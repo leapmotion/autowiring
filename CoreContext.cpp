@@ -13,7 +13,6 @@ thread_specific_ptr<cpp11::shared_ptr<CoreContext>> CoreContext::s_curContext;
 
 CoreContext::CoreContext(cpp11::shared_ptr<CoreContext> pParent):
   Autowirer(cpp11::static_pointer_cast<Autowirer, CoreContext>(pParent)),
-  m_shouldRun(false),
   m_shouldStop(true),
   m_refCount(0)
 {

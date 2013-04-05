@@ -68,7 +68,6 @@ private:
   int m_refCount;
 
   // This is a global STOP variable, used to signal shutdown when it's time to quit.
-  bool m_shouldRun;
   bool m_shouldStop;
 
   // This is the stop condition, which is set when all core threads have actually exited
