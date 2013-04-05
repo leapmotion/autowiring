@@ -22,8 +22,13 @@ class CoreThread:
 {
 public:
   /// <param name="pName">An optional name for this thread</param>
-  CoreThread(const char* pName = nullptr);
-  virtual ~CoreThread(void);
+  CoreThread(const char* pName = nullptr):
+    ContextMember(pName),
+    m_stop(true)
+  {
+  }
+
+  virtual ~CoreThread(void) {}
 
 private:
   boost::mutex m_stopLock;
