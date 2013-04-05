@@ -148,7 +148,7 @@ public:
   }
 
   template<class W>
-  AutowiredCreator(GlobalContextName<W> name, eGlobalBehavior behavior = eDefaultGlobalBehavior):
+  AutowiredCreator(const GlobalContextName<W>&, eGlobalBehavior behavior = eDefaultGlobalBehavior):
     cpp11::shared_ptr<GlobalCoreContext>(GetGlobalContext())
   {
     DestroyTracker::m_context = GetGlobalContextAsCoreContext();
@@ -221,7 +221,7 @@ public:
   /// left up to the caller.
   /// </remarks>
   template<class S>
-  Autowired(GlobalContextName<S> name, eGlobalBehavior behavior = eDefaultGlobalBehavior):
+  Autowired(const GlobalContextName<S>& name, eGlobalBehavior behavior = eDefaultGlobalBehavior):
     AutowiredCreator<GlobalCoreContext, false>(name, behavior)
   {}
 };
