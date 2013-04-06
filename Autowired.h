@@ -3,7 +3,7 @@
 #include <functional>
 #include <memory>
 
-template<class T, const char* pszName>
+template<class T>
 class Autowired;
 class CoreContext;
 class GlobalCoreContext;
@@ -187,14 +187,13 @@ public:
 /// An autowired template class that forms the foundation of the context consumer system
 /// </summary>
 /// <param name="T">The class whose type is to be found.  Must be an EXACT match.</param>
-/// <param name="pszName">The name of the instance, if more than one instance of T exists in the context</param>
 /// <remarks>
 /// The autowired class offers a quick way to import or create an instance of a specified
 /// class in the local context.
 ///
 /// This class may be safely used even when the member in question is an abstract type.
 /// </remarks>
-template<class T, const char* pszName>
+template<class T>
 class Autowired:
   public AutowiredCreator<T, false>
 {
@@ -204,8 +203,8 @@ public:
   }
 };
 
-template<const char* pszName>
-class Autowired<GlobalCoreContext, pszName>:
+template<>
+class Autowired<GlobalCoreContext>:
   public AutowiredCreator<GlobalCoreContext, false>
 {
 public:
@@ -233,9 +232,9 @@ public:
 /// This class is simply a convenience class and provides a declarative way to name a
 /// required dependency.
 /// </remarks>
-template<class T, const char* pszName = sc_emptyName>
+template<class T>
 class AutoRequired:
-  public Autowired<T, pszName>
+  public Autowired<T>
 {
 public:
   AutoRequired(void)
@@ -246,46 +245,22 @@ public:
 };
 
 /// <summary>
-/// A utility class for autowiring classes without first including their header files
+/// Provides a way to name a dependency on a specific instance of a class
 /// </summary>
-/// <param name="isPolymorphic">Set to true if the class is known to inherit from Object</param>
 /// <remarks>
-/// This is a utility class for users who _know_ that the class they need to autowire will
-/// be concrete.  By using it, users do not need to first include the header file defining
-/// the class--without it, excessive header dependence may result
-///
-/// Be forewarned:  Setting the value of isPolymorphic incorrectly can have serious consequences
-/// and, though the autowiring system will detect and warn you of an incorrect assignment,
-/// this will only happen when autowiring is attempted.  This unfortunate circumstance is
-/// due to the fact that the autowired declaration won't have access to the full class
-/// definition at declaration time, and so it won't know _anything_ about the class you are
-/// trying to autowire.
+/// 
 /// </remarks>
-template<class T, bool isPolymorphic, bool isAbstract>
-class AutowiredNoForwardDeclaration:
-  public AutowiredCreator<T, isAbstract>
+template<class T, const char* name>
+class AutoNamed:
+  public Autowired<T>
 {
 public:
-  static const bool s_isPolymorphic = isPolymorphic;
-  AutowiredNoForwardDeclaration(void) {
-    DestroyTracker::m_context->Autowire(*this);
-  }
 };
-
-template<class T, bool isPolymorphic>
-class AutowiredConcrete:
-  public AutowiredNoForwardDeclaration<T, isPolymorphic,  false>
-{};
-
-template<class T, bool isPolymorphic>
-class AutowiredAbstract:
-  public AutowiredNoForwardDeclaration<T, isPolymorphic,  true>
-{};
 
 /// <summary>
 /// Autofind is like autowired, except it holds a weak reference to the matched class
 /// </summary>
-template<class T, const char* pszName>
+template<class T>
 class AutowiredWeak:
   public cpp11::weak_ptr<T>,
   public DestroyTracker

@@ -18,9 +18,7 @@ namespace AutowirerHelpers {
   struct FindByCastInternal;
 }
 
-extern const char sc_emptyName[];
-
-template<class T, const char* pszName = sc_emptyName>
+template<class T>
 class Autowired;
 
 template<class T, bool isPolymorphic, bool isAbstract>
@@ -176,8 +174,8 @@ public:
   /// <summary>
   /// Locates an available context member by its exact type, if known
   /// </summary>
-  template<class T, const char* name>
-  cpp11::shared_ptr<T> FindByType(const Autowired<T, name>&) {
+  template<class T>
+  cpp11::shared_ptr<T> FindByType(const Autowired<T>&) {
     // Attempt a resolution by type first:
     std::string typeName = typeid(T).name();
     t_mpType::iterator q;
@@ -198,7 +196,7 @@ public:
     // If find has been requested by type, there should be only one match.
     cpp11::shared_ptr<T>& retVal = *(SharedPtrWrap<T>*)((q->second).get());
     q++;
-    if(q != m_byType.end() && q->first == name)
+    if(q != m_byType.end() && q->first == typeName)
       // Ambiguous match, exception:
       throw std::runtime_error("An autowiring operation resulted in an ambiguous match");
     return retVal;
