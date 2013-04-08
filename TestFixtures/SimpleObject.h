@@ -11,6 +11,9 @@ public:
     one(1)
   {}
 
+  ~SimpleObject(void) {
+  }
+
   int zero;
   int one;
 };

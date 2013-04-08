@@ -57,9 +57,6 @@ public:
   static cpp11::shared_ptr<CoreContext> NewContext(const cpp11::shared_ptr<CoreContext>& pParent);
 
 private:
-  // A back-reference to ourselves, weak in order to prevent a degenerate cyclic reference
-  cpp11::weak_ptr<CoreContext> m_self;
-
   // General purpose lock for this class
   boost::mutex m_coreLock;
 
@@ -157,7 +154,11 @@ public:
   /// This makes this core context current.
   /// </summary>
   void SetCurrent(void) {
-    SetCurrent(m_self.lock());
+    SetCurrent(
+      cpp11::static_pointer_cast<CoreContext, Autowirer>(
+        m_self.lock()
+      )
+    );
   }
 
   /// <summary>

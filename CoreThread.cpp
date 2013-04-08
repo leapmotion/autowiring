@@ -4,7 +4,8 @@
 #include <boost/thread.hpp>
 
 bool CoreThread::ShouldStop(void) const {
-  return m_stop || (m_context && m_context->ShouldStop());
+  shared_ptr<CoreContext> context = ContextMember::GetContext();
+  return m_stop || context || context->ShouldStop();
 }
 
 void CoreThread::ThreadSleep(long millisecond) {

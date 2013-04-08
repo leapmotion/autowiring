@@ -26,6 +26,9 @@ void NullOp(T) {}
 class DestroyTracker {
 public:
   DestroyTracker();
+
+  ~DestroyTracker(void) {
+  }
   
   /// <summary>
   /// This is a destroy self-reference.  There should only ever be one shared pointer
@@ -37,7 +40,22 @@ public:
   /// <summary>
   /// This is the context that was available at the time the autowiring was performed.
   /// </summary>
-  cpp11::shared_ptr<CoreContext> m_context;
+  /// <remarks>
+  /// A weak reference is held in hroder to ensure proper teardown, otherwise the
+  /// first created member of the context would generate a cyclic reference between
+  /// this pointer and the context membership set.
+  /// </remarks>
+  cpp11::weak_ptr<CoreContext> m_context;
+
+  /// <summary>
+  /// Utility routine to lock the context, or throw an exception if something goes wrong
+  /// </summary>
+  cpp11::shared_ptr<CoreContext> LockContext(void) {
+    cpp11::shared_ptr<CoreContext> retVal = m_context.lock();
+    if(!retVal)
+      throw std::runtime_error("Attempted to autowire in a context that is tearing down");
+    return retVal;
+  }
 };
 
 template<class T, bool isAbstract> class AutowiredCreator;
@@ -177,7 +195,7 @@ public:
     // NOTE: If you are getting an error tracked to this line, ensure that class T is totally
     // defined at the point where the Autowired instance is constructed.  Generally,
     // such errors are tracked to missing header files.
-    *this = DestroyTracker::m_context->Add(new T);
+    *this = LockContext()->Add(new T);
   }
 
   using AutowiredCreator<T, true>::operator=;
@@ -199,8 +217,31 @@ class Autowired:
 {
 public:
   Autowired(void) {
-    DestroyTracker::m_context->Autowire(*this);
+    shared_ptr<CoreContext> context = DestroyTracker::LockContext();
+    context->Autowire(*this);
   }
+};
+
+/// <summary>
+/// Autowiring specialization that does not do a context membership search
+/// </summary>
+/// <remarks>
+/// This specialization is guaranteed to be identical to obtaining a shared_ptr
+/// reference to the result of CoreContext::CurrentContext.  It is provided for
+/// symmetry of declaration.
+/// </remarks>
+template<>
+class Autowired<CoreContext>:
+  public AutowiredCreator<CoreContext, false>
+{
+public:
+  /// <remarks>
+  /// Specialized constructor that enables the forced creation of a new child context
+  /// </remarks>
+  /// <param name="forceNew">Set if a new context is required</param>
+  Autowired(bool forceNew = false);
+
+  using cpp11::shared_ptr<CoreContext>::operator=;
 };
 
 template<>
@@ -237,11 +278,18 @@ class AutoRequired:
   public Autowired<T>
 {
 public:
-  AutoRequired(void)
-  {
+  AutoRequired(void) {
     if(!*this)
       AutowiredCreator<T, false>::Create();
   }
+};
+
+template<>
+class AutoRequired<CoreContext>:
+  public Autowired<CoreContext>
+{
+public:
+  AutoRequired(void) {}
 };
 
 /// <summary>
