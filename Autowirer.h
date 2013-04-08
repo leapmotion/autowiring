@@ -68,6 +68,10 @@ protected:
   void erase(t_mpType::iterator q) {
     m_byType.erase(q);
   }
+  
+  void erase(t_mpName::iterator q) {
+    m_byName.erase(q);
+  }
 
   /// <summary>
   /// Final addition method that inserts a generic object to the m_byType map
@@ -122,7 +126,8 @@ protected:
     return false;
   }
 
-  friend void AutowirerErase(Autowirer* pAutowirer, Autowirer::t_mpType::iterator q);
+  template<class Mp>
+  friend void AutowirerErase(Autowirer* pAutowirer, typename Mp::iterator q);
   friend class SharedPtrWrapBase;
   template<class, class> friend class SharedPtrWrap;
   template<class, class> friend class SharedPtrWrapContext;
