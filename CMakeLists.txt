@@ -31,6 +31,10 @@ set(
   ScopeTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
+  MultiInheritTest.h
+  MultiInheritTest.cpp
+  TestFixtures/SimpleObject.h
+  TestFixtures/MultiInherit.h
 )
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)

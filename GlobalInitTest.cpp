@@ -2,20 +2,7 @@
 #include "GlobalInitTest.h"
 #include "GlobalCoreContext.h"
 #include "Autowired.h"
-
-// Simple ContextMember class:
-class SimpleObject:
-  public ContextMember
-{
-public:
-  SimpleObject(void):
-    zero(0),
-    one(1)
-  {}
-
-  int zero;
-  int one;
-};
+#include "TestFixtures/SimpleObject.h"
 
 void GlobalInitTest::TearDown(void) {
   // Always drop the global context when tests are done
