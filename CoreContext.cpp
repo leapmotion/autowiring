@@ -34,17 +34,16 @@ cpp11::shared_ptr<CoreContext> CoreContext::NewContext(const cpp11::shared_ptr<C
   // Create the context, first
   CoreContext* pContext(new CoreContext(pParent));
 
-  // A context is always _reflexive_, in that it's always a member of itself.  This is yet
-  // another reason we cannot safely construct a core context directly--if this were done,
-  // we'd either have a cyclic reference or the object would implode immediately.
-  cpp11::shared_ptr<CoreContext> retVal = pContext->Add(pContext);
+  // Create the shared pointer for the context--do not add the context to itself,
+  // this creates a dangerous cyclic reference.
+  cpp11::shared_ptr<CoreContext> retVal(pContext);
   pContext->m_self = retVal;
   return retVal;
 }
 
 void CoreContext::InitiateCoreThreads(void) {
   // Self-reference to ensure the context is not destroyed until all threads are gone
-  cpp11::shared_ptr<CoreContext> self = m_self.lock();
+  cpp11::shared_ptr<CoreContext> self = cpp11::static_pointer_cast<CoreContext, Autowirer>(m_self.lock());
   ASSERT(self);
 
   {
@@ -124,10 +123,6 @@ cpp11::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   return *retVal;
 }
 
-cpp11::shared_ptr<CoreContext> GetCurrentContext() {
-  return CoreContext::CurrentContext();
-}
-
 cpp11::shared_ptr<CoreThread> CoreContext::Add(CoreThread* pCoreThread) {
   // Give the base class a chance first:
   cpp11::shared_ptr<CoreThread> interior = Autowirer::Add(pCoreThread);
@@ -148,7 +143,7 @@ cpp11::shared_ptr<CoreThread> CoreContext::Add(CoreThread* pCoreThread) {
       });
   }
 
-  cpp11::weak_ptr<CoreContext> self = m_self;
+  cpp11::weak_ptr<Autowirer> self = m_self;
   
   // This is done so that, when the returned cpp11::shared_ptr is released, we are notified
   // and can release the corresponding iterator.  If we didn't do this, we would have
@@ -158,7 +153,7 @@ cpp11::shared_ptr<CoreThread> CoreContext::Add(CoreThread* pCoreThread) {
       pCoreThread,
       [this, q, self] (CoreThread*) {
         // Verify that our context is still around, and lock it in place if so.
-        cpp11::shared_ptr<CoreContext> temp = self.lock();
+        cpp11::shared_ptr<Autowirer> temp = self.lock();
         if(!temp)
           return;
 
@@ -168,4 +163,8 @@ cpp11::shared_ptr<CoreThread> CoreContext::Add(CoreThread* pCoreThread) {
       }
     );
   return *q;
+}
+
+cpp11::shared_ptr<CoreContext> GetCurrentContext() {
+  return CoreContext::CurrentContext();
 }

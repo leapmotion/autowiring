@@ -8,6 +8,7 @@ public:
   GlobalInitTest(void) {}
   ~GlobalInitTest(void) {}
 
+  void SetUp(void);
   void TearDown(void);
 };
 

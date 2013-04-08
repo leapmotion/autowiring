@@ -20,7 +20,7 @@ public:
 
 protected:
   // Member variables:
-  cpp11::shared_ptr<CoreContext> m_context;
+  cpp11::weak_ptr<CoreContext> m_context;
 
 public:
   // Accessor methods:
@@ -36,9 +36,12 @@ public:
   /// </summary>
   /// <remarks>
   /// By default, the context will be whatever the current context was in the thread
-  /// where this object was constructed at the time of the object's construction
+  /// where this object was constructed at the time of the object's construction.
+  ///
+  /// Note that, if the context is in the process of tearing down, this return value
+  /// could be null.
   /// </remarks>
-  cpp11::shared_ptr<CoreContext>& GetContext(void) {return m_context;}
+  cpp11::shared_ptr<CoreContext> GetContext(void) const {return m_context.lock();}
 
   /// <summary>
   /// Returns a shared pointer that refers to ourselves
