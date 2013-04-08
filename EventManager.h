@@ -30,20 +30,20 @@ public:
   template<class W>
   EventManager<T>& operator+=(Autowired<W> rhs) {
     return operator+=(
-      cpp11::static_ptr_cast<T, W>(rhs)
+      cpp11::static_pointer_cast<T, W>(rhs)
     );
   }
 
   // Multi-argument firing:
   template<class Arg1, class Arg2, class Ty1, class Ty2>
   void FireAsSingle(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2), const Ty1& ty1, const Ty2& ty2) {
-    for(t_mpType::iterator q = m_mp.begin(); q != m_mp.end(); q++)
+    for(typename t_mpType::iterator q = m_mp.begin(); q != m_mp.end(); q++)
       ((q->second.get())->*fnPtr)(ty1, ty2);
   }
 
   template<class Arg1, class Arg2>
   cpp11::function<void (Arg1, Arg2)> Fire(void (T::*fnPtr)(Arg1, Arg2)) {
-#ifdef _WINDOWS
+#if LAMBDAS_AVAILABLE
     // Done to prevent warning spam on MSVC
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
