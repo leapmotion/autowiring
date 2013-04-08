@@ -71,3 +71,7 @@ Autowired<CoreContext>::Autowired(bool forceNew) {
     *this = GetCurrentContext();
   DestroyTracker::m_context = *this;
 }
+
+void AddGlobalObjects(InstantiatorLink* pLink) {
+  GlobalCoreContext::AddGlobalObjects(pLink);
+}
