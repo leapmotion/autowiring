@@ -7,6 +7,9 @@
 class Autowirer;
 class ContextMember;
 class Object;
+class SharedPtrWrapBase;
+
+void AutowirerErase(Autowirer* pAutowirer, std::multimap<std::string, cpp11::shared_ptr<SharedPtrWrapBase> >::iterator q);
 
 /// <summary>
 /// Base class support functionality for SharedPtrWrap in order to enable template polymorphism
@@ -78,7 +81,7 @@ public:
       // We don't attempt this if the autowirer is already in teardown, meaning that
       // the map, and all if its members, are already being destroyed or are already
       // gone.
-      autowirer->erase(m_q);
+      AutowirerErase(autowirer.get(), m_q);
   }
 
   myIter m_q;

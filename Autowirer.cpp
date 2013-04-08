@@ -64,3 +64,7 @@ cpp11::shared_ptr<ContextMember> Autowirer::Add(ContextMember* pContextMember)
 cpp11::shared_ptr<CoreContext> CreateContextThunk(void) {
   return CoreContext::NewContext();
 }
+
+void AutowirerErase(Autowirer* pAutowirer, Autowirer::t_mpType::iterator q) {
+  pAutowirer->erase(q);
+}

@@ -167,7 +167,7 @@ public:
   }
 
   template<class W>
-  static void MakeLink(void) {
+  static InstantiatorLink* MakeLink(void) {
     static InstantiatorLink link = {nullptr, &MakeInstance<W>};
     return &link;
   }
@@ -180,7 +180,7 @@ public:
     ASSERT(*this);
     if(behavior == eInitGlobalBehavior)
       // FillGlobalContext is idempotent
-      AddGlobalObjects(&MakeLink<W>);
+      AddGlobalObjects(MakeLink<W>());
   }
 };
 
