@@ -3,6 +3,15 @@
 
 #include "CoreContext.h"
 #include <boost/thread/mutex.hpp>
+  
+typedef void (*t_instantiator)(void);
+struct InstantiatorLink {
+  // Next instantiator in the chain
+  InstantiatorLink* pFlink;
+
+  // Function pointer at this link
+  t_instantiator fn;
+};
 
 // A special class designed to make it easier to detect when our context is the global context
 class GlobalCoreContext:
@@ -37,13 +46,15 @@ public:
   template<class W>
   static void AddGlobalObjects(void) {
     static InstantiatorLink current = {
-      s_instantiator,
+      nullptr,
       &InstantiateW<W>
     };
+    AddGlobalObjects(&current);
+  }
 
-    // Push a link, if needed.  This construction also prevents cyclic references.
-    if(current.pFlink == s_instantiator)
-      s_instantiator = &current;
+  static void AddGlobalObjects(InstantiatorLink* pLink) {
+    pLink->pFlink = s_instantiator;
+    s_instantiator = pLink;
   }
 
   /// <summary>
@@ -76,15 +87,6 @@ public:
   }
 
 private:
-  typedef void (*t_instantiator)(void);
-  struct InstantiatorLink {
-    // Next instantiator in the chain
-    InstantiatorLink* pFlink;
-
-    // Function pointer at this link
-    t_instantiator fn;
-  };
-
   // Singly linked list of instantiators
   static InstantiatorLink* s_instantiator;
 

@@ -7,7 +7,7 @@ boost::mutex GlobalCoreContext::s_initLock;
 cpp11::shared_ptr<GlobalCoreContext> GlobalCoreContext::s_globalContext;
 
 // Initially, there are no instantiators to be run
-GlobalCoreContext::InstantiatorLink* GlobalCoreContext::s_instantiator = nullptr;
+InstantiatorLink* GlobalCoreContext::s_instantiator = nullptr;
 
 GlobalCoreContext::GlobalCoreContext(void):
   CoreContext(cpp11::shared_ptr<CoreContext>())

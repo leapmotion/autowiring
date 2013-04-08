@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 
+struct InstantiatorLink;
 template<class T>
 class Autowired;
 class CoreContext;
@@ -12,6 +13,7 @@ class GlobalCoreContext;
 cpp11::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 cpp11::shared_ptr<CoreContext> GetGlobalContextAsCoreContext(void);
 cpp11::shared_ptr<CoreContext> GetCurrentContext(void);
+void AddGlobalObjects(InstantiatorLink* pLink);
 
 // Exists only to get around a header cyclic dependency, needed only because we
 // cannot forward-declare member functions more than once
@@ -165,6 +167,12 @@ public:
   }
 
   template<class W>
+  static void MakeLink(void) {
+    static InstantiatorLink link = {nullptr, &MakeInstance<W>};
+    return &link;
+  }
+
+  template<class W>
   AutowiredCreator(const GlobalContextName<W>&, eGlobalBehavior behavior = eDefaultGlobalBehavior):
     cpp11::shared_ptr<GlobalCoreContext>(GetGlobalContext())
   {
@@ -172,7 +180,7 @@ public:
     ASSERT(*this);
     if(behavior == eInitGlobalBehavior)
       // FillGlobalContext is idempotent
-      GlobalCoreContext::AddGlobalObjects<W>();
+      AddGlobalObjects(&MakeLink<W>);
   }
 };
 
