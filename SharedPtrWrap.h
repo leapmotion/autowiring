@@ -75,6 +75,7 @@ class SharedPtrWrap<T, Mp, false>:
   public SharedPtrWrapImpl<T, Mp>
 {
 public:
+  typedef typename Mp::iterator myIter;
   SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p, myIter q):
     SharedPtrWrapImpl<T, Mp>(pAutowirer, p, q)
   {}
@@ -94,6 +95,7 @@ class SharedPtrWrap<T, Mp, true>:
   public SharedPtrWrapImpl<T, Mp>
 {
 public:
+  typedef typename Mp::iterator myIter;
   SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p, myIter q):
     SharedPtrWrapImpl<T, Mp>(pAutowirer, p, q)
   {}
