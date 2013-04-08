@@ -21,21 +21,13 @@ CoreContext::CoreContext(cpp11::shared_ptr<CoreContext> pParent):
 }
 
 CoreContext::~CoreContext(void) {
-  // First we get the thread local store variable, which is a cpp11::shared_ptr, then we dereference that.
-  if(s_curContext.get()->get() == this) {
-    if(m_pParent)
-      // We're the current context, we need to pop up to one level
-      s_curContext.reset(
-        new cpp11::shared_ptr<CoreContext>(
-          static_cast<CoreContext*>(m_pParent.get())
-        )
-      );
-    else {
-      // This should ONLY HAPPEN when we are of type GlobalCoreContext
-      ASSERT(dynamic_cast<GlobalCoreContext*>(this));
-      s_curContext.reset();
-    }
-  }
+  // The s_curContext pointer holds a shared_ptr to this--if we're in a ctor, and our caller
+  // still holds a reference to us, then we have a serious problem.
+  ASSERT(
+    !s_curContext.get() ||
+    !s_curContext.get()->use_count() ||
+    s_curContext.get()->get() != this
+  );
 }
 
 cpp11::shared_ptr<CoreContext> CoreContext::NewContext(const cpp11::shared_ptr<CoreContext>& pParent) {
@@ -130,30 +122,6 @@ cpp11::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   ASSERT(retVal);
   ASSERT(*retVal);
   return *retVal;
-}
-
-cpp11::shared_ptr<GlobalCoreContext> GetGlobalContext() {
-  // We use a shared pointer, we never want the global context to go away once
-  // we've created it.
-  static cpp11::shared_ptr<GlobalCoreContext> s_globalContext;
-
-  // Multiple initialization guard:
-  static mutex s_multiInitLock;
-
-  lock_guard<mutex> lk(s_multiInitLock);
-  if(s_globalContext) {
-    ASSERT(s_globalContext);
-    return s_globalContext;
-  }
-  
-  // Object not yet initialized, create it
-  GlobalCoreContext* pContext(new GlobalCoreContext());
-  s_globalContext = pContext->Add(pContext);
-  pContext->m_self = s_globalContext;
-  s_globalContext->SetCurrent();
-
-  // Done, now it's the user's responsibility
-  return s_globalContext;
 }
 
 cpp11::shared_ptr<CoreContext> GetCurrentContext() {

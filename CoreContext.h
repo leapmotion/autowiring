@@ -170,6 +170,18 @@ public:
   };
 
   /// <summary>
+  /// Makes no context current
+  /// </summary>
+  /// <remarks>
+  /// Generally speaking, users wishing to release their reference to some context can do so simply
+  /// by making the global context current.  The sole exception is when the global context is being
+  /// destroyed, in which case, a null context is exactly what's desired.
+  /// </remarks>
+  static void EvictCurrent(void) {
+    s_curContext.reset();
+  }
+
+  /// <summary>
   /// This retrieves a shared pointer to the current context.  It is only contextually relevant.
   /// </summary>
   /// <return>
@@ -182,11 +194,6 @@ public:
   /// </remarks>
   static cpp11::shared_ptr<CoreContext> CurrentContext(void);
 };
-
-/// <summary>
-/// This is a special context for global use
-/// </summary>
-cpp11::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 
 /// <summary>
 /// Convenient access to the currently active context stored in the global context
