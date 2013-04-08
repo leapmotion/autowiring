@@ -45,6 +45,9 @@ cpp11::shared_ptr<GlobalCoreContext> GlobalCoreContext::Get() {
   ASSERT(s_globalContext);
   ASSERT(s_globalContext.get() == pPtr);
 
+  // Unreferenced, force a ref here to avoid complaints.
+  pPtr;
+
   // We return a copy of s_globalContext to prevent the principal from being modified
   // due to rvalue optimization.
   cpp11::shared_ptr<GlobalCoreContext> ptr(s_globalContext);
