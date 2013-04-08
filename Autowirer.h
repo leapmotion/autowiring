@@ -129,8 +129,6 @@ protected:
   template<class Mp>
   friend void AutowirerErase(Autowirer* pAutowirer, typename Mp::iterator q);
   friend class SharedPtrWrapBase;
-  template<class, class> friend class SharedPtrWrap;
-  template<class, class> friend class SharedPtrWrapContext;
 
 public:
   // Accessor methods:
