@@ -12,7 +12,6 @@ class GlobalCoreContext;
 cpp11::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 cpp11::shared_ptr<CoreContext> GetGlobalContextAsCoreContext(void);
 cpp11::shared_ptr<CoreContext> GetCurrentContext(void);
-void FillWithDefaults(void (*instantiator)(void));
 
 // Exists only to get around a header cyclic dependency, needed only because we
 // cannot forward-declare member functions more than once
@@ -173,7 +172,7 @@ public:
     ASSERT(*this);
     if(behavior == eInitGlobalBehavior)
       // FillGlobalContext is idempotent
-      FillWithDefaults(&MakeInstance<W>);
+      GlobalCoreContext::AddGlobalObjects<W>();
   }
 };
 
