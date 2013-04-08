@@ -123,7 +123,11 @@ cpp11::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   return *retVal;
 }
 
-cpp11::shared_ptr<CoreThread> CoreContext::Add(CoreThread* pCoreThread) {
+cpp11::shared_ptr<CoreThread> CoreContext::Add(CoreThread* pCoreThread, bool allowNotReady) {
+  // We don't allow the insertion of a thread that isn't ready unless the user really
+  // wants that behavior.
+  ASSERT(allowNotReady || pCoreThread->IsReady());
+
   // Give the base class a chance first:
   cpp11::shared_ptr<CoreThread> interior = Autowirer::Add(pCoreThread);
 

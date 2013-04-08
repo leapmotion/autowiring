@@ -99,12 +99,13 @@ public:
   /// Adds an object of any kind to the IOC container
   /// </summary>
   /// <param name="pContextMember">The member which was added</param>
+  /// <param name="notReady">Allows the insertion of a thread, even if that thread isn't ready yet</param>
   /// <return>The shared pointer which contains the context member.</return>
   /// <remarks>
   /// It's safe to allow the returned shared_ptr to go out of scope; the core context
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
-  cpp11::shared_ptr<CoreThread> Add(CoreThread* pCoreThread);
+  cpp11::shared_ptr<CoreThread> Add(CoreThread* pCoreThread, bool allowNotReady = true);
 
   /// <summary>
   /// Utility routine, invoked typically by the service, which starts all registered
