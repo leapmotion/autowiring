@@ -40,6 +40,12 @@ public:
 protected:
   // General purpose lock for this class
   boost::mutex m_lock;
+
+  // A pointer to the parent context
+  cpp11::shared_ptr<Autowirer> m_pParent;
+
+  // A back-reference to ourselves, weak in order to prevent a degenerate cyclic reference
+  cpp11::weak_ptr<Autowirer> m_self;
   
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes
@@ -55,9 +61,16 @@ protected:
   typedef std::list<cpp11::function<bool ()> > t_deferredList;
   t_deferredList m_deferred;
 
-  // A pointer to the parent context
-  cpp11::shared_ptr<Autowirer> m_pParent;
+  /// <summary>
+  /// Erasure routine, designed to be invoked from inside SharedPtrWrap
+  /// </summary>
+  void erase(t_mpType::iterator q) {
+    m_byType.erase(q);
+  }
 
+  /// <summary>
+  /// Final addition method that inserts a generic object to the m_byType map
+  /// </summary>
   template<class T>
   cpp11::shared_ptr<T> AddInternal(T* pValue) {
     t_mpType::iterator q;
@@ -74,29 +87,10 @@ protected:
       );
     }
 
-    class Lambda {
-    public:
-      Lambda(Autowirer* pThis, t_mpType::iterator q):
-        pThis(pThis),
-        q(q)
-      {}
-
-      Autowirer* pThis;
-      t_mpType::iterator q;
-
-      void operator()(SharedPtrWrap<T>* p) {
-        // Remove the iterator that was inserted earlier
-        // "This" qualifiers necessary due to quirky member resolution on clang
-        this->pThis->m_byType.erase(this->q);
-
-        // Destroy the fundamental pointer itself
-        delete p;
-      }
-    };
-
-    // Create a new shared pointer:
-    SharedPtrWrap<T>* pWrap = new SharedPtrWrap<T>(pValue);
-    cpp11::shared_ptr<SharedPtrWrapBase> pPtr(pWrap, Lambda(this, q));
+    // Create a new shared pointer.  SharedPtrWrapBase auto-eliminates from the
+    // map based on the iterator, which obviates a need for an explicit Remove.
+    SharedPtrWrap<T, t_mpType>* pWrap = new SharedPtrWrap<T, t_mpType>(m_self, pValue, q);
+    cpp11::shared_ptr<SharedPtrWrapBase> pPtr(pWrap);
 
     // Assign the value, now that a location is reserved for it
     q->second = pPtr;
@@ -114,14 +108,6 @@ protected:
     return *pWrap;
   }
 
-  // Base of an empty heirarchy.  Should never be used.
-  class Empty:
-    public Object 
-  {
-    Empty();
-    virtual ~Empty();
-  };
-  
   template<class W>
   bool DoAutowire(W& slot) {
     typename W::t_ptrType retVal;
@@ -134,6 +120,10 @@ protected:
     }
     return false;
   }
+
+  friend class SharedPtrWrapBase;
+  template<class, class> friend class SharedPtrWrap;
+  template<class, class> friend class SharedPtrWrapContext;
 
 public:
   // Accessor methods:
@@ -194,7 +184,7 @@ public:
       return FindByCast<T>();
 
     // If find has been requested by type, there should be only one match.
-    cpp11::shared_ptr<T>& retVal = *(SharedPtrWrap<T>*)((q->second).get());
+    cpp11::shared_ptr<T>& retVal = *(SharedPtrWrap<T, t_mpType>*)((q->second).get());
     q++;
     if(q != m_byType.end() && q->first == typeName)
       // Ambiguous match, exception:

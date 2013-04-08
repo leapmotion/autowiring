@@ -27,12 +27,14 @@ set(
 set(
   AutowiringTest_SRCS
   TestMain.cpp
-  ScopeTest.h
-  ScopeTest.cpp
+  ContextCleanupTest.h
+  ContextCleanupTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
+  ScopeTest.h
+  ScopeTest.cpp
   TestFixtures/SimpleObject.h
   TestFixtures/MultiInherit.h
 )

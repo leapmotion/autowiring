@@ -4,6 +4,14 @@
 #include "Autowired.h"
 #include "TestFixtures/SimpleObject.h"
 
+void GlobalInitTest::SetUp(void) {
+  // Always drop the global context when tests are done
+  GlobalCoreContext::Release();
+
+  // Also release the current context, whatever it is.
+  CoreContext::EvictCurrent();
+}
+
 void GlobalInitTest::TearDown(void) {
   // Always drop the global context when tests are done
   GlobalCoreContext::Release();
@@ -19,7 +27,7 @@ TEST_F(GlobalInitTest, VerifyGlobalExists) {
 
   // There should only be three references:  The one we have, the global
   // reference, and the thread-current reference
-  EXPECT_EQ(global.use_count(), 3);
+  EXPECT_EQ(global.use_count(), 3) << "Unexpected global use count after bare initialization";
 }
 
 TEST_F(GlobalInitTest, VerifySimpleContext) {
