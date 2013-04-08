@@ -17,6 +17,7 @@ set(
   CoreContext.h
   CoreThread.cpp
   CoreThread.h
+  EventManager.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   Object.h

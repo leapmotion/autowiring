@@ -32,17 +32,23 @@ GlobalCoreContext::~GlobalCoreContext(void) {
 
 // Obtains the currently generated global context:
 cpp11::shared_ptr<GlobalCoreContext> GlobalCoreContext::Get() {
-  if(!s_globalContext) {
-    boost::lock_guard<boost::mutex> lk(s_initLock);
-    if(s_globalContext)
-      // Multi-init by another thread, just short-circuit here
-      return s_globalContext;
+  if(s_globalContext)
+    return s_globalContext;
+  
+  boost::lock_guard<boost::mutex> lk(s_initLock);
+  if(s_globalContext)
+    // Multi-init by another thread, just short-circuit here
+    return s_globalContext;
 
-    // Create a new core context.  Constructor will automatically set the shared pointer.
-    new GlobalCoreContext();
-    ASSERT(s_globalContext);
-  }
-  return s_globalContext;
+  // Create a new core context.  Constructor will automatically set the shared pointer.
+  GlobalCoreContext* pPtr = new GlobalCoreContext();
+  ASSERT(s_globalContext);
+  ASSERT(s_globalContext.get() == pPtr);
+
+  // We return a copy of s_globalContext to prevent the principal from being modified
+  // due to rvalue optimization.
+  cpp11::shared_ptr<GlobalCoreContext> ptr(s_globalContext);
+  return ptr;
 }
 
 cpp11::shared_ptr<GlobalCoreContext> GetGlobalContext(void) {
