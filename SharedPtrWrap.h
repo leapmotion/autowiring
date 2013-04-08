@@ -73,7 +73,7 @@ public:
   }
 
   ~SharedPtrWrap(void) {
-    shared_ptr<Autowirer> autowirer = this->pAutowirer.lock();
+    cpp11::shared_ptr<Autowirer> autowirer = this->pAutowirer.lock();
     if(autowirer)
       // We don't attempt this if the autowirer is already in teardown, meaning that
       // the map, and all if its members, are already being destroyed or are already
@@ -104,7 +104,7 @@ public:
   {}
 
   ~SharedPtrWrapContext(void) {
-    shared_ptr<Autowirer> autowirer = this->pAutowirer.lock();
+    cpp11::shared_ptr<Autowirer> autowirer = this->pAutowirer.lock();
     if(autowirer)
       autowirer->erase(q);
   }
