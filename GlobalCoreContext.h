@@ -104,6 +104,16 @@ private:
 };
 
 /// <summary>
+/// Provides a declarative way to set the global context
+/// </summary>
+template<class W>
+struct GlobalContextAssigner {
+  GlobalContextAssigner(void) {
+    GlobalCoreContext::AddGlobalObjects<W>();
+  }
+};
+
+/// <summary>
 /// Obtains the global context, provided at global scope to allow forward declaration
 /// </summary>
 cpp11::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
