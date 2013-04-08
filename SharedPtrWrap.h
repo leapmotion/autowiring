@@ -40,13 +40,14 @@ public:
 /// <summary>
 /// Helper class for the two cases of shared ptr--inherited from Object, and not. 
 /// </summary>
-template<class T>
+template<class T, class Mp>
 class SharedPtrWrapImpl:
   public SharedPtrWrapBase,
   public cpp11::shared_ptr<T>
 {
 public:
-  SharedPtrWrapImpl(cpp11::weak_ptr<Autowirer> pAutowirer, T* p):
+  typedef typename Mp::iterator myIter;
+  SharedPtrWrapImpl(cpp11::weak_ptr<Autowirer> pAutowirer, T* p, myIter q):
     SharedPtrWrapBase(pAutowirer),
     cpp11::shared_ptr<T>(p)
   {}
@@ -56,36 +57,27 @@ public:
     // correct version of shared_ptr's destructor gets called.
   }
 
+  myIter m_q;
+
   virtual const std::type_info& GetTypeInfo(void) const {
     return typeid(T);
   }
 };
 
+template<class T, class Mp, bool isPoly = cpp11::is_base_of<Object, T>::value>
+class SharedPtrWrap;
+
 /// <summary>
 /// This class is a generic class intended to wrap a shared pointer
 /// </summary>
 template<class T, class Mp>
-class SharedPtrWrap:
-  public SharedPtrWrapImpl<T>
+class SharedPtrWrap<T, Mp, false>:
+  public SharedPtrWrapImpl<T, Mp>
 {
 public:
-  typedef typename Mp::iterator myIter;
   SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p, myIter q):
-    SharedPtrWrapImpl<T>(pAutowirer, p),
-    m_q(q)
-  {
-  }
-
-  ~SharedPtrWrap(void) {
-    cpp11::shared_ptr<Autowirer> autowirer = this->pAutowirer.lock();
-    if(autowirer)
-      // We don't attempt this if the autowirer is already in teardown, meaning that
-      // the map, and all if its members, are already being destroyed or are already
-      // gone.
-      AutowirerErase<Mp>(autowirer.get(), m_q);
-  }
-
-  myIter m_q;
+    SharedPtrWrapImpl<T, Mp>(pAutowirer, p, q)
+  {}
 };
 
 /// <summary>
@@ -98,28 +90,16 @@ public:
 /// pointer exchange location.
 /// </remarks>
 template<class T, class Mp>
-class SharedPtrWrapContext:
-  public SharedPtrWrapImpl<T>
+class SharedPtrWrap<T, Mp, true>:
+  public SharedPtrWrapImpl<T, Mp>
 {
 public:
-  typedef typename Mp::iterator myIter;
-  SharedPtrWrapContext(cpp11::weak_ptr<Autowirer> pParent, T* p, myIter q):
-    SharedPtrWrapImpl<T>(pParent, p)
+  SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p, myIter q):
+    SharedPtrWrapImpl<T, Mp>(pAutowirer, p, q)
   {}
 
-  ~SharedPtrWrapContext(void) {
-    cpp11::shared_ptr<Autowirer> autowirer = this->pAutowirer.lock();
-    if(autowirer)
-      AutowirerErase<Mp>(autowirer.get(), q);
-  }
-
-  myIter q;
-
   virtual cpp11::shared_ptr<Object> AsObject() {
-    return
-      cpp11::is_base_of<Object, T>::value ?
-      cpp11::static_pointer_cast<Object, T>(*this) :
-      cpp11::shared_ptr<Object>();
+    return cpp11::static_pointer_cast<Object, T>(*this);
   }
 };
 
