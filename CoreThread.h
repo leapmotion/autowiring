@@ -48,7 +48,7 @@ public:
   /// <summary>
   /// Delay execution of the corresponding core thread until it's ready
   /// </summary>
-  void DelayUntilReady(void) {
+  bool DelayUntilReady(void) {
     boost::unique_lock<boost::mutex> lk(m_stopLock);
     
     class Lambda {
@@ -60,11 +60,13 @@ public:
       CoreThread* pThread;
 
       bool operator()() {
-        return !pThread->m_stop;
+        return pThread->IsReady();
       }
     };
 
+    cpp11::weak_ptr<CoreContext> context = m_context;
     m_stopCondition.wait(lk, Lambda(this));
+    return !context.expired();
   }
 
   /// <summary>
