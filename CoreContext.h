@@ -105,7 +105,7 @@ public:
   /// It's safe to allow the returned shared_ptr to go out of scope; the core context
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
-  cpp11::shared_ptr<CoreThread> Add(CoreThread* pCoreThread, bool allowNotReady = true);
+  cpp11::shared_ptr<CoreThread> Add(CoreThread* pCoreThread, bool allowNotReady = false);
 
   /// <summary>
   /// Utility routine, invoked typically by the service, which starts all registered

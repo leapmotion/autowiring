@@ -5,7 +5,7 @@
 
 bool CoreThread::ShouldStop(void) const {
   shared_ptr<CoreContext> context = ContextMember::GetContext();
-  return m_stop || context || context->ShouldStop();
+  return m_stop || !context || context->ShouldStop();
 }
 
 void CoreThread::ThreadSleep(long millisecond) {
