@@ -1,4 +1,6 @@
 include_directories(
+    ../googletest
+    ../googletest/include
     ..
   )
 
@@ -22,5 +24,20 @@ set(
   SharedPtrWrap.h
 )
 
+set(
+  AutowiringTest_SRCS
+  TestMain.cpp
+  ScopeTest.h
+  ScopeTest.cpp
+  GlobalInitTest.h
+  GlobalInitTest.cpp
+)
+
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
+
+if(BUILD_TESTING)
+  ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
+  add_executable(AutowiringTest ${AutowiringTest_SRCS} "../googletest/src/gtest-all.cc")
+  target_link_libraries(AutowiringTest Autowiring)
+endif(BUILD_TESTING)
