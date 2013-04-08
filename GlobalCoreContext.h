@@ -1,18 +1,9 @@
 #ifndef _GLOBAL_CORE_CONTEXT
 #define _GLOBAL_CORE_CONTEXT
-
+#include "InstantiatorLink.h"
 #include "CoreContext.h"
 #include <boost/thread/mutex.hpp>
-  
-typedef void (*t_instantiator)(void);
-struct InstantiatorLink {
-  // Next instantiator in the chain
-  InstantiatorLink* pFlink;
-
-  // Function pointer at this link
-  t_instantiator fn;
-};
-
+ 
 // A special class designed to make it easier to detect when our context is the global context
 class GlobalCoreContext:
   public CoreContext
