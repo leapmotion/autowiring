@@ -172,15 +172,9 @@ public:
     return &link;
   }
 
-  template<class W>
-  AutowiredCreator(const GlobalContextName<W>&, eGlobalBehavior behavior = eDefaultGlobalBehavior):
+  AutowiredCreator(void):
     cpp11::shared_ptr<GlobalCoreContext>(GetGlobalContext())
   {
-    DestroyTracker::m_context = GetGlobalContextAsCoreContext();
-    ASSERT(*this);
-    if(behavior == eInitGlobalBehavior)
-      // FillGlobalContext is idempotent
-      AddGlobalObjects(MakeLink<W>());
   }
 };
 
@@ -254,24 +248,7 @@ public:
 template<>
 class Autowired<GlobalCoreContext>:
   public AutowiredCreator<GlobalCoreContext, false>
-{
-public:
-  /// <summary>
-  /// Global context specialized constructor
-  /// </summary>
-  /// <remarks>
-  /// Unlike other autowired instances, this one guarantees that it will be autowired,
-  /// and also allows the default global context to be filled with entities based on
-  /// the desired behavior.
-  ///
-  /// Note that this class will _not_ invoke the InitiateCoreThreads method.  This is
-  /// left up to the caller.
-  /// </remarks>
-  template<class S>
-  Autowired(const GlobalContextName<S>& name, eGlobalBehavior behavior = eDefaultGlobalBehavior):
-    AutowiredCreator<GlobalCoreContext, false>(name, behavior)
-  {}
-};
+{};
 
 /// <summary>
 /// Similar to Autowired, but the default constructor invokes Autowired(true)
