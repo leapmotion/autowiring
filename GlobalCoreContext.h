@@ -107,8 +107,8 @@ private:
 /// Provides a declarative way to set the global context
 /// </summary>
 template<class W>
-struct GlobalContextAssigner {
-  GlobalContextAssigner(void) {
+struct GlobalContextDesignation {
+  GlobalContextDesignation(void) {
     GlobalCoreContext::AddGlobalObjects<W>();
   }
 };
