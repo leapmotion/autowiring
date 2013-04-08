@@ -37,6 +37,9 @@ public:
   Autowirer(const cpp11::shared_ptr<Autowirer>& pParent);
   ~Autowirer(void);
 
+  typedef std::multimap<std::string, cpp11::shared_ptr<SharedPtrWrapBase> > t_mpType;
+  typedef std::map<std::string, cpp11::shared_ptr<ContextMember> > t_mpName;
+
 protected:
   // General purpose lock for this class
   boost::mutex m_lock;
@@ -50,11 +53,9 @@ protected:
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes
   // away.
-  typedef std::multimap<std::string, cpp11::shared_ptr<SharedPtrWrapBase> > t_mpType;
   t_mpType m_byType;
   
   // Only one object in a context can bear a particular name
-  typedef std::map<std::string, cpp11::shared_ptr<ContextMember> > t_mpName;
   t_mpName m_byName;
 
   // Set of objects waiting to be autowired
@@ -121,6 +122,7 @@ protected:
     return false;
   }
 
+  friend void AutowirerErase(Autowirer* pAutowirer, Autowirer::t_mpType::iterator q);
   friend class SharedPtrWrapBase;
   template<class, class> friend class SharedPtrWrap;
   template<class, class> friend class SharedPtrWrapContext;
@@ -322,7 +324,8 @@ struct FindByCastInternal<T, true>:
       cpp11::shared_ptr<T>();
   }
 };
-  
+
+void AutowirerErase(Autowirer* pAutowirer, Autowirer::t_mpType::iterator q);
 
 template<class T>
 struct FindByCastInternal<T, false>:
