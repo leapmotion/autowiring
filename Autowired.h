@@ -1,9 +1,9 @@
 #pragma once
 #include "CoreContext.h"
+#include "InstantiatorLink.h"
 #include <functional>
 #include <memory>
 
-struct InstantiatorLink;
 template<class T>
 class Autowired;
 class CoreContext;
@@ -90,7 +90,8 @@ public:
     // Now we'll add this object to the context so the created object may be autowired elsewhere.
     // We also want to be sure we use the same shared_ptr that's being used internally in the
     // context.
-    *this = DestroyTracker::m_context->Add(ptr);
+    cpp11::shared_ptr<CoreContext> context = LockContext();
+    *this = context->Add(ptr);
   }
 
   using cpp11::shared_ptr<T>::operator=;

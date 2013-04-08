@@ -18,6 +18,7 @@ set(
   CoreThread.cpp
   CoreThread.h
   EventManager.h
+  InstantiatorLink.h  
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   Object.h
