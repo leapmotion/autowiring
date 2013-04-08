@@ -82,7 +82,7 @@ public:
       // We don't attempt this if the autowirer is already in teardown, meaning that
       // the map, and all if its members, are already being destroyed or are already
       // gone.
-      AutowirerErase(autowirer.get(), m_q);
+      AutowirerErase<Mp>(autowirer.get(), m_q);
   }
 
   myIter m_q;
@@ -110,7 +110,7 @@ public:
   ~SharedPtrWrapContext(void) {
     cpp11::shared_ptr<Autowirer> autowirer = this->pAutowirer.lock();
     if(autowirer)
-      AutowirerErase(autowirer.get(), q);
+      AutowirerErase<Mp>(autowirer.get(), q);
   }
 
   myIter q;
