@@ -95,6 +95,11 @@ public:
     return ((CoreContextHelpers::Add<T>&)*this)(pValue);
   }
 
+  template<class T>
+  cpp11::shared_ptr<T> Add(void) {
+    return Add(new T);
+  }
+
   /// <summary>
   /// Adds an object of any kind to the IOC container
   /// </summary>
