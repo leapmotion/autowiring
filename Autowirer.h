@@ -49,7 +49,7 @@ protected:
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes
   // away.
-  typedef std::multimap<std::string, cpp11::shared_ptr<SharedPtrWrapBase> > t_mpType;
+  typedef std::multimap<std::string, SharedPtrWrapBase*> t_mpType;
   t_mpType m_byType;
   
   // Only one object in a context can bear a particular name
@@ -82,16 +82,14 @@ protected:
   cpp11::shared_ptr<T> AddInternal(T* pValue) {
     // Create the wrap:
     SharedPtrWrap<T>* pWrap = new SharedPtrWrap<T>(m_self, pValue);
-    cpp11::shared_ptr<SharedPtrWrapBase> pPtr(pWrap);
 
     // Add to the map:
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
       m_byType.insert(
-        m_byType.end(),
         t_mpType::value_type(
           std::string(typeid(*pValue).name()),
-          pPtr
+          pWrap
         )
       );
 
@@ -218,7 +216,7 @@ public:
       return FindByCast<T>();
 
     // If find has been requested by type, there should be only one match.
-    cpp11::shared_ptr<T>& retVal = *(SharedPtrWrap<T>*)((q->second).get());
+    cpp11::shared_ptr<T>& retVal = *(SharedPtrWrap<T>*)q->second;
     q++;
     if(q != m_byType.end() && q->first == typeName)
       // Ambiguous match, exception:
@@ -299,7 +297,7 @@ struct FindByCastInternal<T, true>:
 
     cpp11::shared_ptr<Object> obj;
     for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); q++) {
-      SharedPtrWrapBase* pBase = q->second.get();
+      SharedPtrWrapBase* pBase = q->second;
 
       // See if this wrap contains an object, which we could use to access other types
       obj = pBase->AsObject();
