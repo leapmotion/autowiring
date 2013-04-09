@@ -20,11 +20,6 @@
 
 using std::list;
 
-namespace CoreContextHelpers {
-  template<class T, bool isbase = cpp11::is_base_of<CoreThread, T>::value>
-  struct Add;
-}
-
 class ContextMember;
 class CoreThread;
 class GlobalCoreContext;
@@ -78,7 +73,7 @@ private:
   cpp11::shared_ptr<CoreContext> m_outstanding;
 
   // Actual core threads:
-  typedef list<cpp11::shared_ptr<CoreThread> > t_threadList;
+  typedef list<CoreThread*> t_threadList;
   t_threadList m_threads;
 
   friend cpp11::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
@@ -92,7 +87,9 @@ public:
   cpp11::shared_ptr<T> Add(T* pValue) {
     // Based on the above, we now decide where to send this add request.  The
     // reinterpret_cast
-    return ((CoreContextHelpers::Add<T>&)*this)(pValue);
+    cpp11::shared_ptr<T> retVal = AddInternal(pValue);
+    AddCoreThread(pValue);
+    return retVal;
   }
 
   template<class T>
@@ -110,7 +107,8 @@ public:
   /// It's safe to allow the returned shared_ptr to go out of scope; the core context
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
-  cpp11::shared_ptr<CoreThread> Add(CoreThread* pCoreThread, bool allowNotReady = false);
+  void AddCoreThread(CoreThread* pCoreThread, bool allowNotReady = false);
+  void AddCoreThread(void*) {}
 
   /// <summary>
   /// Utility routine, invoked typically by the service, which starts all registered
@@ -206,27 +204,3 @@ public:
 /// Convenient access to the currently active context stored in the global context
 /// </summary>
 cpp11::shared_ptr<CoreContext> GetCurrentContext(void);
-
-namespace CoreContextHelpers {
-template<class T, bool isbase>
-struct Add;
-
-template<class T>
-struct Add<T, true>:
-  public CoreContext
-{
-  cpp11::shared_ptr<T> operator()(CoreThread* pValue) {
-    return cpp11::static_pointer_cast<T, CoreThread>(CoreContext::Add(pValue));
-  }
-};
-
-template<class T>
-struct Add<T, false>:
-  public CoreContext
-{
-  cpp11::shared_ptr<T> operator()(T* pValue) {
-    return Autowirer::Add<T>(pValue);
-  }
-};
-
-}
