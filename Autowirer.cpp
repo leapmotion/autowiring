@@ -17,23 +17,21 @@ Autowirer::~Autowirer(void)
 {
 }
 
-cpp11::shared_ptr<ContextMember> Autowirer::Add(ContextMember* pContextMember)
+void Autowirer::AddContextMember(ContextMember* ptr)
 {
-  cpp11::shared_ptr<ContextMember> ptr = AddInternal<ContextMember>(pContextMember);
   boost::lock_guard<boost::mutex> lk(m_lock);
 
   // Insert context members by name.  If there is no name, just return the base pointer.
-  if(!pContextMember->GetName())
-    return ptr;
+  if(!ptr->GetName())
+    return;
   
-  string name = pContextMember->GetName();
-  cpp11::shared_ptr<ContextMember>& location = m_byName[name];
+  string name = ptr->GetName();
+  ContextMember*& location = m_byName[name];
   if(location)
     throw std::runtime_error("Two values have been mapped to the same key in the same context");
 
   // Trivial insertion and return:
   location = ptr;
-  return ptr;
 }
 
 cpp11::shared_ptr<CoreContext> CreateContextThunk(void) {

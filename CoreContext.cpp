@@ -63,13 +63,13 @@ void CoreContext::InitiateCoreThreads(void) {
   
   class Lambda {
   public:
-    Lambda(const cpp11::shared_ptr<CoreThread>& pCur, const cpp11::shared_ptr<CoreContext>& outstanding, const cpp11::shared_ptr<CoreContext>& self):
+    Lambda(CoreThread* pCur, const cpp11::shared_ptr<CoreContext>& outstanding, const cpp11::shared_ptr<CoreContext>& self):
       pCur(pCur),
       outstanding(outstanding),
       self(self)
     {}
 
-    cpp11::shared_ptr<CoreThread> pCur;
+    CoreThread* pCur;
     cpp11::shared_ptr<CoreContext> outstanding;
     cpp11::shared_ptr<CoreContext> self;
 
@@ -123,13 +123,10 @@ cpp11::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   return *retVal;
 }
 
-cpp11::shared_ptr<CoreThread> CoreContext::Add(CoreThread* pCoreThread, bool allowNotReady) {
+void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
   // We don't allow the insertion of a thread that isn't ready unless the user really
   // wants that behavior.
-  ASSERT(allowNotReady || pCoreThread->IsReady());
-
-  // Add to everything else first:
-  cpp11::shared_ptr<CoreThread> ptr = Autowirer::Add(pCoreThread);
+  ASSERT(allowNotReady || ptr->IsReady());
 
   // Insert into the linked list of threads first:
   lock_guard<mutex> lk(m_coreLock);
@@ -137,11 +134,10 @@ cpp11::shared_ptr<CoreThread> CoreContext::Add(CoreThread* pCoreThread, bool all
 
   if(!m_shouldStop)
     // We're already running, this means we're late to the game and need to start _now_.
-    boost::thread([this, pCoreThread] () {
-      pCoreThread->DelayUntilReady();
-      pCoreThread->Run();
+    boost::thread([this, ptr] () {
+      ptr->DelayUntilReady();
+      ptr->Run();
     });
-  return ptr;
 }
 
 cpp11::shared_ptr<CoreContext> GetCurrentContext() {
