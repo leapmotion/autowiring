@@ -128,45 +128,20 @@ cpp11::shared_ptr<CoreThread> CoreContext::Add(CoreThread* pCoreThread, bool all
   // wants that behavior.
   ASSERT(allowNotReady || pCoreThread->IsReady());
 
-  // Give the base class a chance first:
-  cpp11::shared_ptr<CoreThread> interior = Autowirer::Add(pCoreThread);
+  // Add to everything else first:
+  cpp11::shared_ptr<CoreThread> ptr = Autowirer::Add(pCoreThread);
 
   // Insert into the linked list of threads first:
-  list<cpp11::shared_ptr<CoreThread>>::iterator q;
+  lock_guard<mutex> lk(m_coreLock);
+  m_threads.push_front(ptr);
 
-  {
-    lock_guard<mutex> lk(m_coreLock);
-    m_threads.push_front(cpp11::shared_ptr<CoreThread>());
-    q = m_threads.begin();
-
-    if(!m_shouldStop)
-      // We're already running, this means we're late to the game and need to start _now_.
-      boost::thread([this, pCoreThread] () {
-        pCoreThread->DelayUntilReady();
-        pCoreThread->Run();
-      });
-  }
-
-  cpp11::weak_ptr<Autowirer> self = m_self;
-  
-  // This is done so that, when the returned cpp11::shared_ptr is released, we are notified
-  // and can release the corresponding iterator.  If we didn't do this, we would have
-  // to require the corresponding implementors of pCoreThread to call a Release function
-  // manually, and for that to work right they would always have to have a pointer
-  *q = cpp11::shared_ptr<CoreThread>(
-      pCoreThread,
-      [this, q, self] (CoreThread*) {
-        // Verify that our context is still around, and lock it in place if so.
-        cpp11::shared_ptr<Autowirer> temp = self.lock();
-        if(!temp)
-          return;
-
-        // Remove the elment we inserted earlier
-        lock_guard<mutex> lk(m_coreLock);
-        m_threads.erase(q);
-      }
-    );
-  return *q;
+  if(!m_shouldStop)
+    // We're already running, this means we're late to the game and need to start _now_.
+    boost::thread([this, pCoreThread] () {
+      pCoreThread->DelayUntilReady();
+      pCoreThread->Run();
+    });
+  return ptr;
 }
 
 cpp11::shared_ptr<CoreContext> GetCurrentContext() {
