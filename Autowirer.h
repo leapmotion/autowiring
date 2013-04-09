@@ -5,10 +5,12 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 #include <boost/thread/mutex.hpp>
 
 class ContextMember;
 class DestroyTracker;
+class EventReceiver;
 
 namespace AutowirerHelpers {
   template<class T, bool isContextMember = cpp11::is_base_of<ContextMember, T>::value>
@@ -62,6 +64,9 @@ protected:
   typedef std::list<cpp11::function<bool ()> > t_deferredList;
   t_deferredList m_deferred;
 
+  // All known event receivers
+  std::vector<EventReceiver*> m_eventReceivers;
+
   /// <summary>
   /// Erasure routine, designed to be invoked from inside SharedPtrWrap
   /// </summary>
@@ -108,6 +113,8 @@ protected:
         r = m_deferred.erase(r);
       else
         r++;
+
+    // We also need to be sure that any existing 
 
     // Done, return
     return *pWrap;
