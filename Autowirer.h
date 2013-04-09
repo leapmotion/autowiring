@@ -127,11 +127,13 @@ protected:
 
   template<class T>
   void AddToEventRecievers(EventReceiver* pEventReceiver, cpp11::shared_ptr<T>& sharedPtr) {
-    m_eventReceivers.push_back(pEventReceiver);
+    m_eventReceivers.push_back(
+      cpp11::static_pointer_cast<EventReceiver, T>(sharedPtr)
+    );
 
     // Scan the list of compatible senders:
     for(size_t i = 0; i < m_eventSenders.size(); i++)
-      m_eventSenders[i] += sharedPtr;
+      *m_eventSenders[i] += cpp11::static_pointer_cast<EventReceiver, T>(sharedPtr);
   }
 
   template<class T>
