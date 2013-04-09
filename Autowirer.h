@@ -13,9 +13,6 @@ class ContextMember;
 class DestroyTracker;
 
 namespace AutowirerHelpers {
-  template<class T, bool isContextMember = cpp11::is_base_of<ContextMember, T>::value>
-  struct Add;
-
   template<class T, bool isPolymorphic = cpp11::is_base_of<Object, T>::value>
   struct FindByCastInternal;
 }
@@ -39,9 +36,6 @@ public:
   Autowirer(const cpp11::shared_ptr<Autowirer>& pParent);
   ~Autowirer(void);
 
-  typedef std::multimap<std::string, cpp11::shared_ptr<SharedPtrWrapBase> > t_mpType;
-  typedef std::map<std::string, cpp11::shared_ptr<ContextMember> > t_mpName;
-
 protected:
   // General purpose lock for this class
   boost::mutex m_lock;
@@ -55,9 +49,11 @@ protected:
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes
   // away.
+  typedef std::multimap<std::string, cpp11::shared_ptr<SharedPtrWrapBase> > t_mpType;
   t_mpType m_byType;
   
   // Only one object in a context can bear a particular name
+  typedef std::map<std::string, ContextMember*> t_mpName;
   t_mpName m_byName;
 
   // Set of objects waiting to be autowired
@@ -133,9 +129,7 @@ protected:
 
   template<class T>
   void AddToEventRecievers(EventReceiver* pEventReceiver, cpp11::shared_ptr<T>& sharedPtr) {
-    m_eventReceivers.push_back(
-      pEventReceiver
-    );
+    m_eventReceivers.push_back(pEventReceiver);
 
     // Scan the list of compatible senders:
     for(size_t i = 0; i < m_eventSenders.size(); i++)
@@ -177,13 +171,16 @@ public:
   /// </remarks>
   template<class T>
   cpp11::shared_ptr<T> Add(T* pValue) {
-    return ((AutowirerHelpers::Add<T>&)*this)(pValue);
+    cpp11::shared_ptr<T> retVal = Autowirer::Add(pValue);
+    AddContextMember(&retVal);
+    return retVal;
   }
 
   /// <summary>
   /// Overload of Add based on ContextMember
   /// </summary>
-  cpp11::shared_ptr<ContextMember> Add(ContextMember* pContextMember);
+  void AddContextMember(ContextMember* pPtr);
+  void AddContextMember(void* ptr) {}
   
   /// <summary>
   /// Attempts to find a member in the container that can be passed to the specified type
@@ -287,29 +284,6 @@ public:
 
 namespace AutowirerHelpers {
 
-template<class T, bool isContextMember>
-struct Add;
-
-template<class T>
-struct Add<T, true>:
-  public Autowirer
-{
-  cpp11::shared_ptr<T> operator()(ContextMember* pValue) {
-    return cpp11::static_pointer_cast<T, ContextMember>(
-      Autowirer::Add(pValue)
-    );
-  }
-};
-
-template<class T>
-struct Add<T, false>:
-  public Autowirer
-{
-  cpp11::shared_ptr<T> operator()(T* pValue) {
-    return AddInternal(pValue);
-  }
-};
-
 template<class T, bool isPolymorphic>
 struct FindByCastInternal;
 
@@ -359,8 +333,6 @@ struct FindByCastInternal<T, true>:
       cpp11::shared_ptr<T>();
   }
 };
-
-void AutowirerErase(Autowirer* pAutowirer, Autowirer::t_mpType::iterator q);
 
 template<class T>
 struct FindByCastInternal<T, false>:
