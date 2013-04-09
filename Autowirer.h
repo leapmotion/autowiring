@@ -1,4 +1,5 @@
 #pragma once
+#include "EventManager.h"
 #include "SharedPtrWrap.h"
 #include <functional>
 #include <list>
@@ -10,7 +11,6 @@
 
 class ContextMember;
 class DestroyTracker;
-class EventReceiver;
 
 namespace AutowirerHelpers {
   template<class T, bool isContextMember = cpp11::is_base_of<ContextMember, T>::value>
@@ -65,7 +65,8 @@ protected:
   t_deferredList m_deferred;
 
   // All known event receivers
-  std::vector<EventReceiver*> m_eventReceivers;
+  std::vector<cpp11::shared_ptr<EventReceiver> > m_eventReceivers;
+  std::vector<EventManagerBase*> m_eventSenders;
 
   /// <summary>
   /// Erasure routine, designed to be invoked from inside SharedPtrWrap
@@ -85,6 +86,7 @@ protected:
   cpp11::shared_ptr<T> AddInternal(T* pValue) {
     // Create the wrap:
     SharedPtrWrap<T>* pWrap = new SharedPtrWrap<T>(m_self, pValue);
+    cpp11::shared_ptr<SharedPtrWrapBase> pPtr(pWrap);
 
     // Add to the map:
     {
@@ -93,37 +95,55 @@ protected:
         m_byType.end(),
         t_mpType::value_type(
           std::string(typeid(*pValue).name()),
-          cpp11::shared_ptr<SharedPtrWrapBase>()
+          pPtr
         )
       );
-    }
 
-    // Create a new shared pointer.  SharedPtrWrapBase auto-eliminates from the
-    // map based on the iterator, which obviates a need for an explicit Remove.
-    cpp11::shared_ptr<SharedPtrWrapBase> pPtr(pWrap);
+      // If the value is an event type, we can add it to the collection of event
+      // manager things:
+      AddToEventSenders(pValue);
+      AddToEventRecievers(pValue, *pWrap);
+    }
 
     // Notify any autowired field whose autowiring was deferred
     // TODO:  We should also notify any descendant autowiring
     // contexts that a new member is now available.
-    for(t_deferredList::iterator r = m_deferred.begin(); r != m_deferred.end(); )
-      if((*r)())
+    for(t_deferredList::iterator r = m_deferred.begin(); r != m_deferred.end(); ) {
+      bool rs = (*r)();
+      
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      if(rs)
         r = m_deferred.erase(r);
       else
         r++;
-
-    // If the value is an event type, we can add it to the collection of event
-    // manager things:
-    AddToEventCollection(pValue);
+    }
 
     // Done, return
     return *pWrap;
   }
 
-  void AddToEventCollection(EventReceiver* pEventReceiver) {
-    m_eventReceivers.push_back(pEventReceiver);
+  void AddToEventSenders(EventManagerBase* pSender) {
+    m_eventSenders.push_back(pSender);
+
+    // Scan the list for compatible receivers:
+    for(size_t i = 0; i < m_eventReceivers.size(); i++)
+      *pSender += m_eventReceivers[i];
+  }
+  inline void AddToEventSenders(void*) {}
+
+  template<class T>
+  void AddToEventRecievers(EventReceiver* pEventReceiver, cpp11::shared_ptr<T>& sharedPtr) {
+    m_eventReceivers.push_back(
+      pEventReceiver
+    );
+
+    // Scan the list of compatible senders:
+    for(size_t i = 0; i < m_eventSenders.size(); i++)
+      m_eventSenders[i] += sharedPtr;
   }
 
-  inline void AddToEventCollection(void*) {}
+  template<class T>
+  inline void AddToEventRecievers(void*, const cpp11::shared_ptr<T>&) {}
 
   template<class W>
   bool DoAutowire(W& slot) {
@@ -201,7 +221,7 @@ public:
       return FindByCast<T>();
 
     // If find has been requested by type, there should be only one match.
-    cpp11::shared_ptr<T>& retVal = *(SharedPtrWrap<T, t_mpType>*)((q->second).get());
+    cpp11::shared_ptr<T>& retVal = *(SharedPtrWrap<T>*)((q->second).get());
     q++;
     if(q != m_byType.end() && q->first == typeName)
       // Ambiguous match, exception:
