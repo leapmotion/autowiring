@@ -15,6 +15,9 @@ Autowirer::Autowirer(const cpp11::shared_ptr<Autowirer>& pParent):
 
 Autowirer::~Autowirer(void)
 {
+  // Explicit deleters to simplify implementation of SharedPtrWrapBase
+  for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); q++)
+    delete q->second;
 }
 
 void Autowirer::AddContextMember(ContextMember* ptr)
