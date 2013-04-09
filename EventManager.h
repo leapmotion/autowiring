@@ -4,6 +4,22 @@
 #include <map>
 
 /// <summary>
+/// Used to identify event recipients
+/// </summary>
+class EventReceiver {
+  virtual ~EventReceiver(void) {
+  }
+};
+
+/// <summary>
+/// Used to identify event managers
+/// </summary>
+class EventManagerBase {
+  virtual ~EventManagerBase(void) {
+  }
+}
+
+/// <summary>
 /// A simple event manager class
 /// </summary>
 /// <param name="T">The event interface type</param>
@@ -11,6 +27,11 @@ template<class T>
 class EventManager
 {
 private:
+  static_assert(
+    cpp11::is_base_of<EventReceiver, T>::value,
+    "Uses of EventManager must be for interfaces that implement EventReceiver"
+  );
+
   typedef std::map<T*, shared_ptr<T> > t_mpType;
   t_mpType m_mp;
 
