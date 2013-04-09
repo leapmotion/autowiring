@@ -70,7 +70,7 @@ class SharedPtrWrap<T, false>:
 {
 public:
   SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p):
-    SharedPtrWrapImpl<T, Mp>(pAutowirer, p)
+    SharedPtrWrapImpl<T>(pAutowirer, p)
   {}
 };
 

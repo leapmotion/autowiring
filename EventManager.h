@@ -1,5 +1,4 @@
 #pragma once
-#include "Autowired.h"
 #include <boost/bind.hpp>
 #include <map>
 
@@ -7,6 +6,7 @@
 /// Used to identify event recipients
 /// </summary>
 class EventReceiver {
+public:
   virtual ~EventReceiver(void) {
   }
 };
@@ -15,16 +15,20 @@ class EventReceiver {
 /// Used to identify event managers
 /// </summary>
 class EventManagerBase {
+public:
   virtual ~EventManagerBase(void) {
   }
-}
+  
+  virtual EventManagerBase& operator+=(cpp11::shared_ptr<EventReceiver>& rhs) = 0;
+};
 
 /// <summary>
 /// A simple event manager class
 /// </summary>
 /// <param name="T">The event interface type</param>
 template<class T>
-class EventManager
+class EventManager:
+  public EventManagerBase
 {
 private:
   static_assert(
@@ -32,27 +36,30 @@ private:
     "Uses of EventManager must be for interfaces that implement EventReceiver"
   );
 
-  typedef std::map<T*, shared_ptr<T> > t_mpType;
+  typedef std::map<T*, cpp11::shared_ptr<T> > t_mpType;
   t_mpType m_mp;
 
 public:
-  /// <summary>
-  /// Adds the specified observer to receive events dispatched from this instace
-  /// </su8mmary>
-  EventManager<T>& operator+=(cpp11::shared_ptr<T> rhs) {
-    // If we already contain the specified rhs, short-circuit.
-    if(m_mp.contains(rhs.get()))
-      return *this;
+  virtual EventManagerBase& operator+=(cpp11::shared_ptr<EventReceiver>& rhs) {
+    EventReceiver* ptr = rhs.get();
+    try {
+      cpp11::shared_ptr<T> casted = cpp11::dynamic_pointer_cast<T, EventReceiver>(rhs);
+      if(casted)
+        return *this += casted;
+    } catch(std::bad_cast&) {
+    }
+    return *this;
   }
 
   /// <summary>
-  /// Convenience method offered when W inherits from T
-  /// </summary>
-  template<class W>
-  EventManager<T>& operator+=(Autowired<W> rhs) {
-    return operator+=(
-      cpp11::static_pointer_cast<T, W>(rhs)
-    );
+  /// Adds the specified observer to receive events dispatched from this instace
+  /// </su8mmary>
+  EventManager<T>& operator+=(cpp11::shared_ptr<T>& rhs) {
+    // If we already contain the specified rhs, short-circuit.
+    cpp11::shared_ptr<T>& location = m_mp[rhs.get()];
+    if(!location)
+      location = rhs;
+    return *this;
   }
 
   // Multi-argument firing:
