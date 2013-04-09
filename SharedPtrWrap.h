@@ -9,9 +9,6 @@ class ContextMember;
 class Object;
 class SharedPtrWrapBase;
 
-template<class Mp>
-void AutowirerErase(Autowirer* pAutowirer, typename Mp::iterator q);
-
 /// <summary>
 /// Base class support functionality for SharedPtrWrap in order to enable template polymorphism
 /// </summary>
@@ -40,14 +37,13 @@ public:
 /// <summary>
 /// Helper class for the two cases of shared ptr--inherited from Object, and not. 
 /// </summary>
-template<class T, class Mp>
+template<class T>
 class SharedPtrWrapImpl:
   public SharedPtrWrapBase,
   public cpp11::shared_ptr<T>
 {
 public:
-  typedef typename Mp::iterator myIter;
-  SharedPtrWrapImpl(cpp11::weak_ptr<Autowirer> pAutowirer, T* p, myIter q):
+  SharedPtrWrapImpl(cpp11::weak_ptr<Autowirer> pAutowirer, T* p):
     SharedPtrWrapBase(pAutowirer),
     cpp11::shared_ptr<T>(p)
   {}
@@ -57,27 +53,24 @@ public:
     // correct version of shared_ptr's destructor gets called.
   }
 
-  myIter m_q;
-
   virtual const std::type_info& GetTypeInfo(void) const {
     return typeid(T);
   }
 };
 
-template<class T, class Mp, bool isPoly = cpp11::is_base_of<Object, T>::value>
+template<class T, bool isPoly = cpp11::is_base_of<Object, T>::value>
 class SharedPtrWrap;
 
 /// <summary>
 /// This class is a generic class intended to wrap a shared pointer
 /// </summary>
-template<class T, class Mp>
-class SharedPtrWrap<T, Mp, false>:
-  public SharedPtrWrapImpl<T, Mp>
+template<class T>
+class SharedPtrWrap<T, false>:
+  public SharedPtrWrapImpl<T>
 {
 public:
-  typedef typename Mp::iterator myIter;
-  SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p, myIter q):
-    SharedPtrWrapImpl<T, Mp>(pAutowirer, p, q)
+  SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p):
+    SharedPtrWrapImpl<T, Mp>(pAutowirer, p)
   {}
 };
 
@@ -90,14 +83,13 @@ public:
 /// known type that both the wrap and the search methods can agree upon as a unified
 /// pointer exchange location.
 /// </remarks>
-template<class T, class Mp>
-class SharedPtrWrap<T, Mp, true>:
-  public SharedPtrWrapImpl<T, Mp>
+template<class T>
+class SharedPtrWrap<T, true>:
+  public SharedPtrWrapImpl<T>
 {
 public:
-  typedef typename Mp::iterator myIter;
-  SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p, myIter q):
-    SharedPtrWrapImpl<T, Mp>(pAutowirer, p, q)
+  SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p):
+    SharedPtrWrapImpl<T>(pAutowirer, p)
   {}
 
   virtual cpp11::shared_ptr<Object> AsObject() {
