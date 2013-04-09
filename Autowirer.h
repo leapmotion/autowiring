@@ -83,12 +83,13 @@ protected:
   /// </summary>
   template<class T>
   cpp11::shared_ptr<T> AddInternal(T* pValue) {
-    t_mpType::iterator q;
+    // Create the wrap:
+    SharedPtrWrap<T>* pWrap = new SharedPtrWrap<T>(m_self, pValue);
+
+    // Add to the map:
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-
-      // Reserve a slot in the map first:
-      q = m_byType.insert(
+      m_byType.insert(
         m_byType.end(),
         t_mpType::value_type(
           std::string(typeid(*pValue).name()),
@@ -99,11 +100,7 @@ protected:
 
     // Create a new shared pointer.  SharedPtrWrapBase auto-eliminates from the
     // map based on the iterator, which obviates a need for an explicit Remove.
-    SharedPtrWrap<T, t_mpType>* pWrap = new SharedPtrWrap<T, t_mpType>(m_self, pValue, q);
     cpp11::shared_ptr<SharedPtrWrapBase> pPtr(pWrap);
-
-    // Assign the value, now that a location is reserved for it
-    q->second = pPtr;
 
     // Notify any autowired field whose autowiring was deferred
     // TODO:  We should also notify any descendant autowiring
@@ -114,11 +111,19 @@ protected:
       else
         r++;
 
-    // We also need to be sure that any existing 
+    // If the value is an event type, we can add it to the collection of event
+    // manager things:
+    AddToEventCollection(pValue);
 
     // Done, return
     return *pWrap;
   }
+
+  void AddToEventCollection(EventReceiver* pEventReceiver) {
+    m_eventReceivers.push_back(pEventReceiver);
+  }
+
+  inline void AddToEventCollection(void*) {}
 
   template<class W>
   bool DoAutowire(W& slot) {
