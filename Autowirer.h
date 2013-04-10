@@ -96,7 +96,7 @@ protected:
       // If the value is an event type, we can add it to the collection of event
       // manager things:
       AddToEventSenders(pValue);
-      AddToEventRecievers(pValue, *pWrap);
+      AddToEventReceivers(pValue, *pWrap);
     }
 
     // Notify any autowired field whose autowiring was deferred
@@ -126,18 +126,21 @@ protected:
   inline void AddToEventSenders(void*) {}
 
   template<class T>
-  void AddToEventRecievers(EventReceiver* pEventReceiver, cpp11::shared_ptr<T>& sharedPtr) {
+  void AddToEventReceivers(EventReceiver* pEventReceiver, cpp11::shared_ptr<T>& sharedPtr) {
     m_eventReceivers.push_back(
       cpp11::static_pointer_cast<EventReceiver, T>(sharedPtr)
     );
 
+    // The cast is a loop invariant; store it here for convenience
+    cpp11::shared_ptr<EventReceiver> casted = cpp11::static_pointer_cast<EventReceiver, T>(sharedPtr);
+
     // Scan the list of compatible senders:
     for(size_t i = 0; i < m_eventSenders.size(); i++)
-      *m_eventSenders[i] += cpp11::static_pointer_cast<EventReceiver, T>(sharedPtr);
+      *m_eventSenders[i] += casted;
   }
 
   template<class T>
-  inline void AddToEventRecievers(void*, const cpp11::shared_ptr<T>&) {}
+  inline void AddToEventReceivers(void*, const cpp11::shared_ptr<T>&) {}
 
   template<class W>
   bool DoAutowire(W& slot) {
