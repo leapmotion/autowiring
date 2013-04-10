@@ -49,6 +49,10 @@ protected:
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes
   // away.
+  // TODO:  Use type_index instead.
+  // It's more efficient to use type_index, here, instead of trying to index directly by
+  // the class name.  A lower bound operation is never required, making this implementation
+  // inefficient.
   typedef std::multimap<std::string, SharedPtrWrapBase*> t_mpType;
   t_mpType m_byType;
   
