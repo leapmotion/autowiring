@@ -131,13 +131,9 @@ protected:
       cpp11::static_pointer_cast<EventReceiver, T>(sharedPtr)
     );
 
-#if 0
     // Scan the list of compatible senders:
     for(size_t i = 0; i < m_eventSenders.size(); i++)
       *m_eventSenders[i] += cpp11::static_pointer_cast<EventReceiver, T>(sharedPtr);
-#else
-#warning "The above code doesn't compile"
-#endif
   }
 
   template<class T>
