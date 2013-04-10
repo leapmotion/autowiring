@@ -55,7 +55,7 @@ if(BUILD_TESTING)
     set(Boost_THREAD_LIBRARY libboost_thread)
     add_library(${Boost_THREAD_LIBRARY} STATIC IMPORTED)
     set_property(TARGET ${Boost_THREAD_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_THREAD_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-
-    target_link_libraries(AutowiringTest Autowiring ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
   endif()
+  
+  target_link_libraries(AutowiringTest Autowiring ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
 endif(BUILD_TESTING)
