@@ -3,6 +3,7 @@
 #include "Autowired.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
+#include "ThreadStatusMaintainer.h"
 #include <boost/thread.hpp>
 #include <algorithm>
 #include <memory>
@@ -44,6 +45,9 @@ cpp11::shared_ptr<CoreContext> CoreContext::NewContext(const cpp11::shared_ptr<C
 void CoreContext::InitiateCoreThreads(void) {
   // Self-reference to ensure the context is not destroyed until all threads are gone
   cpp11::shared_ptr<CoreContext> self = cpp11::static_pointer_cast<CoreContext, Autowirer>(m_self.lock());
+
+  // Because the caller was able to invoke a method on this CoreContext, it must have
+  // a shared_ptr to it.  Thus, we can assert that the above lock operation succeeded.
   ASSERT(self);
 
   {
@@ -60,41 +64,11 @@ void CoreContext::InitiateCoreThreads(void) {
 
   // Set our stop flag before kicking off any threads:
   m_shouldStop = false;
-  
-  class Lambda {
-  public:
-    Lambda(CoreThread* pCur, const cpp11::shared_ptr<CoreContext>& outstanding, const cpp11::shared_ptr<CoreContext>& self):
-      pCur(pCur),
-      outstanding(outstanding),
-      self(self)
-    {}
-
-    CoreThread* pCur;
-    cpp11::shared_ptr<CoreContext> outstanding;
-    cpp11::shared_ptr<CoreContext> self;
-
-    void operator()() {
-      ASSERT(pCur);
-      pCur->DelayUntilReady();
-      pCur->Run();
-    }
-  };
 
   // Hold another lock to prevent m_threads from being modified while we sit on it
   lock_guard<mutex> lk(m_coreLock);
-  for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); q++) {
-    // The following magic is pretty complicated.  It's a lambda, and it has a copy
-    // capture on the "outstanding" pointer.  This means that we will hold a reference
-    // for as long as there are active threads running.  As soon as the last active
-    // thread disappears, the context starts the destruction sequence, _unless_
-    // there's someone out there who has an outstanding reference to this context.
-    //
-    // As a consequence, in order to prevent memory leaks, it's important that members
-    // of this context only retain weak_ptr to their enclosing context.  If any
-    // members of this context have a cpp11::shared_ptr to this context, the result will be a
-    // cyclic reference and a subsequent memory leak.
-    boost::thread(Lambda(*q, m_outstanding, self));
-  }
+  for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); q++)
+    (*q)->Start();
 }
 
 void CoreContext::SignalShutdown(void) {

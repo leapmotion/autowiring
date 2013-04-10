@@ -83,6 +83,19 @@ public:
   // Accessor methods:
   bool ShouldStop(void) const {return m_shouldStop;}
 
+  /// <summary>
+  /// Increments the total number of contexts still outstanding
+  /// </summary>
+  /// <remarks>
+  /// This is an indirect incrementation routine.  The count will be incremented for as
+  /// long as the returned shared_ptr is not destroyed.  Once it's destroyed, the count
+  /// is decremented.  The caller is encouraged not to copy the return value, as doing
+  /// so can give spurious values for the current number of outstanding threads.
+  /// </remarks>
+  cpp11::shared_ptr<CoreContext> IncrementOutstandingThreadCount(void) {
+    return m_outstanding;
+  }
+
   template<class T>
   cpp11::shared_ptr<T> Add(T* pValue) {
     // Based on the above, we now decide where to send this add request.  The
