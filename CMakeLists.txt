@@ -24,6 +24,8 @@ set(
   Object.h
   SharedPtrWrap.cpp
   SharedPtrWrap.h
+  ThreadStatusMaintainer.cpp
+  ThreadStatusMaintainer.h
 )
 
 set(

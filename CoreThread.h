@@ -24,7 +24,8 @@ public:
   /// <param name="pName">An optional name for this thread</param>
   CoreThread(const char* pName = nullptr):
     ContextMember(pName),
-    m_stop(true)
+    m_stop(true),
+    m_running(false)
   {
   }
 
@@ -34,11 +35,15 @@ private:
   boost::mutex m_stopLock;
   boost::condition_variable m_stopCondition;
   bool m_stop;
+  bool m_running;
+
+  friend class ThreadStatusMaintainer;
 
 public:
   // Accessor methods:
   bool ShouldStop(void) const;
   bool IsReady(void) const {return !m_stop;}
+  bool IsRunning(void) const {return m_running;}
 
   /// <summary>
   /// A convenience method that will sleep this thread for the specified duration
@@ -68,6 +73,14 @@ public:
     m_stopCondition.wait(lk, Lambda(this));
     return !context.expired();
   }
+
+  /// <summary>
+  /// Causes a new thread to be created in which the Run method will be invoked
+  /// </summary>
+  /// <returns>True to indicate that the thread was started successfully</returns>
+  /// <remarks>
+  /// Note that this operation has an inherit race condition.
+  bool Start(void);
 
   /// <summary>
   /// Begins the core thread
