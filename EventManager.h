@@ -41,7 +41,6 @@ private:
 
 public:
   virtual EventManagerBase& operator+=(cpp11::shared_ptr<EventReceiver>& rhs) {
-    EventReceiver* ptr = rhs.get();
     try {
       cpp11::shared_ptr<T> casted = cpp11::dynamic_pointer_cast<T, EventReceiver>(rhs);
       if(casted)
