@@ -62,22 +62,46 @@ public:
   }
 
   // Multi-argument firing:
+  template<class Arg1, class Ty1>
+  void FireAsSingle(void (T::*fnPtr)(Arg1 arg1), const Ty1& ty1) const {
+    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
+      ((q->second.get())->*fnPtr)(ty1);
+  }
+  
   template<class Arg1, class Arg2, class Ty1, class Ty2>
-  void FireAsSingle(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2), const Ty1& ty1, const Ty2& ty2) {
-    for(typename t_mpType::iterator q = m_mp.begin(); q != m_mp.end(); q++)
+  void FireAsSingle(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2), const Ty1& ty1, const Ty2& ty2) const {
+    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
       ((q->second.get())->*fnPtr)(ty1, ty2);
   }
 
-  template<class Arg1, class Arg2>
-  cpp11::function<void (Arg1, Arg2)> Fire(void (T::*fnPtr)(Arg1, Arg2)) {
-#if LAMBDAS_AVAILABLE
-    // Done to prevent warning spam on MSVC
+  
+  // Two-parenthetical invocations
+  template<class Arg1>
+  cpp11::function<void (Arg1)> Fire(void (T::*fnPtr)(Arg1)) const {
     return
+#if LAMBDAS_AVAILABLE
+      [this, fnPtr] (Arg1 arg1) {
+        FireAsSingle(fnPtr, arg1);
+      };
+#else
+      boost::bind(
+        boost::bind(
+          &EventManager<T>::FireAsSingle<Arg1, Arg1>,
+          this
+        ),
+        fnPtr
+      );
+#endif
+  }
+
+  template<class Arg1, class Arg2>
+  cpp11::function<void (Arg1, Arg2)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
+    return
+#if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
         FireAsSingle(fnPtr, arg1, arg2);
       };
 #else
-    return
       boost::bind(
         boost::bind(
           &EventManager<T>::FireAsSingle<Arg1, Arg2, Arg1, Arg2>,
@@ -85,7 +109,6 @@ public:
         ),
         fnPtr
       );
-    
 #endif
   }
 };
