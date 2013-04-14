@@ -18,7 +18,6 @@ CoreContext::CoreContext(cpp11::shared_ptr<CoreContext> pParent):
   m_refCount(0)
 {
   ASSERT(pParent.get() != this);
-  m_outstanding = cpp11::shared_ptr<CoreContext>(this, NullOp<CoreContext*>);
 }
 
 CoreContext::~CoreContext(void) {
@@ -29,6 +28,22 @@ CoreContext::~CoreContext(void) {
     !s_curContext.get()->use_count() ||
     s_curContext.get()->get() != this
   );
+}
+
+cpp11::shared_ptr<CoreContext> CoreContext::IncrementOutstandingThreadCount(void) {
+  cpp11::shared_ptr<CoreContext> retVal = m_outstanding.lock();
+  if(!m_outstanding.expired())
+    return retVal;
+
+  boost::lock_guard<boost::mutex> lk(m_outstandingLock);
+  retVal = cpp11::shared_ptr<CoreContext>(
+    this,
+    [this] (CoreContext*) {
+      this->m_stop.notify_all();
+    }
+  );
+  m_outstanding = retVal;
+  return retVal;
 }
 
 cpp11::shared_ptr<CoreContext> CoreContext::NewContext(const cpp11::shared_ptr<CoreContext>& pParent) {
