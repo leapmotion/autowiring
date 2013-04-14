@@ -40,6 +40,7 @@ set(
   ScopeTest.h
   ScopeTest.cpp
   TestFixtures/SimpleObject.h
+  TestFixtures/SimpleThreaded.h
   TestFixtures/MultiInherit.h
 )
 

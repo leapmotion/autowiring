@@ -3,6 +3,10 @@
 #include "Autowired.h"
 #include "CoreContext.h"
 #include "TestFixtures/SimpleObject.h"
+#include "TestFixtures/SimpleThreaded.h"
+#include <boost/chrono.hpp>
+
+using boost::chrono::milliseconds;
 
 TEST_F(ContextCleanupTest, VerifyContextDtor) {
   cpp11::weak_ptr<CoreContext> contextVerifier;
@@ -50,4 +54,28 @@ TEST_F(ContextCleanupTest, VerifyContextDtor) {
 
   // The object should be gone, but will still be around if the context still exists:
   EXPECT_TRUE(objVerifier.expired()) << "SimpleObject still had " << objVerifier.use_count() << " reference(s)";
+}
+
+TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
+  // Create a context that will be used to test the cleanup:
+  AutoRequired<CoreContext> context;
+  context->SetCurrent();
+
+  // Add a simple thread object
+  context->Add<SimpleThreaded>();
+
+  // Kick off the operation
+  context->InitiateCoreThreads();
+
+  // No exit initially:
+  EXPECT_FALSE(context->Wait(milliseconds(10))) << "Core context completed prematurely";
+
+  Autowired<SimpleThreaded> simple;
+  ASSERT_TRUE(simple) << "Couldn't autowire the SimpleThreaded object";
+
+  // Cause the thread to exit:
+  simple->m_cond.notify_all();
+
+  // Now we verify that exiting happens promptly:
+  EXPECT_TRUE(context->Wait(milliseconds(100))) << "Context did not exit in a timely fashion";
 }

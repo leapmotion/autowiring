@@ -70,7 +70,8 @@ private:
 
   // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
   // Destructor does nothing; this is by design.
-  cpp11::shared_ptr<CoreContext> m_outstanding;
+  boost::mutex m_outstandingLock;
+  cpp11::weak_ptr<CoreContext> m_outstanding;
 
   // Actual core threads:
   typedef list<CoreThread*> t_threadList;
@@ -92,9 +93,7 @@ public:
   /// is decremented.  The caller is encouraged not to copy the return value, as doing
   /// so can give spurious values for the current number of outstanding threads.
   /// </remarks>
-  cpp11::shared_ptr<CoreContext> IncrementOutstandingThreadCount(void) {
-    return m_outstanding;
-  }
+  cpp11::shared_ptr<CoreContext> IncrementOutstandingThreadCount(void);
 
   template<class T>
   cpp11::shared_ptr<T> Add(T* pValue) {
@@ -143,21 +142,24 @@ public:
   /// </summary>
   void Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_coreLock);
-
-    class Lambda {
-    public:
-      Lambda(CoreContext* pContext):
-        pContext(pContext)
-      {}
-
-      CoreContext* pContext;
-
-      bool operator()() {
-        return pContext->m_outstanding.use_count() == 1;
+    m_stop.wait(
+      lk,
+      [this] () {
+        return this->m_outstanding.expired();
       }
-    };
+    );
+  }
 
-    m_stop.wait(lk, Lambda(this));
+  template<class Rep, class Period>
+  bool Wait(boost::chrono::duration<Rep, Period>& duration) {
+    boost::unique_lock<boost::mutex> lk(m_coreLock);
+    return m_stop.wait_for(
+      lk,
+      duration,
+      [this] () {
+        return this->m_outstanding.expired();
+      }
+    );
   }
 
   /// <summary>

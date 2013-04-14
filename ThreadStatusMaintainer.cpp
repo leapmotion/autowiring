@@ -4,9 +4,9 @@
 #include "CoreThread.h"
 
 ThreadStatusMaintainer::ThreadStatusMaintainer(CoreThread* pThread, const cpp11::shared_ptr<CoreContext>& context):
-    pThread(pThread),
-    context(context),
-    outstanding(context->IncrementOutstandingThreadCount())
+  pThread(pThread),
+  context(context),
+  outstanding(context->IncrementOutstandingThreadCount())
 {
 }
 
