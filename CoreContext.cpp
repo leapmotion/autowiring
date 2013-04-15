@@ -92,10 +92,20 @@ void CoreContext::SignalShutdown(void) {
     if(--m_refCount)
       // Someone else still depends on this
       return;
-  }
 
-  m_shouldStop = true;
-  m_stopping.notify_all();
+    // Global context is now "stop":
+    m_shouldStop = true;
+    m_stopping.notify_all();
+    
+    // Also pass notice to all children:
+    std::for_each(
+      m_threads.begin(),
+      m_threads.end(),
+      [] (CoreThread* pThread) {
+        pThread->Stop();
+      }
+    );
+  }
 
   if(m_pParent)
     // Signal parent that it's time to shut down
