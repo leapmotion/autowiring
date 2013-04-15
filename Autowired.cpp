@@ -19,9 +19,11 @@ cpp11::shared_ptr<CoreContext> NewContextThunk(cpp11::shared_ptr<CoreContext>& p
 
 // Autowired CoreContext:
 void AutowiredCreator<CoreContext, false>::Create() {
-  // Same as before--we don't allow creation on a non-null entity
-  if(*this)
-    return;
+  // We allow creation on a CoreContext
+  // TODO:  Evaluate whether this idiom is a bad one
+  // Create will not create in any other circumstance if the autowired
+  // member is already set, but we do so here unconditionally.  Is this
+  // a good idea?
 
   // Typically we must do an m_context->Add, but that's not needed here.
   // All we have to do is to create a context.  Contexts are required to
