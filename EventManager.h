@@ -73,6 +73,12 @@ public:
     for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
       ((q->second.get())->*fnPtr)(ty1, ty2);
   }
+  
+  template<class Arg1, class Arg2, class Arg3, class Ty1, class Ty2, class Ty3>
+  void FireAsSingle(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3) const {
+    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
+      ((q->second.get())->*fnPtr)(ty1, ty2, ty3);
+  }
 
   
   // Two-parenthetical invocations
@@ -100,6 +106,24 @@ public:
 #if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
         FireAsSingle(fnPtr, arg1, arg2);
+      };
+#else
+      boost::bind(
+        boost::bind(
+          &EventManager<T>::FireAsSingle<Arg1, Arg2, Arg1, Arg2>,
+          this
+        ),
+        fnPtr
+      );
+#endif
+  }
+
+  template<class Arg1, class Arg2, class Arg3>
+  cpp11::function<void (Arg1, Arg2, Arg3)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
+    return
+#if LAMBDAS_AVAILABLE
+      [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
+        FireAsSingle(fnPtr, arg1, arg2, arg3);
       };
 #else
       boost::bind(
