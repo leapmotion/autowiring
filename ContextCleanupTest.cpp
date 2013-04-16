@@ -74,7 +74,10 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   ASSERT_TRUE(simple) << "Couldn't autowire the SimpleThreaded object";
 
   // Cause the thread to exit:
-  simple->m_cond.notify_all();
+  {
+    boost::lock_guard<boost::mutex> lk(simple->m_condLock);
+    simple->m_cond.notify_all();
+  }
 
   // Now we verify that exiting happens promptly:
   EXPECT_TRUE(context->Wait(milliseconds(100))) << "Context did not exit in a timely fashion";

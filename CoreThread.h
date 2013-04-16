@@ -55,23 +55,8 @@ public:
   /// </summary>
   bool DelayUntilReady(void) {
     boost::unique_lock<boost::mutex> lk(m_stopLock);
-    
-    class Lambda {
-    public:
-      Lambda(CoreThread* pThread):
-        pThread(pThread)
-      {}
-
-      CoreThread* pThread;
-
-      bool operator()() {
-        return pThread->IsReady();
-      }
-    };
-
-    cpp11::weak_ptr<CoreContext> context = m_context;
-    m_stopCondition.wait(lk, Lambda(this));
-    return !context.expired();
+    m_stopCondition.wait(lk, [this] () {return IsReady();});
+    return !m_context.expired();
   }
 
   /// <summary>
@@ -96,6 +81,8 @@ public:
   /// </summary>
   void Ready(void) {
     m_stop = false;
+
+    boost::lock_guard<boost::mutex> lk(m_stopLock);
     m_stopCondition.notify_all();
   }
 
@@ -105,6 +92,7 @@ public:
   /// </summary>
   virtual void Stop(void) {
     m_stop = true;
+    boost::lock_guard<boost::mutex> lk(m_stopLock);
     m_stopCondition.notify_all();
   }
 };
