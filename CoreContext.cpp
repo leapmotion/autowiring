@@ -39,6 +39,7 @@ cpp11::shared_ptr<CoreContext> CoreContext::IncrementOutstandingThreadCount(void
   retVal = cpp11::shared_ptr<CoreContext>(
     this,
     [this] (CoreContext*) {
+      boost::lock_guard<boost::mutex> lk(this->m_coreLock);
       this->m_stop.notify_all();
     }
   );
@@ -94,8 +95,11 @@ void CoreContext::SignalShutdown(void) {
       return;
 
     // Global context is now "stop":
-    m_shouldStop = true;
-    m_stopping.notify_all();
+    {
+      boost::lock_guard<boost::mutex> lk(this->m_coreLock);
+      m_shouldStop = true;
+      m_stopping.notify_all();
+    }
     
     // Also pass notice to all children:
     std::for_each(
