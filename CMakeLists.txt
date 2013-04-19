@@ -11,6 +11,8 @@ set(
   Autowirer.cpp
   Autowirer.h
   CMakeLists.txt
+  ContextMap.h
+  ContextMap.cpp
   ContextMember.cpp
   ContextMember.h
   CoreContext.cpp
@@ -33,6 +35,8 @@ set(
   TestMain.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
+  ContextMapTest.h
+  ContextMapTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
   MultiInheritTest.h
