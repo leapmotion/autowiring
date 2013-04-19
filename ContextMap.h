@@ -37,6 +37,9 @@ private:
   }
 
 public:
+  // Accessor methods:
+  size_t size(void) const {return m_contexts.size();}
+
   /// <summary>
   /// Adds a new context to the map
   /// </summary>
