@@ -38,8 +38,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
   weak_ptr<CoreContext> weakContext;
 
   {
-    Autowired<CoreContext> context;
-    context.Create();
+    Autowired<CoreContext> context(true);
 
     // Obtain a weak pointer of our own, and add to the context:
     weakContext = context;
@@ -81,4 +80,35 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     cpp11::shared_ptr<CoreContext> notFound = mp.Find("context1");
     EXPECT_FALSE(notFound) << "Context was not properly evicted from the map";
   }
+}
+
+TEST_F(ContextMapTest, AdjacentCleanupTest) {
+  ContextMap<string> mp;
+  weak_ptr<CoreContext> outerWeak;
+  weak_ptr<CoreContext> innerWeak;
+
+  // Add two contexts, and let one go out of scope
+  Autowired<CoreContext> outer(true);
+  mp.Add("0", outer);
+  outerWeak = outer;
+
+  {
+    Autowired<CoreContext> inner(true);
+    mp.Add("1", inner);
+    innerWeak = inner;
+
+    // Verify that we can find both contexts
+    cpp11::shared_ptr<CoreContext> outerSearched = mp.Find("0");
+    ASSERT_TRUE(outerSearched) << "Outer context just added, but couldn't be found";
+
+    cpp11::shared_ptr<CoreContext> innerSearched = mp.Find("1");
+    ASSERT_TRUE(innerSearched) << "Inner context just added, but couldn't be found";
+  }
+
+  // Inner should be 404 by now
+  ASSERT_TRUE(innerWeak.expired()) << "Unexpected outstanding reference to the inner context";
+
+  // Try to find the outer context.  This should evict the inner context.
+  mp.Find("0");
+  ASSERT_EQ(1, mp.size()) << "Proximity eviction didn't function as expected";
 }
