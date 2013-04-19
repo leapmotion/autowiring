@@ -21,8 +21,14 @@
 using std::list;
 
 class ContextMember;
+class CoreContext;
 class CoreThread;
 class GlobalCoreContext;
+
+/// <summary>
+/// Convenient access to the currently active context stored in the global context
+/// </summary>
+cpp11::shared_ptr<CoreContext> GetCurrentContext(void);
 
 /// <summary>
 /// This class is used to determine whether all core threads have exited
@@ -104,9 +110,19 @@ public:
     return retVal;
   }
 
+  /// <summary>
+  /// Similar to the alternative overloaded Add method, except makes this context current before construction
   template<class T>
   cpp11::shared_ptr<T> Add(void) {
-    return Add(new T);
+    shared_ptr<CoreContext> prior = SetCurrent();
+    try {
+      cpp11::shared_ptr<T> retVal = Add(new T);
+      prior->SetCurrent();
+      return retVal;
+    } catch(std::exception& e) {
+      prior->SetCurrent();
+      throw e;
+    }
   }
 
   /// <summary>
@@ -172,8 +188,9 @@ public:
   /// <summary>
   /// This makes this core context current.
   /// </summary>
-  void SetCurrent(void) {
-    SetCurrent(
+  /// <returns>The previously current context</returns>
+  cpp11::shared_ptr<CoreContext> SetCurrent(void) {
+    return SetCurrent(
       cpp11::static_pointer_cast<CoreContext, Autowirer>(
         m_self.lock()
       )
@@ -183,10 +200,12 @@ public:
   /// <summary>
   /// This makes a specific core context current
   /// </summary>
-  static void SetCurrent(const cpp11::shared_ptr<CoreContext>& context) {
+  /// <returns>The previously current context</returns>
+  static cpp11::shared_ptr<CoreContext> SetCurrent(const cpp11::shared_ptr<CoreContext>& context) {
     ASSERT(context);
-    cpp11::shared_ptr<CoreContext>* self = new cpp11::shared_ptr<CoreContext>(context);
-    s_curContext.reset(self);
+    cpp11::shared_ptr<CoreContext> retVal = GetCurrentContext();
+    s_curContext.reset(new cpp11::shared_ptr<CoreContext>(context));
+    return retVal;
   };
 
   /// <summary>
@@ -214,8 +233,3 @@ public:
   /// </remarks>
   static cpp11::shared_ptr<CoreContext> CurrentContext(void);
 };
-
-/// <summary>
-/// Convenient access to the currently active context stored in the global context
-/// </summary>
-cpp11::shared_ptr<CoreContext> GetCurrentContext(void);

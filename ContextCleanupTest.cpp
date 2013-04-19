@@ -73,6 +73,9 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   Autowired<SimpleThreaded> simple;
   ASSERT_TRUE(simple) << "Couldn't autowire the SimpleThreaded object";
 
+  // Context shutdown
+  context->SignalShutdown();
+
   // Cause the thread to exit:
   {
     boost::lock_guard<boost::mutex> lk(simple->m_condLock);
