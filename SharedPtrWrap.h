@@ -35,43 +35,26 @@ public:
 };
 
 /// <summary>
-/// Helper class for the two cases of shared ptr--inherited from Object, and not. 
-/// </summary>
-template<class T>
-class SharedPtrWrapImpl:
-  public SharedPtrWrapBase,
-  public cpp11::shared_ptr<T>
-{
-public:
-  SharedPtrWrapImpl(cpp11::weak_ptr<Autowirer> pAutowirer, T* p):
-    SharedPtrWrapBase(pAutowirer),
-    cpp11::shared_ptr<T>(p)
-  {}
-
-  ~SharedPtrWrapImpl(void) {
-    // The existence of this virtual function will ensure that the
-    // correct version of shared_ptr's destructor gets called.
-  }
-
-  virtual const std::type_info& GetTypeInfo(void) const {
-    return typeid(T);
-  }
-};
-
-template<class T, bool isPoly = cpp11::is_base_of<Object, T>::value>
-class SharedPtrWrap;
-
-/// <summary>
 /// This class is a generic class intended to wrap a shared pointer
 /// </summary>
-template<class T>
-class SharedPtrWrap<T, false>:
-  public SharedPtrWrapImpl<T>
+template<class T, bool isPoly = cpp11::is_base_of<Object, T>::value>
+class SharedPtrWrap:
+  public SharedPtrWrapBase,
+  public cpp11::shared_ptr<T>
 {
 public:
   SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p):
     SharedPtrWrapImpl<T>(pAutowirer, p)
   {}
+    
+  SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, cpp11::shared_ptr<T>& p):
+    SharedPtrWrapBase(pAutowirer),
+    cpp11::shared_ptr<T>(p)
+  {}
+
+  virtual const std::type_info& GetTypeInfo(void) const {
+    return typeid(T);
+  }
 };
 
 /// <summary>
@@ -85,11 +68,15 @@ public:
 /// </remarks>
 template<class T>
 class SharedPtrWrap<T, true>:
-  public SharedPtrWrapImpl<T>
+  public SharedPtrWrap<T, false>
 {
 public:
   SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p):
-    SharedPtrWrapImpl<T>(pAutowirer, p)
+    SharedPtrWrap<T, false>(pAutowirer, p)
+  {}
+    
+  SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, cpp11::shared_ptr<T>& p):
+    SharedPtrWrap<T, false>(pAutowirer, p)
   {}
 
   virtual cpp11::shared_ptr<Object> AsObject() {

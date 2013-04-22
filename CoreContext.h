@@ -143,28 +143,25 @@ public:
   /// </remarks>
   cpp11::shared_ptr<CoreContext> IncrementOutstandingThreadCount(void);
 
+  /// <summary>
+  /// Adds the specified value without creating a new shared pointer for that value
+  /// </summary>
   template<class T>
-  cpp11::shared_ptr<T> Add(T* pValue) {
-    // Based on the above, we now decide where to send this add request.
-    cpp11::shared_ptr<T> retVal = AddInternal(pValue);
-    AddCoreThread(pValue);
-    return retVal;
+  void Add(cpp11::shared_ptr<T>& value) {
+    Autowirer::Add(value);
+    AddCoreThread(value.get());
   }
 
   /// <summary>
   /// Similar to the alternative overloaded Add method, except makes this context current before construction
+  /// and creates a new shared_ptr for the constructed object
   /// </summary>
   template<class T>
   cpp11::shared_ptr<T> Add(void) {
-    shared_ptr<CoreContext> prior = SetCurrent();
-    try {
-      cpp11::shared_ptr<T> retVal = Add(new T);
-      prior->SetCurrent();
-      return retVal;
-    } catch(std::exception& e) {
-      prior->SetCurrent();
-      throw e;
-    }
+    CurrentContextPusher pusher(this);
+    cpp11::shared_ptr<T> retVal(new T);
+    Add(retVal);
+    return retVal;
   }
 
   /// <summary>
