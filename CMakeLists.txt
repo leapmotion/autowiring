@@ -41,6 +41,8 @@ set(
   ContextMapTest.cpp
   CurrentContextPusherTest.h
   CurrentContextPusherTest.cpp
+  DependentContextTest.h
+  DependentContextTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
   MultiInheritTest.h
