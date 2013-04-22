@@ -19,6 +19,8 @@ set(
   CoreContext.h
   CoreThread.cpp
   CoreThread.h
+  CurrentContextPusher.cpp
+  CurrentContextPusher.h
   EventManager.h
   InstantiatorLink.h  
   GlobalCoreContext.cpp
@@ -37,6 +39,8 @@ set(
   ContextCleanupTest.cpp
   ContextMapTest.h
   ContextMapTest.cpp
+  CurrentContextPusherTest.h
+  CurrentContextPusherTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
   MultiInheritTest.h
