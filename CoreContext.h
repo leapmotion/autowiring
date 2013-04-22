@@ -84,8 +84,19 @@ public:
     //  5) DependentContext ctor is called, autowires in the current context into m_context
     //  6) pusher's dtor is called, resets the current context
     cpp11::shared_ptr<CoreContext> dependent = Create();
-    CurrentContextPusher pusher(dependent.get());
-    return new DependentContext<T>;
+    return
+      CurrentContextPusher(dependent.get()),
+      new DependentContext<T>;
+  }
+  
+  /// <summary>
+  /// Virtually identical to CreateDependentContext, except adds the members of T to this context
+  /// </summary>
+  template<class T>
+  DependentContext<T>* AugmentContext(void) {
+    return
+      CurrentContextPusher(this),
+      new DependentContext<T>();
   }
 
 private:
