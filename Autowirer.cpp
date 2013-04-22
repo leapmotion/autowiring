@@ -38,5 +38,5 @@ void Autowirer::AddContextMember(ContextMember* ptr)
 }
 
 cpp11::shared_ptr<CoreContext> CreateContextThunk(void) {
-  return CoreContext::NewContext();
+  return CoreContext::CurrentContext()->Create();
 }

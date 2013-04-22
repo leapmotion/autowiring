@@ -47,9 +47,12 @@ cpp11::shared_ptr<CoreContext> CoreContext::IncrementOutstandingThreadCount(void
   return retVal;
 }
 
-cpp11::shared_ptr<CoreContext> CoreContext::NewContext(const cpp11::shared_ptr<CoreContext>& pParent) {
+cpp11::shared_ptr<CoreContext> CoreContext::Create(void) {
   // Create the context, first
-  CoreContext* pContext(new CoreContext(pParent));
+  CoreContext* pContext =
+    new CoreContext(
+      cpp11::static_pointer_cast<CoreContext, Autowirer>(m_self.lock())
+    );
 
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.

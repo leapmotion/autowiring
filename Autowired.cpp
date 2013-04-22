@@ -10,11 +10,11 @@ DestroyTracker::DestroyTracker(void):
 }
     
 cpp11::shared_ptr<CoreContext> NewContextThunk(void) {
-  return CoreContext::NewContext();
+  return CoreContext::CurrentContext()->Create();
 }
 
 cpp11::shared_ptr<CoreContext> NewContextThunk(cpp11::shared_ptr<CoreContext>& pParent) {
-  return CoreContext::NewContext(pParent);
+  return pParent->Create();
 }
 
 // Autowired CoreContext:
