@@ -78,29 +78,38 @@ protected:
   void erase(t_mpName::iterator q) {
     m_byName.erase(q);
   }
-
+  
   /// <summary>
-  /// Final addition method that inserts a generic object to the m_byType map
+  /// Addition method which simply uses an already-constructed SharedPtrWrap
   /// </summary>
   template<class T>
-  cpp11::shared_ptr<T> AddInternal(T* pValue) {
-    // Create the wrap:
-    SharedPtrWrap<T>* pWrap = new SharedPtrWrap<T>(m_self, pValue);
-
+  cpp11::shared_ptr<T> AddInternal(SharedPtrWrap<T>* pWrap) {
+  }
+  
+  /// Adds an object of any kind to the IOC container
+  /// </summary>
+  /// <param name="value">The member to be added</param>
+  /// <remarks>
+  /// It's safe to allow the returned shared_ptr to go out of scope; the core context
+  /// will continue to hold a reference to it until it is destroyed
+  /// </remarks>
+  template<class T>
+  void AddInternal(cpp11::shared_ptr<T> value) {
     // Add to the map:
     {
+      SharedPtrWrap<T>* pWrap = new SharedPtrWrap<T>(m_self, value);
       boost::lock_guard<boost::mutex> lk(m_lock);
       m_byType.insert(
         t_mpType::value_type(
-          std::string(typeid(*pValue).name()),
+          std::string(typeid(*value.get()).name()),
           pWrap
         )
       );
 
       // If the value is an event type, we can add it to the collection of event
       // manager things:
-      AddToEventSenders(pValue);
-      AddToEventReceivers(pValue, *pWrap);
+      AddToEventSenders(value.get());
+      AddToEventReceivers(value.get(), value);
     }
 
     // Notify any autowired field whose autowiring was deferred
@@ -115,9 +124,6 @@ protected:
       else
         r++;
     }
-
-    // Done, return
-    return *pWrap;
   }
 
   void AddToEventSenders(EventManagerBase* pSender) {
@@ -171,16 +177,14 @@ public:
   /// Adds an object of any kind to the IOC container
   /// </summary>
   /// <param name="pContextMember">The member which was added</param>
-  /// <return>The shared pointer which contains the context member.</return>
   /// <remarks>
   /// It's safe to allow the returned shared_ptr to go out of scope; the core context
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
   template<class T>
-  cpp11::shared_ptr<T> Add(T* pValue) {
-    cpp11::shared_ptr<T> retVal = Autowirer::Add(pValue);
-    AddContextMember(&retVal);
-    return retVal;
+  void Add(cpp11::shared_ptr<T> value) {
+    AddInternal(value);
+    AddContextMember(value.get());
   }
 
   /// <summary>
