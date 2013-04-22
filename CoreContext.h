@@ -145,8 +145,7 @@ public:
 
   template<class T>
   cpp11::shared_ptr<T> Add(T* pValue) {
-    // Based on the above, we now decide where to send this add request.  The
-    // reinterpret_cast
+    // Based on the above, we now decide where to send this add request.
     cpp11::shared_ptr<T> retVal = AddInternal(pValue);
     AddCoreThread(pValue);
     return retVal;
@@ -154,6 +153,7 @@ public:
 
   /// <summary>
   /// Similar to the alternative overloaded Add method, except makes this context current before construction
+  /// </summary>
   template<class T>
   cpp11::shared_ptr<T> Add(void) {
     shared_ptr<CoreContext> prior = SetCurrent();
