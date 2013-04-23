@@ -58,7 +58,7 @@ public:
       q != m_contexts.end() &&
       q->first == key
     )
-      throw std::exception("Specified key is already associated with another context");
+      throw std::runtime_error("Specified key is already associated with another context");
     q = m_contexts.insert(q, typename t_mpType::value_type(key, context));
     ProximityCheck(q);
   }
