@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _CORECONTEXT_H
+#define _CORECONTEXT_H
 #include "Autowirer.h"
 #include "CoreThread.h"
 #include "CurrentContextPusher.h"
@@ -86,7 +87,7 @@ public:
     cpp11::shared_ptr<CoreContext> dependent = Create();
     return
       CurrentContextPusher(dependent.get()),
-      new DependentContext<T>;
+      new DependentContext<T>(dependent);
   }
   
   /// <summary>
@@ -273,3 +274,4 @@ public:
   /// </remarks>
   static cpp11::shared_ptr<CoreContext> CurrentContext(void);
 };
+#endif

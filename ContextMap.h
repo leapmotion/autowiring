@@ -6,6 +6,8 @@
 
 class CoreContext;
 
+extern cpp11::shared_ptr<CoreContext> NewContextThunk(void);
+
 /// <summary>
 /// A context map allows the management of semitransient contexts
 /// </summary>
@@ -24,11 +26,11 @@ template<class Key>
 class ContextMap
 {
 private:
-  typedef std::map<typename Key, cpp11::weak_ptr<CoreContext> > t_mpType;
+  typedef std::map<Key, cpp11::weak_ptr<CoreContext> > t_mpType;
   boost::mutex m_lk;
   t_mpType m_contexts;
 
-  void ProximityCheck(typename t_mpType::iterator q) {
+  void ProximityCheck(typename ContextMap<Key>::t_mpType::iterator q) {
     if(
       ++q != m_contexts.end() &&
       q->second.expired()
@@ -51,13 +53,13 @@ public:
   /// </remarks>
   void Add(const Key& key, cpp11::shared_ptr<CoreContext>& context) {
     boost::lock_guard<boost::mutex> lk(m_lk);
-    t_mpType::iterator q = m_contexts.lower_bound(key);
+    typename t_mpType::iterator q = m_contexts.lower_bound(key);
     if(
       q != m_contexts.end() &&
       q->first == key
     )
       throw std::exception("Specified key is already associated with another context");
-    q = m_contexts.insert(q, t_mpType::value_type(key, context));
+    q = m_contexts.insert(q, typename t_mpType::value_type(key, context));
     ProximityCheck(q);
   }
 
@@ -68,7 +70,7 @@ public:
     cpp11::shared_ptr<CoreContext> retVal;
 
     boost::lock_guard<boost::mutex> lk(m_lk);
-    t_mpType::iterator q = m_contexts.lower_bound(key);
+    typename t_mpType::iterator q = m_contexts.lower_bound(key);
     if(q != m_contexts.end()) {
       if(q->first == key)
         retVal = q->second.lock();
@@ -86,14 +88,14 @@ public:
 
     // Lock and lookup:
     boost::lock_guard<boost::mutex> lk(m_lk);
-    t_mpType::iterator q = m_contexts.lower_bound(key);
+    typename t_mpType::iterator q = m_contexts.lower_bound(key);
     if(
       q == m_contexts.end() ||
       q->first != key ||
       !(retVal = q->second.lock())
     ) {
       // Not present, create and return:
-      retVal.reset(new CoreContext);
+      retVal = NewContextThunk();
       q = m_contexts.insert(q, t_mpType::value_type(key, retVal));
     }
 
