@@ -21,6 +21,7 @@ set(
   CoreThread.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
+  DependentContext.h
   EventManager.h
   InstantiatorLink.h  
   GlobalCoreContext.cpp
