@@ -26,7 +26,7 @@ TEST_F(DependentContextTest, ValidateMembership) {
 
   {
     // Try creating a dependent context:
-    shared_ptr<DependentContext<ContextExample>> ex(
+    cpp11::shared_ptr<DependentContext<ContextExample> > ex(
       context->CreateDependentContext<ContextExample>()
     );
 
