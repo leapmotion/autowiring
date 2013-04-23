@@ -16,7 +16,8 @@ public:
 
   void Run(void) {
     boost::unique_lock<boost::mutex> lk(m_condLock);
-    m_cond.wait(lk, [this] () {return ShouldStop();});
+    while(!ShouldStop())
+      m_cond.wait(lk);
   }
 };
 

@@ -2,6 +2,7 @@
 
 class CoreContext;
 class CoreThread;
+class OutstandingCountTracker;
 
 class ThreadStatusMaintainer
 {
@@ -12,7 +13,7 @@ public:
 private:
   CoreThread* pThread;
   cpp11::shared_ptr<CoreContext> context;
-  cpp11::shared_ptr<CoreContext> outstanding;
+  cpp11::shared_ptr<OutstandingCountTracker> outstanding;
 
 public:
   void operator()();
