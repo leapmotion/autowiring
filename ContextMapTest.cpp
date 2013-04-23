@@ -34,8 +34,8 @@ TEST_F(ContextMapTest, VerifySimple) {
 
 TEST_F(ContextMapTest, VerifyWithThreads) {
   ContextMap<string> mp;
-  shared_ptr<SimpleThreaded> threaded;
-  weak_ptr<CoreContext> weakContext;
+  cpp11::shared_ptr<SimpleThreaded> threaded;
+  cpp11::weak_ptr<CoreContext> weakContext;
 
   {
     Autowired<CoreContext> context(true);
@@ -84,8 +84,8 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
 
 TEST_F(ContextMapTest, AdjacentCleanupTest) {
   ContextMap<string> mp;
-  weak_ptr<CoreContext> outerWeak;
-  weak_ptr<CoreContext> innerWeak;
+  cpp11::weak_ptr<CoreContext> outerWeak;
+  cpp11::weak_ptr<CoreContext> innerWeak;
 
   // Add two contexts, and let one go out of scope
   Autowired<CoreContext> outer(true);
@@ -110,5 +110,5 @@ TEST_F(ContextMapTest, AdjacentCleanupTest) {
 
   // Try to find the outer context.  This should evict the inner context.
   mp.Find("0");
-  ASSERT_EQ(1, mp.size()) << "Proximity eviction didn't function as expected";
+  ASSERT_EQ(1UL, mp.size()) << "Proximity eviction didn't function as expected";
 }
