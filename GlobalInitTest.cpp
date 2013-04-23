@@ -30,11 +30,12 @@ TEST_F(GlobalInitTest, VerifyGlobalExists) {
   EXPECT_EQ(global.use_count(), 3) << "Unexpected global use count after bare initialization";
 }
 
+struct Simple {
+  AutoRequired<SimpleObject> m_simple;
+};
+
 TEST_F(GlobalInitTest, VerifySimpleContext) {
   // Set our global scope stuff:
-  struct Simple {
-    AutoRequired<SimpleObject> m_simple;
-  };
   GlobalCoreContext::AddGlobalObjects<Simple>();
 
   // Obtain reference:

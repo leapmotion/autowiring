@@ -32,7 +32,7 @@ public:
   /// A structure containing AutoRequired members which are all supposed to be in the global scope
   /// </param>
   /// <remarks>
-  /// This method may be called as many times as desired.
+  /// This method may be called as many times as desired, it is idempotent
   /// </remarks>
   template<class W>
   static void AddGlobalObjects(void) {
@@ -40,10 +40,10 @@ public:
       nullptr,
       &InstantiateW<W>
     };
-    AddGlobalObjects(&current);
+    AddGlobalObjectsWithLink(&current);
   }
 
-  static void AddGlobalObjects(InstantiatorLink* pLink) {
+  static void AddGlobalObjectsWithLink(InstantiatorLink* pLink) {
     pLink->pFlink = s_instantiator;
     s_instantiator = pLink;
   }
