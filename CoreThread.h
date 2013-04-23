@@ -55,7 +55,8 @@ public:
   /// </summary>
   bool DelayUntilReady(void) {
     boost::unique_lock<boost::mutex> lk(m_stopLock);
-    m_stopCondition.wait(lk, [this] () {return ShouldStop() || IsReady();});
+    while(!ShouldStop() && !IsReady())
+      m_stopCondition.wait(lk);
     return !ShouldStop() && !m_context.expired();
   }
 
