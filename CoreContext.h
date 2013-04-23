@@ -207,7 +207,7 @@ public:
   }
 
   template<class Rep, class Period>
-  bool Wait(boost::chrono::duration<Rep, Period>& duration) {
+  bool Wait(const boost::chrono::duration<Rep, Period>& duration) {
     boost::unique_lock<boost::mutex> lk(m_coreLock);
     return m_stop.wait_for(
       lk,
