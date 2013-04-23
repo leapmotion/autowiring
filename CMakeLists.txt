@@ -27,6 +27,8 @@ set(
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   Object.h
+  OutstandingCountTracker.cpp
+  OutstandingCountTracker.h
   SharedPtrWrap.cpp
   SharedPtrWrap.h
   ThreadStatusMaintainer.cpp
