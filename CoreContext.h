@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _CORECONTEXT_H
+#define _CORECONTEXT_H
 #include "Autowirer.h"
 #include "CoreThread.h"
 #include "CurrentContextPusher.h"
@@ -26,6 +27,7 @@ class ContextMember;
 class CoreContext;
 class CoreThread;
 class GlobalCoreContext;
+class OutstandingCountTracker;
 
 /// <summary>
 /// Convenient access to the currently active context stored in the global context
@@ -86,7 +88,7 @@ public:
     cpp11::shared_ptr<CoreContext> dependent = Create();
     return
       CurrentContextPusher(dependent.get()),
-      new DependentContext<T>;
+      new DependentContext<T>(dependent);
   }
   
   /// <summary>
@@ -96,9 +98,13 @@ public:
   DependentContext<T>* AugmentContext(void) {
     return
       CurrentContextPusher(this),
-      new DependentContext<T>();
+      new DependentContext<T>(
+        cpp11::static_pointer_cast<CoreContext, Autowirer>(
+          m_self.lock()
+        )
+      );
   }
-
+  
 private:
   // General purpose lock for this class
   boost::mutex m_coreLock;
@@ -119,7 +125,7 @@ private:
   // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
   // Destructor does nothing; this is by design.
   boost::mutex m_outstandingLock;
-  cpp11::weak_ptr<CoreContext> m_outstanding;
+  cpp11::weak_ptr<OutstandingCountTracker> m_outstanding;
 
   // Actual core threads:
   typedef list<CoreThread*> t_threadList;
@@ -127,6 +133,8 @@ private:
 
   friend cpp11::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
   friend class GlobalCoreContext;
+
+  friend class OutstandingCountTracker;
 
 public:
   // Accessor methods:
@@ -141,7 +149,7 @@ public:
   /// is decremented.  The caller is encouraged not to copy the return value, as doing
   /// so can give spurious values for the current number of outstanding threads.
   /// </remarks>
-  cpp11::shared_ptr<CoreContext> IncrementOutstandingThreadCount(void);
+  cpp11::shared_ptr<OutstandingCountTracker> IncrementOutstandingThreadCount(void);
 
   /// <summary>
   /// Adds the specified value without creating a new shared pointer for that value
@@ -197,24 +205,18 @@ public:
   /// </summary>
   void Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_coreLock);
-    m_stop.wait(
-      lk,
-      [this] () {
-        return this->m_outstanding.expired();
-      }
-    );
+    while(!this->m_outstanding.expired())
+      m_stop.wait(lk);
   }
 
   template<class Rep, class Period>
-  bool Wait(boost::chrono::duration<Rep, Period>& duration) {
+  bool Wait(const boost::chrono::duration<Rep, Period>& duration) {
     boost::unique_lock<boost::mutex> lk(m_coreLock);
-    return m_stop.wait_for(
-      lk,
-      duration,
-      [this] () {
-        return this->m_outstanding.expired();
-      }
-    );
+
+    boost::cv_status stat;
+    do stat = m_stop.wait_for(lk, duration);
+    while(!this->m_outstanding.expired());
+    return stat == boost::cv_status::no_timeout;
   }
 
   /// <summary>
@@ -273,3 +275,4 @@ public:
   /// </remarks>
   static cpp11::shared_ptr<CoreContext> CurrentContext(void);
 };
+#endif

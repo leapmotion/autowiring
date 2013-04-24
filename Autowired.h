@@ -197,7 +197,7 @@ public:
     // NOTE: If you are getting an error tracked to this line, ensure that class T is totally
     // defined at the point where the Autowired instance is constructed.  Generally,
     // such errors are tracked to missing header files.
-    reset(new T);
+    this->reset(new T);
     DestroyTracker::LockContext()->Add(*this);
   }
 
