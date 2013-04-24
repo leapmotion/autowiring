@@ -60,8 +60,32 @@ protected:
   typedef std::map<std::string, ContextMember*> t_mpName;
   t_mpName m_byName;
 
+  // Deferred autowiring base class
+  class DeferredBase {
+  public:
+    DeferredBase(Autowirer* pThis, cpp11::weak_ptr<DestroyTracker> tracker):
+      pThis(pThis),
+      tracker(tracker)
+    {
+    }
+
+    virtual ~DeferredBase(void) {}
+
+  protected:
+    Autowirer* pThis;
+    
+    // Store a weak reference to the slot's tracker so we can be informed
+    // if it goes away before we have a chance to autowire it
+    cpp11::weak_ptr<DestroyTracker> tracker;
+
+  public:
+    virtual bool operator()() {
+      return true;
+    }
+  };
+
   // Set of objects waiting to be autowired
-  typedef std::list<cpp11::function<bool ()> > t_deferredList;
+  typedef std::list<DeferredBase*> t_deferredList;
   t_deferredList m_deferred;
 
   // All known event receivers
@@ -116,7 +140,7 @@ protected:
     // TODO:  We should also notify any descendant autowiring
     // contexts that a new member is now available.
     for(t_deferredList::iterator r = m_deferred.begin(); r != m_deferred.end(); ) {
-      bool rs = (*r)();
+      bool rs = (**r)();
       
       boost::lock_guard<boost::mutex> lk(m_lock);
       if(rs)
@@ -265,22 +289,17 @@ public:
   
   template<class S>
   void Defer(S& slot) {
-    class Lambda {
+    class Deferred:
+      public DeferredBase {
     public:
-      Lambda(Autowirer* pThis, S& slot):
-        pThis(pThis),
-        slot(slot),
-        tracker(slot.m_tracker) {
-      }
+      Deferred(Autowirer* pThis, S& slot):
+        DeferredBase(pThis, slot.m_tracker),
+        slot(slot)
+      {}
       
-      Autowirer* pThis;
       S& slot;
 
-      // Store a weak reference to the slot's tracker so we can be informed
-      // if it goes away before we have a chance to autowire it
-      cpp11::weak_ptr<DestroyTracker> tracker;
-
-      bool operator()() {
+      bool operator()() const {
         return
           this->tracker.expired() ||
           this->slot ||
@@ -289,7 +308,7 @@ public:
     };
 
     // Resolution failed, add this autowired value for a delayed attempt
-    m_deferred.push_back(Lambda(this, slot));
+    m_deferred.push_back(new Deferred(this, slot));
   }
 };
 

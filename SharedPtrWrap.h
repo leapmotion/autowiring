@@ -44,7 +44,7 @@ class SharedPtrWrap:
 {
 public:
   SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p):
-    SharedPtrWrapImpl<T>(pAutowirer, p)
+    SharedPtrWrapBase(pAutowirer)
   {}
     
   SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, cpp11::shared_ptr<T>& p):

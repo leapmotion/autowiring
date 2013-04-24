@@ -3,6 +3,7 @@
 #include "Autowired.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
+#include "OutstandingCountTracker.h"
 #include "ThreadStatusMaintainer.h"
 #include <boost/thread.hpp>
 #include <algorithm>
@@ -10,7 +11,7 @@
 
 using namespace boost;
 
-thread_specific_ptr<cpp11::shared_ptr<CoreContext>> CoreContext::s_curContext;
+thread_specific_ptr<cpp11::shared_ptr<CoreContext> > CoreContext::s_curContext;
 
 CoreContext::CoreContext(cpp11::shared_ptr<CoreContext> pParent):
   Autowirer(cpp11::static_pointer_cast<Autowirer, CoreContext>(pParent)),
@@ -30,18 +31,16 @@ CoreContext::~CoreContext(void) {
   );
 }
 
-cpp11::shared_ptr<CoreContext> CoreContext::IncrementOutstandingThreadCount(void) {
-  cpp11::shared_ptr<CoreContext> retVal = m_outstanding.lock();
+cpp11::shared_ptr<OutstandingCountTracker> CoreContext::IncrementOutstandingThreadCount(void) {
+  cpp11::shared_ptr<OutstandingCountTracker> retVal = m_outstanding.lock();
   if(!m_outstanding.expired())
     return retVal;
 
   boost::lock_guard<boost::mutex> lk(m_outstandingLock);
-  retVal = cpp11::shared_ptr<CoreContext>(
-    this,
-    [this] (CoreContext*) {
-      boost::lock_guard<boost::mutex> lk(this->m_coreLock);
-      this->m_stop.notify_all();
-    }
+  retVal.reset(
+    new OutstandingCountTracker(
+      cpp11::static_pointer_cast<CoreContext, Autowirer>(m_self.lock())
+    )
   );
   m_outstanding = retVal;
   return retVal;
@@ -102,13 +101,8 @@ void CoreContext::SignalShutdown(void) {
     m_stopping.notify_all();
     
     // Also pass notice to all children:
-    std::for_each(
-      m_threads.begin(),
-      m_threads.end(),
-      [] (CoreThread* pThread) {
-        pThread->Stop();
-      }
-    );
+    for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); q++)
+      (*q)->Stop();
   }
 
   if(m_pParent)
@@ -137,10 +131,7 @@ void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
 
   if(!m_shouldStop)
     // We're already running, this means we're late to the game and need to start _now_.
-    boost::thread([this, ptr] () {
-      ptr->DelayUntilReady();
-      ptr->Run();
-    });
+    ptr->Start();
 }
 
 cpp11::shared_ptr<CoreContext> GetCurrentContext() {

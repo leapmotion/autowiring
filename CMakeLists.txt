@@ -21,11 +21,14 @@ set(
   CoreThread.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
+  DependentContext.h
   EventManager.h
   InstantiatorLink.h  
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   Object.h
+  OutstandingCountTracker.cpp
+  OutstandingCountTracker.h
   SharedPtrWrap.cpp
   SharedPtrWrap.h
   ThreadStatusMaintainer.cpp
@@ -56,19 +59,28 @@ set(
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
+if(NOT BUILD_WINDOWS)
+  set(Boost_SYSTEM_LIBRARY libboost_system)
+  add_library(${Boost_SYSTEM_LIBRARY} STATIC IMPORTED)
+  set_property(TARGET ${Boost_SYSTEM_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_SYSTEM_LIBRARY}${STATIC_LIBRARY_SUFFIX})
+	
+  set(Boost_THREAD_LIBRARY libboost_thread)
+  add_library(${Boost_THREAD_LIBRARY} STATIC IMPORTED)
+  set_property(TARGET ${Boost_THREAD_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_THREAD_LIBRARY}${STATIC_LIBRARY_SUFFIX})
+	
+  set(Boost_CHRONO_LIBRARY libboost_chrono)
+  add_library(${Boost_CHRONO_LIBRARY} STATIC IMPORTED)
+  set_property(TARGET ${Boost_CHRONO_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_CHRONO_LIBRARY}${STATIC_LIBRARY_SUFFIX})
+
+  if(NOT BUILD_MAC)
+    target_link_libraries(Autowiring -lrt)
+  endif()
+  target_link_libraries(Autowiring -lpthread ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY})
+endif()
 
 if(BUILD_TESTING)
   ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
   add_executable(AutowiringTest ${AutowiringTest_SRCS} "../googletest/src/gtest-all.cc")
-  if(NOT BUILD_WINDOWS)
-    set(Boost_SYSTEM_LIBRARY libboost_system)
-    add_library(${Boost_SYSTEM_LIBRARY} STATIC IMPORTED)
-    set_property(TARGET ${Boost_SYSTEM_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_SYSTEM_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-	
-    set(Boost_THREAD_LIBRARY libboost_thread)
-    add_library(${Boost_THREAD_LIBRARY} STATIC IMPORTED)
-    set_property(TARGET ${Boost_THREAD_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_THREAD_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-  endif()
   
-  target_link_libraries(AutowiringTest Autowiring ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY})
+  target_link_libraries(AutowiringTest Autowiring)
 endif(BUILD_TESTING)
