@@ -210,8 +210,11 @@ public:
     boost::unique_lock<boost::mutex> lk(m_coreLock);
 
     boost::cv_status stat;
-    do stat = m_stop.wait_for(lk, duration);
-    while(!this->m_outstanding.expired());
+    while(
+      !this->m_outstanding.expired() &&
+      stat != boost::cv_status::timeout
+    )
+      stat = m_stop.wait_for(lk, duration);
     return stat == boost::cv_status::no_timeout;
   }
 
