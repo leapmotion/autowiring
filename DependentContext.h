@@ -1,11 +1,18 @@
 #ifndef _DEPENDENT_CONTEXT_H
 #define _DEPENDENT_CONTEXT_H
 
+class CoreContext;
+
 template<class T>
-struct DependentContext:
+class DependentContext:
   public T
 {
-  Autowired<CoreContext> m_context;
+public:
+  DependentContext(cpp11::shared_ptr<CoreContext>& context):
+    m_context(context)
+  {}
+
+  cpp11::shared_ptr<CoreContext> m_context;
 };
 
 #endif

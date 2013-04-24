@@ -75,5 +75,5 @@ Autowired<CoreContext>::Autowired(bool forceNew) {
 }
 
 void AddGlobalObjects(InstantiatorLink* pLink) {
-  GlobalCoreContext::AddGlobalObjects(pLink);
+  GlobalCoreContext::AddGlobalObjectsWithLink(pLink);
 }
