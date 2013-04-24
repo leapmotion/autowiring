@@ -151,7 +151,7 @@ public:
   /// Adds the specified value without creating a new shared pointer for that value
   /// </summary>
   template<class T>
-  void Add(cpp11::shared_ptr<T>& value) {
+  void Add(const cpp11::shared_ptr<T>& value) {
     Autowirer::Add(value);
     AddCoreThread(value.get());
   }
