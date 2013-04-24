@@ -8,7 +8,7 @@ class DependentContext:
   public T
 {
 public:
-  DependentContext(cpp11::shared_ptr<CoreContext>& context):
+  DependentContext(const cpp11::shared_ptr<CoreContext>& context):
     m_context(context)
   {}
 
