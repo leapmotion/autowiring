@@ -80,7 +80,7 @@ endif()
 
 if(BUILD_TESTING)
   ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
-  add_executable(AutowiringTest ${AutowiringTest_SRCS} "../googletest/src/gtest-all.cc")
+  add_executable(AutowiringTest ${AutowiringTest_SRCS} "gtest-all-guard.cpp")
   
   target_link_libraries(AutowiringTest Autowiring)
 endif(BUILD_TESTING)
