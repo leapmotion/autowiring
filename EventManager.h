@@ -63,19 +63,19 @@ public:
 
   // Multi-argument firing:
   template<class Arg1, class Ty1>
-  void FireAsSingle(void (T::*fnPtr)(Arg1 arg1), const Ty1& ty1) const {
+  void FireAsSingle1(void (T::*fnPtr)(Arg1 arg1), const Ty1& ty1) const {
     for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
       ((q->second.get())->*fnPtr)(ty1);
   }
   
   template<class Arg1, class Arg2, class Ty1, class Ty2>
-  void FireAsSingle(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2), const Ty1& ty1, const Ty2& ty2) const {
+  void FireAsSingle2(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2), const Ty1& ty1, const Ty2& ty2) const {
     for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
       ((q->second.get())->*fnPtr)(ty1, ty2);
   }
   
   template<class Arg1, class Arg2, class Arg3, class Ty1, class Ty2, class Ty3>
-  void FireAsSingle(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3) const {
+  void FireAsSingle3(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3) const {
     for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
       ((q->second.get())->*fnPtr)(ty1, ty2, ty3);
   }
@@ -87,12 +87,12 @@ public:
     return
 #if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1) {
-        FireAsSingle(fnPtr, arg1);
+        FireAsSingle1(fnPtr, arg1);
       };
 #else
       boost::bind(
         boost::bind(
-          &EventManager<T>::FireAsSingle<Arg1, Arg1>,
+          &EventManager<T>::FireAsSingle1<Arg1, Arg1>,
           this
         ),
         fnPtr
@@ -105,12 +105,12 @@ public:
     return
 #if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
-        FireAsSingle(fnPtr, arg1, arg2);
+        FireAsSingle2(fnPtr, arg1, arg2);
       };
 #else
       boost::bind(
         boost::bind(
-          &EventManager<T>::FireAsSingle<Arg1, Arg2, Arg1, Arg2>,
+          &EventManager<T>::FireAsSingle2<Arg1, Arg2, Arg1, Arg2>,
           this
         ),
         fnPtr
@@ -123,12 +123,12 @@ public:
     return
 #if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
-        FireAsSingle(fnPtr, arg1, arg2, arg3);
+        FireAsSingle3(fnPtr, arg1, arg2, arg3);
       };
 #else
       boost::bind(
         boost::bind(
-          &EventManager<T>::FireAsSingle<Arg1, Arg2, Arg1, Arg2>,
+          &EventManager<T>::FireAsSingle3<Arg1, Arg2, Arg3, Arg1, Arg2, Arg3>,
           this
         ),
         fnPtr
