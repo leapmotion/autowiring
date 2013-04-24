@@ -87,7 +87,7 @@ public:
     return
 #if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1) {
-        FireAsSingle1(fnPtr, arg1);
+        this->FireAsSingle1(fnPtr, arg1);
       };
 #else
       boost::bind(
@@ -105,7 +105,7 @@ public:
     return
 #if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
-        FireAsSingle2(fnPtr, arg1, arg2);
+        this->FireAsSingle2(fnPtr, arg1, arg2);
       };
 #else
       boost::bind(
@@ -123,7 +123,7 @@ public:
     return
 #if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
-        FireAsSingle3(fnPtr, arg1, arg2, arg3);
+        this->FireAsSingle3(fnPtr, arg1, arg2, arg3);
       };
 #else
       boost::bind(
