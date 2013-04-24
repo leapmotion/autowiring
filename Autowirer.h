@@ -206,7 +206,7 @@ public:
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
   template<class T>
-  void Add(cpp11::shared_ptr<T> value) {
+  void Add(const cpp11::shared_ptr<T>& value) {
     AddInternal(value);
     AddContextMember(value.get());
   }
