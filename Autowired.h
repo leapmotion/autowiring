@@ -1,4 +1,6 @@
-#pragma once
+#ifndef _AUTOWIRED_H
+#define _AUTOWIRED_H
+#include "AutowirableSlot.h"
 #include "CoreContext.h"
 #include "InstantiatorLink.h"
 #include <functional>
@@ -20,50 +22,9 @@ void AddGlobalObjects(InstantiatorLink* pLink);
 extern cpp11::shared_ptr<CoreContext> NewContextThunk(void);
 extern cpp11::shared_ptr<CoreContext> NewContextThunk(cpp11::shared_ptr<CoreContext>& pParent);
 
-// Utility routine, for users who need a function that does nothing
-template<class T>
-void NullOp(T) {}
-
-class DestroyTracker {
-public:
-  DestroyTracker();
-
-  ~DestroyTracker(void) {
-  }
-  
-  /// <summary>
-  /// This is a destroy self-reference.  There should only ever be one shared pointer
-  /// to this object, and it's located here.  Everything else should be weak pointers
-  /// whose purpose is to be notified when this tracker goes away.
-  /// </summary>
-  cpp11::shared_ptr<DestroyTracker> m_tracker;
-
-  /// <summary>
-  /// This is the context that was available at the time the autowiring was performed.
-  /// </summary>
-  /// <remarks>
-  /// A weak reference is held in hroder to ensure proper teardown, otherwise the
-  /// first created member of the context would generate a cyclic reference between
-  /// this pointer and the context membership set.
-  /// </remarks>
-  cpp11::weak_ptr<CoreContext> m_context;
-
-  /// <summary>
-  /// Utility routine to lock the context, or throw an exception if something goes wrong
-  /// </summary>
-  cpp11::shared_ptr<CoreContext> LockContext(void) {
-    cpp11::shared_ptr<CoreContext> retVal = m_context.lock();
-    if(!retVal)
-      throw std::runtime_error("Attempted to autowire in a context that is tearing down");
-    return retVal;
-  }
-};
-
-template<class T, bool isAbstract> class AutowiredCreator;
-
-template<class T>
-class AutowiredCreator<T, true>:
-  public DestroyTracker,
+template<class T, bool isAbstract>
+class AutowiredCreator:
+  public AutowirableSlot,
   public cpp11::shared_ptr<T>
 {
 public:
@@ -79,7 +40,7 @@ public:
 
     // Okay, we're ready to go now, we can release
     // the shared pointer so any lambdas disappear
-    DestroyTracker::m_tracker = cpp11::shared_ptr<DestroyTracker>();
+    AutowirableSlot::m_tracker = cpp11::shared_ptr<AutowirableSlot>();
     
     // TODO:  Allow this to be lazily invoked
     // It would be nice if this constructor is only invoked on the first dereference
@@ -95,11 +56,13 @@ public:
   }
 
   using cpp11::shared_ptr<T>::operator=;
+
+  bool IsAutowired(void) const override {return !!this->get();}
 };
 
 template<>
 class AutowiredCreator<CoreContext, false>:
-  public DestroyTracker,
+  public AutowirableSlot,
   public cpp11::shared_ptr<CoreContext>
 {
 public:
@@ -121,6 +84,7 @@ public:
   void Pop();
 
   using cpp11::shared_ptr<CoreContext>::operator=;
+  bool IsAutowired(void) const override {return !!this->get();}
 };
 
 struct EmptyContext {};
@@ -149,7 +113,7 @@ enum eGlobalBehavior {
 /// </remarks>
 template<>
 class AutowiredCreator<GlobalCoreContext, false>:
-  public DestroyTracker,
+  public AutowirableSlot,
   public cpp11::shared_ptr<GlobalCoreContext>
 {
 private:
@@ -177,6 +141,7 @@ public:
     cpp11::shared_ptr<GlobalCoreContext>(GetGlobalContext())
   {
   }
+  bool IsAutowired(void) const override {return !!this->get();}
 };
 
 template<class T>
@@ -198,7 +163,7 @@ public:
     // defined at the point where the Autowired instance is constructed.  Generally,
     // such errors are tracked to missing header files.
     this->reset(new T);
-    DestroyTracker::LockContext()->Add(*this);
+    AutowirableSlot::LockContext()->Add(*this);
   }
 
   using AutowiredCreator<T, true>::operator=;
@@ -220,7 +185,7 @@ class Autowired:
 {
 public:
   Autowired(void) {
-    shared_ptr<CoreContext> context = DestroyTracker::LockContext();
+    shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
     context->Autowire(*this);
   }
 };
@@ -297,7 +262,7 @@ public:
 template<class T>
 class AutowiredWeak:
   public cpp11::weak_ptr<T>,
-  public DestroyTracker
+  public AutowirableSlot
 {
 public:
   // TODO: Fix this, we need a way to autowire weak pointers
@@ -307,3 +272,4 @@ public:
   }
 };
 
+#endif
