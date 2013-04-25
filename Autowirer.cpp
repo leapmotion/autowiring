@@ -2,6 +2,7 @@
 #include "Autowirer.h"
 #include "ContextMember.h"
 #include "CoreContext.h"
+#include "AutowirableSlot.h"
 #include <string>
 
 using namespace std;
@@ -20,8 +21,8 @@ Autowirer::~Autowirer(void)
     delete q->second;
 
   // Explicit deleters to simplify base deletion
-  for(t_deferredList::iterator q = m_deferred.begin(); q != m_deferred.end(); q++)
-    delete *q;
+  for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); q++)
+    delete q->second;
 }
 
 void Autowirer::AddContextMember(ContextMember* ptr)
@@ -39,6 +40,24 @@ void Autowirer::AddContextMember(ContextMember* ptr)
 
   // Trivial insertion and return:
   location = ptr;
+}
+
+void Autowirer::NotifyWhenAutowired(const AutowirableSlot& slot, const cpp11::function<void()>& listener) {
+  boost::lock_guard<boost::mutex> lk(m_deferredLock);
+
+  // If the slot is already autowired then we can invoke the listener here and return early
+  if(slot.IsAutowired())
+    return listener();
+
+  t_deferred::iterator q = m_deferred.find(&slot);
+  if(q == m_deferred.end())
+    if(m_pParent)
+      // Try the parent context first, it could be present there
+      return m_pParent->NotifyWhenAutowired(slot, listener);
+    else
+      throw std::domain_error("An attempt was made to observe a principal not in this context");
+
+  q->second->AddPostBindingListener(listener);
 }
 
 cpp11::shared_ptr<CoreContext> CreateContextThunk(void) {

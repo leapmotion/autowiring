@@ -8,6 +8,8 @@ set(
   Autowiring_SRCS
   Autowired.cpp
   Autowired.h
+  AutowirableSlot.h
+  AutowirableSlot.cpp
   Autowirer.cpp
   Autowirer.h
   CMakeLists.txt
@@ -50,6 +52,8 @@ set(
   GlobalInitTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
+  PostConstructTest.h
+  PostConstructTest.cpp
   ScopeTest.h
   ScopeTest.cpp
   TestFixtures/SimpleObject.h
