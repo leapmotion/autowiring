@@ -50,12 +50,13 @@ void Autowirer::NotifyWhenAutowired(const AutowirableSlot& slot, const cpp11::fu
     return listener();
 
   t_deferred::iterator q = m_deferred.find(&slot);
-  if(q == m_deferred.end())
+  if(q == m_deferred.end()) {
     if(m_pParent)
       // Try the parent context first, it could be present there
       return m_pParent->NotifyWhenAutowired(slot, listener);
     else
       throw std::domain_error("An attempt was made to observe a principal not in this context");
+  }
 
   q->second->AddPostBindingListener(listener);
 }
