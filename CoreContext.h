@@ -221,7 +221,7 @@ public:
   /// <summary>
   /// Makes the current context the parent of this context
   /// </summary>
-  void Pop(void) {
+  void DEPRECATED(Pop(void), "Pop is semantically incorrect, it should no longer be used") {
     cpp11::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->SetCurrent();
   }
 
