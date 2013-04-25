@@ -39,7 +39,6 @@ set(
 
 set(
   AutowiringTest_SRCS
-  TestMain.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h
