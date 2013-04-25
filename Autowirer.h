@@ -10,7 +10,7 @@
 #include <boost/thread/mutex.hpp>
 
 class ContextMember;
-class DestroyTracker;
+class AutowirableSlot;
 
 namespace AutowirerHelpers {
   template<class T, bool isPolymorphic = cpp11::is_base_of<Object, T>::value>
@@ -63,30 +63,45 @@ protected:
   // Deferred autowiring base class
   class DeferredBase {
   public:
-    DeferredBase(Autowirer* pThis, cpp11::weak_ptr<DestroyTracker> tracker):
+    DeferredBase(Autowirer* pThis, cpp11::weak_ptr<AutowirableSlot> tracker):
       pThis(pThis),
       tracker(tracker)
     {
     }
 
-    virtual ~DeferredBase(void) {}
+    virtual ~DeferredBase(void) {
+      cpp11::shared_ptr<AutowirableSlot> temp = tracker.lock();
+      if(!temp)
+        // Destruction is occurring before autowiring, short-circuit
+        return;
+
+      // Inform all listeners
+      for(size_t i = this->m_postBind.size(); i--; )
+        this->m_postBind[i]();
+    }
 
   protected:
     Autowirer* pThis;
+
+    // Functions that want to be called when we successfully bind:
+    std::vector< cpp11::function<void()> > m_postBind;
     
     // Store a weak reference to the slot's tracker so we can be informed
     // if it goes away before we have a chance to autowire it
-    cpp11::weak_ptr<DestroyTracker> tracker;
+    cpp11::weak_ptr<AutowirableSlot> tracker;
 
   public:
-    virtual bool operator()() {
-      return true;
+    void AddPostBindingListener(const cpp11::function<void()>& listener) {
+      m_postBind.push_back(listener);
     }
+
+    virtual bool operator()() = 0;
   };
 
-  // Set of objects waiting to be autowired
-  typedef std::list<DeferredBase*> t_deferredList;
-  t_deferredList m_deferred;
+  // Collection of objects waiting to be autowired, and a specific lock exclusively for this collection
+  boost::mutex m_deferredLock;
+  typedef std::map<const AutowirableSlot*, DeferredBase*> t_deferred;
+  t_deferred m_deferred;
 
   // All known event receivers
   std::vector<cpp11::shared_ptr<EventReceiver> > m_eventReceivers;
@@ -136,18 +151,30 @@ protected:
       AddToEventReceivers(value.get(), value);
     }
 
+    std::list<DeferredBase*> successful;
+
     // Notify any autowired field whose autowiring was deferred
-    // TODO:  We should also notify any descendant autowiring
-    // contexts that a new member is now available.
-    for(t_deferredList::iterator r = m_deferred.begin(); r != m_deferred.end(); ) {
-      bool rs = (**r)();
-      
-      boost::lock_guard<boost::mutex> lk(m_lock);
-      if(rs)
-        r = m_deferred.erase(r);
-      else
-        r++;
+    // TODO:  We should also notify any descendant autowiring contexts that a new member is now available.
+    {
+      boost::lock_guard<boost::mutex> lk(m_deferredLock);
+      for(t_deferred::iterator r = m_deferred.begin(); r != m_deferred.end(); ) {
+        bool rs = (*r->second)();
+        if(rs) {
+          successful.push_back(r->second);
+
+          // Temporary required because of the absence of a convenience eraser iterator with stl map on all platforms
+          t_deferred::iterator rm = r++;
+          m_deferred.erase(rm);
+        }
+        else
+          r++;
+      }
     }
+
+    // Now, outside of the context of a lock, we destroy each successfully wired deferred member
+    // This causes any listeners to be invoked, conveniently, outside of the context of any lock
+    for(std::list<DeferredBase*>::iterator q = successful.begin(); q != successful.end(); q++)
+      delete *q;
   }
 
   void AddToEventSenders(EventManagerBase* pSender) {
@@ -299,7 +326,7 @@ public:
       
       S& slot;
 
-      bool operator()() const {
+      bool operator()() override {
         return
           this->tracker.expired() ||
           this->slot ||
@@ -308,8 +335,33 @@ public:
     };
 
     // Resolution failed, add this autowired value for a delayed attempt
-    m_deferred.push_back(new Deferred(this, slot));
+    boost::lock_guard<boost::mutex> lk(m_deferredLock);
+    if(slot)
+      // Someone autowired this before we did, short-circuit
+      return;
+
+    DeferredBase*& pDeferred = m_deferred[&slot];
+    if(pDeferred)
+      throw std::runtime_error("A slot is being autowired, but a deferred instance already exists at this location");
+    pDeferred = new Deferred(this, slot);
   }
+
+  /// <summary>
+  /// Adds a post-attachment listener in this context for a particular autowired member
+  /// </summary>
+  /// <remarks>
+  /// This method will succeed if slot was constructed in this context or any parent context.  If this
+  /// assumption is false, an exception will be thrown.
+  ///
+  /// It's possible that the passed slot will never be filled, and instead the corresponding instance
+  /// destroyed without ever having been initialized.
+  ///
+  /// If the passed slot is already autowired, then the listener will be invoked immediately from the
+  /// body of this method.  Care should be taken to avoid deadlocks in this case--either the caller must
+  /// not be holding any locks when this method is invoked, or the caller should design the listener
+  /// method such that it may be substitutde in place for the notification routine.
+  /// </remarks>
+  void NotifyWhenAutowired(const AutowirableSlot& slot, const cpp11::function<void()>& listener);
 };
 
 namespace AutowirerHelpers {

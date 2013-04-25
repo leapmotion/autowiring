@@ -2,12 +2,6 @@
 #include "Autowired.h"
 #include "CoreContext.h"
 #include "GlobalCoreContext.h"
-
-DestroyTracker::DestroyTracker(void):
-    m_context(GetCurrentContext())
-{
-  m_tracker = cpp11::shared_ptr<DestroyTracker>(this, NullOp<DestroyTracker*>);
-}
     
 cpp11::shared_ptr<CoreContext> NewContextThunk(void) {
   return CoreContext::CurrentContext()->Create();
@@ -71,7 +65,7 @@ Autowired<CoreContext>::Autowired(bool forceNew) {
     Create();
   else
     *this = GetCurrentContext();
-  DestroyTracker::m_context = *this;
+  AutowirableSlot::m_context = *this;
 }
 
 void AddGlobalObjects(InstantiatorLink* pLink) {
