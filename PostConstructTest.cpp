@@ -71,7 +71,7 @@ TEST_F(PostConstructTest, VerifyExpectedDeferrmentCount) {
 
   // Now test the count:
   EXPECT_EQ(
-    1,
+    1UL,
     ((ContextExposer&)*subContext).DeferredCount()
   ) << "Unexpected number of deferred initializers";
 }
