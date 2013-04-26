@@ -14,7 +14,6 @@ set(
   Autowirer.h
   CMakeLists.txt
   ContextMap.h
-  ContextMap.cpp
   ContextMember.cpp
   ContextMember.h
   CoreContext.cpp
