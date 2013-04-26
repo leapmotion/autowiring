@@ -378,7 +378,7 @@ struct FindByCastInternal<T, true>:
     boost::lock_guard<boost::mutex> lk(m_lock);
     cpp11::shared_ptr<Object> matchedObject;
 
-    static_assert(!cpp11::is_same<Object, T>::value, "FindByCastInternal on type Object is an overly broad search criteria");
+    static_assert((!cpp11::is_same<Object, T>::value), "FindByCastInternal on type Object is an overly broad search criteria");
 
     cpp11::shared_ptr<Object> obj;
     for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); q++) {
