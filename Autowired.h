@@ -217,6 +217,9 @@ class Autowired<GlobalCoreContext>:
   public AutowiredCreator<GlobalCoreContext, false>
 {};
 
+template<class T, T* (*fn)()>
+struct CtorProxy {};
+
 /// <summary>
 /// Similar to Autowired, but the default constructor invokes Autowired(true)
 /// </summary>
@@ -235,12 +238,15 @@ public:
   }
 };
 
-template<>
-class AutoRequired<CoreContext>:
-  public Autowired<CoreContext>
+template<class T, T* (*fn)()>
+class AutoRequired< CtorProxy<T, fn> >:
+  public Autowired<T>
 {
 public:
-  AutoRequired(void) {}
+  AutoRequired(void) {
+    if(!*this)
+      this->reset(fn());
+  }
 };
 
 /// <summary>
