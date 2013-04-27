@@ -32,7 +32,7 @@ class EventManager:
 {
 private:
   static_assert(
-    cpp11::is_base_of<EventReceiver, T>::value,
+    (cpp11::is_base_of<EventReceiver, T>::value),
     "Uses of EventManager must be for interfaces that implement EventReceiver"
   );
 
