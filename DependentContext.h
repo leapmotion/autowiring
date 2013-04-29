@@ -8,11 +8,11 @@ class DependentContext:
   public T
 {
 public:
-  DependentContext(const cpp11::shared_ptr<CoreContext>& context):
+  DependentContext(const std::shared_ptr<CoreContext>& context):
     m_context(context)
   {}
 
-  cpp11::shared_ptr<CoreContext> m_context;
+  std::shared_ptr<CoreContext> m_context;
 };
 
 #endif

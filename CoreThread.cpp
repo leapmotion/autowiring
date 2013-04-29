@@ -14,7 +14,7 @@ void CoreThread::ThreadSleep(long millisecond) {
 }
 
 bool CoreThread::Start(void) {
-  cpp11::shared_ptr<CoreContext> context = GetContext();
+  std::shared_ptr<CoreContext> context = GetContext();
   if(!context)
     return false;
 

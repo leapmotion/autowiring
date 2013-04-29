@@ -15,13 +15,13 @@ class SharedPtrWrapBase;
 class SharedPtrWrapBase
 {
 public:
-  SharedPtrWrapBase(cpp11::weak_ptr<Autowirer> pAutowirer):
+  SharedPtrWrapBase(std::weak_ptr<Autowirer> pAutowirer):
     pAutowirer(pAutowirer)
   {}
   virtual ~SharedPtrWrapBase(void) {}
 
   // The autowirer responsible for this pointer wrap, placed in a weak pointer
-  cpp11::weak_ptr<Autowirer> pAutowirer;
+  std::weak_ptr<Autowirer> pAutowirer;
 
   /// <summary>
   /// Obtains the pointer information of the encapsulated type
@@ -31,25 +31,25 @@ public:
   /// <summary>
   /// Casts this shared pointer to a shared pointer to the base object
   /// </summary>
-  virtual cpp11::shared_ptr<Object> AsObject();
+  virtual std::shared_ptr<Object> AsObject();
 };
 
 /// <summary>
 /// This class is a generic class intended to wrap a shared pointer
 /// </summary>
-template<class T, bool isPoly = cpp11::is_base_of<Object, T>::value>
+template<class T, bool isPoly = std::is_base_of<Object, T>::value>
 class SharedPtrWrap:
   public SharedPtrWrapBase,
-  public cpp11::shared_ptr<T>
+  public std::shared_ptr<T>
 {
 public:
-  SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p):
+  SharedPtrWrap(std::weak_ptr<Autowirer> pAutowirer, T* p):
     SharedPtrWrapBase(pAutowirer)
   {}
     
-  SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, cpp11::shared_ptr<T>& p):
+  SharedPtrWrap(std::weak_ptr<Autowirer> pAutowirer, std::shared_ptr<T>& p):
     SharedPtrWrapBase(pAutowirer),
-    cpp11::shared_ptr<T>(p)
+    std::shared_ptr<T>(p)
   {}
 
   virtual const std::type_info& GetTypeInfo(void) const {
@@ -71,16 +71,16 @@ class SharedPtrWrap<T, true>:
   public SharedPtrWrap<T, false>
 {
 public:
-  SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, T* p):
+  SharedPtrWrap(std::weak_ptr<Autowirer> pAutowirer, T* p):
     SharedPtrWrap<T, false>(pAutowirer, p)
   {}
     
-  SharedPtrWrap(cpp11::weak_ptr<Autowirer> pAutowirer, cpp11::shared_ptr<T>& p):
+  SharedPtrWrap(std::weak_ptr<Autowirer> pAutowirer, std::shared_ptr<T>& p):
     SharedPtrWrap<T, false>(pAutowirer, p)
   {}
 
-  virtual cpp11::shared_ptr<Object> AsObject() {
-    return cpp11::static_pointer_cast<Object, T>(*this);
+  virtual std::shared_ptr<Object> AsObject() {
+    return std::static_pointer_cast<Object, T>(*this);
   }
 };
 

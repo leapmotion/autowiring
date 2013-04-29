@@ -23,19 +23,19 @@ TEST_F(ContextMapTest, VerifySimple) {
     ASSERT_EQ(context.use_count(), 1) << "The map altered the context use count";
 
     // We should be able to find this context now:
-    cpp11::shared_ptr<CoreContext> found = mp.Find("context1");
-    EXPECT_TRUE(found) << "Failed to find a context that was just inserted into a context map";
+    std::shared_ptr<CoreContext> found = mp.Find("context1");
+    EXPECT_TRUE(!!found.get()) << "Failed to find a context that was just inserted into a context map";
   }
 
   // We shouldn't be able to find it now that it's gone out of scope:
-  cpp11::shared_ptr<CoreContext> notFound = mp.Find("context1");
-  EXPECT_FALSE(notFound) << "Context was not evicted as expected when it went out of scope";
+  std::shared_ptr<CoreContext> notFound = mp.Find("context1");
+  EXPECT_FALSE(!!notFound.get()) << "Context was not evicted as expected when it went out of scope";
 }
 
 TEST_F(ContextMapTest, VerifyWithThreads) {
   ContextMap<string> mp;
-  cpp11::shared_ptr<SimpleThreaded> threaded;
-  cpp11::weak_ptr<CoreContext> weakContext;
+  std::shared_ptr<SimpleThreaded> threaded;
+  std::weak_ptr<CoreContext> weakContext;
 
   {
     Autowired<CoreContext> context(true);
@@ -56,8 +56,8 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
 
   {
     // Verify that we can still find the context while the thread is alive:
-    cpp11::shared_ptr<CoreContext> context = mp.Find("context1");
-    ASSERT_TRUE(context) << "Map evicted a context before expected";
+    std::shared_ptr<CoreContext> context = mp.Find("context1");
+    ASSERT_TRUE(!!context.get()) << "Map evicted a context before expected";
 
     // Begin context shutdown
     context->SignalShutdown();
@@ -77,15 +77,15 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
 
   {
     // Verify that we can still find the context while the thread is alive:
-    cpp11::shared_ptr<CoreContext> notFound = mp.Find("context1");
+    std::shared_ptr<CoreContext> notFound = mp.Find("context1");
     EXPECT_FALSE(notFound) << "Context was not properly evicted from the map";
   }
 }
 
 TEST_F(ContextMapTest, AdjacentCleanupTest) {
   ContextMap<string> mp;
-  cpp11::weak_ptr<CoreContext> outerWeak;
-  cpp11::weak_ptr<CoreContext> innerWeak;
+  std::weak_ptr<CoreContext> outerWeak;
+  std::weak_ptr<CoreContext> innerWeak;
 
   // Add two contexts, and let one go out of scope
   Autowired<CoreContext> outer(true);
@@ -98,11 +98,11 @@ TEST_F(ContextMapTest, AdjacentCleanupTest) {
     innerWeak = inner;
 
     // Verify that we can find both contexts
-    cpp11::shared_ptr<CoreContext> outerSearched = mp.Find("0");
-    ASSERT_TRUE(outerSearched) << "Outer context just added, but couldn't be found";
+    std::shared_ptr<CoreContext> outerSearched = mp.Find("0");
+    ASSERT_TRUE(!!outerSearched.get()) << "Outer context just added, but couldn't be found";
 
-    cpp11::shared_ptr<CoreContext> innerSearched = mp.Find("1");
-    ASSERT_TRUE(innerSearched) << "Inner context just added, but couldn't be found";
+    std::shared_ptr<CoreContext> innerSearched = mp.Find("1");
+    ASSERT_TRUE(!!innerSearched.get()) << "Inner context just added, but couldn't be found";
   }
 
   // Inner should be 404 by now

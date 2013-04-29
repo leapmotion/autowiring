@@ -21,12 +21,12 @@ struct ContextExample {
 };
 
 TEST_F(DependentContextTest, ValidateMembership) {
-  cpp11::shared_ptr<CoreContext> context = CoreContext::CurrentContext();
-  cpp11::weak_ptr<CoreContext> subContext;
+  std::shared_ptr<CoreContext> context = CoreContext::CurrentContext();
+  std::weak_ptr<CoreContext> subContext;
 
   {
     // Try creating a dependent context:
-    cpp11::shared_ptr<DependentContext<ContextExample> > ex(
+    std::shared_ptr<DependentContext<ContextExample> > ex(
       context->CreateDependentContext<ContextExample>()
     );
 
