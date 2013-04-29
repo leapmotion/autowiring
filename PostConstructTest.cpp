@@ -58,12 +58,12 @@ public:
 
 TEST_F(PostConstructTest, VerifyNaiveBehavior) {
   // Create a context and add just the naive class, to verify the problematic behavior:
-  cpp11::shared_ptr<CoreContext> subContext = CoreContext::CurrentContext()->Create();
+  std::shared_ptr<CoreContext> subContext = CoreContext::CurrentContext()->Create();
   EXPECT_THROW(subContext->Add<Naive>(), std::exception) << "Naive class didn't throw an exception as expected";
 }
 
 TEST_F(PostConstructTest, VerifyExpectedDeferrmentCount) {
-  cpp11::shared_ptr<CoreContext> subContext = CoreContext::CurrentContext()->Create();
+  std::shared_ptr<CoreContext> subContext = CoreContext::CurrentContext()->Create();
   CurrentContextPusher cur(subContext);
 
   // Add the smart class, which should introduce a single deferred count:
@@ -81,7 +81,7 @@ TEST_F(PostConstructTest, VerifySmartBehavior) {
   if(!LAMBDAS_AVAILABLE)
     return;
 
-  cpp11::shared_ptr<CoreContext> subContext = CoreContext::CurrentContext()->Create();
+  std::shared_ptr<CoreContext> subContext = CoreContext::CurrentContext()->Create();
   CurrentContextPusher cur(subContext);
 
   // Add the smart class, which should allow 

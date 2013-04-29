@@ -22,8 +22,8 @@ void GlobalInitTest::TearDown(void) {
 
 TEST_F(GlobalInitTest, VerifyGlobalExists) {
   // Verify that we at least get a global scope
-  cpp11::shared_ptr<GlobalCoreContext> global = GlobalCoreContext::Get();
-  EXPECT_TRUE(global);
+  std::shared_ptr<GlobalCoreContext> global = GlobalCoreContext::Get();
+  EXPECT_TRUE(!!global.get());
 
   // There should only be three references:  The one we have, the global
   // reference, and the thread-current reference
@@ -39,10 +39,10 @@ TEST_F(GlobalInitTest, VerifySimpleContext) {
   GlobalCoreContext::AddGlobalObjects<Simple>();
 
   // Obtain reference:
-  cpp11::shared_ptr<GlobalCoreContext> global = GlobalCoreContext::Get();
-  EXPECT_TRUE(global);
+  std::shared_ptr<GlobalCoreContext> global = GlobalCoreContext::Get();
+  EXPECT_TRUE(!!global.get());
 
   // Verify that initialization happened as we expected:
   Autowired<SimpleObject> simpleObj;
-  EXPECT_TRUE(simpleObj);
+  EXPECT_TRUE(!!simpleObj.get());
 }

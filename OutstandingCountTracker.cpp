@@ -2,7 +2,7 @@
 #include "OutstandingCountTracker.h"
 #include "CoreContext.h"
 
-OutstandingCountTracker::OutstandingCountTracker(cpp11::shared_ptr<CoreContext> context):
+OutstandingCountTracker::OutstandingCountTracker(std::shared_ptr<CoreContext> context):
   m_context(context)
 {
 }
