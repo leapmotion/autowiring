@@ -4,13 +4,13 @@
 // We use a shared pointer, we never want the global context to go away once
 // we've created it.  We also have an initializer lock to prevent multi-init
 boost::mutex GlobalCoreContext::s_initLock;
-cpp11::shared_ptr<GlobalCoreContext> GlobalCoreContext::s_globalContext;
+std::shared_ptr<GlobalCoreContext> GlobalCoreContext::s_globalContext;
 
 // Initially, there are no instantiators to be run
 InstantiatorLink* GlobalCoreContext::s_instantiator = nullptr;
 
 GlobalCoreContext::GlobalCoreContext(void):
-  CoreContext(cpp11::shared_ptr<CoreContext>())
+  CoreContext(std::shared_ptr<CoreContext>())
 {
   // Guard against multi-initialization:
   ASSERT(!s_globalContext);
@@ -31,7 +31,7 @@ GlobalCoreContext::~GlobalCoreContext(void) {
 }
 
 // Obtains the currently generated global context:
-cpp11::shared_ptr<GlobalCoreContext> GlobalCoreContext::Get() {
+std::shared_ptr<GlobalCoreContext> GlobalCoreContext::Get() {
   if(s_globalContext)
     return s_globalContext;
   
@@ -50,10 +50,10 @@ cpp11::shared_ptr<GlobalCoreContext> GlobalCoreContext::Get() {
 
   // We return a copy of s_globalContext to prevent the principal from being modified
   // due to rvalue optimization.
-  cpp11::shared_ptr<GlobalCoreContext> ptr(s_globalContext);
+  std::shared_ptr<GlobalCoreContext> ptr(s_globalContext);
   return ptr;
 }
 
-cpp11::shared_ptr<GlobalCoreContext> GetGlobalContext(void) {
+std::shared_ptr<GlobalCoreContext> GetGlobalContext(void) {
   return GlobalCoreContext::Get();
 }

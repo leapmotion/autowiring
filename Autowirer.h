@@ -13,7 +13,7 @@ class ContextMember;
 class AutowirableSlot;
 
 namespace AutowirerHelpers {
-  template<class T, bool isPolymorphic = cpp11::is_base_of<Object, T>::value>
+  template<class T, bool isPolymorphic = std::is_base_of<Object, T>::value>
   struct FindByCastInternal;
 }
 
@@ -33,7 +33,7 @@ class Autowirer:
   public Object
 {
 public:
-  Autowirer(const cpp11::shared_ptr<Autowirer>& pParent);
+  Autowirer(const std::shared_ptr<Autowirer>& pParent);
   ~Autowirer(void);
 
 protected:
@@ -41,10 +41,10 @@ protected:
   boost::mutex m_lock;
 
   // A pointer to the parent context
-  cpp11::shared_ptr<Autowirer> m_pParent;
+  std::shared_ptr<Autowirer> m_pParent;
 
   // A back-reference to ourselves, weak in order to prevent a degenerate cyclic reference
-  cpp11::weak_ptr<Autowirer> m_self;
+  std::weak_ptr<Autowirer> m_self;
   
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes
@@ -63,14 +63,14 @@ protected:
   // Deferred autowiring base class
   class DeferredBase {
   public:
-    DeferredBase(Autowirer* pThis, cpp11::weak_ptr<AutowirableSlot> tracker):
+    DeferredBase(Autowirer* pThis, std::weak_ptr<AutowirableSlot> tracker):
       pThis(pThis),
       tracker(tracker)
     {
     }
 
     virtual ~DeferredBase(void) {
-      cpp11::shared_ptr<AutowirableSlot> temp = tracker.lock();
+      std::shared_ptr<AutowirableSlot> temp = tracker.lock();
       if(!temp)
         // Destruction is occurring before autowiring, short-circuit
         return;
@@ -84,14 +84,14 @@ protected:
     Autowirer* pThis;
 
     // Functions that want to be called when we successfully bind:
-    std::vector< cpp11::function<void()> > m_postBind;
+    std::vector< std::function<void()> > m_postBind;
     
     // Store a weak reference to the slot's tracker so we can be informed
     // if it goes away before we have a chance to autowire it
-    cpp11::weak_ptr<AutowirableSlot> tracker;
+    std::weak_ptr<AutowirableSlot> tracker;
 
   public:
-    void AddPostBindingListener(const cpp11::function<void()>& listener) {
+    void AddPostBindingListener(const std::function<void()>& listener) {
       m_postBind.push_back(listener);
     }
 
@@ -104,7 +104,7 @@ protected:
   t_deferred m_deferred;
 
   // All known event receivers
-  std::vector<cpp11::shared_ptr<EventReceiver> > m_eventReceivers;
+  std::vector<std::shared_ptr<EventReceiver> > m_eventReceivers;
   std::vector<EventManagerBase*> m_eventSenders;
 
   /// <summary>
@@ -122,7 +122,7 @@ protected:
   /// Addition method which simply uses an already-constructed SharedPtrWrap
   /// </summary>
   template<class T>
-  cpp11::shared_ptr<T> AddInternal(SharedPtrWrap<T>* pWrap) {
+  std::shared_ptr<T> AddInternal(SharedPtrWrap<T>* pWrap) {
   }
   
   /// Adds an object of any kind to the IOC container
@@ -133,7 +133,7 @@ protected:
   /// will continue to hold a reference to it until it is destroyed
   /// </remarks>
   template<class T>
-  void AddInternal(cpp11::shared_ptr<T> value) {
+  void AddInternal(std::shared_ptr<T> value) {
     // Add to the map:
     {
       SharedPtrWrap<T>* pWrap = new SharedPtrWrap<T>(m_self, value);
@@ -187,13 +187,13 @@ protected:
   inline void AddToEventSenders(void*) {}
 
   template<class T>
-  void AddToEventReceivers(EventReceiver* pEventReceiver, cpp11::shared_ptr<T>& sharedPtr) {
+  void AddToEventReceivers(EventReceiver* pEventReceiver, std::shared_ptr<T>& sharedPtr) {
     m_eventReceivers.push_back(
-      cpp11::static_pointer_cast<EventReceiver, T>(sharedPtr)
+      std::static_pointer_cast<EventReceiver, T>(sharedPtr)
     );
 
     // The cast is a loop invariant; store it here for convenience
-    cpp11::shared_ptr<EventReceiver> casted = cpp11::static_pointer_cast<EventReceiver, T>(sharedPtr);
+    std::shared_ptr<EventReceiver> casted = std::static_pointer_cast<EventReceiver, T>(sharedPtr);
 
     // Scan the list of compatible senders:
     for(size_t i = 0; i < m_eventSenders.size(); i++)
@@ -201,7 +201,7 @@ protected:
   }
 
   template<class T>
-  inline void AddToEventReceivers(void*, const cpp11::shared_ptr<T>&) {}
+  inline void AddToEventReceivers(void*, const std::shared_ptr<T>&) {}
 
   template<class W>
   bool DoAutowire(W& slot) {
@@ -222,7 +222,7 @@ protected:
 
 public:
   // Accessor methods:
-  cpp11::shared_ptr<Autowirer>& GetParentContext(void) {return m_pParent;}
+  std::shared_ptr<Autowirer>& GetParentContext(void) {return m_pParent;}
 
   /// <summary>
   /// Adds an object of any kind to the IOC container
@@ -233,7 +233,7 @@ public:
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
   template<class T>
-  void Add(const cpp11::shared_ptr<T>& value) {
+  void Add(const std::shared_ptr<T>& value) {
     AddInternal(value);
     AddContextMember(value.get());
   }
@@ -253,7 +253,7 @@ public:
   /// due to limitations on the way that dynamic_cast works internally.
   /// </remarks>
   template<class T>
-  cpp11::shared_ptr<T> FindByCast(void) {
+  std::shared_ptr<T> FindByCast(void) {
     return ((AutowirerHelpers::FindByCastInternal<T>&)*this)();
   }
 
@@ -261,7 +261,7 @@ public:
   /// Locates an available context member by its exact type, if known
   /// </summary>
   template<class T>
-  cpp11::shared_ptr<T> FindByType(const Autowired<T>&) {
+  std::shared_ptr<T> FindByType(const Autowired<T>&) {
     // Attempt a resolution by type first:
     std::string typeName = typeid(T).name();
     t_mpType::iterator q;
@@ -280,7 +280,7 @@ public:
       return FindByCast<T>();
 
     // If find has been requested by type, there should be only one match.
-    cpp11::shared_ptr<T>& retVal = *(SharedPtrWrap<T>*)q->second;
+    std::shared_ptr<T>& retVal = *(SharedPtrWrap<T>*)q->second;
     q++;
     if(q != m_byType.end() && q->first == typeName)
       // Ambiguous match, exception:
@@ -292,7 +292,7 @@ public:
   /// Specialization for autowired members which have no forward declaration
   /// </summary>
   template<class T, bool isPolymorphic, bool isAbstract>
-  cpp11::shared_ptr<T> FindByType(const AutowiredNoForwardDeclaration<T, isPolymorphic, isAbstract>&) {
+  std::shared_ptr<T> FindByType(const AutowiredNoForwardDeclaration<T, isPolymorphic, isAbstract>&) {
     // It's an object, the only thing we're going to attempt is a cast resolution
     return ((AutowirerHelpers::FindByCastInternal<T, isPolymorphic>&)*this)();
   }
@@ -361,7 +361,7 @@ public:
   /// not be holding any locks when this method is invoked, or the caller should design the listener
   /// method such that it may be substitutde in place for the notification routine.
   /// </remarks>
-  void NotifyWhenAutowired(const AutowirableSlot& slot, const cpp11::function<void()>& listener);
+  void NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener);
 };
 
 namespace AutowirerHelpers {
@@ -373,13 +373,13 @@ template<class T>
 struct FindByCastInternal<T, true>:
   public Autowirer
 {
-  cpp11::shared_ptr<T> operator()(void) {
+  std::shared_ptr<T> operator()(void) {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    cpp11::shared_ptr<Object> matchedObject;
+    std::shared_ptr<Object> matchedObject;
 
-    static_assert((!cpp11::is_same<Object, T>::value), "FindByCastInternal on type Object is an overly broad search criteria");
+    static_assert((!std::is_same<Object, T>::value), "FindByCastInternal on type Object is an overly broad search criteria");
 
-    cpp11::shared_ptr<Object> obj;
+    std::shared_ptr<Object> obj;
     for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); q++) {
       SharedPtrWrapBase* pBase = q->second;
 
@@ -411,8 +411,8 @@ struct FindByCastInternal<T, true>:
     return
       matchedObject ?
       // Generally, we don't care whether the originally constructed value is
-      cpp11::static_pointer_cast<T, Object>(matchedObject) :
-      cpp11::shared_ptr<T>();
+      std::static_pointer_cast<T, Object>(matchedObject) :
+      std::shared_ptr<T>();
   }
 };
 
@@ -420,8 +420,8 @@ template<class T>
 struct FindByCastInternal<T, false>:
   public Autowirer
 {
-  cpp11::shared_ptr<T> operator()(void) {
-    return cpp11::shared_ptr<T>();
+  std::shared_ptr<T> operator()(void) {
+    return std::shared_ptr<T>();
   }
 };
 

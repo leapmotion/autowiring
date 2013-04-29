@@ -51,7 +51,7 @@ public:
   /// <summary>
   /// Obtains the global core context, or initializes it if necessary
   /// </summary>
-  static cpp11::shared_ptr<GlobalCoreContext> Get(void);
+  static std::shared_ptr<GlobalCoreContext> Get(void);
   
   /// <summary>
   /// Releases the global context, allowing reinitialization
@@ -83,7 +83,7 @@ private:
 
   // Global context shared pointer and lock:
   static boost::mutex s_initLock;
-  static cpp11::shared_ptr<GlobalCoreContext> s_globalContext;
+  static std::shared_ptr<GlobalCoreContext> s_globalContext;
 
   /// <summary>
   /// Initializes, then destroys, a single instance of class W in local scope
@@ -107,6 +107,6 @@ struct GlobalContextDesignation {
 /// <summary>
 /// Obtains the global context, provided at global scope to allow forward declaration
 /// </summary>
-cpp11::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
+std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 
 #endif

@@ -3,11 +3,11 @@
 #include "CoreContext.h"
 #include "GlobalCoreContext.h"
     
-cpp11::shared_ptr<CoreContext> NewContextThunk(void) {
+std::shared_ptr<CoreContext> NewContextThunk(void) {
   return CoreContext::CurrentContext()->Create();
 }
 
-cpp11::shared_ptr<CoreContext> NewContextThunk(cpp11::shared_ptr<CoreContext>& pParent) {
+std::shared_ptr<CoreContext> NewContextThunk(std::shared_ptr<CoreContext>& pParent) {
   return pParent->Create();
 }
 
@@ -46,7 +46,7 @@ void AutowiredCreator<CoreContext, false>::Push() {
 /// context is the global context.
 /// </remarks>
 void AutowiredCreator<CoreContext, false>::Pop(void) {
-  *this = cpp11::static_pointer_cast<CoreContext, Autowirer>(get()->GetParentContext());
+  *this = std::static_pointer_cast<CoreContext, Autowirer>(get()->GetParentContext());
   if(*this) {
     m_context = *this;
     get()->SetCurrent();
@@ -56,8 +56,8 @@ void AutowiredCreator<CoreContext, false>::Pop(void) {
   }
 }
 
-cpp11::shared_ptr<CoreContext> GetGlobalContextAsCoreContext(void) {
-  return cpp11::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
+std::shared_ptr<CoreContext> GetGlobalContextAsCoreContext(void) {
+  return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
 }
 
 Autowired<CoreContext>::Autowired(bool forceNew) {

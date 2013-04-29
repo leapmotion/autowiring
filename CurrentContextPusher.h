@@ -10,12 +10,12 @@ class CoreContext;
 class CurrentContextPusher
 {
 public:
-  CurrentContextPusher(cpp11::shared_ptr<CoreContext> pContext);
+  CurrentContextPusher(std::shared_ptr<CoreContext> pContext);
   CurrentContextPusher(CoreContext* pContext);
   ~CurrentContextPusher(void);
 
 private:
-  cpp11::shared_ptr<CoreContext> m_prior;
+  std::shared_ptr<CoreContext> m_prior;
 };
 
 #endif

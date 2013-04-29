@@ -2,7 +2,7 @@
 #include "CurrentContextPusher.h"
 #include "CoreContext.h"
 
-CurrentContextPusher::CurrentContextPusher(cpp11::shared_ptr<CoreContext> pContext):
+CurrentContextPusher::CurrentContextPusher(std::shared_ptr<CoreContext> pContext):
   m_prior(pContext->SetCurrent())
 {
 }

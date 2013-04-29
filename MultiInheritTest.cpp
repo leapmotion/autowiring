@@ -11,15 +11,15 @@ TEST_F(MultiInheritTest, VerifyCast) {
   ctxt->SetCurrent();
 
   // Make sure that we still have a context:
-  ASSERT_TRUE(ctxt) << "Create call must create a context";
+  ASSERT_TRUE(ctxt.IsAutowired()) << "Create call must create a context";
 
   // Insert a MultiInherit object:
-  cpp11::shared_ptr<MultiInherit> obj(new MultiInherit());
+  std::shared_ptr<MultiInherit> obj(new MultiInherit());
   ctxt->Add(obj);
 
   // Autowire in the pObj:
   Autowired<MultiInherit> wiredPobj;
-  ASSERT_TRUE(wiredPobj) << "Autowiring failed for a multi-inheritance object";
+  ASSERT_TRUE(wiredPobj.IsAutowired()) << "Autowiring failed for a multi-inheritance object";
 
   // Verify that we get a pObj back with correct casting:
   EXPECT_EQ(obj, wiredPobj) << "Autowiring failed on a multiple inheritance object";
