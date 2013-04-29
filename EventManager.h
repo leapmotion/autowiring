@@ -19,7 +19,7 @@ public:
   virtual ~EventManagerBase(void) {
   }
   
-  virtual EventManagerBase& operator+=(cpp11::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual EventManagerBase& operator+=(std::shared_ptr<EventReceiver>& rhs) = 0;
 };
 
 /// <summary>
@@ -32,17 +32,17 @@ class EventManager:
 {
 private:
   static_assert(
-    (cpp11::is_base_of<EventReceiver, T>::value),
+    (std::is_base_of<EventReceiver, T>::value),
     "Uses of EventManager must be for interfaces that implement EventReceiver"
   );
 
-  typedef std::map<T*, cpp11::shared_ptr<T> > t_mpType;
+  typedef std::map<T*, std::shared_ptr<T> > t_mpType;
   t_mpType m_mp;
 
 public:
-  virtual EventManagerBase& operator+=(cpp11::shared_ptr<EventReceiver>& rhs) {
+  virtual EventManagerBase& operator+=(std::shared_ptr<EventReceiver>& rhs) {
     try {
-      cpp11::shared_ptr<T> casted = cpp11::dynamic_pointer_cast<T, EventReceiver>(rhs);
+      std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
       if(casted)
         return *this += casted;
     } catch(std::bad_cast&) {
@@ -53,9 +53,9 @@ public:
   /// <summary>
   /// Adds the specified observer to receive events dispatched from this instace
   /// </su8mmary>
-  EventManager<T>& operator+=(cpp11::shared_ptr<T>& rhs) {
+  EventManager<T>& operator+=(std::shared_ptr<T>& rhs) {
     // If we already contain the specified rhs, short-circuit.
-    cpp11::shared_ptr<T>& location = m_mp[rhs.get()];
+    std::shared_ptr<T>& location = m_mp[rhs.get()];
     if(!location)
       location = rhs;
     return *this;
@@ -83,7 +83,7 @@ public:
   
   // Two-parenthetical invocations
   template<class Arg1>
-  cpp11::function<void (Arg1)> Fire(void (T::*fnPtr)(Arg1)) const {
+  std::function<void (Arg1)> Fire(void (T::*fnPtr)(Arg1)) const {
     return
 #if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1) {
@@ -101,7 +101,7 @@ public:
   }
 
   template<class Arg1, class Arg2>
-  cpp11::function<void (Arg1, Arg2)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
+  std::function<void (Arg1, Arg2)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
     return
 #if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
@@ -119,7 +119,7 @@ public:
   }
 
   template<class Arg1, class Arg2, class Arg3>
-  cpp11::function<void (Arg1, Arg2, Arg3)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
+  std::function<void (Arg1, Arg2, Arg3)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
     return
 #if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {

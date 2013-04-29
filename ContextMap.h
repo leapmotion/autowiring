@@ -6,7 +6,7 @@
 
 class CoreContext;
 
-extern cpp11::shared_ptr<CoreContext> NewContextThunk(void);
+extern std::shared_ptr<CoreContext> NewContextThunk(void);
 
 /// <summary>
 /// A context map allows the management of semitransient contexts
@@ -26,7 +26,7 @@ template<class Key>
 class ContextMap
 {
 private:
-  typedef std::map<Key, cpp11::weak_ptr<CoreContext> > t_mpType;
+  typedef std::map<Key, std::weak_ptr<CoreContext> > t_mpType;
   boost::mutex m_lk;
   t_mpType m_contexts;
 
@@ -51,7 +51,7 @@ public:
   ///
   /// An exception will be thrown if the passed key is already associated with a context
   /// </remarks>
-  void Add(const Key& key, cpp11::shared_ptr<CoreContext>& context) {
+  void Add(const Key& key, std::shared_ptr<CoreContext>& context) {
     boost::lock_guard<boost::mutex> lk(m_lk);
     typename t_mpType::iterator q = m_contexts.lower_bound(key);
     if(
@@ -66,8 +66,8 @@ public:
   /// <summary>
   /// Attempts to find a context by the specified key
   /// </summary>
-  cpp11::shared_ptr<CoreContext> Find(const Key& key) {
-    cpp11::shared_ptr<CoreContext> retVal;
+  std::shared_ptr<CoreContext> Find(const Key& key) {
+    std::shared_ptr<CoreContext> retVal;
 
     boost::lock_guard<boost::mutex> lk(m_lk);
     typename t_mpType::iterator q = m_contexts.lower_bound(key);
@@ -83,8 +83,8 @@ public:
   /// <summary>
   /// Identifies and locks the context specified by the key, if one exists, or creates it if one does not
   /// </summary>
-  cpp11::shared_ptr<CoreContext> Create(const Key& key) {
-    cpp11::shared_ptr<CoreContext> retVal;
+  std::shared_ptr<CoreContext> Create(const Key& key) {
+    std::shared_ptr<CoreContext> retVal;
 
     // Lock and lookup:
     boost::lock_guard<boost::mutex> lk(m_lk);
