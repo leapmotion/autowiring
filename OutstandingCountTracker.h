@@ -6,11 +6,11 @@ class CoreContext;
 class OutstandingCountTracker
 {
 public:
-  OutstandingCountTracker(cpp11::shared_ptr<CoreContext> context);
+  OutstandingCountTracker(std::shared_ptr<CoreContext> context);
   ~OutstandingCountTracker(void);
 
 private:
-  cpp11::shared_ptr<CoreContext> m_context;
+  std::shared_ptr<CoreContext> m_context;
 };
 
 #endif

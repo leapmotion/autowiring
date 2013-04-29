@@ -32,7 +32,7 @@ class OutstandingCountTracker;
 /// <summary>
 /// Convenient access to the currently active context stored in the global context
 /// </summary>
-cpp11::shared_ptr<CoreContext> GetCurrentContext(void);
+std::shared_ptr<CoreContext> GetCurrentContext(void);
 
 /// <summary>
 /// This class is used to determine whether all core threads have exited
@@ -40,10 +40,10 @@ cpp11::shared_ptr<CoreContext> GetCurrentContext(void);
 class CoreContext:
   public Autowirer
 {
-  CoreContext(cpp11::shared_ptr<CoreContext> pParent);
+  CoreContext(std::shared_ptr<CoreContext> pParent);
 
   // A pointer to the current context, for construction purposes
-  static boost::thread_specific_ptr<cpp11::shared_ptr<CoreContext> > s_curContext;
+  static boost::thread_specific_ptr<std::shared_ptr<CoreContext> > s_curContext;
 
 public:
   virtual ~CoreContext(void);
@@ -52,7 +52,7 @@ public:
   /// Factory to create a new context
   /// </summary>
   /// <param name="pParent">An optional parent context.  If null, will default to the root context.</param>
-  cpp11::shared_ptr<CoreContext> Create(void);
+  std::shared_ptr<CoreContext> Create(void);
 
   /// <summary>
   /// Creates a dependent context using the specified global structure as a reference entity
@@ -85,7 +85,7 @@ public:
     //  4) AutoRequired members insert new members into the new CoreContext
     //  5) DependentContext ctor is called, autowires in the current context into m_context
     //  6) pusher's dtor is called, resets the current context
-    cpp11::shared_ptr<CoreContext> dependent = Create();
+    std::shared_ptr<CoreContext> dependent = Create();
     return
       CurrentContextPusher(dependent.get()),
       new DependentContext<T>(dependent);
@@ -121,13 +121,13 @@ private:
   // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
   // Destructor does nothing; this is by design.
   boost::mutex m_outstandingLock;
-  cpp11::weak_ptr<OutstandingCountTracker> m_outstanding;
+  std::weak_ptr<OutstandingCountTracker> m_outstanding;
 
   // Actual core threads:
   typedef list<CoreThread*> t_threadList;
   t_threadList m_threads;
 
-  friend cpp11::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
+  friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
   friend class GlobalCoreContext;
 
   friend class OutstandingCountTracker;
@@ -145,13 +145,13 @@ public:
   /// is decremented.  The caller is encouraged not to copy the return value, as doing
   /// so can give spurious values for the current number of outstanding threads.
   /// </remarks>
-  cpp11::shared_ptr<OutstandingCountTracker> IncrementOutstandingThreadCount(void);
+  std::shared_ptr<OutstandingCountTracker> IncrementOutstandingThreadCount(void);
 
   /// <summary>
   /// Adds the specified value without creating a new shared pointer for that value
   /// </summary>
   template<class T>
-  void Add(const cpp11::shared_ptr<T>& value) {
+  void Add(const std::shared_ptr<T>& value) {
     Autowirer::Add(value);
     AddCoreThread(value.get());
   }
@@ -161,9 +161,9 @@ public:
   /// and creates a new shared_ptr for the constructed object
   /// </summary>
   template<class T>
-  cpp11::shared_ptr<T> Add(void) {
+  std::shared_ptr<T> Add(void) {
     CurrentContextPusher pusher(this);
-    cpp11::shared_ptr<T> retVal(new T);
+    std::shared_ptr<T> retVal(new T);
     Add(retVal);
     return retVal;
   }
@@ -222,16 +222,16 @@ public:
   /// Makes the current context the parent of this context
   /// </summary>
   void DEPRECATED(Pop(void), "Pop is semantically incorrect, it should no longer be used") {
-    cpp11::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->SetCurrent();
+    std::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->SetCurrent();
   }
 
   /// <summary>
   /// This makes this core context current.
   /// </summary>
   /// <returns>The previously current context</returns>
-  cpp11::shared_ptr<CoreContext> SetCurrent(void) {
-    cpp11::shared_ptr<CoreContext> newCurrent = 
-      cpp11::static_pointer_cast<CoreContext, Autowirer>(
+  std::shared_ptr<CoreContext> SetCurrent(void) {
+    std::shared_ptr<CoreContext> newCurrent = 
+      std::static_pointer_cast<CoreContext, Autowirer>(
         m_self.lock()
       );
     ASSERT(newCurrent);
@@ -242,10 +242,10 @@ public:
   /// This makes a specific core context current
   /// </summary>
   /// <returns>The previously current context</returns>
-  static cpp11::shared_ptr<CoreContext> SetCurrent(const cpp11::shared_ptr<CoreContext>& context) {
+  static std::shared_ptr<CoreContext> SetCurrent(const std::shared_ptr<CoreContext>& context) {
     ASSERT(context);
-    cpp11::shared_ptr<CoreContext> retVal = GetCurrentContext();
-    s_curContext.reset(new cpp11::shared_ptr<CoreContext>(context));
+    std::shared_ptr<CoreContext> retVal = GetCurrentContext();
+    s_curContext.reset(new std::shared_ptr<CoreContext>(context));
     return retVal;
   };
 
@@ -272,6 +272,6 @@ public:
   /// context is assigned before invoking a CoreThread instance's Run method, and it's also assigned
   /// when a context is first constructed by a thread.
   /// </remarks>
-  static cpp11::shared_ptr<CoreContext> CurrentContext(void);
+  static std::shared_ptr<CoreContext> CurrentContext(void);
 };
 #endif

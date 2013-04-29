@@ -12,7 +12,7 @@ class ContextMember:
 {
 protected:
   ContextMember(const char* name = nullptr);
-  cpp11::weak_ptr<ContextMember> m_self;
+  std::weak_ptr<ContextMember> m_self;
   const char* m_name;
 
 public:
@@ -20,14 +20,14 @@ public:
 
 protected:
   // Member variables:
-  cpp11::weak_ptr<CoreContext> m_context;
+  std::weak_ptr<CoreContext> m_context;
 
 public:
   // Accessor methods:
   const char* GetName(void) const {return m_name;}
 
   // Mutator methods:
-  void SetContext(cpp11::shared_ptr<CoreContext>& context) {
+  void SetContext(std::shared_ptr<CoreContext>& context) {
     m_context = context;
   }
 
@@ -41,18 +41,18 @@ public:
   /// Note that, if the context is in the process of tearing down, this return value
   /// could be null.
   /// </remarks>
-  cpp11::shared_ptr<CoreContext> GetContext(void) const {return m_context.lock();}
+  std::shared_ptr<CoreContext> GetContext(void) const {return m_context.lock();}
 
   /// <summary>
   /// Returns a shared pointer that refers to ourselves
   /// </summary>
   template<class T>
-  cpp11::shared_ptr<T> GetSelf(void) {
+  std::shared_ptr<T> GetSelf(void) {
     // This exists exclusively to ensure casting safety
     static_cast<T*>((ContextMember*)nullptr);
 
     // HACK:  This is a stupid way to get a shared pointer to the type we want, but I don't see another way.
-    return (cpp11::shared_ptr<T>&)m_self.lock();
+    return (std::shared_ptr<T>&)m_self.lock();
   }
 };
 

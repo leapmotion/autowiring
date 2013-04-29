@@ -7,7 +7,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 
-using cpp11::shared_ptr;
+using std::shared_ptr;
 
 class CoreContext;
 class CoreThread;

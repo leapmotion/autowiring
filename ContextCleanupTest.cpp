@@ -9,8 +9,8 @@
 using boost::chrono::milliseconds;
 
 TEST_F(ContextCleanupTest, VerifyContextDtor) {
-  cpp11::weak_ptr<CoreContext> contextVerifier;
-  cpp11::weak_ptr<SimpleObject> objVerifier;
+  std::weak_ptr<CoreContext> contextVerifier;
+  std::weak_ptr<SimpleObject> objVerifier;
 
   {
     // Create a new context and add some objects

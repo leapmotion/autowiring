@@ -9,7 +9,7 @@ using namespace std;
 
 const char sc_emptyName[] = "";
 
-Autowirer::Autowirer(const cpp11::shared_ptr<Autowirer>& pParent):
+Autowirer::Autowirer(const std::shared_ptr<Autowirer>& pParent):
   m_pParent(pParent)
 {
 }
@@ -42,7 +42,7 @@ void Autowirer::AddContextMember(ContextMember* ptr)
   location = ptr;
 }
 
-void Autowirer::NotifyWhenAutowired(const AutowirableSlot& slot, const cpp11::function<void()>& listener) {
+void Autowirer::NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener) {
   boost::lock_guard<boost::mutex> lk(m_deferredLock);
 
   // If the slot is already autowired then we can invoke the listener here and return early
@@ -61,6 +61,6 @@ void Autowirer::NotifyWhenAutowired(const AutowirableSlot& slot, const cpp11::fu
   q->second->AddPostBindingListener(listener);
 }
 
-cpp11::shared_ptr<CoreContext> CreateContextThunk(void) {
+std::shared_ptr<CoreContext> CreateContextThunk(void) {
   return CoreContext::CurrentContext()->Create();
 }
