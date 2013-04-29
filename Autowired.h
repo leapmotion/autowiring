@@ -12,20 +12,20 @@ class CoreContext;
 class GlobalCoreContext;
 
 // Redeclarations, primary declarations in CoreContext.h
-cpp11::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
-cpp11::shared_ptr<CoreContext> GetGlobalContextAsCoreContext(void);
-cpp11::shared_ptr<CoreContext> GetCurrentContext(void);
+std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
+std::shared_ptr<CoreContext> GetGlobalContextAsCoreContext(void);
+std::shared_ptr<CoreContext> GetCurrentContext(void);
 void AddGlobalObjects(InstantiatorLink* pLink);
 
 // Exists only to get around a header cyclic dependency, needed only because we
 // cannot forward-declare member functions more than once
-extern cpp11::shared_ptr<CoreContext> NewContextThunk(void);
-extern cpp11::shared_ptr<CoreContext> NewContextThunk(cpp11::shared_ptr<CoreContext>& pParent);
+extern std::shared_ptr<CoreContext> NewContextThunk(void);
+extern std::shared_ptr<CoreContext> NewContextThunk(std::shared_ptr<CoreContext>& pParent);
 
 template<class T, bool isAbstract>
 class AutowiredCreator:
   public AutowirableSlot,
-  public cpp11::shared_ptr<T>
+  public std::shared_ptr<T>
 {
 public:
   typedef shared_ptr<T> t_ptrType;
@@ -33,14 +33,14 @@ public:
   /// <summary>
   /// This creates a pointer using the specified lambda, if such creation is needed.
   /// <summary>
-  void Create(const cpp11::function<T* ()>& fn) {
+  void Create(const std::function<T* ()>& fn) {
     // Is the object already created?  Short-circuit if so.
     if(*this)
       return;
 
     // Okay, we're ready to go now, we can release
     // the shared pointer so any lambdas disappear
-    AutowirableSlot::m_tracker = cpp11::shared_ptr<AutowirableSlot>();
+    AutowirableSlot::m_tracker = std::shared_ptr<AutowirableSlot>();
     
     // TODO:  Allow this to be lazily invoked
     // It would be nice if this constructor is only invoked on the first dereference
@@ -51,97 +51,21 @@ public:
     // Now we'll add this object to the context so the created object may be autowired elsewhere.
     // We also want to be sure we use the same shared_ptr that's being used internally in the
     // context.
-    cpp11::shared_ptr<CoreContext> context = LockContext();
+    std::shared_ptr<CoreContext> context = LockContext();
     *this = context->Add(ptr);
   }
 
-  using cpp11::shared_ptr<T>::operator=;
-
   bool IsAutowired(void) const override {return !!this->get();}
-};
 
-template<>
-class AutowiredCreator<CoreContext, false>:
-  public AutowirableSlot,
-  public cpp11::shared_ptr<CoreContext>
-{
-public:
-  typedef shared_ptr<CoreContext> t_ptrType;
-  void Create(void);
-
-  /// <summary>
-  /// Creates a dependent context based on the currently bound context
-  /// </summary>
-  void Push();
-
-  /// <summary>
-  /// Moves this context pointer up one notch to its parent context
-  /// </summary>
-  /// <remarks>
-  /// This may cause the current pointer to become null, if the current
-  /// context is the global context.
-  /// </remarks>
-  void Pop();
-
-  using cpp11::shared_ptr<CoreContext>::operator=;
-  bool IsAutowired(void) const override {return !!this->get();}
-};
-
-struct EmptyContext {};
-
-/// <summary>
-/// A container structure used to specify the types
-/// </summary>
-template<class S = EmptyContext>
-struct GlobalContextName {};
-
-enum eGlobalBehavior {
-  // Simply autowire a global object in
-  eDefaultGlobalBehavior,
-
-  // Initialize, if not already initialized
-  eInitGlobalBehavior
-};
-
-/// <summary>
-/// This is the specialization for global contexts.  Unlike other autowires, it's guaranteed
-/// to autowire in all circumstances.
-/// </summary>
-/// <remarks>
-/// We do not autowire operator=, because there is never a case where the rhs is anything
-/// but the sole Global context or null.
-/// </remarks>
-template<>
-class AutowiredCreator<GlobalCoreContext, false>:
-  public AutowirableSlot,
-  public cpp11::shared_ptr<GlobalCoreContext>
-{
-private:
-  // We do not allow operator=
-  using cpp11::shared_ptr<GlobalCoreContext>::operator=;
-
-public:
-  typedef shared_ptr<GlobalCoreContext> t_ptrType;
-  
-  /// <summary>
-  /// Alias of GlobalCoreContext::InstantiateW
-  /// </summary>
-  template<class W>
-  static void MakeInstance() {
-    W s;
+  operator bool(void) const {
+    return !!t_ptrType::get();
   }
 
-  template<class W>
-  static InstantiatorLink* MakeLink(void) {
-    static InstantiatorLink link = {nullptr, &MakeInstance<W>};
-    return &link;
+  operator T*(void) const {
+    return t_ptrType::get();
   }
 
-  AutowiredCreator(void):
-    cpp11::shared_ptr<GlobalCoreContext>(GetGlobalContext())
-  {
-  }
-  bool IsAutowired(void) const override {return !!this->get();}
+  using std::shared_ptr<T>::operator=;
 };
 
 template<class T>
@@ -167,6 +91,79 @@ public:
   }
 
   using AutowiredCreator<T, true>::operator=;
+};
+
+template<>
+class AutowiredCreator<CoreContext, false>:
+  public AutowirableSlot,
+  public std::shared_ptr<CoreContext>
+{
+public:
+  typedef shared_ptr<CoreContext> t_ptrType;
+  void Create(void);
+
+  /// <summary>
+  /// Creates a dependent context based on the currently bound context
+  /// </summary>
+  void Push();
+
+  /// <summary>
+  /// Moves this context pointer up one notch to its parent context
+  /// </summary>
+  /// <remarks>
+  /// This may cause the current pointer to become null, if the current
+  /// context is the global context.
+  /// </remarks>
+  void Pop();
+
+  using std::shared_ptr<CoreContext>::operator=;
+  bool IsAutowired(void) const override {return !!this->get();}
+};
+
+/// <summary>
+/// This is the specialization for global contexts.  Unlike other autowires, it's guaranteed
+/// to autowire in all circumstances.
+/// </summary>
+/// <remarks>
+/// We do not autowire operator=, because there is never a case where the rhs is anything
+/// but the sole Global context or null.
+/// </remarks>
+template<>
+class AutowiredCreator<GlobalCoreContext, false>:
+  public AutowirableSlot,
+  public std::shared_ptr<GlobalCoreContext>
+{
+private:
+  // We do not allow operator=
+  using std::shared_ptr<GlobalCoreContext>::operator=;
+
+public:
+  typedef shared_ptr<GlobalCoreContext> t_ptrType;
+  
+  /// <summary>
+  /// Alias of GlobalCoreContext::InstantiateW
+  /// </summary>
+  template<class W>
+  static void MakeInstance() {
+    W s;
+  }
+
+  template<class W>
+  static InstantiatorLink* MakeLink(void) {
+    static InstantiatorLink link = {nullptr, &MakeInstance<W>};
+    return &link;
+  }
+
+  AutowiredCreator(void):
+    std::shared_ptr<GlobalCoreContext>(GetGlobalContext())
+  {
+  }
+
+  bool IsAutowired(void) const override {return !!this->get();}
+
+  operator GlobalCoreContext*(void) const {
+    return t_ptrType::get();
+  }
 };
 
 /// <summary>
@@ -209,7 +206,7 @@ public:
   /// <param name="forceNew">Set if a new context is required</param>
   Autowired(bool forceNew = false);
 
-  using cpp11::shared_ptr<CoreContext>::operator=;
+  using std::shared_ptr<CoreContext>::operator=;
 };
 
 template<>
@@ -267,13 +264,13 @@ public:
 /// </summary>
 template<class T>
 class AutowiredWeak:
-  public cpp11::weak_ptr<T>,
+  public std::weak_ptr<T>,
   public AutowirableSlot
 {
 public:
   // TODO: Fix this, we need a way to autowire weak pointers
   AutowiredWeak(void):
-      cpp11::weak_ptr<T>()
+      std::weak_ptr<T>()
   {
   }
 };

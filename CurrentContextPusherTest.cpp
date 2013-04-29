@@ -6,10 +6,10 @@
 using namespace std;
 
 TEST_F(CurrentContextPusherTest, VerifyResetsDuringThrow) {
-  cpp11::shared_ptr<CoreContext> current = CoreContext::CurrentContext();
+  std::shared_ptr<CoreContext> current = CoreContext::CurrentContext();
 
   try {
-    cpp11::shared_ptr<CoreContext> subContext = current->Create();
+    std::shared_ptr<CoreContext> subContext = current->Create();
     CurrentContextPusher test(subContext.get());
     throw exception();
   } catch(exception&) {

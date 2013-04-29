@@ -11,10 +11,10 @@
 
 using namespace boost;
 
-thread_specific_ptr<cpp11::shared_ptr<CoreContext> > CoreContext::s_curContext;
+thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
 
-CoreContext::CoreContext(cpp11::shared_ptr<CoreContext> pParent):
-  Autowirer(cpp11::static_pointer_cast<Autowirer, CoreContext>(pParent)),
+CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
+  Autowirer(std::static_pointer_cast<Autowirer, CoreContext>(pParent)),
   m_shouldStop(true),
   m_refCount(0)
 {
@@ -31,38 +31,38 @@ CoreContext::~CoreContext(void) {
   );
 }
 
-cpp11::shared_ptr<OutstandingCountTracker> CoreContext::IncrementOutstandingThreadCount(void) {
-  cpp11::shared_ptr<OutstandingCountTracker> retVal = m_outstanding.lock();
+std::shared_ptr<OutstandingCountTracker> CoreContext::IncrementOutstandingThreadCount(void) {
+  std::shared_ptr<OutstandingCountTracker> retVal = m_outstanding.lock();
   if(!m_outstanding.expired())
     return retVal;
 
   boost::lock_guard<boost::mutex> lk(m_outstandingLock);
   retVal.reset(
     new OutstandingCountTracker(
-      cpp11::static_pointer_cast<CoreContext, Autowirer>(m_self.lock())
+      std::static_pointer_cast<CoreContext, Autowirer>(m_self.lock())
     )
   );
   m_outstanding = retVal;
   return retVal;
 }
 
-cpp11::shared_ptr<CoreContext> CoreContext::Create(void) {
+std::shared_ptr<CoreContext> CoreContext::Create(void) {
   // Create the context, first
   CoreContext* pContext =
     new CoreContext(
-      cpp11::static_pointer_cast<CoreContext, Autowirer>(m_self.lock())
+      std::static_pointer_cast<CoreContext, Autowirer>(m_self.lock())
     );
 
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
-  cpp11::shared_ptr<CoreContext> retVal(pContext);
+  std::shared_ptr<CoreContext> retVal(pContext);
   pContext->m_self = retVal;
   return retVal;
 }
 
 void CoreContext::InitiateCoreThreads(void) {
   // Self-reference to ensure the context is not destroyed until all threads are gone
-  cpp11::shared_ptr<CoreContext> self = cpp11::static_pointer_cast<CoreContext, Autowirer>(m_self.lock());
+  std::shared_ptr<CoreContext> self = std::static_pointer_cast<CoreContext, Autowirer>(m_self.lock());
 
   // Because the caller was able to invoke a method on this CoreContext, it must have
   // a shared_ptr to it.  Thus, we can assert that the above lock operation succeeded.
@@ -78,7 +78,7 @@ void CoreContext::InitiateCoreThreads(void) {
   if(m_pParent)
     // Start parent threads first
     // Parent MUST be a core context
-    cpp11::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->InitiateCoreThreads();
+    std::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->InitiateCoreThreads();
 
   // Set our stop flag before kicking off any threads:
   m_shouldStop = false;
@@ -107,14 +107,14 @@ void CoreContext::SignalShutdown(void) {
 
   if(m_pParent)
     // Signal parent that it's time to shut down
-    cpp11::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->SignalShutdown();
+    std::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->SignalShutdown();
 }
 
-cpp11::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
+std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   if(!s_curContext.get())
-    return cpp11::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
+    return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
 
-  cpp11::shared_ptr<CoreContext>* retVal = s_curContext.get();
+  std::shared_ptr<CoreContext>* retVal = s_curContext.get();
   ASSERT(retVal);
   ASSERT(*retVal);
   return *retVal;
@@ -134,6 +134,6 @@ void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
     ptr->Start();
 }
 
-cpp11::shared_ptr<CoreContext> GetCurrentContext() {
+std::shared_ptr<CoreContext> GetCurrentContext() {
   return CoreContext::CurrentContext();
 }

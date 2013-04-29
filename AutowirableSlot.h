@@ -20,7 +20,7 @@ public:
   /// to this object, and it's located here.  Everything else should be weak pointers
   /// whose purpose is to be notified when this tracker goes away.
   /// </summary>
-  cpp11::shared_ptr<AutowirableSlot> m_tracker;
+  std::shared_ptr<AutowirableSlot> m_tracker;
 
   /// <summary>
   /// This is the context that was available at the time the autowiring was performed.
@@ -30,17 +30,17 @@ public:
   /// first created member of the context would generate a cyclic reference between
   /// this pointer and the context membership set.
   /// </remarks>
-  cpp11::weak_ptr<CoreContext> m_context;
+  std::weak_ptr<CoreContext> m_context;
 
   /// <summary>
   /// Convenience method, functionally identical to Autowirer::NotifyWhenAutowired
   /// </summary>
-  void NotifyWhenAutowired(const cpp11::function<void()>& listener);
+  void NotifyWhenAutowired(const std::function<void()>& listener);
 
   /// <summary>
   /// Utility routine to lock the context, or throw an exception if something goes wrong
   /// </summary>
-  cpp11::shared_ptr<CoreContext> LockContext(void);
+  std::shared_ptr<CoreContext> LockContext(void);
 
   virtual bool IsAutowired(void) const = 0;
 };
