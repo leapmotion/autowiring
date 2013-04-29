@@ -18,14 +18,22 @@ public:
 };
 
 TEST_F(CtorProxyTest, VerifySimple) {
-  shared_ptr<CoreContext> context = CoreContext::CurrentContext()->Create();
-  CurrentContextPusher psher(context);
+  std::weak_ptr<SimpleClass> weak;
+  {
+    std::shared_ptr<CoreContext> context = CoreContext::CurrentContext()->Create();
+    CurrentContextPusher psher(context);
 
-  // Trivial creation and destruction test:
-  AutoRequired<
-    CtorProxy<SimpleClass, &SimpleClass::Create>
-  > req;
+    // Trivial creation and destruction test:
+    {
+      AutoRequired<
+        CtorProxy<SimpleClass, &SimpleClass::Create>
+      > req;
+      ASSERT_TRUE(req.IsAutowired()) << "Class factory AutoRequired didn't create as expected";
 
-  EXPECT_TRUE(req.IsAutowired()) << "Class factory AutoRequired didn't create as expected";
-  EXPECT_EQ(1, req->m_i) << "Class factory didn't invoke the SimpleClass ctor";
+      weak = req;
+      EXPECT_EQ(1, req->m_i) << "Class factory didn't invoke the SimpleClass ctor";
+    }
+    EXPECT_FALSE(weak.expired()) << "CtorProxy object was prematurely free";
+  }
+  EXPECT_TRUE(weak.expired()) << "CtorProxy object leaked from its parent context";
 }
