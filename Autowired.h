@@ -241,8 +241,11 @@ class AutoRequired< CtorProxy<T, fn> >:
 {
 public:
   AutoRequired(void) {
-    if(!*this)
-      this->reset(fn());
+    if(*this)
+      return;
+    
+    this->reset(fn());
+    AutowirableSlot::LockContext()->Add(*this);
   }
 };
 

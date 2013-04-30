@@ -42,6 +42,8 @@ set(
   ContextCleanupTest.cpp
   ContextMapTest.h
   ContextMapTest.cpp
+  CtorProxyTest.h
+  CtorProxyTest.cpp
   CurrentContextPusherTest.h
   CurrentContextPusherTest.cpp
   DependentContextTest.h
