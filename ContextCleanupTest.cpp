@@ -8,6 +8,29 @@
 
 using boost::chrono::milliseconds;
 
+TEST_F(ContextCleanupTest, VerifyNoEarlyDtor) {
+  std::weak_ptr<SimpleObject> weak;
+
+  {
+    shared_ptr<CoreContext> context = CoreContext::CurrentContext()->Create();
+    CurrentContextPusher psher(context);
+
+    {
+      // Okay, now we create a simple class first:
+      AutoRequired<SimpleObject> sObj;
+      ASSERT_TRUE(sObj.IsAutowired()) << "";
+
+      weak = sObj;
+    }
+
+    // Verify that the object still exists (somewhere) even though we don't hold a reference directly
+    // We expect the reference to be held open by our containing context
+    ASSERT_FALSE(weak.expired()) << "An inserted object was deleted before the context was destroyed";
+  }
+
+  ASSERT_TRUE(weak.expired()) << "An object survived the destruction of its parent context";
+}
+
 TEST_F(ContextCleanupTest, VerifyContextDtor) {
   std::weak_ptr<CoreContext> contextVerifier;
   std::weak_ptr<SimpleObject> objVerifier;
