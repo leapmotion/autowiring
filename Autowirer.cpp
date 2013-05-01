@@ -20,6 +20,10 @@ Autowirer::~Autowirer(void)
   for(size_t i = m_contextMembers.size(); i--;)
     m_contextMembers[i]->ReleaseAll();
 
+  // Release all event sender links:
+  for(size_t i = m_eventSenders.size(); i--;)
+    m_eventSenders[i]->Release();
+
   // Explicit deleters to simplify implementation of SharedPtrWrapBase
   for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); q++)
     delete q->second;
