@@ -19,6 +19,10 @@ public:
   virtual ~EventManagerBase(void) {
   }
   
+  /// <summary>
+  /// Invoked by the parent context when the context is shutting down in order to release all references
+  /// </summary>
+  virtual void Release(void) = 0;
   virtual EventManagerBase& operator+=(std::shared_ptr<EventReceiver>& rhs) = 0;
 };
 
@@ -40,6 +44,10 @@ private:
   t_mpType m_mp;
 
 public:
+  virtual void Release() override {
+    m_mp.clear();
+  }
+
   virtual EventManagerBase& operator+=(std::shared_ptr<EventReceiver>& rhs) {
     try {
       std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
