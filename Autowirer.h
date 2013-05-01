@@ -59,6 +59,9 @@ protected:
   typedef std::multimap<std::string, SharedPtrWrapBase*> t_mpType;
   t_mpType m_byType;
   
+  // All ContextMember objects known in this autowirer:
+  std::vector<ContextMember*> m_contextMembers;
+
   // Only one object in a context can bear a particular name
   typedef std::map<std::string, ContextMember*> t_mpName;
   t_mpName m_byName;

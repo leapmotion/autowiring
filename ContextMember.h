@@ -32,6 +32,21 @@ public:
   }
 
   /// <summary>
+  /// Invoked by the parent context when the parent context is about to be destroyed
+  /// </summary>
+  /// <remarks>
+  /// A context may be destroyed if and only if none of its members are running and none of
+  /// them may enter a runnable state.  This happens when the last pointer to ContextMember
+  /// is lost.  Resource cleanup must be started at this point.
+  ///
+  /// For contexts containing strictly heirarchial objects, implementors of this method do
+  /// not need to do anything.  If, however, there are circular references anywhere in the
+  /// context, callers should invoke reset() on each autowired member they control.
+  /// </remarks>
+  virtual void ReleaseAll(void) {
+  }
+
+  /// <summary>
   /// Retrieves the context associated with this object.
   /// </summary>
   /// <remarks>

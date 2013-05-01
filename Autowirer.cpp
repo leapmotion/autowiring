@@ -16,6 +16,10 @@ Autowirer::Autowirer(const std::shared_ptr<Autowirer>& pParent):
 
 Autowirer::~Autowirer(void)
 {
+  // Notify all ContextMember instances that their parent is going away
+  for(size_t i = m_contextMembers.size(); i--;)
+    m_contextMembers[i]->ReleaseAll();
+
   // Explicit deleters to simplify implementation of SharedPtrWrapBase
   for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); q++)
     delete q->second;
@@ -28,6 +32,9 @@ Autowirer::~Autowirer(void)
 void Autowirer::AddContextMember(ContextMember* ptr)
 {
   boost::lock_guard<boost::mutex> lk(m_lock);
+
+  // Always add to the set of context members
+  m_contextMembers.push_back(ptr);
 
   // Insert context members by name.  If there is no name, just return the base pointer.
   if(!ptr->GetName())
