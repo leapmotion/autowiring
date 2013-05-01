@@ -157,7 +157,9 @@ public:
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
     Autowirer::Add(value);
-    AddCoreThread(value.get());
+    CoreThread* pCoreThread = safe_dynamic_cast<CoreThread, T>::Cast(value.get());
+    if(pCoreThread)
+      AddCoreThread(pCoreThread);
   }
 
   /// <summary>
@@ -183,7 +185,6 @@ public:
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
   void AddCoreThread(CoreThread* pCoreThread, bool allowNotReady = false);
-  void AddCoreThread(void*) {}
 
   /// <summary>
   /// Utility routine, invoked typically by the service, which starts all registered
