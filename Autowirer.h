@@ -1,5 +1,6 @@
 #pragma once
 #include "EventManager.h"
+#include "safe_dynamic_cast.h"
 #include "SharedPtrWrap.h"
 #include <functional>
 #include <list>
@@ -235,14 +236,15 @@ public:
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
     AddInternal(value);
-    AddContextMember(value.get());
+    ContextMember* pContextMember = safe_dynamic_cast<ContextMember, T>::Cast(value.get());
+    if(pContextMember)
+      AddContextMember(pContextMember);
   }
 
   /// <summary>
   /// Overload of Add based on ContextMember
   /// </summary>
   void AddContextMember(ContextMember* pPtr);
-  void AddContextMember(void* ptr) {}
   
   /// <summary>
   /// Attempts to find a member in the container that can be passed to the specified type
