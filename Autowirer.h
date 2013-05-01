@@ -1,5 +1,7 @@
-#pragma once
+#ifndef _AUTOWIRER_H
+#define _AUTOWIRER_H
 #include "EventManager.h"
+#include "DeferredBase.h"
 #include "safe_dynamic_cast.h"
 #include "SharedPtrWrap.h"
 #include <functional>
@@ -60,44 +62,6 @@ protected:
   // Only one object in a context can bear a particular name
   typedef std::map<std::string, ContextMember*> t_mpName;
   t_mpName m_byName;
-
-  // Deferred autowiring base class
-  class DeferredBase {
-  public:
-    DeferredBase(Autowirer* pThis, std::weak_ptr<AutowirableSlot> tracker):
-      pThis(pThis),
-      tracker(tracker)
-    {
-    }
-
-    virtual ~DeferredBase(void) {
-      std::shared_ptr<AutowirableSlot> temp = tracker.lock();
-      if(!temp || !temp->IsAutowired())
-        // Destruction is occurring before autowiring succeeded, short-circuit
-        return;
-
-      // Inform all listeners
-      for(size_t i = this->m_postBind.size(); i--; )
-        this->m_postBind[i]();
-    }
-
-  protected:
-    Autowirer* pThis;
-
-    // Functions that want to be called when we successfully bind:
-    std::vector< std::function<void()> > m_postBind;
-    
-    // Store a weak reference to the slot's tracker so we can be informed
-    // if it goes away before we have a chance to autowire it
-    std::weak_ptr<AutowirableSlot> tracker;
-
-  public:
-    void AddPostBindingListener(const std::function<void()>& listener) {
-      m_postBind.push_back(listener);
-    }
-
-    virtual bool operator()() = 0;
-  };
 
   // Collection of objects waiting to be autowired, and a specific lock exclusively for this collection
   boost::mutex m_deferredLock;
@@ -369,10 +333,7 @@ public:
 namespace AutowirerHelpers {
 
 template<class T, bool isPolymorphic>
-struct FindByCastInternal;
-
-template<class T>
-struct FindByCastInternal<T, true>:
+struct FindByCastInternal:
   public Autowirer
 {
   std::shared_ptr<T> operator()(void) {
@@ -428,3 +389,5 @@ struct FindByCastInternal<T, false>:
 };
 
 }
+
+#endif
