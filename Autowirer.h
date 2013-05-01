@@ -72,8 +72,8 @@ protected:
 
     virtual ~DeferredBase(void) {
       std::shared_ptr<AutowirableSlot> temp = tracker.lock();
-      if(!temp)
-        // Destruction is occurring before autowiring, short-circuit
+      if(!temp || !temp->IsAutowired())
+        // Destruction is occurring before autowiring succeeded, short-circuit
         return;
 
       // Inform all listeners
