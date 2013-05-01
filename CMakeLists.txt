@@ -22,6 +22,8 @@ set(
   CoreThread.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
+  DeferredBase.h
+  DeferredBase.cpp
   DependentContext.h
   EventManager.h
   InstantiatorLink.h  
