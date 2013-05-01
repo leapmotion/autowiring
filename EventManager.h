@@ -62,6 +62,11 @@ public:
   }
 
   // Multi-argument firing:
+  void FireAsSingle0(void (T::*fnPtr)()) const {
+    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
+      ((q->second.get())->*fnPtr)();
+  }
+
   template<class Arg1, class Ty1>
   void FireAsSingle1(void (T::*fnPtr)(Arg1 arg1), const Ty1& ty1) const {
     for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
@@ -82,6 +87,23 @@ public:
 
   
   // Two-parenthetical invocations
+  std::function<void ()> Fire(void (T::*fnPtr)()) const {
+    return
+#if LAMBDAS_AVAILABLE
+      [this, fnPtr] () {
+        this->FireAsSingle0(fnPtr);
+      };
+#else
+      boost::bind(
+        boost::bind(
+          &EventManager<T>::FireAsSingle0,
+          this
+        ),
+        fnPtr
+      );
+#endif
+  }
+
   template<class Arg1>
   std::function<void (Arg1)> Fire(void (T::*fnPtr)(Arg1)) const {
     return
