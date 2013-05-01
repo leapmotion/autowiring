@@ -65,7 +65,14 @@ public:
     return t_ptrType::get();
   }
 
-  using std::shared_ptr<T>::operator=;
+  AutowiredCreator<T, isAbstract>& operator=(T* rhs) {
+    // Set up the shared pointer first:
+    std::shared_ptr<T>::reset(rhs);
+
+    // Strong assumption must be made, here, that the rhs isn't already in the current context
+    LockContext()->Add(*this);
+    return *this;
+  }
 };
 
 template<class T>
@@ -185,6 +192,8 @@ public:
     shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
     context->Autowire(*this);
   }
+
+  using AutowiredCreator<T, false>::operator=;
 };
 
 /// <summary>
@@ -205,8 +214,8 @@ public:
   /// </remarks>
   /// <param name="forceNew">Set if a new context is required</param>
   Autowired(bool forceNew = false);
-
-  using std::shared_ptr<CoreContext>::operator=;
+  
+  using AutowiredCreator<CoreContext, false>::operator=;
 };
 
 template<>
@@ -246,35 +255,6 @@ public:
     
     this->reset(fn());
     AutowirableSlot::LockContext()->Add(*this);
-  }
-};
-
-/// <summary>
-/// Provides a way to name a dependency on a specific instance of a class
-/// </summary>
-/// <remarks>
-/// 
-/// </remarks>
-template<class T, const char* name>
-class AutoNamed:
-  public Autowired<T>
-{
-public:
-};
-
-/// <summary>
-/// Autofind is like autowired, except it holds a weak reference to the matched class
-/// </summary>
-template<class T>
-class AutowiredWeak:
-  public std::weak_ptr<T>,
-  public AutowirableSlot
-{
-public:
-  // TODO: Fix this, we need a way to autowire weak pointers
-  AutowiredWeak(void):
-      std::weak_ptr<T>()
-  {
   }
 };
 
