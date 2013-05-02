@@ -20,6 +20,10 @@ void ThreadStatusMaintainer::operator()() {
 
   // Now we wait for the thread to be good to go:
   pThread->DelayUntilReady();
-  pThread->m_running = true;
   pThread->Run();
+
+  // Notify everyone that we're completed:
+  boost::lock_guard<boost::mutex>(pThread->m_lock),
+  pThread->m_completed = true,
+  pThread->m_completionCondition.notify_all();
 }
