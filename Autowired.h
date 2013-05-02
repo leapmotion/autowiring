@@ -193,6 +193,10 @@ public:
     context->Autowire(*this);
   }
 
+  Autowired(T* ptr) {
+    *this = ptr;
+  }
+
   using AutowiredCreator<T, false>::operator=;
 };
 
