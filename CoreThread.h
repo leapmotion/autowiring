@@ -122,8 +122,9 @@ public:
   /// Unlike Join, this method may be invoked even if the CoreThread isn't running
   /// </remarks>
   void Wait(void) {
+    boost::unique_lock<boost::mutex> uniqueLock(m_lock);
     m_completionCondition.wait(
-      boost::unique_lock<boost::mutex>(m_lock),
+      uniqueLock,
       [this] () {return this->m_completed;}
     );
   }
