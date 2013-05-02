@@ -90,24 +90,18 @@ void CoreContext::InitiateCoreThreads(void) {
 }
 
 void CoreContext::SignalShutdown(void) {
-  {
-    lock_guard<mutex> lk(m_coreLock);
-    if(--m_refCount)
-      // Someone else still depends on this
-      return;
+  lock_guard<mutex> lk(m_coreLock);
+  if(--m_refCount)
+    // Someone else still depends on this
+    return;
 
-    // Global context is now "stop":
-    m_shouldStop = true;
-    m_stopping.notify_all();
+  // Global context is now "stop":
+  m_shouldStop = true;
+  m_stopping.notify_all();
     
-    // Also pass notice to all children:
-    for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); q++)
-      (*q)->Stop();
-  }
-
-  if(m_pParent)
-    // Signal parent that it's time to shut down
-    std::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->SignalShutdown();
+  // Also pass notice to all children:
+  for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); q++)
+    (*q)->Stop();
 }
 
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
