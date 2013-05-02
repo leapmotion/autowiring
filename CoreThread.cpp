@@ -13,6 +13,24 @@ CoreThread::CoreThread(const char* pName):
 {
 }
 
+void CoreThread::DoRun(void) {
+  // Make our own session current before we do anything else:
+  CurrentContextPusher pusher(GetContext());
+
+  // Set the thread name no matter what:
+  if(GetName())
+    SetCurrentThreadName();
+
+  // Now we wait for the thread to be good to go:
+  DelayUntilReady();
+  Run();
+
+  // Notify everyone that we're completed:
+  boost::lock_guard<boost::mutex>(m_lock),
+  (m_completed = true),
+  m_completionCondition.notify_all();
+}
+
 bool CoreThread::ShouldStop(void) const {
   shared_ptr<CoreContext> context = ContextMember::GetContext();
   return m_stop || !context || context->ShouldStop();
