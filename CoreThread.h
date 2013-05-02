@@ -75,7 +75,10 @@ public:
   /// </summary>
   /// <returns>True to indicate that the thread was started successfully</returns>
   /// <remarks>
-  /// Note that this operation has an inherit race condition.
+  /// Note that this operation has an inherit race condition.  Be careful to ensure that
+  /// Start will not be called from more than one place on the same object.  The thread
+  /// will be invoked from the context which was active at the time the thread was created.
+  /// </remarks>
   bool Start(void);
 
   /// <summary>
