@@ -102,6 +102,12 @@ void CoreContext::SignalShutdown(void) {
   // Also pass notice to all children:
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); q++)
     (*q)->Stop();
+
+  // Pass notice to the parent.  This is required because we use reference counts to decide
+  // when to shut down, and it makes no sense to keep a parent context running when we were
+  // the ones who got it going in the first place.
+  if(m_pParent)
+    std::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->SignalShutdown();
 }
 
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
