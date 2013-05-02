@@ -48,6 +48,22 @@ private:
 
   friend class ThreadStatusMaintainer;
 
+private:
+  /// <summary>
+  /// Assigns the name of the thread, for use in debugger windows
+  /// </summary>
+  /// <remarks>
+  /// Some platforms allow the assignment of a thread name for viewing by a debugger
+  /// window.  This method is a platform-independent way of doing this for the current
+  /// thread.
+  /// </remarks>
+  void SetCurrentThreadName(void) const;
+
+  /// <summary>
+  /// Private routine that sets up the necessary extranea before a call to Run
+  /// </summary>
+  void DoRun(void);
+
 public:
   // Accessor methods:
   bool ShouldStop(void) const;
