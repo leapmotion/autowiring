@@ -42,6 +42,12 @@ public:
   /// For contexts containing strictly heirarchial objects, implementors of this method do
   /// not need to do anything.  If, however, there are circular references anywhere in the
   /// context, callers should invoke reset() on each autowired member they control.
+  ///
+  /// TODO:  Eventually, we MUST eliminate this method and simply keep track of all Autowired
+  /// instances in a single context.  This can be done safely by using the Autowired's internal
+  /// m_tracker member, which can serve to notify listeners when the instance is destroyed.
+  /// Alternatively, the Autowired instance could attach and detach itself from a linked list
+  /// in a lock-free way in order to support chain detachment.
   /// </remarks>
   virtual void ReleaseAll(void) {
   }
