@@ -155,13 +155,13 @@ protected:
   inline void AddToEventSenders(void*) {}
 
   template<class T>
-  void AddToEventReceivers(EventReceiver* pEventReceiver, std::shared_ptr<T>& sharedPtr) {
+  void AddToEventReceivers(EventReceiver* pEventReceiver, std::shared_ptr<T>& value) {
     m_eventReceivers.push_back(
-      std::static_pointer_cast<EventReceiver, T>(sharedPtr)
+      std::static_pointer_cast<EventReceiver, T>(value)
     );
 
     // The cast is a loop invariant; store it here for convenience
-    std::shared_ptr<EventReceiver> casted = std::static_pointer_cast<EventReceiver, T>(sharedPtr);
+    std::shared_ptr<EventReceiver> casted = std::static_pointer_cast<EventReceiver, T>(value);
 
     // Scan the list of compatible senders:
     for(size_t i = 0; i < m_eventSenders.size(); i++)
