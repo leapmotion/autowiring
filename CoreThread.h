@@ -22,27 +22,36 @@ class CoreThread:
 {
 public:
   /// <param name="pName">An optional name for this thread</param>
-  CoreThread(const char* pName = nullptr):
-    ContextMember(pName),
-    m_stop(true),
-    m_running(false)
-  {
-  }
+  CoreThread(const char* pName = nullptr);
 
   virtual ~CoreThread(void) {}
 
 private:
-  boost::mutex m_stopLock;
+  // General purpose thread lock
+  boost::mutex m_lock;
+
+  // Flag indicating that we need to stop right now
   boost::condition_variable m_stopCondition;
   bool m_stop;
+  
+  // Ready condition
+  boost::condition_variable m_readyCondition;
+  bool m_ready;
+
+  // Run condition:
+  boost::condition_variable m_runCondition;
   bool m_running;
+
+  // Completion condition:
+  boost::condition_variable m_completionCondition;
+  bool m_completed;
 
   friend class ThreadStatusMaintainer;
 
 public:
   // Accessor methods:
   bool ShouldStop(void) const;
-  bool IsReady(void) const {return !m_stop;}
+  bool IsReady(void) const {return m_ready;}
   bool IsRunning(void) const {return m_running;}
 
   /// <summary>
@@ -54,9 +63,10 @@ public:
   /// Delay execution of the corresponding core thread until it's ready
   /// </summary>
   bool DelayUntilReady(void) {
-    boost::unique_lock<boost::mutex> lk(m_stopLock);
-    while(!ShouldStop() && !IsReady())
-      m_stopCondition.wait(lk);
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    m_readyCondition.wait(lk, [this] () {
+      return !ShouldStop() || m_ready;
+    });
     return !ShouldStop() && !m_context.expired();
   }
 
@@ -81,10 +91,22 @@ public:
   /// invoked.
   /// </summary>
   void Ready(void) {
-    m_stop = false;
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_ready = true;
+    m_readyCondition.notify_all();
+  }
 
-    boost::lock_guard<boost::mutex> lk(m_stopLock);
-    m_stopCondition.notify_all();
+  /// <summary>
+  /// Waits until the core thread is launched and then terminates
+  /// </summary>
+  /// <remarks>
+  /// Unlike Join, this method may be invoked even if the CoreThread isn't running
+  /// </remarks>
+  void Wait(void) {
+    m_completionCondition.wait(
+      boost::unique_lock<boost::mutex>(m_lock),
+      [this] () {return this->m_completed;}
+    );
   }
 
   /// <summary>
@@ -93,7 +115,7 @@ public:
   /// </summary>
   virtual void Stop(void) {
     m_stop = true;
-    boost::lock_guard<boost::mutex> lk(m_stopLock);
+    boost::lock_guard<boost::mutex> lk(m_lock);
     m_stopCondition.notify_all();
   }
 };
