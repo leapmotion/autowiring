@@ -38,6 +38,18 @@ set(
   ThreadStatusMaintainer.h
 )
 
+if(BUILD_WINDOWS)
+  set(Autowiring_SRCS
+    CoreThreadWin.cpp
+    ${Autowiring_SRCS}
+  )
+else()
+  set(Autowiring_SRCS
+    CoreThreadUnix.cpp
+    ${Autowiring_SRCS}
+  )
+endif()
+
 set(
   AutowiringTest_SRCS
   ContextCleanupTest.h
