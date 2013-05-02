@@ -206,8 +206,7 @@ public:
   /// </summary>
   void Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_coreLock);
-    while(!this->m_outstanding.expired())
-      m_stop.wait(lk);
+    m_stop.wait(lk, [this] () {return this->m_outstanding.expired();});
   }
 
   template<class Rep, class Period>
