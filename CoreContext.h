@@ -130,6 +130,11 @@ private:
   // Actual core threads:
   typedef list<CoreThread*> t_threadList;
   t_threadList m_threads;
+  
+  // Child contexts:
+  typedef list<std::weak_ptr<CoreContext> > t_childList;
+  boost::mutex m_childrenLock;
+  t_childList m_children;
 
   friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
   friend class GlobalCoreContext;
@@ -200,6 +205,11 @@ public:
   /// shutdown procedures should begin immediately
   /// </summary>
   void SignalShutdown(void);
+  
+  /// <summary>
+  /// This terminates this context and all of its children, by force if necessary
+  /// </summary>
+  void SignalTerminate(void);
 
   /// <summary>
   /// Waits for all threads holding references to exit
