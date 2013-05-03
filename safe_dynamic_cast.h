@@ -1,6 +1,8 @@
 #ifndef _CAST_UTILITY_H
 #define _CAST_UTILITY_H
 
+#include "ocuConfig.h"
+
 #ifdef LEAP_OS_MAC
 #include<tr1/type_traits>
 #endif //LEAP_OS_MAC
