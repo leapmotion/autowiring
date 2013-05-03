@@ -1,7 +1,9 @@
 #ifndef _CAST_UTILITY_H
 #define _CAST_UTILITY_H
 
-template<class To, class From, bool isPolymorphic = std::is_polymorphic<From>::value>
+#include<tr1/type_traits>
+
+template<class To, class From, bool isPolymorphic = std::tr1::is_polymorphic<From>::value>
 struct safe_dynamic_cast
 {
   static To* Cast(From*) {
