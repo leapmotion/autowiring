@@ -26,7 +26,7 @@ public:
 
   virtual ~CoreThread(void) {}
 
-private:
+protected:
   // General purpose thread lock
   boost::mutex m_lock;
 
