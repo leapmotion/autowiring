@@ -47,16 +47,29 @@ std::shared_ptr<OutstandingCountTracker> CoreContext::IncrementOutstandingThread
 }
 
 std::shared_ptr<CoreContext> CoreContext::Create(void) {
-  // Create the context, first
+  // Lock my child list
+  lock_guard<mutex> lk(m_childrenLock);
+  
+  // Create the context
   CoreContext* pContext =
     new CoreContext(
       std::static_pointer_cast<CoreContext, Autowirer>(m_self.lock())
     );
-
+  
+  // Reserve a place in the list for the child
+  t_childList::iterator childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
+  
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
-  std::shared_ptr<CoreContext> retVal(pContext);
+  std::shared_ptr<CoreContext> retVal(pContext,
+                                      [this,childIterator] (CoreContext* pContext)
+                                      {
+                                        lock_guard<mutex> lk(m_childrenLock);
+                                        this->m_children.erase(childIterator);
+                                        delete pContext;
+                                      });
   pContext->m_self = retVal;
+  *childIterator = retVal;
   return retVal;
 }
 
@@ -99,7 +112,7 @@ void CoreContext::SignalShutdown(void) {
   m_shouldStop = true;
   m_stopping.notify_all();
     
-  // Also pass notice to all children:
+  // Also pass notice to all child threads:
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); q++)
     (*q)->Stop();
 
@@ -108,6 +121,25 @@ void CoreContext::SignalShutdown(void) {
   // the ones who got it going in the first place.
   if(m_pParent)
     std::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->SignalShutdown();
+}
+
+void CoreContext::SignalTerminate(void) {
+  { // Tear down all the children.
+    lock_guard<mutex> lk(m_childrenLock);
+    for (t_childList::iterator it = m_children.begin(); it != m_children.end(); ++it) {
+      std::shared_ptr<CoreContext> ptr = it->lock();
+      if(ptr)
+      {
+        ptr->SignalTerminate();
+      }
+    }
+  }
+  
+  // Shutmyself down.
+  SignalShutdown();
+  
+  // I shouldn't be referenced anywhere now.
+  ASSERT(m_refCount == 0);
 }
 
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
