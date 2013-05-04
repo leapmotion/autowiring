@@ -1,4 +1,5 @@
 #pragma once
+#include "ocuConfig.h"
 #include <boost/bind.hpp>
 #include <map>
 

@@ -26,8 +26,8 @@ void CoreThread::DoRun(void) {
   Run();
 
   // Notify everyone that we're completed:
-  boost::lock_guard<boost::mutex>(m_lock),
-  (m_completed = true),
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  m_completed = true;
   m_completionCondition.notify_all();
 }
 
