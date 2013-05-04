@@ -22,7 +22,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
 }
 
 CoreContext::~CoreContext(void) {
-  // The s_curContext pointer holds a shared_ptr to this--if we're in a ctor, and our caller
+  // The s_curContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
   // still holds a reference to us, then we have a serious problem.
   ASSERT(
     !s_curContext.get() ||
