@@ -1,5 +1,6 @@
 #ifndef _AUTOWIRER_H
 #define _AUTOWIRER_H
+#include "ocuConfig.h"
 #include "EventManager.h"
 #include "DeferredBase.h"
 #include "safe_dynamic_cast.h"

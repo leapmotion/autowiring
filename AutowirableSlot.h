@@ -1,6 +1,7 @@
 #ifndef _AUTOWIRABLE_SLOT_H
 #define _AUTOWIRABLE_SLOT_H
 #include <functional>
+#include <memory>
 
 class CoreContext;
 
