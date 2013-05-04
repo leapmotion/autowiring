@@ -1,5 +1,6 @@
 #ifndef _AUTOWIRED_H
 #define _AUTOWIRED_H
+#include "ocuConfig.h"
 #include "AutowirableSlot.h"
 #include "CoreContext.h"
 #include "InstantiatorLink.h"
