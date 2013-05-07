@@ -3,7 +3,6 @@
 
 // We use a shared pointer, we never want the global context to go away once
 // we've created it.  We also have an initializer lock to prevent multi-init
-boost::mutex GlobalCoreContext::s_initLock;
 std::shared_ptr<GlobalCoreContext> GlobalCoreContext::s_globalContext;
 
 // Initially, there are no instantiators to be run
@@ -35,7 +34,7 @@ std::shared_ptr<GlobalCoreContext> GlobalCoreContext::Get() {
   if(s_globalContext)
     return s_globalContext;
   
-  boost::lock_guard<boost::mutex> lk(s_initLock);
+  boost::lock_guard<boost::mutex> lk(getInitLock());
   if(s_globalContext)
     // Multi-init by another thread, just short-circuit here
     return s_globalContext;

@@ -72,7 +72,7 @@ public:
   /// </remarks>
   static void Release(void) {
     // Release local:
-    boost::lock_guard<boost::mutex> lk(s_initLock);
+    boost::lock_guard<boost::mutex> lk(getInitLock());
     s_instantiator = nullptr;
     s_globalContext.reset();
   }
@@ -82,7 +82,11 @@ private:
   static InstantiatorLink* s_instantiator;
 
   // Global context shared pointer and lock:
-  static boost::mutex s_initLock;
+  static boost::mutex& getInitLock() {
+    static boost::mutex s_initLock;
+    return s_initLock;
+  }
+
   static std::shared_ptr<GlobalCoreContext> s_globalContext;
 
   /// <summary>
