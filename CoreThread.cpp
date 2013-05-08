@@ -14,6 +14,8 @@ CoreThread::CoreThread(const char* pName):
 }
 
 void CoreThread::DoRun(void) {
+  ASSERT(m_running);
+
   // Make our own session current before we do anything else:
   CurrentContextPusher pusher(GetContext());
 
@@ -28,7 +30,8 @@ void CoreThread::DoRun(void) {
   // Notify everyone that we're completed:
   boost::lock_guard<boost::mutex> lk(m_lock);
   m_completed = true;
-  m_completionCondition.notify_all();
+  m_running = false;
+  m_stateCondition.notify_all();
 }
 
 bool CoreThread::ShouldStop(void) const {
@@ -45,14 +48,16 @@ bool CoreThread::Start(void) {
   if(!context)
     return false;
 
-  boost::lock_guard<boost::mutex> lk(m_lock);
-  if(m_running)
-    // Already running, short-circuit
-    return true;
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    if(m_running)
+      // Already running, short-circuit
+      return true;
 
-  // Currently running:
-  m_running = true;
-  m_runCondition.notify_all();
+    // Currently running:
+    m_running = true;
+    m_stateCondition.notify_all();
+  }
 
   // Kick off a thread and return here
   boost::thread(ThreadStatusMaintainer(this, context));
