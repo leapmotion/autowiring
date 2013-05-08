@@ -77,7 +77,7 @@ public:
   /// caller is responsible for starting core threads if this is desired.
   /// </remarks>
   template<class T>
-  DependentContext<T>* CreateDependentContext(void) {
+  std::shared_ptr<DependentContext<T> > CreateDependentContext(void) {
     // Complex statement, here's what's going on:
     //  1) Create a new context, child of this one, and make it current
     //  2) Create a new dependent context
@@ -86,23 +86,27 @@ public:
     //  5) DependentContext ctor is called, autowires in the current context into m_context
     //  6) pusher's dtor is called, resets the current context
     std::shared_ptr<CoreContext> dependent = Create();
-    return
-      CurrentContextPusher(dependent.get()),
-      new DependentContext<T>(dependent);
+    CurrentContextPusher pusher(dependent);
+    std::shared_ptr<DependentContext<T> > retVal(
+      new DependentContext<T>(dependent)
+    );
+    return retVal;
   }
   
   /// <summary>
   /// Virtually identical to CreateDependentContext, except adds the members of T to this context
   /// </summary>
   template<class T>
-  DependentContext<T>* AugmentContext(void) {
-    return
-      CurrentContextPusher(this),
+  std::shared_ptr<DependentContext<T> > AugmentContext(void) {
+    CurrentContextPusher pusher(this);
+    std::shared_ptr<DependentContext<T> > retVal(
       new DependentContext<T>(
         std::static_pointer_cast<CoreContext, Autowirer>(
           m_self.lock()
         )
-      );
+      )
+    );
+    return retVal;
   }
   
 private:
