@@ -10,10 +10,6 @@ ThreadStatusMaintainer::ThreadStatusMaintainer(CoreThread* pThread, const std::s
 {
 }
 
-ThreadStatusMaintainer::~ThreadStatusMaintainer(void) {
-  pThread->m_running = false;
-}
-
 void ThreadStatusMaintainer::operator()() {
   pThread->DoRun();
 }

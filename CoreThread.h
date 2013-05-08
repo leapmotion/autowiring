@@ -27,23 +27,20 @@ public:
   virtual ~CoreThread(void) {}
 
 protected:
-  // General purpose thread lock
+  // General purpose thread lock and update condition for the lock
   boost::mutex m_lock;
+  boost::condition_variable m_stateCondition;
 
   // Flag indicating that we need to stop right now
-  boost::condition_variable m_stopCondition;
   bool m_stop;
   
   // Ready condition
-  boost::condition_variable m_readyCondition;
   bool m_ready;
 
   // Run condition:
-  boost::condition_variable m_runCondition;
   bool m_running;
 
   // Completion condition:
-  boost::condition_variable m_completionCondition;
   bool m_completed;
 
   friend class ThreadStatusMaintainer;
@@ -80,7 +77,7 @@ public:
   /// </summary>
   bool DelayUntilReady(void) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    m_readyCondition.wait(lk, [this] () {
+    m_stateCondition.wait(lk, [this] () {
       return !ShouldStop() || m_ready;
     });
     return !ShouldStop() && !m_context.expired();
@@ -112,7 +109,7 @@ public:
   void Ready(void) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     m_ready = true;
-    m_readyCondition.notify_all();
+    m_stateCondition.notify_all();
   }
 
   /// <summary>
@@ -123,7 +120,7 @@ public:
   /// </remarks>
   void Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    m_completionCondition.wait(
+    m_stateCondition.wait(
       lk,
       [this] () {return this->m_completed;}
     );
@@ -136,7 +133,7 @@ public:
   virtual void Stop(void) {
     m_stop = true;
     boost::lock_guard<boost::mutex> lk(m_lock);
-    m_stopCondition.notify_all();
+    m_stateCondition.notify_all();
   }
 };
 
