@@ -32,6 +32,14 @@ public:
   }
 
   /// <summary>
+  /// This method is invoked after all embedded Autowired members of this class are initialized
+  /// </summary>
+  /// <remarks>
+  /// Not currently implemented
+  /// </remarks>
+  virtual void PostConstruct(void) {}
+
+  /// <summary>
   /// Invoked by the parent context when the parent context is about to be destroyed
   /// </summary>
   /// <remarks>
@@ -49,8 +57,7 @@ public:
   /// Alternatively, the Autowired instance could attach and detach itself from a linked list
   /// in a lock-free way in order to support chain detachment.
   /// </remarks>
-  virtual void ReleaseAll(void) {
-  }
+  virtual void ReleaseAll(void) {}
 
   /// <summary>
   /// Retrieves the context associated with this object.
