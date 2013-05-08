@@ -8,7 +8,6 @@ class ThreadStatusMaintainer
 {
 public:
   ThreadStatusMaintainer(CoreThread* pThread, const std::shared_ptr<CoreContext>& context);
-  ~ThreadStatusMaintainer(void);
 
 private:
   CoreThread* pThread;
