@@ -124,6 +124,10 @@ void CoreContext::SignalShutdown(void) {
 }
 
 void CoreContext::SignalTerminate(void) {
+  // We're stopping now.
+  m_shouldStop = true;
+  m_stopping.notify_all();
+  
   { // Tear down all the children.
     lock_guard<mutex> lk(m_childrenLock);
     for (t_childList::iterator it = m_children.begin(); it != m_children.end(); ++it) {
@@ -140,6 +144,11 @@ void CoreContext::SignalTerminate(void) {
   
   // I shouldn't be referenced anywhere now.
   ASSERT(m_refCount == 0);
+  
+  // Wait for the treads to finish before returning.
+  for (t_threadList::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
+    (*it)->Wait();
+  }
 }
 
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
