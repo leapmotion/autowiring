@@ -104,7 +104,7 @@ void CoreContext::InitiateCoreThreads(void) {
 
 void CoreContext::SignalShutdown(void) {
   lock_guard<mutex> lk(m_coreLock);
-  if(--m_refCount)
+  if(m_refCount == 0 || --m_refCount)
     // Someone else still depends on this
     return;
 
@@ -126,7 +126,6 @@ void CoreContext::SignalShutdown(void) {
 void CoreContext::SignalTerminate(void) {
   // We're stopping now.
   m_shouldStop = true;
-  m_stopping.notify_all();
   
   { // Tear down all the children.
     lock_guard<mutex> lk(m_childrenLock);
@@ -144,7 +143,7 @@ void CoreContext::SignalTerminate(void) {
   
   // I shouldn't be referenced anywhere now.
   ASSERT(m_refCount == 0);
-  
+
   // Wait for the treads to finish before returning.
   for (t_threadList::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
     (*it)->Wait();
