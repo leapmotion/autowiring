@@ -5,6 +5,12 @@
 #include "TestFixtures/MultiInherit.h"
 
 class Shared {
+public:
+  Shared(void) {
+    m_i = 100;
+  }
+
+  int m_i;
 };
 
 class Base {
@@ -18,6 +24,7 @@ class Derived:
 public:
   Derived(void) {
     EXPECT_TRUE(Base::m_member.IsAutowired()) << "Base AutoRequired member was not initialized properly";
+    EXPECT_TRUE(100, Base::m_member->m_i) << "Autowired instance was not properly constructed";
     EXPECT_EQ(m_member, m_secondMember) << "Autowiring idempotency was violated";
   }
 
