@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 class ContextCleanupTest:
-	public testing::Test
+  public testing::Test
 {
 };
 

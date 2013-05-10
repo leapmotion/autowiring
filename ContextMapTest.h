@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 class ContextMapTest:
-	public testing::Test
+  public testing::Test
 {
 };
 
