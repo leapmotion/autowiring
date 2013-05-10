@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 class MultiInheritTest:
-	public testing::Test
+  public testing::Test
 {
 public:
   MultiInheritTest(void) {}

@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 class ScopeTest:
-	public testing::Test
+  public testing::Test
 {
 public:
   ScopeTest(void);
