@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 class GlobalInitTest:
-	public testing::Test
+  public testing::Test
 {
 public:
   GlobalInitTest(void) {}

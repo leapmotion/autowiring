@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 class DependentContextTest:
-	public testing::Test
+  public testing::Test
 {
 };
 
