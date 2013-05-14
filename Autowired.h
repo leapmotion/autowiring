@@ -14,14 +14,6 @@ class GlobalCoreContext;
 
 // Redeclarations, primary declarations in CoreContext.h
 std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
-std::shared_ptr<CoreContext> GetGlobalContextAsCoreContext(void);
-std::shared_ptr<CoreContext> GetCurrentContext(void);
-void AddGlobalObjects(InstantiatorLink* pLink);
-
-// Exists only to get around a header cyclic dependency, needed only because we
-// cannot forward-declare member functions more than once
-extern std::shared_ptr<CoreContext> NewContextThunk(void);
-extern std::shared_ptr<CoreContext> NewContextThunk(std::shared_ptr<CoreContext>& pParent);
 
 template<class T, bool isAbstract>
 class AutowiredCreator:
@@ -109,20 +101,6 @@ class AutowiredCreator<CoreContext, false>:
 public:
   typedef shared_ptr<CoreContext> t_ptrType;
   void Create(void);
-
-  /// <summary>
-  /// Creates a dependent context based on the currently bound context
-  /// </summary>
-  void Push();
-
-  /// <summary>
-  /// Moves this context pointer up one notch to its parent context
-  /// </summary>
-  /// <remarks>
-  /// This may cause the current pointer to become null, if the current
-  /// context is the global context.
-  /// </remarks>
-  void Pop();
 
   using std::shared_ptr<CoreContext>::operator=;
   bool IsAutowired(void) const override {return !!this->get();}
