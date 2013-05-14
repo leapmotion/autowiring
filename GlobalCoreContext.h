@@ -26,29 +26,6 @@ public:
   ~GlobalCoreContext(void);
 
   /// <summary>
-  /// A declarative way to describe the global context.
-  /// </summary>
-  /// <param name="W">
-  /// A structure containing AutoRequired members which are all supposed to be in the global scope
-  /// </param>
-  /// <remarks>
-  /// This method may be called as many times as desired, it is idempotent
-  /// </remarks>
-  template<class W>
-  static void AddGlobalObjects(void) {
-    static InstantiatorLink current = {
-      nullptr,
-      &InstantiateW<W>
-    };
-    AddGlobalObjectsWithLink(&current);
-  }
-
-  static void AddGlobalObjectsWithLink(InstantiatorLink* pLink) {
-    pLink->pFlink = s_instantiator;
-    s_instantiator = pLink;
-  }
-
-  /// <summary>
   /// Obtains the global core context, or initializes it if necessary
   /// </summary>
   static std::shared_ptr<GlobalCoreContext> Get(void);
@@ -73,14 +50,10 @@ public:
   static void Release(void) {
     // Release local:
     boost::lock_guard<boost::mutex> lk(getInitLock());
-    s_instantiator = nullptr;
     s_globalContext.reset();
   }
 
 private:
-  // Singly linked list of instantiators
-  static InstantiatorLink* s_instantiator;
-
   // Global context shared pointer and lock:
   static boost::mutex& getInitLock() {
     static boost::mutex s_initLock;
@@ -88,15 +61,12 @@ private:
   }
 
   static std::shared_ptr<GlobalCoreContext> s_globalContext;
-
-  /// <summary>
-  /// Initializes, then destroys, a single instance of class W in local scope
-  /// </summary>
-  template<class W>
-  static void InstantiateW() {
-    W w;
-  }
 };
+
+/// <summary>
+/// Obtains the global context, provided at global scope to allow forward declaration
+/// </summary>
+std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 
 /// <summary>
 /// Provides a declarative way to set the global context
@@ -104,13 +74,9 @@ private:
 template<class W>
 struct GlobalContextDesignation {
   GlobalContextDesignation(void) {
-    GlobalCoreContext::AddGlobalObjects<W>();
+    CurrentContextPusher pshr(GetGlobalContext());
+    W w;
   }
 };
-
-/// <summary>
-/// Obtains the global context, provided at global scope to allow forward declaration
-/// </summary>
-std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 
 #endif

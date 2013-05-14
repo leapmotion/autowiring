@@ -30,7 +30,3 @@ Autowired<CoreContext>::Autowired(bool forceNew) {
     *this = GetCurrentContext();
   AutowirableSlot::m_context = *this;
 }
-
-void AddGlobalObjects(InstantiatorLink* pLink) {
-  GlobalCoreContext::AddGlobalObjectsWithLink(pLink);
-}
