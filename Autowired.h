@@ -67,10 +67,8 @@ public:
     *this = context->Add(ptr);
   }
 
-  bool IsAutowired(void) const override {return !!t_ptrType::get();}
-
   operator bool(void) const {
-    return !!t_ptrType::get();
+    return IsAutowired();
   }
 
   operator T*(void) const {
@@ -85,6 +83,8 @@ public:
     LockContext()->Add(*this);
     return *this;
   }
+
+  bool IsAutowired(void) const override {return !!t_ptrType::get();}
 };
 
 template<>
@@ -97,7 +97,7 @@ public:
   void Create(void);
 
   using std::shared_ptr<CoreContext>::operator=;
-  bool IsAutowired(void) const override {return !!this->get();}
+  bool IsAutowired(void) const override {return !!t_ptrType::get();}
 };
 
 /// <summary>
@@ -125,7 +125,7 @@ public:
   {
   }
 
-  bool IsAutowired(void) const override {return !!this->get();}
+  bool IsAutowired(void) const override {return !!t_ptrType::get();}
 
   operator GlobalCoreContext*(void) const {
     return t_ptrType::get();
