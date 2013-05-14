@@ -12,8 +12,7 @@ TEST_F(ContextMapTest, VerifySimple) {
 
   // Create a new context and add it to the map:
   {
-    Autowired<CoreContext> context;
-    context.Create();
+    AutoCreateContext context;
 
     // Verify the reference count or the rest of the test will fail
     ASSERT_EQ(context.use_count(), 1) << "A newly created context's use count isn't what was expected";
@@ -38,7 +37,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
   std::weak_ptr<CoreContext> weakContext;
 
   {
-    Autowired<CoreContext> context(true);
+    AutoCreateContext context;
 
     // Obtain a weak pointer of our own, and add to the context:
     weakContext = context;
@@ -88,12 +87,12 @@ TEST_F(ContextMapTest, AdjacentCleanupTest) {
   std::weak_ptr<CoreContext> innerWeak;
 
   // Add two contexts, and let one go out of scope
-  Autowired<CoreContext> outer(true);
+  AutoCreateContext outer;
   mp.Add("0", outer);
   outerWeak = outer;
 
   {
-    Autowired<CoreContext> inner(true);
+    AutoCreateContext inner;
     mp.Add("1", inner);
     innerWeak = inner;
 

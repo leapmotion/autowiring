@@ -38,7 +38,7 @@ TEST_F(ContextCleanupTest, VerifyContextDtor) {
 
   {
     // Create a new context and add some objects
-    Autowired<CoreContext> subContext(true);
+    AutoCreateContext subContext;
 
     // Copy over the weak pointer before we go out of scope:
     contextVerifier = subContext;
@@ -82,8 +82,8 @@ TEST_F(ContextCleanupTest, VerifyContextDtor) {
 
 TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   // Create a context that will be used to test the cleanup:
-  AutoRequired<CoreContext> context;
-  context->SetCurrent();
+  AutoCreateContext context;
+  CurrentContextPusher pshr(context);
 
   // Add a simple thread object
   context->Add<SimpleThreaded>();

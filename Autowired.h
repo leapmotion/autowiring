@@ -160,25 +160,14 @@ public:
 };
 
 /// <summary>
-/// Autowiring specialization that does not do a context membership search
+/// This is a forbidden autowiring.  Do not attempt it.
 /// </summary>
-/// <remarks>
-/// This specialization is guaranteed to be identical to obtaining a shared_ptr
-/// reference to the result of CoreContext::CurrentContext.  It is provided for
-/// symmetry of declaration.
-/// </remarks>
 template<>
 class Autowired<CoreContext>:
   public AutowiredCreator<CoreContext>
 {
+  Autowired(void);
 public:
-  /// <remarks>
-  /// Specialized constructor that enables the forced creation of a new child context
-  /// </remarks>
-  /// <param name="forceNew">Set if a new context is required</param>
-  Autowired(bool forceNew = false);
-  
-  using AutowiredCreator<CoreContext>::operator=;
 };
 
 template<>
@@ -248,6 +237,37 @@ public:
     this->reset(new Concrete);
     AutowirableSlot::LockContext()->Add(*this);
   }
+};
+
+/// <summary>
+/// Provides a simple way to obtain a reference to the current context
+/// </summary>
+/// <remarks>
+/// Users of this class are encouraged not to hold references for longer than needed.  Failing
+/// to release a context pointer could prevent resources from being correctly released.
+/// </remarks>
+class AutoCurrentContext:
+  public std::shared_ptr<CoreContext>
+{
+public:
+  AutoCurrentContext(void);
+
+  using std::shared_ptr<CoreContext>::operator=;
+};
+
+/// <summary>
+/// Provides a simple way to create a dependent context pointer
+/// </summary>
+/// <remarks>
+/// The newly created context will be created using CoreContext::CurrentContext()->Create().
+/// </remarks>
+class AutoCreateContext:
+  public std::shared_ptr<CoreContext>
+{
+public:
+  AutoCreateContext(void);
+
+  using std::shared_ptr<CoreContext>::operator=;
 };
 
 #endif
