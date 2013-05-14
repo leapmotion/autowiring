@@ -5,9 +5,6 @@
 // we've created it.  We also have an initializer lock to prevent multi-init
 std::shared_ptr<GlobalCoreContext> GlobalCoreContext::s_globalContext;
 
-// Initially, there are no instantiators to be run
-InstantiatorLink* GlobalCoreContext::s_instantiator = nullptr;
-
 GlobalCoreContext::GlobalCoreContext(void):
   CoreContext(std::shared_ptr<CoreContext>())
 {
@@ -20,10 +17,6 @@ GlobalCoreContext::GlobalCoreContext(void):
 
   // Make ourselves the current context before filling it:
   SetCurrent();
-
-  // Run all instantiators:
-  for(InstantiatorLink* pCur = s_instantiator; pCur; pCur = pCur->pFlink)
-    pCur->fn();
 }
 
 GlobalCoreContext::~GlobalCoreContext(void) {
