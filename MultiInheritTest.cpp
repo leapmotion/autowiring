@@ -33,12 +33,8 @@ public:
 
 TEST_F(MultiInheritTest, VerifyCast) {
   // Create a dummy context and make it current:
-  Autowired<CoreContext> ctxt;
-  ctxt.Create();
+  AutoCreateContext ctxt;
   CurrentContextPusher pshr(ctxt);
-
-  // Make sure that we still have a context:
-  ASSERT_TRUE(ctxt.IsAutowired()) << "Create call must create a context";
 
   // Insert a MultiInherit object:
   std::shared_ptr<MultiInherit> obj(new MultiInherit());
@@ -53,8 +49,7 @@ TEST_F(MultiInheritTest, VerifyCast) {
 }
 
 TEST_F(MultiInheritTest, VerifyBaseInitializer) {
-  Autowired<CoreContext> ctxt;
-  ctxt.Create();
+  AutoCreateContext ctxt;
   CurrentContextPusher pshr(ctxt);
 
   Derived derived;

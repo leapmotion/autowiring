@@ -23,10 +23,10 @@ std::shared_ptr<CoreContext> GetGlobalContextAsCoreContext(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
 }
 
-Autowired<CoreContext>::Autowired(bool forceNew) {
-  if(forceNew)
-    Create();
-  else
-    *this = GetCurrentContext();
-  AutowirableSlot::m_context = *this;
+AutoCurrentContext::AutoCurrentContext(void) {
+  *this = CoreContext::CurrentContext();
+}
+
+AutoCreateContext::AutoCreateContext(void) {
+  *this = CoreContext::CurrentContext()->Create();
 }
