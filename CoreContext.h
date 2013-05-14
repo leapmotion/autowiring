@@ -199,9 +199,6 @@ public:
   /// Utility routine, invoked typically by the service, which starts all registered
   /// core threads.
   /// </summary>
-  /// <remarks>
-  /// To stop core threads,
-  /// </remarks>
   void InitiateCoreThreads(void);
 
   /// <summary>
