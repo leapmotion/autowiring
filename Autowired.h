@@ -23,8 +23,13 @@ class AutowiredCreator:
 public:
   typedef shared_ptr<T> t_ptrType;
   
-  // TODO:  This create method, and all other Autowired create methods, should also be
-  // available directly as an autowired behavior.
+  /// <summary>
+  /// Creates a new instance if this instance isn't autowired
+  /// </summary>
+  /// <remarks>
+  /// Users are encouraged to make use of AutoRequired wherever it's a sensible alternative
+  /// to a Create call.
+  /// </remarks>
   void Create(void) {
     if(*this)
       return;
@@ -115,20 +120,6 @@ private:
 public:
   typedef shared_ptr<GlobalCoreContext> t_ptrType;
   
-  /// <summary>
-  /// Alias of GlobalCoreContext::InstantiateW
-  /// </summary>
-  template<class W>
-  static void MakeInstance() {
-    W s;
-  }
-
-  template<class W>
-  static InstantiatorLink* MakeLink(void) {
-    static InstantiatorLink link = {nullptr, &MakeInstance<W>};
-    return &link;
-  }
-
   AutowiredCreator(void):
     std::shared_ptr<GlobalCoreContext>(GetGlobalContext())
   {
