@@ -15,13 +15,27 @@ class GlobalCoreContext;
 // Redeclarations, primary declarations in CoreContext.h
 std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 
-template<class T, bool isAbstract>
+template<class T>
 class AutowiredCreator:
   public AutowirableSlot,
   public std::shared_ptr<T>
 {
 public:
   typedef shared_ptr<T> t_ptrType;
+  
+  // TODO:  This create method, and all other Autowired create methods, should also be
+  // available directly as an autowired behavior.
+  void Create(void) {
+    if(*this)
+      return;
+    
+    // Create and add to the context:
+    // NOTE: If you are getting an error tracked to this line, ensure that class T is totally
+    // defined at the point where the Autowired instance is constructed.  Generally,
+    // such errors are tracked to missing header files.
+    this->reset(new T);
+    AutowirableSlot::LockContext()->Add(*this);
+  }
 
   /// <summary>
   /// This creates a pointer using the specified lambda, if such creation is needed.
@@ -48,7 +62,7 @@ public:
     *this = context->Add(ptr);
   }
 
-  bool IsAutowired(void) const override {return !!this->get();}
+  bool IsAutowired(void) const override {return !!t_ptrType::get();}
 
   operator bool(void) const {
     return !!t_ptrType::get();
@@ -58,7 +72,7 @@ public:
     return t_ptrType::get();
   }
 
-  AutowiredCreator<T, isAbstract>& operator=(T* rhs) {
+  AutowiredCreator<T>& operator=(T* rhs) {
     // Set up the shared pointer first:
     std::shared_ptr<T>::reset(rhs);
 
@@ -68,33 +82,8 @@ public:
   }
 };
 
-template<class T>
-class AutowiredCreator<T, false>:
-  public AutowiredCreator<T, true>
-{
-public:
-  using AutowiredCreator<T, true>::Create;
-  static const bool s_isAbstract = false;
-  
-  // TODO:  This create method, and all other Autowired create methods, should also be
-  // available directly as an autowired behavior.
-  void Create(void) {
-    if(*this)
-      return;
-    
-    // Create and add to the context:
-    // NOTE: If you are getting an error tracked to this line, ensure that class T is totally
-    // defined at the point where the Autowired instance is constructed.  Generally,
-    // such errors are tracked to missing header files.
-    this->reset(new T);
-    AutowirableSlot::LockContext()->Add(*this);
-  }
-
-  using AutowiredCreator<T, true>::operator=;
-};
-
 template<>
-class AutowiredCreator<CoreContext, false>:
+class AutowiredCreator<CoreContext>:
   public AutowirableSlot,
   public std::shared_ptr<CoreContext>
 {
@@ -115,7 +104,7 @@ public:
 /// but the sole Global context or null.
 /// </remarks>
 template<>
-class AutowiredCreator<GlobalCoreContext, false>:
+class AutowiredCreator<GlobalCoreContext>:
   public AutowirableSlot,
   public std::shared_ptr<GlobalCoreContext>
 {
@@ -164,7 +153,7 @@ public:
 /// </remarks>
 template<class T>
 class Autowired:
-  public AutowiredCreator<T, false>
+  public AutowiredCreator<T>
 {
 public:
   Autowired(void) {
@@ -176,7 +165,7 @@ public:
     *this = ptr;
   }
 
-  using AutowiredCreator<T, false>::operator=;
+  using AutowiredCreator<T>::operator=;
 };
 
 /// <summary>
@@ -189,7 +178,7 @@ public:
 /// </remarks>
 template<>
 class Autowired<CoreContext>:
-  public AutowiredCreator<CoreContext, false>
+  public AutowiredCreator<CoreContext>
 {
 public:
   /// <remarks>
@@ -198,16 +187,13 @@ public:
   /// <param name="forceNew">Set if a new context is required</param>
   Autowired(bool forceNew = false);
   
-  using AutowiredCreator<CoreContext, false>::operator=;
+  using AutowiredCreator<CoreContext>::operator=;
 };
 
 template<>
 class Autowired<GlobalCoreContext>:
-  public AutowiredCreator<GlobalCoreContext, false>
+  public AutowiredCreator<GlobalCoreContext>
 {};
-
-template<class T, T* (*fn)()>
-struct CtorProxy {};
 
 /// <summary>
 /// Similar to Autowired, but the default constructor invokes Autowired(true)
@@ -223,10 +209,22 @@ class AutoRequired:
 public:
   AutoRequired(void) {
     if(!*this)
-      AutowiredCreator<T, false>::Create();
+      AutowiredCreator<T>::Create();
   }
 };
 
+/// <summary>
+/// CtorProxy, a special templated type that allows users to specify factory construction methods
+/// </summary>
+template<class T, T* (*fn)()>
+struct CtorProxy {};
+
+/// <summary>
+/// An AutoRequired specialization that allows the user to specify a function call to initialize this field
+/// </summary>
+/// <remarks>
+/// This specialization is useful when it's necessary to AutoRequire an interface
+/// </remarks>
 template<class T, T* (*fn)()>
 class AutoRequired< CtorProxy<T, fn> >:
   public Autowired<T>
