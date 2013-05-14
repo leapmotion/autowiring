@@ -4,7 +4,7 @@
 #include "GlobalCoreContext.h"
 
 // Autowired CoreContext:
-void AutowiredCreator<CoreContext, false>::Create() {
+void AutowiredCreator<CoreContext>::Create() {
   // We allow creation on a CoreContext
   // TODO:  Evaluate whether this idiom is a bad one
   // Create will not create in any other circumstance if the autowired
