@@ -36,7 +36,7 @@ struct Simple {
 
 TEST_F(GlobalInitTest, VerifySimpleContext) {
   // Set our global scope stuff:
-  GlobalCoreContext::AddGlobalObjects<Simple>();
+  GlobalContextDesignation<Simple> d;
 
   // Obtain reference:
   std::shared_ptr<GlobalCoreContext> global = GlobalCoreContext::Get();
