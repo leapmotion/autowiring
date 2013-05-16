@@ -142,7 +142,7 @@ protected:
 
     // Now, outside of the context of a lock, we destroy each successfully wired deferred member
     // This causes any listeners to be invoked, conveniently, outside of the context of any lock
-    for(std::list<DeferredBase*>::iterator q = successful.begin(); q != successful.end(); q++)
+    for(std::list<DeferredBase*>::iterator q = successful.begin(); q != successful.end(); ++q)
       delete *q;
   }
 
@@ -347,7 +347,7 @@ struct FindByCastInternal:
     static_assert((!std::is_same<Object, T>::value), "FindByCastInternal on type Object is an overly broad search criteria");
 
     std::shared_ptr<Object> obj;
-    for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); q++) {
+    for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); ++q) {
       SharedPtrWrapBase* pBase = q->second;
 
       // See if this wrap contains an object, which we could use to access other types
