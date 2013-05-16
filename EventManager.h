@@ -72,25 +72,25 @@ public:
 
   // Multi-argument firing:
   void FireAsSingle0(void (T::*fnPtr)()) const {
-    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
+    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); ++q)
       ((q->second.get())->*fnPtr)();
   }
 
   template<class Arg1, class Ty1>
   void FireAsSingle1(void (T::*fnPtr)(Arg1 arg1), const Ty1& ty1) const {
-    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
+    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); ++q)
       ((q->second.get())->*fnPtr)(ty1);
   }
   
   template<class Arg1, class Arg2, class Ty1, class Ty2>
   void FireAsSingle2(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2), const Ty1& ty1, const Ty2& ty2) const {
-    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
+    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); ++q)
       ((q->second.get())->*fnPtr)(ty1, ty2);
   }
   
   template<class Arg1, class Arg2, class Arg3, class Ty1, class Ty2, class Ty3>
   void FireAsSingle3(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3) const {
-    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); q++)
+    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); ++q)
       ((q->second.get())->*fnPtr)(ty1, ty2, ty3);
   }
 

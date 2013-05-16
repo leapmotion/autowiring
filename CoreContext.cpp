@@ -98,7 +98,7 @@ void CoreContext::InitiateCoreThreads(void) {
 
   // Hold another lock to prevent m_threads from being modified while we sit on it
   lock_guard<mutex> lk(m_coreLock);
-  for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); q++)
+  for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
     (*q)->Start();
 }
 
@@ -113,7 +113,7 @@ void CoreContext::SignalShutdown(void) {
   m_stopping.notify_all();
     
   // Also pass notice to all child threads:
-  for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); q++)
+  for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
     (*q)->Stop();
 
   // Pass notice to the parent.  This is required because we use reference counts to decide
