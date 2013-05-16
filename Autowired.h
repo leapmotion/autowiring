@@ -34,10 +34,25 @@ public:
     if(*this)
       return;
     
-    // Create and add to the context:
-    // NOTE: If you are getting an error tracked to this line, ensure that class T is totally
+    // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
+    // If you are getting an error tracked to this line, ensure that class T is totally
     // defined at the point where the Autowired instance is constructed.  Generally,
-    // such errors are tracked to missing header files.
+    // such errors are tracked to missing header files.  A common mistake, for instance,
+    // is to do something like this:
+    //
+    // class MyClass;
+    //
+    // struct MyStructure {
+    //   Autowired<MyClass> m_member;
+    // };
+    //
+    // At the time m_member is instantiated, MyClass is an incomplete type.  This problem
+    // can be fixed two ways:  You can include the definition of MyClass before MyStructure
+    // is defined, OR, you can give MyStructure a nontrivial constructor, and then ensure
+    // that the definition of MyClass is available before the nontrivial constructor is
+    // defined.
+    //
+    // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
     this->reset(new T);
     AutowirableSlot::LockContext()->Add(*this);
   }
