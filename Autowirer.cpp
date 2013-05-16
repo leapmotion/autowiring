@@ -25,11 +25,11 @@ Autowirer::~Autowirer(void)
     m_eventSenders[i]->Release();
 
   // Explicit deleters to simplify implementation of SharedPtrWrapBase
-  for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); q++)
+  for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); ++q)
     delete q->second;
 
   // Explicit deleters to simplify base deletion
-  for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); q++)
+  for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
     delete q->second;
 }
 
