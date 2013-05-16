@@ -46,11 +46,15 @@ public:
     //   Autowired<MyClass> m_member;
     // };
     //
-    // At the time m_member is instantiated, MyClass is an incomplete type.  This problem
-    // can be fixed two ways:  You can include the definition of MyClass before MyStructure
-    // is defined, OR, you can give MyStructure a nontrivial constructor, and then ensure
-    // that the definition of MyClass is available before the nontrivial constructor is
-    // defined.
+    // At the time m_member is instantiated, MyClass is an incomplete type.  So, when the
+    // compiler tries to instantiate AutowiredCreator::Create (the function you're in right
+    // now!) it finds that it can't create a new instance of type MyClass because it has
+    // no idea how to construct it!
+    // 
+    // This problem can be fixed two ways:  You can include the definition of MyClass before
+    // MyStructure is defined, OR, you can give MyStructure a nontrivial constructor, and
+    // then ensure that the definition of MyClass is available before the nontrivial
+    // constructor is defined.
     //
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
     this->reset(new T);
