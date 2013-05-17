@@ -94,13 +94,13 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
 
   // Deferred fire:
   sender->Defer(&CallableInterface::ZeroArgs)();
-  sender->Defer(&CallableInterface::OneArg)(100);
+  sender->Defer(&CallableInterface::OneArg)(101);
   sender->Defer(&CallableInterface::AllDone)();
 
   // Verify that nothing is hit yet:
-  EXPECT_FALSE(receiver->m_zero);
-  EXPECT_FALSE(receiver->m_one);
-  EXPECT_TRUE(receiver->IsRunning());
+  EXPECT_FALSE(receiver->m_zero) << "Zero-argument call made prematurely";
+  EXPECT_FALSE(receiver->m_one) << "One-argument call made prematurely";
+  EXPECT_TRUE(receiver->IsRunning()) << "Receiver is terminated";
 
   // Unblock:
   receiver->m_barrier.wait();
@@ -111,4 +111,5 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
   // Validate deferred firing:
   EXPECT_TRUE(receiver->m_zero);
   EXPECT_TRUE(receiver->m_one);
+  EXPECT_EQ(101, receiver->m_oneArg) << "Argument was not correctly propagated through a deferred call";
 }
