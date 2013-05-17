@@ -53,7 +53,7 @@ public:
   /// <summary>
   /// Adds a new method to be dispatched by this queue
   /// </summary>
-  void operator+=(const std::function<void ()>& rhs) {
+  void operator+=(std::function<void ()>&& rhs) {
     m_dispatchQueue.push_back(rhs);
   }
 };
