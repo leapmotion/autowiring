@@ -28,6 +28,7 @@ set(
   DispatchQueue.h
   DispatchQueue.cpp
   EventManager.h
+  EventManager.cpp
   InstantiatorLink.h  
   GlobalCoreContext.cpp
   GlobalCoreContext.h
