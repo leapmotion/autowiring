@@ -13,6 +13,15 @@ class dispatch_aborted_exception:
 };
 
 /// <summary>
+/// A simple virtual class used to hold a trivial thunk
+/// </summary>
+class DispatchThunk {
+public:
+  virtual ~DispatchThunk(void) {}
+  virtual void operator()() = 0;
+};
+
+/// <summary>
 /// This is an asynchronous queue of zero-argument functions
 /// </summary>
 class DispatchQueue
@@ -36,8 +45,7 @@ private:
 
   boost::condition_variable m_queueUpdated;
 
-  typedef std::function<void ()> t_thunk;
-  std::list<std::unique_ptr<t_thunk>> m_dispatchQueue;
+  std::list<std::unique_ptr<DispatchThunk>> m_dispatchQueue;
 
   /// <summary>
   /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
@@ -66,12 +74,31 @@ public:
   void DispatchEvent(void);
 
   /// <summary>
-  /// Adds a new method to be dispatched by this queue
+  /// Adds a new method object to the dispatch queue
   /// </summary>
-  void operator+=(std::function<void ()>&& rhs) {
+  template<class _Fx>
+  void operator+=(_Fx&& fx) {
+    class Thunk:
+      public DispatchThunk
+    {
+    public:
+      Thunk(_Fx&& fx):
+        m_fx(fx)
+      {}
+
+      _Fx m_fx;
+
+      void operator()() override {
+        m_fx();
+      }
+    };
+
+    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
     m_dispatchQueue.push_back(
-      std::unique_ptr<t_thunk>(
-        new t_thunk(rhs)
+      std::unique_ptr<DispatchThunk>(
+        new Thunk(
+          std::forward<_Fx>(fx)
+        )
       )
     );
   }
