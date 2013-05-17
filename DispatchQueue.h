@@ -30,9 +30,24 @@ public:
 
 private:
   bool m_aborted;
+
+  // A lock held when modifications to any element EXCEPT the first element must be made:
   boost::mutex m_dispatchLock;
+
   boost::condition_variable m_queueUpdated;
-  std::list<std::function<void ()>> m_dispatchQueue;
+
+  typedef std::function<void ()> t_thunk;
+  std::list<std::unique_ptr<t_thunk>> m_dispatchQueue;
+
+  /// <summary>
+  /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
+  /// </summary>
+  /// <param name="lk">A lock on m_dispatchLock</param>
+  /// <remarks>
+  /// This method assumes that the dispatch lock is held and that m_aborted is false.  It
+  /// is an error to call this method without those preconditions met.
+  /// </remarks>
+  void DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk);
 
 public:
   /// <summary>
@@ -54,7 +69,11 @@ public:
   /// Adds a new method to be dispatched by this queue
   /// </summary>
   void operator+=(std::function<void ()>&& rhs) {
-    m_dispatchQueue.push_back(rhs);
+    m_dispatchQueue.push_back(
+      std::unique_ptr<t_thunk>(
+        new t_thunk(rhs)
+      )
+    );
   }
 };
 
