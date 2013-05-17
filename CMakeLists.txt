@@ -25,6 +25,8 @@ set(
   DeferredBase.h
   DeferredBase.cpp
   DependentContext.h
+  DispatchQueue.h
+  DispatchQueue.cpp
   EventManager.h
   InstantiatorLink.h  
   GlobalCoreContext.cpp
