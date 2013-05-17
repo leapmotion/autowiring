@@ -6,6 +6,26 @@
 
 using namespace std;
 
+class CopyCounter {
+public:
+  CopyCounter(void):
+    m_count(0)
+  {}
+
+  CopyCounter(const CopyCounter& rhs):
+    m_count(rhs.m_count + 1)
+  {}
+
+  /// <summary>
+  /// Special case move ctor, which won't increment the count
+  /// </summary>
+  CopyCounter(CopyCounter&& rhs):
+    m_count(rhs.m_count)
+  {}
+
+  int m_count;
+};
+
 class CallableInterface:
   public EventReceiver
 {
@@ -14,6 +34,7 @@ public:
   virtual void OneArg(int arg) = 0;
   virtual void CopyVector(const vector<int>& vec) = 0;
   virtual void CopyVectorForwarded(vector<int>&& vec) = 0;
+  virtual void TrackCopy(CopyCounter&& ctr) = 0;
   virtual void AllDone(void) = 0;
 };
 
@@ -43,8 +64,9 @@ public:
   bool m_one;
   int m_oneArg;
 
-  // Simple copy operation:
+  // Copy operation fields:
   vector<int> m_myVec;
+  CopyCounter m_myCtr;
 
   // Continuity barrier:
   boost::barrier m_barrier;
@@ -68,6 +90,10 @@ public:
     m_myVec = vec;
   }
 
+  void TrackCopy(CopyCounter&& ctr) override {
+    m_myCtr = ctr;
+  }
+
   void AllDone(void) override {
     Stop();
   }
@@ -78,15 +104,14 @@ public:
   }
 };
 
-TEST_F(EventReceiverTest, SimpleMethodCall) {
+EventReceiverTest::EventReceiverTest(void) {
   AutoCurrentContext ctxt;
-
-  AutoRequired<SimpleReceiver> receiver;
-  AutoRequired<SimpleSender> sender;
 
   // Start up the context:
   ctxt->InitiateCoreThreads();
+}
 
+TEST_F(EventReceiverTest, SimpleMethodCall) {
   // Try firing the event first:
   sender->Fire(&CallableInterface::ZeroArgs)();
   sender->Fire(&CallableInterface::OneArg)(100);
@@ -101,15 +126,6 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
 }
 
 TEST_F(EventReceiverTest, DeferredInvoke) {
-  AutoCurrentContext ctxt;
-
-  // Create our transmitter and receiver and start:
-  AutoRequired<SimpleReceiver> receiver;
-  AutoRequired<SimpleSender> sender;
-
-  // Start up the context:
-  ctxt->InitiateCoreThreads();
-
   // Deferred fire:
   sender->Defer(&CallableInterface::ZeroArgs)();
   sender->Defer(&CallableInterface::OneArg)(101);
@@ -133,15 +149,7 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
 }
 
 TEST_F(EventReceiverTest, NontrivialCopy) {
-  AutoCurrentContext ctxt;
   static const size_t sc_numElems = 10;
-
-  // Create our transmitter and receiver and start:
-  AutoRequired<SimpleReceiver> receiver;
-  AutoRequired<SimpleSender> sender;
-
-  // Start up the context:
-  ctxt->InitiateCoreThreads();
 
   // Create the vector we're going to copy over:
   vector<int> ascending;
@@ -166,4 +174,28 @@ TEST_F(EventReceiverTest, NontrivialCopy) {
   ASSERT_EQ(10, receiver->m_myVec.size()) << "Receiver was not populated correctly with a vector";
   for(size_t i = 0; i < sc_numElems; i++)
     EXPECT_EQ(i, ascending[i]) << "Element at offset " << i << " was incorrectly copied";
+}
+
+TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
+  // Make our copy counter:
+  CopyCounter ctr;
+
+  // Verify the counter correctly tracks the number of times it was copied:
+  {
+    CopyCounter myCopy1 = ctr;
+    ASSERT_EQ(1, myCopy1.m_count) << "Copy counter appears to be broken; cannot run test";
+
+    CopyCounter myCopy2 = myCopy1;
+    ASSERT_EQ(2, myCopy2.m_count) << "Secondary counter appears to be broken; cannot run test";
+
+    CopyCounter myCopy3(std::move(myCopy2));
+    ASSERT_EQ(2, myCopy3.m_count) << "Move ctor doesn't appear to be invoked correctly";
+
+    // Try a move copy
+    CopyCounter myCopy4;
+    myCopy4 = std::move(myCopy3);
+    ASSERT_EQ(2, myCopy4.m_count) << "Move assignment didn't correctly propagate the current count";
+  }
+
+  // Now we 
 }
