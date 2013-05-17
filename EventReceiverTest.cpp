@@ -9,6 +9,7 @@ class CallableInterface:
 public:
   virtual void ZeroArgs(void) = 0;
   virtual void OneArg(int arg) = 0;
+  virtual void AllDone(void) = 0;
 };
 
 class SimpleSender:
@@ -35,19 +36,22 @@ public:
   bool m_one;
   int m_oneArg;
 
-  virtual void ZeroArgs(void) override {
+  void ZeroArgs(void) override {
     m_zero = true;
   }
 
-  virtual void OneArg(int arg) override {
+  void OneArg(int arg) override {
     m_one = true;
     m_oneArg = arg;
+  }
+
+  void AllDone(void) override {
+    Stop();
   }
 };
 
 TEST_F(EventReceiverTest, SimpleMethodCall) {
-  AutoCreateContext ctxt;
-  CurrentContextPusher pshr(ctxt);
+  AutoCurrentContext ctxt;
 
   AutoRequired<SimpleReceiver> receiver;
   AutoRequired<SimpleSender> sender;
@@ -63,8 +67,23 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
   EXPECT_TRUE(receiver->m_zero);
   EXPECT_TRUE(receiver->m_one);
   EXPECT_EQ(100, receiver->m_oneArg);
+}
 
-  // Cleanup time
-  ctxt->SignalShutdown();
-  ctxt->Wait();
+TEST_F(EventReceiverTest, DeferredInvoke) {
+  AutoCurrentContext ctxt;
+
+  // Create our transmitter and receiver and start:
+  AutoRequired<SimpleReceiver> receiver;
+  AutoRequired<SimpleSender> sender;
+
+  // Start up the context:
+  ctxt->InitiateCoreThreads();
+
+  // Deferred fire:
+  sender->Defer(&CallableInterface::ZeroArgs)();
+  sender->Defer(&CallableInterface::OneArg)(100);
+  sender->Defer(&CallableInterface::AllDone)();
+
+  // Now wait until all events are processed:
+  receiver->Wait();
 }
