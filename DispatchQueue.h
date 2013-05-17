@@ -38,38 +38,17 @@ public:
   /// <summary>
   /// Causes all currently blocked thread members to quit and prevents any blocking
   /// </summary>
-  void Abort(void) {
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    m_dispatchQueue.clear();
-  };
+  void Abort(void);
 
   /// <summary>
   /// Blocks until a new dispatch member is added, dispatches, and then returns
   /// </summary>
-  void WaitForEvent(void) {
-    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-
-    m_queueUpdated.wait(lk, [this] () {
-      return !this->m_dispatchQueue.empty() && !m_aborted;
-    });
-    m_dispatchQueue.front()();
-    m_dispatchQueue.pop_front();
-  }
+  void WaitForEvent(void);
 
   /// <summary>
   /// Similar to WaitForEvent, but does not block
   /// </summary>
-  void DispatchEvent(void) {
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-    if(!m_dispatchQueue.empty()) {
-      m_dispatchQueue.front()();
-      m_dispatchQueue.pop_front();
-    }
-  }
+  void DispatchEvent(void);
 };
 
 #endif
