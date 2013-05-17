@@ -13,9 +13,14 @@ class DispatchQueue;
 /// </summary>
 class EventManagerBase {
 public:
-  virtual ~EventManagerBase(void) {
-  }
+  virtual ~EventManagerBase(void);
+
+protected:
+  // Just the DispatchQueue listeners:
+  typedef std::set<DispatchQueue*> t_stType;
+  t_stType m_dispatch;
   
+public:
   /// <summary>
   /// Invoked by the parent context when the context is shutting down in order to release all references
   /// </summary>
@@ -40,10 +45,6 @@ private:
   // Collection of all known listeners:
   typedef std::map<T*, std::shared_ptr<T> > t_mpType;
   t_mpType m_mp;
-
-  // Just the DispatchQueue listeners:
-  typedef std::set<DispatchQueue*> t_stType;
-  t_stType m_dispatch;
 
 public:
   virtual void Release() override {
@@ -137,7 +138,13 @@ public:
   std::function<void ()> Defer(void (T::*fnPtr)()) const {
     return
       [this, fnPtr] () {
-        this->FireAsSingle0(fnPtr);
+        auto f = fnPtr;
+        for(EventManager<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
+          T* ptr = dynamic_cast<T*>(*q);
+          **q += [ptr, f] () {
+            (ptr->*f)();
+          };
+        }
       };
   }
 
