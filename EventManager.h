@@ -1,16 +1,9 @@
-#pragma once
+#ifndef _EVENT_MANAGER_H
+#define _EVENT_MANAGER_H
 #include "ocuConfig.h"
+#include "EventReceiver.h"
 #include <boost/bind.hpp>
 #include <map>
-
-/// <summary>
-/// Used to identify event recipients
-/// </summary>
-class EventReceiver {
-public:
-  virtual ~EventReceiver(void) {
-  }
-};
 
 /// <summary>
 /// Used to identify event managers
@@ -38,7 +31,7 @@ class EventManager:
 private:
   static_assert(
     (std::is_base_of<EventReceiver, T>::value),
-    "Uses of EventManager must be for interfaces that implement EventReceiver"
+    "If you want an event interface, the interface must inherit from EventReceiver"
   );
 
   typedef std::map<T*, std::shared_ptr<T> > t_mpType;
@@ -167,3 +160,4 @@ public:
 #endif
   }
 };
+#endif
