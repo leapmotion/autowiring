@@ -46,7 +46,7 @@ public:
   /// <summary>
   /// Blocks until a new dispatch member is added, dispatches, and then returns
   /// </summary>
-  void Wait(void) {
+  void WaitForEvent(void) {
     boost::unique_lock<boost::mutex> lk(m_dispatchLock);
     if(m_aborted)
       throw dispatch_aborted_exception();
@@ -59,9 +59,9 @@ public:
   }
 
   /// <summary>
-  /// Similar to Wait, but does not block
+  /// Similar to WaitForEvent, but does not block
   /// </summary>
-  void Dispatch(void) {
+  void DispatchEvent(void) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
     if(m_aborted)
       throw dispatch_aborted_exception();
