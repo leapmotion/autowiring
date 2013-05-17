@@ -280,11 +280,17 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   CopyCounter ctr;
 
   // Pass the field in:
-  sender->Defer(&CallableInterface::TrackCopy)(std::move(ctr));
+  sender->Defer(&CallableInterface::TrackCopy)(
+    ctr
+  );
 
-  // Counter needs to be invalid at this point (it should have been moved)
-  EXPECT_THROW(ctr.Check(), invalid_copycounter_exception);
+  // Signal stop:
+  sender->Defer(&CallableInterface::AllDone)();
 
-  // Signal the barrier so we can quit:
+  // Let the sender process and then wait for it before we go on:
   receiver->Proceed();
+  receiver->Wait();
+  
+  // Check to make sure we only copied the counter once:
+  EXPECT_EQ(1, receiver->m_myCtr.m_count) << "Transfer object was copied too many times";
 }

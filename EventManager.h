@@ -42,6 +42,12 @@ private:
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
 
+  template<class T>
+  struct remove
+  {
+    typedef typename std::remove_const<typename std::remove_reference<T>::type>::type type;
+  };
+
   // Collection of all known listeners:
   typedef std::map<T*, std::shared_ptr<T> > t_mpType;
   t_mpType m_mp;
@@ -149,32 +155,26 @@ public:
   }
 
   template<class Arg1>
-  std::function<void (Arg1)> Defer(void (T::*fnPtr)(Arg1)) const {
+  std::function<void (const typename remove<Arg1>::type&)> Defer(void (T::*fnPtr)(Arg1)) const {
+    // Converted args:
+    typedef remove<Arg1>::type tArg1;
+
     return
-      [this, fnPtr] (Arg1 arg1) {
+      [this, fnPtr] (const tArg1& arg1) {
         auto f = fnPtr;
         for(EventManager<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
           T* ptr = dynamic_cast<T*>(*q);
-          **q += [ptr, f, arg1] () {
-            (ptr->*f)(arg1);
+
+          // Force off the const modifier so we can copy into the lambda just once
+          tArg1& arg1Forced = (tArg1&)arg1;
+
+          // Pass the copy into the lambda:
+          **q += [ptr, f, arg1Forced] () mutable {
+            (ptr->*f)(
+              std::move(arg1Forced)
+            );
           };
         }
-      };
-  }
-
-  template<class Arg1, class Arg2>
-  std::function<void (Arg1, Arg2)> Defer(void (T::*fnPtr)(Arg1, Arg2)) const {
-    return
-      [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
-        this->FireAsSingle2(fnPtr, arg1, arg2);
-      };
-  }
-
-  template<class Arg1, class Arg2, class Arg3>
-  std::function<void (Arg1, Arg2, Arg3)> Defer(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
-    return
-      [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
-        this->FireAsSingle3(fnPtr, arg1, arg2, arg3);
       };
   }
 };
