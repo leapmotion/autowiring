@@ -26,7 +26,7 @@ public:
   /// <remarks>
   /// 
   /// </remarks>
-  ~DispatchQueue(void);
+  virtual ~DispatchQueue(void);
 
 private:
   bool m_aborted;
@@ -49,6 +49,13 @@ public:
   /// Similar to WaitForEvent, but does not block
   /// </summary>
   void DispatchEvent(void);
+
+  /// <summary>
+  /// Adds a new method to be dispatched by this queue
+  /// </summary>
+  void operator+=(const std::function<void ()>& rhs) {
+    m_dispatchQueue.push_back(rhs);
+  }
 };
 
 #endif

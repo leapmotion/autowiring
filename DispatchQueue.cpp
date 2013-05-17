@@ -19,17 +19,21 @@ void DispatchQueue::Abort(void) {
 }
 
 void DispatchQueue::WaitForEvent(void) {
-  boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-  if(m_aborted)
-    throw dispatch_aborted_exception();
-
-  m_queueUpdated.wait(lk, [this] () -> bool {
+  std::function<void ()> fn;
+  {
+    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
     if(m_aborted)
       throw dispatch_aborted_exception();
-    return !this->m_dispatchQueue.empty();
-  });
-  m_dispatchQueue.front()();
-  m_dispatchQueue.pop_front();
+
+    m_queueUpdated.wait(lk, [this] () -> bool {
+      if(m_aborted)
+        throw dispatch_aborted_exception();
+      return !this->m_dispatchQueue.empty();
+    });
+    fn = m_dispatchQueue.front();
+    m_dispatchQueue.pop_front();
+  }
+  fn();
 }
 
 void DispatchQueue::DispatchEvent(void) {
