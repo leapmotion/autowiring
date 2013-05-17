@@ -292,5 +292,6 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   receiver->Wait();
   
   // Check to make sure we only copied the counter once:
-  EXPECT_EQ(1, receiver->m_myCtr.m_count) << "Transfer object was copied too many times";
+  CopyCounter& finalCtr = receiver->m_myCtr;
+  EXPECT_EQ(1, finalCtr.m_count) << "Transfer object was copied too many times";
 }
