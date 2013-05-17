@@ -27,7 +27,7 @@ void CoreThread::DoRun(void) {
   DelayUntilReady();
   try {
     Run();
-  } catch(should_stop&) {
+  } catch(dispatch_aborted_exception&) {
     // Okay, this is fine, cleanup by design
   }
 
@@ -45,12 +45,6 @@ bool CoreThread::ShouldStop(void) const {
 
 void CoreThread::ThreadSleep(long millisecond) {
   boost::this_thread::sleep(boost::posix_time::milliseconds(millisecond));
-}
-
-void CoreThread::WaitForEvent(void) {
-}
-
-void CoreThread::DispatchEvent(void) {
 }
 
 bool CoreThread::Start(void) {
