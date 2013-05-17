@@ -62,6 +62,8 @@ set(
   CurrentContextPusherTest.cpp
   DependentContextTest.h
   DependentContextTest.cpp
+  EventReceiverTest.h
+  EventReceiverTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
   MultiInheritTest.h

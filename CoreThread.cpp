@@ -25,7 +25,11 @@ void CoreThread::DoRun(void) {
 
   // Now we wait for the thread to be good to go:
   DelayUntilReady();
-  Run();
+  try {
+    Run();
+  } catch(should_stop&) {
+    // Okay, this is fine, cleanup by design
+  }
 
   // Notify everyone that we're completed:
   boost::lock_guard<boost::mutex> lk(m_lock);
@@ -41,6 +45,12 @@ bool CoreThread::ShouldStop(void) const {
 
 void CoreThread::ThreadSleep(long millisecond) {
   boost::this_thread::sleep(boost::posix_time::milliseconds(millisecond));
+}
+
+void CoreThread::WaitForEvent(void) {
+}
+
+void CoreThread::DispatchEvent(void) {
 }
 
 bool CoreThread::Start(void) {
@@ -62,4 +72,9 @@ bool CoreThread::Start(void) {
   // Kick off a thread and return here
   boost::thread(ThreadStatusMaintainer(this, context));
   return true;
+}
+
+void CoreThread::Run() {
+  for(;;)
+    WaitForEvent();
 }
