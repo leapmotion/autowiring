@@ -4,6 +4,9 @@
 #include "EventReceiver.h"
 #include <boost/bind.hpp>
 #include <map>
+#include <set>
+
+class DispatchQueue;
 
 /// <summary>
 /// Used to identify event managers
@@ -34,8 +37,13 @@ private:
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
 
+  // Collection of all known listeners:
   typedef std::map<T*, std::shared_ptr<T> > t_mpType;
   t_mpType m_mp;
+
+  // Just the DispatchQueue listeners:
+  typedef std::set<DispatchQueue*> t_stType;
+  t_stType m_dispatch;
 
 public:
   virtual void Release() override {
@@ -60,6 +68,11 @@ public:
     std::shared_ptr<T>& location = m_mp[rhs.get()];
     if(!location)
       location = rhs;
+
+    // If the RHS implements DispatchQueue, add it to that collection as well:
+    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
+    if(pDispatch)
+      m_dispatch.insert(pDispatch);
     return *this;
   }
 
@@ -91,73 +104,65 @@ public:
   // Two-parenthetical invocations
   std::function<void ()> Fire(void (T::*fnPtr)()) const {
     return
-#if LAMBDAS_AVAILABLE
       [this, fnPtr] () {
         this->FireAsSingle0(fnPtr);
       };
-#else
-      boost::bind(
-        boost::bind(
-          &EventManager<T>::FireAsSingle0,
-          this
-        ),
-        fnPtr
-      );
-#endif
   }
 
   template<class Arg1>
   std::function<void (Arg1)> Fire(void (T::*fnPtr)(Arg1)) const {
     return
-#if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1) {
         this->FireAsSingle1(fnPtr, arg1);
       };
-#else
-      boost::bind(
-        boost::bind(
-          &EventManager<T>::FireAsSingle1<Arg1, Arg1>,
-          this
-        ),
-        fnPtr
-      );
-#endif
   }
 
   template<class Arg1, class Arg2>
   std::function<void (Arg1, Arg2)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
     return
-#if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
         this->FireAsSingle2(fnPtr, arg1, arg2);
       };
-#else
-      boost::bind(
-        boost::bind(
-          &EventManager<T>::FireAsSingle2<Arg1, Arg2, Arg1, Arg2>,
-          this
-        ),
-        fnPtr
-      );
-#endif
   }
 
   template<class Arg1, class Arg2, class Arg3>
   std::function<void (Arg1, Arg2, Arg3)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
     return
-#if LAMBDAS_AVAILABLE
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
         this->FireAsSingle3(fnPtr, arg1, arg2, arg3);
       };
-#else
-      boost::bind(
-        boost::bind(
-          &EventManager<T>::FireAsSingle3<Arg1, Arg2, Arg3, Arg1, Arg2, Arg3>,
-          this
-        ),
-        fnPtr
-      );
-#endif
+  }
+
+  // Two-parenthetical deferred invocations:
+  std::function<void ()> Defer(void (T::*fnPtr)()) const {
+    return
+      [this, fnPtr] () {
+        this->FireAsSingle0(fnPtr);
+      };
+  }
+
+  template<class Arg1>
+  std::function<void (Arg1)> Defer(void (T::*fnPtr)(Arg1)) const {
+    return
+      [this, fnPtr] (Arg1 arg1) {
+        this->FireAsSingle1(fnPtr, arg1);
+      };
+  }
+
+  template<class Arg1, class Arg2>
+  std::function<void (Arg1, Arg2)> Defer(void (T::*fnPtr)(Arg1, Arg2)) const {
+    return
+      [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
+        this->FireAsSingle2(fnPtr, arg1, arg2);
+      };
+  }
+
+  template<class Arg1, class Arg2, class Arg3>
+  std::function<void (Arg1, Arg2, Arg3)> Defer(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
+    return
+      [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
+        this->FireAsSingle3(fnPtr, arg1, arg2, arg3);
+      };
   }
 };
 #endif
