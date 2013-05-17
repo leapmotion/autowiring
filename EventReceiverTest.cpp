@@ -23,9 +23,11 @@ class SimpleReceiver:
 {
 public:
   SimpleReceiver(void):
+    CoreThread("SimpleReceiver"),
     m_zero(false),
     m_one(false),
-    m_oneArg(0)
+    m_oneArg(0),
+    m_barrier(2)
   {
     Ready();
   }
@@ -35,6 +37,9 @@ public:
 
   bool m_one;
   int m_oneArg;
+
+  // Continuity barrier:
+  boost::barrier m_barrier;
 
   void ZeroArgs(void) override {
     m_zero = true;
@@ -47,6 +52,11 @@ public:
 
   void AllDone(void) override {
     Stop();
+  }
+
+  void Run(void) override {
+    m_barrier.wait();
+    CoreThread::Run();
   }
 };
 
@@ -63,10 +73,13 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
   sender->Fire(&CallableInterface::ZeroArgs)();
   sender->Fire(&CallableInterface::OneArg)(100);
 
-  // Now we verify the event was received by our receiver:
+  // Verify that stuff happens even when the thread isn't running:
   EXPECT_TRUE(receiver->m_zero);
   EXPECT_TRUE(receiver->m_one);
   EXPECT_EQ(100, receiver->m_oneArg);
+  
+  // Unblock:
+  receiver->m_barrier.wait();
 }
 
 TEST_F(EventReceiverTest, DeferredInvoke) {
@@ -84,6 +97,18 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
   sender->Defer(&CallableInterface::OneArg)(100);
   sender->Defer(&CallableInterface::AllDone)();
 
+  // Verify that nothing is hit yet:
+  EXPECT_FALSE(receiver->m_zero);
+  EXPECT_FALSE(receiver->m_one);
+  EXPECT_TRUE(receiver->IsRunning());
+
+  // Unblock:
+  receiver->m_barrier.wait();
+
   // Now wait until all events are processed:
   receiver->Wait();
+
+  // Validate deferred firing:
+  EXPECT_TRUE(receiver->m_zero);
+  EXPECT_TRUE(receiver->m_one);
 }

@@ -140,6 +140,8 @@ public:
     m_stop = true;
     boost::lock_guard<boost::mutex> lk(m_lock);
     m_stateCondition.notify_all();
+
+    // Abort the dispatch queue so anyone waiting will wake up
     DispatchQueue::Abort();
   }
 };
