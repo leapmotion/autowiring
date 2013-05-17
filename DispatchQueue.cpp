@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "DispatchQueue.h"
 
 DispatchQueue::DispatchQueue(void):
