@@ -53,11 +53,18 @@ public:
     m_zero(false),
     m_one(false),
     m_oneArg(0),
-    m_barrier(2)
+    m_barrier(2),
+    m_barrierDone(false)
   {
     Ready();
   }
 
+private:
+  // Continuity barrier, used to pause processing while in Run
+  boost::barrier m_barrier;
+  bool m_barrierDone;
+
+public:
   // Manifest of functions called:
   bool m_zero;
 
@@ -68,9 +75,9 @@ public:
   vector<int> m_myVec;
   CopyCounter m_myCtr;
 
-  // Continuity barrier:
-  boost::barrier m_barrier;
-
+  ///
+  // Interface utility methods:
+  ///
   void ZeroArgs(void) override {
     m_zero = true;
   }
@@ -94,10 +101,29 @@ public:
     m_myCtr = ctr;
   }
 
+  // Trivial shutdown override
   void AllDone(void) override {
     Stop();
   }
 
+  // Overridden here so we can hit the barrier if we're still waiting on it
+  void Stop() override {
+    Proceed();
+    CoreThread::Stop();
+  }
+
+  /// <summary>
+  /// Invoked to cause Run to continue its processing
+  /// </summary>
+  void Proceed(void) {
+    if(!m_barrierDone)
+      m_barrier.wait();
+    m_barrierDone = true;
+  }
+
+  ///
+  // Runs the thread
+  ///
   void Run(void) override {
     m_barrier.wait();
     CoreThread::Run();
@@ -122,7 +148,7 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
   EXPECT_EQ(100, receiver->m_oneArg);
   
   // Unblock:
-  receiver->m_barrier.wait();
+  receiver->Proceed();
 }
 
 TEST_F(EventReceiverTest, DeferredInvoke) {
@@ -137,7 +163,7 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
   EXPECT_TRUE(receiver->IsRunning()) << "Receiver is terminated";
 
   // Unblock:
-  receiver->m_barrier.wait();
+  receiver->Proceed();
 
   // Now wait until all events are processed:
   receiver->Wait();
@@ -165,7 +191,7 @@ TEST_F(EventReceiverTest, NontrivialCopy) {
   EXPECT_TRUE(receiver->IsRunning()) << "Receiver is terminated";
 
   // Unblock:
-  receiver->m_barrier.wait();
+  receiver->Proceed();
 
   // Now wait until all events are processed:
   receiver->Wait();
@@ -197,5 +223,6 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
     ASSERT_EQ(2, myCopy4.m_count) << "Move assignment didn't correctly propagate the current count";
   }
 
-  // Now we 
+  // Signal the barrier so we can quit:
+  //receiver->Proceed();
 }
