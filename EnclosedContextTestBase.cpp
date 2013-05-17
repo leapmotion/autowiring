@@ -1,17 +1,12 @@
 #include "stdafx.h"
 #include "EnclosedContextTestBase.h"
 
-void EnclosedContextTestBase::SetUp(void) {
-  AutoCurrentContext current;
-  m_create = current->Create();
-  m_create->SetCurrent();
+EnclosedContextTestBase::EnclosedContextTestBase(void):
+  m_pshr(m_create)
+{
 }
 
-void EnclosedContextTestBase::TearDown(void) {
-  // Cleanup time
+EnclosedContextTestBase::~EnclosedContextTestBase(void) {
   m_create->SignalShutdown();
   m_create->Wait();
-
-  // Let the context tear down completely, now:
-  m_create.reset();
 }

@@ -8,13 +8,16 @@ class EnclosedContextTestBase:
   public testing::Test
 {
 public:
-  virtual void SetUp(void) override;
-  virtual void TearDown(void) override;
+  EnclosedContextTestBase(void);
+  ~EnclosedContextTestBase(void);
 
 private:
   // The context proper.  This is automatically assigned as the current
   // context when SetUp is invoked.
-  std::shared_ptr<CoreContext> m_create;
+  AutoCreateContext m_create;
+
+  // Currency pusher:
+  CurrentContextPusher m_pshr;
 };
 
 #endif
