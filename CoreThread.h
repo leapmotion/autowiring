@@ -1,6 +1,7 @@
 #ifndef _CORETHREAD_H
 #define _CORETHREAD_H
 #include "ContextMember.h"
+#include "DispatchQueue.h"
 #include <vector>
 #include <memory>
 #include <boost/thread/condition_variable.hpp>
@@ -18,7 +19,8 @@ class CoreThread;
 /// running, even if there are no other references to it.
 /// </summary>
 class CoreThread:
-  public ContextMember
+  public ContextMember,
+  public DispatchQueue
 {
 public:
   /// <param name="pName">An optional name for this thread</param>
@@ -98,7 +100,11 @@ public:
   /// Begins the core thread
   /// </summary>
   /// <param name="context">A shared pointer to the context containing this thread</param>
-  virtual void Run() = 0;
+  /// <remarks>
+  /// The default implementation of Run will simply call WaitForEvent in a loop until it's
+  /// told to quit.
+  /// </remarks>
+  virtual void Run();
 
   /// <summary>
   /// Generally speaking, this method doesn't need to be called as it's invoked
