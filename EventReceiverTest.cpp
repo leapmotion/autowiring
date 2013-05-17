@@ -246,14 +246,12 @@ TEST_F(EventReceiverTest, NontrivialCopy) {
 }
 
 TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
-  // Make our copy counter:
-  CopyCounter ctr;
-
   // Verify the counter correctly tracks the number of times it was copied:
   {
     CopyCounter antiRecycle;
+    CopyCounter base;
 
-    CopyCounter myCopy1 = ctr;
+    CopyCounter myCopy1 = base;
     ASSERT_EQ(1, myCopy1.m_count) << "Copy counter appears to be broken; cannot run test";
 
     CopyCounter myCopy2 = myCopy1;
@@ -270,15 +268,22 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
     CopyCounter myCopy4;
     myCopy4 = std::move(myCopy3);
     ASSERT_EQ(2, myCopy4.m_count) << "Move assignment didn't correctly propagate the current count";
-    ASSERT_THROW(antiRecycle = myCopy4, invalid_copycounter_exception);
+    ASSERT_THROW(antiRecycle = myCopy3, invalid_copycounter_exception);
 
     // Try a trivial copy:
     CopyCounter myCopy5;
     myCopy5 = myCopy4;
     ASSERT_EQ(3, myCopy5.m_count) << "Assignment operator did not increment reference count";
   }
+  
+  // Make our copy counter:
+  CopyCounter ctr;
 
-  // Transfer over the copied 
+  // Pass the field in:
+  sender->Defer(&CallableInterface::TrackCopy)(std::move(ctr));
+
+  // Counter needs to be invalid at this point (it should have been moved)
+  EXPECT_THROW(ctr.Check(), invalid_copycounter_exception);
 
   // Signal the barrier so we can quit:
   receiver->Proceed();
