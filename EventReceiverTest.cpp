@@ -2,9 +2,19 @@
 #include "EventReceiverTest.h"
 #include "Autowiring/Autowired.h"
 #include "Autowiring/CoreThread.h"
+#include <stdexcept>
 #include <vector>
 
 using namespace std;
+
+class invalid_copycounter_exception:
+  public runtime_error
+{
+public:
+  invalid_copycounter_exception(void):
+    runtime_error("Copy counter was moved, and incorrectly reused")
+  {}
+};
 
 class CopyCounter {
 public:
@@ -14,16 +24,49 @@ public:
 
   CopyCounter(const CopyCounter& rhs):
     m_count(rhs.m_count + 1)
-  {}
+  {
+    rhs.Check();
+  }
 
   /// <summary>
   /// Special case move ctor, which won't increment the count
   /// </summary>
   CopyCounter(CopyCounter&& rhs):
     m_count(rhs.m_count)
-  {}
+  {
+    rhs.Check();
+    rhs.m_count = -1;
+  }
 
+  /// <summary>
+  /// Destructor, which invalidates the count in a specific way to indicate use-after-free
+  /// </summary>
+  ~CopyCounter(void) {
+    m_count = -2;
+  }
+
+  // The actual count:
   int m_count;
+
+  // Throws an exception if this copycounter is invalid
+  void Check(void) const {
+    if(m_count < 0)
+      throw invalid_copycounter_exception();
+  }
+
+  // Copy and move overrides
+  CopyCounter& operator=(const CopyCounter& rhs) {
+    rhs.Check();
+    m_count = rhs.m_count + 1;
+    return *this;
+  }
+  
+  CopyCounter& operator=(CopyCounter&& rhs) {
+    rhs.Check();
+    m_count = rhs.m_count;
+    rhs.m_count = -1;
+    return *this;
+  }
 };
 
 class CallableInterface:
@@ -208,21 +251,35 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
 
   // Verify the counter correctly tracks the number of times it was copied:
   {
+    CopyCounter antiRecycle;
+
     CopyCounter myCopy1 = ctr;
     ASSERT_EQ(1, myCopy1.m_count) << "Copy counter appears to be broken; cannot run test";
 
     CopyCounter myCopy2 = myCopy1;
     ASSERT_EQ(2, myCopy2.m_count) << "Secondary counter appears to be broken; cannot run test";
 
+    // Try move construction:
     CopyCounter myCopy3(std::move(myCopy2));
     ASSERT_EQ(2, myCopy3.m_count) << "Move ctor doesn't appear to be invoked correctly";
+    
+    // Verify antirecycle:
+    ASSERT_THROW(antiRecycle = myCopy2, invalid_copycounter_exception);
 
     // Try a move copy
     CopyCounter myCopy4;
     myCopy4 = std::move(myCopy3);
     ASSERT_EQ(2, myCopy4.m_count) << "Move assignment didn't correctly propagate the current count";
+    ASSERT_THROW(antiRecycle = myCopy4, invalid_copycounter_exception);
+
+    // Try a trivial copy:
+    CopyCounter myCopy5;
+    myCopy5 = myCopy4;
+    ASSERT_EQ(3, myCopy5.m_count) << "Assignment operator did not increment reference count";
   }
 
+  // Transfer over the copied 
+
   // Signal the barrier so we can quit:
-  //receiver->Proceed();
+  receiver->Proceed();
 }
