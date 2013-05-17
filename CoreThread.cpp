@@ -69,6 +69,6 @@ bool CoreThread::Start(void) {
 }
 
 void CoreThread::Run() {
-  for(;;)
+  while(!ShouldStop())
     WaitForEvent();
 }

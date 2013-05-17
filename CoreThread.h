@@ -140,6 +140,7 @@ public:
     m_stop = true;
     boost::lock_guard<boost::mutex> lk(m_lock);
     m_stateCondition.notify_all();
+    DispatchQueue::Abort();
   }
 };
 
