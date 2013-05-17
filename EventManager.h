@@ -152,7 +152,13 @@ public:
   std::function<void (Arg1)> Defer(void (T::*fnPtr)(Arg1)) const {
     return
       [this, fnPtr] (Arg1 arg1) {
-        this->FireAsSingle1(fnPtr, arg1);
+        auto f = fnPtr;
+        for(EventManager<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
+          T* ptr = dynamic_cast<T*>(*q);
+          **q += [ptr, f, arg1] () {
+            (ptr->*f)(arg1);
+          };
+        }
       };
   }
 
