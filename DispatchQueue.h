@@ -1,6 +1,6 @@
 #ifndef _DISPATCH_QUEUE_H
 #define _DISPATCH_QUEUE_H
-#include <boost/thread.hpp>
+#include <boost/thread/condition_variable.hpp>
 #include <functional>
 #include <list>
 

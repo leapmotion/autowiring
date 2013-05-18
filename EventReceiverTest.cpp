@@ -2,6 +2,7 @@
 #include "EventReceiverTest.h"
 #include "Autowiring/Autowired.h"
 #include "Autowiring/CoreThread.h"
+#include <boost/thread/barrier.hpp>
 #include <stdexcept>
 #include <vector>
 

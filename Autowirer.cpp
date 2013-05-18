@@ -3,11 +3,9 @@
 #include "ContextMember.h"
 #include "CoreContext.h"
 #include "AutowirableSlot.h"
-#include <string>
+#include <list>
 
 using namespace std;
-
-const char sc_emptyName[] = "";
 
 Autowirer::Autowirer(const std::shared_ptr<Autowirer>& pParent):
   m_pParent(pParent)
@@ -17,8 +15,8 @@ Autowirer::Autowirer(const std::shared_ptr<Autowirer>& pParent):
 Autowirer::~Autowirer(void)
 {
   // Notify all ContextMember instances that their parent is going away
-  for(size_t i = m_contextMembers.size(); i--;)
-    m_contextMembers[i]->ReleaseAll();
+  for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
+    (*q)->ReleaseAll();
 
   // Release all event sender links:
   for(std::set<EventManagerBase*>::iterator q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
@@ -35,6 +33,33 @@ Autowirer::~Autowirer(void)
   // Explicit deleters to simplify base deletion
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
     delete q->second;
+}
+
+void Autowirer::UpdateDeferredElements(void) {
+  std::list<DeferredBase*> successful;
+
+  // Notify any autowired field whose autowiring was deferred
+  // TODO:  We should also notify any descendant autowiring contexts that a new member is now available.
+  {
+    boost::lock_guard<boost::mutex> lk(m_deferredLock);
+    for(t_deferred::iterator r = m_deferred.begin(); r != m_deferred.end(); ) {
+      bool rs = (*r->second)();
+      if(rs) {
+        successful.push_back(r->second);
+
+        // Temporary required because of the absence of a convenience eraser iterator with stl map on all platforms
+        t_deferred::iterator rm = r++;
+        m_deferred.erase(rm);
+      }
+      else
+        r++;
+    }
+  }
+
+  // Now, outside of the context of a lock, we destroy each successfully wired deferred member
+  // This causes any listeners to be invoked, conveniently, outside of the context of any lock
+  for(std::list<DeferredBase*>::iterator q = successful.begin(); q != successful.end(); ++q)
+    delete *q;
 }
 
 void Autowirer::AddToEventSenders(EventManagerBase* pSender) {
@@ -65,7 +90,7 @@ void Autowirer::AddContextMember(ContextMember* ptr)
   boost::lock_guard<boost::mutex> lk(m_lock);
 
   // Always add to the set of context members
-  m_contextMembers.push_back(ptr);
+  m_contextMembers.insert(ptr);
 
   // Insert context members by name.  If there is no name, just return the base pointer.
   if(!ptr->GetName())
