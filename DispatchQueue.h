@@ -93,7 +93,7 @@ public:
   void operator+=(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
     m_dispatchQueue.push_back(
-      std::unique_ptr<DispatchThunk<_Fx>>(
+      std::unique_ptr<DispatchThunkBase>(
         new DispatchThunk<_Fx>(fx)
       )
     );
