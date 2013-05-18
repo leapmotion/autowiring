@@ -15,8 +15,9 @@ void DispatchQueue::Abort(void) {
   boost::lock_guard<boost::mutex> lk(m_dispatchLock);
   m_aborted = true;
 
-  // Clear everything
-  m_dispatchQueue.clear();
+  // Rundown:
+  for(; !m_dispatchQueue.empty(); m_dispatchQueue.pop_front())
+    delete m_dispatchQueue.front();
 
   // Wake up anyone who is still waiting:
   m_queueUpdated.notify_all();

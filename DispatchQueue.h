@@ -61,7 +61,7 @@ private:
 
   boost::condition_variable m_queueUpdated;
 
-  std::list<std::unique_ptr<DispatchThunkBase>> m_dispatchQueue;
+  std::list<DispatchThunkBase*> m_dispatchQueue;
 
   /// <summary>
   /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
@@ -92,8 +92,7 @@ public:
   template<class _Fx>
   void operator+=(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    std::unique_ptr<DispatchThunkBase> ptr(new DispatchThunk<_Fx>(fx));
-    m_dispatchQueue.push_back(std::move(ptr));
+    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
   }
 };
 
