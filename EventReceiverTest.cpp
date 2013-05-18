@@ -295,7 +295,9 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   receiver->Proceed();
   receiver->Wait();
   
-  // Check to make sure we only copied the counter once:
+  // There are limitations to how few times we can copy.  At a minimum, there's one
+  // copy from the the Defer call, and one again when the deferred method is passed
+  // the DispatchQueue
   CopyCounter& finalCtr = receiver->m_myCtr;
-  EXPECT_EQ(1, finalCtr.m_count) << "Transfer object was copied too many times";
+  EXPECT_LE(finalCtr.m_count, 2) << "Transfer object was copied too many times";
 }
