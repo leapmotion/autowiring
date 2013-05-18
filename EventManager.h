@@ -38,12 +38,12 @@ class EventManager:
 {
 private:
   static_assert(
-    (std::is_base_of<EventReceiver, T>::value),
+    std::is_base_of<EventReceiver, T>::value,
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
 
   // Collection of all known listeners:
-  typedef std::map<T*, std::shared_ptr<T> > t_mpType;
+  typedef std::map<T*, std::shared_ptr<T>> t_mpType;
   t_mpType m_mp;
 
 public:
