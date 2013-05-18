@@ -92,11 +92,8 @@ public:
   template<class _Fx>
   void operator+=(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    m_dispatchQueue.push_back(
-      std::unique_ptr<DispatchThunkBase>(
-        new DispatchThunk<_Fx>(fx)
-      )
-    );
+    std::unique_ptr<DispatchThunkBase> ptr(new DispatchThunk<_Fx>(fx));
+    m_dispatchQueue.push_back(std::move(ptr));
   }
 };
 
