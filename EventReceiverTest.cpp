@@ -315,18 +315,37 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
 TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
   // Sender goes in the parent context:
   AutoRequired<SimpleSender> sender;
-  
-  // Create a new descendant context and put the receiver in it:
-  AutoCreateContext subCtxt;
-  CurrentContextPusher pshr(subCtxt);
 
-  // Create a new descendant event receiver that matches a parent context type and should
-  // be autowired to grab events from the parent:
-  AutoRequired<SimpleReceiver> rcvr;
+  std::weak_ptr<SimpleReceiver> rcvrWeak;
+  {
+    std::shared_ptr<SimpleReceiver> rcvrCopy;
+    {
+      // Create a new descendant context and put the receiver in it:
+      AutoCreateContext subCtxt;
+      CurrentContextPusher pshr(subCtxt);
+
+      // Create a new descendant event receiver that matches a parent context type and should
+      // be autowired to grab events from the parent:
+      AutoRequired<SimpleReceiver> rcvr;
+      rcvrWeak = rcvr;
+      rcvrCopy = rcvr;
   
-  // Now we try to fire and verify it gets caught on the receiver side:
+      // Now we try to fire and verify it gets caught on the receiver side:
+      sender->Fire(&CallableInterface::ZeroArgs)();
+
+      // Verify that it gets caught:
+      EXPECT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
+    }
+
+    // Fire the event again--shouldn't be captured by the receiver because its context is gone
+    rcvrCopy->m_zero = false;
+    sender->Fire(&CallableInterface::ZeroArgs)();
+    EXPECT_FALSE(rcvrCopy->m_zero);
+  }
+
+  // The parent context had better not be holding a reference at this point
+  EXPECT_TRUE(rcvrWeak.expired());
+
+  // Fire the event again, this shouldn't cause anything to blow up!
   sender->Fire(&CallableInterface::ZeroArgs)();
-
-  // Verify that it gets caught:
-  EXPECT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
 }
