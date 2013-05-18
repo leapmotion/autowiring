@@ -185,6 +185,9 @@ EventReceiverTest::EventReceiverTest(void) {
 }
 
 TEST_F(EventReceiverTest, SimpleMethodCall) {
+  AutoRequired<SimpleReceiver> receiver;
+  AutoRequired<SimpleSender> sender;
+
   // Try firing the event first:
   sender->Fire(&CallableInterface::ZeroArgs)();
   sender->Fire(&CallableInterface::OneArg)(100);
@@ -199,6 +202,9 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
 }
 
 TEST_F(EventReceiverTest, DeferredInvoke) {
+  AutoRequired<SimpleReceiver> receiver;
+  AutoRequired<SimpleSender> sender;
+
   // Deferred fire:
   sender->Defer(&CallableInterface::ZeroArgs)();
   sender->Defer(&CallableInterface::OneArg)(101);
@@ -222,6 +228,9 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
 }
 
 TEST_F(EventReceiverTest, NontrivialCopy) {
+  AutoRequired<SimpleReceiver> receiver;
+  AutoRequired<SimpleSender> sender;
+
   static const int sc_numElems = 10;
 
   // Create the vector we're going to copy over:
@@ -280,6 +289,9 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
     ASSERT_EQ(3, myCopy5.m_count) << "Assignment operator did not increment reference count";
   }
   
+  AutoRequired<SimpleReceiver> receiver;
+  AutoRequired<SimpleSender> sender;
+
   // Make our copy counter:
   CopyCounter ctr;
 
@@ -298,4 +310,23 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   // the DispatchQueue
   CopyCounter& finalCtr = receiver->m_myCtr;
   EXPECT_LE(finalCtr.m_count, 2) << "Transfer object was copied too many times";
+}
+
+TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
+  // Sender goes in the parent context:
+  AutoRequired<SimpleSender> sender;
+  
+  // Create a new descendant context and put the receiver in it:
+  AutoCreateContext subCtxt;
+  CurrentContextPusher pshr(subCtxt);
+
+  // Create a new descendant event receiver that matches a parent context type and should
+  // be autowired to grab events from the parent:
+  AutoRequired<SimpleReceiver> rcvr;
+  
+  // Now we try to fire and verify it gets caught on the receiver side:
+  sender->Fire(&CallableInterface::ZeroArgs)();
+
+  // Verify that it gets caught:
+  EXPECT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
 }

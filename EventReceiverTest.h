@@ -10,10 +10,6 @@ class EventReceiverTest:
 {
 public:
   EventReceiverTest(void);
-
-protected:
-  AutoRequired<SimpleReceiver> receiver;
-  AutoRequired<SimpleSender> sender;
 };
 
 #endif
