@@ -4,7 +4,7 @@
 #include "EventReceiver.h"
 #include "SharedPtrHash.h"
 #include <boost/bind.hpp>
-#include <hash_set>
+#include <unordered_set>
 #include <set>
 
 class DispatchQueue;
@@ -18,7 +18,7 @@ public:
 
 protected:
   // Just the DispatchQueue listeners:
-  typedef std::hash_set<DispatchQueue*> t_stType;
+  typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
   
 public:
@@ -47,7 +47,7 @@ private:
   );
 
   // Collection of all known listeners:
-  typedef std::hash_set<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
+  typedef std::unordered_set<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
   t_listenerSet m_st;
 
 public:

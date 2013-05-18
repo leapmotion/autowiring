@@ -3,7 +3,6 @@
 #include "EventManager.h"
 #include "DeferredBase.h"
 #include "safe_dynamic_cast.h"
-#include "SharedPtrHash.h"
 #include "SharedPtrWrap.h"
 #include <functional>
 #include <map>
@@ -59,7 +58,7 @@ protected:
   t_mpType m_byType;
   
   // All ContextMember objects known in this autowirer:
-  std::hash_set<ContextMember*> m_contextMembers;
+  std::unordered_set<ContextMember*> m_contextMembers;
 
   // Only one object in a context can bear a particular name
   typedef std::map<std::string, ContextMember*> t_mpName;
@@ -71,7 +70,7 @@ protected:
   t_deferred m_deferred;
 
   // All known event receivers
-  typedef std::hash_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
+  typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
   std::set<EventManagerBase*> m_eventSenders;
 
