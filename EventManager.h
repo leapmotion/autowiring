@@ -151,7 +151,7 @@ public:
   template<class Arg1>
   std::function<void (const typename std::decay<Arg1>::type&)> Defer(void (T::*fnPtr)(Arg1)) const {
     // Converted args:
-    typedef std::decay<Arg1>::type tArg1;
+    typedef typename std::decay<Arg1>::type tArg1;
 
     return
       [this, fnPtr] (const tArg1& arg1) {
