@@ -141,7 +141,7 @@ public:
   }
 
   void TrackCopy(CopyCounter&& ctr) override {
-    m_myCtr = ctr;
+    m_myCtr = std::forward<CopyCounter>(ctr);
   }
 
   // Trivial shutdown override
