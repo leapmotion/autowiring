@@ -4,6 +4,7 @@
 #include "EventManager.h"
 #include "DeferredBase.h"
 #include "safe_dynamic_cast.h"
+#include "SharedPtrHash.h"
 #include "SharedPtrWrap.h"
 #include <functional>
 #include <list>
@@ -74,7 +75,7 @@ protected:
   t_deferred m_deferred;
 
   // All known event receivers
-  typedef std::set<std::shared_ptr<EventReceiver>> t_rcvrSet;
+  typedef std::hash_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
   std::set<EventManagerBase*> m_eventSenders;
 
