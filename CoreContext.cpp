@@ -61,13 +61,14 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
   
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
-  std::shared_ptr<CoreContext> retVal(pContext,
-                                      [this,childIterator] (CoreContext* pContext)
-                                      {
-                                        lock_guard<mutex> lk(m_childrenLock);
-                                        this->m_children.erase(childIterator);
-                                        delete pContext;
-                                      });
+  std::shared_ptr<CoreContext> retVal(
+    pContext,
+    [this, childIterator] (CoreContext* pContext) {
+      lock_guard<mutex> lk(m_childrenLock);
+      this->m_children.erase(childIterator);
+      delete pContext;
+    }
+);
   pContext->m_self = retVal;
   *childIterator = retVal;
   return retVal;

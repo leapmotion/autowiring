@@ -21,8 +21,12 @@ Autowirer::~Autowirer(void)
     m_contextMembers[i]->ReleaseAll();
 
   // Release all event sender links:
-  for(size_t i = m_eventSenders.size(); i--;)
-    m_eventSenders[i]->Release();
+  for(std::set<EventManagerBase*>::iterator q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
+    (**q).Release();
+
+  // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
+  if(m_pParent)
+    m_pParent->RemoveEventSenders(m_eventReceivers.begin(), m_eventReceivers.end());
 
   // Explicit deleters to simplify implementation of SharedPtrWrapBase
   for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); ++q)
@@ -31,6 +35,29 @@ Autowirer::~Autowirer(void)
   // Explicit deleters to simplify base deletion
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
     delete q->second;
+}
+
+void Autowirer::AddToEventSenders(EventManagerBase* pSender) {
+  m_eventSenders.insert(pSender);
+
+  // Scan the list for compatible receivers:
+  for(auto q = m_eventReceivers.begin(); q != m_eventReceivers.end(); q++)
+    *pSender += *q;
+}
+
+void Autowirer::RemoveEventSenders(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
+  for(auto q = first; q != last; q++) {
+    // n^2 sender unlinking
+    for(auto r = m_eventSenders.begin(); r != m_eventSenders.end(); r++)
+      **r -= *q;
+
+    // Trivial erase:
+    m_eventReceivers.erase(*q);
+  }
+
+  // Detour to the parent collection (if necessary)
+  if(m_pParent)
+    m_pParent->RemoveEventSenders(first, last);
 }
 
 void Autowirer::AddContextMember(ContextMember* ptr)

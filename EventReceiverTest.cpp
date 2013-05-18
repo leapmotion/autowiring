@@ -340,11 +340,11 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
     // Fire the event again--shouldn't be captured by the receiver because its context is gone
     rcvrCopy->m_zero = false;
     sender->Fire(&CallableInterface::ZeroArgs)();
-    EXPECT_FALSE(rcvrCopy->m_zero);
+    EXPECT_FALSE(rcvrCopy->m_zero) << "Event receiver was still wired even after its enclosing context was removed";
   }
 
   // The parent context had better not be holding a reference at this point
-  EXPECT_TRUE(rcvrWeak.expired());
+  EXPECT_TRUE(rcvrWeak.expired()) << "Event receiver reference still being held after its context and all shared references are gone";
 
   // Fire the event again, this shouldn't cause anything to blow up!
   sender->Fire(&CallableInterface::ZeroArgs)();

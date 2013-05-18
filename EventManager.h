@@ -3,7 +3,7 @@
 #include "ocuConfig.h"
 #include "EventReceiver.h"
 #include <boost/bind.hpp>
-#include <map>
+#include <hash_set>
 #include <set>
 
 class DispatchQueue;
@@ -17,7 +17,7 @@ public:
 
 protected:
   // Just the DispatchQueue listeners:
-  typedef std::set<DispatchQueue*> t_stType;
+  typedef std::hash_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
   
 public:
@@ -25,7 +25,10 @@ public:
   /// Invoked by the parent context when the context is shutting down in order to release all references
   /// </summary>
   virtual void Release(void) = 0;
-  virtual EventManagerBase& operator+=(std::shared_ptr<EventReceiver>& rhs) = 0;
+
+  // Event attachment and detachment pure virtuals
+  virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
 };
 
 /// <summary>
@@ -42,33 +45,43 @@ private:
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
 
+  class SharedPtrHash:
+    public std::hash_compare<std::shared_ptr<T>>
+  {
+  public:
+    size_t operator()(const std::shared_ptr<T>& _Key) const {
+      return (size_t)_Key.get();
+    }
+
+    using std::hash_compare<std::shared_ptr<T>>::operator();
+  };
+
   // Collection of all known listeners:
-  typedef std::map<T*, std::shared_ptr<T>> t_mpType;
-  t_mpType m_mp;
+  typedef std::hash_set<std::shared_ptr<T>, SharedPtrHash> t_listenerSet;
+  t_listenerSet m_st;
 
 public:
   virtual void Release() override {
-    m_mp.clear();
+    m_st.clear();
+    m_dispatch.clear();
   }
 
-  virtual EventManagerBase& operator+=(std::shared_ptr<EventReceiver>& rhs) {
-    try {
-      std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
-      if(casted)
-        return *this += casted;
-    } catch(std::bad_cast&) {
-    }
-    return *this;
+  virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
+    std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
+    return casted ? *this += casted : *this;
+  }
+
+  virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
+    std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
+    return casted ? *this -= casted : *this;
   }
 
   /// <summary>
   /// Adds the specified observer to receive events dispatched from this instace
   /// </su8mmary>
-  EventManager<T>& operator+=(std::shared_ptr<T>& rhs) {
-    // If we already contain the specified rhs, short-circuit.
-    std::shared_ptr<T>& location = m_mp[rhs.get()];
-    if(!location)
-      location = rhs;
+  EventManager<T>& operator+=(const std::shared_ptr<T>& rhs) {
+    // Trivial insertion, don't even bother checking for existence:
+    m_st.insert(rhs);
 
     // If the RHS implements DispatchQueue, add it to that collection as well:
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
@@ -77,28 +90,44 @@ public:
     return *this;
   }
 
+  /// <summary>
+  /// Removes the specified observer from the set currently configured to receive events
+  /// </su8mmary>
+  EventManager<T>& operator-=(const std::shared_ptr<T>& rhs) {
+    // Trivial removal:
+    size_t nErased = m_st.erase(rhs);
+    if(!nErased)
+      return *this;
+    
+    // If the RHS implements DispatchQueue, add it to that collection as well:
+    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
+    if(pDispatch)
+      m_dispatch.erase(pDispatch);
+    return *this;
+  }
+
   // Multi-argument firing:
   void FireAsSingle0(void (T::*fnPtr)()) const {
-    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); ++q)
-      ((q->second.get())->*fnPtr)();
+    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
+      (**q.*fnPtr)();
   }
 
   template<class Arg1, class Ty1>
   void FireAsSingle1(void (T::*fnPtr)(Arg1 arg1), const Ty1& ty1) const {
-    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); ++q)
-      ((q->second.get())->*fnPtr)(ty1);
+    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
+      (**q.*fnPtr)(ty1);
   }
   
   template<class Arg1, class Arg2, class Ty1, class Ty2>
   void FireAsSingle2(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2), const Ty1& ty1, const Ty2& ty2) const {
-    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); ++q)
-      ((q->second.get())->*fnPtr)(ty1, ty2);
+    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
+      (**q.*fnPtr)(ty1, ty2);
   }
   
   template<class Arg1, class Arg2, class Arg3, class Ty1, class Ty2, class Ty3>
   void FireAsSingle3(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3) const {
-    for(typename t_mpType::const_iterator q = m_mp.begin(); q != m_mp.end(); ++q)
-      ((q->second.get())->*fnPtr)(ty1, ty2, ty3);
+    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
+      (**q.*fnPtr)(ty1, ty2, ty3);
   }
 
   
