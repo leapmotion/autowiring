@@ -222,11 +222,11 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
 }
 
 TEST_F(EventReceiverTest, NontrivialCopy) {
-  static const size_t sc_numElems = 10;
+  static const int sc_numElems = 10;
 
   // Create the vector we're going to copy over:
   vector<int> ascending;
-  for(size_t i = 0; i < sc_numElems; i++)
+  for(int i = 0; i < sc_numElems; i++)
     ascending.push_back(i);
 
   // Deferred fire:
@@ -244,8 +244,8 @@ TEST_F(EventReceiverTest, NontrivialCopy) {
   receiver->Wait();
 
   // Validate our vectors:
-  ASSERT_EQ(10, receiver->m_myVec.size()) << "Receiver was not populated correctly with a vector";
-  for(size_t i = 0; i < sc_numElems; i++)
+  ASSERT_EQ(10, (int)receiver->m_myVec.size()) << "Receiver was not populated correctly with a vector";
+  for(int i = 0; i < sc_numElems; i++)
     EXPECT_EQ(i, ascending[i]) << "Element at offset " << i << " was incorrectly copied";
 }
 
