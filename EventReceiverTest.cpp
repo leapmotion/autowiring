@@ -159,9 +159,13 @@ public:
   /// Invoked to cause Run to continue its processing
   /// </summary>
   void Proceed(void) {
-    if(!m_barrierDone)
-      m_barrier.wait();
-    m_barrierDone = true;
+    {
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      if(m_barrierDone)
+        return;
+      m_barrierDone = true;
+    }
+    m_barrier.wait();
   }
 
   ///
