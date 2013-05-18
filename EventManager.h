@@ -42,12 +42,6 @@ private:
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
 
-  template<class T>
-  struct remove
-  {
-    typedef typename std::remove_const<typename std::remove_reference<T>::type>::type type;
-  };
-
   // Collection of all known listeners:
   typedef std::map<T*, std::shared_ptr<T> > t_mpType;
   t_mpType m_mp;
@@ -155,9 +149,9 @@ public:
   }
 
   template<class Arg1>
-  std::function<void (const typename remove<Arg1>::type&)> Defer(void (T::*fnPtr)(Arg1)) const {
+  std::function<void (const typename std::decay<Arg1>::type&)> Defer(void (T::*fnPtr)(Arg1)) const {
     // Converted args:
-    typedef remove<Arg1>::type tArg1;
+    typedef std::decay<Arg1>::type tArg1;
 
     return
       [this, fnPtr] (const tArg1& arg1) {
