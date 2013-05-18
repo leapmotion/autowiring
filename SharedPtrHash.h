@@ -1,6 +1,5 @@
 #ifndef _SHARED_PTR_HASH_H
 #define _SHARED_PTR_HASH_H
-#include <hash_set>
 #include <memory>
 
 /// <summary>
@@ -10,8 +9,8 @@ template<class T>
 class SharedPtrHash
 {
 public:
-  const size_t bucket_size = 1;
-  const size_t min_buckets = 8;
+  static const size_t bucket_size = 1;
+  static const size_t min_buckets = 8;
 
   size_t operator()(const std::shared_ptr<T>& _Key) const {
     return (size_t)_Key.get();
