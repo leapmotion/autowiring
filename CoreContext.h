@@ -9,8 +9,6 @@
 #include <boost/thread/tss.hpp>
 #include <list>
 #include <memory>
-#include <string>
-#include <vector>
 
 #ifndef ASSERT
   #ifdef _DEBUG

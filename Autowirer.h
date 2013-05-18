@@ -1,18 +1,14 @@
 #ifndef _AUTOWIRER_H
 #define _AUTOWIRER_H
-#include "ocuConfig.h"
 #include "EventManager.h"
 #include "DeferredBase.h"
 #include "safe_dynamic_cast.h"
 #include "SharedPtrHash.h"
 #include "SharedPtrWrap.h"
 #include <functional>
-#include <list>
 #include <map>
 #include <memory>
-#include <set>
 #include <string>
-#include <vector>
 #include <boost/thread/mutex.hpp>
 
 class ContextMember;
@@ -63,7 +59,7 @@ protected:
   t_mpType m_byType;
   
   // All ContextMember objects known in this autowirer:
-  std::vector<ContextMember*> m_contextMembers;
+  std::hash_set<ContextMember*> m_contextMembers;
 
   // Only one object in a context can bear a particular name
   typedef std::map<std::string, ContextMember*> t_mpName;
@@ -89,6 +85,11 @@ protected:
   void erase(t_mpName::iterator q) {
     m_byName.erase(q);
   }
+
+  /// <summary>
+  /// Invokes all deferred autowiring fields, generally called after a new member has been added
+  /// </summary>
+  void UpdateDeferredElements(void);
   
   /// Adds an object of any kind to the IOC container
   /// </summary>
@@ -116,30 +117,7 @@ protected:
       AddToEventReceivers(value.get(), value);
     }
 
-    std::list<DeferredBase*> successful;
-
-    // Notify any autowired field whose autowiring was deferred
-    // TODO:  We should also notify any descendant autowiring contexts that a new member is now available.
-    {
-      boost::lock_guard<boost::mutex> lk(m_deferredLock);
-      for(t_deferred::iterator r = m_deferred.begin(); r != m_deferred.end(); ) {
-        bool rs = (*r->second)();
-        if(rs) {
-          successful.push_back(r->second);
-
-          // Temporary required because of the absence of a convenience eraser iterator with stl map on all platforms
-          t_deferred::iterator rm = r++;
-          m_deferred.erase(rm);
-        }
-        else
-          r++;
-      }
-    }
-
-    // Now, outside of the context of a lock, we destroy each successfully wired deferred member
-    // This causes any listeners to be invoked, conveniently, outside of the context of any lock
-    for(std::list<DeferredBase*>::iterator q = successful.begin(); q != successful.end(); ++q)
-      delete *q;
+    UpdateDeferredElements();
   }
 
   void AddToEventSenders(EventManagerBase* pSender);
