@@ -2,7 +2,6 @@
 #include "Object.h"
 #include <map>
 #include <memory>
-#include <typeinfo>
 
 class Autowirer;
 class ContextMember;
