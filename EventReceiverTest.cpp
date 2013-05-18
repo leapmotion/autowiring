@@ -284,9 +284,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   CopyCounter ctr;
 
   // Pass the field in:
-  sender->Defer(&CallableInterface::TrackCopy)(
-    ctr
-  );
+  sender->Defer(&CallableInterface::TrackCopy)(ctr);
 
   // Signal stop:
   sender->Defer(&CallableInterface::AllDone)();
