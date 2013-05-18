@@ -4,7 +4,7 @@
 #include "EventReceiver.h"
 #include "SharedPtrHash.h"
 #include <boost/bind.hpp>
-#include <unordered_set>
+#include STL_UNORDERED_SET
 #include <set>
 
 class DispatchQueue;
