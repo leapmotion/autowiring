@@ -35,6 +35,7 @@ set(
   Object.h
   OutstandingCountTracker.cpp
   OutstandingCountTracker.h
+  SharedPtrHash.h
   SharedPtrWrap.cpp
   SharedPtrWrap.h
   ThreadStatusMaintainer.cpp
