@@ -9,6 +9,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 #include <boost/thread/mutex.hpp>
@@ -73,8 +74,9 @@ protected:
   t_deferred m_deferred;
 
   // All known event receivers
-  std::vector<std::shared_ptr<EventReceiver> > m_eventReceivers;
-  std::vector<EventManagerBase*> m_eventSenders;
+  typedef std::set<std::shared_ptr<EventReceiver>> t_rcvrSet;
+  t_rcvrSet m_eventReceivers;
+  std::set<EventManagerBase*> m_eventSenders;
 
   /// <summary>
   /// Erasure routine, designed to be invoked from inside SharedPtrWrap
@@ -85,13 +87,6 @@ protected:
   
   void erase(t_mpName::iterator q) {
     m_byName.erase(q);
-  }
-  
-  /// <summary>
-  /// Addition method which simply uses an already-constructed SharedPtrWrap
-  /// </summary>
-  template<class T>
-  std::shared_ptr<T> AddInternal(SharedPtrWrap<T>* pWrap) {
   }
   
   /// Adds an object of any kind to the IOC container
@@ -146,18 +141,17 @@ protected:
       delete *q;
   }
 
-  void AddToEventSenders(EventManagerBase* pSender) {
-    m_eventSenders.push_back(pSender);
-
-    // Scan the list for compatible receivers:
-    for(size_t i = 0; i < m_eventReceivers.size(); i++)
-      *pSender += m_eventReceivers[i];
-  }
+  void AddToEventSenders(EventManagerBase* pSender);
   inline void AddToEventSenders(void*) {}
+
+  /// <summary>
+  /// Removes all recognized event receivers in the indicated range
+  /// </summary>
+  void RemoveEventSenders(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
 
   template<class T>
   void AddToEventReceivers(EventReceiver* pEventReceiver, std::shared_ptr<T>& value) {
-    m_eventReceivers.push_back(
+    m_eventReceivers.insert(
       std::static_pointer_cast<EventReceiver, T>(value)
     );
 
@@ -165,8 +159,13 @@ protected:
     std::shared_ptr<EventReceiver> casted = std::static_pointer_cast<EventReceiver, T>(value);
 
     // Scan the list of compatible senders:
-    for(size_t i = 0; i < m_eventSenders.size(); i++)
-      *m_eventSenders[i] += casted;
+    for(auto q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
+      **q += casted;
+    
+    // Delegate ascending resolution, where possible.  This ensures that the parent context links
+    // this event receiver to compatible senders in the parent context itself.
+    if(m_pParent)
+      m_pParent->AddToEventReceivers(pEventReceiver, value);
   }
 
   template<class T>
