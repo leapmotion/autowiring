@@ -2,6 +2,7 @@
 #define _EVENT_MANAGER_H
 #include "ocuConfig.h"
 #include "EventReceiver.h"
+#include "SharedPtrHash.h"
 #include <boost/bind.hpp>
 #include <hash_set>
 #include <set>
@@ -45,19 +46,8 @@ private:
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
 
-  class SharedPtrHash:
-    public std::hash_compare<std::shared_ptr<T>>
-  {
-  public:
-    size_t operator()(const std::shared_ptr<T>& _Key) const {
-      return (size_t)_Key.get();
-    }
-
-    using std::hash_compare<std::shared_ptr<T>>::operator();
-  };
-
   // Collection of all known listeners:
-  typedef std::hash_set<std::shared_ptr<T>, SharedPtrHash> t_listenerSet;
+  typedef std::hash_set<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
   t_listenerSet m_st;
 
 public:
