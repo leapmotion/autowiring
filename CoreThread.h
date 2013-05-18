@@ -2,11 +2,9 @@
 #define _CORETHREAD_H
 #include "ContextMember.h"
 #include "DispatchQueue.h"
-#include <vector>
-#include <memory>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/thread.hpp>
+#include <memory>
 
 using std::shared_ptr;
 

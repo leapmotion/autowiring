@@ -5,7 +5,6 @@
 #include "GlobalCoreContext.h"
 #include "OutstandingCountTracker.h"
 #include "ThreadStatusMaintainer.h"
-#include <boost/thread.hpp>
 #include <algorithm>
 #include <memory>
 
