@@ -72,6 +72,8 @@ set(
   EventReceiverTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
+  GraphConstructionTest.h
+  GraphConstructionTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
   PostConstructTest.h
