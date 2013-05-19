@@ -11,7 +11,7 @@ public:
   EnclosedContextTestBase(void);
   ~EnclosedContextTestBase(void);
 
-private:
+protected:
   // The context proper.  This is automatically assigned as the current
   // context when SetUp is invoked.
   AutoCreateContext m_create;
