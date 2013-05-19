@@ -105,19 +105,6 @@ public:
   bool IsAutowired(void) const override {return !!t_ptrType::get();}
 };
 
-template<>
-class AutowiredCreator<CoreContext>:
-  public AutowirableSlot,
-  public std::shared_ptr<CoreContext>
-{
-public:
-  typedef shared_ptr<CoreContext> t_ptrType;
-  void Create(void);
-
-  using std::shared_ptr<CoreContext>::operator=;
-  bool IsAutowired(void) const override {return !!t_ptrType::get();}
-};
-
 /// <summary>
 /// This is the specialization for global contexts.  Unlike other autowires, it's guaranteed
 /// to autowire in all circumstances.
@@ -181,11 +168,10 @@ public:
 /// This is a forbidden autowiring.  Do not attempt it.
 /// </summary>
 template<>
-class Autowired<CoreContext>:
-  public AutowiredCreator<CoreContext>
+class Autowired<CoreContext>
 {
+private:
   Autowired(void);
-public:
 };
 
 template<>
