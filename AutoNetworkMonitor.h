@@ -4,7 +4,8 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/tss.hpp>
 #include <iosfwd>
-#include <unordered_map>
+#include <list>
+#include <map>
 
 class AutowirableSlot;
 class ContextMember;
@@ -42,11 +43,7 @@ public:
 
   struct Allocation
   {
-    Allocation(const void* pSpace, size_t nBytes):
-      pSpace(pSpace),
-      nBytes(nBytes)
-    {
-    }
+    Allocation(const void* pSpace, size_t nBytes);
 
     const void* pSpace;
     size_t nBytes;
@@ -66,30 +63,7 @@ public:
     typedef std::map<Allocation, std::list<std::weak_ptr<AutowirableSlot>>> t_mpType;
     t_mpType m_mp;
 
-    t_mpType::iterator Find(const void* ptr) {
-      // Trivial return check:
-      if(m_mp.empty())
-        return m_mp.end();
-
-      // Now we run a upper bound on the passed element, in order to find the first key strictly
-      // greater than the pointer.  The key right before this one will be the candidate allocation
-      // enclosing this pointer.
-      Allocation alloc(ptr, 1);
-      auto q = m_mp.upper_bound(alloc);
-      if(q == m_mp.begin())
-        // The first key in the map already occurs after our pointer, return here.
-        return m_mp.end();
-      
-      q--;
-      return
-        q->first.Enclosed(ptr) ?
-
-        // This pointer matches, we can return it
-        q :
-        
-        // Found something, but it's not an enclosure of the passed pointer
-        m_mp.end();
-    }
+    t_mpType::iterator Find(const void* ptr);
   };
 
   // Space tracking monitor--global because it's thread-specific:

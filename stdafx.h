@@ -4,7 +4,7 @@
 #include <math.h>
 #include "ocuConfig.h"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && 0
   #define ENABLE_NETWORK_MONITOR 1
 #else
   #define ENABLE_NETWORK_MONITOR 0
