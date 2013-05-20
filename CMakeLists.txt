@@ -6,8 +6,10 @@ include_directories(
 
 set(
   Autowiring_SRCS
-  Autowired.cpp
+	AutoNetworkMonitor.h
+  AutoNetworkMonitor.cpp
   Autowired.h
+  Autowired.cpp
   AutowirableSlot.h
   AutowirableSlot.cpp
   Autowirer.cpp

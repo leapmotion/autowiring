@@ -209,6 +209,11 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<T> FindByType(const Autowired<T>&) {
+    return FindByType<T>();
+  }
+  
+  template<class T>
+  std::shared_ptr<T> FindByType(void) {
     // Attempt a resolution by type first:
     std::string typeName = typeid(T).name();
     t_mpType::iterator q;

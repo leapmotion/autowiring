@@ -1,21 +1,28 @@
 #include "stdafx.h"
 #include "GraphConstructionTest.h"
 #include "Autowired.h"
+#include "AutoNetworkMonitor.h"
 
 class NodeTwo;
 class NodeThree;
 
-class NodeOne
+class NodeOne:
+  public ContextMember
 {
+public:
+  NodeOne(void) {
+  }
   Autowired<NodeTwo> n2;
 };
 
-class NodeTwo
+class NodeTwo:
+  public ContextMember
 {
   Autowired<NodeThree> n3;
 };
 
-class NodeThree
+class NodeThree:
+  public ContextMember
 {
   AutoRequired<NodeOne> n1;
   AutoRequired<NodeTwo> n2;
@@ -23,11 +30,11 @@ class NodeThree
 
 TEST_F(GraphConstructionTest, VerifySimpleGraph)
 {
+  // Set up the network monitor first:
+  AutoRequired<AutoNetworkMonitor> networkMon;
+
   // Make our items:
   AutoRequired<NodeOne> n1;
   AutoRequired<NodeTwo> n2;
   AutoRequired<NodeThree> n3;
-
-  // Dump a graph from the context object:
-  //m_create->DumpGraph();
 }

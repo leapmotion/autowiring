@@ -232,13 +232,6 @@ public:
   }
 
   /// <summary>
-  /// Makes the current context the parent of this context
-  /// </summary>
-  void DEPRECATED(Pop(void), "Pop is semantically incorrect, it should no longer be used") {
-    std::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->SetCurrent();
-  }
-
-  /// <summary>
   /// This makes this core context current.
   /// </summary>
   /// <returns>The previously current context</returns>

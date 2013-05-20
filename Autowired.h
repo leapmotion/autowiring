@@ -165,7 +165,7 @@ public:
 };
 
 /// <summary>
-/// This is a forbidden autowiring.  Do not attempt it.
+/// This is a forbidden autowiring.  Do not attempt it.  Instead, use AutoCurrentContext or AutoCreateContext.
 /// </summary>
 template<>
 class Autowired<CoreContext>

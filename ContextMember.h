@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _CONTEXT_MEMBER_H
+#define _CONTEXT_MEMBER_H
 #include "Object.h"
 #include <memory>
 
@@ -17,6 +18,8 @@ protected:
 
 public:
   virtual ~ContextMember();
+
+  static void* operator new(size_t nBytes);
 
 protected:
   // Member variables:
@@ -84,3 +87,4 @@ public:
   }
 };
 
+#endif
