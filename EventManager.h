@@ -1,6 +1,5 @@
 #ifndef _EVENT_MANAGER_H
 #define _EVENT_MANAGER_H
-#include "ocuConfig.h"
 #include "EventReceiver.h"
 #include "SharedPtrHash.h"
 #include <boost/bind.hpp>
