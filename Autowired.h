@@ -2,7 +2,6 @@
 #define _AUTOWIRED_H
 #include "AutowirableSlot.h"
 #include "CoreContext.h"
-#include "InstantiatorLink.h"
 #include <functional>
 #include <memory>
 

@@ -1,6 +1,5 @@
 #ifndef _GLOBAL_CORE_CONTEXT
 #define _GLOBAL_CORE_CONTEXT
-#include "InstantiatorLink.h"
 #include "CoreContext.h"
 #include <boost/thread/mutex.hpp>
  
