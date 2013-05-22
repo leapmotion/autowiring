@@ -180,8 +180,13 @@ std::shared_ptr<CoreContext> GetCurrentContext() {
 
 void CoreContext::Dump(std::ostream& os) const {
   Autowirer::Dump(os);
-  for(auto q = m_threads.begin(); q != m_threads.end(); q++)
-    os << "Thread " << (**q).GetName() << std::endl;
+
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  for(auto q = m_threads.begin(); q != m_threads.end(); q++) {
+    CoreThread* pThread = *q;
+    const char* name = pThread->GetName();
+    os << "Thread " << pThread << " " << (name ? name : "(no name)") << std::endl;
+  }
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& context) {

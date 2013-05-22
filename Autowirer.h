@@ -42,7 +42,7 @@ public:
 
 protected:
   // General purpose lock for this class
-  boost::mutex m_lock;
+  mutable boost::mutex m_lock;
 
   // A pointer to the parent context
   std::shared_ptr<Autowirer> m_pParent;

@@ -99,6 +99,7 @@ public:
     return *this;
   }
 
+protected:
   // Multi-argument firing:
   void FireAsSingle0(void (T::*fnPtr)()) const {
     for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
