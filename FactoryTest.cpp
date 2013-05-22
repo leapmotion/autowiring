@@ -42,7 +42,8 @@ TEST_F(FactoryTest, VerifyFactoryWiring) {
   AutoRequired<SimpleFactory> factory;
 
   // Now we determine whether the factory gets invoked by trying to require an interface
-  AutoRequired<SimpleInterface> instance;
+  // TODO:  Change this to AutoRequired and correct the resulting compiler errors
+  Autowired<SimpleInterface> instance;
 
   // Validation that the factory was called:
   EXPECT_TRUE(factory->m_called) << "The factory wasn't called when the interface instance was autowired";
