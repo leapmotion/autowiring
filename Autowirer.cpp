@@ -127,3 +127,18 @@ void Autowirer::NotifyWhenAutowired(const AutowirableSlot& slot, const std::func
 std::shared_ptr<CoreContext> CreateContextThunk(void) {
   return CoreContext::CurrentContext()->Create();
 }
+
+void Autowirer::Dump(std::ostream& os) const {
+  for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
+    os << q->second->GetTypeInfo().name();
+    std::shared_ptr<Object> pObj = q->second->AsObject();
+    if(pObj)
+      os << hex << " 0x" << pObj;
+    os << endl;
+  }
+}
+
+std::ostream& operator<<(std::ostream& os, const Autowirer& rhs) {
+  rhs.Dump(os);
+  return os;
+}
