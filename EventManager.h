@@ -180,7 +180,7 @@ public:
   std::function<void (Arg1, Arg2, Arg3, Arg4, Arg5)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) {
-        this->FireAsSingle4(fnPtr, arg1, arg2, arg3, arg4, arg5);
+        this->FireAsSingle5(fnPtr, arg1, arg2, arg3, arg4, arg5);
       };
   }
 
