@@ -50,6 +50,11 @@ private:
   t_listenerSet m_st;
 
 public:
+  /// <summary>
+  /// Convenience method allowing consumers to quickly determine whether any listeners exist
+  /// </summary>
+  bool HasListeners(void) const {return !m_st.empty();}
+
   virtual void Release() override {
     m_st.clear();
     m_dispatch.clear();

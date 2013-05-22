@@ -185,7 +185,7 @@ class Autowired<GlobalCoreContext>:
 /// This class is simply a convenience class and provides a declarative way to name a
 /// required dependency.
 /// </remarks>
-template<class T, bool isAbstract = std::is_abstract<T>::value>
+template<class T>
 class AutoRequired:
   public Autowired<T>
 {
@@ -194,12 +194,6 @@ public:
     if(!*this)
       AutowiredCreator<T>::Create();
   }
-};
-
-template<class T>
-class AutoRequired<T, true>:
-  public AutowirableSlot
-{
 };
 
 /// <summary>
@@ -215,7 +209,7 @@ struct CtorProxy {};
 /// This specialization is useful when it's necessary to AutoRequire an interface
 /// </remarks>
 template<class T, T* (*fn)()>
-class AutoRequired<CtorProxy<T, fn>, false>:
+class AutoRequired<CtorProxy<T, fn>>:
   public Autowired<T>
 {
 public:
@@ -234,8 +228,8 @@ public:
 template<class T, class Concrete>
 struct CtorConcrete {};
 
-template<class T, class Concrete, bool isAbstract>
-class AutoRequired<CtorConcrete<T, Concrete>, isAbstract>:
+template<class T, class Concrete>
+class AutoRequired<CtorConcrete<T, Concrete>>:
   public Autowired<T>
 {
 public:
