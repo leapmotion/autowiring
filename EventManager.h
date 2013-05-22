@@ -14,12 +14,9 @@ class EventManagerBase {
 public:
   virtual ~EventManagerBase(void);
 
-protected:
-  // Just the DispatchQueue listeners:
-  typedef std::unordered_set<DispatchQueue*> t_stType;
-  t_stType m_dispatch;
-  
 public:
+  virtual bool HasListeners(void) = 0;
+
   /// <summary>
   /// Invoked by the parent context when the context is shutting down in order to release all references
   /// </summary>
@@ -30,13 +27,10 @@ public:
   virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
 };
 
-/// <summary>
-/// A simple event manager class
-/// </summary>
-/// <param name="T">The event interface type</param>
+struct NoType {};
+
 template<class T>
-class EventManager:
-  public EventManagerBase
+class EventManagerSingle
 {
 private:
   static_assert(
@@ -47,6 +41,10 @@ private:
   // Collection of all known listeners:
   typedef std::unordered_set<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
   t_listenerSet m_st;
+  
+  // Just the DispatchQueue listeners:
+  typedef std::unordered_set<DispatchQueue*> t_stType;
+  t_stType m_dispatch;
 
 public:
   /// <summary>
@@ -54,17 +52,17 @@ public:
   /// </summary>
   bool HasListeners(void) const {return !m_st.empty();}
 
-  virtual void ReleaseRefs() override {
+  void ReleaseRefs() {
     m_st.clear();
     m_dispatch.clear();
   }
 
-  virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
+  EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) {
     std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     return casted ? *this += casted : *this;
   }
 
-  virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
+  EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) {
     std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     return casted ? *this -= casted : *this;
   }
@@ -72,7 +70,7 @@ public:
   /// <summary>
   /// Adds the specified observer to receive events dispatched from this instace
   /// </su8mmary>
-  EventManager<T>& operator+=(const std::shared_ptr<T>& rhs) {
+  void operator+=(const std::shared_ptr<T>& rhs) {
     // Trivial insertion, don't even bother checking for existence:
     m_st.insert(rhs);
 
@@ -80,13 +78,12 @@ public:
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
     if(pDispatch)
       m_dispatch.insert(pDispatch);
-    return *this;
   }
 
   /// <summary>
   /// Removes the specified observer from the set currently configured to receive events
   /// </su8mmary>
-  EventManager<T>& operator-=(const std::shared_ptr<T>& rhs) {
+  void operator-=(const std::shared_ptr<T>& rhs) {
     // Trivial removal:
     size_t nErased = m_st.erase(rhs);
     if(!nErased)
@@ -96,6 +93,57 @@ public:
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
     if(pDispatch)
       m_dispatch.erase(pDispatch);
+  }
+};
+
+template<>
+class EventManagerSingle<NoType> {
+};
+
+/// <summary>
+/// A simple event manager class
+/// </summary>
+/// <param name="T">The event interface type</param>
+/// <param name="A">Another event interface type to manage</param>
+/// <param name="B">Another event interface type to manage</param>
+/// <param name="C">Another event interface type to manage</param>
+template<class T, class A = NoType, class B = NoType, class C = NoType>
+class EventManager;
+
+template<class T, class A, class B, class C>
+class EventManager:
+  public EventManager<A, B, C>,
+  public EventManagerSingle<T>
+{
+private:
+  typedef EventManager<A, B, C> t_base;
+
+public:
+  bool HasListeners(void) const {return t_base::HasListeners() || !m_st.empty();}
+
+  template<class W>
+  bool HasListeners(void) const {
+    return
+      std::is_same<W, T>::value ?
+      EventManagerSingle::HasListeners() :
+      t_base::HasListeners();
+  }
+  
+  virtual void ReleaseRefs(void) {
+    t_base::ReleaseRefs();
+    EventManagerSingle<T>::ReleaseRefs();
+  }
+
+  // Event attachment and detachment pure virtuals
+  virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
+    (t_base&)*this += rhs;
+    (EventManagerSingle&)*this += rhs;
+    return *this;
+  }
+
+  virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
+    (t_base&)*this -= rhs;
+    (EventManagerSingle&)*this -= rhs;
     return *this;
   }
 
@@ -222,5 +270,25 @@ protected:
         }
       };
   }
+
+  using t_base::Fire;
 };
+
+template<>
+class EventManager<NoType, NoType, NoType, NoType>:
+  public EventManagerBase
+{
+  template<class Ignored>
+  void Fire(Ignored) {}
+
+  // Event attachment and detachment pure virtuals
+  virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
+    return *this;
+  }
+
+  virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
+    return *this;
+  }
+};
+
 #endif
