@@ -122,6 +122,18 @@ public:
     for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
       (**q.*fnPtr)(ty1, ty2, ty3);
   }
+  
+  template<class Arg1, class Arg2, class Arg3, class Arg4, class Ty1, class Ty2, class Ty3, class Ty4>
+  void FireAsSingle4(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3, Arg4 ty4), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3, const Ty4& ty4) const {
+    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
+      (**q.*fnPtr)(ty1, ty2, ty3, ty4);
+  }
+  
+  template<class Arg1, class Arg2, class Arg3, class Arg4, class Arg5, class Ty1, class Ty2, class Ty3, class Ty4, class Ty5>
+  void FireAsSingle5(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3, Arg4 ty4, Arg5 ty5), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3, const Ty4& ty4, const Ty5& ty5) const {
+    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
+      (**q.*fnPtr)(ty1, ty2, ty3, ty4, ty5);
+  }
 
   
   // Two-parenthetical invocations
@@ -153,6 +165,22 @@ public:
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
         this->FireAsSingle3(fnPtr, arg1, arg2, arg3);
+      };
+  }
+
+  template<class Arg1, class Arg2, class Arg3, class Arg4>
+  std::function<void (Arg1, Arg2, Arg3, Arg4)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)) const {
+    return
+      [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) {
+        this->FireAsSingle4(fnPtr, arg1, arg2, arg3, arg4);
+      };
+  }
+
+  template<class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+  std::function<void (Arg1, Arg2, Arg3, Arg4, Arg5)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
+    return
+      [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) {
+        this->FireAsSingle4(fnPtr, arg1, arg2, arg3, arg4, arg5);
       };
   }
 
