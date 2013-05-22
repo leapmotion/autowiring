@@ -16,6 +16,9 @@ class AutowirableSlot;
 namespace AutowirerHelpers {
   template<class T, bool isPolymorphic = std::is_base_of<Object, T>::value>
   struct FindByCastInternal;
+
+  template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
+  struct AddEventReceiver;
 }
 
 template<class T>
@@ -113,7 +116,7 @@ protected:
       // If the value is an event type, we can add it to the collection of event
       // manager things:
       AddToEventSenders(value.get());
-      AddToEventReceivers(value.get(), value);
+      ((AutowirerHelpers::AddEventReceiver<T>&)*this)(value);
     }
 
     UpdateDeferredElements();
@@ -126,28 +129,6 @@ protected:
   /// Removes all recognized event receivers in the indicated range
   /// </summary>
   void RemoveEventSenders(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
-
-  template<class T>
-  void AddToEventReceivers(EventReceiver* pEventReceiver, std::shared_ptr<T>& value) {
-    m_eventReceivers.insert(
-      std::static_pointer_cast<EventReceiver, T>(value)
-    );
-
-    // The cast is a loop invariant; store it here for convenience
-    std::shared_ptr<EventReceiver> casted = std::static_pointer_cast<EventReceiver, T>(value);
-
-    // Scan the list of compatible senders:
-    for(auto q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
-      **q += casted;
-    
-    // Delegate ascending resolution, where possible.  This ensures that the parent context links
-    // this event receiver to compatible senders in the parent context itself.
-    if(m_pParent)
-      m_pParent->AddToEventReceivers(pEventReceiver, value);
-  }
-
-  template<class T>
-  inline void AddToEventReceivers(void*, const std::shared_ptr<T>&) {}
 
   template<class W>
   bool DoAutowire(W& slot) {
@@ -317,6 +298,39 @@ public:
 };
 
 namespace AutowirerHelpers {
+
+template<class T, bool isPolymorphic>
+struct AddEventReceiver:
+  public Autowirer
+{
+public:
+  void operator()(std::shared_ptr<T>& value) {
+    EventReceiver* pRecvr = dynamic_cast<EventReceiver*>(value.get());
+    if(!pRecvr)
+      return;
+
+    // The cast is a loop invariant; store it here for convenience
+    std::shared_ptr<EventReceiver> casted = std::dynamic_pointer_cast<EventReceiver, T>(value);
+    m_eventReceivers.insert(casted);
+
+    // Scan the list of compatible senders:
+    for(auto q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
+      **q += casted;
+    
+    // Delegate ascending resolution, where possible.  This ensures that the parent context links
+    // this event receiver to compatible senders in the parent context itself.
+    if(m_pParent)
+      ((AddEventReceiver<T, true>&)*m_pParent)(value);
+  }
+};
+
+template<class T>
+struct AddEventReceiver<T, false>:
+  public Autowirer
+{
+public:
+  inline void operator()(const std::shared_ptr<T>&) {}
+};
 
 template<class T, bool isPolymorphic>
 struct FindByCastInternal:
