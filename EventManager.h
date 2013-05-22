@@ -24,7 +24,7 @@ public:
   /// <summary>
   /// Invoked by the parent context when the context is shutting down in order to release all references
   /// </summary>
-  virtual void Release(void) = 0;
+  virtual void ReleaseRefs(void) = 0;
 
   // Event attachment and detachment pure virtuals
   virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
@@ -55,7 +55,7 @@ public:
   /// </summary>
   bool HasListeners(void) const {return !m_st.empty();}
 
-  virtual void Release() override {
+  virtual void ReleaseRefs() override {
     m_st.clear();
     m_dispatch.clear();
   }
