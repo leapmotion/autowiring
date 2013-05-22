@@ -129,6 +129,7 @@ std::shared_ptr<CoreContext> CreateContextThunk(void) {
 }
 
 void Autowirer::Dump(std::ostream& os) const {
+  boost::lock_guard<boost::mutex> lk(m_lock);
   for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
     os << q->second->GetTypeInfo().name();
     std::shared_ptr<Object> pObj = q->second->AsObject();
