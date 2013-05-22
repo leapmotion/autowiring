@@ -1,12 +1,11 @@
 #ifndef _EVENT_MANAGER_H
 #define _EVENT_MANAGER_H
+#include "DispatchQueue.h"
 #include "EventReceiver.h"
 #include "SharedPtrHash.h"
 #include <boost/bind.hpp>
 #include STL_UNORDERED_SET
 #include <set>
-
-class DispatchQueue;
 
 /// <summary>
 /// Used to identify event managers
