@@ -20,7 +20,7 @@ Autowirer::~Autowirer(void)
 
   // Release all event sender links:
   for(std::set<EventManagerBase*>::iterator q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
-    (**q).Release();
+    (**q).ReleaseRefs();
 
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
   if(m_pParent)
