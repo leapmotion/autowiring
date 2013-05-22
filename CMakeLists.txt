@@ -31,9 +31,11 @@ set(
   DispatchQueue.cpp
   EventManager.h
   EventManager.cpp
+  Factory.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   Object.h
+  ObjectPool.h
   OutstandingCountTracker.cpp
   OutstandingCountTracker.h
   SharedPtrHash.h
@@ -71,6 +73,8 @@ set(
   EnclosedContextTestBase.cpp
   EventReceiverTest.h
   EventReceiverTest.cpp
+  FactoryTest.h
+  FactoryTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
   GraphConstructionTest.h
