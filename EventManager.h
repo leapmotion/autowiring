@@ -15,7 +15,7 @@ public:
   virtual ~EventManagerBase(void);
 
 public:
-  virtual bool HasListeners(void) = 0;
+  virtual bool HasListeners(void) const = 0;
 
   /// <summary>
   /// Invoked by the parent context when the context is shutting down in order to release all references
@@ -32,7 +32,7 @@ struct NoType {};
 template<class T>
 class EventManagerSingle
 {
-private:
+protected:
   static_assert(
     std::is_base_of<EventReceiver, T>::value,
     "If you want an event interface, the interface must inherit from EventReceiver"
@@ -57,14 +57,16 @@ public:
     m_dispatch.clear();
   }
 
-  EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) {
+  void operator+=(const std::shared_ptr<EventReceiver>& rhs) {
     std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
-    return casted ? *this += casted : *this;
+    if(casted)
+      *this += casted;
   }
 
-  EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) {
+  void operator-=(const std::shared_ptr<EventReceiver>& rhs) {
     std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
-    return casted ? *this -= casted : *this;
+    if(casted)
+      *this -= casted;
   }
 
   /// <summary>
@@ -87,64 +89,12 @@ public:
     // Trivial removal:
     size_t nErased = m_st.erase(rhs);
     if(!nErased)
-      return *this;
+      return;
     
     // If the RHS implements DispatchQueue, add it to that collection as well:
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
     if(pDispatch)
       m_dispatch.erase(pDispatch);
-  }
-};
-
-template<>
-class EventManagerSingle<NoType> {
-};
-
-/// <summary>
-/// A simple event manager class
-/// </summary>
-/// <param name="T">The event interface type</param>
-/// <param name="A">Another event interface type to manage</param>
-/// <param name="B">Another event interface type to manage</param>
-/// <param name="C">Another event interface type to manage</param>
-template<class T, class A = NoType, class B = NoType, class C = NoType>
-class EventManager;
-
-template<class T, class A, class B, class C>
-class EventManager:
-  public EventManager<A, B, C>,
-  public EventManagerSingle<T>
-{
-private:
-  typedef EventManager<A, B, C> t_base;
-
-public:
-  bool HasListeners(void) const {return t_base::HasListeners() || !m_st.empty();}
-
-  template<class W>
-  bool HasListeners(void) const {
-    return
-      std::is_same<W, T>::value ?
-      EventManagerSingle::HasListeners() :
-      t_base::HasListeners();
-  }
-  
-  virtual void ReleaseRefs(void) {
-    t_base::ReleaseRefs();
-    EventManagerSingle<T>::ReleaseRefs();
-  }
-
-  // Event attachment and detachment pure virtuals
-  virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
-    (t_base&)*this += rhs;
-    (EventManagerSingle&)*this += rhs;
-    return *this;
-  }
-
-  virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
-    (t_base&)*this -= rhs;
-    (EventManagerSingle&)*this -= rhs;
-    return *this;
   }
 
 protected:
@@ -184,7 +134,6 @@ protected:
       (**q.*fnPtr)(ty1, ty2, ty3, ty4, ty5);
   }
 
-  
   // Two-parenthetical invocations
   std::function<void ()> Fire(void (T::*fnPtr)()) const {
     return
@@ -270,16 +219,92 @@ protected:
         }
       };
   }
+};
 
-  using t_base::Fire;
+template<>
+class EventManagerSingle<NoType> {
+};
+
+/// <summary>
+/// A simple event manager class
+/// </summary>
+/// <param name="T">The event interface type</param>
+/// <param name="A">Another event interface type to manage</param>
+/// <param name="B">Another event interface type to manage</param>
+/// <param name="C">Another event interface type to manage</param>
+template<class T, class A = NoType, class B = NoType, class C = NoType>
+class EventManager;
+
+template<class T, class A, class B, class C>
+class EventManager:
+  public EventManager<A, B, C>,
+  public EventManagerSingle<T>
+{
+private:
+  typedef EventManager<A, B, C> t_base;
+
+  template<class MemFn>
+  struct Decompose;
+
+  template<class W>
+  struct Decompose<void (W::*)()> {
+    typedef void fnType();
+    typedef W type;
+  };
+
+  template<class W, class Arg1>
+  struct Decompose<void (W::*)(Arg1)> {
+    typedef void fnType(Arg1);
+    typedef W type;
+  };
+
+  template<class W, class Arg1, class Arg2>
+  struct Decompose<void (W::*)(Arg1, Arg2)> {
+    typedef void fnType(Arg1, Arg2);
+    typedef W type;
+  };
+
+public:
+  bool HasListeners(void) const override {return EventManagerSingle<T>::HasListeners() || t_base::HasListeners();}
+
+  template<class W>
+  bool HasListeners(void) const {
+    return
+      std::is_same<W, T>::value ?
+      EventManagerSingle::HasListeners() :
+      t_base::HasListeners();
+  }
+  
+  virtual void ReleaseRefs(void) {
+    t_base::ReleaseRefs();
+    EventManagerSingle<T>::ReleaseRefs();
+  }
+
+  // Event attachment and detachment virtuals
+  virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
+    (t_base&)*this += rhs;
+    (EventManagerSingle<T>&)*this += rhs;
+    return *this;
+  }
+
+  virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
+    (t_base&)*this -= rhs;
+    (EventManagerSingle<T>&)*this -= rhs;
+    return *this;
+  }
+
+  template<class MemFn>
+  std::function<typename Decompose<MemFn>::fnType> Fire(MemFn fn) {
+    return EventManagerSingle<Decompose<MemFn>::type>::Fire(fn);
+  }
 };
 
 template<>
 class EventManager<NoType, NoType, NoType, NoType>:
   public EventManagerBase
 {
-  template<class Ignored>
-  void Fire(Ignored) {}
+public:
+  virtual bool HasListeners(void) const override {return false;}
 
   // Event attachment and detachment pure virtuals
   virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
@@ -289,6 +314,9 @@ class EventManager<NoType, NoType, NoType, NoType>:
   virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
     return *this;
   }
+
+protected:
+  void Fire() {}
 };
 
 #endif
