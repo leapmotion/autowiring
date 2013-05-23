@@ -63,6 +63,8 @@ set(
   ContextCleanupTest.cpp
   ContextMapTest.h
   ContextMapTest.cpp
+  CoreThreadTest.h
+  CoreThreadTest.cpp
   CtorProxyTest.h
   CtorProxyTest.cpp
   CurrentContextPusherTest.h
