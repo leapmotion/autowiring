@@ -1,5 +1,6 @@
 #ifndef _DISPATCH_QUEUE_H
 #define _DISPATCH_QUEUE_H
+#include "ocuConfig.h"
 #include <boost/thread/condition_variable.hpp>
 #include <functional>
 #include <list>
