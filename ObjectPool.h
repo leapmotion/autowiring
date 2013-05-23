@@ -47,7 +47,7 @@ public:
       boost::lock_guard<boost::mutex> lk(m_lock);
       if(m_objs.size()) {
         // Lock and remove an element at random:
-        t_stType::iterator q = m_objs.begin();
+        typename t_stType::iterator q = m_objs.begin();
         pObj = *q;
         m_objs.erase(q);
       }
