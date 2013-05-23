@@ -275,7 +275,7 @@ public:
       t_base::HasListeners();
   }
   
-  virtual void ReleaseRefs(void) {
+  virtual void ReleaseRefs(void) override {
     t_base::ReleaseRefs();
     EventManagerSingle<T>::ReleaseRefs();
   }
@@ -299,24 +299,37 @@ public:
   }
 };
 
-template<>
-class EventManager<NoType, NoType, NoType, NoType>:
+template<class T>
+class EventManager<T, NoType, NoType, NoType>:
+  public EventManagerSingle<T>,
   public EventManagerBase
 {
 public:
-  virtual bool HasListeners(void) const override {return false;}
+  virtual bool HasListeners(void) const override {return EventManagerSingle::HasListeners();}
+
+  template<class W>
+  bool HasListeners(void) const {
+    static_assert(std::is_same<W, T>::value, "Cannot query listeners on unbound type W");
+    return EventManagerSingle::HasListeners();
+  }
+  
+  virtual void ReleaseRefs(void) override {
+    EventManagerSingle<T>::ReleaseRefs();
+  }
 
   // Event attachment and detachment pure virtuals
   virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
+    (EventManagerSingle&)*this += rhs;
     return *this;
   }
 
   virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
+    (EventManagerSingle&)*this -= rhs;
     return *this;
   }
 
 protected:
-  void Fire() {}
+  using EventManagerSingle<T>::Fire;
 };
 
 #endif
