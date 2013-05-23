@@ -187,7 +187,7 @@ protected:
     return
       [this, fnPtr] () {
         auto f = fnPtr;
-        for(EventManager<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
+        for(EventManagerSingle<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
           T* ptr = dynamic_cast<T*>(*q);
           **q += [ptr, f] () {
             (ptr->*f)();
@@ -204,7 +204,7 @@ protected:
     return
       [this, fnPtr] (const tArg1& arg1) {
         auto f = fnPtr;
-        for(EventManager<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
+        for(EventManagerSingle<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
           T* ptr = dynamic_cast<T*>(*q);
 
           // Force off the const modifier so we can copy into the lambda just once
