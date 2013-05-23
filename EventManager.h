@@ -271,7 +271,7 @@ public:
   bool HasListeners(void) const {
     return
       std::is_same<W, T>::value ?
-      EventManagerSingle::HasListeners() :
+      EventManagerSingle<T>::HasListeners() :
       t_base::HasListeners();
   }
   
@@ -295,7 +295,7 @@ public:
 
   template<class MemFn>
   std::function<typename Decompose<MemFn>::fnType> Fire(MemFn fn) {
-    return EventManagerSingle<Decompose<MemFn>::type>::Fire(fn);
+    return EventManagerSingle<typename Decompose<MemFn>::type>::Fire(fn);
   }
 };
 
@@ -305,12 +305,12 @@ class EventManager<T, NoType, NoType, NoType>:
   public EventManagerBase
 {
 public:
-  virtual bool HasListeners(void) const override {return EventManagerSingle::HasListeners();}
+  virtual bool HasListeners(void) const override {return EventManagerSingle<T>::HasListeners();}
 
   template<class W>
   bool HasListeners(void) const {
     static_assert(std::is_same<W, T>::value, "Cannot query listeners on unbound type W");
-    return EventManagerSingle::HasListeners();
+    return EventManagerSingle<T>::HasListeners();
   }
   
   virtual void ReleaseRefs(void) override {
@@ -319,12 +319,12 @@ public:
 
   // Event attachment and detachment pure virtuals
   virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
-    (EventManagerSingle&)*this += rhs;
+    (EventManagerSingle<T>&)*this += rhs;
     return *this;
   }
 
   virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
-    (EventManagerSingle&)*this -= rhs;
+    (EventManagerSingle<T>&)*this -= rhs;
     return *this;
   }
 
