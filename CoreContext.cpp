@@ -177,3 +177,19 @@ void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
 std::shared_ptr<CoreContext> GetCurrentContext() {
   return CoreContext::CurrentContext();
 }
+
+void CoreContext::Dump(std::ostream& os) const {
+  Autowirer::Dump(os);
+
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  for(auto q = m_threads.begin(); q != m_threads.end(); q++) {
+    CoreThread* pThread = *q;
+    const char* name = pThread->GetName();
+    os << "Thread " << pThread << " " << (name ? name : "(no name)") << std::endl;
+  }
+}
+
+std::ostream& operator<<(std::ostream& os, const CoreContext& context) {
+  context.Dump(os);
+  return os;
+}

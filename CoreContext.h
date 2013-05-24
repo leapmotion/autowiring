@@ -279,5 +279,13 @@ public:
   /// when a context is first constructed by a thread.
   /// </remarks>
   static std::shared_ptr<CoreContext> CurrentContext(void);
+
+  /// <summary>
+  /// Utility debug method for writing a snapshot of this context to the specified output stream
+  /// </summary>
+  void Dump(std::ostream& os) const;
 };
+
+std::ostream& operator<<(std::ostream& os, const CoreContext& context);
+
 #endif
