@@ -163,10 +163,14 @@ public:
   /// </summary>
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
+   std::cout << __LINE__ << ":\t   12 = " << (12) << std::endl;
     Autowirer::Add(value);
+	 std::cout << __LINE__ << ":\t	 12 = " << (12) << std::endl;
     CoreThread* pCoreThread = safe_dynamic_cast<CoreThread, T>::Cast(value.get());
+	 std::cout << __LINE__ << ":\t	 12 = " << (12) << std::endl;
     if(pCoreThread)
       AddCoreThread(pCoreThread);
+	   std::cout << __LINE__ << ":\t	   12 = " << (12) << std::endl;
   }
 
   /// <summary>
