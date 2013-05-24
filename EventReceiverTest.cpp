@@ -85,6 +85,9 @@ public:
 class SimpleSender:
   public EventManager<CallableInterface>
 {
+public:
+  using EventManager<CallableInterface>::Fire;
+  using EventManager<CallableInterface>::Defer;
 };
 
 class SimpleReceiver:
