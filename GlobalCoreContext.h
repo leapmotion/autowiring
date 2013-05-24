@@ -50,17 +50,20 @@ public:
   static void Release(void) {
     // Release local:
     boost::lock_guard<boost::mutex> lk(getInitLock());
-    s_globalContext.reset();
+    getGlobalContextSharedPtr().reset();
   }
 
 private:
   // Global context shared pointer and lock:
-  static boost::mutex& getInitLock() {
+  static inline boost::mutex& getInitLock() {
     static boost::mutex s_initLock;
     return s_initLock;
   }
 
-  static std::shared_ptr<GlobalCoreContext> s_globalContext;
+  static inline std::shared_ptr<GlobalCoreContext>& getGlobalContextSharedPtr() {
+    static std::shared_ptr<GlobalCoreContext> s_globalContextSharedPtr;
+    return s_globalContextSharedPtr;
+  }
 };
 
 /// <summary>
