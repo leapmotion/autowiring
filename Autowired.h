@@ -2,7 +2,6 @@
 #define _AUTOWIRED_H
 #include "AutowirableSlot.h"
 #include "CoreContext.h"
-#include "InstantiatorLink.h"
 #include <functional>
 #include <memory>
 
@@ -210,7 +209,7 @@ struct CtorProxy {};
 /// This specialization is useful when it's necessary to AutoRequire an interface
 /// </remarks>
 template<class T, T* (*fn)()>
-class AutoRequired< CtorProxy<T, fn> >:
+class AutoRequired<CtorProxy<T, fn>>:
   public Autowired<T>
 {
 public:
@@ -230,7 +229,7 @@ template<class T, class Concrete>
 struct CtorConcrete {};
 
 template<class T, class Concrete>
-class AutoRequired< CtorConcrete<T, Concrete> >:
+class AutoRequired<CtorConcrete<T, Concrete>>:
   public Autowired<T>
 {
 public:

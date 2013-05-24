@@ -42,7 +42,7 @@ public:
 
 protected:
   // General purpose lock for this class
-  boost::mutex m_lock;
+  mutable boost::mutex m_lock;
 
   // A pointer to the parent context
   std::shared_ptr<Autowirer> m_pParent;
@@ -295,6 +295,8 @@ public:
   /// method such that it may be substitutde in place for the notification routine.
   /// </remarks>
   void NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener);
+
+  void Dump(std::ostream& os) const;
 };
 
 namespace AutowirerHelpers {
@@ -389,5 +391,7 @@ struct FindByCastInternal<T, false>:
 };
 
 }
+
+std::ostream& operator<<(std::ostream& os, const Autowirer& rhs);
 
 #endif
