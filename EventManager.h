@@ -283,14 +283,14 @@ public:
 
   // Event attachment and detachment virtuals
   virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
-    (t_base&)*this += rhs;
-    (EventManagerSingle<T>&)*this += rhs;
+    t_base::operator+=(rhs);
+    EventManagerSingle<T>::operator+=(rhs);
     return *this;
   }
 
   virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
-    (t_base&)*this -= rhs;
-    (EventManagerSingle<T>&)*this -= rhs;
+    t_base::operator-=(rhs);
+    EventManagerSingle<T>::operator-=(rhs);
     return *this;
   }
 
@@ -320,12 +320,12 @@ public:
 
   // Event attachment and detachment pure virtuals
   virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
-    (EventManagerSingle<T>&)*this += rhs;
+    EventManagerSingle<T>::operator+=(rhs);
     return *this;
   }
 
   virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
-    (EventManagerSingle<T>&)*this -= rhs;
+    EventManagerSingle<T>::operator+=(rhs);
     return *this;
   }
 
