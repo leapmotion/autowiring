@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "CoreContext.h"
 #include "Autowired.h"
+#include "ContextCreationListenerBase.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
 #include "OutstandingCountTracker.h"
@@ -28,6 +29,22 @@ CoreContext::~CoreContext(void) {
     !s_curContext.get()->use_count() ||
     s_curContext.get()->get() != this
   );
+}
+
+void CoreContext::BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const {
+  auto nameIter = m_nameListeners.find(contextName);
+  if(nameIter != m_nameListeners.end()) {
+    const std::list<ContextCreationListenerBase*>& list = nameIter->second;
+    for(auto q = list.begin(); q != list.end(); q++)
+      (**q).ContextCreated(context);
+  }
+
+  // Pass the broadcast to all listening children:
+  for(auto q = m_children.begin(); q != m_children.end(); q++) {
+    std::shared_ptr<CoreContext> child = q->lock();
+    if(child)
+      child->BroadcastContextCreationNotice(contextName, context);
+  }
 }
 
 std::shared_ptr<OutstandingCountTracker> CoreContext::IncrementOutstandingThreadCount(void) {
@@ -174,6 +191,26 @@ void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
     ptr->Start();
 }
 
+void CoreContext::AddContextCreationListener(ContextCreationListenerBase* pBase) {
+  m_nameListeners[pBase->GetContextName()].push_back(pBase);
+}
+
 std::shared_ptr<CoreContext> GetCurrentContext() {
   return CoreContext::CurrentContext();
+}
+
+void CoreContext::Dump(std::ostream& os) const {
+  Autowirer::Dump(os);
+
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  for(auto q = m_threads.begin(); q != m_threads.end(); q++) {
+    CoreThread* pThread = *q;
+    const char* name = pThread->GetName();
+    os << "Thread " << pThread << " " << (name ? name : "(no name)") << std::endl;
+  }
+}
+
+std::ostream& operator<<(std::ostream& os, const CoreContext& context) {
+  context.Dump(os);
+  return os;
 }

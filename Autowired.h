@@ -2,7 +2,6 @@
 #define _AUTOWIRED_H
 #include "AutowirableSlot.h"
 #include "CoreContext.h"
-#include "InstantiatorLink.h"
 #include <functional>
 #include <memory>
 
@@ -97,8 +96,10 @@ public:
     // Set up the shared pointer first:
     std::shared_ptr<T>::reset(rhs);
 
-    // Strong assumption must be made, here, that the rhs isn't already in the current context
-    LockContext()->Add(*this);
+    // Only add when we are non-null
+    if(rhs)
+      // Strong assumption must be made, here, that the rhs isn't already in the current context
+      LockContext()->Add(*this);
     return *this;
   }
 
@@ -210,7 +211,7 @@ struct CtorProxy {};
 /// This specialization is useful when it's necessary to AutoRequire an interface
 /// </remarks>
 template<class T, T* (*fn)()>
-class AutoRequired< CtorProxy<T, fn> >:
+class AutoRequired<CtorProxy<T, fn>>:
   public Autowired<T>
 {
 public:
@@ -230,7 +231,7 @@ template<class T, class Concrete>
 struct CtorConcrete {};
 
 template<class T, class Concrete>
-class AutoRequired< CtorConcrete<T, Concrete> >:
+class AutoRequired<CtorConcrete<T, Concrete>>:
   public Autowired<T>
 {
 public:

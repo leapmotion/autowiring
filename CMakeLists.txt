@@ -15,6 +15,8 @@ set(
   Autowirer.cpp
   Autowirer.h
   CMakeLists.txt
+  ContextCreator.h
+  ContextCreatorBase.h
   ContextMap.h
   ContextMember.cpp
   ContextMember.h
@@ -31,10 +33,11 @@ set(
   DispatchQueue.cpp
   EventManager.h
   EventManager.cpp
-  InstantiatorLink.h  
+  Factory.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   Object.h
+  ObjectPool.h
   OutstandingCountTracker.cpp
   OutstandingCountTracker.h
   SharedPtrHash.h
@@ -62,6 +65,10 @@ set(
   ContextCleanupTest.cpp
   ContextMapTest.h
   ContextMapTest.cpp
+  CoreThreadTest.h
+  CoreThreadTest.cpp
+  CreationListenerTest.h
+  CreationListenerTest.cpp
   CtorProxyTest.h
   CtorProxyTest.cpp
   CurrentContextPusherTest.h
@@ -72,6 +79,8 @@ set(
   EnclosedContextTestBase.cpp
   EventReceiverTest.h
   EventReceiverTest.cpp
+  FactoryTest.h
+  FactoryTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
   GraphConstructionTest.h
