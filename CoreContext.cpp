@@ -186,6 +186,10 @@ void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
     ptr->Start();
 }
 
+void CoreContext::AddContextCreationListener(ContextCreationListenerBase* pBase) {
+  m_nameListeners[pBase->GetContextName()].push_back(pBase);
+}
+
 std::shared_ptr<CoreContext> GetCurrentContext() {
   return CoreContext::CurrentContext();
 }
