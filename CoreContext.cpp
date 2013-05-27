@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "CoreContext.h"
 #include "Autowired.h"
+#include "ContextCreationListenerBase.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
 #include "OutstandingCountTracker.h"
@@ -28,6 +29,17 @@ CoreContext::~CoreContext(void) {
     !s_curContext.get()->use_count() ||
     s_curContext.get()->get() != this
   );
+}
+
+void CoreContext::BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const {
+  auto q = m_nameListeners.find(contextName);
+  if(q == m_nameListeners.end())
+    // No listeners for this name, short-circuit return:
+    return;
+
+  const std::list<ContextCreationListenerBase*>& list = q->second;
+  for(auto r = list.begin(); r != list.end(); r++)
+    (**r).ContextCreated(context);
 }
 
 std::shared_ptr<OutstandingCountTracker> CoreContext::IncrementOutstandingThreadCount(void) {
