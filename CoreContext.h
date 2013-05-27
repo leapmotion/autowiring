@@ -175,9 +175,16 @@ public:
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
     Autowirer::Add(value);
+
+    // Is the passed value a CoreThread?
     CoreThread* pCoreThread = safe_dynamic_cast<CoreThread, T>::Cast(value.get());
     if(pCoreThread)
       AddCoreThread(pCoreThread);
+
+    // Is the passed value a ContextCreationListener?
+    ContextCreationListenerBase* pBase = safe_dynamic_cast<ContextCreationListenerBase, T>::Cast(value.get());
+    if(pBase)
+      AddContextCreationListener(pBase);
   }
 
   /// <summary>
@@ -203,6 +210,12 @@ public:
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
   void AddCoreThread(CoreThread* pCoreThread, bool allowNotReady = false);
+
+  /// <summary>
+  /// Adds the specified context creation listener to receive creation events broadcast from this context
+  /// </summary>
+  /// <param name="pBase">The instance being added</param>
+  void AddContextCreationListener(ContextCreationListenerBase* pBase);
 
   /// <summary>
   /// Utility routine, invoked typically by the service, which starts all registered
