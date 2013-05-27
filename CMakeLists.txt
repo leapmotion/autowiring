@@ -15,6 +15,7 @@ set(
   Autowirer.cpp
   Autowirer.h
   CMakeLists.txt
+  ContextCreator.h
   ContextMap.h
   ContextMember.cpp
   ContextMember.h
@@ -65,6 +66,8 @@ set(
   ContextMapTest.cpp
   CoreThreadTest.h
   CoreThreadTest.cpp
+  CreationListenerTest.h
+  CreationListenerTest.cpp
   CtorProxyTest.h
   CtorProxyTest.cpp
   CurrentContextPusherTest.h
