@@ -96,8 +96,10 @@ public:
     // Set up the shared pointer first:
     std::shared_ptr<T>::reset(rhs);
 
-    // Strong assumption must be made, here, that the rhs isn't already in the current context
-    LockContext()->Add(*this);
+    // Only add when we are non-null
+    if(rhs)
+      // Strong assumption must be made, here, that the rhs isn't already in the current context
+      LockContext()->Add(*this);
     return *this;
   }
 
