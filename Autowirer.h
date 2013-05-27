@@ -42,7 +42,7 @@ public:
 
 protected:
   // General purpose lock for this class
-  boost::mutex m_lock;
+  mutable boost::mutex m_lock;
 
   // A pointer to the parent context
   std::shared_ptr<Autowirer> m_pParent;
@@ -63,30 +63,15 @@ protected:
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
 
-  // Only one object in a context can bear a particular name
-  typedef std::map<std::string, ContextMember*> t_mpName;
-  t_mpName m_byName;
-
   // Collection of objects waiting to be autowired, and a specific lock exclusively for this collection
   boost::mutex m_deferredLock;
   typedef std::map<const AutowirableSlot*, DeferredBase*> t_deferred;
   t_deferred m_deferred;
 
-  // All known event receivers
+  // All known event senders and receivers
   typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
   std::set<EventManagerBase*> m_eventSenders;
-
-  /// <summary>
-  /// Erasure routine, designed to be invoked from inside SharedPtrWrap
-  /// </summary>
-  void erase(t_mpType::iterator q) {
-    m_byType.erase(q);
-  }
-  
-  void erase(t_mpName::iterator q) {
-    m_byName.erase(q);
-  }
 
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
@@ -295,6 +280,8 @@ public:
   /// method such that it may be substitutde in place for the notification routine.
   /// </remarks>
   void NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener);
+
+  void Dump(std::ostream& os) const;
 };
 
 namespace AutowirerHelpers {
@@ -389,5 +376,7 @@ struct FindByCastInternal<T, false>:
 };
 
 }
+
+std::ostream& operator<<(std::ostream& os, const Autowirer& rhs);
 
 #endif
