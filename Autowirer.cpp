@@ -20,7 +20,7 @@ Autowirer::~Autowirer(void)
 
   // Release all event sender links:
   for(std::set<EventManagerBase*>::iterator q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
-    (**q).Release();
+    (**q).ReleaseRefs();
 
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
   if(m_pParent)
@@ -91,18 +91,6 @@ void Autowirer::AddContextMember(ContextMember* ptr)
 
   // Always add to the set of context members
   m_contextMembers.insert(ptr);
-
-  // Insert context members by name.  If there is no name, just return the base pointer.
-  if(!ptr->GetName())
-    return;
-  
-  string name = ptr->GetName();
-  ContextMember*& location = m_byName[name];
-  if(location)
-    throw std::runtime_error("Two values have been mapped to the same key in the same context");
-
-  // Trivial insertion and return:
-  location = ptr;
 }
 
 void Autowirer::NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener) {
@@ -126,4 +114,20 @@ void Autowirer::NotifyWhenAutowired(const AutowirableSlot& slot, const std::func
 
 std::shared_ptr<CoreContext> CreateContextThunk(void) {
   return CoreContext::CurrentContext()->Create();
+}
+
+void Autowirer::Dump(std::ostream& os) const {
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
+    os << q->second->GetTypeInfo().name();
+    std::shared_ptr<Object> pObj = q->second->AsObject();
+    if(pObj)
+      os << hex << " 0x" << pObj;
+    os << endl;
+  }
+}
+
+std::ostream& operator<<(std::ostream& os, const Autowirer& rhs) {
+  rhs.Dump(os);
+  return os;
 }

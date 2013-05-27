@@ -2,6 +2,7 @@
 #define _CORECONTEXT_H
 #include "Autowirer.h"
 #include "CoreThread.h"
+#include "ContextCreationListener.h"
 #include "CurrentContextPusher.h"
 #include "DependentContext.h"
 #include <boost/thread/condition.hpp>
@@ -21,6 +22,7 @@
 
 using std::list;
 
+class ContextCreationListenerBase;
 class ContextMember;
 class CoreContext;
 class CoreThread;
@@ -124,6 +126,10 @@ private:
   // This is the stop condition, which is set when core threads have been told to stop
   boost::condition m_stopping;
 
+  // Lists of event receivers, by name:
+  typedef std::map<const char*, std::list<ContextCreationListenerBase*>> t_contextNameListeners;
+  t_contextNameListeners m_nameListeners;
+
   // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
   // Destructor does nothing; this is by design.
   boost::mutex m_outstandingLock;
@@ -148,6 +154,11 @@ public:
   bool ShouldStop(void) const {return m_shouldStop;}
 
   /// <summary>
+  /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
+  /// </summary>
+  void BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const;
+
+  /// <summary>
   /// Increments the total number of contexts still outstanding
   /// </summary>
   /// <remarks>
@@ -164,9 +175,16 @@ public:
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
     Autowirer::Add(value);
+
+    // Is the passed value a CoreThread?
     CoreThread* pCoreThread = safe_dynamic_cast<CoreThread, T>::Cast(value.get());
     if(pCoreThread)
       AddCoreThread(pCoreThread);
+
+    // Is the passed value a ContextCreationListener?
+    ContextCreationListenerBase* pBase = safe_dynamic_cast<ContextCreationListenerBase, T>::Cast(value.get());
+    if(pBase)
+      AddContextCreationListener(pBase);
   }
 
   /// <summary>
@@ -192,6 +210,12 @@ public:
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
   void AddCoreThread(CoreThread* pCoreThread, bool allowNotReady = false);
+
+  /// <summary>
+  /// Adds the specified context creation listener to receive creation events broadcast from this context
+  /// </summary>
+  /// <param name="pBase">The instance being added</param>
+  void AddContextCreationListener(ContextCreationListenerBase* pBase);
 
   /// <summary>
   /// Utility routine, invoked typically by the service, which starts all registered
@@ -279,5 +303,13 @@ public:
   /// when a context is first constructed by a thread.
   /// </remarks>
   static std::shared_ptr<CoreContext> CurrentContext(void);
+
+  /// <summary>
+  /// Utility debug method for writing a snapshot of this context to the specified output stream
+  /// </summary>
+  void Dump(std::ostream& os) const;
 };
+
+std::ostream& operator<<(std::ostream& os, const CoreContext& context);
+
 #endif
