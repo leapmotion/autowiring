@@ -11,6 +11,10 @@ template<const char* contextName>
 class ContextCreationListener:
   public ContextCreationListenerBase
 {
+public:
+  const char* GetContextName(void) override {
+    return contextName;
+  }
 };
 
 #endif
