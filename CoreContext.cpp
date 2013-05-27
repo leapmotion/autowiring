@@ -32,14 +32,19 @@ CoreContext::~CoreContext(void) {
 }
 
 void CoreContext::BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const {
-  auto q = m_nameListeners.find(contextName);
-  if(q == m_nameListeners.end())
-    // No listeners for this name, short-circuit return:
-    return;
+  auto nameIter = m_nameListeners.find(contextName);
+  if(nameIter != m_nameListeners.end()) {
+    const std::list<ContextCreationListenerBase*>& list = nameIter->second;
+    for(auto q = list.begin(); q != list.end(); q++)
+      (**q).ContextCreated(context);
+  }
 
-  const std::list<ContextCreationListenerBase*>& list = q->second;
-  for(auto r = list.begin(); r != list.end(); r++)
-    (**r).ContextCreated(context);
+  // Pass the broadcast to all listening children:
+  for(auto q = m_children.begin(); q != m_children.end(); q++) {
+    std::shared_ptr<CoreContext> child = q->lock();
+    if(child)
+      child->BroadcastContextCreationNotice(contextName, context);
+  }
 }
 
 std::shared_ptr<OutstandingCountTracker> CoreContext::IncrementOutstandingThreadCount(void) {
