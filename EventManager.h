@@ -298,6 +298,11 @@ public:
   std::function<typename Decompose<MemFn>::fnType> Fire(MemFn fn) {
     return EventManagerSingle<typename Decompose<MemFn>::type>::Fire(fn);
   }
+
+  template<class MemFn>
+  std::function<typename Decompose<MemFn>::fnType> Defer(MemFn fn) {
+    return EventManagerSingle<typename Decompose<MemFn>::type>::Defer(fn);
+  }
 };
 
 template<class T>
