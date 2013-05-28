@@ -32,17 +32,22 @@ TEST_F(CreationListenerTest, VerifyMapping) {
 
   // Trivial context creation check:
   {
-    std::shared_ptr<CoreContext> ctxt1 = simpleCreator.Create(L"Simple");
-    EXPECT_TRUE(!!ctxt1.get()) << "Initial context creation did not succeed as expected";
+    std::shared_ptr<DeferredCreationNotice> notice = simpleCreator.CreateContext(L"Simple");
+    ASSERT_TRUE(!!notice.get()) << "Initial context creation did not succeed as expected";
+    EXPECT_TRUE(notice->WasCreated());
   }
 
   // Now try to autowire a listener:
   AutoRequired<Listener> myListener;
 
   // Create a second context, verify that the listener got the message:
-  std::shared_ptr<CoreContext> ctxt2 = simpleCreator.Create(L"Simple2");
+  std::shared_ptr<DeferredCreationNotice> ctxt = simpleCreator.CreateContext(L"Simple2");
 
-  // Check the listener to verify we had a hit:
+  // Check the listener to verify a hit was not had here:
+  EXPECT_FALSE(myListener->hit) << "The listener callback was hit unexpectedly early";
+
+  // Relase the reference, verify we have a hit now:
+  ctxt.reset();
   EXPECT_TRUE(myListener->hit) << "The listener callback was not hit as expected";
 }
 
@@ -66,7 +71,7 @@ TEST_F(CreationListenerTest, VerifyDescendantMapping) {
   }
 
   // Dependent context broadcast check:
-  simpleCreator->Create(L"Simple");
+  simpleCreator->CreateContext(L"Simple");
 
   // Check the listener to verify we had a hit:
   EXPECT_TRUE(listener->hit) << "The listener callback was not hit as expected";
