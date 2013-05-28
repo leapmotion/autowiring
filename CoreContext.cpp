@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "CoreContext.h"
 #include "Autowired.h"
-#include "ContextCreationListenerBase.h"
+#include "BoltBase.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
 #include "OutstandingCountTracker.h"
@@ -34,7 +34,7 @@ CoreContext::~CoreContext(void) {
 void CoreContext::BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const {
   auto nameIter = m_nameListeners.find(contextName);
   if(nameIter != m_nameListeners.end()) {
-    const std::list<ContextCreationListenerBase*>& list = nameIter->second;
+    const std::list<BoltBase*>& list = nameIter->second;
     for(auto q = list.begin(); q != list.end(); q++)
       (**q).ContextCreated(context);
   }
@@ -191,7 +191,7 @@ void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
     ptr->Start();
 }
 
-void CoreContext::AddContextCreationListener(ContextCreationListenerBase* pBase) {
+void CoreContext::AddBolt(BoltBase* pBase) {
   m_nameListeners[pBase->GetContextName()].push_back(pBase);
 }
 

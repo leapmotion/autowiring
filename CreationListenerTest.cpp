@@ -1,14 +1,14 @@
 #include "stdafx.h"
 #include "CreationListenerTest.h"
 #include "Autowired.h"
-#include "ContextCreationListener.h"
+#include "Bolt.h"
 #include "ContextCreator.h"
 #include <string>
 
 extern const char sc_pipelineName[] = "Pipeline";
 
 class Listener:
-  public ContextCreationListener<sc_pipelineName>
+  public Bolt<sc_pipelineName>
 {
 public:
   Listener(void):
