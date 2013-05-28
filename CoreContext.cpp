@@ -34,9 +34,13 @@ CoreContext::~CoreContext(void) {
 void CoreContext::BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const {
   auto nameIter = m_nameListeners.find(contextName);
   if(nameIter != m_nameListeners.end()) {
+    // Context creation notice requires that the created context be set before invocation:
+    CurrentContextPusher pshr(context);
+
+    // Iterate through all listeners:
     const std::list<BoltBase*>& list = nameIter->second;
     for(auto q = list.begin(); q != list.end(); q++)
-      (**q).ContextCreated(context);
+      (**q).ContextCreated();
   }
 
   // Pass the broadcast to all listening children:

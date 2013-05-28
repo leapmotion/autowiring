@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "CreationListenerTest.h"
+#include "BoltTest.h"
 #include "Autowired.h"
 #include "Bolt.h"
 #include "ContextCreator.h"
@@ -17,8 +17,12 @@ public:
 
   bool hit;
 
-  void ContextCreated(const std::shared_ptr<CoreContext>& context) override {
+  std::shared_ptr<CoreContext> createdContext;
+
+  void ContextCreated(void) override {
     hit = true;
+
+    createdContext = CoreContext::CurrentContext();
   }
 };
 
@@ -41,14 +45,22 @@ TEST_F(CreationListenerTest, VerifyMapping) {
   AutoRequired<Listener> myListener;
 
   // Create a second context, verify that the listener got the message:
-  std::shared_ptr<DeferredCreationNotice> ctxt = simpleCreator.CreateContext(L"Simple2");
+  std::shared_ptr<CoreContext> createdContext;
+  {
+    std::shared_ptr<DeferredCreationNotice> deferred = simpleCreator.CreateContext(L"Simple2");
 
-  // Check the listener to verify a hit was not had here:
-  EXPECT_FALSE(myListener->hit) << "The listener callback was hit unexpectedly early";
+    // Check the listener to verify a hit was not had here:
+    EXPECT_FALSE(myListener->hit) << "The listener callback was hit unexpectedly early";
 
-  // Relase the reference, verify we have a hit now:
-  ctxt.reset();
+    // Copy out context, release reference:
+    createdContext = deferred->GetContext();
+  }
+
+  // Verify we have a hit now that the reference was released:
   EXPECT_TRUE(myListener->hit) << "The listener callback was not hit as expected";
+
+  // Verify that the correct context was created:
+  EXPECT_EQ(createdContext, myListener->createdContext) << "The context set to current for the listener callback was not the context that got created";
 }
 
 TEST_F(CreationListenerTest, VerifyDescendantMapping) {

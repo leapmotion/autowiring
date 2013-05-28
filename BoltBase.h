@@ -22,8 +22,10 @@ public:
   /// <summary>
   /// A notification broadcast when a context of the desired name has been created
   /// </summary>
-  /// <param name="context">A reference to the context that was just created</param>
-  virtual void ContextCreated(const std::shared_ptr<CoreContext>& context) = 0;
+  /// <remarks>
+  /// The current context is guaranteed to be the newly created context.
+  /// </remarks>
+  virtual void ContextCreated(void) = 0;
 };
 
 #endif
