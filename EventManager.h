@@ -325,7 +325,7 @@ public:
   }
 
   virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
-    EventManagerSingle<T>::operator+=(rhs);
+    EventManagerSingle<T>::operator-=(rhs);
     return *this;
   }
 
