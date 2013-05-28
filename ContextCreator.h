@@ -26,7 +26,7 @@ public:
     m_context = CoreContext::CurrentContext();
   }
 
-private:
+protected:
   // Collection of mapped contexts:
   typedef std::unordered_map<Key, std::shared_ptr<CoreContext>> t_mpType;
   t_mpType m_mp;
