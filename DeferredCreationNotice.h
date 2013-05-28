@@ -23,7 +23,7 @@ private:
   std::shared_ptr<CoreContext> m_ctxt;
 
 public:
-  bool WasCreated(void) const {return m_name == nullptr;}
+  bool WasCreated(void) const {return m_name != nullptr;}
   const std::shared_ptr<CoreContext>& GetContext(void) const {return m_ctxt;}
 };
 
