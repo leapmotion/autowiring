@@ -28,6 +28,7 @@ void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
   m_dispatchQueue.pop_front();
   lk.unlock();
   (*thunk)();
+  delete thunk;
 }
 
 void DispatchQueue::WaitForEvent(void) {
