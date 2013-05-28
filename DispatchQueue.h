@@ -94,6 +94,7 @@ public:
   void operator+=(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
+    m_queueUpdated.notify_all();
   }
 };
 
