@@ -1,6 +1,7 @@
 #ifndef _DISPATCH_QUEUE_H
 #define _DISPATCH_QUEUE_H
 #include "ocuConfig.h"
+#include "EventDispatcher.h"
 #include <boost/thread/condition_variable.hpp>
 #include <functional>
 #include <list>
@@ -41,7 +42,8 @@ public:
 /// <summary>
 /// This is an asynchronous queue of zero-argument functions
 /// </summary>
-class DispatchQueue
+class DispatchQueue:
+  public EventDispatcher
 {
 public:
   DispatchQueue(void);
@@ -83,12 +85,12 @@ public:
   /// <summary>
   /// Blocks until a new dispatch member is added, dispatches, and then returns
   /// </summary>
-  void WaitForEvent(void);
+  void WaitForEvent(void) override;
 
   /// <summary>
   /// Similar to WaitForEvent, but does not block
   /// </summary>
-  void DispatchEvent(void);
+  void DispatchEvent(void) override;
   
   template<class _Fx>
   void operator+=(_Fx&& fx) {
