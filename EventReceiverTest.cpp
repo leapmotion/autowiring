@@ -100,15 +100,14 @@ public:
     m_zero(false),
     m_one(false),
     m_oneArg(0),
-    m_barrier(2),
     m_barrierDone(false)
   {
     Ready();
   }
 
 private:
-  // Continuity barrier, used to pause processing while in Run
-  boost::barrier m_barrier;
+  // Continuity signal:
+  boost::condition_variable m_continueCond;
   bool m_barrierDone;
 
 public:
@@ -163,20 +162,21 @@ public:
   /// Invoked to cause Run to continue its processing
   /// </summary>
   void Proceed(void) {
-    {
-      boost::lock_guard<boost::mutex> lk(m_lock);
-      if(m_barrierDone)
-        return;
-      m_barrierDone = true;
-    }
-    m_barrier.wait();
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    if(m_barrierDone)
+      return;
+    m_barrierDone = true;
+    m_continueCond.notify_all();
   }
 
   ///
   // Runs the thread
   ///
   void Run(void) override {
-    m_barrier.wait();
+    {
+      boost::unique_lock<boost::mutex> lk(m_lock);
+      m_continueCond.wait(lk, [this] () {return m_barrierDone;});
+    }
     CoreThread::Run();
   }
 };
