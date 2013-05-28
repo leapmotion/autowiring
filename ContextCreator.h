@@ -2,7 +2,7 @@
 #define _CONTEXT_CREATOR_H
 #include "ContextCreatorBase.h"
 #include "CoreContext.h"
-#include <unordered_map>
+#include STL_UNORDERED_MAP
 
 /// <summary>
 /// Implements a foundation class that allows named context registration and augmentation
