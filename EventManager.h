@@ -214,7 +214,7 @@ protected:
           // Pass the copy into the lambda:
           **q += [ptr, f, arg1Forced] () mutable {
             (ptr->*f)(
-              std::move(arg1Forced)
+              arg1Forced
             );
           };
         }
