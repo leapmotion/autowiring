@@ -30,6 +30,8 @@ public:
     m_called(false)
   {}
 
+  virtual ~SimpleFactory() { }
+
   bool m_called;
 
   void operator()(SimpleInterface*& ptr) override {
