@@ -24,7 +24,7 @@ void DispatchQueue::Abort(void) {
 }
 
 void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
-  auto thunk = std::move(m_dispatchQueue.front());
+  DispatchThunkBase* thunk = m_dispatchQueue.front();
   m_dispatchQueue.pop_front();
   lk.unlock();
   (*thunk)();
