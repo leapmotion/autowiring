@@ -37,7 +37,7 @@ public:
   }
 };
 
-TEST_F(FactoryTest, VerifyFactoryWiring) {
+TEST_F(FactoryTest, DISABLED_VerifyFactoryWiring) {
   // First insert our factory
   AutoRequired<SimpleFactory> factory;
 
