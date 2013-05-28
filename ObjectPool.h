@@ -80,12 +80,12 @@ public:
         // We do not allow an outstanding count
         return;
 
-      // Increment the total number of objects outstanding:
-      m_outstanding++;
-
       // We failed to recover an object, create a new one:
       pObj = new T;
     }
+
+    // Increment the total number of objects outstanding:
+    m_outstanding++;
 
     // Fill the shared pointer with the object we created, and ensure that we override
     // the destructor so that the object is returned to the pool when it falls out of
