@@ -15,7 +15,7 @@ DeferredCreationNotice::~DeferredCreationNotice(void)
   if(!parent)
     // Short-circuit return, teardown must be underway
     return;
-
-  // Parent context resolved, broadcast the notice:
-  parent->BroadcastContextCreationNotice(m_name, m_ctxt);
+  if(m_name)
+    // Parent context resolved, broadcast the notice:
+    parent->BroadcastContextCreationNotice(m_name, m_ctxt);
 }
