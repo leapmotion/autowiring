@@ -10,6 +10,7 @@
 #include <boost/thread/tss.hpp>
 #include <list>
 #include <memory>
+#include <unordered_map>
 
 #ifndef ASSERT
   #ifdef _DEBUG
@@ -127,7 +128,7 @@ private:
   boost::condition m_stopping;
 
   // Lists of event receivers, by name:
-  typedef std::map<const char*, std::list<BoltBase*>> t_contextNameListeners;
+  typedef std::unordered_map<std::string, std::list<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
 
   // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
