@@ -341,6 +341,9 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
       EXPECT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
     }
 
+    // Verify the reference count on the event receiver
+    EXPECT_EQ(1, rcvrCopy.use_count()) << "Detected a leaked reference to an event receiver";
+
     // Fire the event again--shouldn't be captured by the receiver because its context is gone
     rcvrCopy->m_zero = false;
     sender->Fire(&CallableInterface::ZeroArgs)();
