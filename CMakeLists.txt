@@ -28,6 +28,8 @@ set(
   CurrentContextPusher.h
   DeferredBase.h
   DeferredBase.cpp
+  DeferredCreationNotice.h
+  DeferredCreationNotice.cpp
   DependentContext.h
   DispatchQueue.h
   DispatchQueue.cpp

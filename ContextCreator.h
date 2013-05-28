@@ -2,6 +2,7 @@
 #define _CONTEXT_CREATOR_H
 #include "ContextCreatorBase.h"
 #include "CoreContext.h"
+#include "DeferredCreationNotice.h"
 #include <unordered_map>
 
 /// <summary>
@@ -13,6 +14,8 @@
 /// This class helps manage the creation of contexts with global names.  When the new child context
 /// is created, a notification is broadcast throughout the entire current context to any registered
 /// ContextCreationListener.
+///
+/// None of these methods are synchronized.
 /// </remarks>
 template<const char* contextName, class Key>
 class ContextCreator:
@@ -24,9 +27,11 @@ public:
   }
 
 private:
+  // Collection of mapped contexts:
   typedef std::unordered_map<Key, std::shared_ptr<CoreContext>> t_mpType;
   t_mpType m_mp;
 
+  // Local context pointer:
   std::weak_ptr<CoreContext> m_context;
 
 public:
@@ -41,20 +46,25 @@ public:
   }
 
   /// <summary>
-  /// Finds or creates a context with the specified key, dependent upon the current context
+  /// Creates a context with the specified key, dependent upon the current context
   /// </summary>
-  std::shared_ptr<CoreContext> Create(const Key& key) {
+  /// <returns>A deferred creation notice which, when destroyed, will cause clients to be notified of context creation</returns>
+  /// <remarks>
+  /// 
+  /// </remarks>
+  std::shared_ptr<DeferredCreationNotice> CreateContext(const Key& key) {
     // Try to find a context already existing with the given key:
-    std::shared_ptr<CoreContext>& retVal = m_mp[key];
-    if(!retVal) {
+    std::shared_ptr<CoreContext>& child = m_mp[key];
+    std::shared_ptr<DeferredCreationNotice> retVal;
+    if(child)
+      retVal.reset(new DeferredCreationNotice(nullptr, child));
+    else {
       // Attempt to lock the context.  Could already be destroyed by this point.
       std::shared_ptr<CoreContext> context = m_context.lock();
       if(context) {
         // Create:
-        retVal = context->Create();
-
-        // Notify all listeners that this creation event has taken place:
-        context->BroadcastContextCreationNotice(contextName, retVal);
+        child = context->Create();
+        retVal.reset(new DeferredCreationNotice(contextName, child));
       }
     }
     return retVal;
@@ -63,8 +73,15 @@ public:
   /// <summary>
   /// Removes the specified context by its key
   /// </summary>
-  void Remove(const Key& key) {
+  void RemoveContext(const Key& key) {
     m_mp.erase(key);
+  }
+
+  /// <summary>
+  /// Removes the specified context by its iterator
+  /// </summary>
+  void RemoveContext(typename t_mpType::iterator q) {
+    m_mp.erase(q);
   }
 };
 
