@@ -70,8 +70,8 @@ set(
   ContextMapTest.cpp
   CoreThreadTest.h
   CoreThreadTest.cpp
-  CreationListenerTest.h
-  CreationListenerTest.cpp
+  BoltTest.h
+  BoltTest.cpp
   CtorProxyTest.h
   CtorProxyTest.cpp
   CurrentContextPusherTest.h
