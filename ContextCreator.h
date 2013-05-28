@@ -13,7 +13,7 @@
 /// <remarks>
 /// This class helps manage the creation of contexts with global names.  When the new child context
 /// is created, a notification is broadcast throughout the entire current context to any registered
-/// ContextCreationListener.
+/// Bolt.
 ///
 /// None of these methods are synchronized.
 /// </remarks>

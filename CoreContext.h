@@ -2,7 +2,7 @@
 #define _CORECONTEXT_H
 #include "Autowirer.h"
 #include "CoreThread.h"
-#include "ContextCreationListener.h"
+#include "Bolt.h"
 #include "CurrentContextPusher.h"
 #include "DependentContext.h"
 #include <boost/thread/condition.hpp>
@@ -22,7 +22,7 @@
 
 using std::list;
 
-class ContextCreationListenerBase;
+class BoltBase;
 class ContextMember;
 class CoreContext;
 class CoreThread;
@@ -127,7 +127,7 @@ private:
   boost::condition m_stopping;
 
   // Lists of event receivers, by name:
-  typedef std::map<const char*, std::list<ContextCreationListenerBase*>> t_contextNameListeners;
+  typedef std::map<const char*, std::list<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
 
   // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
@@ -181,10 +181,10 @@ public:
     if(pCoreThread)
       AddCoreThread(pCoreThread);
 
-    // Is the passed value a ContextCreationListener?
-    ContextCreationListenerBase* pBase = safe_dynamic_cast<ContextCreationListenerBase, T>::Cast(value.get());
+    // Is the passed value a Bolt?
+    BoltBase* pBase = safe_dynamic_cast<BoltBase, T>::Cast(value.get());
     if(pBase)
-      AddContextCreationListener(pBase);
+      AddBolt(pBase);
   }
 
   /// <summary>
@@ -215,7 +215,7 @@ public:
   /// Adds the specified context creation listener to receive creation events broadcast from this context
   /// </summary>
   /// <param name="pBase">The instance being added</param>
-  void AddContextCreationListener(ContextCreationListenerBase* pBase);
+  void AddBolt(BoltBase* pBase);
 
   /// <summary>
   /// Utility routine, invoked typically by the service, which starts all registered
