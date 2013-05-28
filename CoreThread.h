@@ -43,6 +43,9 @@ protected:
   // Completion condition:
   bool m_completed;
 
+  // Acceptor flag:
+  bool m_canAccept;
+
   friend class ThreadStatusMaintainer;
 
 private:
@@ -61,11 +64,37 @@ private:
   /// </summary>
   void DoRun(void);
 
+protected:
+  /// <summary>
+  /// Indicates that the system should accept the delivery of deferred procedure calls
+  /// </summary>
+  void AcceptDispatchDelivery(void) {
+    m_canAccept = true;
+  }
+  
+  /// <summary>
+  /// Indicates that no more deferred procedure calls should be pended
+  /// </summary>
+  /// <remarks>
+  /// This method guarantees that, at some point after it returns, the caller will no
+  /// longer receive pended events.  No guarantees are made about how long after this
+  /// call is made that the last pended dispatch event will be delivered.
+  ///
+  /// Callers interested in this guarantee should invoke this method and then wait for
+  /// the dispatch queue to become empty.
+  /// </remarks>
+  void RejectDispatchDelivery(void) {
+    m_canAccept = false;
+  }
+
 public:
   // Accessor methods:
   bool ShouldStop(void) const;
   bool IsReady(void) const {return m_ready;}
   bool IsRunning(void) const {return m_running;}
+
+  // Override from EventDispatcher
+  bool CanAccept(void) const {return m_canAccept;}
 
   /// <summary>
   /// A convenience method that will sleep this thread for the specified duration

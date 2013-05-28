@@ -2,6 +2,7 @@
 #define _EVENT_MANAGER_H
 #include "ocuConfig.h"
 #include "DispatchQueue.h"
+#include "EventDispatcher.h"
 #include "EventReceiver.h"
 #include "SharedPtrHash.h"
 #include <boost/bind.hpp>
@@ -207,6 +208,17 @@ protected:
         auto f = fnPtr;
         for(EventManagerSingle<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
           T* ptr = dynamic_cast<T*>(*q);
+
+          // If the pointer cannot support a EventDispatcher, we _cannot_ defer it
+          // TODO:  Consider constructing a separate set just containing EventDispatcher-castables.  Whether an object can
+          // be cast to a particular type is declarative, anyway.
+          EventDispatcher* pDispatchable = dynamic_cast<EventDispatcher*>(ptr);
+          if(!pDispatchable)
+            continue;
+          
+          // If the CoreThread isn't currently running, then we do not offer it any events to be pended:
+          if(!pDispatchable->CanAccept())
+            continue;
 
           // Force off the const modifier so we can copy into the lambda just once
           tArg1& arg1Forced = (tArg1&)arg1;
