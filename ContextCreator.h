@@ -3,7 +3,11 @@
 #include "ContextCreatorBase.h"
 #include "CoreContext.h"
 #include "DeferredCreationNotice.h"
+#if defined(__APPLE__) && !defined(_LIBCPP_VERSION)
+#include <tr1/unordered_map>
+#else
 #include <unordered_map>
+#endif
 
 /// <summary>
 /// Implements a foundation class that allows named context registration and augmentation
@@ -39,7 +43,7 @@ public:
   /// Attempts to find a context with the specified key
   /// </summary>
   std::shared_ptr<CoreContext> FindContext(const Key& key) {
-    t_mpType::iterator q = m_mp.find(key);
+    typename t_mpType::iterator q = m_mp.find(key);
     if(q == m_mp.end())
       return std::shared_ptr<CoreContext>();
     return q->second;
