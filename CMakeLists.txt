@@ -6,7 +6,7 @@ include_directories(
 
 set(
   Autowiring_SRCS
-	AutoNetworkMonitor.h
+  AutoNetworkMonitor.h
   AutoNetworkMonitor.cpp
   Autowired.h
   Autowired.cpp
@@ -17,6 +17,7 @@ set(
   CMakeLists.txt
   ContextCreator.h
   ContextCreatorBase.h
+  ContextCreationListener.h
   ContextMap.h
   ContextMember.cpp
   ContextMember.h
