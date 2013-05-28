@@ -65,6 +65,9 @@ public:
   void operator()(std::shared_ptr<T>& rs) {
     T* pObj = nullptr;
 
+    // Force the passed value to be empty so we don't cause a deadlock by accident
+    rs.reset();
+
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
       if(m_objs.size()) {
