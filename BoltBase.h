@@ -10,7 +10,7 @@ class CoreContext;
 /// <param name="contextName">The name of the context whose creation we want to listen for</param>
 /// <remarks>
 /// </remarks>
-class ContextCreationListenerBase:
+class BoltBase:
   public EventReceiver
 {
 public:
