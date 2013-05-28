@@ -34,7 +34,7 @@ public:
   /// Attempts to find a context with the specified key
   /// </summary>
   std::shared_ptr<CoreContext> FindContext(const Key& key) {
-    t_mpType::iterator q = m_mp.find(key);
+    typename t_mpType::iterator q = m_mp.find(key);
     if(q == m_mp.end())
       return std::shared_ptr<CoreContext>();
     return q->second;
