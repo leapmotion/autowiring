@@ -10,7 +10,11 @@
 #include <boost/thread/tss.hpp>
 #include <list>
 #include <memory>
+#if defined(__APPLE__) && !defined(_LIBCPP_VERSION)
+#include <tr1/unordered_map>
+#else
 #include <unordered_map>
+#endif
 
 #ifndef ASSERT
   #ifdef _DEBUG
