@@ -9,7 +9,8 @@ CoreThread::CoreThread(const char* pName):
   m_stop(false),
   m_ready(false),
   m_running(false),
-  m_completed(false)
+  m_completed(false),
+  m_canAccept(false)
 {
 }
 
@@ -29,7 +30,14 @@ void CoreThread::DoRun(void) {
     Run();
   } catch(dispatch_aborted_exception&) {
     // Okay, this is fine, cleanup by design
+  } catch(...) {
+    // Turn off dispatch delivery but continue up the stack:
+    RejectDispatchDelivery();
+    throw;
   }
+
+  // Unconditionally shut off dispatch delivery:
+  RejectDispatchDelivery();
 
   // Notify everyone that we're completed:
   boost::lock_guard<boost::mutex> lk(m_lock);
@@ -69,6 +77,7 @@ bool CoreThread::Start(void) {
 }
 
 void CoreThread::Run() {
+  AcceptDispatchDelivery();
   while(!ShouldStop())
     WaitForEvent();
 }

@@ -34,6 +34,7 @@ set(
   DependentContext.h
   DispatchQueue.h
   DispatchQueue.cpp
+  EventDispatcher.h
   EventManager.h
   EventManager.cpp
   Factory.h
