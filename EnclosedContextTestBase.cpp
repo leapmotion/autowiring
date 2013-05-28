@@ -8,5 +8,8 @@ EnclosedContextTestBase::EnclosedContextTestBase(void):
 
 EnclosedContextTestBase::~EnclosedContextTestBase(void) {
   m_create->SignalShutdown();
-  m_create->Wait();
+
+  // Do not allow teardown to take more than a millisecond
+  if(!m_create->Wait(boost::chrono::milliseconds(100)))
+    ASSERT(false);
 }
