@@ -100,7 +100,7 @@ public:
   template<class _Fx>
   void operator+=(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    if(m_dispatchQueue.size() > m_dispatchCap)
+    if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
       return;
 
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
