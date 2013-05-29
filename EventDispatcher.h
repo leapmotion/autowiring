@@ -22,7 +22,7 @@ public:
   /// <summary>
   /// Similar to WaitForEvent, but does not block
   /// </summary>
-  virtual void DispatchEvent(void) = 0;
+  virtual bool DispatchEvent(void) = 0;
 };
 
 #endif
