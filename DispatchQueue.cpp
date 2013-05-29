@@ -2,7 +2,8 @@
 #include "DispatchQueue.h"
 
 DispatchQueue::DispatchQueue(void):
-  m_aborted(false)
+  m_aborted(false),
+  m_dispatchCap(1024)
 {
 }
 
@@ -44,9 +45,13 @@ void DispatchQueue::WaitForEvent(void) {
   DispatchEventUnsafe(lk);
 }
 
-void DispatchQueue::DispatchEvent(void) {
+bool DispatchQueue::DispatchEvent(void) {
   boost::unique_lock<boost::mutex> lk(m_dispatchLock);
   if(m_aborted)
     throw dispatch_aborted_exception();
+  if(m_dispatchQueue.empty())
+    return false;
+
   DispatchEventUnsafe(lk);
+  return true;
 }

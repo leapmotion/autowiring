@@ -56,6 +56,10 @@ public:
   /// </remarks>
   virtual ~DispatchQueue(void);
 
+protected:
+  // The maximum allowed number of pended dispatches before pended calls start getting dropped
+  int m_dispatchCap;
+
 private:
   bool m_aborted;
 
@@ -90,11 +94,15 @@ public:
   /// <summary>
   /// Similar to WaitForEvent, but does not block
   /// </summary>
-  void DispatchEvent(void) override;
+  /// <returns>True if an event was dispatched, false if the queue was empty when checked</returns>
+  bool DispatchEvent(void) override;
   
   template<class _Fx>
   void operator+=(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    if(m_dispatchQueue.size() > m_dispatchCap)
+      return;
+
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
     m_queueUpdated.notify_all();
   }
