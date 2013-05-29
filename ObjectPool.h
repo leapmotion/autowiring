@@ -19,8 +19,10 @@ template<class T>
 class ObjectPool
 {
 public:
-  ObjectPool(size_t limit = -1):
+  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
+  ObjectPool(size_t limit = ~0, size_t maxPooled = ~0):
     m_limit(limit),
+    m_maxPooled(maxPooled),
     m_outstanding(0)
   {}
 
@@ -34,17 +36,45 @@ private:
   typedef std::set<T*> t_stType;
   t_stType m_objs;
 
+  size_t m_maxPooled;
   size_t m_limit;
   size_t m_outstanding;
 
 protected:
   void Return(T* ptr) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_objs.insert(ptr);
-    m_outstanding--;
+    {
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      m_outstanding--;
+      if(m_objs.size() < m_maxPooled) {
+        m_objs.insert(ptr);
+        return;
+      }
+    }
+
+    // Object wasn't added.  Destroy it.
+    delete ptr;
   }
 
 public:
+  /// <summary>
+  /// This sets the maximum number of entities that the pool will cache to satisfy a later allocation request
+  /// </summary>
+  /// <param name="maxPooled">The new maximum cache count</param>
+  bool SetMaximumPooledEntities(bool maxPooled) {
+    m_maxPooled = maxPooled;
+    for(;;) {
+      T* ptr;
+      {
+        boost::lock_guard<boost::mutex> lk(m_lock);
+        if(m_objs.size() <= m_maxPooled)
+          return;
+        q = m_objs.begin();
+        m_objs.erase(q);
+      }
+      delete *ptr;
+    }
+  }
+
   /// <summary>
   /// Sets the maximum number of objects this pool will permit to be outstanding at time
   /// </summary>
