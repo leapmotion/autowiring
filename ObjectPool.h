@@ -68,7 +68,7 @@ public:
         boost::lock_guard<boost::mutex> lk(m_lock);
         if(m_objs.size() <= m_maxPooled)
           return;
-        q = m_objs.begin();
+        typename t_stType::iterator q = m_objs.begin();
         m_objs.erase(q);
       }
       delete *ptr;
