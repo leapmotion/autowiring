@@ -94,7 +94,7 @@ public:
   bool IsRunning(void) const {return m_running;}
 
   // Override from EventDispatcher
-  bool CanAccept(void) const {return m_canAccept;}
+  bool CanAccept(void) const override {return m_canAccept;}
 
   /// <summary>
   /// A convenience method that will sleep this thread for the specified duration

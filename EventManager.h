@@ -191,6 +191,12 @@ protected:
         auto f = fnPtr;
         for(EventManagerSingle<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
           T* ptr = dynamic_cast<T*>(*q);
+
+          // EventDispatcher check:
+          EventDispatcher* pDispatchable = dynamic_cast<EventDispatcher*>(ptr);
+          if(!pDispatchable || !pDispatchable->CanAccept())
+            continue;
+
           **q += [ptr, f] () {
             (ptr->*f)();
           };
@@ -213,11 +219,7 @@ protected:
           // TODO:  Consider constructing a separate set just containing EventDispatcher-castables.  Whether an object can
           // be cast to a particular type is declarative, anyway.
           EventDispatcher* pDispatchable = dynamic_cast<EventDispatcher*>(ptr);
-          if(!pDispatchable)
-            continue;
-          
-          // If the CoreThread isn't currently running, then we do not offer it any events to be pended:
-          if(!pDispatchable->CanAccept())
+          if(!pDispatchable || !pDispatchable->CanAccept())
             continue;
 
           // Force off the const modifier so we can copy into the lambda just once
@@ -226,7 +228,7 @@ protected:
           // Pass the copy into the lambda:
           **q += [ptr, f, arg1Forced] () mutable {
             (ptr->*f)(
-              arg1Forced
+              std::move(arg1Forced)
             );
           };
         }
