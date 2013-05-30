@@ -179,6 +179,10 @@ public:
     }
     CoreThread::Run();
   }
+
+  // Make this method public
+  using CoreThread::AcceptDispatchDelivery;
+  using CoreThread::RejectDispatchDelivery;
 };
 
 EventReceiverTest::EventReceiverTest(void) {
@@ -205,9 +209,35 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
   receiver->Proceed();
 }
 
+TEST_F(EventReceiverTest, VerifyNoReceive) {
+  AutoRequired<SimpleReceiver> receiver;
+  AutoRequired<SimpleSender> sender;
+
+  // Try to defer these calls, should not be delivered anywhere:
+  sender->Defer(&CallableInterface::ZeroArgs)();
+  sender->Defer(&CallableInterface::OneArg)(100);
+  
+  // Unblock:
+  receiver->Proceed();
+
+  // Allow dispatch delivery and post the quit event:
+  receiver->AcceptDispatchDelivery();
+  sender->Defer(&CallableInterface::AllDone)();
+
+  // Wait:
+  receiver->Wait();
+
+  // Verify that no call was not made accidentally
+  EXPECT_FALSE(receiver->m_zero) << "A zero-argument call was pended to a dispatcher not marked ready";
+  EXPECT_FALSE(receiver->m_one) << "A single-argument call was pended to a dispatcher not marked ready";
+}
+
 TEST_F(EventReceiverTest, DeferredInvoke) {
   AutoRequired<SimpleReceiver> receiver;
   AutoRequired<SimpleSender> sender;
+  
+  // Accept dispatch delivery:
+  receiver->AcceptDispatchDelivery();
 
   // Deferred fire:
   sender->Defer(&CallableInterface::ZeroArgs)();
@@ -226,14 +256,17 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
   receiver->Wait();
 
   // Validate deferred firing:
-  EXPECT_TRUE(receiver->m_zero);
-  EXPECT_TRUE(receiver->m_one);
+  EXPECT_TRUE(receiver->m_zero) << "Zero argument call was not properly deferred";
+  EXPECT_TRUE(receiver->m_one) << "Single argument call was not properly deferred";
   EXPECT_EQ(101, receiver->m_oneArg) << "Argument was not correctly propagated through a deferred call";
 }
 
 TEST_F(EventReceiverTest, NontrivialCopy) {
   AutoRequired<SimpleReceiver> receiver;
   AutoRequired<SimpleSender> sender;
+  
+  // Accept dispatch delivery:
+  receiver->AcceptDispatchDelivery();
 
   static const int sc_numElems = 10;
 
@@ -295,6 +328,9 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   
   AutoRequired<SimpleReceiver> receiver;
   AutoRequired<SimpleSender> sender;
+  
+  // Accept dispatch delivery:
+  receiver->AcceptDispatchDelivery();
 
   // Make our copy counter:
   CopyCounter ctr;
