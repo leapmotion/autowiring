@@ -96,6 +96,17 @@ public:
   /// </summary>
   /// <returns>True if an event was dispatched, false if the queue was empty when checked</returns>
   bool DispatchEvent(void) override;
+
+  /// <summary>
+  /// Similar to DispatchEvent, but will attempt to dispatch all events currently queued
+  /// </summary>
+  /// <returns>The total number of events dispatched</returns>
+  size_t DispatchAllEvents(void) {
+    size_t retVal = 0;
+    while(DispatchEvent())
+      retVal++;
+    return retVal;
+  }
   
   template<class _Fx>
   void operator+=(_Fx&& fx) {
