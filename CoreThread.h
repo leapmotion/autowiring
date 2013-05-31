@@ -1,3 +1,4 @@
+// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _CORETHREAD_H
 #define _CORETHREAD_H
 #include "ContextMember.h"

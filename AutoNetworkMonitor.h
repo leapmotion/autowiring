@@ -1,3 +1,4 @@
+// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _AUTO_NETWORK_MONITOR_H
 #define _AUTO_NETWORK_MONITOR_H
 #include <boost/icl/interval_map.hpp>

@@ -1,3 +1,4 @@
+// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _AUTOWIRER_H
 #define _AUTOWIRER_H
 #include "EventManager.h"
