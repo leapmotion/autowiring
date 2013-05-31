@@ -1,3 +1,4 @@
+// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _AUTOWIRED_H
 #define _AUTOWIRED_H
 #include "AutowirableSlot.h"

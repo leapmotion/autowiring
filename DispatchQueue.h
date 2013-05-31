@@ -1,3 +1,4 @@
+// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _DISPATCH_QUEUE_H
 #define _DISPATCH_QUEUE_H
 #include "ocuConfig.h"

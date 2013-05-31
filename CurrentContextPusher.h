@@ -1,3 +1,4 @@
+// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _CURRENT_CONTEXT_PUSHER_H
 #define _CURRENT_CONTEXT_PUSHER_H
 
