@@ -1,3 +1,4 @@
+// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _CONTEXT_CREATOR_H
 #define _CONTEXT_CREATOR_H
 #include "ContextCreatorBase.h"

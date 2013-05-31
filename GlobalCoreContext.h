@@ -1,3 +1,4 @@
+// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _GLOBAL_CORE_CONTEXT
 #define _GLOBAL_CORE_CONTEXT
 #include "CoreContext.h"

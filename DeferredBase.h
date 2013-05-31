@@ -1,3 +1,4 @@
+// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _DEFERRED_BASE_H
 #define _DEFERRED_BASE_H
 #include <functional>
