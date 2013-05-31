@@ -41,6 +41,23 @@ protected:
 
 public:
   /// <summary>
+  /// Performs a scan of all contexts and evicts those contexts which have terminated
+  /// </summary>
+  /// <remarks>
+  /// Consider eliminating this method and altering the internal map to use weak pointers.
+  /// </remarks>
+  void EvictStale(void) {
+    for(auto q = m_mp.begin(); q != m_mp.end(); ) {
+      if(q->second.unique()) {
+        auto r = q++;
+        m_mp.erase(r);
+        q = r;
+      } else
+        q++;
+    }
+  }
+
+  /// <summary>
   /// Attempts to find a context with the specified key
   /// </summary>
   std::shared_ptr<CoreContext> FindContext(const Key& key) {
