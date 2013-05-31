@@ -19,6 +19,9 @@ namespace AutowirerHelpers {
   struct FindByCastInternal;
 
   template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
+  struct AddEventSender;
+
+  template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
   struct AddEventReceiver;
 }
 
@@ -101,7 +104,8 @@ protected:
 
       // If the value is an event type, we can add it to the collection of event
       // manager things:
-      AddToEventSenders(value.get());
+
+      ((AutowirerHelpers::AddEventSender<T>&)*this)(value.get());
       ((AutowirerHelpers::AddEventReceiver<T>&)*this)(value);
     }
 
@@ -109,7 +113,6 @@ protected:
   }
 
   void AddToEventSenders(EventManagerBase* pSender);
-  inline void AddToEventSenders(void*) {}
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
@@ -286,6 +289,27 @@ public:
 };
 
 namespace AutowirerHelpers {
+
+
+template<class T, bool isPolymorphic>
+struct AddEventSender:
+  public Autowirer
+{
+public:
+  inline void operator()(T* ptr) {
+    EventManagerBase* pEventManagerBase = dynamic_cast<EventManagerBase*>(ptr);
+    if(pEventManagerBase)
+      Autowirer::AddToEventSenders(pEventManagerBase);
+  }
+};
+
+template<class T>
+struct AddEventSender<T, false>:
+  public Autowirer
+{
+public:
+  inline void operator()(T*) {}
+};
 
 template<class T, bool isPolymorphic>
 struct AddEventReceiver:
