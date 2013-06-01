@@ -47,14 +47,11 @@ public:
   /// Consider eliminating this method and altering the internal map to use weak pointers.
   /// </remarks>
   void EvictStale(void) {
-    for(auto q = m_mp.begin(); q != m_mp.end(); ) {
-      if(q->second.unique()) {
-        auto r = q++;
-        m_mp.erase(r);
-        q = r;
-      } else
+    for(auto q = m_mp.begin(); q != m_mp.end(); )
+      if(q->second.unique())
+        m_mp.erase(q++);
+      else
         q++;
-    }
   }
 
   /// <summary>
