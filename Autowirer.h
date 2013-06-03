@@ -386,7 +386,7 @@ struct FindByCastInternal:
     return
       matchedObject ?
       // Generally, we don't care whether the originally constructed value is
-      std::static_pointer_cast<T, Object>(matchedObject) :
+      std::dynamic_pointer_cast<T, Object>(matchedObject) :
       std::shared_ptr<T>();
   }
 };
