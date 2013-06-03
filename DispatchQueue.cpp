@@ -9,8 +9,11 @@ DispatchQueue::DispatchQueue(void):
 }
 
 DispatchQueue::~DispatchQueue(void) {
-  if(!m_dispatchQueue.empty())
-    throw std::runtime_error("Dispatch queue was not empty at destructor time");
+  // Rundown to prevent leaks:
+  while(!m_dispatchQueue.empty()) {
+    delete m_dispatchQueue.front();
+    m_dispatchQueue.pop_front();
+  }
 }
 
 void DispatchQueue::Abort(void) {
