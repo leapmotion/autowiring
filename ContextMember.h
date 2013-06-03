@@ -10,7 +10,7 @@ class CoreContext;
 /// A class that must be inherited in order to be a member of a context heriarchy
 /// </summary>
 class ContextMember:
-  public Object
+  public virtual Object
 {
 protected:
   ContextMember(const char* name = nullptr);
