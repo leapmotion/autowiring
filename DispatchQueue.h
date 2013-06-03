@@ -50,10 +50,11 @@ public:
   DispatchQueue(void);
 
   /// <summary>
-  /// Throws an exception if it is invoked, and Abort wasn't first called
+  /// Runs down the dispatch queue without calling anything
   /// </summary>
   /// <remarks>
-  /// 
+  /// Nothing in the destructor is synchronized.  This is done under the assumption that multi-
+  /// access during teardown is impossible.
   /// </remarks>
   virtual ~DispatchQueue(void);
 
