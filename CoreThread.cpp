@@ -32,9 +32,17 @@ void CoreThread::DoRun(void) {
   } catch(dispatch_aborted_exception&) {
     // Okay, this is fine, cleanup by design
   } catch(...) {
-    // Turn off dispatch delivery but continue up the stack:
-    RejectDispatchDelivery();
-    throw;
+    // Unhandled exception in a context member, dump a description (if we can)
+    try {
+      throw;
+    } catch(std::exception& ex) {
+      std::cerr << ex.what() << std::endl;
+    } catch(const char* what) {
+      std::cerr << what << std::endl;
+    }
+    
+    // Now we initiate teardown
+    GetContext()->SignalTerminate();
   }
 
   // Unconditionally shut off dispatch delivery:
