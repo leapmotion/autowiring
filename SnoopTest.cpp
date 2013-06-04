@@ -52,6 +52,11 @@ class Disallowed:
 {
 };
 
+class DisallowedGeneric:
+  public UpBroadcastListener
+{
+};
+
 TEST_F(SnoopTest, VerifySimpleSnoop) {
   // Create the parent listener:
   AutoRequired<ParentMember> parentMember;
@@ -94,5 +99,19 @@ TEST_F(SnoopTest, DetectDisallowedContextMember) {
     AutoRequired<Disallowed> disallow;
 
     EXPECT_THROW(sibling2->Snoop(disallow), std::runtime_error);
+  }
+}
+
+TEST_F(SnoopTest, DetectDisallowedGeneralType) {
+  // Create two child contexts:
+  AutoCreateContext sibling1;
+  AutoCreateContext sibling2;
+  
+  // Create a member again, but this time, use the generic type so we can't use a context membership check
+  {
+    CurrentContextPusher pshr(sibling1);
+    AutoRequired<DisallowedGeneric> disallowGeneric;
+
+    EXPECT_THROW(sibling2->Snoop(disallowGeneric), std::runtime_error);
   }
 }
