@@ -141,6 +141,19 @@ public:
   std::shared_ptr<Autowirer>& GetParentContext(void) {return m_pParent;}
 
   /// <summary>
+  /// Enables the passed event receiver to obtain messages broadcast by this context
+  /// </summary>
+  /// <remarks>
+  /// This enables the passed event receiver to snoop events that are broadcast from a
+  /// parent context.  The passed event receiver MUST exist in a parent context, or the
+  /// behavior of this method may be undefined during teardown.
+  ///
+  /// The snooper will not receive any events broadcast from parent contexts.  ONLY events
+  /// broadcast in THIS context will be forwarded to the snooper.
+  /// </remarks>
+  void Snoop(const std::shared_ptr<EventReceiver>& pSnooper);
+
+  /// <summary>
   /// Adds an object of any kind to the IOC container
   /// </summary>
   /// <param name="pContextMember">The member which was added</param>
@@ -316,7 +329,7 @@ struct AddEventReceiver:
   public Autowirer
 {
 public:
-  void operator()(std::shared_ptr<T>& value) {
+  void operator()(const std::shared_ptr<T>& value) {
     EventReceiver* pRecvr = dynamic_cast<EventReceiver*>(value.get());
     if(!pRecvr)
       return;
@@ -385,7 +398,6 @@ struct FindByCastInternal:
 
     return
       matchedObject ?
-      // Generally, we don't care whether the originally constructed value is
       std::dynamic_pointer_cast<T, Object>(matchedObject) :
       std::shared_ptr<T>();
   }

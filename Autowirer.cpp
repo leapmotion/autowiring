@@ -86,6 +86,25 @@ void Autowirer::RemoveEventSenders(t_rcvrSet::iterator first, t_rcvrSet::iterato
     m_pParent->RemoveEventSenders(first, last);
 }
 
+void Autowirer::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
+  // If the passed type is a ContextMember, we can query relationship status
+  ContextMember* pMember = dynamic_cast<ContextMember*>(pSnooper.get());
+  if(pMember) {
+    // Ancestry check:
+    std::shared_ptr<Autowirer> target = pMember->GetContext();
+    std::shared_ptr<Autowirer> cur = GetParentContext();
+
+    while(cur && cur != target)
+      cur = cur->GetParentContext();
+
+    if(!cur)
+      throw std::runtime_error("A context member attempted to snoop a context which was not a child context");
+  }
+
+  // Pass control to the event adder helper:
+  ((AutowirerHelpers::AddEventReceiver<EventReceiver>&)*this)(pSnooper);
+}
+
 void Autowirer::AddContextMember(ContextMember* ptr)
 {
   boost::lock_guard<boost::mutex> lk(m_lock);

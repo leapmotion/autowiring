@@ -95,6 +95,8 @@ set(
   PostConstructTest.cpp
   ScopeTest.h
   ScopeTest.cpp
+  SnoopTest.h
+  SnoopTest.cpp
   TestFixtures/SimpleObject.h
   TestFixtures/SimpleThreaded.h
   TestFixtures/MultiInherit.h
