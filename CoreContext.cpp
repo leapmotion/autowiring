@@ -68,17 +68,20 @@ std::shared_ptr<OutstandingCountTracker> CoreContext::IncrementOutstandingThread
 }
 
 std::shared_ptr<CoreContext> CoreContext::Create(void) {
-  // Lock my child list
-  lock_guard<mutex> lk(m_childrenLock);
+  t_childList::iterator childIterator;
+  {
+    // Lock the child list while we insert
+    lock_guard<mutex> lk(m_childrenLock);
   
-  // Create the context
+    // Reserve a place in the list for the child
+    childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
+  }
+  
+  // Create the child context
   CoreContext* pContext =
     new CoreContext(
       std::static_pointer_cast<CoreContext, Autowirer>(m_self.lock())
     );
-  
-  // Reserve a place in the list for the child
-  t_childList::iterator childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
   
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
@@ -89,7 +92,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
       this->m_children.erase(childIterator);
       delete pContext;
     }
-);
+  );
   pContext->m_self = retVal;
   *childIterator = retVal;
   return retVal;
