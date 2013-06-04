@@ -59,8 +59,7 @@ protected:
   // away.
   // TODO:  Use type_index instead.
   // It's more efficient to use type_index, here, instead of trying to index directly by
-  // the class name.  A lower bound operation is never required, making this implementation
-  // inefficient.
+  // the class name.
   typedef std::multimap<std::string, SharedPtrWrapBase*> t_mpType;
   t_mpType m_byType;
   

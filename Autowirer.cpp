@@ -99,6 +99,18 @@ void Autowirer::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
 
     if(!cur)
       throw std::runtime_error("A context member attempted to snoop a context which was not a child context");
+  } else {
+    // Dynamic membership check:
+    const type_info& info = typeid(*pSnooper);
+    
+    std::shared_ptr<Autowirer> cur = GetParentContext();
+    for(; cur; cur = cur->GetParentContext()) {
+      auto q = cur->m_byType.find(info.name());
+      if(q != cur->m_byType.end())
+        break;
+    }
+    if(!cur)
+      throw std::runtime_error("A generic type attempted to snoop a context which was not a child context");
   }
 
   // Pass control to the event adder helper:
