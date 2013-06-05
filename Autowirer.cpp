@@ -117,34 +117,55 @@ void Autowirer::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
   ((AutowirerHelpers::AddPolymorphic<EventReceiver>&)*this).AddEventReceiver(pSnooper);
 }
 
-void Autowirer::FilterException(std::exception_ptr except) {
+void Autowirer::FilterException(void) {
+  // Unfortunately, not all platforms support rethrow or current_exception.
+  // Therefore, we short-circuit this function if it's unsupported.
+  // We would like to compile as much of this function as possible, though, which is why it's not all
+  // preproc'd out
+  if(!PLATFORM_RETHROW_EXISTS)
+    return;
+
+  auto rethrower = [] () {
+#if PLATFORM_RETHROW_EXISTS
+    std::rethrow_exception(std::current_exception());
+#endif
+  };
+
   bool handled = false;
   for(auto q = m_filters.begin(); q != m_filters.end(); q++)
     try {
-      (*q)->Filter(except);
+      (*q)->Filter(rethrower);
       handled = true;
     } catch(...) {
       // Do nothing
     }
 
-  // Return indicating whether the exception was handled:
+  // Rethrow if unhandled:
   if(!handled)
-    std::rethrow_exception(except);
+    rethrower();
 }
 
-void Autowirer::FilterFiringException(std::exception_ptr except, const EventManagerBase* pSender, EventReceiver* pRecipient) {
+void Autowirer::FilterFiringException(const EventManagerBase* pSender, EventReceiver* pRecipient) {
+  if(!PLATFORM_RETHROW_EXISTS)
+    return;
+  auto rethrower = [] () {
+#if PLATFORM_RETHROW_EXISTS
+    std::rethrow_exception(std::current_exception());
+#endif
+  };
+
   bool handled = false;
   for(auto q = m_filters.begin(); q != m_filters.end(); q++)
     try {
-      (*q)->Filter(except, pSender, pRecipient);
+      (*q)->Filter(rethrower, pSender, pRecipient);
       handled = true;
     } catch(...) {
-      // Do nothing
+      // Do nothing, filter didn't want to filter this exception
     }
 
-  // Return indicating whether the exception was handled:
+  // Rethrow if unhandled:
   if(!handled)
-    std::rethrow_exception(except);
+    rethrower();
 }
 
 void Autowirer::AddContextMember(ContextMember* ptr) {

@@ -68,10 +68,10 @@ public:
   bool m_generic;
   bool m_fireSpecific;
 
-  virtual void Filter(std::exception_ptr except) override {
+  virtual void Filter(const std::function<void()>& rethrower) override {
     m_hit = true;
     try {
-      std::rethrow_exception(except);
+      rethrower();
     } catch(custom_exception& custom) {
       EXPECT_EQ(100, custom.m_value) << "A filtered custom exception did not have the expected member field value";
       m_specific = true;
@@ -80,10 +80,10 @@ public:
     }
   }
 
-  virtual void Filter(std::exception_ptr& except, const EventManagerBase* pSender, EventReceiver* pRecipient) override {
+  virtual void Filter(const std::function<void()>& rethrower, const EventManagerBase* pSender, EventReceiver* pRecipient) override {
     m_hit = true;
     try {
-      std::rethrow_exception(except);
+      rethrower();
     } catch(custom_exception& custom) {
       EXPECT_EQ(200, custom.m_value) << "A fired exception did not have the expected value, probable copy malfunction";
       m_fireSpecific = true;
@@ -93,7 +93,13 @@ public:
   }
 };
 
-TEST_F(ExceptionFilterTest, ThreadThrowsCheck) {
+#if PLATFORM_RETHROW_EXISTS
+  #define ONLY_PLATFORM_RETHROW_EXISTS(x) x
+#else
+  #define ONLY_PLATFORM_RETHROW_EXISTS(x) DISABLED_##x
+#endif
+
+TEST_F(ExceptionFilterTest, ONLY_PLATFORM_RETHROW_EXISTS(ThreadThrowsCheck)) {
   // Add the exception filter type to the context first
   AutoRequired<GenericFilter> filter;
 
@@ -110,7 +116,7 @@ TEST_F(ExceptionFilterTest, ThreadThrowsCheck) {
   EXPECT_FALSE(filter->m_generic) << "Filter did not correctly filter out a specific exception";
 }
 
-TEST_F(ExceptionFilterTest, FireThrowsCheck) {
+TEST_F(ExceptionFilterTest, ONLY_PLATFORM_RETHROW_EXISTS(FireThrowsCheck)) {
   // Add the generic filter:
   AutoRequired<GenericFilter> filter;
 

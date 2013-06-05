@@ -15,6 +15,18 @@ CoreThread::CoreThread(const char* pName):
 {
 }
 
+void DebugPrintCurrentExceptionInformation() {
+#if PLATFORM_RETHROW_EXISTS
+  try {
+    std::rethrow_exception(std::current_exception());
+  } catch(std::exception& ex) {
+    std::cerr << ex.what() << std::endl;
+  } catch(...) {
+    // Nothing can be done, we don't know what exception type this is.
+  }
+#endif
+}
+
 void CoreThread::DoRun(void) {
   ASSERT(m_running);
 
@@ -30,27 +42,18 @@ void CoreThread::DoRun(void) {
   try {
     Run();
   } catch(dispatch_aborted_exception&) {
-    // Okay, this is fine, cleanup by design
-  }
-#ifdef __APPLE__
-  catch(std::exception& except) {
-    try {
-      GetContext()->FilterException(std::exception_ptr(except));
-#else
-  catch(...) {
+    // Okay, this is fine, a dispatcher is terminating--this is a normal way to
+    // end a dispatcher loop.
+  } catch(...) {
     try {
       // Ask that the enclosing context filter this exception, if possible:
-      GetContext()->FilterException(std::current_exception());
-#endif
-    } catch(std::exception& ex) {
-      std::cerr << ex.what() << std::endl;
-    } catch(const char* what) {
-      std::cerr << what << std::endl;
+      GetContext()->FilterException();
     } catch(...) {
       // Generic exception, unhandled, we can't print anything off.
+      DebugPrintCurrentExceptionInformation();
     }
     
-    // Context needs to shut down
+    // Signal shutdown on the enclosing context
     GetContext()->SignalShutdown();
   }
 
