@@ -74,6 +74,10 @@ public:
 class NoCopyClass
 {
 public:
+  NoCopyClass():
+    m_value(100)
+  {}
+
   explicit NoCopyClass(NoCopyClass& rhs):
     m_value(101)
   {}
