@@ -122,41 +122,12 @@ protected:
       }
   }
 
-  // Multi-argument firing:
-  void FireAsSingle0(void (T::*fnPtr)()) const {
-    FireCurried([fnPtr] (T& ref) {(ref.*fnPtr)();});
-  }
-
-  template<class Arg1, class Ty1>
-  void FireAsSingle1(void (T::*fnPtr)(Arg1 arg1), const Ty1& ty1) const {
-    FireCurried([fnPtr, ty1] (T& ref) {(ref.*fnPtr)(ty1);});
-  }
-  
-  template<class Arg1, class Arg2, class Ty1, class Ty2>
-  void FireAsSingle2(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2), const Ty1& ty1, const Ty2& ty2) const {
-    FireCurried([fnPtr, ty1, ty2] (T& ref) {(ref.*fnPtr)(ty1, ty2);});
-  }
-  
-  template<class Arg1, class Arg2, class Arg3, class Ty1, class Ty2, class Ty3>
-  void FireAsSingle3(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3) const {
-    FireCurried([fnPtr, ty1, ty2, ty3] (T& ref) {(ref.*fnPtr)(ty1, ty2, ty3);});
-  }
-  
-  template<class Arg1, class Arg2, class Arg3, class Arg4, class Ty1, class Ty2, class Ty3, class Ty4>
-  void FireAsSingle4(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3, Arg4 ty4), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3, const Ty4& ty4) const {
-    FireCurried([fnPtr, ty1, ty2, ty3, ty4] (T& ref) {(ref.*fnPtr)(ty1, ty2, ty3, ty4);});
-  }
-  
-  template<class Arg1, class Arg2, class Arg3, class Arg4, class Arg5, class Ty1, class Ty2, class Ty3, class Ty4, class Ty5>
-  void FireAsSingle5(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3, Arg4 ty4, Arg5 ty5), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3, const Ty4& ty4, const Ty5& ty5) const {
-    FireCurried([fnPtr, ty1, ty2, ty3, ty4, ty5] (T& ref) {(ref.*fnPtr)(ty1, ty2, ty3, ty4, ty5);});
-  }
-
   // Two-parenthetical invocations
   std::function<void ()> Fire(void (T::*fnPtr)()) const {
     return
       [this, fnPtr] () {
-        this->FireAsSingle0(fnPtr);
+        auto f = fnPtr;
+        this->FireCurried([f] (T& ref) {(ref.*f)();});
       };
   }
 
@@ -164,7 +135,8 @@ protected:
   std::function<void (Arg1)> Fire(void (T::*fnPtr)(Arg1)) const {
     return
       [this, fnPtr] (Arg1 arg1) {
-        this->FireAsSingle1(fnPtr, arg1);
+        auto f = fnPtr;
+        this->FireCurried([f, arg1] (T& ref) {(ref.*f)(arg1);});
       };
   }
 
@@ -172,7 +144,8 @@ protected:
   std::function<void (Arg1, Arg2)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
-        this->FireAsSingle2(fnPtr, arg1, arg2);
+        auto f = fnPtr;
+        this->FireCurried([f, arg1, arg2] (T& ref) {(ref.*f)(arg1, arg2);});
       };
   }
 
@@ -180,7 +153,8 @@ protected:
   std::function<void (Arg1, Arg2, Arg3)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
-        this->FireAsSingle3(fnPtr, arg1, arg2, arg3);
+        auto f = fnPtr;
+        this->FireCurried([f, arg1, arg2, arg3] (T& ref) {(ref.*f)(arg1, arg2, arg3);});
       };
   }
 
@@ -188,7 +162,8 @@ protected:
   std::function<void (Arg1, Arg2, Arg3, Arg4)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) {
-        this->FireAsSingle4(fnPtr, arg1, arg2, arg3, arg4);
+        auto f = fnPtr;
+        this->FireCurried([f, arg1, arg2, arg3, arg4] (T& ref) {(ref.*f)(arg1, arg2, arg3, arg4);});
       };
   }
 
@@ -196,7 +171,8 @@ protected:
   std::function<void (Arg1, Arg2, Arg3, Arg4, Arg5)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) {
-        this->FireAsSingle5(fnPtr, arg1, arg2, arg3, arg4, arg5);
+        auto f = fnPtr;
+        this->FireCurried([f, arg1, arg2, arg3, arg4, arg5] (T& ref) {(ref.*f)(arg1, arg2, arg3, arg4, arg5);});
       };
   }
 
