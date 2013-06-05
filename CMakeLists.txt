@@ -37,6 +37,7 @@ set(
   EventDispatcher.h
   EventManager.h
   EventManager.cpp
+  ExceptionFilter.h
   Factory.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
