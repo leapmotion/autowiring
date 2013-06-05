@@ -3,7 +3,7 @@
 #include <exception>
 #include <functional>
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(_LIBCPP_VERSION)
 #include "exception_ptr.h"
 #endif
 
