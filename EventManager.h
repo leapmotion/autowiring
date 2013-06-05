@@ -20,7 +20,7 @@ class EventReceiver;
 /// <summary>
 /// Service routine called inside Fire calls in order to decide how to handle an exception
 /// </summary>
-void FilterFiringException(std::exception_ptr& except, const EventManagerBase* pSender, EventReceiver* pRecipient);
+void FilterFiringException(const EventManagerBase* pSender, EventReceiver* pRecipient);
 
 /// <summary>
 /// Used to identify event managers
@@ -117,18 +117,16 @@ public:
 
   // HACK!  UGLY HACK!  REQUIRED BECAUSE current_exception NOT SUPPORTED ON APPLE!  YUCKY!
 #ifdef __APPLE__
-  inline void PassFilterFiringException(std::exception& except, EventReceiver* pReceiver) const {
-    std::exception_ptr ptr(except);
-    FilterFiringException(ptr, dynamic_cast<const EventManagerBase*>(this), pReceiver);
-  }
-
-  #define FIRE_CATCHER_BLOCK catch(std::exception& ex) { this->PassFilterFiringException(ex, (*q).get()); }
+  #define FIRE_CATCHER_START {
+  #define FIRE_CATCHER_END }
 #else
+  #define FIRE_CATCHER_START try {
+
   inline void PassFilterFiringException(EventReceiver* pReceiver) const {
-    FilterFiringException(std::current_exception(), dynamic_cast<const EventManagerBase*>(this), pReceiver);
+    FilterFiringException(dynamic_cast<const EventManagerBase*>(this), pReceiver);
   }
 
-  #define FIRE_CATCHER_BLOCK catch(...) { this->PassFilterFiringException((*q).get()); }
+  #define FIRE_CATCHER_END } catch(...) { this->PassFilterFiringException((*q).get()); }
 #endif
 
 protected:
@@ -137,9 +135,9 @@ protected:
     return
       [this, fnPtr] () {
         for(auto q = m_st.begin(); q != m_st.end(); ++q)
-          try {
+          FIRE_CATCHER_START
             (**q.*fnPtr)();
-          } FIRE_CATCHER_BLOCK
+          FIRE_CATCHER_END
       };
   }
 
@@ -148,9 +146,9 @@ protected:
     return
       [this, fnPtr] (Arg1 arg1) {
         for(auto q = m_st.begin(); q != m_st.end(); ++q)
-          try {
+          FIRE_CATCHER_START
             (**q.*fnPtr)(arg1);
-          } FIRE_CATCHER_BLOCK
+          FIRE_CATCHER_END
       };
   }
 
@@ -159,9 +157,9 @@ protected:
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
         for(auto q = m_st.begin(); q != m_st.end(); ++q)
-          try {
+          FIRE_CATCHER_START
             (**q.*fnPtr)(arg1, arg2);
-          } FIRE_CATCHER_BLOCK
+          FIRE_CATCHER_END
       };
   }
 
@@ -170,9 +168,9 @@ protected:
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
         for(auto q = m_st.begin(); q != m_st.end(); ++q)
-          try {
+          FIRE_CATCHER_START
             (**q.*fnPtr)(arg1, arg2, arg3);
-          } FIRE_CATCHER_BLOCK
+          FIRE_CATCHER_END
       };
   }
 
@@ -181,9 +179,9 @@ protected:
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) {
         for(auto q = m_st.begin(); q != m_st.end(); ++q)
-          try {
+          FIRE_CATCHER_START
             (**q.*fnPtr)(arg1, arg2, arg3, arg4);
-          } FIRE_CATCHER_BLOCK
+          FIRE_CATCHER_END
       };
   }
 
@@ -192,9 +190,9 @@ protected:
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) {
         for(auto q = m_st.begin(); q != m_st.end(); ++q)
-          try {
+          FIRE_CATCHER_START
             (**q.*fnPtr)(arg1, arg2, arg3, arg4, arg5);
-          } FIRE_CATCHER_BLOCK
+          FIRE_CATCHER_END
       };
   }
 
