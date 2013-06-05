@@ -1,10 +1,12 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _AUTOWIRER_H
 #define _AUTOWIRER_H
+#include "ExceptionFilter.h"
 #include "EventManager.h"
 #include "DeferredBase.h"
 #include "safe_dynamic_cast.h"
 #include "SharedPtrWrap.h"
+#include <exception>
 #include <functional>
 #include <map>
 #include <memory>
@@ -19,17 +21,11 @@ namespace AutowirerHelpers {
   struct FindByCastInternal;
 
   template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
-  struct AddEventSender;
-
-  template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
-  struct AddEventReceiver;
+  struct AddPolymorphic;
 }
 
 template<class T>
 class Autowired;
-
-template<class T, bool isPolymorphic, bool isAbstract>
-class AutowiredNoForwardDeclaration;
 
 /// <summary>
 /// This is a service class that performs the acutal autowiring operations
@@ -76,6 +72,9 @@ protected:
   t_rcvrSet m_eventReceivers;
   std::set<EventManagerBase*> m_eventSenders;
 
+  // All known exception filters:
+  std::unordered_set<ExceptionFilter*> m_filters;
+
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
@@ -100,17 +99,19 @@ protected:
           pWrap
         )
       );
-
-      // If the value is an event type, we can add it to the collection of event
-      // manager things:
-
-      ((AutowirerHelpers::AddEventSender<T>&)*this)(value.get());
-      ((AutowirerHelpers::AddEventReceiver<T>&)*this)(value);
     }
 
+    // Polymorphic insertion, as required:
+    ((AutowirerHelpers::AddPolymorphic<T>&)*this)(value);
+
+    // Notify any autowiring field that is currently waiting that we have a new member
+    // to be considered.
     UpdateDeferredElements();
   }
 
+  /// <summary>
+  /// Adds the passed event manager to the collection of known event senders, and links it up
+  /// </summary>
   void AddToEventSenders(EventManagerBase* pSender);
 
   /// <summary>
@@ -138,6 +139,27 @@ protected:
 public:
   // Accessor methods:
   std::shared_ptr<Autowirer>& GetParentContext(void) {return m_pParent;}
+
+  /// <summary>
+  /// Filters the passed exception using any registered exception filters, or rethrows.
+  /// </summary>
+  /// <remarks>
+  /// The passed exception is assumed to be a generic exception whose default behavior
+  /// shall be to tear down the context.  It will be the caller's responsibility to ensure
+  /// that this behavior is observed.
+  ///
+  /// If the exception is successfully handled by a filter, this method returns cleanly.
+  /// Otherwise, this method is equivalent to std::rethrow_exception.
+  /// </remarks>
+  void FilterException(std::exception_ptr except);
+
+  /// <summary>
+  /// Filters an exception thrown by an EventManagerBase during a Fire
+  /// </summary>
+  /// <param name="except">The exception being thrown</param>
+  /// <param name="pSender">The sender of the event</param>
+  /// <param name="pRecipient">The recipient of the event</param>
+  void FilterFiringException(std::exception_ptr except, const EventManagerBase* pSender, EventReceiver* pRecipient);
 
   /// <summary>
   /// Enables the passed event receiver to obtain messages broadcast by this context
@@ -223,15 +245,6 @@ public:
   }
 
   /// <summary>
-  /// Specialization for autowired members which have no forward declaration
-  /// </summary>
-  template<class T, bool isPolymorphic, bool isAbstract>
-  std::shared_ptr<T> FindByType(const AutowiredNoForwardDeclaration<T, isPolymorphic, isAbstract>&) {
-    // It's an object, the only thing we're going to attempt is a cast resolution
-    return ((AutowirerHelpers::FindByCastInternal<T, isPolymorphic>&)*this)();
-  }
-
-  /// <summary>
   /// Registers a pointer to be autowired
   /// </summary>
   /// <remarks>
@@ -304,52 +317,46 @@ namespace AutowirerHelpers {
 
 
 template<class T, bool isPolymorphic>
-struct AddEventSender:
+struct AddPolymorphic:
   public Autowirer
 {
 public:
-  inline void operator()(T* ptr) {
-    EventManagerBase* pEventManagerBase = dynamic_cast<EventManagerBase*>(ptr);
-    if(pEventManagerBase)
-      Autowirer::AddToEventSenders(pEventManagerBase);
-  }
-};
-
-template<class T>
-struct AddEventSender<T, false>:
-  public Autowirer
-{
-public:
-  inline void operator()(T*) {}
-};
-
-template<class T, bool isPolymorphic>
-struct AddEventReceiver:
-  public Autowirer
-{
-public:
-  void operator()(const std::shared_ptr<T>& value) {
-    EventReceiver* pRecvr = dynamic_cast<EventReceiver*>(value.get());
-    if(!pRecvr)
-      return;
-
-    // The cast is a loop invariant; store it here for convenience
-    std::shared_ptr<EventReceiver> casted = std::dynamic_pointer_cast<EventReceiver, T>(value);
-    m_eventReceivers.insert(casted);
+  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+    // Add to our local collection:
+    m_eventReceivers.insert(pRecvr);
 
     // Scan the list of compatible senders:
     for(auto q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
-      **q += casted;
+      **q += pRecvr;
     
     // Delegate ascending resolution, where possible.  This ensures that the parent context links
     // this event receiver to compatible senders in the parent context itself.
     if(m_pParent)
-      ((AddEventReceiver<T, true>&)*m_pParent)(value);
+      ((AddPolymorphic<T, true>&)*m_pParent).AddEventReceiver(pRecvr);
+  }
+
+  inline void operator()(std::shared_ptr<T> value) {
+    // Event senders first:
+    {
+      EventManagerBase* pEventManagerBase = dynamic_cast<EventManagerBase*>(value.get());
+      if(pEventManagerBase)
+        Autowirer::AddToEventSenders(pEventManagerBase);
+    }
+
+    // Event receivers second:
+    std::shared_ptr<EventReceiver> pRecvr = std::dynamic_pointer_cast<EventReceiver, T>(value);
+    if(pRecvr)
+      AddEventReceiver(pRecvr);
+
+    // Finally, any exception filters:
+    ExceptionFilter* pFilter = dynamic_cast<ExceptionFilter*>(value.get());
+    if(pFilter)
+      m_filters.insert(pFilter);
   }
 };
 
 template<class T>
-struct AddEventReceiver<T, false>:
+struct AddPolymorphic<T, false>:
   public Autowirer
 {
 public:

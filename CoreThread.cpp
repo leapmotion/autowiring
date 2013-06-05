@@ -32,17 +32,19 @@ void CoreThread::DoRun(void) {
   } catch(dispatch_aborted_exception&) {
     // Okay, this is fine, cleanup by design
   } catch(...) {
-    // Unhandled exception in a context member, dump a description (if we can)
     try {
-      throw;
+      // Ask that the enclosing context filter this exception, if possible:
+      GetContext()->FilterException(std::current_exception());
     } catch(std::exception& ex) {
       std::cerr << ex.what() << std::endl;
     } catch(const char* what) {
       std::cerr << what << std::endl;
+    } catch(...) {
+      // Generic exception, unhandled, we can't print anything off.
     }
     
-    // Now we initiate teardown
-    GetContext()->SignalTerminate();
+    // Context needs to shut down
+    GetContext()->SignalShutdown();
   }
 
   // Unconditionally shut off dispatch delivery:

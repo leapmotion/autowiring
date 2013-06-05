@@ -10,6 +10,14 @@
 #include STL_UNORDERED_SET
 #include <set>
 
+class EventManagerBase;
+class EventReceiver;
+
+/// <summary>
+/// Service routine called inside Fire calls in order to decide how to handle an exception
+/// </summary>
+void FilterFiringException(const EventManagerBase* pSender, EventReceiver* pRecipient);
+
 /// <summary>
 /// Used to identify event managers
 /// </summary>
@@ -35,6 +43,9 @@ struct NoType {};
 template<class T>
 class EventManagerSingle
 {
+public:
+  virtual ~EventManagerSingle(void) {}
+
 protected:
   static_assert(
     std::is_base_of<EventReceiver, T>::value,
@@ -101,40 +112,44 @@ public:
   }
 
 protected:
+  void FireCurried(const std::function<void (T&)>& fn) const {
+    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
+      try {
+        fn(**q);
+      } catch(...) {
+        // Pass control to the context for handling:
+        FilterFiringException(dynamic_cast<const EventManagerBase*>(this), (*q).get());
+      }
+  }
+
   // Multi-argument firing:
   void FireAsSingle0(void (T::*fnPtr)()) const {
-    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
-      (**q.*fnPtr)();
+    FireCurried([fnPtr] (T& ref) {(ref.*fnPtr)();});
   }
 
   template<class Arg1, class Ty1>
   void FireAsSingle1(void (T::*fnPtr)(Arg1 arg1), const Ty1& ty1) const {
-    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
-      (**q.*fnPtr)(ty1);
+    FireCurried([fnPtr, ty1] (T& ref) {(ref.*fnPtr)(ty1);});
   }
   
   template<class Arg1, class Arg2, class Ty1, class Ty2>
   void FireAsSingle2(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2), const Ty1& ty1, const Ty2& ty2) const {
-    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
-      (**q.*fnPtr)(ty1, ty2);
+    FireCurried([fnPtr, ty1, ty2] (T& ref) {(ref.*fnPtr)(ty1, ty2);});
   }
   
   template<class Arg1, class Arg2, class Arg3, class Ty1, class Ty2, class Ty3>
   void FireAsSingle3(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3) const {
-    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
-      (**q.*fnPtr)(ty1, ty2, ty3);
+    FireCurried([fnPtr, ty1, ty2, ty3] (T& ref) {(ref.*fnPtr)(ty1, ty2, ty3);});
   }
   
   template<class Arg1, class Arg2, class Arg3, class Arg4, class Ty1, class Ty2, class Ty3, class Ty4>
   void FireAsSingle4(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3, Arg4 ty4), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3, const Ty4& ty4) const {
-    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
-      (**q.*fnPtr)(ty1, ty2, ty3, ty4);
+    FireCurried([fnPtr, ty1, ty2, ty3, ty4] (T& ref) {(ref.*fnPtr)(ty1, ty2, ty3, ty4);});
   }
   
   template<class Arg1, class Arg2, class Arg3, class Arg4, class Arg5, class Ty1, class Ty2, class Ty3, class Ty4, class Ty5>
   void FireAsSingle5(void (T::*fnPtr)(Arg1 arg1, Arg2 arg2, Arg3 ty3, Arg4 ty4, Arg5 ty5), const Ty1& ty1, const Ty2& ty2, const Ty3& ty3, const Ty4& ty4, const Ty5& ty5) const {
-    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
-      (**q.*fnPtr)(ty1, ty2, ty3, ty4, ty5);
+    FireCurried([fnPtr, ty1, ty2, ty3, ty4, ty5] (T& ref) {(ref.*fnPtr)(ty1, ty2, ty3, ty4, ty5);});
   }
 
   // Two-parenthetical invocations
