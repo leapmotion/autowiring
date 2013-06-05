@@ -125,7 +125,7 @@ protected:
             (**q.*fnPtr)();
           } catch(...) {
             // Pass control to the context for handling:
-            PassFilterFiringException((*q).get());
+            this->PassFilterFiringException((*q).get());
           }
       };
   }
@@ -139,7 +139,7 @@ protected:
             (**q.*fnPtr)(arg1);
           } catch(...) {
             // Pass control to the context for handling:
-            PassFilterFiringException((*q).get());
+            this->PassFilterFiringException((*q).get());
           }
       };
   }
@@ -153,7 +153,7 @@ protected:
             (**q.*fnPtr)(arg1, arg2);
           } catch(...) {
             // Pass control to the context for handling:
-            PassFilterFiringException((*q).get());
+            this->PassFilterFiringException((*q).get());
           }
       };
   }
@@ -167,7 +167,7 @@ protected:
             (**q.*fnPtr)(arg1, arg2, arg3);
           } catch(...) {
             // Pass control to the context for handling:
-            PassFilterFiringException((*q).get());
+            this->PassFilterFiringException((*q).get());
           }
       };
   }
@@ -181,7 +181,7 @@ protected:
             (**q.*fnPtr)(arg1, arg2, arg3, arg4);
           } catch(...) {
             // Pass control to the context for handling:
-            PassFilterFiringException((*q).get());
+            this->PassFilterFiringException((*q).get());
           }
       };
   }
@@ -195,7 +195,7 @@ protected:
             (**q.*fnPtr)(arg1, arg2, arg3, arg4, arg5);
           } catch(...) {
             // Pass control to the context for handling:
-            PassFilterFiringException((*q).get());
+            this->PassFilterFiringException((*q).get());
           }
       };
   }
