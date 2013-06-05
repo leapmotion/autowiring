@@ -141,7 +141,7 @@ public:
   std::shared_ptr<Autowirer>& GetParentContext(void) {return m_pParent;}
 
   /// <summary>
-  /// Filters the passed exception using any registered exception filters, or rethrows.
+  /// Filters std::current_exception using any registered exception filters, or rethrows.
   /// </summary>
   /// <remarks>
   /// The passed exception is assumed to be a generic exception whose default behavior
@@ -151,15 +151,14 @@ public:
   /// If the exception is successfully handled by a filter, this method returns cleanly.
   /// Otherwise, this method is equivalent to std::rethrow_exception.
   /// </remarks>
-  void FilterException(std::exception_ptr except);
+  void FilterException(void);
 
   /// <summary>
-  /// Filters an exception thrown by an EventManagerBase during a Fire
+  /// Filters a std::current_exception thrown by an EventManagerBase during a Fire
   /// </summary>
-  /// <param name="except">The exception being thrown</param>
   /// <param name="pSender">The sender of the event</param>
   /// <param name="pRecipient">The recipient of the event</param>
-  void FilterFiringException(std::exception_ptr except, const EventManagerBase* pSender, EventReceiver* pRecipient);
+  void FilterFiringException(const EventManagerBase* pSender, EventReceiver* pRecipient);
 
   /// <summary>
   /// Enables the passed event receiver to obtain messages broadcast by this context

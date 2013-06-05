@@ -1,6 +1,7 @@
 #ifndef _EXCEPTION_FILTER_H
 #define _EXCEPTION_FILTER_H
 #include <exception>
+#include <functional>
 
 #ifdef __APPLE__
 #include "exception_ptr.h"
@@ -21,7 +22,7 @@ class EventReceiver;
 /// follows:
 ///
 /// try {
-///   rethrow_exception(except);
+///   rethrower(except);
 /// } catch(custom_type_1&) {
 ///   ...handling code...
 /// } catch(custom_type_2&) {
@@ -46,20 +47,28 @@ public:
   /// <summary>
   /// This method is invoked when an exception has been thrown by CoreThread::Run
   /// </summary>
+  /// <param name="rethrower">A function which, when called, will throw the exception being filtered</param>
   /// <remarks>
   /// Such an exception is treated as a fatal exception, and will unconditionally result
   /// in the enclosing context being torn down.  Filters MUST NOT attempt to alter this
   /// behavior.  If this behavior is not desirable, greater care should be taken to
   /// prevent certain exceptions from being unhandled.
+  ///
+  /// The rethrower lambda must be called before this filter method exits.  Attempting to cache this function
+  /// will result in undefined behavior.
   /// </remarks>
-  virtual void Filter(std::exception_ptr except) {};
+  virtual void Filter(const std::function<void()>& rethrower) {};
   
   /// <summary>
-  /// This is an exception thrown during a call to Fire
+  /// This is an exception filter for exceptions thrown during a call to Fire
   /// </summary>
-  /// <param name="except">The exception that was thrown</param>
+  /// <param name="rethrower">A function which, when called, will throw the exception being filtered</param>
   /// <param name="pRecipient">The target of the call</param>
-  virtual void Filter(std::exception_ptr& except, const EventManagerBase* pSender, EventReceiver* pRecipient) {}
+  /// <remarks>
+  /// The rethrower lambda must be called before this filter method exits.  Attempting to cache this function
+  /// will result in undefined behavior.
+  /// </remarks>
+  virtual void Filter(const std::function<void()>& rethrower, const EventManagerBase* pSender, EventReceiver* pRecipient) {}
 };
 
 #endif

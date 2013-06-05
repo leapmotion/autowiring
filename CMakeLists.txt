@@ -64,14 +64,6 @@ else()
   )
 endif()
 
-if(BUILD_MAC)
-  set(Autowiring_SRCS
-    exception_ptr.h
-    exception_ptr.cpp
-    ${Autowiring_SRCS}
-  )
-endif()
-
 set(
   AutowiringTest_SRCS
   ContextCleanupTest.h
