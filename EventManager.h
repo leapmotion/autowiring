@@ -111,23 +111,22 @@ public:
       m_dispatch.erase(pDispatch);
   }
 
-protected:
-  void FireCurried(const std::function<void (T&)>& fn) const {
-    for(typename t_listenerSet::const_iterator q = m_st.begin(); q != m_st.end(); ++q)
-      try {
-        fn(**q);
-      } catch(...) {
-        // Pass control to the context for handling:
-        FilterFiringException(dynamic_cast<const EventManagerBase*>(this), (*q).get());
-      }
+  inline void PassFilterFiringException(EventReceiver* pReceiver) const {
+    FilterFiringException(dynamic_cast<const EventManagerBase*>(this), pReceiver);
   }
 
+protected:
   // Two-parenthetical invocations
   std::function<void ()> Fire(void (T::*fnPtr)()) const {
     return
       [this, fnPtr] () {
-        auto f = fnPtr;
-        this->FireCurried([f] (T& ref) {(ref.*f)();});
+        for(auto q = m_st.begin(); q != m_st.end(); ++q)
+          try {
+            (**q.*fnPtr)();
+          } catch(...) {
+            // Pass control to the context for handling:
+            PassFilterFiringException((*q).get());
+          }
       };
   }
 
@@ -135,8 +134,13 @@ protected:
   std::function<void (Arg1)> Fire(void (T::*fnPtr)(Arg1)) const {
     return
       [this, fnPtr] (Arg1 arg1) {
-        auto f = fnPtr;
-        this->FireCurried([f, arg1] (T& ref) {(ref.*f)(arg1);});
+        for(auto q = m_st.begin(); q != m_st.end(); ++q)
+          try {
+            (**q.*fnPtr)(arg1);
+          } catch(...) {
+            // Pass control to the context for handling:
+            PassFilterFiringException((*q).get());
+          }
       };
   }
 
@@ -144,8 +148,13 @@ protected:
   std::function<void (Arg1, Arg2)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
-        auto f = fnPtr;
-        this->FireCurried([f, arg1, arg2] (T& ref) {(ref.*f)(arg1, arg2);});
+        for(auto q = m_st.begin(); q != m_st.end(); ++q)
+          try {
+            (**q.*fnPtr)(arg1, arg2);
+          } catch(...) {
+            // Pass control to the context for handling:
+            PassFilterFiringException((*q).get());
+          }
       };
   }
 
@@ -153,8 +162,13 @@ protected:
   std::function<void (Arg1, Arg2, Arg3)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
-        auto f = fnPtr;
-        this->FireCurried([f, arg1, arg2, arg3] (T& ref) {(ref.*f)(arg1, arg2, arg3);});
+        for(auto q = m_st.begin(); q != m_st.end(); ++q)
+          try {
+            (**q.*fnPtr)(arg1, arg2, arg3);
+          } catch(...) {
+            // Pass control to the context for handling:
+            PassFilterFiringException((*q).get());
+          }
       };
   }
 
@@ -162,8 +176,13 @@ protected:
   std::function<void (Arg1, Arg2, Arg3, Arg4)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) {
-        auto f = fnPtr;
-        this->FireCurried([f, arg1, arg2, arg3, arg4] (T& ref) {(ref.*f)(arg1, arg2, arg3, arg4);});
+        for(auto q = m_st.begin(); q != m_st.end(); ++q)
+          try {
+            (**q.*fnPtr)(arg1, arg2, arg3, arg4);
+          } catch(...) {
+            // Pass control to the context for handling:
+            PassFilterFiringException((*q).get());
+          }
       };
   }
 
@@ -171,8 +190,13 @@ protected:
   std::function<void (Arg1, Arg2, Arg3, Arg4, Arg5)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) {
-        auto f = fnPtr;
-        this->FireCurried([f, arg1, arg2, arg3, arg4, arg5] (T& ref) {(ref.*f)(arg1, arg2, arg3, arg4, arg5);});
+        for(auto q = m_st.begin(); q != m_st.end(); ++q)
+          try {
+            (**q.*fnPtr)(arg1, arg2, arg3, arg4, arg5);
+          } catch(...) {
+            // Pass control to the context for handling:
+            PassFilterFiringException((*q).get());
+          }
       };
   }
 
