@@ -114,11 +114,40 @@ void Autowirer::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
   }
 
   // Pass control to the event adder helper:
-  ((AutowirerHelpers::AddEventReceiver<EventReceiver>&)*this)(pSnooper);
+  ((AutowirerHelpers::AddPolymorphic<EventReceiver>&)*this).AddEventReceiver(pSnooper);
 }
 
-void Autowirer::AddContextMember(ContextMember* ptr)
-{
+void Autowirer::FilterException(std::exception_ptr except) {
+  bool handled = false;
+  for(auto q = m_filters.begin(); q != m_filters.end(); q++)
+    try {
+      (*q)->Filter(except);
+      handled = true;
+    } catch(...) {
+      // Do nothing
+    }
+
+  // Return indicating whether the exception was handled:
+  if(!handled)
+    std::rethrow_exception(except);
+}
+
+void Autowirer::FilterFiringException(std::exception_ptr except, const EventManagerBase* pSender, EventReceiver* pRecipient) {
+  bool handled = false;
+  for(auto q = m_filters.begin(); q != m_filters.end(); q++)
+    try {
+      (*q)->Filter(except, pSender, pRecipient);
+      handled = true;
+    } catch(...) {
+      // Do nothing
+    }
+
+  // Return indicating whether the exception was handled:
+  if(!handled)
+    std::rethrow_exception(except);
+}
+
+void Autowirer::AddContextMember(ContextMember* ptr) {
   boost::lock_guard<boost::mutex> lk(m_lock);
 
   // Always add to the set of context members
