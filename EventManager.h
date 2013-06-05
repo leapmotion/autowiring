@@ -112,10 +112,6 @@ public:
   }
 
   // HACK!  UGLY HACK!  REQUIRED BECAUSE current_exception NOT SUPPORTED ON APPLE!  YUCKY!
-#ifdef __APPLE__
-  #define FIRE_CATCHER_START {
-  #define FIRE_CATCHER_END }
-#else
   #define FIRE_CATCHER_START try {
 
   inline void PassFilterFiringException(EventReceiver* pReceiver) const {
@@ -123,7 +119,6 @@ public:
   }
 
   #define FIRE_CATCHER_END } catch(...) { this->PassFilterFiringException((*q).get()); }
-#endif
 
 protected:
   // Two-parenthetical invocations
