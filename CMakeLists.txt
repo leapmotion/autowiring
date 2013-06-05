@@ -82,6 +82,8 @@ set(
   DependentContextTest.cpp
   EnclosedContextTestBase.h
   EnclosedContextTestBase.cpp
+  ExceptionFilterTest.h
+  ExceptionFilterTest.cpp
   EventReceiverTest.h
   EventReceiverTest.cpp
   FactoryTest.h
