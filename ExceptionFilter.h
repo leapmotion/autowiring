@@ -2,6 +2,10 @@
 #define _EXCEPTION_FILTER_H
 #include <exception>
 
+#ifdef __APPLE__
+#include "exception_ptr.h"
+#endif
+
 class EventManagerBase;
 class EventReceiver;
 
@@ -37,6 +41,8 @@ class EventReceiver;
 class ExceptionFilter
 {
 public:
+  virtual ~ExceptionFilter(void) {}
+
   /// <summary>
   /// This method is invoked when an exception has been thrown by CoreThread::Run
   /// </summary>

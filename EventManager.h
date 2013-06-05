@@ -13,10 +13,14 @@
 class EventManagerBase;
 class EventReceiver;
 
+#ifdef __APPLE__
+#include "exception_ptr.h"
+#endif
+
 /// <summary>
 /// Service routine called inside Fire calls in order to decide how to handle an exception
 /// </summary>
-void FilterFiringException(const EventManagerBase* pSender, EventReceiver* pRecipient);
+void FilterFiringException(std::exception_ptr& except, const EventManagerBase* pSender, EventReceiver* pRecipient);
 
 /// <summary>
 /// Used to identify event managers
@@ -111,9 +115,21 @@ public:
       m_dispatch.erase(pDispatch);
   }
 
-  inline void PassFilterFiringException(EventReceiver* pReceiver) const {
-    FilterFiringException(dynamic_cast<const EventManagerBase*>(this), pReceiver);
+  // HACK!  UGLY HACK!  REQUIRED BECAUSE current_exception NOT SUPPORTED ON APPLE!  YUCKY!
+#ifdef __APPLE__
+  inline void PassFilterFiringException(std::exception& except, EventReceiver* pReceiver) const {
+    std::exception_ptr ptr(except);
+    FilterFiringException(ptr, dynamic_cast<const EventManagerBase*>(this), pReceiver);
   }
+
+  #define FIRE_CATCHER_BLOCK catch(std::exception& ex) { this->PassFilterFiringException(ex, (*q).get()); }
+#else
+  inline void PassFilterFiringException(EventReceiver* pReceiver) const {
+    FilterFiringException(std::current_exception(), dynamic_cast<const EventManagerBase*>(this), pReceiver);
+  }
+
+  #define FIRE_CATCHER_BLOCK catch(...) { this->PassFilterFiringException((*q).get()); }
+#endif
 
 protected:
   // Two-parenthetical invocations
@@ -123,10 +139,7 @@ protected:
         for(auto q = m_st.begin(); q != m_st.end(); ++q)
           try {
             (**q.*fnPtr)();
-          } catch(...) {
-            // Pass control to the context for handling:
-            this->PassFilterFiringException((*q).get());
-          }
+          } FIRE_CATCHER_BLOCK
       };
   }
 
@@ -137,10 +150,7 @@ protected:
         for(auto q = m_st.begin(); q != m_st.end(); ++q)
           try {
             (**q.*fnPtr)(arg1);
-          } catch(...) {
-            // Pass control to the context for handling:
-            this->PassFilterFiringException((*q).get());
-          }
+          } FIRE_CATCHER_BLOCK
       };
   }
 
@@ -151,10 +161,7 @@ protected:
         for(auto q = m_st.begin(); q != m_st.end(); ++q)
           try {
             (**q.*fnPtr)(arg1, arg2);
-          } catch(...) {
-            // Pass control to the context for handling:
-            this->PassFilterFiringException((*q).get());
-          }
+          } FIRE_CATCHER_BLOCK
       };
   }
 
@@ -165,10 +172,7 @@ protected:
         for(auto q = m_st.begin(); q != m_st.end(); ++q)
           try {
             (**q.*fnPtr)(arg1, arg2, arg3);
-          } catch(...) {
-            // Pass control to the context for handling:
-            this->PassFilterFiringException((*q).get());
-          }
+          } FIRE_CATCHER_BLOCK
       };
   }
 
@@ -179,10 +183,7 @@ protected:
         for(auto q = m_st.begin(); q != m_st.end(); ++q)
           try {
             (**q.*fnPtr)(arg1, arg2, arg3, arg4);
-          } catch(...) {
-            // Pass control to the context for handling:
-            this->PassFilterFiringException((*q).get());
-          }
+          } FIRE_CATCHER_BLOCK
       };
   }
 
@@ -193,10 +194,7 @@ protected:
         for(auto q = m_st.begin(); q != m_st.end(); ++q)
           try {
             (**q.*fnPtr)(arg1, arg2, arg3, arg4, arg5);
-          } catch(...) {
-            // Pass control to the context for handling:
-            this->PassFilterFiringException((*q).get());
-          }
+          } FIRE_CATCHER_BLOCK
       };
   }
 
