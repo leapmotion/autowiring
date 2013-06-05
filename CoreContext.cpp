@@ -223,7 +223,7 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& context) {
   return os;
 }
 
-void FilterFiringException(const EventManagerBase* pSender, EventReceiver* pRecipient) {
+void FilterFiringException(std::exception_ptr& except, const EventManagerBase* pSender, EventReceiver* pRecipient) {
   // Obtain the current context and pass control:
-  CoreContext::CurrentContext()->FilterFiringException(std::current_exception(), pSender, pRecipient);
+  CoreContext::CurrentContext()->FilterFiringException(except, pSender, pRecipient);
 }

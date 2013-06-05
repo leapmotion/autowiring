@@ -31,10 +31,17 @@ void CoreThread::DoRun(void) {
     Run();
   } catch(dispatch_aborted_exception&) {
     // Okay, this is fine, cleanup by design
-  } catch(...) {
+  }
+#ifdef __APPLE__
+  catch(std::exception& except) {
+    try {
+      GetContext()->FilterException(std::exception_ptr(except));
+#else
+  catch(...) {
     try {
       // Ask that the enclosing context filter this exception, if possible:
       GetContext()->FilterException(std::current_exception());
+#endif
     } catch(std::exception& ex) {
       std::cerr << ex.what() << std::endl;
     } catch(const char* what) {
