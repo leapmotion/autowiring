@@ -13,10 +13,6 @@
 class EventManagerBase;
 class EventReceiver;
 
-#if defined(__APPLE__) && !defined(_LIBCPP_VERSION)
-#include "exception_ptr.h"
-#endif
-
 /// <summary>
 /// Service routine called inside Fire calls in order to decide how to handle an exception
 /// </summary>

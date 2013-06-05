@@ -15,18 +15,6 @@ CoreThread::CoreThread(const char* pName):
 {
 }
 
-void DebugPrintCurrentExceptionInformation() {
-#if PLATFORM_RETHROW_EXISTS
-  try {
-    std::rethrow_exception(std::current_exception());
-  } catch(std::exception& ex) {
-    std::cerr << ex.what() << std::endl;
-  } catch(...) {
-    // Nothing can be done, we don't know what exception type this is.
-  }
-#endif
-}
-
 void CoreThread::DoRun(void) {
   ASSERT(m_running);
 
@@ -50,7 +38,7 @@ void CoreThread::DoRun(void) {
       GetContext()->FilterException();
     } catch(...) {
       // Generic exception, unhandled, we can't print anything off.
-      DebugPrintCurrentExceptionInformation();
+      Autowirer::DebugPrintCurrentExceptionInformation();
     }
     
     // Signal shutdown on the enclosing context

@@ -6,6 +6,20 @@
 #include "AutowirableSlot.h"
 #include <list>
 
+// Due to duplicate symbols (boost::tag_original_exception_type) being reported
+// by the linker on Mac, keep all of the "std::exception_ptr" (really
+// boost::exception_ptr on Mac using libstdc++) usage in the same file. This
+// limitation may be lifted when we no longer need to depend on libstdc++.
+#include <exception>
+#if defined(__APPLE__) && !defined(_LIBCPP_VERSION)
+#include <boost/exception_ptr.hpp>
+namespace std {
+  using boost::exception_ptr;
+  using boost::rethrow_exception;
+  using boost::current_exception;
+}
+#endif
+
 using namespace std;
 
 Autowirer::Autowirer(const std::shared_ptr<Autowirer>& pParent):
@@ -118,17 +132,8 @@ void Autowirer::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
 }
 
 void Autowirer::FilterException(void) {
-  // Unfortunately, not all platforms support rethrow or current_exception.
-  // Therefore, we short-circuit this function if it's unsupported.
-  // We would like to compile as much of this function as possible, though, which is why it's not all
-  // preproc'd out
-  if(!PLATFORM_RETHROW_EXISTS)
-    return;
-
   auto rethrower = [] () {
-#if PLATFORM_RETHROW_EXISTS
     std::rethrow_exception(std::current_exception());
-#endif
   };
 
   bool handled = false;
@@ -146,12 +151,8 @@ void Autowirer::FilterException(void) {
 }
 
 void Autowirer::FilterFiringException(const EventManagerBase* pSender, EventReceiver* pRecipient) {
-  if(!PLATFORM_RETHROW_EXISTS)
-    return;
   auto rethrower = [] () {
-#if PLATFORM_RETHROW_EXISTS
     std::rethrow_exception(std::current_exception());
-#endif
   };
 
   bool handled = false;
@@ -212,4 +213,14 @@ void Autowirer::Dump(std::ostream& os) const {
 std::ostream& operator<<(std::ostream& os, const Autowirer& rhs) {
   rhs.Dump(os);
   return os;
+}
+
+void Autowirer::DebugPrintCurrentExceptionInformation() {
+  try {
+    std::rethrow_exception(std::current_exception());
+  } catch(std::exception& ex) {
+    std::cerr << ex.what() << std::endl;
+  } catch(...) {
+    // Nothing can be done, we don't know what exception type this is.
+  }
 }
