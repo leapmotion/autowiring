@@ -71,6 +71,16 @@ public:
   }
 };
 
+class NoCopyClass
+{
+public:
+  explicit NoCopyClass(NoCopyClass& rhs):
+    m_value(101)
+  {}
+
+  int m_value;
+};
+
 class CallableInterface:
   public EventReceiver
 {
@@ -81,6 +91,8 @@ public:
   virtual void CopyVectorForwarded(vector<int>&& vec) = 0;
   virtual void TrackCopy(CopyCounter&& ctr) = 0;
   virtual void AllDone(void) = 0;
+
+  virtual void NoCopyMethod(NoCopyClass& noCopy) {}
 };
 
 class SimpleSender:
@@ -146,6 +158,9 @@ public:
 
   void TrackCopy(CopyCounter&& ctr) override {
     m_myCtr = std::forward<CopyCounter>(ctr);
+  }
+
+  void NoCopyMethod(NoCopyClass& noCopy) override {
   }
 
   // Trivial shutdown override
@@ -392,4 +407,12 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
 
   // Fire the event again, this shouldn't cause anything to blow up!
   sender->Fire(&CallableInterface::ZeroArgs)();
+}
+
+TEST_F(EventReceiverTest, VerifyNoCopyCallable) {
+  AutoRequired<SimpleSender> sender;
+  AutoRequired<SimpleReceiver> receiver;
+
+  NoCopyClass method;
+  sender->Fire(&CallableInterface::NoCopyMethod)(method);
 }
