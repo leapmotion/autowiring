@@ -12,11 +12,11 @@ class custom_exception:
 public:
   custom_exception(int value):
     m_value(value)
-    {
-      std::stringstream ss;
-      ss << "custom_exception: " << m_value;
-      m_what = ss.str();
-    }
+  {
+    std::stringstream ss;
+    ss << "custom_exception: " << m_value;
+    m_what = ss.str();
+  }
 
   int m_value;
   std::string m_what;
