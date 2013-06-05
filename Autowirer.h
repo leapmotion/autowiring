@@ -310,6 +310,8 @@ public:
   void NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener);
 
   void Dump(std::ostream& os) const;
+
+  static void DebugPrintCurrentExceptionInformation();
 };
 
 namespace AutowirerHelpers {

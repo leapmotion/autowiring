@@ -1,12 +1,6 @@
+// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _EXCEPTION_FILTER_H
 #define _EXCEPTION_FILTER_H
-#include <exception>
-#include <functional>
-
-#if defined(__APPLE__) && !defined(_LIBCPP_VERSION)
-#include "exception_ptr.h"
-#endif
-
 class EventManagerBase;
 class EventReceiver;
 

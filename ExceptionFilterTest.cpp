@@ -1,8 +1,10 @@
+// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "ExceptionFilterTest.h"
 #include "EventReceiver.h"
 #include "ExceptionFilter.h"
 #include <stdexcept>
+#include <sstream>
 
 class custom_exception:
   public std::exception
@@ -10,9 +12,18 @@ class custom_exception:
 public:
   custom_exception(int value):
     m_value(value)
-    {}
+    {
+      std::stringstream ss;
+      ss << "custom_exception: " << m_value;
+      m_what = ss.str();
+    }
 
   int m_value;
+  std::string m_what;
+
+  virtual const char* what() const noexcept {
+    return m_what.c_str();
+  }
 };
 
 class ThrowingListener:
@@ -93,13 +104,7 @@ public:
   }
 };
 
-#if PLATFORM_RETHROW_EXISTS
-  #define ONLY_PLATFORM_RETHROW_EXISTS(x) x
-#else
-  #define ONLY_PLATFORM_RETHROW_EXISTS(x) DISABLED_##x
-#endif
-
-TEST_F(ExceptionFilterTest, ONLY_PLATFORM_RETHROW_EXISTS(ThreadThrowsCheck)) {
+TEST_F(ExceptionFilterTest, ThreadThrowsCheck) {
   // Add the exception filter type to the context first
   AutoRequired<GenericFilter> filter;
 
@@ -116,7 +121,7 @@ TEST_F(ExceptionFilterTest, ONLY_PLATFORM_RETHROW_EXISTS(ThreadThrowsCheck)) {
   EXPECT_FALSE(filter->m_generic) << "Filter did not correctly filter out a specific exception";
 }
 
-TEST_F(ExceptionFilterTest, ONLY_PLATFORM_RETHROW_EXISTS(FireThrowsCheck)) {
+TEST_F(ExceptionFilterTest, FireThrowsCheck) {
   // Add the generic filter:
   AutoRequired<GenericFilter> filter;
 
