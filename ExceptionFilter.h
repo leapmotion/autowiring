@@ -1,6 +1,8 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _EXCEPTION_FILTER_H
 #define _EXCEPTION_FILTER_H
+#include FUNCTIONAL_HEADER
+
 class EventManagerBase;
 class EventReceiver;
 

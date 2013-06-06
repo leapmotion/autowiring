@@ -5,9 +5,7 @@
 #include "CoreContext.h"
 #include "AutowirableSlot.h"
 #include <list>
-
 #include EXCEPTION_PTR_HEADER
-EXCEPTION_PTR_DECL()
 
 using namespace std;
 
