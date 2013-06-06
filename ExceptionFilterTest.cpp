@@ -6,16 +6,6 @@
 #include <stdexcept>
 #include <sstream>
 
-class throw_exception_util {
-public:
-  template<class T>
-  inline throw_exception_util(T&& type) {
-    throw type;
-  }
-};
-
-#define throw_exception (throw_exception_util)
-
 class custom_exception:
   public std::exception
 {
