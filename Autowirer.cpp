@@ -6,19 +6,8 @@
 #include "AutowirableSlot.h"
 #include <list>
 
-// Due to duplicate symbols (boost::tag_original_exception_type) being reported
-// by the linker on Mac, keep all of the "std::exception_ptr" (really
-// boost::exception_ptr on Mac using libstdc++) usage in the same file. This
-// limitation may be lifted when we no longer need to depend on libstdc++.
-#include <exception>
-#if defined(__APPLE__) && !defined(_LIBCPP_VERSION)
-#include <boost/exception_ptr.hpp>
-namespace std {
-  using boost::exception_ptr;
-  using boost::rethrow_exception;
-  using boost::current_exception;
-}
-#endif
+#include EXCEPTION_PTR_HEADER
+EXCEPTION_PTR_DECL()
 
 using namespace std;
 
