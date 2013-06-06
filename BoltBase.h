@@ -24,7 +24,7 @@ public:
   /// A notification broadcast when a context of the desired name has been created
   /// </summary>
   /// <remarks>
-  /// The current context is guaranteed to be the newly created context.
+  /// The current context at the time of the call is guaranteed to be the newly created context.
   /// </remarks>
   virtual void ContextCreated(void) = 0;
 };
