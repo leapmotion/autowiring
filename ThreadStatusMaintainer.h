@@ -1,5 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#pragma once
+#ifndef _THREAD_STATUS_MAINTAINER_H
+#define _THREAD_STATUS_MAINTAINER_H
+#include SHARED_PTR_HEADER
 
 class CoreContext;
 class CoreThread;
@@ -18,4 +20,4 @@ private:
 public:
   void operator()();
 };
-
+#endif
