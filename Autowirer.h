@@ -6,12 +6,12 @@
 #include "DeferredBase.h"
 #include "safe_dynamic_cast.h"
 #include "SharedPtrWrap.h"
-#include <exception>
-#include <functional>
 #include <map>
-#include <memory>
 #include <string>
 #include <boost/thread/mutex.hpp>
+#include FUNCTIONAL_HEADER
+#include EXCEPTION_PTR_HEADER
+#include SHARED_PTR_HEADER
 
 class ContextMember;
 class AutowirableSlot;

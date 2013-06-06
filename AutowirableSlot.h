@@ -2,6 +2,8 @@
 #ifndef _AUTOWIRABLE_SLOT_H
 #define _AUTOWIRABLE_SLOT_H
 #include "ocuConfig.h" // for cpp11.h
+#include FUNCTIONAL_HEADER
+#include SHARED_PTR_HEADER
 #include <functional>
 #include <memory>
 
