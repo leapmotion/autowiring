@@ -239,7 +239,7 @@ public:
     q++;
     if(q != m_byType.end() && q->first == typeName)
       // Ambiguous match, exception:
-      throw std::runtime_error("An autowiring operation resulted in an ambiguous match");
+      throw_rethrowable std::runtime_error("An autowiring operation resulted in an ambiguous match");
     return retVal;
   }
 
@@ -288,7 +288,7 @@ public:
 
     DeferredBase*& pDeferred = m_deferred[&slot];
     if(pDeferred)
-      throw std::runtime_error("A slot is being autowired, but a deferred instance already exists at this location");
+      throw_rethrowable std::runtime_error("A slot is being autowired, but a deferred instance already exists at this location");
     pDeferred = new Deferred(this, slot);
   }
 
@@ -393,7 +393,7 @@ struct FindByCastInternal:
 
         // Verify that we didn't try storing something already
         if(matchedObject)
-          throw std::runtime_error("An autowiring operation resulted in an ambiguous match");
+          throw_rethrowable std::runtime_error("An autowiring operation resulted in an ambiguous match");
 
         // Record this value to be returned
         matchedObject.swap(obj);

@@ -99,7 +99,7 @@ void Autowirer::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
       cur = cur->GetParentContext();
 
     if(!cur)
-      throw std::runtime_error("A context member attempted to snoop a context which was not a child context");
+      throw_rethrowable std::runtime_error("A context member attempted to snoop a context which was not a child context");
   } else {
     // Dynamic membership check:
     const type_info& info = typeid(*pSnooper);
@@ -111,7 +111,7 @@ void Autowirer::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
         break;
     }
     if(!cur)
-      throw std::runtime_error("A generic type attempted to snoop a context which was not a child context");
+      throw_rethrowable std::runtime_error("A generic type attempted to snoop a context which was not a child context");
   }
 
   // Pass control to the event adder helper:
@@ -176,7 +176,7 @@ void Autowirer::NotifyWhenAutowired(const AutowirableSlot& slot, const std::func
       // Try the parent context first, it could be present there
       return m_pParent->NotifyWhenAutowired(slot, listener);
     else
-      throw std::domain_error("An attempt was made to observe a principal not in this context");
+      throw_rethrowable std::domain_error("An attempt was made to observe a principal not in this context");
   }
 
   q->second->AddPostBindingListener(listener);

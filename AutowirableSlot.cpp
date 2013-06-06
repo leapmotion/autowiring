@@ -32,6 +32,6 @@ void AutowirableSlot::NotifyWhenAutowired(const std::function<void()>& listener)
 std::shared_ptr<CoreContext> AutowirableSlot::LockContext(void) {
   std::shared_ptr<CoreContext> retVal = m_context.lock();
   if(!retVal)
-    throw std::runtime_error("Attempted to autowire in a context that is tearing down");
+    throw_rethrowable std::runtime_error("Attempted to autowire in a context that is tearing down");
   return retVal;
 }
