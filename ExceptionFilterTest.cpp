@@ -45,7 +45,7 @@ public:
   }
 
   void Run(void) override {
-    throw_exception custom_exception(100);
+    throw_rethrowable custom_exception(100);
   }
 };
 
