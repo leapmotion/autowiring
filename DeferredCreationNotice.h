@@ -1,7 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _DEFERRED_CREATION_NOTICE_H
 #define _DEFERRED_CREATION_NOTICE_H
-#include <memory>
+#include SHARED_PTR_HEADER
 
 class CoreContext;
 

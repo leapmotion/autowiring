@@ -2,7 +2,7 @@
 #ifndef _CONTEXT_MEMBER_H
 #define _CONTEXT_MEMBER_H
 #include "Object.h"
-#include <memory>
+#include SHARED_PTR_HEADER
 
 class CoreContext;
 

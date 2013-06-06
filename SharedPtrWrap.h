@@ -1,8 +1,10 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#pragma once
+#ifndef _SHARED_PTR_WRAP_H
+#define _SHARED_PTR_WRAP_H
 #include "Object.h"
 #include <map>
-#include <memory>
+#include SHARED_PTR_HEADER
+#include TYPE_TRAITS_HEADER
 
 class Autowirer;
 class ContextMember;
@@ -84,3 +86,4 @@ public:
   }
 };
 
+#endif
