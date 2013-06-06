@@ -6,6 +6,16 @@
 #include <stdexcept>
 #include <sstream>
 
+class throw_exception_util {
+public:
+  template<class T>
+  inline throw_exception_util(T&& type) {
+    throw type;
+  }
+};
+
+#define throw_exception (throw_exception_util)
+
 class custom_exception:
   public std::exception
 {
@@ -16,6 +26,9 @@ public:
     std::stringstream ss;
     ss << "custom_exception: " << m_value;
     m_what = ss.str();
+  }
+
+  ~custom_exception() noexcept {
   }
 
   int m_value;
@@ -42,7 +55,7 @@ public:
   }
 
   void Run(void) override {
-    throw custom_exception(100);
+    throw_exception custom_exception(100);
   }
 };
 
