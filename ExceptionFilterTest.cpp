@@ -54,7 +54,7 @@ class ThrowsWhenFired:
 {
 public:
   void DoThrow(void) override {
-    throw custom_exception(200);
+    throw_rethrowable custom_exception(200);
   }
 };
 
