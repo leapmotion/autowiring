@@ -7,7 +7,11 @@
 #include "EventReceiver.h"
 #include "SharedPtrHash.h"
 #include <boost/bind.hpp>
+#include FUNCTIONAL_HEADER
+#include RVALUE_HEADER
+#include SHARED_PTR_HEADER
 #include STL_UNORDERED_SET
+#include TYPE_TRAITS_HEADER
 #include <set>
 
 class EventManagerBase;

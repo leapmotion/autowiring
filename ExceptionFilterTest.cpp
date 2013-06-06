@@ -107,6 +107,17 @@ public:
   }
 };
 
+TEST_F(ExceptionFilterTest, CheckThrowThrow) {
+  class example {
+  public:
+    example() {
+      throw std::exception();
+    }
+  };
+
+  EXPECT_THROW(throw example(), std::exception) << "An exception type which throws from its ctor did not throw the expected type";
+}
+
 TEST_F(ExceptionFilterTest, ThreadThrowsCheck) {
   // Add the exception filter type to the context first
   AutoRequired<GenericFilter> filter;

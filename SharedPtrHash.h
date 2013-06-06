@@ -1,6 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _SHARED_PTR_HASH_H
 #define _SHARED_PTR_HASH_H
+#include SHARED_PTR_HEADER
 #include <memory>
 
 /// <summary>

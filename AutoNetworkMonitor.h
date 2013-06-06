@@ -7,6 +7,7 @@
 #include <iosfwd>
 #include <list>
 #include <map>
+#include SHARED_PTR_HEADER
 
 class AutowirableSlot;
 class ContextMember;

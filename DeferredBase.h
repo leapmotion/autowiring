@@ -2,8 +2,9 @@
 #ifndef _DEFERRED_BASE_H
 #define _DEFERRED_BASE_H
 #include <functional>
-#include <memory>
 #include <vector>
+#include FUNCTIONAL_HEADER
+#include SHARED_PTR_HEADER
 
 class Autowirer;
 class AutowirableSlot;
