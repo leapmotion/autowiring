@@ -6,7 +6,6 @@
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
 #include "SharedPtrHash.h"
-#include <boost/bind.hpp>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
@@ -115,13 +114,19 @@ public:
       m_dispatch.erase(pDispatch);
   }
 
-  // HACK!  UGLY HACK!  REQUIRED BECAUSE current_exception NOT SUPPORTED ON APPLE!  YUCKY!
-  #define FIRE_CATCHER_START try {
-
+  /// <summary>
+  /// Convenience routine for Fire calls
+  /// </summary>
+  /// <remarks>
+  /// This is a convenience routine, its only purpose is to add the "this" parameter to the
+  /// call to FilterFiringException
+  /// </remarks>
   inline void PassFilterFiringException(EventReceiver* pReceiver) const {
     FilterFiringException(dynamic_cast<const EventManagerBase*>(this), pReceiver);
   }
 
+  // Convenience defines for Fire overloads, consider removing
+  #define FIRE_CATCHER_START try {
   #define FIRE_CATCHER_END } catch(...) { this->PassFilterFiringException((*q).get()); }
 
 protected:
