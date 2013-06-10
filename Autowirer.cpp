@@ -21,7 +21,7 @@ Autowirer::~Autowirer(void)
     (*q)->ReleaseAll();
 
   // Release all event sender links:
-  for(std::set<EventManagerBase*>::iterator q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
+  for(std::set<EventSenderBase*>::iterator q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
     (**q).ReleaseRefs();
 
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
@@ -64,7 +64,7 @@ void Autowirer::UpdateDeferredElements(void) {
     delete *q;
 }
 
-void Autowirer::AddToEventSenders(EventManagerBase* pSender) {
+void Autowirer::AddToEventSenders(EventSenderBase* pSender) {
   m_eventSenders.insert(pSender);
 
   // Scan the list for compatible receivers:
@@ -137,7 +137,7 @@ void Autowirer::FilterException(void) {
     rethrower();
 }
 
-void Autowirer::FilterFiringException(const EventManagerBase* pSender, EventReceiver* pRecipient) {
+void Autowirer::FilterFiringException(const EventSenderBase* pSender, EventReceiver* pRecipient) {
   auto rethrower = [] () {
     std::rethrow_exception(std::current_exception());
   };
