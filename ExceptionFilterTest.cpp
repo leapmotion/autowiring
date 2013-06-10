@@ -59,10 +59,10 @@ public:
 };
 
 class ThrowingBroadcaster:
-  public EventManager<ThrowingListener>
+  public EventSender<ThrowingListener>
 {
 public:
-  using EventManager<ThrowingListener>::Fire;
+  using EventSender<ThrowingListener>::Fire;
 };
 
 class GenericFilter:
@@ -94,7 +94,7 @@ public:
     }
   }
 
-  virtual void Filter(const std::function<void()>& rethrower, const EventManagerBase* pSender, EventReceiver* pRecipient) override {
+  virtual void Filter(const std::function<void()>& rethrower, const EventSenderBase* pSender, EventReceiver* pRecipient) override {
     m_hit = true;
     try {
       rethrower();
