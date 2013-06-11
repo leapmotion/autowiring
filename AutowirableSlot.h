@@ -19,7 +19,7 @@ public:
 
   virtual ~AutowirableSlot(void) {
   }
-  
+
   /// <summary>
   /// This is a destroy self-reference.  There should only ever be one shared pointer
   /// to this object, and it's located here.  Everything else should be weak pointers

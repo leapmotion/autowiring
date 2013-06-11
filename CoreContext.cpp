@@ -72,17 +72,17 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
   {
     // Lock the child list while we insert
     lock_guard<mutex> lk(m_childrenLock);
-  
+
     // Reserve a place in the list for the child
     childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
   }
-  
+
   // Create the child context
   CoreContext* pContext =
     new CoreContext(
       std::static_pointer_cast<CoreContext, Autowirer>(m_self.lock())
     );
-  
+
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
   std::shared_ptr<CoreContext> retVal(
@@ -136,7 +136,7 @@ void CoreContext::SignalShutdown(void) {
   // Global context is now "stop":
   m_shouldStop = true;
   m_stopping.notify_all();
-    
+
   // Also pass notice to all child threads:
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
     (*q)->Stop();
@@ -151,7 +151,7 @@ void CoreContext::SignalShutdown(void) {
 void CoreContext::SignalTerminate(void) {
   // We're stopping now.
   m_shouldStop = true;
-  
+
   { // Tear down all the children.
     lock_guard<mutex> lk(m_childrenLock);
     for (t_childList::iterator it = m_children.begin(); it != m_children.end(); ++it) {
@@ -162,10 +162,10 @@ void CoreContext::SignalTerminate(void) {
       }
     }
   }
-  
+
   // Shutmyself down.
   SignalShutdown();
-  
+
   // I shouldn't be referenced anywhere now.
   ASSERT(m_refCount == 0);
 

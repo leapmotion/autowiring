@@ -48,7 +48,7 @@ public:
   SharedPtrWrap(std::weak_ptr<Autowirer> pAutowirer, T* p):
     SharedPtrWrapBase(pAutowirer)
   {}
-    
+
   SharedPtrWrap(std::weak_ptr<Autowirer> pAutowirer, std::shared_ptr<T>& p):
     SharedPtrWrapBase(pAutowirer),
     std::shared_ptr<T>(p)
@@ -76,7 +76,7 @@ public:
   SharedPtrWrap(std::weak_ptr<Autowirer> pAutowirer, T* p):
     SharedPtrWrap<T, false>(pAutowirer, p)
   {}
-    
+
   SharedPtrWrap(std::weak_ptr<Autowirer> pAutowirer, std::shared_ptr<T>& p):
     SharedPtrWrap<T, false>(pAutowirer, p)
   {}

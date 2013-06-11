@@ -109,7 +109,7 @@ public:
       retVal++;
     return retVal;
   }
-  
+
   template<class _Fx>
   void operator+=(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);

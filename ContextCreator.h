@@ -69,7 +69,7 @@ public:
   /// </summary>
   /// <returns>A deferred creation notice which, when destroyed, will cause clients to be notified of context creation</returns>
   /// <remarks>
-  /// 
+  ///
   /// </remarks>
   std::shared_ptr<DeferredCreationNotice> CreateContext(const Key& key) {
     // Try to find a context already existing with the given key:

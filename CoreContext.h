@@ -98,7 +98,7 @@ public:
     );
     return retVal;
   }
-  
+
   /// <summary>
   /// Virtually identical to CreateDependentContext, except adds the members of T to this context
   /// </summary>
@@ -114,7 +114,7 @@ public:
     );
     return retVal;
   }
-  
+
 private:
   // General purpose lock for this class
   boost::mutex m_coreLock;
@@ -144,7 +144,7 @@ private:
   // Actual core threads:
   typedef list<CoreThread*> t_threadList;
   t_threadList m_threads;
-  
+
   // Child contexts:
   typedef list<std::weak_ptr<CoreContext> > t_childList;
   boost::mutex m_childrenLock;
@@ -234,7 +234,7 @@ public:
   /// shutdown procedures should begin immediately
   /// </summary>
   void SignalShutdown(void);
-  
+
   /// <summary>
   /// This terminates this context and all of its children, by force if necessary
   /// </summary>
@@ -259,7 +259,7 @@ public:
   /// </summary>
   /// <returns>The previously current context</returns>
   std::shared_ptr<CoreContext> SetCurrent(void) {
-    std::shared_ptr<CoreContext> newCurrent = 
+    std::shared_ptr<CoreContext> newCurrent =
       std::static_pointer_cast<CoreContext, Autowirer>(
         m_self.lock()
       );
