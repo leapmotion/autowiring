@@ -103,7 +103,7 @@ void Autowirer::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
   } else {
     // Dynamic membership check:
     const type_info& info = typeid(*pSnooper);
-    
+
     std::shared_ptr<Autowirer> cur = GetParentContext();
     for(; cur; cur = cur->GetParentContext()) {
       auto q = cur->m_byType.find(info.name());

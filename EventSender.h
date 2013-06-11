@@ -63,7 +63,7 @@ protected:
   // Collection of all known listeners:
   typedef std::unordered_set<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
   t_listenerSet m_st;
-  
+
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
@@ -112,7 +112,7 @@ public:
     size_t nErased = m_st.erase(rhs);
     if(!nErased)
       return;
-    
+
     // If the RHS implements DispatchQueue, add it to that collection as well:
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
     if(pDispatch)
@@ -306,7 +306,7 @@ public:
       EventSenderSingle<T>::HasListeners() :
       t_base::HasListeners();
   }
-  
+
   virtual void ReleaseRefs(void) override {
     t_base::ReleaseRefs();
     EventSenderSingle<T>::ReleaseRefs();
@@ -349,7 +349,7 @@ public:
     static_assert(std::is_same<W, T>::value, "Cannot query listeners on unbound type W");
     return EventSenderSingle<T>::HasListeners();
   }
-  
+
   virtual void ReleaseRefs(void) override {
     EventSenderSingle<T>::ReleaseRefs();
   }
