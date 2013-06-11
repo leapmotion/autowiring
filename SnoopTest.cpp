@@ -107,7 +107,7 @@ TEST_F(SnoopTest, DetectDisallowedGeneralType) {
   // Create two child contexts:
   AutoCreateContext sibling1;
   AutoCreateContext sibling2;
-  
+
   // Create a member again, but this time, use the generic type so we can't use a context membership check
   {
     CurrentContextPusher pshr(sibling1);

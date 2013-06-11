@@ -17,7 +17,7 @@ TEST_F(ContextMapTest, VerifySimple) {
 
     // Verify the reference count or the rest of the test will fail
     ASSERT_EQ(context.use_count(), 1) << "A newly created context's use count isn't what was expected";
-    
+
     // Add and ensure the reference count is unmodified
     mp.Add("context1", context);
     ASSERT_EQ(context.use_count(), 1) << "The map altered the context use count";

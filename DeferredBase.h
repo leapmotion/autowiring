@@ -20,7 +20,7 @@ protected:
 
   // Functions that want to be called when we successfully bind:
   std::vector< std::function<void()> > m_postBind;
-    
+
   // Store a weak reference to the slot's tracker so we can be informed
   // if it goes away before we have a chance to autowire it
   std::weak_ptr<AutowirableSlot> tracker;
