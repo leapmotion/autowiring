@@ -4,11 +4,8 @@
 #include "ContextCreatorBase.h"
 #include "CoreContext.h"
 #include "DeferredCreationNotice.h"
-#if defined(__APPLE__) && !defined(_LIBCPP_VERSION)
-#include <tr1/unordered_map>
-#else
-#include <unordered_map>
-#endif
+#include STL_UNORDERED_MAP
+#include <boost/thread/mutex.hpp>
 
 /// <summary>
 /// Implements a foundation class that allows named context registration and augmentation
@@ -32,6 +29,9 @@ public:
   }
 
 protected:
+  // Lock:
+  boost::mutex m_contextLock;
+
   // Collection of mapped contexts:
   typedef std::unordered_map<Key, std::shared_ptr<CoreContext>> t_mpType;
   t_mpType m_mp;
@@ -58,6 +58,7 @@ public:
   /// Attempts to find a context with the specified key
   /// </summary>
   std::shared_ptr<CoreContext> FindContext(const Key& key) {
+    boost::lock_guard<boost::mutex> lk(m_contextLock);
     typename t_mpType::iterator q = m_mp.find(key);
     if(q == m_mp.end())
       return std::shared_ptr<CoreContext>();
@@ -72,6 +73,8 @@ public:
   /// 
   /// </remarks>
   std::shared_ptr<DeferredCreationNotice> CreateContext(const Key& key) {
+    boost::lock_guard<boost::mutex> lk(m_contextLock);
+
     // Try to find a context already existing with the given key:
     std::shared_ptr<CoreContext>& child = m_mp[key];
     std::shared_ptr<DeferredCreationNotice> retVal;
@@ -89,10 +92,48 @@ public:
     return retVal;
   }
 
+  /// <sumamry>
+  /// Removes all contexts from this creator, and optionally waits for them to quit
+  /// </summary>
+  /// <param name="wait">True if this call should not return until all child contexts quit</param>
+  /// <remarks>
+  /// The blocking version of the Clear method works by copying the current map into a temporary
+  /// container, and then waiting on those elements to terminate.  This behavior allows other users
+  /// of this container to add elements even as it's being cleared.
+  ///
+  /// Regardless of this detail, consumers should be aware that no guarantees are made about how
+  /// long this container will remain empty once the function returns in an asynchronous context.
+  /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
+  /// </remarks>
+  void Clear(bool wait) {
+    if(!wait) {
+      // Trivial signal-clear-return:
+      boost::lock_guard<boost::mutex> lk(m_contextLock);
+      for(auto q = m_mp.begin(); q != m_mp.end(); q++)
+        q->second->SignalShutdown();
+      m_mp.clear();
+      return;
+    }
+
+    t_mpType mp;
+
+    // Copy out and clear:
+    (boost::lock_guard<boost::mutex>)m_contextLock,
+    mp = m_mp,
+    m_mp.clear();
+
+    // Signal everyone first, then wait in a second pass:
+    for(auto q = m_mp.begin(); q != m_mp.end(); q++)
+      q->second->SignalShutdown();
+    for(auto q = mp.begin(); q != mp.end(); q++)
+      q->second->Wait();
+  }
+
   /// <summary>
   /// Removes the specified context by its key
   /// </summary>
   void RemoveContext(const Key& key) {
+    boost::lock_guard<boost::mutex> lk(m_contextLock);
     m_mp.erase(key);
   }
 
@@ -100,6 +141,7 @@ public:
   /// Removes the specified context by its iterator
   /// </summary>
   void RemoveContext(typename t_mpType::iterator q) {
+    boost::lock_guard<boost::mutex> lk(m_contextLock);
     m_mp.erase(q);
   }
 };
