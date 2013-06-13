@@ -6,7 +6,6 @@
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
 #include "SharedPtrHash.h"
-#include <boost/bind.hpp>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
@@ -14,20 +13,25 @@
 #include TYPE_TRAITS_HEADER
 #include <set>
 
-class EventManagerBase;
+class EventSenderBase;
 class EventReceiver;
 
 /// <summary>
 /// Service routine called inside Fire calls in order to decide how to handle an exception
 /// </summary>
-void FilterFiringException(const EventManagerBase* pSender, EventReceiver* pRecipient);
+/// <remarks>
+/// This routine MUST NOT be called outside of a "catch" handler.  This function, and the functions that
+/// it call, rely on the validity of the std::current_exception return value, which will not be valid
+/// outside of a call block.
+/// </remarks>
+void FilterFiringException(const EventSenderBase* pSender, EventReceiver* pRecipient);
 
 /// <summary>
 /// Used to identify event managers
 /// </summary>
-class EventManagerBase {
+class EventSenderBase {
 public:
-  virtual ~EventManagerBase(void);
+  virtual ~EventSenderBase(void);
 
 public:
   virtual bool HasListeners(void) const = 0;
@@ -38,17 +42,17 @@ public:
   virtual void ReleaseRefs(void) = 0;
 
   // Event attachment and detachment pure virtuals
-  virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
-  virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual EventSenderBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual EventSenderBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
 };
 
 struct NoType {};
 
 template<class T>
-class EventManagerSingle
+class EventSenderSingle
 {
 public:
-  virtual ~EventManagerSingle(void) {}
+  virtual ~EventSenderSingle(void) {}
 
 protected:
   static_assert(
@@ -115,13 +119,19 @@ public:
       m_dispatch.erase(pDispatch);
   }
 
-  // HACK!  UGLY HACK!  REQUIRED BECAUSE current_exception NOT SUPPORTED ON APPLE!  YUCKY!
-  #define FIRE_CATCHER_START try {
-
+  /// <summary>
+  /// Convenience routine for Fire calls
+  /// </summary>
+  /// <remarks>
+  /// This is a convenience routine, its only purpose is to add the "this" parameter to the
+  /// call to FilterFiringException
+  /// </remarks>
   inline void PassFilterFiringException(EventReceiver* pReceiver) const {
-    FilterFiringException(dynamic_cast<const EventManagerBase*>(this), pReceiver);
+    FilterFiringException(dynamic_cast<const EventSenderBase*>(this), pReceiver);
   }
 
+  // Convenience defines for Fire overloads, consider removing
+  #define FIRE_CATCHER_START try {
   #define FIRE_CATCHER_END } catch(...) { this->PassFilterFiringException((*q).get()); }
 
 protected:
@@ -196,7 +206,7 @@ protected:
     return
       [this, fnPtr] () {
         auto f = fnPtr;
-        for(EventManagerSingle<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
+        for(EventSenderSingle<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
           T* ptr = dynamic_cast<T*>(*q);
 
           // EventDispatcher check:
@@ -219,7 +229,7 @@ protected:
     return
       [this, fnPtr] (const tArg1& arg1) {
         auto f = fnPtr;
-        for(EventManagerSingle<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
+        for(EventSenderSingle<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
           T* ptr = dynamic_cast<T*>(*q);
 
           // If the pointer cannot support a EventDispatcher, we _cannot_ defer it
@@ -244,7 +254,7 @@ protected:
 };
 
 template<>
-class EventManagerSingle<NoType> {
+class EventSenderSingle<NoType> {
 };
 
 /// <summary>
@@ -255,15 +265,15 @@ class EventManagerSingle<NoType> {
 /// <param name="B">Another event interface type to manage</param>
 /// <param name="C">Another event interface type to manage</param>
 template<class T, class A = NoType, class B = NoType, class C = NoType>
-class EventManager;
+class EventSender;
 
 template<class T, class A, class B, class C>
-class EventManager:
-  public EventManager<A, B, C>,
-  public EventManagerSingle<T>
+class EventSender:
+  public EventSender<A, B, C>,
+  public EventSenderSingle<T>
 {
 private:
-  typedef EventManager<A, B, C> t_base;
+  typedef EventSender<A, B, C> t_base;
 
   template<class MemFn>
   struct Decompose;
@@ -287,76 +297,76 @@ private:
   };
 
 public:
-  bool HasListeners(void) const override {return EventManagerSingle<T>::HasListeners() || t_base::HasListeners();}
+  bool HasListeners(void) const override {return EventSenderSingle<T>::HasListeners() || t_base::HasListeners();}
 
   template<class W>
   bool HasListeners(void) const {
     return
       std::is_same<W, T>::value ?
-      EventManagerSingle<T>::HasListeners() :
+      EventSenderSingle<T>::HasListeners() :
       t_base::HasListeners();
   }
   
   virtual void ReleaseRefs(void) override {
     t_base::ReleaseRefs();
-    EventManagerSingle<T>::ReleaseRefs();
+    EventSenderSingle<T>::ReleaseRefs();
   }
 
   // Event attachment and detachment virtuals
-  virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
+  virtual EventSenderBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
     t_base::operator+=(rhs);
-    EventManagerSingle<T>::operator+=(rhs);
+    EventSenderSingle<T>::operator+=(rhs);
     return *this;
   }
 
-  virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
+  virtual EventSenderBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
     t_base::operator-=(rhs);
-    EventManagerSingle<T>::operator-=(rhs);
+    EventSenderSingle<T>::operator-=(rhs);
     return *this;
   }
 
   template<class MemFn>
   std::function<typename Decompose<MemFn>::fnType> Fire(MemFn fn) {
-    return EventManagerSingle<typename Decompose<MemFn>::type>::Fire(fn);
+    return EventSenderSingle<typename Decompose<MemFn>::type>::Fire(fn);
   }
 
   template<class MemFn>
   std::function<typename Decompose<MemFn>::fnType> Defer(MemFn fn) {
-    return EventManagerSingle<typename Decompose<MemFn>::type>::Defer(fn);
+    return EventSenderSingle<typename Decompose<MemFn>::type>::Defer(fn);
   }
 };
 
 template<class T>
-class EventManager<T, NoType, NoType, NoType>:
-  public EventManagerSingle<T>,
-  public EventManagerBase
+class EventSender<T, NoType, NoType, NoType>:
+  public EventSenderSingle<T>,
+  public EventSenderBase
 {
 public:
-  virtual bool HasListeners(void) const override {return EventManagerSingle<T>::HasListeners();}
+  virtual bool HasListeners(void) const override {return EventSenderSingle<T>::HasListeners();}
 
   template<class W>
   bool HasListeners(void) const {
     static_assert(std::is_same<W, T>::value, "Cannot query listeners on unbound type W");
-    return EventManagerSingle<T>::HasListeners();
+    return EventSenderSingle<T>::HasListeners();
   }
   
   virtual void ReleaseRefs(void) override {
-    EventManagerSingle<T>::ReleaseRefs();
+    EventSenderSingle<T>::ReleaseRefs();
   }
 
   // Event attachment and detachment pure virtuals
-  virtual EventManagerBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
-    EventManagerSingle<T>::operator+=(rhs);
+  virtual EventSenderBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
+    EventSenderSingle<T>::operator+=(rhs);
     return *this;
   }
 
-  virtual EventManagerBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
-    EventManagerSingle<T>::operator-=(rhs);
+  virtual EventSenderBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
+    EventSenderSingle<T>::operator-=(rhs);
     return *this;
   }
 
 protected:
-  using EventManagerSingle<T>::Fire;
+  using EventSenderSingle<T>::Fire;
 };
 
 #endif
