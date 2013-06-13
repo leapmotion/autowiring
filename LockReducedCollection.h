@@ -54,8 +54,14 @@ private:
   // The primary buffer:
   mutable Collection* volatile m_primary;
 
+  struct Resetter {
+    void operator() (Collection& op) {
+      op.clear();
+    }
+  };
+
   // Buffer pool:
-  ObjectPool<Collection> m_pool;
+  ObjectPool<Collection, Resetter> m_pool;
 
 public:
   /// <summary>
@@ -154,6 +160,9 @@ public:
 
       // Check-and-set:
     } while(primary.get() != compare_exchange((void*volatile*)&m_primary, secondary.get(), primary.get()));
+
+    // Pointer free:
+    primary->m_circular.reset();
     return false;
   }
 };

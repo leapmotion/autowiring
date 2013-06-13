@@ -5,6 +5,11 @@
 #include <memory>
 #include <set>
 
+template<class T>
+class NoOp {
+  void operator() (T& op) {}
+};
+
 /// <summary>
 /// Allows the management of a pool of objects based on an embedded factory
 /// </summary>
@@ -16,7 +21,7 @@
 ///
 /// All object pool methods are thread safe.
 /// </remarks>
-template<class T>
+template<class T, class _Rx = NoOp<T> >
 class ObjectPool
 {
 public:
@@ -41,12 +46,17 @@ private:
   size_t m_limit;
   size_t m_outstanding;
 
+  // Resetter, where relevant:
+  _Rx m_rx;
+
 protected:
   void Return(T* ptr) {
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
       m_outstanding--;
       if(m_objs.size() < m_maxPooled) {
+        // Reset, insert, return
+        m_rx(*ptr);
         m_objs.insert(ptr);
         return;
       }
