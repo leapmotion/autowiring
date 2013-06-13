@@ -110,7 +110,8 @@ public:
       // Trivial signal-clear-return:
       boost::lock_guard<boost::mutex> lk(m_contextLock);
       for(auto q = m_mp.begin(); q != m_mp.end(); q++)
-        q->second->SignalShutdown();
+        if(q->second)
+          q->second->SignalShutdown();
       m_mp.clear();
       return;
     }
@@ -123,8 +124,12 @@ public:
     m_mp.clear();
 
     // Signal everyone first, then wait in a second pass:
-    for(auto q = m_mp.begin(); q != m_mp.end(); q++)
-      q->second->SignalShutdown();
+    for(auto q = mp.begin(); q != mp.end();)
+      if(q->second) {
+        q->second->SignalShutdown();
+        q++;
+      } else
+        q = mp.erase(q);
     for(auto q = mp.begin(); q != mp.end(); q++)
       q->second->Wait();
   }
