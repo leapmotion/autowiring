@@ -174,6 +174,14 @@ public:
   void Snoop(const std::shared_ptr<EventReceiver>& pSnooper);
 
   /// <summary>
+  /// Unregisters an event receiver previously registered to receive snooped events
+  /// </summary>
+  /// <remarks>
+  /// It is an error to call this method without a prior call to Snoop
+  /// </remarks>
+  void Unsnoop(const std::shared_ptr<EventReceiver>& pSnooper);
+
+  /// <summary>
   /// Adds an object of any kind to the IOC container
   /// </summary>
   /// <param name="pContextMember">The member which was added</param>
@@ -335,6 +343,19 @@ public:
     if(m_pParent)
       ((AddPolymorphic<T, true>&)*m_pParent).AddEventReceiver(pRecvr);
   }
+
+  void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+    // Remove from the local collection
+    m_eventReceivers.erase(pRecvr);
+
+    // Notify all compatible senders that we're going away:
+    for(auto q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
+      **q -= pRecvr;
+
+    // Delegate to the parent:
+    if(m_pParent)
+      ((AddPolymorphic<T, true>&)*m_pParent).RemoveEventReceiver(pRecvr);
+  };
 
   inline void operator()(std::shared_ptr<T> value) {
     // Event senders first:
