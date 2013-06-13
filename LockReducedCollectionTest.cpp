@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "LockReducedCollectionTest.h"
 #include "LockReducedCollection.h"
-#include <boost/thread.hpp>
+#include <boost/thread/barrier.hpp>
+#include <boost/thread/thread.hpp>
 
 struct IntHash {
   size_t operator()(int v) const {
@@ -34,16 +35,17 @@ TEST_F(LockReducedCollectionTest, ConcurrentWritersCheck) {
 
   const size_t threadCount = 100;
   boost::thread threads[threadCount];
+  boost::barrier barrier(threadCount + 1);
 
   // VERY INEFFICIENT, but should put the collection through its paces
   for(int i = 0; i < threadCount; i++)
-    boost::thread([&collection, i] () {
+    boost::thread([&collection, &barrier, i] () {
       collection.Insert(i);
+      barrier.wait();
     });
 
   // Wait on all threads:
-  for(size_t i = 0; i < threadCount; i++)
-    threads[i].join();
+  barrier.wait();
 
   // Trivial size validation first:
   auto image = collection.GetImage();
