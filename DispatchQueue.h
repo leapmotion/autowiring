@@ -68,8 +68,10 @@ private:
   // A lock held when modifications to any element EXCEPT the first element must be made:
   boost::mutex m_dispatchLock;
 
+  // Notice when the dispatch queue has been updated:
   boost::condition_variable m_queueUpdated;
 
+  // The dispatch queue proper:
   std::list<DispatchThunkBase*> m_dispatchQueue;
 
   /// <summary>

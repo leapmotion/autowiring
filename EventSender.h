@@ -5,7 +5,9 @@
 #include "DispatchQueue.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
+#include "LockReducedCollection.h"
 #include "SharedPtrHash.h"
+#include <boost/thread/shared_mutex.hpp>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
@@ -60,8 +62,11 @@ protected:
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
 
+  // Reader-writer lock:
+  boost::shared_mutex m_rwLock;
+
   // Collection of all known listeners:
-  typedef std::unordered_set<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
+  typedef LockReducedCollection<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
   t_listenerSet m_st;
   
   // Just the DispatchQueue listeners:
@@ -72,10 +77,10 @@ public:
   /// <summary>
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
   /// </summary>
-  bool HasListeners(void) const {return !m_st.empty();}
+  bool HasListeners(void) const {return !m_st.GetImage()->empty();}
 
   void ReleaseRefs() {
-    m_st.clear();
+    m_st.Clear();
     m_dispatch.clear();
   }
 
@@ -95,8 +100,8 @@ public:
   /// Adds the specified observer to receive events dispatched from this instace
   /// </su8mmary>
   void operator+=(const std::shared_ptr<T>& rhs) {
-    // Trivial insertion, don't even bother checking for existence:
-    m_st.insert(rhs);
+    // Trivial insertion
+    m_st.Insert(rhs);
 
     // If the RHS implements DispatchQueue, add it to that collection as well:
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
@@ -109,7 +114,7 @@ public:
   /// </su8mmary>
   void operator-=(const std::shared_ptr<T>& rhs) {
     // Trivial removal:
-    size_t nErased = m_st.erase(rhs);
+    auto nErased = m_st.Erase(rhs);
     if(!nErased)
       return;
     
@@ -139,7 +144,8 @@ protected:
   std::function<void ()> Fire(void (T::*fnPtr)()) const {
     return
       [this, fnPtr] () {
-        for(auto q = m_st.begin(); q != m_st.end(); ++q)
+        auto st = m_st.GetImage();
+        for(auto q = st->begin(); q != st->end(); ++q)
           FIRE_CATCHER_START
             (**q.*fnPtr)();
           FIRE_CATCHER_END
@@ -150,7 +156,8 @@ protected:
   std::function<void (Arg1)> Fire(void (T::*fnPtr)(Arg1)) const {
     return
       [this, fnPtr] (Arg1 arg1) {
-        for(auto q = m_st.begin(); q != m_st.end(); ++q)
+        auto st = m_st.GetImage();
+        for(auto q = st->begin(); q != st->end(); ++q)
           FIRE_CATCHER_START
             (**q.*fnPtr)(arg1);
           FIRE_CATCHER_END
@@ -161,7 +168,8 @@ protected:
   std::function<void (Arg1, Arg2)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
-        for(auto q = m_st.begin(); q != m_st.end(); ++q)
+        auto st = m_st.GetImage();
+        for(auto q = st->begin(); q != st->end(); ++q)
           FIRE_CATCHER_START
             (**q.*fnPtr)(arg1, arg2);
           FIRE_CATCHER_END
@@ -172,7 +180,8 @@ protected:
   std::function<void (Arg1, Arg2, Arg3)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
-        for(auto q = m_st.begin(); q != m_st.end(); ++q)
+        auto st = m_st.GetImage();
+        for(auto q = st->begin(); q != st->end(); ++q)
           FIRE_CATCHER_START
             (**q.*fnPtr)(arg1, arg2, arg3);
           FIRE_CATCHER_END
@@ -183,7 +192,8 @@ protected:
   std::function<void (Arg1, Arg2, Arg3, Arg4)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) {
-        for(auto q = m_st.begin(); q != m_st.end(); ++q)
+        auto st = m_st.GetImage();
+        for(auto q = st->begin(); q != st->end(); ++q)
           FIRE_CATCHER_START
             (**q.*fnPtr)(arg1, arg2, arg3, arg4);
           FIRE_CATCHER_END
@@ -194,7 +204,8 @@ protected:
   std::function<void (Arg1, Arg2, Arg3, Arg4, Arg5)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) {
-        for(auto q = m_st.begin(); q != m_st.end(); ++q)
+        auto st = m_st.GetImage();
+        for(auto q = st->begin(); q != st->end(); ++q)
           FIRE_CATCHER_START
             (**q.*fnPtr)(arg1, arg2, arg3, arg4, arg5);
           FIRE_CATCHER_END
@@ -206,7 +217,7 @@ protected:
     return
       [this, fnPtr] () {
         auto f = fnPtr;
-        for(EventSenderSingle<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
+        for(auto q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
           T* ptr = dynamic_cast<T*>(*q);
 
           // EventDispatcher check:
