@@ -21,8 +21,14 @@ public:
     public std::unordered_set<T, Hash>
   {
   public:
+    ~Collection(void) {
+    }
+
     // Interior shared pointer, manually released in order to cause destruction:
     mutable std::shared_ptr<Collection> m_circular;
+
+    // Use the base assignment implementation:
+    using std::unordered_set<T, Hash>::operator=;
   };
 
   LockReducedCollection(void) {
