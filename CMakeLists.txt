@@ -43,6 +43,7 @@ set(
   GlobalCoreContext.h
   InterlockedExchange.h
   InterlockedExchangeWin.cpp
+  LockReducedCollection.h
   Object.h
   ObjectPool.h
   OutstandingCountTracker.cpp
