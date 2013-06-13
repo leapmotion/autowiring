@@ -2,7 +2,7 @@
 #ifndef _AUTOWIRER_H
 #define _AUTOWIRER_H
 #include "ExceptionFilter.h"
-#include "EventManager.h"
+#include "EventSender.h"
 #include "DeferredBase.h"
 #include "safe_dynamic_cast.h"
 #include "SharedPtrWrap.h"
@@ -70,7 +70,7 @@ protected:
   // All known event senders and receivers
   typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
-  std::set<EventManagerBase*> m_eventSenders;
+  std::set<EventSenderBase*> m_eventSenders;
 
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
@@ -112,7 +112,7 @@ protected:
   /// <summary>
   /// Adds the passed event manager to the collection of known event senders, and links it up
   /// </summary>
-  void AddToEventSenders(EventManagerBase* pSender);
+  void AddToEventSenders(EventSenderBase* pSender);
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
@@ -154,11 +154,11 @@ public:
   void FilterException(void);
 
   /// <summary>
-  /// Filters a std::current_exception thrown by an EventManagerBase during a Fire
+  /// Filters a std::current_exception thrown by an EventSenderBase during a Fire
   /// </summary>
   /// <param name="pSender">The sender of the event</param>
   /// <param name="pRecipient">The recipient of the event</param>
-  void FilterFiringException(const EventManagerBase* pSender, EventReceiver* pRecipient);
+  void FilterFiringException(const EventSenderBase* pSender, EventReceiver* pRecipient);
 
   /// <summary>
   /// Enables the passed event receiver to obtain messages broadcast by this context
@@ -339,9 +339,9 @@ public:
   inline void operator()(std::shared_ptr<T> value) {
     // Event senders first:
     {
-      EventManagerBase* pEventManagerBase = dynamic_cast<EventManagerBase*>(value.get());
-      if(pEventManagerBase)
-        Autowirer::AddToEventSenders(pEventManagerBase);
+      EventSenderBase* pEventSenderBase = dynamic_cast<EventSenderBase*>(value.get());
+      if(pEventSenderBase)
+        Autowirer::AddToEventSenders(pEventSenderBase);
     }
 
     // Event receivers second:

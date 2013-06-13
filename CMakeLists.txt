@@ -35,8 +35,8 @@ set(
   DispatchQueue.h
   DispatchQueue.cpp
   EventDispatcher.h
-  EventManager.h
-  EventManager.cpp
+  EventSender.h
+  EventSender.cpp
   ExceptionFilter.h
   Factory.h
   GlobalCoreContext.cpp

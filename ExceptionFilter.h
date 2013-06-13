@@ -3,7 +3,7 @@
 #define _EXCEPTION_FILTER_H
 #include FUNCTIONAL_HEADER
 
-class EventManagerBase;
+class EventSenderBase;
 class EventReceiver;
 
 /// <summary>
@@ -64,7 +64,7 @@ public:
   /// The rethrower lambda must be called before this filter method exits.  Attempting to cache this function
   /// will result in undefined behavior.
   /// </remarks>
-  virtual void Filter(const std::function<void()>& rethrower, const EventManagerBase* pSender, EventReceiver* pRecipient) {}
+  virtual void Filter(const std::function<void()>& rethrower, const EventSenderBase* pSender, EventReceiver* pRecipient) {}
 };
 
 #endif

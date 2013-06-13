@@ -24,7 +24,7 @@ public:
 };
 
 class Firer:
-  public EventManager<UpBroadcastListener>
+  public EventSender<UpBroadcastListener>
 {
 public:
   void DoFire(void) {

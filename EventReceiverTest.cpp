@@ -100,11 +100,11 @@ public:
 };
 
 class SimpleSender:
-  public EventManager<CallableInterface>
+  public EventSender<CallableInterface>
 {
 public:
-  using EventManager<CallableInterface>::Fire;
-  using EventManager<CallableInterface>::Defer;
+  using EventSender<CallableInterface>::Fire;
+  using EventSender<CallableInterface>::Defer;
 };
 
 class SimpleReceiver:
