@@ -13,9 +13,8 @@
 /// read access, and write access is performed with optimistic locking.  The lock reduced
 /// collection has very inefficient insertion, but very efficient search.
 ///
-/// This collection is implemented with spin locks and optimistic locking to make it more
-/// lightweight.  If the collection becomes highly contended or is frequently edited,
-/// changes will be necessary.
+/// This collection is implemented with spin locks to make it more lightweight.  If the
+/// collection becomes highly contended or is frequently edited, changes will be necessary.
 /// </remarks>
 template<class T, class Hash>
 class LockReducedCollection
@@ -91,22 +90,51 @@ private:
   // Buffer pool:
   ObjectPool<Collection, Resetter> m_pool;
 
+  /// <summary>
+  /// Acquires the current m_primary value, and sets the m_primary value to nullptr
+  /// </summary>
+  Collection* Acquire(void) const {
+    // Spin lock:
+    Collection* primary;
+    do primary = (Collection*)exchange_acquire((void*volatile*)&m_primary, nullptr);
+    while(!primary);
+    return primary;
+  }
+
+  /// <summary>
+  /// Provides a new collection to replace the current primary collection
+  /// </summary>
+  Collection* Propose(void) {
+    std::shared_ptr<Collection> retVal;
+    m_pool(retVal);
+    retVal->m_circular = retVal;
+    return retVal.get();
+  }
+
+  void Release(Collection* primary) const {
+    // Spin lock exit:
+    auto pPrior = exchange_release((void*volatile*)&m_primary, primary);
+
+    // The only time this assert might fail is if someone attempts to release a spin lock
+    // they do not own.
+    // NOTE:  The thread releasing the unowned spin lock is not necessarily the one that
+    // hits this assert!
+    assert(!pPrior);
+  }
+
 public:
   /// <summary>
   /// Obtains a lock-free image of the current buffer
   /// </summary>
   t_mpTypeConst GetImage(void) const {
     // Spin lock:
-    Collection* primary;
-    do primary = (Collection*)exchange_acquire((void*volatile*)&m_primary, nullptr);
-    while(!primary);
+    Collection* primary = Acquire();
 
     // Copy out the return value:
     t_mpTypeConst retVal = primary->m_circular;
 
     // Spin lock exit:
-    auto pPrior = exchange_release((void*volatile*)&m_primary, primary);
-    assert(!pPrior);
+    Release(primary);
 
     // Done
     return retVal;
@@ -141,26 +169,24 @@ public:
   /// </remarks>
   void Insert(const T& value) {
     // Create the destination type:
-    t_mpType secondary;
-    m_pool(secondary);
-    secondary->m_circular = secondary;
+    auto secondary = Propose();
 
-    // Store the item we're going to be performing all of our operations on:
-    t_mpTypeConst primary;
-    do {
-      // Test, first, because then we can drop an O(n):
-      primary = GetImage();
-      if(primary->count(value))
-        return;
+    // Spin lock:
+    Collection* primary = Acquire();
 
+    // Test, first, because then we can drop an O(n):
+    if(primary->count(value))
+      std::swap(primary, secondary);
+    else {
       // Create a copy and insert:
       *secondary = *primary;
       secondary->insert(value);
+    }
 
-      // Check-and-set:
-    } while(primary.get() != compare_exchange((void*volatile*)&m_primary, secondary.get(), primary.get()));
+    // Release:
+    Release(secondary);
 
-    // Graceful release:
+    // Primary container back to collection:
     primary->m_circular.reset();
   }
 
@@ -173,21 +199,17 @@ public:
   /// </remarks>
   bool Erase(const T& value) {
     // Create the destination type:
-    t_mpType secondary;
-    m_pool(secondary);
-    secondary->m_circular = secondary;
+    auto secondary = Propose();
     
-    t_mpTypeConst primary;
-    do {
-      // Test, first, because then we can drop an O(n):
-      primary = GetImage();
+    // Spin lock:
+    auto primary = Acquire();
 
-      // Create a copy and drop:
-      *secondary = *primary;
-      secondary->erase(value);
+    // Create a copy and erase:
+    *secondary = *primary;
+    secondary->erase(value);
 
-      // Check-and-set:
-    } while(primary.get() != compare_exchange((void*volatile*)&m_primary, secondary.get(), primary.get()));
+    // Release:
+    Release(secondary);
 
     // Pointer free:
     primary->m_circular.reset();
