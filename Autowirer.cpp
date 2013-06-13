@@ -118,6 +118,11 @@ void Autowirer::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
   ((AutowirerHelpers::AddPolymorphic<EventReceiver>&)*this).AddEventReceiver(pSnooper);
 }
 
+void Autowirer::Unsnoop(const std::shared_ptr<EventReceiver>& pSnooper) {
+  // Pass control to the event remover helper:
+  ((AutowirerHelpers::AddPolymorphic<EventReceiver>&)*this).RemoveEventReceiver(pSnooper);
+}
+
 void Autowirer::FilterException(void) {
   auto rethrower = [] () {
     std::rethrow_exception(std::current_exception());
