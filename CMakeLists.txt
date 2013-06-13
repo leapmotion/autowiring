@@ -41,6 +41,8 @@ set(
   Factory.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
+  InterlockedExchange.h
+  InterlockedExchangeWin.cpp
   Object.h
   ObjectPool.h
   OutstandingCountTracker.cpp
@@ -92,6 +94,8 @@ set(
   GlobalInitTest.cpp
   GraphConstructionTest.h
   GraphConstructionTest.cpp
+  LockReducedCollectionTest.h
+  LockReducedCollectionTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
   PostConstructTest.h

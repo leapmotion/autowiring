@@ -107,6 +107,27 @@ public:
   using EventSender<CallableInterface>::Defer;
 };
 
+class Jammer:
+  public CoreThread,
+  public EventSender<CallableInterface>
+{
+public:
+  Jammer(void):
+    totalXmit(0)
+  {
+    Ready();
+  }
+
+  int totalXmit;
+
+  void Run(void) override {
+    while(!ShouldStop())
+      // Jam for awhile in an asynchronous way:
+      while(++totalXmit % 100)
+        Fire(&CallableInterface::ZeroArgs)();
+  }
+};
+
 class SimpleReceiver:
   public CoreThread,
   public CallableInterface
@@ -419,4 +440,45 @@ TEST_F(EventReceiverTest, VerifyNoCopyCallable) {
 
   NoCopyClass method;
   sender->Fire(&CallableInterface::NoCopyMethod)(method);
+}
+
+TEST_F(EventReceiverTest, PathologicalChildContextTest) {
+  // Set up the jammer and receiver collections:
+  AutoRequired<Jammer> jammer;
+
+  // This by itself is sufficient to cause problems:
+  for(size_t i = 0; i < 500; i++) {
+    AutoCreateContext subCtxt;
+    CurrentContextPusher pshr(subCtxt);
+    AutoRequired<SimpleReceiver> recvr;
+  }
+
+  // Spin until the jammer has transmitted a thousand messages:
+  while(jammer->totalXmit < 10000);
+  jammer->Stop();
+  jammer->Wait();
+
+  // Now we begin teardown operations.  If there is an improper event receiver, this will crash hard.
+  AutoCurrentContext ctxt;
+  ctxt->SignalTerminate();
+}
+
+TEST_F(EventReceiverTest, PathologicalTransmitterTest) {
+  // Set up the jammer and receiver collections:
+  AutoRequired<Jammer> jammer;
+
+  for(size_t i = 0; i < 5; i++) {
+    AutoCreateContext subCtxt;
+    CurrentContextPusher pshr(subCtxt);
+    AutoRequired<SimpleReceiver> recvr;
+  }
+
+  // Spin until the jammer has transmitted a thousand messages:
+  while(jammer->totalXmit != 1000);
+  jammer->Stop();
+  jammer->Wait();
+
+  // Now we begin teardown operations.  If there is an improper event receiver, this will crash hard.
+  AutoCurrentContext ctxt;
+  ctxt->SignalTerminate();
 }
