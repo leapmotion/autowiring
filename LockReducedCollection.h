@@ -12,11 +12,23 @@
 /// A reduced-lock collection is a collection where there are no locks used to restrict
 /// read access, and write access is performed with optimistic locking.  The lock reduced
 /// collection has very inefficient insertion, but very efficient search.
+///
+/// This collection is implemented with spin locks and optimistic locking to make it more
+/// lightweight.  If the collection becomes highly contended or is frequently edited,
+/// changes will be necessary.
 /// </remarks>
 template<class T, class Hash>
 class LockReducedCollection
 {
 public:
+  /// <summary>
+  /// Implements a simple immutable collection.
+  /// </summary>
+  /// <remarks>
+  /// This collection is not altered after it is made the current primary collection.
+  /// This enables multisynchronous access and enumeration on the collection itself,
+  /// while the parent container provides a way to update the current constant collection.
+  /// </remarks>
   class Collection:
     public std::unordered_set<T, Hash>
   {
@@ -29,6 +41,22 @@ public:
 
     // Use the base assignment implementation:
     using std::unordered_set<T, Hash>::operator=;
+
+    void Reset(void) {
+      clear();
+    }
+
+    // TODO:  If this datastructure is too slow, then a pair of singly linked lists
+    // should be placed here.  This singly linked list should also be lock-free, and
+    // will contain all of the members added or deleted from this collection since
+    // the collection was constructed.
+    //
+    // Once the collection is released back to the pool, the associated Reset method
+    // should be used to update this collection according to the cached sequence of
+    // operations.  This enables collections that are returned to the object pool
+    // to converge to the current active collection, and prevents new consumers from
+    // having to copy the entire contents of the current collection when preparing
+    // to replace it or during an optimistic lock failure.
   };
 
   LockReducedCollection(void) {
@@ -56,7 +84,7 @@ private:
 
   struct Resetter {
     void operator() (Collection& op) {
-      op.clear();
+      op.Reset();
     }
   };
 
