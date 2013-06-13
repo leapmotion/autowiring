@@ -88,6 +88,31 @@ TEST_F(SnoopTest, VerifySimpleSnoop) {
   EXPECT_FALSE(ignored->m_simpleCall) << "A member in a parent context received a child-context message even though it didn't request to snoop that context";
 }
 
+TEST_F(SnoopTest, VerifyUnsnoop) {
+  // Create a child context to snoop:
+  AutoCreateContext snoopy;
+  AutoRequired<ParentMember> parentMember;
+
+  // Add a member to be snooped:
+  {
+    CurrentContextPusher pshr(snoopy);
+    AutoRequired<ChildMember> childMember;
+
+    // Snoop, unsnoop:
+    snoopy->Snoop(parentMember);
+    snoopy->Unsnoop(parentMember);
+
+    // Fire one event:
+    AutoRequired<Firer> firer;
+    firer->DoFire();
+
+    // The local listener should have gotten something
+    EXPECT_TRUE(childMember->m_simpleCall) << "Message not received by a local listener after Unsnoop call";
+  }
+
+  EXPECT_FALSE(parentMember->m_simpleCall) << "ParentMember snooper received an event, even after an Unsnoop call was made";
+}
+
 TEST_F(SnoopTest, DetectDisallowedContextMember) {
   // Create two child contexts:
   AutoCreateContext sibling1;
