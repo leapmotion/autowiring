@@ -42,7 +42,6 @@ set(
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   InterlockedExchange.h
-  InterlockedExchangeWin.cpp
   LockReducedCollection.h
   Object.h
   ObjectPool.h
@@ -58,11 +57,13 @@ set(
 if(BUILD_WINDOWS)
   set(Autowiring_SRCS
     CoreThreadWin.cpp
+	InterlockedExchangeWin.cpp
     ${Autowiring_SRCS}
   )
 else()
   set(Autowiring_SRCS
     CoreThreadUnix.cpp
+	InterlockedExchangeUnix.cpp
     ${Autowiring_SRCS}
   )
 endif()
