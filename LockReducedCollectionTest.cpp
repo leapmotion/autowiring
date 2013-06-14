@@ -38,14 +38,16 @@ TEST_F(LockReducedCollectionTest, ConcurrentWritersCheck) {
   boost::barrier barrier(threadCount + 1);
 
   // VERY INEFFICIENT, but should put the collection through its paces
-  for(int i = 0; i < threadCount; i++)
-    boost::thread([&collection, &barrier, i] () {
-      collection.Insert(i);
+  boost::thread allThreads[threadCount];
+  for(size_t i = 0; i < threadCount; i++)
+    allThreads[i] = boost::thread([&collection, &barrier, i] () {
       barrier.wait();
+      collection.Insert(i);
     });
 
   // Wait on all threads:
-  barrier.wait();
+  for(size_t i = 0; i < threadCount; i++)
+    allThreads[i].join();
 
   // Trivial size validation first:
   auto image = collection.GetImage();
