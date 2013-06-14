@@ -14,6 +14,17 @@ struct IntHash {
   }
 };
 
+TEST_F(LockReducedCollectionTest, ClearCheck) {
+  LockReducedCollection<int, IntHash> collection;
+  collection.Insert(10);
+
+  // Try to clear the collection and verify the happens-after ordering:
+  collection.Clear();
+  auto value = collection.GetImage();
+  ASSERT_TRUE(!!value) << "Collection image was empty, this is a fatal condition";
+  EXPECT_TRUE(value->empty()) << "Collection contained elements even after it was cleared";
+}
+
 TEST_F(LockReducedCollectionTest, SimpleMembershipCheck) {
   // Verify trivial insertion works as we expect.
   LockReducedCollection<int, IntHash> collection;
