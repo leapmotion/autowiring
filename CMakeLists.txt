@@ -96,6 +96,8 @@ set(
   GlobalInitTest.cpp
   GraphConstructionTest.h
   GraphConstructionTest.cpp
+  InterlockedRoutinesTest.h
+  InterlockedRoutinesTest.cpp
   LockReducedCollectionTest.h
   LockReducedCollectionTest.cpp
   MultiInheritTest.h
