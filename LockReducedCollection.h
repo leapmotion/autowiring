@@ -39,7 +39,10 @@ public:
     mutable std::shared_ptr<Collection> m_circular;
 
     // Use the base assignment implementation:
-    using std::unordered_set<T, Hash>::operator=;
+    Collection& operator=(const Collection& rhs) {
+      this->insert(rhs.begin(), rhs.end());
+      return *this;
+    }
 
     void Reset(void) {
       std::unordered_set<T, Hash>::clear();
