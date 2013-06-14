@@ -49,7 +49,7 @@ TEST_F(InterlockedRoutinesTest, VerifyCompareExchange) {
 }
 
 TEST_F(InterlockedRoutinesTest, VerifyCompareExchangePathological) {
-  static const int threadCount = 100;
+  static const size_t threadCount = 100;
 
   // State-checking value.  The value of this address isn't actually used, it's only here
   // to give us a convenient address we can start from.
@@ -90,6 +90,6 @@ TEST_F(InterlockedRoutinesTest, VerifyCompareExchangePathological) {
 
   // Verify that no illegal transitions have taken place by ensuring the count is precisely
   // the count we expect:
-  int offset = (char*)counter - &base;
+  size_t offset = (char*)counter - &base;
   EXPECT_EQ(offset, threadCount) << "Interlocked exchange under heavy contention failed to honor interlocking requirements";
 }
