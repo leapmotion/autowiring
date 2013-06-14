@@ -121,7 +121,7 @@ public:
   int totalXmit;
 
   void Run(void) override {
-    while(!ShouldStop())
+    while(!ShouldStop() && totalXmit < 0x7FFFF000)
       // Jam for awhile in an asynchronous way:
       while(++totalXmit % 100)
         Fire(&CallableInterface::ZeroArgs)();
