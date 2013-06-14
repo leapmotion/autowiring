@@ -45,10 +45,8 @@ public:
       clear();
     }
 
-    // TODO:  If this datastructure is too slow, then a pair of singly linked lists
-    // should be placed here.  This singly linked list should also be lock-free, and
-    // will contain all of the members added or deleted from this collection since
-    // the collection was constructed.
+    // TODO:  If this datastructure is too slow, then a singly linked list should be
+    // placed here to indicate the operations to be conducted on this collection.
     //
     // Once the collection is released back to the pool, the associated Reset method
     // should be used to update this collection according to the cached sequence of
