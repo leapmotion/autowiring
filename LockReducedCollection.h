@@ -42,7 +42,7 @@ public:
     using std::unordered_set<T, Hash>::operator=;
 
     void Reset(void) {
-      clear();
+      std::unordered_set<T, Hash>::clear();
     }
 
     // TODO:  If this datastructure is too slow, then a singly linked list should be
@@ -112,6 +112,7 @@ private:
   void Release(Collection* primary) const {
     // Spin lock exit:
     auto pPrior = exchange_release((void*volatile*)&m_primary, primary);
+    (void)pPrior;
 
     // The only time this assert might fail is if someone attempts to release a spin lock
     // they do not own.
