@@ -442,6 +442,34 @@ TEST_F(EventReceiverTest, VerifyNoCopyCallable) {
   sender->Fire(&CallableInterface::NoCopyMethod)(method);
 }
 
+TEST_F(EventReceiverTest, OrphanedMemberFireCheck) {
+  // This instance attempts to fire an event in its dtor
+  class DtorFire:
+    public EventSender<CallableInterface>
+  {
+  public:
+    ~DtorFire(void) {
+      Fire(&CallableInterface::ZeroArgs)();
+    }
+
+    using EventSender<CallableInterface>::Fire;
+  };
+
+  // Create the instance and let its enclosing context go away:
+  std::shared_ptr<DtorFire> dtorFireShared;
+  {
+    AutoCreateContext ctxt;
+    CurrentContextPusher pshr(ctxt);
+    dtorFireShared = AutoRequired<DtorFire>();
+  }
+
+  // Verify that a trivial firing doesn't cause an exception:
+  dtorFireShared->Fire(&CallableInterface::ZeroArgs)();
+
+  // Now release the last shared reference:
+  dtorFireShared.reset();
+}
+
 TEST_F(EventReceiverTest, PathologicalChildContextTest) {
   // Set up the jammer and receiver collections:
   AutoRequired<Jammer> jammer;
