@@ -98,7 +98,7 @@ public:
 
   /// <summary>
   /// Adds the specified observer to receive events dispatched from this instace
-  /// </su8mmary>
+  /// </summary>
   void operator+=(const std::shared_ptr<T>& rhs) {
     // Trivial insertion
     m_st.Insert(rhs);
@@ -111,7 +111,7 @@ public:
 
   /// <summary>
   /// Removes the specified observer from the set currently configured to receive events
-  /// </su8mmary>
+  /// </summary>
   void operator-=(const std::shared_ptr<T>& rhs) {
     // Trivial removal:
     auto nErased = m_st.Erase(rhs);
