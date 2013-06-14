@@ -34,7 +34,6 @@ TEST_F(LockReducedCollectionTest, ConcurrentWritersCheck) {
   LockReducedCollection<int, IntHash> collection;
 
   const size_t threadCount = 100;
-  boost::thread threads[threadCount];
   boost::barrier barrier(threadCount + 1);
 
   // VERY INEFFICIENT, but should put the collection through its paces
