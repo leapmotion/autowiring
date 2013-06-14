@@ -52,7 +52,7 @@ TEST_F(LockReducedCollectionTest, ConcurrentWritersCheck) {
   for(size_t i = 0; i < threadCount; i++)
     allThreads[i] = boost::thread([&collection, &barrier, i] () {
       barrier.wait();
-      collection.Insert(i);
+      collection.Insert((int)i);
     });
 
   // Wait on all threads:
@@ -65,5 +65,5 @@ TEST_F(LockReducedCollectionTest, ConcurrentWritersCheck) {
 
   // Verify that all numbers in the expected range exist:
   for(size_t i = 0; i < threadCount; i++)
-    ASSERT_EQ(image->count(i), 1) << "Element " << i << " was missing from the collection";
+    ASSERT_EQ(image->count((int)i), 1) << "Element " << i << " was missing from the collection";
 }
