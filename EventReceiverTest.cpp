@@ -466,7 +466,8 @@ TEST_F(EventReceiverTest, OrphanedMemberFireCheck) {
   // Verify that a trivial firing doesn't cause an exception:
   dtorFireShared->Fire(&CallableInterface::ZeroArgs)();
 
-  // Now release the last shared reference:
+  // Now release the last shared reference and ensure we can still fire
+  // even in a destructor pathway:
   dtorFireShared.reset();
 }
 
