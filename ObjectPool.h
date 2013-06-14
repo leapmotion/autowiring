@@ -2,11 +2,11 @@
 #ifndef _OBJECT_POOL_H
 #define _OBJECT_POOL_H
 #include <boost/thread/mutex.hpp>
-#include <memory>
 #include <set>
+#include SHARED_PTR_HEADER
 
 template<class T>
-class NoOp {
+struct NoOp {
   void operator() (T& op) {}
 };
 
