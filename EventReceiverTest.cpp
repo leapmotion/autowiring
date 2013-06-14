@@ -118,7 +118,7 @@ public:
     Ready();
   }
 
-  int totalXmit;
+  volatile int totalXmit;
 
   void Run(void) override {
     while(!ShouldStop() && totalXmit < 0x7FFFF000)
