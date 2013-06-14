@@ -157,7 +157,7 @@ public:
     do
       do pPrimary = m_primary;
       while(!pPrimary);
-    while(pPrimary != compare_exchange((void*volatile*)&m_primary, pPrimary, emptyPtr));
+    while(pPrimary != compare_exchange((void*volatile*)&m_primary, emptyPtr, pPrimary));
 
     // Allow the primary element to return to the object pool:
     pPrimary->m_circular.reset();
