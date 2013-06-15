@@ -38,7 +38,7 @@ TEST_F(LockReducedCollectionTest, SimpleMembershipCheck) {
 
   // Size check:
   auto image = collection.GetImage();
-  EXPECT_EQ(image->size(), 3) << "Unexpected collection count";
+  EXPECT_EQ(image->size(), static_cast<size_t>(3)) << "Unexpected collection count";
 }
 
 TEST_F(LockReducedCollectionTest, ConcurrentWritersCheck) {
@@ -65,5 +65,5 @@ TEST_F(LockReducedCollectionTest, ConcurrentWritersCheck) {
 
   // Verify that all numbers in the expected range exist:
   for(size_t i = 0; i < threadCount; i++)
-    ASSERT_EQ(image->count((int)i), 1) << "Element " << i << " was missing from the collection";
+    ASSERT_EQ(image->count((int)i), static_cast<size_t>(1)) << "Element " << i << " was missing from the collection";
 }
