@@ -41,6 +41,8 @@ set(
   Factory.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
+  InterlockedExchange.h
+  LockReducedCollection.h
   Object.h
   ObjectPool.h
   OutstandingCountTracker.cpp
@@ -55,11 +57,13 @@ set(
 if(BUILD_WINDOWS)
   set(Autowiring_SRCS
     CoreThreadWin.cpp
+	InterlockedExchangeWin.cpp
     ${Autowiring_SRCS}
   )
 else()
   set(Autowiring_SRCS
     CoreThreadUnix.cpp
+	InterlockedExchangeUnix.cpp
     ${Autowiring_SRCS}
   )
 endif()
@@ -92,6 +96,10 @@ set(
   GlobalInitTest.cpp
   GraphConstructionTest.h
   GraphConstructionTest.cpp
+  InterlockedRoutinesTest.h
+  InterlockedRoutinesTest.cpp
+  LockReducedCollectionTest.h
+  LockReducedCollectionTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
   PostConstructTest.h
