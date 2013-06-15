@@ -19,17 +19,23 @@ class EventReceiver;
 ///
 /// try {
 ///   rethrower(except);
-/// } catch(custom_type_1&) {
+/// } catch(custom_type_1& t1) {
 ///   ...handling code...
-/// } catch(custom_type_2&) {
+/// } catch(custom_type_2& t2) {
 ///   ...handling code...
 /// }
 ///
-/// Filtration methods should generally allow any unhandled rethrows to percolate to the
-/// caller.  If a filter method does not rethrow the passed exception, the exception is
-/// marked as "handled," which may change system behavior under certain circumstances.
-/// Generally speaking, unhandled exceptions will result in the teardown of the context
-/// that threw them, and by extension, any associated child contexts.
+/// Alternatively, this strategy may be used:
+
+/// try {
+///   rethrower(except);
+/// } catch(custom_type_1&) {
+/// } catch(custom_type_2&) {
+/// }
+/// ...handling code...
+///
+/// Filtration methods may safely allow any unhandled rethrows to percolate to the caller.
+/// Unhandled exceptions thrown in a context will cause that context to be torn down.
 ///
 /// All filter methods are guaranteed to be called in the thread and context of the code
 /// which threw the exception.  In the case of Fire, it will be in the context of the

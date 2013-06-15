@@ -88,8 +88,10 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
   std::shared_ptr<CoreContext> retVal(
     pContext,
     [this, childIterator] (CoreContext* pContext) {
-      lock_guard<mutex> lk(m_childrenLock);
-      this->m_children.erase(childIterator);
+      {
+        lock_guard<mutex> lk(m_childrenLock);
+        this->m_children.erase(childIterator);
+      }
       delete pContext;
     }
   );
@@ -152,18 +154,43 @@ void CoreContext::SignalTerminate(void) {
   // We're stopping now.
   m_shouldStop = true;
 
-  { // Tear down all the children.
-    lock_guard<mutex> lk(m_childrenLock);
-    for (t_childList::iterator it = m_children.begin(); it != m_children.end(); ++it) {
-      std::shared_ptr<CoreContext> ptr = it->lock();
-      if(ptr)
-      {
-        ptr->SignalTerminate();
+  {
+    // Teardown interleave assurance--all of these contexts will generally be destroyed
+    // at the exit of this block, due to the behavior of SignalTerminate, unless exterior
+    // context references (IE, related to snooping) exist.
+    //
+    // This is done in order to provide a stable collection that may be traversed during
+    // teardown outside of a lock.
+    std::vector<std::shared_ptr<CoreContext>> childrenInterleave;
+
+    {
+      // Tear down all the children.
+      lock_guard<mutex> lk(m_childrenLock);
+
+      // Fill strong lock series in order to ensure proper teardown interleave:
+      childrenInterleave.reserve(m_children.size());
+      for(auto q = m_children.begin(); q != m_children.end(); q++) {
+        auto childContext = q->lock();
+
+        // Technically, it *is* possible for this weak pointer to be expired, even though
+        // we're holding the lock.  This may happen if the context itself is exiting even
+        // as we are processing SignalTerminate.  In that case, the child context in
+        // question is blocking in its dtor lambda, waiting patiently until we're done,
+        // at which point it will modify the m_children collection.
+        if(!childContext)
+          continue;
+
+        // Add to the interleave so we can SignalTerminate in a controlled way.
+        childrenInterleave.push_back(q->lock());
       }
     }
+
+    // Now that we have a locked-down, immutable series, begin termination signalling:
+    for(size_t i = childrenInterleave.size(); i--; )
+      childrenInterleave[i]->SignalTerminate();
   }
 
-  // Shutmyself down.
+  // Shut myself down.
   SignalShutdown();
 
   // I shouldn't be referenced anywhere now.
