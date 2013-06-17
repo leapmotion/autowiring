@@ -47,6 +47,7 @@ set(
   ObjectPool.h
   OutstandingCountTracker.cpp
   OutstandingCountTracker.h
+  safe_dynamic_cast.h
   SharedPtrHash.h
   SharedPtrWrap.cpp
   SharedPtrWrap.h
