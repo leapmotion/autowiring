@@ -96,6 +96,11 @@ public:
   void WaitForEvent(void) override;
 
   /// <summary>
+  /// Blocks until a new dispatch member is added, dispatches, and then returns or timed out
+  /// </summary>
+  void WaitForEvent(const boost::chrono::duration<double, boost::milli>& milliseconds);
+
+  /// <summary>
   /// Similar to WaitForEvent, but does not block
   /// </summary>
   /// <returns>True if an event was dispatched, false if the queue was empty when checked</returns>
