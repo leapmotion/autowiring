@@ -202,7 +202,7 @@ public:
   bool Erase(const T& value) {
     // Create the destination type:
     auto secondary = Propose();
-    
+
     // Spin lock:
     auto primary = Acquire();
 

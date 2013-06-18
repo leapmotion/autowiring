@@ -5,4 +5,3 @@ class LockReducedCollectionTest:
   public EnclosedContextTestBase
 {
 };
-
