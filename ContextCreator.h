@@ -118,9 +118,13 @@ public:
     t_mpType mp;
 
     // Copy out and clear:
-    (boost::lock_guard<boost::mutex>)m_contextLock,
-    mp = m_mp,
-    m_mp.clear();
+    {
+      boost::lock_guard<boost::mutex> lk(m_contextLock);
+      for (auto q = m_mp.begin(); q != m_mp.end(); q++)
+        q->second->SignalShutdown();
+      mp = m_mp,
+      m_mp.clear();
+    }
 
     // Signal everyone first, then wait in a second pass:
     for(auto q = mp.begin(); q != mp.end(); q++)
