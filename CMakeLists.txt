@@ -53,6 +53,7 @@ set(
   SharedPtrWrap.h
   ThreadStatusMaintainer.cpp
   ThreadStatusMaintainer.h
+  TransientContextMember.h
 )
 
 if(BUILD_WINDOWS)
@@ -105,6 +106,8 @@ set(
   MultiInheritTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
+  TransientContextMemberTest.h
+  TransientContextMemberTest.cpp
   ScopeTest.h
   ScopeTest.cpp
   SnoopTest.h
