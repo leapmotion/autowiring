@@ -126,11 +126,8 @@ private:
   // This is a global STOP variable, used to signal shutdown when it's time to quit.
   bool m_shouldStop;
 
-  // This is the stop condition, which is set when all core threads have actually exited
-  boost::condition m_stop;
-
-  // This is the stop condition, which is set when core threads have been told to stop
-  boost::condition m_stopping;
+  // Condition, signalled when context state has been changed
+  boost::condition m_stateChanged;
 
   // Lists of event receivers, by name:
   typedef std::unordered_map<std::string, std::list<BoltBase*>> t_contextNameListeners;
@@ -245,13 +242,13 @@ public:
   /// </summary>
   void Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_coreLock);
-    m_stop.wait(lk, [this] () {return this->m_outstanding.expired();});
+    m_stateChanged.wait(lk, [this] () {return this->m_outstanding.expired();});
   }
 
   template<class Rep, class Period>
   bool Wait(const boost::chrono::duration<Rep, Period>& duration) {
     boost::unique_lock<boost::mutex> lk(m_coreLock);
-    return m_stop.wait_for(lk, duration, [this] () {return this->m_outstanding.expired();});
+    return m_stateChanged.wait_for(lk, duration, [this] () {return this->m_outstanding.expired();});
   }
 
   /// <summary>
