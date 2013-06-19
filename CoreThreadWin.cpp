@@ -3,6 +3,7 @@
 #include "CoreThread.h"
 #include <Windows.h>
 
+#pragma pack(push, 8)
 typedef struct tagTHREADNAME_INFO
 {
    DWORD dwType; // must be 0x1000
@@ -10,6 +11,7 @@ typedef struct tagTHREADNAME_INFO
    DWORD dwThreadID; // thread ID (-1=caller thread)
    DWORD dwFlags; // reserved for future use, must be zero
 } THREADNAME_INFO;
+#pragma pack(pop)
 
 void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
 {
