@@ -51,10 +51,8 @@ void DispatchQueue::WaitForEvent(void) {
 
 void DispatchQueue::WaitForEvent(const boost::chrono::duration<double, boost::milli>& milliseconds) {
   boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-  if(m_aborted) {
+  if(m_aborted)
     throw dispatch_aborted_exception();
-    return;
-  }
 
   m_queueUpdated.wait_for(lk, milliseconds, [this] () -> bool {
     if(m_aborted)
