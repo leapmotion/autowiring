@@ -137,7 +137,7 @@ void CoreContext::SignalShutdown(void) {
 
   // Global context is now "stop":
   m_shouldStop = true;
-  m_stopping.notify_all();
+  m_stateChanged.notify_all();
 
   // Also pass notice to all child threads:
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)

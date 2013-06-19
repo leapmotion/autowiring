@@ -9,6 +9,19 @@
 
 using boost::chrono::milliseconds;
 
+TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
+  class WeakPtrChecker {
+  public:
+    ~WeakPtrChecker(void) {
+      EXPECT_TRUE(self.expired()) << "Shared pointer to this was not expired at destructor time";
+    }
+
+    std::weak_ptr<WeakPtrChecker> self;
+  };
+
+  std::shared_ptr<WeakPtrChecker>(new WeakPtrChecker);
+}
+
 TEST_F(ContextCleanupTest, VerifyNoEarlyDtor) {
   std::weak_ptr<SimpleObject> weak;
 
