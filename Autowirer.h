@@ -191,6 +191,8 @@ public:
   /// </remarks>
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
+    static_assert(!std::is_base_of<TransientContextMember, T>::value, "Cannot add a transient member to an autowirer");
+
     AddInternal(value);
     ContextMember* pContextMember = safe_dynamic_cast<ContextMember, T>::Cast(value.get());
     if(pContextMember)

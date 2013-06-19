@@ -246,6 +246,22 @@ public:
 };
 
 /// <summary>
+/// Unconditionally creates a new transient member of type T and adds it to the current context
+/// </summary>
+template<class T>
+class AutoTransient:
+  public std::shared_ptr<T>
+{
+public:
+  AutoTransient(void):
+    std::shared_ptr<T>(new T)
+  {
+    // Obtain current context and associate with any event handlers:
+    ;
+  }
+};
+
+/// <summary>
 /// Provides a simple way to obtain a reference to the current context
 /// </summary>
 /// <remarks>
