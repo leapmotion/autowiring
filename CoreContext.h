@@ -6,16 +6,13 @@
 #include "Bolt.h"
 #include "CurrentContextPusher.h"
 #include "DependentContext.h"
+#include "TransientContextMember.h"
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/tss.hpp>
 #include <list>
 #include <memory>
-#if defined(__APPLE__) && !defined(_LIBCPP_VERSION)
-#include <tr1/unordered_map>
-#else
-#include <unordered_map>
-#endif
+#include STL_UNORDERED_MAP
 
 #ifndef ASSERT
   #ifdef _DEBUG
