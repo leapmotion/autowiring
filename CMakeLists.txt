@@ -42,6 +42,7 @@ set(
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   InterlockedExchange.h
+  LockFreeList.h
   LockReducedCollection.h
   Object.h
   ObjectPool.h
@@ -100,6 +101,8 @@ set(
   GraphConstructionTest.cpp
   InterlockedRoutinesTest.h
   InterlockedRoutinesTest.cpp
+  LockFreeListTest.h
+  LockFreeListTest.cpp
   LockReducedCollectionTest.h
   LockReducedCollectionTest.cpp
   MultiInheritTest.h
