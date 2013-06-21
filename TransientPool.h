@@ -8,7 +8,9 @@
 /// Implements a transient pool with forwarding for member events
 /// </summary>
 /// <remarks>
-/// A transient pool must strictly be non-transient, and maintains a collection of weak pointers.
+/// The transient pool must not _itself_ be transient; rather, it is a durable collection of transient members.
+///
+/// The transient pool will only attach to event senders whose transmitted event matches T _exactly_.
 /// </remarks>
 template<class T>
 class TransientPool:
@@ -16,10 +18,10 @@ class TransientPool:
   public TransientPoolBase
 {
 public:
-  static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot operate a transient pool on a non-event type");
-  static_assert(std::is_base_of<TransientContextMember, T>::value, "Cannot operate a transient pool on a nontransient type");
-
   TransientPool(void) {
+    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot operate a transient pool on a non-event type");
+    static_assert(std::is_base_of<TransientContextMember, T>::value, "Cannot operate a transient pool on a nontransient type");
+
     // Immediately ready
     Ready();
   }
