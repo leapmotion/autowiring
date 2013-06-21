@@ -8,7 +8,7 @@
 #include "LockFreeList.h"
 #include "LockReducedCollection.h"
 #include "SharedPtrHash.h"
-#include "TransientPoolBase.h"
+#include "TransientPool.h"
 #include <boost/thread/shared_mutex.hpp>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
@@ -76,7 +76,8 @@ protected:
   t_stType m_dispatch;
 
   // Collection of all transient pools:
-  typedef LockReducedCollection<std::shared_ptr<TransientPoolBase>, SharedPtrHash<TransientPoolBase>> t_transientSet;
+  typedef TransientPool<T> t_transientPool;
+  typedef LockReducedCollection<std::shared_ptr<t_transientPool>, SharedPtrHash<TransientPoolBase>> t_transientSet;
   t_transientSet m_stTransient;
 
 public:
@@ -100,6 +101,14 @@ public:
     std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     if(casted)
       *this -= casted;
+  }
+
+  void operator+=(const std::shared_ptr<TransientPool<T>>& rhs) {
+    m_stTransient.Insert(rhs);
+  }
+
+  void operator-=(const std::shared_ptr<TransientPool<T>>& rhs) {
+    m_stTransient.Erase(rhs);
   }
 
   /// <summary>
@@ -378,13 +387,21 @@ public:
   // Event attachment and detachment virtuals
   virtual EventSenderBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
     t_base::operator+=(rhs);
-    EventSenderSingle<T>::operator+=(rhs);
+
+    auto ptr = std::dynamic_pointer_cast<TransientPool<T>, EventReceiver>(rhs);
+    if(ptr)
+      // We can cast the transient pool to a transient pool managing our current type
+      EventSenderSingle<T>::operator+=(ptr);
     return *this;
   }
 
   virtual EventSenderBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
     t_base::operator-=(rhs);
-    EventSenderSingle<T>::operator-=(rhs);
+    
+    auto ptr = std::dynamic_pointer_cast<TransientPool<T>, EventReceiver>(rhs);
+    if(ptr)
+      // We can cast the transient pool to a transient pool managing our current type
+      EventSenderSingle<T>::operator-=(ptr);
     return *this;
   }
 
@@ -420,13 +437,26 @@ public:
   // Event attachment and detachment pure virtuals
   virtual EventSenderBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
     EventSenderSingle<T>::operator+=(rhs);
+
+    // Transient pool detect:
+    auto ptr = std::dynamic_pointer_cast<TransientPool<T>, EventReceiver>(rhs);
+    if(ptr)
+      // We can cast the transient pool to a transient pool managing our current type
+      EventSenderSingle<T>::operator+=(ptr);
     return *this;
   }
 
   virtual EventSenderBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
     EventSenderSingle<T>::operator-=(rhs);
+
+    // Transient pool detect:
+    auto ptr = std::dynamic_pointer_cast<TransientPool<T>, EventReceiver>(rhs);
+    if(ptr)
+      // We can cast the transient pool to a transient pool managing our current type
+      EventSenderSingle<T>::operator-=(ptr);
     return *this;
   }
+
 
 protected:
   using EventSenderSingle<T>::Fire;

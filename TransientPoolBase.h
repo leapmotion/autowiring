@@ -4,7 +4,8 @@
 class EventReceiver;
 class TransientContextMember;
 
-class TransientPoolBase
+class TransientPoolBase:
+  public virtual EventReceiver
 {
 public:
   virtual ~TransientPoolBase(void) {}
