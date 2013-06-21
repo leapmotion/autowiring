@@ -8,6 +8,7 @@
 #include "LockFreeList.h"
 #include "LockReducedCollection.h"
 #include "SharedPtrHash.h"
+#include "TransientPoolBase.h"
 #include <boost/thread/shared_mutex.hpp>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
@@ -70,13 +71,13 @@ protected:
   typedef LockReducedCollection<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
   t_listenerSet m_st;
 
-  // Collection of all transient listeners:
-  typedef LockFreeList<std::weak_ptr<T>> t_transientSet;
-  t_transientSet m_stTransient;
-
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
+
+  // Collection of all transient pools:
+  typedef LockReducedCollection<std::shared_ptr<TransientPoolBase>, SharedPtrHash<TransientPoolBase>> t_transientSet;
+  t_transientSet m_stTransient;
 
 public:
   /// <summary>
@@ -140,11 +141,10 @@ public:
     FilterFiringException(dynamic_cast<const EventSenderBase*>(this), pReceiver);
   }
 
-  // Convenience defines for Fire overloads, consider removing
-  #define FIRE_CATCHER_START try {
-  #define FIRE_CATCHER_END } catch(...) { this->PassFilterFiringException((*q).get()); }
-
-  // Zero-argument deferred call:
+  /// <summary>
+  /// Zero-argument deferred call relay
+  /// </summary>
+  /// <param name="fn">A nearly-curried routine to be invoked</param>
   template<class Fn>
   void FireCurried(Fn&& fn) const {
     // Held names first:
@@ -158,12 +158,17 @@ public:
         }
     }
 
-    // Weak names next:
-    m_stTransient.Enumerate([&fn] (std::weak_ptr<T>& ptrWeak) {
-      auto ptr = ptrWeak.lock();
-      if(ptr)
-        fn(*ptr);
-    });
+    // Transient pools next:
+    {
+      auto relay = [fn] (EventReceiver& er) {
+        auto* casted = dynamic_cast<T*>(&er);
+        if(casted)
+          fn(*casted);
+      };
+      auto st = m_stTransient.GetImage();
+      for(auto q = st->begin(); q != st->end(); q++)
+        (**q).PoolInvoke(relay);
+    }
   }
 
 protected:

@@ -1,16 +1,17 @@
 #include "stdafx.h"
 #include "TransientContextMemberTest.h"
 #include "TransientContextMember.h"
+#include "TransientPool.h"
 
 class TransientEventA:
-  public EventReceiver
+  public virtual EventReceiver
 {
 public:
   virtual void ZeroArgsA(void) = 0;
 };
 
 class TransientEventB:
-  public EventReceiver
+  public virtual EventReceiver
 {
 public:
   virtual void ZeroArgsB(void) = 0;
@@ -53,11 +54,18 @@ public:
   using EventSender::Fire;
 };
 
+class MyTransientPool:
+  public TransientPool<TransientClassA>
+{
+};
+
 TEST_F(TransientContextMemberTest, VerifyTransience) {
   std::weak_ptr<TransientClassA> transWeak;
 
   AutoRequired<DurableClassA> durable;
   {
+    AutoRequired<MyTransientPool> pool;
+
     AutoTransient<TransientClassA> trans;
     transWeak = trans;
 
