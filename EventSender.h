@@ -5,6 +5,7 @@
 #include "DispatchQueue.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
+#include "LockFreeList.h"
 #include "LockReducedCollection.h"
 #include "SharedPtrHash.h"
 #include <boost/thread/shared_mutex.hpp>
@@ -68,6 +69,10 @@ protected:
   // Collection of all known listeners:
   typedef LockReducedCollection<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
   t_listenerSet m_st;
+
+  // Collection of all transient listeners:
+  typedef LockFreeList<std::weak_ptr<T>> t_transientSet;
+  t_transientSet m_stTransient;
 
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
@@ -139,76 +144,118 @@ public:
   #define FIRE_CATCHER_START try {
   #define FIRE_CATCHER_END } catch(...) { this->PassFilterFiringException((*q).get()); }
 
+  // Zero-argument deferred call:
+  template<class Fn>
+  void FireCurried(Fn&& fn) const {
+    // Held names first:
+    {
+      auto st = m_st.GetImage();
+      for(auto q = st->begin(); q != st->end(); ++q)
+        try {
+          fn(**q);
+        } catch(...) {
+          this->PassFilterFiringException((*q).get());
+        }
+    }
+
+    // Weak names next:
+    m_stTransient.Enumerate([&fn] (std::weak_ptr<T>& ptrWeak) {
+      auto ptr = ptrWeak.lock();
+      if(ptr)
+        fn(*ptr);
+    });
+  }
+
 protected:
   // Two-parenthetical invocations
   std::function<void ()> Fire(void (T::*fnPtr)()) const {
     return
       [this, fnPtr] () {
-        auto st = m_st.GetImage();
-        for(auto q = st->begin(); q != st->end(); ++q)
-          FIRE_CATCHER_START
-            (**q.*fnPtr)();
-          FIRE_CATCHER_END
+        FireCurried(
+          [=] (T& obj) {
+            (obj.*fnPtr)();
+          }
+        );
       };
   }
 
   template<class Arg1>
-  std::function<void (Arg1)> Fire(void (T::*fnPtr)(Arg1)) const {
+  std::function<void (const Arg1&)> Fire(void (T::*fnPtr)(Arg1)) const {
     return
-      [this, fnPtr] (Arg1 arg1) {
-        auto st = m_st.GetImage();
-        for(auto q = st->begin(); q != st->end(); ++q)
-          FIRE_CATCHER_START
-            (**q.*fnPtr)(arg1);
-          FIRE_CATCHER_END
+      [this, fnPtr] (const Arg1& arg1) {
+        auto fnPtrCpy = fnPtr;
+        auto arg1Ptr = &arg1;
+        FireCurried(
+          [fnPtrCpy, arg1Ptr] (T& obj) {
+            (obj.*fnPtrCpy)(*arg1Ptr);
+          }
+        );
       };
   }
 
   template<class Arg1, class Arg2>
-  std::function<void (Arg1, Arg2)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
+  std::function<void (const Arg1&, const Arg2&)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
     return
-      [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
-        auto st = m_st.GetImage();
-        for(auto q = st->begin(); q != st->end(); ++q)
-          FIRE_CATCHER_START
-            (**q.*fnPtr)(arg1, arg2);
-          FIRE_CATCHER_END
+      [this, fnPtr] (const Arg1& arg1, const Arg2& arg2) {
+        auto fnPtrCpy = fnPtr;
+        auto arg1Ptr = &arg1;
+        auto arg2Ptr = &arg2;
+        FireCurried(
+          [fnPtrCpy, arg1Ptr, arg2Ptr] (T& obj) {
+            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr);
+          }
+        );
       };
   }
 
   template<class Arg1, class Arg2, class Arg3>
-  std::function<void (Arg1, Arg2, Arg3)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
+  std::function<void (const Arg1&, const Arg2&, const Arg3&)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
-        auto st = m_st.GetImage();
-        for(auto q = st->begin(); q != st->end(); ++q)
-          FIRE_CATCHER_START
-            (**q.*fnPtr)(arg1, arg2, arg3);
-          FIRE_CATCHER_END
+        auto fnPtrCpy = fnPtr;
+        auto arg1Ptr = &arg1;
+        auto arg2Ptr = &arg2;
+        auto arg3Ptr = &arg3;
+        FireCurried(
+          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr] (T& obj) {
+            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr);
+          }
+        );
       };
   }
 
   template<class Arg1, class Arg2, class Arg3, class Arg4>
-  std::function<void (Arg1, Arg2, Arg3, Arg4)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)) const {
+  std::function<void (const Arg1&, const Arg2&, const Arg3&, const Arg4&)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) {
-        auto st = m_st.GetImage();
-        for(auto q = st->begin(); q != st->end(); ++q)
-          FIRE_CATCHER_START
-            (**q.*fnPtr)(arg1, arg2, arg3, arg4);
-          FIRE_CATCHER_END
+        auto fnPtrCpy = fnPtr;
+        auto arg1Ptr = &arg1;
+        auto arg2Ptr = &arg2;
+        auto arg3Ptr = &arg3;
+        auto arg4Ptr = &arg4;
+        FireCurried(
+          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr, arg4Ptr] (T& obj) {
+            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr, *arg4Ptr);
+          }
+        );
       };
   }
 
   template<class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-  std::function<void (Arg1, Arg2, Arg3, Arg4, Arg5)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
+  std::function<void (const Arg1&, const Arg2&, const Arg3&, const Arg4&, const Arg5&)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) {
-        auto st = m_st.GetImage();
-        for(auto q = st->begin(); q != st->end(); ++q)
-          FIRE_CATCHER_START
-            (**q.*fnPtr)(arg1, arg2, arg3, arg4, arg5);
-          FIRE_CATCHER_END
+        auto fnPtrCpy = fnPtr;
+        auto arg1Ptr = &arg1;
+        auto arg2Ptr = &arg2;
+        auto arg3Ptr = &arg3;
+        auto arg4Ptr = &arg4;
+        auto arg5Ptr = &arg5;
+        FireCurried(
+          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr, arg4Ptr, arg5PTr] (T& obj) {
+            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr, *arg4Ptr, *arg5Ptr);
+          }
+        );
       };
   }
 
