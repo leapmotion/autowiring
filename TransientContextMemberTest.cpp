@@ -54,6 +54,11 @@ public:
   using EventSender::Fire;
 };
 
+class DurableClassB:
+  public DurableClassA
+{
+};
+
 class MyTransientPool:
   public TransientPool<TransientClassA>
 {
@@ -64,6 +69,7 @@ TEST_F(TransientContextMemberTest, VerifyTransience) {
 
   AutoRequired<DurableClassA> durable;
   {
+    AutoRequired<DurableClassB> durableB;
     AutoRequired<MyTransientPool> pool;
 
     AutoTransient<TransientClassA> trans;
@@ -72,6 +78,7 @@ TEST_F(TransientContextMemberTest, VerifyTransience) {
     // Verify bidirectional event transmission:
     trans->Fire(&TransientEventB::ZeroArgsB)();
     durable->Fire(&TransientEventA::ZeroArgsA)();
+    durableB->Fire(&TransientEventA::ZeroArgsA)();
 
     EXPECT_TRUE(trans->m_received) << "Transient class did not receive an event as expected";
     EXPECT_TRUE(durable->m_received) << "Durable instance did not receive a message from a transient instance";
