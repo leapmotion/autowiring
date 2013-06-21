@@ -58,7 +58,9 @@ set(
 )
 
 if(BUILD_WINDOWS)
+  enable_language(ASM_MASM)
   set(Autowiring_SRCS
+	interlocked.asm
     CoreThreadWin.cpp
 	InterlockedExchangeWin.cpp
     ${Autowiring_SRCS}

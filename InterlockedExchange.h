@@ -8,6 +8,11 @@ void* exchange_acquire(void*volatile* dest, void* exchange);
 void* exchange_release(void*volatile* dest, void* exchange);
 
 /// <summary>
+/// Interlocked 32-bit add routine
+/// </summary>
+long interlocked_add(volatile long* dest, long addBy);
+
+/// <summary>
 /// Performs an interlocked compare exchange with the passed field
 /// </summary>
 /// <returns>The value of *dest prior to the swap</returns>
