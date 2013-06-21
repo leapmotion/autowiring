@@ -86,7 +86,7 @@ public:
 };
 
 class CallableInterface:
-  public EventReceiver
+  public virtual EventReceiver
 {
 public:
   virtual void ZeroArgs(void) = 0;

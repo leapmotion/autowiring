@@ -1,0 +1,28 @@
+#pragma once
+#include FUNCTIONAL_HEADER
+
+class EventReceiver;
+class TransientContextMember;
+
+class TransientPoolBase
+{
+public:
+  virtual ~TransientPoolBase(void) {}
+  
+  /// <summary>
+  /// Adds the specified transient context member to the pool
+  /// </sumamry>
+  /// <remarks>
+  /// Only a weak pointer is held internally to the passed member.  The member will stop
+  /// receiving events as soon as it goes out of scope.
+  ///
+  /// This method may be called even if the passed member does not match the type of the
+  /// derived pool.  In this case, the function will return false.
+  /// </remarks>
+  virtual bool Add(std::shared_ptr<TransientContextMember> pMember) = 0;
+
+  /// <summary>
+  /// Immediate fire routine
+  /// </summary>
+  virtual void PoolInvoke(const std::function<void (EventReceiver&)>& eventProxy) = 0;
+};

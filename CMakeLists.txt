@@ -55,6 +55,8 @@ set(
   ThreadStatusMaintainer.cpp
   ThreadStatusMaintainer.h
   TransientContextMember.h
+  TransientPool.h
+  TransientPoolBase.h
 )
 
 if(BUILD_WINDOWS)

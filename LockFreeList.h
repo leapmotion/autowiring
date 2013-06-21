@@ -14,7 +14,9 @@ public:
   static const int sc_concurrencyMask = ((1 << sc_maxConcurrency) - 1) << sc_maxEntry;
   static const int sc_entryMax = (1 << sc_maxEntry) - 1;
 
-  LockFreeList(void) {
+  LockFreeList(void):
+    m_pLookaside(nullptr)
+  {
     m_sentry.transciever = 0;
     m_sentry.m_entry = nullptr;
   }
@@ -26,7 +28,8 @@ public:
     });
 
     // Delete the lookaside list proper:
-    delete m_pLookaside;
+    if(m_pLookaside)
+      delete m_pLookaside;
   }
 
   union Link {
@@ -56,7 +59,7 @@ public:
     // Traffic increment:
     while(cur) {
       // TODO:  Interlocked increment
-      ;
+      break;
     }
   }
 };
