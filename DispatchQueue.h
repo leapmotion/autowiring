@@ -130,7 +130,7 @@ public:
   /// Certain derived implementations may proxy the event call, sending it elsewhere, possibly more than
   /// once, which requires that the passed routine be invariant.
   /// </remarks>
-  virtual void operator+=(const std::function<void (EventReceiver&)>& eventProxy) {
+  virtual void AttachProxyRoutine(const std::function<void (EventReceiver&)>& eventProxy) {
     *this += [this, eventProxy] () {
       eventProxy(*this);
     };
