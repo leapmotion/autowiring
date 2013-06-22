@@ -313,24 +313,26 @@ protected:
       [this, fnPtr] (const tArg1& arg1) {
         auto f = fnPtr;
         for(EventSenderSingle<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
-          T* ptr = dynamic_cast<T*>(*q);
-
-          // If the pointer cannot support a EventDispatcher, we _cannot_ defer it
-          // TODO:  Consider constructing a separate set just containing EventDispatcher-castables.  Whether an object can
-          // be cast to a particular type is declarative, anyway.
-          EventDispatcher* pDispatchable = dynamic_cast<EventDispatcher*>(ptr);
-          if(!pDispatchable || !pDispatchable->CanAccept())
+          auto* pCur = *q;
+          if(!pCur->CanAccept())
             continue;
+
+          typedef T targetType;
 
           // Force off the const modifier so we can copy into the lambda just once
           tArg1& arg1Forced = (tArg1&)arg1;
 
           // Pass the copy into the lambda:
-          **q += [ptr, f, arg1Forced] () mutable {
-            (ptr->*f)(
-              std::move(arg1Forced)
-            );
-          };
+          pCur->AttachProxyRoutine(
+            [f, arg1Forced] (EventReceiver& obj) mutable {
+              // Now we perform the cast:
+              targetType* pObj = dynamic_cast<targetType*>(&obj);
+
+              (pObj->*f)(
+                std::move(arg1Forced)
+              );
+            }
+          );
         }
       };
   }
