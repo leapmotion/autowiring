@@ -21,7 +21,7 @@ class AutowiredCreator:
 {
 public:
   typedef shared_ptr<T> t_ptrType;
-  
+
   /// <summary>
   /// Creates a new instance if this instance isn't autowired
   /// </summary>
@@ -32,7 +32,7 @@ public:
   void Create(void) {
     if(*this)
       return;
-    
+
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
     // If you are getting an error tracked to this line, ensure that class T is totally
     // defined at the point where the Autowired instance is constructed.  Generally,
@@ -49,7 +49,7 @@ public:
     // compiler tries to instantiate AutowiredCreator::Create (the function you're in right
     // now!) it finds that it can't create a new instance of type MyClass because it has
     // no idea how to construct it!
-    // 
+    //
     // This problem can be fixed two ways:  You can include the definition of MyClass before
     // MyStructure is defined, OR, you can give MyStructure a nontrivial constructor, and
     // then ensure that the definition of MyClass is available before the nontrivial
@@ -71,7 +71,7 @@ public:
     // Okay, we're ready to go now, we can release
     // the shared pointer so any lambdas disappear
     AutowirableSlot::m_tracker = std::shared_ptr<AutowirableSlot>();
-    
+
     // TODO:  Allow this to be lazily invoked
     // It would be nice if this constructor is only invoked on the first dereference
     // of this autowired object.  That would allow us to specify default types that
@@ -126,7 +126,7 @@ private:
 
 public:
   typedef shared_ptr<GlobalCoreContext> t_ptrType;
-  
+
   AutowiredCreator(void):
     std::shared_ptr<GlobalCoreContext>(GetGlobalContext())
   {
@@ -219,7 +219,7 @@ public:
   AutoRequired(void) {
     if(*this)
       return;
-    
+
     this->reset(fn());
     AutowirableSlot::LockContext()->Add(*this);
   }

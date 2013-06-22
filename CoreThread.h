@@ -34,7 +34,7 @@ protected:
 
   // Flag indicating that we need to stop right now
   bool m_stop;
-  
+
   // Ready condition
   bool m_ready;
 
@@ -72,7 +72,7 @@ protected:
   void AcceptDispatchDelivery(void) {
     m_canAccept = true;
   }
-  
+
   /// <summary>
   /// Indicates that no more deferred procedure calls should be pended
   /// </summary>

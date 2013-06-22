@@ -32,14 +32,14 @@ AutoNetworkMonitor::Space::t_mpType::iterator AutoNetworkMonitor::Space::Find(co
   if(q == m_mp.begin())
     // The first key in the map already occurs after our pointer, return here.
     return m_mp.end();
-      
+
   q--;
   return
     q->first.Enclosed(ptr) ?
 
     // This pointer matches, we can return it
     q :
-        
+
     // Found something, but it's not an enclosure of the passed pointer
     m_mp.end();
 }
@@ -69,7 +69,7 @@ void AutoNetworkMonitor::PostConstruct(void* pSpace) {
   // Locate the space:
 
   // Resolve all allocations:
-  
+
   // Lock and map:
 }
 

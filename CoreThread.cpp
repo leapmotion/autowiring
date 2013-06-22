@@ -40,7 +40,7 @@ void CoreThread::DoRun(void) {
       // Generic exception, unhandled, we can't print anything off.
       Autowirer::DebugPrintCurrentExceptionInformation();
     }
-    
+
     // Signal shutdown on the enclosing context
     GetContext()->SignalShutdown();
   }

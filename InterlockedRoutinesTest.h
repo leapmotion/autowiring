@@ -5,4 +5,3 @@ class InterlockedRoutinesTest:
   public testing::Test
 {
 };
-

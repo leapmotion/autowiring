@@ -49,7 +49,7 @@ protected:
 
   // A back-reference to ourselves, weak in order to prevent a degenerate cyclic reference
   std::weak_ptr<Autowirer> m_self;
-  
+
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes
   // away.
@@ -58,7 +58,7 @@ protected:
   // the class name.
   typedef std::multimap<std::string, SharedPtrWrapBase*> t_mpType;
   t_mpType m_byType;
-  
+
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
 
@@ -79,7 +79,7 @@ protected:
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
   void UpdateDeferredElements(void);
-  
+
   /// Adds an object of any kind to the IOC container
   /// </summary>
   /// <param name="value">The member to be added</param>
@@ -203,7 +203,7 @@ public:
   /// Overload of Add based on ContextMember
   /// </summary>
   void AddContextMember(ContextMember* pPtr);
-  
+
   /// <summary>
   /// Attempts to find a member in the container that can be passed to the specified type
   /// </summary>
@@ -224,7 +224,7 @@ public:
   std::shared_ptr<T> FindByType(const Autowired<T>&) {
     return FindByType<T>();
   }
-  
+
   template<class T>
   std::shared_ptr<T> FindByType(void) {
     // Attempt a resolution by type first:
@@ -269,7 +269,7 @@ public:
     Defer(slot);
     return false;
   }
-  
+
   template<class S>
   void Defer(S& slot) {
     class Deferred:
@@ -279,7 +279,7 @@ public:
         DeferredBase(pThis, slot.m_tracker),
         slot(slot)
       {}
-      
+
       S& slot;
 
       bool operator()() override {
@@ -339,7 +339,7 @@ public:
     // Scan the list of compatible senders:
     for(auto q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
       **q += pRecvr;
-    
+
     // Delegate ascending resolution, where possible.  This ensures that the parent context links
     // this event receiver to compatible senders in the parent context itself.
     if(m_pParent)

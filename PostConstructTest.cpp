@@ -85,7 +85,7 @@ TEST_F(PostConstructTest, VerifySmartBehavior) {
   std::shared_ptr<CoreContext> subContext = CoreContext::CurrentContext()->Create();
   CurrentContextPusher cur(subContext);
 
-  // Add the smart class, which should allow 
+  // Add the smart class, which should allow
   subContext->Add<Smarter>();
 
   // Initially, value should be one, which is the default
