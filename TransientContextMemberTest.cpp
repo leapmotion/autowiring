@@ -72,7 +72,7 @@ TEST_F(TransientContextMemberTest, VerifyTransience) {
     AutoRequired<DurableClassB> durableB;
     AutoRequired<MyTransientPool> pool;
 
-    AutoTransient<TransientClassA> trans;
+    AutoTransient<TransientClassA> trans(*pool);
     transWeak = trans;
 
     // Verify bidirectional event transmission:

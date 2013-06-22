@@ -3,6 +3,8 @@
 
 class EventReceiver;
 class TransientContextMember;
+template<class T, class Witness = T>
+class TransientPool;
 
 class TransientPoolBase:
   public virtual EventReceiver
