@@ -86,9 +86,9 @@ public:
   /// space.
   /// </remarks>
   void PreConstruct(void* pMem, size_t szSpace);
-  
+
   /// <summary>
-  /// Notifies this network monitor that a new 
+  /// Notifies this network monitor that a new
   /// </summary>
   void Notify(const AutowirableSlot& lhs);
 
