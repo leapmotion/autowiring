@@ -287,15 +287,13 @@ protected:
       [this, fnPtr] () {
         auto f = fnPtr;
         for(auto q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
-          T* ptr = dynamic_cast<T*>(*q);
-
-          // EventDispatcher check:
-          EventDispatcher* pDispatchable = dynamic_cast<EventDispatcher*>(ptr);
-          if(!pDispatchable || !pDispatchable->CanAccept())
+          EventDispatcher* pCur = *q;
+          if(!pCur->CanAccept())
             continue;
 
-          **q += [ptr, f] () {
-            (ptr->*f)();
+          // Straight dispatch queue insertion:
+          **q += [f] (T& obj) {
+            (obj.*f)();
           };
         }
       };
