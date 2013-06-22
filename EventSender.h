@@ -287,14 +287,19 @@ protected:
       [this, fnPtr] () {
         auto f = fnPtr;
         for(auto q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
-          EventDispatcher* pCur = *q;
+          auto* pCur = *q;
           if(!pCur->CanAccept())
             continue;
 
+          typedef T targetType;
+
           // Straight dispatch queue insertion:
-          **q += [f] (T& obj) {
-            (obj.*f)();
-          };
+          pCur->AttachProxyRoutine([f] (EventReceiver& obj) {
+            // Now we perform the cast:
+            targetType* pObj = dynamic_cast<targetType*>(&obj);
+
+            (pObj->*f)();
+          });
         }
       };
   }
