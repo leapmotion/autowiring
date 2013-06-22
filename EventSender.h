@@ -8,7 +8,7 @@
 #include "LockFreeList.h"
 #include "LockReducedCollection.h"
 #include "SharedPtrHash.h"
-#include "TransientPool.h"
+#include "TransientPoolBase.h"
 #include <boost/thread/shared_mutex.hpp>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
@@ -76,8 +76,7 @@ protected:
   t_stType m_dispatch;
 
   // Collection of all transient pools:
-  typedef TransientPool<T> t_transientPool;
-  typedef LockReducedCollection<std::shared_ptr<t_transientPool>, SharedPtrHash<TransientPoolBase>> t_transientSet;
+  typedef LockReducedCollection<std::shared_ptr<TransientPoolBase>, SharedPtrHash<TransientPoolBase>> t_transientSet;
   t_transientSet m_stTransient;
 
 public:
@@ -103,11 +102,11 @@ public:
       *this -= casted;
   }
 
-  void operator+=(const std::shared_ptr<TransientPool<T>>& rhs) {
+  void operator+=(const std::shared_ptr<TransientPoolBase>& rhs) {
     m_stTransient.Insert(rhs);
   }
 
-  void operator-=(const std::shared_ptr<TransientPool<T>>& rhs) {
+  void operator-=(const std::shared_ptr<TransientPoolBase>& rhs) {
     m_stTransient.Erase(rhs);
   }
 
@@ -439,7 +438,7 @@ public:
     EventSenderSingle<T>::operator+=(rhs);
 
     // Transient pool detect:
-    auto ptr = std::dynamic_pointer_cast<TransientPool<T>, EventReceiver>(rhs);
+    auto ptr = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
     if(ptr)
       // We can cast the transient pool to a transient pool managing our current type
       EventSenderSingle<T>::operator+=(ptr);
@@ -450,7 +449,7 @@ public:
     EventSenderSingle<T>::operator-=(rhs);
 
     // Transient pool detect:
-    auto ptr = std::dynamic_pointer_cast<TransientPool<T>, EventReceiver>(rhs);
+    auto ptr = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
     if(ptr)
       // We can cast the transient pool to a transient pool managing our current type
       EventSenderSingle<T>::operator-=(ptr);

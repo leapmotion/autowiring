@@ -7,19 +7,19 @@
 /// <summary>
 /// Implements a transient pool with forwarding for member events
 /// </summary>
+/// <param name="T">The transient type to be relayed</param>
+/// <param name="Witness">A polymorphic, constructable type which describes all of the events to be received</param>
 /// <remarks>
 /// The transient pool must not _itself_ be transient; rather, it is a durable collection of transient members.
-///
-/// The transient pool will only attach to event senders whose transmitted event matches T _exactly_.
 /// </remarks>
-template<class T>
+template<class T, class Witness = T>
 class TransientPool:
   public CoreThread,
   public TransientPoolBase
 {
 public:
   TransientPool(void) {
-    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot operate a transient pool on a non-event type");
+    static_assert(std::is_base_of<EventReceiver, Witness>::value, "Cannot operate a transient pool on a witness type that does not receive events");
     static_assert(std::is_base_of<TransientContextMember, T>::value, "Cannot operate a transient pool on a nontransient type");
 
     // Immediately ready
@@ -27,6 +27,9 @@ public:
   }
 
 private:
+  // Witness type:
+  const Witness m_witness;
+
   // Conditional lock, if the transient collection must be groomed or amended
   boost::mutex m_transientLock;
 
@@ -34,6 +37,9 @@ private:
   std::list<std::weak_ptr<T>> m_transient;
 
 public:
+  // Accessor methods:
+  const EventReceiver& GetWitness(void) const override {return m_witness;}
+
   virtual bool Add(std::shared_ptr<TransientContextMember> pMember) override {
     auto casted = std::dynamic_pointer_cast<T, TransientContextMember>(pMember);
     if(!casted)
