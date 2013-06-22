@@ -86,6 +86,9 @@ TEST_F(TransientContextMemberTest, VerifyTransientDeferred) {
   AutoRequired<DurableClass> sender;
   AutoTransient<MyTransientClass> recipient(*pool);
 
+  // Wait for the transient pool to become ready:
+  pool->DelayUntilCanAccept();
+
   // Attempt to defer:
   sender->Defer(&TransientEvent::ZeroArgsA)();
 
