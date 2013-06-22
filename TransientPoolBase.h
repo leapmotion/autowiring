@@ -9,6 +9,11 @@ class TransientPoolBase:
 {
 public:
   virtual ~TransientPoolBase(void) {}
+
+  /// <summary>
+  /// Retrieves a witness type which may be dynamically cast to each supported recipient event type
+  /// </summary>
+  virtual const EventReceiver& GetWitness(void) const = 0;
   
   /// <summary>
   /// Adds the specified transient context member to the pool
