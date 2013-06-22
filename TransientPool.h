@@ -12,7 +12,7 @@
 /// <remarks>
 /// The transient pool must not _itself_ be transient; rather, it is a durable collection of transient members.
 /// </remarks>
-template<class T, class Witness = T>
+template<class T, class Witness>
 class TransientPool:
   public CoreThread,
   public TransientPoolBase
