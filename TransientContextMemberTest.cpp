@@ -3,27 +3,19 @@
 #include "TransientContextMember.h"
 #include "TransientPool.h"
 
-class TransientEventA:
+class TransientEvent:
   public virtual EventReceiver
 {
 public:
   virtual void ZeroArgsA(void) = 0;
 };
 
-class TransientEventB:
-  public virtual EventReceiver
-{
-public:
-  virtual void ZeroArgsB(void) = 0;
-};
-
-class TransientClassA:
+class TransientClass:
   public TransientContextMember,
-  public TransientEventA,
-  public EventSender<TransientEventB>
+  public TransientEvent
 {
 public:
-  TransientClassA(void):
+  TransientClass(void):
     m_received(false)
   {}
 
@@ -32,56 +24,46 @@ public:
   }
 
   bool m_received;
-
-  using EventSender::Fire;
 };
 
-class DurableClassA:
-  public EventSender<TransientEventA>,
-  public TransientEventB
+class DurableClass:
+  public EventSender<TransientEvent>
 {
 public:
-  DurableClassA(void):
+  DurableClass(void):
     m_received(false)
   {}
-
-  virtual void ZeroArgsB(void) override {
-    m_received = true;
-  }
 
   bool m_received;
 
   using EventSender::Fire;
 };
 
-class DurableClassB:
-  public DurableClassA
-{
-};
-
-class MyTransientPool:
-  public TransientPool<TransientClassA>
-{
-};
-
 TEST_F(TransientContextMemberTest, VerifyTransience) {
-  std::weak_ptr<TransientClassA> transWeak;
+  // Weak pointer for the transient instance:
+  std::weak_ptr<TransientClass> transWeak;
 
-  AutoRequired<DurableClassA> durable;
+  // Generic event sender:
+  AutoRequired<DurableClass> durable;
+  
+  // Pool type and pool declaration:
+  class MyTransientPool:
+    public TransientPool<TransientClass>
   {
-    AutoRequired<DurableClassB> durableB;
-    AutoRequired<MyTransientPool> pool;
+  };
+  AutoRequired<MyTransientPool> pool;
 
-    AutoTransient<TransientClassA> trans(*pool);
+  {
+    // Create the transient instance and copy over the weak pointer:
+    AutoTransient<TransientClass> trans(*pool);
     transWeak = trans;
 
-    // Verify bidirectional event transmission:
-    trans->Fire(&TransientEventB::ZeroArgsB)();
-    durable->Fire(&TransientEventA::ZeroArgsA)();
-    durableB->Fire(&TransientEventA::ZeroArgsA)();
+    // Ensure that there are no duplicate shared pointers anywhere:
+    EXPECT_TRUE(trans.unique()) << "Transient instance was not unique after construction";
 
+    // Verify the transient instance gets the event as expected:
+    durable->Fire(&TransientEvent::ZeroArgsA)();
     EXPECT_TRUE(trans->m_received) << "Transient class did not receive an event as expected";
-    EXPECT_TRUE(durable->m_received) << "Durable instance did not receive a message from a transient instance";
   }
 
   EXPECT_TRUE(transWeak.expired()) << "Transient instance did not expire as expected";
