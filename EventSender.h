@@ -399,9 +399,10 @@ public:
 
   // Event attachment and detachment virtuals
   virtual EventSenderBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
+    EventSenderSingle<T>::operator+=(rhs);
     t_base::operator+=(rhs);
 
-    auto ptr = std::dynamic_pointer_cast<TransientPool<T>, EventReceiver>(rhs);
+    auto ptr = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
     if(ptr)
       // We can cast the transient pool to a transient pool managing our current type
       EventSenderSingle<T>::operator+=(ptr);
@@ -409,9 +410,10 @@ public:
   }
 
   virtual EventSenderBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
+    EventSenderSingle<T>::operator-=(rhs);
     t_base::operator-=(rhs);
     
-    auto ptr = std::dynamic_pointer_cast<TransientPool<T>, EventReceiver>(rhs);
+    auto ptr = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
     if(ptr)
       // We can cast the transient pool to a transient pool managing our current type
       EventSenderSingle<T>::operator-=(ptr);
