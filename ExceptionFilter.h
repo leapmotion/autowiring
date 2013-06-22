@@ -60,7 +60,7 @@ public:
   /// will result in undefined behavior.
   /// </remarks>
   virtual void Filter(const std::function<void()>& rethrower) {};
-  
+
   /// <summary>
   /// This is an exception filter for exceptions thrown during a call to Fire
   /// </summary>

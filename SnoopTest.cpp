@@ -1,3 +1,4 @@
+// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "SnoopTest.h"
 
@@ -131,7 +132,7 @@ TEST_F(SnoopTest, DetectDisallowedGeneralType) {
   // Create two child contexts:
   AutoCreateContext sibling1;
   AutoCreateContext sibling2;
-  
+
   // Create a member again, but this time, use the generic type so we can't use a context membership check
   {
     CurrentContextPusher pshr(sibling1);

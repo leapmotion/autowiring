@@ -3,7 +3,7 @@
 #define _GLOBAL_CORE_CONTEXT
 #include "CoreContext.h"
 #include <boost/thread/mutex.hpp>
- 
+
 // A special class designed to make it easier to detect when our context is the global context
 class GlobalCoreContext:
   public CoreContext
@@ -29,7 +29,7 @@ public:
   /// Obtains the global core context, or initializes it if necessary
   /// </summary>
   static std::shared_ptr<GlobalCoreContext> Get(void);
-  
+
   /// <summary>
   /// Releases the global context, allowing reinitialization
   /// </summary>

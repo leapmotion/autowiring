@@ -62,7 +62,7 @@ public:
     m_count = rhs.m_count + 1;
     return *this;
   }
-  
+
   CopyCounter& operator=(CopyCounter&& rhs) {
     rhs.Check();
     m_count = rhs.m_count;
@@ -245,7 +245,7 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
   EXPECT_TRUE(receiver->m_zero);
   EXPECT_TRUE(receiver->m_one);
   EXPECT_EQ(100, receiver->m_oneArg);
-  
+
   // Unblock:
   receiver->Proceed();
 }
@@ -257,7 +257,7 @@ TEST_F(EventReceiverTest, VerifyNoReceive) {
   // Try to defer these calls, should not be delivered anywhere:
   sender->Defer(&CallableInterface::ZeroArgs)();
   sender->Defer(&CallableInterface::OneArg)(100);
-  
+
   // Unblock:
   receiver->Proceed();
 
@@ -276,7 +276,7 @@ TEST_F(EventReceiverTest, VerifyNoReceive) {
 TEST_F(EventReceiverTest, DeferredInvoke) {
   AutoRequired<SimpleReceiver> receiver;
   AutoRequired<SimpleSender> sender;
-  
+
   // Accept dispatch delivery:
   receiver->AcceptDispatchDelivery();
 
@@ -305,7 +305,7 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
 TEST_F(EventReceiverTest, NontrivialCopy) {
   AutoRequired<SimpleReceiver> receiver;
   AutoRequired<SimpleSender> sender;
-  
+
   // Accept dispatch delivery:
   receiver->AcceptDispatchDelivery();
 
@@ -351,7 +351,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
     // Try move construction:
     CopyCounter myCopy3(std::move(myCopy2));
     ASSERT_EQ(2, myCopy3.m_count) << "Move ctor doesn't appear to be invoked correctly";
-    
+
     // Verify antirecycle:
     ASSERT_THROW(antiRecycle = myCopy2, invalid_copycounter_exception);
 
@@ -366,10 +366,10 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
     myCopy5 = myCopy4;
     ASSERT_EQ(3, myCopy5.m_count) << "Assignment operator did not increment reference count";
   }
-  
+
   AutoRequired<SimpleReceiver> receiver;
   AutoRequired<SimpleSender> sender;
-  
+
   // Accept dispatch delivery:
   receiver->AcceptDispatchDelivery();
 
@@ -385,7 +385,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   // Let the sender process and then wait for it before we go on:
   receiver->Proceed();
   receiver->Wait();
-  
+
   // There are limitations to how few times we can copy.  At a minimum, there's one
   // copy from the the Defer call, and one again when the deferred method is passed
   // the DispatchQueue
@@ -410,7 +410,7 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
       AutoRequired<SimpleReceiver> rcvr;
       rcvrWeak = rcvr;
       rcvrCopy = rcvr;
-  
+
       // Now we try to fire and verify it gets caught on the receiver side:
       sender->Fire(&CallableInterface::ZeroArgs)();
 
