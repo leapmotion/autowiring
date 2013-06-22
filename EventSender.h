@@ -103,6 +103,15 @@ public:
   }
 
   void operator+=(const std::shared_ptr<TransientPoolBase>& rhs) {
+    // Obtain the witness and ascertain whether this transient pool supports our recipient type:
+    if(!dynamic_cast<const T*>(&rhs->GetWitness()))
+      return;
+
+    // All transient pools are dispatchers, add it in to the dispatch pool:
+    DispatchQueue* pDeferred = dynamic_cast<DispatchQueue*>(rhs.get());
+    m_dispatch.insert(pDeferred);
+
+    // Insertion:
     m_stTransient.Insert(rhs);
   }
 
