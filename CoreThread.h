@@ -41,7 +41,7 @@ protected:
   // Run condition:
   bool m_running;
 
-  // Completion condition:
+  // Completion condition, true when this thread is no longer running and has run at least once
   bool m_completed;
 
   // Acceptor flag:
