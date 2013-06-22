@@ -253,11 +253,14 @@ class AutoTransient:
   public std::shared_ptr<T>
 {
 public:
-  AutoTransient(void):
+  /// <summary>
+  /// Constructor which registers the specified transient instance with the passed pool
+  /// </summary>
+  AutoTransient(TransientPool<T>& pool):
     std::shared_ptr<T>(new T)
   {
-    // Obtain current context and associate with any event handlers:
-    ;
+    // Associate with the pool:
+    pool.Add(*this);
   }
 };
 
