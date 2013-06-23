@@ -161,11 +161,23 @@ void Autowirer::FilterFiringException(const EventSenderBase* pSender, EventRecei
     rethrower();
 }
 
-void Autowirer::AddContextMember(ContextMember* ptr) {
-  boost::lock_guard<boost::mutex> lk(m_lock);
+void Autowirer::AddContextMember(SharedPtrWrapBase* ptr) {
+  // Try to get an object shared pointer:
+  auto asObj = ptr->AsObject();
+  if(!asObj)
+    return;
+
+  // Try to cast to a context member shared pointer:
+  auto contextMember = std::dynamic_pointer_cast<ContextMember, Object>(asObj);
+  if(!contextMember)
+    return;
+
+  // Reflexive assignment:
+  contextMember->m_self = contextMember;
 
   // Always add to the set of context members
-  m_contextMembers.insert(ptr);
+  (boost::lock_guard<boost::mutex>)m_lock,
+  m_contextMembers.insert(contextMember.get());
 }
 
 void Autowirer::NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener) {
