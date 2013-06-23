@@ -6,14 +6,14 @@ class MultiEventA:
   public virtual EventReceiver
 {
 public:
-  virtual void EventA(void) = 0;
+  virtual void Event(void) = 0;
 };
 
 class MultiEventB:
   public virtual EventReceiver
 {
 public:
-  virtual void EventB(void) = 0;
+  virtual void Event(void) = 0;
 };
 
 class MultiSender:
@@ -24,9 +24,9 @@ class MultiSender:
 MultipleSenderTest::MultipleSenderTest(void) {}
 
 TEST_F(MultipleSenderTest, VerifyMultiSendA) {
-  m_sender->Fire(&MultiEventA::EventA)();
+  m_sender->Fire(&MultiEventA::Event)();
 }
 
 TEST_F(MultipleSenderTest, VerifyMultiSendB) {
-  m_sender->Fire(&MultiEventB::EventB)();
+  m_sender->Fire(&MultiEventB::Event)();
 }
