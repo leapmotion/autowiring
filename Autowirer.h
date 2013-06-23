@@ -193,8 +193,10 @@ public:
   void Add(const std::shared_ptr<T>& value) {
     AddInternal(value);
     ContextMember* pContextMember = safe_dynamic_cast<ContextMember, T>::Cast(value.get());
-    if(pContextMember)
+    if(pContextMember) {
+      pContextMember->m_self = safe_dynamic_cast<ContextMember, T>::Cast(value);
       AddContextMember(pContextMember);
+    }
   }
 
   /// <summary>
