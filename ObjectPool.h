@@ -20,6 +20,8 @@ struct NoOp {
 /// being deleted.  Returned objects may satisfy subsequent requests for construction.
 ///
 /// All object pool methods are thread safe.
+///
+/// Issued pool members must be released before the pool goes out of scope
 /// </remarks>
 template<class T, class _Rx = NoOp<T> >
 class ObjectPool
