@@ -9,8 +9,7 @@ DeferredCreationNotice::DeferredCreationNotice(const char* name, std::shared_ptr
 {
 }
 
-DeferredCreationNotice::~DeferredCreationNotice(void)
-{
+DeferredCreationNotice::~DeferredCreationNotice(void) {
   // Broadcast:
   std::shared_ptr<CoreContext> parent = std::dynamic_pointer_cast<CoreContext, Autowirer>(m_ctxt->GetParentContext());
   if(!parent)
