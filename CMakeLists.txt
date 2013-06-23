@@ -103,6 +103,8 @@ set(
   LockReducedCollectionTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
+  MultipleSenderTest.h
+  MultipleSenderTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
   ScopeTest.h
