@@ -88,18 +88,16 @@ protected:
   /// will continue to hold a reference to it until it is destroyed
   /// </remarks>
   template<class T>
-  void AddInternal(std::shared_ptr<T> value) {
+  SharedPtrWrap<T>* AddInternal(std::shared_ptr<T> value) {
     // Add to the map:
-    {
-      SharedPtrWrap<T>* pWrap = new SharedPtrWrap<T>(m_self, value);
-      boost::lock_guard<boost::mutex> lk(m_lock);
-      m_byType.insert(
-        t_mpType::value_type(
-          std::string(typeid(*value.get()).name()),
-          pWrap
-        )
-      );
-    }
+    SharedPtrWrap<T>* pWrap = new SharedPtrWrap<T>(m_self, value);
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_byType.insert(
+      t_mpType::value_type(
+        std::string(typeid(*value.get()).name()),
+        pWrap
+      )
+    );
 
     // Polymorphic insertion, as required:
     ((AutowirerHelpers::AddPolymorphic<T>&)*this)(value);
@@ -107,6 +105,7 @@ protected:
     // Notify any autowiring field that is currently waiting that we have a new member
     // to be considered.
     UpdateDeferredElements();
+    return pWrap;
   }
 
   /// <summary>
@@ -191,18 +190,14 @@ public:
   /// </remarks>
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
-    AddInternal(value);
-    ContextMember* pContextMember = safe_dynamic_cast<ContextMember, T>::Cast(value.get());
-    if(pContextMember) {
-      pContextMember->m_self = safe_dynamic_cast<ContextMember, T>::Cast(value);
-      AddContextMember(pContextMember);
-    }
+    auto pWrap = AddInternal(value);
+    AddContextMember(pWrap);
   }
 
   /// <summary>
   /// Overload of Add based on ContextMember
   /// </summary>
-  void AddContextMember(ContextMember* pPtr);
+  void AddContextMember(SharedPtrWrapBase* pWrap);
 
   /// <summary>
   /// Attempts to find a member in the container that can be passed to the specified type
