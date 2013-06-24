@@ -91,7 +91,7 @@ protected:
   SharedPtrWrap<T>* AddInternal(std::shared_ptr<T> value) {
     // Add to the map:
     SharedPtrWrap<T>* pWrap = new SharedPtrWrap<T>(m_self, value);
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    (boost::lock_guard<boost::mutex>)m_lock,
     m_byType.insert(
       t_mpType::value_type(
         std::string(typeid(*value.get()).name()),
