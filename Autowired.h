@@ -246,6 +246,25 @@ public:
 };
 
 /// <summary>
+/// Unconditionally creates a new transient member of type T and adds it to the current context
+/// </summary>
+template<class T>
+class AutoTransient:
+  public std::shared_ptr<T>
+{
+public:
+  /// <summary>
+  /// Constructor which registers the specified transient instance with the passed pool
+  /// </summary>
+  AutoTransient(TransientPool<T>& pool):
+    std::shared_ptr<T>(new T)
+  {
+    // Associate with the pool:
+    pool.Add(*this);
+  }
+};
+
+/// <summary>
 /// Provides a simple way to obtain a reference to the current context
 /// </summary>
 /// <remarks>
