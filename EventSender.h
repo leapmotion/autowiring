@@ -5,8 +5,10 @@
 #include "DispatchQueue.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
+#include "LockFreeList.h"
 #include "LockReducedCollection.h"
 #include "SharedPtrHash.h"
+#include "TransientPoolBase.h"
 #include <boost/thread/shared_mutex.hpp>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
@@ -73,6 +75,10 @@ protected:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
 
+  // Collection of all transient pools:
+  typedef LockReducedCollection<std::shared_ptr<TransientPoolBase>, SharedPtrHash<TransientPoolBase>> t_transientSet;
+  t_transientSet m_stTransient;
+
 public:
   /// <summary>
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
@@ -94,6 +100,23 @@ public:
     std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     if(casted)
       *this -= casted;
+  }
+
+  void operator+=(const std::shared_ptr<TransientPoolBase>& rhs) {
+    // Obtain the witness and ascertain whether this transient pool supports our recipient type:
+    if(!dynamic_cast<const T*>(&rhs->GetWitness()))
+      return;
+
+    // All transient pools are dispatchers, add it in to the dispatch pool:
+    DispatchQueue* pDeferred = dynamic_cast<DispatchQueue*>(rhs.get());
+    m_dispatch.insert(pDeferred);
+
+    // Insertion:
+    m_stTransient.Insert(rhs);
+  }
+
+  void operator-=(const std::shared_ptr<TransientPoolBase>& rhs) {
+    m_stTransient.Erase(rhs);
   }
 
   /// <summary>
@@ -135,80 +158,126 @@ public:
     FilterFiringException(dynamic_cast<const EventSenderBase*>(this), pReceiver);
   }
 
-  // Convenience defines for Fire overloads, consider removing
-  #define FIRE_CATCHER_START try {
-  #define FIRE_CATCHER_END } catch(...) { this->PassFilterFiringException((*q).get()); }
+  /// <summary>
+  /// Zero-argument deferred call relay
+  /// </summary>
+  /// <param name="fn">A nearly-curried routine to be invoked</param>
+  template<class Fn>
+  void FireCurried(Fn&& fn) const {
+    // Held names first:
+    {
+      auto st = m_st.GetImage();
+      for(auto q = st->begin(); q != st->end(); ++q)
+        try {
+          fn(**q);
+        } catch(...) {
+          this->PassFilterFiringException((*q).get());
+        }
+    }
+
+    // Transient pools next:
+    {
+      auto relay = [fn] (EventReceiver& er) {
+        auto* casted = dynamic_cast<T*>(&er);
+        if(casted)
+          fn(*casted);
+      };
+      auto st = m_stTransient.GetImage();
+      for(auto q = st->begin(); q != st->end(); q++)
+        (**q).PoolInvoke(relay);
+    }
+  }
 
 protected:
   // Two-parenthetical invocations
   std::function<void ()> Fire(void (T::*fnPtr)()) const {
     return
       [this, fnPtr] () {
-        auto st = m_st.GetImage();
-        for(auto q = st->begin(); q != st->end(); ++q)
-          FIRE_CATCHER_START
-            (**q.*fnPtr)();
-          FIRE_CATCHER_END
+        FireCurried(
+          [=] (T& obj) {
+            (obj.*fnPtr)();
+          }
+        );
       };
   }
 
   template<class Arg1>
-  std::function<void (Arg1)> Fire(void (T::*fnPtr)(Arg1)) const {
+  std::function<void (const Arg1&)> Fire(void (T::*fnPtr)(Arg1)) const {
     return
-      [this, fnPtr] (Arg1 arg1) {
-        auto st = m_st.GetImage();
-        for(auto q = st->begin(); q != st->end(); ++q)
-          FIRE_CATCHER_START
-            (**q.*fnPtr)(arg1);
-          FIRE_CATCHER_END
+      [this, fnPtr] (const Arg1& arg1) {
+        auto fnPtrCpy = fnPtr;
+        auto arg1Ptr = &arg1;
+        FireCurried(
+          [fnPtrCpy, arg1Ptr] (T& obj) {
+            (obj.*fnPtrCpy)(*arg1Ptr);
+          }
+        );
       };
   }
 
   template<class Arg1, class Arg2>
-  std::function<void (Arg1, Arg2)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
+  std::function<void (const Arg1&, const Arg2&)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
     return
-      [this, fnPtr] (Arg1 arg1, Arg2 arg2) {
-        auto st = m_st.GetImage();
-        for(auto q = st->begin(); q != st->end(); ++q)
-          FIRE_CATCHER_START
-            (**q.*fnPtr)(arg1, arg2);
-          FIRE_CATCHER_END
+      [this, fnPtr] (const Arg1& arg1, const Arg2& arg2) {
+        auto fnPtrCpy = fnPtr;
+        auto arg1Ptr = &arg1;
+        auto arg2Ptr = &arg2;
+        FireCurried(
+          [fnPtrCpy, arg1Ptr, arg2Ptr] (T& obj) {
+            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr);
+          }
+        );
       };
   }
 
   template<class Arg1, class Arg2, class Arg3>
-  std::function<void (Arg1, Arg2, Arg3)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
+  std::function<void (const Arg1&, const Arg2&, const Arg3&)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
-        auto st = m_st.GetImage();
-        for(auto q = st->begin(); q != st->end(); ++q)
-          FIRE_CATCHER_START
-            (**q.*fnPtr)(arg1, arg2, arg3);
-          FIRE_CATCHER_END
+        auto fnPtrCpy = fnPtr;
+        auto arg1Ptr = &arg1;
+        auto arg2Ptr = &arg2;
+        auto arg3Ptr = &arg3;
+        FireCurried(
+          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr] (T& obj) {
+            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr);
+          }
+        );
       };
   }
 
   template<class Arg1, class Arg2, class Arg3, class Arg4>
-  std::function<void (Arg1, Arg2, Arg3, Arg4)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)) const {
+  std::function<void (const Arg1&, const Arg2&, const Arg3&, const Arg4&)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) {
-        auto st = m_st.GetImage();
-        for(auto q = st->begin(); q != st->end(); ++q)
-          FIRE_CATCHER_START
-            (**q.*fnPtr)(arg1, arg2, arg3, arg4);
-          FIRE_CATCHER_END
+        auto fnPtrCpy = fnPtr;
+        auto arg1Ptr = &arg1;
+        auto arg2Ptr = &arg2;
+        auto arg3Ptr = &arg3;
+        auto arg4Ptr = &arg4;
+        FireCurried(
+          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr, arg4Ptr] (T& obj) {
+            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr, *arg4Ptr);
+          }
+        );
       };
   }
 
   template<class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-  std::function<void (Arg1, Arg2, Arg3, Arg4, Arg5)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
+  std::function<void (const Arg1&, const Arg2&, const Arg3&, const Arg4&, const Arg5&)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) {
-        auto st = m_st.GetImage();
-        for(auto q = st->begin(); q != st->end(); ++q)
-          FIRE_CATCHER_START
-            (**q.*fnPtr)(arg1, arg2, arg3, arg4, arg5);
-          FIRE_CATCHER_END
+        auto fnPtrCpy = fnPtr;
+        auto arg1Ptr = &arg1;
+        auto arg2Ptr = &arg2;
+        auto arg3Ptr = &arg3;
+        auto arg4Ptr = &arg4;
+        auto arg5Ptr = &arg5;
+        FireCurried(
+          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr, arg4Ptr, arg5PTr] (T& obj) {
+            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr, *arg4Ptr, *arg5Ptr);
+          }
+        );
       };
   }
 
@@ -218,16 +287,19 @@ protected:
       [this, fnPtr] () {
         auto f = fnPtr;
         for(auto q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
-          T* ptr = dynamic_cast<T*>(*q);
-
-          // EventDispatcher check:
-          EventDispatcher* pDispatchable = dynamic_cast<EventDispatcher*>(ptr);
-          if(!pDispatchable || !pDispatchable->CanAccept())
+          auto* pCur = *q;
+          if(!pCur->CanAccept())
             continue;
 
-          **q += [ptr, f] () {
-            (ptr->*f)();
-          };
+          typedef T targetType;
+
+          // Straight dispatch queue insertion:
+          pCur->AttachProxyRoutine([f] (EventReceiver& obj) {
+            // Now we perform the cast:
+            targetType* pObj = dynamic_cast<targetType*>(&obj);
+
+            (pObj->*f)();
+          });
         }
       };
   }
@@ -241,24 +313,26 @@ protected:
       [this, fnPtr] (const tArg1& arg1) {
         auto f = fnPtr;
         for(EventSenderSingle<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
-          T* ptr = dynamic_cast<T*>(*q);
-
-          // If the pointer cannot support a EventDispatcher, we _cannot_ defer it
-          // TODO:  Consider constructing a separate set just containing EventDispatcher-castables.  Whether an object can
-          // be cast to a particular type is declarative, anyway.
-          EventDispatcher* pDispatchable = dynamic_cast<EventDispatcher*>(ptr);
-          if(!pDispatchable || !pDispatchable->CanAccept())
+          auto* pCur = *q;
+          if(!pCur->CanAccept())
             continue;
+
+          typedef T targetType;
 
           // Force off the const modifier so we can copy into the lambda just once
           tArg1& arg1Forced = (tArg1&)arg1;
 
           // Pass the copy into the lambda:
-          **q += [ptr, f, arg1Forced] () mutable {
-            (ptr->*f)(
-              std::move(arg1Forced)
-            );
-          };
+          pCur->AttachProxyRoutine(
+            [f, arg1Forced] (EventReceiver& obj) mutable {
+              // Now we perform the cast:
+              targetType* pObj = dynamic_cast<targetType*>(&obj);
+
+              (pObj->*f)(
+                std::move(arg1Forced)
+              );
+            }
+          );
         }
       };
   }
@@ -325,14 +399,24 @@ public:
 
   // Event attachment and detachment virtuals
   virtual EventSenderBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
-    t_base::operator+=(rhs);
     EventSenderSingle<T>::operator+=(rhs);
+    t_base::operator+=(rhs);
+
+    auto ptr = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
+    if(ptr)
+      // We can cast the transient pool to a transient pool managing our current type
+      EventSenderSingle<T>::operator+=(ptr);
     return *this;
   }
 
   virtual EventSenderBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
-    t_base::operator-=(rhs);
     EventSenderSingle<T>::operator-=(rhs);
+    t_base::operator-=(rhs);
+    
+    auto ptr = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
+    if(ptr)
+      // We can cast the transient pool to a transient pool managing our current type
+      EventSenderSingle<T>::operator-=(ptr);
     return *this;
   }
 
@@ -368,13 +452,26 @@ public:
   // Event attachment and detachment pure virtuals
   virtual EventSenderBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
     EventSenderSingle<T>::operator+=(rhs);
+
+    // Transient pool detect:
+    auto ptr = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
+    if(ptr)
+      // We can cast the transient pool to a transient pool managing our current type
+      EventSenderSingle<T>::operator+=(ptr);
     return *this;
   }
 
   virtual EventSenderBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
     EventSenderSingle<T>::operator-=(rhs);
+
+    // Transient pool detect:
+    auto ptr = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
+    if(ptr)
+      // We can cast the transient pool to a transient pool managing our current type
+      EventSenderSingle<T>::operator-=(ptr);
     return *this;
   }
+
 
 protected:
   using EventSenderSingle<T>::Fire;
