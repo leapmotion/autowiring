@@ -381,6 +381,18 @@ private:
     typedef W type;
   };
 
+  template<class W, class Arg1, class Arg2, class Arg3>
+  struct Decompose<void (W::*)(Arg1, Arg2, Arg3)> {
+    typedef void fnType(Arg1, Arg2, Arg3);
+    typedef W type;
+  };
+
+  template<class W, class Arg1, class Arg2, class Arg3, class Arg4>
+  struct Decompose<void (W::*)(Arg1, Arg2, Arg3, Arg4)> {
+    typedef void fnType(Arg1, Arg2, Arg3, Arg4);
+    typedef W type;
+  };
+
 public:
   bool HasListeners(void) const override {return EventSenderSingle<T>::HasListeners() || t_base::HasListeners();}
 
