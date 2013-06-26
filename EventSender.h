@@ -193,7 +193,7 @@ protected:
   std::function<void ()> Fire(void (T::*fnPtr)()) const {
     return
       [this, fnPtr] () {
-        FireCurried(
+        this->FireCurried(
           [=] (T& obj) {
             (obj.*fnPtr)();
           }
@@ -207,7 +207,7 @@ protected:
       [this, fnPtr] (const Arg1& arg1) {
         auto fnPtrCpy = fnPtr;
         auto arg1Ptr = &arg1;
-        FireCurried(
+        this->FireCurried(
           [fnPtrCpy, arg1Ptr] (T& obj) {
             (obj.*fnPtrCpy)(*arg1Ptr);
           }
@@ -222,7 +222,7 @@ protected:
         auto fnPtrCpy = fnPtr;
         auto arg1Ptr = &arg1;
         auto arg2Ptr = &arg2;
-        FireCurried(
+        this->FireCurried(
           [fnPtrCpy, arg1Ptr, arg2Ptr] (T& obj) {
             (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr);
           }
@@ -238,7 +238,7 @@ protected:
         auto arg1Ptr = &arg1;
         auto arg2Ptr = &arg2;
         auto arg3Ptr = &arg3;
-        FireCurried(
+        this->FireCurried(
           [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr] (T& obj) {
             (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr);
           }
@@ -255,7 +255,7 @@ protected:
         auto arg2Ptr = &arg2;
         auto arg3Ptr = &arg3;
         auto arg4Ptr = &arg4;
-        FireCurried(
+        this->FireCurried(
           [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr, arg4Ptr] (T& obj) {
             (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr, *arg4Ptr);
           }
@@ -273,8 +273,8 @@ protected:
         auto arg3Ptr = &arg3;
         auto arg4Ptr = &arg4;
         auto arg5Ptr = &arg5;
-        FireCurried(
-          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr, arg4Ptr, arg5PTr] (T& obj) {
+        this->FireCurried(
+          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr, arg4Ptr, arg5Ptr] (T& obj) {
             (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr, *arg4Ptr, *arg5Ptr);
           }
         );
