@@ -5,7 +5,7 @@
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
 #include <boost/thread/condition_variable.hpp>
-#include <functional>
+#include FUNCTIONAL_HEADER
 #include <list>
 
 /// <summary>
