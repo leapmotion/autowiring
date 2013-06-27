@@ -11,11 +11,13 @@
 #include <memory>
 
 using namespace boost;
+using namespace std;
+using namespace CoreContextHelpers;
 
 thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
 
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
-  Autowirer(std::static_pointer_cast<Autowirer, CoreContext>(pParent)),
+  m_pParent(pParent),
   m_shouldStop(true),
   m_refCount(0)
 {
@@ -30,6 +32,26 @@ CoreContext::~CoreContext(void) {
     !s_curContext.get()->use_count() ||
     s_curContext.get()->get() != this
   );
+  
+  // Notify all ContextMember instances that their parent is going away
+  for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
+    (*q)->ReleaseAll();
+
+  // Release all event sender links:
+  for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+    (*q).second->ReleaseRefs();
+
+  // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
+  if(m_pParent)
+    m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+
+  // Explicit deleters to simplify implementation of SharedPtrWrapBase
+  for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); ++q)
+    delete q->second;
+
+  // Explicit deleters to simplify base deletion
+  for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
+    delete q->second;
 }
 
 void CoreContext::BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const {
@@ -60,7 +82,7 @@ std::shared_ptr<OutstandingCountTracker> CoreContext::IncrementOutstandingThread
   boost::lock_guard<boost::mutex> lk(m_outstandingLock);
   retVal.reset(
     new OutstandingCountTracker(
-      std::static_pointer_cast<CoreContext, Autowirer>(m_self.lock())
+      std::static_pointer_cast<CoreContext, CoreContext>(m_self.lock())
     )
   );
   m_outstanding = retVal;
@@ -80,7 +102,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
   // Create the child context
   CoreContext* pContext =
     new CoreContext(
-      std::static_pointer_cast<CoreContext, Autowirer>(m_self.lock())
+      std::static_pointer_cast<CoreContext, CoreContext>(m_self.lock())
     );
 
   // Create the shared pointer for the context--do not add the context to itself,
@@ -102,14 +124,14 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
 
 void CoreContext::InitiateCoreThreads(void) {
   // Self-reference to ensure the context is not destroyed until all threads are gone
-  std::shared_ptr<CoreContext> self = std::static_pointer_cast<CoreContext, Autowirer>(m_self.lock());
+  std::shared_ptr<CoreContext> self = std::static_pointer_cast<CoreContext, CoreContext>(m_self.lock());
 
   // Because the caller was able to invoke a method on this CoreContext, it must have
   // a shared_ptr to it.  Thus, we can assert that the above lock operation succeeded.
   ASSERT(self);
 
   {
-    lock_guard<mutex> lk(m_coreLock);
+    lock_guard<mutex> lk(m_lock);
     if(m_refCount++)
       // Already running
       return;
@@ -118,19 +140,19 @@ void CoreContext::InitiateCoreThreads(void) {
   if(m_pParent)
     // Start parent threads first
     // Parent MUST be a core context
-    std::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->InitiateCoreThreads();
+    std::static_pointer_cast<CoreContext, CoreContext>(m_pParent)->InitiateCoreThreads();
 
   // Set our stop flag before kicking off any threads:
   m_shouldStop = false;
 
   // Hold another lock to prevent m_threads from being modified while we sit on it
-  lock_guard<mutex> lk(m_coreLock);
+  lock_guard<mutex> lk(m_lock);
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
     (*q)->Start();
 }
 
 void CoreContext::SignalShutdown(void) {
-  lock_guard<mutex> lk(m_coreLock);
+  lock_guard<mutex> lk(m_lock);
   if(m_refCount == 0 || --m_refCount)
     // Someone else still depends on this
     return;
@@ -147,7 +169,7 @@ void CoreContext::SignalShutdown(void) {
   // when to shut down, and it makes no sense to keep a parent context running when we were
   // the ones who got it going in the first place.
   if(m_pParent)
-    std::static_pointer_cast<CoreContext, Autowirer>(m_pParent)->SignalShutdown();
+    std::static_pointer_cast<CoreContext, CoreContext>(m_pParent)->SignalShutdown();
 }
 
 void CoreContext::SignalTerminate(void) {
@@ -218,7 +240,7 @@ void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
   ASSERT(allowNotReady || ptr->IsReady());
 
   // Insert into the linked list of threads first:
-  lock_guard<mutex> lk(m_coreLock);
+  lock_guard<mutex> lk(m_lock);
   m_threads.push_front(ptr);
 
   if(!m_shouldStop)
@@ -235,9 +257,15 @@ std::shared_ptr<CoreContext> GetCurrentContext() {
 }
 
 void CoreContext::Dump(std::ostream& os) const {
-  Autowirer::Dump(os);
-
   boost::lock_guard<boost::mutex> lk(m_lock);
+  for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
+    os << q->second->GetTypeInfo().name();
+    std::shared_ptr<Object> pObj = q->second->AsObject();
+    if(pObj)
+      os << hex << " 0x" << pObj;
+    os << endl;
+  }
+
   for(auto q = m_threads.begin(); q != m_threads.end(); q++) {
     CoreThread* pThread = *q;
     const char* name = pThread->GetName();
@@ -245,12 +273,180 @@ void CoreContext::Dump(std::ostream& os) const {
   }
 }
 
-std::ostream& operator<<(std::ostream& os, const CoreContext& context) {
-  context.Dump(os);
+void FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) {
+  // Obtain the current context and pass control:
+  CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
+}
+
+void CoreContext::UpdateDeferredElements(void) {
+  std::list<DeferredBase*> successful;
+
+  // Notify any autowired field whose autowiring was deferred
+  // TODO:  We should also notify any descendant autowiring contexts that a new member is now available.
+  {
+    boost::lock_guard<boost::mutex> lk(m_deferredLock);
+    for(t_deferred::iterator r = m_deferred.begin(); r != m_deferred.end(); ) {
+      bool rs = (*r->second)();
+      if(rs) {
+        successful.push_back(r->second);
+
+        // Temporary required because of the absence of a convenience eraser iterator with stl map on all platforms
+        t_deferred::iterator rm = r++;
+        m_deferred.erase(rm);
+      }
+      else
+        r++;
+    }
+  }
+
+  // Now, outside of the context of a lock, we destroy each successfully wired deferred member
+  // This causes any listeners to be invoked, conveniently, outside of the context of any lock
+  for(std::list<DeferredBase*>::iterator q = successful.begin(); q != successful.end(); ++q)
+    delete *q;
+}
+
+void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
+  for(auto q = first; q != last; q++) {
+    // n^2 sender unlinking
+    for(auto r = m_proxies.begin(); r != m_proxies.end(); r++)
+      *r->second -= *q;
+
+    // Trivial erase:
+    m_eventReceivers.erase(*q);
+  }
+
+  // Detour to the parent collection (if necessary)
+  if(m_pParent)
+    m_pParent->RemoveEventReceivers(first, last);
+}
+
+void CoreContext::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
+  // If the passed type is a ContextMember, we can query relationship status
+  ContextMember* pMember = dynamic_cast<ContextMember*>(pSnooper.get());
+  if(pMember) {
+    // Ancestry check:
+    std::shared_ptr<CoreContext> target = pMember->GetContext();
+    std::shared_ptr<CoreContext> cur = GetParentContext();
+
+    while(cur && cur != target)
+      cur = cur->GetParentContext();
+
+    if(!cur)
+      throw_rethrowable std::runtime_error("A context member attempted to snoop a context which was not a child context");
+  } else {
+    // Dynamic membership check:
+    const type_info& info = typeid(*pSnooper);
+
+    std::shared_ptr<CoreContext> cur = GetParentContext();
+    for(; cur; cur = cur->GetParentContext()) {
+      auto q = cur->m_byType.find(info);
+      if(q != cur->m_byType.end())
+        break;
+    }
+    if(!cur)
+      throw_rethrowable std::runtime_error("A generic type attempted to snoop a context which was not a child context");
+  }
+
+  // Pass control to the event adder helper:
+  ((CoreContextHelpers::AddPolymorphic<EventReceiver>&)*this).AddEventReceiver(pSnooper);
+}
+
+void CoreContext::Unsnoop(const std::shared_ptr<EventReceiver>& pSnooper) {
+  // Pass control to the event remover helper:
+  ((CoreContextHelpers::AddPolymorphic<EventReceiver>&)*this).RemoveEventReceiver(pSnooper);
+}
+
+void CoreContext::FilterException(void) {
+  auto rethrower = [] () {
+    std::rethrow_exception(std::current_exception());
+  };
+
+  bool handled = false;
+  for(auto q = m_filters.begin(); q != m_filters.end(); q++)
+    try {
+      (*q)->Filter(rethrower);
+      handled = true;
+    } catch(...) {
+      // Do nothing
+    }
+
+  // Rethrow if unhandled:
+  if(!handled)
+    rethrower();
+}
+
+void CoreContext::FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) {
+  auto rethrower = [] () {
+    std::rethrow_exception(std::current_exception());
+  };
+
+  bool handled = false;
+  for(auto q = m_filters.begin(); q != m_filters.end(); q++)
+    try {
+      (*q)->Filter(rethrower, pProxy, pRecipient);
+      handled = true;
+    } catch(...) {
+      // Do nothing, filter didn't want to filter this exception
+    }
+
+  // Rethrow if unhandled:
+  if(!handled)
+    rethrower();
+}
+
+void CoreContext::AddContextMember(SharedPtrWrapBase* ptr) {
+  // Try to get an object shared pointer:
+  auto asObj = ptr->AsObject();
+  if(!asObj)
+    return;
+
+  // Try to cast to a context member shared pointer:
+  auto contextMember = std::dynamic_pointer_cast<ContextMember, Object>(asObj);
+  if(!contextMember)
+    return;
+
+  // Reflexive assignment:
+  contextMember->m_self = contextMember;
+
+  // Always add to the set of context members
+  (boost::lock_guard<boost::mutex>)m_lock,
+  m_contextMembers.insert(contextMember.get());
+}
+
+void CoreContext::NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener) {
+  boost::lock_guard<boost::mutex> lk(m_deferredLock);
+
+  // If the slot is already autowired then we can invoke the listener here and return early
+  if(slot.IsAutowired())
+    return listener();
+
+  t_deferred::iterator q = m_deferred.find(&slot);
+  if(q == m_deferred.end()) {
+    if(m_pParent)
+      // Try the parent context first, it could be present there
+      return m_pParent->NotifyWhenAutowired(slot, listener);
+    else
+      throw_rethrowable std::domain_error("An attempt was made to observe a principal not in this context");
+  }
+
+  q->second->AddPostBindingListener(listener);
+}
+
+std::shared_ptr<CoreContext> CreateContextThunk(void) {
+  return CoreContext::CurrentContext()->Create();
+}
+
+std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
+  rhs.Dump(os);
   return os;
 }
 
-void FilterFiringException(const EventSenderBase* pSender, EventReceiver* pRecipient) {
-  // Obtain the current context and pass control:
-  CoreContext::CurrentContext()->FilterFiringException(pSender, pRecipient);
+void CoreContext::DebugPrintCurrentExceptionInformation() {
+  try {
+    std::rethrow_exception(std::current_exception());
+  } catch(std::exception& ex) {
+    std::cerr << ex.what() << std::endl;
+  } catch(...) {
+    // Nothing can be done, we don't know what exception type this is.
+  }
 }
