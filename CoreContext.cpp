@@ -38,12 +38,12 @@ CoreContext::~CoreContext(void) {
     (*q)->ReleaseAll();
 
   // Release all event sender links:
-  for(std::set<EventSenderBase*>::iterator q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
-    (**q).ReleaseRefs();
+  for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+    (*q).second->ReleaseRefs();
 
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
   if(m_pParent)
-    m_pParent->RemoveEventSenders(m_eventReceivers.begin(), m_eventReceivers.end());
+    m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
 
   // Explicit deleters to simplify implementation of SharedPtrWrapBase
   for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); ++q)
@@ -304,19 +304,11 @@ void CoreContext::UpdateDeferredElements(void) {
     delete *q;
 }
 
-void CoreContext::AddToEventSenders(EventSenderBase* pSender) {
-  m_eventSenders.insert(pSender);
-
-  // Scan the list for compatible receivers:
-  for(auto q = m_eventReceivers.begin(); q != m_eventReceivers.end(); q++)
-    *pSender += *q;
-}
-
-void CoreContext::RemoveEventSenders(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
+void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
   for(auto q = first; q != last; q++) {
     // n^2 sender unlinking
-    for(auto r = m_eventSenders.begin(); r != m_eventSenders.end(); r++)
-      **r -= *q;
+    for(auto r = m_proxies.begin(); r != m_proxies.end(); r++)
+      *r->second -= *q;
 
     // Trivial erase:
     m_eventReceivers.erase(*q);
@@ -324,7 +316,7 @@ void CoreContext::RemoveEventSenders(t_rcvrSet::iterator first, t_rcvrSet::itera
 
   // Detour to the parent collection (if necessary)
   if(m_pParent)
-    m_pParent->RemoveEventSenders(first, last);
+    m_pParent->RemoveEventReceivers(first, last);
 }
 
 void CoreContext::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
