@@ -21,7 +21,7 @@ public:
   virtual ~ContextMember();
 
   static void* operator new(size_t nBytes);
-  friend class Autowirer;
+  friend class CoreContext;
 
 protected:
   // Member variables:
