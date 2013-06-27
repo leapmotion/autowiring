@@ -651,26 +651,26 @@ public:
   /// <summary>
   /// Fast cast, will use a static cast if the relationship is known at compile time or a dynamic cast if not
   /// </summary>
-  template<class T, class U, bool related = std::is_base_of<T, U>::value>
+  template<class U, class V, bool related = std::is_base_of<T, U>::value>
   struct CastWithRelationship {
     static const bool value = true;
 
-    static std::shared_ptr<T> Cast(std::shared_ptr<U> rhs) {
-      return std::dynamic_pointer_cast<T, U>(rhs);
+    static std::shared_ptr<U> Cast(std::shared_ptr<V> rhs) {
+      return std::dynamic_pointer_cast<U, V>(rhs);
     }
   };
 
-  template<class T, class U>
-  struct CastWithRelationship<T, U, true> {
+  template<class U, class V>
+  struct CastWithRelationship<U, V, true> {
     static const bool value = true;
 
-    static std::shared_ptr<T> Cast(std::shared_ptr<U> rhs) {
-      return std::static_pointer_cast<T, U>(rhs);
+    static std::shared_ptr<U> Cast(std::shared_ptr<V> rhs) {
+      return std::static_pointer_cast<U, V>(rhs);
     }
   };
 
   inline void operator()(std::shared_ptr<T> value) {
-    typedef typename CastWithRelationship<EventReceiver, T> t_cast;
+    typedef CastWithRelationship<EventReceiver, T> t_cast;
 
     // Add event receivers:
     std::shared_ptr<EventReceiver> pRecvr = t_cast::Cast(value);
