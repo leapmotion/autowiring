@@ -3,5 +3,5 @@
 #include "EventSender.h"
 #include "DispatchQueue.h"
 
-EventSenderBase::~EventSenderBase(void) {
+EventReceiverProxyBase::~EventReceiverProxyBase(void) {
 }

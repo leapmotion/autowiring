@@ -24,15 +24,6 @@ public:
   }
 };
 
-class Firer:
-  public EventSender<UpBroadcastListener>
-{
-public:
-  void DoFire(void) {
-    Fire(&UpBroadcastListener::SimpleCall)();
-  };
-};
-
 class ChildMember:
   public SnoopTestBase
 {};
@@ -75,8 +66,8 @@ TEST_F(SnoopTest, VerifySimpleSnoop) {
     child->Snoop(parentMember);
 
     // Now fire an event from the child:
-    AutoRequired<Firer> firer;
-    firer->DoFire();
+    AutoFired<UpBroadcastListener> firer;
+    firer(&UpBroadcastListener::SimpleCall)();
 
     // Verify that the child itself got the message:
     EXPECT_TRUE(childMember->m_simpleCall) << "Message not received by another member of the same context";
@@ -104,8 +95,8 @@ TEST_F(SnoopTest, VerifyUnsnoop) {
     snoopy->Unsnoop(parentMember);
 
     // Fire one event:
-    AutoRequired<Firer> firer;
-    firer->DoFire();
+    AutoFired<UpBroadcastListener> firer;
+    firer(&UpBroadcastListener::SimpleCall)();
 
     // The local listener should have gotten something
     EXPECT_TRUE(childMember->m_simpleCall) << "Message not received by a local listener after Unsnoop call";

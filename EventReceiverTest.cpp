@@ -86,12 +86,11 @@ public:
 };
 
 class CallableInterface:
-  public EventReceiver
+  public virtual EventReceiver
 {
 public:
   virtual void ZeroArgs(void) = 0;
   virtual void OneArg(int arg) = 0;
-  virtual void CopyVector(const vector<int>& vec) = 0;
   virtual void CopyVectorForwarded(vector<int>&& vec) = 0;
   virtual void TrackCopy(CopyCounter&& ctr) = 0;
   virtual void AllDone(void) = 0;
@@ -99,17 +98,18 @@ public:
   virtual void NoCopyMethod(NoCopyClass& noCopy) {}
 };
 
-class SimpleSender:
-  public EventSender<CallableInterface>
+class CallableInterfaceDeferred:
+  public virtual EventReceiver
 {
 public:
-  using EventSender<CallableInterface>::Fire;
-  using EventSender<CallableInterface>::Defer;
+  virtual Deferred CopyVectorDeferred(const vector<int>& vec) = 0;
+  virtual Deferred ZeroArgsDeferred(void) = 0;
+  virtual Deferred OneArgDeferred(int arg) = 0;
+  virtual Deferred AllDoneDeferred(void) = 0;
 };
 
 class Jammer:
-  public CoreThread,
-  public EventSender<CallableInterface>
+  public CoreThread
 {
 public:
   Jammer(void):
@@ -120,17 +120,20 @@ public:
 
   volatile int totalXmit;
 
+  AutoFired<CallableInterface> m_ci;
+
   void Run(void) override {
     while(!ShouldStop() && totalXmit < 0x7FFFF000)
       // Jam for awhile in an asynchronous way:
       while(++totalXmit % 100)
-        Fire(&CallableInterface::ZeroArgs)();
+        m_ci(&CallableInterface::ZeroArgs)();
   }
 };
 
 class SimpleReceiver:
   public CoreThread,
-  public CallableInterface
+  public CallableInterface,
+  public CallableInterfaceDeferred
 {
 public:
   SimpleReceiver(void):
@@ -171,9 +174,21 @@ public:
     m_oneArg = arg;
   }
 
-  void CopyVector(const vector<int>& vec) override {
+  virtual Deferred ZeroArgsDeferred(void) override {
+    m_zero = true;
+    return Deferred(this);
+  }
+
+  virtual Deferred OneArgDeferred(int arg) override {
+    m_one = true;
+    m_oneArg = arg;
+    return Deferred(this);
+  }
+
+  Deferred CopyVectorDeferred(const vector<int>& vec) override {
     // Copy out the argument:
     m_myVec = vec;
+    return Deferred(this);
   }
 
   void CopyVectorForwarded(vector<int>&& vec) override {
@@ -191,6 +206,11 @@ public:
   // Trivial shutdown override
   void AllDone(void) override {
     Stop();
+  }
+
+  Deferred AllDoneDeferred(void) override {
+    Stop();
+    return Deferred(this);
   }
 
   // Overridden here so we can hit the barrier if we're still waiting on it
@@ -235,11 +255,11 @@ EventReceiverTest::EventReceiverTest(void) {
 
 TEST_F(EventReceiverTest, SimpleMethodCall) {
   AutoRequired<SimpleReceiver> receiver;
-  AutoRequired<SimpleSender> sender;
+  AutoFired<CallableInterface> sender;
 
   // Try firing the event first:
-  sender->Fire(&CallableInterface::ZeroArgs)();
-  sender->Fire(&CallableInterface::OneArg)(100);
+  sender(&CallableInterface::ZeroArgs)();
+  sender(&CallableInterface::OneArg)(100);
 
   // Verify that stuff happens even when the thread isn't running:
   EXPECT_TRUE(receiver->m_zero);
@@ -252,18 +272,18 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
 
 TEST_F(EventReceiverTest, VerifyNoReceive) {
   AutoRequired<SimpleReceiver> receiver;
-  AutoRequired<SimpleSender> sender;
+  AutoFired<CallableInterfaceDeferred> sender;
 
   // Try to defer these calls, should not be delivered anywhere:
-  sender->Defer(&CallableInterface::ZeroArgs)();
-  sender->Defer(&CallableInterface::OneArg)(100);
+  sender.Defer(&CallableInterfaceDeferred::ZeroArgsDeferred)();
+  sender.Defer(&CallableInterfaceDeferred::OneArgDeferred)(100);
 
   // Unblock:
   receiver->Proceed();
 
   // Allow dispatch delivery and post the quit event:
   receiver->AcceptDispatchDelivery();
-  sender->Defer(&CallableInterface::AllDone)();
+  sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Wait:
   receiver->Wait();
@@ -275,15 +295,15 @@ TEST_F(EventReceiverTest, VerifyNoReceive) {
 
 TEST_F(EventReceiverTest, DeferredInvoke) {
   AutoRequired<SimpleReceiver> receiver;
-  AutoRequired<SimpleSender> sender;
+  AutoFired<CallableInterfaceDeferred> sender;
 
   // Accept dispatch delivery:
   receiver->AcceptDispatchDelivery();
 
   // Deferred fire:
-  sender->Defer(&CallableInterface::ZeroArgs)();
-  sender->Defer(&CallableInterface::OneArg)(101);
-  sender->Defer(&CallableInterface::AllDone)();
+  sender.Defer(&CallableInterfaceDeferred::ZeroArgsDeferred)();
+  sender.Defer(&CallableInterfaceDeferred::OneArgDeferred)(101);
+  sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Verify that nothing is hit yet:
   EXPECT_FALSE(receiver->m_zero) << "Zero-argument call made prematurely";
@@ -304,7 +324,7 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
 
 TEST_F(EventReceiverTest, NontrivialCopy) {
   AutoRequired<SimpleReceiver> receiver;
-  AutoRequired<SimpleSender> sender;
+  AutoFired<CallableInterfaceDeferred> sender;
 
   // Accept dispatch delivery:
   receiver->AcceptDispatchDelivery();
@@ -317,8 +337,8 @@ TEST_F(EventReceiverTest, NontrivialCopy) {
     ascending.push_back(i);
 
   // Deferred fire:
-  sender->Defer(&CallableInterface::CopyVector)(ascending);
-  sender->Defer(&CallableInterface::AllDone)();
+  sender.Defer(&CallableInterfaceDeferred::CopyVectorDeferred)(ascending);
+  sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Verify that nothing is hit yet:
   EXPECT_TRUE(receiver->m_myVec.empty()) << "Event handler invoked before barrier was hit; it should have been deferred";
@@ -368,7 +388,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   }
 
   AutoRequired<SimpleReceiver> receiver;
-  AutoRequired<SimpleSender> sender;
+  AutoFired<CallableInterfaceDeferred> sender;
 
   // Accept dispatch delivery:
   receiver->AcceptDispatchDelivery();
@@ -376,11 +396,15 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   // Make our copy counter:
   CopyCounter ctr;
 
+  // Can't test this until MSVC11!
+
+#if _MSC_VER >= 1700
   // Pass the field in:
-  sender->Defer(&CallableInterface::TrackCopy)(ctr);
+  sender.Defer(&CallableInterface::TrackCopy)(std::move(ctr));
+#endif
 
   // Signal stop:
-  sender->Defer(&CallableInterface::AllDone)();
+  sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Let the sender process and then wait for it before we go on:
   receiver->Proceed();
@@ -395,7 +419,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
 
 TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
   // Sender goes in the parent context:
-  AutoRequired<SimpleSender> sender;
+  AutoFired<CallableInterface> sender;
 
   std::weak_ptr<SimpleReceiver> rcvrWeak;
   {
@@ -412,7 +436,7 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
       rcvrCopy = rcvr;
 
       // Now we try to fire and verify it gets caught on the receiver side:
-      sender->Fire(&CallableInterface::ZeroArgs)();
+      sender(&CallableInterface::ZeroArgs)();
 
       // Verify that it gets caught:
       EXPECT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
@@ -423,7 +447,7 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
 
     // Fire the event again--shouldn't be captured by the receiver because its context is gone
     rcvrCopy->m_zero = false;
-    sender->Fire(&CallableInterface::ZeroArgs)();
+    sender(&CallableInterface::ZeroArgs)();
     EXPECT_FALSE(rcvrCopy->m_zero) << "Event receiver was still wired even after its enclosing context was removed";
   }
 
@@ -431,28 +455,27 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
   EXPECT_TRUE(rcvrWeak.expired()) << "Event receiver reference still being held after its context and all shared references are gone";
 
   // Fire the event again, this shouldn't cause anything to blow up!
-  sender->Fire(&CallableInterface::ZeroArgs)();
+  sender(&CallableInterface::ZeroArgs)();
 }
 
 TEST_F(EventReceiverTest, VerifyNoCopyCallable) {
-  AutoRequired<SimpleSender> sender;
+  AutoFired<CallableInterface> sender;
   AutoRequired<SimpleReceiver> receiver;
 
   NoCopyClass method;
-  sender->Fire(&CallableInterface::NoCopyMethod)(method);
+  sender(&CallableInterface::NoCopyMethod)(method);
 }
 
 TEST_F(EventReceiverTest, OrphanedMemberFireCheck) {
   // This instance attempts to fire an event in its dtor
-  class DtorFire:
-    public EventSender<CallableInterface>
+  class DtorFire
   {
   public:
     ~DtorFire(void) {
-      Fire(&CallableInterface::ZeroArgs)();
+      m_fire(&CallableInterface::ZeroArgs)();
     }
 
-    using EventSender<CallableInterface>::Fire;
+    AutoFired<CallableInterface> m_fire;
   };
 
   // Create the instance and let its enclosing context go away:
@@ -464,7 +487,7 @@ TEST_F(EventReceiverTest, OrphanedMemberFireCheck) {
   }
 
   // Verify that a trivial firing doesn't cause an exception:
-  dtorFireShared->Fire(&CallableInterface::ZeroArgs)();
+  dtorFireShared->m_fire(&CallableInterface::ZeroArgs)();
 
   // Now release the last shared reference and ensure we can still fire
   // even in a destructor pathway:

@@ -9,6 +9,6 @@ OutstandingCountTracker::OutstandingCountTracker(std::shared_ptr<CoreContext> co
 }
 
 OutstandingCountTracker::~OutstandingCountTracker(void) {
-  boost::lock_guard<boost::mutex> lk(m_context->m_coreLock);
+  boost::lock_guard<boost::mutex> lk(m_context->m_lock);
   m_context->m_stateChanged.notify_all();
 }
