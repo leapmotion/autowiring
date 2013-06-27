@@ -282,46 +282,78 @@ private:
   template<class MemFn>
   struct Decompose;
 
-  template<class W>
-  struct Decompose<void (W::*)()> {
+  template<class R, class W>
+  struct Decompose<R (W::*)()> {
     typedef void fnType();
     typedef W type;
+    typedef R retType;
   };
 
-  template<class W, class Arg1>
-  struct Decompose<void (W::*)(Arg1)> {
+  template<class R, class W, class Arg1>
+  struct Decompose<R (W::*)(Arg1)> {
     typedef void fnType(Arg1);
     typedef W type;
+    typedef R retType;
   };
 
-  template<class W, class Arg1, class Arg2>
-  struct Decompose<void (W::*)(Arg1, Arg2)> {
+  template<class R, class W, class Arg1, class Arg2>
+  struct Decompose<R (W::*)(Arg1, Arg2)> {
     typedef void fnType(Arg1, Arg2);
     typedef W type;
+    typedef R retType;
   };
 
-  template<class W, class Arg1, class Arg2, class Arg3>
-  struct Decompose<void (W::*)(Arg1, Arg2, Arg3)> {
+  template<class R, class W, class Arg1, class Arg2, class Arg3>
+  struct Decompose<R (W::*)(Arg1, Arg2, Arg3)> {
     typedef void fnType(Arg1, Arg2, Arg3);
     typedef W type;
+    typedef R retType;
   };
 
-  template<class W, class Arg1, class Arg2, class Arg3, class Arg4>
-  struct Decompose<void (W::*)(Arg1, Arg2, Arg3, Arg4)> {
+  template<class R, class W, class Arg1, class Arg2, class Arg3, class Arg4>
+  struct Decompose<R (W::*)(Arg1, Arg2, Arg3, Arg4)> {
     typedef void fnType(Arg1, Arg2, Arg3, Arg4);
     typedef W type;
+    typedef R retType;
   };
 
   std::shared_ptr<EventReceiverProxy<T>> m_receiver;
 
+  template<class MemFn, bool isDeferred = std::is_same<typename Decompose<MemFn>::retType, Deferred>::value>
+  struct Selector {
+    typedef std::function<typename Decompose<MemFn>::fnType> retType;
+
+    static inline retType Select(EventReceiverProxy<T>* pReceiver, MemFn pfn) {
+      return pReceiver->Defer(pfn);
+    }
+  };
+
+  template<class MemFn>
+  struct Selector<MemFn, false> {
+    typedef std::function<typename Decompose<MemFn>::fnType> retType;
+
+    static inline retType Select(EventReceiverProxy<T>* pReceiver, MemFn pfn) {
+      return pReceiver->Fire(pfn);
+    }
+  };
+
 public:
   template<class MemFn>
-  std::function<typename Decompose<MemFn>::fnType> operator()(MemFn pfn) {
-    return m_receiver->Fire(pfn);
+  typename Selector<MemFn>::retType operator()(MemFn pfn) {
+    static_assert(std::is_same<Decompose<MemFn>::type, T>::value, "Cannot invoke an event for an unrelated type");
+    return Selector<MemFn>::Select(m_receiver.get(), pfn);
+  }
+
+  template<class MemFn>
+  std::function<typename Decompose<MemFn>::fnType> Fire(MemFn pfn) {
+    static_assert(!std::is_same<Decompose<MemFn>::retType, Deferred>::value, "Cannot Fire an event which is marked Deferred");
+    static_assert(std::is_same<Decompose<MemFn>::type, T>::value, "Cannot Fire an event for an unrelated type");
   }
 
   template<class MemFn>
   std::function<typename Decompose<MemFn>::fnType> Defer(MemFn pfn) {
+    static_assert(std::is_same<Decompose<MemFn>::retType, Deferred>::value, "Cannot Defer an event which does not return the Deferred type");
+    static_assert(std::is_same<Decompose<MemFn>::type, T>::value, "Cannot Defer an event for an unrelated type");
     return m_receiver->Defer(pfn);
   }
 };

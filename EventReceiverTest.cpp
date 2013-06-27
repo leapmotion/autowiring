@@ -91,12 +91,21 @@ class CallableInterface:
 public:
   virtual void ZeroArgs(void) = 0;
   virtual void OneArg(int arg) = 0;
-  virtual void CopyVector(const vector<int>& vec) = 0;
   virtual void CopyVectorForwarded(vector<int>&& vec) = 0;
   virtual void TrackCopy(CopyCounter&& ctr) = 0;
   virtual void AllDone(void) = 0;
 
   virtual void NoCopyMethod(NoCopyClass& noCopy) {}
+};
+
+class CallableInterfaceDeferred:
+  public virtual EventReceiver
+{
+public:
+  virtual Deferred CopyVectorDeferred(const vector<int>& vec) = 0;
+  virtual Deferred ZeroArgsDeferred(void) = 0;
+  virtual Deferred OneArgDeferred(int arg) = 0;
+  virtual Deferred AllDoneDeferred(void) = 0;
 };
 
 class Jammer:
@@ -123,7 +132,8 @@ public:
 
 class SimpleReceiver:
   public CoreThread,
-  public CallableInterface
+  public CallableInterface,
+  public CallableInterfaceDeferred
 {
 public:
   SimpleReceiver(void):
@@ -164,9 +174,21 @@ public:
     m_oneArg = arg;
   }
 
-  void CopyVector(const vector<int>& vec) override {
+  virtual Deferred ZeroArgsDeferred(void) override {
+    m_zero = true;
+    return Deferred(this);
+  }
+
+  virtual Deferred OneArgDeferred(int arg) override {
+    m_one = true;
+    m_oneArg = arg;
+    return Deferred(this);
+  }
+
+  Deferred CopyVectorDeferred(const vector<int>& vec) override {
     // Copy out the argument:
     m_myVec = vec;
+    return Deferred(this);
   }
 
   void CopyVectorForwarded(vector<int>&& vec) override {
@@ -184,6 +206,11 @@ public:
   // Trivial shutdown override
   void AllDone(void) override {
     Stop();
+  }
+
+  Deferred AllDoneDeferred(void) override {
+    Stop();
+    return Deferred(this);
   }
 
   // Overridden here so we can hit the barrier if we're still waiting on it
@@ -245,18 +272,18 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
 
 TEST_F(EventReceiverTest, VerifyNoReceive) {
   AutoRequired<SimpleReceiver> receiver;
-  AutoFired<CallableInterface> sender;
+  AutoFired<CallableInterfaceDeferred> sender;
 
   // Try to defer these calls, should not be delivered anywhere:
-  sender.Defer(&CallableInterface::ZeroArgs)();
-  sender.Defer(&CallableInterface::OneArg)(100);
+  sender.Defer(&CallableInterfaceDeferred::ZeroArgsDeferred)();
+  sender.Defer(&CallableInterfaceDeferred::OneArgDeferred)(100);
 
   // Unblock:
   receiver->Proceed();
 
   // Allow dispatch delivery and post the quit event:
   receiver->AcceptDispatchDelivery();
-  sender.Defer(&CallableInterface::AllDone)();
+  sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Wait:
   receiver->Wait();
@@ -268,15 +295,15 @@ TEST_F(EventReceiverTest, VerifyNoReceive) {
 
 TEST_F(EventReceiverTest, DeferredInvoke) {
   AutoRequired<SimpleReceiver> receiver;
-  AutoFired<CallableInterface> sender;
+  AutoFired<CallableInterfaceDeferred> sender;
 
   // Accept dispatch delivery:
   receiver->AcceptDispatchDelivery();
 
   // Deferred fire:
-  sender.Defer(&CallableInterface::ZeroArgs)();
-  sender.Defer(&CallableInterface::OneArg)(101);
-  sender.Defer(&CallableInterface::AllDone)();
+  sender.Defer(&CallableInterfaceDeferred::ZeroArgsDeferred)();
+  sender.Defer(&CallableInterfaceDeferred::OneArgDeferred)(101);
+  sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Verify that nothing is hit yet:
   EXPECT_FALSE(receiver->m_zero) << "Zero-argument call made prematurely";
@@ -297,7 +324,7 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
 
 TEST_F(EventReceiverTest, NontrivialCopy) {
   AutoRequired<SimpleReceiver> receiver;
-  AutoFired<CallableInterface> sender;
+  AutoFired<CallableInterfaceDeferred> sender;
 
   // Accept dispatch delivery:
   receiver->AcceptDispatchDelivery();
@@ -310,8 +337,8 @@ TEST_F(EventReceiverTest, NontrivialCopy) {
     ascending.push_back(i);
 
   // Deferred fire:
-  sender.Defer(&CallableInterface::CopyVector)(ascending);
-  sender.Defer(&CallableInterface::AllDone)();
+  sender.Defer(&CallableInterfaceDeferred::CopyVectorDeferred)(ascending);
+  sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Verify that nothing is hit yet:
   EXPECT_TRUE(receiver->m_myVec.empty()) << "Event handler invoked before barrier was hit; it should have been deferred";
@@ -361,7 +388,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   }
 
   AutoRequired<SimpleReceiver> receiver;
-  AutoFired<CallableInterface> sender;
+  AutoFired<CallableInterfaceDeferred> sender;
 
   // Accept dispatch delivery:
   receiver->AcceptDispatchDelivery();
@@ -377,7 +404,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
 #endif
 
   // Signal stop:
-  sender.Defer(&CallableInterface::AllDone)();
+  sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Let the sender process and then wait for it before we go on:
   receiver->Proceed();

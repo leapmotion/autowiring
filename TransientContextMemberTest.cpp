@@ -8,6 +8,7 @@ class TransientEvent:
 {
 public:
   virtual void ZeroArgsA(void) = 0;
+  virtual Deferred ZeroArgsADeferred(void) = 0;
 };
 
 class MyTransientClass:
@@ -21,6 +22,11 @@ public:
 
   virtual void ZeroArgsA(void) override {
     m_hitCount++;
+  }
+
+  virtual Deferred ZeroArgsADeferred(void) override {
+    m_hitCount++;
+    return Deferred();
   }
 
   int m_hitCount;
@@ -76,7 +82,7 @@ TEST_F(TransientContextMemberTest, VerifyTransientDeferred) {
   pool->DelayUntilCanAccept();
 
   // Attempt to defer:
-  sender.Defer(&TransientEvent::ZeroArgsA)();
+  sender.Defer(&TransientEvent::ZeroArgsADeferred)();
 
   // Signal the pool to quit and wait until it does:
   pool->Stop();
