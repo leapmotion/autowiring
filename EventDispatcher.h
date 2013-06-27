@@ -8,6 +8,16 @@
 class EventDispatcher {
 public:
   /// <summary>
+  /// Blocks the caller until the dispatcher is able to accept a dispatch
+  /// </summary>
+  /// <remarks>
+  /// This method will return when the dispatch queue begins accepting events.  It may also
+  /// return when it determines that it is impossible for the dispatch queue to ever accept
+  /// events--this may happen if the dispatch thread quits, for example.
+  /// </remarks>
+  virtual bool DelayUntilCanAccept(void) = 0;
+
+  /// <summary>
   /// Required service method which indicates whether this dispatcher can accept new input
   /// </summary>
   /// <remarks>

@@ -3,9 +3,6 @@
 #define _DEFERRED_INVOCATION_TEST_H
 #include "EnclosedContextTestBase.h"
 
-class SimpleReceiver;
-class SimpleSender;
-
 class EventReceiverTest:
   public EnclosedContextTestBase
 {
