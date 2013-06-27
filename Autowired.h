@@ -352,6 +352,7 @@ public:
   std::function<typename Decompose<MemFn>::fnType> Fire(MemFn pfn) const {
     static_assert(!std::is_same<Decompose<MemFn>::retType, Deferred>::value, "Cannot Fire an event which is marked Deferred");
     static_assert(std::is_same<Decompose<MemFn>::type, T>::value, "Cannot Fire an event for an unrelated type");
+    return m_receiver->Fire(pfn);
   }
 
   template<class MemFn>
