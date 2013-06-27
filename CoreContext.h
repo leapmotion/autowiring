@@ -18,7 +18,7 @@
 #include <memory>
 #include <map>
 #include <string>
-#include <typeindex>
+#include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
 #include SHARED_PTR_HEADER
