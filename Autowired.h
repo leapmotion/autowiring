@@ -271,10 +271,59 @@ template<class T>
 class AutoFired
 {
 public:
-  static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot create an Autofired instance on a non-event type");
+  static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
+
+  AutoFired(void) {
+    auto ctxt = CoreContext::CurrentContext();
+    m_receiver = ctxt->GetEventRecieverProxy<T>();
+  }
 
 private:
+  template<class MemFn>
+  struct Decompose;
 
+  template<class W>
+  struct Decompose<void (W::*)()> {
+    typedef void fnType();
+    typedef W type;
+  };
+
+  template<class W, class Arg1>
+  struct Decompose<void (W::*)(Arg1)> {
+    typedef void fnType(Arg1);
+    typedef W type;
+  };
+
+  template<class W, class Arg1, class Arg2>
+  struct Decompose<void (W::*)(Arg1, Arg2)> {
+    typedef void fnType(Arg1, Arg2);
+    typedef W type;
+  };
+
+  template<class W, class Arg1, class Arg2, class Arg3>
+  struct Decompose<void (W::*)(Arg1, Arg2, Arg3)> {
+    typedef void fnType(Arg1, Arg2, Arg3);
+    typedef W type;
+  };
+
+  template<class W, class Arg1, class Arg2, class Arg3, class Arg4>
+  struct Decompose<void (W::*)(Arg1, Arg2, Arg3, Arg4)> {
+    typedef void fnType(Arg1, Arg2, Arg3, Arg4);
+    typedef W type;
+  };
+
+  std::shared_ptr<EventReceiverProxy<T>> m_receiver;
+
+public:
+  template<class MemFn>
+  std::function<typename Decompose<MemFn>::fnType> operator()(MemFn pfn) {
+    return m_receiver->Fire(pfn);
+  }
+
+  template<class MemFn>
+  std::function<typename Decompose<MemFn>::fnType> Defer(MemFn pfn) {
+    return m_receiver->Defer(pfn);
+  }
 };
 
 /// <summary>

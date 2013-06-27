@@ -18,6 +18,7 @@
 #include <memory>
 #include <map>
 #include <string>
+#include <typeindex>
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
 #include SHARED_PTR_HEADER
@@ -147,10 +148,7 @@ protected:
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes
   // away.
-  // TODO:  Use type_index instead.
-  // It's more efficient to use type_index, here, instead of trying to index directly by
-  // the class name.
-  typedef std::multimap<std::string, SharedPtrWrapBase*> t_mpType;
+  typedef std::multimap<std::type_index, SharedPtrWrapBase*> t_mpType;
   t_mpType m_byType;
 
   // All ContextMember objects known in this autowirer:
@@ -161,10 +159,12 @@ protected:
   typedef std::map<const AutowirableSlot*, DeferredBase*> t_deferred;
   t_deferred m_deferred;
 
-  // All known event senders and receivers
+  // All known event receivers and receiver proxies:
   typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
-  std::set<EventSenderBase*> m_eventSenders;
+
+  typedef std::unordered_map<std::type_index, std::shared_ptr<EventReceiverProxyBase>> t_proxies;
+  t_proxies m_proxies;
 
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
@@ -221,7 +221,7 @@ protected:
     (boost::lock_guard<boost::mutex>)m_lock,
     m_byType.insert(
       t_mpType::value_type(
-        std::string(typeid(*value.get()).name()),
+        typeid(*value.get()),
         pWrap
       )
     );
@@ -236,14 +236,9 @@ protected:
   }
 
   /// <summary>
-  /// Adds the passed event manager to the collection of known event senders, and links it up
-  /// </summary>
-  void AddToEventSenders(EventSenderBase* pSender);
-
-  /// <summary>
   /// Removes all recognized event receivers in the indicated range
   /// </summary>
-  void RemoveEventSenders(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
+  void RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
 
   template<class W>
   bool DoAutowire(W& slot) {
@@ -268,6 +263,33 @@ public:
   /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
   /// </summary>
   void BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const;
+
+  /// <summary>
+  /// Obtains a shared pointer to an event sender _in this context_ matching the specified type
+  /// </summary>
+  template<class T>
+  std::shared_ptr<EventReceiverProxy<T>> GetEventRecieverProxy(void) {
+    std::shared_ptr<EventReceiverProxy<T>> retVal;
+    {
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      auto q = m_proxies.find(typeid(T));
+      if(q != m_proxies.end())
+        // No dynamic cast is needed here, we already have independent knowledge of the
+        // destination type because it's the key type of our map
+        return std::static_pointer_cast<EventReceiverProxy<T>, EventReceiverProxyBase>(q->second);
+
+      // Construct new type:
+      retVal.reset(new EventReceiverProxy<T>);
+      m_proxies[typeid(T)] = retVal;
+    }
+
+    // Attach compatible receivers:
+    for(auto q = m_eventReceivers.begin(); q != m_eventReceivers.end(); q++)
+      *retVal += *q;
+
+    // Construction complete
+    return retVal;
+  }
 
   /// <summary>
   /// Increments the total number of contexts still outstanding
@@ -491,11 +513,10 @@ public:
   template<class T>
   std::shared_ptr<T> FindByType(void) {
     // Attempt a resolution by type first:
-    std::string typeName = typeid(T).name();
     t_mpType::iterator q;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      q = m_byType.find(typeName);
+      q = m_byType.find(typeid(T));
     }
 
     if(q == m_byType.end())
@@ -510,7 +531,7 @@ public:
     // If find has been requested by type, there should be only one match.
     std::shared_ptr<T>& retVal = *(SharedPtrWrap<T>*)q->second;
     q++;
-    if(q != m_byType.end() && q->first == typeName)
+    if(q != m_byType.end() && q->first == typeid(T))
       // Ambiguous match, exception:
       throw_rethrowable std::runtime_error("An autowiring operation resulted in an ambiguous match");
     return retVal;
@@ -605,8 +626,8 @@ public:
     m_eventReceivers.insert(pRecvr);
 
     // Scan the list of compatible senders:
-    for(auto q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
-      **q += pRecvr;
+    for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+      *q->second += pRecvr;
 
     // Delegate ascending resolution, where possible.  This ensures that the parent context links
     // this event receiver to compatible senders in the parent context itself.
@@ -619,8 +640,8 @@ public:
     m_eventReceivers.erase(pRecvr);
 
     // Notify all compatible senders that we're going away:
-    for(auto q = m_eventSenders.begin(); q != m_eventSenders.end(); q++)
-      **q -= pRecvr;
+    for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+      *q->second -= pRecvr;
 
     // Delegate to the parent:
     if(m_pParent)
@@ -628,14 +649,7 @@ public:
   };
 
   inline void operator()(std::shared_ptr<T> value) {
-    // Event senders first:
-    {
-      EventSenderBase* pEventSenderBase = dynamic_cast<EventSenderBase*>(value.get());
-      if(pEventSenderBase)
-        CoreContext::AddToEventSenders(pEventSenderBase);
-    }
-
-    // Event receivers second:
+    // Add event receivers:
     std::shared_ptr<EventReceiver> pRecvr = std::dynamic_pointer_cast<EventReceiver, T>(value);
     if(pRecvr)
       AddEventReceiver(pRecvr);

@@ -17,7 +17,7 @@
 #include TYPE_TRAITS_HEADER
 #include <set>
 
-class EventSenderBase;
+class EventReceiverProxyBase;
 class EventReceiver;
 
 /// <summary>
@@ -28,14 +28,14 @@ class EventReceiver;
 /// it call, rely on the validity of the std::current_exception return value, which will not be valid
 /// outside of a call block.
 /// </remarks>
-void FilterFiringException(const EventSenderBase* pSender, EventReceiver* pRecipient);
+void FilterFiringException(const EventReceiverProxyBase* pSender, EventReceiver* pRecipient);
 
 /// <summary>
 /// Used to identify event managers
 /// </summary>
-class EventSenderBase {
+class EventReceiverProxyBase {
 public:
-  virtual ~EventSenderBase(void);
+  virtual ~EventReceiverProxyBase(void);
 
 public:
   virtual bool HasListeners(void) const = 0;
@@ -46,17 +46,18 @@ public:
   virtual void ReleaseRefs(void) = 0;
 
   // Event attachment and detachment pure virtuals
-  virtual EventSenderBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
-  virtual EventSenderBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual EventReceiverProxyBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual EventReceiverProxyBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
 };
 
 struct NoType {};
 
 template<class T>
-class EventSenderSingle
+class EventReceiverProxy:
+  public EventReceiverProxyBase
 {
 public:
-  virtual ~EventSenderSingle(void) {}
+  virtual ~EventReceiverProxy(void) {}
 
 protected:
   static_assert(
@@ -83,23 +84,25 @@ public:
   /// <summary>
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
   /// </summary>
-  bool HasListeners(void) const {return !m_st.GetImage()->empty();}
+  bool HasListeners(void) const override {return !m_st.GetImage()->empty();}
 
-  void ReleaseRefs() {
+  void ReleaseRefs() override {
     m_st.Clear();
     m_dispatch.clear();
   }
 
-  void operator+=(const std::shared_ptr<EventReceiver>& rhs) {
+  EventReceiverProxyBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
     std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     if(casted)
       *this += casted;
+    return *this;
   }
 
-  void operator-=(const std::shared_ptr<EventReceiver>& rhs) {
+  EventReceiverProxyBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
     std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     if(casted)
       *this -= casted;
+    return *this;
   }
 
   void operator+=(const std::shared_ptr<TransientPoolBase>& rhs) {
@@ -155,7 +158,7 @@ public:
   /// call to FilterFiringException
   /// </remarks>
   inline void PassFilterFiringException(EventReceiver* pReceiver) const {
-    FilterFiringException(dynamic_cast<const EventSenderBase*>(this), pReceiver);
+    FilterFiringException(this, pReceiver);
   }
 
   /// <summary>
@@ -188,7 +191,7 @@ public:
     }
   }
 
-protected:
+public:
   // Two-parenthetical invocations
   std::function<void ()> Fire(void (T::*fnPtr)()) const {
     return
@@ -312,7 +315,7 @@ protected:
     return
       [this, fnPtr] (const tArg1& arg1) {
         auto f = fnPtr;
-        for(EventSenderSingle<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
+        for(EventReceiverProxy<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
           auto* pCur = *q;
           if(!pCur->CanAccept())
             continue;
@@ -338,60 +341,12 @@ protected:
   }
 };
 
-template<>
-class EventSenderSingle<NoType> {
-};
-
-/// <summary>
-/// A simple event manager class
-/// </summary>
-/// <param name="T">The event interface type</param>
-/// <param name="A">Another event interface type to manage</param>
-/// <param name="B">Another event interface type to manage</param>
-/// <param name="C">Another event interface type to manage</param>
-template<class T, class A = NoType, class B = NoType, class C = NoType>
-class EventSender;
-
+#if 0
 template<class T, class A, class B, class C>
-class EventSender:
-  public EventSender<A, B, C>,
-  public EventSenderSingle<T>
+class EventSender
 {
 private:
   typedef EventSender<A, B, C> t_base;
-
-  template<class MemFn>
-  struct Decompose;
-
-  template<class W>
-  struct Decompose<void (W::*)()> {
-    typedef void fnType();
-    typedef W type;
-  };
-
-  template<class W, class Arg1>
-  struct Decompose<void (W::*)(Arg1)> {
-    typedef void fnType(Arg1);
-    typedef W type;
-  };
-
-  template<class W, class Arg1, class Arg2>
-  struct Decompose<void (W::*)(Arg1, Arg2)> {
-    typedef void fnType(Arg1, Arg2);
-    typedef W type;
-  };
-
-  template<class W, class Arg1, class Arg2, class Arg3>
-  struct Decompose<void (W::*)(Arg1, Arg2, Arg3)> {
-    typedef void fnType(Arg1, Arg2, Arg3);
-    typedef W type;
-  };
-
-  template<class W, class Arg1, class Arg2, class Arg3, class Arg4>
-  struct Decompose<void (W::*)(Arg1, Arg2, Arg3, Arg4)> {
-    typedef void fnType(Arg1, Arg2, Arg3, Arg4);
-    typedef W type;
-  };
 
 public:
   bool HasListeners(void) const override {return EventSenderSingle<T>::HasListeners() || t_base::HasListeners();}
@@ -442,51 +397,6 @@ public:
     return EventSenderSingle<typename Decompose<MemFn>::type>::Defer(fn);
   }
 };
-
-template<class T>
-class EventSender<T, NoType, NoType, NoType>:
-  public EventSenderSingle<T>,
-  public EventSenderBase
-{
-public:
-  virtual bool HasListeners(void) const override {return EventSenderSingle<T>::HasListeners();}
-
-  template<class W>
-  bool HasListeners(void) const {
-    static_assert(std::is_same<W, T>::value, "Cannot query listeners on unbound type W");
-    return EventSenderSingle<T>::HasListeners();
-  }
-
-  virtual void ReleaseRefs(void) override {
-    EventSenderSingle<T>::ReleaseRefs();
-  }
-
-  // Event attachment and detachment pure virtuals
-  virtual EventSenderBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
-    EventSenderSingle<T>::operator+=(rhs);
-
-    // Transient pool detect:
-    auto ptr = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
-    if(ptr)
-      // We can cast the transient pool to a transient pool managing our current type
-      EventSenderSingle<T>::operator+=(ptr);
-    return *this;
-  }
-
-  virtual EventSenderBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
-    EventSenderSingle<T>::operator-=(rhs);
-
-    // Transient pool detect:
-    auto ptr = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
-    if(ptr)
-      // We can cast the transient pool to a transient pool managing our current type
-      EventSenderSingle<T>::operator-=(ptr);
-    return *this;
-  }
-
-
-protected:
-  using EventSenderSingle<T>::Fire;
-};
+#endif
 
 #endif
