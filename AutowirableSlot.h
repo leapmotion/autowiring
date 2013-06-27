@@ -14,6 +14,10 @@ template<class T>
 void NullOp(T) {}
 
 class AutowirableSlot {
+private:
+  // Copy construction of an autowired slot is generally unsafe and not allowed
+  AutowirableSlot(const AutowirableSlot& rhs);
+
 public:
   AutowirableSlot();
 
@@ -38,7 +42,7 @@ public:
   std::weak_ptr<CoreContext> m_context;
 
   /// <summary>
-  /// Convenience method, functionally identical to Autowirer::NotifyWhenAutowired
+  /// Convenience method, functionally identical to CoreContext::NotifyWhenAutowired
   /// </summary>
   void NotifyWhenAutowired(const std::function<void()>& listener);
 

@@ -13,6 +13,8 @@ struct NoOp {
 /// <summary>
 /// Allows the management of a pool of objects based on an embedded factory
 /// </summary>
+/// <param name="T>The type to be pooled</param>
+/// <param name="_Rx">A function object which resets instances returned to the pool</param>
 /// <remarks>
 /// This class is a type of factory that creates an object of type T.  The object pool
 /// creates a shared pointer for the consumer to use, and when the last shared pointer

@@ -6,17 +6,17 @@
 #include FUNCTIONAL_HEADER
 #include SHARED_PTR_HEADER
 
-class Autowirer;
+class CoreContext;
 class AutowirableSlot;
 
 // Deferred autowiring base class
 class DeferredBase {
 public:
-  DeferredBase(Autowirer* pThis, std::weak_ptr<AutowirableSlot> tracker);
+  DeferredBase(CoreContext* pThis, std::weak_ptr<AutowirableSlot> tracker);
   virtual ~DeferredBase(void);
 
 protected:
-  Autowirer* pThis;
+  CoreContext* pThis;
 
   // Functions that want to be called when we successfully bind:
   std::vector< std::function<void()> > m_postBind;
@@ -29,6 +29,15 @@ public:
   void AddPostBindingListener(const std::function<void()>& listener) {
     m_postBind.push_back(listener);
   }
+
+  /// <summary>
+  /// Returns true if this deferred base has become expired
+  /// </summary>
+  /// <remarks>
+  /// A deferred base may become expired if its bound slot could not be autowired before
+  /// it was destroyed.  At that point, the deferred base should be dropped as expired.
+  /// </remarks>
+  bool IsExpired(void) const {return tracker.expired();}
 
   virtual bool operator()() = 0;
 };

@@ -41,7 +41,7 @@ protected:
   // Run condition:
   bool m_running;
 
-  // Completion condition:
+  // Completion condition, true when this thread is no longer running and has run at least once
   bool m_completed;
 
   // Acceptor flag:
@@ -71,6 +71,8 @@ protected:
   /// </summary>
   void AcceptDispatchDelivery(void) {
     m_canAccept = true;
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_stateCondition.notify_all();
   }
 
   /// <summary>
@@ -86,6 +88,8 @@ protected:
   /// </remarks>
   void RejectDispatchDelivery(void) {
     m_canAccept = false;
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_stateCondition.notify_all();
   }
 
 public:
@@ -112,6 +116,9 @@ public:
     });
     return !ShouldStop() && !m_context.expired();
   }
+  
+  // Base overrides:
+  bool DelayUntilCanAccept(void) override;
 
   /// <summary>
   /// Causes a new thread to be created in which the Run method will be invoked
