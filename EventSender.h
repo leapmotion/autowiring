@@ -92,16 +92,29 @@ public:
   }
 
   EventReceiverProxyBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
-    std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
+    auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     if(casted)
+      // Proposed type is directly one of our receivers
       *this += casted;
+    else {
+      auto pool = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
+      if(pool)
+        *this += pool;
+    }
+
     return *this;
   }
 
   EventReceiverProxyBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
-    std::shared_ptr<T> casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
+    auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     if(casted)
       *this -= casted;
+    else {
+      auto pool = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
+      if(pool)
+        *this -= pool;
+    }
+
     return *this;
   }
 
