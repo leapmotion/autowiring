@@ -271,7 +271,7 @@ template<class T>
 class AutoFired
 {
 public:
-  static_assert(std::is_base_of<EventSender, T>::value, "Cannot create an Autofired instance on a non-event type");
+  static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot create an Autofired instance on a non-event type");
 
 private:
 

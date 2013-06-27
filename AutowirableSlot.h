@@ -42,7 +42,7 @@ public:
   std::weak_ptr<CoreContext> m_context;
 
   /// <summary>
-  /// Convenience method, functionally identical to Autowirer::NotifyWhenAutowired
+  /// Convenience method, functionally identical to CoreContext::NotifyWhenAutowired
   /// </summary>
   void NotifyWhenAutowired(const std::function<void()>& listener);
 

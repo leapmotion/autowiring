@@ -12,8 +12,6 @@ set(
   Autowired.cpp
   AutowirableSlot.h
   AutowirableSlot.cpp
-  Autowirer.cpp
-  Autowirer.h
   CMakeLists.txt
   ContextCreator.h
   Bolt.h

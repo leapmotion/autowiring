@@ -12,7 +12,7 @@ DeferredCreationNotice::DeferredCreationNotice(const char* name, std::shared_ptr
 DeferredCreationNotice::~DeferredCreationNotice(void)
 {
   // Broadcast:
-  std::shared_ptr<CoreContext> parent = std::dynamic_pointer_cast<CoreContext, Autowirer>(m_ctxt->GetParentContext());
+  auto parent = m_ctxt->GetParentContext();
   if(!parent)
     // Short-circuit return, teardown must be underway
     return;

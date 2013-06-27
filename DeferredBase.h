@@ -6,17 +6,17 @@
 #include FUNCTIONAL_HEADER
 #include SHARED_PTR_HEADER
 
-class Autowirer;
+class CoreContext;
 class AutowirableSlot;
 
 // Deferred autowiring base class
 class DeferredBase {
 public:
-  DeferredBase(Autowirer* pThis, std::weak_ptr<AutowirableSlot> tracker);
+  DeferredBase(CoreContext* pThis, std::weak_ptr<AutowirableSlot> tracker);
   virtual ~DeferredBase(void);
 
 protected:
-  Autowirer* pThis;
+  CoreContext* pThis;
 
   // Functions that want to be called when we successfully bind:
   std::vector< std::function<void()> > m_postBind;
