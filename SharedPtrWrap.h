@@ -6,7 +6,7 @@
 #include SHARED_PTR_HEADER
 #include TYPE_TRAITS_HEADER
 
-class Autowirer;
+class CoreContext;
 class ContextMember;
 class Object;
 class SharedPtrWrapBase;
@@ -17,13 +17,13 @@ class SharedPtrWrapBase;
 class SharedPtrWrapBase
 {
 public:
-  SharedPtrWrapBase(std::weak_ptr<Autowirer> pAutowirer):
+  SharedPtrWrapBase(std::weak_ptr<CoreContext> pAutowirer):
     pAutowirer(pAutowirer)
   {}
   virtual ~SharedPtrWrapBase(void) {}
 
   // The autowirer responsible for this pointer wrap, placed in a weak pointer
-  std::weak_ptr<Autowirer> pAutowirer;
+  std::weak_ptr<CoreContext> pAutowirer;
 
   /// <summary>
   /// Obtains the pointer information of the encapsulated type
@@ -45,11 +45,11 @@ class SharedPtrWrap:
   public std::shared_ptr<T>
 {
 public:
-  SharedPtrWrap(std::weak_ptr<Autowirer> pAutowirer, T* p):
+  SharedPtrWrap(std::weak_ptr<CoreContext> pAutowirer, T* p):
     SharedPtrWrapBase(pAutowirer)
   {}
 
-  SharedPtrWrap(std::weak_ptr<Autowirer> pAutowirer, std::shared_ptr<T>& p):
+  SharedPtrWrap(std::weak_ptr<CoreContext> pAutowirer, std::shared_ptr<T>& p):
     SharedPtrWrapBase(pAutowirer),
     std::shared_ptr<T>(p)
   {}
@@ -73,11 +73,11 @@ class SharedPtrWrap<T, true>:
   public SharedPtrWrap<T, false>
 {
 public:
-  SharedPtrWrap(std::weak_ptr<Autowirer> pAutowirer, T* p):
+  SharedPtrWrap(std::weak_ptr<CoreContext> pAutowirer, T* p):
     SharedPtrWrap<T, false>(pAutowirer, p)
   {}
 
-  SharedPtrWrap(std::weak_ptr<Autowirer> pAutowirer, std::shared_ptr<T>& p):
+  SharedPtrWrap(std::weak_ptr<CoreContext> pAutowirer, std::shared_ptr<T>& p):
     SharedPtrWrap<T, false>(pAutowirer, p)
   {}
 

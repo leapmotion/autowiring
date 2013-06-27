@@ -58,13 +58,6 @@ public:
   }
 };
 
-class ThrowingBroadcaster:
-  public EventSender<ThrowingListener>
-{
-public:
-  using EventSender<ThrowingListener>::Fire;
-};
-
 class GenericFilter:
   public ExceptionFilter
 {
@@ -94,7 +87,7 @@ public:
     }
   }
 
-  virtual void Filter(const std::function<void()>& rethrower, const EventSenderBase* pSender, EventReceiver* pRecipient) override {
+  virtual void Filter(const std::function<void()>& rethrower, const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) override {
     m_hit = true;
     try {
       rethrower();
@@ -143,8 +136,8 @@ TEST_F(ExceptionFilterTest, FireThrowsCheck) {
   AutoRequired<ThrowsWhenFired> fireThrower;
 
   // Add something to fire the exception:
-  AutoRequired<ThrowingBroadcaster> broadcaster;
-  broadcaster->Fire(&ThrowingListener::DoThrow)();
+  AutoFired<ThrowingListener> broadcaster;
+  broadcaster(&ThrowingListener::DoThrow)();
 
   // Verify that the exception was filtered properly by the generic filter:
   EXPECT_TRUE(filter->m_fireSpecific) << "Filter was not invoked on a Fired exception";

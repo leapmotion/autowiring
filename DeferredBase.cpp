@@ -3,7 +3,7 @@
 #include "DeferredBase.h"
 #include "AutowirableSlot.h"
 
-DeferredBase::DeferredBase(Autowirer* pThis, std::weak_ptr<AutowirableSlot> tracker):
+DeferredBase::DeferredBase(CoreContext* pThis, std::weak_ptr<AutowirableSlot> tracker):
   pThis(pThis),
   tracker(tracker)
 {
