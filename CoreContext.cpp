@@ -273,10 +273,11 @@ void CoreContext::Dump(std::ostream& os) const {
   }
 }
 
-void FilterFiringException(const EventSenderBase* pSender, EventReceiver* pRecipient) {
+void FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) {
   // Obtain the current context and pass control:
-  CoreContext::CurrentContext()->FilterFiringException(pSender, pRecipient);
+  CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
 }
+
 void CoreContext::UpdateDeferredElements(void) {
   std::list<DeferredBase*> successful;
 
@@ -338,7 +339,7 @@ void CoreContext::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
 
     std::shared_ptr<CoreContext> cur = GetParentContext();
     for(; cur; cur = cur->GetParentContext()) {
-      auto q = cur->m_byType.find(info.name());
+      auto q = cur->m_byType.find(info);
       if(q != cur->m_byType.end())
         break;
     }
@@ -374,7 +375,7 @@ void CoreContext::FilterException(void) {
     rethrower();
 }
 
-void CoreContext::FilterFiringException(const EventSenderBase* pSender, EventReceiver* pRecipient) {
+void CoreContext::FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) {
   auto rethrower = [] () {
     std::rethrow_exception(std::current_exception());
   };
@@ -382,7 +383,7 @@ void CoreContext::FilterFiringException(const EventSenderBase* pSender, EventRec
   bool handled = false;
   for(auto q = m_filters.begin(); q != m_filters.end(); q++)
     try {
-      (*q)->Filter(rethrower, pSender, pRecipient);
+      (*q)->Filter(rethrower, pProxy, pRecipient);
       handled = true;
     } catch(...) {
       // Do nothing, filter didn't want to filter this exception

@@ -383,7 +383,7 @@ public:
 
   template<class Rep, class Period>
   bool Wait(const boost::chrono::duration<Rep, Period>& duration) {
-    boost::unique_lock<boost::mutex> lk(m_coreLock);
+    boost::unique_lock<boost::mutex> lk(m_lock);
     return m_stateChanged.wait_for(lk, duration, [this] () {return this->m_outstanding.expired();});
   }
 
@@ -459,9 +459,9 @@ public:
   /// <summary>
   /// Filters a std::current_exception thrown by an EventSenderBase during a Fire
   /// </summary>
-  /// <param name="pSender">The sender of the event</param>
+  /// <param name="pProxy">The sender of the event</param>
   /// <param name="pRecipient">The recipient of the event</param>
-  void FilterFiringException(const EventSenderBase* pSender, EventReceiver* pRecipient);
+  void FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient);
 
   /// <summary>
   /// Enables the passed event receiver to obtain messages broadcast by this context

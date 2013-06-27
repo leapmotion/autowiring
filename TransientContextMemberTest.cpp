@@ -26,20 +26,6 @@ public:
   int m_hitCount;
 };
 
-class DurableClass:
-  public EventSender<TransientEvent>
-{
-public:
-  DurableClass(void):
-    m_received(false)
-  {}
-
-  bool m_received;
-
-  using EventSender::Fire;
-  using EventSender::Defer;
-};
-
 class MyTransientPool:
   public TransientPool<MyTransientClass>
 {
@@ -50,7 +36,7 @@ TEST_F(TransientContextMemberTest, VerifyTransience) {
   std::weak_ptr<MyTransientClass> transWeak;
 
   // Generic event sender:
-  AutoRequired<DurableClass> durable;
+  AutoFired<TransientEvent> durable;
   
   // Pool declaration:
   AutoRequired<MyTransientPool> pool;
@@ -64,14 +50,14 @@ TEST_F(TransientContextMemberTest, VerifyTransience) {
     EXPECT_TRUE(trans.unique()) << "Transient instance was not unique after construction";
 
     // Verify the transient instance gets the event as expected:
-    durable->Fire(&TransientEvent::ZeroArgsA)();
+    durable(&TransientEvent::ZeroArgsA)();
     EXPECT_EQ(trans->m_hitCount, 1) << "Transient class did not receive an event as expected";
   }
 
   EXPECT_TRUE(transWeak.expired()) << "Transient instance did not expire as expected";
 
   // Verify nothing explodes if we try to fire an event again:
-  EXPECT_NO_THROW(durable->Fire(&TransientEvent::ZeroArgsA)()) << "Firing after transient eviction caused an exception";
+  EXPECT_NO_THROW(durable(&TransientEvent::ZeroArgsA)()) << "Firing after transient eviction caused an exception";
 }
 
 TEST_F(TransientContextMemberTest, VerifyTransientDeferred) {
@@ -83,14 +69,14 @@ TEST_F(TransientContextMemberTest, VerifyTransientDeferred) {
   AutoRequired<MyTransientPool> pool;
 
   // Create the sender and recipient:
-  AutoRequired<DurableClass> sender;
+  AutoFired<TransientEvent> sender;
   AutoTransient<MyTransientClass> recipient(*pool);
 
   // Wait for the transient pool to become ready:
   pool->DelayUntilCanAccept();
 
   // Attempt to defer:
-  sender->Defer(&TransientEvent::ZeroArgsA)();
+  sender.Defer(&TransientEvent::ZeroArgsA)();
 
   // Signal the pool to quit and wait until it does:
   pool->Stop();
