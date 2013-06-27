@@ -30,6 +30,15 @@ public:
     m_postBind.push_back(listener);
   }
 
+  /// <summary>
+  /// Returns true if this deferred base has become expired
+  /// </summary>
+  /// <remarks>
+  /// A deferred base may become expired if its bound slot could not be autowired before
+  /// it was destroyed.  At that point, the deferred base should be dropped as expired.
+  /// </remarks>
+  bool IsExpired(void) const {return tracker.expired();}
+
   virtual bool operator()() = 0;
 };
 

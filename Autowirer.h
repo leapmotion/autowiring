@@ -292,8 +292,13 @@ public:
       return;
 
     DeferredBase*& pDeferred = m_deferred[&slot];
-    if(pDeferred)
-      throw_rethrowable std::runtime_error("A slot is being autowired, but a deferred instance already exists at this location");
+    if(pDeferred) {
+      // We allow rebinding at this site if the deferred base has already expired
+      if(pDeferred->IsExpired())
+        delete pDeferred;
+      else
+        throw_rethrowable std::runtime_error("A slot is being autowired, but a deferred instance already exists at this location");
+    }
     pDeferred = new Deferred(this, slot);
   }
 
