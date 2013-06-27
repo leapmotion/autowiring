@@ -169,6 +169,39 @@ protected:
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
 
+  // The current RUN count.  This is the number of times that InitiateCoreThreads has been called.
+  // SignalShutdown must be called an equal number of times to actually shut down this context.
+  int m_refCount;
+
+  // This is a global STOP variable, used to signal shutdown when it's time to quit.
+  bool m_shouldStop;
+
+  // Condition, signalled when context state has been changed
+  boost::condition m_stateChanged;
+
+  // Lists of event receivers, by name:
+  typedef std::unordered_map<std::string, std::list<BoltBase*>> t_contextNameListeners;
+  t_contextNameListeners m_nameListeners;
+
+  // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
+  // Destructor does nothing; this is by design.
+  boost::mutex m_outstandingLock;
+  std::weak_ptr<OutstandingCountTracker> m_outstanding;
+
+  // Actual core threads:
+  typedef list<CoreThread*> t_threadList;
+  t_threadList m_threads;
+
+  // Child contexts:
+  typedef list<std::weak_ptr<CoreContext> > t_childList;
+  boost::mutex m_childrenLock;
+  t_childList m_children;
+
+  friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
+  friend class GlobalCoreContext;
+
+  friend class OutstandingCountTracker;
+
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
@@ -226,43 +259,6 @@ protected:
   }
 
   friend class SharedPtrWrapBase;
-
-private:
-  // General purpose lock for this class
-  boost::mutex m_coreLock;
-
-  // The current RUN count.  This is the number of times that InitiateCoreThreads has been called.
-  // SignalShutdown must be called an equal number of times to actually shut down this context.
-  int m_refCount;
-
-  // This is a global STOP variable, used to signal shutdown when it's time to quit.
-  bool m_shouldStop;
-
-  // Condition, signalled when context state has been changed
-  boost::condition m_stateChanged;
-
-  // Lists of event receivers, by name:
-  typedef std::unordered_map<std::string, std::list<BoltBase*>> t_contextNameListeners;
-  t_contextNameListeners m_nameListeners;
-
-  // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
-  // Destructor does nothing; this is by design.
-  boost::mutex m_outstandingLock;
-  std::weak_ptr<OutstandingCountTracker> m_outstanding;
-
-  // Actual core threads:
-  typedef list<CoreThread*> t_threadList;
-  t_threadList m_threads;
-
-  // Child contexts:
-  typedef list<std::weak_ptr<CoreContext> > t_childList;
-  boost::mutex m_childrenLock;
-  t_childList m_children;
-
-  friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
-  friend class GlobalCoreContext;
-
-  friend class OutstandingCountTracker;
 
 public:
   // Accessor methods:
@@ -359,7 +355,7 @@ public:
   /// Waits for all threads holding references to exit
   /// </summary>
   void Wait(void) {
-    boost::unique_lock<boost::mutex> lk(m_coreLock);
+    boost::unique_lock<boost::mutex> lk(m_lock);
     m_stateChanged.wait(lk, [this] () {return this->m_outstanding.expired();});
   }
 
