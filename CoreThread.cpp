@@ -38,7 +38,7 @@ void CoreThread::DoRun(void) {
       GetContext()->FilterException();
     } catch(...) {
       // Generic exception, unhandled, we can't print anything off.
-      Autowirer::DebugPrintCurrentExceptionInformation();
+      CoreContext::DebugPrintCurrentExceptionInformation();
     }
 
     // Signal shutdown on the enclosing context
