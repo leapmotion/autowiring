@@ -14,6 +14,10 @@ template<class T>
 void NullOp(T) {}
 
 class AutowirableSlot {
+private:
+  // Copy construction of an autowired slot is generally unsafe and not allowed
+  AutowirableSlot(const AutowirableSlot& rhs);
+
 public:
   AutowirableSlot();
 
