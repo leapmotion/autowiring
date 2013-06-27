@@ -1,12 +1,12 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#pragma once
-#include <gtest/gtest.h>
+#ifndef _SCOPE_TEST_H
+#define _SCOPE_TEST_H
+#include "EnclosedContextTestBase.h"
 
 class ScopeTest:
-  public testing::Test
+  public EnclosedContextTestBase
 {
-public:
-  ScopeTest(void);
-  ~ScopeTest(void);
 };
 
+
+#endif
