@@ -298,7 +298,7 @@ public:
   }
 
   // Two-parenthetical deferred invocations:
-  std::function<void ()> Defer(void (T::*fnPtr)()) const {
+  std::function<void ()> Defer(Deferred (T::*fnPtr)()) const {
     return
       [this, fnPtr] () {
         auto f = fnPtr;
@@ -321,7 +321,7 @@ public:
   }
 
   template<class Arg1>
-  std::function<void (const typename std::decay<Arg1>::type&)> Defer(void (T::*fnPtr)(Arg1)) const {
+  std::function<void (const typename std::decay<Arg1>::type&)> Defer(Deferred (T::*fnPtr)(Arg1)) const {
     // Converted args:
     typedef typename std::decay<Arg1>::type tArg1;
 
