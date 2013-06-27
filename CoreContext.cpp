@@ -131,7 +131,7 @@ void CoreContext::InitiateCoreThreads(void) {
   ASSERT(self);
 
   {
-    lock_guard<mutex> lk(m_coreLock);
+    lock_guard<mutex> lk(m_lock);
     if(m_refCount++)
       // Already running
       return;
@@ -146,13 +146,13 @@ void CoreContext::InitiateCoreThreads(void) {
   m_shouldStop = false;
 
   // Hold another lock to prevent m_threads from being modified while we sit on it
-  lock_guard<mutex> lk(m_coreLock);
+  lock_guard<mutex> lk(m_lock);
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
     (*q)->Start();
 }
 
 void CoreContext::SignalShutdown(void) {
-  lock_guard<mutex> lk(m_coreLock);
+  lock_guard<mutex> lk(m_lock);
   if(m_refCount == 0 || --m_refCount)
     // Someone else still depends on this
     return;
@@ -240,7 +240,7 @@ void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
   ASSERT(allowNotReady || ptr->IsReady());
 
   // Insert into the linked list of threads first:
-  lock_guard<mutex> lk(m_coreLock);
+  lock_guard<mutex> lk(m_lock);
   m_threads.push_front(ptr);
 
   if(!m_shouldStop)
