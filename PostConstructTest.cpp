@@ -57,45 +57,52 @@ public:
   Autowired<A> m_a;
 };
 
+class FailedAutowiringInstance {
+};
+
 TEST_F(PostConstructTest, VerifyNaiveBehavior) {
   // Create a context and add just the naive class, to verify the problematic behavior:
-  std::shared_ptr<CoreContext> subContext = CoreContext::CurrentContext()->Create();
-  EXPECT_THROW(subContext->Add<Naive>(), std::exception) << "Naive class didn't throw an exception as expected";
+  AutoCurrentContext ctxt;
+  EXPECT_THROW(ctxt->Add<Naive>(), std::exception) << "Naive class didn't throw an exception as expected";
 }
 
 TEST_F(PostConstructTest, VerifyExpectedDeferrmentCount) {
-  std::shared_ptr<CoreContext> subContext = CoreContext::CurrentContext()->Create();
-  CurrentContextPusher cur(subContext);
+  AutoCurrentContext ctxt;
 
   // Add the smart class, which should introduce a single deferred count:
-  subContext->Add<Smarter>();
+  ctxt->Add<Smarter>();
 
   // Now test the count:
   EXPECT_EQ(
     1UL,
-    ((ContextExposer&)*subContext).DeferredCount()
+    ((ContextExposer&)*ctxt).DeferredCount()
   ) << "Unexpected number of deferred initializers";
 }
 
 TEST_F(PostConstructTest, VerifySmartBehavior) {
-  // These tests are only eabled where C++11 is present, because they are somewhat complicated to implement without it.
   if(!LAMBDAS_AVAILABLE)
     return;
 
-  std::shared_ptr<CoreContext> subContext = CoreContext::CurrentContext()->Create();
-  CurrentContextPusher cur(subContext);
+  AutoCurrentContext ctxt;
 
   // Add the smart class, which should allow
-  subContext->Add<Smarter>();
+  ctxt->Add<Smarter>();
 
   // Initially, value should be one, which is the default
   Autowired<Smarter> smarter;
   EXPECT_EQ(1, smarter->value) << "Unexpected initial value of Smarter instance";
 
   // Now we add A and check the wiring
-  subContext->Add<A>();
+  ctxt->Add<A>();
   EXPECT_FALSE(!smarter->m_a.get()) << "Autowired member was not wired as expected";
 
   // Verify the value was updated by the notification routine
   EXPECT_EQ(2, smarter->value) << "Post-construction notification routine wasn't invoked as expected";
+}
+
+TEST_F(PostConstructTest, VerifyLoopingFailedAutowiring) {
+  for(size_t i = 10; i--;) {
+    Autowired<FailedAutowiringInstance> ignored;
+    ASSERT_FALSE(ignored.IsAutowired()) << "Successfully autowired an instance that should not have been autowirable";
+  }
 }

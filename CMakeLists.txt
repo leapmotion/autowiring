@@ -12,8 +12,6 @@ set(
   Autowired.cpp
   AutowirableSlot.h
   AutowirableSlot.cpp
-  Autowirer.cpp
-  Autowirer.h
   CMakeLists.txt
   ContextCreator.h
   Bolt.h
@@ -35,6 +33,8 @@ set(
   DispatchQueue.h
   DispatchQueue.cpp
   EventDispatcher.h
+  EventReceiver.h
+  EventReceiver.cpp
   EventSender.h
   EventSender.cpp
   ExceptionFilter.h
@@ -42,6 +42,7 @@ set(
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   InterlockedExchange.h
+  LockFreeList.h
   LockReducedCollection.h
   Object.h
   ObjectPool.h
@@ -53,10 +54,15 @@ set(
   SharedPtrWrap.h
   ThreadStatusMaintainer.cpp
   ThreadStatusMaintainer.h
+  TransientContextMember.h
+  TransientPool.h
+  TransientPoolBase.h
 )
 
 if(BUILD_WINDOWS)
+  enable_language(ASM_MASM)
   set(Autowiring_SRCS
+	interlocked.asm
     CoreThreadWin.cpp
 	InterlockedExchangeWin.cpp
     ${Autowiring_SRCS}
@@ -99,12 +105,16 @@ set(
   GraphConstructionTest.cpp
   InterlockedRoutinesTest.h
   InterlockedRoutinesTest.cpp
+  LockFreeListTest.h
+  LockFreeListTest.cpp
   LockReducedCollectionTest.h
   LockReducedCollectionTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
+  TransientContextMemberTest.h
+  TransientContextMemberTest.cpp
   ScopeTest.h
   ScopeTest.cpp
   SnoopTest.h
