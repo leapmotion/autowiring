@@ -33,6 +33,7 @@ set(
   DispatchQueue.h
   DispatchQueue.cpp
   EventDispatcher.h
+  EventReceiver.h
   EventSender.h
   EventSender.cpp
   ExceptionFilter.h
