@@ -248,8 +248,8 @@ TEST_F(EventReceiverTest, VerifyNoReceive) {
   AutoFired<CallableInterface> sender;
 
   // Try to defer these calls, should not be delivered anywhere:
-  sender(&CallableInterface::ZeroArgs)();
-  sender(&CallableInterface::OneArg)(100);
+  sender.Defer(&CallableInterface::ZeroArgs)();
+  sender.Defer(&CallableInterface::OneArg)(100);
 
   // Unblock:
   receiver->Proceed();
