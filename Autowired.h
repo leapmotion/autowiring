@@ -265,6 +265,19 @@ public:
 };
 
 /// <summary>
+/// This class
+/// </summary>
+template<class T>
+class AutoFired
+{
+public:
+  static_assert(std::is_base_of<EventSender, T>::value, "Cannot create an Autofired instance on a non-event type");
+
+private:
+
+};
+
+/// <summary>
 /// Provides a simple way to obtain a reference to the current context
 /// </summary>
 /// <remarks>
