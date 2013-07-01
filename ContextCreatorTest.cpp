@@ -9,31 +9,46 @@ class Creator:
   public ContextCreator<gc_contextName, int> {
 };
 
+class GlobalSignal {
+public:
+  GlobalSignal(void):
+    m_shouldContinue(false)
+  {}
+
+private:
+  boost::mutex m_lock;
+  bool m_shouldContinue;
+  boost::condition_variable s_continueCond;
+  
+public:
+  void Signal(void) {
+    boost::lock_guard<boost::mutex>(m_lock),
+    (m_shouldContinue = true),
+    s_continueCond.notify_all();
+  }
+
+  void Delay(void) {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    s_continueCond.wait(lk, [this] () {return m_shouldContinue;});
+  }
+};
+
 class WaitMember:
   public CoreThread
 {
 public:
-  WaitMember(void):
-    m_shouldContinue(false)
-  {
+  WaitMember(void) {
     Ready();
   }
 
 private:
-  bool m_shouldContinue;
-  boost::condition_variable m_continueCond;
+  AutoRequired<GlobalSignal> m_signal;
 
 public:
-  void NotifyContinue(void) {
-    boost::lock_guard<boost::mutex>(m_lock),
-    (m_shouldContinue = true),
-    m_continueCond.notify_all();
-  }
 
   void Run(void) override {
     // Wait for our event to be signalled, then leave
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    m_continueCond.wait(lk, [this] () {return m_shouldContinue;});
+    m_signal->Delay();
   }
 };
 
@@ -61,7 +76,7 @@ TEST_F(ContextCreatorTest, ValidateSimpleEviction) {
 
 TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
   // Number of dependent contexts to be created
-  const size_t count = 10;
+  const size_t count = 100;
 
   // Teardown lock, counter, and condition:
   boost::mutex lock;
@@ -70,6 +85,9 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
 
   // Obtain creator pointer:
   AutoRequired<Creator> creator;
+
+  // Set up a signal manager at global context scope:
+  AutoRequired<GlobalSignal> signal;
 
   {
     // Array of objects to test destruction on, and corresponding collection of contexts:
@@ -80,7 +98,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
     for(size_t i = count; i--;) {
       std::shared_ptr<CoreContext> ctxt = *creator->CreateContext(i);
       CurrentContextPusher pshr(ctxt);
-   
+
       // Add in an object to test asynchronous destruction:
       AutoRequired<WaitMember> obj;
       members[i] = obj;
@@ -97,8 +115,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
     }
 
     // Signal all members and then release everything:
-    for(size_t i = count; i--;)
-      members[i]->NotifyContinue();
+    signal->Signal();
   }
 
   // Wait for all contexts to be destroyed
