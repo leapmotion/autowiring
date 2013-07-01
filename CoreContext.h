@@ -261,6 +261,7 @@ protected:
 
 public:
   // Accessor methods:
+  size_t GetMemberCount(void) const {return m_byType.size();}
   bool ShouldStop(void) const {return m_shouldStop;}
 
   /// <summary>

@@ -99,6 +99,9 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
       std::shared_ptr<CoreContext> ctxt = *creator->CreateContext(i);
       CurrentContextPusher pshr(ctxt);
 
+      // Trivial validation that the newly created context is an empty context:
+      ASSERT_EQ(0, ctxt->GetMemberCount()) << "A created context was not empty";
+
       // Add in an object to test asynchronous destruction:
       AutoRequired<WaitMember> obj;
       members[i] = obj;
