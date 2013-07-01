@@ -85,6 +85,8 @@ set(
   CoreThreadTest.cpp
   BoltTest.h
   BoltTest.cpp
+  ContextCreatorTest.h
+  ContextCreatorTest.cpp
   CtorProxyTest.h
   CtorProxyTest.cpp
   CurrentContextPusherTest.h
