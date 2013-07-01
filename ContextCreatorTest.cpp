@@ -28,5 +28,5 @@ TEST_F(ContextCreatorTest, ValidateSimpleEviction) {
   ASSERT_TRUE(ctxtWeak.expired()) << "Expected the context to be destroyed";
 
   // Verify that our creator is now empty:
-  EXPECT_EQ(0UL, creator->EvictStale()) << "Unexpected stale context found";
+  EXPECT_EQ(0UL, creator->GetSize()) << "Context creator still holds a context reference, this is unexpected";
 }

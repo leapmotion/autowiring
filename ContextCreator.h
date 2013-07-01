@@ -40,22 +40,8 @@ protected:
   std::weak_ptr<CoreContext> m_context;
 
 public:
-  /// <summary>
-  /// Performs a scan of all contexts and evicts those contexts which have terminated
-  /// </summary>
-  /// <returns>The number of stale contexts evicted</returns>
-  /// <remarks>
-  /// Consider eliminating this method and altering the internal map to use weak pointers.
-  /// </remarks>
-  size_t EvictStale(void) {
-    size_t retVal = 0;
-    for(auto q = m_mp.begin(); q != m_mp.end(); )
-      if(q->second.expired())
-        retVal++, m_mp.erase(q++);
-      else
-        q++;
-    return retVal;
-  }
+  // Accessor methods:
+  size_t GetSize(void) const {return m_mp.size();}
 
   /// <summary>
   /// Attempts to find a context with the specified key
@@ -119,8 +105,11 @@ public:
     if(!wait) {
       // Trivial signal-clear-return:
       boost::lock_guard<boost::mutex> lk(m_contextLock);
-      for(auto q = m_mp.begin(); q != m_mp.end(); q++)
-        q->second->SignalShutdown();
+      for(auto q = m_mp.begin(); q != m_mp.end(); q++) {
+        auto locked = q->second.lock();
+        if(locked)
+          locked->SignalShutdown();
+      }
       m_mp.clear();
       return;
     }
@@ -130,15 +119,21 @@ public:
     // Copy out and clear:
     {
       boost::lock_guard<boost::mutex> lk(m_contextLock);
-      for (auto q = m_mp.begin(); q != m_mp.end(); q++)
-        q->second->SignalShutdown();
+      for(auto q = m_mp.begin(); q != m_mp.end(); q++) {
+        auto locked = q->second.lock();
+        if(locked)
+          locked->SignalShutdown();
+      }
       mp = m_mp,
       m_mp.clear();
     }
 
     // Signal everyone first, then wait in a second pass:
-    for(auto q = mp.begin(); q != mp.end(); q++)
-      q->second->Wait();
+    for(auto q = mp.begin(); q != mp.end(); q++) {
+      auto locked = q->second.lock();
+      if(locked)
+        locked->Wait();
+    }
   }
 
   /// <summary>
@@ -152,6 +147,13 @@ public:
   /// <summary>
   /// Removes the specified context by its iterator
   /// </summary>
+  /// <remarks>
+  /// Removing a context does not do anything to the context itself.  The caller is responsible for ensuring
+  /// that the context is shut down (if this is desired) or performing any required synchronization.
+  ///
+  /// If the caller does _not_ do this, then the context is in a so-called "orphaned state," whereby all
+  /// shared pointers to the context are held by threads currently running in the context.
+  /// </remarks>
   void RemoveContext(typename t_mpType::iterator q) {
     boost::lock_guard<boost::mutex>(m_contextLock),
     m_mp.erase(q);
