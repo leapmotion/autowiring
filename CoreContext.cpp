@@ -315,13 +315,16 @@ void CoreContext::UpdateDeferredElements(void) {
 }
 
 void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
-  for(auto q = first; q != last; q++) {
-    // n^2 sender unlinking
-    for(auto r = m_proxies.begin(); r != m_proxies.end(); r++)
-      *r->second -= *q;
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    for(auto q = first; q != last; q++) {
+      // n^2 sender unlinking
+      for(auto r = m_proxies.begin(); r != m_proxies.end(); r++)
+        *r->second -= *q;
 
-    // Trivial erase:
-    m_eventReceivers.erase(*q);
+      // Trivial erase:
+      m_eventReceivers.erase(*q);
+    }
   }
 
   // Detour to the parent collection (if necessary)
