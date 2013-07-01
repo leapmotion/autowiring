@@ -43,15 +43,18 @@ public:
   /// <summary>
   /// Performs a scan of all contexts and evicts those contexts which have terminated
   /// </summary>
+  /// <returns>The number of stale contexts evicted</returns>
   /// <remarks>
   /// Consider eliminating this method and altering the internal map to use weak pointers.
   /// </remarks>
-  void EvictStale(void) {
+  size_t EvictStale(void) {
+    size_t retVal = 0;
     for(auto q = m_mp.begin(); q != m_mp.end(); )
       if(q->second.unique())
-        m_mp.erase(q++);
+        retVal++, m_mp.erase(q++);
       else
         q++;
+    return retVal;
   }
 
   /// <summary>
