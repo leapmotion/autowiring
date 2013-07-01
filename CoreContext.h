@@ -179,6 +179,10 @@ protected:
   // Condition, signalled when context state has been changed
   boost::condition m_stateChanged;
 
+  // Teardown listeners, invoked in sequence when the context is tearing down
+  typedef std::list<std::function<void()>> t_teardownListeners;
+  t_teardownListeners m_teardownListeners;
+
   // Lists of event receivers, by name:
   typedef std::unordered_map<std::string, std::list<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
@@ -263,6 +267,11 @@ public:
   /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
   /// </summary>
   void BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const;
+
+  /// <summary>
+  /// Registers the passed listener to be called when the context is in a teardown pathway
+  /// </summary>
+  void AddTeardownListener(const std::function<void ()>& listener);
 
   /// <summary>
   /// Obtains a shared pointer to an event sender _in this context_ matching the specified type

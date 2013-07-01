@@ -33,7 +33,7 @@ protected:
   boost::mutex m_contextLock;
 
   // Collection of mapped contexts:
-  typedef std::unordered_map<Key, std::shared_ptr<CoreContext>> t_mpType;
+  typedef std::unordered_map<Key, std::weak_ptr<CoreContext>> t_mpType;
   t_mpType m_mp;
 
   // Local context pointer:
@@ -50,7 +50,7 @@ public:
   size_t EvictStale(void) {
     size_t retVal = 0;
     for(auto q = m_mp.begin(); q != m_mp.end(); )
-      if(q->second.unique())
+      if(q->second.expired())
         retVal++, m_mp.erase(q++);
       else
         q++;
@@ -72,14 +72,14 @@ public:
   /// Creates a context with the specified key, dependent upon the current context
   /// </summary>
   /// <returns>A deferred creation notice which, when destroyed, will cause clients to be notified of context creation</returns>
-  /// <remarks>
-  ///
-  /// </remarks>
   std::shared_ptr<DeferredCreationNotice> CreateContext(const Key& key) {
     boost::lock_guard<boost::mutex> lk(m_contextLock);
 
+    // Obtain and lock a weak pointer, if possible:
+    auto& childWeak = m_mp[key];
+    auto child = childWeak.lock();
+
     // Try to find a context already existing with the given key:
-    std::shared_ptr<CoreContext>& child = m_mp[key];
     std::shared_ptr<DeferredCreationNotice> retVal;
     if(child)
       retVal.reset(new DeferredCreationNotice(nullptr, child));
@@ -90,6 +90,13 @@ public:
         // Create:
         child = context->Create();
         retVal.reset(new DeferredCreationNotice(contextName, child));
+
+        // Add a teardown listener for this child in particular:
+        child->AddTeardownListener([this, key] () {
+          // Erase the key from our collection:
+          boost::lock_guard<boost::mutex>(m_contextLock),
+          m_mp.erase(key);
+        });
       }
     }
     return retVal;
@@ -134,12 +141,11 @@ public:
       q->second->Wait();
   }
 
-
   /// <summary>
   /// Removes the specified context by its key
   /// </summary>
   void RemoveContext(const Key& key) {
-    boost::lock_guard<boost::mutex> lk(m_contextLock);
+    boost::lock_guard<boost::mutex>(m_contextLock),
     m_mp.erase(key);
   }
 
@@ -147,8 +153,21 @@ public:
   /// Removes the specified context by its iterator
   /// </summary>
   void RemoveContext(typename t_mpType::iterator q) {
-    boost::lock_guard<boost::mutex> lk(m_contextLock);
+    boost::lock_guard<boost::mutex>(m_contextLock),
     m_mp.erase(q);
+  }
+
+  /// <summary>
+  /// Notifies this context creator that the specified context is being destroyed
+  /// </summary>
+  /// <param name="key">The key that was originally used to create the context</param>
+  /// <remarks>
+  /// The default behavior of this method is to evict the key from the internal map.  Consumers who desire
+  /// to change the default behavior of this map should pass control to the base class.
+  /// </remarks>
+  virtual void NotifyContextDestroyed(Key key, CoreContext* pContext) {
+    boost::lock_guard<boost::mutex>(m_contextLock),
+    m_mp.erase(key);
   }
 };
 
