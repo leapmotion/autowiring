@@ -2,6 +2,8 @@
 #ifndef _CONTEXT_MEMBER_H
 #define _CONTEXT_MEMBER_H
 #include "Object.h"
+#include "TeardownNotifier.h"
+#include <assert.h>
 #include SHARED_PTR_HEADER
 
 class CoreContext;
@@ -10,7 +12,8 @@ class CoreContext;
 /// A class that must be inherited in order to be a member of a context heriarchy
 /// </summary>
 class ContextMember:
-  public virtual Object
+  public virtual Object,
+  public TeardownNotifier
 {
 protected:
   ContextMember(const char* name = nullptr);
@@ -30,9 +33,23 @@ protected:
 public:
   // Accessor methods:
   const char* GetName(void) const {return m_name;}
+  bool IsOrphaned(void) const {return m_context.expired();}
 
-  // Mutator methods:
+  /// <summary>
+  /// Assigns the context for this context member
+  /// </summary>
+  /// <remarks>
+  /// This method may be used to assign the member's enclosing context to exactly one value.  It
+  /// is an error to attempt to use this method to change the context member's context once it has
+  /// been assigned.
+  ///
+  /// An exception to this rule is that a context member's context may be updated if the context
+  /// member has been orphaned.
+  ///
+  /// This method is idempotent.
+  /// </remarks>
   void SetContext(std::shared_ptr<CoreContext>& context) {
+    assert(m_context.lock() == context || m_context.expired());
     m_context = context;
   }
 
