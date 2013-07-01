@@ -33,6 +33,10 @@ CoreContext::~CoreContext(void) {
     s_curContext.get()->get() != this
   );
   
+  // Notify all teardown listeners first:
+  for(auto q = m_teardownListeners.begin(); q != m_teardownListeners.end(); q++)
+    (*q)();
+
   // Notify all ContextMember instances that their parent is going away
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
     (*q)->NotifyContextTeardown();
@@ -49,7 +53,7 @@ CoreContext::~CoreContext(void) {
   for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); ++q)
     delete q->second;
 
-  // Explicit deleters to simplify base deletion
+  // Explicit deleters to simplify base deletion of any deferred autowiring requests:
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
     delete q->second;
 }
@@ -72,6 +76,11 @@ void CoreContext::BroadcastContextCreationNotice(const char* contextName, const 
     if(child)
       child->BroadcastContextCreationNotice(contextName, context);
   }
+}
+
+void CoreContext::AddTeardownListener(const std::function<void ()>& listener) {
+  boost::lock_guard<boost::mutex>(m_lock),
+  m_teardownListeners.push_back(listener);
 }
 
 std::shared_ptr<OutstandingCountTracker> CoreContext::IncrementOutstandingThreadCount(void) {
