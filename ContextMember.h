@@ -62,7 +62,7 @@ public:
   /// Alternatively, the Autowired instance could attach and detach itself from a linked list
   /// in a lock-free way in order to support chain detachment.
   /// </remarks>
-  virtual void ReleaseAll(void) {}
+  virtual void NotifyContextTeardown(void) {}
 
   /// <summary>
   /// Retrieves the context associated with this object.

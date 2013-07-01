@@ -35,7 +35,7 @@ CoreContext::~CoreContext(void) {
   
   // Notify all ContextMember instances that their parent is going away
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
-    (*q)->ReleaseAll();
+    (*q)->NotifyContextTeardown();
 
   // Release all event sender links:
   for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
