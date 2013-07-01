@@ -14,8 +14,7 @@ ContextMember::ContextMember(const char* name):
 ContextMember::~ContextMember() {
 }
 
-void* ContextMember::operator new(size_t nBytes)
-{
+void* ContextMember::operator new(size_t nBytes) {
   void* pRetVal = ::operator new(nBytes);
   if(ENABLE_NETWORK_MONITOR) {
     AutoCurrentContext ctxt;

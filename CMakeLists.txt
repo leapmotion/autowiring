@@ -52,6 +52,8 @@ set(
   SharedPtrHash.h
   SharedPtrWrap.cpp
   SharedPtrWrap.h
+  TeardownNotifier.h
+  TeardownNotifier.cpp
   ThreadStatusMaintainer.cpp
   ThreadStatusMaintainer.h
   TransientContextMember.h
@@ -115,6 +117,8 @@ set(
   MultiInheritTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
+  TeardownNotifierTest.h
+  TeardownNotifierTest.cpp
   TransientContextMemberTest.h
   TransientContextMemberTest.cpp
   ScopeTest.h
