@@ -92,7 +92,6 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
   {
     // Array of objects to test destruction on, and corresponding collection of contexts:
     std::shared_ptr<WaitMember> members[count];
-    std::shared_ptr<CoreContext> contexts[count];
 
     // Create a few contexts:
     for(size_t i = count; i--;) {
