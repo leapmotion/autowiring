@@ -22,7 +22,7 @@ private:
   
 public:
   void Signal(void) {
-    boost::lock_guard<boost::mutex>(m_lock),
+    (boost::lock_guard<boost::mutex>)m_lock,
     (m_shouldContinue = true),
     s_continueCond.notify_all();
   }
@@ -108,7 +108,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
 
       // Add a notifier to signal a continue condition when we have everything we need:
       ctxt->AddTeardownListener([&lock, &cond, &counter] {
-        boost::lock_guard<boost::mutex>(lock),
+        (boost::lock_guard<boost::mutex>)lock,
         counter--,
         cond.notify_all();
       });
