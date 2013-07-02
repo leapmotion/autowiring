@@ -80,7 +80,7 @@ public:
         // Add a teardown listener for this child in particular:
         child->AddTeardownListener([this, key] () {
           // Erase the key from our collection:
-          boost::lock_guard<boost::mutex>(m_contextLock),
+          (boost::lock_guard<boost::mutex>)m_contextLock,
           m_mp.erase(key);
         });
       }
@@ -140,7 +140,7 @@ public:
   /// Removes the specified context by its key
   /// </summary>
   void RemoveContext(const Key& key) {
-    boost::lock_guard<boost::mutex>(m_contextLock),
+    (boost::lock_guard<boost::mutex>)m_contextLock,
     m_mp.erase(key);
   }
 
@@ -155,7 +155,7 @@ public:
   /// shared pointers to the context are held by threads currently running in the context.
   /// </remarks>
   void RemoveContext(typename t_mpType::iterator q) {
-    boost::lock_guard<boost::mutex>(m_contextLock),
+    (boost::lock_guard<boost::mutex>)m_contextLock,
     m_mp.erase(q);
   }
 
@@ -168,7 +168,7 @@ public:
   /// to change the default behavior of this map should pass control to the base class.
   /// </remarks>
   virtual void NotifyContextDestroyed(Key key, CoreContext* pContext) {
-    boost::lock_guard<boost::mutex>(m_contextLock),
+    (boost::lock_guard<boost::mutex>)m_contextLock,
     m_mp.erase(key);
   }
 };
