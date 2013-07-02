@@ -75,6 +75,7 @@ public:
       if(context) {
         // Create:
         child = context->Create();
+        childWeak = child;
         retVal.reset(new DeferredCreationNotice(contextName, child));
 
         // Add a teardown listener for this child in particular:
