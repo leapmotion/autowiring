@@ -34,8 +34,6 @@
   #endif
 #endif
 
-using std::list;
-
 class AutowirableSlot;
 class BoltBase;
 class ContextMember;
@@ -191,11 +189,11 @@ protected:
   std::weak_ptr<OutstandingCountTracker> m_outstanding;
 
   // Actual core threads:
-  typedef list<CoreThread*> t_threadList;
+  typedef std::list<CoreThread*> t_threadList;
   t_threadList m_threads;
 
   // Child contexts:
-  typedef list<std::weak_ptr<CoreContext> > t_childList;
+  typedef std::list<std::weak_ptr<CoreContext> > t_childList;
   boost::mutex m_childrenLock;
   t_childList m_children;
 
