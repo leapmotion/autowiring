@@ -175,7 +175,7 @@ public:
       );
 
     // Add a teardown listener so we can update the list:
-    auto pContext = child.lock();
+    auto pContext = child.get();
     child->AddTeardownListener([this, q, pContext] () {
       NotifyContextDestroyed(q, pContext);
     });
