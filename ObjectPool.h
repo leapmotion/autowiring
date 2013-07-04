@@ -1,6 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _OBJECT_POOL_H
 #define _OBJECT_POOL_H
+#include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <set>
 #include SHARED_PTR_HEADER
@@ -107,10 +108,8 @@ public:
   /// Blocks until an object becomes available from the pool
   /// </summary>
   std::shared_ptr<T> Wait(void) {
-    std::shared_ptr<T> retVal;
-
     boost::unique_lock<boost::mutex> lk(m_lock);
-    m_setCondition.wait(lk, [this, &retVal, &lk] -> bool {
+    m_setCondition.wait(lk, [this] () -> bool {
       return m_outstanding < m_limit;
     });
 
@@ -120,13 +119,13 @@ public:
     // If we don't have anything, create a new item to be returned:
     if(!m_objs.size()) {
       lk.unlock();
-      return new T;
+      return std::shared_ptr<T>(new T);
     }
     
     typename t_stType::iterator q = m_objs.begin();
     auto retVal = *q;
     m_objs.erase(q);
-    return retVal;
+    return std::shared_ptr<T>(retVal);
   }
 
   /// <summary>
@@ -144,25 +143,27 @@ public:
     rs.reset();
 
     {
-      boost::lock_guard<boost::mutex> lk(m_lock);
+      boost::unique_lock<boost::mutex> lk(m_lock);
+      if(m_limit <= m_outstanding)
+        // Already at the limit
+        return;
+
+      // Increment total objects outstanding, unconditionally:
+      m_outstanding++;
+
+      // Cached, or construct?
       if(m_objs.size()) {
         // Lock and remove an element at random:
         typename t_stType::iterator q = m_objs.begin();
         pObj = *q;
         m_objs.erase(q);
+      } else {
+        // Lock release, so construction does not have to be synchronized:
+        lk.unlock();
+
+        // We failed to recover an object, create a new one:
+        pObj = new T;
       }
-    }
-
-    // Increment the total number of objects outstanding:
-    m_outstanding++;
-
-    if(!pObj) {
-      if(m_limit == m_outstanding)
-        // We do not allow an outstanding count
-        return;
-
-      // We failed to recover an object, create a new one:
-      pObj = new T;
     }
 
     // Fill the shared pointer with the object we created, and ensure that we override

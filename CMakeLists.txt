@@ -118,6 +118,8 @@ set(
   LockReducedCollectionTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
+  ObjectPoolTest.h
+  ObjectPoolTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
   TeardownNotifierTest.h
