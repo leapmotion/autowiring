@@ -94,38 +94,7 @@ public:
   /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
   /// </remarks>
   void Clear(bool wait) {
-    if(!wait) {
-      // Trivial signal-clear-return:
-      boost::lock_guard<boost::mutex> lk(m_contextLock);
-      for(auto q = m_mp.begin(); q != m_mp.end(); q++) {
-        auto locked = q->second.lock();
-        if(locked)
-          locked->SignalShutdown();
-      }
-      m_mp.clear();
-      return;
-    }
-
-    t_mpType mp;
-
-    // Copy out and clear:
-    {
-      boost::lock_guard<boost::mutex> lk(m_contextLock);
-      for(auto q = m_mp.begin(); q != m_mp.end(); q++) {
-        auto locked = q->second.lock();
-        if(locked)
-          locked->SignalShutdown();
-      }
-      mp = m_mp,
-      m_mp.clear();
-    }
-
-    // Signal everyone first, then wait in a second pass:
-    for(auto q = mp.begin(); q != mp.end(); q++) {
-      auto locked = q->second.lock();
-      if(locked)
-        locked->Wait();
-    }
+    ContextCreatorBase::Clear(m_mp, [] (t_mpType::iterator q) {return q->second.lock();});
   }
 
   /// <summary>
@@ -224,34 +193,6 @@ public:
   /// </remarks>
   void Clear(bool wait) {
     ContextCreatorBase::Clear(m_contextList, [] (t_contextList::iterator q) {return q->lock();});
-  }
-
-  /// <summary>
-  /// Removes the specified context by its iterator
-  /// </summary>
-  /// <remarks>
-  /// Removing a context does not do anything to the context itself.  The caller is responsible for ensuring
-  /// that the context is shut down (if this is desired) or performing any required synchronization.
-  ///
-  /// If the caller does _not_ do this, then the context is in a so-called "orphaned state," whereby all
-  /// shared pointers to the context are held by threads currently running in the context.
-  /// </remarks>
-  void RemoveContext(typename t_mpType::iterator q) {
-    (boost::lock_guard<boost::mutex>)m_contextLock,
-    m_mp.erase(q);
-  }
-
-  /// <summary>
-  /// Notifies this context creator that the specified context is being destroyed
-  /// </summary>
-  /// <param name="key">The key that was originally used to create the context</param>
-  /// <remarks>
-  /// The default behavior of this method is to evict the key from the internal map.  Consumers who desire
-  /// to change the default behavior of this map should pass control to the base class.
-  /// </remarks>
-  virtual void NotifyContextDestroyed(Key key, CoreContext* pContext) {
-    (boost::lock_guard<boost::mutex>)m_contextLock,
-    m_mp.erase(key);
   }
 };
 
