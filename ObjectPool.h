@@ -43,6 +43,8 @@ public:
 
 private:
   boost::mutex m_lock;
+  boost::condition_variable m_setCondition;
+
   typedef std::set<T*> t_stType;
   t_stType m_objs;
 
@@ -62,6 +64,7 @@ protected:
         // Reset, insert, return
         m_rx(*ptr);
         m_objs.insert(ptr);
+        m_setCondition.notify_one();
         return;
       }
     }
@@ -98,6 +101,22 @@ public:
   /// </remarks>
   void SetOutstandingLimit(size_t limit) {
     m_limit = limit;
+  }
+
+  /// <summary>
+  /// Blocks until an object becomes available from the pool
+  /// </summary>
+  std::shared_ptr<T> Wait(void) {
+    std::shared_ptr<T> retVal;
+
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    m_setCondition.wait(lk, [this, &retVal, &lk] -> bool {
+      lk.unlock();
+      (*this)(retVal);
+      lk.lock();
+      return retVal != nullptr;
+    });
+    return retVal;
   }
 
   /// <summary>
