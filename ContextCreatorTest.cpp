@@ -12,6 +12,17 @@ class Creator:
 class VoidCreator:
   public ContextCreator<gc_contextName>
 {
+public:
+  VoidCreator(void):
+    m_totalDestroyed(0)
+  {}
+
+  size_t m_totalDestroyed;
+
+  void NotifyContextDestroyed(t_contextList::iterator q, CoreContext* pContext) override {
+    m_totalDestroyed++;
+    ContextCreator<gc_contextName>::NotifyContextDestroyed(q, pContext);
+  }
 };
 
 class GlobalSignal {
@@ -145,7 +156,9 @@ TEST_F(ContextCreatorTest, VoidKeyType) {
       EXPECT_EQ(1UL, vc->GetSize()) << "Requested that a context be created, but the void creator did not have any members";
     }
     EXPECT_EQ(1UL, vc->GetSize()) << "A created context was apparently destroyed after firing bolts";
+    EXPECT_EQ(0UL, vc->m_totalDestroyed) << "The void creator received a NotifyContextDestroyed call unexpectedly early";
   }
 
   EXPECT_EQ(0UL, vc->GetSize()) << "A void context creator was not correctly updated when its dependent context went out of scope";
+  EXPECT_EQ(1UL, vc->m_totalDestroyed) << "The void creator did not receive the expected number of NotifyContextDestroyed calls";
 }
