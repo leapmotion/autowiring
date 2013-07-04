@@ -14,6 +14,8 @@ set(
   AutowirableSlot.cpp
   CMakeLists.txt
   ContextCreator.h
+  ContextCreatorBase.h
+  ContextCreatorBase.cpp
   Bolt.h
   BoltBase.h
   ContextMap.h
