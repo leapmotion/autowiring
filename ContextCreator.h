@@ -70,10 +70,9 @@ public:
         retVal.reset(new DeferredCreationNotice(contextName, child));
 
         // Add a teardown listener for this child in particular:
-        child->AddTeardownListener([this, key] () {
-          // Erase the key from our collection:
-          (boost::lock_guard<boost::mutex>)m_contextLock,
-          m_mp.erase(key);
+        auto pContext = child.get();
+        child->AddTeardownListener([this, key, pContext] () {
+          NotifyContextDestroyed(key, pContext);
         });
       }
     }
@@ -127,6 +126,9 @@ public:
   /// <remarks>
   /// The default behavior of this method is to evict the key from the internal map.  Consumers who desire
   /// to change the default behavior of this map should pass control to the base class.
+  ///
+  /// Consumers are urged to exercise caution when attempting to dereference pContext, as pContext will be
+  /// in a teardown pathway when this method is called.
   /// </remarks>
   virtual void NotifyContextDestroyed(Key key, CoreContext* pContext) {
     (boost::lock_guard<boost::mutex>)m_contextLock,
@@ -173,9 +175,9 @@ public:
       );
 
     // Add a teardown listener so we can update the list:
-    child->AddTeardownListener([this, q] () {
-      (boost::lock_guard<boost::mutex>)m_contextLock,
-      m_contextList.erase(q);
+    auto pContext = child.lock();
+    child->AddTeardownListener([this, q, pContext] () {
+      NotifyContextDestroyed(q, pContext);
     });
     return retVal;
   }
@@ -195,6 +197,22 @@ public:
   /// </remarks>
   void Clear(bool wait) {
     ContextCreatorBase::Clear(m_contextList, [] (t_contextList::iterator q) {return q->lock();});
+  }
+
+  /// <summary>
+  /// Notifies this context creator that the specified context is being destroyed
+  /// </summary>
+  /// <param name="q">An iterator referring to the context being destroyed</param>
+  /// <remarks>
+  /// The default behavior of this method is to evict the key from the internal map.  Consumers who desire
+  /// to change the default behavior of this map should pass control to the base class.
+  ///
+  /// Consumers are urged to exercise caution when attempting to dereference pContext, as pContext will be
+  /// in a teardown pathway when this method is called.
+  /// </remarks>
+  virtual void NotifyContextDestroyed(t_contextList::iterator q, CoreContext* pContext) {
+    (boost::lock_guard<boost::mutex>)m_contextLock,
+    m_contextList.erase(q);
   }
 };
 
