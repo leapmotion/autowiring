@@ -162,20 +162,22 @@ public:
 
     // Create:
     auto child = context->Create();
-    childWeak = child;
     std::shared_ptr<DeferredCreationNotice> retVal(new DeferredCreationNotice(contextName, child));
 
     // Insert into our list:
     auto q =
-      (boost::lock_guard<boost::mutex>)m_contextLock,
-      m_contextList.push_front(child),
-      m_contextList.begin();
+      (
+        (boost::lock_guard<boost::mutex>)m_contextLock,
+        m_contextList.push_front(child),
+        m_contextList.begin()
+      );
 
     // Add a teardown listener so we can update the list:
     child->AddTeardownListener([this, q] () {
       (boost::lock_guard<boost::mutex>)m_contextLock,
       m_contextList.erase(q);
     });
+    return retVal;
   }
 
   /// <sumamry>
