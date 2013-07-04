@@ -111,11 +111,21 @@ public:
 
     boost::unique_lock<boost::mutex> lk(m_lock);
     m_setCondition.wait(lk, [this, &retVal, &lk] -> bool {
-      lk.unlock();
-      (*this)(retVal);
-      lk.lock();
-      return retVal != nullptr;
+      return m_outstanding < m_limit;
     });
+
+    // Unconditionally increment the outstanding count:
+    m_outstanding++;
+
+    // If we don't have anything, create a new item to be returned:
+    if(!m_objs.size()) {
+      lk.unlock();
+      return new T;
+    }
+    
+    typename t_stType::iterator q = m_objs.begin();
+    auto retVal = *q;
+    m_objs.erase(q);
     return retVal;
   }
 
@@ -143,6 +153,9 @@ public:
       }
     }
 
+    // Increment the total number of objects outstanding:
+    m_outstanding++;
+
     if(!pObj) {
       if(m_limit == m_outstanding)
         // We do not allow an outstanding count
@@ -151,9 +164,6 @@ public:
       // We failed to recover an object, create a new one:
       pObj = new T;
     }
-
-    // Increment the total number of objects outstanding:
-    m_outstanding++;
 
     // Fill the shared pointer with the object we created, and ensure that we override
     // the destructor so that the object is returned to the pool when it falls out of
