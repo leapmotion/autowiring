@@ -223,38 +223,7 @@ public:
   /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
   /// </remarks>
   void Clear(bool wait) {
-    if(!wait) {
-      // Trivial signal-clear-return:
-      boost::lock_guard<boost::mutex> lk(m_contextLock);
-      for(auto q = m_contextList.begin(); q != m_contextList.end(); q++) {
-        auto locked = q->lock();
-        if(locked)
-          locked->SignalShutdown();
-      }
-      m_contextList.clear();
-      return;
-    }
-
-    t_contextList contextList;
-
-    // Copy out and clear:
-    {
-      boost::lock_guard<boost::mutex> lk(m_contextLock);
-      for(auto q = m_mp.begin(); q != m_mp.end(); q++) {
-        auto locked = q->second.lock();
-        if(locked)
-          locked->SignalShutdown();
-      }
-      contextList = m_contextList;
-      m_contextList.clear();
-    }
-
-    // Signal everyone first, then wait in a second pass:
-    for(auto q = contextList.begin(); q != contextList.end(); q++) {
-      auto locked = q->lock();
-      if(locked)
-        locked->Wait();
-    }
+    ContextCreatorBase::Clear(m_contextList, [] (t_contextList::iterator q) {return q->lock();});
   }
 
   /// <summary>
