@@ -8,14 +8,13 @@ class StrictlyLocal {
 TEST_F(AutoLocalTest, VerifyNegativeAutowiring) {
   AutoRequired<StrictlyLocal> exterior;
 
-  {
-    AutoCreateContext ctxt;
-    CurrentContextPusher pshr(ctxt);
+  // Create the subcontext:
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
 
-    // Attempt a local autowiring on a type that doesn't exist:
-    AutowiredLocal<StrictlyLocal> local;
-    EXPECT_FALSE(local.IsAutowired()) << "Locally autowired a type which was not local to the current context";
-  }
+  // Attempt a local autowiring on a type that doesn't exist:
+  AutowiredLocal<StrictlyLocal> local;
+  EXPECT_FALSE(local.IsAutowired()) << "Locally autowired a type which was not local to the current context";
 }
 
 TEST_F(AutoLocalTest, VerifyNoExteriorDeferred) {
@@ -34,11 +33,19 @@ TEST_F(AutoLocalTest, VerifyNoExteriorDeferred) {
 }
 
 TEST_F(AutoLocalTest, VerifyNoLocalAliasing) {
+  // Nonlocal type, which the local instance should not satisfy:
   AutoRequired<StrictlyLocal> nonlocal;
 
+  // Create a subcontext to prevent linkage:
   AutoCreateContext ctxt;
   CurrentContextPusher pshr(ctxt);
 
+  // This AutoRequired instance should alias the outer type:
+  AutoRequired<StrictlyLocal> nonlocalAlias;
+  ASSERT_TRUE(nonlocalAlias.IsAutowired());
+  EXPECT_EQ(nonlocal, nonlocalAlias) << "AutoRequired instance did not properly alias the enclosing type";
+
+  // The local instance should obtain the interior type:
   AutoRequiredLocal<StrictlyLocal> local;
   EXPECT_TRUE(local.IsAutowired()) << "An AutoRequiredLocal instance was not autowired as expected";
   EXPECT_NE(nonlocal, local) << "A local instance aliased a type in an enclosing scope";
