@@ -31,6 +31,7 @@ set(
   DeferredBase.cpp
   DeferredCreationNotice.h
   DeferredCreationNotice.cpp
+  deferred_ptr.h
   DependentContext.h
   DispatchQueue.h
   DispatchQueue.cpp
