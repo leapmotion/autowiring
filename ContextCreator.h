@@ -30,6 +30,9 @@ protected:
   typedef std::unordered_map<Key, std::weak_ptr<CoreContext>> t_mpType;
   t_mpType m_mp;
 
+  // The type that will be used with destruction notification callbacks
+  typedef Key t_callbackHandle;
+
 public:
   // Accessor methods:
   size_t GetSize(void) const {return m_mp.size();}
@@ -130,7 +133,7 @@ public:
   /// Consumers are urged to exercise caution when attempting to dereference pContext, as pContext will be
   /// in a teardown pathway when this method is called.
   /// </remarks>
-  virtual void NotifyContextDestroyed(Key key, CoreContext* pContext) {
+  virtual void NotifyContextDestroyed(t_callbackHandle key, CoreContext* pContext) {
     (boost::lock_guard<boost::mutex>)m_contextLock,
     m_mp.erase(key);
   }
@@ -147,6 +150,9 @@ protected:
   // List of mapped contexts:
   typedef std::list<std::weak_ptr<CoreContext>> t_contextList;
   t_contextList m_contextList;
+
+  // The type that will be used with destruction notification callbacks
+  typedef t_contextList::iterator t_callbackHandle;
 
 public:
   // Accessor methods:
@@ -210,7 +216,7 @@ public:
   /// Consumers are urged to exercise caution when attempting to dereference pContext, as pContext will be
   /// in a teardown pathway when this method is called.
   /// </remarks>
-  virtual void NotifyContextDestroyed(t_contextList::iterator q, CoreContext* pContext) {
+  virtual void NotifyContextDestroyed(t_callbackHandle q, CoreContext* pContext) {
     (boost::lock_guard<boost::mutex>)m_contextLock,
     m_contextList.erase(q);
   }
