@@ -264,6 +264,13 @@ public:
   }
 };
 
+/// <summary>
+/// An AutowiredLocal instance may only be satisfied by a member of the specified type which exists in the current context.
+/// </summary>
+/// <remarks>
+/// Do not use AutoRequiredLocal and AutoRequired on the same type in the same context.  Doing this could cause an initialization-order
+/// dependency, and is an error.  In debug mode, doing this may cause an exception.
+/// </remarks>
 template<class T>
 class AutowiredLocal:
   public AutowiredCreator<T>
@@ -275,6 +282,14 @@ public:
   }
 };
 
+/// <summary>
+/// A local AutoRequired instance will ensure that the specified type will always be constructed in the current scope
+/// </summary>
+/// <remarks>
+/// This type offers a convenient way to ensure that some type is always constructed in the current context, even if a satisfying
+/// type exists in the parent scope.  Do not use AutoRequiredLocal and AutoRequired on the same type in the same context.  Doing this
+/// could cause an initialization-order dependency, and is an error.  In debug mode, doing this may cause an exception.
+/// </remarks>
 template<class T>
 class AutoRequiredLocal:
   public AutowiredLocal<T>
