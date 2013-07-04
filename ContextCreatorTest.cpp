@@ -134,4 +134,12 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
 }
 
 TEST_F(ContextCreatorTest, VoidKeyType) {
+  AutoRequired<VoidCreator> vc;
+  std::shared_ptr<CoreContext> ctxt;
+
+  {
+    auto created = vc->CreateContext();
+    ctxt = *created;
+  }
+  EXPECT_EQ(1UL, vc->GetSize()) << "Requested that a context be created, but the void creator did not have any members";
 }
