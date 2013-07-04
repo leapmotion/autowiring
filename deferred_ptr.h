@@ -10,9 +10,12 @@ class deferred_ptr:
   std::weak_ptr<T>
 {
 public:
-  deferred_ptr(std::shared_ptr<T>& ptr):
+  deferred_ptr(const std::shared_ptr<T>& ptr, bool obtain = false):
     std::weak_ptr<T>(ptr)
-  {}
+  {
+    if(obtain)
+      interior = ptr;
+  }
 
 private:
   // The optionally obtained interior pointer
