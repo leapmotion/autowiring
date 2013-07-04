@@ -181,17 +181,6 @@ class Autowired<GlobalCoreContext>:
   public AutowiredCreator<GlobalCoreContext>
 {};
 
-template<class T>
-class AutowiredLocal:
-  public AutowiredCreator<T>
-{
-public:
-  AutowiredLocal(void) {
-    shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
-    context->Autowire(*this);
-  }
-};
-
 /// <summary>
 /// Similar to Autowired, but the default constructor invokes Autowired(true)
 /// </summary>
@@ -272,6 +261,28 @@ public:
   {
     // Associate with the pool:
     pool.Add(*this);
+  }
+};
+
+template<class T>
+class AutowiredLocal:
+  public AutowiredCreator<T>
+{
+public:
+  AutowiredLocal(void) {
+    shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
+    context->Autowire(*this);
+  }
+};
+
+template<class T>
+class AutoRequiredLocal:
+  public AutowiredLocal<T>
+{
+public:
+  AutoRequiredLocal(void) {
+    if(!*this)
+      AutowiredCreator<T>::Create();
   }
 };
 

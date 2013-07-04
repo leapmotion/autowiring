@@ -32,3 +32,14 @@ TEST_F(AutoLocalTest, VerifyNoExteriorDeferred) {
   AutoRequired<StrictlyLocal> created;
   EXPECT_FALSE(local.IsAutowired()) << "A creation event unexpectedly satisfied a local pointer in a child context";
 }
+
+TEST_F(AutoLocalTest, VerifyNoLocalAliasing) {
+  AutoRequired<StrictlyLocal> nonlocal;
+
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+
+  AutoRequiredLocal<StrictlyLocal> local;
+  EXPECT_TRUE(local.IsAutowired()) << "An AutoRequiredLocal instance was not autowired as expected";
+  EXPECT_NE(nonlocal, local) << "A local instance aliased a type in an enclosing scope";
+}
