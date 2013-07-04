@@ -96,7 +96,7 @@ public:
   /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
   /// </remarks>
   void Clear(bool wait) {
-    ContextCreatorBase::Clear(m_mp, [] (t_mpType::iterator q) {return q->second.lock();});
+    ContextCreatorBase::Clear(wait, m_mp, [] (t_mpType::iterator q) {return q->second.lock();});
   }
 
   /// <summary>
@@ -202,7 +202,7 @@ public:
   /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
   /// </remarks>
   void Clear(bool wait) {
-    ContextCreatorBase::Clear(m_contextList, [] (t_contextList::iterator q) {return q->lock();});
+    ContextCreatorBase::Clear(wait, m_contextList, [] (t_contextList::iterator q) {return q->lock();});
   }
 
   /// <summary>

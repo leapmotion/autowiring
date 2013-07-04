@@ -27,7 +27,7 @@ protected:
   /// This method is synchronized on the contextLock and this will generally make it thread-safe
   /// </remarks>
   template<class Ctr, class Fx>
-  void Clear(Ctr& ctr, Fx&& locker) {
+  void Clear(bool wait, Ctr& ctr, Fx&& locker) {
     if(!wait) {
       // Trivial signal-clear-return:
       boost::lock_guard<boost::mutex> lk(m_contextLock);
