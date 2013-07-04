@@ -9,6 +9,11 @@ class Creator:
   public ContextCreator<gc_contextName, int> {
 };
 
+class VoidCreator:
+  public ContextCreator<gc_contextName>
+{
+};
+
 class GlobalSignal {
 public:
   GlobalSignal(void):
@@ -126,4 +131,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
 
   // Validate that everything expires:
   EXPECT_EQ(0, creator->GetSize()) << "Not all contexts were evicted as expected";
+}
+
+TEST_F(ContextCreatorTest, VoidKeyType) {
 }
