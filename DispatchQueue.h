@@ -69,7 +69,6 @@ protected:
 
 private:
   bool m_aborted;
-  bool m_rundown;
 
   // A lock held when modifications to any element EXCEPT the first element must be made:
   boost::mutex m_dispatchLock;
