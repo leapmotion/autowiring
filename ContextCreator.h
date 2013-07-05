@@ -5,7 +5,6 @@
 #include "CoreContext.h"
 #include "DeferredCreationNotice.h"
 #include STL_UNORDERED_MAP
-#include <boost/thread/mutex.hpp>
 
 /// <summary>
 /// Implements a foundation class that allows named context registration and augmentation
@@ -17,27 +16,22 @@
 /// is created, a notification is broadcast throughout the entire current context to any registered
 /// Bolt.
 ///
-/// None of these methods are synchronized.
+/// If the key type is not specified, contexts will be unconditionally created.  In this case, a
+/// context can only be removed by its iterator.
+///
+/// All static member functions are thread-safe, other members are not thread-safe.
 /// </remarks>
-template<const char* contextName, class Key>
+template<const char* contextName, class Key = void>
 class ContextCreator:
   public ContextCreatorBase
 {
-public:
-  ContextCreator(void) {
-    m_context = CoreContext::CurrentContext();
-  }
-
 protected:
-  // Lock:
-  boost::mutex m_contextLock;
-
   // Collection of mapped contexts:
   typedef std::unordered_map<Key, std::weak_ptr<CoreContext>> t_mpType;
   t_mpType m_mp;
 
-  // Local context pointer:
-  std::weak_ptr<CoreContext> m_context;
+  // The type that will be used with destruction notification callbacks
+  typedef Key t_callbackHandle;
 
 public:
   // Accessor methods:
@@ -79,10 +73,9 @@ public:
         retVal.reset(new DeferredCreationNotice(contextName, child));
 
         // Add a teardown listener for this child in particular:
-        child->AddTeardownListener([this, key] () {
-          // Erase the key from our collection:
-          (boost::lock_guard<boost::mutex>)m_contextLock,
-          m_mp.erase(key);
+        auto pContext = child.get();
+        child->AddTeardownListener([this, key, pContext] () {
+          this->NotifyContextDestroyed(key, pContext);
         });
       }
     }
@@ -103,38 +96,7 @@ public:
   /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
   /// </remarks>
   void Clear(bool wait) {
-    if(!wait) {
-      // Trivial signal-clear-return:
-      boost::lock_guard<boost::mutex> lk(m_contextLock);
-      for(auto q = m_mp.begin(); q != m_mp.end(); q++) {
-        auto locked = q->second.lock();
-        if(locked)
-          locked->SignalShutdown();
-      }
-      m_mp.clear();
-      return;
-    }
-
-    t_mpType mp;
-
-    // Copy out and clear:
-    {
-      boost::lock_guard<boost::mutex> lk(m_contextLock);
-      for(auto q = m_mp.begin(); q != m_mp.end(); q++) {
-        auto locked = q->second.lock();
-        if(locked)
-          locked->SignalShutdown();
-      }
-      mp = m_mp,
-      m_mp.clear();
-    }
-
-    // Signal everyone first, then wait in a second pass:
-    for(auto q = mp.begin(); q != mp.end(); q++) {
-      auto locked = q->second.lock();
-      if(locked)
-        locked->Wait();
-    }
+    ContextCreatorBase::Clear(wait, m_mp, [] (typename t_mpType::iterator q) {return q->second.lock();});
   }
 
   /// <summary>
@@ -167,10 +129,96 @@ public:
   /// <remarks>
   /// The default behavior of this method is to evict the key from the internal map.  Consumers who desire
   /// to change the default behavior of this map should pass control to the base class.
+  ///
+  /// Consumers are urged to exercise caution when attempting to dereference pContext, as pContext will be
+  /// in a teardown pathway when this method is called.
   /// </remarks>
-  virtual void NotifyContextDestroyed(Key key, CoreContext* pContext) {
+  virtual void NotifyContextDestroyed(t_callbackHandle key, CoreContext* pContext) {
     (boost::lock_guard<boost::mutex>)m_contextLock,
     m_mp.erase(key);
+  }
+};
+
+/// <summary>
+/// Specialization for consumers who do not wish (or have any need) to key their contexts
+/// </summary>
+template<const char* contextName>
+class ContextCreator<contextName, void>:
+  public ContextCreatorBase
+{
+protected:
+  // List of mapped contexts:
+  typedef std::list<std::weak_ptr<CoreContext>> t_contextList;
+  t_contextList m_contextList;
+
+  // The type that will be used with destruction notification callbacks
+  typedef t_contextList::iterator t_callbackHandle;
+
+public:
+  // Accessor methods:
+  size_t GetSize(void) const {return m_contextList.size();}
+
+  /// <summary>
+  /// Unconditionally creates a context
+  /// </summary>
+  /// <returns>A deferred creation notice which, when destroyed, will cause clients to be notified of context creation</returns>
+  std::shared_ptr<DeferredCreationNotice> CreateContext(void) {
+    // Attempt to lock the context.  Could already be destroyed by this point.
+    std::shared_ptr<CoreContext> context = m_context.lock();
+    if(!context)
+      return std::shared_ptr<DeferredCreationNotice>();
+
+    // Create:
+    auto child = context->Create();
+    std::shared_ptr<DeferredCreationNotice> retVal(new DeferredCreationNotice(contextName, child));
+
+    // Insert into our list:
+    auto q =
+      (
+        (boost::lock_guard<boost::mutex>)m_contextLock,
+        m_contextList.push_front(child),
+        m_contextList.begin()
+      );
+
+    // Add a teardown listener so we can update the list:
+    auto pContext = child.get();
+    child->AddTeardownListener([this, q, pContext] () {
+      this->NotifyContextDestroyed(q, pContext);
+    });
+    return retVal;
+  }
+
+  /// <sumamry>
+  /// Removes all contexts from this creator, and optionally waits for them to quit
+  /// </summary>
+  /// <param name="wait">True if this call should not return until all child contexts quit</param>
+  /// <remarks>
+  /// The blocking version of the Clear method works by copying the current map into a temporary
+  /// container, and then waiting on those elements to terminate.  This behavior allows other users
+  /// of this container to add elements even as it's being cleared.
+  ///
+  /// Regardless of this detail, consumers should be aware that no guarantees are made about how
+  /// long this container will remain empty once the function returns in an asynchronous context.
+  /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
+  /// </remarks>
+  void Clear(bool wait) {
+    ContextCreatorBase::Clear(wait, m_contextList, [] (typename t_contextList::iterator q) {return q->lock();});
+  }
+
+  /// <summary>
+  /// Notifies this context creator that the specified context is being destroyed
+  /// </summary>
+  /// <param name="q">An iterator referring to the context being destroyed</param>
+  /// <remarks>
+  /// The default behavior of this method is to evict the key from the internal map.  Consumers who desire
+  /// to change the default behavior of this map should pass control to the base class.
+  ///
+  /// Consumers are urged to exercise caution when attempting to dereference pContext, as pContext will be
+  /// in a teardown pathway when this method is called.
+  /// </remarks>
+  virtual void NotifyContextDestroyed(t_callbackHandle q, CoreContext* pContext) {
+    (boost::lock_guard<boost::mutex>)m_contextLock,
+    m_contextList.erase(q);
   }
 };
 
