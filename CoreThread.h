@@ -168,16 +168,41 @@ public:
   }
 
   /// <summary>
+  /// Event which may be used to perform custom handling when the thread is told to stop
+  /// </summary>
+  /// <param name="graceful">Set to true to rundown the dispatch queue before quitting</param>
+  /// <remarks>
+  /// This method is called when the thread should stop.  When invoked, the value of
+  /// CoreThread::ShouldStop is guaranteed to be true.
+  ///
+  /// Callers are not required to call CoreThread::OnStop.  This method is guaranteed to do
+  /// nothing by default.
+  /// </remarks>
+  virtual void OnStop(void) {}
+
+  /// <summary>
   /// This is an override method that will cause ShouldStop to return true,
   /// regardless of what the global stop setting is.
   /// </summary>
-  virtual void Stop(void) {
+  virtual void Stop(bool graceful = false) {
+    // Perform initial stop:
     m_stop = true;
+    OnStop();
+
+    // Notify all callers of our status update:
     boost::lock_guard<boost::mutex> lk(m_lock);
     m_stateCondition.notify_all();
 
-    // Abort the dispatch queue so anyone waiting will wake up
-    DispatchQueue::Abort();
+    if(graceful) {
+      // Signal the dispatch queue to run down
+      RejectDispatchDelivery();
+
+      // Pend a call which will invoke Abort once the dispatch queue is done:
+      *this += [this] {this->Abort();};
+    }
+    else
+      // Abort the dispatch queue so anyone waiting will wake up
+      DispatchQueue::Abort();
   }
 };
 
