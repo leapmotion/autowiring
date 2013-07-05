@@ -104,23 +104,6 @@ public:
   /// This method is idempotent
   /// </remarks>
   void Abort(void);
-  
-  /// <summary>
-  /// Prevents new entries from being added to the dispatch queue
-  /// </summary>
-  /// <param name="wait">Set to true to delay until the queue becomes empty</param>
-  /// <remarks>
-  /// This method is a more graceful way of terminating a dispatch queue.  It permits dispatchers to finish
-  /// processing any elements in the queue at the time of the call, and prevents new messages from being
-  /// enqueued.
-  ///
-  /// If wait is set to true, Rundown will return as soon as the last item in the queue is processed.  At
-  /// the time of the return, it is guaranteed that the dispatch queue is empty and all dispatch processing
-  /// is completed.
-  ///
-  /// This method is idempotent
-  /// </remarks>
-  void Rundown(bool wait);
 
   /// <summary>
   /// Blocks until a new dispatch member is added, dispatches, and then returns
@@ -169,6 +152,9 @@ public:
   template<class _Fx>
   void operator+=(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    if(!CanAccept())
+      return;
+
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
       return;
 
