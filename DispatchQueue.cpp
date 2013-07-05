@@ -27,17 +27,6 @@ void DispatchQueue::Abort(void) {
   m_queueUpdated.notify_all();
 }
 
-void DispatchQueue::Rundown(bool wait) {
-  // Set the rundown flag:
-  m_rundown = true;
-
-  // Optionally delay:
-  if(wait) {
-    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-    m_queueUpdated.wait(lk, [this] {return m_dispatchQueue.empty();});
-  }
-}
-
 void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
   DispatchThunkBase* thunk = m_dispatchQueue.front();
   m_dispatchQueue.pop_front();

@@ -85,7 +85,7 @@ TEST_F(TransientContextMemberTest, VerifyTransientDeferred) {
   sender.Defer(&TransientEvent::ZeroArgsADeferred)();
 
   // Signal the pool to quit and wait until it does:
-  pool->Stop();
+  pool->Stop(true);
   pool->Wait();
 
   // Now verify that the receipt count was what we expected:
