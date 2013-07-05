@@ -19,7 +19,7 @@ private:
   boost::mutex m_lock;
   bool m_shouldContinue;
   boost::condition_variable s_continueCond;
-  
+
 public:
   void Signal(void) {
     (boost::lock_guard<boost::mutex>)m_lock,
@@ -99,7 +99,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
       CurrentContextPusher pshr(ctxt);
 
       // Trivial validation that the newly created context is an empty context:
-      ASSERT_EQ(0, ctxt->GetMemberCount()) << "A created context was not empty";
+      ASSERT_EQ(static_cast<size_t>(0), ctxt->GetMemberCount()) << "A created context was not empty";
 
       // Add in an object to test asynchronous destruction:
       AutoRequired<WaitMember> obj;
@@ -125,5 +125,5 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
   cond.wait(lk, [&counter] {return counter == 0;});
 
   // Validate that everything expires:
-  EXPECT_EQ(0, creator->GetSize()) << "Not all contexts were evicted as expected";
+  EXPECT_EQ(static_cast<size_t>(0), creator->GetSize()) << "Not all contexts were evicted as expected";
 }
