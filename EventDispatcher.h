@@ -34,6 +34,12 @@ public:
   /// Similar to WaitForEvent, but does not block
   /// </summary>
   virtual bool DispatchEvent(void) = 0;
+
+  /// <summary>
+  /// Identical to while(DispatchEvent());
+  /// </summary>
+  /// <returns>The number of events dispatched</returns>
+  virtual size_t DispatchAllEvents(void) = 0;
 };
 
 #endif
