@@ -16,6 +16,14 @@ public:
   CurrentContextPusher(CoreContext* pContext);
   ~CurrentContextPusher(void);
 
+  /// <summary>
+  /// Provides the caller with a way to set the prior context current prior to the destruction of this instance
+  /// </summary>
+  /// <remarks>
+  /// This method is idempotent
+  /// </remarks>
+  void Pop(void);
+
 private:
   std::shared_ptr<CoreContext> m_prior;
 };
