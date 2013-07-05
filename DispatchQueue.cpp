@@ -9,31 +9,49 @@ DispatchQueue::DispatchQueue(void):
 }
 
 DispatchQueue::~DispatchQueue(void) {
-  // Rundown to prevent leaks:
-  while(!m_dispatchQueue.empty()) {
-    delete m_dispatchQueue.front();
-    m_dispatchQueue.pop_front();
-  }
+  // Teardown:
+  for(auto q = m_dispatchQueue.begin(); q != m_dispatchQueue.end(); q++)
+    delete *q;
 }
 
 void DispatchQueue::Abort(void) {
   boost::lock_guard<boost::mutex> lk(m_dispatchLock);
   m_aborted = true;
 
-  // Rundown:
-  for(; !m_dispatchQueue.empty(); m_dispatchQueue.pop_front())
-    delete m_dispatchQueue.front();
+  // Rip apart:
+  for(auto q = m_dispatchQueue.begin(); q != m_dispatchQueue.end(); q++)
+    delete *q;
+  m_dispatchQueue.clear();
 
   // Wake up anyone who is still waiting:
   m_queueUpdated.notify_all();
 }
 
+void DispatchQueue::Rundown(bool wait) {
+  // Set the rundown flag:
+  m_rundown = true;
+
+  // Optionally delay:
+  if(wait) {
+    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+    m_queueUpdated.wait(lk, [this] {return m_dispatchQueue.empty();});
+  }
+}
+
 void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
   DispatchThunkBase* thunk = m_dispatchQueue.front();
   m_dispatchQueue.pop_front();
+  bool wasEmpty = m_dispatchQueue.empty();
   lk.unlock();
   (*thunk)();
   delete thunk;
+
+  // If we emptied the queue, we'd like to reobtain the lock and tell everyone
+  // that the queue is now empty.
+  if(wasEmpty) {
+    lk.lock();
+    m_queueUpdated.notify_all();
+  }
 }
 
 void DispatchQueue::WaitForEvent(void) {
