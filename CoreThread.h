@@ -189,20 +189,21 @@ public:
     m_stop = true;
     OnStop();
 
-    // Notify all callers of our status update:
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_stateCondition.notify_all();
-
     if(graceful) {
       // Signal the dispatch queue to run down
       RejectDispatchDelivery();
 
       // Pend a call which will invoke Abort once the dispatch queue is done:
       *this += [this] {this->Abort();};
-    }
-    else
+    } else {
       // Abort the dispatch queue so anyone waiting will wake up
       DispatchQueue::Abort();
+      
+      // Notify all callers of our status update, only needed if we don't call
+      // RejectDispatchDelivery first
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      m_stateCondition.notify_all();
+    }
   }
 };
 
