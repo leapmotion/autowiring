@@ -69,6 +69,7 @@ protected:
 
 private:
   bool m_aborted;
+  bool m_rundown;
 
   // A lock held when modifications to any element EXCEPT the first element must be made:
   boost::mutex m_dispatchLock;
@@ -91,8 +92,17 @@ private:
 
 public:
   /// <summary>
-  /// Causes all currently blocked thread members to quit and prevents any blocking
+  /// Causes the current dispatch queue to be dumped if it's non-empty
   /// </summary>
+  /// <remarks>
+  /// This method should only be called if a non-graceful termination is desired.  In this case, the dispatch
+  /// queue will be immediately cleared and any subsequent calls to WaitForEvent or DispatchEvent will throw
+  /// a dispatch_aborted_exception.
+  ///
+  /// Callers who are willing to allow the dispatch queue to be fully processed should call Rundown instead.
+  ///
+  /// This method is idempotent
+  /// </remarks>
   void Abort(void);
 
   /// <summary>
@@ -110,7 +120,7 @@ public:
   /// Similar to DispatchEvent, but will attempt to dispatch all events currently queued
   /// </summary>
   /// <returns>The total number of events dispatched</returns>
-  size_t DispatchAllEvents(void) {
+  size_t DispatchAllEvents(void) override {
     size_t retVal = 0;
     while(DispatchEvent())
       retVal++;
@@ -142,6 +152,9 @@ public:
   template<class _Fx>
   void operator+=(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    if(!CanAccept())
+      return;
+
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
       return;
 

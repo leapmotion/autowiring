@@ -13,6 +13,8 @@
 
 #ifdef _MSC_VER
   #define noexcept throw()
+#else
+  #include <stdlib.h>
 #endif
 
 // Very unusual syntax -- function taking an array of fixed size, and returning
