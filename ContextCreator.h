@@ -75,7 +75,7 @@ public:
         // Add a teardown listener for this child in particular:
         auto pContext = child.get();
         child->AddTeardownListener([this, key, pContext] () {
-          NotifyContextDestroyed(key, pContext);
+          this->NotifyContextDestroyed(key, pContext);
         });
       }
     }
@@ -96,7 +96,7 @@ public:
   /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
   /// </remarks>
   void Clear(bool wait) {
-    ContextCreatorBase::Clear(wait, m_mp, [] (t_mpType::iterator q) {return q->second.lock();});
+    ContextCreatorBase::Clear(wait, m_mp, [] (typename t_mpType::iterator q) {return q->second.lock();});
   }
 
   /// <summary>
@@ -183,7 +183,7 @@ public:
     // Add a teardown listener so we can update the list:
     auto pContext = child.get();
     child->AddTeardownListener([this, q, pContext] () {
-      NotifyContextDestroyed(q, pContext);
+      this->NotifyContextDestroyed(q, pContext);
     });
     return retVal;
   }
@@ -202,7 +202,7 @@ public:
   /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
   /// </remarks>
   void Clear(bool wait) {
-    ContextCreatorBase::Clear(wait, m_contextList, [] (t_contextList::iterator q) {return q->lock();});
+    ContextCreatorBase::Clear(wait, m_contextList, [] (typename t_contextList::iterator q) {return q->lock();});
   }
 
   /// <summary>
