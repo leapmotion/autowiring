@@ -53,6 +53,8 @@ namespace CoreContextHelpers {
 template<class T>
 class Autowired;
 
+template<class T>
+class AutowiredLocal;
 
 /// <summary>
 /// Convenient access to the currently active context stored in the global context
@@ -240,6 +242,9 @@ protected:
   /// </summary>
   void RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
 
+  /// <summary>
+  /// Autowires the passed slot, and if this fails, attempts to autowire in the parent context
+  /// </summary>
   template<class W>
   bool DoAutowire(W& slot) {
     typename W::t_ptrType retVal;
@@ -251,6 +256,19 @@ protected:
       }
     }
     return false;
+  }
+
+  /// <summary>
+  /// Autowires the passed slot, but does so without traversing to any parents
+  /// </summary>
+  template<class T>
+  bool DoAutowire(AutowiredLocal<T>& slot) {
+    auto retVal = FindByType<T>();
+    if(!retVal)
+      return false;
+
+    slot.swap(retVal);
+    return true;
   }
 
   friend class SharedPtrWrapBase;

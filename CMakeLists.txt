@@ -81,6 +81,8 @@ endif()
 
 set(
   AutowiringTest_SRCS
+  AutoLocalTest.h
+  AutoLocalTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h
