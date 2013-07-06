@@ -15,5 +15,12 @@ CurrentContextPusher::CurrentContextPusher(CoreContext* pContext):
 
 CurrentContextPusher::~CurrentContextPusher(void)
 {
-  m_prior->SetCurrent();
+  Pop();
+}
+
+void CurrentContextPusher::Pop(void) {
+  if(m_prior) {
+    m_prior->SetCurrent();
+    m_prior.reset();
+  }
 }

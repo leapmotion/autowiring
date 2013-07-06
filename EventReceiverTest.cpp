@@ -214,9 +214,8 @@ public:
   }
 
   // Overridden here so we can hit the barrier if we're still waiting on it
-  void Stop() override {
+  void OnStop() override {
     Proceed();
-    CoreThread::Stop();
   }
 
   /// <summary>
