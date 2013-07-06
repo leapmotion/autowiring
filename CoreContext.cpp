@@ -10,11 +10,10 @@
 #include <algorithm>
 #include <memory>
 
-using namespace boost;
 using namespace std;
 using namespace CoreContextHelpers;
 
-thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
+boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
 
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
   m_pParent(pParent),
@@ -92,7 +91,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert
-    lock_guard<mutex> lk(m_childrenLock);
+    boost::lock_guard<boost::mutex> lk(m_childrenLock);
 
     // Reserve a place in the list for the child
     childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
@@ -110,7 +109,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
     pContext,
     [this, childIterator] (CoreContext* pContext) {
       {
-        lock_guard<mutex> lk(m_childrenLock);
+        boost::lock_guard<boost::mutex> lk(m_childrenLock);
         this->m_children.erase(childIterator);
       }
       delete pContext;
@@ -130,7 +129,7 @@ void CoreContext::InitiateCoreThreads(void) {
   ASSERT(self);
 
   {
-    lock_guard<mutex> lk(m_lock);
+    boost::lock_guard<boost::mutex> lk(m_lock);
     if(m_refCount++)
       // Already running
       return;
@@ -145,13 +144,13 @@ void CoreContext::InitiateCoreThreads(void) {
   m_shouldStop = false;
 
   // Hold another lock to prevent m_threads from being modified while we sit on it
-  lock_guard<mutex> lk(m_lock);
+  boost::lock_guard<boost::mutex> lk(m_lock);
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
     (*q)->Start();
 }
 
 void CoreContext::SignalShutdown(void) {
-  lock_guard<mutex> lk(m_lock);
+  boost::lock_guard<boost::mutex> lk(m_lock);
   if(m_refCount == 0 || --m_refCount)
     // Someone else still depends on this
     return;
@@ -186,7 +185,7 @@ void CoreContext::SignalTerminate(void) {
 
     {
       // Tear down all the children.
-      lock_guard<mutex> lk(m_childrenLock);
+      boost::lock_guard<boost::mutex> lk(m_childrenLock);
 
       // Fill strong lock series in order to ensure proper teardown interleave:
       childrenInterleave.reserve(m_children.size());
@@ -239,7 +238,7 @@ void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
   ASSERT(allowNotReady || ptr->IsReady());
 
   // Insert into the linked list of threads first:
-  lock_guard<mutex> lk(m_lock);
+  boost::lock_guard<boost::mutex> lk(m_lock);
   m_threads.push_front(ptr);
 
   if(!m_shouldStop)
