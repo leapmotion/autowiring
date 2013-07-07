@@ -33,6 +33,15 @@ public:
   // Accessor methods:
   size_t size(void) const {return m_contexts.size();}
 
+  template<class Fn>
+  void Enumerate(Fn&& fn) {
+    boost::lock_guard<boost::mutex> lk(m_lk);
+    for(auto q = m_contexts.begin(); q != m_contexts.end(); q++) {
+      auto ctxt = q->second.lock();
+      fn(q->first, ctxt);
+    }
+  }
+
   /// <summary>
   /// Adds a new context to the map
   /// </summary>
