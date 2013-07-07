@@ -56,9 +56,21 @@ public:
       // be expired by the time we get here, but there is a small chance that the same key
       // will be introduced at the exact time that the context is tearing down, which could
       // cause the slot for that key to be reclaimed earlier than expected.
-      auto sp = m_contexts[key].lock();
+      auto q = m_context.find(key);
+
+      // There is a very unlikely race which could cause the key to not be found.  It involves
+      // a second context being created and destroyed on the same key as some original context.
+      // This causes one of the two context's teardown handlers to attempt to evict the same
+      // key at the same time, and one of them will of course fail.
+      if(q == m_context.end())
+        return;
+
+      // Try to lock--potentially, this key has been reclaimed by a different contesxt, and in
+      // that case, the new context will gain the responsibility of tearing down this key when
+      // the time comes.
+      auto sp = q->lock();
       if(!sp)
-        m_context.erase(key);
+        this->m_contexts.erase(key);
     });
   }
 
