@@ -56,19 +56,19 @@ public:
       // be expired by the time we get here, but there is a small chance that the same key
       // will be introduced at the exact time that the context is tearing down, which could
       // cause the slot for that key to be reclaimed earlier than expected.
-      auto q = m_context.find(key);
+      auto q = m_contexts.find(key);
 
       // There is a very unlikely race which could cause the key to not be found.  It involves
       // a second context being created and destroyed on the same key as some original context.
       // This causes one of the two context's teardown handlers to attempt to evict the same
       // key at the same time, and one of them will of course fail.
-      if(q == m_context.end())
+      if(q == m_contexts.end())
         return;
 
       // Try to lock--potentially, this key has been reclaimed by a different contesxt, and in
       // that case, the new context will gain the responsibility of tearing down this key when
       // the time comes.
-      auto sp = q->lock();
+      auto sp = q->second.lock();
       if(!sp)
         this->m_contexts.erase(key);
     });
@@ -83,7 +83,7 @@ public:
 
     return
       q == m_contexts.end() ?
-      (std::shared_ptr<CoreContext>) :
+      std::shared_ptr<CoreContext>() :
       q->second.lock();
   }
 };
