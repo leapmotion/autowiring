@@ -79,7 +79,7 @@ public:
   /// </summary>
   std::shared_ptr<CoreContext> Find(const Key& key) {
     boost::lock_guard<boost::mutex> lk(m_lk);
-    auto q = m_contexts.lower_bound(key);
+    auto q = m_contexts.find(key);
 
     return
       q == m_contexts.end() ?
