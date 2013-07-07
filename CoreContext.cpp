@@ -150,10 +150,12 @@ void CoreContext::InitiateCoreThreads(void) {
 }
 
 void CoreContext::SignalShutdown(void) {
-  boost::lock_guard<boost::mutex> lk(m_lock);
-  if(m_refCount == 0 || --m_refCount)
-    // Someone else still depends on this
-    return;
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    if(m_refCount == 0 || --m_refCount)
+      // Someone else still depends on this
+      return;
+  }
 
   // Global context is now "stop":
   m_shouldStop = true;
