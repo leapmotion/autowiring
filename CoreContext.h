@@ -43,7 +43,7 @@ class GlobalCoreContext;
 class OutstandingCountTracker;
 
 namespace CoreContextHelpers {
-  template<class T, bool isPolymorphic = std::is_base_of<Object, T>::value>
+  template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
   struct FindByCastInternal;
 
   template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
