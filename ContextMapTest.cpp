@@ -123,7 +123,7 @@ TEST_F(ContextMapTest, VerifySimpleEnumeration) {
   mp.Add("2", ctxt2);
   mp.Add("3", ctxt3);
 
-  int count = 0;
+  size_t count = 0;
   mp.Enumerate(
     [&count] (const string&, std::shared_ptr<CoreContext>& ctxt) {
       count++;
