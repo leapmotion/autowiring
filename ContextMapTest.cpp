@@ -112,3 +112,24 @@ TEST_F(ContextMapTest, AdjacentCleanupTest) {
   mp.Find("0");
   ASSERT_EQ(1UL, mp.size()) << "Proximity eviction didn't function as expected";
 }
+
+TEST_F(ContextMapTest, VerifySimpleEnumeration) {
+  ContextMap<string> mp;
+  AutoCreateContext ctxt1;
+  AutoCreateContext ctxt2;
+  AutoCreateContext ctxt3;
+
+  mp.Add("1", ctxt1);
+  mp.Add("2", ctxt2);
+  mp.Add("3", ctxt3);
+
+  size_t count = 0;
+  mp.Enumerate(
+    [&count] (const string&, std::shared_ptr<CoreContext>& ctxt) {
+      count++;
+    }
+  );
+
+  EXPECT_EQ(3UL, count) << "Failed to enumerate all expected context pointers";
+}
+
