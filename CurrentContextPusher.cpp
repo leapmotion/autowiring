@@ -3,7 +3,9 @@
 #include "CurrentContextPusher.h"
 #include "CoreContext.h"
 
-CurrentContextPusher::CurrentContextPusher(void) {
+CurrentContextPusher::CurrentContextPusher(void):
+  m_prior(CoreContext::CurrentContext())
+{
 }
 
 CurrentContextPusher::CurrentContextPusher(std::shared_ptr<CoreContext> pContext):
