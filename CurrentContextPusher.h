@@ -15,7 +15,11 @@ class CurrentContextPusher
   CurrentContextPusher(const CurrentContextPusher& rhs);
 
 public:
+  /// <summary>
+  /// Saves the current context, to be restored on destruction
+  /// </summary>
   CurrentContextPusher(void);
+
   CurrentContextPusher(std::shared_ptr<CoreContext> pContext);
   CurrentContextPusher(CoreContext* pContext);
   CurrentContextPusher(CurrentContextPusher&& rhs);
