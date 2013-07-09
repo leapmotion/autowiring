@@ -11,9 +11,14 @@ class CoreContext;
 /// </summary>
 class CurrentContextPusher
 {
+  // Copy construction not permitted
+  CurrentContextPusher(const CurrentContextPusher& rhs);
+
 public:
+  CurrentContextPusher(void);
   CurrentContextPusher(std::shared_ptr<CoreContext> pContext);
   CurrentContextPusher(CoreContext* pContext);
+  CurrentContextPusher(CurrentContextPusher&& rhs);
   ~CurrentContextPusher(void);
 
   /// <summary>
