@@ -142,3 +142,22 @@ TEST_F(ExceptionFilterTest, FireThrowsCheck) {
   // Verify that the exception was filtered properly by the generic filter:
   EXPECT_TRUE(filter->m_fireSpecific) << "Filter was not invoked on a Fired exception";
 }
+
+TEST_F(ExceptionFilterTest, EnclosedThrowCheck) {
+  // Create our listener:
+  AutoRequired<GenericFilter> filter;
+
+  // Now the subcontext:
+  AutoCreateContext subCtxt;
+  CurrentContextPusher pshr(subCtxt);
+
+  // Create and start:
+  AutoRequired<ThrowsWhenRun> runThrower;
+  subCtxt->InitiateCoreThreads();
+
+  // Wait for the exception to get thrown:
+  subCtxt->Wait();
+
+  // Verify that the filter caught the exception:
+  EXPECT_TRUE(filter->m_hit) << "Filter operating in a superior context did not catch an exception thrown from a child context";
+}
