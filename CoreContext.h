@@ -10,6 +10,7 @@
 #include "EventSender.h"
 #include "safe_dynamic_cast.h"
 #include "SharedPtrWrap.h"
+#include "TeardownNotifier.h"
 #include "TransientContextMember.h"
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
@@ -33,8 +34,6 @@
   #endif
 #endif
 
-using std::list;
-
 class AutowirableSlot;
 class BoltBase;
 class ContextMember;
@@ -54,6 +53,8 @@ namespace CoreContextHelpers {
 template<class T>
 class Autowired;
 
+template<class T>
+class AutowiredLocal;
 
 /// <summary>
 /// Convenient access to the currently active context stored in the global context
@@ -64,7 +65,8 @@ std::shared_ptr<CoreContext> GetCurrentContext(void);
 /// This class is used to determine whether all core threads have exited
 /// </summary>
 class CoreContext:
-  public Object
+  public Object,
+  public TeardownNotifier
 {
   CoreContext(std::shared_ptr<CoreContext> pParent);
 
@@ -189,11 +191,11 @@ protected:
   std::weak_ptr<OutstandingCountTracker> m_outstanding;
 
   // Actual core threads:
-  typedef list<CoreThread*> t_threadList;
+  typedef std::list<CoreThread*> t_threadList;
   t_threadList m_threads;
 
   // Child contexts:
-  typedef list<std::weak_ptr<CoreContext> > t_childList;
+  typedef std::list<std::weak_ptr<CoreContext> > t_childList;
   boost::mutex m_childrenLock;
   t_childList m_children;
 
@@ -240,6 +242,9 @@ protected:
   /// </summary>
   void RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
 
+  /// <summary>
+  /// Autowires the passed slot, and if this fails, attempts to autowire in the parent context
+  /// </summary>
   template<class W>
   bool DoAutowire(W& slot) {
     typename W::t_ptrType retVal;
@@ -253,10 +258,24 @@ protected:
     return false;
   }
 
+  /// <summary>
+  /// Autowires the passed slot, but does so without traversing to any parents
+  /// </summary>
+  template<class T>
+  bool DoAutowire(AutowiredLocal<T>& slot) {
+    auto retVal = FindByType<T>();
+    if(!retVal)
+      return false;
+
+    slot.swap(retVal);
+    return true;
+  }
+
   friend class SharedPtrWrapBase;
 
 public:
   // Accessor methods:
+  size_t GetMemberCount(void) const {return m_byType.size();}
   bool ShouldStop(void) const {return m_shouldStop;}
 
   /// <summary>

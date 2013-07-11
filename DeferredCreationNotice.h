@@ -26,6 +26,8 @@ private:
 public:
   bool WasCreated(void) const {return m_name != nullptr;}
   const std::shared_ptr<CoreContext>& GetContext(void) const {return m_ctxt;}
+
+  operator const std::shared_ptr<CoreContext>&(void) const {return GetContext();}
 };
 
 #endif

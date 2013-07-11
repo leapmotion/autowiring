@@ -14,6 +14,8 @@ set(
   AutowirableSlot.cpp
   CMakeLists.txt
   ContextCreator.h
+  ContextCreatorBase.h
+  ContextCreatorBase.cpp
   Bolt.h
   BoltBase.h
   ContextMap.h
@@ -52,6 +54,8 @@ set(
   SharedPtrHash.h
   SharedPtrWrap.cpp
   SharedPtrWrap.h
+  TeardownNotifier.h
+  TeardownNotifier.cpp
   ThreadStatusMaintainer.cpp
   ThreadStatusMaintainer.h
   TransientContextMember.h
@@ -77,6 +81,8 @@ endif()
 
 set(
   AutowiringTest_SRCS
+  AutoLocalTest.h
+  AutoLocalTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h
@@ -85,6 +91,8 @@ set(
   CoreThreadTest.cpp
   BoltTest.h
   BoltTest.cpp
+  ContextCreatorTest.h
+  ContextCreatorTest.cpp
   CtorProxyTest.h
   CtorProxyTest.cpp
   CurrentContextPusherTest.h
@@ -113,6 +121,8 @@ set(
   MultiInheritTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
+  TeardownNotifierTest.h
+  TeardownNotifierTest.cpp
   TransientContextMemberTest.h
   TransientContextMemberTest.cpp
   ScopeTest.h
