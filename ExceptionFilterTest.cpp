@@ -30,7 +30,7 @@ public:
 };
 
 class ThrowingListener:
-  public EventReceiver
+  public virtual EventReceiver
 {
 public:
   virtual void DoThrow(void) = 0;
