@@ -10,11 +10,10 @@
 #include <algorithm>
 #include <memory>
 
-using namespace boost;
 using namespace std;
 using namespace CoreContextHelpers;
 
-thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
+boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
 
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
   m_pParent(pParent),
@@ -32,10 +31,9 @@ CoreContext::~CoreContext(void) {
     !s_curContext.get()->use_count() ||
     s_curContext.get()->get() != this
   );
-  
+
   // Notify all ContextMember instances that their parent is going away
-  for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
-    (*q)->ReleaseAll();
+  NotifyTeardownListeners();
 
   // Release all event sender links:
   for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
@@ -49,7 +47,7 @@ CoreContext::~CoreContext(void) {
   for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); ++q)
     delete q->second;
 
-  // Explicit deleters to simplify base deletion
+  // Explicit deleters to simplify base deletion of any deferred autowiring requests:
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
     delete q->second;
 }
@@ -93,7 +91,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert
-    lock_guard<mutex> lk(m_childrenLock);
+    boost::lock_guard<boost::mutex> lk(m_childrenLock);
 
     // Reserve a place in the list for the child
     childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
@@ -111,7 +109,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
     pContext,
     [this, childIterator] (CoreContext* pContext) {
       {
-        lock_guard<mutex> lk(m_childrenLock);
+        boost::lock_guard<boost::mutex> lk(m_childrenLock);
         this->m_children.erase(childIterator);
       }
       delete pContext;
@@ -131,7 +129,7 @@ void CoreContext::InitiateCoreThreads(void) {
   ASSERT(self);
 
   {
-    lock_guard<mutex> lk(m_lock);
+    boost::lock_guard<boost::mutex> lk(m_lock);
     if(m_refCount++)
       // Already running
       return;
@@ -146,16 +144,18 @@ void CoreContext::InitiateCoreThreads(void) {
   m_shouldStop = false;
 
   // Hold another lock to prevent m_threads from being modified while we sit on it
-  lock_guard<mutex> lk(m_lock);
+  boost::lock_guard<boost::mutex> lk(m_lock);
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
     (*q)->Start();
 }
 
 void CoreContext::SignalShutdown(void) {
-  lock_guard<mutex> lk(m_lock);
-  if(m_refCount == 0 || --m_refCount)
-    // Someone else still depends on this
-    return;
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    if(m_refCount == 0 || --m_refCount)
+      // Someone else still depends on this
+      return;
+  }
 
   // Global context is now "stop":
   m_shouldStop = true;
@@ -187,7 +187,7 @@ void CoreContext::SignalTerminate(void) {
 
     {
       // Tear down all the children.
-      lock_guard<mutex> lk(m_childrenLock);
+      boost::lock_guard<boost::mutex> lk(m_childrenLock);
 
       // Fill strong lock series in order to ensure proper teardown interleave:
       childrenInterleave.reserve(m_children.size());
@@ -240,7 +240,7 @@ void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
   ASSERT(allowNotReady || ptr->IsReady());
 
   // Insert into the linked list of threads first:
-  lock_guard<mutex> lk(m_lock);
+  boost::lock_guard<boost::mutex> lk(m_lock);
   m_threads.push_front(ptr);
 
   if(!m_shouldStop)
@@ -306,13 +306,16 @@ void CoreContext::UpdateDeferredElements(void) {
 }
 
 void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
-  for(auto q = first; q != last; q++) {
-    // n^2 sender unlinking
-    for(auto r = m_proxies.begin(); r != m_proxies.end(); r++)
-      *r->second -= *q;
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    for(auto q = first; q != last; q++) {
+      // n^2 sender unlinking
+      for(auto r = m_proxies.begin(); r != m_proxies.end(); r++)
+        *r->second -= *q;
 
-    // Trivial erase:
-    m_eventReceivers.erase(*q);
+      // Trivial erase:
+      m_eventReceivers.erase(*q);
+    }
   }
 
   // Detour to the parent collection (if necessary)

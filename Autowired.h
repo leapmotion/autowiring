@@ -167,7 +167,7 @@ public:
 };
 
 /// <summary>
-/// This is a forbidden autowiring.  Do not attempt it.  Instead, use AutoCurrentContext or AutoCreateContext.
+/// Forbidden autowiring.  Do not attempt it.  Instead, use AutoCurrentContext or AutoCreateContext.
 /// </summary>
 template<>
 class Autowired<CoreContext>
@@ -176,10 +176,15 @@ private:
   Autowired(void);
 };
 
+/// <summary>
+/// Forbidden autowiring.  Do not attempt it.  Instead, use AutoGlobalContext
+/// </summary>
 template<>
-class Autowired<GlobalCoreContext>:
-  public AutowiredCreator<GlobalCoreContext>
-{};
+class Autowired<GlobalCoreContext>
+{
+private:
+  Autowired(void);
+};
 
 /// <summary>
 /// Similar to Autowired, but the default constructor invokes Autowired(true)
@@ -265,6 +270,43 @@ public:
 };
 
 /// <summary>
+/// An AutowiredLocal instance may only be satisfied by a member of the specified type which exists in the current context.
+/// </summary>
+/// <remarks>
+/// Do not use AutoRequiredLocal and AutoRequired on the same type in the same context.  Doing this could cause an initialization-order
+/// dependency, and is an error.  In debug mode, doing this may cause an exception.
+/// </remarks>
+template<class T>
+class AutowiredLocal:
+  public AutowiredCreator<T>
+{
+public:
+  AutowiredLocal(void) {
+    shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
+    context->Autowire(*this);
+  }
+};
+
+/// <summary>
+/// A local AutoRequired instance will ensure that the specified type will always be constructed in the current scope
+/// </summary>
+/// <remarks>
+/// This type offers a convenient way to ensure that some type is always constructed in the current context, even if a satisfying
+/// type exists in the parent scope.  Do not use AutoRequiredLocal and AutoRequired on the same type in the same context.  Doing this
+/// could cause an initialization-order dependency, and is an error.  In debug mode, doing this may cause an exception.
+/// </remarks>
+template<class T>
+class AutoRequiredLocal:
+  public AutowiredLocal<T>
+{
+public:
+  AutoRequiredLocal(void) {
+    if(!*this)
+      AutowiredCreator<T>::Create();
+  }
+};
+
+/// <summary>
 /// This class
 /// </summary>
 template<class T>
@@ -344,21 +386,21 @@ public:
 
   template<class MemFn>
   typename Selector<MemFn>::retType operator()(MemFn pfn) const {
-    static_assert(std::is_same<Decompose<MemFn>::type, T>::value, "Cannot invoke an event for an unrelated type");
+    static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot invoke an event for an unrelated type");
     return Selector<MemFn>::Select(m_receiver.get(), pfn);
   }
 
   template<class MemFn>
   std::function<typename Decompose<MemFn>::fnType> Fire(MemFn pfn) const {
-    static_assert(!std::is_same<Decompose<MemFn>::retType, Deferred>::value, "Cannot Fire an event which is marked Deferred");
-    static_assert(std::is_same<Decompose<MemFn>::type, T>::value, "Cannot Fire an event for an unrelated type");
+    static_assert(!std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Fire an event which is marked Deferred");
+    static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot Fire an event for an unrelated type");
     return m_receiver->Fire(pfn);
   }
 
   template<class MemFn>
   std::function<typename Decompose<MemFn>::fnType> Defer(MemFn pfn) const {
-    static_assert(std::is_same<Decompose<MemFn>::retType, Deferred>::value, "Cannot Defer an event which does not return the Deferred type");
-    static_assert(std::is_same<Decompose<MemFn>::type, T>::value, "Cannot Defer an event for an unrelated type");
+    static_assert(std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Defer an event which does not return the Deferred type");
+    static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot Defer an event for an unrelated type");
     return m_receiver->Defer(pfn);
   }
 };
@@ -377,6 +419,16 @@ public:
   AutoCurrentContext(void);
 
   using std::shared_ptr<CoreContext>::operator=;
+};
+
+/// <summary>
+/// Simple way to obtain a reference to the global context
+/// </summary>
+class AutoGlobalContext:
+  public std::shared_ptr<CoreContext>
+{
+public:
+  AutoGlobalContext(void);
 };
 
 /// <summary>

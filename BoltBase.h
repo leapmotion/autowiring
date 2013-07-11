@@ -12,7 +12,7 @@ class CoreContext;
 /// <remarks>
 /// </remarks>
 class BoltBase:
-  public EventReceiver
+  public virtual EventReceiver
 {
 public:
   /// <summary>
