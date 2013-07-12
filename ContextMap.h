@@ -24,10 +24,21 @@ extern std::shared_ptr<CoreContext> NewContextThunk(void);
 template<class Key>
 class ContextMap
 {
+public:
+  ContextMap(void)
+  {
+    m_tracker.reset(
+      this,
+      [] (ContextMap*) {}
+    );
+  }
+
 private:
   typedef std::unordered_map<Key, std::weak_ptr<CoreContext>> t_mpType;
   boost::mutex m_lk;
   t_mpType m_contexts;
+
+  std::shared_ptr<ContextMap> m_tracker;
 
 public:
   // Accessor methods:
@@ -58,7 +69,15 @@ public:
       throw_rethrowable std::runtime_error("Specified key is already associated with another context");
 
     rhs = context;
-    context->AddTeardownListener([this, key] {
+
+    std::weak_ptr<ContextMap> tracker(m_tracker);
+    context->AddTeardownListener([this, key, tracker] {
+      // Prevent the map from being deleted while we process this teardown notice:
+      auto locked = tracker.lock();
+      if(!locked)
+        // Context survived the map
+        return;
+
       boost::lock_guard<boost::mutex> lk(m_lk);
 
       // We only remove the key if it's expired.  Under normal circumstances, the key will
