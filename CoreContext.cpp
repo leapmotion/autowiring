@@ -17,7 +17,7 @@ boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curCont
 
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
   m_pParent(pParent),
-  m_shouldStop(true),
+  m_shouldStop(false),
   m_refCount(0)
 {
   ASSERT(pParent.get() != this);
@@ -243,7 +243,7 @@ void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
   boost::lock_guard<boost::mutex> lk(m_lock);
   m_threads.push_front(ptr);
 
-  if(!m_shouldStop)
+  if(m_refCount)
     // We're already running, this means we're late to the game and need to start _now_.
     ptr->Start();
 }
