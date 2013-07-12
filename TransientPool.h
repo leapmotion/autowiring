@@ -56,6 +56,10 @@ public:
   }
 
   virtual bool Add(std::shared_ptr<TransientContextMember> pMember) override {
+    // Trivial return check:
+    if(this->m_stop)
+      throw_rethrowable std::runtime_error("Cannot add an element to a terminated transient pool");
+
     auto casted = std::dynamic_pointer_cast<T, TransientContextMember>(pMember);
     if(!casted)
       return false;
