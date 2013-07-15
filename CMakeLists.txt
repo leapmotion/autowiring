@@ -99,6 +99,8 @@ set(
   CurrentContextPusherTest.cpp
   DependentContextTest.h
   DependentContextTest.cpp
+  DtorCorrectnessTest.h
+  DtorCorrectnessTest.cpp
   EnclosedContextTestBase.h
   EnclosedContextTestBase.cpp
   ExceptionFilterTest.h
