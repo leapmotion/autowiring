@@ -1,11 +1,9 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _CONTEXT_MAP_H
 #define _CONTEXT_MAP_H
+#include "CoreContext.h"
 #include <boost/thread/mutex.hpp>
-#include <map>
-#include <string>
-
-class CoreContext;
+#include STL_UNORDERED_MAP
 
 extern std::shared_ptr<CoreContext> NewContextThunk(void);
 
@@ -26,22 +24,34 @@ extern std::shared_ptr<CoreContext> NewContextThunk(void);
 template<class Key>
 class ContextMap
 {
+public:
+  ContextMap(void)
+  {
+    m_tracker.reset(
+      this,
+      [] (ContextMap*) {}
+    );
+  }
+
 private:
-  typedef std::map<Key, std::weak_ptr<CoreContext> > t_mpType;
+  typedef std::unordered_map<Key, std::weak_ptr<CoreContext>> t_mpType;
   boost::mutex m_lk;
   t_mpType m_contexts;
 
-  void ProximityCheck(typename ContextMap<Key>::t_mpType::iterator q) {
-    if(
-      ++q != m_contexts.end() &&
-      q->second.expired()
-    )
-      m_contexts.erase(q);
-  }
+  std::shared_ptr<ContextMap> m_tracker;
 
 public:
   // Accessor methods:
   size_t size(void) const {return m_contexts.size();}
+
+  template<class Fn>
+  void Enumerate(Fn&& fn) {
+    boost::lock_guard<boost::mutex> lk(m_lk);
+    for(auto q = m_contexts.begin(); q != m_contexts.end(); q++) {
+      auto ctxt = q->second.lock();
+      fn(q->first, ctxt);
+    }
+  }
 
   /// <summary>
   /// Adds a new context to the map
@@ -54,57 +64,55 @@ public:
   /// </remarks>
   void Add(const Key& key, std::shared_ptr<CoreContext>& context) {
     boost::lock_guard<boost::mutex> lk(m_lk);
-    typename t_mpType::iterator q = m_contexts.lower_bound(key);
-    if(
-      q != m_contexts.end() &&
-      q->first == key
-    )
+    auto& rhs = m_contexts[key];
+    if(!rhs.expired())
       throw_rethrowable std::runtime_error("Specified key is already associated with another context");
-    q = m_contexts.insert(q, typename t_mpType::value_type(key, context));
-    ProximityCheck(q);
+
+    rhs = context;
+
+    std::weak_ptr<ContextMap> tracker(m_tracker);
+    context->AddTeardownListener([this, key, tracker] {
+      // Prevent the map from being deleted while we process this teardown notice:
+      auto locked = tracker.lock();
+      if(!locked)
+        // Context survived the map
+        return;
+
+      boost::lock_guard<boost::mutex> lk(m_lk);
+
+      // We only remove the key if it's expired.  Under normal circumstances, the key will
+      // be expired by the time we get here, but there is a small chance that the same key
+      // will be introduced at the exact time that the context is tearing down, which could
+      // cause the slot for that key to be reclaimed earlier than expected.
+      auto q = m_contexts.find(key);
+
+      // There is a very unlikely race which could cause the key to not be found.  It involves
+      // a second context being created and destroyed on the same key as some original context.
+      // This causes one of the two context's teardown handlers to attempt to evict the same
+      // key at the same time, and one of them will of course fail.
+      if(q == m_contexts.end())
+        return;
+
+      // Try to lock--potentially, this key has been reclaimed by a different contesxt, and in
+      // that case, the new context will gain the responsibility of tearing down this key when
+      // the time comes.
+      auto sp = q->second.lock();
+      if(!sp)
+        this->m_contexts.erase(key);
+    });
   }
 
   /// <summary>
   /// Attempts to find a context by the specified key
   /// </summary>
   std::shared_ptr<CoreContext> Find(const Key& key) {
-    std::shared_ptr<CoreContext> retVal;
-
     boost::lock_guard<boost::mutex> lk(m_lk);
-    typename t_mpType::iterator q = m_contexts.lower_bound(key);
-    if(q != m_contexts.end()) {
-      if(q->first == key)
-        retVal = q->second.lock();
-      ProximityCheck(q);
-    }
+    auto q = m_contexts.find(key);
 
-    return retVal;
-  }
-
-  /// <summary>
-  /// Identifies and locks the context specified by the key, if one exists, or creates it if one does not
-  /// </summary>
-  std::shared_ptr<CoreContext> Create(const Key& key) {
-    std::shared_ptr<CoreContext> retVal;
-
-    // Lock and lookup:
-    boost::lock_guard<boost::mutex> lk(m_lk);
-    typename t_mpType::iterator q = m_contexts.lower_bound(key);
-    if(
-      q == m_contexts.end() ||
-      q->first != key ||
-      !(retVal = q->second.lock())
-    ) {
-      // Not present, create and return:
-      retVal = NewContextThunk();
-      q = m_contexts.insert(q, t_mpType::value_type(key, retVal));
-    }
-
-    // Cleanup check:
-    ProximityCheck(q);
-
-    // Done
-    return retVal;
+    return
+      q == m_contexts.end() ?
+      std::shared_ptr<CoreContext>() :
+      q->second.lock();
   }
 };
 

@@ -423,10 +423,12 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
   std::weak_ptr<SimpleReceiver> rcvrWeak;
   {
     std::shared_ptr<SimpleReceiver> rcvrCopy;
+    std::weak_ptr<CoreContext> subCtxtWeak;
     {
       // Create a new descendant context and put the receiver in it:
       AutoCreateContext subCtxt;
       CurrentContextPusher pshr(subCtxt);
+      subCtxtWeak = subCtxt;
 
       // Create a new descendant event receiver that matches a parent context type and should
       // be autowired to grab events from the parent:
@@ -440,6 +442,9 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
       // Verify that it gets caught:
       EXPECT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
     }
+
+    // Verify subcontext is gone:
+    EXPECT_TRUE(subCtxtWeak.expired()) << "Subcontext endured outside of its intended scope";
 
     // Verify the reference count on the event receiver
     EXPECT_EQ(1, rcvrCopy.use_count()) << "Detected a leaked reference to an event receiver";

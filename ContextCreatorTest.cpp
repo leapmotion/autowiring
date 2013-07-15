@@ -110,7 +110,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
     std::shared_ptr<WaitMember> members[count];
 
     // Create a few contexts:
-    for(size_t i = count; i--;) {
+    for(int i = count; i--;) {
       std::shared_ptr<CoreContext> ctxt = *creator->CreateContext(i);
       CurrentContextPusher pshr(ctxt);
 
