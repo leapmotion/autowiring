@@ -194,7 +194,13 @@ public:
       RejectDispatchDelivery();
 
       // Pend a call which will invoke Abort once the dispatch queue is done:
-      *this += [this] {this->Abort();};
+      DispatchQueue::Pend([this] {
+        this->Abort();
+        
+        // Notify callers of our new state:
+        boost::lock_guard<boost::mutex> lk(this->m_lock);
+        this->m_stateCondition.notify_all();
+      });
     } else {
       // Abort the dispatch queue so anyone waiting will wake up
       DispatchQueue::Abort();
