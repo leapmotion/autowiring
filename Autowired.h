@@ -167,7 +167,7 @@ public:
 };
 
 /// <summary>
-/// This is a forbidden autowiring.  Do not attempt it.  Instead, use AutoCurrentContext or AutoCreateContext.
+/// Forbidden autowiring.  Do not attempt it.  Instead, use AutoCurrentContext or AutoCreateContext.
 /// </summary>
 template<>
 class Autowired<CoreContext>
@@ -176,10 +176,15 @@ private:
   Autowired(void);
 };
 
+/// <summary>
+/// Forbidden autowiring.  Do not attempt it.  Instead, use AutoGlobalContext
+/// </summary>
 template<>
-class Autowired<GlobalCoreContext>:
-  public AutowiredCreator<GlobalCoreContext>
-{};
+class Autowired<GlobalCoreContext>
+{
+private:
+  Autowired(void);
+};
 
 /// <summary>
 /// Similar to Autowired, but the default constructor invokes Autowired(true)
@@ -414,6 +419,16 @@ public:
   AutoCurrentContext(void);
 
   using std::shared_ptr<CoreContext>::operator=;
+};
+
+/// <summary>
+/// Simple way to obtain a reference to the global context
+/// </summary>
+class AutoGlobalContext:
+  public std::shared_ptr<CoreContext>
+{
+public:
+  AutoGlobalContext(void);
 };
 
 /// <summary>

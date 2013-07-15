@@ -132,6 +132,7 @@ set(
   ScopeTest.cpp
   SnoopTest.h
   SnoopTest.cpp
+  TestFixtures/ExitRaceThreaded.h
   TestFixtures/SimpleObject.h
   TestFixtures/SimpleThreaded.h
   TestFixtures/MultiInherit.h

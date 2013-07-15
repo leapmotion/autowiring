@@ -3,6 +3,9 @@
 #define _SIMPLE_THREADED_H
 #include "Autowiring/CoreThread.h"
 
+/// <summary>
+/// A simple class which will delay block until it is signalled to stop.
+/// </summary>
 class SimpleThreaded:
   public CoreThread
 {
