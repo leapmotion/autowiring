@@ -79,6 +79,7 @@ private:
   // The dispatch queue proper:
   std::list<DispatchThunkBase*> m_dispatchQueue;
 
+protected:
   /// <summary>
   /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
   /// </summary>
@@ -89,6 +90,16 @@ private:
   /// </remarks>
   void DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk);
 
+  /// <summary>
+  /// Attaches an element to the end of the dispatch queue without any checks
+  /// </summary>
+  template<class _Fx>
+  void Pend(_Fx&& fx) {
+    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
+    m_queueUpdated.notify_all();
+  }
+  
 public:
   /// <summary>
   /// Causes the current dispatch queue to be dumped if it's non-empty
