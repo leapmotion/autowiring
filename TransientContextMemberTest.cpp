@@ -99,3 +99,13 @@ TEST_F(TransientContextMemberTest, VerifyTransiencePathological) {
   // Vector of transient elements:
   std::vector<std::shared_ptr<MyTransientClass>> elements;
 }
+
+TEST_F(TransientContextMemberTest, VerifyNoAddToStopped) {
+  // Create our pool and immediately stop it:
+  AutoRequired<MyTransientPool> pool;
+  pool->Stop();
+
+  // This should throw an exception unconditionally:
+  std::shared_ptr<MyTransientClass> myTransient;
+  EXPECT_THROW(pool->Add(myTransient), std::runtime_error);
+}
