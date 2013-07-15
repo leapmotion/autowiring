@@ -91,6 +91,8 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
   cdl(&CtorDtorListener::DoDeferred)(CtorDtorCopyCounter());
   listener1->Stop(true);
   listener2->Stop(true);
+  listener1->Wait();
+  listener2->Wait();
 
   // Verify that we actually hit something:
   EXPECT_TRUE(listener1->m_hitDeferred) << "Failed to hit a listener's deferred call";
