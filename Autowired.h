@@ -313,9 +313,9 @@ template<class T>
 class AutoFired
 {
 public:
-  static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
-
   AutoFired(void) {
+    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
+
     auto ctxt = CoreContext::CurrentContext();
     m_receiver = ctxt->GetEventRecieverProxy<T>();
   }
