@@ -23,9 +23,7 @@ public:
 
   Deferred(TransientContextMember* pMember) {}
 
-  Deferred(CoreThread* pThread) {
-    assert(CoreThreadCanAccept(pThread));
-  }
+  Deferred(CoreThread* pThread) {}
 };
 
 /// <summary>
