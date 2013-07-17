@@ -102,9 +102,16 @@ public:
   /// <summary>
   /// Removes the specified context by its key
   /// </summary>
-  void RemoveContext(const Key& key) {
-    (boost::lock_guard<boost::mutex>)m_contextLock,
-    m_mp.erase(key);
+  /// <returns>The removed context, if one existed, otherwise nullptr</returns>
+  std::shared_ptr<CoreContext> RemoveContext(const Key& key) {
+    boost::lock_guard<boost::mutex> lk(m_contextLock);
+    auto q = m_mp.find(key);
+    if(q == m_mp.end())
+      return std::shared_ptr<CoreContext>();
+      
+    auto retVal = q->second.lock();
+    m_mp.erase(q);
+    return retVal;
   }
 
   /// <summary>
