@@ -87,7 +87,7 @@ bool CoreThread::Start(void) {
   }
 
   // Kick off a thread and return here
-  boost::thread(ThreadStatusMaintainer(this, context));
+  m_thisThread = boost::thread(ThreadStatusMaintainer(this, context));
   return true;
 }
 
