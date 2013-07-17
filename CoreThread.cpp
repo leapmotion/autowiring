@@ -53,9 +53,6 @@ void CoreThread::DoRun(void) {
   m_completed = true;
   m_running = false;
   m_stateCondition.notify_all();
-
-  // No longer running, we MUST release the thread pointer to ensure proper teardown
-  m_thisThread.detach();
 }
 
 bool CoreThread::ShouldStop(void) const {
@@ -90,7 +87,7 @@ bool CoreThread::Start(void) {
   }
 
   // Kick off a thread and return here
-  m_thisThread = boost::thread(ThreadStatusMaintainer(this, context));
+  boost::thread(ThreadStatusMaintainer(this, context));
   return true;
 }
 
