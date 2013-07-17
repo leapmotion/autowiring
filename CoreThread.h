@@ -172,6 +172,34 @@ public:
   }
 
   /// <summary>
+  /// Timed version of Wait
+  /// </summary>
+  /// <returns>False if the timeout elapsed, true otherwise</returns>
+  template<class DurationType>
+  bool WaitFor(DurationType duration) {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    return m_stateCondition.wait_for(
+      lk,
+      duration,
+      [this] () {return this->m_completed;}
+    );
+  }
+  
+  /// <summary>
+  /// Timed version of Wait
+  /// </summary>
+  /// <returns>False if the timeout elapsed, true otherwise</returns>
+  template<class TimeType>
+  bool WaitUntil(TimeType timepoint) {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    return m_stateCondition.wait_until(
+      lk,
+      timepoint,
+      [this] () {return this->m_completed;}
+    );
+  }
+
+  /// <summary>
   /// Event which may be used to perform custom handling when the thread is told to stop
   /// </summary>
   /// <param name="graceful">Set to true to rundown the dispatch queue before quitting</param>
