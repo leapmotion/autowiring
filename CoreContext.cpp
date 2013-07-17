@@ -374,8 +374,16 @@ void CoreContext::FilterException(void) {
     }
 
   // Pass to parent if one exists:
-  if(m_pParent)
-    m_pParent->FilterException();
+  if(m_pParent) {
+    try {
+      // See if the parent wants to handle this exception:
+      m_pParent->FilterException();
+
+      // Parent handled it, we're good to go
+      return;
+    } catch(...) {
+    }
+  }
 
   // Rethrow if unhandled:
   if(!handled)
