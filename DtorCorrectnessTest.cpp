@@ -79,13 +79,19 @@ TEST_F(DtorCorrectnessTest, VerifyFiringDtors) {
 }
 
 TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
+  // Precondition verification:
+  ASSERT_FALSE(listener1->ShouldStop()) << "Thread was signalled to stop before it even started";
+
   // Make sure our threads are running:
   AutoCurrentContext ctxt;
   ctxt->InitiateCoreThreads();
 
+  // Verify that the thread didn't exit too soon:
+  ASSERT_FALSE(listener1->ShouldStop()) << "Thread was signalled to stop even though it should have been deferring";
+
   // Spin until both threads are ready to accept:
-  listener1->DelayUntilCanAccept();
-  listener2->DelayUntilCanAccept();
+  ASSERT_TRUE(listener1->DelayUntilCanAccept()) << "First listener reported it could not accept";
+  ASSERT_TRUE(listener2->DelayUntilCanAccept()) << "Second listener reported it could not accept";
 
   // Now try deferring:
   cdl(&CtorDtorListener::DoDeferred)(CtorDtorCopyCounter());
