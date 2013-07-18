@@ -98,11 +98,7 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<T> GetSelf(void) {
-    // This exists exclusively to ensure casting safety
-    static_cast<T*>((ContextMember*)nullptr);
-
-    // HACK:  This is a stupid way to get a shared pointer to the type we want, but I don't see another way.
-    return (std::shared_ptr<T>&)m_self.lock();
+    return std::static_pointer_cast<T, ContextMember>(m_self.lock());
   }
 };
 
