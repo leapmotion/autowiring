@@ -66,8 +66,8 @@ void CoreThread::ThreadSleep(long millisecond) {
 
 bool CoreThread::DelayUntilCanAccept(void) {
   boost::unique_lock<boost::mutex> lk(m_lock);
-  m_stateCondition.wait(lk, [this] () {return ShouldStop() || CanAccept();});
-  return ShouldStop();
+  m_stateCondition.wait(lk, [this] {return ShouldStop() || CanAccept();});
+  return !ShouldStop();
 }
 
 bool CoreThread::Start(void) {
