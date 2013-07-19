@@ -92,7 +92,6 @@ public:
   virtual void ZeroArgs(void) = 0;
   virtual void OneArg(int arg) = 0;
   virtual void CopyVectorForwarded(vector<int>&& vec) = 0;
-  virtual void TrackCopy(CopyCounter&& ctr) = 0;
   virtual void AllDone(void) = 0;
 
   virtual void NoCopyMethod(NoCopyClass& noCopy) {}
@@ -105,6 +104,7 @@ public:
   virtual Deferred CopyVectorDeferred(const vector<int>& vec) = 0;
   virtual Deferred ZeroArgsDeferred(void) = 0;
   virtual Deferred OneArgDeferred(int arg) = 0;
+  virtual Deferred TrackCopy(CopyCounter&& ctr) = 0;
   virtual Deferred AllDoneDeferred(void) = 0;
 };
 
@@ -191,13 +191,14 @@ public:
     return Deferred(this);
   }
 
+  Deferred TrackCopy(CopyCounter&& ctr) override {
+    m_myCtr = std::forward<CopyCounter>(ctr);
+    return Deferred(this);
+  }
+
   void CopyVectorForwarded(vector<int>&& vec) override {
     // Copy out the argument:
     m_myVec = vec;
-  }
-
-  void TrackCopy(CopyCounter&& ctr) override {
-    m_myCtr = std::forward<CopyCounter>(ctr);
   }
 
   void NoCopyMethod(NoCopyClass& noCopy) override {
@@ -399,7 +400,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
 
 #if _MSC_VER >= 1700
   // Pass the field in:
-  sender.Defer(&CallableInterface::TrackCopy)(std::move(ctr));
+  sender(&CallableInterfaceDeferred::TrackCopy)(std::move(ctr));
 #endif
 
   // Signal stop:
