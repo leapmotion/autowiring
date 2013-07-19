@@ -18,13 +18,13 @@ public:
     m_what = ss.str();
   }
 
-  ~custom_exception() noexcept {
+  ~custom_exception() {
   }
 
   int m_value;
   std::string m_what;
 
-  virtual const char* what() const noexcept {
+  virtual const char* what() const {
     return m_what.c_str();
   }
 };
