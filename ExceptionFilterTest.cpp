@@ -7,26 +7,23 @@
 #include <sstream>
 
 class custom_exception:
-  public std::exception
+  public std::runtime_error
 {
 public:
   custom_exception(int value):
+    std::runtime_error(
+      (
+        (std::stringstream&)(std::stringstream() << "custom_exception: " << value)
+      ).str()
+    ),
     m_value(value)
   {
-    std::stringstream ss;
-    ss << "custom_exception: " << m_value;
-    m_what = ss.str();
   }
 
   ~custom_exception() {
   }
 
   int m_value;
-  std::string m_what;
-
-  virtual const char* what() const {
-    return m_what.c_str();
-  }
 };
 
 class ThrowingListener:
