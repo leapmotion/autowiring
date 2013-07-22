@@ -386,13 +386,11 @@ public:
       // Pass the copy into the lambda:
       auto f = fnPtr;
       pCur->AttachProxyRoutine(
-        [f, arg1] (EventReceiver& obj) mutable {
+        [f, arg1] (EventReceiver& obj) {
           // Now we perform the cast:
           T* pObj = dynamic_cast<T*>(&obj);
 
-          (pObj->*f)(
-            std::move(arg1)
-          );
+          (pObj->*f)(std::move(arg1));
         }
       );
     }
