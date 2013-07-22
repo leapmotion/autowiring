@@ -78,7 +78,12 @@ TEST_F(DtorCorrectnessTest, VerifyFiringDtors) {
   EXPECT_EQ(0, CtorDtorCopyCounter::s_count) << "Counter mismatch under event firing";
 }
 
-TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
+#if __APPLE__
+TEST_F(DtorCorrectnessTest, DISABLED_VerifyDeferringDtors)
+#else
+TEST_F(DtorCorrectnessTest, VerifyDeferringDtors)
+#endif
+{
   // Make sure our threads are running:
   AutoCurrentContext ctxt;
   ctxt->InitiateCoreThreads();
