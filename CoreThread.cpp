@@ -95,4 +95,8 @@ void CoreThread::Run() {
   AcceptDispatchDelivery();
   while(!ShouldStop())
     WaitForEvent();
+
+  // If we are asked to rundown while we still have elements in our dispatch queue,
+  // we must try to process them:
+  DispatchAllEvents();
 }
