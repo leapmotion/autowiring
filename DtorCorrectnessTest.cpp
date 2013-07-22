@@ -119,9 +119,7 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
   ASSERT_TRUE(listener2->DelayUntilCanAccept()) << "Second listener reported it could not accept";
 
   // Now try deferring:
-  cout << "Counter value is " << CtorDtorCopyCounter::s_outstanding << endl;
   cdl(&CtorDtorListener::DoDeferred)(CtorDtorCopyCounter());
-  cout << "Counter value is " << CtorDtorCopyCounter::s_outstanding << endl;
 
   // Process all deferred elements and then check to see what we got:
   AutoCurrentContext ctxt;
