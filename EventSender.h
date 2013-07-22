@@ -42,6 +42,24 @@ class InvokeRelay<Deferred (T::*)()>;
 template<class T, class Arg1>
 class InvokeRelay<Deferred (T::*)(Arg1)>;
 
+template<class T>
+class InvokeRelay<void (T::*)()>;
+
+template<class T, class Arg1>
+class InvokeRelay<void (T::*)(Arg1)>;
+
+template<class T, class Arg1, class Arg2>
+class InvokeRelay<void (T::*)(Arg1, Arg2)>;
+
+template<class T, class Arg1, class Arg2, class Arg3>
+class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3)>;
+
+template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4)>;
+
+template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5)>;
+
 /// <summary>
 /// Used to identify event managers
 /// </summary>
@@ -221,105 +239,9 @@ public:
   }
 
 public:
-  // Two-parenthetical invocations
-  std::function<void ()> Invoke(void (T::*fnPtr)()) const {
-    return
-      [this, fnPtr] () {
-        this->FireCurried(
-          [=] (T& obj) {
-            (obj.*fnPtr)();
-          }
-        );
-      };
-  }
-
-  template<class Arg1>
-  std::function<void (const Arg1&)> Invoke(void (T::*fnPtr)(Arg1)) const {
-    return
-      [this, fnPtr] (const Arg1& arg1) {
-        auto fnPtrCpy = fnPtr;
-        auto arg1Ptr = &arg1;
-        this->FireCurried(
-          [fnPtrCpy, arg1Ptr] (T& obj) {
-            (obj.*fnPtrCpy)(*arg1Ptr);
-          }
-        );
-      };
-  }
-
-  template<class Arg1, class Arg2>
-  std::function<void (const Arg1&, const Arg2&)> Invoke(void (T::*fnPtr)(Arg1, Arg2)) const {
-    return
-      [this, fnPtr] (const Arg1& arg1, const Arg2& arg2) {
-        auto fnPtrCpy = fnPtr;
-        auto arg1Ptr = &arg1;
-        auto arg2Ptr = &arg2;
-        this->FireCurried(
-          [fnPtrCpy, arg1Ptr, arg2Ptr] (T& obj) {
-            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr);
-          }
-        );
-      };
-  }
-
-  template<class Arg1, class Arg2, class Arg3>
-  std::function<void (const Arg1&, const Arg2&, const Arg3&)> Invoke(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
-    return
-      [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
-        auto fnPtrCpy = fnPtr;
-        auto arg1Ptr = &arg1;
-        auto arg2Ptr = &arg2;
-        auto arg3Ptr = &arg3;
-        this->FireCurried(
-          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr] (T& obj) {
-            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr);
-          }
-        );
-      };
-  }
-
-  template<class Arg1, class Arg2, class Arg3, class Arg4>
-  std::function<void (const Arg1&, const Arg2&, const Arg3&, const Arg4&)> Invoke(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)) const {
-    return
-      [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) {
-        auto fnPtrCpy = fnPtr;
-        auto arg1Ptr = &arg1;
-        auto arg2Ptr = &arg2;
-        auto arg3Ptr = &arg3;
-        auto arg4Ptr = &arg4;
-        this->FireCurried(
-          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr, arg4Ptr] (T& obj) {
-            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr, *arg4Ptr);
-          }
-        );
-      };
-  }
-
-  template<class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-  std::function<void (const Arg1&, const Arg2&, const Arg3&, const Arg4&, const Arg5&)> Invoke(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
-    return
-      [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) {
-        auto fnPtrCpy = fnPtr;
-        auto arg1Ptr = &arg1;
-        auto arg2Ptr = &arg2;
-        auto arg3Ptr = &arg3;
-        auto arg4Ptr = &arg4;
-        auto arg5Ptr = &arg5;
-        this->FireCurried(
-          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr, arg4Ptr, arg5Ptr] (T& obj) {
-            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr, *arg4Ptr, *arg5Ptr);
-          }
-        );
-      };
-  }
-
   // Two-parenthetical deferred invocations:
-  auto Invoke(Deferred (T::*fnPtr)()) const -> InvokeRelay<decltype(fnPtr)> {
-    return InvokeRelay<decltype(fnPtr)>(*this, fnPtr);
-  }
-
-  template<class Arg1>
-  auto Invoke(Deferred (T::*fnPtr)(Arg1)) const -> InvokeRelay<decltype(fnPtr)> {
+  template<class FnPtr>
+  auto Invoke(FnPtr fnPtr) const -> InvokeRelay<decltype(fnPtr)> {
     return InvokeRelay<decltype(fnPtr)>(*this, fnPtr);
   }
 };
@@ -394,6 +316,91 @@ public:
         }
       );
     }
+  }
+};
+
+template<class T>
+class InvokeRelay<void (T::*)()> {
+public:
+  InvokeRelay(T& erp, void (T::*fnPtr)(void)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  T& erp;
+  void (T::*fnPtr)();
+
+public:
+  void operator()() const {
+    (erp.*fnPtr)();
+  }
+};
+
+template<class T, class Arg1>
+class InvokeRelay<void (T::*)(Arg1)> {
+public:
+  typedef typename std::decay<Arg1>::type tArg1;
+
+  InvokeRelay(T& erp, void (T::*fnPtr)(Arg1)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  T& erp;
+  void (T::*fnPtr)(Arg1);
+
+public:
+  void operator()(const tArg1& arg1) const {
+    (erp.*fnPtr)(arg1);
+  }
+};
+
+template<class T, class Arg1, class Arg2>
+class InvokeRelay<void (T::*)(Arg1, Arg2)> {
+public:
+  typedef typename std::decay<Arg1>::type tArg1;
+  typedef typename std::decay<Arg2>::type tArg2;
+
+  InvokeRelay(T& erp, void (T::*fnPtr)(Arg1, Arg2)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  T& erp;
+  void (T::*fnPtr)(Arg1, Arg2);
+
+public:
+  void operator()(const tArg1& arg1, const tArg2& arg2) const {
+    (erp.*fnPtr)(arg1);
+  }
+};
+
+template<class T, class Arg1, class Arg2, class Arg3>
+class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3)> {
+public:
+  typedef typename std::decay<Arg1>::type tArg1;
+  typedef typename std::decay<Arg2>::type tArg2;
+  typedef typename std::decay<Arg2>::type tArg3;
+
+  InvokeRelay(T& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  T& erp;
+  void (T::*fnPtr)(Arg1, Arg2, Arg3);
+
+public:
+  void operator()(const tArg1& arg1, const tArg2& arg2, const tArg3 arg3) const {
+    (erp.*fnPtr)(arg1);
   }
 };
 
