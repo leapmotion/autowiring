@@ -385,23 +385,23 @@ public:
   }
 
   template<class MemFn>
-  typename Selector<MemFn>::retType operator()(MemFn pfn) const {
+  auto operator()(MemFn pfn) const -> decltype(m_receiver->Invoke(pfn)) {
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot invoke an event for an unrelated type");
-    return Selector<MemFn>::Select(m_receiver.get(), pfn);
+    return m_receiver->Invoke(pfn);
   }
 
   template<class MemFn>
   std::function<typename Decompose<MemFn>::fnType> Fire(MemFn pfn) const {
     static_assert(!std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Fire an event which is marked Deferred");
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot Fire an event for an unrelated type");
-    return m_receiver->Fire(pfn);
+    return m_receiver->Invoke(pfn);
   }
 
   template<class MemFn>
-  std::function<typename Decompose<MemFn>::fnType> Defer(MemFn pfn) const {
+  auto Defer(MemFn pfn) const -> decltype(m_receiver->Invoke(pfn)) {
     static_assert(std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Defer an event which does not return the Deferred type");
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot Defer an event for an unrelated type");
-    return m_receiver->Defer(pfn);
+    return m_receiver->Invoke(pfn);
   }
 };
 
