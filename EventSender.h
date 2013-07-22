@@ -320,37 +320,46 @@ public:
       };
   }
 
+  template<class Arg1, class tArg1>
+  class DeferredRelay {
+  public:
+    DeferredRelay(const EventReceiverProxy<T>& erp, Deferred (T::*fnPtr)(Arg1)):
+      erp(erp),
+      fnPtr(fnPtr)
+    {
+    }
+
+  private:
+    const EventReceiverProxy<T>& erp;
+    Deferred (T::*fnPtr)(Arg1);
+
+  public:
+    void operator()(const tArg1& arg1) {
+      auto f = fnPtr;
+      for(auto q = erp.m_dispatch.begin(); q != erp.m_dispatch.end(); q++) {
+        auto* pCur = *q;
+        if(!pCur->CanAccept())
+          continue;
+
+        // Pass the copy into the lambda:
+        pCur->AttachProxyRoutine(
+          [f, arg1] (EventReceiver& obj) mutable {
+            // Now we perform the cast:
+            T* pObj = dynamic_cast<T*>(&obj);
+
+            (pObj->*f)(
+              std::move(arg1)
+            );
+          }
+        );
+      }
+    }
+  };
+
   template<class Arg1>
-  std::function<void (const typename std::decay<Arg1>::type&)> Defer(Deferred (T::*fnPtr)(Arg1)) const {
-    // Converted args:
-    typedef typename std::decay<Arg1>::type tArg1;
-
-    return
-      [this, fnPtr] (const tArg1& arg1) {
-        auto f = fnPtr;
-        for(EventReceiverProxy<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
-          auto* pCur = *q;
-          if(!pCur->CanAccept())
-            continue;
-
-          typedef T targetType;
-
-          // Force off the const modifier so we can copy into the lambda just once
-          tArg1& arg1Forced = (tArg1&)arg1;
-
-          // Pass the copy into the lambda:
-          pCur->AttachProxyRoutine(
-            [f, arg1Forced] (EventReceiver& obj) mutable {
-              // Now we perform the cast:
-              targetType* pObj = dynamic_cast<targetType*>(&obj);
-
-              (pObj->*f)(
-                std::move(arg1Forced)
-              );
-            }
-          );
-        }
-      };
+  DeferredRelay<Arg1, const typename std::decay<Arg1>::type&> Defer(Deferred (T::*fnPtr)(Arg1)) const {
+    typedef typename const std::decay<Arg1>::type& tArg1;
+    return DeferredRelay<Arg1, tArg1>(*this, fnPtr);
   }
 };
 
