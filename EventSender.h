@@ -320,9 +320,11 @@ public:
       };
   }
 
-  template<class Arg1, class tArg1>
+  template<class Arg1>
   class DeferredRelay {
   public:
+    typedef typename std::decay<Arg1>::type tArg1;
+
     DeferredRelay(const EventReceiverProxy<T>& erp, Deferred (T::*fnPtr)(Arg1)):
       erp(erp),
       fnPtr(fnPtr)
@@ -357,9 +359,8 @@ public:
   };
 
   template<class Arg1>
-  DeferredRelay<Arg1, const typename std::decay<Arg1>::type&> Defer(Deferred (T::*fnPtr)(Arg1)) const {
-    typedef typename const std::decay<Arg1>::type& tArg1;
-    return DeferredRelay<Arg1, tArg1>(*this, fnPtr);
+  DeferredRelay<Arg1> Defer(Deferred (T::*fnPtr)(Arg1)) const {
+    return DeferredRelay<Arg1>(*this, fnPtr);
   }
 };
 
