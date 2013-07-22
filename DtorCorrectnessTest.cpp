@@ -40,7 +40,8 @@ class MyCtorDtorListener:
   public CtorDtorListener
 {
 public:
-  MyCtorDtorListener(void):
+  MyCtorDtorListener(const char* name):
+    CoreThread(name),
     m_hitDeferred(false)
   {
     AcceptDispatchDelivery();
@@ -60,11 +61,21 @@ public:
 
 class MyCtorDtorListener1:
   public MyCtorDtorListener
-{};
+{
+public:
+  MyCtorDtorListener1(void):
+    MyCtorDtorListener("MyCtorDtorListener1")
+  {}
+};
 
 class MyCtorDtorListener2:
   public MyCtorDtorListener
-{};
+{
+public:
+  MyCtorDtorListener2(void):
+    MyCtorDtorListener("MyCtorDtorListener2")
+  {}
+};
 
 DtorCorrectnessTest::DtorCorrectnessTest(void) {
 }
