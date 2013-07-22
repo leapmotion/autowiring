@@ -206,7 +206,7 @@ public:
 
 public:
   // Two-parenthetical invocations
-  std::function<void ()> Fire(void (T::*fnPtr)()) const {
+  std::function<void ()> Invoke(void (T::*fnPtr)()) const {
     return
       [this, fnPtr] () {
         this->FireCurried(
@@ -218,7 +218,7 @@ public:
   }
 
   template<class Arg1>
-  std::function<void (const Arg1&)> Fire(void (T::*fnPtr)(Arg1)) const {
+  std::function<void (const Arg1&)> Invoke(void (T::*fnPtr)(Arg1)) const {
     return
       [this, fnPtr] (const Arg1& arg1) {
         auto fnPtrCpy = fnPtr;
@@ -232,7 +232,7 @@ public:
   }
 
   template<class Arg1, class Arg2>
-  std::function<void (const Arg1&, const Arg2&)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
+  std::function<void (const Arg1&, const Arg2&)> Invoke(void (T::*fnPtr)(Arg1, Arg2)) const {
     return
       [this, fnPtr] (const Arg1& arg1, const Arg2& arg2) {
         auto fnPtrCpy = fnPtr;
@@ -247,7 +247,7 @@ public:
   }
 
   template<class Arg1, class Arg2, class Arg3>
-  std::function<void (const Arg1&, const Arg2&, const Arg3&)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
+  std::function<void (const Arg1&, const Arg2&, const Arg3&)> Invoke(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
         auto fnPtrCpy = fnPtr;
@@ -263,7 +263,7 @@ public:
   }
 
   template<class Arg1, class Arg2, class Arg3, class Arg4>
-  std::function<void (const Arg1&, const Arg2&, const Arg3&, const Arg4&)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)) const {
+  std::function<void (const Arg1&, const Arg2&, const Arg3&, const Arg4&)> Invoke(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) {
         auto fnPtrCpy = fnPtr;
@@ -280,7 +280,7 @@ public:
   }
 
   template<class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-  std::function<void (const Arg1&, const Arg2&, const Arg3&, const Arg4&, const Arg5&)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
+  std::function<void (const Arg1&, const Arg2&, const Arg3&, const Arg4&, const Arg5&)> Invoke(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
     return
       [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) {
         auto fnPtrCpy = fnPtr;
@@ -297,35 +297,49 @@ public:
       };
   }
 
-  // Two-parenthetical deferred invocations:
-  std::function<void ()> Defer(Deferred (T::*fnPtr)()) const {
-    return
-      [this, fnPtr] () {
+  template<class FnPtr>
+  class InvokeRelay;
+  
+  template<>
+  class InvokeRelay<Deferred (T::*)()> {
+  public:
+    InvokeRelay(const EventReceiverProxy<T>& erp, Deferred (T::*fnPtr)()):
+      erp(erp),
+      fnPtr(fnPtr)
+    {
+    }
+
+  private:
+    const EventReceiverProxy<T>& erp;
+    Deferred (T::*fnPtr)();
+
+  public:
+    void operator()(void) const {
+      for(auto q = erp.m_dispatch.begin(); q != erp.m_dispatch.end(); q++) {
+        auto* pCur = *q;
+        if(!pCur->CanAccept())
+          continue;
+
+        typedef T targetType;
+
+        // Straight dispatch queue insertion:
         auto f = fnPtr;
-        for(auto q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
-          auto* pCur = *q;
-          if(!pCur->CanAccept())
-            continue;
+        pCur->AttachProxyRoutine([f] (EventReceiver& obj) {
+          // Now we perform the cast:
+          targetType* pObj = dynamic_cast<targetType*>(&obj);
 
-          typedef T targetType;
-
-          // Straight dispatch queue insertion:
-          pCur->AttachProxyRoutine([f] (EventReceiver& obj) {
-            // Now we perform the cast:
-            targetType* pObj = dynamic_cast<targetType*>(&obj);
-
-            (pObj->*f)();
-          });
-        }
-      };
-  }
+          (pObj->*f)();
+        });
+      }
+    }
+  };
 
   template<class Arg1>
-  class DeferredRelay {
+  class InvokeRelay<Deferred (T::*)(Arg1)> {
   public:
     typedef typename std::decay<Arg1>::type tArg1;
 
-    DeferredRelay(const EventReceiverProxy<T>& erp, Deferred (T::*fnPtr)(Arg1)):
+    InvokeRelay(const EventReceiverProxy<T>& erp, Deferred (T::*fnPtr)(Arg1)):
       erp(erp),
       fnPtr(fnPtr)
     {
@@ -336,14 +350,14 @@ public:
     Deferred (T::*fnPtr)(Arg1);
 
   public:
-    void operator()(const tArg1& arg1) {
-      auto f = fnPtr;
+    void operator()(const tArg1& arg1) const {
       for(auto q = erp.m_dispatch.begin(); q != erp.m_dispatch.end(); q++) {
         auto* pCur = *q;
         if(!pCur->CanAccept())
           continue;
 
         // Pass the copy into the lambda:
+        auto f = fnPtr;
         pCur->AttachProxyRoutine(
           [f, arg1] (EventReceiver& obj) mutable {
             // Now we perform the cast:
@@ -358,9 +372,14 @@ public:
     }
   };
 
+  // Two-parenthetical deferred invocations:
+  auto Invoke(Deferred (T::*fnPtr)()) const -> InvokeRelay<decltype(fnPtr)> {
+    return InvokeRelay<decltype(fnPtr)>(*this, fnPtr);
+  }
+
   template<class Arg1>
-  DeferredRelay<Arg1> Defer(Deferred (T::*fnPtr)(Arg1)) const {
-    return DeferredRelay<Arg1>(*this, fnPtr);
+  auto Invoke(Deferred (T::*fnPtr)(Arg1)) const -> InvokeRelay<decltype(fnPtr)> {
+    return InvokeRelay<decltype(fnPtr)>(*this, fnPtr);
   }
 };
 
