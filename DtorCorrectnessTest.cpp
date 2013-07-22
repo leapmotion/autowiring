@@ -43,6 +43,7 @@ public:
   MyCtorDtorListener(void):
     m_hitDeferred(false)
   {
+    AcceptDispatchDelivery();
     Ready();
   }
 
@@ -85,10 +86,6 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
   // Precondition verification:
   ASSERT_FALSE(listener1->ShouldStop()) << "Thread was signalled to stop before it even started";
 
-  // Make sure our threads are running:
-  AutoCurrentContext ctxt;
-  ctxt->InitiateCoreThreads();
-
   // Simple check of our copy counter under scope:
   {
     CtorDtorCopyCounter tempCounter;
@@ -114,6 +111,10 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
   cout << "Counter value is " << CtorDtorCopyCounter::s_outstanding << endl;
   cdl(&CtorDtorListener::DoDeferred)(CtorDtorCopyCounter());
   cout << "Counter value is " << CtorDtorCopyCounter::s_outstanding << endl;
+
+  // Process all deferred elements and then check to see what we got:
+  AutoCurrentContext ctxt;
+  ctxt->InitiateCoreThreads();
   listener1->Stop(true);
   listener2->Stop(true);
   listener1->Wait();
