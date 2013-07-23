@@ -167,6 +167,16 @@ public:
     );
   }
 
+  template<class Duration>
+  bool WaitFor(Duration duration) {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    return m_stateCondition.wait_for(
+      lk,
+      duration,
+      [this] () {return this->m_completed;}
+    );
+  }
+
   /// <summary>
   /// Event which may be used to perform custom handling when the thread is told to stop
   /// </summary>

@@ -5,6 +5,9 @@
 #include "ExceptionFilter.h"
 #include <stdexcept>
 #include <sstream>
+#include <iostream>
+
+using namespace std;
 
 class custom_exception:
   public std::runtime_error
