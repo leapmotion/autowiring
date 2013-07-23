@@ -20,9 +20,6 @@ public:
   {
   }
 
-  ~custom_exception() {
-  }
-
   int m_value;
 };
 
