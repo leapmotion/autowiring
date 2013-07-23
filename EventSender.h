@@ -241,7 +241,7 @@ public:
 public:
   // Two-parenthetical deferred invocations:
   template<class FnPtr>
-  auto Invoke(FnPtr fnPtr) const -> InvokeRelay<decltype(fnPtr)> {
+  auto Invoke(FnPtr fnPtr) -> InvokeRelay<decltype(fnPtr)> {
     return InvokeRelay<decltype(fnPtr)>(*this, fnPtr);
   }
 };
@@ -322,85 +322,76 @@ public:
 template<class T>
 class InvokeRelay<void (T::*)()> {
 public:
-  InvokeRelay(T& erp, void (T::*fnPtr)(void)):
+  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(void)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  T& erp;
+  EventReceiverProxy<T>& erp;
   void (T::*fnPtr)();
 
 public:
   void operator()() const {
-    (erp.*fnPtr)();
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)();});
   }
 };
 
 template<class T, class Arg1>
 class InvokeRelay<void (T::*)(Arg1)> {
 public:
-  typedef typename std::decay<Arg1>::type tArg1;
-
-  InvokeRelay(T& erp, void (T::*fnPtr)(Arg1)):
+  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  T& erp;
+  EventReceiverProxy<T>& erp;
   void (T::*fnPtr)(Arg1);
 
 public:
-  void operator()(const tArg1& arg1) const {
-    (erp.*fnPtr)(arg1);
+  void operator()(Arg1 arg1) const {
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1);});
   }
 };
 
 template<class T, class Arg1, class Arg2>
 class InvokeRelay<void (T::*)(Arg1, Arg2)> {
 public:
-  typedef typename std::decay<Arg1>::type tArg1;
-  typedef typename std::decay<Arg2>::type tArg2;
-
-  InvokeRelay(T& erp, void (T::*fnPtr)(Arg1, Arg2)):
+  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  T& erp;
+  EventReceiverProxy<T>& erp;
   void (T::*fnPtr)(Arg1, Arg2);
 
 public:
-  void operator()(const tArg1& arg1, const tArg2& arg2) const {
-    (erp.*fnPtr)(arg1);
+  void operator()(Arg1& arg1, Arg2& arg2) const {
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2);});
   }
 };
 
 template<class T, class Arg1, class Arg2, class Arg3>
 class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3)> {
 public:
-  typedef typename std::decay<Arg1>::type tArg1;
-  typedef typename std::decay<Arg2>::type tArg2;
-  typedef typename std::decay<Arg2>::type tArg3;
-
-  InvokeRelay(T& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3)):
+  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  T& erp;
+  EventReceiverProxy<T>& erp;
   void (T::*fnPtr)(Arg1, Arg2, Arg3);
 
 public:
-  void operator()(const tArg1& arg1, const tArg2& arg2, const tArg3 arg3) const {
-    (erp.*fnPtr)(arg1);
+  void operator()(Arg1& arg1, Arg2& arg2, Arg3 arg3) const {
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3);});
   }
 };
 
