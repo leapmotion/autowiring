@@ -77,6 +77,8 @@ void DtorCorrectnessTest::SetUp(void) {
   CtorDtorCopyCounter::s_construction = 0;
 }
 
+void convert(int x);
+
 TEST_F(DtorCorrectnessTest, VerifyFiringDtors) {
   // Try firing some events and validate the invariant:
   cdl(&CtorDtorListener::DoFired)(CtorDtorCopyCounter());
