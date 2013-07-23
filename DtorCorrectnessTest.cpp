@@ -1,28 +1,31 @@
 #include "stdafx.h"
 #include "DtorCorrectnessTest.h"
+#include <iostream>
+
+using namespace std;
 
 class CtorDtorCopyCounter {
 public:
-  static int s_count;
-  static size_t s_hit;
+  static int s_outstanding;
+  static size_t s_construction;
 
   CtorDtorCopyCounter(void) {
-    s_count++;
-    s_hit++;
+    s_outstanding++;
+    s_construction++;
   }
 
   CtorDtorCopyCounter(const CtorDtorCopyCounter&) {
-    s_count++;
-    s_hit++;
+    s_outstanding++;
+    s_construction++;
   }
 
   ~CtorDtorCopyCounter(void) {
-    s_count--;
+    s_outstanding--;
   }
 };
 
-int CtorDtorCopyCounter::s_count = 0;
-size_t CtorDtorCopyCounter::s_hit = 0;
+int CtorDtorCopyCounter::s_outstanding = 0;
+size_t CtorDtorCopyCounter::s_construction = 0;
 
 class CtorDtorListener:
   public virtual EventReceiver
@@ -38,8 +41,10 @@ class MyCtorDtorListener:
 {
 public:
   MyCtorDtorListener(void):
+    CoreThread("MyCtorDtorListener"),
     m_hitDeferred(false)
   {
+    AcceptDispatchDelivery();
     Ready();
   }
 
@@ -54,46 +59,60 @@ public:
   }
 };
 
-class MyCtorDtorListener1:
+template<int i>
+class MyCtorDtorListenerN:
   public MyCtorDtorListener
-{};
-
-class MyCtorDtorListener2:
-  public MyCtorDtorListener
-{};
+{
+public:
+  MyCtorDtorListenerN(void)
+  {}
+};
 
 DtorCorrectnessTest::DtorCorrectnessTest(void) {
 }
 
 void DtorCorrectnessTest::SetUp(void) {
   // Reset counter:
-  CtorDtorCopyCounter::s_count = 0;
-  CtorDtorCopyCounter::s_hit = 0;
+  CtorDtorCopyCounter::s_outstanding = 0;
+  CtorDtorCopyCounter::s_construction = 0;
 }
+
+void convert(int x);
 
 TEST_F(DtorCorrectnessTest, VerifyFiringDtors) {
   // Try firing some events and validate the invariant:
   cdl(&CtorDtorListener::DoFired)(CtorDtorCopyCounter());
-  EXPECT_LE(2UL, CtorDtorCopyCounter::s_hit) << "Counter constructors were not invoked the expected number of times when fired";
-  EXPECT_EQ(0, CtorDtorCopyCounter::s_count) << "Counter mismatch under event firing";
+  EXPECT_LE(2UL, CtorDtorCopyCounter::s_construction) << "Counter constructors were not invoked the expected number of times when fired";
+  EXPECT_EQ(0, CtorDtorCopyCounter::s_outstanding) << "Counter mismatch under event firing";
 }
 
-#if __APPLE__
-TEST_F(DtorCorrectnessTest, DISABLED_VerifyDeferringDtors)
-#else
-TEST_F(DtorCorrectnessTest, VerifyDeferringDtors)
-#endif
-{
-  // Make sure our threads are running:
-  AutoCurrentContext ctxt;
-  ctxt->InitiateCoreThreads();
+TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
+  {
+    CtorDtorCopyCounter tempCounter;
+    ASSERT_EQ(1UL, CtorDtorCopyCounter::s_construction) << "Constructor count was not incremented correctly";
+    CtorDtorCopyCounter::s_construction = 0;
+  }
+  ASSERT_EQ(0UL, CtorDtorCopyCounter::s_outstanding) << "Unexpected number of outstanding instances";
+
+  // Simple check of anonymous instance handling:
+  CtorDtorCopyCounter();
+  ASSERT_EQ(1UL, CtorDtorCopyCounter::s_construction) << "Constructor count was not incremented correctly";
+  CtorDtorCopyCounter::s_construction = 0;
+  ASSERT_EQ(0UL, CtorDtorCopyCounter::s_outstanding) << "Unexpected number of outstanding instances";
+
+  // Verify that the thread didn't exit too soon:
+  ASSERT_FALSE(listener1->ShouldStop()) << "Thread was signalled to stop even though it should have been deferring";
 
   // Spin until both threads are ready to accept:
-  listener1->DelayUntilCanAccept();
-  listener2->DelayUntilCanAccept();
+  ASSERT_TRUE(listener1->DelayUntilCanAccept()) << "First listener reported it could not accept";
+  ASSERT_TRUE(listener2->DelayUntilCanAccept()) << "Second listener reported it could not accept";
 
   // Now try deferring:
   cdl(&CtorDtorListener::DoDeferred)(CtorDtorCopyCounter());
+
+  // Process all deferred elements and then check to see what we got:
+  AutoCurrentContext ctxt;
+  ctxt->InitiateCoreThreads();
   listener1->Stop(true);
   listener2->Stop(true);
   listener1->Wait();
@@ -103,7 +122,12 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors)
   EXPECT_TRUE(listener1->m_hitDeferred) << "Failed to hit a listener's deferred call";
   EXPECT_TRUE(listener2->m_hitDeferred) << "Failed to hit a listener's deferred call";
 
+  // Release all of our pointers:
+  m_create.reset();
+  listener1.reset();
+  listener2.reset();
+
   // Verify hit counts:
-  EXPECT_LE(2UL, CtorDtorCopyCounter::s_hit) << "Counter constructors were not invoked the expected number of times when deferred";
-  EXPECT_EQ(0, CtorDtorCopyCounter::s_count) << "Counter mismatch under deferred events";
+  //EXPECT_LE(2UL, CtorDtorCopyCounter::s_construction) << "Counter constructors were not invoked the expected number of times when deferred";
+  EXPECT_EQ(0, CtorDtorCopyCounter::s_outstanding) << "Counter mismatch under deferred events";
 }

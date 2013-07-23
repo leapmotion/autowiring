@@ -35,6 +35,8 @@ set(
   DependentContext.h
   DispatchQueue.h
   DispatchQueue.cpp
+  DispatchThunkEventProxy.h
+  DispatchThunkEventProxy.cpp
   EventDispatcher.h
   EventReceiver.h
   EventReceiver.cpp
