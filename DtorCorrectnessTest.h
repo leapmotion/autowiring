@@ -2,8 +2,8 @@
 #include "EnclosedContextTestBase.h"
 
 class CtorDtorListener;
-class MyCtorDtorListener1;
-class MyCtorDtorListener2;
+template<int i>
+class MyCtorDtorListenerN;
 
 class DtorCorrectnessTest:
   public EnclosedContextTestBase
@@ -14,7 +14,7 @@ public:
   void SetUp(void) override;
   
   AutoFired<CtorDtorListener> cdl;
-  AutoRequired<MyCtorDtorListener1> listener1;
-  AutoRequired<MyCtorDtorListener2> listener2;
+  AutoRequired<MyCtorDtorListenerN<1>> listener1;
+  AutoRequired<MyCtorDtorListenerN<2>> listener2;
 };
 

@@ -10,6 +10,7 @@ public:
   /// <summary>
   /// Blocks the caller until the dispatcher is able to accept a dispatch
   /// </summary>
+  /// <returns>True on success, false if the delay was interrupted</returns>
   /// <remarks>
   /// This method will return when the dispatch queue begins accepting events.  It may also
   /// return when it determines that it is impossible for the dispatch queue to ever accept

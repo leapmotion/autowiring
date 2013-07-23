@@ -11,9 +11,7 @@
   #define ENABLE_NETWORK_MONITOR 0
 #endif
 
-#ifdef _MSC_VER
-  #define noexcept throw()
-#else
+#ifndef _MSC_VER
   #include <stdlib.h>
 #endif
 
