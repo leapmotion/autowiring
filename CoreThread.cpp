@@ -66,8 +66,8 @@ void CoreThread::ThreadSleep(long millisecond) {
 
 bool CoreThread::DelayUntilCanAccept(void) {
   boost::unique_lock<boost::mutex> lk(m_lock);
-  m_stateCondition.wait(lk, [this] () {return ShouldStop() || CanAccept();});
-  return ShouldStop();
+  m_stateCondition.wait(lk, [this] {return ShouldStop() || CanAccept();});
+  return !ShouldStop();
 }
 
 bool CoreThread::Start(void) {
@@ -95,4 +95,8 @@ void CoreThread::Run() {
   AcceptDispatchDelivery();
   while(!ShouldStop())
     WaitForEvent();
+
+  // If we are asked to rundown while we still have elements in our dispatch queue,
+  // we must try to process them:
+  DispatchAllEvents();
 }

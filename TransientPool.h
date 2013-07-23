@@ -88,7 +88,7 @@ public:
     }
   }
 
-  virtual void AttachProxyRoutine(const std::function<void (EventReceiver&)>& eventProxy) override {
+  virtual void AttachProxyRoutine(std::function<void (EventReceiver&)>&& eventProxy) override {
     // Special handling for our event proxy types:
     DispatchQueue::operator+=([this, eventProxy] () {
       this->PoolInvoke(eventProxy);

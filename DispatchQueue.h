@@ -4,9 +4,14 @@
 #include "ocuConfig.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
+#include "DispatchThunk.h"
+#include "DispatchThunkEventProxy.h"
 #include <boost/thread/condition_variable.hpp>
 #include FUNCTIONAL_HEADER
+#include RVALUE_HEADER
 #include <list>
+
+class DispatchQueue;
 
 /// <summary>
 /// Thrown when a dispatch operation was aborted
@@ -14,31 +19,6 @@
 class dispatch_aborted_exception:
   public std::exception
 {
-};
-
-/// <summary>
-/// A simple virtual class used to hold a trivial thunk
-/// </summary>
-class DispatchThunkBase {
-public:
-  virtual ~DispatchThunkBase(void) {}
-  virtual void operator()() = 0;
-};
-
-template<class _Fx>
-class DispatchThunk:
-  public DispatchThunkBase
-{
-public:
-  DispatchThunk(const _Fx& fx):
-    m_fx(fx)
-  {}
-
-  _Fx m_fx;
-
-  void operator()() override {
-    m_fx();
-  }
 };
 
 /// <summary>
@@ -155,10 +135,10 @@ public:
   /// Certain derived implementations may proxy the event call, sending it elsewhere, possibly more than
   /// once, which requires that the passed routine be invariant.
   /// </remarks>
-  virtual void AttachProxyRoutine(const std::function<void (EventReceiver&)>& eventProxy) {
-    *this += [this, eventProxy] () {
-      eventProxy(*this);
-    };
+  virtual void AttachProxyRoutine(std::function<void (EventReceiver&)>&& eventProxy) {
+    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    m_dispatchQueue.push_back(new DispatchThunkEventProxy(*this, std::move(eventProxy)));
+    m_queueUpdated.notify_all();
   }
 
   /// <summary>
