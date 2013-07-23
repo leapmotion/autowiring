@@ -40,7 +40,7 @@ public:
   tracking_exception(const tracking_exception& rhs) {
     s_count++;
   }
-  ~tracking_exception(void) {
+  NOEXCEPT(~tracking_exception(void)) {
     s_count--;
   }
 
@@ -139,7 +139,7 @@ TEST_F(ExceptionFilterTest, ExceptionDestruction) {
   thrower->Wait();
 
   // Verify that the exception was destroyed the correct number of times:
-  EXPECT_EQ(0, tracking_exception::s_count) << "Exception was not destroyed the correct number of times";
+  EXPECT_EQ(0UL, tracking_exception::s_count) << "Exception was not destroyed the correct number of times";
 }
 
 TEST_F(ExceptionFilterTest, CheckThrowThrow) {
