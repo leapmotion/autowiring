@@ -360,26 +360,34 @@ void CoreContext::Unsnoop(const std::shared_ptr<EventReceiver>& pSnooper) {
 }
 
 void CoreContext::FilterException(void) {
-  auto rethrower = [] () {
-    std::rethrow_exception(std::current_exception());
-  };
-
   bool handled = false;
   for(auto q = m_filters.begin(); q != m_filters.end(); q++)
     try {
-      (*q)->Filter(rethrower);
+      (*q)->Filter(
+        [] {
+          std::rethrow_exception(std::current_exception());
+        }
+      );
       handled = true;
     } catch(...) {
       // Do nothing
     }
 
   // Pass to parent if one exists:
-  if(m_pParent)
-    m_pParent->FilterException();
+  if(m_pParent) {
+    try {
+      // See if the parent wants to handle this exception:
+      m_pParent->FilterException();
+
+      // Parent handled it, we're good to go
+      return;
+    } catch(...) {
+    }
+  }
 
   // Rethrow if unhandled:
   if(!handled)
-    rethrower();
+    std::rethrow_exception(std::current_exception());
 }
 
 void CoreContext::FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) {
