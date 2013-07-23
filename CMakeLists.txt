@@ -31,6 +31,7 @@ set(
   DeferredBase.cpp
   DeferredCreationNotice.h
   DeferredCreationNotice.cpp
+  deferred_ptr.h
   DependentContext.h
   DispatchQueue.h
   DispatchQueue.cpp
@@ -121,6 +122,8 @@ set(
   LockReducedCollectionTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
+  ObjectPoolTest.h
+  ObjectPoolTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
   TeardownNotifierTest.h
