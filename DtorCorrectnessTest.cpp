@@ -92,13 +92,13 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
     ASSERT_EQ(1UL, CtorDtorCopyCounter::s_construction) << "Constructor count was not incremented correctly";
     CtorDtorCopyCounter::s_construction = 0;
   }
-  ASSERT_EQ(0UL, CtorDtorCopyCounter::s_outstanding) << "Unexpected number of outstanding instances";
+  ASSERT_EQ(0, CtorDtorCopyCounter::s_outstanding) << "Unexpected number of outstanding instances";
 
   // Simple check of anonymous instance handling:
   CtorDtorCopyCounter();
   ASSERT_EQ(1UL, CtorDtorCopyCounter::s_construction) << "Constructor count was not incremented correctly";
   CtorDtorCopyCounter::s_construction = 0;
-  ASSERT_EQ(0UL, CtorDtorCopyCounter::s_outstanding) << "Unexpected number of outstanding instances";
+  ASSERT_EQ(0, CtorDtorCopyCounter::s_outstanding) << "Unexpected number of outstanding instances";
 
   // Verify that the thread didn't exit too soon:
   ASSERT_FALSE(listener1->ShouldStop()) << "Thread was signalled to stop even though it should have been deferring";
