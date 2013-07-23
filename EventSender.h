@@ -371,7 +371,7 @@ private:
   void (T::*fnPtr)(Arg1, Arg2);
 
 public:
-  void operator()(Arg1& arg1, Arg2& arg2) const {
+  void operator()(Arg1 arg1, Arg2 arg2) const {
     erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2);});
   }
 };
@@ -390,8 +390,46 @@ private:
   void (T::*fnPtr)(Arg1, Arg2, Arg3);
 
 public:
-  void operator()(Arg1& arg1, Arg2& arg2, Arg3 arg3) const {
+  void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3) const {
     erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3);});
+  }
+};
+
+template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4)> {
+public:
+  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  EventReceiverProxy<T>& erp;
+  void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4);
+
+public:
+  void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) const {
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3, arg4);});
+  }
+};
+
+template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5)> {
+public:
+  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  EventReceiverProxy<T>& erp;
+  void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5);
+
+public:
+  void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) const {
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3, arg4, arg5);});
   }
 };
 
