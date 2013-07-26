@@ -8,6 +8,11 @@ AutoCurrentContext::AutoCurrentContext(void) {
   *this = CoreContext::CurrentContext();
 }
 
+AutoGlobalContext::AutoGlobalContext(void):
+  std::shared_ptr<CoreContext>(GlobalCoreContext::Get())
+{
+}
+
 AutoCreateContext::AutoCreateContext(void) {
   *this = CoreContext::CurrentContext()->Create();
 }

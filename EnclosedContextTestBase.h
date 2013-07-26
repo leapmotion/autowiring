@@ -19,6 +19,9 @@ protected:
 
   // Currency pusher:
   CurrentContextPusher m_pshr;
+ 
+private:
+  std::weak_ptr<CoreContext> m_createWeak;
 };
 
 #endif
