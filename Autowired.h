@@ -1,6 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _AUTOWIRED_H
 #define _AUTOWIRED_H
+#include "ocuType.h"
 #include "AutowirableSlot.h"
 #include "CoreContext.h"
 #include <functional>
@@ -167,7 +168,7 @@ public:
 };
 
 /// <summary>
-/// This is a forbidden autowiring.  Do not attempt it.  Instead, use AutoCurrentContext or AutoCreateContext.
+/// Forbidden autowiring.  Do not attempt it.  Instead, use AutoCurrentContext or AutoCreateContext.
 /// </summary>
 template<>
 class Autowired<CoreContext>
@@ -176,10 +177,15 @@ private:
   Autowired(void);
 };
 
+/// <summary>
+/// Forbidden autowiring.  Do not attempt it.  Instead, use AutoGlobalContext
+/// </summary>
 template<>
-class Autowired<GlobalCoreContext>:
-  public AutowiredCreator<GlobalCoreContext>
-{};
+class Autowired<GlobalCoreContext>
+{
+private:
+  Autowired(void);
+};
 
 /// <summary>
 /// Similar to Autowired, but the default constructor invokes Autowired(true)
@@ -308,9 +314,9 @@ template<class T>
 class AutoFired
 {
 public:
-  static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
-
   AutoFired(void) {
+    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
+
     auto ctxt = CoreContext::CurrentContext();
     m_receiver = ctxt->GetEventRecieverProxy<T>();
   }
@@ -380,23 +386,23 @@ public:
   }
 
   template<class MemFn>
-  typename Selector<MemFn>::retType operator()(MemFn pfn) const {
+  InvokeRelay<MemFn> operator()(MemFn pfn) const {
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot invoke an event for an unrelated type");
-    return Selector<MemFn>::Select(m_receiver.get(), pfn);
+    return m_receiver->Invoke(pfn);
   }
 
   template<class MemFn>
-  std::function<typename Decompose<MemFn>::fnType> Fire(MemFn pfn) const {
+  InvokeRelay<MemFn> Fire(MemFn pfn) const {
     static_assert(!std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Fire an event which is marked Deferred");
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot Fire an event for an unrelated type");
-    return m_receiver->Fire(pfn);
+    return m_receiver->Invoke(pfn);
   }
 
   template<class MemFn>
-  std::function<typename Decompose<MemFn>::fnType> Defer(MemFn pfn) const {
+  InvokeRelay<MemFn> Defer(MemFn pfn) const {
     static_assert(std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Defer an event which does not return the Deferred type");
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot Defer an event for an unrelated type");
-    return m_receiver->Defer(pfn);
+    return m_receiver->Invoke(pfn);
   }
 };
 
@@ -414,6 +420,16 @@ public:
   AutoCurrentContext(void);
 
   using std::shared_ptr<CoreContext>::operator=;
+};
+
+/// <summary>
+/// Simple way to obtain a reference to the global context
+/// </summary>
+class AutoGlobalContext:
+  public std::shared_ptr<CoreContext>
+{
+public:
+  AutoGlobalContext(void);
 };
 
 /// <summary>

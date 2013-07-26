@@ -92,7 +92,6 @@ public:
   virtual void ZeroArgs(void) = 0;
   virtual void OneArg(int arg) = 0;
   virtual void CopyVectorForwarded(vector<int>&& vec) = 0;
-  virtual void TrackCopy(CopyCounter&& ctr) = 0;
   virtual void AllDone(void) = 0;
 
   virtual void NoCopyMethod(NoCopyClass& noCopy) {}
@@ -105,6 +104,7 @@ public:
   virtual Deferred CopyVectorDeferred(const vector<int>& vec) = 0;
   virtual Deferred ZeroArgsDeferred(void) = 0;
   virtual Deferred OneArgDeferred(int arg) = 0;
+  virtual Deferred TrackCopy(CopyCounter&& ctr) = 0;
   virtual Deferred AllDoneDeferred(void) = 0;
 };
 
@@ -191,13 +191,14 @@ public:
     return Deferred(this);
   }
 
+  Deferred TrackCopy(CopyCounter&& ctr) override {
+    m_myCtr = std::forward<CopyCounter>(ctr);
+    return Deferred(this);
+  }
+
   void CopyVectorForwarded(vector<int>&& vec) override {
     // Copy out the argument:
     m_myVec = vec;
-  }
-
-  void TrackCopy(CopyCounter&& ctr) override {
-    m_myCtr = std::forward<CopyCounter>(ctr);
   }
 
   void NoCopyMethod(NoCopyClass& noCopy) override {
@@ -399,7 +400,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
 
 #if _MSC_VER >= 1700
   // Pass the field in:
-  sender.Defer(&CallableInterface::TrackCopy)(std::move(ctr));
+  sender(&CallableInterfaceDeferred::TrackCopy)(std::move(ctr));
 #endif
 
   // Signal stop:
@@ -423,10 +424,12 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
   std::weak_ptr<SimpleReceiver> rcvrWeak;
   {
     std::shared_ptr<SimpleReceiver> rcvrCopy;
+    std::weak_ptr<CoreContext> subCtxtWeak;
     {
       // Create a new descendant context and put the receiver in it:
       AutoCreateContext subCtxt;
       CurrentContextPusher pshr(subCtxt);
+      subCtxtWeak = subCtxt;
 
       // Create a new descendant event receiver that matches a parent context type and should
       // be autowired to grab events from the parent:
@@ -440,6 +443,9 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
       // Verify that it gets caught:
       EXPECT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
     }
+
+    // Verify subcontext is gone:
+    EXPECT_TRUE(subCtxtWeak.expired()) << "Subcontext endured outside of its intended scope";
 
     // Verify the reference count on the event receiver
     EXPECT_EQ(1, rcvrCopy.use_count()) << "Detected a leaked reference to an event receiver";

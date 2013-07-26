@@ -31,9 +31,12 @@ set(
   DeferredBase.cpp
   DeferredCreationNotice.h
   DeferredCreationNotice.cpp
+  deferred_ptr.h
   DependentContext.h
   DispatchQueue.h
   DispatchQueue.cpp
+  DispatchThunkEventProxy.h
+  DispatchThunkEventProxy.cpp
   EventDispatcher.h
   EventReceiver.h
   EventReceiver.cpp
@@ -99,6 +102,8 @@ set(
   CurrentContextPusherTest.cpp
   DependentContextTest.h
   DependentContextTest.cpp
+  DtorCorrectnessTest.h
+  DtorCorrectnessTest.cpp
   EnclosedContextTestBase.h
   EnclosedContextTestBase.cpp
   ExceptionFilterTest.h
@@ -119,6 +124,8 @@ set(
   LockReducedCollectionTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
+  ObjectPoolTest.h
+  ObjectPoolTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
   TeardownNotifierTest.h
@@ -129,6 +136,7 @@ set(
   ScopeTest.cpp
   SnoopTest.h
   SnoopTest.cpp
+  TestFixtures/ExitRaceThreaded.h
   TestFixtures/SimpleObject.h
   TestFixtures/SimpleThreaded.h
   TestFixtures/MultiInherit.h
