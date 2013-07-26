@@ -31,13 +31,58 @@ class EventReceiver;
 void FilterFiringException(const EventReceiverProxyBase* pSender, EventReceiver* pRecipient);
 
 /// <summary>
+/// Function pointer relay type
+/// </summary>
+template<class FnPtr>
+class InvokeRelay {};
+
+template<class T>
+class InvokeRelay<Deferred (T::*)()>;
+
+template<class T, class Arg1>
+class InvokeRelay<Deferred (T::*)(Arg1)>;
+
+template<class T>
+class InvokeRelay<void (T::*)()>;
+
+template<class T, class Arg1>
+class InvokeRelay<void (T::*)(Arg1)>;
+
+template<class T, class Arg1, class Arg2>
+class InvokeRelay<void (T::*)(Arg1, Arg2)>;
+
+template<class T, class Arg1, class Arg2, class Arg3>
+class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3)>;
+
+template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4)>;
+
+template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5)>;
+
+/// <summary>
 /// Used to identify event managers
 /// </summary>
 class EventReceiverProxyBase {
 public:
   virtual ~EventReceiverProxyBase(void);
 
+protected:
+  // Reader-writer lock:
+  boost::shared_mutex m_rwLock;
+
+  // Just the DispatchQueue listeners:
+  typedef std::unordered_set<DispatchQueue*> t_stType;
+  t_stType m_dispatch;
+
+  // Collection of all transient pools:
+  typedef LockReducedCollection<std::shared_ptr<TransientPoolBase>, SharedPtrHash<TransientPoolBase>> t_transientSet;
+  t_transientSet m_stTransient;
+
 public:
+  // Accessor methods:
+  const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const {return m_dispatch;}
+
   virtual bool HasListeners(void) const = 0;
 
   /// <summary>
@@ -57,28 +102,17 @@ class EventReceiverProxy:
   public EventReceiverProxyBase
 {
 public:
-  virtual ~EventReceiverProxy(void) {}
-
-protected:
   static_assert(
     std::is_base_of<EventReceiver, T>::value,
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
 
-  // Reader-writer lock:
-  boost::shared_mutex m_rwLock;
+  virtual ~EventReceiverProxy(void) {}
 
+protected:
   // Collection of all known listeners:
   typedef LockReducedCollection<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
   t_listenerSet m_st;
-
-  // Just the DispatchQueue listeners:
-  typedef std::unordered_set<DispatchQueue*> t_stType;
-  t_stType m_dispatch;
-
-  // Collection of all transient pools:
-  typedef LockReducedCollection<std::shared_ptr<TransientPoolBase>, SharedPtrHash<TransientPoolBase>> t_transientSet;
-  t_transientSet m_stTransient;
 
 public:
   /// <summary>
@@ -205,152 +239,197 @@ public:
   }
 
 public:
-  // Two-parenthetical invocations
-  std::function<void ()> Fire(void (T::*fnPtr)()) const {
-    return
-      [this, fnPtr] () {
-        this->FireCurried(
-          [=] (T& obj) {
-            (obj.*fnPtr)();
-          }
-        );
-      };
-  }
-
-  template<class Arg1>
-  std::function<void (const Arg1&)> Fire(void (T::*fnPtr)(Arg1)) const {
-    return
-      [this, fnPtr] (const Arg1& arg1) {
-        auto fnPtrCpy = fnPtr;
-        auto arg1Ptr = &arg1;
-        this->FireCurried(
-          [fnPtrCpy, arg1Ptr] (T& obj) {
-            (obj.*fnPtrCpy)(*arg1Ptr);
-          }
-        );
-      };
-  }
-
-  template<class Arg1, class Arg2>
-  std::function<void (const Arg1&, const Arg2&)> Fire(void (T::*fnPtr)(Arg1, Arg2)) const {
-    return
-      [this, fnPtr] (const Arg1& arg1, const Arg2& arg2) {
-        auto fnPtrCpy = fnPtr;
-        auto arg1Ptr = &arg1;
-        auto arg2Ptr = &arg2;
-        this->FireCurried(
-          [fnPtrCpy, arg1Ptr, arg2Ptr] (T& obj) {
-            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr);
-          }
-        );
-      };
-  }
-
-  template<class Arg1, class Arg2, class Arg3>
-  std::function<void (const Arg1&, const Arg2&, const Arg3&)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3)) const {
-    return
-      [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3) {
-        auto fnPtrCpy = fnPtr;
-        auto arg1Ptr = &arg1;
-        auto arg2Ptr = &arg2;
-        auto arg3Ptr = &arg3;
-        this->FireCurried(
-          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr] (T& obj) {
-            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr);
-          }
-        );
-      };
-  }
-
-  template<class Arg1, class Arg2, class Arg3, class Arg4>
-  std::function<void (const Arg1&, const Arg2&, const Arg3&, const Arg4&)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)) const {
-    return
-      [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) {
-        auto fnPtrCpy = fnPtr;
-        auto arg1Ptr = &arg1;
-        auto arg2Ptr = &arg2;
-        auto arg3Ptr = &arg3;
-        auto arg4Ptr = &arg4;
-        this->FireCurried(
-          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr, arg4Ptr] (T& obj) {
-            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr, *arg4Ptr);
-          }
-        );
-      };
-  }
-
-  template<class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-  std::function<void (const Arg1&, const Arg2&, const Arg3&, const Arg4&, const Arg5&)> Fire(void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)) const {
-    return
-      [this, fnPtr] (Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) {
-        auto fnPtrCpy = fnPtr;
-        auto arg1Ptr = &arg1;
-        auto arg2Ptr = &arg2;
-        auto arg3Ptr = &arg3;
-        auto arg4Ptr = &arg4;
-        auto arg5Ptr = &arg5;
-        this->FireCurried(
-          [fnPtrCpy, arg1Ptr, arg2Ptr, arg3Ptr, arg4Ptr, arg5Ptr] (T& obj) {
-            (obj.*fnPtrCpy)(*arg1Ptr, *arg2Ptr, *arg3Ptr, *arg4Ptr, *arg5Ptr);
-          }
-        );
-      };
-  }
-
   // Two-parenthetical deferred invocations:
-  std::function<void ()> Defer(Deferred (T::*fnPtr)()) const {
-    return
-      [this, fnPtr] () {
-        auto f = fnPtr;
-        for(auto q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
-          auto* pCur = *q;
-          if(!pCur->CanAccept())
-            continue;
+  template<class FnPtr>
+  auto Invoke(FnPtr fnPtr) -> InvokeRelay<decltype(fnPtr)> {
+    return InvokeRelay<decltype(fnPtr)>(*this, fnPtr);
+  }
+};
 
-          typedef T targetType;
 
-          // Straight dispatch queue insertion:
-          pCur->AttachProxyRoutine([f] (EventReceiver& obj) {
-            // Now we perform the cast:
-            targetType* pObj = dynamic_cast<targetType*>(&obj);
-
-            (pObj->*f)();
-          });
-        }
-      };
+template<class T>
+class InvokeRelay<Deferred (T::*)()> {
+public:
+  InvokeRelay(const EventReceiverProxyBase& erp, Deferred (T::*fnPtr)()):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
   }
 
-  template<class Arg1>
-  std::function<void (const typename std::decay<Arg1>::type&)> Defer(Deferred (T::*fnPtr)(Arg1)) const {
-    // Converted args:
-    typedef typename std::decay<Arg1>::type tArg1;
+private:
+  const EventReceiverProxyBase& erp;
+  Deferred (T::*fnPtr)();
 
-    return
-      [this, fnPtr] (const tArg1& arg1) {
-        auto f = fnPtr;
-        for(EventReceiverProxy<T>::t_stType::const_iterator q = m_dispatch.begin(); q != m_dispatch.end(); q++) {
-          auto* pCur = *q;
-          if(!pCur->CanAccept())
-            continue;
+public:
+  void operator()(void) const {
+    const auto& dq = erp.GetDispatchQueue();
+    for(auto q = dq.begin(); q != dq.end(); q++) {
+      auto* pCur = *q;
+      if(!pCur->CanAccept())
+        continue;
 
-          typedef T targetType;
+      typedef T targetType;
 
-          // Force off the const modifier so we can copy into the lambda just once
-          tArg1& arg1Forced = (tArg1&)arg1;
+      // Straight dispatch queue insertion:
+      auto f = fnPtr;
+      pCur->AttachProxyRoutine([f] (EventReceiver& obj) {
+        // Now we perform the cast:
+        targetType* pObj = dynamic_cast<targetType*>(&obj);
 
-          // Pass the copy into the lambda:
-          pCur->AttachProxyRoutine(
-            [f, arg1Forced] (EventReceiver& obj) mutable {
-              // Now we perform the cast:
-              targetType* pObj = dynamic_cast<targetType*>(&obj);
+        (pObj->*f)();
+      });
+    }
+  }
+};
 
-              (pObj->*f)(
-                std::move(arg1Forced)
-              );
-            }
-          );
+template<class T, class Arg1>
+class InvokeRelay<Deferred (T::*)(Arg1)> {
+public:
+  typedef typename std::decay<Arg1>::type tArg1;
+
+  InvokeRelay(const EventReceiverProxyBase& erp, Deferred (T::*fnPtr)(Arg1)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  const EventReceiverProxyBase& erp;
+  Deferred (T::*fnPtr)(Arg1);
+
+public:
+  void operator()(const tArg1& arg1) const {
+    const auto& dq = erp.GetDispatchQueue();
+    for(auto q = dq.begin(); q != dq.end(); q++) {
+      auto* pCur = *q;
+      if(!pCur->CanAccept())
+        continue;
+
+      // Pass the copy into the lambda:
+      auto f = fnPtr;
+      pCur->AttachProxyRoutine(
+        [f, arg1] (EventReceiver& obj) {
+          // Now we perform the cast:
+          T* pObj = dynamic_cast<T*>(&obj);
+
+          (pObj->*f)(std::move(arg1));
         }
-      };
+      );
+    }
+  }
+};
+
+template<class T>
+class InvokeRelay<void (T::*)()> {
+public:
+  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(void)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  EventReceiverProxy<T>& erp;
+  void (T::*fnPtr)();
+
+public:
+  void operator()() const {
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)();});
+  }
+};
+
+template<class T, class Arg1>
+class InvokeRelay<void (T::*)(Arg1)> {
+public:
+  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  EventReceiverProxy<T>& erp;
+  void (T::*fnPtr)(Arg1);
+
+public:
+  void operator()(Arg1 arg1) const {
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1);});
+  }
+};
+
+template<class T, class Arg1, class Arg2>
+class InvokeRelay<void (T::*)(Arg1, Arg2)> {
+public:
+  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  EventReceiverProxy<T>& erp;
+  void (T::*fnPtr)(Arg1, Arg2);
+
+public:
+  void operator()(Arg1 arg1, Arg2 arg2) const {
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2);});
+  }
+};
+
+template<class T, class Arg1, class Arg2, class Arg3>
+class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3)> {
+public:
+  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  EventReceiverProxy<T>& erp;
+  void (T::*fnPtr)(Arg1, Arg2, Arg3);
+
+public:
+  void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3) const {
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3);});
+  }
+};
+
+template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
+class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4)> {
+public:
+  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  EventReceiverProxy<T>& erp;
+  void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4);
+
+public:
+  void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) const {
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3, arg4);});
+  }
+};
+
+template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
+class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5)> {
+public:
+  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)):
+    erp(erp),
+    fnPtr(fnPtr)
+  {
+  }
+
+private:
+  EventReceiverProxy<T>& erp;
+  void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5);
+
+public:
+  void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) const {
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3, arg4, arg5);});
   }
 };
 

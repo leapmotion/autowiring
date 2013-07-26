@@ -41,7 +41,25 @@ public:
   // Accessor methods:
   const EventReceiver& GetWitness(void) const override {return m_witness;}
 
+  /// <summary>
+  /// Evicts all members from this pool
+  /// </summary>
+  /// <remarks>
+  /// The only effect of this method is that it will prevent instances that still exist from
+  /// getting any deferred or fired events via this pool.  Because the pool only retains weak
+  /// pointers to the instances it manages, clearing the pool is guaranteed not to directly
+  /// result in the destruction of any entities.
+  /// </remarks>
+  void Clear(void) {
+    boost::lock_guard<boost::mutex> lk(m_transientLock);
+    m_transient.clear();
+  }
+
   virtual bool Add(std::shared_ptr<TransientContextMember> pMember) override {
+    // Trivial return check:
+    if(this->m_stop)
+      throw_rethrowable std::runtime_error("Cannot add an element to a terminated transient pool");
+
     auto casted = std::dynamic_pointer_cast<T, TransientContextMember>(pMember);
     if(!casted)
       return false;
@@ -70,7 +88,7 @@ public:
     }
   }
 
-  virtual void AttachProxyRoutine(const std::function<void (EventReceiver&)>& eventProxy) override {
+  virtual void AttachProxyRoutine(std::function<void (EventReceiver&)>&& eventProxy) override {
     // Special handling for our event proxy types:
     DispatchQueue::operator+=([this, eventProxy] () {
       this->PoolInvoke(eventProxy);

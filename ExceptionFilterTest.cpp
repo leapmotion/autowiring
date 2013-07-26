@@ -5,6 +5,15 @@
 #include "ExceptionFilter.h"
 #include <stdexcept>
 #include <sstream>
+#include <iostream>
+
+using namespace std;
+
+string FormatMessage(int value) {
+  std::stringstream sstr;
+  sstr << "custom_exception: " << value;
+  return sstr.str();
+}
 
 class custom_exception:
   public std::exception
@@ -13,21 +22,32 @@ public:
   custom_exception(int value):
     m_value(value)
   {
-    std::stringstream ss;
-    ss << "custom_exception: " << m_value;
-    m_what = ss.str();
-  }
-
-  ~custom_exception() noexcept {
   }
 
   int m_value;
-  std::string m_what;
-
-  virtual const char* what() const noexcept {
-    return m_what.c_str();
-  }
 };
+
+/// <summary>
+/// Exception type which can track its own destruction
+/// </summary>
+class tracking_exception:
+  public std::exception
+{
+public:
+  tracking_exception(int) {
+    s_count++;
+  }
+  tracking_exception(const tracking_exception& rhs) {
+    s_count++;
+  }
+  NOEXCEPT(~tracking_exception(void)) {
+    s_count--;
+  }
+
+  static size_t s_count;
+};
+
+size_t tracking_exception::s_count = 0;
 
 class ThrowingListener:
   public virtual EventReceiver
@@ -36,6 +56,7 @@ public:
   virtual void DoThrow(void) = 0;
 };
 
+template<class Ex>
 class ThrowsWhenRun:
   public CoreThread
 {
@@ -44,8 +65,13 @@ public:
     Ready();
   }
 
+  // This convoluted syntax is required to evade warnings on Mac
+  decltype(throw_rethrowable Ex(100)) MakeException() {
+    return throw_rethrowable Ex(100);
+  }
+
   void Run(void) override {
-    throw_rethrowable custom_exception(100);
+    MakeException();
   }
 };
 
@@ -79,6 +105,7 @@ public:
     m_hit = true;
     try {
       rethrower();
+    } catch(tracking_exception&) {
     } catch(custom_exception& custom) {
       EXPECT_EQ(100, custom.m_value) << "A filtered custom exception did not have the expected member field value";
       m_specific = true;
@@ -100,6 +127,21 @@ public:
   }
 };
 
+TEST_F(ExceptionFilterTest, ExceptionDestruction) {
+  // Add the exception filter type to the context first
+  AutoRequired<GenericFilter> filter;
+
+  // Now add something that will throw when it's run:
+  AutoRequired<ThrowsWhenRun<tracking_exception>> thrower;
+
+  // Run:
+  m_create->InitiateCoreThreads();
+  thrower->Wait();
+
+  // Verify that the exception was destroyed the correct number of times:
+  EXPECT_EQ(0UL, tracking_exception::s_count) << "Exception was not destroyed the correct number of times";
+}
+
 TEST_F(ExceptionFilterTest, CheckThrowThrow) {
   class example {
   public:
@@ -116,7 +158,7 @@ TEST_F(ExceptionFilterTest, ThreadThrowsCheck) {
   AutoRequired<GenericFilter> filter;
 
   // Now add something that will throw when it's run:
-  AutoRequired<ThrowsWhenRun> thrower;
+  AutoRequired<ThrowsWhenRun<custom_exception>> thrower;
 
   // Wait for the thrower to terminate, should be pretty fast:
   m_create->InitiateCoreThreads();
@@ -141,4 +183,23 @@ TEST_F(ExceptionFilterTest, FireThrowsCheck) {
 
   // Verify that the exception was filtered properly by the generic filter:
   EXPECT_TRUE(filter->m_fireSpecific) << "Filter was not invoked on a Fired exception";
+}
+
+TEST_F(ExceptionFilterTest, EnclosedThrowCheck) {
+  // Create our listener:
+  AutoRequired<GenericFilter> filter;
+
+  // Now the subcontext:
+  AutoCreateContext subCtxt;
+  CurrentContextPusher pshr(subCtxt);
+
+  // Create and start:
+  AutoRequired<ThrowsWhenRun<custom_exception>> runThrower;
+  subCtxt->InitiateCoreThreads();
+
+  // Wait for the exception to get thrown:
+  subCtxt->Wait();
+
+  // Verify that the filter caught the exception:
+  EXPECT_TRUE(filter->m_hit) << "Filter operating in a superior context did not catch an exception thrown from a child context";
 }

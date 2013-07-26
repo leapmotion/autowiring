@@ -3,6 +3,7 @@
 #include "ContextMapTest.h"
 #include "Autowired.h"
 #include "ContextMap.h"
+#include "TestFixtures/ExitRaceThreaded.h"
 #include "TestFixtures/SimpleThreaded.h"
 #include <string>
 
@@ -80,6 +81,53 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     std::shared_ptr<CoreContext> notFound = mp.Find("context1");
     EXPECT_FALSE(notFound) << "Context was not properly evicted from the map";
   }
+}
+
+TEST_F(ContextMapTest, OutOfOrderDeletionTest) {
+  try {
+    AutoCreateContext controlled;
+    ContextMap<size_t> mp;
+
+    // Add the current context to the map:
+    mp.Add(1, controlled);
+
+    // Map is destroyed first, then the enclosed context--no exceptions should be thrown
+  } catch(...) {
+    FAIL() << "Exception thrown while attempting an out-of-order teardown";
+  }
+}
+
+TEST_F(ContextMapTest, VerifyWithThreadsPathological) {
+  ContextMap<size_t> mp;
+  
+  // Context collection and exit race threads:
+  vector<std::shared_ptr<CoreContext>> contexts;
+
+  // Exit race controller:
+  AutoRequired<ExitRaceSignal> signal;
+
+  // Create a number of dependent contexts:
+  for(size_t i = 0; i < 100; i++) {
+    AutoCreateContext context;
+    contexts.push_back(context);
+
+    // Store a shared pointer
+    mp.Add(i, context);
+
+    // Start the context
+    context->InitiateCoreThreads();
+  }
+
+  // Set the signal:
+  signal->Signal();
+
+  // Verify that the map empties once our zero-count is hit:
+  for(size_t i = 0; i < contexts.size(); i++)
+    contexts[i]->Wait();
+  
+  // Clear the context collection:
+  contexts.clear();
+  EXPECT_EQ(0UL, mp.size()) << "Context map did not empty as expected";
 }
 
 TEST_F(ContextMapTest, AdjacentCleanupTest) {

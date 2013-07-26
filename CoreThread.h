@@ -167,6 +167,16 @@ public:
     );
   }
 
+  template<class Duration>
+  bool WaitFor(Duration duration) {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    return m_stateCondition.wait_for(
+      lk,
+      duration,
+      [this] () {return this->m_completed;}
+    );
+  }
+
   /// <summary>
   /// Event which may be used to perform custom handling when the thread is told to stop
   /// </summary>
@@ -194,7 +204,13 @@ public:
       RejectDispatchDelivery();
 
       // Pend a call which will invoke Abort once the dispatch queue is done:
-      *this += [this] {this->Abort();};
+      DispatchQueue::Pend([this] {
+        this->Abort();
+        
+        // Notify callers of our new state:
+        boost::lock_guard<boost::mutex> lk(this->m_lock);
+        this->m_stateCondition.notify_all();
+      });
     } else {
       // Abort the dispatch queue so anyone waiting will wake up
       DispatchQueue::Abort();
