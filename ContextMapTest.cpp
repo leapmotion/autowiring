@@ -85,6 +85,34 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
   }
 }
 
+TEST_F(ContextMapTest, ConcurrentDestructionTestPathological) {
+  vector<weak_ptr<SimpleThreaded>> weakPointers;
+
+  for(size_t i = 0; i < 100; i++) {
+    // Create our map and a context:
+    ContextMap<string> mp;
+    AutoCreateContext context;
+
+    // Insert into the map:
+    mp.Add("pathological_destruction", context);
+
+    // Add a thread and kick off the context:
+    weakPointers.push_back(context->Add<SimpleThreaded>());
+    context->InitiateCoreThreads();
+
+    // Immediately tear the context down:
+    context->SignalShutdown();
+  }
+
+  // Wait on anything not signalled:
+  for(size_t i = 0; i < weakPointers.size(); i++) {
+    auto cur = weakPointers[i].lock();
+    if(!cur)
+      continue;
+    cur->Wait();
+  }
+}
+
 TEST_F(ContextMapTest, OutOfOrderDeletionTest) {
   try {
     AutoCreateContext controlled;
