@@ -33,6 +33,12 @@ public:
     );
   }
 
+  ~ContextMap(void) {
+    // Ensure we guard our own teardown pathway:
+    (boost::lock_guard<boost::mutex>)m_lk,
+    m_tracker.reset();
+  }
+
 private:
   typedef std::unordered_map<Key, std::weak_ptr<CoreContext>> t_mpType;
   boost::mutex m_lk;
@@ -93,7 +99,7 @@ public:
       if(q == m_contexts.end())
         return;
 
-      // Try to lock--potentially, this key has been reclaimed by a different contesxt, and in
+      // Try to lock--potentially, this key has been reclaimed by a different context, and in
       // that case, the new context will gain the responsibility of tearing down this key when
       // the time comes.
       auto sp = q->second.lock();
