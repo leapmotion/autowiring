@@ -107,9 +107,8 @@ TEST_F(ContextMapTest, ConcurrentDestructionTestPathological) {
   // Wait on anything not signalled:
   for(size_t i = 0; i < weakPointers.size(); i++) {
     auto cur = weakPointers[i].lock();
-    if(!cur)
-      continue;
-    cur->Wait();
+    if(cur)
+      cur->Wait();
   }
 }
 
