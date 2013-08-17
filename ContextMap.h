@@ -25,21 +25,34 @@ template<class Key>
 class ContextMap
 {
 public:
+  struct tracker:
+    public boost::mutex
+  {
+    tracker(void):
+      destroyed(false)
+    {}
+    bool destroyed;
+  };
+
   ContextMap(void):
-    m_tracker(new boost::mutex),
+    m_tracker(new tracker),
     m_lk(*m_tracker)
-  {}
+  {
+  }
 
   ~ContextMap(void) {
     // Teardown pathway assurance:
-    (boost::lock_guard<boost::mutex>)*m_tracker,
+    (boost::lock_guard<boost::mutex>)m_lk,
+    (m_tracker->destroyed = true);
+
+    // Done, we can release our copy of the shared pointer and end here
     m_tracker.reset();
   }
 
 private:
   // Tracker lock, used to protect against accidental destructor-contending access while still allowing
   // the parent ContextMap structure to be stack-allocated
-  std::shared_ptr<boost::mutex> m_tracker;
+  std::shared_ptr<tracker> m_tracker;
 
   typedef std::unordered_map<Key, std::weak_ptr<CoreContext>> t_mpType;
   boost::mutex& m_lk;
@@ -75,7 +88,7 @@ public:
 
     rhs = context;
 
-    std::weak_ptr<boost::mutex> tracker(m_tracker);
+    std::weak_ptr<tracker> tracker(m_tracker);
     context->AddTeardownListener([this, key, tracker] {
       // Prevent the map from being deleted while we process this teardown notice:
       auto locked = tracker.lock();
@@ -84,6 +97,9 @@ public:
         return;
 
       boost::lock_guard<boost::mutex> lk(*locked);
+      if(locked->destroyed)
+        // Map passed through teardown pathway while we were trying to lock it
+        return;
 
       // We only remove the key if it's expired.  Under normal circumstances, the key will
       // be expired by the time we get here, but there is a small chance that the same key
