@@ -173,13 +173,19 @@ TEST_F(ContextMapTest, VerifySimpleEnumeration) {
   mp.Add("2", ctxt2);
   mp.Add("3", ctxt3);
 
+  std::set<std::string> found;
+
   size_t count = 0;
   mp.Enumerate(
-    [&count] (const string&, std::shared_ptr<CoreContext>& ctxt) {
+    [&count, &found] (const string& name, std::shared_ptr<CoreContext>& ctxt) {
       count++;
+      found.insert(name);
     }
   );
 
   EXPECT_EQ(3UL, count) << "Failed to enumerate all expected context pointers";
+  EXPECT_EQ(1UL, found.count("1")) << "Failed to find map element '1'";
+  EXPECT_EQ(1UL, found.count("2")) << "Failed to find map element '2'";
+  EXPECT_EQ(1UL, found.count("3")) << "Failed to find map element '3'";
 }
 
