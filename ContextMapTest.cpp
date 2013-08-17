@@ -59,15 +59,17 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     // Verify that we can still find the context while the thread is alive:
     std::shared_ptr<CoreContext> context = mp.Find("context1");
     ASSERT_TRUE(!!context.get()) << "Map evicted a context before expected";
+    
+    // Relock the weak context, verify that we get back the same pointer:
+    auto relocked = weakContext.lock();
+    EXPECT_EQ(relocked, context) << "Mapped context pointer was not identical to a previously stored context pointer";
 
     // Begin context shutdown
     context->SignalShutdown();
 
     // Signal that the thread can quit:
-    {
-      boost::lock_guard<boost::mutex> lk(threaded->m_condLock);
-      threaded->m_cond.notify_all();
-    }
+    (boost::lock_guard<boost::mutex>)threaded->m_condLock;
+    threaded->m_cond.notify_all();
 
     // Wait for the context to exit:
     context->Wait();
