@@ -289,19 +289,17 @@ public:
   template<class T>
   std::shared_ptr<EventReceiverProxy<T>> GetEventRecieverProxy(void) {
     std::shared_ptr<EventReceiverProxy<T>> retVal;
-    {
-      boost::lock_guard<boost::mutex> lk(m_lock);
-      auto q = m_proxies.find(typeid(T));
-      if(q != m_proxies.end())
-        // No dynamic cast is needed here, we already have independent knowledge of the
-        // destination type because it's the key type of our map
-        return std::static_pointer_cast<EventReceiverProxy<T>, EventReceiverProxyBase>(q->second);
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    auto q = m_proxies.find(typeid(T));
+    if(q != m_proxies.end())
+      // No dynamic cast is needed here, we already have independent knowledge of the
+      // destination type because it's the key type of our map
+      return std::static_pointer_cast<EventReceiverProxy<T>, EventReceiverProxyBase>(q->second);
 
-      // Construct new type:
-      retVal.reset(new EventReceiverProxy<T>);
-      m_proxies[typeid(T)] = retVal;
-    }
-
+    // Construct new type:
+    retVal.reset(new EventReceiverProxy<T>);
+    m_proxies[typeid(T)] = retVal;
+      
     // Attach compatible receivers:
     for(auto q = m_eventReceivers.begin(); q != m_eventReceivers.end(); q++)
       *retVal += *q;
@@ -642,6 +640,7 @@ struct AddPolymorphic:
 public:
   void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
     // Add to our local collection:
+    (boost::lock_guard<boost::mutex>)m_lock,
     m_eventReceivers.insert(pRecvr);
 
     // Scan the list of compatible senders:
@@ -656,6 +655,7 @@ public:
 
   void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
     // Remove from the local collection
+    (boost::lock_guard<boost::mutex>)m_lock,
     m_eventReceivers.erase(pRecvr);
 
     // Notify all compatible senders that we're going away:
