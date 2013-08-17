@@ -20,16 +20,16 @@ TEST_F(ContextMapTest, VerifySimple) {
     ASSERT_EQ(context.use_count(), 1) << "A newly created context's use count isn't what was expected";
 
     // Add and ensure the reference count is unmodified
-    mp.Add("context1", context);
+    mp.Add("context_simple", context);
     ASSERT_EQ(context.use_count(), 1) << "The map altered the context use count";
 
     // We should be able to find this context now:
-    std::shared_ptr<CoreContext> found = mp.Find("context1");
+    std::shared_ptr<CoreContext> found = mp.Find("context_simple");
     EXPECT_TRUE(!!found.get()) << "Failed to find a context that was just inserted into a context map";
   }
 
   // We shouldn't be able to find it now that it's gone out of scope:
-  std::shared_ptr<CoreContext> notFound = mp.Find("context1");
+  std::shared_ptr<CoreContext> notFound = mp.Find("context_simple");
   EXPECT_FALSE(!!notFound.get()) << "Context was not evicted as expected when it went out of scope";
 }
 
@@ -43,7 +43,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
 
     // Obtain a weak pointer of our own, and add to the context:
     weakContext = context;
-    mp.Add("context1", context);
+    mp.Add("context_withthreads", context);
 
     // Add a thread to hold the context open for awhile:
     threaded = context->Add<SimpleThreaded>();
@@ -57,17 +57,19 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
 
   {
     // Verify that we can still find the context while the thread is alive:
-    std::shared_ptr<CoreContext> context = mp.Find("context1");
+    std::shared_ptr<CoreContext> context = mp.Find("context_withthreads");
     ASSERT_TRUE(!!context.get()) << "Map evicted a context before expected";
+    
+    // Relock the weak context, verify that we get back the same pointer:
+    auto relocked = weakContext.lock();
+    EXPECT_EQ(relocked, context) << "Mapped context pointer was not identical to a previously stored context pointer";
 
     // Begin context shutdown
     context->SignalShutdown();
 
     // Signal that the thread can quit:
-    {
-      boost::lock_guard<boost::mutex> lk(threaded->m_condLock);
-      threaded->m_cond.notify_all();
-    }
+    (boost::lock_guard<boost::mutex>)threaded->m_condLock;
+    threaded->m_cond.notify_all();
 
     // Wait for the context to exit:
     context->Wait();
@@ -78,8 +80,35 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
 
   {
     // Verify that we can still find the context while the thread is alive:
-    std::shared_ptr<CoreContext> notFound = mp.Find("context1");
+    std::shared_ptr<CoreContext> notFound = mp.Find("context_withthreads");
     EXPECT_FALSE(notFound) << "Context was not properly evicted from the map";
+  }
+}
+
+TEST_F(ContextMapTest, ConcurrentDestructionTestPathological) {
+  vector<weak_ptr<SimpleThreaded>> weakPointers;
+
+  for(size_t i = 0; i < 100; i++) {
+    // Create our map and a context:
+    ContextMap<string> mp;
+    AutoCreateContext context;
+
+    // Insert into the map:
+    mp.Add("pathological_destruction", context);
+
+    // Add a thread and kick off the context:
+    weakPointers.push_back(context->Add<SimpleThreaded>());
+    context->InitiateCoreThreads();
+
+    // Immediately tear the context down:
+    context->SignalShutdown();
+  }
+
+  // Wait on anything not signalled:
+  for(size_t i = 0; i < weakPointers.size(); i++) {
+    auto cur = weakPointers[i].lock();
+    if(cur)
+      cur->Wait();
   }
 }
 
@@ -167,17 +196,23 @@ TEST_F(ContextMapTest, VerifySimpleEnumeration) {
   AutoCreateContext ctxt2;
   AutoCreateContext ctxt3;
 
-  mp.Add("1", ctxt1);
-  mp.Add("2", ctxt2);
-  mp.Add("3", ctxt3);
+  mp.Add("context_se_1", ctxt1);
+  mp.Add("context_se_2", ctxt2);
+  mp.Add("context_se_3", ctxt3);
+
+  std::set<std::string> found;
 
   size_t count = 0;
   mp.Enumerate(
-    [&count] (const string&, std::shared_ptr<CoreContext>& ctxt) {
+    [&count, &found] (const string& name, std::shared_ptr<CoreContext>& ctxt) {
       count++;
+      found.insert(name);
     }
   );
 
   EXPECT_EQ(3UL, count) << "Failed to enumerate all expected context pointers";
+  EXPECT_EQ(1UL, found.count("context_se_1")) << "Failed to find map element '1'";
+  EXPECT_EQ(1UL, found.count("context_se_2")) << "Failed to find map element '2'";
+  EXPECT_EQ(1UL, found.count("context_se_3")) << "Failed to find map element '3'";
 }
 
