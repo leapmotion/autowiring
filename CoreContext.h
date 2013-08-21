@@ -56,6 +56,24 @@ class Autowired;
 template<class T>
 class AutowiredLocal;
 
+template<class Fn>
+struct AtExit {
+  AtExit(Fn&& fn):
+    fn(fn)
+  {}
+
+  ~AtExit(void) {
+    fn();
+  }
+
+  Fn fn;
+};
+
+template<class Fn>
+AtExit<Fn> MakeAtExit(Fn&& fn) {
+  return AtExit<Fn>(std::forward<Fn>(fn));
+}
+
 /// <summary>
 /// Convenient access to the currently active context stored in the global context
 /// </summary>
