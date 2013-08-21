@@ -172,7 +172,7 @@ void CoreContext::SignalShutdown(void) {
     std::static_pointer_cast<CoreContext, CoreContext>(m_pParent)->SignalShutdown();
 }
 
-void CoreContext::SignalTerminate(void) {
+void CoreContext::SignalTerminate(bool wait) {
   // We're stopping now.
   m_shouldStop = true;
 
@@ -209,7 +209,7 @@ void CoreContext::SignalTerminate(void) {
 
     // Now that we have a locked-down, immutable series, begin termination signalling:
     for(size_t i = childrenInterleave.size(); i--; )
-      childrenInterleave[i]->SignalTerminate();
+      childrenInterleave[i]->SignalTerminate(wait);
   }
 
   // Shut myself down.
@@ -217,6 +217,10 @@ void CoreContext::SignalTerminate(void) {
 
   // I shouldn't be referenced anywhere now.
   ASSERT(m_refCount == 0);
+
+  // Short-return if required:
+  if(!wait)
+    return;
 
   // Wait for the treads to finish before returning.
   for (t_threadList::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
