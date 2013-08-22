@@ -35,6 +35,9 @@ public:
 
 private:
   std::shared_ptr<CoreContext> m_prior;
+
+public:
+  CoreContext* operator->(void) {return m_prior.get();}
 };
 
 #endif
