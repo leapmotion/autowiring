@@ -204,9 +204,10 @@ TEST_F(ContextMapTest, VerifySimpleEnumeration) {
 
   size_t count = 0;
   mp.Enumerate(
-    [&count, &found] (const string& name, std::shared_ptr<CoreContext>& ctxt) {
+    [&count, &found] (const string& name, std::shared_ptr<CoreContext>& ctxt) -> bool {
       count++;
       found.insert(name);
+      return true;
     }
   );
 
