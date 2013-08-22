@@ -28,22 +28,36 @@ class ContextCreator:
 protected:
   // Collection of mapped contexts:
   typedef std::unordered_map<Key, std::weak_ptr<CoreContext>> t_mpType;
-  t_mpType m_mp;
+  t_mpType m_contexts;
 
   // The type that will be used with destruction notification callbacks
   typedef Key t_callbackHandle;
 
 public:
   // Accessor methods:
-  size_t GetSize(void) const {return m_mp.size();}
+  size_t GetSize(void) const {return m_contexts.size();}
+  
+  /// <summary>
+  /// Enumeration routine, similar to the ContextMap enumerator
+  /// </summary>
+  template<class Fn>
+  void Enumerate(Fn&& fn) {
+    boost::lock_guard<boost::mutex> lk(m_contextLock);
+    for(auto q = m_contexts.begin(); q != m_contexts.end(); q++) {
+      auto ctxt = q->second.lock();
+      if(ctxt)
+        if(!fn(q->first, ctxt))
+          return;
+    }
+  }
 
   /// <summary>
   /// Attempts to find a context with the specified key
   /// </summary>
   std::shared_ptr<CoreContext> FindContext(const Key& key) {
     boost::lock_guard<boost::mutex> lk(m_contextLock);
-    typename t_mpType::iterator q = m_mp.find(key);
-    if(q == m_mp.end())
+    typename t_mpType::iterator q = m_contexts.find(key);
+    if(q == m_contexts.end())
       return std::shared_ptr<CoreContext>();
     return q->second;
   }
@@ -56,7 +70,7 @@ public:
     boost::lock_guard<boost::mutex> lk(m_contextLock);
 
     // Obtain and lock a weak pointer, if possible:
-    auto& childWeak = m_mp[key];
+    auto& childWeak = m_contexts[key];
     auto child = childWeak.lock();
 
     // Try to find a context already existing with the given key:
@@ -96,7 +110,7 @@ public:
   /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
   /// </remarks>
   void Clear(bool wait) {
-    ContextCreatorBase::Clear(wait, m_mp, [] (typename t_mpType::iterator q) {return q->second.lock();});
+    ContextCreatorBase::Clear(wait, m_contexts, [] (typename t_mpType::iterator q) {return q->second.lock();});
   }
 
   /// <summary>
@@ -105,12 +119,12 @@ public:
   /// <returns>The removed context, if one existed, otherwise nullptr</returns>
   std::shared_ptr<CoreContext> RemoveContext(const Key& key) {
     boost::lock_guard<boost::mutex> lk(m_contextLock);
-    auto q = m_mp.find(key);
-    if(q == m_mp.end())
+    auto q = m_contexts.find(key);
+    if(q == m_contexts.end())
       return std::shared_ptr<CoreContext>();
       
     auto retVal = q->second.lock();
-    m_mp.erase(q);
+    m_contexts.erase(q);
     return retVal;
   }
 
@@ -126,7 +140,7 @@ public:
   /// </remarks>
   void RemoveContext(typename t_mpType::iterator q) {
     (boost::lock_guard<boost::mutex>)m_contextLock,
-    m_mp.erase(q);
+    m_contexts.erase(q);
   }
 
   /// <summary>
@@ -142,7 +156,7 @@ public:
   /// </remarks>
   virtual void NotifyContextDestroyed(t_callbackHandle key, CoreContext* pContext) {
     (boost::lock_guard<boost::mutex>)m_contextLock,
-    m_mp.erase(key);
+    m_contexts.erase(key);
   }
 };
 
