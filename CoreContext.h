@@ -39,6 +39,7 @@ class BoltBase;
 class ContextMember;
 class CoreContext;
 class CoreThread;
+class EventReceiver;
 class GlobalCoreContext;
 class OutstandingCountTracker;
 
@@ -48,6 +49,9 @@ namespace CoreContextHelpers {
 
   template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
   struct AddPolymorphic;
+  
+  template<class T, bool isContextMember = std::is_base_of<ContextMember, T>::value>
+  struct IsMember;
 }
 
 template<class T>
@@ -296,6 +300,32 @@ public:
   size_t GetMemberCount(void) const {return m_byType.size();}
   bool ShouldStop(void) const {return m_shouldStop;}
 
+  /// <returns>
+  /// True if this context is an ancestor of the specified context
+  /// </returns>
+  /// <remarks>
+  /// This method will also return true if this == child
+  /// </remarks>
+  bool IsAncestorOf(const CoreContext* child) const {
+    for(auto cur = child; cur; cur = cur->GetParentContext().get())
+      if(cur == this)
+        return true;
+    return false;
+  }
+
+  /// <summary>
+  /// Determines whether the passed type is a member of this context, or any ancestor context
+  /// </summary>
+  template<class T>
+  bool IsMember(T* ptr) const {
+    return !!((CoreContextHelpers::IsMember<T>&)*this)(ptr);
+  }
+  
+  template<class T>
+  bool IsMember(const std::shared_ptr<T>& ptr) const {
+    return !!((CoreContextHelpers::IsMember<T>&)*this)(ptr.get());
+  }
+
   /// <summary>
   /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
   /// </summary>
@@ -477,6 +507,7 @@ public:
   /// Obtains a pointer to the parent context
   /// </summary>
   std::shared_ptr<CoreContext>& GetParentContext(void) {return m_pParent;}
+  const std::shared_ptr<CoreContext>& GetParentContext(void) const {return m_pParent;}
 
   /// <summary>
   /// Filters std::current_exception using any registered exception filters, or rethrows.
@@ -509,7 +540,15 @@ public:
   /// The snooper will not receive any events broadcast from parent contexts.  ONLY events
   /// broadcast in THIS context will be forwarded to the snooper.
   /// </remarks>
-  void Snoop(const std::shared_ptr<EventReceiver>& pSnooper);
+  template<class T>
+  void Snoop(const std::shared_ptr<T>& pSnooper) {
+    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot snoop on a type which is not an event receiver");
+
+    // Pass control to the event adder helper:
+    ((CoreContextHelpers::AddPolymorphic<T>&)*this).AddEventReceiver(
+      std::static_pointer_cast<EventReceiver, T>(pSnooper)
+    );
+  }
 
   /// <summary>
   /// Unregisters an event receiver previously registered to receive snooped events
@@ -517,7 +556,15 @@ public:
   /// <remarks>
   /// It is an error to call this method without a prior call to Snoop
   /// </remarks>
-  void Unsnoop(const std::shared_ptr<EventReceiver>& pSnooper);
+  template<class T>
+  void Unsnoop(const std::shared_ptr<T>& pSnooper) {
+    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot unsnoop on a type which is not an event receiver");
+
+    // Pass control to the event remover helper:
+    ((CoreContextHelpers::AddPolymorphic<EventReceiver>&)*this).RemoveEventReceiver(
+      std::static_pointer_cast<EventReceiver, T>(pSnooper)
+    );
+  }
 
   /// <summary>
   /// Overload of Add based on ContextMember
@@ -781,6 +828,30 @@ struct FindByCastInternal<T, false>:
 {
   std::shared_ptr<T> operator()(void) {
     return std::shared_ptr<T>();
+  }
+};
+
+template<class T>
+struct IsMember<T, true>:
+  public CoreContext
+{
+  bool operator()(T* ptr) const {
+    return
+      static_cast<ContextMember*>(ptr)->GetContext().get() == this;
+  }
+};
+
+template<class T>
+struct IsMember<T, false>:
+  public CoreContext
+{
+  bool operator()(T* ptr) const {
+    // If the passed type is a ContextMember, we can query relationship status
+    ContextMember* pMember = dynamic_cast<ContextMember*>(ptr);
+    return
+      pMember ?
+      pMember->GetContext().get() == this :
+      !!m_byType.count(typeid(T));
   }
 };
 
