@@ -39,6 +39,10 @@ CoreContext::~CoreContext(void) {
   for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
     (*q).second->ReleaseRefs();
 
+  // Eliminate all snoopers from our apprehended list of receivers:
+  for(auto q = m_snoopers.begin(); q != m_snoopers.end(); q++)
+    m_eventReceivers.erase(*q);
+
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
   if(m_pParent)
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
