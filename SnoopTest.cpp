@@ -38,17 +38,6 @@ class IgnoredParentMember:
 {
 };
 
-class Disallowed:
-  public ContextMember,
-  public UpBroadcastListener
-{
-};
-
-class DisallowedGeneric:
-  public UpBroadcastListener
-{
-};
-
 TEST_F(SnoopTest, VerifySimpleSnoop) {
   // Create the parent listener:
   AutoRequired<ParentMember> parentMember;
@@ -103,34 +92,6 @@ TEST_F(SnoopTest, VerifyUnsnoop) {
   }
 
   EXPECT_FALSE(parentMember->m_simpleCall) << "ParentMember snooper received an event, even after an Unsnoop call was made";
-}
-
-TEST_F(SnoopTest, DetectDisallowedContextMember) {
-  // Create two child contexts:
-  AutoCreateContext sibling1;
-  AutoCreateContext sibling2;
-
-  // Create a member of the first context, and try to use it to snoop the second context:
-  {
-    CurrentContextPusher pshr(sibling1);
-    AutoRequired<Disallowed> disallow;
-
-    EXPECT_THROW(sibling2->Snoop(disallow), std::runtime_error);
-  }
-}
-
-TEST_F(SnoopTest, DetectDisallowedGeneralType) {
-  // Create two child contexts:
-  AutoCreateContext sibling1;
-  AutoCreateContext sibling2;
-
-  // Create a member again, but this time, use the generic type so we can't use a context membership check
-  {
-    CurrentContextPusher pshr(sibling1);
-    AutoRequired<DisallowedGeneric> disallowGeneric;
-
-    EXPECT_THROW(sibling2->Snoop(disallowGeneric), std::runtime_error);
-  }
 }
 
 TEST_F(SnoopTest, AmbiguousReciept) {
