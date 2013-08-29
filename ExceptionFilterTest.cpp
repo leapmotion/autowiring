@@ -75,12 +75,20 @@ public:
   }
 };
 
+template<int i = 200>
 class ThrowsWhenFired:
   public ThrowingListener
 {
 public:
+  ThrowsWhenFired(void):
+    hit(false)
+  {}
+
+  bool hit;
+
   void DoThrow(void) override {
-    throw_rethrowable custom_exception(200);
+    hit = true;
+    throw_rethrowable custom_exception(i);
   }
 };
 
@@ -175,7 +183,7 @@ TEST_F(ExceptionFilterTest, FireThrowsCheck) {
   AutoRequired<GenericFilter> filter;
 
   // Add a context member which will throw when its event is fired, and a firing class:
-  AutoRequired<ThrowsWhenFired> fireThrower;
+  AutoRequired<ThrowsWhenFired<>> fireThrower;
 
   // Add something to fire the exception:
   AutoFired<ThrowingListener> broadcaster;
@@ -202,4 +210,17 @@ TEST_F(ExceptionFilterTest, EnclosedThrowCheck) {
 
   // Verify that the filter caught the exception:
   EXPECT_TRUE(filter->m_hit) << "Filter operating in a superior context did not catch an exception thrown from a child context";
+}
+
+TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
+  // Create a pair of classes which throw exceptions:
+  AutoRequired<ThrowsWhenFired<200>> v200;
+  AutoRequired<ThrowsWhenFired<201>> v201;
+
+  // Now try to throw:
+  AutoFired<ThrowingListener> tl;
+  tl(&ThrowingListener::DoThrow)();
+
+  // Verify that BOTH are hit:
+  EXPECT_TRUE(v200->hit && v201->hit) << "Expected all receivers of a fired event will be processed, even if some throw exceptions";
 }
