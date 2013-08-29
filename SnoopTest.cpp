@@ -136,6 +136,10 @@ TEST_F(SnoopTest, DetectDisallowedGeneralType) {
 TEST_F(SnoopTest, AmbiguousReciept) {
   AutoRequired<ParentMember> parent;
 
+  // Fire and verify that disallow still receives the event:
+  AutoFired<UpBroadcastListener> ubl;
+  ASSERT_TRUE(ubl.HasListeners()) << "Expected at least one listener--the ParentMember instance";
+
   {
     AutoCreateContext subCtxt;
     subCtxt->Snoop(parent);
@@ -149,9 +153,9 @@ TEST_F(SnoopTest, AmbiguousReciept) {
     parent->m_simpleCall = false;
   }
 
-  // Fire and verify that disallow still receives the event:
-  AutoFired<UpBroadcastListener> ubl;
-  ubl(&UpBroadcastListener::SimpleCall)();
+  // Should still be listeners at this point:
+  ASSERT_TRUE(ubl.HasListeners()) << "Apparently no listeners exist after subcontext destruction";
 
+  ubl(&UpBroadcastListener::SimpleCall)();
   EXPECT_TRUE(parent->m_simpleCall) << "Snooped parent did not receive an event as expected when snooped context was destroyed";
 }
