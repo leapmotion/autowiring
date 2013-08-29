@@ -190,6 +190,9 @@ protected:
   typedef std::unordered_map<std::type_index, std::shared_ptr<EventReceiverProxyBase>> t_proxies;
   t_proxies m_proxies;
 
+  // All known snoopers.  Snoopers will not be removed from parent scopes on destruction.
+  t_rcvrSet m_snoopers;
+
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
 
@@ -544,10 +547,13 @@ public:
   void Snoop(const std::shared_ptr<T>& pSnooper) {
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot snoop on a type which is not an event receiver");
 
+    // Snooping now
+    auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
+    (boost::lock_guard<boost::mutex>)m_lock,
+    m_snoopers.insert(rcvr);
+
     // Pass control to the event adder helper:
-    ((CoreContextHelpers::AddPolymorphic<T>&)*this).AddEventReceiver(
-      std::static_pointer_cast<EventReceiver, T>(pSnooper)
-    );
+    ((CoreContextHelpers::AddPolymorphic<T>&)*this).AddEventReceiver(rcvr);
   }
 
   /// <summary>
@@ -561,9 +567,10 @@ public:
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot unsnoop on a type which is not an event receiver");
 
     // Pass control to the event remover helper:
-    ((CoreContextHelpers::AddPolymorphic<EventReceiver>&)*this).RemoveEventReceiver(
-      std::static_pointer_cast<EventReceiver, T>(pSnooper)
-    );
+    auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
+    (boost::lock_guard<boost::mutex>)m_lock,
+    m_snoopers.erase(rcvr);
+    ((CoreContextHelpers::AddPolymorphic<EventReceiver>&)*this).RemoveEventReceiver(rcvr);
   }
 
   /// <summary>
