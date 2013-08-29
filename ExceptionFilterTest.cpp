@@ -179,6 +179,13 @@ TEST_F(ExceptionFilterTest, ThreadThrowsCheck) {
 }
 
 TEST_F(ExceptionFilterTest, FireThrowsCheck) {
+  // Firing will occur at the parent context scope:
+  AutoFired<ThrowingListener> broadcaster;
+
+  // Create a subcontext
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+
   // Add the generic filter:
   AutoRequired<GenericFilter> filter;
 
@@ -186,11 +193,16 @@ TEST_F(ExceptionFilterTest, FireThrowsCheck) {
   AutoRequired<ThrowsWhenFired<>> fireThrower;
 
   // Add something to fire the exception:
-  AutoFired<ThrowingListener> broadcaster;
-  broadcaster(&ThrowingListener::DoThrow)();
+  EXPECT_NO_THROW(broadcaster(&ThrowingListener::DoThrow)());
 
   // Verify that the exception was filtered properly by the generic filter:
   EXPECT_TRUE(filter->m_fireSpecific) << "Filter was not invoked on a Fired exception";
+
+  // Verify that our context was torn down:
+  EXPECT_TRUE(ctxt->ShouldStop()) << "An unhandled exception from a fire call in a context should have signalled it to stop";
+
+  // Verify that the parent context is intact:
+  EXPECT_FALSE(m_create->ShouldStop()) << "An unhandled exception incorrectly terminated a parent context";
 }
 
 TEST_F(ExceptionFilterTest, EnclosedThrowCheck) {
