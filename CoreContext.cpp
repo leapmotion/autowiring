@@ -395,18 +395,17 @@ void CoreContext::FilterFiringException(const EventReceiverProxyBase* pProxy, Ev
     std::rethrow_exception(std::current_exception());
   };
 
-  bool handled = false;
-  for(auto q = m_filters.begin(); q != m_filters.end(); q++)
-    try {
-      (*q)->Filter(rethrower, pProxy, pRecipient);
-      handled = true;
-    } catch(...) {
-      // Do nothing, filter didn't want to filter this exception
-    }
+  // Filter in order:
+  for(CoreContext* pCur = this; pCur; pCur = pCur->GetParentContext().get())
+    for(auto q = pCur->m_filters.begin(); q != pCur->m_filters.end(); q++)
+      try {
+        (*q)->Filter(rethrower, pProxy, pRecipient);
+      } catch(...) {
+        // Do nothing, filter didn't want to filter this exception
+      }
 
-  // Rethrow if unhandled:
-  if(!handled)
-    rethrower();
+  // Shut down our context:
+  SignalShutdown();
 }
 
 void CoreContext::AddContextMember(SharedPtrWrapBase* ptr) {
