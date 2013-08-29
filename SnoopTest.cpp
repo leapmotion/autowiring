@@ -132,3 +132,26 @@ TEST_F(SnoopTest, DetectDisallowedGeneralType) {
     EXPECT_THROW(sibling2->Snoop(disallowGeneric), std::runtime_error);
   }
 }
+
+TEST_F(SnoopTest, AmbiguousReciept) {
+  AutoRequired<ParentMember> parent;
+
+  {
+    AutoCreateContext subCtxt;
+    subCtxt->Snoop(parent);
+
+    // Verify that simple firing _here_ causes transmission as expected:
+    AutoFired<UpBroadcastListener> ubl;
+    ubl(&UpBroadcastListener::SimpleCall)();
+    ASSERT_TRUE(parent->m_simpleCall) << "Snooped parent trivially failed to receive an event";
+
+    // Reset the flag:
+    parent->m_simpleCall = false;
+  }
+
+  // Fire and verify that disallow still receives the event:
+  AutoFired<UpBroadcastListener> ubl;
+  ubl(&UpBroadcastListener::SimpleCall)();
+
+  EXPECT_TRUE(parent->m_simpleCall) << "Snooped parent did not receive an event as expected when snooped context was destroyed";
+}
