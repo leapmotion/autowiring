@@ -711,13 +711,15 @@ struct AddPolymorphic:
 {
 public:
   void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    // Add to our local collection:
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_eventReceivers.insert(pRecvr);
+    {
+      // Add to our local collection:
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      m_eventReceivers.insert(pRecvr);
 
-    // Scan the list of compatible senders:
-    for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
-      *q->second += pRecvr;
+      // Scan the list of compatible senders:
+      for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+        *q->second += pRecvr;
+    }
 
     // Delegate ascending resolution, where possible.  This ensures that the parent context links
     // this event receiver to compatible senders in the parent context itself.
