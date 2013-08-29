@@ -570,7 +570,7 @@ public:
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
     (boost::lock_guard<boost::mutex>)m_lock,
     m_snoopers.erase(rcvr);
-    ((CoreContextHelpers::AddPolymorphic<EventReceiver>&)*this).RemoveEventReceiver(rcvr);
+    ((CoreContextHelpers::AddPolymorphic<T>&)*this).RemoveEventReceiver(rcvr);
   }
 
   /// <summary>
