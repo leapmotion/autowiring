@@ -3,6 +3,8 @@
 #include "AutoNetworkMonitor.h"
 #include "AutowirableSlot.h"
 
+#ifdef USEAUTONET
+
 boost::thread_specific_ptr<AutoNetworkMonitor::Space> AutoNetworkMonitor::s_space;
 
 AutoNetworkMonitor::AutoNetworkMonitor(void)
@@ -79,3 +81,4 @@ void AutoNetworkMonitor::Serialize(std::ostream& os) const {
 std::ostream& operator<<(std::ostream& os, const AutoNetworkMonitor& rhs) {
   return rhs.Serialize(os), os;
 }
+#endif
