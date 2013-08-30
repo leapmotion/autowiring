@@ -169,3 +169,8 @@ if(BUILD_TESTING)
   
   target_link_libraries(AutowiringTest Autowiring)
 endif(BUILD_TESTING)
+
+OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
+if(BUILD_AUTONET)
+    add_definitions(-USEAUTONET)
+endif()
