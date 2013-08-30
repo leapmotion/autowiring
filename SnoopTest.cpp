@@ -38,17 +38,6 @@ class IgnoredParentMember:
 {
 };
 
-class Disallowed:
-  public ContextMember,
-  public UpBroadcastListener
-{
-};
-
-class DisallowedGeneric:
-  public UpBroadcastListener
-{
-};
-
 TEST_F(SnoopTest, VerifySimpleSnoop) {
   // Create the parent listener:
   AutoRequired<ParentMember> parentMember;
@@ -105,30 +94,32 @@ TEST_F(SnoopTest, VerifyUnsnoop) {
   EXPECT_FALSE(parentMember->m_simpleCall) << "ParentMember snooper received an event, even after an Unsnoop call was made";
 }
 
-TEST_F(SnoopTest, DetectDisallowedContextMember) {
-  // Create two child contexts:
-  AutoCreateContext sibling1;
-  AutoCreateContext sibling2;
+TEST_F(SnoopTest, AmbiguousReciept) {
+  AutoRequired<ParentMember> parent;
 
-  // Create a member of the first context, and try to use it to snoop the second context:
+  // Fire and verify that disallow still receives the event:
+  AutoFired<UpBroadcastListener> ubl;
+  ASSERT_TRUE(ubl.HasListeners()) << "Expected at least one listener--the ParentMember instance";
+
+  // Membership double-check:
+  ASSERT_TRUE(m_create->IsMember(parent)) << "Could not find a just-autowired instance in the current context";
+
   {
-    CurrentContextPusher pshr(sibling1);
-    AutoRequired<Disallowed> disallow;
+    AutoCreateContext subCtxt;
+    subCtxt->Snoop(parent);
 
-    EXPECT_THROW(sibling2->Snoop(disallow), std::runtime_error);
+    // Verify that simple firing _here_ causes transmission as expected:
+    AutoFired<UpBroadcastListener> ubl;
+    ubl(&UpBroadcastListener::SimpleCall)();
+    ASSERT_TRUE(parent->m_simpleCall) << "Snooped parent trivially failed to receive an event";
+
+    // Reset the flag:
+    parent->m_simpleCall = false;
   }
-}
 
-TEST_F(SnoopTest, DetectDisallowedGeneralType) {
-  // Create two child contexts:
-  AutoCreateContext sibling1;
-  AutoCreateContext sibling2;
+  // Should still be listeners at this point:
+  ASSERT_TRUE(ubl.HasListeners()) << "Apparently no listeners exist after subcontext destruction";
 
-  // Create a member again, but this time, use the generic type so we can't use a context membership check
-  {
-    CurrentContextPusher pshr(sibling1);
-    AutoRequired<DisallowedGeneric> disallowGeneric;
-
-    EXPECT_THROW(sibling2->Snoop(disallowGeneric), std::runtime_error);
-  }
+  ubl(&UpBroadcastListener::SimpleCall)();
+  EXPECT_TRUE(parent->m_simpleCall) << "Snooped parent did not receive an event as expected when snooped context was destroyed";
 }
