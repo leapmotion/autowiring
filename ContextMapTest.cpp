@@ -59,7 +59,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     // Verify that we can still find the context while the thread is alive:
     std::shared_ptr<CoreContext> context = mp.Find("context_withthreads");
     ASSERT_TRUE(!!context.get()) << "Map evicted a context before expected";
-    
+
     // Relock the weak context, verify that we get back the same pointer:
     auto relocked = weakContext.lock();
     EXPECT_EQ(relocked, context) << "Mapped context pointer was not identical to a previously stored context pointer";
@@ -85,7 +85,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
   }
 }
 
-TEST_F(ContextMapTest, ConcurrentDestructionTestPathological) {
+TEST_F(ContextMapTest, DISABLED_ConcurrentDestructionTestPathological) {
   vector<weak_ptr<SimpleThreaded>> weakPointers;
 
   for(size_t i = 0; i < 100; i++) {
@@ -128,7 +128,7 @@ TEST_F(ContextMapTest, OutOfOrderDeletionTest) {
 
 TEST_F(ContextMapTest, VerifyWithThreadsPathological) {
   ContextMap<size_t> mp;
-  
+
   // Context collection and exit race threads:
   vector<std::shared_ptr<CoreContext>> contexts;
 
@@ -153,7 +153,7 @@ TEST_F(ContextMapTest, VerifyWithThreadsPathological) {
   // Verify that the map empties once our zero-count is hit:
   for(size_t i = 0; i < contexts.size(); i++)
     contexts[i]->Wait();
-  
+
   // Clear the context collection:
   contexts.clear();
   EXPECT_EQ(0UL, mp.size()) << "Context map did not empty as expected";
