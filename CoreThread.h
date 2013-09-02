@@ -5,6 +5,7 @@
 #include "DispatchQueue.h"
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/thread.hpp>
 #include <memory>
 
 using std::shared_ptr;
@@ -46,6 +47,9 @@ protected:
 
   // Acceptor flag:
   bool m_canAccept;
+
+  // The current thread, if running
+  boost::thread m_thisThread;
 
   friend class ThreadStatusMaintainer;
 
@@ -167,12 +171,30 @@ public:
     );
   }
 
-  template<class Duration>
-  bool WaitFor(Duration duration) {
+  /// <summary>
+  /// Timed version of Wait
+  /// </summary>
+  /// <returns>False if the timeout elapsed, true otherwise</returns>
+  template<class DurationType>
+  bool WaitFor(DurationType duration) {
     boost::unique_lock<boost::mutex> lk(m_lock);
     return m_stateCondition.wait_for(
       lk,
       duration,
+      [this] () {return this->m_completed;}
+    );
+  }
+  
+  /// <summary>
+  /// Timed version of Wait
+  /// </summary>
+  /// <returns>False if the timeout elapsed, true otherwise</returns>
+  template<class TimeType>
+  bool WaitUntil(TimeType timepoint) {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    return m_stateCondition.wait_until(
+      lk,
+      timepoint,
       [this] () {return this->m_completed;}
     );
   }
