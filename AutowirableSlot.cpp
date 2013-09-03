@@ -13,13 +13,13 @@ AutowirableSlot::AutowirableSlot(void):
 {
   m_tracker = std::shared_ptr<AutowirableSlot>(this, NullOp<AutowirableSlot*>);
 
-  if(ENABLE_NETWORK_MONITOR) {
+#if ENABLE_NETWORK_MONITOR
     // Obtain the network monitor:
     std::shared_ptr<AutoNetworkMonitor> pMon = GetCurrentContext()->FindByType<AutoNetworkMonitor>();
     if(pMon)
       // Pass notification:
       pMon->Notify(*this);
-  }
+#endif
 }
 
 void AutowirableSlot::NotifyWhenAutowired(const std::function<void()>& listener) {
