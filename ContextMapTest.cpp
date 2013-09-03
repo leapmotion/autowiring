@@ -68,8 +68,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     context->SignalShutdown();
 
     // Signal that the thread can quit:
-    (boost::lock_guard<boost::mutex>)threaded->m_condLock;
-    threaded->m_cond.notify_all();
+    threaded->Stop();
 
     // Wait for the context to exit:
     context->Wait();
