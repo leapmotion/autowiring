@@ -115,10 +115,7 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   context->SignalShutdown();
 
   // Cause the thread to exit:
-  {
-    boost::lock_guard<boost::mutex> lk(simple->m_condLock);
-    simple->m_cond.notify_all();
-  }
+  simple->Stop();
 
   // Now we verify that exiting happens promptly:
   EXPECT_TRUE(context->Wait(milliseconds(100))) << "Context did not exit in a timely fashion";
