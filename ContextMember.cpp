@@ -11,6 +11,7 @@
 #define ENABLE_NET_MON 0
 #endif
 
+
 ContextMember::ContextMember(const char* name):
   m_name(name),
   m_context(CoreContext::CurrentContext())
