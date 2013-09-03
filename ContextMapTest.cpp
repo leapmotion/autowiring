@@ -112,7 +112,7 @@ TEST_F(ContextMapTest, ConcurrentDestructionTestPathological) {
     for(size_t i = 0; i < ARRAYCOUNT(threads); i++) {
       auto cur = threads[i].lock();
       if(cur)
-        ASSERT_TRUE(cur->WaitFor(boost::chrono::seconds(1))) << "Subcontext did not exit in a timely fashion";
+        ASSERT_TRUE(cur->WaitFor(boost::chrono::seconds(1))) << "Spawned thread did not exit in a timely fashion";
     }
   }
 }
