@@ -23,11 +23,11 @@ ContextMember::~ContextMember() {
 
 void* ContextMember::operator new(size_t nBytes) {
   void* pRetVal = ::operator new(nBytes);
-  if(ENABLE_NET_MON) {
+#if ENABLE_NET_MON
     AutoCurrentContext ctxt;
     shared_ptr<AutoNetworkMonitor> netMon = ctxt->FindByType<AutoNetworkMonitor>();
     if(netMon)
       netMon->PreConstruct(pRetVal, nBytes);
-  }
+#endif
   return pRetVal;
 }
