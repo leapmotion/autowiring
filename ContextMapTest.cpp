@@ -86,29 +86,34 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
 }
 
 TEST_F(ContextMapTest, ConcurrentDestructionTestPathological) {
-  vector<weak_ptr<SimpleThreaded>> weakPointers;
-
-  for(size_t i = 0; i < 100; i++) {
-    // Create our map and a context:
+  for(size_t i = 0; i < 1000; i++) {
+    // Create our map and a few contexts:
     ContextMap<string> mp;
-    AutoCreateContext context;
+    AutoCreateContext contexts[4];
+    weak_ptr<SimpleThreaded> threads[4];
 
     // Insert into the map:
-    mp.Add("pathological_destruction", context);
+    mp.Add("pathological_destruction0", contexts[0]);
+    mp.Add("pathological_destruction1", contexts[1]);
+    mp.Add("pathological_destruction2", contexts[2]);
+    mp.Add("pathological_destruction3", contexts[3]);
 
     // Add a thread and kick off the context:
-    weakPointers.push_back(context->Add<SimpleThreaded>());
-    context->InitiateCoreThreads();
+    for(size_t i = ARRAYCOUNT(contexts); i--;) {
+      threads[i] = contexts[i]->Add<SimpleThreaded>();
+      contexts[i]->InitiateCoreThreads();
+    }
 
-    // Immediately tear the context down:
-    context->SignalShutdown();
-  }
+    // Immediately tear contexts down:
+    for(size_t i = ARRAYCOUNT(contexts); i--;)
+      contexts[i]->SignalShutdown();
 
-  // Wait on anything not signalled:
-  for(size_t i = 0; i < weakPointers.size(); i++) {
-    auto cur = weakPointers[i].lock();
-    if(cur)
-      cur->Wait();
+    // Wait on anything not signalled:
+    for(size_t i = 0; i < ARRAYCOUNT(threads); i++) {
+      auto cur = threads[i].lock();
+      if(cur)
+        ASSERT_TRUE(cur->WaitFor(boost::chrono::seconds(1))) << "Subcontext did not exit in a timely fashion";
+    }
   }
 }
 
