@@ -85,7 +85,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
 }
 
 TEST_F(ContextMapTest, ConcurrentDestructionTestPathological) {
-  for(size_t i = 0; i < 1000; i++) {
+  for(size_t i = 0; i < 100; i++) {
     // Create our map and a few contexts:
     ContextMap<string> mp;
     AutoCreateContext contexts[4];
