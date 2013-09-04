@@ -5,6 +5,13 @@
 #include "CoreContext.h"
 #include "AutoNetworkMonitor.h"
 
+#ifdef USEAUTONET
+#define ENABLE_NET_MON 1
+#else
+#define ENABLE_NET_MON 0
+#endif
+
+
 ContextMember::ContextMember(const char* name):
   m_name(name),
   m_context(CoreContext::CurrentContext())
@@ -16,11 +23,11 @@ ContextMember::~ContextMember() {
 
 void* ContextMember::operator new(size_t nBytes) {
   void* pRetVal = ::operator new(nBytes);
-  if(ENABLE_NETWORK_MONITOR) {
+#if ENABLE_NET_MON
     AutoCurrentContext ctxt;
     shared_ptr<AutoNetworkMonitor> netMon = ctxt->FindByType<AutoNetworkMonitor>();
     if(netMon)
       netMon->PreConstruct(pRetVal, nBytes);
-  }
+#endif
   return pRetVal;
 }

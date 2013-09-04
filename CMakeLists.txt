@@ -7,7 +7,6 @@ include_directories(
 set(
   Autowiring_SRCS
   AutoNetworkMonitor.h
-  AutoNetworkMonitor.cpp
   Autowired.h
   Autowired.cpp
   AutowirableSlot.h
@@ -65,6 +64,15 @@ set(
   TransientPool.h
   TransientPoolBase.h
 )
+
+OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
+
+if(BUILD_AUTONET)
+  set(Autowiring_SRCS
+    AutoNetworkMonitor.cpp
+    ${Autowiring_SRCS}
+  )
+endif()
 
 if(BUILD_WINDOWS)
   enable_language(ASM_MASM)
@@ -169,3 +177,7 @@ if(BUILD_TESTING)
   
   target_link_libraries(AutowiringTest Autowiring)
 endif(BUILD_TESTING)
+
+if(BUILD_AUTONET)
+    add_definitions(-USEAUTONET)
+endif()
