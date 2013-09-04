@@ -39,6 +39,10 @@ CoreContext::~CoreContext(void) {
   for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
     (*q).second->ReleaseRefs();
 
+  // Eliminate all snoopers from our apprehended list of receivers:
+  for(auto q = m_snoopers.begin(); q != m_snoopers.end(); q++)
+    m_eventReceivers.erase(*q);
+
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
   if(m_pParent)
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
@@ -328,42 +332,6 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::ite
     m_pParent->RemoveEventReceivers(first, last);
 }
 
-void CoreContext::Snoop(const std::shared_ptr<EventReceiver>& pSnooper) {
-  // If the passed type is a ContextMember, we can query relationship status
-  ContextMember* pMember = dynamic_cast<ContextMember*>(pSnooper.get());
-  if(pMember) {
-    // Ancestry check:
-    std::shared_ptr<CoreContext> target = pMember->GetContext();
-    std::shared_ptr<CoreContext> cur = GetParentContext();
-
-    while(cur && cur != target)
-      cur = cur->GetParentContext();
-
-    if(!cur)
-      throw_rethrowable std::runtime_error("A context member attempted to snoop a context which was not a child context");
-  } else {
-    // Dynamic membership check:
-    const type_info& info = typeid(*pSnooper);
-
-    std::shared_ptr<CoreContext> cur = GetParentContext();
-    for(; cur; cur = cur->GetParentContext()) {
-      auto q = cur->m_byType.find(info);
-      if(q != cur->m_byType.end())
-        break;
-    }
-    if(!cur)
-      throw_rethrowable std::runtime_error("A generic type attempted to snoop a context which was not a child context");
-  }
-
-  // Pass control to the event adder helper:
-  ((CoreContextHelpers::AddPolymorphic<EventReceiver>&)*this).AddEventReceiver(pSnooper);
-}
-
-void CoreContext::Unsnoop(const std::shared_ptr<EventReceiver>& pSnooper) {
-  // Pass control to the event remover helper:
-  ((CoreContextHelpers::AddPolymorphic<EventReceiver>&)*this).RemoveEventReceiver(pSnooper);
-}
-
 void CoreContext::FilterException(void) {
   bool handled = false;
   for(auto q = m_filters.begin(); q != m_filters.end(); q++)
@@ -400,18 +368,17 @@ void CoreContext::FilterFiringException(const EventReceiverProxyBase* pProxy, Ev
     std::rethrow_exception(std::current_exception());
   };
 
-  bool handled = false;
-  for(auto q = m_filters.begin(); q != m_filters.end(); q++)
-    try {
-      (*q)->Filter(rethrower, pProxy, pRecipient);
-      handled = true;
-    } catch(...) {
-      // Do nothing, filter didn't want to filter this exception
-    }
+  // Filter in order:
+  for(CoreContext* pCur = this; pCur; pCur = pCur->GetParentContext().get())
+    for(auto q = pCur->m_filters.begin(); q != pCur->m_filters.end(); q++)
+      try {
+        (*q)->Filter(rethrower, pProxy, pRecipient);
+      } catch(...) {
+        // Do nothing, filter didn't want to filter this exception
+      }
 
-  // Rethrow if unhandled:
-  if(!handled)
-    rethrower();
+  // Shut down our context:
+  SignalShutdown();
 }
 
 void CoreContext::AddContextMember(SharedPtrWrapBase* ptr) {

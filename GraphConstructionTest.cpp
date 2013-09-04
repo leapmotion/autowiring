@@ -4,6 +4,7 @@
 #include "Autowired.h"
 #include "AutoNetworkMonitor.h"
 
+#ifdef USEAUTONET
 class NodeTwo;
 class NodeThree;
 
@@ -39,3 +40,4 @@ TEST_F(GraphConstructionTest, VerifySimpleGraph)
   AutoRequired<NodeTwo> n2;
   AutoRequired<NodeThree> n3;
 }
+#endif
