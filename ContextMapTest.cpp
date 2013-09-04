@@ -59,7 +59,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     // Verify that we can still find the context while the thread is alive:
     std::shared_ptr<CoreContext> context = mp.Find("context_withthreads");
     ASSERT_TRUE(!!context.get()) << "Map evicted a context before expected";
-    
+
     // Relock the weak context, verify that we get back the same pointer:
     auto relocked = weakContext.lock();
     EXPECT_EQ(relocked, context) << "Mapped context pointer was not identical to a previously stored context pointer";
@@ -68,8 +68,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     context->SignalShutdown();
 
     // Signal that the thread can quit:
-    (boost::lock_guard<boost::mutex>)threaded->m_condLock;
-    threaded->m_cond.notify_all();
+    threaded->Stop();
 
     // Wait for the context to exit:
     context->Wait();
@@ -86,29 +85,34 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
 }
 
 TEST_F(ContextMapTest, ConcurrentDestructionTestPathological) {
-  vector<weak_ptr<SimpleThreaded>> weakPointers;
-
   for(size_t i = 0; i < 100; i++) {
-    // Create our map and a context:
+    // Create our map and a few contexts:
     ContextMap<string> mp;
-    AutoCreateContext context;
+    AutoCreateContext contexts[4];
+    weak_ptr<SimpleThreaded> threads[4];
 
     // Insert into the map:
-    mp.Add("pathological_destruction", context);
+    mp.Add("pathological_destruction0", contexts[0]);
+    mp.Add("pathological_destruction1", contexts[1]);
+    mp.Add("pathological_destruction2", contexts[2]);
+    mp.Add("pathological_destruction3", contexts[3]);
 
     // Add a thread and kick off the context:
-    weakPointers.push_back(context->Add<SimpleThreaded>());
-    context->InitiateCoreThreads();
+    for(size_t i = ARRAYCOUNT(contexts); i--;) {
+      threads[i] = contexts[i]->Add<SimpleThreaded>();
+      contexts[i]->InitiateCoreThreads();
+    }
 
-    // Immediately tear the context down:
-    context->SignalShutdown();
-  }
+    // Immediately tear contexts down:
+    for(size_t i = ARRAYCOUNT(contexts); i--;)
+      contexts[i]->SignalShutdown();
 
-  // Wait on anything not signalled:
-  for(size_t i = 0; i < weakPointers.size(); i++) {
-    auto cur = weakPointers[i].lock();
-    if(cur)
-      cur->Wait();
+    // Wait on anything not signalled:
+    for(size_t i = 0; i < ARRAYCOUNT(threads); i++) {
+      auto cur = threads[i].lock();
+      if(cur)
+        ASSERT_TRUE(cur->WaitFor(boost::chrono::seconds(1))) << "Spawned thread did not exit in a timely fashion";
+    }
   }
 }
 
@@ -128,7 +132,7 @@ TEST_F(ContextMapTest, OutOfOrderDeletionTest) {
 
 TEST_F(ContextMapTest, VerifyWithThreadsPathological) {
   ContextMap<size_t> mp;
-  
+
   // Context collection and exit race threads:
   vector<std::shared_ptr<CoreContext>> contexts;
 
@@ -153,7 +157,7 @@ TEST_F(ContextMapTest, VerifyWithThreadsPathological) {
   // Verify that the map empties once our zero-count is hit:
   for(size_t i = 0; i < contexts.size(); i++)
     contexts[i]->Wait();
-  
+
   // Clear the context collection:
   contexts.clear();
   EXPECT_EQ(0UL, mp.size()) << "Context map did not empty as expected";
