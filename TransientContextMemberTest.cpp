@@ -18,7 +18,13 @@ class MyTransientClass:
 public:
   MyTransientClass(void):
     m_hitCount(0)
-  {}
+  {
+    s_ctorCount++;
+  }
+
+  ~MyTransientClass(void) {
+    s_ctorCount--;
+  }
 
   virtual void ZeroArgsA(void) override {
     m_hitCount++;
@@ -29,13 +35,18 @@ public:
     return Deferred();
   }
 
+  static int s_ctorCount;
+
   int m_hitCount;
 };
 
-class MyTransientPool:
-  public TransientPool<MyTransientClass>
-{
-};
+int MyTransientClass::s_ctorCount;
+
+typedef TransientPool<MyTransientClass> MyTransientPool;
+
+TransientContextMemberTest::TransientContextMemberTest(void) {
+  MyTransientClass::s_ctorCount = 0;
+}
 
 TEST_F(TransientContextMemberTest, VerifyTransience) {
   // Weak pointer for the transient instance:
@@ -74,6 +85,9 @@ TEST_F(TransientContextMemberTest, VerifyTransientDeferred) {
   // Pool creation:
   AutoRequired<MyTransientPool> pool;
 
+  // Ensure that just a single element is created:
+  EXPECT_EQ(1, MyTransientClass::s_ctorCount) << "An unexpected number of witness elements were created";
+
   // Create the sender and recipient:
   AutoFired<TransientEvent> sender;
   AutoTransient<MyTransientClass> recipient(*pool);
@@ -90,6 +104,44 @@ TEST_F(TransientContextMemberTest, VerifyTransientDeferred) {
 
   // Now verify that the receipt count was what we expected:
   EXPECT_EQ(recipient->m_hitCount, 1) << "Deferred call on a transient instance was not received";
+}
+
+TEST_F(TransientContextMemberTest, SimplePoolTeardown) {
+  {
+    AutoCreateContext ctxt;
+  
+    // Pool creation:
+    (CurrentContextPusher)ctxt,
+    AutoRequired<MyTransientPool>();
+  }
+
+  // Verify that this didn't leak anything:
+  EXPECT_EQ(0, MyTransientClass::s_ctorCount) << "A dangling transient instance still exists after context teardown";
+}
+
+TEST_F(TransientContextMemberTest, AllTeardown) {
+  {
+    AutoCreateContext ctxt;
+    CurrentContextPusher pshr(ctxt);
+
+    // Pool creation:
+    AutoRequired<MyTransientPool> pool;
+
+    // Ensure that just a single witness element is created:
+    EXPECT_EQ(1, MyTransientClass::s_ctorCount) << "An unexpected number of witness elements were created";
+    
+    // Now create our transient instance:
+    AutoTransient<MyTransientClass> recipient(*pool);
+
+    // Verify that one more instance is created:
+    EXPECT_EQ(2, MyTransientClass::s_ctorCount) << "A transient instance was not created as expected";
+
+    // Create a sample sender:
+    AutoFired<TransientEvent> sender;
+  }
+
+  // Verify that no dangling types remain:
+  EXPECT_EQ(0, MyTransientClass::s_ctorCount) << "A dangling transient instance still exists after context teardown";
 }
 
 TEST_F(TransientContextMemberTest, VerifyTransiencePathological) {
