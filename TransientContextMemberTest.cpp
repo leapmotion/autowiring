@@ -37,6 +37,7 @@ public:
 
   static int s_ctorCount;
 
+  AutoFired<TransientEvent> fired;
   int m_hitCount;
 };
 
@@ -106,33 +107,6 @@ TEST_F(TransientContextMemberTest, VerifyTransientDeferred) {
   EXPECT_EQ(recipient->m_hitCount, 1) << "Deferred call on a transient instance was not received";
 }
 
-TEST_F(TransientContextMemberTest, SimplePoolTeardown) {
-  std::weak_ptr<MyTransientPool> poolWeak;
-  {
-    AutoCreateContext ctxt;
-    ctxt->InitiateCoreThreads();
-  
-    // Pool creation:
-    poolWeak =
-      (
-        (CurrentContextPusher)ctxt,
-        AutoRequired<MyTransientPool>()
-      );
-
-    // Teardown and delay:
-    ctxt->SignalShutdown();
-    ctxt->Wait();
-  }
-
-  // Give the transient pool sufficient time to exit:
-  while(!poolWeak.expired())
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-
-  // Should be done by now
-  ASSERT_TRUE(poolWeak.expired()) << "The weak pool took too long to exit";
-  EXPECT_EQ(0, MyTransientClass::s_ctorCount) << "A dangling transient instance still exists after context teardown";
-}
-
 TEST_F(TransientContextMemberTest, AllTeardown) {
   std::weak_ptr<MyTransientPool> poolWeak;
   {
@@ -172,7 +146,7 @@ TEST_F(TransientContextMemberTest, AllTeardown) {
     boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 
   // Should be done by now
-  ASSERT_TRUE(poolWeak.expired()) << "The weak pool took too long to exit";
+  EXPECT_TRUE(poolWeak.expired()) << "The weak pool took too long to exit";
   EXPECT_EQ(0, MyTransientClass::s_ctorCount) << "A dangling transient instance still exists after context teardown";
 }
 
