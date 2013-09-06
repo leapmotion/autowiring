@@ -107,25 +107,45 @@ TEST_F(TransientContextMemberTest, VerifyTransientDeferred) {
 }
 
 TEST_F(TransientContextMemberTest, SimplePoolTeardown) {
+  std::weak_ptr<MyTransientPool> poolWeak;
   {
     AutoCreateContext ctxt;
+    ctxt->InitiateCoreThreads();
   
     // Pool creation:
-    (CurrentContextPusher)ctxt,
-    AutoRequired<MyTransientPool>();
+    poolWeak =
+      (
+        (CurrentContextPusher)ctxt,
+        AutoRequired<MyTransientPool>()
+      );
+
+    // Teardown and delay:
+    ctxt->SignalShutdown();
+    ctxt->Wait();
   }
 
-  // Verify that this didn't leak anything:
+  // Give the transient pool sufficient time to exit:
+  while(!poolWeak.expired())
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+
+  // Should be done by now
+  ASSERT_TRUE(poolWeak.expired()) << "The weak pool took too long to exit";
   EXPECT_EQ(0, MyTransientClass::s_ctorCount) << "A dangling transient instance still exists after context teardown";
 }
 
 TEST_F(TransientContextMemberTest, AllTeardown) {
+  std::weak_ptr<MyTransientPool> poolWeak;
   {
     AutoCreateContext ctxt;
     CurrentContextPusher pshr(ctxt);
+    ctxt->InitiateCoreThreads();
 
     // Pool creation:
     AutoRequired<MyTransientPool> pool;
+    poolWeak = pool;
+
+    // Wait for the transient pool to become ready:
+    pool->DelayUntilCanAccept();
 
     // Ensure that just a single witness element is created:
     EXPECT_EQ(1, MyTransientClass::s_ctorCount) << "An unexpected number of witness elements were created";
@@ -138,9 +158,21 @@ TEST_F(TransientContextMemberTest, AllTeardown) {
 
     // Create a sample sender:
     AutoFired<TransientEvent> sender;
+
+    // Attempt to defer:
+    sender.Defer(&TransientEvent::ZeroArgsADeferred)();
+
+    // Context termination:
+    ctxt->SignalShutdown();
+    ctxt->Wait();
   }
 
-  // Verify that no dangling types remain:
+  // Give the transient pool sufficient time to exit:
+  for(size_t i = 0; i < 100 && !poolWeak.expired(); i++)
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+
+  // Should be done by now
+  ASSERT_TRUE(poolWeak.expired()) << "The weak pool took too long to exit";
   EXPECT_EQ(0, MyTransientClass::s_ctorCount) << "A dangling transient instance still exists after context teardown";
 }
 
