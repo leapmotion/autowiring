@@ -123,6 +123,7 @@ public:
   void ReleaseRefs() override {
     m_st.Clear();
     m_dispatch.clear();
+    m_stTransient.Clear();
   }
 
   EventReceiverProxyBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
