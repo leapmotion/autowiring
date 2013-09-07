@@ -5,6 +5,8 @@
 class TransientContextMemberTest:
   public EnclosedContextTestBase
 {
+public:
+  TransientContextMemberTest(void);
 };
 
 #endif

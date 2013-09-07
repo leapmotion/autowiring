@@ -18,7 +18,13 @@ class MyTransientClass:
 public:
   MyTransientClass(void):
     m_hitCount(0)
-  {}
+  {
+    s_ctorCount++;
+  }
+
+  ~MyTransientClass(void) {
+    s_ctorCount--;
+  }
 
   virtual void ZeroArgsA(void) override {
     m_hitCount++;
@@ -29,13 +35,19 @@ public:
     return Deferred();
   }
 
+  static int s_ctorCount;
+
+  AutoFired<TransientEvent> fired;
   int m_hitCount;
 };
 
-class MyTransientPool:
-  public TransientPool<MyTransientClass>
-{
-};
+int MyTransientClass::s_ctorCount;
+
+typedef TransientPool<MyTransientClass> MyTransientPool;
+
+TransientContextMemberTest::TransientContextMemberTest(void) {
+  MyTransientClass::s_ctorCount = 0;
+}
 
 TEST_F(TransientContextMemberTest, VerifyTransience) {
   // Weak pointer for the transient instance:
@@ -74,6 +86,9 @@ TEST_F(TransientContextMemberTest, VerifyTransientDeferred) {
   // Pool creation:
   AutoRequired<MyTransientPool> pool;
 
+  // Ensure that just a single element is created:
+  EXPECT_EQ(1, MyTransientClass::s_ctorCount) << "An unexpected number of witness elements were created";
+
   // Create the sender and recipient:
   AutoFired<TransientEvent> sender;
   AutoTransient<MyTransientClass> recipient(*pool);
@@ -90,6 +105,49 @@ TEST_F(TransientContextMemberTest, VerifyTransientDeferred) {
 
   // Now verify that the receipt count was what we expected:
   EXPECT_EQ(recipient->m_hitCount, 1) << "Deferred call on a transient instance was not received";
+}
+
+TEST_F(TransientContextMemberTest, AllTeardown) {
+  std::weak_ptr<MyTransientPool> poolWeak;
+  {
+    AutoCreateContext ctxt;
+    CurrentContextPusher pshr(ctxt);
+    ctxt->InitiateCoreThreads();
+
+    // Pool creation:
+    AutoRequired<MyTransientPool> pool;
+    poolWeak = pool;
+
+    // Wait for the transient pool to become ready:
+    pool->DelayUntilCanAccept();
+
+    // Ensure that just a single witness element is created:
+    EXPECT_EQ(1, MyTransientClass::s_ctorCount) << "An unexpected number of witness elements were created";
+    
+    // Now create our transient instance:
+    AutoTransient<MyTransientClass> recipient(*pool);
+
+    // Verify that one more instance is created:
+    EXPECT_EQ(2, MyTransientClass::s_ctorCount) << "A transient instance was not created as expected";
+
+    // Create a sample sender:
+    AutoFired<TransientEvent> sender;
+
+    // Attempt to defer:
+    sender.Defer(&TransientEvent::ZeroArgsADeferred)();
+
+    // Context termination:
+    ctxt->SignalShutdown();
+    ctxt->Wait();
+  }
+
+  // Give the transient pool sufficient time to exit:
+  for(size_t i = 0; i < 100 && !poolWeak.expired(); i++)
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+
+  // Should be done by now
+  EXPECT_TRUE(poolWeak.expired()) << "The weak pool took too long to exit";
+  EXPECT_EQ(0, MyTransientClass::s_ctorCount) << "A dangling transient instance still exists after context teardown";
 }
 
 TEST_F(TransientContextMemberTest, VerifyTransiencePathological) {
