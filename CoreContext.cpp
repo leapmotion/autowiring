@@ -137,15 +137,16 @@ void CoreContext::InitiateCoreThreads(void) {
     if(m_refCount++)
       // Already running
       return;
+
+    // Short-return if our stop flag has already been set:
+    if(m_shouldStop)
+      return;
   }
 
   if(m_pParent)
     // Start parent threads first
     // Parent MUST be a core context
     std::static_pointer_cast<CoreContext, CoreContext>(m_pParent)->InitiateCoreThreads();
-
-  // Set our stop flag before kicking off any threads:
-  m_shouldStop = false;
 
   // Hold another lock to prevent m_threads from being modified while we sit on it
   boost::lock_guard<boost::mutex> lk(m_lock);
@@ -159,11 +160,11 @@ void CoreContext::SignalShutdown(void) {
     if(m_refCount == 0 || --m_refCount)
       // Someone else still depends on this
       return;
+    
+    // Now transitioning to the stopped state:
+    m_shouldStop = true;
+    m_stateChanged.notify_all();
   }
-
-  // Global context is now "stop":
-  m_shouldStop = true;
-  m_stateChanged.notify_all();
 
   // Also pass notice to all child threads:
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
@@ -176,8 +177,8 @@ void CoreContext::SignalShutdown(void) {
     std::static_pointer_cast<CoreContext, CoreContext>(m_pParent)->SignalShutdown();
 }
 
-void CoreContext::SignalTerminate(void) {
-  // We're stopping now.
+void CoreContext::SignalTerminate(bool wait) {
+  // Transition as soon as possible:
   m_shouldStop = true;
 
   {
@@ -213,14 +214,18 @@ void CoreContext::SignalTerminate(void) {
 
     // Now that we have a locked-down, immutable series, begin termination signalling:
     for(size_t i = childrenInterleave.size(); i--; )
-      childrenInterleave[i]->SignalTerminate();
+      childrenInterleave[i]->SignalTerminate(wait);
   }
 
-  // Shut myself down.
+  // Shut myself down.  This also signals our condition variable.
   SignalShutdown();
 
   // I shouldn't be referenced anywhere now.
   ASSERT(m_refCount == 0);
+
+  // Short-return if required:
+  if(!wait)
+    return;
 
   // Wait for the treads to finish before returning.
   for (t_threadList::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
