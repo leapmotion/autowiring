@@ -439,7 +439,8 @@ public:
   /// <summary>
   /// This terminates this context and all of its children, by force if necessary
   /// </summary>
-  void SignalTerminate(void);
+  /// <param name="wait">Set if the function should wait for all child contexts to exit before returning</param>
+  void SignalTerminate(bool wait = true);
 
   /// <summary>
   /// Waits for all threads holding references to exit
