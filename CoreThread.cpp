@@ -56,6 +56,9 @@ void CoreThread::DoRun(void) {
 
   // No longer running, we MUST release the thread pointer to ensure proper teardown
   m_thisThread.detach();
+
+  // And finally, perform a manual notification of teardown listeners
+  NotifyTeardownListeners();
 }
 
 bool CoreThread::ShouldStop(void) const {
