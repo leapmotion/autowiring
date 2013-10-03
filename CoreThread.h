@@ -217,6 +217,10 @@ public:
   /// regardless of what the global stop setting is.
   /// </summary>
   virtual void Stop(bool graceful = false) {
+    // Trivial return check:
+    if(m_stop)
+      return;
+
     // Perform initial stop:
     m_stop = true;
     OnStop();
