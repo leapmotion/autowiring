@@ -32,8 +32,19 @@ protected:
 
 public:
   /// <summary>
-  /// Registers the passed listener to be called when this object is being destroyed
+  /// Registers the passed listener to be called when teardown is occurring for this object
   /// </summary>
+  /// <remarks>
+  /// Teardown can mean different things depending on the object.  Generally speaking, teardown occurs
+  /// when an object is executing some kind of cleanup operation, or is exiting its operational state.
+  /// Objects which maintain an internal thread enter teardown when their thread is exiting.  Other
+  /// objects enter teardown when they are being destroyed.
+  ///
+  /// Regardless, the teardown notifier provides a strong guarantee that the listener will be called
+  /// during teardown, or at some point afterwards, by performing teardown notification during the
+  /// destructor.  Unless otherwise stated by the object in question, however, the object should be
+  /// treated as invalid at the time of notification.
+  /// </remarks>
   void AddTeardownListener(const std::function<void ()>& listener);
 };
 
