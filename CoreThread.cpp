@@ -50,6 +50,7 @@ void CoreThread::DoRun(void) {
 
   // Notify everyone that we're completed:
   boost::lock_guard<boost::mutex> lk(m_lock);
+  m_stop = true;
   m_completed = true;
   m_running = false;
   m_stateCondition.notify_all();
