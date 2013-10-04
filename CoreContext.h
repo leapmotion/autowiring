@@ -301,7 +301,25 @@ protected:
 public:
   // Accessor methods:
   size_t GetMemberCount(void) const {return m_byType.size();}
+  bool IsRunning(void) const {return !!m_refCount;}
+
+  /// <returns>
+  /// True if CoreThread instances in this context should begin teardown operations
+  /// </returns>
   bool ShouldStop(void) const {return m_shouldStop;}
+
+  /// <returns>
+  /// True if this context was ever started
+  /// </returns>
+  /// <remarks>
+  /// A return value of "true" is guaranteed to be indefinitely correct.  A return value of
+  /// "false" will only be correct for as long as it takes for someone to start this context.
+  /// Unless externally synchronized, this operation may return false on a running context.
+  /// </remarks>
+  bool WasStarted(void) const {
+    // We were started IF we are currently running, OR we have been signalled to stop
+    return IsRunning() || ShouldStop();
+  }
 
   /// <returns>
   /// True if this context is an ancestor of the specified context
