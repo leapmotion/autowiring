@@ -1,7 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "FactoryTest.h"
-#include "Factory.h"
+#include "AutoFactory.h"
 
 class SimpleInterface {
 public:
@@ -24,7 +24,7 @@ public:
 };
 
 class SimpleFactory:
-  public IFactory<SimpleInterface>
+  public AutoFactory<SimpleInterface>
 {
 public:
   SimpleFactory(void):
@@ -35,12 +35,13 @@ public:
 
   bool m_called;
 
-  void operator()(SimpleInterface*& ptr) override {
-    ptr = new ConcreteInstance;
+  SimpleInterface* operator()(void) override {
+    m_called = true;
+    return new ConcreteInstance;
   }
 };
 
-TEST_F(FactoryTest, DISABLED_VerifyFactoryWiring) {
+TEST_F(FactoryTest, VerifyFactoryWiring) {
   // First insert our factory
   AutoRequired<SimpleFactory> factory;
 
