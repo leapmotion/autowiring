@@ -1,6 +1,21 @@
 #pragma once
 #include TYPE_TRAITS_HEADER
 
+template<typename T>
+struct has_static_new
+{
+  template<typename T, T>
+  struct unnamed_constant;
+
+  template<class U>
+  static int select(unnamed_constant<T* (*)(), &U::New>*);
+
+  template<class U>
+  static char select(...);
+
+  static const bool value = sizeof(select<T>(nullptr)) == sizeof(int);
+};
+
 class AutoFactoryBase
 {
 public:
@@ -8,18 +23,6 @@ public:
   /// Returns type information for the proposed 
   /// </summary>
   virtual const type_info& GetType(void) const = 0;
-};
-
-template<class U>
-static std::true_type sfinae(std::integral_constant<int, sizeof(U())>*);
-
-template<class U>
-static std::false_type sfinae(...);
-
-template<class T>
-class is_default_constructible:
-  decltype(sfinae(nullptr))
-{
 };
 
 /// <summary>
