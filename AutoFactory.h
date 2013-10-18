@@ -58,7 +58,8 @@ template<class Product>
 class AutoFactory
 {
 public:
-  virtual Product* operator()(void) = 0;
+  const type_info& GetType(void) const override {return typeid(Product);}
+  virtual Product* New(void) = 0;
 };
 
 /// <summary>
@@ -73,5 +74,5 @@ class AutoStaticFactory:
   public AutoFactory<Product>
 {
 public:
-  Product* operator()(void) {return Product::New();}
+  Product* New(void) {return Product::New();}
 };
