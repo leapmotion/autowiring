@@ -4,11 +4,11 @@
 template<typename T>
 struct has_static_new
 {
-  template<typename T, T>
+  template<class Fn, Fn>
   struct unnamed_constant;
 
   template<class U>
-  static int select(unnamed_constant<T* (*)(), &U::New>*);
+  static int select(unnamed_constant<U* (*)(), &U::New>*);
 
   template<class U>
   static char select(...);
@@ -58,6 +58,5 @@ template<class Product>
 class AutoFactory
 {
 public:
-  const type_info& GetType(void) const override {return typeid(Product);}
   virtual Product* New(void) = 0;
 };
