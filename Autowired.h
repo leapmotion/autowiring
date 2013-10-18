@@ -33,6 +33,7 @@ struct AutowiredCreatorHelper<T, true, hsc>:
   public T
 {
   // This specialization just brings in T's already-existing New implementation
+  // We do this even if T also has a zero-arguments constructor--this is intentional!
   using T::New;
 };
 
@@ -41,6 +42,22 @@ struct AutowiredCreatorHelper<T, false, true>
 {
   // We have to provide our own New, because T doesn't have one already
   static T* New(void) {return new T;}
+};
+
+template<class T>
+struct AutowiredCreatorHelper<T, false, false>
+{
+  static T* New(void) {
+    // Okay we have a problem.  Our type does not have an embedded "New", and cannot be zero-args
+    // constructed.  We need to try to obtain a factory in the current context which might be able
+    // to construct our type for us.
+    Autowired<AutoFactory<T>> factory;
+    if(!factory)
+      throw std::runtime_error("Attempted to AutoRequire an interface, but no factory was registered to create this type.");
+
+    // Well we got a factory back, we can try making the instance now.
+    return factory->New();
+  }
 };
 
 template<class T>
