@@ -61,18 +61,3 @@ public:
   const type_info& GetType(void) const override {return typeid(Product);}
   virtual Product* New(void) = 0;
 };
-
-/// <summary>
-/// Utility type which simply invokes the static method "New" on the product type
-/// </summary>
-/// <remarks>
-/// This method is useful in situations where the type in question defines a static
-/// method "New" which can construct instances of the product type.
-/// </remarks>
-template<class Product>
-class AutoStaticFactory:
-  public AutoFactory<Product>
-{
-public:
-  Product* New(void) {return Product::New();}
-};
