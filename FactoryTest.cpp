@@ -2,6 +2,9 @@
 #include "stdafx.h"
 #include "FactoryTest.h"
 #include "AutoFactory.h"
+#include <iostream>
+
+using namespace std;
 
 class SimpleInterface {
 public:
@@ -17,6 +20,8 @@ public:
   {}
 
   bool m_called;
+
+  static ConcreteInstance* New(void);
 
   void Method(void) override {
     m_called = true;
@@ -41,7 +46,11 @@ public:
   }
 };
 
+
 TEST_F(FactoryTest, VerifyFactoryWiring) {
+  static_assert(has_static_new<ConcreteInstance>::value, "Good is bad!");
+  static_assert(!has_static_new<SimpleFactory>::value, "Bad is good!");
+
   // First insert our factory
   AutoRequired<SimpleFactory> factory;
 
