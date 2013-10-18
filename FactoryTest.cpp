@@ -15,11 +15,7 @@ public:
   bool m_called;
 
   virtual void Method(void) = 0;
-
-  // Factory method, for trivial factory construction:
-  static SimpleInterface* New(void);
 };
-static_assert(has_static_new<SimpleInterface>::value, "Class with static allocator was not correctly detected as having one");
 
 class ClassWithSimpleCtor:
   public SimpleInterface
@@ -37,6 +33,18 @@ public:
 };
 static_assert(has_simple_constructor<ClassWithSimpleCtor>::value, "Class with a zero-argument constructor was not correctly identified as such");
 
+class SimpleInterfaceWithNew:
+  public SimpleInterface
+{
+public:
+  // Factory method, for trivial factory construction:
+  static SimpleInterface* New(void) {
+    return new ClassWithSimpleCtor();
+  }
+};
+
+static_assert(has_static_new<SimpleInterfaceWithNew>::value, "Class with static allocator was not correctly detected as having one");
+
 class ClassWithIntegralCtor:
   public SimpleInterface
 {
@@ -44,11 +52,6 @@ public:
   ClassWithIntegralCtor(int) {}
 };
 static_assert(!has_simple_constructor<ClassWithIntegralCtor>::value, "A class without a simple constructor was incorrectly identified as having one");
-
-// Now we can define the factory method, once ClassWithSimpleCtor has been defined.
-SimpleInterface* SimpleInterface::New(void) {
-  return new ClassWithSimpleCtor();
-}
 
 TEST_F(FactoryTest, VerifySimple) {
   std::weak_ptr<ClassWithSimpleCtor> weak;
@@ -70,5 +73,9 @@ TEST_F(FactoryTest, VerifySimple) {
 }
 
 TEST_F(FactoryTest, VerifyCanRequireAbstract) {
+  AutoRequired<SimpleInterfaceWithNew> si;
+}
+
+TEST_F(FactoryTest, VerifyFactoryCall) {
   AutoRequired<SimpleInterface> si;
 }
