@@ -16,6 +16,23 @@ struct has_static_new
   static const bool value = sizeof(select<T>(nullptr)) == sizeof(int);
 };
 
+template<typename T, bool is_abstract = std::is_abstract<T>::value>
+struct has_simple_constructor
+{
+  template<class U>
+  static int select(std::integral_constant<int, sizeof(T())>*);
+
+  template<class U>
+  static char select(...);
+
+  static const bool value = sizeof(select<T>(nullptr)) == sizeof(int);
+};
+
+template<typename T>
+struct has_simple_constructor<T, true>:
+  public std::false_type
+{};
+
 class AutoFactoryBase
 {
 public:
