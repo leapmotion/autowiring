@@ -3,6 +3,7 @@
 #define _AUTOWIRED_H
 #include "AutowirableSlot.h"
 #include "CoreContext.h"
+#include "AutoFactory.h"
 #include <functional>
 #include <memory>
 
@@ -13,6 +14,34 @@ class GlobalCoreContext;
 
 // Redeclarations, primary declarations in CoreContext.h
 std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
+
+/// <summary>
+/// AutoRequired construction helper
+/// </summary>
+/// <remarks>
+/// If type T has a static member function called New, the helper's Create routine will attempt call
+/// this function instead of the default constructor, even if the default constructor has been supplied,
+/// and even if the arity of the New routine is not zero.
+///
+/// To prevent this behavior, use a name other than New.
+/// </remarks>
+template<class T, bool hsn = has_static_new<T>::value, bool hsc = has_simple_constructor<T>::value>
+struct AutowiredCreatorHelper;
+
+template<class T, bool hsc>
+struct AutowiredCreatorHelper<T, true, hsc>:
+  public T
+{
+  // This specialization just brings in T's already-existing New implementation
+  using T::New;
+};
+
+template<class T>
+struct AutowiredCreatorHelper<T, false, true>
+{
+  // We have to provide our own New, because T doesn't have one already
+  static T* New(void) {return new T;}
+};
 
 template<class T>
 class AutowiredCreator:
@@ -56,7 +85,7 @@ public:
     // constructor is defined.
     //
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-    this->reset(new T);
+    this->reset(AutowiredCreatorHelper<T>::New());
     AutowirableSlot::LockContext()->Add(*this);
   }
 
@@ -190,8 +219,7 @@ private:
 /// Similar to Autowired, but the default constructor invokes Autowired(true)
 /// </summary>
 /// <remarks>
-/// This class is simply a convenience class and provides a declarative way to name a
-/// required dependency.
+/// This class is simply a convenience class and provides a declarative way to name a required dependency.
 /// </remarks>
 template<class T>
 class AutoRequired:
@@ -201,32 +229,6 @@ public:
   AutoRequired(void) {
     if(!*this)
       AutowiredCreator<T>::Create();
-  }
-};
-
-/// <summary>
-/// A special templated type that allows users to specify factory construction methods
-/// </summary>
-template<class T, T* (*fn)()>
-struct CtorProxy {};
-
-/// <summary>
-/// An AutoRequired specialization that allows the user to specify a function call to initialize this field
-/// </summary>
-/// <remarks>
-/// This specialization is useful when it's necessary to AutoRequire an interface
-/// </remarks>
-template<class T, T* (*fn)()>
-class AutoRequired<CtorProxy<T, fn>>:
-  public Autowired<T>
-{
-public:
-  AutoRequired(void) {
-    if(*this)
-      return;
-
-    this->reset(fn());
-    AutowirableSlot::LockContext()->Add(*this);
   }
 };
 

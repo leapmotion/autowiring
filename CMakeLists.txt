@@ -104,8 +104,6 @@ set(
   BoltTest.cpp
   ContextCreatorTest.h
   ContextCreatorTest.cpp
-  CtorProxyTest.h
-  CtorProxyTest.cpp
   CurrentContextPusherTest.h
   CurrentContextPusherTest.cpp
   DependentContextTest.h
