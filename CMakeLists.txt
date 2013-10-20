@@ -143,6 +143,7 @@ set(
   SnoopTest.h
   SnoopTest.cpp
   TestFixtures/ExitRaceThreaded.h
+  TestFixtures/SimpleInterface.h
   TestFixtures/SimpleObject.h
   TestFixtures/SimpleThreaded.h
   TestFixtures/MultiInherit.h
