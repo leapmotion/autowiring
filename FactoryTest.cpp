@@ -2,20 +2,10 @@
 #include "stdafx.h"
 #include "FactoryTest.h"
 #include "AutoFactory.h"
+#include "TestFixtures/SimpleInterface.h"
 #include <iostream>
 
 using namespace std;
-
-class SimpleInterface {
-public:
-  SimpleInterface(void):
-    m_called(false)
-  {}
-
-  bool m_called;
-
-  virtual void Method(void) = 0;
-};
 
 class ClassWithSimpleCtor:
   public SimpleInterface
@@ -33,17 +23,6 @@ public:
 };
 static_assert(has_simple_constructor<ClassWithSimpleCtor>::value, "Class with a zero-argument constructor was not correctly identified as such");
 
-class SimpleInterfaceWithNew:
-  public SimpleInterface
-{
-public:
-  // Factory method, for trivial factory construction:
-  static SimpleInterface* New(void) {
-    return new ClassWithSimpleCtor();
-  }
-};
-
-static_assert(has_static_new<SimpleInterfaceWithNew>::value, "Class with static allocator was not correctly detected as having one");
 
 class ClassWithIntegralCtor:
   public SimpleInterface
@@ -52,6 +31,7 @@ public:
   ClassWithIntegralCtor(int) {}
 };
 static_assert(!has_simple_constructor<ClassWithIntegralCtor>::value, "A class without a simple constructor was incorrectly identified as having one");
+
 
 TEST_F(FactoryTest, VerifySimple) {
   std::weak_ptr<ClassWithSimpleCtor> weak;
@@ -72,10 +52,33 @@ TEST_F(FactoryTest, VerifySimple) {
   EXPECT_TRUE(weak.expired()) << "CtorProxy object leaked from its parent context";
 }
 
-TEST_F(FactoryTest, VerifyCanRequireAbstract) {
-  AutoRequired<SimpleInterfaceWithNew> si;
+TEST_F(FactoryTest, VerifyFactoryCall) {
+  class ClassWithStaticNew
+  {
+  public:
+    ClassWithStaticNew(bool madeByFactory = false):
+      m_madeByFactory(madeByFactory)
+    {}
+
+    bool m_madeByFactory;
+
+    // Factory method, for trivial factory construction:
+    static ClassWithStaticNew* New(void) {
+      return new ClassWithStaticNew(true);
+    }
+  };
+  static_assert(has_static_new<ClassWithStaticNew>::value, "Class with static allocator was not correctly detected as having one");
+
+  // Try to create the static new type:
+  AutoRequired<ClassWithStaticNew> si;
+
+  // Verify the correct version was called:
+  ASSERT_TRUE(si->m_madeByFactory) << "A factory method was not called on a type which provided a static factory New method";
 }
 
-TEST_F(FactoryTest, VerifyFactoryCall) {
+TEST_F(FactoryTest, VerifyCanRequireAbstract) {
+  // Make a factory for SimpleInterface
+
+  // Should invoke the factory constructor method:
   AutoRequired<SimpleInterface> si;
 }
