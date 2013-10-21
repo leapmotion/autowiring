@@ -211,26 +211,6 @@ public:
 };
 
 /// <summary>
-/// A special templated type that allows users to specify a particular concrete instance
-/// </summary>
-template<class T, class Concrete>
-struct CtorConcrete {};
-
-template<class T, class Concrete>
-class AutoRequired<CtorConcrete<T, Concrete>>:
-  public Autowired<T>
-{
-public:
-  AutoRequired(void) {
-    if(*this)
-      return;
-
-    this->reset(new Concrete);
-    AutowirableSlot::LockContext()->Add(*this);
-  }
-};
-
-/// <summary>
 /// Unconditionally creates a new transient member of type T and adds it to the current context
 /// </summary>
 template<class T>
