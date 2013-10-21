@@ -12,9 +12,6 @@ class Autowired;
 class CoreContext;
 class GlobalCoreContext;
 
-// Redeclarations, primary declarations in CoreContext.h
-std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
-
 /// <summary>
 /// Provides a simple way to obtain a reference to the current context
 /// </summary>
@@ -56,29 +53,6 @@ public:
   using std::shared_ptr<CoreContext>::operator=;
 };
 
-/// <summary>
-/// AutoRequired construction helper
-/// </summary>
-/// <remarks>
-/// If type T has a static member function called New, the helper's Create routine will attempt call
-/// this function instead of the default constructor, even if the default constructor has been supplied,
-/// and even if the arity of the New routine is not zero.
-///
-/// To prevent this behavior, use a name other than New.
-/// </remarks>
-struct AutowiredCreatorHelper {
-  template<class T>
-  static typename std::enable_if<has_static_new<T>::value, T*>::type New(void) {
-    return T::New();
-  }
-
-  template<class T>
-  static typename std::enable_if<!has_static_new<T>::value, T*>::type New(void) {
-    static_assert(has_simple_constructor<T>::value, "Attempted to create a type which did not provide a zero-arguments ctor");
-    return new T;
-  }
-};
-
 template<class T>
 class AutowiredCreator:
   public AutowirableSlot,
@@ -86,13 +60,27 @@ class AutowiredCreator:
 {
 public:
   typedef shared_ptr<T> t_ptrType;
+  
+  template<class U>
+  static typename std::enable_if<has_static_new<U>::value, U*>::type New(void) {
+    return U::New();
+  }
+
+  template<class U>
+  static typename std::enable_if<!has_static_new<U>::value, U*>::type New(void) {
+    static_assert(has_simple_constructor<U>::value, "Attempted to create a type which did not provide a zero-arguments ctor");
+    return new U;
+  }
 
   /// <summary>
   /// Creates a new instance if this instance isn't autowired
   /// </summary>
   /// <remarks>
-  /// Users are encouraged to make use of AutoRequired wherever it's a sensible alternative
-  /// to a Create call.
+  /// If type T has a static member function called New, the helper's Create routine will attempt call
+  /// this function instead of the default constructor, even if the default constructor has been supplied,
+  /// and even if the arity of the New routine is not zero.
+  ///
+  /// To prevent this behavior, use a name other than New.
   /// </remarks>
   void Create(void) {
     if(*this)
@@ -121,33 +109,8 @@ public:
     // constructor is defined.
     //
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-    this->reset(AutowiredCreatorHelper::New<T>());
+    this->reset(New<T>());
     AutowirableSlot::LockContext()->Add(*this);
-  }
-
-  /// <summary>
-  /// This creates a pointer using the specified lambda, if such creation is needed.
-  /// <summary>
-  void Create(const std::function<T* ()>& fn) {
-    // Is the object already created?  Short-circuit if so.
-    if(*this)
-      return;
-
-    // Okay, we're ready to go now, we can release
-    // the shared pointer so any lambdas disappear
-    AutowirableSlot::m_tracker = std::shared_ptr<AutowirableSlot>();
-
-    // TODO:  Allow this to be lazily invoked
-    // It would be nice if this constructor is only invoked on the first dereference
-    // of this autowired object.  That would allow us to specify default types that
-    // aren't constructed spuriously.
-    T* ptr = fn();
-
-    // Now we'll add this object to the context so the created object may be autowired elsewhere.
-    // We also want to be sure we use the same shared_ptr that's being used internally in the
-    // context.
-    std::shared_ptr<CoreContext> context = LockContext();
-    *this = context->Add(ptr);
   }
 
   operator bool(void) const {
@@ -170,38 +133,6 @@ public:
   }
 
   bool IsAutowired(void) const override {return !!t_ptrType::get();}
-};
-
-/// <summary>
-/// This is the specialization for global contexts.  Unlike other autowires, it's guaranteed
-/// to autowire in all circumstances.
-/// </summary>
-/// <remarks>
-/// We do not autowire operator=, because there is never a case where the rhs is anything
-/// but the sole Global context or null.
-/// </remarks>
-template<>
-class AutowiredCreator<GlobalCoreContext>:
-  public AutowirableSlot,
-  public std::shared_ptr<GlobalCoreContext>
-{
-private:
-  // We do not allow operator=
-  using std::shared_ptr<GlobalCoreContext>::operator=;
-
-public:
-  typedef shared_ptr<GlobalCoreContext> t_ptrType;
-
-  AutowiredCreator(void):
-    std::shared_ptr<GlobalCoreContext>(GetGlobalContext())
-  {
-  }
-
-  bool IsAutowired(void) const override {return !!t_ptrType::get();}
-
-  operator GlobalCoreContext*(void) const {
-    return t_ptrType::get();
-  }
 };
 
 /// <summary>
