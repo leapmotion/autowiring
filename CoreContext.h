@@ -57,9 +57,6 @@ namespace CoreContextHelpers {
 template<class T>
 class Autowired;
 
-template<class T>
-class AutowiredLocal;
-
 template<class Fn>
 struct AtExit {
   AtExit(Fn&& fn):
@@ -266,35 +263,6 @@ protected:
   /// Removes all recognized event receivers in the indicated range
   /// </summary>
   void RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
-
-  /// <summary>
-  /// Autowires the passed slot, and if this fails, attempts to autowire in the parent context
-  /// </summary>
-  template<class W>
-  bool DoAutowire(W& slot) {
-    typename W::t_ptrType retVal;
-    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
-      retVal = pCur->FindByType(slot);
-      if(retVal) {
-        slot.swap(retVal);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /// <summary>
-  /// Autowires the passed slot, but does so without traversing to any parents
-  /// </summary>
-  template<class T>
-  bool DoAutowire(AutowiredLocal<T>& slot) {
-    auto retVal = FindByType<T>();
-    if(!retVal)
-      return false;
-
-    slot.swap(retVal);
-    return true;
-  }
 
   friend class SharedPtrWrapBase;
 
@@ -646,19 +614,31 @@ public:
   }
 
   /// <summary>
-  /// Registers a pointer to be autowired
+  /// Registers a slot to be autowired
   /// </summary>
-  /// <remarks>
-  /// The autowired member must generally inherit from Autowired, or there
-  /// may be issues.
-  /// </remarks>
   template<class W>
   bool Autowire(W& slot) {
-    if(DoAutowire(slot))
+    if(AutowireNoDefer(slot))
       return true;
 
     // Failed, defer
     Defer(slot);
+    return false;
+  }
+
+  /// <summary>
+  /// Identical to Autowire, but will not register the passed slot for deferred resolution
+  /// </summary>
+  template<class W>
+  bool AutowireNoDefer(W& slot) {
+    typename W::t_ptrType retVal;
+    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
+      retVal = pCur->FindByType(slot);
+      if(retVal) {
+        slot.swap(retVal);
+        return true;
+      }
+    }
     return false;
   }
 
@@ -678,7 +658,7 @@ public:
         return
           this->tracker.expired() ||
           this->slot ||
-          this->pThis->DoAutowire(this->slot);
+          this->pThis->AutowireNoDefer(this->slot);
       }
     };
 
