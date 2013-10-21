@@ -24,8 +24,6 @@ class AutoCurrentContext:
 {
 public:
   AutoCurrentContext(void);
-
-  using std::shared_ptr<CoreContext>::operator=;
 };
 
 /// <summary>
@@ -49,8 +47,6 @@ class AutoCreateContext:
 {
 public:
   AutoCreateContext(void);
-
-  using std::shared_ptr<CoreContext>::operator=;
 };
 
 template<class T>
@@ -121,17 +117,6 @@ public:
     return t_ptrType::get();
   }
 
-  AutowiredCreator<T>& operator=(T* rhs) {
-    // Set up the shared pointer first:
-    std::shared_ptr<T>::reset(rhs);
-
-    // Only add when we are non-null
-    if(rhs)
-      // Strong assumption must be made, here, that the rhs isn't already in the current context
-      LockContext()->Add(*this);
-    return *this;
-  }
-
   bool IsAutowired(void) const override {return !!t_ptrType::get();}
 };
 
@@ -161,8 +146,6 @@ public:
   Autowired(T* ptr) {
     *this = ptr;
   }
-
-  using AutowiredCreator<T>::operator=;
 };
 
 /// <summary>
