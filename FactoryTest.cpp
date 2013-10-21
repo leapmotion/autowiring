@@ -32,22 +32,19 @@ TEST_F(FactoryTest, VerifyFactoryCall) {
   ASSERT_TRUE(si->m_madeByFactory) << "A factory method was not called on a type which provided a static factory New method";
 }
 
-
-/// <summary>
-/// Compile-time check to ensure that unconstructable types are identified correctly
-/// </summary>
-class ClassWithIntegralCtor:
-  public SimpleInterface
-{
-public:
-  ClassWithIntegralCtor(int) {}
-
-  void Method(void) override {}
-};
-static_assert(!has_simple_constructor<ClassWithIntegralCtor>::value, "A class without a simple constructor was incorrectly identified as having one");
-
-
 TEST_F(FactoryTest, VerifyCanRequireAbstract) {
+  /// <summary>
+  /// Compile-time check to ensure that unconstructable types are identified correctly
+  /// </summary>
+  class ClassWithIntegralCtor:
+    public SimpleInterface
+  {
+  public:
+    ClassWithIntegralCtor(int) {}
+    void Method(void) override {}
+  };
+  static_assert(!has_simple_constructor<ClassWithIntegralCtor>::value, "A class without a simple constructor was incorrectly identified as having one");
+
   /// <summary>
   /// A factory for SimpleInterface
   /// </summary>
