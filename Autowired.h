@@ -178,6 +178,9 @@ class Autowired:
   public AutowiredCreator<T>
 {
 public:
+  static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
+  static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
+
   Autowired(void) {
     shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
     context->Autowire(*this);
@@ -188,26 +191,6 @@ public:
   }
 
   using AutowiredCreator<T>::operator=;
-};
-
-/// <summary>
-/// Forbidden autowiring.  Do not attempt it.  Instead, use AutoCurrentContext or AutoCreateContext.
-/// </summary>
-template<>
-class Autowired<CoreContext>
-{
-private:
-  Autowired(void);
-};
-
-/// <summary>
-/// Forbidden autowiring.  Do not attempt it.  Instead, use AutoGlobalContext
-/// </summary>
-template<>
-class Autowired<GlobalCoreContext>
-{
-private:
-  Autowired(void);
 };
 
 /// <summary>
