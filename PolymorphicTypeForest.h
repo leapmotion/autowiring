@@ -3,6 +3,8 @@
 #include TYPE_INDEX_HEADER
 #include TYPE_TRAITS_HEADER
 #include SHARED_PTR_HEADER
+#include <allocators>
+#include <list>
 #include <vector>
 
 /// <summary>
@@ -94,16 +96,30 @@ public:
     // Cast the witness down to the ground type:
     auto pWitnessGround = static_cast<Ground*>(pWitness.get());
 
+    // Collection of unsatisfied witnesses
+    std::vector<TreeBase*> te;
+
     // Linear scan for collisions:
-    for(auto q = m_memos.begin(); q != m_memos.end(); q++)
+    for(auto q = m_memos.begin(); q != m_memos.end(); q++) {
+      auto cur = q->second;
+      
+      if(cur->Contains(pWitnessGround)) {
+        if(cur->pGround)
+          // We have a witness that is an ancestor of the current witness.
+          return false;
+        
+        // The witness exists, but was not initialized.  The witness is _unsatisfied_ and
+        // will be satisfied if we can successfully insert.
+        te.push_back(cur);
+      }
+
       if(
-        // Verify that other witnesses are not ancestors of our current witness
-        q->second->Contains(pWitnessGround) ||
 
         // Verify that our current witness is not an ancestor of other witnesses
-        dynamic_cast<T*>(q->second->pGround.get())
+        dynamic_cast<T*>(cur->pGround.get())
       )
         return false;
+    }
 
     // Construct and introduce the new tree
     auto pTree = new Tree<T>;
