@@ -25,38 +25,16 @@ std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 ///
 /// To prevent this behavior, use a name other than New.
 /// </remarks>
-template<class T, bool hsn = has_static_new<T>::value, bool hsc = has_simple_constructor<T>::value>
-struct AutowiredCreatorHelper;
+struct AutowiredCreatorHelper {
+  template<class T>
+  static typename std::enable_if<has_static_new<T>::value, T*>::type New(void) {
+    return T::New();
+  }
 
-template<class T, bool hsc>
-struct AutowiredCreatorHelper<T, true, hsc>:
-  public T
-{
-  // This specialization just brings in T's already-existing New implementation
-  // We do this even if T also has a zero-arguments constructor--this is intentional!
-  using T::New;
-};
-
-template<class T>
-struct AutowiredCreatorHelper<T, false, true>
-{
-  // We have to provide our own New, because T doesn't have one already
-  static T* New(void) {return new T;}
-};
-
-template<class T>
-struct AutowiredCreatorHelper<T, false, false>
-{
-  static T* New(void) {
-    // Okay we have a problem.  Our type does not have an embedded "New", and cannot be zero-args
-    // constructed.  We need to try to obtain a factory in the current context which might be able
-    // to construct our type for us.
-    Autowired<AutoFactory<T>> factory;
-    if(!factory)
-      throw std::runtime_error("Attempted to AutoRequire an interface, but no factory was registered to create this type.");
-
-    // Well we got a factory back, we can try making the instance now.
-    return factory->New();
+  template<class T>
+  static typename std::enable_if<!has_static_new<T>::value, T*>::type New(void) {
+    static_assert(has_simple_constructor<T>::value, "Attempted to create a type which did not provide a zero-arguments ctor");
+    return new T;
   }
 };
 
@@ -102,7 +80,7 @@ public:
     // constructor is defined.
     //
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-    this->reset(AutowiredCreatorHelper<T>::New());
+    this->reset(AutowiredCreatorHelper::New<T>());
     AutowirableSlot::LockContext()->Add(*this);
   }
 
