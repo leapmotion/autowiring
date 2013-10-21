@@ -16,6 +16,47 @@ class GlobalCoreContext;
 std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 
 /// <summary>
+/// Provides a simple way to obtain a reference to the current context
+/// </summary>
+/// <remarks>
+/// Users of this class are encouraged not to hold references for longer than needed.  Failing
+/// to release a context pointer could prevent resources from being correctly released.
+/// </remarks>
+class AutoCurrentContext:
+  public std::shared_ptr<CoreContext>
+{
+public:
+  AutoCurrentContext(void);
+
+  using std::shared_ptr<CoreContext>::operator=;
+};
+
+/// <summary>
+/// Simple way to obtain a reference to the global context
+/// </summary>
+class AutoGlobalContext:
+  public std::shared_ptr<CoreContext>
+{
+public:
+  AutoGlobalContext(void);
+};
+
+/// <summary>
+/// Provides a simple way to create a dependent context pointer
+/// </summary>
+/// <remarks>
+/// The newly created context will be created using CoreContext::CurrentContext()->Create().
+/// </remarks>
+class AutoCreateContext:
+  public std::shared_ptr<CoreContext>
+{
+public:
+  AutoCreateContext(void);
+
+  using std::shared_ptr<CoreContext>::operator=;
+};
+
+/// <summary>
 /// AutoRequired construction helper
 /// </summary>
 /// <remarks>
@@ -363,47 +404,6 @@ public:
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot Defer an event for an unrelated type");
     return m_receiver->Invoke(pfn);
   }
-};
-
-/// <summary>
-/// Provides a simple way to obtain a reference to the current context
-/// </summary>
-/// <remarks>
-/// Users of this class are encouraged not to hold references for longer than needed.  Failing
-/// to release a context pointer could prevent resources from being correctly released.
-/// </remarks>
-class AutoCurrentContext:
-  public std::shared_ptr<CoreContext>
-{
-public:
-  AutoCurrentContext(void);
-
-  using std::shared_ptr<CoreContext>::operator=;
-};
-
-/// <summary>
-/// Simple way to obtain a reference to the global context
-/// </summary>
-class AutoGlobalContext:
-  public std::shared_ptr<CoreContext>
-{
-public:
-  AutoGlobalContext(void);
-};
-
-/// <summary>
-/// Provides a simple way to create a dependent context pointer
-/// </summary>
-/// <remarks>
-/// The newly created context will be created using CoreContext::CurrentContext()->Create().
-/// </remarks>
-class AutoCreateContext:
-  public std::shared_ptr<CoreContext>
-{
-public:
-  AutoCreateContext(void);
-
-  using std::shared_ptr<CoreContext>::operator=;
 };
 
 #endif
