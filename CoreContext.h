@@ -46,9 +46,6 @@ class OutstandingCountTracker;
 namespace CoreContextHelpers {
   template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
   struct AddPolymorphic;
-  
-  template<class T, bool isContextMember = std::is_base_of<ContextMember, T>::value>
-  struct IsMember;
 }
 
 template<class T>
@@ -302,15 +299,26 @@ public:
   /// Determines whether the passed type is a member of this context, or any ancestor context
   /// </summary>
   template<class T>
-  bool IsMember(T* ptr) const {
-    return !!((CoreContextHelpers::IsMember<T>&)*this)(ptr);
+  bool IsMember(typename std::enable_if<std::is_base_of<ContextMember, T>::value, T*>::type ptr) const {
+    return
+      static_cast<ContextMember*>(ptr)->GetContext().get() == this;
+  }
+  
+  template<class T>
+  bool IsMember(typename std::enable_if<!std::is_base_of<ContextMember, T>::value, T*>::type ptr) const {
+    // If the passed type is a ContextMember, we can query relationship status
+    ContextMember* pMember = dynamic_cast<ContextMember*>(ptr);
+    return
+      pMember ?
+      pMember->GetContext().get() == this :
+      !!m_byType.count(typeid(T));
   }
   
   template<class T>
   bool IsMember(const std::shared_ptr<T>& ptr) const {
-    return !!((CoreContextHelpers::IsMember<T>&)*this)(ptr.get());
+    return IsMember<T>(ptr.get());
   }
-
+  
   /// <summary>
   /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
   /// </summary>
@@ -818,30 +826,6 @@ struct AddPolymorphic<T, false>:
 {
 public:
   inline void operator()(const std::shared_ptr<T>&) {}
-};
-
-template<class T>
-struct IsMember<T, true>:
-  public CoreContext
-{
-  bool operator()(T* ptr) const {
-    return
-      static_cast<ContextMember*>(ptr)->GetContext().get() == this;
-  }
-};
-
-template<class T>
-struct IsMember<T, false>:
-  public CoreContext
-{
-  bool operator()(T* ptr) const {
-    // If the passed type is a ContextMember, we can query relationship status
-    ContextMember* pMember = dynamic_cast<ContextMember*>(ptr);
-    return
-      pMember ?
-      pMember->GetContext().get() == this :
-      !!m_byType.count(typeid(T));
-  }
 };
 
 }
