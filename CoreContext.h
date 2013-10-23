@@ -45,9 +45,6 @@ class OutstandingCountTracker;
 
 namespace CoreContextHelpers {
   template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
-  struct FindByCastInternal;
-
-  template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
   struct AddPolymorphic;
   
   template<class T, bool isContextMember = std::is_base_of<ContextMember, T>::value>
@@ -223,7 +220,6 @@ protected:
 
   friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
   friend class GlobalCoreContext;
-
   friend class OutstandingCountTracker;
 
   /// <summary>
@@ -574,9 +570,47 @@ public:
   /// due to limitations on the way that dynamic_cast works internally.
   /// </remarks>
   template<class T>
-  std::shared_ptr<T> FindByCast(void) {
-    return ((CoreContextHelpers::FindByCastInternal<T>&)*this)();
+  void FindByCast(typename std::enable_if<std::is_polymorphic<T>::value, std::shared_ptr<T>>::type& match) {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    std::shared_ptr<Object> matchedObject;
+
+    static_assert((!std::is_same<Object, T>::value), "FindByCastInternal on type Object is an overly broad search criteria");
+
+    std::shared_ptr<Object> obj;
+    for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); ++q) {
+      SharedPtrWrapBase* pBase = q->second;
+
+      // See if this wrap contains an object, which we could use to access other types
+      obj = pBase->AsObject();
+      if(!obj)
+        continue;
+
+      // Okay, we can work with this, it's an Object
+      try {
+        // Try the cast
+        if(!dynamic_cast<T*>(obj.get()))
+          // Sometimes the above will throw an exception, sometimes it will return null.
+          // We handle both cases by wrapping this in a try-except block.
+          continue;
+
+        // Verify that we didn't try storing something already
+        if(matchedObject)
+          throw_rethrowable std::runtime_error("An autowiring operation resulted in an ambiguous match");
+
+        // Record this value to be returned
+        matchedObject.swap(obj);
+      } catch(std::bad_cast&) {
+      } catch(...) {
+        // Very bad exception happened
+      };
+    }
+
+    if(matchedObject)
+      match = std::dynamic_pointer_cast<T, Object>(matchedObject);
   }
+  
+  template<class T>
+  void FindByCast(...) {}
 
   /// <summary>
   /// Locates an available context member by its exact type, if known
@@ -595,14 +629,16 @@ public:
       q = m_byType.find(typeid(T));
     }
 
-    if(q == m_byType.end())
+    if(q == m_byType.end()) {
       // We couldn't find by a perfect name match, now we'll try to find something in the
       // table which can be safely casted to the type we're looking for.  A common case
       // where this is needed is where the autowiring calls for an interface, and we have
       // a concrete implementation of this interface.
       // Note that this only works for polymorphic types!
       // POCO types do not have a VFT and cannot be used in a dynamic_cast.
-      return FindByCast<T>();
+      std::shared_ptr<T> retVal;
+      return FindByCast<T>(retVal), retVal;
+    }
 
     // If find has been requested by type, there should be only one match.
     std::shared_ptr<T>& retVal = *(SharedPtrWrap<T>*)q->second;
@@ -782,61 +818,6 @@ struct AddPolymorphic<T, false>:
 {
 public:
   inline void operator()(const std::shared_ptr<T>&) {}
-};
-
-template<class T, bool isPolymorphic>
-struct FindByCastInternal:
-  public CoreContext
-{
-  std::shared_ptr<T> operator()(void) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    std::shared_ptr<Object> matchedObject;
-
-    static_assert((!std::is_same<Object, T>::value), "FindByCastInternal on type Object is an overly broad search criteria");
-
-    std::shared_ptr<Object> obj;
-    for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); ++q) {
-      SharedPtrWrapBase* pBase = q->second;
-
-      // See if this wrap contains an object, which we could use to access other types
-      obj = pBase->AsObject();
-      if(!obj)
-        continue;
-
-      // Okay, we can work with this, it's an Object
-      try {
-        // Try the cast
-        if(!dynamic_cast<T*>(obj.get()))
-          // Sometimes the above will throw an exception, sometimes it will return null.
-          // We handle both cases by wrapping this in a try-except block.
-          continue;
-
-        // Verify that we didn't try storing something already
-        if(matchedObject)
-          throw_rethrowable std::runtime_error("An autowiring operation resulted in an ambiguous match");
-
-        // Record this value to be returned
-        matchedObject.swap(obj);
-      } catch(std::bad_cast&) {
-      } catch(...) {
-        // Very bad exception happened
-      };
-    }
-
-    return
-      matchedObject ?
-      std::dynamic_pointer_cast<T, Object>(matchedObject) :
-      std::shared_ptr<T>();
-  }
-};
-
-template<class T>
-struct FindByCastInternal<T, false>:
-  public CoreContext
-{
-  std::shared_ptr<T> operator()(void) {
-    return std::shared_ptr<T>();
-  }
 };
 
 template<class T>
