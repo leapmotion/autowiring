@@ -537,7 +537,7 @@ public:
   /// <summary>
   /// Utility debug method for writing a snapshot of this context to the specified output stream
   /// </summary>
-  void Dump(std::ostream& os) const;// Accessor methods:
+  void Dump(std::ostream& os) const;
 
   /// <summary>
   /// Obtains a pointer to the parent context
