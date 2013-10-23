@@ -181,7 +181,7 @@ public:
   /// True if we contain any member of type T
   /// </returns>
   template<class T>
-  bool Contains(void) {
+  bool Contains(void) const {
     return !!m_memos.count(typeid(T));
   }
   
@@ -189,7 +189,7 @@ public:
   /// True if we contain a member of type T and that member matches the passed member
   /// </summary>
   template<class T>
-  bool Contains(T* ptr) {
+  bool Contains(T* ptr) const {
     auto q = m_memos.find(typeid(T));
     if(q == m_memos.end())
       return false;
@@ -217,11 +217,13 @@ public:
     if(q != m_memos.end())
       return ptr = static_cast<Tree<T>*>(q->second)->pWitness, true;
 
+    TreeBase* pMatchedTree = nullptr;
     std::shared_ptr<T> match;
 
     // Linear scan on all trees (but not memos)
     for(auto q = m_trees.begin(); q != m_trees.end(); q++) {
-      std::shared_ptr<T> attemptedCast = std::dynamic_pointer_cast<T, Ground>(q->second->pGround);
+      TreeBase* pCur = q->second;
+      std::shared_ptr<T> attemptedCast = std::dynamic_pointer_cast<T, Ground>(pCur->pGround);
       if(!attemptedCast)
         // No match, try the next tree in the forest
         continue;
@@ -231,13 +233,14 @@ public:
         return false;
 
       // Copy over the match
+      pMatchedTree = pCur;
       match = attemptedCast;
     }
 
     // Memoize the consequences of our search:
     auto pTree = new Tree<T>;
     pTree->pWitness = match;
-    pTree->pGround = match;
+    pTree->pGround = pMatchedTree ? pMatchedTree->pGround : nullptr;
     m_memos[typeid(T)] = pTree;
 
     // Pass the results back to the caller and indicate unambiguous success
