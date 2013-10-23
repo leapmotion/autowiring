@@ -51,6 +51,11 @@ private:
   struct TreeBase {
     // Ground type shared pointer
     std::shared_ptr<Ground> pGround;
+    
+    /// <summary>
+    /// Casts the passed value to the bound type
+    /// </summary>
+    virtual void operator=(const std::shared_ptr<Ground>& rhs) = 0;
 
     /// <summary>
     /// Returns true if rhs is of type T, the type named by this entry
@@ -65,6 +70,11 @@ private:
   public:
     // Witness of this type
     std::shared_ptr<T> pWitness;
+
+    virtual void operator=(const std::shared_ptr<Ground>& rhs) override {
+      pGround = rhs;
+      pWitness = std::dynamic_pointer_cast<T, Ground>(rhs);
+    }
 
     virtual bool Contains(Ground* rhs) const override {
       return !!dynamic_cast<T*>(rhs);
@@ -102,24 +112,25 @@ public:
     // Linear scan for collisions:
     for(auto q = m_memos.begin(); q != m_memos.end(); q++) {
       auto cur = q->second;
-      
-      if(cur->Contains(pWitnessGround)) {
-        if(cur->pGround)
-          // We have a witness that is an ancestor of the current witness.
+
+      if(cur->pGround)
+        // Already-resolved instance, we need to ensure there are no collisions
+      {
+        if(
+          cur->Contains(pWitnessGround) ||
+          dynamic_cast<T*>(cur->pGround.get())
+        )
+          // Relationship exists between this witness and an already-resolved witness, we cannot proceed
           return false;
-        
-        // The witness exists, but was not initialized.  The witness is _unsatisfied_ and
-        // will be satisfied if we can successfully insert.
-        te.push_back(cur);
       }
-
-      if(
-
-        // Verify that our current witness is not an ancestor of other witnesses
-        dynamic_cast<T*>(cur->pGround.get())
-      )
-        return false;
+      else if(cur->Contains(pWitnessGround))
+        // We can delay-resolve this entry:
+        te.push_back(cur);
     }
+
+    // Run through all necessary transfer assignments:
+    for(size_t i = te.size(); i--;)
+      *te[i] = std::static_pointer_cast<Ground, T>(pWitness);
 
     // Construct and introduce the new tree
     auto pTree = new Tree<T>;
