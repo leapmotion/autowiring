@@ -249,43 +249,6 @@ protected:
       m_pParent->RemoveEventReceiver(pRecvr);
   };
 
-  template<class T>
-  typename std::enable_if<std::is_polymorphic<T>::value, void>::type AddPolymorphic(const std::shared_ptr<T>& value) {
-    // Add event receivers:
-    std::shared_ptr<EventReceiver> pRecvr = std::fast_pointer_cast<EventReceiver, T>(value);
-    if(pRecvr)
-      AddEventReceiver(pRecvr);
-
-    // Finally, any exception filters:
-    ExceptionFilter* pFilter = dynamic_cast<ExceptionFilter*>(value.get());
-    if(pFilter)
-      m_filters.insert(pFilter);
-  }
-
-  template<class T>
-  inline void AddPolymorphic(...) {}
-
-  /// Adds an object of any kind to the IOC container
-  /// </summary>
-  /// <param name="value">The member to be added</param>
-  /// <remarks>
-  /// It's safe to allow the returned shared_ptr to go out of scope; the core context
-  /// will continue to hold a reference to it until it is destroyed
-  /// </remarks>
-  template<class T>
-  void AddInternal(std::shared_ptr<T> value) {
-    // Add a new member of the forest:
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_byType.AddTree(value);
-
-    // Polymorphic insertion, as required:
-    AddPolymorphic<T>(value);
-
-    // Notify any autowiring field that is currently waiting that we have a new member
-    // to be considered.
-    UpdateDeferredElements();
-  }
-
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
   /// </summary>
@@ -397,28 +360,53 @@ public:
   /// <summary>
   /// Adds an object of any kind to the IOC container
   /// </summary>
-  /// <param name="pContextMember">The member which was added</param>
+  /// <param name="T">The concrete type to be added</param>
+  /// <param name="value">The member to add</param>
   /// <remarks>
   /// It's safe to allow the returned shared_ptr to go out of scope; the core context
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
-    AddInternal(value);
+    {
+      boost::lock_guard<boost::mutex> lk(m_lock);
 
-    auto pContextMember = std::fast_pointer_cast<ContextMember, T>(value);
-    if(pContextMember)
-      AddContextMember(pContextMember);
+      // Add a new member of the forest:
+      auto obj = std::fast_pointer_cast<Object, T>(value);
+      if(obj) {
+        m_byType.AddTree(obj);
 
-    // Is the passed value a CoreThread?
-    auto pCoreThread = std::fast_pointer_cast<CoreThread, T>(value);
-    if(pCoreThread)
-      AddCoreThread(pCoreThread);
+        // Context members:
+        auto pContextMember = std::fast_pointer_cast<ContextMember, T>(value);
+        if(pContextMember) {
+          AddContextMember(pContextMember);
 
-    // Is the passed value a Bolt?
-    auto pBase = std::fast_pointer_cast<BoltBase, T>(value);
-    if(pBase)
-      AddBolt(pBase);
+          // CoreThreads:
+          auto pCoreThread = std::fast_pointer_cast<CoreThread, T>(value);
+          if(pCoreThread)
+            AddCoreThread(pCoreThread);
+        }
+      }
+    
+      // Event receivers:
+      auto pRecvr = std::fast_pointer_cast<EventReceiver, T>(value);
+      if(pRecvr)
+        AddEventReceiver(pRecvr);
+
+      // Exception filters:
+      auto pFilter = std::fast_pointer_cast<ExceptionFilter, T>(value);
+      if(pFilter)
+        m_filters.insert(pFilter.get());
+
+      // Bolts:
+      auto pBase = std::fast_pointer_cast<BoltBase, T>(value);
+      if(pBase)
+        AddBolt(pBase);
+    }
+
+    // Notify any autowiring field that is currently waiting that we have a new member
+    // to be considered.
+    UpdateDeferredElements();
   }
 
   /// <summary>
@@ -607,57 +595,6 @@ public:
   void AddContextMember(const std::shared_ptr<ContextMember>& ptr);
 
   /// <summary>
-  /// Attempts to find a member in the container that can be passed to the specified type
-  /// </summary>
-  /// <remarks>
-  /// This method will throw an exception if there is more than one object castable to
-  /// type T.  This method cannot be invoked with any type that does not inherit from Object
-  /// due to limitations on the way that dynamic_cast works internally.
-  /// </remarks>
-  template<class T>
-  void FindByCast(typename std::enable_if<std::is_polymorphic<T>::value, std::shared_ptr<T>>::type& match) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    std::shared_ptr<Object> matchedObject;
-
-    static_assert((!std::is_same<Object, T>::value), "FindByCastInternal on type Object is an overly broad search criteria");
-
-    std::shared_ptr<Object> obj;
-    for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); ++q) {
-      SharedPtrWrapBase* pBase = q->second;
-
-      // See if this wrap contains an object, which we could use to access other types
-      obj = pBase->AsObject();
-      if(!obj)
-        continue;
-
-      // Okay, we can work with this, it's an Object
-      try {
-        // Try the cast
-        if(!dynamic_cast<T*>(obj.get()))
-          // Sometimes the above will throw an exception, sometimes it will return null.
-          // We handle both cases by wrapping this in a try-except block.
-          continue;
-
-        // Verify that we didn't try storing something already
-        if(matchedObject)
-          throw_rethrowable std::runtime_error("An autowiring operation resulted in an ambiguous match");
-
-        // Record this value to be returned
-        matchedObject.swap(obj);
-      } catch(std::bad_cast&) {
-      } catch(...) {
-        // Very bad exception happened
-      };
-    }
-
-    if(matchedObject)
-      match = std::dynamic_pointer_cast<T, Object>(matchedObject);
-  }
-  
-  template<class T>
-  void FindByCast(...) {}
-
-  /// <summary>
   /// Locates an available context member by its exact type, if known
   /// </summary>
   template<class T>
@@ -667,29 +604,9 @@ public:
 
   template<class T>
   std::shared_ptr<T> FindByType(void) {
-    // Attempt a resolution by type first:
-    t_mpType::iterator q;
-    {
-      boost::lock_guard<boost::mutex> lk(m_lock);
-      q = m_byType.find(typeid(T));
-    }
-
-    if(q == m_byType.end()) {
-      // We couldn't find by a perfect name match, now we'll try to find something in the
-      // table which can be safely casted to the type we're looking for.  A common case
-      // where this is needed is where the autowiring calls for an interface, and we have
-      // a concrete implementation of this interface.
-      // Note that this only works for polymorphic types!
-      // POCO types do not have a VFT and cannot be used in a dynamic_cast.
-      std::shared_ptr<T> retVal;
-      return FindByCast<T>(retVal), retVal;
-    }
-
-    // If find has been requested by type, there should be only one match.
-    std::shared_ptr<T>& retVal = *(SharedPtrWrap<T>*)q->second;
-    q++;
-    if(q != m_byType.end() && q->first == typeid(T))
-      // Ambiguous match, exception:
+    std::shared_ptr<T> retVal;
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    if(!m_byType.Resolve(retVal))
       throw_rethrowable std::runtime_error("An autowiring operation resulted in an ambiguous match");
     return retVal;
   }
