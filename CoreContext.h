@@ -8,6 +8,7 @@
 #include "DependentContext.h"
 #include "ExceptionFilter.h"
 #include "EventSender.h"
+#include "PolymorphicTypeForest.h"
 #include "SharedPtrWrap.h"
 #include "TeardownNotifier.h"
 #include "TransientContextMember.h"
@@ -157,8 +158,7 @@ protected:
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes
   // away.
-  typedef std::multimap<std::type_index, SharedPtrWrapBase*> t_mpType;
-  t_mpType m_byType;
+  PolymorphicTypeForest<Object> m_byType;
 
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
@@ -273,16 +273,10 @@ protected:
   /// will continue to hold a reference to it until it is destroyed
   /// </remarks>
   template<class T>
-  SharedPtrWrap<T>* AddInternal(std::shared_ptr<T> value) {
-    // Add to the map:
-    SharedPtrWrap<T>* pWrap = new SharedPtrWrap<T>(m_self, value);
+  void AddInternal(std::shared_ptr<T> value) {
+    // Add a new member of the forest:
     (boost::lock_guard<boost::mutex>)m_lock,
-    m_byType.insert(
-      t_mpType::value_type(
-        typeid(*value.get()),
-        pWrap
-      )
-    );
+    m_byType.AddTree(value);
 
     // Polymorphic insertion, as required:
     AddPolymorphic<T>(value);
@@ -290,7 +284,6 @@ protected:
     // Notify any autowiring field that is currently waiting that we have a new member
     // to be considered.
     UpdateDeferredElements();
-    return pWrap;
   }
 
   /// <summary>
@@ -352,7 +345,7 @@ public:
     return
       pMember ?
       pMember->GetContext().get() == this :
-      !!m_byType.count(typeid(T));
+      m_byType.Contains<T>();
   }
   
   template<class T>
@@ -411,16 +404,19 @@ public:
   /// </remarks>
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
-    auto pWrap = AddInternal(value);
-    AddContextMember(pWrap);
+    AddInternal(value);
+
+    auto pContextMember = std::fast_pointer_cast<ContextMember, T>(value);
+    if(pContextMember)
+      AddContextMember(pContextMember);
 
     // Is the passed value a CoreThread?
-    CoreThread* pCoreThread = std::fast_pointer_cast<CoreThread, T>(value).get();
+    auto pCoreThread = std::fast_pointer_cast<CoreThread, T>(value);
     if(pCoreThread)
       AddCoreThread(pCoreThread);
 
     // Is the passed value a Bolt?
-    BoltBase* pBase = std::fast_pointer_cast<BoltBase, T>(value).get();
+    auto pBase = std::fast_pointer_cast<BoltBase, T>(value);
     if(pBase)
       AddBolt(pBase);
   }
@@ -447,13 +443,13 @@ public:
   /// It's safe to allow the returned shared_ptr to go out of scope; the core context
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
-  void AddCoreThread(CoreThread* pCoreThread, bool allowNotReady = false);
+  void AddCoreThread(const std::shared_ptr<CoreThread>& pCoreThread, bool allowNotReady = false);
 
   /// <summary>
   /// Adds the specified context creation listener to receive creation events broadcast from this context
   /// </summary>
   /// <param name="pBase">The instance being added</param>
-  void AddBolt(BoltBase* pBase);
+  void AddBolt(const std::shared_ptr<BoltBase>& pBase);
 
   /// <summary>
   /// Utility routine, invoked typically by the service, which starts all registered
@@ -608,7 +604,7 @@ public:
   /// <summary>
   /// Overload of Add based on ContextMember
   /// </summary>
-  void AddContextMember(SharedPtrWrapBase* pWrap);
+  void AddContextMember(const std::shared_ptr<ContextMember>& ptr);
 
   /// <summary>
   /// Attempts to find a member in the container that can be passed to the specified type

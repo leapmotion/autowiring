@@ -105,15 +105,21 @@ private:
     }
   };
 
+  typedef std::unordered_map<std::type_index, TreeBase*> t_mpType;
+
   // All known type trees
-  std::unordered_map<std::type_index, TreeBase*> m_trees;
+  t_mpType m_trees;
 
   // Memoized results for search efficiency and to facilitate ambiguation detection:
-  std::unordered_map<std::type_index, TreeBase*> m_memos;
+  t_mpType m_memos;
 
 public:
   // Accessor methods:
   size_t size(void) const {return m_trees.size();}
+  typename t_mpType::iterator begin(void) {return m_trees.begin();}
+  typename t_mpType::const_iterator begin(void) const {return m_trees.begin();}
+  typename t_mpType::iterator end(void) {return m_trees.end();}
+  typename t_mpType::const_iterator end(void) const {return m_trees.end();}
 
   /// <summary>
   /// Adds the passed type to this collection
@@ -169,6 +175,27 @@ public:
     m_memos[typeid(T)] = &(*new Tree<T> = *pTree);
 
     return true;
+  }
+
+  /// <returns>
+  /// True if we contain any member of type T
+  /// </returns>
+  template<class T>
+  bool Contains(void) {
+    return !!m_memos.count(typeid(T));
+  }
+  
+  /// <summary>
+  /// True if we contain a member of type T and that member matches the passed member
+  /// </summary>
+  template<class T>
+  bool Contains(T* ptr) {
+    auto q = m_memos.find(typeid(T));
+    if(q == m_memos.end())
+      return false;
+
+    auto val = static_cast<Tree<T>*>(q->second);
+    return val->pWitness.get() == ptr;
   }
 
   /// <returns>
