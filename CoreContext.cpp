@@ -11,7 +11,6 @@
 #include <memory>
 
 using namespace std;
-using namespace CoreContextHelpers;
 
 boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
 

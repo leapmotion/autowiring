@@ -43,11 +43,6 @@ class EventReceiver;
 class GlobalCoreContext;
 class OutstandingCountTracker;
 
-namespace CoreContextHelpers {
-  template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
-  struct AddPolymorphic;
-}
-
 template<class T>
 class Autowired;
 
@@ -223,6 +218,53 @@ protected:
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
   void UpdateDeferredElements(void);
+  
+  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+    {
+      // Add to our local collection:
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      m_eventReceivers.insert(pRecvr);
+
+      // Scan the list of compatible senders:
+      for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+        *q->second += pRecvr;
+    }
+
+    // Delegate ascending resolution, where possible.  This ensures that the parent context links
+    // this event receiver to compatible senders in the parent context itself.
+    if(m_pParent)
+      m_pParent->AddEventReceiver(pRecvr);
+  }
+
+  void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+    // Remove from the local collection
+    (boost::lock_guard<boost::mutex>)m_lock,
+    m_eventReceivers.erase(pRecvr);
+
+    // Notify all compatible senders that we're going away:
+    for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+      *q->second -= pRecvr;
+
+    // Delegate to the parent:
+    if(m_pParent)
+      m_pParent->RemoveEventReceiver(pRecvr);
+  };
+
+  template<class T>
+  typename std::enable_if<std::is_polymorphic<T>::value, void>::type AddPolymorphic(const std::shared_ptr<T>& value) {
+    // Add event receivers:
+    std::shared_ptr<EventReceiver> pRecvr = std::fast_pointer_cast<EventReceiver, T>(value);
+    if(pRecvr)
+      AddEventReceiver(pRecvr);
+
+    // Finally, any exception filters:
+    ExceptionFilter* pFilter = dynamic_cast<ExceptionFilter*>(value.get());
+    if(pFilter)
+      m_filters.insert(pFilter);
+  }
+
+  template<class T>
+  inline void AddPolymorphic(...) {}
 
   /// Adds an object of any kind to the IOC container
   /// </summary>
@@ -244,7 +286,7 @@ protected:
     );
 
     // Polymorphic insertion, as required:
-    ((CoreContextHelpers::AddPolymorphic<T>&)*this)(value);
+    AddPolymorphic<T>(value);
 
     // Notify any autowiring field that is currently waiting that we have a new member
     // to be considered.
@@ -544,7 +586,7 @@ public:
     m_snoopers.insert(rcvr);
 
     // Pass control to the event adder helper:
-    ((CoreContextHelpers::AddPolymorphic<T>&)*this).AddEventReceiver(rcvr);
+    AddEventReceiver(rcvr);
   }
 
   /// <summary>
@@ -561,7 +603,7 @@ public:
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
     (boost::lock_guard<boost::mutex>)m_lock,
     m_snoopers.erase(rcvr);
-    ((CoreContextHelpers::AddPolymorphic<T>&)*this).RemoveEventReceiver(rcvr);
+    RemoveEventReceiver(rcvr);
   }
 
   /// <summary>
@@ -744,67 +786,5 @@ public:
 };
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& context);
-
-namespace CoreContextHelpers {
-
-
-template<class T, bool isPolymorphic>
-struct AddPolymorphic:
-  public CoreContext
-{
-public:
-  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    {
-      // Add to our local collection:
-      boost::lock_guard<boost::mutex> lk(m_lock);
-      m_eventReceivers.insert(pRecvr);
-
-      // Scan the list of compatible senders:
-      for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
-        *q->second += pRecvr;
-    }
-
-    // Delegate ascending resolution, where possible.  This ensures that the parent context links
-    // this event receiver to compatible senders in the parent context itself.
-    if(m_pParent)
-      ((AddPolymorphic<T, true>&)*m_pParent).AddEventReceiver(pRecvr);
-  }
-
-  void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    // Remove from the local collection
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_eventReceivers.erase(pRecvr);
-
-    // Notify all compatible senders that we're going away:
-    for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
-      *q->second -= pRecvr;
-
-    // Delegate to the parent:
-    if(m_pParent)
-      ((AddPolymorphic<T, true>&)*m_pParent).RemoveEventReceiver(pRecvr);
-  };
-
-  inline void operator()(std::shared_ptr<T> value) {
-    // Add event receivers:
-    std::shared_ptr<EventReceiver> pRecvr = std::fast_pointer_cast<EventReceiver, T>(value);
-    if(pRecvr)
-      AddEventReceiver(pRecvr);
-
-    // Finally, any exception filters:
-    ExceptionFilter* pFilter = dynamic_cast<ExceptionFilter*>(value.get());
-    if(pFilter)
-      m_filters.insert(pFilter);
-  }
-};
-
-template<class T>
-struct AddPolymorphic<T, false>:
-  public CoreContext
-{
-public:
-  inline void operator()(const std::shared_ptr<T>&) {}
-};
-
-}
 
 #endif
