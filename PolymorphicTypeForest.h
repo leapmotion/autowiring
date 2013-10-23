@@ -8,6 +8,30 @@
 #include <vector>
 
 /// <summary>
+/// Extracts the ground type, if available
+/// </summary>
+template<class T>
+struct ground_type_of {
+  template<bool b>
+  struct resolver {
+    typedef typename T::ground type;
+  };
+
+  template<>
+  struct resolver<false> {
+    typedef typename T type;
+  };
+  
+  template<class U>
+  static typename U::ground select(typename U::ground*);
+
+  template<class U>
+  static U select(...);
+
+  typedef decltype(select<T>(nullptr)) type;
+};
+
+/// <summary>
 /// Represents a type bag, which may be used to perform runtime type resolution
 /// </summary>
 /// <remarks>
@@ -88,6 +112,9 @@ private:
   std::unordered_map<std::type_index, TreeBase*> m_memos;
 
 public:
+  // Accessor methods:
+  size_t size(void) const {return m_trees.size();}
+
   /// <summary>
   /// Adds the passed type to this collection
   /// </summary>

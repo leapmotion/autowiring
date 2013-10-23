@@ -8,6 +8,9 @@
 /// </summary>
 class Object {
 public:
+  // We are our own ground type
+  typedef Object ground;
+
   virtual ~Object(void) {};
 };
 
