@@ -26,13 +26,13 @@ TEST_F(ContextCleanupTest, VerifyNoEarlyDtor) {
   std::weak_ptr<SimpleObject> weak;
 
   {
-    shared_ptr<CoreContext> context = CoreContext::CurrentContext()->Create();
+    AutoCreateContext context;
     CurrentContextPusher psher(context);
 
     {
       // Okay, now we create a simple class first:
       AutoRequired<SimpleObject> sObj;
-      ASSERT_TRUE(sObj.IsAutowired()) << "";
+      ASSERT_TRUE(sObj.IsAutowired()) << "Failed to construct a simple type in the current context";
 
       weak = sObj;
     }
