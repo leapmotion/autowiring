@@ -8,7 +8,6 @@
 #include "DependentContext.h"
 #include "ExceptionFilter.h"
 #include "EventSender.h"
-#include "safe_dynamic_cast.h"
 #include "SharedPtrWrap.h"
 #include "TeardownNotifier.h"
 #include "TransientContextMember.h"
@@ -416,12 +415,12 @@ public:
     AddContextMember(pWrap);
 
     // Is the passed value a CoreThread?
-    CoreThread* pCoreThread = safe_dynamic_cast<CoreThread, T>::Cast(value.get());
+    CoreThread* pCoreThread = std::fast_pointer_cast<CoreThread, T>(value).get();
     if(pCoreThread)
       AddCoreThread(pCoreThread);
 
     // Is the passed value a Bolt?
-    BoltBase* pBase = safe_dynamic_cast<BoltBase, T>::Cast(value.get());
+    BoltBase* pBase = std::fast_pointer_cast<BoltBase, T>(value).get();
     if(pBase)
       AddBolt(pBase);
   }
