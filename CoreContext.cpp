@@ -244,7 +244,6 @@ void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr, bool all
   ASSERT(allowNotReady || ptr->IsReady());
 
   // Insert into the linked list of threads first:
-  boost::lock_guard<boost::mutex> lk(m_lock);
   m_threads.push_front(ptr.get());
 
   if(m_refCount)
@@ -381,7 +380,6 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
   ptr->m_self = ptr;
 
   // Always add to the set of context members
-  (boost::lock_guard<boost::mutex>)m_lock,
   m_contextMembers.insert(ptr.get());
 }
 
