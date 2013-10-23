@@ -142,10 +142,6 @@ public:
     shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
     context->Autowire(*this);
   }
-
-  Autowired(T* ptr) {
-    *this = ptr;
-  }
 };
 
 /// <summary>
