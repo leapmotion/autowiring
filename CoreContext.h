@@ -784,33 +784,10 @@ public:
       ((AddPolymorphic<T, true>&)*m_pParent).RemoveEventReceiver(pRecvr);
   };
 
-  /// <summary>
-  /// Fast cast, will use a static cast if the relationship is known at compile time or a dynamic cast if not
-  /// </summary>
-  template<class U, class V, bool related = std::is_base_of<T, U>::value>
-  struct CastWithRelationship {
-    static const bool value = true;
-
-    static std::shared_ptr<U> Cast(std::shared_ptr<V> rhs) {
-      return std::dynamic_pointer_cast<U, V>(rhs);
-    }
-  };
-
-  template<class U, class V>
-  struct CastWithRelationship<U, V, true> {
-    static const bool value = true;
-
-    static std::shared_ptr<U> Cast(std::shared_ptr<V> rhs) {
-      return std::static_pointer_cast<U, V>(rhs);
-    }
-  };
-
   inline void operator()(std::shared_ptr<T> value) {
-    typedef CastWithRelationship<EventReceiver, T> t_cast;
-
     // Add event receivers:
-    std::shared_ptr<EventReceiver> pRecvr = t_cast::Cast(value);
-    if(t_cast::value || pRecvr)
+    std::shared_ptr<EventReceiver> pRecvr = std::fast_pointer_cast<EventReceiver, T>(value);
+    if(pRecvr)
       AddEventReceiver(pRecvr);
 
     // Finally, any exception filters:
