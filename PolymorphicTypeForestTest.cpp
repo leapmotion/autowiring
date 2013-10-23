@@ -94,3 +94,29 @@ TEST_F(PolymorphicTypeForestTest, AmbiguousAncestorRequest) {
   // Attempt to find type B, which should still be resolvable
   EXPECT_TRUE(forest.Resolve(ptr)) << "Was able to resolve a type name that should have been ambiguous";
 }
+
+TEST_F(PolymorphicTypeForestTest, GroundResolutionCheck) {
+  static_assert(
+    std::is_same<
+      ground_type_of<Object>::type,
+      Object
+    >::value,
+    "Incorrect identity property on ground_type_of"
+  );
+  static_assert(
+    std::is_same<
+    ground_type_of<ObjA>::type,
+    Object
+    >::value,
+    "Failed to match the ground type of an Object-grounded type"
+  );
+
+  // Now try to establish the ground of an ungrounded type:
+  static_assert(
+    std::is_same<
+      ground_type_of<std::string>::type,
+      std::string
+    >::value,
+    "Failed to reflect the ground type of a type which has no explicit ground"
+  );
+}
