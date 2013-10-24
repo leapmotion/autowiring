@@ -56,6 +56,9 @@ TEST_F(FactoryTest, VerifyCanRequireAbstract) {
     SimpleInterface* New(void) {return new ClassWithIntegralCtor(1);}
   };
 
+  // Ground validation:
+  static_assert(std::is_same<AutoFactoryBase, typename ground_type_of<SimpleInterfaceFactory>::type>::value, "Interface factory had an unexpected ground type");
+
   // Insert the factory type into the context:
   AutoRequired<SimpleInterfaceFactory> factory;
 
