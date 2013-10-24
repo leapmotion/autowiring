@@ -262,10 +262,10 @@ std::shared_ptr<CoreContext> GetCurrentContext() {
 void CoreContext::Dump(std::ostream& os) const {
   boost::lock_guard<boost::mutex> lk(m_lock);
   for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
-    os << q->first.name();
-    std::shared_ptr<Object> pObj = q->second->pGround;
+    os << q->first.derived.name();
+    void* pObj = q->second->RawPointer();
     if(pObj)
-      os << hex << " 0x" << pObj;
+      os << " 0x" << hex << pObj;
     os << endl;
   }
 

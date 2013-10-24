@@ -156,9 +156,8 @@ protected:
   std::weak_ptr<CoreContext> m_self;
 
   // This is a map of the context members by type and, where appropriate, by name
-  // This map keeps all of its objects resident at least until the context goes
-  // away.
-  PolymorphicTypeForest<Object> m_byType;
+  // This map keeps all of its objects resident at least until the context goes away.
+  PolymorphicTypeForest m_byType;
 
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
@@ -368,24 +367,24 @@ public:
   /// </remarks>
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
+    // Extract ground for this value, we'll use it to select the correct forest for the value:
+    typedef typename ground_type_of<T>::type groundType;
+
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
 
       // Add a new member of the forest:
-      auto obj = std::fast_pointer_cast<Object, T>(value);
-      if(obj) {
-        m_byType.AddTree(obj);
+      m_byType.AddTree(value);
 
-        // Context members:
-        auto pContextMember = std::fast_pointer_cast<ContextMember, T>(value);
-        if(pContextMember) {
-          AddContextMember(pContextMember);
+      // Context members:
+      auto pContextMember = std::fast_pointer_cast<ContextMember, T>(value);
+      if(pContextMember) {
+        AddContextMember(pContextMember);
 
-          // CoreThreads:
-          auto pCoreThread = std::fast_pointer_cast<CoreThread, T>(value);
-          if(pCoreThread)
-            AddCoreThread(pCoreThread);
-        }
+        // CoreThreads:
+        auto pCoreThread = std::fast_pointer_cast<CoreThread, T>(value);
+        if(pCoreThread)
+          AddCoreThread(pCoreThread);
       }
       
       // Exception filters:
