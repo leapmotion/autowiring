@@ -2,6 +2,12 @@
 #include "PolymorphicTypeForestTest.h"
 #include SHARED_PTR_HEADER
 
+class UnrelatedInterface:
+{
+public:
+  virtual ~UnrelatedInterface(void);
+};
+
 class ObjA:
   public Object
 {
@@ -18,7 +24,8 @@ class ObjB1:
 };
 
 class ObjB2:
-  public ObjB
+  public ObjB,
+  public UnrelatedInterface
 {
 };
 
@@ -120,4 +127,14 @@ TEST_F(PolymorphicTypeForestTest, GroundResolutionCheck) {
     >::value,
     "Failed to reflect the ground type of a type which has no explicit ground"
   );
+}
+
+TEST_F(PolymorphicTypeForestTest, UnrelatedInterfaceTest) {
+  // Add the object which has our interface:
+  forest.AddTree(std::make_shared<ObjB2>());
+  
+  // Attempt to resolve based on this interface:
+  std::shared_ptr<UnrelatedInterface> urif;
+  EXPECT_TRUE(forest.Resolve(urif)) << "An ungrounded interface resolution attempt was incorrectly interpreted as ambiguous";
+  EXPECT_TRUE(urif != nullptr) << "Failed to resolve an ungrounded interface on ObjB2";
 }
