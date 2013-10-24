@@ -471,18 +471,17 @@ TEST_F(EventReceiverTest, VerifyNoCopyCallable) {
   sender(&CallableInterface::NoCopyMethod)(method);
 }
 
+// This instance attempts to fire an event in its dtor
+class DtorFire
+{
+public:
+  ~DtorFire(void) {
+    m_fire(&CallableInterface::ZeroArgs)();
+  }
+  AutoFired<CallableInterface> m_fire;
+};
+
 TEST_F(EventReceiverTest, OrphanedMemberFireCheck) {
-  // This instance attempts to fire an event in its dtor
-  class DtorFire
-  {
-  public:
-    ~DtorFire(void) {
-      m_fire(&CallableInterface::ZeroArgs)();
-    }
-
-    AutoFired<CallableInterface> m_fire;
-  };
-
   // Create the instance and let its enclosing context go away:
   std::shared_ptr<DtorFire> dtorFireShared;
   {
