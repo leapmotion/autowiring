@@ -1,4 +1,5 @@
 #pragma once
+#include <typeinfo>
 #include TYPE_TRAITS_HEADER
 
 template<typename T>

@@ -1,8 +1,9 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _CORECONTEXT_H
 #define _CORECONTEXT_H
-#include "CoreThread.h"
+#include "AutoFactory.h"
 #include "Bolt.h"
+#include "CoreThread.h"
 #include "CurrentContextPusher.h"
 #include "DeferredBase.h"
 #include "DependentContext.h"
