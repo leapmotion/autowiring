@@ -115,8 +115,8 @@ public:
   /// Similar to DispatchEvent, but will attempt to dispatch all events currently queued
   /// </summary>
   /// <returns>The total number of events dispatched</returns>
-  size_t DispatchAllEvents(void) override {
-    size_t retVal = 0;
+  int DispatchAllEvents(void) override {
+    int retVal = 0;
     while(DispatchEvent())
       retVal++;
     return retVal;

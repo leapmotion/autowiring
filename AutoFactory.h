@@ -39,6 +39,8 @@ class AutoFactoryBase
 public:
   typedef AutoFactoryBase ground;
 
+  virtual ~AutoFactoryBase(void) {}
+
   /// <summary>
   /// Returns type information for the proposed 
   /// </summary>
