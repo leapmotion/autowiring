@@ -73,6 +73,8 @@ public:
 
 private:
   struct TreeBase {
+    virtual ~TreeBase(void) {}
+
     // Ground type shared pointer
     std::shared_ptr<Ground> pGround;
     
@@ -105,9 +107,8 @@ private:
     }
   };
 
-  typedef std::unordered_map<std::type_index, TreeBase*> t_mpType;
-
   // All known type trees
+  typedef std::unordered_map<std::type_index, TreeBase*> t_mpType;
   t_mpType m_trees;
 
   // Memoized results for search efficiency and to facilitate ambiguation detection:
