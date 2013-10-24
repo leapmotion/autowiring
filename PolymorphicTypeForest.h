@@ -113,13 +113,13 @@ private:
   };
 
   struct GroundedCoordinate {
-    GroundedCoordinate(std::type_index ground, std::type_index derived):
+    GroundedCoordinate(const std::type_info& ground, const std::type_info& derived):
       ground(ground),
       derived(derived)
     {}
 
-    std::type_index ground;
-    std::type_index derived;
+    const std::type_info& ground;
+    const std::type_info& derived;
 
     bool operator==(const GroundedCoordinate& rhs) const {
       return ground == rhs.ground && derived == rhs.derived;
@@ -128,7 +128,7 @@ private:
     operator size_t(void) const {
       // The derived type provides adequate collision resistance, as a derived type has
       // a unique ground in any case
-      return derived.hash_code();
+      return std::hash<std::type_index>()(derived);
     }
   };
 
@@ -177,7 +177,7 @@ public:
 
     // Linear scan for collisions:
     for(auto q = m_memos.begin(); q != m_memos.end(); q++) {
-      if(q->first.ground != typeid(Ground))
+      if(!(q->first.ground == typeid(Ground)))
         continue;
 
       auto cur = static_cast<TreeBase<Ground>*>(q->second);
@@ -272,7 +272,7 @@ public:
 
     // Linear scan on all trees (but not memos)
     for(auto q = m_trees.begin(); q != m_trees.end(); q++) {
-      if(q->first.ground != typeid(Ground))
+      if(!(q->first.ground == typeid(Ground)))
         continue;
 
       auto pCur = static_cast<TreeBase<Ground>*>(q->second);
@@ -293,7 +293,8 @@ public:
     // Memoize the consequences of our search:
     auto pTree = new Tree<Ground, T>;
     pTree->pWitness = match;
-    pTree->pGround = pMatchedTree ? pMatchedTree->pGround : nullptr;
+    if(pMatchedTree)
+      pTree->pGround = pMatchedTree->pGround;
     m_memos[coord] = pTree;
 
     // Pass the results back to the caller and indicate unambiguous success
