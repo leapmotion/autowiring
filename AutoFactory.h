@@ -39,7 +39,7 @@ public:
   /// <summary>
   /// Returns type information for the proposed 
   /// </summary>
-  virtual const type_info& GetType(void) const = 0;
+  virtual const std::type_info& GetType(void) const = 0;
 };
 
 /// <summary>

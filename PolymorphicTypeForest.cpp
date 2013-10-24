@@ -8,7 +8,7 @@ PolymorphicTypeForest::~PolymorphicTypeForest(void) {
     delete q->second;
 }
 
-bool PolymorphicTypeForest::Contains(const type_info& ground, const type_info& type) const {
+bool PolymorphicTypeForest::Contains(const std::type_info& ground, const std::type_info& type) const {
   auto q = m_memos.find(GroundedCoordinate(ground, type));
   return
     q == m_memos.end() ?

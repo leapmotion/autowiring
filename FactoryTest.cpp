@@ -7,21 +7,22 @@
 
 using namespace std;
 
+class ClassWithStaticNew
+{
+public:
+  ClassWithStaticNew(bool madeByFactory = false):
+    m_madeByFactory(madeByFactory)
+  {}
+
+  bool m_madeByFactory;
+
+  // Factory method, for trivial factory construction:
+  static ClassWithStaticNew* New(void) {
+    return new ClassWithStaticNew(true);
+  }
+};
+
 TEST_F(FactoryTest, VerifyFactoryCall) {
-  class ClassWithStaticNew
-  {
-  public:
-    ClassWithStaticNew(bool madeByFactory = false):
-      m_madeByFactory(madeByFactory)
-    {}
-
-    bool m_madeByFactory;
-
-    // Factory method, for trivial factory construction:
-    static ClassWithStaticNew* New(void) {
-      return new ClassWithStaticNew(true);
-    }
-  };
   static_assert(has_simple_constructor<ClassWithStaticNew>::value, "Class with default-argument constructor was not correctly detected as such ");
   static_assert(has_static_new<ClassWithStaticNew>::value, "Class with static allocator was not correctly detected as having one");
 

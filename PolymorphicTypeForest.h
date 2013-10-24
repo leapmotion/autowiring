@@ -5,21 +5,21 @@
 #include SHARED_PTR_HEADER
 #include <vector>
 
+template<class T, bool b>
+struct ground_type_of_helper {
+  typedef typename T::ground type;
+};
+
+template<class T>
+struct ground_type_of_helper<T, false> {
+  typedef T type;
+};
+
 /// <summary>
 /// Extracts the ground type, if available
 /// </summary>
 template<class T>
 struct ground_type_of {
-
-  template<bool b>
-  struct resolver {
-    typedef typename T::ground type;
-  };
-
-  template<>
-  struct resolver<false> {
-    typedef typename T type;
-  };
   
   template<class U>
   static int select(typename U::ground* );
@@ -27,7 +27,7 @@ struct ground_type_of {
   template<class U>
   static char select(...);
 
-  typedef typename resolver<sizeof(select<T>(nullptr)) == sizeof(int)>::type type;
+  typedef typename ground_type_of_helper<T, sizeof(select<T>(nullptr)) == sizeof(int)>::type type;
 };
 
 /// <summary>
@@ -44,13 +44,12 @@ struct ground_type_of {
 ///
 /// Consider the following inheritance graph:
 ///
-/***
- *       A       
- *      / \
- *     B   C
- *    / \ 
- *   D   E
- ***/
+///         A         |
+///        / \        |
+///       B   C       |
+///      / \          |
+///     D   E         |
+///
 /// The following are the maxima for the type forest.  That is to say, given a type forest
 /// containing these types, it would not be possible to expand the type forest any further:
 ///
@@ -64,7 +63,7 @@ class PolymorphicTypeForest
 {
 public:
   ~PolymorphicTypeForest(void);
-
+  
 private:
   struct TreeBaseFoundation {
     virtual ~TreeBaseFoundation(void) {}
@@ -86,7 +85,7 @@ private:
     /// <summary>
     /// Returns true if rhs is of type T, the type named by this entry
     /// </summary>
-    virtual bool Contains(Ground* rhs) const = 0;
+    virtual bool Contains(Ground* rhs) const {return false;}
   };
 
   template<class Ground, class T>
@@ -100,12 +99,12 @@ private:
     void* RawPointer(void) const override {return pWitness.get();}
 
     virtual void operator=(const std::shared_ptr<Ground>& rhs) override {
-      pGround = rhs;
+      TreeBase<Ground>::pGround = rhs;
       pWitness = std::dynamic_pointer_cast<T, Ground>(rhs);
     }
 
     void Assign(const std::shared_ptr<T>& rhs) {
-      pGround = std::static_pointer_cast<Ground, T>(rhs);
+      TreeBase<Ground>::pGround = std::static_pointer_cast<Ground, T>(rhs);
       pWitness = rhs;
     }
 
@@ -133,9 +132,15 @@ private:
       return derived.hash_code();
     }
   };
+
+  struct GroundedCoordinateHasher {
+    size_t operator()(const GroundedCoordinate& rhs) const {
+      return (size_t)rhs;
+    }
+  };
   
   // All known type trees
-  typedef std::unordered_map<GroundedCoordinate, TreeBaseFoundation*> t_mpType;
+  typedef std::unordered_map<GroundedCoordinate, TreeBaseFoundation*, GroundedCoordinateHasher> t_mpType;
   t_mpType m_trees;
 
   // Memoized results for search efficiency and to facilitate ambiguation detection:
@@ -162,7 +167,7 @@ public:
   /// </remarks>
   template<class T>
   bool AddTree(std::shared_ptr<T> pWitness) {
-    typedef ground_type_of<T>::type Ground;
+    typedef typename ground_type_of<T>::type Ground;
 
     // Cast the witness down to the ground type:
     const GroundedCoordinate coord(typeid(Ground), typeid(T));
@@ -217,24 +222,27 @@ public:
   /// </returns>
   template<class T>
   bool Contains(void) const {
-    return Contains(typeid(ground_type_of<T>::type), typeid(T));
+    return Contains(typeid(typename ground_type_of<T>::type), typeid(T));
   }
   
   /// <returns>
   /// True if we contain any member of type type_info
   /// </returns>
-  bool Contains(const type_info& ground, const type_info& type) const;
+  bool Contains(const std::type_info& ground, const std::type_info& type) const;
 
   /// <summary>
   /// True if we contain a member of type T and that member matches the passed member
   /// </summary>
   template<class T>
   bool Contains(T* ptr) const {
-    auto q = m_memos.find(typeid(T));
+    typedef typename ground_type_of<T>::type Ground;
+    const GroundedCoordinate coord(typeid(Ground), typeid(T));
+
+    auto q = m_memos.find(coord);
     if(q == m_memos.end())
       return false;
 
-    auto val = static_cast<Tree<T>*>(q->second);
+    auto val = static_cast<Tree<Ground, T>*>(q->second);
     return val->pWitness.get() == ptr;
   }
 
@@ -252,7 +260,7 @@ public:
   /// </remarks>
   template<class T>
   bool Resolve(std::shared_ptr<T>& ptr) {
-    typedef ground_type_of<T>::type Ground;
+    typedef typename ground_type_of<T>::type Ground;
     const GroundedCoordinate coord(typeid(Ground), typeid(T));
 
     // Attempt to find a precise match:
