@@ -253,6 +253,29 @@ protected:
   /// </summary>
   void RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
 
+  /// <summary>
+  /// Adds an object of any kind to the IOC container
+  /// </summary>
+  /// <param name="pContextMember">The member which was added</param>
+  /// <param name="notReady">Allows the insertion of a thread, even if that thread isn't ready yet</param>
+  /// <return>The shared pointer which contains the context member.</return>
+  /// <remarks>
+  /// It's safe to allow the returned shared_ptr to go out of scope; the core context
+  /// will continue to hold a reference to it until Remove is invoked.
+  /// </remarks>
+  void AddCoreThread(const std::shared_ptr<CoreThread>& pCoreThread, bool allowNotReady = false);
+
+  /// <summary>
+  /// Adds the specified context creation listener to receive creation events broadcast from this context
+  /// </summary>
+  /// <param name="pBase">The instance being added</param>
+  void AddBolt(const std::shared_ptr<BoltBase>& pBase);
+
+  /// <summary>
+  /// Overload of Add based on ContextMember
+  /// </summary>
+  void AddContextMember(const std::shared_ptr<ContextMember>& ptr);
+
   friend class SharedPtrWrapBase;
 
 public:
@@ -421,24 +444,6 @@ public:
   }
 
   /// <summary>
-  /// Adds an object of any kind to the IOC container
-  /// </summary>
-  /// <param name="pContextMember">The member which was added</param>
-  /// <param name="notReady">Allows the insertion of a thread, even if that thread isn't ready yet</param>
-  /// <return>The shared pointer which contains the context member.</return>
-  /// <remarks>
-  /// It's safe to allow the returned shared_ptr to go out of scope; the core context
-  /// will continue to hold a reference to it until Remove is invoked.
-  /// </remarks>
-  void AddCoreThread(const std::shared_ptr<CoreThread>& pCoreThread, bool allowNotReady = false);
-
-  /// <summary>
-  /// Adds the specified context creation listener to receive creation events broadcast from this context
-  /// </summary>
-  /// <param name="pBase">The instance being added</param>
-  void AddBolt(const std::shared_ptr<BoltBase>& pBase);
-
-  /// <summary>
   /// Utility routine, invoked typically by the service, which starts all registered
   /// core threads.
   /// </summary>
@@ -517,11 +522,6 @@ public:
   static std::shared_ptr<CoreContext> CurrentContext(void);
 
   /// <summary>
-  /// Utility debug method for writing a snapshot of this context to the specified output stream
-  /// </summary>
-  void Dump(std::ostream& os) const;
-
-  /// <summary>
   /// Obtains a pointer to the parent context
   /// </summary>
   std::shared_ptr<CoreContext>& GetParentContext(void) {return m_pParent;}
@@ -589,11 +589,6 @@ public:
   }
 
   /// <summary>
-  /// Overload of Add based on ContextMember
-  /// </summary>
-  void AddContextMember(const std::shared_ptr<ContextMember>& ptr);
-
-  /// <summary>
   /// Locates an available context member by its exact type, if known
   /// </summary>
   template<class T>
@@ -611,19 +606,6 @@ public:
   }
 
   /// <summary>
-  /// Registers a slot to be autowired
-  /// </summary>
-  template<class W>
-  bool Autowire(W& slot) {
-    if(AutowireNoDefer(slot))
-      return true;
-
-    // Failed, defer
-    Defer(slot);
-    return false;
-  }
-
-  /// <summary>
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
   template<class W>
@@ -636,6 +618,19 @@ public:
         return true;
       }
     }
+    return false;
+  }
+
+  /// <summary>
+  /// Registers a slot to be autowired
+  /// </summary>
+  template<class W>
+  bool Autowire(W& slot) {
+    if(AutowireNoDefer(slot))
+      return true;
+
+    // Failed, defer
+    Defer(slot);
     return false;
   }
 
@@ -692,6 +687,11 @@ public:
   /// method such that it may be substitutde in place for the notification routine.
   /// </remarks>
   void NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener);
+
+  /// <summary>
+  /// Utility debug method for writing a snapshot of this context to the specified output stream
+  /// </summary>
+  void Dump(std::ostream& os) const;
 
   static void DebugPrintCurrentExceptionInformation();
 };
