@@ -3,8 +3,6 @@
 #include TYPE_INDEX_HEADER
 #include TYPE_TRAITS_HEADER
 #include SHARED_PTR_HEADER
-#include <allocators>
-#include <list>
 #include <vector>
 
 /// <summary>
@@ -46,12 +44,13 @@ struct ground_type_of {
 ///
 /// Consider the following inheritance graph:
 ///
-///      A
-///     / \
-///    B   C
-///   / \
-///  D   E
-///
+/***
+ *       A       
+ *      / \
+ *     B   C
+ *    / \ 
+ *   D   E
+ ***/
 /// The following are the maxima for the type forest.  That is to say, given a type forest
 /// containing these types, it would not be possible to expand the type forest any further:
 ///
