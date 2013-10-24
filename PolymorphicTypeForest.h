@@ -24,12 +24,12 @@ struct ground_type_of {
   };
   
   template<class U>
-  static typename U::ground select(typename U::ground*);
+  static int select(typename U::ground* );
 
   template<class U>
-  static U select(...);
+  static char select(...);
 
-  typedef decltype(select<T>(nullptr)) type;
+  typedef typename resolver<sizeof(select<T>(nullptr)) == sizeof(int)>::type type;
 };
 
 /// <summary>
@@ -74,6 +74,8 @@ public:
 private:
   struct TreeBaseFoundation {
     virtual ~TreeBaseFoundation(void) {}
+
+    virtual void* RawPointer(void) const = 0;
   };
 
   template<class Ground>
@@ -82,7 +84,7 @@ private:
   {
     // Ground type shared pointer
     std::shared_ptr<Ground> pGround;
-    
+
     /// <summary>
     /// Casts the passed value to the bound type
     /// </summary>
@@ -101,6 +103,8 @@ private:
   public:
     // Witness of this type
     std::shared_ptr<T> pWitness;
+
+    void* RawPointer(void) const override {return pWitness.get();}
 
     virtual void operator=(const std::shared_ptr<Ground>& rhs) override {
       pGround = rhs;
