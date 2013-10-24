@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "PolymorphicTypeForestTest.h"
+#include SHARED_PTR_HEADER
 
 class ObjA:
   public Object
