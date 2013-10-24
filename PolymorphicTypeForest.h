@@ -64,17 +64,11 @@ struct ground_type_of {
 class PolymorphicTypeForest
 {
 public:
-  ~PolymorphicTypeForest(void) {
-    for(auto q = m_trees.begin(); q != m_trees.end(); q++)
-      delete q->second;
-    for(auto q = m_memos.begin(); q != m_memos.end(); q++)
-      delete q->second;
-  }
+  ~PolymorphicTypeForest(void);
 
 private:
   struct TreeBaseFoundation {
     virtual ~TreeBaseFoundation(void) {}
-
     virtual void* RawPointer(void) const = 0;
   };
 
@@ -222,13 +216,7 @@ public:
   /// <returns>
   /// True if we contain any member of type type_info
   /// </returns>
-  bool Contains(const type_info& ground, const type_info& type) const {
-    auto q = m_memos.find(GroundedCoordinate(ground, type));
-    return
-      q == m_memos.end() ?
-      false :
-      !!q->second;
-  }
+  bool Contains(const type_info& ground, const type_info& type) const;
 
   /// <summary>
   /// True if we contain a member of type T and that member matches the passed member
