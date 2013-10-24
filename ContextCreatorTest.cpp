@@ -57,10 +57,7 @@ public:
     Ready();
   }
 
-private:
   AutoRequired<GlobalSignal> m_signal;
-
-public:
 
   void Run(void) override {
     // Wait for our event to be signalled, then leave
@@ -111,7 +108,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
 
     // Create a few contexts:
     for(int i = count; i--;) {
-      std::shared_ptr<CoreContext> ctxt = *creator->CreateContext(i);
+      AutoCreateContext ctxt;
       CurrentContextPusher pshr(ctxt);
 
       // Trivial validation that the newly created context is an empty context:
@@ -120,6 +117,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
       // Add in an object to test asynchronous destruction:
       AutoRequired<WaitMember> obj;
       members[i] = obj;
+      ASSERT_EQ(signal, obj->m_signal) << "Dependent context wiring did not correctly match to the enclosing scope";
 
       // Add a notifier to signal a continue condition when we have everything we need:
       ctxt->AddTeardownListener([&lock, &cond, &counter] {
