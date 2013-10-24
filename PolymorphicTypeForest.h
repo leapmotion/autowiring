@@ -20,7 +20,6 @@ struct ground_type_of_helper<T, false> {
 /// </summary>
 template<class T>
 struct ground_type_of {
-  
   template<class U>
   static int select(typename U::ground* );
 
