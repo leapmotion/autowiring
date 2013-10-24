@@ -105,6 +105,11 @@ private:
       pWitness = std::dynamic_pointer_cast<T, Ground>(rhs);
     }
 
+    void Assign(const std::shared_ptr<T>& rhs) {
+      pGround = std::static_pointer_cast<Ground, T>(rhs);
+      pWitness = rhs;
+    }
+
     virtual bool Contains(Ground* rhs) const override {
       return !!dynamic_cast<T*>(rhs);
     }
@@ -161,6 +166,7 @@ public:
     typedef ground_type_of<T>::type Ground;
 
     // Cast the witness down to the ground type:
+    const GroundedCoordinate coord(typeid(Ground), typeid(T));
     auto pWitnessGround = static_cast<Ground*>(pWitness.get());
 
     // Collection of unsatisfied witnesses
@@ -172,7 +178,6 @@ public:
         continue;
 
       auto cur = static_cast<TreeBase<Ground>*>(q->second);
-
       if(cur->pGround)
         // Already-resolved instance, we need to ensure there are no collisions
       {
@@ -188,20 +193,23 @@ public:
         te.push_back(cur);
     }
 
-    // Run through all necessary transfer assignments:
+    // Transfer assignment on all memos:
     for(size_t i = te.size(); i--;)
       *te[i] = std::static_pointer_cast<Ground, T>(pWitness);
 
-    // Construct and introduce the new tree
-    GroundedCoordinate coord(typeid(Ground), typeid(T));
-    auto pTree = new Tree<Ground, T>;
-    m_trees[coord] = pTree;
-    pTree->pWitness = pWitness;
-    pTree->pGround = pWitness;
+    // Ensure that the desired slot exists before we run through our memo search:
+    auto& pTreeMemo = m_memos[coord];
+    if(!pTreeMemo)
+      pTreeMemo = new Tree<Ground, T>;
+    static_cast<Tree<Ground, T>*>(pTreeMemo)->Assign(pWitness);
 
-    // Also construct the memoization for this type:
-    m_memos[coord] = &(*new Tree<Ground, T> = *pTree);
+    // Construct the forest entry for this type:
+    auto& pTree = m_trees[coord];
+    if(!pTree)
+      pTree = new Tree<Ground, T>;
+    static_cast<Tree<Ground, T>*>(pTree)->Assign(pWitness);
 
+    // We have successfully resolved a type unambiguously, we can return here
     return true;
   }
 
