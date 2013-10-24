@@ -12,6 +12,7 @@
 /// </summary>
 template<class T>
 struct ground_type_of {
+
   template<bool b>
   struct resolver {
     typedef typename T::ground type;
@@ -60,7 +61,6 @@ struct ground_type_of {
 ///
 /// The caller is responsible for externally synchronizing this structure.
 /// </remarks>
-template<class Ground>
 class PolymorphicTypeForest
 {
 public:
@@ -72,9 +72,14 @@ public:
   }
 
 private:
-  struct TreeBase {
-    virtual ~TreeBase(void) {}
+  struct TreeBaseFoundation {
+    virtual ~TreeBaseFoundation(void) {}
+  };
 
+  template<class Ground>
+  struct TreeBase:
+    TreeBaseFoundation
+  {
     // Ground type shared pointer
     std::shared_ptr<Ground> pGround;
     
@@ -89,9 +94,9 @@ private:
     virtual bool Contains(Ground* rhs) const = 0;
   };
 
-  template<class T>
+  template<class Ground, class T>
   struct Tree:
-    TreeBase
+    TreeBase<Ground>
   {
   public:
     // Witness of this type
@@ -107,8 +112,28 @@ private:
     }
   };
 
+  struct GroundedCoordinate {
+    GroundedCoordinate(std::type_index ground, std::type_index derived):
+      ground(ground),
+      derived(derived)
+    {}
+
+    std::type_index ground;
+    std::type_index derived;
+
+    bool operator==(const GroundedCoordinate& rhs) const {
+      return ground == rhs.ground && derived == rhs.derived;
+    }
+
+    operator size_t(void) const {
+      // The derived type provides adequate collision resistance, as a derived type has
+      // a unique ground in any case
+      return derived.hash_code();
+    }
+  };
+  
   // All known type trees
-  typedef std::unordered_map<std::type_index, TreeBase*> t_mpType;
+  typedef std::unordered_map<GroundedCoordinate, TreeBaseFoundation*> t_mpType;
   t_mpType m_trees;
 
   // Memoized results for search efficiency and to facilitate ambiguation detection:
@@ -117,10 +142,10 @@ private:
 public:
   // Accessor methods:
   size_t size(void) const {return m_trees.size();}
-  typename t_mpType::iterator begin(void) {return m_trees.begin();}
-  typename t_mpType::const_iterator begin(void) const {return m_trees.begin();}
-  typename t_mpType::iterator end(void) {return m_trees.end();}
-  typename t_mpType::const_iterator end(void) const {return m_trees.end();}
+  t_mpType::iterator begin(void) {return m_trees.begin();}
+  t_mpType::const_iterator begin(void) const {return m_trees.begin();}
+  t_mpType::iterator end(void) {return m_trees.end();}
+  t_mpType::const_iterator end(void) const {return m_trees.end();}
 
   /// <summary>
   /// Adds the passed type to this collection
@@ -135,17 +160,20 @@ public:
   /// </remarks>
   template<class T>
   bool AddTree(std::shared_ptr<T> pWitness) {
-    static_assert(std::is_base_of<Ground, T>::value, "Cannot add an unrelated type to the forest");
+    typedef ground_type_of<T>::type Ground;
 
     // Cast the witness down to the ground type:
     auto pWitnessGround = static_cast<Ground*>(pWitness.get());
 
     // Collection of unsatisfied witnesses
-    std::vector<TreeBase*> te;
+    std::vector<TreeBase<Ground>*> te;
 
     // Linear scan for collisions:
     for(auto q = m_memos.begin(); q != m_memos.end(); q++) {
-      auto cur = q->second;
+      if(q->first.ground != typeid(Ground))
+        continue;
+
+      auto cur = static_cast<TreeBase<Ground>*>(q->second);
 
       if(cur->pGround)
         // Already-resolved instance, we need to ensure there are no collisions
@@ -167,13 +195,14 @@ public:
       *te[i] = std::static_pointer_cast<Ground, T>(pWitness);
 
     // Construct and introduce the new tree
-    auto pTree = new Tree<T>;
-    m_trees[typeid(T)] = pTree;
+    GroundedCoordinate coord(typeid(Ground), typeid(T));
+    auto pTree = new Tree<Ground, T>;
+    m_trees[coord] = pTree;
     pTree->pWitness = pWitness;
     pTree->pGround = pWitness;
 
     // Also construct the memoization for this type:
-    m_memos[typeid(T)] = &(*new Tree<T> = *pTree);
+    m_memos[coord] = &(*new Tree<Ground, T> = *pTree);
 
     return true;
   }
@@ -183,9 +212,20 @@ public:
   /// </returns>
   template<class T>
   bool Contains(void) const {
-    return !!m_memos.count(typeid(T));
+    return Contains(typeid(ground_type_of<T>::type), typeid(T));
   }
   
+  /// <returns>
+  /// True if we contain any member of type type_info
+  /// </returns>
+  bool Contains(const type_info& ground, const type_info& type) const {
+    auto q = m_memos.find(GroundedCoordinate(ground, type));
+    return
+      q == m_memos.end() ?
+      false :
+      !!q->second;
+  }
+
   /// <summary>
   /// True if we contain a member of type T and that member matches the passed member
   /// </summary>
@@ -213,17 +253,23 @@ public:
   /// </remarks>
   template<class T>
   bool Resolve(std::shared_ptr<T>& ptr) {
-    // Attempt to find a precise match:
-    auto q = m_memos.find(typeid(T));
-    if(q != m_memos.end())
-      return ptr = static_cast<Tree<T>*>(q->second)->pWitness, true;
+    typedef ground_type_of<T>::type Ground;
+    const GroundedCoordinate coord(typeid(Ground), typeid(T));
 
-    TreeBase* pMatchedTree = nullptr;
+    // Attempt to find a precise match:
+    auto q = m_memos.find(coord);
+    if(q != m_memos.end())
+      return ptr = static_cast<Tree<Ground, T>*>(q->second)->pWitness, true;
+
+    TreeBase<Ground>* pMatchedTree = nullptr;
     std::shared_ptr<T> match;
 
     // Linear scan on all trees (but not memos)
     for(auto q = m_trees.begin(); q != m_trees.end(); q++) {
-      TreeBase* pCur = q->second;
+      if(q->first.ground != typeid(Ground))
+        continue;
+
+      auto pCur = static_cast<TreeBase<Ground>*>(q->second);
       std::shared_ptr<T> attemptedCast = std::dynamic_pointer_cast<T, Ground>(pCur->pGround);
       if(!attemptedCast)
         // No match, try the next tree in the forest
@@ -239,10 +285,10 @@ public:
     }
 
     // Memoize the consequences of our search:
-    auto pTree = new Tree<T>;
+    auto pTree = new Tree<Ground, T>;
     pTree->pWitness = match;
     pTree->pGround = pMatchedTree ? pMatchedTree->pGround : nullptr;
-    m_memos[typeid(T)] = pTree;
+    m_memos[coord] = pTree;
 
     // Pass the results back to the caller and indicate unambiguous success
     ptr.swap(match);

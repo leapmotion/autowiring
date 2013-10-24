@@ -7,6 +7,6 @@ class PolymorphicTypeForestTest:
   public EnclosedContextTestBase
 {
 public:
-  PolymorphicTypeForest<Object> forest;
+  PolymorphicTypeForest forest;
 };
 
