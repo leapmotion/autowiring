@@ -24,10 +24,12 @@ TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
 
 TEST_F(ContextCleanupTest, VerifyNoEarlyDtor) {
   std::weak_ptr<SimpleObject> weak;
+  std::weak_ptr<CoreContext> subCtxt;
 
   {
     AutoCreateContext context;
     CurrentContextPusher psher(context);
+    subCtxt = context;
 
     {
       // Okay, now we create a simple class first:
@@ -42,6 +44,7 @@ TEST_F(ContextCleanupTest, VerifyNoEarlyDtor) {
     ASSERT_FALSE(weak.expired()) << "An inserted object was deleted before the context was destroyed";
   }
 
+  ASSERT_TRUE(subCtxt.expired()) << "A context survived beyond the point where it was expected to have become invalid";
   ASSERT_TRUE(weak.expired()) << "An object survived the destruction of its parent context";
 }
 
