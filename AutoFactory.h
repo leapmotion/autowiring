@@ -36,6 +36,8 @@ struct has_simple_constructor<T, true>:
 class AutoFactoryBase
 {
 public:
+  typedef AutoFactoryBase ground;
+
   /// <summary>
   /// Returns type information for the proposed 
   /// </summary>
@@ -55,8 +57,10 @@ public:
 ///
 /// </remarks>
 template<class Product>
-class AutoFactory
+class AutoFactory:
+  public AutoFactoryBase
 {
 public:
+  virtual const std::type_info& GetType(void) const override {return typeid(Product);}
   virtual Product* New(void) = 0;
 };

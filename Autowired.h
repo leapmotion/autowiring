@@ -55,6 +55,7 @@ class AutowiredCreator:
   public std::shared_ptr<T>
 {
 public:
+  typedef T value_type;
   typedef shared_ptr<T> t_ptrType;
   
   template<class U>

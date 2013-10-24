@@ -589,7 +589,7 @@ public:
   }
 
   /// <summary>
-  /// Locates an available context member by its exact type, if known
+  /// Locates an available context member in this context
   /// </summary>
   template<class T>
   std::shared_ptr<T> FindByType(const Autowired<T>&) {
@@ -618,6 +618,28 @@ public:
         return true;
       }
     }
+
+    // We will not attempt second-chance resolution if the type is constructable
+    if(
+      has_static_new<typename W::value_type>::value ||
+      has_simple_constructor<typename W::value_type>::value
+    )
+      return false;
+
+    // Attempt second-chance resolution:
+    typedef AutoFactory<typename W::value_type> Factory;
+    std::shared_ptr<Factory> factory;
+    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
+      factory = pCur->FindByType<Factory>();
+      if(!factory)
+        continue;
+      
+      typename W::t_ptrType ptr(factory->New());
+      Add(ptr);
+      slot.swap(ptr);
+      return true;
+    }
+
     return false;
   }
 
