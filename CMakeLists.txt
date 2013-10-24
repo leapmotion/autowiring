@@ -53,6 +53,7 @@ set(
   OutstandingCountTracker.cpp
   OutstandingCountTracker.h
   PolymorphicTypeForest.h
+  PolymorphicTypeForest.cpp
   SharedPtrHash.h
   SharedPtrWrap.cpp
   SharedPtrWrap.h
