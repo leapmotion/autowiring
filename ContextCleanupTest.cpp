@@ -69,8 +69,8 @@ TEST_F(ContextCleanupTest, VerifyContextDtor) {
       AutoRequired<SimpleObject> simple;
       objVerifier = simple;
 
-      // Should only be two references to this object
-      EXPECT_EQ(2, objVerifier.use_count()) << "Too many references to a newly constructed object";
+      // Should be exactly five references to this object
+      EXPECT_EQ(5, objVerifier.use_count()) << "Too many references to a newly constructed object";
 
       // Reference count should be unchanged:
       EXPECT_EQ(2, contextVerifier.use_count()) << "Reference count changed unexpectedly after addition of an object";
