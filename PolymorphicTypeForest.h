@@ -15,6 +15,38 @@ struct ground_type_of_helper<T, false> {
   typedef T type;
 };
 
+namespace std {
+  /// <summary>
+  /// Identical to static_pointer_cast if U inherits T, dynamic_pointer_cast otherwise
+  /// </summary>
+  template<class T, class U>
+  typename std::enable_if<
+    std::is_base_of<T, U>::value,
+    typename std::shared_ptr<T>
+  >::type fast_pointer_cast(const std::shared_ptr<U>& Other) {
+    return std::static_pointer_cast<T, U>(Other);
+  };
+
+  template<class T, class U>
+  typename std::enable_if<
+    !std::is_base_of<T, U>::value &&
+    std::is_polymorphic<T>::value &&
+    std::is_polymorphic<U>::value,
+    std::shared_ptr<T>
+  >::type fast_pointer_cast(const std::shared_ptr<U>& Other) {
+    return std::dynamic_pointer_cast<T, U>(Other);
+  }
+
+  template<class T, class U>
+  typename std::enable_if<
+    !std::is_polymorphic<T>::value ||
+    !std::is_polymorphic<U>::value,
+    std::shared_ptr<T>
+  >::type fast_pointer_cast(const std::shared_ptr<U>&) {
+    return std::shared_ptr<T>();
+  }
+}
+
 /// <summary>
 /// Extracts the ground type, if available
 /// </summary>
@@ -68,14 +100,14 @@ struct ExplicitGrounds:
   protected ExplicitGrounds<T, void>,
   protected List
 {
-  template<class T>
-  void Add(const std::shared_ptr<T>& rhs) {
+  template<class U>
+  void Add(const std::shared_ptr<U>& rhs) {
     ExplicitGrounds<T, void>::Add(rhs);
     List::Add(rhs);
   }
 
-  template<class T>
-  bool Resolve(std::shared_ptr<T>& ptr) {
+  template<class U>
+  bool Resolve(std::shared_ptr<U>& ptr) {
     // Reset so we can make a trivial-null assumption in base types:
     ptr.reset();
 
@@ -89,13 +121,13 @@ struct ExplicitGrounds:
 template<class T>
 struct ExplicitGrounds<T, void>
 {
-  template<class T>
-  void Add(const std::shared_ptr<T>& rhs) {
+  template<class U>
+  void Add(const std::shared_ptr<U>& rhs) {
     m_typeTree.Add(rhs);
   }
 
-  template<class T>
-  bool Resolve(std::shared_ptr<T>& ptr) {
+  template<class U>
+  bool Resolve(std::shared_ptr<U>& ptr) {
     return m_typeTree.Resolve(ptr);
   }
 
