@@ -2,10 +2,10 @@
 #include "PolymorphicTypeForestTest.h"
 #include SHARED_PTR_HEADER
 
-class UnrelatedInterface:
+class UnrelatedInterface
 {
 public:
-  virtual ~UnrelatedInterface(void);
+  virtual ~UnrelatedInterface(void) {}
 };
 
 class ObjA:
