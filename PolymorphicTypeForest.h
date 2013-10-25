@@ -32,6 +32,9 @@ struct ground_type_of {
 /// <summary>
 /// Represents a type bag, which may be used to perform runtime type resolution
 /// </summary>
+/// <param name="ExplicitGrounds">
+/// A pseudo-list of explicit grounds to be used with this type forest
+/// </param>
 /// <remarks>
 /// A type tree is a collection of types related by inheritance.  A type forest is
 /// a collection of such trees.
@@ -58,10 +61,16 @@ struct ground_type_of {
 ///
 /// The caller is responsible for externally synchronizing this structure.
 /// </remarks>
+template<class ExplicitGrounds>
 class PolymorphicTypeForest
 {
 public:
-  ~PolymorphicTypeForest(void);
+  ~PolymorphicTypeForest(void) {
+    for(auto q = m_trees.begin(); q != m_trees.end(); q++)
+      delete q->second;
+    for(auto q = m_memos.begin(); q != m_memos.end(); q++)
+      delete q->second;
+  }
   
 private:
   struct TreeBaseFoundation {
@@ -227,7 +236,13 @@ public:
   /// <returns>
   /// True if we contain any member of type type_info
   /// </returns>
-  bool Contains(const std::type_info& ground, const std::type_info& type) const;
+  bool Contains(const std::type_info& ground, const std::type_info& type) const {
+    auto q = m_memos.find(GroundedCoordinate(ground, type));
+    return
+      q == m_memos.end() ?
+      false :
+      !!q->second;
+  }
 
   /// <summary>
   /// True if we contain a member of type T and that member matches the passed member
@@ -272,7 +287,11 @@ public:
 
     // Linear scan on all trees (but not memos)
     for(auto q = m_trees.begin(); q != m_trees.end(); q++) {
-      if(!(q->first.ground == typeid(Ground)))
+      if(
+        // We make an exception for exact matches of named types, even if grounds don't match
+        !(q->first.ground == typeid(T)) &&
+        !(q->first.ground == typeid(Ground))
+      )
         continue;
 
       auto pCur = static_cast<TreeBase<Ground>*>(q->second);
