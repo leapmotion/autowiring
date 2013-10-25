@@ -54,8 +54,6 @@ set(
   OutstandingCountTracker.h
   PolymorphicTypeForest.h
   SharedPtrHash.h
-  SharedPtrWrap.cpp
-  SharedPtrWrap.h
   TeardownNotifier.h
   TeardownNotifier.cpp
   ThreadStatusMaintainer.cpp
