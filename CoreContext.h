@@ -158,7 +158,9 @@ protected:
 
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes away.
-  PolymorphicTypeForest m_byType;
+  // "Object" is named here as an explicit ground type in order to allow arbitrary casting from Object-
+  // derived types.
+  PolymorphicTypeForest<ExplicitGrounds<Object>> m_byType;
 
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
