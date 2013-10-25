@@ -30,10 +30,99 @@ struct ground_type_of {
 };
 
 /// <summary>
+/// Represents a type tree that will work on exactly one type
+/// </summary>
+template<class Ground>
+struct SingleTypeTree {
+  template<class T>
+  void Add(const std::shared_ptr<T>& rhs) {
+    T* rhs = std::fast_pointer_cast<Ground, T>(rhs);
+    if(rhs)
+      m_membership.push_back(rhs);
+  }
+
+  template<class T>
+  bool Scan(std::shared_ptr<T>& ptr) {
+    ptr.reset();
+
+    // Attempt to cast each element in our membership collection, but return false if
+    // more than one of our members satisfies the request
+    for(size_t i = m_membership.size(); i++;) {
+      auto casted = std::fast_pointer_cast<Ground, T>(m_membership[i]);
+      if(!casted)
+        continue;
+      if(ptr)
+        return false;
+      ptr.swap(casted);
+    }
+    return true;
+  }
+
+private:
+  // Known membership:
+  std::vector<std::shared_ptr<Ground>> m_membership;
+};
+
+template<class T = void, class List = void>
+struct ExplicitGrounds:
+  protected ExplicitGrounds<T, void>,
+  protected List
+{
+  template<class T>
+  void Add(const std::shared_ptr<T>& rhs) {
+    ExplicitGrounds<T, void>::Add(rhs);
+    List::Add(rhs);
+  }
+
+  template<class T>
+  bool Scan(std::shared_ptr<T>& ptr) {
+    // Reset so we can make a trivial-null assumption in base types:
+    ptr.reset();
+
+    // Pass control to the base types:
+    return
+      ExplicitGrounds<T, void>::Scan(ptr) &&
+      List::Scan(ptr);
+  }
+};
+
+template<class T>
+struct ExplicitGrounds<T, void>
+{
+  template<class T>
+  void Add(const std::shared_ptr<T>& rhs) {
+    m_typeTree.Add(rhs);
+    List::Add(rhs);
+  }
+
+  template<class T>
+  bool Scan(std::shared_ptr<T>& ptr) {
+    return m_typeTree.Scan(ptr);
+  }
+
+private:
+  SingleTypeTree<T> m_typeTree;
+};
+
+template<>
+struct ExplicitGrounds<void, void>
+{
+  template<class T>
+  void Add(const std::shared_ptr<T>& rhs) {}
+
+  template<class T>
+  bool Scan(std::shared_ptr<T>& ptr) {
+    return true;
+  }
+};
+
+/// <summary>
 /// Represents a type bag, which may be used to perform runtime type resolution
 /// </summary>
 /// <param name="ExplicitGrounds">
-/// A pseudo-list of explicit grounds to be used with this type forest
+/// A pseudo-list of explicit grounds to be used with this type forest.  Explicit grounds
+/// should be specified using the explicit grounds helper structure, or should be left
+/// empty.
 /// </param>
 /// <remarks>
 /// A type tree is a collection of types related by inheritance.  A type forest is
@@ -61,8 +150,9 @@ struct ground_type_of {
 ///
 /// The caller is responsible for externally synchronizing this structure.
 /// </remarks>
-template<class ExplicitGrounds>
-class PolymorphicTypeForest
+template<class Ground = ExplicitGrounds<>>
+class PolymorphicTypeForest:
+  public Ground
 {
 public:
   ~PolymorphicTypeForest(void) {
@@ -157,10 +247,10 @@ private:
 public:
   // Accessor methods:
   size_t size(void) const {return m_trees.size();}
-  t_mpType::iterator begin(void) {return m_trees.begin();}
-  t_mpType::const_iterator begin(void) const {return m_trees.begin();}
-  t_mpType::iterator end(void) {return m_trees.end();}
-  t_mpType::const_iterator end(void) const {return m_trees.end();}
+  typename t_mpType::iterator begin(void) {return m_trees.begin();}
+  typename t_mpType::const_iterator begin(void) const {return m_trees.begin();}
+  typename t_mpType::iterator end(void) {return m_trees.end();}
+  typename t_mpType::const_iterator end(void) const {return m_trees.end();}
 
   /// <summary>
   /// Adds the passed type to this collection
