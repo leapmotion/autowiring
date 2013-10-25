@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "AutowirableSlot.h"
 #include "Autowired.h"
+#include "autowiring_error.h"
 #include "AutoNetworkMonitor.h"
 #include "CoreContext.h"
 #include <stdexcept>
@@ -32,6 +33,6 @@ void AutowirableSlot::NotifyWhenAutowired(const std::function<void()>& listener)
 std::shared_ptr<CoreContext> AutowirableSlot::LockContext(void) {
   std::shared_ptr<CoreContext> retVal = m_context.lock();
   if(!retVal)
-    throw_rethrowable std::runtime_error("Attempted to autowire in a context that is tearing down");
+    throw_rethrowable autowiring_error("Attempted to autowire in a context that is tearing down");
   return retVal;
 }
