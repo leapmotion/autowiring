@@ -2,6 +2,7 @@
 #ifndef _CORECONTEXT_H
 #define _CORECONTEXT_H
 #include "AutoFactory.h"
+#include "autowiring_error.h"
 #include "Bolt.h"
 #include "CoreThread.h"
 #include "CurrentContextPusher.h"
@@ -601,7 +602,7 @@ public:
     std::shared_ptr<T> retVal;
     boost::lock_guard<boost::mutex> lk(m_lock);
     if(!m_byType.Resolve(retVal))
-      throw_rethrowable std::runtime_error("An autowiring operation resulted in an ambiguous match");
+      throw_rethrowable autowiring_error("An autowiring operation resulted in an ambiguous match");
     return retVal;
   }
 
@@ -688,7 +689,7 @@ public:
       if(pDeferred->IsExpired())
         delete pDeferred;
       else
-        throw_rethrowable std::runtime_error("A slot is being autowired, but a deferred instance already exists at this location");
+        throw_rethrowable autowiring_error("A slot is being autowired, but a deferred instance already exists at this location");
     }
     pDeferred = new Deferred(this, slot);
   }
