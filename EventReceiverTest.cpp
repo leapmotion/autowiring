@@ -10,11 +10,11 @@
 using namespace std;
 
 class invalid_copycounter_exception:
-  public runtime_error
+  public autowiring_error
 {
 public:
   invalid_copycounter_exception(void):
-    runtime_error("Copy counter was moved, and incorrectly reused")
+    autowiring_error("Copy counter was moved, and incorrectly reused")
   {}
 };
 
