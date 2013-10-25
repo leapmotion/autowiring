@@ -36,19 +36,19 @@ template<class Ground>
 struct SingleTypeTree {
   template<class T>
   void Add(const std::shared_ptr<T>& rhs) {
-    T* rhs = std::fast_pointer_cast<Ground, T>(rhs);
-    if(rhs)
-      m_membership.push_back(rhs);
+    auto casted = std::fast_pointer_cast<Ground, T>(rhs);
+    if(casted)
+      m_membership.push_back(casted);
   }
 
   template<class T>
-  bool Scan(std::shared_ptr<T>& ptr) {
+  bool Resolve(std::shared_ptr<T>& ptr) {
     ptr.reset();
 
     // Attempt to cast each element in our membership collection, but return false if
     // more than one of our members satisfies the request
-    for(size_t i = m_membership.size(); i++;) {
-      auto casted = std::fast_pointer_cast<Ground, T>(m_membership[i]);
+    for(size_t i = m_membership.size(); i--;) {
+      auto casted = std::fast_pointer_cast<T, Ground>(m_membership[i]);
       if(!casted)
         continue;
       if(ptr)
@@ -75,14 +75,14 @@ struct ExplicitGrounds:
   }
 
   template<class T>
-  bool Scan(std::shared_ptr<T>& ptr) {
+  bool Resolve(std::shared_ptr<T>& ptr) {
     // Reset so we can make a trivial-null assumption in base types:
     ptr.reset();
 
     // Pass control to the base types:
     return
-      ExplicitGrounds<T, void>::Scan(ptr) &&
-      List::Scan(ptr);
+      ExplicitGrounds<T, void>::Resolve(ptr) &&
+      List::Resolve(ptr);
   }
 };
 
@@ -92,12 +92,11 @@ struct ExplicitGrounds<T, void>
   template<class T>
   void Add(const std::shared_ptr<T>& rhs) {
     m_typeTree.Add(rhs);
-    List::Add(rhs);
   }
 
   template<class T>
-  bool Scan(std::shared_ptr<T>& ptr) {
-    return m_typeTree.Scan(ptr);
+  bool Resolve(std::shared_ptr<T>& ptr) {
+    return m_typeTree.Resolve(ptr);
   }
 
 private:
@@ -111,9 +110,7 @@ struct ExplicitGrounds<void, void>
   void Add(const std::shared_ptr<T>& rhs) {}
 
   template<class T>
-  bool Scan(std::shared_ptr<T>& ptr) {
-    return true;
-  }
+  bool Resolve(std::shared_ptr<T>& ptr) {return true;}
 };
 
 /// <summary>
@@ -150,9 +147,9 @@ struct ExplicitGrounds<void, void>
 ///
 /// The caller is responsible for externally synchronizing this structure.
 /// </remarks>
-template<class Ground = ExplicitGrounds<>>
+template<class V = ExplicitGrounds<>>
 class PolymorphicTypeForest:
-  public Ground
+  public V
 {
 public:
   ~PolymorphicTypeForest(void) {
@@ -238,6 +235,9 @@ private:
   };
   
   // All known type trees
+  // TODO:  These trees also include grounded coordinates from our explicit grounds.  We could be
+  // a bit more efficient if we avoided adding members derived from one (or more) explicit ground
+  // to this collection, and reserved this collection instead for alien types.
   typedef std::unordered_map<GroundedCoordinate, TreeBaseFoundation*, GroundedCoordinateHasher> t_mpType;
   t_mpType m_trees;
 
@@ -273,6 +273,9 @@ public:
 
     // Collection of unsatisfied witnesses
     std::vector<TreeBase<Ground>*> te;
+
+    // Explicit base introduction:
+    V::Add(pWitness);
 
     // Linear scan for collisions:
     for(auto q = m_memos.begin(); q != m_memos.end(); q++) {
@@ -375,6 +378,10 @@ public:
     TreeBase<Ground>* pMatchedTree = nullptr;
     std::shared_ptr<T> match;
 
+    // Scan on all explicit bases--if this succeeds and a tree scan rematches, then we wind up
+    // with a failure in the aggregate due to multiple resolvable pathways.
+    V::Resolve(match);
+
     // Linear scan on all trees (but not memos)
     for(auto q = m_trees.begin(); q != m_trees.end(); q++) {
       if(
@@ -390,13 +397,13 @@ public:
         // No match, try the next tree in the forest
         continue;
 
-      if(match)
-        // Match already identified for this type--T is ambiguous!  Short return
+      if(match && match != attemptedCast)
+        // Match already identified for this type, and it's not the same--T is ambiguous!  Short return
         return false;
 
       // Copy over the match
       pMatchedTree = pCur;
-      match = attemptedCast;
+      match.swap(attemptedCast);
     }
 
     // Memoize the consequences of our search:
