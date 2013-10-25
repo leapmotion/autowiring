@@ -12,6 +12,7 @@ set(
   Autowired.cpp
   AutowirableSlot.h
   AutowirableSlot.cpp
+  autowiring_error.h
   CMakeLists.txt
   ContextCreator.h
   ContextCreatorBase.h
