@@ -10,7 +10,6 @@
 #include "ExceptionFilter.h"
 #include "EventSender.h"
 #include "PolymorphicTypeForest.h"
-#include "SharedPtrWrap.h"
 #include "TeardownNotifier.h"
 #include "TransientContextMember.h"
 #include <boost/thread/condition.hpp>
@@ -278,8 +277,6 @@ protected:
   /// Overload of Add based on ContextMember
   /// </summary>
   void AddContextMember(const std::shared_ptr<ContextMember>& ptr);
-
-  friend class SharedPtrWrapBase;
 
 public:
   // Accessor methods:
