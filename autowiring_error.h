@@ -13,6 +13,6 @@ private:
   const char* m_what;
 
 public:
-  const char* what(void) const override {return m_what;}
+  const char* what(void) const throw() override {return m_what;}
 };
 
