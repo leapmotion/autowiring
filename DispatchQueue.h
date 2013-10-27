@@ -81,6 +81,9 @@ protected:
   }
   
 public:
+  // Accessor methods:
+  size_t GetDispatchQueueLength(void) const {return m_dispatchQueue.size();}
+
   /// <summary>
   /// Causes the current dispatch queue to be dumped if it's non-empty
   /// </summary>
@@ -101,9 +104,20 @@ public:
   void WaitForEvent(void) override;
 
   /// <summary>
-  /// Blocks until a new dispatch member is added, dispatches, and then returns or timed out
+  /// Timed version of WaitForEvent
   /// </summary>
-  void WaitForEvent(const boost::chrono::duration<double, boost::milli>& milliseconds);
+  /// <returns>
+  /// False if the timeout period elapsed before an event could be dispatched, true otherwise
+  /// </returns>
+  bool WaitForEvent(boost::chrono::duration<double, boost::milli> milliseconds);
+
+  /// <summary>
+  /// Wakeup-point version of WaitForEvent
+  /// </summary>
+  /// <returns>
+  /// False if the timeout period elapsed before an event could be dispatched, true otherwise
+  /// </returns>
+  bool WaitForEvent(boost::chrono::steady_clock::time_point wakeTime);
 
   /// <summary>
   /// Similar to WaitForEvent, but does not block
