@@ -59,7 +59,7 @@ public:
     typename t_mpType::iterator q = m_contexts.find(key);
     if(q == m_contexts.end())
       return std::shared_ptr<CoreContext>();
-    return q->second;
+    return q->second.lock();
   }
 
   /// <summary>
