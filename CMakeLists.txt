@@ -105,7 +105,6 @@ set(
   DtorCorrectnessTest.h
   DtorCorrectnessTest.cpp
   EnclosedContextTestBase.h
-  EnclosedContextTestBase.cpp
   ExceptionFilterTest.h
   ExceptionFilterTest.cpp
   EventReceiverTest.h
