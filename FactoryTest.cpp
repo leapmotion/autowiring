@@ -1,64 +1,71 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "FactoryTest.h"
-#include "Factory.h"
+#include "AutoFactory.h"
+#include "TestFixtures/SimpleInterface.h"
+#include <iostream>
 
-class SimpleInterface {
+using namespace std;
+
+class ClassWithStaticNew
+{
 public:
-  virtual void Method(void) = 0;
+  ClassWithStaticNew(bool madeByFactory = false):
+    m_madeByFactory(madeByFactory)
+  {}
+
+  bool m_madeByFactory;
+
+  // Factory method, for trivial factory construction:
+  static ClassWithStaticNew* New(void) {
+    return new ClassWithStaticNew(true);
+  }
 };
 
-class ConcreteInstance:
+TEST_F(FactoryTest, VerifyFactoryCall) {
+  static_assert(has_simple_constructor<ClassWithStaticNew>::value, "Class with default-argument constructor was not correctly detected as such ");
+  static_assert(has_static_new<ClassWithStaticNew>::value, "Class with static allocator was not correctly detected as having one");
+
+  // Try to create the static new type:
+  AutoRequired<ClassWithStaticNew> si;
+
+  // Verify the correct version was called:
+  ASSERT_TRUE(si->m_madeByFactory) << "A factory method was not called on a type which provided a static factory New method";
+}
+
+/// <summary>
+/// Compile-time check to ensure that unconstructable types are identified correctly
+/// </summary>
+class ClassWithIntegralCtor:
   public SimpleInterface
 {
 public:
-  ConcreteInstance(void):
-    m_called(false)
-  {}
-
-  bool m_called;
-
-  void Method(void) override {
-    m_called = true;
-  }
+  ClassWithIntegralCtor(int) {}
+  void Method(void) override {}
 };
+static_assert(!has_simple_constructor<ClassWithIntegralCtor>::value, "A class without a simple constructor was incorrectly identified as having one");
 
-class SimpleFactory:
-  public IFactory<SimpleInterface>
+/// <summary>
+/// A factory for SimpleInterface
+/// </summary>
+class SimpleInterfaceFactory:
+  public AutoFactory<SimpleInterface>
 {
 public:
-  SimpleFactory(void):
-    m_called(false)
-  {}
-
-  virtual ~SimpleFactory() { }
-
-  bool m_called;
-
-  void operator()(SimpleInterface*& ptr) override {
-    ptr = new ConcreteInstance;
-  }
+  SimpleInterface* New(void) override {return new ClassWithIntegralCtor(1);}
 };
 
-TEST_F(FactoryTest, DISABLED_VerifyFactoryWiring) {
-  // First insert our factory
-  AutoRequired<SimpleFactory> factory;
+// Ground validation:
+static_assert(std::is_same<AutoFactoryBase, typename ground_type_of<SimpleInterfaceFactory>::type>::value, "Interface factory had an unexpected ground type");
 
-  // Now we determine whether the factory gets invoked by trying to require an interface
-  // TODO:  Change this to AutoRequired and correct the resulting compiler errors
-  Autowired<SimpleInterface> instance;
+TEST_F(FactoryTest, VerifyCanRequireAbstract) {
+  // Insert the factory type into the context:
+  AutoRequired<SimpleInterfaceFactory> factory;
 
-  // Validation that the factory was called:
-  EXPECT_TRUE(factory->m_called) << "The factory wasn't called when the interface instance was autowired";
+  // Now request that the factory be used to create a new SimpleInterface type
+  Autowired<SimpleInterface> si;
+  ASSERT_TRUE(si.IsAutowired()) << "Autowiring a type for which a factory exists did not correctly result in the construction of that type";
 
-  // Validation on the member:
-  ASSERT_TRUE(instance.IsAutowired()) << "Factory didn't inject a SimpleInterface instance";
-
-  // Validation on the type of the member
-  ConcreteInstance* pInstance = dynamic_cast<ConcreteInstance*>(instance.get());
-  ASSERT_TRUE(pInstance != nullptr);
-
-  // Invoke the instance member and see what happens:
-  instance->Method();
-  EXPECT_TRUE(pInstance->m_called) << "Virtual call was not correctly honored by concrete instance";
+  // Verify that the type of the constructed item is what we expect, too:
+  ASSERT_EQ(typeid(ClassWithIntegralCtor), typeid(*si)) << "The factory-constructed type was not the type the factory should have constructed.";
 }

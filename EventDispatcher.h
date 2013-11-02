@@ -40,7 +40,7 @@ public:
   /// Identical to while(DispatchEvent());
   /// </summary>
   /// <returns>The number of events dispatched</returns>
-  virtual size_t DispatchAllEvents(void) = 0;
+  virtual int DispatchAllEvents(void) = 0;
 };
 
 #endif

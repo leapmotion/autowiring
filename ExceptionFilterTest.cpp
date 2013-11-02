@@ -40,7 +40,7 @@ public:
   tracking_exception(const tracking_exception& rhs) {
     s_count++;
   }
-  NOEXCEPT(~tracking_exception(void)) {
+  ~tracking_exception(void) throw() {
     s_count--;
   }
 
@@ -53,6 +53,7 @@ class ThrowingListener:
   public virtual EventReceiver
 {
 public:
+  ThrowingListener(void) {}
   virtual void DoThrow(void) = 0;
 };
 

@@ -24,15 +24,17 @@ TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
 
 TEST_F(ContextCleanupTest, VerifyNoEarlyDtor) {
   std::weak_ptr<SimpleObject> weak;
+  std::weak_ptr<CoreContext> subCtxt;
 
   {
-    shared_ptr<CoreContext> context = CoreContext::CurrentContext()->Create();
+    AutoCreateContext context;
     CurrentContextPusher psher(context);
+    subCtxt = context;
 
     {
       // Okay, now we create a simple class first:
       AutoRequired<SimpleObject> sObj;
-      ASSERT_TRUE(sObj.IsAutowired()) << "";
+      ASSERT_TRUE(sObj.IsAutowired()) << "Failed to construct a simple type in the current context";
 
       weak = sObj;
     }
@@ -42,6 +44,7 @@ TEST_F(ContextCleanupTest, VerifyNoEarlyDtor) {
     ASSERT_FALSE(weak.expired()) << "An inserted object was deleted before the context was destroyed";
   }
 
+  ASSERT_TRUE(subCtxt.expired()) << "A context survived beyond the point where it was expected to have become invalid";
   ASSERT_TRUE(weak.expired()) << "An object survived the destruction of its parent context";
 }
 
@@ -69,8 +72,8 @@ TEST_F(ContextCleanupTest, VerifyContextDtor) {
       AutoRequired<SimpleObject> simple;
       objVerifier = simple;
 
-      // Should only be two references to this object
-      EXPECT_EQ(2, objVerifier.use_count()) << "Too many references to a newly constructed object";
+      // Should be exactly five references to this object
+      EXPECT_EQ(6, objVerifier.use_count()) << "Too many references to a newly constructed object";
 
       // Reference count should be unchanged:
       EXPECT_EQ(2, contextVerifier.use_count()) << "Reference count changed unexpectedly after addition of an object";
