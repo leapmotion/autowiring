@@ -1,15 +1,16 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _CORECONTEXT_H
 #define _CORECONTEXT_H
-#include "CoreThread.h"
+#include "AutoFactory.h"
+#include "autowiring_error.h"
 #include "Bolt.h"
+#include "CoreThread.h"
 #include "CurrentContextPusher.h"
 #include "DeferredBase.h"
 #include "DependentContext.h"
 #include "ExceptionFilter.h"
 #include "EventSender.h"
-#include "safe_dynamic_cast.h"
-#include "SharedPtrWrap.h"
+#include "PolymorphicTypeForest.h"
 #include "TeardownNotifier.h"
 #include "TransientContextMember.h"
 #include <boost/thread/condition.hpp>
@@ -43,22 +44,8 @@ class EventReceiver;
 class GlobalCoreContext;
 class OutstandingCountTracker;
 
-namespace CoreContextHelpers {
-  template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
-  struct FindByCastInternal;
-
-  template<class T, bool isPolymorphic = std::is_polymorphic<T>::value>
-  struct AddPolymorphic;
-  
-  template<class T, bool isContextMember = std::is_base_of<ContextMember, T>::value>
-  struct IsMember;
-}
-
 template<class T>
 class Autowired;
-
-template<class T>
-class AutowiredLocal;
 
 template<class Fn>
 struct AtExit {
@@ -170,10 +157,10 @@ protected:
   std::weak_ptr<CoreContext> m_self;
 
   // This is a map of the context members by type and, where appropriate, by name
-  // This map keeps all of its objects resident at least until the context goes
-  // away.
-  typedef std::multimap<std::type_index, SharedPtrWrapBase*> t_mpType;
-  t_mpType m_byType;
+  // This map keeps all of its objects resident at least until the context goes away.
+  // "Object" is named here as an explicit ground type in order to allow arbitrary casting from Object-
+  // derived types.
+  PolymorphicTypeForest<ExplicitGrounds<Object>> m_byType;
 
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
@@ -226,41 +213,43 @@ protected:
 
   friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
   friend class GlobalCoreContext;
-
   friend class OutstandingCountTracker;
 
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
   void UpdateDeferredElements(void);
+  
+  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+    {
+      // Add to our local collection:
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      m_eventReceivers.insert(pRecvr);
 
-  /// Adds an object of any kind to the IOC container
-  /// </summary>
-  /// <param name="value">The member to be added</param>
-  /// <remarks>
-  /// It's safe to allow the returned shared_ptr to go out of scope; the core context
-  /// will continue to hold a reference to it until it is destroyed
-  /// </remarks>
-  template<class T>
-  SharedPtrWrap<T>* AddInternal(std::shared_ptr<T> value) {
-    // Add to the map:
-    SharedPtrWrap<T>* pWrap = new SharedPtrWrap<T>(m_self, value);
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_byType.insert(
-      t_mpType::value_type(
-        typeid(*value.get()),
-        pWrap
-      )
-    );
+      // Scan the list of compatible senders:
+      for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+        *q->second += pRecvr;
+    }
 
-    // Polymorphic insertion, as required:
-    ((CoreContextHelpers::AddPolymorphic<T>&)*this)(value);
-
-    // Notify any autowiring field that is currently waiting that we have a new member
-    // to be considered.
-    UpdateDeferredElements();
-    return pWrap;
+    // Delegate ascending resolution, where possible.  This ensures that the parent context links
+    // this event receiver to compatible senders in the parent context itself.
+    if(m_pParent)
+      m_pParent->AddEventReceiver(pRecvr);
   }
+
+  void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+    // Remove from the local collection
+    (boost::lock_guard<boost::mutex>)m_lock,
+    m_eventReceivers.erase(pRecvr);
+
+    // Notify all compatible senders that we're going away:
+    for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+      *q->second -= pRecvr;
+
+    // Delegate to the parent:
+    if(m_pParent)
+      m_pParent->RemoveEventReceiver(pRecvr);
+  };
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
@@ -268,35 +257,27 @@ protected:
   void RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
 
   /// <summary>
-  /// Autowires the passed slot, and if this fails, attempts to autowire in the parent context
+  /// Adds an object of any kind to the IOC container
   /// </summary>
-  template<class W>
-  bool DoAutowire(W& slot) {
-    typename W::t_ptrType retVal;
-    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
-      retVal = pCur->FindByType(slot);
-      if(retVal) {
-        slot.swap(retVal);
-        return true;
-      }
-    }
-    return false;
-  }
+  /// <param name="pContextMember">The member which was added</param>
+  /// <param name="notReady">Allows the insertion of a thread, even if that thread isn't ready yet</param>
+  /// <return>The shared pointer which contains the context member.</return>
+  /// <remarks>
+  /// It's safe to allow the returned shared_ptr to go out of scope; the core context
+  /// will continue to hold a reference to it until Remove is invoked.
+  /// </remarks>
+  void AddCoreThread(const std::shared_ptr<CoreThread>& pCoreThread, bool allowNotReady = false);
 
   /// <summary>
-  /// Autowires the passed slot, but does so without traversing to any parents
+  /// Adds the specified context creation listener to receive creation events broadcast from this context
   /// </summary>
-  template<class T>
-  bool DoAutowire(AutowiredLocal<T>& slot) {
-    auto retVal = FindByType<T>();
-    if(!retVal)
-      return false;
+  /// <param name="pBase">The instance being added</param>
+  void AddBolt(const std::shared_ptr<BoltBase>& pBase);
 
-    slot.swap(retVal);
-    return true;
-  }
-
-  friend class SharedPtrWrapBase;
+  /// <summary>
+  /// Overload of Add based on ContextMember
+  /// </summary>
+  void AddContextMember(const std::shared_ptr<ContextMember>& ptr);
 
 public:
   // Accessor methods:
@@ -338,15 +319,26 @@ public:
   /// Determines whether the passed type is a member of this context, or any ancestor context
   /// </summary>
   template<class T>
-  bool IsMember(T* ptr) const {
-    return !!((CoreContextHelpers::IsMember<T>&)*this)(ptr);
+  bool IsMember(typename std::enable_if<std::is_base_of<ContextMember, T>::value, T*>::type ptr) const {
+    return
+      static_cast<ContextMember*>(ptr)->GetContext().get() == this;
+  }
+  
+  template<class T>
+  bool IsMember(typename std::enable_if<!std::is_base_of<ContextMember, T>::value, T*>::type ptr) const {
+    // If the passed type is a ContextMember, we can query relationship status
+    ContextMember* pMember = dynamic_cast<ContextMember*>(ptr);
+    return
+      pMember ?
+      pMember->GetContext().get() == this :
+      m_byType.Contains<T>();
   }
   
   template<class T>
   bool IsMember(const std::shared_ptr<T>& ptr) const {
-    return !!((CoreContextHelpers::IsMember<T>&)*this)(ptr.get());
+    return IsMember<T>(ptr.get());
   }
-
+  
   /// <summary>
   /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
   /// </summary>
@@ -391,25 +383,53 @@ public:
   /// <summary>
   /// Adds an object of any kind to the IOC container
   /// </summary>
-  /// <param name="pContextMember">The member which was added</param>
+  /// <param name="T">The concrete type to be added</param>
+  /// <param name="value">The member to add</param>
   /// <remarks>
   /// It's safe to allow the returned shared_ptr to go out of scope; the core context
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
-    auto pWrap = AddInternal(value);
-    AddContextMember(pWrap);
+    // Extract ground for this value, we'll use it to select the correct forest for the value:
+    typedef typename ground_type_of<T>::type groundType;
 
-    // Is the passed value a CoreThread?
-    CoreThread* pCoreThread = safe_dynamic_cast<CoreThread, T>::Cast(value.get());
-    if(pCoreThread)
-      AddCoreThread(pCoreThread);
+    {
+      boost::lock_guard<boost::mutex> lk(m_lock);
 
-    // Is the passed value a Bolt?
-    BoltBase* pBase = safe_dynamic_cast<BoltBase, T>::Cast(value.get());
-    if(pBase)
-      AddBolt(pBase);
+      // Add a new member of the forest:
+      m_byType.AddTree(value);
+
+      // Context members:
+      auto pContextMember = std::fast_pointer_cast<ContextMember, T>(value);
+      if(pContextMember) {
+        AddContextMember(pContextMember);
+
+        // CoreThreads:
+        auto pCoreThread = std::fast_pointer_cast<CoreThread, T>(value);
+        if(pCoreThread)
+          AddCoreThread(pCoreThread);
+      }
+      
+      // Exception filters:
+      auto pFilter = std::fast_pointer_cast<ExceptionFilter, T>(value);
+      if(pFilter)
+        m_filters.insert(pFilter.get());
+      
+      // Bolts:
+      auto pBase = std::fast_pointer_cast<BoltBase, T>(value);
+      if(pBase)
+        AddBolt(pBase);
+    }
+    
+    // Event receivers:
+    auto pRecvr = std::fast_pointer_cast<EventReceiver, T>(value);
+    if(pRecvr)
+      AddEventReceiver(pRecvr);
+
+    // Notify any autowiring field that is currently waiting that we have a new member
+    // to be considered.
+    UpdateDeferredElements();
   }
 
   /// <summary>
@@ -423,24 +443,6 @@ public:
     Add(retVal);
     return retVal;
   }
-
-  /// <summary>
-  /// Adds an object of any kind to the IOC container
-  /// </summary>
-  /// <param name="pContextMember">The member which was added</param>
-  /// <param name="notReady">Allows the insertion of a thread, even if that thread isn't ready yet</param>
-  /// <return>The shared pointer which contains the context member.</return>
-  /// <remarks>
-  /// It's safe to allow the returned shared_ptr to go out of scope; the core context
-  /// will continue to hold a reference to it until Remove is invoked.
-  /// </remarks>
-  void AddCoreThread(CoreThread* pCoreThread, bool allowNotReady = false);
-
-  /// <summary>
-  /// Adds the specified context creation listener to receive creation events broadcast from this context
-  /// </summary>
-  /// <param name="pBase">The instance being added</param>
-  void AddBolt(BoltBase* pBase);
 
   /// <summary>
   /// Utility routine, invoked typically by the service, which starts all registered
@@ -521,11 +523,6 @@ public:
   static std::shared_ptr<CoreContext> CurrentContext(void);
 
   /// <summary>
-  /// Utility debug method for writing a snapshot of this context to the specified output stream
-  /// </summary>
-  void Dump(std::ostream& os) const;// Accessor methods:
-
-  /// <summary>
   /// Obtains a pointer to the parent context
   /// </summary>
   std::shared_ptr<CoreContext>& GetParentContext(void) {return m_pParent;}
@@ -572,7 +569,7 @@ public:
     m_snoopers.insert(rcvr);
 
     // Pass control to the event adder helper:
-    ((CoreContextHelpers::AddPolymorphic<T>&)*this).AddEventReceiver(rcvr);
+    AddEventReceiver(rcvr);
   }
 
   /// <summary>
@@ -589,29 +586,11 @@ public:
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
     (boost::lock_guard<boost::mutex>)m_lock,
     m_snoopers.erase(rcvr);
-    ((CoreContextHelpers::AddPolymorphic<T>&)*this).RemoveEventReceiver(rcvr);
+    RemoveEventReceiver(rcvr);
   }
 
   /// <summary>
-  /// Overload of Add based on ContextMember
-  /// </summary>
-  void AddContextMember(SharedPtrWrapBase* pWrap);
-
-  /// <summary>
-  /// Attempts to find a member in the container that can be passed to the specified type
-  /// </summary>
-  /// <remarks>
-  /// This method will throw an exception if there is more than one object castable to
-  /// type T.  This method cannot be invoked with any type that does not inherit from Object
-  /// due to limitations on the way that dynamic_cast works internally.
-  /// </remarks>
-  template<class T>
-  std::shared_ptr<T> FindByCast(void) {
-    return ((CoreContextHelpers::FindByCastInternal<T>&)*this)();
-  }
-
-  /// <summary>
-  /// Locates an available context member by its exact type, if known
+  /// Locates an available context member in this context
   /// </summary>
   template<class T>
   std::shared_ptr<T> FindByType(const Autowired<T>&) {
@@ -620,41 +599,57 @@ public:
 
   template<class T>
   std::shared_ptr<T> FindByType(void) {
-    // Attempt a resolution by type first:
-    t_mpType::iterator q;
-    {
-      boost::lock_guard<boost::mutex> lk(m_lock);
-      q = m_byType.find(typeid(T));
-    }
-
-    if(q == m_byType.end())
-      // We couldn't find by a perfect name match, now we'll try to find something in the
-      // table which can be safely casted to the type we're looking for.  A common case
-      // where this is needed is where the autowiring calls for an interface, and we have
-      // a concrete implementation of this interface.
-      // Note that this only works for polymorphic types!
-      // POCO types do not have a VFT and cannot be used in a dynamic_cast.
-      return FindByCast<T>();
-
-    // If find has been requested by type, there should be only one match.
-    std::shared_ptr<T>& retVal = *(SharedPtrWrap<T>*)q->second;
-    q++;
-    if(q != m_byType.end() && q->first == typeid(T))
-      // Ambiguous match, exception:
-      throw_rethrowable std::runtime_error("An autowiring operation resulted in an ambiguous match");
+    std::shared_ptr<T> retVal;
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    if(!m_byType.Resolve(retVal))
+      throw_rethrowable autowiring_error("An autowiring operation resulted in an ambiguous match");
     return retVal;
   }
 
   /// <summary>
-  /// Registers a pointer to be autowired
+  /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
-  /// <remarks>
-  /// The autowired member must generally inherit from Autowired, or there
-  /// may be issues.
-  /// </remarks>
+  template<class W>
+  bool AutowireNoDefer(W& slot) {
+    typename W::t_ptrType retVal;
+    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
+      retVal = pCur->FindByType(slot);
+      if(retVal) {
+        slot.swap(retVal);
+        return true;
+      }
+    }
+
+    // We will not attempt second-chance resolution if the type is constructable
+    if(
+      has_static_new<typename W::value_type>::value ||
+      has_simple_constructor<typename W::value_type>::value
+    )
+      return false;
+
+    // Attempt second-chance resolution:
+    typedef AutoFactory<typename W::value_type> Factory;
+    std::shared_ptr<Factory> factory;
+    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
+      factory = pCur->FindByType<Factory>();
+      if(!factory)
+        continue;
+      
+      typename W::t_ptrType ptr(factory->New());
+      Add(ptr);
+      slot.swap(ptr);
+      return true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
+  /// Registers a slot to be autowired
+  /// </summary>
   template<class W>
   bool Autowire(W& slot) {
-    if(DoAutowire(slot))
+    if(AutowireNoDefer(slot))
       return true;
 
     // Failed, defer
@@ -678,7 +673,7 @@ public:
         return
           this->tracker.expired() ||
           this->slot ||
-          this->pThis->DoAutowire(this->slot);
+          this->pThis->AutowireNoDefer(this->slot);
       }
     };
 
@@ -694,7 +689,7 @@ public:
       if(pDeferred->IsExpired())
         delete pDeferred;
       else
-        throw_rethrowable std::runtime_error("A slot is being autowired, but a deferred instance already exists at this location");
+        throw_rethrowable autowiring_error("A slot is being autowired, but a deferred instance already exists at this location");
     }
     pDeferred = new Deferred(this, slot);
   }
@@ -716,173 +711,14 @@ public:
   /// </remarks>
   void NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener);
 
+  /// <summary>
+  /// Utility debug method for writing a snapshot of this context to the specified output stream
+  /// </summary>
+  void Dump(std::ostream& os) const;
+
   static void DebugPrintCurrentExceptionInformation();
 };
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& context);
-
-namespace CoreContextHelpers {
-
-
-template<class T, bool isPolymorphic>
-struct AddPolymorphic:
-  public CoreContext
-{
-public:
-  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    {
-      // Add to our local collection:
-      boost::lock_guard<boost::mutex> lk(m_lock);
-      m_eventReceivers.insert(pRecvr);
-
-      // Scan the list of compatible senders:
-      for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
-        *q->second += pRecvr;
-    }
-
-    // Delegate ascending resolution, where possible.  This ensures that the parent context links
-    // this event receiver to compatible senders in the parent context itself.
-    if(m_pParent)
-      ((AddPolymorphic<T, true>&)*m_pParent).AddEventReceiver(pRecvr);
-  }
-
-  void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    // Remove from the local collection
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_eventReceivers.erase(pRecvr);
-
-    // Notify all compatible senders that we're going away:
-    for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
-      *q->second -= pRecvr;
-
-    // Delegate to the parent:
-    if(m_pParent)
-      ((AddPolymorphic<T, true>&)*m_pParent).RemoveEventReceiver(pRecvr);
-  };
-
-  /// <summary>
-  /// Fast cast, will use a static cast if the relationship is known at compile time or a dynamic cast if not
-  /// </summary>
-  template<class U, class V, bool related = std::is_base_of<T, U>::value>
-  struct CastWithRelationship {
-    static const bool value = true;
-
-    static std::shared_ptr<U> Cast(std::shared_ptr<V> rhs) {
-      return std::dynamic_pointer_cast<U, V>(rhs);
-    }
-  };
-
-  template<class U, class V>
-  struct CastWithRelationship<U, V, true> {
-    static const bool value = true;
-
-    static std::shared_ptr<U> Cast(std::shared_ptr<V> rhs) {
-      return std::static_pointer_cast<U, V>(rhs);
-    }
-  };
-
-  inline void operator()(std::shared_ptr<T> value) {
-    typedef CastWithRelationship<EventReceiver, T> t_cast;
-
-    // Add event receivers:
-    std::shared_ptr<EventReceiver> pRecvr = t_cast::Cast(value);
-    if(t_cast::value || pRecvr)
-      AddEventReceiver(pRecvr);
-
-    // Finally, any exception filters:
-    ExceptionFilter* pFilter = dynamic_cast<ExceptionFilter*>(value.get());
-    if(pFilter)
-      m_filters.insert(pFilter);
-  }
-};
-
-template<class T>
-struct AddPolymorphic<T, false>:
-  public CoreContext
-{
-public:
-  inline void operator()(const std::shared_ptr<T>&) {}
-};
-
-template<class T, bool isPolymorphic>
-struct FindByCastInternal:
-  public CoreContext
-{
-  std::shared_ptr<T> operator()(void) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    std::shared_ptr<Object> matchedObject;
-
-    static_assert((!std::is_same<Object, T>::value), "FindByCastInternal on type Object is an overly broad search criteria");
-
-    std::shared_ptr<Object> obj;
-    for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); ++q) {
-      SharedPtrWrapBase* pBase = q->second;
-
-      // See if this wrap contains an object, which we could use to access other types
-      obj = pBase->AsObject();
-      if(!obj)
-        continue;
-
-      // Okay, we can work with this, it's an Object
-      try {
-        // Try the cast
-        if(!dynamic_cast<T*>(obj.get()))
-          // Sometimes the above will throw an exception, sometimes it will return null.
-          // We handle both cases by wrapping this in a try-except block.
-          continue;
-
-        // Verify that we didn't try storing something already
-        if(matchedObject)
-          throw_rethrowable std::runtime_error("An autowiring operation resulted in an ambiguous match");
-
-        // Record this value to be returned
-        matchedObject.swap(obj);
-      } catch(std::bad_cast&) {
-      } catch(...) {
-        // Very bad exception happened
-      };
-    }
-
-    return
-      matchedObject ?
-      std::dynamic_pointer_cast<T, Object>(matchedObject) :
-      std::shared_ptr<T>();
-  }
-};
-
-template<class T>
-struct FindByCastInternal<T, false>:
-  public CoreContext
-{
-  std::shared_ptr<T> operator()(void) {
-    return std::shared_ptr<T>();
-  }
-};
-
-template<class T>
-struct IsMember<T, true>:
-  public CoreContext
-{
-  bool operator()(T* ptr) const {
-    return
-      static_cast<ContextMember*>(ptr)->GetContext().get() == this;
-  }
-};
-
-template<class T>
-struct IsMember<T, false>:
-  public CoreContext
-{
-  bool operator()(T* ptr) const {
-    // If the passed type is a ContextMember, we can query relationship status
-    ContextMember* pMember = dynamic_cast<ContextMember*>(ptr);
-    return
-      pMember ?
-      pMember->GetContext().get() == this :
-      !!m_byType.count(typeid(T));
-  }
-};
-
-}
 
 #endif

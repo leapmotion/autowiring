@@ -10,11 +10,11 @@
 using namespace std;
 
 class invalid_copycounter_exception:
-  public runtime_error
+  public autowiring_error
 {
 public:
   invalid_copycounter_exception(void):
-    runtime_error("Copy counter was moved, and incorrectly reused")
+    autowiring_error("Copy counter was moved, and incorrectly reused")
   {}
 };
 
@@ -471,18 +471,17 @@ TEST_F(EventReceiverTest, VerifyNoCopyCallable) {
   sender(&CallableInterface::NoCopyMethod)(method);
 }
 
+// This instance attempts to fire an event in its dtor
+class DtorFire
+{
+public:
+  ~DtorFire(void) {
+    m_fire(&CallableInterface::ZeroArgs)();
+  }
+  AutoFired<CallableInterface> m_fire;
+};
+
 TEST_F(EventReceiverTest, OrphanedMemberFireCheck) {
-  // This instance attempts to fire an event in its dtor
-  class DtorFire
-  {
-  public:
-    ~DtorFire(void) {
-      m_fire(&CallableInterface::ZeroArgs)();
-    }
-
-    AutoFired<CallableInterface> m_fire;
-  };
-
   // Create the instance and let its enclosing context go away:
   std::shared_ptr<DtorFire> dtorFireShared;
   {

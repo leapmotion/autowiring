@@ -11,7 +11,6 @@
 #include <memory>
 
 using namespace std;
-using namespace CoreContextHelpers;
 
 boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
 
@@ -46,10 +45,6 @@ CoreContext::~CoreContext(void) {
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
   if(m_pParent)
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
-
-  // Explicit deleters to simplify implementation of SharedPtrWrapBase
-  for(t_mpType::iterator q = m_byType.begin(); q != m_byType.end(); ++q)
-    delete q->second;
 
   // Explicit deleters to simplify base deletion of any deferred autowiring requests:
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
@@ -243,22 +238,21 @@ std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   return *retVal;
 }
 
-void CoreContext::AddCoreThread(CoreThread* ptr, bool allowNotReady) {
+void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr, bool allowNotReady) {
   // We don't allow the insertion of a thread that isn't ready unless the user really
   // wants that behavior.
   ASSERT(allowNotReady || ptr->IsReady());
 
   // Insert into the linked list of threads first:
-  boost::lock_guard<boost::mutex> lk(m_lock);
-  m_threads.push_front(ptr);
+  m_threads.push_front(ptr.get());
 
   if(m_refCount)
     // We're already running, this means we're late to the game and need to start _now_.
     ptr->Start();
 }
 
-void CoreContext::AddBolt(BoltBase* pBase) {
-  m_nameListeners[pBase->GetContextName()].push_back(pBase);
+void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
+  m_nameListeners[pBase->GetContextName()].push_back(pBase.get());
 }
 
 std::shared_ptr<CoreContext> GetCurrentContext() {
@@ -268,10 +262,10 @@ std::shared_ptr<CoreContext> GetCurrentContext() {
 void CoreContext::Dump(std::ostream& os) const {
   boost::lock_guard<boost::mutex> lk(m_lock);
   for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
-    os << q->second->GetTypeInfo().name();
-    std::shared_ptr<Object> pObj = q->second->AsObject();
+    os << q->first.derived.name();
+    void* pObj = q->second->RawPointer();
     if(pObj)
-      os << hex << " 0x" << pObj;
+      os << " 0x" << hex << pObj;
     os << endl;
   }
 
@@ -381,23 +375,12 @@ void CoreContext::FilterFiringException(const EventReceiverProxyBase* pProxy, Ev
   SignalShutdown();
 }
 
-void CoreContext::AddContextMember(SharedPtrWrapBase* ptr) {
-  // Try to get an object shared pointer:
-  auto asObj = ptr->AsObject();
-  if(!asObj)
-    return;
-
-  // Try to cast to a context member shared pointer:
-  auto contextMember = std::dynamic_pointer_cast<ContextMember, Object>(asObj);
-  if(!contextMember)
-    return;
-
+void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
   // Reflexive assignment:
-  contextMember->m_self = contextMember;
+  ptr->m_self = ptr;
 
   // Always add to the set of context members
-  (boost::lock_guard<boost::mutex>)m_lock,
-  m_contextMembers.insert(contextMember.get());
+  m_contextMembers.insert(ptr.get());
 }
 
 void CoreContext::NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener) {

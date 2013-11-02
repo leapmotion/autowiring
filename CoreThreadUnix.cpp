@@ -3,11 +3,10 @@
 #include "CoreThread.h"
 
 void CoreThread::SetCurrentThreadName(void) const {
-#if IS_INTERNAL_BUILD == 1
+  if(IS_INTERNAL_BUILD)
 #if __APPLE__
-  pthread_setname_np(m_name);
+    pthread_setname_np(m_name);
 #else
-  pthread_setname_np(pthread_self(), m_name);
-#endif
+    pthread_setname_np(pthread_self(), m_name);
 #endif
 }

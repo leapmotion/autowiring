@@ -56,7 +56,7 @@ void DispatchQueue::WaitForEvent(void) {
   DispatchEventUnsafe(lk);
 }
 
-void DispatchQueue::WaitForEvent(const boost::chrono::duration<double, boost::milli>& milliseconds) {
+bool DispatchQueue::WaitForEvent(boost::chrono::duration<double, boost::milli> milliseconds) {
   boost::unique_lock<boost::mutex> lk(m_dispatchLock);
   if(m_aborted)
     throw dispatch_aborted_exception();
@@ -66,9 +66,28 @@ void DispatchQueue::WaitForEvent(const boost::chrono::duration<double, boost::mi
       throw dispatch_aborted_exception();
     return !this->m_dispatchQueue.empty();
   });
-  if (!m_dispatchQueue.empty()) {
-    DispatchEventUnsafe(lk);
-  }
+  if(m_dispatchQueue.empty())
+    return false;
+  
+  DispatchEventUnsafe(lk);
+  return true;
+}
+
+bool DispatchQueue::WaitForEvent(boost::chrono::steady_clock::time_point wakeTime) {
+  boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+  if(m_aborted)
+    throw dispatch_aborted_exception();
+
+  m_queueUpdated.wait_until(lk, wakeTime, [this] () -> bool {
+    if(m_aborted)
+      throw dispatch_aborted_exception();
+    return !this->m_dispatchQueue.empty();
+  });
+  if(m_dispatchQueue.empty())
+    return false;
+  
+  DispatchEventUnsafe(lk);
+  return true;
 }
 
 bool DispatchQueue::DispatchEvent(void) {
