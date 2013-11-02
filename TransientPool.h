@@ -1,4 +1,5 @@
 #pragma once
+#include "autowiring_error.h"
 #include "CoreThread.h"
 #include "EventReceiver.h"
 #include "TransientPoolBase.h"
@@ -58,7 +59,7 @@ public:
   virtual bool Add(std::shared_ptr<TransientContextMember> pMember) override {
     // Trivial return check:
     if(this->m_stop)
-      throw_rethrowable std::runtime_error("Cannot add an element to a terminated transient pool");
+      throw_rethrowable autowiring_error("Cannot add an element to a terminated transient pool");
 
     auto casted = std::dynamic_pointer_cast<T, TransientContextMember>(pMember);
     if(!casted)

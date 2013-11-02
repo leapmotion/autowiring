@@ -1,6 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _CONTEXT_MAP_H
 #define _CONTEXT_MAP_H
+#include "autowiring_error.h"
 #include "CoreContext.h"
 #include <boost/thread/mutex.hpp>
 #include STL_UNORDERED_MAP
@@ -86,7 +87,7 @@ public:
     boost::lock_guard<boost::mutex> lk(m_lk);
     auto& rhs = m_contexts[key];
     if(!rhs.expired())
-      throw_rethrowable std::runtime_error("Specified key is already associated with another context");
+      throw_rethrowable autowiring_error("Specified key is already associated with another context");
 
     rhs = context;
 

@@ -4,8 +4,9 @@
 #include "CoreContext.h"
 #include "GlobalCoreContext.h"
 
-AutoCurrentContext::AutoCurrentContext(void) {
-  *this = CoreContext::CurrentContext();
+AutoCurrentContext::AutoCurrentContext(void):
+  std::shared_ptr<CoreContext>(CoreContext::CurrentContext())
+{
 }
 
 AutoGlobalContext::AutoGlobalContext(void):
@@ -13,6 +14,7 @@ AutoGlobalContext::AutoGlobalContext(void):
 {
 }
 
-AutoCreateContext::AutoCreateContext(void) {
-  *this = CoreContext::CurrentContext()->Create();
+AutoCreateContext::AutoCreateContext(void):
+  std::shared_ptr<CoreContext>(CoreContext::CurrentContext()->Create())
+{
 }

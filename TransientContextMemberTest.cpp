@@ -165,5 +165,5 @@ TEST_F(TransientContextMemberTest, VerifyNoAddToStopped) {
 
   // This should throw an exception unconditionally:
   std::shared_ptr<MyTransientClass> myTransient;
-  EXPECT_THROW(pool->Add(myTransient), std::runtime_error);
+  EXPECT_THROW(pool->Add(myTransient), autowiring_error);
 }

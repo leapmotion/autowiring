@@ -1,9 +1,9 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _AUTOWIRED_H
 #define _AUTOWIRED_H
-#include "ocuType.h"
 #include "AutowirableSlot.h"
 #include "CoreContext.h"
+#include "AutoFactory.h"
 #include <functional>
 #include <memory>
 
@@ -12,8 +12,42 @@ class Autowired;
 class CoreContext;
 class GlobalCoreContext;
 
-// Redeclarations, primary declarations in CoreContext.h
-std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
+/// <summary>
+/// Provides a simple way to obtain a reference to the current context
+/// </summary>
+/// <remarks>
+/// Users of this class are encouraged not to hold references for longer than needed.  Failing
+/// to release a context pointer could prevent resources from being correctly released.
+/// </remarks>
+class AutoCurrentContext:
+  public std::shared_ptr<CoreContext>
+{
+public:
+  AutoCurrentContext(void);
+};
+
+/// <summary>
+/// Simple way to obtain a reference to the global context
+/// </summary>
+class AutoGlobalContext:
+  public std::shared_ptr<CoreContext>
+{
+public:
+  AutoGlobalContext(void);
+};
+
+/// <summary>
+/// Provides a simple way to create a dependent context pointer
+/// </summary>
+/// <remarks>
+/// The newly created context will be created using CoreContext::CurrentContext()->Create().
+/// </remarks>
+class AutoCreateContext:
+  public std::shared_ptr<CoreContext>
+{
+public:
+  AutoCreateContext(void);
+};
 
 template<class T>
 class AutowiredCreator:
@@ -21,14 +55,29 @@ class AutowiredCreator:
   public std::shared_ptr<T>
 {
 public:
+  typedef T value_type;
   typedef shared_ptr<T> t_ptrType;
+  
+  template<class U>
+  static typename std::enable_if<has_static_new<U>::value, U*>::type New(void) {
+    return U::New();
+  }
+
+  template<class U>
+  static typename std::enable_if<!has_static_new<U>::value, U*>::type New(void) {
+    static_assert(has_simple_constructor<U>::value, "Attempted to create a type which did not provide a zero-arguments ctor");
+    return new U;
+  }
 
   /// <summary>
   /// Creates a new instance if this instance isn't autowired
   /// </summary>
   /// <remarks>
-  /// Users are encouraged to make use of AutoRequired wherever it's a sensible alternative
-  /// to a Create call.
+  /// If type T has a static member function called New, the helper's Create routine will attempt call
+  /// this function instead of the default constructor, even if the default constructor has been supplied,
+  /// and even if the arity of the New routine is not zero.
+  ///
+  /// To prevent this behavior, use a name other than New.
   /// </remarks>
   void Create(void) {
     if(*this)
@@ -57,33 +106,8 @@ public:
     // constructor is defined.
     //
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-    this->reset(new T);
+    this->reset(New<T>());
     AutowirableSlot::LockContext()->Add(*this);
-  }
-
-  /// <summary>
-  /// This creates a pointer using the specified lambda, if such creation is needed.
-  /// <summary>
-  void Create(const std::function<T* ()>& fn) {
-    // Is the object already created?  Short-circuit if so.
-    if(*this)
-      return;
-
-    // Okay, we're ready to go now, we can release
-    // the shared pointer so any lambdas disappear
-    AutowirableSlot::m_tracker = std::shared_ptr<AutowirableSlot>();
-
-    // TODO:  Allow this to be lazily invoked
-    // It would be nice if this constructor is only invoked on the first dereference
-    // of this autowired object.  That would allow us to specify default types that
-    // aren't constructed spuriously.
-    T* ptr = fn();
-
-    // Now we'll add this object to the context so the created object may be autowired elsewhere.
-    // We also want to be sure we use the same shared_ptr that's being used internally in the
-    // context.
-    std::shared_ptr<CoreContext> context = LockContext();
-    *this = context->Add(ptr);
   }
 
   operator bool(void) const {
@@ -94,50 +118,7 @@ public:
     return t_ptrType::get();
   }
 
-  AutowiredCreator<T>& operator=(T* rhs) {
-    // Set up the shared pointer first:
-    std::shared_ptr<T>::reset(rhs);
-
-    // Only add when we are non-null
-    if(rhs)
-      // Strong assumption must be made, here, that the rhs isn't already in the current context
-      LockContext()->Add(*this);
-    return *this;
-  }
-
   bool IsAutowired(void) const override {return !!t_ptrType::get();}
-};
-
-/// <summary>
-/// This is the specialization for global contexts.  Unlike other autowires, it's guaranteed
-/// to autowire in all circumstances.
-/// </summary>
-/// <remarks>
-/// We do not autowire operator=, because there is never a case where the rhs is anything
-/// but the sole Global context or null.
-/// </remarks>
-template<>
-class AutowiredCreator<GlobalCoreContext>:
-  public AutowirableSlot,
-  public std::shared_ptr<GlobalCoreContext>
-{
-private:
-  // We do not allow operator=
-  using std::shared_ptr<GlobalCoreContext>::operator=;
-
-public:
-  typedef shared_ptr<GlobalCoreContext> t_ptrType;
-
-  AutowiredCreator(void):
-    std::shared_ptr<GlobalCoreContext>(GetGlobalContext())
-  {
-  }
-
-  bool IsAutowired(void) const override {return !!t_ptrType::get();}
-
-  operator GlobalCoreContext*(void) const {
-    return t_ptrType::get();
-  }
 };
 
 /// <summary>
@@ -155,44 +136,20 @@ class Autowired:
   public AutowiredCreator<T>
 {
 public:
+  static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
+  static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
+
   Autowired(void) {
     shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
     context->Autowire(*this);
   }
-
-  Autowired(T* ptr) {
-    *this = ptr;
-  }
-
-  using AutowiredCreator<T>::operator=;
-};
-
-/// <summary>
-/// Forbidden autowiring.  Do not attempt it.  Instead, use AutoCurrentContext or AutoCreateContext.
-/// </summary>
-template<>
-class Autowired<CoreContext>
-{
-private:
-  Autowired(void);
-};
-
-/// <summary>
-/// Forbidden autowiring.  Do not attempt it.  Instead, use AutoGlobalContext
-/// </summary>
-template<>
-class Autowired<GlobalCoreContext>
-{
-private:
-  Autowired(void);
 };
 
 /// <summary>
 /// Similar to Autowired, but the default constructor invokes Autowired(true)
 /// </summary>
 /// <remarks>
-/// This class is simply a convenience class and provides a declarative way to name a
-/// required dependency.
+/// This class is simply a convenience class and provides a declarative way to name a required dependency.
 /// </remarks>
 template<class T>
 class AutoRequired:
@@ -202,52 +159,6 @@ public:
   AutoRequired(void) {
     if(!*this)
       AutowiredCreator<T>::Create();
-  }
-};
-
-/// <summary>
-/// A special templated type that allows users to specify factory construction methods
-/// </summary>
-template<class T, T* (*fn)()>
-struct CtorProxy {};
-
-/// <summary>
-/// An AutoRequired specialization that allows the user to specify a function call to initialize this field
-/// </summary>
-/// <remarks>
-/// This specialization is useful when it's necessary to AutoRequire an interface
-/// </remarks>
-template<class T, T* (*fn)()>
-class AutoRequired<CtorProxy<T, fn>>:
-  public Autowired<T>
-{
-public:
-  AutoRequired(void) {
-    if(*this)
-      return;
-
-    this->reset(fn());
-    AutowirableSlot::LockContext()->Add(*this);
-  }
-};
-
-/// <summary>
-/// A special templated type that allows users to specify a particular concrete instance
-/// </summary>
-template<class T, class Concrete>
-struct CtorConcrete {};
-
-template<class T, class Concrete>
-class AutoRequired<CtorConcrete<T, Concrete>>:
-  public Autowired<T>
-{
-public:
-  AutoRequired(void) {
-    if(*this)
-      return;
-
-    this->reset(new Concrete);
-    AutowirableSlot::LockContext()->Add(*this);
   }
 };
 
@@ -267,43 +178,6 @@ public:
   {
     // Associate with the pool:
     pool.Add(*this);
-  }
-};
-
-/// <summary>
-/// An AutowiredLocal instance may only be satisfied by a member of the specified type which exists in the current context.
-/// </summary>
-/// <remarks>
-/// Do not use AutoRequiredLocal and AutoRequired on the same type in the same context.  Doing this could cause an initialization-order
-/// dependency, and is an error.  In debug mode, doing this may cause an exception.
-/// </remarks>
-template<class T>
-class AutowiredLocal:
-  public AutowiredCreator<T>
-{
-public:
-  AutowiredLocal(void) {
-    shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
-    context->Autowire(*this);
-  }
-};
-
-/// <summary>
-/// A local AutoRequired instance will ensure that the specified type will always be constructed in the current scope
-/// </summary>
-/// <remarks>
-/// This type offers a convenient way to ensure that some type is always constructed in the current context, even if a satisfying
-/// type exists in the parent scope.  Do not use AutoRequiredLocal and AutoRequired on the same type in the same context.  Doing this
-/// could cause an initialization-order dependency, and is an error.  In debug mode, doing this may cause an exception.
-/// </remarks>
-template<class T>
-class AutoRequiredLocal:
-  public AutowiredLocal<T>
-{
-public:
-  AutoRequiredLocal(void) {
-    if(!*this)
-      AutowiredCreator<T>::Create();
   }
 };
 
@@ -404,47 +278,6 @@ public:
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot Defer an event for an unrelated type");
     return m_receiver->Invoke(pfn);
   }
-};
-
-/// <summary>
-/// Provides a simple way to obtain a reference to the current context
-/// </summary>
-/// <remarks>
-/// Users of this class are encouraged not to hold references for longer than needed.  Failing
-/// to release a context pointer could prevent resources from being correctly released.
-/// </remarks>
-class AutoCurrentContext:
-  public std::shared_ptr<CoreContext>
-{
-public:
-  AutoCurrentContext(void);
-
-  using std::shared_ptr<CoreContext>::operator=;
-};
-
-/// <summary>
-/// Simple way to obtain a reference to the global context
-/// </summary>
-class AutoGlobalContext:
-  public std::shared_ptr<CoreContext>
-{
-public:
-  AutoGlobalContext(void);
-};
-
-/// <summary>
-/// Provides a simple way to create a dependent context pointer
-/// </summary>
-/// <remarks>
-/// The newly created context will be created using CoreContext::CurrentContext()->Create().
-/// </remarks>
-class AutoCreateContext:
-  public std::shared_ptr<CoreContext>
-{
-public:
-  AutoCreateContext(void);
-
-  using std::shared_ptr<CoreContext>::operator=;
 };
 
 #endif

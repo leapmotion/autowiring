@@ -6,11 +6,13 @@ include_directories(
 
 set(
   Autowiring_SRCS
+  AutoFactory.h
   AutoNetworkMonitor.h
   Autowired.h
   Autowired.cpp
   AutowirableSlot.h
   AutowirableSlot.cpp
+  autowiring_error.h
   ContextCreator.h
   ContextCreatorBase.h
   ContextCreatorBase.cpp
@@ -41,7 +43,6 @@ set(
   EventSender.h
   EventSender.cpp
   ExceptionFilter.h
-  Factory.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   InterlockedExchange.h
@@ -51,10 +52,8 @@ set(
   ObjectPool.h
   OutstandingCountTracker.cpp
   OutstandingCountTracker.h
-  safe_dynamic_cast.h
+  PolymorphicTypeForest.h
   SharedPtrHash.h
-  SharedPtrWrap.cpp
-  SharedPtrWrap.h
   TeardownNotifier.h
   TeardownNotifier.cpp
   ThreadStatusMaintainer.cpp
@@ -91,8 +90,6 @@ endif()
 
 set(
   AutowiringTest_SRCS
-  AutoLocalTest.h
-  AutoLocalTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h
@@ -103,8 +100,6 @@ set(
   BoltTest.cpp
   ContextCreatorTest.h
   ContextCreatorTest.cpp
-  CtorProxyTest.h
-  CtorProxyTest.cpp
   CurrentContextPusherTest.h
   CurrentContextPusherTest.cpp
   DependentContextTest.h
@@ -112,7 +107,6 @@ set(
   DtorCorrectnessTest.h
   DtorCorrectnessTest.cpp
   EnclosedContextTestBase.h
-  EnclosedContextTestBase.cpp
   ExceptionFilterTest.h
   ExceptionFilterTest.cpp
   EventReceiverTest.h
@@ -133,6 +127,8 @@ set(
   MultiInheritTest.cpp
   ObjectPoolTest.h
   ObjectPoolTest.cpp
+  PolymorphicTypeForestTest.h
+  PolymorphicTypeForestTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
   TeardownNotifierTest.h
@@ -144,6 +140,7 @@ set(
   SnoopTest.h
   SnoopTest.cpp
   TestFixtures/ExitRaceThreaded.h
+  TestFixtures/SimpleInterface.h
   TestFixtures/SimpleObject.h
   TestFixtures/SimpleThreaded.h
   TestFixtures/MultiInherit.h

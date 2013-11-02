@@ -12,8 +12,7 @@ public:
 
 protected:
   // Teardown listeners, invoked in sequence when the context is tearing down
-  typedef std::list<std::function<void()>> t_teardownListeners;
-  t_teardownListeners m_teardownListeners;
+  std::list<std::function<void()>> m_teardownListeners;
 
   /// <summary>
   /// May be invoked prospectively by a derived instance to prematurely notify teardown listeners
