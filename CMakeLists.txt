@@ -102,6 +102,8 @@ set(
   ContextCreatorTest.cpp
   CurrentContextPusherTest.h
   CurrentContextPusherTest.cpp
+  DecoratorTest.h
+  DecoratorTest.cpp
   DependentContextTest.h
   DependentContextTest.cpp
   DtorCorrectnessTest.h
