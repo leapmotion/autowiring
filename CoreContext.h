@@ -1,6 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _CORECONTEXT_H
 #define _CORECONTEXT_H
+#include "at_exit.h"
 #include "AutoFactory.h"
 #include "AutoPacketFactory.h"
 #include "autowiring_error.h"
@@ -48,24 +49,6 @@ class OutstandingCountTracker;
 
 template<class T>
 class Autowired;
-
-template<class Fn>
-struct AtExit {
-  AtExit(Fn&& fn):
-    fn(std::move(fn))
-  {}
-
-  ~AtExit(void) {
-    fn();
-  }
-
-  Fn fn;
-};
-
-template<class Fn>
-AtExit<Fn> MakeAtExit(Fn&& fn) {
-  return AtExit<Fn>(std::forward<Fn>(fn));
-}
 
 /// <summary>
 /// This class is used to determine whether all core threads have exited
