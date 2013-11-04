@@ -10,7 +10,7 @@
 using namespace std;
 
 AutowirableSlot::AutowirableSlot(void):
-  m_context(GetCurrentContext())
+  m_context(CoreContext::CurrentContext())
 {
   m_tracker = std::shared_ptr<AutowirableSlot>(this, NullOp<AutowirableSlot*>);
 
