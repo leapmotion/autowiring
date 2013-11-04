@@ -124,9 +124,10 @@ public:
   T& Decorate(const T& t) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     auto& ptr = static_cast<Enclosure<T>*&>(m_mp[typeid(T)]);
-    if(!ptr)
+    if(!ptr) {
       ptr = new Enclosure<T>(t);
-    UpdateSatisfaction(typeid(T));
+      UpdateSatisfaction(typeid(T));
+    }
     return static_cast<Enclosure<T>*>(pObj)->held;
   }
 
@@ -135,9 +136,10 @@ public:
   T& Decorate(T&& t) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     auto*& pObj = m_mp[typeid(T)];
-    if(!pObj)
+    if(!pObj) {
       pObj = new Enclosure<T>(std::move(t));
-    UpdateSatisfaction(typeid(T));
+      UpdateSatisfaction(typeid(T));
+    }
     return static_cast<Enclosure<T>*>(pObj)->held;
   }
 
