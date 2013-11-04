@@ -39,15 +39,13 @@ struct RecipientPropertyExtractor {
   }
 
   /// <summary>
-  /// Utility method which returns argument types in a vector instead of a functional
+  /// Utility method which returns argument types in an array instead of a functional
   /// </summary>
-  static std::vector<const std::type_info*> Enumerate(void) {
-    auto& c = Decompose<decltype(&T::AutoFilter)>::Enumerate();
-    return
-      std::vector<const std::type_info*>(
-        c,
-        c + ARRAYCOUNT(c) - 1
-      );
+  /// <remarks>
+  /// The returned array is terminated by a null pointer
+  /// </remarks>
+  static const std::type_info*const* Enumerate(void) {
+    return Decompose<decltype(&T::AutoFilter)>::Enumerate();
   }
 };
 
@@ -56,7 +54,8 @@ struct RecipientPropertyExtractor<T, false> {
   template<class _Fx>
   static void Enumerate(_Fx&&) {}
 
-  static std::vector<const std::type_info*> Enumerate(void) {
-    return std::vector<const std::type_info*>();
+  static const std::type_info* (&Enumerate(void))[1] {
+    static const std::type_info* ti[] = {nullptr};
+    return ti;
   }
 };

@@ -52,18 +52,22 @@ TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   EXPECT_EQ(typeid(Decoration<1>), *v[1]);
 
   // Verify both overloads wind up returning the same array:
-  auto vCopy = RecipientPropertyExtractor<FilterA>::Enumerate();
-  EXPECT_EQ(v, vCopy) << "Two overloads of Enumerate returned contradictory types";
+  auto ppCur = RecipientPropertyExtractor<FilterA>::Enumerate();
+  for(size_t i = 0; ppCur[i]; i++)
+    EXPECT_EQ(*v[i], *ppCur[i]) << "Two overloads of Enumerate returned contradictory types";
 }
 
 TEST_F(DecoratorTest, VerifyEmptyExtraction) {
-  vector<const type_info*> v = RecipientPropertyExtractor<Object>::Enumerate();
-  EXPECT_TRUE(v.empty()) << "Extracted arguments from an object known not to have a Filter method";
+  const type_info*const* v = RecipientPropertyExtractor<Object>::Enumerate();
+  EXPECT_EQ(nullptr, *v) << "Extracted arguments from an object known not to have a Filter method";
 }
 
 TEST_F(DecoratorTest, VerifySimpleFilter) {
   AutoRequired<FilterA> filterA;
   AutoRequired<AutoPacketFactory> factory;
+
+  // Manually register the subscriber:
+  factory->AddSubscriber(*filterA);
 
   // Obtain a packet from the factory:
   auto f = factory->NewPacket();
