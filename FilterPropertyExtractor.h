@@ -34,16 +34,20 @@ struct RecipientPropertyExtractor {
   /// </remarks>
   template<class _Fx>
   static void Enumerate(_Fx&& fx) {
-    Decompose<decltype(&T::Filter)>::Enumerate<_Fx>(std::move(fx));
+    for(auto ppCur = Decompose<decltype(&T::AutoFilter)>::Enumerate(); *ppCur; ppCur++)
+      fx(**ppCur);
   }
 
   /// <summary>
   /// Utility method which returns argument types in a vector instead of a functional
   /// </summary>
   static std::vector<const std::type_info*> Enumerate(void) {
-    std::vector<const std::type_info*> retVal;
-    Enumerate([&retVal](const std::type_info* ti) {retVal.push_back(ti); });
-    return retVal;
+    auto& c = Decompose<decltype(&T::Filter)>::Enumerate();
+    return
+      std::vector<const std::type_info*>(
+        c,
+        c + ARRAYCOUNT(c) - 1
+      );
   }
 };
 
