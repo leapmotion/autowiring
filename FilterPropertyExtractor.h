@@ -5,13 +5,13 @@
 /// Reflection primitive which can be used to detect a "Filter" method present on type T
 /// </summary>
 template<typename T>
-struct has_filter
+struct has_autofilter
 {
   template<class Fn, Fn>
   struct unnamed_constant;
 
   template<class U>
-  static int select(unnamed_constant<decltype(&U::Filter), &U::Filter>*);
+  static int select(unnamed_constant<decltype(&U::AutoFilter), &U::AutoFilter>*);
 
   template<class U>
   static char select(...);
@@ -22,7 +22,7 @@ struct has_filter
 /// <summary>
 /// Utility class which allows discovery of the named 
 /// </summary>
-template<class T, bool hasFilter = has_filter<T>::value>
+template<class T, bool hasFilter = has_autofilter<T>::value>
 struct RecipientPropertyExtractor {
   /// <summary>
   /// Passes detected filter inputs to the specified functional
@@ -42,7 +42,7 @@ struct RecipientPropertyExtractor {
   /// Utility method which returns argument types in a vector instead of a functional
   /// </summary>
   static std::vector<const std::type_info*> Enumerate(void) {
-    auto& c = Decompose<decltype(&T::Filter)>::Enumerate();
+    auto& c = Decompose<decltype(&T::AutoFilter)>::Enumerate();
     return
       std::vector<const std::type_info*>(
         c,
