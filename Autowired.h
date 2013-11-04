@@ -1,9 +1,10 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _AUTOWIRED_H
 #define _AUTOWIRED_H
+#include "AutoFactory.h"
 #include "AutowirableSlot.h"
 #include "CoreContext.h"
-#include "AutoFactory.h"
+#include "Decompose.h"
 #include <functional>
 #include <memory>
 
@@ -196,44 +197,6 @@ public:
   }
 
 private:
-  template<class MemFn>
-  struct Decompose;
-
-  template<class R, class W>
-  struct Decompose<R (W::*)()> {
-    typedef void fnType();
-    typedef W type;
-    typedef R retType;
-  };
-
-  template<class R, class W, class Arg1>
-  struct Decompose<R (W::*)(Arg1)> {
-    typedef void fnType(Arg1);
-    typedef W type;
-    typedef R retType;
-  };
-
-  template<class R, class W, class Arg1, class Arg2>
-  struct Decompose<R (W::*)(Arg1, Arg2)> {
-    typedef void fnType(Arg1, Arg2);
-    typedef W type;
-    typedef R retType;
-  };
-
-  template<class R, class W, class Arg1, class Arg2, class Arg3>
-  struct Decompose<R (W::*)(Arg1, Arg2, Arg3)> {
-    typedef void fnType(Arg1, Arg2, Arg3);
-    typedef W type;
-    typedef R retType;
-  };
-
-  template<class R, class W, class Arg1, class Arg2, class Arg3, class Arg4>
-  struct Decompose<R (W::*)(Arg1, Arg2, Arg3, Arg4)> {
-    typedef void fnType(Arg1, Arg2, Arg3, Arg4);
-    typedef W type;
-    typedef R retType;
-  };
-
   std::shared_ptr<EventReceiverProxy<T>> m_receiver;
 
   template<class MemFn, bool isDeferred = std::is_same<typename Decompose<MemFn>::retType, Deferred>::value>

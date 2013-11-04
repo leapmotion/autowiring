@@ -1,5 +1,9 @@
 #pragma once
+#include "Decompose.h"
 
+/// <summary>
+/// Reflection primitive which can be used to detect a "Filter" method present on type T
+/// </summary>
 template<typename T>
 struct has_filter
 {
@@ -31,13 +35,13 @@ public:
   ///
   /// 
   template<class _Fx>
-  static void Extract(_Fx&& fx) {
-
+  static void Enumerate(_Fx&& fx) {
+    Decompose<decltype(&T::Filter)>::Enumerate<_Fx>(std::move(fx));
   }
 };
 
 template<class T>
 class RecipientPropertyExtractor<T, false> {
   template<class _Fx>
-  static void Extract(_Fx&&) {}
+  static void Enumerate(_Fx&&) {}
 };
