@@ -64,8 +64,15 @@ private:
   /// </summary>
   std::unordered_set<std::type_index, std::list<void*>> m_sats;
 
+  /// <summary>
+  /// Optimization value
+  /// </summary>
+
 public:
   /// <summary>
+  /// Obtains a new packet from the object pool and configures it with the current
+  /// satisfaction graph
   /// </summary>
+  std::shared_ptr<AutoPacket> NewPacket(void);
 };
 
