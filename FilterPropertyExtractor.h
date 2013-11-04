@@ -23,8 +23,7 @@ struct has_filter
 /// Utility class which allows discovery of the named 
 /// </summary>
 template<class T, bool hasFilter = has_filter<T>::value>
-class RecipientPropertyExtractor {
-public:
+struct RecipientPropertyExtractor {
   /// <summary>
   /// Passes detected filter inputs to the specified functional
   /// </summary>
@@ -32,16 +31,28 @@ public:
   /// <remarks>
   /// This method can be called on any type, and will pass the arguments of the
   /// single detected "Filter" method, one at a time, to the passed functional.
-  ///
-  /// 
+  /// </remarks>
   template<class _Fx>
   static void Enumerate(_Fx&& fx) {
     Decompose<decltype(&T::Filter)>::Enumerate<_Fx>(std::move(fx));
   }
+
+  /// <summary>
+  /// Utility method which returns argument types in a vector instead of a functional
+  /// </summary>
+  static std::vector<const std::type_info*> Enumerate(void) {
+    std::vector<const std::type_info*> retVal;
+    Enumerate([&retVal](const std::type_info* ti) {retVal.push_back(ti); });
+    return retVal;
+  }
 };
 
 template<class T>
-class RecipientPropertyExtractor<T, false> {
+struct RecipientPropertyExtractor<T, false> {
   template<class _Fx>
   static void Enumerate(_Fx&&) {}
+
+  static std::vector<const std::type_info*> Enumerate(void) {
+    return std::vector<const std::type_info*>();
+  }
 };
