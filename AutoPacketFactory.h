@@ -1,4 +1,5 @@
 #pragma once
+#include "Decompose.h"
 #include "FilterPropertyExtractor.h"
 #include "ObjectPool.h"
 #include <typeindex>
@@ -6,31 +7,51 @@
 
 class AutoPacket;
 
-class AutoPacketFactorySatisfactionBase {
-public:
-  virtual ~AutoPacketFactorySatisfactionBase(void) {}
-};
-
 /// <summary>
-/// A satisfaction implements the behavior that results 
+/// Subscriber wrap, represents a single logical subscriber
 /// </summary>
-template<class T>
-class AutoPacketFactorySatisfaction:
-  AutoPacketFactorySatisfactionBase
-{
-private:
+class AutoPacketSubscriber {
+public:
+  AutoPacketSubscriber(size_t subscriberIndex = -1) :
+    m_subscriberIndex(subscriberIndex)
+  {}
+
+  AutoPacketSubscriber(AutoPacketSubscriber&& rhs):
+    m_degree(rhs.m_degree)
+  {
+    std::swap(m_filterMethod, rhs.m_filterMethod);
+  }
+
   /// <summary>
-  /// The instance to which this satisfaction actually refers
+  /// Constructs a new packet subscriber entry based on the specified subscriber
   /// </summary>
-  std::shared_ptr<T> m_sat;
+  template<class T>
+  AutoPacketSubscriber(std::shared_ptr<T> subscriber)
+  {
+    m_filterMethod = [subscriber] (const AutoPacket& packet) {
+      typedef decltype(subscriber) t_pointer;
+      typedef t_pointer::element_type _T;
+
+      auto call = &Decompose<decltype(&_T::AutoFilter)>::Call<AutoPacket>;
+
+      // Allow the Decompose helper to make the call.  We'll forward the enclosed
+      // object, make sure Decompose has the actual member function we want to call,
+      // and then allow the Call static function to extract and pass in the necessary
+      // arguments from the decorated AutoPacket.
+      call(subscriber.get(), &_T::AutoFilter, packet);
+    };
+    static_assert(has_autofilter<T>::value, "The proposed type is not a subscriber");
+  }
+
+protected:
+  size_t m_degree;
+  size_t m_subscriberIndex;
+  std::function<void(const AutoPacket&)> m_filterMethod;
 
 public:
-  /// <summary>
-  /// Method invoked by the AutoPacket when this satisfaction is complete
-  /// </summary>
-  void OnSatisfied(void) {
-
-  }
+  // Accessor methods:
+  size_t GetDegree(void) const { return m_degree; }
+  size_t GetSubscriberIndex(void) const { return m_subscriberIndex; }
 };
 
 /// <summary>
@@ -42,6 +63,19 @@ public:
 class AutoPacketFactory
 {
 public:
+  struct AdjacencyEntry {
+    AdjacencyEntry(const std::type_info& ti) :
+      ti(ti)
+    {}
+
+    // Reflexive type information for this entry
+    const std::type_info& ti;
+
+    // Indexes into the subscriber satisfaction vector.  Each entry in this list
+    // represents a single subscriber, and an offset in the m_subscribers vector
+    std::list<size_t> subscribers;
+  };
+
   AutoPacketFactory(void);
   ~AutoPacketFactory(void);
 
@@ -60,46 +94,101 @@ private:
   // is equivalent to the sum of all of the sizes in the m_sats list.
   size_t m_numSats;
 
-  /// <summary>
-  /// The packet factory satisfaction graph
-  /// </summary>
-  std::unordered_map<std::type_index, size_t> m_sats;
+  // Vector of known subscribers--a vector must be used because random access is
+  // required due to its use in an adjacency list.
+  typedef std::vector<AutoPacketSubscriber> t_subscriberVec;
+  t_subscriberVec m_subscribers;
 
-  /// <summary>
-  /// Priming vector, updated with each new subscription
-  /// </summary>
-  std::vector<size_t> m_degree;
+  // Map used to associate a decorator type with the adjacency entries
+  // for that type.
+  typedef std::unordered_map<std::type_index, AdjacencyEntry> t_decMap;
+  t_decMap m_sats;
+
+  // Map used to associate a subscriber type with a monotonic index
+  typedef std::unordered_map<std::type_index, size_t> t_subMap;
+  t_subMap m_subMap;
 
 public:
+  // Accessor methods:
+  const t_subscriberVec& GetSubscriberVector(void) const { return m_subscribers; }
+
+  /// <summary>
+  /// Finds the packet subscriber proper corresponding to a particular subscriber type
+  /// </summary>
+  /// <returns>The subscriber, or nullptr if one cannot be found</returns>
+  const AutoPacketSubscriber* FindSubscriber(const std::type_info& info) const {
+    size_t subscriberIndex = FindSubscriberIndex(info);
+    if(subscriberIndex == -1)
+      return nullptr;
+    return &m_subscribers[subscriberIndex];
+  }
+
+  /// <summary>
+  /// Finds the monotonic index corresponding to a particular subscriber type
+  /// </summary>
+  /// <returns>The index, or -1 if the subscriber does not exist</returns>
+  size_t FindSubscriberIndex(const std::type_info& info) const {
+    auto q = m_subMap.find(info);
+    return q == m_subMap.end() ? -1 : q->second;
+  }
+
+  /// <summary>
+  /// Finds the entry in the adjacency list corresponding to a decorator type
+  /// </summary>
+  /// <returns>The adjacency entry, or nullptr if no such entry exists</returns>
+  const AdjacencyEntry* FindDecorator(const std::type_info& info) const {
+    auto q = m_sats.find(info);
+    return q == m_sats.end() ? nullptr : &q->second;
+  }
+
   /// <summary>
   /// Registers the passed subscriber, if it defines a method called AutoFilter
   /// </summary>
   template<class T>
   typename std::enable_if<
     has_autofilter<T>::value
-  >::type AddSubscriber(T& sub) {
+  >::type AddSubscriber(const std::shared_ptr<T>& sub) {
+    // Find the subscriber we're adding:
+    auto q = m_subMap.find(typeid(T));
+    if(q != m_subMap.end())
+      // Already registered, no need to register a second time
+      return;
+
+    // Cannot register a subscriber with zero arguments:
+    const size_t arity = Decompose<decltype(&T::AutoFilter)>::N;
+    static_assert(0 != arity, "Cannot register a subscriber whose AutoFilter method is arity zero");
+
+    // Register the subscriber and pre-populate the arity:
+    size_t subscriberIndex = m_subscribers.size();
+    m_subMap[typeid(T)] = subscriberIndex;
+    m_subscribers.push_back(AutoPacketSubscriber(sub));
+
     // Prime the satisfaction graph for each element:
     for(
       auto ppCur = RecipientPropertyExtractor<T>::Enumerate();
       *ppCur;
       ppCur++
     ) {
-      // See if we can find the current argument:
-      auto q = m_sats.find(**ppCur);
-      if(q == m_sats.end()) {
-        // Need to allocate a new element in our degree collection.
-        m_sats[**ppCur] = m_degree.size();
-        m_degree.push_back(1);
-      } else
-        // Increment the degree at this offset
-        m_degree[q->second]++;
+      // Obtain the decorator type at this position:
+      auto r = m_sats.find(**ppCur);
+      if(r == m_sats.end())
+        // Decorator formerly not encountered, introduce it:
+        r = m_sats.insert(
+          t_decMap::value_type(
+            typeid(T),
+            AdjacencyEntry(typeid(T))
+          )
+        ).first;
+
+      // Now we need to update the adjacency entry with the new subscriber:
+      r->second.subscribers.push_back(subscriberIndex);
     }
   }
 
   template<class T>
   typename std::enable_if<
     !has_autofilter<T>::value
-  >::type AddSubscriber(T& sub) {}
+  >::type AddSubscriber(const std::shared_ptr<T>& sub) {}
 
   /// <summary>
   /// Obtains a new packet from the object pool and configures it with the current
