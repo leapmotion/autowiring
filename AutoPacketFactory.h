@@ -16,11 +16,12 @@ public:
     m_subscriberIndex(subscriberIndex)
   {}
 
-  AutoPacketSubscriber(AutoPacketSubscriber&& rhs):
-    m_arity(rhs.m_arity)
-  {
-    std::swap(m_filterMethod, rhs.m_filterMethod);
-  }
+  AutoPacketSubscriber(const AutoPacketSubscriber& rhs) :
+    m_subscriberIndex(rhs.m_subscriberIndex),
+    m_arity(rhs.m_arity),
+    m_pObj(rhs.m_pObj),
+    m_pCall(rhs.m_pCall)
+  {}
 
   /// <summary>
   /// Constructs a new packet subscriber entry based on the specified subscriber
@@ -34,26 +35,30 @@ public:
   template<class T>
   AutoPacketSubscriber(std::shared_ptr<T> subscriber):
     m_arity(Decompose<decltype(&T::AutoFilter)>::N),
-    m_filterMethod([subscriber](const AutoPacket& packet) {
-      typedef decltype(subscriber) t_pointer;
-      typedef t_pointer::element_type _T;
-
-      auto call = &Decompose<decltype(&_T::AutoFilter)>::Call<AutoPacket>;
-
-      // Allow the Decompose helper to make the call.  We'll forward the enclosed
-      // object, make sure Decompose has the actual member function we want to call,
-      // and then allow the Call static function to extract and pass in the necessary
-      // arguments from the decorated AutoPacket.
-      call(subscriber.get(), &_T::AutoFilter, packet);
-    })
-  {
-    static_assert(has_autofilter<T>::value, "The proposed type is not a subscriber");
-  }
+    m_pObj(subscriber.get()),
+    m_pCall(
+      reinterpret_cast<void (*)(void* pObj, const AutoPacket& repo)>(
+        &Decompose<decltype(&T::AutoFilter)>::Call<AutoPacket, &T::AutoFilter>
+      )
+    )
+  {}
 
 protected:
-  size_t m_arity;
   size_t m_subscriberIndex;
-  std::function<void(const AutoPacket&)> m_filterMethod;
+
+  // The number of parameters that will be extracted from the repository object when making
+  // a Call.  This is used to prime the AutoPacket in order to make saturation checking work
+  // correctly.
+  size_t m_arity;
+
+  // This is the first argument that will be passed to the Call function defined below.  It
+  // is a pointer to an actual subscriber, but with type information omitted for performance.
+  void* m_pObj;
+
+  // The first argument of this static global is void*, but it is expected that the argument
+  // that will actually be passed is of a type corresponding to the member function bound
+  // by this operation.  Strong guarantees must be made that the types
+  void (*m_pCall)(void* pObj, const AutoPacket& repo);
 
 public:
   // Accessor methods:
@@ -69,7 +74,7 @@ public:
   /// subscribers, or an exception will be thrown.
   /// </remarks>
   void Call(const AutoPacket& packet) const {
-    m_filterMethod(packet);
+    m_pCall(m_pObj, packet);
   }
 };
 
