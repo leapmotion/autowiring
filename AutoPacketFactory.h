@@ -78,6 +78,13 @@ public:
   typename std::enable_if<
     has_autofilter<T>::value
   >::type AddSubscriber(T& sub) {
+    // Prime the satisfaction graph for each element:
+    for(
+      const std::type_index** ppCur = RecipientPropertyExtractor<T>::Enumerate();
+      *ppCur;
+      ppCur++
+    )
+    auto q = m_sats.find();
     ;
   }
 
