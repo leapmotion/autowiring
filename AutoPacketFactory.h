@@ -17,7 +17,7 @@ public:
   {}
 
   AutoPacketSubscriber(AutoPacketSubscriber&& rhs):
-    m_degree(rhs.m_degree)
+    m_arity(rhs.m_arity)
   {
     std::swap(m_filterMethod, rhs.m_filterMethod);
   }
@@ -25,10 +25,16 @@ public:
   /// <summary>
   /// Constructs a new packet subscriber entry based on the specified subscriber
   /// </summary>
+  /// <remarks>
+  /// This constructor increments the reference count on the passed object until the
+  /// object is freed.  A subscriber wraps the templated type, automatically mapping
+  /// desired arguments into the correct locations, via use of Decompose::Call and
+  /// a AutoPacket to provide type sources
+  /// </summary>
   template<class T>
-  AutoPacketSubscriber(std::shared_ptr<T> subscriber)
-  {
-    m_filterMethod = [subscriber] (const AutoPacket& packet) {
+  AutoPacketSubscriber(std::shared_ptr<T> subscriber):
+    m_arity(Decompose<decltype(&T::AutoFilter)>::N),
+    m_filterMethod([subscriber](const AutoPacket& packet) {
       typedef decltype(subscriber) t_pointer;
       typedef t_pointer::element_type _T;
 
@@ -39,19 +45,32 @@ public:
       // and then allow the Call static function to extract and pass in the necessary
       // arguments from the decorated AutoPacket.
       call(subscriber.get(), &_T::AutoFilter, packet);
-    };
+    })
+  {
     static_assert(has_autofilter<T>::value, "The proposed type is not a subscriber");
   }
 
 protected:
-  size_t m_degree;
+  size_t m_arity;
   size_t m_subscriberIndex;
   std::function<void(const AutoPacket&)> m_filterMethod;
 
 public:
   // Accessor methods:
-  size_t GetDegree(void) const { return m_degree; }
+  size_t GetArity(void) const { return m_arity; }
   size_t GetSubscriberIndex(void) const { return m_subscriberIndex; }
+
+  /// <summary>
+  /// Calls the associated subscriber
+  /// </summary>
+  /// <remarks>
+  /// Parameters for the associated subscriber are obtained by querying the packet.
+  /// The packet must already be decorated with all required parameters for the
+  /// subscribers, or an exception will be thrown.
+  /// </remarks>
+  void Call(const AutoPacket& packet) const {
+    m_filterMethod(packet);
+  }
 };
 
 /// <summary>
@@ -96,13 +115,11 @@ private:
 
   // Vector of known subscribers--a vector must be used because random access is
   // required due to its use in an adjacency list.
-  typedef std::vector<AutoPacketSubscriber> t_subscriberVec;
-  t_subscriberVec m_subscribers;
+  std::vector<AutoPacketSubscriber> m_subscribers;
 
-  // Map used to associate a decorator type with the adjacency entries
-  // for that type.
+  // Map used to associate a decorator type with the adjacency entries for that type.
   typedef std::unordered_map<std::type_index, AdjacencyEntry> t_decMap;
-  t_decMap m_sats;
+  t_decMap m_decorations;
 
   // Map used to associate a subscriber type with a monotonic index
   typedef std::unordered_map<std::type_index, size_t> t_subMap;
@@ -110,7 +127,7 @@ private:
 
 public:
   // Accessor methods:
-  const t_subscriberVec& GetSubscriberVector(void) const { return m_subscribers; }
+  const std::vector<AutoPacketSubscriber>& GetSubscriberVector(void) const { return m_subscribers; }
 
   /// <summary>
   /// Finds the packet subscriber proper corresponding to a particular subscriber type
@@ -137,8 +154,8 @@ public:
   /// </summary>
   /// <returns>The adjacency entry, or nullptr if no such entry exists</returns>
   const AdjacencyEntry* FindDecorator(const std::type_info& info) const {
-    auto q = m_sats.find(info);
-    return q == m_sats.end() ? nullptr : &q->second;
+    auto q = m_decorations.find(info);
+    return q == m_decorations.end() ? nullptr : &q->second;
   }
 
   /// <summary>
@@ -148,6 +165,8 @@ public:
   typename std::enable_if<
     has_autofilter<T>::value
   >::type AddSubscriber(const std::shared_ptr<T>& sub) {
+    typedef Decompose<decltype(&T::AutoFilter)> t_decomposition;
+
     // Find the subscriber we're adding:
     auto q = m_subMap.find(typeid(T));
     if(q != m_subMap.end())
@@ -155,7 +174,7 @@ public:
       return;
 
     // Cannot register a subscriber with zero arguments:
-    const size_t arity = Decompose<decltype(&T::AutoFilter)>::N;
+    const size_t arity = t_decomposition::N;
     static_assert(0 != arity, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
     // Register the subscriber and pre-populate the arity:
@@ -165,18 +184,18 @@ public:
 
     // Prime the satisfaction graph for each element:
     for(
-      auto ppCur = RecipientPropertyExtractor<T>::Enumerate();
+      auto ppCur = t_decomposition::Enumerate();
       *ppCur;
       ppCur++
     ) {
       // Obtain the decorator type at this position:
-      auto r = m_sats.find(**ppCur);
-      if(r == m_sats.end())
+      auto r = m_decorations.find(**ppCur);
+      if(r == m_decorations.end())
         // Decorator formerly not encountered, introduce it:
-        r = m_sats.insert(
+        r = m_decorations.insert(
           t_decMap::value_type(
-            typeid(T),
-            AdjacencyEntry(typeid(T))
+            **ppCur,
+            AdjacencyEntry(**ppCur)
           )
         ).first;
 
