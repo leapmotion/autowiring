@@ -133,7 +133,7 @@ public:
   /// Start will not be called from more than one place on the same object.  The thread
   /// will be invoked from the context which was active at the time the thread was created.
   /// </remarks>
-  bool Start(void);
+  bool Start(std::shared_ptr<Object> outstanding);
 
   /// <summary>
   /// Begins the core thread
