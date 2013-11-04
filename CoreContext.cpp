@@ -263,10 +263,6 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
   m_nameListeners[pBase->GetContextName()].push_back(pBase.get());
 }
 
-std::shared_ptr<CoreContext> GetCurrentContext() {
-  return CoreContext::CurrentContext();
-}
-
 void CoreContext::Dump(std::ostream& os) const {
   boost::lock_guard<boost::mutex> lk(m_lock);
   for(auto q = m_byType.begin(); q != m_byType.end(); q++) {

@@ -67,11 +67,6 @@ AtExit<Fn> MakeAtExit(Fn&& fn) {
 }
 
 /// <summary>
-/// Convenient access to the currently active context stored in the global context
-/// </summary>
-std::shared_ptr<CoreContext> GetCurrentContext(void);
-
-/// <summary>
 /// This class is used to determine whether all core threads have exited
 /// </summary>
 class CoreContext:
@@ -540,7 +535,7 @@ public:
   /// <returns>The previously current context</returns>
   static std::shared_ptr<CoreContext> SetCurrent(const std::shared_ptr<CoreContext>& context) {
     ASSERT(context);
-    std::shared_ptr<CoreContext> retVal = GetCurrentContext();
+    std::shared_ptr<CoreContext> retVal = CurrentContext();
     s_curContext.reset(new std::shared_ptr<CoreContext>(context));
     return retVal;
   };
