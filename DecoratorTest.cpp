@@ -25,7 +25,7 @@ public:
     m_called(false)
   {}
 
-  void Filter(Decoration<0> zero, Decoration<1> one) {
+  void AutoFilter(Decoration<0> zero, Decoration<1> one) {
     m_called = true;
     m_zero = zero;
     m_one = one;
@@ -78,4 +78,5 @@ TEST_F(DecoratorTest, VerifySimpleFilter) {
   f->Decorate(Decoration<1>());
 
   // A hit should have taken place at this point:
+  EXPECT_TRUE(filterA->m_called) << "Filter was not called even though it was fully satisfied";
 }
