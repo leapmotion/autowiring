@@ -1,6 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "CoreContext.h"
+#include "AutoPacketFactory.h"
 #include "Autowired.h"
 #include "BoltBase.h"
 #include "CoreThread.h"
@@ -17,7 +18,8 @@ boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curCont
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
   m_pParent(pParent),
   m_shouldStop(false),
-  m_refCount(0)
+  m_refCount(0),
+  m_packetFactory(new AutoPacketFactory)
 {
   ASSERT(pParent.get() != this);
 }
