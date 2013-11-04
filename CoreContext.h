@@ -51,7 +51,7 @@ class Autowired;
 template<class Fn>
 struct AtExit {
   AtExit(Fn&& fn):
-    fn(fn)
+    fn(std::move(fn))
   {}
 
   ~AtExit(void) {
