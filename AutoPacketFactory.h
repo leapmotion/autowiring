@@ -16,12 +16,13 @@ class AutoPacketSubscriber {
 public:
   typedef void (*t_call)(void*, const AutoPacket&);
 
-  AutoPacketSubscriber(size_t subscriberIndex = -1) :
-    m_subscriberIndex(subscriberIndex)
+  AutoPacketSubscriber(void) :
+    m_arity(0),
+    m_pObj(nullptr),
+    m_pCall(nullptr)
   {}
 
   AutoPacketSubscriber(const AutoPacketSubscriber& rhs) :
-    m_subscriberIndex(rhs.m_subscriberIndex),
     m_arity(rhs.m_arity),
     m_pObj(rhs.m_pObj),
     m_pCall(rhs.m_pCall)
@@ -48,8 +49,6 @@ public:
   }
 
 protected:
-  size_t m_subscriberIndex;
-
   // The number of parameters that will be extracted from the repository object when making
   // a Call.  This is used to prime the AutoPacket in order to make saturation checking work
   // correctly.
@@ -91,7 +90,6 @@ protected:
 public:
   // Accessor methods:
   size_t GetArity(void) const { return m_arity; }
-  size_t GetSubscriberIndex(void) const { return m_subscriberIndex; }
 
   /// <returns>A pointer to the subscriber</returns>
   void* GetSubscriber(void) const { return m_pObj; }
