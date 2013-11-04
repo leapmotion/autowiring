@@ -167,7 +167,7 @@ TEST_F(DecoratorTest, VerifySimpleFilter) {
   EXPECT_TRUE(filterA->m_called) << "Filter was not called even though it was fully satisfied";
 }
 
-TEST_F(DecoratorTest, VerifyDecorationIdempotence) {
+TEST_F(DecoratorTest, VerifyNoMultiDecorate) {
   AutoRequired<FilterA> filterA;
   AutoRequired<AutoPacketFactory> factory;
 
