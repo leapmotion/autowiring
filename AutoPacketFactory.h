@@ -6,6 +6,8 @@
 #include STL_UNORDERED_MAP
 
 class AutoPacket;
+class Deferred;
+class DispatchQueue;
 
 /// <summary>
 /// Subscriber wrap, represents a single logical subscriber
@@ -36,14 +38,14 @@ public:
   /// </summary>
   template<class T>
   AutoPacketSubscriber(std::shared_ptr<T> subscriber):
-    m_arity(Decompose<decltype(&T::AutoFilter)>::N),
-    m_pObj(subscriber.get()),
-    m_pCall(
-      reinterpret_cast<t_call>(
-        &Decompose<decltype(&T::AutoFilter)>::Call<AutoPacket, &T::AutoFilter>
-      )
-    )
-  {}
+    m_pObj(subscriber.get())
+  {
+    typedef Decompose<decltype(&T::AutoFilter)> t_decompose;
+    CallExtractor<T, std::is_same<Deferred, t_decompose::retType>::value> e;
+
+    m_arity = t_decompose::N;
+    m_pCall = reinterpret_cast<t_call>(e());
+  }
 
 protected:
   size_t m_subscriberIndex;
@@ -61,6 +63,30 @@ protected:
   // that will actually be passed is of a type corresponding to the member function bound
   // by this operation.  Strong guarantees must be made that the types
   t_call m_pCall;
+
+  template<class T, bool is_deferred>
+  struct CallExtractor {
+    t_call operator()() const {
+      return
+        reinterpret_cast<t_call>(
+          &Decompose<decltype(&T::AutoFilter)>::Call<AutoPacket, &T::AutoFilter>
+        );
+    }
+  };
+
+  template<class T>
+  struct CallExtractor<T, true> {
+    static void CallDeferred(T* pObj, const AutoPacket& repo) {
+      static const auto call = &Decompose<decltype(&T::AutoFilter)>::Call<AutoPacket, &T::AutoFilter>;
+      *pObj += [pObj, &repo] {
+        call(pObj, repo);
+      };
+    }
+
+    t_call operator()() const {
+      return reinterpret_cast<t_call>(&CallDeferred);
+    }
+  };
 
 public:
   // Accessor methods:
