@@ -257,6 +257,10 @@ public:
     !has_autofilter<T>::value
   >::type AddSubscriber(const std::shared_ptr<T>& sub) {}
 
+  template<class T>
+  void RemoveSubscriber(const std::shared_ptr<T>& sub) {
+  }
+
   /// <summary>
   /// Obtains a new packet from the object pool and configures it with the current
   /// satisfaction graph
