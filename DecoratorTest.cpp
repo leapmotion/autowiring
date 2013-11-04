@@ -263,14 +263,21 @@ TEST_F(DecoratorTest, VerifyCheckout) {
 
   {
     AutoPacket::AutoCheckout<Decoration<0>> exterior;
+
     {
       AutoPacket::AutoCheckout<Decoration<0>> checkout = packet->Checkout<Decoration<0>>();
 
-      // Verify we can move the packet out to an outer scope:
-      exterior = std::move(checkout);
+      // Verify we can move the original type:
+      AutoPacket::AutoCheckout<Decoration<0>> checkoutMoved(std::move(checkout));
+
+      // Verify no hits yet:
+      EXPECT_FALSE(filterA->m_called) << "Filter called as a consequence of a checkout move operation";
+
+      // Move the checkout a second time:
+      exterior = std::move(checkoutMoved);
     }
 
-    // Verify no hits yet:
+    // Still no hits
     EXPECT_FALSE(filterA->m_called) << "Filter called before a decoration checkout expired";
   }
 
