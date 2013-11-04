@@ -78,6 +78,7 @@ class CoreContext:
   public Object,
   public TeardownNotifier
 {
+protected:
   CoreContext(std::shared_ptr<CoreContext> pParent);
 
   // A pointer to the current context, for construction purposes
@@ -213,7 +214,6 @@ protected:
   t_childList m_children;
 
   friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
-  friend class GlobalCoreContext;
   friend class OutstandingCountTracker;
 
   // The interior packet factory:
