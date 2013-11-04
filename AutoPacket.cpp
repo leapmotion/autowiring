@@ -52,6 +52,21 @@ void AutoPacket::Reset(void) {
 }
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
+  // Obtain the decorator:
   auto decorator = m_factory->FindDecorator(ti);
-  return !!decorator;
+  if(!decorator)
+    // Nobody anywhere cares about this type
+    return false;
+
+  const auto& subscribers = decorator->subscribers;
+  for(size_t i = subscribers.size(); i--; )
+    if(
+      subscribers[i] < m_satCounters.size() &&
+      m_satCounters[subscribers[i]].remaining
+    )
+      // Found a valid, enabled subscriber
+      return true;
+
+  // No matches, end here
+  return false;
 }

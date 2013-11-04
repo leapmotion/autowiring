@@ -144,7 +144,7 @@ public:
 
     // Indexes into the subscriber satisfaction vector.  Each entry in this list
     // represents a single subscriber, and an offset in the m_subscribers vector
-    std::list<size_t> subscribers;
+    std::vector<size_t> subscribers;
   };
 
   AutoPacketFactory(void);
