@@ -31,6 +31,7 @@ set(
   CoreThread.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
+  Decompose.h
   DeferredBase.h
   DeferredBase.cpp
   DeferredCreationNotice.h
