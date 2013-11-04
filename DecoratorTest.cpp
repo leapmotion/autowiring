@@ -35,6 +35,7 @@ public:
   Decoration<0> m_zero;
   Decoration<1> m_one;
 };
+static_assert(has_autofilter<FilterA>::value, "Expected the filter to have an AutoFilter method");
 
 TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   vector<const type_info*> v;
@@ -67,7 +68,7 @@ TEST_F(DecoratorTest, VerifySimpleFilter) {
   AutoRequired<AutoPacketFactory> factory;
 
   // Manually register the subscriber:
-  factory->AddSubscriber(*filterA);
+  factory->AddSubscriber(filterA);
 
   // Obtain a packet from the factory:
   auto f = factory->NewPacket();
