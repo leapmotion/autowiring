@@ -1,8 +1,36 @@
 #pragma once
-#include "Autowiring/Object.h"
+#include "Autowired.h"
+#include "Object.h"
 #include <boost/thread/mutex.hpp>
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
+
+class AutoPacketFactory;
+class AutoPacketSubscriber;
+
+/// <summary>
+/// Status class, constructed from the enclosing AutoPacketFactory
+/// </summary>
+class AutoPacketSubscriberStatus {
+public:
+  AutoPacketSubscriberStatus(void):
+    m_pSubscriber(nullptr),
+    m_visitCount(0)
+  {}
+
+  AutoPacketSubscriberStatus(const AutoPacketSubscriber& subscriber);
+
+private:
+  // The parent packet subscriber
+  const AutoPacketSubscriber* m_pSubscriber;
+
+  // The total number of times we've been visited so far--when we hit zero, a call must
+  // be issued.
+  size_t m_visitCount;
+
+public:
+  size_t operator--(int) { return m_visitCount--; }
+};
 
 /// <summary>
 /// A decorator-style processing packet
@@ -23,6 +51,12 @@ public:
   ~AutoPacket(void);
 
 private:
+  /// <summary>
+  /// A type enclosure, used to provide support similar to boost::any
+  /// </summary>
+  /// <remarks>
+  /// We use this instead of boost::any so we can have access to a rvalue-move ctor.
+  /// </remarks>
   template<class T>
   class Enclosure:
     public Object
@@ -31,7 +65,7 @@ private:
     Enclosure(void) {}
 
     Enclosure(const T& held) :
-      held(std::move(held))
+      held(held)
     {}
 
     Enclosure(T&& held) :
@@ -41,14 +75,43 @@ private:
     T held;
   };
 
-  // The enclosed type map and corresponding lock:
+  // The associated packet factory:
+  AutoRequired<AutoPacketFactory> m_factory;
+
+  // The set of decorations currently attached to this object, and the associated lock:
   boost::mutex m_lock;
   std::unordered_map<std::type_index, Object*> m_mp;
 
-  // Satisfaction counters:
-  std::vector<size_t> m_satCounters;
+  // Status counters, copied directly from the degree vector in the packet factory:
+  std::vector<AutoPacketSubscriberStatus> m_satCounters;
+
+  /// <summary>
+  /// Updates subscriber statuses given that the specified type information has been satisfied
+  /// </summary>
+  /// <param name="info">The decoration which was just added to this packet</param>
+  /// <remarks>
+  /// This method results in a call to the AutoFilter method on any subscribers which are
+  /// satisfied by this decoration.
+  /// </remarks>
+  void UpdateSatisfaction(const std::type_info& info);
 
 public:
+  /// <summary>
+  /// Clears all decorations and copies over all satisfaction counters
+  /// </summary>
+  void Reset(void);
+
+  /// <summary>
+  /// Detects the desired type, or throws an exception if such a type cannot be found
+  /// </summary>
+  template<class T>
+  const T& Get(void) const {
+    auto q = m_mp.find(typeid(T));
+    if(q == m_mp.end())
+      throw_rethrowable("Attempted to obtain a value which was not decorated on this packet");
+    return static_cast<Enclosure<T>*>(q->second)->held;
+  }
+
   /// <summary>
   /// Determines whether this pipeline packet contains an entry of the specified type
   /// </summary>
@@ -85,7 +148,8 @@ public:
     boost::lock_guard<boost::mutex> lk(m_lock);
     auto& ptr = static_cast<Enclosure<T>*&>(m_mp[typeid(T)]);
     if(!ptr)
-      ptr = new Enclosure<T>;
+      ptr = new Enclosure<T>(t);
+    UpdateSatisfaction(typeid(T));
   }
 
   template<class T>
@@ -93,7 +157,8 @@ public:
     boost::lock_guard<boost::mutex> lk(m_lock);
     auto*& pObj = m_mp[typeid(T)];
     if(!pObj)
-      pObj = new Enclosure<T>;
+      pObj = new Enclosure<T>(std::move(t));
+    UpdateSatisfaction(typeid(T));
   }
 
   /// <returns>
