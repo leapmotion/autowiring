@@ -2,7 +2,7 @@
 #include "FilterPropertyExtractor.h"
 #include "ObjectPool.h"
 #include <typeindex>
-#include STL_UNORDERED_SET
+#include STL_UNORDERED_MAP
 
 class AutoPacket;
 
@@ -63,7 +63,7 @@ private:
   /// <summary>
   /// The packet factory satisfaction graph
   /// </summary>
-  std::unordered_set<std::type_index, std::list<void*>> m_sats;
+  std::unordered_map<std::type_index, size_t> m_sats;
 
   /// <summary>
   /// Priming vector, updated with each new subscription
@@ -80,12 +80,20 @@ public:
   >::type AddSubscriber(T& sub) {
     // Prime the satisfaction graph for each element:
     for(
-      const std::type_index** ppCur = RecipientPropertyExtractor<T>::Enumerate();
+      auto ppCur = RecipientPropertyExtractor<T>::Enumerate();
       *ppCur;
       ppCur++
-    )
-    auto q = m_sats.find();
-    ;
+    ) {
+      // See if we can find the current argument:
+      auto q = m_sats.find(**ppCur);
+      if(q == m_sats.end()) {
+        // Need to allocate a new element in our degree collection.
+        m_sats[**ppCur] = m_degree.size();
+        m_degree.push_back(1);
+      } else
+        // Increment the degree at this offset
+        m_degree[q->second]++;
+    }
   }
 
   template<class T>
