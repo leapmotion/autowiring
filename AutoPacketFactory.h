@@ -103,9 +103,18 @@ public:
   // Accessor methods:
   bool empty(void) const { return m_subscriber.empty(); }
   size_t GetArity(void) const { return m_arity; }
+  boost::any GetSubscriber(void) const { return m_subscriber; }
+
+  /// <summary>
+  /// Releases the bound subscriber and the corresponding arity, causing it to become disabled
+  /// </summary>
+  void ReleaseSubscriber(void) {
+    m_arity = 0;
+    m_subscriber = boost::any();
+  }
 
   /// <returns>A pointer to the subscriber</returns>
-  void* GetSubscriber(void) const { return m_pObj; }
+  void* GetSubscriberPtr(void) const { return m_pObj; }
 
   /// <returns>A call lambda wrapping the associated subscriber</returns>
   /// <remarks>
@@ -278,14 +287,9 @@ public:
   template<class T>
   void RemoveSubscriber(const std::shared_ptr<T>& sub) {
     auto q = m_subMap.find(typeid(T));
-    if(q == m_subMap.end())
-      return;
-
-    // Clear out the matched subscriber:
-    m_subscribers[q->second] = AutoPacketSubscriber();
-
-    // Eliminate this subscriber from the subscription map:
-    m_subMap.erase(q);
+    if(q != m_subMap.end())
+      // Clear out the matched subscriber:
+      m_subscribers[q->second].ReleaseSubscriber();
   }
 
   /// <summary>

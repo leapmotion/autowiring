@@ -51,6 +51,14 @@ private:
     T held;
   };
 
+  /// <summary>
+  /// A single subscription counter entry
+  /// </summary>
+  struct SatCounter {
+    size_t remaining;
+    boost::any subscriber;
+  };
+
   // The associated packet factory:
   AutoRequired<AutoPacketFactory> m_factory;
 
@@ -59,7 +67,7 @@ private:
   std::unordered_map<std::type_index, Object*> m_mp;
 
   // Status counters, copied directly from the degree vector in the packet factory:
-  std::vector<size_t> m_satCounters;
+  std::vector<SatCounter> m_satCounters;
 
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
