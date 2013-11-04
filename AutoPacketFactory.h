@@ -2,6 +2,7 @@
 #include "Decompose.h"
 #include "FilterPropertyExtractor.h"
 #include "ObjectPool.h"
+#include <boost/any.hpp>
 #include <typeindex>
 #include STL_UNORDERED_MAP
 
@@ -30,6 +31,7 @@ public:
   {}
 
   AutoPacketSubscriber(const AutoPacketSubscriber& rhs) :
+    m_subscriber(rhs.m_subscriber),
     m_arity(rhs.m_arity),
     m_pObj(rhs.m_pObj),
     m_pCall(rhs.m_pCall)
@@ -46,6 +48,7 @@ public:
   /// </summary>
   template<class T>
   AutoPacketSubscriber(std::shared_ptr<T> subscriber):
+    m_subscriber(subscriber),
     m_pObj(subscriber.get())
   {
     typedef Decompose<decltype(&T::AutoFilter)> t_decompose;
@@ -56,6 +59,9 @@ public:
   }
 
 protected:
+  // A hold on the enclosed subscriber
+  boost::any m_subscriber;
+
   // The number of parameters that will be extracted from the repository object when making
   // a Call.  This is used to prime the AutoPacket in order to make saturation checking work
   // correctly.
@@ -95,6 +101,7 @@ protected:
 
 public:
   // Accessor methods:
+  bool empty(void) const { return m_subscriber.empty(); }
   size_t GetArity(void) const { return m_arity; }
 
   /// <returns>A pointer to the subscriber</returns>
@@ -157,7 +164,8 @@ private:
   typedef std::unordered_map<std::type_index, AdjacencyEntry> t_decMap;
   t_decMap m_decorations;
 
-  // Map used to associate a subscriber type with a monotonic index
+  // Map used to associate a subscriber type with a monotonic index.  The index is
+  // an offset into m_subscribers.
   typedef std::unordered_map<std::type_index, size_t> t_subMap;
   t_subMap m_subMap;
 
@@ -215,20 +223,30 @@ public:
   >::type AddSubscriber(const std::shared_ptr<T>& sub) {
     typedef Decompose<decltype(&T::AutoFilter)> t_decomposition;
 
-    // Find the subscriber we're adding:
-    auto q = m_subMap.find(typeid(T));
-    if(q != m_subMap.end())
-      // Already registered, no need to register a second time
-      return;
-
     // Cannot register a subscriber with zero arguments:
     const size_t arity = t_decomposition::N;
     static_assert(0 != arity, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
-    // Register the subscriber and pre-populate the arity:
-    size_t subscriberIndex = m_subscribers.size();
-    m_subMap[typeid(T)] = subscriberIndex;
-    m_subscribers.push_back(AutoPacketSubscriber(sub));
+    // Determine whether this subscriber already exists--perhaps, it is formerly disabled
+    auto q = m_subMap.find(typeid(T));
+    size_t subscriberIndex;
+    if(q != m_subMap.end()) {
+      AutoPacketSubscriber& entry = m_subscribers[q->second];
+      subscriberIndex = q->second;
+
+      if(!entry.empty())
+        // Already registered, no need to register a second time
+        return;
+     
+      // Registered but previously removed, re-initialize
+      entry = AutoPacketSubscriber(sub);
+    }
+    else {
+      // Register the subscriber and pre-populate the arity:
+      subscriberIndex = m_subscribers.size();
+      m_subMap[typeid(T)] = subscriberIndex;
+      m_subscribers.push_back(AutoPacketSubscriber(sub));
+    }
 
     // Prime the satisfaction graph for each element:
     for(
@@ -259,6 +277,15 @@ public:
 
   template<class T>
   void RemoveSubscriber(const std::shared_ptr<T>& sub) {
+    auto q = m_subMap.find(typeid(T));
+    if(q == m_subMap.end())
+      return;
+
+    // Clear out the matched subscriber:
+    m_subscribers[q->second] = AutoPacketSubscriber();
+
+    // Eliminate this subscriber from the subscription map:
+    m_subMap.erase(q);
   }
 
   /// <summary>
