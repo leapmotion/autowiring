@@ -28,6 +28,11 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
     }
 }
 
+void AutoPacket::Release(void) {
+  for(size_t i = m_satCounters.size(); i--;)
+    m_satCounters[i].subscriber = boost::any();
+}
+
 void AutoPacket::Reset(void) {
   for(auto q = m_mp.begin(); q != m_mp.end(); q++)
     if(q->second) {
@@ -42,8 +47,7 @@ void AutoPacket::Reset(void) {
     auto& curDst = m_satCounters[i];
 
     curDst.remaining = curSrc.GetArity();
-    if(curDst.subscriber.empty() && !curSrc.GetSubscriber().empty())
-      curDst.subscriber = curSrc.GetSubscriber();
+    curDst.subscriber = curSrc.GetSubscriber();
   }
 }
 

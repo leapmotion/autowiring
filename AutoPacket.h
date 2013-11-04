@@ -81,6 +81,11 @@ private:
 
 public:
   /// <summary>
+  /// Releases all exterior references to autowired members
+  /// </summary>
+  void Release(void);
+
+  /// <summary>
   /// Clears all decorations and copies over all satisfaction counters
   /// </summary>
   void Reset(void);
