@@ -1,5 +1,6 @@
 #pragma once
-#include "Autowiring/ObjectPool.h"
+#include "FilterPropertyExtractor.h"
+#include "ObjectPool.h"
 #include <typeindex>
 #include STL_UNORDERED_SET
 
@@ -65,10 +66,26 @@ private:
   std::unordered_set<std::type_index, std::list<void*>> m_sats;
 
   /// <summary>
-  /// Optimization value
+  /// Priming vector, updated with each new subscription
   /// </summary>
+  std::vector<size_t> m_degree;
 
 public:
+  /// <summary>
+  /// Registers the passed subscriber, if it defines a method called AutoFilter
+  /// </summary>
+  template<class T>
+  typename std::enable_if<
+    has_autofilter<T>::value
+  >::type AddSubscriber(T& sub) {
+    ;
+  }
+
+  template<class T>
+  typename std::enable_if<
+    !has_autofilter<T>::value
+  >::type AddSubscriber(T& sub) {}
+
   /// <summary>
   /// Obtains a new packet from the object pool and configures it with the current
   /// satisfaction graph
