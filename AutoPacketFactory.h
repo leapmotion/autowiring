@@ -151,6 +151,10 @@ public:
   ~AutoPacketFactory(void);
 
 private:
+  struct AutoPacketResetter {
+    void operator()(AutoPacket& packet) const;
+  };
+
   /// <summary>
   /// An independently maintained object pool just for packets
   /// </summary>
@@ -159,7 +163,7 @@ private:
   /// pipeline packet expiration in order to support expiration notification
   /// broadcasts.
   /// </remarks>
-  ObjectPool<AutoPacket> m_packets;
+  ObjectPool<AutoPacket, AutoPacketResetter> m_packets;
 
   // Optimization value.  Stores the total number of all satisfactions.  This
   // is equivalent to the sum of all of the sizes in the m_sats list.

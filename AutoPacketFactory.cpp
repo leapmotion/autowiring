@@ -2,6 +2,11 @@
 #include "AutoPacketFactory.h"
 #include "AutoPacket.h"
 
+void AutoPacketFactory::AutoPacketResetter::operator()(AutoPacket& packet) const {
+  // Eliminate references to any shared pointers
+  packet.Release();
+}
+
 AutoPacketFactory::AutoPacketFactory():
   m_numSats(0)
 {
