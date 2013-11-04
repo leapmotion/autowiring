@@ -12,6 +12,8 @@ set(
   AutoPacket.cpp
   AutoPacketFactory.h
   AutoPacketFactory.cpp
+  AutoPacketProfiler.h
+  AutoPacketProfiler.cpp
   AutoNetworkMonitor.h
   Autowired.h
   Autowired.cpp
