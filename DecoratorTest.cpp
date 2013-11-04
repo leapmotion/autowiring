@@ -9,11 +9,11 @@ using namespace std;
 /// <summary>
 /// A simple "decoration" class which will be added to a variety of sample packets
 /// </summary>
-template<int i>
+template<int N>
 class Decoration {
 public:
   Decoration(void) :
-    i(i)
+    i(N)
   {}
 
   int i;
@@ -61,6 +61,33 @@ TEST_F(DecoratorTest, VerifyCorrectExtraction) {
 TEST_F(DecoratorTest, VerifyEmptyExtraction) {
   const type_info*const* v = RecipientPropertyExtractor<Object>::Enumerate();
   EXPECT_EQ(nullptr, *v) << "Extracted arguments from an object known not to have a Filter method";
+}
+
+TEST_F(DecoratorTest, VerifySimplePacketDecoration) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Create the packet we will be persisting:
+  auto f = factory->NewPacket();
+
+  // Add a few decorations on this packet:
+  auto& knownDec0 = f->Decorate(Decoration<0>());
+  auto& knownDec1 = f->Decorate(Decoration<1>());
+  auto& knownDec2 = f->Decorate(Decoration<2>());
+
+  // Verify we can get these packets back--might throw exceptions here!
+  auto& dec0 = f->Get<Decoration<0>>();
+  auto& dec1 = f->Get<Decoration<1>>();
+  auto& dec2 = f->Get<Decoration<2>>();
+
+  // Verify identities:
+  EXPECT_EQ(&knownDec0, &dec0) << "Decoration 0 returned at an incorrect location";
+  EXPECT_EQ(&knownDec1, &dec1) << "Decoration 1 returned at an incorrect location";
+  EXPECT_EQ(&knownDec2, &dec2) << "Decoration 2 returned at an incorrect location";
+
+  // Verify content correctness:
+  EXPECT_EQ(0, dec0.i) << "Decoration 0 incorrectly persisted";
+  EXPECT_EQ(1, dec1.i) << "Decoration 1 incorrectly persisted";
+  EXPECT_EQ(2, dec2.i) << "Decoration 2 incorrectly persisted";
 }
 
 TEST_F(DecoratorTest, VerifySimpleFilter) {
