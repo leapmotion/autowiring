@@ -6,7 +6,6 @@
 #include "BoltBase.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
-#include "OutstandingCountTracker.h"
 #include "ThreadStatusMaintainer.h"
 #include <algorithm>
 #include <memory>
@@ -73,16 +72,27 @@ void CoreContext::BroadcastContextCreationNotice(const char* contextName, const 
   }
 }
 
-std::shared_ptr<OutstandingCountTracker> CoreContext::IncrementOutstandingThreadCount(void) {
-  std::shared_ptr<OutstandingCountTracker> retVal = m_outstanding.lock();
+std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  std::shared_ptr<Object> retVal = m_outstanding.lock();
   if(!m_outstanding.expired())
     return retVal;
 
-  boost::lock_guard<boost::mutex> lk(m_outstandingLock);
+  auto self = m_self.lock();
   retVal.reset(
-    new OutstandingCountTracker(
-      std::static_pointer_cast<CoreContext, CoreContext>(m_self.lock())
-    )
+    new Object,
+    [this, self](Object* ptr) {
+      // Object being destroyed, notify all recipients
+      boost::lock_guard<boost::mutex> lk(m_lock);
+
+      // Unfortunately, this destructor callback is made before weak pointers are
+      // invalidated, which requires that we manually reset the outstanding count
+      m_outstanding.reset();
+
+      // Wake everyone up
+      m_stateChanged.notify_all();
+      delete ptr;
+    }
   );
   m_outstanding = retVal;
   return retVal;
@@ -99,10 +109,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
   }
 
   // Create the child context
-  CoreContext* pContext =
-    new CoreContext(
-      std::static_pointer_cast<CoreContext, CoreContext>(m_self.lock())
-    );
+  CoreContext* pContext = new CoreContext(m_self.lock());
 
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
@@ -123,7 +130,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
 
 void CoreContext::InitiateCoreThreads(void) {
   // Self-reference to ensure the context is not destroyed until all threads are gone
-  std::shared_ptr<CoreContext> self = std::static_pointer_cast<CoreContext, CoreContext>(m_self.lock());
+  std::shared_ptr<CoreContext> self = m_self.lock();
 
   // Because the caller was able to invoke a method on this CoreContext, it must have
   // a shared_ptr to it.  Thus, we can assert that the above lock operation succeeded.
@@ -143,9 +150,9 @@ void CoreContext::InitiateCoreThreads(void) {
   if(m_pParent)
     // Start parent threads first
     // Parent MUST be a core context
-    std::static_pointer_cast<CoreContext, CoreContext>(m_pParent)->InitiateCoreThreads();
+    m_pParent->InitiateCoreThreads();
 
-  // Hold another lock to prevent m_threads from being modified while we sit on it
+  // Reacquire the lock to prevent m_threads from being modified while we sit on it
   boost::lock_guard<boost::mutex> lk(m_lock);
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
     (*q)->Start();
@@ -171,7 +178,7 @@ void CoreContext::SignalShutdown(void) {
   // when to shut down, and it makes no sense to keep a parent context running when we were
   // the ones who got it going in the first place.
   if(m_pParent)
-    std::static_pointer_cast<CoreContext, CoreContext>(m_pParent)->SignalShutdown();
+    m_pParent->SignalShutdown();
 }
 
 void CoreContext::SignalTerminate(bool wait) {
