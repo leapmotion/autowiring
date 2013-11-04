@@ -80,7 +80,7 @@ TEST_F(DecoratorTest, VerifyCorrectExtraction) {
       v.push_back(&ti);
     }
   );
-  ASSERT_EQ(2, v.size()) << "Extracted an insufficient number of types from a known filter function";
+  ASSERT_EQ(2UL, v.size()) << "Extracted an insufficient number of types from a known filter function";
 
   // Arguments MUST be in order:
   EXPECT_EQ(typeid(Decoration<0>), *v[0]);

@@ -151,13 +151,13 @@ public:
   /// Determines whether this pipeline packet contains an entry of the specified type
   /// </summary>
   template<class T>
-  bool Get(T*& out) {
+  bool Get(T*& out) const {
     auto q = m_mp.find(typeid(T));
     if(q == m_mp.end() || !q->second) {
       out = nullptr;
       return false;
     }
-    out = static_cast<Enclosure<T>*>(q->second)->held;
+    out = &static_cast<Enclosure<T>*>(q->second)->held;
     return true;
   }
 
