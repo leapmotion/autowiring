@@ -115,26 +115,30 @@ public:
   /// <summary>
   /// Decorates this packet with a particular type
   /// </summary>
+  /// <returns>A reference to the internally persisted object</returns>
   /// <remarks>
   /// Unlike Publish, the Decorate method is unconditional and will install the passed
   /// value regardless of whether any subscribers exist.
   /// </remarks>
   template<class T>
-  void Decorate(const T& t) {
+  T& Decorate(const T& t) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     auto& ptr = static_cast<Enclosure<T>*&>(m_mp[typeid(T)]);
     if(!ptr)
       ptr = new Enclosure<T>(t);
     UpdateSatisfaction(typeid(T));
+    return static_cast<Enclosure<T>*>(pObj)->held;
   }
 
+  /// <returns>A reference to the internally persisted object</returns>
   template<class T>
-  void Decorate(T&& t) {
+  T& Decorate(T&& t) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     auto*& pObj = m_mp[typeid(T)];
     if(!pObj)
       pObj = new Enclosure<T>(std::move(t));
     UpdateSatisfaction(typeid(T));
+    return static_cast<Enclosure<T>*>(pObj)->held;
   }
 
   /// <returns>
