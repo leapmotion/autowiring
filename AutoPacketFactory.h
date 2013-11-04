@@ -12,8 +12,15 @@ class DispatchQueue;
 /// <summary>
 /// Subscriber wrap, represents a single logical subscriber
 /// </summary>
+/// <remarks>
+/// A logical subscriber is any autowired member of the current context which implements
+/// a nonstatic member function called AutoFilter that accepts one or more types.  This
+/// function is invoked via a call centralizer implemented in the Decompose header, and
+/// instantiated from the templatized version of this class's constructor.
+/// </remarks>
 class AutoPacketSubscriber {
 public:
+  // The type of the call centralizer
   typedef void (*t_call)(void*, const AutoPacket&);
 
   AutoPacketSubscriber(void) :
@@ -45,7 +52,7 @@ public:
     CallExtractor<T, std::is_same<Deferred, t_decompose::retType>::value> e;
 
     m_arity = t_decompose::N;
-    m_pCall = reinterpret_cast<t_call>(e());
+    m_pCall = e();
   }
 
 protected:
@@ -66,10 +73,9 @@ protected:
   template<class T, bool is_deferred>
   struct CallExtractor {
     t_call operator()() const {
-      return
-        reinterpret_cast<t_call>(
-          &Decompose<decltype(&T::AutoFilter)>::Call<AutoPacket, &T::AutoFilter>
-        );
+      return reinterpret_cast<t_call>(
+        &Decompose<decltype(&T::AutoFilter)>::Call<AutoPacket, &T::AutoFilter>
+      );
     }
   };
 
