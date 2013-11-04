@@ -42,8 +42,8 @@ struct Decompose<R(W::*)()> {
   /// It is the caller's responsibility to ensure that all of the necessary types are available
   /// before this call is made, in order to prevent such an exception from being thrown.
   /// </remarks>
-  template<class T>
-  static void Call(W* pObj, memType memfn, const T&) {
+  template<class T, memType memfn>
+  static void Call(W* pObj, const T&) {
     (pObj->*memfn)();
   }
 };
@@ -61,8 +61,8 @@ struct Decompose<R(W::*)(Arg1)> {
     return ti;
   }
 
-  template<class T>
-  static void Call(W* pObj, memType memfn, const T& repo) {
+  template<class T, memType memfn>
+  static void Call(W* pObj, const T& repo) {
     (pObj->*memfn)(repo.Get<Arg1>());
   }
 };
@@ -80,8 +80,8 @@ struct Decompose<R(W::*)(Arg1, Arg2)> {
     return ti;
   }
 
-  template<class T>
-  static void Call(W* pObj, memType memfn, const T& repo) {
+  template<class T, memType memfn>
+  static void Call(W* pObj, const T& repo) {
     (pObj->*memfn)(repo.Get<Arg1>(), repo.Get<Arg2>());
   }
 };
@@ -99,8 +99,8 @@ struct Decompose<R(W::*)(Arg1, Arg2, Arg3)> {
     return ti;
   }
 
-  template<class T>
-  static void Call(W* pObj, memType memfn, const T& repo) {
+  template<class T, memType memfn>
+  static void Call(W* pObj, const T& repo) {
     (pObj->*memfn)(repo.Get<Arg1>(), repo.Get<Arg2>(), repo.Get<Arg3>());
   }
 };
@@ -118,8 +118,8 @@ struct Decompose<R(W::*)(Arg1, Arg2, Arg3, Arg4)> {
     return ti;
   }
 
-  template<class T>
-  static void Call(W* pObj, memType memfn, const T& repo) {
+  template<class T, memType memfn>
+  static void Call(W* pObj, const T& repo) {
     (pObj->*memfn)(repo.Get<Arg1>(), repo.Get<Arg2>(), repo.Get<Arg3>(), repo.Get<Arg4>());
   }
 };
