@@ -43,7 +43,8 @@ public:
       m_parent(rhs.m_parent),
       m_val(rhs.m_val)
     {
-      rhs = AutoCheckout<T>();
+      rhs.m_parent = nullptr;
+      rhs.m_val = nullptr;
     }
 
     ~AutoCheckout(void) {
