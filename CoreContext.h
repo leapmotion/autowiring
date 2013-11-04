@@ -2,7 +2,6 @@
 #ifndef _CORECONTEXT_H
 #define _CORECONTEXT_H
 #include "AutoFactory.h"
-#include "AutoPacketFactory.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
 #include "CoreThread.h"
@@ -36,6 +35,7 @@
   #endif
 #endif
 
+class AutoPacketFactory;
 class AutowirableSlot;
 class BoltBase;
 class ContextMember;
@@ -217,7 +217,7 @@ protected:
   friend class OutstandingCountTracker;
 
   // The interior packet factory:
-  AutoPacketFactory m_packetFactory;
+  std::shared_ptr<AutoPacketFactory> m_packetFactory;
 
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
@@ -292,6 +292,9 @@ protected:
     if(!m_byType.Resolve(slot))
       throw_rethrowable autowiring_error("An autowiring operation resulted in an ambiguous match");
   }
+
+  // Interior type overrides:
+  void FindByType(std::shared_ptr<AutoPacketFactory>& slot) { slot = m_packetFactory; }
 
   /// <summary>
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
