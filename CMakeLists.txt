@@ -7,6 +7,10 @@ include_directories(
 set(
   Autowiring_SRCS
   AutoFactory.h
+  AutoPacket.h
+  AutoPacket.cpp
+  AutoPacketFactory.h
+  AutoPacketFactory.cpp
   AutoNetworkMonitor.h
   Autowired.h
   Autowired.cpp
@@ -43,6 +47,7 @@ set(
   EventSender.h
   EventSender.cpp
   ExceptionFilter.h
+  FilterPropertyExtractor.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   InterlockedExchange.h
