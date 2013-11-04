@@ -67,17 +67,17 @@ TEST_F(DecoratorTest, VerifySimplePacketDecoration) {
   AutoRequired<AutoPacketFactory> factory;
 
   // Create the packet we will be persisting:
-  auto f = factory->NewPacket();
+  auto packet = factory->NewPacket();
 
   // Add a few decorations on this packet:
-  auto& knownDec0 = f->Decorate(Decoration<0>());
-  auto& knownDec1 = f->Decorate(Decoration<1>());
-  auto& knownDec2 = f->Decorate(Decoration<2>());
+  auto& knownDec0 = packet->Decorate(Decoration<0>());
+  auto& knownDec1 = packet->Decorate(Decoration<1>());
+  auto& knownDec2 = packet->Decorate(Decoration<2>());
 
   // Verify we can get these packets back--might throw exceptions here!
-  auto& dec0 = f->Get<Decoration<0>>();
-  auto& dec1 = f->Get<Decoration<1>>();
-  auto& dec2 = f->Get<Decoration<2>>();
+  auto& dec0 = packet->Get<Decoration<0>>();
+  auto& dec1 = packet->Get<Decoration<1>>();
+  auto& dec2 = packet->Get<Decoration<2>>();
 
   // Verify identities:
   EXPECT_EQ(&knownDec0, &dec0) << "Decoration 0 returned at an incorrect location";
@@ -98,17 +98,38 @@ TEST_F(DecoratorTest, VerifySimpleFilter) {
   factory->AddSubscriber(filterA);
 
   // Obtain a packet from the factory:
-  auto f = factory->NewPacket();
+  auto packet = factory->NewPacket();
 
   // Decorate with one instance:
-  f->Decorate(Decoration<0>());
+  packet->Decorate(Decoration<0>());
 
   // Verify that no hit takes place with inadequate decoration:
   EXPECT_FALSE(filterA->m_called) << "Filter called prematurely with insufficient decoration";
 
   // Now decorate with the other requirement of the filter:
-  f->Decorate(Decoration<1>());
+  packet->Decorate(Decoration<1>());
 
   // A hit should have taken place at this point:
   EXPECT_TRUE(filterA->m_called) << "Filter was not called even though it was fully satisfied";
+}
+
+TEST_F(DecoratorTest, VerifyDecorationIdempotence) {
+  AutoRequired<FilterA> filterA;
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Initial subscriber registration:
+  factory->AddSubscriber(filterA);
+
+  // Obtain a packet and attempt redundant introduction:
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>());
+  packet->Decorate(Decoration<0>());
+  packet->Decorate(Decoration<0>());
+
+  // Verify that a call has not yet been made
+  EXPECT_FALSE(filterA->m_called) << "A call made on an idempotent packet decoration";
+
+  // Now finish saturating the filter and ensure we get a call:
+  packet->Decorate(Decoration<1>());
+  EXPECT_TRUE(filterA->m_called) << "Filter was not called after being fully satisfied";
 }
