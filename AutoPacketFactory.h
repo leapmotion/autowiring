@@ -25,6 +25,7 @@ public:
   typedef void (*t_call)(void*, const AutoPacket&);
 
   AutoPacketSubscriber(void) :
+    m_ti(nullptr),
     m_arity(0),
     m_pObj(nullptr),
     m_pCall(nullptr)
@@ -32,6 +33,7 @@ public:
 
   AutoPacketSubscriber(const AutoPacketSubscriber& rhs) :
     m_subscriber(rhs.m_subscriber),
+    m_ti(rhs.m_ti),
     m_arity(rhs.m_arity),
     m_pObj(rhs.m_pObj),
     m_pCall(rhs.m_pCall)
@@ -49,6 +51,7 @@ public:
   template<class T>
   AutoPacketSubscriber(std::shared_ptr<T> subscriber):
     m_subscriber(subscriber),
+    m_ti(&typeid(T)),
     m_pObj(subscriber.get())
   {
     typedef Decompose<decltype(&T::AutoFilter)> t_decompose;
@@ -61,6 +64,9 @@ public:
 protected:
   // A hold on the enclosed subscriber
   boost::any m_subscriber;
+
+  // The type information of this entry, used for profiling
+  const std::type_info* m_ti;
 
   // The number of parameters that will be extracted from the repository object when making
   // a Call.  This is used to prime the AutoPacket in order to make saturation checking work
@@ -104,6 +110,7 @@ public:
   bool empty(void) const { return m_subscriber.empty(); }
   size_t GetArity(void) const { return m_arity; }
   boost::any GetSubscriber(void) const { return m_subscriber; }
+  const std::type_info* GetSubscriberTypeInfo(void) const { return m_ti; }
 
   /// <summary>
   /// Releases the bound subscriber and the corresponding arity, causing it to become disabled
