@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "CoreThread.h"
 #include "CoreContext.h"
-#include "ThreadStatusMaintainer.h"
 #include <boost/thread.hpp>
 
 CoreThread::CoreThread(const char* pName):
@@ -77,7 +76,7 @@ bool CoreThread::DelayUntilCanAccept(void) {
   return !ShouldStop();
 }
 
-bool CoreThread::Start(void) {
+bool CoreThread::Start(std::shared_ptr<Object> outstanding) {
   std::shared_ptr<CoreContext> context = m_context.lock();
   if(!context)
     return false;
@@ -94,7 +93,11 @@ bool CoreThread::Start(void) {
   }
 
   // Kick off a thread and return here
-  m_thisThread = boost::thread(ThreadStatusMaintainer(this, context));
+  m_thisThread = boost::thread(
+    [this, outstanding] {
+      this->DoRun();
+    }
+  );
   return true;
 }
 

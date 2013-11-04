@@ -60,8 +60,6 @@ set(
   SharedPtrHash.h
   TeardownNotifier.h
   TeardownNotifier.cpp
-  ThreadStatusMaintainer.cpp
-  ThreadStatusMaintainer.h
   TransientContextMember.h
   TransientPool.h
   TransientPoolBase.h
