@@ -56,8 +56,6 @@ set(
   LockReducedCollection.h
   Object.h
   ObjectPool.h
-  OutstandingCountTracker.cpp
-  OutstandingCountTracker.h
   PolymorphicTypeForest.h
   SharedPtrHash.h
   TeardownNotifier.h

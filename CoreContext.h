@@ -139,11 +139,7 @@ public:
   std::shared_ptr<DependentContext<T> > AugmentContext(void) {
     CurrentContextPusher pusher(this);
     std::shared_ptr<DependentContext<T> > retVal(
-      new DependentContext<T>(
-        std::static_pointer_cast<CoreContext, CoreContext>(
-          m_self.lock()
-        )
-      )
+      new DependentContext<T>(m_self.lock())
     );
     return retVal;
   }
@@ -201,8 +197,7 @@ protected:
 
   // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
   // Destructor does nothing; this is by design.
-  boost::mutex m_outstandingLock;
-  std::weak_ptr<OutstandingCountTracker> m_outstanding;
+  std::weak_ptr<Object> m_outstanding;
 
   // Actual core threads:
   typedef std::list<CoreThread*> t_threadList;
@@ -214,7 +209,6 @@ protected:
   t_childList m_children;
 
   friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
-  friend class OutstandingCountTracker;
 
   // The interior packet factory:
   std::shared_ptr<AutoPacketFactory> m_packetFactory;
@@ -430,7 +424,7 @@ public:
   /// is decremented.  The caller is encouraged not to copy the return value, as doing
   /// so can give spurious values for the current number of outstanding threads.
   /// </remarks>
-  std::shared_ptr<OutstandingCountTracker> IncrementOutstandingThreadCount(void);
+  std::shared_ptr<Object> IncrementOutstandingThreadCount(void);
 
   /// <summary>
   /// Adds an object of any kind to the IOC container
