@@ -33,6 +33,15 @@ TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   );
 
   ASSERT_EQ(2, v.size()) << "Extracted an insufficient number of types from a known filter function";
+
+  // Arguments MUST be in order:
+  EXPECT_EQ(typeid(Decoration<0>), *v[0]);
+  EXPECT_EQ(typeid(Decoration<1>), *v[1]);
+}
+
+TEST_F(DecoratorTest, VerifyEmptyExtraction) {
+  vector<const type_info*> v = RecipientPropertyExtractor<Object>::Enumerate();
+  EXPECT_TRUE(v.empty()) << "Extracted arguments from an object known not to have a Filter method";
 }
 
 TEST_F(DecoratorTest, VerifySimpleRecipient) {
