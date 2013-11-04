@@ -612,6 +612,8 @@ public:
   template<class W>
   bool AutowireNoDefer(W& slot) {
     typename W::t_ptrType retVal;
+
+    // First-chance resolution in this context and ancestor contexts:
     for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
       retVal = pCur->FindByType(slot);
       if(retVal) {
@@ -620,11 +622,11 @@ public:
       }
     }
 
-    // We will not attempt second-chance resolution if the type is constructable
     if(
       has_static_new<typename W::value_type>::value ||
       has_simple_constructor<typename W::value_type>::value
     )
+      // We will not attempt second-chance resolution if the type is constructable
       return false;
 
     // Attempt second-chance resolution:
@@ -698,8 +700,8 @@ public:
   /// Adds a post-attachment listener in this context for a particular autowired member
   /// </summary>
   /// <remarks>
-  /// This method will succeed if slot was constructed in this context or any parent context.  If this
-  /// assumption is false, an exception will be thrown.
+  /// This method will succeed if slot was constructed in this context or any parent context.  If the
+  /// passed slot was not created in this context or a parent context, an exception will be thrown.
   ///
   /// It's possible that the passed slot will never be filled, and instead the corresponding instance
   /// destroyed without ever having been initialized.
@@ -716,6 +718,9 @@ public:
   /// </summary>
   void Dump(std::ostream& os) const;
 
+  /// <summary>
+  /// Utility routine to print information about the current exception
+  /// </summary>
   static void DebugPrintCurrentExceptionInformation();
 };
 
