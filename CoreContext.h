@@ -2,6 +2,7 @@
 #ifndef _CORECONTEXT_H
 #define _CORECONTEXT_H
 #include "AutoFactory.h"
+#include "AutoPacketFactory.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
 #include "CoreThread.h"
@@ -215,6 +216,9 @@ protected:
   friend class GlobalCoreContext;
   friend class OutstandingCountTracker;
 
+  // The interior packet factory:
+  AutoPacketFactory m_packetFactory;
+
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
@@ -278,6 +282,51 @@ protected:
   /// Overload of Add based on ContextMember
   /// </summary>
   void AddContextMember(const std::shared_ptr<ContextMember>& ptr);
+
+  /// <summary>
+  /// Locates an available context member in this context
+  /// </summary>
+  template<class T>
+  void FindByType(std::shared_ptr<T>& slot) {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    if(!m_byType.Resolve(slot))
+      throw_rethrowable autowiring_error("An autowiring operation resulted in an ambiguous match");
+  }
+
+  /// <summary>
+  /// Identical to Autowire, but will not register the passed slot for deferred resolution
+  /// </summary>
+  template<class T>
+  bool AutowireNoDefer(Autowired<T>& slot) {
+    // First-chance resolution in this context and ancestor contexts:
+    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
+      pCur->FindByType(slot);
+      if(slot)
+        return true;
+    }
+
+    if(
+      has_static_new<T>::value ||
+      has_simple_constructor<T>::value
+    )
+      // We will not attempt second-chance resolution if the type is constructable
+      return false;
+
+    // Attempt second-chance resolution:
+    std::shared_ptr<AutoFactory<T>> factory;
+    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
+      pCur->FindByType(factory);
+      if(!factory)
+        continue;
+
+      std::shared_ptr<T> ptr(factory->New());
+      Add(ptr);
+      slot.swap(ptr);
+      return true;
+    }
+
+    return false;
+  }
 
 public:
   // Accessor methods:
@@ -587,63 +636,6 @@ public:
     (boost::lock_guard<boost::mutex>)m_lock,
     m_snoopers.erase(rcvr);
     RemoveEventReceiver(rcvr);
-  }
-
-  /// <summary>
-  /// Locates an available context member in this context
-  /// </summary>
-  template<class T>
-  std::shared_ptr<T> FindByType(const Autowired<T>&) {
-    return FindByType<T>();
-  }
-
-  template<class T>
-  std::shared_ptr<T> FindByType(void) {
-    std::shared_ptr<T> retVal;
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    if(!m_byType.Resolve(retVal))
-      throw_rethrowable autowiring_error("An autowiring operation resulted in an ambiguous match");
-    return retVal;
-  }
-
-  /// <summary>
-  /// Identical to Autowire, but will not register the passed slot for deferred resolution
-  /// </summary>
-  template<class W>
-  bool AutowireNoDefer(W& slot) {
-    typename W::t_ptrType retVal;
-
-    // First-chance resolution in this context and ancestor contexts:
-    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
-      retVal = pCur->FindByType(slot);
-      if(retVal) {
-        slot.swap(retVal);
-        return true;
-      }
-    }
-
-    if(
-      has_static_new<typename W::value_type>::value ||
-      has_simple_constructor<typename W::value_type>::value
-    )
-      // We will not attempt second-chance resolution if the type is constructable
-      return false;
-
-    // Attempt second-chance resolution:
-    typedef AutoFactory<typename W::value_type> Factory;
-    std::shared_ptr<Factory> factory;
-    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
-      factory = pCur->FindByType<Factory>();
-      if(!factory)
-        continue;
-      
-      typename W::t_ptrType ptr(factory->New());
-      Add(ptr);
-      slot.swap(ptr);
-      return true;
-    }
-
-    return false;
   }
 
   /// <summary>
