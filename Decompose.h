@@ -28,6 +28,20 @@ struct Decompose<R(W::*)()> {
     return ti;
   }
 
+  /// <summary>
+  /// Performs a call on the specified object with the specified member function
+  /// <summary>
+  /// <remarks>
+  /// The passed type object, the last parameter, must be a type repository.  It must support
+  /// a method of the following form:
+  ///
+  /// template<class T>
+  /// const T& Get();
+  ///
+  /// The method must return the object of the desired type, or else it must throw an exception.
+  /// It is the caller's responsibility to ensure that all of the necessary types are available
+  /// before this call is made, in order to prevent such an exception from being thrown.
+  /// </remarks>
   template<class T>
   static void Call(W* pObj, memType memfn, const T&) {
     (pObj->*memfn)();
@@ -46,6 +60,11 @@ struct Decompose<R(W::*)(Arg1)> {
     static const std::type_info* ti[] = {&typeid(Arg1), nullptr};
     return ti;
   }
+
+  template<class T>
+  static void Call(W* pObj, memType memfn, const T& repo) {
+    (pObj->*memfn)(repo.Get<Arg1>());
+  }
 };
 
 template<class R, class W, class Arg1, class Arg2>
@@ -59,6 +78,11 @@ struct Decompose<R(W::*)(Arg1, Arg2)> {
   static const std::type_info* (&Enumerate(void))[N + 1] {
     static const std::type_info* ti[] = {&typeid(Arg1), &typeid(Arg2), nullptr};
     return ti;
+  }
+
+  template<class T>
+  static void Call(W* pObj, memType memfn, const T& repo) {
+    (pObj->*memfn)(repo.Get<Arg1>(), repo.Get<Arg2>());
   }
 };
 
@@ -74,6 +98,11 @@ struct Decompose<R(W::*)(Arg1, Arg2, Arg3)> {
     static const std::type_info* ti[] = {&typeid(Arg1), &typeid(Arg2), &typeid(Arg3), nullptr};
     return ti;
   }
+
+  template<class T>
+  static void Call(W* pObj, memType memfn, const T& repo) {
+    (pObj->*memfn)(repo.Get<Arg1>(), repo.Get<Arg2>(), repo.Get<Arg3>());
+  }
 };
 
 template<class R, class W, class Arg1, class Arg2, class Arg3, class Arg4>
@@ -87,5 +116,10 @@ struct Decompose<R(W::*)(Arg1, Arg2, Arg3, Arg4)> {
   static const std::type_info* (&Enumerate(void))[N + 1] {
     static const std::type_info* ti[] = {&typeid(Arg1), &typeid(Arg2), &typeid(Arg3), &typeid(Arg4), nullptr};
     return ti;
+  }
+
+  template<class T>
+  static void Call(W* pObj, memType memfn, const T& repo) {
+    (pObj->*memfn)(repo.Get<Arg1>(), repo.Get<Arg2>(), repo.Get<Arg3>(), repo.Get<Arg4>());
   }
 };
