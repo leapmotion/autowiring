@@ -212,3 +212,39 @@ TEST_F(DecoratorTest, VerifyInterThreadDecoration) {
   // Verify that the filter method has been called
   EXPECT_TRUE(filterB->m_called) << "A deferred filter method was not called as expected";
 }
+
+TEST_F(DecoratorTest, VerifyTeardownArrangement) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  std::weak_ptr<FilterA> filterAWeak;
+  std::shared_ptr<AutoPacket> packet;
+  {
+    // Create the filter and subscribe it
+    std::shared_ptr<FilterA> filterA(new FilterA);
+    filterAWeak = filterA;
+    factory->AddSubscriber(filterA);
+
+    // Create the packet--this should lock in references to all subscribers:
+    packet = factory->NewPacket();
+  }
+
+  // Verify that the subscription has not expired:
+  ASSERT_FALSE(filterAWeak.expired()) << "A subscriber while it was still registered";
+
+  {
+    std::shared_ptr<FilterA> filterA = filterAWeak.lock();
+
+    // Unsubscribe the filter:
+    factory->RemoveSubscriber(filterA);
+  }
+
+  // Verify that unsubscription STILL does not result in expiration:
+  ASSERT_FALSE(filterAWeak.expired()) << "A subscriber expired before all packets on that subscriber were satisfied";
+
+  // Satisfy the packet:
+  packet->Decorate(Decoration<0>());
+  packet->Decorate(Decoration<1>());
+
+  // Filter should be expired now:
+  ASSERT_TRUE(filterAWeak.expired()) << "Subscriber was still left outstanding even though all references should be gone";
+}
