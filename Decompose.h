@@ -50,6 +50,7 @@ struct Decompose<R(W::*)()> {
 
 template<class R, class W, class Arg1>
 struct Decompose<R(W::*)(Arg1)> {
+  typedef Arg1 t_arg1;
   typedef R(W::*memType)(Arg1);
   typedef void fnType(Arg1);
   typedef W type;
@@ -63,7 +64,9 @@ struct Decompose<R(W::*)(Arg1)> {
 
   template<class T, memType memfn>
   static void Call(W* pObj, const T& repo) {
-    (pObj->*memfn)(repo.Get<Arg1>());
+    const Arg1* arg1;
+    repo.Get(arg1);
+    (pObj->*memfn)(*arg1);
   }
 };
 
@@ -82,7 +85,11 @@ struct Decompose<R(W::*)(Arg1, Arg2)> {
 
   template<class T, memType memfn>
   static void Call(W* pObj, const T& repo) {
-    (pObj->*memfn)(repo.Get<Arg1>(), repo.Get<Arg2>());
+    const Arg1* arg1;
+    const Arg2* arg2;
+    repo.Get(arg1);
+    repo.Get(arg2);
+    (pObj->*memfn)(*arg1, *arg2);
   }
 };
 
@@ -101,7 +108,13 @@ struct Decompose<R(W::*)(Arg1, Arg2, Arg3)> {
 
   template<class T, memType memfn>
   static void Call(W* pObj, const T& repo) {
-    (pObj->*memfn)(repo.Get<Arg1>(), repo.Get<Arg2>(), repo.Get<Arg3>());
+    const Arg1* arg1;
+    const Arg2* arg2;
+    const Arg2* arg3;
+    repo.Get(arg1);
+    repo.Get(arg2);
+    repo.Get(arg3);
+    (pObj->*memfn)(*arg1, *arg2, *arg3);
   }
 };
 
@@ -120,6 +133,14 @@ struct Decompose<R(W::*)(Arg1, Arg2, Arg3, Arg4)> {
 
   template<class T, memType memfn>
   static void Call(W* pObj, const T& repo) {
-    (pObj->*memfn)(repo.Get<Arg1>(), repo.Get<Arg2>(), repo.Get<Arg3>(), repo.Get<Arg4>());
+    const Arg1* arg1;
+    const Arg2* arg2;
+    const Arg2* arg3;
+    const Arg2* arg4;
+    repo.Get(arg1);
+    repo.Get(arg2);
+    repo.Get(arg3);
+    repo.Get(arg4);
+    (pObj->*memfn)(*arg1, *arg2, *arg3, *arg4);
   }
 };

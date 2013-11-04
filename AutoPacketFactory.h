@@ -10,6 +10,37 @@ class AutoPacket;
 class Deferred;
 class DispatchQueue;
 
+template<class T, bool is_deferred>
+struct CallExtractor {
+  typedef void(*t_call)(void*, const AutoPacket&);
+
+  t_call operator()() const {
+    typedef decltype(&T::AutoFilter) t_fnType;
+    return reinterpret_cast<t_call>(
+      &Decompose<t_fnType>::template Call<AutoPacket, &T::AutoFilter>
+    );
+  }
+};
+
+template<class T>
+struct CallExtractor<T, true> {
+  typedef void(*t_call)(void*, const AutoPacket&);
+
+  static void CallDeferred(T* pObj, const AutoPacket& repo) {
+    const t_call call =
+      reinterpret_cast<t_call>(
+        &Decompose<decltype(&T::AutoFilter)>::template Call<AutoPacket, &T::AutoFilter>
+      );
+    *pObj += [pObj, &repo, call] {
+      call(pObj, repo);
+    };
+  }
+
+  t_call operator()() const {
+    return reinterpret_cast<t_call>(&CallDeferred);
+  }
+};
+
 /// <summary>
 /// Subscriber wrap, represents a single logical subscriber
 /// </summary>
@@ -55,7 +86,7 @@ public:
     m_pObj(subscriber.get())
   {
     typedef Decompose<decltype(&T::AutoFilter)> t_decompose;
-    CallExtractor<T, std::is_same<Deferred, t_decompose::retType>::value> e;
+    CallExtractor<T, std::is_same<Deferred, typename t_decompose::retType>::value> e;
 
     m_arity = t_decompose::N;
     m_pCall = e();
@@ -81,29 +112,6 @@ protected:
   // that will actually be passed is of a type corresponding to the member function bound
   // by this operation.  Strong guarantees must be made that the types
   t_call m_pCall;
-
-  template<class T, bool is_deferred>
-  struct CallExtractor {
-    t_call operator()() const {
-      return reinterpret_cast<t_call>(
-        &Decompose<decltype(&T::AutoFilter)>::Call<AutoPacket, &T::AutoFilter>
-      );
-    }
-  };
-
-  template<class T>
-  struct CallExtractor<T, true> {
-    static void CallDeferred(T* pObj, const AutoPacket& repo) {
-      static const auto call = &Decompose<decltype(&T::AutoFilter)>::Call<AutoPacket, &T::AutoFilter>;
-      *pObj += [pObj, &repo] {
-        call(pObj, repo);
-      };
-    }
-
-    t_call operator()() const {
-      return reinterpret_cast<t_call>(&CallDeferred);
-    }
-  };
 
 public:
   // Accessor methods:
@@ -199,7 +207,7 @@ public:
   /// <returns>The subscriber, or nullptr if one cannot be found</returns>
   const AutoPacketSubscriber* FindSubscriber(const std::type_info& info) const {
     size_t subscriberIndex = FindSubscriberIndex(info);
-    if(subscriberIndex == -1)
+    if(!~subscriberIndex)
       return nullptr;
     return &m_subscribers[subscriberIndex];
   }
@@ -207,10 +215,10 @@ public:
   /// <summary>
   /// Finds the monotonic index corresponding to a particular subscriber type
   /// </summary>
-  /// <returns>The index, or -1 if the subscriber does not exist</returns>
+  /// <returns>The index, or ~0 if the subscriber does not exist</returns>
   size_t FindSubscriberIndex(const std::type_info& info) const {
     auto q = m_subMap.find(info);
-    return q == m_subMap.end() ? -1 : q->second;
+    return q == m_subMap.end() ? ~0 : q->second;
   }
 
   /// <summary>
@@ -244,8 +252,7 @@ public:
     typedef Decompose<decltype(&T::AutoFilter)> t_decomposition;
 
     // Cannot register a subscriber with zero arguments:
-    const size_t arity = t_decomposition::N;
-    static_assert(0 != arity, "Cannot register a subscriber whose AutoFilter method is arity zero");
+    static_assert(t_decomposition::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
     // Determine whether this subscriber already exists--perhaps, it is formerly disabled
     auto q = m_subMap.find(typeid(T));
