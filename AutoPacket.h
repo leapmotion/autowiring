@@ -6,6 +6,7 @@
 #include STL_UNORDERED_MAP
 
 class AutoPacketFactory;
+class AutoPacketProfiler;
 class AutoPacketSubscriber;
 
 /// <summary>
@@ -101,6 +102,9 @@ private:
 
   // The associated packet factory:
   AutoRequired<AutoPacketFactory> m_factory;
+
+  // Profiler, if one exists:
+  Autowired<AutoPacketProfiler> m_profiler;
 
   // The set of decorations currently attached to this object, and the associated lock:
   boost::mutex m_lock;

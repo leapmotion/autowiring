@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
+#include "AutoPacketProfiler.h"
 #include <boost/any.hpp>
 
 AutoPacket::AutoPacket()
@@ -16,15 +17,39 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
   if(!decorator)
     return;
 
-  // Update all satisfaction counters:
   const auto& satVec = m_factory->GetSubscriberVector();
   const auto& subscribers = decorator->subscribers;
+
+  // Update all satisfaction counters:
   for(auto q = subscribers.begin(); q != subscribers.end(); q++)
     if(!--m_satCounters[*q].remaining) {
       // No entries remaining in this saturation, we can now make the call
       auto& entry = satVec[*q];
       assert(entry.GetCall());
-      entry.GetCall()(entry.GetSubscriberPtr(), *this);
+
+      if(m_profiler && m_profiler->ShouldProfile()) {
+        // Record the current time before we hand control over to the call:
+        auto before = boost::chrono::high_resolution_clock::now();
+
+        // Make the actual call
+        entry.GetCall()(entry.GetSubscriberPtr(), *this);
+
+        // Record the total time spent in the call
+        // TODO:  This naive implementation will also add any time spent in
+        // subscribers which are reached from the subscriber defined above.
+        // A good profiling system should exclude the time spent in dependent
+        // subscribers by having some sort of thread-specific reentrancy
+        // detection on this function--perhaps by propagating out a "boost"
+        // value which will be subtracted by callers operating at higher
+        // elevation levels.
+        m_profiler->AddProfilingInformation(
+          *entry.GetSubscriberTypeInfo(),
+          boost::chrono::high_resolution_clock::now() - before
+        );
+      }
+      else
+        // No profiling required, just make the call directly
+        entry.GetCall()(entry.GetSubscriberPtr(), *this);
     }
 }
 
