@@ -2,6 +2,7 @@
 #ifndef _CORECONTEXT_H
 #define _CORECONTEXT_H
 #include "AutoFactory.h"
+#include "AutoPacketFactory.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
 #include "CoreThread.h"
@@ -469,6 +470,9 @@ public:
     auto pRecvr = std::fast_pointer_cast<EventReceiver, T>(value);
     if(pRecvr)
       AddEventReceiver(pRecvr);
+
+    // Subscribers:
+    m_packetFactory->AddSubscriber(value);
 
     // Notify any autowiring field that is currently waiting that we have a new member
     // to be considered.
