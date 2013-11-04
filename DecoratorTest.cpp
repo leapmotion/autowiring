@@ -3,6 +3,7 @@
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
 #include "FilterPropertyExtractor.h"
+#include <boost/thread/barrier.hpp>
 
 using namespace std;
 
@@ -19,23 +20,55 @@ public:
   int i;
 };
 
-class FilterA {
+class FilterRoot {
 public:
-  FilterA(void) :
+  FilterRoot(void) :
     m_called(false)
   {}
-
-  void AutoFilter(Decoration<0> zero, Decoration<1> one) {
-    m_called = true;
-    m_zero = zero;
-    m_one = one;
-  }
 
   bool m_called;
   Decoration<0> m_zero;
   Decoration<1> m_one;
 };
+
+class FilterA:
+  public FilterRoot
+{
+public:
+  void AutoFilter(Decoration<0> zero, Decoration<1> one) {
+    m_called = true;
+    m_zero = zero;
+    m_one = one;
+  }
+};
 static_assert(has_autofilter<FilterA>::value, "Expected the filter to have an AutoFilter method");
+
+class FilterB:
+  public CoreThread,
+  public FilterRoot
+{
+public:
+  FilterB(void) :
+    m_barr(2)
+  {
+    // We'll accept dispatch delivery as long as we exist:
+    AcceptDispatchDelivery();
+  }
+
+  Deferred AutoFilter(Decoration<0> zero, Decoration<1> one) {
+    m_called = true;
+    m_zero = zero;
+    m_one = one;
+    return Deferred(this);
+  }
+
+  boost::barrier m_barr;
+
+  void Run(void) override {
+    m_barr.wait();
+    CoreThread::Run();
+  }
+};
 
 TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   vector<const type_info*> v;
@@ -152,4 +185,29 @@ TEST_F(DecoratorTest, VerifyDecorationIdempotence) {
   // Now finish saturating the filter and ensure we get a call:
   packet->Decorate(Decoration<1>());
   EXPECT_TRUE(filterA->m_called) << "Filter was not called after being fully satisfied";
+}
+
+TEST_F(DecoratorTest, VerifyInterThreadDecoration) {
+  AutoRequired<FilterB> filterB;
+  AutoRequired<AutoPacketFactory> factory;
+  AutoCurrentContext ctxt;
+
+  // Kick off all threads:
+  ctxt->InitiateCoreThreads();
+
+  // Obtain a packet for processing and decorate it:
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>());
+  packet->Decorate(Decoration<1>());
+
+  // Verify that the recipient has NOT yet received the message:
+  EXPECT_FALSE(filterB->m_called) << "A call was made to a thread which should not have been able to process it";
+
+  // Wake up the barrier and post a quit message:
+  filterB->m_barr.wait();
+  filterB->Stop();
+  filterB->Wait();
+
+  // Verify that the filter method has been called
+  EXPECT_TRUE(filterB->m_called) << "A deferred filter method was not called as expected";
 }
