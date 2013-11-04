@@ -325,6 +325,19 @@ protected:
     return false;
   }
 
+  /// <summary>
+  /// Increments the total number of contexts still outstanding
+  /// </summary>
+  /// <remarks>
+  /// This is an indirect incrementation routine.  The count will be incremented for as
+  /// long as the returned shared_ptr is not destroyed.  Once it's destroyed, the count
+  /// is decremented.  The caller is encouraged not to copy the return value, as doing
+  /// so can give spurious values for the current number of outstanding threads.
+  ///
+  /// The caller is responsible for exterior synchronization
+  /// </remarks>
+  std::shared_ptr<Object> IncrementOutstandingThreadCount(void);
+
 public:
   // Accessor methods:
   size_t GetMemberCount(void) const {return m_byType.size();}
@@ -406,7 +419,7 @@ public:
     // Construct new type:
     retVal.reset(new EventReceiverProxy<T>);
     m_proxies[typeid(T)] = retVal;
-      
+    
     // Attach compatible receivers:
     for(auto q = m_eventReceivers.begin(); q != m_eventReceivers.end(); q++)
       *retVal += *q;
@@ -414,17 +427,6 @@ public:
     // Construction complete
     return retVal;
   }
-
-  /// <summary>
-  /// Increments the total number of contexts still outstanding
-  /// </summary>
-  /// <remarks>
-  /// This is an indirect incrementation routine.  The count will be incremented for as
-  /// long as the returned shared_ptr is not destroyed.  Once it's destroyed, the count
-  /// is decremented.  The caller is encouraged not to copy the return value, as doing
-  /// so can give spurious values for the current number of outstanding threads.
-  /// </remarks>
-  std::shared_ptr<Object> IncrementOutstandingThreadCount(void);
 
   /// <summary>
   /// Adds an object of any kind to the IOC container

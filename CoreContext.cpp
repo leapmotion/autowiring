@@ -6,7 +6,6 @@
 #include "BoltBase.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
-#include "ThreadStatusMaintainer.h"
 #include <algorithm>
 #include <memory>
 
@@ -73,9 +72,8 @@ void CoreContext::BroadcastContextCreationNotice(const char* contextName, const 
 }
 
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
-  boost::lock_guard<boost::mutex> lk(m_lock);
   std::shared_ptr<Object> retVal = m_outstanding.lock();
-  if(!m_outstanding.expired())
+  if(retVal)
     return retVal;
 
   auto self = m_self.lock();
@@ -153,9 +151,10 @@ void CoreContext::InitiateCoreThreads(void) {
     m_pParent->InitiateCoreThreads();
 
   // Reacquire the lock to prevent m_threads from being modified while we sit on it
+  auto outstanding = IncrementOutstandingThreadCount();
   boost::lock_guard<boost::mutex> lk(m_lock);
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
-    (*q)->Start();
+    (*q)->Start(outstanding);
 }
 
 void CoreContext::SignalShutdown(void) {
@@ -257,7 +256,7 @@ void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr, bool all
 
   if(m_refCount)
     // We're already running, this means we're late to the game and need to start _now_.
-    ptr->Start();
+    ptr->Start(IncrementOutstandingThreadCount());
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
