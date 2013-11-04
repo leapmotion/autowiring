@@ -26,6 +26,45 @@ public:
   AutoPacket(void);
   ~AutoPacket(void);
 
+  template<class T>
+  class AutoCheckout {
+  public:
+    AutoCheckout(void) :
+      m_parent(nullptr),
+      m_val(nullptr)
+    {}
+
+    AutoCheckout(AutoPacket& parent, T& val) :
+      m_parent(&parent),
+      m_val(&val)
+    {}
+
+    AutoCheckout(AutoCheckout&& rhs) :
+      m_parent(rhs.m_parent),
+      m_val(rhs.m_val)
+    {
+      rhs = AutoCheckout<T>();
+    }
+
+    ~AutoCheckout(void) {
+      if(m_val)
+        m_parent->UpdateSatisfaction(typeid(T));
+    }
+
+  private:
+    AutoPacket* m_parent;
+    T* m_val;
+
+  public:
+    T* operator->(void) const { return m_val; }
+
+    AutoCheckout& operator=(AutoCheckout&& rhs) {
+      std::swap(m_parent, rhs.m_parent);
+      std::swap(m_val, rhs.m_val);
+      return *this;
+    }
+  };
+
 private:
   /// <summary>
   /// A type enclosure, used to provide support similar to boost::any
@@ -127,6 +166,22 @@ public:
   }
 
   /// <summary>
+  /// Checks out the specified type, providing it to the caller to be filled in
+  /// </summary>
+  /// <remarks>
+  template<class T>
+  AutoCheckout<T> Checkout(void) {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    auto*& pObj = m_mp[typeid(T)];
+    if(pObj)
+      throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
+
+    auto enclosure = new Enclosure<T>();
+    pObj = enclosure;
+    return AutoCheckout<T>(*this, enclosure->held);
+  }
+
+  /// <summary>
   /// Decorates this packet with a particular type
   /// </summary>
   /// <returns>A reference to the internally persisted object</returns>
@@ -138,10 +193,11 @@ public:
   T& Decorate(T&& t) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     auto*& pObj = m_mp[typeid(T)];
-    if(!pObj) {
-      pObj = new Enclosure<T>(std::move(t));
-      UpdateSatisfaction(typeid(T));
-    }
+    if(pObj)
+      throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
+
+    pObj = new Enclosure<T>(std::move(t));
+    UpdateSatisfaction(typeid(T));
     return static_cast<Enclosure<T>*>(pObj)->held;
   }
 
