@@ -206,7 +206,7 @@ TEST_F(DecoratorTest, VerifyInterThreadDecoration) {
 
   // Wake up the barrier and post a quit message:
   filterB->m_barr.wait();
-  filterB->Stop();
+  *filterB += [&filterB] { filterB->Stop(); };
   filterB->Wait();
 
   // Verify that the filter method has been called
