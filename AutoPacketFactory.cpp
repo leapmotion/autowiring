@@ -17,6 +17,7 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   m_packets(retVal);
 
   // Fill the packet with satisfaction information:
+  retVal->Reset();
 
   // Done, return
   return retVal;

@@ -9,30 +9,6 @@ class AutoPacketFactory;
 class AutoPacketSubscriber;
 
 /// <summary>
-/// Status class, constructed from the enclosing AutoPacketFactory
-/// </summary>
-class AutoPacketSubscriberStatus {
-public:
-  AutoPacketSubscriberStatus(void):
-    m_pSubscriber(nullptr),
-    m_visitCount(0)
-  {}
-
-  AutoPacketSubscriberStatus(const AutoPacketSubscriber& subscriber);
-
-private:
-  // The parent packet subscriber
-  const AutoPacketSubscriber* m_pSubscriber;
-
-  // The total number of times we've been visited so far--when we hit zero, a call must
-  // be issued.
-  size_t m_visitCount;
-
-public:
-  size_t operator--(int) { return m_visitCount--; }
-};
-
-/// <summary>
 /// A decorator-style processing packet
 /// </summary>
 /// <remarks>
@@ -83,7 +59,7 @@ private:
   std::unordered_map<std::type_index, Object*> m_mp;
 
   // Status counters, copied directly from the degree vector in the packet factory:
-  std::vector<AutoPacketSubscriberStatus> m_satCounters;
+  std::vector<size_t> m_satCounters;
 
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
