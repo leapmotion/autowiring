@@ -28,9 +28,7 @@ private:
     public Object
   {
   public:
-    Enclosure(void) :
-      held(nullptr)
-    {}
+    Enclosure(void) {}
 
     Enclosure(const T& held) :
       held(std::move(held))
@@ -84,63 +82,18 @@ public:
   /// </remarks>
   template<class T>
   void Decorate(const T& t) {
-    Decorate<T>() = t;
-  }
-
-  template<class T>
-  void Decorate(T&& t) {
-    std::swap(Decorate<T>(), t);
-  }
-
-  template<class T>
-  T& Decorate(void) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     auto& ptr = static_cast<Enclosure<T>*&>(m_mp[typeid(T)]);
     if(!ptr)
       ptr = new Enclosure<T>;
-    return ptr->held;
   }
 
-  /// <summary>
-  /// Attempts to decorate this packet, if a subscriber exists
-  /// </summary>
-  /// <remarks>
-  /// Publication is a conditional event, taking place if and only if an actual
-  /// subscriber for this type exists.  Subscription takes place by a call to the
-  /// Subscribe method on this packet, or the Subscribe method on the
-  /// AutoPacketFactory.
-  ///
-  /// Because this type requires that the passed value be completely constructed
-  /// when publication takes place, callers should generally only use this overload
-  /// when a particular field is always available.
-  /// </remarks>
   template<class T>
-  void Publish(const T& val) {
-    boost::lock_guard<boost::mutex> lk;
-    auto q = m_mp.find(typeid(T));
-    if(q != m_mp.end())
-      static_cast<Enclosure<T>*>(q->second)->held = val;
-  }
-
-  /// <summary>
-  /// Optimized overload of Publish which provides a storage space for serialization
-  /// </summary>
-  /// <returns>
-  /// A slot which should be filled with the data to be published, or nullptr if there
-  /// are no subscribers.
-  /// </returns>
-  /// <remarks>
-  /// This override is useful when the published data should not be generated except
-  /// when there are subscribers.  It is provided for convenience and optimization.
-  /// </remarks>
-  template<class T>
-  T* Publish(void) const {
-    boost::lock_guard<boost::mutex> lk;
-    auto q = m_mp.find(typeid(T));
-    return
-      q == m_mp.end() ?
-      nullptr :
-      &static_cast<Enclosure<T>*>(q->second)->held;
+  void Decorate(T&& t) {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    auto*& pObj = m_mp[typeid(T)];
+    if(!pObj)
+      pObj = new Enclosure<T>;
   }
 
   /// <returns>
