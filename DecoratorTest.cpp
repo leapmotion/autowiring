@@ -90,6 +90,26 @@ TEST_F(DecoratorTest, VerifySimplePacketDecoration) {
   EXPECT_EQ(2, dec2.i) << "Decoration 2 incorrectly persisted";
 }
 
+TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
+  // Create a packet while the factory has no subscribers:
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet1 = factory->NewPacket();
+
+  // Verify subscription-free status:
+  EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
+
+  // Create another packet where a subscriber exists:
+  AutoRequired<FilterA> filterA;
+  factory->AddSubscriber(filterA);
+  auto packet2 = factory->NewPacket();
+  
+  // Verify the first packet still does not have subscriptions:
+  EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
+
+  // Verify the second one does:
+  EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
+}
+
 TEST_F(DecoratorTest, VerifySimpleFilter) {
   AutoRequired<FilterA> filterA;
   AutoRequired<AutoPacketFactory> factory;

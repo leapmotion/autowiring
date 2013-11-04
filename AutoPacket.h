@@ -94,7 +94,7 @@ public:
   template<class T>
   bool Get(T*& out) {
     auto q = m_mp.find(typeid(T));
-    if(q == m_mp.end()) {
+    if(q == m_mp.end() || !q->second) {
       out = nullptr;
       return false;
     }
@@ -109,7 +109,8 @@ public:
   void Enumerate(Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     for(auto q = m_mp.begin(); q != m_mp.end(); q++)
-      fx(q->first, q->second);
+      if(q->second)
+        fx(q->first, q->second);
   }
 
   /// <summary>
@@ -120,18 +121,6 @@ public:
   /// Unlike Publish, the Decorate method is unconditional and will install the passed
   /// value regardless of whether any subscribers exist.
   /// </remarks>
-  template<class T>
-  T& Decorate(const T& t) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    auto& ptr = static_cast<Enclosure<T>*&>(m_mp[typeid(T)]);
-    if(!ptr) {
-      ptr = new Enclosure<T>(t);
-      UpdateSatisfaction(typeid(T));
-    }
-    return static_cast<Enclosure<T>*>(pObj)->held;
-  }
-
-  /// <returns>A reference to the internally persisted object</returns>
   template<class T>
   T& Decorate(T&& t) {
     boost::lock_guard<boost::mutex> lk(m_lock);
@@ -151,9 +140,8 @@ public:
   /// this type, or the corresponding factory, at some point prior to the call.
   /// </remarks>
   template<class T>
-  bool HasSubscribers(void) const {
-    auto q = m_mp.find(typeid(T));
-    return q != m_mp.end();
-  }
+  bool HasSubscribers(void) const {return HasSubscribers(typeid(T));}
+
+  bool HasSubscribers(const std::type_info& ti) const;
 };
 

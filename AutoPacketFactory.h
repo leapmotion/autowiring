@@ -12,6 +12,8 @@ class AutoPacket;
 /// </summary>
 class AutoPacketSubscriber {
 public:
+  typedef void (*t_call)(void*, const AutoPacket&);
+
   AutoPacketSubscriber(size_t subscriberIndex = -1) :
     m_subscriberIndex(subscriberIndex)
   {}
@@ -37,7 +39,7 @@ public:
     m_arity(Decompose<decltype(&T::AutoFilter)>::N),
     m_pObj(subscriber.get()),
     m_pCall(
-      reinterpret_cast<void (*)(void* pObj, const AutoPacket& repo)>(
+      reinterpret_cast<t_call>(
         &Decompose<decltype(&T::AutoFilter)>::Call<AutoPacket, &T::AutoFilter>
       )
     )
@@ -58,24 +60,23 @@ protected:
   // The first argument of this static global is void*, but it is expected that the argument
   // that will actually be passed is of a type corresponding to the member function bound
   // by this operation.  Strong guarantees must be made that the types
-  void (*m_pCall)(void* pObj, const AutoPacket& repo);
+  t_call m_pCall;
 
 public:
   // Accessor methods:
   size_t GetArity(void) const { return m_arity; }
   size_t GetSubscriberIndex(void) const { return m_subscriberIndex; }
 
-  /// <summary>
-  /// Calls the associated subscriber
-  /// </summary>
+  /// <returns>A pointer to the subscriber</returns>
+  void* GetSubscriber(void) const { return m_pObj; }
+
+  /// <returns>A call lambda wrapping the associated subscriber</returns>
   /// <remarks>
   /// Parameters for the associated subscriber are obtained by querying the packet.
   /// The packet must already be decorated with all required parameters for the
   /// subscribers, or an exception will be thrown.
   /// </remarks>
-  void Call(const AutoPacket& packet) const {
-    m_pCall(m_pObj, packet);
-  }
+  t_call GetCall(void) const { return m_pCall; }
 };
 
 /// <summary>
