@@ -251,3 +251,30 @@ TEST_F(DecoratorTest, VerifyTeardownArrangement) {
   // Filter should be expired now:
   ASSERT_TRUE(filterAWeak.expired()) << "Subscriber was still left outstanding even though all references should be gone";
 }
+
+TEST_F(DecoratorTest, VerifyCheckout) {
+  AutoRequired<FilterA> filterA;
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Obtain a packet and use deferred decoration:
+  auto packet = factory->NewPacket();
+
+  // Satisfy the other decoration:
+  packet->Decorate(Decoration<1>());
+
+  {
+    AutoPacket::AutoCheckout<Decoration<0>> exterior;
+    {
+      AutoPacket::AutoCheckout<Decoration<0>> checkout = packet->Checkout<Decoration<0>>();
+
+      // Verify we can move the packet out to an outer scope:
+      exterior = std::move(checkout);
+    }
+
+    // Verify no hits yet:
+    EXPECT_FALSE(filterA->m_called) << "Filter called before a decoration checkout expired";
+  }
+
+  // Verify a hit took place now
+  EXPECT_TRUE(filterA->m_called) << "Filter was not called after all decorations were installed";
+}
