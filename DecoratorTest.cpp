@@ -53,6 +53,7 @@ public:
   {
     // We'll accept dispatch delivery as long as we exist:
     AcceptDispatchDelivery();
+    Ready();
   }
 
   Deferred AutoFilter(Decoration<0> zero, Decoration<1> one) {
@@ -133,7 +134,7 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
 
   // Create another packet where a subscriber exists:
   AutoRequired<FilterA> filterA;
-  factory->AddSubscriber(filterA);
+  ASSERT_TRUE(factory->IsSubscriber<FilterA>());
   auto packet2 = factory->NewPacket();
   
   // Verify the first packet still does not have subscriptions:
@@ -148,7 +149,7 @@ TEST_F(DecoratorTest, VerifySimpleFilter) {
   AutoRequired<AutoPacketFactory> factory;
 
   // Manually register the subscriber:
-  factory->AddSubscriber(filterA);
+  ASSERT_TRUE(factory->IsSubscriber<FilterA>());
 
   // Obtain a packet from the factory:
   auto packet = factory->NewPacket();
@@ -170,8 +171,8 @@ TEST_F(DecoratorTest, VerifyDecorationIdempotence) {
   AutoRequired<FilterA> filterA;
   AutoRequired<AutoPacketFactory> factory;
 
-  // Initial subscriber registration:
-  factory->AddSubscriber(filterA);
+  // Subscriber registration verification:
+  ASSERT_TRUE(factory->IsSubscriber<FilterA>());
 
   // Obtain a packet and attempt redundant introduction:
   auto packet = factory->NewPacket();

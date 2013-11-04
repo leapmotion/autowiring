@@ -164,6 +164,18 @@ public:
     return q == m_decorations.end() ? nullptr : &q->second;
   }
 
+  /// <returns>
+  /// True if the specified type is a subscriber registered with this factory
+  /// </returns>
+  template<class T>
+  bool IsSubscriber(void) {
+    return IsSubscriber(typeid(T));
+  }
+
+  bool IsSubscriber(const std::type_info& ti) {
+    return m_subMap.find(ti) != m_subMap.end();
+  }
+
   /// <summary>
   /// Registers the passed subscriber, if it defines a method called AutoFilter
   /// </summary>
