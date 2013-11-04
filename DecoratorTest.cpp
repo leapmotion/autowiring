@@ -26,7 +26,7 @@ TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   vector<const type_info*> v;
 
   // Run our prop extractor based on a known decorator:
-  RecipientPropertyExtractor<DecoratorA>::Extract(
+  RecipientPropertyExtractor<DecoratorA>::Enumerate(
     [&v] (const std::type_info& ti) {
       v.push_back(&ti);
     }

@@ -62,7 +62,7 @@ private:
   /// <summary>
   /// The packet factory satisfaction graph
   /// </summary>
-  std::unordered_set<std::type_index, std::list<AutoPacketFactory>> m_sats;
+  std::unordered_set<std::type_index, std::list<void*>> m_sats;
 
 public:
   /// <summary>
