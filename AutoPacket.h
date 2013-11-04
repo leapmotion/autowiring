@@ -35,9 +35,9 @@ public:
       m_val(nullptr)
     {}
 
-    AutoCheckout(AutoPacket& parent, T& val) :
+    AutoCheckout(AutoPacket& parent, T* val) :
       m_parent(&parent),
-      m_val(&val)
+      m_val(val)
     {}
 
     AutoCheckout(AutoCheckout&& rhs) :
@@ -59,6 +59,8 @@ public:
 
   public:
     T* operator->(void) const { return m_val; }
+    
+    operator bool(void) const { return !!m_val; }
 
     AutoCheckout& operator=(AutoCheckout&& rhs) {
       std::swap(m_parent, rhs.m_parent);
@@ -181,9 +183,12 @@ public:
     if(pObj)
       throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
 
+    if(!HasSubscribers<T>())
+      return AutoCheckout<T>(*this, nullptr);
+
     auto enclosure = new Enclosure<T>();
     pObj = enclosure;
-    return AutoCheckout<T>(*this, enclosure->held);
+    return AutoCheckout<T>(*this, &enclosure->held);
   }
 
   /// <summary>
