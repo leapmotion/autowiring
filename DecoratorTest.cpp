@@ -2,6 +2,7 @@
 #include "DecoratorTest.h"
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
+#include "AutoPacketListener.h"
 #include "FilterPropertyExtractor.h"
 #include <boost/thread/barrier.hpp>
 
@@ -96,6 +97,16 @@ class FilterD:
 {
 public:
   void AutoFilter(AutoPacket& pkt) {
+    m_called = true;
+  }
+};
+
+class FilterE:
+  public FilterRoot,
+  public AutoPacketListener
+{
+public:
+  void OnPacketReturned(const AutoPacket& packet) {
     m_called = true;
   }
 };
@@ -324,6 +335,7 @@ TEST_F(DecoratorTest, VerifyReflexiveReciept) {
   AutoRequired<FilterA> filterA;
   AutoRequired<FilterC> filterC;
   AutoRequired<FilterD> filterD;
+  AutoRequired<FilterE> filterE;
   AutoRequired<AutoPacketFactory> factory;
 
   // Obtain a packet first:
@@ -349,4 +361,9 @@ TEST_F(DecoratorTest, VerifyReflexiveReciept) {
 
   // FilterC should have also satisfied filterA:
   EXPECT_TRUE(filterA->m_called) << "FilterA should have been satisfied by FilterC";
+
+  // Release the packet, and verify that filterD gets hit only once this happens
+  EXPECT_FALSE(filterE->m_called) << "Packet listener was notified prematurely";
+  packet.reset();
+  EXPECT_TRUE(filterE->m_called) << "Packet listener was not notified as anticipated";
 }
