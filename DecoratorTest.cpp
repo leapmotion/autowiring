@@ -88,6 +88,18 @@ public:
   }
 };
 
+/// <summary>
+/// A filter which will simply get hit any time a packet is issued in the current context
+/// </summary>
+class FilterD:
+  public FilterRoot
+{
+public:
+  void AutoFilter(AutoPacket& pkt) {
+    m_called = true;
+  }
+};
+
 TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   vector<const type_info*> v;
 
@@ -311,10 +323,14 @@ TEST_F(DecoratorTest, VerifyCheckout) {
 TEST_F(DecoratorTest, VerifyReflexiveReciept) {
   AutoRequired<FilterA> filterA;
   AutoRequired<FilterC> filterC;
+  AutoRequired<FilterD> filterD;
   AutoRequired<AutoPacketFactory> factory;
 
   // Obtain a packet first:
   auto packet = factory->NewPacket();
+
+  // The mere act of obtaining a packet should have triggered filterD to be fired:
+  EXPECT_TRUE(filterD->m_called) << "Trivial filter was not called as expected";
 
   // The packet should be able to obtain a pointer to itself:
   {
