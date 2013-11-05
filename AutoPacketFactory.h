@@ -1,5 +1,6 @@
 #pragma once
 #include "Autowired.h"
+#include "AutoPacketSubscriber.h"
 #include "Decompose.h"
 #include "FilterPropertyExtractor.h"
 #include "ObjectPool.h"
@@ -42,105 +43,6 @@ struct CallExtractor<T, true> {
   t_call operator()() const {
     return reinterpret_cast<t_call>(&CallDeferred);
   }
-};
-
-/// <summary>
-/// Subscriber wrap, represents a single logical subscriber
-/// </summary>
-/// <remarks>
-/// A logical subscriber is any autowired member of the current context which implements
-/// a nonstatic member function called AutoFilter that accepts one or more types.  This
-/// function is invoked via a call centralizer implemented in the Decompose header, and
-/// instantiated from the templatized version of this class's constructor.
-/// </remarks>
-class AutoPacketSubscriber {
-public:
-  // The type of the call centralizer
-  typedef void (*t_call)(void*, const AutoPacket&);
-
-  AutoPacketSubscriber(void) :
-    m_ti(nullptr),
-    m_arity(0),
-    m_pObj(nullptr),
-    m_pCall(nullptr)
-  {}
-
-  AutoPacketSubscriber(const AutoPacketSubscriber& rhs) :
-    m_subscriber(rhs.m_subscriber),
-    m_ti(rhs.m_ti),
-    m_arity(rhs.m_arity),
-    m_pObj(rhs.m_pObj),
-    m_pCall(rhs.m_pCall)
-  {}
-
-  /// <summary>
-  /// Constructs a new packet subscriber entry based on the specified subscriber
-  /// </summary>
-  /// <remarks>
-  /// This constructor increments the reference count on the passed object until the
-  /// object is freed.  A subscriber wraps the templated type, automatically mapping
-  /// desired arguments into the correct locations, via use of Decompose::Call and
-  /// a AutoPacket to provide type sources
-  /// </summary>
-  template<class T>
-  AutoPacketSubscriber(std::shared_ptr<T> subscriber):
-    m_subscriber(subscriber),
-    m_ti(&typeid(T)),
-    m_pObj(subscriber.get())
-  {
-    typedef Decompose<decltype(&T::AutoFilter)> t_decompose;
-    CallExtractor<T, std::is_same<Deferred, typename t_decompose::retType>::value> e;
-
-    m_arity = t_decompose::N;
-    m_pCall = e();
-  }
-
-protected:
-  // A hold on the enclosed subscriber
-  boost::any m_subscriber;
-
-  // The type information of this entry, used for profiling
-  const std::type_info* m_ti;
-
-  // The number of parameters that will be extracted from the repository object when making
-  // a Call.  This is used to prime the AutoPacket in order to make saturation checking work
-  // correctly.
-  size_t m_arity;
-
-  // This is the first argument that will be passed to the Call function defined below.  It
-  // is a pointer to an actual subscriber, but with type information omitted for performance.
-  void* m_pObj;
-
-  // The first argument of this static global is void*, but it is expected that the argument
-  // that will actually be passed is of a type corresponding to the member function bound
-  // by this operation.  Strong guarantees must be made that the types
-  t_call m_pCall;
-
-public:
-  // Accessor methods:
-  bool empty(void) const { return m_subscriber.empty(); }
-  size_t GetArity(void) const { return m_arity; }
-  boost::any GetSubscriber(void) const { return m_subscriber; }
-  const std::type_info* GetSubscriberTypeInfo(void) const { return m_ti; }
-
-  /// <summary>
-  /// Releases the bound subscriber and the corresponding arity, causing it to become disabled
-  /// </summary>
-  void ReleaseSubscriber(void) {
-    m_arity = 0;
-    m_subscriber = boost::any();
-  }
-
-  /// <returns>A pointer to the subscriber</returns>
-  void* GetSubscriberPtr(void) const { return m_pObj; }
-
-  /// <returns>A call lambda wrapping the associated subscriber</returns>
-  /// <remarks>
-  /// Parameters for the associated subscriber are obtained by querying the packet.
-  /// The packet must already be decorated with all required parameters for the
-  /// subscribers, or an exception will be thrown.
-  /// </remarks>
-  t_call GetCall(void) const { return m_pCall; }
 };
 
 /// <summary>
@@ -247,6 +149,59 @@ public:
   /// Registers the passed subscriber, if it defines a method called AutoFilter
   /// </summary>
   template<class T>
+  void AddSubscriber(AutoPacketSubscriber&& rhs) {
+    typedef Decompose<decltype(&T::AutoFilter)> t_decomposition;
+
+    // Cannot register a subscriber with zero arguments:
+    static_assert(t_decomposition::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
+
+    // Determine whether this subscriber already exists--perhaps, it is formerly disabled
+    auto q = m_subMap.find(typeid(T));
+    size_t subscriberIndex;
+    if(q != m_subMap.end()) {
+      AutoPacketSubscriber& entry = m_subscribers[q->second];
+      subscriberIndex = q->second;
+
+      if(!entry.empty())
+        // Already registered, no need to register a second time
+        return;
+
+      // Registered but previously removed, re-initialize
+      entry = AutoPacketSubscriber(sub);
+    }
+    else {
+      // Register the subscriber and pre-populate the arity:
+      subscriberIndex = m_subscribers.size();
+      m_subMap[typeid(T)] = subscriberIndex;
+      m_subscribers.push_back(AutoPacketSubscriber(sub));
+    }
+
+    // Prime the satisfaction graph for each element:
+    for(
+      auto ppCur = t_decomposition::Enumerate();
+      *ppCur;
+    ppCur++
+      ) {
+      // Obtain the decorator type at this position:
+      auto r = m_decorations.find(**ppCur);
+      if(r == m_decorations.end())
+        // Decorator formerly not encountered, introduce it:
+        r = m_decorations.insert(
+        t_decMap::value_type(
+        **ppCur,
+        AdjacencyEntry(**ppCur)
+        )
+        ).first;
+
+      // Now we need to update the adjacency entry with the new subscriber:
+      r->second.subscribers.push_back(subscriberIndex);
+    }
+  }
+
+  /// <summary>
+  /// Registers the passed subscriber, if it defines a method called AutoFilter
+  /// </summary>
+  template<class T>
   typename std::enable_if<
     has_autofilter<T>::value
   >::type AddSubscriber(const std::shared_ptr<T>& sub) {
@@ -265,7 +220,7 @@ public:
       if(!entry.empty())
         // Already registered, no need to register a second time
         return;
-     
+
       // Registered but previously removed, re-initialize
       entry = AutoPacketSubscriber(sub);
     }
@@ -280,17 +235,17 @@ public:
     for(
       auto ppCur = t_decomposition::Enumerate();
       *ppCur;
-      ppCur++
-    ) {
+    ppCur++
+      ) {
       // Obtain the decorator type at this position:
       auto r = m_decorations.find(**ppCur);
       if(r == m_decorations.end())
         // Decorator formerly not encountered, introduce it:
         r = m_decorations.insert(
-          t_decMap::value_type(
-            **ppCur,
-            AdjacencyEntry(**ppCur)
-          )
+        t_decMap::value_type(
+        **ppCur,
+        AdjacencyEntry(**ppCur)
+        )
         ).first;
 
       // Now we need to update the adjacency entry with the new subscriber:
