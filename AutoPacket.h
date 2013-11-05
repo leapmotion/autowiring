@@ -63,6 +63,8 @@ public:
     
     operator bool(void) const { return !!m_val; }
 
+    operator T&(void) const { return *m_val; }
+
     AutoCheckout& operator=(AutoCheckout&& rhs) {
       std::swap(m_parent, rhs.m_parent);
       std::swap(m_val, rhs.m_val);
