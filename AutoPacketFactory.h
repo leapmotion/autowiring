@@ -150,6 +150,19 @@ public:
       m_subscribers[q->second].ReleaseSubscriber();
   }
 
+  /// <returns>
+  /// True if the indicated type has been requested for use by some consumer
+  /// </returns>
+  /// <remarks>
+  /// This method is used to determine whether an AutoFilter consumer exists for the
+  /// specified type at the time of the call.  Note that this method may occassionally
+  /// return an incorrect result in a multithreaded context.
+  /// </remarks>
+  template<class T>
+  bool HasSubscribers(void) const { return HasSubscribers(typeid(T)); }
+
+  bool HasSubscribers(const std::type_info& ti) const;
+
   /// <summary>
   /// Obtains a new packet from the object pool and configures it with the current
   /// satisfaction graph

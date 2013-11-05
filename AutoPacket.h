@@ -259,8 +259,8 @@ public:
   /// True if the indicated type has been requested for use by some consumer
   /// </returns>
   /// <remarks>
-  /// This method is used to determine whether some consumer invoked Subscribe on
-  /// this type, or the corresponding factory, at some point prior to the call.
+  /// This method is used to determine whether an AutoFilter recipient existed
+  /// for the specified type at the time the packet was created
   /// </remarks>
   template<class T>
   bool HasSubscribers(void) const {return HasSubscribers(typeid(T));}

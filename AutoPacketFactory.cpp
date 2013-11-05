@@ -88,3 +88,8 @@ void AutoPacketFactory::AddSubscriber(AutoPacketSubscriber&& rhs) {
     r->second.subscribers.push_back(subscriberIndex);
   }
 }
+
+bool AutoPacketFactory::HasSubscribers(const std::type_info& ti) const {
+  auto decorator = FindDecorator(ti);
+  return !!decorator;
+}
