@@ -2,6 +2,7 @@
 #include "Decompose.h"
 #include "FilterPropertyExtractor.h"
 #include <boost/any.hpp>
+#include SHARED_PTR_HEADER
 
 class AutoPacket;
 class Deferred;

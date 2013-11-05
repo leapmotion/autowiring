@@ -1,5 +1,5 @@
 #pragma once
-#include <type_traits>
+#include TYPE_TRAITS_HEADER
 #include <typeinfo>
 
 /// <summary>
