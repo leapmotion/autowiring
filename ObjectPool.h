@@ -4,6 +4,7 @@
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <set>
+#include RVALUE_HEADER
 #include SHARED_PTR_HEADER
 
 template<class T>
