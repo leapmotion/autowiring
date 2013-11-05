@@ -322,8 +322,8 @@ TEST_F(DecoratorTest, VerifyReflexiveReciept) {
     EXPECT_TRUE(packet->Get(reflex)) << "Packet was unable to obtain a self-reference via Get";
     EXPECT_EQ(packet.get(), reflex) << "Packet reflexive reference was not an identity";
 
-    AutoPacket* cReflex;
-    EXPECT_TRUE(const_cast<const AutoPacket*>(packet)->Get(cReflex)) << "Packet was unable to obtain a self-reference via const Get";
+    const AutoPacket* cReflex;
+    EXPECT_TRUE(const_cast<const AutoPacket*>(packet.get())->Get(cReflex)) << "Packet was unable to obtain a self-reference via const Get";
     EXPECT_EQ(packet.get(), cReflex) << "Packet reflexive reference was not an identity";
   }
 
