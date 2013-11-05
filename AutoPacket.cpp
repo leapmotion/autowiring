@@ -15,6 +15,7 @@ AutoPacket::~AutoPacket()
 void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
   auto decorator = m_factory->FindDecorator(info);
   if(!decorator)
+    // Trivial return, there's no subscriber to this decoration
     return;
 
   const auto& satVec = m_factory->GetSubscriberVector();
