@@ -7,8 +7,7 @@ void AutoPacketFactory::AutoPacketResetter::operator()(AutoPacket& packet) const
   packet.Release();
 }
 
-AutoPacketFactory::AutoPacketFactory():
-  m_numSats(0)
+AutoPacketFactory::AutoPacketFactory()
 {
 }
 

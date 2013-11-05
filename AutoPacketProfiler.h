@@ -1,6 +1,6 @@
 #pragma once
 #include <boost/chrono/system_clocks.hpp>
-#include <typeindex>
+#include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 
 /// <summary>
