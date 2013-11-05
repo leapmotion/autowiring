@@ -220,14 +220,17 @@ public:
   /// </remarks>
   template<class T>
   T& Decorate(T&& t) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    auto*& pObj = m_mp[typeid(T)];
-    if(pObj)
-      throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
+    Object* retVal;
+    {
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      auto*& pObj = m_mp[typeid(T)];
+      if(pObj)
+        throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
+      retVal = pObj = new Enclosure<T>(std::move(t));
+    }
 
-    pObj = new Enclosure<T>(std::move(t));
     UpdateSatisfaction(typeid(T));
-    return static_cast<Enclosure<T>*>(pObj)->held;
+    return static_cast<Enclosure<T>*>(retVal)->held;
   }
 
   /// <returns>
