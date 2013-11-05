@@ -1,5 +1,6 @@
 #pragma once
 #include "Autowired.h"
+#include "AutoPacket.h"
 #include "AutoPacketSubscriber.h"
 #include "Decompose.h"
 #include "FilterPropertyExtractor.h"
