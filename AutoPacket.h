@@ -22,7 +22,8 @@ class AutoPacketSubscriber;
 /// Consumers who wish to advertise a particular field under multiple types must do so
 /// manually with the Advertise function.
 /// </remarks>
-class AutoPacket
+class AutoPacket:
+  public std::enable_shared_from_this<AutoPacket>
 {
 public:
   AutoPacket(void);
