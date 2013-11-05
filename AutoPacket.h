@@ -33,17 +33,20 @@ public:
   public:
     AutoCheckout(void) :
       m_parent(nullptr),
-      m_val(nullptr)
+      m_val(nullptr),
+      m_ready(false)
     {}
 
     AutoCheckout(AutoPacket& parent, T* val) :
       m_parent(&parent),
-      m_val(val)
+      m_val(val),
+      m_ready(false)
     {}
 
     AutoCheckout(AutoCheckout&& rhs) :
       m_parent(rhs.m_parent),
-      m_val(rhs.m_val)
+      m_val(rhs.m_val),
+      m_ready(rhs.m_ready)
     {
       rhs.m_parent = nullptr;
       rhs.m_val = nullptr;
@@ -51,18 +54,28 @@ public:
 
     ~AutoCheckout(void) {
       if(m_val)
-        m_parent->UpdateSatisfaction(typeid(T));
+        if(m_ready)
+          m_parent->UpdateSatisfaction(typeid(T));
+        else
+          m_parent->RevertSatisfaction(typeid(T));
     }
 
   private:
     AutoPacket* m_parent;
     T* m_val;
+    bool m_ready;
 
   public:
-    T* operator->(void) const { return m_val; }
+    /// <summary>
+    /// Causes the wrapped packet to be committed when the checkout is destroyed
+    /// </summary>
+    void Ready(void) {
+      m_ready = true;
+    }
     
+    // Operator overloads:
+    T* operator->(void) const { return m_val; }
     operator bool(void) const { return !!m_val; }
-
     operator T&(void) const { return *m_val; }
 
     AutoCheckout& operator=(AutoCheckout&& rhs) {
@@ -127,6 +140,11 @@ private:
   /// satisfied by this decoration.
   /// </remarks>
   void UpdateSatisfaction(const std::type_info& info);
+
+  /// <summary>
+  /// Reverses a satisfaction that was issued, as in by a checkout, but not completed
+  /// </summary>
+  void RevertSatisfaction(const std::type_info& info);
 
 public:
   /// <summary>
