@@ -53,11 +53,12 @@ public:
     }
 
     ~AutoCheckout(void) {
-      if(m_val)
+      if(m_val) {
         if(m_ready)
           m_parent->UpdateSatisfaction(typeid(T));
         else
           m_parent->RevertSatisfaction(typeid(T));
+      }
     }
 
   private:
