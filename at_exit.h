@@ -1,5 +1,5 @@
 #pragma once
-#include <memory>
+#include RVALUE_HEADER
 
 template<class Fn>
 struct AtExit {

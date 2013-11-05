@@ -3,8 +3,9 @@
 #include "FilterPropertyExtractor.h"
 #include "ObjectPool.h"
 #include <boost/any.hpp>
-#include <typeindex>
+#include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
+#include <vector>
 
 class AutoPacket;
 class Deferred;
@@ -179,10 +180,6 @@ private:
   /// broadcasts.
   /// </remarks>
   ObjectPool<AutoPacket, AutoPacketResetter> m_packets;
-
-  // Optimization value.  Stores the total number of all satisfactions.  This
-  // is equivalent to the sum of all of the sizes in the m_sats list.
-  size_t m_numSats;
 
   // Vector of known subscribers--a vector must be used because random access is
   // required due to its use in an adjacency list.

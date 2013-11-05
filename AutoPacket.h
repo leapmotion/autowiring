@@ -143,7 +143,7 @@ public:
   const T& Get(void) const {
     auto q = m_mp.find(typeid(T));
     if(q == m_mp.end())
-      throw_rethrowable("Attempted to obtain a value which was not decorated on this packet");
+      throw_rethrowable std::runtime_error("Attempted to obtain a value which was not decorated on this packet");
     return static_cast<Enclosure<T>*>(q->second)->held;
   }
 
