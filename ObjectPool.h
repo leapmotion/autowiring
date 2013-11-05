@@ -31,10 +31,11 @@ class ObjectPool
 {
 public:
   /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
-  ObjectPool(size_t limit = ~0, size_t maxPooled = ~0):
+  ObjectPool(size_t limit = ~0, size_t maxPooled = ~0, _Rx&& rx = _Rx()):
     m_limit(limit),
     m_maxPooled(maxPooled),
-    m_outstanding(0)
+    m_outstanding(0),
+    m_rx(std::move(rx))
   {}
 
   ~ObjectPool(void) {
