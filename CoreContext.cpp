@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "CoreContext.h"
 #include "AutoPacketFactory.h"
+#include "AutoPacketListener.h"
 #include "Autowired.h"
 #include "BoltBase.h"
 #include "CoreThread.h"
@@ -18,7 +19,16 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
   m_shouldStop(false),
   m_refCount(0)
 {
-  m_packetFactory.reset(new AutoPacketFactory);
+  // Prime the proxy map with the APL recipient:
+  auto ptr = make_shared<EventReceiverProxy<AutoPacketListener>>();
+  m_proxies[typeid(AutoPacketListener)] = ptr;
+  m_packetFactory.reset(
+    new AutoPacketFactory(
+      AutoFired<AutoPacketListener>(
+        std::move(ptr)
+      )
+    )
+  );
   ASSERT(pParent.get() != this);
 }
 

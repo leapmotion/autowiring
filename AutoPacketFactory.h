@@ -37,10 +37,22 @@ public:
   };
 
   AutoPacketFactory(void);
+
+  /// <summary>
+  /// Utility ctor, provided to allow AutoPacketFactory construction during CoreContext construction
+  /// </summary>
+  AutoPacketFactory(AutoFired<AutoPacketListener>&& apl);
+
   ~AutoPacketFactory(void);
 
 private:
   struct AutoPacketResetter {
+    AutoPacketResetter(void);
+
+    AutoPacketResetter(AutoPacketResetter&& rhs);
+
+    AutoPacketResetter(AutoFired<AutoPacketListener>&& apl);
+
     AutoFired<AutoPacketListener> m_apl;
 
     void operator()(AutoPacket& packet) const;

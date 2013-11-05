@@ -199,6 +199,20 @@ public:
     m_receiver = ctxt->GetEventRecieverProxy<T>();
   }
 
+  /// <summary>
+  /// Utility constructor, used when the receiver is already known
+  /// </summary>
+  AutoFired(const std::shared_ptr<EventReceiverProxy<T>>& receiver) :
+    m_receiver(receiver)
+  {}
+
+  /// <summary>
+  /// Utility constructor, used to support movement operations
+  /// </summary>
+  AutoFired(AutoFired&& rhs):
+    m_receiver(std::move(rhs.m_receiver))
+  {}
+
 private:
   std::shared_ptr<EventReceiverProxy<T>> m_receiver;
 
