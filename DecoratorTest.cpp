@@ -325,10 +325,39 @@ TEST_F(DecoratorTest, VerifyCheckout) {
 
     // Still no hits
     EXPECT_FALSE(filterA->m_called) << "Filter called before a decoration checkout expired";
+
+    // Mark ready so we get committed:
+    exterior.Ready();
   }
 
   // Verify a hit took place now
   EXPECT_TRUE(filterA->m_called) << "Filter was not called after all decorations were installed";
+}
+
+TEST_F(DecoratorTest, RollbackCorrectness) {
+  AutoRequired<FilterA> filterA;
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Obtain a packet for use with deferred decoration:
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<1>());
+
+  // Request and immediately allow the destruction of a checkout:
+  packet->Checkout<Decoration<0>>();
+
+  // Verify no hit took place--the checkout should have been cancelled:
+  EXPECT_FALSE(filterA->m_called) << "Filter was not called after all decorations were installed";
+
+  {
+    // Verify that we can try to issue another checkout:
+    auto checkout = packet->Checkout<Decoration<0>>();
+
+    // Mark ready so it gets satisfied:
+    checkout.Ready();
+  }
+
+  // That should have satisfied the filter:
+  EXPECT_TRUE(filterA->m_called) << "Filter not called on second-try checkout";
 }
 
 TEST_F(DecoratorTest, VerifyReflexiveReciept) {
