@@ -16,9 +16,9 @@ boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curCont
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
   m_pParent(pParent),
   m_shouldStop(false),
-  m_refCount(0),
-  m_packetFactory(new AutoPacketFactory)
+  m_refCount(0)
 {
+  m_packetFactory.reset(new AutoPacketFactory);
   ASSERT(pParent.get() != this);
 }
 
@@ -312,6 +312,37 @@ void CoreContext::UpdateDeferredElements(void) {
     delete *q;
 }
 
+void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+  {
+    // Add to our local collection:
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_eventReceivers.insert(pRecvr);
+
+    // Scan the list of compatible senders:
+    for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+      *q->second += pRecvr;
+  }
+
+  // Delegate ascending resolution, where possible.  This ensures that the parent context links
+  // this event receiver to compatible senders in the parent context itself.
+  if(m_pParent)
+    m_pParent->AddEventReceiver(pRecvr);
+}
+
+void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+  // Remove from the local collection
+  (boost::lock_guard<boost::mutex>)m_lock,
+  m_eventReceivers.erase(pRecvr);
+
+  // Notify all compatible senders that we're going away:
+  for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+    *q->second -= pRecvr;
+
+  // Delegate to the parent:
+  if(m_pParent)
+    m_pParent->RemoveEventReceiver(pRecvr);
+}
+
 void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
@@ -385,6 +416,10 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
 
   // Always add to the set of context members
   m_contextMembers.insert(ptr.get());
+}
+
+void CoreContext::AddPacketSubscriber(AutoPacketSubscriber&& rhs) {
+  m_packetFactory->AddSubscriber(std::move(rhs));
 }
 
 void CoreContext::NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener) {
