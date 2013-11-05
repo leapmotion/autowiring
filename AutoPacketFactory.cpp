@@ -3,6 +3,16 @@
 #include "AutoPacket.h"
 #include "AutoPacketListener.h"
 
+AutoPacketFactory::AutoPacketResetter::AutoPacketResetter(void) {}
+
+AutoPacketFactory::AutoPacketResetter::AutoPacketResetter(AutoPacketResetter&& rhs) :
+  m_apl(std::move(rhs.m_apl))
+{}
+
+AutoPacketFactory::AutoPacketResetter::AutoPacketResetter(AutoFired<AutoPacketListener>&& apl) :
+  m_apl(std::move(apl))
+{}
+
 void AutoPacketFactory::AutoPacketResetter::operator()(AutoPacket& packet) const {
   // Notify all listeners that a packet has just returned home:
   m_apl(&AutoPacketListener::OnPacketReturned)(packet);
@@ -11,13 +21,15 @@ void AutoPacketFactory::AutoPacketResetter::operator()(AutoPacket& packet) const
   packet.Release();
 }
 
-AutoPacketFactory::AutoPacketFactory()
-{
-}
+AutoPacketFactory::AutoPacketFactory(void)
+{}
+
+AutoPacketFactory::AutoPacketFactory(AutoFired<AutoPacketListener>&& apl) :
+  m_packets(~0, ~0, AutoPacketResetter(std::move(apl)))
+{}
 
 AutoPacketFactory::~AutoPacketFactory()
-{
-}
+{}
 
 std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   // Obtain a packet:
