@@ -71,6 +71,23 @@ public:
   }
 };
 
+/// <summary>
+/// This is a filter which, in addition to accepting a decoration, also accepts a packet and tries to decorate it
+/// </summary>
+class FilterC:
+  public FilterRoot
+{
+public:
+  void AutoFilter(AutoPacket& pkt, const Decoration<0>& zero) {
+    // Copy out:
+    m_called = true;
+    m_zero = zero;
+
+    // Add a decoration:
+    pkt.Decorate(Decoration<1>());
+  }
+};
+
 TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   vector<const type_info*> v;
 
@@ -289,4 +306,31 @@ TEST_F(DecoratorTest, VerifyCheckout) {
 
   // Verify a hit took place now
   EXPECT_TRUE(filterA->m_called) << "Filter was not called after all decorations were installed";
+}
+
+TEST_F(DecoratorTest, VerifyReflexiveReciept) {
+  AutoRequired<FilterA> filterA;
+  AutoRequired<FilterC> filterC;
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Obtain a packet first:
+  auto packet = factory->NewPacket();
+
+  // The packet should be able to obtain a pointer to itself:
+  {
+    AutoPacket* reflex;
+    EXPECT_TRUE(packet->Get(reflex)) << "Packet was unable to obtain a self-reference via Get";
+    EXPECT_EQ(packet.get(), reflex) << "Packet reflexive reference was not an identity";
+
+    AutoPacket* cReflex;
+    EXPECT_TRUE(const_cast<const AutoPacket*>(packet)->Get(cReflex)) << "Packet was unable to obtain a self-reference via const Get";
+    EXPECT_EQ(packet.get(), cReflex) << "Packet reflexive reference was not an identity";
+  }
+
+  // Decorate--should satisfy filterC
+  packet->Decorate(Decoration<0>());
+  EXPECT_TRUE(filterC->m_called) << "FilterC should have been satisfied with one decoration";
+
+  // FilterC should have also satisfied filterA:
+  EXPECT_TRUE(filterA->m_called) << "FilterA should have been satisfied by FilterC";
 }
