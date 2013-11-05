@@ -26,10 +26,12 @@ struct CallExtractor<T, true> {
   static void CallDeferred(T* pObj, const AutoPacket& repo) {
     const t_call call =
       reinterpret_cast<t_call>(
-      &BoundCall<AutoPacket, decltype(&T::AutoFilter), &T::AutoFilter>::Call
+        &BoundCall<AutoPacket, decltype(&T::AutoFilter), &T::AutoFilter>::Call
       );
-    *pObj += [pObj, &repo, call] {
-      call(pObj, repo);
+
+    auto shared = repo.shared_from_this();
+    *pObj += [pObj, shared, call] {
+      call(pObj, *shared);
     };
   }
 
