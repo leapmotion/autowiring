@@ -1,6 +1,7 @@
 #pragma once
 #include "Autowired.h"
 #include "Object.h"
+#include <boost/any.hpp>
 #include <boost/thread/mutex.hpp>
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP

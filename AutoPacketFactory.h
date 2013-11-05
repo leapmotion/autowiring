@@ -1,4 +1,5 @@
 #pragma once
+#include "Autowired.h"
 #include "Decompose.h"
 #include "FilterPropertyExtractor.h"
 #include "ObjectPool.h"
@@ -8,6 +9,7 @@
 #include <vector>
 
 class AutoPacket;
+class AutoPacketListener;
 class Deferred;
 class DispatchQueue;
 
@@ -168,6 +170,8 @@ public:
 
 private:
   struct AutoPacketResetter {
+    AutoFired<AutoPacketListener> m_apl;
+
     void operator()(AutoPacket& packet) const;
   };
 
