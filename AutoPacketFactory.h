@@ -17,7 +17,7 @@ struct CallExtractor {
   t_call operator()() const {
     typedef decltype(&T::AutoFilter) t_fnType;
     return reinterpret_cast<t_call>(
-      &Decompose<t_fnType>::template Call<AutoPacket, &T::AutoFilter>
+      &BoundCall<AutoPacket, t_fnType, &T::AutoFilter>::Call
     );
   }
 };
@@ -29,7 +29,7 @@ struct CallExtractor<T, true> {
   static void CallDeferred(T* pObj, const AutoPacket& repo) {
     const t_call call =
       reinterpret_cast<t_call>(
-        &Decompose<decltype(&T::AutoFilter)>::template Call<AutoPacket, &T::AutoFilter>
+        &BoundCall<AutoPacket, decltype(&T::AutoFilter), &T::AutoFilter>::Call
       );
     *pObj += [pObj, &repo, call] {
       call(pObj, repo);
