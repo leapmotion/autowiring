@@ -74,6 +74,9 @@ void AutoPacket::Reset(void) {
     curDst.remaining = curSrc.GetArity();
     curDst.subscriber = curSrc.GetSubscriber();
   }
+
+  // We will automatically satisfy any requests for AutoPacket:
+  UpdateSatisfaction(typeid(AutoPacket));
 }
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {

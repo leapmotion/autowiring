@@ -1,5 +1,21 @@
 #pragma once
+#include <type_traits>
 #include <typeinfo>
+
+/// <summary>
+/// Extended version of is_same
+/// </summary>
+/// <remarks>
+/// Inherits from true_type if T is the same as any of U1...UN
+/// </remarks>
+template<class T, class U1, class U2, class U3, class U4>
+struct is_any_same {
+  static const bool value =
+    std::is_same<T, U1>::value ||
+    std::is_same<T, U2>::value ||
+    std::is_same<T, U3>::value ||
+    std::is_same<T, U4>::value;
+};
 
 /// <summary>
 /// Provides some static reflection support for member function pointers
@@ -128,10 +144,10 @@ struct BoundCall<T, MemFn, memfn, 1>:
 {
   typedef Decompose<MemFn> t_decompose;
 
-  static void Call(typename t_decompose::type* pObj, const T& repo) {
-    const typename t_decompose::t_arg1* arg1;
-    repo.Get(arg1);
-    (pObj->*memfn)(*arg1);
+  static void Call(typename t_decompose::type* pObj, T& repo) {
+    (pObj->*memfn)(
+      repo.template Get<typename std::decay<typename t_decompose::t_arg1>::type>()
+    );
   }
 };
 
@@ -141,12 +157,11 @@ struct BoundCall<T, MemFn, memfn, 2>:
 {
   typedef Decompose<MemFn> t_decompose;
 
-  static void Call(typename t_decompose::type* pObj, const T& repo) {
-    const typename t_decompose::t_arg1* arg1;
-    const typename t_decompose::t_arg2* arg2;
-    repo.Get(arg1);
-    repo.Get(arg2);
-    (pObj->*memfn)(*arg1, *arg2);
+  static void Call(typename t_decompose::type* pObj, T& repo) {
+    (pObj->*memfn)(
+      repo.template Get<typename std::decay<typename t_decompose::t_arg1>::type>(),
+      repo.template Get<typename std::decay<typename t_decompose::t_arg2>::type>()
+    );
   }
 };
 
@@ -156,14 +171,12 @@ struct BoundCall<T, MemFn, memfn, 3>:
 {
   typedef Decompose<MemFn> t_decompose;
 
-  static void Call(typename t_decompose::type* pObj, const T& repo) {
-    const typename t_decompose::t_arg1* arg1;
-    const typename t_decompose::t_arg2* arg2;
-    const typename t_decompose::t_arg2* arg3;
-    repo.Get(arg1);
-    repo.Get(arg2);
-    repo.Get(arg3);
-    (pObj->*memfn)(*arg1, *arg2, *arg3);
+  static void Call(typename t_decompose::type* pObj, T& repo) {
+    (pObj->*memfn)(
+      repo.template Get<typename std::decay<typename t_decompose::t_arg1>::type>(),
+      repo.template Get<typename std::decay<typename t_decompose::t_arg2>::type>(),
+      repo.template Get<typename std::decay<typename t_decompose::t_arg3>::type>()
+    );
   }
 };
 
@@ -173,15 +186,12 @@ struct BoundCall<T, MemFn, memfn, 4>:
 {
   typedef Decompose<MemFn> t_decompose;
 
-  static void Call(typename t_decompose::type* pObj, const T& repo) {
-    const typename t_decompose::t_arg1* arg1;
-    const typename t_decompose::t_arg2* arg2;
-    const typename t_decompose::t_arg2* arg3;
-    const typename t_decompose::t_arg2* arg4;
-    repo.Get(arg1);
-    repo.Get(arg2);
-    repo.Get(arg3);
-    repo.Get(arg4);
-    (pObj->*memfn)(*arg1, *arg2, *arg3, *arg4);
+  static void Call(typename t_decompose::type* pObj, T& repo) {
+    (pObj->*memfn)(
+      repo.template Get<typename std::decay<typename t_decompose::t_arg1>::type>(),
+      repo.template Get<typename std::decay<typename t_decompose::t_arg2>::type>(),
+      repo.template Get<typename std::decay<typename t_decompose::t_arg3>::type>(),
+      repo.template Get<typename std::decay<typename t_decompose::t_arg4>::type>()
+    );
   }
 };

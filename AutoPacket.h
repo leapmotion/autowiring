@@ -147,17 +147,36 @@ public:
     return static_cast<Enclosure<T>*>(q->second)->held;
   }
 
+  template<class T>
+  typename std::enable_if<
+    std::is_same<AutoPacket, T>::value, T
+  >::type& Get(void) {
+    return *this;
+  }
+
   /// <summary>
   /// Determines whether this pipeline packet contains an entry of the specified type
   /// </summary>
   template<class T>
   bool Get(T*& out) const {
+    static_assert(!std::is_same<T, AutoPacket>::value, "Cannot obtain an non-const AutoPacket from a const AutoPacket");
+
     auto q = m_mp.find(typeid(T));
     if(q == m_mp.end() || !q->second) {
       out = nullptr;
       return false;
     }
     out = &static_cast<Enclosure<T>*>(q->second)->held;
+    return true;
+  }
+
+  bool Get(const AutoPacket*& out) const {
+    out = this;
+    return true;
+  }
+
+  bool Get(AutoPacket*& out) {
+    out = this;
     return true;
   }
 
