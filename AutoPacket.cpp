@@ -62,6 +62,7 @@ void AutoPacket::RevertSatisfaction(const std::type_info& info) {
     if(q == m_mp.end())
       return;
     pObj = q->second;
+    m_mp.erase(q);
   }
   if(pObj)
     delete pObj;
