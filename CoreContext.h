@@ -3,7 +3,6 @@
 #define _CORECONTEXT_H
 #include "at_exit.h"
 #include "AutoFactory.h"
-#include "AutoPacketFactory.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
 #include "CoreThread.h"
