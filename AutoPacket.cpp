@@ -54,6 +54,19 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
     }
 }
 
+void AutoPacket::RevertSatisfaction(const std::type_info& info) {
+  Object* pObj;
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    auto q = m_mp.find(info);
+    if(q == m_mp.end())
+      return;
+    pObj = q->second;
+  }
+  if(pObj)
+    delete pObj;
+}
+
 void AutoPacket::Release(void) {
   for(size_t i = m_satCounters.size(); i--;)
     m_satCounters[i].subscriber = boost::any();
