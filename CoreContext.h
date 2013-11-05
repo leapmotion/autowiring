@@ -3,6 +3,7 @@
 #define _CORECONTEXT_H
 #include "at_exit.h"
 #include "AutoFactory.h"
+#include "AutoPacketSubscriber.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
 #include "CoreThread.h"
@@ -195,37 +196,16 @@ protected:
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
   void UpdateDeferredElements(void);
-  
-  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    {
-      // Add to our local collection:
-      boost::lock_guard<boost::mutex> lk(m_lock);
-      m_eventReceivers.insert(pRecvr);
 
-      // Scan the list of compatible senders:
-      for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
-        *q->second += pRecvr;
-    }
+  /// <summary>
+  /// Adds the named event receiver to the collection of known receivers
+  /// </summary>
+  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
 
-    // Delegate ascending resolution, where possible.  This ensures that the parent context links
-    // this event receiver to compatible senders in the parent context itself.
-    if(m_pParent)
-      m_pParent->AddEventReceiver(pRecvr);
-  }
-
-  void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    // Remove from the local collection
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_eventReceivers.erase(pRecvr);
-
-    // Notify all compatible senders that we're going away:
-    for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
-      *q->second -= pRecvr;
-
-    // Delegate to the parent:
-    if(m_pParent)
-      m_pParent->RemoveEventReceiver(pRecvr);
-  };
+  /// <summary>
+  /// Removes the named event receiver from the collection of known receivers
+  /// </summary>
+  void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
@@ -254,6 +234,16 @@ protected:
   /// Overload of Add based on ContextMember
   /// </summary>
   void AddContextMember(const std::shared_ptr<ContextMember>& ptr);
+
+  /// <summary>
+  /// Forwarding routine, adds a packet subscriber to the internal packet factory
+  /// </summary>
+  void AddPacketSubscriber(AutoPacketSubscriber&& rhs);
+
+  /// <summary>
+  /// Default override, when a member does not have an autofilter routine
+  /// </summary>
+  void AddPacketSubscriber(const std::false_type&) {}
 
   /// <summary>
   /// Locates an available context member in this context
@@ -454,7 +444,7 @@ public:
       AddEventReceiver(pRecvr);
 
     // Subscribers:
-    m_packetFactory->AddSubscriber(value);
+    AddPacketSubscriber(AutoPacketSubscriberSelect<T>(value));
 
     // Notify any autowiring field that is currently waiting that we have a new member
     // to be considered.

@@ -14,37 +14,6 @@ class AutoPacketListener;
 class Deferred;
 class DispatchQueue;
 
-template<class T, bool is_deferred>
-struct CallExtractor {
-  typedef void(*t_call)(void*, const AutoPacket&);
-
-  t_call operator()() const {
-    typedef decltype(&T::AutoFilter) t_fnType;
-    return reinterpret_cast<t_call>(
-      &BoundCall<AutoPacket, t_fnType, &T::AutoFilter>::Call
-    );
-  }
-};
-
-template<class T>
-struct CallExtractor<T, true> {
-  typedef void(*t_call)(void*, const AutoPacket&);
-
-  static void CallDeferred(T* pObj, const AutoPacket& repo) {
-    const t_call call =
-      reinterpret_cast<t_call>(
-        &BoundCall<AutoPacket, decltype(&T::AutoFilter), &T::AutoFilter>::Call
-      );
-    *pObj += [pObj, &repo, call] {
-      call(pObj, repo);
-    };
-  }
-
-  t_call operator()() const {
-    return reinterpret_cast<t_call>(&CallDeferred);
-  }
-};
-
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
 /// </summary>
@@ -100,6 +69,9 @@ private:
   typedef std::unordered_map<std::type_index, size_t> t_subMap;
   t_subMap m_subMap;
 
+  // Utility override, does nothing
+  void AddSubscriber(std::false_type&&) {}
+
 public:
   // Accessor methods:
   const std::vector<AutoPacketSubscriber>& GetSubscriberVector(void) const { return m_subscribers; }
@@ -148,115 +120,15 @@ public:
   /// <summary>
   /// Registers the passed subscriber, if it defines a method called AutoFilter
   /// </summary>
-  template<class T>
-  void AddSubscriber(AutoPacketSubscriber&& rhs) {
-    typedef Decompose<decltype(&T::AutoFilter)> t_decomposition;
-
-    // Cannot register a subscriber with zero arguments:
-    static_assert(t_decomposition::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
-
-    // Determine whether this subscriber already exists--perhaps, it is formerly disabled
-    auto q = m_subMap.find(typeid(T));
-    size_t subscriberIndex;
-    if(q != m_subMap.end()) {
-      AutoPacketSubscriber& entry = m_subscribers[q->second];
-      subscriberIndex = q->second;
-
-      if(!entry.empty())
-        // Already registered, no need to register a second time
-        return;
-
-      // Registered but previously removed, re-initialize
-      entry = AutoPacketSubscriber(sub);
-    }
-    else {
-      // Register the subscriber and pre-populate the arity:
-      subscriberIndex = m_subscribers.size();
-      m_subMap[typeid(T)] = subscriberIndex;
-      m_subscribers.push_back(AutoPacketSubscriber(sub));
-    }
-
-    // Prime the satisfaction graph for each element:
-    for(
-      auto ppCur = t_decomposition::Enumerate();
-      *ppCur;
-    ppCur++
-      ) {
-      // Obtain the decorator type at this position:
-      auto r = m_decorations.find(**ppCur);
-      if(r == m_decorations.end())
-        // Decorator formerly not encountered, introduce it:
-        r = m_decorations.insert(
-        t_decMap::value_type(
-        **ppCur,
-        AdjacencyEntry(**ppCur)
-        )
-        ).first;
-
-      // Now we need to update the adjacency entry with the new subscriber:
-      r->second.subscribers.push_back(subscriberIndex);
-    }
-  }
+  void AddSubscriber(AutoPacketSubscriber&& rhs);
 
   /// <summary>
-  /// Registers the passed subscriber, if it defines a method called AutoFilter
+  /// Convenience override of AddSubscriber
   /// </summary>
   template<class T>
-  typename std::enable_if<
-    has_autofilter<T>::value
-  >::type AddSubscriber(const std::shared_ptr<T>& sub) {
-    typedef Decompose<decltype(&T::AutoFilter)> t_decomposition;
-
-    // Cannot register a subscriber with zero arguments:
-    static_assert(t_decomposition::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
-
-    // Determine whether this subscriber already exists--perhaps, it is formerly disabled
-    auto q = m_subMap.find(typeid(T));
-    size_t subscriberIndex;
-    if(q != m_subMap.end()) {
-      AutoPacketSubscriber& entry = m_subscribers[q->second];
-      subscriberIndex = q->second;
-
-      if(!entry.empty())
-        // Already registered, no need to register a second time
-        return;
-
-      // Registered but previously removed, re-initialize
-      entry = AutoPacketSubscriber(sub);
-    }
-    else {
-      // Register the subscriber and pre-populate the arity:
-      subscriberIndex = m_subscribers.size();
-      m_subMap[typeid(T)] = subscriberIndex;
-      m_subscribers.push_back(AutoPacketSubscriber(sub));
-    }
-
-    // Prime the satisfaction graph for each element:
-    for(
-      auto ppCur = t_decomposition::Enumerate();
-      *ppCur;
-    ppCur++
-      ) {
-      // Obtain the decorator type at this position:
-      auto r = m_decorations.find(**ppCur);
-      if(r == m_decorations.end())
-        // Decorator formerly not encountered, introduce it:
-        r = m_decorations.insert(
-        t_decMap::value_type(
-        **ppCur,
-        AdjacencyEntry(**ppCur)
-        )
-        ).first;
-
-      // Now we need to update the adjacency entry with the new subscriber:
-      r->second.subscribers.push_back(subscriberIndex);
-    }
+  void AddSubscriber(const std::shared_ptr<T>& rhs) {
+    AddSubscriber(AutoPacketSubscriberSelect<T>(rhs));
   }
-
-  template<class T>
-  typename std::enable_if<
-    !has_autofilter<T>::value
-  >::type AddSubscriber(const std::shared_ptr<T>& sub) {}
 
   template<class T>
   void RemoveSubscriber(const std::shared_ptr<T>& sub) {
