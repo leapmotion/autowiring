@@ -17,6 +17,22 @@ struct is_any_same {
     std::is_same<T, U4>::value;
 };
 
+struct type_info_constructable {
+  type_info_constructable(const type_info* ti = nullptr) :
+    ti(ti)
+  {}
+
+  const type_info* ti;
+
+  const type_info* operator->(void) const { return ti; }
+  operator const type_info*(void) const { return ti; }
+
+  template<class T>
+  struct rebind {
+    operator type_info_constructable(void) const {return type_info_constructable(typeid(T));}
+  };
+};
+
 /// <summary>
 /// Provides some static reflection support for member function pointers
 /// </summary>
@@ -43,6 +59,15 @@ struct Decompose<R(W::*)()> {
     static const std::type_info* ti[] = {nullptr};
     return ti;
   }
+
+  /// <summary>
+  /// Returns an array parameterized on the specified rebindable
+  /// </summary>
+  template<class R>
+  static const R(&Enumerate(void))[N + 1] {
+    static const R rb[] = {R()};
+    return rb;
+  }
 };
 
 template<class T, class MemFn, MemFn memfn, int arity = Decompose<MemFn>::N>
@@ -61,6 +86,12 @@ struct Decompose<R(W::*)(Arg1)> {
     static const std::type_info* ti[] = {&typeid(Arg1), nullptr};
     return ti;
   }
+
+  template<class R>
+  static const R(&Enumerate(void))[N + 1] {
+    static const R rb[] = {R::rebind<t_arg1>(), R()};
+    return rb;
+  }
 };
 
 template<class R, class W, class Arg1, class Arg2>
@@ -76,6 +107,18 @@ struct Decompose<R(W::*)(Arg1, Arg2)> {
   static const std::type_info* (&Enumerate(void))[N + 1] {
     static const std::type_info* ti[] = {&typeid(Arg1), &typeid(Arg2), nullptr};
     return ti;
+  }
+
+  template<class Token, class Fx>
+  static void Enumerate(Token& token, Fx& fx) {
+    fx.template operator()<t_arg1>();
+    fx.template operator()<t_arg2>();
+  }
+
+  template<class R>
+  static const R(&Enumerate(void))[N + 1] {
+    static const R rb[] = {R::rebind<t_arg1>(), R::rebind<t_arg2>(), R()};
+    return rb;
   }
 };
 
@@ -94,6 +137,12 @@ struct Decompose<R(W::*)(Arg1, Arg2, Arg3)> {
     static const std::type_info* ti[] = {&typeid(Arg1), &typeid(Arg2), &typeid(Arg3), nullptr};
     return ti;
   }
+
+  template<class R>
+  static const R(&Enumerate(void))[N + 1] {
+    static const R rb[] = {R::rebind<t_arg1>(), R::rebind<t_arg2>(), R::rebind<t_arg3>(), R()};
+    return rb;
+  }
 };
 
 template<class R, class W, class Arg1, class Arg2, class Arg3, class Arg4>
@@ -111,6 +160,12 @@ struct Decompose<R(W::*)(Arg1, Arg2, Arg3, Arg4)> {
   static const std::type_info* (&Enumerate(void))[N + 1] {
     static const std::type_info* ti[] = {&typeid(Arg1), &typeid(Arg2), &typeid(Arg3), &typeid(Arg4), nullptr};
     return ti;
+  }
+
+  template<class R>
+  static const R(&Enumerate(void))[N + 1] {
+    static const R rb[] = {R::rebind<t_arg1>(), R::rebind<t_arg2>(), R::rebind<t_arg3>(), R::rebind<t_arg4>(), R()};
+    return rb;
   }
 };
 

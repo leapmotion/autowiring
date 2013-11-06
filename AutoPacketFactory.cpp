@@ -69,23 +69,28 @@ void AutoPacketFactory::AddSubscriber(AutoPacketSubscriber&& rhs) {
 
   // Prime the satisfaction graph for each element:
   for(
-    auto ppCur = rhs.GetSubscriberArgs();
-    *ppCur;
-  ppCur++
-    ) {
+    auto pCur = rhs.GetSubscriberInput();
+    *pCur;
+  pCur++
+  ) {
     // Obtain the decorator type at this position:
-    auto r = m_decorations.find(**ppCur);
+    auto r = m_decorations.find(*pCur->ti);
     if(r == m_decorations.end())
       // Decorator formerly not encountered, introduce it:
       r = m_decorations.insert(
-      t_decMap::value_type(
-      **ppCur,
-      AdjacencyEntry(**ppCur)
-      )
+        t_decMap::value_type(
+          *pCur->ti,
+          AdjacencyEntry(*pCur->ti)
+        )
       ).first;
 
     // Now we need to update the adjacency entry with the new subscriber:
-    r->second.subscribers.push_back(subscriberIndex);
+    r->second.subscribers.push_back(
+      std::make_pair(
+        subscriberIndex,
+        pCur->is_optional
+      )
+    );
   }
 }
 
