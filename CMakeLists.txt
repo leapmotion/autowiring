@@ -40,7 +40,6 @@ set(
   DeferredCreationNotice.h
   DeferredCreationNotice.cpp
   deferred_ptr.h
-  DependentContext.h
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunkEventProxy.h
@@ -109,8 +108,6 @@ set(
   CurrentContextPusherTest.cpp
   DecoratorTest.h
   DecoratorTest.cpp
-  DependentContextTest.h
-  DependentContextTest.cpp
   DtorCorrectnessTest.h
   DtorCorrectnessTest.cpp
   EnclosedContextTestBase.h
