@@ -54,7 +54,8 @@ class Autowired;
 /// </summary>
 class CoreContext:
   public Object,
-  public TeardownNotifier
+  public TeardownNotifier,
+  public std::enable_shared_from_this<CoreContext>
 {
 protected:
   CoreContext(std::shared_ptr<CoreContext> pParent);
@@ -77,9 +78,6 @@ protected:
 
   // A pointer to the parent context
   std::shared_ptr<CoreContext> m_pParent;
-
-  // A back-reference to ourselves, weak in order to prevent a degenerate cyclic reference
-  std::weak_ptr<CoreContext> m_self;
 
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes away.
@@ -448,7 +446,7 @@ public:
   /// </summary>
   /// <returns>The previously current context</returns>
   std::shared_ptr<CoreContext> SetCurrent(void) {
-    std::shared_ptr<CoreContext> newCurrent = m_self.lock();
+    std::shared_ptr<CoreContext> newCurrent = shared_from_this();
     ASSERT(newCurrent);
     return SetCurrent(newCurrent);
   }
