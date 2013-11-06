@@ -9,7 +9,6 @@
 #include "CoreThread.h"
 #include "CurrentContextPusher.h"
 #include "DeferredBase.h"
-#include "DependentContext.h"
 #include "ExceptionFilter.h"
 #include "EventSender.h"
 #include "PolymorphicTypeForest.h"
@@ -71,57 +70,6 @@ public:
   /// </summary>
   /// <param name="pParent">An optional parent context.  If null, will default to the root context.</param>
   std::shared_ptr<CoreContext> Create(void);
-
-  /// <summary>
-  /// Creates a dependent context using the specified global structure as a reference entity
-  /// </summary>
-  /// <returns>A new dependent context with the requested members</returns>
-  /// <remarks>
-  /// The structure passed as type T is usually a simple structure containing nothing except
-  /// AutoRequired members which will populate the context with some required basic members.
-  /// The structure generally looks like this:
-  ///
-  /// struct UseCaseName {
-  ///   AutoRequired<GeneratorClass> m_generator;
-  ///   AutoRequired<FinderClass> m_finder;
-  /// };
-  ///
-  /// The dependent context has an autowired CoreContext member in it; this member is needed
-  /// in order to provide the sole guaranteed strong reference to the context that prevents
-  /// the whole thing from being freed.
-  ///
-  /// The current context is altered during this method call, but will be reset before it
-  /// returns.  The InitiateCoreThreads routine is not invoked on the created Context; the
-  /// caller is responsible for starting core threads if this is desired.
-  /// </remarks>
-  template<class T>
-  std::shared_ptr<DependentContext<T> > CreateDependentContext(void) {
-    // Complex statement, here's what's going on:
-    //  1) Create a new context, child of this one, and make it current
-    //  2) Create a new dependent context
-    //  3) T's ctor initializes all of T's AutoRequired members
-    //  4) AutoRequired members insert new members into the new CoreContext
-    //  5) DependentContext ctor is called, autowires in the current context into m_context
-    //  6) pusher's dtor is called, resets the current context
-    std::shared_ptr<CoreContext> dependent = Create();
-    CurrentContextPusher pusher(dependent);
-    std::shared_ptr<DependentContext<T> > retVal(
-      new DependentContext<T>(dependent)
-    );
-    return retVal;
-  }
-
-  /// <summary>
-  /// Virtually identical to CreateDependentContext, except adds the members of T to this context
-  /// </summary>
-  template<class T>
-  std::shared_ptr<DependentContext<T> > AugmentContext(void) {
-    CurrentContextPusher pusher(this);
-    std::shared_ptr<DependentContext<T> > retVal(
-      new DependentContext<T>(m_self.lock())
-    );
-    return retVal;
-  }
 
 protected:
   // General purpose lock for this class
