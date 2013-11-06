@@ -16,4 +16,24 @@ template<class T>
 class optional_ptr
 {
 public:
+  optional_ptr(const T* ptr = nullptr) :
+    m_ptr(ptr)
+  {}
+
+  optional_ptr(const T& rhs) :
+    m_ptr(&rhs)
+  {}
+
+  optional_ptr(const optional_ptr& rhs) :
+    m_ptr(rhs.m_ptr)
+  {}
+
+private:
+  // This is the only member of this class.  Because of how it's used, the optional_ptr
+  // class MUST NOT be resized by the introduction of other members.
+  const T* const m_ptr;
+
+public:
+  const T* operator->(void) const { return m_ptr; }
 };
+

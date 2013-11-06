@@ -22,10 +22,12 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
   const auto& subscribers = decorator->subscribers;
 
   // Update all satisfaction counters:
-  for(auto q = subscribers.begin(); q != subscribers.end(); q++)
-    if(!--m_satCounters[*q].remaining) {
+  for(auto q = subscribers.begin(); q != subscribers.end(); q++) {
+    const std::pair<size_t, bool>& cur = *q;
+
+    if(!m_satCounters[cur.first].Decrement(cur.second)) {
       // No entries remaining in this saturation, we can now make the call
-      auto& entry = satVec[*q];
+      auto& entry = satVec[cur.first];
       assert(entry.GetCall());
 
       if(m_profiler && m_profiler->ShouldProfile()) {
@@ -52,6 +54,7 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
         // No profiling required, just make the call directly
         entry.GetCall()(entry.GetSubscriberPtr(), *this);
     }
+  }
 }
 
 void AutoPacket::RevertSatisfaction(const std::type_info& info) {
@@ -86,7 +89,8 @@ void AutoPacket::Reset(void) {
     const auto& curSrc = vec[i];
     auto& curDst = m_satCounters[i];
 
-    curDst.remaining = curSrc.GetArity();
+    curDst.remaining = curSrc.GetArity() - curSrc.GetOptionalCount();
+    curDst.optional = curSrc.GetOptionalCount();
     curDst.subscriber = curSrc.GetSubscriber();
   }
 
@@ -104,8 +108,8 @@ bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
   const auto& subscribers = decorator->subscribers;
   for(size_t i = subscribers.size(); i--; )
     if(
-      subscribers[i] < m_satCounters.size() &&
-      m_satCounters[subscribers[i]].remaining
+      subscribers[i].first < m_satCounters.size() &&
+      m_satCounters[subscribers[i].first].remaining
     )
       // Found a valid, enabled subscriber
       return true;
