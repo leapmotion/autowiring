@@ -60,6 +60,8 @@ set(
   Object.h
   ObjectPool.h
   PolymorphicTypeForest.h
+  ReentrantCounter.h
+  ReentrantCounter.cpp
   SharedPtrHash.h
   TeardownNotifier.h
   TeardownNotifier.cpp
@@ -138,6 +140,8 @@ set(
   PolymorphicTypeForestTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
+  ReentrantCounterTest.h
+  ReentrantCounterTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
   TransientContextMemberTest.h
