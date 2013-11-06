@@ -57,7 +57,7 @@ public:
     ~AutoCheckout(void) {
       if(m_val) {
         if(m_ready)
-          m_parent->UpdateSatisfaction(typeid(T));
+          m_parent->UpdateSatisfaction(typeid(T), true);
         else
           m_parent->RevertSatisfaction(typeid(T));
       }
@@ -169,7 +169,7 @@ private:
   /// This method results in a call to the AutoFilter method on any subscribers which are
   /// satisfied by this decoration.
   /// </remarks>
-  void UpdateSatisfaction(const std::type_info& info);
+  void UpdateSatisfaction(const std::type_info& info, bool is_satisfied);
 
   /// <summary>
   /// Reverses a satisfaction that was issued, as in by a checkout, but not completed
@@ -275,10 +275,10 @@ public:
   template<class T>
   AutoCheckout<T> Checkout(void) {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    auto*& pObj = m_mp[typeid(T)];
-    if(pObj)
+    if(m_mp.count(typeid(T)))
       throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
 
+    auto*& pObj = m_mp[typeid(T)];
     if(!HasSubscribers<T>())
       return AutoCheckout<T>(*this, nullptr);
 
@@ -294,7 +294,7 @@ public:
   /// Marking a decoration as unsatisfiable 
   template<class T>
   void AntiDecorate(void) {
-
+    // Insert a null entry at this location:
   }
 
   /// <summary>
@@ -307,17 +307,18 @@ public:
   /// </remarks>
   template<class T>
   T& Decorate(T&& t) {
-    Object* retVal;
+    Object** ppObject;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      auto*& pObj = m_mp[typeid(T)];
-      if(pObj)
+      if(m_mp.count(typeid(T)))
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
-      retVal = pObj = new Enclosure<T>(std::move(t));
+
+      ppObject = &m_mp[typeid(T)];
     }
 
-    UpdateSatisfaction(typeid(T));
-    return static_cast<Enclosure<T>*>(retVal)->held;
+    *ppObject = new Enclosure<T>(std::move(t));
+    UpdateSatisfaction(typeid(T), true);
+    return static_cast<Enclosure<T>*>(*ppObject)->held;
   }
 
   /// <sumamry>
