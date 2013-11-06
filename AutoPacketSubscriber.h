@@ -6,6 +6,8 @@
 
 class AutoPacket;
 class Deferred;
+template<class T>
+class optional_ptr;
 
 template<class T, bool is_deferred>
 struct CallExtractor {
@@ -15,7 +17,7 @@ struct CallExtractor {
     typedef decltype(&T::AutoFilter) t_fnType;
     return reinterpret_cast<t_call>(
       &BoundCall<AutoPacket, t_fnType, &T::AutoFilter>::Call
-      );
+    );
   }
 };
 
@@ -40,6 +42,32 @@ struct CallExtractor<T, true> {
   }
 };
 
+struct AutoPacketSubscriberInput {
+  AutoPacketSubscriberInput(const std::type_info* ti = nullptr, bool is_optional = false) :
+    ti(ti),
+    is_optional(is_optional)
+  {}
+
+  const std::type_info* ti;
+  bool is_optional;
+
+  operator bool(void) const {
+    return !!ti;
+  }
+
+  template<class T>
+  struct rebind {
+    operator AutoPacketSubscriberInput() { return AutoPacketSubscriberInput(&typeid(T), false); }
+  };
+};
+
+template<class T>
+struct AutoPacketSubscriberInput::rebind<optional_ptr<T>> {
+  operator AutoPacketSubscriberInput(void) const {
+    return AutoPacketSubscriberInput(&typeid(T), true);
+  }
+};
+
 /// <summary>
 /// Subscriber wrap, represents a single logical subscriber
 /// </summary>
@@ -56,8 +84,9 @@ public:
 
   AutoPacketSubscriber(void) :
     m_ti(nullptr),
-    m_ppArgs(nullptr),
+    m_pArgs(nullptr),
     m_arity(0),
+    m_optionalCount(0),
     m_pObj(nullptr),
     m_pCall(nullptr)
   {}
@@ -65,8 +94,9 @@ public:
   AutoPacketSubscriber(const AutoPacketSubscriber& rhs) :
     m_subscriber(rhs.m_subscriber),
     m_ti(rhs.m_ti),
-    m_ppArgs(rhs.m_ppArgs),
+    m_pArgs(rhs.m_pArgs),
     m_arity(rhs.m_arity),
+    m_optionalCount(rhs.m_optionalCount),
     m_pObj(rhs.m_pObj),
     m_pCall(rhs.m_pCall)
   {}
@@ -84,6 +114,7 @@ public:
   AutoPacketSubscriber(const std::shared_ptr<T>& subscriber) :
     m_subscriber(subscriber),
     m_ti(&typeid(T)),
+    m_optionalCount(0),
     m_pObj(subscriber.get())
   {
     typedef Decompose<decltype(&T::AutoFilter)> t_decompose;
@@ -93,7 +124,9 @@ public:
     static_assert(t_decompose::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
     m_arity = t_decompose::N;
-    m_ppArgs = t_decompose::Enumerate();
+    m_pArgs = t_decompose::template Enumerate<AutoPacketSubscriberInput>();
+    for(auto pArg = m_pArgs; *pArg; pArg++)
+      m_optionalCount += pArg->is_optional;
     m_pCall = e();
   }
 
@@ -105,12 +138,15 @@ protected:
   const std::type_info* m_ti;
 
   // This subscriber's argument types
-  const std::type_info*const* m_ppArgs;
+  const AutoPacketSubscriberInput* m_pArgs;
 
   // The number of parameters that will be extracted from the repository object when making
   // a Call.  This is used to prime the AutoPacket in order to make saturation checking work
   // correctly.
   size_t m_arity;
+
+  // The number of arguments declared to be optional:
+  size_t m_optionalCount;
 
   // This is the first argument that will be passed to the Call function defined below.  It
   // is a pointer to an actual subscriber, but with type information omitted for performance.
@@ -125,9 +161,10 @@ public:
   // Accessor methods:
   bool empty(void) const { return m_subscriber.empty(); }
   size_t GetArity(void) const { return m_arity; }
+  size_t GetOptionalCount(void) const { return m_optionalCount; }
   boost::any GetSubscriber(void) const { return m_subscriber; }
   const std::type_info* GetSubscriberTypeInfo(void) const { return m_ti; }
-  const std::type_info*const* GetSubscriberArgs(void) const { return m_ppArgs; }
+  const AutoPacketSubscriberInput* GetSubscriberInput(void) const { return m_pArgs; }
 
   /// <summary>
   /// Releases the bound subscriber and the corresponding arity, causing it to become disabled

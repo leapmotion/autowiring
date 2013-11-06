@@ -21,8 +21,8 @@ TEST_F(OptionalDecorationTest, EnsureOrdinarySatisfaction) {
 
   // Obtain a new packet and verify that ordinary satisfaction works
   auto packet = factory->NewPacket();
-  packet->Decorate<Decoration<0>>();
-  packet->Decorate<Decoration<1>>();
+  packet->Decorate(Decoration<0>());
+  packet->Decorate(Decoration<1>());
 
   EXPECT_TRUE(filter->m_called) << "Optional decoration was not correctly parsed";
 }

@@ -58,6 +58,7 @@ set(
   LockReducedCollection.h
   Object.h
   ObjectPool.h
+  optional_ptr.h
   PolymorphicTypeForest.h
   SharedPtrHash.h
   TeardownNotifier.h

@@ -100,25 +100,47 @@ private:
     public Object
   {
   public:
-    Enclosure(void) {}
+    Enclosure(void) :
+      optional(&held)
+    {}
 
     Enclosure(const T& held) :
-      held(held)
+      held(held),
+      optional(&held)
     {}
 
     Enclosure(T&& held) :
-      held(std::move(held))
+      held(std::move(held)),
+      optional(&held)
     {}
 
     T held;
+
+    // An optional pointer, used during optional satisfaction.  Without this, there would be
+    // no durable location where a pointer to "held" could be found.
+    optional_ptr<T> optional;
   };
 
   /// <summary>
   /// A single subscription counter entry
   /// </summary>
   struct SatCounter {
+    // The MANDATORY remaining counter:
     size_t remaining;
+
+    // The OPTIONAL remaining counter:
+    size_t optional;
+
     boost::any subscriber;
+
+    /// <summary>
+    /// Decrements the optional, or mandatory counter based on the selection
+    /// </summary>
+    /// <returns>True if there are decorations yet unsatisfied, optional or not</returns>
+    bool Decrement(bool is_optional) {
+      is_optional ? optional-- : remaining--;
+      return remaining || optional;
+    }
   };
 
   // The associated packet factory:
@@ -165,38 +187,57 @@ public:
   /// </summary>
   template<class T>
   const T& Get(void) const {
-    auto q = m_mp.find(typeid(T));
-    if(q == m_mp.end())
+    T* retVal;
+    if(!Get(retVal))
       throw_rethrowable std::runtime_error("Attempted to obtain a value which was not decorated on this packet");
-    return static_cast<Enclosure<T>*>(q->second)->held;
+    return *retVal;
   }
 
   template<class T>
-  typename std::enable_if<
-    std::is_same<AutoPacket, T>::value, T
-  >::type& Get(void) {
-    return *this;
+  T& Get(void) {
+    T* retVal;
+    if(!Get(retVal))
+      throw_rethrowable std::runtime_error("Attempted to obtain a value which was not decorated on this packet");
+    return *retVal;
   }
 
   /// <summary>
   /// Determines whether this pipeline packet contains an entry of the specified type
   /// </summary>
   template<class T>
-  bool Get(T*& out) const {
+  bool Get(const T*& out) const {
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot obtain an non-const AutoPacket from a const AutoPacket");
 
     auto q = m_mp.find(typeid(T));
-    if(q == m_mp.end() || !q->second) {
+    if(q == m_mp.end()) {
       out = nullptr;
       return false;
     }
+
     out = &static_cast<Enclosure<T>*>(q->second)->held;
+    return true;
+  }
+
+  template<class T>
+  bool Get(const optional_ptr<T>*& out) const {
+    auto q = m_mp.find(typeid(T));
+    if(q == m_mp.end())
+      throw_rethrowable std::runtime_error("Attempted to obtain a value which was not decorated on this packet");
+
+    // Obtain a properly cast reference of the optional pointer
+    out = &static_cast<Enclosure<T>&>(*q->second).optional;
     return true;
   }
 
   bool Get(const AutoPacket*& out) const {
     out = this;
     return true;
+  }
+
+
+  template<class T>
+  bool Get(T*& out) {
+    return const_cast<const AutoPacket*>(this)->Get(const_cast<const T*&>(out));
   }
 
   bool Get(AutoPacket*& out) {

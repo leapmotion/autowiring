@@ -32,9 +32,10 @@ public:
     // Reflexive type information for this entry
     const std::type_info& ti;
 
-    // Indexes into the subscriber satisfaction vector.  Each entry in this list
-    // represents a single subscriber, and an offset in the m_subscribers vector
-    std::vector<size_t> subscribers;
+    // Indexes into the subscriber satisfaction vector.  Each entry in this list represents a single
+    // subscriber, and an offset in the m_subscribers vector.  The second element in the pair is the
+    // optional flag.
+    std::vector<std::pair<size_t, bool>> subscribers;
   };
 
   AutoPacketFactory(void);
