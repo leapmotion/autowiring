@@ -55,12 +55,8 @@ public:
     }
 
     ~AutoCheckout(void) {
-      if(m_val) {
-        if(m_ready)
-          m_parent->UpdateSatisfaction(typeid(T), true);
-        else
-          m_parent->RevertSatisfaction<T>();
-      }
+      if(m_val)
+        m_parent->CompleteCheckout<T>(m_ready);
     }
 
   private:
@@ -254,14 +250,24 @@ private:
   void RevertSatisfaction(void) {
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      auto q = m_mp.find(typeid(T));
-      if(q == m_mp.end())
-        return;
-      q->second.Unsatisfiable<T>();
+      auto& entry = m_mp[typeid(T)];
+      entry.initialized = true;
+      entry.Unsatisfiable<T>();
     }
 
     // Now we update the satisfaction:
     UpdateSatisfaction(typeid(T), false);
+  }
+
+  /// <summary>
+  /// Invoked from a checkout when a checkout has completed
+  /// <param name="ready">Ready flag, set to false if the decoration should be marked unsatisfiable</param>
+  template<class T>
+  void CompleteCheckout(bool ready) {
+    if(ready)
+      UpdateSatisfaction(typeid(T), true);
+    else
+      RevertSatisfaction<T>();
   }
 
 public:
