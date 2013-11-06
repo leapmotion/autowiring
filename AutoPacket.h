@@ -1,6 +1,7 @@
 #pragma once
 #include "Autowired.h"
 #include "Object.h"
+#include "optional_ptr.h"
 #include <boost/any.hpp>
 #include <boost/thread/mutex.hpp>
 #include TYPE_INDEX_HEADER
@@ -218,6 +219,10 @@ public:
   /// Checks out the specified type, providing it to the caller to be filled in
   /// </summary>
   /// <remarks>
+  /// The caller must call Ready on the returned value before it falls out of scope in order
+  /// to ensure that the checkout is eventually committed.  The checkout will be committed
+  /// when it falls out of scope if so marked.
+  /// </remarks>
   template<class T>
   AutoCheckout<T> Checkout(void) {
     boost::lock_guard<boost::mutex> lk(m_lock);
@@ -231,6 +236,16 @@ public:
     auto enclosure = new Enclosure<T>();
     pObj = enclosure;
     return AutoCheckout<T>(*this, &enclosure->held);
+  }
+
+  /// <summary>
+  /// Marks the named decoration as unsatisfiable
+  /// </summary>
+  /// <remarks>
+  /// Marking a decoration as unsatisfiable 
+  template<class T>
+  void AntiDecorate(void) {
+
   }
 
   /// <summary>
@@ -254,6 +269,22 @@ public:
 
     UpdateSatisfaction(typeid(T));
     return static_cast<Enclosure<T>*>(retVal)->held;
+  }
+
+  /// <sumamry>
+  /// Attaches a decoration which will only be valid for the duration of the call
+  /// </summary>
+  /// <remarks>
+  /// The attached decoration is only valid for AutoFilters which are valid during
+  /// this call.
+  /// </remarks>
+  template<class T>
+  void DecorateImmediate(T&& t) {
+    // Satisfy:
+    Decorate(std::move(&t));
+
+    // Now we have to evict the rhs to prevent subsequent satisfactions from trying
+    // to obtain this field:
   }
 
   /// <returns>
