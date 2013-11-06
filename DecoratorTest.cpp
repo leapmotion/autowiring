@@ -4,22 +4,10 @@
 #include "AutoPacketFactory.h"
 #include "AutoPacketListener.h"
 #include "FilterPropertyExtractor.h"
+#include "TestFixtures/Decoration.h"
 #include <boost/thread/barrier.hpp>
 
 using namespace std;
-
-/// <summary>
-/// A simple "decoration" class which will be added to a variety of sample packets
-/// </summary>
-template<int N>
-class Decoration {
-public:
-  Decoration(void) :
-    i(N)
-  {}
-
-  int i;
-};
 
 class FilterRoot {
 public:

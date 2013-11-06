@@ -143,6 +143,7 @@ set(
   ScopeTest.cpp
   SnoopTest.h
   SnoopTest.cpp
+  TestFixtures/Decoration.h
   TestFixtures/ExitRaceThreaded.h
   TestFixtures/SimpleInterface.h
   TestFixtures/SimpleObject.h
