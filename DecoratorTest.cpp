@@ -336,16 +336,11 @@ TEST_F(DecoratorTest, RollbackCorrectness) {
   // Verify no hit took place--the checkout should have been cancelled:
   EXPECT_FALSE(filterA->m_called) << "Filter was not called after all decorations were installed";
 
-  {
-    // Verify that we can try to issue another checkout:
-    auto checkout = packet->Checkout<Decoration<0>>();
-
-    // Mark ready so it gets satisfied:
-    checkout.Ready();
-  }
-
-  // That should have satisfied the filter:
-  EXPECT_TRUE(filterA->m_called) << "Filter not called on second-try checkout";
+  // We should not be able to obtain another checkout of this decoration on this packet:
+  EXPECT_ANY_THROW(packet->Checkout<Decoration<0>>()) << "An attempt to check out a decoration a second time should have failed";
+  
+  // We shouldn't be able to manually decorate, either:
+  EXPECT_ANY_THROW(packet->Decorate(Decoration<0>())) << "An attempt to manually add a previously failed decoration succeeded where it should not have";
 }
 
 TEST_F(DecoratorTest, VerifyReflexiveReciept) {
