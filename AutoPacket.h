@@ -293,8 +293,12 @@ public:
   /// <remarks>
   /// Marking a decoration as unsatisfiable 
   template<class T>
-  void AntiDecorate(void) {
+  void Unsatisfiable(void) {
     // Insert a null entry at this location:
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    if(m_mp.count(typeid(T)))
+      throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
+    m_mp[typeid(T)] = nullptr;
   }
 
   /// <summary>

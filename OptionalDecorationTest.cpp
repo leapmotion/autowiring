@@ -57,11 +57,11 @@ TEST_F(OptionalDecorationTest, VerifyEarlyOptOutSatisfaction) {
   auto packet = factory->NewPacket();
   packet->Decorate(Decoration<1>());
 
-  // Verify that we cannot antidecorate something that was already decorated:
-  EXPECT_THROW(packet->AntiDecorate<Decoration<1>>(), std::runtime_error) << "Antidecoration did not fail for an already-existing decoration";
+  // Verify that we cannot unsatisfy something that was already decorated:
+  EXPECT_THROW(packet->Unsatisfiable<Decoration<1>>(), std::runtime_error) << "Antidecoration did not fail for an already-existing decoration";
 
-  // Now manually antidecorate with the optional decoration:
-  packet->AntiDecorate<Decoration<0>>();
+  // Now manually unsatisfy with the optional decoration:
+  packet->Unsatisfiable<Decoration<0>>();
 
   // This should have satisfied this requirement and should not have passed the optional field:
   EXPECT_TRUE(filter->m_called) << "Filter was not invoked as expected when a decoration was contraindicated";
