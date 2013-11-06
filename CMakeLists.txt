@@ -131,6 +131,8 @@ set(
   MultiInheritTest.cpp
   ObjectPoolTest.h
   ObjectPoolTest.cpp
+  OptionalDecorationTest.h
+  OptionalDecorationTest.cpp
   PolymorphicTypeForestTest.h
   PolymorphicTypeForestTest.cpp
   PostConstructTest.h
