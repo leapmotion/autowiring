@@ -36,14 +36,14 @@ void AutoPacket::UpdateSatisfactionSpecific(size_t subscriberIndex) {
     m_profiler->AddProfilingInformation(
       *entry.GetSubscriberTypeInfo(),
       boost::chrono::high_resolution_clock::now() - before
-      );
+    );
   }
   else
     // No profiling required, just make the call directly
     entry.GetCall()(entry.GetSubscriberPtr(), *this);
 }
 
-void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
+void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfied) {
   auto decorator = m_factory->FindDecorator(info);
   if(!decorator)
     // Trivial return, there's no subscriber to this decoration
@@ -53,6 +53,11 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
   const auto& subscribers = decorator->subscribers;
   for(size_t i = subscribers.size(); i--;) {
     const auto& subscriber = subscribers[i];
+
+    if(!is_satisfied && !subscriber.second)
+      // Not satisfied, but this entry is not optional--we have to cancel and circle around
+      continue;
+
     if(!m_satCounters[subscriber.first].Decrement(subscriber.second))
       UpdateSatisfactionSpecific(subscriber.first);
   }
@@ -66,10 +71,13 @@ void AutoPacket::RevertSatisfaction(const std::type_info& info) {
     if(q == m_mp.end())
       return;
     pObj = q->second;
-    m_mp.erase(q);
+    q->second = nullptr;
   }
   if(pObj)
     delete pObj;
+
+  // Now we update the satisfaction:
+  UpdateSatisfaction(info, false);
 }
 
 void AutoPacket::Release(void) {
@@ -106,7 +114,7 @@ void AutoPacket::Reset(void) {
   }
 
   // We will automatically satisfy any requests for AutoPacket:
-  UpdateSatisfaction(typeid(AutoPacket));
+  UpdateSatisfaction(typeid(AutoPacket), true);
 }
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
