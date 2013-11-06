@@ -343,6 +343,25 @@ TEST_F(DecoratorTest, RollbackCorrectness) {
   EXPECT_ANY_THROW(packet->Decorate(Decoration<0>())) << "An attempt to manually add a previously failed decoration succeeded where it should not have";
 }
 
+TEST_F(DecoratorTest, VerifyAntiDecorate) {
+  AutoRequired<FilterA> filterA;
+  AutoRequired<AutoPacketFactory> factory;
+
+  {
+    // Obtain a new packet and mark an unsatisfiable decoration:
+    auto packet = factory->NewPacket();
+    packet->Unsatisfiable<Decoration<0>>();
+    EXPECT_ANY_THROW(packet->Decorate(Decoration<0>())) << "Decoration succeeded on a decoration marked unsatisfiable";
+  }
+
+  {
+    // Obtain a new packet and try to make a satisfied decoration unsatisfiable.
+    auto packet = factory->NewPacket();
+    packet->Decorate(Decoration<0>());
+    EXPECT_ANY_THROW(packet->Unsatisfiable<Decoration<0>>()) << "Succeeded in marking an already-existing decoration as unsatisfiable";
+  }
+}
+
 TEST_F(DecoratorTest, VerifyReflexiveReciept) {
   AutoRequired<FilterA> filterA;
   AutoRequired<FilterC> filterC;
