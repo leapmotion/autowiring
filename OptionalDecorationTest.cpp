@@ -48,3 +48,38 @@ TEST_F(OptionalDecorationTest, EnsureOmittedSatisfaction) {
   EXPECT_FALSE(filter->m_hadOptional) << "Optional pointer was passed even though no optional decoration was set";
   EXPECT_TRUE(filter->m_called) << "Optional call was not correctly made";
 }
+
+TEST_F(OptionalDecorationTest, VerifyEarlyOptOutSatisfaction) {
+  AutoRequired<OptionalFilter> filter;
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Obtain a new packet and add the mandatory decoration:
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<1>());
+
+  // Verify that we cannot antidecorate something that was already decorated:
+  EXPECT_THROW(packet->AntiDecorate<Decoration<1>>(), std::runtime_error) << "Antidecoration did not fail for an already-existing decoration";
+
+  // Now manually antidecorate with the optional decoration:
+  packet->AntiDecorate<Decoration<0>>();
+
+  // This should have satisfied this requirement and should not have passed the optional field:
+  EXPECT_TRUE(filter->m_called) << "Filter was not invoked as expected when a decoration was contraindicated";
+  EXPECT_FALSE(filter->m_hadOptional) << "Filter received the optional field, but this field was incorrectly assigned";
+}
+
+TEST_F(OptionalDecorationTest, VerifyCancelledCheckoutSatisfaction) {
+  AutoRequired<OptionalFilter> filter;
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Obtain a new packet and add the mandatory decoration:
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<1>());
+
+  // Allow a checkout to expire:
+  packet->Checkout<Decoration<0>>();
+
+  // This should have satisfied this requirement and should not have passed the optional field:
+  EXPECT_TRUE(filter->m_called) << "Filter was not invoked as expected when a checkout expired";
+  EXPECT_FALSE(filter->m_hadOptional) << "Filter received the optional field, but this field was incorrectly assigned";
+}
