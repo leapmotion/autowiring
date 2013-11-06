@@ -4,13 +4,8 @@
 #include "AutoPacketProfiler.h"
 #include <boost/any.hpp>
 
-AutoPacket::AutoPacket()
-{
-}
-
-AutoPacket::~AutoPacket()
-{
-}
+AutoPacket::AutoPacket() {}
+AutoPacket::~AutoPacket() {}
 
 void AutoPacket::UpdateSatisfactionSpecific(size_t subscriberIndex) {
   // No entries remaining in this saturation, we can now make the call
@@ -63,23 +58,6 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfie
   }
 }
 
-void AutoPacket::RevertSatisfaction(const std::type_info& info) {
-  Object* pObj;
-  {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    auto q = m_mp.find(info);
-    if(q == m_mp.end())
-      return;
-    pObj = q->second;
-    q->second = nullptr;
-  }
-  if(pObj)
-    delete pObj;
-
-  // Now we update the satisfaction:
-  UpdateSatisfaction(info, false);
-}
-
 void AutoPacket::Release(void) {
   for(size_t i = m_satCounters.size(); i--;) {
     auto& satCounter = m_satCounters[i];
@@ -97,10 +75,7 @@ void AutoPacket::Release(void) {
 
 void AutoPacket::Reset(void) {
   for(auto q = m_mp.begin(); q != m_mp.end(); q++)
-    if(q->second) {
-      delete q->second;
-      q->second = nullptr;
-    }
+    q->second.Reset();
 
   auto& vec = m_factory->GetSubscriberVector();
   m_satCounters.resize(vec.size());
