@@ -246,19 +246,6 @@ protected:
   void AddPacketSubscriber(const std::false_type&) {}
 
   /// <summary>
-  /// Locates an available context member in this context
-  /// </summary>
-  template<class T>
-  void FindByType(std::shared_ptr<T>& slot) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    if(!m_byType.Resolve(slot))
-      throw_rethrowable autowiring_error("An autowiring operation resulted in an ambiguous match");
-  }
-
-  // Interior type overrides:
-  void FindByType(std::shared_ptr<AutoPacketFactory>& slot) { slot = m_packetFactory; }
-
-  /// <summary>
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
   template<class T>
@@ -607,6 +594,19 @@ public:
     m_snoopers.erase(rcvr);
     RemoveEventReceiver(rcvr);
   }
+
+  /// <summary>
+  /// Locates an available context member in this context
+  /// </summary>
+  template<class T>
+  void FindByType(std::shared_ptr<T>& slot) {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    if(!m_byType.Resolve(slot))
+      throw_rethrowable autowiring_error("An autowiring operation resulted in an ambiguous match");
+  }
+
+  // Interior type overrides:
+  void FindByType(std::shared_ptr<AutoPacketFactory>& slot) { slot = m_packetFactory; }
 
   /// <summary>
   /// Registers a slot to be autowired
