@@ -34,6 +34,7 @@ private:
   const T* const m_ptr;
 
 public:
+  operator bool(void) const { return !!m_ptr; }
   const T* operator->(void) const { return m_ptr; }
 };
 
