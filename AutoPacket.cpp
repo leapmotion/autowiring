@@ -12,48 +12,49 @@ AutoPacket::~AutoPacket()
 {
 }
 
+void AutoPacket::UpdateSatisfactionSpecific(size_t subscriberIndex) {
+  // No entries remaining in this saturation, we can now make the call
+  const auto& satVec = m_factory->GetSubscriberVector();
+  auto& entry = satVec[subscriberIndex];
+  assert(entry.GetCall());
+
+  if(m_profiler && m_profiler->ShouldProfile()) {
+    // Record the current time before we hand control over to the call:
+    auto before = boost::chrono::high_resolution_clock::now();
+
+    // Make the actual call
+    entry.GetCall()(entry.GetSubscriberPtr(), *this);
+
+    // Record the total time spent in the call
+    // TODO:  This naive implementation will also add any time spent in
+    // subscribers which are reached from the subscriber defined above.
+    // A good profiling system should exclude the time spent in dependent
+    // subscribers by having some sort of thread-specific reentrancy
+    // detection on this function--perhaps by propagating out a "boost"
+    // value which will be subtracted by callers operating at higher
+    // elevation levels.
+    m_profiler->AddProfilingInformation(
+      *entry.GetSubscriberTypeInfo(),
+      boost::chrono::high_resolution_clock::now() - before
+      );
+  }
+  else
+    // No profiling required, just make the call directly
+    entry.GetCall()(entry.GetSubscriberPtr(), *this);
+}
+
 void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
   auto decorator = m_factory->FindDecorator(info);
   if(!decorator)
     // Trivial return, there's no subscriber to this decoration
     return;
 
-  const auto& satVec = m_factory->GetSubscriberVector();
-  const auto& subscribers = decorator->subscribers;
-
   // Update all satisfaction counters:
-  for(auto q = subscribers.begin(); q != subscribers.end(); q++) {
-    const std::pair<size_t, bool>& cur = *q;
-
-    if(!m_satCounters[cur.first].Decrement(cur.second)) {
-      // No entries remaining in this saturation, we can now make the call
-      auto& entry = satVec[cur.first];
-      assert(entry.GetCall());
-
-      if(m_profiler && m_profiler->ShouldProfile()) {
-        // Record the current time before we hand control over to the call:
-        auto before = boost::chrono::high_resolution_clock::now();
-
-        // Make the actual call
-        entry.GetCall()(entry.GetSubscriberPtr(), *this);
-
-        // Record the total time spent in the call
-        // TODO:  This naive implementation will also add any time spent in
-        // subscribers which are reached from the subscriber defined above.
-        // A good profiling system should exclude the time spent in dependent
-        // subscribers by having some sort of thread-specific reentrancy
-        // detection on this function--perhaps by propagating out a "boost"
-        // value which will be subtracted by callers operating at higher
-        // elevation levels.
-        m_profiler->AddProfilingInformation(
-          *entry.GetSubscriberTypeInfo(),
-          boost::chrono::high_resolution_clock::now() - before
-        );
-      }
-      else
-        // No profiling required, just make the call directly
-        entry.GetCall()(entry.GetSubscriberPtr(), *this);
-    }
+  const auto& subscribers = decorator->subscribers;
+  for(size_t i = subscribers.size(); i--;) {
+    const auto& subscriber = subscribers[i];
+    if(!m_satCounters[subscriber.first].Decrement(subscriber.second))
+      UpdateSatisfactionSpecific(subscriber.first);
   }
 }
 
@@ -72,8 +73,18 @@ void AutoPacket::RevertSatisfaction(const std::type_info& info) {
 }
 
 void AutoPacket::Release(void) {
-  for(size_t i = m_satCounters.size(); i--;)
-    m_satCounters[i].subscriber = boost::any();
+  for(size_t i = m_satCounters.size(); i--;) {
+    auto& satCounter = m_satCounters[i];
+
+    // Scan through the saturation counters, looking for any where the mandatory
+    // count is satisfied but the optional count is not:
+    if(satCounter.optional && !satCounter.remaining)
+      // We can satisfy this one now:
+      UpdateSatisfactionSpecific(i);
+
+    // Reset this subscriber unconditionally:
+    satCounter.subscriber = boost::any();
+  }
 }
 
 void AutoPacket::Reset(void) {

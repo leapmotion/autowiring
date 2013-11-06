@@ -89,6 +89,7 @@ private:
 public:
   // Accessor methods:
   const std::vector<AutoPacketSubscriber>& GetSubscriberVector(void) const { return m_subscribers; }
+  const t_decMap& GetDecorations(void) const { return m_decorations; }
 
   /// <summary>
   /// Finds the packet subscriber proper corresponding to a particular subscriber type
