@@ -25,7 +25,8 @@ void* ContextMember::operator new(size_t nBytes) {
   void* pRetVal = ::operator new(nBytes);
 #if ENABLE_NET_MON
     AutoCurrentContext ctxt;
-    shared_ptr<AutoNetworkMonitor> netMon = ctxt->FindByType<AutoNetworkMonitor>();
+    shared_ptr<AutoNetworkMonitor> netMon;
+    ctxt->FindByType(netMon);
     if(netMon)
       netMon->PreConstruct(pRetVal, nBytes);
 #endif
