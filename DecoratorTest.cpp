@@ -205,7 +205,7 @@ TEST_F(DecoratorTest, VerifyNoMultiDecorate) {
   // Obtain a packet and attempt redundant introduction:
   auto packet = factory->NewPacket();
   packet->Decorate(Decoration<0>());
-  EXPECT_THROW(packet->Decorate(Decoration<0>()), std::runtime_error) << "Redundant decoration did not throw an exception as expected";
+  EXPECT_ANY_THROW(packet->Decorate(Decoration<0>())) << "Redundant decoration did not throw an exception as expected";
 
   // Verify that a call has not yet been made
   EXPECT_FALSE(filterA->m_called) << "A call made on an idempotent packet decoration";
