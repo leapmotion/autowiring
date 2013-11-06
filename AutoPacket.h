@@ -89,6 +89,20 @@ public:
   };
 
 private:
+  template<class T>
+  class EnclosureUnsatisfied:
+    public Object
+  {
+  public:
+    EnclosureUnsatisfied(optional_ptr<T>&& optional = optional_ptr<T>()) :
+      optional(std::move(optional))
+    {}
+
+    // An optional pointer, used during optional satisfaction.  Without this, there would be
+    // no durable location where a pointer to "held" could be found.
+    optional_ptr<T> optional;
+  };
+
   /// <summary>
   /// A type enclosure, used to provide support similar to boost::any
   /// </summary>
@@ -97,28 +111,24 @@ private:
   /// </remarks>
   template<class T>
   class Enclosure:
-    public Object
+    public EnclosureUnsatisfied<T>
   {
   public:
     Enclosure(void) :
-      optional(&held)
+      EnclosureUnsatisfied(&held)
     {}
 
     Enclosure(const T& held) :
-      held(held),
-      optional(&held)
+      EnclosureUnsatisfied(&held),
+      held(held)
     {}
 
     Enclosure(T&& held) :
-      held(std::move(held)),
-      optional(&held)
+      EnclosureUnsatisfied(&held),
+      held(std::move(held))
     {}
 
     T held;
-
-    // An optional pointer, used during optional satisfaction.  Without this, there would be
-    // no durable location where a pointer to "held" could be found.
-    optional_ptr<T> optional;
   };
 
   /// <summary>
@@ -214,13 +224,11 @@ public:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot obtain an non-const AutoPacket from a const AutoPacket");
 
     auto q = m_mp.find(typeid(T));
-    if(q == m_mp.end()) {
-      out = nullptr;
-      return false;
-    }
-
-    out = &static_cast<Enclosure<T>*>(q->second)->held;
-    return true;
+    out =
+      q == m_mp.end() ?
+      nullptr :
+      static_cast<EnclosureUnsatisfied<T>*>(q->second)->optional;
+    return !!out;
   }
 
   template<class T>
@@ -230,7 +238,7 @@ public:
     auto q = m_mp.find(typeid(T));
     out =
       q != m_mp.end() ?
-      &static_cast<Enclosure<T>&>(*q->second).optional :
+      &static_cast<EnclosureUnsatisfied<T>&>(*q->second).optional :
       // Couldn't find this entry--whatever, it was optional anyway.  Point it at a
       // reference of our one-and-only statically null optional.
       &empty;
@@ -296,9 +304,10 @@ public:
   void Unsatisfiable(void) {
     // Insert a null entry at this location:
     boost::lock_guard<boost::mutex> lk(m_lock);
-    if(m_mp.count(typeid(T)))
+    auto*& pObj = m_mp[typeid(T)];
+    if(pObj)
       throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
-    m_mp[typeid(T)] = nullptr;
+    m_mp[typeid(T)] = new EnclosureUnsatisfied<T>();
   }
 
   /// <summary>
@@ -314,10 +323,9 @@ public:
     Object** ppObject;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      if(m_mp.count(typeid(T)))
-        throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
-
       ppObject = &m_mp[typeid(T)];
+      if(ppObject)
+        throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
     }
 
     *ppObject = new Enclosure<T>(std::move(t));
