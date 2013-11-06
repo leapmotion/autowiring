@@ -385,12 +385,20 @@ public:
   /// </remarks>
   template<class T>
   void Unsatisfiable(void) {
-    // Insert a null entry at this location:
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    auto& entry = m_mp[typeid(T)];
-    if(entry.initialized)
-      throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
-    entry.Unsatisfiable<T>();
+    {
+      // Insert a null entry at this location:
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      auto& entry = m_mp[typeid(T)];
+      if(entry.initialized)
+        throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
+
+      // Mark the entry as appropriate:
+      entry.initialized = true;
+      entry.Unsatisfiable<T>();
+    }
+
+    // Now trigger a rescan:
+    UpdateSatisfaction(typeid(T), false);
   }
 
   /// <summary>
