@@ -100,13 +100,15 @@ bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
     return false;
 
   const auto& subscribers = decorator->subscribers;
-  for(size_t i = subscribers.size(); i--; )
-    if(
-      subscribers[i].first < m_satCounters.size() &&
-      m_satCounters[subscribers[i].first].remaining
-    )
+  for(size_t i = subscribers.size(); i--; ) {
+    if(subscribers[i].first >= m_satCounters.size())
+      continue;
+
+    const auto& cur = m_satCounters[subscribers[i].first];
+    if(cur.remaining || cur.optional)
       // Found a valid, enabled subscriber
       return true;
+  }
 
   // No matches, end here
   return false;
