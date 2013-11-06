@@ -157,6 +157,11 @@ private:
   std::vector<SatCounter> m_satCounters;
 
   /// <summary>
+  /// Interior routine to UpdateSatisfaction
+  /// </summary>
+  void UpdateSatisfactionSpecific(size_t subscriberIndex);
+
+  /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
   /// </summary>
   /// <param name="info">The decoration which was just added to this packet</param>
@@ -220,12 +225,15 @@ public:
 
   template<class T>
   bool Get(const optional_ptr<T>*& out) const {
-    auto q = m_mp.find(typeid(T));
-    if(q == m_mp.end())
-      throw_rethrowable std::runtime_error("Attempted to obtain a value which was not decorated on this packet");
+    static const optional_ptr<T> empty;
 
-    // Obtain a properly cast reference of the optional pointer
-    out = &static_cast<Enclosure<T>&>(*q->second).optional;
+    auto q = m_mp.find(typeid(T));
+    out =
+      q != m_mp.end() ?
+      &static_cast<Enclosure<T>&>(*q->second).optional :
+      // Couldn't find this entry--whatever, it was optional anyway.  Point it at a
+      // reference of our one-and-only statically null optional.
+      &empty;
     return true;
   }
 
