@@ -121,6 +121,7 @@ public:
     m_ti(nullptr),
     m_pArgs(nullptr),
     m_arity(0),
+    m_requiredCount(0),
     m_optionalCount(0),
     m_pObj(nullptr),
     m_pCall(nullptr)
@@ -131,6 +132,7 @@ public:
     m_ti(rhs.m_ti),
     m_pArgs(rhs.m_pArgs),
     m_arity(rhs.m_arity),
+    m_requiredCount(rhs.m_requiredCount),
     m_optionalCount(rhs.m_optionalCount),
     m_pObj(rhs.m_pObj),
     m_pCall(rhs.m_pCall)
@@ -149,6 +151,7 @@ public:
   AutoPacketSubscriber(const std::shared_ptr<T>& subscriber) :
     m_subscriber(subscriber),
     m_ti(&typeid(T)),
+    m_requiredCount(0),
     m_optionalCount(0),
     m_pObj(subscriber.get())
   {
@@ -160,8 +163,16 @@ public:
 
     m_arity = t_decompose::N;
     m_pArgs = t_decompose::template Enumerate<AutoPacketSubscriberInput>();
-    for(auto pArg = m_pArgs; *pArg; pArg++)
-      m_optionalCount += pArg->subscriberType == inTypeOptional;
+    for(auto pArg = m_pArgs; *pArg; pArg++) {
+      switch(pArg->subscriberType) {
+      case inTypeRequired:
+        m_requiredCount++;
+        break;
+      case inTypeOptional:
+        m_optionalCount++;
+        break;
+      }
+    }
     m_pCall = e();
   }
 
@@ -180,6 +191,9 @@ protected:
   // correctly.
   size_t m_arity;
 
+  // The number of argumetns declared to be required:
+  size_t m_requiredCount;
+
   // The number of arguments declared to be optional:
   size_t m_optionalCount;
 
@@ -196,6 +210,7 @@ public:
   // Accessor methods:
   bool empty(void) const { return m_subscriber.empty(); }
   size_t GetArity(void) const { return m_arity; }
+  size_t GetRequiredCount(void) const { return m_requiredCount; }
   size_t GetOptionalCount(void) const { return m_optionalCount; }
   boost::any GetSubscriber(void) const { return m_subscriber; }
   const std::type_info* GetSubscriberTypeInfo(void) const { return m_ti; }
