@@ -466,10 +466,16 @@ public:
     return nullptr;
   }
 
-  // Overload for checkout types
+  // Checkout type overload
   template<class T, bool checkout>
   operator auto_out<T, checkout>(void) const {
     return auto_out<T, checkout>(packet.Checkout<T>());
+  }
+
+  // Pooled checkout type overload:
+  template<class T>
+  operator auto_pooled<T>(void) const {
+    return auto_pooled<T>(packet.Checkout<T>());
   }
 
   // This is our last-ditch attempt:  Run a query on the underlying packet
