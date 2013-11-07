@@ -119,20 +119,26 @@ private:
   {
   public:
     Enclosure(void) :
-      EnclosureShort(&held)
+      EnclosureShort(&m_held)
     {}
 
     Enclosure(const T& held) :
-      EnclosureShort(&held),
-      held(held)
+      EnclosureShort(&m_held),
+      m_held(held)
     {}
 
     Enclosure(T&& held) :
-      EnclosureShort(&held),
-      held(std::move(held))
+      EnclosureShort(&m_held),
+      m_held(std::move(held))
     {}
 
-    T held;
+  private:
+    T m_held;
+
+  public:
+    operator T*(void) { return ptr; }
+    operator T&(void) { return *ptr; }
+    operator const T&(void) const { return *ptr; }
   };
   
   /// <remarks>
@@ -340,13 +346,10 @@ public:
     if(entry.initialized)
       throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
 
-    if(!HasSubscribers<T>())
-      return AutoCheckout<T>(*this, nullptr);
-
-    return AutoCheckout<T>(
-      *this,
-      &entry.Initialize<T>().held
-    );
+    return
+      HasSubscribers<T>() ?
+      AutoCheckout<T>(*this, entry.Initialize<T>()) :
+      AutoCheckout<T>(*this, nullptr);
   }
 
   /// <summary>
@@ -395,8 +398,7 @@ public:
 
     auto& retVal = pEntry->Initialize(std::move(t));
     UpdateSatisfaction(typeid(T), true);
-    assert(&retVal.held == retVal.ptr);
-    return retVal.held;
+    return retVal;
   }
 
   /// <sumamry>
