@@ -380,10 +380,6 @@ TEST_F(DecoratorTest, VerifyReflexiveReciept) {
     AutoPacketAdaptor extractor(*packet);
     AutoPacket* reflex = extractor;
     EXPECT_EQ(packet.get(), reflex) << "Packet reflexive reference was not an identity";
-
-    const AutoPacket* cReflex;
-    EXPECT_TRUE(const_cast<const AutoPacket*>(packet.get())->Get(cReflex)) << "Packet was unable to obtain a self-reference via const Get";
-    EXPECT_EQ(packet.get(), cReflex) << "Packet reflexive reference was not an identity";
   }
 
   // Decorate--should satisfy filterC
