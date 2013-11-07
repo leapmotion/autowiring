@@ -171,6 +171,8 @@ public:
       case inTypeOptional:
         m_optionalCount++;
         break;
+      default:
+        break;
       }
     }
     m_pCall = e();
