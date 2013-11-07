@@ -89,9 +89,6 @@ void AutoPacket::PulseSatisfaction(const std::type_info& info) {
 }
 
 void AutoPacket::Release(void) {
-  for(auto q = m_mp.begin(); q != m_mp.end(); q++)
-    q->second.Release();
-
   for(size_t i = m_satCounters.size(); i--;) {
     auto& satCounter = m_satCounters[i];
 
@@ -104,9 +101,16 @@ void AutoPacket::Release(void) {
     // Reset this subscriber unconditionally:
     satCounter.subscriber = boost::any();
   }
+
+  // Now that all second chances are notified, we will release held objects:
+  for(auto q = m_mp.begin(); q != m_mp.end(); q++)
+    q->second.Release();
 }
 
 void AutoPacket::Reset(void) {
+  for(auto q = m_mp.begin(); q != m_mp.end(); q++)
+    q->second.satisfied = false;
+
   auto& vec = m_factory->GetSubscriberVector();
   m_satCounters.resize(vec.size());
   for(size_t i = vec.size(); i--;) {

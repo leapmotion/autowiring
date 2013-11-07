@@ -49,7 +49,7 @@ public:
   {}
 
   EnclosureImpl(T&& held) :
-    m_isInitialized(false)
+    m_isInitialized(true)
   {
     new (m_held) T(std::move(held));
   }
