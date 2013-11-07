@@ -478,11 +478,10 @@ public:
     return packet.Get<typename std::decay<T>::type>();
   }
 
-#ifndef _MSC_VER
-  // Windows can use the above cast to handle by-value coercions as necessary,
-  // but Linux cannot.  Unfortunately, Windows gets confused by the additional
-  // overload, and so we must provide just one overload on Windows, but two
-  // otherwise.
+  // MSVC and CLANG can use the above cast to handle by-value coercions as necessary,
+  // but GCC cannot.  Unfortunately, Windows gets confused by the additional overload,
+  // and so we must provide just one overload on Windows, but two otherwise.
+#if defined(__GNUC__) && !defined(__clang__)
   template<class T>
   operator T(void) const {
     return packet.Get<typename std::decay<T>::type>();
