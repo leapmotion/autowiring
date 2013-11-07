@@ -22,6 +22,11 @@ public:
     m_outstanding(0)
   {}
 
+  ~ObjectPoolBase(void) {
+    for(auto q = m_objs.begin(); q != m_objs.end(); q++)
+      delete *q;
+  }
+
 protected:
   boost::mutex m_lock;
   boost::condition_variable m_setCondition;
@@ -33,7 +38,27 @@ protected:
   size_t m_limit;
   size_t m_outstanding;
 
-  virtual void Return(T* ptr) = 0;
+  void Return(T* ptr) {
+    {
+      boost::lock_guard<boost::mutex> lk(this->m_lock);
+      m_outstanding--;
+      if(m_objs.size() < m_maxPooled) {
+        // Reset, insert, return
+        Reset(*ptr);
+        m_objs.insert(ptr);
+        m_setCondition.notify_one();
+        return;
+      }
+    }
+
+    // Object wasn't added.  Destroy it.
+    delete ptr;
+  }
+
+  /// <summary>
+  /// Actually performs a reset of the passed object
+  /// </summary>
+  virtual void Reset(T& ptr) = 0;
 
 public:
   /// <summary>
@@ -161,34 +186,14 @@ class ObjectPool:
 public:
   /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
   ObjectPool(size_t limit = ~0, size_t maxPooled = ~0, _Rx&& rx = _Rx()):
-    ObjectPoolBase(limit, maxPooled),
+    ObjectPoolBase<T>(limit, maxPooled),
     m_rx(std::move(rx))
   {}
-
-  ~ObjectPool(void) {
-    for(auto q = m_objs.begin(); q != m_objs.end(); q++)
-      delete *q;
-  }
 
 private:
   // Resetter, where relevant:
   _Rx m_rx;
 
 protected:
-  void Return(T* ptr) {
-    {
-      boost::lock_guard<boost::mutex> lk(m_lock);
-      m_outstanding--;
-      if(m_objs.size() < m_maxPooled) {
-        // Reset, insert, return
-        m_rx(*ptr);
-        m_objs.insert(ptr);
-        m_setCondition.notify_one();
-        return;
-      }
-    }
-
-    // Object wasn't added.  Destroy it.
-    delete ptr;
-  }
+  void Reset(T& obj) override { m_rx(obj); }
 };
