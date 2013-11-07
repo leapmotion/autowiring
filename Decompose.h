@@ -29,7 +29,7 @@ struct type_info_constructable {
 
   template<class T>
   struct rebind {
-    operator type_info_constructable(void) const {return type_info_constructable(typeid(T));}
+    operator type_info_constructable(void) const {return type_info_constructable(&typeid(T));}
   };
 };
 

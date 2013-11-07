@@ -143,3 +143,7 @@ bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
   // No matches, end here
   return false;
 }
+
+std::shared_ptr<AutoPacket> ExtractSharedPointer(const AutoPacketAdaptor& adaptor) {
+  return adaptor;
+}

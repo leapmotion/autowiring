@@ -1,5 +1,7 @@
 #pragma once
 #include "AutoCheckout.h"
+#include RVALUE_HEADER
+#include <algorithm>
 
 /// <summary>
 /// A utility type to positively declare an output to an AutoFilter
@@ -15,6 +17,11 @@
 template<class T, bool auto_ready = true>
 class auto_out {
 public:
+  auto_out(auto_out&& rhs) :
+    m_checkout(std::move(rhs.m_checkout)),
+    m_cancelled(false)
+  {}
+
   auto_out(AutoCheckout<T>&& checkout) :
     m_checkout(std::move(checkout)),
     m_cancelled(false)

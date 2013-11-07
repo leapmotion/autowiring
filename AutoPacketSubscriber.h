@@ -14,6 +14,11 @@ class auto_out;
 template<class T>
 class optional_ptr;
 
+/// <summary>
+/// Forward declaration circumvention, used to avoid circular reference issues
+/// </summary>
+std::shared_ptr<AutoPacket> ExtractSharedPointer(const AutoPacketAdaptor& adaptor);
+
 template<class T, bool is_deferred>
 struct CallExtractor {
   typedef void(*t_call)(void*, const AutoPacketAdaptor&);
@@ -38,7 +43,7 @@ struct CallExtractor<T, true> {
         &BoundCall<AutoPacketAdaptor, decltype(&T::AutoFilter), &T::AutoFilter>::Call
       );
 
-    std::shared_ptr<AutoPacket> shared = repo;
+    std::shared_ptr<AutoPacket> shared = ExtractSharedPointer(repo);
     *pObj += [pObj, shared, call] {
       call(pObj, *shared);
     };
