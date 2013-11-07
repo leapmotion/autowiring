@@ -296,13 +296,13 @@ TEST_F(DecoratorTest, VerifyCheckout) {
   packet->Decorate(Decoration<1>());
 
   {
-    AutoPacket::AutoCheckout<Decoration<0>> exterior;
+    AutoCheckout<Decoration<0>> exterior;
 
     {
-      AutoPacket::AutoCheckout<Decoration<0>> checkout = packet->Checkout<Decoration<0>>();
+      AutoCheckout<Decoration<0>> checkout = packet->Checkout<Decoration<0>>();
 
       // Verify we can move the original type:
-      AutoPacket::AutoCheckout<Decoration<0>> checkoutMoved(std::move(checkout));
+      AutoCheckout<Decoration<0>> checkoutMoved(std::move(checkout));
 
       // Verify no hits yet:
       EXPECT_FALSE(filterA->m_called) << "Filter called as a consequence of a checkout move operation";

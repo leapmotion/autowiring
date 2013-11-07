@@ -1,4 +1,5 @@
 #pragma once
+#include "auto_out.h"
 #include "Autowired.h"
 #include "AutoPacket.h"
 #include "AutoPacketSubscriber.h"
