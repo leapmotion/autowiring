@@ -400,7 +400,7 @@ public:
     }
 
     // Pulse satisfaction:
-    auto& retVal = pEntry->Initialize(const_cast<T*>(pt));
+    pEntry->Initialize(const_cast<T*>(pt));
     PulseSatisfaction(typeid(T));
 
     // Mark this entry as unsatisfiable:
