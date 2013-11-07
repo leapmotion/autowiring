@@ -1,9 +1,10 @@
 #pragma once
 #include "Autowired.h"
 #include "AutoCheckout.h"
-#include "Object.h"
 #include "auto_out.h"
+#include "Object.h"
 #include "optional_ptr.h"
+#include "SatCounter.h"
 #include <boost/any.hpp>
 #include <boost/thread/mutex.hpp>
 #include TYPE_INDEX_HEADER
