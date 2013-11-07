@@ -329,17 +329,6 @@ public:
     return true;
   }
 
-
-  template<class T>
-  bool Get(T*& out) {
-    return const_cast<const AutoPacket*>(this)->Get(const_cast<const T*&>(out));
-  }
-
-  bool Get(AutoPacket*& out) {
-    out = this;
-    return true;
-  }
-
   /// <summary>
   /// Provides the passed enumerator function with a list of all interior types
   /// </summary>
@@ -468,6 +457,10 @@ public:
 /// One could do:
 ///
 /// type t = AutoPacketExtractor(packet);
+///
+/// The packet extractor also provides additional utility extraction routines, which
+/// makes it a much more attractive option than trying to manually invoke Get on the
+/// packet directly.
 /// </remarks>
 class AutoPacketExtractor {
 public:
@@ -481,6 +474,10 @@ private:
 public:
   operator std::shared_ptr<AutoPacket>(void) const {
     return packet.shared_from_this();
+  }
+
+  operator AutoPacket&(void) {
+    return packet;
   }
 
   template<class T>
