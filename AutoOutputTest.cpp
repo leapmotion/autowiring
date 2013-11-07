@@ -24,10 +24,24 @@ public:
   Decoration<1>* m_rcvDecAddr;
 };
 
+class SimpleRequestor {
+public:
+  SimpleRequestor(void):
+    m_called(false)
+  {}
+
+  void AutoFilter(const Decoration<1>& dec) {
+    m_called = true;
+  }
+
+  bool m_called;
+};
+
 TEST_F(AutoOutputTest, VerifySimpleInput) {
   // Create our elements:
   Autowired<AutoPacketFactory> factory;
   AutoRequired<SimpleAutoOut> autoOut;
+  AutoRequired<SimpleRequestor> req;
 
   // Create the first decoration, this should trigger an autofilter invocation:
   auto packet = factory->NewPacket();
@@ -41,4 +55,7 @@ TEST_F(AutoOutputTest, VerifySimpleInput) {
 
   // Identity validation:
   EXPECT_EQ(pDec, autoOut->m_rcvDecAddr) << "Packet decoration must have been copied, address mismatch";
+
+  // Verify secondary satisfaction:
+  EXPECT_TRUE(req->m_called) << "Secondary satisfaction of an implicitly checked out decoration did not take place";
 }

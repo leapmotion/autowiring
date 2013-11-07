@@ -16,18 +16,32 @@ template<class T, bool auto_ready = true>
 class auto_out {
 public:
   auto_out(AutoCheckout<T>&& checkout) :
-    m_checkout(std::move(checkout))
-  {
-    // Mark ready by default:
-    m_checkout.Ready();
+    m_checkout(std::move(checkout)),
+    m_cancelled(false)
+  {}
+
+  ~auto_out(void) {
+    if(!m_cancelled)
+      m_checkout.Ready();
   }
 
-  ~auto_out(void) {}
-
 private:
+  bool m_cancelled;
   AutoCheckout<T> m_checkout;
 
 public:
+  void Cancel(void) const { m_cancelled = true; }
   T* operator->(void) const { return m_checkout; }
   operator T*(void) const { return m_checkout; }
+};
+
+// The non-autoready specialization is just a checkout alias:
+template<class T>
+class auto_out<T, false>:
+  public AutoCheckout<T>
+{
+public:
+  auto_out(AutoCheckout<T>&& checkout):
+    AutoCheckout<T>(std::move(checkout))
+  {}
 };
