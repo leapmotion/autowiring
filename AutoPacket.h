@@ -171,7 +171,7 @@ public:
     if(q != m_mp.end() && q->second.satisfied) {
       auto enclosure = static_cast<Enclosure<T>*>(q->second.pEnclosure);
       if(enclosure) {
-        out = *enclosure;
+        out = enclosure->get();
         return true;
       }
     }
@@ -215,8 +215,10 @@ public:
       entry->satisfied = true;
     }
 
-    if(HasSubscribers<T>())
-      return AutoCheckout<T>(*this, entry->Initialize<T>(), &AutoPacket::CompleteCheckout<T>);
+    if(HasSubscribers<T>()) {
+      auto& enclosure = entry->Initialize<T>();
+      return AutoCheckout<T>(*this, enclosure.get(), &AutoPacket::CompleteCheckout<T>);
+    }
 
     // Ensure we mark this entry unsatisfiable so that cleanup behavior works as expected
     entry->Release();
@@ -269,7 +271,7 @@ public:
 
     auto& retVal = pEntry->Initialize(std::move(t));
     UpdateSatisfaction(typeid(T), true);
-    return *(T*)retVal;
+    return *retVal.get();
   }
 
   /// <sumamry>

@@ -24,8 +24,7 @@ public:
   ~Enclosure(void) {}
 
   virtual void operator=(T&& rhs) = 0;
-  virtual operator T*(void) = 0;
-  virtual operator const T*(void) const = 0;
+  virtual T* get(void) = 0;
 };
 
 /// <summary>
@@ -87,10 +86,7 @@ public:
     }
   }
 
-  operator T*(void) override { return m_isInitialized ? (T*) m_held : nullptr; }
-  operator const T*(void) const override { return m_isInitialized ? (const T*) m_held : nullptr; }
-  operator T&(void) { return *(T*) m_held; }
-  operator const T&(void) const { return *(const T*) m_held; }
+  T* get(void) override { return m_isInitialized ? (T*) m_held : nullptr; }
 };
 
 template<class T>
@@ -124,6 +120,5 @@ public:
     *m_ptr = std::move(rhs);
   }
 
-  operator T*(void) override { return m_ptr.get(); }
-  operator const T*(void) const override { return m_ptr.get(); }
+  T* get(void) override { return m_ptr.get(); }
 };
