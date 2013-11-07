@@ -89,6 +89,9 @@ void AutoPacket::PulseSatisfaction(const std::type_info& info) {
 }
 
 void AutoPacket::Release(void) {
+  for(auto q = m_mp.begin(); q != m_mp.end(); q++)
+    q->second.Release();
+
   for(size_t i = m_satCounters.size(); i--;) {
     auto& satCounter = m_satCounters[i];
 
@@ -104,9 +107,6 @@ void AutoPacket::Release(void) {
 }
 
 void AutoPacket::Reset(void) {
-  for(auto q = m_mp.begin(); q != m_mp.end(); q++)
-    q->second.Reset();
-
   auto& vec = m_factory->GetSubscriberVector();
   m_satCounters.resize(vec.size());
   for(size_t i = vec.size(); i--;) {
