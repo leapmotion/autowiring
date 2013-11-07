@@ -67,16 +67,16 @@ private:
   {
   public:
     Enclosure(void) :
-      EnclosureShort(&m_held)
+      EnclosureShort<T>(&m_held)
     {}
 
     Enclosure(const T& held) :
-      EnclosureShort(&m_held),
+      EnclosureShort<T>(&m_held),
       m_held(held)
     {}
 
     Enclosure(T&& held) :
-      EnclosureShort(&m_held),
+      EnclosureShort<T>(&m_held),
       m_held(std::move(held))
     {}
 
@@ -84,9 +84,9 @@ private:
     T m_held;
 
   public:
-    operator T*(void) { return ptr; }
-    operator T&(void) { return *ptr; }
-    operator const T&(void) const { return *ptr; }
+    operator T*(void) { return this->ptr; }
+    operator T&(void) { return *this->ptr; }
+    operator const T&(void) const { return *this->ptr; }
   };
   
   /// <remarks>
@@ -100,7 +100,7 @@ private:
 
     ~DecorationDisposition(void) {
       Reset();
-      delete (void*) pEnclosure;
+      delete (char*) pEnclosure;
     }
 
     // Flag, used by the caller, to mark the enclosure as "taken".  This value is
@@ -140,7 +140,7 @@ private:
     void Unsatisfiable(void) {
       if(!pEnclosure)
         pEnclosure = reinterpret_cast<Enclosure<T>*>(new char[sizeof(Enclosure<T>)]);
-      *new (pEnclosure) EnclosureShort<T>();
+      new (pEnclosure) EnclosureShort<T>();
     }
 
     template<class T>
@@ -226,8 +226,6 @@ private:
       RevertSatisfaction<T>();
   }
 
-  template<class T> friend class AutoCheckout;
-
 public:
   /// <summary>
   /// Releases all exterior references to autowired members
@@ -301,10 +299,12 @@ public:
       entry->initialized = true;
     }
 
-    return
-      HasSubscribers<T>() ?
-      AutoCheckout<T>(*this, entry->Initialize<T>()) :
-      AutoCheckout<T>(*this, (entry->Unsatisfiable<T>(), nullptr));
+    if(HasSubscribers<T>())
+      return AutoCheckout<T>(*this, entry->Initialize<T>(), &AutoPacket::CompleteCheckout<T>);
+
+    // Ensure we mark this entry unsatisfiable so that cleanup behavior works as expected
+    entry->Unsatisfiable<T>();
+    return AutoCheckout<T>(*this, nullptr, &AutoPacket::CompleteCheckout<T>);
   }
 
   /// <summary>
@@ -422,7 +422,7 @@ public:
   // Optional pointer overload, tries to satisfy but doesn't throw if there's a miss
   template<class T>
   operator optional_ptr<T>(void) const {
-    typename const std::decay<T>::type* out;
+    const typename std::decay<T>::type* out;
     if(packet.Get(out))
       return out;
     return nullptr;
@@ -439,4 +439,15 @@ public:
   operator const T&(void) const {
     return packet.Get<typename std::decay<T>::type>();
   }
+
+#ifndef _MSC_VER
+  // Windows can use the above cast to handle by-value coercions as necessary,
+  // but Linux cannot.  Unfortunately, Windows gets confused by the additional
+  // overload, and so we must provide just one overload on Windows, but two
+  // otherwise.
+  template<class T>
+  operator T(void) const {
+    return packet.Get<typename std::decay<T>::type>();
+  }
+#endif
 };

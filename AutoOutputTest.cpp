@@ -117,8 +117,8 @@ TEST_F(AutoOutputTest, VerifyMultiOutputSatisfaction) {
     EXPECT_TRUE(req1->m_called) << "Simple requestor did not receive a call as expected";
 
     // Verify that one of the two packets was supplied, and the other was not:
-    EXPECT_NE(nullptr, autoOut->m_rcvDecAddr1) << "A decoration was not supplied when it had a subscription";
-    EXPECT_EQ(nullptr, autoOut->m_rcvDecAddr2) << "A decoration was supplied when there were no subscribers";
+    EXPECT_TRUE(nullptr != autoOut->m_rcvDecAddr1) << "A decoration was not supplied when it had a subscription";
+    EXPECT_TRUE(nullptr == autoOut->m_rcvDecAddr2) << "A decoration was supplied when there were no subscribers";
   }
 
   // Introduce a requestor interested in the other output:
@@ -134,7 +134,7 @@ TEST_F(AutoOutputTest, VerifyMultiOutputSatisfaction) {
     EXPECT_TRUE(req2->m_called) << "First requestor was not invoked on an output type";
 
     // Verify that both outputs were satisfied:
-    EXPECT_NE(nullptr, autoOut->m_rcvDecAddr1);
-    EXPECT_NE(nullptr, autoOut->m_rcvDecAddr2);
+    EXPECT_TRUE(nullptr != autoOut->m_rcvDecAddr1);
+    EXPECT_TRUE(nullptr != autoOut->m_rcvDecAddr2);
   }
 }

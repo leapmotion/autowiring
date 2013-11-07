@@ -6,22 +6,27 @@ class AutoPacket;
 template<class T>
 class AutoCheckout {
 public:
+  typedef void (AutoPacket::*t_completion)(bool);
+
   AutoCheckout(void) :
     m_parent(nullptr),
     m_val(nullptr),
-    m_ready(false)
+    m_ready(false),
+    completion(nullptr)
   {}
 
-  AutoCheckout(AutoPacket& parent, T* val) :
+  AutoCheckout(AutoPacket& parent, T* val, t_completion completion) :
     m_parent(&parent),
     m_val(val),
-    m_ready(false)
+    m_ready(false),
+    completion(completion)
   {}
 
   AutoCheckout(AutoCheckout&& rhs) :
     m_parent(rhs.m_parent),
     m_val(rhs.m_val),
-    m_ready(rhs.m_ready)
+    m_ready(rhs.m_ready),
+    completion(rhs.completion)
   {
     rhs.m_parent = nullptr;
     rhs.m_val = nullptr;
@@ -29,13 +34,14 @@ public:
 
   ~AutoCheckout(void) {
     if(m_val)
-      m_parent->CompleteCheckout<T>(m_ready);
+      (m_parent->*completion)(m_ready);
   }
 
 private:
   AutoPacket* m_parent;
   T* m_val;
   bool m_ready;
+  t_completion completion;
 
 public:
   /// <summary>
@@ -54,6 +60,8 @@ public:
   AutoCheckout& operator=(AutoCheckout&& rhs) {
     std::swap(m_parent, rhs.m_parent);
     std::swap(m_val, rhs.m_val);
+    m_ready = rhs.m_ready;
+    completion = rhs.completion;
     return *this;
   }
 };
