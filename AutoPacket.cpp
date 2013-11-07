@@ -49,6 +49,10 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfie
   for(size_t i = subscribers.size(); i--;) {
     const auto& subscriber = subscribers[i];
 
+    if(m_satCounters[subscriber.first])
+      // Ignore this entry, no matter what happens, something already caused it to be satisfied
+      continue;
+
     if(!is_satisfied && !subscriber.second)
       // Not satisfied, but this entry is not optional--we have to cancel and circle around
       continue;
@@ -58,26 +62,29 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfie
   }
 }
 
-void AutoPacket::ReverseSatisfaction(const std::type_info& info) {
+void AutoPacket::PulseSatisfaction(const std::type_info& info) {
   auto decorator = m_factory->FindDecorator(info);
   if(!decorator)
     return;
 
   // Roll back all satisfaction counters:
   const auto& subscribers = decorator->subscribers;
+  const auto& subscriberDescriptors = m_factory->GetSubscriberVector();
   for(size_t i = subscribers.size(); i--;) {
     const auto& subscriber = subscribers[i];
-    if(m_satCounters[subscriber.first])
-      // This guy bottomed out already, we don't touch him:
+
+    if(subscriberDescriptors[subscriber.second].IsDeferred())
+      // Deferred subscriber, nothing we can do here.
       continue;
 
-    if(subscriber.second)
-      // Optional subscription--we don't increment this back, because optional subscriptions
-      // are allowed to be null.  If the subscriber was not satisfied during the UpdateSatisfaction
-      // call, they may be satisfied at some later time.
+    auto& curCounter = m_satCounters[subscriber.first];
+    if(!curCounter.PseudoDecrement(subscriber.second))
+      // Still has entries outstanding, give up
       continue;
-
-    m_satCounters[subscriber.first].Increment(false);
+    
+    // Commit this decrementation, generate the call
+    curCounter.Decrement(subscriber.second);
+    UpdateSatisfactionSpecific(subscriber.first);
   }
 }
 
