@@ -298,16 +298,19 @@ public:
   /// </summary>
   template<class T>
   bool Get(const T*& out) const {
-    static_assert(!std::is_same<T, AutoPacket>::value, "Cannot obtain an non-const AutoPacket from a const AutoPacket");
+    static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
     auto q = m_mp.find(typeid(T));
-    if(q == m_mp.end()) {
-      out = nullptr;
-      return false;
+    if(q != m_mp.end() && q->second.initialized) {
+      auto enclosure = static_cast<Enclosure<T>*>(q->second.pEnclosure);
+      if(enclosure->ptr) {
+        out = enclosure->ptr;
+        return true;
+      }
     }
 
-    out = static_cast<Enclosure<T>*>(q->second.pEnclosure)->ptr;
-    return true;
+    out = nullptr;
+    return false;
   }
 
   /// <summary>
@@ -392,6 +395,7 @@ public:
 
     auto& retVal = pEntry->Initialize(std::move(t));
     UpdateSatisfaction(typeid(T), true);
+    assert(&retVal.held == retVal.ptr);
     return retVal.held;
   }
 
