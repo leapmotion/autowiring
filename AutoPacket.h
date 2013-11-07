@@ -340,15 +340,19 @@ public:
   /// </remarks>
   template<class T>
   AutoCheckout<T> Checkout(void) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    DecorationDisposition* entry;
+    {
+      boost::lock_guard<boost::mutex> lk(m_lock);
 
-    auto& entry = m_mp[typeid(T)];
-    if(entry.initialized)
-      throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
+      entry = &m_mp[typeid(T)];
+      if(entry->initialized)
+        throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
+      entry->initialized = true;
+    }
 
     return
       HasSubscribers<T>() ?
-      AutoCheckout<T>(*this, entry.Initialize<T>()) :
+      AutoCheckout<T>(*this, entry->Initialize<T>()) :
       AutoCheckout<T>(*this, nullptr);
   }
 
