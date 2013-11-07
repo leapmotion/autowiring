@@ -454,3 +454,37 @@ public:
   bool HasSubscribers(const std::type_info& ti) const;
 };
 
+/// <summary>
+/// Utility extractive wrapper
+/// </summary>
+/// <remarks>
+/// This class is useful in instances where implicitly casting is more convenient
+/// than explicitly naming the desired type and pulling it out of the packet with Get.
+///
+/// So, for instance, rather than:
+///
+/// type t = packet.Get<type>();
+///
+/// One could do:
+///
+/// type t = AutoPacketExtractor(packet);
+/// </remarks>
+class AutoPacketExtractor {
+public:
+  AutoPacketExtractor(AutoPacket& packet):
+    packet(packet)
+  {}
+
+private:
+  AutoPacket& packet;
+
+public:
+  operator std::shared_ptr<AutoPacket>(void) const {
+    return packet.shared_from_this();
+  }
+
+  template<class T>
+  operator T&(void) const {
+    return packet.Get<typename std::decay<T>::type>();
+  }
+};
