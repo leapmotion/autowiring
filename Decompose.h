@@ -60,9 +60,18 @@ struct Decompose<R(W::*)()> {
     return ti;
   }
 
-  /// <summary>
-  /// Returns an array parameterized on the specified rebindable
-  /// </summary>
+  /// <returns>
+  /// An array of type T, parameterized by the bound function's arguments
+  /// </returns>
+  /// <remarks>
+  /// Type T must be move-constructable.
+  ///
+  /// The returned array contains one more element than the arity of the decomposed member function
+  /// type.  Each element in the array is initialized based on the type of the corresponding argument
+  /// in the decomposed function.  Elements in the array are constructed using the "rebind" structure
+  /// which must be an interior type to type T.  An instance of type rebind should be castable to the
+  /// base type T, or it must be a function returning a value of type T.
+  /// </remarks>
   template<class T>
   static const T(&Enumerate(void))[N + 1] {
     static const T rb[] = {T()};
