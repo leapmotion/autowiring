@@ -95,14 +95,16 @@ private:
   public:
     // A redirection-style constructor, useful when the internally held value is not going to
     // be used
-    EnclosureShort(optional_ptr<T>&& rhs = optional_ptr<T>()) :
-      optional(std::move(rhs))
+    EnclosureShort(T* ptr = nullptr) :
+      ptr(ptr)
     {}
 
-    // An optional pointer, used during optional satisfaction.  Without this, there would be
-    // no durable location where a pointer to "held" could be found.  The value of this pointer
-    // is also used to assess whether the held value is satisfied or not.
-    optional_ptr<T> optional;
+    // The pointer to the space referred to by this enclosure.  Generally, this type is an
+    // Enclosure, and this will point to the "held" member.  Potentially, however, this field
+    // could be null, indicating that the decoration is unsatisfiable, or the field could
+    // point somewhere else entirely, indicating that the decoration is an immediate (IE, will
+    // only be valid during a call to DecorateImmediate).
+    T* ptr;
   };
 
   /// <summary>
@@ -187,9 +189,8 @@ private:
     }
 
     template<class T>
-    const optional_ptr<T>& Obtain(void) const {
-      static const optional_ptr<T> empty;
-      return initialized ? static_cast<Enclosure<T>&>(*pEnclosure).optional : empty;
+    const T* Obtain(void) const {
+      return initialized ? static_cast<Enclosure<T>&>(*pEnclosure).ptr : nullptr;
     }
   };
 
@@ -292,7 +293,6 @@ public:
     return *retVal;
   }
 
-
   /// <summary>
   /// Determines whether this pipeline packet contains an entry of the specified type
   /// </summary>
@@ -306,19 +306,7 @@ public:
       return false;
     }
 
-    out = &static_cast<Enclosure<T>*>(q->second.pEnclosure)->held;
-    return true;
-  }
-
-  template<class T>
-  bool Get(const optional_ptr<T>*& out) const {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    out = &m_mp[typeid(T)].Obtain<T>();
-    return true;
-  }
-
-  bool Get(const AutoPacket*& out) const {
-    out = this;
+    out = static_cast<Enclosure<T>*>(q->second.pEnclosure)->ptr;
     return true;
   }
 
@@ -465,18 +453,21 @@ private:
   AutoPacket& packet;
 
 public:
-  operator std::shared_ptr<AutoPacket>(void) const {
-    return packet.shared_from_this();
+  // Reflexive overloads:
+  operator AutoPacket*(void) const {return &packet;}
+  operator AutoPacket&(void) const {return packet;}
+  operator std::shared_ptr<AutoPacket>(void) const { return packet.shared_from_this(); }
+
+  // Optional pointer overload, tries to satisfy but doesn't throw if there's a miss
+  template<class T>
+  operator optional_ptr<T>(void) const {
+    typename const std::decay<T>::type* out;
+    if(packet.Get(out))
+      return out;
+    return nullptr;
   }
 
-  operator AutoPacket*(void) const {
-    return &packet;
-  }
-
-  operator AutoPacket&(void) const {
-    return packet;
-  }
-
+  // This is our last-ditch attempt:  Run a query on the underlying packet:
   template<class T>
   operator const T&(void) const {
     return packet.Get<typename std::decay<T>::type>();
