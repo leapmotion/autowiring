@@ -377,8 +377,8 @@ TEST_F(DecoratorTest, VerifyReflexiveReciept) {
 
   // The packet should be able to obtain a pointer to itself:
   {
-    AutoPacket* reflex;
-    EXPECT_TRUE(packet->Get(reflex)) << "Packet was unable to obtain a self-reference via Get";
+    AutoPacketExtractor extractor(*packet);
+    AutoPacket* reflex = extractor;
     EXPECT_EQ(packet.get(), reflex) << "Packet reflexive reference was not an identity";
 
     const AutoPacket* cReflex;
