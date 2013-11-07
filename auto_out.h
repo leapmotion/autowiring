@@ -12,13 +12,13 @@
 /// direct call to Ready before the object falls out of scope
 /// </remarks>
 template<class T, bool auto_ready = true>
-class auto_output {
+class auto_out {
 public:
-  auto_output(T& obj) :
+  auto_out(T& obj) :
     obj(obj)
   {}
 
-  ~auto_output(void) {}
+  ~auto_out(void) {}
 
 private:
   T& obj;

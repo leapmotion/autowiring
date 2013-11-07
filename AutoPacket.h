@@ -477,6 +477,12 @@ public:
     return nullptr;
   }
 
+  // Overload for checkout types
+  template<class T>
+  operator auto_out<T, true>(void) const {
+    return auto_out<T, true>(packet.Checkout());
+  }
+
   // This is our last-ditch attempt:  Run a query on the underlying packet
   template<class T>
   operator const T&(void) const {
