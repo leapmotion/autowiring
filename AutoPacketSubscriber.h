@@ -62,8 +62,7 @@ enum eSubscriberInputType {
   inTypeRequired,
   inTypeOptional,
   outTypeRef,
-  outTypeRefAutoReady,
-  outTypeAutoPooled
+  outTypeRefAutoReady
 };
 
 template<class T>
@@ -85,13 +84,6 @@ struct subscriber_traits<auto_out<T, auto_ready>>
 {
   typedef T type;
   static const eSubscriberInputType subscriberType = auto_ready ? outTypeRef : outTypeRefAutoReady;
-};
-
-template<class T>
-struct subscriber_traits<auto_pooled<T>>
-{
-  typedef T type;
-  static const eSubscriberInputType subscriberType = outTypeAutoPooled;
 };
 
 struct AutoPacketSubscriberInput {
