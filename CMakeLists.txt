@@ -48,6 +48,7 @@ set(
   DispatchQueue.cpp
   DispatchThunkEventProxy.h
   DispatchThunkEventProxy.cpp
+  Enclosure.h
   EventDispatcher.h
   EventReceiver.h
   EventReceiver.cpp
