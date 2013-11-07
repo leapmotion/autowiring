@@ -1,7 +1,7 @@
 #pragma once
 
 /// <summary>
-/// A wrapper type, used to indicate a pointer which cannot be deferred
+/// A wrapper type, used to indicate a pointer which may optionally be satisfied
 /// </summary>
 /// <remarks>
 /// An optional pointer denotes a field which may be omitted during a call to a filter
@@ -29,8 +29,7 @@ public:
   {}
 
 private:
-  // This is the only member of this class.  Because of how it's used, the optional_ptr
-  // class MUST NOT be resized by the introduction of other members.
+  // This is the only member of this class.
   const T* const m_ptr;
 
 public:
