@@ -138,3 +138,14 @@ TEST_F(AutoOutputTest, VerifyMultiOutputSatisfaction) {
     EXPECT_TRUE(nullptr != autoOut->m_rcvDecAddr2);
   }
 }
+
+TEST_F(AutoOutputTest, VerifyNoAmbiguousOutputs) {
+  // Create two output that will result in an ambiguous satisfaction condition:
+  AutoRequired<SimpleAutoOut> simpleAutoOut;
+  AutoRequired<CompoundAutoOut> compoundAutoOut;
+  Autowired<AutoPacketFactory> factory;
+
+  // Should throw an exception:
+  auto packet = factory->NewPacket();
+  EXPECT_ANY_THROW(packet->Decorate(Decoration<0>())) << "Ambiguous output decorations did not cause an exception as expected";
+}
