@@ -7,6 +7,7 @@ include_directories(
 set(
   Autowiring_SRCS
   at_exit.h
+  auto_out.h
   AutoFactory.h
   AutoPacket.h
   AutoPacket.cpp

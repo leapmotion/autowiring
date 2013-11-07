@@ -2,7 +2,7 @@
 #include "EnclosedContextTestBase.h"
 
 class AutoOutputTest:
-  EnclosedContextTestBase
+  public EnclosedContextTestBase
 {
 };
 
