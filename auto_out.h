@@ -25,4 +25,5 @@ private:
 
 public:
   T* operator->(void) const { return &obj; }
+  operator T*(void) const { return &obj; }
 };
