@@ -58,6 +58,7 @@ private:
     Enclosure<T>& Initialize(void) {
       if(!pEnclosure)
         pEnclosure = new EnclosureImpl<T>();
+      pEnclosure->Reset();
       return static_cast<Enclosure<T>&>(*pEnclosure);
     }
 
@@ -166,14 +167,15 @@ public:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
     auto q = m_mp.find(typeid(T));
-    if(q == m_mp.end() || !q->second.satisfied)
-      out = nullptr;
-    else {
-      out = *static_cast<Enclosure<T>*>(q->second.pEnclosure);
-      if(out)
+    if(q != m_mp.end() && q->second.satisfied) {
+      auto enclosure = static_cast<Enclosure<T>*>(q->second.pEnclosure);
+      if(enclosure) {
+        out = *enclosure;
         return true;
+      }
     }
 
+    out = nullptr;
     return false;
   }
 
@@ -216,7 +218,7 @@ public:
       return AutoCheckout<T>(*this, entry->Initialize<T>(), &AutoPacket::CompleteCheckout<T>);
 
     // Ensure we mark this entry unsatisfiable so that cleanup behavior works as expected
-    entry->pEnclosure->Release();
+    entry->Release();
     return AutoCheckout<T>(*this, nullptr, &AutoPacket::CompleteCheckout<T>);
   }
 
