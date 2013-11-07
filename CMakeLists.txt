@@ -95,6 +95,8 @@ endif()
 
 set(
   AutowiringTest_SRCS
+  AutowiringBenchmarkTest.h
+  AutowiringBenchmarkTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h
