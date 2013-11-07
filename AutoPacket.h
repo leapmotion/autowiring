@@ -2,6 +2,7 @@
 #include "Autowired.h"
 #include "AutoCheckout.h"
 #include "auto_out.h"
+#include "Enclosure.h"
 #include "Object.h"
 #include "optional_ptr.h"
 #include "SatCounter.h"
@@ -34,161 +35,45 @@ public:
   ~AutoPacket(void);
 
 private:
-  /// <summary>
-  /// A short enclosure, useful when we don't want to generate needless constructor calls
-  /// </summary>
-  template<class T>
-  class EnclosureShort:
-    public Object
-  {
-  public:
-    // A redirection-style constructor, useful when the internally held value is not going to
-    // be used
-    EnclosureShort(T* ptr = nullptr) :
-      ptr(ptr)
-    {}
-
-    // The pointer to the space referred to by this enclosure.  Generally, this type is an
-    // Enclosure, and this will point to the "held" member.  Potentially, however, this field
-    // could be null, indicating that the decoration is unsatisfiable, or the field could
-    // point somewhere else entirely, indicating that the decoration is an immediate (IE, will
-    // only be valid during a call to DecorateImmediate).
-    T* ptr;
-  };
-
-  /// <summary>
-  /// A type enclosure, used to provide support similar to boost::any
-  /// </summary>
-  /// <remarks>
-  /// We use this instead of boost::any so we can have access to a rvalue-move ctor.
-  /// </remarks>
-  template<class T>
-  class Enclosure:
-    public EnclosureShort<T>
-  {
-  public:
-    Enclosure(void) :
-      EnclosureShort<T>(&m_held)
-    {}
-
-    Enclosure(const T& held) :
-      EnclosureShort<T>(&m_held),
-      m_held(held)
-    {}
-
-    Enclosure(T&& held) :
-      EnclosureShort<T>(&m_held),
-      m_held(std::move(held))
-    {}
-
-  private:
-    T m_held;
-
-  public:
-    operator T*(void) { return this->ptr; }
-    operator T&(void) { return *this->ptr; }
-    operator const T&(void) const { return *this->ptr; }
-  };
-  
   /// <remarks>
   /// A disposition holder, used to maintain initialization state on the key
   /// </remarks>
   struct DecorationDisposition {
     DecorationDisposition(void) :
-      initialized(false),
+      satisfied(false),
       pEnclosure(nullptr)
     {}
 
     ~DecorationDisposition(void) {
-      Reset();
-      delete (char*) pEnclosure;
+      delete pEnclosure;
     }
 
-    // Flag, used by the caller, to mark the enclosure as "taken".  This value is
-    // generally managed externally.
-    bool initialized;
+    // Flag, used by the caller, to mark this enclosure as satisfied
+    bool satisfied;
 
     // The enclosure proper:
-    Object* pEnclosure;
+    EnclosureBase* pEnclosure;
 
     template<class T>
     Enclosure<T>& Initialize(void) {
-      if(pEnclosure)
-        new (pEnclosure) Enclosure<T>();
-      else
-        pEnclosure = new Enclosure<T>();
+      if(!pEnclosure)
+        pEnclosure = new EnclosureImpl<T>();
       return static_cast<Enclosure<T>&>(*pEnclosure);
     }
 
     template<class T>
-    Enclosure<T>& Initialize(T&& val) {
+    Enclosure<T>& Initialize(T&& rhs) {
       if(pEnclosure)
-        new (pEnclosure) Enclosure<T>(std::move(val));
+        *static_cast<Enclosure<T>*>(pEnclosure) = std::move(rhs);
       else
-        pEnclosure = new Enclosure<T>(std::move(val));
-      return static_cast<Enclosure<T>&>(*pEnclosure);
+        pEnclosure = new EnclosureImpl<T>(std::move(rhs));
+      return *static_cast<Enclosure<T>*>(pEnclosure);
     }
 
-    template<class T>
-    EnclosureShort<T>& Initialize(T* val) {
-      if(!pEnclosure)
-        pEnclosure = reinterpret_cast<Enclosure<T>*>(new char[sizeof(Enclosure<T>)]);
-      return *new (pEnclosure) EnclosureShort<T>(val);
+    void Release(void) {
+      if(pEnclosure)
+        pEnclosure->Release();
     }
-
-    void Reset(void) {
-      if(initialized) {
-        initialized = false;
-        assert(pEnclosure);
-        pEnclosure->~Object();
-      }
-    }
-
-    template<class T>
-    void Unsatisfiable(void) {
-      if(!pEnclosure)
-        pEnclosure = reinterpret_cast<Enclosure<T>*>(new char[sizeof(Enclosure<T>)]);
-      new (pEnclosure) EnclosureShort<T>();
-    }
-
-    template<class T>
-    const T* Obtain(void) const {
-      return initialized ? static_cast<Enclosure<T>&>(*pEnclosure).ptr : nullptr;
-    }
-  };
-
-  /// <summary>
-  /// A single subscription counter entry
-  /// </summary>
-  struct SatCounter {
-    // The MANDATORY remaining counter:
-    size_t remaining;
-
-    // The OPTIONAL remaining counter:
-    size_t optional;
-
-    boost::any subscriber;
-
-    /// <summary>
-    /// Decrements the optional, or mandatory counter based on the selection
-    /// </summary>
-    /// <returns>True if there are decorations yet unsatisfied, optional or not</returns>
-    bool Decrement(bool is_optional) {
-      is_optional ? optional-- : remaining--;
-      return remaining || optional;
-    }
-
-    /// <returns>
-    /// The disposition after a decrementation, without actually performing a decrementation
-    /// </returns>
-    bool PseudoDecrement(bool is_optional) {
-      return
-        is_optional ?
-        optional == 1 && !remaining :
-        !optional && remaining == 1;
-    }
-
-    operator bool(void) const { return !remaining && !optional; }
   };
 
   // The associated packet factory:
@@ -232,8 +117,8 @@ private:
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
       auto& entry = m_mp[typeid(T)];
-      entry.initialized = true;
-      entry.Unsatisfiable<T>();
+      entry.satisfied = true;
+      static_cast<Enclosure<T>*>(entry.pEnclosure)->Release();
     }
 
     // Now we update the satisfaction:
@@ -281,15 +166,14 @@ public:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
     auto q = m_mp.find(typeid(T));
-    if(q != m_mp.end() && q->second.initialized) {
-      auto enclosure = static_cast<Enclosure<T>*>(q->second.pEnclosure);
-      if(enclosure->ptr) {
-        out = enclosure->ptr;
+    if(q == m_mp.end() || !q->second.satisfied)
+      out = nullptr;
+    else {
+      out = *static_cast<Enclosure<T>*>(q->second.pEnclosure);
+      if(out)
         return true;
-      }
     }
 
-    out = nullptr;
     return false;
   }
 
@@ -307,28 +191,32 @@ public:
   /// <summary>
   /// Checks out the specified type, providing it to the caller to be filled in
   /// </summary>
+  /// <param name="use_pool">If set, allocations will use an object pool instead of an 
   /// <remarks>
   /// The caller must call Ready on the returned value before it falls out of scope in order
   /// to ensure that the checkout is eventually committed.  The checkout will be committed
   /// when it falls out of scope if so marked.
   /// </remarks>
   template<class T>
-  AutoCheckout<T> Checkout(void) {
+  AutoCheckout<T> Checkout(bool use_pool = false) {
+    // This allows us to install correct entries for decorated input requests
+    typedef typename subscriber_traits<T>::type type;
+
     DecorationDisposition* entry;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
 
-      entry = &m_mp[typeid(T)];
-      if(entry->initialized)
+      entry = &m_mp[typeid(type)];
+      if(entry->satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
-      entry->initialized = true;
+      entry->satisfied = true;
     }
 
     if(HasSubscribers<T>())
       return AutoCheckout<T>(*this, entry->Initialize<T>(), &AutoPacket::CompleteCheckout<T>);
 
     // Ensure we mark this entry unsatisfiable so that cleanup behavior works as expected
-    entry->Unsatisfiable<T>();
+    entry->pEnclosure->Release();
     return AutoCheckout<T>(*this, nullptr, &AutoPacket::CompleteCheckout<T>);
   }
 
@@ -345,12 +233,12 @@ public:
       // Insert a null entry at this location:
       boost::lock_guard<boost::mutex> lk(m_lock);
       auto& entry = m_mp[typeid(T)];
-      if(entry.initialized)
+      if(entry.satisfied)
         throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
 
       // Mark the entry as appropriate:
-      entry.initialized = true;
-      entry.Unsatisfiable<T>();
+      entry.satisfied = true;
+      entry.Release();
     }
 
     // Now trigger a rescan:
@@ -371,14 +259,14 @@ public:
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
       pEntry = &m_mp[typeid(T)];
-      if(pEntry->initialized)
+      if(pEntry->satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
-      pEntry->initialized = true;
+      pEntry->satisfied = true;
     }
 
     auto& retVal = pEntry->Initialize(std::move(t));
     UpdateSatisfaction(typeid(T), true);
-    return retVal;
+    return *(T*)retVal;
   }
 
   /// <sumamry>
@@ -395,17 +283,17 @@ public:
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
       pEntry = &m_mp[typeid(T)];
-      if(pEntry->initialized)
+      if(pEntry->satisfied)
         throw std::runtime_error("Cannot perform immediate decoration with type T, the requested decoration already exists");
-      pEntry->initialized = true;
+      pEntry->satisfied = true;
     }
 
     // Pulse satisfaction:
-    pEntry->Initialize(const_cast<T*>(pt));
+    auto& enclosure = pEntry->Initialize(const_cast<T*>(pt));
     PulseSatisfaction(typeid(T));
 
     // Mark this entry as unsatisfiable:
-    pEntry->Unsatisfiable<T>();
+    enclosure.Release();
 
     // Now trigger a rescan to hit any deferred, unsatisfiable entries:
     UpdateSatisfaction(typeid(T), false);
@@ -471,12 +359,6 @@ public:
   template<class T, bool checkout>
   operator auto_out<T, checkout>(void) const {
     return auto_out<T, checkout>(packet.Checkout<T>());
-  }
-
-  // Pooled checkout type overload:
-  template<class T>
-  operator auto_pooled<T>(void) const {
-    return auto_pooled<T>(packet.Checkout<T>());
   }
 
   // This is our last-ditch attempt:  Run a query on the underlying packet
