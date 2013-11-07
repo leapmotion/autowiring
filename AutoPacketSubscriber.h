@@ -1,14 +1,16 @@
 #pragma once
 #include "Decompose.h"
-#include "auto_out.h"
 #include "FilterPropertyExtractor.h"
-#include "optional_ptr.h"
 #include <boost/any.hpp>
 #include SHARED_PTR_HEADER
 
 class AutoPacket;
 class AutoPacketAdaptor;
 class Deferred;
+
+template<class T, bool auto_ready>
+class auto_out;
+
 template<class T>
 class optional_ptr;
 
