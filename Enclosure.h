@@ -91,7 +91,7 @@ public:
 
 template<class T>
 class EnclosureImpl<auto_pooled<T>>:
-  public Enclosure<T>
+  public Enclosure<auto_pooled<T>>
 {
 public:
   EnclosureImpl(void) {}
@@ -103,7 +103,7 @@ public:
 
   // Pool and corresponding shared pointer:
   AutoRequired<ObjectPool<T>> m_pool;
-  std::shared_ptr<T> m_ptr;
+  auto_pooled<T> m_ptr;
 
   void Release(void) override {
     m_ptr.reset();
@@ -114,11 +114,15 @@ public:
       (*m_pool)(m_ptr);
   }
 
+  void operator=(auto_pooled<T>&& rhs) override {
+    m_ptr = std::move(rhs);
+  }
+
   void operator=(T&& rhs) {
     if(!m_ptr)
       (*m_pool)(m_ptr);
     *m_ptr = std::move(rhs);
   }
 
-  T* get(void) override { return m_ptr.get(); }
+  auto_pooled<T>* get(void) override { return &m_ptr; }
 };
