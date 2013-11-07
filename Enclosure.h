@@ -101,12 +101,12 @@ public:
   EnclosureImpl(void) {}
 
   EnclosureImpl(T&& rhs) {
-    m_pool(m_ptr);
+    (*m_pool)(m_ptr);
     *m_ptr = std::move(rhs);
   }
 
   // Pool and corresponding shared pointer:
-  Autowired<ObjectPool<T>> m_pool;
+  AutoRequired<ObjectPool<T>> m_pool;
   std::shared_ptr<T> m_ptr;
 
   void Release(void) override {
@@ -115,12 +115,12 @@ public:
 
   void Reset(void) override {
     if(!m_ptr)
-      m_pool(m_ptr);
+      (*m_pool)(m_ptr);
   }
 
   void operator=(T&& rhs) {
     if(!m_ptr)
-      m_pool(m_ptr);
+      (*m_pool)(m_ptr);
     *m_ptr = std::move(rhs);
   }
 
