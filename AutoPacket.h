@@ -131,6 +131,7 @@ private:
     void Reset(void) {
       if(initialized) {
         initialized = false;
+        assert(pEnclosure);
         pEnclosure->~Object();
       }
     }
@@ -303,7 +304,7 @@ public:
     return
       HasSubscribers<T>() ?
       AutoCheckout<T>(*this, entry->Initialize<T>()) :
-      AutoCheckout<T>(*this, nullptr);
+      AutoCheckout<T>(*this, (entry->Unsatisfiable<T>(), nullptr));
   }
 
   /// <summary>
