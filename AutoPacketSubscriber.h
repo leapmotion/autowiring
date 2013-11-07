@@ -5,31 +5,31 @@
 #include SHARED_PTR_HEADER
 
 class AutoPacket;
-class AutoPacketExtractor;
+class AutoPacketAdaptor;
 class Deferred;
 template<class T>
 class optional_ptr;
 
 template<class T, bool is_deferred>
 struct CallExtractor {
-  typedef void(*t_call)(void*, const AutoPacketExtractor&);
+  typedef void(*t_call)(void*, const AutoPacketAdaptor&);
 
   t_call operator()() const {
     typedef decltype(&T::AutoFilter) t_fnType;
     return reinterpret_cast<t_call>(
-      &BoundCall<AutoPacketExtractor, t_fnType, &T::AutoFilter>::Call
+      &BoundCall<AutoPacketAdaptor, t_fnType, &T::AutoFilter>::Call
     );
   }
 };
 
 template<class T>
 struct CallExtractor<T, true> {
-  typedef void(*t_call)(void*, const AutoPacketExtractor&);
+  typedef void(*t_call)(void*, const AutoPacketAdaptor&);
 
-  static void CallDeferred(T* pObj, const AutoPacketExtractor& repo) {
+  static void CallDeferred(T* pObj, const AutoPacketAdaptor& repo) {
     const t_call call =
       reinterpret_cast<t_call>(
-        &BoundCall<AutoPacketExtractor, decltype(&T::AutoFilter), &T::AutoFilter>::Call
+        &BoundCall<AutoPacketAdaptor, decltype(&T::AutoFilter), &T::AutoFilter>::Call
       );
 
     std::shared_ptr<AutoPacket> shared = repo;
@@ -81,7 +81,7 @@ struct AutoPacketSubscriberInput::rebind<optional_ptr<T>> {
 class AutoPacketSubscriber {
 public:
   // The type of the call centralizer
-  typedef void(*t_call)(void*, const AutoPacketExtractor&);
+  typedef void(*t_call)(void*, const AutoPacketAdaptor&);
 
   AutoPacketSubscriber(void) :
     m_ti(nullptr),

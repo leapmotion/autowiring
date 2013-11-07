@@ -449,15 +449,15 @@ public:
 ///
 /// One could do:
 ///
-/// type t = AutoPacketExtractor(packet);
+/// type t = AutoPacketAdaptor(packet);
 ///
 /// The packet extractor also provides additional utility extraction routines, which
 /// makes it a much more attractive option than trying to manually invoke Get on the
 /// packet directly.
 /// </remarks>
-class AutoPacketExtractor {
+class AutoPacketAdaptor {
 public:
-  AutoPacketExtractor(AutoPacket& packet):
+  AutoPacketAdaptor(AutoPacket& packet):
     packet(packet)
   {}
 
