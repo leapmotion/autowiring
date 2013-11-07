@@ -127,6 +127,8 @@ set(
   GlobalInitTest.cpp
   GraphConstructionTest.h
   GraphConstructionTest.cpp
+  ImmediateDecoratorTest.h
+  ImmediateDecoratorTest.cpp
   InterlockedRoutinesTest.h
   InterlockedRoutinesTest.cpp
   LockFreeListTest.h

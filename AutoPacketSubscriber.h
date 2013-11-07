@@ -17,6 +17,7 @@ class optional_ptr;
 template<class T, bool is_deferred>
 struct CallExtractor {
   typedef void(*t_call)(void*, const AutoPacketAdaptor&);
+  typedef std::false_type deferred;
 
   t_call operator()() const {
     typedef decltype(&T::AutoFilter) t_fnType;
@@ -29,6 +30,7 @@ struct CallExtractor {
 template<class T>
 struct CallExtractor<T, true> {
   typedef void(*t_call)(void*, const AutoPacketAdaptor&);
+  typedef std::false_type deferred;
 
   static void CallDeferred(T* pObj, const AutoPacketAdaptor& repo) {
     const t_call call =
@@ -120,6 +122,7 @@ public:
   AutoPacketSubscriber(void) :
     m_ti(nullptr),
     m_pArgs(nullptr),
+    m_deferred(false),
     m_arity(0),
     m_requiredCount(0),
     m_optionalCount(0),
@@ -131,6 +134,7 @@ public:
     m_subscriber(rhs.m_subscriber),
     m_ti(rhs.m_ti),
     m_pArgs(rhs.m_pArgs),
+    m_deferred(false),
     m_arity(rhs.m_arity),
     m_requiredCount(rhs.m_requiredCount),
     m_optionalCount(rhs.m_optionalCount),
@@ -156,11 +160,13 @@ public:
     m_pObj(subscriber.get())
   {
     typedef Decompose<decltype(&T::AutoFilter)> t_decompose;
-    CallExtractor<T, std::is_same<Deferred, typename t_decompose::retType>::value> e;
+    typedef CallExtractor<T, std::is_same<Deferred, typename t_decompose::retType>::value> t_callExtractor;
+    t_callExtractor e;
 
     // Cannot register a subscriber with zero arguments:
     static_assert(t_decompose::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
+    m_deferred = t_callExtractor::deferred::value;
     m_arity = t_decompose::N;
     m_pArgs = t_decompose::template Enumerate<AutoPacketSubscriberInput>();
     for(auto pArg = m_pArgs; *pArg; pArg++) {
@@ -187,6 +193,11 @@ protected:
 
   // This subscriber's argument types
   const AutoPacketSubscriberInput* m_pArgs;
+
+  // Set if this is a deferred subscriber.  Deferred subscribers cannot receive immediate-style
+  // decorations, and have additional handling considerations when dealing with non-copyable
+  // decorations.
+  bool m_deferred;
 
   // The number of parameters that will be extracted from the repository object when making
   // a Call.  This is used to prime the AutoPacket in order to make saturation checking work
@@ -217,6 +228,7 @@ public:
   boost::any GetSubscriber(void) const { return m_subscriber; }
   const std::type_info* GetSubscriberTypeInfo(void) const { return m_ti; }
   const AutoPacketSubscriberInput* GetSubscriberInput(void) const { return m_pArgs; }
+  bool IsDeferred(void) const { return m_deferred; }
 
   /// <summary>
   /// Releases the bound subscriber and the corresponding arity, causing it to become disabled

@@ -177,8 +177,14 @@ private:
       return remaining || optional;
     }
 
-    void Increment(bool is_optional) {
-      is_optional ? optional++ : remaining++;
+    /// <returns>
+    /// The disposition after a decrementation, without actually performing a decrementation
+    /// </returns>
+    bool PseudoDecrement(bool is_optional) {
+      return
+        is_optional ?
+        optional == 1 && !remaining :
+        !optional && remaining == 1;
     }
 
     operator bool(void) const { return !remaining && !optional; }
@@ -213,9 +219,9 @@ private:
   void UpdateSatisfaction(const std::type_info& info, bool is_satisfied);
 
   /// <summary>
-  /// Logical inverse of UpdateSatisfaction
+  /// Performs a "satisfaction pulse", which will avoid notifying any deferred filters
   /// </summary>
-  void ReverseSatisfaction(const std::type_info& info);
+  void PulseSatisfaction(const std::type_info& info);
 
   /// <summary>
   /// Reverses a satisfaction that was issued, as in by a checkout, but not completed
@@ -393,16 +399,15 @@ public:
       pEntry->initialized = true;
     }
 
-    // Satisfy:
+    // Pulse satisfaction:
     auto& retVal = pEntry->Initialize(const_cast<T*>(pt));
-    UpdateSatisfaction(typeid(T), true);
+    PulseSatisfaction(typeid(T));
 
-    // Now we have to evict the rhs to prevent subsequent satisfactions from trying
-    // to obtain this field:
-    ReverseSatisfaction(typeid(T));
+    // Mark this entry as unsatisfiable:
+    pEntry->Unsatisfiable<T>();
 
-    (boost::lock_guard<boost::mutex>)m_lock,
-    static_cast<Enclosure<T>&>(*pEntry->pEnclosure).ptr = nullptr;
+    // Now trigger a rescan to hit any deferred, unsatisfiable entries:
+    UpdateSatisfaction(typeid(T), false);
   }
 
   /// <returns>
