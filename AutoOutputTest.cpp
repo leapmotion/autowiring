@@ -5,7 +5,7 @@
 
 class SimpleAutoOut {
 public:
-  void AutoFilter(const Decoration<0>& decoration, auto_output<Decoration<1>> out1) {
+  void AutoFilter(const Decoration<0>& decoration, auto_out<Decoration<1>> out1) {
 
   }
 };

@@ -1,6 +1,6 @@
 #pragma once
 #include "Decompose.h"
-#include "auto_output.h"
+#include "auto_out.h"
 #include "FilterPropertyExtractor.h"
 #include "optional_ptr.h"
 #include <boost/any.hpp>
@@ -68,7 +68,7 @@ struct subscriber_traits<optional_ptr<T>>
 };
 
 template<class T, bool auto_ready>
-struct subscriber_traits<auto_output<T, auto_ready>>
+struct subscriber_traits<auto_out<T, auto_ready>>
 {
   typedef T type;
   static const eSubscriberInputType subscriberType = auto_ready ? outTypeRef : outTypeRefAutoReady;
@@ -159,7 +159,7 @@ public:
     m_arity = t_decompose::N;
     m_pArgs = t_decompose::template Enumerate<AutoPacketSubscriberInput>();
     for(auto pArg = m_pArgs; *pArg; pArg++)
-      m_optionalCount += pArg->is_optional;
+      m_optionalCount += pArg->subscriberType == inTypeOptional;
     m_pCall = e();
   }
 
