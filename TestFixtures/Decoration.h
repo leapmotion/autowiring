@@ -68,8 +68,10 @@ public:
     m_barr.wait();
     try {
       CoreThread::Run();
-    }
-    catch(...) {
+    } catch(dispatch_aborted_exception&) {
+      // Expected exception type
+      throw;
+    } catch(...) {
       m_excepted = true;
     }
   }
