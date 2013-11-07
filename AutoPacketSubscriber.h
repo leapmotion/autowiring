@@ -43,6 +43,20 @@ struct CallExtractor<T, true> {
   }
 };
 
+template<class T>
+struct subscriber_traits
+{
+  typedef std::false_type is_optional;
+  typedef T type;
+};
+
+template<class T>
+struct subscriber_traits<optional_ptr<T>>
+{
+  typedef std::true_type is_optional;
+  typedef T type;
+};
+
 struct AutoPacketSubscriberInput {
   AutoPacketSubscriberInput(const std::type_info* ti = nullptr, bool is_optional = false) :
     ti(ti),
@@ -58,15 +72,11 @@ struct AutoPacketSubscriberInput {
 
   template<class T>
   struct rebind {
-    operator AutoPacketSubscriberInput() { return AutoPacketSubscriberInput(&typeid(T), false); }
+    operator AutoPacketSubscriberInput() {
+      typedef subscriber_traits<T> traits;
+      return AutoPacketSubscriberInput(&typeid(typename traits::type), traits::is_optional::value);
+    }
   };
-};
-
-template<class T>
-struct AutoPacketSubscriberInput::rebind<optional_ptr<T>> {
-  operator AutoPacketSubscriberInput(void) const {
-    return AutoPacketSubscriberInput(&typeid(T), true);
-  }
 };
 
 /// <summary>
