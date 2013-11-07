@@ -1,6 +1,8 @@
 #pragma once
 #include "Decompose.h"
+#include "auto_output.h"
 #include "FilterPropertyExtractor.h"
+#include "optional_ptr.h"
 #include <boost/any.hpp>
 #include SHARED_PTR_HEADER
 
@@ -43,28 +45,49 @@ struct CallExtractor<T, true> {
   }
 };
 
+enum eSubscriberInputType {
+  inTypeInvalid,
+  inTypeRequired,
+  inTypeOptional,
+  outTypeRef,
+  outTypeRefAutoReady
+};
+
 template<class T>
 struct subscriber_traits
 {
-  typedef std::false_type is_optional;
   typedef T type;
+  static const eSubscriberInputType subscriberType = inTypeRequired;
 };
 
 template<class T>
 struct subscriber_traits<optional_ptr<T>>
 {
-  typedef std::true_type is_optional;
   typedef T type;
+  static const eSubscriberInputType subscriberType = inTypeOptional;
+};
+
+template<class T, bool auto_ready>
+struct subscriber_traits<auto_output<T, auto_ready>>
+{
+  typedef T type;
+  static const eSubscriberInputType subscriberType = auto_ready ? outTypeRef : outTypeRefAutoReady;
 };
 
 struct AutoPacketSubscriberInput {
-  AutoPacketSubscriberInput(const std::type_info* ti = nullptr, bool is_optional = false) :
-    ti(ti),
-    is_optional(is_optional)
+  AutoPacketSubscriberInput(void) :
+    ti(nullptr),
+    subscriberType(inTypeInvalid)
   {}
 
-  const std::type_info* ti;
-  bool is_optional;
+  template<class T>
+  AutoPacketSubscriberInput(subscriber_traits<T>&& traits) :
+    ti(&typeid(typename subscriber_traits<T>::type)),
+    subscriberType(subscriber_traits<T>::subscriberType)
+  {}
+
+  const std::type_info* const ti;
+  const eSubscriberInputType subscriberType;
 
   operator bool(void) const {
     return !!ti;
@@ -73,8 +96,7 @@ struct AutoPacketSubscriberInput {
   template<class T>
   struct rebind {
     operator AutoPacketSubscriberInput() {
-      typedef subscriber_traits<T> traits;
-      return AutoPacketSubscriberInput(&typeid(typename traits::type), traits::is_optional::value);
+      return subscriber_traits<T>();
     }
   };
 };

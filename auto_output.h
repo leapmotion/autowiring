@@ -3,14 +3,26 @@
 /// <summary>
 /// A utility type to positively declare an output to an AutoFilter
 /// </summary>
+/// <param name="auto_ready">Set if the output should be marked "ready" by default</param>
 /// <remarks>
 /// The auto_output wrapper is a convenience alternative to accepting an AutoPacket
 /// and then requesting a checkout.  It provides the additional benefit that the
 /// caller may declaratively specify whether the auto_output should be satisfied by
 /// default when the function returns, or if it must be manually satisfied with a
-/// call to 
+/// direct call to Ready before the object falls out of scope
 /// </remarks>
-template<class T, bool satisfy = false>
+template<class T, bool auto_ready = true>
 class auto_output {
+public:
+  auto_output(T& obj) :
+    obj(obj)
+  {}
 
+  ~auto_output(void) {}
+
+private:
+  T& obj;
+
+public:
+  T* operator->(void) const { return &obj; }
 };
