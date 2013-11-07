@@ -186,7 +186,7 @@ public:
   void Enumerate(Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     for(auto q = m_mp.begin(); q != m_mp.end(); q++)
-      if(q->second.initialized)
+      if(q->second.satisfied)
         fx(q->first, q->second.pEnclosure);
   }
 
