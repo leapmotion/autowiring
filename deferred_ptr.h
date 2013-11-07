@@ -10,6 +10,8 @@ class deferred_ptr:
   std::weak_ptr<T>
 {
 public:
+  deferred_ptr(void) {}
+
   deferred_ptr(const std::shared_ptr<T>& ptr, bool obtain = false):
     std::weak_ptr<T>(ptr)
   {
