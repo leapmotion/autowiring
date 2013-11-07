@@ -64,6 +64,7 @@ set(
   ObjectPool.h
   optional_ptr.h
   PolymorphicTypeForest.h
+  SatCounter.h
   SharedPtrHash.h
   TeardownNotifier.h
   TeardownNotifier.cpp
