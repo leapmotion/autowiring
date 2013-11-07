@@ -58,6 +58,29 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfie
   }
 }
 
+void AutoPacket::ReverseSatisfaction(const std::type_info& info) {
+  auto decorator = m_factory->FindDecorator(info);
+  if(!decorator)
+    return;
+
+  // Roll back all satisfaction counters:
+  const auto& subscribers = decorator->subscribers;
+  for(size_t i = subscribers.size(); i--;) {
+    const auto& subscriber = subscribers[i];
+    if(m_satCounters[subscriber.first])
+      // This guy bottomed out already, we don't touch him:
+      continue;
+
+    if(subscriber.second)
+      // Optional subscription--we don't increment this back, because optional subscriptions
+      // are allowed to be null.  If the subscriber was not satisfied during the UpdateSatisfaction
+      // call, they may be satisfied at some later time.
+      continue;
+
+    m_satCounters[subscriber.first].Increment(false);
+  }
+}
+
 void AutoPacket::Release(void) {
   for(size_t i = m_satCounters.size(); i--;) {
     auto& satCounter = m_satCounters[i];
