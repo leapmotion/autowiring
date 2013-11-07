@@ -83,7 +83,7 @@ void AutoPacket::Reset(void) {
     const auto& curSrc = vec[i];
     auto& curDst = m_satCounters[i];
 
-    curDst.remaining = curSrc.GetArity() - curSrc.GetOptionalCount();
+    curDst.remaining = curSrc.GetRequiredCount();
     curDst.optional = curSrc.GetOptionalCount();
     curDst.subscriber = curSrc.GetSubscriber();
   }
