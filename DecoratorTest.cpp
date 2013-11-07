@@ -4,112 +4,9 @@
 #include "AutoPacketFactory.h"
 #include "AutoPacketListener.h"
 #include "FilterPropertyExtractor.h"
-#include <boost/thread/barrier.hpp>
+#include "TestFixtures/Decoration.h"
 
 using namespace std;
-
-/// <summary>
-/// A simple "decoration" class which will be added to a variety of sample packets
-/// </summary>
-template<int N>
-class Decoration {
-public:
-  Decoration(void) :
-    i(N)
-  {}
-
-  int i;
-};
-
-class FilterRoot {
-public:
-  FilterRoot(void) :
-    m_called(false)
-  {}
-
-  bool m_called;
-  Decoration<0> m_zero;
-  Decoration<1> m_one;
-};
-
-class FilterA:
-  public FilterRoot
-{
-public:
-  void AutoFilter(Decoration<0> zero, Decoration<1> one) {
-    m_called = true;
-    m_zero = zero;
-    m_one = one;
-  }
-};
-static_assert(has_autofilter<FilterA>::value, "Expected the filter to have an AutoFilter method");
-
-class FilterB:
-  public CoreThread,
-  public FilterRoot
-{
-public:
-  FilterB(void) :
-    m_barr(2)
-  {
-    // We'll accept dispatch delivery as long as we exist:
-    AcceptDispatchDelivery();
-    Ready();
-  }
-
-  Deferred AutoFilter(Decoration<0> zero, Decoration<1> one) {
-    m_called = true;
-    m_zero = zero;
-    m_one = one;
-    return Deferred(this);
-  }
-
-  boost::barrier m_barr;
-
-  void Run(void) override {
-    m_barr.wait();
-    CoreThread::Run();
-  }
-};
-
-/// <summary>
-/// This is a filter which, in addition to accepting a decoration, also accepts a packet and tries to decorate it
-/// </summary>
-class FilterC:
-  public FilterRoot
-{
-public:
-  void AutoFilter(AutoPacket& pkt, const Decoration<0>& zero) {
-    // Copy out:
-    m_called = true;
-    m_zero = zero;
-
-    // Add a decoration:
-    pkt.Decorate(Decoration<1>());
-  }
-};
-
-/// <summary>
-/// A filter which will simply get hit any time a packet is issued in the current context
-/// </summary>
-class FilterD:
-  public FilterRoot
-{
-public:
-  void AutoFilter(AutoPacket& pkt) {
-    m_called = true;
-  }
-};
-
-class FilterE:
-  public FilterRoot,
-  public AutoPacketListener
-{
-public:
-  void OnPacketReturned(const AutoPacket& packet) {
-    m_called = true;
-  }
-};
 
 TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   vector<const type_info*> v;
@@ -217,7 +114,7 @@ TEST_F(DecoratorTest, VerifyNoMultiDecorate) {
   // Obtain a packet and attempt redundant introduction:
   auto packet = factory->NewPacket();
   packet->Decorate(Decoration<0>());
-  EXPECT_THROW(packet->Decorate(Decoration<0>()), std::runtime_error) << "Redundant decoration did not throw an exception as expected";
+  EXPECT_ANY_THROW(packet->Decorate(Decoration<0>())) << "Redundant decoration did not throw an exception as expected";
 
   // Verify that a call has not yet been made
   EXPECT_FALSE(filterA->m_called) << "A call made on an idempotent packet decoration";
@@ -308,13 +205,13 @@ TEST_F(DecoratorTest, VerifyCheckout) {
   packet->Decorate(Decoration<1>());
 
   {
-    AutoPacket::AutoCheckout<Decoration<0>> exterior;
+    AutoCheckout<Decoration<0>> exterior;
 
     {
-      AutoPacket::AutoCheckout<Decoration<0>> checkout = packet->Checkout<Decoration<0>>();
+      AutoCheckout<Decoration<0>> checkout = packet->Checkout<Decoration<0>>();
 
       // Verify we can move the original type:
-      AutoPacket::AutoCheckout<Decoration<0>> checkoutMoved(std::move(checkout));
+      AutoCheckout<Decoration<0>> checkoutMoved(std::move(checkout));
 
       // Verify no hits yet:
       EXPECT_FALSE(filterA->m_called) << "Filter called as a consequence of a checkout move operation";
@@ -325,10 +222,53 @@ TEST_F(DecoratorTest, VerifyCheckout) {
 
     // Still no hits
     EXPECT_FALSE(filterA->m_called) << "Filter called before a decoration checkout expired";
+
+    // Mark ready so we get committed:
+    exterior.Ready();
   }
 
   // Verify a hit took place now
   EXPECT_TRUE(filterA->m_called) << "Filter was not called after all decorations were installed";
+}
+
+TEST_F(DecoratorTest, RollbackCorrectness) {
+  AutoRequired<FilterA> filterA;
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Obtain a packet for use with deferred decoration:
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<1>());
+
+  // Request and immediately allow the destruction of a checkout:
+  packet->Checkout<Decoration<0>>();
+
+  // Verify no hit took place--the checkout should have been cancelled:
+  EXPECT_FALSE(filterA->m_called) << "Filter was not called after all decorations were installed";
+
+  // We should not be able to obtain another checkout of this decoration on this packet:
+  EXPECT_ANY_THROW(packet->Checkout<Decoration<0>>()) << "An attempt to check out a decoration a second time should have failed";
+  
+  // We shouldn't be able to manually decorate, either:
+  EXPECT_ANY_THROW(packet->Decorate(Decoration<0>())) << "An attempt to manually add a previously failed decoration succeeded where it should not have";
+}
+
+TEST_F(DecoratorTest, VerifyAntiDecorate) {
+  AutoRequired<FilterA> filterA;
+  AutoRequired<AutoPacketFactory> factory;
+
+  {
+    // Obtain a new packet and mark an unsatisfiable decoration:
+    auto packet = factory->NewPacket();
+    packet->Unsatisfiable<Decoration<0>>();
+    EXPECT_ANY_THROW(packet->Decorate(Decoration<0>())) << "Decoration succeeded on a decoration marked unsatisfiable";
+  }
+
+  {
+    // Obtain a new packet and try to make a satisfied decoration unsatisfiable.
+    auto packet = factory->NewPacket();
+    packet->Decorate(Decoration<0>());
+    EXPECT_ANY_THROW(packet->Unsatisfiable<Decoration<0>>()) << "Succeeded in marking an already-existing decoration as unsatisfiable";
+  }
 }
 
 TEST_F(DecoratorTest, VerifyReflexiveReciept) {
@@ -346,13 +286,9 @@ TEST_F(DecoratorTest, VerifyReflexiveReciept) {
 
   // The packet should be able to obtain a pointer to itself:
   {
-    AutoPacket* reflex;
-    EXPECT_TRUE(packet->Get(reflex)) << "Packet was unable to obtain a self-reference via Get";
+    AutoPacketAdaptor extractor(*packet);
+    AutoPacket* reflex = extractor;
     EXPECT_EQ(packet.get(), reflex) << "Packet reflexive reference was not an identity";
-
-    const AutoPacket* cReflex;
-    EXPECT_TRUE(const_cast<const AutoPacket*>(packet.get())->Get(cReflex)) << "Packet was unable to obtain a self-reference via const Get";
-    EXPECT_EQ(packet.get(), cReflex) << "Packet reflexive reference was not an identity";
   }
 
   // Decorate--should satisfy filterC

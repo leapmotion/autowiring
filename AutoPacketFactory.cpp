@@ -69,22 +69,50 @@ void AutoPacketFactory::AddSubscriber(AutoPacketSubscriber&& rhs) {
 
   // Prime the satisfaction graph for each element:
   for(
-    auto ppCur = rhs.GetSubscriberArgs();
-    *ppCur;
-  ppCur++
-    ) {
-    // Obtain the decorator type at this position:
-    auto r = m_decorations.find(**ppCur);
-    if(r == m_decorations.end())
-      // Decorator formerly not encountered, introduce it:
-      r = m_decorations.insert(
-      t_decMap::value_type(
-      **ppCur,
-      AdjacencyEntry(**ppCur)
-      )
-      ).first;
+    auto pCur = rhs.GetSubscriberInput();
+    *pCur;
+    pCur++
+  ) {
+    // Decide what to do with this entry:
+    switch(pCur->subscriberType) {
+    case inTypeInvalid:
+      // Should never happen--trivially ignore this entry
+      break;
+    case inTypeRequired:
+    case inTypeOptional:
+      {
+        // Obtain the decorator type at this position:
+        auto r = m_decorations.find(*pCur->ti);
+        if(r == m_decorations.end())
+          // Decorator formerly not encountered, introduce it:
+          r = m_decorations.insert(
+            t_decMap::value_type(
+              *pCur->ti,
+              AdjacencyEntry(*pCur->ti)
+            )
+          ).first;
 
-    // Now we need to update the adjacency entry with the new subscriber:
-    r->second.subscribers.push_back(subscriberIndex);
+        // Now we need to update the adjacency entry with the new subscriber:
+        r->second.subscribers.push_back(
+          std::make_pair(
+            subscriberIndex,
+            pCur->subscriberType == inTypeOptional
+          )
+        );
+      }
+      break;
+    case outTypeRef:
+    case outTypeRefAutoReady:
+      // We don't do anything with these types.
+      // Optionally, we might want to register them as outputs, or do some kind
+      // of runtime detection that a multi-satisfaction case exists--but for now,
+      // we just trivially ignore them.
+      break;
+    }
   }
+}
+
+bool AutoPacketFactory::HasSubscribers(const std::type_info& ti) const {
+  auto decorator = FindDecorator(ti);
+  return !!decorator;
 }
