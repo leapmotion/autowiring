@@ -86,7 +86,7 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   if(retVal)
     return retVal;
 
-  auto self = m_self.lock();
+  auto self = shared_from_this();
   retVal.reset(
     new Object,
     [this, self](Object* ptr) {
@@ -117,7 +117,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
   }
 
   // Create the child context
-  CoreContext* pContext = new CoreContext(m_self.lock());
+  CoreContext* pContext = new CoreContext(shared_from_this());
 
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
@@ -131,19 +131,11 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
       delete pContext;
     }
   );
-  pContext->m_self = retVal;
   *childIterator = retVal;
   return retVal;
 }
 
 void CoreContext::InitiateCoreThreads(void) {
-  // Self-reference to ensure the context is not destroyed until all threads are gone
-  std::shared_ptr<CoreContext> self = m_self.lock();
-
-  // Because the caller was able to invoke a method on this CoreContext, it must have
-  // a shared_ptr to it.  Thus, we can assert that the above lock operation succeeded.
-  ASSERT(self);
-
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     if(m_refCount++)

@@ -10,7 +10,6 @@ GlobalCoreContext::GlobalCoreContext(void):
 
   // Set up the global shared pointer:
   getGlobalContextSharedPtr().reset(this);
-  CoreContext::m_self = getGlobalContextSharedPtr();
 
   // Make ourselves the current context before filling it:
   SetCurrent();
