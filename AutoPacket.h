@@ -477,7 +477,7 @@ public:
     return nullptr;
   }
 
-  // This is our last-ditch attempt:  Run a query on the underlying packet:
+  // This is our last-ditch attempt:  Run a query on the underlying packet
   template<class T>
   operator const T&(void) const {
     return packet.Get<typename std::decay<T>::type>();
