@@ -7,6 +7,9 @@ include_directories(
 set(
   Autowiring_SRCS
   at_exit.h
+  auto_out.h
+  auto_pooled.h
+  AutoCheckout.h
   AutoFactory.h
   AutoPacket.h
   AutoPacket.cpp
@@ -14,6 +17,7 @@ set(
   AutoPacketFactory.cpp
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
+  AutoPacketSubscriber.h
   AutoNetworkMonitor.h
   Autowired.h
   Autowired.cpp
@@ -40,11 +44,11 @@ set(
   DeferredCreationNotice.h
   DeferredCreationNotice.cpp
   deferred_ptr.h
-  DependentContext.h
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunkEventProxy.h
   DispatchThunkEventProxy.cpp
+  Enclosure.h
   EventDispatcher.h
   EventReceiver.h
   EventReceiver.cpp
@@ -59,7 +63,9 @@ set(
   LockReducedCollection.h
   Object.h
   ObjectPool.h
+  optional_ptr.h
   PolymorphicTypeForest.h
+  SatCounter.h
   SharedPtrHash.h
   TeardownNotifier.h
   TeardownNotifier.cpp
@@ -111,8 +117,6 @@ set(
   CurrentContextPusherTest.cpp
   DecoratorTest.h
   DecoratorTest.cpp
-  DependentContextTest.h
-  DependentContextTest.cpp
   DtorCorrectnessTest.h
   DtorCorrectnessTest.cpp
   EnclosedContextTestBase.h
@@ -126,6 +130,8 @@ set(
   GlobalInitTest.cpp
   GraphConstructionTest.h
   GraphConstructionTest.cpp
+  ImmediateDecoratorTest.h
+  ImmediateDecoratorTest.cpp
   InterlockedRoutinesTest.h
   InterlockedRoutinesTest.cpp
   LockFreeListTest.h
@@ -136,6 +142,8 @@ set(
   MultiInheritTest.cpp
   ObjectPoolTest.h
   ObjectPoolTest.cpp
+  OptionalDecorationTest.h
+  OptionalDecorationTest.cpp
   PolymorphicTypeForestTest.h
   PolymorphicTypeForestTest.cpp
   PostConstructTest.h
@@ -148,6 +156,7 @@ set(
   ScopeTest.cpp
   SnoopTest.h
   SnoopTest.cpp
+  TestFixtures/Decoration.h
   TestFixtures/ExitRaceThreaded.h
   TestFixtures/SimpleInterface.h
   TestFixtures/SimpleObject.h

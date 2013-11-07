@@ -1,6 +1,5 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _OBJECT_POOL_H
-#define _OBJECT_POOL_H
+#pragma once
+#include "Object.h"
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <set>
@@ -12,39 +11,23 @@ struct NoOp {
   void operator() (T& op) {}
 };
 
-/// <summary>
-/// Allows the management of a pool of objects based on an embedded factory
-/// </summary>
-/// <param name="T>The type to be pooled</param>
-/// <param name="_Rx">A function object which resets instances returned to the pool</param>
-/// <remarks>
-/// This class is a type of factory that creates an object of type T.  The object pool
-/// creates a shared pointer for the consumer to use, and when the last shared pointer
-/// for that object is destroyed, the wrapped object is returned to this pool rather than
-/// being deleted.  Returned objects may satisfy subsequent requests for construction.
-///
-/// All object pool methods are thread safe.
-///
-/// Issued pool members must be released before the pool goes out of scope
-/// </remarks>
-template<class T, class _Rx = NoOp<T> >
-class ObjectPool
+template<class T>
+class ObjectPoolBase:
+  public Object
 {
 public:
-  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
-  ObjectPool(size_t limit = ~0, size_t maxPooled = ~0, _Rx&& rx = _Rx()):
+  ObjectPoolBase(size_t limit = ~0, size_t maxPooled = ~0) :
     m_limit(limit),
     m_maxPooled(maxPooled),
-    m_outstanding(0),
-    m_rx(std::move(rx))
+    m_outstanding(0)
   {}
 
-  ~ObjectPool(void) {
+  ~ObjectPoolBase(void) {
     for(auto q = m_objs.begin(); q != m_objs.end(); q++)
       delete *q;
   }
 
-private:
+protected:
   boost::mutex m_lock;
   boost::condition_variable m_setCondition;
 
@@ -55,17 +38,13 @@ private:
   size_t m_limit;
   size_t m_outstanding;
 
-  // Resetter, where relevant:
-  _Rx m_rx;
-
-protected:
   void Return(T* ptr) {
     {
-      boost::lock_guard<boost::mutex> lk(m_lock);
+      boost::lock_guard<boost::mutex> lk(this->m_lock);
       m_outstanding--;
       if(m_objs.size() < m_maxPooled) {
         // Reset, insert, return
-        m_rx(*ptr);
+        Reset(*ptr);
         m_objs.insert(ptr);
         m_setCondition.notify_one();
         return;
@@ -76,7 +55,15 @@ protected:
     delete ptr;
   }
 
+  /// <summary>
+  /// Actually performs a reset of the passed object
+  /// </summary>
+  virtual void Reset(T& ptr) = 0;
+
 public:
+  // Accessor methods:
+  size_t GetOutstanding(void) const { return m_outstanding; }
+
   /// <summary>
   /// This sets the maximum number of entities that the pool will cache to satisfy a later allocation request
   /// </summary>
@@ -180,4 +167,36 @@ public:
   }
 };
 
-#endif
+/// <summary>
+/// Allows the management of a pool of objects based on an embedded factory
+/// </summary>
+/// <param name="T>The type to be pooled</param>
+/// <param name="_Rx">A function object which resets instances returned to the pool</param>
+/// <remarks>
+/// This class is a type of factory that creates an object of type T.  The object pool
+/// creates a shared pointer for the consumer to use, and when the last shared pointer
+/// for that object is destroyed, the wrapped object is returned to this pool rather than
+/// being deleted.  Returned objects may satisfy subsequent requests for construction.
+///
+/// All object pool methods are thread safe.
+///
+/// Issued pool members must be released before the pool goes out of scope
+/// </remarks>
+template<class T, class _Rx = NoOp<T>>
+class ObjectPool:
+  public ObjectPoolBase<T>
+{
+public:
+  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
+  ObjectPool(size_t limit = ~0, size_t maxPooled = ~0, _Rx&& rx = _Rx()):
+    ObjectPoolBase<T>(limit, maxPooled),
+    m_rx(std::move(rx))
+  {}
+
+private:
+  // Resetter, where relevant:
+  _Rx m_rx;
+
+protected:
+  void Reset(T& obj) override { m_rx(obj); }
+};

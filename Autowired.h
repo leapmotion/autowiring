@@ -260,4 +260,9 @@ public:
   }
 };
 
+// We will also pull in a few utility headers which are reliant upon the declarations in this file
+// TODO:  Consider moving the declarations in this file into its own header, and using this header
+// as a master header for all of Autowiring
+#include "AutoPacketFactory.h"
+
 #endif

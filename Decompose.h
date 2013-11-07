@@ -17,6 +17,22 @@ struct is_any_same {
     std::is_same<T, U4>::value;
 };
 
+struct type_info_constructable {
+  type_info_constructable(const std::type_info* ti = nullptr) :
+    ti(ti)
+  {}
+
+  const std::type_info* ti;
+
+  const std::type_info* operator->(void) const { return ti; }
+  operator const std::type_info*(void) const { return ti; }
+
+  template<class T>
+  struct rebind {
+    operator type_info_constructable(void) const {return type_info_constructable(&typeid(T));}
+  };
+};
+
 /// <summary>
 /// Provides some static reflection support for member function pointers
 /// </summary>
@@ -43,6 +59,24 @@ struct Decompose<R(W::*)()> {
     static const std::type_info* ti[] = {nullptr};
     return ti;
   }
+
+  /// <returns>
+  /// An array of type T, parameterized by the bound function's arguments
+  /// </returns>
+  /// <remarks>
+  /// Type T must be move-constructable.
+  ///
+  /// The returned array contains one more element than the arity of the decomposed member function
+  /// type.  Each element in the array is initialized based on the type of the corresponding argument
+  /// in the decomposed function.  Elements in the array are constructed using the "rebind" structure
+  /// which must be an interior type to type T.  An instance of type rebind should be castable to the
+  /// base type T, or it must be a function returning a value of type T.
+  /// </remarks>
+  template<class T>
+  static const T(&Enumerate(void))[N + 1] {
+    static const T rb[] = {T()};
+    return rb;
+  }
 };
 
 template<class T, class MemFn, MemFn memfn, int arity = Decompose<MemFn>::N>
@@ -61,6 +95,12 @@ struct Decompose<R(W::*)(Arg1)> {
     static const std::type_info* ti[] = {&typeid(Arg1), nullptr};
     return ti;
   }
+
+  template<class T>
+  static const T(&Enumerate(void))[N + 1] {
+    static const T rb[] = {typename T::template rebind<t_arg1>(), T()};
+    return rb;
+  }
 };
 
 template<class R, class W, class Arg1, class Arg2>
@@ -76,6 +116,18 @@ struct Decompose<R(W::*)(Arg1, Arg2)> {
   static const std::type_info* (&Enumerate(void))[N + 1] {
     static const std::type_info* ti[] = {&typeid(Arg1), &typeid(Arg2), nullptr};
     return ti;
+  }
+
+  template<class Token, class Fx>
+  static void Enumerate(Token& token, Fx& fx) {
+    fx.template operator()<t_arg1>();
+    fx.template operator()<t_arg2>();
+  }
+
+  template<class T>
+  static const T(&Enumerate(void))[N + 1] {
+    static const T rb[] = {typename T::template rebind<t_arg1>(), typename T::template rebind<t_arg2>(), T()};
+    return rb;
   }
 };
 
@@ -94,6 +146,12 @@ struct Decompose<R(W::*)(Arg1, Arg2, Arg3)> {
     static const std::type_info* ti[] = {&typeid(Arg1), &typeid(Arg2), &typeid(Arg3), nullptr};
     return ti;
   }
+
+  template<class T>
+  static const T(&Enumerate(void))[N + 1] {
+    static const T rb[] = {typename T::template rebind<t_arg1>(), typename T::template rebind<t_arg2>(), typename T::template rebind<t_arg3>(), T()};
+    return rb;
+  }
 };
 
 template<class R, class W, class Arg1, class Arg2, class Arg3, class Arg4>
@@ -111,6 +169,12 @@ struct Decompose<R(W::*)(Arg1, Arg2, Arg3, Arg4)> {
   static const std::type_info* (&Enumerate(void))[N + 1] {
     static const std::type_info* ti[] = {&typeid(Arg1), &typeid(Arg2), &typeid(Arg3), &typeid(Arg4), nullptr};
     return ti;
+  }
+
+  template<class T>
+  static const T(&Enumerate(void))[N + 1] {
+    static const T rb[] = {typename T::template rebind<t_arg1>(), typename T::template rebind<t_arg2>(), typename T::template rebind<t_arg3>(), typename T::template rebind<t_arg4>(), T()};
+    return rb;
   }
 };
 
@@ -145,9 +209,7 @@ struct BoundCall<T, MemFn, memfn, 1>:
   typedef Decompose<MemFn> t_decompose;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
-    (pObj->*memfn)(
-      repo.template Get<typename std::decay<typename t_decompose::t_arg1>::type>()
-    );
+    (pObj->*memfn)(repo);
   }
 };
 
@@ -158,10 +220,7 @@ struct BoundCall<T, MemFn, memfn, 2>:
   typedef Decompose<MemFn> t_decompose;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
-    (pObj->*memfn)(
-      repo.template Get<typename std::decay<typename t_decompose::t_arg1>::type>(),
-      repo.template Get<typename std::decay<typename t_decompose::t_arg2>::type>()
-    );
+    (pObj->*memfn)(repo, repo);
   }
 };
 
@@ -172,11 +231,7 @@ struct BoundCall<T, MemFn, memfn, 3>:
   typedef Decompose<MemFn> t_decompose;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
-    (pObj->*memfn)(
-      repo.template Get<typename std::decay<typename t_decompose::t_arg1>::type>(),
-      repo.template Get<typename std::decay<typename t_decompose::t_arg2>::type>(),
-      repo.template Get<typename std::decay<typename t_decompose::t_arg3>::type>()
-    );
+    (pObj->*memfn)(repo, repo, repo);
   }
 };
 
@@ -187,11 +242,6 @@ struct BoundCall<T, MemFn, memfn, 4>:
   typedef Decompose<MemFn> t_decompose;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
-    (pObj->*memfn)(
-      repo.template Get<typename std::decay<typename t_decompose::t_arg1>::type>(),
-      repo.template Get<typename std::decay<typename t_decompose::t_arg2>::type>(),
-      repo.template Get<typename std::decay<typename t_decompose::t_arg3>::type>(),
-      repo.template Get<typename std::decay<typename t_decompose::t_arg4>::type>()
-    );
+    (pObj->*memfn)(repo, repo, repo, repo);
   }
 };
