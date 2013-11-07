@@ -37,9 +37,13 @@ private:
   AutoCheckout<T> m_checkout;
 
 public:
+  T* ptr(void) const { return m_checkout; }
+
   void Cancel(void) const { m_cancelled = true; }
   T* operator->(void) const { return m_checkout; }
   operator T*(void) const { return m_checkout; }
+  operator T&(void) const { return m_checkout; }
+  T& operator*(void) const { return m_checkout; }
 };
 
 // The non-autoready specialization is just a checkout alias:

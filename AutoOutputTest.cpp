@@ -3,10 +3,11 @@
 #include "AutoPacketFactory.h"
 #include "TestFixtures/Decoration.h"
 
-class SimpleAutoOut {
+class SimpleAutoOut:
+  public FilterRoot
+{
 public:
   SimpleAutoOut(void) :
-    m_called(false),
     m_rcvDecAddr(nullptr)
   {}
 
@@ -21,14 +22,14 @@ public:
       out1->i = -100;
   }
 
-  bool m_called;
   Decoration<1>* m_rcvDecAddr;
 };
 
-class CompoundAutoOut {
+class CompoundAutoOut:
+  public FilterRoot
+{
 public:
   CompoundAutoOut(void) :
-    m_called(false),
     m_rcvDecAddr1(nullptr),
     m_rcvDecAddr2(nullptr)
   {}
@@ -47,23 +48,43 @@ public:
       out2->i = -101;
   }
 
-  bool m_called;
   Decoration<1>* m_rcvDecAddr1;
   Decoration<2>* m_rcvDecAddr2;
 };
 
 template<int N>
-class SimpleRequestor {
+class SimpleRequestor:
+  public FilterRoot
+{
 public:
-  SimpleRequestor(void):
-    m_called(false)
-  {}
-
   void AutoFilter(const Decoration<N>& dec) {
     m_called = true;
   }
+};
 
-  bool m_called;
+class PooledRequestor:
+  public FilterRoot
+{
+public:
+  void AutoFilter(Decoration<0> dec0, auto_out<auto_pooled<Decoration<6>>> pooled) {
+    m_called = true;
+    if(pooled)
+      m_pooled = pooled;
+  }
+
+  std::shared_ptr<Decoration<6>> m_pooled;
+};
+
+class PooledRecipient:
+  public FilterRoot
+{
+public:
+  void AutoFilter(auto_pooled<Decoration<6>> pooled) {
+    m_called = true;
+    m_pooled = pooled;
+  }
+
+  std::shared_ptr<Decoration<6>> m_pooled;
 };
 
 TEST_F(AutoOutputTest, VerifySimpleInput) {
@@ -148,4 +169,19 @@ TEST_F(AutoOutputTest, VerifyNoAmbiguousOutputs) {
   // Should throw an exception:
   auto packet = factory->NewPacket();
   EXPECT_ANY_THROW(packet->Decorate(Decoration<0>())) << "Ambiguous output decorations did not cause an exception as expected";
+}
+
+TEST_F(AutoOutputTest, VerifyPooledReciept) {
+  // Create our pooled filter:
+  AutoRequired<PooledRequestor> requestor;
+  AutoRequired<PooledRecipient> recipient;
+  Autowired<AutoPacketFactory> factory;
+
+  // Kick off and validate a call:
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>());
+  ASSERT_TRUE(requestor->m_called) << "Pooled pointer filter was not called as expected";
+
+  Autowired<ObjectPoolBase<Decoration<6>>> pool;
+  ASSERT_TRUE(pool.IsAutowired()) << "Pooled pointer existence did not create an object pool as expected";
 }

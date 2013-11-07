@@ -2,6 +2,7 @@
 #include "Autowired.h"
 #include "AutoCheckout.h"
 #include "auto_out.h"
+#include "auto_pooled.h"
 #include "Enclosure.h"
 #include "Object.h"
 #include "optional_ptr.h"

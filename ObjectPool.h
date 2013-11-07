@@ -61,6 +61,9 @@ protected:
   virtual void Reset(T& ptr) = 0;
 
 public:
+  // Accessor methods:
+  size_t GetOutstanding(void) const { return m_outstanding; }
+
   /// <summary>
   /// This sets the maximum number of entities that the pool will cache to satisfy a later allocation request
   /// </summary>

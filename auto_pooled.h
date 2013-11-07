@@ -6,6 +6,8 @@
 /// <remarks>
 /// </remarks>
 template<class T>
-class auto_pooled {
+class auto_pooled:
+  public std::shared_ptr<T>
+{
 public:
 };
