@@ -8,6 +8,7 @@ set(
   Autowiring_SRCS
   at_exit.h
   auto_out.h
+  AutoCheckout.h
   AutoFactory.h
   AutoPacket.h
   AutoPacket.cpp

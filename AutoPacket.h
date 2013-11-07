@@ -1,6 +1,8 @@
 #pragma once
 #include "Autowired.h"
+#include "AutoCheckout.h"
 #include "Object.h"
+#include "auto_out.h"
 #include "optional_ptr.h"
 #include <boost/any.hpp>
 #include <boost/thread/mutex.hpp>
@@ -29,60 +31,6 @@ class AutoPacket:
 public:
   AutoPacket(void);
   ~AutoPacket(void);
-
-  template<class T>
-  class AutoCheckout {
-  public:
-    AutoCheckout(void) :
-      m_parent(nullptr),
-      m_val(nullptr),
-      m_ready(false)
-    {}
-
-    AutoCheckout(AutoPacket& parent, T* val) :
-      m_parent(&parent),
-      m_val(val),
-      m_ready(false)
-    {}
-
-    AutoCheckout(AutoCheckout&& rhs) :
-      m_parent(rhs.m_parent),
-      m_val(rhs.m_val),
-      m_ready(rhs.m_ready)
-    {
-      rhs.m_parent = nullptr;
-      rhs.m_val = nullptr;
-    }
-
-    ~AutoCheckout(void) {
-      if(m_val)
-        m_parent->CompleteCheckout<T>(m_ready);
-    }
-
-  private:
-    AutoPacket* m_parent;
-    T* m_val;
-    bool m_ready;
-
-  public:
-    /// <summary>
-    /// Causes the wrapped packet to be committed when the checkout is destroyed
-    /// </summary>
-    void Ready(void) {
-      m_ready = true;
-    }
-    
-    // Operator overloads:
-    T* operator->(void) const { return m_val; }
-    operator bool(void) const { return !!m_val; }
-    operator T&(void) const { return *m_val; }
-
-    AutoCheckout& operator=(AutoCheckout&& rhs) {
-      std::swap(m_parent, rhs.m_parent);
-      std::swap(m_val, rhs.m_val);
-      return *this;
-    }
-  };
 
 private:
   /// <summary>
@@ -276,6 +224,8 @@ private:
     else
       RevertSatisfaction<T>();
   }
+
+  template<class T> friend class AutoCheckout;
 
 public:
   /// <summary>
@@ -478,9 +428,9 @@ public:
   }
 
   // Overload for checkout types
-  template<class T>
-  operator auto_out<T, true>(void) const {
-    return auto_out<T, true>(packet.Checkout());
+  template<class T, bool checkout>
+  operator auto_out<T, checkout>(void) const {
+    return auto_out<T, checkout>(packet.Checkout<T>());
   }
 
   // This is our last-ditch attempt:  Run a query on the underlying packet

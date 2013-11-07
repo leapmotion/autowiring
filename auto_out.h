@@ -1,4 +1,5 @@
 #pragma once
+#include "AutoCheckout.h"
 
 /// <summary>
 /// A utility type to positively declare an output to an AutoFilter
@@ -14,16 +15,19 @@
 template<class T, bool auto_ready = true>
 class auto_out {
 public:
-  auto_out(T& obj) :
-    obj(obj)
-  {}
+  auto_out(AutoCheckout<T>&& checkout) :
+    m_checkout(std::move(checkout))
+  {
+    // Mark ready by default:
+    m_checkout.Ready();
+  }
 
   ~auto_out(void) {}
 
 private:
-  T& obj;
+  AutoCheckout<T> m_checkout;
 
 public:
-  T* operator->(void) const { return &obj; }
-  operator T*(void) const { return &obj; }
+  T* operator->(void) const { return m_checkout; }
+  operator T*(void) const { return m_checkout; }
 };
