@@ -286,19 +286,12 @@ public:
   /// </summary>
   template<class T>
   const T& Get(void) const {
-    T* retVal;
+    const T* retVal;
     if(!Get(retVal))
       throw_rethrowable std::runtime_error("Attempted to obtain a value which was not decorated on this packet");
     return *retVal;
   }
 
-  template<class T>
-  T& Get(void) {
-    T* retVal;
-    if(!Get(retVal))
-      throw_rethrowable std::runtime_error("Attempted to obtain a value which was not decorated on this packet");
-    return *retVal;
-  }
 
   /// <summary>
   /// Determines whether this pipeline packet contains an entry of the specified type
@@ -476,12 +469,16 @@ public:
     return packet.shared_from_this();
   }
 
-  operator AutoPacket&(void) {
+  operator AutoPacket*(void) const {
+    return &packet;
+  }
+
+  operator AutoPacket&(void) const {
     return packet;
   }
 
   template<class T>
-  operator T&(void) const {
+  operator const T&(void) const {
     return packet.Get<typename std::decay<T>::type>();
   }
 };
