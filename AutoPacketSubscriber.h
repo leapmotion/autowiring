@@ -30,7 +30,7 @@ struct CallExtractor {
 template<class T>
 struct CallExtractor<T, true> {
   typedef void(*t_call)(void*, const AutoPacketAdaptor&);
-  typedef std::false_type deferred;
+  typedef std::true_type deferred;
 
   static void CallDeferred(T* pObj, const AutoPacketAdaptor& repo) {
     const t_call call =
@@ -134,7 +134,7 @@ public:
     m_subscriber(rhs.m_subscriber),
     m_ti(rhs.m_ti),
     m_pArgs(rhs.m_pArgs),
-    m_deferred(false),
+    m_deferred(rhs.m_deferred),
     m_arity(rhs.m_arity),
     m_requiredCount(rhs.m_requiredCount),
     m_optionalCount(rhs.m_optionalCount),

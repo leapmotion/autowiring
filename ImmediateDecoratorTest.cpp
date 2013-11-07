@@ -33,6 +33,11 @@ TEST_F(ImmediateDecoratorTest, VerifyNoImmediateCrossthread) {
   auto packet = factory->NewPacket();
   packet->Decorate(Decoration<0>());
 
+  // Verify that the factory correctly recognizes a deferred tag:
+  auto desc = factory->FindSubscriber<FilterB>();
+  ASSERT_TRUE(desc != nullptr) << "Failed to find a known subscriber";
+  ASSERT_TRUE(desc->IsDeferred()) << "Deferred filter incorrectly identified as being non-deferred";
+
   // Now, use an immediate decoration on the other half, and wait for the filter to quit:
   Decoration<1> dec;
   packet->DecorateImmediate(&dec);

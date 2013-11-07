@@ -103,6 +103,9 @@ public:
     return &m_subscribers[subscriberIndex];
   }
 
+  template<class T>
+  const AutoPacketSubscriber* FindSubscriber(void) const { return FindSubscriber(typeid(T)); }
+
   /// <summary>
   /// Finds the monotonic index corresponding to a particular subscriber type
   /// </summary>
