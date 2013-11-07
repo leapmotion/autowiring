@@ -128,6 +128,13 @@ private:
       return static_cast<Enclosure<T>&>(*pEnclosure);
     }
 
+    template<class T>
+    EnclosureShort<T>& Initialize(T* val) {
+      if(!pEnclosure)
+        pEnclosure = reinterpret_cast<Enclosure<T>*>(new char[sizeof(Enclosure<T>)]);
+      return *new (pEnclosure) EnclosureShort<T>(val);
+    }
+
     void Reset(void) {
       if(initialized) {
         initialized = false;
@@ -169,6 +176,12 @@ private:
       is_optional ? optional-- : remaining--;
       return remaining || optional;
     }
+
+    void Increment(bool is_optional) {
+      is_optional ? optional++ : remaining++;
+    }
+
+    operator bool(void) const { return !remaining && !optional; }
   };
 
   // The associated packet factory:
@@ -198,6 +211,11 @@ private:
   /// satisfied by this decoration.
   /// </remarks>
   void UpdateSatisfaction(const std::type_info& info, bool is_satisfied);
+
+  /// <summary>
+  /// Logical inverse of UpdateSatisfaction
+  /// </summary>
+  void ReverseSatisfaction(const std::type_info& info);
 
   /// <summary>
   /// Reverses a satisfaction that was issued, as in by a checkout, but not completed
@@ -364,12 +382,27 @@ public:
   /// this call.
   /// </remarks>
   template<class T>
-  void DecorateImmediate(T&& t) {
+  void DecorateImmediate(const T* pt) {
+    // Perform standard decoration with a short initialization:
+    DecorationDisposition* pEntry;
+    {
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      pEntry = &m_mp[typeid(T)];
+      if(pEntry->initialized)
+        throw std::runtime_error("Cannot perform immediate decoration with type T, the requested decoration already exists");
+      pEntry->initialized = true;
+    }
+
     // Satisfy:
-    Decorate(std::move(&t));
+    auto& retVal = pEntry->Initialize(const_cast<T*>(pt));
+    UpdateSatisfaction(typeid(T), true);
 
     // Now we have to evict the rhs to prevent subsequent satisfactions from trying
     // to obtain this field:
+    ReverseSatisfaction(typeid(T));
+
+    (boost::lock_guard<boost::mutex>)m_lock,
+    static_cast<Enclosure<T>&>(*pEntry->pEnclosure).ptr = nullptr;
   }
 
   /// <returns>

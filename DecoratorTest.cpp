@@ -99,6 +99,15 @@ public:
   }
 };
 
+class FilterF:
+  public FilterRoot
+{
+public:
+  void AutoFilter(const Decoration<0>& dec) {
+    m_called = true;
+  }
+};
+
 TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   vector<const type_info*> v;
 
@@ -393,4 +402,24 @@ TEST_F(DecoratorTest, VerifyReflexiveReciept) {
   EXPECT_FALSE(filterE->m_called) << "Packet listener was notified prematurely";
   packet.reset();
   EXPECT_TRUE(filterE->m_called) << "Packet listener was not notified as anticipated";
+}
+
+TEST_F(DecoratorTest, VerifyImmediate) {
+  // Create one filter which cannot be immediately satisfied, and one which can be:
+  AutoRequired<FilterA> filterA;
+  AutoRequired<FilterF> filterF;
+
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet = factory->NewPacket();
+
+  // Create an immediate style decoration:
+  Decoration<0> imm;
+  packet->DecorateImmediate(&imm);
+  EXPECT_TRUE(filterF->m_called) << "FilterF should have been satisfied immediately, but it was not";
+
+  // Now add the other decoration:
+  packet->Decorate(Decoration<1>());
+
+  // Verify that the first filter was not satisfied:
+  EXPECT_FALSE(filterA->m_called) << "FilterA was called, even though it had no opportunity to be called";
 }
