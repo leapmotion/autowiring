@@ -1,9 +1,9 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _OBJECT_POOL_H
-#define _OBJECT_POOL_H
+#pragma once
+#include "Object.h"
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <set>
+#include RVALUE_HEADER
 #include SHARED_PTR_HEADER
 
 template<class T>
@@ -11,38 +11,23 @@ struct NoOp {
   void operator() (T& op) {}
 };
 
-/// <summary>
-/// Allows the management of a pool of objects based on an embedded factory
-/// </summary>
-/// <param name="T>The type to be pooled</param>
-/// <param name="_Rx">A function object which resets instances returned to the pool</param>
-/// <remarks>
-/// This class is a type of factory that creates an object of type T.  The object pool
-/// creates a shared pointer for the consumer to use, and when the last shared pointer
-/// for that object is destroyed, the wrapped object is returned to this pool rather than
-/// being deleted.  Returned objects may satisfy subsequent requests for construction.
-///
-/// All object pool methods are thread safe.
-///
-/// Issued pool members must be released before the pool goes out of scope
-/// </remarks>
-template<class T, class _Rx = NoOp<T> >
-class ObjectPool
+template<class T>
+class ObjectPoolBase:
+  public Object
 {
 public:
-  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
-  ObjectPool(size_t limit = ~0, size_t maxPooled = ~0):
+  ObjectPoolBase(size_t limit = ~0, size_t maxPooled = ~0) :
     m_limit(limit),
     m_maxPooled(maxPooled),
     m_outstanding(0)
   {}
 
-  ~ObjectPool(void) {
+  ~ObjectPoolBase(void) {
     for(auto q = m_objs.begin(); q != m_objs.end(); q++)
       delete *q;
   }
 
-private:
+protected:
   boost::mutex m_lock;
   boost::condition_variable m_setCondition;
 
@@ -53,17 +38,13 @@ private:
   size_t m_limit;
   size_t m_outstanding;
 
-  // Resetter, where relevant:
-  _Rx m_rx;
-
-protected:
   void Return(T* ptr) {
     {
-      boost::lock_guard<boost::mutex> lk(m_lock);
+      boost::lock_guard<boost::mutex> lk(this->m_lock);
       m_outstanding--;
       if(m_objs.size() < m_maxPooled) {
         // Reset, insert, return
-        m_rx(*ptr);
+        Reset(*ptr);
         m_objs.insert(ptr);
         m_setCondition.notify_one();
         return;
@@ -74,7 +55,52 @@ protected:
     delete ptr;
   }
 
+  /// <summary>
+  /// Actually performs a reset of the passed object
+  /// </summary>
+  virtual void Reset(T& ptr) = 0;
+
+  /// <summary>
+  /// Obtains an element from the object queue, assumes exterior synchronization
+  /// </summary>
+  /// <remarks>
+  /// This method will unconditionally increment the outstanding count and will not attempt
+  /// to perform bounds checking to ensure that the desired element may be issued
+  /// </remarks>
+  std::shared_ptr<T> ObtainElementUnsafe(boost::unique_lock<boost::mutex>& lk) {
+    // Unconditionally increment the outstanding count:
+    m_outstanding++;
+
+    // Cached, or construct?
+    T* pObj;
+    if(m_objs.size()) {
+      // Lock and remove an element at random:
+      auto q = m_objs.begin();
+      pObj = *q;
+      m_objs.erase(q);
+    } else {
+      // Lock release, so construction does not have to be synchronized:
+      lk.unlock();
+
+      // We failed to recover an object, create a new one:
+      pObj = new T;
+    }
+
+    // Fill the shared pointer with the object we created, and ensure that we override
+    // the destructor so that the object is returned to the pool when it falls out of
+    // scope.
+    return std::shared_ptr<T>(
+      pObj,
+      [this] (T* ptr) {
+        this->Return(ptr);
+      }
+    );
+  }
+
 public:
+  // Accessor methods:
+  size_t GetOutstanding(void) const { return m_outstanding; }
+
   /// <summary>
   /// This sets the maximum number of entities that the pool will cache to satisfy a later allocation request
   /// </summary>
@@ -105,27 +131,30 @@ public:
   }
 
   /// <summary>
+  /// Blocks until an object becomes available from the pool, or the timeout has elapsed
+  /// </summary>
+  template<class Duration>
+  std::shared_ptr<T> WaitFor(Duration duration) {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    if(m_setCondition.wait_for(
+        lk,
+        duration,
+        [this]() -> bool { return m_outstanding < m_limit; }
+      )
+    )
+      return ObtainElementUnsafe(lk);
+    return std::shared_ptr<T>();
+  }
+
+  /// <summary>
   /// Blocks until an object becomes available from the pool
   /// </summary>
   std::shared_ptr<T> Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    m_setCondition.wait(lk, [this] () -> bool {
+    m_setCondition.wait(lk, [this]() -> bool {
       return m_outstanding < m_limit;
     });
-
-    // Unconditionally increment the outstanding count:
-    m_outstanding++;
-
-    // If we don't have anything, create a new item to be returned:
-    if(!m_objs.size()) {
-      lk.unlock();
-      return std::shared_ptr<T>(new T);
-    }
-    
-    typename t_stType::iterator q = m_objs.begin();
-    auto retVal = *q;
-    m_objs.erase(q);
-    return std::shared_ptr<T>(retVal);
+    return ObtainElementUnsafe(lk);
   }
 
   /// <summary>
@@ -137,45 +166,48 @@ public:
   /// outstanding limit should be careful to check the return of this function.
   /// </remarks>
   void operator()(std::shared_ptr<T>& rs) {
-    T* pObj = nullptr;
-
     // Force the passed value to be empty so we don't cause a deadlock by accident
     rs.reset();
 
-    {
-      boost::unique_lock<boost::mutex> lk(m_lock);
-      if(m_limit <= m_outstanding)
-        // Already at the limit
-        return;
-
-      // Increment total objects outstanding, unconditionally:
-      m_outstanding++;
-
-      // Cached, or construct?
-      if(m_objs.size()) {
-        // Lock and remove an element at random:
-        typename t_stType::iterator q = m_objs.begin();
-        pObj = *q;
-        m_objs.erase(q);
-      } else {
-        // Lock release, so construction does not have to be synchronized:
-        lk.unlock();
-
-        // We failed to recover an object, create a new one:
-        pObj = new T;
-      }
-    }
-
-    // Fill the shared pointer with the object we created, and ensure that we override
-    // the destructor so that the object is returned to the pool when it falls out of
-    // scope.
-    rs.reset(
-      pObj,
-      [this] (T* ptr) {
-        this->Return(ptr);
-      }
-    );
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    if(m_limit <= m_outstanding)
+      // Already at the limit
+      return;
+    rs = ObtainElementUnsafe(lk);
   }
 };
 
-#endif
+/// <summary>
+/// Allows the management of a pool of objects based on an embedded factory
+/// </summary>
+/// <param name="T>The type to be pooled</param>
+/// <param name="_Rx">A function object which resets instances returned to the pool</param>
+/// <remarks>
+/// This class is a type of factory that creates an object of type T.  The object pool
+/// creates a shared pointer for the consumer to use, and when the last shared pointer
+/// for that object is destroyed, the wrapped object is returned to this pool rather than
+/// being deleted.  Returned objects may satisfy subsequent requests for construction.
+///
+/// All object pool methods are thread safe.
+///
+/// Issued pool members must be released before the pool goes out of scope
+/// </remarks>
+template<class T, class _Rx = NoOp<T>>
+class ObjectPool:
+  public ObjectPoolBase<T>
+{
+public:
+  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
+  ObjectPool(size_t limit = ~0, size_t maxPooled = ~0, _Rx&& rx = _Rx()):
+    ObjectPoolBase<T>(limit, maxPooled),
+    m_rx(std::move(rx))
+  {}
+
+private:
+  // Resetter, where relevant:
+  _Rx m_rx;
+
+protected:
+  void Reset(T& obj) override { m_rx(obj); }
+};
+
