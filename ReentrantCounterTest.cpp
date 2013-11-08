@@ -53,10 +53,12 @@ TEST_F(ReentrantCounterTest, VerifySimpleBenchmarking) {
 
 TEST_F(ReentrantCounterTest, VerifyComplexReentrancy) {
   // Run our reentrant function:
-  while(g_curOffset < ARRAYCOUNT(gc_timeouts))
+  while(g_curOffset < ARRAYCOUNT(gc_timeouts)){
+    //the dingus who wrote this ended up creating SEVERAL ROOTS so we have to have a way to mark fresh runs
+    ReentrantCounter::globalTimeElapsedSinceStart = boost::chrono::high_resolution_clock::now() - boost::chrono::high_resolution_clock::now();
     Reenter();
-
-  // Validate timeouts:
+  }
+  // Validate timeouts:;
   for(size_t i = 0; i < ARRAYCOUNT(gc_timeouts); i++) {
     EXPECT_EQ(1, g_timeouts[i].hitCount) << "Performance counter hit too many times";
     EXPECT_LT(
@@ -64,8 +66,10 @@ TEST_F(ReentrantCounterTest, VerifyComplexReentrancy) {
       boost::chrono::milliseconds(gc_timeouts[i])
     );
     EXPECT_GT(
+      //boost::chrono::duration_cast<boost::chrono::milliseconds>(g_timeouts[i].lingerTime + slack),
       g_timeouts[i].lingerTime + slack,
-      boost::chrono::milliseconds(gc_timeouts[i])
+      //boost::chrono::milliseconds(gc_timeouts[i])
+      gc_timeouts[i]
     );
   }
 }
