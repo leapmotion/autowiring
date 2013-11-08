@@ -63,13 +63,11 @@ TEST_F(ReentrantCounterTest, VerifyComplexReentrancy) {
     EXPECT_EQ(1, g_timeouts[i].hitCount) << "Performance counter hit too many times";
     EXPECT_LT(
       g_timeouts[i].lingerTime - slack,
-      boost::chrono::milliseconds(gc_timeouts[i])
+      boost::chrono::microseconds(gc_timeouts[i])
     );
     EXPECT_GT(
-      //boost::chrono::duration_cast<boost::chrono::milliseconds>(g_timeouts[i].lingerTime + slack),
       g_timeouts[i].lingerTime + slack,
-      //boost::chrono::milliseconds(gc_timeouts[i])
-      gc_timeouts[i]
+      boost::chrono::microseconds(gc_timeouts[i])
     );
   }
 }
