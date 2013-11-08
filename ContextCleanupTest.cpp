@@ -117,9 +117,6 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   // Context shutdown
   context->SignalShutdown();
 
-  // Cause the thread to exit:
-  simple->Stop();
-
   // Now we verify that exiting happens promptly:
   EXPECT_TRUE(context->Wait(milliseconds(100))) << "Context did not exit in a timely fashion";
 }
