@@ -9,6 +9,11 @@ struct PerformanceCounter {
 
   size_t hitCount;
   boost::chrono::nanoseconds lingerTime;
+  
+
+  ~PerformanceCounter(){
+ // std::cout<<"Performance Counter DYING"<<std::endl;
+  }
 };
 
 /// <summary>
@@ -18,10 +23,15 @@ class ReentrantCounter {
 public:
   ReentrantCounter(PerformanceCounter& duration);
   ~ReentrantCounter(void);
+  static size_t numberOfTimesEntered;
 
+  static boost::chrono::nanoseconds globalTimeElapsedSinceStart;  
+  size_t timesEnteredSinceIStarted;
 private:
   PerformanceCounter& duration;
-
+  
   // Construction time:
   boost::chrono::high_resolution_clock::time_point startTime;
+  boost::chrono::high_resolution_clock::time_point endTime;
+  boost::chrono::nanoseconds myRecordedTimeElapsedSinceStart;
 };
