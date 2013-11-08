@@ -1,8 +1,8 @@
 #pragma once
-#include <gtest/gtest.h>
+#include "EnclosedContextTestBase.h"
 
 class ObjectPoolTest:
-  public testing::Test
+  public EnclosedContextTestBase
 {
 };
 
