@@ -60,6 +60,25 @@ protected:
   /// </summary>
   virtual void Reset(T& ptr) = 0;
 
+  /// <summary>
+  /// Obtains an element from the object queue, assumes exterior synchronization
+  /// </summary>
+  std::shared_ptr<T> ObtainElementUnsafe(boost::unique_lock<boost::mutex>& lk) {
+    // Unconditionally increment the outstanding count:
+    m_outstanding++;
+
+    // If we don't have anything, create a new item to be returned:
+    if(!m_objs.size()) {
+      lk.unlock();
+      return std::shared_ptr<T>(new T);
+    }
+
+    typename t_stType::iterator q = m_objs.begin();
+    auto retVal = *q;
+    m_objs.erase(q);
+    return std::shared_ptr<T>(retVal);
+  }
+
 public:
   // Accessor methods:
   size_t GetOutstanding(void) const { return m_outstanding; }
@@ -94,27 +113,30 @@ public:
   }
 
   /// <summary>
+  /// Blocks until an object becomes available from the pool, or the timeout has elapsed
+  /// </summary>
+  template<class Duration>
+  std::shared_ptr<T> WaitFor(Duration duration) {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    if(m_setCondition.wait_for(
+        lk,
+        duration,
+        [this]() -> bool { return m_outstanding < m_limit; }
+      )
+    )
+      return ObtainElementUnsafe(lk);
+    return std::shared_ptr<T>();
+  }
+
+  /// <summary>
   /// Blocks until an object becomes available from the pool
   /// </summary>
   std::shared_ptr<T> Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    m_setCondition.wait(lk, [this] () -> bool {
+    m_setCondition.wait(lk, [this]() -> bool {
       return m_outstanding < m_limit;
     });
-
-    // Unconditionally increment the outstanding count:
-    m_outstanding++;
-
-    // If we don't have anything, create a new item to be returned:
-    if(!m_objs.size()) {
-      lk.unlock();
-      return std::shared_ptr<T>(new T);
-    }
-    
-    typename t_stType::iterator q = m_objs.begin();
-    auto retVal = *q;
-    m_objs.erase(q);
-    return std::shared_ptr<T>(retVal);
+    return ObtainElementUnsafe(lk);
   }
 
   /// <summary>
