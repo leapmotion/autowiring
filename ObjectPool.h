@@ -63,20 +63,38 @@ protected:
   /// <summary>
   /// Obtains an element from the object queue, assumes exterior synchronization
   /// </summary>
+  /// <remarks>
+  /// This method will unconditionally increment the outstanding count and will not attempt
+  /// to perform bounds checking to ensure that the desired element may be issued
+  /// </remarks>
   std::shared_ptr<T> ObtainElementUnsafe(boost::unique_lock<boost::mutex>& lk) {
     // Unconditionally increment the outstanding count:
     m_outstanding++;
 
-    // If we don't have anything, create a new item to be returned:
-    if(!m_objs.size()) {
+    // Cached, or construct?
+    T* pObj;
+    if(m_objs.size()) {
+      // Lock and remove an element at random:
+      auto q = m_objs.begin();
+      pObj = *q;
+      m_objs.erase(q);
+    } else {
+      // Lock release, so construction does not have to be synchronized:
       lk.unlock();
-      return std::shared_ptr<T>(new T);
+
+      // We failed to recover an object, create a new one:
+      pObj = new T;
     }
 
-    typename t_stType::iterator q = m_objs.begin();
-    auto retVal = *q;
-    m_objs.erase(q);
-    return std::shared_ptr<T>(retVal);
+    // Fill the shared pointer with the object we created, and ensure that we override
+    // the destructor so that the object is returned to the pool when it falls out of
+    // scope.
+    return std::shared_ptr<T>(
+      pObj,
+      [this] (T* ptr) {
+        this->Return(ptr);
+      }
+    );
   }
 
 public:
@@ -148,44 +166,14 @@ public:
   /// outstanding limit should be careful to check the return of this function.
   /// </remarks>
   void operator()(std::shared_ptr<T>& rs) {
-    T* pObj = nullptr;
-
     // Force the passed value to be empty so we don't cause a deadlock by accident
     rs.reset();
 
-    {
-      boost::unique_lock<boost::mutex> lk(m_lock);
-      if(m_limit <= m_outstanding)
-        // Already at the limit
-        return;
-
-      // Increment total objects outstanding, unconditionally:
-      m_outstanding++;
-
-      // Cached, or construct?
-      if(m_objs.size()) {
-        // Lock and remove an element at random:
-        typename t_stType::iterator q = m_objs.begin();
-        pObj = *q;
-        m_objs.erase(q);
-      } else {
-        // Lock release, so construction does not have to be synchronized:
-        lk.unlock();
-
-        // We failed to recover an object, create a new one:
-        pObj = new T;
-      }
-    }
-
-    // Fill the shared pointer with the object we created, and ensure that we override
-    // the destructor so that the object is returned to the pool when it falls out of
-    // scope.
-    rs.reset(
-      pObj,
-      [this] (T* ptr) {
-        this->Return(ptr);
-      }
-    );
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    if(m_limit <= m_outstanding)
+      // Already at the limit
+      return;
+    rs = ObtainElementUnsafe(lk);
   }
 };
 
