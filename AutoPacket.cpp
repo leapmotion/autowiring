@@ -2,7 +2,7 @@
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketProfiler.h"
-#include <boost/any.hpp>
+#include <iostream>
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory):
   m_factory(factory)
@@ -151,6 +151,18 @@ bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
   return false;
 }
 
+void AutoPacket::Print(std::ostream& os) const {
+  boost::lock_guard<boost::mutex> lk(m_lock);
+
+  for(auto q = m_mp.begin(); q != m_mp.end(); q++) {
+    os << q->first.name() << " = " << q->second.pEnclosure << std::endl;
+  }
+}
+
 std::shared_ptr<AutoPacket> ExtractSharedPointer(const AutoPacketAdaptor& adaptor) {
   return adaptor;
+}
+
+std::ostream& operator<<(std::ostream& os, const AutoPacket& packet) {
+  return packet.Print(os), os;
 }

@@ -194,7 +194,7 @@ public:
   /// <summary>
   /// Checks out the specified type, providing it to the caller to be filled in
   /// </summary>
-  /// <param name="use_pool">If set, allocations will use an object pool instead of an 
+  /// <param name="use_pool">If set, allocations will use an object pool instead of an
   /// <remarks>
   /// The caller must call Ready on the returned value before it falls out of scope in order
   /// to ensure that the checkout is eventually committed.  The checkout will be committed
@@ -315,6 +315,11 @@ public:
   bool HasSubscribers(void) const {return HasSubscribers(typeid(T));}
 
   bool HasSubscribers(const std::type_info& ti) const;
+
+  /// <summary>
+  /// Debug print routine
+  /// </summary>
+  void Print(std::ostream& os) const;
 };
 
 /// <summary>
@@ -382,3 +387,5 @@ public:
   }
 #endif
 };
+
+std::ostream& operator<<(std::ostream& os, const AutoPacket& packet);
