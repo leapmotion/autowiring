@@ -24,12 +24,12 @@ public:
   ReentrantCounter(PerformanceCounter& duration);
   ~ReentrantCounter(void);
   static size_t numberOfTimesEntered;
-
+  static size_t currentLevel;
   static boost::chrono::nanoseconds globalTimeElapsedSinceStart;  
   size_t timesEnteredSinceIStarted;
 private:
   PerformanceCounter& duration;
-  
+  bool iAmARoot;
   // Construction time:
   boost::chrono::high_resolution_clock::time_point startTime;
   boost::chrono::high_resolution_clock::time_point endTime;
