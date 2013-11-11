@@ -2,12 +2,19 @@
 #include "ReentrantCounter.h"
 
 size_t ReentrantCounter::numberOfTimesEntered = 0;
+size_t ReentrantCounter::currentLevel = 0;
 boost::chrono::nanoseconds ReentrantCounter::globalTimeElapsedSinceStart(0);  
 
 ReentrantCounter::ReentrantCounter(PerformanceCounter& duration) :
   duration(duration),
   startTime(boost::chrono::high_resolution_clock::now())
 {
+  iAmARoot = (currentLevel == 0) ?true:false;
+  if(iAmARoot){
+  globalTimeElapsedSinceStart = (boost::chrono::nanoseconds(0)); 
+  numberOfTimesEntered = 0;
+  }
+  currentLevel++;
   numberOfTimesEntered++;
   myRecordedTimeElapsedSinceStart = globalTimeElapsedSinceStart;
   timesEnteredSinceIStarted = numberOfTimesEntered;
@@ -30,4 +37,6 @@ ReentrantCounter::~ReentrantCounter(void)
   }
   globalTimeElapsedSinceStart +=duration.lingerTime;
   //std::cout<<"Here is what I believe my global time elapsed since start is " << globalTimeElapsedSinceStart.count() << std::endl;
+
+  currentLevel--;
 }
