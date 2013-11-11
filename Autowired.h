@@ -68,6 +68,7 @@ public:
 
   template<class U>
   static typename std::enable_if<!has_static_new<U>::value, U*>::type New(void) {
+    static_assert(!std::is_abstract<U>::value, "Cannot create a type which is abstract");
     static_assert(has_simple_constructor<U>::value, "Attempted to create a type which did not provide a zero-arguments ctor");
     return new U;
   }
