@@ -23,13 +23,11 @@ class ReentrantCounter {
 public:
   ReentrantCounter(PerformanceCounter& duration);
   ~ReentrantCounter(void);
-  static size_t numberOfTimesEntered;
-  static size_t currentLevel;
   static boost::chrono::nanoseconds globalTimeElapsedSinceStart;  
-  size_t timesEnteredSinceIStarted;
+  static ReentrantCounter * lastKnownObject;
 private:
   PerformanceCounter& duration;
-  bool iAmARoot;
+  ReentrantCounter * objectIObservedOnStart;
   // Construction time:
   boost::chrono::high_resolution_clock::time_point startTime;
   boost::chrono::high_resolution_clock::time_point endTime;
