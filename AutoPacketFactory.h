@@ -61,6 +61,20 @@ private:
     void operator()(AutoPacket& packet) const;
   };
 
+  struct AutoPacketCreator {
+    AutoPacketCreator(AutoPacketFactory* factory = nullptr) :
+      factory(factory)
+    {}
+
+    AutoPacketCreator(AutoPacketCreator&& rhs) :
+      factory(rhs.factory)
+    {}
+
+    AutoPacketFactory* factory;
+
+    AutoPacket* operator()() const;
+  };
+
   /// <summary>
   /// An independently maintained object pool just for packets
   /// </summary>
@@ -69,7 +83,7 @@ private:
   /// pipeline packet expiration in order to support expiration notification
   /// broadcasts.
   /// </remarks>
-  ObjectPool<AutoPacket, AutoPacketResetter> m_packets;
+  ObjectPool<AutoPacket, AutoPacketResetter, AutoPacketCreator> m_packets;
 
   // Vector of known subscribers--a vector must be used because random access is
   // required due to its use in an adjacency list.
@@ -86,6 +100,8 @@ private:
 
   // Utility override, does nothing
   void AddSubscriber(std::false_type&&) {}
+
+  std::function<void()> fn;
 
 public:
   // Accessor methods:

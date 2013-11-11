@@ -4,12 +4,15 @@
 #include "AutoPacketProfiler.h"
 #include <boost/any.hpp>
 
-AutoPacket::AutoPacket() {}
+AutoPacket::AutoPacket(AutoPacketFactory& factory):
+  m_factory(factory)
+{}
+
 AutoPacket::~AutoPacket() {}
 
 void AutoPacket::UpdateSatisfactionSpecific(size_t subscriberIndex) {
   // No entries remaining in this saturation, we can now make the call
-  const auto& satVec = m_factory->GetSubscriberVector();
+  const auto& satVec = m_factory.GetSubscriberVector();
   auto& entry = satVec[subscriberIndex];
   assert(entry.GetCall());
 
@@ -39,7 +42,7 @@ void AutoPacket::UpdateSatisfactionSpecific(size_t subscriberIndex) {
 }
 
 void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfied) {
-  auto decorator = m_factory->FindDecorator(info);
+  auto decorator = m_factory.FindDecorator(info);
   if(!decorator)
     // Trivial return, there's no subscriber to this decoration
     return;
@@ -63,13 +66,13 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfie
 }
 
 void AutoPacket::PulseSatisfaction(const std::type_info& info) {
-  auto decorator = m_factory->FindDecorator(info);
+  auto decorator = m_factory.FindDecorator(info);
   if(!decorator)
     return;
 
   // Roll back all satisfaction counters:
   const auto& subscribers = decorator->subscribers;
-  const auto& subscriberDescriptors = m_factory->GetSubscriberVector();
+  const auto& subscriberDescriptors = m_factory.GetSubscriberVector();
   for(size_t i = subscribers.size(); i--;) {
     const auto& subscriber = subscribers[i];
 
@@ -111,7 +114,7 @@ void AutoPacket::Reset(void) {
   for(auto q = m_mp.begin(); q != m_mp.end(); q++)
     q->second.satisfied = false;
 
-  auto& vec = m_factory->GetSubscriberVector();
+  auto& vec = m_factory.GetSubscriberVector();
   m_satCounters.resize(vec.size());
   for(size_t i = vec.size(); i--;) {
     const auto& curSrc = vec[i];
@@ -128,7 +131,7 @@ void AutoPacket::Reset(void) {
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
   // Obtain the decorator:
-  auto decorator = m_factory->FindDecorator(ti);
+  auto decorator = m_factory.FindDecorator(ti);
   if(!decorator)
     // Nobody anywhere cares about this type
     return false;

@@ -13,6 +13,10 @@ AutoPacketFactory::AutoPacketResetter::AutoPacketResetter(AutoFired<AutoPacketLi
   m_apl(std::move(apl))
 {}
 
+AutoPacket* AutoPacketFactory::AutoPacketCreator::operator()() const {
+  return new AutoPacket(*factory);
+}
+
 void AutoPacketFactory::AutoPacketResetter::operator()(AutoPacket& packet) const {
   // Notify all listeners that a packet has just returned home:
   m_apl(&AutoPacketListener::OnPacketReturned)(packet);
@@ -21,12 +25,13 @@ void AutoPacketFactory::AutoPacketResetter::operator()(AutoPacket& packet) const
   packet.Release();
 }
 
-AutoPacketFactory::AutoPacketFactory(void)
-{}
+AutoPacketFactory::AutoPacketFactory(void) {}
 
-AutoPacketFactory::AutoPacketFactory(AutoFired<AutoPacketListener>&& apl) :
+AutoPacketFactory::AutoPacketFactory(AutoFired<AutoPacketListener>&& apl):
   m_packets(~0, ~0, AutoPacketResetter(std::move(apl)))
-{}
+{
+  m_packets.SetAlloc(AutoPacketCreator(this));
+}
 
 AutoPacketFactory::~AutoPacketFactory()
 {}

@@ -32,7 +32,7 @@ class AutoPacket:
   public std::enable_shared_from_this<AutoPacket>
 {
 public:
-  AutoPacket(void);
+  AutoPacket(AutoPacketFactory& factory);
   ~AutoPacket(void);
 
 private:
@@ -79,7 +79,7 @@ private:
   };
 
   // The associated packet factory:
-  AutoRequired<AutoPacketFactory> m_factory;
+  AutoPacketFactory& m_factory;
 
   // Profiler, if one exists:
   Autowired<AutoPacketProfiler> m_profiler;
