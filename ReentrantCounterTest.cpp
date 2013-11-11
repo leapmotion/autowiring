@@ -54,8 +54,6 @@ TEST_F(ReentrantCounterTest, VerifySimpleBenchmarking) {
 TEST_F(ReentrantCounterTest, VerifyComplexReentrancy) {
   // Run our reentrant function:
   while(g_curOffset < ARRAYCOUNT(gc_timeouts)){
-    //the dingus who wrote this ended up creating SEVERAL ROOTS so we have to have a way to mark fresh runs
-    ReentrantCounter::globalTimeElapsedSinceStart = boost::chrono::high_resolution_clock::now() - boost::chrono::high_resolution_clock::now();
     Reenter();
   }
   // Validate timeouts:;
