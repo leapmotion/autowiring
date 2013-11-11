@@ -73,6 +73,10 @@ private:
     AutoPacketFactory* factory;
 
     AutoPacket* operator()() const;
+
+    void operator=(AutoPacketCreator&& rhs) {
+      factory = rhs.factory;
+    }
   };
 
   /// <summary>
