@@ -1,5 +1,6 @@
 #pragma once
 #include "Autowired.h"
+#include "AutoPacket.h"
 #include "AutoPacketSubscriber.h"
 #include "Decompose.h"
 #include "FilterPropertyExtractor.h"
@@ -9,7 +10,6 @@
 #include STL_UNORDERED_MAP
 #include <vector>
 
-class AutoPacket;
 class AutoPacketListener;
 class Deferred;
 class DispatchQueue;
