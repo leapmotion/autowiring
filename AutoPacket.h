@@ -315,11 +315,6 @@ public:
   bool HasSubscribers(void) const {return HasSubscribers(typeid(T));}
 
   bool HasSubscribers(const std::type_info& ti) const;
-
-  /// <summary>
-  /// Debug print routine
-  /// </summary>
-  void Print(std::ostream& os) const;
 };
 
 /// <summary>
@@ -387,5 +382,3 @@ public:
   }
 #endif
 };
-
-std::ostream& operator<<(std::ostream& os, const AutoPacket& packet);
