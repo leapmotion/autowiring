@@ -2,7 +2,7 @@
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketProfiler.h"
-#include <iostream>
+#include <boost/any.hpp>
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory):
   m_factory(factory)
@@ -84,7 +84,7 @@ void AutoPacket::PulseSatisfaction(const std::type_info& info) {
     if(!curCounter.PseudoDecrement(subscriber.second))
       // Still has entries outstanding, give up
       continue;
-    
+
     // Commit this decrementation, generate the call
     curCounter.Decrement(subscriber.second);
     UpdateSatisfactionSpecific(subscriber.first);
@@ -151,18 +151,6 @@ bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
   return false;
 }
 
-void AutoPacket::Print(std::ostream& os) const {
-  boost::lock_guard<boost::mutex> lk(m_lock);
-
-  for(auto q = m_mp.begin(); q != m_mp.end(); q++) {
-    os << q->first.name() << " = " << q->second.pEnclosure << std::endl;
-  }
-}
-
 std::shared_ptr<AutoPacket> ExtractSharedPointer(const AutoPacketAdaptor& adaptor) {
   return adaptor;
-}
-
-std::ostream& operator<<(std::ostream& os, const AutoPacket& packet) {
-  return packet.Print(os), os;
 }
