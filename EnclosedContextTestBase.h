@@ -18,11 +18,10 @@ class EnclosedContextTestBase:
   public testing::Test
 {
 public:
-  EnclosedContextTestBase(void):
-    m_pshr(m_create)
-  {
-    m_createWeak = m_create;
-  }
+  EnclosedContextTestBase(void) :
+    m_pshr(m_create),
+    m_createWeak(m_create)
+  {}
 
   ~EnclosedContextTestBase(void) {
     // Only attempt teardown if it hasn't already happened:
@@ -34,10 +33,10 @@ public:
 
     // Do not allow teardown to take more than a millisecond
     if(!ctxt->Wait(static_cast<boost::chrono::duration<double, boost::milli> >(100.))) {
-      // Critical error--cannot
-      assert(false);
+      ASSERT(false);
     }
   }
+
 
 protected:
   // The context proper.  This is automatically assigned as the current
