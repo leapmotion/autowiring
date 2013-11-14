@@ -421,6 +421,16 @@ public:
     // Extract ground for this value, we'll use it to select the correct forest for the value:
     typedef typename ground_type_of<T>::type groundType;
 
+    // Validate that this addition does not generate an ambiguity:
+    {
+      std::shared_ptr<T> ptr;
+      FindByType<T>(ptr);
+      if(ptr == value)
+        throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
+      if(ptr)
+        throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+    }
+
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
 
