@@ -154,6 +154,12 @@ set(
   TestFixtures/MultiInherit.h
 )
 
+set(
+  AutowiringFixture_SRCS
+  SelfSelectingFixture.h
+  SelfSelectingFixture.cpp
+)
+
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 if(NOT BUILD_WINDOWS)
@@ -176,10 +182,12 @@ if(NOT BUILD_WINDOWS)
 endif()
 
 if(BUILD_TESTING)
+  ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringFixture_SRCS)
+  add_library(AutowiringFixture ${AutowiringFixture_SRCS})
+
   ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
   add_executable(AutowiringTest ${AutowiringTest_SRCS} "../gtest-all-guard.cpp")
-  
-  target_link_libraries(AutowiringTest Autowiring)
+  target_link_libraries(AutowiringTest Autowiring AutowiringFixture)
 endif(BUILD_TESTING)
 
 if(BUILD_AUTONET)
