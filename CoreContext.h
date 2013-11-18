@@ -69,12 +69,16 @@ public:
   /// <summary>
   /// Factory to create a new context
   /// </summary>
+  /// <param name="name">The optional context name.  If null, creates an anonymous context.</param>
   /// <param name="pParent">An optional parent context.  If null, will default to the root context.</param>
-  std::shared_ptr<CoreContext> Create(void);
+  std::shared_ptr<CoreContext> Create(const char* name = nullptr);
 
 protected:
   // General purpose lock for this class
   mutable boost::mutex m_lock;
+
+  // The context's internally held name--required to be a literal string
+  const char* m_name;
 
   // A pointer to the parent context
   std::shared_ptr<CoreContext> m_pParent;
@@ -243,6 +247,7 @@ public:
   // Accessor methods:
   size_t GetMemberCount(void) const {return m_byType.size();}
   bool IsRunning(void) const {return !!m_refCount;}
+  const char* GetName(void) const { return m_name; }
 
   /// <returns>
   /// True if CoreThread instances in this context should begin teardown operations
