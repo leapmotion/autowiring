@@ -58,6 +58,7 @@ set(
   LockReducedCollection.h
   Object.h
   ObjectPool.h
+  MicroBolt.h
   PolymorphicTypeForest.h
   ReentrantCounter.h
   ReentrantCounter.cpp
@@ -139,6 +140,8 @@ set(
   PostConstructTest.cpp
   ReentrantCounterTest.h
   ReentrantCounterTest.cpp
+  SelfSelectingFixtureTest.h
+  SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
   TransientContextMemberTest.h
