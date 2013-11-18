@@ -17,7 +17,8 @@ boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curCont
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
   m_pParent(pParent),
   m_shouldStop(false),
-  m_refCount(0)
+  m_refCount(0),
+  m_name(nullptr)
 {
   // Prime the proxy map with the APL recipient:
   auto ptr = make_shared<EventReceiverProxy<AutoPacketListener>>();
@@ -106,7 +107,7 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   return retVal;
 }
 
-std::shared_ptr<CoreContext> CoreContext::Create(void) {
+std::shared_ptr<CoreContext> CoreContext::Create(const char* name) {
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert
