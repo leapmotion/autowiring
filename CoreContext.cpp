@@ -120,6 +120,8 @@ std::shared_ptr<CoreContext> CoreContext::Create(const char* name) {
   // Create the child context
   CoreContext* pContext = new CoreContext(shared_from_this());
 
+  //Set that name baby.
+  pContext -> SetName(name);
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
   std::shared_ptr<CoreContext> retVal(

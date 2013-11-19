@@ -2,7 +2,7 @@
 #ifndef _CONTEXT_CREATION_LISTENER_H
 #define _CONTEXT_CREATION_LISTENER_H
 #include "BoltBase.h"
-
+#include <iostream>
 /// <summary>
 /// </summary>
 /// <param name="contextName">The name of the context whose creation we want to listen for</param>
