@@ -248,7 +248,7 @@ public:
   size_t GetMemberCount(void) const {return m_byType.size();}
   bool IsRunning(void) const {return !!m_refCount;}
   const char* GetName(void) const { return m_name; }
-
+  void SetName(const char* name) {  m_name = name; }
   /// <returns>
   /// True if CoreThread instances in this context should begin teardown operations
   /// </returns>
