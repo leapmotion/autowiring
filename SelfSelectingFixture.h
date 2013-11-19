@@ -2,6 +2,7 @@
 #include "ContextMember.h"
 
 extern const char s_expectedFixtureName[];
+extern const char s_pipelinename[];
 
 class SelfSelectingFixture:
   public ContextMember

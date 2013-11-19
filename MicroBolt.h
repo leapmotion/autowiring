@@ -19,7 +19,11 @@ class MicroBolt:
   public Bolt<contextName>
 {
 public:
+  MicroBolt(){
+    std::cout << "Sanity check that micro bolt was constructed somewhere:  " << contextName;
+  }
   void ContextCreated(void) override {
+    std::cout << "Hi I'm a Bolt, I just heard the creation of a little context named: " << contextName;
     AutoRequired<T>();
   }
 };
