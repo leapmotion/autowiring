@@ -82,7 +82,7 @@ public:
       std::shared_ptr<CoreContext> context = m_context.lock();
       if(context) {
         // Create:
-        child = context->Create();
+        child = context->Create(contextName);
         childWeak = child;
         retVal.reset(new DeferredCreationNotice(contextName, child));
 

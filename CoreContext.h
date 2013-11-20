@@ -71,7 +71,7 @@ public:
   /// </summary>
   /// <param name="name">The optional context name.  If null, creates an anonymous context.</param>
   /// <param name="pParent">An optional parent context.  If null, will default to the root context.</param>
-  std::shared_ptr<CoreContext> Create(const char* name = nullptr);
+  std::shared_ptr<CoreContext> Create(const char* name = "IAMANON");
 
 protected:
   // General purpose lock for this class
@@ -80,6 +80,8 @@ protected:
   // The context's internally held name--required to be a literal string
   const char* m_name;
 
+  // The context's internally held full-path name (recursively defined through parents)--required to be a literal string
+  std::string m_fullPathName;
   // A pointer to the parent context
   std::shared_ptr<CoreContext> m_pParent;
 
@@ -249,6 +251,23 @@ public:
   bool IsRunning(void) const {return !!m_refCount;}
   const char* GetName(void) const { return m_name; }
   void SetName(const char* name) {  m_name = name; }
+
+  std::string GetFullPath(void) const {
+    //return GetName();
+    //std::string a  = std::string("hi");
+    //const char * temp = a.c_str();
+    //std::cout<< "HI TEMP WAS" << temp << std::endl;
+    //return a;
+     if(!m_pParent) return std::string(GetName()) ; 
+    //else return m_pParent -> GetFullPath();
+      
+      return   std::string(m_pParent -> GetFullPath()) + "/" + std::string(GetName()) ;
+  }
+  void SetFullPath(const char* name) {  
+    m_fullPathName = GetFullPath();
+     const char * something = GetFullPath().c_str();
+    std::cout<< "HI MY FULL PATH IS: " << m_fullPathName << std::endl;
+  }
   /// <returns>
   /// True if CoreThread instances in this context should begin teardown operations
   /// </returns>
