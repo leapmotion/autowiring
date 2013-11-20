@@ -27,6 +27,7 @@
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_MAP
 
+
 #ifndef ASSERT
   #ifdef _DEBUG
     #include <assert.h>
@@ -253,20 +254,13 @@ public:
   void SetName(const char* name) {  m_name = name; }
 
   std::string GetFullPath(void) const {
-    //return GetName();
-    //std::string a  = std::string("hi");
-    //const char * temp = a.c_str();
-    //std::cout<< "HI TEMP WAS" << temp << std::endl;
-    //return a;
      if(!m_pParent) return std::string(GetName()) ; 
-    //else return m_pParent -> GetFullPath();
-      
+    //else return m_pParent -> GetFullPath();      
       return   std::string(m_pParent -> GetFullPath()) + "/" + std::string(GetName()) ;
   }
   void SetFullPath(const char* name) {  
     m_fullPathName = GetFullPath();
-     const char * something = GetFullPath().c_str();
-    std::cout<< "HI MY FULL PATH IS: " << m_fullPathName << std::endl;
+    //std::cout<< "HI MY FULL PATH IS: " << m_fullPathName << std::endl;    
   }
   /// <returns>
   /// True if CoreThread instances in this context should begin teardown operations
