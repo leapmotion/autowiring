@@ -31,3 +31,16 @@ public:
       AutoRequired<T>();
   }
 };
+
+#define BOLT_TO(type, absolutePath) \
+  namespace { \
+    class SpecificBolt: \
+      public MicroBoltBase \
+    { \
+      void ListenForAnAbsolutePath(const std::string& absoluteContextPath) override { \
+        if(!absoluteContextPath.compare(absolutePath)) \
+          AutoRequired<type>(); \
+      } \
+    }; \
+    static AutoRequired<SpecificBolt> s_bolt; \
+  }
