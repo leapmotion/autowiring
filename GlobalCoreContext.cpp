@@ -13,6 +13,7 @@ GlobalCoreContext::GlobalCoreContext(void):
 
   // Make ourselves the current context before filling it:
   SetCurrent();
+  SetName("Global");
 }
 
 GlobalCoreContext::~GlobalCoreContext(void) {
