@@ -1,7 +1,7 @@
 #pragma once
 #include "Bolt.h"
 #include "Autowired.h"
-
+#include <string>
 /// <summary>
 /// Utility class, defined at file level, which registers a type as a member of a context
 /// </summary>
@@ -14,21 +14,19 @@
 /// 2)  Otherwise, follow the AutoRequired behavior for T on the current context
 ///
 /// </remarks>
-template<class T, const char* contextName>
-class MicroBolt:
-  public Bolt<contextName>
-{
-public:
-  MicroBolt(){
-    std::cout << "Sanity check that micro bolt was constructed somewhere:  " << contextName;
-  }
-  void ContextCreated(void) override {
-    std::cout << "Hi I'm a Bolt, I just heard the creation of a little context named: " << contextName;
-    AutoRequired<T>();
-  }
+
+class MicroBoltBase:
+  public EventReceiver{
+    public:
+      virtual void ListenForAnAbsolutePath(std::string absoluteContextPath)=0;
 };
 
-#define BOLT_TO(T, contextName) \
-  extern const char s_microBolt##T##contextName##str[] = #contextName; \
-  static AutoRequired<MicroBolt<T, s_microBolt##T##contextName##str>> s_microBolt##T##contextName;
-
+template <class T, const char * absolutepath>
+class MicroBolt:
+  public MicroBoltBase
+{
+  public:
+    void ListenForAnAbsolutePath(std::string absoluteContextPath){
+      if(absolutepath == absoluteContextPath)AutoRequired<T>();
+    }
+};

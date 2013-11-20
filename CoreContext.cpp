@@ -7,6 +7,7 @@
 #include "BoltBase.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
+#include "MicroBolt.h"
 #include <algorithm>
 #include <memory>
 
@@ -108,6 +109,8 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   return retVal;
 }
 
+static AutoFired <MicroBoltBase> MyMicroBoltListener;
+
 std::shared_ptr<CoreContext> CoreContext::Create(const char* name) {
   t_childList::iterator childIterator;
   {
@@ -120,12 +123,12 @@ std::shared_ptr<CoreContext> CoreContext::Create(const char* name) {
 
   // Create the child context
   CoreContext* pContext = new CoreContext(shared_from_this());
-
+  
   //Set that name baby.
   pContext -> SetName(name);
   //Set Global name too? But what's my parent ctxt.
   pContext -> SetFullPath(name);
-
+  MyMicroBoltListener(&MicroBoltBase::ListenForAnAbsolutePath)(pContext -> GetFullPath());
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
   std::shared_ptr<CoreContext> retVal(
@@ -139,6 +142,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(const char* name) {
     }
   );
   *childIterator = retVal;
+  
   return retVal;
 }
 
