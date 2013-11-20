@@ -32,15 +32,21 @@ public:
   }
 };
 
-#define BOLT_TO(type, absolutePath) \
-  namespace { \
-    class SpecificBolt: \
-      public MicroBoltBase \
-    { \
-      void ListenForAnAbsolutePath(const std::string& absoluteContextPath) override { \
-        if(!absoluteContextPath.compare(absolutePath)) \
-          AutoRequired<type>(); \
-      } \
-    }; \
-    static AutoRequired<SpecificBolt> s_bolt; \
-  }
+// Internal macro, should not be used by most consumers.  If we used the above MicroBolt template
+// declaration, we would not be able to contrive this macro in a way that allowed users to declare
+// a BOLT_TO statement anywhere except at file level.
+#define BOLT_TO_WITHNAME(type, absolutePath, name) \
+  class name: \
+    public MicroBoltBase \
+  { \
+    void ListenForAnAbsolutePath(const std::string& absoluteContextPath) override { \
+      if(!absoluteContextPath.compare(absolutePath)) \
+        AutoRequired<type>(); \
+    } \
+  }; \
+  static AutoRequired<name> s_bolt_##name;
+
+/// <summary>
+/// Declares a file-level bolt relationship
+/// </summary>
+#define BOLT_TO(type, absolutePath) BOLT_TO_WITHNAME(type, absolutePath, type##Bolt##__COUNTER__)
