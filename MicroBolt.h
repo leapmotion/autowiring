@@ -2,6 +2,7 @@
 #include "Bolt.h"
 #include "Autowired.h"
 #include <string>
+
 /// <summary>
 /// Utility class, defined at file level, which registers a type as a member of a context
 /// </summary>
@@ -12,21 +13,21 @@
 /// 1)  If T provides a static method of the form "ContextCreated(const char*)", invoke this
 ///     method with the specified ContextName
 /// 2)  Otherwise, follow the AutoRequired behavior for T on the current context
-///
 /// </remarks>
-
 class MicroBoltBase:
-  public EventReceiver{
-    public:
-      virtual void ListenForAnAbsolutePath(std::string absoluteContextPath)=0;
+  public EventReceiver
+{
+public:
+  virtual void ListenForAnAbsolutePath(const std::string& absoluteContextPath) = 0;
 };
 
-template <class T, const char * absolutepath>
+template<class T, const char* absolutepath>
 class MicroBolt:
   public MicroBoltBase
 {
-  public:
-    void ListenForAnAbsolutePath(std::string absoluteContextPath){
-      if(absolutepath == absoluteContextPath)AutoRequired<T>();
-    }
+public:
+  void ListenForAnAbsolutePath(const std::string& absoluteContextPath) override {
+    if(!absoluteContextPath.compare(absolutePath))
+      AutoRequired<T>();
+  }
 };
