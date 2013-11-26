@@ -417,10 +417,13 @@ public:
     // Linear scan on all trees (but not memos)
     for(auto q = m_trees.begin(); q != m_trees.end(); q++) {
       if(
-        // We make an exception for exact matches of named types, even if grounds don't match
-        !(q->first.ground == typeid(T)) &&
-        !(q->first.ground == typeid(Ground))
+        // If the ground type doesn't match...
+        q->first.ground != typeid(Ground) &&
+
+        // ...AND the match is not exact...
+        q->first.ground != typeid(T)
       )
+        // Then we have to skip this entry
         continue;
 
       auto pCur = static_cast<TreeBase<Ground>*>(q->second);
