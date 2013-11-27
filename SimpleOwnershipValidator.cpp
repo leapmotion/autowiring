@@ -29,10 +29,11 @@ SimpleOwnershipValidator::~SimpleOwnershipValidator()
 
 void SimpleOwnershipValidator::PrintToStdErr(const std::vector<const type_info*>& violating) {
   cerr
-    << "A context is being destroyed, but some of its members are not being destroyed at the." << endl
-    << "same time.  The user has indicated that this context was supposed to have simple" << endl
-    << "ownership over its members.  The following types are participants in what may be a" << endl
-    << "cycle:" << endl;
+    << "A context is being destroyed, but some of its members are not being destroyed" << endl
+    << "at the same time.  The user has indicated that this context was supposed to" << endl
+    << "have simple ownership over its members.  The following types are participants" << endl
+    << "in what may be a cycle:" << endl
+    << endl;
 
   for(size_t i = 0; i < violating.size(); i++)
     cerr << violating[i]->name() << endl;
