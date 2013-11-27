@@ -12,6 +12,7 @@
 #include "ExceptionFilter.h"
 #include "EventSender.h"
 #include "PolymorphicTypeForest.h"
+#include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
 #include "TransientContextMember.h"
 #include <boost/thread/condition.hpp>
@@ -54,6 +55,7 @@ class Autowired;
 /// </summary>
 class CoreContext:
   public Object,
+  public SimpleOwnershipValidator,
   public TeardownNotifier,
   public std::enable_shared_from_this<CoreContext>
 {
@@ -75,6 +77,11 @@ public:
 protected:
   // General purpose lock for this class
   mutable boost::mutex m_lock;
+
+  // Flag, set if this context should use its ownership validator to guarantee that all autowired members
+  // are correctly torn down.  This flag must be set at construction time.  Members added to the context
+  // before this flag is assigned will NOT be checked.
+  bool m_useOwnershipValidator;
 
   // A pointer to the parent context
   std::shared_ptr<CoreContext> m_pParent;
@@ -244,6 +251,26 @@ public:
   size_t GetMemberCount(void) const {return m_byType.size();}
   bool IsRunning(void) const {return !!m_refCount;}
 
+  /// <summary>
+  /// In debug mode, adds an additional compile-time check
+  /// </summary>
+  /// <remarks>
+  /// Enabling simple ownership checks on a context will ensure that, at teardown time, simple
+  /// ownership of contained objects is enforced.  This means that the lifetime of objects in
+  /// a context does not extend beyond the lifetime of the context itself.
+  ///
+  /// This flag is useful in detecting cycles in a context, as cycles will prevent cleanup and
+  /// give the impression of an exterior reference.  Information about the detected cycle will
+  /// be printed to stderr.
+  ///
+  /// This flag cannot be unset.  This flag is inherited by children.  Children which were
+  /// created at the time this flag is assigned do not receive assignment of this flag retro-
+  /// actively.
+  /// </remarks>
+  void EnforceSimpleOwnership(void) {
+    m_useOwnershipValidator = true;
+  }
+
   /// <returns>
   /// True if CoreThread instances in this context should begin teardown operations
   /// </returns>
@@ -392,6 +419,10 @@ public:
     // Notify any autowiring field that is currently waiting that we have a new member
     // to be considered.
     UpdateDeferredElements();
+
+    // Ownership validation, as appropriate:
+    if(m_useOwnershipValidator)
+      PendValidation(value);
   }
 
   /// <summary>
