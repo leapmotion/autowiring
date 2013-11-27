@@ -2,6 +2,8 @@
 #include "SimpleOwnershipValidatorTest.h"
 #include "TestFixtures/SimpleObject.h"
 
+using namespace std;
+
 TEST_F(SimpleOwnershipValidatorTest, VerifyExclusionCases) {
   bool hit = false;
   int count = -1;
