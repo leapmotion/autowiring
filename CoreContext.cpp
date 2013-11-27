@@ -57,6 +57,10 @@ CoreContext::~CoreContext(void) {
   if(m_pParent)
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
 
+  // Tell all context members that we're tearing down:
+  for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
+    (**q).NotifyContextTeardown();
+
   // Explicit deleters to simplify base deletion of any deferred autowiring requests:
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
     delete q->second;
