@@ -27,7 +27,7 @@ SimpleOwnershipValidator::~SimpleOwnershipValidator()
     listeners[i](violating);
 }
 
-void SimpleOwnershipValidator::PrintToStdOut(const std::vector<const type_info*>& violating) {
+void SimpleOwnershipValidator::PrintToStdErr(const std::vector<const type_info*>& violating) {
   cerr
     << "A context is being destroyed, but some of its members are not being destroyed at the." << endl
     << "same time.  The user has indicated that this context was supposed to have simple" << endl

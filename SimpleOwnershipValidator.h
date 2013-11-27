@@ -19,7 +19,7 @@ public:
 
   // The standard output stream used by the validator to report errors, just prints
   // to stderr
-  static void PrintToStdOut(const std::vector<const type_info*>& violating);
+  static void PrintToStdErr(const std::vector<const type_info*>& violating);
 
 private:
   struct EntryBase {
