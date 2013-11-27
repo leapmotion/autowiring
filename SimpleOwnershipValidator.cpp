@@ -5,7 +5,7 @@
 
 using namespace std;
 
-SimpleOwnershipValidator::~SimpleOwnershipValidator()
+SimpleOwnershipValidator::~SimpleOwnershipValidator(void)
 {
   // Find violating entries, gather them, and destroy our array:
   vector<const type_info*> violating;
