@@ -52,8 +52,7 @@ protected:
   /// </summary>
   template<class T>
   void PendValidation(std::weak_ptr<T>&& entry) {
-    if(IS_INTERNAL_BUILD)
-      m_entries.push_back(new Entry<T>(std::move(entry)));
+    m_entries.push_back(new Entry<T>(std::move(entry)));
   }
 
 public:
