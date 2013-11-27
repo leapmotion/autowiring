@@ -1,15 +1,26 @@
 #pragma once
-#include <iosfwd>
+#include <functional>
 #include <vector>
 #include SHARED_PTR_HEADER
 
+/// <summary>
+/// An ownership validator class, used to guarantee shared pointer expiration in its dtor
+/// </summary>
+/// <remarks>
+/// This class allows consumers to ensure that the weak pointers added to it are all expired
+/// when instances are destroyed.  The specified listeners are invoked when a weak pointer
+/// is encountered which is not properly destroyed.  If there are no listeners, an assert is
+/// used to raise a debugger event in debug mode.
+/// </remarks>
 class SimpleOwnershipValidator
 {
 public:
   SimpleOwnershipValidator();
   ~SimpleOwnershipValidator();
 
-  // The standard output stream used by the validator to report errors
+  // The standard output stream used by the validator to report errors, just prints
+  // to stderr
+  static void PrintToStdOut(const std::vector<const type_info*>& violating);
 
 private:
   struct EntryBase {
@@ -37,6 +48,8 @@ private:
 
   std::vector<EntryBase*> m_entries;
 
+  std::vector<std::function<void(const std::vector<const type_info*>&)>> listeners;
+
 protected:
   /// <summary>
   /// Adds a new entry whose expiration is to be checked at destruction time
@@ -46,5 +59,11 @@ protected:
     if(IS_INTERNAL_BUILD)
       m_entries.push_back(new Entry<T>(entry));
   }
+
+public:
+  /// <summary>
+  /// Adds a listener who is to be notified of unchecked entities at destruction time
+  /// </summary>
+  void AddValidationListener(std::function < void(const std::vector<const type_info*>&)>&& fn);
 };
 

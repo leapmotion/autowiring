@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "SimpleOwnershipValidator.h"
+#include <assert.h>
 #include <iostream>
 
 using namespace std;
@@ -18,7 +19,15 @@ SimpleOwnershipValidator::~SimpleOwnershipValidator()
   if(!IS_INTERNAL_BUILD || violating.empty())
     return;
 
-  // Time to show the user what went wrong:
+  // If no listeners, we can only assert:
+  assert(!listeners.empty());
+
+  // And now notify all listeners:
+  for(size_t i = 0; i < listeners.size(); i++)
+    listeners[i](violating);
+}
+
+void SimpleOwnershipValidator::PrintToStdOut(const std::vector<const type_info*>& violating) {
   cerr
     << "A context is being destroyed, but some of its members are not being destroyed at the." << endl
     << "same time.  The user has indicated that this context was supposed to have simple" << endl
@@ -27,4 +36,9 @@ SimpleOwnershipValidator::~SimpleOwnershipValidator()
 
   for(size_t i = 0; i < violating.size(); i++)
     cerr << violating[i]->name() << endl;
+}
+
+void SimpleOwnershipValidator::AddValidationListener(std::function < void(const std::vector<const type_info*>&)>&& fn)
+{
+  listeners.push_back(std::move(fn));
 }
