@@ -1,6 +1,7 @@
 #pragma once
-#include <functional>
 #include <vector>
+#include FUNCTIONAL_HEADER
+#include RVALUE_HEADER
 #include SHARED_PTR_HEADER
 
 /// <summary>
@@ -15,7 +16,7 @@
 class SimpleOwnershipValidator
 {
 public:
-  ~SimpleOwnershipValidator();
+  ~SimpleOwnershipValidator(void);
 
   // The standard output stream used by the validator to report errors, just prints
   // to stderr
