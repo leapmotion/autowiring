@@ -16,7 +16,7 @@ SimpleOwnershipValidator::~SimpleOwnershipValidator()
     delete cur;
   }
 
-  if(!IS_INTERNAL_BUILD || violating.empty())
+  if(violating.empty())
     return;
 
   // If no listeners, we can only assert:
