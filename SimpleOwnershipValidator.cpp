@@ -19,7 +19,10 @@ SimpleOwnershipValidator::~SimpleOwnershipValidator(void)
   if(violating.empty())
     return;
 
-  // If no listeners, we can only assert:
+  // If no listeners, we can only assert.  If you're getting a breakpoint here, check the contents
+  // of the "violating" vector for an indication of the types that are dangling and/or members of
+  // a cycle.  Generally just setting a breakpoint on this line will allow any interested parties
+  // an opportunity to examine the components of a cycle.
   assert(!listeners.empty());
 
   // And now notify all listeners:
