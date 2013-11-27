@@ -38,7 +38,7 @@ void SimpleOwnershipValidator::PrintToStdOut(const std::vector<const type_info*>
     cerr << violating[i]->name() << endl;
 }
 
-void SimpleOwnershipValidator::AddValidationListener(std::function < void(const std::vector<const type_info*>&)>&& fn)
+void SimpleOwnershipValidator::AddValidationListener(const std::function < void(const std::vector<const type_info*>&)>& fn)
 {
-  listeners.push_back(std::move(fn));
+  listeners.push_back(fn);
 }

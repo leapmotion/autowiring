@@ -60,6 +60,6 @@ public:
   /// <summary>
   /// Adds a listener who is to be notified of unchecked entities at destruction time
   /// </summary>
-  void AddValidationListener(std::function < void(const std::vector<const type_info*>&)>&& fn);
+  void AddValidationListener(const std::function<void(const std::vector<const type_info*>&)>& fn);
 };
 
