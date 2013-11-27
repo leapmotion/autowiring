@@ -17,6 +17,7 @@ boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curCont
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
   m_pParent(pParent),
   m_shouldStop(false),
+  m_useOwnershipValidator(false),
   m_refCount(0)
 {
   // Prime the proxy map with the APL recipient:
@@ -118,6 +119,8 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
 
   // Create the child context
   CoreContext* pContext = new CoreContext(shared_from_this());
+  if(m_useOwnershipValidator)
+    pContext->EnforceSimpleOwnership();
 
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
