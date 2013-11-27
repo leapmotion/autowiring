@@ -422,7 +422,7 @@ public:
 
     // Ownership validation, as appropriate:
     if(m_useOwnershipValidator)
-      PendValidation(std::weak_ptr<T>(value));
+      SimpleOwnershipValidator::PendValidation(std::weak_ptr<T>(value));
   }
 
   /// <summary>

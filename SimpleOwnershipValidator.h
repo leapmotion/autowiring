@@ -19,7 +19,7 @@ public:
 
   // The standard output stream used by the validator to report errors, just prints
   // to stderr
-  static void PrintToStdErr(const std::vector<const type_info*>& violating);
+  static void PrintToStdErr(const std::vector<const std::type_info*>& violating);
 
 private:
   struct EntryBase {
@@ -44,7 +44,7 @@ private:
 
   std::vector<EntryBase*> m_entries;
 
-  std::vector<std::function<void(const std::vector<const type_info*>&)>> listeners;
+  std::vector<std::function<void(const std::vector<const std::type_info*>&)>> listeners;
 
 protected:
   /// <summary>
@@ -60,6 +60,6 @@ public:
   /// <summary>
   /// Adds a listener who is to be notified of unchecked entities at destruction time
   /// </summary>
-  void AddValidationListener(const std::function<void(const std::vector<const type_info*>&)>& fn);
+  void AddValidationListener(const std::function<void(const std::vector<const std::type_info*>&)>& fn);
 };
 
