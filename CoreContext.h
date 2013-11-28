@@ -72,7 +72,7 @@ public:
   /// </summary>
   /// <param name="name">The optional context name.  If null, creates an anonymous context.</param>
   /// <param name="pParent">An optional parent context.  If null, will default to the root context.</param>
-  std::shared_ptr<CoreContext> Create(const char* name = "IAMANON");
+  std::shared_ptr<CoreContext> Create(const char* name = "IAMANON");//, GlobalNameTypeBase& sigilnamer = 0 );
 
 protected:
   // General purpose lock for this class
