@@ -27,7 +27,7 @@ TEST_F(SelfSelectingFixtureTest, LocalScopeBoltCreation) {
     // And now we bolt the fixture to the specified path.  This bolt must IGNORE the current context and
     // always insert into the global context.  Template specialization on AutoRequired, or alternatively on
     // the AutowiredCreator, is perhaps the best way to handle this.
-    BOLT_TO(SelfSelectingFixture, "Global/IAMANON/SelfSelect2");
+//    BOLT_TO(SelfSelectingFixture, "Global/IAMANON/SelfSelect2");
   }
 
   // Now try to create a context and see whether our fixture pops out:
@@ -46,7 +46,7 @@ TEST_F(SelfSelectingFixtureTest, PostHocBoltIntroduction) {
   ASSERT_FALSE(ssf.IsAutowired()) << "Fixture self-selected into a context prematurely";
 
   // Now the bolt, this should introduce the fixture into the already-existing context
-  BOLT_TO(SelfSelectingFixture, "Global/IAMANON/SelfSelect3");
+ // BOLT_TO(SelfSelectingFixture, "Global/IAMANON/SelfSelect3");
   
   // Autowired fields are funny--they can be satisfied at the point of their declaration, or if a member
   // is added to a context which might satisfy an autowired field _after_ it is declared, they can be
