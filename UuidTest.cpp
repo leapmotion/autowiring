@@ -12,11 +12,11 @@ TEST_F(UuidTest, VerifySimpleUuid) {
   EXPECT_EQ(0xA, UUID_MAPPING_TABLE['A' - '0']) << "Hex character 'A' in the mapping table was not correctly mapped";
 
   // Verify the queried UUID:
-  UUID uuid = uuid_of<MyX>::Uuid();
-  EXPECT_EQ(0x1234567, uuid.Data1) << "Data1 was not defined properly";
-  EXPECT_EQ(0x89AB, uuid.Data2) << "Data2 was not defined properly";
-  EXPECT_EQ(0xCDEF, uuid.Data3) << "Data3 was not defined properly";
-  EXPECT_EQ(0x1032547698badcfe, (long long&)uuid.Data4) << "Data4 was not defined properly";
+  uuid test_uuid = uuid_of<MyX>::Uuid();
+  EXPECT_EQ(0x1234567, test_uuid.Data1) << "Data1 was not defined properly";
+  EXPECT_EQ(0x89AB, test_uuid.Data2) << "Data2 was not defined properly";
+  EXPECT_EQ(0xCDEF, test_uuid.Data3) << "Data3 was not defined properly";
+  EXPECT_EQ(0x1032547698badcfe, (long long&)test_uuid.Data4) << "Data4 was not defined properly";
 }
 
 TEST_F(UuidTest, VerifyEquivalence) {
