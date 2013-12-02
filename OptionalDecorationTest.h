@@ -1,8 +1,7 @@
 #pragma once
 #include "EnclosedContextTestBase.h"
 
-class ObjectPoolTest:
+class OptionalDecorationTest:
   public EnclosedContextTestBase
 {
 };
-

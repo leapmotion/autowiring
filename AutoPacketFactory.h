@@ -1,4 +1,5 @@
 #pragma once
+#include "auto_out.h"
 #include "Autowired.h"
 #include "AutoPacket.h"
 #include "AutoPacketSubscriber.h"
@@ -31,9 +32,10 @@ public:
     // Reflexive type information for this entry
     const std::type_info& ti;
 
-    // Indexes into the subscriber satisfaction vector.  Each entry in this list
-    // represents a single subscriber, and an offset in the m_subscribers vector
-    std::vector<size_t> subscribers;
+    // Indexes into the subscriber satisfaction vector.  Each entry in this list represents a single
+    // subscriber, and an offset in the m_subscribers vector.  The second element in the pair is the
+    // optional flag.
+    std::vector<std::pair<size_t, bool>> subscribers;
   };
 
   AutoPacketFactory(void);
@@ -58,6 +60,24 @@ private:
     void operator()(AutoPacket& packet) const;
   };
 
+  struct AutoPacketCreator {
+    AutoPacketCreator(AutoPacketFactory* factory = nullptr) :
+      factory(factory)
+    {}
+
+    AutoPacketCreator(AutoPacketCreator&& rhs) :
+      factory(rhs.factory)
+    {}
+
+    AutoPacketFactory* factory;
+
+    AutoPacket* operator()() const;
+
+    void operator=(AutoPacketCreator&& rhs) {
+      factory = rhs.factory;
+    }
+  };
+
   /// <summary>
   /// An independently maintained object pool just for packets
   /// </summary>
@@ -66,7 +86,7 @@ private:
   /// pipeline packet expiration in order to support expiration notification
   /// broadcasts.
   /// </remarks>
-  ObjectPool<AutoPacket, AutoPacketResetter> m_packets;
+  ObjectPool<AutoPacket, AutoPacketResetter, AutoPacketCreator> m_packets;
 
   // Vector of known subscribers--a vector must be used because random access is
   // required due to its use in an adjacency list.
@@ -84,9 +104,12 @@ private:
   // Utility override, does nothing
   void AddSubscriber(std::false_type&&) {}
 
+  std::function<void()> fn;
+
 public:
   // Accessor methods:
   const std::vector<AutoPacketSubscriber>& GetSubscriberVector(void) const { return m_subscribers; }
+  const t_decMap& GetDecorations(void) const { return m_decorations; }
 
   /// <summary>
   /// Finds the packet subscriber proper corresponding to a particular subscriber type
@@ -98,6 +121,9 @@ public:
       return nullptr;
     return &m_subscribers[subscriberIndex];
   }
+
+  template<class T>
+  const AutoPacketSubscriber* FindSubscriber(void) const { return FindSubscriber(typeid(T)); }
 
   /// <summary>
   /// Finds the monotonic index corresponding to a particular subscriber type
@@ -149,6 +175,19 @@ public:
       // Clear out the matched subscriber:
       m_subscribers[q->second].ReleaseSubscriber();
   }
+
+  /// <returns>
+  /// True if the indicated type has been requested for use by some consumer
+  /// </returns>
+  /// <remarks>
+  /// This method is used to determine whether an AutoFilter consumer exists for the
+  /// specified type at the time of the call.  Note that this method may occassionally
+  /// return an incorrect result in a multithreaded context.
+  /// </remarks>
+  template<class T>
+  bool HasSubscribers(void) const { return HasSubscribers(typeid(T)); }
+
+  bool HasSubscribers(const std::type_info& ti) const;
 
   /// <summary>
   /// Obtains a new packet from the object pool and configures it with the current

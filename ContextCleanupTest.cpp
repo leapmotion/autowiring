@@ -1,4 +1,3 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "ContextCleanupTest.h"
 #include "Autowired.h"
@@ -117,9 +116,33 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   // Context shutdown
   context->SignalShutdown();
 
-  // Cause the thread to exit:
-  simple->Stop();
-
   // Now we verify that exiting happens promptly:
   EXPECT_TRUE(context->Wait(milliseconds(100))) << "Context did not exit in a timely fashion";
+}
+
+class ReceivesTeardownNotice:
+  public ContextMember
+{
+public:
+  ReceivesTeardownNotice(void) :
+    m_notified(false)
+  {}
+
+  void NotifyContextTeardown(void) override {
+    m_notified = true;
+  }
+
+  bool m_notified;
+};
+
+TEST_F(ContextCleanupTest, VerifyNotificationReciept) {
+  std::shared_ptr<ReceivesTeardownNotice> rtn;
+  {
+    AutoCreateContext ctxt;
+    CurrentContextPusher pshr(ctxt);
+
+    // Now create an object which will receive a teardown notice:
+    rtn = AutoRequired<ReceivesTeardownNotice>();
+  }
+  ASSERT_TRUE(rtn->m_notified) << "A member of a destroyed context did not correctly receive a teardown notice";
 }
