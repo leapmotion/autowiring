@@ -33,7 +33,7 @@
     MAKE_4_INDIRECT(UUID_MAPPING_TABLE, name, base + 14, 0), \
     MAKE_16_INDIRECT(UUID_MAPPING_TABLE, name, base + 19) \
 
-
+// TODO:  Replace this with defined(_MSC_VER) when the linux implementation has been tested
 #if 0
 #define DECL_UUID(id) __declspec(uuid(id))
 #define PLATFORM_UUID_OF __uuidof
@@ -80,6 +80,9 @@ struct UUID {
 };
 #endif
 
+// TODO:  The UUID structure is the type of the result of the __uuidof keyword, so we have to use it
+// (or something like it) here.  It might be helpful to find a solution that doesn't require the use
+// of this name, as not all consumers of this header will be including Windows.h
 struct uuid:
   UUID
 {
