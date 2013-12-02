@@ -8,7 +8,12 @@
 
 template<class T>
 struct NoOp {
-  void operator() (T& op) {}
+  void operator()(T& op) const {}
+};
+
+template<class T>
+struct Create {
+  T* operator()() const { return new T(); }
 };
 
 template<class T>
@@ -61,6 +66,11 @@ protected:
   virtual void Reset(T& ptr) = 0;
 
   /// <summary>
+  /// Creates a new instance of type T
+  /// </summary>
+  virtual T* Allocate(void) const = 0;
+
+  /// <summary>
   /// Obtains an element from the object queue, assumes exterior synchronization
   /// </summary>
   /// <remarks>
@@ -83,7 +93,7 @@ protected:
       lk.unlock();
 
       // We failed to recover an object, create a new one:
-      pObj = new T;
+      pObj = Allocate();
     }
 
     // Fill the shared pointer with the object we created, and ensure that we override
@@ -192,22 +202,30 @@ public:
 ///
 /// Issued pool members must be released before the pool goes out of scope
 /// </remarks>
-template<class T, class _Rx = NoOp<T>>
+template<class T, class _Rx = NoOp<T>, class _Alloc = Create<T>>
 class ObjectPool:
   public ObjectPoolBase<T>
 {
 public:
   /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
-  ObjectPool(size_t limit = ~0, size_t maxPooled = ~0, _Rx&& rx = _Rx()):
+  ObjectPool(size_t limit = ~0, size_t maxPooled = ~0, _Rx&& rx = _Rx(), _Alloc&& alloc = _Alloc()):
     ObjectPoolBase<T>(limit, maxPooled),
-    m_rx(std::move(rx))
+    m_rx(std::move(rx)),
+    m_alloc(std::move(alloc))
   {}
 
 private:
   // Resetter, where relevant:
   _Rx m_rx;
 
+  // Allocator, where relevant:
+  _Alloc m_alloc;
+
 protected:
   void Reset(T& obj) override { m_rx(obj); }
-};
+  virtual T* Allocate(void) const override { return m_alloc(); }
 
+public:
+  void SetRx(_Rx&& rx) { m_rx = std::move(rx); }
+  void SetAlloc(_Alloc&& alloc) { m_alloc = std::move(alloc); }
+};

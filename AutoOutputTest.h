@@ -1,7 +1,7 @@
 #pragma once
 #include "EnclosedContextTestBase.h"
 
-class ObjectPoolTest:
+class AutoOutputTest:
   public EnclosedContextTestBase
 {
 };
