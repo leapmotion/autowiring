@@ -5,8 +5,19 @@
 #include "Bolt.h"
 #include "ContextCreator.h"
 #include <string>
+#include <iostream>
 
 extern const char sc_pipelineName[] = "Pipeline";
+
+template <class t>
+struct testtemps{
+	testtemps(){
+		std::cout << "This fucking thing was constructed";
+	}
+};
+
+testtemps<int> testr;
+
 
 class Listener:
   public Bolt<sc_pipelineName>
