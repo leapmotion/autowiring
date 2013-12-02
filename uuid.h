@@ -83,13 +83,28 @@ struct UUID {
 // TODO:  The UUID structure is the type of the result of the __uuidof keyword, so we have to use it
 // (or something like it) here.  It might be helpful to find a solution that doesn't require the use
 // of this name, as not all consumers of this header will be including Windows.h
-struct uuid:
-  UUID
+struct uuid
 {
+
+    long Data1;
+    long Data2;
+    long Data3;
+    long Data4;
   /// <summary>
   /// Trivial constructor
   /// </summary>
   uuid(void) {}
+
+  /// <summary>
+  /// Equality Operators [stubbed for unit-testing, need better implementations]
+  /// </summary>
+
+  bool friend operator== (const uuid& lhs, const uuid& rhs){
+    //NEEDS TO BE REDEFINED TO WORK PROPERLY
+    /* do actual comparison */ 
+    return true;
+  }
+  bool friend operator!= (const uuid& lhs, const uuid& rhs){return !(lhs == rhs);}
 
   /// <summary>
   /// Convenience constructor:
