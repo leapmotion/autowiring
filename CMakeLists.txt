@@ -67,6 +67,8 @@ set(
   TransientContextMember.h
   TransientPool.h
   TransientPoolBase.h
+  uuid.h
+  uuid.cpp
 )
 
 OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
@@ -152,6 +154,8 @@ set(
   TestFixtures/SimpleObject.h
   TestFixtures/SimpleThreaded.h
   TestFixtures/MultiInherit.h
+  UuidTest.h
+  UuidTest.cpp
 )
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
