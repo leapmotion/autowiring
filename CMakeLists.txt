@@ -40,7 +40,6 @@ set(
   DeferredCreationNotice.h
   DeferredCreationNotice.cpp
   deferred_ptr.h
-  DependentContext.h
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunkEventProxy.h
@@ -60,6 +59,8 @@ set(
   Object.h
   ObjectPool.h
   PolymorphicTypeForest.h
+  ReentrantCounter.h
+  ReentrantCounter.cpp
   SharedPtrHash.h
   TeardownNotifier.h
   TeardownNotifier.cpp
@@ -109,8 +110,6 @@ set(
   CurrentContextPusherTest.cpp
   DecoratorTest.h
   DecoratorTest.cpp
-  DependentContextTest.h
-  DependentContextTest.cpp
   DtorCorrectnessTest.h
   DtorCorrectnessTest.cpp
   EnclosedContextTestBase.h
@@ -138,6 +137,8 @@ set(
   PolymorphicTypeForestTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
+  ReentrantCounterTest.h
+  ReentrantCounterTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
   TransientContextMemberTest.h

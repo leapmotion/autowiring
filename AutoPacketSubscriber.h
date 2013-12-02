@@ -5,37 +5,112 @@
 #include SHARED_PTR_HEADER
 
 class AutoPacket;
+class AutoPacketAdaptor;
 class Deferred;
+
+template<class T, bool auto_ready>
+class auto_out;
+
+template<class T>
+class auto_pooled;
+
+template<class T>
+class optional_ptr;
+
+/// <summary>
+/// Forward declaration circumvention, used to avoid circular reference issues
+/// </summary>
+std::shared_ptr<AutoPacket> ExtractSharedPointer(const AutoPacketAdaptor& adaptor);
 
 template<class T, bool is_deferred>
 struct CallExtractor {
-  typedef void(*t_call)(void*, const AutoPacket&);
+  typedef void(*t_call)(void*, const AutoPacketAdaptor&);
+  typedef std::false_type deferred;
 
   t_call operator()() const {
     typedef decltype(&T::AutoFilter) t_fnType;
     return reinterpret_cast<t_call>(
-      &BoundCall<AutoPacket, t_fnType, &T::AutoFilter>::Call
-      );
+      &BoundCall<AutoPacketAdaptor, t_fnType, &T::AutoFilter>::Call
+    );
   }
 };
 
 template<class T>
 struct CallExtractor<T, true> {
-  typedef void(*t_call)(void*, const AutoPacket&);
+  typedef void(*t_call)(void*, const AutoPacketAdaptor&);
+  typedef std::true_type deferred;
 
-  static void CallDeferred(T* pObj, const AutoPacket& repo) {
+  static void CallDeferred(T* pObj, const AutoPacketAdaptor& repo) {
     const t_call call =
       reinterpret_cast<t_call>(
-      &BoundCall<AutoPacket, decltype(&T::AutoFilter), &T::AutoFilter>::Call
+        &BoundCall<AutoPacketAdaptor, decltype(&T::AutoFilter), &T::AutoFilter>::Call
       );
-    *pObj += [pObj, &repo, call] {
-      call(pObj, repo);
+
+    std::shared_ptr<AutoPacket> shared = ExtractSharedPointer(repo);
+    *pObj += [pObj, shared, call] {
+      call(pObj, *shared);
     };
   }
 
   t_call operator()() const {
     return reinterpret_cast<t_call>(&CallDeferred);
   }
+};
+
+enum eSubscriberInputType {
+  inTypeInvalid,
+  inTypeRequired,
+  inTypeOptional,
+  outTypeRef,
+  outTypeRefAutoReady
+};
+
+template<class T>
+struct subscriber_traits
+{
+  typedef T type;
+  static const eSubscriberInputType subscriberType = inTypeRequired;
+};
+
+template<class T>
+struct subscriber_traits<optional_ptr<T>>
+{
+  typedef T type;
+  static const eSubscriberInputType subscriberType = inTypeOptional;
+};
+
+template<class T, bool auto_ready>
+struct subscriber_traits<auto_out<T, auto_ready>>
+{
+  typedef T type;
+  static const eSubscriberInputType subscriberType = auto_ready ? outTypeRef : outTypeRefAutoReady;
+};
+
+struct AutoPacketSubscriberInput {
+  AutoPacketSubscriberInput(void) :
+    ti(nullptr),
+    subscriberType(inTypeInvalid)
+  {}
+
+  template<class T>
+  AutoPacketSubscriberInput(subscriber_traits<T>&& traits) :
+    ti(&typeid(typename subscriber_traits<T>::type)),
+    subscriberType(subscriber_traits<T>::subscriberType)
+  {}
+
+  const std::type_info* const ti;
+  const eSubscriberInputType subscriberType;
+
+  operator bool(void) const {
+    return !!ti;
+  }
+
+  template<class T>
+  struct rebind {
+    operator AutoPacketSubscriberInput() {
+      return subscriber_traits<T>();
+    }
+  };
 };
 
 /// <summary>
@@ -50,12 +125,15 @@ struct CallExtractor<T, true> {
 class AutoPacketSubscriber {
 public:
   // The type of the call centralizer
-  typedef void(*t_call)(void*, const AutoPacket&);
+  typedef void(*t_call)(void*, const AutoPacketAdaptor&);
 
   AutoPacketSubscriber(void) :
     m_ti(nullptr),
-    m_ppArgs(nullptr),
+    m_pArgs(nullptr),
+    m_deferred(false),
     m_arity(0),
+    m_requiredCount(0),
+    m_optionalCount(0),
     m_pObj(nullptr),
     m_pCall(nullptr)
   {}
@@ -63,8 +141,11 @@ public:
   AutoPacketSubscriber(const AutoPacketSubscriber& rhs) :
     m_subscriber(rhs.m_subscriber),
     m_ti(rhs.m_ti),
-    m_ppArgs(rhs.m_ppArgs),
+    m_pArgs(rhs.m_pArgs),
+    m_deferred(rhs.m_deferred),
     m_arity(rhs.m_arity),
+    m_requiredCount(rhs.m_requiredCount),
+    m_optionalCount(rhs.m_optionalCount),
     m_pObj(rhs.m_pObj),
     m_pCall(rhs.m_pCall)
   {}
@@ -82,16 +163,32 @@ public:
   AutoPacketSubscriber(const std::shared_ptr<T>& subscriber) :
     m_subscriber(subscriber),
     m_ti(&typeid(T)),
+    m_requiredCount(0),
+    m_optionalCount(0),
     m_pObj(subscriber.get())
   {
     typedef Decompose<decltype(&T::AutoFilter)> t_decompose;
-    CallExtractor<T, std::is_same<Deferred, typename t_decompose::retType>::value> e;
+    typedef CallExtractor<T, std::is_same<Deferred, typename t_decompose::retType>::value> t_callExtractor;
+    t_callExtractor e;
 
     // Cannot register a subscriber with zero arguments:
     static_assert(t_decompose::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
+    m_deferred = t_callExtractor::deferred::value;
     m_arity = t_decompose::N;
-    m_ppArgs = t_decompose::Enumerate();
+    m_pArgs = t_decompose::template Enumerate<AutoPacketSubscriberInput>();
+    for(auto pArg = m_pArgs; *pArg; pArg++) {
+      switch(pArg->subscriberType) {
+      case inTypeRequired:
+        m_requiredCount++;
+        break;
+      case inTypeOptional:
+        m_optionalCount++;
+        break;
+      default:
+        break;
+      }
+    }
     m_pCall = e();
   }
 
@@ -103,12 +200,23 @@ protected:
   const std::type_info* m_ti;
 
   // This subscriber's argument types
-  const std::type_info*const* m_ppArgs;
+  const AutoPacketSubscriberInput* m_pArgs;
+
+  // Set if this is a deferred subscriber.  Deferred subscribers cannot receive immediate-style
+  // decorations, and have additional handling considerations when dealing with non-copyable
+  // decorations.
+  bool m_deferred;
 
   // The number of parameters that will be extracted from the repository object when making
   // a Call.  This is used to prime the AutoPacket in order to make saturation checking work
   // correctly.
   size_t m_arity;
+
+  // The number of argumetns declared to be required:
+  size_t m_requiredCount;
+
+  // The number of arguments declared to be optional:
+  size_t m_optionalCount;
 
   // This is the first argument that will be passed to the Call function defined below.  It
   // is a pointer to an actual subscriber, but with type information omitted for performance.
@@ -123,9 +231,12 @@ public:
   // Accessor methods:
   bool empty(void) const { return m_subscriber.empty(); }
   size_t GetArity(void) const { return m_arity; }
+  size_t GetRequiredCount(void) const { return m_requiredCount; }
+  size_t GetOptionalCount(void) const { return m_optionalCount; }
   boost::any GetSubscriber(void) const { return m_subscriber; }
   const std::type_info* GetSubscriberTypeInfo(void) const { return m_ti; }
-  const std::type_info*const* GetSubscriberArgs(void) const { return m_ppArgs; }
+  const AutoPacketSubscriberInput* GetSubscriberInput(void) const { return m_pArgs; }
+  bool IsDeferred(void) const { return m_deferred; }
 
   /// <summary>
   /// Releases the bound subscriber and the corresponding arity, causing it to become disabled
