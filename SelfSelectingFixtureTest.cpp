@@ -27,7 +27,7 @@ TEST_F(SelfSelectingFixtureTest, LocalScopeBoltCreation) {
     // And now we bolt the fixture to the specified path.  This bolt must IGNORE the current context and
     // always insert into the global context.  Template specialization on AutoRequired, or alternatively on
     // the AutowiredCreator, is perhaps the best way to handle this.
-//    BOLT_TO(SelfSelectingFixture, "Global/IAMANON/SelfSelect2");
+   // BOLT_TO(SelfSelectingFixture, "Global/IAMANON/SelfSelect2");
   }
 
   // Now try to create a context and see whether our fixture pops out:
