@@ -73,10 +73,10 @@ struct UUID {
 // of this name, as not all consumers of this header will be including Windows.h
 struct uuid
 {
-    long Data1;
-    short Data2;
-    short Data3;
-    long long Data4;
+    unsigned long Data1;
+    unsigned short Data2;
+    unsigned short Data3;
+    unsigned long long Data4;
   /// <summary>
   /// Trivial constructor
   /// </summary>
@@ -87,16 +87,17 @@ struct uuid
   /// </summary>
 
   bool friend operator== (const uuid& lhs, const uuid& rhs){
-    //NEEDS TO BE REDEFINE 
-    /* do actual comparison */ 
-    return true;
+    return  (lhs.Data1 == rhs.Data1) && 
+            (lhs.Data2 == rhs.Data2) &&
+            (lhs.Data3 == rhs.Data3) && 
+            (lhs.Data4 == rhs.Data4);
   }
   bool friend operator!= (const uuid& lhs, const uuid& rhs){return !(lhs == rhs);}
 
   /// <summary>
   /// Convenience constructor:
   /// </summary>
-  uuid(long Data1, short Data2, short Data3, long long Data4)
+  uuid(unsigned long Data1,unsigned short Data2,unsigned short Data3, unsigned long long Data4)
   {
     this->Data1 = Data1;
     this->Data2 = Data2;
