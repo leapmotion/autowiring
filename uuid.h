@@ -25,6 +25,8 @@
 ///
 ///  01234567-89AB-CDEF-fedc-ba9876543210
 ///
+///  It is parsed out as
+///  [01234567]L-[89AB]S-[CDEF]S- [fedc ba9876543210]LL
 /// Hexidecimal characters may be uppercase or lowercase.  Dashes are required, and there must not be any offsets.
 /// </remarks>
 #define COMPOSE_UUID(name, base) \
@@ -41,20 +43,6 @@
 #define DECL_UUID(id)
 #define PLATFORM_UUID_OF(clazz) uuid_of<clazz>::Uuid()
 #endif
-
-/// <summary>
-/// Allows the association of a uuid with a class
-/// </summary>
-#define DECLARE_UUID(clazz, id) \
-  class clazz; \
-  template<> \
-  struct uuid_of<clazz>: \
-    std::true_type \
-  { \
-    static const char* UuidStr(void) {return id;} \
-    static const uuid Uuid(void) { return uuid(id); }; \
-  }; \
-  class DECL_UUID(id) clazz
 
 /// <summary>
 /// Provides the uuid of a specific type as a constant expression
@@ -85,11 +73,10 @@ struct UUID {
 // of this name, as not all consumers of this header will be including Windows.h
 struct uuid
 {
-
     long Data1;
-    long Data2;
-    long Data3;
-    long Data4;
+    short Data2;
+    short Data3;
+    long long Data4;
   /// <summary>
   /// Trivial constructor
   /// </summary>
@@ -100,7 +87,7 @@ struct uuid
   /// </summary>
 
   bool friend operator== (const uuid& lhs, const uuid& rhs){
-    //NEEDS TO BE REDEFINED TO WORK PROPERLY
+    //NEEDS TO BE REDEFINE 
     /* do actual comparison */ 
     return true;
   }
@@ -140,12 +127,33 @@ struct uuid
   }
 };
 
+/// <summary>
+/// Macro defines a template specialization of uuid_of
+/// Allows the association of a uuid with a class
+/// </summary>
+#define DECLARE_UUID(clazz, id) \
+  class clazz; \
+  template<> \
+  struct uuid_of<clazz>: \
+    std::true_type \
+  { \
+    static const char* UuidStr(void) {return id;} \
+    static const uuid Uuid(void) { return uuid(id); }; \
+  }; \
+  class DECL_UUID(id) clazz
+/// <summary>
+/// Non-macro defined fall-thrrough case for uuid_of. Gets called on types
+/// which were not previously declared with DECLARE_UUID
+/// Allows the association of a uuid with a class
+/// </summary>
 template<class T>
 struct uuid_of:
   std::false_type
 {
   static const char* UuidStr(void) {return nullptr;}
-  static const uuid Uuid(void) {return MakeUuid(0, 0, 0, 0);};
+
+  static uuid Uuid(void) {
+   retrun uuid::uuid(0, 0, 0, 0);}
 };
 
 /// <summary>
