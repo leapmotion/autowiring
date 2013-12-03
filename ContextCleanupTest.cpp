@@ -5,7 +5,7 @@
 #include "TestFixtures/SimpleObject.h"
 #include "TestFixtures/SimpleThreaded.h"
 #include <boost/chrono.hpp>
-
+#include <boost/thread/barrier.hpp>
 using boost::chrono::milliseconds;
 
 TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
@@ -145,4 +145,58 @@ TEST_F(ContextCleanupTest, VerifyNotificationReciept) {
     rtn = AutoRequired<ReceivesTeardownNotice>();
   }
   ASSERT_TRUE(rtn->m_notified) << "A member of a destroyed context did not correctly receive a teardown notice";
+}
+
+class TakesALongTimeToDestroy:
+  public CoreThread
+{
+public:
+  TakesALongTimeToDestroy(void):
+    barr(2)
+  {
+    Ready();
+  }
+
+  ~TakesALongTimeToDestroy(void) {
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+  }
+
+  boost::barrier barr;
+
+  virtual void Run(void) {
+    barr.wait();
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+  }
+};
+
+TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
+  std::weak_ptr<TakesALongTimeToDestroy> longTimeWeak;
+  std::weak_ptr<CoreContext> ctxtWeak;
+
+  {
+    AutoCreateContext ctxt;
+    CurrentContextPusher pshr(ctxt);
+
+    // We want threads to run as soon as they are added:
+    ctxt->InitiateCoreThreads();
+
+    // Create a thread that will take awhile to stop:
+    AutoRequired<TakesALongTimeToDestroy> longTime;
+
+    // Delay until the thread is actually running:
+    longTime->barr.wait();
+
+    // Now stop the context and wait for it to respond:
+    ctxt->SignalShutdown();
+    ctxt->Wait();
+
+    // Grab a weak pointer so we can verify things go away in a timely fashion.  By this point, we should
+    // be the only entity with a handle to the context--the longTime thread MUST have finished its teardown
+    // and returned the context pointer.
+    ctxtWeak = ctxt;
+    longTimeWeak = longTime;
+  }
+
+  EXPECT_TRUE(ctxtWeak.expired()) << "Context persisted even after it should have fallen out of scope";
+  EXPECT_TRUE(longTimeWeak.expired()) << "Context thread persisted even after it should have fallen out of scope";
 }
