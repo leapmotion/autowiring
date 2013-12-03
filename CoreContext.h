@@ -14,6 +14,7 @@
 #include "PolymorphicTypeForest.h"
 #include "TeardownNotifier.h"
 #include "TransientContextMember.h"
+#include "uuid.h"
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/tss.hpp>
@@ -42,6 +43,7 @@ class BoltBase;
 class ContextMember;
 class CoreContext;
 class CoreThread;
+class EventOutputStream;
 class EventReceiver;
 class GlobalCoreContext;
 class OutstandingCountTracker;
@@ -640,6 +642,16 @@ public:
   /// Utility routine to print information about the current exception
   /// </summary>
   static void DebugPrintCurrentExceptionInformation();
+
+  /// <summary>
+  /// Creates a new event stream based on the provided event type
+  /// </summary>
+  template<class T>
+  std::shared_ptr<EventOutputStream> CreateEventOutputStream(void) {
+    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot create an output stream based on a non-event type");
+    static_assert(uuid_of<T>::value, "Cannot create an output stream on type T, the type was not defined with DECLARE_UUID");
+    return nullptr;
+  }
 };
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& context);

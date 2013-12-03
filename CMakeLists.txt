@@ -45,6 +45,8 @@ set(
   DispatchThunkEventProxy.h
   DispatchThunkEventProxy.cpp
   EventDispatcher.h
+  EventOutputStream.h
+  EventOutputStream.cpp
   EventReceiver.h
   EventReceiver.cpp
   EventSender.h
