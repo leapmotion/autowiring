@@ -131,6 +131,8 @@ set(
   LockFreeListTest.cpp
   LockReducedCollectionTest.h
   LockReducedCollectionTest.cpp
+  MarshalingTest.h
+  MarshalingTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
   ObjectPoolTest.h
