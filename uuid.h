@@ -142,6 +142,7 @@ struct uuid
     static const uuid Uuid(void) { return uuid(id); }; \
   }; \
   class DECL_UUID(id) clazz
+
 /// <summary>
 /// Non-macro defined fall-thrrough case for uuid_of. Gets called on types
 /// which were not previously declared with DECLARE_UUID
