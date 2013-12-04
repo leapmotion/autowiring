@@ -13,7 +13,7 @@ struct MicroBoltUtilities {
   /// Instantiates and returns the SAME EXACT Vector per given Sigil Class and Container Type
   /// </summary>
   template<class SigilClass, class ContainerType>
-  static std::vector<ContainerType>& return_head_of_bolt_enumeration_list(void) {
+  static std::vector<ContainerType>& GetBoltEnumerationList(void) {
     static std::vector<ContainerType> AlwaysSameVector = std::vector<ContainerType>(); //runs once at init
     return AlwaysSameVector;
   }
@@ -23,13 +23,7 @@ struct MicroBoltUtilities {
   /// </summary>
   template<class SigilClass, class ContainerType, ContainerType x>
   static void one_time_insert(void) {
-   static bool initialized;
-   // Runs once at init
-   if(!initialized) {
-     initialized = true;
-     auto list = return_head_of_list<SigilClass, ContainerType>();
-     list.push_back(x);
-    }
+    static bool initialized = PerformInsert<SigilClass, ContainerType, x>();
   }
 
   /// <summary>
@@ -37,17 +31,25 @@ struct MicroBoltUtilities {
   /// </summary>
   template<class SigilClass, class ContainerType>
   static void enumerate_my_micro_bolts(std::shared_ptr<CoreContext> ctxtptr) {
-	  auto list = return_head_of_list<SigilClass, ContainerType>();
-	  for(ctxtfnptr myptr : list)
+    auto list = GetBoltEnumerationList<SigilClass, ContainerType>();
+    for(size_t i = 0; i < list.size(); i++)
       // Call every callable in the vector, passing a ref to me each time
-		  mpytr(ctxtptr);
+		  list[i](ctxtptr);
+  }
+
+private:
+  template<class SigilClass, class ContainerType, ContainerType x>
+  static bool PerformInsert(void) {
+    auto list = GetBoltEnumerationList<SigilClass, ContainerType>();
+    list.push_back(x);
+    return true;
   }
 };
 
 template<class SigilClass, class ContainerType, ContainerType x>
 struct MicroBolt {
   MicroBolt(void) {
-		MicroBoltUtilities:::one_time_insert<SigilClass, ContainerType, x>();
+		MicroBoltUtilities::one_time_insert<SigilClass, ContainerType, x>();
 	}
 };
 
