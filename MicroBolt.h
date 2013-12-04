@@ -54,7 +54,7 @@ struct MicroBolt {
 };
 
 template<class T>
-void make_me_an_auto_func(std::shared_ptr<CoreContext> cptr) {
+void InsertNameIntoContext(std::shared_ptr<CoreContext> cptr) {
   CurrentContextPusher pshr(cptr);
   AutoRequired<T>();
 }
@@ -62,6 +62,5 @@ void make_me_an_auto_func(std::shared_ptr<CoreContext> cptr) {
 // BOLT_TO = make_me_an_auto_func parameterized on a Sigil Class.
 // Later, a vector of these are enumerated by the CoreContext with matching Sigil Class
 #define BOLT_TO(SigilClass, TypeToInsert) namespace { \
-	  auto localautofunc = make_me_an_auto_func<TypeToInsert>; \
-	  MicroBolt<SigilClass, ctxtfnptr, localautofunc> x##__COUNTER__ ; \
+    MicroBolt<SigilClass, ctxtfnptr, &InsertNameIntoContext<TypeToInsert>> s_##SigilClass; \
   }
