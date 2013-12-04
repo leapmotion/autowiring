@@ -2,8 +2,7 @@
 #include "SelfSelectingFixture.h"
 #include "MicroBolt.h"
 
-const char s_expectedFixtureName[] = "SelfSelect";
-//BOLT_TO(SelfSelectingFixture, "Global/IAMANON/SelfSelect")
+BOLT_TO(SelfSelect, SelfSelectingFixture)
 
 SelfSelectingFixture::SelfSelectingFixture(void) :
   magic(10010)

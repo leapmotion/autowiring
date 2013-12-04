@@ -1,7 +1,7 @@
 #pragma once
 #include "ContextMember.h"
 
-extern const char s_expectedFixtureName[];
+struct SelfSelect;
 
 class SelfSelectingFixture:
   public ContextMember
