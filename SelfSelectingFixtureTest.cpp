@@ -3,14 +3,22 @@
 #include "SelfSelectingFixture.h"
 #include "MicroBolt.h"
 
-TEST_F(SelfSelectingFixtureTest, FixtureTest) {
+// Simple class we will bolt locally in this application
+class SimpleLocalClass {
+
+};
+
+TEST_F(SelfSelectingFixtureTest, LocalFixtureTest) {
+
+}
+
+TEST_F(SelfSelectingFixtureTest, ExteriorFixtureTest) {
   // Create a context with the fixture test name:
-  auto created = AutoCurrentContext()->Create(s_expectedFixtureName);
+  auto created = AutoCurrentContext()->Create<SelfSelect>();
   ASSERT_TRUE(created != nullptr) << "Created context was unexpectedly null";
 
   // Verify that the context has the name we gave to it:
-  ASSERT_NE(nullptr, created->GetName()) << "Name was empty, should have held the context name";
-  ASSERT_EQ(0, strcmp(s_expectedFixtureName, created->GetName())) << "Context was incorrectly named";
+  ASSERT_EQ(typeid(SelfSelect), created->GetSigilType()) << "Context was incorrectly named";
 
   // Set the current context and detect the SelfSelectingFixture's presence
   CurrentContextPusher pshr(created);
@@ -18,3 +26,4 @@ TEST_F(SelfSelectingFixtureTest, FixtureTest) {
   ASSERT_TRUE(ssf.IsAutowired()) << "Self-selecting fixture was not selected into a created context with the correct name";
   ASSERT_TRUE(ssf->IsMagicCorrect()) << "Self-selecting fixture was apparently not initialized correctly";
 }
+

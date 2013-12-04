@@ -7,7 +7,7 @@
 #include <string>
 #include <iostream>
 
-extern const char sc_pipelineName[] = "Pipeline";
+struct Pipeline;
 
 template <class t>
 struct testtemps{
@@ -20,7 +20,7 @@ testtemps<int> testr;
 
 
 class Listener:
-  public Bolt<sc_pipelineName>
+  public Bolt<Pipeline>
 {
 public:
   Listener(void):
@@ -39,12 +39,12 @@ public:
 };
 
 class Creator:
-  public ContextCreator<sc_pipelineName, std::string>
+  public ContextCreator<Pipeline, std::string>
 {
 };
 
 TEST_F(CreationListenerTest, VerifyMapping) {
-  ContextCreator<sc_pipelineName, std::wstring> simpleCreator;
+  ContextCreator<Pipeline, std::wstring> simpleCreator;
 
   // Trivial context creation check:
   {
@@ -83,7 +83,7 @@ TEST_F(CreationListenerTest, VerifyDescendantMapping) {
   }
 
   // Put the creator in the parent context:
-  AutoRequired<ContextCreator<sc_pipelineName, std::wstring>> simpleCreator;
+  AutoRequired<ContextCreator<Pipeline, std::wstring>> simpleCreator;
   std::shared_ptr<Listener> listener;
 
   // Create a child context of the current one, and put the listener in there:
