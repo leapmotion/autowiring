@@ -9,8 +9,10 @@
 #include "CoreThread.h"
 #include "CurrentContextPusher.h"
 #include "DeferredBase.h"
-#include "ExceptionFilter.h"
 #include "EventSender.h"
+#include "EventInputStream.h"
+#include "EventOutputStream.h"
+#include "ExceptionFilter.h"
 #include "PolymorphicTypeForest.h"
 #include "TeardownNotifier.h"
 #include "TransientContextMember.h"
@@ -43,7 +45,6 @@ class BoltBase;
 class ContextMember;
 class CoreContext;
 class CoreThread;
-class EventOutputStream;
 class EventReceiver;
 class GlobalCoreContext;
 class OutstandingCountTracker;
@@ -650,6 +651,11 @@ public:
   std::shared_ptr<EventOutputStream> CreateEventOutputStream(void) {
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot create an output stream based on a non-event type");
     static_assert(uuid_of<T>::value, "Cannot create an output stream on type T, the type was not defined with DECLARE_UUID");
+    return nullptr;
+  }
+
+  template<class T>
+  std::shared_ptr<EventInputStream<T>> CreateEventInputStream(void) {
     return nullptr;
   }
 };
