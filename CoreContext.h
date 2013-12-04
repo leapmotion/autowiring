@@ -59,7 +59,7 @@ class CoreContext:
   public std::enable_shared_from_this<CoreContext>
 {
 protected:
-  CoreContext(std::shared_ptr<CoreContext> pParent);
+  CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil);
 
   // A pointer to the current context, for construction purposes
   static boost::thread_specific_ptr<std::shared_ptr<CoreContext> > s_curContext;
@@ -70,16 +70,16 @@ public:
   /// <summary>
   /// Factory to create a new context
   /// </summary>
-  /// <param name="name">The optional context name.  If null, creates an anonymous context.</param>
+  /// <param name="name">The optional context sigil.  If void, creates an anonymous context.</param>
   /// <param name="pParent">An optional parent context.  If null, will default to the root context.</param>
-  std::shared_ptr<CoreContext> Create(const char* name = "IAMANON");//, GlobalNameTypeBase& sigilnamer = 0 );
+  std::shared_ptr<CoreContext> Create(const std::type_info& sigil = typeid(void));
 
 protected:
   // General purpose lock for this class
   mutable boost::mutex m_lock;
 
-  // The context's internally held name--required to be a literal string
-  const char* m_name;
+  // The context's internally held sigil type
+  const std::type_info& m_sigil;
 
   // The context's internally held full-path name (recursively defined through parents)--required to be a literal string
   std::string m_fullPathName;
@@ -250,18 +250,8 @@ public:
   // Accessor methods:
   size_t GetMemberCount(void) const {return m_byType.size();}
   bool IsRunning(void) const {return !!m_refCount;}
-  const char* GetName(void) const { return m_name; }
-  void SetName(const char* name) {  m_name = name; }
+  const std::type_info& GetSigilType(void) const { return m_sigil; }
 
-  std::string GetFullPath(void) const {
-     if(!m_pParent) return std::string(GetName()) ; 
-    //else return m_pParent -> GetFullPath();      
-      return   std::string(m_pParent -> GetFullPath()) + "/" + std::string(GetName()) ;
-  }
-  void SetFullPath(const char* name) {  
-    m_fullPathName = GetFullPath();
-    //std::cout<< "HI MY FULL PATH IS: " << m_fullPathName << std::endl;    
-  }
   /// <returns>
   /// True if CoreThread instances in this context should begin teardown operations
   /// </returns>
