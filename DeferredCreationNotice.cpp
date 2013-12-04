@@ -3,8 +3,8 @@
 #include "DeferredCreationNotice.h"
 #include "CoreContext.h"
 
-DeferredCreationNotice::DeferredCreationNotice(const char* name, std::shared_ptr<CoreContext> ctxt):
-  m_name(name),
+DeferredCreationNotice::DeferredCreationNotice(const std::type_info* pSigil, std::shared_ptr<CoreContext> ctxt) :
+  m_pSigil(pSigil),
   m_ctxt(ctxt)
 {
 }
@@ -20,7 +20,7 @@ DeferredCreationNotice::~DeferredCreationNotice(void) {
     // Another short-circuit, we are being called because we're in an unwind pathway
     return;
 
-  if(m_name)
+  if(m_pSigil && *m_pSigil != typeid(void))
     // Parent context resolved, broadcast the notice:
-    parent->BroadcastContextCreationNotice(m_name, m_ctxt);
+    parent->BroadcastContextCreationNotice(*m_pSigil, m_ctxt);
 }

@@ -18,7 +18,7 @@ public:
   /// <summary>
   /// A convenience method to get a context name
   /// </summary>
-  virtual const char* GetContextName(void) = 0;
+  virtual const std::type_info& GetContextSigil(void) = 0;
 
   /// <summary>
   /// A notification broadcast when a context of the desired name has been created

@@ -84,7 +84,7 @@ public:
         // Create:
         child = context->Create(typeid(Sigil));
         childWeak = child;
-        retVal.reset(new DeferredCreationNotice(contextName, child));
+        retVal.reset(new DeferredCreationNotice(&typeid(Sigil), child));
 
         // Add a teardown listener for this child in particular:
         auto pContext = child.get();
@@ -163,8 +163,8 @@ public:
 /// <summary>
 /// Specialization for consumers who do not wish (or have any need) to key their contexts
 /// </summary>
-template<const char* contextName>
-class ContextCreator<contextName, void>:
+template<class Sigil>
+class ContextCreator<Sigil, void>:
   public ContextCreatorBase
 {
 protected:
@@ -191,7 +191,7 @@ public:
 
     // Create:
     auto child = context->Create();
-    std::shared_ptr<DeferredCreationNotice> retVal(new DeferredCreationNotice(contextName, child));
+    std::shared_ptr<DeferredCreationNotice> retVal(new DeferredCreationNotice(&typeid(Sigil), child));
 
     // Insert into our list:
     auto q =
