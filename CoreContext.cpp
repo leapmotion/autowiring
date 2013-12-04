@@ -64,8 +64,8 @@ CoreContext::~CoreContext(void) {
     delete q->second;
 }
 
-void CoreContext::BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const {
-  auto nameIter = m_nameListeners.find(contextName);
+void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil, const std::shared_ptr<CoreContext>& context) const {
+  auto nameIter = m_nameListeners.find(sigil);
   if(nameIter != m_nameListeners.end()) {
     // Context creation notice requires that the created context be set before invocation:
     CurrentContextPusher pshr(context);
@@ -80,7 +80,7 @@ void CoreContext::BroadcastContextCreationNotice(const char* contextName, const 
   for(auto q = m_children.begin(); q != m_children.end(); q++) {
     std::shared_ptr<CoreContext> child = q->lock();
     if(child)
-      child->BroadcastContextCreationNotice(contextName, context);
+      child->BroadcastContextCreationNotice(sigil, context);
   }
 }
 
@@ -266,7 +266,7 @@ void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr, bool all
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
-  m_nameListeners[pBase->GetContextName()].push_back(pBase.get());
+  m_nameListeners[pBase->GetContextSigil()].push_back(pBase.get());
 }
 
 void CoreContext::Dump(std::ostream& os) const {

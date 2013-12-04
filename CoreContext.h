@@ -74,6 +74,12 @@ public:
   /// <param name="pParent">An optional parent context.  If null, will default to the root context.</param>
   std::shared_ptr<CoreContext> Create(const std::type_info& sigil = typeid(void));
 
+  // Convenience override
+  template<class T>
+  std::shared_ptr<CoreContext> Create(void) {
+    return Create(typeid(T));
+  }
+
 protected:
   // General purpose lock for this class
   mutable boost::mutex m_lock;
@@ -124,7 +130,7 @@ protected:
   boost::condition m_stateChanged;
 
   // Lists of event receivers, by name:
-  typedef std::unordered_map<std::string, std::list<BoltBase*>> t_contextNameListeners;
+  typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
 
   // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
@@ -310,7 +316,7 @@ public:
   /// <summary>
   /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
   /// </summary>
-  void BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const;
+  void BroadcastContextCreationNotice(const std::type_info& sigil, const std::shared_ptr<CoreContext>& context) const;
 
   /// <summary>
   /// Obtains a shared pointer to an event sender _in this context_ matching the specified type
