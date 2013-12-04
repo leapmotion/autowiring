@@ -54,8 +54,7 @@ struct MicroBolt {
 template<class T>
 void make_me_an_auto_func(std::shared_ptr<CoreContext> cptr) {
   CurrentContextPusher pshr(cptr);
-  AutoRequired<T>;
-  return;
+  AutoRequired<T>();
 }
 
 // BOLT_TO = make_me_an_auto_func parameterized on a Sigil Class.
