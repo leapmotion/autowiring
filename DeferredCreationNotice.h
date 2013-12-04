@@ -13,18 +13,18 @@ class CoreContext;
 class DeferredCreationNotice
 {
 public:
-  DeferredCreationNotice(const char* name, std::shared_ptr<CoreContext> ctxt);
+  DeferredCreationNotice(const std::type_info* pSigil, std::shared_ptr<CoreContext> ctxt);
   ~DeferredCreationNotice(void);
 
 private:
-  // The name of the created context, or null if the context was not created
-  const char* m_name;
+  // The sigil of the created context, or null if the context was not created
+  const std::type_info* m_pSigil;
 
   // The created context
   std::shared_ptr<CoreContext> m_ctxt;
 
 public:
-  bool WasCreated(void) const {return m_name != nullptr;}
+  bool WasCreated(void) const { return m_pSigil == nullptr; }
   const std::shared_ptr<CoreContext>& GetContext(void) const {return m_ctxt;}
 
   operator const std::shared_ptr<CoreContext>&(void) const {return GetContext();}
