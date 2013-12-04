@@ -3,14 +3,15 @@
 #include "ContextCreator.h"
 #include <string>
 
-extern const char gc_contextName[] = "eviction_context";
+struct EvictionContext;
 
 class Creator:
-  public ContextCreator<gc_contextName, int> {
+  public ContextCreator<EvictionContext, int>
+{
 };
 
 class VoidCreator:
-  public ContextCreator<gc_contextName>
+  public ContextCreator<EvictionContext>
 {
 public:
   VoidCreator(void):
@@ -21,7 +22,7 @@ public:
 
   void NotifyContextDestroyed(t_contextList::iterator q, CoreContext* pContext) override {
     m_totalDestroyed++;
-    ContextCreator<gc_contextName>::NotifyContextDestroyed(q, pContext);
+    ContextCreator<EvictionContext>::NotifyContextDestroyed(q, pContext);
   }
 };
 
