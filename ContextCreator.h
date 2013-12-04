@@ -9,7 +9,7 @@
 /// <summary>
 /// Implements a foundation class that allows named context registration and augmentation
 /// </summary>
-/// <param name="contextName">A unique name for this context type</param>
+/// <param name="Sigil">The sigil type that will be used for created contexts</param>
 /// <param name="Key">A key type used to identify this context</param>
 /// <remarks>
 /// This class helps manage the creation of contexts with global names.  When the new child context
@@ -21,7 +21,7 @@
 ///
 /// All static member functions are thread-safe, other members are not thread-safe.
 /// </remarks>
-template<const char* contextName, class Key = void>
+template<class Sigil, class Key = void>
 class ContextCreator:
   public ContextCreatorBase
 {
@@ -82,7 +82,7 @@ public:
       std::shared_ptr<CoreContext> context = m_context.lock();
       if(context) {
         // Create:
-        child = context->Create(contextName);
+        child = context->Create(typeid(Sigil));
         childWeak = child;
         retVal.reset(new DeferredCreationNotice(contextName, child));
 

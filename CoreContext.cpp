@@ -16,11 +16,11 @@ using namespace std;
 
 boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
 
-CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
+CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil) :
   m_pParent(pParent),
+  m_sigil(sigil),
   m_shouldStop(false),
-  m_refCount(0),
-  m_name(nullptr)
+  m_refCount(0)
 {
   // Prime the proxy map with the APL recipient:
   auto ptr = make_shared<EventReceiverProxy<AutoPacketListener>>();
@@ -109,8 +109,7 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   return retVal;
 }
 
-//static AutoFired <MicroBoltBase> MyMicroBoltListener;
-std::shared_ptr<CoreContext> CoreContext::Create(const char* name) {
+std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil) {
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert
@@ -121,13 +120,8 @@ std::shared_ptr<CoreContext> CoreContext::Create(const char* name) {
   }
 
   // Create the child context
-  CoreContext* pContext = new CoreContext(shared_from_this());
+  CoreContext* pContext = new CoreContext(shared_from_this(), sigil);
   
-  //Set that name baby.
-  pContext -> SetName(name);
-  //Set Global name too? But what's my parent ctxt.
-  pContext -> SetFullPath(name);
-//  MyMicroBoltListener(&MicroBoltBase::ListenForAnAbsolutePath)(pContext -> GetFullPath());
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
   std::shared_ptr<CoreContext> retVal(

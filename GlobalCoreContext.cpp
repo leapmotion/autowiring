@@ -3,7 +3,7 @@
 #include "GlobalCoreContext.h"
 
 GlobalCoreContext::GlobalCoreContext(void):
-  CoreContext(std::shared_ptr<CoreContext>())
+  CoreContext(std::shared_ptr<CoreContext>(), typeid(GlobalCoreContext))
 {
   // Guard against multi-initialization:
   ASSERT(!getGlobalContextSharedPtr());
@@ -13,7 +13,6 @@ GlobalCoreContext::GlobalCoreContext(void):
 
   // Make ourselves the current context before filling it:
   SetCurrent();
-  SetName("Global");
 }
 
 GlobalCoreContext::~GlobalCoreContext(void) {
