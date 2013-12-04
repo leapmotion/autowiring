@@ -147,18 +147,14 @@ TEST_F(ContextCleanupTest, VerifyNotificationReciept) {
   ASSERT_TRUE(rtn->m_notified) << "A member of a destroyed context did not correctly receive a teardown notice";
 }
 
-class TakesALongTimeToDestroy:
+class TakesALongTimeToExit:
   public CoreThread
 {
 public:
-  TakesALongTimeToDestroy(void):
+  TakesALongTimeToExit(void) :
     barr(2)
   {
     Ready();
-  }
-
-  ~TakesALongTimeToDestroy(void) {
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
   }
 
   boost::barrier barr;
@@ -170,33 +166,23 @@ public:
 };
 
 TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
-  std::weak_ptr<TakesALongTimeToDestroy> longTimeWeak;
-  std::weak_ptr<CoreContext> ctxtWeak;
+  // Record the initial use count:
+  size_t initCount = m_create.use_count();
 
-  {
-    AutoCreateContext ctxt;
-    CurrentContextPusher pshr(ctxt);
+  // We want threads to run as soon as they are added:
+  m_create->InitiateCoreThreads();
 
-    // We want threads to run as soon as they are added:
-    ctxt->InitiateCoreThreads();
+  // Create a thread that will take awhile to stop:
+  AutoRequired<TakesALongTimeToExit> longTime;
 
-    // Create a thread that will take awhile to stop:
-    AutoRequired<TakesALongTimeToDestroy> longTime;
+  // Make the thread exit before the enclosing context exits:
+  longTime->barr.wait();
+  longTime->Stop();
 
-    // Delay until the thread is actually running:
-    longTime->barr.wait();
+  // Now perform an explicit wait
+  longTime->Wait();
 
-    // Now stop the context and wait for it to respond:
-    ctxt->SignalShutdown();
-    ctxt->Wait();
-
-    // Grab a weak pointer so we can verify things go away in a timely fashion.  By this point, we should
-    // be the only entity with a handle to the context--the longTime thread MUST have finished its teardown
-    // and returned the context pointer.
-    ctxtWeak = ctxt;
-    longTimeWeak = longTime;
-  }
-
-  EXPECT_TRUE(ctxtWeak.expired()) << "Context persisted even after it should have fallen out of scope";
-  EXPECT_TRUE(longTimeWeak.expired()) << "Context thread persisted even after it should have fallen out of scope";
+  // At this point, the thread must have returned AND released its shared pointer to the enclosing context
+  EXPECT_EQ(initCount, m_create.use_count()) << "Context thread persisted even after it should have fallen out of scope";
 }
+
