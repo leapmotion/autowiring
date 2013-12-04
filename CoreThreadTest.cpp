@@ -59,7 +59,7 @@ public:
 };
 
 TEST_F(CoreThreadTest, VerifyIndefiniteDelay) {
-  AutoRequired<SpamguardTest> instance;
+  AutoRequired<InvokesIndefiniteWait> instance;
   m_create->InitiateCoreThreads();
 
   // Verify that the instance does not quit until we pend something:
