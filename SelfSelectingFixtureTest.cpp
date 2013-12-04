@@ -19,26 +19,6 @@ TEST_F(SelfSelectingFixtureTest, FixtureTest) {
   ASSERT_TRUE(ssf->IsMagicCorrect()) << "Self-selecting fixture was apparently not initialized correctly";
 }
 
-TEST_F(SelfSelectingFixtureTest, LocalScopeBoltCreation) {
-  {
-    // Create and make current an anonymous context in order to confound the following BOLT_TO expression
-    CurrentContextPusher pshr(m_create->Create());
-
-    // And now we bolt the fixture to the specified path.  This bolt must IGNORE the current context and
-    // always insert into the global context.  Template specialization on AutoRequired, or alternatively on
-    // the AutowiredCreator, is perhaps the best way to handle this.
-   // BOLT_TO(SelfSelectingFixture, "Global/IAMANON/SelfSelect2");
-  }
-
-  // Now try to create a context and see whether our fixture pops out:
-  auto created = m_create->Create("SelfSelect2");
-  ASSERT_TRUE(created != nullptr);
-
-  CurrentContextPusher pshr(created);
-  Autowired<SelfSelectingFixture> ssf;
-  ASSERT_TRUE(ssf.IsAutowired()) << "Self-selecting fixture was not introduced to a context that should have been bolted post-hoc";
-}
-
 TEST_F(SelfSelectingFixtureTest, PostHocBoltIntroduction) {
   // Create a context FIRST, and THEN create the bolt:
   CurrentContextPusher pshr(m_create->Create("SelfSelect3"));
