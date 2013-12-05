@@ -71,13 +71,25 @@ protected:
   void DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk);
 
   /// <summary>
-  /// Attaches an element to the end of the dispatch queue without any checks
+  /// Utility virtual, called whenever a new event is deferred
+  /// </summary>
+  /// <remarks>
+  /// The recipient of this call will be running in an arbitrary thread context while holding the dispatch
+  /// lock.  The queue is guaranteed to contain at least one element, and may potentially contain more.  The
+  /// caller MUST NOT attempt to pend any more events during this call, or a deadlock could occur.
+  /// </remarks>
+  virtual void OnPended(void) {}
+
+  /// <summary>
+  /// Attaches an element to the end of the dispatch queue without any checks.
   /// </summary>
   template<class _Fx>
   void Pend(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
     m_queueUpdated.notify_all();
+
+    OnPended();
   }
   
 public:
