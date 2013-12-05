@@ -4,7 +4,16 @@
 class EnclosureBase
 {
 public:
+  EnclosureBase(void) :
+    m_isInitialized(false)
+  {}
   virtual ~EnclosureBase(void) {}
+
+protected:
+  bool m_isInitialized;
+
+public:
+  bool IsInitialized(void) const { return m_isInitialized; }
 
   // Causes this object to be released and memory potentially reclaimed, where possible
   // The corresponding slot will appear empty, and any attempts to extract a pointer will
@@ -20,9 +29,9 @@ class Enclosure:
   public EnclosureBase
 {
 public:
-  Enclosure(void) {}
   ~Enclosure(void) {}
 
+public:
   virtual void operator=(T&& rhs) = 0;
   virtual T* get(void) = 0;
 };
@@ -39,20 +48,18 @@ class EnclosureImpl:
 {
 public:
   EnclosureImpl(void) :
-    m_isInitialized(false),
     heldRef((T&) m_held[0])
   {}
 
   EnclosureImpl(const T& held) :
-    m_isInitialized(false),
     m_held(held),
     heldRef((T&) m_held[0])
   {}
 
   EnclosureImpl(T&& held) :
-    m_isInitialized(true),
     heldRef((T&) m_held[0])
   {
+    m_isInitialized = true;
     new (m_held) T(std::move(held));
   }
 
@@ -62,7 +69,6 @@ public:
   }
 
 private:
-  bool m_isInitialized;
   unsigned char m_held[sizeof(T)];
   T& heldRef;
 
