@@ -55,6 +55,10 @@ class auto_out<T, false>:
   public AutoCheckout<T>
 {
 public:
+  auto_out(auto_out&& rhs):
+    AutoCheckout<T>(std::move(rhs))
+  {}
+
   explicit auto_out(AutoCheckout<T>&& checkout) :
     AutoCheckout<T>(std::move(checkout))
   {}
