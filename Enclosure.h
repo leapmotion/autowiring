@@ -39,16 +39,19 @@ class EnclosureImpl:
 {
 public:
   EnclosureImpl(void) :
-    m_isInitialized(false)
+    m_isInitialized(false),
+    heldRef((T&) m_held[0])
   {}
 
   EnclosureImpl(const T& held) :
     m_isInitialized(false),
-    m_held(held)
+    m_held(held),
+    heldRef((T&) m_held[0])
   {}
 
   EnclosureImpl(T&& held) :
-    m_isInitialized(true)
+    m_isInitialized(true),
+    heldRef((T&) m_held[0])
   {
     new (m_held) T(std::move(held));
   }
@@ -61,6 +64,7 @@ public:
 private:
   bool m_isInitialized;
   unsigned char m_held[sizeof(T)];
+  T& heldRef;
 
 public:
   // Causes this object to be released and memory potentially reclaimed, where possible
