@@ -8,6 +8,7 @@ class SimpleLocalClass {
 
 };
 
+
 TEST_F(SelfSelectingFixtureTest, LocalFixtureTest) {
 
 }
@@ -23,6 +24,7 @@ TEST_F(SelfSelectingFixtureTest, ExteriorFixtureTest) {
   // Set the current context and detect the SelfSelectingFixture's presence
   CurrentContextPusher pshr(created);
   Autowired<SelfSelectingFixture> ssf;
+
   ASSERT_TRUE(ssf.IsAutowired()) << "Self-selecting fixture was not selected into a created context with the correct name";
   ASSERT_TRUE(ssf->IsMagicCorrect()) << "Self-selecting fixture was apparently not initialized correctly";
 }

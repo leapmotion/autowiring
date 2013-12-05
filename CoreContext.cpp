@@ -135,7 +135,6 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil) {
     }
   );
   *childIterator = retVal;
-  
   return retVal;
 }
 

@@ -31,16 +31,17 @@ struct MicroBoltUtilities {
   /// </summary>
   template<class SigilClass, class ContainerType>
   static void enumerate_my_micro_bolts(std::shared_ptr<CoreContext> ctxtptr) {
-    auto list = GetBoltEnumerationList<SigilClass, ContainerType>();
-    for(size_t i = 0; i < list.size(); i++)
+    auto & list = GetBoltEnumerationList<SigilClass, ContainerType>();
+    for(size_t i = 0; i < list.size(); i++){
       // Call every callable in the vector, passing a ref to me each time
-		  list[i](ctxtptr);
+      list[i](ctxtptr);
+    }
   }
 
 private:
   template<class SigilClass, class ContainerType, ContainerType x>
   static bool PerformInsert(void) {
-    auto list = GetBoltEnumerationList<SigilClass, ContainerType>();
+    auto & list = GetBoltEnumerationList<SigilClass, ContainerType>();
     list.push_back(x);
     return true;
   }
@@ -64,3 +65,5 @@ void InsertNameIntoContext(std::shared_ptr<CoreContext> cptr) {
 #define BOLT_TO(SigilClass, TypeToInsert) namespace { \
     MicroBolt<SigilClass, ctxtfnptr, &InsertNameIntoContext<TypeToInsert>> s_##SigilClass; \
   }
+
+
