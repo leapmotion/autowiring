@@ -317,6 +317,45 @@ public:
   bool HasSubscribers(const std::type_info& ti) const;
 };
 
+// Default behavior:
+template<class T>
+struct AutoPacketAdaptorHelper {
+  static_assert(
+    std::is_const<typename std::remove_reference<T>::type>::value ||
+    !std::is_reference<T>::value,
+    "If a decoration is desired, it must either be a const reference, or by value"
+  );
+
+  T operator()(AutoPacket& packet) const {
+    return packet.Get<typename std::decay<T>::type>();
+  }
+};
+
+template<class T>
+struct AutoPacketAdaptorHelper<optional_ptr<T>> {
+  // Optional pointer overload, tries to satisfy but doesn't throw if there's a miss
+  optional_ptr<T> operator()(AutoPacket& packet) const {
+    const typename std::decay<T>::type* out;
+    if(packet.Get(out))
+      return out;
+    return nullptr;
+  }
+};
+
+template<class T, bool checkout>
+struct AutoPacketAdaptorHelper<auto_out<T, checkout>> {
+  auto_out<T, checkout> operator()(AutoPacket& packet) const {
+    return auto_out<T, checkout>(packet.Checkout<T>());
+  }
+};
+
+template<>
+struct AutoPacketAdaptorHelper<AutoPacket&> {
+  AutoPacket& operator()(AutoPacket& packet) const {
+    return packet;
+  }
+};
+
 /// <summary>
 /// Utility extractive wrapper
 /// </summary>
@@ -351,34 +390,9 @@ public:
   operator AutoPacket&(void) const {return packet;}
   operator std::shared_ptr<AutoPacket>(void) const { return packet.shared_from_this(); }
 
-  // Optional pointer overload, tries to satisfy but doesn't throw if there's a miss
   template<class T>
-  operator optional_ptr<T>(void) const {
-    const typename std::decay<T>::type* out;
-    if(packet.Get(out))
-      return out;
-    return nullptr;
+  T Cast(void) {
+    AutoPacketAdaptorHelper<T> helper;
+    return helper(packet);
   }
-
-  // Checkout type overload
-  template<class T, bool checkout>
-  operator auto_out<T, checkout>(void) const {
-    return auto_out<T, checkout>(packet.Checkout<T>());
-  }
-
-  // This is our last-ditch attempt:  Run a query on the underlying packet
-  template<class T>
-  operator const T&(void) const {
-    return packet.Get<typename std::decay<T>::type>();
-  }
-
-  // MSVC and CLANG can use the above cast to handle by-value coercions as necessary,
-  // but GCC cannot.  Unfortunately, Windows gets confused by the additional overload,
-  // and so we must provide just one overload on Windows, but two otherwise.
-#if defined(__GNUC__) && !defined(__clang__)
-  template<class T>
-  operator T(void) const {
-    return packet.Get<typename std::decay<T>::type>();
-  }
-#endif
 };
