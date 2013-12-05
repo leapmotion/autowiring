@@ -10,6 +10,7 @@ public:
   virtual ~EnclosureBase(void) {}
 
 protected:
+  // Set if the internally held object is currently initialized
   bool m_isInitialized;
 
 public:
