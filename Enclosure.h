@@ -60,12 +60,12 @@ public:
   EnclosureImpl(T&& held) :
     heldRef((T&) m_held[0])
   {
-    m_isInitialized = true;
+    this->m_isInitialized = true;
     new (m_held) T(std::move(held));
   }
 
   ~EnclosureImpl(void) {
-    if(m_isInitialized)
+    if(this->m_isInitialized)
       ((T*) m_held)->~T();
   }
 
@@ -76,28 +76,28 @@ private:
 public:
   // Causes this object to be released and memory potentially reclaimed, where possible
   virtual void Release(void) override {
-    if(m_isInitialized)
+    if(this->m_isInitialized)
       ((T*) m_held)->~T();
-    m_isInitialized = false;
+    this->m_isInitialized = false;
   }
 
   // Causes the held object by this enclosure to be reinitialized
   virtual void Reset(void) override {
-    if(!m_isInitialized)
+    if(!this->m_isInitialized)
       new (m_held) T();
-    m_isInitialized = true;
+    this->m_isInitialized = true;
   }
 
   void operator=(T&& rhs) override {
-    if(m_isInitialized)
+    if(this->m_isInitialized)
       (T&) *this = std::move(rhs);
     else {
-      m_isInitialized = true;
+      this->m_isInitialized = true;
       new (m_held) T(std::move(rhs));
     }
   }
 
-  T* get(void) override { return m_isInitialized ? (T*) m_held : nullptr; }
+  T* get(void) override { return this->m_isInitialized ? (T*) m_held : nullptr; }
 };
 
 template<class T>

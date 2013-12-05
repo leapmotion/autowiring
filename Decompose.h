@@ -207,10 +207,11 @@ struct BoundCall<T, MemFn, memfn, 1>:
   Decompose<MemFn>
 {
   typedef Decompose<MemFn> t_decompose;
+  typedef typename Decompose<MemFn>::t_arg1 t_arg1;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
     (pObj->*memfn)(
-      repo.Cast<t_arg1>()
+      repo.template Cast<t_arg1>()
     );
   }
 };
@@ -220,11 +221,13 @@ struct BoundCall<T, MemFn, memfn, 2>:
   Decompose<MemFn>
 {
   typedef Decompose<MemFn> t_decompose;
+  typedef typename Decompose<MemFn>::t_arg1 t_arg1;
+  typedef typename Decompose<MemFn>::t_arg2 t_arg2;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
     (pObj->*memfn)(
-      repo.Cast<t_arg1>(),
-      repo.Cast<t_arg2>()
+      repo.template Cast<t_arg1>(),
+      repo.template Cast<t_arg2>()
     );
   }
 };
@@ -234,12 +237,15 @@ struct BoundCall<T, MemFn, memfn, 3>:
   Decompose<MemFn>
 {
   typedef Decompose<MemFn> t_decompose;
+  typedef typename Decompose<MemFn>::t_arg1 t_arg1;
+  typedef typename Decompose<MemFn>::t_arg2 t_arg2;
+  typedef typename Decompose<MemFn>::t_arg3 t_arg3;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
     (pObj->*memfn)(
-      repo.Cast<t_arg1>(),
-      repo.Cast<t_arg2>(),
-      repo.Cast<t_arg3>()
+      repo.template Cast<t_arg1>(),
+      repo.template Cast<t_arg2>(),
+      repo.template Cast<t_arg3>()
     );
   }
 };
@@ -249,13 +255,17 @@ struct BoundCall<T, MemFn, memfn, 4>:
   Decompose<MemFn>
 {
   typedef Decompose<MemFn> t_decompose;
+  typedef typename Decompose<MemFn>::t_arg1 t_arg1;
+  typedef typename Decompose<MemFn>::t_arg2 t_arg2;
+  typedef typename Decompose<MemFn>::t_arg3 t_arg3;
+  typedef typename Decompose<MemFn>::t_arg4 t_arg4;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
     (pObj->*memfn)(
-      repo.Cast<t_arg1>(),
-      repo.Cast<t_arg2>(),
-      repo.Cast<t_arg3>(),
-      repo.Cast<t_arg4>()
+      repo.template Cast<t_arg1>(),
+      repo.template Cast<t_arg2>(),
+      repo.template Cast<t_arg3>(),
+      repo.template Cast<t_arg4>()
     );
   }
 };
