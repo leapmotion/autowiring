@@ -209,7 +209,9 @@ struct BoundCall<T, MemFn, memfn, 1>:
   typedef Decompose<MemFn> t_decompose;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
-    (pObj->*memfn)(repo);
+    (pObj->*memfn)(
+      repo.Cast<t_arg1>()
+    );
   }
 };
 
@@ -220,7 +222,10 @@ struct BoundCall<T, MemFn, memfn, 2>:
   typedef Decompose<MemFn> t_decompose;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
-    (pObj->*memfn)(repo, repo);
+    (pObj->*memfn)(
+      repo.Cast<t_arg1>(),
+      repo.Cast<t_arg2>()
+    );
   }
 };
 
@@ -231,7 +236,11 @@ struct BoundCall<T, MemFn, memfn, 3>:
   typedef Decompose<MemFn> t_decompose;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
-    (pObj->*memfn)(repo, repo, repo);
+    (pObj->*memfn)(
+      repo.Cast<t_arg1>(),
+      repo.Cast<t_arg2>(),
+      repo.Cast<t_arg3>()
+    );
   }
 };
 
@@ -242,6 +251,11 @@ struct BoundCall<T, MemFn, memfn, 4>:
   typedef Decompose<MemFn> t_decompose;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
-    (pObj->*memfn)(repo, repo, repo, repo);
+    (pObj->*memfn)(
+      repo.Cast<t_arg1>(),
+      repo.Cast<t_arg2>(),
+      repo.Cast<t_arg3>(),
+      repo.Cast<t_arg4>()
+    );
   }
 };
