@@ -170,6 +170,7 @@ public:
     auto q = m_mp.find(typeid(T));
     if(q != m_mp.end() && q->second.satisfied) {
       auto enclosure = static_cast<Enclosure<T>*>(q->second.pEnclosure);
+      assert(enclosure->IsInitialized());
       if(enclosure) {
         out = enclosure->get();
         return true;
