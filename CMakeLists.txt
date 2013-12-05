@@ -96,6 +96,8 @@ endif()
 
 set(
   AutowiringTest_SRCS
+  AutoOutTest.h
+  AutoOutTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h
