@@ -24,7 +24,7 @@ private:
   std::shared_ptr<CoreContext> m_ctxt;
 
 public:
-  bool WasCreated(void) const { return m_pSigil == nullptr; }
+  bool WasCreated(void) const { return m_pSigil != nullptr; }
   const std::shared_ptr<CoreContext>& GetContext(void) const {return m_ctxt;}
 
   operator const std::shared_ptr<CoreContext>&(void) const {return GetContext();}
