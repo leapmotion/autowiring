@@ -20,6 +20,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_pParent(pParent),
   m_sigil(sigil),
   m_shouldStop(false),
+  m_useOwnershipValidator(false),
   m_refCount(0)
 {
   // Prime the proxy map with the APL recipient:
@@ -58,6 +59,10 @@ CoreContext::~CoreContext(void) {
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
   if(m_pParent)
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+
+  // Tell all context members that we're tearing down:
+  for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
+    (**q).NotifyContextTeardown();
 
   // Explicit deleters to simplify base deletion of any deferred autowiring requests:
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
@@ -121,6 +126,8 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil) {
 
   // Create the child context
   CoreContext* pContext = new CoreContext(shared_from_this(), sigil);
+  if(m_useOwnershipValidator)
+    pContext->EnforceSimpleOwnership();
   
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
