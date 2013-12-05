@@ -9,16 +9,6 @@
 
 struct Pipeline;
 
-template <class t>
-struct testtemps{
-	testtemps(){
-		std::cout << "This fucking thing was constructed";
-	}
-};
-
-testtemps<int> testr;
-
-
 class Listener:
   public Bolt<Pipeline>
 {
