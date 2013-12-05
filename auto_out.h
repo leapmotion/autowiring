@@ -20,7 +20,10 @@ public:
   auto_out(auto_out&& rhs) :
     m_checkout(std::move(rhs.m_checkout)),
     m_cancelled(false)
-  {}
+  {
+    // Ensure we do not try to multiply commit this checkout:
+    rhs.m_cancelled = true;
+  }
 
   auto_out(AutoCheckout<T>&& checkout) :
     m_checkout(std::move(checkout)),
