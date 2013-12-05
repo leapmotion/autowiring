@@ -181,6 +181,7 @@ public:
 
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
     m_queueUpdated.notify_all();
+    OnPended();
   }
 };
 
