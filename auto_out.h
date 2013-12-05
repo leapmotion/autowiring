@@ -25,7 +25,7 @@ public:
     rhs.m_cancelled = true;
   }
 
-  auto_out(AutoCheckout<T>&& checkout) :
+  explicit auto_out(AutoCheckout<T>&& checkout) :
     m_checkout(std::move(checkout)),
     m_cancelled(false)
   {}
@@ -36,7 +36,7 @@ public:
   }
 
 private:
-  bool m_cancelled;
+  mutable bool m_cancelled;
   AutoCheckout<T> m_checkout;
 
 public:
@@ -55,7 +55,11 @@ class auto_out<T, false>:
   public AutoCheckout<T>
 {
 public:
-  auto_out(AutoCheckout<T>&& checkout):
+  auto_out(auto_out&& rhs):
+    AutoCheckout<T>(std::move(rhs))
+  {}
+
+  explicit auto_out(AutoCheckout<T>&& checkout) :
     AutoCheckout<T>(std::move(checkout))
   {}
 };

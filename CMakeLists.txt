@@ -7,6 +7,7 @@ include_directories(
 set(
   Autowiring_SRCS
   at_exit.h
+  auto_out.h
   AutoFactory.h
   AutoPacket.h
   AutoPacket.cpp
@@ -96,6 +97,8 @@ endif()
 
 set(
   AutowiringTest_SRCS
+  AutoOutTest.h
+  AutoOutTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h
