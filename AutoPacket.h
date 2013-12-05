@@ -42,6 +42,7 @@ private:
   struct DecorationDisposition {
     DecorationDisposition(void) :
       satisfied(false),
+      isCheckedOut(false),
       pEnclosure(nullptr)
     {}
 
@@ -51,6 +52,9 @@ private:
 
     // Flag, used by the caller, to mark this enclosure as satisfied
     bool satisfied;
+
+    // Flag, set if the internally held object is currently checked out
+    bool isCheckedOut;
 
     // The enclosure proper:
     EnclosureBase* pEnclosure;
@@ -112,30 +116,25 @@ private:
   void PulseSatisfaction(const std::type_info& info);
 
   /// <summary>
-  /// Reverses a satisfaction that was issued, as in by a checkout, but not completed
-  /// </summary>
-  template<class T>
-  void RevertSatisfaction(void) {
-    {
-      boost::lock_guard<boost::mutex> lk(m_lock);
-      auto& entry = m_mp[typeid(T)];
-      entry.satisfied = true;
-      static_cast<Enclosure<T>*>(entry.pEnclosure)->Release();
-    }
-
-    // Now we update the satisfaction:
-    UpdateSatisfaction(typeid(T), false);
-  }
-
-  /// <summary>
   /// Invoked from a checkout when a checkout has completed
   /// <param name="ready">Ready flag, set to false if the decoration should be marked unsatisfiable</param>
   template<class T>
   void CompleteCheckout(bool ready) {
-    if(ready)
-      UpdateSatisfaction(typeid(T), true);
-    else
-      RevertSatisfaction<T>();
+    {
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      auto& entry = m_mp[typeid(T)];
+      assert(entry.satisfied);
+
+      if(!ready)
+        // Memory must be released, the checkout was cancelled
+        static_cast<Enclosure<T>*>(entry.pEnclosure)->Release();
+
+      // Reset the checkout flag before releasing the lock:
+      assert(entry.isCheckedOut);
+      entry.isCheckedOut = false;
+    }
+
+    UpdateSatisfaction(typeid(T), ready);
   }
 
 public:
@@ -214,6 +213,7 @@ public:
       if(entry->satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
       entry->satisfied = true;
+      entry->isCheckedOut = true;
     }
 
     if(HasSubscribers<T>()) {
