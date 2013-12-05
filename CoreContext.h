@@ -77,7 +77,9 @@ public:
   // Convenience override
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return Create(typeid(T));
+    auto retval = Create(typeid(T));
+    MicroBoltUtilities::enumerate_my_micro_bolts<T, ctxtfnptr>(retval);
+    return retval;
   }
 
 protected:
