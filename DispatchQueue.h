@@ -172,10 +172,10 @@ public:
   /// </summary>
   template<class _Fx>
   void operator+=(_Fx&& fx) {
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
     if(!CanAccept())
       return;
 
+    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
       return;
 
