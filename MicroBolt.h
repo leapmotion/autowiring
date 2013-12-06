@@ -1,9 +1,7 @@
 #pragma once
 #include "Bolt.h"
 #include "Autowired.h"
-#include <string>
 #include <iostream>
-#include <unordered_map>
 #include <vector>
 
 typedef void(*ctxtfnptr)(std::shared_ptr<CoreContext>);
