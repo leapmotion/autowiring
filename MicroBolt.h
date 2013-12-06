@@ -66,4 +66,11 @@ void InsertNameIntoContext(std::shared_ptr<CoreContext> cptr) {
     MicroBolt<SigilClass, ctxtfnptr, &InsertNameIntoContext<TypeToInsert>> s_##SigilClass; \
   }
 
+// BOLT_TO_FUNCTION = make_me_an_auto_func parameterized on a Sigil Class.
+// Later, a vector of these are enumerated by the CoreContext with matching Sigil Class
+#define BOLT_TO_FUNCTION(SigilClass, fptr ) namespace { \
+  MicroBolt<SigilClass, ctxtfnptr, fptr> s_##SigilClass##Bolted_Function; \
+  }
+
+
 
