@@ -57,8 +57,12 @@ void CoreThread::DoRun(void) {
   // Perform a manual notification of teardown listeners
   NotifyTeardownListeners();
 
+  // Pop the CurrentContextPusher so the reference to this context is destroyed.
+  pusher.Pop();
+
   // No longer running, we MUST release the thread pointer to ensure proper teardown
   m_thisThread.detach();
+
 }
 
 bool CoreThread::ShouldStop(void) const {
