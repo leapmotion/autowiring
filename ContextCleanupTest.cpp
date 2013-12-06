@@ -169,11 +169,11 @@ TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
   // Record the initial use count:
   size_t initCount = m_create.use_count();
 
-  // We want threads to run as soon as they are added:
-  m_create->InitiateCoreThreads();
-
   // Create a thread that will take awhile to stop:
   AutoRequired<TakesALongTimeToExit> longTime;
+
+  // We want threads to run as soon as they are added:
+  m_create->InitiateCoreThreads();
 
   // Make the thread exit before the enclosing context exits:
   longTime->barr.wait();
