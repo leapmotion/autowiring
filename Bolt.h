@@ -15,4 +15,5 @@ public:
   const std::type_info& GetContextSigil(void) override {
     return typeid(Sigil);
   }
+  static Sigil MySigilType;
 };

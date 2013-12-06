@@ -190,7 +190,7 @@ public:
       return std::shared_ptr<DeferredCreationNotice>();
 
     // Create:
-    auto child = context->Create();
+    auto child = context->Create<Sigil>();
     std::shared_ptr<DeferredCreationNotice> retVal(new DeferredCreationNotice(&typeid(Sigil), child));
 
     // Insert into our list:
