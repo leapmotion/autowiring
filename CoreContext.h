@@ -11,6 +11,7 @@
 #include "DeferredBase.h"
 #include "ExceptionFilter.h"
 #include "EventSender.h"
+#include "MicroBolt.h"
 #include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
@@ -80,6 +81,7 @@ public:
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
     auto retval = Create(typeid(T));
+    CurrentContextPusher pshr(retval); //This should prolly be reexamined
     MicroBoltUtilities::enumerate_my_micro_bolts<T, ctxtfnptr>(retval);
     return retval;
   }
