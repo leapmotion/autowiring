@@ -62,7 +62,6 @@ void CoreThread::DoRun(void) {
 
   // No longer running, we MUST release the thread pointer to ensure proper teardown
   m_thisThread.detach();
-
 }
 
 bool CoreThread::ShouldStop(void) const {
