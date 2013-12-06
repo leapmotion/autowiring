@@ -82,7 +82,8 @@ public:
       std::shared_ptr<CoreContext> context = m_context.lock();
       if(context) {
         // Create:
-        child = context->Create(typeid(Sigil));
+        //child = context->Create(typeid(Sigil));
+        child = context->Create<Sigil>(); //this overload hooks into the proper microbolt logic
         childWeak = child;
         retVal.reset(new DeferredCreationNotice(&typeid(Sigil), child));
 
