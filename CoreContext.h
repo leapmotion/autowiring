@@ -72,15 +72,20 @@ public:
   /// <summary>
   /// Factory to create a new context
   /// </summary>
-  /// <param name="name">The optional context sigil.  If void, creates an anonymous context.</param>
-  /// <param name="pParent">An optional parent context.  If null, will default to the root context.</param>
-  std::shared_ptr<CoreContext> Create(const std::type_info& sigil = typeid(void));
-
-  // Convenience override
+  /// <param name="T">The context sigil.  If void, identical to CreateAnonymous.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(void);
 
+  /// <summary>
+  /// Factory to create an anonymous context
+  /// </summary>
+  std::shared_ptr<CoreContext> CreateAnonymous(void) {
+    return Create(typeid(void));
+  }
+
 protected:
+  std::shared_ptr<CoreContext> Create(const std::type_info& sigil = typeid(void));
+
   // General purpose lock for this class
   mutable boost::mutex m_lock;
 
@@ -693,6 +698,9 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 
 template<class T>
 std::shared_ptr<CoreContext> CoreContext::Create(void) {
+  if(std::is_same<T, void>::value)
+    return CreateAnonymous();
+
   auto retval = Create(typeid(T));
   CurrentContextPusher pshr(retval);
   MicroBoltUtilities::AddBoltsToContext<T>(retval);
