@@ -453,10 +453,6 @@ void CoreContext::NotifyWhenAutowired(const AutowirableSlot& slot, const std::fu
   q->second->AddPostBindingListener(listener);
 }
 
-std::shared_ptr<CoreContext> CreateContextThunk(void) {
-  return CoreContext::CurrentContext()->Create();
-}
-
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
   rhs.Dump(os);
   return os;
