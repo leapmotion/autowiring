@@ -63,7 +63,7 @@ void CoreThread::DoRun(std::shared_ptr<Object> && outstanding) {
     // Pop the CurrentContextPusher so the reference to this context is destroyed.
     pusher.Pop();
   
-    // Reset referece from closure so context is destoryed
+    // Reset reference from closure so context is destroyed
     outstanding.reset();
   }
 
@@ -104,7 +104,7 @@ bool CoreThread::Start(std::shared_ptr<Object> outstanding) {
 
   // Kick off a thread and return here
   m_thisThread = boost::thread(
-    [this, outstanding]() mutable {
+    [this, outstanding] () mutable {
       this->DoRun(std::move(outstanding));
     }
   );
