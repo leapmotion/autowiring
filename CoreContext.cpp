@@ -114,7 +114,7 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   return retVal;
 }
 
-std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil) {
+std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, const std::vector<void(*)()>& callbacks) {
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert

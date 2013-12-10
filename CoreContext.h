@@ -80,11 +80,11 @@ public:
   /// Factory to create an anonymous context
   /// </summary>
   std::shared_ptr<CoreContext> CreateAnonymous(void) {
-    return Create(typeid(void));
+    return Create(typeid(void), std::vector<void(*)()>());
   }
 
 protected:
-  std::shared_ptr<CoreContext> Create(const std::type_info& sigil = typeid(void));
+  std::shared_ptr<CoreContext> Create(const std::type_info& sigil, const std::vector<void(*)()>& callbacks);
 
   // General purpose lock for this class
   mutable boost::mutex m_lock;
@@ -99,7 +99,6 @@ protected:
   // are correctly torn down.  This flag must be set at construction time.  Members added to the context
   // before this flag is assigned will NOT be checked.
   bool m_useOwnershipValidator;
-
 
   // A pointer to the parent context
   std::shared_ptr<CoreContext> m_pParent;
@@ -698,13 +697,10 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 
 template<class T>
 std::shared_ptr<CoreContext> CoreContext::Create(void) {
-  if(std::is_same<T, void>::value)
-    return CreateAnonymous();
-
-  auto retval = Create(typeid(T));
-  CurrentContextPusher pshr(retval);
-  MicroBoltUtilities::AddBoltsToContext<T>(retval);
-  return retval;
+  return
+    std::is_same<T, void>::value ?
+    CreateAnonymous() :
+    Create(typeid(T), MicroBoltUtilities::GetBoltEnumerationList<T>());
 }
 
 #endif
