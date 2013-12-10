@@ -14,7 +14,7 @@ CoreThread::CoreThread(const char* pName):
 {
 }
 
-void CoreThread::DoRun(std::shared_ptr<Object> && outstanding) {
+void CoreThread::DoRun(void) {
   ASSERT(m_running);
 
   // Make our own session current before we do anything else:
@@ -47,27 +47,19 @@ void CoreThread::DoRun(std::shared_ptr<Object> && outstanding) {
   // Unconditionally shut off dispatch delivery:
   RejectDispatchDelivery();
 
-  {
-    // Notify everyone that we're completed:
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_stop = true;
-    m_completed = true;
-    m_running = false;
+  // Notify everyone that we're completed:
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  m_stop = true;
+  m_completed = true;
+  m_running = false;
 
-    // Notify other other threads that we are done
-    m_stateCondition.notify_all();
+  // Notify other threads that we are done
+  m_stateCondition.notify_all();
 
-    // Perform a manual notification of teardown listeners
-    NotifyTeardownListeners();
+  // Perform a manual notification of teardown listeners
+  NotifyTeardownListeners();
 
-    // Pop the CurrentContextPusher so the reference to this context is destroyed.
-    pusher.Pop();
-
-    // Reset reference from closure so context is destroyed
-    outstanding.reset();
-  }
-
-  // No longer running, we MUST release the thread pointer to ensure proper teardown
+  // No longer running, we MUST release the thread pointer to ensure proper teardown order
   m_thisThread.detach();
 }
 
@@ -104,8 +96,8 @@ bool CoreThread::Start(std::shared_ptr<Object> outstanding) {
 
   // Kick off a thread and return here
   m_thisThread = boost::thread(
-    [this, outstanding] () mutable {
-      this->DoRun(std::move(outstanding));
+    [this, outstanding] {
+      this->DoRun();
     }
   );
   return true;

@@ -67,7 +67,7 @@ private:
   /// <summary>
   /// Private routine that sets up the necessary extranea before a call to Run
   /// </summary>
-  void DoRun(std::shared_ptr<Object>&&);
+  void DoRun(void);
 
 protected:
   /// <summary>
