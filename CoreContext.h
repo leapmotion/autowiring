@@ -82,7 +82,7 @@ public:
   std::shared_ptr<CoreContext> Create(void) {
     auto retval = Create(typeid(T));
     CurrentContextPusher pshr(retval);
-    MicroBoltUtilities::enumerate_my_micro_bolts<T, ctxtfnptr>(retval);
+    MicroBoltUtilities::AddBoltsToContext<T>(retval);
     return retval;
   }
 
