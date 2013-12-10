@@ -2,22 +2,20 @@
 #include "Bolt.h"
 #include <vector>
 
-typedef void(*ctxtfnptr)(std::shared_ptr<CoreContext>);
-
 struct MicroBoltUtilities {
   /// <summary>
   /// Instantiates and returns the SAME EXACT Vector per given Sigil Class and Container Type
   /// </summary>
   template<class SigilClass>
-  static std::vector<ctxtfnptr>& GetBoltEnumerationList(void) {
-    static std::vector<ctxtfnptr> retVal; //runs once at init
+  static std::vector<void(*)()>& GetBoltEnumerationList(void) {
+    static std::vector<void(*)()> retVal; //runs once at init
     return retVal;
   }
 
   /// <summary>
   /// Makes sure any given ContainerType elt is inserted only once into given ContainerType vector 
   /// </summary>
-  template<class SigilClass, ctxtfnptr callback>
+  template<class SigilClass, void(*callback)()>
   static bool RegisterCallbackWithSigil(void) {
     static bool initialized = PerformInsert<SigilClass, callback>();
     return initialized;
@@ -30,7 +28,7 @@ struct MicroBoltUtilities {
   static void AddBoltsToContext(std::shared_ptr<CoreContext> ctxtptr);
 
 private:
-  template<class SigilClass, ctxtfnptr callback>
+  template<class SigilClass, void(*callback)()>
   static bool PerformInsert(void) {
     auto& list = GetBoltEnumerationList<SigilClass>();
     list.push_back(callback);
@@ -50,7 +48,7 @@ void MicroBoltUtilities::AddBoltsToContext(std::shared_ptr<CoreContext> ctxtptr)
   }
 }
 
-template<class SigilClass, ctxtfnptr callback>
+template<class SigilClass, void (*callback)()>
 struct MicroBolt {
   MicroBolt(void) {
     MicroBoltUtilities::RegisterCallbackWithSigil<SigilClass, callback>();
@@ -58,10 +56,10 @@ struct MicroBolt {
 };
 
 template<class T>
-void InsertNameIntoContext(std::shared_ptr<CoreContext> cptr) {
+void InsertNameIntoContext(void) {
   // We will allow this to throw an exception if a contradictory
   // or duplicated bolt registration exists
-  cptr->Add<T>(std::shared_ptr<T>(new T));
+  CoreContext::CurrentContext()->Add<T>(std::shared_ptr<T>(new T));
 }
 
 // Bolts a particular concrete type into the specified context, identified by its sigil
