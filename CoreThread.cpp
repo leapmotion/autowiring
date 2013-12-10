@@ -46,9 +46,6 @@ void CoreThread::DoRun(std::shared_ptr<Object> && outstanding) {
 
   // Unconditionally shut off dispatch delivery:
   RejectDispatchDelivery();
-  
-  // Perform a manual notification of teardown listeners
-  NotifyTeardownListeners();
 
   {
     // Notify everyone that we're completed:
@@ -56,13 +53,16 @@ void CoreThread::DoRun(std::shared_ptr<Object> && outstanding) {
     m_stop = true;
     m_completed = true;
     m_running = false;
-  
+
     // Notify other other threads that we are done
     m_stateCondition.notify_all();
-  
+
+    // Perform a manual notification of teardown listeners
+    NotifyTeardownListeners();
+
     // Pop the CurrentContextPusher so the reference to this context is destroyed.
     pusher.Pop();
-  
+
     // Reset reference from closure so context is destroyed
     outstanding.reset();
   }
