@@ -1,7 +1,6 @@
 #pragma once
 #include "Bolt.h"
-#include "Autowired.h"
-#include <iostream>
+#include "CoreContext.h"
 #include <vector>
 
 typedef void(*ctxtfnptr)(std::shared_ptr<CoreContext>);
@@ -54,8 +53,9 @@ struct MicroBolt {
 
 template<class T>
 void InsertNameIntoContext(std::shared_ptr<CoreContext> cptr) {
-  CurrentContextPusher pshr(cptr);
-  AutoRequired<T>();
+  // We will allow this to throw an exception if a contradictory
+  // or duplicated bolt registration exists
+  cptr->Add<T>(std::shared_ptr<T>(new T));
 }
 
 // BOLT_TO = make_me_an_auto_func parameterized on a Sigil Class.
