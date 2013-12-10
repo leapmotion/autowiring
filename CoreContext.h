@@ -11,7 +11,6 @@
 #include "DeferredBase.h"
 #include "ExceptionFilter.h"
 #include "EventSender.h"
-#include "MicroBolt.h"
 #include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
@@ -79,12 +78,7 @@ public:
 
   // Convenience override
   template<class T>
-  std::shared_ptr<CoreContext> Create(void) {
-    auto retval = Create(typeid(T));
-    CurrentContextPusher pshr(retval);
-    MicroBoltUtilities::AddBoltsToContext<T>(retval);
-    return retval;
-  }
+  std::shared_ptr<CoreContext> Create(void);
 
 protected:
   // General purpose lock for this class
@@ -694,5 +688,15 @@ public:
 };
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& context);
+
+#include "MicroBolt.h"
+
+template<class T>
+std::shared_ptr<CoreContext> CoreContext::Create(void) {
+  auto retval = Create(typeid(T));
+  CurrentContextPusher pshr(retval);
+  MicroBoltUtilities::AddBoltsToContext<T>(retval);
+  return retval;
+}
 
 #endif
