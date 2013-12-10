@@ -81,7 +81,7 @@ public:
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
     auto retval = Create(typeid(T));
-    CurrentContextPusher pshr(retval); //This should prolly be reexamined
+    CurrentContextPusher pshr(retval);
     MicroBoltUtilities::enumerate_my_micro_bolts<T, ctxtfnptr>(retval);
     return retval;
   }
