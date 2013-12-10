@@ -3,7 +3,7 @@
 #include "ContextCreator.h"
 #include <string>
 
-struct EvictionContext;
+struct EvictionContext {};
 
 class Creator:
   public ContextCreator<EvictionContext, int>

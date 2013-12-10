@@ -7,7 +7,7 @@
 #include <string>
 #include <iostream>
 
-struct Pipeline;
+struct Pipeline {};
 
 class Listener:
   public Bolt<Pipeline>

@@ -1,7 +1,7 @@
 #pragma once
 #include "ContextMember.h"
 
-struct SelfSelect;
+struct SelfSelect {};
 
 class SelfSelectingFixture:
   public ContextMember
