@@ -1,6 +1,5 @@
 #pragma once
 #include "Bolt.h"
-#include "CoreContext.h"
 #include <vector>
 
 typedef void(*ctxtfnptr)(std::shared_ptr<CoreContext>);
@@ -19,21 +18,16 @@ struct MicroBoltUtilities {
   /// Makes sure any given ContainerType elt is inserted only once into given ContainerType vector 
   /// </summary>
   template<class SigilClass, ctxtfnptr callback>
-  static void RegisterCallbackWithSigil(void) {
+  static bool RegisterCallbackWithSigil(void) {
     static bool initialized = PerformInsert<SigilClass, callback>();
+    return initialized;
   }
 
   /// <summary>
   /// Enumerates all microbolts for given sigilclass and containertype
   /// </summary>
   template<class SigilClass>
-  static void AddBoltsToContext(std::shared_ptr<CoreContext> ctxtptr) {
-    auto& list = GetBoltEnumerationList<SigilClass>();
-    for(size_t i = 0; i < list.size(); i++){
-      // Call every callable in the vector, passing a ref to me each time
-      list[i](ctxtptr);
-    }
-  }
+  static void AddBoltsToContext(std::shared_ptr<CoreContext> ctxtptr);
 
 private:
   template<class SigilClass, ctxtfnptr callback>
@@ -43,6 +37,18 @@ private:
     return true;
   }
 };
+
+// Include must be provided here due to include dependency arrangement
+#include "CoreContext.h"
+
+template<class SigilClass>
+void MicroBoltUtilities::AddBoltsToContext(std::shared_ptr<CoreContext> ctxtptr) {
+  auto& list = GetBoltEnumerationList<SigilClass>();
+  for(size_t i = 0; i < list.size(); i++){
+    // Call every callable in the vector, passing a ref to me each time
+    list[i](ctxtptr);
+  }
+}
 
 template<class SigilClass, ctxtfnptr callback>
 struct MicroBolt {
