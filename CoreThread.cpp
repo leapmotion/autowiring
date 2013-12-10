@@ -52,12 +52,14 @@ void CoreThread::DoRun(void) {
   m_stop = true;
   m_completed = true;
   m_running = false;
+
+  // Notify other threads that we are done
   m_stateCondition.notify_all();
 
   // Perform a manual notification of teardown listeners
   NotifyTeardownListeners();
 
-  // No longer running, we MUST release the thread pointer to ensure proper teardown
+  // No longer running, we MUST release the thread pointer to ensure proper teardown order
   m_thisThread.detach();
 }
 

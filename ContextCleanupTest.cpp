@@ -5,7 +5,7 @@
 #include "TestFixtures/SimpleObject.h"
 #include "TestFixtures/SimpleThreaded.h"
 #include <boost/chrono.hpp>
-
+#include <boost/thread/barrier.hpp>
 using boost::chrono::milliseconds;
 
 TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
@@ -146,3 +146,44 @@ TEST_F(ContextCleanupTest, VerifyNotificationReciept) {
   }
   ASSERT_TRUE(rtn->m_notified) << "A member of a destroyed context did not correctly receive a teardown notice";
 }
+
+class TakesALongTimeToExit:
+  public CoreThread
+{
+public:
+  TakesALongTimeToExit(void) :
+    barr(2)
+  {
+    Ready();
+  }
+
+  boost::barrier barr;
+
+  virtual void Run(void) {
+    barr.wait();
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+  }
+};
+
+TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
+  // Record the initial use count:
+  size_t initCount = m_create.use_count();
+  m_create->EnforceSimpleOwnership();
+
+  // Create a thread that will take awhile to stop:
+  AutoRequired<TakesALongTimeToExit> longTime;
+
+  // We want threads to run as soon as they are added:
+  m_create->InitiateCoreThreads();
+
+  // Make the thread exit before the enclosing context exits:
+  longTime->barr.wait();
+  longTime->Stop();
+
+  // Now perform an explicit wait
+  m_create->Wait();
+
+  // At this point, the thread must have returned AND released its shared pointer to the enclosing context
+  EXPECT_EQ(initCount, m_create.use_count()) << "Context thread persisted even after it should have fallen out of scope";
+}
+
