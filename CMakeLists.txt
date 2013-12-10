@@ -63,6 +63,8 @@ set(
   ReentrantCounter.h
   ReentrantCounter.cpp
   SharedPtrHash.h
+  SimpleOwnershipValidator.h
+  SimpleOwnershipValidator.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
   TransientContextMember.h
@@ -150,6 +152,8 @@ set(
   ScopeTest.cpp
   SnoopTest.h
   SnoopTest.cpp
+  SimpleOwnershipValidatorTest.h
+  SimpleOwnershipValidatorTest.cpp
   TestFixtures/ExitRaceThreaded.h
   TestFixtures/SimpleInterface.h
   TestFixtures/SimpleObject.h

@@ -3,6 +3,7 @@
 #define _CONTEXT_CREATOR_BASE_H
 #include SHARED_PTR_HEADER
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/locks.hpp>
 
 class CoreContext;
 
