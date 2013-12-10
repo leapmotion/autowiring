@@ -168,6 +168,7 @@ public:
 TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
   // Record the initial use count:
   size_t initCount = m_create.use_count();
+  m_create->EnforceSimpleOwnership();
 
   // Create a thread that will take awhile to stop:
   AutoRequired<TakesALongTimeToExit> longTime;
@@ -180,7 +181,7 @@ TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
   longTime->Stop();
 
   // Now perform an explicit wait
-  longTime->Wait();
+  m_create->Wait();
 
   // At this point, the thread must have returned AND released its shared pointer to the enclosing context
   EXPECT_EQ(initCount, m_create.use_count()) << "Context thread persisted even after it should have fallen out of scope";
