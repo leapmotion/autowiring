@@ -1,25 +1,25 @@
 #include "stdafx.h"
 #include "EventOutputStream.h"
 
-EventOutputStream::EventOutputStream(void)
+EventOutputStreamBase::EventOutputStreamBase(void)
 {
 }
 
-EventOutputStream::~EventOutputStream(void)
+EventOutputStreamBase::~EventOutputStreamBase(void)
 {
 }
 
-bool EventOutputStream::IsEmpty(void) const {
+bool EventOutputStreamBase::IsEmpty(void) const {
   return true;
 }
 
-size_t EventOutputStream::GetSize(void) const {
+size_t EventOutputStreamBase::GetSize(void) const {
   return 0;
 }
 
-const void* EventOutputStream::GetData(void) const {
+const void* EventOutputStreamBase::GetData(void) const {
   return nullptr;
 }
 
-void EventOutputStream::Reset(void) {
+void EventOutputStreamBase::Reset(void) {
 }

@@ -34,7 +34,11 @@ public:
   }
 };
 
-void VerifyProperStreamReceipt(EventOutputStream* os, const AutoFired<EventWithUuid>& ewuuid) {
+template<class T>
+void VerifyProperStreamReceipt(EventOutputStream<T>* os, const AutoFired<EventWithUuid>& ewuuid) {
+  // Register our expected event type:
+  os->EnableIdentity(&EventWithUuid::SampleEventFiring);
+
   // Test fire an event:
   std::string str("012345678900123456789012345678901234567890");
   ewuuid(&EventWithUuid::SampleEventFiring)(&str);
@@ -52,7 +56,7 @@ TEST_F(MarshalingTest, VerifyListenersUpdated) {
   EXPECT_FALSE(ewuuid.HasListeners()) << "A newly created event incorrectly reported that listeners existed where none were subscribed";
 
   AutoCurrentContext ctxt;
-  std::shared_ptr<EventOutputStream> os = ctxt->CreateEventOutputStream<EventWithUuid>();
+  std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
   ASSERT_NE(nullptr, os.get()) << "Attempted to obtain an event stream from a context, but the returned pointer was null";
 
   // Should be listeners now:
@@ -66,7 +70,7 @@ TEST_F(MarshalingTest, VerifyListenersUpdated) {
 TEST_F(MarshalingTest, VerifyOutOfOrderFiring) {
   // We should be able to create an output stream on an event even if nobody fires this event right now
   AutoCurrentContext ctxt;
-  std::shared_ptr<EventOutputStream> os = ctxt->CreateEventOutputStream<EventWithUuid>();
+  std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
   ASSERT_NE(nullptr, os.get()) << "Failed to create an output stream in a context where no firers of the underlying event exist";
 
   // Verify that we get stream reciept even if we fire at _this_ point, after the stream exists
@@ -77,7 +81,7 @@ TEST_F(MarshalingTest, VerifySimpleSerialization) {
   AutoFired<EventWithUuid> ewuuid;
 
   AutoCurrentContext ctxt;
-  std::shared_ptr<EventOutputStream> os = ctxt->CreateEventOutputStream<EventWithUuid>();
+  std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
   ASSERT_NE(nullptr, os.get());
 
   // Should be empty before we fire anything:
@@ -101,7 +105,7 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
 
   // Serialize a fired event first:
   AutoFired<EventWithUuid> ewuuid;
-  std::shared_ptr<EventOutputStream> os = ctxt->CreateEventOutputStream<EventWithUuid>();
+  std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
   ASSERT_NE(nullptr, os.get());
 
   std::string helloWorld = "Hello, world!";
@@ -120,8 +124,8 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   ASSERT_NE(nullptr, is.get()) << "Event input stream was empty";
 
   // Register our expected event type:
-  is->Enable(&EventWithUuid::SampleEventFiring);
-  is->Enable(&EventWithUuid::SampleEventDeferred);
+  is->EnableIdentity(&EventWithUuid::SampleEventFiring);
+  is->EnableIdentity(&EventWithUuid::SampleEventDeferred);
 
   const void* ptr = os->GetData();
   size_t nRemaining = os->GetSize();
