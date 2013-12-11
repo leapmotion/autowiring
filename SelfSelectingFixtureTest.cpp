@@ -24,5 +24,8 @@ TEST_F(SelfSelectingFixtureTest, ExteriorFixtureTest) {
 
   ASSERT_TRUE(ssf.IsAutowired()) << "Self-selecting fixture was not selected into a created context with the correct name";
   ASSERT_TRUE(ssf->IsMagicCorrect()) << "Self-selecting fixture was apparently not initialized correctly";
+
+  // Verify that both bolts, including the one we shall not name, made it in:
+  ASSERT_EQ(2UL, created->GetMemberCount()) << "An unuttered fixture was eliminated by the linker unexpectedly";
 }
 
