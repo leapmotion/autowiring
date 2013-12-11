@@ -1,8 +1,6 @@
 #pragma once
 #include "ContextMember.h"
 
-struct SelfSelect {};
-
 class UnutteredSelectingFixture:
   public ContextMember
 {

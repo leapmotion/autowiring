@@ -2,6 +2,7 @@
 #include "SelfSelectingFixtureTest.h"
 #include "SelfSelectingFixture.h"
 #include "MicroBolt.h"
+#include "UnutteredSelectingFixture.h"
 
 // Simple class we will bolt locally in this application
 class SimpleLocalClass {};
@@ -20,6 +21,7 @@ TEST_F(SelfSelectingFixtureTest, ExteriorFixtureTest) {
 
   // Set the current context and detect the SelfSelectingFixture's presence
   CurrentContextPusher pshr(created);
+  Autowired<UnutteredSelectingFixture> usf;
   Autowired<SelfSelectingFixture> ssf;
 
   ASSERT_TRUE(ssf.IsAutowired()) << "Self-selecting fixture was not selected into a created context with the correct name";
