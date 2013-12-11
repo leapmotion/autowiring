@@ -37,8 +37,6 @@ set(
   Decompose.h
   DeferredBase.h
   DeferredBase.cpp
-  DeferredCreationNotice.h
-  DeferredCreationNotice.cpp
   deferred_ptr.h
   DispatchQueue.h
   DispatchQueue.cpp

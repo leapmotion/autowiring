@@ -69,14 +69,11 @@ CoreContext::~CoreContext(void) {
     delete q->second;
 }
 
-void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil, const std::shared_ptr<CoreContext>& context) const {
-  auto nameIter = m_nameListeners.find(sigil);
-  if(nameIter != m_nameListeners.end()) {
-    // Context creation notice requires that the created context be set before invocation:
-    CurrentContextPusher pshr(context);
-
+void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) const {
+  auto q = m_nameListeners.find(sigil);
+  if(q != m_nameListeners.end()) {
     // Iterate through all listeners:
-    const std::list<BoltBase*>& list = nameIter->second;
+    const auto& list = q->second;
     for(auto q = list.begin(); q != list.end(); q++)
       (**q).ContextCreated();
   }
@@ -85,7 +82,7 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil, co
   for(auto q = m_children.begin(); q != m_children.end(); q++) {
     std::shared_ptr<CoreContext> child = q->lock();
     if(child)
-      child->BroadcastContextCreationNotice(sigil, context);
+      child->BroadcastContextCreationNotice(sigil);
   }
 }
 
@@ -143,10 +140,14 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, co
   );
   *childIterator = retVal;
 
-  // Fire all bolts and then return:
   CurrentContextPusher pshr(retVal);
+
+  // Fire all implicit bolts:
   for(size_t i = 0; i < callbacks.size(); i++)
     callbacks[i]();
+
+  // Fire all explicit bolts:
+  BroadcastContextCreationNotice(sigil);
   return retVal;
 }
 
