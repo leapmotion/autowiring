@@ -63,9 +63,8 @@ void InsertNameIntoContext(void) {
 }
 
 // Bolts a particular concrete type into the specified context, identified by its sigil
-#define BOLT_TO(SigilClass, TypeToInsert) namespace { \
-    MicroBolt<SigilClass, &InsertNameIntoContext<TypeToInsert>> s_##SigilClass; \
-  }
+#define BOLT_TO(SigilClass, TypeToInsert) \
+  MicroBolt<SigilClass, &InsertNameIntoContext<TypeToInsert>> s_##SigilClass##TypeToInsert;
 
 // Causes the specified function to be invoked when a context is created whose sigil matches
 // the specified sigil
