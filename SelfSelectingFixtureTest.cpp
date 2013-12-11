@@ -4,10 +4,7 @@
 #include "MicroBolt.h"
 
 // Simple class we will bolt locally in this application
-class SimpleLocalClass {
-
-};
-
+class SimpleLocalClass {};
 
 TEST_F(SelfSelectingFixtureTest, LocalFixtureTest) {
 

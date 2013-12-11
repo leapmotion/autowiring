@@ -8,7 +8,7 @@ struct MicroBoltUtilities {
   /// </summary>
   template<class SigilClass>
   static std::vector<void(*)()>& GetBoltEnumerationList(void) {
-    static std::vector<void(*)()> retVal; //runs once at init
+    static std::vector<void(*)()> retVal;
     return retVal;
   }
 

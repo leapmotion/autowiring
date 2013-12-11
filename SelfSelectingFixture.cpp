@@ -2,8 +2,7 @@
 #include "SelfSelectingFixture.h"
 #include "MicroBolt.h"
 
-
-BOLT_TO(SelfSelect, SelfSelectingFixture) //gotta go back and make sure this can cross project boundaries once finished
+BOLT_TO(SelfSelect, SelfSelectingFixture)
 
 SelfSelectingFixture::SelfSelectingFixture(void) :
   magic(10010)
