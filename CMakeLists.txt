@@ -163,6 +163,8 @@ set(
   AutowiringFixture_SRCS
   SelfSelectingFixture.h
   SelfSelectingFixture.cpp
+  UnutteredSelectingFixture.h
+  UnutteredSelectingFixture.cpp
 )
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
