@@ -142,6 +142,11 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, co
     }
   );
   *childIterator = retVal;
+
+  // Fire all bolts and then return:
+  CurrentContextPusher pshr(retVal);
+  for(size_t i = 0; i < callbacks.size(); i++)
+    callbacks[i]();
   return retVal;
 }
 
