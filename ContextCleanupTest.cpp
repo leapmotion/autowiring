@@ -167,7 +167,7 @@ public:
 
 TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
   // Record the initial use count:
-  size_t initCount = m_create.use_count();
+  auto initCount = m_create.use_count();
   m_create->EnforceSimpleOwnership();
 
   // Create a thread that will take awhile to stop:
