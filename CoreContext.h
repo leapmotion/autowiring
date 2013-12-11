@@ -648,7 +648,7 @@ public:
   /// Creates a new event stream based on the provided event type
   /// </summary>
   template<class T>
-  std::shared_ptr<EventOutputStream> CreateEventOutputStream(void) {
+  std::shared_ptr<EventOutputStream<T>> CreateEventOutputStream(void) {
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot create an output stream based on a non-event type");
     static_assert(uuid_of<T>::value, "Cannot create an output stream on type T, the type was not defined with DECLARE_UUID");
     return nullptr;

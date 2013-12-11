@@ -1,17 +1,11 @@
 #pragma once
+#include "Decompose.h"
 
-/// <summary>
-/// An output stream, which represents marshalled output from an event type in a context
-/// </summary>
-class EventOutputStream
-{
+class EventOutputStreamBase {
 public:
-  EventOutputStream(void);
-  ~EventOutputStream(void);
+  EventOutputStreamBase(void);
+  ~EventOutputStreamBase(void);
 
-private:
-
-public:
   /// <returns>
   /// True if this stream has no events in it
   /// </returns>
@@ -31,5 +25,25 @@ public:
   /// Resets the output stream, preparing it for new writes.  Does not release or reallocate memory.
   /// </summary>
   void Reset(void);
+};
+
+/// <summary>
+/// An output stream, which represents marshalled output from an event type in a context
+/// </summary>
+template<class T>
+class EventOutputStream:
+  public EventOutputStreamBase
+{
+private:
+
+public:
+  /// <summary>
+  /// Enables a new event for serialization via its identity
+  /// </summary>
+  template<class MemFn>
+  void EnableIdentity(MemFn eventIden) {
+    // We cannot serialize an identity we don't recognize
+    static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
+  }
 };
 

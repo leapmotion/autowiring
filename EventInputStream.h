@@ -13,10 +13,10 @@ private:
 
 public:
   /// <summary>
-  /// Enables a new event for firing, as a member of T, for transmission by this class
+  /// Enables a new event for firing via its identity, as a member of T, for transmission by this class
   /// </summary>
   template<class MemFn>
-  void Enable(MemFn memFn) {
+  void EnableIdentity(MemFn eventIden) {
   }
 
   /// <summary>
