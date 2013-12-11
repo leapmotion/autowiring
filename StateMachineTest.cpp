@@ -5,42 +5,58 @@
 
 using namespace std;
 
+enum PlaybackState {
+  Playing,
+  Paused,
+  Stopped
+};
 
-TEST_F(StateMachineTest, SimpleStates) {
-  
-  enum class states {BLUE, GREEN, RED, BAD_STATE};
-  
-  StateMachine<states,int> machine((states::BLUE));
-  
-  auto trans = [](int i){
-    switch (i){
-      case 0:
-        return states::BLUE;
-        break;
-      case 1:
-        return states::GREEN;
-        break;
-      case 2:
-        return states::RED;
-        break;
-    }
-    return states::BAD_STATE;
-  };
-  
-  machine.addTransition(states::BLUE, trans);
-  machine.addTransition(states::GREEN, trans);
-  machine.addTransition(states::RED, trans);
-  
-  EXPECT_EQ(states::BLUE, machine.getState());
-  
-  machine.transition(2);
-  
-  EXPECT_EQ(states::RED, machine.getState());
+enum DeviceCommand {
+  Play,
+  Pause,
+  Stop
+};
 
-  machine.transition(1);
-  
-  EXPECT_EQ(states::GREEN, machine.getState());
-  
+class SimpleRecordingDevice:
+  public StateMachine<PlaybackState, DeviceCommand>
+{
+public:
+  SimpleRecordingDevice(void):
+    StateMachine(
+      machine(Stopped) << Stopped << Play << Playing
+    ),
+    m_playingCallCount(0)
+  {
+    *this += Play, &SimpleRecordingDevice::OnPlayInput;
+    
+    *this += Playing, [this] {
+      this->OnStartPlaying()
+    };
+  }
+
+  int m_playInputCount;
+  int m_playingCallCount;
+
+  void OnPlayInput(void) {
+    m_playInputCount++;
+  }
+
+  void OnStartPlaying(void) {
+    m_playingCallCount++;
+  }
+};
+
+TEST_F(StateMachineTest, RecordingDeviceTest) {
+  SimpleRecordingDevice device;
+
+  // Verify that the device is in the default state:
+  ASSERT_EQ(Stopped, device.getState()) << "State machine's ground state was incorrect";
+
+  // Hit the playback state and then transition back to the stopped state:
+  device.transition(Play);
+  device.transition(Stop);
+  ASSERT_EQ(1, device.m_playingCallCount) << "State machine did not hit the input state the expected number of times";
+  ASSERT_EQ(1, device.m_playInputCount) << "";
 }
 
 
