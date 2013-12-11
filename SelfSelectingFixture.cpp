@@ -2,7 +2,11 @@
 #include "SelfSelectingFixture.h"
 #include "MicroBolt.h"
 
-BOLT_TO(SelfSelect, SelfSelectingFixture)
+BOLT_TO(SelfSelect, SelfSelectingFixture);
+
+class ComdatClass {
+  ComdatClass(void) {};
+};
 
 SelfSelectingFixture::SelfSelectingFixture(void) :
   magic(10010)
