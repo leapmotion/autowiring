@@ -3,7 +3,6 @@
 #define _CONTEXT_CREATOR_H
 #include "ContextCreatorBase.h"
 #include "CoreContext.h"
-#include "DeferredCreationNotice.h"
 #include STL_UNORDERED_MAP
 
 /// <summary>
@@ -65,36 +64,34 @@ public:
   /// <summary>
   /// Creates a context with the specified key, dependent upon the current context
   /// </summary>
-  /// <returns>A deferred creation notice which, when destroyed, will cause clients to be notified of context creation</returns>
-  std::shared_ptr<DeferredCreationNotice> CreateContext(const Key& key) {
+  /// <returns>A pair in which the first element is the created context and the second is a bool set if creation took place</returns>
+  std::pair<std::shared_ptr<CoreContext>, bool> CreateContext(const Key& key) {
     boost::lock_guard<boost::mutex> lk(m_contextLock);
 
     // Obtain and lock a weak pointer, if possible:
     auto& childWeak = m_contexts[key];
-    auto child = childWeak.lock();
+    auto retVal = childWeak.lock();
 
     // Try to find a context already existing with the given key:
-    std::shared_ptr<DeferredCreationNotice> retVal;
-    if(child)
-      retVal.reset(new DeferredCreationNotice(nullptr, child));
-    else {
-      // Attempt to lock the context.  Could already be destroyed by this point.
-      std::shared_ptr<CoreContext> context = m_context.lock();
-      if(context) {
-        // Create:
-        //child = context->Create(typeid(Sigil));
-        child = context->Create<Sigil>(); //this overload hooks into the proper microbolt logic
-        childWeak = child;
-        retVal.reset(new DeferredCreationNotice(&typeid(Sigil), child));
+    if(retVal)
+      return std::make_pair(retVal, false);
 
-        // Add a teardown listener for this child in particular:
-        auto pContext = child.get();
-        child->AddTeardownListener([this, key, pContext] () {
-          this->NotifyContextDestroyed(key, pContext);
-        });
-      }
-    }
-    return retVal;
+    // Attempt to lock the enclosing context.  Could already be destroyed by this point.
+    auto context = m_context.lock();
+    if(!context)
+      // Can't lock the context, empty pointer returned
+      throw std::runtime_error("Attempted to create a child context of a parent context which was shutting down");
+
+    // Create, and insert into our map:
+    retVal = context->Create<Sigil>();
+    childWeak = retVal;
+
+    // Add a teardown listener so we know when to evict from our map:
+    auto pContext = retVal.get();
+    retVal->AddTeardownListener([this, key, pContext] () {
+      this->NotifyContextDestroyed(key, pContext);
+    });
+    return std::make_pair(retVal, true);
   }
 
   /// <sumamry>
@@ -183,16 +180,15 @@ public:
   /// <summary>
   /// Unconditionally creates a context
   /// </summary>
-  /// <returns>A deferred creation notice which, when destroyed, will cause clients to be notified of context creation</returns>
-  std::shared_ptr<DeferredCreationNotice> CreateContext(void) {
+  /// <returns>A shared pointer to the created context</returns>
+  std::shared_ptr<CoreContext> CreateContext(void) {
     // Attempt to lock the context.  Could already be destroyed by this point.
     std::shared_ptr<CoreContext> context = m_context.lock();
     if(!context)
-      return std::shared_ptr<DeferredCreationNotice>();
+      return std::shared_ptr<CoreContext>();
 
     // Create:
     auto child = context->Create<Sigil>();
-    std::shared_ptr<DeferredCreationNotice> retVal(new DeferredCreationNotice(&typeid(Sigil), child));
 
     // Insert into our list:
     auto q =
@@ -207,7 +203,7 @@ public:
     child->AddTeardownListener([this, q, pContext] () {
       this->NotifyContextDestroyed(q, pContext);
     });
-    return retVal;
+    return child;
   }
 
   /// <sumamry>

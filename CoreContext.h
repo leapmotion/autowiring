@@ -347,7 +347,11 @@ public:
   /// <summary>
   /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
   /// </summary>
-  void BroadcastContextCreationNotice(const std::type_info& sigil, const std::shared_ptr<CoreContext>& context) const;
+  /// <remarks>
+  /// The broadcast is made without altering the current context.  Recipients expect that the current context will be the
+  /// one about which they are being informed.
+  /// </remarks>
+  void BroadcastContextCreationNotice(const std::type_info& sigil) const;
 
   /// <summary>
   /// Obtains a shared pointer to an event sender _in this context_ matching the specified type

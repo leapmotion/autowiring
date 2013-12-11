@@ -38,27 +38,17 @@ TEST_F(CreationListenerTest, VerifyMapping) {
 
   // Trivial context creation check:
   {
-    std::shared_ptr<DeferredCreationNotice> notice = simpleCreator.CreateContext(L"Simple");
-    ASSERT_TRUE(!!notice.get()) << "Initial context creation did not succeed as expected";
-    EXPECT_TRUE(notice->WasCreated());
+    auto ctxt = simpleCreator.CreateContext(L"Simple");
+    ASSERT_TRUE(ctxt.second && ctxt.first.get()) << "Initial context creation did not succeed as expected";
   }
 
   // Now try to autowire a listener:
   AutoRequired<Listener> myListener;
 
   // Create a second context, verify that the listener got the message:
-  std::shared_ptr<CoreContext> createdContext;
-  {
-    std::shared_ptr<DeferredCreationNotice> deferred = simpleCreator.CreateContext(L"Simple2");
+  std::shared_ptr<CoreContext> createdContext = simpleCreator.CreateContext(L"Simple2").first;
 
-    // Check the listener to verify a hit was not had here:
-    EXPECT_FALSE(myListener->hit) << "The listener callback was hit unexpectedly early";
-
-    // Copy out context, release reference:
-    createdContext = deferred->GetContext();
-  }
-
-  // Verify we have a hit now that the reference was released:
+  // Verify we have a hit our bolt:
   EXPECT_TRUE(myListener->hit) << "The listener callback was not hit as expected";
 
   // Verify that the correct context was created:
