@@ -40,6 +40,9 @@ public:
     };
   }
 
+  using StateMachine<PlaybackState, DeviceCommand>::getState;
+  using StateMachine<PlaybackState, DeviceCommand>::transition;
+
   int m_playInputCount;
   int m_playingCallCount;
 
