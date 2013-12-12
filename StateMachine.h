@@ -17,6 +17,9 @@ private:
   T_states startState;
 
 public:
+  // Accessor methods:
+  T_states GetStartState(void) const { return startState; }
+
   struct LhsWithTransition {
     LhsWithTransition(TransitionObject& owner, T_states lhs, T_input input):
       owner(owner),
@@ -80,21 +83,62 @@ public:
 
 private:
   T_states m_currentState;
-  std::map<T_states, t_func> m_transitionMap;
+  typedef std::map<T_states, t_func> t_transitionMap;
+  t_transitionMap m_transitionMap;
+
+  typedef std::map<T_states, std::function<void()>> t_behaviors;
+  t_behaviors m_behaviors;
+
+  typedef std::map<T_input, std::function<void()>> t_transitionHandlers;
+  t_transitionHandlers m_transitionHandlers;
 
 protected:
   static TransitionObject<T_states, T_input> machine(T_states startState) {
     return TransitionObject<T_states, T_input>(startState);
   }
 
+  struct BehaviorEntry
+  {
+    BehaviorEntry(std::function<void()>& entry):
+      entry(entry)
+    {}
+
+    std::function<void()>& entry;
+    
+    // Operator overloads for behavior introduction:
+    template<class T>
+    void operator,(void (T::*memFn)()) {
+    }
+
+    void operator,(std::function<void()>&& rhs) {
+    }
+  };
+  
+  struct TransitionEntry
+  {
+    TransitionEntry(std::function<void()>& entry):
+      entry(entry)
+    {}
+
+    std::function<void()>& entry;
+    
+    // Operator overloads for behavior introduction:
+    template<class T>
+    void operator,(void (T::*memFn)()) {
+    }
+
+    void operator,(std::function<void()>&& rhs) {
+      return parent;
+    }
+  };
+
   // Operator overloads for behavior introduction:
-  template<class T>
-  StateMachine& operator+=(void (T::*memFn)()) {
-    return *this;
+  BehaviorEntry operator+=(T_states state) {
+    return BehaviorEntry(m_behaviors[state]);
   }
 
-  StateMachine& operator+=(std::function<void()>&& rhs) {
-    return *this;
+  TransitionEntry operator+=(T_input input) {
+    return TransitionEntry(m_transitionHandlers[input]);
   }
 };
 
