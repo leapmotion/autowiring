@@ -1,7 +1,6 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _CONTEXT_CREATION_LISTENER_BASE_H
 #define _CONTEXT_CREATION_LISTENER_BASE_H
-#include "EventReceiver.h"
 #include <memory>
 
 class CoreContext;
@@ -11,8 +10,7 @@ class CoreContext;
 /// <param name="contextName">The name of the context whose creation we want to listen for</param>
 /// <remarks>
 /// </remarks>
-class BoltBase:
-  public virtual EventReceiver
+class BoltBase
 {
 public:
   /// <summary>

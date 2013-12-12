@@ -13,6 +13,7 @@
 #include "EventSender.h"
 #include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
+#include "MicroBolt.h"
 #include "TeardownNotifier.h"
 #include "TransientContextMember.h"
 #include <boost/thread/condition.hpp>
@@ -51,6 +52,9 @@ class OutstandingCountTracker;
 template<class T>
 class Autowired;
 
+template<class Sigil1, class Sigil2, class Sigil3>
+struct Boltable;
+
 /// <summary>
 /// This class is used to determine whether all core threads have exited
 /// </summary>
@@ -74,17 +78,36 @@ public:
   /// </summary>
   /// <param name="T">The context sigil.  If void, identical to CreateAnonymous.</param>
   template<class T>
-  std::shared_ptr<CoreContext> Create(void);
+  std::shared_ptr<CoreContext> Create(void) {
+    return Create(typeid(T));
+  }
 
   /// <summary>
   /// Factory to create an anonymous context
   /// </summary>
   std::shared_ptr<CoreContext> CreateAnonymous(void) {
-    return Create(typeid(void), std::vector<void(*)()>());
+    return Create(typeid(void));
   }
 
+  /// <summary>
+  /// Allows a specifically named class to be bolted
+  /// </summary>
+  /// <remarks>
+  /// If the specified type does not inherit from BoltTo, this method has no effect
+  /// </remarks>
+  template<class T>
+  void Enable(void) {
+    static_assert(!std::is_abstract<T>::value, "Cannot enable an abstract class for bolting");
+    EnableInternal((T*)nullptr, (T*)nullptr);
+  }
+
+  /// <summary>
+  /// Convenience method to obtain a shared reference to the global context
+  /// </summary>
+  static std::shared_ptr<CoreContext> GetGlobal(void);
+
 protected:
-  std::shared_ptr<CoreContext> Create(const std::type_info& sigil, const std::vector<void(*)()>& callbacks);
+  std::shared_ptr<CoreContext> Create(const std::type_info& sigil);
 
   // General purpose lock for this class
   mutable boost::mutex m_lock;
@@ -158,6 +181,45 @@ protected:
   // The interior packet factory:
   std::shared_ptr<AutoPacketFactory> m_packetFactory;
 
+  // Lists of event receivers, by name:
+  typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
+  t_contextNameListeners m_nameListeners;
+
+  // Adds a bolt proper to this context
+  template<class T, class Sigil>
+  void EnableInternal(T*, Bolt<Sigil>*) {
+    std::shared_ptr<T> ptr;
+    AutoRequire(ptr);
+  }
+
+  template<class Sigil, class T>
+  void AutoRequireMicroBolt(void) {
+    if(std::is_same<void, Sigil>::value)
+      return;
+
+    std::shared_ptr<MicroBolt<Sigil, T>> ptr;
+    AutoRequire(ptr);
+  }
+
+  // Enables a boltable class
+  template<class T, class Sigil1, class Sigil2, class Sigil3>
+  void EnableInternal(T*, Boltable<Sigil1, Sigil2, Sigil3>*) {
+    AutoRequireMicroBolt<Sigil1, T>();
+    AutoRequireMicroBolt<Sigil2, T>();
+    AutoRequireMicroBolt<Sigil3, T>();
+  }
+
+  void EnableInternal(...) {}
+
+  /// <summary>
+  /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
+  /// </summary>
+  /// <remarks>
+  /// The broadcast is made without altering the current context.  Recipients expect that the current context will be the
+  /// one about which they are being informed.
+  /// </remarks>
+  void BroadcastContextCreationNotice(const std::type_info& sigil) const;
+
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
@@ -194,7 +256,7 @@ protected:
   /// Adds the specified context creation listener to receive creation events broadcast from this context
   /// </summary>
   /// <param name="pBase">The instance being added</param>
-  virtual void AddBolt(const std::shared_ptr<BoltBase>& pBase);
+  void AddBolt(const std::shared_ptr<BoltBase>& pBase);
 
   /// <summary>
   /// Overload of Add based on ContextMember
@@ -214,8 +276,10 @@ protected:
   /// <summary>
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
-  template<class T>
-  bool AutowireNoDefer(Autowired<T>& slot) {
+  template<class W>
+  bool AutowireNoDefer(W& slot) {
+    typedef typename W::element_type T;
+
     // First-chance resolution in this context and ancestor contexts:
     for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
       pCur->FindByType(slot);
@@ -261,6 +325,7 @@ protected:
 
 public:
   // Accessor methods:
+  bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const {return m_byType.size();}
   bool IsRunning(void) const {return !!m_refCount;}
   const std::type_info& GetSigilType(void) const { return m_sigil; }
@@ -604,6 +669,17 @@ public:
   // Interior type overrides:
   void FindByType(std::shared_ptr<AutoPacketFactory>& slot) { slot = m_packetFactory; }
 
+  template<class W>
+  void AutoRequire(W& slot) {
+    if(AutowireNoDefer(slot))
+      return;
+
+    // Failed, create
+    std::shared_ptr<typename W::element_type> ptr(CreationRules::New<typename W::element_type>());
+    Add(ptr);
+    slot = ptr;
+  }
+
   /// <summary>
   /// Registers a slot to be autowired
   /// </summary>
@@ -685,13 +761,5 @@ public:
 std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 
 #include "MicroBolt.h"
-
-template<class T>
-std::shared_ptr<CoreContext> CoreContext::Create(void) {
-  return
-    std::is_same<T, void>::value ?
-    CreateAnonymous() :
-    Create(typeid(T), MicroBoltUtilities::GetBoltEnumerationList<T>());
-}
 
 #endif

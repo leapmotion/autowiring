@@ -1,4 +1,5 @@
 #pragma once
+#include "AutowirableSlot.h"
 #include "BoltBase.h"
 
 /// <summary>

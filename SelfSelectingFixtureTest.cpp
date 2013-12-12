@@ -31,9 +31,8 @@ TEST_F(SelfSelectingFixtureTest, LocalFixtureTest) {
   // Enable the bolt
   AutoEnable<HitCountingBolt>();
 
-  // Verify creation and ownership:
+  // Verify creation:
   ASSERT_TRUE(hcb.IsAutowired()) << "Bolt not created after being enabled";
-  ASSERT_EQ(AutoGlobalContext(), hcb->GetContext()) << "Hit-counting bolt was not a member of the global context as bolts are required to be";
 
   // Verify the bolt gets hit:
   m_create->Create<SimpleLocalClass>();
