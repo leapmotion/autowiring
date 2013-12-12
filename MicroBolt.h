@@ -5,6 +5,12 @@
 #include <vector>
 
 /// <summary>
+/// Causes the class inheriting from this definition to be bolted to the specified contexts
+/// </summary>
+template<class Sigil1, class Sigil2 = void, class Sigil3 = void>
+struct Boltable {};
+
+/// <summary>
 /// A default bolt type which will insert the specified type into a matching context
 /// </summary>
 template<class Sigil, class T>
@@ -23,7 +29,7 @@ struct MicroBolt<void, T> {};
 template<class Sigil, class T>
 void MicroBolt<Sigil, T>::ContextCreated(void) {
   std::shared_ptr<T> ptr;
-  AutoCurrentContext ctxt;
+  auto ctxt = CoreContext::CurrentContext();
   ctxt->FindByType(ptr);
   if(ptr)
     return;
@@ -31,9 +37,3 @@ void MicroBolt<Sigil, T>::ContextCreated(void) {
   ptr.reset(CreationRules::New<T>());
   ctxt->Add(ptr);
 }
-
-/// <summary>
-/// Causes the class inheriting from this definition to be bolted to the specified contexts
-/// </summary>
-template<class Sigil1, class Sigil2 = void, class Sigil3 = void>
-struct Boltable {};
