@@ -1,8 +1,6 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "Autowired.h"
-#include "CoreContext.h"
-#include "GlobalCoreContext.h"
 
 AutoCurrentContext::AutoCurrentContext(void):
   std::shared_ptr<CoreContext>(CoreContext::CurrentContext())
@@ -10,11 +8,11 @@ AutoCurrentContext::AutoCurrentContext(void):
 }
 
 AutoGlobalContext::AutoGlobalContext(void):
-  std::shared_ptr<CoreContext>(GlobalCoreContext::Get())
+  std::shared_ptr<GlobalCoreContext>(GlobalCoreContext::Get())
 {
 }
 
 AutoCreateContext::AutoCreateContext(void):
-  std::shared_ptr<CoreContext>(CoreContext::CurrentContext()->Create())
+  std::shared_ptr<CoreContext>(CoreContext::CurrentContext()->CreateAnonymous())
 {
 }
