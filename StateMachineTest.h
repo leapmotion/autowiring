@@ -8,5 +8,4 @@ public testing::Test
 {
 };
 
-
 #endif
