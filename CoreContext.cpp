@@ -98,7 +98,7 @@ std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
 
-std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, const std::vector<void(*)()>& callbacks) {
+std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil) {
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert
@@ -127,14 +127,9 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, co
   );
   *childIterator = retVal;
 
-  CurrentContextPusher pshr(retVal);
-
-  // Fire all implicit bolts:
-  for(size_t i = 0; i < callbacks.size(); i++)
-    callbacks[i]();
-
   // Fire all explicit bolts:
-  GlobalCoreContext::Get()->BroadcastContextCreationNotice(sigil);
+  CurrentContextPusher pshr(retVal);
+  BroadcastContextCreationNotice(sigil);
   return retVal;
 }
 
@@ -265,8 +260,7 @@ void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr, bool all
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
-  // Cannot add a bolt to anything but the global context
-  assert(false);
+  m_nameListeners[pBase->GetContextSigil()].push_back(pBase.get());
 }
 
 void CoreContext::Dump(std::ostream& os) const {
@@ -289,6 +283,20 @@ void CoreContext::Dump(std::ostream& os) const {
 void FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) {
   // Obtain the current context and pass control:
   CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
+}
+
+void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) const {
+  auto q = m_nameListeners.find(sigil);
+  if(q != m_nameListeners.end()) {
+    // Iterate through all listeners:
+    const auto& list = q->second;
+    for(auto q = list.begin(); q != list.end(); q++)
+      (**q).ContextCreated();
+  }
+
+  // Notify the parent next:
+  if(m_pParent)
+    m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
 void CoreContext::UpdateDeferredElements(void) {
