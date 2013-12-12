@@ -1,6 +1,4 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _CORECONTEXT_H
-#define _CORECONTEXT_H
+#pragma once
 #include "at_exit.h"
 #include "AutoFactory.h"
 #include "AutoPacketSubscriber.h"
@@ -13,7 +11,6 @@
 #include "EventSender.h"
 #include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
-#include "MicroBolt.h"
 #include "TeardownNotifier.h"
 #include "TransientContextMember.h"
 #include <boost/thread/condition.hpp>
@@ -193,13 +190,7 @@ protected:
   }
 
   template<class Sigil, class T>
-  void AutoRequireMicroBolt(void) {
-    if(std::is_same<void, Sigil>::value)
-      return;
-
-    std::shared_ptr<MicroBolt<Sigil, T>> ptr;
-    AutoRequire(ptr);
-  }
+  void AutoRequireMicroBolt(void);
 
   // Enables a boltable class
   template<class T, class Sigil1, class Sigil2, class Sigil3>
@@ -762,4 +753,12 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 
 #include "MicroBolt.h"
 
-#endif
+template<class Sigil, class T>
+void CoreContext::AutoRequireMicroBolt(void) {
+  if(std::is_same<void, Sigil>::value)
+    return;
+
+  std::shared_ptr<MicroBolt<Sigil, T>> ptr;
+  AutoRequire(ptr);
+}
+

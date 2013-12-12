@@ -4,6 +4,8 @@
 #include "MicroBolt.h"
 #include "OtherSelectingFixture.h"
 
+struct SelfSelect {};
+
 // Simple class we will bolt locally in this application
 class SimpleLocalClass {};
 
