@@ -7,7 +7,37 @@
 // Simple class we will bolt locally in this application
 class SimpleLocalClass {};
 
+// Bolt which just counts hits:
+class HitCountingBolt:
+  public ContextMember,
+  public Bolt<SimpleLocalClass>
+{
+public:
+  HitCountingBolt(void):
+    m_hitCount(0)
+  {}
+
+  void ContextCreated(void) override {
+    m_hitCount++;
+  }
+
+  size_t m_hitCount;
+};
+
 TEST_F(SelfSelectingFixtureTest, LocalFixtureTest) {
+  Autowired<HitCountingBolt> hcb;
+  ASSERT_FALSE(hcb.IsAutowired()) << "Hit-counting bolt was created before it was enabled";
+
+  // Enable the bolt
+  AutoEnable<HitCountingBolt>();
+
+  // Verify creation and ownership:
+  ASSERT_TRUE(hcb.IsAutowired()) << "Bolt not created after being enabled";
+  ASSERT_EQ(AutoGlobalContext(), hcb->GetContext()) << "Hit-counting bolt was not a member of the global context as bolts are required to be";
+
+  // Verify the bolt gets hit:
+  m_create->Create<SimpleLocalClass>();
+  ASSERT_EQ(1UL, hcb->m_hitCount) << "Bolt was not hit when a matching class was created";
 }
 
 TEST_F(SelfSelectingFixtureTest, ExteriorFixtureTest) {
