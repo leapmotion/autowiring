@@ -62,9 +62,20 @@ void InsertNameIntoContext(void) {
   CoreContext::CurrentContext()->Add<T>(std::shared_ptr<T>(new T));
 }
 
+// Explicit enable routine, needed to ensure that microbolt modules are instantiated
+template<class Type>
+void ModuleAnchorPoint(void);
+
+#define ANCHOR_POINT(TypeToInsert) \
+  template<> void ModuleAnchorPoint<TypeToInsert>(void) {}
+
 // Bolts a particular concrete type into the specified context, identified by its sigil
 #define BOLT_TO(SigilClass, TypeToInsert) \
   MicroBolt<SigilClass, &InsertNameIntoContext<TypeToInsert>> s_##SigilClass##TypeToInsert;
+
+#define BOLT_TO_AND_ANCHOR_POINT(SigilClass, TypeToInsert) \
+  ANCHOR_POINT(TypeToInsert) \
+  BOLT_TO(SigilClass, TypeToInsert)
 
 // Causes the specified function to be invoked when a context is created whose sigil matches
 // the specified sigil
@@ -72,5 +83,6 @@ void InsertNameIntoContext(void) {
     MicroBolt<SigilClass, fptr> s_##SigilClass##Bolted_Function; \
   }
 
-
-
+// Enables a particular class for microbolting
+#define ANCHOR_MODULE_HERE(TypeToInsert) \
+  static void(*const s_unreferenced##TypeToInsert)() = &ModuleAnchorPoint<TypeToInsert>;
