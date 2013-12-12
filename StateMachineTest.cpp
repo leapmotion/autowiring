@@ -23,7 +23,13 @@ class SimpleRecordingDevice:
 public:
   SimpleRecordingDevice(void):
     StateMachine(
-      machine(Stopped) << Stopped << Play << Playing
+      machine(Stopped)
+      << Stopped << Play << Playing
+      << Stopped << Pause << Stopped
+      << Paused << Play << Playing
+      << Paused << Stop << Stopped
+      << Playing << Stop << Stopped
+      << Playing << Pause << Paused
     ),
     m_playingCallCount(0)
   {
