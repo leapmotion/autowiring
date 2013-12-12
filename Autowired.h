@@ -1,9 +1,9 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _AUTOWIRED_H
 #define _AUTOWIRED_H
-#include "AutoFactory.h"
 #include "AutowirableSlot.h"
-#include "CoreContext.h"
+#include "CreationRules.h"
+#include "GlobalCoreContext.h"
 #include "Decompose.h"
 #include <functional>
 #include <memory>
@@ -33,10 +33,20 @@ public:
 /// Simple way to obtain a reference to the global context
 /// </summary>
 class AutoGlobalContext:
-  public std::shared_ptr<CoreContext>
+  public std::shared_ptr<GlobalCoreContext>
 {
 public:
   AutoGlobalContext(void);
+};
+
+/// <summary>
+/// Idiom to enable boltable classes
+/// </summary>
+template<class T>
+class AutoEnable
+{
+public:
+  AutoEnable(void) { CoreContext::CurrentContext()->Enable<T>(); }
 };
 
 /// <summary>
@@ -60,18 +70,6 @@ class AutowiredCreator:
 public:
   typedef T value_type;
   typedef shared_ptr<T> t_ptrType;
-  
-  template<class U>
-  static typename std::enable_if<has_static_new<U>::value, U*>::type New(void) {
-    return U::New();
-  }
-
-  template<class U>
-  static typename std::enable_if<!has_static_new<U>::value, U*>::type New(void) {
-    static_assert(!std::is_abstract<U>::value, "Cannot create a type which is abstract");
-    static_assert(has_simple_constructor<U>::value, "Attempted to create a type which did not provide a zero-arguments ctor");
-    return new U;
-  }
 
   /// <summary>
   /// Creates a new instance if this instance isn't autowired
@@ -110,7 +108,7 @@ public:
     // constructor is defined.
     //
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-    this->reset(New<T>());
+    this->reset(CreationRules::New<T>());
     AutowirableSlot::LockContext()->Add(*this);
   }
 
