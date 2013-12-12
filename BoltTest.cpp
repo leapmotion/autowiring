@@ -55,24 +55,22 @@ TEST_F(CreationListenerTest, VerifyMapping) {
   EXPECT_EQ(createdContext, myListener->createdContext) << "The context set to current for the listener callback was not the context that got created";
 }
 
-TEST_F(CreationListenerTest, VerifyDescendantMapping) {
+TEST_F(CreationListenerTest, VerifyCreationBubbling) {
   // Leakage check:
   {
     Autowired<Listener> validation;
     ASSERT_FALSE(validation.IsAutowired());
   }
 
-  // Put the creator in the parent context:
-  AutoRequired<ContextCreator<Pipeline, std::wstring>> simpleCreator;
-  std::shared_ptr<Listener> listener;
+  // Put the listener in the parent context:
+  AutoRequired<Listener> listener;
 
-  // Create a child context of the current one, and put the listener in there:
+  // Create a child context of the current one, and put the creator in there:
   AutoCreateContext childContext;
-  {
-    CurrentContextPusher pshr(childContext);
-    AutoRequired<Listener> myListener;
-    listener = myListener;
-  }
+  std::shared_ptr<ContextCreator<Pipeline, std::wstring>> simpleCreator = (
+    CurrentContextPusher(childContext),
+    AutoRequired<ContextCreator<Pipeline, std::wstring>>()
+  );
 
   // Dependent context broadcast check:
   simpleCreator->CreateContext(L"Simple");
