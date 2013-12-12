@@ -1,8 +1,7 @@
 #pragma once
 #include "EnclosedContextTestBase.h"
 
-class BoltTest:
+class SelfSelectingFixtureTest:
   public EnclosedContextTestBase
 {
 };
-

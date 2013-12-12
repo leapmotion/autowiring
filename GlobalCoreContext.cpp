@@ -1,9 +1,8 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "GlobalCoreContext.h"
 
 GlobalCoreContext::GlobalCoreContext(void):
-  CoreContext(std::shared_ptr<CoreContext>())
+  CoreContext(std::shared_ptr<CoreContext>(), typeid(GlobalCoreContext))
 {
   // Guard against multi-initialization:
   ASSERT(!getGlobalContextSharedPtr());
