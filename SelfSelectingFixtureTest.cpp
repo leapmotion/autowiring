@@ -7,18 +7,13 @@
 // Simple class we will bolt locally in this application
 class SimpleLocalClass {};
 
-class ComdatClass {
-public:
-  ComdatClass(void) {};
-};
+ANCHOR_MODULE_HERE(SelfSelectingFixture);
+ANCHOR_MODULE_HERE(UnutteredSelectingFixture);
 
 TEST_F(SelfSelectingFixtureTest, LocalFixtureTest) {
-
 }
 
 TEST_F(SelfSelectingFixtureTest, ExteriorFixtureTest) {
-  ComdatClass cc;
-
   // Create a context with the fixture test name:
   auto created = AutoCurrentContext()->Create<SelfSelect>();
   ASSERT_TRUE(created != nullptr) << "Created context was unexpectedly null";
