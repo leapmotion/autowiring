@@ -10,7 +10,7 @@
 #include "MicroBolt.h"
 #include <algorithm>
 #include <memory>
-
+#include <boost/thread/reverse_lock.hpp>
 
 using namespace std;
 
@@ -92,6 +92,10 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   );
   m_outstanding = retVal;
   return retVal;
+}
+
+std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
+  return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
 
 std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, const std::vector<void(*)()>& callbacks) {
@@ -291,7 +295,6 @@ void CoreContext::UpdateDeferredElements(void) {
   std::list<DeferredBase*> successful;
 
   // Notify any autowired field whose autowiring was deferred
-  // TODO:  We should also notify any descendant autowiring contexts that a new member is now available.
   {
     boost::lock_guard<boost::mutex> lk(m_deferredLock);
     for(t_deferred::iterator r = m_deferred.begin(); r != m_deferred.end(); ) {
@@ -312,6 +315,20 @@ void CoreContext::UpdateDeferredElements(void) {
   // This causes any listeners to be invoked, conveniently, outside of the context of any lock
   for(std::list<DeferredBase*>::iterator q = successful.begin(); q != successful.end(); ++q)
     delete *q;
+
+  // Give children a chance to also update their deferred elements:
+  boost::unique_lock<boost::mutex> lk(m_childrenLock);
+  for(auto q = m_children.begin(); q != m_children.end(); q++) {
+    // Hold reference to prevent this iterator from becoming invalidated:
+    auto ctxt = q->lock();
+    if(!ctxt)
+      continue;
+
+    // Reverse lock before satisfying children:
+    lk.unlock();
+    ctxt->UpdateDeferredElements();
+    lk.lock();
+  }
 }
 
 void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
