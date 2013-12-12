@@ -33,7 +33,7 @@ class Creator:
 {
 };
 
-TEST_F(CreationListenerTest, VerifyMapping) {
+TEST_F(BoltTest, VerifyMapping) {
   ContextCreator<Pipeline, std::wstring> simpleCreator;
 
   // Trivial context creation check:
@@ -55,7 +55,7 @@ TEST_F(CreationListenerTest, VerifyMapping) {
   EXPECT_EQ(createdContext, myListener->createdContext) << "The context set to current for the listener callback was not the context that got created";
 }
 
-TEST_F(CreationListenerTest, VerifyCreationBubbling) {
+TEST_F(BoltTest, VerifyCreationBubbling) {
   // Leakage check:
   {
     Autowired<Listener> validation;
