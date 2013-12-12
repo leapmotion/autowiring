@@ -42,6 +42,20 @@ std::shared_ptr<GlobalCoreContext> GlobalCoreContext::Get() {
   return ptr;
 }
 
+void GlobalCoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
+  m_nameListeners[pBase->GetContextSigil()].push_back(pBase.get());
+}
+
+void GlobalCoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) const {
+  auto q = m_nameListeners.find(sigil);
+  if(q != m_nameListeners.end()) {
+    // Iterate through all listeners:
+    const auto& list = q->second;
+    for(auto q = list.begin(); q != list.end(); q++)
+      (**q).ContextCreated();
+  }
+}
+
 std::shared_ptr<GlobalCoreContext> GetGlobalContext(void) {
   return GlobalCoreContext::Get();
 }

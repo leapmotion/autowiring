@@ -69,23 +69,6 @@ CoreContext::~CoreContext(void) {
     delete q->second;
 }
 
-void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) const {
-  auto q = m_nameListeners.find(sigil);
-  if(q != m_nameListeners.end()) {
-    // Iterate through all listeners:
-    const auto& list = q->second;
-    for(auto q = list.begin(); q != list.end(); q++)
-      (**q).ContextCreated();
-  }
-
-  // Pass the broadcast to all listening children:
-  for(auto q = m_children.begin(); q != m_children.end(); q++) {
-    std::shared_ptr<CoreContext> child = q->lock();
-    if(child)
-      child->BroadcastContextCreationNotice(sigil);
-  }
-}
-
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   std::shared_ptr<Object> retVal = m_outstanding.lock();
   if(retVal)
@@ -147,7 +130,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, co
     callbacks[i]();
 
   // Fire all explicit bolts:
-  BroadcastContextCreationNotice(sigil);
+  GlobalCoreContext::Get()->BroadcastContextCreationNotice(sigil);
   return retVal;
 }
 
@@ -278,7 +261,8 @@ void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr, bool all
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
-  m_nameListeners[pBase->GetContextSigil()].push_back(pBase.get());
+  // Cannot add a bolt to anything but the global context
+  assert(false);
 }
 
 void CoreContext::Dump(std::ostream& os) const {

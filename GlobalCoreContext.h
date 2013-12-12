@@ -1,8 +1,14 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _GLOBAL_CORE_CONTEXT
 #define _GLOBAL_CORE_CONTEXT
+#include "AutowirableSlot.h"
 #include "CoreContext.h"
 #include <boost/thread/mutex.hpp>
+
+template<class T>
+struct EnableBoltInternal {
+
+};
 
 // A special class designed to make it easier to detect when our context is the global context
 class GlobalCoreContext:
@@ -53,7 +59,58 @@ public:
     getGlobalContextSharedPtr().reset();
   }
 
+  /// <summary>
+  /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
+  /// </summary>
+  /// <remarks>
+  /// The broadcast is made without altering the current context.  Recipients expect that the current context will be the
+  /// one about which they are being informed.
+  /// </remarks>
+  void BroadcastContextCreationNotice(const std::type_info& sigil) const;
+
+  /// <summary>
+  /// Allows a specifically named class to be bolted
+  /// </summary>
+  /// <remarks>
+  /// If the specified type does not inherit from BoltTo, this method has no effect
+  /// </remarks>
+  template<class T>
+  void Enable(void) {
+    static_assert(!std::is_abstract<T>::value, "Cannot enable an abstract class for bolting");
+    EnableInternal((T*)nullptr, (T*)nullptr);
+  }
+
 private:
+  // Lists of event receivers, by name:
+  typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
+  t_contextNameListeners m_nameListeners;
+
+  // Adds a bolt proper to this context
+  template<class T, class Sigil>
+  void EnableInternal(T*, Bolt<Sigil>*) {
+    std::shared_ptr<T> ptr;
+    this->FindByType(ptr);
+    if(ptr)
+      return;
+    
+    CurrentContextPusher pshr(shared_from_this());
+    ptr.reset(AutowirableSlot::New<T>());
+    this->Add(ptr);
+  }
+
+  // Enables a boltable class
+  template<class T, class Sigil1, class Sigil2, class Sigil3>
+  void EnableInternal(T*, Boltable<Sigil1, Sigil2, Sigil3>*) {
+    static MicroBolt<Sigil1, &InsertNameIntoContext<T>> s_sigil1;
+    static MicroBolt<Sigil2, &InsertNameIntoContext<T>> s_sigil2;
+    static MicroBolt<Sigil3, &InsertNameIntoContext<T>> s_sigil3;
+  }
+
+  void EnableInternal(...) {}
+
+  // CoreContext overrides:
+  void AddBolt(const std::shared_ptr<BoltBase>& pBase) override;
+
   // Global context shared pointer and lock:
   static inline boost::mutex& getInitLock() {
     static boost::mutex s_initLock;
