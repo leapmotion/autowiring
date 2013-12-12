@@ -31,7 +31,8 @@ public:
       << Playing << Stop << Stopped
       << Playing << Pause << Paused
     ),
-    m_playingCallCount(0)
+    m_playingCallCount(0),
+    m_playInputCount(0)
   {
     *this += Play, &SimpleRecordingDevice::OnPlayInput;
     
