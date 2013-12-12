@@ -1,8 +1,11 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _GLOBAL_CORE_CONTEXT
-#define _GLOBAL_CORE_CONTEXT
+#pragma once
 #include "CoreContext.h"
 #include <boost/thread/mutex.hpp>
+
+template<class T>
+struct EnableBoltInternal {
+
+};
 
 // A special class designed to make it easier to detect when our context is the global context
 class GlobalCoreContext:
@@ -82,4 +85,3 @@ struct GlobalContextDesignation {
   }
 };
 
-#endif

@@ -23,6 +23,7 @@ set(
   ContextCreator.h
   ContextCreatorBase.h
   ContextCreatorBase.cpp
+  CreationRules.h
   Bolt.h
   BoltBase.h
   ContextMap.h
@@ -37,8 +38,6 @@ set(
   Decompose.h
   DeferredBase.h
   DeferredBase.cpp
-  DeferredCreationNotice.h
-  DeferredCreationNotice.cpp
   deferred_ptr.h
   DispatchQueue.h
   DispatchQueue.cpp
@@ -58,6 +57,7 @@ set(
   LockReducedCollection.h
   Object.h
   ObjectPool.h
+  MicroBolt.h
   PolymorphicTypeForest.h
   ReentrantCounter.h
   ReentrantCounter.cpp
@@ -98,6 +98,8 @@ endif()
 
 set(
   AutowiringTest_SRCS
+  AutowiringBenchmarkTest.h
+  AutowiringBenchmarkTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h
@@ -141,6 +143,8 @@ set(
   PostConstructTest.cpp
   ReentrantCounterTest.h
   ReentrantCounterTest.cpp
+  SelfSelectingFixtureTest.h
+  SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
   TransientContextMemberTest.h
@@ -156,6 +160,14 @@ set(
   TestFixtures/SimpleObject.h
   TestFixtures/SimpleThreaded.h
   TestFixtures/MultiInherit.h
+)
+
+set(
+  AutowiringFixture_SRCS
+  SelfSelectingFixture.h
+  SelfSelectingFixture.cpp
+  OtherSelectingFixture.h
+  OtherSelectingFixture.cpp
 )
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
@@ -180,10 +192,12 @@ if(NOT BUILD_WINDOWS)
 endif()
 
 if(BUILD_TESTING)
+  ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringFixture_SRCS)
+  add_library(AutowiringFixture ${AutowiringFixture_SRCS})
+
   ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
   add_executable(AutowiringTest ${AutowiringTest_SRCS} "../gtest-all-guard.cpp")
-  
-  target_link_libraries(AutowiringTest Autowiring)
+  target_link_libraries(AutowiringTest Autowiring AutowiringFixture)
 endif(BUILD_TESTING)
 
 if(BUILD_AUTONET)
