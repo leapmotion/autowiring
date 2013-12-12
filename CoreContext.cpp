@@ -7,15 +7,18 @@
 #include "BoltBase.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
+#include "MicroBolt.h"
 #include <algorithm>
 #include <memory>
+#include <boost/thread/reverse_lock.hpp>
 
 using namespace std;
 
 boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
 
-CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
+CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil) :
   m_pParent(pParent),
+  m_sigil(sigil),
   m_shouldStop(false),
   m_useOwnershipValidator(false),
   m_refCount(0)
@@ -66,26 +69,6 @@ CoreContext::~CoreContext(void) {
     delete q->second;
 }
 
-void CoreContext::BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const {
-  auto nameIter = m_nameListeners.find(contextName);
-  if(nameIter != m_nameListeners.end()) {
-    // Context creation notice requires that the created context be set before invocation:
-    CurrentContextPusher pshr(context);
-
-    // Iterate through all listeners:
-    const std::list<BoltBase*>& list = nameIter->second;
-    for(auto q = list.begin(); q != list.end(); q++)
-      (**q).ContextCreated();
-  }
-
-  // Pass the broadcast to all listening children:
-  for(auto q = m_children.begin(); q != m_children.end(); q++) {
-    std::shared_ptr<CoreContext> child = q->lock();
-    if(child)
-      child->BroadcastContextCreationNotice(contextName, context);
-  }
-}
-
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   std::shared_ptr<Object> retVal = m_outstanding.lock();
   if(retVal)
@@ -111,7 +94,11 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   return retVal;
 }
 
-std::shared_ptr<CoreContext> CoreContext::Create(void) {
+std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
+  return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
+}
+
+std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil) {
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert
@@ -122,10 +109,10 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
   }
 
   // Create the child context
-  CoreContext* pContext = new CoreContext(shared_from_this());
+  CoreContext* pContext = new CoreContext(shared_from_this(), sigil);
   if(m_useOwnershipValidator)
     pContext->EnforceSimpleOwnership();
-
+  
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
   std::shared_ptr<CoreContext> retVal(
@@ -139,6 +126,10 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
     }
   );
   *childIterator = retVal;
+
+  // Fire all explicit bolts:
+  CurrentContextPusher pshr(retVal);
+  BroadcastContextCreationNotice(sigil);
   return retVal;
 }
 
@@ -269,7 +260,7 @@ void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr, bool all
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
-  m_nameListeners[pBase->GetContextName()].push_back(pBase.get());
+  m_nameListeners[pBase->GetContextSigil()].push_back(pBase.get());
 }
 
 void CoreContext::Dump(std::ostream& os) const {
@@ -294,11 +285,24 @@ void FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* 
   CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
 }
 
+void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) const {
+  auto q = m_nameListeners.find(sigil);
+  if(q != m_nameListeners.end()) {
+    // Iterate through all listeners:
+    const auto& list = q->second;
+    for(auto q = list.begin(); q != list.end(); q++)
+      (**q).ContextCreated();
+  }
+
+  // Notify the parent next:
+  if(m_pParent)
+    m_pParent->BroadcastContextCreationNotice(sigil);
+}
+
 void CoreContext::UpdateDeferredElements(void) {
   std::list<DeferredBase*> successful;
 
   // Notify any autowired field whose autowiring was deferred
-  // TODO:  We should also notify any descendant autowiring contexts that a new member is now available.
   {
     boost::lock_guard<boost::mutex> lk(m_deferredLock);
     for(t_deferred::iterator r = m_deferred.begin(); r != m_deferred.end(); ) {
@@ -319,6 +323,20 @@ void CoreContext::UpdateDeferredElements(void) {
   // This causes any listeners to be invoked, conveniently, outside of the context of any lock
   for(std::list<DeferredBase*>::iterator q = successful.begin(); q != successful.end(); ++q)
     delete *q;
+
+  // Give children a chance to also update their deferred elements:
+  boost::unique_lock<boost::mutex> lk(m_childrenLock);
+  for(auto q = m_children.begin(); q != m_children.end(); q++) {
+    // Hold reference to prevent this iterator from becoming invalidated:
+    auto ctxt = q->lock();
+    if(!ctxt)
+      continue;
+
+    // Reverse lock before satisfying children:
+    lk.unlock();
+    ctxt->UpdateDeferredElements();
+    lk.lock();
+  }
 }
 
 void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
@@ -448,10 +466,6 @@ void CoreContext::NotifyWhenAutowired(const AutowirableSlot& slot, const std::fu
   }
 
   q->second->AddPostBindingListener(listener);
-}
-
-std::shared_ptr<CoreContext> CreateContextThunk(void) {
-  return CoreContext::CurrentContext()->Create();
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
