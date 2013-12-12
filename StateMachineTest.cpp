@@ -18,7 +18,7 @@ enum DeviceCommand {
 };
 
 class SimpleRecordingDevice:
-  public StateMachine<PlaybackState, DeviceCommand>
+  protected StateMachine<PlaybackState, DeviceCommand>
 {
 public:
   SimpleRecordingDevice(void):
@@ -30,7 +30,7 @@ public:
     *this += Play, &SimpleRecordingDevice::OnPlayInput;
     
     *this += Playing, [this] {
-      this->OnStartPlaying()
+      this->OnStartPlaying();
     };
   }
 
