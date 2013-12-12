@@ -2,6 +2,7 @@
 #ifndef _AUTOWIRED_H
 #define _AUTOWIRED_H
 #include "AutowirableSlot.h"
+#include "CreationRules.h"
 #include "GlobalCoreContext.h"
 #include "Decompose.h"
 #include <functional>
@@ -45,7 +46,7 @@ template<class T>
 class AutoEnable
 {
 public:
-  AutoEnable(void) { GlobalCoreContext::Get()->Enable<T>(); }
+  AutoEnable(void) { CoreContext::CurrentContext()->Enable<T>(); }
 };
 
 /// <summary>
@@ -107,7 +108,7 @@ public:
     // constructor is defined.
     //
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-    this->reset(New<T>());
+    this->reset(CreationRules::New<T>());
     AutowirableSlot::LockContext()->Add(*this);
   }
 
