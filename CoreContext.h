@@ -140,10 +140,6 @@ protected:
   // Condition, signalled when context state has been changed
   boost::condition m_stateChanged;
 
-  // Lists of event receivers, by name:
-  typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
-  t_contextNameListeners m_nameListeners;
-
   // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
   // Destructor does nothing; this is by design.
   std::weak_ptr<Object> m_outstanding;
@@ -198,7 +194,7 @@ protected:
   /// Adds the specified context creation listener to receive creation events broadcast from this context
   /// </summary>
   /// <param name="pBase">The instance being added</param>
-  void AddBolt(const std::shared_ptr<BoltBase>& pBase);
+  virtual void AddBolt(const std::shared_ptr<BoltBase>& pBase);
 
   /// <summary>
   /// Overload of Add based on ContextMember
@@ -343,15 +339,6 @@ public:
   bool IsMember(const std::shared_ptr<T>& ptr) const {
     return IsMember<T>(ptr.get());
   }
-  
-  /// <summary>
-  /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
-  /// </summary>
-  /// <remarks>
-  /// The broadcast is made without altering the current context.  Recipients expect that the current context will be the
-  /// one about which they are being informed.
-  /// </remarks>
-  void BroadcastContextCreationNotice(const std::type_info& sigil) const;
 
   /// <summary>
   /// Obtains a shared pointer to an event sender _in this context_ matching the specified type
