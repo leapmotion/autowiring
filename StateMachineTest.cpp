@@ -18,13 +18,13 @@ enum DeviceCommand {
 };
 
 class SimpleRecordingDevice:
-  protected StateMachine<PlaybackState, DeviceCommand>
+  public StateMachine<PlaybackState, DeviceCommand>
 {
 public:
   SimpleRecordingDevice(void):
     StateMachine(
-      machine(Stopped)
-      << Stopped << Play << Playing
+      initializeStateMachine(Stopped) //Initial state of the machine is "Stopped"
+      << Stopped << Play << Playing // When on state "Stoped", transition to "Playing" when you receive a "Play" event
       << Stopped << Pause << Stopped
       << Paused << Play << Playing
       << Paused << Stop << Stopped
@@ -34,8 +34,10 @@ public:
     m_playingCallCount(0),
     m_playInputCount(0)
   {
+    // Set a callback when "Play" event is processed
     *this += Play, &SimpleRecordingDevice::OnPlayInput;
     
+    // Set a callback when "Playing" state is entered
     *this += Playing, [this] {
       this->OnStartPlaying();
     };

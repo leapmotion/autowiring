@@ -5,111 +5,100 @@
 #include <map>
 #include <utility>
 #include <iostream>
-
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 
-template<typename T_states, typename T_input>
+/// <summary>
+/// Represents state transitions when parsing input to StateMachine constructor
+/// </summary>
+/// <param name="T_State"> An enum of states in the machine</param>
+/// <param name="T_Event"> An enum of events that change state</param>
+/// <remarks>
+/// Used by StateMachine. You shouldn't need to interact with this directly
+/// </remarks>
+template<typename T_State, typename T_Event>
 struct TransitionObject {
-  TransitionObject(T_states startState):
+  TransitionObject(T_State startState):
     startState(startState)
   {}
 
 private:
-  T_states startState;
-  typedef std::pair<T_states,T_input> t_pair;
-  typedef std::map<t_pair,T_states> t_transitionMap;
+  typedef std::pair<T_State,T_Event> t_pair;
+  typedef std::map<t_pair,T_State> t_transitionMap;
+  
   t_transitionMap m_transitionMap;
+  T_State startState;
 
 public:
-  // Accessor methods:
-  T_states GetStartState(void) const { return startState; }
-  t_transitionMap&& GetTransitions(void) { return std::move(m_transitionMap); }
+  T_State GetStartState(void) const { return startState; }
+  t_transitionMap& GetTransitions(void) { return m_transitionMap; }
 
   struct LhsWithTransition {
-    LhsWithTransition(TransitionObject& owner, T_states lhs, T_input input):
+    LhsWithTransition(TransitionObject& owner, T_State lhs, T_Event event):
       owner(owner),
       lhs(lhs),
-      input(input)
+      event(event)
     {}
 
     TransitionObject& owner;
-    T_states lhs;
-    T_input input;
+    T_State lhs;
+    T_Event event;
 
-    TransitionObject&& operator<<(T_states rhs) {
-      // TODO:  Insert the lhs, input, rhs trio into our owning transition object
-      owner.m_transitionMap[std::make_pair(lhs,input)] = rhs;
+    TransitionObject&& operator<<(T_State rhs) {
+      owner.m_transitionMap[std::make_pair(lhs,event)] = rhs;
       return std::move(owner);
     }
   };
 
   struct LhsState {
-    LhsState(TransitionObject& owner, T_states lhs):
+    LhsState(TransitionObject& owner, T_State lhs):
       owner(owner),
       lhs(lhs)
     {}
 
     TransitionObject& owner;
-    T_states lhs;
+    T_State lhs;
 
-    LhsWithTransition operator<<(T_input input) {
-      return LhsWithTransition(owner, lhs, input);
+    LhsWithTransition operator<<(T_Event event) {
+      return LhsWithTransition(owner, lhs, event);
     }
   };
 
-  LhsState operator<<(T_states lhs) {
+  LhsState operator<<(T_State lhs) {
     return LhsState(*this, lhs);
   }
 };
 
-template<typename T_states, typename T_input>
-class StateMachine
-{
-public:
-  StateMachine(TransitionObject<T_states, T_input>&& tobj):
+/// <summary>
+/// Inherit from this class implement a state machine
+/// </summary>
+/// <param name="T_State"> An enum of states in the machine</param>
+/// <param name="T_Event"> An enum of events that change state</param>
+/// <remarks>
+/// See StateMachineTest.cpp for an example of how to use
+/// </remarks>
+template<typename T_State, typename T_Event>
+struct StateMachine {
+  StateMachine(TransitionObject<T_State, T_Event>&& tobj):
     m_currentState(tobj.GetStartState()),
-    m_transitionMap(tobj.GetTransitions())
+    m_transitionMap(std::move(tobj.GetTransitions()))
   {}
-  
   virtual ~StateMachine(){};
   
-  T_states transition(T_input input){
-    m_currentState = m_transitionMap[std::make_pair(m_currentState,input)];
-    
-    auto behavior_func = m_behaviors.find(m_currentState);
-    if (behavior_func != m_behaviors.end()) {
-      behavior_func->second();
-    }
-    
-    auto transition_func = m_transitionHandlers.find(input);
-    if (transition_func != m_transitionHandlers.end()) {
-      transition_func->second();
-    }
-    
-    return m_currentState;
-  };
-  
-  T_states getState(){
-    return m_currentState;
-  };
-
 private:
-  T_states m_currentState;
-  typedef std::pair<T_states,T_input> t_pair;
-  typedef std::map<t_pair,T_states> t_transitionMap;
-  t_transitionMap m_transitionMap;
-
-  typedef std::map<T_states, std::function<void()>> t_behaviors;
-  t_behaviors m_behaviors;
-
-  typedef std::map<T_input, std::function<void()>> t_transitionHandlers;
-  t_transitionHandlers m_transitionHandlers;
+  typedef std::pair<T_State,T_Event> t_pair;
+  typedef std::map<t_pair,T_State> t_transitionMap;
+  typedef std::map<T_State, std::function<void()>> t_stateBehaviors;
+  typedef std::map<T_Event, std::function<void()>> t_transitionHandlers;
   
-
+  t_transitionMap m_transitionMap;
+  t_stateBehaviors m_stateBehaviors;
+  t_transitionHandlers m_transitionHandlers;
+  T_State m_currentState;
+  
 protected:
-  static TransitionObject<T_states, T_input> machine(T_states startState) {
-    return TransitionObject<T_states, T_input>(startState);
+  static TransitionObject<T_State, T_Event> initializeStateMachine(T_State startState) {
+    return TransitionObject<T_State, T_Event>(startState);
   }
 
   struct BehaviorEntry
@@ -122,12 +111,11 @@ protected:
     std::function<void()>& entry;
     StateMachine* p_this;
     
-    // Operator overloads for behavior introduction:
     template<class T>
     void operator,(void (T::*memFn)()) {
-      entry = [this,memFn]{
-        T* herpderp = reinterpret_cast<T*>(p_this);
-        (herpderp->*memFn)();
+      auto p_this = static_cast<T*>(this->p_this);
+      entry = [p_this,memFn]{
+        (p_this->*memFn)();
       };
     }
 
@@ -149,10 +137,9 @@ protected:
     // Operator overloads for behavior introduction:
     template<class T>
     void operator,(void (T::*memFn)()) {
-      auto p_this = this->p_this;
+      auto p_this = static_cast<T*>(this->p_this);
       entry = [p_this,memFn]{
-        T* herpderp = reinterpret_cast<T*>(p_this);
-        (herpderp->*memFn)();
+        (p_this->*memFn)();
       };
     }
 
@@ -162,13 +149,43 @@ protected:
   };
 
   // Operator overloads for behavior introduction:
-  BehaviorEntry operator+=(T_states state) {
-    return BehaviorEntry(this, m_behaviors[state]);
+  BehaviorEntry operator+=(T_State state) {
+    return BehaviorEntry(this, m_stateBehaviors[state]);
   }
 
-  TransitionEntry operator+=(T_input input) {
-    return TransitionEntry(this, m_transitionHandlers[input]);
+  TransitionEntry operator+=(T_Event event) {
+    return TransitionEntry(this, m_transitionHandlers[event]);
   }
+  
+public:
+  /// <summary>
+  /// Transition to the next state based on the current state and input event
+  /// Returns the new state and sets it's new current state
+  /// </summary>
+  /// <param name="event">Input to the state machine. May change the current state</param>
+  /// <remarks>
+  /// This is the only function you need to use to control the state machine
+  /// after initialization
+  /// </remarks>
+  T_State transition(T_Event event){
+    m_currentState = m_transitionMap[std::make_pair(m_currentState,event)];
+    
+    auto behavior_func = m_stateBehaviors.find(m_currentState);
+    if (behavior_func != m_stateBehaviors.end()) {
+      behavior_func->second();
+    }
+    
+    auto transition_func = m_transitionHandlers.find(event);
+    if (transition_func != m_transitionHandlers.end()) {
+      transition_func->second();
+    }
+    
+    return m_currentState;
+  };
+  
+  T_State getState(){
+    return m_currentState;
+  };
 };
 
 #endif
