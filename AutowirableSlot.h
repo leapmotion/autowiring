@@ -1,7 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _AUTOWIRABLE_SLOT_H
 #define _AUTOWIRABLE_SLOT_H
-#include "ocuConfig.h" // for cpp11.h
+#include "AutoFactory.h"
 #include FUNCTIONAL_HEADER
 #include SHARED_PTR_HEADER
 #include <functional>
@@ -20,6 +20,18 @@ private:
 
 public:
   AutowirableSlot();
+
+  template<class U>
+  static typename std::enable_if<has_static_new<U>::value, U*>::type New(void) {
+    return U::New();
+  }
+
+  template<class U>
+  static typename std::enable_if<!has_static_new<U>::value, U*>::type New(void) {
+    static_assert(!std::is_abstract<U>::value, "Cannot create a type which is abstract");
+    static_assert(has_simple_constructor<U>::value, "Attempted to create a type which did not provide a zero-arguments ctor");
+    return new U;
+  }
 
   virtual ~AutowirableSlot(void) {
   }

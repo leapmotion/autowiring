@@ -56,6 +56,12 @@ struct MicroBolt {
 	}
 };
 
+/// <summary>
+/// Utility identity, provided because bolting to void does nothing
+/// </summary>
+template<void(*callback)()>
+struct MicroBolt<void, callback> {};
+
 template<class T>
 void InsertNameIntoContext(void) {
   // We will allow this to throw an exception if a contradictory
@@ -63,27 +69,8 @@ void InsertNameIntoContext(void) {
   CoreContext::CurrentContext()->Add<T>(std::shared_ptr<T>(new T));
 }
 
-// Explicit enable routine, needed to ensure that microbolt modules are instantiated
-template<class Type>
-void ModuleAnchorPoint(void);
-
-#define ANCHOR_POINT(TypeToInsert) \
-  template<> void ModuleAnchorPoint<TypeToInsert>(void) {}
-
-// Registers a new bolt at global scope and automatically creates a new anchor
-#define BOLT(BoltClass) \
-  static_assert(std::is_base_of<BoltBase, BoltClass>::value, "Cannot name a bolt class if that class is not actually a bolt"); \
-  ANCHOR_POINT(BoltClass) \
-  AutoRequired<BoltClass> s_bolt;
-
-// Bolts a particular concrete type into the specified context, identified by its sigil
-#define BOLT_TO(SigilClass, TypeToInsert) \
-  MicroBolt<SigilClass, &InsertNameIntoContext<TypeToInsert>> s_##SigilClass##TypeToInsert;
-
-#define BOLT_TO_AND_ANCHOR_POINT(SigilClass, TypeToInsert) \
-  ANCHOR_POINT(TypeToInsert) \
-  BOLT_TO(SigilClass, TypeToInsert)
-
-// Enables a particular class for microbolting
-#define ANCHOR_MODULE_HERE(TypeToInsert) \
-  static void(*const s_unreferenced##TypeToInsert)() = &ModuleAnchorPoint<TypeToInsert>;
+/// <summary>
+/// Causes the class inheriting from this definition to be bolted to the specified contexts
+/// </summary>
+template<class Sigil1, class Sigil2 = void, class Sigil3 = void>
+struct Boltable {};

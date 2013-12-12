@@ -7,13 +7,14 @@
 // Simple class we will bolt locally in this application
 class SimpleLocalClass {};
 
-ANCHOR_MODULE_HERE(SelfSelectingFixture);
-ANCHOR_MODULE_HERE(UnutteredSelectingFixture);
-
 TEST_F(SelfSelectingFixtureTest, LocalFixtureTest) {
 }
 
 TEST_F(SelfSelectingFixtureTest, ExteriorFixtureTest) {
+  // Enable our self selectors:
+  AutoEnable<SelfSelectingFixture>();
+  AutoEnable<UnutteredSelectingFixture>();
+
   // Create a context with the fixture test name:
   auto created = AutoCurrentContext()->Create<SelfSelect>();
   ASSERT_TRUE(created != nullptr) << "Created context was unexpectedly null";
@@ -23,8 +24,8 @@ TEST_F(SelfSelectingFixtureTest, ExteriorFixtureTest) {
 
   // Set the current context and detect the SelfSelectingFixture's presence
   CurrentContextPusher pshr(created);
-  Autowired<UnutteredSelectingFixture> usf;
   Autowired<SelfSelectingFixture> ssf;
+  Autowired<UnutteredSelectingFixture> usf;
 
   ASSERT_TRUE(ssf.IsAutowired()) << "Self-selecting fixture was not selected into a created context with the correct name";
   ASSERT_TRUE(ssf->IsMagicCorrect()) << "Self-selecting fixture was apparently not initialized correctly";
