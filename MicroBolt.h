@@ -1,5 +1,6 @@
 #pragma once
 #include "Bolt.h"
+#include "Decompose.h"
 #include <vector>
 
 struct MicroBoltUtilities {
@@ -69,6 +70,12 @@ void ModuleAnchorPoint(void);
 #define ANCHOR_POINT(TypeToInsert) \
   template<> void ModuleAnchorPoint<TypeToInsert>(void) {}
 
+// Registers a new bolt at global scope and automatically creates a new anchor
+#define BOLT(BoltClass) \
+  static_assert(std::is_base_of<BoltBase, BoltClass>::value, "Cannot name a bolt class if that class is not actually a bolt"); \
+  ANCHOR_POINT(BoltClass) \
+  AutoRequired<BoltClass> s_bolt;
+
 // Bolts a particular concrete type into the specified context, identified by its sigil
 #define BOLT_TO(SigilClass, TypeToInsert) \
   MicroBolt<SigilClass, &InsertNameIntoContext<TypeToInsert>> s_##SigilClass##TypeToInsert;
@@ -76,12 +83,6 @@ void ModuleAnchorPoint(void);
 #define BOLT_TO_AND_ANCHOR_POINT(SigilClass, TypeToInsert) \
   ANCHOR_POINT(TypeToInsert) \
   BOLT_TO(SigilClass, TypeToInsert)
-
-// Causes the specified function to be invoked when a context is created whose sigil matches
-// the specified sigil
-#define BOLT_TO_FUNCTION(SigilClass, fptr) namespace { \
-    MicroBolt<SigilClass, fptr> s_##SigilClass##Bolted_Function; \
-  }
 
 // Enables a particular class for microbolting
 #define ANCHOR_MODULE_HERE(TypeToInsert) \
