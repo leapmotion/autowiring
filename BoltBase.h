@@ -13,6 +13,8 @@ class CoreContext;
 class BoltBase
 {
 public:
+  virtual ~BoltBase(void) {}
+
   /// <summary>
   /// A convenience method to get a context name
   /// </summary>
