@@ -1,9 +1,9 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "BoltTest.h"
 #include "Autowired.h"
 #include "Bolt.h"
 #include "ContextCreator.h"
+#include "TestFixtures/SimpleObject.h"
 #include <string>
 #include <iostream>
 
@@ -32,6 +32,32 @@ class Creator:
   public ContextCreator<Pipeline, std::string>
 {
 };
+
+class InjectsIntoPipeline:
+  public Bolt<Pipeline>
+{
+public:
+  void ContextCreated(void) override {
+    AutoRequired<SimpleObject>();
+  }
+};
+
+TEST_F(BoltTest, VerifySimpleInjection) {
+  AutoEnable<InjectsIntoPipeline>();
+
+  auto created = m_create->Create<Pipeline>();
+
+  // Verify that the SimpleObject didn't accidentally get injected out here:
+  {
+    Autowired<SimpleObject> so;
+    EXPECT_FALSE(so.IsAutowired()) << "Object was injected into an outer scope by a bolt";
+  }
+
+  // Verify that the objecT DID get autowired where we expected it to be autowired
+  CurrentContextPusher pshr(created);
+  Autowired<SimpleObject> so;
+  ASSERT_TRUE(so.IsAutowired()) << "Simple object was not injected as expected into a dependent context";
+}
 
 TEST_F(BoltTest, VerifyMapping) {
   ContextCreator<Pipeline, std::wstring> simpleCreator;
