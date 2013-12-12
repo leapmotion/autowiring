@@ -4,12 +4,12 @@
 
 struct SelfSelect;
 
-class UnutteredSelectingFixture:
+class OtherSelectingFixture:
   public Boltable<SelfSelect>,
   public ContextMember
 {
 public:
-  UnutteredSelectingFixture(void);
-  ~UnutteredSelectingFixture(void);
+  OtherSelectingFixture(void);
+  ~OtherSelectingFixture(void);
 };
 
