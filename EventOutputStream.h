@@ -4,7 +4,7 @@
 class EventOutputStreamBase {
 public:
   EventOutputStreamBase(void);
-  ~EventOutputStreamBase(void);
+  virtual ~EventOutputStreamBase(void);
 
   /// <returns>
   /// True if this stream has no events in it
@@ -37,6 +37,17 @@ class EventOutputStream:
 private:
 
 public:
+  EventOutputStream(){}
+  ~EventOutputStream(){
+    std::cout<< "Event outputstream destructor was called" << std::endl;
+    /*
+    auto toremove = static_cast<std::shared_ptr<EventOutputStreamBase>>(this);//make sure you downcast first. Throw this into base destructorkk
+    AutoCurrentContext ctxt;
+    ctxt -> RemoveEventOutputStream<T>(toremove);
+    */
+    std::cout<< "Event outputstream destructor was called" << std::endl;
+  }
+  void New(){}
   /// <summary>
   /// Enables a new event for serialization via its identity
   /// </summary>

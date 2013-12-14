@@ -1,3 +1,4 @@
+//#include "Autowired.h"
 #include "stdafx.h"
 #include "EventOutputStream.h"
 
