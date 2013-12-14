@@ -46,6 +46,7 @@ class ContextMember;
 class CoreContext;
 class CoreThread;
 class EventReceiver;
+class EventOutputStreamBase;
 class GlobalCoreContext;
 class OutstandingCountTracker;
 
@@ -90,6 +91,11 @@ protected:
 
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
+
+  // All EventOutputStreams objects known in this autowirer:
+  typedef std::map<const std::type_info *, std::vector<std::shared_ptr<EventOutputStreamBase> > > t_eventOutputStreamMap;
+  t_eventOutputStreamMap m_eventOutputStreams;
+  //std::unordered_set<std::shared_ptr<EventOutputStreamBase>> m_eventOutputStreams;
 
   // Collection of objects waiting to be autowired, and a specific lock exclusively for this collection
   boost::mutex m_deferredLock;
@@ -145,6 +151,8 @@ protected:
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
   void UpdateDeferredElements(void);
+
+
 
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
@@ -245,6 +253,60 @@ protected:
 public:
   // Accessor methods:
   size_t GetMemberCount(void) const {return m_byType.size();}
+
+/// <summary>
+/// Adds the named eventoutputstream to the collection of known eventoutputstreams
+/// </summary>
+template <class T>
+void AddEventOutputStream(std::shared_ptr<EventOutputStreamBase> pRecvr){
+  auto mapfinditerator= m_eventOutputStreams.find(&typeid(T));
+  if (mapfinditerator != m_eventOutputStreams.end()){
+    //if the type exists already, find the correspoonding outputstreambase and push it back.
+    (mapfinditerator -> second).push_back(pRecvr);
+  }
+  else {
+    std::vector<std::shared_ptr<EventOutputStreamBase> > newvec;
+    newvec.push_back(pRecvr);
+    m_eventOutputStreams[&typeid(T)] = newvec; //assignment copy constructor invoked; 
+  }
+}
+/// <summary>
+/// Checks for presence of the named eventoutputstream in the collection of known eventoutputstreams
+/// </summary>
+template <class T>
+void RemoveEventOutputStream(std::shared_ptr<EventOutputStreamBase> pRecvr){
+  std::cout << "Passed shared ptr addy: " << &pRecvr << std::endl;
+  auto mapfinditerator= m_eventOutputStreams.find(&typeid(T));
+  auto v = mapfinditerator -> second;
+  if (mapfinditerator != m_eventOutputStreams.end()){
+     std::cout << "From removeEvent outstream: found the right type as a key" << std::endl;
+     /*
+     for(auto it = v.begin(); it != v.end(); ++it) {
+       std::cout << (*it == pRecvr) << std::endl;
+     } 
+     */
+    //if the type exists already, find the correspoonding outputstreambase and erase it
+    
+    auto it = std::find((mapfinditerator->second).begin(), (mapfinditerator->second).end(), pRecvr);
+       if(it != (mapfinditerator->second).end()){
+       std::cout << "From removeEvent outstream: foudn and bout to remove the ptr" << std::endl;
+       (mapfinditerator->second).erase(it);
+       }
+  }
+
+}
+/// <summary>
+/// 
+/// </summary>
+template <class T>
+bool CheckEventOutputStream(void){
+   auto mapfinditerator= m_eventOutputStreams.find(&typeid(T));
+   if (mapfinditerator != m_eventOutputStreams.end())
+       if ((mapfinditerator->second).size() != 0)  
+         return true;
+   return false;
+}
+
   bool IsRunning(void) const {return !!m_refCount;}
 
   /// <returns>
@@ -357,6 +419,7 @@ public:
     }
 
     {
+
       boost::lock_guard<boost::mutex> lk(m_lock);
 
       // Add a new member of the forest:
@@ -651,7 +714,11 @@ public:
   std::shared_ptr<EventOutputStream<T>> CreateEventOutputStream(void) {
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot create an output stream based on a non-event type");
     static_assert(uuid_of<T>::value, "Cannot create an output stream on type T, the type was not defined with DECLARE_UUID");
-    return nullptr;
+    auto retval =  std::make_shared<EventOutputStream<T>>();
+    auto upcastptr = static_cast<std::shared_ptr<EventOutputStreamBase>>(retval);
+    std::cout << "Create event output stream: " << (retval == upcastptr) << std::endl;
+    AddEventOutputStream<T>(upcastptr);    
+    return retval;
   }
 
   template<class T>
