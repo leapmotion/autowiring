@@ -119,7 +119,6 @@ public:
   /// </summary>
   bool HasListeners(void) const override {
     //check: does it have any direct listeners, or are any appropriate marshalling objects wired into the immediate context?
-    Autowired<EventOutputStream<T>> testmembr;
     auto ctxt = CoreContext::CurrentContext();
     bool checkval = ctxt->CheckEventOutputStream<T>();
     return !m_st.GetImage()->empty() || checkval;
