@@ -1,5 +1,6 @@
 #pragma once
 #include "Decompose.h"
+#include <memory>
 
 class EventOutputStreamBase {
 public:
@@ -38,15 +39,7 @@ private:
 
 public:
   EventOutputStream(){}
-  ~EventOutputStream(){
-    std::cout<< "Event outputstream destructor was called" << std::endl;
-    /*
-    auto toremove = static_cast<std::shared_ptr<EventOutputStreamBase>>(this);//make sure you downcast first. Throw this into base destructorkk
-    AutoCurrentContext ctxt;
-    ctxt -> RemoveEventOutputStream<T>(toremove);
-    */
-    std::cout<< "Event outputstream destructor was called" << std::endl;
-  }
+  ~EventOutputStream(){}
   void New(){}
   /// <summary>
   /// Enables a new event for serialization via its identity
