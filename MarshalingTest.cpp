@@ -61,14 +61,7 @@ TEST_F(MarshalingTest, VerifyListenersUpdated) {
 
   // Should be listeners now:
   EXPECT_TRUE(ewuuid.HasListeners()) << "An output stream creation did not change the HasListeners disposition";
-  std::cout << "Bout to try to remove with : " << &os << std::endl;
-  //ctxt -> RemoveEventOutputStream<EventWithUuid>(os);
-      //auto toremove = static_cast<std::shared_ptr<EventOutputStreamBase>>(this);//make sure you downcast first. Throw this into base destructorkk
-    //AutoCurrentContext ctxt;
-    ctxt -> RemoveEventOutputStream<EventWithUuid>(os);
-   // Let the output stream fall out of scope and verify that the listener existence disposition is updated:
   os.reset();
-  //auto upcastptr = static_cast<std::shared_ptr<EventOutputStreamBase>>(os);
 
   EXPECT_FALSE(ewuuid.HasListeners()) << "An event incorrectly reported that it had listeners, even though its only listener--an output stream--is out of scope";
 }
