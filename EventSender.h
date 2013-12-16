@@ -358,6 +358,10 @@ private:
 
 public:
   void operator()(Arg1 arg1) const {
+	//First distribute the arguments to any listening serializers in current context
+	auto ctxt = CoreContext::CurrentContext();
+    ctxt->DistributeToMarshals<T>(fnPtr, arg1);
+	//Then wrap up stuff in a lambda and get ready to pass to eventreceivers
     erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1);});
   }
 };
