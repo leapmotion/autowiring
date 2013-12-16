@@ -292,6 +292,34 @@ bool CheckEventOutputStream(void){
    return false;  //return false if no vec with that type
 }
 
+/// <summary>
+/// Distributes func and args to all listening marshal types
+/// to serialize as the marshal listeners please.
+/// </summary>
+template <typename T, class Memfn, class Arg1>
+void DistributeToMarshals(Memfn & memfn, Arg1 & arg1){
+   auto mapfinditerator= m_eventOutputStreams.find(&typeid(T));
+   if (mapfinditerator != m_eventOutputStreams.end()){
+      auto v = (mapfinditerator->second);
+	  auto it = v.begin();
+	  while(it != v.end() ){
+	    auto testptr = (*it).lock();
+	     if( testptr ) {
+		    //if given eventid is enabled for given eventoutputstream, serialize!
+		   if (testptr -> IsEnabled(memfn)){
+			   //TODO: this needs a little SFINAE to make sure Arg1 has a << before you try to do this
+			   //Candidate: Boot has left shift
+			   //Also could use std::enable_if
+		     testptr -> Serialize(memfn, arg1);
+			}
+			++it;
+		 }
+	     else it = v.erase(it); //opportunistically kill dead references.
+       }
+	}
+   return;
+}
+
   bool IsRunning(void) const {return !!m_refCount;}
 
   /// <returns>
