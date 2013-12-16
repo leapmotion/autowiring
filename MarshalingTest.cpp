@@ -48,7 +48,7 @@ void VerifyProperStreamReceipt(EventOutputStream<T>* os, const AutoFired<EventWi
   EXPECT_LT(0UL, os->GetSize()) << "The output stream should have had more than zero bytes in it after recording an event, but it did not";
 
   // Verify that the output stream is _at least as long_ as the string argument we passed earlier:
-  EXPECT_LT(str.size(), os->GetSize()) << "An output stream contained fewer uncompressed bytes than were transmitted in a fired event";
+  EXPECT_LE(str.size(), os->GetSize()) << "An output stream contained fewer uncompressed bytes than were transmitted in a fired event";
 }
 
 TEST_F(MarshalingTest, VerifyListenersUpdated) {
