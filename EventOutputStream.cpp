@@ -11,11 +11,11 @@ EventOutputStreamBase::~EventOutputStreamBase(void)
 }
 
 bool EventOutputStreamBase::IsEmpty(void) const {
-  return true;
+  return !m_OutputStream.str().size();;
 }
 
 size_t EventOutputStreamBase::GetSize(void) const {
-  return 0;
+  return m_OutputStream.str().size();
 }
 
 const void* EventOutputStreamBase::GetData(void) const {
@@ -23,4 +23,6 @@ const void* EventOutputStreamBase::GetData(void) const {
 }
 
 void EventOutputStreamBase::Reset(void) {
+  m_OutputStream.str("");
+  m_OutputStream.clear();
 }
