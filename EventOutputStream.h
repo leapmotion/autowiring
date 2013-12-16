@@ -5,9 +5,6 @@
 #include <sstream>
 
 
-
-
-
 class EventOutputStreamBase {
 private:
   std::stringstream m_OutputStream;
@@ -40,19 +37,31 @@ public:
   /// </summary>
   template<class MemFn>
   bool IsEnabled(MemFn eventIden, bool amIRegistered = false) {
-	static int registration = 0; //first time func is checked
-	if (amIRegistered && registration < 1){
+  static int registration = 0; //first time func is checked
+  if (amIRegistered && registration < 1){
     registration++;
-	}
-	return (!!registration);
+  }
+  return (!!registration);
   }
   
   template <class Memfn, class Arg1>
-  void Serialize(Memfn & memfn, Arg1 & arg1){
-	  std::cout <<  "Hi! Just tried to serialize this stuff" << std::endl;
-	  m_OutputStream << arg1;
-	  std::cout << "From my outputs" << m_OutputStream << std::endl;
+  //SFINAE STUB OUT: replace with check_if overloads <<
+  typename std::enable_if< std::is_same<Arg1, std::basic_string<char> const *>::value, void >::type     
+    Serialize(Memfn & memfn, Arg1 & arg1 ){
+    m_OutputStream << *arg1;
+    std::string outtest;
+    m_OutputStream >> outtest; // just here if you wanna get it back
   }
+  
+  template <class Memfn, class Arg1>
+  //SFINAE STUB OUT: replace with check_if overloads <<
+  typename std::enable_if<!std::is_same<Arg1, std::basic_string<char> const *>::value, void >::type 
+  Serialize(Memfn & memfn, Arg1 & arg1){
+    std::cout <<  "Hi! Fall through case does nothing" << std::endl;
+    //If the program ever actually executes this code it should fail miserably.
+    //That would mean an enable memfn tried to serialize an unserializable arg.
+  }
+
 };
 
 /// <summary>
