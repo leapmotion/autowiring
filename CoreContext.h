@@ -733,7 +733,8 @@ void DistributeToMarshals(Memfn & memfn, Arg1 & arg1){
 
   template<class T>
   std::shared_ptr<EventInputStream<T>> CreateEventInputStream(void) {
-    return nullptr;
+   auto retval =  std::make_shared<EventInputStream<T>>();
+   return retval;
   }
 };
 
