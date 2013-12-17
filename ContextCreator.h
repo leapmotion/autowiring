@@ -221,6 +221,20 @@ public:
     return child;
   }
 
+  /// <summary>
+  /// Enumeration routine, similar to the ContextMap enumerator
+  /// </summary>
+  template<class Fn>
+  void Enumerate(Fn&& fn) {
+    boost::lock_guard<boost::mutex> lk(m_contextLock);
+    for(auto q = m_contextList.begin(); q != m_contextList.end(); q++) {
+      auto ctxt = q->lock();
+      if(ctxt)
+      if(!fn(ctxt))
+        return;
+    }
+  }
+
   /// <sumamry>
   /// Removes all contexts from this creator, and optionally waits for them to quit
   /// </summary>
