@@ -4,6 +4,23 @@
 #include "EventOutputStream.h"
 #include "uuid.h"
 
+/*
+EXTRA SPECS to code to that have not yet been implemented as unit tests.
+
+1. Sender and Client each import the same header file which defines a UUID event.
+2. Sender encodes UUID of its event in the serialized stream
+3. Client reads UUID and args, and reverse-look ups the correct memfn to call the memfn
+4. Client gracefully handles receiving UUID events it can't reverse lookup
+5. EVERYONE should know when you change ANY identifying properties of a DECLARE_UUID
+you must change the UUID as well or you will get version incompatilibity erros.
+Extra points for figuring out how to enforce this.
+
+Other Goals:
+Broader SFINAE: force server and client to define their own Autoserialize or Autodeserialized
+If the types aren't POD. At the very least, tests need to be written which violate the 
+"I can do everything with stringstreams" implementation currently passing
+*/
+
 DECLARE_UUID(EventWithUuid, "6EC2129F-5DD7-43D5-ACB5-864E8BB5D6B4") :
   public virtual EventReceiver
 {
@@ -128,7 +145,7 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   
   // Register our expected event type:
   is->EnableIdentity(&EventWithUuid::SampleEventFiring);
-  is->EnableIdentity(&EventWithUuid::SampleEventDeferred);;
+  is->EnableIdentity(&EventWithUuid::SampleEventDeferred);
   
   const void* ptr = os->GetData();
   size_t nRemaining = os->GetSize();
