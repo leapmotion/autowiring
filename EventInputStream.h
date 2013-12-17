@@ -12,11 +12,26 @@ public:
 private:
 
 public:
+  EventInputStream(){}
   /// <summary>
-  /// Enables a new event for firing via its identity, as a member of T, for transmission by this class
+  /// Returns true if memfn is enabled, otherwise false.
+  /// </summary>
+  template<class MemFn>
+  bool IsEnabled(MemFn eventIden, bool amIRegistered = false) {
+  static int registration = 0; //first time func is checked
+    if (amIRegistered && registration < 1){
+      registration++;
+    }
+  return (!!registration);
+  }
+  /// <summary>
+  /// Enables a new event for deserialization via its identity
   /// </summary>
   template<class MemFn>
   void EnableIdentity(MemFn eventIden) {
+    // We cannot serialize an identity we don't recognize
+    static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
+    IsEnabled(eventIden, true);
   }
 
   /// <summary>
