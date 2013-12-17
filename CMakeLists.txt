@@ -64,6 +64,8 @@ set(
   SharedPtrHash.h
   SimpleOwnershipValidator.h
   SimpleOwnershipValidator.cpp
+  StateMachine.h
+  StateMachine.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
   TransientContextMember.h
@@ -155,6 +157,8 @@ set(
   SnoopTest.cpp
   SimpleOwnershipValidatorTest.h
   SimpleOwnershipValidatorTest.cpp
+  StateMachineTest.h
+  StateMachineTest.cpp
   TestFixtures/ExitRaceThreaded.h
   TestFixtures/SimpleInterface.h
   TestFixtures/SimpleObject.h
