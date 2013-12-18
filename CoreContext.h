@@ -87,6 +87,29 @@ public:
   }
 
   /// <summary>
+  /// Factory to create a peer context
+  /// </summary>
+  /// <remarks>
+  /// A peer context allows clients to create autowiring contexts which are in the same event
+  /// domain with respect to each other, but are not in the same autowiring domain.  This can
+  /// be useful where multiple instances of a particular object are desired, but inserting
+  /// such objects into a simple child context is cumbersome because the objects at parent
+  /// scope are listening to events originating from objects at child scope.
+  /// </remarks>
+  template<class T>
+  std::shared_ptr<CoreContext> CreatePeer(void) {
+    return CreatePeer(typeid(T));
+  }
+
+  /// <summary>
+  /// Factory to create an anonymous peer context
+  /// </summary>
+  template<class T>
+  std::shared_ptr<CoreContext> CreatePeerAnopnymous(void) {
+    return Create(typeid(void));
+  }
+
+  /// <summary>
   /// Allows a specifically named class to be bolted
   /// </summary>
   /// <remarks>
@@ -105,6 +128,7 @@ public:
 
 protected:
   std::shared_ptr<CoreContext> Create(const std::type_info& sigil);
+  std::shared_ptr<CoreContext> CreatePeer(const std::type_info& sigil);
 
   // General purpose lock for this class
   mutable boost::mutex m_lock;
