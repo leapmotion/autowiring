@@ -7,7 +7,6 @@
 CoreThread::CoreThread(const char* pName):
   ContextMember(pName),
   m_stop(false),
-  m_ready(false),
   m_running(false),
   m_completed(false),
   m_canAccept(false)
@@ -25,7 +24,6 @@ void CoreThread::DoRun(void) {
     SetCurrentThreadName();
 
   // Now we wait for the thread to be good to go:
-  DelayUntilReady();
   try {
     Run();
   } catch(dispatch_aborted_exception&) {
