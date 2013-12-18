@@ -139,6 +139,8 @@ set(
   MultiInheritTest.cpp
   ObjectPoolTest.h
   ObjectPoolTest.cpp
+  PeerContextTest.h
+  PeerContextTest.cpp
   PolymorphicTypeForestTest.h
   PolymorphicTypeForestTest.cpp
   PostConstructTest.h
