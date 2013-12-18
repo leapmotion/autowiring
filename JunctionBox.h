@@ -1,6 +1,4 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _EVENT_MANAGER_H
-#define _EVENT_MANAGER_H
+#pragma once
 #include "DispatchQueue.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
@@ -433,4 +431,3 @@ public:
   }
 };
 
-#endif
