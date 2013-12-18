@@ -8,7 +8,7 @@
 #include "CurrentContextPusher.h"
 #include "DeferredBase.h"
 #include "ExceptionFilter.h"
-#include "EventSender.h"
+#include "JunctionBox.h"
 #include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
@@ -400,17 +400,17 @@ public:
   /// Obtains a shared pointer to an event sender _in this context_ matching the specified type
   /// </summary>
   template<class T>
-  std::shared_ptr<EventReceiverProxy<T>> GetEventRecieverProxy(void) {
-    std::shared_ptr<EventReceiverProxy<T>> retVal;
+  std::shared_ptr<JunctionBox<T>> GetEventRecieverProxy(void) {
+    std::shared_ptr<JunctionBox<T>> retVal;
     boost::lock_guard<boost::mutex> lk(m_lock);
     auto q = m_proxies.find(typeid(T));
     if(q != m_proxies.end())
       // No dynamic cast is needed here, we already have independent knowledge of the
       // destination type because it's the key type of our map
-      return std::static_pointer_cast<EventReceiverProxy<T>, EventReceiverProxyBase>(q->second);
+      return std::static_pointer_cast<JunctionBox<T>, EventReceiverProxyBase>(q->second);
 
     // Construct new type:
-    retVal.reset(new EventReceiverProxy<T>);
+    retVal.reset(new JunctionBox<T>);
     m_proxies[typeid(T)] = retVal;
     
     // Attach compatible receivers:
