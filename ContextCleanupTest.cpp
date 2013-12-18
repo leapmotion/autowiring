@@ -154,7 +154,6 @@ public:
   TakesALongTimeToExit(void) :
     barr(2)
   {
-    Ready();
   }
 
   boost::barrier barr;
