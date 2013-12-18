@@ -115,7 +115,6 @@ public:
   Jammer(void):
     totalXmit(0)
   {
-    Ready();
   }
 
   volatile int totalXmit;
@@ -143,7 +142,6 @@ public:
     m_oneArg(0),
     m_barrierDone(false)
   {
-    Ready();
   }
 
 private:

@@ -51,7 +51,6 @@ public:
   {
     // We'll accept dispatch delivery as long as we exist:
     AcceptDispatchDelivery();
-    Ready();
   }
 
   Deferred AutoFilter(Decoration<0> zero, Decoration<1> one) {

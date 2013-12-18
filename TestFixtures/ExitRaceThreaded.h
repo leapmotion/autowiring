@@ -41,10 +41,6 @@ class ExitRaceThreaded:
   public CoreThread
 {
 public:
-  ExitRaceThreaded(void) {
-    Ready();
-  }
-
   Autowired<ExitRaceSignal> m_exitRace;
 
   void Run(void) override {
