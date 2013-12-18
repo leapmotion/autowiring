@@ -24,7 +24,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_refCount(0)
 {
   // Prime the proxy map with the APL recipient:
-  auto ptr = make_shared<EventReceiverProxy<AutoPacketListener>>();
+  auto ptr = make_shared<JunctionBox<AutoPacketListener>>();
   m_proxies[typeid(AutoPacketListener)] = ptr;
   m_packetFactory.reset(
     new AutoPacketFactory(

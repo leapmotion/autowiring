@@ -97,7 +97,7 @@ public:
 struct NoType {};
 
 template<class T>
-class EventReceiverProxy:
+class JunctionBox:
   public EventReceiverProxyBase
 {
 public:
@@ -106,7 +106,7 @@ public:
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
 
-  virtual ~EventReceiverProxy(void) {}
+  virtual ~JunctionBox(void) {}
 
 protected:
   // Collection of all known listeners:
@@ -322,14 +322,14 @@ public:
 template<class T>
 class InvokeRelay<void (T::*)()> {
 public:
-  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(void)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(void)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  EventReceiverProxy<T>& erp;
+  JunctionBox<T>& erp;
   void (T::*fnPtr)();
 
 public:
@@ -341,14 +341,14 @@ public:
 template<class T, class Arg1>
 class InvokeRelay<void (T::*)(Arg1)> {
 public:
-  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  EventReceiverProxy<T>& erp;
+  JunctionBox<T>& erp;
   void (T::*fnPtr)(Arg1);
 
 public:
@@ -360,14 +360,14 @@ public:
 template<class T, class Arg1, class Arg2>
 class InvokeRelay<void (T::*)(Arg1, Arg2)> {
 public:
-  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  EventReceiverProxy<T>& erp;
+  JunctionBox<T>& erp;
   void (T::*fnPtr)(Arg1, Arg2);
 
 public:
@@ -379,14 +379,14 @@ public:
 template<class T, class Arg1, class Arg2, class Arg3>
 class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3)> {
 public:
-  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  EventReceiverProxy<T>& erp;
+  JunctionBox<T>& erp;
   void (T::*fnPtr)(Arg1, Arg2, Arg3);
 
 public:
@@ -398,14 +398,14 @@ public:
 template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
 class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4)> {
 public:
-  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  EventReceiverProxy<T>& erp;
+  JunctionBox<T>& erp;
   void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4);
 
 public:
@@ -417,14 +417,14 @@ public:
 template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
 class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5)> {
 public:
-  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  EventReceiverProxy<T>& erp;
+  JunctionBox<T>& erp;
   void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5);
 
 public:
