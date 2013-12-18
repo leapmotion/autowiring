@@ -58,3 +58,16 @@ TEST_F(PeerContextTest, VerifyPeerTransitivity) {
   ASSERT_TRUE(sr->m_one) << "Simple receiver did not properly recieve an event from a transitively peered context";
   ASSERT_EQ(25, sr->m_oneArg) << "Simple receiver properly recieved a transitively peered context's event, but its argument was incorrect";
 }
+
+TEST_F(PeerContextTest, VerifyNoAutowiringLeakage) {
+  // Insert a simple object in the base context
+  AutoRequired<SimpleObject>();
+
+  // Create a peer context and make it current:
+  auto peer = m_create->CreatePeer<PeerContextName1>();
+  CurrentContextPusher pshr(peer);
+
+  // Verify that, in this peer context, SimpleObject is not visible
+  Autowired<SimpleObject> so;
+  ASSERT_FALSE(so.IsAutowired()) << "An autowiring request incorrectly resolved against an object allocated in a peer context";
+}
