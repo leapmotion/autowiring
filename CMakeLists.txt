@@ -149,8 +149,6 @@ set(
   SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
-  TransientContextMemberTest.h
-  TransientContextMemberTest.cpp
   ScopeTest.h
   ScopeTest.cpp
   SnoopTest.h
