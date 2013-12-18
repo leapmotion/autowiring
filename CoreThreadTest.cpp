@@ -11,7 +11,6 @@ public:
     m_hit(false),
     m_multiHit(false)
   {
-    Ready();
   }
 
   bool m_hit;
@@ -46,10 +45,6 @@ class InvokesIndefiniteWait:
   public CoreThread
 {
 public:
-  InvokesIndefiniteWait(void) {
-    Ready();
-  }
-
   virtual void Run(void) override {
     AcceptDispatchDelivery();
 

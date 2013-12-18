@@ -54,10 +54,6 @@ class WaitMember:
   public CoreThread
 {
 public:
-  WaitMember(void) {
-    Ready();
-  }
-
   AutoRequired<GlobalSignal> m_signal;
 
   void Run(void) override {
