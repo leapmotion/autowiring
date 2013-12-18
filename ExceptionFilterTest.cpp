@@ -62,10 +62,6 @@ class ThrowsWhenRun:
   public CoreThread
 {
 public:
-  ThrowsWhenRun(void) {
-    Ready();
-  }
-
   // This convoluted syntax is required to evade warnings on Mac
   decltype(throw_rethrowable Ex(100)) MakeException() {
     return throw_rethrowable Ex(100);
