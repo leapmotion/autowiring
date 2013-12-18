@@ -201,7 +201,7 @@ public:
   /// <summary>
   /// Utility constructor, used when the receiver is already known
   /// </summary>
-  AutoFired(const std::shared_ptr<EventReceiverProxy<T>>& receiver) :
+  AutoFired(const std::shared_ptr<JunctionBox<T>>& receiver) :
     m_receiver(receiver)
   {}
 
@@ -213,13 +213,13 @@ public:
   {}
 
 private:
-  std::shared_ptr<EventReceiverProxy<T>> m_receiver;
+  std::shared_ptr<JunctionBox<T>> m_receiver;
 
   template<class MemFn, bool isDeferred = std::is_same<typename Decompose<MemFn>::retType, Deferred>::value>
   struct Selector {
     typedef std::function<typename Decompose<MemFn>::fnType> retType;
 
-    static inline retType Select(EventReceiverProxy<T>* pReceiver, MemFn pfn) {
+    static inline retType Select(JunctionBox<T>* pReceiver, MemFn pfn) {
       return pReceiver->Defer(pfn);
     }
   };
@@ -228,7 +228,7 @@ private:
   struct Selector<MemFn, false> {
     typedef std::function<typename Decompose<MemFn>::fnType> retType;
 
-    static inline retType Select(EventReceiverProxy<T>* pReceiver, MemFn pfn) {
+    static inline retType Select(JunctionBox<T>* pReceiver, MemFn pfn) {
       return pReceiver->Fire(pfn);
     }
   };

@@ -46,8 +46,8 @@ set(
   EventDispatcher.h
   EventReceiver.h
   EventReceiver.cpp
-  EventSender.h
-  EventSender.cpp
+  JunctionBox.h
+  JunctionBox.cpp
   ExceptionFilter.h
   FilterPropertyExtractor.h
   GlobalCoreContext.cpp
