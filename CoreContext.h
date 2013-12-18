@@ -241,7 +241,7 @@ protected:
   /// It's safe to allow the returned shared_ptr to go out of scope; the core context
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
-  void AddCoreThread(const std::shared_ptr<CoreThread>& pCoreThread, bool allowNotReady = false);
+  void AddCoreThread(const std::shared_ptr<CoreThread>& pCoreThread);
 
   /// <summary>
   /// Adds the specified context creation listener to receive creation events broadcast from this context

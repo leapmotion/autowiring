@@ -246,11 +246,7 @@ std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   return *retVal;
 }
 
-void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr, bool allowNotReady) {
-  // We don't allow the insertion of a thread that isn't ready unless the user really
-  // wants that behavior.
-  ASSERT(allowNotReady || ptr->IsReady());
-
+void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr) {
   // Insert into the linked list of threads first:
   m_threads.push_front(ptr.get());
 
