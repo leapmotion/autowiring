@@ -133,6 +133,10 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil) {
   return retVal;
 }
 
+std::shared_ptr<CoreContext> CoreContext::CreatePeer(const std::type_info& sigil) {
+  return std::shared_ptr<CoreContext>();
+}
+
 void CoreContext::InitiateCoreThreads(void) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
