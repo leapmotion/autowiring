@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "DispatchThunkEventProxy.h"
-#include "EventSender.h"
+#include "JunctionBox.h"
 
 void DispatchThunkEventProxy::operator()() {
   eventProxy(dq);
