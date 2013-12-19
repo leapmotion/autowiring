@@ -3,5 +3,5 @@
 #include "JunctionBox.h"
 #include "DispatchQueue.h"
 
-EventReceiverProxyBase::~EventReceiverProxyBase(void) {
+JunctionBoxBase::~JunctionBoxBase(void) {
 }
