@@ -9,7 +9,7 @@
 #include "LockReducedCollection.h"
 #include "SharedPtrHash.h"
 #include "TransientPoolBase.h"
-#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/mutex.hpp>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
@@ -68,8 +68,8 @@ public:
   virtual ~EventReceiverProxyBase(void);
 
 protected:
-  // Reader-writer lock:
-  boost::shared_mutex m_rwLock;
+  // Dispatch queue lock:
+  mutable boost::mutex m_lock;
 
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
@@ -82,6 +82,7 @@ protected:
 public:
   // Accessor methods:
   const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const {return m_dispatch;}
+  boost::mutex& GetDispatchQueueLock(void) const { return m_lock; }
 
   virtual bool HasListeners(void) const = 0;
 
@@ -122,8 +123,10 @@ public:
 
   void ReleaseRefs() override {
     m_st.Clear();
-    m_dispatch.clear();
     m_stTransient.Clear();
+
+    boost::lock_guard<boost::mutex>(m_lock),
+    m_dispatch.clear();
   }
 
   EventReceiverProxyBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
@@ -159,14 +162,21 @@ public:
       return;
 
     // All transient pools are dispatchers, add it in to the dispatch pool:
-    DispatchQueue* pDeferred = dynamic_cast<DispatchQueue*>(rhs.get());
-    m_dispatch.insert(pDeferred);
+    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
+
+    boost::lock_guard<boost::mutex>(m_lock),
+    m_dispatch.insert(pDispatch);
 
     // Insertion:
     m_stTransient.Insert(rhs);
   }
 
   void operator-=(const std::shared_ptr<TransientPoolBase>& rhs) {
+    // Remove the non-reference-counted pointer first
+    boost::lock_guard<boost::mutex>(m_lock),
+    m_dispatch.erase(dynamic_cast<DispatchQueue*>(rhs.get()));
+
+    // Then remove from our reference counted collection
     m_stTransient.Erase(rhs);
   }
 
@@ -180,6 +190,7 @@ public:
     // If the RHS implements DispatchQueue, add it to that collection as well:
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
     if(pDispatch)
+      boost::lock_guard<boost::mutex>(m_lock),
       m_dispatch.insert(pDispatch);
   }
 
@@ -187,15 +198,16 @@ public:
   /// Removes the specified observer from the set currently configured to receive events
   /// </summary>
   void operator-=(const std::shared_ptr<T>& rhs) {
+    // If the RHS implements DispatchQueue, remove it from the dispatchers collection
+    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
+    if(pDispatch)
+      boost::lock_guard<boost::mutex>(m_lock),
+      m_dispatch.erase(pDispatch);
+
     // Trivial removal:
     auto nErased = m_st.Erase(rhs);
     if(!nErased)
       return;
-
-    // If the RHS implements DispatchQueue, add it to that collection as well:
-    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
-    if(pDispatch)
-      m_dispatch.erase(pDispatch);
   }
 
   /// <summary>
@@ -264,6 +276,8 @@ private:
 public:
   void operator()(void) const {
     const auto& dq = erp.GetDispatchQueue();
+    boost::lock_guard<boost::mutex> lk(erp.GetDispatchQueueLock());
+
     for(auto q = dq.begin(); q != dq.end(); q++) {
       auto* pCur = *q;
       if(!pCur->CanAccept())
@@ -301,6 +315,8 @@ private:
 public:
   void operator()(const tArg1& arg1) const {
     const auto& dq = erp.GetDispatchQueue();
+    boost::lock_guard<boost::mutex> lk(erp.GetDispatchQueueLock());
+
     for(auto q = dq.begin(); q != dq.end(); q++) {
       auto* pCur = *q;
       if(!pCur->CanAccept())
