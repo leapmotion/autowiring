@@ -165,8 +165,8 @@ protected:
   typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
 
-  typedef std::unordered_map<std::type_index, std::shared_ptr<EventReceiverProxyBase>> t_proxies;
-  t_proxies m_proxies;
+  typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
+  t_junctionBoxes m_junctionBoxes;
 
   // All known snoopers.  Snoopers will not be removed from parent scopes on destruction.
   t_rcvrSet m_snoopers;
@@ -424,18 +424,18 @@ public:
   /// Obtains a shared pointer to an event sender _in this context_ matching the specified type
   /// </summary>
   template<class T>
-  std::shared_ptr<JunctionBox<T>> GetEventRecieverProxy(void) {
+  std::shared_ptr<JunctionBox<T>> GetJunctionBox(void) {
     std::shared_ptr<JunctionBox<T>> retVal;
     boost::lock_guard<boost::mutex> lk(m_lock);
-    auto q = m_proxies.find(typeid(T));
-    if(q != m_proxies.end())
+    auto q = m_junctionBoxes.find(typeid(T));
+    if(q != m_junctionBoxes.end())
       // No dynamic cast is needed here, we already have independent knowledge of the
       // destination type because it's the key type of our map
-      return std::static_pointer_cast<JunctionBox<T>, EventReceiverProxyBase>(q->second);
+      return std::static_pointer_cast<JunctionBox<T>, JunctionBoxBase>(q->second);
 
     // Construct new type:
     retVal.reset(new JunctionBox<T>);
-    m_proxies[typeid(T)] = retVal;
+    m_junctionBoxes[typeid(T)] = retVal;
     
     // Attach compatible receivers:
     for(auto q = m_eventReceivers.begin(); q != m_eventReceivers.end(); q++)
@@ -628,7 +628,7 @@ public:
   /// </summary>
   /// <param name="pProxy">The sender of the event</param>
   /// <param name="pRecipient">The recipient of the event</param>
-  void FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient);
+  void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient);
 
   /// <summary>
   /// Enables the passed event receiver to obtain messages broadcast by this context

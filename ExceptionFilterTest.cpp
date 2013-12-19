@@ -119,7 +119,7 @@ public:
     }
   }
 
-  virtual void Filter(const std::function<void()>& rethrower, const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) override {
+  virtual void Filter(const std::function<void()>& rethrower, const JunctionBoxBase* pJunctionBox, EventReceiver* pRecipient) override {
     m_hit = true;
     try {
       rethrower();

@@ -14,7 +14,7 @@
 #include TYPE_TRAITS_HEADER
 #include <set>
 
-class EventReceiverProxyBase;
+class JunctionBoxBase;
 class EventReceiver;
 
 /// <summary>
@@ -25,7 +25,7 @@ class EventReceiver;
 /// it call, rely on the validity of the std::current_exception return value, which will not be valid
 /// outside of a call block.
 /// </remarks>
-void FilterFiringException(const EventReceiverProxyBase* pSender, EventReceiver* pRecipient);
+void FilterFiringException(const JunctionBoxBase* pSender, EventReceiver* pRecipient);
 
 /// <summary>
 /// Function pointer relay type
@@ -60,9 +60,9 @@ class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5)>;
 /// <summary>
 /// Used to identify event managers
 /// </summary>
-class EventReceiverProxyBase {
+class JunctionBoxBase {
 public:
-  virtual ~EventReceiverProxyBase(void);
+  virtual ~JunctionBoxBase(void);
 
 protected:
   // Reader-writer lock:
@@ -88,15 +88,15 @@ public:
   virtual void ReleaseRefs(void) = 0;
 
   // Event attachment and detachment pure virtuals
-  virtual EventReceiverProxyBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
-  virtual EventReceiverProxyBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual JunctionBoxBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
 };
 
 struct NoType {};
 
 template<class T>
 class JunctionBox:
-  public EventReceiverProxyBase
+  public JunctionBoxBase
 {
 public:
   static_assert(
@@ -123,7 +123,7 @@ public:
     m_stTransient.Clear();
   }
 
-  EventReceiverProxyBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
+  JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     if(casted)
       // Proposed type is directly one of our receivers
@@ -137,7 +137,7 @@ public:
     return *this;
   }
 
-  EventReceiverProxyBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
+  JunctionBoxBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     if(casted)
       *this -= casted;
@@ -248,14 +248,14 @@ public:
 template<class T>
 class InvokeRelay<Deferred (T::*)()> {
 public:
-  InvokeRelay(const EventReceiverProxyBase& erp, Deferred (T::*fnPtr)()):
+  InvokeRelay(const JunctionBoxBase& erp, Deferred (T::*fnPtr)()):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  const EventReceiverProxyBase& erp;
+  const JunctionBoxBase& erp;
   Deferred (T::*fnPtr)();
 
 public:
@@ -285,14 +285,14 @@ class InvokeRelay<Deferred (T::*)(Arg1)> {
 public:
   typedef typename std::decay<Arg1>::type tArg1;
 
-  InvokeRelay(const EventReceiverProxyBase& erp, Deferred (T::*fnPtr)(Arg1)):
+  InvokeRelay(const JunctionBoxBase& erp, Deferred (T::*fnPtr)(Arg1)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  const EventReceiverProxyBase& erp;
+  const JunctionBoxBase& erp;
   Deferred (T::*fnPtr)(Arg1);
 
 public:
