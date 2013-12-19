@@ -21,7 +21,7 @@ class TransientPool:
 public:
   TransientPool(void) {
     static_assert(std::is_base_of<EventReceiver, Witness>::value, "Cannot operate a transient pool on a witness type that does not receive events");
-    static_assert(!std::is_base_of<EventReceiverProxyBase, T>::value, "A transient member cannot be an event sender");
+    static_assert(!std::is_base_of<JunctionBoxBase, T>::value, "A transient member cannot be an event sender");
     static_assert(std::is_base_of<TransientContextMember, T>::value, "Cannot operate a transient pool on a nontransient type");
   }
 
