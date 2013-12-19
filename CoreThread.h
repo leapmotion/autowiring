@@ -67,6 +67,8 @@ private:
   void DoRun(void);
 
 protected:
+  void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
+
   /// <summary>
   /// Indicates that the system should accept the delivery of deferred procedure calls
   /// </summary>
