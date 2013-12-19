@@ -1,14 +1,20 @@
 #pragma once
 #include "Decompose.h"
+#include <map>
 #include <memory>
 #include <iostream>
 #include <sstream>
+
+#ifndef EnableIdentity
+#define EnableIdentity(x) SpecialAssign("x", x) 
+#endif
 
 
 class EventOutputStreamBase {
 private:
   std::stringstream m_OutputStream;
 public:
+
   EventOutputStreamBase(void);
   virtual ~EventOutputStreamBase(void);
 
@@ -72,7 +78,8 @@ class EventOutputStream:
   public EventOutputStreamBase
 {
 private:
-
+	typedef void (T::*fnPtr)(std::string); 
+    std::map<std::string, fnPtr> m_oneArgsMap;
 public:
   EventOutputStream(){}
   ~EventOutputStream(){}
@@ -82,10 +89,16 @@ public:
   /// Enables a new event for serialization via its identity
   /// </summary>
   template<class MemFn>
-  void EnableIdentity(MemFn eventIden) {
+  void SpecialAssign(std::string, MemFn eventIden) {
     // We cannot serialize an identity we don't recognize
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
 	IsEnabled(eventIden, true);
+	/*
+	Then something to the effect of:
+	Check if memfn has been enabled
+	Try to add memfn to the m_oneArgsMap. When you serialize, serialize the VALUE
+	When you deserialize, deserializer the KEY of the buddy map in EventInputStream.h
+	*/
   }
 
 

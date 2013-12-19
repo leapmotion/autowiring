@@ -1,5 +1,10 @@
 #pragma once
+#include <string>
+#include <map>
 
+#ifndef EnableIdentity
+#define EnableIdentity(x) SpecialAssign("x", x) 
+#endif
 /// <summary>
 /// Allows the deserialization of events from an output stream, in order to replay them in-process
 /// </summary>
@@ -10,7 +15,8 @@ public:
   static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot instantiate an event input stream on a non-event type");
 
 private:
-
+	typedef void (T::*fnPtr)(std::string); 
+    std::map<std::string, fnPtr> m_oneArgsMap;
 public:
   EventInputStream(){}
   /// <summary>
@@ -28,7 +34,7 @@ public:
   /// Enables a new event for deserialization via its identity
   /// </summary>
   template<class MemFn>
-  void EnableIdentity(MemFn eventIden) {
+  void SpecialAssign(std::string, MemFn eventIden) {
     // We cannot serialize an identity we don't recognize
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
     IsEnabled(eventIden, true);
