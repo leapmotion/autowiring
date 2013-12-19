@@ -134,7 +134,11 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil) {
 }
 
 std::shared_ptr<CoreContext> CoreContext::CreatePeer(const std::type_info& sigil) {
-  return std::shared_ptr<CoreContext>();
+  auto sibling = m_pParent->Create(sigil);
+  
+  
+  
+  return sibling;
 }
 
 void CoreContext::InitiateCoreThreads(void) {

@@ -105,8 +105,8 @@ public:
   /// Factory to create an anonymous peer context
   /// </summary>
   template<class T>
-  std::shared_ptr<CoreContext> CreatePeerAnopnymous(void) {
-    return Create(typeid(void));
+  std::shared_ptr<CoreContext> CreatePeerAnonymous(void) {
+    return CreatePeer(typeid(void));
   }
 
   /// <summary>
