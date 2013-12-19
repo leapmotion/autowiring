@@ -232,7 +232,13 @@ void CoreContext::SignalTerminate(bool wait) {
 
   // Wait for the treads to finish before returning.
   for (t_threadList::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
-    (*it)->Wait();
+    auto& cur = **it;
+
+    // Wait for completion only if we're currently running.  The thread cannot be made active
+    // at this point, because we're in teardown, and this makes it safe to elide the call to
+    // wait if the thread has never been run yet.
+    if(cur.IsRunning())
+      cur.Wait();
   }
 }
 
