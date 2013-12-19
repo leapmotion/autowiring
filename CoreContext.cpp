@@ -24,8 +24,8 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_refCount(0)
 {
   // Prime the proxy map with the APL recipient:
-  auto ptr = make_shared<EventReceiverProxy<AutoPacketListener>>();
-  m_proxies[typeid(AutoPacketListener)] = ptr;
+  auto ptr = make_shared<JunctionBox<AutoPacketListener>>();
+  m_junctionBoxes[typeid(AutoPacketListener)] = ptr;
   m_packetFactory.reset(
     new AutoPacketFactory(
       AutoFired<AutoPacketListener>(
@@ -49,7 +49,7 @@ CoreContext::~CoreContext(void) {
   NotifyTeardownListeners();
 
   // Release all event sender links:
-  for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
     (*q).second->ReleaseRefs();
 
   // Eliminate all snoopers from our apprehended list of receivers:
@@ -232,7 +232,13 @@ void CoreContext::SignalTerminate(bool wait) {
 
   // Wait for the treads to finish before returning.
   for (t_threadList::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
-    (*it)->Wait();
+    auto& cur = **it;
+
+    // Wait for completion only if we're currently running.  The thread cannot be made active
+    // at this point, because we're in teardown, and this makes it safe to elide the call to
+    // wait if the thread has never been run yet.
+    if(cur.IsRunning())
+      cur.Wait();
   }
 }
 
@@ -276,7 +282,7 @@ void CoreContext::Dump(std::ostream& os) const {
   }
 }
 
-void FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) {
+void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient) {
   // Obtain the current context and pass control:
   CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
 }
@@ -342,7 +348,7 @@ void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
     m_eventReceivers.insert(pRecvr);
 
     // Scan the list of compatible senders:
-    for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+    for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
       *q->second += pRecvr;
   }
 
@@ -358,7 +364,7 @@ void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
   m_eventReceivers.erase(pRecvr);
 
   // Notify all compatible senders that we're going away:
-  for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
+  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
     *q->second -= pRecvr;
 
   // Delegate to the parent:
@@ -371,7 +377,7 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::ite
     boost::lock_guard<boost::mutex> lk(m_lock);
     for(auto q = first; q != last; q++) {
       // n^2 sender unlinking
-      for(auto r = m_proxies.begin(); r != m_proxies.end(); r++)
+      for(auto r = m_junctionBoxes.begin(); r != m_junctionBoxes.end(); r++)
         *r->second -= *q;
 
       // Trivial erase:
@@ -415,7 +421,7 @@ void CoreContext::FilterException(void) {
     std::rethrow_exception(std::current_exception());
 }
 
-void CoreContext::FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) {
+void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient) {
   auto rethrower = [] () {
     std::rethrow_exception(std::current_exception());
   };

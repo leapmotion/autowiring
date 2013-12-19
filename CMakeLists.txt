@@ -46,8 +46,8 @@ set(
   EventDispatcher.h
   EventReceiver.h
   EventReceiver.cpp
-  EventSender.h
-  EventSender.cpp
+  JunctionBox.h
+  JunctionBox.cpp
   ExceptionFilter.h
   FilterPropertyExtractor.h
   GlobalCoreContext.cpp
@@ -149,8 +149,6 @@ set(
   SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
-  TransientContextMemberTest.h
-  TransientContextMemberTest.cpp
   ScopeTest.h
   ScopeTest.cpp
   SnoopTest.h
