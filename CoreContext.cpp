@@ -23,6 +23,10 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_useOwnershipValidator(false),
   m_refCount(0)
 {
+#ifdef _DEBUG
+  m_magic = CORE_CONTEXT_MAGIC;
+#endif
+
   // Prime the proxy map with the APL recipient:
   auto ptr = make_shared<JunctionBox<AutoPacketListener>>();
   m_junctionBoxes[typeid(AutoPacketListener)] = ptr;
@@ -33,13 +37,13 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
       )
     )
   );
-  ASSERT(pParent.get() != this);
+  assert(pParent.get() != this);
 }
 
 CoreContext::~CoreContext(void) {
   // The s_curContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
   // still holds a reference to us, then we have a serious problem.
-  ASSERT(
+  assert(
     !s_curContext.get() ||
     !s_curContext.get()->use_count() ||
     s_curContext.get()->get() != this
@@ -49,8 +53,9 @@ CoreContext::~CoreContext(void) {
   NotifyTeardownListeners();
 
   // Release all event sender links:
-  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
+  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++) {
     (*q).second->ReleaseRefs();
+  }
 
   // Eliminate all snoopers from our apprehended list of receivers:
   for(auto q = m_snoopers.begin(); q != m_snoopers.end(); q++)
@@ -67,6 +72,12 @@ CoreContext::~CoreContext(void) {
   // Explicit deleters to simplify base deletion of any deferred autowiring requests:
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
     delete q->second;
+
+#ifdef _DEBUG
+  // Invalidate magic value:
+  assert(m_magic == CORE_CONTEXT_MAGIC);
+  m_magic = 0xFEFEFEFE;
+#endif
 }
 
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
