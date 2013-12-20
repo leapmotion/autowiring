@@ -1,12 +1,14 @@
 #pragma once
 #include "Decompose.h"
+#include <vector>
 #include <map>
 #include <memory>
+#include <string>
 #include <iostream>
 #include <sstream>
 
 #ifndef EnableIdentity
-#define EnableIdentity(x) SpecialAssign("x", x) 
+#define EnableIdentity(x) SpecialAssign(#x, x) 
 #endif
 
 
@@ -39,6 +41,27 @@ public:
   void Reset(void);
   
   /// <summary>
+  /// Converts member functions to their string representation for serialization.
+  /// </summary>
+  template <class MemFn>
+  std::string 
+  AddAndQueryMemFn(MemFn memfn, std::string str = "Query")
+  {
+  std::map<std::string, MemFn> local; 
+  static std::map<std::string, MemFn> my_map = local;
+  if (str == "Query")
+  {
+    for (auto it = my_map.begin(); it != my_map.end(); ++it)
+    {
+      if ((it->second) == memfn) return it -> first;
+    }
+    return "";
+  }
+  my_map[str] = memfn;
+  return "";
+  }
+
+  /// <summary>
   /// Returns true if memfn is enabled, otherwise false.
   /// </summary>
   template<class MemFn>
@@ -57,6 +80,8 @@ public:
     m_OutputStream << *arg1;
     std::string outtest;
     m_OutputStream >> outtest; // just here if you wanna get it back
+   std::cout <<  "Hi,got proper args: " << outtest << std::endl;
+   std::cout <<  "Was going to serialize that arg as " << AddAndQueryMemFn(memfn) << std::endl;
   }
   
   template <class Memfn, class Arg1>
@@ -78,8 +103,8 @@ class EventOutputStream:
   public EventOutputStreamBase
 {
 private:
-	typedef void (T::*fnPtr)(std::string); 
-    std::map<std::string, fnPtr> m_oneArgsMap;
+  typedef void (T::*fnPtr)(std::string); 
+  std::map<std::string, fnPtr> m_oneArgsMap;
 public:
   EventOutputStream(){}
   ~EventOutputStream(){}
@@ -89,18 +114,13 @@ public:
   /// Enables a new event for serialization via its identity
   /// </summary>
   template<class MemFn>
-  void SpecialAssign(std::string, MemFn eventIden) {
+  void SpecialAssign(std::string str, MemFn eventIden) {
     // We cannot serialize an identity we don't recognize
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
-	IsEnabled(eventIden, true);
-	/*
-	Then something to the effect of:
-	Check if memfn has been enabled
-	Try to add memfn to the m_oneArgsMap. When you serialize, serialize the VALUE
-	When you deserialize, deserializer the KEY of the buddy map in EventInputStream.h
-	*/
+    if (!IsEnabled(eventIden))
+    {
+    IsEnabled(eventIden,  true);
+    AddAndQueryMemFn(eventIden, str);
+    }
   }
-
-
 };
-
