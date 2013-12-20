@@ -19,7 +19,11 @@ size_t EventOutputStreamBase::GetSize(void) const {
 }
 
 const void* EventOutputStreamBase::GetData(void) const {
-  return nullptr;
+  auto intermed = m_OutputStream.str();
+  auto ptr = intermed.c_str();
+  char * retvalue = new char [ m_OutputStream.str().size()];
+  memcpy(retvalue, m_OutputStream.str().c_str(),  m_OutputStream.str().size());
+  return retvalue;
 }
 
 void EventOutputStreamBase::Reset(void) {
