@@ -48,6 +48,8 @@ set(
   EventReceiver.cpp
   JunctionBox.h
   JunctionBox.cpp
+  JunctionBoxManager.h
+  JunctionBoxManager.cpp
   ExceptionFilter.h
   FilterPropertyExtractor.h
   GlobalCoreContext.cpp
