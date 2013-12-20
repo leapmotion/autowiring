@@ -16,34 +16,14 @@ class EventInputStream
 {
 public:
   static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot instantiate an event input stream on a non-event type");
-  std::map<std::string, std::type_info *> my_type_info_map;
-
-  /// <summary>
-  /// helper function for memfn querying
-  // </summary>
-
-
-  /// <summary>
-  /// Converts strings to their proper memberfunctions for deserialization and firing.
-  /// </summary>
-  template <std::type_info * ti, class MemFn>
-  MemFn
-  AddAndQueryMemFn(std::type_info * ti, MemFn memfn = nullptr)
-  {
-  std::map<std::string, MemFn> local; 
-  static std::map<std::string, MemFn> my_map = local;
-  if (memfn == nullptr)
-  {
-    auto find = my_map.find(str);
-    if (find != my_map.end()) return find->second;
-  }
-  my_map[str] = memfn;
-  return nullptr;
-  }
+  typedef void (T::*fnPtr)(const std::string *);
+  typedef Deferred (T::*DeferredfnPtr)(const std::string *);
+  std::map<std::string, fnPtr> Fired_map;
+  std::map<std::string, DeferredfnPtr> Deferred_map;
 
 private:
-  typedef void (T::*fnPtr)(std::string); 
   std::map<std::string, fnPtr> m_oneArgsMap;
+  std::shared_ptr<EventReceiverProxy<T>> m_receiver;
 public:
   EventInputStream(){}
   /// <summary>
@@ -57,19 +37,35 @@ public:
     }
   return (!!registration);
   }
+ 
   /// <summary>
-  /// Enables a new event for deserialization via its identity
+  /// Enables a new FIRED event for deserialization via its identity
   /// </summary>
   template<class MemFn>
-  void SpecialAssign(std::string str, MemFn eventIden) {
+  typename std::enable_if< std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, void >::type 
+  SpecialAssign(std::string str, MemFn eventIden) {
+    // We cannot serialize an identity we don't recognize
+    static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
+    if (!IsEnabled(eventIden))
+    {
+      IsEnabled(eventIden, true);
+      Deferred_map[str] = eventIden;
+    }
+  }
+
+  /// <summary>
+  /// Enables a new DEFERRED event for deserialization via its identity
+  /// </summary>
+  template<class MemFn>
+  typename std::enable_if< std::is_same<typename Decompose<MemFn>::retType, void>::value, void >::type  
+  SpecialAssign(std::string str, MemFn eventIden) {
     // We cannot serialize an identity we don't recognize
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
 
     if (!IsEnabled(eventIden))
     {
       IsEnabled(eventIden, true);
-      //my_type_info_map[str] = &typeid(eventIden);
-      //AddAndQueryMemFn<&typeid(eventIden)> (&typeid(eventIden), eventIden);
+      Fired_map[str] = eventIden;
     }
   }
 
@@ -82,28 +78,38 @@ public:
   size_t FireSingle(const void* pData, size_t dataSize) const {
     //First wrap all the bytes in a string.
     auto chptr = static_cast <const char *> (pData);
-    std::string MyString (chptr, dataSize);
-    //std::cout<<"Fire Single was called" << std ::endl;
-    //std::cout<< MyString;
+    std::string MyString (chptr);//, dataSize);
+
     std::size_t location = MyString.find("Þ");
     std::string topevent = MyString.substr(0, location);
 
     std::deque<std::string> v;
     std::istringstream buf(topevent);
-    for(std::string token; getline(buf, token, 'Ø'); )
-        v.push_back(token);
 
-    //stuck here. almost done.
+    std::string s;
+    while (std::getline(buf, s, 'Ø'))
+        v.push_back(s);
+
     std::string query = v[0];
-    //auto EventPredicate = AddAndQueryMemFn(*my_type_info_map.find(query));
-   // EventPredicate(v[1]);
-    //for(auto it = v.begin(); it != v.end(); ++it)
-        //std::cout<<*it << std::endl;
-    /*
-    for (unsigned int i = 0; i < dataSize; ++i)
-        std::cout << ((char *)pData)[i];
-        */
-    return dataSize - location;
+    const std::string * ARG1 = &v[1];
+
+    AutoFired<T> sender;
+
+    auto find1 = Fired_map.find(query);
+    if (find1 != Fired_map.end()) 
+    {
+      auto eventpred1 = find1 -> second;
+      sender(eventpred1)(ARG1);
+    }
+
+    auto find2 = Deferred_map.find(query);
+    if (find2 != Deferred_map.end())
+    {
+      auto eventpred2 = find2 -> second;
+      sender.Defer(eventpred2)(ARG1);
+    }
+
+    return location +1 ;
   }
 };
 

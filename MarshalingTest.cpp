@@ -150,7 +150,7 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   const void* ptr = os->GetData(); //This is damn unsafe. Who is supposed to be doing cleanup?
   size_t nRemaining = os->GetSize();
   size_t advanceBy = is->FireSingle(ptr, nRemaining);
-   /*
+   
   ASSERT_NE(0UL, advanceBy) << "Input stream did not correctly report the number of bytes deserialized";
   ASSERT_LE(advanceBy, nRemaining) << "Input stream processed more bytes from the passed buffer than were available for processing";
  
@@ -166,12 +166,12 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   advanceBy = is->FireSingle(ptr, nRemaining);
   ASSERT_NE(0UL, advanceBy) << "A second attempt to fire an event failed to parse any bytes";
   ASSERT_LE(advanceBy, nRemaining) << "Input stream overran its buffer for the second fired event";
-
+  
   // Now verify that we got called again:
   ASSERT_TRUE(listener->m_called) << "Second event was not received from the event input stream";
   ASSERT_EQ(helloWorldAgain, listener->m_str) << "Listener did not receive the second message payload from the input stream";
 
   // Ensure that we processed EXACTLY the number of bytes that were in the output stream:
   EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";
-  */
+
 }
