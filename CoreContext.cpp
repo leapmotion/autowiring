@@ -35,6 +35,20 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   );
   ASSERT(pParent.get() != this);
 }
+CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer) :
+  m_pParent(pParent),
+  m_sigil(sigil),
+  m_shouldStop(false),
+  m_useOwnershipValidator(false),
+  m_refCount(0),
+  m_junctionBoxes(pPeer->m_junctionBoxes),
+  m_packetFactory(pPeer->m_packetFactory)
+{
+  ASSERT(pParent.get() != this);
+}
+
+
+
 
 CoreContext::~CoreContext(void) {
   // The s_curContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
@@ -98,7 +112,11 @@ std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
 
-std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil) {
+std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil){
+  return Create(sigil, new CoreContext(shared_from_this(), sigil));
+}
+
+std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, CoreContext* newContext) {
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert
@@ -109,7 +127,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil) {
   }
 
   // Create the child context
-  CoreContext* pContext = new CoreContext(shared_from_this(), sigil);
+  CoreContext* pContext = newContext;
   if(m_useOwnershipValidator)
     pContext->EnforceSimpleOwnership();
   
@@ -134,7 +152,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil) {
 }
 
 std::shared_ptr<CoreContext> CoreContext::CreatePeer(const std::type_info& sigil) {
-  auto sibling = m_pParent->Create(sigil);
+  auto sibling = m_pParent->Create(sigil, new CoreContext(m_pParent, sigil, shared_from_this()));
   
   
   
