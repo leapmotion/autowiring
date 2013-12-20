@@ -452,6 +452,9 @@ public:
         throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
     }
 
+    // Shared pointer to our entity, if it's a CoreThread
+    std::shared_ptr<CoreThread> pCoreThread;
+
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
 
@@ -464,7 +467,7 @@ public:
         AddContextMember(pContextMember);
 
         // CoreThreads:
-        auto pCoreThread = std::fast_pointer_cast<CoreThread, T>(value);
+        pCoreThread = std::fast_pointer_cast<CoreThread, T>(value);
         if(pCoreThread)
           AddCoreThread(pCoreThread);
       }
@@ -492,8 +495,11 @@ public:
     // to be considered.
     UpdateDeferredElements();
 
-    // Ownership validation, as appropriate:
-    if(m_useOwnershipValidator)
+    // Ownership validation, as appropriate
+    // We do not attempt to pend validation for CoreThread instances, because a CoreThread could potentially hold
+    // the final outstanding reference to this context, and therefore may be responsible for this context's (and,
+    // transitively, its own) destruction.
+    if(m_useOwnershipValidator && pCoreThread)
       SimpleOwnershipValidator::PendValidation(std::weak_ptr<T>(value));
   }
 
