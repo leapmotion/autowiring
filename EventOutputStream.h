@@ -77,11 +77,15 @@ public:
   //SFINAE STUB OUT: replace with check_if overloads <<
   typename std::enable_if< std::is_same<Arg1, std::basic_string<char> const *>::value, void >::type     
     Serialize(Memfn & memfn, Arg1 & arg1 ){
-    m_OutputStream << *arg1;
+    m_OutputStream <<  AddAndQueryMemFn(memfn) << "Ø" << *arg1 << "Þ" ;
+    //"Ø" is a argument delimeter per stream
+    //"Þ" is an event delimeter
+    /*
     std::string outtest;
     m_OutputStream >> outtest; // just here if you wanna get it back
    std::cout <<  "Hi,got proper args: " << outtest << std::endl;
    std::cout <<  "Was going to serialize that arg as " << AddAndQueryMemFn(memfn) << std::endl;
+   */
   }
   
   template <class Memfn, class Arg1>

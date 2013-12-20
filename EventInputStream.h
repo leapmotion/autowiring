@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
+#include <deque>
 #include <map>
+#include <typeinfo>
+#include "Autowired.h"
 
 #ifndef EnableIdentity
 #define EnableIdentity(x) SpecialAssign(#x, x) 
@@ -13,13 +16,19 @@ class EventInputStream
 {
 public:
   static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot instantiate an event input stream on a non-event type");
+  std::map<std::string, std::type_info *> my_type_info_map;
+
+  /// <summary>
+  /// helper function for memfn querying
+  // </summary>
+
 
   /// <summary>
   /// Converts strings to their proper memberfunctions for deserialization and firing.
   /// </summary>
-  template <class MemFn>
+  template <std::type_info * ti, class MemFn>
   MemFn
-  AddAndQueryMemFn(std::string str, MemFn memfn = nullptr)
+  AddAndQueryMemFn(std::type_info * ti, MemFn memfn = nullptr)
   {
   std::map<std::string, MemFn> local; 
   static std::map<std::string, MemFn> my_map = local;
@@ -59,7 +68,8 @@ public:
     if (!IsEnabled(eventIden))
     {
       IsEnabled(eventIden, true);
-      AddAndQueryMemFn(str, eventIden);
+      //my_type_info_map[str] = &typeid(eventIden);
+      //AddAndQueryMemFn<&typeid(eventIden)> (&typeid(eventIden), eventIden);
     }
   }
 
@@ -70,7 +80,30 @@ public:
   /// The number of bytes processed from the input buffer
   /// </returns>
   size_t FireSingle(const void* pData, size_t dataSize) const {
-    return 0;
+    //First wrap all the bytes in a string.
+    auto chptr = static_cast <const char *> (pData);
+    std::string MyString (chptr, dataSize);
+    //std::cout<<"Fire Single was called" << std ::endl;
+    //std::cout<< MyString;
+    std::size_t location = MyString.find("Þ");
+    std::string topevent = MyString.substr(0, location);
+
+    std::deque<std::string> v;
+    std::istringstream buf(topevent);
+    for(std::string token; getline(buf, token, 'Ø'); )
+        v.push_back(token);
+
+    //stuck here. almost done.
+    std::string query = v[0];
+    //auto EventPredicate = AddAndQueryMemFn(*my_type_info_map.find(query));
+   // EventPredicate(v[1]);
+    //for(auto it = v.begin(); it != v.end(); ++it)
+        //std::cout<<*it << std::endl;
+    /*
+    for (unsigned int i = 0; i < dataSize; ++i)
+        std::cout << ((char *)pData)[i];
+        */
+    return dataSize - location;
   }
 };
 
