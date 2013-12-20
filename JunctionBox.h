@@ -119,11 +119,11 @@ public:
   bool HasListeners(void) const override {return !m_st.GetImage()->empty();}
 
   void ReleaseRefs() override {
-    m_st.Clear();
-    m_stTransient.Clear();
-
     boost::lock_guard<boost::mutex>(m_lock),
     m_dispatch.clear();
+
+    m_st.Clear();
+    m_stTransient.Clear();
   }
 
   JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
