@@ -292,6 +292,14 @@ bool CheckEventOutputStream(void){
    return false;  //return false if no vec with that type
 }
 
+
+template <class MemFn, MemFn fptr>
+std::string SpecialTest(){
+	//m_noArgsMap[str] = fptr;
+	static std::string thisstring = "sdsd";
+	return str;
+}
+
 /// <summary>
 /// Distributes func and args to all listening marshal types
 /// to serialize as the marshal listeners please.
