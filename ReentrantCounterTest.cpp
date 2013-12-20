@@ -44,7 +44,7 @@ TEST_F(ReentrantCounterTest, VerifySimpleBenchmarking) {
   }
 
   // Verify we hit exactly once:
-  EXPECT_EQ(1, counter.hitCount) << "Performance counter incremented an incorrect number of times";
+  EXPECT_EQ(1UL, counter.hitCount) << "Performance counter incremented an incorrect number of times";
 
   // Verify we are in range:
   EXPECT_LT(spinTime - slack, counter.lingerTime) << "Reentrant counter underestimated the total spin time";
