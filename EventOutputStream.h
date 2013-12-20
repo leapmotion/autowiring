@@ -11,7 +11,6 @@
 #define EnableIdentity(x) SpecialAssign(#x, x) 
 #endif
 
-
 class EventOutputStreamBase {
 private:
   std::stringstream m_OutputStream;
@@ -78,14 +77,6 @@ public:
   typename std::enable_if< std::is_same<Arg1, std::basic_string<char> const *>::value, void >::type     
     Serialize(Memfn & memfn, Arg1 & arg1 ){
     m_OutputStream <<  AddAndQueryMemFn(memfn) << "Ø" << *arg1 << "Þ" ;
-    //"Ø" is a argument delimeter per stream
-    //"Þ" is an event delimeter
-    /*
-    std::string outtest;
-    m_OutputStream >> outtest; // just here if you wanna get it back
-   std::cout <<  "Hi,got proper args: " << outtest << std::endl;
-   std::cout <<  "Was going to serialize that arg as " << AddAndQueryMemFn(memfn) << std::endl;
-   */
   }
   
   template <class Memfn, class Arg1>
@@ -93,10 +84,8 @@ public:
   typename std::enable_if<!std::is_same<Arg1, std::basic_string<char> const *>::value, void >::type 
   Serialize(Memfn & memfn, Arg1 & arg1){
     std::cout <<  "Hi! Fall through case does nothing" << std::endl;
-    //If the program ever actually executes this code it should fail miserably.
-    //That would mean an enable memfn tried to serialize an unserializable arg.
+    //static_assert(false, "Fundamental belief about serialized argument types violated");
   }
-
 };
 
 /// <summary>
