@@ -52,6 +52,8 @@ class Autowired;
 template<class Sigil1, class Sigil2, class Sigil3>
 struct Boltable;
 
+#define CORE_CONTEXT_MAGIC 0xC04EC0DE
+
 /// <summary>
 /// This class is used to determine whether all core threads have exited
 /// </summary>
@@ -105,6 +107,11 @@ public:
 
 protected:
   std::shared_ptr<CoreContext> Create(const std::type_info& sigil);
+
+#ifdef _DEBUG
+  // Magic value, used to detect doublefree cases
+  long m_magic;
+#endif
 
   // General purpose lock for this class
   mutable boost::mutex m_lock;
