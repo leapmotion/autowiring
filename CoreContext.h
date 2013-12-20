@@ -129,7 +129,7 @@ public:
 
 protected:
   std::shared_ptr<CoreContext> Create(const std::type_info& sigil);
-  std::shared_ptr<CoreContext> Create(const std::type_info& sigil, CoreContext* newContext);
+  std::shared_ptr<CoreContext> Create(const std::type_info& sigil, CoreContext& newContext);
   std::shared_ptr<CoreContext> CreatePeer(const std::type_info& sigil);
 
   // General purpose lock for this class
@@ -167,8 +167,11 @@ protected:
   typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
 
+  //This is the new type when JunctionBoxManager is done
+  //typedef std::shared_ptr<JunctionBoxManager> t_junctionBoxes;
   typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
   t_junctionBoxes m_junctionBoxes;
+  
 
   // All known snoopers.  Snoopers will not be removed from parent scopes on destruction.
   t_rcvrSet m_snoopers;
