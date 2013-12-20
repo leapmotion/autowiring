@@ -68,9 +68,6 @@ set(
   StateMachine.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
-  TransientContextMember.h
-  TransientPool.h
-  TransientPoolBase.h
 )
 
 OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
