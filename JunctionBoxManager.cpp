@@ -7,3 +7,4 @@ JunctionBoxManager::JunctionBoxManager(void) {
 
 JunctionBoxManager::~JunctionBoxManager(void) {
 }
+

@@ -61,7 +61,7 @@ TEST_F(PeerContextTest, VerifyPeerTransitivity) {
 
 TEST_F(PeerContextTest, VerifyNoAutowiringLeakage) {
   // Insert a simple object in the base context
-  AutoRequired<SimpleObject>();
+  AutoRequired<SimpleObject> obj1;
 
   // Create a peer context and make it current:
   auto peer = m_create->CreatePeer<PeerContextName1>();
@@ -70,4 +70,13 @@ TEST_F(PeerContextTest, VerifyNoAutowiringLeakage) {
   // Verify that, in this peer context, SimpleObject is not visible
   Autowired<SimpleObject> so;
   ASSERT_FALSE(so.IsAutowired()) << "An autowiring request incorrectly resolved against an object allocated in a peer context";
+  
+  AutoRequired<SimpleObject> obj1prime;
+  
+  ASSERT_NE(obj1, obj1prime) << "Autowired objects of the same type in peer contexts should be seperate instances";
+  
 }
+
+
+
+

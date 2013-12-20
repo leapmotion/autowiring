@@ -35,6 +35,8 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   );
   ASSERT(pParent.get() != this);
 }
+
+// Peer Context Constructor. Called interally by CreatePeer
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer) :
   m_pParent(pParent),
   m_sigil(sigil),
@@ -46,9 +48,6 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
 {
   ASSERT(pParent.get() != this);
 }
-
-
-
 
 CoreContext::~CoreContext(void) {
   // The s_curContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
@@ -113,10 +112,18 @@ std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
 }
 
 std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil){
-  return Create(sigil, new CoreContext(shared_from_this(), sigil));
+  return Create(sigil, *new CoreContext(shared_from_this(), sigil));
 }
 
-std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, CoreContext* newContext) {
+std::shared_ptr<CoreContext> CoreContext::CreatePeer(const std::type_info& sigil) {
+  auto sibling = m_pParent->Create(sigil, *new CoreContext(m_pParent, sigil, shared_from_this()));
+  
+  
+  
+  return sibling;
+}
+
+std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, CoreContext& newContext) {
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert
@@ -127,7 +134,7 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, Co
   }
 
   // Create the child context
-  CoreContext* pContext = newContext;
+  CoreContext* pContext = &newContext;
   if(m_useOwnershipValidator)
     pContext->EnforceSimpleOwnership();
   
@@ -149,14 +156,6 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, Co
   CurrentContextPusher pshr(retVal);
   BroadcastContextCreationNotice(sigil);
   return retVal;
-}
-
-std::shared_ptr<CoreContext> CoreContext::CreatePeer(const std::type_info& sigil) {
-  auto sibling = m_pParent->Create(sigil, new CoreContext(m_pParent, sigil, shared_from_this()));
-  
-  
-  
-  return sibling;
 }
 
 void CoreContext::InitiateCoreThreads(void) {
