@@ -63,6 +63,7 @@ class CoreContext:
 {
 protected:
   CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil);
+  CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer);
 
   // A pointer to the current context, for construction purposes
   static boost::thread_specific_ptr<std::shared_ptr<CoreContext> > s_curContext;
@@ -105,7 +106,7 @@ public:
   /// Factory to create an anonymous peer context
   /// </summary>
   template<class T>
-  std::shared_ptr<CoreContext> CreatePeerAnonymous(void) {
+  std::shared_ptr<CoreContext> CreateAnonymousPeer(void) {
     return CreatePeer(typeid(void));
   }
 
@@ -128,6 +129,7 @@ public:
 
 protected:
   std::shared_ptr<CoreContext> Create(const std::type_info& sigil);
+  std::shared_ptr<CoreContext> Create(const std::type_info& sigil, CoreContext* newContext);
   std::shared_ptr<CoreContext> CreatePeer(const std::type_info& sigil);
 
   // General purpose lock for this class
