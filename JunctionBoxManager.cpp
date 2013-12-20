@@ -8,3 +8,6 @@ JunctionBoxManager::JunctionBoxManager(void) {
 JunctionBoxManager::~JunctionBoxManager(void) {
 }
 
+std::shared_ptr<JunctionBoxBase> JunctionBoxManager::operator[](std::type_index pTypeIndex) {
+  return m_junctionBoxes[pTypeIndex];
+}
