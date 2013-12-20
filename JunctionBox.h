@@ -119,7 +119,7 @@ public:
   bool HasListeners(void) const override {return !m_st.GetImage()->empty();}
 
   void ReleaseRefs() override {
-    boost::lock_guard<boost::mutex>(m_lock),
+    (boost::lock_guard<boost::mutex>)m_lock,
     m_dispatch.clear();
 
     m_st.Clear();
@@ -161,7 +161,7 @@ public:
     // All transient pools are dispatchers, add it in to the dispatch pool:
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
 
-    boost::lock_guard<boost::mutex>(m_lock),
+    (boost::lock_guard<boost::mutex>)m_lock,
     m_dispatch.insert(pDispatch);
 
     // Insertion:
@@ -170,7 +170,7 @@ public:
 
   void operator-=(const std::shared_ptr<TransientPoolBase>& rhs) {
     // Remove the non-reference-counted pointer first
-    boost::lock_guard<boost::mutex>(m_lock),
+    (boost::lock_guard<boost::mutex>)m_lock,
     m_dispatch.erase(dynamic_cast<DispatchQueue*>(rhs.get()));
 
     // Then remove from our reference counted collection
@@ -187,7 +187,7 @@ public:
     // If the RHS implements DispatchQueue, add it to that collection as well:
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
     if(pDispatch)
-      boost::lock_guard<boost::mutex>(m_lock),
+      (boost::lock_guard<boost::mutex>)m_lock,
       m_dispatch.insert(pDispatch);
   }
 
@@ -198,7 +198,7 @@ public:
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
     if(pDispatch)
-      boost::lock_guard<boost::mutex>(m_lock),
+      (boost::lock_guard<boost::mutex>)m_lock,
       m_dispatch.erase(pDispatch);
 
     // Trivial removal:
