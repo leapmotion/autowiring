@@ -29,13 +29,14 @@ public:
 
 // For testing NotifyWhenAutowired with heirarchies
 class Interface :
-  public ContextMember //NOTE - this is required if you want to listen for the Interface being wired
+  public virtual Object //NOTE - this is required if you want to listen for the Interface being wired
 {
 public:
   virtual int GetValue() = 0;
 };
 
 class Implementation :
+  public ContextMember,
   public Interface
 {
 public:
