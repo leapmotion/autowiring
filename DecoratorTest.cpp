@@ -81,6 +81,45 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
   EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
 }
 
+TEST_F(DecoratorTest, VerifyDescendentAwareness) {
+   // Create a packet while the factory has no subscribers:
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet1 = factory->NewPacket();
+
+  // Verify subscription-free status:
+  EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
+
+  //Create a subcontext
+  AutoCurrentContext ctxt;
+  auto pContext = ctxt->CreateAnonymous();
+  {
+    CurrentContextPusher pusher;
+    pContext->SetCurrent();
+
+    //add a filter in the subcontext
+    AutoRequired<FilterA> subFilter;
+  }
+
+  //Create a packet where a subscriber exists only in a subcontext
+  auto packet2 = factory->NewPacket();
+  EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
+
+  //destroy the subcontext
+  pContext.reset();
+
+  auto packet3 = factory->NewPacket();
+  EXPECT_FALSE(packet3->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
+  
+  // Verify the first packet still does not have subscriptions:
+  EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
+
+  // Verify the second one does:
+  EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
+  
+  // Verify the third one does not:
+  EXPECT_FALSE(packet3->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
+}
+
 TEST_F(DecoratorTest, VerifySimpleFilter) {
   AutoRequired<FilterA> filterA;
   AutoRequired<AutoPacketFactory> factory;
