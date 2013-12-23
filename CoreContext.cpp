@@ -450,11 +450,10 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
 }
 
 void CoreContext::AddPacketSubscriber(AutoPacketSubscriber&& rhs) {
-  if( m_pParent ) {
-    AutoPacketSubscriber copy(rhs);
-    m_pParent->AddPacketSubscriber(std::move(copy));
-  }
   m_packetFactory->AddSubscriber(std::move(rhs));
+  if( m_pParent ) {
+    m_pParent->AddPacketSubscriber(std::move(rhs));
+  }
 }
 
 void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber> &subscribers) {
@@ -462,6 +461,7 @@ void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber
   if( m_pParent ) {
     m_pParent->RemovePacketSubscribers(subscribers);
   }
+  
   m_packetFactory->RemoveSubscribers(subscribers.begin(), subscribers.end());
 }
 
