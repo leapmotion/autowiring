@@ -89,24 +89,23 @@ TEST_F(DecoratorTest, VerifyDescendentAwareness) {
   // Verify subscription-free status:
   EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
 
+  std::shared_ptr<AutoPacket> packet2;
   //Create a subcontext
-  AutoCurrentContext ctxt;
-  auto pContext = ctxt->CreateAnonymous();
   {
-    CurrentContextPusher pusher;
-    pContext->SetCurrent();
+    AutoCreateContext subContext;
+    {
+      CurrentContextPusher pusher(subContext);
 
-    //add a filter in the subcontext
-    AutoRequired<FilterA> subFilter;
+      //add a filter in the subcontext
+      AutoRequired<FilterA> subFilter;
+    }
+
+    //Create a packet where a subscriber exists only in a subcontext
+    packet2 = factory->NewPacket();
+    EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
   }
 
-  //Create a packet where a subscriber exists only in a subcontext
-  auto packet2 = factory->NewPacket();
-  EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
-
-  //destroy the subcontext
-  pContext.reset();
-
+  //Create a packet after the subcontext has been destroyed
   auto packet3 = factory->NewPacket();
   EXPECT_FALSE(packet3->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
   
