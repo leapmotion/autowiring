@@ -112,8 +112,12 @@ TEST_F(DecoratorTest, VerifyDescendentAwareness) {
   // Verify the first packet still does not have subscriptions:
   EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
 
-  // Verify the second one does:
-  EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
+  packet2->Decorate(Decoration<0>());
+
+  // Verify the second one will no longe have subscriptions  - 
+  // normally removing a subscriber would mean the packet still has the subscriber, but
+  // in this case, the subscriber was actually destroyed so the packet has lost a subscriber.
+  EXPECT_FALSE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
   
   // Verify the third one does not:
   EXPECT_FALSE(packet3->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
@@ -216,7 +220,7 @@ TEST_F(DecoratorTest, VerifyTeardownArrangement) {
 
     // Verify that unsubscription STILL does not result in expiration:
     ASSERT_FALSE(filterAWeak.expired()) << "A subscriber expired before all packets on that subscriber were satisfied";
-
+    
     //Create a new packet after having removed the only filter on it.
     auto packet2 = factory->NewPacket();
     ASSERT_FALSE(packet2->HasSubscribers<Decoration<0>>()) << "A packet had subscriptions after the only subscriber was removed.";
