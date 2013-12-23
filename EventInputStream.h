@@ -8,6 +8,39 @@
 #ifndef EnableIdentity
 #define EnableIdentity(x) SpecialAssign(#x, x) 
 #endif
+
+/// <summary>
+/// Lambda factory for deserialize-and-fire operations
+/// </summary>
+template <class T, class Memfn, Memfn memfn, int n>
+struct LambdaFactory{};
+
+template <class T, class Memfn, Memfn memfn>
+struct LambdaFactory<T, Memfn, memfn, 0>{
+  typedef Decompose<Memfn> DecomposedMemfn;
+  typedef void (*func)();
+  func GiveMeLambda()
+  {
+    auto ret = [](){AutoFired<T> sender; sender(memfn)();};
+    return retval;
+  }
+};
+
+template <class T, class Memfn, Memfn memfn>
+struct LambdaFactory<T, Memfn, memfn, 1>{
+  typedef Decompose<Memfn> DecomposedMemfn;
+  typedef void (*func)(std::string);
+  func GiveMeLambda(std::string arg1)
+  {
+    auto ret = [](std::string str1){AutoFired<T> sender; 
+                                  //Then deserialization and proper casting of arg1 into decomposedmemfn:arg1, then
+                                   sender(memfn)(str1);};
+    return retval;
+  }
+};
+
+
+
 /// <summary>
 /// Allows the deserialization of events from an output stream, in order to replay them in-process
 /// </summary>
