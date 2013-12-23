@@ -217,9 +217,16 @@ TEST_F(DecoratorTest, VerifyTeardownArrangement) {
     // Verify that unsubscription STILL does not result in expiration:
     ASSERT_FALSE(filterAWeak.expired()) << "A subscriber expired before all packets on that subscriber were satisfied";
 
+    //Create a new packet after having removed the only filter on it.
+    auto packet2 = factory->NewPacket();
+    ASSERT_FALSE(packet2->HasSubscribers<Decoration<0>>()) << "A packet had subscriptions after the only subscriber was removed.";
+
     // Satisfy the packet:
     packet->Decorate(Decoration<0>());
     packet->Decorate(Decoration<1>());
+
+    auto packet3 = factory->NewPacket();
+    ASSERT_FALSE(packet3->HasSubscribers<Decoration<0>>()) << "A packet had subscriptions after the only subscriber was removed.";
   }
 
   // Filter should be expired now:
