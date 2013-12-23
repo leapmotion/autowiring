@@ -57,8 +57,10 @@ CoreContext::~CoreContext(void) {
     m_eventReceivers.erase(*q);
 
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
-  if(m_pParent)
+  if(m_pParent) {
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+    m_pParent->RemovePacketSubscribers(m_packetFactory->GetSubscriberVector());
+  }
 
   // Tell all context members that we're tearing down:
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
@@ -448,7 +450,19 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
 }
 
 void CoreContext::AddPacketSubscriber(AutoPacketSubscriber&& rhs) {
+  if( m_pParent ) {
+    AutoPacketSubscriber copy(rhs);
+    m_pParent->AddPacketSubscriber(std::move(copy));
+  }
   m_packetFactory->AddSubscriber(std::move(rhs));
+}
+
+void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber> &subscribers) {
+  //delegate to the parent if there is one
+  if( m_pParent ) {
+    m_pParent->RemovePacketSubscribers(subscribers);
+  }
+  m_packetFactory->RemoveSubscribers(subscribers.begin(), subscribers.end());
 }
 
 void CoreContext::NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener) {

@@ -264,6 +264,8 @@ protected:
   /// </summary>
   void AddPacketSubscriber(const std::false_type&) {}
 
+  void RemovePacketSubscribers( const std::vector<AutoPacketSubscriber>& subscribers );
+
   /// <summary>
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
