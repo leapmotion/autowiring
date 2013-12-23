@@ -32,6 +32,8 @@ class FilterA:
   public FilterRoot
 {
 public:
+  FilterA() {printf("debug");}
+  virtual ~FilterA() { printf("debug"); }
   void AutoFilter(Decoration<0> zero, Decoration<1> one) {
     m_called = true;
     m_zero = zero;
