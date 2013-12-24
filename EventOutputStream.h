@@ -106,8 +106,8 @@ public:
   /// <summary>
   /// Enables a new event for serialization via its identity
   /// </summary>
-  template<class MemFn>
-  void SpecialAssign(std::string str, MemFn eventIden) {
+  template<class MemFn, MemFn eventIden>
+  void SpecialAssign(std::string str) {
     // We cannot serialize an identity we don't recognize
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
     if (!IsEnabled(eventIden))

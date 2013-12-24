@@ -2,7 +2,11 @@
 #include "MarshalingTest.h"
 #include "EventInputStream.h"
 #include "EventOutputStream.h"
+#include "Decompose.h"
 #include "uuid.h"
+
+
+
 
 /*
 EXTRA SPECS to code to that have not yet been implemented as unit tests.

@@ -1,45 +1,69 @@
 #pragma once
 #include <string>
+#include <sstream>
+#include <memory>
 #include <deque>
 #include <map>
 #include <typeinfo>
 #include "Autowired.h"
 
 #ifndef EnableIdentity
-#define EnableIdentity(x) SpecialAssign(#x, x) 
+#define EnableIdentity(x) SpecialAssign<decltype(x), x> (#x) 
 #endif
 
-/// <summary>
-/// Lambda factory for deserialize-and-fire operations
-/// </summary>
+template <typename T>
+struct DeserializeHelper{
+   static T Deserialize(std::string & str){
+    T arg1;
+    std::stringstream buf;
+    buf << s1;
+    buf >> arg1;
+    return arg1
+  }
+};
+
+template <typename T>
+struct DeserializeHelper<const T * >{
+  static const T * Deserialize(std::string & str){
+    const T * ret = &str;
+    return ret;
+  }
+};
+
+struct ExpressionBase{
+  virtual void func(std::string = "", std::string = "", std::string = "", std::string = "") = 0;
+};
+
 template <class T, class Memfn, Memfn memfn, int n>
-struct LambdaFactory{};
-
-template <class T, class Memfn, Memfn memfn>
-struct LambdaFactory<T, Memfn, memfn, 0>{
-  typedef Decompose<Memfn> DecomposedMemfn;
-  typedef void (*func)();
-  func GiveMeLambda()
-  {
-    auto ret = [](){AutoFired<T> sender; sender(memfn)();};
-    return retval;
+struct Expression: public ExpressionBase{
+  void func(std::string = "", std::string = "", std::string = "", std::string = ""){
+    std::cout << "Hi from no init" << std::endl; 
   }
 };
 
 template <class T, class Memfn, Memfn memfn>
-struct LambdaFactory<T, Memfn, memfn, 1>{
-  typedef Decompose<Memfn> DecomposedMemfn;
-  typedef void (*func)(std::string);
-  func GiveMeLambda(std::string arg1)
-  {
-    auto ret = [](std::string str1){AutoFired<T> sender; 
-                                  //Then deserialization and proper casting of arg1 into decomposedmemfn:arg1, then
-                                   sender(memfn)(str1);};
-    return retval;
+struct Expression<T, Memfn, memfn, 0>: public ExpressionBase{
+  //0 args case. So deserialize the first string, ignore the rest
+  void func(std::string s1 = "", std::string s2= "", std::string s3= "", std::string s4 = ""){
+    std::cout << "Hi from expression no args " << std::endl;
+    AutoFired<T> sender; 
+    sender(memfn)();
   }
 };
 
+template <class T, class Memfn, Memfn memfn>
+struct Expression<T, Memfn, memfn, 1>: public ExpressionBase{
+  //typedef Decompose<Memfn>::type Arg1;
+  typedef Decompose<Memfn> decompose;
+    void
+    func(std::string s1 = "", std::string s2 = "", std::string s3= "", std::string s4 = ""){
+    AutoFired<T> sender;
 
+    //deserialization
+     sender(memfn)(DeserializeHelper<decompose::t_arg1>::Deserialize(s1));
+  }
+
+};
 
 /// <summary>
 /// Allows the deserialization of events from an output stream, in order to replay them in-process
@@ -49,14 +73,13 @@ class EventInputStream
 {
 public:
   static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot instantiate an event input stream on a non-event type");
-  typedef void (T::*fnPtr)(const std::string *);
+
   typedef Deferred (T::*DeferredfnPtr)(const std::string *);
-  std::map<std::string, fnPtr> Fired_map;
   std::map<std::string, DeferredfnPtr> Deferred_map;
 
 private:
-  std::map<std::string, fnPtr> m_oneArgsMap;
   std::shared_ptr<EventReceiverProxy<T>> m_receiver;
+  std::map<std::string, std::shared_ptr<ExpressionBase> > test_fired_map;
 public:
   EventInputStream(){}
   /// <summary>
@@ -74,31 +97,34 @@ public:
   /// <summary>
   /// Enables a new FIRED event for deserialization via its identity
   /// </summary>
-  template<class MemFn>
+  template<class MemFn, MemFn eventIden>
   typename std::enable_if< std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, void >::type 
-  SpecialAssign(std::string str, MemFn eventIden) {
+  SpecialAssign(std::string str) {
     // We cannot serialize an identity we don't recognize
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
     if (!IsEnabled(eventIden))
     {
       IsEnabled(eventIden, true);
       Deferred_map[str] = eventIden;
+      //test_fired_map[str] = 
     }
   }
 
   /// <summary>
   /// Enables a new DEFERRED event for deserialization via its identity
   /// </summary>
-  template<class MemFn>
+  template<class MemFn, MemFn eventIden>
   typename std::enable_if< std::is_same<typename Decompose<MemFn>::retType, void>::value, void >::type  
-  SpecialAssign(std::string str, MemFn eventIden) {
+  SpecialAssign(std::string str) {
     // We cannot serialize an identity we don't recognize
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
 
     if (!IsEnabled(eventIden))
     {
       IsEnabled(eventIden, true);
-      Fired_map[str] = eventIden;
+
+      std::shared_ptr<ExpressionBase> ptr = std::make_shared<Expression<T, MemFn, eventIden, Decompose<MemFn>::N> >();
+      test_fired_map[str] = ptr;
     }
   }
 
@@ -128,12 +154,13 @@ public:
 
     AutoFired<T> sender;
 
-    auto find1 = Fired_map.find(query);
-    if (find1 != Fired_map.end()) 
+    auto find1 = test_fired_map.find(query);
+    if (find1 != test_fired_map.end()) 
     {
-      auto eventpred1 = find1 -> second;
-      sender(eventpred1)(ARG1);
+      auto evt = find1 -> second;
+      evt -> func(v[1]);
     }
+    
 
     auto find2 = Deferred_map.find(query);
     if (find2 != Deferred_map.end())
