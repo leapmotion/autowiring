@@ -140,6 +140,37 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
   EXPECT_EQ(static_cast<size_t>(0), creator->GetSize()) << "Not all contexts were evicted as expected";
 }
 
+TEST_F(ContextCreatorTest, ClearAndTeardown) {
+  // Create a context and verify it gets evicted from the context creator:
+  
+  std::weak_ptr<CoreContext> ctxtWeak;
+
+  {
+    AutoCreateContext mainContext;
+    CurrentContextPusher pusher(mainContext);
+
+    AutoRequired<VoidCreator> creator;
+    std::shared_ptr<CoreContext> ctxt;
+
+    // Make a sub-context
+    ctxt = creator->CreateContext();
+
+    // Obtain a weak pointer, in order to ensure proper teardown:
+    ctxtWeak = ctxt;
+
+    //Call clear on the creator.
+    creator->Clear(true);
+
+    //Let the creator go out of scope
+  }
+
+  // Context must be destroyed as a precondition of the subsequent assertion
+  ASSERT_TRUE(ctxtWeak.expired()) << "Expected the context to be destroyed";
+
+  // Verify that our creator is now empty:
+ // EXPECT_EQ(0UL, creator->GetSize()) << "Context creator is non-empty after all created contexts were destroyed";
+}
+
 TEST_F(ContextCreatorTest, VoidKeyType) {
   AutoRequired<VoidCreator> vc;
 
