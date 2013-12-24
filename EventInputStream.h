@@ -30,12 +30,40 @@ struct DeserializeHelper<const T * >{
     return ret;
   }
 };
-//Wrap up memfns as shared_ptrs to ExpressionBase-derived classes. Call func = call wrapped event firing.
+
+/// <summary>
+/// Pick the right way to fire an event based on the return type of the member function
+/// </summary>
+template <class T, class MemFn, class ReturnType>
+struct DeferOrFire{
+};
+
+template <class T, class MemFn>
+struct DeferOrFire<T, MemFn, Deferred>
+{
+  InvokeRelay<MemFn> func(T & t, MemFn memfn)
+  {
+    return t.Defer(memfn);
+  }
+};
+
+template <class T, class MemFn>
+struct DeferOrFire<T, MemFn, void>
+{
+  InvokeRelay<MemFn> func(T & t, MemFn memfn)
+  {
+    return t(memfn);
+  }
+};
+
+/// <summary>
+/// Wrap up memfns as shared_ptrs to ExpressionBase-derived classes. Call func = call wrapped event firing.
+/// </summary>
 struct ExpressionBase{
   virtual void func(std::string = "", std::string = "", std::string = "", std::string = "") = 0;
 };
 
-template <class T, class Memfn, Memfn memfn, class ReturnType, int n>
+template <class T, class Memfn, Memfn memfn, int n>
 struct Expression: public ExpressionBase{
   void func(std::string = "", std::string = "", std::string = "", std::string = ""){
     std::cout << "Hi from no init" << std::endl; 
@@ -43,38 +71,24 @@ struct Expression: public ExpressionBase{
 };
 
 template <class T, class Memfn, Memfn memfn>
-struct Expression<T, Memfn, memfn, void, 0>: public ExpressionBase{
+struct Expression<T, Memfn, memfn, 0>: public ExpressionBase{
   //0 args case. So deserialize the first string, ignore the rest
   void func(std::string s1 = "", std::string s2= "", std::string s3= "", std::string s4 = ""){
     std::cout << "Hi from expression no args " << std::endl;
-    AutoFired<T> sender; 
+    AutoFired<T> sender;
     sender(memfn)();
   }
 };
 
 template <class T, class Memfn, Memfn memfn>
-struct Expression<T, Memfn, memfn, void, 1>: public ExpressionBase{
-  //typedef Decompose<Memfn>::type Arg1;
-  typedef Decompose<Memfn> decompose;
-   // typename std::enable_if< std::is_same<typename decompose::retType, void>::value, void >::type  
+struct Expression<T, Memfn, memfn, 1>: public ExpressionBase{
     void func(std::string s1 = "", std::string s2 = "", std::string s3= "", std::string s4 = ""){      
     AutoFired<T> sender;
-    //deserialization and void firing
-     sender(memfn)(DeserializeHelper<decompose::t_arg1>::Deserialize(s1));
+    DeferOrFire<decltype(sender), Memfn, typename Decompose<Memfn>::retType> FireType;
+    FireType.func(sender, memfn)(DeserializeHelper<typename Decompose<Memfn>::t_arg1>::Deserialize(s1));
   }
 };
 
-template <class T, class Memfn, Memfn memfn>
-struct Expression<T, Memfn, memfn, Deferred, 1>: public ExpressionBase{
-  //typedef Decompose<Memfn>::type Arg1;
-  typedef Decompose<Memfn> decompose;
-   // typename std::enable_if< std::is_same<typename decompose::retType, void>::value, void >::type  
-    void func(std::string s1 = "", std::string s2 = "", std::string s3= "", std::string s4 = ""){
-    AutoFired<T> sender;
-    //deserialization and deferred firing
-    sender.Defer(memfn)(DeserializeHelper<decompose::t_arg1>::Deserialize(s1));
-  }
-};
 
 /// <summary>
 /// Allows the deserialization of events from an output stream, in order to replay them in-process
@@ -103,7 +117,7 @@ public:
   }
  
   /// <summary>
-  /// Enables a new DEFERRED event for deserialization via its identity
+  /// Enables a new event for deserialization via its identity
   /// </summary>
   template<class MemFn, MemFn eventIden>
   void SpecialAssign(std::string str) {
@@ -112,8 +126,7 @@ public:
     if (!IsEnabled(eventIden))
     {
       IsEnabled(eventIden, true);
-
-      std::shared_ptr<ExpressionBase> ptr = std::make_shared<Expression<T, MemFn, eventIden, Decompose<MemFn>::retType, Decompose<MemFn>::N> >();
+      std::shared_ptr<ExpressionBase> ptr = std::make_shared<Expression<T, MemFn, eventIden, Decompose<MemFn>::N> >();
       m_EventMap[str] = ptr;
     }
   }
