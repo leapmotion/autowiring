@@ -149,11 +149,11 @@ TEST_F(ContextCreatorTest, ClearAndTeardown) {
     AutoCreateContext mainContext;
     CurrentContextPusher pusher(mainContext);
 
-    AutoRequired<VoidCreator> creator;
+    AutoRequired<Creator> creator;
     std::shared_ptr<CoreContext> ctxt;
 
     // Make a sub-context
-    ctxt = creator->CreateContext();
+    ctxt = creator->CreateContext(0).first;
 
     // Obtain a weak pointer, in order to ensure proper teardown:
     ctxtWeak = ctxt;
@@ -162,7 +162,7 @@ TEST_F(ContextCreatorTest, ClearAndTeardown) {
     creator->Clear(true);
 
     //Make another one!
-    ctxt = creator->CreateContext();
+    ctxt = creator->CreateContext(1).first;
     //Let the creator go out of scope
   }
 
@@ -182,12 +182,14 @@ TEST_F(ContextCreatorTest, VoidKeyType) {
 
     EXPECT_EQ(1UL, vc->GetSize()) << "A created context was apparently destroyed after firing bolts";
     EXPECT_EQ(0UL, vc->m_totalDestroyed) << "The void creator received a NotifyContextDestroyed call unexpectedly early";
-    
+  
+    vc->Clear(true);
+
     //Make another one to check about collisions
     std::shared_ptr<CoreContext> ctxt2 = vc->CreateContext();
-    EXPECT_EQ(2UL, vc->GetSize()) << "Second void context creation failed!";
+    EXPECT_EQ(1UL, vc->GetSize()) << "Second void context creation failed!";
   }
 
   EXPECT_EQ(0UL, vc->GetSize()) << "A void context creator was not correctly updated when its dependent context went out of scope";
-  EXPECT_EQ(1UL, vc->m_totalDestroyed) << "The void creator did not receive the expected number of NotifyContextDestroyed calls";
+  EXPECT_EQ(2UL, vc->m_totalDestroyed) << "The void creator did not receive the expected number of NotifyContextDestroyed calls";
 }
