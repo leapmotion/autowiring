@@ -20,7 +20,7 @@ public:
 
   size_t m_totalDestroyed;
 
-  void NotifyContextDestroyed(t_contextList::iterator q, CoreContext* pContext) override {
+  void NotifyContextDestroyed(t_callbackHandle q, CoreContext* pContext) override {
     m_totalDestroyed++;
     ContextCreator<EvictionContext>::NotifyContextDestroyed(q, pContext);
   }
@@ -161,6 +161,8 @@ TEST_F(ContextCreatorTest, ClearAndTeardown) {
     //Call clear on the creator.
     creator->Clear(true);
 
+    //Make another one!
+    ctxt = creator->CreateContext();
     //Let the creator go out of scope
   }
 
@@ -180,6 +182,10 @@ TEST_F(ContextCreatorTest, VoidKeyType) {
 
     EXPECT_EQ(1UL, vc->GetSize()) << "A created context was apparently destroyed after firing bolts";
     EXPECT_EQ(0UL, vc->m_totalDestroyed) << "The void creator received a NotifyContextDestroyed call unexpectedly early";
+    
+    //Make another one to check about collisions
+    std::shared_ptr<CoreContext> ctxt2 = vc->CreateContext();
+    EXPECT_EQ(2UL, vc->GetSize()) << "Second void context creation failed!";
   }
 
   EXPECT_EQ(0UL, vc->GetSize()) << "A void context creator was not correctly updated when its dependent context went out of scope";
