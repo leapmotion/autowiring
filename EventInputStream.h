@@ -11,6 +11,7 @@
 #define EnableIdentity(x) SpecialAssign<decltype(x), x> (#x) 
 #endif
 
+//The point here is to use template specialization to pick default-deserialization for certain types at registration 
 template <typename T>
 struct DeserializeHelper{
    static T Deserialize(std::string & str){
@@ -21,7 +22,7 @@ struct DeserializeHelper{
     return arg1
   }
 };
-
+//The point here is to use template specialization to pick default-deserialization for certain types at registration 
 template <typename T>
 struct DeserializeHelper<const T * >{
   static const T * Deserialize(std::string & str){
@@ -29,12 +30,12 @@ struct DeserializeHelper<const T * >{
     return ret;
   }
 };
-
+//Wrap up memfns as shared_ptrs to ExpressionBase-derived classes. Call func = call wrapped event firing.
 struct ExpressionBase{
   virtual void func(std::string = "", std::string = "", std::string = "", std::string = "") = 0;
 };
 
-template <class T, class Memfn, Memfn memfn, int n>
+template <class T, class Memfn, Memfn memfn, class ReturnType, int n>
 struct Expression: public ExpressionBase{
   void func(std::string = "", std::string = "", std::string = "", std::string = ""){
     std::cout << "Hi from no init" << std::endl; 
@@ -42,7 +43,7 @@ struct Expression: public ExpressionBase{
 };
 
 template <class T, class Memfn, Memfn memfn>
-struct Expression<T, Memfn, memfn, 0>: public ExpressionBase{
+struct Expression<T, Memfn, memfn, void, 0>: public ExpressionBase{
   //0 args case. So deserialize the first string, ignore the rest
   void func(std::string s1 = "", std::string s2= "", std::string s3= "", std::string s4 = ""){
     std::cout << "Hi from expression no args " << std::endl;
@@ -52,17 +53,27 @@ struct Expression<T, Memfn, memfn, 0>: public ExpressionBase{
 };
 
 template <class T, class Memfn, Memfn memfn>
-struct Expression<T, Memfn, memfn, 1>: public ExpressionBase{
+struct Expression<T, Memfn, memfn, void, 1>: public ExpressionBase{
   //typedef Decompose<Memfn>::type Arg1;
   typedef Decompose<Memfn> decompose;
-    void
-    func(std::string s1 = "", std::string s2 = "", std::string s3= "", std::string s4 = ""){
+   // typename std::enable_if< std::is_same<typename decompose::retType, void>::value, void >::type  
+    void func(std::string s1 = "", std::string s2 = "", std::string s3= "", std::string s4 = ""){      
     AutoFired<T> sender;
-
-    //deserialization
+    //deserialization and void firing
      sender(memfn)(DeserializeHelper<decompose::t_arg1>::Deserialize(s1));
   }
+};
 
+template <class T, class Memfn, Memfn memfn>
+struct Expression<T, Memfn, memfn, Deferred, 1>: public ExpressionBase{
+  //typedef Decompose<Memfn>::type Arg1;
+  typedef Decompose<Memfn> decompose;
+   // typename std::enable_if< std::is_same<typename decompose::retType, void>::value, void >::type  
+    void func(std::string s1 = "", std::string s2 = "", std::string s3= "", std::string s4 = ""){
+    AutoFired<T> sender;
+    //deserialization and deferred firing
+    sender.Defer(memfn)(DeserializeHelper<decompose::t_arg1>::Deserialize(s1));
+  }
 };
 
 /// <summary>
@@ -74,12 +85,9 @@ class EventInputStream
 public:
   static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot instantiate an event input stream on a non-event type");
 
-  typedef Deferred (T::*DeferredfnPtr)(const std::string *);
-  std::map<std::string, DeferredfnPtr> Deferred_map;
-
 private:
-  std::shared_ptr<EventReceiverProxy<T>> m_receiver;
-  std::map<std::string, std::shared_ptr<ExpressionBase> > test_fired_map;
+  std::map<std::string, std::shared_ptr<ExpressionBase> > m_EventMap;
+  
 public:
   EventInputStream(){}
   /// <summary>
@@ -95,36 +103,18 @@ public:
   }
  
   /// <summary>
-  /// Enables a new FIRED event for deserialization via its identity
-  /// </summary>
-  template<class MemFn, MemFn eventIden>
-  typename std::enable_if< std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, void >::type 
-  SpecialAssign(std::string str) {
-    // We cannot serialize an identity we don't recognize
-    static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
-    if (!IsEnabled(eventIden))
-    {
-      IsEnabled(eventIden, true);
-      Deferred_map[str] = eventIden;
-      //test_fired_map[str] = 
-    }
-  }
-
-  /// <summary>
   /// Enables a new DEFERRED event for deserialization via its identity
   /// </summary>
   template<class MemFn, MemFn eventIden>
-  typename std::enable_if< std::is_same<typename Decompose<MemFn>::retType, void>::value, void >::type  
-  SpecialAssign(std::string str) {
+  void SpecialAssign(std::string str) {
     // We cannot serialize an identity we don't recognize
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
-
     if (!IsEnabled(eventIden))
     {
       IsEnabled(eventIden, true);
 
-      std::shared_ptr<ExpressionBase> ptr = std::make_shared<Expression<T, MemFn, eventIden, Decompose<MemFn>::N> >();
-      test_fired_map[str] = ptr;
+      std::shared_ptr<ExpressionBase> ptr = std::make_shared<Expression<T, MemFn, eventIden, Decompose<MemFn>::retType, Decompose<MemFn>::N> >();
+      m_EventMap[str] = ptr;
     }
   }
 
@@ -137,7 +127,7 @@ public:
   size_t FireSingle(const void* pData, size_t dataSize) const {
     //First wrap all the bytes in a string.
     auto chptr = static_cast <const char *> (pData);
-    std::string MyString (chptr);//, dataSize);
+    std::string MyString (chptr);
 
     std::size_t location = MyString.find("Þ");
     std::string topevent = MyString.substr(0, location);
@@ -150,25 +140,13 @@ public:
         v.push_back(s);
 
     std::string query = v[0];
-    const std::string * ARG1 = &v[1];
 
-    AutoFired<T> sender;
-
-    auto find1 = test_fired_map.find(query);
-    if (find1 != test_fired_map.end()) 
+    auto find1 = m_EventMap.find(query);
+    if (find1 != m_EventMap.end()) 
     {
       auto evt = find1 -> second;
-      evt -> func(v[1]);
+       evt -> func(v[1]);
     }
-    
-
-    auto find2 = Deferred_map.find(query);
-    if (find2 != Deferred_map.end())
-    {
-      auto eventpred2 = find2 -> second;
-      sender.Defer(eventpred2)(ARG1);
-    }
-
     return location +1 ;
   }
 };
