@@ -66,7 +66,6 @@ struct ExpressionBase{
 template <class T, class Memfn, Memfn memfn, int n>
 struct Expression: public ExpressionBase{
   void func(std::string = "", std::string = "", std::string = "", std::string = ""){
-    std::cout << "Hi from no init" << std::endl; 
   }
 };
 
@@ -76,7 +75,9 @@ struct Expression<T, Memfn, memfn, 0>: public ExpressionBase{
   void func(std::string s1 = "", std::string s2= "", std::string s3= "", std::string s4 = ""){
     std::cout << "Hi from expression no args " << std::endl;
     AutoFired<T> sender;
-    sender(memfn)();
+    //sender(memfn)();
+    DeferOrFire<decltype(sender), Memfn, typename Decompose<Memfn>::retType> FireType;
+    FireType.func(sender, memfn)();
   }
 };
 
@@ -85,7 +86,44 @@ struct Expression<T, Memfn, memfn, 1>: public ExpressionBase{
     void func(std::string s1 = "", std::string s2 = "", std::string s3= "", std::string s4 = ""){      
     AutoFired<T> sender;
     DeferOrFire<decltype(sender), Memfn, typename Decompose<Memfn>::retType> FireType;
-    FireType.func(sender, memfn)(DeserializeHelper<typename Decompose<Memfn>::t_arg1>::Deserialize(s1));
+    auto arg1 = DeserializeHelper<typename Decompose<Memfn>::t_arg1>::Deserialize(s1);
+    FireType.func(sender, memfn)(arg1);
+  }
+};
+
+template <class T, class Memfn, Memfn memfn>
+struct Expression<T, Memfn, memfn, 2>: public ExpressionBase{
+    void func(std::string s1 = "", std::string s2 = "", std::string s3= "", std::string s4 = ""){      
+    AutoFired<T> sender;
+    DeferOrFire<decltype(sender), Memfn, typename Decompose<Memfn>::retType> FireType;
+    auto arg1 = DeserializeHelper<typename Decompose<Memfn>::t_arg1>::Deserialize(s1);
+    auto arg2 = DeserializeHelper<typename Decompose<Memfn>::t_arg2>::Deserialize(s2);
+    FireType.func(sender, memfn)(arg1, arg2);
+  }
+};
+
+template <class T, class Memfn, Memfn memfn>
+struct Expression<T, Memfn, memfn, 3>: public ExpressionBase{
+    void func(std::string s1 = "", std::string s2 = "", std::string s3= "", std::string s4 = ""){      
+    AutoFired<T> sender;
+    DeferOrFire<decltype(sender), Memfn, typename Decompose<Memfn>::retType> FireType;
+    auto arg1 = DeserializeHelper<typename Decompose<Memfn>::t_arg1>::Deserialize(s1);
+    auto arg2 = DeserializeHelper<typename Decompose<Memfn>::t_arg2>::Deserialize(s2);
+    auto arg3 = DeserializeHelper<typename Decompose<Memfn>::t_arg3>::Deserialize(s3);
+    FireType.func(sender, memfn)(arg1, arg2, arg3);
+  }
+};
+
+template <class T, class Memfn, Memfn memfn>
+struct Expression<T, Memfn, memfn, 4>: public ExpressionBase{
+    void func(std::string s1 = "", std::string s2 = "", std::string s3= "", std::string s4 = ""){      
+    AutoFired<T> sender;
+    DeferOrFire<decltype(sender), Memfn, typename Decompose<Memfn>::retType> FireType;
+    auto arg1 = DeserializeHelper<typename Decompose<Memfn>::t_arg1>::Deserialize(s1);
+    auto arg2 = DeserializeHelper<typename Decompose<Memfn>::t_arg2>::Deserialize(s2);
+    auto arg3 = DeserializeHelper<typename Decompose<Memfn>::t_arg3>::Deserialize(s3);
+    auto arg3 = DeserializeHelper<typename Decompose<Memfn>::t_arg4>::Deserialize(s4);
+    FireType.func(sender, memfn)(arg1, arg2, arg3, arg4);
   }
 };
 
@@ -145,20 +183,23 @@ public:
     std::size_t location = MyString.find("Þ");
     std::string topevent = MyString.substr(0, location);
 
-    std::deque<std::string> v;
+    std::deque<std::string> d;
     std::istringstream buf(topevent);
 
     std::string s;
     while (std::getline(buf, s, 'Ø'))
-        v.push_back(s);
+        d.push_back(s);
 
-    std::string query = v[0];
+    //null-arg pad the dequeso it has size = 5
+    while (d.size() != 5) d.push_back(std::string(""));
+
+    std::string query = d[0];
 
     auto find1 = m_EventMap.find(query);
     if (find1 != m_EventMap.end()) 
     {
       auto evt = find1 -> second;
-       evt -> func(v[1]);
+       evt -> func(d[1], d[2], d[3], d[4]);
     }
     return location +1 ;
   }
