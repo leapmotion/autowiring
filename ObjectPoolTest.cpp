@@ -58,3 +58,15 @@ TEST_F(ObjectPoolTest, VerifyAsynchronousUsage) {
   *obj += [&obj] { obj->Stop(); };
   obj->Wait();
 }
+
+TEST_F(ObjectPoolTest, VerifyOutOfOrderDestruction) {
+  std::shared_ptr<int> ptr;
+
+  {
+    ObjectPool<int> pool;
+    pool(ptr);
+  }
+
+  // Verify that returning a shared pointer after the pool is gone does not result in an exception
+  ASSERT_NO_THROW(ptr.reset()) << "Attempting to release a shared pointer on a destroyed pool caused an unexpected exception";
+}
