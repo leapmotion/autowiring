@@ -38,8 +38,8 @@ void CoreThread::DoRun(void) {
       CoreContext::DebugPrintCurrentExceptionInformation();
     }
 
-    // Signal shutdown on the enclosing context
-    GetContext()->SignalShutdown();
+    // Signal shutdown on the enclosing context--cannot wait, if we wait we WILL deadlock
+    GetContext()->SignalShutdown(false);
   }
 
   // Unconditionally shut off dispatch delivery:
@@ -63,7 +63,7 @@ void CoreThread::DoRun(void) {
 
 bool CoreThread::ShouldStop(void) const {
   shared_ptr<CoreContext> context = ContextMember::GetContext();
-  return m_stop || !context || context->ShouldStop();
+  return m_stop || !context || context->IsShutdown();
 }
 
 void CoreThread::ThreadSleep(long millisecond) {
