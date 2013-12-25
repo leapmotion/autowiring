@@ -204,10 +204,10 @@ TEST_F(ExceptionFilterTest, DISABLED_FireContainmentCheck) {
   EXPECT_NO_THROW(broadcaster(&ThrowingListener::DoThrow)());
 
   // Verify that the context containing the fire thrower was torn down:
-  EXPECT_TRUE(ctxt->ShouldStop()) << "An unhandled exception from a fire call in a context should have signalled it to stop";
+  EXPECT_TRUE(ctxt->IsShutdown()) << "An unhandled exception from a fire call in a context should have signalled it to stop";
 
   // Verify that the parent context was protected:
-  EXPECT_FALSE(m_create->ShouldStop()) << "An unhandled exception incorrectly terminated a parent context";
+  EXPECT_FALSE(m_create->IsShutdown()) << "An unhandled exception incorrectly terminated a parent context";
 }
 
 TEST_F(ExceptionFilterTest, EnclosedThrowCheck) {
