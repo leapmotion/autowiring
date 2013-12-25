@@ -57,6 +57,8 @@ set(
   LockReducedCollection.h
   Object.h
   ObjectPool.h
+  ObjectPoolMonitor.h
+  ObjectPoolMonitor.cpp
   MicroBolt.h
   PolymorphicTypeForest.h
   ReentrantCounter.h
