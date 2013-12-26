@@ -188,6 +188,18 @@ protected:
     std::shared_ptr<T> ptr;
     AutoRequire(ptr);
   }
+  
+  template<class T, class Sigil, class Sigil2>
+  void EnableInternal(T*, Bolt<Sigil,Sigil2>*) {
+    std::shared_ptr<T> ptr;
+    AutoRequire(ptr);
+  }
+  
+  template<class T, class Sigil, class Sigil2, class Sigil3>
+  void EnableInternal(T*, Bolt<Sigil,Sigil2,Sigil3>*) {
+    std::shared_ptr<T> ptr;
+    AutoRequire(ptr);
+  }
 
   template<class Sigil, class T>
   void AutoRequireMicroBolt(void);
