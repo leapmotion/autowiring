@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "CoreThreadTest.h"
 #include "Autowired.h"
+#include "TestFixtures/SimpleThreaded.h"
 
 class SpamguardTest:
   public CoreThread
@@ -63,4 +64,32 @@ TEST_F(CoreThreadTest, VerifyIndefiniteDelay) {
   // Now we pend an arbitrary event and verify that we can wait:
   *instance += [] {};
   ASSERT_TRUE(instance->WaitFor(boost::chrono::milliseconds(10))) << "Instance did not exit after an event was pended which should have woken up its dispatch loop";
+}
+
+TEST_F(CoreThreadTest, VerifyNestedTermination) {
+  std::shared_ptr<SimpleThreaded> st;
+
+  // Insert a thread into a second-order subcontext:
+  {
+    AutoCreateContext outer;
+    CurrentContextPusher outerPshr(outer);
+    AutoRequired<SimpleThreaded>();
+    outer->InitiateCoreThreads();
+
+    {
+      AutoCreateContext ctxt;
+      CurrentContextPusher pshr(ctxt);
+      ctxt->InitiateCoreThreads();
+      st = AutoRequired<SimpleThreaded>();
+    }
+  }
+
+  // Everything should be running by now:
+  ASSERT_TRUE(st->IsRunning()) << "Child thread was not running as expected";
+
+  // Shut down the enclosing context:
+  m_create->SignalTerminate(true);
+
+  // Verify that the child thread has stopped:
+  ASSERT_FALSE(st->IsRunning()) << "Child thread was running even though the enclosing context was terminated";
 }
