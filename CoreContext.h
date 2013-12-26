@@ -494,7 +494,7 @@ public:
     // We do not attempt to pend validation for CoreThread instances, because a CoreThread could potentially hold
     // the final outstanding reference to this context, and therefore may be responsible for this context's (and,
     // transitively, its own) destruction.
-    if(m_useOwnershipValidator && pCoreThread)
+    if(m_useOwnershipValidator && !pCoreThread)
       SimpleOwnershipValidator::PendValidation(std::weak_ptr<T>(value));
   }
 
