@@ -264,7 +264,10 @@ void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr) {
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
-  m_nameListeners[pBase->GetContextSigil()].push_back(pBase.get());
+  const t_TypeInfoVector& v = pBase->GetContextSigils();
+  for(auto i = v.begin(); i != v.end(); i++) {
+    m_nameListeners[*i].push_back(pBase.get());
+  }
 }
 
 void CoreContext::Dump(std::ostream& os) const {
