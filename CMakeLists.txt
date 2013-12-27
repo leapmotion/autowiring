@@ -73,6 +73,8 @@ set(
   TransientContextMember.h
   TransientPool.h
   TransientPoolBase.h
+  TypeRegistry.h
+  TypeRegistry.cpp
 )
 
 OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
@@ -151,6 +153,8 @@ set(
   SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
+  TypeRegistryTest.h
+  TypeRegistryTest.cpp
   ScopeTest.h
   ScopeTest.cpp
   SnoopTest.h
