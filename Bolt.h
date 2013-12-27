@@ -12,9 +12,7 @@
 /// with a given sigil, use Boltable.
 /// </remarks>
 
-class NoSigil;
-
-template<class Sigil1, class Sigil2 = NoSigil, class Sigil3 = NoSigil>
+template<class Sigil1, class Sigil2 = void, class Sigil3 = void>
 class Bolt:
   public BoltBase
 {
@@ -34,7 +32,7 @@ class Bolt:
 };
 
 template<class Sigil1>
-class Bolt<Sigil1,NoSigil,NoSigil>:
+class Bolt<Sigil1,void,void>:
   public BoltBase
 {
 public:
@@ -50,7 +48,7 @@ public:
 };
 
 template<class Sigil1, class Sigil2>
-class Bolt<Sigil1,Sigil2,NoSigil>:
+class Bolt<Sigil1,Sigil2,void>:
   public BoltBase
 {
   const t_TypeInfoVector& GetContextSigils(void){
