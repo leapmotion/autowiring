@@ -11,9 +11,6 @@
 #define EnableIdentity(x) SpecialAssign<decltype(x), x> (#x) 
 #endif
 
-template <int n>
-struct CompileTimeInt{};
-
 //The point here is to use template specialization to pick default-deserialization for certain types at registration 
 
 template <typename T>
@@ -36,9 +33,8 @@ struct DeserializeHelper<const T * >{
   }
 };
 
-struct NoDo{
-   CompileTimeInt<666> * Deserialize(std::string & str){return nullptr;}	
-};
+template <int n>
+struct CompileTimeInt{};
 
 /// <summary>
 /// Pick the right way to fire an event based on the return type of the member function
@@ -65,10 +61,13 @@ struct DeferOrFire<T, MemFn, void>
   }
 };
 
+struct NoDo{
+   CompileTimeInt<666> * Deserialize(std::string & str){return nullptr;}
+};
 /// <summary>
 /// N-Member typedef detector
-/// Reflection primitive which deduces 2^4 possible types from Decompose(memfn)
-/// Use: auto arg1 = NMemberDetector::select<Test>(nullptr, "12").Deserialize(xx);
+/// Reflection primitive to deduce presence of args from Decompose(memfn)
+/// Use: auto arg1 = TypedefDetector::select<Test>(nullptr, CompileTimeInt<n>)
 /// </summary>
 struct TypedefDetector
 {
@@ -107,38 +106,35 @@ struct TypedefDetector
 /// Wrap up memfns as shared_ptrs to ExpressionBase-derived classes. Call func = call wrapped event firing.
 /// </summary>
 struct ExpressionBase{
-  virtual void func(std::string = "", std::string = "", std::string = "", std::string = "") = 0;
-};
-
-template <class T, class Memfn, Memfn memfn, int n>
-struct Expression: public ExpressionBase{
-  void func(std::string = "", std::string = "", std::string = "", std::string = ""){
-  }
+  virtual void func(std::string, std::string, std::string, std::string) = 0;
 };
 
 template <class T, class Memfn, Memfn memfn>
-struct Expression<T, Memfn, memfn, 0>: public ExpressionBase{
-  //0 args case. So deserialize the first string, ignore the rest
-  void func(std::string s1 = "", std::string s2= "", std::string s3= "", std::string s4 = ""){
-    std::cout << "Hi from expression no args " << std::endl;
-    AutoFired<T> sender;
-    //sender(memfn)();
-    DeferOrFire<decltype(sender), Memfn, typename Decompose<Memfn>::retType> FireType;
-    FireType.func(sender, memfn)();
-  }
-};
+struct Expression:  public ExpressionBase{
+    decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<1>())) m_arg1;
+    decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<2>())) m_arg2;
+    decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<3>())) m_arg3;
+    decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<4>())) m_arg4;
 
-template <class T, class Memfn, Memfn memfn>
-struct Expression<T, Memfn, memfn, 1>: public ExpressionBase{
-    void func(std::string s1 = "", std::string s2 = "", std::string s3= "", std::string s4 = ""){      
+    void func(std::string s1, std::string s2, std::string s3, std::string s4 ){
     AutoFired<T> sender;
     DeferOrFire<decltype(sender), Memfn, typename Decompose<Memfn>::retType> FireType;
-    //auto arg1 = DeserializeHelper<typename Decompose<Memfn>::t_arg1>::Deserialize(s1);
-    auto arg1 = TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<1>()).Deserialize(s1);
-    auto arg2 = TypedefDetector::select<typename Decompose<Memfn>>(nullptr, CompileTimeInt<2>()).Deserialize(s2);
-    auto arg3 = TypedefDetector::select<typename Decompose<Memfn>>(nullptr, CompileTimeInt<3>()).Deserialize(s3);
-    auto arg4 = TypedefDetector::select<typename Decompose<Memfn>>(nullptr, CompileTimeInt<4>()).Deserialize(s4);
-    FireType.func(sender, memfn)(arg1);
+
+    auto a1 = m_arg1.Deserialize(s1);
+    auto a2 = m_arg2.Deserialize(s2);
+    auto a3 = m_arg3.Deserialize(s3);
+    auto a4 = m_arg4.Deserialize(s4);
+
+    if (a4)
+      FireType.func(sender, memfn)(a1, a2, a3, a4);
+    else if(a3)
+      FireType.func(sender, memfn)(a1, a2, a3);
+    else if(a2)
+      FireType.func(sender, memfn)(a1, a2);
+    else if(a1)
+      FireType.func(sender, memfn)(a1);
+    else
+      FireType.func(sender, memfn)();
   }
 };
 
@@ -178,7 +174,7 @@ public:
     if (!IsEnabled(eventIden))
     {
       IsEnabled(eventIden, true);
-      std::shared_ptr<ExpressionBase> ptr = std::make_shared<Expression<T, MemFn, eventIden, Decompose<MemFn>::N> >();
+      std::shared_ptr<ExpressionBase> ptr = std::make_shared<Expression<T, MemFn, eventIden> >();
       m_EventMap[str] = ptr;
     }
   }
