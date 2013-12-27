@@ -5,8 +5,7 @@
 #include "LockFreeList.h"
 #include "LockReducedCollection.h"
 #include "SharedPtrHash.h"
-#include "TransientPoolBase.h"
-#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/mutex.hpp>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
@@ -65,20 +64,17 @@ public:
   virtual ~JunctionBoxBase(void);
 
 protected:
-  // Reader-writer lock:
-  boost::shared_mutex m_rwLock;
+  // Dispatch queue lock:
+  mutable boost::mutex m_lock;
 
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
 
-  // Collection of all transient pools:
-  typedef LockReducedCollection<std::shared_ptr<TransientPoolBase>, SharedPtrHash<TransientPoolBase>> t_transientSet;
-  t_transientSet m_stTransient;
-
 public:
   // Accessor methods:
   const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const {return m_dispatch;}
+  boost::mutex& GetDispatchQueueLock(void) const { return m_lock; }
 
   virtual bool HasListeners(void) const = 0;
 
@@ -119,52 +115,26 @@ public:
 
   void ReleaseRefs() override {
     m_st.Clear();
+
+    boost::lock_guard<boost::mutex>(m_lock),
     m_dispatch.clear();
-    m_stTransient.Clear();
   }
 
   JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
-    if(casted)
+    if(casted){
       // Proposed type is directly one of our receivers
       *this += casted;
-    else {
-      auto pool = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
-      if(pool)
-        *this += pool;
     }
-
     return *this;
   }
 
   JunctionBoxBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
-    if(casted)
+    if(casted){
       *this -= casted;
-    else {
-      auto pool = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
-      if(pool)
-        *this -= pool;
     }
-
     return *this;
-  }
-
-  void operator+=(const std::shared_ptr<TransientPoolBase>& rhs) {
-    // Obtain the witness and ascertain whether this transient pool supports our recipient type:
-    if(!dynamic_cast<const T*>(&rhs->GetWitness()))
-      return;
-
-    // All transient pools are dispatchers, add it in to the dispatch pool:
-    DispatchQueue* pDeferred = dynamic_cast<DispatchQueue*>(rhs.get());
-    m_dispatch.insert(pDeferred);
-
-    // Insertion:
-    m_stTransient.Insert(rhs);
-  }
-
-  void operator-=(const std::shared_ptr<TransientPoolBase>& rhs) {
-    m_stTransient.Erase(rhs);
   }
 
   /// <summary>
@@ -177,6 +147,7 @@ public:
     // If the RHS implements DispatchQueue, add it to that collection as well:
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
     if(pDispatch)
+      boost::lock_guard<boost::mutex>(m_lock),
       m_dispatch.insert(pDispatch);
   }
 
@@ -184,15 +155,16 @@ public:
   /// Removes the specified observer from the set currently configured to receive events
   /// </summary>
   void operator-=(const std::shared_ptr<T>& rhs) {
+    // If the RHS implements DispatchQueue, remove it from the dispatchers collection
+    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
+    if(pDispatch)
+      boost::lock_guard<boost::mutex>(m_lock),
+      m_dispatch.erase(pDispatch);
+
     // Trivial removal:
     auto nErased = m_st.Erase(rhs);
     if(!nErased)
       return;
-
-    // If the RHS implements DispatchQueue, add it to that collection as well:
-    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
-    if(pDispatch)
-      m_dispatch.erase(pDispatch);
   }
 
   /// <summary>
@@ -213,26 +185,13 @@ public:
   template<class Fn>
   void FireCurried(Fn&& fn) const {
     // Held names first:
-    {
-      auto st = m_st.GetImage();
-      for(auto q = st->begin(); q != st->end(); ++q)
-        try {
-          fn(**q);
-        } catch(...) {
-          this->PassFilterFiringException((*q).get());
-        }
-    }
-
-    // Transient pools next:
-    {
-      auto relay = [fn] (EventReceiver& er) {
-        auto* casted = dynamic_cast<T*>(&er);
-        if(casted)
-          fn(*casted);
-      };
-      auto st = m_stTransient.GetImage();
-      for(auto q = st->begin(); q != st->end(); q++)
-        (**q).PoolInvoke(relay);
+    auto st = m_st.GetImage();
+    for(auto q = st->begin(); q != st->end(); ++q){
+      try {
+        fn(**q);
+      } catch(...) {
+        this->PassFilterFiringException((*q).get());
+      }
     }
   }
 
@@ -261,6 +220,8 @@ private:
 public:
   void operator()(void) const {
     const auto& dq = erp.GetDispatchQueue();
+    boost::lock_guard<boost::mutex> lk(erp.GetDispatchQueueLock());
+
     for(auto q = dq.begin(); q != dq.end(); q++) {
       auto* pCur = *q;
       if(!pCur->CanAccept())
@@ -298,6 +259,8 @@ private:
 public:
   void operator()(const tArg1& arg1) const {
     const auto& dq = erp.GetDispatchQueue();
+    boost::lock_guard<boost::mutex> lk(erp.GetDispatchQueueLock());
+
     for(auto q = dq.begin(); q != dq.end(); q++) {
       auto* pCur = *q;
       if(!pCur->CanAccept())
