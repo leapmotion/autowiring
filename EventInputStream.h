@@ -62,7 +62,7 @@ struct DeferOrFire<T, MemFn, void>
 };
 
 struct NoDo{
-   CompileTimeInt<666> * Deserialize(std::string & str){return nullptr;}
+   void * Deserialize(std::string & str){return nullptr;}
 };
 /// <summary>
 /// N-Member typedef detector
@@ -116,6 +116,16 @@ struct Expression:  public ExpressionBase{
     decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<3>())) m_arg3;
     decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<4>())) m_arg4;
 
+    template <class A, class B, class C>
+    void fire(void *, void *, void *, void *, B & sender, C & FireType) {
+    FireType.func(sender, memfn)();
+    }
+
+    template <class A, class B, class C>
+    void fire(A a1, void *, void *, void *, B & sender, C & FireType) {
+    FireType.func(sender, memfn)(a1);
+    }
+
     void func(std::string s1, std::string s2, std::string s3, std::string s4 ){
     AutoFired<T> sender;
     DeferOrFire<decltype(sender), Memfn, typename Decompose<Memfn>::retType> FireType;
@@ -125,16 +135,7 @@ struct Expression:  public ExpressionBase{
     auto a3 = m_arg3.Deserialize(s3);
     auto a4 = m_arg4.Deserialize(s4);
 
-    if (a4)
-      FireType.func(sender, memfn)(a1, a2, a3, a4);
-    else if(a3)
-      FireType.func(sender, memfn)(a1, a2, a3);
-    else if(a2)
-      FireType.func(sender, memfn)(a1, a2);
-    else if(a1)
-      FireType.func(sender, memfn)(a1);
-    else
-      FireType.func(sender, memfn)();
+    fire(a1, a2, a3, a4, sender, FireType)
   }
 };
 
@@ -214,4 +215,3 @@ public:
     return location +1 ;
   }
 };
-
