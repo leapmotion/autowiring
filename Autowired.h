@@ -12,8 +12,6 @@ template<class T>
 class Autowired;
 class CoreContext;
 class GlobalCoreContext;
-template<class T, class Witness>
-class TransientPool;
 
 /// <summary>
 /// Provides a simple way to obtain a reference to the current context
@@ -161,26 +159,6 @@ public:
   AutoRequired(void) {
     if(!*this)
       AutowiredCreator<T>::Create();
-  }
-};
-
-/// <summary>
-/// Unconditionally creates a new transient member of type T and adds it to the current context
-/// </summary>
-template<class T>
-class AutoTransient:
-  public std::shared_ptr<T>
-{
-public:
-  /// <summary>
-  /// Constructor which registers the specified transient instance with the passed pool
-  /// </summary>
-  template<class W>
-  AutoTransient(TransientPool<T, W>& pool):
-    std::shared_ptr<T>(new T)
-  {
-    // Associate with the pool:
-    pool.Add(*this);
   }
 };
 
