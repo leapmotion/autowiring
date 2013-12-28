@@ -5,6 +5,7 @@
 #include "CreationRules.h"
 #include "GlobalCoreContext.h"
 #include "Decompose.h"
+#include "TypeRegistry.h"
 #include <functional>
 #include <memory>
 
@@ -70,6 +71,11 @@ class AutowiredCreator:
 public:
   typedef T value_type;
   typedef shared_ptr<T> t_ptrType;
+
+  AutowiredCreator(void) {
+    // Add an utterance of the TypeRegistry so we can add this autowired type to our collection
+    RegType<T>::r;
+  }
 
   /// <summary>
   /// Creates a new instance if this instance isn't autowired
