@@ -9,6 +9,7 @@
 #include "DeferredBase.h"
 #include "ExceptionFilter.h"
 #include "JunctionBox.h"
+#include "JunctionBoxManager.h"
 #include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
@@ -162,13 +163,13 @@ protected:
   typedef std::map<const AutowirableSlot*, DeferredBase*> t_deferred;
   t_deferred m_deferred;
 
-  // All known event receivers and receiver proxies:
+  // All known event receivers and receiver proxies originating from this context:
   typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
 
-  //This is the new type when JunctionBoxManager is done
-  //typedef std::shared_ptr<JunctionBoxManager> t_junctionBoxes;
-  typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
+  //TODO: This is the new type when JunctionBoxManager is done
+  typedef std::shared_ptr<JunctionBoxManager> t_junctionBoxes;
+  //typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
   t_junctionBoxes m_junctionBoxes;
   
 
@@ -429,6 +430,7 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<JunctionBox<T>> GetJunctionBox(void) {
+    /*
     std::shared_ptr<JunctionBox<T>> retVal;
     boost::lock_guard<boost::mutex> lk(m_lock);
     auto q = m_junctionBoxes.find(typeid(T));
@@ -447,6 +449,10 @@ public:
 
     // Construction complete
     return retVal;
+     */
+    
+    //TODO: Replace above with below when JunctionBoxManager is complete
+    return std::static_pointer_cast<JunctionBox<T>, JunctionBoxBase>(m_junctionBoxes->Get(typeid(T)));
   }
 
   /// <summary>
