@@ -394,6 +394,23 @@ public:
   }
 
   /// <summary>
+  /// Convenience method which allows an event to be fired without making the remote context current
+  /// </summary>
+  /// <remarks>
+  /// The following two statements are equivalent:
+  ///
+  ///  CurrentContextPusher(ctxt),
+  ///  (AutoFired<MyEventType>())(&MyEventType::MyEvent)();
+  ///
+  ///  ctxt->Invoke(&MyEventType::MyEvent)();
+  ///
+  /// </remarks>
+  template<class MemFn>
+  InvokeRelay<MemFn> Invoke(MemFn memFn) {
+    return GetEventRecieverProxy<typename Decompose<MemFn>::type>()->Invoke(memFn);
+  }
+
+  /// <summary>
   /// Adds an object of any kind to the IOC container
   /// </summary>
   /// <param name="T">The concrete type to be added</param>
