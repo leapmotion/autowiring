@@ -46,4 +46,5 @@ TEST_F(TypeRegistryTest, VerifyExteriorModuleRegistration) {
     nTypes++;
 
   ASSERT_LT(10UL, nTypes) << "Registration failed to pick up the expected minimum number of types in this test";
+  ASSERT_EQ(g_entryCount, nTypes) << "Linked list did not contain the same number of entries as reported in g_entryCount";
 }
