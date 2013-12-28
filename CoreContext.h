@@ -314,6 +314,43 @@ protected:
   /// </remarks>
   std::shared_ptr<Object> IncrementOutstandingThreadCount(void);
 
+  template<class S>
+  void DeferAutowiring(S& slot) {
+    class Deferred:
+      public DeferredBase {
+    public:
+      Deferred(CoreContext* pThis, S& slot) :
+        DeferredBase(pThis, slot.m_tracker),
+        slot(slot)
+      {}
+
+      S& slot;
+
+      bool operator()() override {
+        return
+          this->tracker.expired() ||
+          this->slot ||
+          this->pThis->AutowireNoDefer(this->slot);
+      }
+    };
+
+    // Resolution failed, add this autowired value for a delayed attempt
+    boost::lock_guard<boost::mutex> lk(m_deferredLock);
+    if(slot)
+      // Someone autowired this before we did, short-circuit
+      return;
+
+    DeferredBase*& pDeferred = m_deferred[&slot];
+    if(pDeferred) {
+      // We allow rebinding at this site if the deferred base has already expired
+      if(pDeferred->IsExpired())
+        delete pDeferred;
+      else
+        throw_rethrowable autowiring_error("A slot is being autowired, but a deferred instance already exists at this location");
+    }
+    pDeferred = new Deferred(this, slot);
+  }
+
 public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
@@ -419,6 +456,23 @@ public:
 
     // Construction complete
     return retVal;
+  }
+
+  /// <summary>
+  /// Convenience method which allows an event to be fired without making the remote context current
+  /// </summary>
+  /// <remarks>
+  /// The following two statements are equivalent:
+  ///
+  ///  CurrentContextPusher(ctxt),
+  ///  (AutoFired<MyEventType>())(&MyEventType::MyEvent)();
+  ///
+  ///  ctxt->Invoke(&MyEventType::MyEvent)();
+  ///
+  /// </remarks>
+  template<class MemFn>
+  InvokeRelay<MemFn> Invoke(MemFn memFn) {
+    return GetJunctionBox<typename Decompose<MemFn>::type>()->Invoke(memFn);
   }
 
   /// <summary>
@@ -680,45 +734,8 @@ public:
       return true;
 
     // Failed, defer
-    Defer(slot);
+    DeferAutowiring(slot);
     return false;
-  }
-
-  template<class S>
-  void Defer(S& slot) {
-    class Deferred:
-      public DeferredBase {
-    public:
-      Deferred(CoreContext* pThis, S& slot):
-        DeferredBase(pThis, slot.m_tracker),
-        slot(slot)
-      {}
-
-      S& slot;
-
-      bool operator()() override {
-        return
-          this->tracker.expired() ||
-          this->slot ||
-          this->pThis->AutowireNoDefer(this->slot);
-      }
-    };
-
-    // Resolution failed, add this autowired value for a delayed attempt
-    boost::lock_guard<boost::mutex> lk(m_deferredLock);
-    if(slot)
-      // Someone autowired this before we did, short-circuit
-      return;
-
-    DeferredBase*& pDeferred = m_deferred[&slot];
-    if(pDeferred) {
-      // We allow rebinding at this site if the deferred base has already expired
-      if(pDeferred->IsExpired())
-        delete pDeferred;
-      else
-        throw_rethrowable autowiring_error("A slot is being autowired, but a deferred instance already exists at this location");
-    }
-    pDeferred = new Deferred(this, slot);
   }
 
   /// <summary>
