@@ -23,9 +23,11 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_useOwnershipValidator(false),
   m_refCount(0)
 {
-  // Prime the proxy map with the APL recipient:
+  m_junctionBoxes.reset(new JunctionBoxManager);
+  
+  //TODO: Make this less jenky
   auto ptr = make_shared<JunctionBox<AutoPacketListener>>();
-  m_junctionBoxes[typeid(AutoPacketListener)] = ptr;
+  m_junctionBoxes->Get(typeid(AutoPacketListener)) = ptr;
   m_packetFactory.reset(
     new AutoPacketFactory(
       AutoFired<AutoPacketListener>(
@@ -33,6 +35,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
       )
     )
   );
+  
   ASSERT(pParent.get() != this);
 }
 
@@ -62,16 +65,17 @@ CoreContext::~CoreContext(void) {
   NotifyTeardownListeners();
 
   // Release all event sender links:
-  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-    (*q).second->ReleaseRefs();
+  //for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
+  //  (*q).second->ReleaseRefs();
+  m_junctionBoxes->ReleaseRefs(m_eventReceivers.begin(), m_eventReceivers.begin());
 
   // Eliminate all snoopers from our apprehended list of receivers:
-  for(auto q = m_snoopers.begin(); q != m_snoopers.end(); q++)
-    m_eventReceivers.erase(*q);
+  m_eventReceivers.erase(m_snoopers.begin(), m_snoopers.end());
+  m_junctionBoxes->RemoveSnoopers(m_snoopers.begin(), m_snoopers.end());
 
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
   if(m_pParent)
-    m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+    m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.begin());
 
   // Tell all context members that we're tearing down:
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
@@ -363,6 +367,7 @@ void CoreContext::UpdateDeferredElements(void) {
 }
 
 void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+  /*
   {
     // Add to our local collection:
     boost::lock_guard<boost::mutex> lk(m_lock);
@@ -372,6 +377,11 @@ void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
     for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
       *q->second += pRecvr;
   }
+   */
+  
+  m_junctionBoxes->AddEventReceiver(pRecvr);
+  
+  m_eventReceivers.insert(pRecvr);
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
@@ -381,12 +391,17 @@ void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
 
 void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
   // Remove from the local collection
-  (boost::lock_guard<boost::mutex>)m_lock,
-  m_eventReceivers.erase(pRecvr);
+  //(boost::lock_guard<boost::mutex>)m_lock,
+  //m_eventReceivers.erase(pRecvr);
 
   // Notify all compatible senders that we're going away:
-  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-    *q->second -= pRecvr;
+  //for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
+  //  *q->second -= pRecvr;
+  
+  
+  m_junctionBoxes->RemoveEventReceiver(pRecvr);
+  
+  m_eventReceivers.erase(pRecvr);
 
   // Delegate to the parent:
   if(m_pParent)
@@ -394,6 +409,7 @@ void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
 }
 
 void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
+  /*
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     for(auto q = first; q != last; q++) {
@@ -405,6 +421,12 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::ite
       m_eventReceivers.erase(*q);
     }
   }
+  */
+
+  m_junctionBoxes->RemoveEventReceivers(first, last);
+  
+  m_eventReceivers.erase(first,last);
+  
 
   // Detour to the parent collection (if necessary)
   if(m_pParent)
