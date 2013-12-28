@@ -45,5 +45,5 @@ TEST_F(TypeRegistryTest, VerifyExteriorModuleRegistration) {
   for(auto p = g_pFirstEntry; p; p = p->pFlink)
     nTypes++;
 
-  ASSERT_GT(10, nTypes) << "Registration failed to pick up the expected minimum number of types in this test";
+  ASSERT_LT(10UL, nTypes) << "Registration failed to pick up the expected minimum number of types in this test";
 }
