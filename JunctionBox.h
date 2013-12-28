@@ -70,6 +70,8 @@ protected:
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
+  
+  typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
 
 public:
   // Accessor methods:
@@ -81,7 +83,7 @@ public:
   /// <summary>
   /// Invoked by the parent context when the context is shutting down in order to release all references
   /// </summary>
-  virtual void ReleaseRefs(void) = 0;
+  virtual void ReleaseRefs(t_rcvrSet::iterator start, t_rcvrSet::iterator finish) = 0;
 
   // Event attachment and detachment pure virtuals
   virtual JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
@@ -104,20 +106,20 @@ public:
 
 protected:
   // Collection of all known listeners:
-  typedef LockReducedCollection<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
+  typedef std::unordered_set<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
   t_listenerSet m_st;
 
 public:
   /// <summary>
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
   /// </summary>
-  bool HasListeners(void) const override {return !m_st.GetImage()->empty();}
+  bool HasListeners(void) const override {return !m_st.empty();}
 
-  void ReleaseRefs() override {
-    m_st.Clear();
-
-    boost::lock_guard<boost::mutex>(m_lock),
-    m_dispatch.clear();
+  void ReleaseRefs(t_rcvrSet::iterator start, t_rcvrSet::iterator finish) override {
+    for(auto q = start; q != finish; q++){
+      const std::shared_ptr<EventReceiver> event = *q;
+      *this -= event;
+    }
   }
 
   JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
@@ -142,12 +144,13 @@ public:
   /// </summary>
   void operator+=(const std::shared_ptr<T>& rhs) {
     // Trivial insertion
-    m_st.Insert(rhs);
+    //TODO: Get lock to not compiler error
+    //boost::lock_guard<boost::mutex>(m_lock);
+    m_st.insert(rhs);
 
     // If the RHS implements DispatchQueue, add it to that collection as well:
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
     if(pDispatch)
-      boost::lock_guard<boost::mutex>(m_lock),
       m_dispatch.insert(pDispatch);
   }
 
@@ -155,16 +158,16 @@ public:
   /// Removes the specified observer from the set currently configured to receive events
   /// </summary>
   void operator-=(const std::shared_ptr<T>& rhs) {
+    //TODO: Get lock to not compiler error
+    //boost::lock_guard<boost::mutex>(m_lock);
+    
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
     if(pDispatch)
-      boost::lock_guard<boost::mutex>(m_lock),
       m_dispatch.erase(pDispatch);
 
     // Trivial removal:
-    auto nErased = m_st.Erase(rhs);
-    if(!nErased)
-      return;
+    m_st.erase(rhs);
   }
 
   /// <summary>
@@ -185,8 +188,7 @@ public:
   template<class Fn>
   void FireCurried(Fn&& fn) const {
     // Held names first:
-    auto st = m_st.GetImage();
-    for(auto q = st->begin(); q != st->end(); ++q){
+    for(auto q = m_st.begin(); q != m_st.end(); ++q){
       try {
         fn(**q);
       } catch(...) {

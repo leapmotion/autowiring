@@ -15,20 +15,24 @@
 
 //Create a thread safe way to share junctionBoxes between peer contexts
 
-typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
-typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>>::iterator t_junctionIter;
-typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
+class EventReceiver;
+class CoreContext;
 
 class JunctionBoxManager{
+  typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
+  typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>>::iterator t_junctionIter;
+  typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
 public:
   
   JunctionBoxManager();
   virtual ~JunctionBoxManager();
   
-  
-  std::shared_ptr<JunctionBoxBase> operator[](std::type_index);
-  std::shared_ptr<JunctionBoxBase> GetJunctionBox(std::type_index, t_rcvrSet&);
-  
+  std::shared_ptr<JunctionBoxBase> Get(std::type_index);
+  void ReleaseRefs(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
+  void RemoveSnoopers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
+  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
+  void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
+  void RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
   
 protected:
   t_junctionBoxes m_junctionBoxes;
