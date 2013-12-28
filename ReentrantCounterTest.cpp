@@ -58,7 +58,7 @@ TEST_F(ReentrantCounterTest, VerifyComplexReentrancy) {
   }
   // Validate timeouts:;
   for(size_t i = 0; i < ARRAYCOUNT(gc_timeouts); i++) {
-    EXPECT_EQ(1, g_timeouts[i].hitCount) << "Performance counter hit too many times";
+    EXPECT_EQ(1UL, g_timeouts[i].hitCount) << "Performance counter hit too many times";
     EXPECT_LT(
       g_timeouts[i].lingerTime - slack,
       boost::chrono::microseconds(gc_timeouts[i])
