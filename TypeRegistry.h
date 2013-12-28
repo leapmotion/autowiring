@@ -9,6 +9,7 @@ struct TypeRegistryEntry {
 };
 
 extern const TypeRegistryEntry* g_pFirstEntry;
+extern size_t g_entryCount;
 
 /// <summary>
 /// Adds the specified type to the universal type registry
