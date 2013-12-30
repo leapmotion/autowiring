@@ -145,9 +145,9 @@ public:
   /// Adds the specified observer to receive events dispatched from this instace
   /// </summary>
   void operator+=(const std::shared_ptr<T>& rhs) {
-    // Trivial insertion
-    //TODO: Get lock to not compiler error
-    //boost::lock_guard<boost::mutex>(m_lock);
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    
+    // Trivial insert
     m_st.insert(rhs);
 
     // If the RHS implements DispatchQueue, add it to that collection as well:
@@ -160,8 +160,7 @@ public:
   /// Removes the specified observer from the set currently configured to receive events
   /// </summary>
   void operator-=(const std::shared_ptr<T>& rhs) {
-    //TODO: Get lock to not compiler error
-    //boost::lock_guard<boost::mutex>(m_lock);
+    boost::lock_guard<boost::mutex> lk(m_lock);
     
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
