@@ -59,6 +59,8 @@ set(
   LockReducedCollection.h
   Object.h
   ObjectPool.h
+  ObjectPoolMonitor.h
+  ObjectPoolMonitor.cpp
   MicroBolt.h
   PolymorphicTypeForest.h
   ReentrantCounter.h
@@ -70,6 +72,8 @@ set(
   StateMachine.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
+  TypeRegistry.h
+  TypeRegistry.cpp
 )
 
 OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
@@ -150,6 +154,8 @@ set(
   SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
+  TypeRegistryTest.h
+  TypeRegistryTest.cpp
   ScopeTest.h
   ScopeTest.cpp
   SnoopTest.h
