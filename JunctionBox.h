@@ -4,6 +4,7 @@
 #include "EventReceiver.h"
 #include "LockFreeList.h"
 #include "LockReducedCollection.h"
+#include "PolymorphicTypeForest.h"
 #include "SharedPtrHash.h"
 #include "TransientPoolBase.h"
 #include <boost/thread/mutex.hpp>
@@ -185,7 +186,7 @@ public:
     m_st.Insert(rhs);
 
     // If the RHS implements DispatchQueue, add it to that collection as well:
-    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
+    DispatchQueue* pDispatch = std::fast_pointer_cast<DispatchQueue, T>(rhs).get();
     if(pDispatch)
       (boost::lock_guard<boost::mutex>)m_lock,
       m_dispatch.insert(pDispatch);
@@ -196,7 +197,7 @@ public:
   /// </summary>
   void operator-=(const std::shared_ptr<T>& rhs) {
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
-    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
+    DispatchQueue* pDispatch = std::fast_pointer_cast<DispatchQueue, T>(rhs).get();
     if(pDispatch)
       (boost::lock_guard<boost::mutex>)m_lock,
       m_dispatch.erase(pDispatch);
