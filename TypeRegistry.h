@@ -2,15 +2,16 @@
 #include <typeinfo>
 #include "JunctionBox.h"
 #include FUNCTIONAL_HEADER
+#include SHARED_PTR_HEADER
 
 class JunctionBoxBase;
 
 struct TypeRegistryEntry {
-  TypeRegistryEntry(const std::type_info& ti, std::function<JunctionBoxBase*(void)> factory);
+  TypeRegistryEntry(const std::type_info& ti, std::function<std::shared_ptr<JunctionBoxBase>(void)> factory);
 
   const TypeRegistryEntry* pFlink;
   const std::type_info& ti;
-  std::function<JunctionBoxBase*(void)> m_pFactory;
+  std::function<std::shared_ptr<JunctionBoxBase>(void)> m_NewJunctionBox;
 };
 
 extern const TypeRegistryEntry* g_pFirstEntry;
@@ -18,8 +19,9 @@ extern size_t g_entryCount;
 
 ///JunctionBox factory
 template<class T>
-JunctionBox<T>* NewJunctionBox(){
-  return new JunctionBox<T>;
+std::shared_ptr<JunctionBox<T>> NewJunctionBox(){
+  std::shared_ptr<JunctionBox<T>> box(new JunctionBox<T>);
+  return box;
 }
 
 /// <summary>
