@@ -4,4 +4,5 @@
 #include "DispatchQueue.h"
 
 JunctionBoxBase::~JunctionBoxBase(void) {
+  
 }
