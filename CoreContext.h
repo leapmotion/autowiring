@@ -166,8 +166,7 @@ protected:
   // All known event receivers and receiver proxies originating from this context:
   typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
-
-  //TODO: This is the new type when JunctionBoxManager is done
+  
   typedef std::shared_ptr<JunctionBoxManager> t_junctionBoxes;
   //typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
   t_junctionBoxes m_junctionBoxes;

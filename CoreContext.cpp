@@ -102,6 +102,12 @@ CoreContext::~CoreContext(void) {
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
   if(m_pParent)
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.begin());
+  
+  
+  //TODO: Trye reseting event receivers here
+  //for(auto p=m_eventReceivers.begin(); p!=m_eventReceivers.end(); p++){
+  //  (*p)->reset();
+  //}
 
   // Tell all context members that we're tearing down:
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
@@ -453,7 +459,6 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::ite
   
   m_eventReceivers.erase(first,last);
   
-
   // Detour to the parent collection (if necessary)
   if(m_pParent)
     m_pParent->RemoveEventReceivers(first, last);
