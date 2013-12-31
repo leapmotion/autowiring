@@ -34,6 +34,9 @@ public:
   void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
   void RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
   
+  bool CheckAllNotNull();
+  bool IsKey(std::type_index pTypeIndex);
+  
 protected:
   t_junctionBoxes m_junctionBoxes;
   boost::mutex m_lock;
