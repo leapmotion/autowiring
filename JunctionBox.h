@@ -121,8 +121,6 @@ public:
       const std::shared_ptr<EventReceiver> event = *q;
       *this -= event;
     }
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_dispatch.clear();
   }
 
   JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {

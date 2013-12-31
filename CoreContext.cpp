@@ -23,8 +23,33 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_useOwnershipValidator(false),
   m_refCount(0)
 {
+  /*
+   // Prime the proxy map with the APL recipient:
+   auto ptr = make_shared<JunctionBox<AutoPacketListener>>();
+   m_junctionBoxes[typeid(AutoPacketListener)] = ptr;
+   m_packetFactory.reset(
+     new AutoPacketFactory(
+       AutoFired<AutoPacketListener>(
+         std::move(ptr)
+       )
+     )
+   );
+   ASSERT(pParent.get() != this);
+   */
+  
   m_junctionBoxes.reset(new JunctionBoxManager);
   
+  auto ptr = static_pointer_cast<JunctionBox<AutoPacketListener>>(m_junctionBoxes->Get(typeid(AutoPacketListener)));
+  
+  m_packetFactory.reset(
+    new AutoPacketFactory(
+      AutoFired<AutoPacketListener>(
+        std::move(ptr)
+      )
+    )
+  );
+  
+  /*
   //TODO: Make this less jenky
   auto ptr = make_shared<JunctionBox<AutoPacketListener>>();
   m_junctionBoxes->Get(typeid(AutoPacketListener)) = ptr;
@@ -35,6 +60,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
       )
     )
   );
+   */
   
   ASSERT(pParent.get() != this);
 }
