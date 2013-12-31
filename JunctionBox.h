@@ -118,7 +118,7 @@ public:
 
   void ReleaseRefs(t_rcvrSet::iterator start, t_rcvrSet::iterator finish) override {
     for(auto q = start; q != finish; q++){
-      const std::shared_ptr<EventReceiver> event = *q;
+      std::shared_ptr<EventReceiver> event = *q;
       *this -= event;
     }
   }
