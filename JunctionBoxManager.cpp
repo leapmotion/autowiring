@@ -19,7 +19,9 @@ JunctionBoxManager::~JunctionBoxManager(void) {
 }
 
 std::shared_ptr<JunctionBoxBase> JunctionBoxManager::Get(std::type_index pTypeIndex) {
-  return m_junctionBoxes[pTypeIndex];
+  auto box = m_junctionBoxes.find(pTypeIndex);
+  assert(box != m_junctionBoxes.end());
+  return box->second;
 }
 
 void JunctionBoxManager::ReleaseRefs(t_rcvrSet::iterator first, t_rcvrSet::iterator last){
@@ -46,9 +48,15 @@ void JunctionBoxManager::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr)
   boost::lock_guard<boost::mutex> lk(m_lock);
   
   //Notify all currently used junctionboxes that there is a new event
+  int num = 0;
+  auto size = m_junctionBoxes.size();
   for(auto q=m_junctionBoxes.begin(); q!=m_junctionBoxes.end(); q++){
     auto box = q->second;
+    if (!box){
+      auto derp = q->first;
+    }
     *box += pRecvr;
+    num++;
   }
 }
 
@@ -70,3 +78,32 @@ void JunctionBoxManager::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrS
     }
   }
 }
+
+
+//Debug functions
+
+bool JunctionBoxManager::CheckAllNotNull(){
+  
+  bool result = true;
+  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++){
+    auto box = q->second;
+    if (!box){
+      result =false;
+    }
+  }
+  return result;
+}
+
+bool JunctionBoxManager::IsKey(std::type_index pTypeIndex){
+  
+  auto key = m_junctionBoxes.find(pTypeIndex);
+  if (key==m_junctionBoxes.end()){
+    return false;
+  } else {
+    return true;
+  }
+}
+
+
+
+
