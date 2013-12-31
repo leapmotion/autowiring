@@ -10,15 +10,12 @@ JunctionBoxManager::JunctionBoxManager(void) {
   for(auto p = g_pFirstEntry; p; p = p->pFlink) {
     m_junctionBoxes[p->ti] = p->m_NewJunctionBox();
   }
-  
+  //Manually add AutoPacketListener for CoreContext initialization
   m_junctionBoxes[typeid(AutoPacketListener)] = std::make_shared<JunctionBox<AutoPacketListener>>();
-  
 }
 
 JunctionBoxManager::~JunctionBoxManager(void) {
-  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++) {
-    q->second.reset();
-  }
+
 }
 
 std::shared_ptr<JunctionBoxBase> JunctionBoxManager::Get(std::type_index pTypeIndex) {
@@ -49,8 +46,10 @@ void JunctionBoxManager::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr)
   boost::lock_guard<boost::mutex> lk(m_lock);
   
   //Notify all currently used junctionboxes that there is a new event
-  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-    *q->second += pRecvr;
+  for(auto q=m_junctionBoxes.begin(); q!=m_junctionBoxes.end(); q++){
+    auto box = q->second;
+    *box += pRecvr;
+  }
 }
 
 void JunctionBoxManager::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr){

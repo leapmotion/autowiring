@@ -49,19 +49,6 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
     )
   );
   
-  /*
-  //TODO: Make this less jenky
-  auto ptr = make_shared<JunctionBox<AutoPacketListener>>();
-  m_junctionBoxes->Get(typeid(AutoPacketListener)) = ptr;
-  m_packetFactory.reset(
-    new AutoPacketFactory(
-      AutoFired<AutoPacketListener>(
-        std::move(ptr)
-      )
-    )
-  );
-   */
-  
   ASSERT(pParent.get() != this);
 }
 
@@ -93,7 +80,8 @@ CoreContext::~CoreContext(void) {
   // Release all event sender links:
   //for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
   //  (*q).second->ReleaseRefs();
-  m_junctionBoxes->ReleaseRefs(m_eventReceivers.begin(), m_eventReceivers.begin());
+  
+  m_junctionBoxes->ReleaseRefs(m_eventReceivers.begin(), m_eventReceivers.end());
 
   // Eliminate all snoopers from our apprehended list of receivers:
   m_eventReceivers.erase(m_snoopers.begin(), m_snoopers.end());
@@ -101,10 +89,7 @@ CoreContext::~CoreContext(void) {
 
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
   if(m_pParent)
-    m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.begin());
-  
-  
-  m_eventReceivers.clear();
+    m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
 
   // Tell all context members that we're tearing down:
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
@@ -451,14 +436,17 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::ite
     }
   }
   */
-
   m_junctionBoxes->RemoveEventReceivers(first, last);
-  
-  m_eventReceivers.erase(first,last);
   
   // Detour to the parent collection (if necessary)
   if(m_pParent)
     m_pParent->RemoveEventReceivers(first, last);
+  
+  for (auto derp = first; derp != last; derp++){
+    m_eventReceivers.erase(*derp);
+  }
+  
+  //m_eventReceivers.erase(first,last);
 }
 
 void CoreContext::FilterException(void) {
