@@ -104,10 +104,7 @@ CoreContext::~CoreContext(void) {
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.begin());
   
   
-  //TODO: Trye reseting event receivers here
-  //for(auto p=m_eventReceivers.begin(); p!=m_eventReceivers.end(); p++){
-  //  (*p)->reset();
-  //}
+  m_eventReceivers.clear();
 
   // Tell all context members that we're tearing down:
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
