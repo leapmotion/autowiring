@@ -23,9 +23,9 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_useOwnershipValidator(false),
   m_refCount(0)
 {
-  m_junctionBoxes.reset(new JunctionBoxManager);
+  m_junctionBoxManager.reset(new JunctionBoxManager);
   
-  auto ptr = static_pointer_cast<JunctionBox<AutoPacketListener>>(m_junctionBoxes->Get(typeid(AutoPacketListener)));
+  auto ptr = static_pointer_cast<JunctionBox<AutoPacketListener>>(m_junctionBoxManager->Get(typeid(AutoPacketListener)));
   
   m_packetFactory.reset(
     new AutoPacketFactory(
@@ -45,7 +45,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_shouldStop(false),
   m_useOwnershipValidator(false),
   m_refCount(0),
-  m_junctionBoxes(pPeer->m_junctionBoxes),
+  m_junctionBoxManager(pPeer->m_junctionBoxManager),
   m_packetFactory(pPeer->m_packetFactory)
 {
   ASSERT(pParent.get() != this);
@@ -64,7 +64,7 @@ CoreContext::~CoreContext(void) {
   NotifyTeardownListeners();
 
   // Release all event sender links:
-  m_junctionBoxes->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+  m_junctionBoxManager->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
   
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
   if(m_pParent){
@@ -366,7 +366,7 @@ void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
     m_eventReceivers.insert(pRecvr);
   }
   
-  m_junctionBoxes->AddEventReceiver(pRecvr);
+  m_junctionBoxManager->AddEventReceiver(pRecvr);
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
@@ -380,7 +380,7 @@ void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
     m_eventReceivers.erase(pRecvr);
   }
   
-  m_junctionBoxes->RemoveEventReceiver(pRecvr);
+  m_junctionBoxManager->RemoveEventReceiver(pRecvr);
 
   // Delegate to the parent:
   if(m_pParent)
@@ -396,7 +396,7 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::ite
     }
   }
   
-  m_junctionBoxes->RemoveEventReceivers(first, last);
+  m_junctionBoxManager->RemoveEventReceivers(first, last);
   
   // Detour to the parent collection (if necessary)
   if(m_pParent)

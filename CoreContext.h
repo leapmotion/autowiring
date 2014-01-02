@@ -167,8 +167,9 @@ protected:
   typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
   
-  typedef std::shared_ptr<JunctionBoxManager> t_junctionBoxes;
-  t_junctionBoxes m_junctionBoxes;
+  // Manages events for this context. One JunctionBoxManager is shared between peer contexts
+  typedef std::shared_ptr<JunctionBoxManager> t_junctionBoxManager;
+  t_junctionBoxManager m_junctionBoxManager;
   
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
@@ -424,7 +425,7 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<JunctionBox<T>> GetJunctionBox(void) {
-    auto retVal = m_junctionBoxes->Get(typeid(T));
+    auto retVal = m_junctionBoxManager->Get(typeid(T));
     return std::static_pointer_cast<JunctionBox<T>, JunctionBoxBase>(retVal);
   }
 
@@ -633,7 +634,7 @@ public:
     // Snooping now
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
       
-    m_junctionBoxes->AddEventReceiver(rcvr);
+    m_junctionBoxManager->AddEventReceiver(rcvr);
     
     // Delegate ascending resolution, where possible.  This ensures that the parent context links
     // this event receiver to compatible senders in the parent context itself.
@@ -654,7 +655,7 @@ public:
     // Pass control to the event remover helper:
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
     
-    m_junctionBoxes->RemoveEventReceiver(rcvr);
+    m_junctionBoxManager->RemoveEventReceiver(rcvr);
     
     // Delegate to the parent:
     if(m_pParent)
