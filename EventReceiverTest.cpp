@@ -299,7 +299,7 @@ TEST_F(EventReceiverTest, PathologicalChildContextTest) {
   jammer->Stop();
   jammer->Wait();
 
-  // Now we begin teardown operations.  If there is an improper event receiver, this will crash hard.
+  // Now we begin teardown operations. If there is an improper event receiver, this will crash hard.
   AutoCurrentContext ctxt;
   ctxt->SignalTerminate();
 }
