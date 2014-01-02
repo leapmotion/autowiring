@@ -168,13 +168,8 @@ protected:
   t_rcvrSet m_eventReceivers;
   
   typedef std::shared_ptr<JunctionBoxManager> t_junctionBoxes;
-  //typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
   t_junctionBoxes m_junctionBoxes;
   
-
-  // All known snoopers.  Snoopers will not be removed from parent scopes on destruction.
-  t_rcvrSet m_snoopers;
-
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
 
@@ -628,6 +623,8 @@ public:
   ///
   /// The snooper will not receive any events broadcast from parent contexts.  ONLY events
   /// broadcast in THIS context will be forwarded to the snooper.
+  ///
+  /// Same as "AddEventReceiver" except doesn't added event to m_eventReceivers
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
@@ -635,11 +632,13 @@ public:
 
     // Snooping now
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_snoopers.insert(rcvr);
-
-    // Pass control to the event adder helper:
-    AddEventReceiver(rcvr);
+      
+    m_junctionBoxes->AddEventReceiver(rcvr);
+    
+    // Delegate ascending resolution, where possible.  This ensures that the parent context links
+    // this event receiver to compatible senders in the parent context itself.
+    if(m_pParent)
+      m_pParent->Snoop(pSnooper);
   }
 
   /// <summary>
@@ -654,9 +653,12 @@ public:
 
     // Pass control to the event remover helper:
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_snoopers.erase(rcvr);
-    RemoveEventReceiver(rcvr);
+    
+    m_junctionBoxes->RemoveEventReceiver(rcvr);
+    
+    // Delegate to the parent:
+    if(m_pParent)
+      m_pParent->Unsnoop(pSnooper);
   }
 
   /// <summary>

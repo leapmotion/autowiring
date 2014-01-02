@@ -81,11 +81,6 @@ public:
 
   virtual bool HasListeners(void) const = 0;
 
-  /// <summary>
-  /// Invoked by the parent context when the context is shutting down in order to release all references
-  /// </summary>
-  virtual void ReleaseRefs(t_rcvrSet::iterator start, t_rcvrSet::iterator finish) = 0;
-
   // Event attachment and detachment pure virtuals
   virtual JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
   virtual JunctionBoxBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
@@ -115,12 +110,6 @@ public:
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
   /// </summary>
   bool HasListeners(void) const override {return !m_st.empty();}
-
-  void ReleaseRefs(t_rcvrSet::iterator start, t_rcvrSet::iterator finish) override {
-    for(auto q = start; q != finish; q++){
-      *this -= *q;
-    }
-  }
 
   JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);

@@ -1,9 +1,5 @@
 #pragma once
 #include "JunctionBox.h"
-#include <boost/thread/shared_mutex.hpp>
-#include <boost/thread/condition.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/tss.hpp>
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
@@ -28,16 +24,10 @@ public:
   virtual ~JunctionBoxManager();
   
   std::shared_ptr<JunctionBoxBase> Get(std::type_index);
-  void ReleaseRefs(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
-  void RemoveSnoopers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
   void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
   void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
   void RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
   
-  bool CheckAllNotNull();
-  bool IsKey(std::type_index pTypeIndex);
-  
 protected:
   t_junctionBoxes m_junctionBoxes;
-  boost::mutex m_lock;
 };
