@@ -64,13 +64,7 @@ CoreContext::~CoreContext(void) {
   NotifyTeardownListeners();
 
   // Release all event sender links:
-  m_junctionBoxes->ReleaseRefs(m_eventReceivers.begin(), m_eventReceivers.end());
-
-  // Eliminate all snoopers from our apprehended list of receivers:
-  for (auto derp = m_snoopers.begin(); derp!=m_snoopers.end(); derp++){
-    m_eventReceivers.erase(*derp);
-  }
-  m_junctionBoxes->RemoveSnoopers(m_snoopers.begin(), m_snoopers.end());
+  m_junctionBoxes->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
   
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
   if(m_pParent){
@@ -367,12 +361,12 @@ void CoreContext::UpdateDeferredElements(void) {
 }
 
 void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-  boost::lock_guard<boost::mutex> lk(m_lock);
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_eventReceivers.insert(pRecvr);
+  }
   
   m_junctionBoxes->AddEventReceiver(pRecvr);
-  
-  //Keep track of this context's events
-  m_eventReceivers.insert(pRecvr);
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
@@ -381,11 +375,12 @@ void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
 }
 
 void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-  boost::lock_guard<boost::mutex> lk(m_lock);
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_eventReceivers.erase(pRecvr);
+  }
   
   m_junctionBoxes->RemoveEventReceiver(pRecvr);
-  
-  m_eventReceivers.erase(pRecvr);
 
   // Delegate to the parent:
   if(m_pParent)
@@ -393,13 +388,15 @@ void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
 }
 
 void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
-  boost::lock_guard<boost::mutex> lk(m_lock);
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+  
+    for (auto derp = first; derp != last; derp++){
+      m_eventReceivers.erase(*derp);
+    }
+  }
   
   m_junctionBoxes->RemoveEventReceivers(first, last);
-  
-  for (auto derp = first; derp != last; derp++){
-    m_eventReceivers.erase(*derp);
-  }
   
   // Detour to the parent collection (if necessary)
   if(m_pParent)
