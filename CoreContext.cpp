@@ -63,7 +63,7 @@ CoreContext::~CoreContext(void) {
   // Notify all ContextMember instances that their parent is going away
   NotifyTeardownListeners();
 
-  // Release all event sender links:
+  // Release all event receivers originating from this context:
   m_junctionBoxManager->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
   
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:

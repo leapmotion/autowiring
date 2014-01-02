@@ -16,7 +16,6 @@ class CoreContext;
 
 class JunctionBoxManager{
   typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
-  typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>>::iterator t_junctionIter;
   typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
 public:
   
