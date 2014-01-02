@@ -2,8 +2,7 @@
 #include "DispatchQueue.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
-#include "LockFreeList.h"
-#include "LockReducedCollection.h"
+#include "ObjectPool.h"
 #include "PolymorphicTypeForest.h"
 #include "SharedPtrHash.h"
 #include <boost/thread/mutex.hpp>
