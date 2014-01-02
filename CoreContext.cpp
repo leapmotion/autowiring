@@ -67,12 +67,15 @@ CoreContext::~CoreContext(void) {
   m_junctionBoxes->ReleaseRefs(m_eventReceivers.begin(), m_eventReceivers.end());
 
   // Eliminate all snoopers from our apprehended list of receivers:
-  m_eventReceivers.erase(m_snoopers.begin(), m_snoopers.end());
+  for (auto derp = m_snoopers.begin(); derp!=m_snoopers.end(); derp++){
+    m_eventReceivers.erase(*derp);
+  }
   m_junctionBoxes->RemoveSnoopers(m_snoopers.begin(), m_snoopers.end());
-
+  
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
-  if(m_pParent)
+  if(m_pParent){
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+  }
 
   // Tell all context members that we're tearing down:
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
