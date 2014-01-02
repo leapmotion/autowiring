@@ -48,15 +48,9 @@ void JunctionBoxManager::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr)
   boost::lock_guard<boost::mutex> lk(m_lock);
   
   //Notify all currently used junctionboxes that there is a new event
-  int num = 0;
-  auto size = m_junctionBoxes.size();
   for(auto q=m_junctionBoxes.begin(); q!=m_junctionBoxes.end(); q++){
     auto box = q->second;
-    if (!box){
-      auto derp = q->first;
-    }
     *box += pRecvr;
-    num++;
   }
 }
 
