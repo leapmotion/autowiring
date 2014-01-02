@@ -186,6 +186,8 @@ public:
   /// <param name="fn">A nearly-curried routine to be invoked</param>
   template<class Fn>
   void FireCurried(Fn&& fn) const {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    
     // Held names first:
     for(auto q = m_st.begin(); q != m_st.end(); ++q){
       try {
