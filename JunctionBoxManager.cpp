@@ -7,16 +7,15 @@
 
 JunctionBoxManager::JunctionBoxManager(void) {
   
+  // Enumerate all Autowired types to initialize new JunctionBox for each
   for(auto p = g_pFirstEntry; p; p = p->pFlink) {
     m_junctionBoxes[p->ti] = p->m_NewJunctionBox();
   }
-  //Manually add AutoPacketListener for CoreContext initialization
+  // Manually add AutoPacketListener for CoreContext initialization
   m_junctionBoxes[typeid(AutoPacketListener)] = std::make_shared<JunctionBox<AutoPacketListener>>();
 }
 
-JunctionBoxManager::~JunctionBoxManager(void) {
-
-}
+JunctionBoxManager::~JunctionBoxManager(void) {}
 
 std::shared_ptr<JunctionBoxBase> JunctionBoxManager::Get(std::type_index pTypeIndex) {
   auto box = m_junctionBoxes.find(pTypeIndex);
