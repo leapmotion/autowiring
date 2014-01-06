@@ -3,7 +3,7 @@
 #define _CONTEXT_CREATION_LISTENER_BASE_H
 #include <memory>
 #include <vector>
-#include <typeindex>
+#include TYPE_INDEX_HEADER
 class CoreContext;
 
 typedef std::vector<std::type_index> t_TypeInfoVector;

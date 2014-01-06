@@ -1,6 +1,9 @@
 #pragma once
+
 #include "AutowirableSlot.h"
 #include "BoltBase.h"
+#include "C++11/cpp11.h"
+#include TYPE_INDEX_HEADER
 
 /// <summary>
 /// </summary>
@@ -22,9 +25,8 @@ class Bolt:
       v.push_back(typeid(Sigil1));
       v.push_back(typeid(Sigil2));
       v.push_back(typeid(Sigil3));
-      v.shrink_to_fit();
     }
-    return {typeid(Sigil1),typeid(Sigil2),typeid(Sigil3),0};
+    return v;
   }
   static Sigil1 MySigilType1;
   static Sigil2 MySigilType2;
@@ -40,7 +42,6 @@ public:
     static t_TypeInfoVector v;
     if( v.empty() ) {
       v.push_back(typeid(Sigil1));
-      v.shrink_to_fit();
     }
     return v;
   }
@@ -56,7 +57,6 @@ class Bolt<Sigil1,Sigil2,void>:
     if( v.empty() ) {
       v.push_back(typeid(Sigil1));
       v.push_back(typeid(Sigil2));
-      v.shrink_to_fit();
     }
     return v;
   }
