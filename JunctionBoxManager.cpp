@@ -12,7 +12,8 @@ JunctionBoxManager::JunctionBoxManager(void) {
   }
   
   // Manually add AutoPacketListener for CoreContext initialization
-  m_junctionBoxes[typeid(AutoPacketListener)] = std::make_shared<JunctionBox<AutoPacketListener>>();
+  std::shared_ptr<JunctionBox<AutoPacketListener>> box(new JunctionBox<AutoPacketListener>);
+  m_junctionBoxes[typeid(AutoPacketListener)] = box;
 }
 
 JunctionBoxManager::~JunctionBoxManager(void) {}

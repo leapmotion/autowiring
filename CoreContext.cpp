@@ -29,9 +29,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   
   m_packetFactory.reset(
     new AutoPacketFactory(
-      AutoFired<AutoPacketListener>(
-        std::move(ptr)
-      )
+      AutoFired<AutoPacketListener>(ptr)
     )
   );
   
