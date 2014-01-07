@@ -32,7 +32,7 @@ void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
 }
 
 void CoreThread::SetCurrentThreadName(void) const {
-#if IS_INTERNAL_BUILD == 1
+#if IS_INTERNAL_BUILD == 1 || _DEBUG
   ::SetThreadName(
     GetCurrentThreadId(),
     m_name
