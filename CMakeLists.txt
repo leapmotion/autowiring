@@ -85,17 +85,25 @@ if(BUILD_AUTONET)
 endif()
 
 if(BUILD_WINDOWS)
-  enable_language(ASM_MASM)
-  set(Autowiring_SRCS
-	interlocked.asm
-    CoreThreadWin.cpp
-	InterlockedExchangeWin.cpp
-    ${Autowiring_SRCS}
-  )
+  if(BUILD_64_BIT)
+    set(Autowiring_SRCS
+        CoreThreadWin.cpp
+        InterlockedExchangeWin.cpp
+        ${Autowiring_SRCS}
+    )
+  else()
+    enable_language(ASM_MASM)
+    set(Autowiring_SRCS
+        interlocked.asm
+        CoreThreadWin.cpp
+        InterlockedExchangeWin.cpp
+        ${Autowiring_SRCS}
+    )
+  endif()
 else()
   set(Autowiring_SRCS
     CoreThreadUnix.cpp
-	InterlockedExchangeUnix.cpp
+    InterlockedExchangeUnix.cpp
     ${Autowiring_SRCS}
   )
 endif()
@@ -180,19 +188,23 @@ if(NOT BUILD_WINDOWS)
   set(Boost_SYSTEM_LIBRARY libboost_system)
   add_library(${Boost_SYSTEM_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_SYSTEM_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_SYSTEM_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-	
+  
   set(Boost_THREAD_LIBRARY libboost_thread)
   add_library(${Boost_THREAD_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_THREAD_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_THREAD_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-	
+  
   set(Boost_CHRONO_LIBRARY libboost_chrono)
   add_library(${Boost_CHRONO_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_CHRONO_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_CHRONO_LIBRARY}${STATIC_LIBRARY_SUFFIX})
 
-  if(NOT BUILD_MAC)
+  if(NOT BUILD_MAC AND NOT BUILD_ANDROID)
+    # Linux non-Android only
     target_link_libraries(Autowiring -lrt)
   endif()
-  target_link_libraries(Autowiring -lpthread ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY})
+  if(NOT BUILD_ANDROID)
+    target_link_libraries(Autowiring -lpthread)
+  endif()
+  target_link_libraries(Autowiring ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY})
 endif()
 
 if(BUILD_TESTING)
