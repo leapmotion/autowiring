@@ -93,7 +93,7 @@ set(Autowiring_Unix_SRCS
 	InterlockedExchangeUnix.cpp
 )
 
-ADD_MSVC_DISABLED_FILES("Unix Source" ${Autowiring_Unix_SRCS})
+ADD_MSVC_DISABLED_FILES("Unix Source" Autowiring_SRCS ${Autowiring_Unix_SRCS})
 
 if(BUILD_WINDOWS)
   enable_language(ASM_MASM)
