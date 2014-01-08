@@ -2,7 +2,6 @@
 #include <assert.h>
 
 class CoreThread;
-class TransientContextMember;
 
 bool CoreThreadCanAccept(CoreThread* pThread);
 
@@ -18,8 +17,6 @@ bool CoreThreadCanAccept(CoreThread* pThread);
 class Deferred {
 public:
   Deferred(void) {}
-
-  Deferred(TransientContextMember* pMember) {}
 
   Deferred(CoreThread* pThread) {}
 };
