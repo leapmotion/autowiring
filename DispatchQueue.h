@@ -111,7 +111,7 @@ public:
   void Abort(void);
 
   /// <summary>
-  /// Blocks until a new dispatch member is added, dispatches, and then returns
+  /// Blocks until a new dispatch event is added, dispatches that single event, and then returns
   /// </summary>
   void WaitForEvent(void) override;
 
