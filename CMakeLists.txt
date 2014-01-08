@@ -84,11 +84,16 @@ endif()
 if(BUILD_WINDOWS)
   enable_language(ASM_MASM)
   set(Autowiring_SRCS
-	interlocked.asm
     CoreThreadWin.cpp
-	InterlockedExchangeWin.cpp
+    InterlockedExchangeWin.cpp
     ${Autowiring_SRCS}
   )
+  if(NOT BUILD_64_BIT)
+    set(Autowiring_SRCS
+        interlocked.asm
+        ${Autowiring_SRCS}
+    )
+  endif()
 else()
   set(Autowiring_SRCS
     CoreThreadUnix.cpp
