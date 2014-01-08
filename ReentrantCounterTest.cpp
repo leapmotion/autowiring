@@ -44,7 +44,7 @@ TEST_F(ReentrantCounterTest, VerifySimpleBenchmarking) {
   }
 
   // Verify we hit exactly once:
-  EXPECT_EQ(1, counter.hitCount) << "Performance counter incremented an incorrect number of times";
+  EXPECT_EQ(1UL, counter.hitCount) << "Performance counter incremented an incorrect number of times";
 
   // Verify we are in range:
   EXPECT_LT(spinTime - slack, counter.lingerTime) << "Reentrant counter underestimated the total spin time";
@@ -58,7 +58,7 @@ TEST_F(ReentrantCounterTest, VerifyComplexReentrancy) {
   }
   // Validate timeouts:;
   for(size_t i = 0; i < ARRAYCOUNT(gc_timeouts); i++) {
-    EXPECT_EQ(1, g_timeouts[i].hitCount) << "Performance counter hit too many times";
+    EXPECT_EQ(1UL, g_timeouts[i].hitCount) << "Performance counter hit too many times";
     EXPECT_LT(
       g_timeouts[i].lingerTime - slack,
       boost::chrono::microseconds(gc_timeouts[i])
