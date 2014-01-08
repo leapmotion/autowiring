@@ -57,6 +57,8 @@ set(
   LockReducedCollection.h
   Object.h
   ObjectPool.h
+  ObjectPoolMonitor.h
+  ObjectPoolMonitor.cpp
   MicroBolt.h
   PolymorphicTypeForest.h
   ReentrantCounter.h
@@ -83,9 +85,9 @@ if(BUILD_AUTONET)
 endif()
 
 set(Autowiring_Win_SRCS
-	interlocked.asm
-    CoreThreadWin.cpp
-	InterlockedExchangeWin.cpp
+        interlocked.asm
+        CoreThreadWin.cpp
+        InterlockedExchangeWin.cpp
 )
 
 set(Autowiring_Unix_SRCS
@@ -198,10 +200,14 @@ if(NOT BUILD_WINDOWS)
   add_library(${Boost_CHRONO_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_CHRONO_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_CHRONO_LIBRARY}${STATIC_LIBRARY_SUFFIX})
 
-  if(NOT BUILD_MAC)
+  if(NOT BUILD_MAC AND NOT BUILD_ANDROID)
+    # Linux non-Android only
     target_link_libraries(Autowiring -lrt)
   endif()
-  target_link_libraries(Autowiring -lpthread ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY})
+  if(NOT BUILD_ANDROID)
+    target_link_libraries(Autowiring -lpthread)
+  endif()
+  target_link_libraries(Autowiring ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY})
 endif()
 
 if(BUILD_TESTING)
