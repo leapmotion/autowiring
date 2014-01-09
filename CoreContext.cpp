@@ -25,7 +25,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
 {
   m_junctionBoxManager.reset(new JunctionBoxManager);
   
-  auto ptr = static_pointer_cast<JunctionBox<AutoPacketListener>>(m_junctionBoxManager->Get(typeid(AutoPacketListener)));
+  auto ptr = GetJunctionBox<AutoPacketListener>();
   
   m_packetFactory.reset(
     new AutoPacketFactory(
