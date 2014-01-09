@@ -373,6 +373,24 @@ public:
   const std::type_info& GetSigilType(void) const { return m_sigil; }
 
   /// <summary>
+  /// This is a slow, expensive operation used in unit tests to get all child contexts
+  /// of a given contexts.  It is relatively dangerous and should not be used except for
+  /// testing.
+  template<class Fn>
+  void EnumerateChildContexts(const std::type_info &sigil, Fn&& fn ) {
+    boost::lock_guard<boost::mutex> lock(m_childrenLock);
+    for (auto c = m_children.begin(); c != m_children.end(); c++) {
+      auto shared = c->lock();
+      shared->EnumerateChildContexts(sigil, fn); //check children first
+
+      if (shared->GetSigilType() == sigil) {
+        if (!fn(shared))
+          return;
+      }
+    }
+  }
+
+  /// <summary>
   /// In debug mode, adds an additional compile-time check
   /// </summary>
   /// <remarks>
