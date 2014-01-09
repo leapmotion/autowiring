@@ -10,10 +10,6 @@ JunctionBoxManager::JunctionBoxManager(void) {
   for(auto p = g_pFirstEntry; p; p = p->pFlink) {
     m_junctionBoxes[p->ti] = p->m_NewJunctionBox();
   }
-  
-  // Manually add AutoPacketListener for CoreContext initialization
-  std::shared_ptr<JunctionBox<AutoPacketListener>> box(new JunctionBox<AutoPacketListener>);
-  m_junctionBoxes[typeid(AutoPacketListener)] = box;
 }
 
 JunctionBoxManager::~JunctionBoxManager(void) {}
