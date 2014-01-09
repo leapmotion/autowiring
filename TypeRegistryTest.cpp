@@ -35,16 +35,16 @@ TEST_F(TypeRegistryTest, VerifyExteriorModuleRegistration) {
   // Verify that there are a bunch of registered types in the test application by looking
   // at the length of the linked list.  We expect that there will be at least 2, because of
   // our declarations in the earlier test in this module, but we also expect there to be
-  // (to choose arbitrarily) around 10, because this is a number of autowired fields known
+  // (to choose arbitrarily) around 8, because this is a number of autofired fields known
   // to exist at one point.
   //
   // If the number of autowired members in this unit test drops below 10 at some point, it
-  // might be necessary to reduce the count from 10 to something lower.
+  // might be necessary to reduce the count from 8 to something lower.
   size_t nTypes = 0;
 
   for(auto p = g_pFirstEntry; p; p = p->pFlink)
     nTypes++;
 
-  ASSERT_LT(10UL, nTypes) << "Registration failed to pick up the expected minimum number of types in this test";
+  ASSERT_LT(8UL, nTypes) << "Registration failed to pick up the expected minimum number of types in this test";
   ASSERT_EQ(g_entryCount, nTypes) << "Linked list did not contain the same number of entries as reported in g_entryCount";
 }
