@@ -51,6 +51,21 @@ public:
   }
 
   /// <summary>
+  /// Reads out all contained contexts into the specified container type
+  /// </summary>
+  template<class Container>
+  Container Enumerate(void) {
+    Container container;
+    boost::lock_guard<boost::mutex> lk(m_contextLock);
+    for(auto q = m_contexts.begin(); q != m_contexts.end(); q++) {
+      auto ctxt = q->second.lock();
+      if(ctxt)
+        container.insert(container.end(), ctxt);
+    }
+    return container;
+  }
+
+  /// <summary>
   /// Attempts to find a context with the specified key
   /// </summary>
   std::shared_ptr<CoreContext> FindContext(const Key& key) {
