@@ -9,7 +9,7 @@
 #include TYPE_TRAITS_HEADER
 #include <set>
 
-//Create a thread safe way to share junctionBoxes between peer contexts
+//A thread-safe way to share junctionBoxes between peer contexts
 
 class EventReceiver;
 class CoreContext;

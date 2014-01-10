@@ -6,17 +6,13 @@
 #include "AutoPacketListener.h"
 
 JunctionBoxManager::JunctionBoxManager(void) {
-  // Enumerate all Autowired types to initialize new JunctionBox for each
-  for(auto p = g_pFirstEntry; p; p = p->pFlink) {
+  // Enumerate all Autofired types to initialize a new JunctionBox for each
+  for(auto p = g_pFirstEntry; p; p = p->pFlink)
     m_junctionBoxes[p->ti] = p->m_NewJunctionBox();
-  }
 }
 
 JunctionBoxManager::~JunctionBoxManager(void) {}
 
-/// <summary>
-/// Get the JunctionBox corresponding to type "pTypeIndex"
-/// </summary>
 std::shared_ptr<JunctionBoxBase> JunctionBoxManager::Get(std::type_index pTypeIndex) {
   auto box = m_junctionBoxes.find(pTypeIndex);
   assert(box != m_junctionBoxes.end());
@@ -26,10 +22,8 @@ std::shared_ptr<JunctionBoxBase> JunctionBoxManager::Get(std::type_index pTypeIn
 void JunctionBoxManager::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr){
   
   //Notify all currently used junctionboxes that there is a new event
-  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++){
-    auto box = q->second;
-    *box += pRecvr;
-  }
+  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
+    *(q->second) += pRecvr;
 }
 
 void JunctionBoxManager::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr){
