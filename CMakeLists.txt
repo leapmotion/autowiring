@@ -194,6 +194,12 @@ if(NOT BUILD_WINDOWS)
   add_library(${Boost_CHRONO_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_CHRONO_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_CHRONO_LIBRARY}${STATIC_LIBRARY_SUFFIX})
 
+  if(Boost_VERSION GREATER 105200)
+    set(Boost_ATOMIC_LIBRARY libboost_atomic)
+    add_library(${Boost_ATOMIC_LIBRARY} STATIC IMPORTED)
+    set_property(TARGET ${Boost_ATOMIC_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_ATOMIC_LIBRARY}${STATIC_LIBRARY_SUFFIX})
+  endif()
+
   if(NOT BUILD_MAC AND NOT BUILD_ANDROID)
     # Linux non-Android only
     target_link_libraries(Autowiring -lrt)
@@ -202,6 +208,9 @@ if(NOT BUILD_WINDOWS)
     target_link_libraries(Autowiring -lpthread)
   endif()
   target_link_libraries(Autowiring ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY})
+  if(Boost_VERSION GREATER 105200)
+    target_link_libraries(Autowiring ${Boost_ATOMIC_LIBRARY})
+  endif()
 endif()
 
 if(BUILD_TESTING)
