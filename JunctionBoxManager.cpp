@@ -21,7 +21,7 @@ std::shared_ptr<JunctionBoxBase> JunctionBoxManager::Get(std::type_index pTypeIn
 
 void JunctionBoxManager::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr){
   
-  //Notify all currently used junctionboxes that there is a new event
+  //Notify all junctionboxes that there is a new event
   for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
     *(q->second) += pRecvr;
 }
