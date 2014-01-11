@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TypeRegistry.h"
 
+// Head of a linked list which will have node for every event type
 const TypeRegistryEntry* g_pFirstEntry = nullptr;
 size_t g_entryCount = 0;
 
