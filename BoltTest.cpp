@@ -1,15 +1,16 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "BoltTest.h"
 #include "Autowired.h"
 #include "Bolt.h"
 #include "ContextCreator.h"
+#include "TestFixtures/SimpleObject.h"
 #include <string>
+#include <iostream>
 
-extern const char sc_pipelineName[] = "Pipeline";
+struct Pipeline {};
 
 class Listener:
-  public Bolt<sc_pipelineName>
+  public Bolt<Pipeline>
 {
 public:
   Listener(void):
@@ -28,60 +29,74 @@ public:
 };
 
 class Creator:
-  public ContextCreator<sc_pipelineName, std::string>
+  public ContextCreator<Pipeline, std::string>
 {
 };
 
-TEST_F(CreationListenerTest, VerifyMapping) {
-  ContextCreator<sc_pipelineName, std::wstring> simpleCreator;
+class InjectsIntoPipeline:
+  public Bolt<Pipeline>
+{
+public:
+  void ContextCreated(void) override {
+    AutoRequired<SimpleObject>();
+  }
+};
+
+TEST_F(BoltTest, VerifySimpleInjection) {
+  AutoEnable<InjectsIntoPipeline>();
+
+  auto created = m_create->Create<Pipeline>();
+
+  // Verify that the SimpleObject didn't accidentally get injected out here:
+  {
+    Autowired<SimpleObject> so;
+    EXPECT_FALSE(so.IsAutowired()) << "Object was injected into an outer scope by a bolt";
+  }
+
+  // Verify that the objecT DID get autowired where we expected it to be autowired
+  CurrentContextPusher pshr(created);
+  Autowired<SimpleObject> so;
+  ASSERT_TRUE(so.IsAutowired()) << "Simple object was not injected as expected into a dependent context";
+}
+
+TEST_F(BoltTest, VerifyMapping) {
+  ContextCreator<Pipeline, std::wstring> simpleCreator;
 
   // Trivial context creation check:
   {
-    std::shared_ptr<DeferredCreationNotice> notice = simpleCreator.CreateContext(L"Simple");
-    ASSERT_TRUE(!!notice.get()) << "Initial context creation did not succeed as expected";
-    EXPECT_TRUE(notice->WasCreated());
+    auto ctxt = simpleCreator.CreateContext(L"Simple");
+    ASSERT_TRUE(ctxt.second && ctxt.first.get()) << "Initial context creation did not succeed as expected";
   }
 
   // Now try to autowire a listener:
   AutoRequired<Listener> myListener;
 
   // Create a second context, verify that the listener got the message:
-  std::shared_ptr<CoreContext> createdContext;
-  {
-    std::shared_ptr<DeferredCreationNotice> deferred = simpleCreator.CreateContext(L"Simple2");
+  std::shared_ptr<CoreContext> createdContext = simpleCreator.CreateContext(L"Simple2").first;
 
-    // Check the listener to verify a hit was not had here:
-    EXPECT_FALSE(myListener->hit) << "The listener callback was hit unexpectedly early";
-
-    // Copy out context, release reference:
-    createdContext = deferred->GetContext();
-  }
-
-  // Verify we have a hit now that the reference was released:
+  // Verify we have a hit our bolt:
   EXPECT_TRUE(myListener->hit) << "The listener callback was not hit as expected";
 
   // Verify that the correct context was created:
   EXPECT_EQ(createdContext, myListener->createdContext) << "The context set to current for the listener callback was not the context that got created";
 }
 
-TEST_F(CreationListenerTest, VerifyDescendantMapping) {
+TEST_F(BoltTest, VerifyCreationBubbling) {
   // Leakage check:
   {
     Autowired<Listener> validation;
     ASSERT_FALSE(validation.IsAutowired());
   }
 
-  // Put the creator in the parent context:
-  AutoRequired<ContextCreator<sc_pipelineName, std::wstring>> simpleCreator;
-  std::shared_ptr<Listener> listener;
+  // Put the listener in the parent context:
+  AutoRequired<Listener> listener;
 
-  // Create a child context of the current one, and put the listener in there:
+  // Create a child context of the current one, and put the creator in there:
   AutoCreateContext childContext;
-  {
-    CurrentContextPusher pshr(childContext);
-    AutoRequired<Listener> myListener;
-    listener = myListener;
-  }
+  std::shared_ptr<ContextCreator<Pipeline, std::wstring>> simpleCreator = (
+    CurrentContextPusher(childContext),
+    AutoRequired<ContextCreator<Pipeline, std::wstring>>()
+  );
 
   // Dependent context broadcast check:
   simpleCreator->CreateContext(L"Simple");

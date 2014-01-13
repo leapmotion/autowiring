@@ -1,5 +1,6 @@
 #pragma once
 #include "Object.h"
+#include "ObjectPoolMonitor.h"
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <set>
@@ -16,24 +17,31 @@ struct Create {
   T* operator()() const { return new T(); }
 };
 
+/// <summary>
+/// Templated base class for implementors who wish to have more direct control over Reset and Allocate
+/// </summary>
 template<class T>
 class ObjectPoolBase:
   public Object
 {
 public:
   ObjectPoolBase(size_t limit = ~0, size_t maxPooled = ~0) :
+    m_monitor(new ObjectPoolMonitor),
     m_limit(limit),
     m_maxPooled(maxPooled),
     m_outstanding(0)
   {}
 
   ~ObjectPoolBase(void) {
+    // Transition the pool to the abandoned state:
+    m_monitor->Abandon();
+
     for(auto q = m_objs.begin(); q != m_objs.end(); q++)
       delete *q;
   }
 
 protected:
-  boost::mutex m_lock;
+  std::shared_ptr<ObjectPoolMonitor> m_monitor;
   boost::condition_variable m_setCondition;
 
   typedef std::set<T*> t_stType;
@@ -43,16 +51,18 @@ protected:
   size_t m_limit;
   size_t m_outstanding;
 
-  void Return(T* ptr) {
+  void Return(std::shared_ptr<ObjectPoolMonitor> monitor, T* ptr) {
     {
-      boost::lock_guard<boost::mutex> lk(this->m_lock);
-      m_outstanding--;
-      if(m_objs.size() < m_maxPooled) {
-        // Reset, insert, return
-        Reset(*ptr);
-        m_objs.insert(ptr);
-        m_setCondition.notify_one();
-        return;
+      boost::lock_guard<boost::mutex> lk(*monitor);
+      if(!monitor->IsAbandoned()) {
+        m_outstanding--;
+        if(m_objs.size() < m_maxPooled) {
+          // Reset, insert, return
+          Reset(*ptr);
+          m_objs.insert(ptr);
+          m_setCondition.notify_one();
+          return;
+        }
       }
     }
 
@@ -99,10 +109,12 @@ protected:
     // Fill the shared pointer with the object we created, and ensure that we override
     // the destructor so that the object is returned to the pool when it falls out of
     // scope.
+    auto monitor = m_monitor;
     return std::shared_ptr<T>(
       pObj,
-      [this] (T* ptr) {
-        this->Return(ptr);
+      [this, monitor](T* ptr) {
+        // Obtain the monitor lock and return ourselves to the collection:
+        this->Return(monitor, ptr);
       }
     );
   }
@@ -120,7 +132,7 @@ public:
     for(;;) {
       T* ptr;
       {
-        boost::lock_guard<boost::mutex> lk(m_lock);
+        boost::lock_guard<boost::mutex> lk(*m_monitor);
         if(m_objs.size() <= m_maxPooled)
           return false;
         typename t_stType::iterator q = m_objs.begin();
@@ -145,7 +157,7 @@ public:
   /// </summary>
   template<class Duration>
   std::shared_ptr<T> WaitFor(Duration duration) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
+    boost::unique_lock<boost::mutex> lk(*m_monitor);
     if(m_setCondition.wait_for(
         lk,
         duration,
@@ -160,7 +172,7 @@ public:
   /// Blocks until an object becomes available from the pool
   /// </summary>
   std::shared_ptr<T> Wait(void) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
+    boost::unique_lock<boost::mutex> lk(*m_monitor);
     m_setCondition.wait(lk, [this]() -> bool {
       return m_outstanding < m_limit;
     });
@@ -179,7 +191,7 @@ public:
     // Force the passed value to be empty so we don't cause a deadlock by accident
     rs.reset();
 
-    boost::unique_lock<boost::mutex> lk(m_lock);
+    boost::unique_lock<boost::mutex> lk(*m_monitor);
     if(m_limit <= m_outstanding)
       // Already at the limit
       return;

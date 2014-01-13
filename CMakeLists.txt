@@ -12,6 +12,7 @@ set(
   AutoPacket.cpp
   AutoPacketFactory.h
   AutoPacketFactory.cpp
+  AutoPacketListener.h
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
   AutoNetworkMonitor.h
@@ -23,6 +24,7 @@ set(
   ContextCreator.h
   ContextCreatorBase.h
   ContextCreatorBase.cpp
+  CreationRules.h
   Bolt.h
   BoltBase.h
   ContextMap.h
@@ -37,8 +39,6 @@ set(
   Decompose.h
   DeferredBase.h
   DeferredBase.cpp
-  DeferredCreationNotice.h
-  DeferredCreationNotice.cpp
   deferred_ptr.h
   DispatchQueue.h
   DispatchQueue.cpp
@@ -50,26 +50,32 @@ set(
   EventOutputStream.cpp
   EventReceiver.h
   EventReceiver.cpp
-  EventSender.h
-  EventSender.cpp
+  JunctionBox.h
+  JunctionBox.cpp
+  JunctionBoxManager.h
+  JunctionBoxManager.cpp
   ExceptionFilter.h
   FilterPropertyExtractor.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   InterlockedExchange.h
-  LockFreeList.h
-  LockReducedCollection.h
   Object.h
   ObjectPool.h
+  ObjectPoolMonitor.h
+  ObjectPoolMonitor.cpp
+  MicroBolt.h
   PolymorphicTypeForest.h
   ReentrantCounter.h
   ReentrantCounter.cpp
   SharedPtrHash.h
+  SimpleOwnershipValidator.h
+  SimpleOwnershipValidator.cpp
+  StateMachine.h
+  StateMachine.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
-  TransientContextMember.h
-  TransientPool.h
-  TransientPoolBase.h
+  TypeRegistry.h
+  TypeRegistry.cpp
   uuid.h
   uuid.cpp
 )
@@ -84,23 +90,33 @@ if(BUILD_AUTONET)
 endif()
 
 if(BUILD_WINDOWS)
-  enable_language(ASM_MASM)
-  set(Autowiring_SRCS
-	interlocked.asm
-    CoreThreadWin.cpp
-	InterlockedExchangeWin.cpp
-    ${Autowiring_SRCS}
-  )
+  if(BUILD_64_BIT)
+    set(Autowiring_SRCS
+        CoreThreadWin.cpp
+        InterlockedExchangeWin.cpp
+        ${Autowiring_SRCS}
+    )
+  else()
+    enable_language(ASM_MASM)
+    set(Autowiring_SRCS
+        interlocked.asm
+        CoreThreadWin.cpp
+        InterlockedExchangeWin.cpp
+        ${Autowiring_SRCS}
+    )
+  endif()
 else()
   set(Autowiring_SRCS
     CoreThreadUnix.cpp
-	InterlockedExchangeUnix.cpp
+    InterlockedExchangeUnix.cpp
     ${Autowiring_SRCS}
   )
 endif()
 
 set(
   AutowiringTest_SRCS
+  AutowiringBenchmarkTest.h
+  AutowiringBenchmarkTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h
@@ -130,30 +146,34 @@ set(
   GraphConstructionTest.cpp
   InterlockedRoutinesTest.h
   InterlockedRoutinesTest.cpp
-  LockFreeListTest.h
-  LockFreeListTest.cpp
-  LockReducedCollectionTest.h
-  LockReducedCollectionTest.cpp
   MarshalingTest.h
   MarshalingTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
   ObjectPoolTest.h
   ObjectPoolTest.cpp
+  PeerContextTest.h
+  PeerContextTest.cpp
   PolymorphicTypeForestTest.h
   PolymorphicTypeForestTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
   ReentrantCounterTest.h
   ReentrantCounterTest.cpp
+  SelfSelectingFixtureTest.h
+  SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
-  TransientContextMemberTest.h
-  TransientContextMemberTest.cpp
+  TypeRegistryTest.h
+  TypeRegistryTest.cpp
   ScopeTest.h
   ScopeTest.cpp
   SnoopTest.h
   SnoopTest.cpp
+  SimpleOwnershipValidatorTest.h
+  SimpleOwnershipValidatorTest.cpp
+  StateMachineTest.h
+  StateMachineTest.cpp
   TestFixtures/ExitRaceThreaded.h
   TestFixtures/SimpleInterface.h
   TestFixtures/SimpleObject.h
@@ -163,32 +183,46 @@ set(
   UuidTest.cpp
 )
 
+set(
+  AutowiringFixture_SRCS
+  SelfSelectingFixture.h
+  SelfSelectingFixture.cpp
+  OtherSelectingFixture.h
+  OtherSelectingFixture.cpp
+)
+
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 if(NOT BUILD_WINDOWS)
   set(Boost_SYSTEM_LIBRARY libboost_system)
   add_library(${Boost_SYSTEM_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_SYSTEM_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_SYSTEM_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-	
+  
   set(Boost_THREAD_LIBRARY libboost_thread)
   add_library(${Boost_THREAD_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_THREAD_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_THREAD_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-	
+  
   set(Boost_CHRONO_LIBRARY libboost_chrono)
   add_library(${Boost_CHRONO_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_CHRONO_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_CHRONO_LIBRARY}${STATIC_LIBRARY_SUFFIX})
 
-  if(NOT BUILD_MAC)
+  if(NOT BUILD_MAC AND NOT BUILD_ANDROID)
+    # Linux non-Android only
     target_link_libraries(Autowiring -lrt)
   endif()
-  target_link_libraries(Autowiring -lpthread ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY})
+  if(NOT BUILD_ANDROID)
+    target_link_libraries(Autowiring -lpthread)
+  endif()
+  target_link_libraries(Autowiring ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY})
 endif()
 
 if(BUILD_TESTING)
+  ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringFixture_SRCS)
+  add_library(AutowiringFixture ${AutowiringFixture_SRCS})
+
   ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
   add_executable(AutowiringTest ${AutowiringTest_SRCS} "../gtest-all-guard.cpp")
-  
-  target_link_libraries(AutowiringTest Autowiring)
+  target_link_libraries(AutowiringTest Autowiring AutowiringFixture)
 endif(BUILD_TESTING)
 
 if(BUILD_AUTONET)

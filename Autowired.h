@@ -1,10 +1,11 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _AUTOWIRED_H
 #define _AUTOWIRED_H
-#include "AutoFactory.h"
 #include "AutowirableSlot.h"
-#include "CoreContext.h"
+#include "CreationRules.h"
+#include "GlobalCoreContext.h"
 #include "Decompose.h"
+#include "TypeRegistry.h"
 #include <functional>
 #include <memory>
 
@@ -12,8 +13,6 @@ template<class T>
 class Autowired;
 class CoreContext;
 class GlobalCoreContext;
-template<class T, class Witness>
-class TransientPool;
 
 /// <summary>
 /// Provides a simple way to obtain a reference to the current context
@@ -33,10 +32,20 @@ public:
 /// Simple way to obtain a reference to the global context
 /// </summary>
 class AutoGlobalContext:
-  public std::shared_ptr<CoreContext>
+  public std::shared_ptr<GlobalCoreContext>
 {
 public:
   AutoGlobalContext(void);
+};
+
+/// <summary>
+/// Idiom to enable boltable classes
+/// </summary>
+template<class T>
+class AutoEnable
+{
+public:
+  AutoEnable(void) { CoreContext::CurrentContext()->Enable<T>(); }
 };
 
 /// <summary>
@@ -60,18 +69,8 @@ class AutowiredCreator:
 public:
   typedef T value_type;
   typedef shared_ptr<T> t_ptrType;
-  
-  template<class U>
-  static typename std::enable_if<has_static_new<U>::value, U*>::type New(void) {
-    return U::New();
-  }
 
-  template<class U>
-  static typename std::enable_if<!has_static_new<U>::value, U*>::type New(void) {
-    static_assert(!std::is_abstract<U>::value, "Cannot create a type which is abstract");
-    static_assert(has_simple_constructor<U>::value, "Attempted to create a type which did not provide a zero-arguments ctor");
-    return new U;
-  }
+  AutowiredCreator(void) {}
 
   /// <summary>
   /// Creates a new instance if this instance isn't autowired
@@ -110,7 +109,7 @@ public:
     // constructor is defined.
     //
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-    this->reset(New<T>());
+    this->reset(CreationRules::New<T>());
     AutowirableSlot::LockContext()->Add(*this);
   }
 
@@ -167,26 +166,6 @@ public:
 };
 
 /// <summary>
-/// Unconditionally creates a new transient member of type T and adds it to the current context
-/// </summary>
-template<class T>
-class AutoTransient:
-  public std::shared_ptr<T>
-{
-public:
-  /// <summary>
-  /// Constructor which registers the specified transient instance with the passed pool
-  /// </summary>
-  template<class W>
-  AutoTransient(TransientPool<T, W>& pool):
-    std::shared_ptr<T>(new T)
-  {
-    // Associate with the pool:
-    pool.Add(*this);
-  }
-};
-
-/// <summary>
 /// This class
 /// </summary>
 template<class T>
@@ -195,34 +174,40 @@ class AutoFired
 public:
   AutoFired(void) {
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
+    
+    // Add an utterance of the TypeRegistry so we can add this autowired type to our collection
+    RegType<T>::r;
 
     auto ctxt = CoreContext::CurrentContext();
-    m_receiver = ctxt->GetEventRecieverProxy<T>();
+    m_junctionBox = ctxt->GetJunctionBox<T>();
   }
 
   /// <summary>
   /// Utility constructor, used when the receiver is already known
   /// </summary>
-  AutoFired(const std::shared_ptr<EventReceiverProxy<T>>& receiver) :
-    m_receiver(receiver)
-  {}
+  AutoFired(const std::shared_ptr<JunctionBox<T>>& junctionBox) :
+    m_junctionBox(junctionBox)
+  {
+    // Add an utterance of the TypeRegistry so we can add this autowired type to our collection
+    RegType<T>::r;
+  }
 
   /// <summary>
   /// Utility constructor, used to support movement operations
   /// </summary>
   AutoFired(AutoFired&& rhs):
-    m_receiver(std::move(rhs.m_receiver))
+    m_junctionBox(std::move(rhs.m_junctionBox))
   {}
 
 private:
-  std::shared_ptr<EventReceiverProxy<T>> m_receiver;
+  std::shared_ptr<JunctionBox<T>> m_junctionBox;
 
   template<class MemFn, bool isDeferred = std::is_same<typename Decompose<MemFn>::retType, Deferred>::value>
   struct Selector {
     typedef std::function<typename Decompose<MemFn>::fnType> retType;
 
-    static inline retType Select(EventReceiverProxy<T>* pReceiver, MemFn pfn) {
-      return pReceiver->Defer(pfn);
+    static inline retType Select(JunctionBox<T>* pJunctionBox, MemFn pfn) {
+      return pJunctionBox->Defer(pfn);
     }
   };
 
@@ -230,34 +215,34 @@ private:
   struct Selector<MemFn, false> {
     typedef std::function<typename Decompose<MemFn>::fnType> retType;
 
-    static inline retType Select(EventReceiverProxy<T>* pReceiver, MemFn pfn) {
-      return pReceiver->Fire(pfn);
+    static inline retType Select(JunctionBox<T>* pJunctionBox, MemFn pfn) {
+      return pJunctionBox->Fire(pfn);
     }
   };
 
 public:
   bool HasListeners(void) const {
-    return m_receiver->HasListeners();
+    return m_junctionBox->HasListeners();
   }
 
   template<class MemFn>
   InvokeRelay<MemFn> operator()(MemFn pfn) const {
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot invoke an event for an unrelated type");
-    return m_receiver->Invoke(pfn);
+    return m_junctionBox->Invoke(pfn);
   }
 
   template<class MemFn>
   InvokeRelay<MemFn> Fire(MemFn pfn) const {
     static_assert(!std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Fire an event which is marked Deferred");
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot Fire an event for an unrelated type");
-    return m_receiver->Invoke(pfn);
+    return m_junctionBox->Invoke(pfn);
   }
 
   template<class MemFn>
   InvokeRelay<MemFn> Defer(MemFn pfn) const {
     static_assert(std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Defer an event which does not return the Deferred type");
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot Defer an event for an unrelated type");
-    return m_receiver->Invoke(pfn);
+    return m_junctionBox->Invoke(pfn);
   }
 };
 
