@@ -194,7 +194,7 @@ public:
 private:
   struct TreeBaseFoundation {
     virtual ~TreeBaseFoundation(void) {}
-    virtual void* RawPointer(void) const = 0;
+    virtual const void* RawPointer(void) const = 0;
   };
 
   template<class Ground>
@@ -223,7 +223,7 @@ private:
     // Witness of this type
     std::shared_ptr<T> pWitness;
 
-    void* RawPointer(void) const override {return pWitness.get();}
+    const void* RawPointer(void) const override {return pWitness.get();}
 
     virtual void operator=(const std::shared_ptr<Ground>& rhs) override {
       TreeBase<Ground>::pGround = rhs;

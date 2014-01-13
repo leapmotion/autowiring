@@ -19,10 +19,14 @@ boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curCont
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil) :
   m_pParent(pParent),
   m_sigil(sigil),
-  m_shouldStop(false),
   m_useOwnershipValidator(false),
-  m_refCount(0)
+  m_shouldRunNewThreads(false),
+  m_isShutdown(false)
 {
+#ifdef _DEBUG
+  m_magic = CORE_CONTEXT_MAGIC;
+#endif
+
   m_junctionBoxManager.reset(new JunctionBoxManager);
   
   auto ptr = GetJunctionBox<AutoPacketListener>();
@@ -32,8 +36,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
       AutoFired<AutoPacketListener>(ptr)
     )
   );
-  
-  ASSERT(pParent.get() != this);
+  assert(pParent.get() != this);
 }
 
 // Peer Context Constructor. Called interally by CreatePeer
@@ -46,13 +49,12 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_junctionBoxManager(pPeer->m_junctionBoxManager),
   m_packetFactory(pPeer->m_packetFactory)
 {
-  ASSERT(pParent.get() != this);
 }
 
 CoreContext::~CoreContext(void) {
   // The s_curContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
   // still holds a reference to us, then we have a serious problem.
-  ASSERT(
+  assert(
     !s_curContext.get() ||
     !s_curContext.get()->use_count() ||
     s_curContext.get()->get() != this
@@ -76,6 +78,12 @@ CoreContext::~CoreContext(void) {
   // Explicit deleters to simplify base deletion of any deferred autowiring requests:
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
     delete q->second;
+
+#ifdef _DEBUG
+  // Invalidate magic value:
+  assert(m_magic == CORE_CONTEXT_MAGIC);
+  m_magic = 0xFEFEFEFE;
+#endif
 }
 
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
@@ -153,13 +161,16 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, Co
 void CoreContext::InitiateCoreThreads(void) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    if(m_refCount++)
+    if(m_shouldRunNewThreads)
       // Already running
       return;
 
     // Short-return if our stop flag has already been set:
-    if(m_shouldStop)
+    if(m_isShutdown)
       return;
+
+    // Update flag value
+    m_shouldRunNewThreads = true;
   }
 
   if(m_pParent)
@@ -174,32 +185,9 @@ void CoreContext::InitiateCoreThreads(void) {
     (*q)->Start(outstanding);
 }
 
-void CoreContext::SignalShutdown(void) {
-  {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    if(m_refCount == 0 || --m_refCount)
-      // Someone else still depends on this
-      return;
-    
-    // Now transitioning to the stopped state:
-    m_shouldStop = true;
-    m_stateChanged.notify_all();
-  }
-
-  // Also pass notice to all child threads:
-  for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
-    (*q)->Stop();
-
-  // Pass notice to the parent.  This is required because we use reference counts to decide
-  // when to shut down, and it makes no sense to keep a parent context running when we were
-  // the ones who got it going in the first place.
-  if(m_pParent)
-    m_pParent->SignalShutdown();
-}
-
-void CoreContext::SignalTerminate(bool wait) {
+void CoreContext::SignalShutdown(bool wait) {
   // Transition as soon as possible:
-  m_shouldStop = true;
+  m_isShutdown = true;
 
   {
     // Teardown interleave assurance--all of these contexts will generally be destroyed
@@ -234,14 +222,15 @@ void CoreContext::SignalTerminate(bool wait) {
 
     // Now that we have a locked-down, immutable series, begin termination signalling:
     for(size_t i = childrenInterleave.size(); i--; )
-      childrenInterleave[i]->SignalTerminate(wait);
+      childrenInterleave[i]->SignalShutdown(wait);
   }
 
-  // Shut myself down.  This also signals our condition variable.
-  SignalShutdown();
+  // Pass notice to all child threads:
+  for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
+    (*q)->Stop();
 
-  // I shouldn't be referenced anywhere now.
-  ASSERT(m_refCount == 0);
+  // Signal our condition variable
+  m_stateChanged.notify_all();
 
   // Short-return if required:
   if(!wait)
@@ -273,7 +262,7 @@ void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr) {
   // Insert into the linked list of threads first:
   m_threads.push_front(ptr.get());
 
-  if(m_refCount)
+  if(m_shouldRunNewThreads)
     // We're already running, this means we're late to the game and need to start _now_.
     ptr->Start(IncrementOutstandingThreadCount());
 }
@@ -286,7 +275,7 @@ void CoreContext::Dump(std::ostream& os) const {
   boost::lock_guard<boost::mutex> lk(m_lock);
   for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
     os << q->first.derived.name();
-    void* pObj = q->second->RawPointer();
+    const void* pObj = q->second->RawPointer();
     if(pObj)
       os << " 0x" << hex << pObj;
     os << endl;

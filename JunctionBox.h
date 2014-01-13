@@ -109,6 +109,8 @@ public:
   /// </summary>
   bool HasListeners(void) const override {return (boost::lock_guard<boost::mutex>)m_lock, !m_st.empty();}
 
+
+    m_st.Clear();
   JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     if(casted){
