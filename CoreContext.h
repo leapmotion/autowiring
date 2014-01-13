@@ -52,6 +52,8 @@ class Autowired;
 template<class Sigil1, class Sigil2, class Sigil3>
 struct Boltable;
 
+#define CORE_CONTEXT_MAGIC 0xC04EC0DE
+
 /// <summary>
 /// This class is used to determine whether all core threads have exited
 /// </summary>
@@ -132,6 +134,11 @@ protected:
   std::shared_ptr<CoreContext> Create(const std::type_info& sigil, CoreContext& newContext);
   std::shared_ptr<CoreContext> CreatePeer(const std::type_info& sigil);
 
+#ifdef _DEBUG
+  // Magic value, used to detect doublefree cases
+  long m_magic;
+#endif
+
   // General purpose lock for this class
   mutable boost::mutex m_lock;
 
@@ -174,12 +181,11 @@ protected:
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
 
-  // The current RUN count.  This is the number of times that InitiateCoreThreads has been called.
-  // SignalShutdown must be called an equal number of times to actually shut down this context.
-  int m_refCount;
+  // Set if threads in this context should be started when they are added
+  bool m_shouldRunNewThreads;
 
-  // This is a global STOP variable, used to signal shutdown when it's time to quit.
-  bool m_shouldStop;
+  // Set if the context has been shut down
+  bool m_isShutdown;
 
   // Condition, signalled when context state has been changed
   boost::condition m_stateChanged;
@@ -379,7 +385,8 @@ public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const {return m_byType.size();}
-  bool IsRunning(void) const {return !!m_refCount;}
+  bool IsRunning(void) const { return m_shouldRunNewThreads && !m_isShutdown; }
+  bool IsShutdown(void) const { return m_isShutdown; }
   const std::type_info& GetSigilType(void) const { return m_sigil; }
 
   /// <summary>
@@ -403,11 +410,6 @@ public:
   }
 
   /// <returns>
-  /// True if CoreThread instances in this context should begin teardown operations
-  /// </returns>
-  bool ShouldStop(void) const {return m_shouldStop;}
-
-  /// <returns>
   /// True if this context was ever started
   /// </returns>
   /// <remarks>
@@ -417,7 +419,7 @@ public:
   /// </remarks>
   bool WasStarted(void) const {
     // We were started IF we are currently running, OR we have been signalled to stop
-    return IsRunning() || ShouldStop();
+    return m_shouldRunNewThreads || m_isShutdown;
   }
 
   /// <returns>
@@ -507,6 +509,9 @@ public:
         throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
     }
 
+    // Shared pointer to our entity, if it's a CoreThread
+    std::shared_ptr<CoreThread> pCoreThread;
+
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
 
@@ -519,7 +524,7 @@ public:
         AddContextMember(pContextMember);
 
         // CoreThreads:
-        auto pCoreThread = std::fast_pointer_cast<CoreThread, T>(value);
+        pCoreThread = std::fast_pointer_cast<CoreThread, T>(value);
         if(pCoreThread)
           AddCoreThread(pCoreThread);
       }
@@ -547,8 +552,11 @@ public:
     // to be considered.
     UpdateDeferredElements();
 
-    // Ownership validation, as appropriate:
-    if(m_useOwnershipValidator)
+    // Ownership validation, as appropriate
+    // We do not attempt to pend validation for CoreThread instances, because a CoreThread could potentially hold
+    // the final outstanding reference to this context, and therefore may be responsible for this context's (and,
+    // transitively, its own) destruction.
+    if(m_useOwnershipValidator && !pCoreThread)
       SimpleOwnershipValidator::PendValidation(std::weak_ptr<T>(value));
   }
 
@@ -574,13 +582,13 @@ public:
   /// This signals to the whole system that a shutdown operation is underway, and that
   /// shutdown procedures should begin immediately
   /// </summary>
-  void SignalShutdown(void);
+  /// <param name="wait">Set if the function should wait for all child contexts to exit before returning</param>
+  void SignalShutdown(bool wait = false);
 
   /// <summary>
-  /// This terminates this context and all of its children, by force if necessary
+  /// Alias for SignalShutdown
   /// </summary>
-  /// <param name="wait">Set if the function should wait for all child contexts to exit before returning</param>
-  void SignalTerminate(bool wait = true);
+  void SignalTerminate(bool wait = true) { SignalShutdown(wait); }
 
   /// <summary>
   /// Waits for all threads holding references to exit
