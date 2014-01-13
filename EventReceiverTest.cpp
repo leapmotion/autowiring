@@ -183,11 +183,12 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
 
   // Can't test this until MSVC11!
 
+  /*
 #if _MSC_VER >= 1700
   // Pass the field in:
   sender(&CallableInterfaceDeferred::TrackCopy)(std::move(ctr));
 #endif
-
+  */
   // Signal stop:
   sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
