@@ -7,12 +7,16 @@
 #include "CoreThread.h"
 #include "CurrentContextPusher.h"
 #include "DeferredBase.h"
-#include "ExceptionFilter.h"
 #include "JunctionBox.h"
 #include "JunctionBoxManager.h"
+#include "EventInputStream.h"
+#include "EventOutputStream.h"
+#include "ExceptionFilter.h"
 #include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
+
+#include "uuid.h"
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/tss.hpp>
@@ -43,6 +47,7 @@ class ContextMember;
 class CoreContext;
 class CoreThread;
 class EventReceiver;
+class EventOutputStreamBase;
 class GlobalCoreContext;
 class OutstandingCountTracker;
 
@@ -165,6 +170,11 @@ protected:
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
 
+  // All EventOutputStreams objects known in this autowirer:
+  typedef std::map<const std::type_info *, std::vector<std::weak_ptr<EventOutputStreamBase> > > t_eventOutputStreamMap;
+  t_eventOutputStreamMap m_eventOutputStreams;
+  //std::unordered_set<std::shared_ptr<EventOutputStreamBase>> m_eventOutputStreams;
+
   // Collection of objects waiting to be autowired, and a specific lock exclusively for this collection
   boost::mutex m_deferredLock;
   typedef std::map<const AutowirableSlot*, DeferredBase*> t_deferred;
@@ -245,6 +255,8 @@ protected:
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
   void UpdateDeferredElements(void);
+
+
 
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
@@ -385,8 +397,78 @@ public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const {return m_byType.size();}
-  bool IsRunning(void) const { return m_shouldRunNewThreads && !m_isShutdown; }
-  bool IsShutdown(void) const { return m_isShutdown; }
+
+/// <summary>
+/// Adds the named eventoutputstream to the collection of known eventoutputstreams
+/// </summary>
+template <class T>
+void AddEventOutputStream(std::weak_ptr<EventOutputStreamBase> pRecvr){
+  auto mapfinditerator= m_eventOutputStreams.find(&typeid(T));
+  if (mapfinditerator != m_eventOutputStreams.end()){
+    //if the type exists already, find the correspoonding outputstreambase and push it back.
+    (mapfinditerator -> second).push_back(pRecvr);
+  }
+  else {
+    std::vector<std::weak_ptr<EventOutputStreamBase> > newvec;
+    newvec.push_back(pRecvr);
+    m_eventOutputStreams[&typeid(T)] = newvec; //assignment copy constructor invoked; 
+  }
+}
+/// <summary>
+/// This method checks whether eventoutputstream listeners for the given type still exist.
+/// For a given type in a hash, returns a vector of weak ptrs.
+/// Goes through the weak ptrs, locks them, erases dead ones.
+/// If any live ones found return true. Otherwise false.
+/// NOTE: this func does lazy cleanup on weakptrs ptng to suff that has fallen out of scope.
+/// </summary>
+template <class T>
+bool CheckEventOutputStream(void){
+   auto mapfinditerator= m_eventOutputStreams.find(&typeid(T));
+   if (mapfinditerator != m_eventOutputStreams.end()){
+      auto v = (mapfinditerator->second);
+	  auto it = v.begin();
+	  while(it != v.end() ){
+	     if( (*it).lock() ) return true;
+	     it = v.erase(it); 
+       }
+	   return false; //return false if iterated through whole vec without seeing any live pointers.
+	}
+   return false;  //return false if no vec with that type
+}
+
+
+template <class MemFn, MemFn fptr>
+std::string SpecialTest(){
+	//m_noArgsMap[str] = fptr;
+	static std::string thisstring = "sdsd";
+	return str;
+}
+
+/// <summary>
+/// Distributes func and args to all listening marshal types
+/// to serialize as the marshal listeners please.
+/// </summary>
+template <typename T, class Memfn, class Arg1>
+void DistributeToMarshals(Memfn & memfn, Arg1 & arg1){
+   auto mapfinditerator= m_eventOutputStreams.find(&typeid(T));
+   if (mapfinditerator != m_eventOutputStreams.end()){
+      auto v = (mapfinditerator->second);
+    auto it = v.begin();
+    while(it != v.end() ){
+      auto testptr = (*it).lock();
+       if( testptr ) {
+        //if given eventid is enabled for given eventoutputstream, serialize!
+       if (testptr -> IsEnabled(memfn)){
+         testptr -> Serialize(memfn, arg1);
+      }
+      ++it;
+     }
+       else it = v.erase(it); //opportunistically kill dead references.
+       }
+  }
+   return;
+}
+
   const std::type_info& GetSigilType(void) const { return m_sigil; }
 
   /// <summary>
@@ -513,6 +595,7 @@ public:
     std::shared_ptr<CoreThread> pCoreThread;
 
     {
+
       boost::lock_guard<boost::mutex> lk(m_lock);
 
       // Add a new member of the forest:
@@ -787,6 +870,26 @@ public:
   /// Utility routine to print information about the current exception
   /// </summary>
   static void DebugPrintCurrentExceptionInformation();
+
+  /// <summary>
+  /// Creates a new event stream based on the provided event type
+  /// </summary>
+  template<class T>
+  std::shared_ptr<EventOutputStream<T>> CreateEventOutputStream(void) {
+    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot create an output stream based on a non-event type");
+    static_assert(uuid_of<T>::value, "Cannot create an output stream on type T, the type was not defined with DECLARE_UUID");
+    auto retval =  std::make_shared<EventOutputStream<T>>();
+    auto upcastptr = static_cast<std::shared_ptr<EventOutputStreamBase>>(retval);
+	std::weak_ptr<EventOutputStreamBase> weakStreamPtr = upcastptr;
+    AddEventOutputStream<T>(weakStreamPtr);    
+    return retval;
+  }
+
+  template<class T>
+  std::shared_ptr<EventInputStream<T>> CreateEventInputStream(void) {
+   auto retval =  std::make_shared<EventInputStream<T>>();
+   return retval;
+  }
 };
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& context);

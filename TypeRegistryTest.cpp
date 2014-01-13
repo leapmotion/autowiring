@@ -1,9 +1,15 @@
 #include "stdafx.h"
 #include "TypeRegistryTest.h"
+#include "GlobalCoreContext.h"
+#include "Autowired.h"
+#include "JunctionBox.h"
 #include "TypeRegistry.h"
 
 template<int>
-class Registered {};
+class Registered:
+  public EventReceiver
+{
+};
 
 TEST_F(TypeRegistryTest, VerifySimpleLocalRegistration) {
   // Register two entries statically by uttering the static member's name:
