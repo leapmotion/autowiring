@@ -3,14 +3,15 @@
 #include "ContextCreator.h"
 #include <string>
 
-extern const char gc_contextName[] = "eviction_context";
+struct EvictionContext {};
 
 class Creator:
-  public ContextCreator<gc_contextName, int> {
+  public ContextCreator<EvictionContext, int>
+{
 };
 
 class VoidCreator:
-  public ContextCreator<gc_contextName>
+  public ContextCreator<EvictionContext>
 {
 public:
   VoidCreator(void):
@@ -21,7 +22,7 @@ public:
 
   void NotifyContextDestroyed(t_contextList::iterator q, CoreContext* pContext) override {
     m_totalDestroyed++;
-    ContextCreator<gc_contextName>::NotifyContextDestroyed(q, pContext);
+    ContextCreator<EvictionContext>::NotifyContextDestroyed(q, pContext);
   }
 };
 
@@ -53,10 +54,6 @@ class WaitMember:
   public CoreThread
 {
 public:
-  WaitMember(void) {
-    Ready();
-  }
-
   AutoRequired<GlobalSignal> m_signal;
 
   void Run(void) override {
@@ -74,7 +71,7 @@ TEST_F(ContextCreatorTest, ValidateSimpleEviction) {
     std::shared_ptr<CoreContext> ctxt;
 
     // Make a context:
-    ctxt = *creator->CreateContext(1);
+    ctxt = creator->CreateContext(1).first;
 
     // Obtain a weak pointer, in order to ensure proper teardown:
     ctxtWeak = ctxt;
@@ -110,6 +107,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
     for(int i = count; i--;) {
       AutoCreateContext ctxt;
       CurrentContextPusher pshr(ctxt);
+      ctxt->EnforceSimpleOwnership();
 
       // Trivial validation that the newly created context is an empty context:
       ASSERT_EQ(static_cast<size_t>(0), ctxt->GetMemberCount()) << "A created context was not empty";
@@ -146,13 +144,9 @@ TEST_F(ContextCreatorTest, VoidKeyType) {
   AutoRequired<VoidCreator> vc;
 
   {
-    std::shared_ptr<CoreContext> ctxt;
+    std::shared_ptr<CoreContext> ctxt = vc->CreateContext();
+    EXPECT_EQ(1UL, vc->GetSize()) << "Requested that a context be created, but the void creator did not have any members";
 
-    {
-      auto created = vc->CreateContext();
-      ctxt = *created;
-      EXPECT_EQ(1UL, vc->GetSize()) << "Requested that a context be created, but the void creator did not have any members";
-    }
     EXPECT_EQ(1UL, vc->GetSize()) << "A created context was apparently destroyed after firing bolts";
     EXPECT_EQ(0UL, vc->m_totalDestroyed) << "The void creator received a NotifyContextDestroyed call unexpectedly early";
   }

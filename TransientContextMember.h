@@ -1,3 +1,5 @@
+// Transient pools are deprecated. Don't include this header.
+#error
 #pragma once
 
 /// <summary>
@@ -22,6 +24,7 @@
 class TransientContextMember
 {
 public:
+  DEPRECATED(TransientContextMember(), "Transient context members are deprecated.  Instead of using transient members, insert them into an anonymous subcontext") {}
   virtual ~TransientContextMember(void) {}
 };
 

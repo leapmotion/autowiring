@@ -7,28 +7,45 @@
 #include "BoltBase.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
+#include "MicroBolt.h"
 #include <algorithm>
 #include <memory>
+#include <boost/thread/reverse_lock.hpp>
 
 using namespace std;
 
 boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
 
-CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent):
+CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil) :
   m_pParent(pParent),
+  m_sigil(sigil),
   m_shouldStop(false),
+  m_useOwnershipValidator(false),
   m_refCount(0)
 {
-  // Prime the proxy map with the APL recipient:
-  auto ptr = make_shared<EventReceiverProxy<AutoPacketListener>>();
-  m_proxies[typeid(AutoPacketListener)] = ptr;
+  m_junctionBoxManager.reset(new JunctionBoxManager);
+  
+  auto ptr = GetJunctionBox<AutoPacketListener>();
+  
   m_packetFactory.reset(
     new AutoPacketFactory(
-      AutoFired<AutoPacketListener>(
-        std::move(ptr)
-      )
+      AutoFired<AutoPacketListener>(ptr)
     )
   );
+  
+  ASSERT(pParent.get() != this);
+}
+
+// Peer Context Constructor. Called interally by CreatePeer
+CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer) :
+  m_pParent(pParent),
+  m_sigil(sigil),
+  m_shouldStop(false),
+  m_useOwnershipValidator(false),
+  m_refCount(0),
+  m_junctionBoxManager(pPeer->m_junctionBoxManager),
+  m_packetFactory(pPeer->m_packetFactory)
+{
   ASSERT(pParent.get() != this);
 }
 
@@ -44,17 +61,13 @@ CoreContext::~CoreContext(void) {
   // Notify all ContextMember instances that their parent is going away
   NotifyTeardownListeners();
 
-  // Release all event sender links:
-  for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
-    (*q).second->ReleaseRefs();
-
-  // Eliminate all snoopers from our apprehended list of receivers:
-  for(auto q = m_snoopers.begin(); q != m_snoopers.end(); q++)
-    m_eventReceivers.erase(*q);
-
+  // Release all event receivers originating from this context:
+  m_junctionBoxManager->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+  
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
-  if(m_pParent)
+  if(m_pParent){
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+  }
 
   // Tell all context members that we're tearing down:
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
@@ -63,26 +76,6 @@ CoreContext::~CoreContext(void) {
   // Explicit deleters to simplify base deletion of any deferred autowiring requests:
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
     delete q->second;
-}
-
-void CoreContext::BroadcastContextCreationNotice(const char* contextName, const std::shared_ptr<CoreContext>& context) const {
-  auto nameIter = m_nameListeners.find(contextName);
-  if(nameIter != m_nameListeners.end()) {
-    // Context creation notice requires that the created context be set before invocation:
-    CurrentContextPusher pshr(context);
-
-    // Iterate through all listeners:
-    const std::list<BoltBase*>& list = nameIter->second;
-    for(auto q = list.begin(); q != list.end(); q++)
-      (**q).ContextCreated();
-  }
-
-  // Pass the broadcast to all listening children:
-  for(auto q = m_children.begin(); q != m_children.end(); q++) {
-    std::shared_ptr<CoreContext> child = q->lock();
-    if(child)
-      child->BroadcastContextCreationNotice(contextName, context);
-  }
 }
 
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
@@ -110,7 +103,19 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   return retVal;
 }
 
-std::shared_ptr<CoreContext> CoreContext::Create(void) {
+std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
+  return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
+}
+
+std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil){
+  return Create(sigil, *new CoreContext(shared_from_this(), sigil));
+}
+
+std::shared_ptr<CoreContext> CoreContext::CreatePeer(const std::type_info& sigil) {
+  return m_pParent->Create(sigil, *new CoreContext(m_pParent, sigil, shared_from_this()));
+}
+
+std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, CoreContext& newContext) {
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert
@@ -121,8 +126,10 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
   }
 
   // Create the child context
-  CoreContext* pContext = new CoreContext(shared_from_this());
-
+  CoreContext* pContext = &newContext;
+  if(m_useOwnershipValidator)
+    pContext->EnforceSimpleOwnership();
+  
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
   std::shared_ptr<CoreContext> retVal(
@@ -136,6 +143,10 @@ std::shared_ptr<CoreContext> CoreContext::Create(void) {
     }
   );
   *childIterator = retVal;
+
+  // Fire all explicit bolts:
+  CurrentContextPusher pshr(retVal);
+  BroadcastContextCreationNotice(sigil);
   return retVal;
 }
 
@@ -238,7 +249,13 @@ void CoreContext::SignalTerminate(bool wait) {
 
   // Wait for the treads to finish before returning.
   for (t_threadList::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
-    (*it)->Wait();
+    auto& cur = **it;
+
+    // Wait for completion only if we're currently running.  The thread cannot be made active
+    // at this point, because we're in teardown, and this makes it safe to elide the call to
+    // wait if the thread has never been run yet.
+    if(cur.IsRunning())
+      cur.Wait();
   }
 }
 
@@ -252,11 +269,7 @@ std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   return *retVal;
 }
 
-void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr, bool allowNotReady) {
-  // We don't allow the insertion of a thread that isn't ready unless the user really
-  // wants that behavior.
-  ASSERT(allowNotReady || ptr->IsReady());
-
+void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr) {
   // Insert into the linked list of threads first:
   m_threads.push_front(ptr.get());
 
@@ -266,7 +279,7 @@ void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr, bool all
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
-  m_nameListeners[pBase->GetContextName()].push_back(pBase.get());
+  m_nameListeners[pBase->GetContextSigil()].push_back(pBase.get());
 }
 
 void CoreContext::Dump(std::ostream& os) const {
@@ -286,16 +299,29 @@ void CoreContext::Dump(std::ostream& os) const {
   }
 }
 
-void FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) {
+void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient) {
   // Obtain the current context and pass control:
   CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
+}
+
+void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) const {
+  auto q = m_nameListeners.find(sigil);
+  if(q != m_nameListeners.end()) {
+    // Iterate through all listeners:
+    const auto& list = q->second;
+    for(auto q = list.begin(); q != list.end(); q++)
+      (**q).ContextCreated();
+  }
+
+  // Notify the parent next:
+  if(m_pParent)
+    m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
 void CoreContext::UpdateDeferredElements(void) {
   std::list<DeferredBase*> successful;
 
   // Notify any autowired field whose autowiring was deferred
-  // TODO:  We should also notify any descendant autowiring contexts that a new member is now available.
   {
     boost::lock_guard<boost::mutex> lk(m_deferredLock);
     for(t_deferred::iterator r = m_deferred.begin(); r != m_deferred.end(); ) {
@@ -316,18 +342,29 @@ void CoreContext::UpdateDeferredElements(void) {
   // This causes any listeners to be invoked, conveniently, outside of the context of any lock
   for(std::list<DeferredBase*>::iterator q = successful.begin(); q != successful.end(); ++q)
     delete *q;
+
+  // Give children a chance to also update their deferred elements:
+  boost::unique_lock<boost::mutex> lk(m_childrenLock);
+  for(auto q = m_children.begin(); q != m_children.end(); q++) {
+    // Hold reference to prevent this iterator from becoming invalidated:
+    auto ctxt = q->lock();
+    if(!ctxt)
+      continue;
+
+    // Reverse lock before satisfying children:
+    lk.unlock();
+    ctxt->UpdateDeferredElements();
+    lk.lock();
+  }
 }
 
 void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
   {
-    // Add to our local collection:
     boost::lock_guard<boost::mutex> lk(m_lock);
     m_eventReceivers.insert(pRecvr);
-
-    // Scan the list of compatible senders:
-    for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
-      *q->second += pRecvr;
   }
+  
+  m_junctionBoxManager->AddEventReceiver(pRecvr);
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
@@ -336,13 +373,12 @@ void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
 }
 
 void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-  // Remove from the local collection
-  (boost::lock_guard<boost::mutex>)m_lock,
-  m_eventReceivers.erase(pRecvr);
-
-  // Notify all compatible senders that we're going away:
-  for(auto q = m_proxies.begin(); q != m_proxies.end(); q++)
-    *q->second -= pRecvr;
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_eventReceivers.erase(pRecvr);
+  }
+  
+  m_junctionBoxManager->RemoveEventReceiver(pRecvr);
 
   // Delegate to the parent:
   if(m_pParent)
@@ -352,16 +388,14 @@ void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
 void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    for(auto q = first; q != last; q++) {
-      // n^2 sender unlinking
-      for(auto r = m_proxies.begin(); r != m_proxies.end(); r++)
-        *r->second -= *q;
-
-      // Trivial erase:
-      m_eventReceivers.erase(*q);
+  
+    for (auto derp = first; derp != last; derp++){
+      m_eventReceivers.erase(*derp);
     }
   }
-
+  
+  m_junctionBoxManager->RemoveEventReceivers(first, last);
+  
   // Detour to the parent collection (if necessary)
   if(m_pParent)
     m_pParent->RemoveEventReceivers(first, last);
@@ -398,7 +432,7 @@ void CoreContext::FilterException(void) {
     std::rethrow_exception(std::current_exception());
 }
 
-void CoreContext::FilterFiringException(const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) {
+void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient) {
   auto rethrower = [] () {
     std::rethrow_exception(std::current_exception());
   };
@@ -445,10 +479,6 @@ void CoreContext::NotifyWhenAutowired(const AutowirableSlot& slot, const std::fu
   }
 
   q->second->AddPostBindingListener(listener);
-}
-
-std::shared_ptr<CoreContext> CreateContextThunk(void) {
-  return CoreContext::CurrentContext()->Create();
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {

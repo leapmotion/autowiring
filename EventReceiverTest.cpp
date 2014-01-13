@@ -3,110 +3,12 @@
 #include "EventReceiverTest.h"
 #include "Autowiring/Autowired.h"
 #include "Autowiring/CoreThread.h"
+#include "TestFixtures/SimpleReceiver.h"
 #include <boost/thread/barrier.hpp>
 #include <stdexcept>
 #include <vector>
 
 using namespace std;
-
-class invalid_copycounter_exception:
-  public autowiring_error
-{
-public:
-  invalid_copycounter_exception(void):
-    autowiring_error("Copy counter was moved, and incorrectly reused")
-  {}
-};
-
-class CopyCounter {
-public:
-  CopyCounter(void):
-    m_count(0)
-  {}
-
-  CopyCounter(const CopyCounter& rhs):
-    m_count(rhs.m_count + 1)
-  {
-    rhs.Check();
-  }
-
-  /// <summary>
-  /// Special case move ctor, which won't increment the count
-  /// </summary>
-  CopyCounter(CopyCounter&& rhs):
-    m_count(rhs.m_count)
-  {
-    rhs.Check();
-    rhs.m_count = -1;
-  }
-
-  /// <summary>
-  /// Destructor, which invalidates the count in a specific way to indicate use-after-free
-  /// </summary>
-  ~CopyCounter(void) {
-    m_count = -2;
-  }
-
-  // The actual count:
-  int m_count;
-
-  // Throws an exception if this copycounter is invalid
-  void Check(void) const {
-    if(m_count < 0)
-      throw invalid_copycounter_exception();
-  }
-
-  // Copy and move overrides
-  CopyCounter& operator=(const CopyCounter& rhs) {
-    rhs.Check();
-    m_count = rhs.m_count + 1;
-    return *this;
-  }
-
-  CopyCounter& operator=(CopyCounter&& rhs) {
-    rhs.Check();
-    m_count = rhs.m_count;
-    rhs.m_count = -1;
-    return *this;
-  }
-};
-
-class NoCopyClass
-{
-public:
-  NoCopyClass():
-    m_value(100)
-  {}
-
-  explicit NoCopyClass(NoCopyClass& rhs):
-    m_value(101)
-  {}
-
-  int m_value;
-};
-
-class CallableInterface:
-  public virtual EventReceiver
-{
-public:
-  virtual void ZeroArgs(void) = 0;
-  virtual void OneArg(int arg) = 0;
-  virtual void CopyVectorForwarded(vector<int>&& vec) = 0;
-  virtual void AllDone(void) = 0;
-
-  virtual void NoCopyMethod(NoCopyClass& noCopy) {}
-};
-
-class CallableInterfaceDeferred:
-  public virtual EventReceiver
-{
-public:
-  virtual Deferred CopyVectorDeferred(const vector<int>& vec) = 0;
-  virtual Deferred ZeroArgsDeferred(void) = 0;
-  virtual Deferred OneArgDeferred(int arg) = 0;
-  virtual Deferred TrackCopy(CopyCounter&& ctr) = 0;
-  virtual Deferred AllDoneDeferred(void) = 0;
-};
 
 class Jammer:
   public CoreThread
@@ -115,7 +17,6 @@ public:
   Jammer(void):
     totalXmit(0)
   {
-    Ready();
   }
 
   volatile int totalXmit;
@@ -128,122 +29,6 @@ public:
       while(++totalXmit % 100)
         m_ci(&CallableInterface::ZeroArgs)();
   }
-};
-
-class SimpleReceiver:
-  public CoreThread,
-  public CallableInterface,
-  public CallableInterfaceDeferred
-{
-public:
-  SimpleReceiver(void):
-    CoreThread("SimpleReceiver"),
-    m_zero(false),
-    m_one(false),
-    m_oneArg(0),
-    m_barrierDone(false)
-  {
-    Ready();
-  }
-
-private:
-  // Continuity signal:
-  boost::condition_variable m_continueCond;
-  bool m_barrierDone;
-
-public:
-  // Manifest of functions called:
-  bool m_zero;
-
-  bool m_one;
-  int m_oneArg;
-
-  // Copy operation fields:
-  vector<int> m_myVec;
-  CopyCounter m_myCtr;
-
-  ///
-  // Interface utility methods:
-  ///
-  void ZeroArgs(void) override {
-    m_zero = true;
-  }
-
-  void OneArg(int arg) override {
-    m_one = true;
-    m_oneArg = arg;
-  }
-
-  virtual Deferred ZeroArgsDeferred(void) override {
-    m_zero = true;
-    return Deferred(this);
-  }
-
-  virtual Deferred OneArgDeferred(int arg) override {
-    m_one = true;
-    m_oneArg = arg;
-    return Deferred(this);
-  }
-
-  Deferred CopyVectorDeferred(const vector<int>& vec) override {
-    // Copy out the argument:
-    m_myVec = vec;
-    return Deferred(this);
-  }
-
-  Deferred TrackCopy(CopyCounter&& ctr) override {
-    m_myCtr = std::forward<CopyCounter>(ctr);
-    return Deferred(this);
-  }
-
-  void CopyVectorForwarded(vector<int>&& vec) override {
-    // Copy out the argument:
-    m_myVec = vec;
-  }
-
-  void NoCopyMethod(NoCopyClass& noCopy) override {
-  }
-
-  // Trivial shutdown override
-  void AllDone(void) override {
-    Stop();
-  }
-
-  Deferred AllDoneDeferred(void) override {
-    Stop();
-    return Deferred(this);
-  }
-
-  // Overridden here so we can hit the barrier if we're still waiting on it
-  void OnStop() override {
-    Proceed();
-  }
-
-  /// <summary>
-  /// Invoked to cause Run to continue its processing
-  /// </summary>
-  void Proceed(void) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    if(m_barrierDone)
-      return;
-    m_barrierDone = true;
-    m_continueCond.notify_all();
-  }
-
-  ///
-  // Runs the thread
-  ///
-  void Run(void) override {
-    {
-      boost::unique_lock<boost::mutex> lk(m_lock);
-      m_continueCond.wait(lk, [this] () {return m_barrierDone;});
-    }
-    CoreThread::Run();
-  }
-
-  // Make this method public
-  using CoreThread::AcceptDispatchDelivery;
-  using CoreThread::RejectDispatchDelivery;
 };
 
 EventReceiverTest::EventReceiverTest(void) {
@@ -514,7 +299,7 @@ TEST_F(EventReceiverTest, PathologicalChildContextTest) {
   jammer->Stop();
   jammer->Wait();
 
-  // Now we begin teardown operations.  If there is an improper event receiver, this will crash hard.
+  // Now we begin teardown operations. If there is an improper event receiver, this will crash hard.
   AutoCurrentContext ctxt;
   ctxt->SignalTerminate();
 }
@@ -537,4 +322,20 @@ TEST_F(EventReceiverTest, PathologicalTransmitterTest) {
   // Now we begin teardown operations.  If there is an improper event receiver, this will crash hard.
   AutoCurrentContext ctxt;
   ctxt->SignalTerminate();
+}
+
+TEST_F(EventReceiverTest, VerifyDirectInvocation) {
+  AutoRequired<SimpleReceiver> receiver;
+
+  // Indirect invocation:
+  m_create->Invoke(&CallableInterface::ZeroArgs)();
+  m_create->Invoke(&CallableInterface::OneArg)(100);
+
+  // Verify that stuff happens even when the thread isn't running:
+  EXPECT_TRUE(receiver->m_zero);
+  EXPECT_TRUE(receiver->m_one);
+  EXPECT_EQ(100, receiver->m_oneArg);
+
+  // Unblock:
+  receiver->Proceed();
 }
