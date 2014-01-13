@@ -176,7 +176,7 @@ public:
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
     
     // Add an utterance of the TypeRegistry so we can add this autowired type to our collection
-    RegType<T>::r;
+    (void)RegType<T>::r;
 
     auto ctxt = CoreContext::CurrentContext();
     m_junctionBox = ctxt->GetJunctionBox<T>();
@@ -189,7 +189,7 @@ public:
     m_junctionBox(junctionBox)
   {
     // Add an utterance of the TypeRegistry so we can add this autowired type to our collection
-    RegType<T>::r;
+    (void)RegType<T>::r;
   }
 
   /// <summary>
