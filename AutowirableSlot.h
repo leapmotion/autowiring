@@ -1,7 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _AUTOWIRABLE_SLOT_H
 #define _AUTOWIRABLE_SLOT_H
-#include "ocuConfig.h" // for cpp11.h
+#include "AutoFactory.h"
 #include FUNCTIONAL_HEADER
 #include SHARED_PTR_HEADER
 #include <functional>

@@ -1,22 +1,18 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _EVENT_MANAGER_H
-#define _EVENT_MANAGER_H
+#pragma once
 #include "DispatchQueue.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
-#include "LockFreeList.h"
-#include "LockReducedCollection.h"
+#include "ObjectPool.h"
+#include "PolymorphicTypeForest.h"
 #include "SharedPtrHash.h"
-#include "TransientPoolBase.h"
-#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/mutex.hpp>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_SET
 #include TYPE_TRAITS_HEADER
-#include <set>
 
-class EventReceiverProxyBase;
+class JunctionBoxBase;
 class EventReceiver;
 
 /// <summary>
@@ -27,7 +23,7 @@ class EventReceiver;
 /// it call, rely on the validity of the std::current_exception return value, which will not be valid
 /// outside of a call block.
 /// </remarks>
-void FilterFiringException(const EventReceiverProxyBase* pSender, EventReceiver* pRecipient);
+void FilterFiringException(const JunctionBoxBase* pSender, EventReceiver* pRecipient);
 
 /// <summary>
 /// Function pointer relay type
@@ -62,43 +58,37 @@ class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5)>;
 /// <summary>
 /// Used to identify event managers
 /// </summary>
-class EventReceiverProxyBase {
+class JunctionBoxBase {
 public:
-  virtual ~EventReceiverProxyBase(void);
+  virtual ~JunctionBoxBase(void);
 
 protected:
-  // Reader-writer lock:
-  boost::shared_mutex m_rwLock;
+  // Dispatch queue lock:
+  mutable boost::mutex m_lock;
 
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
-
-  // Collection of all transient pools:
-  typedef LockReducedCollection<std::shared_ptr<TransientPoolBase>, SharedPtrHash<TransientPoolBase>> t_transientSet;
-  t_transientSet m_stTransient;
+  
+  typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
 
 public:
   // Accessor methods:
   const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const {return m_dispatch;}
+  boost::mutex& GetDispatchQueueLock(void) const { return m_lock; }
 
   virtual bool HasListeners(void) const = 0;
 
-  /// <summary>
-  /// Invoked by the parent context when the context is shutting down in order to release all references
-  /// </summary>
-  virtual void ReleaseRefs(void) = 0;
-
   // Event attachment and detachment pure virtuals
-  virtual EventReceiverProxyBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
-  virtual EventReceiverProxyBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual JunctionBoxBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
 };
 
 struct NoType {};
 
 template<class T>
-class EventReceiverProxy:
-  public EventReceiverProxyBase
+class JunctionBox:
+  public JunctionBoxBase
 {
 public:
   static_assert(
@@ -106,83 +96,52 @@ public:
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
 
-  virtual ~EventReceiverProxy(void) {}
+  virtual ~JunctionBox(void) {}
 
 protected:
   // Collection of all known listeners:
-  typedef LockReducedCollection<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
+  typedef std::unordered_set<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
   t_listenerSet m_st;
 
 public:
   /// <summary>
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
   /// </summary>
-  bool HasListeners(void) const override {
+bool HasListeners(void) const override {
     //check: does it have any direct listeners, or are any appropriate marshalling objects wired into the immediate context?
     auto ctxt = CoreContext::CurrentContext();
     bool checkval = ctxt->CheckEventOutputStream<T>();
-    return !m_st.GetImage()->empty() || checkval;
+    return (boost::lock_guard<boost::mutex>)m_lock, (!m_st.empty()||checkval);
      }
 
-  void ReleaseRefs() override {
-    m_st.Clear();
-    m_dispatch.clear();
-    m_stTransient.Clear();
-  }
-
-  EventReceiverProxyBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
+  JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
-    if(casted)
+    if(casted){
       // Proposed type is directly one of our receivers
       *this += casted;
-    else {
-      auto pool = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
-      if(pool)
-        *this += pool;
     }
-
     return *this;
   }
 
-  EventReceiverProxyBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
+  JunctionBoxBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
-    if(casted)
+    if(casted){
       *this -= casted;
-    else {
-      auto pool = std::dynamic_pointer_cast<TransientPoolBase, EventReceiver>(rhs);
-      if(pool)
-        *this -= pool;
     }
-
     return *this;
-  }
-
-  void operator+=(const std::shared_ptr<TransientPoolBase>& rhs) {
-    // Obtain the witness and ascertain whether this transient pool supports our recipient type:
-    if(!dynamic_cast<const T*>(&rhs->GetWitness()))
-      return;
-
-    // All transient pools are dispatchers, add it in to the dispatch pool:
-    DispatchQueue* pDeferred = dynamic_cast<DispatchQueue*>(rhs.get());
-    m_dispatch.insert(pDeferred);
-
-    // Insertion:
-    m_stTransient.Insert(rhs);
-  }
-
-  void operator-=(const std::shared_ptr<TransientPoolBase>& rhs) {
-    m_stTransient.Erase(rhs);
   }
 
   /// <summary>
   /// Adds the specified observer to receive events dispatched from this instace
   /// </summary>
   void operator+=(const std::shared_ptr<T>& rhs) {
-    // Trivial insertion
-    m_st.Insert(rhs);
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    
+    // Trivial insert
+    m_st.insert(rhs);
 
     // If the RHS implements DispatchQueue, add it to that collection as well:
-    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
+    DispatchQueue* pDispatch = std::fast_pointer_cast<DispatchQueue, T>(rhs).get();
     if(pDispatch)
       m_dispatch.insert(pDispatch);
   }
@@ -191,15 +150,15 @@ public:
   /// Removes the specified observer from the set currently configured to receive events
   /// </summary>
   void operator-=(const std::shared_ptr<T>& rhs) {
-    // Trivial removal:
-    auto nErased = m_st.Erase(rhs);
-    if(!nErased)
-      return;
-
-    // If the RHS implements DispatchQueue, add it to that collection as well:
-    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    
+    // If the RHS implements DispatchQueue, remove it from the dispatchers collection
+    DispatchQueue* pDispatch = std::fast_pointer_cast<DispatchQueue, T>(rhs).get();
     if(pDispatch)
       m_dispatch.erase(pDispatch);
+
+    // Trivial removal:
+    m_st.erase(rhs);
   }
 
   /// <summary>
@@ -219,27 +178,19 @@ public:
   /// <param name="fn">A nearly-curried routine to be invoked</param>
   template<class Fn>
   void FireCurried(Fn&& fn) const {
+    
+    // Copy listeners in "m_st" so we can iterate through them without thread problems
+    m_lock.lock();
+    t_listenerSet listeners(m_st.begin(), m_st.end());
+    m_lock.unlock();
+    
     // Held names first:
-    {
-      auto st = m_st.GetImage();
-      for(auto q = st->begin(); q != st->end(); ++q)
-        try {
-          fn(**q);
-        } catch(...) {
-          this->PassFilterFiringException((*q).get());
-        }
-    }
-
-    // Transient pools next:
-    {
-      auto relay = [fn] (EventReceiver& er) {
-        auto* casted = dynamic_cast<T*>(&er);
-        if(casted)
-          fn(*casted);
-      };
-      auto st = m_stTransient.GetImage();
-      for(auto q = st->begin(); q != st->end(); q++)
-        (**q).PoolInvoke(relay);
+    for(auto q = listeners.begin(); q != listeners.end(); ++q){
+      try {
+        fn(**q);
+      } catch(...) {
+        this->PassFilterFiringException((*q).get());
+      }
     }
   }
 
@@ -255,19 +206,21 @@ public:
 template<class T>
 class InvokeRelay<Deferred (T::*)()> {
 public:
-  InvokeRelay(const EventReceiverProxyBase& erp, Deferred (T::*fnPtr)()):
+  InvokeRelay(const JunctionBoxBase& erp, Deferred (T::*fnPtr)()):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  const EventReceiverProxyBase& erp;
+  const JunctionBoxBase& erp;
   Deferred (T::*fnPtr)();
 
 public:
   void operator()(void) const {
     const auto& dq = erp.GetDispatchQueue();
+    boost::lock_guard<boost::mutex> lk(erp.GetDispatchQueueLock());
+
     for(auto q = dq.begin(); q != dq.end(); q++) {
       auto* pCur = *q;
       if(!pCur->CanAccept())
@@ -292,19 +245,21 @@ class InvokeRelay<Deferred (T::*)(Arg1)> {
 public:
   typedef typename std::decay<Arg1>::type tArg1;
 
-  InvokeRelay(const EventReceiverProxyBase& erp, Deferred (T::*fnPtr)(Arg1)):
+  InvokeRelay(const JunctionBoxBase& erp, Deferred (T::*fnPtr)(Arg1)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  const EventReceiverProxyBase& erp;
+  const JunctionBoxBase& erp;
   Deferred (T::*fnPtr)(Arg1);
 
 public:
   void operator()(const tArg1& arg1) const {
     const auto& dq = erp.GetDispatchQueue();
+    boost::lock_guard<boost::mutex> lk(erp.GetDispatchQueueLock());
+
     for(auto q = dq.begin(); q != dq.end(); q++) {
       auto* pCur = *q;
       if(!pCur->CanAccept())
@@ -327,14 +282,14 @@ public:
 template<class T>
 class InvokeRelay<void (T::*)()> {
 public:
-  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(void)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(void)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  EventReceiverProxy<T>& erp;
+  JunctionBox<T>& erp;
   void (T::*fnPtr)();
 
 public:
@@ -346,21 +301,20 @@ public:
 template<class T, class Arg1>
 class InvokeRelay<void (T::*)(Arg1)> {
 public:
-  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  EventReceiverProxy<T>& erp;
+  JunctionBox<T>& erp;
   void (T::*fnPtr)(Arg1);
 
 public:
   void operator()(Arg1 arg1) const {
 	//First distribute the arguments to any listening serializers in current context
-	auto ctxt = CoreContext::CurrentContext();
-//	ctxt -> TrysomeT<decltype(fnPtr), fnPtr
+    auto ctxt = CoreContext::CurrentContext();
     ctxt->DistributeToMarshals<T>(fnPtr, arg1);
 	//Then wrap up stuff in a lambda and get ready to pass to eventreceivers
     erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1);});
@@ -370,14 +324,14 @@ public:
 template<class T, class Arg1, class Arg2>
 class InvokeRelay<void (T::*)(Arg1, Arg2)> {
 public:
-  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  EventReceiverProxy<T>& erp;
+  JunctionBox<T>& erp;
   void (T::*fnPtr)(Arg1, Arg2);
 
 public:
@@ -389,14 +343,14 @@ public:
 template<class T, class Arg1, class Arg2, class Arg3>
 class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3)> {
 public:
-  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  EventReceiverProxy<T>& erp;
+  JunctionBox<T>& erp;
   void (T::*fnPtr)(Arg1, Arg2, Arg3);
 
 public:
@@ -408,14 +362,14 @@ public:
 template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
 class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4)> {
 public:
-  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  EventReceiverProxy<T>& erp;
+  JunctionBox<T>& erp;
   void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4);
 
 public:
@@ -427,14 +381,14 @@ public:
 template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
 class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5)> {
 public:
-  InvokeRelay(EventReceiverProxy<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)):
     erp(erp),
     fnPtr(fnPtr)
   {
   }
 
 private:
-  EventReceiverProxy<T>& erp;
+  JunctionBox<T>& erp;
   void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5);
 
 public:
@@ -443,4 +397,3 @@ public:
   }
 };
 
-#endif

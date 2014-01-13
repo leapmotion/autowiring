@@ -1,3 +1,5 @@
+// Transient pools are deprecated. Don't include this header.
+#error
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _TRANSIENT_MEMBER_H
 #define _TRANSIENT_MEMBER_H
