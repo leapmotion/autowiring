@@ -45,6 +45,9 @@ set(
   DispatchThunkEventProxy.h
   DispatchThunkEventProxy.cpp
   EventDispatcher.h
+  EventInputStream.h
+  EventOutputStream.h
+  EventOutputStream.cpp
   EventReceiver.h
   EventReceiver.cpp
   JunctionBox.h
@@ -73,6 +76,8 @@ set(
   TeardownNotifier.cpp
   TypeRegistry.h
   TypeRegistry.cpp
+  uuid.h
+  uuid.cpp
 )
 
 OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
@@ -141,6 +146,8 @@ set(
   GraphConstructionTest.cpp
   InterlockedRoutinesTest.h
   InterlockedRoutinesTest.cpp
+  MarshalingTest.h
+  MarshalingTest.cpp
   MultiInheritTest.h
   MultiInheritTest.cpp
   ObjectPoolTest.h
@@ -172,6 +179,8 @@ set(
   TestFixtures/SimpleObject.h
   TestFixtures/SimpleThreaded.h
   TestFixtures/MultiInherit.h
+  UuidTest.h
+  UuidTest.cpp
 )
 
 set(
