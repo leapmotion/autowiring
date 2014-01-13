@@ -43,9 +43,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer) :
   m_pParent(pParent),
   m_sigil(sigil),
-  m_shouldStop(false),
   m_useOwnershipValidator(false),
-  m_refCount(0),
   m_junctionBoxManager(pPeer->m_junctionBoxManager),
   m_packetFactory(pPeer->m_packetFactory)
 {
