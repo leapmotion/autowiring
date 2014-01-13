@@ -5,7 +5,6 @@
 #include <deque>
 #include <map>
 #include <typeinfo>
-#include "Autowired.h"
 
 #ifndef EnableIdentity
 #define EnableIdentity(x) SpecialAssign<decltype(x), x> (#x) 
@@ -110,7 +109,7 @@ struct ExpressionBase{
 };
 
 template <class T, class Memfn, Memfn memfn>
-struct Expression:  public ExpressionBase{
+struct Expression:  public ExpressionBase {
     decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<1>())) m_arg1;
     decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<2>())) m_arg2;
     decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<3>())) m_arg3;
@@ -127,6 +126,12 @@ struct Expression:  public ExpressionBase{
     }
 
     void func(std::string s1, std::string s2, std::string s3, std::string s4 ){
+      auto ctxt = CoreContext::CurrentContext();
+      auto jctBox = ctxt->GetJunctionBox<T>();
+
+      
+        /*
+        jctBox->Invoke();
     AutoFired<T> sender;
     DeferOrFire<decltype(sender), Memfn, typename Decompose<Memfn>::retType> FireType;
 
@@ -135,7 +140,8 @@ struct Expression:  public ExpressionBase{
     auto a3 = m_arg3.Deserialize(s3);
     auto a4 = m_arg4.Deserialize(s4);
 
-    fire(a1, a2, a3, a4, sender, FireType)
+	  fire(a1, a2, a3, a4, sender, FireType);
+    */
   }
 };
 

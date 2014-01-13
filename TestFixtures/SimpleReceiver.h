@@ -16,7 +16,7 @@ public:
 /// <summary>
 /// A very simple class which just counts the number of times it has been copied
 /// </summary>
-class CopyCounter {
+class CopyCounter  {
 public:
   CopyCounter(void) :
     m_count(0)

@@ -272,7 +272,8 @@ public:
           // Now we perform the cast:
           T* pObj = dynamic_cast<T*>(&obj);
 
-          (pObj->*f)(std::move(arg1));
+          auto called = std::move(arg1);
+          (pObj->*f)(called);
         }
       );
     }

@@ -9,12 +9,13 @@
 #include "DeferredBase.h"
 #include "JunctionBox.h"
 #include "JunctionBoxManager.h"
+#include "EventInputStream.h"
 #include "EventOutputStream.h"
 #include "ExceptionFilter.h"
 #include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
-#include "TransientContextMember.h"
+
 #include "uuid.h"
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>

@@ -42,7 +42,6 @@ public:
     m_called(false)
   {
     //Need to call ready here. Should be refactored out of existence.
-    Ready();
     }
     
   bool m_called;
