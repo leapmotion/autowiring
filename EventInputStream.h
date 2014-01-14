@@ -7,6 +7,9 @@
 #include <typeinfo>
 #include "Decompose.h"
 
+#include SHARED_PTR_HEADER
+#include TYPE_TRAITS_HEADER
+
 #ifndef EnableIdentity
 #define EnableIdentity(x) SpecialAssign<decltype(x), x> (#x) 
 #endif
