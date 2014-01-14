@@ -18,7 +18,7 @@ class JunctionBoxManager{
   typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
   typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
   // All EventOutputStreams objects known to this JunctionBoxManager:
-  std::map<const std::type_info *, std::vector<std::weak_ptr<EventOutputStreamBase> > > m_eventOutputStreams;
+  std::map<std::type_index, std::vector<std::weak_ptr<EventOutputStreamBase> > > m_eventOutputStreams;
 
 public:
   
@@ -40,7 +40,7 @@ public:
   template <class T>
   bool CheckEventOutputStream(void){
 
-    auto mapfinditerator= m_eventOutputStreams.find(&typeid(T));
+    auto mapfinditerator= m_eventOutputStreams.find(typeid(T));
     if (mapfinditerator != m_eventOutputStreams.end()){
     auto v = (mapfinditerator->second);
     auto it = v.begin();
@@ -58,7 +58,7 @@ public:
   /// </summary>
   template <class T>
   void AddEventOutputStream(std::weak_ptr<EventOutputStreamBase> pRecvr){
-    auto mapfinditerator = m_eventOutputStreams.find(&typeid(T));
+    auto mapfinditerator = m_eventOutputStreams.find(typeid(T));
     if (mapfinditerator != m_eventOutputStreams.end()){
       //if the type exists already, find the correspoonding outputstreambase and push it back.
       (mapfinditerator->second).push_back(pRecvr);
@@ -66,7 +66,7 @@ public:
     else {
       std::vector<std::weak_ptr<EventOutputStreamBase> > newvec;
       newvec.push_back(pRecvr);
-      m_eventOutputStreams[&typeid(T)] = newvec; //assignment copy constructor invoked; 
+      m_eventOutputStreams[typeid(T)] = newvec; //assignment copy constructor invoked; 
     }
   }
 
