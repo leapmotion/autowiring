@@ -38,6 +38,24 @@ class IgnoredParentMember:
 {
 };
 
+
+class SimpleEvent:
+public virtual EventReceiver
+{
+public:
+  virtual void ZeroArgs(void) {}
+};
+
+class RemovesSelf:
+public SimpleEvent,
+public std::enable_shared_from_this<RemovesSelf>
+{
+  virtual void ZeroArgs(void){
+    AutoCurrentContext ctxt;
+    ctxt->Unsnoop(shared_from_this());
+  }
+};
+
 TEST_F(SnoopTest, VerifySimpleSnoop) {
   // Create the parent listener:
   AutoRequired<ParentMember> parentMember;
@@ -122,4 +140,17 @@ TEST_F(SnoopTest, AmbiguousReciept) {
 
   ubl(&UpBroadcastListener::SimpleCall)();
   EXPECT_TRUE(parent->m_simpleCall) << "Snooped parent did not receive an event as expected when snooped context was destroyed";
+}
+
+TEST_F(SnoopTest, AntiCyclicRemoval) {
+  AutoRequired<RemovesSelf> removeself;
+  
+  AutoCreateContext snoopy;
+  CurrentContextPusher pshr(snoopy);
+  
+  snoopy->Snoop(removeself);
+  
+  AutoFired<SimpleEvent> ubl;
+  ubl(&SimpleEvent::ZeroArgs)();
+  
 }
