@@ -168,7 +168,6 @@ protected:
   // All EventOutputStreams objects known in this autowirer:
   typedef std::map<const std::type_info *, std::vector<std::weak_ptr<EventOutputStreamBase> > > t_eventOutputStreamMap;
   t_eventOutputStreamMap m_eventOutputStreams;
-  //std::unordered_set<std::shared_ptr<EventOutputStreamBase>> m_eventOutputStreams;
 
   // Collection of objects waiting to be autowired, and a specific lock exclusively for this collection
   boost::mutex m_deferredLock;
@@ -250,8 +249,6 @@ protected:
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
   void UpdateDeferredElements(void);
-
-
 
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
@@ -393,20 +390,18 @@ public:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const {return m_byType.size();}
 
-
-/// <summary>
-/// This method checks whether eventoutputstream listeners for the given type still exist.
-/// For a given type in a hash, returns a vector of weak ptrs.
-/// Goes through the weak ptrs, locks them, erases dead ones.
-/// If any live ones found return true. Otherwise false.
-/// NOTE: this func does lazy cleanup on weakptrs ptng to suff that has fallen out of scope.
-/// </summary>
-template <class T>
-bool CheckEventOutputStream(void){
-   bool ret = m_junctionBoxManager->CheckEventOutputStream<T>();
-   return ret;
-
-}
+  /// <summary>
+  /// This method checks whether eventoutputstream listeners for the given type still exist.
+  /// For a given type in a hash, returns a vector of weak ptrs.
+  /// Goes through the weak ptrs, locks them, erases dead ones.
+  /// If any live ones found return true. Otherwise false.
+  /// NOTE: this func does lazy cleanup on weakptrs ptng to suff that has fallen out of scope.
+  /// </summary>
+  template <class T>
+  bool CheckEventOutputStream(void){
+    bool ret = m_junctionBoxManager->CheckEventOutputStream<T>();
+    return ret;
+  }
 
   const std::type_info& GetSigilType(void) const { return m_sigil; }
 

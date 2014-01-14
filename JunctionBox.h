@@ -107,7 +107,7 @@ public:
 
 protected:
   // Collection of all known listeners:
-  typedef std::unordered_set<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
+  typedef std::set<std::shared_ptr<T>> t_listenerSet;
   t_listenerSet m_st;
 
 public:
@@ -185,12 +185,16 @@ public:
   void FireCurried(Fn&& fn) const {
     
     // Copy listeners in "m_st" so we can iterate through them without thread problems
-    m_lock.lock();
-    t_listenerSet listeners(m_st.begin(), m_st.end());
-    m_lock.unlock();
+    //m_lock.lock();
+    //t_listenerSet listeners(m_st.begin(), m_st.end());
+    //m_lock.unlock();
     
     // Held names first:
-    for(auto q = listeners.begin(); q != listeners.end(); ++q){
+    for(auto q = m_st.begin(); q != m_st.end(); ++q){
+      auto listener
+      {
+        
+      }
       try {
         fn(**q);
       } catch(...) {
@@ -231,13 +235,11 @@ public:
       if(!pCur->CanAccept())
         continue;
 
-      typedef T targetType;
-
       // Straight dispatch queue insertion:
       auto f = fnPtr;
       pCur->AttachProxyRoutine([f] (EventReceiver& obj) {
         // Now we perform the cast:
-        targetType* pObj = dynamic_cast<targetType*>(&obj);
+        T* pObj = dynamic_cast<T*>(&obj);
 
         (pObj->*f)();
       });
@@ -277,8 +279,7 @@ public:
           // Now we perform the cast:
           T* pObj = dynamic_cast<T*>(&obj);
 
-          auto called = std::move(arg1);
-          (pObj->*f)(called);
+          (pObj->*f)(std::move(arg1));
         }
       );
     }
