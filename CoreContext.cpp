@@ -23,10 +23,6 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_shouldRunNewThreads(false),
   m_isShutdown(false)
 {
-#ifdef _DEBUG
-  m_magic = CORE_CONTEXT_MAGIC;
-#endif
-
   m_junctionBoxManager.reset(new JunctionBoxManager);
   
   auto ptr = GetJunctionBox<AutoPacketListener>();
@@ -76,12 +72,6 @@ CoreContext::~CoreContext(void) {
   // Explicit deleters to simplify base deletion of any deferred autowiring requests:
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
     delete q->second;
-
-#ifdef _DEBUG
-  // Invalidate magic value:
-  assert(m_magic == CORE_CONTEXT_MAGIC);
-  m_magic = 0xFEFEFEFE;
-#endif
 }
 
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {

@@ -139,11 +139,6 @@ protected:
   std::shared_ptr<CoreContext> Create(const std::type_info& sigil, CoreContext& newContext);
   std::shared_ptr<CoreContext> CreatePeer(const std::type_info& sigil);
 
-#ifdef _DEBUG
-  // Magic value, used to detect doublefree cases
-  long m_magic;
-#endif
-
   // General purpose lock for this class
   mutable boost::mutex m_lock;
 
