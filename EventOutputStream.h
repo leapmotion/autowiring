@@ -8,7 +8,7 @@
 #include <sstream>
 
 #ifndef EnableIdentity
-#define EnableIdentity(x) SpecialAssign(#x, x) 
+#define EnableIdentity(x) SpecialAssign<decltype(x), x> (#x) 
 #endif
 
 class EventOutputStreamBase {

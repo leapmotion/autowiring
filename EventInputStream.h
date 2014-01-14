@@ -5,6 +5,7 @@
 #include <deque>
 #include <map>
 #include <typeinfo>
+#include "Decompose.h"
 
 #ifndef EnableIdentity
 #define EnableIdentity(x) SpecialAssign<decltype(x), x> (#x) 
@@ -35,6 +36,7 @@ struct DeserializeHelper<const T * >{
 template <int n>
 struct CompileTimeInt{};
 
+/*
 /// <summary>
 /// Pick the right way to fire an event based on the return type of the member function
 /// </summary>
@@ -59,6 +61,8 @@ struct DeferOrFire<T, MemFn, void>
     return t(memfn);
   }
 };
+*/
+
 
 struct NoDo{
    void * Deserialize(std::string & str){return nullptr;}

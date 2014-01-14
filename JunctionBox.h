@@ -2,6 +2,8 @@
 #include "DispatchQueue.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
+#include "EventOutputStream.h"
+#include "EventInputStream.h"
 #include "ObjectPool.h"
 #include "PolymorphicTypeForest.h"
 #include "SharedPtrHash.h"
