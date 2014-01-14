@@ -1,6 +1,4 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _DEFERRED_INVOCATION_TEST_H
-#define _DEFERRED_INVOCATION_TEST_H
+#pragma once
 #include "EnclosedContextTestBase.h"
 
 class EventReceiverTest:
@@ -10,4 +8,3 @@ public:
   EventReceiverTest(void);
 };
 
-#endif
