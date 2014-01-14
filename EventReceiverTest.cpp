@@ -181,7 +181,6 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   // Make our copy counter:
   CopyCounter ctr;
 
-  /*
   // Signal stop:
   sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
