@@ -3,6 +3,4 @@
 #include "JunctionBox.h"
 #include "DispatchQueue.h"
 
-JunctionBoxBase::~JunctionBoxBase(void) {
-  
-}
+JunctionBoxBase::~JunctionBoxBase(void) {}
