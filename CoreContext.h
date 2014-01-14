@@ -398,22 +398,7 @@ public:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const {return m_byType.size();}
 
-/// <summary>
-/// Adds the named eventoutputstream to the collection of known eventoutputstreams
-/// </summary>
-template <class T>
-void AddEventOutputStream(std::weak_ptr<EventOutputStreamBase> pRecvr){
-  auto mapfinditerator= m_eventOutputStreams.find(&typeid(T));
-  if (mapfinditerator != m_eventOutputStreams.end()){
-    //if the type exists already, find the correspoonding outputstreambase and push it back.
-    (mapfinditerator -> second).push_back(pRecvr);
-  }
-  else {
-    std::vector<std::weak_ptr<EventOutputStreamBase> > newvec;
-    newvec.push_back(pRecvr);
-    m_eventOutputStreams[&typeid(T)] = newvec; //assignment copy constructor invoked; 
-  }
-}
+
 /// <summary>
 /// This method checks whether eventoutputstream listeners for the given type still exist.
 /// For a given type in a hash, returns a vector of weak ptrs.
@@ -423,17 +408,9 @@ void AddEventOutputStream(std::weak_ptr<EventOutputStreamBase> pRecvr){
 /// </summary>
 template <class T>
 bool CheckEventOutputStream(void){
-   auto mapfinditerator= m_eventOutputStreams.find(&typeid(T));
-   if (mapfinditerator != m_eventOutputStreams.end()){
-      auto v = (mapfinditerator->second);
-	  auto it = v.begin();
-	  while(it != v.end() ){
-	     if( (*it).lock() ) return true;
-	     it = v.erase(it); 
-       }
-	   return false; //return false if iterated through whole vec without seeing any live pointers.
-	}
-   return false;  //return false if no vec with that type
+   bool ret = m_junctionBoxManager->CheckEventOutputStream<T>();
+   return ret;
+
 }
 
 
@@ -874,12 +851,7 @@ void DistributeToMarshals(Memfn & memfn, Arg1 & arg1){
   /// </summary>
   template<class T>
   std::shared_ptr<EventOutputStream<T>> CreateEventOutputStream(void) {
-    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot create an output stream based on a non-event type");
-    static_assert(uuid_of<T>::value, "Cannot create an output stream on type T, the type was not defined with DECLARE_UUID");
-    auto retval =  std::make_shared<EventOutputStream<T>>();
-    auto upcastptr = static_cast<std::shared_ptr<EventOutputStreamBase>>(retval);
-	std::weak_ptr<EventOutputStreamBase> weakStreamPtr = upcastptr;
-    AddEventOutputStream<T>(weakStreamPtr);    
+    auto retval = m_junctionBoxManager->CreateEventOutputStream<T>();
     return retval;
   }
 
