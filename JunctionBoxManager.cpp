@@ -16,12 +16,20 @@ JunctionBoxManager::~JunctionBoxManager(void) {}
 std::shared_ptr<JunctionBoxBase> JunctionBoxManager::Get(std::type_index pTypeIndex) {
   auto box = m_junctionBoxes.find(pTypeIndex);
   assert(box != m_junctionBoxes.end());
-
+  
   //Check here if any listening marshals might be interested in receiving the fired args
   auto mapfinditerator = m_eventOutputStreams.find(pTypeIndex);
   std::vector<std::weak_ptr<EventOutputStreamBase> > * OutputStreamVector = nullptr;
-  if (mapfinditerator != m_eventOutputStreams.end())
+  if (mapfinditerator != m_eventOutputStreams.end()){
+    //no vec on this type yet. So create it, pass it, and wait for it to get filled later
     OutputStreamVector = &(mapfinditerator->second);
+  }
+  else {
+    std::vector<std::weak_ptr<EventOutputStreamBase> > newvec;
+    m_eventOutputStreams[pTypeIndex] = newvec; //assignment copy constructor invoked; 
+    auto it  = m_eventOutputStreams.find(pTypeIndex);
+    OutputStreamVector = &(it->second);
+  }
 
   (box->second)->SetPotentialMarshals(OutputStreamVector);
   return box->second;

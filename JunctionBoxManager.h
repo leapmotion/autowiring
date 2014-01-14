@@ -39,16 +39,15 @@ public:
   /// </summary>
   template <class T>
   bool CheckEventOutputStream(void){
-
     auto mapfinditerator= m_eventOutputStreams.find(typeid(T));
     if (mapfinditerator != m_eventOutputStreams.end()){
-    auto v = (mapfinditerator->second);
-    auto it = v.begin();
-    while(it != v.end() ){
-    if( (*it).lock() ) return true;
-    it = v.erase(it);
-    }
-    return false; //return false if iterated through whole vec without seeing any live pointers.
+      auto v = (mapfinditerator->second);
+      auto it = v.begin();
+      while(it != v.end() ){
+        if( (*it).lock() ) return true;
+        it = v.erase(it);
+      }
+      return false; //return false if iterated through whole vec without seeing any live pointers.
     }
     return false;  //return false if no vec with that type
   }
