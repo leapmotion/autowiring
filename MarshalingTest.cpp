@@ -60,7 +60,7 @@ public:
 template<class T>
 void VerifyProperStreamReceipt(EventOutputStream<T>* os, const AutoFired<EventWithUuid>& ewuuid) {
   // Register our expected event type:
-  os->EnableIdentity(&EventWithUuid::SampleEventFiring);
+  os->template EnableIdentity(&EventWithUuid::SampleEventFiring);
 
   // Test fire an event:
   std::string str("012345678900123456789012345678901234567890");

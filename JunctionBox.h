@@ -107,12 +107,9 @@ public:
   /// <summary>
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
   /// </summary>
-bool HasListeners(void) const override {
-    //check: does it have any direct listeners, or are any appropriate marshalling objects wired into the immediate context?
-    auto ctxt = CoreContext::CurrentContext();
-    bool checkval = ctxt->CheckEventOutputStream<T>();
-    return (boost::lock_guard<boost::mutex>)m_lock, (!m_st.empty()||checkval);
-     }
+  bool HasListeners(void) const override {
+    return (boost::lock_guard<boost::mutex>)m_lock, !m_st.empty();
+  }
 
   JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
@@ -315,8 +312,10 @@ private:
 public:
   void operator()(Arg1 arg1) const {
 	//First distribute the arguments to any listening serializers in current context
-    auto ctxt = CoreContext::CurrentContext();
-    ctxt->DistributeToMarshals<T>(fnPtr, arg1);
+    
+  //FIXME Max, you're my only hope
+  //auto ctxt = CoreContext::CurrentContext();
+  //ctxt->DistributeToMarshals<T>(fnPtr, arg1);
 	//Then wrap up stuff in a lambda and get ready to pass to eventreceivers
     erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1);});
   }

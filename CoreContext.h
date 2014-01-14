@@ -437,13 +437,6 @@ bool CheckEventOutputStream(void){
 }
 
 
-template <class MemFn, MemFn fptr>
-std::string SpecialTest(){
-	//m_noArgsMap[str] = fptr;
-	static std::string thisstring = "sdsd";
-	return str;
-}
-
 /// <summary>
 /// Distributes func and args to all listening marshal types
 /// to serialize as the marshal listeners please.
@@ -490,6 +483,11 @@ void DistributeToMarshals(Memfn & memfn, Arg1 & arg1){
   void EnforceSimpleOwnership(void) {
     m_useOwnershipValidator = true;
   }
+  
+  /// <returns>
+  /// True if CoreThread instances in this context should begin teardown operations
+  /// </returns>
+  bool IsShutdown(void) const {return m_isShutdown;}
 
   /// <returns>
   /// True if this context was ever started

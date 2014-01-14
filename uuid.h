@@ -1,6 +1,8 @@
 #ifndef _AUTOWIRING_UUID_H
 #define _AUTOWIRING_UUID_H
 
+#include TYPE_TRAITS_HEADER
+
 // This is a hexadecimal mapping table, represented as a string.  It's based at 0x30, the charcode for '0'
 // This table helps convert hex strings into their numeric representation at compile time.
 #define UUID_MAPPING_TABLE "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09_______\x0a\x0b\x0c\x0d\x0e\x0f__________________________\x0a\x0b\x0c\x0d\x0e\x0f"
@@ -155,7 +157,7 @@ struct uuid_of:
   static const char* UuidStr(void) {return nullptr;}
 
   static uuid Uuid(void) {
-   retrun uuid::uuid(0, 0, 0, 0);}
+   return uuid::uuid(0, 0, 0, 0);}
 };
 
 /// <summary>

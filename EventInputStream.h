@@ -110,10 +110,10 @@ struct ExpressionBase{
 
 template <class T, class Memfn, Memfn memfn>
 struct Expression:  public ExpressionBase {
-    decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<1>())) m_arg1;
-    decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<2>())) m_arg2;
-    decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<3>())) m_arg3;
-    decltype(TypedefDetector::select<typename Decompose<Memfn> >(nullptr, CompileTimeInt<4>())) m_arg4;
+    decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<1>())) m_arg1;
+    decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<2>())) m_arg2;
+    decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<3>())) m_arg3;
+    decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<4>())) m_arg4;
 
     template <class A, class B, class C>
     void fire(void *, void *, void *, void *, B & sender, C & FireType) {
@@ -126,8 +126,9 @@ struct Expression:  public ExpressionBase {
     }
 
     void func(std::string s1, std::string s2, std::string s3, std::string s4 ){
-      auto ctxt = CoreContext::CurrentContext();
-      auto jctBox = ctxt->GetJunctionBox<T>();
+      //FIXME Max, you're my only hope.
+      //auto ctxt = CoreContext::CurrentContext();
+      //auto jctBox = ctxt->GetJunctionBox<T>();
 
       
         /*
