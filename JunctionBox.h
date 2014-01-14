@@ -76,6 +76,9 @@ protected:
 
 public:
   // Accessor methods:
+  std::vector<std::weak_ptr<EventOutputStreamBase> > * m_PotentialMarshals;
+  void SetPotentialMarshals(std::vector<std::weak_ptr<EventOutputStreamBase> > * inVec){ m_PotentialMarshals = inVec; }
+
   const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const {return m_dispatch;}
   boost::mutex& GetDispatchQueueLock(void) const { return m_lock; }
 
@@ -106,6 +109,7 @@ protected:
   t_listenerSet m_st;
 
 public:
+  
   /// <summary>
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
   /// </summary>
@@ -314,10 +318,21 @@ private:
 public:
   void operator()(Arg1 arg1) const {
 	//First distribute the arguments to any listening serializers in current context
-    
-  //FIXME Max, you're my only hope
-  //auto ctxt = CoreContext::CurrentContext();
-  //ctxt->DistributeToMarshals<T>(fnPtr, arg1);
+    if (erp.m_PotentialMarshals){
+     auto m_vector = *erp.m_PotentialMarshals;
+     auto it = m_vector.begin();
+     while (it != m_vector.end()){
+       auto testptr = (*it).lock();
+       if (testptr) {
+         //if given eventid is enabled for given eventoutputstream, serialize!
+         if (testptr->IsEnabled(fnPtr)){
+           testptr->Serialize(fnPtr, arg1);
+         }
+         ++it;
+       }
+     }
+    }
+
 	//Then wrap up stuff in a lambda and get ready to pass to eventreceivers
     erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1);});
   }

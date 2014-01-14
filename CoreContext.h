@@ -413,32 +413,6 @@ bool CheckEventOutputStream(void){
 
 }
 
-
-/// <summary>
-/// Distributes func and args to all listening marshal types
-/// to serialize as the marshal listeners please.
-/// </summary>
-template <typename T, class Memfn, class Arg1>
-void DistributeToMarshals(Memfn & memfn, Arg1 & arg1){
-   auto mapfinditerator= m_eventOutputStreams.find(&typeid(T));
-   if (mapfinditerator != m_eventOutputStreams.end()){
-      auto v = (mapfinditerator->second);
-    auto it = v.begin();
-    while(it != v.end() ){
-      auto testptr = (*it).lock();
-       if( testptr ) {
-        //if given eventid is enabled for given eventoutputstream, serialize!
-       if (testptr -> IsEnabled(memfn)){
-         testptr -> Serialize(memfn, arg1);
-      }
-      ++it;
-     }
-       else it = v.erase(it); //opportunistically kill dead references.
-       }
-  }
-   return;
-}
-
   const std::type_info& GetSigilType(void) const { return m_sigil; }
 
   /// <summary>
