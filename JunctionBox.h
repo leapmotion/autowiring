@@ -77,7 +77,9 @@ protected:
 public:
   // Accessor methods:
   std::vector<std::weak_ptr<EventOutputStreamBase> > * m_PotentialMarshals;
-  void SetPotentialMarshals(std::vector<std::weak_ptr<EventOutputStreamBase> > * inVec){ m_PotentialMarshals = inVec; }
+  void SetPotentialMarshals(std::vector<std::weak_ptr<EventOutputStreamBase> > * inVec){ 
+    m_PotentialMarshals = inVec; 
+  }
 
   const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const {return m_dispatch;}
   boost::mutex& GetDispatchQueueLock(void) const { return m_lock; }
@@ -321,6 +323,7 @@ public:
     if (erp.m_PotentialMarshals){
      auto m_vector = *erp.m_PotentialMarshals;
      auto it = m_vector.begin();
+     
      while (it != m_vector.end()){
        auto testptr = (*it).lock();
        if (testptr) {
@@ -330,6 +333,7 @@ public:
          }
          ++it;
        }
+       else it = m_vector.erase(it); //opportunistically kill dead references.
      }
     }
 
