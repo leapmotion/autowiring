@@ -35,7 +35,7 @@ protected:
 public:
   // Accessor methods:
   size_t GetSize(void) const {return m_contexts.size();}
-  
+
   /// <summary>
   /// Enumeration routine, similar to the ContextMap enumerator
   /// </summary>
@@ -135,7 +135,7 @@ public:
     auto q = m_contexts.find(key);
     if(q == m_contexts.end())
       return std::shared_ptr<CoreContext>();
-      
+
     auto retVal = q->second.lock();
     m_contexts.erase(q);
     return retVal;
@@ -188,7 +188,11 @@ protected:
   // The type that will be used with destruction notification callbacks
   typedef t_contextList::iterator t_callbackHandle;
 
+  unsigned char m_clearSentinal;
+
 public:
+  ContextCreator() : m_clearSentinal(0) {}
+
   // Accessor methods:
   size_t GetSize(void) const {return m_contextList.size();}
 
@@ -204,19 +208,29 @@ public:
 
     // Create:
     auto child = context->Create<Sigil>();
-
-    // Insert into our list:
-    auto q =
-      (
-        (boost::lock_guard<boost::mutex>)m_contextLock,
-        m_contextList.push_front(child),
-        m_contextList.begin()
-      );
+    t_callbackHandle q;
+    unsigned short sentinal;
+    // Insert into our list
+    {
+      boost::lock_guard<boost::mutex> lock(m_contextLock);
+      m_contextList.push_front(child);
+      q = m_contextList.begin();
+      sentinal = m_clearSentinal;
+    }
 
     // Add a teardown listener so we can update the list:
     auto pContext = child.get();
-    child->AddTeardownListener([this, q, pContext] () {
-      this->NotifyContextDestroyed(q, pContext);
+    child->AddTeardownListener([this, q, pContext, sentinal] () {
+      //invalidate the iterator if we've detected that it has already been removed
+      //by a call to Clear
+      if( (boost::lock_guard<boost::mutex>)m_contextLock, sentinal != m_clearSentinal ) {
+        this->NotifyContextDestroyed(m_contextList.end(), pContext);
+      }
+      else {
+        this->NotifyContextDestroyed(q, pContext);
+        (boost::lock_guard<boost::mutex>)m_contextLock,
+          m_contextList.erase(q);
+      }
     });
     return child;
   }
@@ -249,7 +263,9 @@ public:
   /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
   /// </remarks>
   void Clear(bool wait) {
-    ContextCreatorBase::Clear(wait, m_contextList, [] (typename t_contextList::iterator q) {return q->lock();});
+    (boost::lock_guard<boost::mutex>)m_contextLock,
+      m_clearSentinal++;
+    ContextCreatorBase::Clear(wait, m_contextList, [] (typename t_contextList::iterator q) { return q->lock();});
   }
 
   /// <summary>
@@ -263,10 +279,7 @@ public:
   /// Consumers are urged to exercise caution when attempting to dereference pContext, as pContext will be
   /// in a teardown pathway when this method is called.
   /// </remarks>
-  virtual void NotifyContextDestroyed(t_callbackHandle q, CoreContext* pContext) {
-    (boost::lock_guard<boost::mutex>)m_contextLock,
-    m_contextList.erase(q);
-  }
+  virtual void NotifyContextDestroyed(t_callbackHandle q, CoreContext* pContext) { }
 };
 
 #endif
