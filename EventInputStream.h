@@ -162,7 +162,7 @@ public:
     auto chptr = static_cast <const char *> (pData);
     std::string MyString (chptr);
 
-    std::size_t location = MyString.find("\x3F");
+    std::size_t location = MyString.find("\xDE");
     std::string topevent = MyString.substr(0, location);
 
     std::deque<std::string> d;
