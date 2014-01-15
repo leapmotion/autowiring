@@ -8,6 +8,7 @@
 #include "CurrentContextPusher.h"
 #include "DeferredBase.h"
 #include "ExceptionFilter.h"
+#include "fast_pointer_cast.h"
 #include "JunctionBox.h"
 #include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
@@ -510,29 +511,29 @@ public:
       m_byType.AddTree(value);
 
       // Context members:
-      auto pContextMember = std::fast_pointer_cast<ContextMember, T>(value);
+      auto pContextMember = leap::fast_pointer_cast<ContextMember, T>(value);
       if(pContextMember) {
         AddContextMember(pContextMember);
 
         // CoreThreads:
-        pCoreThread = std::fast_pointer_cast<CoreThread, T>(value);
+        pCoreThread = leap::fast_pointer_cast<CoreThread, T>(value);
         if(pCoreThread)
           AddCoreThread(pCoreThread);
       }
       
       // Exception filters:
-      auto pFilter = std::fast_pointer_cast<ExceptionFilter, T>(value);
+      auto pFilter = leap::fast_pointer_cast<ExceptionFilter, T>(value);
       if(pFilter)
         m_filters.insert(pFilter.get());
       
       // Bolts:
-      auto pBase = std::fast_pointer_cast<BoltBase, T>(value);
+      auto pBase = leap::fast_pointer_cast<BoltBase, T>(value);
       if(pBase)
         AddBolt(pBase);
     }
     
     // Event receivers:
-    auto pRecvr = std::fast_pointer_cast<EventReceiver, T>(value);
+    auto pRecvr = leap::fast_pointer_cast<EventReceiver, T>(value);
     if(pRecvr)
       AddEventReceiver(pRecvr);
 
