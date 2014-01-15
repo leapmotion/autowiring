@@ -46,6 +46,7 @@ set(
   EventDispatcher.h
   EventReceiver.h
   EventReceiver.cpp
+  fast_pointer_cast.h
   JunctionBox.h
   JunctionBox.cpp
   ExceptionFilter.h
