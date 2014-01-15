@@ -71,8 +71,6 @@ protected:
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
-  
-  typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
 
 public:
   // Accessor methods:
@@ -102,6 +100,10 @@ public:
     std::is_base_of<EventReceiver, T>::value,
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
+  
+  JunctionBox(void):
+    m_numberOfDeletions(0)
+  {}
 
   virtual ~JunctionBox(void) {}
 
@@ -109,6 +111,9 @@ protected:
   // Collection of all known listeners:
   typedef std::set<std::shared_ptr<T>> t_listenerSet;
   t_listenerSet m_st;
+  
+  // Incremented every time an event is deleted to notify potentially invalidated iterators
+  int m_numberOfDeletions;
 
 public:
   
@@ -157,12 +162,13 @@ public:
   void operator-=(const std::shared_ptr<T>& rhs) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     
+    m_numberOfDeletions++;
+    
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
     DispatchQueue* pDispatch = std::fast_pointer_cast<DispatchQueue, T>(rhs).get();
     if(pDispatch)
       m_dispatch.erase(pDispatch);
 
-    // Trivial removal:
     m_st.erase(rhs);
   }
 
@@ -183,27 +189,33 @@ public:
   /// <param name="fn">A nearly-curried routine to be invoked</param>
   template<class Fn>
   void FireCurried(Fn&& fn) const {
+    boost::unique_lock<boost::mutex> lk(m_lock);
     
-    // Copy listeners in "m_st" so we can iterate through them without thread problems
-    //m_lock.lock();
-    //t_listenerSet listeners(m_st.begin(), m_st.end());
-    //m_lock.unlock();
+    int deleteCount = m_numberOfDeletions;
+    std::shared_ptr<T> currentEvent;
     
-    // Held names first:
-    for(auto q = m_st.begin(); q != m_st.end(); ++q){
-      auto listener
-      {
-        
-      }
+    for(auto it = m_st.begin(); it != m_st.end();){
+      
+      currentEvent = *it;
+      
+      lk.unlock();
       try {
-        fn(**q);
+        fn(*currentEvent);
       } catch(...) {
-        this->PassFilterFiringException((*q).get());
+        this->PassFilterFiringException(currentEvent.get());
+      }
+      lk.lock();
+      
+      // Increment iterator correctly even if it's been invalidated
+      if (deleteCount == m_numberOfDeletions){
+        ++it;
+      } else {
+        it = m_st.upper_bound(currentEvent);
+        deleteCount = m_numberOfDeletions;
       }
     }
   }
 
-public:
   // Two-parenthetical deferred invocations:
   template<class FnPtr>
   auto Invoke(FnPtr fnPtr) -> InvokeRelay<decltype(fnPtr)> {
