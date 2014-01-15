@@ -24,7 +24,7 @@ TEST_F(PeerContextTest, VerifySimplePeerage) {
   {
     // Create a single peer context, make it current, and try to fire:
     auto peer = m_create->CreatePeer<PeerContextName1>();
-    ASSERT_NE(nullptr, peer.get()) << "Peer context creation method returned a null pointer";
+    ASSERT_TRUE(nullptr != peer.get()) << "Peer context creation method returned a null pointer";
 
     CurrentContextPusher pshr(peer);
     AutoFired<CallableInterface> ci;
@@ -43,11 +43,11 @@ TEST_F(PeerContextTest, VerifyPeerTransitivity) {
 
   // Now create the first peer context:
   auto peer1 = m_create->CreatePeer<PeerContextName1>();
-  ASSERT_NE(nullptr, peer1.get());
+  ASSERT_TRUE(nullptr != peer1.get());
 
   // Create the _second_ peer context based on the first:
   auto peer2 = peer1->CreatePeer<PeerContextName2>();
-  ASSERT_NE(nullptr, peer2.get());
+  ASSERT_TRUE(nullptr != peer2.get());
 
   // Fire the event here:
   CurrentContextPusher pshr(peer2);
