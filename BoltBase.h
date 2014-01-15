@@ -2,8 +2,11 @@
 #ifndef _CONTEXT_CREATION_LISTENER_BASE_H
 #define _CONTEXT_CREATION_LISTENER_BASE_H
 #include <memory>
-
+#include <vector>
+#include TYPE_INDEX_HEADER
 class CoreContext;
+
+typedef std::vector<std::type_index> t_TypeInfoVector;
 
 /// <summary>
 /// </summary>
@@ -18,7 +21,7 @@ public:
   /// <summary>
   /// A convenience method to get a context name
   /// </summary>
-  virtual const std::type_info& GetContextSigil(void) = 0;
+  virtual const t_TypeInfoVector& GetContextSigils(void) = 0;
 
   /// <summary>
   /// A notification broadcast when a context of the desired name has been created

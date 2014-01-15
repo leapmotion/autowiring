@@ -193,6 +193,18 @@ protected:
     std::shared_ptr<T> ptr;
     AutoRequire(ptr);
   }
+  
+  template<class T, class Sigil, class Sigil2>
+  void EnableInternal(T*, Bolt<Sigil,Sigil2>*) {
+    std::shared_ptr<T> ptr;
+    AutoRequire(ptr);
+  }
+  
+  template<class T, class Sigil, class Sigil2, class Sigil3>
+  void EnableInternal(T*, Bolt<Sigil,Sigil2,Sigil3>*) {
+    std::shared_ptr<T> ptr;
+    AutoRequire(ptr);
+  }
 
   template<class Sigil, class T>
   void AutoRequireMicroBolt(void);
@@ -268,6 +280,8 @@ protected:
   /// Default override, when a member does not have an autofilter routine
   /// </summary>
   void AddPacketSubscriber(const std::false_type&) {}
+
+  void RemovePacketSubscribers( const std::vector<AutoPacketSubscriber>& subscribers );
 
   /// <summary>
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
@@ -363,6 +377,24 @@ public:
   bool IsRunning(void) const { return m_shouldRunNewThreads && !m_isShutdown; }
   bool IsShutdown(void) const { return m_isShutdown; }
   const std::type_info& GetSigilType(void) const { return m_sigil; }
+
+  /// <summary>
+  /// This is a slow, expensive operation used in unit tests to get all child contexts
+  /// of a given contexts.  It is relatively dangerous and should not be used except for
+  /// testing.
+  template<class Fn>
+  void EnumerateChildContexts(const std::type_info &sigil, Fn&& fn ) {
+    boost::lock_guard<boost::mutex> lock(m_childrenLock);
+    for (auto c = m_children.begin(); c != m_children.end(); c++) {
+      auto shared = c->lock();
+      shared->EnumerateChildContexts(sigil, fn); //check children first
+
+      if (shared->GetSigilType() == sigil) {
+        if (!fn(shared))
+          return;
+      }
+    }
+  }
 
   /// <summary>
   /// In debug mode, adds an additional compile-time check
