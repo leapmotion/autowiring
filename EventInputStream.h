@@ -39,37 +39,10 @@ struct DeserializeHelper<const T * >{
 template <int n>
 struct CompileTimeInt{};
 
-/*
-/// <summary>
-/// Pick the right way to fire an event based on the return type of the member function
-/// </summary>
-template <class T, class MemFn, class ReturnType>
-struct DeferOrFire{
-};
-
-template <class T, class MemFn>
-struct DeferOrFire<T, MemFn, Deferred>
-{
-  InvokeRelay<MemFn> func(T & t, MemFn memfn)
-  {
-    return t.Defer(memfn);
-  }
-};
-
-template <class T, class MemFn>
-struct DeferOrFire<T, MemFn, void>
-{
-  InvokeRelay<MemFn> func(T & t, MemFn memfn)
-  {
-    return t(memfn);
-  }
-};
-*/
-
-
 struct NoDo{
    void * Deserialize(std::string & str){return nullptr;}
 };
+
 /// <summary>
 /// N-Member typedef detector
 /// Reflection primitive to deduce presence of args from Decompose(memfn)
@@ -116,41 +89,25 @@ struct ExpressionBase{
 };
 
 template <class T, class Memfn, Memfn memfn>
-struct Expression:  public ExpressionBase {
-    decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<1>())) m_arg1;
-    decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<2>())) m_arg2;
-    decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<3>())) m_arg3;
-    decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<4>())) m_arg4;
+struct Expression:
+  public ExpressionBase
+{
+  decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<1>())) m_arg1;
+  decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<2>())) m_arg2;
+  decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<3>())) m_arg3;
+  decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<4>())) m_arg4;
 
-    template <class A, class B, class C>
-    void fire(void *, void *, void *, void *, B & sender, C & FireType) {
+  template <class A, class B, class C>
+  void fire(void *, void *, void *, void *, B & sender, C & FireType) {
     FireType.func(sender, memfn)();
-    }
-
-    template <class A, class B, class C>
-    void fire(A a1, void *, void *, void *, B & sender, C & FireType) {
-    FireType.func(sender, memfn)(a1);
-    }
-
-    void func(std::string s1, std::string s2, std::string s3, std::string s4 ){
-      //FIXME Max, you're my only hope.
-      //auto ctxt = CoreContext::CurrentContext();
-      //auto jctBox = ctxt->GetJunctionBox<T>();
-
-      
-        /*
-        jctBox->Invoke();
-    AutoFired<T> sender;
-    DeferOrFire<decltype(sender), Memfn, typename Decompose<Memfn>::retType> FireType;
-
-    auto a1 = m_arg1.Deserialize(s1);
-    auto a2 = m_arg2.Deserialize(s2);
-    auto a3 = m_arg3.Deserialize(s3);
-    auto a4 = m_arg4.Deserialize(s4);
-
-	  fire(a1, a2, a3, a4, sender, FireType);
-    */
   }
+
+  template <class A, class B, class C>
+  void fire(A a1, void *, void *, void *, B & sender, C & FireType) {
+    FireType.func(sender, memfn)(a1);
+  }
+
+  void func(std::string s1, std::string s2, std::string s3, std::string s4) {}
 };
 
 /// <summary>
@@ -172,11 +129,11 @@ public:
   /// </summary>
   template<class MemFn>
   bool IsEnabled(MemFn eventIden, bool amIRegistered = false) {
-  static int registration = 0; //first time func is checked
+    static int registration = 0; //first time func is checked
     if (amIRegistered && registration < 1){
       registration++;
     }
-  return (!!registration);
+    return (!!registration);
   }
  
   /// <summary>
