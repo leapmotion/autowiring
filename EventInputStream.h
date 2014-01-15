@@ -205,14 +205,14 @@ public:
     auto chptr = static_cast <const char *> (pData);
     std::string MyString (chptr);
 
-    std::size_t location = MyString.find("Þ");
+    std::size_t location = MyString.find("\x3F");
     std::string topevent = MyString.substr(0, location);
 
     std::deque<std::string> d;
     std::istringstream buf(topevent);
 
     std::string s;
-    while (std::getline(buf, s, 'Ø'))
+    while (std::getline(buf, s, '\xD8'))
         d.push_back(s);
 
     //null-arg pad the dequeso it has size = 5
