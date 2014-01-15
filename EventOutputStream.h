@@ -77,7 +77,7 @@ public:
   //SFINAE STUB OUT: replace with check_if overloads <<
   typename std::enable_if< std::is_same<Arg1, std::basic_string<char> const *>::value, void >::type     
     Serialize(Memfn & memfn, Arg1 & arg1 ){
-    m_OutputStream <<  AddAndQueryMemFn(memfn) << "Ø" << *arg1 << "Þ" ;
+    m_OutputStream <<  AddAndQueryMemFn(memfn) << "\xD8" << *arg1 << "\xDE" ;
   }
   
   template <class Memfn, class Arg1>
