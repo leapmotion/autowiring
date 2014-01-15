@@ -157,7 +157,8 @@ struct uuid_of:
   static const char* UuidStr(void) {return nullptr;}
 
   static uuid Uuid(void) {
-   return uuid::uuid(0, 0, 0, 0);}
+    return uuid(0, 0, 0, 0);
+  }
 };
 
 /// <summary>
