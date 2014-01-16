@@ -88,10 +88,11 @@ protected:
   ///
   /// Callers interested in this guarantee should invoke this method and then wait for
   /// the dispatch queue to become empty.
+  ///
+  /// This method is idempotent
   /// </remarks>
   void RejectDispatchDelivery(void) {
     m_canAccept = false;
-    boost::lock_guard<boost::mutex> lk(m_lock);
     m_stateCondition.notify_all();
   }
 
