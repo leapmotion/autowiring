@@ -13,8 +13,8 @@ class Registered:
 
 TEST_F(TypeRegistryTest, VerifySimpleLocalRegistration) {
   // Register two entries statically by uttering the static member's name:
-  RegType<Registered<1>>::r;
-  RegType<Registered<2>>::r;
+  (void)RegType<Registered<1>>::r;
+  (void)RegType<Registered<2>>::r;
 
   // Verify that both types exist:
   bool exists1 = false;
