@@ -11,7 +11,7 @@ EventOutputStreamBase::~EventOutputStreamBase(void)
 }
 
 bool EventOutputStreamBase::IsEmpty(void) const {
-  return !m_OutputStream.str().size();;
+  return !m_OutputStream.str().size();
 }
 
 size_t EventOutputStreamBase::GetSize(void) const {
