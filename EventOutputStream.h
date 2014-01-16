@@ -99,7 +99,7 @@ public:
   /// Recursive serialize message: N-args case
   /// </summary>
   template <typename Head, typename... Targs>
-  void Serialize2(Head &value, Targs ... args){
+  void Serialize2(Head &value, Targs&... args){
     //Emit an arg
     SerializeMethod(value);
     //m_OutputStream << "\xD8" << *value;
