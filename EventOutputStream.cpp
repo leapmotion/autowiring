@@ -1,6 +1,7 @@
-//#include "Autowired.h"
 #include "stdafx.h"
+#include "Autowired.h"
 #include "EventOutputStream.h"
+#include <memory>
 
 EventOutputStreamBase::EventOutputStreamBase(void)
 {
