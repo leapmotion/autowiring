@@ -82,9 +82,8 @@ if(BUILD_AUTONET)
 endif()
 
 set(Autowiring_Win_SRCS
-        interlocked.asm
-        CoreThreadWin.cpp
-        InterlockedExchangeWin.cpp
+  CoreThreadWin.cpp
+  InterlockedExchangeWin.cpp
 )
 
 set(Autowiring_Unix_SRCS
@@ -95,12 +94,16 @@ set(Autowiring_Unix_SRCS
 ADD_MSVC_DISABLED_FILES("Unix Source" Autowiring_SRCS ${Autowiring_Unix_SRCS})
 
 if(BUILD_WINDOWS)
-  enable_language(ASM_MASM)
-
-  set(Autowiring_SRCS
-	${Autowiring_Win_SRCS}
+ set(Autowiring_SRCS
+	  ${Autowiring_Win_SRCS}
     ${Autowiring_SRCS}
   )
+
+  if(!BUILD_64_BIT)
+    enable_language(ASM_MASM)
+    set(Autowiring_SRCS interlocked.asm ${Autowiring_SRCS} )
+  endif()
+
 else()
   set(Autowiring_SRCS
     ${Autowiring_Unix_SRCS}
