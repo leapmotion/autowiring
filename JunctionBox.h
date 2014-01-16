@@ -111,7 +111,59 @@ protected:
   t_listenerSet m_st;
 
 public:
-  
+
+  /// <summary>
+  /// Recursive serialize message: Initial Processing- 0 arg case
+  /// </summary> 
+  template <typename Memfn>
+  void SerializeInit(Memfn memfn){
+    //First distribute the arguments to any listening serializers in current context
+    if (m_PotentialMarshals){
+      auto m_vector = *m_PotentialMarshals;
+      auto it = m_vector.begin();
+
+      while (it != m_vector.end()){
+        auto testptr = (*it).lock();
+        if (testptr) {
+          //if given eventid is enabled for given eventoutputstream, serialize!
+          if (testptr->IsEnabled(memfn)){
+            testptr->EmitHeader(memfn);
+            testptr->EmitFooter();
+          }
+          ++it;
+        }
+        else it = m_vector.erase(it); //opportunistically kill dead references.
+      }
+    }
+  }
+
+  /// <summary>
+  /// Recursive serialize message: Initial Processing- n arg case
+  /// </summary>
+  template <typename Memfn, typename Head, typename... Targs>
+  void SerializeInit(Memfn memfn, Head & val, Targs ... args){
+    //First distribute the arguments to any listening serializers in current context
+    if (m_PotentialMarshals){
+      auto m_vector = *m_PotentialMarshals;
+      auto it = m_vector.begin();
+
+      while (it != m_vector.end()){
+        auto testptr = (*it).lock();
+        if (testptr) {
+          //if given eventid is enabled for given eventoutputstream, serialize!
+          if (testptr->IsEnabled(memfn)){
+            testptr->EmitHeader(memfn);
+            testptr->Serialize2( val, args ...);
+            testptr->EmitFooter();            
+          }
+          ++it;
+        }
+        else it = m_vector.erase(it); //opportunistically kill dead references.
+      }
+    }
+  }
+
+
   /// <summary>
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
   /// </summary>
@@ -300,6 +352,9 @@ private:
 
 public:
   void operator()() const {
+    //First distribute the arguments to any listening serializers in current context
+    erp.SerializeInit(fnPtr);
+    //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
     erp.FireCurried([&] (T& obj) {(obj.*fnPtr)();});
   }
 };
@@ -319,26 +374,10 @@ private:
 
 public:
   void operator()(Arg1 arg1) const {
-	//First distribute the arguments to any listening serializers in current context
-    if (erp.m_PotentialMarshals){
-     auto m_vector = *erp.m_PotentialMarshals;
-     auto it = m_vector.begin();
-     
-     while (it != m_vector.end()){
-       auto testptr = (*it).lock();
-       if (testptr) {
-         //if given eventid is enabled for given eventoutputstream, serialize!
-         if (testptr->IsEnabled(fnPtr)){
-           testptr->Serialize(fnPtr, arg1);
-         }
-         ++it;
-       }
-       else it = m_vector.erase(it); //opportunistically kill dead references.
-     }
-    }
-
+   //First distribute the arguments to any listening serializers in current context
+   erp.SerializeInit(fnPtr, arg1);
 	//Then wrap up stuff in a lambda and get ready to pass to eventreceivers
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1);});
+   erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1);});
   }
 };
 
@@ -357,6 +396,9 @@ private:
 
 public:
   void operator()(Arg1 arg1, Arg2 arg2) const {
+    //First distribute the arguments to any listening serializers in current context
+    erp.SerializeInit(fnPtr, arg1, arg2);
+    //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
     erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2);});
   }
 };
@@ -376,6 +418,9 @@ private:
 
 public:
   void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3) const {
+    //First distribute the arguments to any listening serializers in current context
+    erp.SerializeInit(fnPtr, arg1, arg2, arg3);
+    //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
     erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3);});
   }
 };
@@ -395,6 +440,9 @@ private:
 
 public:
   void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) const {
+    //First distribute the arguments to any listening serializers in current context
+    erp.SerializeInit(fnPtr, arg1, arg2, arg3, arg4);
+    //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
     erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3, arg4);});
   }
 };
@@ -414,6 +462,9 @@ private:
 
 public:
   void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) const {
+    //First distribute the arguments to any listening serializers in current context
+    erp.SerializeInit(fnPtr, arg1, arg2, arg3, arg4, arg5);
+    //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
     erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3, arg4, arg5);});
   }
 };
