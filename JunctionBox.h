@@ -92,7 +92,59 @@ protected:
   volatile int m_numberOfDeletions;
 
 public:
-  
+
+  /// <summary>
+  /// Recursive serialize message: Initial Processing- 0 arg case
+  /// </summary> 
+  template <typename Memfn>
+  void SerializeInit(Memfn memfn){
+    //First distribute the arguments to any listening serializers in current context
+    if (m_PotentialMarshals){
+      auto m_vector = *m_PotentialMarshals;
+      auto it = m_vector.begin();
+
+      while (it != m_vector.end()){
+        auto testptr = (*it).lock();
+        if (testptr) {
+          //if given eventid is enabled for given eventoutputstream, serialize!
+          if (testptr->IsEnabled(memfn)){
+            testptr->EmitHeader(memfn);
+            testptr->EmitFooter();
+          }
+          ++it;
+        }
+        else it = m_vector.erase(it); //opportunistically kill dead references.
+      }
+    }
+  }
+
+  /// <summary>
+  /// Recursive serialize message: Initial Processing- n arg case
+  /// </summary>
+  template <typename Memfn, typename Head, typename... Targs>
+  void SerializeInit(Memfn memfn, Head & val, Targs ... args){
+    //First distribute the arguments to any listening serializers in current context
+    if (m_PotentialMarshals){
+      auto m_vector = *m_PotentialMarshals;
+      auto it = m_vector.begin();
+
+      while (it != m_vector.end()){
+        auto testptr = (*it).lock();
+        if (testptr) {
+          //if given eventid is enabled for given eventoutputstream, serialize!
+          if (testptr->IsEnabled(memfn)){
+            testptr->EmitHeader(memfn);
+            testptr->Serialize2( val, args ...);
+            testptr->EmitFooter();            
+          }
+          ++it;
+        }
+        else it = m_vector.erase(it); //opportunistically kill dead references.
+      }
+    }
+  }
+
+
   /// <summary>
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
   /// </summary>
@@ -233,11 +285,10 @@ public:
   }
 };
 
-
-template<typename T, typename ...Args>
+template<class T, typename... Args>
 class InvokeRelay<void (T::*)(Args...)> {
 public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Args...)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Args...)) :
     erp(erp),
     fnPtr(fnPtr)
   {}
@@ -245,51 +296,12 @@ public:
 private:
   JunctionBox<T>& erp;
   void (T::*fnPtr)(Args...);
-  
+
 public:
   void operator()(Args... args) const {
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(args...);});
-  }
-};
-
-
-//Special one argument version for marshelling
-//TODO: Get rid of this somehow.
-template<class T, class Arg1>
-class InvokeRelay<void (T::*)(Arg1)> {
-public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {
-  }
-
-private:
-  JunctionBox<T>& erp;
-  void (T::*fnPtr)(Arg1);
-
-public:
-  void operator()(Arg1 arg1) const {
     //First distribute the arguments to any listening serializers in current context
-    
-    if (erp.m_PotentialMarshals){
-      auto m_vector = *erp.m_PotentialMarshals;
-      auto it = m_vector.begin();
-      
-      while (it != m_vector.end()){
-        auto testptr = (*it).lock();
-        if (testptr) {
-          //if given eventid is enabled for given eventoutputstream, serialize!
-          if (testptr->IsEnabled(fnPtr)){
-            testptr->Serialize(fnPtr, arg1);
-          }
-          ++it;
-        }
-        else it = m_vector.erase(it); //opportunistically kill dead references.
-      }
-    }
-    
-    
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1);});
+    erp.SerializeInit(fnPtr, args...);
+    //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
+    erp.FireCurried([&](T& obj) {(obj.*fnPtr)(args...); });
   }
 };

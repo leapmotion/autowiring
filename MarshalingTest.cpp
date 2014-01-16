@@ -30,10 +30,12 @@ DECLARE_UUID(EventWithUuid, "6EC2129F-5DD7-43D5-ACB5-864E8BB5D6B4") :
 {
 public:
   virtual void SampleEventFiring(const std::string* str) = 0;
+  virtual void SampleEventFiring0(void) = 0;
+  virtual void SampleEventFiring3(const std::string* str1, const std::string* str2, const std::string* str3) = 0;
   virtual Deferred SampleEventDeferred(const std::string* str) = 0;
 };
 
-class ListenerForUuid:
+class ListenerForUuid :
   public CoreThread,
   public EventWithUuid
 {
@@ -42,14 +44,22 @@ public:
     m_called(false)
   {
     //Need to call ready here. Should be refactored out of existence.
-    }
-    
+  }
+
   bool m_called;
   std::string m_str;
+
+  void SampleEventFiring0() override {
+    m_called = true;
+  }
 
   void SampleEventFiring(const std::string* str) override {
     m_called = true;
     m_str = *str;
+  }
+
+  void SampleEventFiring3(const std::string* str1, const std::string* str2, const std::string* str3) override {
+    m_called = true;
   }
 
   Deferred SampleEventDeferred(const std::string* str) override {
@@ -72,6 +82,38 @@ void VerifyProperStreamReceipt(EventOutputStream<T>* os, const AutoFired<EventWi
 
   // Verify that the output stream is _at least as long_ as the string argument we passed earlier:
   EXPECT_LE(str.size(), os->GetSize()) << "An output stream contained fewer uncompressed bytes than were transmitted in a fired event";
+}
+
+template<class T>
+void VerifyProperStreamReceiptZeroArgs(EventOutputStream<T>* os, const AutoFired<EventWithUuid>& ewuuid) {
+  // Register our expected event type:
+  os->template EnableIdentity(&EventWithUuid::SampleEventFiring0);
+
+  // Test fire an event:
+  ewuuid(&EventWithUuid::SampleEventFiring0)();
+
+  // Verify that the output stream is no longer empty and has some default properties:
+  EXPECT_FALSE(os->IsEmpty()) << "0Args: An output stream on an event was empty, even though an event it should have caught was just fired";
+  EXPECT_LT(0UL, os->GetSize()) << "0Args: The output stream should have had more than zero bytes in it after recording an event, but it did not";
+}
+
+template<class T>
+void VerifyProperStreamReceiptThreeArgs(EventOutputStream<T>* os, const AutoFired<EventWithUuid>& ewuuid) {
+  // Register our expected event type:
+  os->template EnableIdentity(&EventWithUuid::SampleEventFiring3);
+
+  // Test fire an event:
+  std::string str1("012345678900123456789012345678901234567890");
+  std::string str2("012345678900123456789012345678901234567890");
+  std::string str3("012345678900123456789012345678901234567890");
+  ewuuid(&EventWithUuid::SampleEventFiring3)(&str1, &str2, &str3);
+
+  // Verify that the output stream is no longer empty and has some default properties:
+  EXPECT_FALSE(os->IsEmpty()) << "3Args: An output stream on an event was empty, even though an event it should have caught was just fired";
+  EXPECT_LT(0UL, os->GetSize()) << "3Args: The output stream should have had more than zero bytes in it after recording an event, but it did not";
+
+  // Verify that the output stream is _at least as long_ as the string argument we passed earlier:
+  EXPECT_LE(str1.size() * 3, os->GetSize()) << "3Args: An output stream contained fewer uncompressed bytes than were transmitted in a fired event";
 }
 
 TEST_F(MarshalingTest, VerifyListenersUpdated) {
@@ -113,7 +155,10 @@ TEST_F(MarshalingTest, VerifySimpleSerialization) {
 
   // Scoping behavior
   VerifyProperStreamReceipt(os.get(), ewuuid);
-
+  os->Reset();
+  VerifyProperStreamReceiptZeroArgs(os.get(), ewuuid);
+  os->Reset();
+  VerifyProperStreamReceiptThreeArgs(os.get(), ewuuid);
   // Flush the output stream and verify it does, in fact, reset its properties:
   os->Reset();
   EXPECT_TRUE(os->IsEmpty()) << "Output stream was not empty after being reset";
