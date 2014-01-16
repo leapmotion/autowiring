@@ -122,7 +122,7 @@ public:
   /// Recursive serialize message: Initial Processing- n arg case
   /// </summary>
   template <typename Memfn, typename Head, typename... Targs>
-  void SerializeInit(Memfn memfn, Head & val, Targs ... args){
+  void SerializeInit(Memfn memfn, Head & val, Targs&... args){
     //First distribute the arguments to any listening serializers in current context
     if (m_PotentialMarshals){
       auto m_vector = *m_PotentialMarshals;
