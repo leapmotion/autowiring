@@ -165,10 +165,6 @@ protected:
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
 
-  // All EventOutputStreams objects known in this autowirer:
-  typedef std::map<const std::type_info *, std::vector<std::weak_ptr<EventOutputStreamBase> > > t_eventOutputStreamMap;
-  t_eventOutputStreamMap m_eventOutputStreams;
-
   // Collection of objects waiting to be autowired, and a specific lock exclusively for this collection
   boost::mutex m_deferredLock;
   typedef std::map<const AutowirableSlot*, DeferredBase*> t_deferred;

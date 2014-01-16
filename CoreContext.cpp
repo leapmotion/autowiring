@@ -42,8 +42,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_useOwnershipValidator(false),
   m_junctionBoxManager(pPeer->m_junctionBoxManager),
   m_packetFactory(pPeer->m_packetFactory)
-{
-}
+{}
 
 CoreContext::~CoreContext(void) {
   // The s_curContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
