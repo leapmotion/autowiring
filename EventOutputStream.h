@@ -61,6 +61,55 @@ public:
   return "";
   }
 
+  template <class Arg>
+  //SFINAE STUB OUT: replace with check_if overloads <<
+  typename std::enable_if< std::is_same<Arg, std::basic_string<char> const *>::value, void >::type
+    SerializeMethod(Arg & arg){
+      m_OutputStream << "\xD8" << *arg;
+    }
+
+  template <class Arg1>
+  //SFINAE STUB OUT: replace with check_if overloads <<
+  typename std::enable_if<!std::is_same<Arg1, std::basic_string<char> const *>::value, void >::type
+    SerializeMethod(Arg1 & arg1){
+      std::cout << "Hi! Fall through case does nothing" << std::endl;
+      //static_assert(false, "Fundamental belief about serialized argument types violated");
+    }
+  /// <summary>
+  /// Comment.
+  /// </summary>
+  template<class MemFn>
+  void EmitHeader(MemFn eventIden){
+    m_OutputStream << AddAndQueryMemFn(eventIden);
+  }
+
+  /// <summary>
+  /// Comment.
+  /// </summary>
+  void EmitFooter(void){
+    m_OutputStream <<  "\xDE";
+  }
+
+  /// <summary>
+  /// Recursive serialize message: base case
+  /// </summary>
+  void Serialize2(void){}
+  
+  /// <summary>
+  /// Recursive serialize message: N-args case
+  /// </summary>
+  template <typename Head, typename... Targs>
+  void Serialize2(Head &value, Targs ... args){
+    //Emit an arg
+    SerializeMethod(value);
+    //m_OutputStream << "\xD8" << *value;
+    Serialize2(args...);
+  }
+
+  
+
+  // See here: http://stackoverflow.com/questions/257288/is-it-possible-to-write-a-c-template-to-check-for-a-functions-existence
+
   /// <summary>
   /// Returns true if memfn is enabled, otherwise false.
   /// </summary>
@@ -72,7 +121,7 @@ public:
   }
   return (!!registration);
   }
-  
+  /*
   template <class Memfn, class Arg1>
   //SFINAE STUB OUT: replace with check_if overloads <<
   typename std::enable_if< std::is_same<Arg1, std::basic_string<char> const *>::value, void >::type     
@@ -87,6 +136,7 @@ public:
     std::cout <<  "Hi! Fall through case does nothing" << std::endl;
     //static_assert(false, "Fundamental belief about serialized argument types violated");
   }
+  */
 };
 
 /// <summary>
