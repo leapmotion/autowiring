@@ -39,23 +39,8 @@ class InvokeRelay<Deferred (T::*)()>;
 template<class T, class Arg1>
 class InvokeRelay<Deferred (T::*)(Arg1)>;
 
-template<class T>
-class InvokeRelay<void (T::*)()>;
-
-template<class T, class Arg1>
-class InvokeRelay<void (T::*)(Arg1)>;
-
-template<class T, class Arg1, class Arg2>
-class InvokeRelay<void (T::*)(Arg1, Arg2)>;
-
-template<class T, class Arg1, class Arg2, class Arg3>
-class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3)>;
-
-template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
-class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4)>;
-
-template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5)>;
+template<class T, typename... Targs>
+class InvokeRelay<void (T::*)(Targs ...)>;
 
 /// <summary>
 /// Used to identify event managers
@@ -337,10 +322,10 @@ public:
   }
 };
 
-template<class T>
-class InvokeRelay<void (T::*)()> {
+template<class T, typename... Targs>
+class InvokeRelay<void (T::*)(Targs ...)> {
 public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(void)):
+  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Targs ...)) :
     erp(erp),
     fnPtr(fnPtr)
   {
@@ -348,124 +333,13 @@ public:
 
 private:
   JunctionBox<T>& erp;
-  void (T::*fnPtr)();
+  void (T::*fnPtr)(Targs ...);
 
 public:
-  void operator()() const {
+  void operator()(Targs ... args) const {
     //First distribute the arguments to any listening serializers in current context
-    erp.SerializeInit(fnPtr);
+    erp.SerializeInit(fnPtr, args ...);
     //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)();});
+    erp.FireCurried([&](T& obj) {(obj.*fnPtr)(args ... ); });
   }
 };
-
-template<class T, class Arg1>
-class InvokeRelay<void (T::*)(Arg1)> {
-public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {
-  }
-
-private:
-  JunctionBox<T>& erp;
-  void (T::*fnPtr)(Arg1);
-
-public:
-  void operator()(Arg1 arg1) const {
-   //First distribute the arguments to any listening serializers in current context
-   erp.SerializeInit(fnPtr, arg1);
-	//Then wrap up stuff in a lambda and get ready to pass to eventreceivers
-   erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1);});
-  }
-};
-
-template<class T, class Arg1, class Arg2>
-class InvokeRelay<void (T::*)(Arg1, Arg2)> {
-public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {
-  }
-
-private:
-  JunctionBox<T>& erp;
-  void (T::*fnPtr)(Arg1, Arg2);
-
-public:
-  void operator()(Arg1 arg1, Arg2 arg2) const {
-    //First distribute the arguments to any listening serializers in current context
-    erp.SerializeInit(fnPtr, arg1, arg2);
-    //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2);});
-  }
-};
-
-template<class T, class Arg1, class Arg2, class Arg3>
-class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3)> {
-public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {
-  }
-
-private:
-  JunctionBox<T>& erp;
-  void (T::*fnPtr)(Arg1, Arg2, Arg3);
-
-public:
-  void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3) const {
-    //First distribute the arguments to any listening serializers in current context
-    erp.SerializeInit(fnPtr, arg1, arg2, arg3);
-    //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3);});
-  }
-};
-
-template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
-class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4)> {
-public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {
-  }
-
-private:
-  JunctionBox<T>& erp;
-  void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4);
-
-public:
-  void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) const {
-    //First distribute the arguments to any listening serializers in current context
-    erp.SerializeInit(fnPtr, arg1, arg2, arg3, arg4);
-    //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3, arg4);});
-  }
-};
-
-template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5)> {
-public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {
-  }
-
-private:
-  JunctionBox<T>& erp;
-  void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5);
-
-public:
-  void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) const {
-    //First distribute the arguments to any listening serializers in current context
-    erp.SerializeInit(fnPtr, arg1, arg2, arg3, arg4, arg5);
-    //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3, arg4, arg5);});
-  }
-};
-
