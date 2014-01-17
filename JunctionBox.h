@@ -95,35 +95,10 @@ protected:
 public:
 
   /// <summary>
-  /// Recursive serialize message: Initial Processing- 0 arg case
-  /// </summary> 
-  template <typename Memfn>
-  void SerializeInit(Memfn memfn){
-    //First distribute the arguments to any listening serializers in current context
-    if (m_PotentialMarshals){
-      auto m_vector = *m_PotentialMarshals;
-      auto it = m_vector.begin();
-
-      while (it != m_vector.end()){
-        auto testptr = (*it).lock();
-        if (testptr) {
-          //if given eventid is enabled for given eventoutputstream, serialize!
-          if (testptr->IsEnabled(memfn)){
-            testptr->EmitHeader(memfn);
-            testptr->EmitFooter();
-          }
-          ++it;
-        }
-        else it = m_vector.erase(it); //opportunistically kill dead references.
-      }
-    }
-  }
-
-  /// <summary>
   /// Recursive serialize message: Initial Processing- n arg case
   /// </summary>
-  template <typename Memfn, typename Head, typename... Targs>
-  void SerializeInit(Memfn memfn, Head & val, Targs&... args){
+  template <typename Memfn, typename... Targs>
+  void SerializeInit(Memfn memfn, Targs&... args){
     //First distribute the arguments to any listening serializers in current context
     if (m_PotentialMarshals){
       auto m_vector = *m_PotentialMarshals;
@@ -134,9 +109,7 @@ public:
         if (testptr) {
           //if given eventid is enabled for given eventoutputstream, serialize!
           if (testptr->IsEnabled(memfn)){
-            testptr->EmitHeader(memfn);
-            testptr->Serialize2( val, args ...);
-            testptr->EmitFooter();            
+            testptr->SerializeInit(memfn, args...);  
           }
           ++it;
         }
