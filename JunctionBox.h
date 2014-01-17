@@ -9,7 +9,6 @@
 #include "SharedPtrHash.h"
 #include "uuid.h"
 #include <boost/thread/mutex.hpp>
-#include <functional>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
@@ -276,6 +275,7 @@ public:
       
       // Pass the copy into the lambda:
       auto f = fnPtr;
+      #ifdef __GNUC__
       auto gccworkaround = 
         [=](EventReceiver& obj, Args... args) {
         // Now we perform the cast:
@@ -284,15 +284,15 @@ public:
       };
       auto retfunction = std::bind(gccworkaround, std::placeholders::_1, args...);
       pCur->AttachProxyRoutine(retfunction);
-      /*
+      #else
       pCur->AttachProxyRoutine(
         [f, args...] (EventReceiver& obj) {
           // Now we perform the cast:
           T* pObj = dynamic_cast<T*>(&obj);
           (pObj->*f)(std::move(args)...);
         }
-      );
-      */
+      );    
+      #endif
     }
   }
 };
@@ -314,8 +314,12 @@ public:
     //First distribute the arguments to any listening serializers in current context
     erp.SerializeInit(fnPtr, args...);
     //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
+    #ifdef __GNUC__
     auto gccworkaround = [&](T& obj, Args... args) {(obj.*fnPtr)(args...); };
     auto retfunction = std::bind(gccworkaround, std::placeholders::_1, std::ref(args)...);
+    #else
+    auto retfunction = [&](T& obj) {(obj.*fnPtr)(args...); };
+    #endif
     erp.FireCurried(retfunction);
   }
 };
