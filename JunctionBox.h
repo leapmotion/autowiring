@@ -93,7 +93,6 @@ protected:
   volatile int m_numberOfDeletions;
 
 public:
-
   /// <summary>
   /// Recursive serialize message: Initial Processing- n arg case
   /// </summary>
@@ -248,27 +247,17 @@ public:
       
       // Pass the copy into the lambda:
       auto f = fnPtr;
-      #if defined(__GNUC__) && !defined(__clang__)
-      auto gccworkaround = 
-        [=](EventReceiver& obj, Args... args) {
-        // Now we perform the cast:
-        T* pObj = dynamic_cast<T*>(&obj);
-        (pObj->*f)(std::move(args)...);
-      };
-      auto retfunction = std::bind(gccworkaround, std::placeholders::_1, args...);
-      pCur->AttachProxyRoutine(retfunction);
-      #else
       pCur->AttachProxyRoutine(
-        [f, args...] (EventReceiver& obj) {
+        [=] (EventReceiver& obj) {
           // Now we perform the cast:
           T* pObj = dynamic_cast<T*>(&obj);
           (pObj->*f)(std::move(args)...);
         }
-      );    
-      #endif
+      );
     }
   }
 };
+
 
 template<class T, typename... Args>
 class InvokeRelay<void (T::*)(Args...)> {
@@ -286,13 +275,6 @@ public:
   void operator()(Args... args) const {
     //First distribute the arguments to any listening serializers in current context
     erp.SerializeInit(fnPtr, args...);
-    //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
-    #if defined(__GNUC__) && !defined(__clang__)
-    auto gccworkaround = [&](T& obj, Args... args) {(obj.*fnPtr)(args...); };
-    auto retfunction = std::bind(gccworkaround, std::placeholders::_1, std::ref(args)...);
-    #else
-    auto retfunction = [&](T& obj) {(obj.*fnPtr)(args...); };
-    #endif
-    erp.FireCurried(retfunction);
+    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(args...);});
   }
 };
