@@ -275,7 +275,7 @@ public:
       
       // Pass the copy into the lambda:
       auto f = fnPtr;
-      #ifdef __GNUC__
+      #if defined(__GNUC__) && !defined(__clang__)
       auto gccworkaround = 
         [=](EventReceiver& obj, Args... args) {
         // Now we perform the cast:
@@ -314,7 +314,7 @@ public:
     //First distribute the arguments to any listening serializers in current context
     erp.SerializeInit(fnPtr, args...);
     //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
-    #ifdef __GNUC__
+    #if defined(__GNUC__) && !defined(__clang__)
     auto gccworkaround = [&](T& obj, Args... args) {(obj.*fnPtr)(args...); };
     auto retfunction = std::bind(gccworkaround, std::placeholders::_1, std::ref(args)...);
     #else
