@@ -8,6 +8,7 @@
 #include "PolymorphicTypeForest.h"
 #include "SharedPtrHash.h"
 #include <boost/thread/mutex.hpp>
+#include "uuid.h"
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
