@@ -7,6 +7,7 @@
 #include "ObjectPool.h"
 #include "PolymorphicTypeForest.h"
 #include "SharedPtrHash.h"
+#include "uuid.h"
 #include <boost/thread/mutex.hpp>
 #include <functional>
 #include FUNCTIONAL_HEADER
