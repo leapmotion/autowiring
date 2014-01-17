@@ -276,12 +276,12 @@ public:
       // Pass the copy into the lambda:
       auto f = fnPtr;
       auto gccworkaround = 
-        [f, args...](EventReceiver& obj, Args... args) {
+        [=](EventReceiver& obj, Args... args) {
         // Now we perform the cast:
         T* pObj = dynamic_cast<T*>(&obj);
         (pObj->*f)(std::move(args)...);
       };
-      auto retfunction = std::bind(gccworkaround, std::placeholders::_1, std::ref(args)...);
+      auto retfunction = std::bind(gccworkaround, std::placeholders::_1, args...);
       pCur->AttachProxyRoutine(retfunction);
       /*
       pCur->AttachProxyRoutine(
