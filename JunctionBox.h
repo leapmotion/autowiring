@@ -247,13 +247,14 @@ public:
       
       // Pass the copy into the lambda:
       auto f = fnPtr;
-      pCur->AttachProxyRoutine(
-        [=] (EventReceiver& obj) {
+      auto lambda = [=] (EventReceiver& obj, Args... args) {
           // Now we perform the cast:
           T* pObj = dynamic_cast<T*>(&obj);
           (pObj->*f)(std::move(args)...);
-        }
-      );
+        };
+      
+      auto bound_lambda = std::bind<void>(lambda, std::placeholders::_1, args...);
+      pCur->AttachProxyRoutine(bound_lambda);
     }
   }
 };
@@ -275,6 +276,10 @@ public:
   void operator()(Args... args) const {
     //First distribute the arguments to any listening serializers in current context
     erp.SerializeInit(fnPtr, args...);
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(args...);});
+    
+    auto lambda = [&] (T& obj, Args... args) {(obj.*fnPtr)(args...);};
+    auto bound_lambda = std::bind<void>(lambda, std::placeholders::_1, std::ref(args)...);
+    
+    erp.FireCurried(bound_lambda);
   }
 };
