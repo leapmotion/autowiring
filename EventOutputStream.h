@@ -93,7 +93,8 @@ public:
   /// <summary>
   /// Recursive serialize message: base case
   /// </summary>
-  void Serialize2(void){}
+  template <typename... Targs>
+  void Serialize2(Targs&... args){}
   
   /// <summary>
   /// Recursive serialize message: N-args case
@@ -106,7 +107,20 @@ public:
     Serialize2(args...);
   }
 
-  
+  template <typename Memfn, typename... Targs>
+  void SerializeInit(Memfn memfn, Targs&... args){
+    EmitHeader(memfn);
+    Serialize2( args...);
+    EmitFooter();
+  }
+
+  template <typename Memfn, typename Head, typename... Targs>
+  void SerializeInit(Memfn memfn, Head &value, Targs&... args){
+    EmitHeader(memfn);
+    Serialize2(value, args...);
+    EmitFooter();
+  }
+
 
   // See here: http://stackoverflow.com/questions/257288/is-it-possible-to-write-a-c-template-to-check-for-a-functions-existence
 
@@ -121,22 +135,7 @@ public:
   }
   return (!!registration);
   }
-  /*
-  template <class Memfn, class Arg1>
-  //SFINAE STUB OUT: replace with check_if overloads <<
-  typename std::enable_if< std::is_same<Arg1, std::basic_string<char> const *>::value, void >::type     
-    Serialize(Memfn & memfn, Arg1 & arg1 ){
-    m_OutputStream <<  AddAndQueryMemFn(memfn) << "\xD8" << *arg1 << "\xDE" ;
-  }
-  
-  template <class Memfn, class Arg1>
-  //SFINAE STUB OUT: replace with check_if overloads <<
-  typename std::enable_if<!std::is_same<Arg1, std::basic_string<char> const *>::value, void >::type 
-  Serialize(Memfn & memfn, Arg1 & arg1){
-    std::cout <<  "Hi! Fall through case does nothing" << std::endl;
-    //static_assert(false, "Fundamental belief about serialized argument types violated");
-  }
-  */
+
 };
 
 /// <summary>
