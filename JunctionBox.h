@@ -8,6 +8,7 @@
 #include "PolymorphicTypeForest.h"
 #include "SharedPtrHash.h"
 #include <boost/thread/mutex.hpp>
+#include <functional>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
@@ -274,6 +275,15 @@ public:
       
       // Pass the copy into the lambda:
       auto f = fnPtr;
+      auto gccworkaround = 
+        [f, args...](EventReceiver& obj, Args... args) {
+        // Now we perform the cast:
+        T* pObj = dynamic_cast<T*>(&obj);
+        (pObj->*f)(std::move(args)...);
+      };
+      auto retfunction = std::bind(gccworkaround, std::placeholders::_1, std::ref(args)...);
+      pCur->AttachProxyRoutine(retfunction);
+      /*
       pCur->AttachProxyRoutine(
         [f, args...] (EventReceiver& obj) {
           // Now we perform the cast:
@@ -281,6 +291,7 @@ public:
           (pObj->*f)(std::move(args)...);
         }
       );
+      */
     }
   }
 };
@@ -302,6 +313,8 @@ public:
     //First distribute the arguments to any listening serializers in current context
     erp.SerializeInit(fnPtr, args...);
     //Then wrap up stuff in a lambda and get ready to pass to eventreceivers
-    erp.FireCurried([&](T& obj) {(obj.*fnPtr)(args...); });
+    auto gccworkaround = [&](T& obj, Args... args) {(obj.*fnPtr)(args...); };
+    auto retfunction = std::bind(gccworkaround, std::placeholders::_1, std::ref(args)...);
+    erp.FireCurried(retfunction);
   }
 };
