@@ -49,6 +49,14 @@ struct NoDo{
 /// </summary>
 struct ExpressionBase{
 
+  virtual void func() = 0;
+  virtual void func(std::string s1) = 0;
+  virtual void func(std::string s1, std::string s2) = 0;
+  virtual void func(std::string s1, std::string s2, std::string s3) = 0;
+  virtual void func(std::string s1, std::string s2, std::string s3, std::string s4) = 0;
+  virtual void func(std::string s1, std::string s2, std::string s3, std::string s4, std::string s5) = 0;
+  virtual void func(std::string s1, std::string s2, std::string s3, std::string s4, std::string s5, std::string s6) = 0;
+
   template <typename ... InputArgs >
   void func(InputArgs ... inargs)
   {
@@ -65,12 +73,20 @@ struct Expression<R(W::*)(ToBindArgs...) >:
 {
     
   template <typename ... InputArgs >
-  void func(InputArgs ... inargs){
+  void infunc(InputArgs ... inargs){
     std::cout << "YAY right one was called!" << std::endl;
 
-    AutoFired<T> sender;
+    AutoFired<W> sender;
     sender(memfn)(Deserialize<ToBindArgs>(inargs)...);
   }
+
+  void func() { infunc(); }
+  void func(std::string s1) {infunc(s1); }
+  void func(std::string s1, std::string s2) { infunc(s1, s2); }
+  void func(std::string s1, std::string s2, std::string s3) { infunc(s1, s2, s3); }
+  void func(std::string s1, std::string s2, std::string s3, std::string s4) { infunc(s1, s2, s3, s4); }
+  void func(std::string s1, std::string s2, std::string s3, std::string s4, std::string s5){ infunc(s1, s2, s3, s4, s5); }
+  void func(std::string s1, std::string s2, std::string s3, std::string s4, std::string s5, std::string s6) { infunc(s1, s2, s3, s4, s5, s6); }
 
 };
 
