@@ -73,12 +73,54 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
   AutoRequired<FilterA> filterA;
   ASSERT_TRUE(factory->IsSubscriber<FilterA>());
   auto packet2 = factory->NewPacket();
-  
+
   // Verify the first packet still does not have subscriptions:
   EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
 
   // Verify the second one does:
   EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
+}
+
+TEST_F(DecoratorTest, VerifyDescendentAwareness) {
+   // Create a packet while the factory has no subscribers:
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet1 = factory->NewPacket();
+
+  // Verify subscription-free status:
+  EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
+
+  std::shared_ptr<AutoPacket> packet2;
+  //Create a subcontext
+  {
+    AutoCreateContext subContext;
+    {
+      CurrentContextPusher pusher(subContext);
+
+      //add a filter in the subcontext
+      AutoRequired<FilterA> subFilter;
+    }
+
+    //Create a packet where a subscriber exists only in a subcontext
+    packet2 = factory->NewPacket();
+    EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
+  }
+
+  //Create a packet after the subcontext has been destroyed
+  auto packet3 = factory->NewPacket();
+  EXPECT_FALSE(packet3->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
+
+  // Verify the first packet still does not have subscriptions:
+  EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
+
+  packet2->Decorate(Decoration<0>());
+
+  // Verify the second one will no longe have subscriptions  -
+  // normally removing a subscriber would mean the packet still has the subscriber, but
+  // in this case, the subscriber was actually destroyed so the packet has lost a subscriber.
+  EXPECT_FALSE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
+
+  // Verify the third one does not:
+  EXPECT_FALSE(packet3->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
 }
 
 TEST_F(DecoratorTest, VerifySimpleFilter) {
@@ -179,9 +221,16 @@ TEST_F(DecoratorTest, VerifyTeardownArrangement) {
     // Verify that unsubscription STILL does not result in expiration:
     ASSERT_FALSE(filterAWeak.expired()) << "A subscriber expired before all packets on that subscriber were satisfied";
 
+    //Create a new packet after having removed the only filter on it.
+    auto packet2 = factory->NewPacket();
+    ASSERT_FALSE(packet2->HasSubscribers<Decoration<0>>()) << "A packet had subscriptions after the only subscriber was removed.";
+
     // Satisfy the packet:
     packet->Decorate(Decoration<0>());
     packet->Decorate(Decoration<1>());
+
+    auto packet3 = factory->NewPacket();
+    ASSERT_FALSE(packet3->HasSubscribers<Decoration<0>>()) << "A packet had subscriptions after the only subscriber was removed.";
   }
 
   // Filter should be expired now:
@@ -247,7 +296,7 @@ TEST_F(DecoratorTest, RollbackCorrectness) {
 
   // We should not be able to obtain another checkout of this decoration on this packet:
   EXPECT_ANY_THROW(packet->Checkout<Decoration<0>>()) << "An attempt to check out a decoration a second time should have failed";
-  
+
   // We shouldn't be able to manually decorate, either:
   EXPECT_ANY_THROW(packet->Decorate(Decoration<0>())) << "An attempt to manually add a previously failed decoration succeeded where it should not have";
 }

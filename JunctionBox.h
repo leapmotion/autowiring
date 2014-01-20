@@ -152,7 +152,7 @@ public:
     m_st.insert(rhs);
 
     // If the RHS implements DispatchQueue, add it to that collection as well:
-    DispatchQueue* pDispatch = std::fast_pointer_cast<DispatchQueue, T>(rhs).get();
+    DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs).get();
     if(pDispatch)
       m_dispatch.insert(pDispatch);
   }
@@ -166,7 +166,7 @@ public:
     m_numberOfDeletions++;
     
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
-    DispatchQueue* pDispatch = std::fast_pointer_cast<DispatchQueue, T>(rhs).get();
+    DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs).get();
     if(pDispatch)
       m_dispatch.erase(pDispatch);
 

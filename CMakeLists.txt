@@ -50,6 +50,7 @@ set(
   EventOutputStream.cpp
   EventReceiver.h
   EventReceiver.cpp
+  fast_pointer_cast.h
   JunctionBox.h
   JunctionBox.cpp
   JunctionBoxManager.h
@@ -89,26 +90,32 @@ if(BUILD_AUTONET)
   )
 endif()
 
+set(Autowiring_Win_SRCS
+  CoreThreadWin.cpp
+  InterlockedExchangeWin.cpp
+)
+
+set(Autowiring_Unix_SRCS
+	CoreThreadUnix.cpp
+	InterlockedExchangeUnix.cpp
+)
+
+ADD_MSVC_DISABLED_FILES("Unix Source" Autowiring_SRCS ${Autowiring_Unix_SRCS})
+
 if(BUILD_WINDOWS)
-  if(BUILD_64_BIT)
-    set(Autowiring_SRCS
-        CoreThreadWin.cpp
-        InterlockedExchangeWin.cpp
-        ${Autowiring_SRCS}
-    )
-  else()
+ set(Autowiring_SRCS
+	  ${Autowiring_Win_SRCS}
+    ${Autowiring_SRCS}
+  )
+
+  if(!BUILD_64_BIT)
     enable_language(ASM_MASM)
-    set(Autowiring_SRCS
-        interlocked.asm
-        CoreThreadWin.cpp
-        InterlockedExchangeWin.cpp
-        ${Autowiring_SRCS}
-    )
+    set(Autowiring_SRCS interlocked.asm ${Autowiring_SRCS} )
   endif()
+
 else()
   set(Autowiring_SRCS
-    CoreThreadUnix.cpp
-    InterlockedExchangeUnix.cpp
+    ${Autowiring_Unix_SRCS}
     ${Autowiring_SRCS}
   )
 endif()
@@ -197,11 +204,11 @@ if(NOT BUILD_WINDOWS)
   set(Boost_SYSTEM_LIBRARY libboost_system)
   add_library(${Boost_SYSTEM_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_SYSTEM_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_SYSTEM_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-  
+
   set(Boost_THREAD_LIBRARY libboost_thread)
   add_library(${Boost_THREAD_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_THREAD_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_THREAD_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-  
+
   set(Boost_CHRONO_LIBRARY libboost_chrono)
   add_library(${Boost_CHRONO_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_CHRONO_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_CHRONO_LIBRARY}${STATIC_LIBRARY_SUFFIX})
