@@ -117,6 +117,33 @@ void AutoPacketFactory::AddSubscriber(AutoPacketSubscriber&& rhs) {
   }
 }
 
+void AutoPacketFactory::RemoveSubscriber(const std::type_info &idx) {
+  auto q = m_subMap.find(idx);
+    
+  if(q != m_subMap.end()) {
+    // Clear out the matched subscriber:
+    auto& subscriber = m_subscribers[q->second];
+
+    //Also remove subscriber from the decoration list
+    for( auto pSInfo = subscriber.GetSubscriberInput(); *pSInfo; pSInfo++ ) {
+      auto decoration = m_decorations.find(*pSInfo->ti);
+      if( decoration != m_decorations.end() ) {
+        auto& decSubs = decoration->second.subscribers;
+
+        decSubs.erase( std::remove_if(decSubs.begin(), decSubs.end(),
+          [&q](std::pair<size_t,bool> a) { return a.first == q->second; }),
+          decSubs.end()
+        );
+        
+        //Remove decoration if there are no longer any subscribers
+        if( decSubs.empty() )
+          m_decorations.erase(decoration);
+      }
+    }
+    m_subscribers[q->second].ReleaseSubscriber();
+  }
+}
+
 bool AutoPacketFactory::HasSubscribers(const std::type_info& ti) const {
   auto decorator = FindDecorator(ti);
   return !!decorator;
