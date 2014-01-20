@@ -9,6 +9,7 @@
 #include "SharedPtrHash.h"
 #include "uuid.h"
 #include <boost/thread/mutex.hpp>
+#include "fast_pointer_cast.h"
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
