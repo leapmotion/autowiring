@@ -3,6 +3,7 @@
 #include TYPE_INDEX_HEADER
 #include TYPE_TRAITS_HEADER
 #include SHARED_PTR_HEADER
+#include "fast_pointer_cast.h"
 #include <vector>
 
 template<class T, bool b>
