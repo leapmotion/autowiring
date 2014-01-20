@@ -60,8 +60,9 @@ CoreContext::~CoreContext(void) {
   m_junctionBoxManager->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
   
   // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
-  if(m_pParent){
+  if(m_pParent) {
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+    m_pParent->RemovePacketSubscribers(m_packetFactory->GetSubscriberVector());
   }
 
   // Tell all context members that we're tearing down:
@@ -255,7 +256,10 @@ void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr) {
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
-  m_nameListeners[pBase->GetContextSigil()].push_back(pBase.get());
+  const t_TypeInfoVector& v = pBase->GetContextSigils();
+  for(auto i = v.begin(); i != v.end(); i++) {
+    m_nameListeners[*i].push_back(pBase.get());
+  }
 }
 
 void CoreContext::Dump(std::ostream& os) const {
@@ -436,6 +440,18 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
 
 void CoreContext::AddPacketSubscriber(AutoPacketSubscriber&& rhs) {
   m_packetFactory->AddSubscriber(std::move(rhs));
+  if( m_pParent ) {
+    m_pParent->AddPacketSubscriber(std::move(rhs));
+  }
+}
+
+void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber> &subscribers) {
+  //delegate to the parent if there is one
+  if( m_pParent ) {
+    m_pParent->RemovePacketSubscribers(subscribers);
+  }
+  
+  m_packetFactory->RemoveSubscribers(subscribers.begin(), subscribers.end());
 }
 
 void CoreContext::NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener) {

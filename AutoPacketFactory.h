@@ -169,12 +169,17 @@ public:
     AddSubscriber(AutoPacketSubscriberSelect<T>(rhs));
   }
 
+  void RemoveSubscriber(const std::type_info &idx);
+
   template<class T>
   void RemoveSubscriber(const std::shared_ptr<T>& sub) {
-    auto q = m_subMap.find(typeid(T));
-    if(q != m_subMap.end())
-      // Clear out the matched subscriber:
-      m_subscribers[q->second].ReleaseSubscriber();
+    RemoveSubscriber(typeid(T));
+  }
+
+  void RemoveSubscribers( std::vector<AutoPacketSubscriber>::const_iterator first, std::vector<AutoPacketSubscriber>::const_iterator last) {
+    for( auto i = first; i != last; i++ ) {
+      RemoveSubscriber( *i->GetSubscriberTypeInfo() );
+    }
   }
 
   /// <returns>

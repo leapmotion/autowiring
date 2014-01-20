@@ -8,6 +8,7 @@
 #include <iostream>
 
 struct Pipeline {};
+struct OtherContext {};
 
 class Listener:
   public Bolt<Pipeline>
@@ -35,6 +36,15 @@ class Creator:
 
 class InjectsIntoPipeline:
   public Bolt<Pipeline>
+{
+public:
+  void ContextCreated(void) override {
+    AutoRequired<SimpleObject>();
+  }
+};
+
+class InjectsIntoBoth:
+  public Bolt<Pipeline,OtherContext>
 {
 public:
   void ContextCreated(void) override {
@@ -103,4 +113,29 @@ TEST_F(BoltTest, VerifyCreationBubbling) {
 
   // Check the listener to verify we had a hit:
   EXPECT_TRUE(listener->hit) << "The listener callback was not hit as expected";
+}
+
+TEST_F(BoltTest, VerifyMultipleInjection) {
+  AutoEnable<InjectsIntoBoth>();
+
+  auto created = m_create->Create<Pipeline>();
+  auto created2 = m_create->Create<OtherContext>();
+
+  // Verify that the SimpleObject didn't accidentally get injected out here:
+  {
+    Autowired<SimpleObject> so;
+    EXPECT_FALSE(so.IsAutowired()) << "Object was injected into an outer scope by a bolt";
+  }
+
+  // Verify that the objecT DID get autowired where we expected it to be autowired
+  {
+    CurrentContextPusher pshr(created);
+    Autowired<SimpleObject> so;
+    ASSERT_TRUE(so.IsAutowired()) << "Simple object was not injected as expected into a dependent context";
+  }
+  {
+    CurrentContextPusher pshr(created2);
+    Autowired<SimpleObject> so;
+    ASSERT_TRUE(so.IsAutowired()) << "Simple object was not injected as expected into a dependent context";
+  }
 }

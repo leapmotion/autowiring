@@ -123,6 +123,13 @@ public:
   // Accessor methods:
   size_t GetOutstanding(void) const { return m_outstanding; }
 
+  void ClearCachedEntities(void) {
+    boost::lock_guard<boost::mutex> lk(*m_monitor);
+    for (auto q = m_objs.begin(); q != m_objs.end(); q++)
+      delete *q;
+    m_objs.clear();
+  }
+
   /// <summary>
   /// This sets the maximum number of entities that the pool will cache to satisfy a later allocation request
   /// </summary>
