@@ -14,28 +14,14 @@
 #define EnableIdentity(x) SpecialAssign<decltype(x), x> (#x) 
 #endif
 
-//The point here is to use template specialization to pick default-deserialization for certain types at registration 
-/*
-template <typename T>
-//struct DeserializeHelper{
-   static T Deserialize(std::string & str){
-    T arg1;
-    std::stringstream buf;
-    buf << str;
-    buf >> arg1;
-    return arg1;
-  }
-//};
-*/
-
+template <class T>
+class AutoFired;
 
 template <typename T>
 const std::string * deser(std::string & str){
   const std::string * ret(&str);
     return ret;
   }
-//};
-
 
 /// <summary>
 /// Wrap up memfns as shared_ptrs to ExpressionBase-derived classes. Call func = call wrapped event firing.
@@ -102,10 +88,6 @@ struct Expression<R(W::*)(ToBindArgs...) >:
   {
       infunc(d[1], d[2], d[3]);
   }
-  
-
-  
-
 };
 
  
@@ -171,20 +153,14 @@ public:
     while (std::getline(buf, s, '\xD8'))
         d.push_back(s);
 
-    //null-arg pad the dequeso it has size = 5
-    //while (d.size() != 5) d.push_back(std::string(""));
-
-
     std::string query = d[0];
 
     auto find1 = m_EventMap.find(query);
     if (find1 != m_EventMap.end()) 
     {
-      auto evt = find1 -> second;
-    
-        evt->passmethething(d);
-       
+      auto evt = find1 -> second;       
+      evt->passmethething(d);        
     }
-    return location +1 ;
+    return location + 1;
   }
 };
