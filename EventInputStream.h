@@ -15,9 +15,9 @@
 #endif
 
 //The point here is to use template specialization to pick default-deserialization for certain types at registration 
-
+/*
 template <typename T>
-struct DeserializeHelper{
+//struct DeserializeHelper{
    static T Deserialize(std::string & str){
     T arg1;
     std::stringstream buf;
@@ -25,91 +25,90 @@ struct DeserializeHelper{
     buf >> arg1;
     return arg1;
   }
-};
+//};
+*/
 
-//The point here is to use template specialization to pick default-deserialization for certain types at registration 
+
 template <typename T>
-struct DeserializeHelper<const T * >{
-  const T * Deserialize(std::string & str){
-    const T * ret = &str;
+const std::string * deser(std::string & str){
+  const std::string * ret(&str);
     return ret;
   }
-};
+//};
 
-template <int n>
-struct CompileTimeInt{};
-
-struct NoDo{
-   void * Deserialize(std::string & str){return nullptr;}
-};
-
-/// <summary>
-/// N-Member typedef detector
-/// Reflection primitive to deduce presence of args from Decompose(memfn)
-/// Use: auto arg1 = TypedefDetector::select<Test>(nullptr, CompileTimeInt<n>)
-/// </summary>
-struct TypedefDetector
-{
-  template<class U>
-  static DeserializeHelper<typename U::t_arg1> select(typename U::t_arg1 *, CompileTimeInt<1>)
-  {
-  return DeserializeHelper<typename U::t_arg1>();
-  }
-  
-  template<class U>
-  static DeserializeHelper<typename U::t_arg2> select(typename U::t_arg2 *, CompileTimeInt<2>)
-  {
-  return DeserializeHelper<typename U::t_arg2>();
-  }  
-  
-  template<class U>
-  static DeserializeHelper<typename U::t_arg3> select(typename U::t_arg3 *, CompileTimeInt<3>)
-  {
-  return DeserializeHelper<typename U::t_arg3>();
-  }  
-  
-  template<class U>
-  static DeserializeHelper<typename U::t_arg4> select(typename U::t_arg4 *, CompileTimeInt<4>)
-  {
-  return DeserializeHelper<typename U::t_arg4>();
-  }
-
-  template<class U>
-  static NoDo select(...){
-  return NoDo();
-  }
-
-};
 
 /// <summary>
 /// Wrap up memfns as shared_ptrs to ExpressionBase-derived classes. Call func = call wrapped event firing.
 /// </summary>
 struct ExpressionBase{
-  virtual void func(std::string, std::string, std::string, std::string) = 0;
+  virtual void passmethething(std::deque<std::string> &) =0;
 };
 
-template <class T, class Memfn, Memfn memfn>
-struct Expression:
+template <class MemFn>
+struct Expression;
+
+template <class R, class W, typename... ToBindArgs>
+struct Expression<R(W::*)(ToBindArgs...) >:
   public ExpressionBase
 {
-  decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<1>())) m_arg1;
-  decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<2>())) m_arg2;
-  decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<3>())) m_arg3;
-  decltype(TypedefDetector::select<Decompose<Memfn> >(nullptr, CompileTimeInt<4>())) m_arg4;
+  typedef R(W::*memType)(ToBindArgs...);
+  memType m_memfunc;
+  Expression(memType m){ m_memfunc = m; }
 
-  template <class A, class B, class C>
-  void fire(void *, void *, void *, void *, B & sender, C & FireType) {
-    FireType.func(sender, memfn)();
+  void passmethething(std::deque<std::string> & d){ passed(d); }
+    
+  template <typename ... InputArgs >
+  void infunc(InputArgs ... inargs){
+    std::cout << "YAY right one was called!" << std::endl;
+
+    AutoFired<W> sender;
+    sender(m_memfunc)(deser<ToBindArgs>(inargs)...);
+
   }
 
-  template <class A, class B, class C>
-  void fire(A a1, void *, void *, void *, B & sender, C & FireType) {
-    FireType.func(sender, memfn)(a1);
+  typedef std::integral_constant<std::size_t, sizeof ... ( ToBindArgs)> my_arity;
+  typedef std::integral_constant<std::size_t, 0 > m_zero;
+  typedef std::integral_constant<std::size_t, 1 > m_one;
+  typedef std::integral_constant<std::size_t, 2 > m_two;
+  typedef std::integral_constant<std::size_t, 3 > m_three;
+  typedef std::integral_constant<std::size_t, 4 > m_four;
+  typedef std::integral_constant<std::size_t, 5 > m_five;
+
+  /*
+  template <class T = my_arity>
+  typename std::enable_if< std::is_same<my_arity,  m_zero>::value, void>::type
+    passed(std::deque<std::string>  & d)
+  {
+    infunc();
+  }
+  */
+  template <class T = my_arity>
+  typename std::enable_if< std::is_same<my_arity, m_one>::value, void>::type
+    passed(std::deque<std::string>  & d)
+  {
+      infunc(d[1]);
   }
 
-  void func(std::string s1, std::string s2, std::string s3, std::string s4) {}
+  template <class T = my_arity>
+  typename std::enable_if< std::is_same<my_arity, m_two>::value, void>::type
+    passed(std::deque<std::string>  & d)
+  {
+      infunc(d[1], d[2]);
+  }
+
+  template <class T = my_arity>
+  typename std::enable_if< std::is_same<my_arity, m_three>::value, void>::type
+    passed(std::deque<std::string>  & d)
+  {
+      infunc(d[1], d[2], d[3]);
+  }
+  
+
+  
+
 };
 
+ 
 /// <summary>
 /// Allows the deserialization of events from an output stream, in order to replay them in-process
 /// </summary>
@@ -146,7 +145,7 @@ public:
     if (!IsEnabled(eventIden))
     {
       IsEnabled(eventIden, true);
-      std::shared_ptr<ExpressionBase> ptr = std::make_shared<Expression<T, MemFn, eventIden> >();
+      std::shared_ptr<ExpressionBase> ptr = std::make_shared<Expression<MemFn> >(eventIden);
       m_EventMap[str] = ptr;
     }
   }
@@ -173,7 +172,8 @@ public:
         d.push_back(s);
 
     //null-arg pad the dequeso it has size = 5
-    while (d.size() != 5) d.push_back(std::string(""));
+    //while (d.size() != 5) d.push_back(std::string(""));
+
 
     std::string query = d[0];
 
@@ -181,7 +181,9 @@ public:
     if (find1 != m_EventMap.end()) 
     {
       auto evt = find1 -> second;
-       evt -> func(d[1], d[2], d[3], d[4]);
+    
+        evt->passmethething(d);
+       
     }
     return location +1 ;
   }
