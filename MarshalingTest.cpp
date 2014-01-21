@@ -192,8 +192,8 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   ASSERT_NE(nullptr, is.get()) << "Event input stream was empty";
   
   // Register our expected event type:
-  is->template EnableIdentity(&EventWithUuid::SampleEventFiring);
-  is->template EnableIdentity(&EventWithUuid::SampleEventDeferred);
+  is->EnableIdentity(&EventWithUuid::SampleEventFiring);
+  is->EnableIdentity(&EventWithUuid::SampleEventDeferred);
  
   const void* ptr = os->GetData(); //This is damn unsafe. Who is supposed to be doing cleanup?
   size_t nRemaining = os->GetSize();
