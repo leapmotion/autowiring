@@ -28,11 +28,10 @@ template <typename T>
 //};
 */
 
-//The point here is to use template specialization to pick default-deserialization for certain types at registration 
+
 template <typename T>
-//struct DeserializeHelper<const T * >{
-  const T * Deserialize(T & str){
-    const T * ret ("Some other bullshit");
+const std::string * deser(std::string & str){
+  const std::string * ret(&str);
     return ret;
   }
 //};
@@ -42,7 +41,7 @@ template <typename T>
 /// Wrap up memfns as shared_ptrs to ExpressionBase-derived classes. Call func = call wrapped event firing.
 /// </summary>
 struct ExpressionBase{
-  virtual void passmethething(std::deque<std::string> &) {};
+  virtual void passmethething(std::deque<std::string> &) =0;
 };
 
 template <class MemFn>
@@ -63,10 +62,8 @@ struct Expression<R(W::*)(ToBindArgs...) >:
     std::cout << "YAY right one was called!" << std::endl;
 
     AutoFired<W> sender;
-    //sender(m_memfunc)(Deserialize<ToBindArgs>(inargs)...);
-    const std::string s("yo");
+    sender(m_memfunc)(deser<ToBindArgs>(inargs)...);
 
-    sender(m_memfunc)(&s);
   }
 
   typedef std::integral_constant<std::size_t, sizeof ... ( ToBindArgs)> my_arity;

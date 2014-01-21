@@ -205,7 +205,7 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   // Verify that the listener got _something_, and the thing it got was the thing we sent earlier:
   EXPECT_TRUE(listener->m_called) << "Listener failed to receive any events from the event input stream";
   EXPECT_EQ(helloWorld, listener->m_str) << "Listener received an event, but the payload of the event was not the same as what was originally serialized";
-  /*
+  
   // Clear, advance, and fire the next event:
   listener->m_called = false;
   listener->m_str.clear();
@@ -221,5 +221,4 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
 
   // Ensure that we processed EXACTLY the number of bytes that were in the output stream:
   EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";
-  */
 }
