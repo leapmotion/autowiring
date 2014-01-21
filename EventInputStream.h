@@ -69,21 +69,21 @@ struct Expression<R(W::*)(ToBindArgs...) >:
   }
   */
   template <class T = my_arity>
-  typename std::enable_if< std::is_same<my_arity, m_one>::value, void>::type
+  typename std::enable_if< std::is_same<T, m_one>::value, void>::type
     passed(std::deque<std::string>  & d)
   {
       infunc(d[1]);
   }
 
   template <class T = my_arity>
-  typename std::enable_if< std::is_same<my_arity, m_two>::value, void>::type
+  typename std::enable_if< std::is_same<T, m_two>::value, void>::type
     passed(std::deque<std::string>  & d)
   {
       infunc(d[1], d[2]);
   }
 
   template <class T = my_arity>
-  typename std::enable_if< std::is_same<my_arity, m_three>::value, void>::type
+  typename std::enable_if< std::is_same<T, m_three>::value, void>::type
     passed(std::deque<std::string>  & d)
   {
       infunc(d[1], d[2], d[3]);
