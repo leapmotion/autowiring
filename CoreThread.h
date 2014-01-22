@@ -36,9 +36,6 @@ protected:
   // Flag indicating that we need to stop right now
   bool m_stop;
 
-  // Ready condition
-  bool m_ready;
-
   // Run condition:
   bool m_running;
 
@@ -70,6 +67,8 @@ private:
   void DoRun(void);
 
 protected:
+  void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
+
   /// <summary>
   /// Indicates that the system should accept the delivery of deferred procedure calls
   /// </summary>
@@ -89,17 +88,17 @@ protected:
   ///
   /// Callers interested in this guarantee should invoke this method and then wait for
   /// the dispatch queue to become empty.
+  ///
+  /// This method is idempotent
   /// </remarks>
   void RejectDispatchDelivery(void) {
     m_canAccept = false;
-    boost::lock_guard<boost::mutex> lk(m_lock);
     m_stateCondition.notify_all();
   }
 
 public:
   // Accessor methods:
   bool ShouldStop(void) const;
-  bool IsReady(void) const {return m_ready;}
   bool IsRunning(void) const {return m_running;}
 
   // Override from EventDispatcher
@@ -109,17 +108,6 @@ public:
   /// A convenience method that will sleep this thread for the specified duration
   /// </summary>
   void ThreadSleep(long millisecond);
-
-  /// <summary>
-  /// Delay execution of the corresponding core thread until it's ready
-  /// </summary>
-  bool DelayUntilReady(void) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    m_stateCondition.wait(lk, [this] () {
-      return !ShouldStop() || m_ready;
-    });
-    return !ShouldStop() && !m_context.expired();
-  }
   
   // Base overrides:
   bool DelayUntilCanAccept(void) override;
@@ -144,18 +132,6 @@ public:
   /// told to quit.
   /// </remarks>
   virtual void Run();
-
-  /// <summary>
-  /// Generally speaking, this method doesn't need to be called as it's invoked
-  /// by the core context on behalf of the constructed object.  However, if this
-  /// class is not constructed in the null context, then Ready must be manually
-  /// invoked.
-  /// </summary>
-  void Ready(void) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_ready = true;
-    m_stateCondition.notify_all();
-  }
 
   /// <summary>
   /// Waits until the core thread is launched and then terminates

@@ -3,6 +3,7 @@
 #include TYPE_INDEX_HEADER
 #include TYPE_TRAITS_HEADER
 #include SHARED_PTR_HEADER
+#include "fast_pointer_cast.h"
 #include <vector>
 
 template<class T, bool b>
@@ -14,38 +15,6 @@ template<class T>
 struct ground_type_of_helper<T, false> {
   typedef T type;
 };
-
-namespace std {
-  /// <summary>
-  /// Identical to static_pointer_cast if U inherits T, dynamic_pointer_cast otherwise
-  /// </summary>
-  template<class T, class U>
-  typename std::enable_if<
-    std::is_base_of<T, U>::value,
-    typename std::shared_ptr<T>
-  >::type fast_pointer_cast(const std::shared_ptr<U>& Other) {
-    return std::static_pointer_cast<T, U>(Other);
-  };
-
-  template<class T, class U>
-  typename std::enable_if<
-    !std::is_base_of<T, U>::value &&
-    std::is_polymorphic<T>::value &&
-    std::is_polymorphic<U>::value,
-    std::shared_ptr<T>
-  >::type fast_pointer_cast(const std::shared_ptr<U>& Other) {
-    return std::dynamic_pointer_cast<T, U>(Other);
-  }
-
-  template<class T, class U>
-  typename std::enable_if<
-    !std::is_polymorphic<T>::value ||
-    !std::is_polymorphic<U>::value,
-    std::shared_ptr<T>
-  >::type fast_pointer_cast(const std::shared_ptr<U>&) {
-    return std::shared_ptr<T>();
-  }
-}
 
 /// <summary>
 /// Extracts the ground type, if available
@@ -68,7 +37,7 @@ template<class Ground>
 struct SingleTypeTree {
   template<class T>
   void Add(const std::shared_ptr<T>& rhs) {
-    auto casted = std::fast_pointer_cast<Ground, T>(rhs);
+    auto casted = leap::fast_pointer_cast<Ground, T>(rhs);
     if(casted)
       m_membership.push_back(casted);
   }
@@ -80,7 +49,7 @@ struct SingleTypeTree {
     // Attempt to cast each element in our membership collection, but return false if
     // more than one of our members satisfies the request
     for(size_t i = m_membership.size(); i--;) {
-      auto casted = std::fast_pointer_cast<T, Ground>(m_membership[i]);
+      auto casted = leap::fast_pointer_cast<T, Ground>(m_membership[i]);
       if(!casted)
         continue;
       if(ptr)
@@ -194,7 +163,7 @@ public:
 private:
   struct TreeBaseFoundation {
     virtual ~TreeBaseFoundation(void) {}
-    virtual void* RawPointer(void) const = 0;
+    virtual const void* RawPointer(void) const = 0;
   };
 
   template<class Ground>
@@ -223,7 +192,7 @@ private:
     // Witness of this type
     std::shared_ptr<T> pWitness;
 
-    void* RawPointer(void) const override {return pWitness.get();}
+    const void* RawPointer(void) const override {return pWitness.get();}
 
     virtual void operator=(const std::shared_ptr<Ground>& rhs) override {
       TreeBase<Ground>::pGround = rhs;

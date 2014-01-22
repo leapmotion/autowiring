@@ -27,6 +27,22 @@ public:
   int GetValue(void) const {return m_value;}
 };
 
+// For testing NotifyWhenAutowired with heirarchies
+class Interface :
+  public virtual Object //NOTE - this is required if you want to listen for the Interface being wired
+{
+public:
+  virtual int GetValue() = 0;
+};
+
+class Implementation :
+  public ContextMember,
+  public Interface
+{
+public:
+  virtual int GetValue() override { return 2; }
+};
+
 class Naive:
   public ContextMember
 {
@@ -55,6 +71,24 @@ public:
 
   int value;
   Autowired<A> m_a;
+};
+
+class SmarterInterface//:
+  //public ContextMember
+{
+public:
+  SmarterInterface(void):
+    value(1)
+  {
+#if LAMBDAS_AVAILABLE
+    m_interface.NotifyWhenAutowired([this] () {
+      this->value = m_interface->GetValue();
+    });
+#endif
+  }
+
+  int value;
+  Autowired<Interface> m_interface;
 };
 
 class FailedAutowiringInstance {
@@ -90,7 +124,7 @@ TEST_F(PostConstructTest, VerifySmartBehavior) {
 
   // Initially, value should be one, which is the default
   Autowired<Smarter> smarter;
-  EXPECT_EQ(1, smarter->value) << "Unexpected initial value of Smarter instance";
+  EXPECT_EQ(1, smarter->value) << "Unexpected initial value of SmarterA instance";
 
   // Now we add A and check the wiring
   ctxt->Add<A>();
@@ -98,6 +132,26 @@ TEST_F(PostConstructTest, VerifySmartBehavior) {
 
   // Verify the value was updated by the notification routine
   EXPECT_EQ(2, smarter->value) << "Post-construction notification routine wasn't invoked as expected";
+}
+
+TEST_F(PostConstructTest, VerifySmartBehaviorWithInheritance) {
+  if(!LAMBDAS_AVAILABLE)
+    return;
+
+  AutoCurrentContext ctxt;
+
+  // Add the smart classes, which should succeed
+  ctxt->Add<SmarterInterface>();
+
+  //Initially value should be one, which is the default
+  Autowired<SmarterInterface> smarterI;
+  EXPECT_EQ(1, smarterI->value) << "Unexpected initial value of SmarterA instance";
+
+  //Now add Implementation and check the wiring
+  ctxt->Add<Implementation>();
+  EXPECT_FALSE(!smarterI->m_interface.get()) << "Autowired subclass was not wired as expected";
+
+  EXPECT_EQ(2, smarterI->value) << "Post-construction notification routine wasn't invoked on subclass";
 }
 
 TEST_F(PostConstructTest, VerifyLoopingFailedAutowiring) {

@@ -26,25 +26,19 @@ public:
   bool m_called;
   Decoration<0> m_zero;
   Decoration<1> m_one;
-  Decoration<2> m_two;
 };
 
 class FilterA:
   public FilterRoot
 {
 public:
-  FilterA(void) :
-    m_hitCount(0)
-  {}
-
+  FilterA() {printf("debug");}
+  virtual ~FilterA() { printf("debug"); }
   void AutoFilter(Decoration<0> zero, Decoration<1> one) {
     m_called = true;
     m_zero = zero;
     m_one = one;
-    m_hitCount++;
   }
-
-  size_t m_hitCount;
 };
 static_assert(has_autofilter<FilterA>::value, "Expected the filter to have an AutoFilter method");
 
@@ -59,7 +53,6 @@ public:
   {
     // We'll accept dispatch delivery as long as we exist:
     AcceptDispatchDelivery();
-    Ready();
   }
 
   Deferred AutoFilter(Decoration<0> zero, Decoration<1> one) {
@@ -131,23 +124,4 @@ public:
   void AutoFilter(const Decoration<0>& dec) {
     m_called = true;
   }
-};
-
-class FilterG:
-  public FilterRoot
-{
-public:
-  FilterG(void) :
-    m_hitCount(0)
-  {}
-
-  void AutoFilter(Decoration<0> zero, Decoration<1> one, Decoration<2> two) {
-    m_called = true;
-    m_zero = zero;
-    m_one = one;
-    m_two = two;
-    m_hitCount++;
-  }
-
-  size_t m_hitCount;
 };

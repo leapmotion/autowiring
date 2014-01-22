@@ -1,5 +1,4 @@
-#ifndef _CONTEXT_CLEANUP_TEST_H
-#define _CONTEXT_CLEANUP_TEST_H
+#pragma once
 #include "EnclosedContextTestBase.h"
 
 class ContextCleanupTest:
@@ -7,4 +6,3 @@ class ContextCleanupTest:
 {
 };
 
-#endif

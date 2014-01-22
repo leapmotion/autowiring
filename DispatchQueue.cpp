@@ -74,6 +74,10 @@ bool DispatchQueue::WaitForEvent(boost::chrono::duration<double, boost::milli> m
 }
 
 bool DispatchQueue::WaitForEvent(boost::chrono::steady_clock::time_point wakeTime) {
+  if(wakeTime == boost::chrono::steady_clock::time_point::max())
+    // Maximal wait--we can optimize by using the zero-arguments version
+    return WaitForEvent(), true;
+
   boost::unique_lock<boost::mutex> lk(m_dispatchLock);
   if(m_aborted)
     throw dispatch_aborted_exception();
