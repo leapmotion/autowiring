@@ -14,13 +14,16 @@ class SnoopTestBase:
 {
 public:
   SnoopTestBase(void):
-    m_simpleCall(false)
+    m_simpleCall(false),
+    m_callCount(0)
   {}
 
   bool m_simpleCall;
+  int m_callCount;
 
   void SimpleCall(void) override {
     m_simpleCall = true;
+    m_callCount++;
   }
 };
 
@@ -36,6 +39,24 @@ class ParentMember:
 class IgnoredParentMember:
   public SnoopTestBase
 {
+};
+
+
+class SimpleEvent:
+public virtual EventReceiver
+{
+public:
+  virtual void ZeroArgs(void) {}
+};
+
+class RemovesSelf:
+public SimpleEvent,
+public std::enable_shared_from_this<RemovesSelf>
+{
+  virtual void ZeroArgs(void){
+    AutoCurrentContext ctxt;
+    ctxt->Unsnoop(shared_from_this());
+  }
 };
 
 TEST_F(SnoopTest, VerifySimpleSnoop) {
@@ -122,4 +143,44 @@ TEST_F(SnoopTest, AmbiguousReciept) {
 
   ubl(&UpBroadcastListener::SimpleCall)();
   EXPECT_TRUE(parent->m_simpleCall) << "Snooped parent did not receive an event as expected when snooped context was destroyed";
+}
+
+TEST_F(SnoopTest, AvoidDoubleReciept) {
+  // Create the parent listener:
+  AutoRequired<ParentMember> parentMember;
+  {
+    // Create the child context and insert the child member:
+    std::shared_ptr<ChildMember> childMember(new ChildMember());
+    AutoCreateContext child;
+    {
+      CurrentContextPusher pshr(child);
+      child->Add(childMember);
+
+      // Snoop
+      child->Snoop(parentMember);
+    }
+
+    // Now fire an event from the parent:
+    AutoFired<UpBroadcastListener> firer;
+    firer(&UpBroadcastListener::SimpleCall)();
+
+    // Verify that the child itself got the message
+    EXPECT_EQ(1, childMember->m_callCount) << "Message not received by another member of the same context";
+  }
+
+  // Verify that the parent got the message only once:
+  EXPECT_EQ(1, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
+}
+
+TEST_F(SnoopTest, AntiCyclicRemoval) {
+  AutoRequired<RemovesSelf> removeself;
+  
+  AutoCreateContext snoopy;
+  CurrentContextPusher pshr(snoopy);
+  
+  snoopy->Snoop(removeself);
+  
+  AutoFired<SimpleEvent> ubl;
+  ubl(&SimpleEvent::ZeroArgs)();
+  
 }

@@ -10,7 +10,7 @@ TEST_F(CurrentContextPusherTest, VerifyResetsDuringThrow) {
   std::shared_ptr<CoreContext> current = CoreContext::CurrentContext();
 
   try {
-    std::shared_ptr<CoreContext> subContext = current->Create();
+    std::shared_ptr<CoreContext> subContext = current->CreateAnonymous();
     CurrentContextPusher test(subContext.get());
     throw exception();
   } catch(exception&) {

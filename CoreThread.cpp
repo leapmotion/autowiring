@@ -7,7 +7,6 @@
 CoreThread::CoreThread(const char* pName):
   ContextMember(pName),
   m_stop(false),
-  m_ready(false),
   m_running(false),
   m_completed(false),
   m_canAccept(false)
@@ -25,7 +24,6 @@ void CoreThread::DoRun(void) {
     SetCurrentThreadName();
 
   // Now we wait for the thread to be good to go:
-  DelayUntilReady();
   try {
     Run();
   } catch(dispatch_aborted_exception&) {
@@ -40,8 +38,8 @@ void CoreThread::DoRun(void) {
       CoreContext::DebugPrintCurrentExceptionInformation();
     }
 
-    // Signal shutdown on the enclosing context
-    GetContext()->SignalShutdown();
+    // Signal shutdown on the enclosing context--cannot wait, if we wait we WILL deadlock
+    GetContext()->SignalShutdown(false);
   }
 
   // Unconditionally shut off dispatch delivery:
@@ -52,18 +50,20 @@ void CoreThread::DoRun(void) {
   m_stop = true;
   m_completed = true;
   m_running = false;
+
+  // Notify other threads that we are done
   m_stateCondition.notify_all();
 
   // Perform a manual notification of teardown listeners
   NotifyTeardownListeners();
 
-  // No longer running, we MUST release the thread pointer to ensure proper teardown
+  // No longer running, we MUST release the thread pointer to ensure proper teardown order
   m_thisThread.detach();
 }
 
 bool CoreThread::ShouldStop(void) const {
   shared_ptr<CoreContext> context = ContextMember::GetContext();
-  return m_stop || !context || context->ShouldStop();
+  return m_stop || !context || context->IsShutdown();
 }
 
 void CoreThread::ThreadSleep(long millisecond) {

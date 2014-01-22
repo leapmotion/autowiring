@@ -62,10 +62,6 @@ class ThrowsWhenRun:
   public CoreThread
 {
 public:
-  ThrowsWhenRun(void) {
-    Ready();
-  }
-
   // This convoluted syntax is required to evade warnings on Mac
   decltype(throw_rethrowable Ex(100)) MakeException() {
     return throw_rethrowable Ex(100);
@@ -123,7 +119,7 @@ public:
     }
   }
 
-  virtual void Filter(const std::function<void()>& rethrower, const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) override {
+  virtual void Filter(const std::function<void()>& rethrower, const JunctionBoxBase* pJunctionBox, EventReceiver* pRecipient) override {
     m_hit = true;
     try {
       rethrower();
@@ -208,10 +204,10 @@ TEST_F(ExceptionFilterTest, DISABLED_FireContainmentCheck) {
   EXPECT_NO_THROW(broadcaster(&ThrowingListener::DoThrow)());
 
   // Verify that the context containing the fire thrower was torn down:
-  EXPECT_TRUE(ctxt->ShouldStop()) << "An unhandled exception from a fire call in a context should have signalled it to stop";
+  EXPECT_TRUE(ctxt->IsShutdown()) << "An unhandled exception from a fire call in a context should have signalled it to stop";
 
   // Verify that the parent context was protected:
-  EXPECT_FALSE(m_create->ShouldStop()) << "An unhandled exception incorrectly terminated a parent context";
+  EXPECT_FALSE(m_create->IsShutdown()) << "An unhandled exception incorrectly terminated a parent context";
 }
 
 TEST_F(ExceptionFilterTest, EnclosedThrowCheck) {
