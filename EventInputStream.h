@@ -45,11 +45,8 @@ struct Expression<R(W::*)(ToBindArgs...) >:
     
   template <typename ... InputArgs >
   void infunc(InputArgs ... inargs){
-    std::cout << "YAY right one was called!" << std::endl;
-
     AutoFired<W> sender;
     sender(m_memfunc)(deser<ToBindArgs>(inargs)...);
-
   }
 
   typedef std::integral_constant<std::size_t, sizeof ... ( ToBindArgs)> my_arity;
@@ -60,14 +57,14 @@ struct Expression<R(W::*)(ToBindArgs...) >:
   typedef std::integral_constant<std::size_t, 4 > m_four;
   typedef std::integral_constant<std::size_t, 5 > m_five;
 
-  /*
+  
   template <class T = my_arity>
-  typename std::enable_if< std::is_same<my_arity,  m_zero>::value, void>::type
+  typename std::enable_if< std::is_same<T,  m_zero>::value, void>::type
     passed(std::deque<std::string>  & d)
   {
     infunc();
   }
-  */
+  
   template <class T = my_arity>
   typename std::enable_if< std::is_same<T, m_one>::value, void>::type
     passed(std::deque<std::string>  & d)
