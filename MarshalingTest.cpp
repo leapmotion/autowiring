@@ -54,7 +54,6 @@ public:
   void SampleEventFiring(const std::string* str) override {
     m_called = true;
     m_str = *str;
-    std::cout << "Sample EventFiring function has been called" << std::endl;
   }
 
   void SampleEventFiring3(const std::string* str1, const std::string* str2, const std::string* str3) override {
