@@ -1,3 +1,5 @@
+// Transient pools are deprecated. Don't include this header.
+#error
 #pragma once
 #include FUNCTIONAL_HEADER
 
@@ -10,6 +12,8 @@ class TransientPoolBase:
   public virtual EventReceiver
 {
 public:
+  DEPRECATED(TransientPoolBase(), "Transient pools are now deprecated.  Use subcontexts, or snooping, to implement this behavior.") {}
+
   virtual ~TransientPoolBase(void) {}
 
   /// <summary>

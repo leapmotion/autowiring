@@ -45,7 +45,6 @@ public:
     m_hitDeferred(false)
   {
     AcceptDispatchDelivery();
-    Ready();
   }
 
   bool m_hitDeferred;

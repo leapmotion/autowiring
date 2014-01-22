@@ -21,7 +21,6 @@ class SimpleThreadedT:
 {
 public:
   SimpleThreadedT(void) {
-    Ready();
     AcceptDispatchDelivery();
   }
   Deferred OnEvent(std::shared_ptr<T> obj) override {

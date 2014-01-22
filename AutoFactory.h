@@ -1,33 +1,6 @@
 #pragma once
+#include "CreationRules.h"
 #include <typeinfo>
-#include TYPE_TRAITS_HEADER
-
-template<typename T>
-struct has_static_new
-{
-  template<class Fn, Fn>
-  struct unnamed_constant;
-
-  template<class U>
-  static int select(unnamed_constant<U* (*)(), &U::New>*);
-
-  template<class U>
-  static char select(...);
-
-  static const bool value = sizeof(select<T>(nullptr)) == sizeof(int);
-};
-
-template<typename T, bool isAbstract = std::is_abstract<T>::value>
-struct has_simple_constructor
-{
-  template<class U>
-  static int select(decltype(U())*);
-
-  template<class U>
-  static char select(...);
-
-  static const bool value = sizeof(select<T>(nullptr)) == sizeof(int);
-};
 
 template<typename T>
 struct has_simple_constructor<T, true>:

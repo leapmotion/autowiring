@@ -3,7 +3,7 @@
 #define _EXCEPTION_FILTER_H
 #include FUNCTIONAL_HEADER
 
-class EventReceiverProxyBase;
+class JunctionBoxBase;
 class EventReceiver;
 
 /// <summary>
@@ -70,7 +70,7 @@ public:
   /// The rethrower lambda must be called before this filter method exits.  Attempting to cache this function
   /// will result in undefined behavior.
   /// </remarks>
-  virtual void Filter(const std::function<void()>& rethrower, const EventReceiverProxyBase* pProxy, EventReceiver* pRecipient) {}
+  virtual void Filter(const std::function<void()>& rethrower, const JunctionBoxBase* pJunctionBox, EventReceiver* pRecipient) {}
 };
 
 #endif
