@@ -41,10 +41,10 @@ struct Expression<R(W::*)(ToBindArgs...) >: public ExpressionBase
   Expression(memType m){ m_memfunc = m; }
 
   void DeserializeAndForward(std::deque<std::string> & d){
-    auto it = d.begin();
-    it++; //First arg is event name
+    auto it = d.end();
+    it--;
     AutoFired<W> sender;
-    sender(m_memfunc)(deser<ToBindArgs>(*it++)...);
+    sender(m_memfunc)(deser<ToBindArgs>(*it--)...);
   }
 };
 
