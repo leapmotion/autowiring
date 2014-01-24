@@ -259,8 +259,6 @@ TEST_F(MarshalingTest, VerifyComplexDeserialization) {
   std::string helloWorldAgain = "Hello, world, again!";
   std::string helloWorldYetAgain = "Hello, world, yet again!";
 
-  ewuuid(&EventWithUuid::SampleEventFiring)(&helloWorld);
-  ewuuid(&EventWithUuid::SampleEventFiring)(&helloWorldAgain);
   ewuuid(&EventWithUuid::SampleEventFiring3)(&helloWorld, &helloWorldAgain, &helloWorldYetAgain);
   ASSERT_FALSE(os->IsEmpty());
 
@@ -276,9 +274,6 @@ TEST_F(MarshalingTest, VerifyComplexDeserialization) {
 
   // Register our expected event type:
   is->template EnableIdentity(&EventWithUuid::SampleEventFiring3);
-  is->template EnableIdentity(&EventWithUuid::SampleEventFiring);
-  is->template EnableIdentity(&EventWithUuid::SampleEventDeferred);
-
 
   const void* ptr = os->GetData(); //This is damn unsafe. Who is supposed to be doing cleanup?
   size_t nRemaining = os->GetSize();
@@ -288,36 +283,10 @@ TEST_F(MarshalingTest, VerifyComplexDeserialization) {
   ASSERT_LE(advanceBy, nRemaining) << "Input stream processed more bytes from the passed buffer than were available for processing";
 
   // Verify that the listener got _something_, and the thing it got was the thing we sent earlier:
-  EXPECT_TRUE(listener->m_called) << "Listener failed to receive any events from the event input stream";
-  EXPECT_EQ(helloWorld, listener->m_str) << "Listener received an event, but the payload of the event was not the same as what was originally serialized";
-
-  // Clear, advance, and fire the next event:
-  listener->m_called = false;
-  listener->m_str.clear();
-  (char*&)ptr += advanceBy;
-  nRemaining -= advanceBy;
-  advanceBy = is->FireSingle(ptr, nRemaining);
-  ASSERT_NE(0UL, advanceBy) << "A second attempt to fire an event failed to parse any bytes";
-  ASSERT_LE(advanceBy, nRemaining) << "Input stream overran its buffer for the second fired event";
-
-  // Now verify that we got called again:
-  ASSERT_TRUE(listener->m_called) << "Second event was not received from the event input stream";
-  ASSERT_EQ(helloWorldAgain, listener->m_str) << "Listener did not receive the second message payload from the input stream";
-
-  // Clear, advance, and fire the next event:
-  listener->m_called = false;
-  listener->m_str.clear();
-  (char*&)ptr += advanceBy;
-  nRemaining -= advanceBy;
-  advanceBy = is->FireSingle(ptr, nRemaining);
-  ASSERT_NE(0UL, advanceBy) << "A third attempt to fire an event failed to parse any bytes";
-  ASSERT_LE(advanceBy, nRemaining) << "Input stream overran its buffer for the third fired event";
-
-  // Now verify that we got called again:
   ASSERT_TRUE(listener->m_called) << "Third event was not received from the event input stream";
-  ASSERT_EQ(helloWorld, listener->m_str) << "Listener did not receive the third message payload, 1 arg,  from the input stream";
-  ASSERT_EQ(helloWorldAgain, listener->m_str2) << "Listener did not receive the third message payload, 2 arg,  from the input stream";
-  ASSERT_EQ(helloWorldYetAgain, listener->m_str3) << "Listener did not receive the third message payload, 3 arg,  from the input stream";
+  ASSERT_EQ(helloWorld, listener->m_str) << "Listener did not receive the first message payload, 1 arg,  from the input stream";
+  ASSERT_EQ(helloWorldAgain, listener->m_str2) << "Listener did not receive the first message payload, 2 arg,  from the input stream";
+  ASSERT_EQ(helloWorldYetAgain, listener->m_str3) << "Listener did not receive the first message payload, 3 arg,  from the input stream";  
 
   // Ensure that we processed EXACTLY the number of bytes that were in the output stream:
   EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";

@@ -6,6 +6,7 @@
 #include <map>
 #include <typeinfo>
 #include "Decompose.h"
+#include "Deserialize.h"
 
 #include SHARED_PTR_HEADER
 #include TYPE_TRAITS_HEADER
@@ -16,12 +17,6 @@
 
 template <class T>
 class AutoFired;
-
-template <typename T>
-const std::string * deser(std::string & str){
-  const std::string * ret(&str);
-    return ret;
-  }
 
 /// <summary>
 /// Wrap up memfns as shared_ptrs to ExpressionBase-derived classes. Call func = call wrapped event firing.
@@ -44,7 +39,7 @@ struct Expression<R(W::*)(ToBindArgs...) >: public ExpressionBase
     auto it = d.end();
     it--;
     AutoFired<W> sender;
-    sender(m_memfunc)(deser<ToBindArgs>(*it--)...);
+    sender(m_memfunc)(Auto::deser<ToBindArgs>(*it--)...);
   }
 };
 
@@ -62,16 +57,12 @@ private:
   
 public:
   EventInputStream(){}
+  
   /// <summary>
   /// Returns true if memfn is enabled, otherwise false.
   /// </summary>
-  template<class MemFn>
-  bool IsEnabled(MemFn eventIden, bool amIRegistered = false) {
-    static int registration = 0; //first time func is checked
-    if (amIRegistered && registration < 1){
-      registration++;
-    }
-    return (!!registration);
+  bool IsEnabled(std::string str) {
+    return !(m_EventMap.find(str) == m_EventMap.end());
   }
  
   /// <summary>
@@ -81,9 +72,8 @@ public:
   void SpecialAssign(std::string str) {
     // We cannot serialize an identity we don't recognize
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot add a member function unrelated to the output type for this class");
-    if (!IsEnabled(eventIden))
+    if (!IsEnabled(str))
     {
-      IsEnabled(eventIden, true);
       std::shared_ptr<ExpressionBase> ptr = std::make_shared<Expression<MemFn> >(eventIden);
       m_EventMap[str] = ptr;
     }
