@@ -23,41 +23,31 @@ const std::string * deser(std::string & str){
     return ret;
   }
 
-template <typename T, typename X>
-X wrap(X x){
-  return x;
-}
 /// <summary>
 /// Wrap up memfns as shared_ptrs to ExpressionBase-derived classes. Call func = call wrapped event firing.
 /// </summary>
 struct ExpressionBase{
-  virtual void passmethething(std::deque<std::string> &) =0;
+  virtual void DeserializeAndForward(std::deque<std::string> &) = 0;
 };
 
 template <class MemFn>
 struct Expression;
 
 template <class R, class W, typename... ToBindArgs>
-struct Expression<R(W::*)(ToBindArgs...) >:
-  public ExpressionBase
+struct Expression<R(W::*)(ToBindArgs...) >: public ExpressionBase
 {
   typedef R(W::*memType)(ToBindArgs...);
   memType m_memfunc;
   Expression(memType m){ m_memfunc = m; }
 
-  void passmethething(std::deque<std::string> & d){ 
+  void DeserializeAndForward(std::deque<std::string> & d){
     auto it = d.begin();
     it++; //First arg is event name
-    infunc(wrap<ToBindArgs>(*it++)...);
-  }
-    
-  template <typename ... InputArgs >
-  void infunc(InputArgs ... inargs){
     AutoFired<W> sender;
-    sender(m_memfunc)(deser<ToBindArgs>(inargs)...);
+    sender(m_memfunc)(deser<ToBindArgs>(*it++)...);
   }
 };
- 
+
 /// <summary>
 /// Allows the deserialization of events from an output stream, in order to replay them in-process
 /// </summary>
@@ -125,8 +115,8 @@ public:
     auto find1 = m_EventMap.find(query);
     if (find1 != m_EventMap.end()) 
     {
-      auto evt = find1 -> second;       
-      evt->passmethething(d);        
+      auto evt = find1 -> second;
+      evt->DeserializeAndForward(d);
     }
     return location + 1;
   }
