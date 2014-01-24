@@ -35,6 +35,11 @@ struct Expression<R(W::*)(ToBindArgs...) >: public ExpressionBase
   memType m_memfunc;
   Expression(memType m){ m_memfunc = m; }
 
+  /// <summary>
+  /// This function deserializes exactly as many arguments from the
+  /// argument deque as the length of the type pack ToBindArgs by using
+  /// parameter pack expansion.
+  /// </summary>
   void DeserializeAndForward(std::deque<std::string> & d){
     auto it = d.end();
     it--;
