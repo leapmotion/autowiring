@@ -46,6 +46,8 @@ public:
 
   bool m_called;
   std::string m_str;
+  std::string m_str2;
+  std::string m_str3;
 
   void SampleEventFiring0() override {
     m_called = true;
@@ -58,6 +60,9 @@ public:
 
   void SampleEventFiring3(const std::string* str1, const std::string* str2, const std::string* str3) override {
     m_called = true;
+    m_str = *str1;
+    m_str2 = *str2;
+    m_str3 = *str3;
   }
 
   Deferred SampleEventDeferred(const std::string* str) override {
@@ -176,9 +181,11 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
 
   std::string helloWorld = "Hello, world!";
   std::string helloWorldAgain = "Hello, world, again!";
+  std::string helloWorldYetAgain = "Hello, world, yet again!";
   
   ewuuid(&EventWithUuid::SampleEventFiring)(&helloWorld);
   ewuuid(&EventWithUuid::SampleEventFiring)(&helloWorldAgain);
+  ewuuid(&EventWithUuid::SampleEventFiring3)(&helloWorld, &helloWorldAgain, &helloWorldYetAgain);
   ASSERT_FALSE(os->IsEmpty());
   
   // Inject the listener into the context:
@@ -191,6 +198,7 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   ASSERT_NE(nullptr, is.get()) << "Event input stream was empty";
   
   // Register our expected event type:
+  is->template EnableIdentity(&EventWithUuid::SampleEventFiring3);
   is->template EnableIdentity(&EventWithUuid::SampleEventFiring);
   is->template EnableIdentity(&EventWithUuid::SampleEventDeferred);
  
@@ -217,6 +225,21 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   // Now verify that we got called again:
   ASSERT_TRUE(listener->m_called) << "Second event was not received from the event input stream";
   ASSERT_EQ(helloWorldAgain, listener->m_str) << "Listener did not receive the second message payload from the input stream";
+
+  // Clear, advance, and fire the next event:
+  listener->m_called = false;
+  listener->m_str.clear();
+  (char*&)ptr += advanceBy;
+  nRemaining -= advanceBy;
+  advanceBy = is->FireSingle(ptr, nRemaining);
+  ASSERT_NE(0UL, advanceBy) << "A third attempt to fire an event failed to parse any bytes";
+  ASSERT_LE(advanceBy, nRemaining) << "Input stream overran its buffer for the third fired event";
+
+  // Now verify that we got called again:
+  ASSERT_TRUE(listener->m_called) << "Second event was not received from the event input stream";
+  ASSERT_EQ(helloWorld, listener->m_str) << "Listener did not receive the third message payload, 1 arg,  from the input stream";
+  ASSERT_EQ(helloWorldAgain, listener->m_str2) << "Listener did not receive the third message payload, 2 arg,  from the input stream";
+  ASSERT_EQ(helloWorldYetAgain, listener->m_str3) << "Listener did not receive the third message payload, 3 arg,  from the input stream";
 
   // Ensure that we processed EXACTLY the number of bytes that were in the output stream:
   EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";
