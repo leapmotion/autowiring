@@ -236,7 +236,7 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   ASSERT_LE(advanceBy, nRemaining) << "Input stream overran its buffer for the third fired event";
 
   // Now verify that we got called again:
-  ASSERT_TRUE(listener->m_called) << "Second event was not received from the event input stream";
+  ASSERT_TRUE(listener->m_called) << "Third event was not received from the event input stream";
   ASSERT_EQ(helloWorld, listener->m_str) << "Listener did not receive the third message payload, 1 arg,  from the input stream";
   ASSERT_EQ(helloWorldAgain, listener->m_str2) << "Listener did not receive the third message payload, 2 arg,  from the input stream";
   ASSERT_EQ(helloWorldYetAgain, listener->m_str3) << "Listener did not receive the third message payload, 3 arg,  from the input stream";
