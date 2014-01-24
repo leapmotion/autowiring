@@ -23,6 +23,10 @@ const std::string * deser(std::string & str){
     return ret;
   }
 
+template <typename T, typename X>
+X wrap(X x){
+  return x;
+}
 /// <summary>
 /// Wrap up memfns as shared_ptrs to ExpressionBase-derived classes. Call func = call wrapped event firing.
 /// </summary>
@@ -41,52 +45,18 @@ struct Expression<R(W::*)(ToBindArgs...) >:
   memType m_memfunc;
   Expression(memType m){ m_memfunc = m; }
 
-  void passmethething(std::deque<std::string> & d){ passed(d); }
+  void passmethething(std::deque<std::string> & d){ 
+    auto it = d.begin();
+    it++; //First arg is event name
+    infunc(wrap<ToBindArgs>(*it++)...);
+  }
     
   template <typename ... InputArgs >
   void infunc(InputArgs ... inargs){
     AutoFired<W> sender;
     sender(m_memfunc)(deser<ToBindArgs>(inargs)...);
   }
-
-  typedef std::integral_constant<std::size_t, sizeof ... ( ToBindArgs)> my_arity;
-  typedef std::integral_constant<std::size_t, 0 > m_zero;
-  typedef std::integral_constant<std::size_t, 1 > m_one;
-  typedef std::integral_constant<std::size_t, 2 > m_two;
-  typedef std::integral_constant<std::size_t, 3 > m_three;
-  typedef std::integral_constant<std::size_t, 4 > m_four;
-  typedef std::integral_constant<std::size_t, 5 > m_five;
-
-  
-  template <class T = my_arity>
-  typename std::enable_if< std::is_same<T,  m_zero>::value, void>::type
-    passed(std::deque<std::string>  & d)
-  {
-    infunc();
-  }
-  
-  template <class T = my_arity>
-  typename std::enable_if< std::is_same<T, m_one>::value, void>::type
-    passed(std::deque<std::string>  & d)
-  {
-      infunc(d[1]);
-  }
-
-  template <class T = my_arity>
-  typename std::enable_if< std::is_same<T, m_two>::value, void>::type
-    passed(std::deque<std::string>  & d)
-  {
-      infunc(d[1], d[2]);
-  }
-
-  template <class T = my_arity>
-  typename std::enable_if< std::is_same<T, m_three>::value, void>::type
-    passed(std::deque<std::string>  & d)
-  {
-      infunc(d[1], d[2], d[3]);
-  }
 };
-
  
 /// <summary>
 /// Allows the deserialization of events from an output stream, in order to replay them in-process
