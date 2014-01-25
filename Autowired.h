@@ -169,6 +169,12 @@ public:
     if(!*this)
       AutowiredCreator<T>::Create();
   }
+  AutoRequired(std::weak_ptr<CoreContext> context) :
+    Autowired<T>(context)
+  {
+    if (!*this)
+      AutowiredCreator<T>::Create();
+  }
 };
 
 /// <summary>
