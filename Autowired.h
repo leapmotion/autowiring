@@ -69,6 +69,9 @@ public:
   typedef T value_type;
   typedef shared_ptr<T> t_ptrType;
 
+  AutowiredCreator() {};
+  AutowiredCreator(std::weak_ptr<CoreContext> context) : AutowirableSlot(context) {};
+
   /// <summary>
   /// Creates a new instance if this instance isn't autowired
   /// </summary>
@@ -140,6 +143,12 @@ public:
   static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
 
   Autowired(void) {
+    shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
+    context->Autowire(*this);
+  }
+  Autowired(std::weak_ptr<CoreContext> ctxt) :
+    AutowiredCreator<T>(ctxt)
+  {
     shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
     context->Autowire(*this);
   }
