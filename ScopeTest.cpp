@@ -48,3 +48,18 @@ TEST_F(ScopeTest, VerifyAutowireSpecifiedContext){
   Autowired<A> aWired(subCtxt);
   EXPECT_TRUE(aWired) << "Autowired member not wired from the passed context";
 }
+
+TEST_F(ScopeTest, VerifyAutoRequireSpecifiedContext){
+  AutoCurrentContext ctxt;
+
+  {
+    AutoCreateContext subCtxt;
+    AutoRequired<A> aReq;
+
+    {
+      Autowired<A> aWired;
+      //EXPECT_TRUE(aWired) << "Autorequired member not added to the passed context";
+    }
+  }
+
+}
