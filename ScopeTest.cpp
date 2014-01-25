@@ -38,3 +38,13 @@ TEST_F(ScopeTest, VerifyInherit) {
   Autowired<B> autoB;
   EXPECT_TRUE(!autoB.get()) << "Autowired member wired from sub-context";
 }
+
+TEST_F(ScopeTest, VerifyAutowireSpecifiedContext){
+  AutoCurrentContext ctxt;
+
+  AutoCreateContext subCtxt;
+
+  subCtxt->Add<A>();
+  Autowired<A> aWired(subCtxt);
+  EXPECT_TRUE(aWired) << "Autowired member not wired from the passed context";
+}
