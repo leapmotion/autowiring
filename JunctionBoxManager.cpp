@@ -9,6 +9,8 @@ JunctionBoxManager::JunctionBoxManager(void) {
   // Enumerate all Autofired types to initialize a new JunctionBox for each
   for(auto p = g_pFirstEntry; p; p = p->pFlink)
     m_junctionBoxes[p->ti] = p->m_NewJunctionBox();
+  
+  // Manually add internal types
   m_junctionBoxes[typeid(AutoPacketListener)] = std::make_shared<JunctionBox<AutoPacketListener>>();
 }
 
@@ -16,7 +18,7 @@ JunctionBoxManager::~JunctionBoxManager(void) {}
 
 std::shared_ptr<JunctionBoxBase> JunctionBoxManager::Get(std::type_index pTypeIndex) {
   auto box = m_junctionBoxes.find(pTypeIndex);
-  assert(box != m_junctionBoxes.end());;
+  assert(box != m_junctionBoxes.end());
   
   //Check here if any listening marshals might be interested in receiving the fired args
   auto mapfinditerator = m_eventOutputStreams.find(pTypeIndex);
