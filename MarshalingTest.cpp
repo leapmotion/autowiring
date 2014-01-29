@@ -26,7 +26,8 @@ If the types aren't POD. At the very least, tests need to be written which viola
 */
 
 
-struct StandardType{
+
+struct StandardType : public Auto::RefactorMeMarshal{
   std::string m_str1;
   std::string m_str2;
   std::string m_str3;
@@ -37,11 +38,11 @@ struct StandardType{
     m_str3 = s3;
   }
 
-  static std::string AutoSerialize(StandardType ST){
-    return  ST.m_str1 + "$" + ST.m_str2 + "$" + ST.m_str3 + "$";
+  std::string AutoSerialize(void){
+    return  m_str1 + "$" + m_str2 + "$" + m_str3 + "$";
   }
 
-  static StandardType AutoDeserialize(std::string data){ 
+  StandardType AutoDeserialize(std::string data){ 
     std::istringstream buf(data);
     std::deque<std::string> d;
     std::string s;
@@ -337,6 +338,9 @@ TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
   AutoFired<EventWithUuid> ewuuid;
   std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
   ASSERT_NE(nullptr, os.get());
+
+  // Register our expected event type:
+  os->template EnableIdentity(&EventWithUuid::SampleStandardFiring);
 
   std::string helloWorld = "Hello, world!";
   std::string helloWorldAgain = "Hello, world, again!";
