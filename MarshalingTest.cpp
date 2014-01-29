@@ -330,7 +330,7 @@ TEST_F(MarshalingTest, VerifyComplexDeserialization) {
   // Ensure that we processed EXACTLY the number of bytes that were in the output stream:
   EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";
 }
-
+/*
 TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
   AutoCurrentContext ctxt;
 
@@ -362,7 +362,7 @@ TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
   ASSERT_NE(nullptr, is.get()) << "Event input stream was empty";
 
   // Register our expected event type:
-  is->EnableIdentity(&EventWithUuid::SampleEventFiring3);
+  is->EnableIdentity(&EventWithUuid::SampleStandardFiring);
 
   const void* ptr = os->GetData(); //This is damn unsafe. Who is supposed to be doing cleanup?
   size_t nRemaining = os->GetSize();
@@ -380,3 +380,4 @@ TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
   // Ensure that we processed EXACTLY the number of bytes that were in the output stream:
   EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";
 }
+*/
