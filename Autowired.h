@@ -187,10 +187,7 @@ public:
   /// </summary>
   AutoFired(const std::shared_ptr<JunctionBox<T>>& junctionBox) :
     m_junctionBox(junctionBox)
-  {
-    // Add an utterance of the TypeRegistry so we can add this autowired type to our collection
-    (void)RegType<T>::r;
-  }
+  {}
 
   /// <summary>
   /// Utility constructor, used to support movement operations
