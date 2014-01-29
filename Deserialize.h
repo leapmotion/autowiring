@@ -13,5 +13,13 @@ const std::string * deser(std::string & str){
   const std::string * ret(&str);
     return ret;
   }
+
+
+struct RefactorMeMarshal{
+
+  virtual std::string AutoSerialize(void) = 0;
+
+};
+
   
 }
