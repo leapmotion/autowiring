@@ -37,7 +37,7 @@ struct Expression<R(W::*)(ToBindArgs...) >: public ExpressionBase
 
   /// <summary>
   /// This function deserializes exactly as many arguments from the
-  /// argument deque as the length of the type pack ToBindArgs by using
+  /// argument dequeue as the length of the type pack ToBindArgs by using
   /// parameter pack expansion.
   /// </summary>
   void DeserializeAndForward(std::deque<std::string> & d){
