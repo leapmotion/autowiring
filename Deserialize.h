@@ -9,40 +9,43 @@
 
 namespace Auto{
 
-  struct RefactorMeMarshal{
+  struct SerializableSigil{};
+
+  struct Serialize : public SerializableSigil{
 
     virtual std::string AutoSerialize(void) = 0;
     virtual void AutoDeserialize(std::string data) = 0;
 
-  };      
+  };
 
   template <typename T, typename Tag = T>
   struct deser;
 
   template <typename T>
   struct deser<T>{
-    static const std::string * deserialize(std::string & str){
-      assert(false);
-      //This should never be called
+    
+    /// <summary>
+    /// const std::string * Deserialization
+    /// </summary>
+    template <class X = T>
+    static typename std::enable_if<std::is_same<const std::string *, X>::value, const std::string *>::type
+    deserialize(std::string & str){
       const std::string * ret(&str);
       return ret;
     }
+
+    /// <summary>
+    /// Deserialization for types that do that thingAutoDeserialize
+    /// </summary>
+    template <class X = T>
+    static typename std::enable_if<std::is_base_of<Serialize, X>::value, T>::type
+    deserialize(std::string & str){
+      T t;
+      t.AutoDeserialize(str);
+      return t;
+    }
+
+
   };
 
-  template <>
-  struct deser<const std::string *>{
-    static const std::string * deserialize(std::string & str){
-      const std::string * ret(&str);
-      return ret;
-    }
-  };
-
-  template <typename T>
-  struct deser<T, typename std::enable_if<!std::is_base_of<Auto::RefactorMeMarshal, T>::value>::type>{
-    static const std::string * deserialize(std::string & str){
-      const std::string * ret(&str);
-      return ret;
-    }
-  };
-  
 }

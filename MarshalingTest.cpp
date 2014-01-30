@@ -27,10 +27,12 @@ If the types aren't POD. At the very least, tests need to be written which viola
 
 
 
-struct StandardType : public Auto::RefactorMeMarshal{
+struct StandardType : public Auto::Serialize{
   std::string m_str1;
   std::string m_str2;
   std::string m_str3;
+
+  StandardType(){}
 
   StandardType(std::string s1, std::string s2, std::string s3){
     m_str1 = s1;
