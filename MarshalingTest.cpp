@@ -42,14 +42,17 @@ struct StandardType : public Auto::RefactorMeMarshal{
     return  m_str1 + "$" + m_str2 + "$" + m_str3 + "$";
   }
 
-  StandardType AutoDeserialize(std::string data){ 
+  void AutoDeserialize(std::string data){ 
     std::istringstream buf(data);
     std::deque<std::string> d;
     std::string s;
     while (std::getline(buf, s, '$'))
       d.push_back(s);
-    auto x = StandardType(d[0], d[1], d[2]);
-    return x;
+
+    m_str1 = d[0];
+    m_str2 = d[1];
+    m_str3 = d[2];
+    return;
   }
 };
 
@@ -330,7 +333,7 @@ TEST_F(MarshalingTest, VerifyComplexDeserialization) {
   // Ensure that we processed EXACTLY the number of bytes that were in the output stream:
   EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";
 }
-/*
+
 TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
   AutoCurrentContext ctxt;
 
@@ -380,4 +383,3 @@ TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
   // Ensure that we processed EXACTLY the number of bytes that were in the output stream:
   EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";
 }
-*/
