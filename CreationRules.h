@@ -1,6 +1,7 @@
 #pragma once
 #include TYPE_TRAITS_HEADER
 
+
 template<typename T>
 struct has_static_new
 {
