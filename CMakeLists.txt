@@ -37,6 +37,7 @@ set(
   CurrentContextPusher.cpp
   CurrentContextPusher.h
   Decompose.h
+  Deserialize.h
   DeferredBase.h
   DeferredBase.cpp
   deferred_ptr.h
