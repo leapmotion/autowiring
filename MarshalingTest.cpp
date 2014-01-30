@@ -4,6 +4,8 @@
 #include "EventOutputStream.h"
 #include "Decompose.h"
 #include "uuid.h"
+#include <string>
+#include <sstream>
 
                                                          
 /*
@@ -23,6 +25,39 @@ If the types aren't POD. At the very least, tests need to be written which viola
 "I can do everything with stringstreams" implementation currently passing
 */
 
+
+
+struct StandardType : public Auto::Serialize{
+  std::string m_str1;
+  std::string m_str2;
+  std::string m_str3;
+
+  StandardType(){}
+
+  StandardType(std::string s1, std::string s2, std::string s3){
+    m_str1 = s1;
+    m_str2 = s2;
+    m_str3 = s3;
+  }
+
+  std::string AutoSerialize(void){
+    return  m_str1 + "$" + m_str2 + "$" + m_str3 + "$";
+  }
+
+  void AutoDeserialize(std::string data){ 
+    std::istringstream buf(data);
+    std::deque<std::string> d;
+    std::string s;
+    while (std::getline(buf, s, '$'))
+      d.push_back(s);
+
+    m_str1 = d[0];
+    m_str2 = d[1];
+    m_str3 = d[2];
+    return;
+  }
+};
+
 DECLARE_UUID(EventWithUuid, "6EC2129F-5DD7-43D5-ACB5-864E8BB5D6B4") :
   public virtual EventReceiver
 {
@@ -30,6 +65,7 @@ public:
   virtual void SampleEventFiring(const std::string* str) = 0;
   virtual void SampleEventFiring0(void) = 0;
   virtual void SampleEventFiring3(const std::string* str1, const std::string* str2, const std::string* str3) = 0;
+  virtual void SampleStandardFiring(const StandardType S1) = 0;
   virtual Deferred SampleEventDeferred(const std::string* str) = 0;
 };
 
@@ -46,6 +82,8 @@ public:
 
   bool m_called;
   std::string m_str;
+  std::string m_str2;
+  std::string m_str3;
 
   void SampleEventFiring0() override {
     m_called = true;
@@ -54,12 +92,23 @@ public:
   void SampleEventFiring(const std::string* str) override {
     m_called = true;
     m_str = *str;
-    std::cout << "Sample EventFiring function has been called" << std::endl;
   }
 
   void SampleEventFiring3(const std::string* str1, const std::string* str2, const std::string* str3) override {
     m_called = true;
+    m_str = *str1;
+    m_str2 = *str2;
+    m_str3 = *str3;
   }
+
+
+  void SampleStandardFiring(const StandardType S1){
+    m_called = true;
+    m_str = S1.m_str1;
+    m_str2 = S1.m_str2;
+    m_str3 = S1.m_str3;
+  }
+
 
   Deferred SampleEventDeferred(const std::string* str) override {
     return Deferred(this);
@@ -177,9 +226,11 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
 
   std::string helloWorld = "Hello, world!";
   std::string helloWorldAgain = "Hello, world, again!";
+  std::string helloWorldYetAgain = "Hello, world, yet again!";
   
   ewuuid(&EventWithUuid::SampleEventFiring)(&helloWorld);
   ewuuid(&EventWithUuid::SampleEventFiring)(&helloWorldAgain);
+  ewuuid(&EventWithUuid::SampleEventFiring3)(&helloWorld, &helloWorldAgain, &helloWorldYetAgain);
   ASSERT_FALSE(os->IsEmpty());
   
   // Inject the listener into the context:
@@ -189,9 +240,11 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   
   // Now we create an input stream and use it to replay events from the output stream:
   std::shared_ptr<EventInputStream<EventWithUuid>> is = ctxt->CreateEventInputStream<EventWithUuid>();
+
   ASSERT_NE(nullptr, is.get()) << "Event input stream was empty";
   
   // Register our expected event type:
+  is->EnableIdentity(&EventWithUuid::SampleEventFiring3);
   is->EnableIdentity(&EventWithUuid::SampleEventFiring);
   is->EnableIdentity(&EventWithUuid::SampleEventDeferred);
  
@@ -218,6 +271,116 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   // Now verify that we got called again:
   ASSERT_TRUE(listener->m_called) << "Second event was not received from the event input stream";
   ASSERT_EQ(helloWorldAgain, listener->m_str) << "Listener did not receive the second message payload from the input stream";
+
+  // Clear, advance, and fire the next event:
+  listener->m_called = false;
+  listener->m_str.clear();
+  (char*&)ptr += advanceBy;
+  nRemaining -= advanceBy;
+  advanceBy = is->FireSingle(ptr, nRemaining);
+  ASSERT_NE(0UL, advanceBy) << "A third attempt to fire an event failed to parse any bytes";
+  ASSERT_LE(advanceBy, nRemaining) << "Input stream overran its buffer for the third fired event";
+
+  // Now verify that we got called again:
+  ASSERT_TRUE(listener->m_called) << "Third event was not received from the event input stream";
+  ASSERT_EQ(helloWorld, listener->m_str) << "Listener did not receive the third message payload, 1 arg,  from the input stream";
+  ASSERT_EQ(helloWorldAgain, listener->m_str2) << "Listener did not receive the third message payload, 2 arg,  from the input stream";
+  ASSERT_EQ(helloWorldYetAgain, listener->m_str3) << "Listener did not receive the third message payload, 3 arg,  from the input stream";
+
+  // Ensure that we processed EXACTLY the number of bytes that were in the output stream:
+  EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";
+}
+
+TEST_F(MarshalingTest, VerifyComplexDeserialization) {
+  AutoCurrentContext ctxt;
+
+  // Serialize a fired event first:
+  AutoFired<EventWithUuid> ewuuid;
+  std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
+  ASSERT_NE(nullptr, os.get());
+
+  std::string helloWorld = "Hello, world!";
+  std::string helloWorldAgain = "Hello, world, again!";
+  std::string helloWorldYetAgain = "Hello, world, yet again!";
+
+  ewuuid(&EventWithUuid::SampleEventFiring3)(&helloWorld, &helloWorldAgain, &helloWorldYetAgain);
+  ASSERT_FALSE(os->IsEmpty());
+
+  // Inject the listener into the context:
+  AutoRequired<ListenerForUuid> listener;
+
+  ASSERT_TRUE(listener->m_str.empty()) << "Listener unexpectedly received messages fired before its construction";
+
+  // Now we create an input stream and use it to replay events from the output stream:
+  std::shared_ptr<EventInputStream<EventWithUuid>> is = ctxt->CreateEventInputStream<EventWithUuid>();
+
+  ASSERT_NE(nullptr, is.get()) << "Event input stream was empty";
+
+  // Register our expected event type:
+  is-> EnableIdentity(&EventWithUuid::SampleEventFiring3);
+
+  const void* ptr = os->GetData(); //This is damn unsafe. Who is supposed to be doing cleanup?
+  size_t nRemaining = os->GetSize();
+  size_t advanceBy = is->FireSingle(ptr, nRemaining);
+
+  ASSERT_NE(0UL, advanceBy) << "Input stream did not correctly report the number of bytes deserialized";
+  ASSERT_LE(advanceBy, nRemaining) << "Input stream processed more bytes from the passed buffer than were available for processing";
+
+  // Verify that the listener got _something_, and the thing it got was the thing we sent earlier:
+  ASSERT_TRUE(listener->m_called) << "Third event was not received from the event input stream";
+  ASSERT_EQ(helloWorld, listener->m_str) << "Listener did not receive the first message payload, 1 arg,  from the input stream";
+  ASSERT_EQ(helloWorldAgain, listener->m_str2) << "Listener did not receive the first message payload, 2 arg,  from the input stream";
+  ASSERT_EQ(helloWorldYetAgain, listener->m_str3) << "Listener did not receive the first message payload, 3 arg,  from the input stream";  
+
+  // Ensure that we processed EXACTLY the number of bytes that were in the output stream:
+  EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";
+}
+
+TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
+  AutoCurrentContext ctxt;
+
+  // Serialize a fired event first:
+  AutoFired<EventWithUuid> ewuuid;
+  std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
+  ASSERT_NE(nullptr, os.get());
+
+  // Register our expected event type:
+  os->template EnableIdentity(&EventWithUuid::SampleStandardFiring);
+
+  std::string helloWorld = "Hello, world!";
+  std::string helloWorldAgain = "Hello, world, again!";
+  std::string helloWorldYetAgain = "Hello, world, yet again!";
+
+  StandardType st(helloWorld, helloWorldAgain, helloWorldYetAgain);
+
+  ewuuid(&EventWithUuid::SampleStandardFiring)(st);
+  ASSERT_FALSE(os->IsEmpty());
+
+  // Inject the listener into the context:
+  AutoRequired<ListenerForUuid> listener;
+
+  ASSERT_TRUE(listener->m_str.empty()) << "Listener unexpectedly received messages fired before its construction";
+
+  // Now we create an input stream and use it to replay events from the output stream:
+  std::shared_ptr<EventInputStream<EventWithUuid>> is = ctxt->CreateEventInputStream<EventWithUuid>();
+
+  ASSERT_NE(nullptr, is.get()) << "Event input stream was empty";
+
+  // Register our expected event type:
+  is->EnableIdentity(&EventWithUuid::SampleStandardFiring);
+
+  const void* ptr = os->GetData(); //This is damn unsafe. Who is supposed to be doing cleanup?
+  size_t nRemaining = os->GetSize();
+  size_t advanceBy = is->FireSingle(ptr, nRemaining);
+
+  ASSERT_NE(0UL, advanceBy) << "Input stream did not correctly report the number of bytes deserialized";
+  ASSERT_LE(advanceBy, nRemaining) << "Input stream processed more bytes from the passed buffer than were available for processing";
+
+  // Verify that the listener got _something_, and the thing it got was the thing we sent earlier:
+  ASSERT_TRUE(listener->m_called) << "Third event was not received from the event input stream";
+  ASSERT_EQ(helloWorld, listener->m_str) << "Listener did not receive the first message payload, 1 arg,  from the input stream";
+  ASSERT_EQ(helloWorldAgain, listener->m_str2) << "Listener did not receive the first message payload, 2 arg,  from the input stream";
+  ASSERT_EQ(helloWorldYetAgain, listener->m_str3) << "Listener did not receive the first message payload, 3 arg,  from the input stream";
 
   // Ensure that we processed EXACTLY the number of bytes that were in the output stream:
   EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";

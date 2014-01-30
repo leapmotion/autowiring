@@ -1,12 +1,16 @@
 #pragma once
 
 #include "Decompose.h"
+#include "Deserialize.h"
 #include <vector>
 #include <map>
 #include <memory>
 #include <string>
 #include <iostream>
 #include <sstream>
+
+#include SHARED_PTR_HEADER
+#include TYPE_TRAITS_HEADER
 
 #ifndef EnableIdentity
 #define EnableIdentity(x) SpecialAssign<decltype(x), x> (#x) 
@@ -67,14 +71,24 @@ public:
     SerializeMethod(Arg & arg){
       m_OutputStream << "\xD8" << *arg;
     }
-
+  
+  template <class Arg>
+  //stub out such that if ARGUMENT defines a static method called AutoSerialize which returns an std::string,
+  typename std::enable_if<std::is_base_of<Auto::Serialize, Arg>::value, void >::type
+    SerializeMethod(Arg & arg){
+      m_OutputStream << "\xD8" << arg.AutoSerialize();
+    }    
+  
   template <class Arg1>
   //SFINAE STUB OUT: replace with check_if overloads <<
-  typename std::enable_if<!std::is_same<Arg1, std::basic_string<char> const *>::value, void >::type
+  typename std::enable_if<!std::is_same<Arg1, std::basic_string<char> const *>::value && !std::is_base_of<Auto::Serialize, Arg1>::value, void >::type
     SerializeMethod(Arg1 & arg1){
       std::cout << "Hi! Fall through case does nothing" << std::endl;
+      assert(false);
       //static_assert(false, "Fundamental belief about serialized argument types violated");
     }
+    
+
   /// <summary>
   /// Comment.
   /// </summary>
@@ -94,7 +108,8 @@ public:
   /// Recursive serialize message: base case
   /// </summary>
   template <typename... Targs>
-  void Serialize2(Targs&... args){}
+  void Serialize2(Targs&... args){
+  }
   
   /// <summary>
   /// Recursive serialize message: N-args case
