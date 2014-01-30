@@ -12,6 +12,7 @@ namespace Auto{
   struct RefactorMeMarshal{
 
     virtual std::string AutoSerialize(void) = 0;
+    virtual void AutoDeserialize(std::string data) = 0;
 
   };      
 
