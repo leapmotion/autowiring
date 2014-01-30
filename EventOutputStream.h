@@ -2,13 +2,15 @@
 
 #include "Decompose.h"
 #include "Deserialize.h"
-#include <type_traits>
 #include <vector>
 #include <map>
 #include <memory>
 #include <string>
 #include <iostream>
 #include <sstream>
+
+#include SHARED_PTR_HEADER
+#include TYPE_TRAITS_HEADER
 
 #ifndef EnableIdentity
 #define EnableIdentity(x) SpecialAssign<decltype(x), x> (#x) 
