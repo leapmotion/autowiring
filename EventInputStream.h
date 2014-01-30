@@ -107,12 +107,10 @@ public:
 
     std::string query = d[0];
     
-    std::cout << "Query was: " << query << std::endl;
     auto find1 = m_EventMap.find(query);
     if (find1 != m_EventMap.end()) 
     {
       auto evt = find1 -> second;
-      std::cout << "Evt was found, forwarding" << std::endl;
       evt->DeserializeAndForward(d);
     }
     return location + 1;
