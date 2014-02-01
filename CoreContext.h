@@ -5,6 +5,7 @@
 #include "autowiring_error.h"
 #include "Bolt.h"
 #include "CoreThread.h"
+#include "CreationRules.h"
 #include "CurrentContextPusher.h"
 #include "DeferredBase.h"
 #include "ExceptionFilter.h"
@@ -371,6 +372,96 @@ protected:
     pDeferred = new Deferred(this, slot);
   }
 
+  /// <summary>
+  /// Utility method which will inject the specified types into this context
+  /// </summary>
+  template<class T>
+  void InjectSingle(void) {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    std::shared_ptr<T> ptr;
+    m_byType.Resolve(ptr);
+    if(ptr)
+      return;
+
+    // Cannot safely inject while holding the lock, so we have to unlock and then inject
+    lk.unlock();
+    ptr.reset(CreationRules::New<T>());
+    lk.lock();
+
+    // Reattempt resolution, short-circuiting if an injection of this type took place:
+    std::shared_ptr<T> ptr2;
+    m_byType.Resolve(ptr2);
+    if(ptr2)
+      return;
+
+    // Pass control to the insertion routine, which will handle injection from this point:
+    AddInternal<T>(ptr, std::move(lk));
+  }
+
+  template<class T>
+  void AddInternal(const std::shared_ptr<T>& value, boost::unique_lock<boost::mutex>&& lock) {
+    // Extract ground for this value, we'll use it to select the correct forest for the value:
+    typedef typename ground_type_of<T>::type groundType;
+
+    // Shared pointer to our entity, if it's a CoreThread
+    std::shared_ptr<CoreThread> pCoreThread;
+
+    {
+      boost::unique_lock<boost::mutex> lk = std::move(lock);
+
+      // Validate that this addition does not generate an ambiguity:
+      std::shared_ptr<T> ptr;
+      m_byType.Resolve(ptr);
+      if(ptr == value)
+        throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
+      if(ptr)
+        throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+
+      // Add a new member of the forest:
+      m_byType.AddTree(value);
+
+      // Context members:
+      auto pContextMember = leap::fast_pointer_cast<ContextMember, T>(value);
+      if(pContextMember) {
+        AddContextMember(pContextMember);
+
+        // CoreThreads:
+        pCoreThread = leap::fast_pointer_cast<CoreThread, T>(value);
+        if(pCoreThread)
+          AddCoreThread(pCoreThread);
+      }
+
+      // Exception filters:
+      auto pFilter = leap::fast_pointer_cast<ExceptionFilter, T>(value);
+      if(pFilter)
+        m_filters.insert(pFilter.get());
+
+      // Bolts:
+      auto pBase = leap::fast_pointer_cast<BoltBase, T>(value);
+      if(pBase)
+        AddBolt(pBase);
+    }
+
+    // Event receivers:
+    auto pRecvr = leap::fast_pointer_cast<EventReceiver, T>(value);
+    if(pRecvr)
+      AddEventReceiver(pRecvr);
+
+    // Subscribers:
+    AddPacketSubscriber(AutoPacketSubscriberSelect<T>(value));
+
+    // Notify any autowiring field that is currently waiting that we have a new member
+    // to be considered.
+    UpdateDeferredElements();
+
+    // Ownership validation, as appropriate
+    // We do not attempt to pend validation for CoreThread instances, because a CoreThread could potentially hold
+    // the final outstanding reference to this context, and therefore may be responsible for this context's (and,
+    // transitively, its own) destruction.
+    if(m_useOwnershipValidator && !pCoreThread)
+      SimpleOwnershipValidator::PendValidation(std::weak_ptr<T>(value));
+  }
+
 public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
@@ -520,68 +611,7 @@ public:
   /// </remarks>
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
-    // Extract ground for this value, we'll use it to select the correct forest for the value:
-    typedef typename ground_type_of<T>::type groundType;
-
-    // Validate that this addition does not generate an ambiguity:
-    {
-      std::shared_ptr<T> ptr;
-      FindByType<T>(ptr);
-      if(ptr == value)
-        throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
-      if(ptr)
-        throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
-    }
-
-    // Shared pointer to our entity, if it's a CoreThread
-    std::shared_ptr<CoreThread> pCoreThread;
-
-    {
-      boost::lock_guard<boost::mutex> lk(m_lock);
-
-      // Add a new member of the forest:
-      m_byType.AddTree(value);
-
-      // Context members:
-      auto pContextMember = leap::fast_pointer_cast<ContextMember, T>(value);
-      if(pContextMember) {
-        AddContextMember(pContextMember);
-
-        // CoreThreads:
-        pCoreThread = leap::fast_pointer_cast<CoreThread, T>(value);
-        if(pCoreThread)
-          AddCoreThread(pCoreThread);
-      }
-      
-      // Exception filters:
-      auto pFilter = leap::fast_pointer_cast<ExceptionFilter, T>(value);
-      if(pFilter)
-        m_filters.insert(pFilter.get());
-      
-      // Bolts:
-      auto pBase = leap::fast_pointer_cast<BoltBase, T>(value);
-      if(pBase)
-        AddBolt(pBase);
-    }
-    
-    // Event receivers:
-    auto pRecvr = leap::fast_pointer_cast<EventReceiver, T>(value);
-    if(pRecvr)
-      AddEventReceiver(pRecvr);
-
-    // Subscribers:
-    AddPacketSubscriber(AutoPacketSubscriberSelect<T>(value));
-
-    // Notify any autowiring field that is currently waiting that we have a new member
-    // to be considered.
-    UpdateDeferredElements();
-
-    // Ownership validation, as appropriate
-    // We do not attempt to pend validation for CoreThread instances, because a CoreThread could potentially hold
-    // the final outstanding reference to this context, and therefore may be responsible for this context's (and,
-    // transitively, its own) destruction.
-    if(m_useOwnershipValidator && !pCoreThread)
-      SimpleOwnershipValidator::PendValidation(std::weak_ptr<T>(value));
+    AddInternal(value, boost::unique_lock<boost::mutex>(m_lock));
   }
 
   /// <summary>
@@ -591,7 +621,7 @@ public:
   template<class T>
   std::shared_ptr<T> Add(void) {
     CurrentContextPusher pusher(this);
-    std::shared_ptr<T> retVal(new T);
+    std::shared_ptr<T> retVal(CreationRules::New<T>());
     Add(retVal);
     return retVal;
   }
@@ -799,6 +829,27 @@ public:
   /// Utility debug method for writing a snapshot of this context to the specified output stream
   /// </summary>
   void Dump(std::ostream& os) const;
+
+  /// <summary>
+  /// A simple utility method which will inject the specified types into the current context when called
+  /// </summary>
+  template<class... Ts>
+  static void InjectCurrent(void) {
+    auto current = CurrentContext();
+    bool dummy[] = {
+      (current->InjectSingle<Ts>(), false)...
+    };
+  }
+
+  /// <summary>
+  /// Utility method which will inject the specified types into this context
+  /// </summary>
+  template<class... Ts>
+  void Inject(void) {
+    bool dummy [] = {
+      (InjectSingle<Ts>(), false)...
+    };
+  }
 
   /// <summary>
   /// Utility routine to print information about the current exception
