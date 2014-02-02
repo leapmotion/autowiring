@@ -839,6 +839,7 @@ public:
     bool dummy[] = {
       (current->InjectSingle<Ts>(), false)...
     };
+    (void) dummy;
   }
 
   /// <summary>
@@ -849,6 +850,7 @@ public:
     bool dummy [] = {
       (InjectSingle<Ts>(), false)...
     };
+    (void) dummy;
   }
 
   /// <summary>
