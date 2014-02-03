@@ -170,7 +170,7 @@ TEST_F(MarshalingTest, VerifyListenersUpdated) {
 
   AutoCurrentContext ctxt;
   std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
-  ASSERT_NE(nullptr, os.get()) << "Attempted to obtain an event stream from a context, but the returned pointer was null";
+  ASSERT_FALSE(nullptr == os.get()) << "Attempted to obtain an event stream from a context, but the returned pointer was null";
 
   // Should be listeners now:
   EXPECT_TRUE(ewuuid.HasListeners()) << "An output stream creation did not change the HasListeners disposition";
@@ -183,7 +183,7 @@ TEST_F(MarshalingTest, VerifyOutOfOrderFiring) {
   // We should be able to create an output stream on an event even if nobody fires this event right now
   AutoCurrentContext ctxt;
   std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
-  ASSERT_NE(nullptr, os.get()) << "Failed to create an output stream in a context where no firers of the underlying event exist";
+  ASSERT_FALSE(nullptr == os.get()) << "Failed to create an output stream in a context where no firers of the underlying event exist";
 
   // Verify that we get stream reciept even if we fire at _this_ point, after the stream exists
   VerifyProperStreamReceipt(os.get(), AutoFired<EventWithUuid>());
@@ -241,7 +241,7 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   // Now we create an input stream and use it to replay events from the output stream:
   std::shared_ptr<EventInputStream<EventWithUuid>> is = ctxt->CreateEventInputStream<EventWithUuid>();
 
-  ASSERT_NE(nullptr, is.get()) << "Event input stream was empty";
+  ASSERT_FALSE(nullptr == is.get()) << "Event input stream was empty";
   
   // Register our expected event type:
   is->EnableIdentity(&EventWithUuid::SampleEventFiring3);
@@ -314,7 +314,7 @@ TEST_F(MarshalingTest, VerifyComplexDeserialization) {
   // Now we create an input stream and use it to replay events from the output stream:
   std::shared_ptr<EventInputStream<EventWithUuid>> is = ctxt->CreateEventInputStream<EventWithUuid>();
 
-  ASSERT_NE(nullptr, is.get()) << "Event input stream was empty";
+  ASSERT_FALSE(nullptr == is.get()) << "Event input stream was empty";
 
   // Register our expected event type:
   is-> EnableIdentity(&EventWithUuid::SampleEventFiring3);
@@ -345,7 +345,7 @@ TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
   ASSERT_NE(nullptr, os.get());
 
   // Register our expected event type:
-  os->template EnableIdentity(&EventWithUuid::SampleStandardFiring);
+  os->EnableIdentity(&EventWithUuid::SampleStandardFiring);
 
   std::string helloWorld = "Hello, world!";
   std::string helloWorldAgain = "Hello, world, again!";
