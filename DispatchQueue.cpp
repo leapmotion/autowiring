@@ -48,11 +48,7 @@ void DispatchQueue::WaitForEvent(void) {
   if(m_aborted)
     throw dispatch_aborted_exception();
 
-  m_queueUpdated.wait(lk, [this] () -> bool {
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-    return !this->m_dispatchQueue.empty();
-  });
+  m_queueUpdated.wait(lk, m_waitPredicate);
   DispatchEventUnsafe(lk);
 }
 
@@ -61,11 +57,7 @@ bool DispatchQueue::WaitForEvent(boost::chrono::duration<double, boost::milli> m
   if(m_aborted)
     throw dispatch_aborted_exception();
 
-  m_queueUpdated.wait_for(lk, milliseconds, [this] () -> bool {
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-    return !this->m_dispatchQueue.empty();
-  });
+  m_queueUpdated.wait_for(lk, milliseconds, m_waitPredicate);
   if(m_dispatchQueue.empty())
     return false;
   
@@ -82,11 +74,7 @@ bool DispatchQueue::WaitForEvent(boost::chrono::steady_clock::time_point wakeTim
   if(m_aborted)
     throw dispatch_aborted_exception();
 
-  m_queueUpdated.wait_until(lk, wakeTime, [this] () -> bool {
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-    return !this->m_dispatchQueue.empty();
-  });
+  m_queueUpdated.wait_until(lk, wakeTime, m_waitPredicate);
   if(m_dispatchQueue.empty())
     return false;
   
