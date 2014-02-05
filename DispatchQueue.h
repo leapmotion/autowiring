@@ -60,14 +60,8 @@ private:
   // The dispatch queue proper:
   std::list<DispatchThunkBase*> m_dispatchQueue;
   
-  // Predicate for m_queueUpdate.wait
-  std::function<bool()> m_waitPredicate = [this] () -> bool {
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-    
-    return !m_dispatchQueue.empty() && m_dispatchQueue.front()->IsCommited();
-  };
-
+  // Predicate for m_queueUpdate.wait()
+  std::function<bool()> m_waitPredicate;
 protected:
   /// <summary>
   /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
@@ -95,7 +89,7 @@ protected:
   template<class _Fx>
   void Pend(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
+    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx, true));
     m_queueUpdated.notify_all();
 
     OnPended();
@@ -187,18 +181,17 @@ public:
   template<class _Fx>
   Commision operator+=(_Fx&& fx) {
     if(!CanAccept())
-      return Commision();
+      return Commision(m_queueUpdated);
 
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
-      return Commision();
+      return Commision(m_queueUpdated);
     
     auto thunk = new DispatchThunk<_Fx>(fx);
     m_dispatchQueue.push_back(thunk);
-    //m_queueUpdated.notify_all(); // notifed when commision is destroyed
     OnPended();
     
-    return Commision(thunk, &m_queueUpdated);
+    return Commision(thunk, m_queueUpdated);
   }
 };
 

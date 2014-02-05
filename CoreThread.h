@@ -204,7 +204,7 @@ public:
     if(graceful) {
       // Signal the dispatch queue to run down
       RejectDispatchDelivery();
-
+      
       // Pend a call which will invoke Abort once the dispatch queue is done:
       DispatchQueue::Pend([this] {
         this->Abort();
