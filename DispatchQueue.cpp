@@ -6,6 +6,11 @@ DispatchQueue::DispatchQueue(void):
   m_aborted(false),
   m_dispatchCap(1024)
 {
+  m_waitPredicate = [this] {
+    if(m_aborted)
+      throw dispatch_aborted_exception();
+    return !m_dispatchQueue.empty() && m_dispatchQueue.front()->IsCommited();
+  };
 }
 
 DispatchQueue::~DispatchQueue(void) {
@@ -86,7 +91,8 @@ bool DispatchQueue::DispatchEvent(void) {
   boost::unique_lock<boost::mutex> lk(m_dispatchLock);
   if(m_aborted)
     throw dispatch_aborted_exception();
-  if(m_dispatchQueue.empty())
+  
+  if(m_dispatchQueue.empty() || !m_dispatchQueue.front()->IsCommited())
     return false;
 
   DispatchEventUnsafe(lk);

@@ -4,8 +4,7 @@ include_directories(
     ..
   )
 
-set(
-  Autowiring_SRCS
+set(Autowiring_SRCS
   at_exit.h
   AutoFactory.h
   AutoPacket.h
@@ -44,6 +43,7 @@ set(
   deferred_ptr.h
   DispatchQueue.h
   DispatchQueue.cpp
+  DispatchThunk.h
   DispatchThunkEventProxy.h
   DispatchThunkEventProxy.cpp
   EventDispatcher.h
@@ -122,8 +122,7 @@ else()
   )
 endif()
 
-set(
-  AutowiringTest_SRCS
+set(AutowiringTest_SRCS
   AutowiringBenchmarkTest.h
   AutowiringBenchmarkTest.cpp
   ContextCleanupTest.h
@@ -140,6 +139,8 @@ set(
   CurrentContextPusherTest.cpp
   DecoratorTest.h
   DecoratorTest.cpp
+  DispatchQueueTest.h
+  DispatchQueueTest.cpp
   DtorCorrectnessTest.h
   DtorCorrectnessTest.cpp
   EnclosedContextTestBase.h
