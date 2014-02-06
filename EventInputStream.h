@@ -41,7 +41,7 @@ struct Expression<R(W::*)(ToBindArgs...) >: public ExpressionBase
   /// parameter pack expansion.
   /// </summary>
   void DeserializeAndForward(std::deque<std::string> & d){
-    DeserializeAndForward(d, Auto::to_index_tuple<ToBindArgs...>());
+    DeserializeAndForward(d, typename Auto::make_index_tuple<ToBindArgs...>::type());
   }
   
   template<unsigned... I>
@@ -96,8 +96,8 @@ public:
   /// </returns>
   size_t FireSingle(const void* pData, size_t dataSize) const {
     //First wrap all the bytes in a string.
-    auto chptr = static_cast <const char *> (pData);
-    std::string MyString (chptr);
+    auto chptr = (const char *)pData;
+    std::string MyString(chptr);
 
     std::size_t location = MyString.find("\xDE");
     std::string topevent = MyString.substr(0, location);
@@ -106,8 +106,8 @@ public:
     std::istringstream buf(topevent);
 
     std::string s;
-    while (std::getline(buf, s, '\xD8'))
-        d.push_back(s);
+    while(std::getline(buf, s, '\xD8'))
+      d.push_back(s);
 
     std::string query = d[0];
     d.pop_front(); // Now a list of arguments
