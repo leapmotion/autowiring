@@ -41,10 +41,14 @@ struct Expression<R(W::*)(ToBindArgs...) >: public ExpressionBase
   /// parameter pack expansion.
   /// </summary>
   void DeserializeAndForward(std::deque<std::string> & d){
-    auto it = d.end();
-    it--;
+    DeserializeAndForward(d, Auto::to_index_tuple<ToBindArgs...>());
+  }
+  
+  template<unsigned... I>
+  void DeserializeAndForward(std::deque<std::string> & d, Auto::index_tuple<I...>){
+    auto it = d.begin();
     AutoFired<W> sender;
-    sender(m_memfunc)(Auto::deser<ToBindArgs>::deserialize(*it--)...);
+    sender(m_memfunc)(Auto::deser<ToBindArgs>::deserialize(it[I])...);
   }
 };
 
@@ -106,6 +110,7 @@ public:
         d.push_back(s);
 
     std::string query = d[0];
+    d.pop_front(); // Now a list of arguments
     
     auto find1 = m_EventMap.find(query);
     if (find1 != m_EventMap.end()) 
