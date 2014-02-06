@@ -73,7 +73,6 @@ set(
   SimpleOwnershipValidator.h
   SimpleOwnershipValidator.cpp
   StateMachine.h
-  StateMachine.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
   TypeRegistry.h
