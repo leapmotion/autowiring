@@ -216,7 +216,7 @@ TEST_F(MarshalingTest, VerifySimpleSerialization) {
   EXPECT_FALSE(ewuuid.HasListeners()) << "An event incorrectly reported that it had listeners, even though its only listener--an output stream--is out of scope";
 }
 
-TEST_F(MarshalingTest, VerifySimpleDeserialization) {
+TEST_F(MarshalingTest, DISABLED_VerifySimpleDeserialization) {
   AutoCurrentContext ctxt;
 
   // Serialize a fired event first:
@@ -291,7 +291,7 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";
 }
 
-TEST_F(MarshalingTest, VerifyComplexDeserialization) {
+TEST_F(MarshalingTest, DISABLED_VerifyComplexDeserialization) {
   AutoCurrentContext ctxt;
 
   // Serialize a fired event first:
@@ -336,7 +336,7 @@ TEST_F(MarshalingTest, VerifyComplexDeserialization) {
   EXPECT_EQ(advanceBy, nRemaining) << "Output stream wrote extraneous bytes to its buffer which were not used during deserialization";
 }
 
-TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
+TEST_F(MarshalingTest, DISABLED_VerifyAutoSerAndDeser) {
   AutoCurrentContext ctxt;
 
   // Serialize a fired event first:
