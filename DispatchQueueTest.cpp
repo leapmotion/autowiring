@@ -115,13 +115,15 @@ TEST_F(DispatchQueueTest, MultiThreadCommits){
     cond.notify_all();
   };
   
-  cond.wait(lk);
+  EXPECT_FALSE( boost::cv_status::timeout == cond.wait_for(lk,boost::chrono::microseconds(500)) )
+  << "Waited more than 500ms on condition variable";
   
   EXPECT_EQ(1, count);
   
   com1.Commit();
   
-  cond.wait(lk);
+  EXPECT_FALSE( boost::cv_status::timeout == cond.wait_for(lk,boost::chrono::microseconds(500)) )
+  << "Waited more than 500ms on condition variable";
   
   EXPECT_EQ(7, count);
 }
