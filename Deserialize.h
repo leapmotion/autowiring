@@ -51,14 +51,16 @@ namespace Auto {
   {
     /// Generate an index_tuple with an additional element.
     template<unsigned N>
-    using append = index_tuple<Indices..., N>;
+    struct append {
+      typedef index_tuple<Indices..., N> type;
+    };
   };
   
   /// Unary metafunction that generates an index_tuple containing [0, Size)
   template<class Head = _, class... Tail>
   struct make_index_tuple
   {
-    typedef typename make_index_tuple<Tail...>::type::template append<sizeof...(Tail)> type;
+    typedef typename make_index_tuple<Tail...>::type::template append<sizeof...(Tail)>::type type;
   };
   
   // Terminal case of the recursive metafunction.
