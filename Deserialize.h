@@ -5,33 +5,28 @@
 /// <summary>
 /// Support class for deserializing byte-streams input as std::string into a variety of formats
 /// </summary>
-
-
-namespace Auto{
-
+namespace Auto {
   struct SerializableSigil{};
 
-  struct Serialize : public SerializableSigil{
-
+  struct Serialize:
+    public SerializableSigil
+  {
     virtual std::string AutoSerialize(void) = 0;
     virtual void AutoDeserialize(std::string data) = 0;
-
   };
 
   template <typename T, typename Tag = T>
   struct deser;
 
-  template <typename T>
-  struct deser<T>{
-    
+  template<typename T>
+  struct deser<T> {
     /// <summary>
     /// const std::string * Deserialization
     /// </summary>
     template <class X = T>
     static typename std::enable_if<std::is_same<const std::string *, X>::value, const std::string *>::type
     deserialize(std::string & str){
-      const std::string * ret(&str);
-      return ret;
+      return &str;
     }
 
     /// <summary>
