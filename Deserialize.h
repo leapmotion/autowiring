@@ -44,8 +44,34 @@ namespace Auto{
       t.AutoDeserialize(str);
       return t;
     }
-
-
   };
+  
+  /// in
+  /// A type that represents a parameter pack of zero or more integers.
+  template<unsigned... Indices>
+  struct index_tuple
+  {
+    /// Generate an index_tuple with an additional element.
+    template<unsigned N>
+    using append = index_tuple<Indices..., N>;
+  };
+  
+  /// Unary metafunction that generates an index_tuple containing [0, Size)
+  template<unsigned Size>
+  struct make_index_tuple
+  {
+    typedef typename make_index_tuple<Size-1>::type::template append<Size-1>
+    type;
+  };
+  
+  // Terminal case of the recursive metafunction.
+  template<>
+  struct make_index_tuple<0u>
+  {
+    typedef index_tuple<> type;
+  };
+  
+  template<typename... Types>
+  using to_index_tuple = typename make_index_tuple<sizeof...(Types)>::type;
 
 }
