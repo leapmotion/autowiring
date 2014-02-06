@@ -42,6 +42,8 @@ namespace Auto {
   };
 
   struct _;
+  
+  /*
 
   /// <summary>
   /// Utility type which enables the composition of a sequence [0, sizeof...(Ts))
@@ -85,4 +87,5 @@ namespace Auto {
     >::value,
     "Index tuple conversion function did not properly index a sample type"
   );
+   */
 }
