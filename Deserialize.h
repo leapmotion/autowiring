@@ -45,9 +45,12 @@ namespace Auto{
       return t;
     }
   };
-  
-  /// in
-  /// A type that represents a parameter pack of zero or more integers.
+
+  struct _;
+
+  /// <summary>
+  /// Utility type which enables the composition of a sequence [0, sizeof...(Ts))
+  /// </summary>
   template<unsigned... Indices>
   struct index_tuple
   {
@@ -57,21 +60,32 @@ namespace Auto{
   };
   
   /// Unary metafunction that generates an index_tuple containing [0, Size)
-  template<unsigned Size>
+  template<class Head = _, class... Tail>
   struct make_index_tuple
   {
-    typedef typename make_index_tuple<Size-1>::type::template append<Size-1>
-    type;
+    typedef typename make_index_tuple<Tail...>::type::template append<sizeof...(Tail)> type;
   };
   
   // Terminal case of the recursive metafunction.
   template<>
-  struct make_index_tuple<0u>
+  struct make_index_tuple<_>
   {
     typedef index_tuple<> type;
   };
   
-  template<typename... Types>
-  using to_index_tuple = typename make_index_tuple<sizeof...(Types)>::type;
+  static_assert(
+    std::is_same<
+      make_index_tuple<>::type,
+      index_tuple<>
+    >::value,
+    "Index tuple base case was not correctly specialized"
+  );
 
+  static_assert(
+    std::is_same<
+      make_index_tuple<int, int, int>::type,
+      index_tuple<0, 1, 2>
+    >::value,
+    "Index tuple conversion function did not properly index a sample type"
+  );
 }
