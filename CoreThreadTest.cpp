@@ -155,12 +155,11 @@ TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
   std::shared_ptr<std::string> value(new std::string("sentinal"));
 
   std::weak_ptr<std::string> watcher(value);
-
-  ctxt->InitiateCoreThreads();
-  listener->DelayUntilCanAccept();
-
   try
   {
+    ctxt->InitiateCoreThreads();
+    listener->DelayUntilCanAccept();
+
     *listener += [value] { throw std::exception(); };
     value.reset();
     ctxt->SignalShutdown(true);
