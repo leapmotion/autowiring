@@ -3,7 +3,7 @@
 #include "CoreThreadTest.h"
 #include "Autowired.h"
 #include "TestFixtures/SimpleThreaded.h"
-#include <thread>
+#include <boost/thread/thread.hpp>
 
 class SpamguardTest:
   public CoreThread
@@ -112,7 +112,7 @@ public:
   Deferred SleepFor(int seconds) override {
     boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
     if(ShouldStop())
-      throw std::exception("Execution aborted");
+      throw std::runtime_error("Execution aborted");
 
     return Deferred(this);
   }
