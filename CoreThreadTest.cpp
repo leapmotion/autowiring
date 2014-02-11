@@ -146,3 +146,27 @@ TEST_F(CoreThreadTest, VerifyDispatchQueueShutdown) {
 
   ASSERT_EQ(listener->GetDispatchQueueLength(), 0);
 }
+
+TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+
+  AutoRequired<ListenThread> listener;
+  std::shared_ptr<std::string> value(new std::string("sentinal"));
+
+  std::weak_ptr<std::string> watcher(value);
+
+  ctxt->InitiateCoreThreads();
+  listener->DelayUntilCanAccept();
+
+  try
+  {
+    *listener += [value] { throw std::exception(); };
+    value.reset();
+    ctxt->SignalShutdown(true);
+  }
+  catch (...) {}
+
+  ASSERT_TRUE(watcher.expired()) << "Leaked memory on exception in a dispatch event";
+
+}
