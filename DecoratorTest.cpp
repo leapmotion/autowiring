@@ -111,7 +111,7 @@ TEST_F(DecoratorTest, VerifyDescendentAwareness) {
     EXPECT_TRUE(packet3.lock()->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
   }
   EXPECT_TRUE(packet3.expired()) << "Packet was not destroyed when it's subscribers were removed";
-  EXPECT_TRUE(filterChecker.expired()) << "Packet keeping subcontext member alive";
+  EXPECT_FALSE(filterChecker.expired()) << "Packet keeping subcontext member alive";
 
   //Create a packet after the subcontext has been destroyed
   auto packet4 = parentFactory->NewPacket();
