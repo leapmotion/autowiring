@@ -167,5 +167,4 @@ TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
   catch (...) {}
 
   ASSERT_TRUE(watcher.expired()) << "Leaked memory on exception in a dispatch event";
-
 }
