@@ -91,6 +91,7 @@ TEST_F(DecoratorTest, VerifyDescendentAwareness) {
 
   std::shared_ptr<AutoPacket> packet2;
   std::weak_ptr<AutoPacket> packet3;
+  std::weak_ptr<FilterA> filterChecker;
   //Create a subcontext
   {
     AutoCreateContext subContext;
@@ -99,6 +100,7 @@ TEST_F(DecoratorTest, VerifyDescendentAwareness) {
 
       //add a filter in the subcontext
       AutoRequired<FilterA> subFilter;
+      filterChecker = subFilter;
     }
 
     //Create a packet where a subscriber exists only in a subcontext
@@ -109,6 +111,7 @@ TEST_F(DecoratorTest, VerifyDescendentAwareness) {
     EXPECT_TRUE(packet3.lock()->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
   }
   EXPECT_TRUE(packet3.expired()) << "Packet was not destroyed when it's subscribers were removed";
+  EXPECT_TRUE(filterChecker.expired()) << "Packet keeping subcontext member alive";
 
   //Create a packet after the subcontext has been destroyed
   auto packet4 = parentFactory->NewPacket();
