@@ -3,6 +3,7 @@
 #include "CoreThreadTest.h"
 #include "Autowired.h"
 #include "TestFixtures/SimpleThreaded.h"
+#include <thread>
 
 class SpamguardTest:
   public CoreThread
@@ -92,4 +93,86 @@ TEST_F(CoreThreadTest, VerifyNestedTermination) {
 
   // Verify that the child thread has stopped:
   ASSERT_FALSE(st->IsRunning()) << "Child thread was running even though the enclosing context was terminated";
+}
+
+class SleepEvent : public virtual EventReceiver
+{
+public:
+  virtual Deferred SleepFor(int seconds) = 0;
+  virtual Deferred SleepForThenThrow(int seconds) = 0;
+};
+
+class DispatchThread :
+  public CoreThread
+{
+public:
+  DispatchThread() : CoreThread("DispatchThread") {}
+  virtual void Run() override{
+    AutoFired<SleepEvent> evt;
+    while (!ShouldStop())
+    {
+      std::cout << "loop" << std::endl;
+      evt(&SleepEvent::SleepFor)(5);
+    }
+
+
+    ASSERT_EQ(GetDispatchQueueLength(), 0);
+  }
+
+};
+
+class ListenThread :
+  public CoreThread,
+  public SleepEvent
+{
+public:
+  ListenThread() : CoreThread("ListenThread") {}
+
+  Deferred SleepFor(int seconds) override {
+    unsigned int i = 0;
+    while (i < 1000000 * (unsigned int)seconds){
+      i++;
+    }
+    return Deferred();
+  }
+
+  Deferred SleepForThenThrow(int seconds) override {
+    unsigned int i = 0;
+    while (i < 1000000 * (unsigned int)seconds){
+      i++;
+    }
+    throw std::exception();
+    return Deferred();
+  }
+
+  virtual void Run() override{
+    AcceptDispatchDelivery();
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    CoreThread::Run();
+    ASSERT_EQ(GetDispatchQueueLength(), 0);
+  }
+
+};
+
+TEST_F(CoreThreadTest, VerifyDispatchQueueShutdown) {
+  AutoCreateContext ctxt;
+  CurrentContextPusher pusher(ctxt);
+
+  AutoRequired<DispatchThread> dispatcher;
+  AutoRequired<ListenThread> listener;
+  try
+  {
+    ctxt->InitiateCoreThreads();
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    AutoFired<SleepEvent> evt;
+    evt(&SleepEvent::SleepForThenThrow)(0);
+    ctxt->SignalShutdown(true);
+  }
+  catch (...)
+  {
+    auto ptr = std::current_exception();
+  }
+  ASSERT_EQ(dispatcher->GetDispatchQueueLength(), 0);
+  ASSERT_EQ(listener->GetDispatchQueueLength(), 0);
 }
