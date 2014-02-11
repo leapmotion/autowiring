@@ -83,13 +83,14 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
 
 TEST_F(DecoratorTest, VerifyDescendentAwareness) {
    // Create a packet while the factory has no subscribers:
-  AutoRequired<AutoPacketFactory> factory;
-  auto packet1 = factory->NewPacket();
+  AutoRequired<AutoPacketFactory> parentFactory;
+  auto packet1 = parentFactory->NewPacket();
 
   // Verify subscription-free status:
   EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
 
   std::shared_ptr<AutoPacket> packet2;
+  std::weak_ptr<AutoPacket> packet3;
   //Create a subcontext
   {
     AutoCreateContext subContext;
@@ -101,13 +102,17 @@ TEST_F(DecoratorTest, VerifyDescendentAwareness) {
     }
 
     //Create a packet where a subscriber exists only in a subcontext
-    packet2 = factory->NewPacket();
+    packet2 = parentFactory->NewPacket();
+    auto strongPacket3 = parentFactory->NewPacket();
+    packet3 = strongPacket3;
     EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
+    EXPECT_TRUE(packet3.lock()->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
   }
+  EXPECT_TRUE(packet3.expired()) << "Packet was not destroyed when it's subscribers were removed";
 
   //Create a packet after the subcontext has been destroyed
-  auto packet3 = factory->NewPacket();
-  EXPECT_FALSE(packet3->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
+  auto packet4 = parentFactory->NewPacket();
+  EXPECT_FALSE(packet4->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
 
   // Verify the first packet still does not have subscriptions:
   EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
@@ -120,7 +125,7 @@ TEST_F(DecoratorTest, VerifyDescendentAwareness) {
   EXPECT_FALSE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
 
   // Verify the third one does not:
-  EXPECT_FALSE(packet3->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
+  EXPECT_FALSE(packet4->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
 }
 
 TEST_F(DecoratorTest, VerifySimpleFilter) {
