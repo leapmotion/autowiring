@@ -102,25 +102,6 @@ public:
   virtual Deferred SleepForThenThrow(int seconds) = 0;
 };
 
-class DispatchThread :
-  public CoreThread
-{
-public:
-  DispatchThread() : CoreThread("DispatchThread") {}
-  virtual void Run() override{
-    AutoFired<SleepEvent> evt;
-    while (!ShouldStop())
-    {
-      std::cout << "loop" << std::endl;
-      evt(&SleepEvent::SleepFor)(5);
-    }
-
-
-    ASSERT_EQ(GetDispatchQueueLength(), 0);
-  }
-
-};
-
 class ListenThread :
   public CoreThread,
   public SleepEvent
@@ -129,50 +110,39 @@ public:
   ListenThread() : CoreThread("ListenThread") {}
 
   Deferred SleepFor(int seconds) override {
-    unsigned int i = 0;
-    while (i < 1000000 * (unsigned int)seconds){
-      i++;
-    }
-    return Deferred();
+    boost::this_thread::sleep_for(boost::chrono::seconds(1));
+    if(ShouldStop())
+      throw std::exception("Execution aborted");
+
+    return Deferred(this);
   }
 
   Deferred SleepForThenThrow(int seconds) override {
-    unsigned int i = 0;
-    while (i < 1000000 * (unsigned int)seconds){
-      i++;
-    }
-    throw std::exception();
-    return Deferred();
+    return Deferred(this);
   }
-
-  virtual void Run() override{
-    AcceptDispatchDelivery();
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    CoreThread::Run();
-    ASSERT_EQ(GetDispatchQueueLength(), 0);
-  }
-
 };
 
 TEST_F(CoreThreadTest, VerifyDispatchQueueShutdown) {
   AutoCreateContext ctxt;
   CurrentContextPusher pusher(ctxt);
 
-  AutoRequired<DispatchThread> dispatcher;
   AutoRequired<ListenThread> listener;
   try
   {
     ctxt->InitiateCoreThreads();
+    listener->DelayUntilCanAccept();
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     AutoFired<SleepEvent> evt;
-    evt(&SleepEvent::SleepForThenThrow)(0);
+
+    // Spam in a bunch of events:
+    for(size_t i = 100; i--;)
+      evt(&SleepEvent::SleepFor)(0);
+
+    // Graceful termination then enclosing context shutdown:
+    listener->Stop(true);
     ctxt->SignalShutdown(true);
   }
-  catch (...)
-  {
-    auto ptr = std::current_exception();
-  }
-  ASSERT_EQ(dispatcher->GetDispatchQueueLength(), 0);
+  catch (...) {}
+
   ASSERT_EQ(listener->GetDispatchQueueLength(), 0);
 }
