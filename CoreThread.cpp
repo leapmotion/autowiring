@@ -45,6 +45,10 @@ void CoreThread::DoRun(void) {
   // Unconditionally shut off dispatch delivery:
   RejectDispatchDelivery();
 
+  // If we are asked to rundown while we still have elements in our dispatch queue,
+  // we must try to process them:
+  DispatchAllEvents();
+
   // Notify everyone that we're completed:
   boost::lock_guard<boost::mutex> lk(m_lock);
   m_stop = true;
@@ -103,10 +107,7 @@ bool CoreThread::Start(std::shared_ptr<Object> outstanding) {
 
 void CoreThread::Run() {
   AcceptDispatchDelivery();
+
   while(!ShouldStop())
     WaitForEvent();
-
-  // If we are asked to rundown while we still have elements in our dispatch queue,
-  // we must try to process them:
-  DispatchAllEvents();
 }
