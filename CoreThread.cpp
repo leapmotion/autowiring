@@ -45,9 +45,15 @@ void CoreThread::DoRun(void) {
   // Unconditionally shut off dispatch delivery:
   RejectDispatchDelivery();
 
-  // If we are asked to rundown while we still have elements in our dispatch queue,
-  // we must try to process them:
-  DispatchAllEvents();
+  try {
+    // If we are asked to rundown while we still have elements in our dispatch queue,
+    // we must try to process them:
+    DispatchAllEvents();
+  }
+  catch(...) {
+    // We failed to run down the dispatch queue gracefully, we now need to abort it
+    Abort();
+  }
 
   // Notify everyone that we're completed:
   boost::lock_guard<boost::mutex> lk(m_lock);
