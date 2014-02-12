@@ -428,6 +428,16 @@ protected:
     // Extract ground for this value, we'll use it to select the correct forest for the value:
     typedef typename ground_type_of<T>::type groundType;
 
+    // If Object appears in your ancestry then you MUST make object your ground type.  Typically
+    // this is as simple as adding this line to the definition of T with public access:
+    //
+    //  typedef Object ground
+    static_assert(
+      !std::is_base_of<Object, T>::value ||
+      std::is_same<typename ground_type_of<T>::type, Object>::value,
+      "If T inherits from Object (for instance, via ContextMember or CoreThread), then T::grounds must be of type Object"
+    );
+
     // Shared pointer to our entity, if it's a CoreThread
     std::shared_ptr<CoreThread> pCoreThread;
 
