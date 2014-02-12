@@ -187,10 +187,7 @@ public:
   /// </summary>
   AutoFired(const std::shared_ptr<JunctionBox<T>>& junctionBox) :
     m_junctionBox(junctionBox)
-  {
-    // Add an utterance of the TypeRegistry so we can add this autowired type to our collection
-    (void)RegType<T>::r;
-  }
+  {}
 
   /// <summary>
   /// Utility constructor, used to support movement operations
@@ -200,7 +197,7 @@ public:
   {}
 
 private:
-  std::shared_ptr<JunctionBox<T>> m_junctionBox;
+  std::weak_ptr<JunctionBox<T>> m_junctionBox;
 
   template<class MemFn, bool isDeferred = std::is_same<typename Decompose<MemFn>::retType, Deferred>::value>
   struct Selector {
@@ -226,27 +223,30 @@ public:
     //check: does it have any direct listeners, or are any appropriate marshalling objects wired into the immediate context?
     auto ctxt = CoreContext::CurrentContext();
     bool checkval = ctxt->CheckEventOutputStream<T>();
-    return (checkval || m_junctionBox->HasListeners());
+    return (checkval || (!m_junctionBox.expired() && m_junctionBox.lock()->HasListeners()) );
   }
 
   template<class MemFn>
   InvokeRelay<MemFn> operator()(MemFn pfn) const {
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot invoke an event for an unrelated type");
-    return m_junctionBox->Invoke(pfn);
+    
+    if (m_junctionBox.expired()) return InvokeRelay<MemFn>(); //Context has been destroyed
+    
+    return m_junctionBox.lock()->Invoke(pfn);
   }
 
   template<class MemFn>
   InvokeRelay<MemFn> Fire(MemFn pfn) const {
     static_assert(!std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Fire an event which is marked Deferred");
-    static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot Fire an event for an unrelated type");
-    return m_junctionBox->Invoke(pfn);
+    
+    return operator()(pfn);
   }
 
   template<class MemFn>
   InvokeRelay<MemFn> Defer(MemFn pfn) const {
     static_assert(std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Defer an event which does not return the Deferred type");
-    static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot Defer an event for an unrelated type");
-    return m_junctionBox->Invoke(pfn);
+
+    return operator()(pfn);
   }
 };
 

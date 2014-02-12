@@ -94,7 +94,7 @@ bool DispatchQueue::WaitForEvent(boost::chrono::steady_clock::time_point wakeTim
 
 bool DispatchQueue::DispatchEvent(void) {
   boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-  if(m_dispatchQueue.empty())
+  if(m_dispatchQueue.empty() || !m_dispatchQueue.front()->IsCommited())
     return false;
 
   DispatchEventUnsafe(lk);
