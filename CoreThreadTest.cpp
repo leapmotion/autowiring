@@ -3,6 +3,7 @@
 #include "CoreThreadTest.h"
 #include "Autowired.h"
 #include "TestFixtures/SimpleThreaded.h"
+#include <boost/thread/thread.hpp>
 
 class SpamguardTest:
   public CoreThread
@@ -92,4 +93,78 @@ TEST_F(CoreThreadTest, VerifyNestedTermination) {
 
   // Verify that the child thread has stopped:
   ASSERT_FALSE(st->IsRunning()) << "Child thread was running even though the enclosing context was terminated";
+}
+
+class SleepEvent : public virtual EventReceiver
+{
+public:
+  virtual Deferred SleepFor(int seconds) = 0;
+  virtual Deferred SleepForThenThrow(int seconds) = 0;
+};
+
+class ListenThread :
+  public CoreThread,
+  public SleepEvent
+{
+public:
+  ListenThread() : CoreThread("ListenThread") {}
+
+  Deferred SleepFor(int seconds) override {
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    if(ShouldStop())
+      throw std::runtime_error("Execution aborted");
+
+    return Deferred(this);
+  }
+
+  Deferred SleepForThenThrow(int seconds) override {
+    return Deferred(this);
+  }
+};
+
+TEST_F(CoreThreadTest, VerifyDispatchQueueShutdown) {
+  AutoCreateContext ctxt;
+  CurrentContextPusher pusher(ctxt);
+
+  AutoRequired<ListenThread> listener;
+  try
+  {
+    ctxt->InitiateCoreThreads();
+    listener->DelayUntilCanAccept();
+
+    AutoFired<SleepEvent> evt;
+
+    // Spam in a bunch of events:
+    for(size_t i = 100; i--;)
+      evt(&SleepEvent::SleepFor)(0);
+
+    // Graceful termination then enclosing context shutdown:
+    listener->Stop(true);
+    ctxt->SignalShutdown(true);
+  }
+  catch (...) {}
+
+  ASSERT_EQ(listener->GetDispatchQueueLength(), 0);
+}
+
+TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+
+  AutoRequired<ListenThread> listener;
+  std::shared_ptr<std::string> value(new std::string("sentinal"));
+
+  std::weak_ptr<std::string> watcher(value);
+  try
+  {
+    ctxt->InitiateCoreThreads();
+    listener->DelayUntilCanAccept();
+
+    *listener += [value] { throw std::exception(); };
+    value.reset();
+    ctxt->SignalShutdown(true);
+  }
+  catch (...) {}
+
+  ASSERT_TRUE(watcher.expired()) << "Leaked memory on exception in a dispatch event";
 }

@@ -6,6 +6,7 @@
 #include "EventReceiver.h"
 #include "DispatchThunk.h"
 #include "DispatchThunkEventProxy.h"
+#include "Commision.h"
 #include <boost/thread/condition_variable.hpp>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
@@ -58,7 +59,9 @@ private:
 
   // The dispatch queue proper:
   std::list<DispatchThunkBase*> m_dispatchQueue;
-
+  
+  // Predicate for m_queueUpdate.wait()
+  std::function<bool()> m_waitPredicate;
 protected:
   /// <summary>
   /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
@@ -86,7 +89,7 @@ protected:
   template<class _Fx>
   void Pend(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
+    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx, true));
     m_queueUpdated.notify_all();
 
     OnPended();
@@ -170,18 +173,25 @@ public:
   /// <summary>
   /// Generic overload which will pend an arbitrary dispatch type
   /// </summary>
+  /// <returns>
+  /// A "commision" object that signals when the appended dispatch type is ready to run.
+  /// The ready signal is sent when the Commision object is destroyed or the method Commit()
+  /// is called.
+  /// </returns>
   template<class _Fx>
-  void operator+=(_Fx&& fx) {
+  Commision operator+=(_Fx&& fx) {
     if(!CanAccept())
-      return;
+      return Commision(m_queueUpdated);
 
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
-      return;
-
-    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
-    m_queueUpdated.notify_all();
+      return Commision(m_queueUpdated);
+    
+    auto thunk = new DispatchThunk<_Fx>(fx);
+    m_dispatchQueue.push_back(thunk);
     OnPended();
+    
+    return Commision(thunk, m_queueUpdated);
   }
 };
 

@@ -3,6 +3,4 @@
 
 class DecoratorTest:
   public EnclosedContextTestBase
-{
-};
-
+{};

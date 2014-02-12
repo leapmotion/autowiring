@@ -12,6 +12,7 @@ public:
   typedef std::function<void (EventReceiver&)> t_eventProxy;
 
   DispatchThunkEventProxy(DispatchQueue& dq, t_eventProxy&& eventProxy):
+    DispatchThunkBase(true),
     dq(dq),
     eventProxy(eventProxy)
   {}
