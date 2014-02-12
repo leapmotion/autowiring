@@ -195,7 +195,7 @@ public:
     int deleteCount = m_numberOfDeletions;
     std::shared_ptr<T> currentEvent;
     
-    for(auto it = m_st.begin(); it != m_st.end();){
+    for(auto it = m_st.begin(); it != m_st.end();/* Update step at end of loop */){
       currentEvent = *it;
       
       lk.unlock();
@@ -219,7 +219,7 @@ public:
   // Two-parenthetical deferred invocations:
   template<class FnPtr>
   auto Invoke(FnPtr fnPtr) -> InvokeRelay<decltype(fnPtr)> {
-    return InvokeRelay<decltype(fnPtr)>(*this, fnPtr);
+    return InvokeRelay<decltype(fnPtr)>(this, fnPtr);
   }
 };
 
@@ -227,19 +227,26 @@ public:
 template<typename T, typename ...Args>
 class InvokeRelay<Deferred (T::*)(Args...)> {
 public:
-  InvokeRelay(const JunctionBoxBase& erp, Deferred (T::*fnPtr)(Args...)):
+  InvokeRelay(const JunctionBox<T>* erp, Deferred (T::*fnPtr)(Args...)):
     erp(erp),
     fnPtr(fnPtr)
   {}
   
+  // Null constructor
+  InvokeRelay():
+    erp(nullptr)
+  {}
+
 private:
-  const JunctionBoxBase& erp;
+  const JunctionBox<T>* erp;
   Deferred (T::*fnPtr)(Args...);
   
 public:
   void operator()(const typename std::decay<Args>::type&... args) const {
-    const auto& dq = erp.GetDispatchQueue();
-    boost::lock_guard<boost::mutex> lk(erp.GetDispatchQueueLock());
+    if (!erp) return; //Context has already been destroyed
+    
+    const auto& dq = erp->GetDispatchQueue();
+    boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
     
     for(auto q = dq.begin(); q != dq.end(); q++) {
       auto* pCur = *q;
@@ -264,23 +271,30 @@ public:
 template<class T, typename... Args>
 class InvokeRelay<void (T::*)(Args...)> {
 public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Args...)) :
+  InvokeRelay(JunctionBox<T>* erp, void (T::*fnPtr)(Args...)) :
     erp(erp),
     fnPtr(fnPtr)
   {}
   
+  // Null constructor
+  InvokeRelay():
+    erp(nullptr)
+  {}
+  
 private:
-  JunctionBox<T>& erp;
+  JunctionBox<T>* erp;
   void (T::*fnPtr)(Args...);
 
 public:
   void operator()(Args... args) const {
+    if (!erp) return; //Context has already been destroyed
+    
     //First distribute the arguments to any listening serializers in current context
-    erp.SerializeInit(fnPtr, args...);
+    erp->SerializeInit(fnPtr, args...);
     
     auto lambda = [&] (T& obj, Args... args) {(obj.*fnPtr)(args...);};
     auto bound_lambda = std::bind<void>(lambda, std::placeholders::_1, std::ref(args)...);
     
-    erp.FireCurried(bound_lambda);
+    erp->FireCurried(bound_lambda);
   }
 };
