@@ -200,7 +200,7 @@ private:
     }
 
     void Assign(const std::shared_ptr<T>& rhs) {
-      TreeBase<Ground>::pGround = std::static_pointer_cast<Ground, T>(rhs);
+      TreeBase<Ground>::pGround = leap::fast_pointer_cast<Ground, T>(rhs);
       pWitness = rhs;
     }
 
@@ -270,7 +270,7 @@ public:
 
     // Cast the witness down to the ground type:
     const GroundedCoordinate coord(typeid(Ground), typeid(T));
-    auto pWitnessGround = static_cast<Ground*>(pWitness.get());
+    auto pWitnessGround = leap::fast_pointer_cast<Ground, T>(pWitness).get();
 
     // Collection of unsatisfied witnesses
     std::vector<TreeBase<Ground>*> te;
@@ -301,7 +301,7 @@ public:
 
     // Transfer assignment on all memos:
     for(size_t i = te.size(); i--;)
-      *te[i] = std::static_pointer_cast<Ground, T>(pWitness);
+      *te[i] = leap::fast_pointer_cast<Ground, T>(pWitness);
 
     // Ensure that the desired slot exists before we run through our memo search:
     auto& pTreeMemo = m_memos[coord];

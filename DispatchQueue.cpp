@@ -1,11 +1,17 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "DispatchQueue.h"
+#include "at_exit.h"
 
 DispatchQueue::DispatchQueue(void):
   m_aborted(false),
   m_dispatchCap(1024)
 {
+  m_waitPredicate = [this] {
+    if(m_aborted)
+      throw dispatch_aborted_exception();
+    return !m_dispatchQueue.empty() && m_dispatchQueue.front()->IsCommited();
+  };
 }
 
 DispatchQueue::~DispatchQueue(void) {
@@ -32,15 +38,19 @@ void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
   m_dispatchQueue.pop_front();
   bool wasEmpty = m_dispatchQueue.empty();
   lk.unlock();
-  (*thunk)();
-  delete thunk;
 
-  // If we emptied the queue, we'd like to reobtain the lock and tell everyone
-  // that the queue is now empty.
-  if(wasEmpty) {
-    lk.lock();
-    m_queueUpdated.notify_all();
-  }
+  auto generalCleanup = MakeAtExit(
+    [this, thunk, wasEmpty] {
+      delete thunk;
+
+      // If we emptied the queue, we'd like to reobtain the lock and tell everyone
+      // that the queue is now empty.
+      if(wasEmpty)
+        m_queueUpdated.notify_all();
+    }
+  );
+
+  (*thunk)();
 }
 
 void DispatchQueue::WaitForEvent(void) {
@@ -48,11 +58,7 @@ void DispatchQueue::WaitForEvent(void) {
   if(m_aborted)
     throw dispatch_aborted_exception();
 
-  m_queueUpdated.wait(lk, [this] () -> bool {
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-    return !this->m_dispatchQueue.empty();
-  });
+  m_queueUpdated.wait(lk, m_waitPredicate);
   DispatchEventUnsafe(lk);
 }
 
@@ -61,11 +67,7 @@ bool DispatchQueue::WaitForEvent(boost::chrono::duration<double, boost::milli> m
   if(m_aborted)
     throw dispatch_aborted_exception();
 
-  m_queueUpdated.wait_for(lk, milliseconds, [this] () -> bool {
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-    return !this->m_dispatchQueue.empty();
-  });
+  m_queueUpdated.wait_for(lk, milliseconds, m_waitPredicate);
   if(m_dispatchQueue.empty())
     return false;
   
@@ -82,11 +84,7 @@ bool DispatchQueue::WaitForEvent(boost::chrono::steady_clock::time_point wakeTim
   if(m_aborted)
     throw dispatch_aborted_exception();
 
-  m_queueUpdated.wait_until(lk, wakeTime, [this] () -> bool {
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-    return !this->m_dispatchQueue.empty();
-  });
+  m_queueUpdated.wait_until(lk, wakeTime, m_waitPredicate);
   if(m_dispatchQueue.empty())
     return false;
   
@@ -96,8 +94,6 @@ bool DispatchQueue::WaitForEvent(boost::chrono::steady_clock::time_point wakeTim
 
 bool DispatchQueue::DispatchEvent(void) {
   boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-  if(m_aborted)
-    throw dispatch_aborted_exception();
   if(m_dispatchQueue.empty())
     return false;
 

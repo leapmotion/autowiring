@@ -41,10 +41,14 @@ struct Expression<R(W::*)(ToBindArgs...) >: public ExpressionBase
   /// parameter pack expansion.
   /// </summary>
   void DeserializeAndForward(std::deque<std::string> & d){
-    auto it = d.end();
-    it--;
+    DeserializeAndForward(d, typename Auto::make_index_tuple<ToBindArgs...>::type());
+  }
+  
+  template<unsigned... I>
+  void DeserializeAndForward(std::deque<std::string> & d, Auto::index_tuple<I...>){
+    auto it = d.begin();
     AutoFired<W> sender;
-    sender(m_memfunc)(Auto::deser<ToBindArgs>::deserialize(*it--)...);
+    sender(m_memfunc)(Auto::deser<ToBindArgs>::deserialize(it[I])...);
   }
 };
 
@@ -92,8 +96,8 @@ public:
   /// </returns>
   size_t FireSingle(const void* pData, size_t dataSize) const {
     //First wrap all the bytes in a string.
-    auto chptr = static_cast <const char *> (pData);
-    std::string MyString (chptr);
+    auto chptr = (const char *)pData;
+    std::string MyString(chptr);
 
     std::size_t location = MyString.find("\xDE");
     std::string topevent = MyString.substr(0, location);
@@ -102,10 +106,11 @@ public:
     std::istringstream buf(topevent);
 
     std::string s;
-    while (std::getline(buf, s, '\xD8'))
-        d.push_back(s);
+    while(std::getline(buf, s, '\xD8'))
+      d.push_back(s);
 
     std::string query = d[0];
+    d.pop_front(); // Now a list of arguments
     
     auto find1 = m_EventMap.find(query);
     if (find1 != m_EventMap.end()) 
