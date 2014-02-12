@@ -128,6 +128,8 @@ else()
 endif()
 
 set(AutowiringTest_SRCS
+  AutoAnchorTest.h
+  AutoAnchorTest.cpp
   AutowiringBenchmarkTest.h
   AutowiringBenchmarkTest.cpp
   ContextCleanupTest.h
