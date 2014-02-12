@@ -45,10 +45,13 @@ public:
 /// The newly created context will be created using CoreContext::CurrentContext()->Create().
 /// </remarks>
 class AutoCreateContext:
-public std::shared_ptr<CoreContext>
+  public std::shared_ptr<CoreContext>
 {
 public:
   AutoCreateContext(void);
+  AutoCreateContext(std::shared_ptr<CoreContext>& ctxt) {
+    // HAHA you will have to implement this!
+  }
 };
 
 /// <summary>
