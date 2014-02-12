@@ -74,7 +74,7 @@ TEST_F(DispatchQueueTest, SingleThreadCommits){
     
     DispatchAllEvents();
     
-    ASSERT_EQ(0, count);
+    EXPECT_EQ(0, count);
     
     com.Commit();
     

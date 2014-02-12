@@ -1,5 +1,4 @@
-#ifndef _DEFERRED_PTR_H
-#define _DEFERRED_PTR_H
+#pragma once
 #include SHARED_PTR_HEADER
 
 /// <summary>
@@ -21,7 +20,7 @@ public:
 
 private:
   // The optionally obtained interior pointer
-  std::shared_ptr<T> interior;
+  mutable std::shared_ptr<T> interior;
 
 public:
   /// <summary>
@@ -30,13 +29,11 @@ public:
   /// <remarks>
   /// This method is idempotent
   /// </remarks>
-  void obtain(void) {
-    interior = lock();
+  const std::shared_ptr<T>& obtain(void) const {
+    return interior = lock();
   }
 
   // The only methods we allow from the base type:
   using std::weak_ptr<T>::lock;
   using std::weak_ptr<T>::expired;
 };
-
-#endif
