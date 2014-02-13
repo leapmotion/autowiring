@@ -1,6 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "DispatchQueue.h"
+#include "at_exit.h"
 
 DispatchQueue::DispatchQueue(void):
   m_aborted(false),
@@ -32,15 +33,19 @@ void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
   m_dispatchQueue.pop_front();
   bool wasEmpty = m_dispatchQueue.empty();
   lk.unlock();
-  (*thunk)();
-  delete thunk;
 
-  // If we emptied the queue, we'd like to reobtain the lock and tell everyone
-  // that the queue is now empty.
-  if(wasEmpty) {
-    lk.lock();
-    m_queueUpdated.notify_all();
-  }
+  auto generalCleanup = MakeAtExit(
+    [this, thunk, wasEmpty] {
+      delete thunk;
+
+      // If we emptied the queue, we'd like to reobtain the lock and tell everyone
+      // that the queue is now empty.
+      if(wasEmpty)
+        m_queueUpdated.notify_all();
+    }
+  );
+
+  (*thunk)();
 }
 
 void DispatchQueue::WaitForEvent(void) {
@@ -96,8 +101,6 @@ bool DispatchQueue::WaitForEvent(boost::chrono::steady_clock::time_point wakeTim
 
 bool DispatchQueue::DispatchEvent(void) {
   boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-  if(m_aborted)
-    throw dispatch_aborted_exception();
   if(m_dispatchQueue.empty())
     return false;
 
