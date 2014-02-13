@@ -38,3 +38,35 @@ TEST_F(ScopeTest, VerifyInherit) {
   Autowired<B> autoB;
   EXPECT_TRUE(!autoB.get()) << "Autowired member wired from sub-context";
 }
+
+struct NoSimpleConstructor:
+  public ContextMember
+{
+  NoSimpleConstructor(int val):
+    value(val)
+  {}
+  
+  const int value;
+};
+
+
+TEST_F(ScopeTest, AddWithArguments){
+  //Add context member with non-simple constructor
+  AutoCurrentContext ctxt;
+  
+  ctxt->Add<NoSimpleConstructor>(10);
+  
+  Autowired<NoSimpleConstructor> wired;
+  
+  EXPECT_TRUE(wired.IsAutowired());
+  EXPECT_EQ(10, wired->value);
+}
+
+
+
+
+
+
+
+
+
