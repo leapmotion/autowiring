@@ -648,7 +648,6 @@ public:
   template<class T>
   void Add(const std::shared_ptr<T>& value) {
     AddInternal(value, boost::unique_lock<boost::mutex>(m_lock));
-
   }
 
   /// <summary>
