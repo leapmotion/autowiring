@@ -17,7 +17,7 @@ TEST_F(ScopeTest, VerifyInherit) {
   AutoCurrentContext ctxt;
 
   //Add a member to the current context
-  ctxt->Add<A>();
+  ctxt->Inject<A>();
 
   std::shared_ptr<CoreContext> pContext = ctxt->CreateAnonymous();
   //Create and switch to a sub-context
@@ -32,7 +32,7 @@ TEST_F(ScopeTest, VerifyInherit) {
     EXPECT_FALSE(!autoA.get()) << "Autowired member not wired from parent context";
 
     //add a member in the subcontext
-    pContext->Add<B>();
+    pContext->Inject<B>();
   }
 
   Autowired<B> autoB;
@@ -49,12 +49,11 @@ struct NoSimpleConstructor:
   const int value;
 };
 
-
 TEST_F(ScopeTest, AddWithArguments){
   //Add context member with non-simple constructor
   AutoCurrentContext ctxt;
   
-  ctxt->Add<NoSimpleConstructor>(10);
+  ctxt->Inject<NoSimpleConstructor>(10);
   
   Autowired<NoSimpleConstructor> wired;
   
@@ -62,11 +61,18 @@ TEST_F(ScopeTest, AddWithArguments){
   EXPECT_EQ(10, wired->value);
 }
 
-
-
-
-
-
-
-
-
+TEST_F(ScopeTest, StaticInject){
+  Autowired<A> preA;
+  Autowired<B> preB;
+  
+  EXPECT_FALSE(preA.IsAutowired());
+  EXPECT_FALSE(preB.IsAutowired());
+  
+  CoreContext::InjectCurrent<A,B>();
+  
+  Autowired<A> a;
+  Autowired<B> b;
+  
+  EXPECT_TRUE(a.IsAutowired());
+  EXPECT_TRUE(b.IsAutowired());
+}

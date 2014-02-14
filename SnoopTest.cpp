@@ -150,11 +150,11 @@ TEST_F(SnoopTest, AvoidDoubleReciept) {
   AutoRequired<ParentMember> parentMember;
   {
     // Create the child context and insert the child member:
-    std::shared_ptr<ChildMember> childMember(new ChildMember());
+    std::shared_ptr<ChildMember> childMember;
     AutoCreateContext child;
     {
       CurrentContextPusher pshr(child);
-      child->Add(childMember);
+      childMember = child->Inject<ChildMember>();
 
       // Snoop
       child->Snoop(parentMember);
