@@ -46,7 +46,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     mp.Add("context_withthreads", context);
 
     // Add a thread to hold the context open for awhile:
-    threaded = context->Add<SimpleThreaded>();
+    threaded = context->Inject<SimpleThreaded>();
 
     // Start the context
     context->InitiateCoreThreads();
@@ -99,7 +99,7 @@ TEST_F(ContextMapTest, ConcurrentDestructionTestPathological) {
 
     // Add a thread and kick off the context:
     for(size_t i = ARRAYCOUNT(contexts); i--;) {
-      threads[i] = contexts[i]->Add<SimpleThreaded>();
+      threads[i] = contexts[i]->Inject<SimpleThreaded>();
       contexts[i]->InitiateCoreThreads();
     }
 

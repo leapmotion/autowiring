@@ -29,10 +29,10 @@ public:
     Commit();
   }
   
-  // Commit the corresponding DispatchQueue element signalling that it is ready to run
-  // This is idempotent
+  // Commit the corresponding DispatchQueue element signalling that it is ready to run.
+  // This is idempotent.
   void Commit() {
-    if (m_fn){ //if we can perform a valid commit
+    if (m_fn) { //if we can perform a valid commit
       m_fn->Commit();
       m_queueUpdated.notify_all();
       m_fn = nullptr;

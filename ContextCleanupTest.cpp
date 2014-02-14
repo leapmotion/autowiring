@@ -102,7 +102,7 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   CurrentContextPusher pshr(context);
 
   // Add a simple thread object
-  context->Add<SimpleThreaded>();
+  context->Inject<SimpleThreaded>();
 
   // Kick off the operation
   context->InitiateCoreThreads();
