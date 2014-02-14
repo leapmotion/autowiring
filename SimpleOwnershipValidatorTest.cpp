@@ -13,8 +13,8 @@ TEST_F(SimpleOwnershipValidatorTest, VerifyExclusionCases) {
       count = (int)violating.size();
     };
 
-  std::shared_ptr<SimpleObject> obj(new SimpleObject);
-  std::weak_ptr<SimpleObject> objWeak(obj);
+  std::shared_ptr<SimpleObject> obj;
+  std::weak_ptr<SimpleObject> objWeak;
   std::weak_ptr<CoreContext> ctxtWeak;
   {
     AutoCreateContext ctxt;
@@ -23,7 +23,7 @@ TEST_F(SimpleOwnershipValidatorTest, VerifyExclusionCases) {
     ctxtWeak = ctxt;
 
     // Add an arbitrary object to this context:
-    ctxt->Add(obj);
+    obj = ctxt->Inject<SimpleObject>();
   }
 
   // Verify we got hit, at a minimum:
@@ -42,7 +42,8 @@ TEST_F(SimpleOwnershipValidatorTest, VerifyExclusionCases) {
     ctxtWeak = ctxt;
 
     // Add an arbitrary object to this context, but release the pointer this time:
-    ctxt->Add(obj);
+    obj = ctxt->Inject<SimpleObject>();
+    objWeak = obj;
     obj.reset();
   }
 
