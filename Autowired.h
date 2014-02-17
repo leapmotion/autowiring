@@ -72,6 +72,8 @@ public:
 
   AutowiredCreator(void) {}
 
+  AutowiredCreator(std::weak_ptr<CoreContext> context) : AutowirableSlot(context) {};
+
   /// <summary>
   /// Creates a new instance if this instance isn't autowired
   /// </summary>
@@ -146,6 +148,12 @@ public:
     shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
     context->Autowire(*this);
   }
+  Autowired(std::weak_ptr<CoreContext> ctxt) :
+    AutowiredCreator<T>(ctxt)
+  {
+    shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
+    context->Autowire(*this);
+  }
 };
 
 /// <summary>
@@ -161,6 +169,12 @@ class AutoRequired:
 public:
   AutoRequired(void) {
     if(!*this)
+      AutowiredCreator<T>::Create();
+  }
+  AutoRequired(std::weak_ptr<CoreContext> context) :
+    Autowired<T>(context)
+  {
+    if (!*this)
       AutowiredCreator<T>::Create();
   }
 };
