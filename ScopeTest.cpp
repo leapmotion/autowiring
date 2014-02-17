@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "ScopeTest.h"
 #include "GlobalCoreContext.h"
+#include "TestFixtures/SimpleObject.h"
 #include "Autowired.h"
 
 TEST_F(ScopeTest, VerifyGlobalExists) {
@@ -37,4 +38,33 @@ TEST_F(ScopeTest, VerifyInherit) {
 
   Autowired<B> autoB;
   EXPECT_TRUE(!autoB.get()) << "Autowired member wired from sub-context";
+}
+
+
+TEST_F(ScopeTest, VerifyAutowireSpecifiedContext){
+  AutoCurrentContext ctxt;
+
+  AutoCreateContext subCtxt;
+
+  subCtxt->Add<A>();
+
+  Autowired<A> aWired(subCtxt);
+  EXPECT_TRUE(aWired) << "Autowired member not wired from the passed context";
+}
+
+TEST_F(ScopeTest, VerifyAutoRequireSpecifiedContext){
+  AutoCreateContext subCtxt;
+  AutoRequired<SimpleObject> aReq(subCtxt);
+  Autowired<SimpleObject> aWired(subCtxt);
+  Autowired<SimpleObject> aFail;
+
+  EXPECT_TRUE(aWired) << "Autorequired member not added to the passed context";
+  EXPECT_FALSE(aFail) << "Autorequired member added to the wrong context";
+}
+
+//This mangles the heap! why??  Using SimpleObject instead of A works fine!
+//This beahvior was NOT introduced by the new context argument.
+TEST_F(ScopeTest, AutowiringHeapMangle){
+  AutoRequired<A> creator;
+  Autowired<A> reference;
 }

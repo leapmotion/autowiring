@@ -19,3 +19,26 @@ TEST_F(TeardownNotifierTest, VerifySingleNotification) {
 
   EXPECT_TRUE(hit) << "Teardown listener was not hit as expected during context teardown";
 }
+
+TEST_F(TeardownNotifierTest, ReferenceMemberInTeardown) {
+
+  bool hit = false;
+  {
+    AutoCreateContext ctxt;
+    CurrentContextPusher pshr(ctxt);
+
+    AutoRequired <SimpleMember> member;
+    std::weak_ptr<SimpleMember> memberWeak;
+
+    ctxt->AddTeardownListener([memberWeak, &hit] {
+      try
+      {
+        if (!memberWeak.expired())
+          hit = true;
+      }
+      catch (autowiring_error) {}
+    });
+  }
+
+  EXPECT_TRUE(hit) << "Failed to reference a member of a context in it's teardown listener";
+}
