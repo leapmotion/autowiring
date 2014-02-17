@@ -88,7 +88,12 @@ TEST_F(DispatchQueueTest, SingleThreadCommits){
   EXPECT_EQ(7, count);
 }
 
-TEST_F(DispatchQueueTest, MultiThreadCommits){
+#if _WIN32
+TEST_F(DispatchQueueTest, DISABLED_MultiThreadCommits)
+#else
+TEST_F(DispatchQueueTest, MultiThreadCommits)
+#endif
+{
   AutoRequired<EventMaker> eventMaker;
   int count = 0;
   
