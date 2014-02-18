@@ -509,18 +509,31 @@ public:
     AddInternal(ptr, std::move(lk));
     return ptr;
   }
-  
+
+  /// <summary>
+  /// A simple utility method which will inject a single type when called
+  /// </summary>
+  /// <returns>
+  /// The injected type
+  /// </returns>
+  template<typename T>
+  std::shared_ptr<T> Inject(void) {
+    return Construct<T>();
+  }
+
   /// <summary>
   /// A simple utility method which will inject the specified types into the current context when called
   /// </summary>
-  template<typename... Ts, typename std::enable_if<sizeof...(Ts) != 1, void>::type>
+  template<typename T1, typename T2, typename... Ts>
   void Inject(void) {
-    bool dummy [] = {
+    bool dummy[] = {
+      (Inject<T1>(), false),
+      (Inject<T2>(), false),
       (Inject<Ts>(), false)...
     };
     (void) dummy;
   }
-  
+
   /// <summary>
   /// Static version of Inject that uses the current context
   /// </summary>
