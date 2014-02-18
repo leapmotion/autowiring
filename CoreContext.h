@@ -486,7 +486,7 @@ public:
   /// Arguments will be passed to the T constructor if provided
   /// </summary>
   template<typename T, typename... Args>
-  std::shared_ptr<T> Inject(Args&&... args) {
+  std::shared_ptr<T> Construct(Args&&... args) {
     boost::unique_lock<boost::mutex> lk(m_lock);
     
     std::shared_ptr<T> ptr;
