@@ -28,7 +28,7 @@ TEST_F(TeardownNotifierTest, ReferenceMemberInTeardown) {
     CurrentContextPusher pshr(ctxt);
 
     AutoRequired <SimpleMember> member;
-    std::weak_ptr<SimpleMember> memberWeak;
+    std::weak_ptr<SimpleMember> memberWeak(member);
 
     ctxt->AddTeardownListener([memberWeak, &hit] {
       try
