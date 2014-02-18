@@ -195,7 +195,7 @@ TEST_F(MarshalingTest, VerifySimpleSerialization) {
   AutoCurrentContext ctxt;
   std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
 
-  ASSERT_NE(nullptr, os.get());
+  ASSERT_NE(static_cast<void*>(nullptr), os.get());
 
   // Should be empty before we fire anything:
   EXPECT_TRUE(os->IsEmpty()) << "Output stream was empty, even though it was just created";
@@ -222,7 +222,7 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   // Serialize a fired event first:
   AutoFired<EventWithUuid> ewuuid;
   std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
-  ASSERT_NE(nullptr, os.get());
+  ASSERT_NE(static_cast<void*>(nullptr), os.get());
 
   std::string helloWorld = "Hello, world!";
   std::string helloWorldAgain = "Hello, world, again!";
@@ -297,7 +297,7 @@ TEST_F(MarshalingTest, VerifyComplexDeserialization) {
   // Serialize a fired event first:
   AutoFired<EventWithUuid> ewuuid;
   std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
-  ASSERT_NE(nullptr, os.get());
+  ASSERT_NE(static_cast<void*>(nullptr), os.get());
 
   std::string helloWorld = "Hello, world!";
   std::string helloWorldAgain = "Hello, world, again!";
@@ -342,7 +342,7 @@ TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
   // Serialize a fired event first:
   AutoFired<EventWithUuid> ewuuid;
   std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
-  ASSERT_NE(nullptr, os.get());
+  ASSERT_NE(static_cast<void*>(nullptr), os.get());
 
   // Register our expected event type:
   os->EnableIdentity(&EventWithUuid::SampleStandardFiring);
@@ -364,7 +364,7 @@ TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
   // Now we create an input stream and use it to replay events from the output stream:
   std::shared_ptr<EventInputStream<EventWithUuid>> is = ctxt->CreateEventInputStream<EventWithUuid>();
 
-  ASSERT_NE(nullptr, is.get()) << "Event input stream was empty";
+  ASSERT_NE(static_cast<void*>(nullptr), is.get()) << "Event input stream was empty";
 
   // Register our expected event type:
   is->EnableIdentity(&EventWithUuid::SampleStandardFiring);

@@ -83,6 +83,11 @@ set(Autowiring_SRCS
   uuid.cpp
 )
 
+if(BUILD_MAC)
+  # suppress warning: has no symbols
+  set_source_files_properties(uuid.cpp PROPERTIES COMPILE_FLAGS "-x c++-header")
+endif()
+
 OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
 
 if(BUILD_AUTONET)
