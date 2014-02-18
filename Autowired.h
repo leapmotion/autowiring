@@ -82,7 +82,6 @@ class Autowired:
 public:
   typedef T value_type;
   typedef shared_ptr<T> t_ptrType;
-  using std::shared_ptr<T>::operator=;
   
   Autowired(void) {
     shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
@@ -98,11 +97,30 @@ public:
   }
 
   bool IsAutowired(void) const override {return !!t_ptrType::get();}
+};
 
-  void Create() {
+/// <summary>
+/// Similar to Autowired, Creates a new instance if this instance isn't autowired
+/// </summary>
+/// <remarks>
+/// This class is simply a convenience class and provides a declarative way to name a required dependency.
+///
+/// If type T has a static member function called New, the helper's Create routine will attempt call
+/// this function instead of the default constructor, even if the default constructor has been supplied,
+/// and even if the arity of the New routine is not zero.
+///
+/// To prevent this behavior, use a name other than New.
+/// </remarks>
+template<class T>
+class AutoRequired:
+  public Autowired<T>
+{
+public:
+  using std::shared_ptr<T>::operator=;
+  
+  AutoRequired(void) {
     if(*this)
       return;
-    
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
     // If you are getting an error tracked to this line, ensure that class T is totally
     // defined at the point where the Autowired instance is constructed.  Generally,
@@ -127,28 +145,6 @@ public:
     //
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
     *this = AutowirableSlot::LockContext()->template Inject<T>();
-  }
-};
-
-/// <summary>
-/// Similar to Autowired, Creates a new instance if this instance isn't autowired
-/// </summary>
-/// <remarks>
-/// This class is simply a convenience class and provides a declarative way to name a required dependency.
-///
-/// If type T has a static member function called New, the helper's Create routine will attempt call
-/// this function instead of the default constructor, even if the default constructor has been supplied,
-/// and even if the arity of the New routine is not zero.
-///
-/// To prevent this behavior, use a name other than New.
-/// </remarks>
-template<class T>
-class AutoRequired:
-  public Autowired<T>
-{
-public:
-  AutoRequired(void) {
-    this->Create();
   }
 };
 
