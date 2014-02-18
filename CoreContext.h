@@ -513,9 +513,8 @@ public:
   /// <summary>
   /// A simple utility method which will inject the specified types into the current context when called
   /// </summary>
-  template<typename... Ts>
-  typename std::enable_if<sizeof...(Ts) != 1, void>::type
-  Inject(void) {
+  template<typename... Ts, typename std::enable_if<sizeof...(Ts) != 1, void>::type>
+  void Inject(void) {
     bool dummy [] = {
       (Inject<Ts>(), false)...
     };
