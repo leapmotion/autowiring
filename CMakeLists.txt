@@ -80,12 +80,14 @@ set(Autowiring_SRCS
   TypeRegistry.h
   TypeRegistry.cpp
   uuid.h
-  uuid.cpp
 )
 
-if(BUILD_MAC)
-  # suppress warning: has no symbols
-  set_source_files_properties(uuid.cpp PROPERTIES COMPILE_FLAGS "-x c++-header")
+if(NOT BUILD_MAC)
+  # avoid warning: has no symbols
+  set(Autowiring_SRCS
+    ${Autowiring_SRCS}
+    uuid.cpp
+  )
 endif()
 
 OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
