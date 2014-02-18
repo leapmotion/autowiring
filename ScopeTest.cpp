@@ -54,7 +54,7 @@ TEST_F(ScopeTest, AddWithArguments){
   //Add context member with non-simple constructor
   AutoCurrentContext ctxt;
   
-  ctxt->Inject<NoSimpleConstructor>(10);
+  ctxt->Construct<NoSimpleConstructor>(10);
   
   Autowired<NoSimpleConstructor> wired;
   
