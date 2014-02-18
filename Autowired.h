@@ -84,8 +84,11 @@ public:
   typedef shared_ptr<T> t_ptrType;
   
   Autowired(void) {
-    shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
-    context->Autowire(*this);
+    AutowirableSlot::LockContext()->Autowire(*this);
+  }
+  
+  Autowired(std::weak_ptr<CoreContext> ctxt) {
+    ctxt.lock()->Autowire(*this);
   }
 
   operator bool(void) const {
@@ -119,6 +122,15 @@ public:
   using std::shared_ptr<T>::operator=;
   
   AutoRequired(void) {
+    this->Create(AutowirableSlot::LockContext());
+  }
+  
+  AutoRequired(std::weak_ptr<CoreContext> ctxt) {
+    this->Create(ctxt.lock());
+  }
+
+private:
+  void Create(std::shared_ptr<CoreContext> p_ctxt) {
     if(*this)
       return;
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
@@ -144,7 +156,7 @@ public:
     // constructor is defined.
     //
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-    *this = AutowirableSlot::LockContext()->template Inject<T>();
+    *this = p_ctxt->template Inject<T>();
   }
 };
 
