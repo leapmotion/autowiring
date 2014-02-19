@@ -88,12 +88,7 @@ TEST_F(DispatchQueueTest, SingleThreadCommits){
   EXPECT_EQ(7, count);
 }
 
-#if _WIN32
-TEST_F(DispatchQueueTest, DISABLED_MultiThreadCommits)
-#else
-TEST_F(DispatchQueueTest, MultiThreadCommits)
-#endif
-{
+TEST_F(DispatchQueueTest, MultiThreadCommits) {
   AutoRequired<EventMaker> eventMaker;
   int count = 0;
   
@@ -120,15 +115,15 @@ TEST_F(DispatchQueueTest, MultiThreadCommits)
     cond.notify_all();
   };
   
-  EXPECT_FALSE( boost::cv_status::timeout == cond.wait_for(lk,boost::chrono::microseconds(500)) )
-  << "Waited more than 500ms on condition variable";
+  ASSERT_EQ(boost::cv_status::no_timeout, cond.wait_for(lk,boost::chrono::seconds(2)))
+  << "Waited more than 2 seconds on condition variable. Probably hanging.";
   
   EXPECT_EQ(1, count);
   
   com1.Commit();
   
-  EXPECT_FALSE( boost::cv_status::timeout == cond.wait_for(lk,boost::chrono::microseconds(500)) )
-  << "Waited more than 500ms on condition variable";
+  ASSERT_EQ(boost::cv_status::no_timeout, cond.wait_for(lk,boost::chrono::seconds(2)))
+  << "Waited more than 2 seconds on condition variable. Probably hanging.";
   
   EXPECT_EQ(7, count);
 }
