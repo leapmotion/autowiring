@@ -471,11 +471,12 @@ public:
   const std::type_info& GetSigilType(void) const { return m_sigil; }
 
   /// <summary>
-  /// This is a slow, expensive operation used in unit tests to get all child contexts
-  /// of a given contexts.  It is relatively dangerous and should not be used except for
-  /// testing.
+  /// Enumerates all matching child contexts recursively and passes each child context to the specified lambda
+  /// </summary>
+  /// <param name="sigil">The sigil of the contexts to be passed to the specified lambda</param>
+  /// <param name="fn">The lambda to receive a shared pointer to each matching child context</param>
   template<class Fn>
-  void EnumerateChildContexts(const std::type_info &sigil, Fn&& fn ) {
+  void EnumerateChildContexts(const std::type_info &sigil, Fn&& fn) {
     boost::lock_guard<boost::mutex> lock(m_childrenLock);
     for (auto c = m_children.begin(); c != m_children.end(); c++) {
       auto shared = c->lock();
