@@ -570,6 +570,12 @@ public:
 
   const std::type_info& GetSigilType(void) const { return m_sigil; }
 
+  /// <returns>
+  /// True if the sigil type of this CoreContext matches the specified sigil type
+  /// </returns>
+  template<class Sigil>
+  bool Is(void) const { return m_sigil == typeid(Sigil); }
+
   /// <summary>
   /// This is a slow, expensive operation used in unit tests to get all child contexts
   /// of a given contexts.  It is relatively dangerous and should not be used except for
