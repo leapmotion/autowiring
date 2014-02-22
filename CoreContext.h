@@ -129,7 +129,7 @@ protected:
   bool m_useOwnershipValidator;
 
   // A pointer to the parent context
-  std::shared_ptr<CoreContext> m_pParent;
+  const std::shared_ptr<CoreContext> m_pParent;
 
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes away.
@@ -220,6 +220,11 @@ protected:
   }
 
   void EnableInternal(...) {}
+
+  /// <summary>
+  /// Unregisters all event receivers in this context
+  /// </summary>
+  void UnregisterEventReceivers(void);
 
   /// <summary>
   /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
@@ -637,10 +642,15 @@ public:
   /// shutdown procedures should begin immediately
   /// </summary>
   /// <param name="wait">Set if the function should wait for all child contexts to exit before returning</param>
+  /// <remarks>
+  /// This method will immediately prevent any new events from being recieved by this context or by any descendant
+  /// context, whether those events are fired in this context or one above, and regardless of whether these events
+  /// are fired or deferred.  Event receivers in this context will also not receive any messages.
+  /// </remarks>
   void SignalShutdown(bool wait = false);
 
   /// <summary>
-  /// Alias for SignalShutdown
+  /// Alias for SignalShutdown(true)
   /// </summary>
   void SignalTerminate(bool wait = true) { SignalShutdown(wait); }
 
@@ -707,7 +717,6 @@ public:
   /// <summary>
   /// Obtains a pointer to the parent context
   /// </summary>
-  std::shared_ptr<CoreContext>& GetParentContext(void) {return m_pParent;}
   const std::shared_ptr<CoreContext>& GetParentContext(void) const {return m_pParent;}
 
   /// <summary>
