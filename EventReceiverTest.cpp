@@ -545,3 +545,15 @@ TEST_F(EventReceiverTest, VerifyDirectInvocation) {
   // Unblock:
   receiver->Proceed();
 }
+
+TEST_F(EventReceiverTest, NoEventsAfterShutdown) {
+  AutoRequired<SimpleReceiver> receiver;
+
+  // Shut down our context, and THEN fire an event
+  AutoFired<CallableInterface> ci;
+  AutoCurrentContext()->SignalShutdown();
+  ci(&CallableInterface::ZeroArgs)();
+
+  // Verify that the callable interface didn't get the event after shutdown
+  EXPECT_FALSE(receiver->m_zero) << "A context member caught an event after its enclosing context was torn down";
+}
