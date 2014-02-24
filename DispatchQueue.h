@@ -223,10 +223,15 @@ public:
   /// </summary>
   void operator+=(DispatchThunkDelayed&& rhs) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    bool wasEmpty = m_delayedQueue.empty();
+
     m_delayedQueue.push(std::forward<DispatchThunkDelayed>(rhs));
-    if(m_delayedQueue.size() == 1 && m_dispatchQueue.empty())
-      // Delay queue becoming non-empty, dispatch queue currently empty, trigger wakeup
-      // so our newly pended delay thunk is eventually processed
+    if(
+      m_delayedQueue.top().GetReadyTime() == rhs.GetReadyTime() &&
+      m_dispatchQueue.empty()
+    )
+      // We're becoming the new next-to-execute entity, dispatch queue currently empty, trigger wakeup
+      // so our newly pended delay thunk is eventually processed.
       m_queueUpdated.notify_all();
   }
 

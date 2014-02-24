@@ -201,3 +201,31 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
   boost::this_thread::sleep_for(boost::chrono::milliseconds(90));
   ASSERT_TRUE(*x) << "A delayed event was not made ready and executed as expected";
 }
+
+TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
+  // Immediately run threads
+  m_create->InitiateCoreThreads();
+
+  // Some variables that we will set to true as the test proceeds:
+  std::shared_ptr<bool> x(new bool(false));
+  std::shared_ptr<bool> y(new bool(false));
+
+  // Create a thread as before, and pend a few events.  The order, here, is important.  We intentionally
+  // pend an event that won't happen for awhile, in order to trick the dispatch queue into waiting for
+  // a lot longer than it should for the next event.
+  AutoRequired<CoreThread> t;
+  t->DelayUntilCanAccept();
+  *t += boost::chrono::hours(1), [x] { *x = true; };
+
+  // Now pend an event that will be ready just about right away:
+  *t += boost::chrono::nanoseconds(1), [y] { *y = true; };
+
+  // Delay for a short period of time, then check our variable states:
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+
+  // This one shouldn't have been hit yet, it isn't scheduled to be hit for 10s
+  ASSERT_FALSE(*x) << "A delayed dispatch was invoked extremely early";
+
+  // This one should have been ready almost at the same time as it was pended
+  ASSERT_TRUE(*y) << "An out-of-order delayed dispatch was not executed in time as expected";
+}

@@ -61,6 +61,10 @@ private:
   boost::chrono::high_resolution_clock::time_point m_readyAt;
   DispatchThunkBase* m_thunk;
 
+  // Unsupported, creates aliases
+  DispatchThunkDelayed(DispatchThunkDelayed&);
+  bool operator=(DispatchThunkDelayed&);
+
 public:
   // Accessor methods:
   boost::chrono::high_resolution_clock::time_point GetReadyTime(void) const { return m_readyAt; }
@@ -74,10 +78,16 @@ public:
     return retVal;
   }
 
+  DispatchThunkDelayed& operator=(DispatchThunkDelayed&& rhs) {
+    m_readyAt = rhs.m_readyAt;
+    std::swap(m_thunk, rhs.m_thunk);
+    return *this;
+  }
+
   /// <summary>
   /// Operator overload, used to sequence delayed dispatch thunks
   /// </summary>
   bool operator<(const DispatchThunkDelayed& rhs) const {
-    return m_readyAt < rhs.m_readyAt;
+    return rhs.m_readyAt < m_readyAt;
   }
 };
