@@ -168,3 +168,36 @@ TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
 
   ASSERT_TRUE(watcher.expired()) << "Leaked memory on exception in a dispatch event";
 }
+
+TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
+  // Run our threads immediately, no need to wait
+  m_create->InitiateCoreThreads();
+
+  // Create a thread which we'll use just to pend dispatch events:
+  AutoRequired<CoreThread> t;
+
+  // Thread should be running by now:
+  ASSERT_TRUE(t->IsRunning()) << "Thread added to a running context was not marked running";
+
+  // Delay until the dispatch loop is actually running, then wait an additional 1ms to let the
+  // WaitForEvent call catch on:
+  t->DelayUntilCanAccept();
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+
+  // These are flags--we'll set them to true as the test proceeds
+  std::shared_ptr<bool> x(new bool(false));
+  std::shared_ptr<bool> y(new bool(false));
+
+  // Pend a delayed event first, and then an immediate event right afterwards:
+  *t += boost::chrono::milliseconds(25), [x] { *x = true; };
+  *t += [y] { *y = true; };
+
+  // Verify that, after 1ms, the first event is called and the second event is NOT called:
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+  ASSERT_TRUE(*y) << "A simple ready call was not dispatched within 10ms of being pended";
+  ASSERT_FALSE(*x) << "An event which should not have been executed for 25ms was executed early";
+
+  // Now delay another 90ms and see if the second event got called:
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(90));
+  ASSERT_TRUE(*x) << "A delayed event was not made ready and executed as expected";
+}
