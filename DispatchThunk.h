@@ -50,8 +50,14 @@ public:
   {
     rhs.m_thunk = nullptr;
   }
+  
+  DispatchThunkDelayed(const DispatchThunkDelayed& rhs) :
+    m_readyAt(rhs.m_readyAt),
+    m_thunk(rhs.m_thunk)
+  {}
 
-  ~DispatchThunkDelayed(void) {
+  // Little bit of a hack to support non-C++11
+  void Reset(void) {
     if(m_thunk)
       delete m_thunk;
   }
@@ -59,28 +65,28 @@ public:
 private:
   // The time when the thunk becomes ready-to-execute
   boost::chrono::high_resolution_clock::time_point m_readyAt;
-  mutable DispatchThunkBase* m_thunk;
-
-  // Unsupported, creates aliases
-  DispatchThunkDelayed(DispatchThunkDelayed&);
-  bool operator=(DispatchThunkDelayed&);
+  DispatchThunkBase* m_thunk;
 
 public:
   // Accessor methods:
   boost::chrono::high_resolution_clock::time_point GetReadyTime(void) const { return m_readyAt; }
 
   /// <summary>
-  /// Extracts the underlying thunk, and releases this dispatch thunk from cleanup responsibilities
+  /// Extracts the underlying thunk
   /// </summary>
-  DispatchThunkBase* Reset(void) const {
-    DispatchThunkBase* retVal = m_thunk;
-    m_thunk = nullptr;
-    return retVal;
+  DispatchThunkBase* Get(void) const {
+    return m_thunk;
   }
 
   DispatchThunkDelayed& operator=(DispatchThunkDelayed&& rhs) {
     m_readyAt = rhs.m_readyAt;
     std::swap(m_thunk, rhs.m_thunk);
+    return *this;
+  }
+  
+  DispatchThunkDelayed& operator=(const DispatchThunkDelayed& rhs) {
+    m_readyAt = rhs.m_readyAt;
+    m_thunk = rhs.m_thunk;
     return *this;
   }
 
