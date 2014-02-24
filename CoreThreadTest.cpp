@@ -202,8 +202,27 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
   ASSERT_TRUE(*x) << "A delayed event was not made ready and executed as expected";
 }
 
+TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
+  m_create->InitiateCoreThreads();
+
+  // We won't actually be referencing this, we just want to make sure it's not destroyed early
+  std::shared_ptr<bool> x(new bool);
+
+  // This deferred pend will never actually be executed:
+  AutoRequired<CoreThread> t;
+  t->DelayUntilCanAccept();
+  *t += boost::chrono::hours(1), [x] {};
+
+  // Verify that we have exactly one pended event at this point.
+  ASSERT_EQ(1UL, t->GetDispatchQueueLength()) << "Dispatch queue had an unexpected number of pended events";
+
+  // Verify that the shared pointer isn't unique at this point.  If it is, it's because our CoreThread deleted
+  // the event even though it was supposed to have pended it.
+  ASSERT_FALSE(x.unique()) << "A pended event was freed before it was called, and appears to be present in a dispatch queue";
+}
+
 TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
-  // Immediately run threads
+  // Immediately pend threads:
   m_create->InitiateCoreThreads();
 
   // Some variables that we will set to true as the test proceeds:
@@ -221,7 +240,7 @@ TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
   *t += boost::chrono::nanoseconds(1), [y] { *y = true; };
 
   // Delay for a short period of time, then check our variable states:
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
 
   // This one shouldn't have been hit yet, it isn't scheduled to be hit for 10s
   ASSERT_FALSE(*x) << "A delayed dispatch was invoked extremely early";
