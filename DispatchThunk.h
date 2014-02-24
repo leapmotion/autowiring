@@ -59,7 +59,7 @@ public:
 private:
   // The time when the thunk becomes ready-to-execute
   boost::chrono::high_resolution_clock::time_point m_readyAt;
-  DispatchThunkBase* m_thunk;
+  mutable DispatchThunkBase* m_thunk;
 
   // Unsupported, creates aliases
   DispatchThunkDelayed(DispatchThunkDelayed&);
@@ -72,7 +72,7 @@ public:
   /// <summary>
   /// Extracts the underlying thunk, and releases this dispatch thunk from cleanup responsibilities
   /// </summary>
-  DispatchThunkBase* Reset(void) {
+  DispatchThunkBase* Reset(void) const {
     DispatchThunkBase* retVal = m_thunk;
     m_thunk = nullptr;
     return retVal;
