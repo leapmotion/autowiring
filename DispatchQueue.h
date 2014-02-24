@@ -188,23 +188,24 @@ public:
     m_queueUpdated.notify_all();
   }
 
+  template<class Clock>
   class DispatchThunkDelayedExpression {
   public:
-    DispatchThunkDelayedExpression(DispatchQueue* pParent, boost::chrono::nanoseconds delay) :
+    DispatchThunkDelayedExpression(DispatchQueue* pParent, boost::chrono::time_point<Clock> wakeup) :
       m_pParent(pParent),
-      m_delay(delay)
+      m_wakeup(wakeup)
     {}
 
   private:
     DispatchQueue* m_pParent;
-    boost::chrono::nanoseconds m_delay;
+    boost::chrono::time_point<Clock> m_wakeup;
 
   public:
     template<class _Fx>
     void operator,(_Fx&& fx) {
       // Let the parent handle this one directly after composing a delayed dispatch thunk r-value
       *m_pParent += DispatchThunkDelayed(
-        boost::chrono::high_resolution_clock::now() + m_delay,
+        m_wakeup,
         new DispatchThunk<_Fx>(std::forward<_Fx>(fx))
       );
     }
@@ -214,8 +215,19 @@ public:
   /// Overload for the introduction of a delayed dispatch thunk
   /// </summary>
   template<class Rep, class Period>
-  DispatchThunkDelayedExpression operator+=(boost::chrono::duration<Rep, Period> rhs) {
-    return DispatchThunkDelayedExpression(this, rhs);
+  DispatchThunkDelayedExpression<boost::chrono::high_resolution_clock> operator+=(boost::chrono::duration<Rep, Period> rhs) {
+    return DispatchThunkDelayedExpression<boost::chrono::high_resolution_clock>(
+      this,
+      boost::chrono::high_resolution_clock::now() + rhs
+    );
+  }
+
+  /// <summary>
+  /// Overload for absolute-time based delayed dispatch thunk
+  /// </summary>
+  template<class Clock>
+  DispatchThunkDelayedExpression<Clock> operator+=(boost::chrono::time_point<Clock> rhs) {
+    return DispatchThunkDelayedExpression<Clock>(this, rhs);
   }
 
   /// <summary>

@@ -270,3 +270,18 @@ TEST_F(CoreThreadTest, VerifyTimedSort) {
   // Verify that the resulting vector is sorted.
   ASSERT_TRUE(std::is_sorted(v.begin(), v.end())) << "A timed sort implementation did not generate a sorted sequence as expected";
 }
+
+TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
+  m_create->InitiateCoreThreads();
+  AutoRequired<CoreThread> t;
+  t->DelayUntilCanAccept();
+
+  // Pend by an absolute time point, nothing really special here
+  std::shared_ptr<bool> x(new bool(false));
+  *t += (boost::chrono::high_resolution_clock::now() + boost::chrono::milliseconds(1)), [&x] { *x = true; };
+
+  // Verify that we hit this after one ms of delay
+  ASSERT_FALSE(*x) << "A timepoint-based delayed dispatch was invoked early";
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
+  ASSERT_TRUE(*x) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
+}
