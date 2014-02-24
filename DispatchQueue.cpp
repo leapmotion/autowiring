@@ -1,7 +1,8 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "DispatchQueue.h"
 #include "at_exit.h"
+
+using namespace boost::chrono;
 
 DispatchQueue::DispatchQueue(void):
   m_aborted(false),
@@ -28,22 +29,18 @@ void DispatchQueue::Abort(void) {
   m_queueUpdated.notify_all();
 }
 
-boost::chrono::nanoseconds DispatchQueue::SuggestSleepTimeUnsafe(boost::chrono::nanoseconds maxWaitTime) const {
-  if(m_delayedQueue.empty())
-    // Nothing in the queue, no way to suggest a shorter time
-    return maxWaitTime;
-
-  // If the frontmost time has already elapsed then we can just tell the caller to wake up right now:
-  auto now = boost::chrono::high_resolution_clock::now();
-  if(now > m_delayedQueue.top().GetReadyTime())
-    return boost::chrono::nanoseconds::zero();
-
-  // Return the shorter of the maximum wait time and the time of the queue ready--we don't want to tell the
-  // caller to wait longer than the limit of their interest.
+high_resolution_clock::time_point DispatchQueue::SuggestSoonestWakeupTimeUnsafe(high_resolution_clock::time_point latestTime) const {
   return
+    m_delayedQueue.empty() ?
+
+    // Nothing in the queue, no way to suggest a shorter time
+    latestTime :
+
+    // Return the shorter of the maximum wait time and the time of the queue ready--we don't want to tell the
+    // caller to wait longer than the limit of their interest.
     std::min(
-      m_delayedQueue.top().GetReadyTime() - boost::chrono::high_resolution_clock::now(),
-      maxWaitTime
+      m_delayedQueue.top().GetReadyTime(),
+      latestTime
     );
 }
 
@@ -81,6 +78,38 @@ void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
   (*thunk)();
 }
 
+bool DispatchQueue::WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost::chrono::high_resolution_clock::time_point wakeTime) {
+  if(m_aborted)
+    throw dispatch_aborted_exception();
+
+  for(;;) {
+    // Derive a wakeup time using the high precision timer:
+    wakeTime = SuggestSoonestWakeupTimeUnsafe(wakeTime);
+
+    // Now we wait, either for the timeout to elapse or for the dispatch queue itself to
+    // transition to the "aborted" state.
+    boost::cv_status status = m_queueUpdated.wait_until(lk, wakeTime);
+
+    // Short-circuit if the queue was aborted
+    if(m_aborted)
+      throw dispatch_aborted_exception();
+
+    // Pull over any ready events:
+    PromoteReadyEventsUnsafe();
+
+    // Dispatch events if the queue is now non-empty:
+    if(!m_dispatchQueue.empty())
+      break;
+
+    if(status == boost::cv_status::timeout)
+      // Can't proceed, queue is empty and nobody is ready to be run
+      return false;
+  }
+
+  DispatchEventUnsafe(lk);
+  return true;
+}
+
 void DispatchQueue::WaitForEvent(void) {
   boost::unique_lock<boost::mutex> lk(m_dispatchLock);
   if(m_aborted)
@@ -90,55 +119,35 @@ void DispatchQueue::WaitForEvent(void) {
   m_queueUpdated.wait(lk, [this] () -> bool {
     if(m_aborted)
       throw dispatch_aborted_exception();
-    return !this->m_dispatchQueue.empty();
+
+    return
+      // We will need to transition out if the delay queue receives any items:
+      !this->m_delayedQueue.empty() ||
+
+      // We also transition out if the dispatch queue has any events:
+      !this->m_dispatchQueue.empty();
   });
-  DispatchEventUnsafe(lk);
+
+  if(m_dispatchQueue.empty())
+    // The delay queue has items but the dispatch queue does not, we need to switch
+    // to the suggested sleep timeout variant:
+    WaitForEventUnsafe(lk, m_delayedQueue.top().GetReadyTime());
+  else
+    // We have an event, we can just hop over to this variant:
+    DispatchEventUnsafe(lk);
 }
 
 bool DispatchQueue::WaitForEvent(boost::chrono::milliseconds milliseconds) {
-  boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-  if(m_aborted)
-    throw dispatch_aborted_exception();
-
-  // Recommend a new wait time based on what's in the delayed queue:
-  auto waitTime = SuggestSleepTimeUnsafe(milliseconds);
-
-  // Now we wait, either for the timeout to elapse or for the dispatch queue itself to
-  // transition to the "aborted" state.
-  m_queueUpdated.wait_for(lk, waitTime, [this]() -> bool {
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-    return !this->m_dispatchQueue.empty();
-  });
-
-  // We could check the return value of the prior wait_for call, but for clarity, the
-  // state of the dispatch queue itself is checked instead.
-  if(m_dispatchQueue.empty())
-    return false;
-  
-  DispatchEventUnsafe(lk);
-  return true;
+  return WaitForEvent(boost::chrono::high_resolution_clock::now() + milliseconds);
 }
 
-bool DispatchQueue::WaitForEvent(boost::chrono::steady_clock::time_point wakeTime) {
+bool DispatchQueue::WaitForEvent(boost::chrono::high_resolution_clock::time_point wakeTime) {
   if(wakeTime == boost::chrono::steady_clock::time_point::max())
     // Maximal wait--we can optimize by using the zero-arguments version
     return WaitForEvent(), true;
 
   boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-  if(m_aborted)
-    throw dispatch_aborted_exception();
-
-  m_queueUpdated.wait_until(lk, wakeTime, [this] () -> bool {
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-    return !this->m_dispatchQueue.empty();
-  });
-  if(m_dispatchQueue.empty())
-    return false;
-  
-  DispatchEventUnsafe(lk);
-  return true;
+  return WaitForEventUnsafe(lk, wakeTime);
 }
 
 bool DispatchQueue::DispatchEvent(void) {

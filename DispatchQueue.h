@@ -64,16 +64,9 @@ private:
   std::priority_queue<DispatchThunkDelayed> m_delayedQueue;
 
   /// <summary>
-  /// Recommends an amount of time to wait for an event to become ready
+  /// Recommends a point in time to wake up to check for events
   /// </summary>
-  /// <returns>
-  /// Either maxWaitTime, or a shorter interval corresponding to the point in time when an event from
-  /// m_delayedQueue becomes ready.
-  /// </returns>
-  /// <remarks>
-  /// The caller must be holding the dispatch lock to make this call safely
-  /// </remarks>
-  boost::chrono::nanoseconds SuggestSleepTimeUnsafe(boost::chrono::nanoseconds maxWaitTime) const;
+  boost::chrono::high_resolution_clock::time_point SuggestSoonestWakeupTimeUnsafe(boost::chrono::high_resolution_clock::time_point latestTime) const;
 
   /// <summary>
   /// Moves all ready events from the delayed queue into the dispatch queue
@@ -90,6 +83,11 @@ protected:
   /// is an error to call this method without those preconditions met.
   /// </remarks>
   void DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk);
+
+  /// <summary>
+  /// An unsafe variant of WaitForEvent
+  /// </summary>
+  bool WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost::chrono::high_resolution_clock::time_point wakeTime);
 
   /// <summary>
   /// Utility virtual, called whenever a new event is deferred
@@ -152,7 +150,7 @@ public:
   /// <returns>
   /// False if the timeout period elapsed before an event could be dispatched, true otherwise
   /// </returns>
-  bool WaitForEvent(boost::chrono::steady_clock::time_point wakeTime);
+  bool WaitForEvent(boost::chrono::high_resolution_clock::time_point wakeTime);
 
   /// <summary>
   /// Similar to WaitForEvent, but does not block
@@ -226,6 +224,10 @@ public:
   void operator+=(DispatchThunkDelayed&& rhs) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
     m_delayedQueue.push(std::forward<DispatchThunkDelayed>(rhs));
+    if(m_delayedQueue.size() == 1 && m_dispatchQueue.empty())
+      // Delay queue becoming non-empty, dispatch queue currently empty, trigger wakeup
+      // so our newly pended delay thunk is eventually processed
+      m_queueUpdated.notify_all();
   }
 
   /// <summary>
