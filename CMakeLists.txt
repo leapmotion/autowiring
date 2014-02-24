@@ -41,6 +41,7 @@ set(
   deferred_ptr.h
   DispatchQueue.h
   DispatchQueue.cpp
+  DispatchThunk.h
   DispatchThunkEventProxy.h
   DispatchThunkEventProxy.cpp
   EventDispatcher.h
