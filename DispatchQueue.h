@@ -1,14 +1,15 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _DISPATCH_QUEUE_H
 #define _DISPATCH_QUEUE_H
+
+#include FUNCTIONAL_HEADER
+#include RVALUE_HEADER
 #include "ocuConfig.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
 #include "DispatchThunk.h"
 #include "DispatchThunkEventProxy.h"
 #include <boost/thread/condition_variable.hpp>
-#include FUNCTIONAL_HEADER
-#include RVALUE_HEADER
 #include <list>
 #include <queue>
 
@@ -235,7 +236,6 @@ public:
   /// </summary>
   void operator+=(DispatchThunkDelayed&& rhs) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    bool wasEmpty = m_delayedQueue.empty();
 
     m_delayedQueue.push(std::forward<DispatchThunkDelayed>(rhs));
     if(
