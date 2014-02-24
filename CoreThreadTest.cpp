@@ -248,3 +248,25 @@ TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
   // This one should have been ready almost at the same time as it was pended
   ASSERT_TRUE(*y) << "An out-of-order delayed dispatch was not executed in time as expected";
 }
+
+TEST_F(CoreThreadTest, VerifyTimedSort) {
+  m_create->InitiateCoreThreads();
+  AutoRequired<CoreThread> t;
+
+  std::vector<size_t> v;
+
+  // Pend a stack of lambdas.  Each lambda waits 3i milliseconds, and pushes the value
+  // i to the back of a vector.  If the delay method is implemented correctly, the resulting
+  // vector will always wind up sorted, no matter how we push elements to the queue.
+  // To doubly verify this property, we don't trivially increment i from the minimum to the
+  // maximum--rather, we use a simple PRNG called a linear congruential generator and hop around
+  // the interval [1...12] instead.
+  for(size_t i = 1; i != 0; i = (i * 5 + 1) % 16)
+    *t += boost::chrono::milliseconds(i * 3), [&v, i] { v.push_back(i); };
+
+  // Delay 50ms for the thread to finish up.  Technically this is 11ms more than we need.
+  boost::this_thread::sleep_for(boost::chrono::seconds(1));
+
+  // Verify that the resulting vector is sorted.
+  ASSERT_TRUE(std::is_sorted(v.begin(), v.end())) << "A timed sort implementation did not generate a sorted sequence as expected";
+}
