@@ -26,7 +26,12 @@ enum class ThreadPriority {
   Normal,
   AboveNormal,
   Highest,
-  TimeCritical
+  TimeCritical,
+
+  // This is a special case for multimedia applications.  Some operating systems, like Windows,
+  // can provide additional scheduling guarantees to applications which declare themselves as
+  // multimedia-intensive in nature.  For other systems, Multimedia is identical to TimeCritical.
+  Multimedia
 };
 
 /// <summary>
