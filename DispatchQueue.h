@@ -1,18 +1,13 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _DISPATCH_QUEUE_H
-#define _DISPATCH_QUEUE_H
-
-#include FUNCTIONAL_HEADER
-#include RVALUE_HEADER
-#include "ocuConfig.h"
+#pragma once
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
 #include "DispatchThunk.h"
 #include "DispatchThunkEventProxy.h"
-#include "Commision.h"
 #include <boost/thread/condition_variable.hpp>
 #include <list>
 #include <queue>
+#include FUNCTIONAL_HEADER
+#include RVALUE_HEADER
 
 class DispatchQueue;
 
@@ -61,12 +56,9 @@ private:
 
   // The dispatch queue proper:
   std::list<DispatchThunkBase*> m_dispatchQueue;
-  
+
   // Priority queue of non-ready events:
   std::priority_queue<DispatchThunkDelayed> m_delayedQueue;
-
-  // Predicate for m_queueUpdate.wait()
-  std::function<bool()> m_waitPredicate;
 
   /// <summary>
   /// Recommends a point in time to wake up to check for events
@@ -110,7 +102,7 @@ protected:
   template<class _Fx>
   void Pend(_Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx, true));
+    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
     m_queueUpdated.notify_all();
 
     OnPended();
@@ -254,26 +246,18 @@ public:
   /// <summary>
   /// Generic overload which will pend an arbitrary dispatch type
   /// </summary>
-  /// <returns>
-  /// A "commision" object that signals when the appended dispatch type is ready to run.
-  /// The ready signal is sent when the Commision object is destroyed or the method Commit()
-  /// is called.
-  /// </returns>
   template<class _Fx>
-  Commision operator+=(_Fx&& fx) {
+  void operator+=(_Fx&& fx) {
     if(!CanAccept())
-      return Commision(m_queueUpdated);
+      return;
 
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
-      return Commision(m_queueUpdated);
-    
+      return;
+
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(std::forward<_Fx>(fx)));
     m_queueUpdated.notify_all();
     OnPended();
-    
-    return Commision(thunk, m_queueUpdated);
   }
 };
 
-#endif

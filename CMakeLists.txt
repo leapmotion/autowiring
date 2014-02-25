@@ -26,7 +26,6 @@ set(Autowiring_SRCS
   CreationRules.h
   Bolt.h
   BoltBase.h
-  Commision.h
   ContextMap.h
   ContextMember.cpp
   ContextMember.h
