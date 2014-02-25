@@ -1,4 +1,3 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "CoreThread.h"
 #include <Windows.h>
@@ -32,10 +31,40 @@ void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
 }
 
 void CoreThread::SetCurrentThreadName(void) const {
-#if IS_INTERNAL_BUILD == 1 || _DEBUG
-  ::SetThreadName(
-    GetCurrentThreadId(),
-    m_name
+  if(IS_INTERNAL_BUILD)
+    ::SetThreadName(m_thisThread.get_thread_info()->id, m_name);
+}
+
+void CoreThread::SetThreadPriority(ThreadPriority threadPriority) {
+  int nPriority;
+  switch(threadPriority) {
+  case ThreadPriority::Idle:
+    nPriority = THREAD_PRIORITY_IDLE;
+    break;
+  case ThreadPriority::Lowest:
+    nPriority = THREAD_PRIORITY_LOWEST;
+    break;
+  case ThreadPriority::BelowNormal:
+    nPriority = THREAD_PRIORITY_BELOW_NORMAL;
+    break;
+  case ThreadPriority::Normal:
+    nPriority = THREAD_PRIORITY_NORMAL;
+    break;
+  case ThreadPriority::AboveNormal:
+    nPriority = THREAD_PRIORITY_ABOVE_NORMAL;
+    break;
+  case ThreadPriority::Highest:
+    nPriority = THREAD_PRIORITY_HIGHEST;
+    break;
+  case ThreadPriority::TimeCritical:
+    nPriority = THREAD_PRIORITY_TIME_CRITICAL;
+    break;
+  default:
+    throw std::runtime_error("Attempted to assign an unrecognized thread priority");
+  }
+
+  ::SetThreadPriority(
+    m_thisThread.native_handle(),
+    nPriority
   );
-#endif
 }
