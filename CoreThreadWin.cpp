@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "CoreThread.h"
 #include <Windows.h>
+#include <Avrt.h>
 
 #pragma pack(push, 8)
 typedef struct tagTHREADNAME_INFO
@@ -35,6 +36,20 @@ void CoreThread::SetCurrentThreadName(void) const {
     ::SetThreadName(m_thisThread.get_thread_info()->id, m_name);
 }
 
+bool SetCapturePriority(void) {
+  static HMODULE avrt = LoadLibrary("Avrt");
+  if(!avrt)
+    return false;
+
+  static auto pfn = (decltype(&AvSetMmThreadCharacteristicsW))GetProcAddress(avrt, "AvSetMmThreadCharacteristicsW");
+  if(!pfn)
+    return false;
+
+  DWORD taskID = 0;
+  pfn(L"Capture", &taskID);
+  return true;
+}
+
 void CoreThread::SetThreadPriority(ThreadPriority threadPriority) {
   int nPriority;
   switch(threadPriority) {
@@ -57,6 +72,14 @@ void CoreThread::SetThreadPriority(ThreadPriority threadPriority) {
     nPriority = THREAD_PRIORITY_HIGHEST;
     break;
   case ThreadPriority::TimeCritical:
+    nPriority = THREAD_PRIORITY_TIME_CRITICAL;
+    break;
+  case ThreadPriority::Multimedia:
+    // Special-case handling, we will use the thread characteristics operation directly
+    if(SetCapturePriority())
+      return;
+
+    // Failed, try to do time-critical priority instead
     nPriority = THREAD_PRIORITY_TIME_CRITICAL;
     break;
   default:
