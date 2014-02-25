@@ -1,6 +1,9 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _DISPATCH_QUEUE_H
 #define _DISPATCH_QUEUE_H
+
+#include FUNCTIONAL_HEADER
+#include RVALUE_HEADER
 #include "ocuConfig.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
@@ -8,9 +11,8 @@
 #include "DispatchThunkEventProxy.h"
 #include "Commision.h"
 #include <boost/thread/condition_variable.hpp>
-#include FUNCTIONAL_HEADER
-#include RVALUE_HEADER
 #include <list>
+#include <queue>
 
 class DispatchQueue;
 
@@ -60,8 +62,22 @@ private:
   // The dispatch queue proper:
   std::list<DispatchThunkBase*> m_dispatchQueue;
   
+  // Priority queue of non-ready events:
+  std::priority_queue<DispatchThunkDelayed> m_delayedQueue;
+
   // Predicate for m_queueUpdate.wait()
   std::function<bool()> m_waitPredicate;
+
+  /// <summary>
+  /// Recommends a point in time to wake up to check for events
+  /// </summary>
+  boost::chrono::high_resolution_clock::time_point SuggestSoonestWakeupTimeUnsafe(boost::chrono::high_resolution_clock::time_point latestTime) const;
+
+  /// <summary>
+  /// Moves all ready events from the delayed queue into the dispatch queue
+  /// </summary>
+  void PromoteReadyEventsUnsafe(void);
+
 protected:
   /// <summary>
   /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
@@ -72,6 +88,11 @@ protected:
   /// is an error to call this method without those preconditions met.
   /// </remarks>
   void DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk);
+
+  /// <summary>
+  /// An unsafe variant of WaitForEvent
+  /// </summary>
+  bool WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost::chrono::high_resolution_clock::time_point wakeTime);
 
   /// <summary>
   /// Utility virtual, called whenever a new event is deferred
@@ -96,8 +117,10 @@ protected:
   }
   
 public:
-  // Accessor methods:
-  size_t GetDispatchQueueLength(void) const {return m_dispatchQueue.size();}
+  /// <summary>
+  /// The total number of all ready and delayed events
+  /// </summary>
+  size_t GetDispatchQueueLength(void) const {return m_dispatchQueue.size() + m_delayedQueue.size();}
 
   /// <summary>
   /// Causes the current dispatch queue to be dumped if it's non-empty
@@ -124,7 +147,7 @@ public:
   /// <returns>
   /// False if the timeout period elapsed before an event could be dispatched, true otherwise
   /// </returns>
-  bool WaitForEvent(boost::chrono::duration<double, boost::milli> milliseconds);
+  bool WaitForEvent(boost::chrono::milliseconds milliseconds);
 
   /// <summary>
   /// Wakeup-point version of WaitForEvent
@@ -132,7 +155,7 @@ public:
   /// <returns>
   /// False if the timeout period elapsed before an event could be dispatched, true otherwise
   /// </returns>
-  bool WaitForEvent(boost::chrono::steady_clock::time_point wakeTime);
+  bool WaitForEvent(boost::chrono::high_resolution_clock::time_point wakeTime);
 
   /// <summary>
   /// Similar to WaitForEvent, but does not block
@@ -170,6 +193,64 @@ public:
     m_queueUpdated.notify_all();
   }
 
+  template<class Clock>
+  class DispatchThunkDelayedExpression {
+  public:
+    DispatchThunkDelayedExpression(DispatchQueue* pParent, boost::chrono::time_point<Clock> wakeup) :
+      m_pParent(pParent),
+      m_wakeup(wakeup)
+    {}
+
+  private:
+    DispatchQueue* m_pParent;
+    boost::chrono::time_point<Clock> m_wakeup;
+
+  public:
+    template<class _Fx>
+    void operator,(_Fx&& fx) {
+      // Let the parent handle this one directly after composing a delayed dispatch thunk r-value
+      *m_pParent += DispatchThunkDelayed(
+        m_wakeup,
+        new DispatchThunk<_Fx>(std::forward<_Fx>(fx))
+      );
+    }
+  };
+
+  /// <summary>
+  /// Overload for the introduction of a delayed dispatch thunk
+  /// </summary>
+  template<class Rep, class Period>
+  DispatchThunkDelayedExpression<boost::chrono::high_resolution_clock> operator+=(boost::chrono::duration<Rep, Period> rhs) {
+    return DispatchThunkDelayedExpression<boost::chrono::high_resolution_clock>(
+      this,
+      boost::chrono::high_resolution_clock::now() + rhs
+    );
+  }
+
+  /// <summary>
+  /// Overload for absolute-time based delayed dispatch thunk
+  /// </summary>
+  template<class Clock>
+  DispatchThunkDelayedExpression<Clock> operator+=(boost::chrono::time_point<Clock> rhs) {
+    return DispatchThunkDelayedExpression<Clock>(this, rhs);
+  }
+
+  /// <summary>
+  /// Directly pends a delayed dispatch thunk
+  /// </summary>
+  void operator+=(DispatchThunkDelayed&& rhs) {
+    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+
+    m_delayedQueue.push(std::forward<DispatchThunkDelayed>(rhs));
+    if(
+      m_delayedQueue.top().GetReadyTime() == rhs.GetReadyTime() &&
+      m_dispatchQueue.empty()
+    )
+      // We're becoming the new next-to-execute entity, dispatch queue currently empty, trigger wakeup
+      // so our newly pended delay thunk is eventually processed.
+      m_queueUpdated.notify_all();
+  }
+
   /// <summary>
   /// Generic overload which will pend an arbitrary dispatch type
   /// </summary>
@@ -187,8 +268,8 @@ public:
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
       return Commision(m_queueUpdated);
     
-    auto thunk = new DispatchThunk<_Fx>(fx);
-    m_dispatchQueue.push_back(thunk);
+    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(std::forward<_Fx>(fx)));
+    m_queueUpdated.notify_all();
     OnPended();
     
     return Commision(thunk, m_queueUpdated);
