@@ -292,7 +292,11 @@ class JustIncrementsANumber:
   public CoreThread
 {
 public:
-  volatile int64_t val = 0;
+  JustIncrementsANumber():
+    val(0)
+  {}
+  
+  volatile int64_t val;
 
   // This will be a hotly contested conditional variable
   AutoRequired<boost::mutex> contended;
