@@ -7,13 +7,18 @@ using namespace boost::chrono;
 DispatchQueue::DispatchQueue(void):
   m_aborted(false),
   m_dispatchCap(1024)
-{
-}
+{}
 
 DispatchQueue::~DispatchQueue(void) {
   // Teardown:
   for(auto q = m_dispatchQueue.begin(); q != m_dispatchQueue.end(); q++)
     delete *q;
+  
+  while (!m_delayedQueue.empty()) {
+    DispatchThunkDelayed thunk = m_delayedQueue.top();
+    thunk.Reset();
+    m_delayedQueue.pop();
+  }
 }
 
 void DispatchQueue::Abort(void) {
@@ -52,7 +57,7 @@ void DispatchQueue::PromoteReadyEventsUnsafe(void) {
     m_delayedQueue.pop()
   )
     // This item's ready time has elapsed, we can add it to our dispatch queue now:
-    m_dispatchQueue.push_back(m_delayedQueue.top().Reset());
+    m_dispatchQueue.push_back(m_delayedQueue.top().Get());
 }
 
 void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
