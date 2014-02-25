@@ -9,7 +9,8 @@ CoreThread::CoreThread(const char* pName):
   m_stop(false),
   m_running(false),
   m_completed(false),
-  m_canAccept(false)
+  m_canAccept(false),
+  m_priority(ThreadPriority::Default)
 {
 }
 
