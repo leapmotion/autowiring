@@ -13,8 +13,8 @@ PerformanceCounter g_timeouts[ARRAYCOUNT(gc_timeouts)];
 // Current offset:
 size_t g_curOffset = 0;
 
-// Slack value--we allow 50us of slack
-const boost::chrono::microseconds slack(50);
+// Slack value--we allow 1s of slack
+const boost::chrono::seconds slack(1);
 
 // Reentrant function proper:
 void Reenter() {

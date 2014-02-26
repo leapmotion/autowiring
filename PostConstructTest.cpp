@@ -97,14 +97,14 @@ class FailedAutowiringInstance {
 TEST_F(PostConstructTest, VerifyNaiveBehavior) {
   // Create a context and add just the naive class, to verify the problematic behavior:
   AutoCurrentContext ctxt;
-  EXPECT_THROW(ctxt->Add<Naive>(), std::exception) << "Naive class didn't throw an exception as expected";
+  EXPECT_THROW(ctxt->Inject<Naive>(), std::exception) << "Naive class didn't throw an exception as expected";
 }
 
 TEST_F(PostConstructTest, VerifyExpectedDeferrmentCount) {
   AutoCurrentContext ctxt;
 
   // Add the smart class, which should introduce a single deferred count:
-  ctxt->Add<Smarter>();
+  ctxt->Inject<Smarter>();
 
   // Now test the count:
   EXPECT_EQ(
@@ -120,14 +120,14 @@ TEST_F(PostConstructTest, VerifySmartBehavior) {
   AutoCurrentContext ctxt;
 
   // Add the smart class, which should allow
-  ctxt->Add<Smarter>();
+  ctxt->Inject<Smarter>();
 
   // Initially, value should be one, which is the default
   Autowired<Smarter> smarter;
   EXPECT_EQ(1, smarter->value) << "Unexpected initial value of SmarterA instance";
 
   // Now we add A and check the wiring
-  ctxt->Add<A>();
+  ctxt->Inject<A>();
   EXPECT_FALSE(!smarter->m_a.get()) << "Autowired member was not wired as expected";
 
   // Verify the value was updated by the notification routine
@@ -141,14 +141,14 @@ TEST_F(PostConstructTest, VerifySmartBehaviorWithInheritance) {
   AutoCurrentContext ctxt;
 
   // Add the smart classes, which should succeed
-  ctxt->Add<SmarterInterface>();
+  ctxt->Inject<SmarterInterface>();
 
   //Initially value should be one, which is the default
   Autowired<SmarterInterface> smarterI;
   EXPECT_EQ(1, smarterI->value) << "Unexpected initial value of SmarterA instance";
 
   //Now add Implementation and check the wiring
-  ctxt->Add<Implementation>();
+  ctxt->Inject<Implementation>();
   EXPECT_FALSE(!smarterI->m_interface.get()) << "Autowired subclass was not wired as expected";
 
   EXPECT_EQ(2, smarterI->value) << "Post-construction notification routine wasn't invoked on subclass";

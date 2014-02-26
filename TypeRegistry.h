@@ -19,7 +19,7 @@ extern size_t g_entryCount;
 
 ///JunctionBox factory
 template<class T>
-std::shared_ptr<JunctionBox<T>> NewJunctionBox() {
+std::shared_ptr<JunctionBox<T>> NewJunctionBox(){
   return std::make_shared<JunctionBox<T>>();
 }
 

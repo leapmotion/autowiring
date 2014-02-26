@@ -38,8 +38,7 @@ TEST_F(MultiInheritTest, VerifyCast) {
   CurrentContextPusher pshr(ctxt);
 
   // Insert a MultiInherit object:
-  std::shared_ptr<MultiInherit> obj(new MultiInherit());
-  ctxt->Add(obj);
+  auto obj = ctxt->Inject<MultiInherit>();
 
   // Autowire in the pObj:
   Autowired<MultiInherit> wiredPobj;

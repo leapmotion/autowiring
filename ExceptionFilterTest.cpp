@@ -198,7 +198,7 @@ TEST_F(ExceptionFilterTest, DISABLED_FireContainmentCheck) {
 
   // Create a subcontext and add the fire thrower to it:
   AutoCreateContext ctxt;
-  ctxt->Add<ThrowsWhenFired<>>();
+  ctxt->Inject<ThrowsWhenFired<>>();
 
   // Now cause the exception to occur:
   EXPECT_NO_THROW(broadcaster(&ThrowingListener::DoThrow)());
