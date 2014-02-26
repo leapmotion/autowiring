@@ -49,22 +49,34 @@ public:
 
   virtual ~CoreThread(void) {}
 
+private:
+  struct State {
+    // General purpose thread lock and update condition for the lock
+    boost::mutex m_lock;
+    boost::condition_variable m_stateCondition;
+  };
+
+  // Internally held thread status block.  This has to be a shared pointer because we need to signal
+  // the held state condition after releasing all shared pointers to ourselves, and this could mean
+  // we're actually signalling this event after we free ourselves.
+  const std::shared_ptr<State> m_state;
+
 protected:
-  // General purpose thread lock and update condition for the lock
-  boost::mutex m_lock;
-  boost::condition_variable m_stateCondition;
+  // Convenience references:
+  boost::mutex& m_lock;
+  boost::condition_variable& m_stateCondition;
 
   // Flag indicating that we need to stop right now
-  bool m_stop;
+  bool m_stop = false;
 
   // Run condition:
-  bool m_running;
+  bool m_running = false;
 
   // Completion condition, true when this thread is no longer running and has run at least once
-  bool m_completed;
+  bool m_completed = false;
 
   // Acceptor flag:
-  bool m_canAccept;
+  bool m_canAccept = false;
 
   // The current thread priority
   ThreadPriority m_priority;
@@ -107,8 +119,7 @@ protected:
   /// </summary>
   void AcceptDispatchDelivery(void) {
     m_canAccept = true;
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_stateCondition.notify_all();
+    m_state->m_stateCondition.notify_all();
   }
 
   /// <summary>
@@ -126,7 +137,7 @@ protected:
   /// </remarks>
   void RejectDispatchDelivery(void) {
     m_canAccept = false;
-    m_stateCondition.notify_all();
+    m_state->m_stateCondition.notify_all();
   }
 
   /// <summary>
@@ -164,7 +175,7 @@ protected:
 public:
   // Accessor methods:
   bool ShouldStop(void) const;
-  bool IsRunning(void) const {return m_running;}
+  bool IsRunning(void) const { return m_running; }
 
   // Override from EventDispatcher
   bool CanAccept(void) const override {return m_canAccept;}
@@ -206,9 +217,9 @@ public:
   /// </remarks>
   void Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    m_stateCondition.wait(
+    m_state->m_stateCondition.wait(
       lk,
-      [this] () {return this->m_completed;}
+      [this]() {return this->m_completed; }
     );
   }
 
@@ -219,7 +230,7 @@ public:
   template<class DurationType>
   bool WaitFor(DurationType duration) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_stateCondition.wait_for(
+    return m_state->m_stateCondition.wait_for(
       lk,
       duration,
       [this] () {return this->m_completed;}
@@ -236,7 +247,7 @@ public:
     return m_stateCondition.wait_until(
       lk,
       timepoint,
-      [this] () {return this->m_completed;}
+      [this]() {return this->m_completed; }
     );
   }
 
@@ -276,7 +287,7 @@ public:
         
         // Notify callers of our new state:
         boost::lock_guard<boost::mutex> lk(this->m_lock);
-        this->m_stateCondition.notify_all();
+        this->m_state->m_stateCondition.notify_all();
       });
     } else {
       // Abort the dispatch queue so anyone waiting will wake up
@@ -285,7 +296,7 @@ public:
       // Notify all callers of our status update, only needed if we don't call
       // RejectDispatchDelivery first
       boost::lock_guard<boost::mutex> lk(m_lock);
-      m_stateCondition.notify_all();
+      m_state->m_stateCondition.notify_all();
     }
   }
 };
