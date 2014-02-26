@@ -62,14 +62,25 @@ void CoreThread::DoRun(void) {
   m_completed = true;
   m_running = false;
 
-  // Notify other threads that we are done
-  m_stateCondition.notify_all();
-
   // Perform a manual notification of teardown listeners
   NotifyTeardownListeners();
 
   // No longer running, we MUST release the thread pointer to ensure proper teardown order
   m_thisThread.detach();
+
+  // Take a copy of our state condition shared pointer while we still hold a reference to
+  // ourselves.  This is the only member out of our collection of members that we actually
+  // need to hold a reference to.
+  auto state = m_state;
+
+  // Release our hold on the context.  After this point, we have to be VERY CAREFUL that we
+  // don't try to refer to any of our own member variables, because our own object may have
+  // already gone out of scope.  [this] is potentially dangling.
+  pusher.Pop();
+
+  // Notify other threads that we are done.  At this point, any held references that might
+  // still exist are held by entities other than ourselves.
+  state->m_stateCondition.notify_all();
 }
 
 bool CoreThread::ShouldStop(void) const {
