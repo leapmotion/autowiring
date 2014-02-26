@@ -144,7 +144,7 @@ TEST_F(CoreThreadTest, VerifyDispatchQueueShutdown) {
   }
   catch (...) {}
 
-  ASSERT_EQ(listener->GetDispatchQueueLength(), 0);
+  ASSERT_EQ(listener->GetDispatchQueueLength(), static_cast<size_t>(0));
 }
 
 TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
@@ -167,4 +167,121 @@ TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
   catch (...) {}
 
   ASSERT_TRUE(watcher.expired()) << "Leaked memory on exception in a dispatch event";
+}
+
+TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
+  // Run our threads immediately, no need to wait
+  m_create->InitiateCoreThreads();
+
+  // Create a thread which we'll use just to pend dispatch events:
+  AutoRequired<CoreThread> t;
+
+  // Thread should be running by now:
+  ASSERT_TRUE(t->IsRunning()) << "Thread added to a running context was not marked running";
+
+  // Delay until the dispatch loop is actually running, then wait an additional 1ms to let the
+  // WaitForEvent call catch on:
+  t->DelayUntilCanAccept();
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+
+  // These are flags--we'll set them to true as the test proceeds
+  std::shared_ptr<bool> x(new bool(false));
+  std::shared_ptr<bool> y(new bool(false));
+
+  // Pend a delayed event first, and then an immediate event right afterwards:
+  *t += boost::chrono::milliseconds(25), [x] { *x = true; };
+  *t += [y] { *y = true; };
+
+  // Verify that, after 1ms, the first event is called and the second event is NOT called:
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+  ASSERT_TRUE(*y) << "A simple ready call was not dispatched within 10ms of being pended";
+  ASSERT_FALSE(*x) << "An event which should not have been executed for 25ms was executed early";
+
+  // Now delay another 90ms and see if the second event got called:
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(90));
+  ASSERT_TRUE(*x) << "A delayed event was not made ready and executed as expected";
+}
+
+TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
+  m_create->InitiateCoreThreads();
+
+  // We won't actually be referencing this, we just want to make sure it's not destroyed early
+  std::shared_ptr<bool> x(new bool);
+
+  // This deferred pend will never actually be executed:
+  AutoRequired<CoreThread> t;
+  t->DelayUntilCanAccept();
+  *t += boost::chrono::hours(1), [x] {};
+
+  // Verify that we have exactly one pended event at this point.
+  ASSERT_EQ(1UL, t->GetDispatchQueueLength()) << "Dispatch queue had an unexpected number of pended events";
+
+  // Verify that the shared pointer isn't unique at this point.  If it is, it's because our CoreThread deleted
+  // the event even though it was supposed to have pended it.
+  ASSERT_FALSE(x.unique()) << "A pended event was freed before it was called, and appears to be present in a dispatch queue";
+}
+
+TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
+  // Immediately pend threads:
+  m_create->InitiateCoreThreads();
+
+  // Some variables that we will set to true as the test proceeds:
+  std::shared_ptr<bool> x(new bool(false));
+  std::shared_ptr<bool> y(new bool(false));
+
+  // Create a thread as before, and pend a few events.  The order, here, is important.  We intentionally
+  // pend an event that won't happen for awhile, in order to trick the dispatch queue into waiting for
+  // a lot longer than it should for the next event.
+  AutoRequired<CoreThread> t;
+  t->DelayUntilCanAccept();
+  *t += boost::chrono::hours(1), [x] { *x = true; };
+
+  // Now pend an event that will be ready just about right away:
+  *t += boost::chrono::nanoseconds(1), [y] { *y = true; };
+
+  // Delay for a short period of time, then check our variable states:
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+
+  // This one shouldn't have been hit yet, it isn't scheduled to be hit for 10s
+  ASSERT_FALSE(*x) << "A delayed dispatch was invoked extremely early";
+
+  // This one should have been ready almost at the same time as it was pended
+  ASSERT_TRUE(*y) << "An out-of-order delayed dispatch was not executed in time as expected";
+}
+
+TEST_F(CoreThreadTest, VerifyTimedSort) {
+  m_create->InitiateCoreThreads();
+  AutoRequired<CoreThread> t;
+
+  std::vector<size_t> v;
+
+  // Pend a stack of lambdas.  Each lambda waits 3i milliseconds, and pushes the value
+  // i to the back of a vector.  If the delay method is implemented correctly, the resulting
+  // vector will always wind up sorted, no matter how we push elements to the queue.
+  // To doubly verify this property, we don't trivially increment i from the minimum to the
+  // maximum--rather, we use a simple PRNG called a linear congruential generator and hop around
+  // the interval [1...12] instead.
+  for(size_t i = 1; i != 0; i = (i * 5 + 1) % 16)
+    *t += boost::chrono::milliseconds(i * 3), [&v, i] { v.push_back(i); };
+
+  // Delay 50ms for the thread to finish up.  Technically this is 11ms more than we need.
+  boost::this_thread::sleep_for(boost::chrono::seconds(1));
+
+  // Verify that the resulting vector is sorted.
+  ASSERT_TRUE(std::is_sorted(v.begin(), v.end())) << "A timed sort implementation did not generate a sorted sequence as expected";
+}
+
+TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
+  m_create->InitiateCoreThreads();
+  AutoRequired<CoreThread> t;
+  t->DelayUntilCanAccept();
+
+  // Pend by an absolute time point, nothing really special here
+  std::shared_ptr<bool> x(new bool(false));
+  *t += (boost::chrono::high_resolution_clock::now() + boost::chrono::milliseconds(1)), [&x] { *x = true; };
+
+  // Verify that we hit this after one ms of delay
+  ASSERT_FALSE(*x) << "A timepoint-based delayed dispatch was invoked early";
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
+  ASSERT_TRUE(*x) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
 }

@@ -28,12 +28,5 @@ struct MicroBolt<void, T> {};
 
 template<class Sigil, class T>
 void MicroBolt<Sigil, T>::ContextCreated(void) {
-  std::shared_ptr<T> ptr;
-  auto ctxt = CoreContext::CurrentContext();
-  ctxt->FindByType(ptr);
-  if(ptr)
-    return;
-
-  ptr.reset(CreationRules::New<T>());
-  ctxt->Add(ptr);
+  CoreContext::InjectCurrent<T>();
 }

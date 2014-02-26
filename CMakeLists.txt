@@ -26,7 +26,6 @@ set(Autowiring_SRCS
   CreationRules.h
   Bolt.h
   BoltBase.h
-  Commision.h
   ContextMap.h
   ContextMember.cpp
   ContextMember.h
@@ -79,8 +78,15 @@ set(Autowiring_SRCS
   TypeRegistry.h
   TypeRegistry.cpp
   uuid.h
-  uuid.cpp
 )
+
+if(NOT BUILD_MAC)
+  # avoid warning: has no symbols
+  set(Autowiring_SRCS
+    ${Autowiring_SRCS}
+    uuid.cpp
+  )
+endif()
 
 OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
 

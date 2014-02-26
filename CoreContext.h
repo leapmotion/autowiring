@@ -332,6 +332,7 @@ protected:
       return false;
 
     // Attempt second-chance resolution:
+    
     std::shared_ptr<AutoFactory<T>> factory;
     for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
       pCur->FindByType(factory);
@@ -339,7 +340,7 @@ protected:
         continue;
 
       std::shared_ptr<T> ptr(factory->New());
-      Add(ptr);
+      AddInternal(ptr);
       slot.swap(ptr);
       return true;
     }
@@ -397,33 +398,15 @@ protected:
     pDeferred = new Deferred(this, slot);
   }
 
-  /// <summary>
-  /// Utility method which will inject the specified types into this context
-  /// </summary>
-  template<class T>
-  void InjectSingle(void) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    std::shared_ptr<T> ptr;
-    m_byType.Resolve(ptr);
-    if(ptr)
-      return;
-
-    // Cannot safely inject while holding the lock, so we have to unlock and then inject
-    lk.unlock();
-    ptr.reset(CreationRules::New<T>());
-    lk.lock();
-
-    // Reattempt resolution, short-circuiting if an injection of this type took place:
-    std::shared_ptr<T> ptr2;
-    m_byType.Resolve(ptr2);
-    if(ptr2)
-      return;
-
-    // Pass control to the insertion routine, which will handle injection from this point:
-    AddInternal<T>(ptr, std::move(lk));
+  // <summary>
+  // Same as Inject, but doesn't checkout Typeforest
+  // </summary>
+  template<typename T>
+  void AddInternal(const std::shared_ptr<T>& value){
+    AddInternal(value, boost::unique_lock<boost::mutex>(m_lock));
   }
-
-  template<class T>
+  
+  template<typename T>
   void AddInternal(const std::shared_ptr<T>& value, boost::unique_lock<boost::mutex>&& lock) {
     // Extract ground for this value, we'll use it to select the correct forest for the value:
     typedef typename ground_type_of<T>::type groundType;
@@ -498,6 +481,77 @@ protected:
   }
 
 public:
+  /// <summary>
+  /// Utility method which will inject the specified types into this context
+  /// Arguments will be passed to the T constructor if provided
+  /// </summary>
+  template<typename T, typename... Args>
+  std::shared_ptr<T> Construct(Args&&... args) {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    
+    std::shared_ptr<T> ptr;
+    m_byType.Resolve(ptr);
+    if(ptr)
+      return ptr;
+    
+    // Cannot safely inject while holding the lock, so we have to unlock and then inject
+    lk.unlock();
+    ptr.reset(CreationRules::New<T>(std::forward<Args>(args)...));
+    lk.lock();
+    
+    // Reattempt resolution, short-circuiting if an injection of this type took place:
+    std::shared_ptr<T> ptr2;
+    m_byType.Resolve(ptr2);
+    if(ptr2)
+      return ptr2;
+    
+    // Pass control to the insertion routine, which will handle injection from this point:
+    AddInternal(ptr, std::move(lk));
+    return ptr;
+  }
+
+  /// <summary>
+  /// A simple utility method which will inject a single type when called
+  /// </summary>
+  /// <returns>
+  /// The injected type
+  /// </returns>
+  template<typename T>
+  std::shared_ptr<T> Inject(void) {
+    return Construct<T>();
+  }
+
+  /// <summary>
+  /// A simple utility method which will inject the specified types into the current context when called
+  /// </summary>
+  template<typename T1, typename T2, typename... Ts>
+  void Inject(void) {
+    bool dummy[] = {
+      (Inject<T1>(), false),
+      (Inject<T2>(), false),
+      (Inject<Ts>(), false)...
+    };
+    (void) dummy;
+  }
+
+  /// <summary>
+  /// Static version of Inject that uses the current context
+  /// </summary>
+  template<typename... Ts>
+  static void InjectCurrent(void) {
+    auto ctxt = CurrentContext();
+    bool dummy [] = {
+      (ctxt->Inject<Ts>(), false)...
+    };
+    (void) dummy;
+  }
+  
+  // This will be depracated soon. Try not to use
+  template<typename T>
+  void AddExisting(std::shared_ptr<T> p_member) {
+    AddInternal(p_member);
+  }
+  
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const {return m_byType.size();}
@@ -511,11 +565,16 @@ public:
   /// </summary>
   template <class T>
   bool CheckEventOutputStream(void){
-    bool ret = m_junctionBoxManager->CheckEventOutputStream<T>();
-    return ret;
+    return m_junctionBoxManager->CheckEventOutputStream<T>();
   }
 
   const std::type_info& GetSigilType(void) const { return m_sigil; }
+
+  /// <returns>
+  /// True if the sigil type of this CoreContext matches the specified sigil type
+  /// </returns>
+  template<class Sigil>
+  bool Is(void) const { return m_sigil == typeid(Sigil); }
 
   /// <summary>
   /// This is a slow, expensive operation used in unit tests to get all child contexts
@@ -615,8 +674,9 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<JunctionBox<T>> GetJunctionBox(void) {
-    auto retVal = m_junctionBoxManager->Get(typeid(T));
-    return std::static_pointer_cast<JunctionBox<T>, JunctionBoxBase>(retVal);
+    return std::static_pointer_cast<JunctionBox<T>, JunctionBoxBase>(
+      m_junctionBoxManager->Get(typeid(T))
+    );
   }
 
   /// <summary>
@@ -634,33 +694,6 @@ public:
   template<class MemFn>
   InvokeRelay<MemFn> Invoke(MemFn memFn) {
     return GetJunctionBox<typename Decompose<MemFn>::type>()->Invoke(memFn);
-  }
-
-  /// <summary>
-  /// Adds an object of any kind to the IOC container
-  /// </summary>
-  /// <param name="T">The concrete type to be added</param>
-  /// <param name="value">The member to add</param>
-  /// <remarks>
-  /// It's safe to allow the returned shared_ptr to go out of scope; the core context
-  /// will continue to hold a reference to it until Remove is invoked.
-  /// </remarks>
-  template<class T>
-  void Add(const std::shared_ptr<T>& value) {
-    AddInternal(value, boost::unique_lock<boost::mutex>(m_lock));
-
-  }
-
-  /// <summary>
-  /// Similar to the alternative overloaded Add method, except makes this context current before construction
-  /// and creates a new shared_ptr for the constructed object
-  /// </summary>
-  template<class T>
-  std::shared_ptr<T> Add(void) {
-    CurrentContextPusher pusher(this);
-    std::shared_ptr<T> retVal(CreationRules::New<T>());
-    Add(retVal);
-    return retVal;
   }
 
   /// <summary>
@@ -834,9 +867,7 @@ public:
       return;
 
     // Failed, create
-    std::shared_ptr<typename W::element_type> ptr(CreationRules::New<typename W::element_type>());
-    Add(ptr);
-    slot = ptr;
+    slot = Inject<typename W::element_type>();
   }
 
   /// <summary>
@@ -875,29 +906,6 @@ public:
   void Dump(std::ostream& os) const;
 
   /// <summary>
-  /// A simple utility method which will inject the specified types into the current context when called
-  /// </summary>
-  template<class... Ts>
-  static void InjectCurrent(void) {
-    auto current = CurrentContext();
-    bool dummy[] = {
-      (current->InjectSingle<Ts>(), false)...
-    };
-    (void) dummy;
-  }
-
-  /// <summary>
-  /// Utility method which will inject the specified types into this context
-  /// </summary>
-  template<class... Ts>
-  void Inject(void) {
-    bool dummy [] = {
-      (InjectSingle<Ts>(), false)...
-    };
-    (void) dummy;
-  }
-
-  /// <summary>
   /// Utility routine to print information about the current exception
   /// </summary>
   static void DebugPrintCurrentExceptionInformation();
@@ -907,14 +915,12 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<EventOutputStream<T>> CreateEventOutputStream(void) {
-    auto retval = m_junctionBoxManager->CreateEventOutputStream<T>();
-    return retval;
+    return m_junctionBoxManager->CreateEventOutputStream<T>();
   }
 
   template<class T>
   std::shared_ptr<EventInputStream<T>> CreateEventInputStream(void) {
-   auto retval =  std::make_shared<EventInputStream<T>>();
-   return retval;
+    return std::make_shared<EventInputStream<T>>();
   }
 };
 
