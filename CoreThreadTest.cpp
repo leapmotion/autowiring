@@ -190,17 +190,13 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
   std::shared_ptr<bool> y(new bool(false));
 
   // Pend a delayed event first, and then an immediate event right afterwards:
-  *t += boost::chrono::milliseconds(25), [x] { *x = true; };
+  *t += boost::chrono::hours(1), [x] { *x = true; };
   *t += [y] { *y = true; };
 
-  // Verify that, after 1ms, the first event is called and the second event is NOT called:
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+  // Verify that, after 10ms, the first event is called and the second event is NOT called:
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
   ASSERT_TRUE(*y) << "A simple ready call was not dispatched within 10ms of being pended";
   ASSERT_FALSE(*x) << "An event which should not have been executed for 25ms was executed early";
-
-  // Now delay another 90ms and see if the second event got called:
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(90));
-  ASSERT_TRUE(*x) << "A delayed event was not made ready and executed as expected";
 }
 
 TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
