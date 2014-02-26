@@ -30,6 +30,11 @@ class EventReceiver;
 void FilterFiringException(const JunctionBoxBase* pSender, EventReceiver* pRecipient);
 
 /// <summary>
+/// Utility routine which shuts down the current context
+/// </summary>
+void ShutdownCurrentContext(void);
+
+/// <summary>
 /// Function pointer relay type
 /// </summary>
 template<class FnPtr>
@@ -195,6 +200,10 @@ public:
     int deleteCount = m_numberOfDeletions;
     std::shared_ptr<T> currentEvent;
     
+    // Flag set to true if there is an exception thrown during the fire, at which point
+    // our response is to terminate the enclosing context
+    bool fatal = false;
+
     for(auto it = m_st.begin(); it != m_st.end();/* Update step at end of loop */){
       currentEvent = *it;
       
@@ -214,6 +223,11 @@ public:
         deleteCount = m_numberOfDeletions;
       }
     }
+
+    if(fatal)
+      // Shut down our context after all recipients have had a chance to process
+      // this event.
+      ShutdownCurrentContext();
   }
 
   // Two-parenthetical deferred invocations:
