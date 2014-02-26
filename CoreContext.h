@@ -580,6 +580,7 @@ public:
   /// This is a slow, expensive operation used in unit tests to get all child contexts
   /// of a given contexts.  It is relatively dangerous and should not be used except for
   /// testing.
+  /// </summary>
   template<class Fn>
   void EnumerateChildContexts(const std::type_info &sigil, Fn&& fn ) {
     boost::lock_guard<boost::mutex> lock(m_childrenLock);
@@ -593,11 +594,25 @@ public:
       }
     }
   }
+  
+  /// <summary>
+  /// This is used for visualization purposes to get a list of all the contexts
+  /// Fn must take a shared_ptr to a context as an argument and the le
+  /// Breadth First
+  /// </summary>
+  template<class Fn>
+  void EnumerateContexts(Fn&& fn) {
+    fn(shared_from_this());
+    boost::lock_guard<boost::mutex> lock(m_childrenLock);
+    for (auto c = m_children.begin(); c != m_children.end(); c++) {
+      c->lock()->EnumerateContexts(fn);
+    }
+  }
 
   /// <summary>
   /// In debug mode, adds an additional compile-time check
   /// </summary>
-  /// <remarks>
+  /// <remarks>S
   /// Enabling simple ownership checks on a context will ensure that, at teardown time, simple
   /// ownership of contained objects is enforced.  This means that the lifetime of objects in
   /// a context does not extend beyond the lifetime of the context itself.
