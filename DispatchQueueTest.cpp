@@ -17,18 +17,9 @@ public:
 };
 
 
-class ThreadBase:
-  public CoreThread
-{
-public:
-  ThreadBase(){
-    AcceptDispatchDelivery();
-  }
-};
-
 template<int N>
 class Thread:
-  public ThreadBase
+  public CoreThread
 {};
 
 
@@ -59,14 +50,18 @@ TEST_F(DispatchQueueTest, PathologicalStartAndStop){
   AutoRequired<Thread<3>> t3;
   AutoRequired<Thread<4>> t4;
   m_create->InitiateCoreThreads();
+  t1->DelayUntilCanAccept();
+
+  // We don't need a strong guarantee that these threads exit in a timely fashion, just that they
+  // do so _eventually_.
   t1->Stop(true);
-  EXPECT_TRUE(t1->WaitFor(boost::chrono::microseconds(200)));
+  ASSERT_TRUE(t1->WaitFor(boost::chrono::seconds(10)));
   t2->Stop(true);
-  EXPECT_TRUE(t2->WaitFor(boost::chrono::microseconds(200)));
+  ASSERT_TRUE(t2->WaitFor(boost::chrono::seconds(10)));
   t3->Stop(true);
-  EXPECT_TRUE(t3->WaitFor(boost::chrono::microseconds(200)));
+  ASSERT_TRUE(t3->WaitFor(boost::chrono::seconds(10)));
   t4->Stop(true);
-  EXPECT_TRUE(t4->WaitFor(boost::chrono::microseconds(200)));
+  ASSERT_TRUE(t4->WaitFor(boost::chrono::seconds(10)));
 }
 
 

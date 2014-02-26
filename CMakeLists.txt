@@ -208,6 +208,9 @@ set(
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
+
+set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
+
 if(NOT BUILD_WINDOWS)
   set(Boost_SYSTEM_LIBRARY libboost_system)
   add_library(${Boost_SYSTEM_LIBRARY} STATIC IMPORTED)
@@ -243,10 +246,12 @@ endif()
 if(BUILD_TESTING)
   ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringFixture_SRCS)
   add_library(AutowiringFixture ${AutowiringFixture_SRCS})
+  set_property(TARGET AutowiringFixture PROPERTY FOLDER "Autowiring")
 
   ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
   add_executable(AutowiringTest ${AutowiringTest_SRCS} "../gtest-all-guard.cpp")
   target_link_libraries(AutowiringTest Autowiring AutowiringFixture)
+  set_property(TARGET AutowiringTest PROPERTY FOLDER "Autowiring")
 endif(BUILD_TESTING)
 
 if(BUILD_AUTONET)

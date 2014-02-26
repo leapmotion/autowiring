@@ -4,6 +4,7 @@
 #include "Autowired.h"
 #include "TestFixtures/SimpleThreaded.h"
 #include <boost/thread/thread.hpp>
+#include <boost/thread.hpp>
 
 class SpamguardTest:
   public CoreThread
@@ -189,17 +190,13 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
   std::shared_ptr<bool> y(new bool(false));
 
   // Pend a delayed event first, and then an immediate event right afterwards:
-  *t += boost::chrono::milliseconds(25), [x] { *x = true; };
+  *t += boost::chrono::hours(1), [x] { *x = true; };
   *t += [y] { *y = true; };
 
-  // Verify that, after 1ms, the first event is called and the second event is NOT called:
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+  // Verify that, after 10ms, the first event is called and the second event is NOT called:
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
   ASSERT_TRUE(*y) << "A simple ready call was not dispatched within 10ms of being pended";
   ASSERT_FALSE(*x) << "An event which should not have been executed for 25ms was executed early";
-
-  // Now delay another 90ms and see if the second event got called:
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(90));
-  ASSERT_TRUE(*x) << "A delayed event was not made ready and executed as expected";
 }
 
 TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
@@ -285,3 +282,66 @@ TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
   boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
   ASSERT_TRUE(*x) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
 }
+
+template<ThreadPriority priority>
+class JustIncrementsANumber:
+  public CoreThread
+{
+public:
+  JustIncrementsANumber():
+    val(0)
+  {}
+  
+  volatile int64_t val;
+
+  // This will be a hotly contested conditional variable
+  AutoRequired<boost::mutex> contended;
+
+  void Run(void) override {
+    ElevatePriority p(*this, priority);
+    while(!ShouldStop()) {
+      // Obtain the lock and then increment our value:
+      boost::lock_guard<boost::mutex> lk(*contended);
+      val++;
+    }
+  }
+};
+
+#ifdef _MSC_VER
+TEST_F(CoreThreadTest, VerifyCanBoostPriority) {
+  // Create two spinners and kick them off at the same time:
+  AutoRequired<JustIncrementsANumber<ThreadPriority::Normal>> lower;
+  AutoRequired<JustIncrementsANumber<ThreadPriority::AboveNormal>> higher;
+  m_create->InitiateCoreThreads();
+
+  // Poke the conditional variable a lot:
+  AutoRequired<boost::mutex> contended;
+  for(size_t i = 100; i--;) {
+    // We sleep while holding contention lock to force waiting threads into the sleep queue.  The reason we have to do
+    // this is due to the way that mutex is implemented under the hood.  The STL mutex uses a high-frequency variable
+    // and attempts to perform a CAS (check-and-set) on this variable.  If it succeeds, the lock is obtained; if it
+    // fails, it will put the thread into a non-ready state by calling WaitForSingleObject on Windows or one of the
+    // mutex_lock methods on Unix.
+    //
+    // When a thread can't be run, it's moved from the OS's ready queue to the sleep queue.  The scheduler knows that
+    // the thread can be moved back to the ready queue if a particular object is signalled, but in the case of a lock,
+    // only one of the threads waiting on the object can actually be moved to the ready queue.  It's at THIS POINT that
+    // the operating system consults the thread priority--if only thread can be moved over, then the highest priority
+    // thread will wind up in the ready queue every time.
+    //
+    // Thread priority does _not_ necessarily influence the amount of time the scheduler allocates allocated to a ready
+    // thread with respect to other threads of the same process.  This is why we hold the lock for a full millisecond,
+    // in order to force the thread over to the sleep queue and ensure that the priority resolution mechanism is
+    // directly tested.
+    boost::lock_guard<boost::mutex> lk(*contended);
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+  }
+
+  // Need to terminate before we try running a comparison.
+  m_create->SignalTerminate();
+
+  ASSERT_LE(lower->val, higher->val) << "A lower-priority thread was moved out of the sleep queue more frequently than a high-priority thread";
+}
+#else
+#pragma message "Warning:  SetThreadPriority not implemented on Unix"
+#endif
