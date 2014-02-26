@@ -56,14 +56,8 @@ CoreContext::~CoreContext(void) {
   // Notify all ContextMember instances that their parent is going away
   NotifyTeardownListeners();
 
-  // Release all event receivers originating from this context:
-  m_junctionBoxManager->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
-  
-  // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
-  if(m_pParent) {
-    m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
-    m_pParent->RemovePacketSubscribers(m_packetFactory->GetSubscriberVector());
-  }
+  // Make sure events aren't happening anymore:
+  UnregisterEventReceivers();
 
   // Tell all context members that we're tearing down:
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
@@ -177,6 +171,13 @@ void CoreContext::SignalShutdown(bool wait) {
   // Transition as soon as possible:
   m_isShutdown = true;
 
+  // Wipe out the junction box manager:
+  {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    UnregisterEventReceivers();
+  }
+
+
   {
     // Teardown interleave assurance--all of these contexts will generally be destroyed
     // at the exit of this block, due to the behavior of SignalTerminate, unless exterior
@@ -282,6 +283,24 @@ void CoreContext::Dump(std::ostream& os) const {
 void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient) {
   // Obtain the current context and pass control:
   CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
+}
+
+void ShutdownCurrentContext(void) {
+  CoreContext::CurrentContext()->SignalShutdown();
+}
+
+void CoreContext::UnregisterEventReceivers(void) {
+  // Release all event receivers originating from this context:
+  m_junctionBoxManager->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+
+  // Notify our parent (if we have one) that our event receivers are going away:
+  if(m_pParent) {
+    m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+    m_pParent->RemovePacketSubscribers(m_packetFactory->GetSubscriberVector());
+  }
+
+  // Wipe out all collections so we don't try to free these multiple times:
+  m_eventReceivers.clear();
 }
 
 void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) const {
@@ -425,9 +444,6 @@ void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, EventRece
       } catch(...) {
         // Do nothing, filter didn't want to filter this exception
       }
-
-  // Shut down our context:
-  SignalShutdown();
 }
 
 void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
