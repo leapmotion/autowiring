@@ -52,6 +52,11 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfie
   for(size_t i = subscribers.size(); i--;) {
     const auto& subscriber = subscribers[i];
 
+    if(m_satCounters.size() <= subscriber.first)
+      // Can't do anything about this, subscriber went away before we could get them a packet.
+      // Continue on to the next subscriber.
+      continue;
+
     if(m_satCounters[subscriber.first])
       // Ignore this entry, no matter what happens, something already caused it to be satisfied
       continue;
