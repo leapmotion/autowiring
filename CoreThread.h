@@ -13,6 +13,27 @@ using std::shared_ptr;
 class CoreContext;
 class CoreThread;
 
+enum class ThreadPriority {
+  // This is the default thread priority, it's treated as a value lower than any of the
+  // other priority so that an initial request to elevate can alter the OS-supplied default
+  // without causing the types of contention problems resulting from a high-priority operation
+  // transitioning to a low-priority state.
+  Default,
+
+  Idle,
+  Lowest,
+  BelowNormal,
+  Normal,
+  AboveNormal,
+  Highest,
+  TimeCritical,
+
+  // This is a special case for multimedia applications.  Some operating systems, like Windows,
+  // can provide additional scheduling guarantees to applications which declare themselves as
+  // multimedia-intensive in nature.  For other systems, Multimedia is identical to TimeCritical.
+  Multimedia
+};
+
 /// <summary>
 /// This is an abstract class that has a single Run method for implementation by a
 /// derived class.  The object will remain in the context as long as the thread is
@@ -45,6 +66,9 @@ protected:
   // Acceptor flag:
   bool m_canAccept;
 
+  // The current thread priority
+  ThreadPriority m_priority;
+
   // The current thread, if running
   boost::thread m_thisThread;
 
@@ -65,6 +89,15 @@ private:
   /// Private routine that sets up the necessary extranea before a call to Run
   /// </summary>
   void DoRun(void);
+
+  /// <summary>
+  /// Sets the thread priority of this thread
+  /// </summary>
+  /// <remarks>
+  /// This method must only be called from the running thread's context, and then, only inside
+  /// the ElevatePriority constructor
+  /// </remarks>
+  void SetThreadPriority(ThreadPriority threadPriority);
 
 protected:
   void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
@@ -95,6 +128,38 @@ protected:
     m_canAccept = false;
     m_stateCondition.notify_all();
   }
+
+  /// <summary>
+  /// RAII-style class for use with threads that need temporary priority boosts
+  /// </summary>
+  /// <remarks>
+  /// The thread priority is changed when the requested priority is higher than the
+  /// current priority.  The destructor automatically restores the previous priority.
+  /// This class cannot be moved or copied, in order to guarantee proper RAII.
+  /// </remarks>
+  class ElevatePriority {
+  public:
+    ElevatePriority(ElevatePriority&) = delete;
+
+    ElevatePriority(CoreThread& thread, ThreadPriority priority) :
+      m_thread(thread),
+      m_oldPriority(thread.m_priority)
+    {
+      // Elevate if the new level is higher than the old level:
+      if(priority > m_oldPriority)
+        m_thread.SetThreadPriority(priority);
+    }
+
+    ~ElevatePriority(void) {
+      // Delevate if the old level is lower than the current level:
+      if(m_thread.m_priority > m_oldPriority)
+        m_thread.SetThreadPriority(m_oldPriority);
+    }
+
+  private:
+    ThreadPriority m_oldPriority;
+    CoreThread& m_thread;
+  };
 
 public:
   // Accessor methods:
