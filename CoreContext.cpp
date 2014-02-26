@@ -285,6 +285,10 @@ void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipi
   CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
 }
 
+void ShutdownCurrentContext(void) {
+  CoreContext::CurrentContext()->SignalShutdown();
+}
+
 void CoreContext::UnregisterEventReceivers(void) {
   // Release all event receivers originating from this context:
   m_junctionBoxManager->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
@@ -440,9 +444,6 @@ void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, EventRece
       } catch(...) {
         // Do nothing, filter didn't want to filter this exception
       }
-
-  // Shut down our context:
-  SignalShutdown();
 }
 
 void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
