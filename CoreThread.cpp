@@ -6,11 +6,11 @@
 
 CoreThread::CoreThread(const char* pName):
   ContextMember(pName),
-  m_stop(false),
-  m_running(false),
-  m_completed(false),
+  m_priority(ThreadPriority::Default),
+  m_state(std::make_shared<State>()),
+  m_lock(m_state->m_lock),
   m_canAccept(false),
-  m_priority(ThreadPriority::Default)
+  m_stateCondition(m_state->m_stateCondition)
 {
 }
 
@@ -83,7 +83,7 @@ void CoreThread::ThreadSleep(long millisecond) {
 
 bool CoreThread::DelayUntilCanAccept(void) {
   boost::unique_lock<boost::mutex> lk(m_lock);
-  m_stateCondition.wait(lk, [this] {return ShouldStop() || CanAccept();});
+  m_stateCondition.wait(lk, [this] {return ShouldStop() || CanAccept(); });
   return !ShouldStop();
 }
 
