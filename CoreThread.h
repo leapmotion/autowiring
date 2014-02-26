@@ -50,7 +50,9 @@ public:
   virtual ~CoreThread(void) {}
 
 private:
-  struct State {
+  struct State:
+    std::enable_shared_from_this<State>
+  {
     // General purpose thread lock and update condition for the lock
     boost::mutex m_lock;
     boost::condition_variable m_stateCondition;
