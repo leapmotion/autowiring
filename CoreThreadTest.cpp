@@ -343,7 +343,6 @@ TEST_F(CoreThreadTest, VerifyCanBoostPriority) {
 
   // Need to terminate before we try running a comparison.
   m_create->SignalTerminate();
-  m_create->Wait();
 
   ASSERT_LE(lower->val, higher->val) << "A lower-priority thread was moved out of the sleep queue more frequently than a high-priority thread";
 }
