@@ -69,16 +69,16 @@ protected:
   boost::condition_variable& m_stateCondition;
 
   // Flag indicating that we need to stop right now
-  bool m_stop = false;
+  bool m_stop;
 
   // Run condition:
-  bool m_running = false;
+  bool m_running;
 
   // Completion condition, true when this thread is no longer running and has run at least once
-  bool m_completed = false;
+  bool m_completed;
 
   // Acceptor flag:
-  bool m_canAccept = false;
+  bool m_canAccept;
 
   // The current thread priority
   ThreadPriority m_priority;

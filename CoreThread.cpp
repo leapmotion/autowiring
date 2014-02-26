@@ -9,10 +9,12 @@ CoreThread::CoreThread(const char* pName):
   m_priority(ThreadPriority::Default),
   m_state(std::make_shared<State>()),
   m_lock(m_state->m_lock),
-  m_canAccept(false),
-  m_stateCondition(m_state->m_stateCondition)
-{
-}
+  m_stateCondition(m_state->m_stateCondition),
+  m_stop(false),
+  m_running(false),
+  m_completed(false),
+  m_canAccept(false)
+{}
 
 void CoreThread::DoRun(void) {
   ASSERT(m_running);
