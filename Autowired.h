@@ -39,6 +39,19 @@ public:
 };
 
 /// <summary>
+/// Provides a simple way to create a dependent context pointer
+/// </summary>
+/// <remarks>
+/// The newly created context will be created using CoreContext::CurrentContext()->Create().
+/// </remarks>
+class AutoCreateContext:
+public std::shared_ptr<CoreContext>
+{
+public:
+  AutoCreateContext(void);
+};
+
+/// <summary>
 /// Idiom to enable boltable classes
 /// </summary>
 template<class T>
@@ -49,43 +62,77 @@ public:
 };
 
 /// <summary>
-/// Provides a simple way to create a dependent context pointer
+/// An autowired template class that forms the foundation of the context consumer system
 /// </summary>
+/// <param name="T">The class whose type is to be found.  Must be an EXACT match.</param>
 /// <remarks>
-/// The newly created context will be created using CoreContext::CurrentContext()->Create().
+/// The autowired class offers a quick way to import or create an instance of a specified
+/// class in the local context.
+///
+/// This class may be safely used even when the member in question is an abstract type.
 /// </remarks>
-class AutoCreateContext:
-  public std::shared_ptr<CoreContext>
-{
-public:
-  AutoCreateContext(void);
-};
-
 template<class T>
-class AutowiredCreator:
+class Autowired:
   public AutowirableSlot,
   public std::shared_ptr<T>
 {
+  static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
+  static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
+  
 public:
   typedef T value_type;
   typedef shared_ptr<T> t_ptrType;
+  
+  Autowired(void) {
+    AutowirableSlot::LockContext()->Autowire(*this);
+  }
+  
+  Autowired(std::weak_ptr<CoreContext> ctxt) {
+    ctxt.lock()->Autowire(*this);
+  }
 
-  AutowiredCreator(void) {}
+  operator bool(void) const {
+    return IsAutowired();
+  }
 
-  /// <summary>
-  /// Creates a new instance if this instance isn't autowired
-  /// </summary>
-  /// <remarks>
-  /// If type T has a static member function called New, the helper's Create routine will attempt call
-  /// this function instead of the default constructor, even if the default constructor has been supplied,
-  /// and even if the arity of the New routine is not zero.
-  ///
-  /// To prevent this behavior, use a name other than New.
-  /// </remarks>
-  void Create(void) {
+  operator T*(void) const {
+    return t_ptrType::get();
+  }
+
+  bool IsAutowired(void) const override {return !!t_ptrType::get();}
+};
+
+/// <summary>
+/// Similar to Autowired, Creates a new instance if this instance isn't autowired
+/// </summary>
+/// <remarks>
+/// This class is simply a convenience class and provides a declarative way to name a required dependency.
+///
+/// If type T has a static member function called New, the helper's Create routine will attempt call
+/// this function instead of the default constructor, even if the default constructor has been supplied,
+/// and even if the arity of the New routine is not zero.
+///
+/// To prevent this behavior, use a name other than New.
+/// </remarks>
+template<class T>
+class AutoRequired:
+  public Autowired<T>
+{
+public:
+  using std::shared_ptr<T>::operator=;
+  
+  AutoRequired(void) {
+    this->Create(AutowirableSlot::LockContext());
+  }
+  
+  AutoRequired(std::weak_ptr<CoreContext> ctxt) {
+    this->Create(ctxt.lock());
+  }
+
+private:
+  void Create(std::shared_ptr<CoreContext> p_ctxt) {
     if(*this)
       return;
-
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
     // If you are getting an error tracked to this line, ensure that class T is totally
     // defined at the point where the Autowired instance is constructed.  Generally,
@@ -109,59 +156,7 @@ public:
     // constructor is defined.
     //
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-    this->reset(CreationRules::New<T>());
-    AutowirableSlot::LockContext()->Add(*this);
-  }
-
-  operator bool(void) const {
-    return IsAutowired();
-  }
-
-  operator T*(void) const {
-    return t_ptrType::get();
-  }
-
-  bool IsAutowired(void) const override {return !!t_ptrType::get();}
-};
-
-/// <summary>
-/// An autowired template class that forms the foundation of the context consumer system
-/// </summary>
-/// <param name="T">The class whose type is to be found.  Must be an EXACT match.</param>
-/// <remarks>
-/// The autowired class offers a quick way to import or create an instance of a specified
-/// class in the local context.
-///
-/// This class may be safely used even when the member in question is an abstract type.
-/// </remarks>
-template<class T>
-class Autowired:
-  public AutowiredCreator<T>
-{
-public:
-  static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
-  static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
-
-  Autowired(void) {
-    shared_ptr<CoreContext> context = AutowirableSlot::LockContext();
-    context->Autowire(*this);
-  }
-};
-
-/// <summary>
-/// Similar to Autowired, but the default constructor invokes Autowired(true)
-/// </summary>
-/// <remarks>
-/// This class is simply a convenience class and provides a declarative way to name a required dependency.
-/// </remarks>
-template<class T>
-class AutoRequired:
-  public Autowired<T>
-{
-public:
-  AutoRequired(void) {
-    if(!*this)
-      AutowiredCreator<T>::Create();
+    *this = p_ctxt->template Inject<T>();
   }
 };
 
@@ -169,13 +164,13 @@ public:
 /// This class
 /// </summary>
 template<class T>
-class AutoFired
+  class AutoFired
 {
 public:
   AutoFired(void) {
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
     
-    // Add an utterance of the TypeRegistry so we can add this autowired type to our collection
+    // Add an utterance of the TypeRegistry so we can add this AutoFired type to our collection
     (void)RegType<T>::r;
 
     auto ctxt = CoreContext::CurrentContext();
