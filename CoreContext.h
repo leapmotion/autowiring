@@ -491,6 +491,11 @@ protected:
   }
 
 public:
+  // Accessor methods:
+  bool IsGlobalContext(void) const { return !m_pParent; }
+  size_t GetMemberCount(void) const { return m_byType.size(); }
+  const std::type_info& GetSigilType(void) const { return m_sigil; }
+
   /// <summary>
   /// Utility method which will inject the specified types into this context
   /// Arguments will be passed to the T constructor if provided
@@ -568,10 +573,6 @@ public:
   /// </remarks>
   template<typename T>
   void DEPRECATED(AddExisting(std::shared_ptr<T> p_member), "Deprecated, use Inject or Construct instead");
-  
-  // Accessor methods:
-  bool IsGlobalContext(void) const { return !m_pParent; }
-  size_t GetMemberCount(void) const {return m_byType.size();}
 
   /// <summary>
   /// This method checks whether eventoutputstream listeners for the given type still exist.
@@ -584,8 +585,6 @@ public:
   bool CheckEventOutputStream(void){
     return m_junctionBoxManager->CheckEventOutputStream<T>();
   }
-
-  const std::type_info& GetSigilType(void) const { return m_sigil; }
 
   /// <returns>
   /// True if the sigil type of this CoreContext matches the specified sigil type
@@ -646,7 +645,7 @@ public:
   /// Unless externally synchronized, this operation may return false on a running context.
   /// </remarks>
   bool WasStarted(void) const {
-    // We were started IF we are currently running, OR we have been signalled to stop
+    // We were started IF we will run new threads, OR we have been signalled to stop
     return m_shouldRunNewThreads || m_isShutdown;
   }
 
@@ -668,8 +667,7 @@ public:
   /// </summary>
   template<class T>
   bool IsMember(typename std::enable_if<std::is_base_of<ContextMember, T>::value, T*>::type ptr) const {
-    return
-      static_cast<ContextMember*>(ptr)->GetContext().get() == this;
+    return ptr->GetContext().get() == this;
   }
   
   template<class T>
@@ -771,8 +769,7 @@ public:
   /// </summary>
   /// <remarks>
   /// Generally speaking, users wishing to release their reference to some context can do so simply
-  /// by making the global context current.  The sole exception is when the global context is being
-  /// destroyed, in which case, a null context is exactly what's desired.
+  /// by making the global context current.
   /// </remarks>
   static void EvictCurrent(void) {
     s_curContext.reset();
