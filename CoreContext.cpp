@@ -14,7 +14,7 @@
 
 using namespace std;
 
-boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
+boost::thread_specific_ptr<std::shared_ptr<CoreContext>> CoreContext::s_curContext;
 
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil) :
   m_pParent(pParent),

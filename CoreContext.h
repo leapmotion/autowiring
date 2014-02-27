@@ -74,8 +74,16 @@ protected:
   CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil);
   CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer);
 
-  // A pointer to the current context, for construction purposes
-  static boost::thread_specific_ptr<std::shared_ptr<CoreContext> > s_curContext;
+  /// <summary>
+  /// A pointer to the current context, specific to the current thread.
+  /// </summary>
+  /// <remarks>
+  /// All threads have a current context, and this pointer refers to that current context.  If this value is null,
+  /// then the current context is the global context.  It's very important that threads not attempt to hold a reference
+  /// to the global context directly because it could change teardown order if the main thread sets the global context
+  /// as current.
+  /// </remarks>
+  static boost::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
 
 public:
   virtual ~CoreContext(void);
@@ -748,20 +756,14 @@ public:
   /// <returns>The previously current context</returns>
   std::shared_ptr<CoreContext> SetCurrent(void) {
     std::shared_ptr<CoreContext> newCurrent = shared_from_this();
-    ASSERT(newCurrent);
-    return SetCurrent(newCurrent);
-  }
 
-  /// <summary>
-  /// This makes a specific core context current
-  /// </summary>
-  /// <returns>The previously current context</returns>
-  static std::shared_ptr<CoreContext> SetCurrent(const std::shared_ptr<CoreContext>& context) {
-    ASSERT(context);
-    std::shared_ptr<CoreContext> retVal = CurrentContext();
-    s_curContext.reset(new std::shared_ptr<CoreContext>(context));
+    if(!newCurrent)
+      throw std::runtime_error("Attempted to make a CoreContext current from a CoreContext ctor");
+
+    std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContext();
+    s_curContext.reset(new std::shared_ptr<CoreContext>(newCurrent));
     return retVal;
-  };
+  }
 
   /// <summary>
   /// Makes no context current
