@@ -550,12 +550,19 @@ public:
     };
     (void) dummy;
   }
-  
-  // This will be depracated soon. Try not to use
+
+  /// <summary>
+  /// Adds an existing shared pointer to the context
+  /// </summary>
+  /// <remarks>
+  /// This method unsafely ambiguates the construction strategy used for some member.  It's possible that
+  /// someone calls AddExisting for a field which is AutoRequired in the current context, or makes a call
+  /// to this method conditionally dependent on a type which may have been AutoRequired elsewhere.
+  ///
+  /// For reason of these ambiguities, and others, the method will be removed.
+  /// </remarks>
   template<typename T>
-  void AddExisting(std::shared_ptr<T> p_member) {
-    AddInternal(p_member);
-  }
+  void DEPRECATED(AddExisting(std::shared_ptr<T> p_member), "Deprecated, use Inject or Construct instead");
   
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
@@ -947,3 +954,7 @@ void CoreContext::AutoRequireMicroBolt(void) {
   AutoRequire(ptr);
 }
 
+template<typename T>
+void CoreContext::AddExisting(std::shared_ptr<T> p_member) {
+  AddInternal(p_member);
+}
