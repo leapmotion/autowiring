@@ -44,6 +44,30 @@ TEST_F(CoreThreadTest, VerifyStartSpam) {
   EXPECT_FALSE(instance->m_multiHit) << "Thread was run more than once unexpectedly";
 }
 
+class PrependEvent:
+  public CoreThread
+{
+public:
+  virtual void Run(void) override {
+    const boost::chrono::milliseconds timeout = boost::chrono::milliseconds(100);
+    AcceptDispatchDelivery();
+    bool wasCalled = false;
+
+    *this += [&wasCalled] { wasCalled = true; };
+
+    ASSERT_TRUE(WaitForEvent(timeout)) << "Failed to detect pending events";
+    ASSERT_TRUE(wasCalled) << "Event was not called";
+  }
+};
+
+TEST_F(CoreThreadTest, VerifyPendingWaitForEvents) {
+  AutoRequired<PrependEvent> instance;
+  m_create->InitiateCoreThreads();
+
+  // Verify that the instance returns within the given timeout
+  ASSERT_TRUE(instance->WaitFor(boost::chrono::milliseconds(10))) << "Instance did not exit from a pended event";
+}
+
 class InvokesIndefiniteWait:
   public CoreThread
 {
@@ -295,7 +319,7 @@ public:
   JustIncrementsANumber():
     val(0)
   {}
-  
+
   volatile int64_t val;
 
   // This will be a hotly contested conditional variable
