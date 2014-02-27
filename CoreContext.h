@@ -173,7 +173,7 @@ protected:
   t_deferred m_deferred;
 
   // All known event receivers and receiver proxies originating from this context:
-  typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
+  typedef std::unordered_set<std::shared_ptr<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
   
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts

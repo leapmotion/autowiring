@@ -69,7 +69,6 @@ set(Autowiring_SRCS
   PolymorphicTypeForest.h
   ReentrantCounter.h
   ReentrantCounter.cpp
-  SharedPtrHash.h
   SimpleOwnershipValidator.h
   SimpleOwnershipValidator.cpp
   StateMachine.h
