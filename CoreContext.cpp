@@ -14,24 +14,17 @@
 
 using namespace std;
 
-boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
+boost::thread_specific_ptr<std::shared_ptr<CoreContext>> CoreContext::s_curContext;
 
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil) :
   m_pParent(pParent),
   m_sigil(sigil),
   m_useOwnershipValidator(false),
   m_shouldRunNewThreads(false),
-  m_isShutdown(false)
+  m_isShutdown(false),
+  m_junctionBoxManager(std::make_shared<JunctionBoxManager>()),
+  m_packetFactory(std::make_shared<AutoPacketFactory>(GetJunctionBox<AutoPacketListener>()))
 {
-  m_junctionBoxManager.reset(new JunctionBoxManager);
-  
-  auto ptr = GetJunctionBox<AutoPacketListener>();
-  
-  m_packetFactory.reset(
-    new AutoPacketFactory(
-      AutoFired<AutoPacketListener>(ptr)
-    )
-  );
   assert(pParent.get() != this);
 }
 

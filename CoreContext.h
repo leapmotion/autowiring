@@ -74,8 +74,16 @@ protected:
   CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil);
   CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer);
 
-  // A pointer to the current context, for construction purposes
-  static boost::thread_specific_ptr<std::shared_ptr<CoreContext> > s_curContext;
+  /// <summary>
+  /// A pointer to the current context, specific to the current thread.
+  /// </summary>
+  /// <remarks>
+  /// All threads have a current context, and this pointer refers to that current context.  If this value is null,
+  /// then the current context is the global context.  It's very important that threads not attempt to hold a reference
+  /// to the global context directly because it could change teardown order if the main thread sets the global context
+  /// as current.
+  /// </remarks>
+  static boost::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
 
 public:
   virtual ~CoreContext(void);
@@ -141,22 +149,28 @@ protected:
   std::shared_ptr<CoreContext> Create(const std::type_info& sigil, CoreContext& newContext);
   std::shared_ptr<CoreContext> CreatePeer(const std::type_info& sigil);
 
+  // A pointer to the parent context
+  const std::shared_ptr<CoreContext> m_pParent;
+
   // General purpose lock for this class
   mutable boost::mutex m_lock;
 
+  // Condition, signalled when context state has been changed
+  boost::condition m_stateChanged;
+
+  // Set if threads in this context should be started when they are added
+  bool m_shouldRunNewThreads;
+
+  // Set if the context has been shut down
+  bool m_isShutdown;
+
   // The context's internally held sigil type
   const std::type_info& m_sigil;
-
-  // The context's internally held full-path name (recursively defined through parents)--required to be a literal string
-  std::string m_fullPathName;
   
     // Flag, set if this context should use its ownership validator to guarantee that all autowired members
   // are correctly torn down.  This flag must be set at construction time.  Members added to the context
   // before this flag is assigned will NOT be checked.
   bool m_useOwnershipValidator;
-
-  // A pointer to the parent context
-  const std::shared_ptr<CoreContext> m_pParent;
 
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes away.
@@ -173,24 +187,14 @@ protected:
   t_deferred m_deferred;
 
   // All known event receivers and receiver proxies originating from this context:
-  typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
+  typedef std::unordered_set<std::shared_ptr<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
   
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
-  typedef std::shared_ptr<JunctionBoxManager> t_junctionBoxManager;
-  t_junctionBoxManager m_junctionBoxManager;
+  const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
   
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
-
-  // Set if threads in this context should be started when they are added
-  bool m_shouldRunNewThreads;
-
-  // Set if the context has been shut down
-  bool m_isShutdown;
-
-  // Condition, signalled when context state has been changed
-  boost::condition m_stateChanged;
 
   // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
   // Destructor does nothing; this is by design.
@@ -201,14 +205,14 @@ protected:
   t_threadList m_threads;
 
   // Child contexts:
-  typedef std::list<std::weak_ptr<CoreContext> > t_childList;
+  typedef std::list<std::weak_ptr<CoreContext>> t_childList;
   boost::mutex m_childrenLock;
   t_childList m_children;
 
   friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 
   // The interior packet factory:
-  std::shared_ptr<AutoPacketFactory> m_packetFactory;
+  const std::shared_ptr<AutoPacketFactory> m_packetFactory;
 
   // Lists of event receivers, by name:
   typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
@@ -752,20 +756,14 @@ public:
   /// <returns>The previously current context</returns>
   std::shared_ptr<CoreContext> SetCurrent(void) {
     std::shared_ptr<CoreContext> newCurrent = shared_from_this();
-    ASSERT(newCurrent);
-    return SetCurrent(newCurrent);
-  }
 
-  /// <summary>
-  /// This makes a specific core context current
-  /// </summary>
-  /// <returns>The previously current context</returns>
-  static std::shared_ptr<CoreContext> SetCurrent(const std::shared_ptr<CoreContext>& context) {
-    ASSERT(context);
-    std::shared_ptr<CoreContext> retVal = CurrentContext();
-    s_curContext.reset(new std::shared_ptr<CoreContext>(context));
+    if(!newCurrent)
+      throw std::runtime_error("Attempted to make a CoreContext current from a CoreContext ctor");
+
+    std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContext();
+    s_curContext.reset(new std::shared_ptr<CoreContext>(newCurrent));
     return retVal;
-  };
+  }
 
   /// <summary>
   /// Makes no context current
