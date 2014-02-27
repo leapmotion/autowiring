@@ -377,7 +377,7 @@ void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
     m_pParent->RemoveEventReceiver(pRecvr);
 }
 
-void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
+void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
   

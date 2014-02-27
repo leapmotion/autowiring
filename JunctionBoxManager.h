@@ -29,7 +29,7 @@ public:
   std::shared_ptr<JunctionBoxBase> Get(std::type_index);
   void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
   void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
-  void RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
+  void RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
 
   /// <summary>
   /// This method checks whether eventoutputstream listeners for the given type still exist.
@@ -40,12 +40,13 @@ public:
   /// </summary>
   template <class T>
   bool CheckEventOutputStream(void){
-    auto mapfinditerator= m_eventOutputStreams.find(typeid(T));
-    if (mapfinditerator != m_eventOutputStreams.end()){
+    auto mapfinditerator = m_eventOutputStreams.find(typeid(T));
+    if(mapfinditerator != m_eventOutputStreams.end()) {
       auto v = (mapfinditerator->second);
       auto it = v.begin();
-      while(it != v.end() ){
-        if( (*it).lock() ) return true;
+      while(it != v.end()) {
+        if((*it).lock())
+          return true;
         it = v.erase(it);
       }
       return false; //return false if iterated through whole vec without seeing any live pointers.
@@ -60,8 +61,8 @@ public:
   void AddEventOutputStream(std::weak_ptr<EventOutputStreamBase> pRecvr){
     auto mapfinditerator = m_eventOutputStreams.find(typeid(T));
     if (mapfinditerator != m_eventOutputStreams.end()){
-      //if the type exists already, find the correspoonding outputstreambase and push it back.
-      (mapfinditerator->second).push_back(pRecvr);
+      // If the type exists already, find the correspoonding outputstreambase and push it back.
+      mapfinditerator->second.push_back(pRecvr);
     }
     else {
       std::vector<std::weak_ptr<EventOutputStreamBase> > newvec;

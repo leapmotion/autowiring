@@ -31,6 +31,7 @@
 #include EXCEPTION_PTR_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_MAP
+#include STL_UNORDERED_SET
 
 
 #ifndef ASSERT
@@ -282,7 +283,7 @@ protected:
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
   /// </summary>
-  void RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
+  void RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
 
   /// <summary>
   /// Adds an object of any kind to the IOC container
@@ -755,7 +756,7 @@ public:
   /// </summary>
   /// <returns>The previously current context</returns>
   std::shared_ptr<CoreContext> SetCurrent(void) {
-    std::shared_ptr<CoreContext> newCurrent = shared_from_this();
+    std::shared_ptr<CoreContext> newCurrent = this->shared_from_this();
 
     if(!newCurrent)
       throw std::runtime_error("Attempted to make a CoreContext current from a CoreContext ctor");

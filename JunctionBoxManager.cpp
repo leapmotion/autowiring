@@ -51,7 +51,7 @@ void JunctionBoxManager::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRec
     *(q->second) -= pRecvr;
 }
 
-void JunctionBoxManager::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last){
+void JunctionBoxManager::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last){
   
   for(auto r = m_junctionBoxes.begin(); r != m_junctionBoxes.end(); r++) {
     auto box = r->second;
