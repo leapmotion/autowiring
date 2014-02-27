@@ -37,8 +37,7 @@ void CoreThread::DoRun(void) {
       // Ask that the enclosing context filter this exception, if possible:
       GetContext()->FilterException();
     } catch(...) {
-      // Generic exception, unhandled, we can't print anything off.
-      CoreContext::DebugPrintCurrentExceptionInformation();
+      // Generic exception, unhandled, we can't do anything about this
     }
 
     // Signal shutdown on the enclosing context--cannot wait, if we wait we WILL deadlock
