@@ -44,7 +44,7 @@ TEST_F(CoreThreadTest, VerifyStartSpam) {
   EXPECT_FALSE(instance->m_multiHit) << "Thread was run more than once unexpectedly";
 }
 
-class PrependEvent:
+class PendsWhileRunningThenWaits:
   public CoreThread
 {
 public:
@@ -55,17 +55,17 @@ public:
 
     *this += [&wasCalled] { wasCalled = true; };
 
-    ASSERT_TRUE(WaitForEvent(timeout)) << "Failed to detect pending events";
-    ASSERT_TRUE(wasCalled) << "Event was not called";
+    ASSERT_TRUE(WaitForEvent(timeout)) << "A CoreThread pended a dispatcher to itself, but failed to dispatch this event when told to do so";
+    ASSERT_TRUE(wasCalled) << "A CoreThread claimed to call a dispatcher, but the dispatcher's side-effects were not detected";
   }
 };
 
 TEST_F(CoreThreadTest, VerifyPendingWaitForEvents) {
-  AutoRequired<PrependEvent> instance;
+  AutoRequired<PendsWhileRunningThenWaits> instance;
   m_create->InitiateCoreThreads();
 
   // Verify that the instance returns within the given timeout
-  ASSERT_TRUE(instance->WaitFor(boost::chrono::milliseconds(10))) << "Instance did not exit from a pended event";
+  ASSERT_TRUE(instance->WaitFor(boost::chrono::milliseconds(10))) << "Instance did not process events in a timely fashion";
 }
 
 class InvokesIndefiniteWait:
