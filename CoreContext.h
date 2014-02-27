@@ -141,22 +141,28 @@ protected:
   std::shared_ptr<CoreContext> Create(const std::type_info& sigil, CoreContext& newContext);
   std::shared_ptr<CoreContext> CreatePeer(const std::type_info& sigil);
 
+  // A pointer to the parent context
+  const std::shared_ptr<CoreContext> m_pParent;
+
   // General purpose lock for this class
   mutable boost::mutex m_lock;
 
+  // Condition, signalled when context state has been changed
+  boost::condition m_stateChanged;
+
+  // Set if threads in this context should be started when they are added
+  bool m_shouldRunNewThreads;
+
+  // Set if the context has been shut down
+  bool m_isShutdown;
+
   // The context's internally held sigil type
   const std::type_info& m_sigil;
-
-  // The context's internally held full-path name (recursively defined through parents)--required to be a literal string
-  std::string m_fullPathName;
   
     // Flag, set if this context should use its ownership validator to guarantee that all autowired members
   // are correctly torn down.  This flag must be set at construction time.  Members added to the context
   // before this flag is assigned will NOT be checked.
   bool m_useOwnershipValidator;
-
-  // A pointer to the parent context
-  const std::shared_ptr<CoreContext> m_pParent;
 
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes away.
@@ -177,20 +183,10 @@ protected:
   t_rcvrSet m_eventReceivers;
   
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
-  typedef std::shared_ptr<JunctionBoxManager> t_junctionBoxManager;
-  t_junctionBoxManager m_junctionBoxManager;
+  const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
   
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
-
-  // Set if threads in this context should be started when they are added
-  bool m_shouldRunNewThreads;
-
-  // Set if the context has been shut down
-  bool m_isShutdown;
-
-  // Condition, signalled when context state has been changed
-  boost::condition m_stateChanged;
 
   // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
   // Destructor does nothing; this is by design.
@@ -201,7 +197,7 @@ protected:
   t_threadList m_threads;
 
   // Child contexts:
-  typedef std::list<std::weak_ptr<CoreContext> > t_childList;
+  typedef std::list<std::weak_ptr<CoreContext>> t_childList;
   boost::mutex m_childrenLock;
   t_childList m_children;
 
