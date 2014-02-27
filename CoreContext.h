@@ -597,8 +597,7 @@ public:
   
   /// <summary>
   /// This is used for visualization purposes to get a list of all the contexts
-  /// Fn must take a shared_ptr to a context as an argument and the le
-  /// Breadth First
+  /// Fn must take a shared_ptr to a CoreContext as an argument.
   /// </summary>
   template<class Fn>
   void EnumerateContexts(Fn&& fn) {
@@ -612,7 +611,7 @@ public:
   /// <summary>
   /// In debug mode, adds an additional compile-time check
   /// </summary>
-  /// <remarks>S
+  /// <remarks>
   /// Enabling simple ownership checks on a context will ensure that, at teardown time, simple
   /// ownership of contained objects is enforced.  This means that the lifetime of objects in
   /// a context does not extend beyond the lifetime of the context itself.
