@@ -22,11 +22,9 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_useOwnershipValidator(false),
   m_shouldRunNewThreads(false),
   m_isShutdown(false),
-  m_junctionBoxManager(std::make_shared<JunctionBoxManager>())
+  m_junctionBoxManager(std::make_shared<JunctionBoxManager>()),
+  m_packetFactory(std::make_shared<AutoPacketFactory>(GetJunctionBox<AutoPacketListener>()))
 {
-  auto ptr = GetJunctionBox<AutoPacketListener>();
-  
-  m_packetFactory = std::make_shared<AutoPacketFactory>(AutoFired<AutoPacketListener>(ptr));
   assert(pParent.get() != this);
 }
 

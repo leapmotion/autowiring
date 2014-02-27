@@ -204,7 +204,7 @@ protected:
   friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 
   // The interior packet factory:
-  std::shared_ptr<AutoPacketFactory> m_packetFactory;
+  const std::shared_ptr<AutoPacketFactory> m_packetFactory;
 
   // Lists of event receivers, by name:
   typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
