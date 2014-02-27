@@ -62,7 +62,7 @@ struct Boltable;
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
 
 /// <summary>
-/// This class is used to determine whether all core threads have exited
+/// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain
 /// </summary>
 class CoreContext:
   public Object,
