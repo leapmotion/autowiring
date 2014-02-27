@@ -27,7 +27,7 @@ void AutoPacketFactory::AutoPacketResetter::operator()(AutoPacket& packet) const
 
 AutoPacketFactory::AutoPacketFactory(void) {}
 
-AutoPacketFactory::AutoPacketFactory(AutoFired<AutoPacketListener>&& apl):
+AutoPacketFactory::AutoPacketFactory(std::shared_ptr<JunctionBox<AutoPacketListener>>&& apl) :
   m_packets(~0, ~0, AutoPacketResetter(std::move(apl)))
 {
   m_packets.SetAlloc(AutoPacketCreator(this));
