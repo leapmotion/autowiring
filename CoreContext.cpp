@@ -245,8 +245,8 @@ std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
     return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
 
   std::shared_ptr<CoreContext>* retVal = s_curContext.get();
-  ASSERT(retVal);
-  ASSERT(*retVal);
+  assert(retVal);
+  assert(*retVal);
   return *retVal;
 }
 
