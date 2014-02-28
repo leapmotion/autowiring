@@ -1,7 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "CurrentContextPusher.h"
-#include "CoreContext.h"
+#include "GlobalCoreContext.h"
 
 CurrentContextPusher::CurrentContextPusher(void):
   m_prior(CoreContext::CurrentContext())
@@ -9,6 +9,11 @@ CurrentContextPusher::CurrentContextPusher(void):
 }
 
 CurrentContextPusher::CurrentContextPusher(std::shared_ptr<CoreContext> pContext):
+  m_prior(pContext->SetCurrent())
+{
+}
+
+CurrentContextPusher::CurrentContextPusher(std::shared_ptr<GlobalCoreContext> pContext) :
   m_prior(pContext->SetCurrent())
 {
 }

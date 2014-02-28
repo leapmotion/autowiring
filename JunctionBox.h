@@ -6,7 +6,6 @@
 #include "EventInputStream.h"
 #include "ObjectPool.h"
 #include "PolymorphicTypeForest.h"
-#include "SharedPtrHash.h"
 #include "uuid.h"
 #include <boost/thread/mutex.hpp>
 #include "fast_pointer_cast.h"
