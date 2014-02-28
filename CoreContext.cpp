@@ -380,10 +380,8 @@ void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
 void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-  
-    for (auto derp = first; derp != last; derp++){
-      m_eventReceivers.erase(*derp);
-    }
+    for(auto q = first; q != last; q++)
+      m_eventReceivers.erase(*q);
   }
   
   m_junctionBoxManager->RemoveEventReceivers(first, last);
