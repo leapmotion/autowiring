@@ -48,21 +48,20 @@ public:
   /// Converts member functions to their string representation for serialization.
   /// </summary>
   template <class MemFn>
-  std::string 
-  AddAndQueryMemFn(MemFn memfn, std::string str = "Query")
+  std::string AddAndQueryMemFn(MemFn memfn, std::string str = "Query")
   {
-  std::map<std::string, MemFn> local; 
-  static std::map<std::string, MemFn> my_map = local;
-  if (str == "Query")
-  {
-    for (auto it = my_map.begin(); it != my_map.end(); ++it)
+    std::map<std::string, MemFn> local;
+    static std::map<std::string, MemFn> my_map = local;
+    if(str == "Query")
     {
-      if ((it->second) == memfn) return it -> first;
+      for(auto it = my_map.begin(); it != my_map.end(); ++it)
+      {
+        if((it->second) == memfn) return it->first;
+      }
+      return "";
     }
+    my_map[str] = memfn;
     return "";
-  }
-  my_map[str] = memfn;
-  return "";
   }
 
   template <class Arg>
