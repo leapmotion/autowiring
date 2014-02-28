@@ -11,10 +11,20 @@
 #include <algorithm>
 #include <memory>
 #include <boost/thread/reverse_lock.hpp>
+#include <boost/thread/tss.hpp>
 
 using namespace std;
 
-boost::thread_specific_ptr<std::shared_ptr<CoreContext>> CoreContext::s_curContext;
+/// <summary>
+/// A pointer to the current context, specific to the current thread.
+/// </summary>
+/// <remarks>
+/// All threads have a current context, and this pointer refers to that current context.  If this value is null,
+/// then the current context is the global context.  It's very important that threads not attempt to hold a reference
+/// to the global context directly because it could change teardown order if the main thread sets the global context
+/// as current.
+/// </remarks>
+boost::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
 
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil) :
   m_pParent(pParent),
@@ -493,4 +503,19 @@ void CoreContext::DebugPrintCurrentExceptionInformation() {
   } catch(...) {
     // Nothing can be done, we don't know what exception type this is.
   }
+}
+
+std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
+  std::shared_ptr<CoreContext> newCurrent = this->shared_from_this();
+
+  if(!newCurrent)
+    throw std::runtime_error("Attempted to make a CoreContext current from a CoreContext ctor");
+
+  std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContext();
+  s_curContext.reset(new std::shared_ptr<CoreContext>(newCurrent));
+  return retVal;
+}
+
+void CoreContext::EvictCurrent(void) {
+  s_curContext.reset();
 }

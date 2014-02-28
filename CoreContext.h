@@ -17,11 +17,10 @@
 #include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
-
 #include "uuid.h"
+
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/tss.hpp>
 #include <list>
 #include <memory>
 #include <map>
@@ -74,17 +73,6 @@ class CoreContext:
 protected:
   CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil);
   CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer);
-
-  /// <summary>
-  /// A pointer to the current context, specific to the current thread.
-  /// </summary>
-  /// <remarks>
-  /// All threads have a current context, and this pointer refers to that current context.  If this value is null,
-  /// then the current context is the global context.  It's very important that threads not attempt to hold a reference
-  /// to the global context directly because it could change teardown order if the main thread sets the global context
-  /// as current.
-  /// </remarks>
-  static boost::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
 
 public:
   virtual ~CoreContext(void);
@@ -753,16 +741,7 @@ public:
   /// This makes this core context current.
   /// </summary>
   /// <returns>The previously current context</returns>
-  std::shared_ptr<CoreContext> SetCurrent(void) {
-    std::shared_ptr<CoreContext> newCurrent = this->shared_from_this();
-
-    if(!newCurrent)
-      throw std::runtime_error("Attempted to make a CoreContext current from a CoreContext ctor");
-
-    std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContext();
-    s_curContext.reset(new std::shared_ptr<CoreContext>(newCurrent));
-    return retVal;
-  }
+  std::shared_ptr<CoreContext> SetCurrent(void);
 
   /// <summary>
   /// Makes no context current
@@ -771,9 +750,7 @@ public:
   /// Generally speaking, users wishing to release their reference to some context can do so simply
   /// by making the global context current.
   /// </remarks>
-  static void EvictCurrent(void) {
-    s_curContext.reset();
-  }
+  static void EvictCurrent(void);
 
   /// <summary>
   /// This retrieves a shared pointer to the current context.  It is only contextually relevant.
