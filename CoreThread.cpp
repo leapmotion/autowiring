@@ -17,7 +17,7 @@ CoreThread::CoreThread(const char* pName):
 {}
 
 void CoreThread::DoRun(void) {
-  ASSERT(m_running);
+  assert(m_running);
 
   // Make our own session current before we do anything else:
   CurrentContextPusher pusher(GetContext());
