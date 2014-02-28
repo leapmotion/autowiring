@@ -193,10 +193,10 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
   *t += boost::chrono::hours(1), [x] { *x = true; };
   *t += [y] { *y = true; };
 
-  // Verify that, after 10ms, the first event is called and the second event is NOT called:
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
-  ASSERT_TRUE(*y) << "A simple ready call was not dispatched within 10ms of being pended";
-  ASSERT_FALSE(*x) << "An event which should not have been executed for 25ms was executed early";
+  // Verify that, after 100ms, the first event is called and the second event is NOT called:
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+  ASSERT_TRUE(*y) << "A simple ready call was not dispatched within 100ms of being pended";
+  ASSERT_FALSE(*x) << "An event which should not have been executed for an hour was executed early";
 }
 
 TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {

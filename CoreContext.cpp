@@ -11,27 +11,30 @@
 #include <algorithm>
 #include <memory>
 #include <boost/thread/reverse_lock.hpp>
+#include <boost/thread/tss.hpp>
 
 using namespace std;
 
-boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
+/// <summary>
+/// A pointer to the current context, specific to the current thread.
+/// </summary>
+/// <remarks>
+/// All threads have a current context, and this pointer refers to that current context.  If this value is null,
+/// then the current context is the global context.  It's very important that threads not attempt to hold a reference
+/// to the global context directly because it could change teardown order if the main thread sets the global context
+/// as current.
+/// </remarks>
+boost::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
 
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil) :
   m_pParent(pParent),
   m_sigil(sigil),
   m_useOwnershipValidator(false),
   m_shouldRunNewThreads(false),
-  m_isShutdown(false)
+  m_isShutdown(false),
+  m_junctionBoxManager(std::make_shared<JunctionBoxManager>()),
+  m_packetFactory(std::make_shared<AutoPacketFactory>(GetJunctionBox<AutoPacketListener>()))
 {
-  m_junctionBoxManager.reset(new JunctionBoxManager);
-  
-  auto ptr = GetJunctionBox<AutoPacketListener>();
-  
-  m_packetFactory.reset(
-    new AutoPacketFactory(
-      AutoFired<AutoPacketListener>(ptr)
-    )
-  );
   assert(pParent.get() != this);
 }
 
@@ -242,8 +245,8 @@ std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
     return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
 
   std::shared_ptr<CoreContext>* retVal = s_curContext.get();
-  ASSERT(retVal);
-  ASSERT(*retVal);
+  assert(retVal);
+  assert(*retVal);
   return *retVal;
 }
 
@@ -384,13 +387,11 @@ void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
     m_pParent->RemoveEventReceiver(pRecvr);
 }
 
-void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
+void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-  
-    for (auto derp = first; derp != last; derp++){
-      m_eventReceivers.erase(*derp);
-    }
+    for(auto q = first; q != last; q++)
+      m_eventReceivers.erase(*q);
   }
   
   m_junctionBoxManager->RemoveEventReceivers(first, last);
@@ -502,4 +503,19 @@ void CoreContext::DebugPrintCurrentExceptionInformation() {
   } catch(...) {
     // Nothing can be done, we don't know what exception type this is.
   }
+}
+
+std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
+  std::shared_ptr<CoreContext> newCurrent = this->shared_from_this();
+
+  if(!newCurrent)
+    throw std::runtime_error("Attempted to make a CoreContext current from a CoreContext ctor");
+
+  std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContext();
+  s_curContext.reset(new std::shared_ptr<CoreContext>(newCurrent));
+  return retVal;
+}
+
+void CoreContext::EvictCurrent(void) {
+  s_curContext.reset();
 }

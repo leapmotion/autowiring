@@ -5,7 +5,7 @@ GlobalCoreContext::GlobalCoreContext(void):
   CoreContext(std::shared_ptr<CoreContext>(), typeid(GlobalCoreContext))
 {
   // Guard against multi-initialization:
-  ASSERT(!getGlobalContextSharedPtr());
+  assert(!getGlobalContextSharedPtr());
 
   // Set up the global shared pointer:
   getGlobalContextSharedPtr().reset(this);
@@ -29,8 +29,8 @@ std::shared_ptr<GlobalCoreContext> GlobalCoreContext::Get() {
 
   // Create a new core context.  Constructor will automatically set the shared pointer.
   GlobalCoreContext* pPtr = new GlobalCoreContext();
-  ASSERT(getGlobalContextSharedPtr());
-  ASSERT(getGlobalContextSharedPtr().get() == pPtr);
+  assert(getGlobalContextSharedPtr());
+  assert(getGlobalContextSharedPtr().get() == pPtr);
 
   // Unreferenced, force a ref here to avoid complaints.
   (void)pPtr;
