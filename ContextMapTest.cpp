@@ -78,9 +78,9 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
   threaded.reset();
 
   {
-    // Verify that we can still find the context while the thread is alive:
-    std::shared_ptr<CoreContext> notFound = mp.Find("context_withthreads");
-    EXPECT_FALSE(notFound) << "Context was not properly evicted from the map";
+    // Verify that the context is gone now that everything in it has stopped running
+    std::shared_ptr<CoreContext> ctxt = mp.Find("context_withthreads");
+    EXPECT_FALSE(ctxt) << "Context was not properly evicted from the map";
   }
 }
 
