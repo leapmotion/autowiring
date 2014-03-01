@@ -64,14 +64,8 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     auto relocked = weakContext.lock();
     EXPECT_EQ(relocked, context) << "Mapped context pointer was not identical to a previously stored context pointer";
 
-    // Begin context shutdown
-    context->SignalShutdown();
-
-    // Signal that the thread can quit:
-    threaded->Stop();
-
-    // Wait for the context to exit:
-    context->Wait();
+    // Terminate whole context
+    context->SignalTerminate();
   }
 
   // Release our threaded entity:
