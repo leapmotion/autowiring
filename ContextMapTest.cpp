@@ -87,7 +87,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     // Sleep for a little bit and run the verification again.  If the prior expectation fails,
     // but this one succeeds, it could be due to race conditions in CoreThread
     boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
-    auto ctxt = mp.Find("context_withthreads");
+    ctxt = mp.Find("context_withthreads");
     EXPECT_FALSE(ctxt) << "Context was not properly evicted even after waiting for a time to ensure eviction";
   }
 }
