@@ -73,8 +73,22 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
 
   {
     // Verify that the context is gone now that everything in it has stopped running
-    std::shared_ptr<CoreContext> ctxt = mp.Find("context_withthreads");
+    auto ctxt = mp.Find("context_withthreads");
     EXPECT_FALSE(ctxt) << "Context was not properly evicted from the map";
+
+    // Just return early if the context was empty as we expected, the next part of this test is for diagnostics
+    if(!ctxt)
+      return;
+
+    // Release the pointer so we aren't guilty of holding a reference to the very thing whose
+    // destruction we are trying to assure.
+    ctxt.reset();
+
+    // Sleep for a little bit and run the verification again.  If the prior expectation fails,
+    // but this one succeeds, it could be due to race conditions in CoreThread
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+    auto ctxt = mp.Find("context_withthreads");
+    EXPECT_FALSE(ctxt) << "Context was not properly evicted even after waiting for a time to ensure eviction";
   }
 }
 
