@@ -497,6 +497,9 @@ public:
     if(ptr)
       return ptr;
     
+    // We must make ourselves current for the duration of this call:
+    CurrentContextPusher pshr(shared_from_this());
+
     // Cannot safely inject while holding the lock, so we have to unlock and then inject
     lk.unlock();
     ptr.reset(CreationRules::New<T>(std::forward<Args>(args)...));
