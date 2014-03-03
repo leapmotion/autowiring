@@ -61,6 +61,14 @@ struct Boltable;
 
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
 
+enum class ShutdownMode {
+  // Shut down gracefully by allowing threads to run down dispatch queues
+  Graceful,
+
+  // Shut down immediately, do not attempt to run down thread dispatch queues
+  Immediate
+};
+
 /// <summary>
 /// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain
 /// </summary>
@@ -710,8 +718,8 @@ public:
   void InitiateCoreThreads(void);
 
   /// <summary>
-  /// This signals to the whole system that a shutdown operation is underway, and that
-  /// shutdown procedures should begin immediately
+  /// This signals to the whole system that a shutdown operation is underway, and that shutdown procedures should
+  /// begin immediately
   /// </summary>
   /// <param name="wait">Set if the function should wait for all child contexts to exit before returning</param>
   /// <remarks>
@@ -719,10 +727,10 @@ public:
   /// context, whether those events are fired in this context or one above, and regardless of whether these events
   /// are fired or deferred.  Event receivers in this context will also not receive any messages.
   /// </remarks>
-  void SignalShutdown(bool wait = false);
+  void SignalShutdown(bool wait = false, ShutdownMode shutdownMode = ShutdownMode::Graceful);
 
   /// <summary>
-  /// Alias for SignalShutdown(true)
+  /// Alias for SignalShutdown(true, ShutdownMode::Immediate)
   /// </summary>
   void SignalTerminate(bool wait = true) { SignalShutdown(wait); }
 
