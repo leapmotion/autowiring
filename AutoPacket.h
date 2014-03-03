@@ -275,7 +275,7 @@ public:
     return *retVal.get();
   }
 
-  /// <sumamry>
+  /// <summary>
   /// Attaches a decoration which will only be valid for the duration of the call
   /// </summary>
   /// <remarks>
