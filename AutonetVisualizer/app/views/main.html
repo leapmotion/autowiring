@@ -1,0 +1,40 @@
+<div class="header section" ng-controller="HeaderCtrl">
+  <ul class="nav nav-pills pull-right">
+    <li ng-class="{active: isSubscribed && isConnected(), disabled: !isConnected()}"><a ng-disabled="!isConnected()" ng-click="subscribe()">Subscribed</a></li>
+    <li ng-class="{active: !isSubscribed && isConnected(), disabled: !isConnected()}"><a ng-disabled="!isConnected()" ng-click="unsubscribe()">Unsubscribed</a></li>
+  </ul>
+  <h3 class="text-muted" ng-class="{connected: isConnected(), disconnected: !isConnected()}">AutoNet</h3>
+</div>
+
+<div ng-controller="MainCtrl">
+  <div class="section">
+    <h3>Contexts</h3>
+    <div class="row">
+      <div class="col-xs-3" ng-repeat="context in contexts">
+        <h4>Context {{context}}</h4>
+        <ul>
+          <li>Parent: Derp</li>
+          <li>Sigil: void</li>
+          <li>herp</li>
+          <li>derp</li>
+        </ul>       
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <h3>Objects</h3>
+    <div class="row">
+      <div class="col-xs-3" ng-repeat="object in objects">
+        <h4>Object {{object}}</h4>
+        <ul>
+          <li>Parent: Derp</li>
+          <li>Sigil: void</li>
+          <li>herp</li>
+          <li>derp</li>
+        </ul>       
+      </div>
+    </div>
+  </div>
+
+</div>
+
