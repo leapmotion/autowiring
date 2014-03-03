@@ -3,6 +3,7 @@
 #define _STDAFX_H
 
 #include <math.h>
+#include <assert.h>
 #include "ocuConfig.h"
 
 #if defined(_DEBUG) && 0

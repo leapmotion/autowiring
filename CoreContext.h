@@ -17,11 +17,10 @@
 #include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
-
 #include "uuid.h"
+
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/tss.hpp>
 #include <list>
 #include <memory>
 #include <map>
@@ -31,6 +30,7 @@
 #include EXCEPTION_PTR_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_MAP
+#include STL_UNORDERED_SET
 
 
 #ifndef ASSERT
@@ -62,7 +62,7 @@ struct Boltable;
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
 
 /// <summary>
-/// This class is used to determine whether all core threads have exited
+/// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain
 /// </summary>
 class CoreContext:
   public Object,
@@ -73,9 +73,6 @@ class CoreContext:
 protected:
   CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil);
   CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer);
-
-  // A pointer to the current context, for construction purposes
-  static boost::thread_specific_ptr<std::shared_ptr<CoreContext> > s_curContext;
 
 public:
   virtual ~CoreContext(void);
@@ -141,22 +138,28 @@ protected:
   std::shared_ptr<CoreContext> Create(const std::type_info& sigil, CoreContext& newContext);
   std::shared_ptr<CoreContext> CreatePeer(const std::type_info& sigil);
 
+  // A pointer to the parent context
+  const std::shared_ptr<CoreContext> m_pParent;
+
   // General purpose lock for this class
   mutable boost::mutex m_lock;
 
+  // Condition, signalled when context state has been changed
+  boost::condition m_stateChanged;
+
+  // Set if threads in this context should be started when they are added
+  bool m_shouldRunNewThreads;
+
+  // Set if the context has been shut down
+  bool m_isShutdown;
+
   // The context's internally held sigil type
   const std::type_info& m_sigil;
-
-  // The context's internally held full-path name (recursively defined through parents)--required to be a literal string
-  std::string m_fullPathName;
   
     // Flag, set if this context should use its ownership validator to guarantee that all autowired members
   // are correctly torn down.  This flag must be set at construction time.  Members added to the context
   // before this flag is assigned will NOT be checked.
   bool m_useOwnershipValidator;
-
-  // A pointer to the parent context
-  std::shared_ptr<CoreContext> m_pParent;
 
   // This is a map of the context members by type and, where appropriate, by name
   // This map keeps all of its objects resident at least until the context goes away.
@@ -173,24 +176,14 @@ protected:
   t_deferred m_deferred;
 
   // All known event receivers and receiver proxies originating from this context:
-  typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
+  typedef std::unordered_set<std::shared_ptr<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
   
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
-  typedef std::shared_ptr<JunctionBoxManager> t_junctionBoxManager;
-  t_junctionBoxManager m_junctionBoxManager;
+  const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
   
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
-
-  // Set if threads in this context should be started when they are added
-  bool m_shouldRunNewThreads;
-
-  // Set if the context has been shut down
-  bool m_isShutdown;
-
-  // Condition, signalled when context state has been changed
-  boost::condition m_stateChanged;
 
   // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
   // Destructor does nothing; this is by design.
@@ -201,14 +194,14 @@ protected:
   t_threadList m_threads;
 
   // Child contexts:
-  typedef std::list<std::weak_ptr<CoreContext> > t_childList;
+  typedef std::list<std::weak_ptr<CoreContext>> t_childList;
   boost::mutex m_childrenLock;
   t_childList m_children;
 
   friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 
   // The interior packet factory:
-  std::shared_ptr<AutoPacketFactory> m_packetFactory;
+  const std::shared_ptr<AutoPacketFactory> m_packetFactory;
 
   // Lists of event receivers, by name:
   typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
@@ -247,6 +240,11 @@ protected:
   void EnableInternal(...) {}
 
   /// <summary>
+  /// Unregisters all event receivers in this context
+  /// </summary>
+  void UnregisterEventReceivers(void);
+
+  /// <summary>
   /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
   /// </summary>
   /// <remarks>
@@ -273,7 +271,7 @@ protected:
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
   /// </summary>
-  void RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last);
+  void RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
 
   /// <summary>
   /// Adds an object of any kind to the IOC container
@@ -481,6 +479,11 @@ protected:
   }
 
 public:
+  // Accessor methods:
+  bool IsGlobalContext(void) const { return !m_pParent; }
+  size_t GetMemberCount(void) const { return m_byType.size(); }
+  const std::type_info& GetSigilType(void) const { return m_sigil; }
+
   /// <summary>
   /// Utility method which will inject the specified types into this context
   /// Arguments will be passed to the T constructor if provided
@@ -494,6 +497,9 @@ public:
     if(ptr)
       return ptr;
     
+    // We must make ourselves current for the duration of this call:
+    CurrentContextPusher pshr(shared_from_this());
+
     // Cannot safely inject while holding the lock, so we have to unlock and then inject
     lk.unlock();
     ptr.reset(CreationRules::New<T>(std::forward<Args>(args)...));
@@ -545,16 +551,19 @@ public:
     };
     (void) dummy;
   }
-  
-  // This will be depracated soon. Try not to use
+
+  /// <summary>
+  /// Adds an existing shared pointer to the context
+  /// </summary>
+  /// <remarks>
+  /// This method unsafely ambiguates the construction strategy used for some member.  It's possible that
+  /// someone calls AddExisting for a field which is AutoRequired in the current context, or makes a call
+  /// to this method conditionally dependent on a type which may have been AutoRequired elsewhere.
+  ///
+  /// For reason of these ambiguities, and others, the method will be removed.
+  /// </remarks>
   template<typename T>
-  void AddExisting(std::shared_ptr<T> p_member) {
-    AddInternal(p_member);
-  }
-  
-  // Accessor methods:
-  bool IsGlobalContext(void) const { return !m_pParent; }
-  size_t GetMemberCount(void) const {return m_byType.size();}
+  void DEPRECATED(AddExisting(std::shared_ptr<T> p_member), "Deprecated, use Inject or Construct instead");
 
   /// <summary>
   /// This method checks whether eventoutputstream listeners for the given type still exist.
@@ -568,8 +577,6 @@ public:
     return m_junctionBoxManager->CheckEventOutputStream<T>();
   }
 
-  const std::type_info& GetSigilType(void) const { return m_sigil; }
-
   /// <returns>
   /// True if the sigil type of this CoreContext matches the specified sigil type
   /// </returns>
@@ -577,12 +584,12 @@ public:
   bool Is(void) const { return m_sigil == typeid(Sigil); }
 
   /// <summary>
-  /// This is a slow, expensive operation used in unit tests to get all child contexts
-  /// of a given contexts.  It is relatively dangerous and should not be used except for
-  /// testing.
+  /// Enumerates all matching child contexts recursively and passes each child context to the specified lambda
   /// </summary>
+  /// <param name="sigil">The sigil of the contexts to be passed to the specified lambda</param>
+  /// <param name="fn">The lambda to receive a shared pointer to each matching child context</param>
   template<class Fn>
-  void EnumerateChildContexts(const std::type_info &sigil, Fn&& fn ) {
+  void EnumerateChildContexts(const std::type_info &sigil, Fn&& fn) {
     boost::lock_guard<boost::mutex> lock(m_childrenLock);
     for (auto c = m_children.begin(); c != m_children.end(); c++) {
       auto shared = c->lock();
@@ -642,7 +649,7 @@ public:
   /// Unless externally synchronized, this operation may return false on a running context.
   /// </remarks>
   bool WasStarted(void) const {
-    // We were started IF we are currently running, OR we have been signalled to stop
+    // We were started IF we will run new threads, OR we have been signalled to stop
     return m_shouldRunNewThreads || m_isShutdown;
   }
 
@@ -664,8 +671,7 @@ public:
   /// </summary>
   template<class T>
   bool IsMember(typename std::enable_if<std::is_base_of<ContextMember, T>::value, T*>::type ptr) const {
-    return
-      static_cast<ContextMember*>(ptr)->GetContext().get() == this;
+    return ptr->GetContext().get() == this;
   }
   
   template<class T>
@@ -721,10 +727,15 @@ public:
   /// shutdown procedures should begin immediately
   /// </summary>
   /// <param name="wait">Set if the function should wait for all child contexts to exit before returning</param>
+  /// <remarks>
+  /// This method will immediately prevent any new events from being recieved by this context or by any descendant
+  /// context, whether those events are fired in this context or one above, and regardless of whether these events
+  /// are fired or deferred.  Event receivers in this context will also not receive any messages.
+  /// </remarks>
   void SignalShutdown(bool wait = false);
 
   /// <summary>
-  /// Alias for SignalShutdown
+  /// Alias for SignalShutdown(true)
   /// </summary>
   void SignalTerminate(bool wait = true) { SignalShutdown(wait); }
 
@@ -746,34 +757,16 @@ public:
   /// This makes this core context current.
   /// </summary>
   /// <returns>The previously current context</returns>
-  std::shared_ptr<CoreContext> SetCurrent(void) {
-    std::shared_ptr<CoreContext> newCurrent = shared_from_this();
-    ASSERT(newCurrent);
-    return SetCurrent(newCurrent);
-  }
-
-  /// <summary>
-  /// This makes a specific core context current
-  /// </summary>
-  /// <returns>The previously current context</returns>
-  static std::shared_ptr<CoreContext> SetCurrent(const std::shared_ptr<CoreContext>& context) {
-    ASSERT(context);
-    std::shared_ptr<CoreContext> retVal = CurrentContext();
-    s_curContext.reset(new std::shared_ptr<CoreContext>(context));
-    return retVal;
-  };
+  std::shared_ptr<CoreContext> SetCurrent(void);
 
   /// <summary>
   /// Makes no context current
   /// </summary>
   /// <remarks>
   /// Generally speaking, users wishing to release their reference to some context can do so simply
-  /// by making the global context current.  The sole exception is when the global context is being
-  /// destroyed, in which case, a null context is exactly what's desired.
+  /// by making the global context current.
   /// </remarks>
-  static void EvictCurrent(void) {
-    s_curContext.reset();
-  }
+  static void EvictCurrent(void);
 
   /// <summary>
   /// This retrieves a shared pointer to the current context.  It is only contextually relevant.
@@ -791,7 +784,6 @@ public:
   /// <summary>
   /// Obtains a pointer to the parent context
   /// </summary>
-  std::shared_ptr<CoreContext>& GetParentContext(void) {return m_pParent;}
   const std::shared_ptr<CoreContext>& GetParentContext(void) const {return m_pParent;}
 
   /// <summary>
@@ -951,3 +943,7 @@ void CoreContext::AutoRequireMicroBolt(void) {
   AutoRequire(ptr);
 }
 
+template<typename T>
+void CoreContext::AddExisting(std::shared_ptr<T> p_member) {
+  AddInternal(p_member);
+}

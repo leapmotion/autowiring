@@ -6,12 +6,33 @@
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
-#include <memory>
+#include SHARED_PTR_HEADER
 
 using std::shared_ptr;
 
 class CoreContext;
 class CoreThread;
+
+enum class ThreadPriority {
+  // This is the default thread priority, it's treated as a value lower than any of the
+  // other priority so that an initial request to elevate can alter the OS-supplied default
+  // without causing the types of contention problems resulting from a high-priority operation
+  // transitioning to a low-priority state.
+  Default,
+
+  Idle,
+  Lowest,
+  BelowNormal,
+  Normal,
+  AboveNormal,
+  Highest,
+  TimeCritical,
+
+  // This is a special case for multimedia applications.  Some operating systems, like Windows,
+  // can provide additional scheduling guarantees to applications which declare themselves as
+  // multimedia-intensive in nature.  For other systems, Multimedia is identical to TimeCritical.
+  Multimedia
+};
 
 /// <summary>
 /// This is an abstract class that has a single Run method for implementation by a
@@ -28,10 +49,24 @@ public:
 
   virtual ~CoreThread(void) {}
 
+private:
+  struct State:
+    std::enable_shared_from_this<State>
+  {
+    // General purpose thread lock and update condition for the lock
+    boost::mutex m_lock;
+    boost::condition_variable m_stateCondition;
+  };
+
+  // Internally held thread status block.  This has to be a shared pointer because we need to signal
+  // the held state condition after releasing all shared pointers to ourselves, and this could mean
+  // we're actually signalling this event after we free ourselves.
+  const std::shared_ptr<State> m_state;
+
 protected:
-  // General purpose thread lock and update condition for the lock
-  boost::mutex m_lock;
-  boost::condition_variable m_stateCondition;
+  // Convenience references:
+  boost::mutex& m_lock;
+  boost::condition_variable& m_stateCondition;
 
   // Flag indicating that we need to stop right now
   bool m_stop;
@@ -44,6 +79,9 @@ protected:
 
   // Acceptor flag:
   bool m_canAccept;
+
+  // The current thread priority
+  ThreadPriority m_priority;
 
   // The current thread, if running
   boost::thread m_thisThread;
@@ -66,6 +104,15 @@ private:
   /// </summary>
   void DoRun(void);
 
+  /// <summary>
+  /// Sets the thread priority of this thread
+  /// </summary>
+  /// <remarks>
+  /// This method must only be called from the running thread's context, and then, only inside
+  /// the ElevatePriority constructor
+  /// </remarks>
+  void SetThreadPriority(ThreadPriority threadPriority);
+
 protected:
   void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
 
@@ -74,8 +121,7 @@ protected:
   /// </summary>
   void AcceptDispatchDelivery(void) {
     m_canAccept = true;
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_stateCondition.notify_all();
+    m_state->m_stateCondition.notify_all();
   }
 
   /// <summary>
@@ -93,13 +139,45 @@ protected:
   /// </remarks>
   void RejectDispatchDelivery(void) {
     m_canAccept = false;
-    m_stateCondition.notify_all();
+    m_state->m_stateCondition.notify_all();
   }
+
+  /// <summary>
+  /// RAII-style class for use with threads that need temporary priority boosts
+  /// </summary>
+  /// <remarks>
+  /// The thread priority is changed when the requested priority is higher than the
+  /// current priority.  The destructor automatically restores the previous priority.
+  /// This class cannot be moved or copied, in order to guarantee proper RAII.
+  /// </remarks>
+  class ElevatePriority {
+  public:
+    ElevatePriority(ElevatePriority&) = delete;
+
+    ElevatePriority(CoreThread& thread, ThreadPriority priority) :
+      m_thread(thread),
+      m_oldPriority(thread.m_priority)
+    {
+      // Elevate if the new level is higher than the old level:
+      if(priority > m_oldPriority)
+        m_thread.SetThreadPriority(priority);
+    }
+
+    ~ElevatePriority(void) {
+      // Delevate if the old level is lower than the current level:
+      if(m_thread.m_priority > m_oldPriority)
+        m_thread.SetThreadPriority(m_oldPriority);
+    }
+
+  private:
+    ThreadPriority m_oldPriority;
+    CoreThread& m_thread;
+  };
 
 public:
   // Accessor methods:
   bool ShouldStop(void) const;
-  bool IsRunning(void) const {return m_running;}
+  bool IsRunning(void) const { return m_running; }
 
   // Override from EventDispatcher
   bool CanAccept(void) const override {return m_canAccept;}
@@ -141,9 +219,9 @@ public:
   /// </remarks>
   void Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    m_stateCondition.wait(
+    m_state->m_stateCondition.wait(
       lk,
-      [this] () {return this->m_completed;}
+      [this]() {return this->m_completed; }
     );
   }
 
@@ -154,7 +232,7 @@ public:
   template<class DurationType>
   bool WaitFor(DurationType duration) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_stateCondition.wait_for(
+    return m_state->m_stateCondition.wait_for(
       lk,
       duration,
       [this] () {return this->m_completed;}
@@ -171,7 +249,7 @@ public:
     return m_stateCondition.wait_until(
       lk,
       timepoint,
-      [this] () {return this->m_completed;}
+      [this]() {return this->m_completed; }
     );
   }
 
@@ -211,7 +289,7 @@ public:
         
         // Notify callers of our new state:
         boost::lock_guard<boost::mutex> lk(this->m_lock);
-        this->m_stateCondition.notify_all();
+        this->m_state->m_stateCondition.notify_all();
       });
     } else {
       // Abort the dispatch queue so anyone waiting will wake up
@@ -220,7 +298,7 @@ public:
       // Notify all callers of our status update, only needed if we don't call
       // RejectDispatchDelivery first
       boost::lock_guard<boost::mutex> lk(m_lock);
-      m_stateCondition.notify_all();
+      m_state->m_stateCondition.notify_all();
     }
   }
 };
