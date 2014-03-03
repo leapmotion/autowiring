@@ -727,8 +727,14 @@ public:
   void SignalTerminate(bool wait = true) { SignalShutdown(wait); }
 
   /// <summary>
-  /// Waits for all threads holding references to exit
+  /// Waits until all threads running in this context at the time of the call are sdtopped when the call returns
   /// </summary>
+  /// <remarks>
+  /// The only guarantees made by this method are that the threads which were running when the call was made will
+  /// no longer be running upon return.  No guarantees are made about the state of other threads that might have
+  /// been created after Wait was called; no guarantees are made about the run state or existence of any child
+  /// contexts.  Child contexts may exist which contain running threads.
+  /// </remarks>
   void Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_lock);
     m_stateChanged.wait(lk, [this] () {return this->m_outstanding.expired();});
