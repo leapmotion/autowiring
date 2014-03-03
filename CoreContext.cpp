@@ -11,27 +11,30 @@
 #include <algorithm>
 #include <memory>
 #include <boost/thread/reverse_lock.hpp>
+#include <boost/thread/tss.hpp>
 
 using namespace std;
 
-boost::thread_specific_ptr<std::shared_ptr<CoreContext> > CoreContext::s_curContext;
+/// <summary>
+/// A pointer to the current context, specific to the current thread.
+/// </summary>
+/// <remarks>
+/// All threads have a current context, and this pointer refers to that current context.  If this value is null,
+/// then the current context is the global context.  It's very important that threads not attempt to hold a reference
+/// to the global context directly because it could change teardown order if the main thread sets the global context
+/// as current.
+/// </remarks>
+boost::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
 
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil) :
   m_pParent(pParent),
   m_sigil(sigil),
   m_useOwnershipValidator(false),
   m_shouldRunNewThreads(false),
-  m_isShutdown(false)
+  m_isShutdown(false),
+  m_junctionBoxManager(std::make_shared<JunctionBoxManager>()),
+  m_packetFactory(std::make_shared<AutoPacketFactory>(GetJunctionBox<AutoPacketListener>()))
 {
-  m_junctionBoxManager.reset(new JunctionBoxManager);
-  
-  auto ptr = GetJunctionBox<AutoPacketListener>();
-  
-  m_packetFactory.reset(
-    new AutoPacketFactory(
-      AutoFired<AutoPacketListener>(ptr)
-    )
-  );
   assert(pParent.get() != this);
 }
 
@@ -56,14 +59,8 @@ CoreContext::~CoreContext(void) {
   // Notify all ContextMember instances that their parent is going away
   NotifyTeardownListeners();
 
-  // Release all event receivers originating from this context:
-  m_junctionBoxManager->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
-  
-  // Notify our parent (if we're still connected to the parent) that our event receivers are going away:
-  if(m_pParent) {
-    m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
-    m_pParent->RemovePacketSubscribers(m_packetFactory->GetSubscriberVector());
-  }
+  // Make sure events aren't happening anymore:
+  UnregisterEventReceivers();
 
   // Tell all context members that we're tearing down:
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
@@ -177,6 +174,13 @@ void CoreContext::SignalShutdown(bool wait) {
   // Transition as soon as possible:
   m_isShutdown = true;
 
+  // Wipe out the junction box manager:
+  {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    UnregisterEventReceivers();
+  }
+
+
   {
     // Teardown interleave assurance--all of these contexts will generally be destroyed
     // at the exit of this block, due to the behavior of SignalTerminate, unless exterior
@@ -241,8 +245,8 @@ std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
     return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
 
   std::shared_ptr<CoreContext>* retVal = s_curContext.get();
-  ASSERT(retVal);
-  ASSERT(*retVal);
+  assert(retVal);
+  assert(*retVal);
   return *retVal;
 }
 
@@ -282,6 +286,24 @@ void CoreContext::Dump(std::ostream& os) const {
 void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient) {
   // Obtain the current context and pass control:
   CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
+}
+
+void ShutdownCurrentContext(void) {
+  CoreContext::CurrentContext()->SignalShutdown();
+}
+
+void CoreContext::UnregisterEventReceivers(void) {
+  // Release all event receivers originating from this context:
+  m_junctionBoxManager->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+
+  // Notify our parent (if we have one) that our event receivers are going away:
+  if(m_pParent) {
+    m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+    m_pParent->RemovePacketSubscribers(m_packetFactory->GetSubscriberVector());
+  }
+
+  // Wipe out all collections so we don't try to free these multiple times:
+  m_eventReceivers.clear();
 }
 
 void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) const {
@@ -365,13 +387,11 @@ void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
     m_pParent->RemoveEventReceiver(pRecvr);
 }
 
-void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::iterator last) {
+void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-  
-    for (auto derp = first; derp != last; derp++){
-      m_eventReceivers.erase(*derp);
-    }
+    for(auto q = first; q != last; q++)
+      m_eventReceivers.erase(*q);
   }
   
   m_junctionBoxManager->RemoveEventReceivers(first, last);
@@ -425,9 +445,6 @@ void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, EventRece
       } catch(...) {
         // Do nothing, filter didn't want to filter this exception
       }
-
-  // Shut down our context:
-  SignalShutdown();
 }
 
 void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
@@ -486,4 +503,19 @@ void CoreContext::DebugPrintCurrentExceptionInformation() {
   } catch(...) {
     // Nothing can be done, we don't know what exception type this is.
   }
+}
+
+std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
+  std::shared_ptr<CoreContext> newCurrent = this->shared_from_this();
+
+  if(!newCurrent)
+    throw std::runtime_error("Attempted to make a CoreContext current from a CoreContext ctor");
+
+  std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContext();
+  s_curContext.reset(new std::shared_ptr<CoreContext>(newCurrent));
+  return retVal;
+}
+
+void CoreContext::EvictCurrent(void) {
+  s_curContext.reset();
 }

@@ -1,9 +1,8 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _CURRENT_CONTEXT_PUSHER_H
-#define _CURRENT_CONTEXT_PUSHER_H
+#pragma once
 #include SHARED_PTR_HEADER
 
 class CoreContext;
+class GlobalCoreContext;
 
 /// <summary>
 /// Saves the current context and makes the passed one current, and then
@@ -21,6 +20,7 @@ public:
   CurrentContextPusher(void);
 
   CurrentContextPusher(std::shared_ptr<CoreContext> pContext);
+  CurrentContextPusher(std::shared_ptr<GlobalCoreContext> pContext);
   CurrentContextPusher(CoreContext* pContext);
   CurrentContextPusher(CurrentContextPusher&& rhs);
   ~CurrentContextPusher(void);
@@ -37,4 +37,3 @@ private:
   std::shared_ptr<CoreContext> m_prior;
 };
 
-#endif
