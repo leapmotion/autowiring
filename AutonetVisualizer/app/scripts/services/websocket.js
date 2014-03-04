@@ -7,18 +7,23 @@ angular.module('autoNetApp')
   var listeners = [];
   var isConnected = false;
 
+  var FireEvent = function(event, args) {
+    args = _.isArray(args) ? args : [];
+    _.map(listeners, function(listener){
+      if (listener.type === event) {
+        $rootScope.$apply(function(){
+          listener.callback.apply(socket, args);
+        });
+      }
+    });
+  };
+
   var InitConnection = function() {
     socket = new WebSocket('ws://localhost:8000');
 
     socket.onmessage = function(evt) {
       var msg = JSON.parse(evt.data);
-      _.map(listeners, function(listener){
-        if (listener.type === msg.type) {
-          $rootScope.$apply(function(){
-            listener.callback.apply(socket, msg.args);
-          });
-        }
-      });
+      FireEvent(msg.type, msg.args);
     };
 
     socket.onopen = function() {
@@ -30,10 +35,10 @@ angular.module('autoNetApp')
     };
 
     socket.onclose = function() {
-      console.log('close');
       isConnected = false;
       $rootScope.$digest();
-      if (interval === null){
+      FireEvent('unsubscribed');
+      if (interval === null) {
         interval = setInterval(InitConnection, 1000);
       }
     };
