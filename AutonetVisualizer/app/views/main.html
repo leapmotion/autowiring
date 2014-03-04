@@ -8,15 +8,18 @@
 
 <div ng-controller="MainCtrl">
   <div class="section">
+    <directed-graph nodes="contexts">
+    </directed-graph> 
+  </div>
+  <div class="section">
     <h3>Contexts</h3>
     <div class="row">
       <div class="col-xs-3" ng-repeat="context in contexts">
-        <h4>Context {{context}}</h4>
+        <h4>Context {{context.name}}</h4>
         <ul>
-          <li>Parent: Derp</li>
-          <li>Sigil: void</li>
-          <li>herp</li>
-          <li>derp</li>
+          <li ng-repeat="(key, value) in context">
+            {{key}}: {{value}}
+          </li>
         </ul>       
       </div>
     </div>
@@ -25,13 +28,12 @@
     <h3>Objects</h3>
     <div class="row">
       <div class="col-xs-3" ng-repeat="object in objects">
-        <h4>Object {{object}}</h4>
+        <h4>Object {{object.name}}</h4>
         <ul>
-          <li>Parent: Derp</li>
-          <li>Sigil: void</li>
-          <li>herp</li>
-          <li>derp</li>
-        </ul>       
+          <li ng-repeat="(key, value) in object">
+            {{key}}: {{value}}
+          </li>
+        </ul>         
       </div>
     </div>
   </div>
