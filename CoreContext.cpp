@@ -170,16 +170,13 @@ void CoreContext::InitiateCoreThreads(void) {
     (*q)->Start(outstanding);
 }
 
-void CoreContext::SignalShutdown(bool wait) {
+void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   // Transition as soon as possible:
   m_isShutdown = true;
 
   // Wipe out the junction box manager:
-  {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    UnregisterEventReceivers();
-  }
-
+  (boost::unique_lock<boost::mutex>)m_lock,
+  UnregisterEventReceivers();
 
   {
     // Teardown interleave assurance--all of these contexts will generally be destroyed
@@ -218,8 +215,9 @@ void CoreContext::SignalShutdown(bool wait) {
   }
 
   // Pass notice to all child threads:
+  bool graceful = shutdownMode == ShutdownMode::Graceful;
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
-    (*q)->Stop();
+    (*q)->Stop(graceful);
 
   // Signal our condition variable
   m_stateChanged.notify_all();

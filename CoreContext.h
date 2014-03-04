@@ -61,6 +61,14 @@ struct Boltable;
 
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
 
+enum class ShutdownMode {
+  // Shut down gracefully by allowing threads to run down dispatch queues
+  Graceful,
+
+  // Shut down immediately, do not attempt to run down thread dispatch queues
+  Immediate
+};
+
 /// <summary>
 /// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain
 /// </summary>
@@ -723,8 +731,8 @@ public:
   void InitiateCoreThreads(void);
 
   /// <summary>
-  /// This signals to the whole system that a shutdown operation is underway, and that
-  /// shutdown procedures should begin immediately
+  /// This signals to the whole system that a shutdown operation is underway, and that shutdown procedures should
+  /// begin immediately
   /// </summary>
   /// <param name="wait">Set if the function should wait for all child contexts to exit before returning</param>
   /// <remarks>
@@ -732,16 +740,22 @@ public:
   /// context, whether those events are fired in this context or one above, and regardless of whether these events
   /// are fired or deferred.  Event receivers in this context will also not receive any messages.
   /// </remarks>
-  void SignalShutdown(bool wait = false);
+  void SignalShutdown(bool wait = false, ShutdownMode shutdownMode = ShutdownMode::Graceful);
 
   /// <summary>
-  /// Alias for SignalShutdown(true)
+  /// Alias for SignalShutdown(true, ShutdownMode::Immediate)
   /// </summary>
-  void SignalTerminate(bool wait = true) { SignalShutdown(wait); }
+  void SignalTerminate(bool wait = true) { SignalShutdown(wait, ShutdownMode::Immediate); }
 
   /// <summary>
-  /// Waits for all threads holding references to exit
+  /// Waits until all threads running in this context at the time of the call are sdtopped when the call returns
   /// </summary>
+  /// <remarks>
+  /// The only guarantees made by this method are that the threads which were running when the call was made will
+  /// no longer be running upon return.  No guarantees are made about the state of other threads that might have
+  /// been created after Wait was called; no guarantees are made about the run state or existence of any child
+  /// contexts.  Child contexts may exist which contain running threads.
+  /// </remarks>
   void Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_lock);
     m_stateChanged.wait(lk, [this] () {return this->m_outstanding.expired();});
