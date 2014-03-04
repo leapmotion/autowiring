@@ -19,19 +19,30 @@ angular.module('autoNetApp')
         });
       });
 
-      var currentNodes = {};
+      var currentNodes = Object.create(null);//a map
 
-      scope.$watchCollection('nodes', function(nodes){
+      scope.$watchCollection('nodes', function(nodes) {
+        // Add new nodes
         _.each(nodes, function(node) {
-          console.log(node);
-          if (currentNodes[node.name] === undefined){
-            var label = "Context: " + node.name;
+          if (typeof currentNodes[node.name] === 'undefined'){
+            var label = 'Context: ' + node.name;
             var newNode = scope.graph.newNode({label:label});
             currentNodes[node.name] = newNode;
-            if (node.parent !== undefined){
+            if (typeof node.parent !== 'undefined'){
               scope.graph.newEdge(currentNodes[node.parent], newNode);
             }
           }
+        });
+
+        // Remove expired nodes
+        var updateNames = _.map(nodes, function(node){
+          return String(node.name);
+        });
+        var currentNames = _.keys(currentNodes);
+        var diff = _.difference(currentNames, updateNames);
+        _.each(diff, function(nodeName) {
+          scope.graph.removeNode(currentNodes[nodeName]);
+          delete currentNodes[nodeName];
         });
 
       });
