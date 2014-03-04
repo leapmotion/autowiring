@@ -29,7 +29,6 @@ angular.module('autoNetApp')
     socket.onopen = function() {
       clearInterval(interval);
       interval = null;
-      console.log('open');
       isConnected = true;
       $rootScope.$digest();
     };
