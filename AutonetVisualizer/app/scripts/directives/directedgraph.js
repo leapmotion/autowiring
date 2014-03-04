@@ -3,7 +3,7 @@
 angular.module('autoNetApp')
 .directive('directedGraph', function () {
   return {
-    template: '<canvas id="springygraph" width="800" height="360" />',
+    template: '<canvas/ width=1000 height=400>',
     restrict: 'E',
     replace: true,
     scope: {
@@ -13,21 +13,24 @@ angular.module('autoNetApp')
       $scope.graph = new Springy.Graph();
     },
     link: function(scope, element, attrs) {
+      // Register canvas with jQuery
       jQuery(function(){
-        var springy = window.springy = jQuery('#springygraph').springy({
+        jQuery(element).springy({
           graph: scope.graph
-        });
+        })
       });
 
-      var currentNodes = Object.create(null);//a map
+      // Map of current Nodes
+      var currentNodes = Object.create(null);
 
+      // Watch when nodes change
       scope.$watchCollection('nodes', function(nodes) {
         // Add new nodes
         _.each(nodes, function(node) {
-          if (typeof currentNodes[node.name] === 'undefined'){
+          if (typeof currentNodes[node.id] === 'undefined'){
             var label = 'Context: ' + node.name;
             var newNode = scope.graph.newNode({label:label});
-            currentNodes[node.name] = newNode;
+            currentNodes[node.id] = newNode;
             if (typeof node.parent !== 'undefined'){
               scope.graph.newEdge(currentNodes[node.parent], newNode);
             }
@@ -35,14 +38,14 @@ angular.module('autoNetApp')
         });
 
         // Remove expired nodes
-        var updateNames = _.map(nodes, function(node){
-          return String(node.name);
+        var updateIds = _.map(nodes, function(node){
+          return String(node.id);
         });
-        var currentNames = _.keys(currentNodes);
-        var diff = _.difference(currentNames, updateNames);
-        _.each(diff, function(nodeName) {
-          scope.graph.removeNode(currentNodes[nodeName]);
-          delete currentNodes[nodeName];
+        var currentIds = _.keys(currentNodes);
+        var diff = _.difference(currentIds, updateIds);
+        _.each(diff, function(nodeId) {
+          scope.graph.removeNode(currentNodes[nodeId]);
+          delete currentNodes[nodeId];
         });
 
       });

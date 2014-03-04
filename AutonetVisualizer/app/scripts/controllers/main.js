@@ -11,6 +11,7 @@ angular.module('autoNetApp')
   });
 
   websocket.on('newContext', function(context){
+    context.name = context.name || context.id;
     $scope.contexts.push(context);
   });
 
