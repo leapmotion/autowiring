@@ -152,6 +152,31 @@ TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
   ASSERT_TRUE(*called) << "Graceful shutdown did not correctly run down all lambdas";
 }
 
+TEST_F(ContextCleanupTest, VerifyImmediateThreadCleanup) {
+  m_create->InitiateCoreThreads();
+  AutoRequired<CoreThread> ct;
+  ct->DelayUntilCanAccept();
+
+  // Just create a CoreThread directly and have it pend some lambdas that will take awhile to run:
+  auto called = std::make_shared<bool>(false);
+  *ct += [] {
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+  };
+
+  // Pend another lambda which will wait longer, for systems which will not complete SignalTerminate in 100ms
+  *ct += [] {
+    boost::this_thread::sleep_for(boost::chrono::seconds(1));
+  };
+
+  // This lambda will return right away, and should still be present on the dispatch queue when SignalTerminate
+  // returns.
+  *ct += [called] { *called = true; };
+
+  // Verify that a graceful shutdown ensures both lambdas are called:
+  m_create->SignalTerminate(true);
+  ASSERT_FALSE(*called) << "Immediate shutdown incorrectly ran down the dispatch queue";
+}
+
 TEST_F(ContextCleanupTest, VerifyNotificationReciept) {
   std::shared_ptr<ReceivesTeardownNotice> rtn;
   {
