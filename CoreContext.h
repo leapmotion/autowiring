@@ -732,7 +732,7 @@ public:
   /// <summary>
   /// Alias for SignalShutdown(true, ShutdownMode::Immediate)
   /// </summary>
-  void SignalTerminate(bool wait = true) { SignalShutdown(wait); }
+  void SignalTerminate(bool wait = true) { SignalShutdown(wait, ShutdownMode::Immediate); }
 
   /// <summary>
   /// Waits until all threads running in this context at the time of the call are sdtopped when the call returns
