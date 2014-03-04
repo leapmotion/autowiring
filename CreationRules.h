@@ -1,4 +1,5 @@
 #pragma once
+#include "C++11/cpp11.h"
 #include TYPE_TRAITS_HEADER
 
 template<typename T>
