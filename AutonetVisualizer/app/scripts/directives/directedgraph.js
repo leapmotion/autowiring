@@ -3,7 +3,7 @@
 angular.module('autoNetApp')
 .directive('directedGraph', function () {
   return {
-    template: '<canvas/ width=1000 height=400>',
+    template: '<canvas width="900" height="400">HTML canvas not supported on your browser</canvas>',
     restrict: 'E',
     replace: true,
     scope: {
@@ -13,7 +13,7 @@ angular.module('autoNetApp')
       $scope.graph = new Springy.Graph();
     },
     link: function(scope, element, attrs) {
-      // Register canvas with jQuery
+      // Register canvas with jQuery/springy
       jQuery(function(){
         jQuery(element).springy({
           graph: scope.graph
@@ -31,7 +31,7 @@ angular.module('autoNetApp')
             var label = 'Context: ' + node.name;
             var newNode = scope.graph.newNode({label:label});
             currentNodes[node.id] = newNode;
-            if (typeof node.parent !== 'undefined'){
+            if (typeof currentNodes[node.parent] !== 'undefined'){
               scope.graph.newEdge(currentNodes[node.parent], newNode);
             }
           }
