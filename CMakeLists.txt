@@ -122,6 +122,8 @@ set(
   ContextCleanupTest.cpp
   ContextMapTest.h
   ContextMapTest.cpp
+  CoreContextTest.h
+  CoreContextTest.cpp
   CoreThreadTest.h
   CoreThreadTest.cpp
   BoltTest.h
