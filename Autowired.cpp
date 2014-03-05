@@ -12,7 +12,8 @@ AutoGlobalContext::AutoGlobalContext(void):
 {
 }
 
+/*
 AutoCreateContext::AutoCreateContext(void):
   std::shared_ptr<CoreContext>(CoreContext::CurrentContext()->CreateAnonymous())
-{
-}
+{}
+ */

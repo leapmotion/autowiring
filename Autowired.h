@@ -44,15 +44,31 @@ public:
 /// <remarks>
 /// The newly created context will be created using CoreContext::CurrentContext()->Create().
 /// </remarks>
-class AutoCreateContext:
+template<typename T>
+class AutoCreateSigil:
   public std::shared_ptr<CoreContext>
 {
 public:
-  AutoCreateContext(void);
-  AutoCreateContext(std::shared_ptr<CoreContext>& ctxt) {
+  AutoCreateSigil(void):
+    std::shared_ptr<CoreContext>(CoreContext::CurrentContext()->Create<T>())
+  {}
+  AutoCreateSigil(std::shared_ptr<CoreContext>& ctxt) {
     // HAHA you will have to implement this!
   }
 };
+
+class AutoCreateContext:
+  public AutoCreateSigil<void>
+{
+public:
+  AutoCreateContext(void){}
+  
+  AutoCreateContext(std::shared_ptr<CoreContext>& ctxt):
+    AutoCreateSigil(ctxt)
+  {}
+};
+
+
 
 /// <summary>
 /// Idiom to enable boltable classes
