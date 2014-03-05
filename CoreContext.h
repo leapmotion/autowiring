@@ -524,6 +524,15 @@ public:
     return result_or_default(fn, true, shared_from_this());
   }
 
+  /// <returns>
+  /// A copy of the list of child CoreThreads
+  /// </returns>
+  /// <remarks>
+  /// No guarantee is made about how long the returned collection will be consistent with this
+  /// context.  A thread may potentially be added to the context after the method returns.
+  /// </remarks>
+  std::vector<std::shared_ptr<CoreThread>> CopyCoreThreadList(void) const;
+
   /// <summary>
   /// In debug mode, adds an additional compile-time check
   /// </summary>
