@@ -10,6 +10,7 @@
 #include "DeferredBase.h"
 #include "ExceptionFilter.h"
 #include "fast_pointer_cast.h"
+#include "result_or_default.h"
 #include "JunctionBox.h"
 #include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
@@ -26,7 +27,7 @@
 #include EXCEPTION_PTR_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_MAP
-
+#include <functional>
 
 #ifndef ASSERT
   #ifdef _DEBUG
@@ -480,18 +481,47 @@ public:
   /// </summary>
   /// <param name="sigil">The sigil of the contexts to be passed to the specified lambda</param>
   /// <param name="fn">The lambda to receive a shared pointer to each matching child context</param>
+  /// <returns>
+  /// True if a complete enumeration has taken place, false if it was aborted by the passed lambda
+  /// </returns>
   template<class Fn>
-  void EnumerateChildContexts(const std::type_info &sigil, Fn&& fn) {
-    boost::lock_guard<boost::mutex> lock(m_childrenLock);
-    for (auto c = m_children.begin(); c != m_children.end(); c++) {
-      auto shared = c->lock();
-      shared->EnumerateChildContexts(sigil, fn); //check children first
+  bool EnumerateChildContexts(const std::type_info &sigil, Fn& fn) {
+    return EnumerateChildContexts(
+      [&fn, &sigil] (std::shared_ptr<CoreContext> ctxt) -> bool {
+        if(ctxt->GetSigilType() != sigil)
+          // Sigil type doesn't match, skip this one
+          return true;
 
-      if (shared->GetSigilType() == sigil) {
-        if (!fn(shared))
-          return;
+        // The sigil type matches, then we'll filter it out to the original lambda
+        return result_or_default(fn, true, ctxt);
       }
+    );
+  }
+
+  /// <summary>
+  /// Full enumeration of all child contexts, including anonymous contexts
+  /// </summary>
+  /// <remarks>
+  /// Do not attempt to create any child contexts from the lambda function, this will cause
+  /// deadlocks.  While it is technically possible to add objects to contexts from the lambda,
+  /// there is a high probability that this will deadlock if any of the added objects directly
+  /// or indirectly cause a child context to be created.
+  ///
+  /// CopyCoreThreadList is guaranteed to be a safe call to be made from this routine.
+  /// </remarks>
+  template<class Fn>
+  bool EnumerateChildContexts(Fn& fn) {
+    boost::lock_guard<boost::mutex> lock(m_childrenLock);
+    for(auto c = m_children.begin(); c != m_children.end(); c++) {
+      // Recurse:
+      auto shared = c->lock();
+      if(shared && !shared->EnumerateChildContexts(fn))
+        // Enumeration was abandoned
+        return false;
     }
+
+    // Call the lambda, default to true in case the lambda's return type is void:
+    return result_or_default(fn, true, shared_from_this());
   }
 
   /// <summary>
