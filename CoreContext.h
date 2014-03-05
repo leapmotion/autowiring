@@ -751,7 +751,7 @@ public:
   template<class Rep, class Period>
   bool Wait(const boost::chrono::duration<Rep, Period>& duration) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_stateChanged.wait_for(lk, duration, [this] () {return this->m_outstanding.expired();});
+    return m_stateChanged.wait_for(lk, duration, [this] {return this->m_outstanding.expired();});
   }
 
   /// <summary>
