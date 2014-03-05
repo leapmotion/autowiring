@@ -1,7 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "CoreThread.h"
-#include "CoreContext.h"
+#include "Autowired.h"
 #include <boost/thread.hpp>
 
 CoreThread::CoreThread(const char* pName):
@@ -117,4 +117,17 @@ void CoreThread::Run() {
 
   while(!ShouldStop())
     WaitForEvent();
+}
+
+void CoreThread::ForceCoreThreadReidentify(void) {
+  AutoGlobalContext global;
+  global->EnumerateChildContexts([](std::shared_ptr<CoreContext> ctxt) {
+    auto threadListCpy = ctxt->CopyCoreThreadList();
+    for(auto q = threadListCpy.begin(); q != threadListCpy.end(); q++)
+      (**q).SetCurrentThreadName();
+  });
+}
+
+void ForceCoreThreadReidentify(void) {
+  CoreThread::ForceCoreThreadReidentify();
 }
