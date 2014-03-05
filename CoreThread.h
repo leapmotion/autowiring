@@ -288,7 +288,6 @@ public:
         this->Abort();
         
         // Notify callers of our new state:
-        boost::lock_guard<boost::mutex> lk(this->m_lock);
         this->m_state->m_stateCondition.notify_all();
       });
     } else {
@@ -297,7 +296,6 @@ public:
       
       // Notify all callers of our status update, only needed if we don't call
       // RejectDispatchDelivery first
-      boost::lock_guard<boost::mutex> lk(m_lock);
       m_state->m_stateCondition.notify_all();
     }
   }
