@@ -65,6 +65,7 @@ set(
   PolymorphicTypeForest.h
   ReentrantCounter.h
   ReentrantCounter.cpp
+  result_or_default.h
   SharedPtrHash.h
   SimpleOwnershipValidator.h
   SimpleOwnershipValidator.cpp
