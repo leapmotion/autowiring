@@ -100,14 +100,6 @@ std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
 
-std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil){
-  return Create(sigil, *new CoreContext(shared_from_this(), sigil));
-}
-
-std::shared_ptr<CoreContext> CoreContext::CreatePeer(const std::type_info& sigil) {
-  return m_pParent->Create(sigil, *new CoreContext(m_pParent, sigil, shared_from_this()));
-}
-
 std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, CoreContext& newContext) {
   t_childList::iterator childIterator;
   {
