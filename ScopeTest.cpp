@@ -20,7 +20,7 @@ TEST_F(ScopeTest, VerifyInherit) {
   //Add a member to the current context
   ctxt->Inject<A>();
 
-  std::shared_ptr<CoreContext> pContext = ctxt->CreateAnonymous();
+  AutoCreateContext pContext(ctxt);
   //Create and switch to a sub-context
   {
     CurrentContextPusher pusher;

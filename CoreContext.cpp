@@ -136,6 +136,8 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, Co
     }
   );
   *childIterator = retVal;
+  
+  // Add Anchor types
 
   // Fire all explicit bolts:
   CurrentContextPusher pshr(retVal);
