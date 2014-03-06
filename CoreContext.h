@@ -102,17 +102,10 @@ public:
   /// <summary>
   /// Factory to create a new context
   /// </summary>
-  /// <param name="T">The context sigil.  If void, identical to CreateAnonymous.</param>
+  /// <param name="T">The context sigil.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return Create(typeid(T));
-  }
-
-  /// <summary>
-  /// Factory to create an anonymous context
-  /// </summary>
-  std::shared_ptr<CoreContext> CreateAnonymous(void) {
-    return Create(typeid(void));
+    return Create(typeid(T), *new CoreContext(shared_from_this(), typeid(T)));
   }
 
   /// <summary>
@@ -127,15 +120,7 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
-    return CreatePeer(typeid(T));
-  }
-
-  /// <summary>
-  /// Factory to create an anonymous peer context
-  /// </summary>
-  template<class T>
-  std::shared_ptr<CoreContext> CreateAnonymousPeer(void) {
-    return CreatePeer(typeid(void));
+    return m_pParent->Create(typeid(T), *new CoreContext(m_pParent, typeid(T), shared_from_this()));
   }
 
   /// <summary>
@@ -156,9 +141,7 @@ public:
   static std::shared_ptr<CoreContext> GetGlobal(void);
 
 protected:
-  std::shared_ptr<CoreContext> Create(const std::type_info& sigil);
   std::shared_ptr<CoreContext> Create(const std::type_info& sigil, CoreContext& newContext);
-  std::shared_ptr<CoreContext> CreatePeer(const std::type_info& sigil);
 
   // A pointer to the parent context
   const std::shared_ptr<CoreContext> m_pParent;
