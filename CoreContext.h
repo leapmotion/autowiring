@@ -69,7 +69,9 @@ struct Boltable;
 /// will be satisfied instead by the anchor.
 /// </remarks>
 template<class... Ts>
-struct AutoAnchor {};
+struct AutoAnchor{
+  
+};
 
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
 
@@ -544,6 +546,11 @@ public:
   /// </returns>
   template<typename T>
   std::shared_ptr<T> Inject(void) {
+    
+    for(CoreContext* pCur = m_pParent.get(); pCur; pCur = pCur->m_pParent.get()) {
+      
+    }
+    
     return Construct<T>();
   }
 
