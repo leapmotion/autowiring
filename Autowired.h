@@ -45,29 +45,19 @@ public:
 /// The newly created context will be created using CoreContext::CurrentContext()->Create().
 /// </remarks>
 template<typename T>
-class AutoCreateSigil:
+class AutoCreateContextT:
   public std::shared_ptr<CoreContext>
 {
 public:
-  AutoCreateSigil(void):
+  AutoCreateContextT(void):
     std::shared_ptr<CoreContext>(CoreContext::CurrentContext()->Create<T>())
   {}
-  AutoCreateSigil(std::shared_ptr<CoreContext>& ctxt) {
-    // HAHA you will have to implement this!
-  }
-};
-
-class AutoCreateContext:
-  public AutoCreateSigil<void>
-{
-public:
-  AutoCreateContext(void){}
-  
-  AutoCreateContext(std::shared_ptr<CoreContext>& ctxt):
-    AutoCreateSigil(ctxt)
+  AutoCreateContextT(std::shared_ptr<CoreContext>& ctxt):
+    std::shared_ptr<CoreContext>(ctxt->Create<T>())
   {}
 };
 
+typedef AutoCreateContextT<void> AutoCreateContext;
 
 
 /// <summary>

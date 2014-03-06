@@ -4,12 +4,11 @@
 
 struct AnchorSigil:
   AutoAnchor<SimpleObject>
-{
-};
+{};
 
-TEST_F(AutoAnchorTest, DISABLED_VerifySimpleAnchor) {
+TEST_F(AutoAnchorTest, VerifySimpleAnchor) {
   // Create a new context with the AnchorSigil sigil type, and then make it current
-  AutoCreateSigil<AnchorSigil> ctxt;
+  AutoCreateContextT<AnchorSigil> ctxt;
 
   // Verify the sigil type
   ASSERT_EQ(typeid(AnchorSigil), ctxt->GetSigilType()) << "Anchor sigil context did not have the correct sigil type";
@@ -29,7 +28,7 @@ TEST_F(AutoAnchorTest, DISABLED_VerifySimpleAnchor) {
 }
 
 TEST_F(AutoAnchorTest, DISABLED_VerifyPostHocSatisfaction) {
-  AutoCreateSigil<AnchorSigil> ctxt;
+  AutoCreateContextT<AnchorSigil> ctxt;
   AutoCreateContext subContext(ctxt);
   CurrentContextPusher pshr(subContext);
 
