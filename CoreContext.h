@@ -155,6 +155,9 @@ public:
   /// </summary>
   static std::shared_ptr<CoreContext> GetGlobal(void);
 protected:
+  /// <summary>
+  /// Register new context with parent and notify others of its creation.
+  /// </summary>
   template<typename T>
   std::shared_ptr<CoreContext> CreateInternal(CoreContext& newContext) {
     t_childList::iterator childIterator;
@@ -166,15 +169,13 @@ protected:
       childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
     }
     
-    // Create the child context
-    CoreContext* pContext = &newContext;
     if(m_useOwnershipValidator)
-      pContext->EnforceSimpleOwnership();
+      newContext.EnforceSimpleOwnership();
     
     // Create the shared pointer for the context--do not add the context to itself,
     // this creates a dangerous cyclic reference.
     std::shared_ptr<CoreContext> retVal(
-      pContext,
+      &newContext,
       [this, childIterator] (CoreContext* pContext) {
         {
           boost::lock_guard<boost::mutex> lk(m_childrenLock);
@@ -190,9 +191,11 @@ protected:
       AddAnchor<typename std::conditional<std::is_base_of<AutoAnchorBase,T>::value, T, AutoAnchorBase>::type>();
     }
     
-    // Fire all explicit bolts:
-    CurrentContextPusher pshr(retVal);
-    BroadcastContextCreationNotice(typeid(T));
+    // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
+    if (!std::is_same<T,void>::value) {
+      CurrentContextPusher pshr(retVal);
+      BroadcastContextCreationNotice(typeid(T));
+    }
     return retVal;
   }
   
@@ -277,20 +280,17 @@ protected:
   // Adds a bolt proper to this context
   template<class T, class Sigil>
   void EnableInternal(T*, Bolt<Sigil>*) {
-    std::shared_ptr<T> ptr;
-    AutoRequire(ptr);
+    Inject<T>();
   }
   
   template<class T, class Sigil, class Sigil2>
   void EnableInternal(T*, Bolt<Sigil,Sigil2>*) {
-    std::shared_ptr<T> ptr;
-    AutoRequire(ptr);
+    Inject<T>();
   }
   
   template<class T, class Sigil, class Sigil2, class Sigil3>
   void EnableInternal(T*, Bolt<Sigil,Sigil2,Sigil3>*) {
-    std::shared_ptr<T> ptr;
-    AutoRequire(ptr);
+    Inject<T>();
   }
 
   template<class Sigil, class T>
@@ -554,16 +554,15 @@ public:
   /// <summary>
   /// Check if parent context's have AutoAnchored the type in their sigil.
   /// </summary>
-  template<typename T>
+  template<typename Sigil>
   std::shared_ptr<CoreContext> ResolveAnchor(void) {
     for(auto pCur = m_pParent; pCur; pCur = pCur->m_pParent) {
-      if (pCur->m_anchors.find(typeid(T)) != pCur->m_anchors.end()){
+      if (pCur->m_anchors.find(typeid(Sigil)) != pCur->m_anchors.end()){
         return pCur;
       }
     }
     return shared_from_this();
   }
-  
 
   /// <summary>
   /// Utility method which will inject the specified types into this context
@@ -605,7 +604,11 @@ public:
   /// </returns>
   template<typename T>
   std::shared_ptr<T> Inject(void) {
-    return Construct<T>();
+    std::shared_ptr<T> slot;
+    if (AutowireNoDefer(slot)) {
+      return slot;
+    }
+    return ResolveAnchor<T>() -> template Construct<T>();
   }
 
   /// <summary>
@@ -941,15 +944,6 @@ public:
   // Interior type overrides:
   void FindByType(std::shared_ptr<AutoPacketFactory>& slot) { slot = m_packetFactory; }
 
-  template<class W>
-  void AutoRequire(W& slot) {
-    if(AutowireNoDefer(slot))
-      return;
-
-    // Failed, create
-    slot = Inject<typename W::element_type>();
-  }
-
   /// <summary>
   /// Registers a slot to be autowired
   /// </summary>
@@ -1013,8 +1007,9 @@ void CoreContext::AutoRequireMicroBolt(void) {
   if(std::is_same<void, Sigil>::value)
     return;
 
-  std::shared_ptr<MicroBolt<Sigil, T>> ptr;
-  AutoRequire(ptr);
+  //std::shared_ptr<MicroBolt<Sigil, T>> ptr;
+  //AutoRequire(ptr);
+  Inject<MicroBolt<Sigil, T>>();
 }
 
 template<typename T>
