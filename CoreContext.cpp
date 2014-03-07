@@ -100,39 +100,6 @@ std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
 
-template<> //Anonymous context template specialization
-std::shared_ptr<CoreContext> CoreContext::CreateInternal<void>(CoreContext& newContext) {
-  t_childList::iterator childIterator;
-  {
-    // Lock the child list while we insert
-    boost::lock_guard<boost::mutex> lk(m_childrenLock);
-    
-    // Reserve a place in the list for the child
-    childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
-  }
-  
-  // Create the child context
-  CoreContext* pContext = &newContext;
-  if(m_useOwnershipValidator)
-    pContext->EnforceSimpleOwnership();
-  
-  // Create the shared pointer for the context--do not add the context to itself,
-  // this creates a dangerous cyclic reference.
-  std::shared_ptr<CoreContext> retVal(
-    pContext,
-    [this, childIterator] (CoreContext* pContext) {
-      {
-        boost::lock_guard<boost::mutex> lk(m_childrenLock);
-        this->m_children.erase(childIterator);
-      }
-      delete pContext;
-    }
-  );
-  *childIterator = retVal;
-  
-  return retVal;
-}
-
 void CoreContext::InitiateCoreThreads(void) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
