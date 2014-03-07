@@ -121,11 +121,13 @@ void CoreThread::Run() {
 
 void CoreThread::ForceCoreThreadReidentify(void) {
   AutoGlobalContext global;
-  global->EnumerateChildContexts([](std::shared_ptr<CoreContext> ctxt) {
-    auto threadListCpy = ctxt->CopyCoreThreadList();
-    for(auto q = threadListCpy.begin(); q != threadListCpy.end(); q++)
-      (**q).SetCurrentThreadName();
-  });
+  global->EnumerateChildContexts(
+    [](std::shared_ptr<CoreContext> ctxt) {
+      auto threadListCpy = ctxt->CopyCoreThreadList();
+      for(auto q = threadListCpy.begin(); q != threadListCpy.end(); q++)
+        (**q).SetCurrentThreadName();
+    }
+  );
 }
 
 void ForceCoreThreadReidentify(void) {

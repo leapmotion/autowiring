@@ -510,7 +510,7 @@ public:
   /// CopyCoreThreadList is guaranteed to be a safe call to be made from this routine.
   /// </remarks>
   template<class Fn>
-  bool EnumerateChildContexts(Fn& fn) {
+  bool EnumerateChildContexts(const Fn& fn) {
     boost::lock_guard<boost::mutex> lock(m_childrenLock);
     for(auto c = m_children.begin(); c != m_children.end(); c++) {
       // Recurse:
