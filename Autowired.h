@@ -97,7 +97,7 @@ public:
   }
   
   Autowired(std::weak_ptr<CoreContext> ctxt) {
-    ctxt.lock()->Autowire(*this);
+    ctxt.lock() -> template ResolveAnchor<T>() -> Autowire(*this);
   }
 
   operator bool(void) const {
