@@ -69,16 +69,20 @@ struct Boltable;
 /// creating the corresponding object or obtaining the junction box in that child context, the request
 /// will be satisfied instead by the anchor.
 /// </remarks>
+
+struct EmptySigil{};
+
 struct AutoAnchorBase {
-  typedef std::tuple<> Anchors;
+  typedef std::tuple<EmptySigil,EmptySigil,EmptySigil> Anchors;
 };
 
-template<typename... Ts>
+template<typename T1, typename T2=EmptySigil, typename T3=EmptySigil>
 struct AutoAnchor:
   AutoAnchorBase
 {
-  typedef std::tuple<Ts...> Anchors;
+  typedef std::tuple<T1,T2,T3> Anchors;
 };
+
 
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
 
@@ -177,6 +181,7 @@ protected:
     );
     *childIterator = retVal;
     
+    // Save anchored types in context
     if (std::is_base_of<AutoAnchorBase,T>::value) {
       AddAnchor<typename std::conditional<std::is_base_of<AutoAnchorBase,T>::value, T, AutoAnchorBase>::type>();
     }
@@ -191,11 +196,10 @@ protected:
   template<typename T>
   void AddAnchor() {
     std::cout << "Anchor" << std::endl;
-    typedef typename T::Anchors AnchorType;
-
+    m_anchors.insert(typeid(typename std::tuple_element<0, typename T::Anchors>::type));
   }
   
-  const std::set<std::type_info> m_anchors;
+  std::unordered_set<std::type_index> m_anchors;
 
   // A pointer to the parent context
   const std::shared_ptr<CoreContext> m_pParent;
@@ -542,6 +546,20 @@ public:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const { return m_byType.size(); }
   const std::type_info& GetSigilType(void) const { return m_sigil; }
+  
+  /// <summary>
+  /// Check if parents have AutoAnchored the type
+  /// </summary>
+  template<typename T>
+  std::shared_ptr<CoreContext> ResolveAnchor(void) {
+    for(auto pCur = shared_from_this(); pCur; pCur = pCur->m_pParent) {
+      if (m_anchors.find(typeid(T)) != m_anchors.end()){
+        return pCur;
+      }
+    }
+    return shared_from_this();
+  }
+  
 
   /// <summary>
   /// Utility method which will inject the specified types into this context
@@ -583,11 +601,6 @@ public:
   /// </returns>
   template<typename T>
   std::shared_ptr<T> Inject(void) {
-    
-    for(CoreContext* pCur = m_pParent.get(); pCur; pCur = pCur->m_pParent.get()) {
-      
-    }
-    
     return Construct<T>();
   }
 
