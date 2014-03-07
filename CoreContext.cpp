@@ -100,16 +100,17 @@ std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
 
-std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, CoreContext& newContext) {
+template<> //Anonymous context template specialization
+std::shared_ptr<CoreContext> CoreContext::CreateInternal<void>(CoreContext& newContext) {
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert
     boost::lock_guard<boost::mutex> lk(m_childrenLock);
-
+    
     // Reserve a place in the list for the child
     childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
   }
-
+  
   // Create the child context
   CoreContext* pContext = &newContext;
   if(m_useOwnershipValidator)
@@ -129,13 +130,11 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, Co
   );
   *childIterator = retVal;
   
-  // Add Anchor types
-
-  // Fire all explicit bolts:
-  CurrentContextPusher pshr(retVal);
-  BroadcastContextCreationNotice(sigil);
   return retVal;
 }
+
+template <>
+void CoreContext::AddAnchor<void>(){}
 
 void CoreContext::InitiateCoreThreads(void) {
   {

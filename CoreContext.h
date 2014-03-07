@@ -25,6 +25,7 @@
 #include <memory>
 #include <map>
 #include <string>
+#include TUPLE_HEADER
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
@@ -68,9 +69,15 @@ struct Boltable;
 /// creating the corresponding object or obtaining the junction box in that child context, the request
 /// will be satisfied instead by the anchor.
 /// </remarks>
-template<class... Ts>
-struct AutoAnchor{
-  
+struct AutoAnchorBase {
+  typedef std::tuple<> Anchors;
+};
+
+template<typename... Ts>
+struct AutoAnchor:
+  AutoAnchorBase
+{
+  typedef std::tuple<Ts...> Anchors;
 };
 
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
@@ -105,7 +112,7 @@ public:
   /// <param name="T">The context sigil.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return Create(typeid(T), *new CoreContext(shared_from_this(), typeid(T)));
+    return CreateInternal<T>(*new CoreContext(shared_from_this(), typeid(T)));
   }
 
   /// <summary>
@@ -120,7 +127,7 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
-    return m_pParent->Create(typeid(T), *new CoreContext(m_pParent, typeid(T), shared_from_this()));
+    return m_pParent->CreateInternal<T>(*new CoreContext(m_pParent, typeid(T), shared_from_this()));
   }
 
   /// <summary>
@@ -139,9 +146,56 @@ public:
   /// Convenience method to obtain a shared reference to the global context
   /// </summary>
   static std::shared_ptr<CoreContext> GetGlobal(void);
-
 protected:
-  std::shared_ptr<CoreContext> Create(const std::type_info& sigil, CoreContext& newContext);
+  template<typename T>
+  std::shared_ptr<CoreContext> CreateInternal(CoreContext& newContext) {
+    t_childList::iterator childIterator;
+    {
+      // Lock the child list while we insert
+      boost::lock_guard<boost::mutex> lk(m_childrenLock);
+      
+      // Reserve a place in the list for the child
+      childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
+    }
+    
+    // Create the child context
+    CoreContext* pContext = &newContext;
+    if(m_useOwnershipValidator)
+      pContext->EnforceSimpleOwnership();
+    
+    // Create the shared pointer for the context--do not add the context to itself,
+    // this creates a dangerous cyclic reference.
+    std::shared_ptr<CoreContext> retVal(
+      pContext,
+      [this, childIterator] (CoreContext* pContext) {
+        {
+          boost::lock_guard<boost::mutex> lk(m_childrenLock);
+          this->m_children.erase(childIterator);
+        }
+        delete pContext;
+      }
+    );
+    *childIterator = retVal;
+    
+    if (std::is_base_of<AutoAnchorBase,T>::value) {
+      AddAnchor<typename std::conditional<std::is_base_of<AutoAnchorBase,T>::value, T, AutoAnchorBase>::type>();
+    }
+    
+    // Fire all explicit bolts:
+    CurrentContextPusher pshr(retVal);
+    BroadcastContextCreationNotice(typeid(T));
+    return retVal;
+  }
+  
+  // T must inherit from AutoAnchorBase
+  template<typename T>
+  void AddAnchor() {
+    std::cout << "Anchor" << std::endl;
+    typedef typename T::Anchors AnchorType;
+
+  }
+  
+  const std::set<std::type_info> m_anchors;
 
   // A pointer to the parent context
   const std::shared_ptr<CoreContext> m_pParent;
