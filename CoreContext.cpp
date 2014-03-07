@@ -133,9 +133,6 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal<void>(CoreContext& newC
   return retVal;
 }
 
-template <>
-void CoreContext::AddAnchor<void>(){}
-
 void CoreContext::InitiateCoreThreads(void) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);

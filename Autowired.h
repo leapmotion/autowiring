@@ -93,7 +93,7 @@ public:
   typedef shared_ptr<T> t_ptrType;
   
   Autowired(void) {
-    AutowirableSlot::LockContext()->Autowire(*this);
+    AutowirableSlot::LockContext() -> template ResolveAnchor<T>() -> Autowire(*this);
   }
   
   Autowired(std::weak_ptr<CoreContext> ctxt) {
