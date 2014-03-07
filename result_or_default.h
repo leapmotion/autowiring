@@ -13,7 +13,7 @@ typename std::enable_if<
   >::value,
   T
 >::type
-result_or_default(Fn& fn, T default, Args&&... args) {
+result_or_default(Fn& fn, T def, Args&&... args) {
   return fn(std::forward<Args>(args)...);
 }
 
@@ -25,7 +25,7 @@ typename std::enable_if<
   >::value,
   T
 >::type
-result_or_default(Fn& fn, T default, Args&&... args) {
+result_or_default(Fn& fn, T def, Args&&... args) {
   fn(std::forward<Args>(args)...);
-  return default;
+  return def;
 }
