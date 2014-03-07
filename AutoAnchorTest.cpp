@@ -22,6 +22,8 @@ TEST_F(AutoAnchorTest, VerifySimpleAnchor) {
 
   // Try to create an object in the new child context:
   AutoRequired<SimpleObject> sobj;
+  
+  auto otherCtxt = sobj->GetContext();
 
   // Membership verification:
   ASSERT_EQ(ctxt, sobj->GetContext()) << "An anchored type was not injected in the context where it was anchored";
