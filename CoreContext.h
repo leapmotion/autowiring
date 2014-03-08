@@ -188,7 +188,7 @@ protected:
     
     // Save anchored types in context
     if (std::is_base_of<AutoAnchorBase,T>::value) {
-      AddAnchor<typename std::conditional<std::is_base_of<AutoAnchorBase,T>::value, T, AutoAnchorBase>::type>();
+      retVal->AddAnchor<typename std::conditional<std::is_base_of<AutoAnchorBase,T>::value, T, AutoAnchorBase>::type>();
     }
     
     // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
@@ -604,10 +604,6 @@ public:
   /// </returns>
   template<typename T>
   std::shared_ptr<T> Inject(void) {
-    std::shared_ptr<T> slot;
-    if (AutowireNoDefer(slot)) {
-      return slot;
-    }
     return ResolveAnchor<T>() -> template Construct<T>();
   }
 
@@ -951,7 +947,7 @@ public:
   bool Autowire(W& slot) {
     if(AutowireNoDefer(slot))
       return true;
-
+    
     // Failed, defer
     DeferAutowiring(slot);
     return false;

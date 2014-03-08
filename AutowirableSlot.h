@@ -18,9 +18,7 @@ private:
   // Copy construction of an autowired slot is generally unsafe and not allowed
   AutowirableSlot(const AutowirableSlot& rhs);
 
-  void init(); //shared constructor functionality
 public:
-  AutowirableSlot();
   AutowirableSlot(std::weak_ptr<CoreContext> context);
 
   virtual ~AutowirableSlot(void) {
