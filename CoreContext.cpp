@@ -282,7 +282,7 @@ void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipi
 void CoreContext::UnregisterEventReceivers(void) {
   // Release all event sender links:
   for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-    (*q).second->ReleaseRefs();
+    (*q).second->RemoveAll();
 
   // Eliminate all snoopers from our apprehended list of receivers:
   for(auto q = m_snoopers.begin(); q != m_snoopers.end(); q++)
@@ -362,7 +362,7 @@ void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
 
     // Scan the list of compatible senders:
     for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-      *q->second += pRecvr;
+      q->second->Add(pRecvr);
   }
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
@@ -378,7 +378,7 @@ void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
 
   // Notify all compatible senders that we're going away:
   for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-    *q->second -= pRecvr;
+    q->second->Remove(pRecvr);
 
   // Delegate to the parent:
   if(m_pParent)
@@ -391,7 +391,7 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::ite
     for(auto q = first; q != last; q++) {
       // n^2 sender unlinking
       for(auto r = m_junctionBoxes.begin(); r != m_junctionBoxes.end(); r++)
-        *r->second -= *q;
+        r->second->Remove(*q);
 
       // Trivial erase:
       m_eventReceivers.erase(*q);
