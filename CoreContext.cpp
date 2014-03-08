@@ -362,7 +362,7 @@ void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
 
     // Scan the list of compatible senders:
     for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-      q->second->Add(pRecvr);
+      q->second->Add(this, pRecvr);
   }
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links

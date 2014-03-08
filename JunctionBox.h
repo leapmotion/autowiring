@@ -13,8 +13,9 @@
 #include TYPE_TRAITS_HEADER
 #include <set>
 
-class JunctionBoxBase;
+class CoreContext;
 class EventReceiver;
+class JunctionBoxBase;
 
 /// <summary>
 /// Service routine called inside Fire calls in order to decide how to handle an exception
@@ -84,7 +85,7 @@ public:
   virtual void RemoveAll(void) = 0;
 
   // Event attachment and detachment pure virtuals
-  virtual void Add(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual void Add(CoreContext* owner, const std::shared_ptr<EventReceiver>& rhs) = 0;
   virtual void Remove(const std::shared_ptr<EventReceiver>& rhs) = 0;
 };
 
@@ -103,8 +104,23 @@ public:
   virtual ~JunctionBox(void) {}
 
 protected:
+  // Internal structure representing a junction box entry
+  struct JunctionBoxEntry:
+    public std::shared_ptr<T>
+  {
+    JunctionBoxEntry(std::shared_ptr<T> ptr, CoreContext* owner):
+      m_owner(owner)
+    {}
+
+    const CoreContext* m_owner;
+
+    bool operator==(const JunctionBoxEntry& rhs) const {
+      return get() == rhs.get();
+    }
+  };
+
   // Collection of all known listeners:
-  typedef LockReducedCollection<std::shared_ptr<T>, SharedPtrHash<T>> t_listenerSet;
+  typedef LockReducedCollection<JunctionBoxEntry, SharedPtrHash<T>> t_listenerSet;
   t_listenerSet m_st;
 
 public:
@@ -120,10 +136,10 @@ public:
     m_st.Clear();
   }
 
-  void Add(const std::shared_ptr<EventReceiver>& rhs) override {
+  void Add(CoreContext* owner, const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     if(casted)
-      Add(casted);
+      Add(owner, casted);
   }
 
   void Remove(const std::shared_ptr<EventReceiver>& rhs) override {
@@ -135,9 +151,9 @@ public:
   /// <summary>
   /// Adds the specified observer to receive events dispatched from this instace
   /// </summary>
-  void Add(const std::shared_ptr<T>& rhs) {
+  void Add(CoreContext* owner, const std::shared_ptr<T>& rhs) {
     // Trivial insertion
-    m_st.Insert(rhs);
+    m_st.Insert(JunctionBoxEntry(rhs, owner));
 
     // If the RHS implements DispatchQueue, add it to that collection as well:
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
@@ -157,7 +173,7 @@ public:
       m_dispatch.erase(pDispatch);
 
     // Trivial removal:
-    auto nErased = m_st.Erase(rhs);
+    auto nErased = m_st.Erase(JunctionBoxEntry(rhs, nullptr));
     if(!nErased)
       return;
   }
