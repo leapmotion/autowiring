@@ -138,7 +138,9 @@ public:
     this->Create(AutowirableSlot::LockContext());
   }
   
-  AutoRequired(std::weak_ptr<CoreContext> ctxt) {
+  AutoRequired(std::weak_ptr<CoreContext> ctxt):
+    Autowired<T>(ctxt)
+  {
     this->Create(ctxt.lock());
   }
 
