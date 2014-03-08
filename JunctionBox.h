@@ -81,11 +81,11 @@ public:
   /// <summary>
   /// Invoked by the parent context when the context is shutting down in order to release all references
   /// </summary>
-  virtual void ReleaseRefs(void) = 0;
+  virtual void RemoveAll(void) = 0;
 
   // Event attachment and detachment pure virtuals
-  virtual JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
-  virtual JunctionBoxBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual void Add(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual void Remove(const std::shared_ptr<EventReceiver>& rhs) = 0;
 };
 
 struct NoType {};
@@ -113,34 +113,29 @@ public:
   /// </summary>
   bool HasListeners(void) const override {return !m_st.GetImage()->empty();}
 
-  void ReleaseRefs() override {
+  void RemoveAll() override {
     (boost::lock_guard<boost::mutex>)m_lock,
     m_dispatch.clear();
 
     m_st.Clear();
   }
 
-  JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
+  void Add(const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
-    if(casted){
-      // Proposed type is directly one of our receivers
-      *this += casted;
-    }
-    return *this;
+    if(casted)
+      Add(casted);
   }
 
-  JunctionBoxBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
+  void Remove(const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
-    if(casted){
-      *this -= casted;
-    }
-    return *this;
+    if(casted)
+      Remove(casted);
   }
 
   /// <summary>
   /// Adds the specified observer to receive events dispatched from this instace
   /// </summary>
-  void operator+=(const std::shared_ptr<T>& rhs) {
+  void Add(const std::shared_ptr<T>& rhs) {
     // Trivial insertion
     m_st.Insert(rhs);
 
@@ -154,7 +149,7 @@ public:
   /// <summary>
   /// Removes the specified observer from the set currently configured to receive events
   /// </summary>
-  void operator-=(const std::shared_ptr<T>& rhs) {
+  void Remove(const std::shared_ptr<T>& rhs) {
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
     DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
     if(pDispatch)
