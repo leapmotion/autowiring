@@ -69,10 +69,9 @@ struct Boltable;
 /// creating the corresponding object or obtaining the junction box in that child context, the request
 /// will be satisfied instead by the anchor.
 /// </remarks>
-
 struct AutoAnchorBase {
   static void Enumerate(std::set<std::type_index>& anchors) {
-    std::cout << "BASE" << std::endl;
+    assert(false); // Base should never be called
   }
 };
 
@@ -169,7 +168,7 @@ protected:
       childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
     }
     
-    if(m_useOwnershipValidator)
+    if (m_useOwnershipValidator)
       newContext.EnforceSimpleOwnership();
     
     // Create the shared pointer for the context--do not add the context to itself,
@@ -202,7 +201,6 @@ protected:
   // T must inherit from AutoAnchorBase
   template<typename AnchorType>
   void AddAnchor() {
-    std::cout << "Anchor" << std::endl;
     AnchorType::Enumerate(m_anchors);
   }
   
