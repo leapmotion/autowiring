@@ -583,7 +583,7 @@ public:
     
     // Attach compatible receivers:
     for(auto q = m_eventReceivers.begin(); q != m_eventReceivers.end(); q++)
-      *retVal += *q;
+      retVal->Add(*q);
 
     // Construction complete
     return retVal;
