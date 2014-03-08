@@ -105,3 +105,29 @@ TEST_F(ScopeTest, AutowiringHeapMangle){
   AutoRequired<A> creator;
   Autowired<A> reference;
 }
+
+TEST_F(ScopeTest, AutowiringOrdering) {
+  AutoCurrentContext outer;
+  AutoCreateContext ctxt1;
+  AutoCreateContext ctxt2;
+  
+  // Autowire in outer context
+  Autowired<A> a;
+  {
+    CurrentContextPusher pshr(ctxt1);
+    
+    AutoRequired<A> a2;
+    ASSERT_FALSE(a.IsAutowired());
+  }
+  
+  // Autorequire in outer context
+  AutoRequired<B> b;
+  {
+    CurrentContextPusher pshr(ctxt2);
+    
+    Autowired<B> b2;
+    ASSERT_TRUE(b.IsAutowired());
+    ASSERT_EQ(b->GetContext(), outer);
+  }
+}
+
