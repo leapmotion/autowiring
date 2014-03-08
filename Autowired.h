@@ -92,12 +92,16 @@ public:
   typedef T value_type;
   typedef shared_ptr<T> t_ptrType;
   
-  Autowired(void) {
-    AutowirableSlot::LockContext() -> template ResolveAnchor<T>() -> Autowire(*this);
+  Autowired(void):
+    AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>())
+  {
+    AutowirableSlot::LockContext() -> Autowire(*this);
   }
   
-  Autowired(std::weak_ptr<CoreContext> ctxt) {
-    ctxt.lock() -> template ResolveAnchor<T>() -> Autowire(*this);
+  Autowired(std::weak_ptr<CoreContext> ctxt):
+    AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>())
+  {
+    AutowirableSlot::LockContext() -> Autowire(*this);
   }
 
   operator bool(void) const {
