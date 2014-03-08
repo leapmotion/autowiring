@@ -172,10 +172,14 @@ set(
   SimpleOwnershipValidatorTest.cpp
   StateMachineTest.h
   StateMachineTest.cpp
+  TestFixtures/custom_exception.h
   TestFixtures/ExitRaceThreaded.h
   TestFixtures/SimpleInterface.h
   TestFixtures/SimpleObject.h
   TestFixtures/SimpleThreaded.h
+  TestFixtures/ThrowingListener.h
+  TestFixtures/ThrowsWhenFired.h
+  TestFixtures/ThrowsWhenRun.h
   TestFixtures/MultiInherit.h
 )
 
