@@ -241,3 +241,21 @@ TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
   // Verify that BOTH are hit:
   EXPECT_TRUE(v200->hit && v201->hit) << "Expected all receivers of a fired event will be processed, even if some throw exceptions";
 }
+
+TEST_F(ExceptionFilterTest, VerifySimpleConfinement) {
+  m_create->InitiateCoreThreads();
+
+  // Create a subcontext where the errant recipients will live:
+  AutoCreateContext child;
+  child->Inject<ThrowsWhenFired<200>>();
+
+  // Cause the child context to throw an exception:
+  AutoFired<ThrowingListener> tl;
+  tl(&ThrowingListener::DoThrow)();
+
+  // Verify that the parent scope wasn't incorrectly terminated:
+  EXPECT_FALSE(m_create->IsShutdown()) << "Parent scope was terminated incorrectly due to an exception sourced by a child context";
+
+  // Verify that the child scope was terminated as expected:
+  EXPECT_TRUE(child->IsShutdown()) << "An event recipient in a child scope threw an exception and the child context was not correctly terminated";
+}
