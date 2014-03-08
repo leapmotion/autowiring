@@ -191,3 +191,12 @@ TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
   // Verify that BOTH are hit:
   EXPECT_TRUE(v200->hit && v201->hit) << "Expected all receivers of a fired event will be processed, even if some throw exceptions";
 }
+
+TEST_F(ExceptionFilterTest, ExceptionFirewall) {
+  AutoRequired<ThrowsWhenFired<200>> v200;
+
+  // Try to throw, verify the return value.  The value should be false, because this particular type always
+  // throws an exception in response to the receipt of an event.
+  AutoFired<ThrowingListener> tl;
+  ASSERT_FALSE(tl(&ThrowingListener::DoThrow)()) << "An exception event was not properly indicated to an event firer";
+}
