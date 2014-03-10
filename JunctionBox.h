@@ -105,13 +105,14 @@ public:
 
 protected:
   // Internal structure representing a junction box entry
-  struct JunctionBoxEntry:
-    public std::shared_ptr<T>
+  struct JunctionBoxEntry
   {
     JunctionBoxEntry(std::shared_ptr<T> ptr, CoreContext* owner):
+      m_ptr(ptr),
       m_owner(owner)
     {}
 
+    const std::shared_ptr<T> m_ptr;
     const CoreContext* m_owner;
 
     bool operator==(const JunctionBoxEntry& rhs) const {
