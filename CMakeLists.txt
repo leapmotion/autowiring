@@ -15,6 +15,7 @@ set(Autowiring_SRCS
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
   AutoNetworkMonitor.h
+  AutoNetworkMonitor.cpp
   Autowired.h
   Autowired.cpp
   AutowirableSlot.h
@@ -89,13 +90,6 @@ if(NOT BUILD_MAC)
 endif()
 
 OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
-
-if(BUILD_AUTONET)
-  set(Autowiring_SRCS
-    AutoNetworkMonitor.cpp
-    ${Autowiring_SRCS}
-  )
-endif()
 
 set(Autowiring_Win_SRCS
   CoreThreadWin.cpp
