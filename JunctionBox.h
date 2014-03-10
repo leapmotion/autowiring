@@ -2,16 +2,15 @@
 #include "DispatchQueue.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
-#include "LockFreeList.h"
-#include "LockReducedCollection.h"
-#include "SharedPtrHash.h"
+#include "ObjectPool.h"
+#include "PolymorphicTypeForest.h"
+#include "fast_pointer_cast.h"
 #include <boost/thread/mutex.hpp>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_SET
 #include TYPE_TRAITS_HEADER
-#include <set>
 
 class CoreContext;
 class EventReceiver;
@@ -28,34 +27,15 @@ class JunctionBoxBase;
 void FilterFiringException(const JunctionBoxBase* pSender, EventReceiver* pRecipient);
 
 /// <summary>
+/// Utility routine which shuts down the current context
+/// </summary>
+void ShutdownCurrentContext(void);
+
+/// <summary>
 /// Function pointer relay type
 /// </summary>
 template<class FnPtr>
 class InvokeRelay {};
-
-template<class T>
-class InvokeRelay<Deferred (T::*)()>;
-
-template<class T, class Arg1>
-class InvokeRelay<Deferred (T::*)(Arg1)>;
-
-template<class T>
-class InvokeRelay<void (T::*)()>;
-
-template<class T, class Arg1>
-class InvokeRelay<void (T::*)(Arg1)>;
-
-template<class T, class Arg1, class Arg2>
-class InvokeRelay<void (T::*)(Arg1, Arg2)>;
-
-template<class T, class Arg1, class Arg2, class Arg3>
-class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3)>;
-
-template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
-class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4)>;
-
-template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5)>;
 
 /// <summary>
 /// Used to identify event managers
@@ -74,7 +54,7 @@ protected:
 
 public:
   // Accessor methods:
-  const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const {return m_dispatch;}
+  const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const { return m_dispatch; }
   boost::mutex& GetDispatchQueueLock(void) const { return m_lock; }
 
   virtual bool HasListeners(void) const = 0;
@@ -100,6 +80,10 @@ public:
     std::is_base_of<EventReceiver, T>::value,
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
+  
+  JunctionBox(void):
+    m_numberOfDeletions(0)
+  {}
 
   virtual ~JunctionBox(void) {}
 
@@ -107,9 +91,9 @@ protected:
   // Internal structure representing a junction box entry
   struct JunctionBoxEntry
   {
-    JunctionBoxEntry(std::shared_ptr<T> ptr, CoreContext* owner):
-      m_ptr(ptr),
-      m_owner(owner)
+    JunctionBoxEntry(CoreContext* owner, std::shared_ptr<T> ptr) :
+      m_owner(owner),
+      m_ptr(ptr)
     {}
 
     const std::shared_ptr<T> m_ptr;
@@ -121,25 +105,31 @@ protected:
   };
 
   // Collection of all known listeners:
-  typedef LockReducedCollection<JunctionBoxEntry, SharedPtrHash<T>> t_listenerSet;
+  typedef std::set<std::shared_ptr<T>> t_listenerSet;
   t_listenerSet m_st;
+  
+  // Incremented every time an event is deleted to notify potentially invalidated iterators
+  volatile int m_numberOfDeletions;
 
 public:
-  /// <summary>
-  /// Convenience method allowing consumers to quickly determine whether any listeners exist
-  /// </summary>
-  bool HasListeners(void) const override {return !m_st.GetImage()->empty();}
-
   void RemoveAll() override {
     (boost::lock_guard<boost::mutex>)m_lock,
     m_dispatch.clear();
 
-    m_st.Clear();
+    m_st.clear();
+  }
+
+  /// <summary>
+  /// Convenience method allowing consumers to quickly determine whether any listeners exist
+  /// </summary>
+  bool HasListeners(void) const override {
+    return (boost::lock_guard<boost::mutex>)m_lock, !m_st.empty();
   }
 
   void Add(CoreContext* owner, const std::shared_ptr<EventReceiver>& rhs) override {
     auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
     if(casted)
+      // Proposed type is directly one of our receivers
       Add(owner, casted);
   }
 
@@ -153,13 +143,14 @@ public:
   /// Adds the specified observer to receive events dispatched from this instace
   /// </summary>
   void Add(CoreContext* owner, const std::shared_ptr<T>& rhs) {
-    // Trivial insertion
-    m_st.Insert(JunctionBoxEntry(rhs, owner));
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    
+    // Trivial insert
+    m_st.insert(rhs);
 
     // If the RHS implements DispatchQueue, add it to that collection as well:
-    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
+    DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs).get();
     if(pDispatch)
-      (boost::lock_guard<boost::mutex>)m_lock,
       m_dispatch.insert(pDispatch);
   }
 
@@ -167,16 +158,17 @@ public:
   /// Removes the specified observer from the set currently configured to receive events
   /// </summary>
   void Remove(const std::shared_ptr<T>& rhs) {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    
+    m_numberOfDeletions++;
+    
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
-    DispatchQueue* pDispatch = dynamic_cast<DispatchQueue*>(rhs.get());
+    DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs).get();
     if(pDispatch)
-      (boost::lock_guard<boost::mutex>)m_lock,
       m_dispatch.erase(pDispatch);
 
-    // Trivial removal:
-    auto nErased = m_st.Erase(JunctionBoxEntry(rhs, nullptr));
-    if(!nErased)
-      return;
+    JunctionBoxEntry entry(nullptr, rhs);
+    m_st.erase(rhs);
   }
 
   /// <summary>
@@ -194,215 +186,116 @@ public:
   /// Zero-argument deferred call relay
   /// </summary>
   /// <param name="fn">A nearly-curried routine to be invoked</param>
+  /// <return>False if an exception was thrown by a recipient, true otherwise</return>
   template<class Fn>
-  void FireCurried(Fn&& fn) const {
-    // Held names first:
-    auto st = m_st.GetImage();
-    for(auto q = st->begin(); q != st->end(); ++q){
+  bool FireCurried(Fn&& fn) const {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    int deleteCount = m_numberOfDeletions;
+    std::shared_ptr<T> currentEvent;
+    
+    bool retVal = true;
+    for(auto it = m_st.begin(); it != m_st.end(); ){
+      currentEvent = *it;
+      
+      lk.unlock();
       try {
-        fn(**q);
+        fn(*currentEvent);
       } catch(...) {
-        this->PassFilterFiringException((*q).get());
+        retVal = false;
+        this->PassFilterFiringException(currentEvent.get());
+      }
+      lk.lock();
+      
+      // Increment iterator correctly even if it's been invalidated
+      if (deleteCount == m_numberOfDeletions){
+        ++it;
+      } else {
+        it = m_st.upper_bound(currentEvent);
+        deleteCount = m_numberOfDeletions;
       }
     }
+    return retVal;
   }
 
-public:
   // Two-parenthetical deferred invocations:
   template<class FnPtr>
   auto Invoke(FnPtr fnPtr) -> InvokeRelay<decltype(fnPtr)> {
-    return InvokeRelay<decltype(fnPtr)>(*this, fnPtr);
+    return InvokeRelay<decltype(fnPtr)>(this, fnPtr);
   }
 };
 
 
-template<class T>
-class InvokeRelay<Deferred (T::*)()> {
+template<typename T, typename ...Args>
+class InvokeRelay<Deferred (T::*)(Args...)> {
 public:
-  InvokeRelay(const JunctionBoxBase& erp, Deferred (T::*fnPtr)()):
+  InvokeRelay(const JunctionBox<T>* erp, Deferred (T::*fnPtr)(Args...)):
     erp(erp),
     fnPtr(fnPtr)
-  {
-  }
+  {}
+  
+  // Null constructor
+  InvokeRelay():
+    erp(nullptr)
+  {}
 
 private:
-  const JunctionBoxBase& erp;
-  Deferred (T::*fnPtr)();
-
+  const JunctionBox<T>* erp;
+  Deferred (T::*fnPtr)(Args...);
+  
 public:
-  void operator()(void) const {
-    const auto& dq = erp.GetDispatchQueue();
-    boost::lock_guard<boost::mutex> lk(erp.GetDispatchQueueLock());
-
+  void operator()(const typename std::decay<Args>::type&... args) const {
+    if (!erp) return; //Context has already been destroyed
+    
+    const auto& dq = erp->GetDispatchQueue();
+    boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
+    
     for(auto q = dq.begin(); q != dq.end(); q++) {
       auto* pCur = *q;
       if(!pCur->CanAccept())
         continue;
-
-      typedef T targetType;
-
-      // Straight dispatch queue insertion:
-      auto f = fnPtr;
-      pCur->AttachProxyRoutine([f] (EventReceiver& obj) {
-        // Now we perform the cast:
-        targetType* pObj = dynamic_cast<targetType*>(&obj);
-
-        (pObj->*f)();
-      });
-    }
-  }
-};
-
-template<class T, class Arg1>
-class InvokeRelay<Deferred (T::*)(Arg1)> {
-public:
-  typedef typename std::decay<Arg1>::type tArg1;
-
-  InvokeRelay(const JunctionBoxBase& erp, Deferred (T::*fnPtr)(Arg1)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {
-  }
-
-private:
-  const JunctionBoxBase& erp;
-  Deferred (T::*fnPtr)(Arg1);
-
-public:
-  void operator()(const tArg1& arg1) const {
-    const auto& dq = erp.GetDispatchQueue();
-    boost::lock_guard<boost::mutex> lk(erp.GetDispatchQueueLock());
-
-    for(auto q = dq.begin(); q != dq.end(); q++) {
-      auto* pCur = *q;
-      if(!pCur->CanAccept())
-        continue;
-
+      
       // Pass the copy into the lambda:
       auto f = fnPtr;
-      pCur->AttachProxyRoutine(
-        [f, arg1] (EventReceiver& obj) {
+      auto lambda = [=] (EventReceiver& obj, Args... args) {
           // Now we perform the cast:
           T* pObj = dynamic_cast<T*>(&obj);
-
-          (pObj->*f)(std::move(arg1));
-        }
-      );
+          (pObj->*f)(std::move(args)...);
+        };
+      
+      auto bound_lambda = std::bind<void>(lambda, std::placeholders::_1, args...);
+      pCur->AttachProxyRoutine(bound_lambda);
     }
   }
 };
 
-template<class T>
-class InvokeRelay<void (T::*)()> {
+
+template<class T, typename... Args>
+class InvokeRelay<void (T::*)(Args...)> {
 public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(void)):
+  InvokeRelay(JunctionBox<T>* erp, void (T::*fnPtr)(Args...)) :
     erp(erp),
     fnPtr(fnPtr)
-  {
-  }
-
+  {}
+  
+  // Null constructor
+  InvokeRelay():
+    erp(nullptr)
+  {}
+  
 private:
-  JunctionBox<T>& erp;
-  void (T::*fnPtr)();
+  JunctionBox<T>* erp;
+  void (T::*fnPtr)(Args...);
 
 public:
-  void operator()() const {
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)();});
+  /// <summary>
+  /// The function call operation itself
+  /// </summary>
+  /// <returns>False if an exception was thrown by a recipient, true otherwise</returns>
+  bool operator()(Args... args) const {
+    if(!erp)
+      // Context has already been destroyed
+      return true;
+
+    return erp->FireCurried([&](T& obj) {(obj.*fnPtr)(args...); });
   }
 };
-
-template<class T, class Arg1>
-class InvokeRelay<void (T::*)(Arg1)> {
-public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {
-  }
-
-private:
-  JunctionBox<T>& erp;
-  void (T::*fnPtr)(Arg1);
-
-public:
-  void operator()(Arg1 arg1) const {
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1);});
-  }
-};
-
-template<class T, class Arg1, class Arg2>
-class InvokeRelay<void (T::*)(Arg1, Arg2)> {
-public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {
-  }
-
-private:
-  JunctionBox<T>& erp;
-  void (T::*fnPtr)(Arg1, Arg2);
-
-public:
-  void operator()(Arg1 arg1, Arg2 arg2) const {
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2);});
-  }
-};
-
-template<class T, class Arg1, class Arg2, class Arg3>
-class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3)> {
-public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {
-  }
-
-private:
-  JunctionBox<T>& erp;
-  void (T::*fnPtr)(Arg1, Arg2, Arg3);
-
-public:
-  void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3) const {
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3);});
-  }
-};
-
-template<class T, class Arg1, class Arg2, class Arg3, class Arg4>
-class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4)> {
-public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {
-  }
-
-private:
-  JunctionBox<T>& erp;
-  void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4);
-
-public:
-  void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4) const {
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3, arg4);});
-  }
-};
-
-template<class T, class Arg1, class Arg2, class Arg3, class Arg4, class Arg5>
-class InvokeRelay<void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5)> {
-public:
-  InvokeRelay(JunctionBox<T>& erp, void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {
-  }
-
-private:
-  JunctionBox<T>& erp;
-  void (T::*fnPtr)(Arg1, Arg2, Arg3, Arg4, Arg5);
-
-public:
-  void operator()(Arg1 arg1, Arg2 arg2, Arg3 arg3, Arg4 arg4, Arg5 arg5) const {
-    erp.FireCurried([&] (T& obj) {(obj.*fnPtr)(arg1, arg2, arg3, arg4, arg5);});
-  }
-};
-
