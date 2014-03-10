@@ -294,7 +294,6 @@ public:
   CurriedInvokeRelay(T& obj, Deferred(T::*fnPtr)(Args...), W... args) :
     m_obj(obj),
     m_fnPtr(fnPtr),
-    m_pObj(nullptr),
     m_args(std::forward<Args>(args)...)
   {
   }
@@ -312,13 +311,11 @@ private:
   /// </summary>
   template<int... S>
   void CallByUnpackingTuple(seq<S...>) {
-    (m_obj.*fnPtr)(std::move(std::get<S>(m_args))...);
+    (m_obj.*m_fnPtr)(std::move(std::get<S>(m_args))...);
   }
 
 public:
   void operator()(void) {
-    if(!m_pObj)
-      throw std::runtime_error("Attemped to make an invocation on a type which was not yet initialized");
     CallByUnpackingTuple(gen_seq<sizeof...(Args)>::type());
   }
 };
@@ -352,7 +349,7 @@ public:
     for(auto q = dq.begin(); q != dq.end(); q++)
       if((**q).CanAccept())
         // Create a fully curried function to add to the dispatch queue:
-        (**q) += new CurriedInvokeRelay<T, Args...>(**q, fnPtr, args...);
+        (**q) += new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...);
   }
 };
 
