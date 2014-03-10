@@ -27,6 +27,7 @@
 #include <map>
 #include <string>
 #include <functional>
+#include TUPLE_HEADER
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
@@ -60,6 +61,33 @@ class Autowired;
 template<class Sigil1, class Sigil2, class Sigil3>
 struct Boltable;
 
+/// <summary>
+/// Anchors a particular object type or event type to the annotated context sigil
+/// </summary>
+/// <remarks>
+/// The AutoAnchor is a marker type to be applied to a sigil type.  When a member of a subcontext of any
+/// annotated sigil class attempts to AutoRequire or AutoFire an instance of any sigil type, instead of
+/// creating the corresponding object or obtaining the junction box in that child context, the request
+/// will be satisfied instead by the anchor.
+/// </remarks>
+struct AutoAnchorBase {
+  static void Enumerate(std::set<std::type_index>& anchors) {
+    assert(false); // Base should never be called
+  }
+};
+
+template<typename... Ts>
+struct AutoAnchor:
+  AutoAnchorBase
+{
+  static void Enumerate(std::set<std::type_index>& anchors) {
+    bool dummy[] = {
+      (anchors.insert(typeid(Ts)), false)...
+    };
+    (void) dummy;
+  }
+};
+
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
 
 enum class ShutdownMode {
@@ -89,17 +117,10 @@ public:
   /// <summary>
   /// Factory to create a new context
   /// </summary>
-  /// <param name="T">The context sigil.  If void, identical to CreateAnonymous.</param>
+  /// <param name="T">The context sigil.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return Create(typeid(T));
-  }
-
-  /// <summary>
-  /// Factory to create an anonymous context
-  /// </summary>
-  std::shared_ptr<CoreContext> CreateAnonymous(void) {
-    return Create(typeid(void));
+    return CreateInternal<T>(*new CoreContext(shared_from_this(), typeid(T)));
   }
 
   /// <summary>
@@ -114,15 +135,7 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
-    return CreatePeer(typeid(T));
-  }
-
-  /// <summary>
-  /// Factory to create an anonymous peer context
-  /// </summary>
-  template<class T>
-  std::shared_ptr<CoreContext> CreateAnonymousPeer(void) {
-    return CreatePeer(typeid(void));
+    return m_pParent->CreateInternal<T>(*new CoreContext(m_pParent, typeid(T), shared_from_this()));
   }
 
   /// <summary>
@@ -141,11 +154,58 @@ public:
   /// Convenience method to obtain a shared reference to the global context
   /// </summary>
   static std::shared_ptr<CoreContext> GetGlobal(void);
-
 protected:
-  std::shared_ptr<CoreContext> Create(const std::type_info& sigil);
-  std::shared_ptr<CoreContext> Create(const std::type_info& sigil, CoreContext& newContext);
-  std::shared_ptr<CoreContext> CreatePeer(const std::type_info& sigil);
+  /// <summary>
+  /// Register new context with parent and notify others of its creation.
+  /// </summary>
+  template<typename T>
+  std::shared_ptr<CoreContext> CreateInternal(CoreContext& newContext) {
+    t_childList::iterator childIterator;
+    {
+      // Lock the child list while we insert
+      boost::lock_guard<boost::mutex> lk(m_childrenLock);
+      
+      // Reserve a place in the list for the child
+      childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
+    }
+    
+    if (m_useOwnershipValidator)
+      newContext.EnforceSimpleOwnership();
+    
+    // Create the shared pointer for the context--do not add the context to itself,
+    // this creates a dangerous cyclic reference.
+    std::shared_ptr<CoreContext> retVal(
+      &newContext,
+      [this, childIterator] (CoreContext* pContext) {
+        {
+          boost::lock_guard<boost::mutex> lk(m_childrenLock);
+          this->m_children.erase(childIterator);
+        }
+        delete pContext;
+      }
+    );
+    *childIterator = retVal;
+    
+    // Save anchored types in context
+    if (std::is_base_of<AutoAnchorBase,T>::value) {
+      retVal->AddAnchor<typename std::conditional<std::is_base_of<AutoAnchorBase,T>::value, T, AutoAnchorBase>::type>();
+    }
+    
+    // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
+    if (!std::is_same<T,void>::value) {
+      CurrentContextPusher pshr(retVal);
+      BroadcastContextCreationNotice(typeid(T));
+    }
+    return retVal;
+  }
+  
+  // T must inherit from AutoAnchorBase
+  template<typename AnchorType>
+  void AddAnchor() {
+    AnchorType::Enumerate(m_anchors);
+  }
+  
+  std::set<std::type_index> m_anchors;
 
   // A pointer to the parent context
   const std::shared_ptr<CoreContext> m_pParent;
@@ -219,20 +279,17 @@ protected:
   // Adds a bolt proper to this context
   template<class T, class Sigil>
   void EnableInternal(T*, Bolt<Sigil>*) {
-    std::shared_ptr<T> ptr;
-    AutoRequire(ptr);
+    Inject<T>();
   }
   
   template<class T, class Sigil, class Sigil2>
   void EnableInternal(T*, Bolt<Sigil,Sigil2>*) {
-    std::shared_ptr<T> ptr;
-    AutoRequire(ptr);
+    Inject<T>();
   }
   
   template<class T, class Sigil, class Sigil2, class Sigil3>
   void EnableInternal(T*, Bolt<Sigil,Sigil2,Sigil3>*) {
-    std::shared_ptr<T> ptr;
-    AutoRequire(ptr);
+    Inject<T>();
   }
 
   template<class Sigil, class T>
@@ -492,6 +549,19 @@ public:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const { return m_byType.size(); }
   const std::type_info& GetSigilType(void) const { return m_sigil; }
+  
+  /// <summary>
+  /// Check if parent context's have AutoAnchored the type in their sigil.
+  /// </summary>
+  template<typename Sigil>
+  std::shared_ptr<CoreContext> ResolveAnchor(void) {
+    for(auto pCur = m_pParent; pCur; pCur = pCur->m_pParent) {
+      if (pCur->m_anchors.find(typeid(Sigil)) != pCur->m_anchors.end()){
+        return pCur;
+      }
+    }
+    return shared_from_this();
+  }
 
   /// <summary>
   /// Utility method which will inject the specified types into this context
@@ -533,7 +603,7 @@ public:
   /// </returns>
   template<typename T>
   std::shared_ptr<T> Inject(void) {
-    return Construct<T>();
+    return ResolveAnchor<T>() -> template Construct<T>();
   }
 
   /// <summary>
@@ -907,15 +977,6 @@ public:
   // Interior type overrides:
   void FindByType(std::shared_ptr<AutoPacketFactory>& slot) { slot = m_packetFactory; }
 
-  template<class W>
-  void AutoRequire(W& slot) {
-    if(AutowireNoDefer(slot))
-      return;
-
-    // Failed, create
-    slot = Inject<typename W::element_type>();
-  }
-
   /// <summary>
   /// Registers a slot to be autowired
   /// </summary>
@@ -923,7 +984,7 @@ public:
   bool Autowire(W& slot) {
     if(AutowireNoDefer(slot))
       return true;
-
+    
     // Failed, defer
     DeferAutowiring(slot);
     return false;
@@ -979,8 +1040,7 @@ void CoreContext::AutoRequireMicroBolt(void) {
   if(std::is_same<void, Sigil>::value)
     return;
 
-  std::shared_ptr<MicroBolt<Sigil, T>> ptr;
-  AutoRequire(ptr);
+  Inject<MicroBolt<Sigil, T>>();
 }
 
 template<typename T>
