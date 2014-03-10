@@ -289,20 +289,20 @@ public:
     
     const auto& dq = erp->GetDispatchQueue();
     boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
-    
+
+    auto f = fnPtr;
+    auto lambda = [f] (EventReceiver& obj, Args... args) {
+      // Now we perform the cast:
+      T* pObj = dynamic_cast<T*>(&obj);
+      (pObj->*f)(std::move(args)...);
+    };
+
     for(auto q = dq.begin(); q != dq.end(); q++) {
       auto* pCur = *q;
       if(!pCur->CanAccept())
         continue;
       
       // Pass the copy into the lambda:
-      auto f = fnPtr;
-      auto lambda = [=] (EventReceiver& obj, Args... args) {
-          // Now we perform the cast:
-          T* pObj = dynamic_cast<T*>(&obj);
-          (pObj->*f)(std::move(args)...);
-        };
-      
       auto bound_lambda = std::bind<void>(lambda, std::placeholders::_1, args...);
       pCur->AttachProxyRoutine(bound_lambda);
     }
