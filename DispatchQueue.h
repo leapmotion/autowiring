@@ -170,25 +170,6 @@ public:
     return retVal;
   }
 
-  /// <summary>
-  /// Dispatcher overload, expressly for use with types which expect an event
-  /// </summary>
-  /// <param name="eventProxy">A proxy routine to the destination event type</param>
-  /// <remarks>
-  /// This overload is intended for use where an event call must be made on a partially bound destination.
-  /// The passed call will receive a pointer to this DispatchQueue, and will be expected to cast it to the
-  /// correct destination type prior to actually making the call.
-  ///
-  /// The event receiver function must be idempotent, and must be callable on types other than [this].
-  /// Certain derived implementations may proxy the event call, sending it elsewhere, possibly more than
-  /// once, which requires that the passed routine be invariant.
-  /// </remarks>
-  virtual void AttachProxyRoutine(std::function<void (EventReceiver&)>&& eventProxy) {
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    m_dispatchQueue.push_back(new DispatchThunkEventProxy(*this, std::move(eventProxy)));
-    m_queueUpdated.notify_all();
-  }
-
   template<class Clock>
   class DispatchThunkDelayedExpression {
   public:
