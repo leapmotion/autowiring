@@ -13,6 +13,8 @@ TEST_F(ScopeTest, VerifyGlobalExists) {
 
 class A : public ContextMember {};
 class B : public ContextMember {};
+class C : public ContextMember {};
+class D : public ContextMember {};
 
 TEST_F(ScopeTest, VerifyInherit) {
   AutoCurrentContext ctxt;
@@ -107,27 +109,53 @@ TEST_F(ScopeTest, AutowiringHeapMangle){
 }
 
 TEST_F(ScopeTest, AutowiringOrdering) {
-  AutoCurrentContext outer;
-  AutoCreateContext ctxt1;
-  AutoCreateContext ctxt2;
+  AutoCreateContext outer;
+  CurrentContextPusher outerPshr(outer);
+  AutoCreateContext inner1;
+  AutoCreateContext inner2;
+  AutoCreateContext inner3;
+  AutoCreateContext inner4;
   
-  // Autowire in outer context
+  // Autowire in outer context, AutoRequire in inner
   Autowired<A> a;
   {
-    CurrentContextPusher pshr(ctxt1);
+    CurrentContextPusher pshr(inner1);
     
     AutoRequired<A> a2;
-    ASSERT_FALSE(a.IsAutowired());
+    EXPECT_FALSE(a.IsAutowired());
   }
   
-  // Autorequire in outer context
+  // AutoRequire in outer context, Autowire in inner
   AutoRequired<B> b;
   {
-    CurrentContextPusher pshr(ctxt2);
+    CurrentContextPusher pshr(inner2);
     
     Autowired<B> b2;
-    ASSERT_TRUE(b.IsAutowired());
-    ASSERT_EQ(b->GetContext(), outer);
+    EXPECT_TRUE(b.IsAutowired());
+    EXPECT_EQ(b->GetContext(), outer);
+  }
+  
+  // AutoRequire in outer context, AutoRequire in inner
+  AutoRequired<C> c;
+  {
+    CurrentContextPusher pshr(inner3);
+    
+    AutoRequired<C> c2;
+    EXPECT_TRUE(c2.IsAutowired());
+    EXPECT_NE(c->GetContext(), c2->GetContext());
+  }
+  
+  // Autowire in outer context, Autowire in inner
+  Autowired<D> d;
+  {
+    CurrentContextPusher pshr(inner4);
+    
+    Autowired<D> d2;
+    EXPECT_FALSE(d.IsAutowired());
+    EXPECT_FALSE(d2.IsAutowired());
+    AutoRequired<D> derp(m_create);
+    EXPECT_EQ(d->GetContext(), d2->GetContext());
+    EXPECT_EQ(derp->GetContext(), d2->GetContext());
   }
 }
 
