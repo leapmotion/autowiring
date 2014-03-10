@@ -146,7 +146,7 @@ protected:
   t_deferred m_deferred;
 
   // All known event receivers and receiver proxies:
-  typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
+  typedef std::unordered_set<std::shared_ptr<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
 
   typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
