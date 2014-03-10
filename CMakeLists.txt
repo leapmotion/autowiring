@@ -69,6 +69,7 @@ set(Autowiring_SRCS
   PolymorphicTypeForest.h
   ReentrantCounter.h
   ReentrantCounter.cpp
+  result_or_default.h
   SimpleOwnershipValidator.h
   SimpleOwnershipValidator.cpp
   StateMachine.h
@@ -134,6 +135,8 @@ set(AutowiringTest_SRCS
   ContextCleanupTest.cpp
   ContextMapTest.h
   ContextMapTest.cpp
+  CoreContextTest.h
+  CoreContextTest.cpp
   CoreThreadTest.h
   CoreThreadTest.cpp
   BoltTest.h
