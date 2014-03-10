@@ -349,24 +349,24 @@ void CoreContext::UpdateDeferredElements(void) {
   }
 }
 
-void CoreContext::AddEventReceiver(CoreContext* pOriginalParent, std::shared_ptr<EventReceiver> pRecvr) {
+void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   {
     // Add to our local collection:
     boost::lock_guard<boost::mutex> lk(m_lock);
-    m_eventReceivers.insert(pRecvr);
+    m_eventReceivers.insert(receiver);
 
     // Scan the list of compatible senders:
     for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-      q->second->Add(pOriginalParent, pRecvr);
+      q->second->Add(receiver);
   }
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
-    m_pParent->AddEventReceiver(pOriginalParent, pRecvr);
+    m_pParent->AddEventReceiver(receiver);
 }
 
-void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
   // Remove from the local collection
   (boost::lock_guard<boost::mutex>)m_lock,
   m_eventReceivers.erase(pRecvr);
