@@ -248,10 +248,25 @@ public:
   }
 
   /// <summary>
+  /// Explicit overload for already-constructed dispatch thunk types
+  /// </summary>
+  void operator+=(DispatchThunkBase* pBase) {
+    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
+      return;
+
+    m_dispatchQueue.push_back(pBase);
+    m_queueUpdated.notify_all();
+    OnPended();
+  }
+
+  /// <summary>
   /// Generic overload which will pend an arbitrary dispatch type
   /// </summary>
   template<class _Fx>
   void operator+=(_Fx&& fx) {
+    static_assert(!std::is_base_of<DispatchThunkBase, _Fx>::value, "Overload resolution malfunction, must not doubly wrap a dispatch thunk");
+
     if(!CanAccept())
       return;
 
