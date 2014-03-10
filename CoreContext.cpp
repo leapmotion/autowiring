@@ -274,11 +274,6 @@ void CoreContext::Dump(std::ostream& os) const {
   }
 }
 
-void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient) {
-  // Obtain the current context and pass control:
-  CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
-}
-
 void CoreContext::UnregisterEventReceivers(void) {
   // Release all event sender links:
   for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
@@ -354,7 +349,7 @@ void CoreContext::UpdateDeferredElements(void) {
   }
 }
 
-void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+void CoreContext::AddEventReceiver(CoreContext* pOriginalParent, std::shared_ptr<EventReceiver> pRecvr) {
   {
     // Add to our local collection:
     boost::lock_guard<boost::mutex> lk(m_lock);
@@ -362,13 +357,13 @@ void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
 
     // Scan the list of compatible senders:
     for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-      q->second->Add(this, pRecvr);
+      q->second->Add(pOriginalParent, pRecvr);
   }
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
-    m_pParent->AddEventReceiver(pRecvr);
+    m_pParent->AddEventReceiver(pOriginalParent, pRecvr);
 }
 
 void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {

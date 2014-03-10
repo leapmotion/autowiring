@@ -17,21 +17,6 @@ class EventReceiver;
 class JunctionBoxBase;
 
 /// <summary>
-/// Service routine called inside Fire calls in order to decide how to handle an exception
-/// </summary>
-/// <remarks>
-/// This routine MUST NOT be called outside of a "catch" handler.  This function, and the functions that
-/// it call, rely on the validity of the std::current_exception return value, which will not be valid
-/// outside of a call block.
-/// </remarks>
-void FilterFiringException(const JunctionBoxBase* pSender, EventReceiver* pRecipient);
-
-/// <summary>
-/// Utility routine which shuts down the current context
-/// </summary>
-void ShutdownCurrentContext(void);
-
-/// <summary>
 /// Function pointer relay type
 /// </summary>
 template<class FnPtr>
@@ -51,6 +36,28 @@ protected:
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
+
+  /// <summary>
+  /// Invokes SignalTerminate on each context in the specified vector
+  /// </summary>
+  static void TerminateAll(const std::vector<std::weak_ptr<CoreContext>>& teardown);
+
+  /// <summary>
+  /// Convenience routine for Fire calls
+  /// </summary>
+  /// <remarks>
+  /// This is a convenience routine, its only purpose is to add the "this" parameter to the
+  /// call to FilterFiringException
+  /// </remarks>
+  void FilterFiringException(const std::shared_ptr<EventReceiver>& pReceiver) const;
+
+  /// <summary>
+  /// Converts a dumb pointer into a weak pointer
+  /// </summary>
+  /// <remarks>
+  /// An exterior hold guarantee must be made to call this method safely
+  /// </remarks>
+  static std::weak_ptr<CoreContext> ContextDumbToWeak(CoreContext* pContext);
 
 public:
   // Accessor methods:
@@ -96,16 +103,19 @@ protected:
       m_ptr(ptr)
     {}
 
-    const std::shared_ptr<T> m_ptr;
-    const CoreContext* m_owner;
+    std::shared_ptr<T> m_ptr;
 
     bool operator==(const JunctionBoxEntry& rhs) const {
       return get() == rhs.get();
     }
+
+    bool operator<(const JunctionBoxEntry& rhs) const {
+      return m_ptr < rhs.m_ptr;
+    }
   };
 
   // Collection of all known listeners:
-  typedef std::set<std::shared_ptr<T>> t_listenerSet;
+  typedef std::set<JunctionBoxEntry> t_listenerSet;
   t_listenerSet m_st;
   
   // Incremented every time an event is deleted to notify potentially invalidated iterators
@@ -113,9 +123,13 @@ protected:
 
 public:
   void RemoveAll() override {
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_dispatch.clear();
+    boost::lock_guard<boost::mutex> lk(m_lock);
 
+    // Deleted entry count must be incremented unconditionally:
+    m_numberOfDeletions++;
+
+    // Clear the dispatch queue and membership set:
+    m_dispatch.clear();
     m_st.clear();
   }
 
@@ -160,6 +174,7 @@ public:
   void Remove(const std::shared_ptr<T>& rhs) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     
+    // Update the deletion count
     m_numberOfDeletions++;
     
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
@@ -167,19 +182,7 @@ public:
     if(pDispatch)
       m_dispatch.erase(pDispatch);
 
-    JunctionBoxEntry entry(nullptr, rhs);
     m_st.erase(rhs);
-  }
-
-  /// <summary>
-  /// Convenience routine for Fire calls
-  /// </summary>
-  /// <remarks>
-  /// This is a convenience routine, its only purpose is to add the "this" parameter to the
-  /// call to FilterFiringException
-  /// </remarks>
-  inline void PassFilterFiringException(EventReceiver* pReceiver) const {
-    FilterFiringException(this, pReceiver);
   }
 
   /// <summary>
@@ -191,18 +194,19 @@ public:
   bool FireCurried(Fn&& fn) const {
     boost::unique_lock<boost::mutex> lk(m_lock);
     int deleteCount = m_numberOfDeletions;
-    std::shared_ptr<T> currentEvent;
+
+    // Set of contexts that need to be torn down in the event of an exception:
+    std::vector<std::weak_ptr<CoreContext>> teardown;
     
-    bool retVal = true;
     for(auto it = m_st.begin(); it != m_st.end(); ){
-      currentEvent = *it;
+      JunctionBoxEntry currentEvent(*it);
       
       lk.unlock();
       try {
-        fn(*currentEvent);
+        fn(*currentEvent.m_ptr);
       } catch(...) {
-        retVal = false;
-        this->PassFilterFiringException(currentEvent.get());
+        teardown.push_back(ContextDumbToWeak(it->m_owner));
+        this->FilterFiringException(currentEvent.m_ptr);
       }
       lk.lock();
       
@@ -214,7 +218,14 @@ public:
         deleteCount = m_numberOfDeletions;
       }
     }
-    return retVal;
+    if(teardown.empty())
+      // Nobody threw any exceptions, end here
+      return true;
+
+    // Exceptions thrown, teardown and then indicate an error
+    lk.unlock();
+    TerminateAll(teardown);
+    return false;
   }
 
   // Two-parenthetical deferred invocations:
