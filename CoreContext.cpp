@@ -442,9 +442,6 @@ void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, EventRece
       } catch(...) {
         // Do nothing, filter didn't want to filter this exception
       }
-
-  // Shut down our context:
-  SignalShutdown();
 }
 
 void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
