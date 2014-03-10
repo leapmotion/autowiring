@@ -1,5 +1,6 @@
 #pragma once
 #include "DispatchQueue.h"
+#include "DispatchThunk.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
 #include "ObjectPool.h"
@@ -282,38 +283,43 @@ struct gen_seq<0, S...> {
 /// <remarks>
 /// </remarks>
 template<class T, class... Args>
-class CurriedInvokeRelay {
+class CurriedInvokeRelay:
+  public DispatchThunkBase
+{
 public:
   CurriedInvokeRelay(CurriedInvokeRelay& rhs) = delete;
+  CurriedInvokeRelay(CurriedInvokeRelay&& rhs) = delete;
 
-  CurriedInvokeRelay(CurriedInvokeRelay&& rhs):
-    fnPtr(rhs.fnPtr),
-    m_args(std::move(rhs.m_args))
-  {
-  }
-
-  CurriedInvokeRelay(Deferred(T::*fnPtr)(Args...), Args&&... args) :
-    fnPtr(fnPtr),
+  template<class... W>
+  CurriedInvokeRelay(T* pObj, Deferred(T::*fnPtr)(Args...), W... args) :
+    m_pObj(pObj),
+    m_fnPtr(fnPtr),
+    m_pObj(nullptr),
     m_args(std::forward<Args>(args)...)
   {
   }
 
 private:
-  Deferred(T::*fnPtr)(Args...);
-  std::tuple<Args...> m_args;
+  // The object on which we are bound
+  T* const m_pObj;
+
+  // Function call to be made, and its arguments:
+  Deferred(T::*m_fnPtr)(Args...);
+  std::tuple<typename std::decay<Args>::type...> m_args;
 
   /// <summary>
   /// Places a call to the bound member function pointer by unpacking a lambda into it
   /// </summary>
   template<int... S>
-  void CallByUnpackingTuple(T* pObj, seq<S...>) {
-    (pObj->*f)(std::move(std::get<S>(m_args))...);
+  void CallByUnpackingTuple(seq<S...>) {
+    (m_pObj->*fnPtr)(std::move(std::get<S>(m_args))...);
   }
 
 public:
-  void operator()(EventReceiver& obj) {
-    T* pObj = dynamic_cast<T*>(&obj);
-    CallByUnpackingTuple(pObj, gen_seq<sizeof...(Args)>::type());
+  void operator()(void) {
+    if(!m_pObj)
+      throw std::runtime_error("Attemped to make an invocation on a type which was not yet initialized");
+    CallByUnpackingTuple(gen_seq<sizeof...(Args)>::type());
   }
 };
 
@@ -336,22 +342,17 @@ private:
   
 public:
   void operator()(const typename std::decay<Args>::type&... args) const {
-    if (!erp) return; //Context has already been destroyed
+    if(!erp)
+      // Context has already been destroyed
+      return;
     
     const auto& dq = erp->GetDispatchQueue();
     boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
 
-    // Copy of our member function pointer, so it's available to captures
-    const auto f = fnPtr;
-
-    for(auto q = dq.begin(); q != dq.end(); q++) {
-      auto* pCur = *q;
-      if(!pCur->CanAccept())
-        continue;
-      
-      // Create a fully curried function to add to the dispatch queue:
-      pCur->AttachProxyRoutine(CurriedInvokeRelay<T, Args...>(fnPtr, args...));
-    }
+    for(auto q = dq.begin(); q != dq.end(); q++)
+      if((**q).CanAccept())
+        // Create a fully curried function to add to the dispatch queue:
+        (**q) += new CurriedInvokeRelay<T, Args...>(fnPtr, args...);
   }
 };
 
