@@ -247,6 +247,7 @@ public:
   template<class _Fx>
   void operator+=(_Fx&& fx) {
     static_assert(!std::is_base_of<DispatchThunkBase, _Fx>::value, "Overload resolution malfunction, must not doubly wrap a dispatch thunk");
+    static_assert(!std::is_pointer<_Fx>::value, "Cannot pend a pointer to a function, we must have direct ownership");
 
     if(!CanAccept())
       return;
