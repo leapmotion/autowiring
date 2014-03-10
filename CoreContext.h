@@ -485,7 +485,7 @@ public:
   /// True if a complete enumeration has taken place, false if it was aborted by the passed lambda
   /// </returns>
   template<class Fn>
-  bool EnumerateChildContexts(const std::type_info &sigil, Fn& fn) {
+  bool EnumerateChildContexts(const std::type_info &sigil, Fn&& fn) {
     return EnumerateChildContexts(
       [&fn, &sigil] (std::shared_ptr<CoreContext> ctxt) -> bool {
         if(ctxt->GetSigilType() != sigil)
