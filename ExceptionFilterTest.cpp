@@ -249,6 +249,9 @@ TEST_F(ExceptionFilterTest, VerifySimpleConfinement) {
   AutoCreateContext child;
   child->Inject<ThrowsWhenFired<200>>();
 
+  Autowired<ThrowsWhenFired<200>> twf;
+  ASSERT_FALSE(twf) << "A member injected into a child context was incorrectly scoped at the parent context";
+
   // Cause the child context to throw an exception:
   AutoFired<ThrowingListener> tl;
   tl(&ThrowingListener::DoThrow)();
