@@ -265,6 +265,57 @@ public:
   }
 };
 
+template<int ...>
+struct seq {};
+
+template<int N, int... S>
+struct gen_seq: gen_seq<N - 1, N - 1, S...> {};
+
+template<int... S>
+struct gen_seq<0, S...> {
+  typedef seq<S...> type;
+};
+
+/// <summary>
+/// A fully bound member function call
+/// </summary>
+/// <remarks>
+/// </remarks>
+template<class T, class... Args>
+class CurriedInvokeRelay {
+public:
+  CurriedInvokeRelay(CurriedInvokeRelay& rhs) = delete;
+
+  CurriedInvokeRelay(CurriedInvokeRelay&& rhs):
+    fnPtr(rhs.fnPtr),
+    m_args(std::move(rhs.m_args))
+  {
+  }
+
+  CurriedInvokeRelay(Deferred(T::*fnPtr)(Args...), Args&&... args) :
+    fnPtr(fnPtr),
+    m_args(std::forward<Args>(args)...)
+  {
+  }
+
+private:
+  Deferred(T::*fnPtr)(Args...);
+  std::tuple<Args...> m_args;
+
+  /// <summary>
+  /// Places a call to the bound member function pointer by unpacking a lambda into it
+  /// </summary>
+  template<int... S>
+  void CallByUnpackingTuple(T* pObj, seq<S...>) {
+    (pObj->*f)(std::move(std::get<S>(m_args))...);
+  }
+
+public:
+  void operator()(EventReceiver& obj) {
+    T* pObj = dynamic_cast<T*>(&obj);
+    CallByUnpackingTuple(pObj, gen_seq<sizeof...(Args)>::type());
+  }
+};
 
 template<typename T, typename ...Args>
 class InvokeRelay<Deferred (T::*)(Args...)> {
@@ -290,21 +341,16 @@ public:
     const auto& dq = erp->GetDispatchQueue();
     boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
 
-    auto f = fnPtr;
-    auto lambda = [f] (EventReceiver& obj, Args... args) {
-      // Now we perform the cast:
-      T* pObj = dynamic_cast<T*>(&obj);
-      (pObj->*f)(std::move(args)...);
-    };
+    // Copy of our member function pointer, so it's available to captures
+    const auto f = fnPtr;
 
     for(auto q = dq.begin(); q != dq.end(); q++) {
       auto* pCur = *q;
       if(!pCur->CanAccept())
         continue;
       
-      // Pass the copy into the lambda:
-      auto bound_lambda = std::bind<void>(lambda, std::placeholders::_1, args...);
-      pCur->AttachProxyRoutine(bound_lambda);
+      // Create a fully curried function to add to the dispatch queue:
+      pCur->AttachProxyRoutine(CurriedInvokeRelay<T, Args...>(fnPtr, args...));
     }
   }
 };
