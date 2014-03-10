@@ -291,8 +291,8 @@ public:
   CurriedInvokeRelay(CurriedInvokeRelay&& rhs) = delete;
 
   template<class... W>
-  CurriedInvokeRelay(T* pObj, Deferred(T::*fnPtr)(Args...), W... args) :
-    m_pObj(pObj),
+  CurriedInvokeRelay(T& obj, Deferred(T::*fnPtr)(Args...), W... args) :
+    m_obj(obj),
     m_fnPtr(fnPtr),
     m_pObj(nullptr),
     m_args(std::forward<Args>(args)...)
@@ -301,7 +301,7 @@ public:
 
 private:
   // The object on which we are bound
-  T* const m_pObj;
+  T& m_obj;
 
   // Function call to be made, and its arguments:
   Deferred(T::*m_fnPtr)(Args...);
@@ -312,7 +312,7 @@ private:
   /// </summary>
   template<int... S>
   void CallByUnpackingTuple(seq<S...>) {
-    (m_pObj->*fnPtr)(std::move(std::get<S>(m_args))...);
+    (m_obj.*fnPtr)(std::move(std::get<S>(m_args))...);
   }
 
 public:
@@ -352,7 +352,7 @@ public:
     for(auto q = dq.begin(); q != dq.end(); q++)
       if((**q).CanAccept())
         // Create a fully curried function to add to the dispatch queue:
-        (**q) += new CurriedInvokeRelay<T, Args...>(fnPtr, args...);
+        (**q) += new CurriedInvokeRelay<T, Args...>(**q, fnPtr, args...);
   }
 };
 
