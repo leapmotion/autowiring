@@ -16,7 +16,7 @@ AutowirableSlot::AutowirableSlot(std::weak_ptr<CoreContext> context) :
   if (ENABLE_NETWORK_MONITOR) {
     // Obtain the network monitor:
     std::shared_ptr<AutoNetworkMonitor> pMon;
-    LockContext() -> template FindByType<AutoNetworkMonitor>(pMon);
+    LockContext() -> FindByType(pMon);
     if (pMon)
       // Pass notification:
       pMon->Notify(*this);
