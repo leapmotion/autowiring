@@ -129,23 +129,40 @@ public:
 /// </remarks>
 template<class T>
 class AutoRequired:
-  public Autowired<T>
+  public AutowirableSlot,
+  public std::shared_ptr<T>
 {
+  static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
+  static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
 public:
   using std::shared_ptr<T>::operator=;
+  typedef T value_type;
+  typedef shared_ptr<T> t_ptrType;
   
-  AutoRequired(void) {
-    this->Create(AutowirableSlot::LockContext());
+  AutoRequired(void):
+    AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>())
+  {
+    this->Create();
   }
   
   AutoRequired(std::weak_ptr<CoreContext> ctxt):
-    Autowired<T>(ctxt)
+    AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>())
   {
-    this->Create(ctxt.lock());
+    this->Create();
   }
+  
+  operator bool(void) const {
+    return IsAutowired();
+  }
+  
+  operator T*(void) const {
+    return t_ptrType::get();
+  }
+  
+  bool IsAutowired(void) const override {return !!t_ptrType::get();}
 
 private:
-  void Create(std::shared_ptr<CoreContext> p_ctxt) {
+  void Create(void) {
     if(*this)
       return;
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
@@ -171,7 +188,7 @@ private:
     // constructor is defined.
     //
     // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-    *this = p_ctxt->template Inject<T>();
+    *this = AutowirableSlot::LockContext()->template Inject<T>();
   }
 };
 
