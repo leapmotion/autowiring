@@ -269,7 +269,7 @@ protected:
   friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 
   // The interior packet factory:
-  std::shared_ptr<AutoPacketFactory> m_packetFactory;
+  const std::shared_ptr<AutoPacketFactory> m_packetFactory;
 
   // Lists of event receivers, by name:
   typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
@@ -1001,8 +1001,6 @@ void CoreContext::AutoRequireMicroBolt(void) {
   if(std::is_same<void, Sigil>::value)
     return;
 
-  //std::shared_ptr<MicroBolt<Sigil, T>> ptr;
-  //AutoRequire(ptr);
   Inject<MicroBolt<Sigil, T>>();
 }
 
