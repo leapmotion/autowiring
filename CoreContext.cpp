@@ -100,49 +100,6 @@ std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
 
-std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil){
-  return Create(sigil, *new CoreContext(shared_from_this(), sigil));
-}
-
-std::shared_ptr<CoreContext> CoreContext::CreatePeer(const std::type_info& sigil) {
-  return m_pParent->Create(sigil, *new CoreContext(m_pParent, sigil, shared_from_this()));
-}
-
-std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, CoreContext& newContext) {
-  t_childList::iterator childIterator;
-  {
-    // Lock the child list while we insert
-    boost::lock_guard<boost::mutex> lk(m_childrenLock);
-
-    // Reserve a place in the list for the child
-    childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
-  }
-
-  // Create the child context
-  CoreContext* pContext = &newContext;
-  if(m_useOwnershipValidator)
-    pContext->EnforceSimpleOwnership();
-  
-  // Create the shared pointer for the context--do not add the context to itself,
-  // this creates a dangerous cyclic reference.
-  std::shared_ptr<CoreContext> retVal(
-    pContext,
-    [this, childIterator] (CoreContext* pContext) {
-      {
-        boost::lock_guard<boost::mutex> lk(m_childrenLock);
-        this->m_children.erase(childIterator);
-      }
-      delete pContext;
-    }
-  );
-  *childIterator = retVal;
-
-  // Fire all explicit bolts:
-  CurrentContextPusher pshr(retVal);
-  BroadcastContextCreationNotice(sigil);
-  return retVal;
-}
-
 std::vector<std::shared_ptr<CoreThread>> CoreContext::CopyCoreThreadList(void) const {
   std::vector<std::shared_ptr<CoreThread>> retVal;
 
