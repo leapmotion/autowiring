@@ -243,7 +243,15 @@ protected:
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
-  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
+  /// <param name="pOriginalParent">The original parent of the passed type</param>
+  void AddEventReceiver(CoreContext* pOriginalParent, std::shared_ptr<EventReceiver> pRecvr);
+
+  /// <summary>
+  /// Adds the named event receiver to the collection of known receivers
+  /// </summary>
+  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+    return AddEventReceiver(this, pRecvr);
+  }
 
   /// <summary>
   /// Removes the named event receiver from the collection of known receivers
