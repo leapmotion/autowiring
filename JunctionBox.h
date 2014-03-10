@@ -23,6 +23,55 @@ template<class FnPtr>
 class InvokeRelay {};
 
 /// <summary>
+/// Utility structure representing a junction box entry together with its owner
+/// </summary>
+template<class T>
+struct JunctionBoxEntry
+{
+  JunctionBoxEntry(CoreContext* owner, std::shared_ptr<T> ptr) :
+    m_owner(owner),
+    m_ptr(ptr)
+  {}
+
+  CoreContext* const m_owner;
+  std::shared_ptr<T> m_ptr;
+
+  bool operator==(const JunctionBoxEntry& rhs) const {
+    return m_ptr == rhs.m_ptr;
+  }
+
+  bool operator<(const JunctionBoxEntry& rhs) const {
+    return m_ptr < rhs.m_ptr;
+  }
+
+  operator bool(void) const {
+    return !!m_ptr.get();
+  }
+
+  template<class U>
+  JunctionBoxEntry<U> Rebind(void) const {
+    return JunctionBoxEntry<U>(
+      m_owner,
+      std::dynamic_pointer_cast<U, T>(m_ptr)
+    );
+  }
+};
+
+namespace std {
+  /// <summary>
+  /// Hash specialization for the junction box entry
+  /// </summary>
+  template<class T>
+  struct hash<JunctionBoxEntry<T>> :
+    public hash<std::shared_ptr<T>>
+  {
+    size_t operator()(const JunctionBoxEntry<T>& jbe) const {
+      return hash<std::shared_ptr<T>>::operator()(jbe.m_ptr);
+    }
+  };
+}
+
+/// <summary>
 /// Used to identify event managers
 /// </summary>
 class JunctionBoxBase {
@@ -72,8 +121,8 @@ public:
   virtual void RemoveAll(void) = 0;
 
   // Event attachment and detachment pure virtuals
-  virtual void Add(CoreContext* owner, const std::shared_ptr<EventReceiver>& rhs) = 0;
-  virtual void Remove(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual void Add(const JunctionBoxEntry<EventReceiver>& rhs) = 0;
+  virtual void Remove(const JunctionBoxEntry<EventReceiver>& rhs) = 0;
 };
 
 struct NoType {};
@@ -95,27 +144,8 @@ public:
   virtual ~JunctionBox(void) {}
 
 protected:
-  // Internal structure representing a junction box entry
-  struct JunctionBoxEntry
-  {
-    JunctionBoxEntry(CoreContext* owner, std::shared_ptr<T> ptr) :
-      m_owner(owner),
-      m_ptr(ptr)
-    {}
-
-    std::shared_ptr<T> m_ptr;
-
-    bool operator==(const JunctionBoxEntry& rhs) const {
-      return get() == rhs.get();
-    }
-
-    bool operator<(const JunctionBoxEntry& rhs) const {
-      return m_ptr < rhs.m_ptr;
-    }
-  };
-
   // Collection of all known listeners:
-  typedef std::set<JunctionBoxEntry> t_listenerSet;
+  typedef std::set<JunctionBoxEntry<T>> t_listenerSet;
   t_listenerSet m_st;
   
   // Incremented every time an event is deleted to notify potentially invalidated iterators
@@ -140,15 +170,15 @@ public:
     return (boost::lock_guard<boost::mutex>)m_lock, !m_st.empty();
   }
 
-  void Add(CoreContext* owner, const std::shared_ptr<EventReceiver>& rhs) override {
-    auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
+  void Add(const JunctionBoxEntry<EventReceiver>& rhs) override {
+    auto casted = rhs.Rebind<T>();
     if(casted)
       // Proposed type is directly one of our receivers
-      Add(owner, casted);
+      Add(casted);
   }
 
-  void Remove(const std::shared_ptr<EventReceiver>& rhs) override {
-    auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
+  void Remove(const JunctionBoxEntry<EventReceiver>& rhs) override {
+    auto casted = rhs.Rebind<T>();
     if(casted)
       Remove(casted);
   }
@@ -156,14 +186,14 @@ public:
   /// <summary>
   /// Adds the specified observer to receive events dispatched from this instace
   /// </summary>
-  void Add(CoreContext* owner, const std::shared_ptr<T>& rhs) {
+  void Add(const JunctionBoxEntry<T>& rhs) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     
     // Trivial insert
     m_st.insert(rhs);
 
     // If the RHS implements DispatchQueue, add it to that collection as well:
-    DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs).get();
+    DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs.m_ptr).get();
     if(pDispatch)
       m_dispatch.insert(pDispatch);
   }
@@ -171,14 +201,14 @@ public:
   /// <summary>
   /// Removes the specified observer from the set currently configured to receive events
   /// </summary>
-  void Remove(const std::shared_ptr<T>& rhs) {
+  void Remove(const JunctionBoxEntry<T>& rhs) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     
     // Update the deletion count
     m_numberOfDeletions++;
     
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
-    DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs).get();
+    DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs.m_ptr).get();
     if(pDispatch)
       m_dispatch.erase(pDispatch);
 
@@ -199,7 +229,7 @@ public:
     std::vector<std::weak_ptr<CoreContext>> teardown;
     
     for(auto it = m_st.begin(); it != m_st.end(); ){
-      JunctionBoxEntry currentEvent(*it);
+      JunctionBoxEntry<T> currentEvent(*it);
       
       lk.unlock();
       try {
