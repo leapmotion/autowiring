@@ -35,7 +35,7 @@ TEST_F(DecoratorTest, VerifyEmptyExtraction) {
 }
 
 TEST_F(DecoratorTest, VerifySimplePacketDecoration) {
-  AutoRequired<AutoPacketFactory> factory;
+  Autowired<AutoPacketFactory> factory;
 
   // Create the packet we will be persisting:
   auto packet = factory->NewPacket();
@@ -63,7 +63,7 @@ TEST_F(DecoratorTest, VerifySimplePacketDecoration) {
 
 TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
   // Create a packet while the factory has no subscribers:
-  AutoRequired<AutoPacketFactory> factory;
+  Autowired<AutoPacketFactory> factory;
   auto packet1 = factory->NewPacket();
 
   // Verify subscription-free status:
@@ -83,7 +83,7 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
 
 TEST_F(DecoratorTest, VerifyDescendentAwareness) {
    // Create a packet while the factory has no subscribers:
-  AutoRequired<AutoPacketFactory> parentFactory;
+  Autowired<AutoPacketFactory> parentFactory;
   auto packet1 = parentFactory->NewPacket();
 
   // Verify subscription-free status:
@@ -133,7 +133,7 @@ TEST_F(DecoratorTest, VerifyDescendentAwareness) {
 
 TEST_F(DecoratorTest, VerifySimpleFilter) {
   AutoRequired<FilterA> filterA;
-  AutoRequired<AutoPacketFactory> factory;
+  Autowired<AutoPacketFactory> factory;
 
   // Manually register the subscriber:
   ASSERT_TRUE(factory->IsSubscriber<FilterA>());
@@ -156,7 +156,7 @@ TEST_F(DecoratorTest, VerifySimpleFilter) {
 
 TEST_F(DecoratorTest, VerifyNoMultiDecorate) {
   AutoRequired<FilterA> filterA;
-  AutoRequired<AutoPacketFactory> factory;
+  Autowired<AutoPacketFactory> factory;
 
   // Subscriber registration verification:
   ASSERT_TRUE(factory->IsSubscriber<FilterA>());
@@ -176,7 +176,7 @@ TEST_F(DecoratorTest, VerifyNoMultiDecorate) {
 
 TEST_F(DecoratorTest, VerifyInterThreadDecoration) {
   AutoRequired<FilterB> filterB;
-  AutoRequired<AutoPacketFactory> factory;
+  Autowired<AutoPacketFactory> factory;
   AutoCurrentContext ctxt;
 
   // Kick off all threads:
@@ -200,7 +200,7 @@ TEST_F(DecoratorTest, VerifyInterThreadDecoration) {
 }
 
 TEST_F(DecoratorTest, VerifyTeardownArrangement) {
-  AutoRequired<AutoPacketFactory> factory;
+  Autowired<AutoPacketFactory> factory;
 
   std::weak_ptr<FilterA> filterAWeak;
 
@@ -247,7 +247,7 @@ TEST_F(DecoratorTest, VerifyTeardownArrangement) {
 
 TEST_F(DecoratorTest, VerifyCheckout) {
   AutoRequired<FilterA> filterA;
-  AutoRequired<AutoPacketFactory> factory;
+  Autowired<AutoPacketFactory> factory;
 
   // Obtain a packet for use with deferred decoration:
   auto packet = factory->NewPacket();
@@ -290,7 +290,7 @@ TEST_F(DecoratorTest, VerifyCheckout) {
 
 TEST_F(DecoratorTest, RollbackCorrectness) {
   AutoRequired<FilterA> filterA;
-  AutoRequired<AutoPacketFactory> factory;
+  Autowired<AutoPacketFactory> factory;
 
   // Obtain a packet for use with deferred decoration:
   auto packet = factory->NewPacket();
@@ -311,7 +311,7 @@ TEST_F(DecoratorTest, RollbackCorrectness) {
 
 TEST_F(DecoratorTest, VerifyAntiDecorate) {
   AutoRequired<FilterA> filterA;
-  AutoRequired<AutoPacketFactory> factory;
+  Autowired<AutoPacketFactory> factory;
 
   {
     // Obtain a new packet and mark an unsatisfiable decoration:
@@ -333,7 +333,7 @@ TEST_F(DecoratorTest, VerifyReflexiveReciept) {
   AutoRequired<FilterC> filterC;
   AutoRequired<FilterD> filterD;
   AutoRequired<FilterE> filterE;
-  AutoRequired<AutoPacketFactory> factory;
+  Autowired<AutoPacketFactory> factory;
 
   // Obtain a packet first:
   auto packet = factory->NewPacket();
