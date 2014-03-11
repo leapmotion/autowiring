@@ -147,7 +147,7 @@ protected:
   t_deferred m_deferred;
 
   // All known event receivers and receiver proxies:
-  typedef std::unordered_set<std::shared_ptr<EventReceiver>, SharedPtrHash<EventReceiver>> t_rcvrSet;
+  typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
 
   typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
@@ -244,12 +244,20 @@ protected:
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
-  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
+  /// <param name="pOriginalParent">The original parent of the passed type</param>
+  void AddEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
+
+  /// <summary>
+  /// Adds the named event receiver to the collection of known receivers
+  /// </summary>
+  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+    return AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, pRecvr));
+  }
 
   /// <summary>
   /// Removes the named event receiver from the collection of known receivers
   /// </summary>
-  void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
+  void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
@@ -622,7 +630,7 @@ public:
     
     // Attach compatible receivers:
     for(auto q = m_eventReceivers.begin(); q != m_eventReceivers.end(); q++)
-      *retVal += *q;
+      retVal->Add(*q);
 
     // Construction complete
     return retVal;
@@ -796,11 +804,13 @@ public:
 
     // Snooping now
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
+
+    JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
     (boost::lock_guard<boost::mutex>)m_lock,
-    m_snoopers.insert(rcvr);
+    m_snoopers.insert(receiver);
 
     // Pass control to the event adder helper:
-    AddEventReceiver(rcvr);
+    AddEventReceiver(receiver);
   }
 
   /// <summary>
@@ -815,9 +825,11 @@ public:
 
     // Pass control to the event remover helper:
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
+    JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
+
     (boost::lock_guard<boost::mutex>)m_lock,
-    m_snoopers.erase(rcvr);
-    RemoveEventReceiver(rcvr);
+    m_snoopers.erase(receiver);
+    RemoveEventReceiver(receiver);
   }
 
   /// <summary>
