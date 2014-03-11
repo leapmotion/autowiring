@@ -3,6 +3,8 @@
 #include "ExceptionFilterTest.h"
 #include "EventReceiver.h"
 #include "ExceptionFilter.h"
+#include "TestFixtures/ThrowsWhenFired.h"
+#include "TestFixtures/ThrowsWhenRun.h"
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
@@ -14,18 +16,6 @@ string FormatMessage(int value) {
   sstr << "custom_exception: " << value;
   return sstr.str();
 }
-
-class custom_exception:
-  public std::exception
-{
-public:
-  custom_exception(int value):
-    m_value(value)
-  {
-  }
-
-  int m_value;
-};
 
 /// <summary>
 /// Exception type which can track its own destruction
@@ -48,46 +38,6 @@ public:
 };
 
 size_t tracking_exception::s_count = 0;
-
-class ThrowingListener:
-  public virtual EventReceiver
-{
-public:
-  ThrowingListener(void) {}
-  virtual void DoThrow(void) = 0;
-};
-
-template<class Ex>
-class ThrowsWhenRun:
-  public CoreThread
-{
-public:
-  // This convoluted syntax is required to evade warnings on Mac
-  decltype(throw_rethrowable Ex(100)) MakeException() {
-    return throw_rethrowable Ex(100);
-  }
-
-  void Run(void) override {
-    MakeException();
-  }
-};
-
-template<int i = 200>
-class ThrowsWhenFired:
-  public ThrowingListener
-{
-public:
-  ThrowsWhenFired(void):
-    hit(false)
-  {}
-
-  bool hit;
-
-  void DoThrow(void) override {
-    hit = true;
-    throw_rethrowable custom_exception(i);
-  }
-};
 
 class GenericFilter:
   public ExceptionFilter
@@ -240,4 +190,13 @@ TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
 
   // Verify that BOTH are hit:
   EXPECT_TRUE(v200->hit && v201->hit) << "Expected all receivers of a fired event will be processed, even if some throw exceptions";
+}
+
+TEST_F(ExceptionFilterTest, ExceptionFirewall) {
+  AutoRequired<ThrowsWhenFired<200>> v200;
+
+  // Try to throw, verify the return value.  The value should be false, because this particular type always
+  // throws an exception in response to the receipt of an event.
+  AutoFired<ThrowingListener> tl;
+  ASSERT_FALSE(tl(&ThrowingListener::DoThrow)()) << "An exception event was not properly indicated to an event firer";
 }

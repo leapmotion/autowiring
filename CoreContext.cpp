@@ -143,6 +143,17 @@ std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, Co
   return retVal;
 }
 
+std::vector<std::shared_ptr<CoreThread>> CoreContext::CopyCoreThreadList(void) const {
+  std::vector<std::shared_ptr<CoreThread>> retVal;
+
+  // It's safe to enumerate this list from outside of a protective lock because a linked list
+  // has stable iterators, we do not delete entries from the interior of this list, and we only
+  // add entries to the end of the list.
+  for(auto q = m_threads.begin(); q != m_threads.end(); q++)
+    retVal.push_back((**q).GetSelf<CoreThread>());
+  return retVal;
+}
+
 void CoreContext::InitiateCoreThreads(void) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
@@ -170,16 +181,13 @@ void CoreContext::InitiateCoreThreads(void) {
     (*q)->Start(outstanding);
 }
 
-void CoreContext::SignalShutdown(bool wait) {
+void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   // Transition as soon as possible:
   m_isShutdown = true;
 
   // Wipe out the junction box manager:
-  {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    UnregisterEventReceivers();
-  }
-
+  (boost::unique_lock<boost::mutex>)m_lock,
+  UnregisterEventReceivers();
 
   {
     // Teardown interleave assurance--all of these contexts will generally be destroyed
@@ -218,8 +226,9 @@ void CoreContext::SignalShutdown(bool wait) {
   }
 
   // Pass notice to all child threads:
+  bool graceful = shutdownMode == ShutdownMode::Graceful;
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
-    (*q)->Stop();
+    (*q)->Stop(graceful);
 
   // Signal our condition variable
   m_stateChanged.notify_all();

@@ -193,23 +193,22 @@ public:
   /// Zero-argument deferred call relay
   /// </summary>
   /// <param name="fn">A nearly-curried routine to be invoked</param>
+  /// <return>False if an exception was thrown by a recipient, true otherwise</return>
   template<class Fn>
-  void FireCurried(Fn&& fn) const {
+  bool FireCurried(Fn&& fn) const {
     boost::unique_lock<boost::mutex> lk(m_lock);
     int deleteCount = m_numberOfDeletions;
     std::shared_ptr<T> currentEvent;
     
-    // Flag set to true if there is an exception thrown during the fire, at which point
-    // our response is to terminate the enclosing context
-    bool fatal = false;
-
-    for(auto it = m_st.begin(); it != m_st.end();/* Update step at end of loop */){
+    bool retVal = true;
+    for(auto it = m_st.begin(); it != m_st.end(); ){
       currentEvent = *it;
       
       lk.unlock();
       try {
         fn(*currentEvent);
       } catch(...) {
+        retVal = false;
         this->PassFilterFiringException(currentEvent.get());
       }
       lk.lock();
@@ -222,11 +221,7 @@ public:
         deleteCount = m_numberOfDeletions;
       }
     }
-
-    if(fatal)
-      // Shut down our context after all recipients have had a chance to process
-      // this event.
-      ShutdownCurrentContext();
+    return retVal;
   }
 
   // Two-parenthetical deferred invocations:
@@ -299,8 +294,14 @@ private:
   void (T::*fnPtr)(Args...);
 
 public:
-  void operator()(Args... args) const {
-    if (!erp) return; //Context has already been destroyed
+  /// <summary>
+  /// The function call operation itself
+  /// </summary>
+  /// <returns>False if an exception was thrown by a recipient, true otherwise</returns>
+  bool operator()(Args... args) const {
+    if(!erp)
+      // Context has already been destroyed
+      return true;
     
     //First distribute the arguments to any listening serializers in current context
     erp->SerializeInit(fnPtr, args...);
@@ -308,6 +309,6 @@ public:
     auto lambda = [&] (T& obj, Args... args) {(obj.*fnPtr)(args...);};
     auto bound_lambda = std::bind<void>(lambda, std::placeholders::_1, std::ref(args)...);
     
-    erp->FireCurried(bound_lambda);
+    return erp->FireCurried(bound_lambda);
   }
 };
