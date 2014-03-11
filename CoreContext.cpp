@@ -285,15 +285,10 @@ void CoreContext::Dump(std::ostream& os) const {
   }
 }
 
-void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient) {
-  // Obtain the current context and pass control:
-  CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
-}
-
 void CoreContext::UnregisterEventReceivers(void) {
   // Release all event sender links:
   for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-    (*q).second->ReleaseRefs();
+    (*q).second->RemoveAll();
 
   // Eliminate all snoopers from our apprehended list of receivers:
   for(auto q = m_snoopers.begin(); q != m_snoopers.end(); q++)
@@ -365,31 +360,31 @@ void CoreContext::UpdateDeferredElements(void) {
   }
 }
 
-void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   {
     // Add to our local collection:
     boost::lock_guard<boost::mutex> lk(m_lock);
-    m_eventReceivers.insert(pRecvr);
+    m_eventReceivers.insert(receiver);
 
     // Scan the list of compatible senders:
     for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-      *q->second += pRecvr;
+      q->second->Add(receiver);
   }
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
-    m_pParent->AddEventReceiver(pRecvr);
+    m_pParent->AddEventReceiver(receiver);
 }
 
-void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
   // Remove from the local collection
   (boost::lock_guard<boost::mutex>)m_lock,
   m_eventReceivers.erase(pRecvr);
 
   // Notify all compatible senders that we're going away:
   for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-    *q->second -= pRecvr;
+    q->second->Remove(pRecvr);
 
   // Delegate to the parent:
   if(m_pParent)
@@ -402,7 +397,7 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::iterator first, t_rcvrSet::ite
     for(auto q = first; q != last; q++) {
       // n^2 sender unlinking
       for(auto r = m_junctionBoxes.begin(); r != m_junctionBoxes.end(); r++)
-        *r->second -= *q;
+        r->second->Remove(*q);
 
       // Trivial erase:
       m_eventReceivers.erase(*q);
@@ -458,9 +453,6 @@ void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, EventRece
       } catch(...) {
         // Do nothing, filter didn't want to filter this exception
       }
-
-  // Shut down our context:
-  SignalShutdown();
 }
 
 void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
