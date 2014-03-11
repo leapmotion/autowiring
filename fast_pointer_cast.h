@@ -1,4 +1,5 @@
 #pragma once
+#include TYPE_TRAITS_HEADER
 
 namespace leap {
   /// <summary>
