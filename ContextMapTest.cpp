@@ -64,23 +64,31 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     auto relocked = weakContext.lock();
     EXPECT_EQ(relocked, context) << "Mapped context pointer was not identical to a previously stored context pointer";
 
-    // Begin context shutdown
-    context->SignalShutdown();
-
-    // Signal that the thread can quit:
-    threaded->Stop();
-
-    // Wait for the context to exit:
-    context->Wait();
+    // Terminate whole context
+    context->SignalTerminate();
   }
 
   // Release our threaded entity:
   threaded.reset();
 
   {
-    // Verify that we can still find the context while the thread is alive:
-    std::shared_ptr<CoreContext> notFound = mp.Find("context_withthreads");
-    EXPECT_FALSE(notFound) << "Context was not properly evicted from the map";
+    // Verify that the context is gone now that everything in it has stopped running
+    auto ctxt = mp.Find("context_withthreads");
+    EXPECT_FALSE(ctxt) << "Context was not properly evicted from the map";
+
+    // Just return early if the context was empty as we expected, the next part of this test is for diagnostics
+    if(!ctxt)
+      return;
+
+    // Release the pointer so we aren't guilty of holding a reference to the very thing whose
+    // destruction we are trying to assure.
+    ctxt.reset();
+
+    // Sleep for a little bit and run the verification again.  If the prior expectation fails,
+    // but this one succeeds, it could be due to race conditions in CoreThread
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+    ctxt = mp.Find("context_withthreads");
+    EXPECT_FALSE(ctxt) << "Context was not properly evicted even after waiting for a time to ensure eviction";
   }
 }
 
