@@ -2,7 +2,6 @@
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
 #include "DispatchThunk.h"
-#include "DispatchThunkEventProxy.h"
 #include <boost/thread/condition_variable.hpp>
 #include <list>
 #include <queue>
