@@ -165,6 +165,19 @@ public:
     return retVal;
   }
 
+  /// <summary>
+  /// Explicit overload for already-constructed dispatch thunk types
+  /// </summary>
+  void AddExisting(DispatchThunkBase* pBase) {
+    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
+      return;
+
+    m_dispatchQueue.push_back(pBase);
+    m_queueUpdated.notify_all();
+    OnPended();
+  }
+
   template<class Clock>
   class DispatchThunkDelayedExpression {
   public:
@@ -221,19 +234,6 @@ public:
       // We're becoming the new next-to-execute entity, dispatch queue currently empty, trigger wakeup
       // so our newly pended delay thunk is eventually processed.
       m_queueUpdated.notify_all();
-  }
-
-  /// <summary>
-  /// Explicit overload for already-constructed dispatch thunk types
-  /// </summary>
-  void operator+=(DispatchThunkBase* pBase) {
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
-      return;
-
-    m_dispatchQueue.push_back(pBase);
-    m_queueUpdated.notify_all();
-    OnPended();
   }
 
   /// <summary>
