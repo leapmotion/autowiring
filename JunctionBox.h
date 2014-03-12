@@ -348,7 +348,7 @@ public:
     for(auto q = dq.begin(); q != dq.end(); q++)
       if((**q).CanAccept())
         // Create a fully curried function to add to the dispatch queue:
-        (**q) += dynamic_cast<DispatchThunkBase*>(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...));
+        (**q) += static_cast<DispatchThunkBase*>(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...));
   }
 };
 
