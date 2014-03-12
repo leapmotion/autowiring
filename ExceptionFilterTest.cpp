@@ -200,3 +200,24 @@ TEST_F(ExceptionFilterTest, ExceptionFirewall) {
   AutoFired<ThrowingListener> tl;
   ASSERT_FALSE(tl(&ThrowingListener::DoThrow)()) << "An exception event was not properly indicated to an event firer";
 }
+
+TEST_F(ExceptionFilterTest, VerifySimpleConfinement) {
+  m_create->InitiateCoreThreads();
+
+  // Create a subcontext where the errant recipients will live:
+  AutoCreateContext child;
+  child->Inject<ThrowsWhenFired<200>>();
+
+  Autowired<ThrowsWhenFired<200>> twf;
+  ASSERT_FALSE(twf) << "A member injected into a child context was incorrectly scoped at the parent context";
+
+  // Cause the child context to throw an exception:
+  AutoFired<ThrowingListener> tl;
+  tl(&ThrowingListener::DoThrow)();
+
+  // Verify that the parent scope wasn't incorrectly terminated:
+  EXPECT_FALSE(m_create->IsShutdown()) << "Parent scope was terminated incorrectly due to an exception sourced by a child context";
+
+  // Verify that the child scope was terminated as expected:
+  EXPECT_TRUE(child->IsShutdown()) << "An event recipient in a child scope threw an exception and the child context was not correctly terminated";
+}
