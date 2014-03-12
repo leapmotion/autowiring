@@ -44,8 +44,6 @@ set(Autowiring_SRCS
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunk.h
-  DispatchThunkEventProxy.h
-  DispatchThunkEventProxy.cpp
   EventDispatcher.h
   EventInputStream.h
   EventOutputStream.h
