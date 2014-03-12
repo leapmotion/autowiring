@@ -12,6 +12,7 @@
 #include "uuid.h"
 #include <boost/thread/mutex.hpp>
 #include "fast_pointer_cast.h"
+#include TUPLE_HEADER
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
@@ -370,7 +371,7 @@ public:
     for(auto q = dq.begin(); q != dq.end(); q++)
       if((**q).CanAccept())
         // Create a fully curried function to add to the dispatch queue:
-        (**q) += dynamic_cast<DispatchThunkBase*>(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...));
+        (**q).AddExisting(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...));
   }
 };
 
