@@ -9,6 +9,7 @@
 #include "CurrentContextPusher.h"
 #include "DeferredBase.h"
 #include "fast_pointer_cast.h"
+#include "result_or_default.h"
 #include "JunctionBox.h"
 #include "JunctionBoxManager.h"
 #include "EventOutputStream.h"
@@ -25,13 +26,14 @@
 #include <memory>
 #include <map>
 #include <string>
+#include <functional>
+#include TUPLE_HEADER
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_MAP
 #include STL_UNORDERED_SET
-
 
 #ifndef ASSERT
   #ifdef _DEBUG
@@ -58,6 +60,33 @@ class Autowired;
 
 template<class Sigil1, class Sigil2, class Sigil3>
 struct Boltable;
+
+/// <summary>
+/// Anchors a particular object type or event type to the annotated context sigil
+/// </summary>
+/// <remarks>
+/// The AutoAnchor is a marker type to be applied to a sigil type.  When a member of a subcontext of any
+/// annotated sigil class attempts to AutoRequire or AutoFire an instance of any sigil type, instead of
+/// creating the corresponding object or obtaining the junction box in that child context, the request
+/// will be satisfied instead by the anchor.
+/// </remarks>
+struct AutoAnchorBase {
+  static void Enumerate(std::set<std::type_index>& anchors) {
+    assert(false); // Base should never be called
+  }
+};
+
+template<typename... Ts>
+struct AutoAnchor:
+  AutoAnchorBase
+{
+  static void Enumerate(std::set<std::type_index>& anchors) {
+    bool dummy[] = {
+      (anchors.insert(typeid(Ts)), false)...
+    };
+    (void) dummy;
+  }
+};
 
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
 
@@ -88,17 +117,10 @@ public:
   /// <summary>
   /// Factory to create a new context
   /// </summary>
-  /// <param name="T">The context sigil.  If void, identical to CreateAnonymous.</param>
+  /// <param name="T">The context sigil.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return Create(typeid(T));
-  }
-
-  /// <summary>
-  /// Factory to create an anonymous context
-  /// </summary>
-  std::shared_ptr<CoreContext> CreateAnonymous(void) {
-    return Create(typeid(void));
+    return CreateInternal<T>(*new CoreContext(shared_from_this(), typeid(T)));
   }
 
   /// <summary>
@@ -113,15 +135,7 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
-    return CreatePeer(typeid(T));
-  }
-
-  /// <summary>
-  /// Factory to create an anonymous peer context
-  /// </summary>
-  template<class T>
-  std::shared_ptr<CoreContext> CreateAnonymousPeer(void) {
-    return CreatePeer(typeid(void));
+    return m_pParent->CreateInternal<T>(*new CoreContext(m_pParent, typeid(T), shared_from_this()));
   }
 
   /// <summary>
@@ -140,11 +154,58 @@ public:
   /// Convenience method to obtain a shared reference to the global context
   /// </summary>
   static std::shared_ptr<CoreContext> GetGlobal(void);
-
 protected:
-  std::shared_ptr<CoreContext> Create(const std::type_info& sigil);
-  std::shared_ptr<CoreContext> Create(const std::type_info& sigil, CoreContext& newContext);
-  std::shared_ptr<CoreContext> CreatePeer(const std::type_info& sigil);
+  /// <summary>
+  /// Register new context with parent and notify others of its creation.
+  /// </summary>
+  template<typename T>
+  std::shared_ptr<CoreContext> CreateInternal(CoreContext& newContext) {
+    t_childList::iterator childIterator;
+    {
+      // Lock the child list while we insert
+      boost::lock_guard<boost::mutex> lk(m_childrenLock);
+      
+      // Reserve a place in the list for the child
+      childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
+    }
+    
+    if (m_useOwnershipValidator)
+      newContext.EnforceSimpleOwnership();
+    
+    // Create the shared pointer for the context--do not add the context to itself,
+    // this creates a dangerous cyclic reference.
+    std::shared_ptr<CoreContext> retVal(
+      &newContext,
+      [this, childIterator] (CoreContext* pContext) {
+        {
+          boost::lock_guard<boost::mutex> lk(m_childrenLock);
+          this->m_children.erase(childIterator);
+        }
+        delete pContext;
+      }
+    );
+    *childIterator = retVal;
+    
+    // Save anchored types in context
+    if (std::is_base_of<AutoAnchorBase,T>::value) {
+      retVal->AddAnchor<typename std::conditional<std::is_base_of<AutoAnchorBase,T>::value, T, AutoAnchorBase>::type>();
+    }
+    
+    // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
+    if (!std::is_same<T,void>::value) {
+      CurrentContextPusher pshr(retVal);
+      BroadcastContextCreationNotice(typeid(T));
+    }
+    return retVal;
+  }
+  
+  // T must inherit from AutoAnchorBase
+  template<typename AnchorType>
+  void AddAnchor() {
+    AnchorType::Enumerate(m_anchors);
+  }
+  
+  std::set<std::type_index> m_anchors;
 
   // A pointer to the parent context
   const std::shared_ptr<CoreContext> m_pParent;
@@ -184,7 +245,7 @@ protected:
   t_deferred m_deferred;
 
   // All known event receivers and receiver proxies originating from this context:
-  typedef std::unordered_set<std::shared_ptr<EventReceiver>> t_rcvrSet;
+  typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
   
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
@@ -218,20 +279,17 @@ protected:
   // Adds a bolt proper to this context
   template<class T, class Sigil>
   void EnableInternal(T*, Bolt<Sigil>*) {
-    std::shared_ptr<T> ptr;
-    AutoRequire(ptr);
+    Inject<T>();
   }
   
   template<class T, class Sigil, class Sigil2>
   void EnableInternal(T*, Bolt<Sigil,Sigil2>*) {
-    std::shared_ptr<T> ptr;
-    AutoRequire(ptr);
+    Inject<T>();
   }
   
   template<class T, class Sigil, class Sigil2, class Sigil3>
   void EnableInternal(T*, Bolt<Sigil,Sigil2,Sigil3>*) {
-    std::shared_ptr<T> ptr;
-    AutoRequire(ptr);
+    Inject<T>();
   }
 
   template<class Sigil, class T>
@@ -269,12 +327,20 @@ protected:
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
-  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
+  /// <param name="pOriginalParent">The original parent of the passed type</param>
+  void AddEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
+
+  /// <summary>
+  /// Adds the named event receiver to the collection of known receivers
+  /// </summary>
+  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+    return AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, pRecvr));
+  }
 
   /// <summary>
   /// Removes the named event receiver from the collection of known receivers
   /// </summary>
-  void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
+  void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
@@ -491,6 +557,19 @@ public:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const { return m_byType.size(); }
   const std::type_info& GetSigilType(void) const { return m_sigil; }
+  
+  /// <summary>
+  /// Check if parent context's have AutoAnchored the type in their sigil.
+  /// </summary>
+  template<typename Sigil>
+  std::shared_ptr<CoreContext> ResolveAnchor(void) {
+    for(auto pCur = m_pParent; pCur; pCur = pCur->m_pParent) {
+      if (pCur->m_anchors.find(typeid(Sigil)) != pCur->m_anchors.end()){
+        return pCur;
+      }
+    }
+    return shared_from_this();
+  }
 
   /// <summary>
   /// Utility method which will inject the specified types into this context
@@ -532,7 +611,7 @@ public:
   /// </returns>
   template<typename T>
   std::shared_ptr<T> Inject(void) {
-    return Construct<T>();
+    return ResolveAnchor<T>() -> template Construct<T>();
   }
 
   /// <summary>
@@ -596,18 +675,47 @@ public:
   /// </summary>
   /// <param name="sigil">The sigil of the contexts to be passed to the specified lambda</param>
   /// <param name="fn">The lambda to receive a shared pointer to each matching child context</param>
+  /// <returns>
+  /// True if a complete enumeration has taken place, false if it was aborted by the passed lambda
+  /// </returns>
   template<class Fn>
-  void EnumerateChildContexts(const std::type_info &sigil, Fn&& fn) {
-    boost::lock_guard<boost::mutex> lock(m_childrenLock);
-    for (auto c = m_children.begin(); c != m_children.end(); c++) {
-      auto shared = c->lock();
-      shared->EnumerateChildContexts(sigil, fn); //check children first
+  bool EnumerateChildContexts(const std::type_info &sigil, Fn&& fn) {
+    return EnumerateChildContexts(
+      [&fn, &sigil] (std::shared_ptr<CoreContext> ctxt) -> bool {
+        if(ctxt->GetSigilType() != sigil)
+          // Sigil type doesn't match, skip this one
+          return true;
 
-      if (shared->GetSigilType() == sigil) {
-        if (!fn(shared))
-          return;
+        // The sigil type matches, then we'll filter it out to the original lambda
+        return result_or_default(fn, true, ctxt);
       }
+    );
+  }
+
+  /// <summary>
+  /// Full enumeration of all child contexts, including anonymous contexts
+  /// </summary>
+  /// <remarks>
+  /// Do not attempt to create any child contexts from the lambda function, this will cause
+  /// deadlocks.  While it is technically possible to add objects to contexts from the lambda,
+  /// there is a high probability that this will deadlock if any of the added objects directly
+  /// or indirectly cause a child context to be created.
+  ///
+  /// CopyCoreThreadList is guaranteed to be a safe call to be made from this routine.
+  /// </remarks>
+  template<class Fn>
+  bool EnumerateChildContexts(const Fn& fn) {
+    boost::lock_guard<boost::mutex> lock(m_childrenLock);
+    for(auto c = m_children.begin(); c != m_children.end(); c++) {
+      // Recurse:
+      auto shared = c->lock();
+      if(shared && !shared->EnumerateChildContexts(fn))
+        // Enumeration was abandoned
+        return false;
     }
+
+    // Call the lambda, default to true in case the lambda's return type is void:
+    return result_or_default(fn, true, shared_from_this());
   }
   
   /// <summary>
@@ -622,6 +730,15 @@ public:
       c->lock()->EnumerateContexts(fn);
     }
   }
+
+  /// <returns>
+  /// A copy of the list of child CoreThreads
+  /// </returns>
+  /// <remarks>
+  /// No guarantee is made about how long the returned collection will be consistent with this
+  /// context.  A thread may potentially be added to the context after the method returns.
+  /// </remarks>
+  std::vector<std::shared_ptr<CoreThread>> CopyCoreThreadList(void) const;
 
   /// <summary>
   /// In debug mode, adds an additional compile-time check
@@ -764,7 +881,7 @@ public:
   template<class Rep, class Period>
   bool Wait(const boost::chrono::duration<Rep, Period>& duration) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_stateChanged.wait_for(lk, duration, [this] () {return this->m_outstanding.expired();});
+    return m_stateChanged.wait_for(lk, duration, [this] {return this->m_outstanding.expired();});
   }
 
   /// <summary>
@@ -839,8 +956,9 @@ public:
 
     // Snooping now
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
-      
-    m_junctionBoxManager->AddEventReceiver(rcvr);
+
+    JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
+    m_junctionBoxManager->AddEventReceiver(receiver);
     
     // Delegate ascending resolution, where possible.  This ensures that the parent context links
     // this event receiver to compatible senders in the parent context itself.
@@ -861,7 +979,8 @@ public:
     // Pass control to the event remover helper:
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
     
-    m_junctionBoxManager->RemoveEventReceiver(rcvr);
+    JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
+    m_junctionBoxManager->RemoveEventReceiver(receiver);
     
     // Delegate to the parent:
     if(m_pParent)
@@ -881,15 +1000,6 @@ public:
   // Interior type overrides:
   void FindByType(std::shared_ptr<AutoPacketFactory>& slot) { slot = m_packetFactory; }
 
-  template<class W>
-  void AutoRequire(W& slot) {
-    if(AutowireNoDefer(slot))
-      return;
-
-    // Failed, create
-    slot = Inject<typename W::element_type>();
-  }
-
   /// <summary>
   /// Registers a slot to be autowired
   /// </summary>
@@ -897,7 +1007,7 @@ public:
   bool Autowire(W& slot) {
     if(AutowireNoDefer(slot))
       return true;
-
+    
     // Failed, defer
     DeferAutowiring(slot);
     return false;
@@ -953,8 +1063,7 @@ void CoreContext::AutoRequireMicroBolt(void) {
   if(std::is_same<void, Sigil>::value)
     return;
 
-  std::shared_ptr<MicroBolt<Sigil, T>> ptr;
-  AutoRequire(ptr);
+  Inject<MicroBolt<Sigil, T>>();
 }
 
 template<typename T>
