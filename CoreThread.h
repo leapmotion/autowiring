@@ -1,6 +1,4 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _CORETHREAD_H
-#define _CORETHREAD_H
+#pragma once
 #include "ContextMember.h"
 #include "DispatchQueue.h"
 #include <boost/thread/condition_variable.hpp>
@@ -288,7 +286,6 @@ public:
         this->Abort();
         
         // Notify callers of our new state:
-        boost::lock_guard<boost::mutex> lk(this->m_lock);
         this->m_state->m_stateCondition.notify_all();
       });
     } else {
@@ -297,10 +294,19 @@ public:
       
       // Notify all callers of our status update, only needed if we don't call
       // RejectDispatchDelivery first
-      boost::lock_guard<boost::mutex> lk(m_lock);
       m_state->m_stateCondition.notify_all();
     }
   }
+
+  /// <summary>
+  /// Forces all Autowiring threads to reidentify themselves
+  /// </summary>
+  /// <remarks>
+  /// </remarks>
+  static void ForceCoreThreadReidentify(void);
 };
 
-#endif
+/// <summary>
+/// Alias of CoreThread::ForceCoreThreadReidentify, provided with C-style linkage for easy invocation
+/// </summary>
+extern "C" void ForceCoreThreadReidentify(void);

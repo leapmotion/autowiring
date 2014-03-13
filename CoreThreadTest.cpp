@@ -145,7 +145,6 @@ TEST_F(CoreThreadTest, VerifyDispatchQueueShutdown) {
   }
   catch (...) {}
 
-  ASSERT_EQ(listener->GetDispatchQueueLength(), static_cast<size_t>(0));
 }
 
 TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
