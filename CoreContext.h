@@ -9,6 +9,7 @@
 #include "CurrentContextPusher.h"
 #include "DeferredBase.h"
 #include "fast_pointer_cast.h"
+#include "result_or_default.h"
 #include "JunctionBox.h"
 #include "JunctionBoxManager.h"
 #include "EventOutputStream.h"
@@ -25,13 +26,14 @@
 #include <memory>
 #include <map>
 #include <string>
+#include <functional>
+#include TUPLE_HEADER
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_MAP
 #include STL_UNORDERED_SET
-
 
 #ifndef ASSERT
   #ifdef _DEBUG
@@ -60,6 +62,14 @@ template<class Sigil1, class Sigil2, class Sigil3>
 struct Boltable;
 
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
+
+enum class ShutdownMode {
+  // Shut down gracefully by allowing threads to run down dispatch queues
+  Graceful,
+
+  // Shut down immediately, do not attempt to run down thread dispatch queues
+  Immediate
+};
 
 /// <summary>
 /// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain
@@ -176,7 +186,7 @@ protected:
   t_deferred m_deferred;
 
   // All known event receivers and receiver proxies originating from this context:
-  typedef std::unordered_set<std::shared_ptr<EventReceiver>> t_rcvrSet;
+  typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
   
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
@@ -261,12 +271,20 @@ protected:
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
-  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
+  /// <param name="pOriginalParent">The original parent of the passed type</param>
+  void AddEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
+
+  /// <summary>
+  /// Adds the named event receiver to the collection of known receivers
+  /// </summary>
+  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+    return AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, pRecvr));
+  }
 
   /// <summary>
   /// Removes the named event receiver from the collection of known receivers
   /// </summary>
-  void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
+  void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
@@ -588,19 +606,57 @@ public:
   /// </summary>
   /// <param name="sigil">The sigil of the contexts to be passed to the specified lambda</param>
   /// <param name="fn">The lambda to receive a shared pointer to each matching child context</param>
+  /// <returns>
+  /// True if a complete enumeration has taken place, false if it was aborted by the passed lambda
+  /// </returns>
   template<class Fn>
-  void EnumerateChildContexts(const std::type_info &sigil, Fn&& fn) {
-    boost::lock_guard<boost::mutex> lock(m_childrenLock);
-    for (auto c = m_children.begin(); c != m_children.end(); c++) {
-      auto shared = c->lock();
-      shared->EnumerateChildContexts(sigil, fn); //check children first
+  bool EnumerateChildContexts(const std::type_info &sigil, Fn&& fn) {
+    return EnumerateChildContexts(
+      [&fn, &sigil] (std::shared_ptr<CoreContext> ctxt) -> bool {
+        if(ctxt->GetSigilType() != sigil)
+          // Sigil type doesn't match, skip this one
+          return true;
 
-      if (shared->GetSigilType() == sigil) {
-        if (!fn(shared))
-          return;
+        // The sigil type matches, then we'll filter it out to the original lambda
+        return result_or_default(fn, true, ctxt);
       }
-    }
+    );
   }
+
+  /// <summary>
+  /// Full enumeration of all child contexts, including anonymous contexts
+  /// </summary>
+  /// <remarks>
+  /// Do not attempt to create any child contexts from the lambda function, this will cause
+  /// deadlocks.  While it is technically possible to add objects to contexts from the lambda,
+  /// there is a high probability that this will deadlock if any of the added objects directly
+  /// or indirectly cause a child context to be created.
+  ///
+  /// CopyCoreThreadList is guaranteed to be a safe call to be made from this routine.
+  /// </remarks>
+  template<class Fn>
+  bool EnumerateChildContexts(const Fn& fn) {
+    boost::lock_guard<boost::mutex> lock(m_childrenLock);
+    for(auto c = m_children.begin(); c != m_children.end(); c++) {
+      // Recurse:
+      auto shared = c->lock();
+      if(shared && !shared->EnumerateChildContexts(fn))
+        // Enumeration was abandoned
+        return false;
+    }
+
+    // Call the lambda, default to true in case the lambda's return type is void:
+    return result_or_default(fn, true, shared_from_this());
+  }
+
+  /// <returns>
+  /// A copy of the list of child CoreThreads
+  /// </returns>
+  /// <remarks>
+  /// No guarantee is made about how long the returned collection will be consistent with this
+  /// context.  A thread may potentially be added to the context after the method returns.
+  /// </remarks>
+  std::vector<std::shared_ptr<CoreThread>> CopyCoreThreadList(void) const;
 
   /// <summary>
   /// In debug mode, adds an additional compile-time check
@@ -710,8 +766,8 @@ public:
   void InitiateCoreThreads(void);
 
   /// <summary>
-  /// This signals to the whole system that a shutdown operation is underway, and that
-  /// shutdown procedures should begin immediately
+  /// This signals to the whole system that a shutdown operation is underway, and that shutdown procedures should
+  /// begin immediately
   /// </summary>
   /// <param name="wait">Set if the function should wait for all child contexts to exit before returning</param>
   /// <remarks>
@@ -719,16 +775,22 @@ public:
   /// context, whether those events are fired in this context or one above, and regardless of whether these events
   /// are fired or deferred.  Event receivers in this context will also not receive any messages.
   /// </remarks>
-  void SignalShutdown(bool wait = false);
+  void SignalShutdown(bool wait = false, ShutdownMode shutdownMode = ShutdownMode::Graceful);
 
   /// <summary>
-  /// Alias for SignalShutdown(true)
+  /// Alias for SignalShutdown(true, ShutdownMode::Immediate)
   /// </summary>
-  void SignalTerminate(bool wait = true) { SignalShutdown(wait); }
+  void SignalTerminate(bool wait = true) { SignalShutdown(wait, ShutdownMode::Immediate); }
 
   /// <summary>
-  /// Waits for all threads holding references to exit
+  /// Waits until all threads running in this context at the time of the call are sdtopped when the call returns
   /// </summary>
+  /// <remarks>
+  /// The only guarantees made by this method are that the threads which were running when the call was made will
+  /// no longer be running upon return.  No guarantees are made about the state of other threads that might have
+  /// been created after Wait was called; no guarantees are made about the run state or existence of any child
+  /// contexts.  Child contexts may exist which contain running threads.
+  /// </remarks>
   void Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_lock);
     m_stateChanged.wait(lk, [this] () {return this->m_outstanding.expired();});
@@ -737,7 +799,7 @@ public:
   template<class Rep, class Period>
   bool Wait(const boost::chrono::duration<Rep, Period>& duration) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_stateChanged.wait_for(lk, duration, [this] () {return this->m_outstanding.expired();});
+    return m_stateChanged.wait_for(lk, duration, [this] {return this->m_outstanding.expired();});
   }
 
   /// <summary>
@@ -812,8 +874,9 @@ public:
 
     // Snooping now
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
-      
-    m_junctionBoxManager->AddEventReceiver(rcvr);
+
+    JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
+    m_junctionBoxManager->AddEventReceiver(receiver);
     
     // Delegate ascending resolution, where possible.  This ensures that the parent context links
     // this event receiver to compatible senders in the parent context itself.
@@ -834,7 +897,8 @@ public:
     // Pass control to the event remover helper:
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
     
-    m_junctionBoxManager->RemoveEventReceiver(rcvr);
+    JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
+    m_junctionBoxManager->RemoveEventReceiver(receiver);
     
     // Delegate to the parent:
     if(m_pParent)

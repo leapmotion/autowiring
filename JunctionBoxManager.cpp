@@ -38,26 +38,20 @@ std::shared_ptr<JunctionBoxBase> JunctionBoxManager::Get(std::type_index pTypeIn
   return box->second;
 }
 
-void JunctionBoxManager::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr){
-  
-  //Notify all junctionboxes that there is a new event
+void JunctionBoxManager::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
+  // Notify all junctionboxes that there is a new event
   for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-    *(q->second) += pRecvr;
+    q->second->Add(receiver);
 }
 
-void JunctionBoxManager::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr){
-  
+void JunctionBoxManager::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   // Notify all compatible senders that we're going away:
   for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-    *(q->second) -= pRecvr;
+    q->second->Remove(receiver);
 }
 
 void JunctionBoxManager::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last){
-  
-  for(auto r = m_junctionBoxes.begin(); r != m_junctionBoxes.end(); r++) {
-    auto box = r->second;
-    for(auto q = first; q != last; q++) {
-      *box -= *q;
-    }
-  }
+  for(auto r = m_junctionBoxes.begin(); r != m_junctionBoxes.end(); r++)
+    for(auto q = first; q != last; q++)
+      r->second->Remove(*q);
 }
