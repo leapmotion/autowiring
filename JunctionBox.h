@@ -315,6 +315,7 @@ public:
   CurriedInvokeRelay(CurriedInvokeRelay&& rhs) = delete;
       
   CurriedInvokeRelay(T& obj, Deferred(T::*fnPtr)(Args...), Args... args) :
+    DispatchThunkBase(true),
     m_obj(obj),
     m_fnPtr(fnPtr),
     m_args(std::forward<Args>(args)...)
