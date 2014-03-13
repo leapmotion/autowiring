@@ -1,5 +1,10 @@
 'use strict';
 
+/* "<directed-graph nodes="MyNodes"></directed-graph>" creates a canvas with a
+** force-directed graph of nodes. "MyNodes" needs to be an array of objects. Each
+** object must contain an "id" and "parent" field. "id" is a unique int identifier
+** for the node and "parent" is the idenifier for the parent node
+*/
 angular.module('autoNetApp')
 .directive('directedGraph', function () {
   return {
@@ -20,12 +25,12 @@ angular.module('autoNetApp')
         })
       });
 
-      // Map of current Nodes
+      // Create a map to keep track of current Nodes
       var currentNodes = Object.create(null);
 
-      // Watch when nodes change
+      // Watch for any new or deleted nodes
       scope.$watchCollection('nodes', function(nodes) {
-        // Add new nodes
+        // Add any new nodes
         _.each(nodes, function(node) {
           if (typeof currentNodes[node.id] === 'undefined'){
             var label = 'Context: ' + node.name;
@@ -37,7 +42,7 @@ angular.module('autoNetApp')
           }
         });
 
-        // Remove expired nodes
+        // Remove any expired nodes
         var updateIds = _.map(nodes, function(node){
           return String(node.id);
         });

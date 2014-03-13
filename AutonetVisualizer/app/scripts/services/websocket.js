@@ -1,12 +1,27 @@
 'use strict';
 
+/* Angular service for receiving events from AutoNetServer
+** Use as follows.. 
+**
+** websocket.on("MyEvent",function(arg1){
+**   ....
+** })
+**
+** This will register a callback for the "MyEvent" event from the server.
+** The number args for the callback must match the number of args for the
+** event type
+**
+** See controllers/main.js for an example 
+*/
+
 angular.module('autoNetApp')
 .factory('websocket', ['$rootScope', function($rootScope) {
-  var socket = null;
-  var interval = null;
-  var listeners = [];
+  var socket = null; //Websocket connection to server
+  var interval = null; //Interval for polling for server when disconnected
+  var listeners = []; // All event listeners
   var isConnected = false;
 
+  // Fire event callback with list of args from the server
   var FireEvent = function(event, args) {
     args = _.isArray(args) ? args : [];
     _.map(listeners, function(listener){
@@ -18,6 +33,8 @@ angular.module('autoNetApp')
     });
   };
 
+  // Initialize connection with AutoNetServer
+  // Called with SetInterval one a second when disconnected from server
   var InitConnection = function() {
     socket = new WebSocket('ws://localhost:8000');
 
