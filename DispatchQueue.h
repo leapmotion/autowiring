@@ -167,22 +167,16 @@ public:
   }
 
   /// <summary>
-  /// Dispatcher overload, expressly for use with types which expect an event
+  /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>
-  /// <param name="eventProxy">A proxy routine to the destination event type</param>
-  /// <remarks>
-  /// This overload is intended for use where an event call must be made on a partially bound destination.
-  /// The passed call will receive a pointer to this DispatchQueue, and will be expected to cast it to the
-  /// correct destination type prior to actually making the call.
-  ///
-  /// The event receiver function must be idempotent, and must be callable on types other than [this].
-  /// Certain derived implementations may proxy the event call, sending it elsewhere, possibly more than
-  /// once, which requires that the passed routine be invariant.
-  /// </remarks>
-  virtual void AttachProxyRoutine(std::function<void (EventReceiver&)>&& eventProxy) {
+  void AddExisting(DispatchThunkBase* pBase) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    m_dispatchQueue.push_back(new DispatchThunkEventProxy(*this, std::move(eventProxy)));
+    if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
+      return;
+
+    m_dispatchQueue.push_back(pBase);
     m_queueUpdated.notify_all();
+    OnPended();
   }
 
   template<class Clock>
@@ -248,6 +242,9 @@ public:
   /// </summary>
   template<class _Fx>
   void operator+=(_Fx&& fx) {
+    static_assert(!std::is_base_of<DispatchThunkBase, _Fx>::value, "Overload resolution malfunction, must not doubly wrap a dispatch thunk");
+    static_assert(!std::is_pointer<_Fx>::value, "Cannot pend a pointer to a function, we must have direct ownership");
+
     if(!CanAccept())
       return;
 

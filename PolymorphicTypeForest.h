@@ -1,4 +1,5 @@
 #pragma once
+#include "fast_pointer_cast.h"
 #include STL_UNORDERED_MAP
 #include TYPE_INDEX_HEADER
 #include TYPE_TRAITS_HEADER
