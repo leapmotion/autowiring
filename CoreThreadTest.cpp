@@ -353,7 +353,7 @@ enum class PlayerName {
 class PingPongGame {
 public:
   PingPongGame(void) :
-    pingPongsRemaining(10000)
+    pingPongsRemaining(1000)
   {}
 
   int pingPongsRemaining;
@@ -410,6 +410,9 @@ public:
 
       // Tell the other player:
       other->Pass();
+
+      // Add some entropy:
+      boost::this_thread::sleep_for(boost::chrono::microseconds(rand() % 20));
     }
   }
 };
