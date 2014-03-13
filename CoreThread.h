@@ -119,7 +119,7 @@ protected:
   /// </summary>
   void AcceptDispatchDelivery(void) {
     m_canAccept = true;
-    m_state->m_stateCondition.notify_all();
+    m_stateCondition.notify_all();
   }
 
   /// <summary>
@@ -137,7 +137,7 @@ protected:
   /// </remarks>
   void RejectDispatchDelivery(void) {
     m_canAccept = false;
-    m_state->m_stateCondition.notify_all();
+    m_stateCondition.notify_all();
   }
 
   /// <summary>
