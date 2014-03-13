@@ -44,12 +44,21 @@ public:
 /// <remarks>
 /// The newly created context will be created using CoreContext::CurrentContext()->Create().
 /// </remarks>
-class AutoCreateContext:
-public std::shared_ptr<CoreContext>
+template<typename T>
+class AutoCreateContextT:
+  public std::shared_ptr<CoreContext>
 {
 public:
-  AutoCreateContext(void);
+  AutoCreateContextT(void):
+    std::shared_ptr<CoreContext>(CoreContext::CurrentContext()->Create<T>())
+  {}
+  AutoCreateContextT(std::shared_ptr<CoreContext>& ctxt):
+    std::shared_ptr<CoreContext>(ctxt->Create<T>())
+  {}
 };
+
+typedef AutoCreateContextT<void> AutoCreateContext;
+
 
 /// <summary>
 /// Idiom to enable boltable classes
@@ -83,12 +92,40 @@ public:
   typedef T value_type;
   typedef shared_ptr<T> t_ptrType;
   
-  Autowired(void) {
-    AutowirableSlot::LockContext()->Autowire(*this);
+  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
+  // If you are getting an error tracked to this line, ensure that class T is totally
+  // defined at the point where the Autowired instance is constructed.  Generally,
+  // such errors are tracked to missing header files.  A common mistake, for instance,
+  // is to do something like this:
+  //
+  // class MyClass;
+  //
+  // struct MyStructure {
+  //   Autowired<MyClass> m_member;
+  // };
+  //
+  // At the time m_member is instantiated, MyClass is an incomplete type.  So, when the
+  // compiler tries to instantiate AutowiredCreator::Create (the function you're in right
+  // now!) it finds that it can't create a new instance of type MyClass because it has
+  // no idea how to construct it!
+  //
+  // This problem can be fixed two ways:  You can include the definition of MyClass before
+  // MyStructure is defined, OR, you can give MyStructure a nontrivial constructor, and
+  // then ensure that the definition of MyClass is available before the nontrivial
+  // constructor is defined.
+  //
+  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
+  
+  Autowired(void):
+    AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>())
+  {
+    AutowirableSlot::LockContext() -> Autowire(*this);
   }
   
-  Autowired(std::weak_ptr<CoreContext> ctxt) {
-    ctxt.lock()->Autowire(*this);
+  Autowired(std::weak_ptr<CoreContext> ctxt):
+    AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>())
+  {
+    AutowirableSlot::LockContext() -> Autowire(*this);
   }
 
   operator bool(void) const {
@@ -116,49 +153,63 @@ public:
 /// </remarks>
 template<class T>
 class AutoRequired:
-  public Autowired<T>
+  public AutowirableSlot,
+  public std::shared_ptr<T>
 {
+  static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
+  static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
 public:
   using std::shared_ptr<T>::operator=;
+  typedef T value_type;
+  typedef shared_ptr<T> t_ptrType;
   
-  AutoRequired(void) {
-    this->Create(AutowirableSlot::LockContext());
+  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
+  // If you are getting an error tracked to this line, ensure that class T is totally
+  // defined at the point where the Autowired instance is constructed.  Generally,
+  // such errors are tracked to missing header files.  A common mistake, for instance,
+  // is to do something like this:
+  //
+  // class MyClass;
+  //
+  // struct MyStructure {
+  //   Autowired<MyClass> m_member;
+  // };
+  //
+  // At the time m_member is instantiated, MyClass is an incomplete type.  So, when the
+  // compiler tries to instantiate AutowiredCreator::Create (the function you're in right
+  // now!) it finds that it can't create a new instance of type MyClass because it has
+  // no idea how to construct it!
+  //
+  // This problem can be fixed two ways:  You can include the definition of MyClass before
+  // MyStructure is defined, OR, you can give MyStructure a nontrivial constructor, and
+  // then ensure that the definition of MyClass is available before the nontrivial
+  // constructor is defined.
+  //
+  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
+  
+  AutoRequired(void):
+    AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>())
+  {
+    *this = AutowirableSlot::LockContext()->template Inject<T>();
   }
   
-  AutoRequired(std::weak_ptr<CoreContext> ctxt) {
-    this->Create(ctxt.lock());
+  AutoRequired(std::weak_ptr<CoreContext> ctxt):
+    AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>())
+  {
+    *this = AutowirableSlot::LockContext()->template Inject<T>();
   }
-
-private:
-  void Create(std::shared_ptr<CoreContext> p_ctxt) {
-    if(*this)
-      return;
-    // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-    // If you are getting an error tracked to this line, ensure that class T is totally
-    // defined at the point where the Autowired instance is constructed.  Generally,
-    // such errors are tracked to missing header files.  A common mistake, for instance,
-    // is to do something like this:
-    //
-    // class MyClass;
-    //
-    // struct MyStructure {
-    //   Autowired<MyClass> m_member;
-    // };
-    //
-    // At the time m_member is instantiated, MyClass is an incomplete type.  So, when the
-    // compiler tries to instantiate AutowiredCreator::Create (the function you're in right
-    // now!) it finds that it can't create a new instance of type MyClass because it has
-    // no idea how to construct it!
-    //
-    // This problem can be fixed two ways:  You can include the definition of MyClass before
-    // MyStructure is defined, OR, you can give MyStructure a nontrivial constructor, and
-    // then ensure that the definition of MyClass is available before the nontrivial
-    // constructor is defined.
-    //
-    // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-    *this = p_ctxt->template Inject<T>();
+  
+  operator bool(void) const {
+    return IsAutowired();
   }
+  
+  operator T*(void) const {
+    return t_ptrType::get();
+  }
+  
+  bool IsAutowired(void) const override {return !!t_ptrType::get();}
 };
+
 
 /// <summary>
 /// This class

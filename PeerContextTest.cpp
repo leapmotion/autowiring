@@ -14,7 +14,8 @@ TEST_F(PeerContextTest, VerifySimplePeerage) {
   {
     // Create an ordinary child anonymous context and try to fire.  This should
     // not cause anything to be picked up anywhere.
-    auto child = m_create->CreateAnonymous();
+    AutoCreateContext child;
+    
     CurrentContextPusher pshr(child);
     AutoFired<CallableInterface> ci;
     ci(&CallableInterface::OneArg)(21);
