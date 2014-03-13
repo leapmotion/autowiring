@@ -344,3 +344,92 @@ TEST_F(CoreThreadTest, VerifyCanBoostPriority) {
 #else
 #pragma message "Warning:  SetThreadPriority not implemented on Unix"
 #endif
+
+enum class PlayerName {
+  PingPlayer,
+  PongPlayer
+};
+
+class PingPongGame {
+public:
+  PingPongGame(void) :
+    pingPongsRemaining(10000)
+  {}
+
+  int pingPongsRemaining;
+
+  /// <returns>True when the game is over</returns>
+  bool IsDone(void) const { return pingPongsRemaining <= 0; }
+
+  // Hits the ball to the other player:
+  void Hit(void) {
+    pingPongsRemaining--;
+  }
+};
+
+template<PlayerName player>
+class PingPongPlayer:
+  public CoreThread
+{
+public:
+  static const PlayerName s_otherPlayer = player == PlayerName::PingPlayer ? PlayerName::PongPlayer : PlayerName::PingPlayer;
+
+private:
+  Autowired<PingPongGame> game;
+  Autowired<PingPongPlayer<s_otherPlayer>> other;
+
+  // The number of hits remaining when we last hit the ball:
+  int localHitCount;
+
+  // Our internal lock and cv:
+  boost::mutex m_lock;
+  boost::condition_variable m_cv;
+
+public:
+  // Notifies this player that the ping pong ball is on the way
+  void Pass(void) {
+    m_cv.notify_all();
+  }
+
+  void Run(void) override {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+
+    while(
+      m_cv.wait_for(
+        lk,
+        boost::chrono::seconds(3),
+        [this] { return localHitCount != game->pingPongsRemaining; }
+      )
+    ) {
+      // If the game is done then we just end here:
+      if(game->IsDone())
+        return;
+
+      // Hit the ball:
+      game->Hit();
+
+      // Tell the other player:
+      other->Pass();
+    }
+  }
+};
+
+TEST_F(CoreThreadTest, VerifyLocksNotRequired) {
+  // Set up the game:
+  AutoRequired<PingPongGame> game;
+
+  // Add the players:
+  AutoRequired<PingPongPlayer<PlayerName::PingPlayer>> pingPlayer;
+  AutoRequired<PingPongPlayer<PlayerName::PongPlayer>>();
+
+  // Kick off the game before starting threads:
+  game->Hit();
+  pingPlayer->Pass();
+
+  // Now we start threads and wait for things to wrap up:
+  m_create->InitiateCoreThreads();
+  m_create->Wait();
+
+  // See what happened:
+  ASSERT_EQ(0, game->pingPongsRemaining) << "Ping-pong failed";
+}
