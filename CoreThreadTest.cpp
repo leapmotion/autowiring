@@ -44,30 +44,6 @@ TEST_F(CoreThreadTest, VerifyStartSpam) {
   EXPECT_FALSE(instance->m_multiHit) << "Thread was run more than once unexpectedly";
 }
 
-class PendsWhileRunningThenWaits:
-  public CoreThread
-{
-public:
-  virtual void Run(void) override {
-    const boost::chrono::milliseconds timeout = boost::chrono::milliseconds(100);
-    AcceptDispatchDelivery();
-    bool wasCalled = false;
-
-    *this += [&wasCalled] { wasCalled = true; };
-
-    ASSERT_TRUE(WaitForEvent(timeout)) << "A CoreThread pended a dispatcher to itself, but failed to dispatch this event when told to do so";
-    ASSERT_TRUE(wasCalled) << "A CoreThread claimed to call a dispatcher, but the dispatcher's side-effects were not detected";
-  }
-};
-
-TEST_F(CoreThreadTest, VerifyPendingWaitForEvents) {
-  AutoRequired<PendsWhileRunningThenWaits> instance;
-  m_create->InitiateCoreThreads();
-
-  // Verify that the instance returns within the given timeout
-  ASSERT_TRUE(instance->WaitFor(boost::chrono::milliseconds(10))) << "Instance did not process events in a timely fashion";
-}
-
 class InvokesIndefiniteWait:
   public CoreThread
 {
@@ -169,7 +145,6 @@ TEST_F(CoreThreadTest, VerifyDispatchQueueShutdown) {
   }
   catch (...) {}
 
-  ASSERT_EQ(listener->GetDispatchQueueLength(), 0UL);
 }
 
 TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
@@ -315,7 +290,7 @@ public:
   JustIncrementsANumber():
     val(0)
   {}
-
+  
   volatile int64_t val;
 
   // This will be a hotly contested conditional variable
