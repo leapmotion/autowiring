@@ -15,51 +15,26 @@
 /// with a given sigil, use Boltable.
 /// </remarks>
 
-template<class Sigil1, class Sigil2 = void, class Sigil3 = void>
+template<typename... Sigil>
 class Bolt:
   public BoltBase
 {
-  const t_TypeInfoVector& GetContextSigils(void){
-    static t_TypeInfoVector v;
-    if( v.empty() ) {
-      v.push_back(typeid(Sigil1));
-      v.push_back(typeid(Sigil2));
-      v.push_back(typeid(Sigil3));
-    }
-    return v;
-  }
-  static Sigil1 MySigilType1;
-  static Sigil2 MySigilType2;
-  static Sigil3 MySigilType3;
-};
-
-template<class Sigil1>
-class Bolt<Sigil1,void,void>:
-  public BoltBase
-{
 public:
-  const t_TypeInfoVector& GetContextSigils(void){
-    static t_TypeInfoVector v;
-    if( v.empty() ) {
-      v.push_back(typeid(Sigil1));
+  Bolt() {
+    if (m_BoltedTypes.empty()){
+      bool dummy[] = {
+        false,
+        (m_BoltedTypes.push_back(typeid(Sigil)),false)...
+      };
+      (void) dummy;
     }
-    return v;
   }
-  static Sigil1 MySigilType1;
+  
+  const t_TypeInfoVector& GetContextSigils(void){
+    return m_BoltedTypes;
+  }
+private:
+  t_TypeInfoVector m_BoltedTypes;
 };
 
-template<class Sigil1, class Sigil2>
-class Bolt<Sigil1,Sigil2,void>:
-  public BoltBase
-{
-  const t_TypeInfoVector& GetContextSigils(void){
-    static t_TypeInfoVector v;
-    if( v.empty() ) {
-      v.push_back(typeid(Sigil1));
-      v.push_back(typeid(Sigil2));
-    }
-    return v;
-  }
-  static Sigil1 MySigilType1;
-  static Sigil2 MySigilType2;
-};
+
