@@ -27,6 +27,7 @@
 #include <map>
 #include <string>
 #include <functional>
+#include TUPLE_HEADER
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
@@ -185,7 +186,7 @@ protected:
   t_deferred m_deferred;
 
   // All known event receivers and receiver proxies originating from this context:
-  typedef std::unordered_set<std::shared_ptr<EventReceiver>> t_rcvrSet;
+  typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
   
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
@@ -270,12 +271,20 @@ protected:
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
-  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
+  /// <param name="pOriginalParent">The original parent of the passed type</param>
+  void AddEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
+
+  /// <summary>
+  /// Adds the named event receiver to the collection of known receivers
+  /// </summary>
+  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+    return AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, pRecvr));
+  }
 
   /// <summary>
   /// Removes the named event receiver from the collection of known receivers
   /// </summary>
-  void RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr);
+  void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
@@ -865,8 +874,9 @@ public:
 
     // Snooping now
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
-      
-    m_junctionBoxManager->AddEventReceiver(rcvr);
+
+    JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
+    m_junctionBoxManager->AddEventReceiver(receiver);
     
     // Delegate ascending resolution, where possible.  This ensures that the parent context links
     // this event receiver to compatible senders in the parent context itself.
@@ -887,7 +897,8 @@ public:
     // Pass control to the event remover helper:
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
     
-    m_junctionBoxManager->RemoveEventReceiver(rcvr);
+    JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
+    m_junctionBoxManager->RemoveEventReceiver(receiver);
     
     // Delegate to the parent:
     if(m_pParent)
