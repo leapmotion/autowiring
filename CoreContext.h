@@ -188,7 +188,7 @@ protected:
     
     // Save anchored types in context
     if (std::is_base_of<AutoAnchorBase,T>::value) {
-      retVal->AddAnchor<typename std::conditional<std::is_base_of<AutoAnchorBase,T>::value, T, AutoAnchorBase>::type>();
+      retVal->AddAnchorInternal<typename std::conditional<std::is_base_of<AutoAnchorBase,T>::value, T, AutoAnchorBase>::type>();
     }
     
     // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
@@ -201,7 +201,7 @@ protected:
   
   // T must inherit from AutoAnchorBase
   template<typename AnchorType>
-  void AddAnchor() {
+  void AddAnchorInternal() {
     AnchorType::Enumerate(m_anchors);
   }
   
@@ -569,6 +569,14 @@ public:
       }
     }
     return shared_from_this();
+  }
+  
+  /// <summary>
+  /// Add an additional anchor type to the context
+  /// </summary>
+  template<typename AnchorType>
+  void AddAnchor(void) {
+    m_anchors.insert(typeid(AnchorType));
   }
 
   /// <summary>
