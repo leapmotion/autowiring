@@ -12,7 +12,7 @@
 #include "uuid.h"
 #include <boost/thread/mutex.hpp>
 #include "fast_pointer_cast.h"
-#include TUPLE_HEADER
+#include STL_TUPLE_HEADER
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
