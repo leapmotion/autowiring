@@ -30,7 +30,7 @@ class Bolt:
   }
   static Sigil1 MySigilType1;
   static Sigil2 MySigilType2;
-  static Sigil1 MySigilType3;
+  static Sigil3 MySigilType3;
 };
 
 template<class Sigil1>
