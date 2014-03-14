@@ -1,32 +1,27 @@
 #pragma once
 #include "DispatchQueue.h"
+#include "DispatchThunk.h"
 #include "EventDispatcher.h"
 #include "EventReceiver.h"
+#include "ObjectPool.h"
+#include "PolymorphicTypeForest.h"
+#include "fast_pointer_cast.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
-#include "ObjectPool.h"
 #include "PolymorphicTypeForest.h"
 #include "uuid.h"
 #include <boost/thread/mutex.hpp>
 #include "fast_pointer_cast.h"
+#include TUPLE_HEADER
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_SET
 #include TYPE_TRAITS_HEADER
 
-class JunctionBoxBase;
+class CoreContext;
 class EventReceiver;
-
-/// <summary>
-/// Service routine called inside Fire calls in order to decide how to handle an exception
-/// </summary>
-/// <remarks>
-/// This routine MUST NOT be called outside of a "catch" handler.  This function, and the functions that
-/// it call, rely on the validity of the std::current_exception return value, which will not be valid
-/// outside of a call block.
-/// </remarks>
-void FilterFiringException(const JunctionBoxBase* pSender, EventReceiver* pRecipient);
+class JunctionBoxBase;
 
 /// <summary>
 /// Utility routine which shuts down the current context
@@ -39,6 +34,54 @@ void ShutdownCurrentContext(void);
 template<class FnPtr>
 class InvokeRelay {};
 
+/// <summary>
+/// Utility structure representing a junction box entry together with its owner
+/// </summary>
+template<class T>
+struct JunctionBoxEntry
+{
+  JunctionBoxEntry(CoreContext* owner, std::shared_ptr<T> ptr) :
+    m_owner(owner),
+    m_ptr(ptr)
+  {}
+
+  CoreContext* const m_owner;
+  std::shared_ptr<T> m_ptr;
+
+  bool operator==(const JunctionBoxEntry& rhs) const {
+    return m_ptr == rhs.m_ptr;
+  }
+
+  bool operator<(const JunctionBoxEntry& rhs) const {
+    return m_ptr < rhs.m_ptr;
+  }
+
+  operator bool(void) const {
+    return !!m_ptr.get();
+  }
+
+  template<class U>
+  JunctionBoxEntry<U> Rebind(void) const {
+    return JunctionBoxEntry<U>(
+      m_owner,
+      std::dynamic_pointer_cast<U, T>(m_ptr)
+    );
+  }
+};
+
+namespace std {
+  /// <summary>
+  /// Hash specialization for the junction box entry
+  /// </summary>
+  template<class T>
+  struct hash<JunctionBoxEntry<T>> :
+    public hash<std::shared_ptr<T>>
+  {
+    size_t operator()(const JunctionBoxEntry<T>& jbe) const {
+      return hash<std::shared_ptr<T>>::operator()(jbe.m_ptr);
+    }
+  };
+}
 /// <summary>
 /// Used to identify event managers
 /// </summary>
@@ -54,21 +97,44 @@ protected:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
 
+  /// <summary>
+  /// Invokes SignalTerminate on each context in the specified vector
+  /// </summary>
+  static void TerminateAll(const std::vector<std::weak_ptr<CoreContext>>& teardown);
+
+  /// <summary>
+  /// Convenience routine for Fire calls
+  /// </summary>
+  /// <remarks>
+  /// This is a convenience routine, its only purpose is to add the "this" parameter to the
+  /// call to FilterFiringException
+  /// </remarks>
+  void FilterFiringException(const std::shared_ptr<EventReceiver>& pReceiver) const;
+
+  /// <summary>
+  /// Converts a dumb pointer into a weak pointer
+  /// </summary>
+  /// <remarks>
+  /// An exterior hold guarantee must be made to call this method safely
+  /// </remarks>
+  static std::weak_ptr<CoreContext> ContextDumbToWeak(CoreContext* pContext);
+
 public:
   // Accessor methods:
   std::vector<std::weak_ptr<EventOutputStreamBase> > * m_PotentialMarshals;
-  void SetPotentialMarshals(std::vector<std::weak_ptr<EventOutputStreamBase> > * inVec){ 
+
+  void SetPotentialMarshals(std::vector<std::weak_ptr<EventOutputStreamBase>> * inVec){  
     m_PotentialMarshals = inVec; 
   }
 
-  const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const {return m_dispatch;}
+  const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const { return m_dispatch; }
   boost::mutex& GetDispatchQueueLock(void) const { return m_lock; }
 
   virtual bool HasListeners(void) const = 0;
 
   // Event attachment and detachment pure virtuals
-  virtual JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) = 0;
-  virtual JunctionBoxBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) = 0;
+  virtual void Add(const JunctionBoxEntry<EventReceiver>& rhs) = 0;
+  virtual void Remove(const JunctionBoxEntry<EventReceiver>& rhs) = 0;
 };
 
 struct NoType {};
@@ -91,7 +157,7 @@ public:
 
 protected:
   // Collection of all known listeners:
-  typedef std::set<std::shared_ptr<T>> t_listenerSet;
+  typedef std::set<JunctionBoxEntry<T>> t_listenerSet;
   t_listenerSet m_st;
   
   // Incremented every time an event is deleted to notify potentially invalidated iterators
@@ -102,7 +168,7 @@ public:
   /// Recursive serialize message: Initial Processing- n arg case
   /// </summary>
   template <typename Memfn, typename... Targs>
-  void SerializeInit(Memfn memfn, Targs&... args){
+  void SerializeInit(Memfn memfn, Targs&... args) {
     //First distribute the arguments to any listening serializers in current context
     if (m_PotentialMarshals){
       auto m_vector = *m_PotentialMarshals;
@@ -112,16 +178,15 @@ public:
         auto testptr = (*it).lock();
         if (testptr) {
           //if given eventid is enabled for given eventoutputstream, serialize!
-          if (testptr->IsEnabled(memfn)){
+          if (testptr->IsEnabled(memfn))
             testptr->SerializeInit(memfn, args...);  
-          }
           ++it;
         }
-        else it = m_vector.erase(it); //opportunistically kill dead references.
+        else
+          it = m_vector.erase(it); //opportunistically kill dead references.
       }
     }
   }
-
 
   /// <summary>
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
@@ -130,34 +195,30 @@ public:
     return (boost::lock_guard<boost::mutex>)m_lock, !m_st.empty();
   }
 
-  JunctionBoxBase& operator+=(const std::shared_ptr<EventReceiver>& rhs) override {
-    auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
-    if(casted){
+  void Add(const JunctionBoxEntry<EventReceiver>& rhs) override {
+    auto casted = rhs.Rebind<T>();
+    if(casted)
       // Proposed type is directly one of our receivers
-      *this += casted;
-    }
-    return *this;
+      Add(casted);
   }
 
-  JunctionBoxBase& operator-=(const std::shared_ptr<EventReceiver>& rhs) override {
-    auto casted = std::dynamic_pointer_cast<T, EventReceiver>(rhs);
-    if(casted){
-      *this -= casted;
-    }
-    return *this;
+  void Remove(const JunctionBoxEntry<EventReceiver>& rhs) override {
+    auto casted = rhs.Rebind<T>();
+    if(casted)
+      Remove(casted);
   }
 
   /// <summary>
   /// Adds the specified observer to receive events dispatched from this instace
   /// </summary>
-  void operator+=(const std::shared_ptr<T>& rhs) {
+  void Add(const JunctionBoxEntry<T>& rhs) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     
     // Trivial insert
     m_st.insert(rhs);
 
     // If the RHS implements DispatchQueue, add it to that collection as well:
-    DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs).get();
+    DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs.m_ptr).get();
     if(pDispatch)
       m_dispatch.insert(pDispatch);
   }
@@ -165,13 +226,14 @@ public:
   /// <summary>
   /// Removes the specified observer from the set currently configured to receive events
   /// </summary>
-  void operator-=(const std::shared_ptr<T>& rhs) {
+  void Remove(const JunctionBoxEntry<T>& rhs) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     
+    // Update the deletion count
     m_numberOfDeletions++;
     
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
-    DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs).get();
+    DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs.m_ptr).get();
     if(pDispatch)
       m_dispatch.erase(pDispatch);
 
@@ -179,37 +241,27 @@ public:
   }
 
   /// <summary>
-  /// Convenience routine for Fire calls
-  /// </summary>
-  /// <remarks>
-  /// This is a convenience routine, its only purpose is to add the "this" parameter to the
-  /// call to FilterFiringException
-  /// </remarks>
-  inline void PassFilterFiringException(EventReceiver* pReceiver) const {
-    FilterFiringException(this, pReceiver);
-  }
-
-  /// <summary>
   /// Zero-argument deferred call relay
   /// </summary>
   /// <param name="fn">A nearly-curried routine to be invoked</param>
   /// <return>False if an exception was thrown by a recipient, true otherwise</return>
-  template<class Fn>
-  bool FireCurried(Fn&& fn) const {
+  template<class Fn, class... Args>
+  bool FireCurried(const Fn& fn, Args&&... args) const {
     boost::unique_lock<boost::mutex> lk(m_lock);
     int deleteCount = m_numberOfDeletions;
-    std::shared_ptr<T> currentEvent;
+
+    // Set of contexts that need to be torn down in the event of an exception:
+    std::vector<std::weak_ptr<CoreContext>> teardown;
     
-    bool retVal = true;
     for(auto it = m_st.begin(); it != m_st.end(); ){
-      currentEvent = *it;
+      JunctionBoxEntry<T> currentEvent(*it);
       
       lk.unlock();
       try {
-        fn(*currentEvent);
+        fn(*currentEvent.m_ptr, std::forward<Args>(args)...);
       } catch(...) {
-        retVal = false;
-        this->PassFilterFiringException(currentEvent.get());
+        teardown.push_back(ContextDumbToWeak(it->m_owner));
+        this->FilterFiringException(currentEvent.m_ptr);
       }
       lk.lock();
       
@@ -221,7 +273,14 @@ public:
         deleteCount = m_numberOfDeletions;
       }
     }
-    return retVal;
+    if(teardown.empty())
+      // Nobody threw any exceptions, end here
+      return true;
+
+    // Exceptions thrown, teardown and then indicate an error
+    lk.unlock();
+    TerminateAll(teardown);
+    return false;
   }
 
   // Two-parenthetical deferred invocations:
@@ -231,6 +290,58 @@ public:
   }
 };
 
+template<int ...>
+struct seq {};
+
+template<int N, int... S>
+struct gen_seq: gen_seq<N - 1, N - 1, S...> {};
+
+template<int... S>
+struct gen_seq<0, S...> {
+  typedef seq<S...> type;
+};
+
+/// <summary>
+/// A fully bound member function call
+/// </summary>
+/// <remarks>
+/// </remarks>
+template<class T, class... Args>
+class CurriedInvokeRelay:
+  public DispatchThunkBase
+{
+public:
+  CurriedInvokeRelay(CurriedInvokeRelay& rhs) = delete;
+  CurriedInvokeRelay(CurriedInvokeRelay&& rhs) = delete;
+      
+  CurriedInvokeRelay(T& obj, Deferred(T::*fnPtr)(Args...), Args... args) :
+    DispatchThunkBase(true),
+    m_obj(obj),
+    m_fnPtr(fnPtr),
+    m_args(std::forward<Args>(args)...)
+  {}
+
+private:
+  // The object on which we are bound
+  T& m_obj;
+
+  // Function call to be made, and its arguments:
+  Deferred(T::*m_fnPtr)(Args...);
+  std::tuple<typename std::decay<Args>::type...> m_args;
+
+  /// <summary>
+  /// Places a call to the bound member function pointer by unpacking a lambda into it
+  /// </summary>
+  template<int... S>
+  void CallByUnpackingTuple(seq<S...>) {
+    (m_obj.*m_fnPtr)(std::move(std::get<S>(m_args))...);
+  }
+
+public:
+  void operator()(void) override {
+    CallByUnpackingTuple(typename gen_seq<sizeof...(Args)>::type());
+  }
+};
 
 template<typename T, typename ...Args>
 class InvokeRelay<Deferred (T::*)(Args...)> {
@@ -251,27 +362,17 @@ private:
   
 public:
   void operator()(const typename std::decay<Args>::type&... args) const {
-    if (!erp) return; //Context has already been destroyed
+    if(!erp)
+      // Context has already been destroyed
+      return;
     
     const auto& dq = erp->GetDispatchQueue();
     boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
-    
-    for(auto q = dq.begin(); q != dq.end(); q++) {
-      auto* pCur = *q;
-      if(!pCur->CanAccept())
-        continue;
-      
-      // Pass the copy into the lambda:
-      auto f = fnPtr;
-      auto lambda = [=] (EventReceiver& obj, Args... args) {
-          // Now we perform the cast:
-          T* pObj = dynamic_cast<T*>(&obj);
-          (pObj->*f)(std::move(args)...);
-        };
-      
-      auto bound_lambda = std::bind<void>(lambda, std::placeholders::_1, args...);
-      pCur->AttachProxyRoutine(bound_lambda);
-    }
+
+    for(auto q = dq.begin(); q != dq.end(); q++)
+      if((**q).CanAccept())
+        // Create a fully curried function to add to the dispatch queue:
+        (**q).AddExisting(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...));
   }
 };
 
@@ -302,13 +403,17 @@ public:
     if(!erp)
       // Context has already been destroyed
       return true;
-    
-    //First distribute the arguments to any listening serializers in current context
+
+    // Give the serializer a chance to handle these arguments:
     erp->SerializeInit(fnPtr, args...);
-    
-    auto lambda = [&] (T& obj, Args... args) {(obj.*fnPtr)(args...);};
-    auto bound_lambda = std::bind<void>(lambda, std::placeholders::_1, std::ref(args)...);
-    
-    return erp->FireCurried(bound_lambda);
+
+    auto fw = [this](T& obj, Args... args) {
+      (obj.*fnPtr)(std::forward<Args>(args)...);
+    };
+
+    return erp->FireCurried(
+      std::move(fw),
+      std::forward<Args>(args)...
+    );
   }
 };

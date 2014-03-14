@@ -292,11 +292,6 @@ void CoreContext::Dump(std::ostream& os) const {
   }
 }
 
-void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient) {
-  // Obtain the current context and pass control:
-  CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
-}
-
 void ShutdownCurrentContext(void) {
   CoreContext::CurrentContext()->SignalShutdown();
 }
@@ -369,21 +364,21 @@ void CoreContext::UpdateDeferredElements(void) {
   }
 }
 
-void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    m_eventReceivers.insert(pRecvr);
+    m_eventReceivers.insert(receiver);
   }
   
-  m_junctionBoxManager->AddEventReceiver(pRecvr);
+  m_junctionBoxManager->AddEventReceiver(receiver);
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
-    m_pParent->AddEventReceiver(pRecvr);
+    m_pParent->AddEventReceiver(receiver);
 }
 
-void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     m_eventReceivers.erase(pRecvr);
