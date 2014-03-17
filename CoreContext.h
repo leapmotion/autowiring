@@ -192,10 +192,9 @@ protected:
     }
     
     // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
-    if (!std::is_same<T,void>::value) {
-      CurrentContextPusher pshr(retVal);
-      BroadcastContextCreationNotice(typeid(T));
-    }
+    CurrentContextPusher pshr(retVal);
+    BroadcastContextCreationNotice(typeid(T));
+    
     return retVal;
   }
   
@@ -275,20 +274,11 @@ protected:
   // Lists of event receivers, by name:
   typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
+  std::list<BoltBase*> m_allNameListeners;
 
   // Adds a bolt proper to this context
-  template<class T, class Sigil>
-  void EnableInternal(T*, Bolt<Sigil>*) {
-    Inject<T>();
-  }
-  
-  template<class T, class Sigil, class Sigil2>
-  void EnableInternal(T*, Bolt<Sigil,Sigil2>*) {
-    Inject<T>();
-  }
-  
-  template<class T, class Sigil, class Sigil2, class Sigil3>
-  void EnableInternal(T*, Bolt<Sigil,Sigil2,Sigil3>*) {
+  template<typename T, typename... Sigils>
+  void EnableInternal(T*, Bolt<Sigils...>*) {
     Inject<T>();
   }
 
@@ -296,11 +286,13 @@ protected:
   void AutoRequireMicroBolt(void);
 
   // Enables a boltable class
-  template<class T, class Sigil1, class Sigil2, class Sigil3>
-  void EnableInternal(T*, Boltable<Sigil1, Sigil2, Sigil3>*) {
-    AutoRequireMicroBolt<Sigil1, T>();
-    AutoRequireMicroBolt<Sigil2, T>();
-    AutoRequireMicroBolt<Sigil3, T>();
+  template<typename T, typename... Sigils>
+  void EnableInternal(T*, Boltable<Sigils...>*) {
+    bool dummy[] = {
+      false,
+      (AutoRequireMicroBolt<Sigils, T>(), false)...
+    };
+    (void)dummy;
   }
 
   void EnableInternal(...) {}
