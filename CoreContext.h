@@ -55,10 +55,10 @@ class EventOutputStreamBase;
 class GlobalCoreContext;
 class OutstandingCountTracker;
 
-template<class T>
+template<typename T>
 class Autowired;
 
-template<class Sigil1, class Sigil2, class Sigil3>
+template<typename... Sigils>
 struct Boltable;
 
 /// <summary>
@@ -282,20 +282,20 @@ protected:
     Inject<T>();
   }
 
-  template<class Sigil, class T>
-  void AutoRequireMicroBolt(void);
-
   // Enables a boltable class
   template<typename T, typename... Sigils>
   void EnableInternal(T*, Boltable<Sigils...>*) {
     bool dummy[] = {
       false,
-      (AutoRequireMicroBolt<Sigils, T>(), false)...
+      (AutoRequireMicroBolt<T, Sigils>(), false)...
     };
     (void)dummy;
   }
 
   void EnableInternal(...) {}
+  
+  template<typename T, typename... Sigils>
+  void AutoRequireMicroBolt(void);
 
   /// <summary>
   /// Unregisters all event receivers in this context
@@ -1058,12 +1058,12 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 
 #include "MicroBolt.h"
 
-template<class Sigil, class T>
+template<typename T, typename... Sigils>
 void CoreContext::AutoRequireMicroBolt(void) {
-  if(std::is_same<void, Sigil>::value)
+  if(sizeof...(Sigils)==1 && std::is_same<void, Sigils...>::value)
     return;
 
-  Inject<MicroBolt<Sigil, T>>();
+  Inject<MicroBolt<T, Sigils...>>();
 }
 
 template<typename T>
