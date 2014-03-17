@@ -289,12 +289,12 @@ protected:
       false,
       (AutoRequireMicroBolt<T, Sigils>(), false)...
     };
-    (void)dummy;
+    (void) dummy;
   }
 
   void EnableInternal(...) {}
   
-  template<typename T, typename... Sigils>
+  template<typename T, typename... Sigil>
   void AutoRequireMicroBolt(void);
 
   /// <summary>
@@ -572,7 +572,7 @@ public:
       (m_anchors.insert(typeid(AnchorType)), false),
       (m_anchors.insert(typeid(RestAnchorTypes)),false)...
     };
-    (void)dummy;
+    (void) dummy;
   }
 
   /// <summary>
@@ -1062,12 +1062,9 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 
 #include "MicroBolt.h"
 
-template<typename T, typename... Sigils>
+template<typename T, typename... Sigil>
 void CoreContext::AutoRequireMicroBolt(void) {
-  if(sizeof...(Sigils)==1 && std::is_same<void, Sigils...>::value)
-    return;
-
-  Inject<MicroBolt<T, Sigils...>>();
+  Inject<MicroBolt<T, Sigil...>>();
 }
 
 template<typename T>
