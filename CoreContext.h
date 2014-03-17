@@ -566,9 +566,13 @@ public:
   /// <summary>
   /// Add an additional anchor type to the context
   /// </summary>
-  template<typename AnchorType>
+  template<typename AnchorType, typename... RestAnchorTypes>
   void AddAnchor(void) {
-    m_anchors.insert(typeid(AnchorType));
+    bool dummy[] = {
+      (m_anchors.insert(typeid(AnchorType)), false),
+      (m_anchors.insert(typeid(RestAnchorTypes)),false)...
+    };
+    (void)dummy;
   }
 
   /// <summary>

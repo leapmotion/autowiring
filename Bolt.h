@@ -7,7 +7,7 @@
 
 /// <summary>
 /// </summary>
-/// <param name="Sigil">The sigil of the context whose creation we want to listen for</param>
+/// <param name="Sigil">The sigils of the contexts whose creation we want to listen for</param>
 /// <remarks>
 /// A bolt is a way to augment the creation of a new context in a declarative, by-name manner.
 /// By inheriting from Bolt, the object will recieve ContextCreated() calls.
@@ -25,7 +25,7 @@ public:
       false,
       (m_BoltedTypes.push_back(typeid(Sigil)), false)...
     };
-    (void)dummy;
+    (void) dummy;
   }
   
   const t_TypeInfoVector& GetContextSigils(void){
