@@ -2,6 +2,7 @@
 #include "Bolt.h"
 #include "CreationRules.h"
 #include "Decompose.h"
+#include "is_any.h"
 #include <vector>
 
 /// <summary>
@@ -18,6 +19,7 @@ struct MicroBolt:
   public Bolt<Sigils...>
 {
 public:
+  static_assert(!is_any<void, Sigils...>::value, "Can't use 'void' as a sigil type");
   void ContextCreated(void) override;
 };
 
