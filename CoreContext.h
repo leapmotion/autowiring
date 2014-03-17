@@ -80,6 +80,7 @@ template<typename... Ts>
 struct AutoAnchor:
   AutoAnchorBase
 {
+  static_assert(!is_any_same<void, Ts...>::value, "Can't use 'void' as a sigil type");
   static void Enumerate(std::set<std::type_index>& anchors) {
     bool dummy[] = {
       (anchors.insert(typeid(Ts)), false)...
