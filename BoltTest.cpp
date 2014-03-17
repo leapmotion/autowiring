@@ -52,6 +52,23 @@ public:
   }
 };
 
+class InjectsIntoEverything:
+  public Bolt<>
+{
+public:
+  InjectsIntoEverything():
+    count(0)
+  {}
+  
+  void ContextCreated(void) override {
+    AutoRequired<SimpleObject>();
+    ++count;
+  }
+
+private:
+  int count;
+};
+
 TEST_F(BoltTest, VerifySimpleInjection) {
   AutoEnable<InjectsIntoPipeline>();
 
@@ -138,4 +155,33 @@ TEST_F(BoltTest, VerifyMultipleInjection) {
     Autowired<SimpleObject> so;
     ASSERT_TRUE(so.IsAutowired()) << "Simple object was not injected as expected into a dependent context";
   }
+}
+
+TEST_F(BoltTest, EmptyBolt) {
+  AutoEnable<InjectsIntoEverything>();
+  Autowired<SimpleObject> so;
+  EXPECT_FALSE(so.IsAutowired()) << "Simple object injected into outer context";
+  
+  AutoCreateContext created;
+  
+  {
+    CurrentContextPusher pshr(created);
+    Autowired<SimpleObject> innerSo;
+    EXPECT_TRUE(innerSo.IsAutowired()) << "Simple object not injected into anonymous context";
+    
+    AutoCreateContext innerCreated;
+    {
+      CurrentContextPusher pshr(created);
+      
+    }
+  }
+  
+  auto created2 = m_create->Create<Pipeline>();
+  
+  {
+    CurrentContextPusher pshr(created2);
+    Autowired<SimpleObject> innerSo;
+    EXPECT_TRUE(innerSo.IsAutowired()) << "Simple object not injected into named context";
+  }
+  
 }
