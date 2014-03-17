@@ -21,13 +21,11 @@ class Bolt:
 {
 public:
   Bolt() {
-    if (m_BoltedTypes.empty()){
-      bool dummy[] = {
-        false,
-        (m_BoltedTypes.push_back(typeid(Sigil)),false)...
-      };
-      (void) dummy;
-    }
+    bool dummy[] = {
+      false,
+      (m_BoltedTypes.push_back(typeid(Sigil)), false)...
+    };
+    (void)dummy;
   }
   
   const t_TypeInfoVector& GetContextSigils(void){
@@ -36,5 +34,3 @@ public:
 private:
   t_TypeInfoVector m_BoltedTypes;
 };
-
-
