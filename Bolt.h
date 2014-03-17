@@ -1,8 +1,7 @@
 #pragma once
 
-#include "AutowirableSlot.h"
 #include "BoltBase.h"
-#include "C++11/cpp11.h"
+#include "Decompose.h"
 #include TYPE_INDEX_HEADER
 
 /// <summary>
@@ -20,14 +19,27 @@ class Bolt:
   public BoltBase
 {
 public:
-  Bolt() {
+  Bolt(void) {
     bool dummy[] = {
-      false,
       (m_BoltedTypes.push_back(typeid(Sigil)), false)...
     };
     (void) dummy;
   }
+
+  const t_TypeInfoVector& GetContextSigils(void){
+    return m_BoltedTypes;
+  }
   
+  static_assert(!is_any_same<void, Sigil...>::value, "Can't use 'void' as a sigil type");
+private:
+  t_TypeInfoVector m_BoltedTypes;
+};
+
+template<>
+class Bolt<>:
+  public BoltBase
+{
+public:
   const t_TypeInfoVector& GetContextSigils(void){
     return m_BoltedTypes;
   }

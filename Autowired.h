@@ -1,8 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _AUTOWIRED_H
-#define _AUTOWIRED_H
+#pragma once
+
 #include "AutowirableSlot.h"
-#include "CreationRules.h"
 #include "GlobalCoreContext.h"
 #include "Decompose.h"
 #include "TypeRegistry.h"
@@ -300,5 +299,3 @@ public:
 // TODO:  Consider moving the declarations in this file into its own header, and using this header
 // as a master header for all of Autowiring
 #include "AutoPacketFactory.h"
-
-#endif
