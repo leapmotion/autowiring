@@ -230,6 +230,9 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
   for(auto i = v.begin(); i != v.end(); i++) {
     m_nameListeners[*i].push_back(pBase.get());
   }
+  if (v.empty()) {
+    m_allNameListeners.push_back(pBase.get());
+  }
 }
 
 void CoreContext::Dump(std::ostream& os) const {
@@ -274,6 +277,10 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     const auto& list = q->second;
     for(auto q = list.begin(); q != list.end(); q++)
       (**q).ContextCreated();
+  }
+  
+  for (auto i = m_allNameListeners.begin(); i != m_allNameListeners.end(); ++i) {
+    (**i).ContextCreated();
   }
 
   // Notify the parent next:

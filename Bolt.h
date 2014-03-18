@@ -1,13 +1,12 @@
 #pragma once
 
-#include "AutowirableSlot.h"
 #include "BoltBase.h"
-#include "C++11/cpp11.h"
+#include "Decompose.h"
 #include TYPE_INDEX_HEADER
 
 /// <summary>
 /// </summary>
-/// <param name="Sigil">The sigil of the context whose creation we want to listen for</param>
+/// <param name="Sigil">The sigils of the contexts whose creation we want to listen for</param>
 /// <remarks>
 /// A bolt is a way to augment the creation of a new context in a declarative, by-name manner.
 /// By inheriting from Bolt, the object will recieve ContextCreated() calls.
@@ -15,51 +14,35 @@
 /// with a given sigil, use Boltable.
 /// </remarks>
 
-template<class Sigil1, class Sigil2 = void, class Sigil3 = void>
+template<typename... Sigil>
 class Bolt:
   public BoltBase
 {
-  const t_TypeInfoVector& GetContextSigils(void){
-    static t_TypeInfoVector v;
-    if( v.empty() ) {
-      v.push_back(typeid(Sigil1));
-      v.push_back(typeid(Sigil2));
-      v.push_back(typeid(Sigil3));
-    }
-    return v;
+public:
+  Bolt(void) {
+    bool dummy[] = {
+      (m_BoltedTypes.push_back(typeid(Sigil)), false)...
+    };
+    (void) dummy;
   }
-  static Sigil1 MySigilType1;
-  static Sigil2 MySigilType2;
-  static Sigil1 MySigilType3;
+
+  const t_TypeInfoVector& GetContextSigils(void){
+    return m_BoltedTypes;
+  }
+  
+  static_assert(!is_any_same<void, Sigil...>::value, "Can't use 'void' as a sigil type");
+private:
+  t_TypeInfoVector m_BoltedTypes;
 };
 
-template<class Sigil1>
-class Bolt<Sigil1,void,void>:
+template<>
+class Bolt<>:
   public BoltBase
 {
 public:
   const t_TypeInfoVector& GetContextSigils(void){
-    static t_TypeInfoVector v;
-    if( v.empty() ) {
-      v.push_back(typeid(Sigil1));
-    }
-    return v;
+    return m_BoltedTypes;
   }
-  static Sigil1 MySigilType1;
-};
-
-template<class Sigil1, class Sigil2>
-class Bolt<Sigil1,Sigil2,void>:
-  public BoltBase
-{
-  const t_TypeInfoVector& GetContextSigils(void){
-    static t_TypeInfoVector v;
-    if( v.empty() ) {
-      v.push_back(typeid(Sigil1));
-      v.push_back(typeid(Sigil2));
-    }
-    return v;
-  }
-  static Sigil1 MySigilType1;
-  static Sigil2 MySigilType2;
+private:
+  t_TypeInfoVector m_BoltedTypes;
 };
