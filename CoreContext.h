@@ -179,6 +179,8 @@ protected:
 
   void AddAnchorInternal(const void*) {}
   
+  // These are the types which will be created in this context if an attempt is made to inject them
+  // into any child context.
   std::set<std::type_index> m_anchors;
 
   // A pointer to the parent context
