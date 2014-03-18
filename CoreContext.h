@@ -1,5 +1,6 @@
 #pragma once
 #include "at_exit.h"
+#include "AutoAnchor.h"
 #include "AutoFactory.h"
 #include "AutoPacketSubscriber.h"
 #include "autowiring_error.h"
@@ -60,34 +61,6 @@ class Autowired;
 
 template<typename... Sigils>
 struct Boltable;
-
-/// <summary>
-/// Anchors a particular object type or event type to the annotated context sigil
-/// </summary>
-/// <remarks>
-/// The AutoAnchor is a marker type to be applied to a sigil type.  When a member of a subcontext of any
-/// annotated sigil class attempts to AutoRequire or AutoFire an instance of any sigil type, instead of
-/// creating the corresponding object or obtaining the junction box in that child context, the request
-/// will be satisfied instead by the anchor.
-/// </remarks>
-struct AutoAnchorBase {
-  static void Enumerate(std::set<std::type_index>& anchors) {
-    assert(false); // Base should never be called
-  }
-};
-
-template<typename... Ts>
-struct AutoAnchor:
-  AutoAnchorBase
-{
-  static_assert(!is_any_same<void, Ts...>::value, "Can't use 'void' as a sigil type");
-  static void Enumerate(std::set<std::type_index>& anchors) {
-    bool dummy[] = {
-      (anchors.insert(typeid(Ts)), false)...
-    };
-    (void) dummy;
-  }
-};
 
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
 
