@@ -3,6 +3,9 @@
 #include <set>
 #include TYPE_INDEX_HEADER
 
+// Marker base class for anchors
+struct AutoAnchorBase {};
+
 /// <summary>
 /// Anchors a particular object type or event type to the annotated context sigil
 /// </summary>
@@ -12,21 +15,8 @@
 /// creating the corresponding object or obtaining the junction box in that child context, the request
 /// will be satisfied instead by the anchor.
 /// </remarks>
-struct AutoAnchorBase {
-  static void Enumerate(std::set<std::type_index>& anchors) {
-    assert(false); // Base should never be called
-  }
-};
-
 template<typename... Ts>
 struct AutoAnchor:
   AutoAnchorBase
 {
-  static_assert(!is_any_same<void, Ts...>::value, "Can't use 'void' as a sigil type");
-  static void Enumerate(std::set<std::type_index>& anchors) {
-    bool dummy[] = {
-      (anchors.insert(typeid(Ts)), false)...
-    };
-    (void) dummy;
-  }
 };
