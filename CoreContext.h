@@ -1,5 +1,6 @@
 #pragma once
 #include "at_exit.h"
+#include "AutoAnchor.h"
 #include "AutoFactory.h"
 #include "AutoPacketSubscriber.h"
 #include "autowiring_error.h"
@@ -55,38 +56,11 @@ class EventOutputStreamBase;
 class GlobalCoreContext;
 class OutstandingCountTracker;
 
-template<class T>
+template<typename T>
 class Autowired;
 
-template<class Sigil1, class Sigil2, class Sigil3>
+template<typename... Sigils>
 struct Boltable;
-
-/// <summary>
-/// Anchors a particular object type or event type to the annotated context sigil
-/// </summary>
-/// <remarks>
-/// The AutoAnchor is a marker type to be applied to a sigil type.  When a member of a subcontext of any
-/// annotated sigil class attempts to AutoRequire or AutoFire an instance of any sigil type, instead of
-/// creating the corresponding object or obtaining the junction box in that child context, the request
-/// will be satisfied instead by the anchor.
-/// </remarks>
-struct AutoAnchorBase {
-  static void Enumerate(std::set<std::type_index>& anchors) {
-    assert(false); // Base should never be called
-  }
-};
-
-template<typename... Ts>
-struct AutoAnchor:
-  AutoAnchorBase
-{
-  static void Enumerate(std::set<std::type_index>& anchors) {
-    bool dummy[] = {
-      (anchors.insert(typeid(Ts)), false)...
-    };
-    (void) dummy;
-  }
-};
 
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
 
@@ -187,24 +161,30 @@ protected:
     *childIterator = retVal;
     
     // Save anchored types in context
-    if (std::is_base_of<AutoAnchorBase,T>::value) {
-      retVal->AddAnchor<typename std::conditional<std::is_base_of<AutoAnchorBase,T>::value, T, AutoAnchorBase>::type>();
-    }
+    retVal->AddAnchorInternal((T*)nullptr);
     
     // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
-    if (!std::is_same<T,void>::value) {
-      CurrentContextPusher pshr(retVal);
-      BroadcastContextCreationNotice(typeid(T));
-    }
+    CurrentContextPusher pshr(retVal);
+    BroadcastContextCreationNotice(typeid(T));
+    
     return retVal;
   }
-  
-  // T must inherit from AutoAnchorBase
-  template<typename AnchorType>
-  void AddAnchor() {
-    AnchorType::Enumerate(m_anchors);
+
+  void AddAnchorInternal(const AutoAnchor<>*) {}
+
+  template<typename... Ts>
+  void AddAnchorInternal(const AutoAnchor<Ts...>*) {
+    static_assert(sizeof...(Ts) != 0, "Cannot anchor nothing");
+
+    bool dummy[] = {
+      (m_anchors.insert(typeid(Ts)), false)...
+    };
   }
+
+  void AddAnchorInternal(const void*) {}
   
+  // These are the types which will be created in this context if an attempt is made to inject them
+  // into any child context.
   std::set<std::type_index> m_anchors;
 
   // A pointer to the parent context
@@ -275,35 +255,28 @@ protected:
   // Lists of event receivers, by name:
   typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
+  std::list<BoltBase*> m_allNameListeners;
 
   // Adds a bolt proper to this context
-  template<class T, class Sigil>
-  void EnableInternal(T*, Bolt<Sigil>*) {
+  template<typename T, typename... Sigils>
+  void EnableInternal(T*, Bolt<Sigils...>*) {
     Inject<T>();
   }
-  
-  template<class T, class Sigil, class Sigil2>
-  void EnableInternal(T*, Bolt<Sigil,Sigil2>*) {
-    Inject<T>();
-  }
-  
-  template<class T, class Sigil, class Sigil2, class Sigil3>
-  void EnableInternal(T*, Bolt<Sigil,Sigil2,Sigil3>*) {
-    Inject<T>();
-  }
-
-  template<class Sigil, class T>
-  void AutoRequireMicroBolt(void);
 
   // Enables a boltable class
-  template<class T, class Sigil1, class Sigil2, class Sigil3>
-  void EnableInternal(T*, Boltable<Sigil1, Sigil2, Sigil3>*) {
-    AutoRequireMicroBolt<Sigil1, T>();
-    AutoRequireMicroBolt<Sigil2, T>();
-    AutoRequireMicroBolt<Sigil3, T>();
+  template<typename T, typename... Sigils>
+  void EnableInternal(T*, Boltable<Sigils...>*) {
+    bool dummy[] = {
+      false,
+      (AutoRequireMicroBolt<T, Sigils>(), false)...
+    };
+    (void) dummy;
   }
 
   void EnableInternal(...) {}
+  
+  template<typename T, typename... Sigil>
+  void AutoRequireMicroBolt(void);
 
   /// <summary>
   /// Unregisters all event receivers in this context
@@ -569,6 +542,17 @@ public:
       }
     }
     return shared_from_this();
+  }
+  
+  /// <summary>
+  /// Add an additional anchor type to the context
+  /// </summary>
+  template<typename... AnchorTypes>
+  void AddAnchor(void) {
+    bool dummy[] = {
+      (m_anchors.insert(typeid(AnchorTypes)), false)...
+    };
+    (void) dummy;
   }
 
   /// <summary>
@@ -1058,12 +1042,9 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 
 #include "MicroBolt.h"
 
-template<class Sigil, class T>
+template<typename T, typename... Sigil>
 void CoreContext::AutoRequireMicroBolt(void) {
-  if(std::is_same<void, Sigil>::value)
-    return;
-
-  Inject<MicroBolt<Sigil, T>>();
+  Inject<MicroBolt<T, Sigil...>>();
 }
 
 template<typename T>
