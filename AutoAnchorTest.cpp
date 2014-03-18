@@ -2,6 +2,15 @@
 #include "AutoAnchorTest.h"
 #include "TestFixtures/SimpleObject.h"
 
+struct AnchorsNothing:
+  AutoAnchor<>
+{};
+
+TEST_F(AutoAnchorTest, VerifyBaseCase) {
+  AutoCreateContextT<AnchorsNothing> ctxt;
+  ASSERT_NE(nullptr, ctxt.get()) << "Failed to create a context which anchors nothing";
+}
+
 struct AnchorSigil:
   AutoAnchor<SimpleObject>
 {};
