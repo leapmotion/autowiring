@@ -161,9 +161,7 @@ protected:
     *childIterator = retVal;
     
     // Save anchored types in context
-    if (std::is_base_of<AutoAnchorBase,T>::value) {
-      retVal->AddAnchorInternal<typename std::conditional<std::is_base_of<AutoAnchorBase,T>::value, T, AutoAnchorBase>::type>();
-    }
+    retVal->AddAnchorInternal((T*)nullptr);
     
     // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
     CurrentContextPusher pshr(retVal);
@@ -172,11 +170,14 @@ protected:
     return retVal;
   }
   
-  // T must inherit from AutoAnchorBase
-  template<typename AnchorType>
-  void AddAnchorInternal() {
-    AnchorType::Enumerate(m_anchors);
+  template<typename... Ts>
+  void AddAnchorInternal(const AutoAnchor<Ts...>*) {
+    bool dummy[] = {
+      (m_anchors.insert(typeid(Ts)), false)...
+    };
   }
+
+  void AddAnchorInternal(const void*) {}
   
   std::set<std::type_index> m_anchors;
 
