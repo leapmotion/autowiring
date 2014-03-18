@@ -190,8 +190,4 @@ TEST_F(BoltTest, EmptyBolt) {
     EXPECT_TRUE(innerSo.IsAutowired()) << "CountObject not injected into named context";
     EXPECT_EQ(1, innerSo->count) << "ContextCreated() called incorrect number of times";
   }
-  
-  //AutoEnable<ShouldFail>();
-  
-  
 }
