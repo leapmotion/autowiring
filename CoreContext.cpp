@@ -100,46 +100,14 @@ std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
 
-std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil){
-  return Create(sigil, *new CoreContext(shared_from_this(), sigil));
-}
+std::vector<std::shared_ptr<CoreThread>> CoreContext::CopyCoreThreadList(void) const {
+  std::vector<std::shared_ptr<CoreThread>> retVal;
 
-std::shared_ptr<CoreContext> CoreContext::CreatePeer(const std::type_info& sigil) {
-  return m_pParent->Create(sigil, *new CoreContext(m_pParent, sigil, shared_from_this()));
-}
-
-std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, CoreContext& newContext) {
-  t_childList::iterator childIterator;
-  {
-    // Lock the child list while we insert
-    boost::lock_guard<boost::mutex> lk(m_childrenLock);
-
-    // Reserve a place in the list for the child
-    childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
-  }
-
-  // Create the child context
-  CoreContext* pContext = &newContext;
-  if(m_useOwnershipValidator)
-    pContext->EnforceSimpleOwnership();
-  
-  // Create the shared pointer for the context--do not add the context to itself,
-  // this creates a dangerous cyclic reference.
-  std::shared_ptr<CoreContext> retVal(
-    pContext,
-    [this, childIterator] (CoreContext* pContext) {
-      {
-        boost::lock_guard<boost::mutex> lk(m_childrenLock);
-        this->m_children.erase(childIterator);
-      }
-      delete pContext;
-    }
-  );
-  *childIterator = retVal;
-
-  // Fire all explicit bolts:
-  CurrentContextPusher pshr(retVal);
-  BroadcastContextCreationNotice(sigil);
+  // It's safe to enumerate this list from outside of a protective lock because a linked list
+  // has stable iterators, we do not delete entries from the interior of this list, and we only
+  // add entries to the end of the list.
+  for(auto q = m_threads.begin(); q != m_threads.end(); q++)
+    retVal.push_back((**q).GetSelf<CoreThread>());
   return retVal;
 }
 
@@ -170,16 +138,13 @@ void CoreContext::InitiateCoreThreads(void) {
     (*q)->Start(outstanding);
 }
 
-void CoreContext::SignalShutdown(bool wait) {
+void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   // Transition as soon as possible:
   m_isShutdown = true;
 
   // Wipe out the junction box manager:
-  {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    UnregisterEventReceivers();
-  }
-
+  (boost::unique_lock<boost::mutex>)m_lock,
+  UnregisterEventReceivers();
 
   {
     // Teardown interleave assurance--all of these contexts will generally be destroyed
@@ -218,8 +183,9 @@ void CoreContext::SignalShutdown(bool wait) {
   }
 
   // Pass notice to all child threads:
+  bool graceful = shutdownMode == ShutdownMode::Graceful;
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
-    (*q)->Stop();
+    (*q)->Stop(graceful);
 
   // Signal our condition variable
   m_stateChanged.notify_all();
@@ -281,11 +247,6 @@ void CoreContext::Dump(std::ostream& os) const {
     const char* name = pThread->GetName();
     os << "Thread " << pThread << " " << (name ? name : "(no name)") << std::endl;
   }
-}
-
-void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient) {
-  // Obtain the current context and pass control:
-  CoreContext::CurrentContext()->FilterFiringException(pProxy, pRecipient);
 }
 
 void ShutdownCurrentContext(void) {
@@ -360,21 +321,21 @@ void CoreContext::UpdateDeferredElements(void) {
   }
 }
 
-void CoreContext::AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    m_eventReceivers.insert(pRecvr);
+    m_eventReceivers.insert(receiver);
   }
   
-  m_junctionBoxManager->AddEventReceiver(pRecvr);
+  m_junctionBoxManager->AddEventReceiver(receiver);
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
-    m_pParent->AddEventReceiver(pRecvr);
+    m_pParent->AddEventReceiver(receiver);
 }
 
-void CoreContext::RemoveEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
+void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     m_eventReceivers.erase(pRecvr);

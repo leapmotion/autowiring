@@ -62,29 +62,24 @@ public:
   Smarter(void):
     value(1)
   {
-#if LAMBDAS_AVAILABLE
     m_a.NotifyWhenAutowired([this] () {
       this->value = m_a->GetValue();
     });
-#endif
   }
 
   int value;
   Autowired<A> m_a;
 };
 
-class SmarterInterface//:
-  //public ContextMember
+class SmarterInterface
 {
 public:
   SmarterInterface(void):
     value(1)
   {
-#if LAMBDAS_AVAILABLE
     m_interface.NotifyWhenAutowired([this] () {
       this->value = m_interface->GetValue();
     });
-#endif
   }
 
   int value;
@@ -114,19 +109,16 @@ TEST_F(PostConstructTest, VerifyExpectedDeferrmentCount) {
 }
 
 TEST_F(PostConstructTest, VerifySmartBehavior) {
-  if(!LAMBDAS_AVAILABLE)
-    return;
-
   AutoCurrentContext ctxt;
 
-  // Add the smart class, which should allow
+  // Add the smart class, which has a member that autowired type A
   ctxt->Inject<Smarter>();
 
-  // Initially, value should be one, which is the default
+  // Check that we can get the item we just injected
   Autowired<Smarter> smarter;
   EXPECT_EQ(1, smarter->value) << "Unexpected initial value of SmarterA instance";
 
-  // Now we add A and check the wiring
+  // Now inject A, and see if delayed autowiring has taken place:
   ctxt->Inject<A>();
   EXPECT_FALSE(!smarter->m_a.get()) << "Autowired member was not wired as expected";
 
@@ -135,9 +127,6 @@ TEST_F(PostConstructTest, VerifySmartBehavior) {
 }
 
 TEST_F(PostConstructTest, VerifySmartBehaviorWithInheritance) {
-  if(!LAMBDAS_AVAILABLE)
-    return;
-
   AutoCurrentContext ctxt;
 
   // Add the smart classes, which should succeed
