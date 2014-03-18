@@ -87,7 +87,7 @@ bool DispatchQueue::WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boo
   if(m_aborted)
     throw dispatch_aborted_exception();
 
-  for(;;) {
+  while(m_dispatchQueue.empty()) {
     // Derive a wakeup time using the high precision timer:
     wakeTime = SuggestSoonestWakeupTimeUnsafe(wakeTime);
 
