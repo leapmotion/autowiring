@@ -169,9 +169,13 @@ protected:
     
     return retVal;
   }
-  
+
+  void AddAnchorInternal(const AutoAnchor<>*) {}
+
   template<typename... Ts>
   void AddAnchorInternal(const AutoAnchor<Ts...>*) {
+    static_assert(sizeof...(Ts) != 0, "Cannot anchor nothing");
+
     bool dummy[] = {
       (m_anchors.insert(typeid(Ts)), false)...
     };
