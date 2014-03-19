@@ -21,6 +21,7 @@ set(Autowiring_SRCS
   Autowired.cpp
   AutowirableSlot.h
   AutowirableSlot.cpp
+  AutowiringEvents.h
   autowiring_error.h
   ContextCreator.h
   ContextCreatorBase.h

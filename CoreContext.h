@@ -3,6 +3,7 @@
 #include "AutoAnchor.h"
 #include "AutoFactory.h"
 #include "AutoPacketSubscriber.h"
+#include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
 #include "CoreThread.h"
@@ -166,6 +167,9 @@ protected:
     // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
     CurrentContextPusher pshr(retVal);
     BroadcastContextCreationNotice(typeid(T));
+    
+    // Fire event notifiying listeners that a new context was created
+    GetGlobal()->Invoke(&AutowiringEvents::NewContext)(retVal);
     
     return retVal;
   }
