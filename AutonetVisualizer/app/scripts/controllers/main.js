@@ -15,7 +15,7 @@ angular.module('autoNetApp')
     $scope.contexts.push(context);
   });
 
-  websocket.on('deleteContext', function(context){
+  websocket.on('expiredContext', function(context){
     $scope.contexts = _.reject($scope.contexts, function(ctxt){
       return ctxt.id === context.id;
     });
