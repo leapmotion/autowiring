@@ -17,7 +17,7 @@ angular.module('autoNetApp')
 
   websocket.on('deleteContext', function(context){
     $scope.contexts = _.reject($scope.contexts, function(ctxt){
-      return ctxt.name === context.name;
+      return ctxt.id === context.id;
     });
   });
 
