@@ -8,7 +8,7 @@
 angular.module('autoNetApp')
 .directive('directedGraph', function () {
   return {
-    template: '<canvas width="900" height="400">HTML canvas not supported on your browser</canvas>',
+    template: '<canvas width="900" height="400">HTML5 canvas not supported on your browser</canvas>',
     restrict: 'E',
     replace: true,
     scope: {
