@@ -52,6 +52,32 @@ public:
   }
 };
 
+struct CountObject:
+  ContextMember
+{
+  CountObject():
+    count(0)
+  {}
+  
+  int count;
+};
+
+class InjectsIntoEverything:
+  public Bolt<>
+{
+public:
+  InjectsIntoEverything():
+    count(0)
+  {}
+  
+  void ContextCreated(void) override {
+    AutoRequired<CountObject> derp;
+    (derp->count)++;
+  }
+
+  int count;
+};
+
 TEST_F(BoltTest, VerifySimpleInjection) {
   AutoEnable<InjectsIntoPipeline>();
 
@@ -137,5 +163,31 @@ TEST_F(BoltTest, VerifyMultipleInjection) {
     CurrentContextPusher pshr(created2);
     Autowired<SimpleObject> so;
     ASSERT_TRUE(so.IsAutowired()) << "Simple object was not injected as expected into a dependent context";
+  }
+}
+
+struct ShouldFail:
+  Boltable<Pipeline,OtherContext,void>
+{};
+
+TEST_F(BoltTest, EmptyBolt) {
+  AutoEnable<InjectsIntoEverything>();
+  Autowired<CountObject> so;
+  EXPECT_FALSE(so.IsAutowired()) << "CountObject injected into outer context";
+  
+  AutoCreateContext created;
+  {
+    CurrentContextPusher pshr(created);
+    Autowired<CountObject> innerSo;
+    EXPECT_TRUE(innerSo.IsAutowired()) << "CountObject not injected into anonymous context";
+    EXPECT_EQ(1, innerSo->count) << "ContextCreated() called incorrect number of times";
+  }
+  
+  auto created2 = m_create->Create<Pipeline>();
+  {
+    CurrentContextPusher pshr(created2);
+    Autowired<CountObject> innerSo;
+    EXPECT_TRUE(innerSo.IsAutowired()) << "CountObject not injected into named context";
+    EXPECT_EQ(1, innerSo->count) << "ContextCreated() called incorrect number of times";
   }
 }

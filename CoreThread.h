@@ -118,8 +118,9 @@ protected:
   /// Indicates that the system should accept the delivery of deferred procedure calls
   /// </summary>
   void AcceptDispatchDelivery(void) {
+    boost::lock_guard<boost::mutex> lk(m_lock);
     m_canAccept = true;
-    m_state->m_stateCondition.notify_all();
+    m_stateCondition.notify_all();
   }
 
   /// <summary>
@@ -136,8 +137,9 @@ protected:
   /// This method is idempotent
   /// </remarks>
   void RejectDispatchDelivery(void) {
+    boost::lock_guard<boost::mutex> lk(m_lock);
     m_canAccept = false;
-    m_state->m_stateCondition.notify_all();
+    m_stateCondition.notify_all();
   }
 
   /// <summary>
