@@ -169,7 +169,7 @@ protected:
     BroadcastContextCreationNotice(typeid(T));
     
     // Fire event notifiying listeners that a new context was created
-    GetGlobal()->Invoke(&AutowiringEvents::NewContext)(retVal);
+    GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal.get());
     
     return retVal;
   }
