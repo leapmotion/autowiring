@@ -5,7 +5,7 @@
 #include "AutoPacketListener.h"
 
 JunctionBoxManager::JunctionBoxManager(void) {
-  // Enumerate all Autofired types to initialize a new JunctionBox for each
+  // Enumerate all event types to initialize a new JunctionBox for each
   for(auto p = g_pFirstEntry; p; p = p->pFlink)
     m_junctionBoxes[p->ti] = p->m_NewJunctionBox();
 
