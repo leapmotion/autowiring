@@ -26,4 +26,10 @@ angular.module('autoNetApp')
     _.extend(toUpdate, context);
   });
 
+  websocket.on('newContextMember', function(context, member){
+    console.log('newContextMember!');
+    console.log(context);
+    console.log(member);
+  });
+
 }]);
