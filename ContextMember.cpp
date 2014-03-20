@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "ContextMember.h"
 #include "Autowired.h"
+#include "AutowiringEvents.h"
 #include "CoreContext.h"
 #include "AutoNetworkMonitor.h"
 
@@ -16,9 +17,11 @@ ContextMember::ContextMember(const char* name):
   m_name(name),
   m_context(CoreContext::CurrentContext())
 {
+  AutoGlobalContext()->Invoke(&AutowiringEvents::NewContextMember)(*this);
 }
 
 ContextMember::~ContextMember() {
+  
 }
 
 void* ContextMember::operator new(size_t nBytes) {
