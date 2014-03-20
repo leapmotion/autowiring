@@ -183,6 +183,7 @@ protected:
     bool dummy[] = {
       (m_anchors.insert(typeid(Ts)), false)...
     };
+    (void)dummy;
   }
 
   void AddAnchorInternal(const void*) {}
@@ -808,7 +809,7 @@ public:
   template<class T>
   std::shared_ptr<JunctionBox<T>> GetJunctionBox(void) {
     return std::static_pointer_cast<JunctionBox<T>, JunctionBoxBase>(
-      m_junctionBoxManager->Get(typeid(T))
+      m_junctionBoxManager->Get<T>()
     );
   }
 
