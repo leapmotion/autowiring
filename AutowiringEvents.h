@@ -2,6 +2,7 @@
 #include "EventReceiver.h"
 
 class CoreContext;
+class ContextMember;
 
 class AutowiringEvents:
   public virtual EventReceiver
@@ -9,4 +10,5 @@ class AutowiringEvents:
 public:
   virtual void NewContext(CoreContext&)=0;
   virtual void ExpiredContext(CoreContext&)=0;
+  virtual void NewContextMember(ContextMember&)=0;
 };
