@@ -1,5 +1,6 @@
 #pragma once
 #include "JunctionBox.h"
+#include "TypeRegistry.h"
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
@@ -26,7 +27,35 @@ public:
   JunctionBoxManager();
   virtual ~JunctionBoxManager();
   
-  std::shared_ptr<JunctionBoxBase> Get(std::type_index);
+  template<typename T>
+  std::shared_ptr<JunctionBoxBase> Get(void) {
+    const std::type_index& pTypeIndex = typeid(T);
+    
+    // Add an utterance of the TypeRegistry so we can add this AutoFired type to our collection
+    (void)RegType<T>::r;
+    
+    auto box = m_junctionBoxes.find(pTypeIndex);
+    assert(box != m_junctionBoxes.end());;
+    
+    //Check here if any listening marshals might be interested in receiving the fired args
+    auto mapfinditerator = m_eventOutputStreams.find(pTypeIndex);
+    std::vector<std::weak_ptr<EventOutputStreamBase> > * OutputStreamVector = nullptr;
+    if (mapfinditerator != m_eventOutputStreams.end()){
+      //no vec on this type yet. So create it, pass it, and wait for it to get filled later
+      OutputStreamVector = &(mapfinditerator->second);
+    }
+    else {
+      std::vector<std::weak_ptr<EventOutputStreamBase> > newvec;
+      m_eventOutputStreams[pTypeIndex] = newvec; //assignment copy constructor invoked;
+      auto it  = m_eventOutputStreams.find(pTypeIndex);
+      OutputStreamVector = &(it->second);
+    }
+    
+    (box->second)->SetPotentialMarshals(OutputStreamVector);
+    return box->second;
+  }
+  
+  
   void AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver);
   void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
   void RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
