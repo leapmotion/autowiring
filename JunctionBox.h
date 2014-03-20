@@ -276,7 +276,7 @@ public:
     if(teardown.empty())
       // Nobody threw any exceptions, end here
       return true;
-
+    
     // Exceptions thrown, teardown and then indicate an error
     lk.unlock();
     TerminateAll(teardown);
