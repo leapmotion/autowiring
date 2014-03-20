@@ -69,6 +69,9 @@ CoreContext::~CoreContext(void) {
   // Explicit deleters to simplify base deletion of any deferred autowiring requests:
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
     delete q->second;
+  
+  // Notify AutowiringEvents listeners
+  GetGlobal()->Invoke(&AutowiringEvents::ExpiredContext)(*this);
 }
 
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
