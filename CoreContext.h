@@ -719,6 +719,10 @@ public:
       c->lock()->EnumerateContexts(fn);
     }
   }
+  
+  const std::unordered_set<ContextMember*>& GetContextMembers(void) {
+    return m_contextMembers;
+  }
 
   /// <returns>
   /// A copy of the list of child CoreThreads
