@@ -29,7 +29,9 @@ angular.module('autoNetApp')
       var currentNodes = Object.create(null);
 
       // Watch for any new or deleted nodes
-      scope.$watchCollection('nodes', function(nodes) {
+      scope.$watchCollection('nodes', function(nodeMap) {
+        var nodes = _.values(nodeMap);
+        console.log(nodes);
         // Add any new nodes
         _.each(nodes, function(node) {
           if (typeof currentNodes[node.id] === 'undefined'){

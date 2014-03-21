@@ -2,41 +2,38 @@
 
 angular.module('autoNetApp')
 .controller('MainCtrl', ['$scope', 'websocket', function ($scope, websocket) {
-  $scope.contexts = [];
-  $scope.objects = [];
+  $scope.contexts = {}; //a map of context.id to contexts
+
+  function Context(ctxt){
+    this.members = [];
+    this.name = "Unnamed";
+
+    _.extend(this, ctxt)
+  }
 
   websocket.on('unsubscribed', function(){
-    $scope.contexts = [];
-    $scope.objects = [];
+    $scope.contexts = {};
   });
 
   websocket.on('newContext', function(context){
-    var existingContext = _.findWhere($scope.contexts, {id: context.id});
-    if (typeof existingContext === 'undefined') {
-      context.name = context.name || context.id;
-      context.members = [];
-      $scope.contexts.push(context);
+    var existingContext = $scope.contexts[context.id];
+    if (_.isUndefined(existingContext)) {
+      $scope.contexts[context.id] = new Context(context);
     } else {
       _.extend(existingContext,context);
     }
   });
 
   websocket.on('expiredContext', function(context){
-    $scope.contexts = _.reject($scope.contexts, function(ctxt){
-      return ctxt.id === context.id;
-    });
+    delete $scope.contexts[context.id];
   });
 
   websocket.on('newContextMember', function(context, member){
-    var toUpdate = _.findWhere($scope.contexts, {id: context.id});
-    if (typeof toUpdate === 'undefined'){
-      var newContext = {};
-      _.extend(newContext, context);
-      newContext.members = [];
-      
-      $scope.contexts.push(newContext);
-      toUpdate = newContext;
+    var toUpdate = $scope.contexts[context.id];
+    if (_.isUndefined(toUpdate)) {
+      toUpdate = $scope.contexts[context.id] = new Context(context);
     }
+    // only add if doesn't already exist
     if (_.isUndefined(_.findWhere(toUpdate.members, {name: member.name}))) {
       toUpdate.members.push(member);
     }
