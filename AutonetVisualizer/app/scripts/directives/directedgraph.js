@@ -33,7 +33,7 @@ angular.module('autoNetApp')
         // Add any new nodes
         _.each(nodes, function(node) {
           if (typeof currentNodes[node.id] === 'undefined'){
-            var label = 'Context: ' + node.name;
+            var label = node.name;
             var newNode = scope.graph.newNode({label:label});
             currentNodes[node.id] = newNode;
             if (typeof currentNodes[node.parent] !== 'undefined'){
