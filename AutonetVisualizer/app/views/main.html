@@ -14,7 +14,7 @@
   <div>
     <h3>Contexts</h3>
     <div class="row">
-      <div class="col-xs-3" ng-repeat="context in contexts">
+      <div class="col-xs-3" ng-repeat="(id,context) in contexts">
         <h4>{{context.name}}</h4>
         <ul>
           <li ng-repeat="member in context.members track by $index">
