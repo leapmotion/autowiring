@@ -8,7 +8,7 @@ class AutowiringEvents:
   public virtual EventReceiver
 {
 public:
-  virtual void NewContext(CoreContext&)=0;
-  virtual void ExpiredContext(CoreContext&)=0;
-  virtual void NewContextMember(ContextMember&)=0;
+  virtual void NewContext(const CoreContext&)=0;
+  virtual void ExpiredContext(const CoreContext&)=0;
+  virtual void NewContextMember(const ContextMember&)=0;
 };
