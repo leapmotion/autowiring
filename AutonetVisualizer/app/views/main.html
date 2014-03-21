@@ -11,27 +11,14 @@
     <directed-graph nodes="contexts">
     </directed-graph> 
   </div>
-  <div class="section">
+  <div>
     <h3>Contexts</h3>
     <div class="row">
       <div class="col-xs-3" ng-repeat="context in contexts">
-        <h4>Context {{context.name}}</h4>
+        <h4>{{context.name}}</h4>
         <ul>
-          <li ng-repeat="(key, value) in context | display">
-            {{key}}: {{value}}
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-  <div class="section">
-    <h3>Objects</h3>
-    <div class="row">
-      <div class="col-xs-3" ng-repeat="object in objects">
-        <h4>Object {{object.name}}</h4>
-        <ul>
-          <li ng-repeat="(key, value) in object">
-            {{key}}: {{value}}
+          <li ng-repeat="member in context.members track by $index">
+            {{member.name}}
           </li>
         </ul>
       </div>

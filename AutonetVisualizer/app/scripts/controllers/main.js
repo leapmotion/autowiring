@@ -11,8 +11,14 @@ angular.module('autoNetApp')
   });
 
   websocket.on('newContext', function(context){
-    context.name = context.name || context.id;
-    $scope.contexts.push(context);
+    var existingContext = _.findWhere($scope.contexts, {id: context.id});
+    if (typeof existingContext === 'undefined') {
+      context.name = context.name || context.id;
+      context.members = [];
+      $scope.contexts.push(context);
+    } else {
+      _.extend(existingContext,context);
+    }
   });
 
   websocket.on('expiredContext', function(context){
@@ -21,15 +27,19 @@ angular.module('autoNetApp')
     });
   });
 
-  websocket.on('updateContext', function(context){
-    var toUpdate = _.findWhere($scope.contexts, {name: context.name});
-    _.extend(toUpdate, context);
-  });
-
   websocket.on('newContextMember', function(context, member){
-    console.log('newContextMember!');
-    console.log(context);
-    console.log(member);
+    var toUpdate = _.findWhere($scope.contexts, {id: context.id});
+    if (typeof toUpdate === 'undefined'){
+      var newContext = {};
+      _.extend(newContext, context);
+      newContext.members = [];
+      
+      $scope.contexts.push(newContext);
+      toUpdate = newContext;
+    }
+    if (_.isUndefined(_.findWhere(toUpdate.members, {name: member.name}))) {
+      toUpdate.members.push(member);
+    }
   });
 
 }]);
