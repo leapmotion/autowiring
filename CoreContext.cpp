@@ -230,6 +230,9 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
   for(auto i = v.begin(); i != v.end(); i++) {
     m_nameListeners[*i].push_back(pBase.get());
   }
+  if (v.empty()) {
+    m_allNameListeners.push_back(pBase.get());
+  }
 }
 
 void CoreContext::Dump(std::ostream& os) const {
@@ -274,6 +277,10 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     const auto& list = q->second;
     for(auto q = list.begin(); q != list.end(); q++)
       (**q).ContextCreated();
+  }
+
+  for (auto i = m_allNameListeners.begin(); i != m_allNameListeners.end(); ++i) {
+    (**i).ContextCreated();
   }
 
   // Notify the parent next:
@@ -326,7 +333,7 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     m_eventReceivers.insert(receiver);
   }
-  
+
   m_junctionBoxManager->AddEventReceiver(receiver);
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
@@ -340,7 +347,7 @@ void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     m_eventReceivers.erase(pRecvr);
   }
-  
+
   m_junctionBoxManager->RemoveEventReceiver(pRecvr);
 
   // Delegate to the parent:
@@ -354,9 +361,9 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
     for(auto q = first; q != last; q++)
       m_eventReceivers.erase(*q);
   }
-  
+
   m_junctionBoxManager->RemoveEventReceivers(first, last);
-  
+
   // Detour to the parent collection (if necessary)
   if(m_pParent)
     m_pParent->RemoveEventReceivers(first, last);
@@ -428,7 +435,7 @@ void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber
   if( m_pParent ) {
     m_pParent->RemovePacketSubscribers(subscribers);
   }
-  
+
   m_packetFactory->RemoveSubscribers(subscribers.begin(), subscribers.end());
 }
 
