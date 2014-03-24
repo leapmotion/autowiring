@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "ContextMember.h"
 #include "Autowired.h"
-#include "AutowiringEvents.h"
+//#include "AutowiringEvents.h"
 #include "CoreContext.h"
 #include "AutoNetworkMonitor.h"
 #include "Configuration/Config.h"
@@ -18,10 +18,12 @@ ContextMember::ContextMember(const char* name):
   m_name(name),
   m_context(CoreContext::CurrentContext())
 {
+  /*
   bool useAutonet = false;
   Config::GetAttribute("use_autonet",useAutonet);
   if (useAutonet)
     AutoGlobalContext()->Invoke(&AutowiringEvents::NewContextMember)(*this);
+  */
 }
 
 ContextMember::~ContextMember() {}
