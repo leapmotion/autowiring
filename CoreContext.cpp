@@ -4,6 +4,7 @@
 #include "AutoPacketFactory.h"
 #include "AutoPacketListener.h"
 #include "Autowired.h"
+#include "AutowiringEvents.h"
 #include "BoltBase.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
@@ -424,6 +425,9 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
 
   // Always add to the set of context members
   m_contextMembers.insert(ptr.get());
+  
+  // Notify listeners of Autowiring Events
+  GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*ptr.get());
 }
 
 void CoreContext::AddPacketSubscriber(AutoPacketSubscriber&& rhs) {
