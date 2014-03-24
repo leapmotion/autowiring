@@ -4,7 +4,6 @@
 #include "AutoPacketFactory.h"
 #include "AutoPacketListener.h"
 #include "Autowired.h"
-#include "AutowiringEvents.h"
 #include "BoltBase.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
@@ -70,9 +69,6 @@ CoreContext::~CoreContext(void) {
   // Explicit deleters to simplify base deletion of any deferred autowiring requests:
   for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
     delete q->second;
-  
-  // Notify AutowiringEvents listeners
-  GetGlobal()->Invoke(&AutowiringEvents::ExpiredContext)(*this);
 }
 
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
@@ -425,9 +421,6 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
 
   // Always add to the set of context members
   m_contextMembers.insert(ptr.get());
-  
-  // Notify listeners of Autowiring Events
-  GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*ptr.get());
 }
 
 void CoreContext::AddPacketSubscriber(AutoPacketSubscriber&& rhs) {
