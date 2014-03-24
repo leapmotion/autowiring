@@ -4,6 +4,8 @@ angular.module('autoNetApp')
 .controller('MainCtrl', ['$scope', 'websocket', function ($scope, websocket) {
   $scope.contexts = {}; //a map of context.id to contexts
 
+
+  //This object is the "values" in $scope.contexts
   function Context(ctxt){
     this.members = [];
     this.name = "Unnamed";
