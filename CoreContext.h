@@ -156,10 +156,16 @@ protected:
           boost::lock_guard<boost::mutex> lk(m_childrenLock);
           this->m_children.erase(childIterator);
         }
+        // Notify AutowiringEvents listeners
+        GetGlobal()->Invoke(&AutowiringEvents::ExpiredContext)(*pContext);
+        
         delete pContext;
       }
     );
     *childIterator = retVal;
+    
+    // Notify AutowiringEvents listeners
+    GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal);
     
     // Save anchored types in context
     retVal->AddAnchorInternal((T*)nullptr);
@@ -167,9 +173,6 @@ protected:
     // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
     CurrentContextPusher pshr(retVal);
     BroadcastContextCreationNotice(typeid(T));
-    
-    // Fire event notifiying listeners that a new context was created
-    GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal.get());
     
     return retVal;
   }
@@ -495,8 +498,12 @@ protected:
 
         // CoreThreads:
         pCoreThread = leap::fast_pointer_cast<CoreThread, T>(value);
-        if(pCoreThread)
+        if (pCoreThread) {
           AddCoreThread(pCoreThread);
+          GetGlobal()->Invoke(&AutowiringEvents::NewCoreThread)(*pCoreThread.get());
+        } else {
+          GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*pContextMember.get());
+        }
       }
 
       // Exception filters:
@@ -504,7 +511,7 @@ protected:
       if(pFilter)
         m_filters.insert(pFilter.get());
 
-      // Bolts:
+      // Bolts
       auto pBase = leap::fast_pointer_cast<BoltBase, T>(value);
       if(pBase)
         AddBolt(pBase);
