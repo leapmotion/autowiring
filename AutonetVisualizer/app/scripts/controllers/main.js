@@ -9,6 +9,9 @@ angular.module('autoNetApp')
   function Context(ctxt){
     this.members = [];
     this.threads = [];
+    this.eventReceivers = [];
+    this.bolts = [];
+    this.exceptionFilters = [];
     this.name = "Unnamed";
 
     _.extend(this, ctxt)
@@ -19,15 +22,17 @@ angular.module('autoNetApp')
   });
 
   websocket.on('newContext', function(context){
-    $scope.contexts[context.id] = new Context(context);
+    if (!_.has($scope.contexts, context.id)) {
+      $scope.contexts[context.id] = new Context(context);
+    }
   });
 
-  websocket.on('expiredContext', function(context){
-    delete $scope.contexts[context.id];
+  websocket.on('expiredContext', function(contextID){
+    delete $scope.contexts[contextID];
   });
 
-  websocket.on('newContextMember', function(context, member){
-    var updatedContext = $scope.contexts[context.id];
+  websocket.on('newContextMember', function(contextID, member){
+    var updatedContext = $scope.contexts[contextID];
 
     // only add if doesn't already exist
     if (_.isUndefined(_.findWhere(updatedContext.members, {name: member.name}))) {
@@ -37,8 +42,8 @@ angular.module('autoNetApp')
     }
   });
 
-  websocket.on('newCoreThread', function(context, thread){
-    var updatedContext = $scope.contexts[context.id];
+  websocket.on('newCoreThread', function(contextID, thread){
+    var updatedContext = $scope.contexts[contextID];
 
     // only add if doesn't already exist
     if (_.isUndefined(_.findWhere(updatedContext.threads, {name: thread.name}))) {
