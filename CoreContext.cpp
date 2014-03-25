@@ -244,8 +244,15 @@ void CoreContext::BuildCurrentState(void) {
       GetGlobal()->Invoke(&AutowiringEvents::NewCoreThread)(*thread) :
       GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(**member);
   }
+  /*
+  for (auto filter = m_filters.begin(); filter != m_filters.end(); ++filter) {
+    GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(**filter);
+  }
   
-  
+  for (auto receiver = m_eventReceivers.begin(); receiver != m_eventReceivers.end(); ++receiver) {
+    GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(**receiver);
+  }
+   */
   
   boost::lock_guard<boost::mutex> lk(m_childrenLock);
   for (auto c = m_children.begin(); c != m_children.end(); ++c) {

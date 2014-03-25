@@ -53,4 +53,37 @@ angular.module('autoNetApp')
     }
   });
 
+  websocket.on('newEventReceiver', function(contextID, receiver){
+    var updatedContext = $scope.contexts[contextID];
+
+    // only add if doesn't already exist
+    if (_.isUndefined(_.findWhere(updatedContext.eventReceivers, {name: receiver.name}))) {
+      updatedContext.eventReceivers.push(receiver);
+    } else {
+      console.log("EventReceiver already exists");
+    }
+  });
+
+  websocket.on('newBolt', function(contextID, bolt){
+    var updatedContext = $scope.contexts[contextID];
+
+    // only add if doesn't already exist
+    if (_.isUndefined(_.findWhere(updatedContext.bolts, {name: bolt.name}))) {
+      updatedContext.bolts.push(bolt);
+    } else {
+      console.log("Bolt already exists");
+    }
+  });
+
+  websocket.on('newExceptionFilter', function(contextID, filter){
+    var updatedContext = $scope.contexts[contextID];
+
+    // only add if doesn't already exist
+    if (_.isUndefined(_.findWhere(updatedContext.exceptionFilters, {name: filter.name}))) {
+      updatedContext.exceptionFilters.push(filter);
+    } else {
+      console.log("EventReceiver already exists");
+    }
+  });
+
 }]);
