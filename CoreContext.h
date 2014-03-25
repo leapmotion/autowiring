@@ -508,19 +508,25 @@ protected:
 
       // Exception filters:
       auto pFilter = leap::fast_pointer_cast<ExceptionFilter, T>(value);
-      if(pFilter)
+      if (pFilter) {
         m_filters.insert(pFilter.get());
+        GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, *pFilter.get());
+      }
 
       // Bolts
       auto pBase = leap::fast_pointer_cast<BoltBase, T>(value);
-      if(pBase)
+      if (pBase) {
         AddBolt(pBase);
+        GetGlobal()->Invoke(&AutowiringEvents::NewBolt)(*this, *pBase.get());
+      }
     }
 
     // Event receivers:
     auto pRecvr = leap::fast_pointer_cast<EventReceiver, T>(value);
-    if(pRecvr)
+    if (pRecvr) {
       AddEventReceiver(pRecvr);
+      GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *pRecvr.get());
+    }
 
     // Subscribers:
     AddPacketSubscriber(AutoPacketSubscriberSelect<T>(value));
