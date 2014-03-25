@@ -235,6 +235,24 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
   }
 }
 
+void CoreContext::BuildCurrentState(void) {
+  GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*this);
+  
+  for (auto member = m_contextMembers.begin(); member != m_contextMembers.end(); ++member) {
+    CoreThread* thread = dynamic_cast<CoreThread*>(*member);
+    thread?
+      GetGlobal()->Invoke(&AutowiringEvents::NewCoreThread)(*thread) :
+      GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(**member);
+  }
+  
+  
+  
+  boost::lock_guard<boost::mutex> lk(m_childrenLock);
+  for (auto c = m_children.begin(); c != m_children.end(); ++c) {
+    c->lock()->BuildCurrentState();
+  }
+}
+
 void CoreContext::Dump(std::ostream& os) const {
   boost::lock_guard<boost::mutex> lk(m_lock);
   for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
