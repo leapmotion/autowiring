@@ -238,21 +238,23 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
 void CoreContext::BuildCurrentState(void) {
   GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*this);
   
+  //ContextMembers and CoreThreads
   for (auto member = m_contextMembers.begin(); member != m_contextMembers.end(); ++member) {
     CoreThread* thread = dynamic_cast<CoreThread*>(*member);
     thread?
       GetGlobal()->Invoke(&AutowiringEvents::NewCoreThread)(*thread) :
       GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(**member);
   }
-  /*
+  
+  //Exception Filters
   for (auto filter = m_filters.begin(); filter != m_filters.end(); ++filter) {
-    GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(**filter);
+    GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, **filter);
   }
   
+  //Event Receivers
   for (auto receiver = m_eventReceivers.begin(); receiver != m_eventReceivers.end(); ++receiver) {
-    GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(**receiver);
+    GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *receiver->m_ptr);
   }
-   */
   
   boost::lock_guard<boost::mutex> lk(m_childrenLock);
   for (auto c = m_children.begin(); c != m_children.end(); ++c) {
