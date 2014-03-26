@@ -30,7 +30,7 @@
           </li>
         </ul>
       </div>
-      <div class="col-xs-2">
+      <div class="col-xs-3">
         <h4>Event Receivers</h4>
         <ul>
           <li ng-repeat="receiver in context.eventReceivers | orderBy:'name'">
@@ -38,15 +38,7 @@
           </li>
         </ul>
       </div>
-      <div class="col-xs-2">
-        <h4>Bolts</h4>
-        <ul>
-          <li ng-repeat="bolt in context.bolts | orderBy:'name'">
-            {{bolt.name}}
-          </li>
-        </ul>
-      </div>
-      <div class="col-xs-2">
+      <div class="col-xs-3">
         <h4>Exception Filters</h4>
         <ul>
           <li ng-repeat="filter in context.exceptionFilters | orderBy:'name'">
