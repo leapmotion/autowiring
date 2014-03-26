@@ -223,7 +223,7 @@ public:
   /// <param name="fn">A nearly-curried routine to be invoked</param>
   /// <return>False if an exception was thrown by a recipient, true otherwise</return>
   template<class Fn, class... Args>
-  bool FireCurried(const Fn& fn, Args&&... args) const {
+  bool FireCurried(const Fn& fn, Args&... args) const {
     boost::unique_lock<boost::mutex> lk(m_lock);
     int deleteCount = m_numberOfDeletions;
 
@@ -235,7 +235,7 @@ public:
       
       lk.unlock();
       try {
-        fn(*currentEvent.m_ptr, std::forward<Args>(args)...);
+        fn(*currentEvent.m_ptr, args...);
       } catch(...) {
         teardown.push_back(ContextDumbToWeak(it->m_owner));
         this->FilterFiringException(currentEvent.m_ptr);
@@ -381,12 +381,12 @@ public:
       return true;
 
     auto fw = [this](T& obj, Args... args) {
-      (obj.*fnPtr)(std::forward<Args>(args)...);
+      (obj.*fnPtr)(args...);
     };
 
     return erp->FireCurried(
       std::move(fw),
-      std::forward<Args>(args)...
+      args...
     );
   }
 };
