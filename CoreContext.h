@@ -517,7 +517,6 @@ protected:
       auto pBase = leap::fast_pointer_cast<BoltBase, T>(value);
       if (pBase) {
         AddBolt(pBase);
-        GetGlobal()->Invoke(&AutowiringEvents::NewBolt)(*this, *pBase.get());
       }
     }
 
