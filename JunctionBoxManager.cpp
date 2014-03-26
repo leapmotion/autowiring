@@ -3,6 +3,7 @@
 #include "JunctionBoxManager.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketListener.h"
+#include "AutowiringEvents.h"
 
 JunctionBoxManager::JunctionBoxManager(void) {
   // Enumerate all event types to initialize a new JunctionBox for each
@@ -10,6 +11,7 @@ JunctionBoxManager::JunctionBoxManager(void) {
     m_junctionBoxes[p->ti] = p->m_NewJunctionBox();
 
   m_junctionBoxes[typeid(AutoPacketListener)] = std::make_shared<JunctionBox<AutoPacketListener>>();
+  m_junctionBoxes[typeid(AutowiringEvents)] = std::make_shared<JunctionBox<AutowiringEvents>>();
 }
 
 JunctionBoxManager::~JunctionBoxManager(void) {}

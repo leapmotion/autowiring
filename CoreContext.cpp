@@ -229,6 +229,7 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
   const t_TypeInfoVector& v = pBase->GetContextSigils();
   for(auto i = v.begin(); i != v.end(); i++) {
     m_nameListeners[*i].push_back(pBase.get());
+    GetGlobal()->Invoke(&AutowiringEvents::NewBolt)(*this, *i, *pBase.get());
   }
   if (v.empty()) {
     m_allNameListeners.push_back(pBase.get());

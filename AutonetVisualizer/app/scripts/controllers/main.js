@@ -10,7 +10,7 @@ angular.module('autoNetApp')
     this.members = [];
     this.threads = [];
     this.eventReceivers = [];
-    this.bolts = [];
+    this.bolts = {};
     this.exceptionFilters = [];
     this.name = "Unnamed";
 
@@ -64,14 +64,14 @@ angular.module('autoNetApp')
     }
   });
 
-  websocket.on('newBolt', function(contextID, bolt){
+  websocket.on('newBolt', function(contextID, serverBolt){
+    console.log("bolt");
     var updatedContext = $scope.contexts[contextID];
-
-    // only add if doesn't already exist
-    if (_.isUndefined(_.findWhere(updatedContext.bolts, {name: bolt.name}))) {
-      updatedContext.bolts.push(bolt);
+    var bolt = updatedContext.bolts[serverBolt.name];
+    if (_.isUndefined(bolt)) {
+      updatedContext.bolts[serverBolt.name] = [serverBolt.listener];
     } else {
-      console.log("Bolt already exists");
+      bolt.push(serverBolt.listener);
     }
   });
 

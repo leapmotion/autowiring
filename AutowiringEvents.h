@@ -1,5 +1,6 @@
 #pragma once
 #include "EventReceiver.h"
+#include <list>
 
 class CoreContext;
 class CoreThread;
@@ -17,6 +18,6 @@ public:
   virtual void NewContextMember(const ContextMember&)=0;
   virtual void NewCoreThread(const CoreThread&)=0;
   virtual void NewEventReceiver(const CoreContext&, const EventReceiver&)=0;
-  virtual void NewBolt(const CoreContext&, const BoltBase&)=0;
+  virtual void NewBolt(const CoreContext&, const std::type_index&, const BoltBase&)=0;
   virtual void NewExceptionFilter(const CoreContext&, const ExceptionFilter&)=0;
 };
