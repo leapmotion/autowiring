@@ -57,22 +57,7 @@ public:
   virtual void DoThrow(void) = 0;
 };
 
-template<class Ex>
-class ThrowsWhenRun:
-  public CoreThread
-{
-public:
-  // This convoluted syntax is required to evade warnings on Mac
-  decltype(throw_rethrowable Ex(100)) MakeException() {
-    return throw_rethrowable Ex(100);
-  }
-
-  void Run(void) override {
-    MakeException();
-  }
-};
-
-template<int i = 200>
+template<class Ex = custom_exception, int i = 200>
 class ThrowsWhenFired:
   public ThrowingListener
 {
@@ -85,7 +70,23 @@ public:
 
   void DoThrow(void) override {
     hit = true;
-    throw_rethrowable custom_exception(i);
+    throw_rethrowable Ex(i);
+  }
+};
+
+template<class Ex>
+class ThrowsWhenRun:
+  public CoreThread,
+  public ThrowsWhenFired<Ex, 200>
+{
+public:
+  void Run(void) override {
+    // Throw in an event handler:
+    AutoFired<ThrowingListener> tl;
+    tl(&ThrowingListener::DoThrow)();
+
+    // Throw again right here:
+    throw Ex(100);
   }
 };
 
@@ -231,8 +232,8 @@ TEST_F(ExceptionFilterTest, EnclosedThrowCheck) {
 
 TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
   // Create a pair of classes which throw exceptions:
-  AutoRequired<ThrowsWhenFired<200>> v200;
-  AutoRequired<ThrowsWhenFired<201>> v201;
+  AutoRequired<ThrowsWhenFired<custom_exception, 200>> v200;
+  AutoRequired<ThrowsWhenFired<custom_exception, 201>> v201;
 
   // Now try to throw:
   AutoFired<ThrowingListener> tl;
@@ -247,9 +248,9 @@ TEST_F(ExceptionFilterTest, VerifySimpleConfinement) {
 
   // Create a subcontext where the errant recipients will live:
   AutoCreateContext child;
-  child->Inject<ThrowsWhenFired<200>>();
+  child->Inject<ThrowsWhenFired<custom_exception, 200>>();
 
-  Autowired<ThrowsWhenFired<200>> twf;
+  Autowired<ThrowsWhenFired<custom_exception, 200>> twf;
   ASSERT_FALSE(twf) << "A member injected into a child context was incorrectly scoped at the parent context";
 
   // Cause the child context to throw an exception:
@@ -261,4 +262,8 @@ TEST_F(ExceptionFilterTest, VerifySimpleConfinement) {
 
   // Verify that the child scope was terminated as expected:
   EXPECT_TRUE(child->IsShutdown()) << "An event recipient in a child scope threw an exception and the child context was not correctly terminated";
+}
+
+TEST_F(ExceptionFilterTest, NoRecursiveShutdowns) {
+
 }
