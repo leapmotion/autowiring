@@ -237,7 +237,7 @@ public:
       try {
         fn(*currentEvent.m_ptr, args...);
       } catch(...) {
-        teardown.push_back(ContextDumbToWeak(it->m_owner));
+        teardown.push_back(ContextDumbToWeak(currentEvent.m_owner));
         this->FilterFiringException(currentEvent.m_ptr);
       }
       lk.lock();
