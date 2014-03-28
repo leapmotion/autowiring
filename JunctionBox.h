@@ -89,7 +89,7 @@ protected:
   t_stType m_dispatch;
 
   /// <summary>
-  /// Invokes SignalTerminate on each context in the specified vector
+  /// Invokes SignalTerminate on each context in the specified vector.  Does not wait.
   /// </summary>
   static void TerminateAll(const std::vector<std::weak_ptr<CoreContext>>& teardown);
 
