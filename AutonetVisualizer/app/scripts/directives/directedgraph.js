@@ -29,7 +29,7 @@ angular.module('autoNetApp')
       var currentNodes = Object.create(null);
 
       // Watch for any new or deleted nodes
-      scope.$watchCollection('nodes', function(nodeMap) {
+      scope.$watch('nodes', function(nodeMap) {
         var nodes = _.values(nodeMap);
         // Add any new nodes
         _.each(nodes, function(node) {
@@ -54,7 +54,7 @@ angular.module('autoNetApp')
           delete currentNodes[nodeId];
         });
 
-      });
+      }, true);
     }
   };
 });

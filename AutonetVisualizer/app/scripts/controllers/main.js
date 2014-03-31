@@ -22,12 +22,15 @@ angular.module('autoNetApp')
   });
 
   websocket.on('newContext', function(context){
-    if (!_.has($scope.contexts, context.id)) {
+    console.log('New Context:',context);
+    if (! (context.id in $scope.contexts)) {
+      console.log('new',context);
       $scope.contexts[context.id] = new Context(context);
     }
   });
 
   websocket.on('expiredContext', function(contextID){
+    console.log('Expired Context', contextID);
     delete $scope.contexts[contextID];
   });
 
