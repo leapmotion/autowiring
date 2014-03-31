@@ -193,7 +193,7 @@ TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
 }
 
 TEST_F(ExceptionFilterTest, ExceptionFirewall) {
-  AutoRequired<ThrowsWhenFired<200>> v200;
+  AutoRequired<ThrowsWhenFired<custom_exception,200>> v200;
 
   // Try to throw, verify the return value.  The value should be false, because this particular type always
   // throws an exception in response to the receipt of an event.
