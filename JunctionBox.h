@@ -98,7 +98,7 @@ protected:
   t_stType m_dispatch;
 
   /// <summary>
-  /// Invokes SignalTerminate on each context in the specified vector
+  /// Invokes SignalTerminate on each context in the specified vector.  Does not wait.
   /// </summary>
   static void TerminateAll(const std::vector<std::weak_ptr<CoreContext>>& teardown);
 
@@ -246,7 +246,7 @@ public:
   /// <param name="fn">A nearly-curried routine to be invoked</param>
   /// <return>False if an exception was thrown by a recipient, true otherwise</return>
   template<class Fn, class... Args>
-  bool FireCurried(const Fn& fn, Args&&... args) const {
+  bool FireCurried(const Fn& fn, Args&... args) const {
     boost::unique_lock<boost::mutex> lk(m_lock);
     int deleteCount = m_numberOfDeletions;
 
@@ -258,9 +258,9 @@ public:
       
       lk.unlock();
       try {
-        fn(*currentEvent.m_ptr, std::forward<Args>(args)...);
+        fn(*currentEvent.m_ptr, args...);
       } catch(...) {
-        teardown.push_back(ContextDumbToWeak(it->m_owner));
+        teardown.push_back(ContextDumbToWeak(currentEvent.m_owner));
         this->FilterFiringException(currentEvent.m_ptr);
       }
       lk.lock();
@@ -290,6 +290,7 @@ public:
   }
 };
 
+// Generate and index tuple
 template<int ...>
 struct seq {};
 
@@ -299,6 +300,17 @@ struct gen_seq: gen_seq<N - 1, N - 1, S...> {};
 template<int... S>
 struct gen_seq<0, S...> {
   typedef seq<S...> type;
+};
+
+// Check if any T::value is true
+template<typename... T>
+struct is_any{
+  static const bool value = false;
+};
+
+template<typename Head, typename... Tail>
+struct is_any<Head, Tail...>{
+  static const bool value = Head::value || is_any<Tail...>::value;
 };
 
 /// <summary>
@@ -354,6 +366,8 @@ public:
   InvokeRelay():
     erp(nullptr)
   {}
+  
+  static_assert(!is_any<std::is_rvalue_reference<Args>...>::value, "Can't use rvalue references as event argument type");
 
 private:
   const JunctionBox<T>* erp;
@@ -375,7 +389,6 @@ public:
   }
 };
 
-
 template<class T, typename... Args>
 class InvokeRelay<void (T::*)(Args...)> {
 public:
@@ -388,6 +401,8 @@ public:
   InvokeRelay():
     erp(nullptr)
   {}
+  
+  static_assert(!is_any<std::is_rvalue_reference<Args>...>::value, "Can't use rvalue references as event argument type");
   
 private:
   JunctionBox<T>* erp;
@@ -407,12 +422,12 @@ public:
     erp->SerializeInit(fnPtr, args...);
 
     auto fw = [this](T& obj, Args... args) {
-      (obj.*fnPtr)(std::forward<Args>(args)...);
+      (obj.*fnPtr)(args...);
     };
 
     return erp->FireCurried(
       std::move(fw),
-      std::forward<Args>(args)...
+      args...
     );
   }
 };
