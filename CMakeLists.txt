@@ -8,6 +8,8 @@ set(Autowiring_SRCS
   at_exit.h
   AutoAnchor.h
   AutoFactory.h
+  AutoJob.h
+  AutoJob.cpp
   AutoPacket.h
   AutoPacket.cpp
   AutoPacketFactory.h
@@ -174,6 +176,8 @@ set(AutowiringTest_SRCS
   SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
+  AutoJobTest.h
+  AutoJobTest.cpp
   TypeRegistryTest.h
   TypeRegistryTest.cpp
   ScopeTest.h
