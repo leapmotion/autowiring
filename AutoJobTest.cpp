@@ -11,7 +11,7 @@ TEST_F(AutoJobTest, VerifySimpleProperties) {
   ASSERT_FALSE(jb->CanAccept()) << "AutoJob reported it could receive events before its enclosing context was created";
 
   // Create a thread which will delay for acceptance, and then quit:
-  boost::thread t([jb] {
+  boost::thread t([&jb] {
     jb->DelayUntilCanAccept();
   });
 
