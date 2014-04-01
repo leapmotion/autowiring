@@ -127,6 +127,7 @@ public:
   /// </remarks>
   void Abort(void);
 
+protected:
   /// <summary>
   /// Blocks until a new dispatch event is added, dispatches that single event, and then returns
   /// </summary>
@@ -164,6 +165,7 @@ public:
       retVal++;
     return retVal;
   }
+public:
 
   /// <summary>
   /// Explicit overload for already-constructed dispatch thunk types
