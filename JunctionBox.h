@@ -98,7 +98,7 @@ protected:
   t_stType m_dispatch;
 
   /// <summary>
-  /// Invokes SignalTerminate on each context in the specified vector
+  /// Invokes SignalTerminate on each context in the specified vector.  Does not wait.
   /// </summary>
   static void TerminateAll(const std::vector<std::weak_ptr<CoreContext>>& teardown);
 
@@ -123,8 +123,8 @@ public:
   // Accessor methods:
   std::vector<std::weak_ptr<EventOutputStreamBase> > * m_PotentialMarshals;
 
-  void SetPotentialMarshals(std::vector<std::weak_ptr<EventOutputStreamBase>> * inVec){  
-    m_PotentialMarshals = inVec; 
+  void SetPotentialMarshals(std::vector<std::weak_ptr<EventOutputStreamBase>> * inVec){
+    m_PotentialMarshals = inVec;
   }
 
   const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const { return m_dispatch; }
@@ -148,7 +148,7 @@ public:
     std::is_base_of<EventReceiver, T>::value,
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
-  
+
   JunctionBox(void):
     m_numberOfDeletions(0)
   {}
@@ -159,7 +159,7 @@ protected:
   // Collection of all known listeners:
   typedef std::set<JunctionBoxEntry<T>> t_listenerSet;
   t_listenerSet m_st;
-  
+
   // Incremented every time an event is deleted to notify potentially invalidated iterators
   volatile int m_numberOfDeletions;
 
@@ -179,7 +179,7 @@ public:
         if (testptr) {
           //if given eventid is enabled for given eventoutputstream, serialize!
           if (testptr->IsEnabled(memfn))
-            testptr->SerializeInit(memfn, args...);  
+            testptr->SerializeInit(memfn, args...);
           ++it;
         }
         else
@@ -213,7 +213,7 @@ public:
   /// </summary>
   void Add(const JunctionBoxEntry<T>& rhs) {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    
+
     // Trivial insert
     m_st.insert(rhs);
 
@@ -228,10 +228,10 @@ public:
   /// </summary>
   void Remove(const JunctionBoxEntry<T>& rhs) {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    
+
     // Update the deletion count
     m_numberOfDeletions++;
-    
+
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
     DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs.m_ptr).get();
     if(pDispatch)
@@ -246,25 +246,25 @@ public:
   /// <param name="fn">A nearly-curried routine to be invoked</param>
   /// <return>False if an exception was thrown by a recipient, true otherwise</return>
   template<class Fn, class... Args>
-  bool FireCurried(const Fn& fn, Args&&... args) const {
+  bool FireCurried(const Fn& fn, Args&... args) const {
     boost::unique_lock<boost::mutex> lk(m_lock);
     int deleteCount = m_numberOfDeletions;
 
     // Set of contexts that need to be torn down in the event of an exception:
     std::vector<std::weak_ptr<CoreContext>> teardown;
-    
+
     for(auto it = m_st.begin(); it != m_st.end(); ){
       JunctionBoxEntry<T> currentEvent(*it);
-      
+
       lk.unlock();
       try {
-        fn(*currentEvent.m_ptr, std::forward<Args>(args)...);
+        fn(*currentEvent.m_ptr, args...);
       } catch(...) {
-        teardown.push_back(ContextDumbToWeak(it->m_owner));
+        teardown.push_back(ContextDumbToWeak(currentEvent.m_owner));
         this->FilterFiringException(currentEvent.m_ptr);
       }
       lk.lock();
-      
+
       // Increment iterator correctly even if it's been invalidated
       if (deleteCount == m_numberOfDeletions){
         ++it;
@@ -290,6 +290,7 @@ public:
   }
 };
 
+// Generate and index tuple
 template<int ...>
 struct seq {};
 
@@ -299,6 +300,17 @@ struct gen_seq: gen_seq<N - 1, N - 1, S...> {};
 template<int... S>
 struct gen_seq<0, S...> {
   typedef seq<S...> type;
+};
+
+// Check if any T::value is true
+template<typename... T>
+struct is_any{
+  static const bool value = false;
+};
+
+template<typename Head, typename... Tail>
+struct is_any<Head, Tail...>{
+  static const bool value = Head::value || is_any<Tail...>::value;
 };
 
 /// <summary>
@@ -313,9 +325,8 @@ class CurriedInvokeRelay:
 public:
   CurriedInvokeRelay(CurriedInvokeRelay& rhs) = delete;
   CurriedInvokeRelay(CurriedInvokeRelay&& rhs) = delete;
-      
+
   CurriedInvokeRelay(T& obj, Deferred(T::*fnPtr)(Args...), Args... args) :
-    DispatchThunkBase(true),
     m_obj(obj),
     m_fnPtr(fnPtr),
     m_args(std::forward<Args>(args)...)
@@ -350,22 +361,24 @@ public:
     erp(erp),
     fnPtr(fnPtr)
   {}
-  
+
   // Null constructor
   InvokeRelay():
     erp(nullptr)
   {}
 
+  static_assert(!is_any<std::is_rvalue_reference<Args>...>::value, "Can't use rvalue references as event argument type");
+
 private:
   const JunctionBox<T>* erp;
   Deferred (T::*fnPtr)(Args...);
-  
+
 public:
   void operator()(const typename std::decay<Args>::type&... args) const {
     if(!erp)
       // Context has already been destroyed
       return;
-    
+
     const auto& dq = erp->GetDispatchQueue();
     boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
 
@@ -376,7 +389,6 @@ public:
   }
 };
 
-
 template<class T, typename... Args>
 class InvokeRelay<void (T::*)(Args...)> {
 public:
@@ -384,12 +396,14 @@ public:
     erp(erp),
     fnPtr(fnPtr)
   {}
-  
+
   // Null constructor
   InvokeRelay():
     erp(nullptr)
   {}
-  
+
+  static_assert(!is_any<std::is_rvalue_reference<Args>...>::value, "Can't use rvalue references as event argument type");
+
 private:
   JunctionBox<T>* erp;
   void (T::*fnPtr)(Args...);
@@ -408,12 +422,12 @@ public:
     erp->SerializeInit(fnPtr, args...);
 
     auto fw = [this](T& obj, Args... args) {
-      (obj.*fnPtr)(std::forward<Args>(args)...);
+      (obj.*fnPtr)(args...);
     };
 
     return erp->FireCurried(
       std::move(fw),
-      std::forward<Args>(args)...
+      args...
     );
   }
 };
