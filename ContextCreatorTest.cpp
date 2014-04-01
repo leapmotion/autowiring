@@ -54,7 +54,7 @@ class WaitMember:
   public CoreThread
 {
 public:
-  AutoRequired<GlobalSignal> m_signal;
+  Autowired<GlobalSignal> m_signal;
 
   void Run(void) override {
     // Wait for our event to be signalled, then leave

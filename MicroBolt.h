@@ -1,32 +1,27 @@
 #pragma once
 #include "Bolt.h"
-#include "CreationRules.h"
-#include "Decompose.h"
 #include <vector>
 
 /// <summary>
 /// Causes the class inheriting from this definition to be bolted to the specified contexts
 /// </summary>
-template<class Sigil1, class Sigil2 = void, class Sigil3 = void>
+template<typename... Sigils>
 struct Boltable {};
 
 /// <summary>
 /// A default bolt type which will insert the specified type into a matching context
 /// </summary>
-template<class Sigil, class T>
+template<typename T, typename... Sigils>
 struct MicroBolt:
-  public Bolt<Sigil>
+  public Bolt<Sigils...>
 {
 public:
   void ContextCreated(void) override;
 };
 
-template<class T>
-struct MicroBolt<void, T> {};
-
 #include "CoreContext.h"
 
-template<class Sigil, class T>
-void MicroBolt<Sigil, T>::ContextCreated(void) {
+template<typename T, typename... Sigils>
+void MicroBolt<T, Sigils...>::ContextCreated(void) {
   CoreContext::InjectCurrent<T>();
 }
