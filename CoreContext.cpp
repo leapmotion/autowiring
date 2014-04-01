@@ -100,49 +100,6 @@ std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
 
-std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil){
-  return Create(sigil, *new CoreContext(shared_from_this(), sigil));
-}
-
-std::shared_ptr<CoreContext> CoreContext::CreatePeer(const std::type_info& sigil) {
-  return m_pParent->Create(sigil, *new CoreContext(m_pParent, sigil, shared_from_this()));
-}
-
-std::shared_ptr<CoreContext> CoreContext::Create(const std::type_info& sigil, CoreContext& newContext) {
-  t_childList::iterator childIterator;
-  {
-    // Lock the child list while we insert
-    boost::lock_guard<boost::mutex> lk(m_childrenLock);
-
-    // Reserve a place in the list for the child
-    childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
-  }
-
-  // Create the child context
-  CoreContext* pContext = &newContext;
-  if(m_useOwnershipValidator)
-    pContext->EnforceSimpleOwnership();
-  
-  // Create the shared pointer for the context--do not add the context to itself,
-  // this creates a dangerous cyclic reference.
-  std::shared_ptr<CoreContext> retVal(
-    pContext,
-    [this, childIterator] (CoreContext* pContext) {
-      {
-        boost::lock_guard<boost::mutex> lk(m_childrenLock);
-        this->m_children.erase(childIterator);
-      }
-      delete pContext;
-    }
-  );
-  *childIterator = retVal;
-
-  // Fire all explicit bolts:
-  CurrentContextPusher pshr(retVal);
-  BroadcastContextCreationNotice(sigil);
-  return retVal;
-}
-
 std::vector<std::shared_ptr<CoreThread>> CoreContext::CopyCoreThreadList(void) const {
   std::vector<std::shared_ptr<CoreThread>> retVal;
 
@@ -272,6 +229,37 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
   const t_TypeInfoVector& v = pBase->GetContextSigils();
   for(auto i = v.begin(); i != v.end(); i++) {
     m_nameListeners[*i].push_back(pBase.get());
+    GetGlobal()->Invoke(&AutowiringEvents::NewBolt)(*this, *i, *pBase.get());
+  }
+  if (v.empty()) {
+    m_allNameListeners.push_back(pBase.get());
+  }
+}
+
+void CoreContext::BuildCurrentState(void) {
+  GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*this);
+
+  //ContextMembers and CoreThreads
+  for (auto member = m_contextMembers.begin(); member != m_contextMembers.end(); ++member) {
+    CoreThread* thread = dynamic_cast<CoreThread*>(*member);
+    thread?
+      GetGlobal()->Invoke(&AutowiringEvents::NewCoreThread)(*thread) :
+      GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(**member);
+  }
+
+  //Exception Filters
+  for (auto filter = m_filters.begin(); filter != m_filters.end(); ++filter) {
+    GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, **filter);
+  }
+
+  //Event Receivers
+  for (auto receiver = m_eventReceivers.begin(); receiver != m_eventReceivers.end(); ++receiver) {
+    GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *receiver->m_ptr);
+  }
+
+  boost::lock_guard<boost::mutex> lk(m_childrenLock);
+  for (auto c = m_children.begin(); c != m_children.end(); ++c) {
+    c->lock()->BuildCurrentState();
   }
 }
 
@@ -317,6 +305,10 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     const auto& list = q->second;
     for(auto q = list.begin(); q != list.end(); q++)
       (**q).ContextCreated();
+  }
+
+  for (auto i = m_allNameListeners.begin(); i != m_allNameListeners.end(); ++i) {
+    (**i).ContextCreated();
   }
 
   // Notify the parent next:
@@ -369,7 +361,7 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     m_eventReceivers.insert(receiver);
   }
-  
+
   m_junctionBoxManager->AddEventReceiver(receiver);
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
@@ -383,7 +375,7 @@ void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     m_eventReceivers.erase(pRecvr);
   }
-  
+
   m_junctionBoxManager->RemoveEventReceiver(pRecvr);
 
   // Delegate to the parent:
@@ -397,9 +389,9 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
     for(auto q = first; q != last; q++)
       m_eventReceivers.erase(*q);
   }
-  
+
   m_junctionBoxManager->RemoveEventReceivers(first, last);
-  
+
   // Detour to the parent collection (if necessary)
   if(m_pParent)
     m_pParent->RemoveEventReceivers(first, last);
@@ -471,7 +463,7 @@ void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber
   if( m_pParent ) {
     m_pParent->RemovePacketSubscribers(subscribers);
   }
-  
+
   m_packetFactory->RemoveSubscribers(subscribers.begin(), subscribers.end());
 }
 
