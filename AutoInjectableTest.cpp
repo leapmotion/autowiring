@@ -43,7 +43,46 @@ TEST_F(AutoInjectableTest, VerifyCombinedInjection) {
   injector();
 
   Autowired<StealsConstructorArgument> myobj;
+  Autowired<SimpleObject> mySimpleObj;
   ASSERT_TRUE(myobj.IsAutowired()) << "Combined injectable failed to introduce a single-arguments constructed item into the context";
   ASSERT_EQ("Hello", myobj->myVal) << "Combined injectable failed to copy an rvalue argument properly";
-  ASSERT_TRUE(myobj.IsAutowired()) << "Combined injectable failed to introduce a zero-arguments constructed item into the context";
+  ASSERT_TRUE(mySimpleObj.IsAutowired()) << "Combined injectable failed to introduce a zero-arguments constructed item into the context";
+}
+
+TEST_F(AutoInjectableTest, VerifyInjectableAdditionPermutation1) {
+  auto injector = MakeInjectable<StealsConstructorArgument>("Hello");
+  auto injector2 = injector + MakeInjectable<SimpleObject>();
+  injector2();
+
+  Autowired<StealsConstructorArgument> myStealObj;
+  Autowired<SimpleObject> mySimpleObj;
+  ASSERT_TRUE(myStealObj.IsAutowired()) << "Combined injectable failed to introduce a single-argument constructed item";
+  ASSERT_EQ("Hello", myStealObj->myVal) << "Combined injectable failed to copy an rvalue argument";
+  ASSERT_TRUE(mySimpleObj.IsAutowired()) << "Combined injectable failed to introduce a zero-arguments constructed";
+}
+
+
+TEST_F(AutoInjectableTest, VerifyInjectableAdditionPermutation2) {
+  auto injector = MakeInjectable<StealsConstructorArgument>("Hello");
+  auto injector2 = MakeInjectable<SimpleObject>() + injector;
+  injector2();
+
+  Autowired<StealsConstructorArgument> myStealObj;
+  Autowired<SimpleObject> mySimpleObj;
+  ASSERT_TRUE(myStealObj.IsAutowired()) << "Combined injectable failed to introduce a single-argument constructed item";
+  ASSERT_EQ("Hello", myStealObj->myVal) << "Combined injectable failed to copy an rvalue argument";
+  ASSERT_TRUE(mySimpleObj.IsAutowired()) << "Combined injectable failed to introduce a zero-arguments constructed";
+}
+
+TEST_F(AutoInjectableTest, VerifyInjectableAdditionPermutation3) {
+  auto injector = MakeInjectable<StealsConstructorArgument>("Hello");
+  auto injector2 = MakeInjectable<SimpleObject>();
+  auto injector3 = injector + injector2;
+  injector3();
+
+  Autowired<StealsConstructorArgument> myStealObj;
+  Autowired<SimpleObject> mySimpleObj;
+  ASSERT_TRUE(myStealObj.IsAutowired()) << "Combined injectable failed to introduce a single-argument constructed item";
+  ASSERT_EQ("Hello", myStealObj->myVal) << "Combined injectable failed to copy an rvalue argument";
+  ASSERT_TRUE(mySimpleObj.IsAutowired()) << "Combined injectable failed to introduce a zero-arguments constructed";
 }
