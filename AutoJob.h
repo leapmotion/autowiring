@@ -16,6 +16,9 @@ private:
   // Acceptor flag:
   bool m_canAccept;
 
+protected:
+  void FireEvent(DispatchThunkBase&) override;
+
 public:
   // EventDispatcher overrides:
   bool DelayUntilCanAccept(void) override;

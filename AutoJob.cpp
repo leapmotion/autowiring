@@ -2,7 +2,6 @@
 #include "AutoJob.h"
 #include "CoreContext.h"
 #include <future>
-#include <iostream>
 
 
 AutoJob::AutoJob(const char* name) :
@@ -10,6 +9,10 @@ AutoJob::AutoJob(const char* name) :
   m_canAccept(false)
 {
   AcceptDispatchDelivery();
+}
+
+void AutoJob::FireEvent(DispatchThunkBase& thunk){
+  std::future<void> a = std::async(std::launch::async, [&thunk]{thunk();});
 }
 
 bool AutoJob::ShouldStop(void) const {
