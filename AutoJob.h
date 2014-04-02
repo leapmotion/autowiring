@@ -28,4 +28,5 @@ public:
   bool ShouldStop(void) const;
   void AcceptDispatchDelivery(void);
   void RejectDispatchDelivery(void);
+  bool Start(std::shared_ptr<Object>);
 };

@@ -25,8 +25,7 @@ class dispatch_aborted_exception:
 /// A DispatchQueue is a type of event receiver which allows for the reception of deferred events.
 /// </remarks>
 class DispatchQueue:
-  public virtual EventReceiver,
-  public EventDispatcher
+  public virtual EventReceiver
 {
 public:
   DispatchQueue(void);
@@ -126,6 +125,11 @@ public:
   /// This method is idempotent
   /// </remarks>
   void Abort(void);
+  
+  /// <summary>
+  /// Check if DispatchQueue is ready to take events
+  /// </summary>
+  virtual bool CanAccept(void) const = 0;
 
 protected:
   /// <summary>
@@ -134,9 +138,14 @@ protected:
   virtual void FireEvent(DispatchThunkBase&);
   
   /// <summary>
+  /// Wait until the queue can start taking events
+  /// </summary>
+  virtual bool DelayUntilCanAccept(void) = 0;
+  
+  /// <summary>
   /// Blocks until a new dispatch event is added, dispatches that single event, and then returns
   /// </summary>
-  void WaitForEvent(void) override;
+  void WaitForEvent(void);
 
   /// <summary>
   /// Timed version of WaitForEvent
@@ -158,13 +167,13 @@ protected:
   /// Similar to WaitForEvent, but does not block
   /// </summary>
   /// <returns>True if an event was dispatched, false if the queue was empty when checked</returns>
-  bool DispatchEvent(void) override;
+  bool DispatchEvent(void);
 
   /// <summary>
   /// Similar to DispatchEvent, but will attempt to dispatch all events currently queued
   /// </summary>
   /// <returns>The total number of events dispatched</returns>
-  int DispatchAllEvents(void) override {
+  int DispatchAllEvents(void){
     int retVal = 0;
     while(DispatchEvent())
       retVal++;

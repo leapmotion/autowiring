@@ -1,7 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #ifndef _EVENT_DISPATCHER_H
 #define _EVENT_DISPATCHER_H
-
+/*
 /// <summary>
 /// This is an interface which generally marks any object that might be able to dispatch events
 /// </summary>
@@ -43,5 +43,6 @@ protected:
   /// <returns>The number of events dispatched</returns>
   virtual int DispatchAllEvents(void) = 0;
 };
+ */
 
 #endif
