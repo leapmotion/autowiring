@@ -123,6 +123,38 @@ bool CoreThread::WaitForEvent(boost::chrono::high_resolution_clock::time_point w
   return WaitForEventUnsafe(lk, wakeTime);
 }
 
+bool CoreThread::WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost::chrono::high_resolution_clock::time_point wakeTime) {
+  if(m_aborted)
+    throw dispatch_aborted_exception();
+  
+  while(m_dispatchQueue.empty()) {
+    // Derive a wakeup time using the high precision timer:
+    wakeTime = SuggestSoonestWakeupTimeUnsafe(wakeTime);
+    
+    // Now we wait, either for the timeout to elapse or for the dispatch queue itself to
+    // transition to the "aborted" state.
+    boost::cv_status status = m_queueUpdated.wait_until(lk, wakeTime);
+    
+    // Short-circuit if the queue was aborted
+    if(m_aborted)
+      throw dispatch_aborted_exception();
+    
+    // Pull over any ready events:
+    PromoteReadyEventsUnsafe();
+    
+    // Dispatch events if the queue is now non-empty:
+    if(!m_dispatchQueue.empty())
+      break;
+    
+    if(status == boost::cv_status::timeout)
+      // Can't proceed, queue is empty and nobody is ready to be run
+      return false;
+  }
+  
+  DispatchEventUnsafe(lk);
+  return true;
+}
+
 void CoreThread::Stop(bool graceful){
   // Trivial return check:
   if(m_stop)

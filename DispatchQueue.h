@@ -57,7 +57,6 @@ protected:
   
   bool m_aborted;
   
-private:
   /// <summary>
   /// Recommends a point in time to wake up to check for events
   /// </summary>
@@ -68,7 +67,6 @@ private:
   /// </summary>
   void PromoteReadyEventsUnsafe(void);
 
-protected:
   /// <summary>
   /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
   /// </summary>
@@ -78,11 +76,6 @@ protected:
   /// is an error to call this method without those preconditions met.
   /// </remarks>
   void DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk);
-
-  /// <summary>
-  /// An unsafe variant of WaitForEvent
-  /// </summary>
-  bool WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost::chrono::high_resolution_clock::time_point wakeTime);
 
   /// <summary>
   /// Utility virtual, called whenever a new event is deferred
