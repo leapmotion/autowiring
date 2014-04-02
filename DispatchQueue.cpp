@@ -70,17 +70,23 @@ void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
   lk.unlock();
 
   auto generalCleanup = MakeAtExit(
-    [this, thunk, wasEmpty] {
-      delete thunk;
-
+    [this, wasEmpty] {
       // If we emptied the queue, we'd like to reobtain the lock and tell everyone
       // that the queue is now empty.
       if(wasEmpty)
         m_queueUpdated.notify_all();
     }
   );
+  
+  FireEvent(*thunk);
+}
 
-  (*thunk)();
+void DispatchQueue::FireEvent(DispatchThunkBase& thunk){
+  DispatchThunkBase* ptr = &thunk;
+  auto generalCleanup = MakeAtExit([ptr]{
+    delete ptr;
+  });
+  thunk();
 }
 
 bool DispatchQueue::WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost::chrono::high_resolution_clock::time_point wakeTime) {

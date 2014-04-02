@@ -129,6 +129,11 @@ public:
 
 protected:
   /// <summary>
+  /// Fire and event when dispatched from the queue.
+  /// </summary>
+  virtual void FireEvent(DispatchThunkBase&);
+  
+  /// <summary>
   /// Blocks until a new dispatch event is added, dispatches that single event, and then returns
   /// </summary>
   void WaitForEvent(void) override;
