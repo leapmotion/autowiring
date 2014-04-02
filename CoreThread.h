@@ -71,6 +71,27 @@ public:
   bool DelayUntilCanAccept(void) override;
 
   /// <summary>
+  /// Blocks until a new dispatch event is added, dispatches that single event, and then returns
+  /// </summary>
+  void WaitForEvent(void);
+
+  /// <summary>
+  /// Timed version of WaitForEvent
+  /// </summary>
+  /// <returns>
+  /// False if the timeout period elapsed before an event could be dispatched, true otherwise
+  /// </returns>
+  bool WaitForEvent(boost::chrono::milliseconds milliseconds);
+
+  /// <summary>
+  /// Wakeup-point version of WaitForEvent
+  /// </summary>
+  /// <returns>
+  /// False if the timeout period elapsed before an event could be dispatched, true otherwise
+  /// </returns>
+  bool WaitForEvent(boost::chrono::high_resolution_clock::time_point wakeTime);
+
+  /// <summary>
   /// Begins the core thread
   /// </summary>
   /// <param name="context">A shared pointer to the context containing this thread</param>

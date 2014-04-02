@@ -42,22 +42,22 @@ public:
 protected:
   // The maximum allowed number of pended dispatches before pended calls start getting dropped
   int m_dispatchCap;
-
-private:
-  bool m_aborted;
-
-  // A lock held when modifications to any element EXCEPT the first element must be made:
-  boost::mutex m_dispatchLock;
-
-  // Notice when the dispatch queue has been updated:
-  boost::condition_variable m_queueUpdated;
-
+  
   // The dispatch queue proper:
   std::list<DispatchThunkBase*> m_dispatchQueue;
-
+  
   // Priority queue of non-ready events:
   std::priority_queue<DispatchThunkDelayed> m_delayedQueue;
-
+  
+  // A lock held when modifications to any element EXCEPT the first element must be made:
+  boost::mutex m_dispatchLock;
+  
+  // Notice when the dispatch queue has been updated:
+  boost::condition_variable m_queueUpdated;
+  
+  bool m_aborted;
+  
+private:
   /// <summary>
   /// Recommends a point in time to wake up to check for events
   /// </summary>
@@ -141,27 +141,6 @@ protected:
   /// Wait until the queue can start taking events
   /// </summary>
   virtual bool DelayUntilCanAccept(void) = 0;
-  
-  /// <summary>
-  /// Blocks until a new dispatch event is added, dispatches that single event, and then returns
-  /// </summary>
-  void WaitForEvent(void);
-
-  /// <summary>
-  /// Timed version of WaitForEvent
-  /// </summary>
-  /// <returns>
-  /// False if the timeout period elapsed before an event could be dispatched, true otherwise
-  /// </returns>
-  bool WaitForEvent(boost::chrono::milliseconds milliseconds);
-
-  /// <summary>
-  /// Wakeup-point version of WaitForEvent
-  /// </summary>
-  /// <returns>
-  /// False if the timeout period elapsed before an event could be dispatched, true otherwise
-  /// </returns>
-  bool WaitForEvent(boost::chrono::high_resolution_clock::time_point wakeTime);
 
   /// <summary>
   /// Similar to WaitForEvent, but does not block
