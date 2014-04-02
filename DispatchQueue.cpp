@@ -121,46 +121,6 @@ bool DispatchQueue::WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boo
   return true;
 }
 
-void DispatchQueue::WaitForEvent(void) {
-  boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-  if(m_aborted)
-    throw dispatch_aborted_exception();
-
-  // Unconditional delay:
-  m_queueUpdated.wait(lk, [this] () -> bool {
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-
-    return
-      // We will need to transition out if the delay queue receives any items:
-      !this->m_delayedQueue.empty() ||
-
-      // We also transition out if the dispatch queue has any events:
-      !this->m_dispatchQueue.empty();
-  });
-
-  if(m_dispatchQueue.empty())
-    // The delay queue has items but the dispatch queue does not, we need to switch
-    // to the suggested sleep timeout variant:
-    WaitForEventUnsafe(lk, m_delayedQueue.top().GetReadyTime());
-  else
-    // We have an event, we can just hop over to this variant:
-    DispatchEventUnsafe(lk);
-}
-
-bool DispatchQueue::WaitForEvent(boost::chrono::milliseconds milliseconds) {
-  return WaitForEvent(boost::chrono::high_resolution_clock::now() + milliseconds);
-}
-
-bool DispatchQueue::WaitForEvent(boost::chrono::high_resolution_clock::time_point wakeTime) {
-  if(wakeTime == boost::chrono::steady_clock::time_point::max())
-    // Maximal wait--we can optimize by using the zero-arguments version
-    return WaitForEvent(), true;
-
-  boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-  return WaitForEventUnsafe(lk, wakeTime);
-}
-
 bool DispatchQueue::DispatchEvent(void) {
   boost::unique_lock<boost::mutex> lk(m_dispatchLock);
   if(m_dispatchQueue.empty())
