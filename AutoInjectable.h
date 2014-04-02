@@ -40,6 +40,15 @@ private:
   }
 };
 
+template<>
+class AutoInjectableExpression<void> :
+  public AutoInjectableExpressionBase
+{
+public:
+  void operator()(void) const override {}
+  virtual AutoInjectableExpressionBase* clone() const { return new AutoInjectableExpression(*this); }
+};
+
 class AutoInjectable
 {
 public:
