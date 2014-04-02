@@ -9,6 +9,8 @@ public:
 
   }
   virtual void operator()(void) const = 0;
+
+  virtual AutoInjectableExpressionBase* clone() const = 0;
 };
 
 template<class T, class... Args>
@@ -20,6 +22,14 @@ public:
     m_args(std::forward<Args>(args)...)
   {}
 
+  void operator()(void) const override {
+    CallByUnpackingTuple(typename gen_seq<sizeof...(Args)>::type());
+  }
+
+  AutoInjectableExpressionBase* clone() const override {
+    return new AutoInjectableExpression<T, Args...>(*this);
+  }
+
 private:
   std::tuple<Args...> m_args;
 
@@ -28,12 +38,6 @@ private:
     auto ctxt = CoreContext::CurrentContext();
     ctxt->Construct<T>(std::get<S>(m_args)...);
   }
-
-public:
-  void operator()(void) const override {
-    CallByUnpackingTuple(typename gen_seq<sizeof...(Args)>::type());
-  }
-
 };
 
 class AutoInjectable
@@ -52,7 +56,13 @@ public:
     rhs.pValue = nullptr;
     rhs.pFLink = nullptr;
   }
-  
+
+  AutoInjectable(const AutoInjectable &rhs) :
+    pValue(rhs.pValue->clone()),
+    pFLink(rhs.pFLink ? new AutoInjectable(*rhs.pFLink) : nullptr)
+  {
+  }
+
   ~AutoInjectable()
   {
     delete pValue;
@@ -90,6 +100,17 @@ AutoInjectable operator+(AutoInjectable&& lhs, AutoInjectable&& rhs) {
   AutoInjectable retVal(std::forward<AutoInjectable>(lhs));
   retVal += std::forward<AutoInjectable>(rhs);
   return retVal;
+}
+
+AutoInjectable operator+(const AutoInjectable& lhs, const AutoInjectable& rhs) {
+  return AutoInjectable(lhs) + AutoInjectable(rhs);
+}
+
+AutoInjectable operator+(AutoInjectable&& lhs, const AutoInjectable& rhs) {
+  return std::forward<AutoInjectable>(lhs) + AutoInjectable(rhs);
+}
+AutoInjectable operator+(const AutoInjectable &lhs, AutoInjectable&& rhs) {
+  return AutoInjectable(lhs) + rhs;
 }
 
 template<class T, class... Args>
