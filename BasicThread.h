@@ -98,7 +98,7 @@ private:
   /// <summary>
   /// Private routine that sets up the necessary extranea before a call to Run
   /// </summary>
-  void DoRun(void);
+  virtual void DoRun(void);
   
   /// <summary>
   /// Sets the thread priority of this thread
