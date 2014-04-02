@@ -92,6 +92,11 @@ public:
   bool WaitForEvent(boost::chrono::high_resolution_clock::time_point wakeTime);
 
   /// <summary>
+  /// An unsafe variant of WaitForEvent
+  /// </summary>
+  bool WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost::chrono::high_resolution_clock::time_point wakeTime);
+
+  /// <summary>
   /// Begins the core thread
   /// </summary>
   /// <param name="context">A shared pointer to the context containing this thread</param>
