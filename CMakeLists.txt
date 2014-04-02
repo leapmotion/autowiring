@@ -28,6 +28,8 @@ set(Autowiring_SRCS
   ContextCreatorBase.h
   ContextCreatorBase.cpp
   CreationRules.h
+  BasicThread.h
+  BasicThread.cpp
   Bolt.h
   BoltBase.h
   ContextMap.h
@@ -37,6 +39,7 @@ set(Autowiring_SRCS
   CoreContext.h
   CoreThread.cpp
   CoreThread.h
+  CoreRunnable.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
   Decompose.h
