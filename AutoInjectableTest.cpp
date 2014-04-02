@@ -11,6 +11,12 @@ TEST_F(AutoInjectableTest, VerifySimpleInjection) {
   ASSERT_TRUE(myobj.IsAutowired()) << "Injectable failed to introduce a zero-arguments constructed item into the context";
 }
 
+TEST_F(AutoInjectableTest, VerifyNullInjection) {
+  auto injector = MakeInjectable<void>();
+  injector();
+  //Todo: Check that nothing was added to the current context
+}
+
 class StealsConstructorArgument {
 public:
   StealsConstructorArgument(std::string&& myVal) :
