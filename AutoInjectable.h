@@ -8,8 +8,6 @@ public:
 
   }
   virtual void operator()(void) const = 0;
-
-  virtual AutoInjectableExpressionBase* clone() const = 0;
 };
 
 /// <summary>
@@ -28,12 +26,8 @@ public:
     CallByUnpackingTuple(typename gen_seq<sizeof...(Args)>::type());
   }
 
-  AutoInjectableExpressionBase* clone() const override {
-    return new AutoInjectableExpression<T, Args...>(*this);
-  }
-
 private:
-  std::tuple<Args...> m_args;
+  const std::tuple<Args...> m_args;
 
   template<int... S>
   void CallByUnpackingTuple(seq<S...>) const {
@@ -51,7 +45,6 @@ class AutoInjectableExpression<void> :
 {
 public:
   void operator()(void) const override {}
-  virtual AutoInjectableExpressionBase* clone() const { return new AutoInjectableExpression(*this); }
 };
 
 /// <summary>
@@ -79,20 +72,17 @@ public:
     pValue(rhs.pValue),
     pFLink(rhs.pFLink)
   {
-    rhs.pValue = nullptr;
     rhs.pFLink = nullptr;
   }
 
   AutoInjectable(const AutoInjectable &rhs) :
-    pValue(rhs.pValue->clone()),
+    pValue(rhs.pValue),
     pFLink(rhs.pFLink ? new AutoInjectable(*rhs.pFLink) : nullptr)
   {
   }
 
   ~AutoInjectable()
   {
-    delete pValue;
-    pValue = nullptr;
     delete pFLink;
     pFLink = nullptr;
   }
@@ -128,7 +118,7 @@ public:
   }
 
 private:
-  AutoInjectableExpressionBase* pValue;
+  std::shared_ptr<AutoInjectableExpressionBase> pValue;
   AutoInjectable* pFLink;
 };
 
