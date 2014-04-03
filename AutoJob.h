@@ -24,7 +24,7 @@ private:
   std::future<void> m_prevEvent;
   
 protected:
-  void FireEvent(DispatchThunkBase&) override;
+  void FireEvent(DispatchThunkBase*) override;
   
 
 public:
@@ -39,4 +39,5 @@ public:
   bool Start(std::shared_ptr<Object> outstanding) override;
   void Stop(bool graceful=false) override;
   bool IsRunning(void) const override;
+  void Wait(void) override;
 };
