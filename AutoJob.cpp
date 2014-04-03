@@ -16,10 +16,19 @@ void AutoJob::FireEvent(DispatchThunkBase& thunk){
   });
 }
 
-
 bool AutoJob::CanAccept(void) const {
   return m_canAccept;
 }
+
+bool AutoJob::DelayUntilCanAccept(void) {
+  boost::unique_lock<boost::mutex> lk(m_jobLock);
+  m_jobUpdate.wait(lk, [this]{
+    return m_canAccept;
+  });
+  return m_canAccept;
+}
+
+bool AutoJob::IsRunning(void) const { return CanAccept(); }
 
 bool AutoJob::Start(std::shared_ptr<Object> outstanding) {
   std::shared_ptr<CoreContext> context = m_context.lock();
@@ -28,6 +37,8 @@ bool AutoJob::Start(std::shared_ptr<Object> outstanding) {
   
   m_outstanding = outstanding;
   m_canAccept = true;
+  
+  m_jobUpdate.notify_all();
   
   return true;
 }

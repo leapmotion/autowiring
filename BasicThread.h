@@ -49,7 +49,7 @@ public:
   
 private:
   struct State:
-  std::enable_shared_from_this<State>
+    std::enable_shared_from_this<State>
   {
     // General purpose thread lock and update condition for the lock
     boost::mutex m_lock;
@@ -147,7 +147,7 @@ protected:
 public:
   // Accessor methods:
   bool ShouldStop(void) const;
-  bool IsRunning(void) const { return m_running; }
+  bool IsRunning(void) const override { return m_running; }
 
   /// <summary>
   /// A convenience method that will sleep this thread for the specified duration
@@ -181,7 +181,7 @@ public:
   /// <remarks>
   /// Unlike Join, this method may be invoked even if the CoreThread isn't running
   /// </remarks>
-  void Wait(void) {
+  void Wait(void) override {
     boost::unique_lock<boost::mutex> lk(m_lock);
     m_state->m_stateCondition.wait(
       lk,
