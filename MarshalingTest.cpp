@@ -2,6 +2,7 @@
 #include "MarshalingTest.h"
 #include "EventInputStream.h"
 #include "EventOutputStream.h"
+#include "CoreThread.h"
 #include "Decompose.h"
 #include "uuid.h"
 #include <string>
