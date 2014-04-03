@@ -12,6 +12,9 @@ public:
   virtual AutoInjectableExpressionBase* clone() const = 0;
 };
 
+/// <summary>
+/// An expression type, which generally encapsulates a single injection operation
+/// </summary>
 template<class T, class... Args>
 class AutoInjectableExpression:
   public AutoInjectableExpressionBase
@@ -39,6 +42,9 @@ private:
   }
 };
 
+/// <summary>
+/// A deafult injectable expression with a no-op behavior
+/// </summary>
 template<>
 class AutoInjectableExpression<void> :
   public AutoInjectableExpressionBase
@@ -48,6 +54,18 @@ public:
   virtual AutoInjectableExpressionBase* clone() const { return new AutoInjectableExpression(*this); }
 };
 
+/// <summary>
+/// Represents a composable injectable expression.
+/// </summary>
+/// <remarks>
+/// An injectable is a type of composable factory which allows consumers to describe collections
+/// of classes to be injected into a context at the same time, together with any necessary constructor
+/// arguments to those classes.  New injectables can be created as the sum of any two injectables.
+///
+/// Once an AutoInjectable instance has been obtained, the function-call operator may be invoked
+/// to create instances of the enclosed payload objects in the current context.  This operation is
+/// idempotent according to the ordinary rules of AutoRequire and CoreContext::Construct.
+/// </remarks>
 class AutoInjectable
 {
 public:
@@ -79,6 +97,16 @@ public:
     pFLink = nullptr;
   }
 
+  /// <summary>
+  /// Primary injection operation, injects this injectable's payload into the current context
+  /// </summary>
+  /// <remarks>
+  /// This method performs the actual injection proper into the current context, and is idempotent.
+  /// Constructor arguments to any injected types are copied, even if the constructor expects an
+  /// r-value.  Users are therefore discouraged from using a constructor accepting an R-value with
+  /// an Injectable--while this is not technically incorrect, it does imply that a move operation
+  /// is taking place when in fact that is not the case.
+  /// </remarks>
   void operator()() const {
     pValue->operator()();
     if(pFLink)
