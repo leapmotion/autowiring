@@ -15,8 +15,11 @@ private:
   //Hold on to this so CoreContext knows we still exist
   std::shared_ptr<Object> m_outstanding;
   
-  // Acceptor flag:
+  // Can accept new dispatchers
   bool m_canAccept;
+  
+  // CoreTheads have been started, so start dispatching
+  bool m_running;
   
   boost::mutex m_jobLock;
   boost::condition_variable m_jobUpdate;

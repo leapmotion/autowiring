@@ -8,24 +8,25 @@ template<typename T>
 class MoveOnly{
 public:
   mutable T value;
-  MoveOnly(T&& mem):
-    value(std::move(mem))
+  MoveOnly(T&& val):
+    value(std::move(val))
   {}
-  MoveOnly(const MoveOnly& mo):
-    value(std::move(mo.value))
+  MoveOnly(const MoveOnly& moveonly):
+    value(std::move(moveonly.value))
   {}
 };
 
 AutoJob::AutoJob(const char* name) :
   ContextMember(name),
-  m_canAccept(false)
+  m_canAccept(true),
+  m_running(false)
 {}
 
 void AutoJob::FireEvent(DispatchThunkBase* thunk){
   MoveOnly<std::future<void>> prev(std::move(m_prevEvent));
   
   m_prevEvent = std::async(std::launch::async, [thunk, prev]{
-    MakeAtExit([thunk]{
+    auto cleanup = MakeAtExit([thunk]{
       delete thunk;
     });
     
@@ -37,7 +38,7 @@ void AutoJob::FireEvent(DispatchThunkBase* thunk){
 
 void AutoJob::OnPended(boost::unique_lock<boost::mutex>&& lk){
   lk.unlock();
-  DispatchEvent();
+  if (m_running) DispatchEvent();
 }
 
 bool AutoJob::CanAccept(void) const {
@@ -52,7 +53,7 @@ bool AutoJob::DelayUntilCanAccept(void) {
   return m_canAccept;
 }
 
-bool AutoJob::IsRunning(void) const { return CanAccept(); }
+bool AutoJob::IsRunning(void) const { return m_running; }
 
 bool AutoJob::Start(std::shared_ptr<Object> outstanding) {
   std::shared_ptr<CoreContext> context = m_context.lock();
@@ -60,7 +61,8 @@ bool AutoJob::Start(std::shared_ptr<Object> outstanding) {
     return false;
   
   m_outstanding = outstanding;
-  m_canAccept = true;
+  m_running = true;
+  DispatchAllEvents();
   
   m_jobUpdate.notify_all();
   
@@ -73,11 +75,13 @@ void AutoJob::Stop(bool graceful) {
   if (graceful){
     // Pend a call which will invoke Abort once the dispatch queue is done:
     DispatchQueue::Pend([this] {
+      this->m_running = false;
       this->Abort();
     });
   } else {
     // Abort the dispatch queue so anyone waiting will wake up
     DispatchQueue::Abort();
+    m_running = false;
   }
   
   try {
@@ -94,5 +98,6 @@ void AutoJob::Stop(bool graceful) {
 }
 
 void AutoJob::Wait() {
+  assert(!m_canAccept); //Can't have more dispatchers appended while waiting
   if (m_prevEvent.valid()) m_prevEvent.wait();
 }

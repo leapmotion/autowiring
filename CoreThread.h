@@ -64,7 +64,7 @@ protected:
   }
 
 public:
-  // Override from EventDispatcher
+  // Override from DispatchQueue
   bool CanAccept(void) const override {return m_canAccept;}
   
   // Base overrides:
