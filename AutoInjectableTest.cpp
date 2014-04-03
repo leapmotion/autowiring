@@ -12,9 +12,13 @@ TEST_F(AutoInjectableTest, VerifySimpleInjection) {
 }
 
 TEST_F(AutoInjectableTest, VerifyNullInjection) {
+  AutoCurrentContext ctxt;
+  size_t currentCount = ctxt->GetMemberCount();
+
   auto injector = MakeInjectable<void>();
   injector();
-  //Todo: Check that nothing was added to the current context
+
+  ASSERT_EQ(currentCount, ctxt->GetMemberCount()) << "A void injector incorrectly added a context member";
 }
 
 class StealsConstructorArgument {
