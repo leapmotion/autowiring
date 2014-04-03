@@ -1,5 +1,4 @@
 #pragma once
-#include "EventDispatcher.h"
 #include "EventReceiver.h"
 #include "DispatchThunk.h"
 #include <boost/thread/condition_variable.hpp>
