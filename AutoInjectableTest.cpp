@@ -96,3 +96,35 @@ TEST_F(AutoInjectableTest, VerifyInjectableAdditionPermutation3) {
   ASSERT_EQ("Hello", myStealObj->myVal) << "Combined injectable failed to copy an rvalue argument";
   ASSERT_TRUE(mySimpleObj.IsAutowired()) << "Combined injectable failed to introduce a zero-arguments constructed";
 }
+
+TEST_F(AutoInjectableTest, VerifySimpleThreadWait) {
+  // Immediate kickoff:
+  AutoCurrentContext()->InitiateCoreThreads();
+
+  // Make an injectable, run it, and stuff it right into a future:
+  AutoFuture future;
+  MakeInjectable<CoreThread>()(&future);
+
+  // Make a thread and then start it going:
+  Autowired<CoreThread> thread;
+  ASSERT_TRUE(thread.IsAutowired()) << "Thread was not injected by an injector as expected";
+  
+  AutoRequired<boost::mutex> barr;
+  {
+    boost::lock_guard<boost::mutex> lk(*barr);
+
+    // Add a lambda that we intentionally block:
+    *thread += [] {
+      Autowired<CoreThread> thread;
+      Autowired<boost::mutex> barr;
+      boost::lock_guard<boost::mutex> lk(*barr);
+      thread->Stop();
+    };
+
+    // Instant wait:
+    ASSERT_FALSE(future.WaitFor(boost::chrono::nanoseconds(1))) << "Premature wait return on an injector-provided future";
+  }
+
+  // Now that the thread is unblocked, verify that it quits:
+  ASSERT_TRUE(future.WaitFor(boost::chrono::seconds(5))) << "Wait failed to return on an injector-provided future";
+}
