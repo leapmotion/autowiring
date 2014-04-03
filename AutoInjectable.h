@@ -132,22 +132,8 @@ private:
   AutoInjectable* pFLink;
 };
 
-inline AutoInjectable operator+(AutoInjectable&& lhs, AutoInjectable&& rhs) {
-  AutoInjectable retVal(std::forward<AutoInjectable>(lhs));
-  retVal += std::forward<AutoInjectable>(rhs);
-  return retVal;
-}
-
-inline AutoInjectable operator+(const AutoInjectable& lhs, const AutoInjectable& rhs) {
-  return AutoInjectable(lhs) + AutoInjectable(rhs);
-}
-
-inline AutoInjectable operator+(AutoInjectable&& lhs, const AutoInjectable& rhs) {
-  return std::forward<AutoInjectable>(lhs) + AutoInjectable(rhs);
-}
-
-inline AutoInjectable operator+(const AutoInjectable &lhs, AutoInjectable&& rhs) {
-  return AutoInjectable(lhs) + rhs;
+inline AutoInjectable operator+(AutoInjectable lhs, AutoInjectable rhs) {
+  return lhs += std::move(rhs);
 }
 
 template<class T, class... Args>
