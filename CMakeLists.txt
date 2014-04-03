@@ -8,6 +8,8 @@ set(Autowiring_SRCS
   at_exit.h
   AutoAnchor.h
   AutoFactory.h
+  AutoFuture.h
+  AutoFuture.cpp
   AutoInjectable.h
   AutoPacket.h
   AutoPacket.cpp

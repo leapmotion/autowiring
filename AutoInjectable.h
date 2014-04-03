@@ -1,4 +1,5 @@
 #pragma once
+#include "AutoFuture.h"
 #include "CoreContext.h"
 
 class AutoInjectableExpressionBase
@@ -7,7 +8,7 @@ public:
   virtual ~AutoInjectableExpressionBase(void) {
 
   }
-  virtual void operator()(void) const = 0;
+  virtual void operator()(AutoFuture* pFuture) const = 0;
 };
 
 /// <summary>
@@ -22,17 +23,19 @@ public:
     m_args(std::forward<Args>(args)...)
   {}
 
-  void operator()(void) const override {
-    CallByUnpackingTuple(typename gen_seq<sizeof...(Args)>::type());
+  void operator()(AutoFuture* pFuture) const override {
+    auto added = CallByUnpackingTuple(typename gen_seq<sizeof...(Args)>::type());
+    if(pFuture)
+      *pFuture += added;
   }
 
 private:
   const std::tuple<Args...> m_args;
 
   template<int... S>
-  void CallByUnpackingTuple(seq<S...>) const {
+  std::shared_ptr<T> CallByUnpackingTuple(seq<S...>) const {
     auto ctxt = CoreContext::CurrentContext();
-    ctxt->Construct<T>(std::get<S>(m_args)...);
+    return ctxt->Construct<T>(std::get<S>(m_args)...);
   }
 };
 
@@ -44,7 +47,7 @@ class AutoInjectableExpression<void> :
   public AutoInjectableExpressionBase
 {
 public:
-  void operator()(void) const override {}
+  void operator()(AutoFuture*) const override {}
 };
 
 /// <summary>
@@ -90,6 +93,7 @@ public:
   /// <summary>
   /// Primary injection operation, injects this injectable's payload into the current context
   /// </summary>
+  /// <param name="pFuture">A future which may be used to assess when injected items complete</param>
   /// <remarks>
   /// This method performs the actual injection proper into the current context, and is idempotent.
   /// Constructor arguments to any injected types are copied, even if the constructor expects an
@@ -97,8 +101,8 @@ public:
   /// an Injectable--while this is not technically incorrect, it does imply that a move operation
   /// is taking place when in fact that is not the case.
   /// </remarks>
-  void operator()() const {
-    pValue->operator()();
+  void operator()(AutoFuture* pFuture = nullptr) const {
+    pValue->operator()(pFuture);
     if(pFLink)
       pFLink->operator()();
   }
