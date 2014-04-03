@@ -78,15 +78,14 @@ void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
     }
   );
   
-  FireEvent(*thunk);
+  FireEvent(thunk);
 }
 
-void DispatchQueue::FireEvent(DispatchThunkBase& thunk){
-  DispatchThunkBase* ptr = &thunk;
-  auto generalCleanup = MakeAtExit([ptr]{
-    delete ptr;
+void DispatchQueue::FireEvent(DispatchThunkBase* thunk){
+  auto generalCleanup = MakeAtExit([thunk]{
+    delete thunk;
   });
-  thunk();
+  (*thunk)();
 }
 
 bool DispatchQueue::DispatchEvent(void) {
