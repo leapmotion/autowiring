@@ -128,7 +128,7 @@ protected:
   /// <summary>
   /// Fire and event when dispatched from the queue.
   /// </summary>
-  virtual void FireEvent(DispatchThunkBase&);
+  virtual void FireEvent(DispatchThunkBase*);
   
   /// <summary>
   /// Wait until the queue can start taking events

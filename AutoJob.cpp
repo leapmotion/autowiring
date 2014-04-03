@@ -3,17 +3,33 @@
 #include "CoreContext.h"
 #include <future>
 
+// Workaround until you can move values into a lambda capture in C++14
+template<typename T>
+class MoveOnly{
+public:
+  mutable T item;
+  MoveOnly(T&& mem):
+    item(std::move(mem))
+  {}
+  MoveOnly(const MoveOnly& mo):
+    item(std::move(mo.item))
+  {}
+};
 
 AutoJob::AutoJob(const char* name) :
   ContextMember(name),
   m_canAccept(false)
 {}
 
-void AutoJob::FireEvent(DispatchThunkBase& thunk){
-  std::async(std::launch::async, [&thunk]{
-    thunk();
-    delete &thunk;
+void AutoJob::FireEvent(DispatchThunkBase* thunk){
+  MoveOnly<std::future<void>> prev(std::move(m_prevEvent));
+  
+  m_prevEvent = std::async(std::launch::async, [thunk, prev]{
+    if (prev.item.valid()) prev.item.wait();
+    (*thunk)();
+    delete thunk;
   });
+  
 }
 
 bool AutoJob::CanAccept(void) const {
@@ -67,4 +83,8 @@ void AutoJob::Stop(bool graceful) {
   }
   
   m_outstanding.reset();
+}
+
+void AutoJob::Wait() {
+  if (m_prevEvent.valid()) m_prevEvent.wait();
 }
