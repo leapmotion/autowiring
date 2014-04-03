@@ -1,7 +1,6 @@
 #pragma once
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
-#include "EventDispatcher.h"
 #include "EventReceiver.h"
 #include "ObjectPool.h"
 #include "PolymorphicTypeForest.h"

@@ -8,7 +8,7 @@ TEST_F(AutoJobTest, VerifySimpleProperties) {
 
   AutoRequired<AutoJob> jb;
 
-  ASSERT_FALSE(jb->CanAccept()) << "AutoJob reported it could receive events before its enclosing context was created";
+  //ASSERT_FALSE(jb->CanAccept()) << "AutoJob reported it could receive events before its enclosing context was created";
 
   // Create a thread which will delay for acceptance, and then quit:
   boost::thread t([&jb] {
@@ -40,4 +40,32 @@ TEST_F(AutoJobTest, VerifySimpleSubmission) {
   ctxt->InitiateCoreThreads();
   ctxt->SignalShutdown(true);
   ASSERT_TRUE(*myFlag) << "AutoJob did not properly execute its thread";
+}
+
+TEST_F(AutoJobTest, VerifyTeardown) {
+  AutoRequired<AutoJob> job;
+  AutoCurrentContext ctxt;
+  
+  bool check1 = false;
+  bool check2 = false;
+  bool check3 = false;
+  
+  *job += [&check1] {
+    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    check1 = true;
+  };
+  *job += [&check2] {
+    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    check2 = true;
+  };
+  ctxt->InitiateCoreThreads();
+  *job += [&check3] {
+    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    check3 = true;
+  };
+  
+  ctxt->SignalShutdown(true);
+  EXPECT_TRUE(check1) << "Lambda 1 didn't finish";
+  EXPECT_TRUE(check2) << "Lambda 2 didn't finish";
+  EXPECT_TRUE(check3) << "Lambda 3 didn't finish";
 }
