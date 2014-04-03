@@ -24,8 +24,9 @@ private:
   std::future<void> m_prevEvent;
   
 protected:
+  // DispatchQueue overrides
   void FireEvent(DispatchThunkBase*) override;
-  
+  void OnPended(boost::unique_lock<boost::mutex>&&) override;
 
 public:
   AutoJob(const char* name = nullptr);

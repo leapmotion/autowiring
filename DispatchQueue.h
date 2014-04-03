@@ -85,18 +85,18 @@ protected:
   /// lock.  The queue is guaranteed to contain at least one element, and may potentially contain more.  The
   /// caller MUST NOT attempt to pend any more events during this call, or a deadlock could occur.
   /// </remarks>
-  virtual void OnPended(void) {}
+  virtual void OnPended(boost::unique_lock<boost::mutex>&& lk) {}
 
   /// <summary>
   /// Attaches an element to the end of the dispatch queue without any checks.
   /// </summary>
   template<class _Fx>
   void Pend(_Fx&& fx) {
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
     m_queueUpdated.notify_all();
 
-    OnPended();
+    OnPended(std::move(lk));
   }
   
 public:
@@ -157,13 +157,13 @@ public:
   /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>
   void AddExisting(DispatchThunkBase* pBase) {
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
       return;
 
     m_dispatchQueue.push_back(pBase);
     m_queueUpdated.notify_all();
-    OnPended();
+    OnPended(std::move(lk));
   }
 
   template<class Clock>
@@ -235,13 +235,13 @@ public:
     if(!CanAccept())
       return;
 
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
       return;
 
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(std::forward<_Fx>(fx)));
     m_queueUpdated.notify_all();
-    OnPended();
+    OnPended(std::move(lk));
   }
 };
 

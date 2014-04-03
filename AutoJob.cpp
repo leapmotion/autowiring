@@ -7,12 +7,12 @@
 template<typename T>
 class MoveOnly{
 public:
-  mutable T item;
+  mutable T value;
   MoveOnly(T&& mem):
-    item(std::move(mem))
+    value(std::move(mem))
   {}
   MoveOnly(const MoveOnly& mo):
-    item(std::move(mo.item))
+    value(std::move(mo.value))
   {}
 };
 
@@ -25,11 +25,19 @@ void AutoJob::FireEvent(DispatchThunkBase* thunk){
   MoveOnly<std::future<void>> prev(std::move(m_prevEvent));
   
   m_prevEvent = std::async(std::launch::async, [thunk, prev]{
-    if (prev.item.valid()) prev.item.wait();
+    MakeAtExit([thunk]{
+      delete thunk;
+    });
+    
+    // Wait for previous async to finish
+    if (prev.value.valid()) prev.value.wait();
     (*thunk)();
-    delete thunk;
   });
-  
+}
+
+void AutoJob::OnPended(boost::unique_lock<boost::mutex>&& lk){
+  lk.unlock();
+  DispatchEvent();
 }
 
 bool AutoJob::CanAccept(void) const {
