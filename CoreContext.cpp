@@ -1,11 +1,11 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "CoreContext.h"
+#include "CoreThread.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketListener.h"
 #include "Autowired.h"
 #include "BoltBase.h"
-#include "CoreThread.h"
 #include "GlobalCoreContext.h"
 #include "MicroBolt.h"
 #include <algorithm>
@@ -100,14 +100,17 @@ std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
 
-std::vector<std::shared_ptr<CoreThread>> CoreContext::CopyCoreThreadList(void) const {
-  std::vector<std::shared_ptr<CoreThread>> retVal;
+std::vector<std::shared_ptr<BasicThread>> CoreContext::CopyCoreThreadList(void) const {
+  std::vector<std::shared_ptr<BasicThread>> retVal;
 
   // It's safe to enumerate this list from outside of a protective lock because a linked list
   // has stable iterators, we do not delete entries from the interior of this list, and we only
   // add entries to the end of the list.
-  for(auto q = m_threads.begin(); q != m_threads.end(); q++)
-    retVal.push_back((**q).GetSelf<CoreThread>());
+  for(auto q = m_threads.begin(); q != m_threads.end(); q++){
+    BasicThread* thread = dynamic_cast<BasicThread*>(*q);
+    if (thread)
+      retVal.push_back((*thread).GetSelf<BasicThread>());
+  }
   return retVal;
 }
 
@@ -216,7 +219,7 @@ std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   return *retVal;
 }
 
-void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr) {
+void CoreContext::AddCoreThread(const std::shared_ptr<CoreRunnable>& ptr) {
   // Insert into the linked list of threads first:
   m_threads.push_front(ptr.get());
 
@@ -246,7 +249,9 @@ void CoreContext::Dump(std::ostream& os) const {
   }
 
   for(auto q = m_threads.begin(); q != m_threads.end(); q++) {
-    CoreThread* pThread = *q;
+    CoreThread* pThread = dynamic_cast<CoreThread*>(*q);
+    if (!pThread) continue;
+    
     const char* name = pThread->GetName();
     os << "Thread " << pThread << " " << (name ? name : "(no name)") << std::endl;
   }

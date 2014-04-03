@@ -122,8 +122,7 @@ void BasicThread::ForceCoreThreadReidentify(void) {
     [](std::shared_ptr<CoreContext> ctxt) {
       auto threadListCpy = ctxt->CopyCoreThreadList();
       for(auto q = threadListCpy.begin(); q != threadListCpy.end(); q++) {
-        auto thread = leap::fast_pointer_cast<CoreThread, BasicThread>(*q);
-        thread->SetCurrentThreadName();
+        (**q).SetCurrentThreadName();
       }
     }
   );

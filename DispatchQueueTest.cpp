@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "DispatchQueueTest.h"
 #include "DispatchQueue.h"
+#include "CoreThread.h"
 
 using namespace std;
 

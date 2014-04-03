@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "ContextCreatorTest.h"
 #include "ContextCreator.h"
+#include "CoreContext.h"
+#include "CoreThread.h"
 #include <string>
 
 struct EvictionContext {};

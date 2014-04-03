@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "DtorCorrectnessTest.h"
+#include "CoreThread.h"
 #include <iostream>
 
 using namespace std;
