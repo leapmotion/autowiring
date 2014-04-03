@@ -5,7 +5,9 @@
 #include "AutoPacketSubscriber.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
-#include "CoreThread.h"
+#include "BasicThread.h"
+#include "CoreRunnable.h"
+#include "ContextMember.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
 #include "DeferredBase.h"
@@ -48,10 +50,7 @@
 class AutoPacketFactory;
 class AutowirableSlot;
 class BoltBase;
-class ContextMember;
 class CoreContext;
-class CoreThread;
-class EventReceiver;
 class EventOutputStreamBase;
 class GlobalCoreContext;
 class OutstandingCountTracker;
@@ -235,12 +234,12 @@ protected:
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
 
-  // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
+  // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
   // Destructor does nothing; this is by design.
   std::weak_ptr<Object> m_outstanding;
 
   // Actual core threads:
-  typedef std::list<CoreThread*> t_threadList;
+  typedef std::list<CoreRunnable*> t_threadList;
   t_threadList m_threads;
 
   // Child contexts:
@@ -331,7 +330,7 @@ protected:
   /// It's safe to allow the returned shared_ptr to go out of scope; the core context
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
-  void AddCoreThread(const std::shared_ptr<CoreThread>& pCoreThread);
+  void AddCoreThread(const std::shared_ptr<CoreRunnable>& pCoreThread);
 
   /// <summary>
   /// Adds the specified context creation listener to receive creation events broadcast from this context
@@ -468,7 +467,7 @@ protected:
     );
 
     // Shared pointer to our entity, if it's a CoreThread
-    std::shared_ptr<CoreThread> pCoreThread;
+    std::shared_ptr<CoreRunnable> pCoreThread;
 
     {
       boost::unique_lock<boost::mutex> lk = std::move(lock);
@@ -490,7 +489,7 @@ protected:
         AddContextMember(pContextMember);
 
         // CoreThreads:
-        pCoreThread = leap::fast_pointer_cast<CoreThread, T>(value);
+        pCoreThread = leap::fast_pointer_cast<CoreRunnable, T>(value);
         if(pCoreThread)
           AddCoreThread(pCoreThread);
       }
@@ -723,7 +722,7 @@ public:
   /// No guarantee is made about how long the returned collection will be consistent with this
   /// context.  A thread may potentially be added to the context after the method returns.
   /// </remarks>
-  std::vector<std::shared_ptr<CoreThread>> CopyCoreThreadList(void) const;
+  std::vector<std::shared_ptr<BasicThread>> CopyCoreThreadList(void) const;
 
   /// <summary>
   /// In debug mode, adds an additional compile-time check
