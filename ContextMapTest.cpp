@@ -49,7 +49,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     threaded = context->Inject<SimpleThreaded>();
 
     // Start the context
-    context->InitiateCoreThreads();
+    context->InitiateCoreRunnables();
   }
 
   // Assert that the context still actually exists:
@@ -108,7 +108,7 @@ TEST_F(ContextMapTest, ConcurrentDestructionTestPathological) {
     // Add a thread and kick off the context:
     for(size_t i = ARRAYCOUNT(contexts); i--;) {
       threads[i] = contexts[i]->Inject<SimpleThreaded>();
-      contexts[i]->InitiateCoreThreads();
+      contexts[i]->InitiateCoreRunnables();
     }
 
     // Immediately tear contexts down:
@@ -156,7 +156,7 @@ TEST_F(ContextMapTest, VerifyWithThreadsPathological) {
     mp.Add(i, context);
 
     // Start the context
-    context->InitiateCoreThreads();
+    context->InitiateCoreRunnables();
   }
 
   // Set the signal:
