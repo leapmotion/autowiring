@@ -100,7 +100,7 @@ std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
 
-std::vector<std::shared_ptr<BasicThread>> CoreContext::CopyCoreThreadList(void) const {
+std::vector<std::shared_ptr<BasicThread>> CoreContext::CopyBasicThreadList(void) const {
   std::vector<std::shared_ptr<BasicThread>> retVal;
 
   // It's safe to enumerate this list from outside of a protective lock because a linked list
@@ -114,7 +114,7 @@ std::vector<std::shared_ptr<BasicThread>> CoreContext::CopyCoreThreadList(void) 
   return retVal;
 }
 
-void CoreContext::InitiateCoreThreads(void) {
+void CoreContext::InitiateCoreRunnables(void) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     if(m_shouldRunNewThreads)
@@ -132,13 +132,17 @@ void CoreContext::InitiateCoreThreads(void) {
   if(m_pParent)
     // Start parent threads first
     // Parent MUST be a core context
-    m_pParent->InitiateCoreThreads();
+    m_pParent->InitiateCoreRunnables();
 
   // Reacquire the lock to prevent m_threads from being modified while we sit on it
   auto outstanding = IncrementOutstandingThreadCount();
   boost::lock_guard<boost::mutex> lk(m_lock);
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
     (*q)->Start(outstanding);
+}
+
+void CoreContext::InitiateCoreThreads(void) {
+  InitiateCoreRunnables();
 }
 
 void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
@@ -219,7 +223,7 @@ std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   return *retVal;
 }
 
-void CoreContext::AddCoreThread(const std::shared_ptr<CoreRunnable>& ptr) {
+void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
   // Insert into the linked list of threads first:
   m_threads.push_front(ptr.get());
 
@@ -242,7 +246,7 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
 void CoreContext::BuildCurrentState(void) {
   GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*this);
 
-  //ContextMembers and CoreThreads
+  //ContextMembers and CoreRunnables
   for (auto member = m_contextMembers.begin(); member != m_contextMembers.end(); ++member) {
     CoreRunnable* thread = dynamic_cast<CoreRunnable*>(*member);
     thread?
@@ -277,7 +281,7 @@ void CoreContext::Dump(std::ostream& os) const {
   }
 
   for(auto q = m_threads.begin(); q != m_threads.end(); q++) {
-    CoreThread* pThread = dynamic_cast<CoreThread*>(*q);
+    BasicThread* pThread = dynamic_cast<BasicThread*>(*q);
     if (!pThread) continue;
     
     const char* name = pThread->GetName();

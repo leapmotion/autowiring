@@ -90,7 +90,7 @@ TEST_F(ExceptionFilterTest, ExceptionDestruction) {
   AutoRequired<ThrowsWhenRun<tracking_exception>> thrower;
 
   // Run:
-  m_create->InitiateCoreThreads();
+  m_create->InitiateCoreRunnables();
   thrower->Wait();
 
   // Verify that the exception was destroyed the correct number of times:
@@ -116,7 +116,7 @@ TEST_F(ExceptionFilterTest, ThreadThrowsCheck) {
   AutoRequired<ThrowsWhenRun<custom_exception>> thrower;
 
   // Wait for the thrower to terminate, should be pretty fast:
-  m_create->InitiateCoreThreads();
+  m_create->InitiateCoreRunnables();
   thrower->Wait();
 
   // Hopefully the filter got hit in the right spot:
@@ -170,7 +170,7 @@ TEST_F(ExceptionFilterTest, EnclosedThrowCheck) {
 
   // Create and start:
   AutoRequired<ThrowsWhenRun<custom_exception>> runThrower;
-  subCtxt->InitiateCoreThreads();
+  subCtxt->InitiateCoreRunnables();
 
   // Wait for the exception to get thrown:
   subCtxt->Wait();
@@ -202,7 +202,7 @@ TEST_F(ExceptionFilterTest, ExceptionFirewall) {
 }
 
 TEST_F(ExceptionFilterTest, VerifySimpleConfinement) {
-  m_create->InitiateCoreThreads();
+  m_create->InitiateCoreRunnables();
 
   // Create a subcontext where the errant recipients will live:
   AutoCreateContext child;

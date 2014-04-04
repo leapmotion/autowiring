@@ -15,7 +15,7 @@ EventReceiverTest::EventReceiverTest(void) {
   AutoCurrentContext ctxt;
 
   // Start up the context:
-  ctxt->InitiateCoreThreads();
+  ctxt->InitiateCoreRunnables();
 }
 
 TEST_F(EventReceiverTest, SimpleMethodCall) {

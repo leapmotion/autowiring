@@ -99,7 +99,7 @@ TEST_F(AutoInjectableTest, VerifyInjectableAdditionPermutation3) {
 
 TEST_F(AutoInjectableTest, VerifySimpleThreadWait) {
   // Immediate kickoff:
-  AutoCurrentContext()->InitiateCoreThreads();
+  AutoCurrentContext()->InitiateCoreRunnables();
 
   // Make an injectable, run it, and stuff it right into a future:
   AutoFuture future;
