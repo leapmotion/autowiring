@@ -3,6 +3,7 @@
 #include "BasicThread.h"
 #include "Autowired.h"
 #include "fast_pointer_cast.h"
+#include "move_only.h"
 #include <boost/thread.hpp>
 
 class CoreThread;
@@ -95,7 +96,6 @@ void BasicThread::ThreadSleep(long millisecond) {
   boost::this_thread::sleep(boost::posix_time::milliseconds(millisecond));
 }
 
-
 bool BasicThread::Start(std::shared_ptr<Object> outstanding) {
   std::shared_ptr<CoreContext> context = m_context.lock();
   if(!context)
@@ -113,9 +113,10 @@ bool BasicThread::Start(std::shared_ptr<Object> outstanding) {
   }
   
   // Kick off a thread and return here
+  MoveOnly<std::shared_ptr<Object>> out(std::move(outstanding));
   m_thisThread = boost::thread(
-    [this, outstanding] {
-      this->DoRun();
+    [this, out] {
+      this->DoRun(std::move(out.value));
     }
   );
   return true;
