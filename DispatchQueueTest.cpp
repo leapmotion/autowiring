@@ -12,9 +12,7 @@ class EventMaker:
 public:
   EventMaker():
     CoreThread("EventMaker")
-  {
-    AcceptDispatchDelivery();
-  }
+  {}
 };
 
 
