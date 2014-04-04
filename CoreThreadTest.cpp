@@ -49,7 +49,6 @@ class InvokesIndefiniteWait:
 {
 public:
   virtual void Run(void) override {
-    AcceptDispatchDelivery();
 
     // Wait for one event using an indefinite timeout, then quit:
     WaitForEvent(boost::chrono::steady_clock::time_point::max());
