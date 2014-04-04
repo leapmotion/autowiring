@@ -337,7 +337,7 @@ protected:
   /// It's safe to allow the returned shared_ptr to go out of scope; the core context
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
-  void AddCoreThread(const std::shared_ptr<CoreRunnable>& pCoreThread);
+  void AddCoreRunnable(const std::shared_ptr<CoreRunnable>& pCoreRunnable);
 
   /// <summary>
   /// Adds the specified context creation listener to receive creation events broadcast from this context
@@ -470,11 +470,11 @@ protected:
     static_assert(
       !std::is_base_of<Object, T>::value ||
       std::is_same<typename ground_type_of<T>::type, Object>::value,
-      "If T inherits from Object (for instance, via ContextMember or CoreThread), then T::grounds must be of type Object"
+      "If T inherits from Object (for instance, via ContextMember or CoreRunnable), then T::grounds must be of type Object"
     );
 
-    // Shared pointer to our entity, if it's a CoreThread
-    std::shared_ptr<CoreRunnable> pCoreThread;
+    // Shared pointer to our entity, if it's a CoreRunnable
+    std::shared_ptr<CoreRunnable> pCoreRunnable;
 
     {
       boost::unique_lock<boost::mutex> lk = std::move(lock);
@@ -495,11 +495,11 @@ protected:
       if(pContextMember) {
         AddContextMember(pContextMember);
 
-        // CoreThreads:
-        pCoreThread = leap::fast_pointer_cast<CoreRunnable, T>(value);
-        if (pCoreThread) {
-          AddCoreThread(pCoreThread);
-          GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*pCoreThread.get());
+        // CoreRunnables:
+        pCoreRunnable = leap::fast_pointer_cast<CoreRunnable, T>(value);
+        if (pCoreRunnable) {
+          AddCoreRunnable(pCoreRunnable);
+          GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*pCoreRunnable.get());
         } else {
           GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*pContextMember.get());
         }
@@ -534,10 +534,10 @@ protected:
     UpdateDeferredElements();
 
     // Ownership validation, as appropriate
-    // We do not attempt to pend validation for CoreThread instances, because a CoreThread could potentially hold
+    // We do not attempt to pend validation for CoreRunnable instances, because a CoreRunnable could potentially hold
     // the final outstanding reference to this context, and therefore may be responsible for this context's (and,
     // transitively, its own) destruction.
-    if(m_useOwnershipValidator && !pCoreThread)
+    if(m_useOwnershipValidator && !pCoreRunnable)
       SimpleOwnershipValidator::PendValidation(std::weak_ptr<T>(value));
   }
 
@@ -701,7 +701,7 @@ public:
   /// there is a high probability that this will deadlock if any of the added objects directly
   /// or indirectly cause a child context to be created.
   ///
-  /// CopyCoreThreadList is guaranteed to be a safe call to be made from this routine.
+  /// CopyBasicThreadList is guaranteed to be a safe call to be made from this routine.
   /// </remarks>
   template<class Fn>
   bool EnumerateChildContexts(const Fn& fn) {
@@ -737,13 +737,13 @@ public:
   void BuildCurrentState(void);
 
   /// <returns>
-  /// A copy of the list of child CoreThreads
+  /// A copy of the list of child CoreRunnables
   /// </returns>
   /// <remarks>
   /// No guarantee is made about how long the returned collection will be consistent with this
   /// context.  A thread may potentially be added to the context after the method returns.
   /// </remarks>
-  std::vector<std::shared_ptr<BasicThread>> CopyCoreThreadList(void) const;
+  std::vector<std::shared_ptr<BasicThread>> CopyBasicThreadList(void) const;
 
   /// <summary>
   /// In debug mode, adds an additional compile-time check
@@ -766,7 +766,7 @@ public:
   }
 
   /// <returns>
-  /// True if CoreThread instances in this context should begin teardown operations
+  /// True if CoreRunnable instances in this context should begin teardown operations
   /// </returns>
   bool IsShutdown(void) const {return m_isShutdown;}
 
@@ -850,7 +850,8 @@ public:
   /// Utility routine, invoked typically by the service, which starts all registered
   /// core threads.
   /// </summary>
-  void InitiateCoreThreads(void);
+  void InitiateCoreRunnables(void);
+  void DEPRECATED(InitiateCoreThreads(void), "InitiateCoreThreads is deprecated, use InitiateCoreRunnables instead");
 
   /// <summary>
   /// This signals to the whole system that a shutdown operation is underway, and that shutdown procedures should
@@ -912,7 +913,7 @@ public:
   /// </return>
   /// <remarks>
   /// This works by using thread-local store, and so is safe in multithreaded systems.  The current
-  /// context is assigned before invoking a CoreThread instance's Run method, and it's also assigned
+  /// context is assigned before invoking a CoreRunnable instance's Run method, and it's also assigned
   /// when a context is first constructed by a thread.
   /// </remarks>
   static std::shared_ptr<CoreContext> CurrentContext(void);
