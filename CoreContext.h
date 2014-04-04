@@ -204,7 +204,7 @@ protected:
   boost::condition m_stateChanged;
 
   // Set if threads in this context should be started when they are added
-  bool m_shouldRunNewThreads;
+  bool m_initiated;
 
   // Set if the context has been shut down
   bool m_isShutdown;
@@ -234,6 +234,9 @@ protected:
   // All known event receivers and receiver proxies originating from this context:
   typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
+  
+  // List of eventReceivers to be added when this context in initiated
+  t_rcvrSet m_delayedEventReceivers;
 
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
   const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
@@ -316,6 +319,11 @@ protected:
   void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
     return AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, pRecvr));
   }
+  
+  /// <summary>
+  /// Add delayed event receivers
+  /// </summary>
+  void AddEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
 
   /// <summary>
   /// Removes the named event receiver from the collection of known receivers
@@ -769,6 +777,8 @@ public:
   /// True if CoreRunnable instances in this context should begin teardown operations
   /// </returns>
   bool IsShutdown(void) const {return m_isShutdown;}
+  
+  bool IsInitiated(void) const {return m_initiated;}
 
   /// <returns>
   /// True if this context was ever started
@@ -780,7 +790,7 @@ public:
   /// </remarks>
   bool WasStarted(void) const {
     // We were started IF we will run new threads, OR we have been signalled to stop
-    return m_shouldRunNewThreads || m_isShutdown;
+    return m_initiated || m_isShutdown;
   }
 
   /// <returns>
@@ -843,6 +853,7 @@ public:
   /// </remarks>
   template<class MemFn>
   InvokeRelay<MemFn> Invoke(MemFn memFn) {
+    if (!m_initiated) throw std::runtime_error("Can't fire events from a context that hasn't been initiated");
     return GetJunctionBox<typename Decompose<MemFn>::type>()->Invoke(memFn);
   }
 
