@@ -9,7 +9,7 @@ CoreThread::CoreThread(const char* pName):
   m_canAccept(false)
 {}
 
-void CoreThread::DoRun(void) {
+void CoreThread::DoRun(std::shared_ptr<Object>&& refTracker) {
   assert(m_running);
 
   // Make our own session current before we do anything else:
@@ -75,6 +75,10 @@ void CoreThread::DoRun(void) {
   // Notify other threads that we are done.  At this point, any held references that might
   // still exist are held by entities other than ourselves.
   state->m_stateCondition.notify_all();
+
+  // Clear our reference tracker, which will notify anyone who is asleep and also maybe
+  // will destroy the entire underlying context.
+  refTracker.reset();
 }
 
 bool CoreThread::DelayUntilCanAccept(void) {

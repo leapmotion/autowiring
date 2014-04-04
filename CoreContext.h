@@ -3,6 +3,7 @@
 #include "AutoAnchor.h"
 #include "AutoFactory.h"
 #include "AutoPacketSubscriber.h"
+#include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
 #include "BasicThread.h"
@@ -137,14 +138,14 @@ protected:
     {
       // Lock the child list while we insert
       boost::lock_guard<boost::mutex> lk(m_childrenLock);
-      
+
       // Reserve a place in the list for the child
       childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
     }
-    
+
     if (m_useOwnershipValidator)
       newContext.EnforceSimpleOwnership();
-    
+
     // Create the shared pointer for the context--do not add the context to itself,
     // this creates a dangerous cyclic reference.
     std::shared_ptr<CoreContext> retVal(
@@ -154,18 +155,24 @@ protected:
           boost::lock_guard<boost::mutex> lk(m_childrenLock);
           this->m_children.erase(childIterator);
         }
+        // Notify AutowiringEvents listeners
+        GetGlobal()->Invoke(&AutowiringEvents::ExpiredContext)(*pContext);
+
         delete pContext;
       }
     );
     *childIterator = retVal;
-    
+
+    // Notify AutowiringEvents listeners
+    GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal);
+
     // Save anchored types in context
     retVal->AddAnchorInternal((T*)nullptr);
-    
+
     // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
     CurrentContextPusher pshr(retVal);
     BroadcastContextCreationNotice(typeid(T));
-    
+
     return retVal;
   }
 
@@ -182,7 +189,7 @@ protected:
   }
 
   void AddAnchorInternal(const void*) {}
-  
+
   // These are the types which will be created in this context if an attempt is made to inject them
   // into any child context.
   std::set<std::type_index> m_anchors;
@@ -204,7 +211,7 @@ protected:
 
   // The context's internally held sigil type
   const std::type_info& m_sigil;
-  
+
     // Flag, set if this context should use its ownership validator to guarantee that all autowired members
   // are correctly torn down.  This flag must be set at construction time.  Members added to the context
   // before this flag is assigned will NOT be checked.
@@ -227,10 +234,10 @@ protected:
   // All known event receivers and receiver proxies originating from this context:
   typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
-  
+
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
   const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
-  
+
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
 
@@ -274,7 +281,7 @@ protected:
   }
 
   void EnableInternal(...) {}
-  
+
   template<typename T, typename... Sigil>
   void AutoRequireMicroBolt(void);
 
@@ -377,7 +384,7 @@ protected:
       return false;
 
     // Attempt second-chance resolution:
-    
+
     std::shared_ptr<AutoFactory<T>> factory;
     for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
       pCur->FindByType(factory);
@@ -450,7 +457,7 @@ protected:
   void AddInternal(const std::shared_ptr<T>& value){
     AddInternal(value, boost::unique_lock<boost::mutex>(m_lock));
   }
-  
+
   template<typename T>
   void AddInternal(const std::shared_ptr<T>& value, boost::unique_lock<boost::mutex>&& lock) {
     // Extract ground for this value, we'll use it to select the correct forest for the value:
@@ -490,25 +497,34 @@ protected:
 
         // CoreThreads:
         pCoreThread = leap::fast_pointer_cast<CoreRunnable, T>(value);
-        if(pCoreThread)
+        if (pCoreThread) {
           AddCoreThread(pCoreThread);
+          GetGlobal()->Invoke(&AutowiringEvents::NewCoreThread)(*pCoreThread.get());
+        } else {
+          GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*pContextMember.get());
+        }
       }
 
       // Exception filters:
       auto pFilter = leap::fast_pointer_cast<ExceptionFilter, T>(value);
-      if(pFilter)
+      if (pFilter) {
         m_filters.insert(pFilter.get());
+        GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, *pFilter.get());
+      }
 
-      // Bolts:
+      // Bolts
       auto pBase = leap::fast_pointer_cast<BoltBase, T>(value);
-      if(pBase)
+      if (pBase) {
         AddBolt(pBase);
+      }
     }
 
     // Event receivers:
     auto pRecvr = leap::fast_pointer_cast<EventReceiver, T>(value);
-    if(pRecvr)
+    if (pRecvr) {
       AddEventReceiver(pRecvr);
+      GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *pRecvr.get());
+    }
 
     // Subscribers:
     AddPacketSubscriber(AutoPacketSubscriberSelect<T>(value));
@@ -530,7 +546,7 @@ public:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const { return m_byType.size(); }
   const std::type_info& GetSigilType(void) const { return m_sigil; }
-  
+
   /// <summary>
   /// Check if parent context's have AutoAnchored the type in their sigil.
   /// </summary>
@@ -543,7 +559,7 @@ public:
     }
     return shared_from_this();
   }
-  
+
   /// <summary>
   /// Add an additional anchor type to the context
   /// </summary>
@@ -562,12 +578,12 @@ public:
   template<typename T, typename... Args>
   std::shared_ptr<T> Construct(Args&&... args) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    
+
     std::shared_ptr<T> ptr;
     m_byType.Resolve(ptr);
     if(ptr)
       return ptr;
-    
+
     // We must make ourselves current for the duration of this call:
     CurrentContextPusher pshr(shared_from_this());
 
@@ -575,13 +591,13 @@ public:
     lk.unlock();
     ptr.reset(CreationRules::New<T>(std::forward<Args>(args)...));
     lk.lock();
-    
+
     // Reattempt resolution, short-circuiting if an injection of this type took place:
     std::shared_ptr<T> ptr2;
     m_byType.Resolve(ptr2);
     if(ptr2)
       return ptr2;
-    
+
     // Pass control to the insertion routine, which will handle injection from this point:
     AddInternal(ptr, std::move(lk));
     return ptr;
@@ -701,7 +717,7 @@ public:
     // Call the lambda, default to true in case the lambda's return type is void:
     return result_or_default(fn, true, shared_from_this());
   }
-  
+
   /// <summary>
   /// This is used for visualization purposes to get a list of all the contexts
   /// Fn must take a shared_ptr to a CoreContext as an argument.
@@ -714,6 +730,11 @@ public:
       c->lock()->EnumerateContexts(fn);
     }
   }
+
+  /// <summary>
+  /// Sends AutowiringEvents to build current state
+  /// </summary>
+  void BuildCurrentState(void);
 
   /// <returns>
   /// A copy of the list of child CoreThreads
@@ -743,7 +764,7 @@ public:
   void EnforceSimpleOwnership(void) {
     m_useOwnershipValidator = true;
   }
-  
+
   /// <returns>
   /// True if CoreThread instances in this context should begin teardown operations
   /// </returns>
@@ -782,7 +803,7 @@ public:
   bool IsMember(typename std::enable_if<std::is_base_of<ContextMember, T>::value, T*>::type ptr) const {
     return ptr->GetContext().get() == this;
   }
-  
+
   template<class T>
   bool IsMember(typename std::enable_if<!std::is_base_of<ContextMember, T>::value, T*>::type ptr) const {
     // If the passed type is a ContextMember, we can query relationship status
@@ -792,7 +813,7 @@ public:
       pMember->GetContext().get() == this :
       m_byType.Contains<T>();
   }
-  
+
   template<class T>
   bool IsMember(const std::shared_ptr<T>& ptr) const {
     return IsMember<T>(ptr.get());
@@ -943,7 +964,7 @@ public:
 
     JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
     m_junctionBoxManager->AddEventReceiver(receiver);
-    
+
     // Delegate ascending resolution, where possible.  This ensures that the parent context links
     // this event receiver to compatible senders in the parent context itself.
     if(m_pParent)
@@ -962,10 +983,10 @@ public:
 
     // Pass control to the event remover helper:
     auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
-    
+
     JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
     m_junctionBoxManager->RemoveEventReceiver(receiver);
-    
+
     // Delegate to the parent:
     if(m_pParent)
       m_pParent->Unsnoop(pSnooper);
@@ -991,7 +1012,7 @@ public:
   bool Autowire(W& slot) {
     if(AutowireNoDefer(slot))
       return true;
-    
+
     // Failed, defer
     DeferAutowiring(slot);
     return false;

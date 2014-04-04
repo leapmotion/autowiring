@@ -85,11 +85,11 @@ class Autowired:
 {
   static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
   static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
-  
+
 public:
   typedef T value_type;
   typedef std::shared_ptr<T> t_ptrType;
-  
+
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
   // If you are getting an error tracked to this line, ensure that class T is totally
   // defined at the point where the Autowired instance is constructed.  Generally,
@@ -113,13 +113,13 @@ public:
   // constructor is defined.
   //
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-  
+
   Autowired(void):
     AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>())
   {
     AutowirableSlot::LockContext() -> Autowire(*this);
   }
-  
+
   Autowired(std::weak_ptr<CoreContext> ctxt):
     AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>())
   {
@@ -160,7 +160,7 @@ public:
   using std::shared_ptr<T>::operator=;
   typedef T value_type;
   typedef std::shared_ptr<T> t_ptrType;
-  
+
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
   // If you are getting an error tracked to this line, ensure that class T is totally
   // defined at the point where the Autowired instance is constructed.  Generally,
@@ -184,27 +184,27 @@ public:
   // constructor is defined.
   //
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-  
+
   AutoRequired(void):
     AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>())
   {
     *this = AutowirableSlot::LockContext()->template Inject<T>();
   }
-  
+
   AutoRequired(std::weak_ptr<CoreContext> ctxt):
     AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>())
   {
     *this = AutowirableSlot::LockContext()->template Inject<T>();
   }
-  
+
   operator bool(void) const {
     return IsAutowired();
   }
-  
+
   operator T*(void) const {
     return t_ptrType::get();
   }
-  
+
   bool IsAutowired(void) const override {return !!t_ptrType::get();}
 };
 
@@ -270,16 +270,16 @@ public:
   template<class MemFn>
   InvokeRelay<MemFn> operator()(MemFn pfn) const {
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot invoke an event for an unrelated type");
-    
+
     if (m_junctionBox.expired()) return InvokeRelay<MemFn>(); //Context has been destroyed
-    
+
     return m_junctionBox.lock()->Invoke(pfn);
   }
 
   template<class MemFn>
   InvokeRelay<MemFn> Fire(MemFn pfn) const {
     static_assert(!std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Fire an event which is marked Deferred");
-    
+
     return operator()(pfn);
   }
 

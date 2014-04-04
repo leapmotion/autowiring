@@ -344,3 +344,91 @@ TEST_F(EventReceiverTest, NoEventsAfterShutdown) {
   // Verify that the callable interface didn't get the event after shutdown
   EXPECT_FALSE(receiver->m_zero) << "A context member caught an event after its enclosing context was torn down";
 }
+
+class PassByValueInterface:
+  public virtual EventReceiver
+{
+public:
+  PassByValueInterface() {}
+  virtual ~PassByValueInterface() {}
+
+  virtual void ConstStringRefArg(const std::string& arg) {}
+  virtual void StringArg(std::string arg) {}
+};
+
+class PassByValueReceiver:
+  public CoreThread,
+  public PassByValueInterface
+{
+public:
+  PassByValueReceiver(void):
+    CoreThread("PassByValueReceiver")
+  {
+  }
+  ~PassByValueReceiver() {}
+
+  std::string value() const {
+    return m_value;
+  }
+
+private:
+  std::string m_value;
+
+public:
+
+  ///
+  /// Interface methods:
+  ///
+  void ConstStringRefArg(const std::string& arg) override {
+    m_value = arg;
+  }
+  void StringArg(std::string arg) override {
+    m_value = arg;
+  }
+
+  // Make this method public
+  using CoreThread::AcceptDispatchDelivery;
+  using CoreThread::RejectDispatchDelivery;
+};
+
+// Create two different receivers
+class PassByValueReceiver1: public PassByValueReceiver {};
+class PassByValueReceiver2: public PassByValueReceiver {};
+
+TEST_F(EventReceiverTest, VerifyMultiplePassByRef) {
+  AutoFired<PassByValueInterface> sender;
+  AutoRequired<PassByValueReceiver1> receiver1;
+  AutoRequired<PassByValueReceiver2> receiver2;
+
+  const std::string passByRef("pass std::string by reference");
+
+  // Fire the "pass by ref" event:
+  sender(&PassByValueInterface::ConstStringRefArg)(passByRef);
+  // Verify that the value received matches what we sent both receivers:
+  EXPECT_EQ(passByRef, receiver1->value());
+  EXPECT_EQ(passByRef, receiver2->value());
+
+  receiver1->Stop();
+  receiver2->Stop();
+  receiver1->Wait();
+  receiver2->Wait();
+}
+
+TEST_F(EventReceiverTest, VerifyMultiplePassByValue) {
+  AutoFired<PassByValueInterface> sender;
+  AutoRequired<PassByValueReceiver1> receiver1;
+  AutoRequired<PassByValueReceiver2> receiver2;
+
+  const std::string passByValue("pass std::string by value");
+
+  // Fire the "pass by value" event:
+  sender(&PassByValueInterface::StringArg)(passByValue);
+  // Verify that the value received matches what we sent both receivers:
+  EXPECT_EQ(passByValue, receiver1->value());
+  EXPECT_EQ(passByValue, receiver2->value());
+
+  receiver1->Stop();
+  receiver2->Stop();
+  receiver1->Wait();
+  receiver2->Wait();
+}

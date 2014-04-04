@@ -58,7 +58,7 @@ struct CountObject:
   CountObject():
     count(0)
   {}
-  
+
   int count;
 };
 
@@ -69,7 +69,7 @@ public:
   InjectsIntoEverything():
     count(0)
   {}
-  
+
   void ContextCreated(void) override {
     AutoRequired<CountObject> derp;
     (derp->count)++;
@@ -174,7 +174,7 @@ TEST_F(BoltTest, EmptyBolt) {
   AutoEnable<InjectsIntoEverything>();
   Autowired<CountObject> so;
   EXPECT_FALSE(so.IsAutowired()) << "CountObject injected into outer context";
-  
+
   AutoCreateContext created;
   {
     CurrentContextPusher pshr(created);
@@ -182,7 +182,7 @@ TEST_F(BoltTest, EmptyBolt) {
     EXPECT_TRUE(innerSo.IsAutowired()) << "CountObject not injected into anonymous context";
     EXPECT_EQ(1, innerSo->count) << "ContextCreated() called incorrect number of times";
   }
-  
+
   auto created2 = m_create->Create<Pipeline>();
   {
     CurrentContextPusher pshr(created2);

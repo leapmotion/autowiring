@@ -48,18 +48,18 @@ struct NoSimpleConstructor:
   NoSimpleConstructor(int val):
     value(val)
   {}
-  
+
   const int value;
 };
 
 TEST_F(ScopeTest, AddWithArguments){
   //Add context member with non-simple constructor
   AutoCurrentContext ctxt;
-  
+
   ctxt->Construct<NoSimpleConstructor>(10);
-  
+
   Autowired<NoSimpleConstructor> wired;
-  
+
   EXPECT_TRUE(wired.IsAutowired());
   EXPECT_EQ(10, wired->value);
 }
@@ -67,15 +67,15 @@ TEST_F(ScopeTest, AddWithArguments){
 TEST_F(ScopeTest, StaticInject){
   Autowired<A> preA;
   Autowired<B> preB;
-  
+
   EXPECT_FALSE(preA.IsAutowired());
   EXPECT_FALSE(preB.IsAutowired());
-  
+
   CoreContext::InjectCurrent<A,B>();
-  
+
   Autowired<A> a;
   Autowired<B> b;
-  
+
   EXPECT_TRUE(a.IsAutowired());
   EXPECT_TRUE(b.IsAutowired());
 }
@@ -115,41 +115,41 @@ TEST_F(ScopeTest, AutowiringOrdering) {
   AutoCreateContext inner2;
   AutoCreateContext inner3;
   AutoCreateContext inner4;
-  
+
   // Autowire in outer context, AutoRequire in inner
   Autowired<A> a;
   {
     CurrentContextPusher pshr(inner1);
-    
+
     AutoRequired<A> a2;
     EXPECT_FALSE(a.IsAutowired());
   }
-  
+
   // AutoRequire in outer context, Autowire in inner
   AutoRequired<B> b;
   {
     CurrentContextPusher pshr(inner2);
-    
+
     Autowired<B> b2;
     EXPECT_TRUE(b.IsAutowired());
     EXPECT_EQ(b->GetContext(), outer);
   }
-  
+
   // AutoRequire in outer context, AutoRequire in inner
   AutoRequired<C> c;
   {
     CurrentContextPusher pshr(inner3);
-    
+
     AutoRequired<C> c2;
     EXPECT_TRUE(c2.IsAutowired());
     EXPECT_NE(c->GetContext(), c2->GetContext());
   }
-  
+
   // Autowire in outer context, Autowire in inner
   Autowired<D> d;
   {
     CurrentContextPusher pshr(inner4);
-    
+
     Autowired<D> d2;
     EXPECT_FALSE(d.IsAutowired());
     EXPECT_FALSE(d2.IsAutowired());
