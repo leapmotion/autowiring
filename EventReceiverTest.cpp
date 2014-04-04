@@ -413,3 +413,34 @@ TEST_F(EventReceiverTest, VerifyMultiplePassByValue) {
   receiver1->Wait();
   receiver2->Wait();
 }
+
+TEST_F(EventReceiverTest, VerifyNoActionWhileStopped) {
+  // Firer which will operate at the outer scope:
+  AutoFired<CallableInterface> ciOuter;
+  AutoFired<CallableInterfaceDeferred> ciOuterDeferred;
+
+  // Create a subcontext:
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+
+  // These AutoFired will be in the interior context
+  AutoFired<CallableInterface> ciInner;
+  AutoFired<CallableInterfaceDeferred> ciInnerDeferred;
+
+  // Inject a simple receiver so we can verify that it didn't catch any events:
+  AutoRequired<SimpleReceiver> sr;
+  ASSERT_FALSE(sr->IsRunning()) << "CoreThread was running in a context that was not started";
+
+  // Fire events at the outer scope--this should succeed but should not be picked up by the CoreThread:
+  ciOuter(&CallableInterface::ZeroArgs)();
+  ASSERT_FALSE(sr->m_zero) << "A member of an uninitialized context incorrectly received an event";
+
+  ciOuterDeferred(&CallableInterfaceDeferred::ZeroArgsDeferred)();
+  ASSERT_EQ(0UL, sr->GetDispatchQueueLength()) << "A deferred event was incorrectly received by a member of an uninitialized context";
+
+  // Now try to fire at the inner scope.  These fire calls MUST throw exceptions, because firing an
+  // event during context setup (say, during a constructor) is an error.
+  const char* fireErr = "Attempting to fire an event in an interior context did not correctly cause an exception";
+  ASSERT_ANY_THROW(ciInner(&CallableInterface::ZeroArgs)()) << fireErr;
+  ASSERT_ANY_THROW(ciInnerDeferred(&CallableInterfaceDeferred::ZeroArgsDeferred)()) << fireErr;
+}
