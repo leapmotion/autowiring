@@ -73,6 +73,7 @@ set(Autowiring_SRCS
   ObjectPool.h
   ObjectPoolMonitor.h
   ObjectPoolMonitor.cpp
+  move_only.h
   MicroBolt.h
   PolymorphicTypeForest.h
   ReentrantCounter.h
