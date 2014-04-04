@@ -33,7 +33,7 @@ protected:
   /// <summary>
   /// Private routine that sets up the necessary extranea before a call to Run
   /// </summary>
-  void DoRun(void);
+  void DoRun(void) override;
 
   /// <summary>
   /// Indicates that the system should accept the delivery of deferred procedure calls
