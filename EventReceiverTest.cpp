@@ -3,33 +3,13 @@
 #include "EventReceiverTest.h"
 #include "Autowiring/Autowired.h"
 #include "Autowiring/CoreThread.h"
+#include "TestFixtures/FiresManyEventsWhenRun.h"
 #include "TestFixtures/SimpleReceiver.h"
 #include <boost/thread/barrier.hpp>
 #include <stdexcept>
 #include <vector>
 
 using namespace std;
-
-class Jammer:
-  public CoreThread
-{
-public:
-  Jammer(void):
-    totalXmit(0)
-  {
-  }
-
-  volatile int totalXmit;
-
-  AutoFired<CallableInterface> m_ci;
-
-  void Run(void) override {
-    while(!ShouldStop() && totalXmit < 0x7FFFF000)
-      // Jam for awhile in an asynchronous way:
-      while(++totalXmit % 100)
-        m_ci(&CallableInterface::ZeroArgs)();
-  }
-};
 
 EventReceiverTest::EventReceiverTest(void) {
   AutoCurrentContext ctxt;
@@ -278,7 +258,7 @@ TEST_F(EventReceiverTest, OrphanedMemberFireCheck) {
 
 TEST_F(EventReceiverTest, PathologicalChildContextTest) {
   // Set up the jammer and receiver collections:
-  AutoRequired<Jammer> jammer;
+  AutoRequired<FiresManyEventsWhenRun> jammer;
 
   // This by itself is sufficient to cause problems:
   for(size_t i = 0; i < 500; i++) {
@@ -299,7 +279,7 @@ TEST_F(EventReceiverTest, PathologicalChildContextTest) {
 
 TEST_F(EventReceiverTest, PathologicalTransmitterTest) {
   // Set up the jammer and receiver collections:
-  AutoRequired<Jammer> jammer;
+  AutoRequired<FiresManyEventsWhenRun> jammer;
 
   for(size_t i = 0; i < 5; i++) {
     AutoCreateContext subCtxt;
@@ -423,6 +403,7 @@ TEST_F(EventReceiverTest, VerifyMultiplePassByValue) {
 
   // Fire the "pass by value" event:
   sender(&PassByValueInterface::StringArg)(passByValue);
+
   // Verify that the value received matches what we sent both receivers:
   EXPECT_EQ(passByValue, receiver1->value());
   EXPECT_EQ(passByValue, receiver2->value());
