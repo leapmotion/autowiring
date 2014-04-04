@@ -9,34 +9,7 @@ CoreThread::CoreThread(const char* pName):
   m_canAccept(false)
 {}
 
-void CoreThread::DoRun(std::shared_ptr<Object>&& refTracker) {
-  assert(m_running);
-
-  // Make our own session current before we do anything else:
-  CurrentContextPusher pusher(GetContext());
-
-  // Set the thread name no matter what:
-  if(GetName())
-    SetCurrentThreadName();
-
-  // Now we wait for the thread to be good to go:
-  try {
-    Run();
-  } catch(dispatch_aborted_exception&) {
-    // Okay, this is fine, a dispatcher is terminating--this is a normal way to
-    // end a dispatcher loop.
-  } catch(...) {
-    try {
-      // Ask that the enclosing context filter this exception, if possible:
-      GetContext()->FilterException();
-    } catch(...) {
-      // Generic exception, unhandled, we can't do anything about this
-    }
-
-    // Signal shutdown on the enclosing context--cannot wait, if we wait we WILL deadlock
-    GetContext()->SignalShutdown(false);
-  }
-
+void CoreThread::DoRunLoopCleanup(void) {
   // Unconditionally shut off dispatch delivery:
   RejectDispatchDelivery();
 
@@ -50,35 +23,8 @@ void CoreThread::DoRun(std::shared_ptr<Object>&& refTracker) {
     Abort();
   }
 
-  // Notify everyone that we're completed:
-  boost::lock_guard<boost::mutex> lk(m_lock);
-  m_stop = true;
-  m_completed = true;
-  m_running = false;
-
-  // Perform a manual notification of teardown listeners
-  NotifyTeardownListeners();
-
-  // No longer running, we MUST release the thread pointer to ensure proper teardown order
-  m_thisThread.detach();
-
-  // Take a copy of our state condition shared pointer while we still hold a reference to
-  // ourselves.  This is the only member out of our collection of members that we actually
-  // need to hold a reference to.
-  auto state = m_state;
-
-  // Release our hold on the context.  After this point, we have to be VERY CAREFUL that we
-  // don't try to refer to any of our own member variables, because our own object may have
-  // already gone out of scope.  [this] is potentially dangling.
-  pusher.Pop();
-
-  // Notify other threads that we are done.  At this point, any held references that might
-  // still exist are held by entities other than ourselves.
-  state->m_stateCondition.notify_all();
-
-  // Clear our reference tracker, which will notify anyone who is asleep and also maybe
-  // will destroy the entire underlying context.
-  refTracker.reset();
+  // Handoff to base class:
+  BasicThread::DoRunLoopCleanup();
 }
 
 bool CoreThread::DelayUntilCanAccept(void) {
