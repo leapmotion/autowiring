@@ -27,12 +27,6 @@ void CoreThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt) {
   BasicThread::DoRunLoopCleanup(std::move(ctxt));
 }
 
-bool CoreThread::DelayUntilCanAccept(void) {
-  boost::unique_lock<boost::mutex> lk(m_lock);
-  m_stateCondition.wait(lk, [this] {return ShouldStop() || CanAccept(); });
-  return !ShouldStop();
-}
-
 void CoreThread::WaitForEvent(void) {
   boost::unique_lock<boost::mutex> lk(m_dispatchLock);
   if(m_aborted)

@@ -114,7 +114,7 @@ std::vector<std::shared_ptr<BasicThread>> CoreContext::CopyBasicThreadList(void)
   return retVal;
 }
 
-void CoreContext::InitiateCoreRunnables(void) {
+void CoreContext::Initiate(void) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     if(m_shouldRunNewThreads)
@@ -132,7 +132,7 @@ void CoreContext::InitiateCoreRunnables(void) {
   if(m_pParent)
     // Start parent threads first
     // Parent MUST be a core context
-    m_pParent->InitiateCoreRunnables();
+    m_pParent->Initiate();
 
   // Reacquire the lock to prevent m_threads from being modified while we sit on it
   auto outstanding = IncrementOutstandingThreadCount();
@@ -142,7 +142,7 @@ void CoreContext::InitiateCoreRunnables(void) {
 }
 
 void CoreContext::InitiateCoreThreads(void) {
-  InitiateCoreRunnables();
+  Initiate();
 }
 
 void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {

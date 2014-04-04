@@ -117,22 +117,12 @@ public:
   /// This method is idempotent
   /// </remarks>
   void Abort(void);
-  
-  /// <summary>
-  /// Check if DispatchQueue is ready to take events
-  /// </summary>
-  virtual bool CanAccept(void) const = 0;
 
 protected:
   /// <summary>
   /// Fire and event when dispatched from the queue.
   /// </summary>
   virtual void FireEvent(DispatchThunkBase*);
-  
-  /// <summary>
-  /// Wait until the queue can start taking events
-  /// </summary>
-  virtual bool DelayUntilCanAccept(void) = 0;
 
   /// <summary>
   /// Similar to WaitForEvent, but does not block
@@ -151,7 +141,12 @@ protected:
     return retVal;
   }
 public:
-
+  /// <summary>
+  /// Check if DispatchQueue is ready to take events
+  /// </summary>
+  virtual bool DEPRECATED(CanAccept(void) const, "CanAccept has been deprecated. Use IsInitiated on the enclosing context instead");
+  virtual bool DEPRECATED(DelayUntilCanAccept(void), "CanAccept is deprecated. Use WaitUntilInitiated on the enclosing context instead");
+  
   /// <summary>
   /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>

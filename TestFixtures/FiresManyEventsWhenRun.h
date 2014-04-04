@@ -1,5 +1,5 @@
 #pragma once
-#include "CoreThread.h"
+#include "Autowiring/CoreThread.h"
 #include "SimpleReceiver.h"
 
 class FiresManyEventsWhenRun:

@@ -46,7 +46,7 @@ TEST_F(ObjectPoolTest, VerifyAsynchronousUsage) {
   }
 
   // Now we kick off threads:
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
 
   // This should return more or less right away as objects become available:
   {

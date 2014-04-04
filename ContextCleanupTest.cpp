@@ -105,7 +105,7 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   AutoRequired<SimpleThreaded>();
 
   // Kick off the operation
-  context->InitiateCoreRunnables();
+  context->Initiate();
 
   // No exit initially:
   EXPECT_FALSE(context->Wait(milliseconds(10))) << "Core context completed prematurely";
@@ -136,7 +136,7 @@ public:
 };
 
 TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
   AutoRequired<CoreThread> ct;
   ct->DelayUntilCanAccept();
 
@@ -153,7 +153,7 @@ TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
 }
 
 TEST_F(ContextCleanupTest, VerifyImmediateThreadCleanup) {
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
   AutoRequired<CoreThread> ct;
   ct->DelayUntilCanAccept();
 
@@ -215,7 +215,7 @@ TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
   AutoRequired<TakesALongTimeToExit> longTime;
 
   // We want threads to run as soon as they are added:
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
 
   // Make the thread exit before the enclosing context exits:
   longTime->barr.wait();
