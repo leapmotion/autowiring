@@ -31,9 +31,18 @@ protected:
   void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
   
   /// <summary>
-  /// Private routine that sets up the necessary extranea before a call to Run
+  /// Routine that sets up the necessary extranea before a call to Run
   /// </summary>
-  void DoRun(void) override;
+  /// <remarks>
+  /// Clients who wish to trigger teardown may release the reference to the passed refTracker
+  /// instance.  If this thread is the last thread holding a reference to this context, then
+  /// after the point where the reference is released, [this] will be deleted.  Clients should
+  /// be careful to hold their own references to refTracker before calling DoRun if they
+  /// intend to reference member data on function return.  This method will always release the
+  /// shared pointer passed to it, typically as a last step before return, potentially
+  /// triggering the case described above.
+  /// </remarks>
+  virtual void DoRun(std::shared_ptr<Object>&& refTracker);
 
   /// <summary>
   /// Indicates that the system should accept the delivery of deferred procedure calls

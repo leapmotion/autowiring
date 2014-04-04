@@ -98,7 +98,7 @@ private:
   /// <summary>
   /// Private routine that sets up the necessary extranea before a call to Run
   /// </summary>
-  virtual void DoRun(void);
+  virtual void DoRun(std::shared_ptr<Object>&& refTracker);
   
   /// <summary>
   /// Sets the thread priority of this thread

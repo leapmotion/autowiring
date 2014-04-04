@@ -29,7 +29,7 @@ public:
   const t_TypeInfoVector& GetContextSigils(void){
     return m_BoltedTypes;
   }
-  
+
   static_assert(!is_any_same<void, Sigil...>::value, "Can't use 'void' as a sigil type");
 private:
   t_TypeInfoVector m_BoltedTypes;

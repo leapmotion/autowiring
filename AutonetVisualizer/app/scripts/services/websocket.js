@@ -1,7 +1,7 @@
 'use strict';
 
 /* Angular service for receiving events from AutoNetServer
-** Use as follows.. 
+** Use as follows..
 **
 ** websocket.on("MyEvent",function(arg1){
 **   ....
@@ -11,7 +11,7 @@
 ** The number args for the callback must match the number of args for the
 ** event type
 **
-** See controllers/main.js for an example 
+** See controllers/main.js for an example
 */
 
 angular.module('autoNetApp')
@@ -64,6 +64,7 @@ angular.module('autoNetApp')
 
   return {
     on: function(eventName, callback) {
+      console.log('Event Registered: ', eventName);
       listeners.push({
         type: eventName,
         callback: callback

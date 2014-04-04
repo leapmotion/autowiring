@@ -15,7 +15,7 @@ TEST_F(PeerContextTest, VerifySimplePeerage) {
     // Create an ordinary child anonymous context and try to fire.  This should
     // not cause anything to be picked up anywhere.
     AutoCreateContext child;
-    
+
     CurrentContextPusher pshr(child);
     AutoFired<CallableInterface> ci;
     ci(&CallableInterface::OneArg)(21);
@@ -71,11 +71,11 @@ TEST_F(PeerContextTest, VerifyNoAutowiringLeakage) {
   // Verify that, in this peer context, SimpleObject is not visible
   Autowired<SimpleObject> so;
   ASSERT_FALSE(so.IsAutowired()) << "An autowiring request incorrectly resolved against an object allocated in a peer context";
-  
+
   AutoRequired<SimpleObject> obj1prime;
-  
+
   ASSERT_NE(obj1, obj1prime) << "Autowired objects of the same type in peer contexts should be seperate instances";
-  
+
 }
 
 
