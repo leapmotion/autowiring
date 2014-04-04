@@ -20,29 +20,41 @@ BasicThread::BasicThread(const char* pName):
 
 void BasicThread::DoRun(std::shared_ptr<Object>&& refTracker) {
   assert(m_running);
-  
+
   // Make our own session current before we do anything else:
   CurrentContextPusher pusher(GetContext());
-  
+
   // Set the thread name no matter what:
   if(GetName())
     SetCurrentThreadName();
-  
+
   // Now we wait for the thread to be good to go:
   try {
     Run();
-  } catch(...) {
+  }
+  catch(dispatch_aborted_exception&) {
+    // Okay, this is fine, a dispatcher is terminating--this is a normal way to
+    // end a dispatcher loop.
+  }
+  catch(...) {
     try {
       // Ask that the enclosing context filter this exception, if possible:
       GetContext()->FilterException();
-    } catch(...) {
+    }
+    catch(...) {
       // Generic exception, unhandled, we can't do anything about this
     }
-    
+
     // Signal shutdown on the enclosing context--cannot wait, if we wait we WILL deadlock
     GetContext()->SignalShutdown(false);
   }
-  
+
+  // Run loop is over, time to clean up
+  DoRunLoopCleanup();
+}
+
+void BasicThread::DoRunLoopCleanup(void)
+{
   // Notify everyone that we're completed:
   boost::lock_guard<boost::mutex> lk(m_lock);
   m_stop = true;
@@ -68,6 +80,10 @@ void BasicThread::DoRun(std::shared_ptr<Object>&& refTracker) {
   // Notify other threads that we are done.  At this point, any held references that might
   // still exist are held by entities other than ourselves.
   state->m_stateCondition.notify_all();
+
+  // Clear our reference tracker, which will notify anyone who is asleep and also maybe
+  // will destroy the entire underlying context.
+  refTracker.reset();
 }
 
 bool BasicThread::ShouldStop(void) const {
