@@ -671,6 +671,18 @@ public:
   template<class Sigil>
   bool Is(void) const { return m_sigil == typeid(Sigil); }
 
+  /// <returns>
+  /// A list of descendant contexts whose sigil type matches the specified sigil type
+  /// </returns>
+  template<class Sigil>
+  std::vector<std::shared_ptr<CoreContext>> EnumerateChildContexts(void) {
+    std::vector<std::shared_ptr<CoreContext>> retVal;
+    EnumerateChildContexts([&retVal](std::shared_ptr<CoreContext> ctxt) {
+      retVal.push_back(ctxt);
+    });
+    return retVal;
+  }
+
   /// <summary>
   /// Enumerates all matching child contexts recursively and passes each child context to the specified lambda
   /// </summary>
