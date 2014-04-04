@@ -283,9 +283,9 @@ public:
   }
 
   // Two-parenthetical deferred invocations:
-  template<class FnPtr>
-  auto Invoke(FnPtr fnPtr) -> InvokeRelay<decltype(fnPtr)> {
-    return InvokeRelay<decltype(fnPtr)>(this, fnPtr);
+  template<typename FnPtr>
+  auto Invoke(FnPtr fnPtr) -> InvokeRelay<FnPtr> {
+    return InvokeRelay<FnPtr>(this, fnPtr);
   }
 };
 
@@ -382,9 +382,7 @@ public:
     boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
 
     for(auto q = dq.begin(); q != dq.end(); q++)
-      if((**q).CanAccept())
-        // Create a fully curried function to add to the dispatch queue:
-        (**q).AddExisting(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...));
+      (**q).AddExisting(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...));
   }
 };
 

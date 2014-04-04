@@ -30,7 +30,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_pParent(pParent),
   m_sigil(sigil),
   m_useOwnershipValidator(false),
-  m_shouldRunNewThreads(false),
+  m_initiated(false),
   m_isShutdown(false),
   m_junctionBoxManager(std::make_shared<JunctionBoxManager>()),
   m_packetFactory(std::make_shared<AutoPacketFactory>(GetJunctionBox<AutoPacketListener>()))
@@ -117,7 +117,7 @@ std::vector<std::shared_ptr<BasicThread>> CoreContext::CopyBasicThreadList(void)
 void CoreContext::Initiate(void) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    if(m_shouldRunNewThreads)
+    if(m_initiated)
       // Already running
       return;
 
@@ -126,7 +126,7 @@ void CoreContext::Initiate(void) {
       return;
 
     // Update flag value
-    m_shouldRunNewThreads = true;
+    m_initiated = true;
   }
 
   if(m_pParent)
@@ -227,7 +227,7 @@ void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
   // Insert into the linked list of threads first:
   m_threads.push_front(ptr.get());
 
-  if(m_shouldRunNewThreads)
+  if(m_initiated)
     // We're already running, this means we're late to the game and need to start _now_.
     ptr->Start(IncrementOutstandingThreadCount());
 }
@@ -368,6 +368,12 @@ void CoreContext::UpdateDeferredElements(void) {
 void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
+    
+    if (!m_initiated) { //Delay adding receiver until context in initialized;
+      m_delayedEventReceivers.insert(receiver);
+      return;
+    }
+    
     m_eventReceivers.insert(receiver);
   }
 
@@ -378,6 +384,23 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   if(m_pParent)
     m_pParent->AddEventReceiver(receiver);
 }
+
+void CoreContext::AddEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
+  assert(m_initiated); //Must be initiated
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    
+    m_eventReceivers.insert(first, last);
+  }
+  
+  m_junctionBoxManager->AddEventReceivers(first, last);
+  
+  // Delegate ascending resolution, where possible.  This ensures that the parent context links
+  // this event receiver to compatible senders in the parent context itself.
+  if(m_pParent)
+    m_pParent->AddEventReceivers(first, last);
+}
+
 
 void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
   {
