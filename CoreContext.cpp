@@ -244,9 +244,9 @@ void CoreContext::BuildCurrentState(void) {
 
   //ContextMembers and CoreThreads
   for (auto member = m_contextMembers.begin(); member != m_contextMembers.end(); ++member) {
-    CoreThread* thread = dynamic_cast<CoreThread*>(*member);
+    CoreRunnable* thread = dynamic_cast<CoreRunnable*>(*member);
     thread?
-      GetGlobal()->Invoke(&AutowiringEvents::NewCoreThread)(*thread) :
+      GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*thread) :
       GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(**member);
   }
 
