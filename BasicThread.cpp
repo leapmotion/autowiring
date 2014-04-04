@@ -137,7 +137,7 @@ void BasicThread::ForceCoreThreadReidentify(void) {
   AutoGlobalContext global;
   global->EnumerateChildContexts(
     [](std::shared_ptr<CoreContext> ctxt) {
-      auto threadListCpy = ctxt->CopyCoreThreadList();
+      auto threadListCpy = ctxt->CopyBasicThreadList();
       for(auto q = threadListCpy.begin(); q != threadListCpy.end(); q++) {
         (**q).SetCurrentThreadName();
       }

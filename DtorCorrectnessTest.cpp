@@ -112,7 +112,7 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
 
   // Process all deferred elements and then check to see what we got:
   AutoCurrentContext ctxt;
-  ctxt->InitiateCoreThreads();
+  ctxt->InitiateCoreRunnables();
   listener1->Stop(true);
   listener2->Stop(true);
   listener1->Wait();

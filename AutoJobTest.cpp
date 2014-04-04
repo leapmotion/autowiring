@@ -19,7 +19,7 @@ TEST_F(AutoJobTest, VerifySimpleProperties) {
   ASSERT_FALSE(t.try_join_for(boost::chrono::milliseconds(10))) << "AutoJob did not block a client who was waiting for its readiness to accept dispatchers";
 
   // Now start the context and verify that certain properties changed as anticipated:
-  m_create->InitiateCoreThreads();
+  m_create->InitiateCoreRunnables();
   ASSERT_TRUE(jb->DelayUntilCanAccept()) << "AutoJob did not correctly delay for dispatch acceptance";
   ASSERT_TRUE(jb->CanAccept()) << "AutoJob failed to correctly report that it could accept dispatch events";
 
@@ -37,7 +37,7 @@ TEST_F(AutoJobTest, VerifySimpleSubmission) {
 
   // Kickoff, signal for a shutdown to take place, and then verify the flag
   AutoCurrentContext ctxt;
-  ctxt->InitiateCoreThreads();
+  ctxt->InitiateCoreRunnables();
   ctxt->SignalShutdown(true);
   ASSERT_TRUE(*myFlag) << "AutoJob did not properly execute its thread";
 }
@@ -58,7 +58,7 @@ TEST_F(AutoJobTest, VerifyTeardown) {
     boost::this_thread::sleep(boost::posix_time::milliseconds(200));
     check2 = true;
   };
-  ctxt->InitiateCoreThreads();
+  ctxt->InitiateCoreRunnables();
   *job += [&check3] {
     boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     check3 = true;

@@ -127,7 +127,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
       });
 
       // Kick off the context:
-      ctxt->InitiateCoreThreads();
+      ctxt->InitiateCoreRunnables();
     }
 
     // Signal all members and then release everything:
