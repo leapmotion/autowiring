@@ -5,14 +5,10 @@
 #include <boost/thread.hpp>
 
 CoreThread::CoreThread(const char* pName):
-  BasicThread(pName),
-  m_canAccept(false)
+  BasicThread(pName)
 {}
 
 void CoreThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt) {
-  // Unconditionally shut off dispatch delivery:
-  RejectDispatchDelivery();
-
   try {
     // If we are asked to rundown while we still have elements in our dispatch queue,
     // we must try to process them:
@@ -109,9 +105,6 @@ void CoreThread::Stop(bool graceful){
   OnStop();
   
   if(graceful) {
-    // Signal the dispatch queue to run down
-    RejectDispatchDelivery();
-    
     // Pend a call which will invoke Abort once the dispatch queue is done:
     DispatchQueue::Pend([this] {
       this->Abort();
@@ -123,14 +116,12 @@ void CoreThread::Stop(bool graceful){
     // Abort the dispatch queue so anyone waiting will wake up
     DispatchQueue::Abort();
     
-    // Notify all callers of our status update, only needed if we don't call
-    // RejectDispatchDelivery first
+    // Notify all callers of our status update
     m_state->m_stateCondition.notify_all();
   }
 }
 
 void CoreThread::Run() {
-  AcceptDispatchDelivery();
 
   while(!ShouldStop())
     WaitForEvent();

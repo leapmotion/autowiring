@@ -50,10 +50,7 @@ public:
   FilterB(void) :
     m_barr(2),
     m_excepted(false)
-  {
-    // We'll accept dispatch delivery as long as we exist:
-    AcceptDispatchDelivery();
-  }
+  {}
 
   Deferred AutoFilter(Decoration<0> zero, Decoration<1> one) {
     m_called = true;

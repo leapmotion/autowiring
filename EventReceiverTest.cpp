@@ -47,7 +47,7 @@ TEST_F(EventReceiverTest, VerifyNoReceive) {
   receiver->Proceed();
 
   // Allow dispatch delivery and post the quit event:
-  receiver->AcceptDispatchDelivery();
+  //receiver->AcceptDispatchDelivery();
   sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Wait:
@@ -63,7 +63,7 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
   AutoFired<CallableInterfaceDeferred> sender;
 
   // Accept dispatch delivery:
-  receiver->AcceptDispatchDelivery();
+  //receiver->AcceptDispatchDelivery();
 
   // Deferred fire:
   sender.Defer(&CallableInterfaceDeferred::ZeroArgsDeferred)();
@@ -92,7 +92,7 @@ TEST_F(EventReceiverTest, NontrivialCopy) {
   AutoFired<CallableInterfaceDeferred> sender;
 
   // Accept dispatch delivery:
-  receiver->AcceptDispatchDelivery();
+  //receiver->AcceptDispatchDelivery();
 
   static const int sc_numElems = 10;
 
@@ -156,7 +156,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   AutoFired<CallableInterfaceDeferred> sender;
 
   // Accept dispatch delivery:
-  receiver->AcceptDispatchDelivery();
+  //receiver->AcceptDispatchDelivery();
 
   // Make our copy counter:
   CopyCounter ctr;
@@ -365,10 +365,6 @@ public:
   void StringArg(std::string arg) override {
     m_value = arg;
   }
-
-  // Make this method public
-  using CoreThread::AcceptDispatchDelivery;
-  using CoreThread::RejectDispatchDelivery;
 };
 
 // Create two different receivers

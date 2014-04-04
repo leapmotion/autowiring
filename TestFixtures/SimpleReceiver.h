@@ -218,8 +218,4 @@ public:
     }
     CoreThread::Run();
   }
-
-  // Make this method public
-  using CoreThread::AcceptDispatchDelivery;
-  using CoreThread::RejectDispatchDelivery;
 };
