@@ -8,14 +8,19 @@
 /// <remarks>
 /// Inherits from true_type if T is the same as any of U1...UN
 /// </remarks>
-template<class T, class U1, class U2, class U3, class U4>
-struct is_any_same {
-  static const bool value =
-    std::is_same<T, U1>::value ||
-    std::is_same<T, U2>::value ||
-    std::is_same<T, U3>::value ||
-    std::is_same<T, U4>::value;
+template<typename... T>
+struct is_any_same{};
+
+template<typename ToCheck>
+struct is_any_same<ToCheck>{
+  static const bool value = false;
 };
+
+template<typename ToCheck, typename Head, typename... Tail>
+struct is_any_same<ToCheck, Head, Tail...>{
+  static const bool value = std::is_same<ToCheck,Head>::value || is_any_same<ToCheck,Tail...>::value;
+};
+
 
 struct type_info_constructable {
   type_info_constructable(const std::type_info* ti = nullptr) :
