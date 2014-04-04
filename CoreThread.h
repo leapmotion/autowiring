@@ -33,7 +33,7 @@ protected:
   /// <summary>
   /// Overridden here so we can rundown the dispatch queue
   /// </summary>
-  virtual void DoRunLoopCleanup(void) override;
+  virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt) override;
 
   /// <summary>
   /// Indicates that the system should accept the delivery of deferred procedure calls

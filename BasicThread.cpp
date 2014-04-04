@@ -50,10 +50,14 @@ void BasicThread::DoRun(std::shared_ptr<Object>&& refTracker) {
   }
 
   // Run loop is over, time to clean up
-  DoRunLoopCleanup();
+  DoRunLoopCleanup(pusher.Pop());
+
+  // Clear our reference tracker, which will notify anyone who is asleep and also maybe
+  // will destroy the entire underlying context.
+  refTracker.reset();
 }
 
-void BasicThread::DoRunLoopCleanup(void)
+void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt)
 {
   // Notify everyone that we're completed:
   boost::lock_guard<boost::mutex> lk(m_lock);
@@ -75,15 +79,11 @@ void BasicThread::DoRunLoopCleanup(void)
   // Release our hold on the context.  After this point, we have to be VERY CAREFUL that we
   // don't try to refer to any of our own member variables, because our own object may have
   // already gone out of scope.  [this] is potentially dangling.
-  pusher.Pop();
+  ctxt.reset();
   
   // Notify other threads that we are done.  At this point, any held references that might
   // still exist are held by entities other than ourselves.
   state->m_stateCondition.notify_all();
-
-  // Clear our reference tracker, which will notify anyone who is asleep and also maybe
-  // will destroy the entire underlying context.
-  refTracker.reset();
 }
 
 bool BasicThread::ShouldStop(void) const {
