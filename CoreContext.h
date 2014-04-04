@@ -850,8 +850,8 @@ public:
   /// Utility routine, invoked typically by the service, which starts all registered
   /// core threads.
   /// </summary>
-  void InitiateCoreRunnables(void);
-  void DEPRECATED(InitiateCoreThreads(void), "InitiateCoreThreads is deprecated, use InitiateCoreRunnables instead");
+  void Initiate(void);
+  void DEPRECATED(InitiateCoreThreads(void), "InitiateCoreThreads is deprecated, use Initiate instead");
 
   /// <summary>
   /// This signals to the whole system that a shutdown operation is underway, and that shutdown procedures should

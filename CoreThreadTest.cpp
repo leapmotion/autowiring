@@ -36,7 +36,7 @@ TEST_F(CoreThreadTest, VerifyStartSpam) {
   // Create our thread class:
   AutoRequired<SpamguardTest> instance;
 
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
 
   // This shouldn't cause another thread to be created:
   instance->Start(std::shared_ptr<Object>(new Object));
@@ -58,7 +58,7 @@ public:
 
 TEST_F(CoreThreadTest, VerifyIndefiniteDelay) {
   AutoRequired<InvokesIndefiniteWait> instance;
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
 
   // Verify that the instance does not quit until we pend something:
   ASSERT_FALSE(instance->WaitFor(boost::chrono::milliseconds(10))) << "Thread instance exited prematurely, when it should have been waiting indefinitely";
@@ -76,12 +76,12 @@ TEST_F(CoreThreadTest, VerifyNestedTermination) {
     AutoCreateContext outer;
     CurrentContextPusher outerPshr(outer);
     AutoRequired<SimpleThreaded>();
-    outer->InitiateCoreRunnables();
+    outer->Initiate();
 
     {
       AutoCreateContext ctxt;
       CurrentContextPusher pshr(ctxt);
-      ctxt->InitiateCoreRunnables();
+      ctxt->Initiate();
       st = AutoRequired<SimpleThreaded>();
     }
   }
@@ -130,7 +130,7 @@ TEST_F(CoreThreadTest, VerifyDispatchQueueShutdown) {
   AutoRequired<ListenThread> listener;
   try
   {
-    ctxt->InitiateCoreRunnables();
+    ctxt->Initiate();
     listener->DelayUntilCanAccept();
 
     AutoFired<SleepEvent> evt;
@@ -157,7 +157,7 @@ TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
   std::weak_ptr<std::string> watcher(value);
   try
   {
-    ctxt->InitiateCoreRunnables();
+    ctxt->Initiate();
     listener->DelayUntilCanAccept();
 
     *listener += [value] { throw std::exception(); };
@@ -171,7 +171,7 @@ TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
 
 TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
   // Run our threads immediately, no need to wait
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
 
   // Create a thread which we'll use just to pend dispatch events:
   AutoRequired<CoreThread> t;
@@ -199,7 +199,7 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
 }
 
 TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
 
   // We won't actually be referencing this, we just want to make sure it's not destroyed early
   std::shared_ptr<bool> x(new bool);
@@ -219,7 +219,7 @@ TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
 
 TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
   // Immediately pend threads:
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
 
   // Some variables that we will set to true as the test proceeds:
   std::shared_ptr<bool> x(new bool(false));
@@ -246,7 +246,7 @@ TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
 }
 
 TEST_F(CoreThreadTest, VerifyTimedSort) {
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
   AutoRequired<CoreThread> t;
 
   std::vector<size_t> v;
@@ -268,7 +268,7 @@ TEST_F(CoreThreadTest, VerifyTimedSort) {
 }
 
 TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
   AutoRequired<CoreThread> t;
   t->DelayUntilCanAccept();
 
@@ -311,7 +311,7 @@ TEST_F(CoreThreadTest, VerifyCanBoostPriority) {
   // Create two spinners and kick them off at the same time:
   AutoRequired<JustIncrementsANumber<ThreadPriority::Normal>> lower;
   AutoRequired<JustIncrementsANumber<ThreadPriority::AboveNormal>> higher;
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
 
   // Poke the conditional variable a lot:
   AutoRequired<boost::mutex> contended;
@@ -430,7 +430,7 @@ TEST_F(CoreThreadTest, VerifyLocksNotRequired) {
   pingPlayer->Pass();
 
   // Now we start threads and wait for things to wrap up:
-  m_create->InitiateCoreRunnables();
+  m_create->Initiate();
   m_create->Wait();
 
   // See what happened:

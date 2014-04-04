@@ -180,7 +180,7 @@ TEST_F(DecoratorTest, VerifyInterThreadDecoration) {
   AutoCurrentContext ctxt;
 
   // Kick off all threads:
-  ctxt->InitiateCoreRunnables();
+  ctxt->Initiate();
 
   // Obtain a packet for processing and decorate it:
   auto packet = factory->NewPacket();
