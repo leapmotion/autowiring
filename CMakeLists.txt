@@ -50,7 +50,6 @@ set(Autowiring_SRCS
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunk.h
-  EventDispatcher.h
   EventInputStream.h
   EventOutputStream.h
   EventOutputStream.cpp
