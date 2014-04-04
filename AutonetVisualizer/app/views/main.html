@@ -1,0 +1,53 @@
+<div class="header section" ng-controller="HeaderCtrl">
+  <ul class="nav nav-pills pull-right">
+    <li ng-class="{active: isSubscribed && isConnected(), disabled: !isConnected()}"><a ng-disabled="!isConnected()" ng-click="subscribe()">Subscribed</a></li>
+    <li ng-class="{active: !isSubscribed && isConnected(), disabled: !isConnected()}"><a ng-disabled="!isConnected()" ng-click="unsubscribe()">Unsubscribed</a></li>
+  </ul>
+  <h3 class="text-muted" ng-class="{connected: isConnected(), disconnected: !isConnected()}">AutoNet</h3>
+</div>
+
+<div ng-controller="MainCtrl">
+  <div class="section">
+    <directed-graph nodes="contexts">
+    </directed-graph>
+  </div>
+  <div ng-repeat="(id,context) in contexts" class="section">
+    <h3>{{context.name}}</h3>
+    <div class="row">
+      <div class="col-xs-3">
+        <h4>Context Members</h4>
+        <ul>
+          <li ng-repeat="member in context.members | orderBy:'name'">
+            {{member.name}}
+          </li>
+        </ul>
+      </div>
+      <div class="col-xs-3">
+        <h4>Core Threads</h4>
+        <ul>
+          <li ng-repeat="thread in context.threads | orderBy:'name'">
+            {{thread.name}}
+          </li>
+        </ul>
+      </div>
+      <div class="col-xs-3">
+        <h4>Event Receivers</h4>
+        <ul>
+          <li ng-repeat="receiver in context.eventReceivers | orderBy:'name'">
+            {{receiver.name}}
+          </li>
+        </ul>
+      </div>
+      <div class="col-xs-3">
+        <h4>Exception Filters</h4>
+        <ul>
+          <li ng-repeat="filter in context.exceptionFilters | orderBy:'name'">
+            {{filter.name}}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
