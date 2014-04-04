@@ -44,9 +44,7 @@ public:
   MyCtorDtorListener(void):
     CoreThread("MyCtorDtorListener"),
     m_hitDeferred(false)
-  {
-    AcceptDispatchDelivery();
-  }
+  {}
 
   bool m_hitDeferred;
 

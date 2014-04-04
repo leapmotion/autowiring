@@ -24,8 +24,6 @@ public:
   virtual ~CoreThread(void) {}
 
 protected:
-  // Acceptor flag:
-  bool m_canAccept;
 
 protected:
   void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
@@ -34,34 +32,6 @@ protected:
   /// Overridden here so we can rundown the dispatch queue
   /// </summary>
   virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt) override;
-
-  /// <summary>
-  /// Indicates that the system should accept the delivery of deferred procedure calls
-  /// </summary>
-  void AcceptDispatchDelivery(void) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_canAccept = true;
-    m_stateCondition.notify_all();
-  }
-
-  /// <summary>
-  /// Indicates that no more deferred procedure calls should be pended
-  /// </summary>
-  /// <remarks>
-  /// This method guarantees that, at some point after it returns, the caller will no
-  /// longer receive pended events.  No guarantees are made about how long after this
-  /// call is made that the last pended dispatch event will be delivered.
-  ///
-  /// Callers interested in this guarantee should invoke this method and then wait for
-  /// the dispatch queue to become empty.
-  ///
-  /// This method is idempotent
-  /// </remarks>
-  void RejectDispatchDelivery(void) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_canAccept = false;
-    m_stateCondition.notify_all();
-  }
 
 public:
   /// <summary>
