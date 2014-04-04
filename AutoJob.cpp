@@ -1,20 +1,8 @@
 #include "stdafx.h"
 #include "AutoJob.h"
 #include "CoreContext.h"
+#include "move_only.h"
 #include <future>
-
-// Workaround until you can move values into a lambda capture in C++14
-template<typename T>
-class MoveOnly{
-public:
-  mutable T value;
-  MoveOnly(T&& val):
-    value(std::move(val))
-  {}
-  MoveOnly(const MoveOnly& moveonly):
-    value(std::move(moveonly.value))
-  {}
-};
 
 AutoJob::AutoJob(const char* name) :
   ContextMember(name),
