@@ -5,9 +5,7 @@
 class AutoInjectableExpressionBase
 {
 public:
-  virtual ~AutoInjectableExpressionBase(void) {
-
-  }
+  virtual ~AutoInjectableExpressionBase(void) {}
   virtual void operator()(AutoFuture* pFuture) const = 0;
 };
 
@@ -40,6 +38,26 @@ private:
 };
 
 /// <summary>
+/// A lambda-injectable type, which just invokes the specified functional
+/// </summary>
+template<class Fn>
+class AutoInjectableExpressionFn:
+  public AutoInjectableExpressionBase
+{
+public:
+  explicit AutoInjectableExpressionFn(Fn&& fn) :
+    fn(std::move(fn))
+  {}
+
+  void operator()(AutoFuture* pFuture) const override {
+    fn();
+  }
+
+private:
+  const Fn fn;
+};
+
+/// <summary>
 /// A deafult injectable expression with a no-op behavior
 /// </summary>
 template<>
@@ -65,9 +83,8 @@ public:
 class AutoInjectable
 {
 public:
-  template<class T, class... Args>
-  AutoInjectable(std::tuple<T*>, Args&&... args) :
-    pValue(new AutoInjectableExpression<T, Args...>(std::forward<Args>(args)...)),
+  AutoInjectable(AutoInjectableExpressionBase* pValue) :
+    pValue(pValue),
     pFLink(nullptr)
   {}
 
@@ -132,5 +149,10 @@ inline AutoInjectable operator+(AutoInjectable lhs, AutoInjectable rhs) {
 
 template<class T, class... Args>
 AutoInjectable MakeInjectable(Args... args) {
-  return AutoInjectable(std::tuple<T*>(), std::forward<Args>(args)...);
+  return AutoInjectable(new AutoInjectableExpression<T, Args...>(std::forward<Args>(args)...));
+}
+
+template<class Fn>
+AutoInjectable MakeInjectableFn(Fn&& fn) {
+  return AutoInjectable(new AutoInjectableExpressionFn<Fn>(std::move(fn)));
 }
