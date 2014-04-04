@@ -6,7 +6,6 @@
 
 AutoJob::AutoJob(const char* name) :
   ContextMember(name),
-  m_canAccept(true),
   m_running(false)
 {}
 
@@ -29,18 +28,6 @@ void AutoJob::OnPended(boost::unique_lock<boost::mutex>&& lk){
   if (m_running) DispatchEvent();
 }
 
-bool AutoJob::CanAccept(void) const {
-  return m_canAccept;
-}
-
-bool AutoJob::DelayUntilCanAccept(void) {
-  boost::unique_lock<boost::mutex> lk(m_jobLock);
-  m_jobUpdate.wait(lk, [this]{
-    return m_canAccept;
-  });
-  return m_canAccept;
-}
-
 bool AutoJob::IsRunning(void) const { return m_running; }
 
 bool AutoJob::Start(std::shared_ptr<Object> outstanding) {
@@ -58,7 +45,6 @@ bool AutoJob::Start(std::shared_ptr<Object> outstanding) {
 }
 
 void AutoJob::Stop(bool graceful) {
-  m_canAccept = false;
   
   if (graceful){
     // Pend a call which will invoke Abort once the dispatch queue is done:
@@ -86,6 +72,5 @@ void AutoJob::Stop(bool graceful) {
 }
 
 void AutoJob::Wait() {
-  assert(!m_canAccept); //Can't have more dispatchers appended while waiting
   if (m_prevEvent.valid()) m_prevEvent.wait();
 }

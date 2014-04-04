@@ -35,10 +35,6 @@ public:
   AutoJob(const char* name = nullptr);
   virtual ~AutoJob(){};
   
-  // DispatchQueue overrides:
-  bool DelayUntilCanAccept(void) override;
-  bool CanAccept(void) const override;
-  
   // "CoreRunnable" overrides
   bool Start(std::shared_ptr<Object> outstanding) override;
   void Stop(bool graceful=false) override;

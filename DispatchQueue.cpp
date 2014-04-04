@@ -82,7 +82,7 @@ void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
 }
 
 void DispatchQueue::FireEvent(DispatchThunkBase* thunk){
-  auto generalCleanup = MakeAtExit([thunk]{
+  auto cleanup = MakeAtExit([thunk]{
     delete thunk;
   });
   (*thunk)();
@@ -96,3 +96,7 @@ bool DispatchQueue::DispatchEvent(void) {
   DispatchEventUnsafe(lk);
   return true;
 }
+
+// DEPRECATED member functions
+bool DispatchQueue::CanAccept() const {return true;}
+bool DispatchQueue::DelayUntilCanAccept() {return true;}

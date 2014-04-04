@@ -64,12 +64,6 @@ protected:
   }
 
 public:
-  // Override from DispatchQueue
-  bool CanAccept(void) const override {return m_canAccept;}
-  
-  // Base overrides:
-  bool DelayUntilCanAccept(void) override;
-
   /// <summary>
   /// Blocks until a new dispatch event is added, dispatches that single event, and then returns
   /// </summary>
