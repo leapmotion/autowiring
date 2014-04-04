@@ -8,8 +8,11 @@ set(Autowiring_SRCS
   at_exit.h
   AutoAnchor.h
   AutoFactory.h
+  AutoFuture.h
+  AutoFuture.cpp
   AutoJob.h
   AutoJob.cpp
+  AutoInjectable.h
   AutoPacket.h
   AutoPacket.cpp
   AutoPacketFactory.h
@@ -23,6 +26,7 @@ set(Autowiring_SRCS
   Autowired.cpp
   AutowirableSlot.h
   AutowirableSlot.cpp
+  AutowiringEvents.h
   autowiring_error.h
   ContextCreator.h
   ContextCreatorBase.h
@@ -127,6 +131,8 @@ endif()
 set(AutowiringTest_SRCS
   AutoAnchorTest.h
   AutoAnchorTest.cpp
+  AutoInjectableTest.h
+  AutoInjectableTest.cpp
   AutowiringBenchmarkTest.h
   AutowiringBenchmarkTest.cpp
   ContextCleanupTest.h
