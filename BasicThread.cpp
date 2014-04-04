@@ -18,7 +18,7 @@ BasicThread::BasicThread(const char* pName):
   m_completed(false)
 {}
 
-void BasicThread::DoRun(void) {
+void BasicThread::DoRun(std::shared_ptr<Object>&& refTracker) {
   assert(m_running);
   
   // Make our own session current before we do anything else:
