@@ -499,7 +499,7 @@ protected:
         pCoreThread = leap::fast_pointer_cast<CoreRunnable, T>(value);
         if (pCoreThread) {
           AddCoreThread(pCoreThread);
-          GetGlobal()->Invoke(&AutowiringEvents::NewCoreThread)(*pCoreThread.get());
+          GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*pCoreThread.get());
         } else {
           GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*pContextMember.get());
         }
