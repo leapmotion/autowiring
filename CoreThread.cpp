@@ -9,7 +9,7 @@ CoreThread::CoreThread(const char* pName):
   m_canAccept(false)
 {}
 
-void CoreThread::DoRunLoopCleanup(void) {
+void CoreThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt) {
   // Unconditionally shut off dispatch delivery:
   RejectDispatchDelivery();
 
@@ -24,7 +24,7 @@ void CoreThread::DoRunLoopCleanup(void) {
   }
 
   // Handoff to base class:
-  BasicThread::DoRunLoopCleanup();
+  BasicThread::DoRunLoopCleanup(std::move(ctxt));
 }
 
 bool CoreThread::DelayUntilCanAccept(void) {
