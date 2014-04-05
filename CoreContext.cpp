@@ -127,6 +127,8 @@ void CoreContext::Initiate(void) {
 
     // Update flag value
     m_initiated = true;
+    AddDelayedEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
+    m_delayedEventReceivers.clear();
   }
 
   if(m_pParent)
@@ -385,7 +387,7 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
     m_pParent->AddEventReceiver(receiver);
 }
 
-void CoreContext::AddEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
+void CoreContext::AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
   assert(m_initiated); //Must be initiated
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
@@ -398,7 +400,7 @@ void CoreContext::AddEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
-    m_pParent->AddEventReceivers(first, last);
+    m_pParent->AddDelayedEventReceivers(first, last);
 }
 
 

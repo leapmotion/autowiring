@@ -323,7 +323,7 @@ protected:
   /// <summary>
   /// Add delayed event receivers
   /// </summary>
-  void AddEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
+  void AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
 
   /// <summary>
   /// Removes the named event receiver from the collection of known receivers
@@ -851,9 +851,9 @@ public:
   ///  ctxt->Invoke(&MyEventType::MyEvent)();
   ///
   /// </remarks>
-  template<class MemFn>
+  template<typename MemFn>
   InvokeRelay<MemFn> Invoke(MemFn memFn) {
-    if (!m_initiated) throw std::runtime_error("Can't fire events from a context that hasn't been initiated");
+    if (!m_initiated) assert(false);//throw std::runtime_error("Can't fire events from a context that hasn't been initiated");
     return GetJunctionBox<typename Decompose<MemFn>::type>()->Invoke(memFn);
   }
 
@@ -1083,4 +1083,10 @@ void CoreContext::AutoRequireMicroBolt(void) {
 template<typename T>
 void CoreContext::AddExisting(std::shared_ptr<T> p_member) {
   AddInternal(p_member);
+}
+
+//Specializtion to allow internal AutowiringEvents before a context is initiated
+template<>
+InvokeRelay<void(AutowiringEvents::*)()> CoreContext::Invoke(void(AutowiringEvents::*memFn)()) {
+  return GetJunctionBox<AutowiringEvents>()->Invoke(memFn);
 }
