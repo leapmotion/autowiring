@@ -15,9 +15,6 @@ private:
   //Hold on to this so CoreContext knows we still exist
   std::shared_ptr<Object> m_outstanding;
   
-  // Can accept new dispatchers
-  bool m_canAccept;
-  
   // CoreTheads have been started, so start dispatching
   bool m_running;
   
