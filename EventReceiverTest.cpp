@@ -48,6 +48,7 @@ TEST_F(EventReceiverTest, VerifyNoReceive) {
 
   // Allow dispatch delivery and post the quit event:
   //receiver->AcceptDispatchDelivery();
+  AutoCurrentContext()->Initiate();
   sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Wait:
