@@ -902,6 +902,8 @@ public:
     boost::unique_lock<boost::mutex> lk(m_lock);
     return m_stateChanged.wait_for(lk, duration, [this] {return this->m_outstanding.expired();});
   }
+  
+  void DelayUntilInitiated(void);
 
   /// <summary>
   /// This makes this core context current.

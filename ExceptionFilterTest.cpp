@@ -126,6 +126,8 @@ TEST_F(ExceptionFilterTest, ThreadThrowsCheck) {
 }
 
 TEST_F(ExceptionFilterTest, SimpleFilterCheck) {
+  AutoCurrentContext()->Initiate();
+  
   // Firing will occur at the parent context scope:
   AutoFired<ThrowingListener> broadcaster;
 
@@ -180,6 +182,8 @@ TEST_F(ExceptionFilterTest, EnclosedThrowCheck) {
 }
 
 TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
+  AutoCurrentContext()->Initiate();
+  
   // Create a pair of classes which throw exceptions:
   AutoRequired<ThrowsWhenFired<custom_exception, 200>> v200;
   AutoRequired<ThrowsWhenFired<custom_exception, 201>> v201;
@@ -193,6 +197,8 @@ TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
 }
 
 TEST_F(ExceptionFilterTest, ExceptionFirewall) {
+  AutoCurrentContext()->Initiate();
+  
   AutoRequired<ThrowsWhenFired<custom_exception,200>> v200;
 
   // Try to throw, verify the return value.  The value should be false, because this particular type always
@@ -206,6 +212,7 @@ TEST_F(ExceptionFilterTest, VerifySimpleConfinement) {
 
   // Create a subcontext where the errant recipients will live:
   AutoCreateContext child;
+  child->Initiate();
   child->Inject<ThrowsWhenFired<custom_exception, 200>>();
 
   Autowired<ThrowsWhenFired<custom_exception, 200>> twf;
