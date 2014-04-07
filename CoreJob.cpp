@@ -1,15 +1,15 @@
 #include "stdafx.h"
-#include "AutoJob.h"
+#include "CoreJob.h"
 #include "CoreContext.h"
 #include "move_only.h"
 #include <future>
 
-AutoJob::AutoJob(const char* name) :
+CoreJob::CoreJob(const char* name) :
   ContextMember(name),
   m_running(false)
 {}
 
-void AutoJob::FireEvent(DispatchThunkBase* thunk){
+void CoreJob::FireEvent(DispatchThunkBase* thunk){
   MoveOnly<std::future<void>> prev(std::move(m_prevEvent));
   
   m_prevEvent = std::async(std::launch::async, [thunk, prev]{
@@ -23,14 +23,14 @@ void AutoJob::FireEvent(DispatchThunkBase* thunk){
   });
 }
 
-void AutoJob::OnPended(boost::unique_lock<boost::mutex>&& lk){
+void CoreJob::OnPended(boost::unique_lock<boost::mutex>&& lk){
   lk.unlock();
   if (m_running) DispatchEvent();
 }
 
-bool AutoJob::IsRunning(void) const { return m_running; }
+bool CoreJob::IsRunning(void) const { return m_running; }
 
-bool AutoJob::Start(std::shared_ptr<Object> outstanding) {
+bool CoreJob::Start(std::shared_ptr<Object> outstanding) {
   std::shared_ptr<CoreContext> context = m_context.lock();
   if(!context)
     return false;
@@ -44,7 +44,7 @@ bool AutoJob::Start(std::shared_ptr<Object> outstanding) {
   return true;
 }
 
-void AutoJob::Stop(bool graceful) {
+void CoreJob::Stop(bool graceful) {
   
   if (graceful){
     // Pend a call which will invoke Abort once the dispatch queue is done:
@@ -71,6 +71,6 @@ void AutoJob::Stop(bool graceful) {
   m_outstanding.reset();
 }
 
-void AutoJob::Wait() {
+void CoreJob::Wait() {
   if (m_prevEvent.valid()) m_prevEvent.wait();
 }

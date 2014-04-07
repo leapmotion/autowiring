@@ -1,14 +1,14 @@
 #include "stdafx.h"
-#include "AutoJobTest.h"
-#include "AutoJob.h"
+#include "CoreJobTest.h"
+#include "CoreJob.h"
 
-TEST_F(AutoJobTest, DISABLED_VerifySimpleProperties) {
+TEST_F(CoreJobTest, DISABLED_VerifySimpleProperties) {
   // We expect to block forever here, this is OK:
   ASSERT_FALSE(m_create->Wait(boost::chrono::milliseconds(1))) << "Initial context wait check returned prematurely";
 
-  AutoRequired<AutoJob> jb;
+  AutoRequired<CoreJob> jb;
 
-  //ASSERT_FALSE(m_create->IsInitiated()) << "AutoJob reported it could receive events before its enclosing context was created";
+  //ASSERT_FALSE(m_create->IsInitiated()) << "CoreJob reported it could receive events before its enclosing context was created";
 
   // Create a thread which will delay for acceptance, and then quit:
   boost::thread t([&jb] {
@@ -16,19 +16,19 @@ TEST_F(AutoJobTest, DISABLED_VerifySimpleProperties) {
   });
 
   // Verify that this thread doesn't back out right away:
-  ASSERT_FALSE(t.try_join_for(boost::chrono::milliseconds(10))) << "AutoJob did not block a client who was waiting for its readiness to accept dispatchers";
+  ASSERT_FALSE(t.try_join_for(boost::chrono::milliseconds(10))) << "CoreJob did not block a client who was waiting for its readiness to accept dispatchers";
 
   // Now start the context and verify that certain properties changed as anticipated:
   //m_create->Initiate();
-  //ASSERT_TRUE(jb->DelayUntilCanAccept()) << "AutoJob did not correctly delay for dispatch acceptance";
-  //ASSERT_TRUE(jb->CanAccept()) << "AutoJob failed to correctly report that it could accept dispatch events";
+  //ASSERT_TRUE(jb->DelayUntilCanAccept()) << "CoreJob did not correctly delay for dispatch acceptance";
+  //ASSERT_TRUE(jb->CanAccept()) << "CoreJob failed to correctly report that it could accept dispatch events";
 
   // Verify that the blocked thread has become unblocked and quits properly:
-  //ASSERT_TRUE(t.try_join_for(boost::chrono::seconds(1))) << "AutoJob did not correctly signal a blocked thread that it was ready to accept dispatchers";
+  //ASSERT_TRUE(t.try_join_for(boost::chrono::seconds(1))) << "CoreJob did not correctly signal a blocked thread that it was ready to accept dispatchers";
 }
 
-TEST_F(AutoJobTest, VerifySimpleSubmission) {
-  AutoRequired<AutoJob> jb;
+TEST_F(CoreJobTest, VerifySimpleSubmission) {
+  AutoRequired<CoreJob> jb;
   
   auto myFlag = std::make_shared<bool>(false);
   *jb += [myFlag] {
@@ -39,11 +39,11 @@ TEST_F(AutoJobTest, VerifySimpleSubmission) {
   AutoCurrentContext ctxt;
   ctxt->Initiate();
   ctxt->SignalShutdown(true);
-  ASSERT_TRUE(*myFlag) << "AutoJob did not properly execute its thread";
+  ASSERT_TRUE(*myFlag) << "CoreJob did not properly execute its thread";
 }
 
-TEST_F(AutoJobTest, VerifyTeardown) {
-  AutoRequired<AutoJob> job;
+TEST_F(CoreJobTest, VerifyTeardown) {
+  AutoRequired<CoreJob> job;
   AutoCurrentContext ctxt;
   
   bool check1 = false;
