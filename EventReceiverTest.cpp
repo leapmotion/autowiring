@@ -186,6 +186,7 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
     {
       // Create a new descendant context and put the receiver in it:
       AutoCreateContext subCtxt;
+      subCtxt->Initiate();
       CurrentContextPusher pshr(subCtxt);
       subCtxtWeak = subCtxt;
 

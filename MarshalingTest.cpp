@@ -194,6 +194,7 @@ TEST_F(MarshalingTest, VerifySimpleSerialization) {
   AutoFired<EventWithUuid> ewuuid;
 
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
   std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
 
   ASSERT_NE(static_cast<void*>(nullptr), os.get());
@@ -219,6 +220,7 @@ TEST_F(MarshalingTest, VerifySimpleSerialization) {
 
 TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
 
   // Serialize a fired event first:
   AutoFired<EventWithUuid> ewuuid;
@@ -294,6 +296,7 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
 
 TEST_F(MarshalingTest, VerifyComplexDeserialization) {
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
 
   // Serialize a fired event first:
   AutoFired<EventWithUuid> ewuuid;
@@ -339,6 +342,7 @@ TEST_F(MarshalingTest, VerifyComplexDeserialization) {
 
 TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
 
   // Serialize a fired event first:
   AutoFired<EventWithUuid> ewuuid;
