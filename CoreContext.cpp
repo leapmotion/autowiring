@@ -124,21 +124,26 @@ void CoreContext::Initiate(void) {
     // Short-return if our stop flag has already been set:
     if(m_isShutdown)
       return;
-
+    
     // Update flag value
     m_initiated = true;
-    AddDelayedEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
-    m_delayedEventReceivers.clear();
   }
 
   if(m_pParent)
     // Start parent threads first
     // Parent MUST be a core context
     m_pParent->Initiate();
+  
+  AddDelayedEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
+  m_delayedEventReceivers.clear();
 
   // Reacquire the lock to prevent m_threads from being modified while we sit on it
   auto outstanding = IncrementOutstandingThreadCount();
   boost::lock_guard<boost::mutex> lk(m_lock);
+  
+  // Signal our condition variable
+  m_stateChanged.notify_all();
+  
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
     (*q)->Start(outstanding);
 }
@@ -213,6 +218,11 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
     if(cur.IsRunning())
       cur.Wait();
   }
+}
+
+void CoreContext::DelayUntilInitiated(void) {
+  boost::unique_lock<boost::mutex> lk(m_lock);
+  m_stateChanged.wait(lk, [this]{return m_initiated;});
 }
 
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
@@ -389,8 +399,11 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
 
 void CoreContext::AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
   assert(m_initiated); //Must be initiated
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_eventReceivers.insert(first, last);
+  }
   
-  m_eventReceivers.insert(first, last);
   m_junctionBoxManager->AddEventReceivers(first, last);
   
   // Delegate ascending resolution, where possible.  This ensures that the parent context links

@@ -78,6 +78,8 @@ void DtorCorrectnessTest::SetUp(void) {
 void convert(int x);
 
 TEST_F(DtorCorrectnessTest, VerifyFiringDtors) {
+  AutoCurrentContext()->Initiate();
+  
   // Try firing some events and validate the invariant:
   cdl(&CtorDtorListener::DoFired)(CtorDtorCopyCounter());
   EXPECT_LE(2UL, CtorDtorCopyCounter::s_construction) << "Counter constructors were not invoked the expected number of times when fired";
