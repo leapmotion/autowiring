@@ -852,9 +852,11 @@ public:
   ///
   /// </remarks>
   template<typename MemFn>
-  InvokeRelay<MemFn> Invoke(MemFn memFn) {
-    if (!m_initiated) assert(false);//throw std::runtime_error("Can't fire events from a context that hasn't been initiated");
-    return GetJunctionBox<typename Decompose<MemFn>::type>()->Invoke(memFn);
+  InvokeRelay<MemFn> Invoke(MemFn memFn){
+    typedef typename Decompose<MemFn>::type evtType;
+    
+    if (!m_initiated && typeid(evtType)!=typeid(AutowiringEvents)) assert(false);//throw std::runtime_error("Can't fire events from a context that hasn't been initiated");
+    return GetJunctionBox<evtType>()->Invoke(memFn);
   }
 
   /// <summary>
@@ -1085,9 +1087,3 @@ void CoreContext::AddExisting(std::shared_ptr<T> p_member) {
   AddInternal(p_member);
 }
 
-//Specializtion to allow internal AutowiringEvents before a context is initiated
-/*
-InvokeRelay<void(AutowiringEvents::*)()> CoreContext::Invoke(void(AutowiringEvents::*memFn)()) {
-  return GetJunctionBox<AutowiringEvents>()->Invoke(memFn);
-}
- */
