@@ -134,6 +134,9 @@ protected:
   /// </summary>
   template<typename T>
   std::shared_ptr<CoreContext> CreateInternal(CoreContext& newContext) {
+    // don't allow new children if shutting down
+    assert(!m_isShutdown);
+    
     t_childList::iterator childIterator;
     {
       // Lock the child list while we insert
