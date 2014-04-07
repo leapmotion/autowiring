@@ -6,7 +6,7 @@
 
 class Object;
 
-class AutoJob:
+class CoreJob:
   public ContextMember,
   public DispatchQueue,
   public virtual CoreRunnable
@@ -29,8 +29,8 @@ protected:
   void OnPended(boost::unique_lock<boost::mutex>&&) override;
 
 public:
-  AutoJob(const char* name = nullptr);
-  virtual ~AutoJob(){};
+  CoreJob(const char* name = nullptr);
+  virtual ~CoreJob(){};
   
   // "CoreRunnable" overrides
   bool Start(std::shared_ptr<Object> outstanding) override;
