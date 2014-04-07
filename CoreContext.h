@@ -1086,7 +1086,8 @@ void CoreContext::AddExisting(std::shared_ptr<T> p_member) {
 }
 
 //Specializtion to allow internal AutowiringEvents before a context is initiated
-template<>
+/*
 InvokeRelay<void(AutowiringEvents::*)()> CoreContext::Invoke(void(AutowiringEvents::*memFn)()) {
   return GetJunctionBox<AutowiringEvents>()->Invoke(memFn);
 }
+ */

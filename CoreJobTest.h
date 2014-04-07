@@ -1,6 +1,6 @@
 #pragma once
 #include "EnclosedContextTestBase.h"
 
-class AutoJobTest:
+class CoreJobTest:
   public EnclosedContextTestBase
 {};

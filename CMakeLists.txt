@@ -10,8 +10,8 @@ set(Autowiring_SRCS
   AutoFactory.h
   AutoFuture.h
   AutoFuture.cpp
-  AutoJob.h
-  AutoJob.cpp
+  CoreJob.h
+  CoreJob.cpp
   AutoInjectable.h
   AutoPacket.h
   AutoPacket.cpp
@@ -185,8 +185,8 @@ set(AutowiringTest_SRCS
   SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
-  AutoJobTest.h
-  AutoJobTest.cpp
+  CoreJobTest.h
+  CoreJobTest.cpp
   TypeRegistryTest.h
   TypeRegistryTest.cpp
   ScopeTest.h
