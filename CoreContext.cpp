@@ -134,6 +134,8 @@ void CoreContext::Initiate(void) {
     // Parent MUST be a core context
     m_pParent->Initiate();
   
+  AddDelayedEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
+  m_delayedEventReceivers.clear();
   m_junctionBoxManager->Initiate();
 
   // Reacquire the lock to prevent m_threads from being modified while we sit on it
@@ -379,6 +381,12 @@ void CoreContext::UpdateDeferredElements(void) {
 void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
+    
+    if (!m_initiated) { //Delay adding receiver until context in initialized;
+      m_delayedEventReceivers.insert(receiver);
+      return;
+    }
+    
     m_eventReceivers.insert(receiver);
   }
 
@@ -389,6 +397,22 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   if(m_pParent)
     m_pParent->AddEventReceiver(receiver);
 }
+
+void CoreContext::AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
+  assert(m_initiated); //Must be initiated
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_eventReceivers.insert(first, last);
+  }
+  
+  m_junctionBoxManager->AddEventReceivers(first, last);
+  
+  // Delegate ascending resolution, where possible.  This ensures that the parent context links
+  // this event receiver to compatible senders in the parent context itself.
+  if(m_pParent)
+    m_pParent->AddDelayedEventReceivers(first, last);
+}
+
 
 void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
   {

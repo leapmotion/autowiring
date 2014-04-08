@@ -416,6 +416,9 @@ TEST_F(EventReceiverTest, VerifyMultiplePassByValue) {
 }
 
 TEST_F(EventReceiverTest, VerifyNoActionWhileStopped) {
+  AutoCreateContext outerCtxt;
+  CurrentContextPusher outerpshr(outerCtxt);
+  
   // Firer which will operate at the outer scope:
   AutoFired<CallableInterface> ciOuter;
   AutoFired<CallableInterfaceDeferred> ciOuterDeferred;
