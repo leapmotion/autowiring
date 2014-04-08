@@ -183,6 +183,7 @@ TEST_F(MarshalingTest, VerifyListenersUpdated) {
 TEST_F(MarshalingTest, VerifyOutOfOrderFiring) {
   // We should be able to create an output stream on an event even if nobody fires this event right now
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
   std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
   ASSERT_FALSE(nullptr == os.get()) << "Failed to create an output stream in a context where no firers of the underlying event exist";
 
