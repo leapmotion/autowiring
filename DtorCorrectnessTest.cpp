@@ -87,6 +87,7 @@ TEST_F(DtorCorrectnessTest, VerifyFiringDtors) {
 }
 
 TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
+  AutoCurrentContext()->Initiate();
   {
     CtorDtorCopyCounter tempCounter;
     ASSERT_EQ(1UL, CtorDtorCopyCounter::s_construction) << "Constructor count was not incremented correctly";
