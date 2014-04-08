@@ -237,9 +237,6 @@ protected:
   // All known event receivers and receiver proxies originating from this context:
   typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
-  
-  // List of eventReceivers to be added when this context in initiated
-  t_rcvrSet m_delayedEventReceivers;
 
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
   const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
@@ -322,11 +319,6 @@ protected:
   void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
     return AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, pRecvr));
   }
-  
-  /// <summary>
-  /// Add delayed event receivers
-  /// </summary>
-  void AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
 
   /// <summary>
   /// Removes the named event receiver from the collection of known receivers
@@ -856,10 +848,7 @@ public:
   /// </remarks>
   template<typename MemFn>
   InvokeRelay<MemFn> Invoke(MemFn memFn){
-    typedef typename Decompose<MemFn>::type evtType;
-    
-    if (!m_initiated && typeid(evtType)!=typeid(AutowiringEvents)) assert(false);//throw std::runtime_error("Can't fire events from a context that hasn't been initiated");
-    return GetJunctionBox<evtType>()->Invoke(memFn);
+    return GetJunctionBox<typename Decompose<MemFn>::type>()->Invoke(memFn);
   }
 
   /// <summary>
