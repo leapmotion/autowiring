@@ -18,6 +18,7 @@ TEST_F(PeerContextTest, VerifySimplePeerage) {
     // Create an ordinary child anonymous context and try to fire.  This should
     // not cause anything to be picked up anywhere.
     AutoCreateContext child;
+    child->Initiate();
 
     CurrentContextPusher pshr(child);
     AutoFired<CallableInterface> ci;
@@ -31,6 +32,7 @@ TEST_F(PeerContextTest, VerifySimplePeerage) {
     ASSERT_TRUE(nullptr != peer.get()) << "Peer context creation method returned a null pointer";
 
     CurrentContextPusher pshr(peer);
+    peer->Initiate();
     AutoFired<CallableInterface> ci;
     ci(&CallableInterface::OneArg)(22);
   }
