@@ -36,6 +36,9 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
 }
 
 TEST_F(EventReceiverTest, VerifyNoReceive) {
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+  
   AutoRequired<SimpleReceiver> receiver;
   AutoFired<CallableInterfaceDeferred> sender;
 
