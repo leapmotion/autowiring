@@ -216,11 +216,10 @@ template<class T>
   class AutoFired
 {
 public:
-  AutoFired(void) {
+  AutoFired(void):
+    m_junctionBox(CoreContext::CurrentContext()->GetJunctionBox<T>())
+  {
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
-
-    auto ctxt = CoreContext::CurrentContext();
-    m_junctionBox = ctxt->GetJunctionBox<T>();
   }
 
   /// <summary>
