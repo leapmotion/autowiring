@@ -44,7 +44,6 @@ TEST_F(PeerContextTest, VerifySimplePeerage) {
 }
 
 TEST_F(PeerContextTest, VerifyPeerTransitivity) {
-  // Accept Events
   AutoCurrentContext()->Initiate();
   
   // Insert our simple receiver:
@@ -52,10 +51,12 @@ TEST_F(PeerContextTest, VerifyPeerTransitivity) {
 
   // Now create the first peer context:
   auto peer1 = m_create->CreatePeer<PeerContextName1>();
+  peer1->Initiate();
   ASSERT_TRUE(nullptr != peer1.get());
 
   // Create the _second_ peer context based on the first:
   auto peer2 = peer1->CreatePeer<PeerContextName2>();
+  peer2->Initiate();
   ASSERT_TRUE(nullptr != peer2.get());
 
   // Fire the event here:

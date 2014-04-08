@@ -216,28 +216,31 @@ template<class T>
   class AutoFired
 {
 public:
-  AutoFired(void) {
+  AutoFired(void):
+    m_context(CoreContext::CurrentContext().get()),
+    m_junctionBox(m_context->GetJunctionBox<T>())
+  {
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
-
-    auto ctxt = CoreContext::CurrentContext();
-    m_junctionBox = ctxt->GetJunctionBox<T>();
   }
 
   /// <summary>
   /// Utility constructor, used when the receiver is already known
   /// </summary>
-  AutoFired(const std::shared_ptr<JunctionBox<T>>& junctionBox) :
-    m_junctionBox(junctionBox)
+  AutoFired(CoreContext* ctxt) :
+    m_context(ctxt),
+    m_junctionBox(m_context->GetJunctionBox<T>())
   {}
 
   /// <summary>
   /// Utility constructor, used to support movement operations
   /// </summary>
   AutoFired(AutoFired&& rhs):
-    m_junctionBox(std::move(rhs.m_junctionBox))
+    m_junctionBox(std::move(rhs.m_junctionBox)),
+    m_context(rhs.m_context)
   {}
 
 private:
+  CoreContext* m_context; // Invalidated when m_junctionBox is expired
   std::weak_ptr<JunctionBox<T>> m_junctionBox;
 
   template<class MemFn, bool isDeferred = std::is_same<typename Decompose<MemFn>::retType, Deferred>::value>
@@ -271,7 +274,7 @@ public:
   InvokeRelay<MemFn> operator()(MemFn pfn) const {
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot invoke an event for an unrelated type");
 
-    if (m_junctionBox.expired()) return InvokeRelay<MemFn>(); //Context has been destroyed
+    if (m_junctionBox.expired() || !m_context->IsInitiated()) return InvokeRelay<MemFn>(); //Context has been destroyed
 
     return m_junctionBox.lock()->Invoke(pfn);
   }
