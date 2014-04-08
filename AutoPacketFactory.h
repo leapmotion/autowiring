@@ -44,7 +44,7 @@ public:
   /// <summary>
   /// Utility ctor, provided to allow AutoPacketFactory construction during CoreContext construction
   /// </summary>
-  AutoPacketFactory(std::shared_ptr<JunctionBox<AutoPacketListener>>&& apl);
+  AutoPacketFactory(AutoFired<AutoPacketListener>&& apl);
 
   ~AutoPacketFactory(void);
 
