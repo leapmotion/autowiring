@@ -55,7 +55,7 @@ public:
     return box->second;
   }
 
-
+  void Initiate();
   void AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver);
   void AddEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
   void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);

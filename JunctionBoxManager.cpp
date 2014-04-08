@@ -10,11 +10,16 @@ JunctionBoxManager::JunctionBoxManager(void) {
   for(auto p = g_pFirstEntry; p; p = p->pFlink)
     m_junctionBoxes[p->ti] = p->m_NewJunctionBox();
 
-  m_junctionBoxes[typeid(AutoPacketListener)] = std::make_shared<JunctionBox<AutoPacketListener>>();
-  m_junctionBoxes[typeid(AutowiringEvents)] = std::make_shared<JunctionBox<AutowiringEvents>>();
+  //Always allow AutowiringEvents
+  m_junctionBoxes[typeid(AutowiringEvents)]->Initiate();
 }
 
 JunctionBoxManager::~JunctionBoxManager(void) {}
+
+void JunctionBoxManager::Initiate(void) {
+  for (auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
+    q->second->Initiate();
+}
 
 void JunctionBoxManager::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   // Notify all junctionboxes that there is a new event

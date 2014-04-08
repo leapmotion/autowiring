@@ -441,6 +441,8 @@ TEST_F(EventReceiverTest, VerifyNoActionWhileStopped) {
 
   // Now try to fire at the inner scope.  These fire calls MUST throw exceptions, because firing an
   // event during context setup (say, during a constructor) is an error.
+  ctxt->Initiate();
+  
   const char* fireErr = "Attempting to fire an event in an interior context did not correctly cause an exception";
   ASSERT_ANY_THROW(ciInner(&CallableInterface::ZeroArgs)()) << fireErr;
   ASSERT_ANY_THROW(ciInnerDeferred(&CallableInterfaceDeferred::ZeroArgsDeferred)()) << fireErr;
