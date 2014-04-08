@@ -334,6 +334,8 @@ TEST_F(DecoratorTest, VerifyReflexiveReciept) {
   AutoRequired<FilterD> filterD;
   AutoRequired<FilterE> filterE;
   Autowired<AutoPacketFactory> factory;
+  
+  AutoCurrentContext()->Initiate();
 
   // Obtain a packet first:
   auto packet = factory->NewPacket();
