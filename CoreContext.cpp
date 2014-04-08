@@ -33,7 +33,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_initiated(false),
   m_isShutdown(false),
   m_junctionBoxManager(std::make_shared<JunctionBoxManager>()),
-  m_packetFactory(std::make_shared<AutoPacketFactory>(GetJunctionBox<AutoPacketListener>()))
+  m_packetFactory(std::make_shared<AutoPacketFactory>(AutoFired<AutoPacketListener>(GetJunctionBox<AutoPacketListener>())))
 {
   assert(pParent.get() != this);
 }
