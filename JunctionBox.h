@@ -86,6 +86,10 @@ namespace std {
 /// </summary>
 class JunctionBoxBase {
 public:
+  JunctionBoxBase(void):
+    m_isInitiated(false)
+  {}
+  
   virtual ~JunctionBoxBase(void);
 
 protected:
@@ -95,6 +99,9 @@ protected:
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
+  
+  // This JunctionBox can fire and receive events
+  bool m_isInitiated;
 
   /// <summary>
   /// Invokes SignalTerminate on each context in the specified vector.  Does not wait.
@@ -119,6 +126,9 @@ protected:
   static std::weak_ptr<CoreContext> ContextDumbToWeak(CoreContext* pContext);
 
 public:
+  bool IsInitiated(void) const {return m_isInitiated;}
+  void Initiate(void) {m_isInitiated=true;}
+  
   // Accessor methods:
   std::vector<std::weak_ptr<EventOutputStreamBase> > * m_PotentialMarshals;
 
@@ -374,9 +384,10 @@ private:
 
 public:
   void operator()(const typename std::decay<Args>::type&... args) const {
-    if(!erp)
+    if(!erp || !erp->IsInitiated())
       // Context has already been destroyed
       return;
+    
 
     const auto& dq = erp->GetDispatchQueue();
     boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
@@ -411,7 +422,7 @@ public:
   /// </summary>
   /// <returns>False if an exception was thrown by a recipient, true otherwise</returns>
   bool operator()(Args... args) const {
-    if(!erp)
+    if(!erp || !erp->IsInitiated())
       // Context has already been destroyed
       return true;
 
