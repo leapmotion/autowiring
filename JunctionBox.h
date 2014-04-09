@@ -384,10 +384,12 @@ private:
 
 public:
   void operator()(const typename std::decay<Args>::type&... args) const {
-    if(!erp || !erp->IsInitiated())
+    if(!erp)
       // Context has already been destroyed
       return;
     
+    if(!erp->IsInitiated())
+      throw std::runtime_error("Attempted event firing before context was initiated");
 
     const auto& dq = erp->GetDispatchQueue();
     boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
@@ -422,9 +424,12 @@ public:
   /// </summary>
   /// <returns>False if an exception was thrown by a recipient, true otherwise</returns>
   bool operator()(Args... args) const {
-    if(!erp || !erp->IsInitiated())
+    if(!erp)
       // Context has already been destroyed
       return true;
+    
+    if(!erp->IsInitiated())
+      throw std::runtime_error("Attempted event firing before context was initiated");
 
     // Give the serializer a chance to handle these arguments:
     erp->SerializeInit(fnPtr, args...);
