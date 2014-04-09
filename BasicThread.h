@@ -163,7 +163,10 @@ protected:
 public:
   // Accessor methods:
   bool ShouldStop(void) const;
-  bool IsRunning(void) const override { return m_running; }
+  bool IsRunning(void) const override {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    return m_running;
+  }
 
   /// <summary>
   /// A convenience method that will sleep this thread for the specified duration
