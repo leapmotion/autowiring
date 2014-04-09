@@ -195,8 +195,8 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
       // Create a new descendant context and put the receiver in it:
       AutoCreateContext subCtxt;
       subCtxtWeak = subCtxt;
-      subCtxt->Initiate();
       CurrentContextPusher pshr(subCtxt);
+      subCtxt->Initiate();
 
       // Create a new descendant event receiver that matches a parent context type and should
       // be autowired to grab events from the parent:
@@ -209,6 +209,8 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
 
       // Verify that it gets caught:
       EXPECT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
+      
+      subCtxt->SignalShutdown(true);
     }
 
     // Verify subcontext is gone:
