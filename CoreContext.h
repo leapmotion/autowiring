@@ -105,7 +105,8 @@ public:
   /// domain with respect to each other, but are not in the same autowiring domain.  This can
   /// be useful where multiple instances of a particular object are desired, but inserting
   /// such objects into a simple child context is cumbersome because the objects at parent
-  /// scope are listening to events originating from objects at child scope.
+  /// scope are listening to events originating from objects at child scope. Events can be fired,
+  /// but not received, from an unintiated context if its peer is initiated.
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
@@ -903,7 +904,11 @@ public:
     return m_stateChanged.wait_for(lk, duration, [this] {return this->m_outstanding.expired();});
   }
   
-  void DelayUntilInitiated(void);
+  /// <summary>
+  /// Wait until the context is initiated or is shutting down
+  /// </summary>
+  /// <returns>True if initiated, false if shutting down</returns>
+  bool DelayUntilInitiated(void);
 
   /// <summary>
   /// This makes this core context current.
