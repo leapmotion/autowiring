@@ -35,7 +35,7 @@ public:
     (void)RegType<T>::r;
 
     auto box = m_junctionBoxes.find(pTypeIndex);
-    assert(box != m_junctionBoxes.end());;
+    assert(box != m_junctionBoxes.end());
 
     //Check here if any listening marshals might be interested in receiving the fired args
     auto mapfinditerator = m_eventOutputStreams.find(pTypeIndex);
