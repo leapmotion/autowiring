@@ -260,7 +260,7 @@ TEST_F(CoreThreadTest, VerifyTimedSort) {
     *t += boost::chrono::milliseconds(i * 3), [&v, i] { v.push_back(i); };
 
   // Delay 50ms for the thread to finish up.  Technically this is 11ms more than we need.
-  boost::this_thread::sleep_for(boost::chrono::seconds(1));
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(75));
 
   // Verify that the resulting vector is sorted.
   ASSERT_TRUE(std::is_sorted(v.begin(), v.end())) << "A timed sort implementation did not generate a sorted sequence as expected";
