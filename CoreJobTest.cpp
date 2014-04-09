@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "CoreJobTest.h"
 #include "CoreJob.h"
+#include "move_only.h"
 
 TEST_F(CoreJobTest, VerifySimpleProperties) {
   AutoRequired<CoreJob> jb;
@@ -93,4 +94,22 @@ TEST_F(CoreJobTest, VerifyNoEventReceivers){
   
   fire(&SimpleListen::SetFlag)();
   EXPECT_FALSE(listener->m_flag) << "Lister recived event event though it wasn't initiated";
+}
+
+class CanOnlyMove {
+public:
+  CanOnlyMove(){}
+  ~CanOnlyMove(){}
+  CanOnlyMove(const CanOnlyMove& derp) = delete;
+  CanOnlyMove(CanOnlyMove&& derp){}
+};
+
+TEST_F(CoreJobTest, MoveOnly){
+  CanOnlyMove move;
+  //CanOnlyMove derp = move; //error
+  
+  MoveOnly<CanOnlyMove> mo(std::move(move));
+  
+  MoveOnly<CanOnlyMove> first = mo;
+  //MoveOnly<CanOnlyMove> second = mo; //error
 }

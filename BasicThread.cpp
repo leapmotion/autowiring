@@ -52,7 +52,7 @@ void BasicThread::DoRun(std::shared_ptr<Object>&& refTracker) {
 
   // Run loop is over, time to clean up
   DoRunLoopCleanup(pusher.Pop());
-
+  
   // Clear our reference tracker, which will notify anyone who is asleep and also maybe
   // will destroy the entire underlying context.
   refTracker.reset();

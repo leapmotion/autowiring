@@ -2,7 +2,7 @@
 #include "ContextMember.h"
 #include "DispatchQueue.h"
 #include "CoreRunnable.h"
-#include <future>
+#include FUTURE_HEADER
 
 class Object;
 
