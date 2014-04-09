@@ -10,8 +10,9 @@ JunctionBoxManager::JunctionBoxManager(void) {
   for(auto p = g_pFirstEntry; p; p = p->pFlink)
     m_junctionBoxes[p->ti] = p->m_NewJunctionBox();
 
-  //Always allow AutowiringEvents
+  //Always allow internal events
   m_junctionBoxes[typeid(AutowiringEvents)]->Initiate();
+  m_junctionBoxes[typeid(AutoPacketListener)]->Initiate();
 }
 
 JunctionBoxManager::~JunctionBoxManager(void) {}
