@@ -144,12 +144,13 @@ TEST_F(ExceptionFilterTest, SimpleFilterCheck) {
   EXPECT_TRUE(filter->m_fireSpecific) << "Filter was not invoked on a Fired exception";
 }
 
-TEST_F(ExceptionFilterTest, DISABLED_FireContainmentCheck) {
+TEST_F(ExceptionFilterTest, FireContainmentCheck) {
   // Firing will occur at the parent context scope:
   AutoFired<ThrowingListener> broadcaster;
 
   // Create a subcontext and add the fire thrower to it:
   AutoCreateContext ctxt;
+  ctxt->Initiate();
   ctxt->Inject<ThrowsWhenFired<>>();
 
   // Now cause the exception to occur:

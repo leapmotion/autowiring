@@ -2,29 +2,25 @@
 #include "CoreJobTest.h"
 #include "CoreJob.h"
 
-TEST_F(CoreJobTest, DISABLED_VerifySimpleProperties) {
-  // We expect to block forever here, this is OK:
-  ASSERT_FALSE(m_create->Wait(boost::chrono::milliseconds(1))) << "Initial context wait check returned prematurely";
-
+TEST_F(CoreJobTest, VerifySimpleProperties) {
   AutoRequired<CoreJob> jb;
 
   ASSERT_FALSE(m_create->IsInitiated()) << "CoreJob reported it could receive events before its enclosing context was created";
 
   // Create a thread which will delay for acceptance, and then quit:
-  boost::thread t([&jb] {
-    //jb->DelayUntilInitiated();
+  boost::thread t([this] {
+    m_create->DelayUntilInitiated();
   });
 
   // Verify that this thread doesn't back out right away:
   ASSERT_FALSE(t.try_join_for(boost::chrono::milliseconds(10))) << "CoreJob did not block a client who was waiting for its readiness to accept dispatchers";
 
   // Now start the context and verify that certain properties changed as anticipated:
-  //m_create->Initiate();
-  //ASSERT_TRUE(jb->DelayUntilCanAccept()) << "CoreJob did not correctly delay for dispatch acceptance";
-  //ASSERT_TRUE(jb->CanAccept()) << "CoreJob failed to correctly report that it could accept dispatch events";
+  m_create->Initiate();
+  ASSERT_TRUE(m_create->DelayUntilInitiated()) << "CoreJob did not correctly delay for dispatch acceptance";
 
   // Verify that the blocked thread has become unblocked and quits properly:
-  //ASSERT_TRUE(t.try_join_for(boost::chrono::seconds(1))) << "CoreJob did not correctly signal a blocked thread that it was ready to accept dispatchers";
+  ASSERT_TRUE(t.try_join_for(boost::chrono::seconds(1))) << "CoreJob did not correctly signal a blocked thread that it was ready to accept dispatchers";
 }
 
 TEST_F(CoreJobTest, VerifySimpleSubmission) {

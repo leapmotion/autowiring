@@ -221,9 +221,10 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   }
 }
 
-void CoreContext::DelayUntilInitiated(void) {
+bool CoreContext::DelayUntilInitiated(void) {
   boost::unique_lock<boost::mutex> lk(m_lock);
-  m_stateChanged.wait(lk, [this]{return m_initiated;});
+  m_stateChanged.wait(lk, [this]{return m_initiated || m_isShutdown;});
+  return !m_isShutdown;
 }
 
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
