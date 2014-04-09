@@ -2,7 +2,6 @@
 #include "CoreJob.h"
 #include "CoreContext.h"
 #include "move_only.h"
-#include <future>
 
 CoreJob::CoreJob(const char* name) :
   ContextMember(name),
