@@ -186,7 +186,10 @@ protected:
 public:
   // Accessor methods:
   bool ShouldStop(void) const;
-  bool IsRunning(void) const { return m_running; }
+  bool IsRunning(void) const {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    return m_running;
+  }
 
   // Override from EventDispatcher
   bool CanAccept(void) const override {return m_canAccept;}
