@@ -25,7 +25,10 @@
     <![endif]-->
 
     <!-- Add your site or application content here -->
-    <div class="container" ng-view=""></div>
+    <div class="container">
+        <div ng-include src=" 'views/header.html' "></div>
+        <div ng-view=""></div>
+    </div>
 
     <!--[if lt IE 9]>
     <script src="bower_components/es5-shim/es5-shim.js"></script>
@@ -54,6 +57,8 @@
         <script src="scripts/controllers/header.js"></script>
         <script src="scripts/directives/directedgraph.js"></script>
         <script src="scripts/filters/display.js"></script>
+        <script src="scripts/controllers/Raw.js"></script>
+        <script src="scripts/controllers/FilterGraph.js"></script>
         <!-- endbuild -->
 </body>
 </html>

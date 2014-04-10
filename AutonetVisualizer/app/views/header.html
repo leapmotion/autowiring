@@ -1,0 +1,7 @@
+<div class="header section" ng-controller="HeaderCtrl">
+  <ul class="nav nav-pills pull-right">
+    <li ng-class="{active: isSubscribed && isConnected(), disabled: !isConnected()}"><a ng-disabled="!isConnected()" ng-click="subscribe()">Subscribed</a></li>
+    <li ng-class="{active: !isSubscribed && isConnected(), disabled: !isConnected()}"><a ng-disabled="!isConnected()" ng-click="unsubscribe()">Unsubscribed</a></li>
+  </ul>
+  <h3 class="text-muted" ng-class="{connected: isConnected(), disconnected: !isConnected()}">AutoNet</h3>
+</div>
