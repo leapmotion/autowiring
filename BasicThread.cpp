@@ -76,14 +76,14 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   // don't try to refer to any of our own member variables, because our own object may have
   // already gone out of scope.  [this] is potentially dangling.
   ctxt.reset();
+  
+  // Clear our reference tracker, which will notify anyone who is asleep and also maybe
+  // will destroy the entire underlying context.
+  refTracker.reset();
 
   // Notify other threads that we are done.  At this point, any held references that might
   // still exist are held by entities other than ourselves.
   state->m_stateCondition.notify_all();
-
-  // Clear our reference tracker, which will notify anyone who is asleep and also maybe
-  // will destroy the entire underlying context.
-  refTracker.reset();
 }
 
 bool BasicThread::ShouldStop(void) const {
