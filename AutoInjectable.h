@@ -40,6 +40,21 @@ private:
 };
 
 /// <summary>
+/// Specialization for cases when no arguments are needed
+/// </summary>
+template<class T>
+class AutoInjectableExpression<T>:
+  public AutoInjectableExpressionBase
+{
+public:
+  void operator()(AutoFuture* pFuture) const override {
+    auto added = CoreContext::CurrentContext()->Construct<T>();
+    if(pFuture)
+      *pFuture += added;
+  }
+};
+
+/// <summary>
 /// A deafult injectable expression with a no-op behavior
 /// </summary>
 template<>
