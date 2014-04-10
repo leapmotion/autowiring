@@ -93,7 +93,14 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt)
 
 void BasicThread::WaitForStateUpdate(const std::function<bool()>& fn) {
   boost::unique_lock<boost::mutex> lk(m_state->m_lock);
-  m_state->m_stateCondition.wait(lk, fn);
+  m_state->m_stateCondition.wait(
+    lk,
+    [&fn, this] {
+      return fn() || ShouldStop();
+    }
+  );
+  if(ShouldStop())
+    throw dispatch_aborted_exception();
 }
 
 void BasicThread::PerformStatusUpdate(const std::function<void()>& fn) {
