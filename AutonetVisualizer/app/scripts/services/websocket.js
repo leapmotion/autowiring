@@ -53,7 +53,6 @@ angular.module('autoNetApp')
     on: function(eventName, callback) {
       console.log('Event Registered: ', eventName);
       $rootScope.$on(eventName,function(event, args){
-        console.log(eventName, args);
         callback.apply(socket, args);
         $rootScope.$digest();
       });

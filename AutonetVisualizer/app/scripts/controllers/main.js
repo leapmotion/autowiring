@@ -22,15 +22,14 @@ angular.module('autoNetApp')
   });
 
   websocket.on('newContext', function(context){
-    console.log('New Context:',context);
     if (! (context.id in $scope.contexts)) {
-      console.log('new',context);
       $scope.contexts[context.id] = new Context(context);
+    } else {
+      console.log('context alreadys exists');
     }
   });
 
   websocket.on('expiredContext', function(contextID){
-    console.log('Expired Context', contextID);
     delete $scope.contexts[contextID];
   });
 
@@ -66,7 +65,7 @@ angular.module('autoNetApp')
       console.log("EventReceiver already exists");
     }
   });
-  
+
   websocket.on('newBolt', function(contextID, serverBolt){
     console.log("bolt");
     var updatedContext = $scope.contexts[contextID];

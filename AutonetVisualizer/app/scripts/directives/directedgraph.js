@@ -30,7 +30,6 @@ angular.module('autoNetApp')
 
       // Watch for any new or deleted nodes
       scope.$watch('nodes', function(nodeMap) {
-        console.log("nodemap",nodeMap);
         var nodes = _.values(nodeMap);
         // Add any new nodes
         _.each(nodes, function(node) {
