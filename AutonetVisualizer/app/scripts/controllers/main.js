@@ -66,7 +66,7 @@ angular.module('autoNetApp')
       console.log("EventReceiver already exists");
     }
   });
-
+  
   websocket.on('newBolt', function(contextID, serverBolt){
     console.log("bolt");
     var updatedContext = $scope.contexts[contextID];

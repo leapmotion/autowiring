@@ -26,7 +26,7 @@
 
     <!-- Add your site or application content here -->
     <div class="container">
-        <div ng-include src=" 'views/header.html' "></div>
+        <div ng-controller="HeaderCtrl"  ng-include src=" 'views/header.html' "></div>
         <div ng-view=""></div>
     </div>
 
