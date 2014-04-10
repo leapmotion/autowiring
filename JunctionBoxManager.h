@@ -2,20 +2,18 @@
 #include "JunctionBox.h"
 #include "TypeRegistry.h"
 #include TYPE_INDEX_HEADER
-#include FUNCTIONAL_HEADER
-#include RVALUE_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_SET
 #include STL_UNORDERED_MAP
 #include TYPE_TRAITS_HEADER
-#include <set>
-
-//A thread-safe way to share junctionBoxes between peer contexts
 
 class EventReceiver;
 class CoreContext;
 
-class JunctionBoxManager{
+/// <summary>
+/// General manager class of all junction boxes defined in some context
+/// </summary>
+class JunctionBoxManager {
   typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
   typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
 
@@ -23,7 +21,6 @@ class JunctionBoxManager{
   std::map<std::type_index, std::vector<std::weak_ptr<EventOutputStreamBase>>> m_eventOutputStreams;
 
 public:
-
   JunctionBoxManager();
   virtual ~JunctionBoxManager();
 
@@ -55,7 +52,11 @@ public:
     return box->second;
   }
 
-  void Initiate();
+  /// <summary>
+  /// Allows this JunctionBox manager to begin processing events
+  /// </summary>
+  void Initiate(void);
+
   void AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver);
   void AddEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
   void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
