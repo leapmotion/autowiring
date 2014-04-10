@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "BasicThread.h"
+#include "BasicThreadStateBlock.h"
 #include <Windows.h>
 #include <Avrt.h>
 
@@ -33,7 +34,7 @@ void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
 
 void BasicThread::SetCurrentThreadName(void) const {
   if(IS_INTERNAL_BUILD)
-    ::SetThreadName(m_thisThread.get_thread_info()->id, m_name);
+    ::SetThreadName(m_state->m_thisThread.get_thread_info()->id, m_name);
 }
 
 bool SetCapturePriority(void) {
@@ -87,7 +88,7 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
   }
 
   ::SetThreadPriority(
-    m_thisThread.native_handle(),
+    m_state->m_thisThread.native_handle(),
     nPriority
   );
 }

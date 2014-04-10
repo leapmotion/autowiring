@@ -27,8 +27,7 @@ public:
 
     m_hit = false;
 
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    m_stateCondition.wait(lk, [this] () {return ShouldStop();});
+    CoreThread::Run();
   }
 };
 
