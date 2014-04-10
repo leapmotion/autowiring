@@ -138,7 +138,6 @@ public:
 TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
   m_create->Initiate();
   AutoRequired<CoreThread> ct;
-  ct->DelayUntilCanAccept();
 
   // Just create a CoreThread directly and have it pend some lambdas that will take awhile to run:
   auto called = std::make_shared<bool>(false);
@@ -155,7 +154,6 @@ TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
 TEST_F(ContextCleanupTest, VerifyImmediateThreadCleanup) {
   m_create->Initiate();
   AutoRequired<CoreThread> ct;
-  ct->DelayUntilCanAccept();
 
   // Just create a CoreThread directly and have it pend some lambdas that will take awhile to run:
   auto called = std::make_shared<bool>(false);
