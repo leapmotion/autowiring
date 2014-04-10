@@ -104,10 +104,6 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
   // Verify that the thread didn't exit too soon:
   ASSERT_FALSE(listener1->ShouldStop()) << "Thread was signalled to stop even though it should have been deferring";
 
-  // Spin until both threads are ready to accept:
-  ASSERT_TRUE(listener1->DelayUntilCanAccept()) << "First listener reported it could not accept";
-  ASSERT_TRUE(listener2->DelayUntilCanAccept()) << "Second listener reported it could not accept";
-
   // Now try deferring:
   cdl(&CtorDtorListener::DoDeferred)(CtorDtorCopyCounter());
 
