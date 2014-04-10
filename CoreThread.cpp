@@ -57,8 +57,13 @@ void CoreThread::DoRun(std::shared_ptr<Object>&& refTracker) {
     Abort();
   }
 
+  // Take a copy of our state condition shared pointer while we still hold a reference to
+  // ourselves.  This is the only member out of our collection of members that we actually
+  // need to hold a reference to.
+  auto state = m_state;
+
   // Notify everyone that we're completed:
-  boost::lock_guard<boost::mutex> lk(m_lock);
+  boost::lock_guard<boost::mutex> lk(state->m_lock);
   m_stop = true;
   m_completed = true;
   m_running = false;
@@ -68,11 +73,6 @@ void CoreThread::DoRun(std::shared_ptr<Object>&& refTracker) {
 
   // No longer running, we MUST release the thread pointer to ensure proper teardown order
   m_thisThread.detach();
-
-  // Take a copy of our state condition shared pointer while we still hold a reference to
-  // ourselves.  This is the only member out of our collection of members that we actually
-  // need to hold a reference to.
-  auto state = m_state;
 
   // Release our hold on the context.  After this point, we have to be VERY CAREFUL that we
   // don't try to refer to any of our own member variables, because our own object may have
