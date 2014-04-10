@@ -130,7 +130,6 @@ TEST_F(CoreThreadTest, VerifyDispatchQueueShutdown) {
   try
   {
     ctxt->Initiate();
-    listener->DelayUntilCanAccept();
 
     AutoFired<SleepEvent> evt;
 
@@ -157,7 +156,6 @@ TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
   try
   {
     ctxt->Initiate();
-    listener->DelayUntilCanAccept();
 
     *listener += [value] { throw std::exception(); };
     value.reset();
@@ -180,7 +178,6 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
 
   // Delay until the dispatch loop is actually running, then wait an additional 1ms to let the
   // WaitForEvent call catch on:
-  t->DelayUntilCanAccept();
   boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 
   // These are flags--we'll set them to true as the test proceeds
@@ -205,7 +202,6 @@ TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
 
   // This deferred pend will never actually be executed:
   AutoRequired<CoreThread> t;
-  t->DelayUntilCanAccept();
   *t += boost::chrono::hours(1), [x] {};
 
   // Verify that we have exactly one pended event at this point.
@@ -228,7 +224,6 @@ TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
   // pend an event that won't happen for awhile, in order to trick the dispatch queue into waiting for
   // a lot longer than it should for the next event.
   AutoRequired<CoreThread> t;
-  t->DelayUntilCanAccept();
   *t += boost::chrono::hours(1), [x] { *x = true; };
 
   // Now pend an event that will be ready just about right away:
@@ -269,7 +264,6 @@ TEST_F(CoreThreadTest, VerifyTimedSort) {
 TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
   m_create->Initiate();
   AutoRequired<CoreThread> t;
-  t->DelayUntilCanAccept();
 
   // Pend by an absolute time point, nothing really special here
   std::shared_ptr<bool> x(new bool(false));

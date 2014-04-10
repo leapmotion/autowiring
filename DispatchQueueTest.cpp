@@ -49,7 +49,6 @@ TEST_F(DispatchQueueTest, PathologicalStartAndStop){
   AutoRequired<Thread<3>> t3;
   AutoRequired<Thread<4>> t4;
   m_create->Initiate();
-  t1->DelayUntilCanAccept();
 
   // We don't need a strong guarantee that these threads exit in a timely fashion, just that they
   // do so _eventually_.
