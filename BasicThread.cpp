@@ -119,8 +119,9 @@ bool BasicThread::IsRunning(void) const {
   return m_running;
 }
 
-void BasicThread::ThreadSleep(long millisecond) {
-  boost::this_thread::sleep(boost::posix_time::milliseconds(millisecond));
+bool BasicThread::ThreadSleep(boost::chrono::nanoseconds timeout) {
+  boost::unique_lock<boost::mutex> lk(m_state->m_lock);
+  return m_state->m_stateCondition.wait_for(lk, timeout, [this] { return ShouldStop(); });
 }
 
 bool BasicThread::Start(std::shared_ptr<Object> outstanding) {
