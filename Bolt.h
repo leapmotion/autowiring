@@ -19,20 +19,15 @@ class Bolt:
   public BoltBase
 {
 public:
-  Bolt(void) {
-    bool dummy[] = {
-      (m_BoltedTypes.push_back(typeid(Sigil)), false)...
+  const t_TypeInfoVector GetContextSigils(void) override {
+    static const std::type_info* sc_types[] = {
+      &typeid(Sigil)...,
+      nullptr
     };
-    (void) dummy;
-  }
-
-  const t_TypeInfoVector& GetContextSigils(void){
-    return m_BoltedTypes;
+    return sc_types;
   }
 
   static_assert(!is_any_same<void, Sigil...>::value, "Can't use 'void' as a sigil type");
-private:
-  t_TypeInfoVector m_BoltedTypes;
 };
 
 template<>
@@ -40,9 +35,8 @@ class Bolt<>:
   public BoltBase
 {
 public:
-  const t_TypeInfoVector& GetContextSigils(void){
-    return m_BoltedTypes;
+  const t_TypeInfoVector GetContextSigils(void) override {
+    static const std::type_info* sc_types[] = {nullptr};
+    return sc_types;
   }
-private:
-  t_TypeInfoVector m_BoltedTypes;
 };
