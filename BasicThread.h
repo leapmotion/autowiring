@@ -48,13 +48,7 @@ public:
   virtual ~BasicThread(void) {}
   
 private:
-  struct State:
-    std::enable_shared_from_this<State>
-  {
-    // General purpose thread lock and update condition for the lock
-    boost::mutex m_lock;
-    boost::condition_variable m_stateCondition;
-  };
+  struct State;
   
 protected:
   // Internally held thread status block.  This has to be a shared pointer because we need to signal
@@ -200,41 +194,20 @@ public:
   /// <remarks>
   /// Unlike Join, this method may be invoked even if the CoreThread isn't running
   /// </remarks>
-  void Wait(void) override {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    m_state->m_stateCondition.wait(
-      lk,
-      [this]() {return this->m_completed; }
-    );
-  }
+  void Wait(void) override;
 
   /// <summary>
   /// Timed version of Wait
   /// </summary>
   /// <returns>False if the timeout elapsed, true otherwise</returns>
-  template<class DurationType>
-  bool WaitFor(DurationType duration) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_state->m_stateCondition.wait_for(
-      lk,
-      duration,
-      [this] () {return this->m_completed;}
-    );
-  }
+  bool WaitFor(boost::chrono::nanoseconds duration);
 
   /// <summary>
   /// Timed version of Wait
   /// </summary>
   /// <returns>False if the timeout elapsed, true otherwise</returns>
   template<class TimeType>
-  bool WaitUntil(TimeType timepoint) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_stateCondition.wait_until(
-      lk,
-      timepoint,
-      [this]() {return this->m_completed; }
-    );
-  }
+  bool WaitUntil(TimeType timepoint);
 
   /// <summary>
   /// Event which may be used to perform custom handling when the thread is told to stop
