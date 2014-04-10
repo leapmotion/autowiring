@@ -82,8 +82,6 @@ set(Autowiring_SRCS
   ReentrantCounter.cpp
   SimpleOwnershipValidator.h
   SimpleOwnershipValidator.cpp
-  StateMachine.h
-  StateMachine.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
   TypeRegistry.h
@@ -197,8 +195,6 @@ set(AutowiringTest_SRCS
   SnoopTest.cpp
   SimpleOwnershipValidatorTest.h
   SimpleOwnershipValidatorTest.cpp
-  StateMachineTest.h
-  StateMachineTest.cpp
   TestFixtures/custom_exception.h
   TestFixtures/ExitRaceThreaded.h
   TestFixtures/SimpleInterface.h
