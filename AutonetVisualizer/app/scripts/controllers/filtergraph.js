@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('autoNetApp')
-  .controller('FiltergraphCtrl', function ($scope) {
+  .controller('FilterGraphCtrl', function ($scope) {
     $scope.awesomeThings = [
       'HTML5 Boilerplate',
       'AngularJS',
