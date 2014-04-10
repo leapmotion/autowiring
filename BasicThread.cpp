@@ -1,4 +1,3 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "BasicThread.h"
 #include "Autowired.h"
@@ -6,7 +5,17 @@
 #include "move_only.h"
 #include <boost/thread.hpp>
 
-class CoreThread;
+// Explicit instantiation of supported time point types:
+template<> bool BasicThread::WaitUntil(boost::chrono::high_resolution_clock::time_point);
+template<> bool BasicThread::WaitUntil(boost::chrono::system_clock::time_point);
+
+struct BasicThread::State :
+  std::enable_shared_from_this<State>
+{
+  // General purpose thread lock and update condition for the lock
+  boost::mutex m_lock;
+  boost::condition_variable m_stateCondition;
+};
 
 BasicThread::BasicThread(const char* pName):
   ContextMember(pName),
@@ -120,6 +129,33 @@ bool BasicThread::Start(std::shared_ptr<Object> outstanding) {
     }
   );
   return true;
+}
+
+void BasicThread::Wait(void) {
+  boost::unique_lock<boost::mutex> lk(m_lock);
+  m_state->m_stateCondition.wait(
+    lk,
+    [this]() {return this->m_completed; }
+  );
+}
+
+bool BasicThread::WaitFor(boost::chrono::nanoseconds duration) {
+  boost::unique_lock<boost::mutex> lk(m_lock);
+  return m_state->m_stateCondition.wait_for(
+    lk,
+    duration,
+    [this]() {return this->m_completed; }
+  );
+}
+
+template<class TimeType>
+bool BasicThread::WaitUntil(TimeType timepoint) {
+  boost::unique_lock<boost::mutex> lk(m_lock);
+  return m_stateCondition.wait_until(
+    lk,
+    timepoint,
+    [this]() {return this->m_completed; }
+  );
 }
 
 void BasicThread::Stop(bool graceful) {
