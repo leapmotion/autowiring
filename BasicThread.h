@@ -1,15 +1,18 @@
 #pragma once
 #include "ContextMember.h"
 #include "CoreRunnable.h"
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/thread.hpp>
+#include <boost/chrono/duration.hpp>
 #include SHARED_PTR_HEADER
 
 using std::shared_ptr;
 
-class CoreContext;
+struct BasicThreadStateBlock;
 class BasicThread;
+class CoreContext;
+
+namespace boost {
+  class mutex;
+}
 
 enum class ThreadPriority {
   // This is the default thread priority, it's treated as a value lower than any of the
@@ -47,18 +50,11 @@ public:
   
   virtual ~BasicThread(void) {}
   
-private:
-  struct State;
-  
 protected:
   // Internally held thread status block.  This has to be a shared pointer because we need to signal
   // the held state condition after releasing all shared pointers to ourselves, and this could mean
   // we're actually signalling this event after we free ourselves.
-  const std::shared_ptr<State> m_state;
-  
-  // Convenience references:
-  boost::mutex& m_lock;
-  boost::condition_variable& m_stateCondition;
+  const std::shared_ptr<BasicThreadStateBlock> m_state;
   
   // Flag indicating that we need to stop right now
   bool m_stop;
@@ -71,9 +67,6 @@ protected:
   
   // The current thread priority
   ThreadPriority m_priority;
-  
-  // The current thread, if running
-  boost::thread m_thisThread;
   
   friend class ThreadStatusMaintainer;
   
@@ -100,6 +93,11 @@ private:
 
 protected:
   /// <summary>
+  /// Recovers a general lock used to synchronize entities in this thread internally
+  /// </summary>
+  boost::mutex& GetLock(void);
+
+  /// <summary>
   /// Routine that sets up the necessary extranea before a call to Run
   /// </summary>
   /// <remarks>
@@ -117,7 +115,6 @@ protected:
   /// Performs all cleanup operations that must take place after DoRun
   /// </summary>
   /// <param name="pusher">The last reference to the enclosing context held by this thread</param>
-  /// 
   virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt);
   
   void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
@@ -153,14 +150,21 @@ protected:
     ThreadPriority m_oldPriority;
     BasicThread& m_thread;
   };
+
+  /// <summary>
+  /// Performs a state condition wait using the specified lambda to judge completeness
+  /// </summary>
+  void WaitForStateUpdate(const std::function<bool()>& fn);
+
+  /// <summary>
+  /// Obtains a mutex, invokes the specified lambda, and then updates the basic thread's state condition
+  /// </summary>
+  void PerformStatusUpdate(const std::function<void()>& fn);
   
 public:
   // Accessor methods:
   bool ShouldStop(void) const;
-  bool IsRunning(void) const override {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    return m_running;
-  }
+  bool IsRunning(void) const override;
 
   /// <summary>
   /// A convenience method that will sleep this thread for the specified duration

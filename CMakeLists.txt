@@ -28,14 +28,15 @@ set(Autowiring_SRCS
   AutowirableSlot.cpp
   AutowiringEvents.h
   autowiring_error.h
+  BasicThread.h
+  BasicThread.cpp
+  BasicThreadStateBlock.h
+  BasicThreadStateBlock.cpp
+  Bolt.h
+  BoltBase.h
   ContextCreator.h
   ContextCreatorBase.h
   ContextCreatorBase.cpp
-  CreationRules.h
-  BasicThread.h
-  BasicThread.cpp
-  Bolt.h
-  BoltBase.h
   ContextMap.h
   ContextMember.cpp
   ContextMember.h
@@ -44,6 +45,7 @@ set(Autowiring_SRCS
   CoreThread.cpp
   CoreThread.h
   CoreRunnable.h
+  CreationRules.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
   Decompose.h
