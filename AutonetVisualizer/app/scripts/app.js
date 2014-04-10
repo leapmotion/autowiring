@@ -1,9 +1,7 @@
 'use strict';
 
 angular.module('autoNetApp', [
-  'ngRoute',
-  'mgcrea.ngStrap.alert',
-  'mgcrea.ngStrap.navbar'
+  'ngRoute'
 ])
 .config(['$routeProvider', function ($routeProvider) {
   $routeProvider
