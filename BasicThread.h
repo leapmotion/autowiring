@@ -67,9 +67,6 @@ protected:
   
   // The current thread priority
   ThreadPriority m_priority;
-  
-  friend class ThreadStatusMaintainer;
-  
 
   /// <summary>
   /// Assigns the name of the thread, for use in debugger windows
