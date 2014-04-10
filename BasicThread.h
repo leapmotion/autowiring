@@ -160,16 +160,25 @@ protected:
   /// Obtains a mutex, invokes the specified lambda, and then updates the basic thread's state condition
   /// </summary>
   void PerformStatusUpdate(const std::function<void()>& fn);
+
+  /// <summary>
+  /// A convenience method that will sleep this thread for the specified duration
+  /// </summary>
+  /// <returns>False if the thread was terminated before the timeout elapsed</returns>
+  /// <remarks>
+  /// Events are dispatched by this method while the sleep is taking place, which makes this
+  /// method similar to an alertable wait on Windows.  Callers are cautioned against holding
+  /// locks while calling this method; if this is done, a deadlock could result.
+  ///
+  /// Callers should not invoke this method outside of this thread's thread context, or an
+  /// interruption exception could result.
+  /// </remarks>
+  bool ThreadSleep(boost::chrono::nanoseconds timeout);
   
 public:
   // Accessor methods:
   bool ShouldStop(void) const;
   bool IsRunning(void) const override;
-
-  /// <summary>
-  /// A convenience method that will sleep this thread for the specified duration
-  /// </summary>
-  void ThreadSleep(long millisecond);
 
   /// <summary>
   /// Causes a new thread to be created in which the Run method will be invoked
