@@ -1,7 +1,5 @@
 #pragma once
 #include <boost/chrono/system_clocks.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/mutex.hpp>
 
 /// <summary>
 /// A simple virtual class used to hold a trivial thunk
