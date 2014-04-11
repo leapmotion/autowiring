@@ -1,6 +1,7 @@
 #pragma once
 #include "JunctionBox.h"
 #include "TypeRegistry.h"
+#include "uuid.h"
 #include TYPE_INDEX_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_SET
