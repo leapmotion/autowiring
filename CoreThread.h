@@ -31,7 +31,7 @@ protected:
   /// <summary>
   /// Overridden here so we can rundown the dispatch queue
   /// </summary>
-  virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt) override;
+  virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<Object>&& refTracker) override;
 
 public:
   /// <summary>
