@@ -112,7 +112,7 @@ protected:
   /// Performs all cleanup operations that must take place after DoRun
   /// </summary>
   /// <param name="pusher">The last reference to the enclosing context held by this thread</param>
-  virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt);
+  virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<Object>&& refTracker);
   
   void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
   
