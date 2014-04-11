@@ -39,6 +39,7 @@ angular.module('autoNetApp')
 
   websocket.on('unsubscribed', function(){
     ContextMap = {};
+    EventHistory = new Messages(200);
   });
 
   websocket.on('newContext', function(context){
