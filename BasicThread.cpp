@@ -55,15 +55,10 @@ void BasicThread::DoRun(std::shared_ptr<Object>&& refTracker) {
   }
 
   // Run loop is over, time to clean up
-  DoRunLoopCleanup(pusher.Pop());
-  
-  // Clear our reference tracker, which will notify anyone who is asleep and also maybe
-  // will destroy the entire underlying context.
-  refTracker.reset();
+  DoRunLoopCleanup(pusher.Pop(), std::move(refTracker));
 }
 
-void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt)
-{
+void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<Object>&& refTracker) {
   // Take a copy of our state condition shared pointer while we still hold a reference to
   // ourselves.  This is the only member out of our collection of members that we actually
   // need to hold a reference to.
@@ -86,6 +81,10 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt)
   // already gone out of scope.  [this] is potentially dangling.
   ctxt.reset();
   
+  // Clear our reference tracker, which will notify anyone who is asleep and also maybe
+  // will destroy the entire underlying context.
+  refTracker.reset();
+
   // Notify other threads that we are done.  At this point, any held references that might
   // still exist are held by entities other than ourselves.
   state->m_stateCondition.notify_all();
