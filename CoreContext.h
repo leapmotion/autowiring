@@ -14,12 +14,12 @@
 #include "DeferredBase.h"
 #include "fast_pointer_cast.h"
 #include "result_or_default.h"
+#include "SharedPointerSlot.h"
 #include "JunctionBox.h"
 #include "JunctionBoxManager.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
 #include "ExceptionFilter.h"
-#include "PolymorphicTypeForest.h"
 #include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
 #include "uuid.h"
@@ -225,7 +225,7 @@ protected:
   // This map keeps all of its objects resident at least until the context goes away.
   // "Object" is named here as an explicit ground type in order to allow arbitrary casting from Object-
   // derived types.
-  PolymorphicTypeForest<ExplicitGrounds<Object>> m_byType;
+  std::unordered_map<std::type_index, SharedPointerSlot> m_byType;
 
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
@@ -472,19 +472,6 @@ protected:
 
   template<typename T>
   void AddInternal(const std::shared_ptr<T>& value, boost::unique_lock<boost::mutex>&& lock) {
-    // Extract ground for this value, we'll use it to select the correct forest for the value:
-    typedef typename ground_type_of<T>::type groundType;
-
-    // If Object appears in your ancestry then you MUST make object your ground type.  Typically
-    // this is as simple as adding this line to the definition of T with public access:
-    //
-    //  typedef Object ground
-    static_assert(
-      !std::is_base_of<Object, T>::value ||
-      std::is_same<typename ground_type_of<T>::type, Object>::value,
-      "If T inherits from Object (for instance, via ContextMember or CoreRunnable), then T::grounds must be of type Object"
-    );
-
     // Shared pointer to our entity, if it's a CoreRunnable
     std::shared_ptr<CoreRunnable> pCoreRunnable;
 
@@ -493,14 +480,14 @@ protected:
 
       // Validate that this addition does not generate an ambiguity:
       std::shared_ptr<T> ptr;
-      m_byType.Resolve(ptr);
+      FindByType(ptr);
       if(ptr == value)
         throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
       if(ptr)
         throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
 
       // Add a new member of the forest:
-      m_byType.AddTree(value);
+      m_byType[typeid(T)] = value;
 
       // Context members:
       auto pContextMember = leap::fast_pointer_cast<ContextMember, T>(value);
@@ -592,7 +579,7 @@ public:
     boost::unique_lock<boost::mutex> lk(m_lock);
 
     std::shared_ptr<T> ptr;
-    m_byType.Resolve(ptr);
+    FindByType(ptr);
     if(ptr)
       return ptr;
 
@@ -606,7 +593,7 @@ public:
 
     // Reattempt resolution, short-circuiting if an injection of this type took place:
     std::shared_ptr<T> ptr2;
-    m_byType.Resolve(ptr2);
+    FindByType(ptr2);
     if(ptr2)
       return ptr2;
 
@@ -825,7 +812,7 @@ public:
     return
       pMember ?
       pMember->GetContext().get() == this :
-      m_byType.Contains<T>();
+      !!m_byType.count(typeid(T));
   }
 
   template<class T>
@@ -1019,8 +1006,13 @@ public:
   template<class T>
   void FindByType(std::shared_ptr<T>& slot) {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    if(!m_byType.Resolve(slot))
-      throw_rethrowable autowiring_error("An autowiring operation resulted in an ambiguous match");
+
+    // Try to find the type directly:
+    auto q = m_byType.find(typeid(T));
+    if(q != m_byType.end())
+      return;
+
+    // TODO:  Resolve based on dynamic cast operations
   }
 
   // Interior type overrides:
