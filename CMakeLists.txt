@@ -75,9 +75,9 @@ set(Autowiring_SRCS
   ObjectPoolMonitor.cpp
   move_only.h
   MicroBolt.h
-  PolymorphicTypeForest.h
   ReentrantCounter.h
   ReentrantCounter.cpp
+  SharedPointerSlot.h
   SimpleOwnershipValidator.h
   SimpleOwnershipValidator.cpp
   StateMachine.h
@@ -175,14 +175,14 @@ set(AutowiringTest_SRCS
   ObjectPoolTest.cpp
   PeerContextTest.h
   PeerContextTest.cpp
-  PolymorphicTypeForestTest.h
-  PolymorphicTypeForestTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
   ReentrantCounterTest.h
   ReentrantCounterTest.cpp
   SelfSelectingFixtureTest.h
   SelfSelectingFixtureTest.cpp
+  SharedPointerSlotTest.h
+  SharedPointerSlotTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
   CoreJobTest.h

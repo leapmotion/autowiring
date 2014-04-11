@@ -286,8 +286,8 @@ void CoreContext::BuildCurrentState(void) {
 void CoreContext::Dump(std::ostream& os) const {
   boost::lock_guard<boost::mutex> lk(m_lock);
   for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
-    os << q->first.derived.name();
-    const void* pObj = q->second->RawPointer();
+    os << q->first.name();
+    const void* pObj = q->second;
     if(pObj)
       os << " 0x" << hex << pObj;
     os << endl;
