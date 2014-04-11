@@ -3,11 +3,9 @@
 #include "DispatchThunk.h"
 #include "EventReceiver.h"
 #include "ObjectPool.h"
-#include "PolymorphicTypeForest.h"
 #include "fast_pointer_cast.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
-#include "PolymorphicTypeForest.h"
 #include "uuid.h"
 #include <boost/thread/mutex.hpp>
 #include "fast_pointer_cast.h"
