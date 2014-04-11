@@ -2,8 +2,7 @@
 
 angular.module('autoNetApp')
 .factory('LeapState', function LeapState(websocket) {
-  
-  //This object is the "values" in $scope.contexts
+
   function Context(ctxt){
     this.members = [];
     this.threads = [];
@@ -15,7 +14,28 @@ angular.module('autoNetApp')
     _.extend(this, ctxt)
   }
 
+  function Message(name,info) {
+    this.name = name;
+    this.info = info
+  };
+  
+  function Messages(maxSize){
+    this.maxSize = maxSize;
+    this.messages = [];
+  }
+
+  Messages.prototype.addMessage = function(name, info){
+    if (this.messages.length >= this.maxSize){
+      this.messages.pop();
+    }
+    this.messages.unshift(new Message(name,info))
+  }
+
+  //////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////
+
   var ContextMap = {}; //a map of context.id to contexts
+  var EventHistory = new Messages(200);
 
   websocket.on('unsubscribed', function(){
     ContextMap = {};
@@ -27,9 +47,12 @@ angular.module('autoNetApp')
     } else {
       console.log('context alreadys exists');
     }
+
+    EventHistory.addMessage('newContext', context.name);
   });
 
   websocket.on('expiredContext', function(contextID){
+    EventHistory.addMessage('expiredContext', ContextMap[contextID].name);
     delete ContextMap[contextID];
   });
 
@@ -42,6 +65,8 @@ angular.module('autoNetApp')
     } else {
       console.log("Member already exists");
     }
+
+    EventHistory.addMessage('newContextMember', sprintf('%s in %s', member.name, updatedContext.name));
   });
 
   websocket.on('newCoreThread', function(contextID, thread){
@@ -53,6 +78,8 @@ angular.module('autoNetApp')
     } else {
       console.log("Thread already exists");
     }
+
+    EventHistory.addMessage('newCoreThread', sprintf('%s in %s', thread.name, updatedContext.name));
   });
 
   websocket.on('newEventReceiver', function(contextID, receiver){
@@ -64,16 +91,20 @@ angular.module('autoNetApp')
     } else {
       console.log("EventReceiver already exists");
     }
+
+    EventHistory.addMessage('newEventReceiver', sprintf('%s in %s', receiver.name, updatedContext.name));
   });
 
   websocket.on('newBolt', function(contextID, serverBolt){
     var updatedContext = ContextMap[contextID];
-    var bolt = updatedContext.bolts[serverBolt.name];
+    var bolt = updatedContext.bolts[serverBolt.sigil];
     if (_.isUndefined(bolt)) {
-      updatedContext.bolts[serverBolt.name] = [serverBolt.listener];
+      updatedContext.bolts[serverBolt.sigil] = [serverBolt.name];
     } else {
-      bolt.push(serverBolt.listener);
+      bolt.push(serverBolt.name);
     }
+    EventHistory.addMessage('newBolt', sprintf('%s listening for %s in %s',
+                               serverBolt.name, serverBolt.sigil ,updatedContext.name));
   });
 
   websocket.on('newExceptionFilter', function(contextID, filter){
@@ -85,11 +116,16 @@ angular.module('autoNetApp')
     } else {
       console.log("EventReceiver already exists");
     }
+
+    EventHistory.addMessage('newExceptionFilter', sprintf('%s in %s', filter.name, updatedContext.name))
   });
 
   return {
     GetContexts: function(){
       return ContextMap;
+    },
+    GetEventHistory: function(){
+      return EventHistory.messages;
     }
   };
 });

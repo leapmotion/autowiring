@@ -1,10 +1,6 @@
 'use strict';
 
 angular.module('autoNetApp')
-  .controller('RawCtrl', function ($scope) {
-    $scope.awesomeThings = [
-      'HTML5 Boilerplate',
-      'AngularJS',
-      'Karma'
-    ];
-  });
+.controller('RawCtrl', function ($scope, LeapState) {
+  $scope.leap = LeapState;
+});
