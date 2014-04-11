@@ -24,7 +24,6 @@ angular.module('autoNetApp')
   // Called with SetInterval one a second when disconnected from server
   var InitConnection = function() {
     socket = new WebSocket('ws://localhost:8000');
-    console.log("InitConnection");
 
     socket.onmessage = function(evt) {
       var msg = JSON.parse(evt.data);

@@ -25,6 +25,7 @@ angular.module('autoNetApp')
         })
       });
 
+      var graph = scope.graph;
       var nodeSet = scope.graph.nodeSet;
 
       // Watch for any new or deleted nodes
@@ -37,20 +38,20 @@ angular.module('autoNetApp')
         // Add any new nodes
         _.each(newNodes, function(nodeID) {
           var node = nodeMap[nodeID];
-          scope.graph.addNode(new Springy.Node(node.id, {label:node.name}) );;
+          graph.addNode(new Springy.Node(node.id, {label:node.name}) );;
         });
 
         // Add any new edges
         _.each(newNodes, function(nodeID) {
           var node = nodeMap[nodeID];
           if (node.hasOwnProperty('parent')){
-            scope.graph.newEdge(nodeSet[node.parent], nodeSet[node.id]);
+            graph.newEdge(nodeSet[node.parent], nodeSet[node.id]);
           }
         });
 
         // Remove any expired nodes
         _.each(expiredNodes, function(nodeID) {
-          scope.graph.removeNode({id: Number(nodeID)});
+          graph.removeNode({id: Number(nodeID)});
         });
       });
     }
