@@ -14,17 +14,74 @@ struct SharedPointerSlotT;
 /// </remarks>
 struct SharedPointerSlot {
 public:
+  SharedPointerSlot(void) {}
+
+  template<class T>
+  SharedPointerSlot(const std::shared_ptr<T>& rhs) {
+    // Delegate the remainder to the assign operation:
+    *this = rhs;
+  }
+
   // Base destructor, doesn't do anything because there's nothing to release from
   // the base class
   virtual ~SharedPointerSlot(void) {}
 
 protected:
   // Space, used to store a shared pointer--by default, though, it's just empty.
-  unsigned char space[sizeof(std::shared_ptr<void>)];
+  unsigned char m_space[sizeof(std::shared_ptr<void>)];
+
+  /// <summary>
+  /// Assignment routine
+  /// </summary>
+  /// <remarks>
+  /// If this method is called, there will be a strong guarantee that the type of rhs
+  /// will be precisely equal to the type of this.
+  ///
+  /// Implementors MUST treat this as a type of constructor replacement.  The contents
+  /// of m_space are indeterminate and certainly invalid, and should be treated as
+  /// uninitialized memory.
+  /// </remarks>
+  virtual void assign(const SharedPointerSlot& rhs) {}
 
 public:
   virtual operator void*(void) const {
     return nullptr;
+  }
+
+  /// <returns>
+  /// True if this slot holds nothing
+  /// </returns>
+  bool empty(void) const { return type() == typeid(void); }
+
+  /// <returns>
+  /// True if this pointer slot holds an instance of the specified type
+  /// </returns>
+  template<class T>
+  bool is(void) const { return type() == typeid(T); }
+
+  /// <returns>
+  /// Returns the type of the shared pointer held in this slot, or typeid(void) if empty
+  /// </returns>
+  virtual const std::type_info& type(void) const { return typeid(void); }
+
+  /// <summary>
+  /// Clears this type, if a shared pointer is currently held
+  /// </summary>
+  void reset(void) {
+    if(empty())
+      // Nothing to do, just back out
+      return;
+  }
+
+  /// <summary>
+  /// Attempts to coerce this type to the speceified type
+  /// </summary>
+  template<class T>
+  std::shared_ptr<T>& as(void) {
+    if(type() != typeid(T))
+      throw std::runtime_error("Attempted to obtain a shared pointer for an unrelated type");
+
+    return ((SharedPointerSlot<T>*)this)->get();
   }
 
   /// <summary>
@@ -32,17 +89,53 @@ public:
   /// </summary>
   template<class T>
   SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
-    if(typeid(*this) == typeid(SharedPointerSlotT<T>))
+    if(type() == typeid(T))
       // We can just use the equivalence operator, no need to make two calls
       return *((SharedPointerSlotT<T>*)this) = rhs;
 
-    if(typeid(*this) != typeid(SharedPointerSlot))
-      // We are currently a different type.  We need to release our
-      // current implementation before attempting to recast.
+    if(!empty())
+      // We aren't presently empty, we need to release our
+      // current implementation before attempting to reinitialize
       this->~SharedPointerSlot();
 
-    // Recast and reassign:
+    // Now we can safely reinitialize:
     return *new (this) SharedPointerSlotT<T>(rhs);
+  }
+
+  /// <summary>
+  /// Copy assignment operator
+  /// </summary>
+  /// <remarks>
+  /// Consumer beware:  This is a transformative assignment.  The true polymorphic
+  /// type will be carried from the right-hand side into this element, which is a
+  /// different behavior from how things are normally done during assignment.  Other
+  /// than that, however, the behavior is very similar to boost::any's assignment
+  /// implementation.
+  /// </remarks>
+  SharedPointerSlot& operator=(const SharedPointerSlot& rhs) {
+    // Our own stuff is going away, need to return here
+    reset();
+
+    // If the right-hand side is empty, we'll just reset ourselves and be done with it:
+    if(rhs.empty())
+      return *this;
+
+    // We want to scrape the VFT, which always appears prior to the data block.  We need
+    // to use pointer magic to find the address of the VFT.  On most systems it's just
+    // one void* space at the top of the class, but we can't be too careful here.
+    size_t headerSpace = offsetof(SharedPointerSlot, m_space);
+    memcpy(this, &rhs, headerSpace);
+
+    // If we had a way to know the compile-time type of the rhs, we might have simply
+    // done a placement new on ourselves and that would have been enough to initialize
+    // our internally held shared pointer.  Unfortunately, we don't know the type on
+    // the right-hand side, and can't do a placement new on the type.  Instead, we will
+    // use our protected virtual method "assign" to do this operation.  The implementation
+    // of assign expects that the passed value will have matching types, and since we just
+    // made our types symmetric with the above memcpy, we can be assured we will get the
+    // correct version of assign.
+    assign(rhs);
+    return *this;
   }
 };
 
@@ -57,21 +150,37 @@ struct SharedPointerSlotT:
     );
 
     // Make use of our space to make a shared pointer:
-    new (space) std::shared_ptr<T>(rhs);
+    new (m_space) std::shared_ptr<T>(rhs);
   }
 
   ~SharedPointerSlotT(void) {
     // Recast and in-place destroy our shared pointer:
-    ((std::shared_ptr<T>*)space)->~shared_ptr();
+    get().~shared_ptr();
   }
 
-  virtual operator void*(void) const {
-    return ((std::shared_ptr<T>*)space)->get();
+protected:
+  void assign(const SharedPointerSlot& rhs) override {
+    // Static cast rhs to our own type, we know a priori that the passed
+    // value will match so we elide the typical safety checks.
+    auto& rhsCasted = static_cast<const SharedPointerSlotT&>(rhs);
+
+    // And now it's just a matter of copying things over.
+    new (m_space) std::shared_ptr<T>(rhsCasted.get());
   }
+
+public:
+  /// <returns>
+  /// The shared pointer held by this slot
+  /// </returns>
+  std::shared_ptr<T>& get(void) { return *(std::shared_ptr<T>*)m_space; }
+  const std::shared_ptr<T>& get(void) const { return *(std::shared_ptr<T>*)m_space; }
+
+  virtual operator void*(void) const { return get().get(); }
+  const std::type_info& type(void) const override { return typeid(T); }
 
   // We have a better opeartor overload for type T:
   SharedPointerSlotT& operator=(const std::shared_ptr<T>& rhs) {
-    *((std::shared_ptr<T>*)space) = rhs;
+    get() = rhs;
     return *this;
   }
 };
