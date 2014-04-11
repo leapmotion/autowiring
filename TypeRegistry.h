@@ -1,21 +1,11 @@
 #pragma once
 #include <typeinfo>
+#include SHARED_PTR_HEADER
 
 template<class T>
 class JunctionBox;
 
 class JunctionBoxBase;
-
-namespace std {
-  template<class T>
-  class shared_ptr;
-
-  template<class T, class... Args>
-  std::shared_ptr<T> make_shared(Args&&...);
-
-  template<class T, class U>
-  shared_ptr<T> static_pointer_cast(const shared_ptr<U>& sp);
-}
 
 struct TypeRegistryEntry {
   TypeRegistryEntry(const std::type_info& ti, void(*factory)(std::shared_ptr<JunctionBoxBase>&));
