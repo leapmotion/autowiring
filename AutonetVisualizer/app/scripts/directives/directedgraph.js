@@ -25,37 +25,34 @@ angular.module('autoNetApp')
         })
       });
 
-      // Create a map to keep track of current Nodes
-      var currentNodes = Object.create(null);
+      var nodeSet = scope.graph.nodeSet;
 
       // Watch for any new or deleted nodes
-      scope.$watch('nodes', function(nodeMap) {
-        var nodes = _.values(nodeMap);
-        console.log("nodes", nodes);
+      scope.$watchCollection('nodes', function(nodeMap) {
+        var nodeIDs = _.keys(nodeMap);
+        var currentNodeIds = _.keys(nodeSet)
+        var newNodes = _.difference(nodeIDs, currentNodeIds);
+        var expiredNodes = _.difference(currentNodeIds, nodeIDs);
+
         // Add any new nodes
-        _.each(nodes, function(node) {
-          if (typeof currentNodes[node.id] === 'undefined'){
-            var label = node.name;
-            var newNode = scope.graph.newNode({label:label});
-            currentNodes[node.id] = newNode;
-            if (typeof currentNodes[node.parent] !== 'undefined'){
-              scope.graph.newEdge(currentNodes[node.parent], newNode);
-            }
+        _.each(newNodes, function(nodeID) {
+          var node = nodeMap[nodeID];
+          scope.graph.addNode(new Springy.Node(node.id, {label:node.name}) );;
+        });
+
+        // Add any new edges
+        _.each(newNodes, function(nodeID) {
+          var node = nodeMap[nodeID];
+          if (node.hasOwnProperty('parent')){
+            scope.graph.newEdge(nodeSet[node.parent], nodeSet[node.id]);
           }
         });
 
         // Remove any expired nodes
-        var updateIds = _.map(nodes, function(node){
-          return String(node.id);
+        _.each(expiredNodes, function(nodeID) {
+          scope.graph.removeNode({id: Number(nodeID)});
         });
-        var currentIds = _.keys(currentNodes);
-        var diff = _.difference(currentIds, updateIds);
-        _.each(diff, function(nodeId) {
-          scope.graph.removeNode(currentNodes[nodeId]);
-          delete currentNodes[nodeId];
-        });
-
-      }, true);
+      });
     }
   };
 });

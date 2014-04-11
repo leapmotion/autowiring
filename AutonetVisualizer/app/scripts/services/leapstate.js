@@ -22,7 +22,6 @@ angular.module('autoNetApp')
   });
 
   websocket.on('newContext', function(context){
-    console.log("Context");
     if (! (context.id in ContextMap)) {
       ContextMap[context.id] = new Context(context);
     } else {
