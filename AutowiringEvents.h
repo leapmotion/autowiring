@@ -9,6 +9,7 @@ class EventReceiver;
 class BoltBase;
 class ExceptionFilter;
 
+
 class AutowiringEvents:
   public virtual EventReceiver
 {
@@ -28,3 +29,5 @@ public:
 
   virtual void NewExceptionFilter(const CoreContext&, const ExceptionFilter&)=0;
 };
+
+
