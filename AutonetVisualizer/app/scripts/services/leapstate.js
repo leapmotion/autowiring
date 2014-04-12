@@ -14,6 +14,14 @@ angular.module('autoNetApp')
     _.extend(this, ctxt)
   }
 
+  Context.prototype.numMembers = function(){
+    return this.members.length +
+          this.threads.length +
+          this.eventReceivers.length +
+          Object.keys(this.bolts).length +
+          this.exceptionFilters.length
+  }
+
   function Message(name,info) {
     this.name = name;
     this.info = info
