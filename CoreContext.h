@@ -480,7 +480,7 @@ protected:
 
       // Validate that this addition does not generate an ambiguity:
       std::shared_ptr<T> ptr;
-      FindByType(ptr);
+      FindByTypeUnsafe(ptr);
       if(ptr == value)
         throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
       if(ptr)
@@ -540,6 +540,35 @@ protected:
       SimpleOwnershipValidator::PendValidation(std::weak_ptr<T>(value));
   }
 
+  template<class T>
+  void FindByTypeUnsafe(std::shared_ptr<T>& ptr) {
+    // Try to find the type directly:
+    auto& entry = m_byType[typeid(T)];
+    if(!entry.empty()) {
+      ptr = entry.as<T>();
+      return;
+    }
+
+    // Resolve based on iterated dynamic casts:
+    ptr.reset();
+    for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
+      std::shared_ptr<Object> obj = q->second;
+      auto casted = std::dynamic_pointer_cast<T>(obj);
+      if(!casted)
+        // No match, try the next entry
+        continue;
+
+      if(ptr)
+        // Resolution ambiguity, cannot proceed
+        throw autowiring_error("An attempt was made to resolve a type which has multiple possible clients");
+
+      ptr = casted;
+    }
+
+    // Memoize:
+    entry = ptr;
+  }
+
 public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
@@ -579,7 +608,7 @@ public:
     boost::unique_lock<boost::mutex> lk(m_lock);
 
     std::shared_ptr<T> ptr;
-    FindByType(ptr);
+    FindByTypeUnsafe(ptr);
     if(ptr)
       return ptr;
 
@@ -593,7 +622,7 @@ public:
 
     // Reattempt resolution, short-circuiting if an injection of this type took place:
     std::shared_ptr<T> ptr2;
-    FindByType(ptr2);
+    FindByTypeUnsafe(ptr2);
     if(ptr2)
       return ptr2;
 
@@ -1006,13 +1035,7 @@ public:
   template<class T>
   void FindByType(std::shared_ptr<T>& slot) {
     boost::lock_guard<boost::mutex> lk(m_lock);
-
-    // Try to find the type directly:
-    auto q = m_byType.find(typeid(T));
-    if(q != m_byType.end())
-      return;
-
-    // TODO:  Resolve based on dynamic cast operations
+    FindByTypeUnsafe(slot);
   }
 
   // Interior type overrides:
