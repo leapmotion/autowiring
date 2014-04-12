@@ -16,6 +16,10 @@ struct SharedPointerSlot {
 public:
   SharedPointerSlot(void) {}
 
+  SharedPointerSlot(const SharedPointerSlot& rhs) {
+    *this = rhs;
+  }
+
   template<class T>
   SharedPointerSlot(const std::shared_ptr<T>& rhs) {
     // Delegate the remainder to the assign operation:
@@ -198,6 +202,10 @@ public:
     new (m_space) SharedPointerSlot;
   }
 
+  AnySharedPointer(const AnySharedPointer& rhs) {
+    new (m_space) SharedPointerSlot(rhs.slot());
+  }
+
   template<class T>
   AnySharedPointer(const std::shared_ptr<T>& rhs) {
     // Delegate the remainder to the assign operation:
@@ -271,6 +279,7 @@ public:
   /// implementation.
   /// </remarks>
   AnySharedPointer& operator=(const AnySharedPointer& rhs) {
+    slot().~SharedPointerSlot();
     *(SharedPointerSlot*) m_space = rhs.slot();
     return *this;
   }
