@@ -48,7 +48,7 @@ TEST_F(SharedPointerSlotTest, SlotReassignment) {
   std::shared_ptr<int> sharedPointerC(new int);
 
   // Make our slot, and start off with a shared pointer of one type:
-  SharedPointerSlot slot;
+  AnySharedPointer slot;
   slot = sharedPointerA;
 
   // Recast to another shared pointer, verify reference count goes down:
@@ -65,7 +65,7 @@ TEST_F(SharedPointerSlotTest, SlotsInVector) {
   std::shared_ptr<bool> sharedPtr(new bool);
 
   {
-    std::vector<SharedPointerSlot> slots;
+    std::vector<AnySharedPointer> slots;
 
     // Initialize with a lot of copies of sharedPtr
     for(size_t i = 0; i < 10; i++)
@@ -81,11 +81,11 @@ TEST_F(SharedPointerSlotTest, SlotsInVector) {
 TEST_F(SharedPointerSlotTest, SlotDuplication) {
   std::shared_ptr<bool> sharedPtr(new bool);
 
-  SharedPointerSlot slot2;
+  AnySharedPointer slot2;
 
   {
     // Create a base slot to hold the shared pointer:
-    SharedPointerSlot slot1 = sharedPtr;
+    AnySharedPointer slot1 = sharedPtr;
     ASSERT_FALSE(slot1.empty()) << "A slot initialized from a shared pointer was incorrectly marked as empty";
 
     // Verify the type came across:

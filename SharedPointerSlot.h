@@ -24,7 +24,14 @@ public:
 
   // Base destructor, doesn't do anything because there's nothing to release from
   // the base class
-  virtual ~SharedPointerSlot(void) {}
+  virtual ~SharedPointerSlot(void) {
+    auto& type = this->type();
+
+    if(type != typeid(void))
+      // VFT assurance.  If the slot was stack-allocated, then the compiler will not call
+      // the correct dtor; we need to ensure that this happens anyway.
+      ((SharedPointerSlot*)this)->~SharedPointerSlot();
+  }
 
 protected:
   // Space, used to store a shared pointer--by default, though, it's just empty.
@@ -184,3 +191,89 @@ public:
     return *this;
   }
 };
+
+struct AnySharedPointer {
+public:
+  AnySharedPointer(void) {
+    new (m_space) SharedPointerSlot;
+  }
+
+  template<class T>
+  AnySharedPointer(const std::shared_ptr<T>& rhs) {
+    // Delegate the remainder to the assign operation:
+    new (m_space) SharedPointerSlot(rhs);
+  }
+
+  ~AnySharedPointer(void) {
+    // Pass control to the *real* destructor:
+    slot().~SharedPointerSlot();
+  }
+
+private:
+  unsigned char m_space[sizeof(SharedPointerSlot)];
+
+  // Convenience method to cast the space to a slot
+  SharedPointerSlot& slot(void) { return *(SharedPointerSlot*) m_space; }
+  const SharedPointerSlot& slot(void) const { return *(SharedPointerSlot*) m_space; }
+
+public:
+  operator void*(void) const {
+    return slot().operator void*();
+  }
+
+  /// <returns>
+  /// True if this slot holds nothing
+  /// </returns>
+  bool empty(void) const { return slot().empty(); }
+
+  /// <returns>
+  /// True if this pointer slot holds an instance of the specified type
+  /// </returns>
+  template<class T>
+  bool is(void) const { return slot().is<T>(); }
+
+  /// <returns>
+  /// Returns the type of the shared pointer held in this slot, or typeid(void) if empty
+  /// </returns>
+  const std::type_info& type(void) const { return slot().type(); }
+
+  /// <summary>
+  /// Clears this type, if a shared pointer is currently held
+  /// </summary>
+  void reset(void) {
+    slot().reset();
+  }
+
+  /// <summary>
+  /// Attempts to coerce this type to the speceified type
+  /// </summary>
+  template<class T>
+  std::shared_ptr<T>& as(void) {
+    return slot().as<T>();
+  }
+
+  /// <summary>
+  /// In-place polymorphic transformer
+  /// </summary>
+  template<class T>
+  SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
+    return slot() = rhs;
+  }
+
+  /// <summary>
+  /// Copy assignment operator
+  /// </summary>
+  /// <remarks>
+  /// Consumer beware:  This is a transformative assignment.  The true polymorphic
+  /// type will be carried from the right-hand side into this element, which is a
+  /// different behavior from how things are normally done during assignment.  Other
+  /// than that, however, the behavior is very similar to boost::any's assignment
+  /// implementation.
+  /// </remarks>
+  AnySharedPointer& operator=(const AnySharedPointer& rhs) {
+    *(SharedPointerSlot*) m_space = rhs.slot();
+    return *this;
+  }
+};
+
+static_assert(!std::is_polymorphic<AnySharedPointer>::value, "The shared pointer cannot be polymorphic");
