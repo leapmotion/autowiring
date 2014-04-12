@@ -68,10 +68,10 @@ TEST_F(SharedPointerSlotTest, SlotsInVector) {
     std::vector<AnySharedPointer> slots;
 
     // Initialize with a lot of copies of sharedPtr
-    for(size_t i = 0; i < 10; i++)
+    for(size_t i = 0; i < 10; i++) {
       slots.push_back(sharedPtr);
-
-    ASSERT_EQ(1 + slots.size(), sharedPtr.use_count()) << "Unexpected number of references to a slotted shared pointer";
+      ASSERT_EQ(1 + slots.size(), sharedPtr.use_count()) << "Unexpected number of references to a slotted shared pointer";
+    }
   }
 
   // Now verify that we're unique again:
