@@ -14,14 +14,15 @@
 #include "DeferredBase.h"
 #include "fast_pointer_cast.h"
 #include "result_or_default.h"
-#include "SharedPointerSlot.h"
 #include "JunctionBox.h"
 #include "JunctionBoxManager.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
 #include "ExceptionFilter.h"
+#include "SharedPointerSlot.h"
 #include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
+#include "TypeUnifier.h"
 #include "uuid.h"
 
 #include <boost/thread/condition.hpp>
@@ -377,36 +378,13 @@ protected:
   /// <summary>
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
-  template<class W>
-  bool AutowireNoDefer(W& slot) {
-    typedef typename W::element_type T;
-
+  template<class T>
+  bool FindByTypeRecursive(std::shared_ptr<T>& slot) {
     // First-chance resolution in this context and ancestor contexts:
     for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
       pCur->FindByType(slot);
       if(slot)
         return true;
-    }
-
-    if(
-      has_static_new<T>::value ||
-      has_simple_constructor<T>::value
-    )
-      // We will not attempt second-chance resolution if the type is constructable
-      return false;
-
-    // Attempt second-chance resolution:
-
-    std::shared_ptr<AutoFactory<T>> factory;
-    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
-      pCur->FindByType(factory);
-      if(!factory)
-        continue;
-
-      std::shared_ptr<T> ptr(factory->New());
-      AddInternal(ptr);
-      slot.swap(ptr);
-      return true;
     }
 
     return false;
@@ -441,7 +419,7 @@ protected:
         return
           this->tracker.expired() ||
           this->slot ||
-          this->pThis->AutowireNoDefer(this->slot);
+          this->pThis->FindByTypeRecursive(this->slot);
       }
     };
 
@@ -541,7 +519,27 @@ protected:
   }
 
   template<class T>
-  void FindByTypeUnsafe(std::shared_ptr<T>& ptr) {
+  typename std::enable_if<!std::is_base_of<Object, T>::value>::type
+  FindByTypeUnsafe(std::shared_ptr<T>& ptr) {
+    typedef typename SelectTypeUnifier<T>::type TProxy;
+
+    // Need to treat T as a type unifier type, cast down, and then return:
+    std::shared_ptr<TProxy> proxy;
+    FindByTypeUnsafe(proxy);
+
+    if(!proxy) {
+      // Failed to locate, reset and return
+      ptr.reset();
+      return;
+    }
+
+    // Found it (or maybe not), static upcast and return
+    ptr = std::static_pointer_cast<T>(proxy);
+  }
+
+  template<class T>
+  typename std::enable_if<std::is_base_of<Object, T>::value>::type
+  FindByTypeUnsafe(std::shared_ptr<T>& ptr) {
     // Try to find the type directly:
     auto& entry = m_byType[typeid(T)];
     if(!entry.empty()) {
@@ -605,30 +603,34 @@ public:
   /// </summary>
   template<typename T, typename... Args>
   std::shared_ptr<T> Construct(Args&&... args) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
+    // If T doesn't inherit Object, then we need to compose a unifying type which does
+    typedef SelectTypeUnifier<T>::type TActual;
 
-    std::shared_ptr<T> ptr;
-    FindByTypeUnsafe(ptr);
-    if(ptr)
-      return ptr;
+    // First see if the object has already been injected:
+    std::shared_ptr<TActual> retVal;
+    FindByType(retVal);
+    if(retVal)
+      return retVal;
 
-    // We must make ourselves current for the duration of this call:
+    // We must make ourselves current for the remainder of this call:
     CurrentContextPusher pshr(shared_from_this());
 
     // Cannot safely inject while holding the lock, so we have to unlock and then inject
-    lk.unlock();
-    ptr.reset(CreationRules::New<T>(std::forward<Args>(args)...));
-    lk.lock();
+    retVal.reset(CreationRules::New<TActual>(std::forward<Args>(args)...));
 
-    // Reattempt resolution, short-circuiting if an injection of this type took place:
-    std::shared_ptr<T> ptr2;
-    FindByTypeUnsafe(ptr2);
-    if(ptr2)
-      return ptr2;
-
-    // Pass control to the insertion routine, which will handle injection from this point:
-    AddInternal(ptr, std::move(lk));
-    return ptr;
+    try {
+      // Pass control to the insertion routine, which will handle injection from this point:
+      AddInternal(retVal);
+    }
+    catch(autowiring_error&) {
+      // We know why this exception occurred.  It's because, while we were constructing our
+      // type, someone else was constructing the same type at the same time.  As a consequence,
+      // we will simply eat this exception, and handle it silently by returning the type that
+      // someone else has already attempted to construct, as per the documented behavior of
+      // Construct.
+      FindByType(retVal);
+    }
+    return retVal;
   }
 
   /// <summary>
@@ -1046,7 +1048,7 @@ public:
   /// </summary>
   template<class W>
   bool Autowire(W& slot) {
-    if(AutowireNoDefer(slot))
+    if(FindByTypeRecursive(slot))
       return true;
 
     // Failed, defer
