@@ -225,7 +225,7 @@ protected:
   // This map keeps all of its objects resident at least until the context goes away.
   // "Object" is named here as an explicit ground type in order to allow arbitrary casting from Object-
   // derived types.
-  std::unordered_map<std::type_index, SharedPointerSlot> m_byType;
+  std::unordered_map<std::type_index, AnySharedPointer> m_byType;
 
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
