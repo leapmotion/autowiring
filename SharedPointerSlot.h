@@ -1,4 +1,5 @@
 #pragma once
+#include "Object.h"
 #include SHARED_PTR_HEADER
 
 template<class T>
@@ -55,9 +56,8 @@ protected:
   virtual void assign(const SharedPointerSlot& rhs) {}
 
 public:
-  virtual operator void*(void) const {
-    return nullptr;
-  }
+  virtual operator void*(void) const { return nullptr; }
+  virtual operator std::shared_ptr<Object>(void) const { return std::shared_ptr<Object>(); }
 
   /// <returns>
   /// True if this slot holds nothing
@@ -92,7 +92,7 @@ public:
     if(type() != typeid(T))
       throw std::runtime_error("Attempted to obtain a shared pointer for an unrelated type");
 
-    return ((SharedPointerSlot<T>*)this)->get();
+    return ((SharedPointerSlotT<T>*)this)->get();
   }
 
   /// <summary>
@@ -160,6 +160,11 @@ struct SharedPointerSlotT:
       "Slot instance is too large to fit in the base type"
     );
 
+    static_assert(
+      std::is_base_of<Object, T>::value,
+      "Cannot create a shared pointer slot on a type which is not derived from type T"
+    );
+
     // Make use of our space to make a shared pointer:
     new (m_space) std::shared_ptr<T>(rhs);
   }
@@ -188,6 +193,10 @@ public:
 
   virtual operator void*(void) const { return get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
+
+  virtual operator std::shared_ptr<Object>(void) const override {
+    return std::static_pointer_cast<Object, T>(get());
+  }
 
   // We have a better opeartor overload for type T:
   SharedPointerSlotT& operator=(const std::shared_ptr<T>& rhs) {
@@ -225,9 +234,8 @@ private:
   const SharedPointerSlot& slot(void) const { return *(SharedPointerSlot*) m_space; }
 
 public:
-  operator void*(void) const {
-    return slot().operator void*();
-  }
+  operator void*(void) const { return slot().operator void*(); }
+  operator std::shared_ptr<Object>(void) const { return slot().operator std::shared_ptr<Object>(); }
 
   /// <returns>
   /// True if this slot holds nothing
