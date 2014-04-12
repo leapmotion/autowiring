@@ -86,6 +86,7 @@ set(Autowiring_SRCS
   TeardownNotifier.cpp
   TypeRegistry.h
   TypeRegistry.cpp
+  TypeUnifier.h
   uuid.h
 )
 

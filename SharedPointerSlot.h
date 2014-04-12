@@ -2,7 +2,7 @@
 #include "Object.h"
 #include SHARED_PTR_HEADER
 
-template<class T>
+template<class T, bool is_object = std::is_base_of<Object, T>::value>
 struct SharedPointerSlotT;
 
 /// <summary>
@@ -99,10 +99,12 @@ public:
   /// In-place polymorphic transformer
   /// </summary>
   template<class T>
-  SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
-    if(type() == typeid(T))
+  void operator=(const std::shared_ptr<T>& rhs) {
+    if(type() == typeid(T)) {
       // We can just use the equivalence operator, no need to make two calls
-      return *((SharedPointerSlotT<T>*)this) = rhs;
+      *((SharedPointerSlotT<T>*)this) = rhs;
+      return;
+    }
 
     if(!empty())
       // We aren't presently empty, we need to release our
@@ -110,7 +112,7 @@ public:
       this->~SharedPointerSlot();
 
     // Now we can safely reinitialize:
-    return *new (this) SharedPointerSlotT<T>(rhs);
+    new (this) SharedPointerSlotT<T>(rhs);
   }
 
   /// <summary>
@@ -123,13 +125,13 @@ public:
   /// than that, however, the behavior is very similar to boost::any's assignment
   /// implementation.
   /// </remarks>
-  SharedPointerSlot& operator=(const SharedPointerSlot& rhs) {
+  void operator=(const SharedPointerSlot& rhs) {
     // Our own stuff is going away, need to return here
     reset();
 
     // If the right-hand side is empty, we'll just reset ourselves and be done with it:
     if(rhs.empty())
-      return *this;
+      return;
 
     // We want to scrape the VFT, which always appears prior to the data block.  We need
     // to use pointer magic to find the address of the VFT.  On most systems it's just
@@ -146,23 +148,17 @@ public:
     // made our types symmetric with the above memcpy, we can be assured we will get the
     // correct version of assign.
     assign(rhs);
-    return *this;
   }
 };
 
 template<class T>
-struct SharedPointerSlotT:
+struct SharedPointerSlotT<T, false>:
   SharedPointerSlot
 {
   SharedPointerSlotT(const std::shared_ptr<T>& rhs) {
     static_assert(
       sizeof(SharedPointerSlotT<T>) == sizeof(SharedPointerSlot),
       "Slot instance is too large to fit in the base type"
-    );
-
-    static_assert(
-      std::is_base_of<Object, T>::value,
-      "Cannot create a shared pointer slot on a type which is not derived from type T"
     );
 
     // Make use of our space to make a shared pointer:
@@ -194,15 +190,25 @@ public:
   virtual operator void*(void) const { return get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
 
+  // We have a better opeartor overload for type T:
+  void operator=(const std::shared_ptr<T>& rhs) {
+    get() = rhs;
+  }
+};
+
+template<class T>
+struct SharedPointerSlotT<T, true> :
+  SharedPointerSlotT<T, false>
+{
+  SharedPointerSlotT(const std::shared_ptr<T>& rhs):
+    SharedPointerSlotT<T, false>(rhs)
+  {}
+
   virtual operator std::shared_ptr<Object>(void) const override {
     return std::static_pointer_cast<Object, T>(get());
   }
 
-  // We have a better opeartor overload for type T:
-  SharedPointerSlotT& operator=(const std::shared_ptr<T>& rhs) {
-    get() = rhs;
-    return *this;
-  }
+  using SharedPointerSlotT<T, false>::operator=;
 };
 
 struct AnySharedPointer {
@@ -272,7 +278,7 @@ public:
   /// In-place polymorphic transformer
   /// </summary>
   template<class T>
-  SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
+  void operator=(const std::shared_ptr<T>& rhs) {
     return slot() = rhs;
   }
 
@@ -286,10 +292,9 @@ public:
   /// than that, however, the behavior is very similar to boost::any's assignment
   /// implementation.
   /// </remarks>
-  AnySharedPointer& operator=(const AnySharedPointer& rhs) {
+  void operator=(const AnySharedPointer& rhs) {
     slot().~SharedPointerSlot();
     *(SharedPointerSlot*) m_space = rhs.slot();
-    return *this;
   }
 };
 
