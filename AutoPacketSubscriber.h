@@ -256,6 +256,11 @@ public:
   /// subscribers, or an exception will be thrown.
   /// </remarks>
   t_call GetCall(void) const { return m_pCall; }
+
+  /// <returns>
+  /// True if this subscriber instance is empty
+  /// </returns>
+  operator bool(void) const { return !empty(); }
 };
 
 template<class T, bool has_autofilter = has_autofilter<T>::value>
@@ -271,7 +276,8 @@ public:
 
 template<class T>
 class AutoPacketSubscriberSelect<T, false>:
-  public std::false_type
+  public std::false_type,
+  public AutoPacketSubscriber
 {
 public:
   AutoPacketSubscriberSelect(const std::shared_ptr<T>&) {}

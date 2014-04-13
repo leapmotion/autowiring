@@ -105,7 +105,7 @@ private:
   t_subMap m_subMap;
 
   // Utility override, does nothing
-  void AddSubscriber(std::false_type&&) {}
+  void AddSubscriber(std::false_type) {}
 
   std::function<void()> fn;
 
@@ -161,7 +161,7 @@ public:
   /// <summary>
   /// Registers the passed subscriber, if it defines a method called AutoFilter
   /// </summary>
-  void AddSubscriber(AutoPacketSubscriber&& rhs);
+  void AddSubscriber(const AutoPacketSubscriber& rhs);
 
   /// <summary>
   /// Convenience override of AddSubscriber

@@ -1,8 +1,9 @@
 #pragma once
+#include "fast_pointer_cast.h"
 #include "Object.h"
 #include SHARED_PTR_HEADER
 
-template<class T, bool is_object = std::is_base_of<Object, T>::value>
+template<class T>
 struct SharedPointerSlotT;
 
 /// <summary>
@@ -116,6 +117,32 @@ public:
   }
 
   /// <summary>
+  /// Specialization for the Object base type
+  /// </summary>
+  bool operator==(const std::shared_ptr<Object>& rhs) const {
+    return this->operator std::shared_ptr<Object>() == rhs;
+  }
+
+  template<class T>
+  bool operator==(const std::shared_ptr<T>& rhs) const {
+    if(empty())
+      // If we're empty, then we are equal if the rhs is also empty
+      // This means we're basically comparing null to null, and we're going to
+      // generally allow it.
+      return rhs == nullptr;
+
+    // If we're not empty, then we will verify that types match before attempting any
+    // other comparison.  This means that it's possible for types related via a dynamic
+    // cast to fail a comparison--callers must be aware of this possibility.
+    if(type() != typeid(T))
+      return false;
+
+    // Everything lines up, coerce ourselves to the derived type and handoff the
+    // comparison behavior.
+    return (SharedPointerSlotT<T>&)*this == rhs;
+  }
+
+  /// <summary>
   /// Copy assignment operator
   /// </summary>
   /// <remarks>
@@ -152,7 +179,7 @@ public:
 };
 
 template<class T>
-struct SharedPointerSlotT<T, false>:
+struct SharedPointerSlotT:
   SharedPointerSlot
 {
   SharedPointerSlotT(const std::shared_ptr<T>& rhs) {
@@ -187,28 +214,22 @@ public:
   std::shared_ptr<T>& get(void) { return *(std::shared_ptr<T>*)m_space; }
   const std::shared_ptr<T>& get(void) const { return *(std::shared_ptr<T>*)m_space; }
 
+  virtual operator std::shared_ptr<Object>(void) const override {
+    return leap::fast_pointer_cast<Object>(get());
+  }
+
   virtual operator void*(void) const { return get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
+
+  template<class T>
+  bool operator==(const std::shared_ptr<T>& rhs) const {
+    return get() == rhs;
+  }
 
   // We have a better opeartor overload for type T:
   void operator=(const std::shared_ptr<T>& rhs) {
     get() = rhs;
   }
-};
-
-template<class T>
-struct SharedPointerSlotT<T, true> :
-  SharedPointerSlotT<T, false>
-{
-  SharedPointerSlotT(const std::shared_ptr<T>& rhs):
-    SharedPointerSlotT<T, false>(rhs)
-  {}
-
-  virtual operator std::shared_ptr<Object>(void) const override {
-    return std::static_pointer_cast<Object, T>(get());
-  }
-
-  using SharedPointerSlotT<T, false>::operator=;
 };
 
 struct AnySharedPointer {
@@ -280,6 +301,11 @@ public:
   template<class T>
   void operator=(const std::shared_ptr<T>& rhs) {
     return slot() = rhs;
+  }
+
+  template<class T>
+  bool operator==(const std::shared_ptr<T>& rhs) const {
+    return slot() == rhs;
   }
 
   /// <summary>
