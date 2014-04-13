@@ -20,6 +20,7 @@ set(Autowiring_SRCS
   AutoPacketListener.h
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
+  AutoPacketSubscriber.h
   AutoNetworkMonitor.h
   AutoNetworkMonitor.cpp
   Autowired.h

@@ -96,6 +96,63 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   return retVal;
 }
 
+void CoreContext::AddInternal(const AddInternalTraits& traits) {
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+
+    // Validate that this addition does not generate an ambiguity:
+    auto v = m_byType[traits.type];
+    if(v == traits.pObject)
+      throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
+    if(v)
+      throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+
+    // Perform the insertion at the canonical type identity:
+    v = traits.pObject;
+
+    // Insert each context element:
+    if(traits.pContextMember) {
+      AddContextMember(traits.pContextMember);
+      GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*traits.pContextMember);
+    }
+
+    if(traits.pCoreRunnable) {
+      AddCoreRunnable(traits.pCoreRunnable);
+      GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*traits.pCoreRunnable);
+    }
+
+    if(traits.pFilter) {
+      m_filters.insert(traits.pFilter.get());
+      GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, *traits.pFilter);
+    }
+
+    if(traits.pBoltBase)
+      AddBolt(traits.pBoltBase);
+  }
+
+  // Event receivers:
+  if(traits.pRecvr) {
+    AddEventReceiver(traits.pRecvr);
+    GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *traits.pRecvr);
+  }
+
+  // Subscribers, if applicable:
+  if(traits.subscriber)
+    AddPacketSubscriber(traits.subscriber);
+
+  // Notify any autowiring field that is currently waiting that we have a new member
+  // to be considered.
+  UpdateDeferredElements(traits.pObject);
+
+  // Ownership validation, as appropriate
+  // We do not attempt to pend validation for CoreRunnable instances, because a
+  // CoreRunnable could potentially hold the final outstanding reference to this
+  // context, and therefore may be responsible for this context's (and, transitively,
+  // its own) destruction.
+  if(m_useOwnershipValidator && !traits.pCoreRunnable)
+    SimpleOwnershipValidator::PendValidation(std::weak_ptr<Object>(traits.pObject));
+}
+
 std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
@@ -338,7 +395,7 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
-void CoreContext::UpdateDeferredElements(void) {
+void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
   std::list<DeferredBase*> successful;
 
   // Notify any autowired field whose autowiring was deferred
@@ -373,7 +430,7 @@ void CoreContext::UpdateDeferredElements(void) {
 
     // Reverse lock before satisfying children:
     lk.unlock();
-    ctxt->UpdateDeferredElements();
+    ctxt->UpdateDeferredElements(entry);
     lk.lock();
   }
 }
@@ -495,19 +552,18 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
   m_contextMembers.insert(ptr.get());
 }
 
-void CoreContext::AddPacketSubscriber(AutoPacketSubscriber&& rhs) {
-  m_packetFactory->AddSubscriber(std::move(rhs));
-  if( m_pParent ) {
-    m_pParent->AddPacketSubscriber(std::move(rhs));
-  }
+void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
+  m_packetFactory->AddSubscriber(rhs);
+  if(m_pParent)
+    m_pParent->AddPacketSubscriber(rhs);
 }
 
 void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber> &subscribers) {
-  //delegate to the parent if there is one
-  if( m_pParent ) {
+  // Notify the parent that it will have to remove these subscribers as well
+  if(m_pParent)
     m_pParent->RemovePacketSubscribers(subscribers);
-  }
 
+  // Remove subscribers from our factory AFTER the parent eviction has taken place
   m_packetFactory->RemoveSubscribers(subscribers.begin(), subscribers.end());
 }
 

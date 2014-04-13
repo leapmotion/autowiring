@@ -310,7 +310,7 @@ protected:
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
-  void UpdateDeferredElements(void);
+  void UpdateDeferredElements(const std::shared_ptr<Object>& entry);
 
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
@@ -364,16 +364,14 @@ protected:
   void AddContextMember(const std::shared_ptr<ContextMember>& ptr);
 
   /// <summary>
-  /// Forwarding routine, adds a packet subscriber to the internal packet factory
+  /// Forwarding routine, recursively adds a packet subscriber to the internal packet factory
   /// </summary>
-  void AddPacketSubscriber(AutoPacketSubscriber&& rhs);
+  void AddPacketSubscriber(const AutoPacketSubscriber& rhs);
 
   /// <summary>
-  /// Default override, when a member does not have an autofilter routine
+  /// Counterpart to the AddPacketSubscriber routine, but will remove an array of subscribers
   /// </summary>
-  void AddPacketSubscriber(const std::false_type&) {}
-
-  void RemovePacketSubscribers( const std::vector<AutoPacketSubscriber>& subscribers );
+  void RemovePacketSubscribers(const std::vector<AutoPacketSubscriber>& subscribers);
 
   /// <summary>
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
@@ -397,7 +395,7 @@ protected:
   /// This is an indirect incrementation routine.  The count will be incremented for as
   /// long as the returned shared_ptr is not destroyed.  Once it's destroyed, the count
   /// is decremented.  The caller is encouraged not to copy the return value, as doing
-  /// so can give spurious values for the current number of outstanding threads.
+  /// so can give inflated values for the current number of outstanding threads.
   ///
   /// The caller is responsible for exterior synchronization
   /// </remarks>
@@ -439,107 +437,46 @@ protected:
     }
     pDeferred = new Deferred(this, slot);
   }
-
-  // <summary>
-  // Same as Inject, but doesn't checkout Typeforest
-  // </summary>
-  template<typename T>
-  void AddInternal(const std::shared_ptr<T>& value){
-    AddInternal(value, boost::unique_lock<boost::mutex>(m_lock));
-  }
-
-  template<typename T>
-  void AddInternal(const std::shared_ptr<T>& value, boost::unique_lock<boost::mutex>&& lock) {
-    // Shared pointer to our entity, if it's a CoreRunnable
-    std::shared_ptr<CoreRunnable> pCoreRunnable;
-
+  
+  /// <summary>
+  /// Mapping and extraction structure used to provide a runtime version of an Object-implementing shared pointer
+  /// </summary>
+  struct AddInternalTraits {
+    template<class T>
+    AddInternalTraits(const std::shared_ptr<T>& value) :
+      type(typeid(T)),
+      pObject(leap::fast_pointer_cast<Object>(value)),
+      pContextMember(leap::fast_pointer_cast<ContextMember>(value)),
+      pCoreRunnable(leap::fast_pointer_cast<CoreRunnable>(value)),
+      pFilter(leap::fast_pointer_cast<ExceptionFilter>(value)),
+      pBoltBase(leap::fast_pointer_cast<BoltBase>(value)),
+      pRecvr(leap::fast_pointer_cast<EventReceiver>(value)),
+      subscriber(AutoPacketSubscriberSelect<T>(value))
     {
-      boost::unique_lock<boost::mutex> lk = std::move(lock);
-
-      // Validate that this addition does not generate an ambiguity:
-      std::shared_ptr<T> ptr;
-      FindByTypeUnsafe(ptr);
-      if(ptr == value)
-        throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
-      if(ptr)
-        throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
-
-      // Add a new member of the forest:
-      m_byType[typeid(T)] = value;
-
-      // Context members:
-      auto pContextMember = leap::fast_pointer_cast<ContextMember, T>(value);
-      if(pContextMember) {
-        AddContextMember(pContextMember);
-
-        // CoreRunnables:
-        pCoreRunnable = leap::fast_pointer_cast<CoreRunnable, T>(value);
-        if (pCoreRunnable) {
-          AddCoreRunnable(pCoreRunnable);
-          GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*pCoreRunnable.get());
-        } else {
-          GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*pContextMember.get());
-        }
-      }
-
-      // Exception filters:
-      auto pFilter = leap::fast_pointer_cast<ExceptionFilter, T>(value);
-      if (pFilter) {
-        m_filters.insert(pFilter.get());
-        GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, *pFilter.get());
-      }
-
-      // Bolts
-      auto pBase = leap::fast_pointer_cast<BoltBase, T>(value);
-      if (pBase) {
-        AddBolt(pBase);
-      }
     }
 
-    // Event receivers:
-    auto pRecvr = leap::fast_pointer_cast<EventReceiver, T>(value);
-    if (pRecvr) {
-      AddEventReceiver(pRecvr);
-      GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *pRecvr.get());
-    }
+    // The declared original type:
+    const std::type_info& type;
 
-    // Subscribers:
-    AddPacketSubscriber(AutoPacketSubscriberSelect<T>(value));
+    // The packet subscriber introduction method, if appropriate:
+    const AutoPacketSubscriber subscriber;
 
-    // Notify any autowiring field that is currently waiting that we have a new member
-    // to be considered.
-    UpdateDeferredElements();
+    // There are a lot of interfaces we support, here they all are:
+    const std::shared_ptr<Object> pObject;
+    const std::shared_ptr<ContextMember> pContextMember;
+    const std::shared_ptr<CoreRunnable> pCoreRunnable;
+    const std::shared_ptr<ExceptionFilter> pFilter;
+    const std::shared_ptr<BoltBase> pBoltBase;
+    const std::shared_ptr<EventReceiver> pRecvr;
+  };
 
-    // Ownership validation, as appropriate
-    // We do not attempt to pend validation for CoreRunnable instances, because a CoreRunnable could potentially hold
-    // the final outstanding reference to this context, and therefore may be responsible for this context's (and,
-    // transitively, its own) destruction.
-    if(m_useOwnershipValidator && !pCoreRunnable)
-      SimpleOwnershipValidator::PendValidation(std::weak_ptr<T>(value));
-  }
+  /// <summary>
+  /// Internal type introduction routine
+  /// </summary>
+  void AddInternal(const AddInternalTraits& traits);
 
   template<class T>
-  typename std::enable_if<!std::is_base_of<Object, T>::value>::type
-  FindByTypeUnsafe(std::shared_ptr<T>& ptr) {
-    typedef typename SelectTypeUnifier<T>::type TProxy;
-
-    // Need to treat T as a type unifier type, cast down, and then return:
-    std::shared_ptr<TProxy> proxy;
-    FindByTypeUnsafe(proxy);
-
-    if(!proxy) {
-      // Failed to locate, reset and return
-      ptr.reset();
-      return;
-    }
-
-    // Found it (or maybe not), static upcast and return
-    ptr = std::static_pointer_cast<T>(proxy);
-  }
-
-  template<class T>
-  typename std::enable_if<std::is_base_of<Object, T>::value>::type
-  FindByTypeUnsafe(std::shared_ptr<T>& ptr) {
+  void FindByTypeUnsafe(std::shared_ptr<T>& ptr) {
     // Try to find the type directly:
     auto& entry = m_byType[typeid(T)];
     if(!entry.empty()) {
@@ -607,7 +544,7 @@ public:
     typedef SelectTypeUnifier<T>::type TActual;
 
     // First see if the object has already been injected:
-    std::shared_ptr<TActual> retVal;
+    std::shared_ptr<T> retVal;
     FindByType(retVal);
     if(retVal)
       return retVal;
