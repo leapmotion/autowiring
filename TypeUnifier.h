@@ -24,7 +24,11 @@ class TypeUnifierSimple:
 /// <summary>
 /// Utility class which allows us to either use the pure type T, or a unifier, as appropriate
 /// </summary>
-template<class T, bool is_object_base = std::is_base_of<Object, T>::value, bool hasSimpleCtor = has_simple_constructor<T>::value>
+template<
+  class T,
+  bool is_object_base = std::is_base_of<Object, T>::value,
+  bool hasSimpleCtor = has_simple_constructor<T>::value
+>
 struct SelectTypeUnifier;
 
 // If T inherits Object already, just use Object
