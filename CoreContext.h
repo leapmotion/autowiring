@@ -846,7 +846,11 @@ public:
   /// </remarks>
   template<typename MemFn>
   InvokeRelay<MemFn> Invoke(MemFn memFn){
-    return GetJunctionBox<typename Decompose<MemFn>::type>()->Invoke(memFn);
+    typedef typename Decompose<MemFn>::type EventType;
+    if (!std::is_same<AutowiringEvents,EventType>::value){
+      GetGlobal()->Invoke(&AutowiringEvents::EventFired)(*this, typeid(EventType));
+    }
+    return GetJunctionBox<EventType>()->Invoke(memFn);
   }
 
   /// <summary>

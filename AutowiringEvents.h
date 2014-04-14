@@ -28,6 +28,7 @@ public:
   virtual void NewBolt(const CoreContext& owningContext, const std::shared_ptr<BoltBase>& bolt) = 0;
 
   virtual void NewExceptionFilter(const CoreContext&, const ExceptionFilter&)=0;
+  virtual void EventFired(const CoreContext&, const std::type_info&)=0;
 };
 
 
