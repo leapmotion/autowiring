@@ -49,8 +49,6 @@ set(Autowiring_SRCS
   CurrentContextPusher.h
   Decompose.h
   Deserialize.h
-  DeferredBase.h
-  DeferredBase.cpp
   deferred_ptr.h
   DispatchQueue.h
   DispatchQueue.cpp
