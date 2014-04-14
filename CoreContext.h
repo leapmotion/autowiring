@@ -29,24 +29,13 @@
 #include <list>
 #include <memory>
 #include <map>
-#include <string>
 #include <functional>
-#include TUPLE_HEADER
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_MAP
 #include STL_UNORDERED_SET
-
-#ifndef ASSERT
-  #ifdef _DEBUG
-    #include <assert.h>
-    #define ASSERT(x) assert(x)
-  #else
-    #define ASSERT(x)
-  #endif
-#endif
 
 class AutoPacketFactory;
 class AutowirableSlot;
