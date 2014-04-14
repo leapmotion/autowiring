@@ -115,26 +115,32 @@ public:
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
 
   Autowired(void):
-    AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>())
+    AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>()),
+    m_autowire(&CoreContext::FindByType<T>)
   {
-    AutowirableSlot::LockContext()->Autowire(*this);
+    TrySatisfy();
   }
 
   Autowired(std::weak_ptr<CoreContext> ctxt):
-    AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>())
+    AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>()),
+    m_autowire(&CoreContext::FindByType<T>)
   {
-    AutowirableSlot::LockContext()->Autowire(*this);
+    TrySatisfy();
   }
 
-  operator bool(void) const {
-    return IsAutowired();
-  }
+  bool(CoreContext::*const m_autowire)(std::shared_ptr<T>& rhs);
 
   operator T*(void) const {
     return t_ptrType::get();
   }
 
+  bool TrySatisfy(void) override {
+    return ((*LockContext()).*m_autowire)(*this);
+  }
+
   bool IsAutowired(void) const override {return !!t_ptrType::get();}
+
+  using AutowirableSlot::operator bool;
 };
 
 /// <summary>
@@ -203,6 +209,11 @@ public:
 
   operator T*(void) const {
     return t_ptrType::get();
+  }
+
+  bool TrySatisfy(void) override {
+    // AutoRequired instances are _always_ satisfied
+    return true;
   }
 
   bool IsAutowired(void) const override {return !!t_ptrType::get();}

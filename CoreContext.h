@@ -11,7 +11,6 @@
 #include "ContextMember.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
-#include "DeferredBase.h"
 #include "fast_pointer_cast.h"
 #include "result_or_default.h"
 #include "JunctionBox.h"
@@ -236,9 +235,7 @@ protected:
   std::unordered_set<ContextMember*> m_contextMembers;
 
   // Collection of objects waiting to be autowired, and a specific lock exclusively for this collection
-  boost::mutex m_deferredLock;
-  typedef std::map<const AutowirableSlot*, DeferredBase*> t_deferred;
-  t_deferred m_deferred;
+  std::vector<AutowirableSlot*> m_deferred;
 
   // All known event receivers and receiver proxies originating from this context:
   typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
@@ -404,43 +401,6 @@ protected:
   /// The caller is responsible for exterior synchronization
   /// </remarks>
   std::shared_ptr<Object> IncrementOutstandingThreadCount(void);
-
-  template<class S>
-  void DeferAutowiring(S& slot) {
-    class Deferred:
-      public DeferredBase {
-    public:
-      Deferred(CoreContext* pThis, S& slot) :
-        DeferredBase(pThis, slot.m_tracker),
-        slot(slot)
-      {}
-
-      S& slot;
-
-      bool operator()() override {
-        return
-          this->tracker.expired() ||
-          this->slot ||
-          this->pThis->FindByTypeRecursive(this->slot);
-      }
-    };
-
-    // Resolution failed, add this autowired value for a delayed attempt
-    boost::lock_guard<boost::mutex> lk(m_deferredLock);
-    if(slot)
-      // Someone autowired this before we did, short-circuit
-      return;
-
-    DeferredBase*& pDeferred = m_deferred[&slot];
-    if(pDeferred) {
-      // We allow rebinding at this site if the deferred base has already expired
-      if(pDeferred->IsExpired())
-        delete pDeferred;
-      else
-        throw_rethrowable autowiring_error("A slot is being autowired, but a deferred instance already exists at this location");
-    }
-    pDeferred = new Deferred(this, slot);
-  }
   
   /// <summary>
   /// Mapping and extraction structure used to provide a runtime version of an Object-implementing shared pointer
@@ -503,6 +463,10 @@ protected:
 
       ptr = casted;
     }
+
+    if(!ptr)
+      // Cannot find a type, memoize
+      return;
 
     // Memoize:
     *entry = ptr;
@@ -976,9 +940,10 @@ public:
   /// Locates an available context member in this context
   /// </summary>
   template<class T>
-  void FindByType(std::shared_ptr<T>& slot) {
+  bool FindByType(std::shared_ptr<T>& slot) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     FindByTypeUnsafe(slot);
+    return slot != nullptr;
   }
 
   // Interior type overrides:
@@ -993,8 +958,21 @@ public:
       return true;
 
     // Failed, defer
-    DeferAutowiring(slot);
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_deferred.push_back(&slot);
     return false;
+  }
+
+  /// <summary>
+  /// Unregisters a slot as a recipient of potential autowiring
+  /// </summary>
+  void UndeferSlot(AutowirableSlot* pSlot) {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    for(size_t i = m_deferred.size(); i--;)
+      if(m_deferred[i] == pSlot) {
+        m_deferred[i] = m_deferred[m_deferred.size() - 1];
+        m_deferred.pop_back();
+      }
   }
 
   /// <summary>

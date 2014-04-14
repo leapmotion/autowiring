@@ -20,16 +20,7 @@ private:
 
 public:
   AutowirableSlot(std::weak_ptr<CoreContext> context);
-
-  virtual ~AutowirableSlot(void) {
-  }
-
-  /// <summary>
-  /// This is a destroy self-reference.  There should only ever be one shared pointer
-  /// to this object, and it's located here.  Everything else should be weak pointers
-  /// whose purpose is to be notified when this tracker goes away.
-  /// </summary>
-  std::shared_ptr<AutowirableSlot> m_tracker;
+  ~AutowirableSlot(void);
 
   /// <summary>
   /// This is the context that was available at the time the autowiring was performed.
@@ -50,6 +41,15 @@ public:
   /// Utility routine to lock the context, or throw an exception if something goes wrong
   /// </summary>
   std::shared_ptr<CoreContext> LockContext(void);
+
+  /// <summary>
+  /// Unconditionally attempts to satisfy this slot by querying the associated CoreContext a second time
+  /// </summary>
+  virtual bool TrySatisfy(void) = 0;
+
+  operator bool(void) const {
+    return IsAutowired();
+  }
 
   virtual bool IsAutowired(void) const = 0;
 };
