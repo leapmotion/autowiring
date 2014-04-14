@@ -10,17 +10,17 @@
 using namespace std;
 
 AutowirableSlot::AutowirableSlot(std::weak_ptr<CoreContext> context) :
-  m_context(context),
-  m_tracker(this, NullOp<AutowirableSlot*>)
+  m_context(context)
 {
-  if (ENABLE_NETWORK_MONITOR) {
-    // Obtain the network monitor:
-    std::shared_ptr<AutoNetworkMonitor> pMon;
-    LockContext() -> FindByType(pMon);
-    if (pMon)
-      // Pass notification:
-      pMon->Notify(*this);
-  }
+}
+
+AutowirableSlot::~AutowirableSlot(void) {
+  auto context = m_context.lock();
+  if(!context)
+    return;
+ 
+  // Tell our context we are going away:
+  context->UndeferSlot(this);
 }
 
 void AutowirableSlot::NotifyWhenAutowired(const std::function<void()>& listener) {
