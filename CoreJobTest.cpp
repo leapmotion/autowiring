@@ -2,6 +2,7 @@
 #include "CoreJobTest.h"
 #include "CoreJob.h"
 #include "move_only.h"
+#include <boost/thread.hpp>
 
 TEST_F(CoreJobTest, VerifySimpleProperties) {
   AutoRequired<CoreJob> jb;
