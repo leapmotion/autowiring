@@ -9,7 +9,7 @@ class Object;
 class CoreJob:
   public ContextMember,
   public DispatchQueue,
-  public virtual CoreRunnable
+  public CoreRunnable
 {
 private:
   //Hold on to this so CoreContext knows we still exist
