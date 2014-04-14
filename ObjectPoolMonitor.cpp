@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ObjectPoolMonitor.h"
+#include <boost/thread/locks.hpp>
 
 ObjectPoolMonitor::ObjectPoolMonitor(void) :
   m_abandoned(false)

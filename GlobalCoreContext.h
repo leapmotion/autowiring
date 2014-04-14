@@ -1,6 +1,5 @@
 #pragma once
 #include "CoreContext.h"
-#include <boost/thread/mutex.hpp>
 
 template<class T>
 struct EnableBoltInternal {

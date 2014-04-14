@@ -126,6 +126,7 @@ public:
 
 private:
   // Continuity signal:
+  boost::mutex m_lock;
   boost::condition_variable m_continueCond;
   bool m_barrierDone;
 
