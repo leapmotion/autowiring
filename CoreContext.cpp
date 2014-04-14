@@ -101,14 +101,14 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
     boost::lock_guard<boost::mutex> lk(m_lock);
 
     // Validate that this addition does not generate an ambiguity:
-    auto v = m_byType[traits.type];
-    if(v == traits.pObject)
+    auto v = m_concreteTypes[traits.type];
+    if(*v == traits.pObject)
       throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
-    if(v)
+    if(*v)
       throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
 
     // Perform the insertion at the canonical type identity:
-    v = traits.pObject;
+    *v = traits.pObject;
 
     // Insert each context element:
     if(traits.pContextMember) {
@@ -342,7 +342,7 @@ void CoreContext::BuildCurrentState(void) {
 
 void CoreContext::Dump(std::ostream& os) const {
   boost::lock_guard<boost::mutex> lk(m_lock);
-  for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
+  for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
     os << q->first.name();
     const void* pObj = q->second;
     if(pObj)

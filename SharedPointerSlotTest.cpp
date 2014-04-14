@@ -86,10 +86,10 @@ TEST_F(SharedPointerSlotTest, SlotDuplication) {
   {
     // Create a base slot to hold the shared pointer:
     AnySharedPointer slot1 = sharedPtr;
-    ASSERT_FALSE(slot1.empty()) << "A slot initialized from a shared pointer was incorrectly marked as empty";
+    ASSERT_FALSE(slot1->empty()) << "A slot initialized from a shared pointer was incorrectly marked as empty";
 
     // Verify the type came across:
-    EXPECT_EQ(typeid(bool), slot1.type()) << "Dynamic initialization did not correctly adjust the dynamic type";
+    EXPECT_EQ(typeid(bool), slot1->type()) << "Dynamic initialization did not correctly adjust the dynamic type";
 
     // Now copy it over:
     slot2 = slot1;
@@ -99,6 +99,6 @@ TEST_F(SharedPointerSlotTest, SlotDuplication) {
   }
 
   // Verify that the slot still holds a reference and that the reference count is correct:
-  ASSERT_FALSE(slot2.empty()) << "A slot should have continued to hold a shared pointer, but was prematurely cleared";
+  ASSERT_FALSE(slot2->empty()) << "A slot should have continued to hold a shared pointer, but was prematurely cleared";
   ASSERT_EQ(2UL, sharedPtr.use_count()) << "A slot going out of scope did not correctly decrement a shared pointer reference";
 }
