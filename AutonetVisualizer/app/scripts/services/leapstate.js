@@ -3,6 +3,7 @@
 angular.module('autoNetApp')
 .factory('LeapState', function LeapState(websocket) {
 
+  // Object definitions
   function Context(ctxt){
     this.members = [];
     this.threads = [];
@@ -127,6 +128,12 @@ angular.module('autoNetApp')
     }
 
     EventHistory.addMessage('newExceptionFilter', sprintf('%s in %s', filter.name, updatedContext.name))
+  });
+
+  websocket.on('eventFired', function(contextID, eventHash){
+    var updatedContext = ContextMap[contextID];
+
+    EventHistory.addMessage('eventFired', sprintf('%s in %s', eventHash.name, updatedContext.name));
   });
 
   return {
