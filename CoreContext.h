@@ -464,10 +464,6 @@ protected:
       ptr = casted;
     }
 
-    if(!ptr)
-      // Cannot find a type, memoize
-      return;
-
     // Memoize:
     *entry = ptr;
   }
