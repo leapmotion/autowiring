@@ -255,51 +255,12 @@ private:
 
 public:
   operator void*(void) const { return slot().operator void*(); }
-  operator std::shared_ptr<Object>(void) const { return slot().operator std::shared_ptr<Object>(); }
 
-  /// <returns>
-  /// True if this slot holds nothing
-  /// </returns>
-  bool empty(void) const { return slot().empty(); }
+  SharedPointerSlot& operator*(void) { return slot(); }
+  const SharedPointerSlot& operator*(void) const { return slot(); }
 
-  /// <returns>
-  /// True if this pointer slot holds an instance of the specified type
-  /// </returns>
-  template<class T>
-  bool is(void) const { return slot().is<T>(); }
-
-  /// <returns>
-  /// Returns the type of the shared pointer held in this slot, or typeid(void) if empty
-  /// </returns>
-  const std::type_info& type(void) const { return slot().type(); }
-
-  /// <summary>
-  /// Clears this type, if a shared pointer is currently held
-  /// </summary>
-  void reset(void) {
-    slot().reset();
-  }
-
-  /// <summary>
-  /// Attempts to coerce this type to the speceified type
-  /// </summary>
-  template<class T>
-  std::shared_ptr<T>& as(void) {
-    return slot().as<T>();
-  }
-
-  /// <summary>
-  /// In-place polymorphic transformer
-  /// </summary>
-  template<class T>
-  void operator=(const std::shared_ptr<T>& rhs) {
-    return slot() = rhs;
-  }
-
-  template<class T>
-  bool operator==(const std::shared_ptr<T>& rhs) const {
-    return slot() == rhs;
-  }
+  SharedPointerSlot* operator->(void) { return &slot(); }
+  const SharedPointerSlot* operator->(void) const { return &slot(); }
 
   /// <summary>
   /// Copy assignment operator

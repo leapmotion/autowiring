@@ -222,11 +222,15 @@ protected:
   // before this flag is assigned will NOT be checked.
   bool m_useOwnershipValidator;
 
-  // This is a map of the context members by type and, where appropriate, by name
+  // This is a map of concrete types, indexed by the true type of each element.
   // This map keeps all of its objects resident at least until the context goes away.
   // "Object" is named here as an explicit ground type in order to allow arbitrary casting from Object-
   // derived types.
-  std::unordered_map<std::type_index, AnySharedPointer> m_byType;
+  std::unordered_map<std::type_index, AnySharedPointer> m_concreteTypes;
+
+  // This is a memoization map used to memoize any already-detected interfaces
+  // Note that the value on the right-hand side must match the void pointer specified on the right-hand side
+  std::unordered_map<std::type_index, AnySharedPointer> m_typeMemos;
 
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
@@ -445,13 +449,13 @@ protected:
     template<class T>
     AddInternalTraits(const std::shared_ptr<T>& value) :
       type(typeid(T)),
+      subscriber(AutoPacketSubscriberSelect<T>(value)),
       pObject(leap::fast_pointer_cast<Object>(value)),
       pContextMember(leap::fast_pointer_cast<ContextMember>(value)),
       pCoreRunnable(leap::fast_pointer_cast<CoreRunnable>(value)),
       pFilter(leap::fast_pointer_cast<ExceptionFilter>(value)),
       pBoltBase(leap::fast_pointer_cast<BoltBase>(value)),
-      pRecvr(leap::fast_pointer_cast<EventReceiver>(value)),
-      subscriber(AutoPacketSubscriberSelect<T>(value))
+      pRecvr(leap::fast_pointer_cast<EventReceiver>(value))
     {
     }
 
@@ -478,16 +482,16 @@ protected:
   template<class T>
   void FindByTypeUnsafe(std::shared_ptr<T>& ptr) {
     // Try to find the type directly:
-    auto& entry = m_byType[typeid(T)];
-    if(!entry.empty()) {
-      ptr = entry.as<T>();
+    auto& entry = m_typeMemos[typeid(T)];
+    if(!entry->empty()) {
+      ptr = entry->as<T>();
       return;
     }
 
-    // Resolve based on iterated dynamic casts:
+    // Resolve based on iterated dynamic casts for each concrete type:
     ptr.reset();
-    for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
-      std::shared_ptr<Object> obj = q->second;
+    for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
+      std::shared_ptr<Object> obj = *q->second;
       auto casted = std::dynamic_pointer_cast<T>(obj);
       if(!casted)
         // No match, try the next entry
@@ -501,13 +505,13 @@ protected:
     }
 
     // Memoize:
-    entry = ptr;
+    *entry = ptr;
   }
 
 public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
-  size_t GetMemberCount(void) const { return m_byType.size(); }
+  size_t GetMemberCount(void) const { return m_concreteTypes.size(); }
   const std::type_info& GetSigilType(void) const { return m_sigil; }
 
   /// <summary>
@@ -780,7 +784,7 @@ public:
     return
       pMember ?
       pMember->GetContext().get() == this :
-      !!m_byType.count(typeid(T));
+      !!m_concreteTypes.count(typeid(T));
   }
 
   template<class T>
