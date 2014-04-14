@@ -30,14 +30,7 @@ public:
 
   // Base destructor, doesn't do anything because there's nothing to release from
   // the base class
-  virtual ~SharedPointerSlot(void) {
-    auto& type = this->type();
-
-    if(type != typeid(void))
-      // VFT assurance.  If the slot was stack-allocated, then the compiler will not call
-      // the correct dtor; we need to ensure that this happens anyway.
-      ((SharedPointerSlot*)this)->~SharedPointerSlot();
-  }
+  virtual ~SharedPointerSlot(void) {}
 
 protected:
   // Space, used to store a shared pointer--by default, though, it's just empty.
