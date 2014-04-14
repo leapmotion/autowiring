@@ -56,13 +56,6 @@ void AutoNetworkMonitor::PreConstruct(void* pMem, size_t szSpace) {
 }
 
 void AutoNetworkMonitor::Notify(const AutowirableSlot& lhs) {
-  Space* pSpace = s_space.get();
-  if(!pSpace)
-    return;
-
-  auto q = pSpace->Find(&lhs);
-  if(q != pSpace->m_mp.end())
-    q->second.push_back(lhs.m_tracker);
 }
 
 void AutoNetworkMonitor::PostConstruct(void* pSpace) {

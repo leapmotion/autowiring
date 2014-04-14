@@ -65,10 +65,6 @@ CoreContext::~CoreContext(void) {
   // Tell all context members that we're tearing down:
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
     (**q).NotifyContextTeardown();
-
-  // Explicit deleters to simplify base deletion of any deferred autowiring requests:
-  for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
-    delete q->second;
 }
 
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
@@ -396,29 +392,19 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
 }
 
 void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
-  std::list<DeferredBase*> successful;
-
   // Notify any autowired field whose autowiring was deferred
   {
-    boost::lock_guard<boost::mutex> lk(m_deferredLock);
-    for(t_deferred::iterator r = m_deferred.begin(); r != m_deferred.end(); ) {
-      bool rs = (*r->second)();
-      if(rs) {
-        successful.push_back(r->second);
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    for(size_t i = m_deferred.size(); i--;) {
+      bool rs = m_deferred[i]->TrySatisfy();
+      if(!rs)
+        continue;
 
-        // Temporary required because of the absence of a convenience eraser iterator with stl map on all platforms
-        t_deferred::iterator rm = r++;
-        m_deferred.erase(rm);
-      }
-      else
-        r++;
+      // Tail erasure of this element:
+      m_deferred[i] = m_deferred[m_deferred.size() - 1];
+      m_deferred.pop_back();
     }
   }
-
-  // Now, outside of the context of a lock, we destroy each successfully wired deferred member
-  // This causes any listeners to be invoked, conveniently, outside of the context of any lock
-  for(std::list<DeferredBase*>::iterator q = successful.begin(); q != successful.end(); ++q)
-    delete *q;
 
   // Give children a chance to also update their deferred elements:
   boost::unique_lock<boost::mutex> lk(m_childrenLock);
@@ -568,22 +554,6 @@ void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber
 }
 
 void CoreContext::NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener) {
-  boost::lock_guard<boost::mutex> lk(m_deferredLock);
-
-  // If the slot is already autowired then we can invoke the listener here and return early
-  if(slot.IsAutowired())
-    return listener();
-
-  t_deferred::iterator q = m_deferred.find(&slot);
-  if(q == m_deferred.end()) {
-    if(m_pParent)
-      // Try the parent context first, it could be present there
-      return m_pParent->NotifyWhenAutowired(slot, listener);
-    else
-      throw_rethrowable std::domain_error("An attempt was made to observe a principal not in this context");
-  }
-
-  q->second->AddPostBindingListener(listener);
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
