@@ -14,8 +14,20 @@ DeferrableAutowiring::DeferrableAutowiring(const std::shared_ptr<CoreContext>& c
 }
 
 DeferrableAutowiring::~DeferrableAutowiring(void) {
+  // Clients MUST call CancelAutowiring from their destructor--if this line is being hit,
+  // it's because the type being destructed isn't calling CancelAutowiring properly.
+  assert(m_context.expired());
+}
+
+void DeferrableAutowiring::CancelAutowiring(void) {
   auto context = m_context.lock();
-  if(context)
-    // Tell our context we are going away:
-    context->CancelAutowiringNotification(this);
+  if(!context)
+    // Nothing to do here, then
+    return;
+
+  // Reset our hold on the weak pointer to prevent repeated cancellation:
+  m_context.reset();
+
+  // Tell our context we are going away:
+  context->CancelAutowiringNotification(this);
 }

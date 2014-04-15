@@ -535,7 +535,7 @@ public:
   /// </returns>
   template<typename T>
   std::shared_ptr<T> Inject(void) {
-    return ResolveAnchor<T>() -> template Construct<T>();
+    return ResolveAnchor<T>()->template Construct<T>();
   }
 
   /// <summary>
