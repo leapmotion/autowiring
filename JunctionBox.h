@@ -1,19 +1,16 @@
 #pragma once
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
-#include "EventDispatcher.h"
 #include "EventReceiver.h"
-#include "ObjectPool.h"
 #include "PolymorphicTypeForest.h"
 #include "fast_pointer_cast.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
 #include "PolymorphicTypeForest.h"
-#include "uuid.h"
 #include <boost/thread/mutex.hpp>
 #include "fast_pointer_cast.h"
+#include <set>
 #include TUPLE_HEADER
-#include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_SET
@@ -87,6 +84,10 @@ namespace std {
 /// </summary>
 class JunctionBoxBase {
 public:
+  JunctionBoxBase(void):
+    m_isInitiated(false)
+  {}
+  
   virtual ~JunctionBoxBase(void);
 
 protected:
@@ -96,6 +97,9 @@ protected:
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
+  
+  // This JunctionBox can fire and receive events
+  bool m_isInitiated;
 
   /// <summary>
   /// Invokes SignalTerminate on each context in the specified vector.  Does not wait.
@@ -120,6 +124,9 @@ protected:
   static std::weak_ptr<CoreContext> ContextDumbToWeak(CoreContext* pContext);
 
 public:
+  bool IsInitiated(void) const {return m_isInitiated;}
+  void Initiate(void) {m_isInitiated=true;}
+  
   // Accessor methods:
   std::vector<std::weak_ptr<EventOutputStreamBase> > * m_PotentialMarshals;
 
@@ -284,9 +291,9 @@ public:
   }
 
   // Two-parenthetical deferred invocations:
-  template<class FnPtr>
-  auto Invoke(FnPtr fnPtr) -> InvokeRelay<decltype(fnPtr)> {
-    return InvokeRelay<decltype(fnPtr)>(this, fnPtr);
+  template<typename FnPtr>
+  auto Invoke(FnPtr fnPtr) -> InvokeRelay<FnPtr> {
+    return InvokeRelay<FnPtr>(this, fnPtr);
   }
 };
 
@@ -378,13 +385,14 @@ public:
     if(!erp)
       // Context has already been destroyed
       return;
+    
+    if(!erp->IsInitiated())
+      throw std::runtime_error("Attempted event firing before context was initiated");
 
     const auto& dq = erp->GetDispatchQueue();
     boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
 
     for(auto q = dq.begin(); q != dq.end(); q++)
-      if((**q).CanAccept())
-        // Create a fully curried function to add to the dispatch queue:
         (**q).AddExisting(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...));
   }
 };
@@ -417,6 +425,9 @@ public:
     if(!erp)
       // Context has already been destroyed
       return true;
+    
+    if(!erp->IsInitiated())
+      throw std::runtime_error("Attempted event firing before context was initiated");
 
     // Give the serializer a chance to handle these arguments:
     erp->SerializeInit(fnPtr, args...);

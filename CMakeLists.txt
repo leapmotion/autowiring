@@ -10,6 +10,8 @@ set(Autowiring_SRCS
   AutoFactory.h
   AutoFuture.h
   AutoFuture.cpp
+  CoreJob.h
+  CoreJob.cpp
   AutoInjectable.h
   AutoPacket.h
   AutoPacket.cpp
@@ -26,12 +28,15 @@ set(Autowiring_SRCS
   AutowirableSlot.cpp
   AutowiringEvents.h
   autowiring_error.h
+  BasicThread.h
+  BasicThread.cpp
+  BasicThreadStateBlock.h
+  BasicThreadStateBlock.cpp
+  Bolt.h
+  BoltBase.h
   ContextCreator.h
   ContextCreatorBase.h
   ContextCreatorBase.cpp
-  CreationRules.h
-  Bolt.h
-  BoltBase.h
   ContextMap.h
   ContextMember.cpp
   ContextMember.h
@@ -39,6 +44,8 @@ set(Autowiring_SRCS
   CoreContext.h
   CoreThread.cpp
   CoreThread.h
+  CoreRunnable.h
+  CreationRules.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
   Decompose.h
@@ -49,7 +56,6 @@ set(Autowiring_SRCS
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunk.h
-  EventDispatcher.h
   EventInputStream.h
   EventOutputStream.h
   EventOutputStream.cpp
@@ -69,13 +75,13 @@ set(Autowiring_SRCS
   ObjectPool.h
   ObjectPoolMonitor.h
   ObjectPoolMonitor.cpp
+  move_only.h
   MicroBolt.h
   PolymorphicTypeForest.h
   ReentrantCounter.h
   ReentrantCounter.cpp
   SimpleOwnershipValidator.h
   SimpleOwnershipValidator.cpp
-  StateMachine.h
   TeardownNotifier.h
   TeardownNotifier.cpp
   TypeRegistry.h
@@ -179,6 +185,8 @@ set(AutowiringTest_SRCS
   SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
+  CoreJobTest.h
+  CoreJobTest.cpp
   TypeRegistryTest.h
   TypeRegistryTest.cpp
   ScopeTest.h
@@ -187,8 +195,6 @@ set(AutowiringTest_SRCS
   SnoopTest.cpp
   SimpleOwnershipValidatorTest.h
   SimpleOwnershipValidatorTest.cpp
-  StateMachineTest.h
-  StateMachineTest.cpp
   TestFixtures/custom_exception.h
   TestFixtures/ExitRaceThreaded.h
   TestFixtures/SimpleInterface.h

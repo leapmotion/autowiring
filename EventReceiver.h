@@ -3,8 +3,6 @@
 
 class CoreThread;
 
-bool CoreThreadCanAccept(CoreThread* pThread);
-
 /// <summary>
 /// Marker return type for deferred calls
 /// </summary>

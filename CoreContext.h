@@ -6,7 +6,9 @@
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
-#include "CoreThread.h"
+#include "BasicThread.h"
+#include "CoreRunnable.h"
+#include "ContextMember.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
 #include "DeferredBase.h"
@@ -27,9 +29,7 @@
 #include <list>
 #include <memory>
 #include <map>
-#include <string>
 #include <functional>
-#include TUPLE_HEADER
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
@@ -37,22 +37,10 @@
 #include STL_UNORDERED_MAP
 #include STL_UNORDERED_SET
 
-#ifndef ASSERT
-  #ifdef _DEBUG
-    #include <assert.h>
-    #define ASSERT(x) assert(x)
-  #else
-    #define ASSERT(x)
-  #endif
-#endif
-
 class AutoPacketFactory;
 class AutowirableSlot;
 class BoltBase;
-class ContextMember;
 class CoreContext;
-class CoreThread;
-class EventReceiver;
 class EventOutputStreamBase;
 class GlobalCoreContext;
 class OutstandingCountTracker;
@@ -106,7 +94,8 @@ public:
   /// domain with respect to each other, but are not in the same autowiring domain.  This can
   /// be useful where multiple instances of a particular object are desired, but inserting
   /// such objects into a simple child context is cumbersome because the objects at parent
-  /// scope are listening to events originating from objects at child scope.
+  /// scope are listening to events originating from objects at child scope. Events can be fired,
+  /// but not received, from an unintiated context if its peer is initiated.
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
@@ -135,6 +124,9 @@ protected:
   /// </summary>
   template<typename T>
   std::shared_ptr<CoreContext> CreateInternal(CoreContext& newContext) {
+    // don't allow new children if shutting down
+    assert(!m_isShutdown);
+    
     t_childList::iterator childIterator;
     {
       // Lock the child list while we insert
@@ -205,7 +197,7 @@ protected:
   boost::condition m_stateChanged;
 
   // Set if threads in this context should be started when they are added
-  bool m_shouldRunNewThreads;
+  bool m_initiated;
 
   // Set if the context has been shut down
   bool m_isShutdown;
@@ -235,6 +227,9 @@ protected:
   // All known event receivers and receiver proxies originating from this context:
   typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
+  
+  // List of eventReceivers to be added when this context in initiated
+  t_rcvrSet m_delayedEventReceivers;
 
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
   const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
@@ -242,12 +237,12 @@ protected:
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
 
-  // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
+  // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
   // Destructor does nothing; this is by design.
   std::weak_ptr<Object> m_outstanding;
 
   // Actual core threads:
-  typedef std::list<CoreThread*> t_threadList;
+  typedef std::list<CoreRunnable*> t_threadList;
   t_threadList m_threads;
 
   // Child contexts:
@@ -315,8 +310,15 @@ protected:
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
   void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    return AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, pRecvr));
+    JunctionBoxEntry<EventReceiver> entry(this, pRecvr);
+    m_eventReceivers.insert(entry);
+    AddEventReceiver(entry);
   }
+  
+  /// <summary>
+  /// Add delayed event receivers
+  /// </summary>
+  void AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
 
   /// <summary>
   /// Removes the named event receiver from the collection of known receivers
@@ -338,7 +340,7 @@ protected:
   /// It's safe to allow the returned shared_ptr to go out of scope; the core context
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
-  void AddCoreThread(const std::shared_ptr<CoreThread>& pCoreThread);
+  void AddCoreRunnable(const std::shared_ptr<CoreRunnable>& pCoreRunnable);
 
   /// <summary>
   /// Adds the specified context creation listener to receive creation events broadcast from this context
@@ -471,11 +473,11 @@ protected:
     static_assert(
       !std::is_base_of<Object, T>::value ||
       std::is_same<typename ground_type_of<T>::type, Object>::value,
-      "If T inherits from Object (for instance, via ContextMember or CoreThread), then T::grounds must be of type Object"
+      "If T inherits from Object (for instance, via ContextMember or CoreRunnable), then T::grounds must be of type Object"
     );
 
-    // Shared pointer to our entity, if it's a CoreThread
-    std::shared_ptr<CoreThread> pCoreThread;
+    // Shared pointer to our entity, if it's a CoreRunnable
+    std::shared_ptr<CoreRunnable> pCoreRunnable;
 
     {
       boost::unique_lock<boost::mutex> lk = std::move(lock);
@@ -496,11 +498,11 @@ protected:
       if(pContextMember) {
         AddContextMember(pContextMember);
 
-        // CoreThreads:
-        pCoreThread = leap::fast_pointer_cast<CoreThread, T>(value);
-        if (pCoreThread) {
-          AddCoreThread(pCoreThread);
-          GetGlobal()->Invoke(&AutowiringEvents::NewCoreThread)(*pCoreThread.get());
+        // CoreRunnables:
+        pCoreRunnable = leap::fast_pointer_cast<CoreRunnable, T>(value);
+        if (pCoreRunnable) {
+          AddCoreRunnable(pCoreRunnable);
+          GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*pCoreRunnable.get());
         } else {
           GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*pContextMember.get());
         }
@@ -535,10 +537,10 @@ protected:
     UpdateDeferredElements();
 
     // Ownership validation, as appropriate
-    // We do not attempt to pend validation for CoreThread instances, because a CoreThread could potentially hold
+    // We do not attempt to pend validation for CoreRunnable instances, because a CoreRunnable could potentially hold
     // the final outstanding reference to this context, and therefore may be responsible for this context's (and,
     // transitively, its own) destruction.
-    if(m_useOwnershipValidator && !pCoreThread)
+    if(m_useOwnershipValidator && !pCoreRunnable)
       SimpleOwnershipValidator::PendValidation(std::weak_ptr<T>(value));
   }
 
@@ -671,6 +673,18 @@ public:
   template<class Sigil>
   bool Is(void) const { return m_sigil == typeid(Sigil); }
 
+  /// <returns>
+  /// A list of descendant contexts whose sigil type matches the specified sigil type
+  /// </returns>
+  template<class Sigil>
+  std::vector<std::shared_ptr<CoreContext>> EnumerateChildContexts(void) {
+    std::vector<std::shared_ptr<CoreContext>> retVal;
+    EnumerateChildContexts([&retVal](std::shared_ptr<CoreContext> ctxt) {
+      retVal.push_back(ctxt);
+    });
+    return retVal;
+  }
+
   /// <summary>
   /// Enumerates all matching child contexts recursively and passes each child context to the specified lambda
   /// </summary>
@@ -702,7 +716,7 @@ public:
   /// there is a high probability that this will deadlock if any of the added objects directly
   /// or indirectly cause a child context to be created.
   ///
-  /// CopyCoreThreadList is guaranteed to be a safe call to be made from this routine.
+  /// CopyBasicThreadList is guaranteed to be a safe call to be made from this routine.
   /// </remarks>
   template<class Fn>
   bool EnumerateChildContexts(const Fn& fn) {
@@ -738,13 +752,13 @@ public:
   void BuildCurrentState(void);
 
   /// <returns>
-  /// A copy of the list of child CoreThreads
+  /// A copy of the list of child CoreRunnables
   /// </returns>
   /// <remarks>
   /// No guarantee is made about how long the returned collection will be consistent with this
   /// context.  A thread may potentially be added to the context after the method returns.
   /// </remarks>
-  std::vector<std::shared_ptr<CoreThread>> CopyCoreThreadList(void) const;
+  std::vector<std::shared_ptr<BasicThread>> CopyBasicThreadList(void) const;
 
   /// <summary>
   /// In debug mode, adds an additional compile-time check
@@ -767,9 +781,11 @@ public:
   }
 
   /// <returns>
-  /// True if CoreThread instances in this context should begin teardown operations
+  /// True if CoreRunnable instances in this context should begin teardown operations
   /// </returns>
   bool IsShutdown(void) const {return m_isShutdown;}
+  
+  bool IsInitiated(void) const {return m_initiated;}
 
   /// <returns>
   /// True if this context was ever started
@@ -781,7 +797,7 @@ public:
   /// </remarks>
   bool WasStarted(void) const {
     // We were started IF we will run new threads, OR we have been signalled to stop
-    return m_shouldRunNewThreads || m_isShutdown;
+    return m_initiated || m_isShutdown;
   }
 
   /// <returns>
@@ -842,8 +858,8 @@ public:
   ///  ctxt->Invoke(&MyEventType::MyEvent)();
   ///
   /// </remarks>
-  template<class MemFn>
-  InvokeRelay<MemFn> Invoke(MemFn memFn) {
+  template<typename MemFn>
+  InvokeRelay<MemFn> Invoke(MemFn memFn){
     return GetJunctionBox<typename Decompose<MemFn>::type>()->Invoke(memFn);
   }
 
@@ -851,7 +867,8 @@ public:
   /// Utility routine, invoked typically by the service, which starts all registered
   /// core threads.
   /// </summary>
-  void InitiateCoreThreads(void);
+  void Initiate(void);
+  void DEPRECATED(InitiateCoreThreads(void), "InitiateCoreThreads is deprecated, use Initiate instead");
 
   /// <summary>
   /// This signals to the whole system that a shutdown operation is underway, and that shutdown procedures should
@@ -889,6 +906,12 @@ public:
     boost::unique_lock<boost::mutex> lk(m_lock);
     return m_stateChanged.wait_for(lk, duration, [this] {return this->m_outstanding.expired();});
   }
+  
+  /// <summary>
+  /// Wait until the context is initiated or is shutting down
+  /// </summary>
+  /// <returns>True if initiated, false if shutting down</returns>
+  bool DelayUntilInitiated(void);
 
   /// <summary>
   /// This makes this core context current.
@@ -913,7 +936,7 @@ public:
   /// </return>
   /// <remarks>
   /// This works by using thread-local store, and so is safe in multithreaded systems.  The current
-  /// context is assigned before invoking a CoreThread instance's Run method, and it's also assigned
+  /// context is assigned before invoking a CoreRunnable instance's Run method, and it's also assigned
   /// when a context is first constructed by a thread.
   /// </remarks>
   static std::shared_ptr<CoreContext> CurrentContext(void);
@@ -1073,3 +1096,4 @@ template<typename T>
 void CoreContext::AddExisting(std::shared_ptr<T> p_member) {
   AddInternal(p_member);
 }
+

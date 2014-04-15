@@ -2,6 +2,7 @@
 #include "MarshalingTest.h"
 #include "EventInputStream.h"
 #include "EventOutputStream.h"
+#include "CoreThread.h"
 #include "Decompose.h"
 #include "uuid.h"
 #include <string>
@@ -182,6 +183,7 @@ TEST_F(MarshalingTest, VerifyListenersUpdated) {
 TEST_F(MarshalingTest, VerifyOutOfOrderFiring) {
   // We should be able to create an output stream on an event even if nobody fires this event right now
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
   std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
   ASSERT_FALSE(nullptr == os.get()) << "Failed to create an output stream in a context where no firers of the underlying event exist";
 
@@ -193,6 +195,7 @@ TEST_F(MarshalingTest, VerifySimpleSerialization) {
   AutoFired<EventWithUuid> ewuuid;
 
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
   std::shared_ptr<EventOutputStream<EventWithUuid>> os = ctxt->CreateEventOutputStream<EventWithUuid>();
 
   ASSERT_NE(static_cast<void*>(nullptr), os.get());
@@ -218,6 +221,7 @@ TEST_F(MarshalingTest, VerifySimpleSerialization) {
 
 TEST_F(MarshalingTest, VerifySimpleDeserialization) {
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
 
   // Serialize a fired event first:
   AutoFired<EventWithUuid> ewuuid;
@@ -293,6 +297,7 @@ TEST_F(MarshalingTest, VerifySimpleDeserialization) {
 
 TEST_F(MarshalingTest, VerifyComplexDeserialization) {
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
 
   // Serialize a fired event first:
   AutoFired<EventWithUuid> ewuuid;
@@ -338,6 +343,7 @@ TEST_F(MarshalingTest, VerifyComplexDeserialization) {
 
 TEST_F(MarshalingTest, VerifyAutoSerAndDeser) {
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
 
   // Serialize a fired event first:
   AutoFired<EventWithUuid> ewuuid;

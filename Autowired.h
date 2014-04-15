@@ -88,7 +88,7 @@ class Autowired:
 
 public:
   typedef T value_type;
-  typedef shared_ptr<T> t_ptrType;
+  typedef std::shared_ptr<T> t_ptrType;
 
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
   // If you are getting an error tracked to this line, ensure that class T is totally
@@ -159,7 +159,7 @@ class AutoRequired:
 public:
   using std::shared_ptr<T>::operator=;
   typedef T value_type;
-  typedef shared_ptr<T> t_ptrType;
+  typedef std::shared_ptr<T> t_ptrType;
 
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
   // If you are getting an error tracked to this line, ensure that class T is totally
@@ -216,11 +216,10 @@ template<class T>
   class AutoFired
 {
 public:
-  AutoFired(void) {
+  AutoFired(void):
+    m_junctionBox(CoreContext::CurrentContext()->GetJunctionBox<T>())
+  {
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
-
-    auto ctxt = CoreContext::CurrentContext();
-    m_junctionBox = ctxt->GetJunctionBox<T>();
   }
 
   /// <summary>
