@@ -962,7 +962,7 @@ public:
 
     // Failed, defer
     boost::lock_guard<boost::mutex> lk(m_lock);
-    m_deferred.insert(&slot);
+    m_deferred[typeid(typename W::value_type)].push_back(&slot);
     return false;
   }
 
