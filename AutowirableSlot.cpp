@@ -3,7 +3,6 @@
 #include "AutowirableSlot.h"
 #include "Autowired.h"
 #include "autowiring_error.h"
-#include "AutoNetworkMonitor.h"
 #include "CoreContext.h"
 #include <stdexcept>
 

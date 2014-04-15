@@ -21,8 +21,6 @@ set(Autowiring_SRCS
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
   AutoPacketSubscriber.h
-  AutoNetworkMonitor.h
-  AutoNetworkMonitor.cpp
   Autowired.h
   Autowired.cpp
   AutowirableSlot.h
@@ -163,8 +161,6 @@ set(AutowiringTest_SRCS
   FactoryTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
-  GraphConstructionTest.h
-  GraphConstructionTest.cpp
   InterlockedRoutinesTest.h
   InterlockedRoutinesTest.cpp
   MarshalingTest.h
