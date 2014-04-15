@@ -24,7 +24,7 @@ public:
   DeferrableAutowiring(const std::shared_ptr<CoreContext>& context);
   ~DeferrableAutowiring(void);
 
-private:
+protected:
   /// <summary>
   /// This is the context that was available at the time the autowiring was performed.
   /// </summary>
@@ -34,6 +34,9 @@ private:
   /// this pointer and the context membership set.
   /// </remarks>
   std::weak_ptr<CoreContext> m_context;
+
+  // The next entry to be autowired in this sequence
+  DeferrableAutowiring* m_pFlink;
 
 protected:
   /// <summary>
@@ -45,6 +48,10 @@ protected:
   void CancelAutowiring(void);
 
 public:
+  DeferrableAutowiring* GetFlink(void) const { return m_pFlink; }
+  void SetFlink(DeferrableAutowiring* pFlink) { m_pFlink = pFlink; }
+
+
   /// <returns>
   /// The type on which this deferred slot is bound
   /// </returns>
@@ -114,14 +121,19 @@ public:
 
   void SatisfyAutowiring(const DeferrableAutowiring& witness) override {
     // Just perform blind assignment:
-    (std::shared_ptr<T>&)*this = static_cast<const AutowirableSlot<T>&>(witness);
+    SatisfyAutowiring(static_cast<const AutowirableSlot<T>&>(witness));
+  }
+
+  void SatisfyAutowiring(const AutowirableSlot<T>& witness) {
+    // Just perform blind assignment:
+    (std::shared_ptr<T>&)*this = witness;
   }
 
   operator bool(void) const {
     return IsAutowired();
   }
 
-  virtual bool IsAutowired(void) const = 0;
+  bool IsAutowired(void) const { return !!t_ptrType::get(); }
 
   using std::shared_ptr<T>::operator=;
 };
@@ -148,19 +160,22 @@ public:
   }
 
   // Underlying lambda that we will call:
-  Fn fn;
+  const Fn fn;
 
-  // Overrides from DeferrableAutowiring:
-  const std::type_info& GetType(void) const override { return typeid(T); }
+  template<class L, class Ret, class... Args>
+  void CallThroughObj(Ret(L::*pfn)(Args...) const) {
+    (fn.*pfn)(
+      (Args) *this...
+    );
+  }
 
   void Finalize(void) override {
     // Let the lambda execute as it sees fit:
-    fn(casted);
+    CallThroughObj<Fn>(&Fn::operator());
 
     // Call the lambda, remove all accountability to the context, self-destruct, and return:
-    ctxtWeak.reset();
+    m_context.reset();
     delete this;
-    return true;
   }
 };
 
