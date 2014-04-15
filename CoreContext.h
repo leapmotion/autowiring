@@ -397,9 +397,9 @@ protected:
   /// </summary>
   struct AddInternalTraits {
     template<class T>
-    AddInternalTraits(const std::shared_ptr<T>& value) :
+    AddInternalTraits(const AutoPacketSubscriber& subscriber, const std::shared_ptr<T>& value) :
       type(typeid(T)),
-      subscriber(AutoPacketSubscriberSelect<T>(value)),
+      subscriber(subscriber),
       pObject(leap::fast_pointer_cast<Object>(value)),
       pContextMember(leap::fast_pointer_cast<ContextMember>(value)),
       pCoreRunnable(leap::fast_pointer_cast<CoreRunnable>(value)),
@@ -514,7 +514,7 @@ public:
 
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
-      AddInternal(retVal);
+      AddInternal(AddInternalTraits(AutoPacketSubscriberSelect<T>(retVal), retVal));
     }
     catch(autowiring_error&) {
       // We know why this exception occurred.  It's because, while we were constructing our
