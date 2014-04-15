@@ -113,29 +113,20 @@ public:
   // constructor is defined.
   //
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-
   Autowired(void):
-    AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>()),
-    m_autowire(&CoreContext::Autowire<Autowired>)
+    AutowirableSlot(CoreContext::CurrentContext()->template ResolveAnchor<T>(), typeid(T))
   {
-    TrySatisfy();
+    LockContext()->Autowire(*this);
   }
 
   Autowired(std::weak_ptr<CoreContext> ctxt):
-    AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>()),
-    m_autowire(&CoreContext::Autowire<Autowired>)
+    AutowirableSlot(ctxt.lock()->template ResolveAnchor<T>(), typeid(T))
   {
-    TrySatisfy();
+    LockContext()->Autowire(*this);
   }
-
-  bool(CoreContext::*const m_autowire)(Autowired& rhs);
 
   operator T*(void) const {
     return t_ptrType::get();
-  }
-
-  bool TrySatisfy(void) override {
-    return ((*LockContext()).*m_autowire)(*this);
   }
 
   bool IsAutowired(void) const override {return !!t_ptrType::get();}
@@ -192,13 +183,13 @@ public:
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
 
   AutoRequired(void):
-    AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>())
+    AutowirableSlot(CoreContext::CurrentContext()->template ResolveAnchor<T>(), typeid(T))
   {
     *this = AutowirableSlot::LockContext()->template Inject<T>();
   }
 
   AutoRequired(std::weak_ptr<CoreContext> ctxt):
-    AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>())
+    AutowirableSlot(ctxt.lock()->template ResolveAnchor<T>(), typeid(T))
   {
     *this = AutowirableSlot::LockContext()->template Inject<T>();
   }
@@ -209,11 +200,6 @@ public:
 
   operator T*(void) const {
     return t_ptrType::get();
-  }
-
-  bool TrySatisfy(void) override {
-    // AutoRequired instances are _always_ satisfied
-    return true;
   }
 
   bool IsAutowired(void) const override {return !!t_ptrType::get();}
