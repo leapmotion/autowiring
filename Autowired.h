@@ -80,16 +80,10 @@ public:
 /// </remarks>
 template<class T>
 class Autowired:
-  public AutowirableSlot,
-  public std::shared_ptr<T>
+  public AutowirableSlot<T>,
+  public DeferrableAutowiring
 {
-  static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
-  static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
-
 public:
-  typedef T value_type;
-  typedef std::shared_ptr<T> t_ptrType;
-
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
   // If you are getting an error tracked to this line, ensure that class T is totally
   // defined at the point where the Autowired instance is constructed.  Generally,
@@ -127,19 +121,29 @@ public:
     return t_ptrType::get();
   }
 
+  using AutowirableSlot::operator bool;
+
+  // Base overrides:
   bool TrySatisfyAutowiring(const std::shared_ptr<Object>& slot) override {
     if(*this)
-      // Already assigned, pass control to the default handler
-      return AutowirableSlot::TrySatisfyAutowiring(slot);
+      // Already assigned, this is an error
+      throw autowiring_error("Cannot invoke assign on a slot which is already assigned");
 
     return !!(
         (std::shared_ptr<T>&)*this = m_fast_pointer_cast(slot)
       );
   }
 
-  bool IsAutowired(void) const override {return !!t_ptrType::get();}
+  void SatisfyAutowiring(DeferrableAutowiring* pWitness) override {
+    *this = static_cast<AutowirableSlot<T>&>(*pWitness);
+  }
 
-  using AutowirableSlot::operator bool;
+  template<class T, class Fn>
+  void NotifyWhenAutowired(Fn&& fn) {
+    ;
+  }
+
+  bool IsAutowired(void) const override {return !!t_ptrType::get();}
 };
 
 /// <summary>
@@ -156,15 +160,10 @@ public:
 /// </remarks>
 template<class T>
 class AutoRequired:
-  public AutowirableSlot,
-  public std::shared_ptr<T>
+  public AutowirableSlot<T>
 {
-  static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
-  static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
 public:
   using std::shared_ptr<T>::operator=;
-  typedef T value_type;
-  typedef std::shared_ptr<T> t_ptrType;
 
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
   // If you are getting an error tracked to this line, ensure that class T is totally

@@ -402,14 +402,42 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
 }
 
 void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
+  // Collection of satisfiable lists:
+  std::vector<std::list<DeferrableAutowiring*>> satisfiable;
+
   // Notify any autowired field whose autowiring was deferred
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    for(auto q = m_deferred.begin(); q != m_deferred.end();)
-      if((**q).TrySatisfyAutowiring(entry))
+    for(auto q = m_deferred.begin(); q != m_deferred.end();) {
+      auto& cur = q->second;
+
+      // Current list should not be empty--if it is, then we have an error
+      assert(!cur.empty());
+
+      if((**cur.begin()).TrySatisfyAutowiring(entry)) {
+        // If the first entry is satisfiable then ALL entries are satisfiable
+        // Move all entries into our satisfiable collection and run them later
+        satisfiable.emplace_back(std::move(cur));
         q = m_deferred.erase(q);
+      }
       else
-       q++;
+        q++;
+    }
+  }
+
+  for(auto& curList : satisfiable) {
+    // First entry needs custom finalization and will be used as a witness:
+    auto* witness = *curList.begin();
+    witness->Finalize();
+    
+    // Need to eliminate the first element so we don't accidentally try to
+    // satisfy it twice:
+    curList.pop_front();
+
+    // Now run through everything else and finalize it all:
+    for(auto& curDeferred : curList) {
+      curDeferred->SatisfyAutowiring(*witness);
+    }
   }
 
   // Give children a chance to also update their deferred elements:

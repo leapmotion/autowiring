@@ -237,8 +237,10 @@ protected:
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
 
-  // Collection of objects waiting to be autowired, and a specific lock exclusively for this collection
-  std::unordered_set<DeferrableAutowiring*> m_deferred;
+  // Map of slots waiting to be autowired, organized by the desired type.  The type allows chaining to take
+  // place in an intelligent way.
+  typedef std::unordered_map<std::type_index, std::list<DeferrableAutowiring*>> t_deferredMap;
+  t_deferredMap m_deferred;
 
   // All known event receivers and receiver proxies originating from this context:
   typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
