@@ -22,7 +22,7 @@ void NullOp(T) {}
 class DeferrableAutowiring {
 public:
   DeferrableAutowiring(const std::shared_ptr<CoreContext>& context);
-  ~DeferrableAutowiring(void) {}
+  ~DeferrableAutowiring(void);
 
 private:
   /// <summary>
@@ -36,6 +36,11 @@ private:
   std::weak_ptr<CoreContext> m_context;
 
 public:
+  /// <returns>
+  /// The type on which this deferred slot is bound
+  /// </returns>
+  virtual const std::type_info& GetType(void) const = 0;
+
   /// <summary>
   /// Attempts to satisfy this autowiring relationship with the specified candidate object
   /// </summary>
@@ -51,7 +56,7 @@ public:
   /// <remarks>
   /// The passed value must be statically castable to type AutowirableSlot
   /// </remarks>
-  virtual void SatisfyAutowiring(DeferrableAutowiring* pWitness) = 0;
+  virtual void SatisfyAutowiring(const DeferrableAutowiring& witness) = 0;
 
   /// <summary>
   /// Releases memory allocated by this object, where appropriate
@@ -70,17 +75,37 @@ public:
 
 template<class T>
 class AutowirableSlot:
+  public DeferrableAutowiring,
   public std::shared_ptr<T>
 {
 public:
   typedef T value_type;
   typedef std::shared_ptr<T> t_ptrType;
 
+  AutowirableSlot(const std::shared_ptr<CoreContext>& ctxt) :
+    DeferrableAutowiring(ctxt),
+    m_fast_pointer_cast(&leap::fast_pointer_cast<T, Object>)
+  {}
+
+  std::shared_ptr<T>(*const m_fast_pointer_cast)(const std::shared_ptr<Object>&);
+
+  bool TrySatisfyAutowiring(const std::shared_ptr<Object>& candidate) override {
+    *this = m_fast_pointer_cast(candidate);
+    return *this;
+  }
+
+  void SatisfyAutowiring(const DeferrableAutowiring& witness) override {
+    // Just perform blind assignment:
+    (std::shared_ptr<T>&)*this = static_cast<const AutowirableSlot<T>&>(witness);
+  }
+
   operator bool(void) const {
     return IsAutowired();
   }
 
   virtual bool IsAutowired(void) const = 0;
+
+  using std::shared_ptr<T>::operator=;
 };
 
 /// <summary>
@@ -104,11 +129,7 @@ public:
   Fn fn;
 
   // Overrides from DeferrableAutowiring:
-  bool TrySatisfyAutowiring(const std::shared_ptr<Object>& candidate) override {
-    auto casted = std::dynamic_pointer_cast<T>(candidate);
-    if(!casted)
-      return false;
-  }
+  const std::type_info& GetType(void) const override { return typeid(T); }
 
   void Finalize(void) override {
     // Let the lambda execute as it sees fit:

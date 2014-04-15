@@ -342,7 +342,17 @@ void CoreContext::BuildCurrentState(void) {
 
 void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable) {
   boost::lock_guard<boost::mutex> lk(m_lock);
-  m_deferred.erase(pDeferrable);
+  auto q = m_deferred.find(pDeferrable->GetType());
+  if(q == m_deferred.end())
+    return;
+
+  // Linear scan for the entry in question:
+  auto r = std::find(q->second.begin(), q->second.end(), pDeferrable);
+  if(r != q->second.end())
+    // Found the entry, evict it:
+    q->second.erase(r);
+
+  // Always finalize this entry:
   pDeferrable->Finalize();
 }
 
