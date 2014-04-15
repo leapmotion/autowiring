@@ -239,7 +239,7 @@ protected:
 
   // Map of slots waiting to be autowired, organized by the desired type.  The type allows chaining to take
   // place in an intelligent way.
-  typedef std::unordered_map<std::type_index, std::list<DeferrableAutowiring*>> t_deferredMap;
+  typedef std::unordered_map<std::type_index, DeferrableAutowiring*> t_deferredMap;
   t_deferredMap m_deferred;
 
   // All known event receivers and receiver proxies originating from this context:
@@ -962,7 +962,11 @@ public:
 
     // Failed, defer
     boost::lock_guard<boost::mutex> lk(m_lock);
-    m_deferred[typeid(typename W::value_type)].push_back(&slot);
+
+    // Push to the head of our linked list:
+    auto& flink = m_deferred[typeid(typename W::value_type)];
+    slot.SetFlink(flink);
+    flink = &slot;
     return false;
   }
 
