@@ -113,8 +113,6 @@ public:
     ctxt->Autowire(*this);
   }
 
-  const std::type_info& GetType(void) const override { return typeid(T); }
-
   operator T*(void) const {
     return t_ptrType::get();
   }
