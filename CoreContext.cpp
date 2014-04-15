@@ -247,13 +247,15 @@ void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
-  GetGlobal()->Invoke(&AutowiringEvents::NewBolt)(*this, pBase);
 
-  for(auto cur = pBase->GetContextSigils(); *cur; cur++)
+  for(auto cur = pBase->GetContextSigils(); *cur; cur++){
     m_nameListeners[**cur].push_back(pBase.get());
+    GetGlobal()->Invoke(&AutowiringEvents::NewBolt)(*this, **cur, *pBase.get());
+  }
 
-  if(!*pBase->GetContextSigils())
+  if(!*pBase->GetContextSigils()) {
     m_allNameListeners.push_back(pBase.get());
+  }
 }
 
 void CoreContext::BuildCurrentState(void) {
@@ -275,6 +277,12 @@ void CoreContext::BuildCurrentState(void) {
   //Event Receivers
   for (auto receiver = m_eventReceivers.begin(); receiver != m_eventReceivers.end(); ++receiver) {
     GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *receiver->m_ptr);
+  }
+  
+  //Bolts
+  for (auto sigil = m_nameListeners.begin(); sigil != m_nameListeners.end(); ++sigil) {
+    for (auto bolt = sigil->second.begin(); bolt != sigil->second.end(); ++bolt)
+      GetGlobal()->Invoke(&AutowiringEvents::NewBolt)(*this, sigil->first, **bolt);
   }
 
   boost::lock_guard<boost::mutex> lk(m_childrenLock);

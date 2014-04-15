@@ -19,7 +19,7 @@ class Bolt:
   public BoltBase
 {
 public:
-  const t_TypeInfoVector GetContextSigils(void) override {
+  const t_TypeInfoVector GetContextSigils(void) const override {
     static const std::type_info* sc_types[] = {
       &typeid(Sigil)...,
       nullptr
@@ -35,7 +35,7 @@ class Bolt<>:
   public BoltBase
 {
 public:
-  const t_TypeInfoVector GetContextSigils(void) override {
+  const t_TypeInfoVector GetContextSigils(void) const override {
     static const std::type_info* sc_types[] = {nullptr};
     return sc_types;
   }
