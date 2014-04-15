@@ -56,7 +56,7 @@ public:
   /// <returns>
   /// True if this slot holds nothing
   /// </returns>
-  bool empty(void) const { return type() == typeid(void); }
+  virtual bool empty(void) const { return true; }
 
   /// <returns>
   /// True if this pointer slot holds an instance of the specified type
@@ -211,6 +211,7 @@ public:
     return leap::fast_pointer_cast<Object>(get());
   }
 
+  virtual bool empty(void) const { return get() == nullptr; }
   virtual operator void*(void) const { return get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
 
