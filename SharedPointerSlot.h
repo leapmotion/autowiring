@@ -82,7 +82,7 @@ public:
   /// Attempts to coerce this type to the speceified type
   /// </summary>
   template<class T>
-  std::shared_ptr<T>& as(void) {
+  std::shared_ptr<T> as(void) const {
     if(type() != typeid(T))
       throw std::runtime_error("Attempted to obtain a shared pointer for an unrelated type");
 
@@ -127,7 +127,7 @@ public:
     // If we're not empty, then we will verify that types match before attempting any
     // other comparison.  This means that it's possible for types related via a dynamic
     // cast to fail a comparison--callers must be aware of this possibility.
-    if(type() != typeid(T))
+    if(type() != typeid(*rhs))
       return false;
 
     // Everything lines up, coerce ourselves to the derived type and handoff the
