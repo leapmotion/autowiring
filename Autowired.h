@@ -116,19 +116,19 @@ public:
 
   Autowired(void):
     AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>()),
-    m_autowire(&CoreContext::FindByType<T>)
+    m_autowire(&CoreContext::Autowire<Autowired>)
   {
     TrySatisfy();
   }
 
   Autowired(std::weak_ptr<CoreContext> ctxt):
     AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>()),
-    m_autowire(&CoreContext::FindByType<T>)
+    m_autowire(&CoreContext::Autowire<Autowired>)
   {
     TrySatisfy();
   }
 
-  bool(CoreContext::*const m_autowire)(std::shared_ptr<T>& rhs);
+  bool(CoreContext::*const m_autowire)(Autowired& rhs);
 
   operator T*(void) const {
     return t_ptrType::get();
