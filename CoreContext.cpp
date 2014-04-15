@@ -399,15 +399,11 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
   // Notify any autowired field whose autowiring was deferred
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    for(size_t i = m_deferred.size(); i--;) {
-      bool rs = false;
-      if(!rs)
-        continue;
-
-      // Tail erasure of this element:
-      m_deferred[i] = m_deferred[m_deferred.size() - 1];
-      m_deferred.pop_back();
-    }
+    for(auto q = m_deferred.begin(); q != m_deferred.end();)
+      if((**q).Assign(entry))
+        q = m_deferred.erase(q);
+      else
+       q++;
   }
 
   // Give children a chance to also update their deferred elements:
