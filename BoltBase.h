@@ -21,7 +21,7 @@ public:
   /// <summary>
   /// Returns a null-termianted list of one (or more) sigil types that this bolt cares about
   /// </summary>
-  virtual const t_TypeInfoVector GetContextSigils(void) = 0;
+  virtual const t_TypeInfoVector GetContextSigils(void) const = 0;
 
   /// <summary>
   /// A notification broadcast when a context of the desired name has been created

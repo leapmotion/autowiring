@@ -27,7 +27,7 @@ angular.module('autoNetApp')
 
     socket.onmessage = function(evt) {
       var msg = JSON.parse(evt.data);
-      $rootScope.$emit(msg.type, msg.args);
+      $rootScope.$emit('leap-'+msg.type, msg.args);
     };
 
     socket.onopen = function() {
@@ -41,7 +41,7 @@ angular.module('autoNetApp')
       console.log('close')
       isConnected = false;
       $rootScope.$digest();
-      $rootScope.$emit('unsubscribed');
+      $rootScope.$emit('leap-unsubscribed');
       if (interval === null) {
         interval = setInterval(InitConnection, 1000);
       }
@@ -53,7 +53,7 @@ angular.module('autoNetApp')
   return {
     on: function(eventName, callback) {
       console.log('Event Registered: ', eventName);
-      $rootScope.$on(eventName,function(event, args){
+      $rootScope.$on('leap-'+eventName, function(event, args){
         callback.apply(socket, args);
         $rootScope.$digest();
       });
