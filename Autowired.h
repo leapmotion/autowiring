@@ -108,11 +108,23 @@ public:
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
 
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
-    AutowirableSlot(ctxt->template ResolveAnchor<T>())
+    AutowirableSlot(ctxt->template ResolveAnchor<T>()),
+    m_pFirstChild(nullptr)
   {
     ctxt->Autowire(*this);
   }
 
+  ~Autowired(void) {
+    std::unique_ptr<DeferrableAutowiring> prior;
+    for(DeferrableAutowiring* cur = m_pFirstChild; cur; cur = cur->GetFlink())
+      prior.reset(cur);
+  }
+
+private:
+  // The first deferred child known to need registration:
+  AutowirableSlot<T>* m_pFirstChild;
+
+public:
   operator T*(void) const {
     return t_ptrType::get();
   }
@@ -121,23 +133,48 @@ public:
     return (AutowirableSlot&) *this;
   }
 
+  /// <summary>
+  /// Allows a lambda function to be called when this slot is autowired
+  /// </summary>
+  /// <remarks>
+  /// In contrast with CoreContext::NotifyWhenAutowired, the specified lambda will only be
+  /// called as long as this Autowired slot has not been destroyed.  If this slot is destroyed
+  /// beforehand, the lambda will never be invoked.
+  /// </remarks>
+  template<class Fn>
+  void NotifyWhenAutowired(Fn fn) {
+    // We pass null, because we do not want this slot to attempt any kind of unregistration when
+    // it goes out of scope.  Instead, we will manage its entire registration lifecycle, and
+    // retain full ownership over the object until we need to destroy it.
+    auto newHead = new AutowirableSlotFn<Fn, T>(nullptr, std::forward<Fn>(fn));
+
+    // Append to our list:
+    newHead->SetFlink(m_pFirstChild);
+    m_pFirstChild = newHead;
+  }
+
   // Base overrides:
   bool TrySatisfyAutowiring(const std::shared_ptr<Object>& slot) override {
     if(*this)
       // Already assigned, this is an error
       throw autowiring_error("Cannot invoke assign on a slot which is already assigned");
 
-    return !!(
-        (std::shared_ptr<T>&)*this = m_fast_pointer_cast(slot)
-      );
+    return !!((std::shared_ptr<T>&)*this = m_fast_pointer_cast(slot));
   }
 
-  template<class Fn>
-  void NotifyWhenAutowired(Fn&& fn) {
-    ;
-  }
+  void Finalize(void) override {
+    // Carry the satisfaction to all of our autowirable slots.  If an exception is thrown
+    // here, we will allow our destructor to handle cleanup operations.
+    while(m_pFirstChild) {
+      // Allow the child to obtain a shared_ptr addref:
+      m_pFirstChild->SatisfyAutowiring(*this);
 
-  bool IsAutowired(void) const override {return !!t_ptrType::get();}
+      // Need to memoize flink, because Finalize has been defined as a self-destruct routine:
+      auto flink = m_pFirstChild->GetFlink();
+      m_pFirstChild->Finalize();
+      m_pFirstChild = static_cast<AutowirableSlot<T>*>(flink);
+    }
+  }
 };
 
 /// <summary>
