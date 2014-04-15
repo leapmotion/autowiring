@@ -2,12 +2,14 @@
 #ifndef _AUTOWIRABLE_SLOT_H
 #define _AUTOWIRABLE_SLOT_H
 #include "AutoFactory.h"
+#include "autowiring_error.h"
 #include FUNCTIONAL_HEADER
 #include SHARED_PTR_HEADER
 #include <functional>
 #include <memory>
 
 class CoreContext;
+class Object;
 
 // Utility routine, for users who need a function that does nothing
 template<class T>
@@ -46,6 +48,10 @@ public:
   /// Utility routine to lock the context, or throw an exception if something goes wrong
   /// </summary>
   std::shared_ptr<CoreContext> LockContext(void);
+
+  virtual bool Assign(const std::shared_ptr<Object>&) {
+    throw autowiring_error("Cannot invoke assign on a slot which is already assigned");
+  }
 
   operator bool(void) const {
     return IsAutowired();
