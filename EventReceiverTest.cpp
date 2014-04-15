@@ -3,6 +3,7 @@
 #include "EventReceiverTest.h"
 #include "Autowiring/Autowired.h"
 #include "Autowiring/CoreThread.h"
+#include "TestFixtures/FiresManyEventsWhenRun.h"
 #include "TestFixtures/SimpleReceiver.h"
 #include <boost/thread/barrier.hpp>
 #include <stdexcept>
@@ -10,32 +11,11 @@
 
 using namespace std;
 
-class Jammer:
-  public CoreThread
-{
-public:
-  Jammer(void):
-    totalXmit(0)
-  {
-  }
-
-  volatile int totalXmit;
-
-  AutoFired<CallableInterface> m_ci;
-
-  void Run(void) override {
-    while(!ShouldStop() && totalXmit < 0x7FFFF000)
-      // Jam for awhile in an asynchronous way:
-      while(++totalXmit % 100)
-        m_ci(&CallableInterface::ZeroArgs)();
-  }
-};
-
 EventReceiverTest::EventReceiverTest(void) {
   AutoCurrentContext ctxt;
 
   // Start up the context:
-  ctxt->InitiateCoreThreads();
+  ctxt->Initiate();
 }
 
 TEST_F(EventReceiverTest, SimpleMethodCall) {
@@ -56,18 +36,26 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
 }
 
 TEST_F(EventReceiverTest, VerifyNoReceive) {
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+  
   AutoRequired<SimpleReceiver> receiver;
   AutoFired<CallableInterfaceDeferred> sender;
 
   // Try to defer these calls, should not be delivered anywhere:
-  sender.Defer(&CallableInterfaceDeferred::ZeroArgsDeferred)();
-  sender.Defer(&CallableInterfaceDeferred::OneArgDeferred)(100);
+  try {
+  EXPECT_ANY_THROW(sender.Defer(&CallableInterfaceDeferred::ZeroArgsDeferred)());
+  }catch(...){}
+  try{
+  EXPECT_ANY_THROW(sender.Defer(&CallableInterfaceDeferred::OneArgDeferred)(100));
+  }catch(...){}
 
   // Unblock:
   receiver->Proceed();
 
   // Allow dispatch delivery and post the quit event:
-  receiver->AcceptDispatchDelivery();
+  //receiver->AcceptDispatchDelivery();
+  AutoCurrentContext()->Initiate();
   sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Wait:
@@ -83,7 +71,7 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
   AutoFired<CallableInterfaceDeferred> sender;
 
   // Accept dispatch delivery:
-  receiver->AcceptDispatchDelivery();
+  //receiver->AcceptDispatchDelivery();
 
   // Deferred fire:
   sender.Defer(&CallableInterfaceDeferred::ZeroArgsDeferred)();
@@ -112,7 +100,7 @@ TEST_F(EventReceiverTest, NontrivialCopy) {
   AutoFired<CallableInterfaceDeferred> sender;
 
   // Accept dispatch delivery:
-  receiver->AcceptDispatchDelivery();
+  //receiver->AcceptDispatchDelivery();
 
   static const int sc_numElems = 10;
 
@@ -176,7 +164,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   AutoFired<CallableInterfaceDeferred> sender;
 
   // Accept dispatch delivery:
-  receiver->AcceptDispatchDelivery();
+  //receiver->AcceptDispatchDelivery();
 
   // Make our copy counter:
   CopyCounter ctr;
@@ -206,8 +194,9 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
     {
       // Create a new descendant context and put the receiver in it:
       AutoCreateContext subCtxt;
-      CurrentContextPusher pshr(subCtxt);
       subCtxtWeak = subCtxt;
+      CurrentContextPusher pshr(subCtxt);
+      subCtxt->Initiate();
 
       // Create a new descendant event receiver that matches a parent context type and should
       // be autowired to grab events from the parent:
@@ -220,6 +209,8 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
 
       // Verify that it gets caught:
       EXPECT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
+      
+      subCtxt->SignalShutdown(true);
     }
 
     // Verify subcontext is gone:
@@ -278,7 +269,7 @@ TEST_F(EventReceiverTest, OrphanedMemberFireCheck) {
 
 TEST_F(EventReceiverTest, PathologicalChildContextTest) {
   // Set up the jammer and receiver collections:
-  AutoRequired<Jammer> jammer;
+  AutoRequired<FiresManyEventsWhenRun> jammer;
 
   // This by itself is sufficient to cause problems:
   for(size_t i = 0; i < 500; i++) {
@@ -299,7 +290,7 @@ TEST_F(EventReceiverTest, PathologicalChildContextTest) {
 
 TEST_F(EventReceiverTest, PathologicalTransmitterTest) {
   // Set up the jammer and receiver collections:
-  AutoRequired<Jammer> jammer;
+  AutoRequired<FiresManyEventsWhenRun> jammer;
 
   for(size_t i = 0; i < 5; i++) {
     AutoCreateContext subCtxt;
@@ -385,10 +376,6 @@ public:
   void StringArg(std::string arg) override {
     m_value = arg;
   }
-
-  // Make this method public
-  using CoreThread::AcceptDispatchDelivery;
-  using CoreThread::RejectDispatchDelivery;
 };
 
 // Create two different receivers
@@ -423,6 +410,7 @@ TEST_F(EventReceiverTest, VerifyMultiplePassByValue) {
 
   // Fire the "pass by value" event:
   sender(&PassByValueInterface::StringArg)(passByValue);
+
   // Verify that the value received matches what we sent both receivers:
   EXPECT_EQ(passByValue, receiver1->value());
   EXPECT_EQ(passByValue, receiver2->value());
@@ -431,4 +419,40 @@ TEST_F(EventReceiverTest, VerifyMultiplePassByValue) {
   receiver2->Stop();
   receiver1->Wait();
   receiver2->Wait();
+}
+
+TEST_F(EventReceiverTest, VerifyNoActionWhileStopped) {
+  AutoCreateContext outerCtxt;
+  CurrentContextPusher outerpshr(outerCtxt);
+  
+  // Firer which will operate at the outer scope:
+  AutoFired<CallableInterface> ciOuter;
+  AutoFired<CallableInterfaceDeferred> ciOuterDeferred;
+
+  // Create a subcontext:
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+
+  // These AutoFired will be in the interior context
+  AutoFired<CallableInterface> ciInner;
+  AutoFired<CallableInterfaceDeferred> ciInnerDeferred;
+
+  // Inject a simple receiver so we can verify that it didn't catch any events:
+  AutoRequired<SimpleReceiver> sr;
+  
+  ASSERT_FALSE(sr->IsRunning()) << "CoreThread was running in a context that was not started";
+
+  // Fire events at the outer scope--this should succeed but should not be picked up by the CoreThread:
+  //EXPECT_ANY_THROW(ciOuter(&CallableInterface::ZeroArgs)()) << "Firing and event before context is initiated didn't throw exception";
+  ASSERT_FALSE(sr->m_zero) << "A member of an uninitialized context incorrectly received an event";
+
+  //ciOuterDeferred(&CallableInterfaceDeferred::ZeroArgsDeferred)();
+  ASSERT_EQ(0UL, sr->GetDispatchQueueLength()) << "A deferred event was incorrectly received by a member of an uninitialized context";
+
+  // Now try to fire at the inner scope.  These fire calls MUST throw exceptions, because firing an
+  // event during context setup (say, during a constructor) is an error.
+  
+  const char* fireErr = "Attempting to fire an event in an interior context did not correctly cause an exception";
+  ASSERT_ANY_THROW(ciInner(&CallableInterface::ZeroArgs)()) << fireErr;
+  ASSERT_ANY_THROW(ciInnerDeferred(&CallableInterfaceDeferred::ZeroArgsDeferred)()) << fireErr;
 }

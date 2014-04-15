@@ -1,6 +1,5 @@
 #pragma once
 #include "Bolt.h"
-#include <vector>
 
 /// <summary>
 /// Causes the class inheriting from this definition to be bolted to the specified contexts

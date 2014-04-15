@@ -99,7 +99,7 @@ TEST_F(AutoInjectableTest, VerifyInjectableAdditionPermutation3) {
 
 TEST_F(AutoInjectableTest, VerifySimpleThreadWait) {
   // Immediate kickoff:
-  AutoCurrentContext()->InitiateCoreThreads();
+  AutoCurrentContext()->Initiate();
 
   // Make an injectable, run it, and stuff it right into a future:
   AutoFuture future;
@@ -127,4 +127,12 @@ TEST_F(AutoInjectableTest, VerifySimpleThreadWait) {
 
   // Now that the thread is unblocked, verify that it quits:
   ASSERT_TRUE(future.WaitFor(boost::chrono::seconds(5))) << "Wait failed to return on an injector-provided future";
+}
+
+TEST_F(AutoInjectableTest, VerifyFunctionalInjectable) {
+  bool val = false;
+  AutoInjectable inj = MakeInjectableFn([&val] { val = true; });
+  inj();
+
+  ASSERT_TRUE(val) << "Functional injectable did not operate as expected";
 }

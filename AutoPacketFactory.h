@@ -7,9 +7,11 @@
 #include "FilterPropertyExtractor.h"
 #include "ObjectPool.h"
 #include <boost/any.hpp>
-#include TYPE_INDEX_HEADER
-#include STL_UNORDERED_MAP
+#include <typeinfo>
 #include <vector>
+#include TYPE_INDEX_HEADER
+#include TYPE_TRAITS_HEADER
+#include STL_UNORDERED_MAP
 
 class AutoPacketListener;
 class Deferred;

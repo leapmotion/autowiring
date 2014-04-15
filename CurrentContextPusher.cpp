@@ -32,9 +32,11 @@ CurrentContextPusher::~CurrentContextPusher(void)
   Pop();
 }
 
-void CurrentContextPusher::Pop(void) {
+std::shared_ptr<CoreContext> CurrentContextPusher::Pop(void) {
+  std::shared_ptr<CoreContext> retVal;
   if(m_prior) {
-    m_prior->SetCurrent();
+    retVal = m_prior->SetCurrent();
     m_prior.reset();
   }
+  return retVal;
 }
