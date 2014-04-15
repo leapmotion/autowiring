@@ -9,8 +9,9 @@
 
 using namespace std;
 
-AutowirableSlot::AutowirableSlot(std::weak_ptr<CoreContext> context) :
-  m_context(context)
+AutowirableSlot::AutowirableSlot(std::weak_ptr<CoreContext> context, const std::type_info& type) :
+  m_context(context),
+  m_type(type)
 {
 }
 
