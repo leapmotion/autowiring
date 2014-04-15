@@ -104,11 +104,10 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
       throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
 
     // Perform the insertion at the canonical type identity:
-    *v = traits.pObject;
+    v = traits.value;
 
     // Double-check that the type we just inserted passes sanity checks:
     assert(*v == traits.pObject);
-    assert(v->as<Object>() == traits.pObject);
 
     // Insert each context element:
     if(traits.pContextMember) {
