@@ -939,10 +939,9 @@ public:
   /// Locates an available context member in this context
   /// </summary>
   template<class T>
-  bool FindByType(std::shared_ptr<T>& slot) {
+  void FindByType(std::shared_ptr<T>& slot) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     FindByTypeUnsafe(slot);
-    return slot != nullptr;
   }
 
   // Interior type overrides:
