@@ -346,18 +346,30 @@ void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable
   if(q == m_deferred.end())
     return;
 
-  // Linear scan for the entry in question:
-  auto r = std::find(q->second.begin(), q->second.end(), pDeferrable);
-  if(r != q->second.end())
-    // Found the entry, evict it:
-    q->second.erase(r);
-
-  if(q->second.empty())
-    // Erase the entire list, the list is now empty:
-    m_deferred.erase(q);
-
   // Always finalize this entry:
   pDeferrable->Finalize();
+
+  // Stores the immediate predecessor of the node we will linearly scan for in our
+  // linked list.
+  DeferrableAutowiring* prior = nullptr;
+
+  // Now remove the entry from the list:
+  // NOTE:  If a performance bottleneck is tracked to here, the solution is to use
+  // a doubly-linked list.
+  for(auto cur = q->second; cur != pDeferrable; prior = cur, cur = cur->GetFlink())
+    if(!cur)
+      // Ran off the end of the list, nothing we can do here
+      return;
+
+  if(prior)
+    // Erase the entry by using link elision:
+    prior->SetFlink(pDeferrable->GetFlink());
+  if(pDeferrable->GetFlink())
+    // Just update the head at this entry
+    q->second = pDeferrable->GetFlink();
+  else
+    // Erase the entire list, the list is now empty:
+    m_deferred.erase(q);
 }
 
 void CoreContext::Dump(std::ostream& os) const {
@@ -417,7 +429,7 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
 
 void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
   // Collection of satisfiable lists:
-  std::vector<std::list<DeferrableAutowiring*>> satisfiable;
+  std::vector<DeferrableAutowiring*> satisfiable;
 
   // Notify any autowired field whose autowiring was deferred
   {
@@ -425,13 +437,10 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
     for(auto q = m_deferred.begin(); q != m_deferred.end();) {
       auto& cur = q->second;
 
-      // Current list should not be empty--if it is, then we have an error
-      assert(!cur.empty());
-
-      if((**cur.begin()).TrySatisfyAutowiring(entry)) {
+      if((*cur).TrySatisfyAutowiring(entry)) {
         // If the first entry is satisfiable then ALL entries are satisfiable
         // Move all entries into our satisfiable collection and run them later
-        satisfiable.emplace_back(std::move(cur));
+        satisfiable.emplace_back(cur);
         q = m_deferred.erase(q);
       }
       else
@@ -439,19 +448,13 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
     }
   }
 
-  for(auto& curList : satisfiable) {
+  for(auto listHead : satisfiable) {
     // First entry needs custom finalization and will be used as a witness:
-    auto* witness = *curList.begin();
-    witness->Finalize();
+    listHead->Finalize();
     
-    // Need to eliminate the first element so we don't accidentally try to
-    // satisfy it twice:
-    curList.pop_front();
-
-    // Now run through everything else and finalize it all:
-    for(auto& curDeferred : curList) {
-      curDeferred->SatisfyAutowiring(*witness);
-    }
+    // Run through everything else and finalize it all:
+    for(auto* pCur = listHead->GetFlink(); pCur; pCur = pCur->GetFlink())
+      pCur->SatisfyAutowiring(*listHead);
   }
 
   // Give children a chance to also update their deferred elements:
