@@ -235,7 +235,7 @@ protected:
   std::unordered_set<ContextMember*> m_contextMembers;
 
   // Collection of objects waiting to be autowired, and a specific lock exclusively for this collection
-  std::vector<AutowirableSlot*> m_deferred;
+  std::unordered_set<AutowirableSlot*> m_deferred;
 
   // All known event receivers and receiver proxies originating from this context:
   typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
@@ -373,21 +373,6 @@ protected:
   /// Counterpart to the AddPacketSubscriber routine, but will remove an array of subscribers
   /// </summary>
   void RemovePacketSubscribers(const std::vector<AutoPacketSubscriber>& subscribers);
-
-  /// <summary>
-  /// Identical to Autowire, but will not register the passed slot for deferred resolution
-  /// </summary>
-  template<class T>
-  bool FindByTypeRecursive(std::shared_ptr<T>& slot) {
-    // First-chance resolution in this context and ancestor contexts:
-    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
-      pCur->FindByType(slot);
-      if(slot)
-        return true;
-    }
-
-    return false;
-  }
 
   /// <summary>
   /// Increments the total number of contexts still outstanding
@@ -948,6 +933,21 @@ public:
   void FindByType(std::shared_ptr<AutoPacketFactory>& slot) { slot = m_packetFactory; }
 
   /// <summary>
+  /// Identical to Autowire, but will not register the passed slot for deferred resolution
+  /// </summary>
+  template<class T>
+  bool FindByTypeRecursive(std::shared_ptr<T>& slot) {
+    // First-chance resolution in this context and ancestor contexts:
+    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
+      pCur->FindByType(slot);
+      if(slot)
+        return true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
   /// Registers a slot to be autowired
   /// </summary>
   template<class W>
@@ -957,7 +957,7 @@ public:
 
     // Failed, defer
     boost::lock_guard<boost::mutex> lk(m_lock);
-    m_deferred.push_back(&slot);
+    m_deferred.insert(&slot);
     return false;
   }
 
@@ -966,11 +966,7 @@ public:
   /// </summary>
   void UndeferSlot(AutowirableSlot* pSlot) {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    for(size_t i = m_deferred.size(); i--;)
-      if(m_deferred[i] == pSlot) {
-        m_deferred[i] = m_deferred[m_deferred.size() - 1];
-        m_deferred.pop_back();
-      }
+    m_deferred.erase(pSlot);
   }
 
   /// <summary>

@@ -114,19 +114,33 @@ public:
   //
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
   Autowired(void):
-    AutowirableSlot(CoreContext::CurrentContext()->template ResolveAnchor<T>(), typeid(T))
+    AutowirableSlot(CoreContext::CurrentContext()->template ResolveAnchor<T>(), typeid(T)),
+    m_fast_pointer_cast(&leap::fast_pointer_cast<T, Object>)
   {
     LockContext()->Autowire(*this);
   }
 
   Autowired(const std::shared_ptr<CoreContext>& ctxt):
-    AutowirableSlot(ctxt->template ResolveAnchor<T>(), typeid(T))
+    AutowirableSlot(ctxt->template ResolveAnchor<T>(), typeid(T)),
+    m_fast_pointer_cast(&leap::fast_pointer_cast<T, Object>)
   {
     LockContext()->Autowire(*this);
   }
 
+  std::shared_ptr<T>(*const m_fast_pointer_cast)(const std::shared_ptr<Object>&);
+
   operator T*(void) const {
     return t_ptrType::get();
+  }
+
+  bool Assign(const std::shared_ptr<Object>& slot) override {
+    if(*this)
+      // Already assigned, pass control to the default handler
+      return AutowirableSlot::Assign(slot);
+
+    return !!(
+        (std::shared_ptr<T>&)*this = m_fast_pointer_cast(slot)
+      );
   }
 
   bool IsAutowired(void) const override {return !!t_ptrType::get();}
