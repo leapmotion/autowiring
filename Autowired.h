@@ -119,8 +119,8 @@ public:
     LockContext()->Autowire(*this);
   }
 
-  Autowired(std::weak_ptr<CoreContext> ctxt):
-    AutowirableSlot(ctxt.lock()->template ResolveAnchor<T>(), typeid(T))
+  Autowired(const std::shared_ptr<CoreContext>& ctxt):
+    AutowirableSlot(ctxt->template ResolveAnchor<T>(), typeid(T))
   {
     LockContext()->Autowire(*this);
   }
@@ -188,8 +188,8 @@ public:
     *this = AutowirableSlot::LockContext()->template Inject<T>();
   }
 
-  AutoRequired(std::weak_ptr<CoreContext> ctxt):
-    AutowirableSlot(ctxt.lock()->template ResolveAnchor<T>(), typeid(T))
+  AutoRequired(const std::shared_ptr<CoreContext>& ctxt) :
+    AutowirableSlot(ctxt->template ResolveAnchor<T>(), typeid(T))
   {
     *this = AutowirableSlot::LockContext()->template Inject<T>();
   }
