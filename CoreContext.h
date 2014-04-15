@@ -400,6 +400,7 @@ protected:
     AddInternalTraits(const AutoPacketSubscriber& subscriber, const std::shared_ptr<T>& value) :
       type(typeid(T)),
       subscriber(subscriber),
+      value(value),
       pObject(leap::fast_pointer_cast<Object>(value)),
       pContextMember(leap::fast_pointer_cast<ContextMember>(value)),
       pCoreRunnable(leap::fast_pointer_cast<CoreRunnable>(value)),
@@ -413,6 +414,10 @@ protected:
 
     // The declared original type:
     const std::type_info& type;
+
+    // A holder to store the original shared pointer, to ensure that type information propagates
+    // correctly on the right-hand side of our map
+    const AnySharedPointer value;
 
     // The packet subscriber introduction method, if appropriate:
     const AutoPacketSubscriber subscriber;
@@ -726,23 +731,16 @@ public:
   /// Determines whether the passed type is a member of this context, or any ancestor context
   /// </summary>
   template<class T>
-  bool IsMember(typename std::enable_if<std::is_base_of<ContextMember, T>::value, T*>::type ptr) const {
-    return ptr->GetContext().get() == this;
-  }
-
-  template<class T>
-  bool IsMember(typename std::enable_if<!std::is_base_of<ContextMember, T>::value, T*>::type ptr) const {
-    // If the passed type is a ContextMember, we can query relationship status
-    ContextMember* pMember = dynamic_cast<ContextMember*>(ptr);
-    return
-      pMember ?
-      pMember->GetContext().get() == this :
-      !!m_concreteTypes.count(typeid(T));
-  }
-
-  template<class T>
   bool IsMember(const std::shared_ptr<T>& ptr) const {
-    return IsMember<T>(ptr.get());
+    boost::lock_guard<boost::mutex> lk(m_lock);
+
+    auto q = m_concreteTypes.find(typeid(*ptr));
+    if(q == m_concreteTypes.end())
+      // The true type of the passed entity isn't even in our concrete map, then we short-circuit
+      return false;
+
+    // Found the true type, see if the slots match or if it's a coincidence:
+    return *q->second == ptr;
   }
 
   /// <summary>
