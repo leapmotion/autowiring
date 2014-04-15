@@ -1,11 +1,11 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "CoreContext.h"
+#include "CoreThread.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketListener.h"
 #include "Autowired.h"
 #include "BoltBase.h"
-#include "CoreThread.h"
 #include "GlobalCoreContext.h"
 #include "MicroBolt.h"
 #include <algorithm>
@@ -30,7 +30,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
   m_pParent(pParent),
   m_sigil(sigil),
   m_useOwnershipValidator(false),
-  m_shouldRunNewThreads(false),
+  m_initiated(false),
   m_isShutdown(false),
   m_junctionBoxManager(std::make_shared<JunctionBoxManager>()),
   m_packetFactory(std::make_shared<AutoPacketFactory>(GetJunctionBox<AutoPacketListener>()))
@@ -100,42 +100,57 @@ std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
 
-std::vector<std::shared_ptr<CoreThread>> CoreContext::CopyCoreThreadList(void) const {
-  std::vector<std::shared_ptr<CoreThread>> retVal;
+std::vector<std::shared_ptr<BasicThread>> CoreContext::CopyBasicThreadList(void) const {
+  std::vector<std::shared_ptr<BasicThread>> retVal;
 
   // It's safe to enumerate this list from outside of a protective lock because a linked list
   // has stable iterators, we do not delete entries from the interior of this list, and we only
   // add entries to the end of the list.
-  for(auto q = m_threads.begin(); q != m_threads.end(); q++)
-    retVal.push_back((**q).GetSelf<CoreThread>());
+  for(auto q = m_threads.begin(); q != m_threads.end(); q++){
+    BasicThread* thread = dynamic_cast<BasicThread*>(*q);
+    if (thread)
+      retVal.push_back((*thread).GetSelf<BasicThread>());
+  }
   return retVal;
 }
 
-void CoreContext::InitiateCoreThreads(void) {
+void CoreContext::Initiate(void) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    if(m_shouldRunNewThreads)
+    if(m_initiated)
       // Already running
       return;
 
     // Short-return if our stop flag has already been set:
     if(m_isShutdown)
       return;
-
+    
     // Update flag value
-    m_shouldRunNewThreads = true;
+    m_initiated = true;
   }
 
   if(m_pParent)
     // Start parent threads first
     // Parent MUST be a core context
-    m_pParent->InitiateCoreThreads();
+    m_pParent->Initiate();
+  
+  AddDelayedEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
+  m_delayedEventReceivers.clear();
+  m_junctionBoxManager->Initiate();
 
   // Reacquire the lock to prevent m_threads from being modified while we sit on it
   auto outstanding = IncrementOutstandingThreadCount();
   boost::lock_guard<boost::mutex> lk(m_lock);
+  
+  // Signal our condition variable
+  m_stateChanged.notify_all();
+  
   for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
     (*q)->Start(outstanding);
+}
+
+void CoreContext::InitiateCoreThreads(void) {
+  Initiate();
 }
 
 void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
@@ -206,6 +221,12 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   }
 }
 
+bool CoreContext::DelayUntilInitiated(void) {
+  boost::unique_lock<boost::mutex> lk(m_lock);
+  m_stateChanged.wait(lk, [this]{return m_initiated || m_isShutdown;});
+  return !m_isShutdown;
+}
+
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   if(!s_curContext.get())
     return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
@@ -216,34 +237,33 @@ std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   return *retVal;
 }
 
-void CoreContext::AddCoreThread(const std::shared_ptr<CoreThread>& ptr) {
+void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
   // Insert into the linked list of threads first:
   m_threads.push_front(ptr.get());
 
-  if(m_shouldRunNewThreads)
+  if(m_initiated)
     // We're already running, this means we're late to the game and need to start _now_.
     ptr->Start(IncrementOutstandingThreadCount());
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
-  const t_TypeInfoVector& v = pBase->GetContextSigils();
-  for(auto i = v.begin(); i != v.end(); i++) {
-    m_nameListeners[*i].push_back(pBase.get());
-    GetGlobal()->Invoke(&AutowiringEvents::NewBolt)(*this, *i, *pBase.get());
-  }
-  if (v.empty()) {
+  GetGlobal()->Invoke(&AutowiringEvents::NewBolt)(*this, pBase);
+
+  for(auto cur = pBase->GetContextSigils(); *cur; cur++)
+    m_nameListeners[**cur].push_back(pBase.get());
+
+  if(!*pBase->GetContextSigils())
     m_allNameListeners.push_back(pBase.get());
-  }
 }
 
 void CoreContext::BuildCurrentState(void) {
   GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*this);
 
-  //ContextMembers and CoreThreads
+  //ContextMembers and CoreRunnables
   for (auto member = m_contextMembers.begin(); member != m_contextMembers.end(); ++member) {
-    CoreThread* thread = dynamic_cast<CoreThread*>(*member);
+    CoreRunnable* thread = dynamic_cast<CoreRunnable*>(*member);
     thread?
-      GetGlobal()->Invoke(&AutowiringEvents::NewCoreThread)(*thread) :
+      GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*thread) :
       GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(**member);
   }
 
@@ -274,7 +294,9 @@ void CoreContext::Dump(std::ostream& os) const {
   }
 
   for(auto q = m_threads.begin(); q != m_threads.end(); q++) {
-    CoreThread* pThread = *q;
+    BasicThread* pThread = dynamic_cast<BasicThread*>(*q);
+    if (!pThread) continue;
+    
     const char* name = pThread->GetName();
     os << "Thread " << pThread << " " << (name ? name : "(no name)") << std::endl;
   }
@@ -359,7 +381,11 @@ void CoreContext::UpdateDeferredElements(void) {
 void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    m_eventReceivers.insert(receiver);
+    
+    if (!m_initiated) { //Delay adding receiver until context in initialized;
+      m_delayedEventReceivers.insert(receiver);
+      return;
+    }
   }
 
   m_junctionBoxManager->AddEventReceiver(receiver);
@@ -369,6 +395,18 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   if(m_pParent)
     m_pParent->AddEventReceiver(receiver);
 }
+
+void CoreContext::AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
+  assert(m_initiated); //Must be initiated
+  
+  m_junctionBoxManager->AddEventReceivers(first, last);
+  
+  // Delegate ascending resolution, where possible.  This ensures that the parent context links
+  // this event receiver to compatible senders in the parent context itself.
+  if(m_pParent)
+    m_pParent->AddDelayedEventReceivers(first, last);
+}
+
 
 void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
   {

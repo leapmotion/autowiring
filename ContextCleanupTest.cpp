@@ -105,7 +105,7 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   AutoRequired<SimpleThreaded>();
 
   // Kick off the operation
-  context->InitiateCoreThreads();
+  context->Initiate();
 
   // No exit initially:
   EXPECT_FALSE(context->Wait(milliseconds(10))) << "Core context completed prematurely";
@@ -136,9 +136,8 @@ public:
 };
 
 TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
   AutoRequired<CoreThread> ct;
-  ct->DelayUntilCanAccept();
 
   // Just create a CoreThread directly and have it pend some lambdas that will take awhile to run:
   auto called = std::make_shared<bool>(false);
@@ -153,9 +152,8 @@ TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
 }
 
 TEST_F(ContextCleanupTest, VerifyImmediateThreadCleanup) {
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
   AutoRequired<CoreThread> ct;
-  ct->DelayUntilCanAccept();
 
   // Just create a CoreThread directly and have it pend some lambdas that will take awhile to run:
   auto called = std::make_shared<bool>(false);
@@ -215,7 +213,7 @@ TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
   AutoRequired<TakesALongTimeToExit> longTime;
 
   // We want threads to run as soon as they are added:
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
 
   // Make the thread exit before the enclosing context exits:
   longTime->barr.wait();
