@@ -1,20 +1,19 @@
 #include "stdafx.h"
 #include "DtorCorrectnessTest.h"
 #include "CoreThread.h"
-#include <iostream>
+#include ATOMIC_HEADER
 
 using namespace std;
 
 class CtorDtorCopyCounter {
 public:
-  static int s_outstanding;
-  static size_t s_construction;
+  static std::atomic<int> s_outstanding;
+  static std::atomic<size_t> s_construction;
 
   CtorDtorCopyCounter(void) {
     s_outstanding++;
     s_construction++;
   }
-
   CtorDtorCopyCounter(const CtorDtorCopyCounter&) {
     s_outstanding++;
     s_construction++;
@@ -25,8 +24,8 @@ public:
   }
 };
 
-int CtorDtorCopyCounter::s_outstanding = 0;
-size_t CtorDtorCopyCounter::s_construction = 0;
+std::atomic<int> CtorDtorCopyCounter::s_outstanding;
+std::atomic<size_t> CtorDtorCopyCounter::s_construction;
 
 class CtorDtorListener:
   public virtual EventReceiver
@@ -125,6 +124,6 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
   listener2.reset();
 
   // Verify hit counts:
-  //EXPECT_LE(2UL, CtorDtorCopyCounter::s_construction) << "Counter constructors were not invoked the expected number of times when deferred";
+  EXPECT_LE(2UL, CtorDtorCopyCounter::s_construction) << "Counter constructors were not invoked the expected number of times when deferred";
   EXPECT_EQ(0, CtorDtorCopyCounter::s_outstanding) << "Counter mismatch under deferred events";
 }
