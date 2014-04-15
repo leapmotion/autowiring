@@ -80,8 +80,7 @@ public:
 /// </remarks>
 template<class T>
 class Autowired:
-  public AutowirableSlot<T>,
-  public DeferrableAutowiring
+  public AutowirableSlot<T>
 {
 public:
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
@@ -109,19 +108,20 @@ public:
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
 
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
-    AutowirableSlot(ctxt->template ResolveAnchor<T>(), typeid(T)),
-    m_fast_pointer_cast(&leap::fast_pointer_cast<T, Object>)
+    AutowirableSlot(ctxt->template ResolveAnchor<T>())
   {
     ctxt->Autowire(*this);
   }
 
-  std::shared_ptr<T>(*const m_fast_pointer_cast)(const std::shared_ptr<Object>&);
+  const std::type_info& GetType(void) const override { return typeid(T); }
 
   operator T*(void) const {
     return t_ptrType::get();
   }
 
-  using AutowirableSlot::operator bool;
+  operator bool(void) const {
+    return (AutowirableSlot&) *this;
+  }
 
   // Base overrides:
   bool TrySatisfyAutowiring(const std::shared_ptr<Object>& slot) override {
@@ -134,11 +134,7 @@ public:
       );
   }
 
-  void SatisfyAutowiring(DeferrableAutowiring* pWitness) override {
-    *this = static_cast<AutowirableSlot<T>&>(*pWitness);
-  }
-
-  template<class T, class Fn>
+  template<class Fn>
   void NotifyWhenAutowired(Fn&& fn) {
     ;
   }
@@ -160,7 +156,7 @@ public:
 /// </remarks>
 template<class T>
 class AutoRequired:
-  public AutowirableSlot<T>
+  public std::shared_ptr<T>
 {
 public:
   using std::shared_ptr<T>::operator=;
@@ -189,10 +185,9 @@ public:
   //
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
 
-  AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
-    AutowirableSlot(ctxt->template ResolveAnchor<T>(), typeid(T))
+  AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
+    std::shared_ptr<T>(ctxt->template Inject<T>())
   {
-    *this = ctxt->template Inject<T>();
   }
 
   operator bool(void) const {
@@ -203,7 +198,7 @@ public:
     return t_ptrType::get();
   }
 
-  bool IsAutowired(void) const override {return !!t_ptrType::get();}
+  bool IsAutowired(void) const {return get() != nullptr;}
 };
 
 
