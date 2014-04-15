@@ -400,7 +400,7 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     for(size_t i = m_deferred.size(); i--;) {
-      bool rs = m_deferred[i]->TrySatisfy();
+      bool rs = false;
       if(!rs)
         continue;
 
