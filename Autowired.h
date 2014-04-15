@@ -113,18 +113,12 @@ public:
   // constructor is defined.
   //
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-  Autowired(void):
-    AutowirableSlot(CoreContext::CurrentContext()->template ResolveAnchor<T>(), typeid(T)),
-    m_fast_pointer_cast(&leap::fast_pointer_cast<T, Object>)
-  {
-    LockContext()->Autowire(*this);
-  }
 
-  Autowired(const std::shared_ptr<CoreContext>& ctxt):
+  Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
     AutowirableSlot(ctxt->template ResolveAnchor<T>(), typeid(T)),
     m_fast_pointer_cast(&leap::fast_pointer_cast<T, Object>)
   {
-    LockContext()->Autowire(*this);
+    ctxt->Autowire(*this);
   }
 
   std::shared_ptr<T>(*const m_fast_pointer_cast)(const std::shared_ptr<Object>&);
@@ -133,10 +127,10 @@ public:
     return t_ptrType::get();
   }
 
-  bool Assign(const std::shared_ptr<Object>& slot) override {
+  bool TrySatisfyAutowiring(const std::shared_ptr<Object>& slot) override {
     if(*this)
       // Already assigned, pass control to the default handler
-      return AutowirableSlot::Assign(slot);
+      return AutowirableSlot::TrySatisfyAutowiring(slot);
 
     return !!(
         (std::shared_ptr<T>&)*this = m_fast_pointer_cast(slot)
@@ -196,16 +190,10 @@ public:
   //
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
 
-  AutoRequired(void):
-    AutowirableSlot(CoreContext::CurrentContext()->template ResolveAnchor<T>(), typeid(T))
-  {
-    *this = AutowirableSlot::LockContext()->template Inject<T>();
-  }
-
-  AutoRequired(const std::shared_ptr<CoreContext>& ctxt) :
+  AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
     AutowirableSlot(ctxt->template ResolveAnchor<T>(), typeid(T))
   {
-    *this = AutowirableSlot::LockContext()->template Inject<T>();
+    *this = ctxt->template Inject<T>();
   }
 
   operator bool(void) const {

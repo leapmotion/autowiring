@@ -48,8 +48,11 @@
   #endif
 #endif
 
+template<class T, class Fn>
+class DeferrableAutowiringFn;
+
 class AutoPacketFactory;
-class AutowirableSlot;
+class DeferrableAutowiring;
 class BoltBase;
 class CoreContext;
 class EventOutputStreamBase;
@@ -235,7 +238,7 @@ protected:
   std::unordered_set<ContextMember*> m_contextMembers;
 
   // Collection of objects waiting to be autowired, and a specific lock exclusively for this collection
-  std::unordered_set<AutowirableSlot*> m_deferred;
+  std::unordered_set<DeferrableAutowiring*> m_deferred;
 
   // All known event receivers and receiver proxies originating from this context:
   typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
@@ -962,16 +965,11 @@ public:
   }
 
   /// <summary>
-  /// Unregisters a slot as a recipient of potential autowiring
-  /// </summary>
-  void UndeferSlot(AutowirableSlot* pSlot) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_deferred.erase(pSlot);
-  }
-
-  /// <summary>
   /// Adds a post-attachment listener in this context for a particular autowired member
   /// </summary>
+  /// <returns>
+  /// A pointer to a deferrable autowiring function which the caller may safely ignore if it's not needed
+  /// </returns>
   /// <remarks>
   /// This method will succeed if slot was constructed in this context or any parent context.  If the
   /// passed slot was not created in this context or a parent context, an exception will be thrown.
@@ -983,8 +981,25 @@ public:
   /// body of this method.  Care should be taken to avoid deadlocks in this case--either the caller must
   /// not be holding any locks when this method is invoked, or the caller should design the listener
   /// method such that it may be substitutde in place for the notification routine.
+  ///
+  /// The returned value may be used later in CancelAutowiringNotification in order to explicitly clean
+  /// up memory.
   /// </remarks>
-  void NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener);
+  template<class T, class Fn>
+  const DeferrableAutowiringFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
+    DeferrableAutowiringFn<T, Fn>* retVal =
+      new DeferrableAutowiringFn<T, Fn>(
+        shared_from_this(),
+        std::forward<Fn>(listener)
+      );
+
+    return retVal;
+  }
+
+  /// <summary>
+  /// Unregisters a slot as a recipient of potential autowiring
+  /// </summary>
+  void CancelAutowiringNotification(DeferrableAutowiring* pDeferrable);
 
   /// <summary>
   /// Utility debug method for writing a snapshot of this context to the specified output stream
