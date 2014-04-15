@@ -352,6 +352,10 @@ void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable
     // Found the entry, evict it:
     q->second.erase(r);
 
+  if(q->second.empty())
+    // Erase the entire list, the list is now empty:
+    m_deferred.erase(q);
+
   // Always finalize this entry:
   pDeferrable->Finalize();
 }

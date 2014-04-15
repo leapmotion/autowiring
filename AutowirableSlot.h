@@ -35,6 +35,15 @@ private:
   /// </remarks>
   std::weak_ptr<CoreContext> m_context;
 
+protected:
+  /// <summary>
+  /// Causes this deferrable to unregister itself with the enclosing context
+  /// </summary>
+  /// <remarks>
+  /// In order to ensure that GetType is available,
+  /// </remarks>
+  void CancelAutowiring(void);
+
 public:
   /// <returns>
   /// The type on which this deferred slot is bound
@@ -87,7 +96,16 @@ public:
     m_fast_pointer_cast(&leap::fast_pointer_cast<T, Object>)
   {}
 
+  ~AutowirableSlot(void) {
+    CancelAutowiring();
+  }
+
   std::shared_ptr<T>(*const m_fast_pointer_cast)(const std::shared_ptr<Object>&);
+
+  // Must be final, because we use this in our dtor and need its behavior to be fixed:
+  const std::type_info& GetType(void) const override final {
+    return typeid(T);
+  }
 
   bool TrySatisfyAutowiring(const std::shared_ptr<Object>& candidate) override {
     *this = m_fast_pointer_cast(candidate);
@@ -123,6 +141,10 @@ public:
     AutowirableSlot(ctxt),
     fn(std::move(fn))
   {
+  }
+
+  ~AutowirableSlotFn(void) {
+    CancelAutowiring();
   }
 
   // Underlying lambda that we will call:
