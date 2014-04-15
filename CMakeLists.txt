@@ -81,6 +81,8 @@ set(Autowiring_SRCS
   StateMachine.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
+  ThreadStatusBlock.h
+  ThreadStatusBlock.cpp
   TypeRegistry.h
   TypeRegistry.cpp
   TypeUnifier.h
