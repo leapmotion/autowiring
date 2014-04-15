@@ -310,7 +310,9 @@ protected:
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
   void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    return AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, pRecvr));
+    JunctionBoxEntry<EventReceiver> entry(this, pRecvr);
+    m_eventReceivers.insert(entry);
+    AddEventReceiver(entry);
   }
   
   /// <summary>
