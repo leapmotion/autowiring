@@ -504,6 +504,10 @@ public:
     // If T doesn't inherit Object, then we need to compose a unifying type which does
     typedef SelectTypeUnifier<T>::type TActual;
     static_assert(std::is_base_of<Object, TActual>::value, "Constructive type does not implement Object as expected");
+    static_assert(
+      std::is_base_of<Object, T>::value || !has_static_new<T>::value,
+      "If type T provides a static new method, then the constructed type MUST directly inherit Object"
+    );
 
     // First see if the object has already been injected:
     std::shared_ptr<TActual> retVal;
