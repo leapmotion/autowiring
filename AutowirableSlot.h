@@ -1,7 +1,4 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _AUTOWIRABLE_SLOT_H
-#define _AUTOWIRABLE_SLOT_H
-#include "AutoFactory.h"
+#pragma once
 #include "autowiring_error.h"
 #include FUNCTIONAL_HEADER
 #include SHARED_PTR_HEADER
@@ -179,4 +176,3 @@ public:
   }
 };
 
-#endif
