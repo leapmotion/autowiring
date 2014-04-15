@@ -19,7 +19,7 @@ private:
   AutowirableSlot(const AutowirableSlot& rhs);
 
 public:
-  AutowirableSlot(std::weak_ptr<CoreContext> context);
+  AutowirableSlot(std::weak_ptr<CoreContext> context, const std::type_info& type);
   ~AutowirableSlot(void);
 
   /// <summary>
@@ -33,6 +33,11 @@ public:
   std::weak_ptr<CoreContext> m_context;
 
   /// <summary>
+  /// Runtime representation of this slot's enclosing type
+  /// </summary>
+  const std::type_info& m_type;
+
+  /// <summary>
   /// Convenience method, functionally identical to CoreContext::NotifyWhenAutowired
   /// </summary>
   void NotifyWhenAutowired(const std::function<void()>& listener);
@@ -41,11 +46,6 @@ public:
   /// Utility routine to lock the context, or throw an exception if something goes wrong
   /// </summary>
   std::shared_ptr<CoreContext> LockContext(void);
-
-  /// <summary>
-  /// Unconditionally attempts to satisfy this slot by querying the associated CoreContext a second time
-  /// </summary>
-  virtual bool TrySatisfy(void) = 0;
 
   operator bool(void) const {
     return IsAutowired();
