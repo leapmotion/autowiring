@@ -148,3 +148,34 @@ TEST_F(PostConstructTest, VerifyLoopingFailedAutowiring) {
     ASSERT_FALSE(ignored.IsAutowired()) << "Successfully autowired an instance that should not have been autowirable";
   }
 }
+
+template<int i>
+class SinglyInheritsObject:
+  public Object
+{
+  virtual void Member(void) = 0;
+};
+
+class MultiplyInheritsObject:
+  public SinglyInheritsObject<0>,
+  public SinglyInheritsObject<1>
+{
+public:
+  MultiplyInheritsObject(void):
+    val(200)
+  {}
+
+  const int val;
+
+  void Member(void) override {}
+};
+
+TEST_F(PostConstructTest, VerifyCanMultiplyInheritObject) {
+  AutoRequired<MultiplyInheritsObject> mio;
+
+  // Verify we can autowire back out the thing we just injected:
+  Autowired<MultiplyInheritsObject> mioRecovered;
+  ASSERT_TRUE(mioRecovered.IsAutowired()) << "Failed to autowire a member that multiply inherits from Object";
+  ASSERT_EQ(mio, mioRecovered) << "Attempted to autowire a member, but did not receive back precisely the member that was injected";
+  ASSERT_EQ(200, mioRecovered->val) << "Recovered member contains corrupt data";
+}
