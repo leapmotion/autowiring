@@ -5,23 +5,29 @@ angular.module('autoNetApp')
 
   // Object definitions
   function Context(ctxt){
-    this.members = [];
-    this.threads = [];
-    this.eventReceivers = [];
-    this.bolts = {};
-    this.exceptionFilters = [];
+    this.objects = [];
     this.name = "Unnamed";
 
     _.extend(this, ctxt)
   }
 
-  Context.prototype.numMembers = function(){
-    return this.members.length +
-          this.threads.length +
-          this.eventReceivers.length +
-          Object.keys(this.bolts).length +
-          this.exceptionFilters.length
+  function LeapObject(types, objData){
+    this.name = objData.name;
+    this.types = _.without(Object.keys(types), 'bolt');
+    this.hasBolts = false;
+
+    if (types.hasOwnProperty("bolt")) {
+      this.boltSigils = types.bolt;
+      if (this.boltSigils.length === 0){
+        this.boltSigils.push("Everything!");
+      }
+      this.hasBolts = true
+    }
   }
+
+  Context.prototype.addObject = function(types, objData) {
+    this.objects.push(new LeapObject(types, objData));
+  };
 
   function Message(name,info) {
     this.name = name;
@@ -65,6 +71,15 @@ angular.module('autoNetApp')
     delete ContextMap[contextID];
   });
 
+  websocket.on('newObject', function(contextID, types, objData) {
+    var updatedContext = ContextMap[contextID];
+
+    updatedContext.addObject(types, objData);
+
+    EventHistory.addMessage('newObject', JSON.stringify(types));
+  });
+
+  /*
   websocket.on('newContextMember', function(contextID, member){
     var updatedContext = ContextMap[contextID];
 
@@ -128,6 +143,8 @@ angular.module('autoNetApp')
 
     EventHistory.addMessage('newExceptionFilter', sprintf('%s in %s', filter.name, updatedContext.name))
   });
+
+  */
 
   websocket.on('eventFired', function(contextID, eventHash){
     var updatedContext = ContextMap[contextID];

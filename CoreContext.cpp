@@ -247,10 +247,8 @@ void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
-
   for(auto cur = pBase->GetContextSigils(); *cur; cur++){
     m_nameListeners[**cur].push_back(pBase.get());
-    GetGlobal()->Invoke(&AutowiringEvents::NewBolt)(*this, **cur, *pBase.get());
   }
 
   if(!*pBase->GetContextSigils()) {
@@ -263,27 +261,32 @@ void CoreContext::BuildCurrentState(void) {
 
   //ContextMembers and CoreRunnables
   for (auto member = m_contextMembers.begin(); member != m_contextMembers.end(); ++member) {
-    CoreRunnable* thread = dynamic_cast<CoreRunnable*>(*member);
-    thread?
-      GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*thread) :
-      GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(**member);
+    Object* obj = dynamic_cast<Object*>(*member);
+    if (obj)
+      GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj);
   }
 
   //Exception Filters
   for (auto filter = m_filters.begin(); filter != m_filters.end(); ++filter) {
-    GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, **filter);
+    Object* obj = dynamic_cast<Object*>(*filter);
+    if (obj)
+      GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj);
   }
 
   //Event Receivers
   for (auto receiver = m_eventReceivers.begin(); receiver != m_eventReceivers.end(); ++receiver) {
-    GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *receiver->m_ptr);
+    Object* obj = dynamic_cast<Object*>(receiver->m_ptr.get());
+    if (obj)
+      GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj);
   }
   
   //Bolts
+  /*
   for (auto sigil = m_nameListeners.begin(); sigil != m_nameListeners.end(); ++sigil) {
     for (auto bolt = sigil->second.begin(); bolt != sigil->second.end(); ++bolt)
       GetGlobal()->Invoke(&AutowiringEvents::NewBolt)(*this, sigil->first, **bolt);
   }
+  */
 
   boost::lock_guard<boost::mutex> lk(m_childrenLock);
   for (auto c = m_children.begin(); c != m_children.end(); ++c) {
