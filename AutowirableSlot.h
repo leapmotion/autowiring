@@ -16,10 +16,10 @@ void NullOp(T) {}
 class AutowirableSlot {
 private:
   // Copy construction of an autowired slot is generally unsafe and not allowed
-  AutowirableSlot(const AutowirableSlot& rhs);
+  AutowirableSlot(const AutowirableSlot& rhs) = delete;
 
 public:
-  AutowirableSlot(std::weak_ptr<CoreContext> context, const std::type_info& type);
+  AutowirableSlot(const std::shared_ptr<CoreContext>& context, const std::type_info& type);
   ~AutowirableSlot(void);
 
   /// <summary>
