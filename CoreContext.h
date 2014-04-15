@@ -1,7 +1,6 @@
 #pragma once
 #include "at_exit.h"
 #include "AutoAnchor.h"
-#include "AutoFactory.h"
 #include "AutoPacketSubscriber.h"
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
