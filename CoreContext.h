@@ -500,34 +500,30 @@ protected:
 
         // CoreRunnables:
         pCoreRunnable = leap::fast_pointer_cast<CoreRunnable, T>(value);
-        if (pCoreRunnable) {
+        if (pCoreRunnable)
           AddCoreRunnable(pCoreRunnable);
-          GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*pCoreRunnable.get());
-        } else {
-          GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*pContextMember.get());
-        }
       }
 
       // Exception filters:
       auto pFilter = leap::fast_pointer_cast<ExceptionFilter, T>(value);
-      if (pFilter) {
+      if (pFilter)
         m_filters.insert(pFilter.get());
-        GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, *pFilter.get());
-      }
 
       // Bolts
       auto pBase = leap::fast_pointer_cast<BoltBase, T>(value);
-      if (pBase) {
+      if (pBase)
         AddBolt(pBase);
-      }
     }
 
     // Event receivers:
     auto pRecvr = leap::fast_pointer_cast<EventReceiver, T>(value);
-    if (pRecvr) {
+    if (pRecvr)
       AddEventReceiver(pRecvr);
-      GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *pRecvr.get());
-    }
+    
+    // Notify listeners(AutoNet) that a new object has been created
+    std::shared_ptr<Object> pObj = leap::fast_pointer_cast<Object, T>(value);
+    if (pObj)
+      GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *pObj);
 
     // Subscribers:
     AddPacketSubscriber(AutoPacketSubscriberSelect<T>(value));
