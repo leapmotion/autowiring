@@ -10,8 +10,7 @@
 using namespace std;
 
 AutowirableSlot::AutowirableSlot(const std::shared_ptr<CoreContext>& context, const std::type_info& type) :
-  m_context(context),
-  m_type(type)
+  m_context(context)
 {
 }
 
@@ -22,13 +21,6 @@ AutowirableSlot::~AutowirableSlot(void) {
  
   // Tell our context we are going away:
   context->UndeferSlot(this);
-}
-
-void AutowirableSlot::NotifyWhenAutowired(const std::function<void()>& listener) {
-  std::shared_ptr<CoreContext> context = LockContext();
-
-  // Punt control over to the context
-  context->NotifyWhenAutowired(*this, listener);
 }
 
 std::shared_ptr<CoreContext> AutowirableSlot::LockContext(void) {
