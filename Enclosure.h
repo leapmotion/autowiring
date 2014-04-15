@@ -1,5 +1,6 @@
 #pragma once
 #include "Autowired.h"
+#include "ObjectPool.h"
 
 class EnclosureBase
 {
