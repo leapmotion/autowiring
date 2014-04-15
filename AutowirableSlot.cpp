@@ -9,23 +9,14 @@
 
 using namespace std;
 
-AutowirableSlot::AutowirableSlot(const std::shared_ptr<CoreContext>& context, const std::type_info& type) :
+DeferrableAutowiring::DeferrableAutowiring(const std::shared_ptr<CoreContext>& context) :
   m_context(context)
 {
 }
 
-AutowirableSlot::~AutowirableSlot(void) {
+DeferrableAutowiring::~DeferrableAutowiring(void) {
   auto context = m_context.lock();
-  if(!context)
-    return;
- 
-  // Tell our context we are going away:
-  context->UndeferSlot(this);
-}
-
-std::shared_ptr<CoreContext> AutowirableSlot::LockContext(void) {
-  std::shared_ptr<CoreContext> retVal = m_context.lock();
-  if(!retVal)
-    throw_rethrowable autowiring_error("Attempted to autowire in a context that is tearing down");
-  return retVal;
+  if(context)
+    // Tell our context we are going away:
+    context->CancelAutowiringNotification(this);
 }

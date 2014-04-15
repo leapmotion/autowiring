@@ -9,6 +9,7 @@
 #include <memory>
 
 class CoreContext;
+class GlobalCoreContext;
 class Object;
 
 // Utility routine, for users who need a function that does nothing
@@ -20,39 +21,8 @@ void NullOp(T) {}
 /// </summary>
 class DeferrableAutowiring {
 public:
+  DeferrableAutowiring(const std::shared_ptr<CoreContext>& context);
   ~DeferrableAutowiring(void) {}
-
-  /// <summary>
-  /// Attempts to satisfy this autowiring relationship with the specified candidate object
-  /// </summary>
-  /// <remarks>
-  /// This method returns true when the autowiring is successful.  Once the function returns true,
-  /// this method is guaranteed to never be called again.
-  /// </remarks>
-  virtual bool TrySatisfyAutowiring(const std::shared_ptr<Object>& candidate) = 0;
-
-  /// <summary>
-  /// Releases memory allocated by this object, where appropriate
-  /// </summary>
-  /// <summary>
-  /// Implementors of this method are permitted to delete "this" or perform any other work while
-  /// outside of the context of a lock.  This method is only called after TrySatisfyAutowiring has
-  /// returned true.  Once this method returns, this object is guaranteed never to be referred to
-  /// again by CoreContext.
-  /// </remarks>
-  virtual void Finalize(void) {}
-};
-
-class AutowirableSlot:
-  public DeferrableAutowiring
-{
-private:
-  // Copy construction of an autowired slot is generally unsafe and not allowed
-  AutowirableSlot(const AutowirableSlot& rhs) = delete;
-
-public:
-  AutowirableSlot(const std::shared_ptr<CoreContext>& context, const std::type_info& type);
-  ~AutowirableSlot(void);
 
 private:
   /// <summary>
@@ -65,27 +35,52 @@ private:
   /// </remarks>
   std::weak_ptr<CoreContext> m_context;
 
-  /// <summary>
-  /// Utility routine to lock the context, or throw an exception if something goes wrong
-  /// </summary>
-  std::shared_ptr<CoreContext> LockContext(void);
-
 public:
+  /// <summary>
+  /// Attempts to satisfy this autowiring relationship with the specified candidate object
+  /// </summary>
+  /// <remarks>
+  /// This method returns true when the autowiring is successful.  Once the function returns true,
+  /// this method is guaranteed to never be called again.
+  /// </remarks>
+  virtual bool TrySatisfyAutowiring(const std::shared_ptr<Object>& candidate) = 0;
+
+  /// <summary>
+  /// Satisfies autowiring with a so-called "witness type" which is guaranteed to inherit AutowirableSlot
+  /// </summary>
+  /// <remarks>
+  /// The passed value must be statically castable to type AutowirableSlot
+  /// </remarks>
+  virtual void SatisfyAutowiring(DeferrableAutowiring* pWitness) = 0;
+
+  /// <summary>
+  /// Releases memory allocated by this object, where appropriate
+  /// </summary>
+  /// <summary>
+  /// Implementors of this method are permitted to delete "this" or perform any other work while
+  /// outside of the context of a lock.  This method is only called after TrySatisfyAutowiring has
+  /// returned true.  Once this method returns, this object is guaranteed never to be referred to
+  /// again by CoreContext.
+  /// </remarks>
+  virtual void Finalize(void) {
+    // Just reset the enclosing pointer, do nothing else.
+    m_context.reset();
+  }
+};
+
+template<class T>
+class AutowirableSlot:
+  public std::shared_ptr<T>
+{
+public:
+  typedef T value_type;
+  typedef std::shared_ptr<T> t_ptrType;
+
   operator bool(void) const {
     return IsAutowired();
   }
 
   virtual bool IsAutowired(void) const = 0;
-
-  // Base overrides
-  void Finalize(void) override {
-    // Just reset the enclosing pointer, do nothing else.
-    m_context.reset();
-  }
-
-  bool TrySatisfyAutowiring(const std::shared_ptr<Object>&) override {
-    throw autowiring_error("Cannot invoke assign on a slot which is already assigned");
-  }
 };
 
 /// <summary>
@@ -93,8 +88,11 @@ public:
 /// </summary>
 template<class Fn, class T>
 class AutowirableSlotFn:
-  public AutowirableSlot
+  public AutowirableSlot<T>
 {
+  static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
+  static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
+
 public:
   AutowirableSlotFn(const std::shared_ptr<CoreContext>& ctxt, Fn&& fn) :
     AutowirableSlot(ctxt),
