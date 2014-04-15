@@ -417,6 +417,8 @@ protected:
       pBoltBase(leap::fast_pointer_cast<BoltBase>(value)),
       pRecvr(leap::fast_pointer_cast<EventReceiver>(value))
     {
+      if(!pObject)
+        throw autowiring_error("Cannot add a type which does not implement Object");
     }
 
     // The declared original type:
@@ -506,9 +508,10 @@ public:
   std::shared_ptr<T> Construct(Args&&... args) {
     // If T doesn't inherit Object, then we need to compose a unifying type which does
     typedef SelectTypeUnifier<T>::type TActual;
+    static_assert(std::is_base_of<Object, TActual>::value, "Constructive type does not implement Object as expected");
 
     // First see if the object has already been injected:
-    std::shared_ptr<T> retVal;
+    std::shared_ptr<TActual> retVal;
     FindByType(retVal);
     if(retVal)
       return retVal;
