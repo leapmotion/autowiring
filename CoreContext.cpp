@@ -340,6 +340,12 @@ void CoreContext::BuildCurrentState(void) {
   }
 }
 
+void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable) {
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  m_deferred.erase(pDeferrable);
+  pDeferrable->Finalize();
+}
+
 void CoreContext::Dump(std::ostream& os) const {
   boost::lock_guard<boost::mutex> lk(m_lock);
   for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
@@ -400,7 +406,7 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     for(auto q = m_deferred.begin(); q != m_deferred.end();)
-      if((**q).Assign(entry))
+      if((**q).TrySatisfyAutowiring(entry))
         q = m_deferred.erase(q);
       else
        q++;
@@ -551,9 +557,6 @@ void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber
 
   // Remove subscribers from our factory AFTER the parent eviction has taken place
   m_packetFactory->RemoveSubscribers(subscribers.begin(), subscribers.end());
-}
-
-void CoreContext::NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener) {
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
