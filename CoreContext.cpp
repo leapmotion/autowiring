@@ -258,35 +258,36 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
 
 void CoreContext::BuildCurrentState(void) {
   GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*this);
+  
+  //keep track of already sent objects so there are no duplicates
+  std::unordered_set<Object*> allObjects;
 
   //ContextMembers and CoreRunnables
   for (auto member = m_contextMembers.begin(); member != m_contextMembers.end(); ++member) {
     Object* obj = dynamic_cast<Object*>(*member);
-    if (obj)
+    if (obj && allObjects.find(obj)==allObjects.end()) {
       GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj);
+      allObjects.insert(obj);
+    }
   }
 
   //Exception Filters
   for (auto filter = m_filters.begin(); filter != m_filters.end(); ++filter) {
     Object* obj = dynamic_cast<Object*>(*filter);
-    if (obj)
+    if (obj && allObjects.find(obj)==allObjects.end()){
       GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj);
+      allObjects.insert(obj);
+    }
   }
 
   //Event Receivers
   for (auto receiver = m_eventReceivers.begin(); receiver != m_eventReceivers.end(); ++receiver) {
     Object* obj = dynamic_cast<Object*>(receiver->m_ptr.get());
-    if (obj)
+    if (obj && allObjects.find(obj)==allObjects.end()) {
       GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj);
+      allObjects.insert(obj);
+    }
   }
-  
-  //Bolts
-  /*
-  for (auto sigil = m_nameListeners.begin(); sigil != m_nameListeners.end(); ++sigil) {
-    for (auto bolt = sigil->second.begin(); bolt != sigil->second.end(); ++bolt)
-      GetGlobal()->Invoke(&AutowiringEvents::NewBolt)(*this, sigil->first, **bolt);
-  }
-  */
 
   boost::lock_guard<boost::mutex> lk(m_childrenLock);
   for (auto c = m_children.begin(); c != m_children.end(); ++c) {
