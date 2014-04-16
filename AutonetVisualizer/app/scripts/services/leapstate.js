@@ -35,6 +35,17 @@ angular.module('autoNetApp')
     return _.contains(this.types, type);
   };
 
+  LeapObject.prototype.IsAnyType = function(filterTypes){
+    if (this.hasBolts() && filterTypes.hasOwnProperty('bolt')) return true;
+
+    for (var i = 0; i<this.types.length; i++) {
+      var type = this.types[i];
+
+      if (filterTypes.hasOwnProperty(type)) return true;
+    }
+    return false;
+  };
+
   LeapObject.prototype.hasBolts = function(){
     return this.hasOwnProperty('boltSigils');
   }
