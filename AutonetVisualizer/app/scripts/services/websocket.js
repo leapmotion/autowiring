@@ -76,10 +76,10 @@ angular.module('autoNetApp')
     on: function(eventName, callback) {
       console.log('Event Registered: ', eventName);
       $rootScope.$on('leap-'+eventName, function(event, args){
-        EventHistory.addMessage(eventName, args);
-        console.log('event');
-        callback.apply(socket, args);
-        $rootScope.$digest();
+        $rootScope.$apply(function(){
+          EventHistory.addMessage(eventName, args);
+          callback.apply(socket, args);
+        });
       });
     },
     subscribe: function() {
