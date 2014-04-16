@@ -16,9 +16,23 @@
 
 angular.module('autoNetApp')
 .factory('websocket', ['$rootScope', function($rootScope) {
-  var socket = null; //Websocket connection to server
-  var interval = null; //Interval for polling for server when disconnected
-  var isConnected = false;
+
+  function Message(name,args) {
+    this.name = name;
+    this.args = args;
+  };
+  
+  function Messages(maxSize){
+    this.maxSize = maxSize;
+    this.messages = [];
+  }
+
+  Messages.prototype.addMessage = function(name, args){
+    if (this.messages.length >= this.maxSize){
+      this.messages.pop();
+    }
+    this.messages.unshift(new Message(name,args))
+  }
 
   // Initialize connection with AutoNetServer
   // Called with SetInterval one a second when disconnected from server
@@ -48,12 +62,22 @@ angular.module('autoNetApp')
     };
   };
 
+  ////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////
+
+  var socket = null; //Websocket connection to server
+  var interval = null; //Interval for polling for server when disconnected
+  var isConnected = false;
+  var EventHistory = new Messages(200);
+
   InitConnection();
 
   return {
     on: function(eventName, callback) {
       console.log('Event Registered: ', eventName);
       $rootScope.$on('leap-'+eventName, function(event, args){
+        EventHistory.addMessage(eventName, args);
+        console.log('event');
         callback.apply(socket, args);
         $rootScope.$digest();
       });
@@ -66,6 +90,9 @@ angular.module('autoNetApp')
     },
     isConnected: function(){
       return isConnected;
+    },
+    GetEventHistory: function(){
+      return EventHistory.messages;
     }
   };
 }]);
