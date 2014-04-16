@@ -18,32 +18,40 @@ angular.module('autoNetApp')
   function LeapObject(types, objData){
     this.name = objData.name;
     this.types = _.without(Object.keys(types), 'bolt');
-    this.hasBolts = false;
 
     if (types.hasOwnProperty("bolt")) {
       this.boltSigils = types.bolt;
       if (this.boltSigils.length === 0){
         this.boltSigils.push("Everything!");
       }
-      this.hasBolts = true
     }
   }
 
   LeapObject.prototype.IsType = function(type){
     if (type === 'bolt'){
-      return this.hasBolts;
+      return this.hasBolts();
     }
 
     return _.contains(this.types, type);
   };
 
+  LeapObject.prototype.hasBolts = function(){
+    return this.hasOwnProperty('boltSigils');
+  }
+
   //////////////////////////////////////////////////////
   //////////////////////////////////////////////////////
 
   var ContextMap = {}; //a map of context.id to contexts
+  var isSubscribed = false;
+
+  websocket.on('subscribed', function(){
+    isSubscribed = true;
+  })
 
   websocket.on('unsubscribed', function(){
     ContextMap = {};
+    isSubscribed = false;
   });
 
   websocket.on('newContext', function(context){
@@ -71,6 +79,9 @@ angular.module('autoNetApp')
   return {
     GetContexts: function(){
       return ContextMap;
+    },
+    isSubscribed: function(){
+      return isSubscribed;
     }
   };
 });

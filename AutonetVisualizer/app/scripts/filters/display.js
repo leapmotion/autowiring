@@ -7,3 +7,13 @@ angular.module('autoNetApp')
     return _.omit(input, 'parent', 'name', 'id');
   };
 });
+
+angular.module('autoNetApp')
+.filter('TypeFilter', function(){
+  return function (input, type) {
+    if (type === 'all') return input;
+    return _.filter(input, function(ele){
+      return ele.IsType(type);
+    });
+  }
+});
