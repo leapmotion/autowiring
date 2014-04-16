@@ -38,3 +38,44 @@ angular.module('autoNetApp')
       }
     };
   });
+
+angular.module('autoNetApp')
+  .directive('activeFilter', function () {
+    return {
+      restrict: 'A',
+      scope: {
+        check: '=check'
+      },
+      link: function postLink(scope, element, attrs) {
+        scope.$watchCollection('check', function(newValue){
+          element.toggleClass('active', attrs.activeFilter in newValue);
+        });
+
+        element.on('click', function(evt){
+          evt.stopImmediatePropagation();
+          evt.preventDefault();
+
+          scope.$apply(function(){
+            if (element.hasClass('active')) {
+              delete scope.check[attrs.activeFilter];
+            } else {
+              scope.check[attrs.activeFilter] = true;
+            }
+          });
+        });
+
+        element.on('click', function(evt){
+          evt.stopImmediatePropagation();
+          evt.preventDefault();
+
+          scope.$apply(function(){
+            if (element.hasClass('active')) {
+              delete scope.check[attrs.activeFilter];
+            } else {
+              scope.check[attrs.activeFilter] = true;
+            }
+          });
+        });
+      }
+    };
+  });
