@@ -74,8 +74,8 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
 
   auto self = shared_from_this();
   retVal.reset(
-    new Object,
-    [this, self](Object* ptr) {
+    (Object*)1,
+    [this, self](Object*) {
       // Object being destroyed, notify all recipients
       boost::lock_guard<boost::mutex> lk(m_lock);
 
@@ -85,7 +85,6 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
 
       // Wake everyone up
       m_stateChanged.notify_all();
-      delete ptr;
     }
   );
   m_outstanding = retVal;
@@ -187,7 +186,6 @@ void CoreContext::Initiate(void) {
 
   if(m_pParent)
     // Start parent threads first
-    // Parent MUST be a core context
     m_pParent->Initiate();
   
   AddDelayedEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());

@@ -5,7 +5,7 @@
 class TypeUnifier: public Object {};
 
 template<class T>
-class TypeUnifierComplex:
+class TypeUnifierComplex sealed:
   public T,
   public TypeUnifier
 {
@@ -17,7 +17,7 @@ public:
 };
 
 template<class T>
-class TypeUnifierSimple:
+class TypeUnifierSimple sealed:
   public T,
   public TypeUnifier
 {
@@ -27,10 +27,18 @@ namespace leap {
   // Specialization of cast so we can handle Complex and Simple type unifiers and
   // manage to resolve an unambiguous Object base
   template<class U>
-  typename std::shared_ptr<Object> fast_pointer_cast(const std::shared_ptr<U>& ptr) {
+  typename std::shared_ptr<Object> fast_pointer_cast(const std::shared_ptr<TypeUnifierSimple<U>>& ptr) {
     return
       std::static_pointer_cast<Object>(
-      std::static_pointer_cast<TypeUnifier>(ptr)
+        std::static_pointer_cast<TypeUnifier>(ptr)
+      );
+  }
+
+  template<class U>
+  typename std::shared_ptr<Object> fast_pointer_cast(const std::shared_ptr<TypeUnifierComplex<U>>& ptr) {
+    return
+      std::static_pointer_cast<Object>(
+        std::static_pointer_cast<TypeUnifier>(ptr)
       );
   }
 }
@@ -40,12 +48,12 @@ namespace leap {
 /// </summary>
 template<
   class T,
-  bool is_object_base = std::is_base_of<Object, T>::value,
+  bool inheritsObject = std::is_base_of<Object, T>::value,
   bool hasSimpleCtor = has_simple_constructor<T>::value
 >
 struct SelectTypeUnifier;
 
-// If T inherits Object already, just use Object
+// Anyone already inheriting Object can just use Object
 template<class T, bool hasSimpleCtor>
 struct SelectTypeUnifier<T, true, hasSimpleCtor> {
   typedef T type;
