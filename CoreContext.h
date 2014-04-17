@@ -1042,6 +1042,6 @@ void CoreContext::AutoRequireMicroBolt(void) {
 
 template<typename T>
 void CoreContext::AddExisting(std::shared_ptr<T> p_member) {
-  AddInternal(p_member);
+  AddInternal(AddInternalTraits(AutoPacketSubscriberSelect<T>(p_member), p_member));
 }
 
