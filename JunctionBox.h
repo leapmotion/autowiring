@@ -427,7 +427,8 @@ public:
       return true;
     
     if(!erp->IsInitiated())
-      throw std::runtime_error("Attempted event firing before context was initiated");
+      // Context not yet started
+      return true;
 
     // Give the serializer a chance to handle these arguments:
     erp->SerializeInit(fnPtr, args...);
