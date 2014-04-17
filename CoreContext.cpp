@@ -477,8 +477,6 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
       m_delayedEventReceivers.insert(receiver);
       return;
     }
-    
-    m_eventReceivers.insert(receiver);
   }
 
   m_junctionBoxManager->AddEventReceiver(receiver);
@@ -491,10 +489,6 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
 
 void CoreContext::AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
   assert(m_initiated); //Must be initiated
-  {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_eventReceivers.insert(first, last);
-  }
   
   m_junctionBoxManager->AddEventReceivers(first, last);
   

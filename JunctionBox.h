@@ -2,15 +2,13 @@
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
 #include "EventReceiver.h"
-#include "ObjectPool.h"
 #include "fast_pointer_cast.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
-#include "uuid.h"
 #include <boost/thread/mutex.hpp>
 #include "fast_pointer_cast.h"
+#include <set>
 #include TUPLE_HEADER
-#include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_SET
@@ -427,7 +425,8 @@ public:
       return true;
     
     if(!erp->IsInitiated())
-      throw std::runtime_error("Attempted event firing before context was initiated");
+      // Context not yet started
+      return true;
 
     // Give the serializer a chance to handle these arguments:
     erp->SerializeInit(fnPtr, args...);

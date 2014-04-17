@@ -8,7 +8,7 @@
 JunctionBoxManager::JunctionBoxManager(void) {
   // Enumerate all event types to initialize a new JunctionBox for each
   for(auto p = g_pFirstEntry; p; p = p->pFlink)
-    m_junctionBoxes[p->ti] = p->m_NewJunctionBox();
+    p->m_NewJunctionBox(m_junctionBoxes[p->ti]);
 
   //Always allow internal events
   m_junctionBoxes[typeid(AutowiringEvents)]->Initiate();
