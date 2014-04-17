@@ -1,7 +1,7 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "CoreThread.h"
 #include "Autowired.h"
+#include "BasicThreadStateBlock.h"
 #include <boost/thread.hpp>
 
 CoreThread::CoreThread(const char* pName):

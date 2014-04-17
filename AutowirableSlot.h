@@ -3,7 +3,6 @@
 #include FUNCTIONAL_HEADER
 #include SHARED_PTR_HEADER
 #include <functional>
-#include <memory>
 
 class CoreContext;
 class GlobalCoreContext;
