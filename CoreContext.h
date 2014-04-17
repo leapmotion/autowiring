@@ -28,24 +28,13 @@
 #include <list>
 #include <memory>
 #include <map>
-#include <string>
 #include <functional>
-#include TUPLE_HEADER
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_MAP
 #include STL_UNORDERED_SET
-
-#ifndef ASSERT
-  #ifdef _DEBUG
-    #include <assert.h>
-    #define ASSERT(x) assert(x)
-  #else
-    #define ASSERT(x)
-  #endif
-#endif
 
 template<class T, class Fn>
 class DeferrableAutowiringFn;
@@ -326,7 +315,9 @@ protected:
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
   void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    return AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, pRecvr));
+    JunctionBoxEntry<EventReceiver> entry(this, pRecvr);
+    m_eventReceivers.insert(entry);
+    AddEventReceiver(entry);
   }
   
   /// <summary>
@@ -600,6 +591,18 @@ public:
   /// </returns>
   template<class Sigil>
   bool Is(void) const { return m_sigil == typeid(Sigil); }
+
+  /// <returns>
+  /// A list of descendant contexts whose sigil type matches the specified sigil type
+  /// </returns>
+  template<class Sigil>
+  std::vector<std::shared_ptr<CoreContext>> EnumerateChildContexts(void) {
+    std::vector<std::shared_ptr<CoreContext>> retVal;
+    EnumerateChildContexts([&retVal](std::shared_ptr<CoreContext> ctxt) {
+      retVal.push_back(ctxt);
+    });
+    return retVal;
+  }
 
   /// <summary>
   /// Enumerates all matching child contexts recursively and passes each child context to the specified lambda
