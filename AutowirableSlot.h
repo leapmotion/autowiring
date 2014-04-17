@@ -19,7 +19,7 @@ void NullOp(T) {}
 class DeferrableAutowiring {
 public:
   DeferrableAutowiring(const std::shared_ptr<CoreContext>& context);
-  ~DeferrableAutowiring(void);
+  virtual ~DeferrableAutowiring(void);
 
 protected:
   /// <summary>
@@ -101,7 +101,7 @@ public:
     m_fast_pointer_cast(&leap::fast_pointer_cast<T, Object>)
   {}
 
-  ~AutowirableSlot(void) {
+  virtual ~AutowirableSlot(void) {
     CancelAutowiring();
   }
 
@@ -154,7 +154,7 @@ public:
   {
   }
 
-  ~AutowirableSlotFn(void) {
+  virtual ~AutowirableSlotFn(void) {
     DeferrableAutowiring::CancelAutowiring();
   }
 
