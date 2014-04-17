@@ -230,7 +230,7 @@ public:
   }
 
   operator T*(void) const {
-    return t_ptrType::get();
+    return std::shared_ptr<T>::get();
   }
 
   bool IsAutowired(void) const {return get() != nullptr;}
