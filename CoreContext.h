@@ -78,7 +78,6 @@ enum class ShutdownMode {
 /// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain
 /// </summary>
 class CoreContext:
-  public Object,
   public SimpleOwnershipValidator,
   public TeardownNotifier,
   public std::enable_shared_from_this<CoreContext>
