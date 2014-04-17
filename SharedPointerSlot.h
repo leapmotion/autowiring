@@ -212,7 +212,7 @@ public:
   }
 
   virtual bool empty(void) const { return get() == nullptr; }
-  virtual operator void*(void) const { return get().get(); }
+  virtual operator const void*(void) const { return get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
 
   template<class T>
