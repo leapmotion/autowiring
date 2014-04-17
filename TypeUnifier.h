@@ -23,26 +23,6 @@ class TypeUnifierSimple:
 {
 };
 
-namespace leap {
-  // Specialization of cast so we can handle Complex and Simple type unifiers and
-  // manage to resolve an unambiguous Object base
-  template<class U>
-  typename std::shared_ptr<Object> fast_pointer_cast(const std::shared_ptr<TypeUnifierSimple<U>>& ptr) {
-    return
-      std::static_pointer_cast<Object>(
-        std::static_pointer_cast<TypeUnifier>(ptr)
-      );
-  }
-
-  template<class U>
-  typename std::shared_ptr<Object> fast_pointer_cast(const std::shared_ptr<TypeUnifierComplex<U>>& ptr) {
-    return
-      std::static_pointer_cast<Object>(
-        std::static_pointer_cast<TypeUnifier>(ptr)
-      );
-  }
-}
-
 /// <summary>
 /// Utility class which allows us to either use the pure type T, or a unifier, as appropriate
 /// </summary>
