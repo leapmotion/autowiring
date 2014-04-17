@@ -2,10 +2,12 @@
 #include "CreationRules.h"
 #include "Object.h"
 
+class TypeUnifier: public Object {};
+
 template<class T>
 class TypeUnifierComplex:
   public T,
-  public Object
+  public TypeUnifier
 {
 public:
   template<class Arg0, class... Args>
@@ -17,9 +19,21 @@ public:
 template<class T>
 class TypeUnifierSimple:
   public T,
-  public Object
+  public TypeUnifier
 {
 };
+
+namespace leap {
+  // Specialization of cast so we can handle Complex and Simple type unifiers and
+  // manage to resolve an unambiguous Object base
+  template<class U>
+  typename std::shared_ptr<Object> fast_pointer_cast(const std::shared_ptr<U>& ptr) {
+    return
+      std::static_pointer_cast<Object>(
+      std::static_pointer_cast<TypeUnifier>(ptr)
+      );
+  }
+}
 
 /// <summary>
 /// Utility class which allows us to either use the pure type T, or a unifier, as appropriate
