@@ -1,6 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "BasicThread.h"
+#include <pthread.h>
 
 void BasicThread::SetCurrentThreadName(void) const {
   if(IS_INTERNAL_BUILD)

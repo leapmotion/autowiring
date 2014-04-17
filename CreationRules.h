@@ -1,5 +1,4 @@
 #pragma once
-#include "C++11/cpp11.h"
 #include TYPE_TRAITS_HEADER
 #include RVALUE_HEADER
 

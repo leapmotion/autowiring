@@ -1,15 +1,18 @@
 #pragma once
 #include "ContextMember.h"
 #include "CoreRunnable.h"
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/thread.hpp>
+#include <boost/chrono/duration.hpp>
 #include SHARED_PTR_HEADER
 
 using std::shared_ptr;
 
-class CoreContext;
+struct BasicThreadStateBlock;
 class BasicThread;
+class CoreContext;
+
+namespace boost {
+  class mutex;
+}
 
 enum class ThreadPriority {
   // This is the default thread priority, it's treated as a value lower than any of the
@@ -47,24 +50,11 @@ public:
   
   virtual ~BasicThread(void) {}
   
-private:
-  struct State:
-    std::enable_shared_from_this<State>
-  {
-    // General purpose thread lock and update condition for the lock
-    boost::mutex m_lock;
-    boost::condition_variable m_stateCondition;
-  };
-  
 protected:
   // Internally held thread status block.  This has to be a shared pointer because we need to signal
   // the held state condition after releasing all shared pointers to ourselves, and this could mean
   // we're actually signalling this event after we free ourselves.
-  const std::shared_ptr<State> m_state;
-  
-  // Convenience references:
-  boost::mutex& m_lock;
-  boost::condition_variable& m_stateCondition;
+  const std::shared_ptr<BasicThreadStateBlock> m_state;
   
   // Flag indicating that we need to stop right now
   bool m_stop;
@@ -77,12 +67,6 @@ protected:
   
   // The current thread priority
   ThreadPriority m_priority;
-  
-  // The current thread, if running
-  boost::thread m_thisThread;
-  
-  friend class ThreadStatusMaintainer;
-  
 
   /// <summary>
   /// Assigns the name of the thread, for use in debugger windows
@@ -106,6 +90,11 @@ private:
 
 protected:
   /// <summary>
+  /// Recovers a general lock used to synchronize entities in this thread internally
+  /// </summary>
+  boost::mutex& GetLock(void);
+
+  /// <summary>
   /// Routine that sets up the necessary extranea before a call to Run
   /// </summary>
   /// <remarks>
@@ -123,7 +112,6 @@ protected:
   /// Performs all cleanup operations that must take place after DoRun
   /// </summary>
   /// <param name="pusher">The last reference to the enclosing context held by this thread</param>
-  /// 
   virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<Object>&& refTracker);
   
   void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
@@ -159,19 +147,35 @@ protected:
     ThreadPriority m_oldPriority;
     BasicThread& m_thread;
   };
-  
-public:
-  // Accessor methods:
-  bool ShouldStop(void) const;
-  bool IsRunning(void) const override {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    return m_running;
-  }
+
+  /// <summary>
+  /// Performs a state condition wait using the specified lambda to judge completeness
+  /// </summary>
+  void WaitForStateUpdate(const std::function<bool()>& fn);
+
+  /// <summary>
+  /// Obtains a mutex, invokes the specified lambda, and then updates the basic thread's state condition
+  /// </summary>
+  void PerformStatusUpdate(const std::function<void()>& fn);
 
   /// <summary>
   /// A convenience method that will sleep this thread for the specified duration
   /// </summary>
-  void ThreadSleep(long millisecond);
+  /// <returns>False if the thread was terminated before the timeout elapsed</returns>
+  /// <remarks>
+  /// Events are dispatched by this method while the sleep is taking place, which makes this
+  /// method similar to an alertable wait on Windows.  Callers are cautioned against holding
+  /// locks while calling this method; if this is done, a deadlock could result.
+  ///
+  /// Callers should not invoke this method outside of this thread's thread context, or an
+  /// interruption exception could result.
+  /// </remarks>
+  bool ThreadSleep(boost::chrono::nanoseconds timeout);
+  
+public:
+  // Accessor methods:
+  bool ShouldStop(void) const;
+  bool IsRunning(void) const override;
 
   /// <summary>
   /// Causes a new thread to be created in which the Run method will be invoked
@@ -200,41 +204,20 @@ public:
   /// <remarks>
   /// Unlike Join, this method may be invoked even if the CoreThread isn't running
   /// </remarks>
-  void Wait(void) override {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    m_state->m_stateCondition.wait(
-      lk,
-      [this]() {return this->m_completed; }
-    );
-  }
+  void Wait(void) override;
 
   /// <summary>
   /// Timed version of Wait
   /// </summary>
   /// <returns>False if the timeout elapsed, true otherwise</returns>
-  template<class DurationType>
-  bool WaitFor(DurationType duration) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_state->m_stateCondition.wait_for(
-      lk,
-      duration,
-      [this] () {return this->m_completed;}
-    );
-  }
+  bool WaitFor(boost::chrono::nanoseconds duration);
 
   /// <summary>
   /// Timed version of Wait
   /// </summary>
   /// <returns>False if the timeout elapsed, true otherwise</returns>
   template<class TimeType>
-  bool WaitUntil(TimeType timepoint) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_stateCondition.wait_until(
-      lk,
-      timepoint,
-      [this]() {return this->m_completed; }
-    );
-  }
+  bool WaitUntil(TimeType timepoint);
 
   /// <summary>
   /// Event which may be used to perform custom handling when the thread is told to stop
