@@ -1,8 +1,9 @@
 #pragma once
 #include "autowiring_error.h"
+#include "fast_pointer_cast.h"
+#include <functional>
 #include FUNCTIONAL_HEADER
 #include SHARED_PTR_HEADER
-#include <functional>
 
 class CoreContext;
 class GlobalCoreContext;
@@ -96,6 +97,7 @@ public:
 
   AutowirableSlot(const std::shared_ptr<CoreContext>& ctxt) :
     DeferrableAutowiring(ctxt),
+    m_type(typeid(T)),
     m_fast_pointer_cast(&leap::fast_pointer_cast<T, Object>)
   {}
 
@@ -103,11 +105,12 @@ public:
     CancelAutowiring();
   }
 
+  const std::type_info& m_type;
   std::shared_ptr<T>(*const m_fast_pointer_cast)(const std::shared_ptr<Object>&);
 
   // Must be final, because we use this in our dtor and need its behavior to be fixed:
-  const std::type_info& GetType(void) const override final {
-    return typeid(T);
+  const std::type_info& GetType(void) const override {
+    return m_type;
   }
 
   bool TrySatisfyAutowiring(const std::shared_ptr<Object>& candidate) override {
@@ -146,13 +149,13 @@ class AutowirableSlotFn:
 
 public:
   AutowirableSlotFn(const std::shared_ptr<CoreContext>& ctxt, Fn&& fn) :
-    AutowirableSlot(ctxt),
+    AutowirableSlot<T>(ctxt),
     fn(std::move(fn))
   {
   }
 
   ~AutowirableSlotFn(void) {
-    CancelAutowiring();
+    DeferrableAutowiring::CancelAutowiring();
   }
 
   // Underlying lambda that we will call:
@@ -170,7 +173,7 @@ public:
     CallThroughObj<Fn>(&Fn::operator());
 
     // Call the lambda, remove all accountability to the context, self-destruct, and return:
-    m_context.reset();
+    DeferrableAutowiring::m_context.reset();
     delete this;
   }
 };

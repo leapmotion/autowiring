@@ -491,7 +491,7 @@ public:
   template<typename T, typename... Args>
   std::shared_ptr<T> Construct(Args&&... args) {
     // If T doesn't inherit Object, then we need to compose a unifying type which does
-    typedef SelectTypeUnifier<T>::type TActual;
+    typedef typename SelectTypeUnifier<T>::type TActual;
     static_assert(std::is_base_of<Object, TActual>::value, "Constructive type does not implement Object as expected");
     static_assert(
       std::is_base_of<Object, T>::value || !has_static_new<T>::value,
