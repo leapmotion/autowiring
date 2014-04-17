@@ -449,10 +449,10 @@ TEST_F(EventReceiverTest, VerifyNoActionWhileStopped) {
   //ciOuterDeferred(&CallableInterfaceDeferred::ZeroArgsDeferred)();
   ASSERT_EQ(0UL, sr->GetDispatchQueueLength()) << "A deferred event was incorrectly received by a member of an uninitialized context";
 
-  // Now try to fire at the inner scope.  These fire calls MUST throw exceptions, because firing an
+  // Now try to fire at the inner scope.  These fire calls MUST not be received, because firing an
   // event during context setup (say, during a constructor) is an error.
   
-  const char* fireErr = "Attempting to fire an event in an interior context did not correctly cause an exception";
-  ASSERT_ANY_THROW(ciInner(&CallableInterface::ZeroArgs)()) << fireErr;
-  ASSERT_ANY_THROW(ciInnerDeferred(&CallableInterfaceDeferred::ZeroArgsDeferred)()) << fireErr;
+  ASSERT_TRUE(ciInner(&CallableInterface::ZeroArgs)()) << "Firing an event in a stopped context did not silently succeed";
+  ciInnerDeferred(&CallableInterfaceDeferred::ZeroArgsDeferred)();
+  ASSERT_FALSE(sr->m_zero) << "Fired an event in a stopped context which was incorrectly received by a member of that same context";
 }
