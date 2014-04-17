@@ -2,6 +2,7 @@
 #include "fast_pointer_cast.h"
 #include "Object.h"
 #include SHARED_PTR_HEADER
+#include <stddef.h>
 
 template<class T>
 struct SharedPointerSlotT;
@@ -156,7 +157,7 @@ public:
     // We want to scrape the VFT, which always appears prior to the data block.  We need
     // to use pointer magic to find the address of the VFT.  On most systems it's just
     // one void* space at the top of the class, but we can't be too careful here.
-    size_t headerSpace = offsetof(SharedPointerSlot, m_space);
+    size_t headerSpace = (char*) m_space - (char*) this;
     memcpy(this, &rhs, headerSpace);
 
     // If we had a way to know the compile-time type of the rhs, we might have simply
@@ -215,8 +216,8 @@ public:
   virtual operator const void*(void) const { return get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
 
-  template<class T>
-  bool operator==(const std::shared_ptr<T>& rhs) const {
+  template<class U>
+  bool operator==(const std::shared_ptr<U>& rhs) const {
     return get() == rhs;
   }
 
