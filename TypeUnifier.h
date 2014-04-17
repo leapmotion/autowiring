@@ -5,7 +5,7 @@
 class TypeUnifier: public Object {};
 
 template<class T>
-class TypeUnifierComplex sealed:
+class TypeUnifierComplex:
   public T,
   public TypeUnifier
 {
@@ -17,7 +17,7 @@ public:
 };
 
 template<class T>
-class TypeUnifierSimple sealed:
+class TypeUnifierSimple:
   public T,
   public TypeUnifier
 {

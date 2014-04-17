@@ -108,7 +108,7 @@ public:
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
 
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
-    AutowirableSlot(ctxt->template ResolveAnchor<T>()),
+    AutowirableSlot<T>(ctxt->template ResolveAnchor<T>()),
     m_pFirstChild(nullptr)
   {
     ctxt->Autowire(*this);
@@ -126,11 +126,11 @@ private:
 
 public:
   operator T*(void) const {
-    return t_ptrType::get();
+    return std::shared_ptr<T>::get();
   }
 
   operator bool(void) const {
-    return (AutowirableSlot&) *this;
+    return (AutowirableSlot<T>&) *this;
   }
 
   /// <summary>
@@ -159,7 +159,7 @@ public:
       // Already assigned, this is an error
       throw autowiring_error("Cannot invoke assign on a slot which is already assigned");
 
-    return !!((std::shared_ptr<T>&)*this = m_fast_pointer_cast(slot));
+    return !!((std::shared_ptr<T>&)*this = AutowirableSlot<T>::m_fast_pointer_cast(slot));
   }
 
   void Finalize(void) override {
@@ -233,7 +233,7 @@ public:
     return std::shared_ptr<T>::get();
   }
 
-  bool IsAutowired(void) const {return get() != nullptr;}
+  bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
 };
 
 
