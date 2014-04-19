@@ -562,19 +562,6 @@ public:
   }
 
   /// <summary>
-  /// Adds an existing shared pointer to the context
-  /// </summary>
-  /// <remarks>
-  /// This method unsafely ambiguates the construction strategy used for some member.  It's possible that
-  /// someone calls AddExisting for a field which is AutoRequired in the current context, or makes a call
-  /// to this method conditionally dependent on a type which may have been AutoRequired elsewhere.
-  ///
-  /// For reason of these ambiguities, and others, the method will be removed.
-  /// </remarks>
-  template<typename T>
-  void DEPRECATED(AddExisting(std::shared_ptr<T> p_member), "Deprecated, use Inject or Construct instead");
-
-  /// <summary>
   /// This method checks whether eventoutputstream listeners for the given type still exist.
   /// For a given type in a hash, returns a vector of weak ptrs.
   /// Goes through the weak ptrs, locks them, erases dead ones.
@@ -1042,9 +1029,3 @@ template<typename T, typename... Sigil>
 void CoreContext::AutoRequireMicroBolt(void) {
   Inject<MicroBolt<T, Sigil...>>();
 }
-
-template<typename T>
-void CoreContext::AddExisting(std::shared_ptr<T> p_member) {
-  AddInternal(AddInternalTraits(AutoPacketSubscriberSelect<T>(p_member), p_member));
-}
-
