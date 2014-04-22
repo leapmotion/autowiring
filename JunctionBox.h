@@ -385,7 +385,8 @@ public:
       return;
     
     if(!erp->IsInitiated())
-      throw std::runtime_error("Attempted event firing before context was initiated");
+      // Context not yet started
+      return;
 
     const auto& dq = erp->GetDispatchQueue();
     boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
