@@ -5,7 +5,8 @@
 #include "GlobalCoreContext.h"
 #include "Decompose.h"
 #include <functional>
-#include <memory>
+#include UNIQUE_PTR_HEADER
+#include RVALUE_HEADER
 
 template<class T>
 class Autowired;
@@ -143,10 +144,10 @@ public:
   /// </remarks>
   template<class Fn>
   void NotifyWhenAutowired(Fn fn) {
-    // We pass null, because we do not want this slot to attempt any kind of unregistration when
+    // We pass a null shared_ptr, because we do not want this slot to attempt any kind of unregistration when
     // it goes out of scope.  Instead, we will manage its entire registration lifecycle, and
     // retain full ownership over the object until we need to destroy it.
-    auto newHead = new AutowirableSlotFn<Fn, T>(nullptr, std::forward<Fn>(fn));
+    auto newHead = new AutowirableSlotFn<Fn, T>(std::shared_ptr<CoreContext>(), std::forward<Fn>(fn));
 
     // Append to our list:
     newHead->SetFlink(m_pFirstChild);

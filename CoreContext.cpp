@@ -437,7 +437,11 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
       if((*cur).TrySatisfyAutowiring(entry)) {
         // If the first entry is satisfiable then ALL entries are satisfiable
         // Move all entries into our satisfiable collection and run them later
+#if STL11_ALLOWED
         satisfiable.emplace_back(cur);
+#else
+        satisfiable.push_back(cur);
+#endif
         q = m_deferred.erase(q);
       }
       else
