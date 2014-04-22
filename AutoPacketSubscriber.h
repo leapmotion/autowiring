@@ -41,10 +41,8 @@ struct CallExtractor<T, true> {
   typedef std::true_type deferred;
 
   static void CallDeferred(T* pObj, const AutoPacketAdaptor& repo) {
-    const t_call call =
-      reinterpret_cast<t_call>(
-        &BoundCall<AutoPacketAdaptor, decltype(&T::AutoFilter), &T::AutoFilter>::Call
-      );
+    typedef BoundCall<AutoPacketAdaptor, decltype(&T::AutoFilter), &T::AutoFilter> t_boundCall;
+    const t_call call = reinterpret_cast<t_call>(&t_boundCall::Call);
 
     std::shared_ptr<AutoPacket> shared = ExtractSharedPointer(repo);
     *pObj += [pObj, shared, call] {
