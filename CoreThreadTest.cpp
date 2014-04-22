@@ -38,7 +38,7 @@ TEST_F(CoreThreadTest, VerifyStartSpam) {
   m_create->Initiate();
 
   // This shouldn't cause another thread to be created:
-  instance->Start(std::shared_ptr<Object>(new Object));
+  instance->Start(std::shared_ptr<Object>((Object*) 1, [] (Object*) {}));
 
   EXPECT_FALSE(instance->m_multiHit) << "Thread was run more than once unexpectedly";
 }
