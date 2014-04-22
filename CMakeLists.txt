@@ -7,7 +7,6 @@ include_directories(
 set(Autowiring_SRCS
   at_exit.h
   AutoAnchor.h
-  AutoFactory.h
   AutoFuture.h
   AutoFuture.cpp
   CoreJob.h
@@ -20,8 +19,7 @@ set(Autowiring_SRCS
   AutoPacketListener.h
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
-  AutoNetworkMonitor.h
-  AutoNetworkMonitor.cpp
+  AutoPacketSubscriber.h
   Autowired.h
   Autowired.cpp
   AutowirableSlot.h
@@ -50,8 +48,6 @@ set(Autowiring_SRCS
   CurrentContextPusher.h
   Decompose.h
   Deserialize.h
-  DeferredBase.h
-  DeferredBase.cpp
   deferred_ptr.h
   DispatchQueue.h
   DispatchQueue.cpp
@@ -77,15 +73,18 @@ set(Autowiring_SRCS
   ObjectPoolMonitor.cpp
   move_only.h
   MicroBolt.h
-  PolymorphicTypeForest.h
   ReentrantCounter.h
   ReentrantCounter.cpp
+  SharedPointerSlot.h
   SimpleOwnershipValidator.h
   SimpleOwnershipValidator.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
+  ThreadStatusBlock.h
+  ThreadStatusBlock.cpp
   TypeRegistry.h
   TypeRegistry.cpp
+  TypeUnifier.h
   uuid.h
 )
 
@@ -163,8 +162,6 @@ set(AutowiringTest_SRCS
   FactoryTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
-  GraphConstructionTest.h
-  GraphConstructionTest.cpp
   InterlockedRoutinesTest.h
   InterlockedRoutinesTest.cpp
   MarshalingTest.h
@@ -175,14 +172,14 @@ set(AutowiringTest_SRCS
   ObjectPoolTest.cpp
   PeerContextTest.h
   PeerContextTest.cpp
-  PolymorphicTypeForestTest.h
-  PolymorphicTypeForestTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
   ReentrantCounterTest.h
   ReentrantCounterTest.cpp
   SelfSelectingFixtureTest.h
   SelfSelectingFixtureTest.cpp
+  SharedPointerSlotTest.h
+  SharedPointerSlotTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
   CoreJobTest.h

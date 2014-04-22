@@ -48,7 +48,7 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   return retVal;
 }
 
-void AutoPacketFactory::AddSubscriber(AutoPacketSubscriber&& rhs) {
+void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
   const std::type_info& ti = *rhs.GetSubscriberTypeInfo();
 
   // Determine whether this subscriber already exists--perhaps, it is formerly disabled

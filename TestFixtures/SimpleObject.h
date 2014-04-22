@@ -1,4 +1,7 @@
 #pragma once
+#include "Autowiring/ContextMember.h"
+#include "Autowiring/TypeUnifier.h"
+#include TYPE_TRAITS_HEADER
 
 // Simple ContextMember class:
 class SimpleObject:
@@ -17,3 +20,10 @@ public:
   int one;
 };
 
+static_assert(
+  std::is_same<
+    SimpleObject,
+    typename SelectTypeUnifier<SimpleObject>::type
+  >::value,
+  "The SimpleObject was incorrectly identified as needing a type unifier"
+);

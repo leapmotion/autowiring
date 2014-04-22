@@ -29,6 +29,12 @@ struct has_simple_constructor
   static const bool value = sizeof(select<T>(nullptr)) == sizeof(int);
 };
 
+template<typename T>
+struct has_simple_constructor<T, true>
+{
+  static const bool value = false;
+};
+
 
 /// <summary>
 /// Simple structure to centralize knowledge about how to create types with various declarations
