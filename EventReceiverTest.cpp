@@ -43,12 +43,8 @@ TEST_F(EventReceiverTest, VerifyNoReceive) {
   AutoFired<CallableInterfaceDeferred> sender;
 
   // Try to defer these calls, should not be delivered anywhere:
-  try {
-  EXPECT_ANY_THROW(sender.Defer(&CallableInterfaceDeferred::ZeroArgsDeferred)());
-  }catch(...){}
-  try{
-  EXPECT_ANY_THROW(sender.Defer(&CallableInterfaceDeferred::OneArgDeferred)(100));
-  }catch(...){}
+  EXPECT_NO_THROW(sender.Defer(&CallableInterfaceDeferred::ZeroArgsDeferred)());
+  EXPECT_NO_THROW(sender.Defer(&CallableInterfaceDeferred::OneArgDeferred)(100));
 
   // Unblock:
   receiver->Proceed();
