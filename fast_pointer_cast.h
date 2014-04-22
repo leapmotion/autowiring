@@ -1,6 +1,7 @@
 #pragma once
 #include SHARED_PTR_HEADER
 #include TYPE_TRAITS_HEADER
+#include SHARED_PTR_HEADER
 
 namespace leap {
   /// <summary>

@@ -188,5 +188,4 @@ TEST_F(SnoopTest, AntiCyclicRemoval) {
   
   AutoFired<SimpleEvent> ubl;
   ubl(&SimpleEvent::ZeroArgs)();
-  
 }

@@ -1,7 +1,8 @@
 #pragma once
 #include "EnclosedContextTestBase.h"
 
-class FactoryTest:
+class AutoOutTest:
   public EnclosedContextTestBase
 {
 };
+
