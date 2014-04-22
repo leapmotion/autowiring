@@ -26,6 +26,8 @@ angular.module('autoNetApp')
       });
 
       var graph = scope.graph;
+
+      // Set of current nodes in graph
       var nodeSet = scope.graph.nodeSet;
 
       // Watch for any new or deleted nodes
