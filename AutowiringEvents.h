@@ -1,10 +1,8 @@
 #pragma once
 #include "EventReceiver.h"
-#include <list>
 
 class Object;
 class CoreContext;
-class BoltBase;
 
 class AutowiringEvents:
   public virtual EventReceiver

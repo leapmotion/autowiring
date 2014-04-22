@@ -1,18 +1,42 @@
 #pragma once
 #include <typeinfo>
+#include <iostream>
 #include SHARED_PTR_HEADER
 
 template<class T>
 class JunctionBox;
 
 class JunctionBoxBase;
+class Object;
+
+// Checks if an Object* listens to a event T;
+struct TypeIdentifierBase {
+  virtual bool Is(const Object* obj) = 0;
+  virtual const std::type_info& Type() = 0;
+};
+
+template<typename T>
+struct TypeIdentifier:
+  public TypeIdentifierBase
+{
+  // true if "obj" is an event receiver for T
+  bool Is(const Object* obj){
+    return !!dynamic_cast<const T*>(obj);
+  }
+  
+  const std::type_info& Type(){
+    return typeid(T);
+  }
+};
 
 struct TypeRegistryEntry {
-  TypeRegistryEntry(const std::type_info& ti, void(*factory)(std::shared_ptr<JunctionBoxBase>&));
+  TypeRegistryEntry(const std::type_info& ti, void(*factory)(std::shared_ptr<JunctionBoxBase>&),
+                                              std::shared_ptr<TypeIdentifierBase>(*identifier)(void));
 
   const TypeRegistryEntry* pFlink;
   const std::type_info& ti;
   void (*const m_NewJunctionBox)(std::shared_ptr<JunctionBoxBase>&);
+  std::shared_ptr<TypeIdentifierBase>(*const m_NewTypeIdentifier)(void);
 };
 
 extern const TypeRegistryEntry* g_pFirstEntry;
@@ -40,6 +64,14 @@ void NewJunctionBox(std::shared_ptr<JunctionBoxBase>& out) {
   );
 }
 
+// TypeIdentifier casting factory
 template<class T>
-const TypeRegistryEntry RegType<T>::r(typeid(T), &NewJunctionBox<T>);
+std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) {
+  return std::static_pointer_cast<TypeIdentifierBase>(
+    std::make_shared<TypeIdentifier<T>>()
+  );
+}
+
+template<class T>
+const TypeRegistryEntry RegType<T>::r(typeid(T), &NewJunctionBox<T>, &NewTypeIdentifier<T>);
 
