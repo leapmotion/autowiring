@@ -2,11 +2,9 @@
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
 #include "EventReceiver.h"
-#include "PolymorphicTypeForest.h"
 #include "fast_pointer_cast.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
-#include "PolymorphicTypeForest.h"
 #include <boost/thread/mutex.hpp>
 #include "fast_pointer_cast.h"
 #include <set>
@@ -387,7 +385,8 @@ public:
       return;
     
     if(!erp->IsInitiated())
-      throw std::runtime_error("Attempted event firing before context was initiated");
+      // Context not yet started
+      return;
 
     const auto& dq = erp->GetDispatchQueue();
     boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
@@ -427,7 +426,8 @@ public:
       return true;
     
     if(!erp->IsInitiated())
-      throw std::runtime_error("Attempted event firing before context was initiated");
+      // Context not yet started
+      return true;
 
     // Give the serializer a chance to handle these arguments:
     erp->SerializeInit(fnPtr, args...);

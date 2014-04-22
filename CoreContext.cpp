@@ -65,10 +65,6 @@ CoreContext::~CoreContext(void) {
   // Tell all context members that we're tearing down:
   for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
     (**q).NotifyContextTeardown();
-
-  // Explicit deleters to simplify base deletion of any deferred autowiring requests:
-  for(t_deferred::iterator q = m_deferred.begin(); q != m_deferred.end(); ++q)
-    delete q->second;
 }
 
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
@@ -78,8 +74,8 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
 
   auto self = shared_from_this();
   retVal.reset(
-    new Object,
-    [this, self](Object* ptr) {
+    (Object*)1,
+    [this, self](Object*) {
       // Object being destroyed, notify all recipients
       boost::lock_guard<boost::mutex> lk(m_lock);
 
@@ -89,11 +85,70 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
 
       // Wake everyone up
       m_stateChanged.notify_all();
-      delete ptr;
     }
   );
   m_outstanding = retVal;
   return retVal;
+}
+
+void CoreContext::AddInternal(const AddInternalTraits& traits) {
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+
+    // Validate that this addition does not generate an ambiguity:
+    auto& v = m_concreteTypes[typeid(*traits.pObject)];
+    if(*v == traits.pObject)
+      throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
+    if(*v)
+      throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+
+    // Perform the insertion at the canonical type identity:
+    v = traits.value;
+
+    // Double-check that the type we just inserted passes sanity checks:
+    assert(*v == traits.pObject);
+
+    // Insert each context element:
+    if(traits.pContextMember) {
+      AddContextMember(traits.pContextMember);
+      GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*traits.pContextMember);
+    }
+
+    if(traits.pCoreRunnable) {
+      AddCoreRunnable(traits.pCoreRunnable);
+      GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*traits.pCoreRunnable);
+    }
+
+    if(traits.pFilter) {
+      m_filters.insert(traits.pFilter.get());
+      GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, *traits.pFilter);
+    }
+
+    if(traits.pBoltBase)
+      AddBolt(traits.pBoltBase);
+  }
+
+  // Event receivers:
+  if(traits.pRecvr) {
+    AddEventReceiver(traits.pRecvr);
+    GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *traits.pRecvr);
+  }
+
+  // Subscribers, if applicable:
+  if(traits.subscriber)
+    AddPacketSubscriber(traits.subscriber);
+
+  // Notify any autowiring field that is currently waiting that we have a new member
+  // to be considered.
+  UpdateDeferredElements(traits.pObject);
+
+  // Ownership validation, as appropriate
+  // We do not attempt to pend validation for CoreRunnable instances, because a
+  // CoreRunnable could potentially hold the final outstanding reference to this
+  // context, and therefore may be responsible for this context's (and, transitively,
+  // its own) destruction.
+  if(m_useOwnershipValidator && !traits.pCoreRunnable)
+    SimpleOwnershipValidator::PendValidation(std::weak_ptr<Object>(traits.pObject));
 }
 
 std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
@@ -131,7 +186,6 @@ void CoreContext::Initiate(void) {
 
   if(m_pParent)
     // Start parent threads first
-    // Parent MUST be a core context
     m_pParent->Initiate();
   
   AddDelayedEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
@@ -295,11 +349,43 @@ void CoreContext::BuildCurrentState(void) {
   }
 }
 
+void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable) {
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  auto q = m_deferred.find(pDeferrable->GetType());
+  if(q == m_deferred.end())
+    return;
+
+  // Always finalize this entry:
+  pDeferrable->Finalize();
+
+  // Stores the immediate predecessor of the node we will linearly scan for in our
+  // linked list.
+  DeferrableAutowiring* prior = nullptr;
+
+  // Now remove the entry from the list:
+  // NOTE:  If a performance bottleneck is tracked to here, the solution is to use
+  // a doubly-linked list.
+  for(auto cur = q->second; cur != pDeferrable; prior = cur, cur = cur->GetFlink())
+    if(!cur)
+      // Ran off the end of the list, nothing we can do here
+      return;
+
+  if(prior)
+    // Erase the entry by using link elision:
+    prior->SetFlink(pDeferrable->GetFlink());
+  if(pDeferrable->GetFlink())
+    // Just update the head at this entry
+    q->second = pDeferrable->GetFlink();
+  else
+    // Erase the entire list, the list is now empty:
+    m_deferred.erase(q);
+}
+
 void CoreContext::Dump(std::ostream& os) const {
   boost::lock_guard<boost::mutex> lk(m_lock);
-  for(auto q = m_byType.begin(); q != m_byType.end(); q++) {
-    os << q->first.derived.name();
-    const void* pObj = q->second->RawPointer();
+  for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
+    os << q->first.name();
+    const void* pObj = q->second;
     if(pObj)
       os << " 0x" << hex << pObj;
     os << endl;
@@ -350,30 +436,35 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
-void CoreContext::UpdateDeferredElements(void) {
-  std::list<DeferredBase*> successful;
+void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
+  // Collection of satisfiable lists:
+  std::vector<DeferrableAutowiring*> satisfiable;
 
   // Notify any autowired field whose autowiring was deferred
   {
-    boost::lock_guard<boost::mutex> lk(m_deferredLock);
-    for(t_deferred::iterator r = m_deferred.begin(); r != m_deferred.end(); ) {
-      bool rs = (*r->second)();
-      if(rs) {
-        successful.push_back(r->second);
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    for(auto q = m_deferred.begin(); q != m_deferred.end();) {
+      auto& cur = q->second;
 
-        // Temporary required because of the absence of a convenience eraser iterator with stl map on all platforms
-        t_deferred::iterator rm = r++;
-        m_deferred.erase(rm);
+      if((*cur).TrySatisfyAutowiring(entry)) {
+        // If the first entry is satisfiable then ALL entries are satisfiable
+        // Move all entries into our satisfiable collection and run them later
+        satisfiable.emplace_back(cur);
+        q = m_deferred.erase(q);
       }
       else
-        r++;
+        q++;
     }
   }
 
-  // Now, outside of the context of a lock, we destroy each successfully wired deferred member
-  // This causes any listeners to be invoked, conveniently, outside of the context of any lock
-  for(std::list<DeferredBase*>::iterator q = successful.begin(); q != successful.end(); ++q)
-    delete *q;
+  for(auto listHead : satisfiable) {
+    // First entry needs custom finalization and will be used as a witness:
+    listHead->Finalize();
+    
+    // Run through everything else and finalize it all:
+    for(auto* pCur = listHead->GetFlink(); pCur; pCur = pCur->GetFlink())
+      pCur->SatisfyAutowiring(*listHead);
+  }
 
   // Give children a chance to also update their deferred elements:
   boost::unique_lock<boost::mutex> lk(m_childrenLock);
@@ -385,7 +476,7 @@ void CoreContext::UpdateDeferredElements(void) {
 
     // Reverse lock before satisfying children:
     lk.unlock();
-    ctxt->UpdateDeferredElements();
+    ctxt->UpdateDeferredElements(entry);
     lk.lock();
   }
 }
@@ -501,39 +592,19 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
   m_contextMembers.insert(ptr.get());
 }
 
-void CoreContext::AddPacketSubscriber(AutoPacketSubscriber&& rhs) {
-  m_packetFactory->AddSubscriber(std::move(rhs));
-  if( m_pParent ) {
-    m_pParent->AddPacketSubscriber(std::move(rhs));
-  }
+void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
+  m_packetFactory->AddSubscriber(rhs);
+  if(m_pParent)
+    m_pParent->AddPacketSubscriber(rhs);
 }
 
 void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber> &subscribers) {
-  //delegate to the parent if there is one
-  if( m_pParent ) {
+  // Notify the parent that it will have to remove these subscribers as well
+  if(m_pParent)
     m_pParent->RemovePacketSubscribers(subscribers);
-  }
 
+  // Remove subscribers from our factory AFTER the parent eviction has taken place
   m_packetFactory->RemoveSubscribers(subscribers.begin(), subscribers.end());
-}
-
-void CoreContext::NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener) {
-  boost::lock_guard<boost::mutex> lk(m_deferredLock);
-
-  // If the slot is already autowired then we can invoke the listener here and return early
-  if(slot.IsAutowired())
-    return listener();
-
-  t_deferred::iterator q = m_deferred.find(&slot);
-  if(q == m_deferred.end()) {
-    if(m_pParent)
-      // Try the parent context first, it could be present there
-      return m_pParent->NotifyWhenAutowired(slot, listener);
-    else
-      throw_rethrowable std::domain_error("An attempt was made to observe a principal not in this context");
-  }
-
-  q->second->AddPostBindingListener(listener);
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
