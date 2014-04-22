@@ -4,6 +4,7 @@
 #include <functional>
 #include FUNCTIONAL_HEADER
 #include SHARED_PTR_HEADER
+#include RVALUE_HEADER
 
 class CoreContext;
 class GlobalCoreContext;
