@@ -4,9 +4,10 @@ angular.module('autoNetApp')
 .factory('LeapState', function LeapState(websocket) {
 
   // Object definitions
-  function Context(ctxt){
+  function Context(id, ctxt){
     this.objects = [];
     this.name = "Unnamed";
+    this.id = id;
 
     _.extend(this, ctxt)
   }
@@ -17,7 +18,7 @@ angular.module('autoNetApp')
 
   function LeapObject(types, objData){
     this.name = objData.name;
-    this.types = _.without(Object.keys(types), 'bolt');
+    this.types = Object.keys(types);
 
     if (types.hasOwnProperty("bolt")) {
       this.boltSigils = types.bolt;
@@ -25,19 +26,27 @@ angular.module('autoNetApp')
         this.boltSigils.push("Everything!");
       }
     }
+
+    if (types.hasOwnProperty("eventReceiver")) {
+      this.events = {};
+      var numEvents = types.eventReceiver.length;
+
+      for (var evt=0; evt<numEvents; evt++) {
+        var eventType = types.eventReceiver[evt];
+        this.events[eventType] = 0;
+      }
+
+      if (numEvents === 0){
+        this.events["Nothing!"] = 0;
+      }
+    }
   }
 
   LeapObject.prototype.IsType = function(type){
-    if (type === 'bolt'){
-      return this.hasBolts();
-    }
-
     return _.contains(this.types, type);
   };
 
   LeapObject.prototype.IsAnyType = function(filterTypes){
-    if (this.hasBolts() && filterTypes.hasOwnProperty('bolt')) return true;
-
     for (var i = 0; i<this.types.length; i++) {
       var type = this.types[i];
 
@@ -48,6 +57,18 @@ angular.module('autoNetApp')
 
   LeapObject.prototype.hasBolts = function(){
     return this.hasOwnProperty('boltSigils');
+  }
+
+  LeapObject.prototype.isEventReceiver = function(){
+    return this.hasOwnProperty('events');
+  }
+
+  LeapObject.prototype.eventFired = function(evt){
+    if (!this.hasOwnProperty('events')) return;
+
+    if (this.events.hasOwnProperty(evt)) {
+      this.events[evt]++;
+    }
   }
 
   //////////////////////////////////////////////////////
@@ -65,9 +86,9 @@ angular.module('autoNetApp')
     isSubscribed = false;
   });
 
-  websocket.on('newContext', function(context){
-    if (! (context.id in ContextMap)) {
-      ContextMap[context.id] = new Context(context);
+  websocket.on('newContext', function(contextID, context){
+    if (!ContextMap.hasOwnProperty(contextID)) {
+      ContextMap[contextID] = new Context(contextID, context);
     } else {
       console.log('context alreadys exists');
     }
@@ -85,6 +106,11 @@ angular.module('autoNetApp')
 
   websocket.on('eventFired', function(contextID, eventHash){
     var updatedContext = ContextMap[contextID];
+
+    for (var i = 0; i<updatedContext.objects.length; i++) {
+      var obj = updatedContext.objects[i];
+      obj.eventFired(eventHash.name);
+    }
   });
 
   return {

@@ -111,17 +111,14 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
     // Insert each context element:
     if(traits.pContextMember) {
       AddContextMember(traits.pContextMember);
-      GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*traits.pContextMember);
     }
 
     if(traits.pCoreRunnable) {
       AddCoreRunnable(traits.pCoreRunnable);
-      GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*traits.pCoreRunnable);
     }
 
     if(traits.pFilter) {
       m_filters.insert(traits.pFilter.get());
-      GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, *traits.pFilter);
     }
 
     if(traits.pBoltBase)
@@ -131,7 +128,6 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   // Event receivers:
   if(traits.pRecvr) {
     AddEventReceiver(traits.pRecvr);
-    GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *traits.pRecvr);
   }
 
   // Subscribers, if applicable:
@@ -149,6 +145,9 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   // its own) destruction.
   if(m_useOwnershipValidator && !traits.pCoreRunnable)
     SimpleOwnershipValidator::PendValidation(std::weak_ptr<Object>(traits.pObject));
+  
+  // Signal listeners that a new object has been created
+  GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *traits.pObject.get());
 }
 
 std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
