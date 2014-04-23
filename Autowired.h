@@ -179,6 +179,55 @@ public:
 };
 
 /// <summary>
+/// Similar to Autowired, but doesn't defer creation if types doesn't already exist
+/// </summary>
+template<class T>
+class AutowiredFast:
+  public std::shared_ptr<T>
+{
+public:
+  using std::shared_ptr<T>::operator=;
+  
+  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
+  // If you are getting an error tracked to this line, ensure that class T is totally
+  // defined at the point where the Autowired instance is constructed.  Generally,
+  // such errors are tracked to missing header files.  A common mistake, for instance,
+  // is to do something like this:
+  //
+  // class MyClass;
+  //
+  // struct MyStructure {
+  //   AutowiredFast<MyClass> m_member;
+  // };
+  //
+  // At the time m_member is instantiated, MyClass is an incomplete type.  So, when the
+  // compiler tries to instantiate AutowiredCreator::Create (the function you're in right
+  // now!) it finds that it can't create a new instance of type MyClass because it has
+  // no idea how to construct it!
+  //
+  // This problem can be fixed two ways:  You can include the definition of MyClass before
+  // MyStructure is defined, OR, you can give MyStructure a nontrivial constructor, and
+  // then ensure that the definition of MyClass is available before the nontrivial
+  // constructor is defined.
+  //
+  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
+  
+  AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()){
+    ctxt->FindByTypeRecursive(*this);
+  }
+  
+  operator bool(void) const {
+    return IsAutowired();
+  }
+  
+  operator T*(void) const {
+    return std::shared_ptr<T>::get();
+  }
+  
+  bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
+};
+
+/// <summary>
 /// Similar to Autowired, Creates a new instance if this instance isn't autowired
 /// </summary>
 /// <remarks>
@@ -206,7 +255,7 @@ public:
   // class MyClass;
   //
   // struct MyStructure {
-  //   Autowired<MyClass> m_member;
+  //   AutoRequired<MyClass> m_member;
   // };
   //
   // At the time m_member is instantiated, MyClass is an incomplete type.  So, when the
