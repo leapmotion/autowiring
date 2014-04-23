@@ -2,10 +2,6 @@
 #include "CreationRules.h"
 #include "Object.h"
 
-#ifdef _WIN32
-#pragma warning(disable : 4250) // We intend this to happen during diamond inheritance
-#endif
-
 class TypeUnifier: public Object {};
 
 template<class T>
