@@ -9,14 +9,6 @@ DispatchQueue::DispatchQueue(void):
   m_dispatchCap(1024)
 {}
 
-DispatchQueue::~DispatchQueue(void) {
-  while (!m_delayedQueue.empty()) {
-    DispatchThunkDelayed thunk = m_delayedQueue.top();
-    thunk.Reset();
-    m_delayedQueue.pop();
-  }
-}
-
 void DispatchQueue::Abort(void) {
   boost::lock_guard<boost::mutex> lk(m_dispatchLock);
   m_aborted = true;
@@ -51,7 +43,7 @@ void DispatchQueue::PromoteReadyEventsUnsafe(void) {
     m_delayedQueue.pop()
   )
     // This item's ready time has elapsed, we can add it to our dispatch queue now:
-    m_dispatchQueue.push_back(std::unique_ptr<DispatchThunkBase>(m_delayedQueue.top().Get()));
+    m_dispatchQueue.push_back(m_delayedQueue.top().Get());
 }
 
 void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
