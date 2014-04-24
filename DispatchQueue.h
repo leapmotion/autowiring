@@ -29,15 +29,7 @@ class DispatchQueue:
 {
 public:
   DispatchQueue(void);
-
-  /// <summary>
-  /// Runs down the dispatch queue without calling anything
-  /// </summary>
-  /// <remarks>
-  /// Nothing in the destructor is synchronized.  This is done under the assumption that multi-
-  /// access during teardown is impossible.
-  /// </remarks>
-  virtual ~DispatchQueue(void);
+  virtual ~DispatchQueue(void){};
 
 protected:
   // The maximum allowed number of pended dispatches before pended calls start getting dropped
@@ -179,7 +171,7 @@ public:
       // Let the parent handle this one directly after composing a delayed dispatch thunk r-value
       *m_pParent += DispatchThunkDelayed(
         m_wakeup,
-        new DispatchThunk<_Fx>(std::forward<_Fx>(fx))
+        std::unique_ptr<DispatchThunkBase>(new DispatchThunk<_Fx>(std::forward<_Fx>(fx)))
       );
     }
   };
