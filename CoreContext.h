@@ -79,46 +79,10 @@ public:
   virtual ~CoreContext(void);
 
   /// <summary>
-  /// Factory to create a new context
-  /// </summary>
-  /// <param name="T">The context sigil.</param>
-  template<class T>
-  std::shared_ptr<CoreContext> Create(void) {
-    return CreateInternal<T>(*new CoreContext(shared_from_this(), typeid(T)));
-  }
-
-  /// <summary>
-  /// Factory to create a peer context
-  /// </summary>
-  /// <remarks>
-  /// A peer context allows clients to create autowiring contexts which are in the same event
-  /// domain with respect to each other, but are not in the same autowiring domain.  This can
-  /// be useful where multiple instances of a particular object are desired, but inserting
-  /// such objects into a simple child context is cumbersome because the objects at parent
-  /// scope are listening to events originating from objects at child scope. Events can be fired,
-  /// but not received, from an unintiated context if its peer is initiated.
-  /// </remarks>
-  template<class T>
-  std::shared_ptr<CoreContext> CreatePeer(void) {
-    return m_pParent->CreateInternal<T>(*new CoreContext(m_pParent, typeid(T), shared_from_this()));
-  }
-
-  /// <summary>
-  /// Allows a specifically named class to be bolted
-  /// </summary>
-  /// <remarks>
-  /// If the specified type does not inherit from BoltTo, this method has no effect
-  /// </remarks>
-  template<class T>
-  void Enable(void) {
-    static_assert(!std::is_abstract<T>::value, "Cannot enable an abstract class for bolting");
-    EnableInternal((T*)nullptr, (T*)nullptr);
-  }
-
-  /// <summary>
   /// Convenience method to obtain a shared reference to the global context
   /// </summary>
   static std::shared_ptr<CoreContext> GetGlobal(void);
+
 protected:
   /// <summary>
   /// Register new context with parent and notify others of its creation.
@@ -460,6 +424,43 @@ public:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const { return m_concreteTypes.size(); }
   const std::type_info& GetSigilType(void) const { return m_sigil; }
+
+  /// <summary>
+  /// Factory to create a new context
+  /// </summary>
+  /// <param name="T">The context sigil.</param>
+  template<class T>
+  std::shared_ptr<CoreContext> Create(void) {
+    return CreateInternal<T>(*new CoreContext(shared_from_this(), typeid(T)));
+  }
+
+  /// <summary>
+  /// Factory to create a peer context
+  /// </summary>
+  /// <remarks>
+  /// A peer context allows clients to create autowiring contexts which are in the same event
+  /// domain with respect to each other, but are not in the same autowiring domain.  This can
+  /// be useful where multiple instances of a particular object are desired, but inserting
+  /// such objects into a simple child context is cumbersome because the objects at parent
+  /// scope are listening to events originating from objects at child scope. Events can be fired,
+  /// but not received, from an unintiated context if its peer is initiated.
+  /// </remarks>
+  template<class T>
+  std::shared_ptr<CoreContext> CreatePeer(void) {
+    return m_pParent->CreateInternal<T>(*new CoreContext(m_pParent, typeid(T), shared_from_this()));
+  }
+
+  /// <summary>
+  /// Allows a specifically named class to be bolted
+  /// </summary>
+  /// <remarks>
+  /// If the specified type does not inherit from BoltTo, this method has no effect
+  /// </remarks>
+  template<class T>
+  void Enable(void) {
+    static_assert(!std::is_abstract<T>::value, "Cannot enable an abstract class for bolting");
+    EnableInternal((T*)nullptr, (T*)nullptr);
+  }
 
   /// <summary>
   /// Check if parent context's have AutoAnchored the type in their sigil.
