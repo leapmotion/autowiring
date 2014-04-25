@@ -270,7 +270,7 @@ TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
 
   // Verify that we hit this after one ms of delay
   ASSERT_FALSE(*x) << "A timepoint-based delayed dispatch was invoked early";
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
   ASSERT_TRUE(*x) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
 }
 
