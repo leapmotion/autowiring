@@ -99,9 +99,14 @@ protected:
   }
   
 public:
-  /// <summary>
+  /// <returns>
+  /// True if there are curerntly any dispatchers ready for execution--IE, DispatchEvent would return true
+  /// </returns>
+  bool AreAnyDispatchersReady(void) const { return !m_dispatchQueue.empty(); }
+
+  /// <returns>
   /// The total number of all ready and delayed events
-  /// </summary>
+  /// </returns>
   size_t GetDispatchQueueLength(void) const {return m_dispatchQueue.size() + m_delayedQueue.size();}
 
   /// <summary>
@@ -122,7 +127,7 @@ protected:
   /// <summary>
   /// Fire and event when dispatched from the queue.
   /// </summary>
-  virtual void FireEvent(DispatchThunkBase*);
+  virtual void FireEvent(std::unique_ptr<DispatchThunkBase>&& rhs);
 
   /// <summary>
   /// Similar to WaitForEvent, but does not block
@@ -134,12 +139,13 @@ protected:
   /// Similar to DispatchEvent, but will attempt to dispatch all events currently queued
   /// </summary>
   /// <returns>The total number of events dispatched</returns>
-  int DispatchAllEvents(void){
+  int DispatchAllEvents(void) {
     int retVal = 0;
     while(DispatchEvent())
       retVal++;
     return retVal;
   }
+
 public:
   /// <summary>
   /// Check if DispatchQueue is ready to take events
