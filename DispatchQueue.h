@@ -6,6 +6,7 @@
 #include <queue>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
+#include UNIQUE_PTR_HEADER
 
 class DispatchQueue;
 
@@ -28,22 +29,14 @@ class DispatchQueue:
 {
 public:
   DispatchQueue(void);
-
-  /// <summary>
-  /// Runs down the dispatch queue without calling anything
-  /// </summary>
-  /// <remarks>
-  /// Nothing in the destructor is synchronized.  This is done under the assumption that multi-
-  /// access during teardown is impossible.
-  /// </remarks>
-  virtual ~DispatchQueue(void);
+  virtual ~DispatchQueue(void){};
 
 protected:
   // The maximum allowed number of pended dispatches before pended calls start getting dropped
   int m_dispatchCap;
   
   // The dispatch queue proper:
-  std::list<DispatchThunkBase*> m_dispatchQueue;
+  std::list<std::unique_ptr<DispatchThunkBase>> m_dispatchQueue;
   
   // Priority queue of non-ready events:
   std::priority_queue<DispatchThunkDelayed> m_delayedQueue;
@@ -92,7 +85,7 @@ protected:
   template<class _Fx>
   void Pend(_Fx&& fx) {
     boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
+    m_dispatchQueue.push_back(std::unique_ptr<DispatchThunkBase>(new DispatchThunk<_Fx>(fx)));
     m_queueUpdated.notify_all();
 
     OnPended(std::move(lk));
@@ -122,7 +115,7 @@ protected:
   /// <summary>
   /// Fire and event when dispatched from the queue.
   /// </summary>
-  virtual void FireEvent(DispatchThunkBase*);
+  virtual void FireEvent(std::unique_ptr<DispatchThunkBase>);
 
   /// <summary>
   /// Similar to WaitForEvent, but does not block
@@ -155,7 +148,7 @@ public:
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
       return;
 
-    m_dispatchQueue.push_back(pBase);
+    m_dispatchQueue.push_back(std::unique_ptr<DispatchThunkBase>(pBase));
     m_queueUpdated.notify_all();
     OnPended(std::move(lk));
   }
@@ -178,7 +171,7 @@ public:
       // Let the parent handle this one directly after composing a delayed dispatch thunk r-value
       *m_pParent += DispatchThunkDelayed(
         m_wakeup,
-        new DispatchThunk<_Fx>(std::forward<_Fx>(fx))
+        std::unique_ptr<DispatchThunkBase>(new DispatchThunk<_Fx>(std::forward<_Fx>(fx)))
       );
     }
   };
@@ -230,7 +223,7 @@ public:
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
       return;
 
-    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(std::forward<_Fx>(fx)));
+    m_dispatchQueue.push_back(std::unique_ptr<DispatchThunkBase>(new DispatchThunk<_Fx>(std::forward<_Fx>(fx))));
     m_queueUpdated.notify_all();
     OnPended(std::move(lk));
   }
