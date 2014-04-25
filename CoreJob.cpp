@@ -8,17 +8,14 @@ CoreJob::CoreJob(const char* name) :
   m_running(false)
 {}
 
-void CoreJob::FireEvent(DispatchThunkBase* thunk){
-  MoveOnly<std::future<void>> prev(std::move(m_prevEvent));
+void CoreJob::FireEvent(std::unique_ptr<DispatchThunkBase> thunk){
+  MoveOnly<std::future<void>> mo_prev(std::move(m_prevEvent));
+  MoveOnly<std::unique_ptr<DispatchThunkBase>> mo_thunk(std::move(thunk));
   
-  m_prevEvent = std::async(std::launch::async, [thunk, prev]{
-    auto cleanup = MakeAtExit([thunk]{
-      delete thunk;
-    });
-    
+  m_prevEvent = std::async(std::launch::async, [mo_thunk, mo_prev]{
     // Wait for previous async to finish
-    if (prev.value.valid()) prev.value.wait();
-    (*thunk)();
+    if (mo_prev.value.valid()) mo_prev.value.wait();
+    (*mo_thunk.value)();
   });
 }
 
