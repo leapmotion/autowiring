@@ -40,73 +40,51 @@ struct dummy:
 {};
 
 TEST_F(AutowiringBenchmarkTest, VerifyAutowiringCache) {
-  
   boost::chrono::nanoseconds baseline(0);
   boost::chrono::nanoseconds benchmark(0);
-  {
-    for (int i=0; i<100; ++i){
-      AutoCreateContext ctxt;
-      CurrentContextPusher pshr(ctxt);
-      
-      auto startBase = boost::chrono::high_resolution_clock::now();
-      Autowired<dummy<1>>();
-      Autowired<dummy<2>>();
-      Autowired<dummy<3>>();
-      Autowired<dummy<4>>();
-      Autowired<dummy<5>>();
-      Autowired<dummy<6>>();
-      Autowired<dummy<7>>();
-      Autowired<dummy<8>>();
-      Autowired<dummy<9>>();
-      Autowired<dummy<10>>();
-      Autowired<dummy<11>>();
-      Autowired<dummy<12>>();
-      Autowired<dummy<13>>();
-      Autowired<dummy<14>>();
-      Autowired<dummy<15>>();
-      Autowired<dummy<16>>();
-      Autowired<dummy<17>>();
-      Autowired<dummy<18>>();
-      Autowired<dummy<19>>();
-      Autowired<dummy<20>>();
-      Autowired<dummy<21>>();
-      Autowired<dummy<22>>();
-      Autowired<dummy<23>>();
-      Autowired<dummy<24>>();
-      Autowired<dummy<25>>();
-      baseline += boost::chrono::high_resolution_clock::now() - startBase;
-      
-      auto startBench = boost::chrono::high_resolution_clock::now();
-      Autowired<dummy<1>>();
-      Autowired<dummy<2>>();
-      Autowired<dummy<3>>();
-      Autowired<dummy<4>>();
-      Autowired<dummy<5>>();
-      Autowired<dummy<6>>();
-      Autowired<dummy<7>>();
-      Autowired<dummy<8>>();
-      Autowired<dummy<9>>();
-      Autowired<dummy<10>>();
-      Autowired<dummy<11>>();
-      Autowired<dummy<12>>();
-      Autowired<dummy<13>>();
-      Autowired<dummy<14>>();
-      Autowired<dummy<15>>();
-      Autowired<dummy<16>>();
-      Autowired<dummy<17>>();
-      Autowired<dummy<18>>();
-      Autowired<dummy<19>>();
-      Autowired<dummy<20>>();
-      Autowired<dummy<21>>();
-      Autowired<dummy<22>>();
-      Autowired<dummy<23>>();
-      Autowired<dummy<24>>();
-      Autowired<dummy<25>>();
-      benchmark += boost::chrono::high_resolution_clock::now() - startBench;
-    }
+
+  auto inj = [] {
+    Autowired<dummy<1>>();
+    Autowired<dummy<2>>();
+    Autowired<dummy<3>>();
+    Autowired<dummy<4>>();
+    Autowired<dummy<5>>();
+    Autowired<dummy<6>>();
+    Autowired<dummy<7>>();
+    Autowired<dummy<8>>();
+    Autowired<dummy<9>>();
+    Autowired<dummy<10>>();
+    Autowired<dummy<11>>();
+    Autowired<dummy<12>>();
+    Autowired<dummy<13>>();
+    Autowired<dummy<14>>();
+    Autowired<dummy<15>>();
+    Autowired<dummy<16>>();
+    Autowired<dummy<17>>();
+    Autowired<dummy<18>>();
+    Autowired<dummy<19>>();
+    Autowired<dummy<20>>();
+    Autowired<dummy<21>>();
+    Autowired<dummy<22>>();
+    Autowired<dummy<23>>();
+    Autowired<dummy<24>>();
+    Autowired<dummy<25>>();
+  };
+
+  for(int i = 0; i<100; ++i) {
+    AutoCreateContext ctxt;
+    CurrentContextPusher pshr(ctxt);
+
+    auto startBase = boost::chrono::high_resolution_clock::now();
+    inj();
+    baseline += boost::chrono::high_resolution_clock::now() - startBase;
+
+    auto startBench = boost::chrono::high_resolution_clock::now();
+    inj();
+    benchmark += boost::chrono::high_resolution_clock::now() - startBench;
   }
   
-  EXPECT_GT(baseline, benchmark*1.3) << "Autowiring cache not improving performance on subsequent autowirings";
+  EXPECT_GT(baseline, benchmark) << "Autowiring cache not improving performance on subsequent autowirings";
 }
 
 
