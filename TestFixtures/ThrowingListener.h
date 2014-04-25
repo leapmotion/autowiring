@@ -1,4 +1,5 @@
 #pragma once
+#include "Autowiring/EventReceiver.h"
 
 class ThrowingListener:
   public virtual EventReceiver

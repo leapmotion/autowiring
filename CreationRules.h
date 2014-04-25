@@ -1,5 +1,4 @@
 #pragma once
-#include "C++11/cpp11.h"
 #include TYPE_TRAITS_HEADER
 #include RVALUE_HEADER
 
@@ -28,6 +27,12 @@ struct has_simple_constructor
   static char select(...);
 
   static const bool value = sizeof(select<T>(nullptr)) == sizeof(int);
+};
+
+template<typename T>
+struct has_simple_constructor<T, true>
+{
+  static const bool value = false;
 };
 
 
