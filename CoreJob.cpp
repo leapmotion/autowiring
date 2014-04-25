@@ -5,6 +5,7 @@
 
 CoreJob::CoreJob(const char* name) :
   ContextMember(name),
+	m_curEventInTeardown(true),
   m_running(false),
   m_shouldStop(false)
 {}
@@ -15,11 +16,27 @@ void CoreJob::OnPended(boost::unique_lock<boost::mutex>&& lk){
     // again for us.
     return;
 
-  // Need to ask the thread pool to handle our events again:
-  m_curEvent = std::async(
-    std::launch::async,
-    [this] { this->DispatchAllAndClearCurrent(); }
-  );
+	// Increment outstanding count because we now have an entry out in a thread pooll
+	auto outstanding = m_outstanding;
+
+	if(!outstanding)
+		// We're currently signalled to stop, we must empty the queue and then
+		// return here--we can't accept dispatch delivery on a stopped queue.
+		while(!m_dispatchQueue.empty()) {
+			delete m_dispatchQueue.front();
+			m_dispatchQueue.pop_front();
+		}
+	else {
+		// Need to ask the thread pool to handle our events again:
+		m_curEventInTeardown = false;
+		m_curEvent = std::async(
+			std::launch::async,
+			[this, outstanding] () mutable {
+				this->DispatchAllAndClearCurrent();
+				outstanding.reset();
+			}
+		);
+	}
 }
 
 void CoreJob::DispatchAllAndClearCurrent(void) {
@@ -31,14 +48,14 @@ void CoreJob::DispatchAllAndClearCurrent(void) {
     // between when we finished looping, and when we obtained the lock, and
     // we don't want to exit our pool if that has happened.
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
-    if(AreAnyDispatchersReady())
-      continue;
+		if(AreAnyDispatchersReady())
+			continue;
 
-    // Now that we've checked while holding the lock, we can reset our future
-    // event and leave our async.  The next thread to check curEvent will have
-    // to do so only while holding the lock we've currently got.
-    m_curEvent = std::future<void>();
-    return;
+		// Indicate that we're tearing down and will be done very soon.  This is
+		// a signal to consumers that a call to m_curEvent.wait() will be nearly
+		// non-blocking.
+		m_curEventInTeardown = true;
+    break;
   }
 }
 
@@ -57,16 +74,20 @@ bool CoreJob::Start(std::shared_ptr<Object> outstanding) {
 void CoreJob::Abort(void) {
   DispatchQueue::Abort();
   m_running = false;
-  m_outstanding.reset();
 }
 
 void CoreJob::Stop(bool graceful) {
   if(graceful)
     // Pend a call which will invoke Abort once the dispatch queue is done:
-    DispatchQueue::Pend([this] { this->Abort(); });
-  else
+    DispatchQueue::Pend(
+			[this] {this->Abort();}
+		);
+	else
     // Abort the dispatch queue so anyone waiting will wake up
     Abort();
+
+	// Reset the outstanding pointer, we don't intend to hold it anymore:
+	m_outstanding.reset();
 
   // Hit our condition variable to wake up any listeners:
   boost::lock_guard<boost::mutex> lk(m_dispatchLock);
@@ -75,10 +96,17 @@ void CoreJob::Stop(bool graceful) {
 }
 
 void CoreJob::Wait() {
-  // Condition variable strike:
-  boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-  m_queueUpdated.wait(
-    lk,
-    [this] { return ShouldStop(); }
-  );
+	{
+		boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+		m_queueUpdated.wait(
+			lk,
+			[this] {
+				return ShouldStop() && m_curEventInTeardown;
+			}
+		);
+	}
+
+	// If the current event is valid, we can block on it until it becomes valid:
+	if(m_curEvent.valid())
+		m_curEvent.wait();
 }

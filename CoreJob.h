@@ -28,6 +28,10 @@ private:
   // The current outstanding async in the thread pool, if one exists:
   std::future<void> m_curEvent;
 
+	// Flag, indicating whether curEvent is in a teardown pathway.  This
+	// flag is highly stateful.
+	bool m_curEventInTeardown;
+
   /// <summary>
   /// Invokes DispatchAllEvents and safely nullifies the current event
   /// </summary>
@@ -42,7 +46,7 @@ protected:
 
 public:
   // Accessor methods:
-  bool ShouldStop(void) const { return !m_shouldStop; }
+  bool ShouldStop(void) const { return m_shouldStop; }
   
   // "CoreRunnable" overrides
   bool Start(std::shared_ptr<Object> outstanding) override;
