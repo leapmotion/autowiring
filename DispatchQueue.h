@@ -125,11 +125,6 @@ public:
 
 protected:
   /// <summary>
-  /// Fire and event when dispatched from the queue.
-  /// </summary>
-  virtual void FireEvent(std::unique_ptr<DispatchThunkBase>&& rhs);
-
-  /// <summary>
   /// Similar to WaitForEvent, but does not block
   /// </summary>
   /// <returns>True if an event was dispatched, false if the queue was empty when checked</returns>
