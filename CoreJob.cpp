@@ -12,8 +12,12 @@ CoreJob::CoreJob(const char* name) :
 
 void CoreJob::OnPended(boost::unique_lock<boost::mutex>&& lk){
   if(m_curEvent.valid())
-    // Something is already outstanding, it will handle dispatching
-    // again for us.
+    // Something is already outstanding, it will handle dispatching for us.
+    return;
+
+  if(!m_running)
+    // Nothing to do, we aren't running yet--just hold on to this entry until we are
+    // ready to initiate it.
     return;
 
 	// Increment outstanding count because we now have an entry out in a thread pooll
@@ -66,7 +70,11 @@ bool CoreJob::Start(std::shared_ptr<Object> outstanding) {
   
   m_outstanding = outstanding;
   m_running = true;
-  DispatchEvent();
+
+  boost::unique_lock<boost::mutex> lk;
+  if(!m_dispatchQueue.empty())
+	  // Simulate a pending event, because we need to set up our async:
+	  OnPended(std::move(lk));
   
   return true;
 }
