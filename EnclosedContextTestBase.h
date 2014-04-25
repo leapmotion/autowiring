@@ -33,7 +33,7 @@ public:
     ctxt->SignalShutdown();
 
     // Do not allow teardown to take more than a millisecond
-    if(!ctxt->Wait(static_cast<boost::chrono::duration<double, boost::milli> >(250.))) {
+    if(!ctxt->Wait(boost::chrono::milliseconds(250))) {
       // Critical error--took too long to tear down
       assert(false);
     }
