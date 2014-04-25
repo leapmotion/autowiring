@@ -1,5 +1,6 @@
 #pragma once
 #include <boost/chrono/system_clocks.hpp>
+#include UNIQUE_PTR_HEADER
 
 /// <summary>
 /// A simple virtual class used to hold a trivial thunk
