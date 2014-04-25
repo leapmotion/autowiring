@@ -6,6 +6,7 @@
 #include <queue>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
+#include UNIQUE_PTR_HEADER
 
 class DispatchQueue;
 
