@@ -1,5 +1,5 @@
 #pragma once
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 /// <summary>
 /// Implements a weak pointer type which may optionally be promoted to contain a shared pointer
