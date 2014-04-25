@@ -77,11 +77,7 @@ void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
         m_queueUpdated.notify_all();
     }
   ),
-  FireEvent(std::move(thunk));
-}
-
-void DispatchQueue::FireEvent(std::unique_ptr<DispatchThunkBase>&& thunk){
-  (*thunk)();
+	(*thunk)();
 }
 
 bool DispatchQueue::DispatchEvent(void) {
