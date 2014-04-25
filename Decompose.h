@@ -8,14 +8,19 @@
 /// <remarks>
 /// Inherits from true_type if T is the same as any of U1...UN
 /// </remarks>
-template<class T, class U1, class U2, class U3, class U4>
-struct is_any_same {
-  static const bool value =
-    std::is_same<T, U1>::value ||
-    std::is_same<T, U2>::value ||
-    std::is_same<T, U3>::value ||
-    std::is_same<T, U4>::value;
+template<typename... T>
+struct is_any_same{};
+
+template<typename ToCheck>
+struct is_any_same<ToCheck>{
+  static const bool value = false;
 };
+
+template<typename ToCheck, typename Head, typename... Tail>
+struct is_any_same<ToCheck, Head, Tail...>{
+  static const bool value = std::is_same<ToCheck,Head>::value || is_any_same<ToCheck,Tail...>::value;
+};
+
 
 struct type_info_constructable {
   type_info_constructable(const std::type_info* ti = nullptr) :
@@ -207,9 +212,12 @@ struct BoundCall<T, MemFn, memfn, 1>:
   Decompose<MemFn>
 {
   typedef Decompose<MemFn> t_decompose;
+  typedef typename Decompose<MemFn>::t_arg1 t_arg1;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
-    (pObj->*memfn)(repo);
+    (pObj->*memfn)(
+      repo.template Cast<t_arg1>()
+    );
   }
 };
 
@@ -218,9 +226,14 @@ struct BoundCall<T, MemFn, memfn, 2>:
   Decompose<MemFn>
 {
   typedef Decompose<MemFn> t_decompose;
+  typedef typename Decompose<MemFn>::t_arg1 t_arg1;
+  typedef typename Decompose<MemFn>::t_arg2 t_arg2;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
-    (pObj->*memfn)(repo, repo);
+    (pObj->*memfn)(
+      repo.template Cast<t_arg1>(),
+      repo.template Cast<t_arg2>()
+    );
   }
 };
 
@@ -229,9 +242,16 @@ struct BoundCall<T, MemFn, memfn, 3>:
   Decompose<MemFn>
 {
   typedef Decompose<MemFn> t_decompose;
+  typedef typename Decompose<MemFn>::t_arg1 t_arg1;
+  typedef typename Decompose<MemFn>::t_arg2 t_arg2;
+  typedef typename Decompose<MemFn>::t_arg3 t_arg3;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
-    (pObj->*memfn)(repo, repo, repo);
+    (pObj->*memfn)(
+      repo.template Cast<t_arg1>(),
+      repo.template Cast<t_arg2>(),
+      repo.template Cast<t_arg3>()
+    );
   }
 };
 
@@ -240,8 +260,17 @@ struct BoundCall<T, MemFn, memfn, 4>:
   Decompose<MemFn>
 {
   typedef Decompose<MemFn> t_decompose;
+  typedef typename Decompose<MemFn>::t_arg1 t_arg1;
+  typedef typename Decompose<MemFn>::t_arg2 t_arg2;
+  typedef typename Decompose<MemFn>::t_arg3 t_arg3;
+  typedef typename Decompose<MemFn>::t_arg4 t_arg4;
 
   static void Call(typename t_decompose::type* pObj, T& repo) {
-    (pObj->*memfn)(repo, repo, repo, repo);
+    (pObj->*memfn)(
+      repo.template Cast<t_arg1>(),
+      repo.template Cast<t_arg2>(),
+      repo.template Cast<t_arg3>(),
+      repo.template Cast<t_arg4>()
+    );
   }
 };
