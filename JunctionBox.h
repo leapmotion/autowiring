@@ -1,19 +1,14 @@
 #pragma once
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
-#include "EventDispatcher.h"
 #include "EventReceiver.h"
-#include "ObjectPool.h"
-#include "PolymorphicTypeForest.h"
 #include "fast_pointer_cast.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
-#include "PolymorphicTypeForest.h"
-#include "uuid.h"
 #include <boost/thread/mutex.hpp>
 #include "fast_pointer_cast.h"
+#include <set>
 #include STL_TUPLE_HEADER
-#include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_SET
@@ -87,6 +82,10 @@ namespace std {
 /// </summary>
 class JunctionBoxBase {
 public:
+  JunctionBoxBase(void):
+    m_isInitiated(false)
+  {}
+  
   virtual ~JunctionBoxBase(void);
 
 protected:
@@ -96,9 +95,12 @@ protected:
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
+  
+  // This JunctionBox can fire and receive events
+  bool m_isInitiated;
 
   /// <summary>
-  /// Invokes SignalTerminate on each context in the specified vector
+  /// Invokes SignalTerminate on each context in the specified vector.  Does not wait.
   /// </summary>
   static void TerminateAll(const std::vector<std::weak_ptr<CoreContext>>& teardown);
 
@@ -120,11 +122,14 @@ protected:
   static std::weak_ptr<CoreContext> ContextDumbToWeak(CoreContext* pContext);
 
 public:
+  bool IsInitiated(void) const {return m_isInitiated;}
+  void Initiate(void) {m_isInitiated=true;}
+  
   // Accessor methods:
   std::vector<std::weak_ptr<EventOutputStreamBase> > * m_PotentialMarshals;
 
-  void SetPotentialMarshals(std::vector<std::weak_ptr<EventOutputStreamBase>> * inVec){  
-    m_PotentialMarshals = inVec; 
+  void SetPotentialMarshals(std::vector<std::weak_ptr<EventOutputStreamBase>> * inVec){
+    m_PotentialMarshals = inVec;
   }
 
   const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const { return m_dispatch; }
@@ -148,7 +153,7 @@ public:
     std::is_base_of<EventReceiver, T>::value,
     "If you want an event interface, the interface must inherit from EventReceiver"
   );
-  
+
   JunctionBox(void):
     m_numberOfDeletions(0)
   {}
@@ -159,7 +164,7 @@ protected:
   // Collection of all known listeners:
   typedef std::set<JunctionBoxEntry<T>> t_listenerSet;
   t_listenerSet m_st;
-  
+
   // Incremented every time an event is deleted to notify potentially invalidated iterators
   volatile int m_numberOfDeletions;
 
@@ -179,7 +184,7 @@ public:
         if (testptr) {
           //if given eventid is enabled for given eventoutputstream, serialize!
           if (testptr->IsEnabled(memfn))
-            testptr->SerializeInit(memfn, args...);  
+            testptr->SerializeInit(memfn, args...);
           ++it;
         }
         else
@@ -213,7 +218,7 @@ public:
   /// </summary>
   void Add(const JunctionBoxEntry<T>& rhs) {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    
+
     // Trivial insert
     m_st.insert(rhs);
 
@@ -228,10 +233,10 @@ public:
   /// </summary>
   void Remove(const JunctionBoxEntry<T>& rhs) {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    
+
     // Update the deletion count
     m_numberOfDeletions++;
-    
+
     // If the RHS implements DispatchQueue, remove it from the dispatchers collection
     DispatchQueue* pDispatch = leap::fast_pointer_cast<DispatchQueue, T>(rhs.m_ptr).get();
     if(pDispatch)
@@ -246,25 +251,25 @@ public:
   /// <param name="fn">A nearly-curried routine to be invoked</param>
   /// <return>False if an exception was thrown by a recipient, true otherwise</return>
   template<class Fn, class... Args>
-  bool FireCurried(const Fn& fn, Args&&... args) const {
+  bool FireCurried(const Fn& fn, Args&... args) const {
     boost::unique_lock<boost::mutex> lk(m_lock);
     int deleteCount = m_numberOfDeletions;
 
     // Set of contexts that need to be torn down in the event of an exception:
     std::vector<std::weak_ptr<CoreContext>> teardown;
-    
+
     for(auto it = m_st.begin(); it != m_st.end(); ){
       JunctionBoxEntry<T> currentEvent(*it);
-      
+
       lk.unlock();
       try {
-        fn(*currentEvent.m_ptr, std::forward<Args>(args)...);
+        fn(*currentEvent.m_ptr, args...);
       } catch(...) {
-        teardown.push_back(ContextDumbToWeak(it->m_owner));
+        teardown.push_back(ContextDumbToWeak(currentEvent.m_owner));
         this->FilterFiringException(currentEvent.m_ptr);
       }
       lk.lock();
-      
+
       // Increment iterator correctly even if it's been invalidated
       if (deleteCount == m_numberOfDeletions){
         ++it;
@@ -284,12 +289,13 @@ public:
   }
 
   // Two-parenthetical deferred invocations:
-  template<class FnPtr>
-  auto Invoke(FnPtr fnPtr) -> InvokeRelay<decltype(fnPtr)> {
-    return InvokeRelay<decltype(fnPtr)>(this, fnPtr);
+  template<typename FnPtr>
+  auto Invoke(FnPtr fnPtr) -> InvokeRelay<FnPtr> {
+    return InvokeRelay<FnPtr>(this, fnPtr);
   }
 };
 
+// Generate and index tuple
 template<int ...>
 struct seq {};
 
@@ -299,6 +305,17 @@ struct gen_seq: gen_seq<N - 1, N - 1, S...> {};
 template<int... S>
 struct gen_seq<0, S...> {
   typedef seq<S...> type;
+};
+
+// Check if any T::value is true
+template<typename... T>
+struct is_any{
+  static const bool value = false;
+};
+
+template<typename Head, typename... Tail>
+struct is_any<Head, Tail...>{
+  static const bool value = Head::value || is_any<Tail...>::value;
 };
 
 /// <summary>
@@ -313,7 +330,7 @@ class CurriedInvokeRelay:
 public:
   CurriedInvokeRelay(CurriedInvokeRelay& rhs) = delete;
   CurriedInvokeRelay(CurriedInvokeRelay&& rhs) = delete;
-      
+
   CurriedInvokeRelay(T& obj, Deferred(T::*fnPtr)(Args...), Args... args) :
     m_obj(obj),
     m_fnPtr(fnPtr),
@@ -349,32 +366,35 @@ public:
     erp(erp),
     fnPtr(fnPtr)
   {}
-  
+
   // Null constructor
   InvokeRelay():
     erp(nullptr)
   {}
 
+  static_assert(!is_any<std::is_rvalue_reference<Args>...>::value, "Can't use rvalue references as event argument type");
+
 private:
   const JunctionBox<T>* erp;
   Deferred (T::*fnPtr)(Args...);
-  
+
 public:
   void operator()(const typename std::decay<Args>::type&... args) const {
     if(!erp)
       // Context has already been destroyed
       return;
     
+    if(!erp->IsInitiated())
+      // Context not yet started
+      return;
+
     const auto& dq = erp->GetDispatchQueue();
     boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
 
     for(auto q = dq.begin(); q != dq.end(); q++)
-      if((**q).CanAccept())
-        // Create a fully curried function to add to the dispatch queue:
         (**q).AddExisting(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...));
   }
 };
-
 
 template<class T, typename... Args>
 class InvokeRelay<void (T::*)(Args...)> {
@@ -383,12 +403,14 @@ public:
     erp(erp),
     fnPtr(fnPtr)
   {}
-  
+
   // Null constructor
   InvokeRelay():
     erp(nullptr)
   {}
-  
+
+  static_assert(!is_any<std::is_rvalue_reference<Args>...>::value, "Can't use rvalue references as event argument type");
+
 private:
   JunctionBox<T>* erp;
   void (T::*fnPtr)(Args...);
@@ -402,17 +424,21 @@ public:
     if(!erp)
       // Context has already been destroyed
       return true;
+    
+    if(!erp->IsInitiated())
+      // Context not yet started
+      return true;
 
     // Give the serializer a chance to handle these arguments:
     erp->SerializeInit(fnPtr, args...);
 
     auto fw = [this](T& obj, Args... args) {
-      (obj.*fnPtr)(std::forward<Args>(args)...);
+      (obj.*fnPtr)(args...);
     };
 
     return erp->FireCurried(
       std::move(fw),
-      std::forward<Args>(args)...
+      args...
     );
   }
 };
