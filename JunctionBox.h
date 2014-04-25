@@ -10,7 +10,7 @@
 #include <set>
 #include TUPLE_HEADER
 #include RVALUE_HEADER
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 #include STL_UNORDERED_SET
 #include TYPE_TRAITS_HEADER
 
