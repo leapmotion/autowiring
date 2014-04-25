@@ -5,29 +5,42 @@
 
 CoreJob::CoreJob(const char* name) :
   ContextMember(name),
-  m_running(false)
+  m_running(false),
+  m_shouldStop(false)
 {}
 
-void CoreJob::FireEvent(DispatchThunkBase* thunk){
-  MoveOnly<std::future<void>> prev(std::move(m_prevEvent));
-  
-  m_prevEvent = std::async(std::launch::async, [thunk, prev]{
-    auto cleanup = MakeAtExit([thunk]{
-      delete thunk;
-    });
-    
-    // Wait for previous async to finish
-    if (prev.value.valid()) prev.value.wait();
-    (*thunk)();
-  });
-}
-
 void CoreJob::OnPended(boost::unique_lock<boost::mutex>&& lk){
-  lk.unlock();
-  if (m_running) DispatchEvent();
+  if(m_curEvent.valid())
+    // Something is already outstanding, it will handle dispatching
+    // again for us.
+    return;
+
+  // Need to ask the thread pool to handle our events again:
+  m_curEvent = std::async(
+    std::launch::async,
+    [this] { this->DispatchAllAndClearCurrent(); }
+  );
 }
 
-bool CoreJob::IsRunning(void) const { return m_running; }
+void CoreJob::DispatchAllAndClearCurrent(void) {
+  for(;;) {
+    // Trivially run down the queue as long as we're in the pool:
+    this->DispatchAllEvents();
+
+    // Check the size of the queue.  Could be that someone added something
+    // between when we finished looping, and when we obtained the lock, and
+    // we don't want to exit our pool if that has happened.
+    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    if(AreAnyDispatchersReady())
+      continue;
+
+    // Now that we've checked while holding the lock, we can reset our future
+    // event and leave our async.  The next thread to check curEvent will have
+    // to do so only while holding the lock we've currently got.
+    m_curEvent = std::future<void>();
+    return;
+  }
+}
 
 bool CoreJob::Start(std::shared_ptr<Object> outstanding) {
   std::shared_ptr<CoreContext> context = m_context.lock();
@@ -36,40 +49,36 @@ bool CoreJob::Start(std::shared_ptr<Object> outstanding) {
   
   m_outstanding = outstanding;
   m_running = true;
-  DispatchAllEvents();
-  
-  m_jobUpdate.notify_all();
+  DispatchEvent();
   
   return true;
 }
 
-void CoreJob::Stop(bool graceful) {
-  
-  if (graceful){
-    // Pend a call which will invoke Abort once the dispatch queue is done:
-    DispatchQueue::Pend([this] {
-      this->m_running = false;
-      this->Abort();
-    });
-  } else {
-    // Abort the dispatch queue so anyone waiting will wake up
-    DispatchQueue::Abort();
-    m_running = false;
-  }
-  
-  try {
-    // If we are asked to rundown while we still have elements in our dispatch queue,
-    // we must try to process them:
-    DispatchAllEvents();
-  }
-  catch(...) {
-    // We failed to run down the dispatch queue gracefully, we now need to abort it
-    DispatchQueue::Abort();
-  }
-  
+void CoreJob::Abort(void) {
+  DispatchQueue::Abort();
+  m_running = false;
   m_outstanding.reset();
 }
 
+void CoreJob::Stop(bool graceful) {
+  if(graceful)
+    // Pend a call which will invoke Abort once the dispatch queue is done:
+    DispatchQueue::Pend([this] { this->Abort(); });
+  else
+    // Abort the dispatch queue so anyone waiting will wake up
+    Abort();
+
+  // Hit our condition variable to wake up any listeners:
+  boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+  m_shouldStop = true;
+  m_queueUpdated.notify_all();
+}
+
 void CoreJob::Wait() {
-  if (m_prevEvent.valid()) m_prevEvent.wait();
+  // Condition variable strike:
+  boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+  m_queueUpdated.wait(
+    lk,
+    [this] { return ShouldStop(); }
+  );
 }
