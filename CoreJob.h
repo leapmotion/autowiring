@@ -25,7 +25,7 @@ private:
   
 protected:
   // DispatchQueue overrides
-  void FireEvent(DispatchThunkBase*) override;
+  void FireEvent(std::unique_ptr<DispatchThunkBase>) override;
   void OnPended(boost::unique_lock<boost::mutex>&&) override;
 
 public:
