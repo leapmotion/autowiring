@@ -173,5 +173,5 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFastPerformance) {
     }
   }
   
-  EXPECT_GT(baseline, benchmark*1.75) << "Autowiring cache not improving performance on subsequent autowirings";
+  EXPECT_GT(baseline, benchmark*1.75) << "Fast autowiring is slower than ordinary autowiring";
 }
