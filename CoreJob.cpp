@@ -59,6 +59,7 @@ void CoreJob::DispatchAllAndClearCurrent(void) {
 		// a signal to consumers that a call to m_curEvent.wait() will be nearly
 		// non-blocking.
 		m_curEventInTeardown = true;
+    m_queueUpdated.notify_all();
     break;
   }
 }
