@@ -5,7 +5,7 @@
 #include <boost/thread/mutex.hpp>
 #include <set>
 #include RVALUE_HEADER
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 template<class T>
 struct NoOp {
