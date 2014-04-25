@@ -3,36 +3,32 @@
 #include "AutowirableSlot.h"
 #include "Autowired.h"
 #include "autowiring_error.h"
-#include "AutoNetworkMonitor.h"
 #include "CoreContext.h"
 #include <stdexcept>
 
 using namespace std;
 
-AutowirableSlot::AutowirableSlot(std::weak_ptr<CoreContext> context) :
+DeferrableAutowiring::DeferrableAutowiring(const std::shared_ptr<CoreContext>& context) :
   m_context(context),
-  m_tracker(this, NullOp<AutowirableSlot*>)
+  m_pFlink(nullptr)
 {
-  if (ENABLE_NETWORK_MONITOR) {
-    // Obtain the network monitor:
-    std::shared_ptr<AutoNetworkMonitor> pMon;
-    LockContext() -> FindByType(pMon);
-    if (pMon)
-      // Pass notification:
-      pMon->Notify(*this);
-  }
 }
 
-void AutowirableSlot::NotifyWhenAutowired(const std::function<void()>& listener) {
-  std::shared_ptr<CoreContext> context = LockContext();
-
-  // Punt control over to the context
-  context->NotifyWhenAutowired(*this, listener);
+DeferrableAutowiring::~DeferrableAutowiring(void) {
+  // Clients MUST call CancelAutowiring from their destructor--if this line is being hit,
+  // it's because the type being destructed isn't calling CancelAutowiring properly.
+  assert(m_context.expired());
 }
 
-std::shared_ptr<CoreContext> AutowirableSlot::LockContext(void) {
-  std::shared_ptr<CoreContext> retVal = m_context.lock();
-  if(!retVal)
-    throw_rethrowable autowiring_error("Attempted to autowire in a context that is tearing down");
-  return retVal;
+void DeferrableAutowiring::CancelAutowiring(void) {
+  auto context = m_context.lock();
+  if(!context)
+    // Nothing to do here, then
+    return;
+
+  // Reset our hold on the weak pointer to prevent repeated cancellation:
+  m_context.reset();
+
+  // Tell our context we are going away:
+  context->CancelAutowiringNotification(this);
 }

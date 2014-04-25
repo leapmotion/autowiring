@@ -1,13 +1,12 @@
 #pragma once
 
-#include "AutowirableSlot.h"
 #include "BoltBase.h"
-#include "C++11/cpp11.h"
+#include "Decompose.h"
 #include TYPE_INDEX_HEADER
 
 /// <summary>
 /// </summary>
-/// <param name="Sigil">The sigil of the context whose creation we want to listen for</param>
+/// <param name="Sigil">The sigils of the contexts whose creation we want to listen for</param>
 /// <remarks>
 /// A bolt is a way to augment the creation of a new context in a declarative, by-name manner.
 /// By inheriting from Bolt, the object will recieve ContextCreated() calls.
@@ -15,51 +14,29 @@
 /// with a given sigil, use Boltable.
 /// </remarks>
 
-template<class Sigil1, class Sigil2 = void, class Sigil3 = void>
+template<typename... Sigil>
 class Bolt:
   public BoltBase
 {
-  const t_TypeInfoVector& GetContextSigils(void){
-    static t_TypeInfoVector v;
-    if( v.empty() ) {
-      v.push_back(typeid(Sigil1));
-      v.push_back(typeid(Sigil2));
-      v.push_back(typeid(Sigil3));
-    }
-    return v;
+public:
+  const t_TypeInfoVector GetContextSigils(void) override {
+    static const std::type_info* sc_types[] = {
+      &typeid(Sigil)...,
+      nullptr
+    };
+    return sc_types;
   }
-  static Sigil1 MySigilType1;
-  static Sigil2 MySigilType2;
-  static Sigil1 MySigilType3;
+
+  static_assert(!is_any_same<void, Sigil...>::value, "Can't use 'void' as a sigil type");
 };
 
-template<class Sigil1>
-class Bolt<Sigil1,void,void>:
+template<>
+class Bolt<>:
   public BoltBase
 {
 public:
-  const t_TypeInfoVector& GetContextSigils(void){
-    static t_TypeInfoVector v;
-    if( v.empty() ) {
-      v.push_back(typeid(Sigil1));
-    }
-    return v;
+  const t_TypeInfoVector GetContextSigils(void) override {
+    static const std::type_info* sc_types[] = {nullptr};
+    return sc_types;
   }
-  static Sigil1 MySigilType1;
-};
-
-template<class Sigil1, class Sigil2>
-class Bolt<Sigil1,Sigil2,void>:
-  public BoltBase
-{
-  const t_TypeInfoVector& GetContextSigils(void){
-    static t_TypeInfoVector v;
-    if( v.empty() ) {
-      v.push_back(typeid(Sigil1));
-      v.push_back(typeid(Sigil2));
-    }
-    return v;
-  }
-  static Sigil1 MySigilType1;
-  static Sigil2 MySigilType2;
 };

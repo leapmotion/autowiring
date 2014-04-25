@@ -1,20 +1,20 @@
 #pragma once
 #include "JunctionBox.h"
+#include "TypeRegistry.h"
+#include "uuid.h"
 #include TYPE_INDEX_HEADER
-#include FUNCTIONAL_HEADER
-#include RVALUE_HEADER
 #include SHARED_PTR_HEADER
 #include STL_UNORDERED_SET
 #include STL_UNORDERED_MAP
 #include TYPE_TRAITS_HEADER
-#include <set>
-
-//A thread-safe way to share junctionBoxes between peer contexts
 
 class EventReceiver;
 class CoreContext;
 
-class JunctionBoxManager{
+/// <summary>
+/// General manager class of all junction boxes defined in some context
+/// </summary>
+class JunctionBoxManager {
   typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
   typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
 
@@ -22,12 +22,44 @@ class JunctionBoxManager{
   std::map<std::type_index, std::vector<std::weak_ptr<EventOutputStreamBase>>> m_eventOutputStreams;
 
 public:
-  
   JunctionBoxManager();
   virtual ~JunctionBoxManager();
-  
-  std::shared_ptr<JunctionBoxBase> Get(std::type_index);
+
+  template<typename T>
+  std::shared_ptr<JunctionBoxBase> Get(void) {
+    const std::type_index& pTypeIndex = typeid(T);
+
+    // Add an utterance of the TypeRegistry so we can add this AutoFired type to our collection
+    (void)RegType<T>::r;
+
+    auto box = m_junctionBoxes.find(pTypeIndex);
+    assert(box != m_junctionBoxes.end());
+
+    //Check here if any listening marshals might be interested in receiving the fired args
+    auto mapfinditerator = m_eventOutputStreams.find(pTypeIndex);
+    std::vector<std::weak_ptr<EventOutputStreamBase> > * OutputStreamVector = nullptr;
+    if (mapfinditerator != m_eventOutputStreams.end()){
+      //no vec on this type yet. So create it, pass it, and wait for it to get filled later
+      OutputStreamVector = &(mapfinditerator->second);
+    }
+    else {
+      std::vector<std::weak_ptr<EventOutputStreamBase> > newvec;
+      m_eventOutputStreams[pTypeIndex] = newvec; //assignment copy constructor invoked;
+      auto it  = m_eventOutputStreams.find(pTypeIndex);
+      OutputStreamVector = &(it->second);
+    }
+
+    (box->second)->SetPotentialMarshals(OutputStreamVector);
+    return box->second;
+  }
+
+  /// <summary>
+  /// Allows this JunctionBox manager to begin processing events
+  /// </summary>
+  void Initiate(void);
+
   void AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver);
+  void AddEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
   void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
   void RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
 
@@ -67,7 +99,7 @@ public:
     else {
       std::vector<std::weak_ptr<EventOutputStreamBase> > newvec;
       newvec.push_back(pRecvr);
-      m_eventOutputStreams[typeid(T)] = newvec; //assignment copy constructor invoked; 
+      m_eventOutputStreams[typeid(T)] = newvec; //assignment copy constructor invoked;
     }
   }
 
@@ -82,10 +114,10 @@ public:
     auto upcastptr = static_cast<std::shared_ptr<EventOutputStreamBase>>(retval);
     std::weak_ptr<EventOutputStreamBase> weakStreamPtr = upcastptr;
     AddEventOutputStream<T>(weakStreamPtr);
-    return retval;   
+    return retval;
   }
 
-  
+
 protected:
   t_junctionBoxes m_junctionBoxes;
 };

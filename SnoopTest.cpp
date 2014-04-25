@@ -69,6 +69,7 @@ TEST_F(SnoopTest, VerifySimpleSnoop) {
   {
     // Create the child context and insert the child member:
     AutoCreateContext child;
+    child->Initiate();
     CurrentContextPusher pshr(child);
     AutoRequired<ChildMember> childMember;
 
@@ -93,6 +94,7 @@ TEST_F(SnoopTest, VerifySimpleSnoop) {
 TEST_F(SnoopTest, VerifyUnsnoop) {
   // Create a child context to snoop:
   AutoCreateContext snoopy;
+  snoopy->Initiate();
   AutoRequired<ParentMember> parentMember;
 
   // Add a member to be snooped:
@@ -116,6 +118,7 @@ TEST_F(SnoopTest, VerifyUnsnoop) {
 }
 
 TEST_F(SnoopTest, AmbiguousReciept) {
+  AutoCurrentContext()->Initiate();
   AutoRequired<ParentMember> parent;
 
   // Fire and verify that disallow still receives the event:
@@ -128,6 +131,7 @@ TEST_F(SnoopTest, AmbiguousReciept) {
   {
     AutoCreateContext subCtxt;
     subCtxt->Snoop(parent);
+    subCtxt->Initiate();
 
     // Verify that simple firing _here_ causes transmission as expected:
     AutoFired<UpBroadcastListener> ubl;
@@ -152,6 +156,7 @@ TEST_F(SnoopTest, AvoidDoubleReciept) {
     // Create the child context and insert the child member:
     std::shared_ptr<ChildMember> childMember;
     AutoCreateContext child;
+    child->Initiate();
     {
       CurrentContextPusher pshr(child);
       childMember = child->Inject<ChildMember>();
@@ -177,10 +182,10 @@ TEST_F(SnoopTest, AntiCyclicRemoval) {
   
   AutoCreateContext snoopy;
   CurrentContextPusher pshr(snoopy);
+  snoopy->Initiate();
   
   snoopy->Snoop(removeself);
   
   AutoFired<SimpleEvent> ubl;
   ubl(&SimpleEvent::ZeroArgs)();
-  
 }
