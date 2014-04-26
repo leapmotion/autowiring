@@ -172,7 +172,7 @@ protected:
   // This is a memoization map used to memoize any already-detected interfaces
   // This map keeps all of its objects resident at least until the context goes away.
   // Note that the value on the right-hand side must match the void pointer specified on the right-hand side
-  std::unordered_map<std::type_index, AnySharedPointer> m_typeMemos;
+  mutable std::unordered_map<std::type_index, AnySharedPointer> m_typeMemos;
 
   // All ContextMember objects known in this autowirer:
   std::vector<ContextMember*> m_contextMembers;
@@ -208,9 +208,6 @@ protected:
   t_childList m_children;
 
   friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
-
-  // The interior packet factory:
-  const std::shared_ptr<AutoPacketFactory> m_packetFactory;
 
   // Lists of event receivers, by name.  The type index of "void" is reserved for
   // bolts for all context types.
@@ -379,7 +376,7 @@ protected:
   void AddInternal(const AddInternalTraits& traits);
 
   template<class T>
-  void FindByTypeUnsafe(std::shared_ptr<T>& ptr) {
+  void FindByTypeUnsafe(std::shared_ptr<T>& ptr) const {
     // Try to find the type directly:
     auto& entry = m_typeMemos[typeid(T)];
     if(!entry->empty()) {
@@ -406,6 +403,11 @@ protected:
     // Memoize:
     *entry = ptr;
   }
+
+  /// <summary>
+  /// Returns or constructs a new AutoPacketFactory instance
+  /// </summary>
+  std::shared_ptr<AutoPacketFactory> GetPacketFactory(void);
 
 public:
   // Accessor methods:
@@ -889,13 +891,10 @@ public:
   /// Locates an available context member in this context
   /// </summary>
   template<class T>
-  void FindByType(std::shared_ptr<T>& slot) {
+  void FindByType(std::shared_ptr<T>& slot) const {
     boost::lock_guard<boost::mutex> lk(m_lock);
     FindByTypeUnsafe(slot);
   }
-
-  // Interior type overrides:
-  void FindByType(std::shared_ptr<AutoPacketFactory>& slot) { slot = m_packetFactory; }
 
   /// <summary>
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
