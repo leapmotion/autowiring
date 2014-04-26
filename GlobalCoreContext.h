@@ -8,7 +8,7 @@ struct EnableBoltInternal {
 
 // A special class designed to make it easier to detect when our context is the global context
 class GlobalCoreContext:
-  public CoreContext
+  public CoreContextT<GlobalCoreContext>
 {
 private:
   /// <summary>
