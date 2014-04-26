@@ -166,13 +166,11 @@ protected:
   // Set if the context has been shut down
   bool m_isShutdown;
 
-  // This is a map of concrete types, indexed by the true type of each element.
-  // This map keeps all of its objects resident at least until the context goes away.
-  // "Object" is named here as an explicit ground type in order to allow arbitrary casting from Object-
-  // derived types.
-  std::unordered_map<std::type_index, AnySharedPointer> m_concreteTypes;
+  // This is a list of concrete types, indexed by the true type of each element.
+  std::vector<AnySharedPointer> m_concreteTypes;
 
   // This is a memoization map used to memoize any already-detected interfaces
+  // This map keeps all of its objects resident at least until the context goes away.
   // Note that the value on the right-hand side must match the void pointer specified on the right-hand side
   std::unordered_map<std::type_index, AnySharedPointer> m_typeMemos;
 
@@ -392,7 +390,7 @@ protected:
     // Resolve based on iterated dynamic casts for each concrete type:
     ptr.reset();
     for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
-      std::shared_ptr<Object> obj = *q->second;
+      std::shared_ptr<Object> obj = **q;
       auto casted = std::dynamic_pointer_cast<T>(obj);
       if(!casted)
         // No match, try the next entry
@@ -698,8 +696,8 @@ public:
   bool IsMember(const std::shared_ptr<T>& ptr) const {
     boost::lock_guard<boost::mutex> lk(m_lock);
 
-    auto q = m_concreteTypes.find(typeid(*ptr));
-    if(q == m_concreteTypes.end())
+    auto q = m_typeMemos.find(typeid(*ptr));
+    if(q == m_typeMemos.end())
       // The true type of the passed entity isn't even in our concrete map, then we short-circuit
       return false;
 
