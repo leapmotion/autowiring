@@ -53,6 +53,9 @@ class Autowired;
 template<typename... Sigils>
 struct Boltable;
 
+template<class T>
+class CoreContextT;
+
 #define CORE_CONTEXT_MAGIC 0xC04EC0DE
 
 enum class ShutdownMode {
@@ -72,8 +75,8 @@ class CoreContext:
   public std::enable_shared_from_this<CoreContext>
 {
 protected:
-  CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil);
-  CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer);
+  CoreContext(std::shared_ptr<CoreContext> pParent);
+  CoreContext(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer);
 
 public:
   virtual ~CoreContext(void);
@@ -88,7 +91,7 @@ protected:
   /// Register new context with parent and notify others of its creation.
   /// </summary>
   template<typename T>
-  std::shared_ptr<CoreContext> CreateInternal(CoreContext& newContext) {
+  std::shared_ptr<CoreContext> CreateInternal(CoreContextT<T>& newContext) {
     // don't allow new children if shutting down
     if(m_isShutdown)
       throw autowiring_error("Cannot create a child context; this context is already shut down");
@@ -167,9 +170,6 @@ protected:
 
   // Set if the context has been shut down
   bool m_isShutdown;
-
-  // The context's internally held sigil type
-  const std::type_info& m_sigil;
 
     // Flag, set if this context should use its ownership validator to guarantee that all autowired members
   // are correctly torn down.  This flag must be set at construction time.  Members added to the context
@@ -423,7 +423,7 @@ public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const { return m_concreteTypes.size(); }
-  const std::type_info& GetSigilType(void) const { return m_sigil; }
+  virtual const std::type_info& GetSigilType(void) const = 0;
 
   /// <summary>
   /// Factory to create a new context
@@ -431,7 +431,7 @@ public:
   /// <param name="T">The context sigil.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return CreateInternal<T>(*new CoreContext(shared_from_this(), typeid(T)));
+    return CreateInternal<T>(*new CoreContextT<T>(shared_from_this()));
   }
 
   /// <summary>
@@ -447,7 +447,7 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
-    return m_pParent->CreateInternal<T>(*new CoreContext(m_pParent, typeid(T), shared_from_this()));
+    return m_pParent->CreateInternal<T>(*new CoreContextT<T>(m_pParent, shared_from_this()));
   }
 
   /// <summary>
@@ -1021,6 +1021,25 @@ public:
   std::shared_ptr<EventInputStream<T>> CreateEventInputStream(void) {
     return std::make_shared<EventInputStream<T>>();
   }
+};
+
+/// <summary>
+/// Constant type optimization for named sigil types
+/// </summary>
+template<class T>
+class CoreContextT:
+  public CoreContext
+{
+public:
+  CoreContextT(std::shared_ptr<CoreContext> pParent) :
+    CoreContext(pParent)
+  {}
+
+  CoreContextT(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer) :
+    CoreContext(pParent, pPeer)
+  {}
+
+  const std::type_info& GetSigilType(void) const override { return typeid(T); }
 };
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& context);

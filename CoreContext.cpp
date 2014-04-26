@@ -26,9 +26,8 @@ using namespace std;
 /// </remarks>
 boost::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
 
-CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil) :
+CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent) :
   m_pParent(pParent),
-  m_sigil(sigil),
   m_useOwnershipValidator(false),
   m_initiated(false),
   m_isShutdown(false),
@@ -39,9 +38,8 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_i
 }
 
 // Peer Context Constructor. Called interally by CreatePeer
-CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer) :
+CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer) :
   m_pParent(pParent),
-  m_sigil(sigil),
   m_useOwnershipValidator(false),
   m_junctionBoxManager(pPeer->m_junctionBoxManager),
   m_packetFactory(pPeer->m_packetFactory)
