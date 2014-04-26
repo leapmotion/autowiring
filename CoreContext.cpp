@@ -119,7 +119,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
     }
 
     if(traits.pFilter) {
-      m_filters.insert(traits.pFilter.get());
+      m_filters.push_back(traits.pFilter.get());
       GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, *traits.pFilter);
     }
 
