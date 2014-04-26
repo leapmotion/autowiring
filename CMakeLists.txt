@@ -76,8 +76,6 @@ set(Autowiring_SRCS
   ReentrantCounter.h
   ReentrantCounter.cpp
   SharedPointerSlot.h
-  SimpleOwnershipValidator.h
-  SimpleOwnershipValidator.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
   ThreadStatusBlock.h
@@ -190,8 +188,6 @@ set(AutowiringTest_SRCS
   ScopeTest.cpp
   SnoopTest.h
   SnoopTest.cpp
-  SimpleOwnershipValidatorTest.h
-  SimpleOwnershipValidatorTest.cpp
   TestFixtures/custom_exception.h
   TestFixtures/ExitRaceThreaded.h
   TestFixtures/SimpleInterface.h
