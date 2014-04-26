@@ -2,7 +2,7 @@
 #include "GlobalCoreContext.h"
 
 GlobalCoreContext::GlobalCoreContext(void):
-  CoreContext(std::shared_ptr<CoreContext>(), typeid(GlobalCoreContext))
+  CoreContextT<GlobalCoreContext>(std::shared_ptr<CoreContext>())
 {
   // Guard against multi-initialization:
   assert(!getGlobalContextSharedPtr());
