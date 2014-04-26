@@ -193,7 +193,7 @@ protected:
   const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
 
   // All known exception filters:
-  std::unordered_set<ExceptionFilter*> m_filters;
+  std::vector<ExceptionFilter*> m_filters;
 
   // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
   // Destructor does nothing; this is by design.
