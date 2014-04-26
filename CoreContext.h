@@ -18,7 +18,6 @@
 #include "EventInputStream.h"
 #include "ExceptionFilter.h"
 #include "SharedPointerSlot.h"
-#include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
 #include "TypeUnifier.h"
 #include "uuid.h"
@@ -70,7 +69,6 @@ enum class ShutdownMode {
 /// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain
 /// </summary>
 class CoreContext:
-  public SimpleOwnershipValidator,
   public TeardownNotifier,
   public std::enable_shared_from_this<CoreContext>
 {
@@ -104,9 +102,6 @@ protected:
       // Reserve a place in the list for the child
       childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
     }
-
-    if (m_useOwnershipValidator)
-      newContext.EnforceSimpleOwnership();
 
     // Create the shared pointer for the context--do not add the context to itself,
     // this creates a dangerous cyclic reference.
@@ -170,11 +165,6 @@ protected:
 
   // Set if the context has been shut down
   bool m_isShutdown;
-
-    // Flag, set if this context should use its ownership validator to guarantee that all autowired members
-  // are correctly torn down.  This flag must be set at construction time.  Members added to the context
-  // before this flag is assigned will NOT be checked.
-  bool m_useOwnershipValidator;
 
   // This is a map of concrete types, indexed by the true type of each element.
   // This map keeps all of its objects resident at least until the context goes away.
@@ -667,26 +657,6 @@ public:
   /// context.  A thread may potentially be added to the context after the method returns.
   /// </remarks>
   std::vector<std::shared_ptr<BasicThread>> CopyBasicThreadList(void) const;
-
-  /// <summary>
-  /// In debug mode, adds an additional compile-time check
-  /// </summary>
-  /// <remarks>
-  /// Enabling simple ownership checks on a context will ensure that, at teardown time, simple
-  /// ownership of contained objects is enforced.  This means that the lifetime of objects in
-  /// a context does not extend beyond the lifetime of the context itself.
-  ///
-  /// This flag is useful in detecting cycles in a context, as cycles will prevent cleanup and
-  /// give the impression of an exterior reference.  Information about the detected cycle will
-  /// be printed to stderr.
-  ///
-  /// This flag cannot be unset.  This flag is inherited by children.  Children which were
-  /// created at the time this flag is assigned do not receive assignment of this flag retro-
-  /// actively.
-  /// </remarks>
-  void EnforceSimpleOwnership(void) {
-    m_useOwnershipValidator = true;
-  }
 
   /// <returns>
   /// True if CoreRunnable instances in this context should begin teardown operations
