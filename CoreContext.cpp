@@ -298,7 +298,7 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
     m_nameListeners[**cur].push_back(pBase.get());
 
   if(!*pBase->GetContextSigils())
-    m_allNameListeners.push_back(pBase.get());
+    m_nameListeners[typeid(void)].push_back(pBase.get());
 }
 
 void CoreContext::BuildCurrentState(void) {
@@ -407,8 +407,13 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
       (**q).ContextCreated();
   }
 
-  for (auto i = m_allNameListeners.begin(); i != m_allNameListeners.end(); ++i) {
-    (**i).ContextCreated();
+  // In the case of an anonymous sigil type, we do not notify the all-types
+  // listeners a second time.
+  if(sigil != typeid(void)) {
+    q = m_nameListeners.find(typeid(void));
+    if(q != m_nameListeners.end())
+      for(auto cur : q->second)
+        cur->ContextCreated();
   }
 
   // Notify the parent next:

@@ -212,10 +212,10 @@ protected:
   // The interior packet factory:
   const std::shared_ptr<AutoPacketFactory> m_packetFactory;
 
-  // Lists of event receivers, by name:
+  // Lists of event receivers, by name.  The type index of "void" is reserved for
+  // bolts for all context types.
   typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
-  std::list<BoltBase*> m_allNameListeners;
 
   // Adds a bolt proper to this context
   template<typename T, typename... Sigils>
