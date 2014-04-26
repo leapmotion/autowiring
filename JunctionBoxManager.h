@@ -59,9 +59,7 @@ public:
   void Initiate(void);
 
   void AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver);
-  void AddEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
   void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
-  void RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
 
   /// <summary>
   /// This method checks whether eventoutputstream listeners for the given type still exist.
