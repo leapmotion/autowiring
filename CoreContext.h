@@ -175,7 +175,7 @@ protected:
   std::unordered_map<std::type_index, AnySharedPointer> m_typeMemos;
 
   // All ContextMember objects known in this autowirer:
-  std::unordered_set<ContextMember*> m_contextMembers;
+  std::vector<ContextMember*> m_contextMembers;
 
   // Map of slots waiting to be autowired, organized by the desired type.  The type allows chaining to take
   // place in an intelligent way.
