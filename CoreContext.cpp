@@ -385,7 +385,8 @@ void ShutdownCurrentContext(void) {
 
 void CoreContext::UnregisterEventReceivers(void) {
   // Release all event receivers originating from this context:
-  m_junctionBoxManager->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+  for(auto q = m_eventReceivers.begin(); q != m_eventReceivers.end(); q++)
+    m_junctionBoxManager->RemoveEventReceiver(*q);
 
   // Notify our parent (if we have one) that our event receivers are going away:
   if(m_pParent) {
@@ -469,7 +470,7 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
     boost::lock_guard<boost::mutex> lk(m_lock);
     
     if (!m_initiated) { //Delay adding receiver until context in initialized;
-      m_delayedEventReceivers.insert(receiver);
+      m_delayedEventReceivers.push_back(receiver);
       return;
     }
   }
@@ -482,10 +483,14 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
     m_pParent->AddEventReceiver(receiver);
 }
 
-void CoreContext::AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
-  assert(m_initiated); //Must be initiated
+
+template<class iter>
+void CoreContext::AddDelayedEventReceivers(iter first, iter last) {
+  // Must be initiated
+  assert(m_initiated);
   
-  m_junctionBoxManager->AddEventReceivers(first, last);
+  for(auto q = first; q != last; q++)
+    m_junctionBoxManager->AddEventReceiver(*q);
   
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
@@ -514,7 +519,8 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
       m_eventReceivers.erase(*q);
   }
 
-  m_junctionBoxManager->RemoveEventReceivers(first, last);
+  for(auto q = first; q != last; q++)
+    m_junctionBoxManager->RemoveEventReceiver(*q);
 
   // Detour to the parent collection (if necessary)
   if(m_pParent)
