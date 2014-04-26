@@ -217,7 +217,7 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
 
     {
       // Tear down all the children.
-      boost::lock_guard<boost::mutex> lk(m_childrenLock);
+      boost::lock_guard<boost::mutex> lk(m_lock);
 
       // Fill strong lock series in order to ensure proper teardown interleave:
       childrenInterleave.reserve(m_children.size());
@@ -322,7 +322,7 @@ void CoreContext::BuildCurrentState(void) {
     GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *receiver->m_ptr);
   }
 
-  boost::lock_guard<boost::mutex> lk(m_childrenLock);
+  boost::lock_guard<boost::mutex> lk(m_lock);
   for (auto c = m_children.begin(); c != m_children.end(); ++c) {
     c->lock()->BuildCurrentState();
   }
@@ -450,7 +450,7 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
   }
 
   // Give children a chance to also update their deferred elements:
-  boost::unique_lock<boost::mutex> lk(m_childrenLock);
+  boost::unique_lock<boost::mutex> lk(m_lock);
   for(auto q = m_children.begin(); q != m_children.end(); q++) {
     // Hold reference to prevent this iterator from becoming invalidated:
     auto ctxt = q->lock();

@@ -97,7 +97,7 @@ protected:
     t_childList::iterator childIterator;
     {
       // Lock the child list while we insert
-      boost::lock_guard<boost::mutex> lk(m_childrenLock);
+      boost::lock_guard<boost::mutex> lk(m_lock);
 
       // Reserve a place in the list for the child
       childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
@@ -109,7 +109,7 @@ protected:
       &newContext,
       [this, childIterator] (CoreContext* pContext) {
         {
-          boost::lock_guard<boost::mutex> lk(m_childrenLock);
+          boost::lock_guard<boost::mutex> lk(m_lock);
           this->m_children.erase(childIterator);
         }
         // Notify AutowiringEvents listeners
@@ -205,7 +205,6 @@ protected:
 
   // Child contexts:
   typedef std::list<std::weak_ptr<CoreContext>> t_childList;
-  boost::mutex m_childrenLock;
   t_childList m_children;
 
   friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
@@ -616,7 +615,7 @@ public:
   /// </remarks>
   template<class Fn>
   bool EnumerateChildContexts(const Fn& fn) {
-    boost::lock_guard<boost::mutex> lock(m_childrenLock);
+    boost::lock_guard<boost::mutex> lock(m_lock);
     for(auto c = m_children.begin(); c != m_children.end(); c++) {
       // Recurse:
       auto shared = c->lock();
@@ -636,7 +635,7 @@ public:
   template<class Fn>
   void EnumerateContexts(Fn&& fn) {
     fn(shared_from_this());
-    boost::lock_guard<boost::mutex> lock(m_childrenLock);
+    boost::lock_guard<boost::mutex> lock(m_lock);
     for (auto c = m_children.begin(); c != m_children.end(); c++) {
       c->lock()->EnumerateContexts(fn);
     }
