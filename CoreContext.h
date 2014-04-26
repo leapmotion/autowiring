@@ -187,7 +187,7 @@ protected:
   t_rcvrSet m_eventReceivers;
   
   // List of eventReceivers to be added when this context in initiated
-  t_rcvrSet m_delayedEventReceivers;
+  std::vector<JunctionBoxEntry<EventReceiver>> m_delayedEventReceivers;
 
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
   const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
@@ -275,7 +275,8 @@ protected:
   /// <summary>
   /// Add delayed event receivers
   /// </summary>
-  void AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
+  template<class iter>
+  void AddDelayedEventReceivers(iter first, iter last);
 
   /// <summary>
   /// Removes the named event receiver from the collection of known receivers
