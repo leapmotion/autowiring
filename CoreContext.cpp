@@ -28,7 +28,6 @@ boost::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
 
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent) :
   m_pParent(pParent),
-  m_useOwnershipValidator(false),
   m_initiated(false),
   m_isShutdown(false),
   m_junctionBoxManager(std::make_shared<JunctionBoxManager>()),
@@ -40,7 +39,6 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent) :
 // Peer Context Constructor. Called interally by CreatePeer
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer) :
   m_pParent(pParent),
-  m_useOwnershipValidator(false),
   m_junctionBoxManager(pPeer->m_junctionBoxManager),
   m_packetFactory(pPeer->m_packetFactory)
 {}
@@ -139,14 +137,6 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   // Notify any autowiring field that is currently waiting that we have a new member
   // to be considered.
   UpdateDeferredElements(traits.pObject);
-
-  // Ownership validation, as appropriate
-  // We do not attempt to pend validation for CoreRunnable instances, because a
-  // CoreRunnable could potentially hold the final outstanding reference to this
-  // context, and therefore may be responsible for this context's (and, transitively,
-  // its own) destruction.
-  if(m_useOwnershipValidator && !traits.pCoreRunnable)
-    SimpleOwnershipValidator::PendValidation(std::weak_ptr<Object>(traits.pObject));
 }
 
 std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
