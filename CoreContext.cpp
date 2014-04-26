@@ -30,18 +30,16 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent) :
   m_pParent(pParent),
   m_initiated(false),
   m_isShutdown(false),
-  m_junctionBoxManager(std::make_shared<JunctionBoxManager>()),
-  m_packetFactory(std::make_shared<AutoPacketFactory>(GetJunctionBox<AutoPacketListener>()))
+  m_junctionBoxManager(std::make_shared<JunctionBoxManager>())
 {
-  assert(pParent.get() != this);
 }
 
 // Peer Context Constructor. Called interally by CreatePeer
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer) :
   m_pParent(pParent),
-  m_junctionBoxManager(pPeer->m_junctionBoxManager),
-  m_packetFactory(pPeer->m_packetFactory)
-{}
+  m_junctionBoxManager(pPeer->m_junctionBoxManager)
+{
+}
 
 CoreContext::~CoreContext(void) {
   // The s_curContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
@@ -391,7 +389,11 @@ void CoreContext::UnregisterEventReceivers(void) {
   // Notify our parent (if we have one) that our event receivers are going away:
   if(m_pParent) {
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
-    m_pParent->RemovePacketSubscribers(m_packetFactory->GetSubscriberVector());
+
+    std::shared_ptr<AutoPacketFactory> pf;
+    FindByTypeUnsafe(pf);
+    if(pf)
+      m_pParent->RemovePacketSubscribers(pf->GetSubscriberVector());
   }
 
   // Wipe out all collections so we don't try to free these multiple times:
@@ -578,6 +580,14 @@ void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, EventRece
       }
 }
 
+std::shared_ptr<AutoPacketFactory> CoreContext::GetPacketFactory(void) {
+  std::shared_ptr<AutoPacketFactory> pf;
+  FindByType(pf);
+  if(!pf)
+    pf = Inject<AutoPacketFactory>();
+  return pf;
+}
+
 void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
   // Reflexive assignment:
   ptr->m_self = ptr;
@@ -587,7 +597,7 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
 }
 
 void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
-  m_packetFactory->AddSubscriber(rhs);
+  GetPacketFactory()->AddSubscriber(rhs);
   if(m_pParent)
     m_pParent->AddPacketSubscriber(rhs);
 }
@@ -598,7 +608,10 @@ void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber
     m_pParent->RemovePacketSubscribers(subscribers);
 
   // Remove subscribers from our factory AFTER the parent eviction has taken place
-  m_packetFactory->RemoveSubscribers(subscribers.begin(), subscribers.end());
+  std::shared_ptr<AutoPacketFactory> factory;
+  FindByTypeUnsafe(factory);
+  if(factory)
+    factory->RemoveSubscribers(subscribers.begin(), subscribers.end());
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
