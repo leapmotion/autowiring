@@ -5,6 +5,7 @@
 #include "AutoPacketSubscriber.h"
 #include "Decompose.h"
 #include "FilterPropertyExtractor.h"
+#include "Object.h"
 #include "ObjectPool.h"
 #include <boost/any.hpp>
 #include <typeinfo>
@@ -23,7 +24,8 @@ class DispatchQueue;
 /// <remarks>
 /// Generally, only one packet factory is required per context.
 /// </remarks>
-class AutoPacketFactory
+class AutoPacketFactory:
+  public Object
 {
 public:
   struct AdjacencyEntry {
