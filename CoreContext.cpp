@@ -572,7 +572,7 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
   ptr->m_self = ptr;
 
   // Always add to the set of context members
-  m_contextMembers.insert(ptr.get());
+  m_contextMembers.push_back(ptr.get());
 }
 
 void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
