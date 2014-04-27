@@ -9,10 +9,6 @@ AutoPacketFactory::AutoPacketResetter::AutoPacketResetter(AutoPacketResetter&& r
   m_apl(std::move(rhs.m_apl))
 {}
 
-AutoPacketFactory::AutoPacketResetter::AutoPacketResetter(AutoFired<AutoPacketListener>&& apl) :
-  m_apl(std::move(apl))
-{}
-
 AutoPacket* AutoPacketFactory::AutoPacketCreator::operator()() const {
   return new AutoPacket(*factory);
 }
@@ -25,16 +21,12 @@ void AutoPacketFactory::AutoPacketResetter::operator()(AutoPacket& packet) const
   packet.Release();
 }
 
-AutoPacketFactory::AutoPacketFactory(void) {}
-
-AutoPacketFactory::AutoPacketFactory(std::shared_ptr<JunctionBox<AutoPacketListener>>&& apl) :
-  m_packets(~0, ~0, AutoPacketResetter(AutoFired<AutoPacketListener>(apl)))
+AutoPacketFactory::AutoPacketFactory(void)
 {
   m_packets.SetAlloc(AutoPacketCreator(this));
 }
 
-AutoPacketFactory::~AutoPacketFactory()
-{}
+AutoPacketFactory::~AutoPacketFactory() {}
 
 std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   // Obtain a packet:
