@@ -262,6 +262,7 @@ protected:
   /// </summary>
   void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
     JunctionBoxEntry<EventReceiver> entry(this, pRecvr);
+    (boost::lock_guard<boost::mutex>)m_lock,
     m_eventReceivers.insert(entry);
     AddEventReceiver(entry);
   }
