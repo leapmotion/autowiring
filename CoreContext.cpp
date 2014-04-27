@@ -593,9 +593,6 @@ std::shared_ptr<AutoPacketFactory> CoreContext::GetPacketFactory(void) {
 }
 
 void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
-  // Reflexive assignment:
-  ptr->m_self = ptr;
-
   // Always add to the set of context members
   m_contextMembers.push_back(ptr.get());
 }
