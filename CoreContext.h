@@ -85,6 +85,70 @@ public:
   static std::shared_ptr<CoreContext> GetGlobal(void);
 
 protected:
+  // A pointer to the parent context
+  const std::shared_ptr<CoreContext> m_pParent;
+
+  // General purpose lock for this class
+  mutable boost::mutex m_lock;
+
+  // Condition, signalled when context state has been changed
+  boost::condition m_stateChanged;
+
+  // Set if threads in this context should be started when they are added
+  bool m_initiated;
+
+  // Set if the context has been shut down
+  bool m_isShutdown;
+
+  // Child contexts:
+  typedef std::list<std::weak_ptr<CoreContext>> t_childList;
+  t_childList m_children;
+
+  // Lists of event receivers, by name.  The type index of "void" is reserved for
+  // bolts for all context types.
+  typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
+  t_contextNameListeners m_nameListeners;
+
+  // These are the types which will be created in this context if an attempt is made to inject them
+  // into any child context.
+  std::set<std::type_index> m_anchors;
+
+  // Map of slots waiting to be autowired, organized by the desired type.  The type allows chaining to take
+  // place in an intelligent way.
+  typedef std::unordered_map<std::type_index, DeferrableAutowiring*> t_deferredMap;
+  t_deferredMap m_deferred;
+
+  // This is a list of concrete types, indexed by the true type of each element.
+  std::vector<AnySharedPointer> m_concreteTypes;
+
+  // This is a memoization map used to memoize any already-detected interfaces
+  // This map keeps all of its objects resident at least until the context goes away.
+  // Note that the value on the right-hand side must match the void pointer specified on the right-hand side
+  mutable std::unordered_map<std::type_index, AnySharedPointer> m_typeMemos;
+
+  // All known context members, exception filters:
+  std::vector<ContextMember*> m_contextMembers;
+  std::vector<ExceptionFilter*> m_filters;
+
+  // All known event receivers and receiver proxies originating from this context:
+  typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
+  t_rcvrSet m_eventReceivers;
+  
+  // List of eventReceivers to be added when this context in initiated
+  std::vector<JunctionBoxEntry<EventReceiver>> m_delayedEventReceivers;
+
+  // Manages events for this context. One JunctionBoxManager is shared between peer contexts
+  const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
+
+  // Actual core threads:
+  typedef std::list<CoreRunnable*> t_threadList;
+  t_threadList m_threads;
+
+  // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
+  // Destructor does nothing; this is by design.
+  std::weak_ptr<Object> m_outstanding;
+
+protected:
   /// <summary>
   /// Register new context with parent and notify others of its creation.
   /// </summary>
@@ -147,73 +211,6 @@ protected:
 
   void AddAnchorInternal(const void*) {}
 
-  // These are the types which will be created in this context if an attempt is made to inject them
-  // into any child context.
-  std::set<std::type_index> m_anchors;
-
-  // A pointer to the parent context
-  const std::shared_ptr<CoreContext> m_pParent;
-
-  // General purpose lock for this class
-  mutable boost::mutex m_lock;
-
-  // Condition, signalled when context state has been changed
-  boost::condition m_stateChanged;
-
-  // Set if threads in this context should be started when they are added
-  bool m_initiated;
-
-  // Set if the context has been shut down
-  bool m_isShutdown;
-
-  // This is a list of concrete types, indexed by the true type of each element.
-  std::vector<AnySharedPointer> m_concreteTypes;
-
-  // This is a memoization map used to memoize any already-detected interfaces
-  // This map keeps all of its objects resident at least until the context goes away.
-  // Note that the value on the right-hand side must match the void pointer specified on the right-hand side
-  mutable std::unordered_map<std::type_index, AnySharedPointer> m_typeMemos;
-
-  // All ContextMember objects known in this autowirer:
-  std::vector<ContextMember*> m_contextMembers;
-
-  // Map of slots waiting to be autowired, organized by the desired type.  The type allows chaining to take
-  // place in an intelligent way.
-  typedef std::unordered_map<std::type_index, DeferrableAutowiring*> t_deferredMap;
-  t_deferredMap m_deferred;
-
-  // All known event receivers and receiver proxies originating from this context:
-  typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
-  t_rcvrSet m_eventReceivers;
-  
-  // List of eventReceivers to be added when this context in initiated
-  std::vector<JunctionBoxEntry<EventReceiver>> m_delayedEventReceivers;
-
-  // Manages events for this context. One JunctionBoxManager is shared between peer contexts
-  const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
-
-  // All known exception filters:
-  std::vector<ExceptionFilter*> m_filters;
-
-  // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
-  // Destructor does nothing; this is by design.
-  std::weak_ptr<Object> m_outstanding;
-
-  // Actual core threads:
-  typedef std::list<CoreRunnable*> t_threadList;
-  t_threadList m_threads;
-
-  // Child contexts:
-  typedef std::list<std::weak_ptr<CoreContext>> t_childList;
-  t_childList m_children;
-
-  friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
-
-  // Lists of event receivers, by name.  The type index of "void" is reserved for
-  // bolts for all context types.
-  typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
-  t_contextNameListeners m_nameListeners;
-
   // Adds a bolt proper to this context
   template<typename T, typename... Sigils>
   void EnableInternal(T*, Bolt<Sigils...>*) {
@@ -257,7 +254,7 @@ protected:
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
-  /// <param name="pOriginalParent">The original parent of the passed type</param>
+  /// <param name="pRecvr">The junction box entry corresponding to the receiver type</param>
   void AddEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
 
   /// <summary>

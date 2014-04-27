@@ -86,6 +86,8 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
 }
 
 void CoreContext::AddInternal(const AddInternalTraits& traits) {
+  AutoGlobalContext glbl;
+
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
 
@@ -108,17 +110,17 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
     // Insert each context element:
     if(traits.pContextMember) {
       AddContextMember(traits.pContextMember);
-      GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(*traits.pContextMember);
+      glbl->Invoke(&AutowiringEvents::NewContextMember)(*traits.pContextMember);
     }
 
     if(traits.pCoreRunnable) {
       AddCoreRunnable(traits.pCoreRunnable);
-      GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*traits.pCoreRunnable);
+      glbl->Invoke(&AutowiringEvents::NewCoreRunnable)(*traits.pCoreRunnable);
     }
 
     if(traits.pFilter) {
       m_filters.push_back(traits.pFilter.get());
-      GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, *traits.pFilter);
+      glbl->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, *traits.pFilter);
     }
 
     if(traits.pBoltBase)
@@ -128,7 +130,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   // Event receivers:
   if(traits.pRecvr) {
     AddEventReceiver(traits.pRecvr);
-    GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *traits.pRecvr);
+    glbl->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *traits.pRecvr);
   }
 
   // Subscribers, if applicable:
@@ -300,24 +302,25 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
 }
 
 void CoreContext::BuildCurrentState(void) {
-  GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*this);
+  AutoGlobalContext glbl;
+  glbl->Invoke(&AutowiringEvents::NewContext)(*this);
 
-  //ContextMembers and CoreRunnables
+  // ContextMembers and CoreRunnables
   for (auto member = m_contextMembers.begin(); member != m_contextMembers.end(); ++member) {
     CoreRunnable* thread = dynamic_cast<CoreRunnable*>(*member);
-    thread?
-      GetGlobal()->Invoke(&AutowiringEvents::NewCoreRunnable)(*thread) :
-      GetGlobal()->Invoke(&AutowiringEvents::NewContextMember)(**member);
+    thread ?
+      glbl->Invoke(&AutowiringEvents::NewCoreRunnable)(*thread) :
+      glbl->Invoke(&AutowiringEvents::NewContextMember)(**member);
   }
 
   //Exception Filters
   for (auto filter = m_filters.begin(); filter != m_filters.end(); ++filter) {
-    GetGlobal()->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, **filter);
+    glbl->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, **filter);
   }
 
   //Event Receivers
   for (auto receiver = m_eventReceivers.begin(); receiver != m_eventReceivers.end(); ++receiver) {
-    GetGlobal()->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *receiver->m_ptr);
+    glbl->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *receiver->m_ptr);
   }
 
   boost::lock_guard<boost::mutex> lk(m_lock);
@@ -472,22 +475,23 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
   }
 }
 
-void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
+void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> entry) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     
-    if (!m_initiated) { //Delay adding receiver until context in initialized;
-      m_delayedEventReceivers.push_back(receiver);
+    if (!m_initiated) {
+      // Delay adding receiver until context is initialized
+      m_delayedEventReceivers.push_back(entry);
       return;
     }
   }
 
-  m_junctionBoxManager->AddEventReceiver(receiver);
+  m_junctionBoxManager->AddEventReceiver(entry);
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
-    m_pParent->AddEventReceiver(receiver);
+    m_pParent->AddEventReceiver(entry);
 }
 
 
