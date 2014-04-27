@@ -43,12 +43,6 @@ public:
   };
 
   AutoPacketFactory(void);
-
-  /// <summary>
-  /// Utility ctor, provided to allow AutoPacketFactory construction during CoreContext construction
-  /// </summary>
-  AutoPacketFactory(std::shared_ptr<JunctionBox<AutoPacketListener>>&& apl);
-
   ~AutoPacketFactory(void);
 
 private:
@@ -56,8 +50,6 @@ private:
     AutoPacketResetter(void);
 
     AutoPacketResetter(AutoPacketResetter&& rhs);
-
-    AutoPacketResetter(AutoFired<AutoPacketListener>&& apl);
 
     AutoFired<AutoPacketListener> m_apl;
 
