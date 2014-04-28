@@ -8,6 +8,9 @@ struct PeerContextName1 {};
 struct PeerContextName2 {};
 
 TEST_F(PeerContextTest, VerifySimplePeerage) {
+  // Accept Events
+  AutoCurrentContext()->Initiate();
+
   // Insert a simple receiver first:
   AutoRequired<SimpleReceiver> sr;
 
@@ -15,6 +18,7 @@ TEST_F(PeerContextTest, VerifySimplePeerage) {
     // Create an ordinary child anonymous context and try to fire.  This should
     // not cause anything to be picked up anywhere.
     AutoCreateContext child;
+    child->Initiate();
 
     CurrentContextPusher pshr(child);
     AutoFired<CallableInterface> ci;
@@ -28,6 +32,7 @@ TEST_F(PeerContextTest, VerifySimplePeerage) {
     ASSERT_TRUE(nullptr != peer.get()) << "Peer context creation method returned a null pointer";
 
     CurrentContextPusher pshr(peer);
+    peer->Initiate();
     AutoFired<CallableInterface> ci;
     ci(&CallableInterface::OneArg)(22);
   }
@@ -39,15 +44,19 @@ TEST_F(PeerContextTest, VerifySimplePeerage) {
 }
 
 TEST_F(PeerContextTest, VerifyPeerTransitivity) {
+  AutoCurrentContext()->Initiate();
+
   // Insert our simple receiver:
   AutoRequired<SimpleReceiver> sr;
 
   // Now create the first peer context:
   auto peer1 = m_create->CreatePeer<PeerContextName1>();
+  peer1->Initiate();
   ASSERT_TRUE(nullptr != peer1.get());
 
   // Create the _second_ peer context based on the first:
   auto peer2 = peer1->CreatePeer<PeerContextName2>();
+  peer2->Initiate();
   ASSERT_TRUE(nullptr != peer2.get());
 
   // Fire the event here:
@@ -61,6 +70,9 @@ TEST_F(PeerContextTest, VerifyPeerTransitivity) {
 }
 
 TEST_F(PeerContextTest, VerifyNoAutowiringLeakage) {
+  // Accept Events
+  AutoCurrentContext()->Initiate();
+
   // Insert a simple object in the base context
   AutoRequired<SimpleObject> obj1;
 

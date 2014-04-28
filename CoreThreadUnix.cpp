@@ -1,8 +1,9 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
-#include "CoreThread.h"
+#include "BasicThread.h"
+#include <pthread.h>
 
-void CoreThread::SetCurrentThreadName(void) const {
+void BasicThread::SetCurrentThreadName(void) const {
   if(IS_INTERNAL_BUILD)
 #if __APPLE__
     pthread_setname_np(m_name);

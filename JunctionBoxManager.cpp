@@ -3,21 +3,36 @@
 #include "JunctionBoxManager.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketListener.h"
+#include "AutowiringEvents.h"
 
 JunctionBoxManager::JunctionBoxManager(void) {
-  // Enumerate all Autofired types to initialize a new JunctionBox for each
+  // Enumerate all event types to initialize a new JunctionBox for each
   for(auto p = g_pFirstEntry; p; p = p->pFlink)
-    m_junctionBoxes[p->ti] = p->m_NewJunctionBox();
+    p->m_NewJunctionBox(m_junctionBoxes[p->ti]);
 
-  m_junctionBoxes[typeid(AutoPacketListener)] = std::make_shared<JunctionBox<AutoPacketListener>>();
+  //Always allow internal events
+  m_junctionBoxes[typeid(AutowiringEvents)]->Initiate();
+  m_junctionBoxes[typeid(AutoPacketListener)]->Initiate();
 }
 
 JunctionBoxManager::~JunctionBoxManager(void) {}
+
+void JunctionBoxManager::Initiate(void) {
+  for (auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
+    q->second->Initiate();
+}
 
 void JunctionBoxManager::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   // Notify all junctionboxes that there is a new event
   for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
     q->second->Add(receiver);
+}
+
+void JunctionBoxManager::AddEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
+  // Notify all junctionboxes that there is a new event
+  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
+    for(auto receiver = first; receiver != last; receiver++)
+      q->second->Add(*receiver);
 }
 
 void JunctionBoxManager::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {

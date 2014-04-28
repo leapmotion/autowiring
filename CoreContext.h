@@ -1,14 +1,15 @@
 #pragma once
 #include "at_exit.h"
 #include "AutoAnchor.h"
-#include "AutoFactory.h"
 #include "AutoPacketSubscriber.h"
+#include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
-#include "CoreThread.h"
+#include "BasicThread.h"
+#include "CoreRunnable.h"
+#include "ContextMember.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
-#include "DeferredBase.h"
 #include "fast_pointer_cast.h"
 #include "result_or_default.h"
 #include "JunctionBox.h"
@@ -16,9 +17,10 @@
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
 #include "ExceptionFilter.h"
-#include "PolymorphicTypeForest.h"
+#include "SharedPointerSlot.h"
 #include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
+#include "TypeUnifier.h"
 #include "uuid.h"
 
 #include <boost/thread/condition.hpp>
@@ -26,32 +28,21 @@
 #include <list>
 #include <memory>
 #include <map>
-#include <string>
 #include <functional>
-#include TUPLE_HEADER
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 #include STL_UNORDERED_MAP
 #include STL_UNORDERED_SET
 
-#ifndef ASSERT
-  #ifdef _DEBUG
-    #include <assert.h>
-    #define ASSERT(x) assert(x)
-  #else
-    #define ASSERT(x)
-  #endif
-#endif
+template<class T, class Fn>
+class DeferrableAutowiringFn;
 
 class AutoPacketFactory;
-class AutowirableSlot;
+class DeferrableAutowiring;
 class BoltBase;
-class ContextMember;
 class CoreContext;
-class CoreThread;
-class EventReceiver;
 class EventOutputStreamBase;
 class GlobalCoreContext;
 class OutstandingCountTracker;
@@ -76,7 +67,6 @@ enum class ShutdownMode {
 /// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain
 /// </summary>
 class CoreContext:
-  public Object,
   public SimpleOwnershipValidator,
   public TeardownNotifier,
   public std::enable_shared_from_this<CoreContext>
@@ -89,51 +79,20 @@ public:
   virtual ~CoreContext(void);
 
   /// <summary>
-  /// Factory to create a new context
-  /// </summary>
-  /// <param name="T">The context sigil.</param>
-  template<class T>
-  std::shared_ptr<CoreContext> Create(void) {
-    return CreateInternal<T>(*new CoreContext(shared_from_this(), typeid(T)));
-  }
-
-  /// <summary>
-  /// Factory to create a peer context
-  /// </summary>
-  /// <remarks>
-  /// A peer context allows clients to create autowiring contexts which are in the same event
-  /// domain with respect to each other, but are not in the same autowiring domain.  This can
-  /// be useful where multiple instances of a particular object are desired, but inserting
-  /// such objects into a simple child context is cumbersome because the objects at parent
-  /// scope are listening to events originating from objects at child scope.
-  /// </remarks>
-  template<class T>
-  std::shared_ptr<CoreContext> CreatePeer(void) {
-    return m_pParent->CreateInternal<T>(*new CoreContext(m_pParent, typeid(T), shared_from_this()));
-  }
-
-  /// <summary>
-  /// Allows a specifically named class to be bolted
-  /// </summary>
-  /// <remarks>
-  /// If the specified type does not inherit from BoltTo, this method has no effect
-  /// </remarks>
-  template<class T>
-  void Enable(void) {
-    static_assert(!std::is_abstract<T>::value, "Cannot enable an abstract class for bolting");
-    EnableInternal((T*)nullptr, (T*)nullptr);
-  }
-
-  /// <summary>
   /// Convenience method to obtain a shared reference to the global context
   /// </summary>
   static std::shared_ptr<CoreContext> GetGlobal(void);
+
 protected:
   /// <summary>
   /// Register new context with parent and notify others of its creation.
   /// </summary>
   template<typename T>
   std::shared_ptr<CoreContext> CreateInternal(CoreContext& newContext) {
+    // don't allow new children if shutting down
+    if(m_isShutdown)
+      throw autowiring_error("Cannot create a child context; this context is already shut down");
+
     t_childList::iterator childIterator;
     {
       // Lock the child list while we insert
@@ -155,10 +114,16 @@ protected:
           boost::lock_guard<boost::mutex> lk(m_childrenLock);
           this->m_children.erase(childIterator);
         }
+        // Notify AutowiringEvents listeners
+        GetGlobal()->Invoke(&AutowiringEvents::ExpiredContext)(*pContext);
+
         delete pContext;
       }
     );
     *childIterator = retVal;
+
+    // Notify AutowiringEvents listeners
+    GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal);
 
     // Save anchored types in context
     retVal->AddAnchorInternal((T*)nullptr);
@@ -198,7 +163,7 @@ protected:
   boost::condition m_stateChanged;
 
   // Set if threads in this context should be started when they are added
-  bool m_shouldRunNewThreads;
+  bool m_initiated;
 
   // Set if the context has been shut down
   bool m_isShutdown;
@@ -211,23 +176,30 @@ protected:
   // before this flag is assigned will NOT be checked.
   bool m_useOwnershipValidator;
 
-  // This is a map of the context members by type and, where appropriate, by name
+  // This is a map of concrete types, indexed by the true type of each element.
   // This map keeps all of its objects resident at least until the context goes away.
   // "Object" is named here as an explicit ground type in order to allow arbitrary casting from Object-
   // derived types.
-  PolymorphicTypeForest<ExplicitGrounds<Object>> m_byType;
+  std::unordered_map<std::type_index, AnySharedPointer> m_concreteTypes;
+
+  // This is a memoization map used to memoize any already-detected interfaces
+  // Note that the value on the right-hand side must match the void pointer specified on the right-hand side
+  std::unordered_map<std::type_index, AnySharedPointer> m_typeMemos;
 
   // All ContextMember objects known in this autowirer:
   std::unordered_set<ContextMember*> m_contextMembers;
 
-  // Collection of objects waiting to be autowired, and a specific lock exclusively for this collection
-  boost::mutex m_deferredLock;
-  typedef std::map<const AutowirableSlot*, DeferredBase*> t_deferred;
-  t_deferred m_deferred;
+  // Map of slots waiting to be autowired, organized by the desired type.  The type allows chaining to take
+  // place in an intelligent way.
+  typedef std::unordered_map<std::type_index, DeferrableAutowiring*> t_deferredMap;
+  t_deferredMap m_deferred;
 
   // All known event receivers and receiver proxies originating from this context:
   typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
+
+  // List of eventReceivers to be added when this context in initiated
+  t_rcvrSet m_delayedEventReceivers;
 
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
   const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
@@ -235,12 +207,12 @@ protected:
   // All known exception filters:
   std::unordered_set<ExceptionFilter*> m_filters;
 
-  // Clever use of shared pointer to expose the number of outstanding CoreThread instances.
+  // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
   // Destructor does nothing; this is by design.
   std::weak_ptr<Object> m_outstanding;
 
   // Actual core threads:
-  typedef std::list<CoreThread*> t_threadList;
+  typedef std::list<CoreRunnable*> t_threadList;
   t_threadList m_threads;
 
   // Child contexts:
@@ -297,7 +269,7 @@ protected:
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
-  void UpdateDeferredElements(void);
+  void UpdateDeferredElements(const std::shared_ptr<Object>& entry);
 
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
@@ -309,8 +281,15 @@ protected:
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
   void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    return AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, pRecvr));
+    JunctionBoxEntry<EventReceiver> entry(this, pRecvr);
+    m_eventReceivers.insert(entry);
+    AddEventReceiver(entry);
   }
+
+  /// <summary>
+  /// Add delayed event receivers
+  /// </summary>
+  void AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
 
   /// <summary>
   /// Removes the named event receiver from the collection of known receivers
@@ -332,7 +311,7 @@ protected:
   /// It's safe to allow the returned shared_ptr to go out of scope; the core context
   /// will continue to hold a reference to it until Remove is invoked.
   /// </remarks>
-  void AddCoreThread(const std::shared_ptr<CoreThread>& pCoreThread);
+  void AddCoreRunnable(const std::shared_ptr<CoreRunnable>& pCoreRunnable);
 
   /// <summary>
   /// Adds the specified context creation listener to receive creation events broadcast from this context
@@ -346,54 +325,14 @@ protected:
   void AddContextMember(const std::shared_ptr<ContextMember>& ptr);
 
   /// <summary>
-  /// Forwarding routine, adds a packet subscriber to the internal packet factory
+  /// Forwarding routine, recursively adds a packet subscriber to the internal packet factory
   /// </summary>
-  void AddPacketSubscriber(AutoPacketSubscriber&& rhs);
+  void AddPacketSubscriber(const AutoPacketSubscriber& rhs);
 
   /// <summary>
-  /// Default override, when a member does not have an autofilter routine
+  /// Counterpart to the AddPacketSubscriber routine, but will remove an array of subscribers
   /// </summary>
-  void AddPacketSubscriber(const std::false_type&) {}
-
-  void RemovePacketSubscribers( const std::vector<AutoPacketSubscriber>& subscribers );
-
-  /// <summary>
-  /// Identical to Autowire, but will not register the passed slot for deferred resolution
-  /// </summary>
-  template<class W>
-  bool AutowireNoDefer(W& slot) {
-    typedef typename W::element_type T;
-
-    // First-chance resolution in this context and ancestor contexts:
-    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
-      pCur->FindByType(slot);
-      if(slot)
-        return true;
-    }
-
-    if(
-      has_static_new<T>::value ||
-      has_simple_constructor<T>::value
-    )
-      // We will not attempt second-chance resolution if the type is constructable
-      return false;
-
-    // Attempt second-chance resolution:
-
-    std::shared_ptr<AutoFactory<T>> factory;
-    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
-      pCur->FindByType(factory);
-      if(!factory)
-        continue;
-
-      std::shared_ptr<T> ptr(factory->New());
-      AddInternal(ptr);
-      slot.swap(ptr);
-      return true;
-    }
-
-    return false;
-  }
+  void RemovePacketSubscribers(const std::vector<AutoPacketSubscriber>& subscribers);
 
   /// <summary>
   /// Increments the total number of contexts still outstanding
@@ -402,136 +341,127 @@ protected:
   /// This is an indirect incrementation routine.  The count will be incremented for as
   /// long as the returned shared_ptr is not destroyed.  Once it's destroyed, the count
   /// is decremented.  The caller is encouraged not to copy the return value, as doing
-  /// so can give spurious values for the current number of outstanding threads.
+  /// so can give inflated values for the current number of outstanding threads.
   ///
   /// The caller is responsible for exterior synchronization
   /// </remarks>
   std::shared_ptr<Object> IncrementOutstandingThreadCount(void);
 
-  template<class S>
-  void DeferAutowiring(S& slot) {
-    class Deferred:
-      public DeferredBase {
-    public:
-      Deferred(CoreContext* pThis, S& slot) :
-        DeferredBase(pThis, slot.m_tracker),
-        slot(slot)
-      {}
-
-      S& slot;
-
-      bool operator()() override {
-        return
-          this->tracker.expired() ||
-          this->slot ||
-          this->pThis->AutowireNoDefer(this->slot);
-      }
-    };
-
-    // Resolution failed, add this autowired value for a delayed attempt
-    boost::lock_guard<boost::mutex> lk(m_deferredLock);
-    if(slot)
-      // Someone autowired this before we did, short-circuit
-      return;
-
-    DeferredBase*& pDeferred = m_deferred[&slot];
-    if(pDeferred) {
-      // We allow rebinding at this site if the deferred base has already expired
-      if(pDeferred->IsExpired())
-        delete pDeferred;
-      else
-        throw_rethrowable autowiring_error("A slot is being autowired, but a deferred instance already exists at this location");
-    }
-    pDeferred = new Deferred(this, slot);
-  }
-
-  // <summary>
-  // Same as Inject, but doesn't checkout Typeforest
-  // </summary>
-  template<typename T>
-  void AddInternal(const std::shared_ptr<T>& value){
-    AddInternal(value, boost::unique_lock<boost::mutex>(m_lock));
-  }
-
-  template<typename T>
-  void AddInternal(const std::shared_ptr<T>& value, boost::unique_lock<boost::mutex>&& lock) {
-    // Extract ground for this value, we'll use it to select the correct forest for the value:
-    typedef typename ground_type_of<T>::type groundType;
-
-    // If Object appears in your ancestry then you MUST make object your ground type.  Typically
-    // this is as simple as adding this line to the definition of T with public access:
-    //
-    //  typedef Object ground
-    static_assert(
-      !std::is_base_of<Object, T>::value ||
-      std::is_same<typename ground_type_of<T>::type, Object>::value,
-      "If T inherits from Object (for instance, via ContextMember or CoreThread), then T::grounds must be of type Object"
-    );
-
-    // Shared pointer to our entity, if it's a CoreThread
-    std::shared_ptr<CoreThread> pCoreThread;
-
+  /// <summary>
+  /// Mapping and extraction structure used to provide a runtime version of an Object-implementing shared pointer
+  /// </summary>
+  struct AddInternalTraits {
+    template<class T>
+    AddInternalTraits(const AutoPacketSubscriber& subscriber, const std::shared_ptr<T>& value) :
+      type(typeid(T)),
+      subscriber(subscriber),
+      value(value),
+      pObject(leap::fast_pointer_cast<Object>(value)),
+      pContextMember(leap::fast_pointer_cast<ContextMember>(value)),
+      pCoreRunnable(leap::fast_pointer_cast<CoreRunnable>(value)),
+      pFilter(leap::fast_pointer_cast<ExceptionFilter>(value)),
+      pBoltBase(leap::fast_pointer_cast<BoltBase>(value)),
+      pRecvr(leap::fast_pointer_cast<EventReceiver>(value))
     {
-      boost::unique_lock<boost::mutex> lk = std::move(lock);
-
-      // Validate that this addition does not generate an ambiguity:
-      std::shared_ptr<T> ptr;
-      m_byType.Resolve(ptr);
-      if(ptr == value)
-        throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
-      if(ptr)
-        throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
-
-      // Add a new member of the forest:
-      m_byType.AddTree(value);
-
-      // Context members:
-      auto pContextMember = leap::fast_pointer_cast<ContextMember, T>(value);
-      if(pContextMember) {
-        AddContextMember(pContextMember);
-
-        // CoreThreads:
-        pCoreThread = leap::fast_pointer_cast<CoreThread, T>(value);
-        if(pCoreThread)
-          AddCoreThread(pCoreThread);
-      }
-
-      // Exception filters:
-      auto pFilter = leap::fast_pointer_cast<ExceptionFilter, T>(value);
-      if(pFilter)
-        m_filters.insert(pFilter.get());
-
-      // Bolts:
-      auto pBase = leap::fast_pointer_cast<BoltBase, T>(value);
-      if(pBase)
-        AddBolt(pBase);
+      if(!pObject)
+        throw autowiring_error("Cannot add a type which does not implement Object");
     }
 
-    // Event receivers:
-    auto pRecvr = leap::fast_pointer_cast<EventReceiver, T>(value);
-    if(pRecvr)
-      AddEventReceiver(pRecvr);
+    // The declared original type:
+    const std::type_info& type;
 
-    // Subscribers:
-    AddPacketSubscriber(AutoPacketSubscriberSelect<T>(value));
+    // A holder to store the original shared pointer, to ensure that type information propagates
+    // correctly on the right-hand side of our map
+    const AnySharedPointer value;
 
-    // Notify any autowiring field that is currently waiting that we have a new member
-    // to be considered.
-    UpdateDeferredElements();
+    // The packet subscriber introduction method, if appropriate:
+    const AutoPacketSubscriber subscriber;
 
-    // Ownership validation, as appropriate
-    // We do not attempt to pend validation for CoreThread instances, because a CoreThread could potentially hold
-    // the final outstanding reference to this context, and therefore may be responsible for this context's (and,
-    // transitively, its own) destruction.
-    if(m_useOwnershipValidator && !pCoreThread)
-      SimpleOwnershipValidator::PendValidation(std::weak_ptr<T>(value));
+    // There are a lot of interfaces we support, here they all are:
+    const std::shared_ptr<Object> pObject;
+    const std::shared_ptr<ContextMember> pContextMember;
+    const std::shared_ptr<CoreRunnable> pCoreRunnable;
+    const std::shared_ptr<ExceptionFilter> pFilter;
+    const std::shared_ptr<BoltBase> pBoltBase;
+    const std::shared_ptr<EventReceiver> pRecvr;
+  };
+
+  /// <summary>
+  /// Internal type introduction routine
+  /// </summary>
+  void AddInternal(const AddInternalTraits& traits);
+
+  template<class T>
+  void FindByTypeUnsafe(std::shared_ptr<T>& ptr) {
+    // Try to find the type directly:
+    auto& entry = m_typeMemos[typeid(T)];
+    if(!entry->empty()) {
+      ptr = entry->as<T>();
+      return;
+    }
+
+    // Resolve based on iterated dynamic casts for each concrete type:
+    ptr.reset();
+    for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
+      std::shared_ptr<Object> obj = *q->second;
+      auto casted = std::dynamic_pointer_cast<T>(obj);
+      if(!casted)
+        // No match, try the next entry
+        continue;
+
+      if(ptr)
+        // Resolution ambiguity, cannot proceed
+        throw autowiring_error("An attempt was made to resolve a type which has multiple possible clients");
+
+      ptr = casted;
+    }
+
+    // Memoize:
+    *entry = ptr;
   }
 
 public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
-  size_t GetMemberCount(void) const { return m_byType.size(); }
+  size_t GetMemberCount(void) const { return m_concreteTypes.size(); }
   const std::type_info& GetSigilType(void) const { return m_sigil; }
+
+  /// <summary>
+  /// Factory to create a new context
+  /// </summary>
+  /// <param name="T">The context sigil.</param>
+  template<class T>
+  std::shared_ptr<CoreContext> Create(void) {
+    return CreateInternal<T>(*new CoreContext(shared_from_this(), typeid(T)));
+  }
+
+  /// <summary>
+  /// Factory to create a peer context
+  /// </summary>
+  /// <remarks>
+  /// A peer context allows clients to create autowiring contexts which are in the same event
+  /// domain with respect to each other, but are not in the same autowiring domain.  This can
+  /// be useful where multiple instances of a particular object are desired, but inserting
+  /// such objects into a simple child context is cumbersome because the objects at parent
+  /// scope are listening to events originating from objects at child scope. Events can be fired,
+  /// but not received, from an unintiated context if its peer is initiated.
+  /// </remarks>
+  template<class T>
+  std::shared_ptr<CoreContext> CreatePeer(void) {
+    return m_pParent->CreateInternal<T>(*new CoreContext(m_pParent, typeid(T), shared_from_this()));
+  }
+
+  /// <summary>
+  /// Allows a specifically named class to be bolted
+  /// </summary>
+  /// <remarks>
+  /// If the specified type does not inherit from BoltTo, this method has no effect
+  /// </remarks>
+  template<class T>
+  void Enable(void) {
+    static_assert(!std::is_abstract<T>::value, "Cannot enable an abstract class for bolting");
+    EnableInternal((T*)nullptr, (T*)nullptr);
+  }
 
   /// <summary>
   /// Check if parent context's have AutoAnchored the type in their sigil.
@@ -563,30 +493,39 @@ public:
   /// </summary>
   template<typename T, typename... Args>
   std::shared_ptr<T> Construct(Args&&... args) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
+    // If T doesn't inherit Object, then we need to compose a unifying type which does
+    typedef typename SelectTypeUnifier<T>::type TActual;
+    static_assert(std::is_base_of<Object, TActual>::value, "Constructive type does not implement Object as expected");
+    static_assert(
+      std::is_base_of<Object, T>::value || !has_static_new<T>::value,
+      "If type T provides a static new method, then the constructed type MUST directly inherit Object"
+    );
 
-    std::shared_ptr<T> ptr;
-    m_byType.Resolve(ptr);
-    if(ptr)
-      return ptr;
+    // First see if the object has already been injected:
+    std::shared_ptr<TActual> retVal;
+    FindByType(retVal);
+    if(retVal)
+      return retVal;
 
-    // We must make ourselves current for the duration of this call:
+    // We must make ourselves current for the remainder of this call:
     CurrentContextPusher pshr(shared_from_this());
 
     // Cannot safely inject while holding the lock, so we have to unlock and then inject
-    lk.unlock();
-    ptr.reset(CreationRules::New<T>(std::forward<Args>(args)...));
-    lk.lock();
+    retVal.reset(CreationRules::New<TActual>(std::forward<Args>(args)...));
 
-    // Reattempt resolution, short-circuiting if an injection of this type took place:
-    std::shared_ptr<T> ptr2;
-    m_byType.Resolve(ptr2);
-    if(ptr2)
-      return ptr2;
-
-    // Pass control to the insertion routine, which will handle injection from this point:
-    AddInternal(ptr, std::move(lk));
-    return ptr;
+    try {
+      // Pass control to the insertion routine, which will handle injection from this point:
+      AddInternal(AddInternalTraits(AutoPacketSubscriberSelect<T>(retVal), retVal));
+    }
+    catch(autowiring_error&) {
+      // We know why this exception occurred.  It's because, while we were constructing our
+      // type, someone else was constructing the same type at the same time.  As a consequence,
+      // we will simply eat this exception, and handle it silently by returning the type that
+      // someone else has already attempted to construct, as per the documented behavior of
+      // Construct.
+      FindByType(retVal);
+    }
+    return retVal;
   }
 
   /// <summary>
@@ -597,7 +536,7 @@ public:
   /// </returns>
   template<typename T>
   std::shared_ptr<T> Inject(void) {
-    return ResolveAnchor<T>() -> template Construct<T>();
+    return ResolveAnchor<T>()->template Construct<T>();
   }
 
   /// <summary>
@@ -626,19 +565,6 @@ public:
   }
 
   /// <summary>
-  /// Adds an existing shared pointer to the context
-  /// </summary>
-  /// <remarks>
-  /// This method unsafely ambiguates the construction strategy used for some member.  It's possible that
-  /// someone calls AddExisting for a field which is AutoRequired in the current context, or makes a call
-  /// to this method conditionally dependent on a type which may have been AutoRequired elsewhere.
-  ///
-  /// For reason of these ambiguities, and others, the method will be removed.
-  /// </remarks>
-  template<typename T>
-  void DEPRECATED(AddExisting(std::shared_ptr<T> p_member), "Deprecated, use Inject or Construct instead");
-
-  /// <summary>
   /// This method checks whether eventoutputstream listeners for the given type still exist.
   /// For a given type in a hash, returns a vector of weak ptrs.
   /// Goes through the weak ptrs, locks them, erases dead ones.
@@ -655,6 +581,18 @@ public:
   /// </returns>
   template<class Sigil>
   bool Is(void) const { return m_sigil == typeid(Sigil); }
+
+  /// <returns>
+  /// A list of descendant contexts whose sigil type matches the specified sigil type
+  /// </returns>
+  template<class Sigil>
+  std::vector<std::shared_ptr<CoreContext>> EnumerateChildContexts(void) {
+    std::vector<std::shared_ptr<CoreContext>> retVal;
+    EnumerateChildContexts([&retVal](std::shared_ptr<CoreContext> ctxt) {
+      retVal.push_back(ctxt);
+    });
+    return retVal;
+  }
 
   /// <summary>
   /// Enumerates all matching child contexts recursively and passes each child context to the specified lambda
@@ -687,7 +625,7 @@ public:
   /// there is a high probability that this will deadlock if any of the added objects directly
   /// or indirectly cause a child context to be created.
   ///
-  /// CopyCoreThreadList is guaranteed to be a safe call to be made from this routine.
+  /// CopyBasicThreadList is guaranteed to be a safe call to be made from this routine.
   /// </remarks>
   template<class Fn>
   bool EnumerateChildContexts(const Fn& fn) {
@@ -717,14 +655,19 @@ public:
     }
   }
 
+  /// <summary>
+  /// Sends AutowiringEvents to build current state
+  /// </summary>
+  void BuildCurrentState(void);
+
   /// <returns>
-  /// A copy of the list of child CoreThreads
+  /// A copy of the list of child CoreRunnables
   /// </returns>
   /// <remarks>
   /// No guarantee is made about how long the returned collection will be consistent with this
   /// context.  A thread may potentially be added to the context after the method returns.
   /// </remarks>
-  std::vector<std::shared_ptr<CoreThread>> CopyCoreThreadList(void) const;
+  std::vector<std::shared_ptr<BasicThread>> CopyBasicThreadList(void) const;
 
   /// <summary>
   /// In debug mode, adds an additional compile-time check
@@ -747,9 +690,11 @@ public:
   }
 
   /// <returns>
-  /// True if CoreThread instances in this context should begin teardown operations
+  /// True if CoreRunnable instances in this context should begin teardown operations
   /// </returns>
   bool IsShutdown(void) const {return m_isShutdown;}
+
+  bool IsInitiated(void) const {return m_initiated;}
 
   /// <returns>
   /// True if this context was ever started
@@ -761,7 +706,7 @@ public:
   /// </remarks>
   bool WasStarted(void) const {
     // We were started IF we will run new threads, OR we have been signalled to stop
-    return m_shouldRunNewThreads || m_isShutdown;
+    return m_initiated || m_isShutdown;
   }
 
   /// <returns>
@@ -781,23 +726,16 @@ public:
   /// Determines whether the passed type is a member of this context, or any ancestor context
   /// </summary>
   template<class T>
-  bool IsMember(typename std::enable_if<std::is_base_of<ContextMember, T>::value, T*>::type ptr) const {
-    return ptr->GetContext().get() == this;
-  }
-
-  template<class T>
-  bool IsMember(typename std::enable_if<!std::is_base_of<ContextMember, T>::value, T*>::type ptr) const {
-    // If the passed type is a ContextMember, we can query relationship status
-    ContextMember* pMember = dynamic_cast<ContextMember*>(ptr);
-    return
-      pMember ?
-      pMember->GetContext().get() == this :
-      m_byType.Contains<T>();
-  }
-
-  template<class T>
   bool IsMember(const std::shared_ptr<T>& ptr) const {
-    return IsMember<T>(ptr.get());
+    boost::lock_guard<boost::mutex> lk(m_lock);
+
+    auto q = m_concreteTypes.find(typeid(*ptr));
+    if(q == m_concreteTypes.end())
+      // The true type of the passed entity isn't even in our concrete map, then we short-circuit
+      return false;
+
+    // Found the true type, see if the slots match or if it's a coincidence:
+    return *q->second == ptr;
   }
 
   /// <summary>
@@ -822,8 +760,8 @@ public:
   ///  ctxt->Invoke(&MyEventType::MyEvent)();
   ///
   /// </remarks>
-  template<class MemFn>
-  InvokeRelay<MemFn> Invoke(MemFn memFn) {
+  template<typename MemFn>
+  InvokeRelay<MemFn> Invoke(MemFn memFn){
     return GetJunctionBox<typename Decompose<MemFn>::type>()->Invoke(memFn);
   }
 
@@ -831,7 +769,8 @@ public:
   /// Utility routine, invoked typically by the service, which starts all registered
   /// core threads.
   /// </summary>
-  void InitiateCoreThreads(void);
+  void Initiate(void);
+  void DEPRECATED(InitiateCoreThreads(void), "InitiateCoreThreads is deprecated, use Initiate instead");
 
   /// <summary>
   /// This signals to the whole system that a shutdown operation is underway, and that shutdown procedures should
@@ -871,6 +810,12 @@ public:
   }
 
   /// <summary>
+  /// Wait until the context is initiated or is shutting down
+  /// </summary>
+  /// <returns>True if initiated, false if shutting down</returns>
+  bool DelayUntilInitiated(void);
+
+  /// <summary>
   /// This makes this core context current.
   /// </summary>
   /// <returns>The previously current context</returns>
@@ -893,7 +838,7 @@ public:
   /// </return>
   /// <remarks>
   /// This works by using thread-local store, and so is safe in multithreaded systems.  The current
-  /// context is assigned before invoking a CoreThread instance's Run method, and it's also assigned
+  /// context is assigned before invoking a CoreRunnable instance's Run method, and it's also assigned
   /// when a context is first constructed by a thread.
   /// </remarks>
   static std::shared_ptr<CoreContext> CurrentContext(void);
@@ -979,29 +924,51 @@ public:
   template<class T>
   void FindByType(std::shared_ptr<T>& slot) {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    if(!m_byType.Resolve(slot))
-      throw_rethrowable autowiring_error("An autowiring operation resulted in an ambiguous match");
+    FindByTypeUnsafe(slot);
   }
 
   // Interior type overrides:
   void FindByType(std::shared_ptr<AutoPacketFactory>& slot) { slot = m_packetFactory; }
 
   /// <summary>
+  /// Identical to Autowire, but will not register the passed slot for deferred resolution
+  /// </summary>
+  template<class T>
+  bool FindByTypeRecursive(std::shared_ptr<T>& slot) {
+    // First-chance resolution in this context and ancestor contexts:
+    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
+      pCur->FindByType(slot);
+      if(slot)
+        return true;
+    }
+
+    return false;
+  }
+
+  /// <summary>
   /// Registers a slot to be autowired
   /// </summary>
   template<class W>
   bool Autowire(W& slot) {
-    if(AutowireNoDefer(slot))
+    if(FindByTypeRecursive(slot))
       return true;
 
     // Failed, defer
-    DeferAutowiring(slot);
+    boost::lock_guard<boost::mutex> lk(m_lock);
+
+    // Push to the head of our linked list:
+    auto& flink = m_deferred[typeid(typename W::value_type)];
+    slot.SetFlink(flink);
+    flink = &slot;
     return false;
   }
 
   /// <summary>
   /// Adds a post-attachment listener in this context for a particular autowired member
   /// </summary>
+  /// <returns>
+  /// A pointer to a deferrable autowiring function which the caller may safely ignore if it's not needed
+  /// </returns>
   /// <remarks>
   /// This method will succeed if slot was constructed in this context or any parent context.  If the
   /// passed slot was not created in this context or a parent context, an exception will be thrown.
@@ -1013,8 +980,25 @@ public:
   /// body of this method.  Care should be taken to avoid deadlocks in this case--either the caller must
   /// not be holding any locks when this method is invoked, or the caller should design the listener
   /// method such that it may be substitutde in place for the notification routine.
+  ///
+  /// The returned value may be used later in CancelAutowiringNotification in order to explicitly clean
+  /// up memory.
   /// </remarks>
-  void NotifyWhenAutowired(const AutowirableSlot& slot, const std::function<void()>& listener);
+  template<class T, class Fn>
+  const DeferrableAutowiringFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
+    DeferrableAutowiringFn<T, Fn>* retVal =
+      new DeferrableAutowiringFn<T, Fn>(
+        shared_from_this(),
+        std::forward<Fn>(listener)
+      );
+
+    return retVal;
+  }
+
+  /// <summary>
+  /// Unregisters a slot as a recipient of potential autowiring
+  /// </summary>
+  void CancelAutowiringNotification(DeferrableAutowiring* pDeferrable);
 
   /// <summary>
   /// Utility debug method for writing a snapshot of this context to the specified output stream
@@ -1047,9 +1031,4 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 template<typename T, typename... Sigil>
 void CoreContext::AutoRequireMicroBolt(void) {
   Inject<MicroBolt<T, Sigil...>>();
-}
-
-template<typename T>
-void CoreContext::AddExisting(std::shared_ptr<T> p_member) {
-  AddInternal(p_member);
 }

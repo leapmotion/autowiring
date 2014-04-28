@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "DispatchQueueTest.h"
 #include "DispatchQueue.h"
+#include "CoreThread.h"
 
 using namespace std;
 
@@ -11,9 +12,7 @@ class EventMaker:
 public:
   EventMaker():
     CoreThread("EventMaker")
-  {
-    AcceptDispatchDelivery();
-  }
+  {}
 };
 
 
@@ -49,8 +48,7 @@ TEST_F(DispatchQueueTest, PathologicalStartAndStop){
   AutoRequired<Thread<2>> t2;
   AutoRequired<Thread<3>> t3;
   AutoRequired<Thread<4>> t4;
-  m_create->InitiateCoreThreads();
-  t1->DelayUntilCanAccept();
+  m_create->Initiate();
 
   // We don't need a strong guarantee that these threads exit in a timely fashion, just that they
   // do so _eventually_.

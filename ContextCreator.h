@@ -109,7 +109,7 @@ public:
     return std::make_pair(retVal, true);
   }
 
-  /// <sumamry>
+  /// <summary>
   /// Removes all contexts from this creator, and optionally waits for them to quit
   /// </summary>
   /// <param name="wait">True if this call should not return until all child contexts quit</param>
@@ -249,7 +249,7 @@ public:
     }
   }
 
-  /// <sumamry>
+  /// <summary>
   /// Removes all contexts from this creator, and optionally waits for them to quit
   /// </summary>
   /// <param name="wait">True if this call should not return until all child contexts quit</param>
@@ -260,7 +260,7 @@ public:
   ///
   /// Regardless of this detail, consumers should be aware that no guarantees are made about how
   /// long this container will remain empty once the function returns in an asynchronous context.
-  /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
+  /// The container could, in fact, have elements in it at the time control is returned to the caller.
   /// </remarks>
   void Clear(bool wait) {
     (boost::lock_guard<boost::mutex>)m_contextLock,

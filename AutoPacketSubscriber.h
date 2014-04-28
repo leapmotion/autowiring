@@ -2,7 +2,7 @@
 #include "Decompose.h"
 #include "FilterPropertyExtractor.h"
 #include <boost/any.hpp>
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 class AutoPacket;
 class AutoPacketAdaptor;
@@ -41,10 +41,8 @@ struct CallExtractor<T, true> {
   typedef std::true_type deferred;
 
   static void CallDeferred(T* pObj, const AutoPacketAdaptor& repo) {
-    const t_call call =
-      reinterpret_cast<t_call>(
-        &BoundCall<AutoPacketAdaptor, decltype(&T::AutoFilter), &T::AutoFilter>::Call
-      );
+    typedef BoundCall<AutoPacketAdaptor, decltype(&T::AutoFilter), &T::AutoFilter> t_boundCall;
+    const t_call call = reinterpret_cast<t_call>(&t_boundCall::Call);
 
     std::shared_ptr<AutoPacket> shared = ExtractSharedPointer(repo);
     *pObj += [pObj, shared, call] {
@@ -256,6 +254,11 @@ public:
   /// subscribers, or an exception will be thrown.
   /// </remarks>
   t_call GetCall(void) const { return m_pCall; }
+
+  /// <returns>
+  /// True if this subscriber instance is empty
+  /// </returns>
+  operator bool(void) const { return !empty(); }
 };
 
 template<class T, bool has_autofilter = has_autofilter<T>::value>
@@ -271,7 +274,8 @@ public:
 
 template<class T>
 class AutoPacketSubscriberSelect<T, false>:
-  public std::false_type
+  public std::false_type,
+  public AutoPacketSubscriber
 {
 public:
   AutoPacketSubscriberSelect(const std::shared_ptr<T>&) {}

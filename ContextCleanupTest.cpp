@@ -71,8 +71,8 @@ TEST_F(ContextCleanupTest, VerifyContextDtor) {
       AutoRequired<SimpleObject> simple;
       objVerifier = simple;
 
-      // Should be exactly five references to this object
-      EXPECT_EQ(6, objVerifier.use_count()) << "Too many references to a newly constructed object";
+      // Should be exactly two references to this object--one held by us, and another one held by the context
+      EXPECT_EQ(2, objVerifier.use_count()) << "Too many references to a newly constructed object";
 
       // Reference count should be unchanged:
       EXPECT_EQ(2, contextVerifier.use_count()) << "Reference count changed unexpectedly after addition of an object";
@@ -105,7 +105,7 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   AutoRequired<SimpleThreaded>();
 
   // Kick off the operation
-  context->InitiateCoreThreads();
+  context->Initiate();
 
   // No exit initially:
   EXPECT_FALSE(context->Wait(milliseconds(10))) << "Core context completed prematurely";
@@ -136,9 +136,8 @@ public:
 };
 
 TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
   AutoRequired<CoreThread> ct;
-  ct->DelayUntilCanAccept();
 
   // Just create a CoreThread directly and have it pend some lambdas that will take awhile to run:
   auto called = std::make_shared<bool>(false);
@@ -153,9 +152,8 @@ TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
 }
 
 TEST_F(ContextCleanupTest, VerifyImmediateThreadCleanup) {
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
   AutoRequired<CoreThread> ct;
-  ct->DelayUntilCanAccept();
 
   // Just create a CoreThread directly and have it pend some lambdas that will take awhile to run:
   auto called = std::make_shared<bool>(false);
@@ -215,7 +213,7 @@ TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
   AutoRequired<TakesALongTimeToExit> longTime;
 
   // We want threads to run as soon as they are added:
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
 
   // Make the thread exit before the enclosing context exits:
   longTime->barr.wait();

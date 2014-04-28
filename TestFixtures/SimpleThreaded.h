@@ -20,9 +20,8 @@ class SimpleThreadedT:
   public SharedPtrReceiver<T>
 {
 public:
-  SimpleThreadedT(void) {
-    AcceptDispatchDelivery();
-  }
+  SimpleThreadedT(void) {}
+
   Deferred OnEvent(std::shared_ptr<T> obj) override {
     return Deferred(this);
   }
