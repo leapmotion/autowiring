@@ -64,95 +64,20 @@ void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
   // Pull the ready thunk off of the front of the queue and pop it while we hold the lock.
   // Then, we will excecute the call while the lock has been released so we do not create
   // deadlocks.
-  DispatchThunkBase* thunk = m_dispatchQueue.front();
+  std::unique_ptr<DispatchThunkBase> thunk(m_dispatchQueue.front());
   m_dispatchQueue.pop_front();
   bool wasEmpty = m_dispatchQueue.empty();
   lk.unlock();
 
-  auto generalCleanup = MakeAtExit(
-    [this, thunk, wasEmpty] {
-      delete thunk;
-
+  MakeAtExit(
+    [this, wasEmpty] {
       // If we emptied the queue, we'd like to reobtain the lock and tell everyone
       // that the queue is now empty.
       if(wasEmpty)
         m_queueUpdated.notify_all();
     }
-  );
-
-  (*thunk)();
-}
-
-bool DispatchQueue::WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost::chrono::high_resolution_clock::time_point wakeTime) {
-  if(m_aborted)
-    throw dispatch_aborted_exception();
-
-  while(m_dispatchQueue.empty()) {
-    // Derive a wakeup time using the high precision timer:
-    wakeTime = SuggestSoonestWakeupTimeUnsafe(wakeTime);
-
-    // Now we wait, either for the timeout to elapse or for the dispatch queue itself to
-    // transition to the "aborted" state.
-    boost::cv_status status = m_queueUpdated.wait_until(lk, wakeTime);
-
-    // Short-circuit if the queue was aborted
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-
-    // Pull over any ready events:
-    PromoteReadyEventsUnsafe();
-
-    // Dispatch events if the queue is now non-empty:
-    if(!m_dispatchQueue.empty())
-      break;
-
-    if(status == boost::cv_status::timeout)
-      // Can't proceed, queue is empty and nobody is ready to be run
-      return false;
-  }
-
-  DispatchEventUnsafe(lk);
-  return true;
-}
-
-void DispatchQueue::WaitForEvent(void) {
-  boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-  if(m_aborted)
-    throw dispatch_aborted_exception();
-
-  // Unconditional delay:
-  m_queueUpdated.wait(lk, [this] () -> bool {
-    if(m_aborted)
-      throw dispatch_aborted_exception();
-
-    return
-      // We will need to transition out if the delay queue receives any items:
-      !this->m_delayedQueue.empty() ||
-
-      // We also transition out if the dispatch queue has any events:
-      !this->m_dispatchQueue.empty();
-  });
-
-  if(m_dispatchQueue.empty())
-    // The delay queue has items but the dispatch queue does not, we need to switch
-    // to the suggested sleep timeout variant:
-    WaitForEventUnsafe(lk, m_delayedQueue.top().GetReadyTime());
-  else
-    // We have an event, we can just hop over to this variant:
-    DispatchEventUnsafe(lk);
-}
-
-bool DispatchQueue::WaitForEvent(boost::chrono::milliseconds milliseconds) {
-  return WaitForEvent(boost::chrono::high_resolution_clock::now() + milliseconds);
-}
-
-bool DispatchQueue::WaitForEvent(boost::chrono::high_resolution_clock::time_point wakeTime) {
-  if(wakeTime == boost::chrono::steady_clock::time_point::max())
-    // Maximal wait--we can optimize by using the zero-arguments version
-    return WaitForEvent(), true;
-
-  boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-  return WaitForEventUnsafe(lk, wakeTime);
+  ),
+	(*thunk)();
 }
 
 bool DispatchQueue::DispatchEvent(void) {
@@ -163,3 +88,7 @@ bool DispatchQueue::DispatchEvent(void) {
   DispatchEventUnsafe(lk);
   return true;
 }
+
+// DEPRECATED member functions
+bool DispatchQueue::CanAccept() const {return true;}
+bool DispatchQueue::DelayUntilCanAccept() {return true;}

@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "ContextCreatorTest.h"
 #include "ContextCreator.h"
+#include "CoreContext.h"
+#include "CoreThread.h"
 #include <string>
 
 struct EvictionContext {};
@@ -125,7 +127,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
       });
 
       // Kick off the context:
-      ctxt->InitiateCoreThreads();
+      ctxt->Initiate();
     }
 
     // Signal all members and then release everything:

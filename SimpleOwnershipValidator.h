@@ -2,7 +2,7 @@
 #include <vector>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 /// <summary>
 /// An ownership validator class, used to guarantee shared pointer expiration in its dtor

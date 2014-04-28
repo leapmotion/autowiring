@@ -1,18 +1,18 @@
 #pragma once
+#include "Decompose.h"
+#include "Deserialize.h"
 #include <string>
 #include <sstream>
 #include <memory>
 #include <deque>
 #include <map>
 #include <typeinfo>
-#include "Decompose.h"
-#include "Deserialize.h"
 
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 #include TYPE_TRAITS_HEADER
 
 #ifndef EnableIdentity
-#define EnableIdentity(x) SpecialAssign<decltype(x), x> (#x) 
+#define EnableIdentity(x) SpecialAssign<decltype(x), x> (#x)
 #endif
 
 template <class T>
@@ -43,7 +43,7 @@ struct Expression<R(W::*)(ToBindArgs...) >: public ExpressionBase
   void DeserializeAndForward(std::deque<std::string> & d){
     DeserializeAndForward(d, typename Auto::make_index_tuple<ToBindArgs...>::type());
   }
-  
+
   template<unsigned... I>
   void DeserializeAndForward(std::deque<std::string> & d, Auto::index_tuple<I...>){
     auto it = d.begin();
@@ -63,17 +63,17 @@ public:
 
 private:
   std::map<std::string, std::shared_ptr<ExpressionBase> > m_EventMap;
-  
+
 public:
   EventInputStream(){}
-  
+
   /// <summary>
   /// Returns true if memfn is enabled, otherwise false.
   /// </summary>
   bool IsEnabled(std::string str) {
     return !(m_EventMap.find(str) == m_EventMap.end());
   }
- 
+
   /// <summary>
   /// Enables a new event for deserialization via its identity
   /// </summary>
@@ -111,9 +111,9 @@ public:
 
     std::string query = d[0];
     d.pop_front(); // Now a list of arguments
-    
+
     auto find1 = m_EventMap.find(query);
-    if (find1 != m_EventMap.end()) 
+    if (find1 != m_EventMap.end())
     {
       auto evt = find1 -> second;
       evt->DeserializeAndForward(d);

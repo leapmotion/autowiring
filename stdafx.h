@@ -6,12 +6,6 @@
 #include <assert.h>
 #include "ocuConfig.h"
 
-#if defined(_DEBUG) && 0
-  #define ENABLE_NETWORK_MONITOR 1
-#else
-  #define ENABLE_NETWORK_MONITOR 0
-#endif
-
 #ifndef _MSC_VER
   #include <stdlib.h>
 #endif

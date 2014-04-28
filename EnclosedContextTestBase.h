@@ -10,7 +10,7 @@
 /// </summary>
 /// <remarks>
 /// Created subcontexts will be terminated and waited upon in the destructor, by default.  Contexts
-/// must exit within 100ms of being signalled to stop, or an error will result in order to ensure
+/// must exit within 250ms of being signalled to stop, or an error will result in order to ensure
 /// tests complete in a timely fashion.  If a longer stop duration is desired, you must provide a
 /// destructor which performs teardown in a different way.
 /// </remarks>
@@ -33,7 +33,7 @@ public:
     ctxt->SignalShutdown();
 
     // Do not allow teardown to take more than a millisecond
-    if(!ctxt->Wait(static_cast<boost::chrono::duration<double, boost::milli> >(100.))) {
+    if(!ctxt->Wait(boost::chrono::milliseconds(250))) {
       // Critical error--took too long to tear down
       assert(false);
     }

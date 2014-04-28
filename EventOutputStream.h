@@ -2,14 +2,12 @@
 
 #include "Decompose.h"
 #include "Deserialize.h"
-#include <vector>
 #include <map>
 #include <memory>
 #include <string>
-#include <iostream>
 #include <sstream>
 
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 #include TYPE_TRAITS_HEADER
 
 #ifndef EnableIdentity
@@ -82,7 +80,6 @@ public:
   //SFINAE STUB OUT: replace with check_if overloads <<
   typename std::enable_if<!std::is_same<Arg1, std::basic_string<char> const *>::value && !std::is_base_of<Auto::Serialize, Arg1>::value, void >::type
     SerializeMethod(Arg1 & arg1){
-      std::cout << "Hi! Fall through case does nothing" << std::endl;
       assert(false);
       //static_assert(false, "Fundamental belief about serialized argument types violated");
     }

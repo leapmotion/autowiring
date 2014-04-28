@@ -5,7 +5,7 @@
 #include <boost/thread/mutex.hpp>
 #include <set>
 #include RVALUE_HEADER
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 template<class T>
 struct NoOp {
@@ -21,8 +21,7 @@ struct Create {
 /// Templated base class for implementors who wish to have more direct control over Reset and Allocate
 /// </summary>
 template<class T>
-class ObjectPoolBase:
-  public Object
+class ObjectPoolBase
 {
 public:
   ObjectPoolBase(size_t limit = ~0, size_t maxPooled = ~0) :
