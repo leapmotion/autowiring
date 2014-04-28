@@ -557,7 +557,7 @@ public:
   /// True if the sigil type of this CoreContext matches the specified sigil type
   /// </returns>
   template<class Sigil>
-  bool Is(void) const { return m_sigil == typeid(Sigil); }
+  bool Is(void) const { return GetSigilType() == typeid(Sigil); }
 
   /// <returns>
   /// A list of descendant contexts whose sigil type matches the specified sigil type
