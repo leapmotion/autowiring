@@ -158,22 +158,16 @@ public:
     return *this;
   }
 
-  AutoInjectable operator+(AutoInjectable&& rhs) {
-    auto pLast = &pFLink;
-    while(*pLast)
-      pLast = &(*pLast)->pFLink;
-
-    *pLast = new AutoInjectable(std::forward<AutoInjectable>(rhs));
-    return *this;
+  AutoInjectable operator+(AutoInjectable&& rhs) const {
+    AutoInjectable retVal(*this);
+    retVal += std::move(rhs);
+    return retVal;
   }
 
-  AutoInjectable operator+(const AutoInjectable& rhs) {
-    auto pLast = &pFLink;
-    while(*pLast)
-      pLast = &(*pLast)->pFLink;
-
-    *pLast = new AutoInjectable(rhs);
-    return *this;
+  AutoInjectable operator+(const AutoInjectable& rhs) const {
+    AutoInjectable retVal(*this);
+    retVal += rhs;
+    return retVal;
   }
 
   void operator=(AutoInjectable&& rhs) {
