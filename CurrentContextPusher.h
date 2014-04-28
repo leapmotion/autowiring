@@ -1,5 +1,5 @@
 #pragma once
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 class CoreContext;
 class GlobalCoreContext;

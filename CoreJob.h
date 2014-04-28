@@ -11,30 +11,46 @@ class CoreJob:
   public DispatchQueue,
   public CoreRunnable
 {
-private:
-  //Hold on to this so CoreContext knows we still exist
-  std::shared_ptr<Object> m_outstanding;
-  
-  // CoreTheads have been started, so start dispatching
-  bool m_running;
-  
-  boost::mutex m_jobLock;
-  boost::condition_variable m_jobUpdate;
-  
-  std::future<void> m_prevEvent;
-  
-protected:
-  // DispatchQueue overrides
-  void FireEvent(std::unique_ptr<DispatchThunkBase>) override;
-  void OnPended(boost::unique_lock<boost::mutex>&&) override;
-
 public:
   CoreJob(const char* name = nullptr);
   virtual ~CoreJob(){};
+
+private:
+  // Hold on to this so CoreContext knows we still exist
+  std::shared_ptr<Object> m_outstanding;
+  
+  // Flag, set to true when it's time to start dispatching
+  bool m_running;
+
+  // Flag, set to stop when we should stop running
+  bool m_shouldStop;
+  
+  // The current outstanding async in the thread pool, if one exists:
+  std::future<void> m_curEvent;
+
+	// Flag, indicating whether curEvent is in a teardown pathway.  This
+	// flag is highly stateful.
+	bool m_curEventInTeardown;
+
+  /// <summary>
+  /// Invokes DispatchAllEvents and safely nullifies the current event
+  /// </summary>
+  void DispatchAllAndClearCurrent(void);
+
+protected:
+  // DispatchQueue overrides
+  void OnPended(boost::unique_lock<boost::mutex>&&) override;
+
+  // Resets the outstanding pointer, calls base abort routine
+  void Abort(void);
+
+public:
+  // Accessor methods:
+  bool ShouldStop(void) const { return m_shouldStop; }
   
   // "CoreRunnable" overrides
   bool Start(std::shared_ptr<Object> outstanding) override;
-  void Stop(bool graceful=false) override;
-  bool IsRunning(void) const override;
+  void Stop(bool graceful) override;
+  bool IsRunning(void) const override { return m_running; }
   void Wait(void) override;
 };
