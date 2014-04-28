@@ -37,6 +37,8 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent) :
 // Peer Context Constructor. Called interally by CreatePeer
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer) :
   m_pParent(pParent),
+  m_initiated(false),
+  m_isShutdown(false),
   m_junctionBoxManager(pPeer->m_junctionBoxManager)
 {
 }
@@ -129,7 +131,15 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
 
   // Event receivers:
   if(traits.pRecvr) {
-    AddEventReceiver(traits.pRecvr);
+    JunctionBoxEntry<EventReceiver> entry(this, traits.pRecvr);
+
+    // Add to our vector of local receivers first:
+    (boost::lock_guard<boost::mutex>)m_lock,
+    m_eventReceivers.push_back(entry);
+
+    // Recursively add to all junction box managers up the stack:
+    AddEventReceiver(entry);
+
     glbl->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *traits.pRecvr);
   }
 
@@ -318,14 +328,18 @@ void CoreContext::BuildCurrentState(void) {
     glbl->Invoke(&AutowiringEvents::NewExceptionFilter)(*this, **filter);
   }
 
-  //Event Receivers
-  for (auto receiver = m_eventReceivers.begin(); receiver != m_eventReceivers.end(); ++receiver) {
+  // Locally known receivers
+  for (auto receiver = m_eventReceivers.begin(); receiver != m_eventReceivers.end(); ++receiver)
     glbl->Invoke(&AutowiringEvents::NewEventReceiver)(*this, *receiver->m_ptr);
-  }
 
   boost::lock_guard<boost::mutex> lk(m_lock);
-  for (auto c = m_children.begin(); c != m_children.end(); ++c) {
-    c->lock()->BuildCurrentState();
+  for(auto c = m_children.begin(); c != m_children.end(); ++c) {
+    auto cur = c->lock();
+    if(!cur)
+      continue;
+
+    // Recurse into the child instance:
+    cur->BuildCurrentState();
   }
 }
 
@@ -511,11 +525,7 @@ void CoreContext::AddDelayedEventReceivers(iter first, iter last) {
 
 
 void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
-  {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_eventReceivers.erase(pRecvr);
-  }
-
+  (boost::lock_guard<boost::mutex>)m_lock,
   m_junctionBoxManager->RemoveEventReceiver(pRecvr);
 
   // Delegate to the parent:
@@ -527,11 +537,8 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     for(auto q = first; q != last; q++)
-      m_eventReceivers.erase(*q);
+      m_junctionBoxManager->RemoveEventReceiver(*q);
   }
-
-  for(auto q = first; q != last; q++)
-    m_junctionBoxManager->RemoveEventReceiver(*q);
 
   // Detour to the parent collection (if necessary)
   if(m_pParent)
