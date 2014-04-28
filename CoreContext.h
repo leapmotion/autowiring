@@ -131,7 +131,7 @@ protected:
   std::vector<ExceptionFilter*> m_filters;
 
   // All known event receivers and receiver proxies originating from this context:
-  typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
+  typedef std::vector<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
   
   // List of eventReceivers to be added when this context in initiated
@@ -257,16 +257,6 @@ protected:
   /// <param name="pRecvr">The junction box entry corresponding to the receiver type</param>
   void AddEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
 
-  /// <summary>
-  /// Adds the named event receiver to the collection of known receivers
-  /// </summary>
-  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    JunctionBoxEntry<EventReceiver> entry(this, pRecvr);
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_eventReceivers.insert(entry);
-    AddEventReceiver(entry);
-  }
-  
   /// <summary>
   /// Add delayed event receivers
   /// </summary>
