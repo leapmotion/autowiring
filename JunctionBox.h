@@ -43,6 +43,12 @@ struct JunctionBoxEntry
   CoreContext* const m_owner;
   std::shared_ptr<T> m_ptr;
 
+  JunctionBoxEntry& operator=(const JunctionBoxEntry& rhs) {
+    // This shouldn't be used. non-c++11 containers require this...
+    throw std::runtime_error("Can't copy a JunctionBoxEntry");
+    return *this;
+  }
+
   bool operator==(const JunctionBoxEntry& rhs) const {
     return m_ptr == rhs.m_ptr;
   }
