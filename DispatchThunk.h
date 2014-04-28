@@ -1,6 +1,5 @@
 #pragma once
 #include <boost/chrono/system_clocks.hpp>
-#include UNIQUE_PTR_HEADER
 
 /// <summary>
 /// A simple virtual class used to hold a trivial thunk
@@ -39,23 +38,33 @@ public:
   /// When this dispatch thunk becomes ready, the associated thunk will be pushed to the back to the owning dispatch queue's
   /// ready queue.
   /// </remarks>
-  DispatchThunkDelayed(boost::chrono::high_resolution_clock::time_point readyAt, std::unique_ptr<DispatchThunkBase> thunk) :
+  DispatchThunkDelayed(boost::chrono::high_resolution_clock::time_point readyAt, DispatchThunkBase* thunk) :
     m_readyAt(readyAt),
-    m_thunk(std::move(thunk))
+    m_thunk(thunk)
   {}
 
   DispatchThunkDelayed(DispatchThunkDelayed&& rhs) :
     m_readyAt(rhs.m_readyAt),
-    m_thunk(std::move(rhs.m_thunk))
-  {}
+    m_thunk(rhs.m_thunk)
+  {
+    rhs.m_thunk = nullptr;
+  }
   
-  DispatchThunkDelayed(const DispatchThunkDelayed&)=delete;
+  DispatchThunkDelayed(const DispatchThunkDelayed& rhs) :
+    m_readyAt(rhs.m_readyAt),
+    m_thunk(rhs.m_thunk)
+  {}
+
+  // Little bit of a hack to support non-C++11
+  void Reset(void) {
+    if(m_thunk)
+      delete m_thunk;
+  }
 
 private:
   // The time when the thunk becomes ready-to-execute
   boost::chrono::high_resolution_clock::time_point m_readyAt;
-  // mutable so this class can be removed from a priority queue.
-  mutable std::unique_ptr<DispatchThunkBase> m_thunk;
+  DispatchThunkBase* m_thunk;
 
 public:
   // Accessor methods:
@@ -64,20 +73,21 @@ public:
   /// <summary>
   /// Extracts the underlying thunk
   /// </summary>
-  /// <remarks>
-  /// Not really const, but has to be to remove from priority queue.
-  /// </remarks>
-  std::unique_ptr<DispatchThunkBase> Get(void) const {
-    return std::move(m_thunk);
+  DispatchThunkBase* Get(void) const {
+    return m_thunk;
   }
 
   DispatchThunkDelayed& operator=(DispatchThunkDelayed&& rhs) {
     m_readyAt = rhs.m_readyAt;
-    m_thunk = std::move(rhs.m_thunk);
+    std::swap(m_thunk, rhs.m_thunk);
     return *this;
   }
   
-  DispatchThunkDelayed& operator=(const DispatchThunkDelayed& rhs)=delete;
+  DispatchThunkDelayed& operator=(const DispatchThunkDelayed& rhs) {
+    m_readyAt = rhs.m_readyAt;
+    m_thunk = rhs.m_thunk;
+    return *this;
+  }
 
   /// <summary>
   /// Operator overload, used to sequence delayed dispatch thunks
