@@ -166,10 +166,6 @@ TEST_F(BoltTest, VerifyMultipleInjection) {
   }
 }
 
-struct ShouldFail:
-  Boltable<Pipeline,OtherContext,void>
-{};
-
 TEST_F(BoltTest, EmptyBolt) {
   AutoEnable<InjectsIntoEverything>();
   Autowired<CountObject> so;
