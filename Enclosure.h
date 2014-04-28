@@ -1,10 +1,21 @@
 #pragma once
 #include "Autowired.h"
+#include "ObjectPool.h"
 
 class EnclosureBase
 {
 public:
+  EnclosureBase(void) :
+    m_isInitialized(false)
+  {}
   virtual ~EnclosureBase(void) {}
+
+protected:
+  // Set if the internally held object is currently initialized
+  bool m_isInitialized;
+
+public:
+  bool IsInitialized(void) const { return m_isInitialized; }
 
   // Causes this object to be released and memory potentially reclaimed, where possible
   // The corresponding slot will appear empty, and any attempts to extract a pointer will
@@ -20,9 +31,9 @@ class Enclosure:
   public EnclosureBase
 {
 public:
-  Enclosure(void) {}
   ~Enclosure(void) {}
 
+public:
   virtual void operator=(T&& rhs) = 0;
   virtual T* get(void) = 0;
 };
@@ -39,54 +50,55 @@ class EnclosureImpl:
 {
 public:
   EnclosureImpl(void) :
-    m_isInitialized(false)
+    heldRef((T&) m_held[0])
   {}
 
   EnclosureImpl(const T& held) :
-    m_isInitialized(false),
-    m_held(held)
+    m_held(held),
+    heldRef((T&) m_held[0])
   {}
 
   EnclosureImpl(T&& held) :
-    m_isInitialized(true)
+    heldRef((T&) m_held[0])
   {
+    this->m_isInitialized = true;
     new (m_held) T(std::move(held));
   }
 
   ~EnclosureImpl(void) {
-    if(m_isInitialized)
+    if(this->m_isInitialized)
       ((T*) m_held)->~T();
   }
 
 private:
-  bool m_isInitialized;
   unsigned char m_held[sizeof(T)];
+  T& heldRef;
 
 public:
   // Causes this object to be released and memory potentially reclaimed, where possible
   virtual void Release(void) override {
-    if(m_isInitialized)
+    if(this->m_isInitialized)
       ((T*) m_held)->~T();
-    m_isInitialized = false;
+    this->m_isInitialized = false;
   }
 
   // Causes the held object by this enclosure to be reinitialized
   virtual void Reset(void) override {
-    if(!m_isInitialized)
+    if(!this->m_isInitialized)
       new (m_held) T();
-    m_isInitialized = true;
+    this->m_isInitialized = true;
   }
 
   void operator=(T&& rhs) override {
-    if(m_isInitialized)
+    if(this->m_isInitialized)
       (T&) *this = std::move(rhs);
     else {
-      m_isInitialized = true;
+      this->m_isInitialized = true;
       new (m_held) T(std::move(rhs));
     }
   }
 
-  T* get(void) override { return m_isInitialized ? (T*) m_held : nullptr; }
+  T* get(void) override { return this->m_isInitialized ? (T*) m_held : nullptr; }
 };
 
 template<class T>

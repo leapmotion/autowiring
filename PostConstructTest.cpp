@@ -28,8 +28,7 @@ public:
 };
 
 // For testing NotifyWhenAutowired with heirarchies
-class Interface :
-  public virtual Object //NOTE - this is required if you want to listen for the Interface being wired
+class Interface
 {
 public:
   virtual int GetValue() = 0;

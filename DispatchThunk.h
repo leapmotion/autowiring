@@ -1,7 +1,5 @@
 #pragma once
 #include <boost/chrono/system_clocks.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/mutex.hpp>
 
 /// <summary>
 /// A simple virtual class used to hold a trivial thunk
@@ -43,8 +41,7 @@ public:
   DispatchThunkDelayed(boost::chrono::high_resolution_clock::time_point readyAt, DispatchThunkBase* thunk) :
     m_readyAt(readyAt),
     m_thunk(thunk)
-  {
-  }
+  {}
 
   DispatchThunkDelayed(DispatchThunkDelayed&& rhs) :
     m_readyAt(rhs.m_readyAt),

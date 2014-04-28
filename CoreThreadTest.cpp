@@ -27,8 +27,7 @@ public:
 
     m_hit = false;
 
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    m_stateCondition.wait(lk, [this] () {return ShouldStop();});
+    CoreThread::Run();
   }
 };
 
@@ -36,10 +35,10 @@ TEST_F(CoreThreadTest, VerifyStartSpam) {
   // Create our thread class:
   AutoRequired<SpamguardTest> instance;
 
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
 
   // This shouldn't cause another thread to be created:
-  instance->Start(std::shared_ptr<Object>(new Object));
+  instance->Start(std::shared_ptr<Object>((Object*) 1, [] (Object*) {}));
 
   EXPECT_FALSE(instance->m_multiHit) << "Thread was run more than once unexpectedly";
 }
@@ -49,7 +48,6 @@ class InvokesIndefiniteWait:
 {
 public:
   virtual void Run(void) override {
-    AcceptDispatchDelivery();
 
     // Wait for one event using an indefinite timeout, then quit:
     WaitForEvent(boost::chrono::steady_clock::time_point::max());
@@ -58,7 +56,7 @@ public:
 
 TEST_F(CoreThreadTest, VerifyIndefiniteDelay) {
   AutoRequired<InvokesIndefiniteWait> instance;
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
 
   // Verify that the instance does not quit until we pend something:
   ASSERT_FALSE(instance->WaitFor(boost::chrono::milliseconds(10))) << "Thread instance exited prematurely, when it should have been waiting indefinitely";
@@ -76,12 +74,12 @@ TEST_F(CoreThreadTest, VerifyNestedTermination) {
     AutoCreateContext outer;
     CurrentContextPusher outerPshr(outer);
     AutoRequired<SimpleThreaded>();
-    outer->InitiateCoreThreads();
+    outer->Initiate();
 
     {
       AutoCreateContext ctxt;
       CurrentContextPusher pshr(ctxt);
-      ctxt->InitiateCoreThreads();
+      ctxt->Initiate();
       st = AutoRequired<SimpleThreaded>();
     }
   }
@@ -130,8 +128,7 @@ TEST_F(CoreThreadTest, VerifyDispatchQueueShutdown) {
   AutoRequired<ListenThread> listener;
   try
   {
-    ctxt->InitiateCoreThreads();
-    listener->DelayUntilCanAccept();
+    ctxt->Initiate();
 
     AutoFired<SleepEvent> evt;
 
@@ -157,8 +154,7 @@ TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
   std::weak_ptr<std::string> watcher(value);
   try
   {
-    ctxt->InitiateCoreThreads();
-    listener->DelayUntilCanAccept();
+    ctxt->Initiate();
 
     *listener += [value] { throw std::exception(); };
     value.reset();
@@ -171,7 +167,7 @@ TEST_F(CoreThreadTest, VerifyNoLeakOnExecptions) {
 
 TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
   // Run our threads immediately, no need to wait
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
 
   // Create a thread which we'll use just to pend dispatch events:
   AutoRequired<CoreThread> t;
@@ -181,7 +177,6 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
 
   // Delay until the dispatch loop is actually running, then wait an additional 1ms to let the
   // WaitForEvent call catch on:
-  t->DelayUntilCanAccept();
   boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 
   // These are flags--we'll set them to true as the test proceeds
@@ -199,14 +194,13 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
 }
 
 TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
 
   // We won't actually be referencing this, we just want to make sure it's not destroyed early
   std::shared_ptr<bool> x(new bool);
 
   // This deferred pend will never actually be executed:
   AutoRequired<CoreThread> t;
-  t->DelayUntilCanAccept();
   *t += boost::chrono::hours(1), [x] {};
 
   // Verify that we have exactly one pended event at this point.
@@ -219,7 +213,7 @@ TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
 
 TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
   // Immediately pend threads:
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
 
   // Some variables that we will set to true as the test proceeds:
   std::shared_ptr<bool> x(new bool(false));
@@ -229,7 +223,6 @@ TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
   // pend an event that won't happen for awhile, in order to trick the dispatch queue into waiting for
   // a lot longer than it should for the next event.
   AutoRequired<CoreThread> t;
-  t->DelayUntilCanAccept();
   *t += boost::chrono::hours(1), [x] { *x = true; };
 
   // Now pend an event that will be ready just about right away:
@@ -246,7 +239,7 @@ TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
 }
 
 TEST_F(CoreThreadTest, VerifyTimedSort) {
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
   AutoRequired<CoreThread> t;
 
   std::vector<size_t> v;
@@ -261,16 +254,15 @@ TEST_F(CoreThreadTest, VerifyTimedSort) {
     *t += boost::chrono::milliseconds(i * 3), [&v, i] { v.push_back(i); };
 
   // Delay 50ms for the thread to finish up.  Technically this is 11ms more than we need.
-  boost::this_thread::sleep_for(boost::chrono::seconds(1));
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(75));
 
   // Verify that the resulting vector is sorted.
   ASSERT_TRUE(std::is_sorted(v.begin(), v.end())) << "A timed sort implementation did not generate a sorted sequence as expected";
 }
 
 TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
   AutoRequired<CoreThread> t;
-  t->DelayUntilCanAccept();
 
   // Pend by an absolute time point, nothing really special here
   std::shared_ptr<bool> x(new bool(false));
@@ -278,7 +270,7 @@ TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
 
   // Verify that we hit this after one ms of delay
   ASSERT_FALSE(*x) << "A timepoint-based delayed dispatch was invoked early";
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(2));
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
   ASSERT_TRUE(*x) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
 }
 
@@ -311,7 +303,7 @@ TEST_F(CoreThreadTest, VerifyCanBoostPriority) {
   // Create two spinners and kick them off at the same time:
   AutoRequired<JustIncrementsANumber<ThreadPriority::Normal>> lower;
   AutoRequired<JustIncrementsANumber<ThreadPriority::AboveNormal>> higher;
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
 
   // Poke the conditional variable a lot:
   AutoRequired<boost::mutex> contended;
@@ -344,95 +336,3 @@ TEST_F(CoreThreadTest, VerifyCanBoostPriority) {
 #else
 #pragma message "Warning:  SetThreadPriority not implemented on Unix"
 #endif
-
-enum class PlayerName {
-  PingPlayer,
-  PongPlayer
-};
-
-class PingPongGame {
-public:
-  PingPongGame(void) :
-    pingPongsRemaining(1000)
-  {}
-
-  int pingPongsRemaining;
-
-  /// <returns>True when the game is over</returns>
-  bool IsDone(void) const { return pingPongsRemaining <= 0; }
-
-  // Hits the ball to the other player:
-  void Hit(void) {
-    pingPongsRemaining--;
-  }
-};
-
-template<PlayerName player>
-class PingPongPlayer:
-  public CoreThread
-{
-public:
-  static const PlayerName s_otherPlayer = player == PlayerName::PingPlayer ? PlayerName::PongPlayer : PlayerName::PingPlayer;
-
-private:
-  Autowired<PingPongGame> game;
-  Autowired<PingPongPlayer<s_otherPlayer>> other;
-
-  // The number of hits remaining when we last hit the ball:
-  int localHitCount;
-
-  // Our internal lock and cv:
-  boost::mutex m_lock;
-  boost::condition_variable m_cv;
-
-public:
-  // Notifies this player that the ping pong ball is on the way
-  void Pass(void) {
-    m_cv.notify_all();
-  }
-
-  void Run(void) override {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-
-    while(
-      m_cv.wait_for(
-        lk,
-        boost::chrono::seconds(3),
-        [this] { return localHitCount != game->pingPongsRemaining; }
-      )
-    ) {
-      // If the game is done then we just end here:
-      if(game->IsDone())
-        return;
-
-      // Hit the ball:
-      game->Hit();
-
-      // Tell the other player:
-      other->Pass();
-
-      // Add some entropy:
-      boost::this_thread::sleep_for(boost::chrono::microseconds(rand() % 20));
-    }
-  }
-};
-
-TEST_F(CoreThreadTest, VerifyLocksNotRequired) {
-  // Set up the game:
-  AutoRequired<PingPongGame> game;
-
-  // Add the players:
-  AutoRequired<PingPongPlayer<PlayerName::PingPlayer>> pingPlayer;
-  AutoRequired<PingPongPlayer<PlayerName::PongPlayer>>();
-
-  // Kick off the game before starting threads:
-  game->Hit();
-  pingPlayer->Pass();
-
-  // Now we start threads and wait for things to wrap up:
-  m_create->InitiateCoreThreads();
-  m_create->Wait();
-
-  // See what happened:
-  ASSERT_EQ(0, game->pingPongsRemaining) << "Ping-pong failed";
-}

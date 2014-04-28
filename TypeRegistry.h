@@ -1,27 +1,22 @@
 #pragma once
 #include <typeinfo>
-#include "JunctionBox.h"
-#include FUNCTIONAL_HEADER
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
+
+template<class T>
+class JunctionBox;
 
 class JunctionBoxBase;
 
 struct TypeRegistryEntry {
-  TypeRegistryEntry(const std::type_info& ti, std::function<std::shared_ptr<JunctionBoxBase>(void)> factory);
+  TypeRegistryEntry(const std::type_info& ti, void(*factory)(std::shared_ptr<JunctionBoxBase>&));
 
   const TypeRegistryEntry* pFlink;
   const std::type_info& ti;
-  std::function<std::shared_ptr<JunctionBoxBase>(void)> m_NewJunctionBox;
+  void (*const m_NewJunctionBox)(std::shared_ptr<JunctionBoxBase>&);
 };
 
 extern const TypeRegistryEntry* g_pFirstEntry;
 extern size_t g_entryCount;
-
-///JunctionBox factory
-template<class T>
-std::shared_ptr<JunctionBox<T>> NewJunctionBox(){
-  return std::make_shared<JunctionBox<T>>();
-}
 
 /// <summary>
 /// Adds the specified type to the universal type registry
@@ -36,6 +31,14 @@ class RegType
 public:
   static const TypeRegistryEntry r;
 };
+
+// JunctionBox casting factory
+template<class T>
+void NewJunctionBox(std::shared_ptr<JunctionBoxBase>& out) {
+  out = std::static_pointer_cast<JunctionBoxBase>(
+    std::make_shared<JunctionBox<T>>()
+  );
+}
 
 template<class T>
 const TypeRegistryEntry RegType<T>::r(typeid(T), &NewJunctionBox<T>);

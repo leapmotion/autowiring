@@ -90,7 +90,7 @@ TEST_F(ExceptionFilterTest, ExceptionDestruction) {
   AutoRequired<ThrowsWhenRun<tracking_exception>> thrower;
 
   // Run:
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
   thrower->Wait();
 
   // Verify that the exception was destroyed the correct number of times:
@@ -116,7 +116,7 @@ TEST_F(ExceptionFilterTest, ThreadThrowsCheck) {
   AutoRequired<ThrowsWhenRun<custom_exception>> thrower;
 
   // Wait for the thrower to terminate, should be pretty fast:
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
   thrower->Wait();
 
   // Hopefully the filter got hit in the right spot:
@@ -126,6 +126,8 @@ TEST_F(ExceptionFilterTest, ThreadThrowsCheck) {
 }
 
 TEST_F(ExceptionFilterTest, SimpleFilterCheck) {
+  AutoCurrentContext()->Initiate();
+
   // Firing will occur at the parent context scope:
   AutoFired<ThrowingListener> broadcaster;
 
@@ -142,12 +144,13 @@ TEST_F(ExceptionFilterTest, SimpleFilterCheck) {
   EXPECT_TRUE(filter->m_fireSpecific) << "Filter was not invoked on a Fired exception";
 }
 
-TEST_F(ExceptionFilterTest, DISABLED_FireContainmentCheck) {
+TEST_F(ExceptionFilterTest, FireContainmentCheck) {
   // Firing will occur at the parent context scope:
   AutoFired<ThrowingListener> broadcaster;
 
   // Create a subcontext and add the fire thrower to it:
   AutoCreateContext ctxt;
+  ctxt->Initiate();
   ctxt->Inject<ThrowsWhenFired<>>();
 
   // Now cause the exception to occur:
@@ -170,7 +173,7 @@ TEST_F(ExceptionFilterTest, EnclosedThrowCheck) {
 
   // Create and start:
   AutoRequired<ThrowsWhenRun<custom_exception>> runThrower;
-  subCtxt->InitiateCoreThreads();
+  subCtxt->Initiate();
 
   // Wait for the exception to get thrown:
   subCtxt->Wait();
@@ -180,9 +183,11 @@ TEST_F(ExceptionFilterTest, EnclosedThrowCheck) {
 }
 
 TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
+  AutoCurrentContext()->Initiate();
+
   // Create a pair of classes which throw exceptions:
-  AutoRequired<ThrowsWhenFired<200>> v200;
-  AutoRequired<ThrowsWhenFired<201>> v201;
+  AutoRequired<ThrowsWhenFired<custom_exception, 200>> v200;
+  AutoRequired<ThrowsWhenFired<custom_exception, 201>> v201;
 
   // Now try to throw:
   AutoFired<ThrowingListener> tl;
@@ -193,7 +198,9 @@ TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
 }
 
 TEST_F(ExceptionFilterTest, ExceptionFirewall) {
-  AutoRequired<ThrowsWhenFired<200>> v200;
+  AutoCurrentContext()->Initiate();
+
+  AutoRequired<ThrowsWhenFired<custom_exception,200>> v200;
 
   // Try to throw, verify the return value.  The value should be false, because this particular type always
   // throws an exception in response to the receipt of an event.
@@ -202,13 +209,14 @@ TEST_F(ExceptionFilterTest, ExceptionFirewall) {
 }
 
 TEST_F(ExceptionFilterTest, VerifySimpleConfinement) {
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
 
   // Create a subcontext where the errant recipients will live:
   AutoCreateContext child;
-  child->Inject<ThrowsWhenFired<200>>();
+  child->Initiate();
+  child->Inject<ThrowsWhenFired<custom_exception, 200>>();
 
-  Autowired<ThrowsWhenFired<200>> twf;
+  Autowired<ThrowsWhenFired<custom_exception, 200>> twf;
   ASSERT_FALSE(twf) << "A member injected into a child context was incorrectly scoped at the parent context";
 
   // Cause the child context to throw an exception:
@@ -220,4 +228,8 @@ TEST_F(ExceptionFilterTest, VerifySimpleConfinement) {
 
   // Verify that the child scope was terminated as expected:
   EXPECT_TRUE(child->IsShutdown()) << "An event recipient in a child scope threw an exception and the child context was not correctly terminated";
+}
+
+TEST_F(ExceptionFilterTest, NoRecursiveShutdowns) {
+
 }

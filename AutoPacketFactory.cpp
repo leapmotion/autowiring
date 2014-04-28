@@ -28,7 +28,7 @@ void AutoPacketFactory::AutoPacketResetter::operator()(AutoPacket& packet) const
 AutoPacketFactory::AutoPacketFactory(void) {}
 
 AutoPacketFactory::AutoPacketFactory(std::shared_ptr<JunctionBox<AutoPacketListener>>&& apl) :
-  m_packets(~0, ~0, AutoPacketResetter(std::move(apl)))
+  m_packets(~0, ~0, AutoPacketResetter(AutoFired<AutoPacketListener>(apl)))
 {
   m_packets.SetAlloc(AutoPacketCreator(this));
 }
@@ -48,7 +48,7 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   return retVal;
 }
 
-void AutoPacketFactory::AddSubscriber(AutoPacketSubscriber&& rhs) {
+void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
   const std::type_info& ti = *rhs.GetSubscriberTypeInfo();
 
   // Determine whether this subscriber already exists--perhaps, it is formerly disabled

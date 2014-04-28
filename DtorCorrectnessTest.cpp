@@ -1,19 +1,19 @@
 #include "stdafx.h"
 #include "DtorCorrectnessTest.h"
-#include <iostream>
+#include "CoreThread.h"
+#include ATOMIC_HEADER
 
 using namespace std;
 
 class CtorDtorCopyCounter {
 public:
-  static int s_outstanding;
-  static size_t s_construction;
+  static std::atomic<int> s_outstanding;
+  static std::atomic<size_t> s_construction;
 
   CtorDtorCopyCounter(void) {
     s_outstanding++;
     s_construction++;
   }
-
   CtorDtorCopyCounter(const CtorDtorCopyCounter&) {
     s_outstanding++;
     s_construction++;
@@ -24,8 +24,8 @@ public:
   }
 };
 
-int CtorDtorCopyCounter::s_outstanding = 0;
-size_t CtorDtorCopyCounter::s_construction = 0;
+std::atomic<int> CtorDtorCopyCounter::s_outstanding;
+std::atomic<size_t> CtorDtorCopyCounter::s_construction;
 
 class CtorDtorListener:
   public virtual EventReceiver
@@ -43,9 +43,7 @@ public:
   MyCtorDtorListener(void):
     CoreThread("MyCtorDtorListener"),
     m_hitDeferred(false)
-  {
-    AcceptDispatchDelivery();
-  }
+  {}
 
   bool m_hitDeferred;
 
@@ -79,6 +77,8 @@ void DtorCorrectnessTest::SetUp(void) {
 void convert(int x);
 
 TEST_F(DtorCorrectnessTest, VerifyFiringDtors) {
+  AutoCurrentContext()->Initiate();
+
   // Try firing some events and validate the invariant:
   cdl(&CtorDtorListener::DoFired)(CtorDtorCopyCounter());
   EXPECT_LE(2UL, CtorDtorCopyCounter::s_construction) << "Counter constructors were not invoked the expected number of times when fired";
@@ -86,6 +86,7 @@ TEST_F(DtorCorrectnessTest, VerifyFiringDtors) {
 }
 
 TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
+  AutoCurrentContext()->Initiate();
   {
     CtorDtorCopyCounter tempCounter;
     ASSERT_EQ(1UL, CtorDtorCopyCounter::s_construction) << "Constructor count was not incremented correctly";
@@ -102,16 +103,12 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
   // Verify that the thread didn't exit too soon:
   ASSERT_FALSE(listener1->ShouldStop()) << "Thread was signalled to stop even though it should have been deferring";
 
-  // Spin until both threads are ready to accept:
-  ASSERT_TRUE(listener1->DelayUntilCanAccept()) << "First listener reported it could not accept";
-  ASSERT_TRUE(listener2->DelayUntilCanAccept()) << "Second listener reported it could not accept";
-
   // Now try deferring:
   cdl(&CtorDtorListener::DoDeferred)(CtorDtorCopyCounter());
 
   // Process all deferred elements and then check to see what we got:
   AutoCurrentContext ctxt;
-  ctxt->InitiateCoreThreads();
+  ctxt->Initiate();
   listener1->Stop(true);
   listener2->Stop(true);
   listener1->Wait();
@@ -127,6 +124,6 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
   listener2.reset();
 
   // Verify hit counts:
-  //EXPECT_LE(2UL, CtorDtorCopyCounter::s_construction) << "Counter constructors were not invoked the expected number of times when deferred";
+  EXPECT_LE(2UL, CtorDtorCopyCounter::s_construction) << "Counter constructors were not invoked the expected number of times when deferred";
   EXPECT_EQ(0, CtorDtorCopyCounter::s_outstanding) << "Counter mismatch under deferred events";
 }

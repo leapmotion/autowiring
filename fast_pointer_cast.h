@@ -1,4 +1,5 @@
 #pragma once
+#include MEMORY_HEADER
 #include TYPE_TRAITS_HEADER
 
 namespace leap {
