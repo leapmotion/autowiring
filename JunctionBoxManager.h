@@ -15,12 +15,6 @@ class CoreContext;
 /// General manager class of all junction boxes defined in some context
 /// </summary>
 class JunctionBoxManager {
-  typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
-  typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
-
-  // All EventOutputStreams objects known to this JunctionBoxManager:
-  std::map<std::type_index, std::vector<std::weak_ptr<EventOutputStreamBase>>> m_eventOutputStreams;
-
 public:
   JunctionBoxManager();
   virtual ~JunctionBoxManager();
@@ -117,5 +111,10 @@ public:
 
 
 protected:
+  // All EventOutputStreams objects known to this JunctionBoxManager:
+  std::map<std::type_index, std::vector<std::weak_ptr<EventOutputStreamBase>>> m_eventOutputStreams;
+
+  // All junction boxes known by this manager:
+  typedef std::unordered_map<std::type_index, std::shared_ptr<JunctionBoxBase>> t_junctionBoxes;
   t_junctionBoxes m_junctionBoxes;
 };
