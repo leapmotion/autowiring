@@ -9,11 +9,25 @@ DispatchQueue::DispatchQueue(void):
   m_dispatchCap(1024)
 {}
 
+DispatchQueue::~DispatchQueue(void) {
+  // Teardown:
+  for(auto q = m_dispatchQueue.begin(); q != m_dispatchQueue.end(); q++)
+    delete *q;
+  
+  while (!m_delayedQueue.empty()) {
+    DispatchThunkDelayed thunk = m_delayedQueue.top();
+    thunk.Reset();
+    m_delayedQueue.pop();
+  }
+}
+
 void DispatchQueue::Abort(void) {
   boost::lock_guard<boost::mutex> lk(m_dispatchLock);
   m_aborted = true;
 
   // Rip apart:
+  for(auto q = m_dispatchQueue.begin(); q != m_dispatchQueue.end(); q++)
+    delete *q;
   m_dispatchQueue.clear();
 
   // Wake up anyone who is still waiting:
@@ -50,25 +64,20 @@ void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
   // Pull the ready thunk off of the front of the queue and pop it while we hold the lock.
   // Then, we will excecute the call while the lock has been released so we do not create
   // deadlocks.
-  auto thunk = std::move(m_dispatchQueue.front());
+  std::unique_ptr<DispatchThunkBase> thunk(m_dispatchQueue.front());
   m_dispatchQueue.pop_front();
   bool wasEmpty = m_dispatchQueue.empty();
   lk.unlock();
 
-  auto generalCleanup = MakeAtExit(
+  MakeAtExit(
     [this, wasEmpty] {
       // If we emptied the queue, we'd like to reobtain the lock and tell everyone
       // that the queue is now empty.
       if(wasEmpty)
         m_queueUpdated.notify_all();
     }
-  );
-  
-  FireEvent(std::move(thunk));
-}
-
-void DispatchQueue::FireEvent(std::unique_ptr<DispatchThunkBase> thunk){
-  (*thunk)();
+  ),
+	(*thunk)();
 }
 
 bool DispatchQueue::DispatchEvent(void) {

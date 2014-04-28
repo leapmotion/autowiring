@@ -2,7 +2,7 @@
 #include "ContextMember.h"
 #include "CoreRunnable.h"
 #include <boost/chrono/duration.hpp>
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 using std::shared_ptr;
 
