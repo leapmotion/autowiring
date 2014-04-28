@@ -7,7 +7,7 @@
 #include <string>
 #include <sstream>
 
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 #include TYPE_TRAITS_HEADER
 
 #ifndef EnableIdentity

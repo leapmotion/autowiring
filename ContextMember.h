@@ -4,7 +4,7 @@
 #include "Object.h"
 #include "TeardownNotifier.h"
 #include <assert.h>
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 class CoreContext;
 

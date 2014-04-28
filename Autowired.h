@@ -4,8 +4,8 @@
 #include "AutowirableSlot.h"
 #include "GlobalCoreContext.h"
 #include "Decompose.h"
-#include <functional>
-#include UNIQUE_PTR_HEADER
+#include FUNCTIONAL_HEADER
+#include MEMORY_HEADER
 #include RVALUE_HEADER
 
 template<class T>
