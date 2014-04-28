@@ -180,7 +180,7 @@ TEST_F(DecoratorTest, VerifyInterThreadDecoration) {
   AutoCurrentContext ctxt;
 
   // Kick off all threads:
-  ctxt->InitiateCoreThreads();
+  ctxt->Initiate();
 
   // Obtain a packet for processing and decorate it:
   auto packet = factory->NewPacket();
@@ -334,6 +334,8 @@ TEST_F(DecoratorTest, VerifyReflexiveReciept) {
   AutoRequired<FilterD> filterD;
   AutoRequired<FilterE> filterE;
   Autowired<AutoPacketFactory> factory;
+
+  AutoCurrentContext()->Initiate();
 
   // Obtain a packet first:
   auto packet = factory->NewPacket();

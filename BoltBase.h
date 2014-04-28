@@ -6,7 +6,7 @@
 #include TYPE_INDEX_HEADER
 class CoreContext;
 
-typedef std::vector<std::type_index> t_TypeInfoVector;
+typedef const std::type_info*const* t_TypeInfoVector;
 
 /// <summary>
 /// </summary>
@@ -19,9 +19,9 @@ public:
   virtual ~BoltBase(void) {}
 
   /// <summary>
-  /// A convenience method to get a context name
+  /// Returns a null-termianted list of one (or more) sigil types that this bolt cares about
   /// </summary>
-  virtual const t_TypeInfoVector& GetContextSigils(void) = 0;
+  virtual const t_TypeInfoVector GetContextSigils(void) = 0;
 
   /// <summary>
   /// A notification broadcast when a context of the desired name has been created

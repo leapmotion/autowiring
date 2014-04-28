@@ -1,5 +1,5 @@
 #pragma once
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 class CoreContext;
 class GlobalCoreContext;
@@ -28,10 +28,11 @@ public:
   /// <summary>
   /// Provides the caller with a way to set the prior context current prior to the destruction of this instance
   /// </summary>
+  /// <returns>A reference to the context that was previously current</returns>
   /// <remarks>
   /// This method is idempotent
   /// </remarks>
-  void Pop(void);
+  std::shared_ptr<CoreContext> Pop(void);
 
 private:
   std::shared_ptr<CoreContext> m_prior;

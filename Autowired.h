@@ -4,8 +4,9 @@
 #include "AutowirableSlot.h"
 #include "GlobalCoreContext.h"
 #include "Decompose.h"
-#include <functional>
-#include <memory>
+#include FUNCTIONAL_HEADER
+#include MEMORY_HEADER
+#include RVALUE_HEADER
 
 template<class T>
 class Autowired;
@@ -80,16 +81,9 @@ public:
 /// </remarks>
 template<class T>
 class Autowired:
-  public AutowirableSlot,
-  public std::shared_ptr<T>
+  public AutowirableSlot<T>
 {
-  static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
-  static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
-
 public:
-  typedef T value_type;
-  typedef shared_ptr<T> t_ptrType;
-
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
   // If you are getting an error tracked to this line, ensure that class T is totally
   // defined at the point where the Autowired instance is constructed.  Generally,
@@ -114,16 +108,89 @@ public:
   //
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
 
-  Autowired(void):
-    AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>())
+  Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
+    AutowirableSlot<T>(ctxt->template ResolveAnchor<T>()),
+    m_pFirstChild(nullptr)
   {
-    AutowirableSlot::LockContext() -> Autowire(*this);
+    ctxt->Autowire(*this);
   }
 
-  Autowired(std::weak_ptr<CoreContext> ctxt):
-    AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>())
-  {
-    AutowirableSlot::LockContext() -> Autowire(*this);
+  ~Autowired(void) {
+    std::unique_ptr<DeferrableAutowiring> prior;
+    for(DeferrableAutowiring* cur = m_pFirstChild; cur; cur = cur->GetFlink())
+      prior.reset(cur);
+  }
+
+private:
+  // The first deferred child known to need registration:
+  AutowirableSlot<T>* m_pFirstChild;
+
+public:
+  operator T*(void) const {
+    return std::shared_ptr<T>::get();
+  }
+
+  operator bool(void) const {
+    return (AutowirableSlot<T>&) *this;
+  }
+
+  /// <summary>
+  /// Allows a lambda function to be called when this slot is autowired
+  /// </summary>
+  /// <remarks>
+  /// In contrast with CoreContext::NotifyWhenAutowired, the specified lambda will only be
+  /// called as long as this Autowired slot has not been destroyed.  If this slot is destroyed
+  /// beforehand, the lambda will never be invoked.
+  /// </remarks>
+  template<class Fn>
+  void NotifyWhenAutowired(Fn fn) {
+    // We pass a null shared_ptr, because we do not want this slot to attempt any kind of unregistration when
+    // it goes out of scope.  Instead, we will manage its entire registration lifecycle, and
+    // retain full ownership over the object until we need to destroy it.
+    auto newHead = new AutowirableSlotFn<Fn, T>(std::shared_ptr<CoreContext>(), std::forward<Fn>(fn));
+
+    // Append to our list:
+    newHead->SetFlink(m_pFirstChild);
+    m_pFirstChild = newHead;
+  }
+
+  // Base overrides:
+  bool TrySatisfyAutowiring(const std::shared_ptr<Object>& slot) override {
+    if(*this)
+      // Already assigned, this is an error
+      throw autowiring_error("Cannot invoke assign on a slot which is already assigned");
+
+    return !!((std::shared_ptr<T>&)*this = AutowirableSlot<T>::m_fast_pointer_cast(slot));
+  }
+
+  void Finalize(void) override {
+    // Carry the satisfaction to all of our autowirable slots.  If an exception is thrown
+    // here, we will allow our destructor to handle cleanup operations.
+    while(m_pFirstChild) {
+      // Allow the child to obtain a shared_ptr addref:
+      m_pFirstChild->SatisfyAutowiring(*this);
+
+      // Need to memoize flink, because Finalize has been defined as a self-destruct routine:
+      auto flink = m_pFirstChild->GetFlink();
+      m_pFirstChild->Finalize();
+      m_pFirstChild = static_cast<AutowirableSlot<T>*>(flink);
+    }
+  }
+};
+
+/// <summary>
+/// Similar to Autowired, but doesn't defer creation if types doesn't already exist
+/// </summary>
+template<class T>
+class AutowiredFast:
+  public std::shared_ptr<T>
+{
+public:
+  using std::shared_ptr<T>::operator=;
+
+  // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
+  AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()){
+    ctxt->FindByTypeRecursive(*this);
   }
 
   operator bool(void) const {
@@ -131,10 +198,10 @@ public:
   }
 
   operator T*(void) const {
-    return t_ptrType::get();
+    return std::shared_ptr<T>::get();
   }
 
-  bool IsAutowired(void) const override {return !!t_ptrType::get();}
+  bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
 };
 
 /// <summary>
@@ -151,76 +218,39 @@ public:
 /// </remarks>
 template<class T>
 class AutoRequired:
-  public AutowirableSlot,
   public std::shared_ptr<T>
 {
-  static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
-  static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
 public:
   using std::shared_ptr<T>::operator=;
-  typedef T value_type;
-  typedef shared_ptr<T> t_ptrType;
 
-  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-  // If you are getting an error tracked to this line, ensure that class T is totally
-  // defined at the point where the Autowired instance is constructed.  Generally,
-  // such errors are tracked to missing header files.  A common mistake, for instance,
-  // is to do something like this:
-  //
-  // class MyClass;
-  //
-  // struct MyStructure {
-  //   Autowired<MyClass> m_member;
-  // };
-  //
-  // At the time m_member is instantiated, MyClass is an incomplete type.  So, when the
-  // compiler tries to instantiate AutowiredCreator::Create (the function you're in right
-  // now!) it finds that it can't create a new instance of type MyClass because it has
-  // no idea how to construct it!
-  //
-  // This problem can be fixed two ways:  You can include the definition of MyClass before
-  // MyStructure is defined, OR, you can give MyStructure a nontrivial constructor, and
-  // then ensure that the definition of MyClass is available before the nontrivial
-  // constructor is defined.
-  //
-  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-
-  AutoRequired(void):
-    AutowirableSlot(CoreContext::CurrentContext() -> template ResolveAnchor<T>())
-  {
-    *this = AutowirableSlot::LockContext()->template Inject<T>();
-  }
-
-  AutoRequired(std::weak_ptr<CoreContext> ctxt):
-    AutowirableSlot(ctxt.lock() -> template ResolveAnchor<T>())
-  {
-    *this = AutowirableSlot::LockContext()->template Inject<T>();
-  }
+  // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
+  AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
+    std::shared_ptr<T>(ctxt->template Inject<T>())
+  {}
 
   operator bool(void) const {
     return IsAutowired();
   }
 
   operator T*(void) const {
-    return t_ptrType::get();
+    return std::shared_ptr<T>::get();
   }
 
-  bool IsAutowired(void) const override {return !!t_ptrType::get();}
+  bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
 };
 
 
 /// <summary>
-/// This class
+/// Convenience class to create an event firer. Also caches the associated JunctionBox
 /// </summary>
 template<class T>
   class AutoFired
 {
 public:
-  AutoFired(void) {
+  AutoFired(void):
+    m_junctionBox(CoreContext::CurrentContext()->GetJunctionBox<T>())
+  {
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
-
-    auto ctxt = CoreContext::CurrentContext();
-    m_junctionBox = ctxt->GetJunctionBox<T>();
   }
 
   /// <summary>

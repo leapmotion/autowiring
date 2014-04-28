@@ -1,5 +1,4 @@
 #pragma once
-#include "EventDispatcher.h"
 #include "EventReceiver.h"
 #include "DispatchThunk.h"
 #include <boost/thread/condition_variable.hpp>
@@ -7,6 +6,7 @@
 #include <queue>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
+#include MEMORY_HEADER
 
 class DispatchQueue;
 
@@ -25,8 +25,7 @@ class dispatch_aborted_exception:
 /// A DispatchQueue is a type of event receiver which allows for the reception of deferred events.
 /// </remarks>
 class DispatchQueue:
-  public virtual EventReceiver,
-  public EventDispatcher
+  public virtual EventReceiver
 {
 public:
   DispatchQueue(void);
@@ -44,8 +43,11 @@ protected:
   // The maximum allowed number of pended dispatches before pended calls start getting dropped
   int m_dispatchCap;
 
-private:
-  bool m_aborted;
+  // The dispatch queue proper:
+  std::list<DispatchThunkBase*> m_dispatchQueue;
+
+  // Priority queue of non-ready events:
+  std::priority_queue<DispatchThunkDelayed> m_delayedQueue;
 
   // A lock held when modifications to any element EXCEPT the first element must be made:
   boost::mutex m_dispatchLock;
@@ -53,11 +55,7 @@ private:
   // Notice when the dispatch queue has been updated:
   boost::condition_variable m_queueUpdated;
 
-  // The dispatch queue proper:
-  std::list<DispatchThunkBase*> m_dispatchQueue;
-
-  // Priority queue of non-ready events:
-  std::priority_queue<DispatchThunkDelayed> m_delayedQueue;
+  bool m_aborted;
 
   /// <summary>
   /// Recommends a point in time to wake up to check for events
@@ -69,7 +67,6 @@ private:
   /// </summary>
   void PromoteReadyEventsUnsafe(void);
 
-protected:
   /// <summary>
   /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
   /// </summary>
@@ -81,11 +78,6 @@ protected:
   void DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk);
 
   /// <summary>
-  /// An unsafe variant of WaitForEvent
-  /// </summary>
-  bool WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost::chrono::high_resolution_clock::time_point wakeTime);
-
-  /// <summary>
   /// Utility virtual, called whenever a new event is deferred
   /// </summary>
   /// <remarks>
@@ -93,24 +85,29 @@ protected:
   /// lock.  The queue is guaranteed to contain at least one element, and may potentially contain more.  The
   /// caller MUST NOT attempt to pend any more events during this call, or a deadlock could occur.
   /// </remarks>
-  virtual void OnPended(void) {}
+  virtual void OnPended(boost::unique_lock<boost::mutex>&& lk) {}
 
   /// <summary>
   /// Attaches an element to the end of the dispatch queue without any checks.
   /// </summary>
   template<class _Fx>
   void Pend(_Fx&& fx) {
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
     m_queueUpdated.notify_all();
 
-    OnPended();
+    OnPended(std::move(lk));
   }
-  
+
 public:
-  /// <summary>
+  /// <returns>
+  /// True if there are curerntly any dispatchers ready for execution--IE, DispatchEvent would return true
+  /// </returns>
+  bool AreAnyDispatchersReady(void) const { return !m_dispatchQueue.empty(); }
+
+  /// <returns>
   /// The total number of all ready and delayed events
-  /// </summary>
+  /// </returns>
   size_t GetDispatchQueueLength(void) const {return m_dispatchQueue.size() + m_delayedQueue.size();}
 
   /// <summary>
@@ -127,55 +124,42 @@ public:
   /// </remarks>
   void Abort(void);
 
-  /// <summary>
-  /// Blocks until a new dispatch event is added, dispatches that single event, and then returns
-  /// </summary>
-  void WaitForEvent(void) override;
-
-  /// <summary>
-  /// Timed version of WaitForEvent
-  /// </summary>
-  /// <returns>
-  /// False if the timeout period elapsed before an event could be dispatched, true otherwise
-  /// </returns>
-  bool WaitForEvent(boost::chrono::milliseconds milliseconds);
-
-  /// <summary>
-  /// Wakeup-point version of WaitForEvent
-  /// </summary>
-  /// <returns>
-  /// False if the timeout period elapsed before an event could be dispatched, true otherwise
-  /// </returns>
-  bool WaitForEvent(boost::chrono::high_resolution_clock::time_point wakeTime);
-
+protected:
   /// <summary>
   /// Similar to WaitForEvent, but does not block
   /// </summary>
   /// <returns>True if an event was dispatched, false if the queue was empty when checked</returns>
-  bool DispatchEvent(void) override;
+  bool DispatchEvent(void);
 
   /// <summary>
   /// Similar to DispatchEvent, but will attempt to dispatch all events currently queued
   /// </summary>
   /// <returns>The total number of events dispatched</returns>
-  int DispatchAllEvents(void) override {
+  int DispatchAllEvents(void) {
     int retVal = 0;
     while(DispatchEvent())
       retVal++;
     return retVal;
   }
 
+public:
+  /// <summary>
+  /// Check if DispatchQueue is ready to take events
+  /// </summary>
+  virtual bool DEPRECATED(CanAccept(void) const, "CanAccept has been deprecated. Use IsInitiated on the enclosing context instead");
+  virtual bool DEPRECATED(DelayUntilCanAccept(void), "CanAccept is deprecated. Use WaitUntilInitiated on the enclosing context instead");
+
   /// <summary>
   /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>
   void AddExisting(DispatchThunkBase* pBase) {
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
       return;
 
     m_dispatchQueue.push_back(pBase);
     m_queueUpdated.notify_all();
-    OnPended();
+    OnPended(std::move(lk));
   }
 
   template<class Clock>
@@ -244,16 +228,13 @@ public:
     static_assert(!std::is_base_of<DispatchThunkBase, _Fx>::value, "Overload resolution malfunction, must not doubly wrap a dispatch thunk");
     static_assert(!std::is_pointer<_Fx>::value, "Cannot pend a pointer to a function, we must have direct ownership");
 
-    if(!CanAccept())
-      return;
-
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
     if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
       return;
 
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(std::forward<_Fx>(fx)));
     m_queueUpdated.notify_all();
-    OnPended();
+    OnPended(std::move(lk));
   }
 };
 

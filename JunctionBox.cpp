@@ -10,7 +10,7 @@ void JunctionBoxBase::TerminateAll(const std::vector<std::weak_ptr<CoreContext>>
   for(size_t i = teardown.size(); i--;) {
     auto curContext = teardown[i].lock();
     if(curContext)
-      curContext->SignalTerminate();
+      curContext->SignalTerminate(false);
   }
 }
 

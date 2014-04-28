@@ -8,7 +8,7 @@
 angular.module('autoNetApp')
 .directive('directedGraph', function () {
   return {
-    template: '<canvas width="900" height="400">HTML canvas not supported on your browser</canvas>',
+    template: '<canvas width="900" height="400">HTML5 canvas not supported on your browser</canvas>',
     restrict: 'E',
     replace: true,
     scope: {
@@ -29,11 +29,12 @@ angular.module('autoNetApp')
       var currentNodes = Object.create(null);
 
       // Watch for any new or deleted nodes
-      scope.$watchCollection('nodes', function(nodes) {
+      scope.$watch('nodes', function(nodeMap) {
+        var nodes = _.values(nodeMap);
         // Add any new nodes
         _.each(nodes, function(node) {
           if (typeof currentNodes[node.id] === 'undefined'){
-            var label = 'Context: ' + node.name;
+            var label = node.name;
             var newNode = scope.graph.newNode({label:label});
             currentNodes[node.id] = newNode;
             if (typeof currentNodes[node.parent] !== 'undefined'){
@@ -53,7 +54,7 @@ angular.module('autoNetApp')
           delete currentNodes[nodeId];
         });
 
-      });
+      }, true);
     }
   };
 });

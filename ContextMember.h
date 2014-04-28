@@ -4,7 +4,7 @@
 #include "Object.h"
 #include "TeardownNotifier.h"
 #include <assert.h>
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 class CoreContext;
 
@@ -12,7 +12,7 @@ class CoreContext;
 /// A class that must be inherited in order to be a member of a context heriarchy
 /// </summary>
 class ContextMember:
-  public virtual Object,
+  public Object,
   public TeardownNotifier
 {
 protected:
@@ -23,7 +23,6 @@ protected:
 public:
   virtual ~ContextMember();
 
-  static void* operator new(size_t nBytes);
   friend class CoreContext;
 
 protected:

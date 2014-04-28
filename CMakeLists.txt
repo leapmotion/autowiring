@@ -7,7 +7,11 @@ include_directories(
 set(Autowiring_SRCS
   at_exit.h
   AutoAnchor.h
-  AutoFactory.h
+  AutoFuture.h
+  AutoFuture.cpp
+  CoreJob.h
+  CoreJob.cpp
+  AutoInjectable.h
   AutoPacket.h
   AutoPacket.cpp
   AutoPacketFactory.h
@@ -15,19 +19,22 @@ set(Autowiring_SRCS
   AutoPacketListener.h
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
-  AutoNetworkMonitor.h
-  AutoNetworkMonitor.cpp
+  AutoPacketSubscriber.h
   Autowired.h
   Autowired.cpp
   AutowirableSlot.h
   AutowirableSlot.cpp
+  AutowiringEvents.h
   autowiring_error.h
+  BasicThread.h
+  BasicThread.cpp
+  BasicThreadStateBlock.h
+  BasicThreadStateBlock.cpp
+  Bolt.h
+  BoltBase.h
   ContextCreator.h
   ContextCreatorBase.h
   ContextCreatorBase.cpp
-  CreationRules.h
-  Bolt.h
-  BoltBase.h
   ContextMap.h
   ContextMember.cpp
   ContextMember.h
@@ -35,17 +42,16 @@ set(Autowiring_SRCS
   CoreContext.h
   CoreThread.cpp
   CoreThread.h
+  CoreRunnable.h
+  CreationRules.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
   Decompose.h
   Deserialize.h
-  DeferredBase.h
-  DeferredBase.cpp
   deferred_ptr.h
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunk.h
-  EventDispatcher.h
   EventInputStream.h
   EventOutputStream.h
   EventOutputStream.cpp
@@ -65,18 +71,20 @@ set(Autowiring_SRCS
   ObjectPool.h
   ObjectPoolMonitor.h
   ObjectPoolMonitor.cpp
+  move_only.h
   MicroBolt.h
-  PolymorphicTypeForest.h
   ReentrantCounter.h
   ReentrantCounter.cpp
+  SharedPointerSlot.h
   SimpleOwnershipValidator.h
   SimpleOwnershipValidator.cpp
-  StateMachine.h
-  StateMachine.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
+  ThreadStatusBlock.h
+  ThreadStatusBlock.cpp
   TypeRegistry.h
   TypeRegistry.cpp
+  TypeUnifier.h
   uuid.h
 )
 
@@ -123,6 +131,8 @@ endif()
 set(AutowiringTest_SRCS
   AutoAnchorTest.h
   AutoAnchorTest.cpp
+  AutoInjectableTest.h
+  AutoInjectableTest.cpp
   AutowiringBenchmarkTest.h
   AutowiringBenchmarkTest.cpp
   ContextCleanupTest.h
@@ -152,8 +162,6 @@ set(AutowiringTest_SRCS
   FactoryTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
-  GraphConstructionTest.h
-  GraphConstructionTest.cpp
   InterlockedRoutinesTest.h
   InterlockedRoutinesTest.cpp
   MarshalingTest.h
@@ -164,16 +172,18 @@ set(AutowiringTest_SRCS
   ObjectPoolTest.cpp
   PeerContextTest.h
   PeerContextTest.cpp
-  PolymorphicTypeForestTest.h
-  PolymorphicTypeForestTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
   ReentrantCounterTest.h
   ReentrantCounterTest.cpp
   SelfSelectingFixtureTest.h
   SelfSelectingFixtureTest.cpp
+  SharedPointerSlotTest.h
+  SharedPointerSlotTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
+  CoreJobTest.h
+  CoreJobTest.cpp
   TypeRegistryTest.h
   TypeRegistryTest.cpp
   ScopeTest.h
@@ -182,8 +192,6 @@ set(AutowiringTest_SRCS
   SnoopTest.cpp
   SimpleOwnershipValidatorTest.h
   SimpleOwnershipValidatorTest.cpp
-  StateMachineTest.h
-  StateMachineTest.cpp
   TestFixtures/custom_exception.h
   TestFixtures/ExitRaceThreaded.h
   TestFixtures/SimpleInterface.h

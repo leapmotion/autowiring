@@ -64,6 +64,7 @@ angular.module('autoNetApp')
 
   return {
     on: function(eventName, callback) {
+      console.log('Event Registered: ', eventName);
       listeners.push({
         type: eventName,
         callback: callback
