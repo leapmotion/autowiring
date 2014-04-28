@@ -1,6 +1,6 @@
 #pragma once
 #include <typeinfo>
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 template<class T>
 class JunctionBox;
