@@ -55,8 +55,6 @@ struct Boltable;
 template<class T>
 class CoreContextT;
 
-#define CORE_CONTEXT_MAGIC 0xC04EC0DE
-
 enum class ShutdownMode {
   // Shut down gracefully by allowing threads to run down dispatch queues
   Graceful,
