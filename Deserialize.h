@@ -1,6 +1,5 @@
 #pragma once
 #include TYPE_TRAITS_HEADER
-#include <typeinfo>
 
 /// <summary>
 /// Support class for deserializing byte-streams input as std::string into a variety of formats

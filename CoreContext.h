@@ -1,5 +1,4 @@
 #pragma once
-#include "at_exit.h"
 #include "AutoAnchor.h"
 #include "AutoPacketSubscriber.h"
 #include "AutowiringEvents.h"
@@ -18,17 +17,12 @@
 #include "EventInputStream.h"
 #include "ExceptionFilter.h"
 #include "SharedPointerSlot.h"
-#include "SimpleOwnershipValidator.h"
 #include "TeardownNotifier.h"
 #include "TypeUnifier.h"
-#include "uuid.h"
 
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
 #include <list>
-#include <memory>
-#include <map>
-#include <functional>
 #include STL_TUPLE_HEADER
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
@@ -54,7 +48,8 @@ class Autowired;
 template<typename... Sigils>
 struct Boltable;
 
-#define CORE_CONTEXT_MAGIC 0xC04EC0DE
+template<class T>
+class CoreContextT;
 
 enum class ShutdownMode {
   // Shut down gracefully by allowing threads to run down dispatch queues
@@ -68,13 +63,12 @@ enum class ShutdownMode {
 /// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain
 /// </summary>
 class CoreContext:
-  public SimpleOwnershipValidator,
   public TeardownNotifier,
   public std::enable_shared_from_this<CoreContext>
 {
 protected:
-  CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil);
-  CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer);
+  CoreContext(std::shared_ptr<CoreContext> pParent);
+  CoreContext(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer);
 
 public:
   virtual ~CoreContext(void);
@@ -85,11 +79,75 @@ public:
   static std::shared_ptr<CoreContext> GetGlobal(void);
 
 protected:
+  // A pointer to the parent context
+  const std::shared_ptr<CoreContext> m_pParent;
+
+  // General purpose lock for this class
+  mutable boost::mutex m_lock;
+
+  // Condition, signalled when context state has been changed
+  boost::condition m_stateChanged;
+
+  // Set if threads in this context should be started when they are added
+  bool m_initiated;
+
+  // Set if the context has been shut down
+  bool m_isShutdown;
+
+  // Child contexts:
+  typedef std::list<std::weak_ptr<CoreContext>> t_childList;
+  t_childList m_children;
+
+  // Lists of event receivers, by name.  The type index of "void" is reserved for
+  // bolts for all context types.
+  typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
+  t_contextNameListeners m_nameListeners;
+
+  // These are the types which will be created in this context if an attempt is made to inject them
+  // into any child context.
+  std::set<std::type_index> m_anchors;
+
+  // Map of slots waiting to be autowired, organized by the desired type.  The type allows chaining to take
+  // place in an intelligent way.
+  typedef std::unordered_map<std::type_index, DeferrableAutowiring*> t_deferredMap;
+  t_deferredMap m_deferred;
+
+  // This is a list of concrete types, indexed by the true type of each element.
+  std::vector<AnySharedPointer> m_concreteTypes;
+
+  // This is a memoization map used to memoize any already-detected interfaces
+  // This map keeps all of its objects resident at least until the context goes away.
+  // Note that the value on the right-hand side must match the void pointer specified on the right-hand side
+  mutable std::unordered_map<std::type_index, AnySharedPointer> m_typeMemos;
+
+  // All known context members, exception filters:
+  std::vector<ContextMember*> m_contextMembers;
+  std::vector<ExceptionFilter*> m_filters;
+
+  // All known event receivers and receiver proxies originating from this context:
+  typedef std::vector<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
+  t_rcvrSet m_eventReceivers;
+  
+  // List of eventReceivers to be added when this context in initiated
+  std::vector<JunctionBoxEntry<EventReceiver>> m_delayedEventReceivers;
+
+  // Manages events for this context. One JunctionBoxManager is shared between peer contexts
+  const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
+
+  // Actual core threads:
+  typedef std::list<CoreRunnable*> t_threadList;
+  t_threadList m_threads;
+
+  // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
+  // Destructor does nothing; this is by design.
+  std::weak_ptr<Object> m_outstanding;
+
+protected:
   /// <summary>
   /// Register new context with parent and notify others of its creation.
   /// </summary>
   template<typename T>
-  std::shared_ptr<CoreContext> CreateInternal(CoreContext& newContext) {
+  std::shared_ptr<CoreContext> CreateInternal(CoreContextT<T>& newContext) {
     // don't allow new children if shutting down
     if(m_isShutdown)
       throw autowiring_error("Cannot create a child context; this context is already shut down");
@@ -97,14 +155,11 @@ protected:
     t_childList::iterator childIterator;
     {
       // Lock the child list while we insert
-      boost::lock_guard<boost::mutex> lk(m_childrenLock);
+      boost::lock_guard<boost::mutex> lk(m_lock);
 
       // Reserve a place in the list for the child
       childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
     }
-
-    if (m_useOwnershipValidator)
-      newContext.EnforceSimpleOwnership();
 
     // Create the shared pointer for the context--do not add the context to itself,
     // this creates a dangerous cyclic reference.
@@ -112,7 +167,7 @@ protected:
       &newContext,
       [this, childIterator] (CoreContext* pContext) {
         {
-          boost::lock_guard<boost::mutex> lk(m_childrenLock);
+          boost::lock_guard<boost::mutex> lk(m_lock);
           this->m_children.erase(childIterator);
         }
         // Notify AutowiringEvents listeners
@@ -149,87 +204,6 @@ protected:
   }
 
   void AddAnchorInternal(const void*) {}
-
-  // These are the types which will be created in this context if an attempt is made to inject them
-  // into any child context.
-  std::set<std::type_index> m_anchors;
-
-  // A pointer to the parent context
-  const std::shared_ptr<CoreContext> m_pParent;
-
-  // General purpose lock for this class
-  mutable boost::mutex m_lock;
-
-  // Condition, signalled when context state has been changed
-  boost::condition m_stateChanged;
-
-  // Set if threads in this context should be started when they are added
-  bool m_initiated;
-
-  // Set if the context has been shut down
-  bool m_isShutdown;
-
-  // The context's internally held sigil type
-  const std::type_info& m_sigil;
-
-    // Flag, set if this context should use its ownership validator to guarantee that all autowired members
-  // are correctly torn down.  This flag must be set at construction time.  Members added to the context
-  // before this flag is assigned will NOT be checked.
-  bool m_useOwnershipValidator;
-
-  // This is a map of concrete types, indexed by the true type of each element.
-  // This map keeps all of its objects resident at least until the context goes away.
-  // "Object" is named here as an explicit ground type in order to allow arbitrary casting from Object-
-  // derived types.
-  std::unordered_map<std::type_index, AnySharedPointer> m_concreteTypes;
-
-  // This is a memoization map used to memoize any already-detected interfaces
-  // Note that the value on the right-hand side must match the void pointer specified on the right-hand side
-  std::unordered_map<std::type_index, AnySharedPointer> m_typeMemos;
-
-  // All ContextMember objects known in this autowirer:
-  std::unordered_set<ContextMember*> m_contextMembers;
-
-  // Map of slots waiting to be autowired, organized by the desired type.  The type allows chaining to take
-  // place in an intelligent way.
-  typedef std::unordered_map<std::type_index, DeferrableAutowiring*> t_deferredMap;
-  t_deferredMap m_deferred;
-
-  // All known event receivers and receiver proxies originating from this context:
-  typedef std::unordered_set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
-  t_rcvrSet m_eventReceivers;
-  
-  // List of eventReceivers to be added when this context in initiated
-  t_rcvrSet m_delayedEventReceivers;
-
-  // Manages events for this context. One JunctionBoxManager is shared between peer contexts
-  const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
-
-  // All known exception filters:
-  std::unordered_set<ExceptionFilter*> m_filters;
-
-  // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
-  // Destructor does nothing; this is by design.
-  std::weak_ptr<Object> m_outstanding;
-
-  // Actual core threads:
-  typedef std::list<CoreRunnable*> t_threadList;
-  t_threadList m_threads;
-
-  // Child contexts:
-  typedef std::list<std::weak_ptr<CoreContext>> t_childList;
-  boost::mutex m_childrenLock;
-  t_childList m_children;
-
-  friend std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
-
-  // The interior packet factory:
-  const std::shared_ptr<AutoPacketFactory> m_packetFactory;
-
-  // Lists of event receivers, by name:
-  typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
-  t_contextNameListeners m_nameListeners;
-  std::list<BoltBase*> m_allNameListeners;
 
   // Adds a bolt proper to this context
   template<typename T, typename... Sigils>
@@ -274,22 +248,14 @@ protected:
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
-  /// <param name="pOriginalParent">The original parent of the passed type</param>
+  /// <param name="pRecvr">The junction box entry corresponding to the receiver type</param>
   void AddEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
 
   /// <summary>
-  /// Adds the named event receiver to the collection of known receivers
-  /// </summary>
-  void AddEventReceiver(std::shared_ptr<EventReceiver> pRecvr) {
-    JunctionBoxEntry<EventReceiver> entry(this, pRecvr);
-    m_eventReceivers.insert(entry);
-    AddEventReceiver(entry);
-  }
-  
-  /// <summary>
   /// Add delayed event receivers
   /// </summary>
-  void AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
+  template<class iter>
+  void AddDelayedEventReceivers(iter first, iter last);
 
   /// <summary>
   /// Removes the named event receiver from the collection of known receivers
@@ -392,7 +358,7 @@ protected:
   void AddInternal(const AddInternalTraits& traits);
 
   template<class T>
-  void FindByTypeUnsafe(std::shared_ptr<T>& ptr) {
+  void FindByTypeUnsafe(std::shared_ptr<T>& ptr) const {
     // Try to find the type directly:
     auto& entry = m_typeMemos[typeid(T)];
     if(!entry->empty()) {
@@ -403,7 +369,7 @@ protected:
     // Resolve based on iterated dynamic casts for each concrete type:
     ptr.reset();
     for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
-      std::shared_ptr<Object> obj = *q->second;
+      std::shared_ptr<Object> obj = **q;
       auto casted = std::dynamic_pointer_cast<T>(obj);
       if(!casted)
         // No match, try the next entry
@@ -420,11 +386,16 @@ protected:
     *entry = ptr;
   }
 
+  /// <summary>
+  /// Returns or constructs a new AutoPacketFactory instance
+  /// </summary>
+  std::shared_ptr<AutoPacketFactory> GetPacketFactory(void);
+
 public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const { return m_concreteTypes.size(); }
-  const std::type_info& GetSigilType(void) const { return m_sigil; }
+  virtual const std::type_info& GetSigilType(void) const = 0;
 
   /// <summary>
   /// Factory to create a new context
@@ -432,7 +403,7 @@ public:
   /// <param name="T">The context sigil.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return CreateInternal<T>(*new CoreContext(shared_from_this(), typeid(T)));
+    return CreateInternal<T>(*new CoreContextT<T>(shared_from_this()));
   }
 
   /// <summary>
@@ -448,7 +419,7 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
-    return m_pParent->CreateInternal<T>(*new CoreContext(m_pParent, typeid(T), shared_from_this()));
+    return m_pParent->CreateInternal<T>(*new CoreContextT<T>(m_pParent, shared_from_this()));
   }
 
   /// <summary>
@@ -580,7 +551,7 @@ public:
   /// True if the sigil type of this CoreContext matches the specified sigil type
   /// </returns>
   template<class Sigil>
-  bool Is(void) const { return m_sigil == typeid(Sigil); }
+  bool Is(void) const { return GetSigilType() == typeid(Sigil); }
 
   /// <returns>
   /// A list of descendant contexts whose sigil type matches the specified sigil type
@@ -629,7 +600,7 @@ public:
   /// </remarks>
   template<class Fn>
   bool EnumerateChildContexts(const Fn& fn) {
-    boost::lock_guard<boost::mutex> lock(m_childrenLock);
+    boost::lock_guard<boost::mutex> lock(m_lock);
     for(auto c = m_children.begin(); c != m_children.end(); c++) {
       // Recurse:
       auto shared = c->lock();
@@ -649,7 +620,7 @@ public:
   template<class Fn>
   void EnumerateContexts(Fn&& fn) {
     fn(shared_from_this());
-    boost::lock_guard<boost::mutex> lock(m_childrenLock);
+    boost::lock_guard<boost::mutex> lock(m_lock);
     for (auto c = m_children.begin(); c != m_children.end(); c++) {
       c->lock()->EnumerateContexts(fn);
     }
@@ -668,26 +639,6 @@ public:
   /// context.  A thread may potentially be added to the context after the method returns.
   /// </remarks>
   std::vector<std::shared_ptr<BasicThread>> CopyBasicThreadList(void) const;
-
-  /// <summary>
-  /// In debug mode, adds an additional compile-time check
-  /// </summary>
-  /// <remarks>
-  /// Enabling simple ownership checks on a context will ensure that, at teardown time, simple
-  /// ownership of contained objects is enforced.  This means that the lifetime of objects in
-  /// a context does not extend beyond the lifetime of the context itself.
-  ///
-  /// This flag is useful in detecting cycles in a context, as cycles will prevent cleanup and
-  /// give the impression of an exterior reference.  Information about the detected cycle will
-  /// be printed to stderr.
-  ///
-  /// This flag cannot be unset.  This flag is inherited by children.  Children which were
-  /// created at the time this flag is assigned do not receive assignment of this flag retro-
-  /// actively.
-  /// </remarks>
-  void EnforceSimpleOwnership(void) {
-    m_useOwnershipValidator = true;
-  }
 
   /// <returns>
   /// True if CoreRunnable instances in this context should begin teardown operations
@@ -729,8 +680,8 @@ public:
   bool IsMember(const std::shared_ptr<T>& ptr) const {
     boost::lock_guard<boost::mutex> lk(m_lock);
 
-    auto q = m_concreteTypes.find(typeid(*ptr));
-    if(q == m_concreteTypes.end())
+    auto q = m_typeMemos.find(typeid(*ptr));
+    if(q == m_typeMemos.end())
       // The true type of the passed entity isn't even in our concrete map, then we short-circuit
       return false;
 
@@ -762,7 +713,12 @@ public:
   /// </remarks>
   template<typename MemFn>
   InvokeRelay<MemFn> Invoke(MemFn memFn){
-    return GetJunctionBox<typename Decompose<MemFn>::type>()->Invoke(memFn);
+    typedef typename Decompose<MemFn>::type EventType;
+    
+    if (!std::is_same<AutowiringEvents,EventType>::value)
+      GetGlobal()->Invoke(&AutowiringEvents::EventFired)(*this, typeid(EventType));
+    
+    return GetJunctionBox<EventType>()->Invoke(memFn);
   }
 
   /// <summary>
@@ -922,13 +878,10 @@ public:
   /// Locates an available context member in this context
   /// </summary>
   template<class T>
-  void FindByType(std::shared_ptr<T>& slot) {
+  void FindByType(std::shared_ptr<T>& slot) const {
     boost::lock_guard<boost::mutex> lk(m_lock);
     FindByTypeUnsafe(slot);
   }
-
-  // Interior type overrides:
-  void FindByType(std::shared_ptr<AutoPacketFactory>& slot) { slot = m_packetFactory; }
 
   /// <summary>
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
@@ -1022,6 +975,25 @@ public:
   std::shared_ptr<EventInputStream<T>> CreateEventInputStream(void) {
     return std::make_shared<EventInputStream<T>>();
   }
+};
+
+/// <summary>
+/// Constant type optimization for named sigil types
+/// </summary>
+template<class T>
+class CoreContextT:
+  public CoreContext
+{
+public:
+  CoreContextT(std::shared_ptr<CoreContext> pParent) :
+    CoreContext(pParent)
+  {}
+
+  CoreContextT(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer) :
+    CoreContext(pParent, pPeer)
+  {}
+
+  const std::type_info& GetSigilType(void) const override { return typeid(T); }
 };
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& context);

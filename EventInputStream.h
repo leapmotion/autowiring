@@ -1,12 +1,11 @@
 #pragma once
+
 #include "Decompose.h"
 #include "Deserialize.h"
 #include <string>
 #include <sstream>
-#include <memory>
 #include <deque>
 #include <map>
-#include <typeinfo>
 
 #include MEMORY_HEADER
 #include TYPE_TRAITS_HEADER
