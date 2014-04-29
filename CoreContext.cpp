@@ -199,9 +199,9 @@ void CoreContext::Initiate(void) {
 
   // Signal our condition variable
   m_stateChanged.notify_all();
-
-  for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
-    (*q)->Start(outstanding);
+  
+  for(auto q : m_threads)
+    q->Start(outstanding);
 }
 
 void CoreContext::InitiateCoreThreads(void) {
