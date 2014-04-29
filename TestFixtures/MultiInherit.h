@@ -1,6 +1,6 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _SIMPLEOBJECT_H
-#define _SIMPLEOBJECT_H
+#pragma once
+
 #include "SimpleObject.h"
 
 class DummyBase {
@@ -27,5 +27,3 @@ public:
   int zero;
   int one;
 };
-
-#endif

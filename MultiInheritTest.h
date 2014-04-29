@@ -9,4 +9,3 @@ public:
   MultiInheritTest(void) {}
   ~MultiInheritTest(void) {}
 };
-
