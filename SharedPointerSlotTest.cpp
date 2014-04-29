@@ -100,5 +100,5 @@ TEST_F(SharedPointerSlotTest, SlotDuplication) {
 
   // Verify that the slot still holds a reference and that the reference count is correct:
   ASSERT_FALSE(slot2->empty()) << "A slot should have continued to hold a shared pointer, but was prematurely cleared";
-  ASSERT_EQ(2UL, sharedPtr.use_count()) << "A slot going out of scope did not correctly decrement a shared pointer reference";
+  ASSERT_EQ(2, sharedPtr.use_count()) << "A slot going out of scope did not correctly decrement a shared pointer reference";
 }
