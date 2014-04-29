@@ -4,9 +4,7 @@
 #include "AutowirableSlot.h"
 #include "GlobalCoreContext.h"
 #include "Decompose.h"
-#include FUNCTIONAL_HEADER
 #include MEMORY_HEADER
-#include RVALUE_HEADER
 
 template<class T>
 class Autowired;

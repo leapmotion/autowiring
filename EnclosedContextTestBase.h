@@ -1,9 +1,9 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _ENCLOSED_CONTEXT_TEST_BASE_H
-#define _ENCLOSED_CONTEXT_TEST_BASE_H
+#pragma once
+
 #include "Autowired.h"
 #include <gtest/gtest.h>
-#include <memory>
+#include MEMORY_HEADER
 
 /// <summary>
 /// Provides a test fixture which ensures proper cleanup of a created subcontext
@@ -57,5 +57,3 @@ public:
   /// </returns>
   bool IsContextClean(void) const {return m_create.unique();}
 };
-
-#endif

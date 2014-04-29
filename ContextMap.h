@@ -1,6 +1,6 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _CONTEXT_MAP_H
-#define _CONTEXT_MAP_H
+// Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
+#pragma once
+
 #include "autowiring_error.h"
 #include "CoreContext.h"
 #include <boost/thread/mutex.hpp>
@@ -139,5 +139,3 @@ public:
       q->second.lock();
   }
 };
-
-#endif

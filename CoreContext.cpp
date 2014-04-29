@@ -9,8 +9,6 @@
 #include "GlobalCoreContext.h"
 #include "MicroBolt.h"
 #include <algorithm>
-#include <memory>
-#include <boost/thread/reverse_lock.hpp>
 #include <boost/thread/tss.hpp>
 
 using namespace std;
