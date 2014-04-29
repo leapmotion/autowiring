@@ -12,7 +12,8 @@
     "angular-sanitize": "1.2.6",
     "angular-route": "1.2.6",
     "underscore": "~1.6.0",
-    "springy": "~2.3.0"
+    "springy": "~2.3.0",
+    "sprintf": "*"
   },
   "devDependencies": {
     "angular-mocks": "1.2.6",

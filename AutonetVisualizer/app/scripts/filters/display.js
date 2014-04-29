@@ -4,6 +4,15 @@
 angular.module('autoNetApp')
 .filter('display', function () {
   return function (input) {
-    return _.omit(input, 'parent', 'name', 'id');
+    return _.without(input, 'bolt', 'eventReceiver');
   };
+});
+
+angular.module('autoNetApp')
+.filter('TypeFilter', function(){
+  return function (input, types) {
+    return _.filter(input, function(ele){
+      return ele.IsAnyType(types);
+    });
+  }
 });

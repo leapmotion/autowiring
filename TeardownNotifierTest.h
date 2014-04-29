@@ -5,4 +5,3 @@ class TeardownNotifierTest:
   public testing::Test
 {
 };
-
