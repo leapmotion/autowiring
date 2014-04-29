@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 class CoreContext;
 

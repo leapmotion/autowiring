@@ -1,5 +1,5 @@
 #pragma once
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>

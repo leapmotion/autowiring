@@ -26,25 +26,19 @@ using namespace std;
 /// </remarks>
 boost::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
 
-CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil) :
+CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent) :
   m_pParent(pParent),
-  m_sigil(sigil),
-  m_useOwnershipValidator(false),
   m_initiated(false),
   m_isShutdown(false),
-  m_junctionBoxManager(std::make_shared<JunctionBoxManager>()),
-  m_packetFactory(std::make_shared<AutoPacketFactory>(GetJunctionBox<AutoPacketListener>()))
-{
-  assert(pParent.get() != this);
-}
+  m_junctionBoxManager(std::make_shared<JunctionBoxManager>())
+{}
 
 // Peer Context Constructor. Called interally by CreatePeer
-CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, const std::type_info& sigil, std::shared_ptr<CoreContext> pPeer) :
+CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer) :
   m_pParent(pParent),
-  m_sigil(sigil),
-  m_useOwnershipValidator(false),
-  m_junctionBoxManager(pPeer->m_junctionBoxManager),
-  m_packetFactory(pPeer->m_packetFactory)
+  m_initiated(false),
+  m_isShutdown(false),
+  m_junctionBoxManager(pPeer->m_junctionBoxManager)
 {}
 
 CoreContext::~CoreContext(void) {
@@ -63,8 +57,8 @@ CoreContext::~CoreContext(void) {
   UnregisterEventReceivers();
 
   // Tell all context members that we're tearing down:
-  for(auto q = m_contextMembers.begin(); q != m_contextMembers.end(); q++)
-    (**q).NotifyContextTeardown();
+  for(auto q : m_contextMembers)
+    q->NotifyContextTeardown();
 }
 
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
@@ -96,11 +90,14 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
     boost::lock_guard<boost::mutex> lk(m_lock);
 
     // Validate that this addition does not generate an ambiguity:
-    auto& v = m_concreteTypes[typeid(*traits.pObject)];
+    auto& v = m_typeMemos[typeid(*traits.pObject)];
     if(*v == traits.pObject)
       throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
     if(*v)
       throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+
+    // Add the new concrete type:
+    m_concreteTypes.push_back(traits.value);
 
     // Perform the insertion at the canonical type identity:
     v = traits.value;
@@ -109,17 +106,14 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
     assert(*v == traits.pObject);
 
     // Insert each context element:
-    if(traits.pContextMember) {
+    if(traits.pContextMember)
       AddContextMember(traits.pContextMember);
-    }
 
-    if(traits.pCoreRunnable) {
+    if(traits.pCoreRunnable)
       AddCoreRunnable(traits.pCoreRunnable);
-    }
 
-    if(traits.pFilter) {
-      m_filters.insert(traits.pFilter.get());
-    }
+    if(traits.pFilter)
+      m_filters.push_back(traits.pFilter.get());
 
     if(traits.pBoltBase)
       AddBolt(traits.pBoltBase);
@@ -127,7 +121,14 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
 
   // Event receivers:
   if(traits.pRecvr) {
-    AddEventReceiver(traits.pRecvr);
+    JunctionBoxEntry<EventReceiver> entry(this, traits.pRecvr);
+
+    // Add to our vector of local receivers first:
+    (boost::lock_guard<boost::mutex>)m_lock,
+    m_eventReceivers.push_back(entry);
+
+    // Recursively add to all junction box managers up the stack:
+    AddEventReceiver(entry);
   }
 
   // Subscribers, if applicable:
@@ -138,14 +139,6 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   // to be considered.
   UpdateDeferredElements(traits.pObject);
 
-  // Ownership validation, as appropriate
-  // We do not attempt to pend validation for CoreRunnable instances, because a
-  // CoreRunnable could potentially hold the final outstanding reference to this
-  // context, and therefore may be responsible for this context's (and, transitively,
-  // its own) destruction.
-  if(m_useOwnershipValidator && !traits.pCoreRunnable)
-    SimpleOwnershipValidator::PendValidation(std::weak_ptr<Object>(traits.pObject));
-  
   // Signal listeners that a new object has been created
   GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *traits.pObject.get());
 }
@@ -198,8 +191,8 @@ void CoreContext::Initiate(void) {
   // Signal our condition variable
   m_stateChanged.notify_all();
   
-  for(t_threadList::iterator q = m_threads.begin(); q != m_threads.end(); ++q)
-    (*q)->Start(outstanding);
+  for(auto q : m_threads)
+    q->Start(outstanding);
 }
 
 void CoreContext::InitiateCoreThreads(void) {
@@ -225,7 +218,7 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
 
     {
       // Tear down all the children.
-      boost::lock_guard<boost::mutex> lk(m_childrenLock);
+      boost::lock_guard<boost::mutex> lk(m_lock);
 
       // Fill strong lock series in order to ensure proper teardown interleave:
       childrenInterleave.reserve(m_children.size());
@@ -304,20 +297,19 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
     m_nameListeners[**cur].push_back(pBase.get());
   }
 
-  if(!*pBase->GetContextSigils()) {
-    m_allNameListeners.push_back(pBase.get());
-  }
+  if(!*pBase->GetContextSigils())
+    m_nameListeners[typeid(void)].push_back(pBase.get());
 }
 
 void CoreContext::BuildCurrentState(void) {
-  GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*this);
+  AutoGlobalContext glbl;
+  glbl->Invoke(&AutowiringEvents::NewContext)(*this);
   
-  //keep track of already sent objects so there are no duplicates
   std::unordered_set<Object*> allObjects;
 
-  //ContextMembers and CoreRunnables
-  for (auto member = m_contextMembers.begin(); member != m_contextMembers.end(); ++member) {
-    Object* obj = dynamic_cast<Object*>(*member);
+  // ContextMembers and CoreRunnables
+  for (auto member : m_contextMembers) {
+    Object* obj = dynamic_cast<Object*>(member);
     if (obj && allObjects.find(obj)==allObjects.end()) {
       GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj);
       allObjects.insert(obj);
@@ -325,8 +317,8 @@ void CoreContext::BuildCurrentState(void) {
   }
 
   //Exception Filters
-  for (auto filter = m_filters.begin(); filter != m_filters.end(); ++filter) {
-    Object* obj = dynamic_cast<Object*>(*filter);
+  for (auto filter : m_filters) {
+    Object* obj = dynamic_cast<Object*>(filter);
     if (obj && allObjects.find(obj)==allObjects.end()){
       GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj);
       allObjects.insert(obj);
@@ -334,17 +326,22 @@ void CoreContext::BuildCurrentState(void) {
   }
 
   //Event Receivers
-  for (auto receiver = m_eventReceivers.begin(); receiver != m_eventReceivers.end(); ++receiver) {
-    Object* obj = dynamic_cast<Object*>(receiver->m_ptr.get());
+  for (auto receiver : m_eventReceivers) {
+    Object* obj = dynamic_cast<Object*>(receiver.m_ptr.get());
     if (obj && allObjects.find(obj)==allObjects.end()) {
       GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj);
       allObjects.insert(obj);
     }
   }
 
-  boost::lock_guard<boost::mutex> lk(m_childrenLock);
-  for (auto c = m_children.begin(); c != m_children.end(); ++c) {
-    c->lock()->BuildCurrentState();
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  for(auto c : m_children) {
+    auto cur = c.lock();
+    if(!cur)
+      continue;
+
+    // Recurse into the child instance:
+    cur->BuildCurrentState();
   }
 }
 
@@ -382,7 +379,7 @@ void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable
 
 void CoreContext::Dump(std::ostream& os) const {
   boost::lock_guard<boost::mutex> lk(m_lock);
-  for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
+  for(auto q = m_typeMemos.begin(); q != m_typeMemos.end(); q++) {
     os << q->first.name();
     const void* pObj = q->second;
     if(pObj)
@@ -405,12 +402,17 @@ void ShutdownCurrentContext(void) {
 
 void CoreContext::UnregisterEventReceivers(void) {
   // Release all event receivers originating from this context:
-  m_junctionBoxManager->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+  for(auto q = m_eventReceivers.begin(); q != m_eventReceivers.end(); q++)
+    m_junctionBoxManager->RemoveEventReceiver(*q);
 
   // Notify our parent (if we have one) that our event receivers are going away:
   if(m_pParent) {
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
-    m_pParent->RemovePacketSubscribers(m_packetFactory->GetSubscriberVector());
+
+    std::shared_ptr<AutoPacketFactory> pf;
+    FindByTypeUnsafe(pf);
+    if(pf)
+      m_pParent->RemovePacketSubscribers(pf->GetSubscriberVector());
   }
 
   // Wipe out all collections so we don't try to free these multiple times:
@@ -426,8 +428,13 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
       (**q).ContextCreated();
   }
 
-  for (auto i = m_allNameListeners.begin(); i != m_allNameListeners.end(); ++i) {
-    (**i).ContextCreated();
+  // In the case of an anonymous sigil type, we do not notify the all-types
+  // listeners a second time.
+  if(sigil != typeid(void)) {
+    q = m_nameListeners.find(typeid(void));
+    if(q != m_nameListeners.end())
+      for(auto cur : q->second)
+        cur->ContextCreated();
   }
 
   // Notify the parent next:
@@ -448,7 +455,11 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
       if((*cur).TrySatisfyAutowiring(entry)) {
         // If the first entry is satisfiable then ALL entries are satisfiable
         // Move all entries into our satisfiable collection and run them later
+#if STL11_ALLOWED
         satisfiable.emplace_back(cur);
+#else
+        satisfiable.push_back(cur);
+#endif
         q = m_deferred.erase(q);
       }
       else
@@ -466,7 +477,7 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
   }
 
   // Give children a chance to also update their deferred elements:
-  boost::unique_lock<boost::mutex> lk(m_childrenLock);
+  boost::unique_lock<boost::mutex> lk(m_lock);
   for(auto q = m_children.begin(); q != m_children.end(); q++) {
     // Hold reference to prevent this iterator from becoming invalidated:
     auto ctxt = q->lock();
@@ -480,28 +491,33 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
   }
 }
 
-void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
+void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> entry) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     
-    if (!m_initiated) { //Delay adding receiver until context in initialized;
-      m_delayedEventReceivers.insert(receiver);
+    if (!m_initiated) {
+      // Delay adding receiver until context is initialized
+      m_delayedEventReceivers.push_back(entry);
       return;
     }
   }
 
-  m_junctionBoxManager->AddEventReceiver(receiver);
+  m_junctionBoxManager->AddEventReceiver(entry);
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
-    m_pParent->AddEventReceiver(receiver);
+    m_pParent->AddEventReceiver(entry);
 }
 
-void CoreContext::AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
-  assert(m_initiated); //Must be initiated
+
+template<class iter>
+void CoreContext::AddDelayedEventReceivers(iter first, iter last) {
+  // Must be initiated
+  assert(m_initiated);
   
-  m_junctionBoxManager->AddEventReceivers(first, last);
+  for(auto q = first; q != last; q++)
+    m_junctionBoxManager->AddEventReceiver(*q);
   
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
@@ -511,11 +527,7 @@ void CoreContext::AddDelayedEventReceivers(t_rcvrSet::const_iterator first, t_rc
 
 
 void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
-  {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_eventReceivers.erase(pRecvr);
-  }
-
+  (boost::lock_guard<boost::mutex>)m_lock,
   m_junctionBoxManager->RemoveEventReceiver(pRecvr);
 
   // Delegate to the parent:
@@ -527,10 +539,8 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     for(auto q = first; q != last; q++)
-      m_eventReceivers.erase(*q);
+      m_junctionBoxManager->RemoveEventReceiver(*q);
   }
-
-  m_junctionBoxManager->RemoveEventReceivers(first, last);
 
   // Detour to the parent collection (if necessary)
   if(m_pParent)
@@ -583,16 +593,21 @@ void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, EventRece
       }
 }
 
-void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
-  // Reflexive assignment:
-  ptr->m_self = ptr;
+std::shared_ptr<AutoPacketFactory> CoreContext::GetPacketFactory(void) {
+  std::shared_ptr<AutoPacketFactory> pf;
+  FindByType(pf);
+  if(!pf)
+    pf = Inject<AutoPacketFactory>();
+  return pf;
+}
 
+void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
   // Always add to the set of context members
-  m_contextMembers.insert(ptr.get());
+  m_contextMembers.push_back(ptr.get());
 }
 
 void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
-  m_packetFactory->AddSubscriber(rhs);
+  GetPacketFactory()->AddSubscriber(rhs);
   if(m_pParent)
     m_pParent->AddPacketSubscriber(rhs);
 }
@@ -603,7 +618,10 @@ void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber
     m_pParent->RemovePacketSubscribers(subscribers);
 
   // Remove subscribers from our factory AFTER the parent eviction has taken place
-  m_packetFactory->RemoveSubscribers(subscribers.begin(), subscribers.end());
+  std::shared_ptr<AutoPacketFactory> factory;
+  FindByTypeUnsafe(factory);
+  if(factory)
+    factory->RemoveSubscribers(subscribers.begin(), subscribers.end());
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {

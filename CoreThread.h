@@ -1,7 +1,7 @@
 #pragma once
 #include "BasicThread.h"
 #include "DispatchQueue.h"
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 
 using std::shared_ptr;
 
