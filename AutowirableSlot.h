@@ -3,7 +3,8 @@
 #include "fast_pointer_cast.h"
 #include <functional>
 #include FUNCTIONAL_HEADER
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
+#include RVALUE_HEADER
 
 class CoreContext;
 class GlobalCoreContext;

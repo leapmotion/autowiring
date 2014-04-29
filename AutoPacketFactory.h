@@ -5,6 +5,7 @@
 #include "AutoPacketSubscriber.h"
 #include "Decompose.h"
 #include "FilterPropertyExtractor.h"
+#include "Object.h"
 #include "ObjectPool.h"
 #include <boost/any.hpp>
 #include <typeinfo>
@@ -23,7 +24,8 @@ class DispatchQueue;
 /// <remarks>
 /// Generally, only one packet factory is required per context.
 /// </remarks>
-class AutoPacketFactory
+class AutoPacketFactory:
+  public Object
 {
 public:
   struct AdjacencyEntry {
@@ -41,12 +43,6 @@ public:
   };
 
   AutoPacketFactory(void);
-
-  /// <summary>
-  /// Utility ctor, provided to allow AutoPacketFactory construction during CoreContext construction
-  /// </summary>
-  AutoPacketFactory(std::shared_ptr<JunctionBox<AutoPacketListener>>&& apl);
-
   ~AutoPacketFactory(void);
 
 private:
@@ -54,8 +50,6 @@ private:
     AutoPacketResetter(void);
 
     AutoPacketResetter(AutoPacketResetter&& rhs);
-
-    AutoPacketResetter(AutoFired<AutoPacketListener>&& apl);
 
     AutoFired<AutoPacketListener> m_apl;
 

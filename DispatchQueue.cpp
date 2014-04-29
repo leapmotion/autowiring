@@ -64,28 +64,20 @@ void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
   // Pull the ready thunk off of the front of the queue and pop it while we hold the lock.
   // Then, we will excecute the call while the lock has been released so we do not create
   // deadlocks.
-  DispatchThunkBase* thunk = m_dispatchQueue.front();
+  std::unique_ptr<DispatchThunkBase> thunk(m_dispatchQueue.front());
   m_dispatchQueue.pop_front();
   bool wasEmpty = m_dispatchQueue.empty();
   lk.unlock();
 
-  auto generalCleanup = MakeAtExit(
+  MakeAtExit(
     [this, wasEmpty] {
       // If we emptied the queue, we'd like to reobtain the lock and tell everyone
       // that the queue is now empty.
       if(wasEmpty)
         m_queueUpdated.notify_all();
     }
-  );
-  
-  FireEvent(thunk);
-}
-
-void DispatchQueue::FireEvent(DispatchThunkBase* thunk){
-  auto cleanup = MakeAtExit([thunk]{
-    delete thunk;
-  });
-  (*thunk)();
+  ),
+	(*thunk)();
 }
 
 bool DispatchQueue::DispatchEvent(void) {
