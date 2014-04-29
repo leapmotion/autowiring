@@ -5,4 +5,3 @@ class UuidTest:
   public testing::Test
 {
 };
-
