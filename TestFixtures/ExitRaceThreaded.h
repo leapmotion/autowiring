@@ -1,5 +1,5 @@
-#ifndef _EXIT_RACE_THREADED_H
-#define _EXIT_RACE_THREADED_H
+#pragma once
+
 #include "Autowiring/CoreThread.h"
 #include <boost/thread/condition_variable.hpp>
 
@@ -47,5 +47,3 @@ public:
     m_exitRace->Wait();
   }
 };
-
-#endif

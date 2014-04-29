@@ -1,8 +1,7 @@
 #pragma once
 
-#include "BoltBase.h"
 #include "Decompose.h"
-#include TYPE_INDEX_HEADER
+#include "BoltBase.h"
 
 /// <summary>
 /// </summary>
