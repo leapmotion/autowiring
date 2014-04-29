@@ -1,14 +1,10 @@
 #pragma once
-#include "auto_out.h"
 #include "Autowired.h"
 #include "AutoPacket.h"
 #include "AutoPacketSubscriber.h"
-#include "Decompose.h"
-#include "FilterPropertyExtractor.h"
+//#include "FilterPropertyExtractor.h"
 #include "Object.h"
 #include "ObjectPool.h"
-#include <boost/any.hpp>
-#include <typeinfo>
 #include <vector>
 #include TYPE_INDEX_HEADER
 #include TYPE_TRAITS_HEADER
