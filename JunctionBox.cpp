@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "JunctionBox.h"
 #include "CoreContext.h"
-#include "DispatchQueue.h"
 
 JunctionBoxBase::~JunctionBoxBase(void) {}
 

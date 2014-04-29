@@ -12,4 +12,3 @@ public:
   void SetUp(void);
   void TearDown(void);
 };
-

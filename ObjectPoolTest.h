@@ -5,4 +5,3 @@ class ObjectPoolTest:
   public EnclosedContextTestBase
 {
 };
-

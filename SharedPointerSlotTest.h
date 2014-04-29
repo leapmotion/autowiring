@@ -5,4 +5,3 @@ class SharedPointerSlotTest:
   public testing::Test
 {
 };
-

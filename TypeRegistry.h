@@ -73,4 +73,3 @@ std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) {
 
 template<class T>
 const TypeRegistryEntry RegType<T>::r(typeid(T), &NewJunctionBox<T>, &NewTypeIdentifier<T>);
-

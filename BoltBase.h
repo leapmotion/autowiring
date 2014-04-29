@@ -1,9 +1,6 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _CONTEXT_CREATION_LISTENER_BASE_H
-#define _CONTEXT_CREATION_LISTENER_BASE_H
-#include <memory>
-#include <vector>
-#include TYPE_INDEX_HEADER
+// Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
+#pragma once
+
 class CoreContext;
 
 typedef const std::type_info*const* t_TypeInfoVector;
@@ -31,5 +28,3 @@ public:
   /// </remarks>
   virtual void ContextCreated(void) = 0;
 };
-
-#endif

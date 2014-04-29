@@ -1,5 +1,4 @@
 #pragma once
-#include "at_exit.h"
 #include "AutoAnchor.h"
 #include "AutoPacketSubscriber.h"
 #include "AutowiringEvents.h"
@@ -20,14 +19,10 @@
 #include "SharedPointerSlot.h"
 #include "TeardownNotifier.h"
 #include "TypeUnifier.h"
-#include "uuid.h"
 
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
 #include <list>
-#include <memory>
-#include <map>
-#include <functional>
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
@@ -718,9 +713,10 @@ public:
   template<typename MemFn>
   InvokeRelay<MemFn> Invoke(MemFn memFn){
     typedef typename Decompose<MemFn>::type EventType;
-    if (!std::is_same<AutowiringEvents,EventType>::value){
+    
+    if (!std::is_same<AutowiringEvents,EventType>::value)
       GetGlobal()->Invoke(&AutowiringEvents::EventFired)(*this, typeid(EventType));
-    }
+    
     return GetJunctionBox<EventType>()->Invoke(memFn);
   }
 
