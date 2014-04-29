@@ -28,21 +28,8 @@ void JunctionBoxManager::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiv
     q.second->Add(receiver);
 }
 
-void JunctionBoxManager::AddEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
-  // Notify all junctionboxes that there is a new event
-  for(auto q : m_junctionBoxes)
-    for(auto receiver = first; receiver != last; receiver++)
-      q.second->Add(*receiver);
-}
-
 void JunctionBoxManager::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   // Notify all compatible senders that we're going away:
   for(auto q : m_junctionBoxes)
     q.second->Remove(receiver);
-}
-
-void JunctionBoxManager::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last){
-  for(auto q : m_junctionBoxes)
-    for(auto receiver = first; receiver != last; receiver++)
-      q.second->Remove(*receiver);
 }

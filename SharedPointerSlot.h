@@ -1,7 +1,7 @@
 #pragma once
 #include "fast_pointer_cast.h"
 #include "Object.h"
-#include SHARED_PTR_HEADER
+#include MEMORY_HEADER
 #include <stddef.h>
 
 template<class T>

@@ -41,8 +41,7 @@ public:
   DispatchThunkDelayed(boost::chrono::high_resolution_clock::time_point readyAt, DispatchThunkBase* thunk) :
     m_readyAt(readyAt),
     m_thunk(thunk)
-  {
-  }
+  {}
 
   DispatchThunkDelayed(DispatchThunkDelayed&& rhs) :
     m_readyAt(rhs.m_readyAt),
