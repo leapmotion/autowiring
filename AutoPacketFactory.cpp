@@ -42,6 +42,7 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
 
 void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
   const std::type_info& ti = *rhs.GetSubscriberTypeInfo();
+  boost::lock_guard<boost::mutex> lk(m_lock);
 
   // Determine whether this subscriber already exists--perhaps, it is formerly disabled
   auto q = m_subMap.find(ti);
@@ -110,6 +111,7 @@ void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
 }
 
 void AutoPacketFactory::RemoveSubscriber(const std::type_info &idx) {
+  boost::lock_guard<boost::mutex> lk(m_lock);
   auto q = m_subMap.find(idx);
     
   if(q != m_subMap.end()) {
