@@ -20,7 +20,7 @@ TEST_F(ObjectPoolTest, VerifyOutstandingLimit) {
   EXPECT_TRUE(obj3 == nullptr) << "Object pool issued more objects than it was authorized to issue";
 }
 
-TEST_F(ObjectPoolTest, DISABLED_VerifyAsynchronousUsage) {
+TEST_F(ObjectPoolTest, VerifyAsynchronousUsage) {
   AutoCreateContext ctxt;
   CurrentContextPusher pshr(ctxt);
   
@@ -53,7 +53,7 @@ TEST_F(ObjectPoolTest, DISABLED_VerifyAsynchronousUsage) {
 
   // This should return more or less right away as objects become available:
   {
-    auto obj4 = pool.WaitFor(boost::chrono::milliseconds(1));
+    auto obj4 = pool.WaitFor(boost::chrono::milliseconds(10));
     EXPECT_TRUE(obj4 != nullptr) << "Object pool failed to be notified that it received a new element";
   }
 
