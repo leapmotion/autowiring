@@ -3,6 +3,7 @@
 #include "PostConstructTest.h"
 #include "Autowired.h"
 #include "ContextMember.h"
+#include "TestFixtures/SimpleObject.h"
 
 using namespace std;
 
@@ -147,4 +148,16 @@ TEST_F(PostConstructTest, VerifyLoopingFailedAutowiring) {
     Autowired<FailedAutowiringInstance> ignored;
     ASSERT_FALSE(ignored.IsAutowired()) << "Successfully autowired an instance that should not have been autowirable";
   }
+}
+
+TEST_F(PostConstructTest, VerifyTrivialNotifyWhenAutowired) {
+  // Inject a type first:
+  AutoRequired<SimpleObject>();
+
+  // Now autowire, and add a registration:
+  bool called = false;
+  Autowired<SimpleObject> so;
+  so.NotifyWhenAutowired([&called] { called = true; });
+
+  ASSERT_TRUE(called) << "An autowiring notification was not invoked on an already-satisfied field as expected";
 }
