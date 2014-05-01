@@ -109,7 +109,6 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
     for(int i = count; i--;) {
       AutoCreateContext ctxt;
       CurrentContextPusher pshr(ctxt);
-      ctxt->EnforceSimpleOwnership();
 
       // Trivial validation that the newly created context is an empty context:
       ASSERT_EQ(static_cast<size_t>(0), ctxt->GetMemberCount()) << "A created context was not empty";

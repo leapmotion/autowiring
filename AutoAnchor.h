@@ -1,7 +1,4 @@
 #pragma once
-#include "Decompose.h"
-#include <set>
-#include TYPE_INDEX_HEADER
 
 // Marker base class for anchors
 struct AutoAnchorBase {};
@@ -18,5 +15,4 @@ struct AutoAnchorBase {};
 template<typename... Ts>
 struct AutoAnchor:
   AutoAnchorBase
-{
-};
+{};
