@@ -1,6 +1,6 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _SIMPLE_THREADED_H
-#define _SIMPLE_THREADED_H
+#pragma once
+
 #include "Autowiring/CoreThread.h"
 
 template<class T>
@@ -28,5 +28,3 @@ public:
 };
 
 typedef SimpleThreadedT<int> SimpleThreaded;
-
-#endif

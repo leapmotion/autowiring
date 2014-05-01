@@ -1,6 +1,6 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _CONTEXT_MEMBER_H
-#define _CONTEXT_MEMBER_H
+// Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
+#pragma once
+
 #include "Object.h"
 #include "TeardownNotifier.h"
 #include <assert.h>
@@ -13,11 +13,11 @@ class CoreContext;
 /// </summary>
 class ContextMember:
   public Object,
-  public TeardownNotifier
+  public TeardownNotifier,
+  public std::enable_shared_from_this<ContextMember>
 {
 protected:
   ContextMember(const char* name = nullptr);
-  std::weak_ptr<ContextMember> m_self;
   const char* m_name;
 
 public:
@@ -97,8 +97,7 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<T> GetSelf(void) {
-    return std::static_pointer_cast<T, ContextMember>(m_self.lock());
+    return std::static_pointer_cast<T, ContextMember>(shared_from_this());
   }
 };
 
-#endif

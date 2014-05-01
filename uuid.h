@@ -1,5 +1,4 @@
-#ifndef _AUTOWIRING_UUID_H
-#define _AUTOWIRING_UUID_H
+#pragma once
 
 // This is a hexadecimal mapping table, represented as a string.  It's based at 0x30, the charcode for '0'
 // This table helps convert hex strings into their numeric representation at compile time.
@@ -173,5 +172,3 @@ struct uuid_hash {
     return (long long&)val.Data4;
   }
 };
-
-#endif

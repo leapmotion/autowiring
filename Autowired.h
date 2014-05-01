@@ -4,9 +4,7 @@
 #include "AutowirableSlot.h"
 #include "GlobalCoreContext.h"
 #include "Decompose.h"
-#include FUNCTIONAL_HEADER
 #include MEMORY_HEADER
-#include RVALUE_HEADER
 
 template<class T>
 class Autowired;
@@ -302,6 +300,8 @@ public:
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot invoke an event for an unrelated type");
 
     if (m_junctionBox.expired()) return InvokeRelay<MemFn>(); //Context has been destroyed
+    
+    AutoGlobalContext()->Invoke(&AutowiringEvents::EventFired)(*CoreContext::CurrentContext(),typeid(typename Decompose<MemFn>::type));
 
     return m_junctionBox.lock()->Invoke(pfn);
   }
