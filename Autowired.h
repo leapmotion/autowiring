@@ -1,10 +1,9 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
-
 #include "AutowirableSlot.h"
-#include "GlobalCoreContext.h"
 #include "Decompose.h"
+#include "GlobalCoreContext.h"
 #include MEMORY_HEADER
+#include ATOMIC_HEADER
 
 template<class T>
 class Autowired;
@@ -114,14 +113,24 @@ public:
   }
 
   ~Autowired(void) {
+    if(m_pFirstChild == this)
+      // Tombstoned, nothing to do:
+      return;
+
+    // Need to ensure that nobody tries to autowire us while we are tearing down:
+    CancelAutowiring();
+
+    // And now we destroy our deferrable autowiring collection:
     std::unique_ptr<DeferrableAutowiring> prior;
     for(DeferrableAutowiring* cur = m_pFirstChild; cur; cur = cur->GetFlink())
       prior.reset(cur);
   }
 
 private:
-  // The first deferred child known to need registration:
-  AutowirableSlot<T>* m_pFirstChild;
+  // The first deferred child known to need registration.  This is distinct from the m_pFlink entry in
+  // the base class, which refers to the _next sibling_; by contrast, this type refers to the _first child_
+  // which will be the first member registered via NotifyWhenAutowired.
+  std::atomic<AutowirableSlot<T>*> m_pFirstChild;
 
 public:
   operator T*(void) const {
@@ -142,37 +151,46 @@ public:
   /// </remarks>
   template<class Fn>
   void NotifyWhenAutowired(Fn fn) {
+    // Trivial initial check:
+    if(*this) {
+      fn();
+      return;
+    }
+
     // We pass a null shared_ptr, because we do not want this slot to attempt any kind of unregistration when
     // it goes out of scope.  Instead, we will manage its entire registration lifecycle, and
     // retain full ownership over the object until we need to destroy it.
     auto newHead = new AutowirableSlotFn<Fn, T>(std::shared_ptr<CoreContext>(), std::forward<Fn>(fn));
 
-    // Append to our list:
-    newHead->SetFlink(m_pFirstChild);
-    m_pFirstChild = newHead;
+    // Append to our list in a lock-free way.  This is a fairly standard way to do a lock-free append to
+    // a singly linked list; the only unusual aspect is the use of "this" as a tombstone indicator (IE,
+    // to signify that the list should no longer be used).
+    AutowirableSlot<T>* pFirstChild;
+    do {
+      // Obtain the current first child, and keep it here so we know what to exchange out with later:
+      pFirstChild = m_pFirstChild;
+
+      // Determine if we've been tombstoned at this piont:
+      if(pFirstChild == this) {
+        // Trivially satisfy, and then return.  This might look like a leak, but it's not, because we know
+        // that Finalize is going to destroy the object.
+        newHead->SatisfyAutowiring(*this);
+        newHead->Finalize();
+        return;
+      }
+      
+      // Try to set the forward link to the current head, and then update our own flink;
+      newHead->SetFlink(pFirstChild);
+    } while(!m_pFirstChild.compare_exchange_weak(pFirstChild, newHead, std::memory_order_acquire));
   }
 
   // Base overrides:
-  bool TrySatisfyAutowiring(const std::shared_ptr<Object>& slot) override {
-    if(*this)
-      // Already assigned, this is an error
-      throw autowiring_error("Cannot invoke assign on a slot which is already assigned");
+  DeferrableAutowiring* ReleaseDependentChain(void) override {
+    // Rip the head off the list, replace it with a tombstone:
+    auto pFirstChild = m_pFirstChild.exchange(this, std::memory_order_relaxed);
 
-    return !!((std::shared_ptr<T>&)*this = AutowirableSlot<T>::m_fast_pointer_cast(slot));
-  }
-
-  void Finalize(void) override {
-    // Carry the satisfaction to all of our autowirable slots.  If an exception is thrown
-    // here, we will allow our destructor to handle cleanup operations.
-    while(m_pFirstChild) {
-      // Allow the child to obtain a shared_ptr addref:
-      m_pFirstChild->SatisfyAutowiring(*this);
-
-      // Need to memoize flink, because Finalize has been defined as a self-destruct routine:
-      auto flink = m_pFirstChild->GetFlink();
-      m_pFirstChild->Finalize();
-      m_pFirstChild = static_cast<AutowirableSlot<T>*>(flink);
-    }
+    // If we got the tombstone back, we have nothing to return.  Otherwise return the element.
+    return pFirstChild == this ? nullptr : pFirstChild;
   }
 };
 
