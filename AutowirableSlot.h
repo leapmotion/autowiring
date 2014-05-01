@@ -1,10 +1,6 @@
 #pragma once
-#include "autowiring_error.h"
 #include "fast_pointer_cast.h"
-#include <functional>
-#include FUNCTIONAL_HEADER
 #include MEMORY_HEADER
-#include RVALUE_HEADER
 
 class CoreContext;
 class GlobalCoreContext;

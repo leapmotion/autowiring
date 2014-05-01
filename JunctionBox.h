@@ -1,4 +1,5 @@
 #pragma once
+
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
 #include "EventReceiver.h"
@@ -6,7 +7,6 @@
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
 #include <boost/thread/mutex.hpp>
-#include "fast_pointer_cast.h"
 #include <set>
 #include TUPLE_HEADER
 #include RVALUE_HEADER
@@ -42,6 +42,12 @@ struct JunctionBoxEntry
 
   CoreContext* const m_owner;
   std::shared_ptr<T> m_ptr;
+  
+  JunctionBoxEntry& operator=(const JunctionBoxEntry& rhs) {
+    // This shouldn't be used. non-c++11 containers require this...
+    throw std::runtime_error("Can't copy a JunctionBoxEntry");
+    return *this;
+  }
 
   bool operator==(const JunctionBoxEntry& rhs) const {
     return m_ptr == rhs.m_ptr;

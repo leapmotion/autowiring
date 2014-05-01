@@ -1,13 +1,10 @@
 #pragma once
-#include "auto_out.h"
 #include "Autowired.h"
 #include "AutoPacket.h"
 #include "AutoPacketSubscriber.h"
-#include "Decompose.h"
-#include "FilterPropertyExtractor.h"
+//#include "FilterPropertyExtractor.h"
+#include "Object.h"
 #include "ObjectPool.h"
-#include <boost/any.hpp>
-#include <typeinfo>
 #include <vector>
 #include TYPE_INDEX_HEADER
 #include TYPE_TRAITS_HEADER
@@ -23,7 +20,8 @@ class DispatchQueue;
 /// <remarks>
 /// Generally, only one packet factory is required per context.
 /// </remarks>
-class AutoPacketFactory
+class AutoPacketFactory:
+  public Object
 {
 public:
   struct AdjacencyEntry {
@@ -41,12 +39,6 @@ public:
   };
 
   AutoPacketFactory(void);
-
-  /// <summary>
-  /// Utility ctor, provided to allow AutoPacketFactory construction during CoreContext construction
-  /// </summary>
-  AutoPacketFactory(std::shared_ptr<JunctionBox<AutoPacketListener>>&& apl);
-
   ~AutoPacketFactory(void);
 
 private:
@@ -54,8 +46,6 @@ private:
     AutoPacketResetter(void);
 
     AutoPacketResetter(AutoPacketResetter&& rhs);
-
-    AutoPacketResetter(AutoFired<AutoPacketListener>&& apl);
 
     AutoFired<AutoPacketListener> m_apl;
 
@@ -79,6 +69,9 @@ private:
       factory = rhs.factory;
     }
   };
+
+  // Lock for this type
+  mutable boost::mutex m_lock;
 
   /// <summary>
   /// An independently maintained object pool just for packets
@@ -141,6 +134,7 @@ public:
   /// </summary>
   /// <returns>The adjacency entry, or nullptr if no such entry exists</returns>
   const AdjacencyEntry* FindDecorator(const std::type_info& info) const {
+    boost::lock_guard<boost::mutex> lk(m_lock);
     auto q = m_decorations.find(info);
     return q == m_decorations.end() ? nullptr : &q->second;
   }

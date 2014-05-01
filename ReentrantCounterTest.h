@@ -5,4 +5,3 @@ class ReentrantCounterTest:
   public testing::Test
 {
 };
-

@@ -1,6 +1,6 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _EXCEPTION_FILTER_H
-#define _EXCEPTION_FILTER_H
+#pragma once
+
 #include FUNCTIONAL_HEADER
 
 class JunctionBoxBase;
@@ -72,5 +72,3 @@ public:
   /// </remarks>
   virtual void Filter(const std::function<void()>& rethrower, const JunctionBoxBase* pJunctionBox, EventReceiver* pRecipient) {}
 };
-
-#endif
