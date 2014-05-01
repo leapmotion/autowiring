@@ -219,3 +219,22 @@ TEST_F(PostConstructTest, NotificationTeardownRace) {
   barr.wait();
   t.join();
 }
+
+TEST_F(PostConstructTest, VerifyAllInstancesSatisfied) {
+  // Create all of our slots and bind to them:
+  const size_t ct = 3;
+  Autowired<SimpleObject> aw[ct];
+  bool hit[ct] = {};
+
+  for(size_t i = ct; i--;)
+    aw[i].NotifyWhenAutowired([&hit, i] { hit[i] = true; });
+
+  // Now we inject our simple object:
+  AutoRequired<SimpleObject>();
+
+  // Verify that everything got hit:
+  for(size_t i = 0; i < ct; i++) {
+    ASSERT_TRUE(aw[i]) << "Autowired slot " << i << " was not post-bound correctly";
+    ASSERT_TRUE(hit[i]) << "Autowired slot " << i << " did not fire all of its post-construct notifiers as expected";
+  }
+}
