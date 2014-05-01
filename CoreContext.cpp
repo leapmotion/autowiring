@@ -9,6 +9,7 @@
 #include "GlobalCoreContext.h"
 #include "MicroBolt.h"
 #include <algorithm>
+#include <stack>
 #include <boost/thread/tss.hpp>
 
 using namespace std;
@@ -267,7 +268,7 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
 
 bool CoreContext::DelayUntilInitiated(void) {
   boost::unique_lock<boost::mutex> lk(m_lock);
-  m_stateChanged.wait(lk, [this]{return m_initiated || m_isShutdown;});
+  m_stateChanged.wait(lk, [this] {return m_initiated || m_isShutdown;});
   return !m_isShutdown;
 }
 
@@ -350,7 +351,9 @@ void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable
     return;
 
   // Always finalize this entry:
-  pDeferrable->Finalize();
+  auto strategy = pDeferrable->GetStrategy();
+  if(strategy)
+    strategy->Finalize(pDeferrable);
 
   // Stores the immediate predecessor of the node we will linearly scan for in our
   // linked list.
@@ -442,37 +445,52 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
 
 void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
   // Collection of satisfiable lists:
-  std::vector<DeferrableAutowiring*> satisfiable;
+  std::vector<std::pair<const DeferrableUnsynchronizedStrategy*, DeferrableAutowiring*>> satisfiable;
 
   // Notify any autowired field whose autowiring was deferred
   {
+    std::stack<DeferrableAutowiring*> stk;
     boost::lock_guard<boost::mutex> lk(m_lock);
     for(auto q = m_deferred.begin(); q != m_deferred.end();) {
-      auto& cur = q->second;
+      auto cur = q->second;
 
-      if((*cur).TrySatisfyAutowiring(entry)) {
-        // If the first entry is satisfiable then ALL entries are satisfiable
-        // Move all entries into our satisfiable collection and run them later
-#if STL11_ALLOWED
-        satisfiable.emplace_back(cur);
-#else
-        satisfiable.push_back(cur);
-#endif
-        q = m_deferred.erase(q);
-      }
-      else
+      if(!(*cur).TrySatisfyAutowiring(entry)) {
         q++;
+        continue;
+      }
+
+      // Remove this element from the deferred set:
+      q = m_deferred.erase(q);
+      stk.push(cur);
+
+      // Finish satisfying the remainder of the chain while we hold the lock:
+      while(!stk.empty()) {
+        auto top = stk.top();
+        stk.pop();
+
+        for(auto* pNext = top; pNext; pNext = pNext->GetFlink()) {
+          pNext->SatisfyAutowiring(*cur);
+
+          // See if there's another chain we need to process:
+          auto child = pNext->ReleaseDependentChain();
+          if(child)
+            stk.push(child);
+
+          // Not everyone needs to be finalized.  The entities that don't require finalization
+          // are identified by an empty strategy, and we just skip them.
+          auto strategy = pNext->GetStrategy();
+          if(strategy)
+            satisfiable.push_back(
+              std::make_pair(strategy, pNext)
+            );
+        }
+      }
     }
   }
 
-  for(auto listHead : satisfiable) {
-    // First entry needs custom finalization and will be used as a witness:
-    listHead->Finalize();
-    
-    // Run through everything else and finalize it all:
-    for(auto* pCur = listHead->GetFlink(); pCur; pCur = pCur->GetFlink())
-      pCur->SatisfyAutowiring(*listHead);
-  }
+  // Run through everything else and finalize it all:
+  for(auto cur : satisfiable)
+    cur.first->Finalize(cur.second);
 
   // Give children a chance to also update their deferred elements:
   boost::unique_lock<boost::mutex> lk(m_lock);
