@@ -118,7 +118,7 @@ public:
       return;
 
     // Need to ensure that nobody tries to autowire us while we are tearing down:
-    CancelAutowiring();
+    this->CancelAutowiring();
 
     // And now we destroy our deferrable autowiring collection:
     std::unique_ptr<DeferrableAutowiring> prior;

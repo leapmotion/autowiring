@@ -179,6 +179,8 @@ class AutowirableSlotFn:
     public DeferrableUnsynchronizedStrategy
   {
   public:
+    Strategy(void) {}
+
     void Finalize(DeferrableAutowiring* pfn) const override {
       ((AutowirableSlotFn*) pfn)->Finalize();
     }
@@ -208,7 +210,7 @@ public:
     CallThroughObj<Fn>(&Fn::operator());
 
     // Call the lambda, remove all accountability to the context, self-destruct, and return:
-    m_context.reset();
+    this->m_context.reset();
     delete this;
   }
 
