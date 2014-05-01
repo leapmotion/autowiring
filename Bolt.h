@@ -1,8 +1,7 @@
 #pragma once
 
-#include "BoltBase.h"
 #include "Decompose.h"
-#include TYPE_INDEX_HEADER
+#include "BoltBase.h"
 
 /// <summary>
 /// </summary>
@@ -19,7 +18,7 @@ class Bolt:
   public BoltBase
 {
 public:
-  const t_TypeInfoVector GetContextSigils(void) override {
+  const t_TypeInfoVector GetContextSigils(void) const override {
     static const std::type_info* sc_types[] = {
       &typeid(Sigil)...,
       nullptr
@@ -35,7 +34,7 @@ class Bolt<>:
   public BoltBase
 {
 public:
-  const t_TypeInfoVector GetContextSigils(void) override {
+  const t_TypeInfoVector GetContextSigils(void) const override {
     static const std::type_info* sc_types[] = {nullptr};
     return sc_types;
   }
