@@ -1,7 +1,6 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "AutowirableSlot.h"
-#include "Autowired.h"
 #include "autowiring_error.h"
 #include "CoreContext.h"
 #include <stdexcept>
