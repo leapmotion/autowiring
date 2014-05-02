@@ -308,6 +308,24 @@ TEST_F(CoreThreadTest, NestedContextWait) {
   ASSERT_TRUE(waitsAwhile->m_runExiting) << "Inner thread marked as stopped, but has not apparently quit";
 }
 
+TEST_F(CoreThreadTest, WaitBeforeInitiate) {
+  // Wait for the outer context before it's actually initiated:
+  ASSERT_FALSE(m_create->Wait(boost::chrono::seconds(0))) << "A wait operation on a context succeeded even though it was not yet started";
+
+  // Stop the outer context without even starting it
+  m_create->SignalTerminate();
+
+  // Try to add a thread to the context.  This should cause the thread to be immediately marked as "stopped" and should allow a Wait
+  // operation on the thread to return right away.
+  AutoRequired<CoreThread> ct;
+  ASSERT_TRUE(!ct->IsRunning()) << "A thread added to an already-stopped context was incorrectly marked as running";
+  ASSERT_TRUE(ct->ShouldStop()) << "A thread added to an already-stopped context did not report that it should be stopped";
+  ASSERT_TRUE(ct->WaitFor(boost::chrono::seconds(0))) << "A thread added to an already-stopped context did not correctly respond to a zero-duration wait";
+
+  // Wait again.  This should suceed right away.
+  ASSERT_TRUE(m_create->Wait(boost::chrono::seconds(0))) << "Failed to wait on a context which should have already been stopped";
+}
+
 template<ThreadPriority priority>
 class JustIncrementsANumber:
   public CoreThread
