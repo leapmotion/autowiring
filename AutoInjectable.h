@@ -98,7 +98,7 @@ private:
 class AutoInjectable
 {
 public:
-  AutoInjectable(AutoInjectableExpressionBase* pValue) :
+  AutoInjectable(AutoInjectableExpressionBase* pValue = nullptr) :
     pValue(pValue),
     pFLink(nullptr)
   {}
@@ -134,7 +134,8 @@ public:
   /// is taking place when in fact that is not the case.
   /// </remarks>
   void operator()(AutoFuture* pFuture = nullptr) const {
-    pValue->operator()(pFuture);
+    if(pValue)
+      pValue->operator()(pFuture);
     if(pFLink)
       pFLink->operator()();
   }
@@ -148,9 +149,34 @@ public:
     return *this;
   }
 
+  AutoInjectable& operator+=(const AutoInjectable& other) {
+    auto pLast = &pFLink;
+    while(*pLast)
+      pLast = &(*pLast)->pFLink;
+
+    *pLast = new AutoInjectable(other);
+    return *this;
+  }
+
+  AutoInjectable operator+(AutoInjectable&& rhs) const {
+    AutoInjectable retVal(*this);
+    retVal += std::move(rhs);
+    return retVal;
+  }
+
+  AutoInjectable operator+(const AutoInjectable& rhs) const {
+    AutoInjectable retVal(*this);
+    retVal += rhs;
+    return retVal;
+  }
+
   void operator=(AutoInjectable&& rhs) {
     std::swap(pValue, rhs.pValue);
     std::swap(pFLink, rhs.pFLink);
+  }
+
+  operator bool(void) const {
+    return !!pValue;
   }
 
 private:
@@ -158,13 +184,34 @@ private:
   AutoInjectable* pFLink;
 };
 
-inline AutoInjectable operator+(AutoInjectable lhs, AutoInjectable rhs) {
-  return lhs += std::move(rhs);
+inline AutoInjectable operator+(AutoInjectable&& lhs, AutoInjectable&& rhs) {
+  lhs += std::move(rhs);
+  return AutoInjectable(std::move(lhs));
 }
 
-template<class T, class... Args>
-AutoInjectable MakeInjectable(Args... args) {
-  return AutoInjectable(new AutoInjectableExpression<T, Args...>(std::forward<Args>(args)...));
+template<class T, class Arg1, class... Args>
+AutoInjectable MakeInjectable(Arg1 arg1, Args... args) {
+  return AutoInjectable(
+    new AutoInjectableExpression<T, Arg1, Args...>(
+      std::forward<Arg1>(arg1),
+      std::forward<Args>(args)...
+    )
+  );
+}
+
+template<class... Ts>
+AutoInjectable MakeInjectable(void)  {
+  if(sizeof...(Ts) == 0)
+    return AutoInjectable();
+
+  AutoInjectable injs [] {
+    AutoInjectable(new AutoInjectableExpression<Ts>())...
+  };
+
+  AutoInjectable retVal(std::move(injs[0]));
+  for(auto& cur : injs)
+    retVal += std::move(cur);
+  return retVal;
 }
 
 template<class Fn>
