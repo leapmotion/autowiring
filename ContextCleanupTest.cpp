@@ -220,8 +220,8 @@ TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
   longTime->barr.wait();
   longTime->Stop();
 
-  // Now perform an explicit wait
-  m_create->Wait();
+  // Now stop the context and perform an explicit wait
+  m_create->SignalShutdown(true);
 
   // At this point, the thread must have returned AND released its shared pointer to the enclosing context
   EXPECT_EQ(initCount, m_create.use_count()) << "Context thread persisted even after it should have fallen out of scope";
