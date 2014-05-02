@@ -180,7 +180,7 @@ public:
   /// <summary>
   /// Causes a new thread to be created in which the Run method will be invoked
   /// </summary>
-  /// <returns>True to indicate that the thread was started successfully</returns>
+  /// <returns>True to indicate that the thread was started successfully, false if it was already started or cancelled</returns>
   /// <remarks>
   /// Note that this operation has an inherit race condition.  Be careful to ensure that
   /// Start will not be called from more than one place on the same object.  The thread
