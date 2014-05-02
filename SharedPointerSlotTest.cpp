@@ -54,7 +54,7 @@ TEST_F(SharedPointerSlotTest, SlotReassignment) {
   // Recast to another shared pointer, verify reference count goes down:
   slot = sharedPointerB;
   ASSERT_TRUE(sharedPointerA.unique()) << "Destructor was not properly invoked for a shared pointer slot";
-  ASSERT_EQ(2UL, sharedPointerB.use_count()) << "Reference count was not incremented properly during a shared pointer hold";
+  ASSERT_EQ(2, sharedPointerB.use_count()) << "Reference count was not incremented properly during a shared pointer hold";
 
   // Now change the type completely, verify proper release:
   slot = sharedPointerC;
@@ -70,7 +70,7 @@ TEST_F(SharedPointerSlotTest, SlotsInVector) {
     // Initialize with a lot of copies of sharedPtr
     for(size_t i = 0; i < 10; i++) {
       slots.push_back(sharedPtr);
-      ASSERT_EQ(1 + slots.size(), sharedPtr.use_count()) << "Unexpected number of references to a slotted shared pointer";
+      ASSERT_EQ(1 + (long)slots.size(), sharedPtr.use_count()) << "Unexpected number of references to a slotted shared pointer";
     }
   }
 
@@ -95,7 +95,7 @@ TEST_F(SharedPointerSlotTest, SlotDuplication) {
     slot2 = slot1;
 
     // Verify reference count was affected as expected
-    ASSERT_EQ(3UL, sharedPtr.use_count()) << "A second-order slot copy didn't increment the reference count as expected";
+    ASSERT_EQ(3, sharedPtr.use_count()) << "A second-order slot copy didn't increment the reference count as expected";
   }
 
   // Verify that the slot still holds a reference and that the reference count is correct:

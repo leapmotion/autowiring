@@ -8,7 +8,7 @@
 #include "EventInputStream.h"
 #include <boost/thread/mutex.hpp>
 #include <set>
-#include TUPLE_HEADER
+#include STL_TUPLE_HEADER
 #include RVALUE_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_SET
