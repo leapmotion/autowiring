@@ -274,6 +274,40 @@ TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
   ASSERT_TRUE(*x) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
 }
 
+class WaitsALongTimeThenQuits:
+  public CoreThread
+{
+public:
+  WaitsALongTimeThenQuits(void):
+    m_runExiting(false)
+  {}
+
+  bool m_runExiting;
+
+  void Run(void) override {
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    m_runExiting = true;
+  }
+};
+
+TEST_F(CoreThreadTest, NestedContextWait) {
+  // Initiate the outer context:
+  m_create->Initiate();
+
+  // Create a subcontext which has our delay thread in it:
+  AutoCreateContext ctxt;
+  auto waitsAwhile = ctxt->Inject<WaitsALongTimeThenQuits>();
+  ctxt->Initiate();
+
+  // Stop and delay on the outer context:
+  m_create->SignalShutdown();
+  m_create->Wait();
+
+  // Now we verify that our interior thread has actually quit:
+  ASSERT_TRUE(!waitsAwhile->IsRunning()) << "Inner thread was marked running by CoreThread when outer context returned";
+  ASSERT_TRUE(waitsAwhile->m_runExiting) << "Inner thread marked as stopped, but has not apparently quit";
+}
+
 template<ThreadPriority priority>
 class JustIncrementsANumber:
   public CoreThread
