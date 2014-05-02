@@ -746,23 +746,17 @@ public:
   void SignalTerminate(bool wait = true) { SignalShutdown(wait, ShutdownMode::Immediate); }
 
   /// <summary>
-  /// Waits until all threads running in this context at the time of the call are sdtopped when the call returns
+  /// Waits until the context is transitioned to the Stopped state and all threads and child threads have terminated.
   /// </summary>
-  /// <remarks>
-  /// The only guarantees made by this method are that the threads which were running when the call was made will
-  /// no longer be running upon return.  No guarantees are made about the state of other threads that might have
-  /// been created after Wait was called; no guarantees are made about the run state or existence of any child
-  /// contexts.  Child contexts may exist which contain running threads.
-  /// </remarks>
   void Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    m_stateChanged.wait(lk, [this] () {return this->m_outstanding.expired();});
+    m_stateChanged.wait(lk, [this] {return m_isShutdown && this->m_outstanding.expired();});
   }
 
   template<class Rep, class Period>
   bool Wait(const boost::chrono::duration<Rep, Period>& duration) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_stateChanged.wait_for(lk, duration, [this] {return this->m_outstanding.expired();});
+    return m_stateChanged.wait_for(lk, duration, [this] {return m_isShutdown && this->m_outstanding.expired(); });
   }
   
   /// <summary>
