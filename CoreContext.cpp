@@ -66,9 +66,17 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
     return retVal;
 
   auto self = shared_from_this();
+
+  // Increment the parent's outstanding count as well.  This will be held by the lambda, and will cause the enclosing
+  // context's outstanding thread count to be incremented by one as long as we have any threads still running in our
+  // context.  This property is relied upon in order to get the Wait function to operate properly.
+  std::shared_ptr<Object> parentCount;
+  if(m_pParent)
+    parentCount = m_pParent->IncrementOutstandingThreadCount();
+
   retVal.reset(
     (Object*)1,
-    [this, self](Object*) {
+    [this, self, parentCount](Object*) {
       // Object being destroyed, notify all recipients
       boost::lock_guard<boost::mutex> lk(m_lock);
 
@@ -178,7 +186,9 @@ void CoreContext::Initiate(void) {
   if(m_pParent)
     // Start parent threads first
     m_pParent->Initiate();
-  
+
+  // Now we can add the event receivers we haven't been able to add because the context
+  // wasn't yet started:
   AddDelayedEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
   m_delayedEventReceivers.clear();
   m_junctionBoxManager->Initiate();
@@ -199,12 +209,13 @@ void CoreContext::InitiateCoreThreads(void) {
 }
 
 void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
-  // Transition as soon as possible:
-  m_isShutdown = true;
-
-  // Wipe out the junction box manager:
-  (boost::unique_lock<boost::mutex>)m_lock,
-  UnregisterEventReceivers();
+  // Wipe out the junction box manager, notify anyone waiting on the state condition:
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    UnregisterEventReceivers();
+    m_isShutdown = true;
+    m_stateChanged.notify_all();
+  }
 
   {
     // Teardown interleave assurance--all of these contexts will generally be destroyed
