@@ -266,15 +266,8 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
     return;
 
   // Wait for the treads to finish before returning.
-  for (t_threadList::iterator it = m_threads.begin(); it != m_threads.end(); ++it) {
-    auto& cur = **it;
-
-    // Wait for completion only if we're currently running.  The thread cannot be made active
-    // at this point, because we're in teardown, and this makes it safe to elide the call to
-    // wait if the thread has never been run yet.
-    if(cur.IsRunning())
-      cur.Wait();
-  }
+  for (t_threadList::iterator it = m_threads.begin(); it != m_threads.end(); ++it)
+    (**it).Wait();
 }
 
 bool CoreContext::DelayUntilInitiated(void) {
@@ -298,8 +291,13 @@ void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
   m_threads.push_front(ptr.get());
 
   if(m_initiated)
-    // We're already running, this means we're late to the game and need to start _now_.
+    // We're already running, this means we're late to the party and need to start _now_.
     ptr->Start(IncrementOutstandingThreadCount());
+
+  if(m_isShutdown)
+    // We're really late to the party, it's already over.  Make sure the thread's stop
+    // overrides are called and that it transitions to a stopped state.
+    ptr->Stop(false);
 }
 
 void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
