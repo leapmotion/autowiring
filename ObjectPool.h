@@ -64,6 +64,8 @@ protected:
           return;
         }
       }
+
+      m_setCondition.notify_one();
     }
 
     // Object wasn't added.  Destroy it.
@@ -142,10 +144,11 @@ public:
         boost::lock_guard<boost::mutex> lk(*m_monitor);
         if(m_objs.size() <= m_maxPooled)
           return false;
-        typename t_stType::iterator q = m_objs.begin();
+        auto q = m_objs.begin();
+        ptr = *q;
         m_objs.erase(q);
       }
-      delete *ptr;
+      delete ptr;
     }
     return true;
   }
@@ -154,21 +157,39 @@ public:
   /// Sets the maximum number of objects this pool will permit to be outstanding at time
   /// </summary>
   /// <remarks>
+  /// A user may assign the limit to a value lower than the current limit.  In this case, Wait will block
+  /// until the number of outstanding entities falls below the current count.
+  ///
+  /// If the limit is set to zero, it may not be changed.  Attempting to change the limit in this case
+  /// will result in an exception.  Setting the outstanding limit to zero is guaranteed to never throw
+  /// an exception.
   /// </remarks>
   void SetOutstandingLimit(size_t limit) {
+    boost::lock_guard<boost::mutex> lk(*m_monitor);
+    if(!m_limit && limit)
+      // We're throwing an exception if the limit is currently zero and the user is trying to set it 
+      // to something other than zero.
+      throw autowiring_error("Attempted to set the limit to a nonzero value after it was set to zero");
     m_limit = limit;
   }
 
   /// <summary>
   /// Blocks until an object becomes available from the pool, or the timeout has elapsed
   /// </summary>
+  /// <remarks>
+  /// This method will throw an autowiring_error if an attempt is made to obtain an element from a pool
+  /// with a limit of zero
+  /// </remarks>
   template<class Duration>
   std::shared_ptr<T> WaitFor(Duration duration) {
     boost::unique_lock<boost::mutex> lk(*m_monitor);
+    if(!m_limit)
+      throw autowiring_error("Attempted to perform a timed wait on a pool containing no entities");
+
     if(m_setCondition.wait_for(
         lk,
         duration,
-        [this]() -> bool { return m_outstanding < m_limit; }
+        [this] { return m_outstanding < m_limit; }
       )
     )
       return ObtainElementUnsafe(lk);
@@ -178,9 +199,16 @@ public:
   /// <summary>
   /// Blocks until an object becomes available from the pool
   /// </summary>
+  /// <remarks>
+  /// This method will throw an autowiring_error if an attempt is made to obtain an element from a pool
+  /// with a limit of zero
+  /// </remarks>
   std::shared_ptr<T> Wait(void) {
     boost::unique_lock<boost::mutex> lk(*m_monitor);
-    m_setCondition.wait(lk, [this]() -> bool {
+    if(!m_limit)
+      throw autowiring_error("Attempted to perform a timed wait on a pool containing no entities");
+
+    m_setCondition.wait(lk, [this] {
       return m_outstanding < m_limit;
     });
     return ObtainElementUnsafe(lk);
@@ -202,7 +230,23 @@ public:
     if(m_limit <= m_outstanding)
       // Already at the limit
       return;
+
     rs = ObtainElementUnsafe(lk);
+  }
+
+  /// <summary>
+  /// Blocks until all outstanding entries have been returned, and prevents the issuance of any new items
+  /// </summary>
+  void Rundown(void) {
+    // Clear our pool and prevent the issuance of any new entities:
+    SetMaximumPooledEntities(0);
+    SetOutstandingLimit(0);
+
+    // Now, simply block until everyone comes back to us
+    boost::unique_lock<boost::mutex> lk(*m_monitor);
+    m_setCondition.wait(lk, [this] {
+      return !m_outstanding;
+    });
   }
 };
 
