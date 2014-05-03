@@ -181,11 +181,11 @@ bool BasicThread::WaitUntil(TimeType timepoint) {
 }
 
 void BasicThread::Stop(bool graceful) {
+  boost::lock_guard<boost::mutex> lk(m_state->m_lock);
+
   // Trivial return check:
   if(m_stop)
     return;
-
-  boost::lock_guard<boost::mutex> lk(m_state->m_lock);
 
   // If we're not running, mark ourselves complete
   if(!m_running)
