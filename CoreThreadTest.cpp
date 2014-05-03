@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "CoreThreadTest.h"
 #include "Autowired.h"
+#include "at_exit.h"
 #include "TestFixtures/SimpleThreaded.h"
 #include <boost/thread/thread.hpp>
 #include <boost/thread.hpp>
@@ -342,6 +343,7 @@ public:
 
   void Run(void) override {
     ElevatePriority p(*this, priority);
+
     while(!ShouldStop()) {
       // Obtain the lock and then increment our value:
       boost::lock_guard<boost::mutex> lk(*contended);
@@ -351,11 +353,19 @@ public:
 };
 
 #ifdef _MSC_VER
+#include "windows.h"
+
 TEST_F(CoreThreadTest, VerifyCanBoostPriority) {
   // Create two spinners and kick them off at the same time:
-  AutoRequired<JustIncrementsANumber<ThreadPriority::Normal>> lower;
-  AutoRequired<JustIncrementsANumber<ThreadPriority::AboveNormal>> higher;
+  AutoRequired<JustIncrementsANumber<ThreadPriority::BelowNormal>> lower;
+  AutoRequired<JustIncrementsANumber<ThreadPriority::Normal>> higher;
   m_create->Initiate();
+
+  // We want all of our threads to run on ONE cpu for awhile, and then we want to put it back at exit
+  SetProcessAffinityMask(GetCurrentProcess(), 1);
+  auto onreturn = MakeAtExit([] {
+    SetProcessAffinityMask(GetCurrentProcess(), ~0);
+  });
 
   // Poke the conditional variable a lot:
   AutoRequired<boost::mutex> contended;
