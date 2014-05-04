@@ -1,5 +1,5 @@
 #pragma once
-
+#include "autowiring_error.h"
 #include "Object.h"
 #include "ObjectPoolMonitor.h"
 #include <boost/thread/condition_variable.hpp>
