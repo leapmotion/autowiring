@@ -52,24 +52,25 @@ protected:
   size_t m_outstanding;
 
   void Return(std::shared_ptr<ObjectPoolMonitor> monitor, T* ptr) {
-    {
-      boost::lock_guard<boost::mutex> lk(*monitor);
-      if(!monitor->IsAbandoned()) {
-        m_outstanding--;
-        if(m_objs.size() < m_maxPooled) {
-          // Reset, insert, return
-          Reset(*ptr);
-          m_objs.insert(ptr);
-          m_setCondition.notify_one();
-          return;
-        }
-      }
+    // Ensure the object gets destroyed if we don't add it:
+    std::unique_ptr<T> lcl(ptr);
 
-      m_setCondition.notify_one();
+    boost::lock_guard<boost::mutex> lk(*monitor);
+    if(monitor->IsAbandoned())
+      // Nothing we can do, monitor object abandoned already, just destroy the object
+      return;
+    
+    // One fewer outstanding count:
+    m_outstanding--;
+    if(m_objs.size() < m_maxPooled) {
+      // Reset, insert, return
+      Reset(*ptr);
+      m_objs.insert(ptr);
     }
 
-    // Object wasn't added.  Destroy it.
-    delete ptr;
+    // If the new outstanding count is less than or equal to the limit, wake up any waiters:
+    if(m_outstanding <= m_limit)
+      m_setCondition.notify_all();
   }
 
   /// <summary>
