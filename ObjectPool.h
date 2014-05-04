@@ -35,16 +35,13 @@ public:
   ~ObjectPoolBase(void) {
     // Transition the pool to the abandoned state:
     m_monitor->Abandon();
-
-    for(auto q = m_objs.begin(); q != m_objs.end(); q++)
-      delete *q;
   }
 
 protected:
   std::shared_ptr<ObjectPoolMonitor> m_monitor;
   boost::condition_variable m_setCondition;
 
-  typedef std::set<T*> t_stType;
+  typedef std::vector<std::unique_ptr<T>> t_stType;
   t_stType m_objs;
 
   size_t m_maxPooled;
@@ -65,7 +62,7 @@ protected:
     if(m_objs.size() < m_maxPooled) {
       // Reset, insert, return
       Reset(*ptr);
-      m_objs.insert(ptr);
+      m_objs.push_back(std::move(lcl));
     }
 
     // If the new outstanding count is less than or equal to the limit, wake up any waiters:
@@ -97,10 +94,9 @@ protected:
     // Cached, or construct?
     T* pObj;
     if(m_objs.size()) {
-      // Lock and remove an element at random:
-      auto q = m_objs.begin();
-      pObj = *q;
-      m_objs.erase(q);
+      // Lock and remove an element:
+      pObj = m_objs[m_objs.size() - 1].release();
+      m_objs.pop_back();
     } else {
       // Lock release, so construction does not have to be synchronized:
       lk.unlock();
@@ -127,9 +123,7 @@ public:
   size_t GetOutstanding(void) const { return m_outstanding; }
 
   void ClearCachedEntities(void) {
-    boost::lock_guard<boost::mutex> lk(*m_monitor);
-    for (auto q = m_objs.begin(); q != m_objs.end(); q++)
-      delete *q;
+    (boost::lock_guard<boost::mutex>)*m_monitor,
     m_objs.clear();
   }
 
@@ -140,16 +134,13 @@ public:
   bool SetMaximumPooledEntities(bool maxPooled) {
     m_maxPooled = maxPooled;
     for(;;) {
-      T* ptr;
-      {
-        boost::lock_guard<boost::mutex> lk(*m_monitor);
-        if(m_objs.size() <= m_maxPooled)
-          return false;
-        auto q = m_objs.begin();
-        ptr = *q;
-        m_objs.erase(q);
-      }
-      delete ptr;
+      std::unique_ptr<T> ptr;
+      boost::lock_guard<boost::mutex> lk(*m_monitor);
+      if(m_objs.size() <= m_maxPooled)
+        return false;
+
+      ptr = std::move(m_objs[m_objs.size() - 1]);
+      m_objs.pop_back();
     }
     return true;
   }
