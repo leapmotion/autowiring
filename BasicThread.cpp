@@ -181,20 +181,24 @@ bool BasicThread::WaitUntil(TimeType timepoint) {
 }
 
 void BasicThread::Stop(bool graceful) {
-  boost::lock_guard<boost::mutex> lk(m_state->m_lock);
+  {
+    boost::lock_guard<boost::mutex> lk(m_state->m_lock);
 
-  // Trivial return check:
-  if(m_stop)
-    return;
+    // Trivial return check:
+    if(m_stop)
+      return;
 
-  // If we're not running, mark ourselves complete
-  if(!m_running)
-    m_completed = true;
-  
-  // Now we send the appropriate trigger:
-  m_stop = true;
+    // If we're not running, mark ourselves complete
+    if(!m_running)
+      m_completed = true;
+
+    // Now we send the appropriate trigger:
+    m_stop = true;
+    m_state->m_stateCondition.notify_all();
+  }
+
+  // Event notification takes place outside of the context of a lock
   OnStop();
-  m_state->m_stateCondition.notify_all();
 }
 
 void BasicThread::ForceCoreThreadReidentify(void) {
