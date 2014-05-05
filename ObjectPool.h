@@ -95,7 +95,7 @@ protected:
     T* pObj;
     if(m_objs.size()) {
       // Lock and remove an element:
-      pObj = m_objs[m_objs.size() - 1].release();
+      pObj = m_objs.back().release();
       m_objs.pop_back();
     } else {
       // Lock release, so construction does not have to be synchronized:
@@ -139,7 +139,7 @@ public:
       if(m_objs.size() <= m_maxPooled)
         return false;
 
-      ptr = std::move(m_objs[m_objs.size() - 1]);
+      ptr = std::move(m_objs.back());
       m_objs.pop_back();
     }
     return true;
