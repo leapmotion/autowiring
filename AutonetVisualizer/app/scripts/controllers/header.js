@@ -5,13 +5,13 @@ angular.module('autoNetApp')
 .controller('HeaderCtrl', ['$scope', 'websocket', function ($scope, websocket) {
   $scope.isSubscribed = false;
 
-  $scope.subscribe = function() {
+  function subscribe() {
     if (websocket.isConnected()){
       websocket.subscribe();
     }
   };
 
-  $scope.unsubscribe = function() {
+  function unsubscribe() {
     if (websocket.isConnected()){
       websocket.unsubscribe();
     }
@@ -24,6 +24,14 @@ angular.module('autoNetApp')
   websocket.on('unsubscribed', function(){
     $scope.isSubscribed = false;
   });
+
+  $scope.toggleSubscription = function(){
+    if ($scope.isSubscribed){
+      unsubscribe();
+    } else {
+      subscribe();
+    }
+  }
 
   $scope.isConnected = function() {
     var con = websocket.isConnected();

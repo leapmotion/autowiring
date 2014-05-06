@@ -1,10 +1,10 @@
 #pragma once
+
 #include "EventReceiver.h"
 #include "DispatchThunk.h"
 #include <boost/thread/condition_variable.hpp>
 #include <list>
 #include <queue>
-#include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include MEMORY_HEADER
 

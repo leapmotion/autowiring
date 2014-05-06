@@ -95,15 +95,7 @@ bool CoreThread::WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost:
   return true;
 }
 
-void CoreThread::Stop(bool graceful){
-  // Trivial return check:
-  if(m_stop)
-    return;
-
-  // Perform initial stop:
-  m_stop = true;
-  OnStop();
-
+void CoreThread::Stop(bool graceful) {
   if(graceful) {
     // Pend a call which will invoke Abort once the dispatch queue is done:
     DispatchQueue::Pend([this] {
@@ -112,13 +104,12 @@ void CoreThread::Stop(bool graceful){
       // Notify callers of our new state:
       this->m_state->m_stateCondition.notify_all();
     });
-  } else {
+  } else
     // Abort the dispatch queue so anyone waiting will wake up
     DispatchQueue::Abort();
 
-    // Notify all callers of our status update
-    m_state->m_stateCondition.notify_all();
-  }
+  // Pass off to base class handling:
+  BasicThread::Stop(graceful);
 }
 
 void CoreThread::Run() {

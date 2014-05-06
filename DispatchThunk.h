@@ -1,4 +1,5 @@
 #pragma once
+
 #include <boost/chrono/system_clocks.hpp>
 
 /// <summary>

@@ -46,4 +46,3 @@ public:
   /// </remarks>
   void AddTeardownListener(const std::function<void ()>& listener);
 };
-

@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "CoreThreadTest.h"
 #include "Autowired.h"
+#include "at_exit.h"
 #include "TestFixtures/SimpleThreaded.h"
 #include <boost/thread/thread.hpp>
 #include <boost/thread.hpp>
@@ -211,7 +212,7 @@ TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
   ASSERT_FALSE(x.unique()) << "A pended event was freed before it was called, and appears to be present in a dispatch queue";
 }
 
-TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
+TEST_F(CoreThreadTest, DISABLED_VerifyDoublePendedDispatchDelay) {
   // Immediately pend threads:
   m_create->Initiate();
 
@@ -274,6 +275,58 @@ TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
   ASSERT_TRUE(*x) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
 }
 
+class WaitsALongTimeThenQuits:
+  public CoreThread
+{
+public:
+  WaitsALongTimeThenQuits(void):
+    m_runExiting(false)
+  {}
+
+  bool m_runExiting;
+
+  void Run(void) override {
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    m_runExiting = true;
+  }
+};
+
+TEST_F(CoreThreadTest, NestedContextWait) {
+  // Initiate the outer context:
+  m_create->Initiate();
+
+  // Create a subcontext which has our delay thread in it:
+  AutoCreateContext ctxt;
+  auto waitsAwhile = ctxt->Inject<WaitsALongTimeThenQuits>();
+  ctxt->Initiate();
+
+  // Stop and delay on the outer context:
+  m_create->SignalShutdown();
+  m_create->Wait();
+
+  // Now we verify that our interior thread has actually quit:
+  ASSERT_TRUE(!waitsAwhile->IsRunning()) << "Inner thread was marked running by CoreThread when outer context returned";
+  ASSERT_TRUE(waitsAwhile->m_runExiting) << "Inner thread marked as stopped, but has not apparently quit";
+}
+
+TEST_F(CoreThreadTest, WaitBeforeInitiate) {
+  // Wait for the outer context before it's actually initiated:
+  ASSERT_FALSE(m_create->Wait(boost::chrono::seconds(0))) << "A wait operation on a context succeeded even though it was not yet started";
+
+  // Stop the outer context without even starting it
+  m_create->SignalTerminate();
+
+  // Try to add a thread to the context.  This should cause the thread to be immediately marked as "stopped" and should allow a Wait
+  // operation on the thread to return right away.
+  AutoRequired<CoreThread> ct;
+  ASSERT_TRUE(!ct->IsRunning()) << "A thread added to an already-stopped context was incorrectly marked as running";
+  ASSERT_TRUE(ct->ShouldStop()) << "A thread added to an already-stopped context did not report that it should be stopped";
+  ASSERT_TRUE(ct->WaitFor(boost::chrono::seconds(0))) << "A thread added to an already-stopped context did not correctly respond to a zero-duration wait";
+
+  // Wait again.  This should suceed right away.
+  ASSERT_TRUE(m_create->Wait(boost::chrono::seconds(0))) << "Failed to wait on a context which should have already been stopped";
+}
+
 template<ThreadPriority priority>
 class JustIncrementsANumber:
   public CoreThread
@@ -290,6 +343,7 @@ public:
 
   void Run(void) override {
     ElevatePriority p(*this, priority);
+
     while(!ShouldStop()) {
       // Obtain the lock and then increment our value:
       boost::lock_guard<boost::mutex> lk(*contended);
@@ -299,11 +353,19 @@ public:
 };
 
 #ifdef _MSC_VER
+#include "windows.h"
+
 TEST_F(CoreThreadTest, VerifyCanBoostPriority) {
   // Create two spinners and kick them off at the same time:
-  AutoRequired<JustIncrementsANumber<ThreadPriority::Normal>> lower;
-  AutoRequired<JustIncrementsANumber<ThreadPriority::AboveNormal>> higher;
+  AutoRequired<JustIncrementsANumber<ThreadPriority::BelowNormal>> lower;
+  AutoRequired<JustIncrementsANumber<ThreadPriority::Normal>> higher;
   m_create->Initiate();
+
+  // We want all of our threads to run on ONE cpu for awhile, and then we want to put it back at exit
+  SetProcessAffinityMask(GetCurrentProcess(), 1);
+  auto onreturn = MakeAtExit([] {
+    SetProcessAffinityMask(GetCurrentProcess(), ~0);
+  });
 
   // Poke the conditional variable a lot:
   AutoRequired<boost::mutex> contended;

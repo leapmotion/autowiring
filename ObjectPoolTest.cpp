@@ -53,7 +53,7 @@ TEST_F(ObjectPoolTest, VerifyAsynchronousUsage) {
 
   // This should return more or less right away as objects become available:
   {
-    auto obj4 = pool.WaitFor(boost::chrono::milliseconds(1));
+    auto obj4 = pool.WaitFor(boost::chrono::milliseconds(10));
     EXPECT_TRUE(obj4 != nullptr) << "Object pool failed to be notified that it received a new element";
   }
 

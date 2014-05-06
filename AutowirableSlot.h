@@ -1,18 +1,47 @@
 #pragma once
-#include "autowiring_error.h"
 #include "fast_pointer_cast.h"
-#include <functional>
-#include FUNCTIONAL_HEADER
 #include MEMORY_HEADER
-#include RVALUE_HEADER
 
 class CoreContext;
+class DeferrableAutowiring;
 class GlobalCoreContext;
 class Object;
 
 // Utility routine, for users who need a function that does nothing
 template<class T>
 void NullOp(T) {}
+
+/// <summary>
+/// Strategy class for performing unsynchronized operations on an autowirable slot
+/// </summary>
+/// <remarks>
+/// The DeferrableAutowiring base class' TrySatisfyAutowiring and SatisfyAutowiring routines are both
+/// guaranteed to be run in a synchronized context--IE, a call to CancelAutowiringNotification will
+/// block until the above routines return.  Unfortunately, this lock also excludes many other types
+/// of operations, such as type search operations, which means that some of the work associated with
+/// cleaning up after an autowiring has been satisfied will take place in an unsynchronized context.
+/// This means that virtual function calls are generally unsafe on the member being autowired when
+/// they are made without a lock being held.
+///
+/// To mitigate this problem, instead of performing a virtual call through the original object, a
+/// strategy type is provided by the DeferrableAutowiring while the lock is held, and then later the
+/// strategy is employed to clean up the object, if necessary.
+/// </remarks>
+class DeferrableUnsynchronizedStrategy {
+public:
+  ~DeferrableUnsynchronizedStrategy(void) {}
+
+  /// <summary>
+  /// Releases memory allocated by this object, where appropriate
+  /// </summary>
+  /// <summary>
+  /// Implementors of this method are permitted to delete "this" or perform any other work while
+  /// outside of the context of a lock.  This method is only called after TrySatisfyAutowiring has
+  /// returned true.  Once this method returns, this object is guaranteed never to be referred to
+  /// again by CoreContext.
+  /// </remarks>
+  virtual void Finalize(DeferrableAutowiring* pSlot) const = 0;
+};
 
 /// <summary>
 /// Utility class which represents any kind of autowiring entry that may be deferred to a later date
@@ -40,27 +69,39 @@ protected:
   /// <summary>
   /// Causes this deferrable to unregister itself with the enclosing context
   /// </summary>
-  /// <remarks>
-  /// In order to ensure that GetType is available,
-  /// </remarks>
   void CancelAutowiring(void);
 
 public:
-  DeferrableAutowiring* GetFlink(void) const { return m_pFlink; }
-  void SetFlink(DeferrableAutowiring* pFlink) { m_pFlink = pFlink; }
+  // Accessor methods:
+  DeferrableAutowiring* GetFlink(void) { return m_pFlink; }
 
+  // Mutator methods:
+  void SetFlink(DeferrableAutowiring* pFlink) {
+    m_pFlink = pFlink;
+  }
 
   /// <returns>
   /// The type on which this deferred slot is bound
   /// </returns>
   virtual const std::type_info& GetType(void) const = 0;
 
+  /// <returns>
+  /// The strategy that should be used to satisfy this slot
+  /// </returns>
+  /// <remarks>
+  /// If no custom strategy is required, this method may return null
+  /// </remarks>
+  virtual const DeferrableUnsynchronizedStrategy* GetStrategy(void) { return nullptr; }
+
+  /// <summary>
+  /// </summary>
+  virtual DeferrableAutowiring* ReleaseDependentChain(void) { return nullptr; }
+
   /// <summary>
   /// Attempts to satisfy this autowiring relationship with the specified candidate object
   /// </summary>
   /// <remarks>
-  /// This method returns true when the autowiring is successful.  Once the function returns true,
-  /// this method is guaranteed to never be called again.
+  /// This method returns true when the autowiring was successful
   /// </remarks>
   virtual bool TrySatisfyAutowiring(const std::shared_ptr<Object>& candidate) = 0;
 
@@ -71,20 +112,6 @@ public:
   /// The passed value must be statically castable to type AutowirableSlot
   /// </remarks>
   virtual void SatisfyAutowiring(const DeferrableAutowiring& witness) = 0;
-
-  /// <summary>
-  /// Releases memory allocated by this object, where appropriate
-  /// </summary>
-  /// <summary>
-  /// Implementors of this method are permitted to delete "this" or perform any other work while
-  /// outside of the context of a lock.  This method is only called after TrySatisfyAutowiring has
-  /// returned true.  Once this method returns, this object is guaranteed never to be referred to
-  /// again by CoreContext.
-  /// </remarks>
-  virtual void Finalize(void) {
-    // Just reset the enclosing pointer, do nothing else.
-    m_context.reset();
-  }
 };
 
 template<class T>
@@ -115,8 +142,8 @@ public:
   }
 
   bool TrySatisfyAutowiring(const std::shared_ptr<Object>& candidate) override {
-    *this = m_fast_pointer_cast(candidate);
-    return *this;
+    (std::shared_ptr<T>&)*this = m_fast_pointer_cast(candidate);
+    return !!*this;
   }
 
   void SatisfyAutowiring(const DeferrableAutowiring& witness) override {
@@ -148,6 +175,19 @@ class AutowirableSlotFn:
   static_assert(!std::is_same<CoreContext, T>::value, "Do not attempt to autowire CoreContext.  Instead, use AutoCurrentContext or AutoCreateContext");
   static_assert(!std::is_same<GlobalCoreContext, T>::value, "Do not attempt to autowire GlobalCoreContext.  Instead, use AutoGlobalContext");
 
+  class Strategy:
+    public DeferrableUnsynchronizedStrategy
+  {
+  public:
+    Strategy(void) {}
+
+    void Finalize(DeferrableAutowiring* pfn) const override {
+      ((AutowirableSlotFn*) pfn)->Finalize();
+    }
+  };
+
+  static const Strategy s_strategy;
+
 public:
   AutowirableSlotFn(const std::shared_ptr<CoreContext>& ctxt, Fn&& fn) :
     AutowirableSlot<T>(ctxt),
@@ -162,6 +202,18 @@ public:
   // Underlying lambda that we will call:
   const Fn fn;
 
+  /// <summary>
+  /// Finalization routine, called by our strategy
+  /// </summary>
+  void Finalize(void) {
+    // Let the lambda execute as it sees fit:
+    CallThroughObj<Fn>(&Fn::operator());
+
+    // Call the lambda, remove all accountability to the context, self-destruct, and return:
+    this->m_context.reset();
+    delete this;
+  }
+
   template<class L, class Ret, class... Args>
   void CallThroughObj(Ret(L::*pfn)(Args...) const) {
     (fn.*pfn)(
@@ -169,13 +221,8 @@ public:
     );
   }
 
-  void Finalize(void) override {
-    // Let the lambda execute as it sees fit:
-    CallThroughObj<Fn>(&Fn::operator());
-
-    // Call the lambda, remove all accountability to the context, self-destruct, and return:
-    DeferrableAutowiring::m_context.reset();
-    delete this;
-  }
+  const DeferrableUnsynchronizedStrategy* GetStrategy(void) override { return &s_strategy; }
 };
 
+template<class Fn, class T>
+const typename AutowirableSlotFn<Fn, T>::Strategy AutowirableSlotFn<Fn, T>::s_strategy;
