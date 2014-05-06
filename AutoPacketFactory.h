@@ -99,8 +99,6 @@ private:
   // Utility override, does nothing
   void AddSubscriber(std::false_type) {}
 
-  std::function<void()> fn;
-
 public:
   // Accessor methods:
   const std::vector<AutoPacketSubscriber>& GetSubscriberVector(void) const { return m_subscribers; }
