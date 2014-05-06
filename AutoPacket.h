@@ -1,5 +1,4 @@
 #pragma once
-#include "Autowired.h"
 #include "AutoCheckout.h"
 #include "auto_out.h"
 #include "auto_pooled.h"
@@ -9,12 +8,16 @@
 #include "SatCounter.h"
 #include <boost/any.hpp>
 #include <boost/thread/mutex.hpp>
+#include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 
 class AutoPacketFactory;
 class AutoPacketProfiler;
 class AutoPacketSubscriber;
+
+template<class T>
+struct subscriber_traits;
 
 /// <summary>
 /// A decorator-style processing packet
@@ -84,9 +87,6 @@ private:
 
   // The associated packet factory:
   AutoPacketFactory& m_factory;
-
-  // Profiler, if one exists:
-  Autowired<AutoPacketProfiler> m_profiler;
 
   // The set of decorations currently attached to this object, and the associated lock:
   mutable boost::mutex m_lock;
@@ -392,7 +392,7 @@ public:
   operator std::shared_ptr<AutoPacket>(void) const { return packet.shared_from_this(); }
 
   template<class T>
-  T Cast(void) {
+  T Cast(void) const {
     AutoPacketAdaptorHelper<T> helper;
     return helper(packet);
   }
