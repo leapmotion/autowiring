@@ -30,7 +30,7 @@ struct CallExtractor {
   t_call operator()() const {
     typedef decltype(&T::AutoFilter) t_fnType;
     return reinterpret_cast<t_call>(
-      &BoundCall<AutoPacketAdaptor, t_fnType, &T::AutoFilter>::Call
+      &Decompose<t_fnType>::Call<&T::AutoFilter, AutoPacketAdaptor>
     );
   }
 };
@@ -41,8 +41,8 @@ struct CallExtractor<T, true> {
   typedef std::true_type deferred;
 
   static void CallDeferred(T* pObj, const AutoPacketAdaptor& repo) {
-    typedef BoundCall<AutoPacketAdaptor, decltype(&T::AutoFilter), &T::AutoFilter> t_boundCall;
-    const t_call call = reinterpret_cast<t_call>(&t_boundCall::Call);
+    typedef Decompose<decltype(&T::AutoFilter)> t_boundCall;
+    const t_call call = reinterpret_cast<t_call>(&t_boundCall::Call<&T::AutoFilter, AutoPacketAdaptor>);
 
     std::shared_ptr<AutoPacket> shared = ExtractSharedPointer(repo);
     *pObj += [pObj, shared, call] {
