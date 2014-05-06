@@ -1,4 +1,5 @@
 #pragma once
+
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
 #include "EventReceiver.h"
@@ -6,9 +7,8 @@
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
 #include <boost/thread/mutex.hpp>
-#include "fast_pointer_cast.h"
 #include <set>
-#include TUPLE_HEADER
+#include STL_TUPLE_HEADER
 #include RVALUE_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_SET

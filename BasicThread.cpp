@@ -134,6 +134,10 @@ bool BasicThread::Start(std::shared_ptr<Object> outstanding) {
       // Already running, short-circuit
       return true;
 
+    if(m_completed)
+      // Already completed (perhaps cancelled), short-circuit
+      return false;
+
     // Currently running:
     m_running = true;
     m_state->m_stateCondition.notify_all();
@@ -153,7 +157,7 @@ void BasicThread::Wait(void) {
   boost::unique_lock<boost::mutex> lk(m_state->m_lock);
   m_state->m_stateCondition.wait(
     lk,
-    [this]() {return this->m_completed; }
+    [this] {return this->m_completed; }
   );
 }
 
@@ -162,7 +166,7 @@ bool BasicThread::WaitFor(boost::chrono::nanoseconds duration) {
   return m_state->m_stateCondition.wait_for(
     lk,
     duration,
-    [this]() {return this->m_completed; }
+    [this] {return this->m_completed; }
   );
 }
 
@@ -172,19 +176,29 @@ bool BasicThread::WaitUntil(TimeType timepoint) {
   return m_state->m_stateCondition.wait_until(
     lk,
     timepoint,
-    [this]() {return this->m_completed; }
+    [this] {return this->m_completed; }
   );
 }
 
 void BasicThread::Stop(bool graceful) {
-  // Trivial return check:
-  if(m_stop)
-    return;
+  {
+    boost::lock_guard<boost::mutex> lk(m_state->m_lock);
 
-  // Perform initial stop:
-  m_stop = true;
+    // Trivial return check:
+    if(m_stop)
+      return;
+
+    // If we're not running, mark ourselves complete
+    if(!m_running)
+      m_completed = true;
+
+    // Now we send the appropriate trigger:
+    m_stop = true;
+    m_state->m_stateCondition.notify_all();
+  }
+
+  // Event notification takes place outside of the context of a lock
   OnStop();
-  m_state->m_stateCondition.notify_all();
 }
 
 void BasicThread::ForceCoreThreadReidentify(void) {

@@ -4,7 +4,6 @@
 #include "uuid.h"
 #include TYPE_INDEX_HEADER
 #include MEMORY_HEADER
-#include STL_UNORDERED_SET
 #include STL_UNORDERED_MAP
 #include TYPE_TRAITS_HEADER
 

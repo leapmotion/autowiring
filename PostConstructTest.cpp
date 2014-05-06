@@ -3,6 +3,9 @@
 #include "PostConstructTest.h"
 #include "Autowired.h"
 #include "ContextMember.h"
+#include "TestFixtures/SimpleObject.h"
+#include <boost/thread/barrier.hpp>
+#include <boost/thread/thread.hpp>
 
 using namespace std;
 
@@ -146,5 +149,92 @@ TEST_F(PostConstructTest, VerifyLoopingFailedAutowiring) {
   for(size_t i = 10; i--;) {
     Autowired<FailedAutowiringInstance> ignored;
     ASSERT_FALSE(ignored.IsAutowired()) << "Successfully autowired an instance that should not have been autowirable";
+  }
+}
+
+TEST_F(PostConstructTest, VerifyTrivialNotifyWhenAutowired) {
+  // Inject a type first:
+  AutoRequired<SimpleObject>();
+
+  // Now autowire, and add a registration:
+  bool called = false;
+  Autowired<SimpleObject> so;
+  so.NotifyWhenAutowired([&called] { called = true; });
+
+  ASSERT_TRUE(called) << "An autowiring notification was not invoked on an already-satisfied field as expected";
+}
+
+TEST_F(PostConstructTest, MultiNotifyWhenAutowired) {
+  // Add multiple notifications on the same space:
+  int field = 0;
+  Autowired<SimpleObject> so;
+  for(size_t i = 10; i--;)
+    so.NotifyWhenAutowired([&field] { field++; });
+
+  // Inject the type to trigger the autowiring
+  AutoRequired<SimpleObject>();
+
+  // Verify that the notification got hit ten times:
+  ASSERT_EQ(10, field) << "Autowiring lambdas did not run the expected number of times";
+}
+
+TEST_F(PostConstructTest, NotificationTeardownRace) {
+  std::shared_ptr<CoreContext> pContext;
+  boost::barrier barr(2);
+
+  // This thread sets up the race pathology:
+  boost::thread t([&] {
+    for(;;) {
+      // Barrier until setup time:
+      barr.wait();
+      if(!pContext)
+        return;
+
+      // Set the context current, then try to autowire:
+      CurrentContextPusher pshr(pContext);
+      Autowired<SimpleObject> sobj;
+      sobj.NotifyWhenAutowired([] {});
+
+      // Now barrier, and then we will try to race against the context
+      // for teardown.
+      barr.wait();
+    }
+  });
+
+  for(size_t i = 0; i < 200; i++) {
+    // Make a new context:
+    AutoCreateContext ctxt;
+    pContext = ctxt;
+
+    // Wake up the other thread, let it set a notify-when-autowired:
+    barr.wait();
+    barr.wait();
+
+    // Now we reset our pContext pointer, and then tell the thread
+    // to race with us against context teardown:
+    pContext.reset();
+  }
+
+  // Signal the thread again that we're done, then join it:
+  barr.wait();
+  t.join();
+}
+
+TEST_F(PostConstructTest, VerifyAllInstancesSatisfied) {
+  // Create all of our slots and bind to them:
+  const size_t ct = 3;
+  Autowired<SimpleObject> aw[ct];
+  bool hit[ct] = {};
+
+  for(size_t i = ct; i--;)
+    aw[i].NotifyWhenAutowired([&hit, i] { hit[i] = true; });
+
+  // Now we inject our simple object:
+  AutoRequired<SimpleObject>();
+
+  // Verify that everything got hit:
+  for(size_t i = 0; i < ct; i++) {
+    ASSERT_TRUE(aw[i]) << "Autowired slot " << i << " was not post-bound correctly";
+    ASSERT_TRUE(hit[i]) << "Autowired slot " << i << " did not fire all of its post-construct notifiers as expected";
   }
 }

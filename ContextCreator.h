@@ -1,6 +1,6 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _CONTEXT_CREATOR_H
-#define _CONTEXT_CREATOR_H
+// Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
+#pragma once
+
 #include "ContextCreatorBase.h"
 #include "CoreContext.h"
 #include STL_UNORDERED_MAP
@@ -281,5 +281,3 @@ public:
   /// </remarks>
   virtual void NotifyContextDestroyed(t_callbackHandle q, CoreContext* pContext) { }
 };
-
-#endif

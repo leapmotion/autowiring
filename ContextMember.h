@@ -1,6 +1,6 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _CONTEXT_MEMBER_H
-#define _CONTEXT_MEMBER_H
+// Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
+#pragma once
+
 #include "Object.h"
 #include "TeardownNotifier.h"
 #include <assert.h>
@@ -101,4 +101,3 @@ public:
   }
 };
 
-#endif
