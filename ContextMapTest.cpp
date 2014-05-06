@@ -163,8 +163,9 @@ TEST_F(ContextMapTest, VerifyWithThreadsPathological) {
   signal->Signal();
 
   // Verify that the map empties once our zero-count is hit:
-  for(size_t i = 0; i < contexts.size(); i++)
-    contexts[i]->Wait();
+  for(size_t i = 0; i < contexts.size(); i++) {
+    contexts[i]->SignalShutdown(true);
+  }
 
   // Clear the context collection:
   contexts.clear();

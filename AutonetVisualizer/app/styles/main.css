@@ -12,20 +12,53 @@ body {
   padding-right: 15px;
 }
 
+
 /* Custom page header */
 .section {
   border-bottom: 1px solid #e5e5e5;
 }
 /* Make the masthead heading the same height as the navigation */
-.header h3 {
+.header span.logo {
+  display: inline-block;
   margin-top: 0;
   margin-bottom: 0;
   line-height: 40px;
   padding-bottom: 19px;
+  font-size: 24px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 500;
+  line-height: 1.1;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-.header a{
+.header span.logo.disconnected{
+  cursor: not-allowed;
+}
+
+.header span.logo small {
+  font-weight: normal;
+  line-height: 1;
+  color: #999999;
+  font-size: 65%;
+}
+
+li a{
   cursor: pointer;
+}
+
+ul.nav-pills li{
+  -webkit-touch-callout: none;
+-webkit-user-select: none;
+-khtml-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
 }
 
 .header .connected{
@@ -42,11 +75,6 @@ body {
   padding-top: 19px;
   color: #777;
   border-top: 1px solid #e5e5e5;
-}
-
-/* Customize container */
-.container-narrow > hr {
-  margin: 30px 0;
 }
 
 

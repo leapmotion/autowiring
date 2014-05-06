@@ -16,22 +16,23 @@
 
 angular.module('autoNetApp')
 .factory('websocket', ['$rootScope', function($rootScope) {
-  var socket = null; //Websocket connection to server
-  var interval = null; //Interval for polling for server when disconnected
-  var listeners = []; // All event listeners
-  var isConnected = false;
 
-  // Fire event callback with list of args from the server
-  var FireEvent = function(event, args) {
-    args = _.isArray(args) ? args : [];
-    _.map(listeners, function(listener){
-      if (listener.type === event) {
-        $rootScope.$apply(function(){
-          listener.callback.apply(socket, args);
-        });
-      }
-    });
+  function Message(name,args) {
+    this.name = name;
+    this.args = args;
   };
+
+  function Messages(maxSize){
+    this.maxSize = maxSize;
+    this.messages = [];
+  }
+
+  Messages.prototype.addMessage = function(name, args){
+    if (this.messages.length >= this.maxSize){
+      this.messages.pop();
+    }
+    this.messages.unshift(new Message(name,args))
+  }
 
   // Initialize connection with AutoNetServer
   // Called with SetInterval one a second when disconnected from server
@@ -40,7 +41,7 @@ angular.module('autoNetApp')
 
     socket.onmessage = function(evt) {
       var msg = JSON.parse(evt.data);
-      FireEvent(msg.type, msg.args);
+      $rootScope.$emit('leap-'+msg.type, msg.args);
     };
 
     socket.onopen = function() {
@@ -51,23 +52,34 @@ angular.module('autoNetApp')
     };
 
     socket.onclose = function() {
+      console.log('close')
       isConnected = false;
       $rootScope.$digest();
-      FireEvent('unsubscribed');
+      $rootScope.$emit('leap-unsubscribed');
       if (interval === null) {
         interval = setInterval(InitConnection, 1000);
       }
     };
   };
 
+  ////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////
+
+  var socket = null; //Websocket connection to server
+  var interval = null; //Interval for polling for server when disconnected
+  var isConnected = false;
+  var EventHistory = new Messages(200);
+
   InitConnection();
 
   return {
     on: function(eventName, callback) {
       console.log('Event Registered: ', eventName);
-      listeners.push({
-        type: eventName,
-        callback: callback
+      $rootScope.$on('leap-'+eventName, function(event, args){
+        $rootScope.$apply(function(){
+          EventHistory.addMessage(eventName, args);
+          callback.apply(socket, args);
+        });
       });
     },
     subscribe: function() {
@@ -78,6 +90,9 @@ angular.module('autoNetApp')
     },
     isConnected: function(){
       return isConnected;
+    },
+    GetEventHistory: function(){
+      return EventHistory.messages;
     }
   };
 }]);

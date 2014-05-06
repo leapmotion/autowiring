@@ -3,6 +3,4 @@
 
 class PeerContextTest:
   public EnclosedContextTestBase
-{
-
-};
+{};
