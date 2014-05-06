@@ -1,5 +1,4 @@
 #pragma once
-#include "at_exit.h"
 #include "AutoAnchor.h"
 #include "AutoPacketSubscriber.h"
 #include "AutowiringEvents.h"
@@ -20,14 +19,11 @@
 #include "SharedPointerSlot.h"
 #include "TeardownNotifier.h"
 #include "TypeUnifier.h"
-#include "uuid.h"
 
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
 #include <list>
-#include <memory>
-#include <map>
-#include <functional>
+#include STL_TUPLE_HEADER
 #include TYPE_INDEX_HEADER
 #include FUNCTIONAL_HEADER
 #include EXCEPTION_PTR_HEADER
@@ -718,7 +714,12 @@ public:
   /// </remarks>
   template<typename MemFn>
   InvokeRelay<MemFn> Invoke(MemFn memFn){
-    return GetJunctionBox<typename Decompose<MemFn>::type>()->Invoke(memFn);
+    typedef typename Decompose<MemFn>::type EventType;
+
+    if (!std::is_same<AutowiringEvents,EventType>::value)
+      GetGlobal()->Invoke(&AutowiringEvents::EventFired)(*this, typeid(EventType));
+
+    return GetJunctionBox<EventType>()->Invoke(memFn);
   }
 
   /// <summary>
@@ -746,23 +747,17 @@ public:
   void SignalTerminate(bool wait = true) { SignalShutdown(wait, ShutdownMode::Immediate); }
 
   /// <summary>
-  /// Waits until all threads running in this context at the time of the call are sdtopped when the call returns
+  /// Waits until the context is transitioned to the Stopped state and all threads and child threads have terminated.
   /// </summary>
-  /// <remarks>
-  /// The only guarantees made by this method are that the threads which were running when the call was made will
-  /// no longer be running upon return.  No guarantees are made about the state of other threads that might have
-  /// been created after Wait was called; no guarantees are made about the run state or existence of any child
-  /// contexts.  Child contexts may exist which contain running threads.
-  /// </remarks>
   void Wait(void) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    m_stateChanged.wait(lk, [this] () {return this->m_outstanding.expired();});
+    m_stateChanged.wait(lk, [this] {return m_isShutdown && this->m_outstanding.expired();});
   }
 
   template<class Rep, class Period>
   bool Wait(const boost::chrono::duration<Rep, Period>& duration) {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_stateChanged.wait_for(lk, duration, [this] {return this->m_outstanding.expired();});
+    return m_stateChanged.wait_for(lk, duration, [this] {return m_isShutdown && this->m_outstanding.expired(); });
   }
 
   /// <summary>

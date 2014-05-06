@@ -18,6 +18,10 @@ public:
   /// <summary>
   /// Stops this runnable, optionally performing graceful cleanup if requested
   /// </summary>
+  /// <remarks>
+  /// On return of this method, regardless of the return value, a subsequent call to Wait is
+  /// guaranteed to either return immediately, or once the thread implementation completes.
+  /// </remarks>
   virtual void Stop(bool graceful) = 0;
 
   /// <returns>

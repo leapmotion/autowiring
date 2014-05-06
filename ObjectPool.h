@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Object.h"
 #include "ObjectPoolMonitor.h"
 #include <boost/thread/condition_variable.hpp>

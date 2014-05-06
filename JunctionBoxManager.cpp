@@ -18,18 +18,18 @@ JunctionBoxManager::JunctionBoxManager(void) {
 JunctionBoxManager::~JunctionBoxManager(void) {}
 
 void JunctionBoxManager::Initiate(void) {
-  for (auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-    q->second->Initiate();
+  for (auto q : m_junctionBoxes)
+    q.second->Initiate();
 }
 
 void JunctionBoxManager::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   // Notify all junctionboxes that there is a new event
-  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-    q->second->Add(receiver);
+  for(auto q : m_junctionBoxes)
+    q.second->Add(receiver);
 }
 
 void JunctionBoxManager::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
   // Notify all compatible senders that we're going away:
-  for(auto q = m_junctionBoxes.begin(); q != m_junctionBoxes.end(); q++)
-    q->second->Remove(receiver);
+  for(auto q : m_junctionBoxes)
+    q.second->Remove(receiver);
 }
