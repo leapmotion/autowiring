@@ -43,7 +43,7 @@ struct type_info_constructable {
 /// Provides some static reflection support for member function pointers
 /// </summary>
 template<class MemFn>
-struct Decompose;
+struct Decompose {};
 
 template<class R, class W, class... Args>
 struct Decompose<R(W::*)(Args...)> {
@@ -92,7 +92,7 @@ struct Decompose<R(W::*)(Args...)> {
   /// The passed type object, the last parameter, must be a type repository.  It must support
   /// a method of the following form:
   ///
-  /// template<class T>
+  /// template&lt;class T&gt;
   /// const T& Get();
   ///
   /// The method must return the object of the desired type, or else it must throw an exception.
@@ -100,7 +100,8 @@ struct Decompose<R(W::*)(Args...)> {
   /// before this call is made, in order to prevent such an exception from being thrown.
   /// </remarks>
   template<memType memfn, class Repo>
-  static void Call(W* pObj, Repo& repo) {
+  static void Call(W* pObj, Repo& repo)
+  {
     (pObj->*memfn)(
       repo.template Cast<Args>()...
     );
