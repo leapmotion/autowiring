@@ -1,7 +1,7 @@
 #pragma once
 #include <gtest/gtest.h>
 
-class SharedPointerSlotTest:
+class AnySharedPointerTest:
   public testing::Test
 {
 };
