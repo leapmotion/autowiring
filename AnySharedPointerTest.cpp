@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "SharedPointerSlotTest.h"
-#include "SharedPointerSlot.h"
+#include "AnySharedPointerTest.h"
+#include "AnySharedPointer.h"
 
 class MyUnusedClass {};
 
