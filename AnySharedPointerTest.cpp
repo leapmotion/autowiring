@@ -19,7 +19,7 @@ struct SharedPointerSlotT<MyUnusedClass>:
   bool dtorStrike;
 };
 
-TEST_F(SharedPointerSlotTest, SimpleDestructorStrike)
+TEST_F(AnySharedPointerTest, SimpleDestructorStrike)
 {
   // We will need a buffer big enough for entire slot:
   unsigned char buf[sizeof(SharedPointerSlotT<MyUnusedClass>)];
@@ -42,7 +42,7 @@ TEST_F(SharedPointerSlotTest, SimpleDestructorStrike)
   ASSERT_TRUE(mucSlot.dtorStrike) << "Virtual destructor on in-place polymorphic class was not hit as expected";
 }
 
-TEST_F(SharedPointerSlotTest, SlotReassignment) {
+TEST_F(AnySharedPointerTest, SlotReassignment) {
   std::shared_ptr<bool> sharedPointerA(new bool);
   std::shared_ptr<bool> sharedPointerB(new bool);
   std::shared_ptr<int> sharedPointerC(new int);
@@ -61,7 +61,7 @@ TEST_F(SharedPointerSlotTest, SlotReassignment) {
   ASSERT_TRUE(sharedPointerB.unique()) << "Second assigned shared pointer was not released under type transformation";
 }
 
-TEST_F(SharedPointerSlotTest, SlotsInVector) {
+TEST_F(AnySharedPointerTest, SlotsInVector) {
   std::shared_ptr<bool> sharedPtr(new bool);
 
   {
@@ -78,7 +78,7 @@ TEST_F(SharedPointerSlotTest, SlotsInVector) {
   ASSERT_TRUE(sharedPtr.unique()) << "Slots in a vector did not properly release all local clones";
 }
 
-TEST_F(SharedPointerSlotTest, SlotDuplication) {
+TEST_F(AnySharedPointerTest, SlotDuplication) {
   std::shared_ptr<bool> sharedPtr(new bool);
 
   AnySharedPointer slot2;
