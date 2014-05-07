@@ -11,6 +11,7 @@
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
+#include EXCEPTION_PTR_HEADER
 
 class AutoPacketFactory;
 class AutoPacketProfiler;
