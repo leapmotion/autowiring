@@ -352,6 +352,21 @@ public:
   }
 };
 
+TEST_F(CoreThreadTest, ReentrantStopOnTeardown) {
+  std::shared_ptr<CoreThread> ct = AutoRequired<CoreThread>();
+
+  // Our thread will try to stop itself on teardown, this will cause it to trivially deadlock if any locks
+  // are held while it passes notification to listeners:
+  ct->AddTeardownListener([ct] {
+    ct->Stop();
+  });
+
+  // Kickoff and then delay:
+  m_create->Initiate();
+  m_create->SignalShutdown();
+  ASSERT_TRUE(m_create->Wait(boost::chrono::seconds(1))) << "Thread deadlocked when attempting to stop itself from a teardown listener";
+}
+
 #ifdef _MSC_VER
 #include "windows.h"
 
