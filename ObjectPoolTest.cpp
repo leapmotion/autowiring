@@ -73,3 +73,38 @@ TEST_F(ObjectPoolTest, VerifyOutOfOrderDestruction) {
   // Verify that returning a shared pointer after the pool is gone does not result in an exception
   ASSERT_NO_THROW(ptr.reset()) << "Attempting to release a shared pointer on a destroyed pool caused an unexpected exception";
 }
+
+class HoldsSharedPtrThenQuits:
+  public CoreThread
+{
+public:
+  std::shared_ptr<int> m_ptr;
+
+  void Run(void) override {
+    ThreadSleep(boost::chrono::milliseconds(100));
+    m_ptr.reset();
+  }
+};
+
+TEST_F(ObjectPoolTest, EmptyPoolIssuance) {
+  ObjectPool<int> pool;
+
+  // Create the thread which will hold the shared pointer for awhile:
+  AutoRequired<HoldsSharedPtrThenQuits> thread;
+  pool(thread->m_ptr);
+  std::weak_ptr<int> ptrWeak = thread->m_ptr;
+
+  ASSERT_FALSE(ptrWeak.expired()) << "Object pool failed to issue a shared pointer as expected";
+
+  // Verify properties now that we've zeroized the limit:
+  pool.SetOutstandingLimit(0);
+  EXPECT_ANY_THROW(pool.SetOutstandingLimit(1)) << "An attempt to alter a zeroized outstanding limit did not throw an exception as expected";
+  EXPECT_ANY_THROW(pool.Wait()) << "An attempt to obtain an element on an empty pool did not throw an exception as expected";
+
+  // Now see if we can delay for the thread to back out:
+  m_create->InitiateCoreThreads();
+  pool.Rundown();
+
+  // Verify that it got released as expected:
+  ASSERT_TRUE(ptrWeak.expired()) << "Not all shared pointers issued by an object pool expired in a timely fashion";
+}
