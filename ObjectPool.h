@@ -79,6 +79,7 @@ protected:
         boost::lock_guard<boost::mutex> lk(*monitor);
         if(monitor->IsAbandoned())
           // Nothing we can do, monitor object abandoned already, just destroy the object
+          delete ptr;
           return;
 
         // Obtain the monitor lock and return ourselves to the collection:
