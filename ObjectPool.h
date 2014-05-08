@@ -28,6 +28,7 @@ public:
   ObjectPoolBase(size_t limit = ~0, size_t maxPooled = ~0) :
     m_monitor(new ObjectPoolMonitor),
     m_limit(limit),
+    m_poolVersion(0),
     m_maxPooled(maxPooled),
     m_outstanding(0)
   {}
@@ -41,6 +42,10 @@ protected:
   std::shared_ptr<ObjectPoolMonitor> m_monitor;
   boost::condition_variable m_setCondition;
 
+  // The set of pooled objects, and the pool version.  The pool version is incremented every
+  // time the ClearCachedEntities method is called, and causes entities which might be trying
+  // to return to the pool to instead free themselves.
+  size_t m_poolVersion;
   std::vector<std::shared_ptr<T>> m_objs;
 
   size_t m_maxPooled;
@@ -72,18 +77,24 @@ protected:
     // the destructor so that the object is returned to the pool when it falls out of
     // scope.
     auto monitor = m_monitor;
+    size_t poolVersion = m_poolVersion;
 
     return std::shared_ptr<T>(
       pObj,
-      [this, monitor](T* ptr) {
+      [this, poolVersion, monitor](T* ptr) {
         boost::lock_guard<boost::mutex> lk(*monitor);
-        if(monitor->IsAbandoned())
+        if(monitor->IsAbandoned()) {
           // Nothing we can do, monitor object abandoned already, just destroy the object
           delete ptr;
           return;
+        }
 
-        // Obtain the monitor lock and return ourselves to the collection:
-        this->Return(std::unique_ptr<T>(ptr));
+        if(poolVersion == m_poolVersion)
+          // Obtain the monitor lock and return ourselves to the collection:
+          this->Return(std::unique_ptr<T>(ptr));
+        else
+          // Object now obsolete, just destroy it
+          delete ptr;
       }
     );
   }
@@ -127,10 +138,18 @@ protected:
 public:
   // Accessor methods:
   size_t GetOutstanding(void) const { return m_outstanding; }
+  size_t GetCached(void) const { return m_objs.size(); }
 
   void ClearCachedEntities(void) {
-    (boost::lock_guard<boost::mutex>)*m_monitor,
-    m_objs.clear();
+    // Declare this first, so it's freed last:
+    std::vector<std::shared_ptr<T>> objs;
+
+    // Move all of our objects into a local variable which we can then free at our leisure.  This allows us to
+    // perform destruction outside of the scope of a lock, preventing any deadlocks that might occur inside
+    // the shared_ptr cleanup lambda.
+    boost::lock_guard<boost::mutex> lk(*m_monitor);
+    m_poolVersion++;
+    objs = std::move(m_objs);
   }
 
   /// <summary>
