@@ -41,33 +41,50 @@ protected:
   std::shared_ptr<ObjectPoolMonitor> m_monitor;
   boost::condition_variable m_setCondition;
 
-  typedef std::vector<std::unique_ptr<T>> t_stType;
-  t_stType m_objs;
+  std::vector<std::shared_ptr<T>> m_objs;
 
   size_t m_maxPooled;
   size_t m_limit;
   size_t m_outstanding;
 
-  void Return(std::shared_ptr<ObjectPoolMonitor> monitor, T* ptr) {
-    // Ensure the object gets destroyed if we don't add it:
-    std::unique_ptr<T> lcl(ptr);
-
-    boost::lock_guard<boost::mutex> lk(*monitor);
-    if(monitor->IsAbandoned())
-      // Nothing we can do, monitor object abandoned already, just destroy the object
-      return;
-    
+  /// <summary>
+  /// Returns the specified object to the object pool
+  /// </summary>
+  void Return(std::unique_ptr<T>&& ptr) {
     // One fewer outstanding count:
     m_outstanding--;
     if(m_objs.size() < m_maxPooled) {
       // Reset, insert, return
       Reset(*ptr);
-      m_objs.push_back(std::move(lcl));
+      m_objs.push_back(Wrap(ptr.release()));
     }
 
     // If the new outstanding count is less than or equal to the limit, wake up any waiters:
     if(m_outstanding <= m_limit)
       m_setCondition.notify_all();
+  }
+
+  /// <summary>
+  /// Creates a shared pointer to wrap the specified object
+  /// </summary>
+  std::shared_ptr<T> Wrap(T* pObj) {
+    // Fill the shared pointer with the object we created, and ensure that we override
+    // the destructor so that the object is returned to the pool when it falls out of
+    // scope.
+    auto monitor = m_monitor;
+
+    return std::shared_ptr<T>(
+      pObj,
+      [this, monitor](T* ptr) {
+        boost::lock_guard<boost::mutex> lk(*monitor);
+        if(monitor->IsAbandoned())
+          // Nothing we can do, monitor object abandoned already, just destroy the object
+          return;
+
+        // Obtain the monitor lock and return ourselves to the collection:
+        this->Return(std::unique_ptr<T>(ptr));
+      }
+    );
   }
 
   /// <summary>
@@ -92,30 +109,18 @@ protected:
     m_outstanding++;
 
     // Cached, or construct?
-    T* pObj;
-    if(m_objs.size()) {
-      // Lock and remove an element:
-      pObj = m_objs.back().release();
-      m_objs.pop_back();
-    } else {
+    if(m_objs.empty()) {
       // Lock release, so construction does not have to be synchronized:
       lk.unlock();
 
       // We failed to recover an object, create a new one:
-      pObj = Allocate();
+      return Wrap(Allocate());
     }
 
-    // Fill the shared pointer with the object we created, and ensure that we override
-    // the destructor so that the object is returned to the pool when it falls out of
-    // scope.
-    auto monitor = m_monitor;
-    return std::shared_ptr<T>(
-      pObj,
-      [this, monitor](T* ptr) {
-        // Obtain the monitor lock and return ourselves to the collection:
-        this->Return(monitor, ptr);
-      }
-    );
+    // Remove, return:
+    auto obj = m_objs.back();
+    m_objs.pop_back();
+    return obj;
   }
 
 public:
@@ -131,18 +136,22 @@ public:
   /// This sets the maximum number of entities that the pool will cache to satisfy a later allocation request
   /// </summary>
   /// <param name="maxPooled">The new maximum cache count</param>
-  bool SetMaximumPooledEntities(bool maxPooled) {
+  void SetMaximumPooledEntities(size_t maxPooled) {
     m_maxPooled = maxPooled;
     for(;;) {
-      std::unique_ptr<T> ptr;
+      std::shared_ptr<T> prior;
       boost::lock_guard<boost::mutex> lk(*m_monitor);
-      if(m_objs.size() <= m_maxPooled)
-        return false;
 
-      ptr = std::move(m_objs.back());
+      // Space check:
+      if(m_objs.size() <= m_maxPooled)
+        // Managed to get the size down sufficiently, we can continue:
+        return;
+
+      // Funny syntax needed to ensure destructors run while we aren't holding any locks.  The prior
+      // shared_ptr will be reset after the lock is released, guaranteeing the desired ordering.
+      prior = m_objs.back();
       m_objs.pop_back();
     }
-    return true;
   }
 
   /// <summary>
