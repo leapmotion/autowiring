@@ -62,6 +62,24 @@ TEST_F(ObjectPoolTest, VerifyAsynchronousUsage) {
   obj->Wait();
 }
 
+TEST_F(ObjectPoolTest, ClearCachedEntities) {
+  ObjectPool<PooledObject> pool(3);
+
+  // Create a pool and get a few items in its cache:
+  pool.Wait(),
+  pool.Wait(),
+  pool.Wait();
+
+  // Verify the expected initial cache count:
+  ASSERT_EQ(3UL, pool.GetCached()) << "Expected pool outstanding count to have hit 3 entries";
+
+  // Now verify that we can clear the object pool at a point in time when it should already be empty:
+  pool.ClearCachedEntities();
+
+  // And we should be legitimately empty at this point
+  ASSERT_EQ(0UL, pool.GetCached()) << "After invoking a cache clearing operation, the cache was nevertheless not cleared";
+}
+
 TEST_F(ObjectPoolTest, VerifyOutOfOrderDestruction) {
   std::shared_ptr<int> ptr;
 
