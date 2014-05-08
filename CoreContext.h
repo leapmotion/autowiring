@@ -360,9 +360,9 @@ protected:
   template<class T>
   void FindByTypeUnsafe(std::shared_ptr<T>& ptr) const {
     // Try to find the type directly:
-    auto& entry = m_typeMemos[typeid(T)];
-    if(!entry->empty()) {
-      ptr = entry->as<T>();
+    auto entry = m_typeMemos.find(typeid(T));
+    if(entry != m_typeMemos.end()) {
+      ptr = entry->second->as<T>();
       return;
     }
 
@@ -383,7 +383,7 @@ protected:
     }
 
     // Memoize:
-    *entry = ptr;
+    *m_typeMemos[typeid(T)] = ptr;
   }
 
   /// <summary>
