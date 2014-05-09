@@ -1,4 +1,5 @@
 #pragma once
+#include "../CoreThread.h"
 #include <vector>
 
 /// <summary>
