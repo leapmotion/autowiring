@@ -168,7 +168,7 @@ public:
 /// <summary>
 /// A function-based autowirable slot, which invokes a lambda rather than binding a shared pointer
 /// </summary>
-template<class Fn, class T>
+template<class T, class Fn>
 class AutowirableSlotFn:
   public AutowirableSlot<T>
 {
@@ -224,5 +224,10 @@ public:
   const DeferrableUnsynchronizedStrategy* GetStrategy(void) override { return &s_strategy; }
 };
 
-template<class Fn, class T>
-const typename AutowirableSlotFn<Fn, T>::Strategy AutowirableSlotFn<Fn, T>::s_strategy;
+template<class T, class Fn>
+AutowirableSlotFn<T, Fn>* MakeAutowirableSlotFn(const std::shared_ptr<CoreContext>& ctxt, Fn fn) {
+  return new AutowirableSlotFn<T, Fn>(ctxt, std::forward<Fn>(fn));
+}
+
+template<class T, class Fn>
+const typename AutowirableSlotFn<T, Fn>::Strategy AutowirableSlotFn<T, Fn>::s_strategy;
