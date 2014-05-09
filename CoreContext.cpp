@@ -412,8 +412,8 @@ void ShutdownCurrentContext(void) {
 
 void CoreContext::UnregisterEventReceivers(void) {
   // Release all event receivers originating from this context:
-  for(auto q = m_eventReceivers.begin(); q != m_eventReceivers.end(); q++)
-    m_junctionBoxManager->RemoveEventReceiver(*q);
+  for(auto q : m_eventReceivers)
+    m_junctionBoxManager->RemoveEventReceiver(q);
 
   // Notify our parent (if we have one) that our event receivers are going away:
   if(m_pParent) {
@@ -635,6 +635,12 @@ void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
   GetPacketFactory()->AddSubscriber(rhs);
   if(m_pParent)
     m_pParent->AddPacketSubscriber(rhs);
+}
+
+void CoreContext::RemovePacketSubscriber(const std::type_info& ti) {
+  GetPacketFactory()->RemoveSubscriber(ti);
+  if(m_pParent)
+    m_pParent->RemovePacketSubscriber(ti);
 }
 
 void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber> &subscribers) {
