@@ -359,7 +359,7 @@ protected:
 
   template<class T>
   void FindByTypeUnsafe(std::shared_ptr<T>& ptr, bool scanIfEmpty = true) const {
-    // Try to find the type directly:
+    // If we've attempted to search for this type before, we will return the value of the memo immediately:
     auto entry = m_typeMemos.find(typeid(T));
     if(entry != m_typeMemos.end() && !(scanIfEmpty && entry->second->empty())) {
       ptr = entry->second->as<T>();

@@ -133,6 +133,8 @@ set(AutowiringTest_SRCS
   AutoInjectableTest.cpp
   AutowiringBenchmarkTest.h
   AutowiringBenchmarkTest.cpp
+  AutowiringTest.h
+  AutowiringTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h
