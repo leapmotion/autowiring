@@ -206,7 +206,7 @@ public:
   
   // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
   AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()){
-    ctxt->FindByTypeRecursive(*this);
+    ctxt->FindByTypeRecursive(*this, false);
   }
   
   operator bool(void) const {
