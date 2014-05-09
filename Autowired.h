@@ -160,7 +160,7 @@ public:
     // We pass a null shared_ptr, because we do not want this slot to attempt any kind of unregistration when
     // it goes out of scope.  Instead, we will manage its entire registration lifecycle, and
     // retain full ownership over the object until we need to destroy it.
-    auto newHead = new AutowirableSlotFn<Fn, T>(std::shared_ptr<CoreContext>(), std::forward<Fn>(fn));
+    auto newHead = new AutowirableSlotFn<T, Fn>(std::shared_ptr<CoreContext>(), std::forward<Fn>(fn));
 
     // Append to our list in a lock-free way.  This is a fairly standard way to do a lock-free append to
     // a singly linked list; the only unusual aspect is the use of "this" as a tombstone indicator (IE,

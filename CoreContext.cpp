@@ -353,6 +353,16 @@ void CoreContext::BuildCurrentState(void) {
   }
 }
 
+
+/// <summary>
+/// Adds the specified deferrable autowiring as a general recipient of autowiring events
+/// </summary>
+void CoreContext::AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
+  auto& flink = m_deferred[deferrable->GetType()];
+  deferrable->SetFlink(flink);
+  flink = deferrable;
+}
+
 void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable) {
   boost::lock_guard<boost::mutex> lk(m_lock);
   auto q = m_deferred.find(pDeferrable->GetType());
@@ -419,8 +429,7 @@ void CoreContext::UnregisterEventReceivers(void) {
   if(m_pParent) {
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
 
-    std::shared_ptr<AutoPacketFactory> pf;
-    FindByTypeUnsafe(pf);
+    auto pf = FindByTypeUnsafe<AutoPacketFactory>();
     if(pf)
       m_pParent->RemovePacketSubscribers(pf->GetSubscriberVector());
   }
@@ -463,6 +472,9 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
     for(auto q = m_deferred.begin(); q != m_deferred.end();) {
       auto cur = q->second;
 
+      // Determine whether the current candidate element satisfies the autowiring we are considering.
+      // This is done internally via a dynamic cast on the interface type for which this polymorphic
+      // base type was constructed.
       if(!(*cur).TrySatisfyAutowiring(entry)) {
         q++;
         continue;
@@ -643,8 +655,7 @@ void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber
     m_pParent->RemovePacketSubscribers(subscribers);
 
   // Remove subscribers from our factory AFTER the parent eviction has taken place
-  std::shared_ptr<AutoPacketFactory> factory;
-  FindByTypeUnsafe(factory);
+  auto factory = FindByTypeUnsafe<AutoPacketFactory>();
   if(factory)
     factory->RemoveSubscribers(subscribers.begin(), subscribers.end());
 }
