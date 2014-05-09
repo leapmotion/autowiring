@@ -84,6 +84,10 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<T> as(void) const {
+    if(type() == typeid(void))
+      // This is allowed, we always permit null to be cast to the requested type.
+      return std::shared_ptr<T>();
+
     if(type() != typeid(T))
       throw std::runtime_error("Attempted to obtain a shared pointer for an unrelated type");
 
