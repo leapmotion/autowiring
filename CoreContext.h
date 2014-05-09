@@ -32,7 +32,7 @@
 #include STL_UNORDERED_SET
 
 template<class T, class Fn>
-class DeferrableAutowiringFn;
+class AutowirableSlotFn;
 
 class AutoPacketFactory;
 class DeferrableAutowiring;
@@ -357,39 +357,33 @@ protected:
   /// </summary>
   void AddInternal(const AddInternalTraits& traits);
 
+  /// <summary>
+  /// Scans the memo collection for the specified entry, or adds a deferred resolution marker if resolution was not possible
+  /// </summary>
   template<class T>
-  void FindByTypeUnsafe(std::shared_ptr<T>& ptr) const {
+  std::shared_ptr<T> FindByTypeUnsafe(void) const {
     // If we've attempted to search for this type before, we will return the value of the memo immediately:
-    auto entry = m_typeMemos.find(typeid(T));
-    if(entry != m_typeMemos.end()) {
-      ptr = entry->second->as<T>();
-      return;
-    }
+    auto q = m_typeMemos.find(typeid(T));
+    if(q != m_typeMemos.end())
+      // Return the value we found:
+      return q->second->as<T>();
+    
+    // This entry was not formerly memoized.  Entry is initially empty.
+    m_typeMemos[typeid(T)]->init<T>();
 
-    // Resolve based on iterated dynamic casts for each concrete type:
-    ptr.reset();
-    for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
-      std::shared_ptr<Object> obj = **q;
-      auto casted = std::dynamic_pointer_cast<T>(obj);
-      if(!casted)
-        // No match, try the next entry
-        continue;
-
-      if(ptr)
-        // Resolution ambiguity, cannot proceed
-        throw autowiring_error("An attempt was made to resolve a type which has multiple possible clients");
-
-      ptr = casted;
-    }
-
-    // Memoize:
-    *m_typeMemos[typeid(T)] = ptr;
+    // Nothing at this location:
+    return std::shared_ptr<T>();
   }
 
   /// <summary>
   /// Returns or constructs a new AutoPacketFactory instance
   /// </summary>
   std::shared_ptr<AutoPacketFactory> GetPacketFactory(void);
+
+  /// <summary>
+  /// Adds the specified deferrable autowiring as a general recipient of autowiring events
+  /// </summary>
+  void AddDeferredUnsafe(DeferrableAutowiring* deferrable);
 
 public:
   // Accessor methods:
@@ -874,7 +868,7 @@ public:
   template<class T>
   void FindByType(std::shared_ptr<T>& slot) const {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    FindByTypeUnsafe(slot);
+    slot = FindByTypeUnsafe<T>();
   }
 
   /// <summary>
@@ -901,12 +895,8 @@ public:
       return true;
 
     // Failed, defer
-    boost::lock_guard<boost::mutex> lk(m_lock);
-
-    // Push to the head of our linked list:
-    auto& flink = m_deferred[typeid(typename W::value_type)];
-    slot.SetFlink(flink);
-    flink = &slot;
+    (boost::lock_guard<boost::mutex>)m_lock,
+    AddDeferredUnsafe(&slot);
     return false;
   }
 
@@ -932,13 +922,14 @@ public:
   /// up memory.
   /// </remarks>
   template<class T, class Fn>
-  const DeferrableAutowiringFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
-    DeferrableAutowiringFn<T, Fn>* retVal =
-      new DeferrableAutowiringFn<T, Fn>(
-        shared_from_this(),
-        std::forward<Fn>(listener)
-      );
+  const AutowirableSlotFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
+    auto retVal = MakeAutowirableSlotFn<T>(
+      shared_from_this(),
+      std::forward<Fn>(listener)
+    );
 
+    (boost::lock_guard<boost::mutex>)m_lock,
+    AddDeferredUnsafe(retVal);
     return retVal;
   }
 
