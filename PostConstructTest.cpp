@@ -238,3 +238,28 @@ TEST_F(PostConstructTest, VerifyAllInstancesSatisfied) {
     ASSERT_TRUE(hit[i]) << "Autowired slot " << i << " did not fire all of its post-construct notifiers as expected";
   }
 }
+
+TEST_F(PostConstructTest, ContextNotifyWhenAutowired) {
+  auto called = std::make_shared<bool>(false);
+  
+  // Now we'd like to be notified when SimpleObject gets added:
+  m_create->NotifyWhenAutowired<SimpleObject>(
+    [called] {
+      *called = true;
+    }
+  );
+
+  // Should only be two uses, at this point, of the capture of the above lambda:
+  EXPECT_EQ(2UL, called.use_count()) << "Unexpected number of references held in a capture lambda";
+
+  // Create another entry that will add another slot to the deferred list:
+  Autowired<SimpleObject> sobj;
+
+  // Insert the SimpleObject, see if the lambda got hit:
+  AutoRequired<SimpleObject>();
+  ASSERT_TRUE(*called) << "Context-wide autowiring notification was not hit as expected when a matching type was injected into a context";
+
+  // Our shared pointer should be unique by this point, because the lambda should have been destroyed
+  ASSERT_TRUE(called.unique()) << "Autowiring notification lambda was not properly cleaned up";
+}
+
