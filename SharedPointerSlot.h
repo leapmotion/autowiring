@@ -2,7 +2,9 @@
 #include "fast_pointer_cast.h"
 #include "Object.h"
 #include MEMORY_HEADER
+#include <stdexcept>
 #include <stddef.h>
+#include <string.h>
 
 template<class T>
 struct SharedPointerSlotT;

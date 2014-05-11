@@ -1,5 +1,6 @@
 #pragma once
 #include "fast_pointer_cast.h"
+#include "SharedPointerSlot.h"
 #include MEMORY_HEADER
 
 class CoreContext;
@@ -135,7 +136,7 @@ public:
 
   void SatisfyAutowiring(const SharedPointerSlot& witness) override {
     // Cast over and assign:
-    (std::shared_ptr<T>&)*this = witness.as<T>();
+    (std::shared_ptr<T>&)*this = witness.template as<T>();
   }
 
   operator bool(void) const {
