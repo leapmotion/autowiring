@@ -124,6 +124,7 @@ TEST_F(PostConstructTest, VerifySmartBehavior) {
 
   // Check that we can get the item we just injected
   Autowired<Smarter> smarter;
+  ASSERT_TRUE(smarter.IsAutowired()) << "Slot was not satisfied as expected";
   EXPECT_EQ(1, smarter->value) << "Unexpected initial value of SmarterA instance";
 
   // Now inject A, and see if delayed autowiring has taken place:
