@@ -102,3 +102,20 @@ TEST_F(SharedPointerSlotTest, SlotDuplication) {
   ASSERT_FALSE(slot2->empty()) << "A slot should have continued to hold a shared pointer, but was prematurely cleared";
   ASSERT_EQ(2, sharedPtr.use_count()) << "A slot going out of scope did not correctly decrement a shared pointer reference";
 }
+
+TEST_F(SharedPointerSlotTest, TrivialRelease) {
+  std::shared_ptr<bool> a(new bool);
+  std::shared_ptr<int> b(new int);
+
+  // Assign the slot to two different values, and make sure that they are released properly
+  AnySharedPointer slot;
+  slot = a;
+  slot = b;
+
+  ASSERT_TRUE(a.unique()) << "Expected reassignment of a slot to release a formerly held instance";
+  ASSERT_FALSE(b.unique()) << "Expected slot to hold a reference to the second specified instance";
+  
+  // Now release, and verify that a release actually took place
+  slot->reset();
+  ASSERT_TRUE(b.unique()) << "Releasing a slot did not actually release the held value as expected";
+}
