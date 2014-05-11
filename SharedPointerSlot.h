@@ -56,6 +56,14 @@ public:
   virtual operator std::shared_ptr<Object>(void) const { return std::shared_ptr<Object>(); }
 
   /// <summary>
+  /// Attempts to dynamically assign this slot to the specified object without changing the current type
+  /// </summary>
+  /// <returns>True if the assignment succeeds</returns>
+  virtual bool try_assign(const std::shared_ptr<Object>& rhs) {
+    return false;
+  }
+
+  /// <summary>
   /// Alters the type of this slot to match the specified type
   /// </summary>
   /// <param name="T">The type to initialize this slot into</param>
@@ -234,9 +242,19 @@ public:
     return leap::fast_pointer_cast<Object>(get());
   }
 
-  virtual bool empty(void) const { return get() == nullptr; }
-  virtual operator void*(void) override { return get().get(); }
-  virtual operator const void*(void) const override { return get().get(); }
+  bool try_assign(const std::shared_ptr<Object>& rhs) override {
+    // Just perform a dynamic cast:
+    auto casted = leap::fast_pointer_cast<T>(rhs);
+    if(!casted)
+      return false;
+
+    get() = casted;
+    return true;
+  }
+
+  bool empty(void) const { return get() == nullptr; }
+  operator void*(void) override { return get().get(); }
+  operator const void*(void) const override { return get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
 
   template<class U>
