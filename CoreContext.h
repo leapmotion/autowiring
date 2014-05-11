@@ -253,7 +253,7 @@ protected:
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
-  void UpdateDeferredElements(const std::shared_ptr<Object>& entry);
+  void UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, const std::shared_ptr<Object>& entry);
 
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
