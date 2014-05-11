@@ -180,10 +180,6 @@ public:
     // Our own stuff is going away, need to return here
     reset();
 
-    // If the right-hand side is empty, we'll just reset ourselves and be done with it:
-    if(rhs.empty())
-      return;
-
     // We want to scrape the VFT, which always appears prior to the data block.  We need
     // to use pointer magic to find the address of the VFT.  On most systems it's just
     // one void* space at the top of the class, but we can't be too careful here.
