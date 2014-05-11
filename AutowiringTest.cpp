@@ -23,6 +23,6 @@ TEST_F(AutowiringTest, VerifyAutowiredFastNontrivial) {
   AutoRequired<SimpleReceiver>();
 
   // Verify that AutowiredFast can find this object from its interface
-  AutowiredFast<CallableInterface> ci;
+  Autowired<CallableInterface> ci;
   ASSERT_TRUE(ci.IsAutowired()) << "Failed to autowire an interface advertised by a newly-inserted object";
 }
