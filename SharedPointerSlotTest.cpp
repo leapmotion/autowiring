@@ -119,3 +119,20 @@ TEST_F(SharedPointerSlotTest, TrivialRelease) {
   slot->reset();
   ASSERT_TRUE(b.unique()) << "Releasing a slot did not actually release the held value as expected";
 }
+
+TEST_F(SharedPointerSlotTest, InitDerivesCorrectType) {
+  AnySharedPointer slot;
+  slot->init<int>();
+
+  ASSERT_EQ(typeid(int), slot->type()) << "A manually initialized slot did not have the expected type";
+}
+
+TEST_F(SharedPointerSlotTest, VoidReturnExpected) {
+  // Fill out our slot:
+  auto v = std::make_shared<int>(5);
+  AnySharedPointer slot;
+  slot = v;
+
+  // Validate equivalence of the void operator:
+  ASSERT_EQ(v.get(), (void*) slot) << "Shared pointer slot did not return a void* with an expected value";
+}
