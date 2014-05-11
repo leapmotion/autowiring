@@ -450,7 +450,6 @@ void CoreContext::UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, 
   // Notify any autowired field whose autowiring was deferred
   std::stack<DeferrableAutowiring*> stk;
   for(auto& cur : m_typeMemos) {
-    auto& key = cur.first;
     auto& value = cur.second;
 
     if(value.m_value)
