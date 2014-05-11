@@ -51,8 +51,24 @@ protected:
   virtual void assign(const SharedPointerSlot& rhs) {}
 
 public:
-  virtual operator void*(void) const { return nullptr; }
+  virtual operator void*(void) { return nullptr; }
+  virtual operator const void*(void) const { return nullptr; }
   virtual operator std::shared_ptr<Object>(void) const { return std::shared_ptr<Object>(); }
+
+  /// <summary>
+  /// Alters the type of this slot to match the specified type
+  /// </summary>
+  /// <param name="T">The type to initialize this slot into</param>
+  /// <remarks>
+  /// This operation releases any previously held value, and causes the slot to hold nullptr with
+  /// the specified type
+  /// </remarks>
+  template<class T>
+  void init(void) {
+    // Trivial reset-then-reinit:
+    reset();
+    new (this) SharedPointerSlotT<T>();
+  }
 
   /// <returns>
   /// True if this slot holds nothing
@@ -77,6 +93,10 @@ public:
     if(empty())
       // Nothing to do, just back out
       return;
+
+    // We aren't presently empty, we need to release our
+    // current implementation before attempting to reinitialize
+    this->~SharedPointerSlot();
   }
 
   /// <summary>
@@ -105,10 +125,8 @@ public:
       return;
     }
 
-    if(!empty())
-      // We aren't presently empty, we need to release our
-      // current implementation before attempting to reinitialize
-      this->~SharedPointerSlot();
+    // Clear out what we're holding:
+    reset();
 
     // Now we can safely reinitialize:
     new (this) SharedPointerSlotT<T>(rhs);
@@ -180,7 +198,7 @@ template<class T>
 struct SharedPointerSlotT:
   SharedPointerSlot
 {
-  SharedPointerSlotT(const std::shared_ptr<T>& rhs) {
+  SharedPointerSlotT(const std::shared_ptr<T>& rhs = std::shared_ptr<T>()) {
     static_assert(
       sizeof(SharedPointerSlotT<T>) == sizeof(SharedPointerSlot),
       "Slot instance is too large to fit in the base type"
@@ -217,7 +235,8 @@ public:
   }
 
   virtual bool empty(void) const { return get() == nullptr; }
-  virtual operator const void*(void) const { return get().get(); }
+  virtual operator void*(void) override { return get().get(); }
+  virtual operator const void*(void) const override { return get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
 
   template<class U>
@@ -244,7 +263,7 @@ public:
   template<class T>
   AnySharedPointer(const std::shared_ptr<T>& rhs) {
     // Delegate the remainder to the assign operation:
-    new (m_space) SharedPointerSlot(rhs);
+    new (m_space) SharedPointerSlotT<T>(rhs);
   }
 
   ~AnySharedPointer(void) {
@@ -260,7 +279,8 @@ private:
   const SharedPointerSlot& slot(void) const { return *(SharedPointerSlot*) m_space; }
 
 public:
-  operator void*(void) const { return slot().operator void*(); }
+  operator void*(void) { return slot().operator void*(); }
+  operator const void*(void) const { return slot().operator const void*(); }
 
   SharedPointerSlot& operator*(void) { return slot(); }
   const SharedPointerSlot& operator*(void) const { return slot(); }
