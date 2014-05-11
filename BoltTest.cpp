@@ -175,15 +175,15 @@ TEST_F(BoltTest, EmptyBolt) {
   {
     CurrentContextPusher pshr(created);
     Autowired<CountObject> innerSo;
-    EXPECT_TRUE(innerSo.IsAutowired()) << "CountObject not injected into anonymous context";
-    EXPECT_EQ(1, innerSo->count) << "ContextCreated() called incorrect number of times";
+    ASSERT_TRUE(innerSo.IsAutowired()) << "CountObject not injected into anonymous context";
+    ASSERT_EQ(1, innerSo->count) << "ContextCreated() called incorrect number of times";
   }
 
   auto created2 = m_create->Create<Pipeline>();
   {
     CurrentContextPusher pshr(created2);
     Autowired<CountObject> innerSo;
-    EXPECT_TRUE(innerSo.IsAutowired()) << "CountObject not injected into named context";
-    EXPECT_EQ(1, innerSo->count) << "ContextCreated() called incorrect number of times";
+    ASSERT_TRUE(innerSo.IsAutowired()) << "CountObject not injected into named context";
+    ASSERT_EQ(1, innerSo->count) << "ContextCreated() called incorrect number of times";
   }
 }
