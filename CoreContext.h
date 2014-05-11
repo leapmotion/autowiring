@@ -107,18 +107,28 @@ protected:
   // into any child context.
   std::set<std::type_index> m_anchors;
 
-  // Map of slots waiting to be autowired, organized by the desired type.  The type allows chaining to take
-  // place in an intelligent way.
-  typedef std::unordered_map<std::type_index, DeferrableAutowiring*> t_deferredMap;
-  t_deferredMap m_deferred;
+  /// <summary>
+  /// Represents a single entry, together with any deferred elements waiting on the satisfaction of this entry
+  /// </summary>
+  struct MemoEntry {
+    MemoEntry(void) :
+      pFirst(nullptr)
+    {
+    }
+
+    // The first deferrable autowiring which requires this type, if one exists:
+    DeferrableAutowiring* pFirst;
+
+    // Once this memo entry is satisfied, this will contain the AnySharedPointer instance that performs
+    // the satisfaction
+    AnySharedPointer m_value;
+  };
 
   // This is a list of concrete types, indexed by the true type of each element.
   std::vector<AnySharedPointer> m_concreteTypes;
 
-  // This is a memoization map used to memoize any already-detected interfaces
-  // This map keeps all of its objects resident at least until the context goes away.
-  // Note that the value on the right-hand side must match the void pointer specified on the right-hand side
-  mutable std::unordered_map<std::type_index, AnySharedPointer> m_typeMemos;
+  // This is a memoization map used to memoize any already-detected interfaces.  The map
+  mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;
 
   // All known context members, exception filters:
   std::vector<ContextMember*> m_contextMembers;
@@ -366,13 +376,29 @@ protected:
     auto q = m_typeMemos.find(typeid(T));
     if(q != m_typeMemos.end())
       // Return the value we found:
-      return q->second->as<T>();
-    
-    // This entry was not formerly memoized.  Entry is initially empty.
-    m_typeMemos[typeid(T)]->init<T>();
+      return q->second.m_value->as<T>();
 
-    // Nothing at this location:
-    return std::shared_ptr<T>();
+    // Resolve based on iterated dynamic casts for each concrete type:
+    std::shared_ptr<T> retVal;
+    for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
+      std::shared_ptr<Object> obj = **q;
+      auto casted = std::dynamic_pointer_cast<T>(obj);
+      if(!casted)
+        // No match, try the next entry
+        continue;
+
+      if(retVal)
+        // Resolution ambiguity, cannot proceed
+        throw autowiring_error("An attempt was made to resolve a type which has multiple possible clients");
+
+      retVal = casted;
+    }
+
+    // This entry was not formerly memoized.  Memoize unconditionally.
+    m_typeMemos[typeid(T)].m_value = retVal;
+
+    // Fill out the entry:
+    return retVal;
   }
 
   /// <summary>
@@ -680,7 +706,7 @@ public:
       return false;
 
     // Found the true type, see if the slots match or if it's a coincidence:
-    return *q->second == ptr;
+    return *q->second.m_value == ptr;
   }
 
   /// <summary>
