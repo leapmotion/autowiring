@@ -94,7 +94,7 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
 
 void CoreContext::AddInternal(const AddInternalTraits& traits) {
   {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    boost::unique_lock<boost::mutex> lk(m_lock);
 
     // Validate that this addition does not generate an ambiguity:
     auto& v = m_typeMemos[typeid(*traits.pObject)];
@@ -105,12 +105,6 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
 
     // Add the new concrete type:
     m_concreteTypes.push_back(traits.value);
-
-    // Perform the insertion at the canonical type identity:
-    v.m_value = traits.value;
-
-    // Double-check that the type we just inserted passes sanity checks:
-    assert(*v.m_value == traits.pObject);
 
     // Insert each context element:
     if(traits.pContextMember)
@@ -124,6 +118,10 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
 
     if(traits.pBoltBase)
       AddBolt(traits.pBoltBase);
+
+    // Notify any autowiring field that is currently waiting that we have a new member
+    // to be considered.
+    UpdateDeferredElements(std::move(lk), traits.pObject);
   }
 
   // Event receivers:
@@ -141,10 +139,6 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   // Subscribers, if applicable:
   if(traits.subscriber)
     AddPacketSubscriber(traits.subscriber);
-
-  // Notify any autowiring field that is currently waiting that we have a new member
-  // to be considered.
-  UpdateDeferredElements(traits.pObject);
 
   // Signal listeners that a new object has been created
   GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *traits.pObject.get());
@@ -389,8 +383,9 @@ void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable
   if(prior)
     // Erase the entry by using link elision:
     prior->SetFlink(pDeferrable->GetFlink());
-  if(pDeferrable->GetFlink())
-    // Just update the head at this entry
+
+  if(pDeferrable == q->second.pFirst)
+    // Current deferrable is at the head, update the flink:
     q->second.pFirst = pDeferrable->GetFlink();
 }
 
@@ -458,65 +453,57 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
-void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
+void CoreContext::UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, const std::shared_ptr<Object>& entry) {
   // Collection of satisfiable lists:
   std::vector<std::pair<const DeferrableUnsynchronizedStrategy*, DeferrableAutowiring*>> satisfiable;
 
   // Notify any autowired field whose autowiring was deferred
-  {
-    std::stack<DeferrableAutowiring*> stk;
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    for(auto& cur : m_typeMemos) {
-      auto& key = cur.first;
-      auto& value = cur.second;
+  std::stack<DeferrableAutowiring*> stk;
+  for(auto& cur : m_typeMemos) {
+    auto& key = cur.first;
+    auto& value = cur.second;
 
-      if(value.m_value)
-        // This entry is already satisfied, no need to process it
-        continue;
+    if(value.m_value)
+      // This entry is already satisfied, no need to process it
+      continue;
 
-      // Determine whether the current candidate element satisfies the autowiring we are considering.
-      // This is done internally via a dynamic cast on the interface type for which this polymorphic
-      // base type was constructed.
-      if(!value.m_value->try_assign(entry))
-        continue;
+    // Determine whether the current candidate element satisfies the autowiring we are considering.
+    // This is done internally via a dynamic cast on the interface type for which this polymorphic
+    // base type was constructed.
+    if(!value.m_value->try_assign(entry))
+      continue;
 
-      // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
-      // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
-      // release the lock.
-      stk.push(value.pFirst);
-      value.pFirst = nullptr;
+    // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
+    // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
+    // release the lock.
+    stk.push(value.pFirst);
+    value.pFirst = nullptr;
 
-      // Finish satisfying the remainder of the chain while we hold the lock:
-      while(!stk.empty()) {
-        auto top = stk.top();
-        stk.pop();
+    // Finish satisfying the remainder of the chain while we hold the lock:
+    while(!stk.empty()) {
+      auto top = stk.top();
+      stk.pop();
 
-        for(auto* pNext = top; pNext; pNext = pNext->GetFlink()) {
-          pNext->SatisfyAutowiring(*value.m_value);
+      for(auto* pNext = top; pNext; pNext = pNext->GetFlink()) {
+        pNext->SatisfyAutowiring(*value.m_value);
 
-          // See if there's another chain we need to process:
-          auto child = pNext->ReleaseDependentChain();
-          if(child)
-            stk.push(child);
+        // See if there's another chain we need to process:
+        auto child = pNext->ReleaseDependentChain();
+        if(child)
+          stk.push(child);
 
-          // Not everyone needs to be finalized.  The entities that don't require finalization
-          // are identified by an empty strategy, and we just skip them.
-          auto strategy = pNext->GetStrategy();
-          if(strategy)
-            satisfiable.push_back(
-              std::make_pair(strategy, pNext)
-            );
-        }
+        // Not everyone needs to be finalized.  The entities that don't require finalization
+        // are identified by an empty strategy, and we just skip them.
+        auto strategy = pNext->GetStrategy();
+        if(strategy)
+          satisfiable.push_back(
+            std::make_pair(strategy, pNext)
+          );
       }
     }
   }
 
-  // Run through everything else and finalize it all:
-  for(auto cur : satisfiable)
-    cur.first->Finalize(cur.second);
-
   // Give children a chance to also update their deferred elements:
-  boost::unique_lock<boost::mutex> lk(m_lock);
   for(auto q = m_children.begin(); q != m_children.end(); q++) {
     // Hold reference to prevent this iterator from becoming invalidated:
     auto ctxt = q->lock();
@@ -525,9 +512,17 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
 
     // Reverse lock before satisfying children:
     lk.unlock();
-    ctxt->UpdateDeferredElements(entry);
+    ctxt->UpdateDeferredElements(
+      boost::unique_lock<boost::mutex>(ctxt->m_lock),
+      entry
+    );
     lk.lock();
   }
+  lk.unlock();
+
+  // Run through everything else and finalize it all:
+  for(auto cur : satisfiable)
+    cur.first->Finalize(cur.second);
 }
 
 void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> entry) {
