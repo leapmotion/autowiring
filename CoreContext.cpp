@@ -347,16 +347,6 @@ void CoreContext::BuildCurrentState(void) {
   }
 }
 
-
-/// <summary>
-/// Adds the specified deferrable autowiring as a general recipient of autowiring events
-/// </summary>
-void CoreContext::AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
-  auto& entry = m_typeMemos[deferrable->GetType()];
-  deferrable->SetFlink(entry.pFirst);
-  entry.pFirst = deferrable;
-}
-
 void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable) {
   boost::lock_guard<boost::mutex> lk(m_lock);
   auto q = m_typeMemos.find(pDeferrable->GetType());

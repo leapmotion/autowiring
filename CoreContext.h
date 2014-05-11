@@ -1,6 +1,7 @@
 #pragma once
 #include "AutoAnchor.h"
 #include "AutoPacketSubscriber.h"
+#include "AutowirableSlot.h"
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
@@ -409,7 +410,21 @@ protected:
   /// <summary>
   /// Adds the specified deferrable autowiring as a general recipient of autowiring events
   /// </summary>
-  void AddDeferredUnsafe(DeferrableAutowiring* deferrable);
+  template<class T>
+  void AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
+    size_t found = m_typeMemos.count(typeid(T));
+
+    if(!found)
+      // Slot not presently initialized, need to initialize it:
+      m_typeMemos[typeid(T)].m_value->init<T>();
+
+    // Obtain the entry (potentially a second time):
+    MemoEntry& entry = m_typeMemos[typeid(T)];
+
+    // Chain forward the linked list:
+    deferrable->SetFlink(entry.pFirst);
+    entry.pFirst = deferrable;
+  }
 
 public:
   // Accessor methods:
@@ -915,14 +930,14 @@ public:
   /// <summary>
   /// Registers a slot to be autowired
   /// </summary>
-  template<class W>
-  bool Autowire(W& slot) {
+  template<class T>
+  bool Autowire(AutowirableSlot<T>& slot) {
     if(FindByTypeRecursive(slot))
       return true;
 
     // Failed, defer
     (boost::lock_guard<boost::mutex>)m_lock,
-    AddDeferredUnsafe(&slot);
+    AddDeferredUnsafe<T>(&slot);
     return false;
   }
 
@@ -955,7 +970,7 @@ public:
     );
 
     (boost::lock_guard<boost::mutex>)m_lock,
-    AddDeferredUnsafe(retVal);
+    AddDeferredUnsafe<T>(retVal);
     return retVal;
   }
 
