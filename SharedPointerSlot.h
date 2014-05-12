@@ -26,7 +26,7 @@ public:
   }
 
   template<class T>
-  SharedPointerSlot(const std::shared_ptr<T>& rhs) {
+  explicit SharedPointerSlot(const std::shared_ptr<T>& rhs) {
     // Delegate the remainder to the assign operation:
     *this = rhs;
   }
@@ -53,9 +53,21 @@ protected:
   virtual void assign(const SharedPointerSlot& rhs) {}
 
 public:
-  virtual operator void*(void) { return nullptr; }
-  virtual operator const void*(void) const { return nullptr; }
+  virtual operator bool(void) const { return false; }
   virtual operator std::shared_ptr<Object>(void) const { return std::shared_ptr<Object>(); }
+  virtual const void* ptr(void) const { return nullptr; }
+
+  /// <returns>
+  /// A void pointer to the underlying shared pointer implementation
+  /// </returns>
+  /// <remarks>
+  /// Use this method with great caution.  The return value may be safely cast to type std::shared_ptr<T>
+  /// _if_ the correct type for T is known at compile time, but if this pointer is shared at runtime between
+  /// modules, compilation differences can change the layout of the shared pointer in subtle ways.
+  /// Generally speaking, this function should only be called by modules which are guaranteed to have
+  /// been statically linked in the same executable.
+  /// </remarks>
+  const void* shared_ptr(void) const { return m_space; }
 
   /// <summary>
   /// Attempts to dynamically assign this slot to the specified object without changing the current type
@@ -125,24 +137,6 @@ public:
   }
 
   /// <summary>
-  /// In-place polymorphic transformer
-  /// </summary>
-  template<class T>
-  void operator=(const std::shared_ptr<T>& rhs) {
-    if(type() == typeid(T)) {
-      // We can just use the equivalence operator, no need to make two calls
-      *((SharedPointerSlotT<T>*)this) = rhs;
-      return;
-    }
-
-    // Clear out what we're holding:
-    reset();
-
-    // Now we can safely reinitialize:
-    new (this) SharedPointerSlotT<T>(rhs);
-  }
-
-  /// <summary>
   /// Specialization for the Object base type
   /// </summary>
   bool operator==(const std::shared_ptr<Object>& rhs) const {
@@ -198,6 +192,24 @@ public:
     // correct version of assign.
     assign(rhs);
   }
+
+  /// <summary>
+  /// In-place polymorphic transformer
+  /// </summary>
+  template<class T>
+  void operator=(const std::shared_ptr<T>& rhs) {
+    if(type() == typeid(T)) {
+      // We can just use the equivalence operator, no need to make two calls
+      *((SharedPointerSlotT<T>*)this) = rhs;
+      return;
+    }
+
+    // Clear out what we're holding:
+    reset();
+
+    // Now we can safely reinitialize:
+    new (this) SharedPointerSlotT<T>(rhs);
+  }
 };
 
 template<class T>
@@ -214,7 +226,7 @@ struct SharedPointerSlotT:
     new (m_space) std::shared_ptr<T>(rhs);
   }
 
-  ~SharedPointerSlotT(void) {
+  ~SharedPointerSlotT(void) override {
     // Recast and in-place destroy our shared pointer:
     get().~shared_ptr();
   }
@@ -240,6 +252,8 @@ public:
     return leap::fast_pointer_cast<Object>(get());
   }
 
+  virtual const void* ptr(void) const { return get().get(); }
+
   bool try_assign(const std::shared_ptr<Object>& rhs) override {
     // Just perform a dynamic cast:
     auto casted = leap::fast_pointer_cast<T>(rhs);
@@ -251,8 +265,7 @@ public:
   }
 
   bool empty(void) const { return get() == nullptr; }
-  operator void*(void) override { return get().get(); }
-  operator const void*(void) const override { return get().get(); }
+  operator bool(void) const override { return !!get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
 
   template<class U>
@@ -295,8 +308,7 @@ private:
   const SharedPointerSlot* slot(void) const { return (const SharedPointerSlot*) m_space; }
 
 public:
-  operator void*(void) { return slot()->operator void*(); }
-  operator const void*(void) const { return slot()->operator const void*(); }
+  operator bool(void) const { return slot()->operator bool(); }
 
   SharedPointerSlot& operator*(void) { return *slot(); }
   const SharedPointerSlot& operator*(void) const { return *slot(); }
@@ -315,8 +327,7 @@ public:
   /// implementation.
   /// </remarks>
   void operator=(const AnySharedPointer& rhs) {
-    slot()->~SharedPointerSlot();
-    *(SharedPointerSlot*) m_space = *rhs.slot();
+    **this = *rhs;
   }
 
   /// <summary>
@@ -324,8 +335,7 @@ public:
   /// </summary>
   template<class T>
   void operator=(const std::shared_ptr<T>& rhs) {
-    slot()->~SharedPointerSlot();
-    *(SharedPointerSlot*) m_space = rhs;
+    **this = rhs;
   }
 };
 
