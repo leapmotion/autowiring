@@ -358,11 +358,11 @@ protected:
   void AddInternal(const AddInternalTraits& traits);
 
   template<class T>
-  void FindByTypeUnsafe(std::shared_ptr<T>& ptr) const {
-    // Try to find the type directly:
-    auto& entry = m_typeMemos[typeid(T)];
-    if(!entry->empty()) {
-      ptr = entry->as<T>();
+  void FindByTypeUnsafe(std::shared_ptr<T>& ptr, bool scanIfEmpty = true) const {
+    // If we've attempted to search for this type before, we will return the value of the memo immediately:
+    auto entry = m_typeMemos.find(typeid(T));
+    if(entry != m_typeMemos.end() && !(scanIfEmpty && entry->second->empty())) {
+      ptr = entry->second->as<T>();
       return;
     }
 
@@ -383,7 +383,7 @@ protected:
     }
 
     // Memoize:
-    *entry = ptr;
+    *m_typeMemos[typeid(T)] = ptr;
   }
 
   /// <summary>
@@ -872,19 +872,19 @@ public:
   /// Locates an available context member in this context
   /// </summary>
   template<class T>
-  void FindByType(std::shared_ptr<T>& slot) const {
+  void FindByType(std::shared_ptr<T>& slot, bool scanIfEmpty = true) const {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    FindByTypeUnsafe(slot);
+    FindByTypeUnsafe(slot, scanIfEmpty);
   }
 
   /// <summary>
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
   template<class T>
-  bool FindByTypeRecursive(std::shared_ptr<T>& slot) {
+  bool FindByTypeRecursive(std::shared_ptr<T>& slot, bool scanIfEmpty = true) {
     // First-chance resolution in this context and ancestor contexts:
     for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
-      pCur->FindByType(slot);
+      pCur->FindByType(slot, scanIfEmpty);
       if(slot)
         return true;
     }
