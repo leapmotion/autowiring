@@ -383,7 +383,7 @@ void CoreContext::Dump(std::ostream& os) const {
   boost::lock_guard<boost::mutex> lk(m_lock);
   for(auto q = m_typeMemos.begin(); q != m_typeMemos.end(); q++) {
     os << q->first.name();
-    const void* pObj = q->second.m_value;
+    const void* pObj = q->second.m_value->ptr();
     if(pObj)
       os << " 0x" << hex << pObj;
     os << endl;
@@ -474,7 +474,7 @@ void CoreContext::UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, 
       stk.pop();
 
       for(auto* pNext = top; pNext; pNext = pNext->GetFlink()) {
-        pNext->SatisfyAutowiring(*value.m_value);
+        pNext->SatisfyAutowiring(value.m_value->shared_ptr());
 
         // See if there's another chain we need to process:
         auto child = pNext->ReleaseDependentChain();

@@ -137,5 +137,5 @@ TEST_F(SharedPointerSlotTest, VoidReturnExpected) {
   slot = v;
 
   // Validate equivalence of the void operator:
-  ASSERT_EQ(v.get(), (void*) slot) << "Shared pointer slot did not return a void* with an expected value";
+  ASSERT_EQ(v.get(), slot->ptr()) << "Shared pointer slot did not return a void* with an expected value";
 }
