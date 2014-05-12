@@ -102,9 +102,9 @@ public:
   /// Satisfies autowiring with a so-called "witness slot" which is guaranteed to be satisfied on the same type
   /// </summary>
   /// <remarks>
-  /// The passed value must be statically castable to type AutowirableSlot
+  /// The passed value must be a void pointer exactly to a shared_ptr of type T that matches this slot
   /// </remarks>
-  virtual void SatisfyAutowiring(const SharedPointerSlot& witness) = 0;
+  virtual void SatisfyAutowiring(const void* pvSharedPtr) = 0;
 };
 
 template<class T>
@@ -134,9 +134,9 @@ public:
     return m_type;
   }
 
-  void SatisfyAutowiring(const SharedPointerSlot& witness) override {
+  void SatisfyAutowiring(const void* pvSharedPtr) override {
     // Cast over and assign:
-    (std::shared_ptr<T>&)*this = witness.template as<T>();
+    (std::shared_ptr<T>&)*this = *(const std::shared_ptr<T>*)pvSharedPtr;
   }
 
   operator bool(void) const {
