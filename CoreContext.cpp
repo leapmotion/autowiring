@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "CoreContext.h"
 #include "CoreThread.h"
-#include "AutoPacketFactory.h"
+//#include "AutoPacketFactory.h"
 #include "AutoPacketListener.h"
 #include "Autowired.h"
 #include "BoltBase.h"
@@ -132,7 +132,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
 
     // Add to our vector of local receivers first:
     (boost::lock_guard<boost::mutex>)m_lock,
-    m_eventReceivers.push_back(entry);
+    m_eventReceivers.insert(entry);
 
     // Recursively add to all junction box managers up the stack:
     AddEventReceiver(entry);
@@ -189,7 +189,7 @@ void CoreContext::Initiate(void) {
 
   // Now we can add the event receivers we haven't been able to add because the context
   // wasn't yet started:
-  AddDelayedEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
+  AddEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
   m_delayedEventReceivers.clear();
   m_junctionBoxManager->Initiate();
 
@@ -519,10 +519,9 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
 void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> entry) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    
     if (!m_initiated) {
       // Delay adding receiver until context is initialized
-      m_delayedEventReceivers.push_back(entry);
+      m_delayedEventReceivers.insert(entry);
       return;
     }
   }
@@ -537,7 +536,7 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> entry) {
 
 
 template<class iter>
-void CoreContext::AddDelayedEventReceivers(iter first, iter last) {
+void CoreContext::AddEventReceivers(iter first, iter last) {
   // Must be initiated
   assert(m_initiated);
   
@@ -547,29 +546,49 @@ void CoreContext::AddDelayedEventReceivers(iter first, iter last) {
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
-    m_pParent->AddDelayedEventReceivers(first, last);
+    m_pParent->AddEventReceivers(first, last);
 }
 
 
-void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
-  (boost::lock_guard<boost::mutex>)m_lock,
-  m_junctionBoxManager->RemoveEventReceiver(pRecvr);
-
+void CoreContext::UnsnoopEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
   // Delegate to the parent:
   if(m_pParent)
-    m_pParent->RemoveEventReceiver(pRecvr);
+    m_pParent->UnsnoopEventReceiver(pRecvr);
+  
+  m_junctionBoxManager->RemoveEventReceiver(pRecvr);
 }
 
 void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
-  {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    for(auto q = first; q != last; q++)
-      m_junctionBoxManager->RemoveEventReceiver(*q);
-  }
+  for(auto q = first; q != last; q++)
+    m_junctionBoxManager->RemoveEventReceiver(*q);
 
   // Detour to the parent collection (if necessary)
   if(m_pParent)
     m_pParent->RemoveEventReceivers(first, last);
+}
+
+//template<typename T>
+void CoreContext::UnsnoopRecursive(bool isEvent, const std::type_info& packet, Object* pSnooper, const JunctionBoxEntry<EventReceiver>& receiver){
+  { //Check if snooper originated from (or also snooped) this context
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    if (m_eventReceivers.find(receiver) != m_eventReceivers.end() ||
+        m_snoopers.find(pSnooper) != m_snoopers.end())
+      return;
+  }
+  
+  // EventReceivers
+  if (isEvent) {
+    m_junctionBoxManager->RemoveEventReceiver(receiver);
+  }
+  
+  // AutoPackets
+  if (packet != typeid(void)) {
+    GetPacketFactory()->RemoveSubscriber(packet);
+  }
+  
+  if (m_pParent)
+    m_pParent->UnsnoopRecursive(isEvent, packet, pSnooper, receiver);
+  
 }
 
 void CoreContext::FilterException(void) {
