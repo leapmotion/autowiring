@@ -120,7 +120,7 @@ TEST_F(ObjectPoolTest, EmptyPoolIssuance) {
   EXPECT_ANY_THROW(pool.Wait()) << "An attempt to obtain an element on an empty pool did not throw an exception as expected";
 
   // Now see if we can delay for the thread to back out:
-  m_create->InitiateCoreThreads();
+  m_create->Initiate();
   pool.Rundown();
 
   // Verify that it got released as expected:
