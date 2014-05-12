@@ -261,11 +261,6 @@ protected:
   void AddEventReceivers(iter first, iter last);
 
   /// <summary>
-  /// Removes the named event receiver from the collection of known receivers
-  /// </summary>
-  void UnsnoopEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
-
-  /// <summary>
   /// Removes all recognized event receivers in the indicated range
   /// </summary>
   void RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
@@ -301,7 +296,6 @@ protected:
   /// <summary>
   /// Counterparts to the AddPacketSubscriber routine
   /// </summary>
-  void RemovePacketSubscriber(const std::type_info& ti);
   void RemovePacketSubscribers(const std::vector<AutoPacketSubscriber>& subscribers);
 
   /// <summary>
@@ -867,18 +861,19 @@ public:
                   "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
     
     JunctionBoxEntry<EventReceiver> receiver(this, pSnooper);
+    Object* oSnooper = std::static_pointer_cast<Object>(pSnooper).get();
     
     (boost::lock_guard<boost::mutex>)m_lock,
-    m_snoopers.erase(std::static_pointer_cast<Object>(pSnooper).get()),
+    m_snoopers.erase(oSnooper),
     m_delayedEventReceivers.erase(receiver);
     
     UnsnoopRecursive(std::is_base_of<EventReceiver, T>::value,
                      typeid(std::conditional<has_autofilter<T>::value, T, void>),
-                     std::static_pointer_cast<Object>(pSnooper).get(),
+                     oSnooper,
                      receiver);
   }
   
-  void UnsnoopRecursive(bool isEvent, const std::type_info& packet, Object* pSnooper, const JunctionBoxEntry<EventReceiver>& receiver);
+  void UnsnoopRecursive(bool isEvent, const std::type_info& packet, Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver);
 
   /// <summary>
   /// Locates an available context member in this context
