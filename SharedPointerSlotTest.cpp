@@ -72,7 +72,7 @@ TEST_F(SharedPointerSlotTest, SlotsInVector) {
 
     // Initialize with a lot of copies of sharedPtr
     for(size_t i = 0; i < 10; i++) {
-      slots.push_back(sharedPtr);
+      slots.push_back(AnySharedPointer(sharedPtr));
       ASSERT_EQ(1 + (long)slots.size(), sharedPtr.use_count()) << "Unexpected number of references to a slotted shared pointer";
     }
   }
@@ -88,7 +88,7 @@ TEST_F(SharedPointerSlotTest, SlotDuplication) {
 
   {
     // Create a base slot to hold the shared pointer:
-    AnySharedPointer slot1 = sharedPtr;
+    AnySharedPointer slot1(sharedPtr);
     ASSERT_FALSE(slot1->empty()) << "A slot initialized from a shared pointer was incorrectly marked as empty";
 
     // Verify the type came across:
