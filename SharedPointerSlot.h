@@ -273,7 +273,7 @@ public:
   }
 
   AnySharedPointer(const AnySharedPointer& rhs) {
-    new (m_space) SharedPointerSlot(rhs.slot());
+    new (m_space) SharedPointerSlot(*rhs.slot());
   }
 
   template<class T>
@@ -284,25 +284,25 @@ public:
 
   ~AnySharedPointer(void) {
     // Pass control to the *real* destructor:
-    slot().~SharedPointerSlot();
+    slot()->~SharedPointerSlot();
   }
 
 private:
   unsigned char m_space[sizeof(SharedPointerSlot)];
 
   // Convenience method to cast the space to a slot
-  SharedPointerSlot& slot(void) { return *(SharedPointerSlot*) m_space; }
-  const SharedPointerSlot& slot(void) const { return *(SharedPointerSlot*) m_space; }
+  SharedPointerSlot* slot(void) { return (SharedPointerSlot*) m_space; }
+  const SharedPointerSlot* slot(void) const { return (const SharedPointerSlot*) m_space; }
 
 public:
-  operator void*(void) { return slot().operator void*(); }
-  operator const void*(void) const { return slot().operator const void*(); }
+  operator void*(void) { return slot()->operator void*(); }
+  operator const void*(void) const { return slot()->operator const void*(); }
 
-  SharedPointerSlot& operator*(void) { return slot(); }
-  const SharedPointerSlot& operator*(void) const { return slot(); }
+  SharedPointerSlot& operator*(void) { return *slot(); }
+  const SharedPointerSlot& operator*(void) const { return *slot(); }
 
-  SharedPointerSlot* operator->(void) { return &slot(); }
-  const SharedPointerSlot* operator->(void) const { return &slot(); }
+  SharedPointerSlot* operator->(void) { return slot(); }
+  const SharedPointerSlot* operator->(void) const { return slot(); }
 
   /// <summary>
   /// Copy assignment operator
@@ -315,8 +315,8 @@ public:
   /// implementation.
   /// </remarks>
   void operator=(const AnySharedPointer& rhs) {
-    slot().~SharedPointerSlot();
-    *(SharedPointerSlot*) m_space = rhs.slot();
+    slot()->~SharedPointerSlot();
+    *(SharedPointerSlot*) m_space = *rhs.slot();
   }
 
   /// <summary>
@@ -324,7 +324,7 @@ public:
   /// </summary>
   template<class T>
   void operator=(const std::shared_ptr<T>& rhs) {
-    slot().~SharedPointerSlot();
+    slot()->~SharedPointerSlot();
     *(SharedPointerSlot*) m_space = rhs;
   }
 };
