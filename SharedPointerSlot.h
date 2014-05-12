@@ -277,7 +277,7 @@ public:
   }
 
   template<class T>
-  AnySharedPointer(const std::shared_ptr<T>& rhs) {
+  explicit AnySharedPointer(const std::shared_ptr<T>& rhs) {
     // Delegate the remainder to the assign operation:
     new (m_space) SharedPointerSlotT<T>(rhs);
   }
@@ -317,6 +317,15 @@ public:
   void operator=(const AnySharedPointer& rhs) {
     slot().~SharedPointerSlot();
     *(SharedPointerSlot*) m_space = rhs.slot();
+  }
+
+  /// <summary>
+  /// Convenience overload for shared pointer assignment
+  /// </summary>
+  template<class T>
+  void operator=(const std::shared_ptr<T>& rhs) {
+    slot().~SharedPointerSlot();
+    *(SharedPointerSlot*) m_space = rhs;
   }
 };
 
