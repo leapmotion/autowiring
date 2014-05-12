@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "CoreContext.h"
 #include "CoreThread.h"
-//#include "AutoPacketFactory.h"
+#include "AutoPacketFactory.h"
 #include "AutoPacketListener.h"
 #include "Autowired.h"
 #include "BoltBase.h"
@@ -549,15 +549,6 @@ void CoreContext::AddEventReceivers(iter first, iter last) {
     m_pParent->AddEventReceivers(first, last);
 }
 
-
-void CoreContext::UnsnoopEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
-  // Delegate to the parent:
-  if(m_pParent)
-    m_pParent->UnsnoopEventReceiver(pRecvr);
-  
-  m_junctionBoxManager->RemoveEventReceiver(pRecvr);
-}
-
 void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
   for(auto q = first; q != last; q++)
     m_junctionBoxManager->RemoveEventReceiver(*q);
@@ -567,12 +558,11 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
     m_pParent->RemoveEventReceivers(first, last);
 }
 
-//template<typename T>
-void CoreContext::UnsnoopRecursive(bool isEvent, const std::type_info& packet, Object* pSnooper, const JunctionBoxEntry<EventReceiver>& receiver){
+void CoreContext::UnsnoopRecursive(bool isEvent, const std::type_info& packet, Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver){
   { //Check if snooper originated from (or also snooped) this context
     boost::lock_guard<boost::mutex> lk(m_lock);
     if (m_eventReceivers.find(receiver) != m_eventReceivers.end() ||
-        m_snoopers.find(pSnooper) != m_snoopers.end())
+        m_snoopers.find(oSnooper) != m_snoopers.end())
       return;
   }
   
@@ -587,8 +577,7 @@ void CoreContext::UnsnoopRecursive(bool isEvent, const std::type_info& packet, O
   }
   
   if (m_pParent)
-    m_pParent->UnsnoopRecursive(isEvent, packet, pSnooper, receiver);
-  
+    m_pParent->UnsnoopRecursive(isEvent, packet, oSnooper, receiver);
 }
 
 void CoreContext::FilterException(void) {
@@ -654,12 +643,6 @@ void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
   GetPacketFactory()->AddSubscriber(rhs);
   if(m_pParent)
     m_pParent->AddPacketSubscriber(rhs);
-}
-
-void CoreContext::RemovePacketSubscriber(const std::type_info& ti) {
-  GetPacketFactory()->RemoveSubscriber(ti);
-  if(m_pParent)
-    m_pParent->RemovePacketSubscriber(ti);
 }
 
 void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber> &subscribers) {
