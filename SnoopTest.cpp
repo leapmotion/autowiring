@@ -10,7 +10,8 @@ public:
 };
 
 class SnoopTestBase:
-  public UpBroadcastListener
+  public virtual UpBroadcastListener,
+  public ContextMember
 {
 public:
   SnoopTestBase(void):
@@ -50,12 +51,12 @@ public:
 };
 
 class RemovesSelf:
-public SimpleEvent,
-public std::enable_shared_from_this<RemovesSelf>
+  public virtual SimpleEvent,
+  public ContextMember
 {
   virtual void ZeroArgs(void){
     AutoCurrentContext ctxt;
-    ctxt->Unsnoop(shared_from_this());
+    ctxt->Unsnoop(GetSelf<RemovesSelf>());
   }
 };
 
@@ -94,7 +95,6 @@ TEST_F(SnoopTest, VerifySimpleSnoop) {
 TEST_F(SnoopTest, VerifyUnsnoop) {
   // Create a child context to snoop:
   AutoCreateContext snoopy;
-  snoopy->Initiate();
   AutoRequired<ParentMember> parentMember;
 
   // Add a member to be snooped:
@@ -105,6 +105,7 @@ TEST_F(SnoopTest, VerifyUnsnoop) {
     // Snoop, unsnoop:
     snoopy->Snoop(parentMember);
     snoopy->Unsnoop(parentMember);
+    snoopy->Initiate();
 
     // Fire one event:
     AutoFired<UpBroadcastListener> firer;
