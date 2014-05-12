@@ -51,6 +51,9 @@ TEST_F(SharedPointerSlotTest, SlotReassignment) {
   AnySharedPointer slot;
   slot = sharedPointerA;
 
+  // Verify that the assignment worked as anticipated:
+  ASSERT_FALSE(sharedPointerA.unique()) << "Constructor did not properly addref a shared pointer on initialization";
+
   // Recast to another shared pointer, verify reference count goes down:
   slot = sharedPointerB;
   ASSERT_TRUE(sharedPointerA.unique()) << "Destructor was not properly invoked for a shared pointer slot";
