@@ -869,23 +869,18 @@ public:
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    static_assert(std::is_base_of<EventReceiver, T>::value ||
-                  has_autofilter<T>::value,
-                  "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
-    
     (boost::lock_guard<boost::mutex>)m_lock,
     m_snoopers.insert(std::static_pointer_cast<Object>(pSnooper).get());
 
+    const AddInternalTraits traits(AutoPacketSubscriberSelect<T>(pSnooper), pSnooper);
+
     // Add EventReceiver
-    if (std::is_base_of<EventReceiver, T>::value) {
-      JunctionBoxEntry<EventReceiver> receiver(this, pSnooper);
-      AddEventReceiver(receiver);
-    }
+    if(traits.pRecvr)
+      AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, traits.pRecvr));
     
     // Add PacketSubscriber;
-    if (has_autofilter<T>::value) {
-      AddPacketSubscriber(AutoPacketSubscriberSelect<T>(pSnooper));
-    }
+    if(traits.subscriber)
+      AddPacketSubscriber(traits.subscriber);
   }
 
   /// <summary>
