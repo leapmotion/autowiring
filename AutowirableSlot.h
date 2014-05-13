@@ -1,5 +1,6 @@
 #pragma once
 #include "fast_pointer_cast.h"
+#include "SharedPointerSlot.h"
 #include MEMORY_HEADER
 
 class CoreContext;
@@ -15,13 +16,13 @@ void NullOp(T) {}
 /// Strategy class for performing unsynchronized operations on an autowirable slot
 /// </summary>
 /// <remarks>
-/// The DeferrableAutowiring base class' TrySatisfyAutowiring and SatisfyAutowiring routines are both
-/// guaranteed to be run in a synchronized context--IE, a call to CancelAutowiringNotification will
-/// block until the above routines return.  Unfortunately, this lock also excludes many other types
-/// of operations, such as type search operations, which means that some of the work associated with
-/// cleaning up after an autowiring has been satisfied will take place in an unsynchronized context.
-/// This means that virtual function calls are generally unsafe on the member being autowired when
-/// they are made without a lock being held.
+/// The DeferrableAutowiring base class' SatisfyAutowiring routine is  guaranteed to be run in a
+/// synchronized context--IE, a call to CancelAutowiringNotification will block until the above
+/// routines return.  Unfortunately, this lock also excludes many other types of operations, such
+/// as type search operations, which means that some of the work associated with cleaning up after
+/// an autowiring has been satisfied will take place in an unsynchronized context.   This means
+/// that virtual function calls are generally unsafe on the member being autowired when they are
+/// made without a lock being held.
 ///
 /// To mitigate this problem, instead of performing a virtual call through the original object, a
 /// strategy type is provided by the DeferrableAutowiring while the lock is held, and then later the
@@ -36,9 +37,8 @@ public:
   /// </summary>
   /// <summary>
   /// Implementors of this method are permitted to delete "this" or perform any other work while
-  /// outside of the context of a lock.  This method is only called after TrySatisfyAutowiring has
-  /// returned true.  Once this method returns, this object is guaranteed never to be referred to
-  /// again by CoreContext.
+  /// outside of the context of a lock.  Once this method returns, this object is guaranteed never
+  /// to be referred to again by CoreContext.
   /// </remarks>
   virtual void Finalize(DeferrableAutowiring* pSlot) const = 0;
 };
@@ -98,20 +98,12 @@ public:
   virtual DeferrableAutowiring* ReleaseDependentChain(void) { return nullptr; }
 
   /// <summary>
-  /// Attempts to satisfy this autowiring relationship with the specified candidate object
+  /// Satisfies autowiring with a so-called "witness slot" which is guaranteed to be satisfied on the same type
   /// </summary>
   /// <remarks>
-  /// This method returns true when the autowiring was successful
+  /// The passed value must be a void pointer exactly to a shared_ptr of type T that matches this slot
   /// </remarks>
-  virtual bool TrySatisfyAutowiring(const std::shared_ptr<Object>& candidate) = 0;
-
-  /// <summary>
-  /// Satisfies autowiring with a so-called "witness type" which is guaranteed to inherit AutowirableSlot
-  /// </summary>
-  /// <remarks>
-  /// The passed value must be statically castable to type AutowirableSlot
-  /// </remarks>
-  virtual void SatisfyAutowiring(const DeferrableAutowiring& witness) = 0;
+  virtual void SatisfyAutowiring(const void* pvSharedPtr) = 0;
 };
 
 template<class T>
@@ -141,19 +133,9 @@ public:
     return m_type;
   }
 
-  bool TrySatisfyAutowiring(const std::shared_ptr<Object>& candidate) override {
-    (std::shared_ptr<T>&)*this = m_fast_pointer_cast(candidate);
-    return !!*this;
-  }
-
-  void SatisfyAutowiring(const DeferrableAutowiring& witness) override {
-    // Just perform blind assignment:
-    SatisfyAutowiring(static_cast<const AutowirableSlot<T>&>(witness));
-  }
-
-  void SatisfyAutowiring(const AutowirableSlot<T>& witness) {
-    // Just perform blind assignment:
-    (std::shared_ptr<T>&)*this = witness;
+  void SatisfyAutowiring(const void* pvSharedPtr) override {
+    // Cast over and assign:
+    (std::shared_ptr<T>&)*this = *(const std::shared_ptr<T>*)pvSharedPtr;
   }
 
   operator bool(void) const {
@@ -168,7 +150,7 @@ public:
 /// <summary>
 /// A function-based autowirable slot, which invokes a lambda rather than binding a shared pointer
 /// </summary>
-template<class Fn, class T>
+template<class T, class Fn>
 class AutowirableSlotFn:
   public AutowirableSlot<T>
 {
@@ -224,5 +206,10 @@ public:
   const DeferrableUnsynchronizedStrategy* GetStrategy(void) override { return &s_strategy; }
 };
 
-template<class Fn, class T>
-const typename AutowirableSlotFn<Fn, T>::Strategy AutowirableSlotFn<Fn, T>::s_strategy;
+template<class T, class Fn>
+AutowirableSlotFn<T, Fn>* MakeAutowirableSlotFn(const std::shared_ptr<CoreContext>& ctxt, Fn fn) {
+  return new AutowirableSlotFn<T, Fn>(ctxt, std::forward<Fn>(fn));
+}
+
+template<class T, class Fn>
+const typename AutowirableSlotFn<T, Fn>::Strategy AutowirableSlotFn<T, Fn>::s_strategy;

@@ -8,15 +8,18 @@ template<>
 struct SharedPointerSlotT<MyUnusedClass>:
   SharedPointerSlot
 {
-  SharedPointerSlotT(const std::shared_ptr<MyUnusedClass>& rhs):
-    dtorStrike(false)
-  {}
-
-  ~SharedPointerSlotT(void) {
-    dtorStrike = true;
+  SharedPointerSlotT(const std::shared_ptr<MyUnusedClass>& rhs)
+  {
+    dtorStrike() = false;
   }
 
-  bool dtorStrike;
+  ~SharedPointerSlotT(void) {
+    dtorStrike() = true;
+  }
+
+  bool& dtorStrike(void) {
+    return (bool&) *m_space;
+  }
 };
 
 TEST_F(AnySharedPointerTest, SimpleDestructorStrike)
@@ -33,13 +36,26 @@ TEST_F(AnySharedPointerTest, SimpleDestructorStrike)
   slot = unused;
 
   // Destructor shouldn't be hit until we call it:
-  ASSERT_FALSE(mucSlot.dtorStrike) << "Destructor was struck prematurely";
+  ASSERT_FALSE(mucSlot.dtorStrike()) << "Destructor was struck prematurely";
 
   // Direct destructor call:
   slot.~SharedPointerSlot();
 
   // Verify we hit our dtor in the specialization we declared above:
-  ASSERT_TRUE(mucSlot.dtorStrike) << "Virtual destructor on in-place polymorphic class was not hit as expected";
+  ASSERT_TRUE(mucSlot.dtorStrike()) << "Virtual destructor on in-place polymorphic class was not hit as expected";
+}
+
+TEST_F(AnySharedPointerTest, AnySharedPointerRelease) {
+  auto t = std::make_shared<int>(5);
+
+  // Assign over, then reset
+  {
+    AnySharedPointer ptr;
+    ptr = t;
+  }
+
+  // Verify the AnySharedPointer destructor worked correctly
+  ASSERT_TRUE(t.unique()) << "AnySharedPointer instance did not properly release a reference when destroyed";
 }
 
 TEST_F(AnySharedPointerTest, SlotReassignment) {
@@ -51,10 +67,13 @@ TEST_F(AnySharedPointerTest, SlotReassignment) {
   AnySharedPointer slot;
   slot = sharedPointerA;
 
+  // Verify that the assignment worked as anticipated:
+  ASSERT_EQ(2, sharedPointerA.use_count()) << "Constructor did not properly addref a shared pointer on initialization";
+
   // Recast to another shared pointer, verify reference count goes down:
   slot = sharedPointerB;
+  EXPECT_EQ(2, sharedPointerB.use_count()) << "Reference count was not incremented properly during a shared pointer hold";
   ASSERT_TRUE(sharedPointerA.unique()) << "Destructor was not properly invoked for a shared pointer slot";
-  ASSERT_EQ(2, sharedPointerB.use_count()) << "Reference count was not incremented properly during a shared pointer hold";
 
   // Now change the type completely, verify proper release:
   slot = sharedPointerC;
@@ -69,7 +88,7 @@ TEST_F(AnySharedPointerTest, SlotsInVector) {
 
     // Initialize with a lot of copies of sharedPtr
     for(size_t i = 0; i < 10; i++) {
-      slots.push_back(sharedPtr);
+      slots.push_back(AnySharedPointer(sharedPtr));
       ASSERT_EQ(1 + (long)slots.size(), sharedPtr.use_count()) << "Unexpected number of references to a slotted shared pointer";
     }
   }
@@ -85,7 +104,7 @@ TEST_F(AnySharedPointerTest, SlotDuplication) {
 
   {
     // Create a base slot to hold the shared pointer:
-    AnySharedPointer slot1 = sharedPtr;
+    AnySharedPointer slot1(sharedPtr);
     ASSERT_FALSE(slot1->empty()) << "A slot initialized from a shared pointer was incorrectly marked as empty";
 
     // Verify the type came across:
@@ -101,4 +120,38 @@ TEST_F(AnySharedPointerTest, SlotDuplication) {
   // Verify that the slot still holds a reference and that the reference count is correct:
   ASSERT_FALSE(slot2->empty()) << "A slot should have continued to hold a shared pointer, but was prematurely cleared";
   ASSERT_EQ(2, sharedPtr.use_count()) << "A slot going out of scope did not correctly decrement a shared pointer reference";
+}
+
+TEST_F(AnySharedPointerTest, TrivialRelease) {
+  std::shared_ptr<bool> a(new bool);
+  std::shared_ptr<int> b(new int);
+
+  // Assign the slot to two different values, and make sure that they are released properly
+  AnySharedPointer slot;
+  slot = a;
+  slot = b;
+
+  ASSERT_TRUE(a.unique()) << "Expected reassignment of a slot to release a formerly held instance";
+  ASSERT_FALSE(b.unique()) << "Expected slot to hold a reference to the second specified instance";
+  
+  // Now release, and verify that a release actually took place
+  slot->reset();
+  ASSERT_TRUE(b.unique()) << "Releasing a slot did not actually release the held value as expected";
+}
+
+TEST_F(AnySharedPointerTest, InitDerivesCorrectType) {
+  AnySharedPointer slot;
+  slot->init<int>();
+
+  ASSERT_EQ(typeid(int), slot->type()) << "A manually initialized slot did not have the expected type";
+}
+
+TEST_F(AnySharedPointerTest, VoidReturnExpected) {
+  // Fill out our slot:
+  auto v = std::make_shared<int>(5);
+  AnySharedPointer slot;
+  slot = v;
+
+  // Validate equivalence of the void operator:
+  ASSERT_EQ(v.get(), slot->ptr()) << "Shared pointer slot did not return a void* with an expected value";
 }
