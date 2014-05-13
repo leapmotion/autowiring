@@ -62,6 +62,24 @@ TEST_F(ObjectPoolTest, VerifyAsynchronousUsage) {
   obj->Wait();
 }
 
+TEST_F(ObjectPoolTest, ClearCachedEntities) {
+  ObjectPool<PooledObject> pool(3);
+
+  // Create a pool and get a few items in its cache:
+  pool.Wait(),
+  pool.Wait(),
+  pool.Wait();
+
+  // Verify the expected initial cache count:
+  ASSERT_EQ(3UL, pool.GetCached()) << "Expected pool outstanding count to have hit 3 entries";
+
+  // Now verify that we can clear the object pool at a point in time when it should already be empty:
+  pool.ClearCachedEntities();
+
+  // And we should be legitimately empty at this point
+  ASSERT_EQ(0UL, pool.GetCached()) << "After invoking a cache clearing operation, the cache was nevertheless not cleared";
+}
+
 TEST_F(ObjectPoolTest, VerifyOutOfOrderDestruction) {
   std::shared_ptr<int> ptr;
 
@@ -72,4 +90,39 @@ TEST_F(ObjectPoolTest, VerifyOutOfOrderDestruction) {
 
   // Verify that returning a shared pointer after the pool is gone does not result in an exception
   ASSERT_NO_THROW(ptr.reset()) << "Attempting to release a shared pointer on a destroyed pool caused an unexpected exception";
+}
+
+class HoldsSharedPtrThenQuits:
+  public CoreThread
+{
+public:
+  std::shared_ptr<int> m_ptr;
+
+  void Run(void) override {
+    ThreadSleep(boost::chrono::milliseconds(100));
+    m_ptr.reset();
+  }
+};
+
+TEST_F(ObjectPoolTest, EmptyPoolIssuance) {
+  ObjectPool<int> pool;
+
+  // Create the thread which will hold the shared pointer for awhile:
+  AutoRequired<HoldsSharedPtrThenQuits> thread;
+  pool(thread->m_ptr);
+  std::weak_ptr<int> ptrWeak = thread->m_ptr;
+
+  ASSERT_FALSE(ptrWeak.expired()) << "Object pool failed to issue a shared pointer as expected";
+
+  // Verify properties now that we've zeroized the limit:
+  pool.SetOutstandingLimit(0);
+  EXPECT_ANY_THROW(pool.SetOutstandingLimit(1)) << "An attempt to alter a zeroized outstanding limit did not throw an exception as expected";
+  EXPECT_ANY_THROW(pool.Wait()) << "An attempt to obtain an element on an empty pool did not throw an exception as expected";
+
+  // Now see if we can delay for the thread to back out:
+  m_create->Initiate();
+  pool.Rundown();
+
+  // Verify that it got released as expected:
+  ASSERT_TRUE(ptrWeak.expired()) << "Not all shared pointers issued by an object pool expired in a timely fashion";
 }
