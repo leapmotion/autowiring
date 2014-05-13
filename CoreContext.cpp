@@ -558,26 +558,14 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
     m_pParent->RemoveEventReceivers(first, last);
 }
 
-void CoreContext::UnsnoopRecursive(bool isEvent, const std::type_info& packet, Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver){
-  { //Check if snooper originated from (or also snooped) this context
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    if (m_eventReceivers.find(receiver) != m_eventReceivers.end() ||
-        m_snoopers.find(oSnooper) != m_snoopers.end())
-      return;
-  }
+void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver) {
+  m_junctionBoxManager->RemoveEventReceiver(receiver);
   
-  // EventReceivers
-  if (isEvent) {
-    m_junctionBoxManager->RemoveEventReceiver(receiver);
-  }
-  
-  // AutoPackets
-  if (packet != typeid(void)) {
-    GetPacketFactory()->RemoveSubscriber(packet);
-  }
-  
-  if (m_pParent)
-    m_pParent->UnsnoopRecursive(isEvent, packet, oSnooper, receiver);
+  // Check if snooper is a member of the parent or also snoops the parentU
+  if (m_pParent &&
+      m_pParent->m_eventReceivers.find(receiver) == m_pParent->m_eventReceivers.end() &&
+      m_pParent->m_snoopers.find(oSnooper) == m_pParent->m_snoopers.end())
+    m_pParent->UnsnoopEvents(oSnooper, receiver);
 }
 
 void CoreContext::FilterException(void) {
@@ -643,6 +631,15 @@ void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
   GetPacketFactory()->AddSubscriber(rhs);
   if(m_pParent)
     m_pParent->AddPacketSubscriber(rhs);
+}
+
+void CoreContext::UnsnoopAutoPacket(Object* oSnooper, const std::type_info& ti) {
+  GetPacketFactory()->RemoveSubscriber(ti);
+  
+  // Check if snooper is a member of the parent
+  if (m_pParent &&
+      m_pParent->m_snoopers.find(oSnooper) == m_pParent->m_snoopers.end())
+    m_pParent->UnsnoopAutoPacket(oSnooper, ti);
 }
 
 void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber> &subscribers) {
