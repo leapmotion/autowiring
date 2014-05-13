@@ -208,6 +208,7 @@ public:
     reset();
 
     // Now we can safely reinitialize:
+    static_assert(sizeof(SharedPointerSlotT<T>) == sizeof(*this), "Cannot instantiate a templated shared pointer slot on this type, it's too large to fit here");
     new (this) SharedPointerSlotT<T>(rhs);
   }
 };
