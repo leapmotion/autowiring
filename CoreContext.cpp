@@ -94,23 +94,17 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
 
 void CoreContext::AddInternal(const AddInternalTraits& traits) {
   {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    boost::unique_lock<boost::mutex> lk(m_lock);
 
     // Validate that this addition does not generate an ambiguity:
     auto& v = m_typeMemos[typeid(*traits.pObject)];
-    if(*v == traits.pObject)
+    if(*v.m_value == traits.pObject)
       throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
-    if(*v)
+    if(*v.m_value)
       throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
 
     // Add the new concrete type:
     m_concreteTypes.push_back(traits.value);
-
-    // Perform the insertion at the canonical type identity:
-    v = traits.value;
-
-    // Double-check that the type we just inserted passes sanity checks:
-    assert(*v == traits.pObject);
 
     // Insert each context element:
     if(traits.pContextMember)
@@ -124,6 +118,10 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
 
     if(traits.pBoltBase)
       AddBolt(traits.pBoltBase);
+
+    // Notify any autowiring field that is currently waiting that we have a new member
+    // to be considered.
+    UpdateDeferredElements(std::move(lk), traits.pObject);
   }
 
   // Event receivers:
@@ -132,7 +130,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
 
     // Add to our vector of local receivers first:
     (boost::lock_guard<boost::mutex>)m_lock,
-    m_eventReceivers.push_back(entry);
+    m_eventReceivers.insert(entry);
 
     // Recursively add to all junction box managers up the stack:
     AddEventReceiver(entry);
@@ -141,10 +139,6 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   // Subscribers, if applicable:
   if(traits.subscriber)
     AddPacketSubscriber(traits.subscriber);
-
-  // Notify any autowiring field that is currently waiting that we have a new member
-  // to be considered.
-  UpdateDeferredElements(traits.pObject);
 
   // Signal listeners that a new object has been created
   GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *traits.pObject.get());
@@ -189,7 +183,7 @@ void CoreContext::Initiate(void) {
 
   // Now we can add the event receivers we haven't been able to add because the context
   // wasn't yet started:
-  AddDelayedEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
+  AddEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
   m_delayedEventReceivers.clear();
   m_junctionBoxManager->Initiate();
 
@@ -355,8 +349,8 @@ void CoreContext::BuildCurrentState(void) {
 
 void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable) {
   boost::lock_guard<boost::mutex> lk(m_lock);
-  auto q = m_deferred.find(pDeferrable->GetType());
-  if(q == m_deferred.end())
+  auto q = m_typeMemos.find(pDeferrable->GetType());
+  if(q == m_typeMemos.end())
     return;
 
   // Always finalize this entry:
@@ -371,7 +365,7 @@ void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable
   // Now remove the entry from the list:
   // NOTE:  If a performance bottleneck is tracked to here, the solution is to use
   // a doubly-linked list.
-  for(auto cur = q->second; cur != pDeferrable; prior = cur, cur = cur->GetFlink())
+  for(auto cur = q->second.pFirst; cur && cur != pDeferrable; prior = cur, cur = cur->GetFlink())
     if(!cur)
       // Ran off the end of the list, nothing we can do here
       return;
@@ -379,19 +373,17 @@ void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable
   if(prior)
     // Erase the entry by using link elision:
     prior->SetFlink(pDeferrable->GetFlink());
-  if(pDeferrable->GetFlink())
-    // Just update the head at this entry
-    q->second = pDeferrable->GetFlink();
-  else
-    // Erase the entire list, the list is now empty:
-    m_deferred.erase(q);
+
+  if(pDeferrable == q->second.pFirst)
+    // Current deferrable is at the head, update the flink:
+    q->second.pFirst = pDeferrable->GetFlink();
 }
 
 void CoreContext::Dump(std::ostream& os) const {
   boost::lock_guard<boost::mutex> lk(m_lock);
   for(auto q = m_typeMemos.begin(); q != m_typeMemos.end(); q++) {
     os << q->first.name();
-    const void* pObj = q->second;
+    const void* pObj = q->second.m_value->ptr();
     if(pObj)
       os << " 0x" << hex << pObj;
     os << endl;
@@ -412,15 +404,14 @@ void ShutdownCurrentContext(void) {
 
 void CoreContext::UnregisterEventReceivers(void) {
   // Release all event receivers originating from this context:
-  for(auto q = m_eventReceivers.begin(); q != m_eventReceivers.end(); q++)
-    m_junctionBoxManager->RemoveEventReceiver(*q);
+  for(auto q : m_eventReceivers)
+    m_junctionBoxManager->RemoveEventReceiver(q);
 
   // Notify our parent (if we have one) that our event receivers are going away:
   if(m_pParent) {
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
 
-    std::shared_ptr<AutoPacketFactory> pf;
-    FindByTypeUnsafe(pf);
+    auto pf = FindByTypeUnsafe<AutoPacketFactory>();
     if(pf)
       m_pParent->RemovePacketSubscribers(pf->GetSubscriberVector());
   }
@@ -452,57 +443,56 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
-void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
+void CoreContext::UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, const std::shared_ptr<Object>& entry) {
   // Collection of satisfiable lists:
   std::vector<std::pair<const DeferrableUnsynchronizedStrategy*, DeferrableAutowiring*>> satisfiable;
 
   // Notify any autowired field whose autowiring was deferred
-  {
-    std::stack<DeferrableAutowiring*> stk;
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    for(auto q = m_deferred.begin(); q != m_deferred.end();) {
-      auto cur = q->second;
+  std::stack<DeferrableAutowiring*> stk;
+  for(auto& cur : m_typeMemos) {
+    auto& value = cur.second;
 
-      if(!(*cur).TrySatisfyAutowiring(entry)) {
-        q++;
-        continue;
-      }
+    if(value.m_value)
+      // This entry is already satisfied, no need to process it
+      continue;
 
-      // Remove this element from the deferred set:
-      q = m_deferred.erase(q);
-      stk.push(cur);
+    // Determine whether the current candidate element satisfies the autowiring we are considering.
+    // This is done internally via a dynamic cast on the interface type for which this polymorphic
+    // base type was constructed.
+    if(!value.m_value->try_assign(entry))
+      continue;
 
-      // Finish satisfying the remainder of the chain while we hold the lock:
-      while(!stk.empty()) {
-        auto top = stk.top();
-        stk.pop();
+    // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
+    // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
+    // release the lock.
+    stk.push(value.pFirst);
+    value.pFirst = nullptr;
 
-        for(auto* pNext = top; pNext; pNext = pNext->GetFlink()) {
-          pNext->SatisfyAutowiring(*cur);
+    // Finish satisfying the remainder of the chain while we hold the lock:
+    while(!stk.empty()) {
+      auto top = stk.top();
+      stk.pop();
 
-          // See if there's another chain we need to process:
-          auto child = pNext->ReleaseDependentChain();
-          if(child)
-            stk.push(child);
+      for(auto* pNext = top; pNext; pNext = pNext->GetFlink()) {
+        pNext->SatisfyAutowiring(value.m_value->shared_ptr());
 
-          // Not everyone needs to be finalized.  The entities that don't require finalization
-          // are identified by an empty strategy, and we just skip them.
-          auto strategy = pNext->GetStrategy();
-          if(strategy)
-            satisfiable.push_back(
-              std::make_pair(strategy, pNext)
-            );
-        }
+        // See if there's another chain we need to process:
+        auto child = pNext->ReleaseDependentChain();
+        if(child)
+          stk.push(child);
+
+        // Not everyone needs to be finalized.  The entities that don't require finalization
+        // are identified by an empty strategy, and we just skip them.
+        auto strategy = pNext->GetStrategy();
+        if(strategy)
+          satisfiable.push_back(
+            std::make_pair(strategy, pNext)
+          );
       }
     }
   }
 
-  // Run through everything else and finalize it all:
-  for(auto cur : satisfiable)
-    cur.first->Finalize(cur.second);
-
   // Give children a chance to also update their deferred elements:
-  boost::unique_lock<boost::mutex> lk(m_lock);
   for(auto q = m_children.begin(); q != m_children.end(); q++) {
     // Hold reference to prevent this iterator from becoming invalidated:
     auto ctxt = q->lock();
@@ -511,18 +501,25 @@ void CoreContext::UpdateDeferredElements(const std::shared_ptr<Object>& entry) {
 
     // Reverse lock before satisfying children:
     lk.unlock();
-    ctxt->UpdateDeferredElements(entry);
+    ctxt->UpdateDeferredElements(
+      boost::unique_lock<boost::mutex>(ctxt->m_lock),
+      entry
+    );
     lk.lock();
   }
+  lk.unlock();
+
+  // Run through everything else and finalize it all:
+  for(auto cur : satisfiable)
+    cur.first->Finalize(cur.second);
 }
 
 void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> entry) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    
     if (!m_initiated) {
       // Delay adding receiver until context is initialized
-      m_delayedEventReceivers.push_back(entry);
+      m_delayedEventReceivers.insert(entry);
       return;
     }
   }
@@ -537,7 +534,7 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> entry) {
 
 
 template<class iter>
-void CoreContext::AddDelayedEventReceivers(iter first, iter last) {
+void CoreContext::AddEventReceivers(iter first, iter last) {
   // Must be initiated
   assert(m_initiated);
   
@@ -547,29 +544,26 @@ void CoreContext::AddDelayedEventReceivers(iter first, iter last) {
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
-    m_pParent->AddDelayedEventReceivers(first, last);
-}
-
-
-void CoreContext::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr) {
-  (boost::lock_guard<boost::mutex>)m_lock,
-  m_junctionBoxManager->RemoveEventReceiver(pRecvr);
-
-  // Delegate to the parent:
-  if(m_pParent)
-    m_pParent->RemoveEventReceiver(pRecvr);
+    m_pParent->AddEventReceivers(first, last);
 }
 
 void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
-  {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    for(auto q = first; q != last; q++)
-      m_junctionBoxManager->RemoveEventReceiver(*q);
-  }
+  for(auto q = first; q != last; q++)
+    m_junctionBoxManager->RemoveEventReceiver(*q);
 
   // Detour to the parent collection (if necessary)
   if(m_pParent)
     m_pParent->RemoveEventReceivers(first, last);
+}
+
+void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver) {
+  m_junctionBoxManager->RemoveEventReceiver(receiver);
+  
+  // Check if snooper is a member of the parent or also snoops the parentU
+  if (m_pParent &&
+      m_pParent->m_eventReceivers.find(receiver) == m_pParent->m_eventReceivers.end() &&
+      m_pParent->m_snoopers.find(oSnooper) == m_pParent->m_snoopers.end())
+    m_pParent->UnsnoopEvents(oSnooper, receiver);
 }
 
 void CoreContext::FilterException(void) {
@@ -637,14 +631,22 @@ void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
     m_pParent->AddPacketSubscriber(rhs);
 }
 
+void CoreContext::UnsnoopAutoPacket(Object* oSnooper, const std::type_info& ti) {
+  GetPacketFactory()->RemoveSubscriber(ti);
+  
+  // Check if snooper is a member of the parent
+  if (m_pParent &&
+      m_pParent->m_snoopers.find(oSnooper) == m_pParent->m_snoopers.end())
+    m_pParent->UnsnoopAutoPacket(oSnooper, ti);
+}
+
 void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber> &subscribers) {
   // Notify the parent that it will have to remove these subscribers as well
   if(m_pParent)
     m_pParent->RemovePacketSubscribers(subscribers);
 
   // Remove subscribers from our factory AFTER the parent eviction has taken place
-  std::shared_ptr<AutoPacketFactory> factory;
-  FindByTypeUnsafe(factory);
+  auto factory = FindByTypeUnsafe<AutoPacketFactory>();
   if(factory)
     factory->RemoveSubscribers(subscribers.begin(), subscribers.end());
 }

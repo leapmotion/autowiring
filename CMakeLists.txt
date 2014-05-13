@@ -7,6 +7,7 @@ include_directories(
 set(Autowiring_SRCS
   AnySharedPointer.h
   at_exit.h
+  AnySharedPointer.h
   AutoAnchor.h
   AutoFuture.h
   AutoFuture.cpp
@@ -136,6 +137,8 @@ set(AutowiringTest_SRCS
   AutoInjectableTest.cpp
   AutowiringBenchmarkTest.h
   AutowiringBenchmarkTest.cpp
+  AutowiringTest.h
+  AutowiringTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h

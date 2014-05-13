@@ -8,35 +8,35 @@ public:
   }
 
   AnySharedPointer(const AnySharedPointer& rhs) {
-    new (m_space) SharedPointerSlot(rhs.slot());
+    new (m_space) SharedPointerSlot(*rhs.slot());
   }
 
   template<class T>
-  AnySharedPointer(const std::shared_ptr<T>& rhs) {
+  explicit AnySharedPointer(const std::shared_ptr<T>& rhs) {
     // Delegate the remainder to the assign operation:
-    new (m_space) SharedPointerSlot(rhs);
+    new (m_space) SharedPointerSlotT<T>(rhs);
   }
 
   ~AnySharedPointer(void) {
     // Pass control to the *real* destructor:
-    slot().~SharedPointerSlot();
+    slot()->~SharedPointerSlot();
   }
 
 private:
   unsigned char m_space[sizeof(SharedPointerSlot)];
 
   // Convenience method to cast the space to a slot
-  SharedPointerSlot& slot(void) { return *(SharedPointerSlot*) m_space; }
-  const SharedPointerSlot& slot(void) const { return *(SharedPointerSlot*) m_space; }
+  SharedPointerSlot* slot(void) { return (SharedPointerSlot*) m_space; }
+  const SharedPointerSlot* slot(void) const { return (const SharedPointerSlot*) m_space; }
 
 public:
-  operator void*(void) const { return slot().operator void*(); }
+  operator bool(void) const { return slot()->operator bool(); }
 
-  SharedPointerSlot& operator*(void) { return slot(); }
-  const SharedPointerSlot& operator*(void) const { return slot(); }
+  SharedPointerSlot& operator*(void) { return *slot(); }
+  const SharedPointerSlot& operator*(void) const { return *slot(); }
 
-  SharedPointerSlot* operator->(void) { return &slot(); }
-  const SharedPointerSlot* operator->(void) const { return &slot(); }
+  SharedPointerSlot* operator->(void) { return slot(); }
+  const SharedPointerSlot* operator->(void) const { return slot(); }
 
   /// <summary>
   /// Copy assignment operator
@@ -49,8 +49,15 @@ public:
   /// implementation.
   /// </remarks>
   void operator=(const AnySharedPointer& rhs) {
-    slot().~SharedPointerSlot();
-    *(SharedPointerSlot*) m_space = rhs.slot();
+    **this = *rhs;
+  }
+
+  /// <summary>
+  /// Convenience overload for shared pointer assignment
+  /// </summary>
+  template<class T>
+  void operator=(const std::shared_ptr<T>& rhs) {
+    **this = rhs;
   }
 };
 
