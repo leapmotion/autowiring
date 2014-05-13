@@ -45,6 +45,19 @@ TEST_F(SharedPointerSlotTest, SimpleDestructorStrike)
   ASSERT_TRUE(mucSlot.dtorStrike()) << "Virtual destructor on in-place polymorphic class was not hit as expected";
 }
 
+TEST_F(SharedPointerSlotTest, AnySharedPointerRelease) {
+  auto t = std::make_shared<int>(5);
+
+  // Assign over, then reset
+  {
+    AnySharedPointer ptr;
+    ptr = t;
+  }
+
+  // Verify the AnySharedPointer destructor worked correctly
+  ASSERT_TRUE(t.unique()) << "AnySharedPointer instance did not properly release a reference when destroyed";
+}
+
 TEST_F(SharedPointerSlotTest, SlotReassignment) {
   std::shared_ptr<bool> sharedPointerA(new bool);
   std::shared_ptr<bool> sharedPointerB(new bool);
