@@ -10,7 +10,8 @@ public:
 };
 
 class SnoopTestBase:
-  public UpBroadcastListener
+  public virtual UpBroadcastListener,
+  public ContextMember
 {
 public:
   SnoopTestBase(void):
@@ -33,14 +34,15 @@ class ChildMember:
 
 class ParentMember:
   public SnoopTestBase
-{
-};
+{};
+
+class SiblingMember:
+public SnoopTestBase
+{};
 
 class IgnoredParentMember:
   public SnoopTestBase
-{
-};
-
+{};
 
 class SimpleEvent:
 public virtual EventReceiver
@@ -50,12 +52,12 @@ public:
 };
 
 class RemovesSelf:
-public SimpleEvent,
-public std::enable_shared_from_this<RemovesSelf>
+  public virtual SimpleEvent,
+  public ContextMember
 {
   virtual void ZeroArgs(void){
     AutoCurrentContext ctxt;
-    ctxt->Unsnoop(shared_from_this());
+    ctxt->Unsnoop(GetSelf<RemovesSelf>());
   }
 };
 
@@ -94,7 +96,6 @@ TEST_F(SnoopTest, VerifySimpleSnoop) {
 TEST_F(SnoopTest, VerifyUnsnoop) {
   // Create a child context to snoop:
   AutoCreateContext snoopy;
-  snoopy->Initiate();
   AutoRequired<ParentMember> parentMember;
 
   // Add a member to be snooped:
@@ -105,6 +106,7 @@ TEST_F(SnoopTest, VerifyUnsnoop) {
     // Snoop, unsnoop:
     snoopy->Snoop(parentMember);
     snoopy->Unsnoop(parentMember);
+    snoopy->Initiate();
 
     // Fire one event:
     AutoFired<UpBroadcastListener> firer;
@@ -150,6 +152,11 @@ TEST_F(SnoopTest, AmbiguousReciept) {
 }
 
 TEST_F(SnoopTest, AvoidDoubleReciept) {
+  AutoCreateContext sibCtxt;
+  
+  AutoCreateContext parentCtxt;
+  CurrentContextPusher parentPshr(parentCtxt);
+  
   // Create the parent listener:
   AutoRequired<ParentMember> parentMember;
   {
@@ -169,12 +176,22 @@ TEST_F(SnoopTest, AvoidDoubleReciept) {
     AutoFired<UpBroadcastListener> firer;
     firer(&UpBroadcastListener::SimpleCall)();
 
-    // Verify that the child itself got the message
+    // Verify that the child and parent got the message once
     EXPECT_EQ(1, childMember->m_callCount) << "Message not received by another member of the same context";
+    EXPECT_EQ(1, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
+    
+    
+    //Test sibling context
+    AutoRequired<SiblingMember> sibMember(sibCtxt);
+    child->Snoop(sibMember);
+    
+    firer(&UpBroadcastListener::SimpleCall)();
+    
+    EXPECT_EQ(2, childMember->m_callCount) << "Message not received by another member of the same context";
+    EXPECT_EQ(2, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
+    EXPECT_EQ(1, sibMember->m_callCount) << "Sibling context member didn't receive message";
   }
-
-  // Verify that the parent got the message only once:
-  EXPECT_EQ(1, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
+  
 }
 
 TEST_F(SnoopTest, AntiCyclicRemoval) {
@@ -188,4 +205,8 @@ TEST_F(SnoopTest, AntiCyclicRemoval) {
   
   AutoFired<SimpleEvent> ubl;
   ubl(&SimpleEvent::ZeroArgs)();
+}
+
+TEST_F(SnoopTest, Packets) {
+  
 }
