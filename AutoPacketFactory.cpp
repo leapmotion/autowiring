@@ -40,6 +40,19 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   return retVal;
 }
 
+bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
+  m_outstanding = outstanding;
+  return true;
+}
+
+void AutoPacketFactory::Stop(bool graceful) {
+
+}
+
+void AutoPacketFactory::Wait(void) {
+
+}
+
 void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
   const std::type_info& ti = *rhs.GetSubscriberTypeInfo();
   boost::lock_guard<boost::mutex> lk(m_lock);
