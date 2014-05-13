@@ -125,11 +125,14 @@ protected:
   std::vector<ExceptionFilter*> m_filters;
 
   // All known event receivers and receiver proxies originating from this context:
-  typedef std::vector<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
+  typedef std::set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
   
   // List of eventReceivers to be added when this context in initiated
-  std::vector<JunctionBoxEntry<EventReceiver>> m_delayedEventReceivers;
+  t_rcvrSet m_delayedEventReceivers;
+  
+  // Context members from other contexts that have snooped this context
+  std::unordered_set<Object*> m_snoopers;
 
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
   const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
@@ -255,12 +258,7 @@ protected:
   /// Add delayed event receivers
   /// </summary>
   template<class iter>
-  void AddDelayedEventReceivers(iter first, iter last);
-
-  /// <summary>
-  /// Removes the named event receiver from the collection of known receivers
-  /// </summary>
-  void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
+  void AddEventReceivers(iter first, iter last);
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
@@ -294,9 +292,14 @@ protected:
   /// Forwarding routine, recursively adds a packet subscriber to the internal packet factory
   /// </summary>
   void AddPacketSubscriber(const AutoPacketSubscriber& rhs);
-
+  
   /// <summary>
-  /// Counterpart to the AddPacketSubscriber routine, but will remove an array of subscribers
+  /// Forwarding routine, only removes from this context
+  /// </summary>
+  void UnsnoopAutoPacket(Object* oSnooper, const std::type_info& ti);
+  
+  /// <summary>
+  /// Counterparts to the AddPacketSubscriber routine
   /// </summary>
   void RemovePacketSubscribers(const std::vector<AutoPacketSubscriber>& subscribers);
 
@@ -828,23 +831,26 @@ public:
   ///
   /// The snooper will not receive any events broadcast from parent contexts.  ONLY events
   /// broadcast in THIS context will be forwarded to the snooper.
-  ///
-  /// Same as "AddEventReceiver" except doesn't added event to m_eventReceivers
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot snoop on a type which is not an event receiver");
+    static_assert(std::is_base_of<EventReceiver, T>::value ||
+                  has_autofilter<T>::value,
+                  "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
+    
+    (boost::lock_guard<boost::mutex>)m_lock,
+    m_snoopers.insert(std::static_pointer_cast<Object>(pSnooper).get());
 
-    // Snooping now
-    auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
-
-    JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
-    m_junctionBoxManager->AddEventReceiver(receiver);
-
-    // Delegate ascending resolution, where possible.  This ensures that the parent context links
-    // this event receiver to compatible senders in the parent context itself.
-    if(m_pParent)
-      m_pParent->Snoop(pSnooper);
+    // Add EventReceiver
+    if (std::is_base_of<EventReceiver, T>::value) {
+      JunctionBoxEntry<EventReceiver> receiver(this, pSnooper);
+      AddEventReceiver(receiver);
+    }
+    
+    // Add PacketSubscriber;
+    if (has_autofilter<T>::value) {
+      AddPacketSubscriber(AutoPacketSubscriberSelect<T>(pSnooper));
+    }
   }
 
   /// <summary>
@@ -855,18 +861,33 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot unsnoop on a type which is not an event receiver");
-
-    // Pass control to the event remover helper:
-    auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
-
-    JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
-    m_junctionBoxManager->RemoveEventReceiver(receiver);
-
-    // Delegate to the parent:
-    if(m_pParent)
-      m_pParent->Unsnoop(pSnooper);
+    static_assert(std::is_base_of<EventReceiver, T>::value ||
+                  has_autofilter<T>::value,
+                  "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
+    
+    Object* oSnooper = std::static_pointer_cast<Object>(pSnooper).get();
+    
+    (boost::lock_guard<boost::mutex>)m_lock,
+    m_snoopers.erase(oSnooper);
+    
+    // Cleanup if its an EventReceiver
+    if (std::is_base_of<EventReceiver, T>::value) {
+      JunctionBoxEntry<EventReceiver> receiver(this, pSnooper);
+      
+      (boost::lock_guard<boost::mutex>)m_lock,
+      m_delayedEventReceivers.erase(receiver);
+      
+      UnsnoopEvents(oSnooper, receiver);
+    }
+    
+    // Cleanup if its a packet listener
+    if (has_autofilter<T>::value) {
+      UnsnoopAutoPacket(oSnooper, typeid(T));
+    }
   }
+  
+  // Remove EventReceiver from parents unless its a member of the parent
+  void UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver);
 
   /// <summary>
   /// Locates an available context member in this context
