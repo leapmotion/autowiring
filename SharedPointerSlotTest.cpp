@@ -8,15 +8,18 @@ template<>
 struct SharedPointerSlotT<MyUnusedClass>:
   SharedPointerSlot
 {
-  SharedPointerSlotT(const std::shared_ptr<MyUnusedClass>& rhs):
-    dtorStrike(false)
-  {}
-
-  ~SharedPointerSlotT(void) {
-    dtorStrike = true;
+  SharedPointerSlotT(const std::shared_ptr<MyUnusedClass>& rhs)
+  {
+    dtorStrike() = false;
   }
 
-  bool dtorStrike;
+  ~SharedPointerSlotT(void) {
+    dtorStrike() = true;
+  }
+
+  bool& dtorStrike(void) {
+    return (bool&) *m_space;
+  }
 };
 
 TEST_F(SharedPointerSlotTest, SimpleDestructorStrike)
@@ -33,13 +36,13 @@ TEST_F(SharedPointerSlotTest, SimpleDestructorStrike)
   slot = unused;
 
   // Destructor shouldn't be hit until we call it:
-  ASSERT_FALSE(mucSlot.dtorStrike) << "Destructor was struck prematurely";
+  ASSERT_FALSE(mucSlot.dtorStrike()) << "Destructor was struck prematurely";
 
   // Direct destructor call:
   slot.~SharedPointerSlot();
 
   // Verify we hit our dtor in the specialization we declared above:
-  ASSERT_TRUE(mucSlot.dtorStrike) << "Virtual destructor on in-place polymorphic class was not hit as expected";
+  ASSERT_TRUE(mucSlot.dtorStrike()) << "Virtual destructor on in-place polymorphic class was not hit as expected";
 }
 
 TEST_F(SharedPointerSlotTest, SlotReassignment) {
@@ -52,12 +55,12 @@ TEST_F(SharedPointerSlotTest, SlotReassignment) {
   slot = sharedPointerA;
 
   // Verify that the assignment worked as anticipated:
-  ASSERT_FALSE(sharedPointerA.unique()) << "Constructor did not properly addref a shared pointer on initialization";
+  ASSERT_EQ(2, sharedPointerA.use_count()) << "Constructor did not properly addref a shared pointer on initialization";
 
   // Recast to another shared pointer, verify reference count goes down:
   slot = sharedPointerB;
+  EXPECT_EQ(2, sharedPointerB.use_count()) << "Reference count was not incremented properly during a shared pointer hold";
   ASSERT_TRUE(sharedPointerA.unique()) << "Destructor was not properly invoked for a shared pointer slot";
-  ASSERT_EQ(2, sharedPointerB.use_count()) << "Reference count was not incremented properly during a shared pointer hold";
 
   // Now change the type completely, verify proper release:
   slot = sharedPointerC;
