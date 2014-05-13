@@ -1,4 +1,5 @@
 #pragma once
+#include "AnySharedPointer.h"
 #include "AutoAnchor.h"
 #include "AutoPacketSubscriber.h"
 #include "AutowirableSlot.h"
@@ -17,7 +18,6 @@
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
 #include "ExceptionFilter.h"
-#include "SharedPointerSlot.h"
 #include "TeardownNotifier.h"
 #include "TypeUnifier.h"
 

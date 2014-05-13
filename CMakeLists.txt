@@ -6,6 +6,7 @@ include_directories(
 
 set(Autowiring_SRCS
   at_exit.h
+  AnySharedPointer.h
   AutoAnchor.h
   AutoFuture.h
   AutoFuture.cpp
