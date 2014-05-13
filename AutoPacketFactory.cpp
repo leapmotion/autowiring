@@ -62,7 +62,7 @@ void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
     // Register the subscriber and pre-populate the arity:
     subscriberIndex = m_subscribers.size();
     m_subMap[ti] = subscriberIndex;
-    m_subscribers.push_back(std::move(rhs));
+    m_subscribers.push_back(rhs);
   }
 
   // Prime the satisfaction graph for each element:
