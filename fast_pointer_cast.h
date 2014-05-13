@@ -17,7 +17,8 @@ namespace leap {
   template<class T, class U>
   typename std::enable_if<
     !std::is_base_of<T, U>::value &&
-    std::is_polymorphic<U>::value,
+    std::is_polymorphic<U>::value &&
+    !std::is_scalar<T>::value,
     std::shared_ptr<T>
   >::type fast_pointer_cast(const std::shared_ptr<U>& Other) {
     return std::dynamic_pointer_cast<T, U>(Other);
@@ -26,7 +27,8 @@ namespace leap {
   template<class T, class U>
   typename std::enable_if<
     (
-      !std::is_polymorphic<U>::value
+      !std::is_polymorphic<U>::value ||
+      std::is_scalar<T>::value
     ) && !std::is_same<T, U>::value,
     std::shared_ptr<T>
   >::type fast_pointer_cast(const std::shared_ptr<U>&) {
