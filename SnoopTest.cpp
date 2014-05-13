@@ -1,6 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "SnoopTest.h"
+#include "TestFixtures/Decoration.h"
 
 class UpBroadcastListener:
   public virtual EventReceiver
@@ -56,9 +57,15 @@ class RemovesSelf:
   public ContextMember
 {
   virtual void ZeroArgs(void){
+    counter++;
     AutoCurrentContext ctxt;
     ctxt->Unsnoop(GetSelf<RemovesSelf>());
   }
+public:
+  RemovesSelf():
+    counter(0)
+  {};
+  int counter;
 };
 
 TEST_F(SnoopTest, VerifySimpleSnoop) {
@@ -181,17 +188,66 @@ TEST_F(SnoopTest, AvoidDoubleReciept) {
     EXPECT_EQ(1, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
     
     
-    //Test sibling context
+    // Test sibling context
     AutoRequired<SiblingMember> sibMember(sibCtxt);
+    AutoRequired<SiblingMember> alsoInParent;
     child->Snoop(sibMember);
     
     firer(&UpBroadcastListener::SimpleCall)();
     
     EXPECT_EQ(2, childMember->m_callCount) << "Message not received by another member of the same context";
     EXPECT_EQ(2, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
+    EXPECT_EQ(1, alsoInParent->m_callCount) << "Parent context member didn't receive message";
     EXPECT_EQ(1, sibMember->m_callCount) << "Sibling context member didn't receive message";
+    
+    // Make sure unsnoop cleans up everything
+    child->Unsnoop(sibMember);
+    firer(&UpBroadcastListener::SimpleCall)();
+    
+    EXPECT_EQ(3, childMember->m_callCount) << "Message not received by another member of the same context";
+    EXPECT_EQ(3, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
+    EXPECT_EQ(2, alsoInParent->m_callCount) << "Parent context member didn't receive message";
+    EXPECT_EQ(1, sibMember->m_callCount) << "Sibling context member didn't unsnoop";
   }
+}
+
+TEST_F(SnoopTest, MultiSnoop) {
+  AutoCurrentContext base;
+  auto ctxt1 = base->Create<void>();
+  auto ctxt2 = ctxt1->Create<void>();
+
+  AutoRequired<ParentMember> member(base);
+  AutoRequired<ParentMember> member1(ctxt1);
+  AutoRequired<ParentMember> member2(ctxt2);
+  ASSERT_EQ(0, member->m_callCount);
   
+  ctxt2->Initiate();
+  
+  // No Snoopers
+  base->Invoke(&UpBroadcastListener::SimpleCall)();
+  ctxt1->Invoke(&UpBroadcastListener::SimpleCall)();
+  ctxt2->Invoke(&UpBroadcastListener::SimpleCall)();
+  
+  EXPECT_EQ(1, member->m_callCount) << "Received events from child contexts";
+  
+  // Snoop both
+  ctxt1->Snoop(member);
+  ctxt2->Snoop(member);
+  base->Invoke(&UpBroadcastListener::SimpleCall)();
+  ctxt1->Invoke(&UpBroadcastListener::SimpleCall)();
+  ctxt2->Invoke(&UpBroadcastListener::SimpleCall)();
+  
+  EXPECT_EQ(4, member->m_callCount) << "Didn't receive all events";
+  
+  // Unsnoop one
+  ctxt2->Unsnoop(member);
+  base->Invoke(&UpBroadcastListener::SimpleCall)();
+  ctxt1->Invoke(&UpBroadcastListener::SimpleCall)();
+  ctxt2->Invoke(&UpBroadcastListener::SimpleCall)();
+  
+  EXPECT_EQ(6, member->m_callCount) << "Unsnooped both!";
+  EXPECT_EQ(6, member1->m_callCount) << "Native context member didn't receive correct number of events";
+  EXPECT_EQ(9, member2->m_callCount) << "Native context member didn't receive correct number of events";
 }
 
 TEST_F(SnoopTest, AntiCyclicRemoval) {
@@ -203,10 +259,39 @@ TEST_F(SnoopTest, AntiCyclicRemoval) {
   
   snoopy->Snoop(removeself);
   
+  ASSERT_EQ(0, removeself->counter);
+  
   AutoFired<SimpleEvent> ubl;
   ubl(&SimpleEvent::ZeroArgs)();
+  EXPECT_EQ(1, removeself->counter) << "Received event";
+  
+  ubl(&SimpleEvent::ZeroArgs)();
+  EXPECT_EQ(1, removeself->counter) << "Received event even though unsnooped";
 }
 
-TEST_F(SnoopTest, Packets) {
+
+TEST_F(SnoopTest, SimplePackets) {
+  AutoCreateContext Pipeline;
+  AutoCreateContext Tracking;
+  Pipeline->Initiate();
+  Tracking->Initiate();
   
+  // Add filter to tracking
+  AutoRequired<FilterA> filter(Tracking);
+  AutoRequired<FilterF> detachedFilter(Tracking);
+  Pipeline->Snoop(filter);
+  ASSERT_FALSE(filter->m_called) << "Filter called prematurely";
+  ASSERT_FALSE(detachedFilter->m_called) << "Filter called prematurely";
+  
+  // Add factory to pipeline
+  AutoRequired<AutoPacketFactory> factory(Pipeline);
+  auto packet = factory->NewPacket();
+  
+  packet->Decorate(Decoration<0>());
+  ASSERT_FALSE(filter->m_called) << "Filter called prematurely";
+  
+  // Now compleletly satisfy filter. Should snoop across contexts
+  packet->Decorate(Decoration<1>());
+  EXPECT_TRUE(filter->m_called) << "Snoop didn't work";
+  EXPECT_FALSE(detachedFilter->m_called) << "Received a packet from a different context";
 }
