@@ -2,7 +2,6 @@
 #include "Autowired.h"
 #include "AutoPacket.h"
 #include "AutoPacketSubscriber.h"
-//#include "FilterPropertyExtractor.h"
 #include "Object.h"
 #include "ObjectPool.h"
 #include <vector>
