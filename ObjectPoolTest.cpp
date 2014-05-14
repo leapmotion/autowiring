@@ -128,6 +128,7 @@ TEST_F(ObjectPoolTest, EmptyPoolIssuance) {
 }
 
 TEST_F(ObjectPoolTest, CanRundownOneIssued) {
+  // No conditions to be checked, we just know these routines should not deadlock.
   ObjectPool<int> pool;
   pool.Wait();
   pool.Rundown();
