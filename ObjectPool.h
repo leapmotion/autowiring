@@ -258,6 +258,9 @@ public:
   /// <summary>
   /// Blocks until all outstanding entries have been returned, and prevents the issuance of any new items
   /// </summary>
+  /// <remarks>
+  /// This method is idempotent
+  /// </remarks>
   void Rundown(void) {
     // Clear our pool and prevent the issuance of any new entities:
     SetMaximumPooledEntities(0);

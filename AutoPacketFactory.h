@@ -2,6 +2,7 @@
 #include "Autowired.h"
 #include "AutoPacket.h"
 #include "AutoPacketSubscriber.h"
+#include "CoreRunnable.h"
 #include "Object.h"
 #include "ObjectPool.h"
 #include <vector>
@@ -20,7 +21,8 @@ class DispatchQueue;
 /// Generally, only one packet factory is required per context.
 /// </remarks>
 class AutoPacketFactory:
-  public Object
+  public Object,
+  public CoreRunnable
 {
 public:
   struct AdjacencyEntry {
@@ -71,6 +73,22 @@ private:
 
   // Lock for this type
   mutable boost::mutex m_lock;
+  
+  // Notify when started
+  boost::condition_variable m_stateCondition;
+  
+  // CoreRunnable States
+  enum class RunState {
+    READY,
+    RUNNING,
+    STOPPED
+  };
+  
+  // Current state
+  RunState m_runState;
+
+  // Outstanding reference if this factory is currently running:
+  std::shared_ptr<Object> m_outstanding;
 
   /// <summary>
   /// An independently maintained object pool just for packets
@@ -102,6 +120,13 @@ public:
   // Accessor methods:
   const std::vector<AutoPacketSubscriber>& GetSubscriberVector(void) const { return m_subscribers; }
   const t_decMap& GetDecorations(void) const { return m_decorations; }
+
+  // CoreRunnable overrides:
+  bool Start(std::shared_ptr<Object> outstanding) override;
+  void Stop(bool graceful) override;
+  bool IsRunning(void) const override;
+  bool ShouldStop(void) const override;
+  void Wait(void) override;
 
   /// <summary>
   /// Finds the packet subscriber proper corresponding to a particular subscriber type
