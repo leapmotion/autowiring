@@ -4,8 +4,6 @@
 #include <boost/chrono/duration.hpp>
 #include MEMORY_HEADER
 
-using std::shared_ptr;
-
 struct BasicThreadStateBlock;
 class BasicThread;
 class CoreContext;
