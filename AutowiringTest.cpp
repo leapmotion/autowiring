@@ -41,21 +41,30 @@ public:
   }
 };
 
-template<class... Args>
-void noop(Args...) {}
-
-template<int... N>
-void InjectAll(seq<N...>) {
-  noop(
-    AutoRequired<AutowiresOneThingThenQuits<N>>()...
-  );
+void InjectAll(void) {
+  AutoRequired<AutowiresOneThingThenQuits<0>>();
+  AutoRequired<AutowiresOneThingThenQuits<1>>();
+  AutoRequired<AutowiresOneThingThenQuits<2>>();
+  AutoRequired<AutowiresOneThingThenQuits<3>>();
+  AutoRequired<AutowiresOneThingThenQuits<4>>();
+  AutoRequired<AutowiresOneThingThenQuits<5>>();
+  AutoRequired<AutowiresOneThingThenQuits<6>>();
+  AutoRequired<AutowiresOneThingThenQuits<7>>();
+  AutoRequired<AutowiresOneThingThenQuits<8>>();
+  AutoRequired<AutowiresOneThingThenQuits<9>>();
+  AutoRequired<AutowiresOneThingThenQuits<10>>();
+  AutoRequired<AutowiresOneThingThenQuits<11>>();
+  AutoRequired<AutowiresOneThingThenQuits<12>>();
+  AutoRequired<AutowiresOneThingThenQuits<13>>();
+  AutoRequired<AutowiresOneThingThenQuits<14>>();
+  AutoRequired<AutowiresOneThingThenQuits<15>>();
 }
 
 TEST_F(AutowiringTest, PathologicalAutowiringRace) {
   AutoRequired<boost::mutex> lock;
 
   (boost::lock_guard<boost::mutex>)*lock,
-  InjectAll(gen_seq<100>::type());
+  InjectAll();
 
   // Now insert at about the same time as other threads are waking up.  If there are synchronization problems
   // in spin-up or tear-down, 
