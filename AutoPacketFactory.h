@@ -124,9 +124,9 @@ public:
   // CoreRunnable overrides:
   bool Start(std::shared_ptr<Object> outstanding) override;
   void Stop(bool graceful) override;
-  bool IsRunning(void) const override;
-  bool ShouldStop(void) const override;
   void Wait(void) override;
+  bool IsRunning(void) const override { return m_runState == RunState::RUNNING; };
+  bool ShouldStop(void) const override { return m_runState == RunState::STOPPED; };
 
   /// <summary>
   /// Finds the packet subscriber proper corresponding to a particular subscriber type
