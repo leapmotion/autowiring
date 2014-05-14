@@ -1,5 +1,4 @@
 #pragma once
-#include "Autowired.h"
 #include "ObjectPool.h"
 
 class EnclosureBase
@@ -114,7 +113,7 @@ public:
   }
 
   // Pool and corresponding shared pointer:
-  AutoRequired<ObjectPool<T>> m_pool;
+  T& m_pool;
   auto_pooled<T> m_ptr;
 
   void Release(void) override {
