@@ -65,7 +65,10 @@ void AutoPacketFactory::Stop(bool graceful) {
 
 void AutoPacketFactory::Wait(void) {
   boost::unique_lock<boost::mutex> lk(m_lock);
-  m_stateCondition.wait(lk, [this]{return m_runState != RunState::READY;});
+  m_stateCondition.wait(lk, [this]{return m_runState != RunState::READY; });
+
+  // Now we need to block until all packets come back to the object pool:
+  m_packets.Rundown();
 }
 
 void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
