@@ -47,7 +47,7 @@ protected:
 
 public:
   // Accessor methods:
-  bool ShouldStop(void) const { return m_shouldStop; }
+  bool ShouldStop(void) const override { return m_shouldStop; }
   
   // "CoreRunnable" overrides
   bool Start(std::shared_ptr<Object> outstanding) override;

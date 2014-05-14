@@ -174,7 +174,7 @@ protected:
   
 public:
   // Accessor methods:
-  bool ShouldStop(void) const;
+  bool ShouldStop(void) const override;
   bool IsRunning(void) const override;
 
   /// <summary>
