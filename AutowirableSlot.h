@@ -7,7 +7,6 @@ class CoreContext;
 class DeferrableAutowiring;
 class GlobalCoreContext;
 class Object;
-struct SharedPointerSlot;
 
 // Utility routine, for users who need a function that does nothing
 template<class T>
