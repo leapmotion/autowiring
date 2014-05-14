@@ -1,5 +1,6 @@
 #pragma once
 #include "is_any.h"
+#include "JunctionBox.h"
 
 class Deferred;
 
@@ -15,7 +16,7 @@ class InvokeRelay {};
 template<typename T, typename ...Args>
 class InvokeRelay<Deferred (T::*)(Args...)> {
 public:
-  InvokeRelay(const JunctionBox<T>* erp, Deferred (T::*fnPtr)(Args...)):
+  InvokeRelay(std::shared_ptr<JunctionBox<T>> erp, Deferred (T::*fnPtr)(Args...)):
     erp(erp),
     fnPtr(fnPtr)
   {}
@@ -28,7 +29,7 @@ public:
   static_assert(!is_any<std::is_rvalue_reference<Args>...>::value, "Can't use rvalue references as event argument type");
 
 private:
-  const JunctionBox<T>* erp;
+  std::shared_ptr<JunctionBox<T>> erp;
   Deferred (T::*fnPtr)(Args...);
 
 public:
@@ -52,7 +53,7 @@ public:
 template<class T, typename... Args>
 class InvokeRelay<void (T::*)(Args...)> {
 public:
-  InvokeRelay(JunctionBox<T>* erp, void (T::*fnPtr)(Args...)) :
+  InvokeRelay(std::shared_ptr<JunctionBox<T>> erp, void (T::*fnPtr)(Args...)) :
     erp(erp),
     fnPtr(fnPtr)
   {}
@@ -65,7 +66,7 @@ public:
   static_assert(!is_any<std::is_rvalue_reference<Args>...>::value, "Can't use rvalue references as event argument type");
 
 private:
-  JunctionBox<T>* erp;
+  std::shared_ptr<JunctionBox<T>> erp;
   void (T::*fnPtr)(Args...);
 
 public:
@@ -95,3 +96,12 @@ public:
     );
   }
 };
+
+
+/// <summary>
+/// Makes an invocation relay for a particular junction box and function pointer
+/// </summary>
+template<typename T, typename FnPtr>
+InvokeRelay<FnPtr> MakeInvokeRelay(std::shared_ptr<JunctionBox<T>> pJunctionBox, FnPtr fnPtr) {
+  return InvokeRelay<FnPtr>(pJunctionBox, fnPtr);
+}

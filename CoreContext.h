@@ -757,7 +757,7 @@ public:
     if (!std::is_same<AutowiringEvents,EventType>::value)
       GetGlobal()->Invoke(&AutowiringEvents::EventFired)(*this, typeid(EventType));
     
-    return GetJunctionBox<EventType>()->Invoke(memFn);
+    return MakeInvokeRelay(GetJunctionBox<EventType>(), memFn);
   }
 
   /// <summary>
