@@ -787,16 +787,12 @@ public:
   /// <summary>
   /// Waits until the context is transitioned to the Stopped state and all threads and child threads have terminated.
   /// </summary>
-  void Wait(void) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    m_stateChanged.wait(lk, [this] {return m_isShutdown && this->m_outstanding.expired();});
-  }
+  void Wait(void);
 
-  template<class Rep, class Period>
-  bool Wait(const boost::chrono::duration<Rep, Period>& duration) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_stateChanged.wait_for(lk, duration, [this] {return m_isShutdown && this->m_outstanding.expired(); });
-  }
+  /// <summary>
+  /// Timed overload
+  /// </summary>
+  bool Wait(const boost::chrono::nanoseconds duration);
   
   /// <summary>
   /// Wait until the context is initiated or is shutting down
