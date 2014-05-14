@@ -6,14 +6,13 @@
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
-#include "BasicThread.h"
 #include "CoreRunnable.h"
 #include "ContextMember.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
 #include "fast_pointer_cast.h"
+#include "InvokeRelay.h"
 #include "result_or_default.h"
-#include "JunctionBox.h"
 #include "JunctionBoxManager.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
@@ -34,10 +33,12 @@ class AutowirableSlotFn;
 
 class AutoPacketFactory;
 class DeferrableAutowiring;
+class BasicThread;
 class BoltBase;
 class CoreContext;
 class EventOutputStreamBase;
 class GlobalCoreContext;
+class JunctionBoxBase;
 class OutstandingCountTracker;
 
 template<typename T>
@@ -48,6 +49,9 @@ struct Boltable;
 
 template<class T>
 class CoreContextT;
+
+template<typename T>
+class JunctionBox;
 
 enum class ShutdownMode {
   // Shut down gracefully by allowing threads to run down dispatch queues
