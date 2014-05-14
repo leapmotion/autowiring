@@ -62,13 +62,16 @@ set(Autowiring_SRCS
   fast_pointer_cast.h
   JunctionBox.h
   JunctionBox.cpp
+  JunctionBoxEntry.h
   JunctionBoxManager.h
   JunctionBoxManager.cpp
   ExceptionFilter.h
   FilterPropertyExtractor.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
+  is_any.h
   InterlockedExchange.h
+  InvokeRelay.h
   Object.h
   ObjectPool.h
   ObjectPoolMonitor.h
