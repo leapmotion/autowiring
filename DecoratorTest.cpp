@@ -8,6 +8,11 @@
 
 using namespace std;
 
+DecoratorTest::DecoratorTest(void) {
+  // All decorator tests must run from an initiated context
+  AutoCurrentContext()->Initiate();
+}
+
 TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   vector<const type_info*> v;
 
