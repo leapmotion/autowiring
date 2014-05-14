@@ -1,4 +1,5 @@
 #pragma once
+#include "AutoPacket.h"
 #include "Decompose.h"
 #include "FilterPropertyExtractor.h"
 #include <boost/any.hpp>
@@ -22,36 +23,41 @@ class optional_ptr;
 /// </summary>
 std::shared_ptr<AutoPacket> ExtractSharedPointer(const AutoPacketAdaptor& adaptor);
 
-template<class T, bool is_deferred>
-struct CallExtractor {
-  typedef void(*t_call)(void*, const AutoPacketAdaptor&);
+template<class MemFn>
+struct CallExtractor;
+
+/// <summary>
+/// Specialization for immediate mode cases
+/// </summary>
+template<class T, class... Args>
+struct CallExtractor<void (T::*)(Args...)>
+{
   typedef std::false_type deferred;
 
-  t_call operator()() const {
-    typedef decltype(&T::AutoFilter) t_fnType;
-    return reinterpret_cast<t_call>(
-      &BoundCall<AutoPacketAdaptor, t_fnType, &T::AutoFilter>::Call
+  static void Call(void* pObj, const AutoPacketAdaptor& repo) {
+    ((T*) pObj)->AutoFilter(
+      repo.Cast<Args>()...
     );
   }
 };
 
-template<class T>
-struct CallExtractor<T, true> {
-  typedef void(*t_call)(void*, const AutoPacketAdaptor&);
+/// <summary>
+/// Specialization for deferredcases
+/// </summary>
+template<class T, class... Args>
+struct CallExtractor<Deferred (T::*)(Args...)>
+{
   typedef std::true_type deferred;
 
-  static void CallDeferred(T* pObj, const AutoPacketAdaptor& repo) {
-    typedef BoundCall<AutoPacketAdaptor, decltype(&T::AutoFilter), &T::AutoFilter> t_boundCall;
-    const t_call call = reinterpret_cast<t_call>(&t_boundCall::Call);
-
+  static void Call(void* pObj, const AutoPacketAdaptor& repo) {
     std::shared_ptr<AutoPacket> shared = ExtractSharedPointer(repo);
-    *pObj += [pObj, shared, call] {
-      call(pObj, *shared);
-    };
-  }
 
-  t_call operator()() const {
-    return reinterpret_cast<t_call>(&CallDeferred);
+    // Pend the call to this object's dispatch queue:
+    *(T*)pObj += [pObj, shared, repo] {
+      ((T*) pObj)->AutoFilter(
+        repo.Cast<Args>()...
+      );
+    };
   }
 };
 
@@ -163,16 +169,15 @@ public:
     m_ti(&typeid(T)),
     m_requiredCount(0),
     m_optionalCount(0),
-    m_pObj(subscriber.get())
+    m_pObj(subscriber.get()),
+    m_pCall(&CallExtractor<decltype(&T::AutoFilter)>::Call)
   {
     typedef Decompose<decltype(&T::AutoFilter)> t_decompose;
-    typedef CallExtractor<T, std::is_same<Deferred, typename t_decompose::retType>::value> t_callExtractor;
-    t_callExtractor e;
 
     // Cannot register a subscriber with zero arguments:
     static_assert(t_decompose::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
-    m_deferred = t_callExtractor::deferred::value;
+    m_deferred = std::is_same<Deferred, typename t_decompose::retType>::value;
     m_arity = t_decompose::N;
     m_pArgs = t_decompose::template Enumerate<AutoPacketSubscriberInput>();
     for(auto pArg = m_pArgs; *pArg; pArg++) {
@@ -187,7 +192,6 @@ public:
         break;
       }
     }
-    m_pCall = e();
   }
 
 protected:

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "AutoPacket.h"
+#include "Autowired.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketProfiler.h"
 #include <boost/any.hpp>
@@ -16,7 +17,8 @@ void AutoPacket::UpdateSatisfactionSpecific(size_t subscriberIndex) {
   auto& entry = satVec[subscriberIndex];
   assert(entry.GetCall());
 
-  if(m_profiler && m_profiler->ShouldProfile()) {
+  AutowiredFast<AutoPacketProfiler> profiler;
+  if(profiler && profiler->ShouldProfile()) {
     // Record the current time before we hand control over to the call:
     auto before = boost::chrono::high_resolution_clock::now();
 
@@ -31,7 +33,7 @@ void AutoPacket::UpdateSatisfactionSpecific(size_t subscriberIndex) {
     // detection on this function--perhaps by propagating out a "boost"
     // value which will be subtracted by callers operating at higher
     // elevation levels.
-    m_profiler->AddProfilingInformation(
+    profiler->AddProfilingInformation(
       *entry.GetSubscriberTypeInfo(),
       boost::chrono::high_resolution_clock::now() - before
     );

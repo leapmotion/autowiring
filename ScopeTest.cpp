@@ -60,8 +60,8 @@ TEST_F(ScopeTest, AddWithArguments){
 
   Autowired<NoSimpleConstructor> wired;
 
-  EXPECT_TRUE(wired.IsAutowired());
-  EXPECT_EQ(10, wired->value);
+  ASSERT_TRUE(wired.IsAutowired());
+  ASSERT_EQ(10, wired->value);
 }
 
 TEST_F(ScopeTest, StaticInject){
@@ -151,11 +151,17 @@ TEST_F(ScopeTest, AutowiringOrdering) {
     CurrentContextPusher pshr(inner4);
 
     Autowired<D> d2;
-    EXPECT_FALSE(d.IsAutowired());
-    EXPECT_FALSE(d2.IsAutowired());
+
+    // Verify preconditions and postconditions on autowiring:
+    ASSERT_FALSE(d.IsAutowired());
+    ASSERT_FALSE(d2.IsAutowired());
     AutoRequired<D> derp(m_create);
-    EXPECT_EQ(d->GetContext(), d2->GetContext());
-    EXPECT_EQ(derp->GetContext(), d2->GetContext());
+
+    ASSERT_TRUE(d.IsAutowired()) << "Outer scope autowired field failed to be instantiated on an element created in an interior scope";
+    ASSERT_TRUE(d2.IsAutowired()) << "Interior scope field failed to be satisfied by a field initiated at an outer context";
+
+    ASSERT_EQ(d->GetContext(), d2->GetContext());
+    ASSERT_EQ(derp->GetContext(), d2->GetContext());
   }
 }
 

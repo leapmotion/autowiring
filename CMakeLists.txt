@@ -5,7 +5,9 @@ include_directories(
   )
 
 set(Autowiring_SRCS
+  AnySharedPointer.h
   at_exit.h
+  AnySharedPointer.h
   AutoAnchor.h
   AutoFuture.h
   AutoFuture.cpp
@@ -127,12 +129,18 @@ else()
 endif()
 
 set(AutowiringTest_SRCS
+  AnySharedPointerTest.h
+  AnySharedPointerTest.cpp
   AutoAnchorTest.h
   AutoAnchorTest.cpp
   AutoInjectableTest.h
   AutoInjectableTest.cpp
+  AutoPacketFactoryTest.h
+  AutoPacketFactoryTest.cpp
   AutowiringBenchmarkTest.h
   AutowiringBenchmarkTest.cpp
+  AutowiringTest.h
+  AutowiringTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h
@@ -176,8 +184,6 @@ set(AutowiringTest_SRCS
   ReentrantCounterTest.cpp
   SelfSelectingFixtureTest.h
   SelfSelectingFixtureTest.cpp
-  SharedPointerSlotTest.h
-  SharedPointerSlotTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
   CoreJobTest.h

@@ -13,7 +13,13 @@ class ContextExposer:
   public CoreContext
 {
 public:
-  size_t DeferredCount(void) const {return CoreContext::m_deferred.size();}
+  size_t DeferredCount(void) const {
+    size_t ct = 0;
+    for(auto& entry : CoreContext::m_typeMemos)
+      for(auto cur = entry.second.pFirst; cur; cur = cur->GetFlink())
+        ct++;
+    return ct;
+  }
 };
 
 // Two classes to make up the cyclic dependency:
@@ -118,6 +124,7 @@ TEST_F(PostConstructTest, VerifySmartBehavior) {
 
   // Check that we can get the item we just injected
   Autowired<Smarter> smarter;
+  ASSERT_TRUE(smarter.IsAutowired()) << "Slot was not satisfied as expected";
   EXPECT_EQ(1, smarter->value) << "Unexpected initial value of SmarterA instance";
 
   // Now inject A, and see if delayed autowiring has taken place:
@@ -238,3 +245,28 @@ TEST_F(PostConstructTest, VerifyAllInstancesSatisfied) {
     ASSERT_TRUE(hit[i]) << "Autowired slot " << i << " did not fire all of its post-construct notifiers as expected";
   }
 }
+
+TEST_F(PostConstructTest, ContextNotifyWhenAutowired) {
+  auto called = std::make_shared<bool>(false);
+  
+  // Now we'd like to be notified when SimpleObject gets added:
+  m_create->NotifyWhenAutowired<SimpleObject>(
+    [called] {
+      *called = true;
+    }
+  );
+
+  // Should only be two uses, at this point, of the capture of the above lambda:
+  EXPECT_EQ(2UL, called.use_count()) << "Unexpected number of references held in a capture lambda";
+
+  // Create another entry that will add another slot to the deferred list:
+  Autowired<SimpleObject> sobj;
+
+  // Insert the SimpleObject, see if the lambda got hit:
+  AutoRequired<SimpleObject>();
+  ASSERT_TRUE(*called) << "Context-wide autowiring notification was not hit as expected when a matching type was injected into a context";
+
+  // Our shared pointer should be unique by this point, because the lambda should have been destroyed
+  ASSERT_TRUE(called.unique()) << "Autowiring notification lambda was not properly cleaned up";
+}
+
