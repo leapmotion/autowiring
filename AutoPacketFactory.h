@@ -73,6 +73,19 @@ private:
 
   // Lock for this type
   mutable boost::mutex m_lock;
+  
+  // Notify when started
+  boost::condition_variable m_stateCondition;
+  
+  // CoreRunnable States
+  enum class RunState {
+    READY,
+    RUNNING,
+    STOPPED
+  };
+  
+  // Current state
+  RunState m_runState;
 
   // Outstanding reference if this factory is currently running:
   std::shared_ptr<Object> m_outstanding;
