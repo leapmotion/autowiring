@@ -56,6 +56,7 @@ protected:
   /// Returns the specified object to the object pool
   /// </summary>
   void Return(std::unique_ptr<T>&& ptr) {
+    assert(m_outstanding != 0);
     // One fewer outstanding count:
     m_outstanding--;
     if(m_objs.size() < m_maxPooled) {
