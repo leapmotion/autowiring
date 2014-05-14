@@ -317,11 +317,14 @@ public:
   InvokeRelay<MemFn> operator()(MemFn pfn) const {
     static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot invoke an event for an unrelated type");
 
-    if (m_junctionBox.expired()) return InvokeRelay<MemFn>(); //Context has been destroyed
+    auto box = m_junctionBox.lock();
+    if(!box)
+      // Context has been destroyed
+      return InvokeRelay<MemFn>();
     
     AutoGlobalContext()->Invoke(&AutowiringEvents::EventFired)(*CoreContext::CurrentContext(),typeid(typename Decompose<MemFn>::type));
 
-    return m_junctionBox.lock()->Invoke(pfn);
+    return MakeInvokeRelay(box, pfn);
   }
 
   template<class MemFn>
