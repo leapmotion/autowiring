@@ -1,5 +1,4 @@
 #pragma once
-
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
 #include "EventReceiver.h"
@@ -18,6 +17,9 @@
 class CoreContext;
 class EventReceiver;
 class JunctionBoxBase;
+
+template<typename T>
+struct JunctionBoxEntry;
 
 /// <summary>
 /// Utility routine which shuts down the current context
@@ -233,12 +235,6 @@ public:
     lk.unlock();
     TerminateAll(teardown);
     return false;
-  }
-
-  // Two-parenthetical deferred invocations:
-  template<typename FnPtr>
-  auto Invoke(FnPtr fnPtr) -> InvokeRelay<FnPtr> {
-    return InvokeRelay<FnPtr>(this, fnPtr);
   }
 };
 
