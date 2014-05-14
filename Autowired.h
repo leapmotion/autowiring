@@ -174,7 +174,7 @@ public:
       if(pFirstChild == this) {
         // Trivially satisfy, and then return.  This might look like a leak, but it's not, because we know
         // that Finalize is going to destroy the object.
-        newHead->SatisfyAutowiring((shared_ptr<T>*)this);
+        newHead->SatisfyAutowiring((std::shared_ptr<T>*)this);
         newHead->Finalize();
         return;
       }
