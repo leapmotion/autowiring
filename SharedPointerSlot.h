@@ -219,7 +219,7 @@ struct SharedPointerSlotT:
 {
   SharedPointerSlotT(const std::shared_ptr<T>& rhs = std::shared_ptr<T>()) {
     static_assert(
-      sizeof(SharedPointerSlotT<T>) == sizeof(SharedPointerSlot),
+      sizeof(std::shared_ptr<T>) == sizeof(m_space),
       "Slot instance is too large to fit in the base type"
     );
 
