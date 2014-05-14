@@ -213,8 +213,8 @@ TEST_F(SnoopTest, AvoidDoubleReciept) {
 
 TEST_F(SnoopTest, MultiSnoop) {
   AutoCurrentContext base;
-  auto ctxt1 = base->Create<void>();
-  auto ctxt2 = ctxt1->Create<void>();
+  auto ctxt1 = base->Create<int>();
+  auto ctxt2 = ctxt1->Create<double>();
 
   AutoRequired<ParentMember> member(base);
   AutoRequired<ParentMember> member1(ctxt1);
@@ -294,4 +294,14 @@ TEST_F(SnoopTest, SimplePackets) {
   packet->Decorate(Decoration<1>());
   EXPECT_TRUE(filter->m_called) << "Snoop didn't work";
   EXPECT_FALSE(detachedFilter->m_called) << "Received a packet from a different context";
+  
+  //reset
+  filter->m_called = false;
+  
+  Pipeline->Unsnoop(filter);
+  auto packet2 = factory->NewPacket();
+  packet2->Decorate(Decoration<0>());
+  packet2->Decorate(Decoration<1>());
+  EXPECT_FALSE(filter->m_called) << "Unsnoop didn't work";
 }
+
