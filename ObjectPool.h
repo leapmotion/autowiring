@@ -167,6 +167,9 @@ public:
         // Managed to get the size down sufficiently, we can continue:
         return;
 
+      // Removing an entry from the cache, must increase the outstanding count at this point
+      m_outstanding++;
+
       // Funny syntax needed to ensure destructors run while we aren't holding any locks.  The prior
       // shared_ptr will be reset after the lock is released, guaranteeing the desired ordering.
       prior = m_objs.back();
