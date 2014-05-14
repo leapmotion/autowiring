@@ -57,6 +57,19 @@ public:
   virtual operator std::shared_ptr<Object>(void) const { return std::shared_ptr<Object>(); }
   virtual const void* ptr(void) const { return nullptr; }
 
+  /// <summary>
+  /// Performs a placement new on the specified space with a type matching the current instance
+  /// </summary>
+  /// <remarks>
+  /// This method will also initialize the returned space with a copy of the shared pointer held by this
+  /// slot.
+  /// </remarks>
+  virtual void New(void* pSpace, size_t nBytes) const {
+    if(nBytes < sizeof(*this))
+      throw std::runtime_error("Attempted to construct a SharedPointerSlot in a space that was too small");
+    new (pSpace) SharedPointerSlot;
+  }
+
   /// <returns>
   /// A void pointer to the underlying shared pointer implementation
   /// </returns>
@@ -173,24 +186,11 @@ public:
   /// implementation.
   /// </remarks>
   void operator=(const SharedPointerSlot& rhs) {
-    // Our own stuff is going away, need to return here
-    reset();
+    // Our own stuff is going away, need to reset ourselves
+    this->~SharedPointerSlot();
 
-    // We want to scrape the VFT, which always appears prior to the data block.  We need
-    // to use pointer magic to find the address of the VFT.  On most systems it's just
-    // one void* space at the top of the class, but we can't be too careful here.
-    size_t headerSpace = (char*) m_space - (char*) this;
-    memcpy(this, &rhs, headerSpace);
-
-    // If we had a way to know the compile-time type of the rhs, we might have simply
-    // done a placement new on ourselves and that would have been enough to initialize
-    // our internally held shared pointer.  Unfortunately, we don't know the type on
-    // the right-hand side, and can't do a placement new on the type.  Instead, we will
-    // use our protected virtual method "assign" to do this operation.  The implementation
-    // of assign expects that the passed value will have matching types, and since we just
-    // made our types symmetric with the above memcpy, we can be assured we will get the
-    // correct version of assign.
-    assign(rhs);
+    // Placement construct the right-hand side into ourselves:
+    rhs.New(this, sizeof(*this));
   }
 
   /// <summary>
@@ -254,6 +254,12 @@ public:
   }
 
   virtual const void* ptr(void) const { return get().get(); }
+
+  virtual void New(void* pSpace, size_t nBytes) const override {
+    if(nBytes < sizeof(*this))
+      throw std::runtime_error("Attempted to construct a SharedPointerSlotT in a space that was too small");
+    new (pSpace) SharedPointerSlotT<T>(get());
+  }
 
   bool try_assign(const std::shared_ptr<Object>& rhs) override {
     // Just perform a dynamic cast:
