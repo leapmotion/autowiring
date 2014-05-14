@@ -30,7 +30,7 @@ AutoPacketFactory::AutoPacketFactory(void):
 AutoPacketFactory::~AutoPacketFactory() {}
 
 std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
-  if ((boost::lock_guard<boost::mutex>)m_lock, m_runState != RunState::RUNNING)
+  if (!IsRunning())
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
   // Obtain a packet:
@@ -46,8 +46,6 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
 
 bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
   m_outstanding = outstanding;
-  
-  (boost::lock_guard<boost::mutex>)m_lock,
   m_runState = RunState::RUNNING;
   
   m_stateCondition.notify_all();
@@ -55,8 +53,6 @@ bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
 }
 
 void AutoPacketFactory::Stop(bool graceful) {
-  boost::lock_guard<boost::mutex> lk(m_lock);
-  
   m_runState = RunState::STOPPED;
   m_outstanding.reset();
   
@@ -64,21 +60,13 @@ void AutoPacketFactory::Stop(bool graceful) {
 }
 
 void AutoPacketFactory::Wait(void) {
-  boost::unique_lock<boost::mutex> lk(m_lock);
-  m_stateCondition.wait(lk, [this]{return m_runState != RunState::READY; });
+  {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    m_stateCondition.wait(lk, [this]{return m_runState != RunState::READY; });
+  }
 
   // Now we need to block until all packets come back to the object pool:
   m_packets.Rundown();
-}
-
-bool AutoPacketFactory::IsRunning(void) const {
-  boost::lock_guard<boost::mutex> lk(m_lock);
-  return m_runState == RunState::RUNNING;
-}
-
-bool AutoPacketFactory::ShouldStop(void) const {
-  boost::lock_guard<boost::mutex> lk(m_lock);
-  return m_runState == RunState::STOPPED;
 }
 
 void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
