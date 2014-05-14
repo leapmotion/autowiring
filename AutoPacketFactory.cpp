@@ -22,7 +22,7 @@ void AutoPacketFactory::AutoPacketResetter::operator()(AutoPacket& packet) const
 }
 
 AutoPacketFactory::AutoPacketFactory(void):
-  m_runState(RunState::READY)
+  m_wasStopped(false)
 {
   m_packets.SetAlloc(AutoPacketCreator(this));
 }
@@ -46,14 +46,13 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
 
 bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
   m_outstanding = outstanding;
-  m_runState = RunState::RUNNING;
   
   m_stateCondition.notify_all();
   return true;
 }
 
 void AutoPacketFactory::Stop(bool graceful) {
-  m_runState = RunState::STOPPED;
+  m_wasStopped = true;
   m_outstanding.reset();
   
   m_stateCondition.notify_all();
@@ -62,7 +61,7 @@ void AutoPacketFactory::Stop(bool graceful) {
 void AutoPacketFactory::Wait(void) {
   {
     boost::unique_lock<boost::mutex> lk(m_lock);
-    m_stateCondition.wait(lk, [this]{return m_runState != RunState::READY; });
+    m_stateCondition.wait(lk, [this]{return IsRunning() || ShouldStop(); });
   }
 
   // Now we need to block until all packets come back to the object pool:
