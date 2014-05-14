@@ -117,6 +117,7 @@ TEST_F(AutoInjectableTest, VerifySimpleThreadWait) {
     *thread += [] {
       Autowired<CoreThread> thread;
       Autowired<boost::mutex> barr;
+      ASSERT_TRUE(thread && barr) << "Failed to find a required type in the current context";
       boost::lock_guard<boost::mutex> lk(*barr);
       thread->Stop();
     };

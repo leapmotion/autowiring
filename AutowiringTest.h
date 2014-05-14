@@ -1,9 +1,8 @@
 #pragma once
 #include "EnclosedContextTestBase.h"
 
-class DecoratorTest:
+class AutowiringTest:
   public EnclosedContextTestBase
 {
-public:
-  DecoratorTest(void);
 };
+

@@ -1,4 +1,5 @@
 #pragma once
+#include <boost/any.hpp>
 
 /// <summary>
 /// A single subscription counter entry

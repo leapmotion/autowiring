@@ -1,6 +1,8 @@
 #pragma once
+#include "AnySharedPointer.h"
 #include "AutoAnchor.h"
 #include "AutoPacketSubscriber.h"
+#include "AutowirableSlot.h"
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
@@ -16,7 +18,6 @@
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
 #include "ExceptionFilter.h"
-#include "SharedPointerSlot.h"
 #include "TeardownNotifier.h"
 #include "TypeUnifier.h"
 
@@ -32,7 +33,7 @@
 #include STL_UNORDERED_SET
 
 template<class T, class Fn>
-class DeferrableAutowiringFn;
+class AutowirableSlotFn;
 
 class AutoPacketFactory;
 class DeferrableAutowiring;
@@ -107,29 +108,42 @@ protected:
   // into any child context.
   std::set<std::type_index> m_anchors;
 
-  // Map of slots waiting to be autowired, organized by the desired type.  The type allows chaining to take
-  // place in an intelligent way.
-  typedef std::unordered_map<std::type_index, DeferrableAutowiring*> t_deferredMap;
-  t_deferredMap m_deferred;
+  /// <summary>
+  /// Represents a single entry, together with any deferred elements waiting on the satisfaction of this entry
+  /// </summary>
+  struct MemoEntry {
+    MemoEntry(void) :
+      pFirst(nullptr)
+    {
+    }
+
+    // The first deferrable autowiring which requires this type, if one exists:
+    DeferrableAutowiring* pFirst;
+
+    // Once this memo entry is satisfied, this will contain the AnySharedPointer instance that performs
+    // the satisfaction
+    AnySharedPointer m_value;
+  };
 
   // This is a list of concrete types, indexed by the true type of each element.
   std::vector<AnySharedPointer> m_concreteTypes;
 
-  // This is a memoization map used to memoize any already-detected interfaces
-  // This map keeps all of its objects resident at least until the context goes away.
-  // Note that the value on the right-hand side must match the void pointer specified on the right-hand side
-  mutable std::unordered_map<std::type_index, AnySharedPointer> m_typeMemos;
+  // This is a memoization map used to memoize any already-detected interfaces.  The map
+  mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;
 
   // All known context members, exception filters:
   std::vector<ContextMember*> m_contextMembers;
   std::vector<ExceptionFilter*> m_filters;
 
   // All known event receivers and receiver proxies originating from this context:
-  typedef std::vector<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
+  typedef std::set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
 
   // List of eventReceivers to be added when this context in initiated
-  std::vector<JunctionBoxEntry<EventReceiver>> m_delayedEventReceivers;
+  t_rcvrSet m_delayedEventReceivers;
+  
+  // Context members from other contexts that have snooped this context
+  std::unordered_set<Object*> m_snoopers;
 
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
   const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
@@ -244,7 +258,7 @@ protected:
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
-  void UpdateDeferredElements(const std::shared_ptr<Object>& entry);
+  void UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, const std::shared_ptr<Object>& entry);
 
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
@@ -256,12 +270,7 @@ protected:
   /// Add delayed event receivers
   /// </summary>
   template<class iter>
-  void AddDelayedEventReceivers(iter first, iter last);
-
-  /// <summary>
-  /// Removes the named event receiver from the collection of known receivers
-  /// </summary>
-  void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
+  void AddEventReceivers(iter first, iter last);
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
@@ -295,9 +304,14 @@ protected:
   /// Forwarding routine, recursively adds a packet subscriber to the internal packet factory
   /// </summary>
   void AddPacketSubscriber(const AutoPacketSubscriber& rhs);
-
+  
   /// <summary>
-  /// Counterpart to the AddPacketSubscriber routine, but will remove an array of subscribers
+  /// Forwarding routine, only removes from this context
+  /// </summary>
+  void UnsnoopAutoPacket(Object* oSnooper, const std::type_info& ti);
+  
+  /// <summary>
+  /// Counterparts to the AddPacketSubscriber routine
   /// </summary>
   void RemovePacketSubscribers(const std::vector<AutoPacketSubscriber>& subscribers);
 
@@ -358,17 +372,19 @@ protected:
   /// </summary>
   void AddInternal(const AddInternalTraits& traits);
 
+  /// <summary>
+  /// Scans the memo collection for the specified entry, or adds a deferred resolution marker if resolution was not possible
+  /// </summary>
   template<class T>
-  void FindByTypeUnsafe(std::shared_ptr<T>& ptr) const {
-    // Try to find the type directly:
-    auto& entry = m_typeMemos[typeid(T)];
-    if(!entry->empty()) {
-      ptr = entry->as<T>();
-      return;
-    }
+  std::shared_ptr<T> FindByTypeUnsafe(void) const {
+    // If we've attempted to search for this type before, we will return the value of the memo immediately:
+    auto q = m_typeMemos.find(typeid(T));
+    if(q != m_typeMemos.end())
+      // Return the value we found:
+      return q->second.m_value->as<T>();
 
     // Resolve based on iterated dynamic casts for each concrete type:
-    ptr.reset();
+    std::shared_ptr<T> retVal;
     for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
       std::shared_ptr<Object> obj = **q;
       auto casted = std::dynamic_pointer_cast<T>(obj);
@@ -376,21 +392,43 @@ protected:
         // No match, try the next entry
         continue;
 
-      if(ptr)
+      if(retVal)
         // Resolution ambiguity, cannot proceed
         throw autowiring_error("An attempt was made to resolve a type which has multiple possible clients");
 
-      ptr = casted;
+      retVal = casted;
     }
 
-    // Memoize:
-    *entry = ptr;
+    // This entry was not formerly memoized.  Memoize unconditionally.
+    m_typeMemos[typeid(T)].m_value = retVal;
+
+    // Fill out the entry:
+    return retVal;
   }
 
   /// <summary>
   /// Returns or constructs a new AutoPacketFactory instance
   /// </summary>
   std::shared_ptr<AutoPacketFactory> GetPacketFactory(void);
+
+  /// <summary>
+  /// Adds the specified deferrable autowiring as a general recipient of autowiring events
+  /// </summary>
+  template<class T>
+  void AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
+    size_t found = m_typeMemos.count(typeid(T));
+
+    if(!found)
+      // Slot not presently initialized, need to initialize it:
+      m_typeMemos[typeid(T)].m_value->init<T>();
+
+    // Obtain the entry (potentially a second time):
+    MemoEntry& entry = m_typeMemos[typeid(T)];
+
+    // Chain forward the linked list:
+    deferrable->SetFlink(entry.pFirst);
+    entry.pFirst = deferrable;
+  }
 
 public:
   // Accessor methods:
@@ -687,7 +725,7 @@ public:
       return false;
 
     // Found the true type, see if the slots match or if it's a coincidence:
-    return *q->second == ptr;
+    return *q->second.m_value == ptr;
   }
 
   /// <summary>
@@ -829,23 +867,26 @@ public:
   ///
   /// The snooper will not receive any events broadcast from parent contexts.  ONLY events
   /// broadcast in THIS context will be forwarded to the snooper.
-  ///
-  /// Same as "AddEventReceiver" except doesn't added event to m_eventReceivers
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot snoop on a type which is not an event receiver");
+    static_assert(std::is_base_of<EventReceiver, T>::value ||
+                  has_autofilter<T>::value,
+                  "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
+    
+    (boost::lock_guard<boost::mutex>)m_lock,
+    m_snoopers.insert(std::static_pointer_cast<Object>(pSnooper).get());
 
-    // Snooping now
-    auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
-
-    JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
-    m_junctionBoxManager->AddEventReceiver(receiver);
-
-    // Delegate ascending resolution, where possible.  This ensures that the parent context links
-    // this event receiver to compatible senders in the parent context itself.
-    if(m_pParent)
-      m_pParent->Snoop(pSnooper);
+    // Add EventReceiver
+    if (std::is_base_of<EventReceiver, T>::value) {
+      JunctionBoxEntry<EventReceiver> receiver(this, pSnooper);
+      AddEventReceiver(receiver);
+    }
+    
+    // Add PacketSubscriber;
+    if (has_autofilter<T>::value) {
+      AddPacketSubscriber(AutoPacketSubscriberSelect<T>(pSnooper));
+    }
   }
 
   /// <summary>
@@ -856,18 +897,33 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot unsnoop on a type which is not an event receiver");
-
-    // Pass control to the event remover helper:
-    auto rcvr = std::static_pointer_cast<EventReceiver, T>(pSnooper);
-
-    JunctionBoxEntry<EventReceiver> receiver(this, rcvr);
-    m_junctionBoxManager->RemoveEventReceiver(receiver);
-
-    // Delegate to the parent:
-    if(m_pParent)
-      m_pParent->Unsnoop(pSnooper);
+    static_assert(std::is_base_of<EventReceiver, T>::value ||
+                  has_autofilter<T>::value,
+                  "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
+    
+    Object* oSnooper = std::static_pointer_cast<Object>(pSnooper).get();
+    
+    (boost::lock_guard<boost::mutex>)m_lock,
+    m_snoopers.erase(oSnooper);
+    
+    // Cleanup if its an EventReceiver
+    if (std::is_base_of<EventReceiver, T>::value) {
+      JunctionBoxEntry<EventReceiver> receiver(this, pSnooper);
+      
+      (boost::lock_guard<boost::mutex>)m_lock,
+      m_delayedEventReceivers.erase(receiver);
+      
+      UnsnoopEvents(oSnooper, receiver);
+    }
+    
+    // Cleanup if its a packet listener
+    if (has_autofilter<T>::value) {
+      UnsnoopAutoPacket(oSnooper, typeid(T));
+    }
   }
+  
+  // Remove EventReceiver from parents unless its a member of the parent
+  void UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver);
 
   /// <summary>
   /// Locates an available context member in this context
@@ -875,7 +931,7 @@ public:
   template<class T>
   void FindByType(std::shared_ptr<T>& slot) const {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    FindByTypeUnsafe(slot);
+    slot = FindByTypeUnsafe<T>();
   }
 
   /// <summary>
@@ -896,18 +952,14 @@ public:
   /// <summary>
   /// Registers a slot to be autowired
   /// </summary>
-  template<class W>
-  bool Autowire(W& slot) {
+  template<class T>
+  bool Autowire(AutowirableSlot<T>& slot) {
     if(FindByTypeRecursive(slot))
       return true;
 
     // Failed, defer
-    boost::lock_guard<boost::mutex> lk(m_lock);
-
-    // Push to the head of our linked list:
-    auto& flink = m_deferred[typeid(typename W::value_type)];
-    slot.SetFlink(flink);
-    flink = &slot;
+    (boost::lock_guard<boost::mutex>)m_lock,
+    AddDeferredUnsafe<T>(&slot);
     return false;
   }
 
@@ -933,13 +985,14 @@ public:
   /// up memory.
   /// </remarks>
   template<class T, class Fn>
-  const DeferrableAutowiringFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
-    DeferrableAutowiringFn<T, Fn>* retVal =
-      new DeferrableAutowiringFn<T, Fn>(
-        shared_from_this(),
-        std::forward<Fn>(listener)
-      );
+  const AutowirableSlotFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
+    auto retVal = MakeAutowirableSlotFn<T>(
+      shared_from_this(),
+      std::forward<Fn>(listener)
+    );
 
+    (boost::lock_guard<boost::mutex>)m_lock,
+    AddDeferredUnsafe<T>(retVal);
     return retVal;
   }
 

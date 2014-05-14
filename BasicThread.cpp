@@ -64,14 +64,15 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   // need to hold a reference to.
   auto state = m_state;
 
+  // Perform a manual notification of teardown listeners
+  NotifyTeardownListeners();
+
   // Notify everyone that we're completed:
   boost::lock_guard<boost::mutex> lk(state->m_lock);
   m_stop = true;
   m_completed = true;
   m_running = false;
 
-  // Perform a manual notification of teardown listeners
-  NotifyTeardownListeners();
 
   // No longer running, we MUST release the thread pointer to ensure proper teardown order
   state->m_thisThread.detach();
