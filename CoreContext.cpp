@@ -266,6 +266,16 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
     (**it).Wait();
 }
 
+void CoreContext::Wait(void) {
+  boost::unique_lock<boost::mutex> lk(m_lock);
+  m_stateChanged.wait(lk, [this] {return m_isShutdown && this->m_outstanding.expired(); });
+}
+
+bool CoreContext::Wait(const boost::chrono::nanoseconds duration) {
+  boost::unique_lock<boost::mutex> lk(m_lock);
+  return m_stateChanged.wait_for(lk, duration, [this] {return m_isShutdown && this->m_outstanding.expired(); });
+}
+
 bool CoreContext::DelayUntilInitiated(void) {
   boost::unique_lock<boost::mutex> lk(m_lock);
   m_stateChanged.wait(lk, [this] {return m_initiated || m_isShutdown;});
