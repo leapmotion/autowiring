@@ -6,6 +6,7 @@
 #include "AutoPacketListener.h"
 #include "Autowired.h"
 #include "BoltBase.h"
+#include "CoreContextStateBlock.h"
 #include "GlobalCoreContext.h"
 #include "JunctionBox.h"
 #include "MicroBolt.h"
@@ -29,6 +30,7 @@ boost::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
 
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent) :
   m_pParent(pParent),
+  m_stateBlock(new CoreContextStateBlock),
   m_initiated(false),
   m_isShutdown(false),
   m_junctionBoxManager(std::make_shared<JunctionBoxManager>())
@@ -37,6 +39,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent) :
 // Peer Context Constructor. Called interally by CreatePeer
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer) :
   m_pParent(pParent),
+  m_stateBlock(new CoreContextStateBlock),
   m_initiated(false),
   m_isShutdown(false),
   m_junctionBoxManager(pPeer->m_junctionBoxManager)
@@ -80,14 +83,14 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
     (Object*)1,
     [this, self, parentCount](Object*) {
       // Object being destroyed, notify all recipients
-      boost::lock_guard<boost::mutex> lk(m_lock);
+      boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
 
       // Unfortunately, this destructor callback is made before weak pointers are
       // invalidated, which requires that we manually reset the outstanding count
       m_outstanding.reset();
 
       // Wake everyone up
-      m_stateChanged.notify_all();
+      m_stateBlock->m_stateChanged.notify_all();
     }
   );
   m_outstanding = retVal;
@@ -96,7 +99,7 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
 
 void CoreContext::AddInternal(const AddInternalTraits& traits) {
   {
-    boost::unique_lock<boost::mutex> lk(m_lock);
+    boost::unique_lock<boost::mutex> lk(m_stateBlock->m_lock);
 
     // Validate that this addition does not generate an ambiguity:
     auto& v = m_typeMemos[typeid(*traits.pObject)];
@@ -131,7 +134,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
     JunctionBoxEntry<EventReceiver> entry(this, traits.pRecvr);
 
     // Add to our vector of local receivers first:
-    (boost::lock_guard<boost::mutex>)m_lock,
+    (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
     m_eventReceivers.insert(entry);
 
     // Recursively add to all junction box managers up the stack:
@@ -166,7 +169,7 @@ std::vector<std::shared_ptr<BasicThread>> CoreContext::CopyBasicThreadList(void)
 
 void CoreContext::Initiate(void) {
   {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
     if(m_initiated)
       // Already running
       return;
@@ -191,10 +194,10 @@ void CoreContext::Initiate(void) {
 
   // Reacquire the lock to prevent m_threads from being modified while we sit on it
   auto outstanding = IncrementOutstandingThreadCount();
-  boost::lock_guard<boost::mutex> lk(m_lock);
+  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
   
   // Signal our condition variable
-  m_stateChanged.notify_all();
+  m_stateBlock->m_stateChanged.notify_all();
   
   for(auto q : m_threads)
     q->Start(outstanding);
@@ -207,10 +210,10 @@ void CoreContext::InitiateCoreThreads(void) {
 void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   // Wipe out the junction box manager, notify anyone waiting on the state condition:
   {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
     UnregisterEventReceivers();
     m_isShutdown = true;
-    m_stateChanged.notify_all();
+    m_stateBlock->m_stateChanged.notify_all();
   }
 
   {
@@ -224,7 +227,7 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
 
     {
       // Tear down all the children.
-      boost::lock_guard<boost::mutex> lk(m_lock);
+      boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
 
       // Fill strong lock series in order to ensure proper teardown interleave:
       childrenInterleave.reserve(m_children.size());
@@ -255,7 +258,7 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
     (*q)->Stop(graceful);
 
   // Signal our condition variable
-  m_stateChanged.notify_all();
+  m_stateBlock->m_stateChanged.notify_all();
 
   // Short-return if required:
   if(!wait)
@@ -267,18 +270,18 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
 }
 
 void CoreContext::Wait(void) {
-  boost::unique_lock<boost::mutex> lk(m_lock);
-  m_stateChanged.wait(lk, [this] {return m_isShutdown && this->m_outstanding.expired(); });
+  boost::unique_lock<boost::mutex> lk(m_stateBlock->m_lock);
+  m_stateBlock->m_stateChanged.wait(lk, [this] {return m_isShutdown && this->m_outstanding.expired(); });
 }
 
 bool CoreContext::Wait(const boost::chrono::nanoseconds duration) {
-  boost::unique_lock<boost::mutex> lk(m_lock);
-  return m_stateChanged.wait_for(lk, duration, [this] {return m_isShutdown && this->m_outstanding.expired(); });
+  boost::unique_lock<boost::mutex> lk(m_stateBlock->m_lock);
+  return m_stateBlock->m_stateChanged.wait_for(lk, duration, [this] {return m_isShutdown && this->m_outstanding.expired(); });
 }
 
 bool CoreContext::DelayUntilInitiated(void) {
-  boost::unique_lock<boost::mutex> lk(m_lock);
-  m_stateChanged.wait(lk, [this] {return m_initiated || m_isShutdown;});
+  boost::unique_lock<boost::mutex> lk(m_stateBlock->m_lock);
+  m_stateBlock->m_stateChanged.wait(lk, [this] {return m_initiated || m_isShutdown;});
   return !m_isShutdown;
 }
 
@@ -348,7 +351,7 @@ void CoreContext::BuildCurrentState(void) {
     }
   }
 
-  boost::lock_guard<boost::mutex> lk(m_lock);
+  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
   for(auto c : m_children) {
     auto cur = c.lock();
     if(!cur)
@@ -360,7 +363,7 @@ void CoreContext::BuildCurrentState(void) {
 }
 
 void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable) {
-  boost::lock_guard<boost::mutex> lk(m_lock);
+  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
   auto q = m_typeMemos.find(pDeferrable->GetType());
   if(q == m_typeMemos.end())
     return;
@@ -392,7 +395,7 @@ void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable
 }
 
 void CoreContext::Dump(std::ostream& os) const {
-  boost::lock_guard<boost::mutex> lk(m_lock);
+  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
   for(auto q = m_typeMemos.begin(); q != m_typeMemos.end(); q++) {
     os << q->first.name();
     const void* pObj = q->second.m_value->ptr();
@@ -514,7 +517,7 @@ void CoreContext::UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, 
     // Reverse lock before satisfying children:
     lk.unlock();
     ctxt->UpdateDeferredElements(
-      boost::unique_lock<boost::mutex>(ctxt->m_lock),
+      boost::unique_lock<boost::mutex>(ctxt->m_stateBlock->m_lock),
       entry
     );
     lk.lock();
@@ -528,7 +531,7 @@ void CoreContext::UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, 
 
 void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> entry) {
   {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
     if (!m_initiated) {
       // Delay adding receiver until context is initialized
       m_delayedEventReceivers.insert(entry);
