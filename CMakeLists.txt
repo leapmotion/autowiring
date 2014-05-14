@@ -135,6 +135,8 @@ set(AutowiringTest_SRCS
   AutoAnchorTest.cpp
   AutoInjectableTest.h
   AutoInjectableTest.cpp
+  AutoPacketFactoryTest.h
+  AutoPacketFactoryTest.cpp
   AutowiringBenchmarkTest.h
   AutowiringBenchmarkTest.cpp
   AutowiringTest.h
