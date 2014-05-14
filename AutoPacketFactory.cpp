@@ -71,6 +71,16 @@ void AutoPacketFactory::Wait(void) {
   m_packets.Rundown();
 }
 
+bool AutoPacketFactory::IsRunning(void) const {
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  return m_runState == RunState::RUNNING;
+}
+
+bool AutoPacketFactory::ShouldStop(void) const {
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  return m_runState == RunState::STOPPED;
+}
+
 void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
   const std::type_info& ti = *rhs.GetSubscriberTypeInfo();
   boost::lock_guard<boost::mutex> lk(m_lock);
