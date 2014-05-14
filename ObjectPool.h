@@ -139,7 +139,10 @@ protected:
 public:
   // Accessor methods:
   size_t GetOutstanding(void) const { return m_outstanding; }
-  size_t GetCached(void) const { return m_objs.size(); }
+  size_t GetCached(void) const {
+    boost::lock_guard<boost::mutex> lk(*m_monitor);
+    return m_objs.size();
+  }
 
   void ClearCachedEntities(void) {
     // Declare this first, so it's freed last:
