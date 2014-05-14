@@ -125,6 +125,7 @@ public:
   bool Start(std::shared_ptr<Object> outstanding) override;
   void Stop(bool graceful) override;
   bool IsRunning(void) const override { return m_outstanding && m_packets.GetOutstanding(); }
+  bool ShouldStop(void) const override { return false; }
   void Wait(void) override;
 
   /// <summary>
