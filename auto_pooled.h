@@ -1,4 +1,5 @@
 #pragma once
+#include MEMORY_HEADER
 
 /// <summary>
 /// Marks an input to an AutoFilter whose memory payload should be pooled

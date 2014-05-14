@@ -29,6 +29,11 @@ public:
   /// </returns>
   virtual bool IsRunning(void) const = 0;
 
+  /// <returns>
+  /// True if this runnable has been told to stop
+  /// </returns>
+  virtual bool ShouldStop(void) const = 0;
+
   /// <summary>
   /// Waits for this object to start running, and then stop running
   /// </summary>

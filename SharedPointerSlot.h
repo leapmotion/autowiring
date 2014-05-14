@@ -2,7 +2,9 @@
 #include "fast_pointer_cast.h"
 #include "Object.h"
 #include MEMORY_HEADER
+#include <stdexcept>
 #include <stddef.h>
+#include <string.h>
 
 template<class T>
 struct SharedPointerSlotT;
@@ -24,7 +26,7 @@ public:
   }
 
   template<class T>
-  SharedPointerSlot(const std::shared_ptr<T>& rhs) {
+  explicit SharedPointerSlot(const std::shared_ptr<T>& rhs) {
     // Delegate the remainder to the assign operation:
     *this = rhs;
   }
@@ -51,8 +53,57 @@ protected:
   virtual void assign(const SharedPointerSlot& rhs) {}
 
 public:
-  virtual operator void*(void) const { return nullptr; }
+  virtual operator bool(void) const { return false; }
   virtual operator std::shared_ptr<Object>(void) const { return std::shared_ptr<Object>(); }
+  virtual const void* ptr(void) const { return nullptr; }
+
+  /// <summary>
+  /// Performs a placement new on the specified space with a type matching the current instance
+  /// </summary>
+  /// <remarks>
+  /// This method will also initialize the returned space with a copy of the shared pointer held by this
+  /// slot.
+  /// </remarks>
+  virtual void New(void* pSpace, size_t nBytes) const {
+    if(nBytes < sizeof(*this))
+      throw std::runtime_error("Attempted to construct a SharedPointerSlot in a space that was too small");
+    new (pSpace) SharedPointerSlot;
+  }
+
+  /// <returns>
+  /// A void pointer to the underlying shared pointer implementation
+  /// </returns>
+  /// <remarks>
+  /// Use this method with great caution.  The return value may be safely cast to type std::shared_ptr<T>
+  /// _if_ the correct type for T is known at compile time, but if this pointer is shared at runtime between
+  /// modules, compilation differences can change the layout of the shared pointer in subtle ways.
+  /// Generally speaking, this function should only be called by modules which are guaranteed to have
+  /// been statically linked in the same executable.
+  /// </remarks>
+  const void* shared_ptr(void) const { return m_space; }
+
+  /// <summary>
+  /// Attempts to dynamically assign this slot to the specified object without changing the current type
+  /// </summary>
+  /// <returns>True if the assignment succeeds</returns>
+  virtual bool try_assign(const std::shared_ptr<Object>& rhs) {
+    return false;
+  }
+
+  /// <summary>
+  /// Alters the type of this slot to match the specified type
+  /// </summary>
+  /// <param name="T">The type to initialize this slot into</param>
+  /// <remarks>
+  /// This operation releases any previously held value, and causes the slot to hold nullptr with
+  /// the specified type
+  /// </remarks>
+  template<class T>
+  void init(void) {
+    // Trivial reset-then-reinit:
+    reset();
+    new (this) SharedPointerSlotT<T>();
+  }
 
   /// <returns>
   /// True if this slot holds nothing
@@ -77,6 +128,10 @@ public:
     if(empty())
       // Nothing to do, just back out
       return;
+
+    // We aren't presently empty, we need to release our
+    // current implementation before attempting to reinitialize
+    this->~SharedPointerSlot();
   }
 
   /// <summary>
@@ -84,30 +139,14 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<T> as(void) const {
+    if(type() == typeid(void))
+      // This is allowed, we always permit null to be cast to the requested type.
+      return std::shared_ptr<T>();
+
     if(type() != typeid(T))
       throw std::runtime_error("Attempted to obtain a shared pointer for an unrelated type");
 
     return ((SharedPointerSlotT<T>*)this)->get();
-  }
-
-  /// <summary>
-  /// In-place polymorphic transformer
-  /// </summary>
-  template<class T>
-  void operator=(const std::shared_ptr<T>& rhs) {
-    if(type() == typeid(T)) {
-      // We can just use the equivalence operator, no need to make two calls
-      *((SharedPointerSlotT<T>*)this) = rhs;
-      return;
-    }
-
-    if(!empty())
-      // We aren't presently empty, we need to release our
-      // current implementation before attempting to reinitialize
-      this->~SharedPointerSlot();
-
-    // Now we can safely reinitialize:
-    new (this) SharedPointerSlotT<T>(rhs);
   }
 
   /// <summary>
@@ -147,28 +186,30 @@ public:
   /// implementation.
   /// </remarks>
   void operator=(const SharedPointerSlot& rhs) {
-    // Our own stuff is going away, need to return here
+    // Our own stuff is going away, need to reset ourselves
+    this->~SharedPointerSlot();
+
+    // Placement construct the right-hand side into ourselves:
+    rhs.New(this, sizeof(*this));
+  }
+
+  /// <summary>
+  /// In-place polymorphic transformer
+  /// </summary>
+  template<class T>
+  void operator=(const std::shared_ptr<T>& rhs) {
+    if(type() == typeid(T)) {
+      // We can just use the equivalence operator, no need to make two calls
+      *((SharedPointerSlotT<T>*)this) = rhs;
+      return;
+    }
+
+    // Clear out what we're holding:
     reset();
 
-    // If the right-hand side is empty, we'll just reset ourselves and be done with it:
-    if(rhs.empty())
-      return;
-
-    // We want to scrape the VFT, which always appears prior to the data block.  We need
-    // to use pointer magic to find the address of the VFT.  On most systems it's just
-    // one void* space at the top of the class, but we can't be too careful here.
-    size_t headerSpace = (char*) m_space - (char*) this;
-    memcpy(this, &rhs, headerSpace);
-
-    // If we had a way to know the compile-time type of the rhs, we might have simply
-    // done a placement new on ourselves and that would have been enough to initialize
-    // our internally held shared pointer.  Unfortunately, we don't know the type on
-    // the right-hand side, and can't do a placement new on the type.  Instead, we will
-    // use our protected virtual method "assign" to do this operation.  The implementation
-    // of assign expects that the passed value will have matching types, and since we just
-    // made our types symmetric with the above memcpy, we can be assured we will get the
-    // correct version of assign.
-    assign(rhs);
+    // Now we can safely reinitialize:
+    static_assert(sizeof(SharedPointerSlotT<T>) == sizeof(*this), "Cannot instantiate a templated shared pointer slot on this type, it's too large to fit here");
+    new (this) SharedPointerSlotT<T>(rhs);
   }
 };
 
@@ -176,9 +217,9 @@ template<class T>
 struct SharedPointerSlotT:
   SharedPointerSlot
 {
-  SharedPointerSlotT(const std::shared_ptr<T>& rhs) {
+  SharedPointerSlotT(const std::shared_ptr<T>& rhs = std::shared_ptr<T>()) {
     static_assert(
-      sizeof(SharedPointerSlotT<T>) == sizeof(SharedPointerSlot),
+      sizeof(std::shared_ptr<T>) == sizeof(m_space),
       "Slot instance is too large to fit in the base type"
     );
 
@@ -186,7 +227,7 @@ struct SharedPointerSlotT:
     new (m_space) std::shared_ptr<T>(rhs);
   }
 
-  ~SharedPointerSlotT(void) {
+  ~SharedPointerSlotT(void) override {
     // Recast and in-place destroy our shared pointer:
     get().~shared_ptr();
   }
@@ -212,8 +253,26 @@ public:
     return leap::fast_pointer_cast<Object>(get());
   }
 
-  virtual bool empty(void) const { return get() == nullptr; }
-  virtual operator const void*(void) const { return get().get(); }
+  virtual const void* ptr(void) const { return get().get(); }
+
+  virtual void New(void* pSpace, size_t nBytes) const override {
+    if(nBytes < sizeof(*this))
+      throw std::runtime_error("Attempted to construct a SharedPointerSlotT in a space that was too small");
+    new (pSpace) SharedPointerSlotT<T>(get());
+  }
+
+  bool try_assign(const std::shared_ptr<Object>& rhs) override {
+    // Just perform a dynamic cast:
+    auto casted = leap::fast_pointer_cast<T>(rhs);
+    if(!casted)
+      return false;
+
+    get() = casted;
+    return true;
+  }
+
+  bool empty(void) const { return get() == nullptr; }
+  operator bool(void) const override { return !!get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
 
   template<class U>
@@ -226,58 +285,3 @@ public:
     get() = rhs;
   }
 };
-
-struct AnySharedPointer {
-public:
-  AnySharedPointer(void) {
-    new (m_space) SharedPointerSlot;
-  }
-
-  AnySharedPointer(const AnySharedPointer& rhs) {
-    new (m_space) SharedPointerSlot(rhs.slot());
-  }
-
-  template<class T>
-  AnySharedPointer(const std::shared_ptr<T>& rhs) {
-    // Delegate the remainder to the assign operation:
-    new (m_space) SharedPointerSlot(rhs);
-  }
-
-  ~AnySharedPointer(void) {
-    // Pass control to the *real* destructor:
-    slot().~SharedPointerSlot();
-  }
-
-private:
-  unsigned char m_space[sizeof(SharedPointerSlot)];
-
-  // Convenience method to cast the space to a slot
-  SharedPointerSlot& slot(void) { return *(SharedPointerSlot*) m_space; }
-  const SharedPointerSlot& slot(void) const { return *(SharedPointerSlot*) m_space; }
-
-public:
-  operator void*(void) const { return slot().operator void*(); }
-
-  SharedPointerSlot& operator*(void) { return slot(); }
-  const SharedPointerSlot& operator*(void) const { return slot(); }
-
-  SharedPointerSlot* operator->(void) { return &slot(); }
-  const SharedPointerSlot* operator->(void) const { return &slot(); }
-
-  /// <summary>
-  /// Copy assignment operator
-  /// </summary>
-  /// <remarks>
-  /// Consumer beware:  This is a transformative assignment.  The true polymorphic
-  /// type will be carried from the right-hand side into this element, which is a
-  /// different behavior from how things are normally done during assignment.  Other
-  /// than that, however, the behavior is very similar to boost::any's assignment
-  /// implementation.
-  /// </remarks>
-  void operator=(const AnySharedPointer& rhs) {
-    slot().~SharedPointerSlot();
-    *(SharedPointerSlot*) m_space = rhs.slot();
-  }
-};
-
-static_assert(!std::is_polymorphic<AnySharedPointer>::value, "The shared pointer cannot be polymorphic");

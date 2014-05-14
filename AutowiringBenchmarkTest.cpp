@@ -122,8 +122,8 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFast) {
 }
 
 TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFastPerformance) {
-  boost::chrono::nanoseconds baseline(0);
-  boost::chrono::nanoseconds benchmark(0);
+  boost::chrono::nanoseconds baseline;
+  boost::chrono::nanoseconds benchmark;
   {
     // All of these tests will operate in the same context:
     AutoCreateContext ctxt;
@@ -136,7 +136,7 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFastPerformance) {
     auto startBase = boost::chrono::high_resolution_clock::now();
     for(int i = 0; i < 500; ++i)
       InjectDummy();
-    baseline += boost::chrono::high_resolution_clock::now() - startBase;
+    baseline = boost::chrono::high_resolution_clock::now() - startBase;
 
     auto startBench = boost::chrono::high_resolution_clock::now();
     for(int i = 0; i < 500; ++i) {
@@ -161,7 +161,7 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFastPerformance) {
       AutowiredFast<dummy<19>>();
       AutowiredFast<dummy<20>>();
     }
-    benchmark += boost::chrono::high_resolution_clock::now() - startBench;
+    benchmark = boost::chrono::high_resolution_clock::now() - startBench;
   }
 
   EXPECT_GT(baseline, benchmark*1.75) << "Fast autowiring is slower than ordinary autowiring";
