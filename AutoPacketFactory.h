@@ -77,7 +77,7 @@ private:
   // Notify when started
   boost::condition_variable m_stateCondition;
   
-  // Current Runnable state
+  // Have we been signaled to stop
   bool m_wasStopped;
 
   // Outstanding reference if this factory is currently running:
