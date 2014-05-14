@@ -42,6 +42,8 @@ set(Autowiring_SRCS
   ContextMember.h
   CoreContext.cpp
   CoreContext.h
+  CoreContextStateBlock.h
+  CoreContextStateBlock.cpp
   CoreThread.cpp
   CoreThread.h
   CoreRunnable.h

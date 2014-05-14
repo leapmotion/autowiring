@@ -6,6 +6,7 @@
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
+#include "CoreContextStateBlock.h"
 #include "CoreRunnable.h"
 #include "ContextMember.h"
 #include "CreationRules.h"
@@ -20,17 +21,13 @@
 #include "TeardownNotifier.h"
 #include "TypeUnifier.h"
 
-#include <boost/thread/condition.hpp>
-#include <boost/thread/mutex.hpp>
 #include <list>
 #include TYPE_INDEX_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_MAP
 #include STL_UNORDERED_SET
 
-template<class T, class Fn>
-class AutowirableSlotFn;
-
+struct CoreContextStateBlock;
 class AutoPacketFactory;
 class DeferrableAutowiring;
 class BasicThread;
@@ -40,6 +37,9 @@ class EventOutputStreamBase;
 class GlobalCoreContext;
 class JunctionBoxBase;
 class OutstandingCountTracker;
+
+template<class T, class Fn>
+class AutowirableSlotFn;
 
 template<typename T>
 class Autowired;
@@ -84,11 +84,8 @@ protected:
   // A pointer to the parent context
   const std::shared_ptr<CoreContext> m_pParent;
 
-  // General purpose lock for this class
-  mutable boost::mutex m_lock;
-
-  // Condition, signalled when context state has been changed
-  boost::condition m_stateChanged;
+  // State block for this context:
+  std::unique_ptr<CoreContextStateBlock> m_stateBlock;
 
   // Set if threads in this context should be started when they are added
   bool m_initiated;
@@ -170,7 +167,7 @@ protected:
     t_childList::iterator childIterator;
     {
       // Lock the child list while we insert
-      boost::lock_guard<boost::mutex> lk(m_lock);
+      boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
 
       // Reserve a place in the list for the child
       childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
@@ -182,7 +179,7 @@ protected:
       &newContext,
       [this, childIterator] (CoreContext* pContext) {
         {
-          boost::lock_guard<boost::mutex> lk(m_lock);
+          boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
           this->m_children.erase(childIterator);
         }
         // Notify AutowiringEvents listeners
@@ -639,7 +636,7 @@ public:
   /// </remarks>
   template<class Fn>
   bool EnumerateChildContexts(const Fn& fn) {
-    boost::lock_guard<boost::mutex> lock(m_lock);
+    boost::lock_guard<boost::mutex> lock(m_stateBlock->m_lock);
     for(auto c = m_children.begin(); c != m_children.end(); c++) {
       // Recurse:
       auto shared = c->lock();
@@ -659,7 +656,7 @@ public:
   template<class Fn>
   void EnumerateContexts(Fn&& fn) {
     fn(shared_from_this());
-    boost::lock_guard<boost::mutex> lock(m_lock);
+    boost::lock_guard<boost::mutex> lock(m_stateBlock->m_lock);
     for (auto c = m_children.begin(); c != m_children.end(); c++) {
       c->lock()->EnumerateContexts(fn);
     }
@@ -717,7 +714,7 @@ public:
   /// </summary>
   template<class T>
   bool IsMember(const std::shared_ptr<T>& ptr) const {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
 
     auto q = m_typeMemos.find(typeid(*ptr));
     if(q == m_typeMemos.end())
@@ -870,7 +867,7 @@ public:
                   has_autofilter<T>::value,
                   "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
     
-    (boost::lock_guard<boost::mutex>)m_lock,
+    (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
     m_snoopers.insert(std::static_pointer_cast<Object>(pSnooper).get());
 
     // Add EventReceiver
@@ -899,14 +896,14 @@ public:
     
     Object* oSnooper = std::static_pointer_cast<Object>(pSnooper).get();
     
-    (boost::lock_guard<boost::mutex>)m_lock,
+    (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
     m_snoopers.erase(oSnooper);
     
     // Cleanup if its an EventReceiver
     if (std::is_base_of<EventReceiver, T>::value) {
       JunctionBoxEntry<EventReceiver> receiver(this, pSnooper);
       
-      (boost::lock_guard<boost::mutex>)m_lock,
+      (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
       m_delayedEventReceivers.erase(receiver);
       
       UnsnoopEvents(oSnooper, receiver);
@@ -926,7 +923,7 @@ public:
   /// </summary>
   template<class T>
   void FindByType(std::shared_ptr<T>& slot) const {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
     slot = FindByTypeUnsafe<T>();
   }
 
@@ -954,7 +951,7 @@ public:
       return true;
 
     // Failed, defer
-    (boost::lock_guard<boost::mutex>)m_lock,
+    (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
     AddDeferredUnsafe<T>(&slot);
     return false;
   }
@@ -987,7 +984,7 @@ public:
       std::forward<Fn>(listener)
     );
 
-    (boost::lock_guard<boost::mutex>)m_lock,
+    (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
     AddDeferredUnsafe<T>(retVal);
     return retVal;
   }
