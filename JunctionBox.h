@@ -3,9 +3,10 @@
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
 #include "EventReceiver.h"
-#include "fast_pointer_cast.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
+#include "fast_pointer_cast.h"
+#include "InvokeRelay.h"
 #include <boost/thread/mutex.hpp>
 #include <set>
 #include STL_TUPLE_HEADER
@@ -23,66 +24,6 @@ class JunctionBoxBase;
 /// </summary>
 void ShutdownCurrentContext(void);
 
-/// <summary>
-/// Function pointer relay type
-/// </summary>
-template<class FnPtr>
-class InvokeRelay {};
-
-/// <summary>
-/// Utility structure representing a junction box entry together with its owner
-/// </summary>
-template<class T>
-struct JunctionBoxEntry
-{
-  JunctionBoxEntry(CoreContext* owner, std::shared_ptr<T> ptr) :
-    m_owner(owner),
-    m_ptr(ptr)
-  {}
-
-  CoreContext* const m_owner;
-  std::shared_ptr<T> m_ptr;
-  
-  JunctionBoxEntry& operator=(const JunctionBoxEntry& rhs) {
-    // This shouldn't be used. non-c++11 containers require this...
-    throw std::runtime_error("Can't copy a JunctionBoxEntry");
-    return *this;
-  }
-
-  bool operator==(const JunctionBoxEntry& rhs) const {
-    return m_ptr == rhs.m_ptr;
-  }
-
-  bool operator<(const JunctionBoxEntry& rhs) const {
-    return m_ptr < rhs.m_ptr;
-  }
-
-  operator bool(void) const {
-    return !!m_ptr.get();
-  }
-
-  template<class U>
-  JunctionBoxEntry<U> Rebind(void) const {
-    return JunctionBoxEntry<U>(
-      m_owner,
-      std::dynamic_pointer_cast<U, T>(m_ptr)
-    );
-  }
-};
-
-namespace std {
-  /// <summary>
-  /// Hash specialization for the junction box entry
-  /// </summary>
-  template<class T>
-  struct hash<JunctionBoxEntry<T>> :
-    public hash<std::shared_ptr<T>>
-  {
-    size_t operator()(const JunctionBoxEntry<T>& jbe) const {
-      return hash<std::shared_ptr<T>>::operator()(jbe.m_ptr);
-    }
-  };
-}
 /// <summary>
 /// Used to identify event managers
 /// </summary>
@@ -313,16 +254,6 @@ struct gen_seq<0, S...> {
   typedef seq<S...> type;
 };
 
-// Check if any T::value is true
-template<typename... T>
-struct is_any{
-  static const bool value = false;
-};
-
-template<typename Head, typename... Tail>
-struct is_any<Head, Tail...>{
-  static const bool value = Head::value || is_any<Tail...>::value;
-};
 
 /// <summary>
 /// A fully bound member function call
@@ -362,89 +293,5 @@ private:
 public:
   void operator()(void) override {
     CallByUnpackingTuple(typename gen_seq<sizeof...(Args)>::type());
-  }
-};
-
-template<typename T, typename ...Args>
-class InvokeRelay<Deferred (T::*)(Args...)> {
-public:
-  InvokeRelay(const JunctionBox<T>* erp, Deferred (T::*fnPtr)(Args...)):
-    erp(erp),
-    fnPtr(fnPtr)
-  {}
-
-  // Null constructor
-  InvokeRelay():
-    erp(nullptr)
-  {}
-
-  static_assert(!is_any<std::is_rvalue_reference<Args>...>::value, "Can't use rvalue references as event argument type");
-
-private:
-  const JunctionBox<T>* erp;
-  Deferred (T::*fnPtr)(Args...);
-
-public:
-  void operator()(const typename std::decay<Args>::type&... args) const {
-    if(!erp)
-      // Context has already been destroyed
-      return;
-    
-    if(!erp->IsInitiated())
-      // Context not yet started
-      return;
-
-    const auto& dq = erp->GetDispatchQueue();
-    boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
-
-    for(auto q = dq.begin(); q != dq.end(); q++)
-        (**q).AddExisting(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...));
-  }
-};
-
-template<class T, typename... Args>
-class InvokeRelay<void (T::*)(Args...)> {
-public:
-  InvokeRelay(JunctionBox<T>* erp, void (T::*fnPtr)(Args...)) :
-    erp(erp),
-    fnPtr(fnPtr)
-  {}
-
-  // Null constructor
-  InvokeRelay():
-    erp(nullptr)
-  {}
-
-  static_assert(!is_any<std::is_rvalue_reference<Args>...>::value, "Can't use rvalue references as event argument type");
-
-private:
-  JunctionBox<T>* erp;
-  void (T::*fnPtr)(Args...);
-
-public:
-  /// <summary>
-  /// The function call operation itself
-  /// </summary>
-  /// <returns>False if an exception was thrown by a recipient, true otherwise</returns>
-  bool operator()(Args... args) const {
-    if(!erp)
-      // Context has already been destroyed
-      return true;
-    
-    if(!erp->IsInitiated())
-      // Context not yet started
-      return true;
-
-    // Give the serializer a chance to handle these arguments:
-    erp->SerializeInit(fnPtr, args...);
-
-    auto fw = [this](T& obj, Args... args) {
-      (obj.*fnPtr)(args...);
-    };
-
-    return erp->FireCurried(
-      std::move(fw),
-      args...
-    );
   }
 };

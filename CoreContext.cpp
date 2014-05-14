@@ -7,7 +7,9 @@
 #include "Autowired.h"
 #include "BoltBase.h"
 #include "GlobalCoreContext.h"
+#include "JunctionBox.h"
 #include "MicroBolt.h"
+#include "TypeRegistry.h"
 #include <algorithm>
 #include <stack>
 #include <boost/thread/tss.hpp>
