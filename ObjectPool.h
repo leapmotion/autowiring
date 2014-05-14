@@ -151,6 +151,8 @@ public:
     boost::lock_guard<boost::mutex> lk(*m_monitor);
     m_poolVersion++;
     objs = std::move(m_objs);
+    // After moving the object, reset it to a known state
+    m_objs.clear();
   }
 
   /// <summary>
