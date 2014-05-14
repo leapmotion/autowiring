@@ -109,7 +109,7 @@ void BasicThread::PerformStatusUpdate(const std::function<void()>& fn) {
 }
 
 bool BasicThread::ShouldStop(void) const {
-  shared_ptr<CoreContext> context = ContextMember::GetContext();
+  auto context = ContextMember::GetContext();
   return m_stop || !context || context->IsShutdown();
 }
 
