@@ -628,22 +628,6 @@ public:
   }
 
   /// <summary>
-  /// Determines whether the passed type is a member of this context, or any ancestor context
-  /// </summary>
-  template<class T>
-  bool IsMember(const std::shared_ptr<T>& ptr) const {
-    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
-
-    auto q = m_typeMemos.find(typeid(*ptr));
-    if(q == m_typeMemos.end())
-      // The true type of the passed entity isn't even in our concrete map, then we short-circuit
-      return false;
-
-    // Found the true type, see if the slots match or if it's a coincidence:
-    return *q->second.m_value == ptr;
-  }
-
-  /// <summary>
   /// Obtains a shared pointer to an event sender _in this context_ matching the specified type
   /// </summary>
   template<class T>
