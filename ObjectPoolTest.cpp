@@ -126,3 +126,10 @@ TEST_F(ObjectPoolTest, EmptyPoolIssuance) {
   // Verify that it got released as expected:
   ASSERT_TRUE(ptrWeak.expired()) << "Not all shared pointers issued by an object pool expired in a timely fashion";
 }
+
+TEST_F(ObjectPoolTest, CanRundownOneIssued) {
+  // No conditions to be checked, we just know these routines should not deadlock.
+  ObjectPool<int> pool;
+  pool.Wait();
+  pool.Rundown();
+}
