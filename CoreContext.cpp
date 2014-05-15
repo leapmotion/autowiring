@@ -101,6 +101,42 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, 
   return retVal;
 }
 
+std::shared_ptr<CoreContext> CoreContext::GetFirstChild(void) const {
+  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+
+  // Just return the first child we successfully obtain a shared pointer for:
+  for(const auto& cur : m_children) {
+    auto child = cur.lock();
+    if(child)
+      return child;
+  }
+
+  // Seems like we have no children, return here
+  return std::shared_ptr<CoreContext>();
+}
+
+std::shared_ptr<CoreContext> CoreContext::GetNextSibling(void) const {
+  // Root context's do not have siblings
+  if(!m_pParent)
+    return std::shared_ptr<CoreContext>();
+
+  // Our iterator will always be valid in our parent collection.  Take a copy, lock the parent collection down
+  // to prevent it from being modified, and then see what happens when we increment
+
+  boost::lock_guard<boost::mutex> lk(m_pParent->m_stateBlock->m_lock);
+  for(
+    auto cur = m_backReference;
+    ++cur != m_pParent->m_children.end();
+  ) {
+    auto sibling = cur->lock();
+    if(sibling)
+      return sibling;
+  }
+
+  // Failed to lock any successor child in the parent context, return unsuccessful
+  return std::shared_ptr<CoreContext>();
+}
+
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   std::shared_ptr<Object> retVal = m_outstanding.lock();
   if(retVal)
