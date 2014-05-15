@@ -61,6 +61,9 @@ TEST_F(AutoPacketFactoryTest, WaitRunsDownAllPackets) {
 
   // Make the thread create and hold a packet, and then return
   AutoRequired<IssuesPacketWaitsThenQuits> ipwtq;
+  
+  // Shutdown context
+  AutoCurrentContext()->SignalShutdown();
 
   // Now we're going to try to run down the factory:
   factory->Wait();
