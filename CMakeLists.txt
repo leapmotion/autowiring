@@ -37,6 +37,8 @@ set(Autowiring_SRCS
   ContextCreator.h
   ContextCreatorBase.h
   ContextCreatorBase.cpp
+  ContextEnumerator.h
+  ContextEnumerator.cpp
   ContextMap.h
   ContextMember.cpp
   ContextMember.h
@@ -148,6 +150,8 @@ set(AutowiringTest_SRCS
   AutowiringTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
+  ContextEnumeratorTest.h
+  ContextEnumeratorTest.cpp
   ContextMapTest.h
   ContextMapTest.cpp
   CoreThreadTest.h
