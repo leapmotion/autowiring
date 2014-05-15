@@ -158,8 +158,7 @@ protected:
   /// <summary>
   /// Register new context with parent and notify others of its creation.
   /// </summary>
-  template<typename T>
-  std::shared_ptr<CoreContext> CreateInternal(CoreContextT<T>& newContext) {
+  std::shared_ptr<CoreContext> CreateInternal(CoreContext& newContext) {
     // don't allow new children if shutting down
     if(m_isShutdown)
       throw autowiring_error("Cannot create a child context; this context is already shut down");
@@ -193,27 +192,15 @@ protected:
     // Notify AutowiringEvents listeners
     GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal);
 
-    // Save anchored types in context
-    retVal->AddAnchorInternal((T*)nullptr);
-
     // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
     CurrentContextPusher pshr(retVal);
-    BroadcastContextCreationNotice(typeid(T));
+    BroadcastContextCreationNotice(retVal->GetSigilType());
 
     return retVal;
   }
 
-  void AddAnchorInternal(const AutoAnchor<>*) {}
-
-  template<typename... Ts>
-  void AddAnchorInternal(const AutoAnchor<Ts...>*) {
-    static_assert(sizeof...(Ts) != 0, "Cannot anchor nothing");
-
-    bool dummy[] = {
-      (m_anchors.insert(typeid(Ts)), false)...
-    };
-    (void)dummy;
-  }
+  template<typename T, typename... Ts>
+  void AddAnchorInternal(const AutoAnchor<T, Ts...>*) { AddAnchor<T, Ts...>(); }
 
   void AddAnchorInternal(const void*) {}
 
@@ -439,7 +426,7 @@ public:
   /// <param name="T">The context sigil.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return CreateInternal<T>(*new CoreContextT<T>(shared_from_this()));
+    return CreateInternal(*new CoreContextT<T>(shared_from_this()));
   }
 
   /// <summary>
@@ -455,7 +442,7 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
-    return m_pParent->CreateInternal<T>(*new CoreContextT<T>(m_pParent, shared_from_this()));
+    return m_pParent->CreateInternal(*new CoreContextT<T>(m_pParent, shared_from_this()));
   }
 
   /// <summary>
@@ -489,10 +476,14 @@ public:
   template<typename... AnchorTypes>
   void AddAnchor(void) {
     bool dummy[] = {
-      (m_anchors.insert(typeid(AnchorTypes)), false)...
+      (AddAnchor(typeid(AnchorTypes)), false)...
     };
     (void) dummy;
   }
+
+  /// <summary>
+  /// Adds the specified anchor type to the context
+  void AddAnchor(const std::type_info& ti);
 
   /// <summary>
   /// Utility method which will inject the specified types into this context
@@ -1028,11 +1019,17 @@ class CoreContextT:
 public:
   CoreContextT(std::shared_ptr<CoreContext> pParent) :
     CoreContext(pParent)
-  {}
+  {
+    // Save anchored types in context
+    AddAnchorInternal((T*)nullptr);
+  }
 
   CoreContextT(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer) :
     CoreContext(pParent, pPeer)
-  {}
+  {
+    // Save anchored types in context
+    AddAnchorInternal((T*)nullptr);
+  }
 
   const std::type_info& GetSigilType(void) const override { return typeid(T); }
 };
