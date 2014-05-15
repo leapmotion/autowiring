@@ -65,6 +65,48 @@ CoreContext::~CoreContext(void) {
     q->NotifyContextTeardown();
 }
 
+std::shared_ptr<CoreContext> CoreContext::CreateInternal(CoreContext& newContext)
+{
+  // don't allow new children if shutting down
+  if(m_isShutdown)
+    throw autowiring_error("Cannot create a child context; this context is already shut down");
+    
+  t_childList::iterator childIterator;
+  {
+    // Lock the child list while we insert
+    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+
+    // Reserve a place in the list for the child
+    childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
+  }
+
+  // Create the shared pointer for the context--do not add the context to itself,
+  // this creates a dangerous cyclic reference.
+  std::shared_ptr<CoreContext> retVal(
+    &newContext,
+    [this, childIterator] (CoreContext* pContext) {
+      {
+        boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+        this->m_children.erase(childIterator);
+      }
+      // Notify AutowiringEvents listeners
+      GetGlobal()->Invoke(&AutowiringEvents::ExpiredContext)(*pContext);
+
+      delete pContext;
+    }
+  );
+  *childIterator = retVal;
+
+  // Notify AutowiringEvents listeners
+  GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal);
+
+  // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
+  CurrentContextPusher pshr(retVal);
+  BroadcastContextCreationNotice(retVal->GetSigilType());
+
+  return retVal;
+}
+
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   std::shared_ptr<Object> retVal = m_outstanding.lock();
   if(retVal)
