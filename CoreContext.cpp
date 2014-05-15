@@ -28,24 +28,30 @@ using namespace std;
 /// </remarks>
 boost::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
 
-CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent) :
-  m_pParent(pParent),
-  m_stateBlock(new CoreContextStateBlock),
-  m_initiated(false),
-  m_isShutdown(false),
-  m_junctionBoxManager(std::make_shared<JunctionBoxManager>())
-{}
-
 // Peer Context Constructor. Called interally by CreatePeer
-CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer) :
+CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
   m_pParent(pParent),
+  m_backReference(backReference),
   m_stateBlock(new CoreContextStateBlock),
   m_initiated(false),
   m_isShutdown(false),
-  m_junctionBoxManager(pPeer->m_junctionBoxManager)
+  m_junctionBoxManager(
+    pPeer ? pPeer->m_junctionBoxManager : std::make_shared<JunctionBoxManager>()
+  )
 {}
 
 CoreContext::~CoreContext(void) {
+  // Evict from the parent's child list first, if we have a parent:
+  if(m_pParent)
+  {
+    // Notify AutowiringEvents listeners
+    GetGlobal()->Invoke(&AutowiringEvents::ExpiredContext)(*this);
+
+    // Also clear out any parent pointers:
+    boost::lock_guard<boost::mutex> lk(m_pParent->m_stateBlock->m_lock);
+    m_pParent->m_children.erase(m_backReference);
+  }
+
   // The s_curContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
   // still holds a reference to us, then we have a serious problem.
   assert(
@@ -65,7 +71,7 @@ CoreContext::~CoreContext(void) {
     q->NotifyContextTeardown();
 }
 
-std::shared_ptr<CoreContext> CoreContext::CreateInternal(CoreContext& newContext)
+std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer)
 {
   // don't allow new children if shutting down
   if(m_isShutdown)
@@ -82,19 +88,7 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(CoreContext& newContext
 
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
-  std::shared_ptr<CoreContext> retVal(
-    &newContext,
-    [this, childIterator] (CoreContext* pContext) {
-      {
-        boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
-        this->m_children.erase(childIterator);
-      }
-      // Notify AutowiringEvents listeners
-      GetGlobal()->Invoke(&AutowiringEvents::ExpiredContext)(*pContext);
-
-      delete pContext;
-    }
-  );
+  std::shared_ptr<CoreContext> retVal = pfnCreate(shared_from_this(), childIterator, pPeer);
   *childIterator = retVal;
 
   // Notify AutowiringEvents listeners
