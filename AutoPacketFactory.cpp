@@ -57,6 +57,9 @@ void AutoPacketFactory::Stop(bool graceful) {
   m_wasStopped = true;
   m_outstanding.reset();
   
+  // Release any external references
+  m_subscribers.clear();
+  
   m_stateCondition.notify_all();
 }
 
