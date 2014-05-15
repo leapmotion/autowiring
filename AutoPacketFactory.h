@@ -116,7 +116,7 @@ public:
 
   // CoreRunnable overrides:
   bool Start(std::shared_ptr<Object> outstanding) override;
-  void Stop(bool graceful) override;
+  void Stop(bool graceful = false) override;
   void Wait(void) override;
   bool IsRunning(void) const override { return m_outstanding && !m_wasStopped; };
   bool ShouldStop(void) const override { return m_wasStopped; };
