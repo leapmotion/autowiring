@@ -71,3 +71,44 @@ TEST_F(AutoPacketFactoryTest, WaitRunsDownAllPackets) {
   // Verify that the thread has quit:
   ASSERT_TRUE(ipwtq->m_hasQuit) << "AutoPacketFactory::Wait returned prematurely";
 }
+
+class HoldsAutoPacketFactoryReference {
+public:
+  AutoRequired<AutoPacketFactory> m_factory;
+
+  // Just a dummy AutoFilter method so that this class is recognized as an AutoFilter
+  void AutoFilter(int) {
+
+  }
+};
+
+TEST_F(AutoPacketFactoryTest, AutoPacketFactoryCycle) {
+  std::weak_ptr<CoreContext> ctxtWeak;
+  std::weak_ptr<HoldsAutoPacketFactoryReference> hapfrWeak;
+  std::shared_ptr<AutoPacket> packet;
+
+  {
+    // Create a context, fill it up, kick it off:
+    AutoCreateContext ctxt;
+    AutoRequired<HoldsAutoPacketFactoryReference> hapfr(ctxt);
+    ctxt->Initiate();
+    
+    // A weak pointer is used to detect object destruction
+    ctxtWeak = ctxt;
+    hapfrWeak = hapfr;
+
+    // Create a packet which will force in a back-reference:
+    AutoRequired<AutoPacketFactory> factory;
+    packet = factory->NewPacket();
+
+    // Terminate the context:
+    ctxt->SignalShutdown();
+  }
+
+  // Verify that the context went out of scope as expected
+  ASSERT_TRUE(ctxtWeak.expired()) << "AutoPacketFactory incorrectly held a cyclic reference even after the context was shut down";
+
+  // Now we can release the packet and verify that everything gets cleaned up:
+  packet.reset();
+  ASSERT_TRUE(hapfrWeak.expired()) << "The last packet from a factory was released; this should have resulted in teardown, but it did not";
+}
