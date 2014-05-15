@@ -366,6 +366,17 @@ public:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const { return m_concreteTypes.size(); }
   virtual const std::type_info& GetSigilType(void) const = 0;
+  t_childList::iterator GetBackReference(void) const { return m_backReference; }
+
+  /// <returns>
+  /// The first child in the set of this context's children
+  /// </returns>
+  std::shared_ptr<CoreContext> GetFirstChild(void) const;
+
+  /// <returns>
+  /// The next context sharing the same parent, or null if this is the last entry in the list
+  /// </returns>
+  std::shared_ptr<CoreContext> GetNextSibling(void) const;
 
   /// <summary>
   /// Factory to create a new context
