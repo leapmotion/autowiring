@@ -320,36 +320,16 @@ protected:
   /// <summary>
   /// Scans the memo collection for the specified entry, or adds a deferred resolution marker if resolution was not possible
   /// </summary>
-  template<class T>
-  std::shared_ptr<T> FindByTypeUnsafe(void) const {
-    // If we've attempted to search for this type before, we will return the value of the memo immediately:
-    auto q = m_typeMemos.find(typeid(T));
-    if(q != m_typeMemos.end())
-      // Return the value we found:
-      return q->second.m_value->as<T>();
+  /// <returns>
+  /// The memo entry where this type was found
+  /// </returns>
+  /// <param name="reference">An initialized shared pointer slot which may be used in type detection</param>
+  void FindByType(AnySharedPointer& reference) const;
 
-    // Resolve based on iterated dynamic casts for each concrete type:
-    std::shared_ptr<T> retVal;
-    for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
-      std::shared_ptr<Object> obj = **q;
-      auto casted = std::dynamic_pointer_cast<T>(obj);
-      if(!casted)
-        // No match, try the next entry
-        continue;
-
-      if(retVal)
-        // Resolution ambiguity, cannot proceed
-        throw autowiring_error("An attempt was made to resolve a type which has multiple possible clients");
-
-      retVal = casted;
-    }
-
-    // This entry was not formerly memoized.  Memoize unconditionally.
-    m_typeMemos[typeid(T)].m_value = retVal;
-
-    // Fill out the entry:
-    return retVal;
-  }
+  /// <summary>
+  /// Unsynchronized version of FindByType
+  /// </summary>
+  void FindByTypeUnsafe(AnySharedPointer& reference) const;
 
   /// <summary>
   /// Returns or constructs a new AutoPacketFactory instance
@@ -875,8 +855,9 @@ public:
   /// </summary>
   template<class T>
   void FindByType(std::shared_ptr<T>& slot) const {
-    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
-    slot = FindByTypeUnsafe<T>();
+    AnySharedPointerT<T> ptr;
+    FindByType(ptr);
+    slot = ptr->as<T>();
   }
 
   /// <summary>
