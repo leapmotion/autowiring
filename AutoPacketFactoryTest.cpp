@@ -74,11 +74,16 @@ TEST_F(AutoPacketFactoryTest, WaitRunsDownAllPackets) {
 
 class HoldsAutoPacketFactoryReference {
 public:
+  HoldsAutoPacketFactoryReference(void):
+    m_value(0)
+  {}
+
   AutoRequired<AutoPacketFactory> m_factory;
+  int m_value;
 
   // Just a dummy AutoFilter method so that this class is recognized as an AutoFilter
-  void AutoFilter(int) {
-
+  void AutoFilter(int value) {
+    m_value = value;
   }
 };
 
@@ -97,8 +102,15 @@ TEST_F(AutoPacketFactoryTest, AutoPacketFactoryCycle) {
     ctxtWeak = ctxt;
     hapfrWeak = hapfr;
 
-    // Create a packet which will force in a back-reference:
+    // Trivial validation-of-reciept:
     AutoRequired<AutoPacketFactory> factory;
+    {
+      auto trivial = factory->NewPacket();
+      trivial->Decorate((int) 54);
+      ASSERT_EQ(54, hapfr->m_value) << "A simple packet was not received as expected by an AutoFilter";
+    }
+
+    // Create a packet which will force in a back-reference:
     packet = factory->NewPacket();
 
     // Terminate the context:
@@ -107,6 +119,16 @@ TEST_F(AutoPacketFactoryTest, AutoPacketFactoryCycle) {
 
   // Verify that the context went out of scope as expected
   ASSERT_TRUE(ctxtWeak.expired()) << "AutoPacketFactory incorrectly held a cyclic reference even after the context was shut down";
+
+  // Verify that we can still decorate the packet and also that the packet is delivered to the factory:
+  packet->Decorate((int) 55);
+
+  // Relock, verify the value was received by the hapfr:
+  {
+    auto locked = hapfrWeak.lock();
+    ASSERT_TRUE(!!locked) << "Failed to lock a shared pointer which should not have been expired yet";
+    ASSERT_EQ(55, locked->m_value) << "AutoFilter did not receive a packet as expected";
+  }
 
   // Now we can release the packet and verify that everything gets cleaned up:
   packet.reset();
