@@ -3,7 +3,6 @@
 
 #include "Object.h"
 #include "TeardownNotifier.h"
-#include <assert.h>
 #include MEMORY_HEADER
 
 class CoreContext;
@@ -48,7 +47,6 @@ public:
   /// This method is idempotent.
   /// </remarks>
   void SetContext(std::shared_ptr<CoreContext>& context) {
-    assert(m_context.lock() == context || m_context.expired());
     m_context = context;
   }
 
