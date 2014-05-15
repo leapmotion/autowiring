@@ -718,6 +718,27 @@ std::shared_ptr<AutoPacketFactory> CoreContext::GetPacketFactory(void) {
   return pf;
 }
 
+void CoreContext::AddDeferred(const AnySharedPointer& reference, DeferrableAutowiring* deferrable)
+{
+  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+
+  // Determine whether a type memo exists right now for the thing we're trying to defer.  If it doesn't
+  // exist, we need to inject one in order to allow deferred satisfaction to know what kind of type we
+  // are trying to satisfy at this point.
+  size_t found = m_typeMemos.count(reference->type());
+
+  if(!found)
+    // Slot not presently initialized, need to initialize it:
+    m_typeMemos[reference->type()].m_value = reference;
+
+  // Obtain the entry (potentially a second time):
+  MemoEntry& entry = m_typeMemos[reference->type()];
+
+  // Chain forward the linked list:
+  deferrable->SetFlink(entry.pFirst);
+  entry.pFirst = deferrable;
+}
+
 void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
   // Always add to the set of context members
   m_contextMembers.push_back(ptr.get());
