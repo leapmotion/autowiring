@@ -6,7 +6,6 @@
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
-#include "CoreContextStateBlock.h"
 #include "CoreRunnable.h"
 #include "ContextMember.h"
 #include "CreationRules.h"
