@@ -69,8 +69,8 @@ class CoreContext:
   public std::enable_shared_from_this<CoreContext>
 {
 protected:
-  CoreContext(std::shared_ptr<CoreContext> pParent);
-  CoreContext(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer);
+  typedef std::list<std::weak_ptr<CoreContext>> t_childList;
+  CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer);
 
 public:
   virtual ~CoreContext(void);
@@ -84,6 +84,9 @@ protected:
   // A pointer to the parent context
   const std::shared_ptr<CoreContext> m_pParent;
 
+  // Back-referencing iterator which refers to ourselves in our parent's child list:
+  const t_childList::iterator m_backReference;
+
   // State block for this context:
   std::unique_ptr<CoreContextStateBlock> m_stateBlock;
 
@@ -94,7 +97,6 @@ protected:
   bool m_isShutdown;
 
   // Child contexts:
-  typedef std::list<std::weak_ptr<CoreContext>> t_childList;
   t_childList m_children;
 
   // Lists of event receivers, by name.  The type index of "void" is reserved for
@@ -155,10 +157,18 @@ protected:
   std::weak_ptr<Object> m_outstanding;
 
 protected:
+  // Delayed creation routine
+  typedef std::shared_ptr<CoreContext> (*t_pfnCreate)(
+    std::shared_ptr<CoreContext> pParent,
+    t_childList::iterator backReference,
+    std::shared_ptr<CoreContext> pPeer
+  );
+
   /// <summary>
   /// Register new context with parent and notify others of its creation.
   /// </summary>
-  std::shared_ptr<CoreContext> CreateInternal(CoreContext& newContext);
+  /// <param name="pfnCreate">A creation routine which can create the desired context</param>
+  std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer);
 
   template<typename T, typename... Ts>
   void AddAnchorInternal(const AutoAnchor<T, Ts...>*) { AddAnchor<T, Ts...>(); }
@@ -363,7 +373,18 @@ public:
   /// <param name="T">The context sigil.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return CreateInternal(*new CoreContextT<T>(shared_from_this()));
+    return CreateInternal(
+      [] (
+        std::shared_ptr<CoreContext> pParent,
+        t_childList::iterator backReference,
+        std::shared_ptr<CoreContext> pPeer
+      ) {
+        return std::static_pointer_cast<CoreContext>(
+          std::make_shared<CoreContextT<T>>(pParent, backReference, pPeer)
+        );
+      },
+      nullptr
+    );
   }
 
   /// <summary>
@@ -379,7 +400,18 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
-    return m_pParent->CreateInternal(*new CoreContextT<T>(m_pParent, shared_from_this()));
+    return m_pParent->CreateInternal(
+      [] (
+        std::shared_ptr<CoreContext> pParent,
+        t_childList::iterator backReference,
+        std::shared_ptr<CoreContext> pPeer
+      ) {
+        return std::static_pointer_cast<CoreContext>(
+          std::make_shared<CoreContextT<T>>(pParent, backReference, pPeer)
+        );
+      },
+      shared_from_this()
+    );
   }
 
   /// <summary>
@@ -537,8 +569,7 @@ public:
   /// <returns>
   /// True if a complete enumeration has taken place, false if it was aborted by the passed lambda
   /// </returns>
-  template<class Fn>
-  bool EnumerateChildContexts(const std::type_info &sigil, Fn&& fn) {
+  bool EnumerateChildContexts(const std::type_info &sigil, std::function<bool(std::shared_ptr<CoreContext>)>&& fn) {
     return EnumerateChildContexts(
       [&fn, &sigil] (std::shared_ptr<CoreContext> ctxt) -> bool {
         if(ctxt->GetSigilType() != sigil)
@@ -546,7 +577,7 @@ public:
           return true;
 
         // The sigil type matches, then we'll filter it out to the original lambda
-        return result_or_default(fn, true, ctxt);
+        return fn(ctxt);
       }
     );
   }
@@ -930,15 +961,8 @@ class CoreContextT:
   public CoreContext
 {
 public:
-  CoreContextT(std::shared_ptr<CoreContext> pParent) :
-    CoreContext(pParent)
-  {
-    // Save anchored types in context
-    AddAnchorInternal((T*)nullptr);
-  }
-
-  CoreContextT(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer) :
-    CoreContext(pParent, pPeer)
+  CoreContextT(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
+    CoreContext(pParent, backReference, pPeer)
   {
     // Save anchored types in context
     AddAnchorInternal((T*)nullptr);
