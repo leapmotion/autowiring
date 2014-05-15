@@ -341,6 +341,16 @@ protected:
   /// </summary>
   void AddDeferred(const AnySharedPointer& reference, DeferrableAutowiring* deferrable);
 
+  /// <summary>
+  /// Adds a snooper to the snoopers set
+  /// </summary>
+  void InsertSnooper(std::shared_ptr<Object> snooper);
+
+  /// <summary>
+  /// Removes a snooper to the snoopers set
+  /// </summary>
+  void RemoveSnooper(std::shared_ptr<Object> snooper);
+
 public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
@@ -769,8 +779,7 @@ public:
                   has_autofilter<T>::value,
                   "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
     
-    (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
-    m_snoopers.insert(std::static_pointer_cast<Object>(pSnooper).get());
+    InsertSnooper(pSnooper);
 
     // Add EventReceiver
     if (std::is_base_of<EventReceiver, T>::value) {
@@ -796,28 +805,22 @@ public:
                   has_autofilter<T>::value,
                   "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
     
+    RemoveSnooper(pSnooper);
+
     Object* oSnooper = std::static_pointer_cast<Object>(pSnooper).get();
     
-    (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
-    m_snoopers.erase(oSnooper);
-    
     // Cleanup if its an EventReceiver
-    if (std::is_base_of<EventReceiver, T>::value) {
-      JunctionBoxEntry<EventReceiver> receiver(this, pSnooper);
-      
-      (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
-      m_delayedEventReceivers.erase(receiver);
-      
-      UnsnoopEvents(oSnooper, receiver);
-    }
+    if (std::is_base_of<EventReceiver, T>::value)
+      UnsnoopEvents(oSnooper, JunctionBoxEntry<EventReceiver>(this, pSnooper));
     
     // Cleanup if its a packet listener
-    if (has_autofilter<T>::value) {
+    if (has_autofilter<T>::value)
       UnsnoopAutoPacket(oSnooper, typeid(T));
-    }
   }
   
-  // Remove EventReceiver from parents unless its a member of the parent
+  /// <summary>
+  /// Remove EventReceiver from parents unless its a member of the parent
+  /// </summary>
   void UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver);
 
   /// <summary>
