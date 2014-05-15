@@ -23,7 +23,7 @@ TEST_F(ContextEnumeratorTest, VerifySimpleEnumeration) {
 
   // Create the enumerator, verify we get the expected count:
   size_t nContexts = 0;
-  for(const std::shared_ptr<CoreContext>& cur : ContextEnumerator()) {
+  for(const std::shared_ptr<CoreContext>& cur : CurrentContextEnumerator()) {
     ASSERT_TRUE(!!allCtxts.count(cur)) << "Context enumerator accidentally enumerated a context not rooted in the specified parent";
 
     allCtxts.erase(cur);
