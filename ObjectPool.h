@@ -56,6 +56,7 @@ protected:
   /// Returns the specified object to the object pool
   /// </summary>
   void Return(std::unique_ptr<T>&& ptr) {
+    assert(m_outstanding != 0);
     // One fewer outstanding count:
     m_outstanding--;
     if(m_objs.size() < m_maxPooled) {
@@ -138,7 +139,10 @@ protected:
 public:
   // Accessor methods:
   size_t GetOutstanding(void) const { return m_outstanding; }
-  size_t GetCached(void) const { return m_objs.size(); }
+  size_t GetCached(void) const {
+    boost::lock_guard<boost::mutex> lk(*m_monitor);
+    return m_objs.size();
+  }
 
   void ClearCachedEntities(void) {
     // Declare this first, so it's freed last:
@@ -150,6 +154,8 @@ public:
     boost::lock_guard<boost::mutex> lk(*m_monitor);
     m_poolVersion++;
     objs = std::move(m_objs);
+    // After moving the object, reset it to a known state
+    m_objs.clear();
   }
 
   /// <summary>
@@ -166,6 +172,9 @@ public:
       if(m_objs.size() <= m_maxPooled)
         // Managed to get the size down sufficiently, we can continue:
         return;
+
+      // Removing an entry from the cache, must increase the outstanding count at this point
+      m_outstanding++;
 
       // Funny syntax needed to ensure destructors run while we aren't holding any locks.  The prior
       // shared_ptr will be reset after the lock is released, guaranteeing the desired ordering.

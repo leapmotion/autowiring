@@ -3,8 +3,6 @@
 #include "DispatchQueue.h"
 #include MEMORY_HEADER
 
-using std::shared_ptr;
-
 class CoreContext;
 class CoreThread;
 

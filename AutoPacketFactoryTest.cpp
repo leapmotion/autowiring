@@ -22,6 +22,8 @@ public:
   void Run(void) override {
     // Move the shared pointer here:
     auto packet = std::move(m_packet);
+    // After moving the object, reset it to a known state
+    m_packet.reset();
 
     // Just wait a bit, then return, just like we said we would
     this->ThreadSleep(boost::chrono::milliseconds(50));
