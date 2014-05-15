@@ -655,13 +655,22 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
 }
 
 void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver) {
-  m_junctionBoxManager->RemoveEventReceiver(receiver);
+  (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
+  m_delayedEventReceivers.erase(receiver);
   
-  // Check if snooper is a member of the parent or also snoops the parentU
-  if (m_pParent &&
-      m_pParent->m_eventReceivers.find(receiver) == m_pParent->m_eventReceivers.end() &&
-      m_pParent->m_snoopers.find(oSnooper) == m_pParent->m_snoopers.end())
-    m_pParent->UnsnoopEvents(oSnooper, receiver);
+  auto cur = this;
+  do {
+    // Always remove from this junction box manager:
+    cur->m_junctionBoxManager->RemoveEventReceiver(receiver);
+
+    // Traverse up to the parent:
+    cur = cur->m_pParent.get();
+  }
+  while(
+    cur &&
+    !cur->m_eventReceivers.count(receiver) &&
+    !cur->m_snoopers.count(oSnooper)
+  );
 }
 
 void CoreContext::FilterException(void) {
@@ -737,6 +746,16 @@ void CoreContext::AddDeferred(const AnySharedPointer& reference, DeferrableAutow
   // Chain forward the linked list:
   deferrable->SetFlink(entry.pFirst);
   entry.pFirst = deferrable;
+}
+
+void CoreContext::InsertSnooper(std::shared_ptr<Object> snooper) {
+  (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
+    m_snoopers.insert(snooper.get());
+}
+
+void CoreContext::RemoveSnooper(std::shared_ptr<Object> snooper) {
+  (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
+  m_snoopers.erase(snooper.get());
 }
 
 void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
