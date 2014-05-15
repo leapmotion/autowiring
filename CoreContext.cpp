@@ -556,14 +556,17 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
     m_pParent->RemoveEventReceivers(first, last);
 }
 
-void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver) {
+void CoreContext::UnsnoopEvents(Object* snooper, const JunctionBoxEntry<EventReceiver>& receiver) {
   m_junctionBoxManager->RemoveEventReceiver(receiver);
   
-  // Check if snooper is a member of the parent or also snoops the parentU
-  if (m_pParent &&
-      m_pParent->m_eventReceivers.find(receiver) == m_pParent->m_eventReceivers.end() &&
-      m_pParent->m_snoopers.find(oSnooper) == m_pParent->m_snoopers.end())
-    m_pParent->UnsnoopEvents(oSnooper, receiver);
+  // Decide if we should unsnoop the parent
+  bool shouldRemove = m_pParent &&
+                      ((boost::lock_guard<boost::mutex>)m_pParent->m_lock, true) &&
+                      m_pParent->m_eventReceivers.find(receiver) == m_pParent->m_eventReceivers.end() &&
+                      m_pParent->m_snoopers.find(snooper) == m_pParent->m_snoopers.end();
+  
+  if (shouldRemove)
+    m_pParent->UnsnoopEvents(snooper, receiver);
 }
 
 void CoreContext::FilterException(void) {
@@ -631,13 +634,17 @@ void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
     m_pParent->AddPacketSubscriber(rhs);
 }
 
-void CoreContext::UnsnoopAutoPacket(Object* oSnooper, const std::type_info& ti) {
-  GetPacketFactory()->RemoveSubscriber(ti);
+void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
+  GetPacketFactory()->RemoveSubscriber(traits.type);
+  
+  // Decide if we should unsnoop the parent
+  bool shouldRemove = m_pParent &&
+                      ((boost::lock_guard<boost::mutex>)m_pParent->m_lock, true) &&
+                      m_pParent->m_snoopers.find(traits.pObject.get()) == m_pParent->m_snoopers.end();
   
   // Check if snooper is a member of the parent
-  if (m_pParent &&
-      m_pParent->m_snoopers.find(oSnooper) == m_pParent->m_snoopers.end())
-    m_pParent->UnsnoopAutoPacket(oSnooper, ti);
+  if (shouldRemove)
+    m_pParent->UnsnoopAutoPacket(traits);
 }
 
 void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber> &subscribers) {
