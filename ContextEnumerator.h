@@ -22,6 +22,7 @@ public:
   /// <summary>
   /// Constructs an enumerator which may enumerate all of the contexts rooted at the specified root
   /// </summary>
+  /// <param name="root">The root context, optionally null</param>
   ContextEnumerator(const std::shared_ptr<CoreContext>& root);
   ~ContextEnumerator(void);
 
