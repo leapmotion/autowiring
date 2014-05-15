@@ -191,6 +191,41 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *traits.pObject.get());
 }
 
+void CoreContext::FindByType(AnySharedPointer& reference) const {
+  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+  FindByTypeUnsafe(reference);
+}
+
+void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
+  const std::type_info& type = reference->type();
+
+  // If we've attempted to search for this type before, we will return the value of the memo immediately:
+  auto q = m_typeMemos.find(type);
+  if(q != m_typeMemos.end()) {
+    // We can copy over and return here
+    reference = q->second.m_value;
+    return;
+  }
+
+  // Resolve based on iterated dynamic casts for each concrete type:
+  bool assigned = false;
+  for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
+    if(!reference->try_assign(**q))
+      // No match, try the next entry
+      continue;
+
+    if(assigned)
+      // Resolution ambiguity, cannot proceed
+      throw autowiring_error("An attempt was made to resolve a type which has multiple possible clients");
+
+    // Update the found-flag:
+    assigned = true;
+  }
+
+  // This entry was not formerly memoized.  Memoize unconditionally.
+  m_typeMemos[type].m_value = reference;
+}
+
 std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
@@ -473,9 +508,10 @@ void CoreContext::UnregisterEventReceivers(void) {
   if(m_pParent) {
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
 
-    auto pf = FindByTypeUnsafe<AutoPacketFactory>();
+    AnySharedPointerT<AutoPacketFactory> pf;
+    FindByTypeUnsafe(pf);
     if(pf)
-      m_pParent->RemovePacketSubscribers(pf->GetSubscriberVector());
+      m_pParent->RemovePacketSubscribers(pf->as<AutoPacketFactory>()->GetSubscriberVector());
   }
 
   // Wipe out all collections so we don't try to free these multiple times:
@@ -708,9 +744,10 @@ void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber
     m_pParent->RemovePacketSubscribers(subscribers);
 
   // Remove subscribers from our factory AFTER the parent eviction has taken place
-  auto factory = FindByTypeUnsafe<AutoPacketFactory>();
-  if(factory)
-    factory->RemoveSubscribers(subscribers.begin(), subscribers.end());
+  AnySharedPointerT<AutoPacketFactory> pf;
+  FindByTypeUnsafe(pf);
+  if(pf)
+    pf->as<AutoPacketFactory>()->RemoveSubscribers(subscribers.begin(), subscribers.end());
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
