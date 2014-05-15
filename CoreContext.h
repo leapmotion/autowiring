@@ -339,21 +339,7 @@ protected:
   /// <summary>
   /// Adds the specified deferrable autowiring as a general recipient of autowiring events
   /// </summary>
-  template<class T>
-  void AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
-    size_t found = m_typeMemos.count(typeid(T));
-
-    if(!found)
-      // Slot not presently initialized, need to initialize it:
-      m_typeMemos[typeid(T)].m_value->init<T>();
-
-    // Obtain the entry (potentially a second time):
-    MemoEntry& entry = m_typeMemos[typeid(T)];
-
-    // Chain forward the linked list:
-    deferrable->SetFlink(entry.pFirst);
-    entry.pFirst = deferrable;
-  }
+  void AddDeferred(const AnySharedPointer& reference, DeferrableAutowiring* deferrable);
 
 public:
   // Accessor methods:
@@ -884,8 +870,7 @@ public:
       return true;
 
     // Failed, defer
-    (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
-    AddDeferredUnsafe<T>(&slot);
+    AddDeferred(AnySharedPointerT<T>(), &slot);
     return false;
   }
 
@@ -917,8 +902,7 @@ public:
       std::forward<Fn>(listener)
     );
 
-    (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
-    AddDeferredUnsafe<T>(retVal);
+    AddDeferred(AnySharedPointerT<T>(), retVal);
     return retVal;
   }
 
