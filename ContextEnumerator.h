@@ -1,6 +1,7 @@
 #pragma once
-#include "CoreContext.h"
-#include <stack>
+#include MEMORY_HEADER
+
+class CoreContext;
 
 /// <summary>
 /// A virtual container which may be used to enumerate all children of a particular context
@@ -19,15 +20,9 @@ class ContextEnumerator
 {
 public:
   /// <summary>
-  /// Constructs an enumerator based on the current context
-  /// </summary>
-  ContextEnumerator(void);
-
-  /// <summary>
   /// Constructs an enumerator which may enumerate all of the contexts rooted at the specified root
   /// </summary>
   ContextEnumerator(const std::shared_ptr<CoreContext>& root);
-
   ~ContextEnumerator(void);
 
 private:
@@ -45,6 +40,8 @@ public:
       m_cur(cur)
     {
     }
+
+    ~iterator(void);
 
   private:
     // Root context pointer:
@@ -67,3 +64,13 @@ public:
   iterator end(void) { return iterator(m_root); }
 };
 
+
+class CurrentContextEnumerator:
+  public ContextEnumerator
+{
+public:
+  /// <summary>
+  /// Constructs an enumerator based on the current context
+  /// </summary>
+  CurrentContextEnumerator(void);
+};
