@@ -115,20 +115,16 @@ TEST_F(AutoPacketFactoryTest, AutoPacketFactoryCycle) {
 
     // Terminate the context:
     ctxt->SignalShutdown();
+
+    // Verify that we can still decorate the packet and also that the packet is delivered to the factory:
+    packet->Decorate((int) 55);
+
+    // Relock, verify the value was received by the hapfr:
+    ASSERT_EQ(55, hapfr->m_value) << "AutoFilter did not receive a packet as expected";
   }
 
   // Verify that the context went out of scope as expected
   ASSERT_TRUE(ctxtWeak.expired()) << "AutoPacketFactory incorrectly held a cyclic reference even after the context was shut down";
-
-  // Verify that we can still decorate the packet and also that the packet is delivered to the factory:
-  packet->Decorate((int) 55);
-
-  // Relock, verify the value was received by the hapfr:
-  {
-    auto locked = hapfrWeak.lock();
-    ASSERT_TRUE(!!locked) << "Failed to lock a shared pointer which should not have been expired yet";
-    ASSERT_EQ(55, locked->m_value) << "AutoFilter did not receive a packet as expected";
-  }
 
   // Now we can release the packet and verify that everything gets cleaned up:
   packet.reset();
