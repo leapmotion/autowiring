@@ -130,10 +130,13 @@ TEST_F(DecoratorTest, VerifyDescendentAwareness) {
   // Verify the second one will no longe have subscriptions  -
   // normally removing a subscriber would mean the packet still has the subscriber, but
   // in this case, the subscriber was actually destroyed so the packet has lost a subscriber.
-  EXPECT_FALSE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
+  EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
 
   // Verify the third one does not:
   EXPECT_FALSE(packet4->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
+  
+  packet2.reset();
+  EXPECT_TRUE(filterChecker.expired()) << "Subscriber didn't expire after packet was reset.";
 }
 
 TEST_F(DecoratorTest, VerifySimpleFilter) {

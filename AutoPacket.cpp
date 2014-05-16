@@ -45,19 +45,12 @@ void AutoPacket::UpdateSatisfactionSpecific(size_t subscriberIndex) {
 }
 
 void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfied) {
-  /*
-  auto decorator = m_factory.FindDecorator(info);
-  if(!decorator)
-    // Trivial return, there's no subscriber to this decoration
-    return;
-
-  // Update all satisfaction counters:
-  const auto& subscribers = decorator->subscribers;
-  */
-  
   auto decorator = m_decorations.find(info);
   if (decorator == m_decorations.end())
+    // Trivial return, there's no subscriber to this decoration
     return;
+  
+  // Update all satisfaction counters:
   const auto& subscribers = decorator->second.subscribers;
   
   for(size_t i = subscribers.size(); i--;) {
@@ -82,19 +75,12 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfie
 }
 
 void AutoPacket::PulseSatisfaction(const std::type_info& info) {
-  /*
-  auto decorator = m_factory.FindDecorator(info);
-  if(!decorator)
-    return;
-
-  // Roll back all satisfaction counters:
-  const auto& subscribers = decorator->subscribers;
-  */
-  
   auto decorator = m_decorations.find(info);
   if (decorator == m_decorations.end())
+    // Trivial return, there's no subscriber to this decoration
     return;
   
+  // Roll back all satisfaction counters:
   const auto& subscribers = decorator->second.subscribers;
   const auto& subscriberDescriptors = m_factory.GetSubscriberVector();
   
@@ -159,21 +145,12 @@ void AutoPacket::Reset(void) {
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
   // Obtain the decorator:
-  /*
-  auto decorator = m_factory.FindDecorator(ti);
-  if(!decorator)
-    // Nobody anywhere cares about this type
-    return false;
-
-  const auto& subscribers = decorator->subscribers;
-  */
-  
   auto decorator = m_decorations.find(ti);
   if (decorator == m_decorations.end())
+    // Nobody anywhere cares about this type
     return false;
   
   const auto& subscribers = decorator->second.subscribers;
-  
   
   for(size_t i = subscribers.size(); i--; ) {
     if(subscribers[i].first >= m_satCounters.size())
