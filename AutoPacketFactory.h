@@ -112,7 +112,7 @@ public:
   /// Finds the entry in the adjacency list corresponding to a decorator type
   /// </summary>
   /// <returns>The adjacency entry, or nullptr if no such entry exists</returns>
-  const AdjacencyEntry* FindDecorator(const std::type_info& info) const {
+  const AdjacencyEntry* FindDecoration(const std::type_info& info) const {
     boost::lock_guard<boost::mutex> lk(m_lock);
     auto q = m_decorations.find(info);
     return q == m_decorations.end() ? nullptr : &q->second;
