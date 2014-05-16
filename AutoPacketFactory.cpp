@@ -172,6 +172,6 @@ void AutoPacketFactory::RemoveSubscriber(const std::type_info &idx) {
 }
 
 bool AutoPacketFactory::HasSubscribers(const std::type_info& ti) const {
-  auto decorator = FindDecorator(ti);
+  auto decorator = FindDecoration(ti);
   return !!decorator;
 }
