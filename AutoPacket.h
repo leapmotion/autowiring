@@ -23,11 +23,11 @@ struct subscriber_traits;
 // Stores subscriber 'pointers' for a for a decorator of type 'ti'
 struct AdjacencyEntry {
   AdjacencyEntry(const std::type_info& ti) :
-    ti(&ti)
+    ti(ti)
   {}
   
-  // Reflexive type information for this entry
-  const std::type_info* ti;
+  // The type of the decoration declared at this spot
+  const std::type_info& ti;
   
   // Indexes into the subscriber satisfaction vector.  Each entry in this list represents a single
   // subscriber, and an offset in the m_subscribers vector.  The second element in the pair is the
