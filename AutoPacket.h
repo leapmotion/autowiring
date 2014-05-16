@@ -20,6 +20,20 @@ class AutoPacketSubscriber;
 template<class T>
 struct subscriber_traits;
 
+struct AdjacencyEntry {
+  AdjacencyEntry(const std::type_info& ti) :
+    ti(&ti)
+  {}
+  
+  // Reflexive type information for this entry
+  const std::type_info* ti;
+  
+  // Indexes into the subscriber satisfaction vector.  Each entry in this list represents a single
+  // subscriber, and an offset in the m_subscribers vector.  The second element in the pair is the
+  // optional flag.
+  std::vector<std::pair<size_t, bool>> subscribers;
+};
+
 /// <summary>
 /// A decorator-style processing packet
 /// </summary>
@@ -88,6 +102,9 @@ private:
 
   // The associated packet factory:
   AutoPacketFactory& m_factory;
+  
+  typedef std::unordered_map<std::type_index, AdjacencyEntry> t_decMap;
+  t_decMap m_decorations;
 
   // The set of decorations currently attached to this object, and the associated lock:
   mutable boost::mutex m_lock;

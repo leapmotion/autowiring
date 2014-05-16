@@ -13,6 +13,7 @@
 class AutoPacketListener;
 class Deferred;
 class DispatchQueue;
+struct AdjacencyEntry;
 
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
@@ -25,20 +26,6 @@ class AutoPacketFactory:
   public CoreRunnable
 {
 public:
-  struct AdjacencyEntry {
-    AdjacencyEntry(const std::type_info& ti) :
-      ti(ti)
-    {}
-
-    // Reflexive type information for this entry
-    const std::type_info& ti;
-
-    // Indexes into the subscriber satisfaction vector.  Each entry in this list represents a single
-    // subscriber, and an offset in the m_subscribers vector.  The second element in the pair is the
-    // optional flag.
-    std::vector<std::pair<size_t, bool>> subscribers;
-  };
-
   AutoPacketFactory(void);
   ~AutoPacketFactory(void);
 
