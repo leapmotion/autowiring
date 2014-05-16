@@ -151,6 +151,8 @@ set(AutowiringTest_SRCS
   BoltTest.cpp
   ContextCreatorTest.h
   ContextCreatorTest.cpp
+  CoreContextTest.h
+  CoreContextTest.cpp
   CurrentContextPusherTest.h
   CurrentContextPusherTest.cpp
   DecoratorTest.h
