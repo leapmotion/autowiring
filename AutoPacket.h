@@ -20,6 +20,7 @@ class AutoPacketSubscriber;
 template<class T>
 struct subscriber_traits;
 
+// Stores subscriber 'pointers' for a for a decorator of type 'ti'
 struct AdjacencyEntry {
   AdjacencyEntry(const std::type_info& ti) :
     ti(&ti)
@@ -103,6 +104,7 @@ private:
   // The associated packet factory:
   AutoPacketFactory& m_factory;
   
+  // Map used to associate a decorator type with the adjacency entries for that type.
   typedef std::unordered_map<std::type_index, AdjacencyEntry> t_decMap;
   t_decMap m_decorations;
 
