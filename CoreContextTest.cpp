@@ -2,6 +2,9 @@
 #include "CoreContextTest.h"
 #include <set>
 
+class Foo{};
+class Bar{};
+
 TEST_F(CoreContextTest, TestEnumerateChildren) {
   // Create a few anonymous children:
   AutoCreateContext child1;
@@ -26,6 +29,16 @@ TEST_F(CoreContextTest, TestEnumerateChildren) {
   ASSERT_EQ(1UL, allChildren.count(child1)) << childMissing;
   ASSERT_EQ(1UL, allChildren.count(child2)) << childMissing;
   ASSERT_EQ(1UL, allChildren.count(child3)) << childMissing;
+  
+  //Check if filtering by sigil works
+  AutoCreateContextT<Foo> fooCtxt;
+  AutoCreateContextT<Bar> barCtxt;
+  auto childFoo = barCtxt->Create<Foo>();
+  
+  auto onlyFoos = m_create->EnumerateChildContexts<Foo>();
+  ASSERT_EQ(2, onlyFoos.size()) << "Didn't collect only contexts with 'Foo' sigil";
+  ASSERT_NE(std::find(onlyFoos.begin(), onlyFoos.end(), fooCtxt), onlyFoos.end()) << "Context not enumerated";
+  ASSERT_NE(std::find(onlyFoos.begin(), onlyFoos.end(), childFoo), onlyFoos.end()) << "Context not enumerated";
 }
 
 TEST_F(CoreContextTest, TestEarlyLambdaReturn) {
