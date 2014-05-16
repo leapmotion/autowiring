@@ -65,3 +65,20 @@ TEST_F(CoreContextTest, TestEarlyLambdaReturn) {
   // Verify that the root context isn't in the set--needed to assure that we are running a depth-first search.
   ASSERT_EQ(0UL, allChildren.count(m_create)) << "EnumerateChildContexts did not execute depth-first";
 }
+
+TEST_F(CoreContextTest, ChildEnumerationIsCorrect) {
+  // Create a few child contexts:
+  AutoCreateContext v, w;
+
+  // Shouldn't find any contexts at this point:
+  auto vec = AutoCurrentContext()->EnumerateChildContexts<Object>();
+  ASSERT_TRUE(vec.empty()) << "Sigil-restricted child enumeration incorrectly detected at least one sigil-bearing child context";
+
+  // Create one sigil-bearing context:
+  AutoCreateContextT<Object> sigilContext;
+
+  // Verify that we only enumerate one child context:
+  vec = AutoCurrentContext()->EnumerateChildContexts<Object>();
+  ASSERT_EQ(1UL, vec.size()) << "Sigil-restricted child enumeration returned too many contexts";
+}
+
