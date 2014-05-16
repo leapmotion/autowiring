@@ -109,29 +109,6 @@ public:
   bool ShouldStop(void) const override { return m_wasStopped; };
 
   /// <summary>
-  /// Finds the packet subscriber proper corresponding to a particular subscriber type
-  /// </summary>
-  /// <returns>The subscriber, or nullptr if one cannot be found</returns>
-  const AutoPacketSubscriber* FindSubscriber(const std::type_info& info) const {
-    size_t subscriberIndex = FindSubscriberIndex(info);
-    if(!~subscriberIndex)
-      return nullptr;
-    return &m_subscribers[subscriberIndex];
-  }
-
-  template<class T>
-  const AutoPacketSubscriber* FindSubscriber(void) const { return FindSubscriber(typeid(T)); }
-
-  /// <summary>
-  /// Finds the monotonic index corresponding to a particular subscriber type
-  /// </summary>
-  /// <returns>The index, or ~0 if the subscriber does not exist</returns>
-  size_t FindSubscriberIndex(const std::type_info& info) const {
-    auto q = m_subMap.find(info);
-    return q == m_subMap.end() ? ~0 : q->second;
-  }
-
-  /// <summary>
   /// Finds the entry in the adjacency list corresponding to a decorator type
   /// </summary>
   /// <returns>The adjacency entry, or nullptr if no such entry exists</returns>
