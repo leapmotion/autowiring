@@ -119,7 +119,7 @@ void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
           r = m_decorations.insert(
             t_decMap::value_type(
               *pCur->ti,
-              AdjacencyEntry(*pCur->ti)
+              AdjacencyEntry()
             )
           ).first;
 
