@@ -1,8 +1,8 @@
 #pragma once
+#include "AnySharedPointer.h"
 #include "AutoCheckout.h"
 #include "auto_out.h"
 #include "auto_pooled.h"
-#include "Enclosure.h"
 #include "Object.h"
 #include "optional_ptr.h"
 #include "SatCounter.h"
@@ -54,13 +54,8 @@ private:
   struct DecorationDisposition {
     DecorationDisposition(void) :
       satisfied(false),
-      isCheckedOut(false),
-      pEnclosure(nullptr)
+      isCheckedOut(false)
     {}
-
-    ~DecorationDisposition(void) {
-      delete pEnclosure;
-    }
 
     // Flag, used by the caller, to mark this enclosure as satisfied
     bool satisfied;
@@ -69,28 +64,28 @@ private:
     bool isCheckedOut;
 
     // The enclosure proper:
-    EnclosureBase* pEnclosure;
+    AnySharedPointer enclosure;
 
+    /// <summary>
+    /// Creates a new shared pointer with the specified type
+    /// </summary>
     template<class T>
-    Enclosure<T>& Initialize(void) {
-      if(!pEnclosure)
-        pEnclosure = new EnclosureImpl<T>();
-      pEnclosure->Reset();
-      return static_cast<Enclosure<T>&>(*pEnclosure);
+    SharedPointerSlotT<T>& Initialize(void) {
+      enclosure = std::make_shared<T>();
+      return enclosure.as<T>();
     }
 
+    /// <summary>
+    /// Initializes the slot with the specified shared pointer
+    /// </summary>
     template<class T>
-    Enclosure<T>& Initialize(T&& rhs) {
-      if(pEnclosure)
-        *static_cast<Enclosure<T>*>(pEnclosure) = std::move(rhs);
-      else
-        pEnclosure = new EnclosureImpl<T>(std::move(rhs));
-      return *static_cast<Enclosure<T>*>(pEnclosure);
+    SharedPointerSlotT<T>& Initialize(const std::shared_ptr<T>& rhs) {
+      enclosure = rhs;
+      return enclosure.as<T>();
     }
 
     void Release(void) {
-      if(pEnclosure)
-        pEnclosure->Release();
+      enclosure->reset();
     }
   };
 
@@ -140,7 +135,7 @@ private:
 
       if(!ready)
         // Memory must be released, the checkout was cancelled
-        static_cast<Enclosure<T>*>(entry.pEnclosure)->Release();
+        entry.enclosure->reset();
 
       // Reset the checkout flag before releasing the lock:
       assert(entry.isCheckedOut);
@@ -181,10 +176,9 @@ public:
 
     auto q = m_mp.find(typeid(T));
     if(q != m_mp.end() && q->second.satisfied) {
-      auto enclosure = static_cast<Enclosure<T>*>(q->second.pEnclosure);
-      assert(enclosure->IsInitialized());
+      auto& enclosure = q->second.enclosure;
       if(enclosure) {
-        out = enclosure->get();
+        out = enclosure->as<T>().get();
         return true;
       }
     }
@@ -283,9 +277,10 @@ public:
       pEntry->satisfied = true;
     }
 
-    auto& retVal = pEntry->Initialize(std::move(t));
+    auto& retVal = pEntry->Initialize<T>();
+    *retVal = std::forward<T>(t);
     UpdateSatisfaction(typeid(T), true);
-    return *retVal.get();
+    return *retVal;
   }
 
   /// <summary>
