@@ -95,6 +95,7 @@ TEST_F(AutoPacketFactoryTest, AutoPacketFactoryCycle) {
   {
     // Create a context, fill it up, kick it off:
     AutoCreateContext ctxt;
+    CurrentContextPusher pshr(ctxt);
     AutoRequired<HoldsAutoPacketFactoryReference> hapfr(ctxt);
     ctxt->Initiate();
     
