@@ -36,6 +36,9 @@ public:
   ~ObjectPoolBase(void) {
     // Transition the pool to the abandoned state:
     m_monitor->Abandon();
+
+    // Clear everything in the cache to ensure that the outstanding limit is correctly updated
+    ClearCachedEntities();
   }
 
 protected:
@@ -53,24 +56,6 @@ protected:
   size_t m_outstanding;
 
   /// <summary>
-  /// Returns the specified object to the object pool
-  /// </summary>
-  void Return(std::unique_ptr<T>&& ptr) {
-    assert(m_outstanding != 0);
-    // One fewer outstanding count:
-    m_outstanding--;
-    if(m_objs.size() < m_maxPooled) {
-      // Reset, insert, return
-      Reset(*ptr);
-      m_objs.push_back(Wrap(ptr.release()));
-    }
-
-    // If the new outstanding count is less than or equal to the limit, wake up any waiters:
-    if(m_outstanding <= m_limit)
-      m_setCondition.notify_all();
-  }
-
-  /// <summary>
   /// Creates a shared pointer to wrap the specified object
   /// </summary>
   std::shared_ptr<T> Wrap(T* pObj) {
@@ -83,19 +68,36 @@ protected:
     return std::shared_ptr<T>(
       pObj,
       [this, poolVersion, monitor](T* ptr) {
+        // Default behavior will be to destroy the pointer
+        std::unique_ptr<T> unique(ptr);
+
+        // Hold the lock next, in order to ensure that destruction happens after the monitor
+        // lock is released.
         boost::lock_guard<boost::mutex> lk(*monitor);
-        if(monitor->IsAbandoned()) {
+
+        // Always decrement the count when an object is no longer outstanding
+        assert(m_outstanding);
+        m_outstanding--;
+
+        if(monitor->IsAbandoned())
           // Nothing we can do, monitor object abandoned already, just destroy the object
-          delete ptr;
           return;
+
+        if(
+          // Pool versions have to match, or the object should be dumped
+          poolVersion == m_poolVersion &&
+
+          // Object pool needs to be capable of accepting another object as an input
+          m_objs.size() < m_maxPooled
+        ) {
+          // Reset the object and put it back in the pool:
+          Reset(*ptr);
+          m_objs.push_back(Wrap(unique.release()));
         }
 
-        if(poolVersion == m_poolVersion)
-          // Obtain the monitor lock and return ourselves to the collection:
-          this->Return(std::unique_ptr<T>(ptr));
-        else
-          // Object now obsolete, just destroy it
-          delete ptr;
+        // If the new outstanding count is less than or equal to the limit, wake up any waiters:
+        if(m_outstanding <= m_limit)
+          m_setCondition.notify_all();
       }
     );
   }
@@ -164,6 +166,9 @@ public:
 
     // Swap the cached object collection with an empty one
     std::swap(objs, m_objs);
+
+    // Technically, all of these entities are now outstanding.  Update accordingly.
+    m_outstanding += objs.size();
   }
 
   /// <summary>
