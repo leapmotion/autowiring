@@ -185,31 +185,30 @@ public:
   /// than that, however, the behavior is very similar to boost::any's assignment
   /// implementation.
   /// </remarks>
-  void operator=(const SharedPointerSlot& rhs) {
+  SharedPointerSlot& operator=(const SharedPointerSlot& rhs) {
     // Our own stuff is going away, need to reset ourselves
     this->~SharedPointerSlot();
 
     // Placement construct the right-hand side into ourselves:
     rhs.New(this, sizeof(*this));
+    return *this;
   }
 
   /// <summary>
   /// In-place polymorphic transformer
   /// </summary>
   template<class T>
-  void operator=(const std::shared_ptr<T>& rhs) {
-    if(type() == typeid(T)) {
+  SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
+    if(type() == typeid(T))
       // We can just use the equivalence operator, no need to make two calls
-      *((SharedPointerSlotT<T>*)this) = rhs;
-      return;
-    }
+      return *((SharedPointerSlotT<T>*)this) = rhs;
 
     // Clear out what we're holding:
     reset();
 
     // Now we can safely reinitialize:
     static_assert(sizeof(SharedPointerSlotT<T>) == sizeof(*this), "Cannot instantiate a templated shared pointer slot on this type, it's too large to fit here");
-    new (this) SharedPointerSlotT<T>(rhs);
+    return *new (this) SharedPointerSlotT<T>(rhs);
   }
 };
 
@@ -281,8 +280,9 @@ public:
   }
 
   // We have a better opeartor overload for type T:
-  void operator=(const std::shared_ptr<T>& rhs) {
+  SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
     get() = rhs;
+    return *this;
   }
 
   T* operator->(void) const {
