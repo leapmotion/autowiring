@@ -51,16 +51,16 @@ public:
   /// than that, however, the behavior is very similar to boost::any's assignment
   /// implementation.
   /// </remarks>
-  void operator=(const AnySharedPointer& rhs) {
-    **this = *rhs;
+  SharedPointerSlot& operator=(const AnySharedPointer& rhs) {
+    return **this = *rhs;
   }
 
   /// <summary>
   /// Convenience overload for shared pointer assignment
   /// </summary>
   template<class T>
-  void operator=(const std::shared_ptr<T>& rhs) {
-    **this = rhs;
+  SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
+    return **this = rhs;
   }
 };
 
