@@ -84,14 +84,9 @@ private:
   // required due to its use in an adjacency list.
   std::vector<AutoPacketSubscriber> m_subscribers;
 
-  // Map used to associate a decorator type with the adjacency entries for that type.
-  typedef std::unordered_map<std::type_index, AdjacencyEntry> t_decMap;
-  t_decMap m_decorations;
-
-  // Map used to associate a subscriber type with a monotonic index.  The index is
-  // an offset into m_subscribers.
-  typedef std::unordered_map<std::type_index, size_t> t_subMap;
-  t_subMap m_subMap;
+  // Map used to associate a decorator type with the subscribers of that type.
+  typedef std::unordered_map<std::type_index, std::vector<AutoPacketSubscriber>> t_subscriberMap;
+  t_subscriberMap m_decorations;
 
   // Utility override, does nothing
   void AddSubscriber(std::false_type) {}
@@ -99,7 +94,7 @@ private:
 public:
   // Accessor methods:
   const std::vector<AutoPacketSubscriber>& GetSubscriberVector(void) const { return m_subscribers; }
-  const t_decMap& GetDecorations(void) const { return m_decorations; }
+  const t_subscriberMap& GetDecorations(void) const { return m_decorations; }
 
   // CoreRunnable overrides:
   bool Start(std::shared_ptr<Object> outstanding) override;
@@ -116,18 +111,6 @@ public:
     boost::lock_guard<boost::mutex> lk(m_lock);
     auto q = m_decorations.find(info);
     return q == m_decorations.end() ? nullptr : &q->second;
-  }
-
-  /// <returns>
-  /// True if the specified type is a subscriber registered with this factory
-  /// </returns>
-  template<class T>
-  bool IsSubscriber(void) {
-    return IsSubscriber(typeid(T));
-  }
-
-  bool IsSubscriber(const std::type_info& ti) {
-    return m_subMap.find(ti) != m_subMap.end();
   }
 
   /// <summary>
