@@ -8,8 +8,8 @@
 #include RVALUE_HEADER
 #include MEMORY_HEADER
 
-template<class T>
 struct NoOp {
+  template<class T>
   void operator()(T& op) const {}
 };
 
@@ -306,7 +306,7 @@ public:
 ///
 /// Issued pool members must be released before the pool goes out of scope
 /// </remarks>
-template<class T, class _Rx = NoOp<T>, class _Alloc = Create<T>>
+template<class T, class _Rx = NoOp, class _Alloc = Create<T>>
 class ObjectPool:
   public ObjectPoolBase<T>
 {
