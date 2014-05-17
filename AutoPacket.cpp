@@ -6,72 +6,57 @@
 #include <boost/any.hpp>
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory):
-  m_factory(factory),
-  m_decorations(m_factory.GetDecorations())
-{}
+  m_factory(factory)
+{
+  // Copy out the satisfaction vector:
+  m_satCounters.assign(
+    factory.GetSubscriberVector().begin(),
+    factory.GetSubscriberVector().end()
+  );
+
+  // Prime the satisfaction graph for each element:
+  for(auto& autoFilter : m_satCounters)
+    for(
+      auto pCur = autoFilter.GetSubscriberInput();
+      *pCur;
+      pCur++
+    ) {
+      DecorationDisposition& entry = m_decorations[*pCur->ti];
+
+      // Decide what to do with this entry:
+      switch(pCur->subscriberType) {
+      case inTypeInvalid:
+        // Should never happen--trivially ignore this entry
+        break;
+      case inTypeRequired:
+        entry.m_subscribers.push_back(std::make_pair(&autoFilter, true));
+        break;
+      case inTypeOptional:
+        entry.m_subscribers.push_back(std::make_pair(&autoFilter, false));
+        break;
+      case outTypeRef:
+      case outTypeRefAutoReady:
+        // We don't do anything with these types.
+        // Optionally, we might want to register them as outputs, or do some kind
+        // of runtime detection that a multi-satisfaction case exists--but for now,
+        // we just trivially ignore them.
+        break;
+      }
+    }
+}
 
 AutoPacket::~AutoPacket() {}
-
-void AutoPacket::UpdateSatisfactionSpecific(size_t subscriberIndex) {
-  // No entries remaining in this saturation, we can now make the call
-  const auto& satVec = m_factory.GetSubscriberVector();
-  auto& entry = satVec[subscriberIndex];
-  assert(entry.GetCall());
-
-  AutowiredFast<AutoPacketProfiler> profiler;
-  if(profiler && profiler->ShouldProfile()) {
-    // Record the current time before we hand control over to the call:
-    auto before = boost::chrono::high_resolution_clock::now();
-
-    // Make the actual call
-    entry.GetCall()(entry.GetSubscriberPtr(), *this);
-
-    // Record the total time spent in the call
-    // TODO:  This naive implementation will also add any time spent in
-    // subscribers which are reached from the subscriber defined above.
-    // A good profiling system should exclude the time spent in dependent
-    // subscribers by having some sort of thread-specific reentrancy
-    // detection on this function--perhaps by propagating out a "boost"
-    // value which will be subtracted by callers operating at higher
-    // elevation levels.
-    profiler->AddProfilingInformation(
-      *entry.GetSubscriberTypeInfo(),
-      boost::chrono::high_resolution_clock::now() - before
-    );
-  }
-  else
-    // No profiling required, just make the call directly
-    entry.GetCall()(entry.GetSubscriberPtr(), *this);
-}
 
 void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfied) {
   auto decoration = m_decorations.find(info);
   if (decoration == m_decorations.end())
-    // Trivial return, there's no subscriber to this decoration
+    // Trivial return, there's no subscriber to this decoration and so we have nothing to do
     return;
   
-  // Update all satisfaction counters:
-  const auto& subscribers = decoration->second.subscribers;
-  
-  for(size_t i = subscribers.size(); i--;) {
-    const auto& subscriber = subscribers[i];
-
-    if(m_satCounters.size() <= subscriber.first)
-      // Can't do anything about this, subscriber went away before we could get them a packet.
-      // Continue on to the next subscriber.
-      continue;
-
-    if(m_satCounters[subscriber.first])
-      // Ignore this entry, no matter what happens, something already caused it to be satisfied
-      continue;
-
-    if(!is_satisfied && !subscriber.second)
-      // Not satisfied, but this entry is not optional--we have to cancel and circle around
-      continue;
-
-    if(!m_satCounters[subscriber.first].Decrement(subscriber.second))
-      UpdateSatisfactionSpecific(subscriber.first);
-  }
+  // Update everything
+  for(auto& satCounter : decoration->second.m_subscribers)
+    if(!satCounter.first->Decrement(satCounter.second))
+      satCounter.first->CallAutoFilter(*this);
 }
 
 void AutoPacket::PulseSatisfaction(const std::type_info& info) {
@@ -80,90 +65,28 @@ void AutoPacket::PulseSatisfaction(const std::type_info& info) {
     // Trivial return, there's no subscriber to this decoration
     return;
   
-  // Roll back all satisfaction counters:
-  const auto& subscribers = decoration->second.subscribers;
-  const auto& subscriberDescriptors = m_factory.GetSubscriberVector();
-  
-  for(size_t i = subscribers.size(); i--;) {
-    const auto& subscriber = subscribers[i];
+  for(auto& satCounter : decoration->second.m_subscribers) {
+    auto& cur = satCounter.first;
+    cur->Decrement(satCounter.second);
 
-    if(subscriberDescriptors[subscriber.second].IsDeferred())
-      // Deferred subscriber, nothing we can do here.
-      continue;
-
-    auto& curCounter = m_satCounters[subscriber.first];
-    if(!curCounter.PseudoDecrement(subscriber.second))
-      // Still has entries outstanding, give up
-      continue;
-
-    // Commit this decrementation, generate the call
-    curCounter.Decrement(subscriber.second);
-    UpdateSatisfactionSpecific(subscriber.first);
+    if(cur->remaining)
+      // We still have mandatory values outstanding, give up
+      satCounter.first->Increment(satCounter.second);
+    else
+      // Invoke while we still can
+      satCounter.first->CallAutoFilter(*this);
   }
-}
-
-void AutoPacket::Release(void) {
-  for(size_t i = m_satCounters.size(); i--;) {
-    auto& satCounter = m_satCounters[i];
-
-    // Scan through the saturation counters, looking for any where the mandatory
-    // count is satisfied but the optional count is not:
-    if(satCounter.optional && !satCounter.remaining)
-      // We can satisfy this one now:
-      UpdateSatisfactionSpecific(i);
-
-    // Reset this subscriber unconditionally:
-    satCounter.subscriber = boost::any();
-  }
-
-  // Now that all second chances are notified, we will release held objects:
-  for(auto q = m_mp.begin(); q != m_mp.end(); q++)
-    q->second.Release();
 }
 
 void AutoPacket::Reset(void) {
-  for(auto q = m_mp.begin(); q != m_mp.end(); q++)
-    q->second.satisfied = false;
-
-  auto& vec = m_factory.GetSubscriberVector();
-  m_satCounters.resize(vec.size());
-  for(size_t i = vec.size(); i--;) {
-    const auto& curSrc = vec[i];
-    auto& curDst = m_satCounters[i];
-
-    curDst.remaining = curSrc.GetRequiredCount();
-    curDst.optional = curSrc.GetOptionalCount();
-    curDst.subscriber = curSrc.GetSubscriber();
-  }
-
-  // We will automatically satisfy any requests for AutoPacket:
-  UpdateSatisfaction(typeid(AutoPacket), true);
-  
-  //Update Decorations
-  m_decorations = m_factory.GetDecorations();
+  for(auto& satCounter : m_satCounters)
+    satCounter.Reset();
+  for(auto& decoration : m_decorations)
+    decoration.second.Reset();
 }
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
-  // Obtain the decorator:
-  auto decoration = m_decorations.find(ti);
-  if (decoration == m_decorations.end())
-    // Nobody anywhere cares about this type
-    return false;
-  
-  const auto& subscribers = decoration->second.subscribers;
-  
-  for(size_t i = subscribers.size(); i--; ) {
-    if(subscribers[i].first >= m_satCounters.size())
-      continue;
-
-    const auto& cur = m_satCounters[subscribers[i].first];
-    if(cur.remaining || cur.optional)
-      // Found a valid, enabled subscriber
-      return true;
-  }
-
-  // No matches, end here
-  return false;
+  return m_decorations.count(ti) != 0;
 }
 
 std::shared_ptr<AutoPacket> ExtractSharedPointer(const AutoPacketAdaptor& adaptor) {

@@ -413,7 +413,7 @@ void CoreContext::UnregisterEventReceivers(void) {
 
     auto pf = FindByTypeUnsafe<AutoPacketFactory>();
     if(pf)
-      m_pParent->RemovePacketSubscribers(pf->GetSubscriberVector());
+      m_pParent->RemovePacketSubscribers(*pf);
   }
 
   // Wipe out all collections so we don't try to free these multiple times:
@@ -635,7 +635,7 @@ void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
 }
 
 void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
-  GetPacketFactory()->RemoveSubscriber(traits.type);
+  GetPacketFactory()->RemoveSubscriber(traits.subscriber);
   
   // Decide if we should unsnoop the parent
   bool shouldRemove = m_pParent &&
@@ -647,15 +647,16 @@ void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
     m_pParent->UnsnoopAutoPacket(traits);
 }
 
-void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber> &subscribers) {
+void CoreContext::RemovePacketSubscribers(const AutoPacketFactory& factory) {
   // Notify the parent that it will have to remove these subscribers as well
   if(m_pParent)
-    m_pParent->RemovePacketSubscribers(subscribers);
+    m_pParent->RemovePacketSubscribers(factory);
 
   // Remove subscribers from our factory AFTER the parent eviction has taken place
-  auto factory = FindByTypeUnsafe<AutoPacketFactory>();
-  if(factory)
-    factory->RemoveSubscribers(subscribers.begin(), subscribers.end());
+  auto localFactory = FindByTypeUnsafe<AutoPacketFactory>();
+  if(localFactory)
+    for(auto& cur : factory.GetSubscriberVector())
+      localFactory->RemoveSubscriber(cur);
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {

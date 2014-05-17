@@ -30,32 +30,13 @@ public:
   ~AutoPacketFactory(void);
 
 private:
-  struct AutoPacketResetter {
-    AutoPacketResetter(void);
-
-    AutoPacketResetter(AutoPacketResetter&& rhs);
-
-    AutoFired<AutoPacketListener> m_apl;
-
-    void operator()(AutoPacket& packet) const;
-  };
-
   struct AutoPacketCreator {
-    AutoPacketCreator(AutoPacketFactory* factory = nullptr) :
-      factory(factory)
-    {}
-
-    AutoPacketCreator(AutoPacketCreator&& rhs) :
-      factory(rhs.factory)
-    {}
+    AutoPacketCreator(AutoPacketFactory* factory = nullptr) : factory(factory) {}
 
     AutoPacketFactory* factory;
 
     AutoPacket* operator()() const;
-
-    void operator=(AutoPacketCreator&& rhs) {
-      factory = rhs.factory;
-    }
+    void operator=(AutoPacketCreator&& rhs) { factory = rhs.factory; }
   };
 
   // Lock for this type
@@ -78,23 +59,31 @@ private:
   /// pipeline packet expiration in order to support expiration notification
   /// broadcasts.
   /// </remarks>
-  ObjectPool<AutoPacket, AutoPacketResetter, AutoPacketCreator> m_packets;
+  ObjectPool<AutoPacket, NoOp, AutoPacketCreator> m_packets;
 
-  // Vector of known subscribers--a vector must be used because random access is
-  // required due to its use in an adjacency list.
-  std::vector<AutoPacketSubscriber> m_subscribers;
+  // Collection of known subscribers
+  typedef std::unordered_set<AutoPacketSubscriber> t_autoFilterSet;
+  t_autoFilterSet m_autoFilters;
 
-  // Map used to associate a decorator type with the subscribers of that type.
-  typedef std::unordered_map<std::type_index, std::vector<AutoPacketSubscriber>> t_subscriberMap;
-  t_subscriberMap m_decorations;
+  struct DecorationEntry {
+    // The single statically detected publisher of the outer type
+    AutoPacketSubscriber m_publisher;
+
+    // All subscribers on this entry
+    std::vector<AutoPacketSubscriber> m_subscribers;
+  };
+
+  // Map used to associate a decoration type with the subscribers of that type.
+  typedef std::unordered_map<std::type_index, DecorationEntry> t_decorationMap;
+  t_decorationMap m_decorationMap;
 
   // Utility override, does nothing
   void AddSubscriber(std::false_type) {}
 
 public:
   // Accessor methods:
-  const std::vector<AutoPacketSubscriber>& GetSubscriberVector(void) const { return m_subscribers; }
-  const t_subscriberMap& GetDecorations(void) const { return m_decorations; }
+  const t_autoFilterSet& GetSubscriberVector(void) const { return m_autoFilters; }
+  const t_decorationMap& GetDecorations(void) const { return m_decorationMap; }
 
   // CoreRunnable overrides:
   bool Start(std::shared_ptr<Object> outstanding) override;
@@ -104,18 +93,11 @@ public:
   bool ShouldStop(void) const override { return m_wasStopped; };
 
   /// <summary>
-  /// Finds the entry in the adjacency list corresponding to a decorator type
-  /// </summary>
-  /// <returns>The adjacency entry, or nullptr if no such entry exists</returns>
-  const AdjacencyEntry* FindDecoration(const std::type_info& info) const {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    auto q = m_decorations.find(info);
-    return q == m_decorations.end() ? nullptr : &q->second;
-  }
-
-  /// <summary>
   /// Registers the passed subscriber, if it defines a method called AutoFilter
   /// </summary>
+  /// <remarks>
+  /// This method is idempotent
+  /// </remarks>
   void AddSubscriber(const AutoPacketSubscriber& rhs);
 
   /// <summary>
@@ -126,31 +108,11 @@ public:
     AddSubscriber(AutoPacketSubscriberSelect<T>(rhs));
   }
 
-  void RemoveSubscriber(const std::type_info &idx);
-
-  template<class T>
-  void RemoveSubscriber(const std::shared_ptr<T>& sub) {
-    RemoveSubscriber(typeid(T));
-  }
-
-  void RemoveSubscribers( std::vector<AutoPacketSubscriber>::const_iterator first, std::vector<AutoPacketSubscriber>::const_iterator last) {
-    for( auto i = first; i != last; i++ ) {
-      RemoveSubscriber( *i->GetSubscriberTypeInfo() );
-    }
-  }
-
-  /// <returns>
-  /// True if the indicated type has been requested for use by some consumer
-  /// </returns>
-  /// <remarks>
-  /// This method is used to determine whether an AutoFilter consumer exists for the
-  /// specified type at the time of the call.  Note that this method may occassionally
-  /// return an incorrect result in a multithreaded context.
-  /// </remarks>
-  template<class T>
-  bool HasSubscribers(void) const { return HasSubscribers(typeid(T)); }
-
-  bool HasSubscribers(const std::type_info& ti) const;
+  /// <summary>
+  /// Removes the designated AutoFilter from this factory
+  /// </summary>
+  /// <param name="autoFilter">The AutoFilter to be removed</param>
+  void RemoveSubscriber(const AutoPacketSubscriber& autoFilter);
 
   /// <summary>
   /// Obtains a new packet from the object pool and configures it with the current

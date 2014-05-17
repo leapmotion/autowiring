@@ -76,7 +76,6 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
 
   // Create another packet where a subscriber exists:
   AutoRequired<FilterA> filterA;
-  ASSERT_TRUE(factory->IsSubscriber<FilterA>());
   auto packet2 = factory->NewPacket();
 
   // Verify the first packet still does not have subscriptions:
@@ -118,7 +117,7 @@ TEST_F(DecoratorTest, VerifyDescendentAwareness) {
   EXPECT_TRUE(packet3.expired()) << "Packet was not destroyed when it's subscribers were removed";
   EXPECT_FALSE(filterChecker.expired()) << "Packet keeping subcontext member alive";
 
-  //Create a packet after the subcontext has been destroyed
+  // Create a packet after the subcontext has been destroyed
   auto packet4 = parentFactory->NewPacket();
   EXPECT_FALSE(packet4->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
 
@@ -140,11 +139,17 @@ TEST_F(DecoratorTest, VerifyDescendentAwareness) {
 }
 
 TEST_F(DecoratorTest, VerifySimpleFilter) {
-  AutoRequired<FilterA> filterA;
   AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterA> filterA;
 
-  // Manually register the subscriber:
-  ASSERT_TRUE(factory->IsSubscriber<FilterA>());
+  // Verify that the subscriber has been properly detected:
+  bool bFound = false;
+  for(const auto& cur : factory->GetSubscriberVector())
+    if(cur.GetSubscriber() == filterA) {
+      bFound = true;
+      break;
+    }
+  ASSERT_TRUE(bFound) << "Failed to find an added subscriber ";
 
   // Obtain a packet from the factory:
   auto packet = factory->NewPacket();
@@ -165,9 +170,6 @@ TEST_F(DecoratorTest, VerifySimpleFilter) {
 TEST_F(DecoratorTest, VerifyNoMultiDecorate) {
   AutoRequired<FilterA> filterA;
   AutoRequired<AutoPacketFactory> factory;
-
-  // Subscriber registration verification:
-  ASSERT_TRUE(factory->IsSubscriber<FilterA>());
 
   // Obtain a packet and attempt redundant introduction:
   auto packet = factory->NewPacket();

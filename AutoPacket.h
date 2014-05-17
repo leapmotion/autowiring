@@ -43,24 +43,40 @@ private:
   /// <remarks>
   /// A disposition holder, used to maintain initialization state on the key
   /// </remarks>
-  struct DecorationDisposition:
-    public AnySharedPointer
+  struct DecorationDisposition
   {
     DecorationDisposition(void) :
+      m_pImmediate(nullptr),
       satisfied(false),
-      isCheckedOut(false)
+      isCheckedOut(false),
+      wasCheckedOut(false)
     {}
 
-    // Indexes into the subscriber satisfaction vector.  Each entry in this list represents a single
-    // subscriber, and an offset in the m_subscribers vector.  The second element in the pair is the
-    // optional flag.
-    std::vector<std::pair<size_t, bool>> subscribers;
+    // The decoration proper--potentially, this decoration might be from a prior execution of this
+    // packet.  In the case of immediate decorations, this value will be invalid.
+    AnySharedPointer m_decoration;
 
-    // Flag indicating that this entry is satsif
+    // A pointer to the immediate decoration, if one is specified, or else nullptr
+    const void* m_pImmediate;
+
+    // Satisfaction counters, with the second part indicating a required entry
+    std::vector<std::pair<SatCounter*, bool>> m_subscribers;
+
+    // Flag indicating that this entry is satisfied
     bool satisfied;
 
-    // Flag, set if the internally held object is currently checked out
+    // Indicates that the internally held object is currently checked out
     bool isCheckedOut;
+
+    // Indicates that this entry was checked out at some point in the past, and can no longer be
+    // checked out for a subsequent satisfaction
+    bool wasCheckedOut;
+
+    void Reset(void) {
+      satisfied = false;
+      isCheckedOut = false;
+      wasCheckedOut = false;
+    }
   };
 
   // The parent packet factory:
@@ -72,17 +88,10 @@ private:
 
   // The set of decorations currently attached to this object, and the associated lock:
   mutable boost::mutex m_lock;
-  mutable std::unordered_map<std::type_index, DecorationDisposition> m_decorations;
+  std::unordered_map<std::type_index, DecorationDisposition> m_decorations;
 
-  // Status counters, copied directly from the degree vector in the packet factory.  These status
-  // counters are the only part of this AutoPacket that must be updated each time the packet is
-  // issued.
+  // Saturation counters, constructed when the packet is created and reset each time thereafter
   std::vector<SatCounter> m_satCounters;
-
-  /// <summary>
-  /// Interior routine to UpdateSatisfaction
-  /// </summary>
-  void UpdateSatisfactionSpecific(size_t subscriberIndex);
 
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
@@ -106,11 +115,11 @@ private:
   void CompleteCheckout(bool ready) {
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      auto& entry = m_mp[typeid(T)];
+      auto& entry = m_decorations[typeid(T)];
 
       if(!ready)
         // Memory must be released, the checkout was cancelled
-        entry->reset();
+        entry.m_decoration->reset();
 
       // Reset the checkout flag before releasing the lock:
       assert(entry.isCheckedOut);
@@ -121,11 +130,6 @@ private:
   }
 
 public:
-  /// <summary>
-  /// Releases all exterior references to autowired members
-  /// </summary>
-  void Release(void);
-
   /// <summary>
   /// Clears all decorations and copies over all satisfaction counters
   /// </summary>
@@ -149,11 +153,11 @@ public:
   bool Get(const T*& out) const {
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
-    auto q = m_mp.find(typeid(T));
-    if(q != m_mp.end() && q->second.satisfied) {
+    auto q = m_decorations.find(typeid(T));
+    if(q != m_decorations.end() && q->second.satisfied) {
       auto& disposition = q->second;
-      if(disposition) {
-        out = disposition->as<T>().get();
+      if(disposition.m_decoration) {
+        out = disposition.m_decoration->as<T>().get();
         return true;
       }
     }
@@ -168,7 +172,7 @@ public:
   template<class Fx>
   void Enumerate(Fx&& fx) {
     boost::lock_guard<boost::mutex> lk(m_lock);
-    for(auto q = m_mp.begin(); q != m_mp.end(); q++)
+    for(auto q = m_decorations.begin(); q != m_decorations.end(); q++)
       if(q->second.satisfied)
         fx(q->first, q->second.pEnclosure);
   }
@@ -191,7 +195,7 @@ public:
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
 
-      entry = &m_mp[typeid(type)];
+      entry = &m_decorations[typeid(type)];
       if(entry->satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
       entry->satisfied = true;
@@ -199,7 +203,7 @@ public:
     }
 
     if(HasSubscribers<T>()) {
-      auto& enclosure = (*entry = std::make_shared<T>());
+      auto& enclosure = (entry->m_decoration = std::make_shared<T>());
       return AutoCheckout<T>(
         *this,
         enclosure.get(),
@@ -207,8 +211,8 @@ public:
       );
     }
 
-    // Ensure we mark this entry unsatisfiable so that cleanup behavior works as expected
-    entry->Release();
+    // Mark the entry as having been checked out
+    entry->wasCheckedOut = true;
     return AutoCheckout<T>(*this, nullptr, &AutoPacket::CompleteCheckout<T>);
   }
 
@@ -224,13 +228,13 @@ public:
     {
       // Insert a null entry at this location:
       boost::lock_guard<boost::mutex> lk(m_lock);
-      auto& entry = m_mp[typeid(T)];
+      auto& entry = m_decorations[typeid(T)];
       if(entry.satisfied)
         throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
 
       // Mark the entry as appropriate:
       entry.satisfied = true;
-      entry.Release();
+      entry.wasCheckedOut = true;
     }
 
     // Now trigger a rescan:
@@ -250,14 +254,14 @@ public:
     DecorationDisposition* pEntry;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      pEntry = &m_mp[typeid(T)];
+      pEntry = &m_decorations[typeid(T)];
       if(pEntry->satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
       pEntry->satisfied = true;
     }
 
-    auto& retVal = pEntry->Initialize<T>();
-    *retVal = std::forward<T>(t);
+    SharedPointerSlotT<T>& retVal = pEntry->m_decoration->init<T>();
+    retVal = std::make_shared<T>(std::forward<T>(t));
     UpdateSatisfaction(typeid(T), true);
     return *retVal;
   }
@@ -267,7 +271,8 @@ public:
   /// </summary>
   /// <remarks>
   /// The attached decoration is only valid for AutoFilters which are valid during
-  /// this call.
+  /// this call.  The type of the decoration is "T", and the passed pointer is not
+  /// copied.
   /// </remarks>
   template<class T>
   void DecorateImmediate(const T* pt) {
@@ -275,18 +280,19 @@ public:
     DecorationDisposition* pEntry;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      pEntry = &m_mp[typeid(T)];
+      pEntry = &m_decorations[typeid(T)];
       if(pEntry->satisfied)
         throw std::runtime_error("Cannot perform immediate decoration with type T, the requested decoration already exists");
       pEntry->satisfied = true;
     }
 
     // Pulse satisfaction:
-    auto& enclosure = pEntry->Initialize(const_cast<T*>(pt));
+    pEntry->m_pImmediate = pt;
     PulseSatisfaction(typeid(T));
 
     // Mark this entry as unsatisfiable:
-    enclosure.Release();
+    pEntry->satisfied = false;
+    entry.wasCheckedOut = true;
 
     // Now trigger a rescan to hit any deferred, unsatisfiable entries:
     UpdateSatisfaction(typeid(T), false);
