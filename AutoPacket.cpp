@@ -45,13 +45,13 @@ void AutoPacket::UpdateSatisfactionSpecific(size_t subscriberIndex) {
 }
 
 void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfied) {
-  auto decorator = m_decorations.find(info);
-  if (decorator == m_decorations.end())
+  auto decoration = m_decorations.find(info);
+  if (decoration == m_decorations.end())
     // Trivial return, there's no subscriber to this decoration
     return;
   
   // Update all satisfaction counters:
-  const auto& subscribers = decorator->second.subscribers;
+  const auto& subscribers = decoration->second.subscribers;
   
   for(size_t i = subscribers.size(); i--;) {
     const auto& subscriber = subscribers[i];
@@ -75,13 +75,13 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfie
 }
 
 void AutoPacket::PulseSatisfaction(const std::type_info& info) {
-  auto decorator = m_decorations.find(info);
-  if (decorator == m_decorations.end())
+  auto decoration = m_decorations.find(info);
+  if (decoration == m_decorations.end())
     // Trivial return, there's no subscriber to this decoration
     return;
   
   // Roll back all satisfaction counters:
-  const auto& subscribers = decorator->second.subscribers;
+  const auto& subscribers = decoration->second.subscribers;
   const auto& subscriberDescriptors = m_factory.GetSubscriberVector();
   
   for(size_t i = subscribers.size(); i--;) {
@@ -145,12 +145,12 @@ void AutoPacket::Reset(void) {
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
   // Obtain the decorator:
-  auto decorator = m_decorations.find(ti);
-  if (decorator == m_decorations.end())
+  auto decoration = m_decorations.find(ti);
+  if (decoration == m_decorations.end())
     // Nobody anywhere cares about this type
     return false;
   
-  const auto& subscribers = decorator->second.subscribers;
+  const auto& subscribers = decoration->second.subscribers;
   
   for(size_t i = subscribers.size(); i--; ) {
     if(subscribers[i].first >= m_satCounters.size())
