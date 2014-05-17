@@ -55,6 +55,7 @@ protected:
 public:
   virtual operator bool(void) const { return false; }
   virtual operator std::shared_ptr<Object>(void) const { return std::shared_ptr<Object>(); }
+  virtual void* ptr(void) { return nullptr; }
   virtual const void* ptr(void) const { return nullptr; }
 
   /// <summary>
@@ -99,10 +100,10 @@ public:
   /// the specified type
   /// </remarks>
   template<class T>
-  void init(void) {
+  SharedPointerSlotT<T>& init(void) {
     // Trivial reset-then-reinit:
     reset();
-    new (this) SharedPointerSlotT<T>();
+    return *new (this) SharedPointerSlotT<T>();
   }
 
   /// <returns>
@@ -252,7 +253,8 @@ public:
     return leap::fast_pointer_cast<Object>(get());
   }
 
-  virtual const void* ptr(void) const { return get().get(); }
+  virtual void* ptr(void) override { return get().get(); }
+  virtual const void* ptr(void) const override { return get().get(); }
 
   virtual void New(void* pSpace, size_t nBytes) const override {
     if(nBytes < sizeof(*this))
