@@ -20,14 +20,6 @@ class AutoPacketSubscriber;
 template<class T>
 struct subscriber_traits;
 
-// Stores subscriber 'pointers' for a for a decorator of type 'ti'
-struct AdjacencyEntry {
-  // Indexes into the subscriber satisfaction vector.  Each entry in this list represents a single
-  // subscriber, and an offset in the m_subscribers vector.  The second element in the pair is the
-  // optional flag.
-  std::vector<std::pair<size_t, bool>> subscribers;
-};
-
 /// <summary>
 /// A decorator-style processing packet
 /// </summary>
@@ -59,6 +51,11 @@ private:
       isCheckedOut(false)
     {}
 
+    // Indexes into the subscriber satisfaction vector.  Each entry in this list represents a single
+    // subscriber, and an offset in the m_subscribers vector.  The second element in the pair is the
+    // optional flag.
+    std::vector<std::pair<size_t, bool>> subscribers;
+
     // Flag indicating that this entry is satsif
     bool satisfied;
 
@@ -66,18 +63,20 @@ private:
     bool isCheckedOut;
   };
 
-  // The associated packet factory:
+  // The parent packet factory:
   AutoPacketFactory& m_factory;
-  
-  // Map used to associate a decorator type with the adjacency entries for that type.
-  typedef std::unordered_map<std::type_index, AdjacencyEntry> t_decMap;
-  t_decMap m_decorations;
+
+  // A back-link to the previously issued packet in the packet sequence.  May potentially be null,
+  // if this is the first packet issued by the packet factory.
+  std::shared_ptr<AutoPacket> m_prior;
 
   // The set of decorations currently attached to this object, and the associated lock:
   mutable boost::mutex m_lock;
-  mutable std::unordered_map<std::type_index, DecorationDisposition> m_mp;
+  mutable std::unordered_map<std::type_index, DecorationDisposition> m_decorations;
 
-  // Status counters, copied directly from the degree vector in the packet factory:
+  // Status counters, copied directly from the degree vector in the packet factory.  These status
+  // counters are the only part of this AutoPacket that must be updated each time the packet is
+  // issued.
   std::vector<SatCounter> m_satCounters;
 
   /// <summary>
