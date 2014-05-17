@@ -133,6 +133,8 @@ set(AutowiringTest_SRCS
   AnySharedPointerTest.cpp
   AutoAnchorTest.h
   AutoAnchorTest.cpp
+  AutoFilterTest.h
+  AutoFilterTest.cpp
   AutoInjectableTest.h
   AutoInjectableTest.cpp
   AutoPacketFactoryTest.h
