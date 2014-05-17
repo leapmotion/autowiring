@@ -144,6 +144,14 @@ public:
     return m_objs.size();
   }
 
+  /// <summary>
+  /// Discards all entities currently saved in the pool
+  /// </summary>
+  /// <remarks>
+  /// This method will also cause currently outstanding entities to be freed.  Eventually, once all objects
+  /// return to the pool, the set of objects managed by this pool will be distinct from those objects created
+  /// prior to this call.
+  /// </remarks>
   void ClearCachedEntities(void) {
     // Declare this first, so it's freed last:
     std::vector<std::shared_ptr<T>> objs;
@@ -153,9 +161,9 @@ public:
     // the shared_ptr cleanup lambda.
     boost::lock_guard<boost::mutex> lk(*m_monitor);
     m_poolVersion++;
-    objs = std::move(m_objs);
-    // After moving the object, reset it to a known state
-    m_objs.clear();
+
+    // Swap the cached object collection with an empty one
+    std::swap(objs, m_objs);
   }
 
   /// <summary>
@@ -214,7 +222,7 @@ public:
   std::shared_ptr<T> WaitFor(Duration duration) {
     boost::unique_lock<boost::mutex> lk(*m_monitor);
     if(!m_limit)
-      throw autowiring_error("Attempted to perform a timed wait on a pool containing no entities");
+      throw autowiring_error("Attempted to perform a timed wait on a pool that is already in rundown");
 
     if(m_setCondition.wait_for(
         lk,
