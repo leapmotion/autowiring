@@ -51,7 +51,9 @@ private:
   /// <remarks>
   /// A disposition holder, used to maintain initialization state on the key
   /// </remarks>
-  struct DecorationDisposition {
+  struct DecorationDisposition:
+    public AnySharedPointer
+  {
     DecorationDisposition(void) :
       satisfied(false),
       isCheckedOut(false)
@@ -62,31 +64,6 @@ private:
 
     // Flag, set if the internally held object is currently checked out
     bool isCheckedOut;
-
-    // The enclosure proper:
-    AnySharedPointer enclosure;
-
-    /// <summary>
-    /// Creates a new shared pointer with the specified type
-    /// </summary>
-    template<class T>
-    SharedPointerSlotT<T>& Initialize(void) {
-      enclosure = std::make_shared<T>();
-      return enclosure.as<T>();
-    }
-
-    /// <summary>
-    /// Initializes the slot with the specified shared pointer
-    /// </summary>
-    template<class T>
-    SharedPointerSlotT<T>& Initialize(const std::shared_ptr<T>& rhs) {
-      enclosure = rhs;
-      return enclosure.as<T>();
-    }
-
-    void Release(void) {
-      enclosure->reset();
-    }
   };
 
   // The associated packet factory:
@@ -135,7 +112,7 @@ private:
 
       if(!ready)
         // Memory must be released, the checkout was cancelled
-        entry.enclosure->reset();
+        entry->reset();
 
       // Reset the checkout flag before releasing the lock:
       assert(entry.isCheckedOut);
@@ -176,9 +153,9 @@ public:
 
     auto q = m_mp.find(typeid(T));
     if(q != m_mp.end() && q->second.satisfied) {
-      auto& enclosure = q->second.enclosure;
-      if(enclosure) {
-        out = enclosure->as<T>().get();
+      auto& disposition = q->second;
+      if(disposition) {
+        out = disposition->as<T>().get();
         return true;
       }
     }
@@ -224,8 +201,12 @@ public:
     }
 
     if(HasSubscribers<T>()) {
-      auto& enclosure = entry->Initialize<T>();
-      return AutoCheckout<T>(*this, enclosure.get(), &AutoPacket::CompleteCheckout<T>);
+      auto& enclosure = (*entry = std::make_shared<T>());
+      return AutoCheckout<T>(
+        *this,
+        enclosure.get(),
+        &AutoPacket::CompleteCheckout<T>
+      );
     }
 
     // Ensure we mark this entry unsatisfiable so that cleanup behavior works as expected
