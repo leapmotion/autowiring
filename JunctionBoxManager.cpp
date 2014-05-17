@@ -12,7 +12,6 @@ JunctionBoxManager::JunctionBoxManager(void) {
 
   //Always allow internal events
   m_junctionBoxes[typeid(AutowiringEvents)]->Initiate();
-  m_junctionBoxes[typeid(AutoPacketListener)]->Initiate();
 }
 
 JunctionBoxManager::~JunctionBoxManager(void) {}
