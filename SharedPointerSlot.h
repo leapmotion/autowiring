@@ -284,4 +284,12 @@ public:
   void operator=(const std::shared_ptr<T>& rhs) {
     get() = rhs;
   }
+
+  T* operator->(void) const {
+    return get().get();
+  }
+
+  T& operator*(void) const {
+    return *get();
+  }
 };

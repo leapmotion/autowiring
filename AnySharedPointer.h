@@ -38,6 +38,9 @@ public:
   SharedPointerSlot* operator->(void) { return slot(); }
   const SharedPointerSlot* operator->(void) const { return slot(); }
 
+  template<class T>
+  SharedPointerSlotT<T>& as(void) const { return (SharedPointerSlotT<T>&)*slot(); }
+
   /// <summary>
   /// Copy assignment operator
   /// </summary>
