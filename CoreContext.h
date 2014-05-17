@@ -305,9 +305,9 @@ protected:
   void AddPacketSubscriber(const AutoPacketSubscriber& rhs);
   
   /// <summary>
-  /// Counterparts to the AddPacketSubscriber routine
+  /// Removes all of the subscribers defined in the given AutoPacketFactory from this CoreContext
   /// </summary>
-  void RemovePacketSubscribers(const std::vector<AutoPacketSubscriber>& subscribers);
+  void RemovePacketSubscribers(const AutoPacketFactory& factory);
 
   /// <summary>
   /// Increments the total number of contexts still outstanding

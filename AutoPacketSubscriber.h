@@ -1,8 +1,7 @@
 #pragma once
-#include "AutoPacket.h"
+#include "AnySharedPointer.h"
 #include "Decompose.h"
 #include "FilterPropertyExtractor.h"
-#include <boost/any.hpp>
 #include MEMORY_HEADER
 
 class AutoPacket;
@@ -138,7 +137,6 @@ public:
     m_arity(0),
     m_requiredCount(0),
     m_optionalCount(0),
-    m_pObj(nullptr),
     m_pCall(nullptr)
   {}
 
@@ -150,7 +148,6 @@ public:
     m_arity(rhs.m_arity),
     m_requiredCount(rhs.m_requiredCount),
     m_optionalCount(rhs.m_optionalCount),
-    m_pObj(rhs.m_pObj),
     m_pCall(rhs.m_pCall)
   {}
 
@@ -169,7 +166,6 @@ public:
     m_ti(&typeid(T)),
     m_requiredCount(0),
     m_optionalCount(0),
-    m_pObj(subscriber.get()),
     m_pCall(&CallExtractor<decltype(&T::AutoFilter)>::Call)
   {
     typedef Decompose<decltype(&T::AutoFilter)> t_decompose;
@@ -196,7 +192,7 @@ public:
 
 protected:
   // A hold on the enclosed subscriber
-  boost::any m_subscriber;
+  AnySharedPointer m_subscriber;
 
   // The type information of this subscriber
   const std::type_info* m_ti;
@@ -220,10 +216,6 @@ protected:
   // The number of arguments declared to be optional:
   size_t m_optionalCount;
 
-  // This is the first argument that will be passed to the Call function defined below.  It
-  // is a pointer to an actual subscriber, but with type information omitted for performance.
-  void* m_pObj;
-
   // The first argument of this static global is void*, but it is expected that the argument
   // that will actually be passed is of a type corresponding to the member function bound
   // by this operation.  Strong guarantees must be made that the types
@@ -231,11 +223,11 @@ protected:
 
 public:
   // Accessor methods:
-  bool empty(void) const { return m_subscriber.empty(); }
+  bool empty(void) const { return m_subscriber->empty(); }
   size_t GetArity(void) const { return m_arity; }
   size_t GetRequiredCount(void) const { return m_requiredCount; }
   size_t GetOptionalCount(void) const { return m_optionalCount; }
-  boost::any GetSubscriber(void) const { return m_subscriber; }
+  const AnySharedPointer& GetSubscriber(void) const { return m_subscriber; }
   const std::type_info* GetSubscriberTypeInfo(void) const { return m_ti; }
   const AutoPacketSubscriberInput* GetSubscriberInput(void) const { return m_pArgs; }
   bool IsDeferred(void) const { return m_deferred; }
@@ -245,11 +237,12 @@ public:
   /// </summary>
   void ReleaseSubscriber(void) {
     m_arity = 0;
-    m_subscriber = boost::any();
+    m_subscriber->reset();
   }
 
-  /// <returns>A pointer to the subscriber</returns>
-  void* GetSubscriberPtr(void) const { return m_pObj; }
+  /// <returns>A pointer to the proper subscriber object</returns>
+  void* GetSubscriberPtr(void) { return m_subscriber->ptr(); }
+  const void* GetSubscriberPtr(void) const { return m_subscriber->ptr(); }
 
   /// <returns>A call lambda wrapping the associated subscriber</returns>
   /// <remarks>
@@ -284,3 +277,17 @@ class AutoPacketSubscriberSelect<T, false>:
 public:
   AutoPacketSubscriberSelect(const std::shared_ptr<T>&) {}
 };
+
+namespace std {
+  template<class T>
+  struct hash;
+
+  template<>
+  struct hash<AutoPacketSubscriber>:
+    public std::unary_function<AutoPacketSubscriber, size_t>
+  {
+    size_t operator()(const AutoPacketSubscriber& subscriber) const {
+      return (size_t) subscriber.GetSubscriberPtr();
+    }
+  };
+}
