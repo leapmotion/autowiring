@@ -59,7 +59,7 @@ private:
       isCheckedOut(false)
     {}
 
-    // Flag, used by the caller, to mark this enclosure as satisfied
+    // Flag indicating that this entry is satsif
     bool satisfied;
 
     // Flag, set if the internally held object is currently checked out
@@ -108,7 +108,6 @@ private:
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
       auto& entry = m_mp[typeid(T)];
-      assert(entry.satisfied);
 
       if(!ready)
         // Memory must be released, the checkout was cancelled
