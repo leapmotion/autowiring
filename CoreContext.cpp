@@ -3,7 +3,6 @@
 #include "CoreContext.h"
 #include "CoreThread.h"
 #include "AutoPacketFactory.h"
-#include "AutoPacketListener.h"
 #include "Autowired.h"
 #include "BoltBase.h"
 #include "GlobalCoreContext.h"
