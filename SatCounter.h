@@ -52,5 +52,6 @@ struct SatCounter:
     return remaining || optional;
   }
 
+  /// <returns>False if there are any mandatory or optional elements still outstanding</returns>
   operator bool(void) const { return !remaining && !optional; }
 };
