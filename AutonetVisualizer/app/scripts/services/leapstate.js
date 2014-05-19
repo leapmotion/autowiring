@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('autoNetApp')
-.factory('LeapState', function LeapState(websocket) {
+.factory('LeapState', ['websocket', function LeapState(websocket) {
 
   // Object definitions
   function Context(id, ctxt){
@@ -121,4 +121,4 @@ angular.module('autoNetApp')
       return isSubscribed;
     }
   };
-});
+}]);
