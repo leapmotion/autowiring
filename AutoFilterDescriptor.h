@@ -2,7 +2,7 @@
 #include "AnySharedPointer.h"
 #include "AutoPacket.h"
 #include "Decompose.h"
-#include "FilterPropertyExtractor.h"
+#include "has_autofilter.h"
 #include MEMORY_HEADER
 
 class AutoPacket;

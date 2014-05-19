@@ -2,7 +2,6 @@
 #include "DecoratorTest.h"
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
-#include "FilterPropertyExtractor.h"
 #include "TestFixtures/Decoration.h"
 
 using namespace std;
