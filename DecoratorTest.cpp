@@ -310,7 +310,7 @@ TEST_F(DecoratorTest, RollbackCorrectness) {
   packet->Checkout<Decoration<0>>();
 
   // Verify no hit took place--the checkout should have been cancelled:
-  EXPECT_FALSE(filterA->m_called) << "Filter was not called after all decorations were installed";
+  EXPECT_FALSE(filterA->m_called) << "Filter was called even though one decoration shouldn't have been available";
 
   // We should not be able to obtain another checkout of this decoration on this packet:
   EXPECT_ANY_THROW(packet->Checkout<Decoration<0>>()) << "An attempt to check out a decoration a second time should have failed";
