@@ -64,13 +64,26 @@ void AutoPacketFactory::Wait(void) {
 }
 
 void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
-  const std::type_info& ti = *rhs.GetSubscriberTypeInfo();
-  boost::lock_guard<boost::mutex> lk(m_lock);
-  m_autoFilters.insert(rhs);
+  {
+    const std::type_info& ti = *rhs.GetSubscriberTypeInfo();
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_autoFilters.insert(rhs);
+  }
+
+  // Trigger object pool reset after releasing the lock.  While it's possible that some
+  // packets may be issued between lock reset and object pool reset, these packets will
+  // not be specifically invalid; they will simply result in late delivery to certain
+  // recipients.  Eventually, all packets will be reset and released.
+  m_packets.ClearCachedEntities();
 }
 
 void AutoPacketFactory::RemoveSubscriber(const AutoPacketSubscriber& autoFilter) {
   // Trivial removal from the autofilter set:
-  boost::lock_guard<boost::mutex> lk(m_lock);
-  m_autoFilters.erase(autoFilter);
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_autoFilters.erase(autoFilter);
+  }
+
+  // Regeneration of the packet pool for the same reason as described in AddSubscriber
+  m_packets.ClearCachedEntities();
 }
