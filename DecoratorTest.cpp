@@ -16,26 +16,23 @@ TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   vector<const type_info*> v;
 
   // Run our prop extractor based on a known decorator:
-  RecipientPropertyExtractor<FilterA>::Enumerate(
-    [&v] (const std::type_info& ti) {
-      v.push_back(&ti);
-    }
-  );
+  AutoRequired<FilterA> filterA;
+  AutoFilterDescriptor desc(filterA);
+  for(const AutoFilterDescriptorInput* cur = desc.GetAutoFilterInput(); *cur; cur++)
+    v.push_back(cur->ti);
   ASSERT_EQ(2UL, v.size()) << "Extracted an insufficient number of types from a known filter function";
 
   // Arguments MUST be in order:
   EXPECT_EQ(typeid(Decoration<0>), *v[0]);
   EXPECT_EQ(typeid(Decoration<1>), *v[1]);
-
-  // Verify both overloads wind up returning the same array:
-  auto ppCur = RecipientPropertyExtractor<FilterA>::Enumerate();
-  for(size_t i = 0; ppCur[i]; i++)
-    EXPECT_EQ(*v[i], *ppCur[i]) << "Two overloads of Enumerate returned contradictory types";
 }
 
 TEST_F(DecoratorTest, VerifyEmptyExtraction) {
-  const type_info*const* v = RecipientPropertyExtractor<Object>::Enumerate();
-  EXPECT_EQ(nullptr, *v) << "Extracted arguments from an object known not to have a Filter method";
+  auto obj = std::make_shared<Object>();
+
+  // Should be possible to obtain this value and have it remain valid even after the descriptor is gone
+  const AutoFilterDescriptorInput* v = MakeAutoFilterDescriptor(obj).GetAutoFilterInput();
+  EXPECT_EQ(nullptr, v) << "Extracted arguments from an object known not to have a Filter method";
 }
 
 TEST_F(DecoratorTest, VerifySimplePacketDecoration) {

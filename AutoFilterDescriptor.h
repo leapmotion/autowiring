@@ -1,5 +1,6 @@
 #pragma once
 #include "AnySharedPointer.h"
+#include "AutoPacket.h"
 #include "Decompose.h"
 #include "FilterPropertyExtractor.h"
 #include MEMORY_HEADER
@@ -16,11 +17,6 @@ class auto_pooled;
 
 template<class T>
 class optional_ptr;
-
-/// <summary>
-/// Forward declaration circumvention, used to avoid circular reference issues
-/// </summary>
-std::shared_ptr<AutoPacket> ExtractSharedPointer(const AutoPacketAdaptor& adaptor);
 
 template<class MemFn>
 struct CallExtractor;
@@ -49,10 +45,13 @@ struct CallExtractor<Deferred (T::*)(Args...)>
   typedef std::true_type deferred;
 
   static void Call(void* pObj, const AutoPacketAdaptor& repo) {
-    std::shared_ptr<AutoPacket> shared = ExtractSharedPointer(repo);
+    // Obtain a shared pointer of the AutoPacket in order to ensure the packet
+    // stays resident when we pend this lambda to the destination object's
+    // dispatch queue.
+    std::shared_ptr<AutoPacket> autoPacket = repo;
 
     // Pend the call to this object's dispatch queue:
-    *(T*)pObj += [pObj, shared, repo] {
+    *(T*) pObj += [pObj, autoPacket, repo] {
       ((T*) pObj)->AutoFilter(
         repo.Cast<Args>()...
       );
@@ -283,6 +282,11 @@ class AutoFilterDescriptorSelect<T, false>:
 public:
   AutoFilterDescriptorSelect(const std::shared_ptr<T>&) {}
 };
+
+template<class T>
+AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
+  return AutoFilterDescriptorSelect<T>(ptr);
+}
 
 namespace std {
   template<class T>

@@ -3,16 +3,14 @@
 #include "AutoCheckout.h"
 #include "auto_out.h"
 #include "auto_pooled.h"
-#include "Object.h"
 #include "optional_ptr.h"
-#include "SatCounter.h"
-#include <boost/any.hpp>
 #include <boost/thread/mutex.hpp>
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 #include EXCEPTION_PTR_HEADER
 
+struct SatCounter;
 class AutoPacketFactory;
 class AutoPacketProfiler;
 class AutoFilterDescriptor;
