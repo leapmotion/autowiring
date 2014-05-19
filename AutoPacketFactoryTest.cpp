@@ -2,37 +2,6 @@
 #include "AutoPacketFactoryTest.h"
 #include "CoreThread.h"
 
-class IssuesPacketWaitsThenQuits:
-  public CoreThread
-{
-public:
-  IssuesPacketWaitsThenQuits(void) :
-    m_hasQuit(false)
-  {
-    // Note:  Don't do this in practice.  This only works because we only inject this type
-    // into a context that's already running; normally, creating a packet from our ctor can
-    // cause an exception if we are being injected before Initiate is called.
-    AutoRequired<AutoPacketFactory> factory;
-    m_packet = factory->NewPacket();
-  }
-
-  bool m_hasQuit;
-  std::shared_ptr<AutoPacket> m_packet;
-
-  void Run(void) override {
-    // Move the shared pointer here:
-    auto packet = std::move(m_packet);
-    // After moving the object, reset it to a known state
-    m_packet.reset();
-
-    // Just wait a bit, then return, just like we said we would
-    this->ThreadSleep(boost::chrono::milliseconds(50));
-
-    // Update our variable and then return out:
-    m_hasQuit = true;
-  }
-};
-
 TEST_F(AutoPacketFactoryTest, VerifyNoIssueWhileNotStarted) {
   AutoRequired<AutoPacketFactory> factory;
   ASSERT_THROW(factory->NewPacket(), autowiring_error) << "Issuing a packet in a context that has not yet been started should throw an exception";
@@ -51,6 +20,37 @@ TEST_F(AutoPacketFactoryTest, VerifyNoIssueWhileStopped) {
   AutoRequired<AutoPacketFactory> factory;
   ASSERT_THROW(factory->NewPacket(), autowiring_error) << "Issuing a packet in a context that has already been stopped should throw an exception";
 }
+
+class IssuesPacketWaitsThenQuits:
+  public CoreThread
+{
+public:
+  IssuesPacketWaitsThenQuits(void) :
+    m_hasQuit(false)
+  {
+    // Note:  Don't do this in practice.  This only works because we only inject this type
+    // into a context that's already running; normally, creating a packet from our ctor can
+    // cause an exception if we are being injected before Initiate is called.
+    AutoRequired<AutoPacketFactory> factory;
+    m_packet = factory->NewPacket();
+  }
+
+  bool m_hasQuit;
+  std::shared_ptr<AutoPacket> m_packet;
+
+  void Run(void) override {
+    // Move shared pointer locally:
+    std::shared_ptr<AutoPacket> packet;
+    std::swap(packet, m_packet);
+
+    // Just wait a bit, then return, just like we said we would
+    this->ThreadSleep(boost::chrono::milliseconds(50));
+
+    // Update our variable and then return out:
+    m_hasQuit = true;
+  }
+};
+
 
 TEST_F(AutoPacketFactoryTest, WaitRunsDownAllPackets) {
   AutoCurrentContext()->Initiate();
