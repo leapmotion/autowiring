@@ -89,14 +89,14 @@ struct subscriber_traits<auto_out<T, auto_ready>>
   static const eSubscriberInputType subscriberType = auto_ready ? outTypeRef : outTypeRefAutoReady;
 };
 
-struct AutoPacketSubscriberInput {
-  AutoPacketSubscriberInput(void) :
+struct AutoFilterDescriptorInput {
+  AutoFilterDescriptorInput(void) :
     ti(nullptr),
     subscriberType(inTypeInvalid)
   {}
 
   template<class T>
-  AutoPacketSubscriberInput(subscriber_traits<T>&& traits) :
+  AutoFilterDescriptorInput(subscriber_traits<T>&& traits) :
     ti(&typeid(typename subscriber_traits<T>::type)),
     subscriberType(subscriber_traits<T>::subscriberType)
   {}
@@ -110,7 +110,7 @@ struct AutoPacketSubscriberInput {
 
   template<class T>
   struct rebind {
-    operator AutoPacketSubscriberInput() {
+    operator AutoFilterDescriptorInput() {
       return subscriber_traits<T>();
     }
   };
@@ -125,12 +125,12 @@ struct AutoPacketSubscriberInput {
 /// function is invoked via a call centralizer implemented in the Decompose header, and
 /// instantiated from the templatized version of this class's constructor.
 /// </remarks>
-class AutoPacketSubscriber {
+class AutoFilterDescriptor {
 public:
   // The type of the call centralizer
   typedef void(*t_call)(void*, const AutoPacketAdaptor&);
 
-  AutoPacketSubscriber(void) :
+  AutoFilterDescriptor(void) :
     m_ti(nullptr),
     m_pArgs(nullptr),
     m_deferred(false),
@@ -140,7 +140,7 @@ public:
     m_pCall(nullptr)
   {}
 
-  AutoPacketSubscriber(const AutoPacketSubscriber& rhs) :
+  AutoFilterDescriptor(const AutoFilterDescriptor& rhs) :
     m_subscriber(rhs.m_subscriber),
     m_ti(rhs.m_ti),
     m_pArgs(rhs.m_pArgs),
@@ -161,7 +161,7 @@ public:
   /// a AutoPacket to provide type sources
   /// </summary>
   template<class T>
-  AutoPacketSubscriber(const std::shared_ptr<T>& subscriber) :
+  AutoFilterDescriptor(const std::shared_ptr<T>& subscriber) :
     m_subscriber(subscriber),
     m_ti(&typeid(T)),
     m_requiredCount(0),
@@ -175,7 +175,7 @@ public:
 
     m_deferred = std::is_same<Deferred, typename t_decompose::retType>::value;
     m_arity = t_decompose::N;
-    m_pArgs = t_decompose::template Enumerate<AutoPacketSubscriberInput>();
+    m_pArgs = t_decompose::template Enumerate<AutoFilterDescriptorInput>();
     for(auto pArg = m_pArgs; *pArg; pArg++) {
       switch(pArg->subscriberType) {
       case inTypeRequired:
@@ -198,7 +198,7 @@ protected:
   const std::type_info* m_ti;
 
   // This subscriber's argument types
-  const AutoPacketSubscriberInput* m_pArgs;
+  const AutoFilterDescriptorInput* m_pArgs;
 
   // Set if this is a deferred subscriber.  Deferred subscribers cannot receive immediate-style
   // decorations, and have additional handling considerations when dealing with non-copyable
@@ -229,10 +229,10 @@ public:
   size_t GetOptionalCount(void) const { return m_optionalCount; }
   const AnySharedPointer& GetSubscriber(void) const { return m_subscriber; }
   const std::type_info* GetSubscriberTypeInfo(void) const { return m_ti; }
-  const AutoPacketSubscriberInput* GetSubscriberInput(void) const { return m_pArgs; }
+  const AutoFilterDescriptorInput* GetSubscriberInput(void) const { return m_pArgs; }
   bool IsDeferred(void) const { return m_deferred; }
 
-  bool operator==(const AutoPacketSubscriber& rhs) const {
+  bool operator==(const AutoFilterDescriptor& rhs) const {
     return
       m_pCall == rhs.m_pCall &&
       m_subscriber == rhs.m_subscriber;
@@ -265,23 +265,23 @@ public:
 };
 
 template<class T, bool has_autofilter = has_autofilter<T>::value>
-class AutoPacketSubscriberSelect:
+class AutoFilterDescriptorSelect:
   public std::true_type,
-  public AutoPacketSubscriber
+  public AutoFilterDescriptor
 {
 public:
-  AutoPacketSubscriberSelect(const std::shared_ptr<T>& subscriber) :
-    AutoPacketSubscriber(subscriber)
+  AutoFilterDescriptorSelect(const std::shared_ptr<T>& subscriber) :
+    AutoFilterDescriptor(subscriber)
   {}
 };
 
 template<class T>
-class AutoPacketSubscriberSelect<T, false>:
+class AutoFilterDescriptorSelect<T, false>:
   public std::false_type,
-  public AutoPacketSubscriber
+  public AutoFilterDescriptor
 {
 public:
-  AutoPacketSubscriberSelect(const std::shared_ptr<T>&) {}
+  AutoFilterDescriptorSelect(const std::shared_ptr<T>&) {}
 };
 
 namespace std {
@@ -289,10 +289,10 @@ namespace std {
   struct hash;
 
   template<>
-  struct hash<AutoPacketSubscriber>:
-    public std::unary_function<AutoPacketSubscriber, size_t>
+  struct hash<AutoFilterDescriptor>:
+    public std::unary_function<AutoFilterDescriptor, size_t>
   {
-    size_t operator()(const AutoPacketSubscriber& subscriber) const {
+    size_t operator()(const AutoFilterDescriptor& subscriber) const {
       return (size_t) subscriber.GetSubscriberPtr();
     }
   };
