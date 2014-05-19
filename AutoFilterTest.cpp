@@ -4,10 +4,6 @@
 #include "AutoPacketFactory.h"
 #include "TestFixtures/Decoration.h"
 
-TEST_F(AutoFilterTest, SimplePacketTransmission)
-{
-}
-
 TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
   AutoCurrentContext()->Initiate();
 
@@ -21,7 +17,8 @@ TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
   std::shared_ptr<AutoPacket> packet2;
   std::weak_ptr<AutoPacket> packet3;
   std::weak_ptr<FilterA> filterChecker;
-  //Create a subcontext
+
+  // Create a subcontext
   {
     AutoCreateContext subContext;
     {
@@ -292,4 +289,20 @@ TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
 
   // FilterC should have also satisfied filterA:
   EXPECT_TRUE(filterA->m_called) << "FilterA should have been satisfied by FilterC";
+}
+
+TEST_F(AutoFilterTest, VerifyReferenceBasedInput) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterGen<Decoration<0>, Decoration<1>&>> makesDec1;
+
+  // Create a packet and put decoration 0 on it:
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>());
+
+  // Verify that our filter got called when its sole input was satisfied
+  ASSERT_TRUE(makesDec1->m_called) << "Single-input autofilter was not called as expected";
+
+  // Now make sure that the packet has the expected decoration:
+  ASSERT_TRUE(packet->Has<Decoration<1>>());
 }

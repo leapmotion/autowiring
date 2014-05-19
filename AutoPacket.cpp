@@ -6,14 +6,12 @@
 #include "SatCounter.h"
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory):
-  m_factory(factory)
-{
-  // Copy out the satisfaction vector:
-  m_satCounters.assign(
+  m_factory(factory),
+  m_satCounters(
     factory.GetSubscriberVector().begin(),
     factory.GetSubscriberVector().end()
-  );
-
+  )
+{
   // Prime the satisfaction graph for each element:
   for(auto& autoFilter : m_satCounters)
     for(

@@ -48,6 +48,7 @@ set(Autowiring_SRCS
   CurrentContextPusher.cpp
   CurrentContextPusher.h
   Decompose.h
+  DecorationDisposition.h
   Deserialize.h
   deferred_ptr.h
   DispatchQueue.h
