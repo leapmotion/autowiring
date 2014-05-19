@@ -286,13 +286,6 @@ TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
   // The mere act of obtaining a packet should have triggered filterD to be fired:
   EXPECT_TRUE(filterD->m_called) << "Trivial filter was not called as expected";
 
-  // The packet should be able to obtain a pointer to itself:
-  {
-    AutoPacketAdaptor extractor(*packet);
-    AutoPacket* reflex = extractor;
-    EXPECT_EQ(packet.get(), reflex) << "Packet reflexive reference was not an identity";
-  }
-
   // Decorate--should satisfy filterC
   packet->Decorate(Decoration<0>());
   EXPECT_TRUE(filterC->m_called) << "FilterC should have been satisfied with one decoration";

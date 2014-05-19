@@ -6,7 +6,6 @@
 #include MEMORY_HEADER
 
 class AutoPacket;
-class AutoPacketAdaptor;
 class Deferred;
 
 template<class T, bool auto_ready>
@@ -29,9 +28,9 @@ struct CallExtractor<void (T::*)(Args...)>
 {
   typedef std::false_type deferred;
 
-  static void Call(void* pObj, const AutoPacketAdaptor& repo) {
+  static void Call(void* pObj, AutoPacket& autoPacket) {
     ((T*) pObj)->AutoFilter(
-      repo.Cast<Args>()...
+      AutoFilterArgExtractor<Args>()(autoPacket)...
     );
   }
 };
@@ -44,16 +43,16 @@ struct CallExtractor<Deferred (T::*)(Args...)>
 {
   typedef std::true_type deferred;
 
-  static void Call(void* pObj, const AutoPacketAdaptor& repo) {
+  static void Call(void* pObj, AutoPacket& autoPacket) {
     // Obtain a shared pointer of the AutoPacket in order to ensure the packet
     // stays resident when we pend this lambda to the destination object's
     // dispatch queue.
-    std::shared_ptr<AutoPacket> autoPacket = repo;
+    auto pAutoPacket = autoPacket.shared_from_this();
 
     // Pend the call to this object's dispatch queue:
-    *(T*) pObj += [pObj, autoPacket, repo] {
+    *(T*) pObj += [pObj, pAutoPacket] {
       ((T*) pObj)->AutoFilter(
-        repo.Cast<Args>()...
+        AutoFilterArgExtractor<Args>()(*pAutoPacket)...
       );
     };
   }
@@ -127,7 +126,7 @@ struct AutoFilterDescriptorInput {
 class AutoFilterDescriptor {
 public:
   // The type of the call centralizer
-  typedef void(*t_call)(void*, const AutoPacketAdaptor&);
+  typedef void(*t_call)(void*, AutoPacket&);
 
   AutoFilterDescriptor(void) :
     m_ti(nullptr),
