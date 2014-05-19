@@ -64,9 +64,9 @@ set(Autowiring_SRCS
   JunctionBoxManager.h
   JunctionBoxManager.cpp
   ExceptionFilter.h
-  FilterPropertyExtractor.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
+  has_autofilter.h
   InterlockedExchange.h
   Object.h
   ObjectPool.h
