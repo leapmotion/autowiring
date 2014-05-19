@@ -2,6 +2,7 @@
 #include "AnySharedPointer.h"
 #include "AutoCheckout.h"
 #include "DecorationDisposition.h"
+#include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
@@ -37,9 +38,6 @@ public:
   ~AutoPacket(void);
 
 private:
-  // The parent packet factory:
-  AutoPacketFactory& m_factory;
-
   // A back-link to the previously issued packet in the packet sequence.  May potentially be null,
   // if this is the first packet issued by the packet factory.
   std::shared_ptr<AutoPacket> m_prior;
@@ -142,17 +140,6 @@ public:
 
     out = nullptr;
     return false;
-  }
-
-  /// <summary>
-  /// Provides the passed enumerator function with a list of all interior types
-  /// </summary>
-  template<class Fx>
-  void Enumerate(Fx&& fx) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    for(auto q = m_decorations.begin(); q != m_decorations.end(); q++)
-      if(q->second.satisfied)
-        fx(q->first, q->second.pEnclosure);
   }
 
   /// <summary>
@@ -271,7 +258,7 @@ public:
 
     // Mark this entry as unsatisfiable:
     pEntry->satisfied = false;
-    entry.wasCheckedOut = true;
+    pEntry->wasCheckedOut = true;
 
     // Now trigger a rescan to hit any deferred, unsatisfiable entries:
     MarkUnsatisfiable(typeid(T));
