@@ -1,9 +1,6 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "AutoCheckout.h"
-#include "auto_out.h"
-#include "auto_pooled.h"
-#include "optional_ptr.h"
 #include <boost/thread/mutex.hpp>
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
@@ -34,6 +31,7 @@ class AutoPacket:
   public std::enable_shared_from_this<AutoPacket>
 {
 public:
+  AutoPacket(const AutoPacket& rhs) = delete;
   AutoPacket(AutoPacketFactory& factory);
   ~AutoPacket(void);
 
@@ -316,43 +314,4 @@ public:
   bool HasSubscribers(void) const {return HasSubscribers(typeid(T));}
 
   bool HasSubscribers(const std::type_info& ti) const;
-};
-
-// Default behavior:
-template<class T>
-struct AutoFilterArgExtractor {
-  static_assert(
-    std::is_const<typename std::remove_reference<T>::type>::value ||
-    !std::is_reference<T>::value,
-    "If a decoration is desired, it must either be a const reference, or by value"
-  );
-
-  T operator()(AutoPacket& packet) const {
-    return packet.Get<typename std::decay<T>::type>();
-  }
-};
-
-template<class T>
-struct AutoFilterArgExtractor<optional_ptr<T>> {
-  // Optional pointer overload, tries to satisfy but doesn't throw if there's a miss
-  optional_ptr<T> operator()(AutoPacket& packet) const {
-    const typename std::decay<T>::type* out;
-    if(packet.Get(out))
-      return out;
-    return nullptr;
-  }
-};
-
-template<class T, bool checkout>
-struct AutoFilterArgExtractor<auto_out<T, checkout>> {
-  auto_out<T, checkout> operator()(AutoPacket& packet) const {
-    return auto_out<T, checkout>(packet.Checkout<T>());
-  }
-};
-
-template<>
-struct AutoFilterArgExtractor<AutoPacket&> {
-  AutoPacket& operator()(AutoPacket& packet) const {
-    return packet;
-  }
 };
