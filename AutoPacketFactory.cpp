@@ -65,7 +65,7 @@ void AutoPacketFactory::Wait(void) {
 
 void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
   {
-    const std::type_info& ti = *rhs.GetSubscriberTypeInfo();
+    const std::type_info& ti = *rhs.GetAutoFilterTypeInfo();
     boost::lock_guard<boost::mutex> lk(m_lock);
     m_autoFilters.insert(rhs);
   }
