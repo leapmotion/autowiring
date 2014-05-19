@@ -72,7 +72,7 @@ TEST_F(AutoFilterTest, VerifySimpleFilter) {
   // Verify that the subscriber has been properly detected:
   bool bFound = false;
   for(const auto& cur : factory->GetSubscriberVector())
-    if(cur.GetSubscriber() == filterA) {
+    if(cur.GetAutoFilter() == filterA) {
       bFound = true;
       break;
     }

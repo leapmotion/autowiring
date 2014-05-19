@@ -17,7 +17,7 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
   // Prime the satisfaction graph for each element:
   for(auto& autoFilter : m_satCounters)
     for(
-      auto pCur = autoFilter.GetSubscriberInput();
+      auto pCur = autoFilter.GetAutoFilterInput();
       *pCur;
       pCur++
     ) {
