@@ -4,6 +4,7 @@
 
 class Foo{};
 class Bar{};
+class Baz{};
 
 TEST_F(CoreContextTest, TestEnumerateChildren) {
   // Create a few anonymous children:
@@ -39,6 +40,13 @@ TEST_F(CoreContextTest, TestEnumerateChildren) {
   ASSERT_EQ(2UL, onlyFoos.size()) << "Didn't collect only contexts with 'Foo' sigil";
   ASSERT_NE(std::find(onlyFoos.begin(), onlyFoos.end(), fooCtxt), onlyFoos.end()) << "Context not enumerated";
   ASSERT_NE(std::find(onlyFoos.begin(), onlyFoos.end(), childFoo), onlyFoos.end()) << "Context not enumerated";
+
+  auto onlyBars = m_create->EnumerateChildContexts<Bar>();
+  ASSERT_EQ(1UL, onlyBars.size()) << "Didn't collect only contexts with 'Bar' sigil";
+  ASSERT_NE(std::find(onlyBars.begin(), onlyBars.end(), barCtxt), onlyBars.end()) << "Context not enumerated";
+
+  auto noBaz = m_create->EnumerateChildContexts<Baz>();
+  ASSERT_TRUE(noBaz.empty()) << "Incorrectly collected contexts with 'Baz' sigil";
 }
 
 TEST_F(CoreContextTest, TestEarlyLambdaReturn) {
