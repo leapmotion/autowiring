@@ -232,6 +232,12 @@ public:
   const AutoPacketSubscriberInput* GetSubscriberInput(void) const { return m_pArgs; }
   bool IsDeferred(void) const { return m_deferred; }
 
+  bool operator==(const AutoPacketSubscriber& rhs) const {
+    return
+      m_pCall == rhs.m_pCall &&
+      m_subscriber == rhs.m_subscriber;
+  }
+
   /// <summary>
   /// Releases the bound subscriber and the corresponding arity, causing it to become disabled
   /// </summary>
