@@ -36,7 +36,7 @@ TEST_F(CoreContextTest, TestEnumerateChildren) {
   auto childFoo = barCtxt->Create<Foo>();
   
   auto onlyFoos = m_create->EnumerateChildContexts<Foo>();
-  ASSERT_EQ(2, onlyFoos.size()) << "Didn't collect only contexts with 'Foo' sigil";
+  ASSERT_EQ(2UL, onlyFoos.size()) << "Didn't collect only contexts with 'Foo' sigil";
   ASSERT_NE(std::find(onlyFoos.begin(), onlyFoos.end(), fooCtxt), onlyFoos.end()) << "Context not enumerated";
   ASSERT_NE(std::find(onlyFoos.begin(), onlyFoos.end(), childFoo), onlyFoos.end()) << "Context not enumerated";
 }
