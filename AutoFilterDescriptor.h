@@ -1,24 +1,79 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "AutoPacket.h"
+#include "auto_out.h"
 #include "Decompose.h"
 #include "has_autofilter.h"
+#include "optional_ptr.h"
 #include MEMORY_HEADER
 
 class AutoPacket;
 class Deferred;
 
-template<class T, bool auto_ready>
-class auto_out;
-
 template<class T>
 class auto_pooled;
 
-template<class T>
-class optional_ptr;
-
 template<class MemFn>
 struct CallExtractor;
+
+enum eSubscriberInputType {
+  inTypeInvalid,
+  inTypeRequired,
+  inTypeOptional,
+  outTypeRef,
+  outTypeRefAutoReady
+};
+
+// Default behavior:
+template<class T>
+struct subscriber_traits {
+  static_assert(
+    std::is_const<typename std::remove_reference<T>::type>::value ||
+    !std::is_reference<T>::value,
+    "If a decoration is desired, it must either be a const reference, or by value"
+  );
+
+  typedef T type;
+  static const eSubscriberInputType subscriberType = inTypeRequired;
+
+  T operator()(AutoPacket& packet) const {
+    return packet.Get<typename std::decay<T>::type>();
+  }
+};
+
+template<class T>
+struct subscriber_traits<optional_ptr<T>> {
+  typedef T type;
+  static const eSubscriberInputType subscriberType = inTypeOptional;
+
+  // Optional pointer overload, tries to satisfy but doesn't throw if there's a miss
+  optional_ptr<T> operator()(AutoPacket& packet) const {
+    const typename std::decay<T>::type* out;
+    if(packet.Get(out))
+      return out;
+    return nullptr;
+  }
+};
+
+template<class T, bool auto_ready>
+struct subscriber_traits<auto_out<T, auto_ready>> {
+  typedef T type;
+  static const eSubscriberInputType subscriberType = auto_ready ? outTypeRef : outTypeRefAutoReady;
+
+  auto_out<T, auto_ready> operator()(AutoPacket& packet) const {
+    return auto_out<T, auto_ready>(packet.Checkout<T>());
+  }
+};
+
+template<>
+struct subscriber_traits<AutoPacket&> {
+  typedef AutoPacket type;
+  static const eSubscriberInputType subscriberType = inTypeRequired;
+
+  AutoPacket& operator()(AutoPacket& packet) const {
+    return packet;
+  }
+};
 
 /// <summary>
 /// Specialization for immediate mode cases
@@ -30,7 +85,7 @@ struct CallExtractor<void (T::*)(Args...)>
 
   static void Call(void* pObj, AutoPacket& autoPacket) {
     ((T*) pObj)->AutoFilter(
-      AutoFilterArgExtractor<Args>()(autoPacket)...
+      subscriber_traits<Args>()(autoPacket)...
     );
   }
 };
@@ -52,39 +107,10 @@ struct CallExtractor<Deferred (T::*)(Args...)>
     // Pend the call to this object's dispatch queue:
     *(T*) pObj += [pObj, pAutoPacket] {
       ((T*) pObj)->AutoFilter(
-        AutoFilterArgExtractor<Args>()(*pAutoPacket)...
+        subscriber_traits<Args>()(*pAutoPacket)...
       );
     };
   }
-};
-
-enum eSubscriberInputType {
-  inTypeInvalid,
-  inTypeRequired,
-  inTypeOptional,
-  outTypeRef,
-  outTypeRefAutoReady
-};
-
-template<class T>
-struct subscriber_traits
-{
-  typedef T type;
-  static const eSubscriberInputType subscriberType = inTypeRequired;
-};
-
-template<class T>
-struct subscriber_traits<optional_ptr<T>>
-{
-  typedef T type;
-  static const eSubscriberInputType subscriberType = inTypeOptional;
-};
-
-template<class T, bool auto_ready>
-struct subscriber_traits<auto_out<T, auto_ready>>
-{
-  typedef T type;
-  static const eSubscriberInputType subscriberType = auto_ready ? outTypeRef : outTypeRefAutoReady;
 };
 
 struct AutoFilterDescriptorInput {
