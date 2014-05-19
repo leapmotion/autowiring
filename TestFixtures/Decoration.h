@@ -113,3 +113,22 @@ public:
     m_called = true;
   }
 };
+
+/// <summary>
+/// A generic filter which accepts templated input types
+/// </summary>
+template<class... Args>
+class FilterGen {
+public:
+  FilterGen(void):
+    m_called(false)
+  {}
+
+  void AutoFilter(Args... args) {
+    m_called = true;
+    m_args = std::tie(args...);
+  }
+
+  bool m_called;
+  std::tuple<typename std::remove_reference<Args>::type...> m_args;
+};

@@ -17,14 +17,29 @@ template<class MemFn>
 struct CallExtractor;
 
 enum eSubscriberInputType {
+  // Unused type, refers to an unrecognized input
   inTypeInvalid,
+
+  // Specifies that this argument is mandatory for the AutoFilter to be called
   inTypeRequired,
+
+  // Specifies that this argument is optional--the filter generally may be called
+  // any time all required arguments are satisfied, no matter how many optional
+  // arguments remain
   inTypeOptional,
+
+  // Specifies that the argument is an output which must be satisfied manually by
+  // the caller
   outTypeRef,
+
+  // Specifies that the argument will automatically be marked ready, unless explicitly
+  // cancelled by the caller.
   outTypeRefAutoReady
 };
 
-// Default behavior:
+/// <summary>
+/// Default behavior, which is to just obtain an input for the specified type
+/// </summary>
 template<class T>
 struct subscriber_traits {
   static_assert(
@@ -36,11 +51,35 @@ struct subscriber_traits {
   typedef T type;
   static const eSubscriberInputType subscriberType = inTypeRequired;
 
-  T operator()(AutoPacket& packet) const {
-    return packet.Get<typename std::decay<T>::type>();
+  const T& operator()(AutoPacket& packet) const {
+    return packet.Get<T>();
   }
 };
 
+/// <summary>
+/// Output behavior for the single specified type
+/// </summary>
+template<class T>
+struct subscriber_traits<T&> {
+  typedef T type;
+  static const eSubscriberInputType subscriberType = outTypeRef;
+
+  AutoCheckout<T> operator()(AutoPacket& packet) const {
+    return packet.Checkout<T>();
+  }
+};
+
+/// <summary>
+/// Mandatory input type
+/// </summary>
+template<class T>
+struct subscriber_traits<const T&>:
+  subscriber_traits<T>
+{};
+
+/// <summary>
+/// Optional input type
+/// </summary>
 template<class T>
 struct subscriber_traits<optional_ptr<T>> {
   typedef T type;

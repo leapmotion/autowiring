@@ -1,6 +1,7 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "AutoCheckout.h"
+#include "DecorationDisposition.h"
 #include <boost/thread/mutex.hpp>
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
@@ -36,45 +37,6 @@ public:
   ~AutoPacket(void);
 
 private:
-  /// <remarks>
-  /// A disposition holder, used to maintain initialization state on the key
-  /// </remarks>
-  struct DecorationDisposition
-  {
-    DecorationDisposition(void) :
-      m_pImmediate(nullptr),
-      satisfied(false),
-      isCheckedOut(false),
-      wasCheckedOut(false)
-    {}
-
-    // The decoration proper--potentially, this decoration might be from a prior execution of this
-    // packet.  In the case of immediate decorations, this value will be invalid.
-    AnySharedPointer m_decoration;
-
-    // A pointer to the immediate decoration, if one is specified, or else nullptr
-    const void* m_pImmediate;
-
-    // Satisfaction counters, with the second part indicating a required entry
-    std::vector<std::pair<SatCounter*, bool>> m_subscribers;
-
-    // Flag indicating that this entry is satisfied
-    bool satisfied;
-
-    // Indicates that the internally held object is currently checked out
-    bool isCheckedOut;
-
-    // Indicates that this entry was checked out at some point in the past, and can no longer be
-    // checked out for a subsequent satisfaction
-    bool wasCheckedOut;
-
-    void Reset(void) {
-      satisfied = false;
-      isCheckedOut = false;
-      wasCheckedOut = false;
-    }
-  };
-
   // The parent packet factory:
   AutoPacketFactory& m_factory;
 
@@ -82,12 +44,13 @@ private:
   // if this is the first packet issued by the packet factory.
   std::shared_ptr<AutoPacket> m_prior;
 
-  // The set of decorations currently attached to this object, and the associated lock:
-  mutable boost::mutex m_lock;
-  std::unordered_map<std::type_index, DecorationDisposition> m_decorations;
-
   // Saturation counters, constructed when the packet is created and reset each time thereafter
   std::vector<SatCounter> m_satCounters;
+
+  // The set of decorations currently attached to this object, and the associated lock:
+  mutable boost::mutex m_lock;
+  typedef std::unordered_map<std::type_index, DecorationDisposition> t_decorationMap;
+  t_decorationMap m_decorations;
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
@@ -138,6 +101,17 @@ public:
   /// Clears all decorations and copies over all satisfaction counters
   /// </summary>
   void Reset(void);
+
+  /// <returns>
+  /// True if this packet posesses a decoration of the specified type
+  /// </returns>
+  template<class T>
+  bool Has(void) const {
+    auto q = m_decorations.find(typeid(T));
+    if(q == m_decorations.end())
+      return false;
+    return q->second.satisfied;
+  }
 
   /// <summary>
   /// Detects the desired type, or throws an exception if such a type cannot be found
