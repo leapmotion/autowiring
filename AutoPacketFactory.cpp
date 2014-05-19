@@ -63,7 +63,7 @@ void AutoPacketFactory::Wait(void) {
   m_packets.Rundown();
 }
 
-void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
+void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
   {
     const std::type_info& ti = *rhs.GetSubscriberTypeInfo();
     boost::lock_guard<boost::mutex> lk(m_lock);
@@ -77,7 +77,7 @@ void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
   m_packets.ClearCachedEntities();
 }
 
-void AutoPacketFactory::RemoveSubscriber(const AutoPacketSubscriber& autoFilter) {
+void AutoPacketFactory::RemoveSubscriber(const AutoFilterDescriptor& autoFilter) {
   // Trivial removal from the autofilter set:
   {
     boost::lock_guard<boost::mutex> lk(m_lock);

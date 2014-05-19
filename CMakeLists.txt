@@ -13,6 +13,7 @@ set(Autowiring_SRCS
   AutoFuture.cpp
   CoreJob.h
   CoreJob.cpp
+  AutoFilterDescriptor.h
   AutoInjectable.h
   AutoPacket.h
   AutoPacket.cpp
@@ -21,7 +22,6 @@ set(Autowiring_SRCS
   AutoPacketListener.h
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
-  AutoPacketSubscriber.h
   Autowired.h
   Autowired.cpp
   AutowirableSlot.h
@@ -73,6 +73,7 @@ set(Autowiring_SRCS
   ObjectPool.h
   ObjectPoolMonitor.h
   ObjectPoolMonitor.cpp
+  SatCounter.h
   move_only.h
   MicroBolt.h
   ReentrantCounter.h
