@@ -10,7 +10,6 @@
 #include TYPE_TRAITS_HEADER
 #include STL_UNORDERED_MAP
 
-class AutoPacketListener;
 class Deferred;
 class DispatchQueue;
 struct AdjacencyEntry;

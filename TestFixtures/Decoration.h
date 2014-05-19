@@ -1,5 +1,4 @@
 #pragma once
-#include "../AutoPacketListener.h"
 #include "../CoreThread.h"
 #include <boost/thread/barrier.hpp>
 
@@ -101,16 +100,6 @@ class FilterD:
 {
 public:
   void AutoFilter(AutoPacket& pkt) {
-    m_called = true;
-  }
-};
-
-class FilterE:
-  public FilterRoot,
-  public AutoPacketListener
-{
-public:
-  void OnPacketReturned(const AutoPacket& packet) {
     m_called = true;
   }
 };

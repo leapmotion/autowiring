@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacket.h"
-#include "AutoPacketListener.h"
 
 AutoPacket* AutoPacketFactory::AutoPacketCreator::operator()() const {
   return new AutoPacket(*factory);
