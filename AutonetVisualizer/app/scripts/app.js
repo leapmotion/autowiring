@@ -9,6 +9,10 @@ angular.module('autoNetApp', [
       templateUrl: 'views/main.html',
       controller: 'MainCtrl'
     })
+    .when('/edit', {
+      templateUrl: 'views/edit.html',
+      controller: 'EditCtrl'
+    })
     .when('/raw', {
       templateUrl: 'views/raw.html',
       controller: 'RawCtrl'
