@@ -320,7 +320,7 @@ public:
 
 // Default behavior:
 template<class T>
-struct AutoPacketAdaptorHelper {
+struct AutoFilterArgExtractor {
   static_assert(
     std::is_const<typename std::remove_reference<T>::type>::value ||
     !std::is_reference<T>::value,
@@ -333,7 +333,7 @@ struct AutoPacketAdaptorHelper {
 };
 
 template<class T>
-struct AutoPacketAdaptorHelper<optional_ptr<T>> {
+struct AutoFilterArgExtractor<optional_ptr<T>> {
   // Optional pointer overload, tries to satisfy but doesn't throw if there's a miss
   optional_ptr<T> operator()(AutoPacket& packet) const {
     const typename std::decay<T>::type* out;
@@ -344,56 +344,15 @@ struct AutoPacketAdaptorHelper<optional_ptr<T>> {
 };
 
 template<class T, bool checkout>
-struct AutoPacketAdaptorHelper<auto_out<T, checkout>> {
+struct AutoFilterArgExtractor<auto_out<T, checkout>> {
   auto_out<T, checkout> operator()(AutoPacket& packet) const {
     return auto_out<T, checkout>(packet.Checkout<T>());
   }
 };
 
 template<>
-struct AutoPacketAdaptorHelper<AutoPacket&> {
+struct AutoFilterArgExtractor<AutoPacket&> {
   AutoPacket& operator()(AutoPacket& packet) const {
     return packet;
-  }
-};
-
-/// <summary>
-/// Utility extractive wrapper
-/// </summary>
-/// <remarks>
-/// This class is useful in instances where implicitly casting is more convenient
-/// than explicitly naming the desired type and pulling it out of the packet with Get.
-///
-/// So, for instance, rather than:
-///
-/// type t = packet.Get<type>();
-///
-/// One could do:
-///
-/// type t = AutoPacketAdaptor(packet);
-///
-/// The packet extractor also provides additional utility extraction routines, which
-/// makes it a much more attractive option than trying to manually invoke Get on the
-/// packet directly.
-/// </remarks>
-class AutoPacketAdaptor {
-public:
-  AutoPacketAdaptor(AutoPacket& packet):
-    packet(packet)
-  {}
-
-private:
-  AutoPacket& packet;
-
-public:
-  // Reflexive overloads:
-  operator AutoPacket*(void) const {return &packet;}
-  operator AutoPacket&(void) const {return packet;}
-  operator std::shared_ptr<AutoPacket>(void) const { return packet.shared_from_this(); }
-
-  template<class T>
-  T Cast(void) const {
-    AutoPacketAdaptorHelper<T> helper;
-    return helper(packet);
   }
 };
