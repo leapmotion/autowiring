@@ -258,18 +258,20 @@ public:
   /// </remarks>
   template<class T>
   T& Decorate(T&& t) {
+    typedef typename std::remove_reference<T>::type Type;
+
     DecorationDisposition* pEntry;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      pEntry = &m_decorations[typeid(T)];
+      pEntry = &m_decorations[typeid(Type)];
       if(pEntry->satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
       pEntry->satisfied = true;
     }
 
-    SharedPointerSlotT<T>& retVal = pEntry->m_decoration->init<T>();
-    retVal = std::make_shared<T>(std::forward<T>(t));
-    UpdateSatisfaction(typeid(T));
+    SharedPointerSlotT<Type>& retVal = pEntry->m_decoration->init<Type>();
+    retVal = std::make_shared<Type>(std::forward<T>(t));
+    UpdateSatisfaction(typeid(Type));
     return *retVal;
   }
 
