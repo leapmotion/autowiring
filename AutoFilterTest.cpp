@@ -298,6 +298,11 @@ TEST_F(AutoFilterTest, VerifyReferenceBasedInput) {
 
   // Create a packet and put decoration 0 on it:
   auto packet = factory->NewPacket();
+
+  // No early call
+  ASSERT_FALSE(makesDec1->m_called) << "Single-input autofilter was invoked prematurely";
+
+  // Now we decorate, after ensuring an early call did not happen
   packet->Decorate(Decoration<0>());
 
   // Verify that our filter got called when its sole input was satisfied

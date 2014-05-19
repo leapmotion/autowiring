@@ -63,11 +63,8 @@ void AutoPacketFactory::Wait(void) {
 }
 
 void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
-  {
-    const std::type_info& ti = *rhs.GetAutoFilterTypeInfo();
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_autoFilters.insert(rhs);
-  }
+  (boost::lock_guard<boost::mutex>)m_lock,
+  m_autoFilters.insert(rhs);
 
   // Trigger object pool reset after releasing the lock.  While it's possible that some
   // packets may be issued between lock reset and object pool reset, these packets will

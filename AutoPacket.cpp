@@ -6,7 +6,6 @@
 #include "SatCounter.h"
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory):
-  m_factory(factory),
   m_satCounters(
     factory.GetSubscriberVector().begin(),
     factory.GetSubscriberVector().end()
