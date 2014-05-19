@@ -141,7 +141,7 @@ public:
   {}
 
   AutoFilterDescriptor(const AutoFilterDescriptor& rhs) :
-    m_subscriber(rhs.m_subscriber),
+    m_autoFilter(rhs.m_autoFilter),
     m_ti(rhs.m_ti),
     m_pArgs(rhs.m_pArgs),
     m_deferred(rhs.m_deferred),
@@ -161,8 +161,8 @@ public:
   /// a AutoPacket to provide type sources
   /// </summary>
   template<class T>
-  AutoFilterDescriptor(const std::shared_ptr<T>& subscriber) :
-    m_subscriber(subscriber),
+  AutoFilterDescriptor(const std::shared_ptr<T>& autoFilter) :
+    m_autoFilter(autoFilter),
     m_ti(&typeid(T)),
     m_requiredCount(0),
     m_optionalCount(0),
@@ -191,8 +191,8 @@ public:
   }
 
 protected:
-  // A hold on the enclosed subscriber
-  AnySharedPointer m_subscriber;
+  // A hold on the enclosed autoFilter
+  AnySharedPointer m_autoFilter;
 
   // The type information of this subscriber
   const std::type_info* m_ti;
@@ -223,32 +223,32 @@ protected:
 
 public:
   // Accessor methods:
-  bool empty(void) const { return m_subscriber->empty(); }
+  bool empty(void) const { return m_autoFilter->empty(); }
   size_t GetArity(void) const { return m_arity; }
   size_t GetRequiredCount(void) const { return m_requiredCount; }
   size_t GetOptionalCount(void) const { return m_optionalCount; }
-  const AnySharedPointer& GetSubscriber(void) const { return m_subscriber; }
-  const std::type_info* GetSubscriberTypeInfo(void) const { return m_ti; }
-  const AutoFilterDescriptorInput* GetSubscriberInput(void) const { return m_pArgs; }
+  const AnySharedPointer& GetAutoFilter(void) const { return m_autoFilter; }
+  const std::type_info* GetAutoFilterTypeInfo(void) const { return m_ti; }
+  const AutoFilterDescriptorInput* GetAutoFilterInput(void) const { return m_pArgs; }
   bool IsDeferred(void) const { return m_deferred; }
 
   bool operator==(const AutoFilterDescriptor& rhs) const {
     return
       m_pCall == rhs.m_pCall &&
-      m_subscriber == rhs.m_subscriber;
+      m_autoFilter == rhs.m_autoFilter;
   }
 
   /// <summary>
   /// Releases the bound subscriber and the corresponding arity, causing it to become disabled
   /// </summary>
-  void ReleaseSubscriber(void) {
+  void ReleaseAutoFilter(void) {
     m_arity = 0;
-    m_subscriber->reset();
+    m_autoFilter->reset();
   }
 
   /// <returns>A pointer to the proper subscriber object</returns>
-  void* GetSubscriberPtr(void) { return m_subscriber->ptr(); }
-  const void* GetSubscriberPtr(void) const { return m_subscriber->ptr(); }
+  void* GetAutoFilterPtr(void) { return m_autoFilter->ptr(); }
+  const void* GetAutoFilterPtr(void) const { return m_autoFilter->ptr(); }
 
   /// <returns>A call lambda wrapping the associated subscriber</returns>
   /// <remarks>
@@ -293,7 +293,7 @@ namespace std {
     public std::unary_function<AutoFilterDescriptor, size_t>
   {
     size_t operator()(const AutoFilterDescriptor& subscriber) const {
-      return (size_t) subscriber.GetSubscriberPtr();
+      return (size_t) subscriber.GetAutoFilterPtr();
     }
   };
 }
