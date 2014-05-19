@@ -47,12 +47,29 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
 
 AutoPacket::~AutoPacket() {}
 
-void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfied) {
+void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
   auto decoration = m_decorations.find(info);
-  if (decoration == m_decorations.end())
+  if(decoration == m_decorations.end())
     // Trivial return, there's no subscriber to this decoration and so we have nothing to do
     return;
-  
+
+  // Update everything
+  for(auto& satCounter : decoration->second.m_subscribers) {
+    if(satCounter.second)
+      // Entry is mandatory, leave it unsatisfaible
+      continue;
+
+    // Entry is optional, we will call if we're satisfied after decrementing this optional field
+    if(!satCounter.first->Decrement(false))
+      satCounter.first->CallAutoFilter(*this);
+  }
+}
+
+void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
+  auto decoration = m_decorations.find(info);
+  if(decoration == m_decorations.end())
+    return;
+
   // Update everything
   for(auto& satCounter : decoration->second.m_subscribers)
     if(!satCounter.first->Decrement(satCounter.second))
@@ -62,7 +79,6 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, bool is_satisfie
 void AutoPacket::PulseSatisfaction(const std::type_info& info) {
   auto decoration = m_decorations.find(info);
   if (decoration == m_decorations.end())
-    // Trivial return, there's no subscriber to this decoration
     return;
   
   for(auto& satCounter : decoration->second.m_subscribers) {

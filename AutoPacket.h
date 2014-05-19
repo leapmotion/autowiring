@@ -94,6 +94,11 @@ private:
   std::vector<SatCounter> m_satCounters;
 
   /// <summary>
+  /// Marks the specified entry as being unsatisfiable
+  /// </summary>
+  void MarkUnsatisfiable(const std::type_info& info);
+
+  /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
   /// </summary>
   /// <param name="info">The decoration which was just added to this packet</param>
@@ -101,7 +106,7 @@ private:
   /// This method results in a call to the AutoFilter method on any subscribers which are
   /// satisfied by this decoration.
   /// </remarks>
-  void UpdateSatisfaction(const std::type_info& info, bool is_satisfied);
+  void UpdateSatisfaction(const std::type_info& info);
 
   /// <summary>
   /// Performs a "satisfaction pulse", which will avoid notifying any deferred filters
@@ -126,7 +131,10 @@ private:
       entry.isCheckedOut = false;
     }
 
-    UpdateSatisfaction(typeid(T), ready);
+    if(ready)
+      UpdateSatisfaction(typeid(T));
+    else
+      MarkUnsatisfiable(typeid(T));
   }
 
 public:
@@ -194,26 +202,25 @@ public:
     DecorationDisposition* entry;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
+      auto q = m_decorations.find(typeid(type));
+      if(q == m_decorations.end())
+        // No parties interested in this entry, return here
+        return AutoCheckout<T>(*this, nullptr, &AutoPacket::CompleteCheckout<T>);
 
       entry = &m_decorations[typeid(type)];
       if(entry->satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
       entry->satisfied = true;
       entry->isCheckedOut = true;
+      entry->wasCheckedOut = true;
     }
 
-    if(HasSubscribers<T>()) {
-      auto& enclosure = (entry->m_decoration = std::make_shared<T>());
-      return AutoCheckout<T>(
-        *this,
-        enclosure.get(),
-        &AutoPacket::CompleteCheckout<T>
-      );
-    }
-
-    // Mark the entry as having been checked out
-    entry->wasCheckedOut = true;
-    return AutoCheckout<T>(*this, nullptr, &AutoPacket::CompleteCheckout<T>);
+    auto& enclosure = (entry->m_decoration = std::make_shared<T>());
+    return AutoCheckout<T>(
+      *this,
+      enclosure.get(),
+      &AutoPacket::CompleteCheckout<T>
+    );
   }
 
   /// <summary>
@@ -238,7 +245,7 @@ public:
     }
 
     // Now trigger a rescan:
-    UpdateSatisfaction(typeid(T), false);
+    MarkUnsatisfiable(typeid(T));
   }
 
   /// <summary>
@@ -262,7 +269,7 @@ public:
 
     SharedPointerSlotT<T>& retVal = pEntry->m_decoration->init<T>();
     retVal = std::make_shared<T>(std::forward<T>(t));
-    UpdateSatisfaction(typeid(T), true);
+    UpdateSatisfaction(typeid(T));
     return *retVal;
   }
 
@@ -295,7 +302,7 @@ public:
     entry.wasCheckedOut = true;
 
     // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-    UpdateSatisfaction(typeid(T), false);
+    MarkUnsatisfiable(typeid(T));
   }
 
   /// <returns>
