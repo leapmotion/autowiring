@@ -68,38 +68,42 @@ protected:
     return std::shared_ptr<T>(
       pObj,
       [this, poolVersion, monitor](T* ptr) {
-        // Default behavior will be to destroy the pointer
-        std::unique_ptr<T> unique(ptr);
-
-        // Hold the lock next, in order to ensure that destruction happens after the monitor
-        // lock is released.
-        boost::lock_guard<boost::mutex> lk(*monitor);
-
-        // Always decrement the count when an object is no longer outstanding
-        assert(m_outstanding);
-        m_outstanding--;
-
-        if(monitor->IsAbandoned())
-          // Nothing we can do, monitor object abandoned already, just destroy the object
-          return;
-
-        if(
-          // Pool versions have to match, or the object should be dumped
-          poolVersion == m_poolVersion &&
-
-          // Object pool needs to be capable of accepting another object as an input
-          m_objs.size() < m_maxPooled
-        ) {
-          // Reset the object and put it back in the pool:
-          Reset(*ptr);
-          m_objs.push_back(Wrap(unique.release()));
-        }
-
-        // If the new outstanding count is less than or equal to the limit, wake up any waiters:
-        if(m_outstanding <= m_limit)
-          m_setCondition.notify_all();
+        this->Return(poolVersion, monitor, ptr);
       }
     );
+  }
+
+  void Return(size_t poolVersion, const std::shared_ptr<ObjectPoolMonitor>& monitor, T* ptr) {
+    // Default behavior will be to destroy the pointer
+    std::unique_ptr<T> unique(ptr);
+
+    // Hold the lock next, in order to ensure that destruction happens after the monitor
+    // lock is released.
+    boost::lock_guard<boost::mutex> lk(*monitor);
+
+    // Always decrement the count when an object is no longer outstanding
+    assert(m_outstanding);
+    m_outstanding--;
+
+    if(monitor->IsAbandoned())
+      // Nothing we can do, monitor object abandoned already, just destroy the object
+      return;
+
+    if(
+      // Pool versions have to match, or the object should be dumped
+      poolVersion == m_poolVersion &&
+
+      // Object pool needs to be capable of accepting another object as an input
+      m_objs.size() < m_maxPooled
+    ) {
+      // Reset the object and put it back in the pool:
+      Reset(*ptr);
+      m_objs.push_back(Wrap(unique.release()));
+    }
+
+    // If the new outstanding count is less than or equal to the limit, wake up any waiters:
+    if(m_outstanding <= m_limit)
+      m_setCondition.notify_all();
   }
 
   /// <summary>
