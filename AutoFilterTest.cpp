@@ -310,4 +310,5 @@ TEST_F(AutoFilterTest, VerifyReferenceBasedInput) {
 
   // Now make sure that the packet has the expected decoration:
   ASSERT_TRUE(packet->Has<Decoration<1>>());
+  AutoCurrentContext()->SignalShutdown(false);
 }
