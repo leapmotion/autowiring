@@ -1,4 +1,5 @@
 #pragma once
+#include "autowiring_error.h"
 #include "fast_pointer_cast.h"
 #include "Object.h"
 #include MEMORY_HEADER
@@ -253,7 +254,12 @@ public:
     return leap::fast_pointer_cast<Object>(get());
   }
 
-  virtual void* ptr(void) override { return get().get(); }
+  virtual void* ptr(void) override {
+    // At this level, because this type is runtime, we can only provide runtime detection of misuse
+    if(std::is_const<T>::value)
+      throw autowiring_error("Attempted to obtain a non-const void pointer value from a const-type shared pointer");
+    return (void*)get().get();
+  }
   virtual const void* ptr(void) const override { return get().get(); }
 
   virtual void New(void* pSpace, size_t nBytes) const override {
