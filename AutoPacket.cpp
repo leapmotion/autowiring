@@ -3,7 +3,7 @@
 #include "Autowired.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketProfiler.h"
-#include <boost/any.hpp>
+#include "SatCounter.h"
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory):
   m_factory(factory)
@@ -107,8 +107,4 @@ void AutoPacket::Reset(void) {
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
   return m_decorations.count(ti) != 0;
-}
-
-std::shared_ptr<AutoPacket> ExtractSharedPointer(const AutoPacketAdaptor& adaptor) {
-  return adaptor;
 }
