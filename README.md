@@ -1,2 +1,2 @@
-Autowiring
-==========
+# Purpose
+The Autowire library provides a declarative way to manage dependencies through [dependency injection](http://en.wikipedia.org/wiki/Dependency_injection). Instead of explicitly instantiating dependencies, simply declare what you need and Autowire will manage the creation and wiring. This used primarily to used to manage resources and functionality throughout the platform. However, only works with polymorphic types.
