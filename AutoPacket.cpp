@@ -95,10 +95,14 @@ void AutoPacket::PulseSatisfaction(const std::type_info& info) {
 }
 
 void AutoPacket::Reset(void) {
+  // Reset all counters:
   for(auto& satCounter : m_satCounters)
     satCounter.Reset();
   for(auto& decoration : m_decorations)
     decoration.second.Reset();
+
+  // Initial satisfaction of the AutoPacket:
+  UpdateSatisfaction(typeid(AutoPacket));
 }
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
