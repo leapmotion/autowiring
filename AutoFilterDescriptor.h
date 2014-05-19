@@ -295,12 +295,6 @@ public:
   const AutoFilterDescriptorInput* GetAutoFilterInput(void) const { return m_pArgs; }
   bool IsDeferred(void) const { return m_deferred; }
 
-  bool operator==(const AutoFilterDescriptor& rhs) const {
-    return
-      m_pCall == rhs.m_pCall &&
-      m_autoFilter == rhs.m_autoFilter;
-  }
-
   /// <summary>
   /// Releases the bound subscriber and the corresponding arity, causing it to become disabled
   /// </summary>
@@ -325,6 +319,12 @@ public:
   /// True if this subscriber instance is empty
   /// </returns>
   operator bool(void) const { return !empty(); }
+
+  bool operator==(const AutoFilterDescriptor& rhs) const {
+    return
+      m_pCall == rhs.m_pCall &&
+      m_autoFilter == rhs.m_autoFilter;
+  }
 };
 
 template<class T, bool has_autofilter = has_autofilter<T>::value>
@@ -357,8 +357,7 @@ namespace std {
   struct hash;
 
   template<>
-  struct hash<AutoFilterDescriptor>:
-    public std::unary_function<AutoFilterDescriptor, size_t>
+  struct hash<AutoFilterDescriptor>
   {
     size_t operator()(const AutoFilterDescriptor& subscriber) const {
       return (size_t) subscriber.GetAutoFilterPtr();
