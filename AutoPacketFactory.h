@@ -1,7 +1,7 @@
 #pragma once
 #include "Autowired.h"
 #include "AutoPacket.h"
-#include "AutoPacketSubscriber.h"
+#include "AutoFilterDescriptor.h"
 #include "CoreRunnable.h"
 #include "Object.h"
 #include "ObjectPool.h"
@@ -62,15 +62,15 @@ private:
   ObjectPool<AutoPacket, NoOp, AutoPacketCreator> m_packets;
 
   // Collection of known subscribers
-  typedef std::unordered_set<AutoPacketSubscriber> t_autoFilterSet;
+  typedef std::unordered_set<AutoFilterDescriptor> t_autoFilterSet;
   t_autoFilterSet m_autoFilters;
 
   struct DecorationEntry {
     // The single statically detected publisher of the outer type
-    AutoPacketSubscriber m_publisher;
+    AutoFilterDescriptor m_publisher;
 
     // All subscribers on this entry
-    std::vector<AutoPacketSubscriber> m_subscribers;
+    std::vector<AutoFilterDescriptor> m_subscribers;
   };
 
   // Map used to associate a decoration type with the subscribers of that type.
@@ -98,21 +98,21 @@ public:
   /// <remarks>
   /// This method is idempotent
   /// </remarks>
-  void AddSubscriber(const AutoPacketSubscriber& rhs);
+  void AddSubscriber(const AutoFilterDescriptor& rhs);
 
   /// <summary>
   /// Convenience override of AddSubscriber
   /// </summary>
   template<class T>
   void AddSubscriber(const std::shared_ptr<T>& rhs) {
-    AddSubscriber(AutoPacketSubscriberSelect<T>(rhs));
+    AddSubscriber(AutoFilterDescriptorSelect<T>(rhs));
   }
 
   /// <summary>
   /// Removes the designated AutoFilter from this factory
   /// </summary>
   /// <param name="autoFilter">The AutoFilter to be removed</param>
-  void RemoveSubscriber(const AutoPacketSubscriber& autoFilter);
+  void RemoveSubscriber(const AutoFilterDescriptor& autoFilter);
 
   /// <summary>
   /// Obtains a new packet from the object pool and configures it with the current

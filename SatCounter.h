@@ -1,15 +1,15 @@
 #pragma once
 #include "AnySharedPointer.h"
-#include "AutoPacketSubscriber.h"
+#include "AutoFilterDescriptor.h"
 
 /// <summary>
 /// A single subscription counter entry
 /// </summary>
 struct SatCounter:
-  public AutoPacketSubscriber
+  public AutoFilterDescriptor
 {
-  SatCounter(const AutoPacketSubscriber& rhs) :
-    AutoPacketSubscriber(rhs)
+  SatCounter(const AutoFilterDescriptor& rhs) :
+    AutoFilterDescriptor(rhs)
   {}
 
   // The MANDATORY remaining counter:

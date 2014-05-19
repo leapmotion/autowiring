@@ -628,7 +628,7 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
   m_contextMembers.push_back(ptr.get());
 }
 
-void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
+void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
   GetPacketFactory()->AddSubscriber(rhs);
   if(m_pParent)
     m_pParent->AddPacketSubscriber(rhs);

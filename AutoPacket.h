@@ -15,7 +15,7 @@
 
 class AutoPacketFactory;
 class AutoPacketProfiler;
-class AutoPacketSubscriber;
+class AutoFilterDescriptor;
 
 template<class T>
 struct subscriber_traits;
