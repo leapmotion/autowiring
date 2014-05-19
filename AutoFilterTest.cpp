@@ -276,7 +276,6 @@ TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
   AutoRequired<FilterA> filterA;
   AutoRequired<FilterC> filterC;
   AutoRequired<FilterD> filterD;
-  AutoRequired<FilterE> filterE;
   AutoRequired<AutoPacketFactory> factory;
 
   AutoCurrentContext()->Initiate();
@@ -300,9 +299,4 @@ TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
 
   // FilterC should have also satisfied filterA:
   EXPECT_TRUE(filterA->m_called) << "FilterA should have been satisfied by FilterC";
-
-  // Release the packet, and verify that filterD gets hit only once this happens
-  EXPECT_FALSE(filterE->m_called) << "Packet listener was notified prematurely";
-  packet.reset();
-  EXPECT_TRUE(filterE->m_called) << "Packet listener was not notified as anticipated";
 }

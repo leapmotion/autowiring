@@ -19,7 +19,6 @@ set(Autowiring_SRCS
   AutoPacket.cpp
   AutoPacketFactory.h
   AutoPacketFactory.cpp
-  AutoPacketListener.h
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
   Autowired.h
