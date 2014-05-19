@@ -30,6 +30,10 @@ public:
 
 private:
   struct AutoPacketCreator {
+    AutoPacketCreator(const AutoPacketCreator& rhs) :
+      factory(rhs.factory)
+    {}
+
     AutoPacketCreator(AutoPacketFactory* factory = nullptr) : factory(factory) {}
 
     AutoPacketFactory* factory;
@@ -61,7 +65,7 @@ private:
   ObjectPool<AutoPacket, NoOp, AutoPacketCreator> m_packets;
 
   // Collection of known subscribers
-  typedef std::unordered_set<AutoFilterDescriptor> t_autoFilterSet;
+  typedef std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> t_autoFilterSet;
   t_autoFilterSet m_autoFilters;
 
   struct DecorationEntry {
