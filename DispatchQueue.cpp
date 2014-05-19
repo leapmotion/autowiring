@@ -25,10 +25,11 @@ void DispatchQueue::Abort(void) {
   boost::lock_guard<boost::mutex> lk(m_dispatchLock);
   m_aborted = true;
 
-  // Rip apart:
-  for(auto q = m_dispatchQueue.begin(); q != m_dispatchQueue.end(); q++)
-    delete *q;
-  m_dispatchQueue.clear();
+  // Destroy the whole dispatch queue:
+  while(!m_dispatchQueue.empty()) {
+    delete m_dispatchQueue.front();
+    m_dispatchQueue.pop_front();
+  }
 
   // Wake up anyone who is still waiting:
   m_queueUpdated.notify_all();
