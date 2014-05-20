@@ -1,4 +1,5 @@
 #pragma once
+#include "JunctionBoxBase.h"
 #include "JunctionBoxEntry.h"
 #include "TypeRegistry.h"
 #include "uuid.h"
