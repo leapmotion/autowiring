@@ -1,10 +1,10 @@
 'use strict';
 
 angular.module('autoNetApp')
-  .controller('EditCtrl', function ($scope) {
-    $scope.awesomeThings = [
-      'HTML5 Boilerplate',
-      'AngularJS',
-      'Karma'
-    ];
-  });
+.controller('EditCtrl', ['$scope', 'LeapState', function($scope, LeapState) {
+  $scope.leap = LeapState;
+
+  $scope.deleteContext = function(ctxt){
+    console.log("Delete context: ",ctxt.name);
+  };
+}]);
