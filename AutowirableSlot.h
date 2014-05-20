@@ -138,7 +138,7 @@ public:
     (std::shared_ptr<T>&)*this = *(const std::shared_ptr<T>*)pvSharedPtr;
   }
 
-  operator bool(void) const {
+  explicit operator bool(void) const {
     return IsAutowired();
   }
 
