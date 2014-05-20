@@ -101,7 +101,7 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, 
   return retVal;
 }
 
-std::shared_ptr<CoreContext> CoreContext::GetFirstChild(void) const {
+std::shared_ptr<CoreContext> CoreContext::FirstChild(void) const {
   boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
 
   // Just return the first child we successfully obtain a shared pointer for:
@@ -115,7 +115,7 @@ std::shared_ptr<CoreContext> CoreContext::GetFirstChild(void) const {
   return std::shared_ptr<CoreContext>();
 }
 
-std::shared_ptr<CoreContext> CoreContext::GetNextSibling(void) const {
+std::shared_ptr<CoreContext> CoreContext::NextSibling(void) const {
   // Root context's do not have siblings
   if(!m_pParent)
     return std::shared_ptr<CoreContext>();
