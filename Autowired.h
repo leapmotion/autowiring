@@ -137,10 +137,6 @@ public:
     return std::shared_ptr<T>::get();
   }
 
-  operator bool(void) const {
-    return (AutowirableSlot<T>&) *this;
-  }
-
   /// <summary>
   /// Allows a lambda function to be called when this slot is autowired
   /// </summary>
