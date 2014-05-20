@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "AnySharedPointerTest.h"
 #include "AnySharedPointer.h"
+#include "Autowired.h"
+#include "TestFixtures/SimpleObject.h"
 
 class MyUnusedClass {};
 
@@ -21,6 +23,19 @@ struct SharedPointerSlotT<MyUnusedClass>:
     return (bool&) *m_space;
   }
 };
+
+TEST_F(AnySharedPointerTest, OperatorEq) {
+  AutoRequired<SimpleObject> sobj;
+
+  // Trivial equivalence of an AnySharedPointer based on an AutoFilter instance
+  AnySharedPointer sobjAny1(sobj);
+  ASSERT_EQ(sobj, sobjAny1) << "An AnySharedPointer instance initialized by constructor violated an identity test";
+
+  // Trivial equivalence of an AnySharedPointer based on an AutoFilter instance
+  AnySharedPointer sobjAny2;
+  sobjAny2 = sobj;
+  ASSERT_EQ(sobj, sobjAny2) << "An AnySharedPointer instance initialized by assignment violated an identity test";
+}
 
 TEST_F(AnySharedPointerTest, SimpleDestructorStrike)
 {
