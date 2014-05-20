@@ -124,7 +124,14 @@ public:
     m_called(false)
   {}
 
-  void AutoFilter(Args... args) {
+  void AutoFilter(AutoPacket& packet, Args... args) {
+    bool detection [] = {
+      std::is_reference<Args>::value && packet.Has<Args>()...
+    };
+
+    for(bool cur : detection)
+      ASSERT_FALSE(cur) << "Packet was already decorated with at least one output-only type";
+
     m_called = true;
     m_args = std::tie(args...);
   }
