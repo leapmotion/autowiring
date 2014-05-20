@@ -38,6 +38,10 @@ public:
   SharedPointerSlot* operator->(void) { return slot(); }
   const SharedPointerSlot* operator->(void) const { return slot(); }
 
+  bool operator==(const AnySharedPointer& rhs) const {
+    return *slot() == *rhs.slot();
+  }
+
   /// <summary>
   /// Copy assignment operator
   /// </summary>
