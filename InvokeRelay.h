@@ -7,6 +7,57 @@ class Deferred;
 template<typename T>
 class JunctionBox;
 
+// Generate and index tuple
+template<int ...>
+struct seq {};
+
+template<int N, int... S>
+struct gen_seq: gen_seq<N - 1, N - 1, S...> {};
+
+template<int... S>
+struct gen_seq<0, S...> {
+  typedef seq<S...> type;
+};
+
+/// <summary>
+/// A fully bound member function call
+/// </summary>
+template<class T, class... Args>
+class CurriedInvokeRelay:
+  public DispatchThunkBase
+{
+public:
+  CurriedInvokeRelay(CurriedInvokeRelay& rhs) = delete;
+  CurriedInvokeRelay(CurriedInvokeRelay&& rhs) = delete;
+
+  CurriedInvokeRelay(T& obj, Deferred(T::*fnPtr)(Args...), Args... args) :
+    m_obj(obj),
+    m_fnPtr(fnPtr),
+    m_args(std::forward<Args>(args)...)
+  {}
+
+private:
+  // The object on which we are bound
+  T& m_obj;
+
+  // Function call to be made, and its arguments:
+  Deferred(T::*m_fnPtr)(Args...);
+  std::tuple<typename std::decay<Args>::type...> m_args;
+
+  /// <summary>
+  /// Places a call to the bound member function pointer by unpacking a lambda into it
+  /// </summary>
+  template<int... S>
+  void CallByUnpackingTuple(seq<S...>) {
+    (m_obj.*m_fnPtr)(std::move(std::get<S>(m_args))...);
+  }
+
+public:
+  void operator()(void) override {
+    CallByUnpackingTuple(typename gen_seq<sizeof...(Args)>::type());
+  }
+};
+
 /// <summary>
 /// Function pointer relay type
 /// </summary>
