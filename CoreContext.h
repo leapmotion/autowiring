@@ -383,23 +383,26 @@ public:
   std::shared_ptr<CoreContext> GetNextSibling(void) const;
 
   /// <summary>
+  /// Creation helper routine
+  /// </summary>
+  template<class T>
+  static std::shared_ptr<CoreContext> Create(
+    std::shared_ptr<CoreContext> pParent,
+    t_childList::iterator backReference,
+    std::shared_ptr<CoreContext> pPeer
+  ) {
+    return std::static_pointer_cast<CoreContext>(
+      std::make_shared<CoreContextT<T>>(pParent, backReference, pPeer)
+    );
+  }
+
+  /// <summary>
   /// Factory to create a new context
   /// </summary>
   /// <param name="T">The context sigil.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return CreateInternal(
-      [] (
-        std::shared_ptr<CoreContext> pParent,
-        t_childList::iterator backReference,
-        std::shared_ptr<CoreContext> pPeer
-      ) {
-        return std::static_pointer_cast<CoreContext>(
-          std::make_shared<CoreContextT<T>>(pParent, backReference, pPeer)
-        );
-      },
-      nullptr
-    );
+    return CreateInternal(&CoreContext::Create<T>, nullptr);
   }
 
   /// <summary>
@@ -415,18 +418,7 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
-    return m_pParent->CreateInternal(
-      [] (
-        std::shared_ptr<CoreContext> pParent,
-        t_childList::iterator backReference,
-        std::shared_ptr<CoreContext> pPeer
-      ) {
-        return std::static_pointer_cast<CoreContext>(
-          std::make_shared<CoreContextT<T>>(pParent, backReference, pPeer)
-        );
-      },
-      shared_from_this()
-    );
+    return m_pParent->CreateInternal(&CoreContext::Create<T>, shared_from_this());
   }
 
   /// <summary>
@@ -802,7 +794,7 @@ public:
   void FindByType(std::shared_ptr<T>& slot) const {
     AnySharedPointerT<T> ptr;
     FindByType(ptr);
-    slot = ptr->as<T>();
+    slot = ptr->template as<T>();
   }
 
   /// <summary>
