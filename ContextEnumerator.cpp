@@ -21,7 +21,7 @@ const ContextEnumerator::iterator& ContextEnumerator::iterator::operator++(void)
 
     // If that doesn't work, then try the next sibling
     !(next = m_cur->GetNextSibling())
-    )
+  )
     // No children, no siblings.  Ascend until we find an ancestor with a sibling.
     do {
       m_cur = m_cur->GetParentContext();

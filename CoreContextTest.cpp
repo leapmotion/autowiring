@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "CoreContextTest.h"
+#include "ContextEnumerator.h"
 #include <set>
 
 class Foo{};
@@ -14,11 +15,8 @@ TEST_F(CoreContextTest, TestEnumerateChildren) {
 
   // Enumerate and see what we get back:
   std::set<std::shared_ptr<CoreContext>> allChildren;
-  m_create->EnumerateChildContexts(
-    [&allChildren](std::shared_ptr<CoreContext> ctxt){
-      allChildren.insert(ctxt);
-    }
-  );
+  for(auto cur : CurrentContextEnumerator())
+    allChildren.insert(cur);
 
   // Verify we get exactly four back:
   ASSERT_EQ(4UL, allChildren.size()) << "Failed to enumerate the correct number of child contexts";
@@ -36,16 +34,19 @@ TEST_F(CoreContextTest, TestEnumerateChildren) {
   AutoCreateContextT<Bar> barCtxt;
   auto childFoo = barCtxt->Create<Foo>();
   
-  auto onlyFoos = m_create->EnumerateChildContexts<Foo>();
+  ContextEnumeratorT<Foo> enumerator1(m_create);
+  std::vector<std::shared_ptr<CoreContextT<Foo>>> onlyFoos(enumerator1.begin(), enumerator1.end());
   ASSERT_EQ(2UL, onlyFoos.size()) << "Didn't collect only contexts with 'Foo' sigil";
   ASSERT_NE(std::find(onlyFoos.begin(), onlyFoos.end(), fooCtxt), onlyFoos.end()) << "Context not enumerated";
   ASSERT_NE(std::find(onlyFoos.begin(), onlyFoos.end(), childFoo), onlyFoos.end()) << "Context not enumerated";
 
-  auto onlyBars = m_create->EnumerateChildContexts<Bar>();
+  ContextEnumeratorT<Bar> enumerator2(m_create);
+  std::vector<std::shared_ptr<CoreContextT<Bar>>> onlyBars(enumerator2.begin(), enumerator2.end());
   ASSERT_EQ(1UL, onlyBars.size()) << "Didn't collect only contexts with 'Bar' sigil";
   ASSERT_NE(std::find(onlyBars.begin(), onlyBars.end(), barCtxt), onlyBars.end()) << "Context not enumerated";
 
-  auto noBaz = m_create->EnumerateChildContexts<Baz>();
+  ContextEnumeratorT<Baz> enumerator3(m_create);
+  std::vector<std::shared_ptr<CoreContextT<Baz>>> noBaz(enumerator3.begin(), enumerator3.end());
   ASSERT_TRUE(noBaz.empty()) << "Incorrectly collected contexts with 'Baz' sigil";
 }
 
@@ -58,35 +59,14 @@ TEST_F(CoreContextTest, TestEarlyLambdaReturn) {
   // Enumerate, but stop after three:
   std::set<std::shared_ptr<CoreContext>> allChildren;
   size_t totalSoFar = 0;
-  m_create->EnumerateChildContexts(
-    [&allChildren, &totalSoFar](std::shared_ptr<CoreContext> ctxt) -> bool {
-      if(totalSoFar++ == 3)
-        return false;
-
-      allChildren.insert(ctxt);
-      return true;
-    }
-  );
+  for(auto& ctxt : CurrentContextEnumerator()) {
+    if(totalSoFar++ == 3)
+      break;
+    allChildren.insert(ctxt);
+  }
 
   ASSERT_EQ(3UL, allChildren.size()) << "Enumeration routine failed to quit early";
 
   // Verify that the root context isn't in the set--needed to assure that we are running a depth-first search.
   ASSERT_EQ(0UL, allChildren.count(m_create)) << "EnumerateChildContexts did not execute depth-first";
 }
-
-TEST_F(CoreContextTest, ChildEnumerationIsCorrect) {
-  // Create a few child contexts:
-  AutoCreateContext v, w;
-
-  // Shouldn't find any contexts at this point:
-  auto vec = AutoCurrentContext()->EnumerateChildContexts<Object>();
-  ASSERT_TRUE(vec.empty()) << "Sigil-restricted child enumeration incorrectly detected at least one sigil-bearing child context";
-
-  // Create one sigil-bearing context:
-  AutoCreateContextT<Object> sigilContext;
-
-  // Verify that we only enumerate one child context:
-  vec = AutoCurrentContext()->EnumerateChildContexts<Object>();
-  ASSERT_EQ(1UL, vec.size()) << "Sigil-restricted child enumeration returned too many contexts";
-}
-
