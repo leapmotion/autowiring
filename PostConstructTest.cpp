@@ -257,7 +257,7 @@ TEST_F(PostConstructTest, ContextNotifyWhenAutowired) {
   );
 
   // Should only be two uses, at this point, of the capture of the above lambda:
-  EXPECT_EQ(2UL, called.use_count()) << "Unexpected number of references held in a capture lambda";
+  EXPECT_EQ(2L, called.use_count()) << "Unexpected number of references held in a capture lambda";
 
   // Create another entry that will add another slot to the deferred list:
   Autowired<SimpleObject> sobj;

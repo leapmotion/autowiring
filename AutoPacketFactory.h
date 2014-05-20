@@ -77,15 +77,8 @@ private:
   // Notify when started
   boost::condition_variable m_stateCondition;
   
-  // CoreRunnable States
-  enum class RunState {
-    READY,
-    RUNNING,
-    STOPPED
-  };
-  
-  // Current state
-  RunState m_runState;
+  // Have we been signaled to stop
+  bool m_wasStopped;
 
   // Outstanding reference if this factory is currently running:
   std::shared_ptr<Object> m_outstanding;
@@ -123,10 +116,10 @@ public:
 
   // CoreRunnable overrides:
   bool Start(std::shared_ptr<Object> outstanding) override;
-  void Stop(bool graceful) override;
-  bool IsRunning(void) const override;
-  bool ShouldStop(void) const override;
+  void Stop(bool graceful = false) override;
   void Wait(void) override;
+  bool IsRunning(void) const override { return m_outstanding && !m_wasStopped; };
+  bool ShouldStop(void) const override { return m_wasStopped; };
 
   /// <summary>
   /// Finds the packet subscriber proper corresponding to a particular subscriber type
