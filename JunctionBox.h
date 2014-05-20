@@ -6,6 +6,7 @@
 #include "EventInputStream.h"
 #include "fast_pointer_cast.h"
 #include "InvokeRelay.h"
+#include "JunctionBoxEntry.h"
 #include <boost/thread/mutex.hpp>
 #include <set>
 #include STL_TUPLE_HEADER
