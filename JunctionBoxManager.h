@@ -1,6 +1,7 @@
 #pragma once
 #include "JunctionBoxEntry.h"
 #include "TypeRegistry.h"
+#include "uuid.h"
 #include <map>
 #include TYPE_INDEX_HEADER
 #include MEMORY_HEADER
