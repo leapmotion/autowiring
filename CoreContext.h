@@ -375,12 +375,12 @@ public:
   /// <returns>
   /// The first child in the set of this context's children
   /// </returns>
-  std::shared_ptr<CoreContext> GetFirstChild(void) const;
+  std::shared_ptr<CoreContext> FirstChild(void) const;
 
   /// <returns>
   /// The next context sharing the same parent, or null if this is the last entry in the list
   /// </returns>
-  std::shared_ptr<CoreContext> GetNextSibling(void) const;
+  std::shared_ptr<CoreContext> NextSibling(void) const;
 
   /// <summary>
   /// Creation helper routine
