@@ -4,8 +4,10 @@
 
 TEST_F(ContextEnumeratorTest, TrivialEnumeration) {
   size_t ct = 0;
-  for(const auto& cur : ContextEnumerator(std::shared_ptr<CoreContext>(nullptr)))
+  for(const auto& cur : ContextEnumerator(std::shared_ptr<CoreContext>(nullptr))) {
+    ASSERT_TRUE(!!cur.get()) << "Context enumerator incorrectly enumerated a null context pointer";
     ct++;
+  }
   ASSERT_EQ(0UL, ct) << "An empty enumerator unexpectedly enumerated one or more entries";
 }
 
@@ -83,7 +85,6 @@ TEST_F(ContextEnumeratorTest, ComplexRemovalInterference) {
   std::vector<std::weak_ptr<CoreContext>> eliminated;
 
   // Go through the enumeration, the totals should line up by the time we're done:
-  size_t nTraversed = 0;
   for(const auto& cur : CurrentContextEnumerator()) {
     enumerated.insert(cur);
     
