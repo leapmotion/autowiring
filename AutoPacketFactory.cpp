@@ -22,7 +22,7 @@ void AutoPacketFactory::AutoPacketResetter::operator()(AutoPacket& packet) const
 }
 
 AutoPacketFactory::AutoPacketFactory(void):
-  m_runState(RunState::READY)
+  m_wasStopped(false)
 {
   m_packets.SetAlloc(AutoPacketCreator(this));
 }
@@ -30,7 +30,7 @@ AutoPacketFactory::AutoPacketFactory(void):
 AutoPacketFactory::~AutoPacketFactory() {}
 
 std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
-  if ((boost::lock_guard<boost::mutex>)m_lock, m_runState != RunState::RUNNING)
+  if (!IsRunning())
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
   // Obtain a packet:
@@ -45,10 +45,8 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
 }
 
 bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
+  boost::lock_guard<boost::mutex> lk(m_lock);
   m_outstanding = outstanding;
-  
-  (boost::lock_guard<boost::mutex>)m_lock,
-  m_runState = RunState::RUNNING;
   
   m_stateCondition.notify_all();
   return true;
@@ -56,29 +54,20 @@ bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
 
 void AutoPacketFactory::Stop(bool graceful) {
   boost::lock_guard<boost::mutex> lk(m_lock);
-  
-  m_runState = RunState::STOPPED;
+  m_wasStopped = true;
   m_outstanding.reset();
   
   m_stateCondition.notify_all();
 }
 
 void AutoPacketFactory::Wait(void) {
-  boost::unique_lock<boost::mutex> lk(m_lock);
-  m_stateCondition.wait(lk, [this]{return m_runState != RunState::READY; });
+  {
+    boost::unique_lock<boost::mutex> lk(m_lock);
+    m_stateCondition.wait(lk, [this]{return ShouldStop(); });
+  }
 
   // Now we need to block until all packets come back to the object pool:
   m_packets.Rundown();
-}
-
-bool AutoPacketFactory::IsRunning(void) const {
-  boost::lock_guard<boost::mutex> lk(m_lock);
-  return m_runState == RunState::RUNNING;
-}
-
-bool AutoPacketFactory::ShouldStop(void) const {
-  boost::lock_guard<boost::mutex> lk(m_lock);
-  return m_runState == RunState::STOPPED;
 }
 
 void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
@@ -103,7 +92,7 @@ void AutoPacketFactory::AddSubscriber(const AutoPacketSubscriber& rhs) {
     // Register the subscriber and pre-populate the arity:
     subscriberIndex = m_subscribers.size();
     m_subMap[ti] = subscriberIndex;
-    m_subscribers.push_back(std::move(rhs));
+    m_subscribers.push_back(rhs);
   }
 
   // Prime the satisfaction graph for each element:

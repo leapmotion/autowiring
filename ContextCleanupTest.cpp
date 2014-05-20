@@ -80,7 +80,7 @@ TEST_F(ContextCleanupTest, VerifyContextDtor) {
       EXPECT_EQ(2, contextVerifier.use_count()) << "Reference count changed unexpectedly after addition of an object";
 
       // Eliminate the thread reference to this context:
-      shared_ptr<CoreContext> ref = subContext;
+      auto ref = subContext;
       EXPECT_EQ(3, ref.use_count()) << "Pointer copy didn't increment the context reference count as expected";
       subContextWeak = subContext;
     }
