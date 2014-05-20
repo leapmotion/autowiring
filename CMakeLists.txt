@@ -65,7 +65,8 @@ set(Autowiring_SRCS
   EventReceiver.cpp
   fast_pointer_cast.h
   JunctionBox.h
-  JunctionBox.cpp
+  JunctionBoxBase.h
+  JunctionBoxBase.cpp
   JunctionBoxEntry.h
   JunctionBoxManager.h
   JunctionBoxManager.cpp
