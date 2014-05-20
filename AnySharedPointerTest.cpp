@@ -29,6 +29,7 @@ TEST_F(AnySharedPointerTest, OperatorEq) {
 
   // Trivial equivalence of an AnySharedPointer based on an AutoFilter instance
   AnySharedPointer sobjAny1(sobj);
+  ASSERT_TRUE((bool)sobjAny1);
   ASSERT_EQ(sobj, sobjAny1) << "An AnySharedPointer instance initialized by constructor violated an identity test";
 
   // Trivial equivalence of an AnySharedPointer based on an AutoFilter instance
