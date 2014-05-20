@@ -3,6 +3,8 @@
 #include "TypeRegistry.h"
 #include "uuid.h"
 #include <map>
+#include <stdexcept>
+#include <vector>
 #include TYPE_INDEX_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_MAP
@@ -12,6 +14,7 @@ class EventReceiver;
 class EventOutputStreamBase;
 class CoreContext;
 class JunctionBoxBase;
+class OutputStreamVector;
 
 template<typename T>
 class EventOutputStream;
