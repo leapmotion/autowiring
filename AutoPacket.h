@@ -86,6 +86,7 @@ private:
       // Reset the checkout flag before releasing the lock:
       assert(entry.isCheckedOut);
       entry.isCheckedOut = false;
+      entry.satisfied = true;
     }
 
     if(ready)
@@ -167,7 +168,6 @@ public:
       entry = &m_decorations[typeid(type)];
       if(entry->satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
-      entry->satisfied = true;
       entry->isCheckedOut = true;
       entry->wasCheckedOut = true;
     }
