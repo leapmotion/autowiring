@@ -774,22 +774,21 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
+    const AddInternalTraits traits(AutoPacketSubscriberSelect<T>(pSnooper), pSnooper);
     static_assert(std::is_base_of<EventReceiver, T>::value ||
                   has_autofilter<T>::value,
                   "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
     
     RemoveSnooper(pSnooper);
 
-    Object* oSnooper = std::static_pointer_cast<Object>(pSnooper).get();
+    auto oSnooper = std::static_pointer_cast<Object>(pSnooper);
     
     // Cleanup if its an EventReceiver
-    if (std::is_base_of<EventReceiver, T>::value)
-      UnsnoopEvents(oSnooper, JunctionBoxEntry<EventReceiver>(this, pSnooper));
+    if(traits.pRecvr)
+      UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<EventReceiver>(this, traits.pRecvr));
     
-      // Remove if unsnoop occurs before context is initiated
-      if (!IsInitiated())
     // Cleanup if its a packet listener
-    if (has_autofilter<T>::value)
+    if(traits.subscriber)
       UnsnoopAutoPacket(traits);
   }
 

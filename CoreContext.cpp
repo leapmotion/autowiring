@@ -684,7 +684,7 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
     m_pParent->RemoveEventReceivers(first, last);
 }
 
-void CoreContext::UnsnoopEvents(Object* snooper, const JunctionBoxEntry<EventReceiver>& receiver) {
+void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver) {
   (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
   m_delayedEventReceivers.erase(receiver);
   
@@ -804,7 +804,7 @@ void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
   
   // Decide if we should unsnoop the parent
   bool shouldRemove = m_pParent &&
-                      ((boost::lock_guard<boost::mutex>)m_pParent->m_lock, true) &&
+                      ((boost::lock_guard<boost::mutex>)m_pParent->m_stateBlock->m_lock, true) &&
                       m_pParent->m_snoopers.find(traits.pObject.get()) == m_pParent->m_snoopers.end();
   
   // Check if snooper is a member of the parent
