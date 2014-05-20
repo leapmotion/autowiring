@@ -57,16 +57,16 @@ TEST_F(CoreContextTest, TestEarlyLambdaReturn) {
   AutoCreateContext child3;
 
   // Enumerate, but stop after three:
-  std::set<std::shared_ptr<CoreContext>> allChildren;
+  std::vector<std::shared_ptr<CoreContext>> allChildren;
   size_t totalSoFar = 0;
   for(auto& ctxt : CurrentContextEnumerator()) {
     if(totalSoFar++ == 3)
       break;
-    allChildren.insert(ctxt);
+    allChildren.push_back(ctxt);
   }
 
   ASSERT_EQ(3UL, allChildren.size()) << "Enumeration routine failed to quit early";
 
-  // Verify that the root context isn't in the set--needed to assure that we are running a depth-first search.
-  ASSERT_EQ(0UL, allChildren.count(m_create)) << "EnumerateChildContexts did not execute depth-first";
+  // Verify that the root context is the first one enumerated--needed to assure that we are executing a depth-first search
+  ASSERT_EQ(m_create, allChildren[0]) << "EnumerateChildContexts did not execute depth-first";
 }
