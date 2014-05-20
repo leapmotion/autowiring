@@ -174,7 +174,7 @@ public:
       if(pFirstChild == this) {
         // Trivially satisfy, and then return.  This might look like a leak, but it's not, because we know
         // that Finalize is going to destroy the object.
-        newHead->SatisfyAutowiring((shared_ptr<T>*)this);
+        newHead->SatisfyAutowiring((std::shared_ptr<T>*)this);
         newHead->Finalize();
         return;
       }
@@ -263,8 +263,8 @@ template<class T>
   class AutoFired
 {
 public:
-  AutoFired(void):
-    m_junctionBox(CoreContext::CurrentContext()->GetJunctionBox<T>())
+  AutoFired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
+    m_junctionBox(ctxt->GetJunctionBox<T>())
   {
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
   }
