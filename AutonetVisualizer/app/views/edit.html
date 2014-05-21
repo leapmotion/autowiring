@@ -1,6 +1,6 @@
 <h3>Delete context</h3>
 <ul>
   <li ng-repeat="(id,ctxt) in leap.GetContexts()" style="position:relative; height:60px; width:300px;">
-    {{ctxt.name}}: <a href class="btn btn-danger btn-sm pull-right" ng-click="deleteContext(ctxt)">Delete</a>
+    {{ctxt.name}}: <a href class="btn btn-danger btn-sm pull-right" ng-click="terminateContext(ctxt)">Terminate</a>
   </li>
 </ul>
