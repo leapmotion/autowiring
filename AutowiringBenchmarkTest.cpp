@@ -36,7 +36,7 @@ TEST_F(AutowiringBenchmarkTest, VerifySimplePerformance) {
 
 template<int N>
 struct dummy:
-  public virtual ContextMember
+  public ContextMember
 {};
 
 void InjectDummy(void) {

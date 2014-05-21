@@ -78,6 +78,8 @@ set(Autowiring_SRCS
   ReentrantCounter.h
   ReentrantCounter.cpp
   SharedPointerSlot.h
+  SlotInformation.h
+  SlotInformation.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
   ThreadStatusBlock.h
