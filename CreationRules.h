@@ -1,4 +1,6 @@
 #pragma once
+#include "ContextMember.h"
+#include "SlotInformation.h"
 #include TYPE_TRAITS_HEADER
 #include RVALUE_HEADER
 
@@ -45,13 +47,33 @@ struct CreationRules {
     return U::New();
   }
 
+  template<typename U>
+  static void MakeStackLocation(void*) {}
+
+  template<typename U>
+  static SlotInformationStackLocation MakeStackLocation(ContextMember* pSpace) {
+    return SlotInformationStackLocation::PushStackLocation(static_cast<U*>(pSpace));
+  }
+
   template<typename U, typename... Args>
   static typename std::enable_if<!has_static_new<U>::value, U*>::type New(Args&&... args) {
     static_assert(!std::is_abstract<U>::value, "Cannot create a type which is abstract");
     static_assert(!has_static_new<U>::value, "Can't inject member with arguments if it has a static new");
     static_assert(!sizeof...(Args) || !has_simple_constructor<U>::value, "Can't inject member with arguments if it has a default constructor");
 
+    // Allocate slot first before registration
+    U* pSpace = (U*)new unsigned char[sizeof(U)];
 
-    return new U(std::forward<Args>(args)...);
+    try {
+      // Stack location and placement new in one expression
+      return
+        MakeStackLocation<U>(pSpace),
+        new (pSpace) U(std::forward<Args>(args)...);
+    }
+    catch(...) {
+      // Don't want memory leaks--but we also want to avoid calling the destructor, here, so we cast to void before freeing
+      delete (void*) pSpace;
+      throw;
+    }
   }
 };
