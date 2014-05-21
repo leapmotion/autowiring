@@ -1,20 +1,22 @@
 #include "stdafx.h"
 #include "SlotInformation.h"
 #include "InterlockedExchange.h"
-#include MEMORY_HEADER
+#include "Autowired.h"
 #include <boost/thread/tss.hpp>
+#include MEMORY_HEADER
 
 // Special file-level allocation with a no-op dtor, because all stack locations are stack-allocated
 static boost::thread_specific_ptr<SlotInformationStackLocation> tss([](SlotInformationStackLocation*) {});
 
 SlotInformationStump::~SlotInformationStump(void) {}
 
-SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStump* pStump, const void* pObj, const void* pContextMember) :
+SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStump* pStump, const void* pObj, const void* pContextMember, size_t extent) :
   m_pPrior(tss.get()),
   m_pStump(pStump),
   m_pCur(nullptr),
   m_pObj(pObj),
-  m_pContextMember(pContextMember)
+  m_pContextMember(pContextMember),
+  m_extent(extent)
 {
   tss.reset(this);
 }
@@ -56,6 +58,13 @@ void SlotInformationStackLocation::RegisterSlot(DeferrableAutowiring* pDeferrabl
 
   if(tss->m_pStump->bInitialized)
     // No reason to continue, stump already initialized
+    return;
+
+  if(
+    (unsigned char*) pDeferrable < (unsigned char*) tss->m_pObj ||
+    (unsigned char*) tss->m_pObj + tss->m_extent < (unsigned char*) pDeferrable + sizeof(AutowirableSlot<int>)
+  )
+    // Slot is extraneous, falling outside of the bounds of the original object--ignore
     return;
 
   tss->m_pCur = new SlotInformation(

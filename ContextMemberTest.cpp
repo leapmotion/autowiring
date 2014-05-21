@@ -77,3 +77,25 @@ TEST_F(ContextMemberTest, RecursiveRelationship) {
     ct++;
   ASSERT_EQ(3UL, ct) << "Recursively AutoRequired type did not enumerate all of the expected slots upon reflection";
 }
+
+class AutowiresInCtor:
+  public ContextMember
+{
+public:
+  AutowiresInCtor(void) {
+    Autowired<SimpleObject>();
+  }
+
+private:
+  Autowired<SimpleObject> m_member;
+};
+
+TEST_F(ContextMemberTest, TransientAutowiring) {
+  AutoRequired<AutowiresInCtor> aictor;
+
+  size_t ct = 0;
+  for(auto cur = aictor->GetSlotInformation(); cur; cur = cur->pFlink)
+    ct++;
+
+  ASSERT_EQ(1UL, ct) << "An autowirable slot declared on the stack was incorrectly detected as being a type member";
+}
