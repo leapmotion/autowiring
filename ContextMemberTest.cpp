@@ -51,3 +51,29 @@ TEST_F(ContextMemberTest, VerifyDetectedMembers)
   }
   ASSERT_EQ(3UL, ct) << "Slot registration detected an insufficient number of created slots";
 }
+
+class AutoRequiresSomething:
+  public ContextMember
+{
+  AutoRequired<HasAFewSlots> m_slots;
+  Autowired<SimpleObject> m_simpleObj;
+};
+
+TEST_F(ContextMemberTest, RecursiveRelationship) {
+  // Create our root type:
+  AutoRequired<AutoRequiresSomething> ars;
+  AutoRequired<HasAFewSlots> hasAFew;
+
+  // Now verify that we only get the type we expect, and none of the transitive types:
+  size_t ct = 0;
+  for(auto cur = ars->GetSlotInformation(); cur; cur = cur->pFlink)
+    ct++;
+  ASSERT_LE(1UL, ct) << "Recursive construction of an AutoRequired type incorrectly mapped in slots in a created field";
+  ASSERT_GE(ct, 1UL) << "Recursive construction failed to map a type after an AutoRequired field was constructed";
+
+  // Descendant type should also be correctly initialized:
+  ct = 0;
+  for(auto cur = hasAFew->GetSlotInformation(); cur; cur = cur->pFlink)
+    ct++;
+  ASSERT_EQ(3UL, ct) << "Recursively AutoRequired type did not enumerate all of the expected slots upon reflection";
+}
