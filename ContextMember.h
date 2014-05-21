@@ -6,6 +6,31 @@
 class CoreContext;
 
 /// <summary>
+/// Represents information about a single slot detected as having been declared in a ContextMember
+/// </summary>
+struct SlotInformation {
+  SlotInformation(const SlotInformation* pFlink, const std::type_info& type, bool autoRequired) :
+    m_pFlink(pFlink),
+    m_type(type),
+    m_autoRequired(autoRequired)
+  {}
+
+  // The next slot defined on this type
+  const SlotInformation* const m_pFlink;
+
+  // The type of this slot:
+  const std::type_info& m_type;
+
+  // True if this slot was AutoRequired
+  bool m_autoRequired;
+};
+
+template<class T>
+class SlotDetectionEngine {
+  SlotInformation* pSlot;
+};
+
+/// <summary>
 /// A class that must be inherited in order to be a member of a context heriarchy
 /// </summary>
 class ContextMember:
@@ -15,21 +40,32 @@ class ContextMember:
 {
 protected:
   ContextMember(const char* name = nullptr);
-  const char* m_name;
 
 public:
   virtual ~ContextMember();
 
-  friend class CoreContext;
-
 protected:
-  // Member variables:
+  // Pointer back to the enclosing context
   const std::weak_ptr<CoreContext> m_context;
+
+  // Name of this Contextmember:
+  const char* m_name;
+
+  // Slots defined on this type, updated as the base type is constructed
+  const SlotInformation* m_pSlots;
 
 public:
   // Accessor methods:
   const char* GetName(void) const {return m_name;}
   bool IsOrphaned(void) const {return m_context.expired();}
+
+  /// <returns>
+  /// A pointer to the head of a linked list of context members
+  /// </returns>
+  /// <remarks>
+  /// The linked list is guaranteed to be in reverse-sorted order
+  /// </remarks>
+  const SlotInformation* GetSlotInformation(void) const { return m_pSlots; }
 
   /// <summary>
   /// This method is invoked after all embedded Autowired members of this class are initialized
