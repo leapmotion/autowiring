@@ -47,14 +47,6 @@ struct CreationRules {
     return U::New();
   }
 
-  template<typename U>
-  static void MakeStackLocation(void*) {}
-
-  template<typename U>
-  static SlotInformationStackLocation MakeStackLocation(ContextMember* pSpace) {
-    return SlotInformationStackLocation::PushStackLocation(static_cast<U*>(pSpace));
-  }
-
   template<typename U, typename... Args>
   static typename std::enable_if<!has_static_new<U>::value, U*>::type New(Args&&... args) {
     static_assert(!std::is_abstract<U>::value, "Cannot create a type which is abstract");
@@ -67,7 +59,7 @@ struct CreationRules {
     try {
       // Stack location and placement new in one expression
       return
-        MakeStackLocation<U>(pSpace),
+        SlotInformationStackLocation::PushStackLocation<U>(static_cast<U*>(pSpace)),
         new (pSpace) U(std::forward<Args>(args)...);
     }
     catch(...) {
