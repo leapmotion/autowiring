@@ -9,17 +9,9 @@ static boost::thread_specific_ptr<SlotInformationStackLocation> tss([](SlotInfor
 
 SlotInformationStump::~SlotInformationStump(void) {}
 
-SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStackLocation&& rhs):
-  m_pPrior(rhs.m_pPrior),
-  m_pHead(rhs.m_pHead),
-  m_pCur(rhs.m_pCur),
-  m_pObj(rhs.m_pObj),
-  m_pContextMember(rhs.m_pContextMember)
-{}
-
 SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStump* pStump, const void* pObj, const void* pContextMember) :
-  m_pPrior(tss.release()),
-  m_pHead(pStump),
+  m_pPrior(tss.get()),
+  m_pStump(pStump),
   m_pCur(nullptr),
   m_pObj(pObj),
   m_pContextMember(pContextMember)
@@ -28,17 +20,23 @@ SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStump*
 }
 
 SlotInformationStackLocation::~SlotInformationStackLocation(void) {
-  // Always replace the prior stack location
+  // Replace the prior stack location, we were pushed
   tss.reset(m_pPrior);
 
-  if(!m_pHead)
-    // Nothing to do, no slots were constructed
-    return;
+  if(
+    // Do not attempt the update if this stump is initialized already, it could
+    // mean that our value is presently invalid
+    !m_pStump->bInitialized &&
 
-  // Update the stump location with our new value:
-  if(!compare_exchange<SlotInformation>(&m_pHead->pHead, m_pCur, nullptr))
-    // Success, we can return
+    // We can only end here if the swap succeeds, otherwise we're going to have
+    // to leave the value that's here already and tear down our list
+    !compare_exchange<SlotInformation>(&m_pStump->pHead, m_pCur, nullptr)
+  ) {
+    // No reason to CAS this boolean field--we're going to unconditionally make
+    // this spot initialized.
+    m_pStump->bInitialized = true;
     return;
+  }
 
   // Stump already filled in, prevent leaks by destroying this stump entry:
   std::unique_ptr<const SlotInformation> prior;
@@ -48,12 +46,16 @@ SlotInformationStackLocation::~SlotInformationStackLocation(void) {
 
 SlotInformationStump* SlotInformationStackLocation::CurrentStackLocation(void) {
   // Trivial null defaulting:
-  return tss.get() ? tss->m_pHead : nullptr;
+  return tss.get() ? tss->m_pStump : nullptr;
 }
 
 void SlotInformationStackLocation::RegisterSlot(DeferrableAutowiring* pDeferrable) {
   if(!tss.get())
     // Nothing to do, this slot entry is missing
+    return;
+
+  if(tss->m_pStump->bInitialized)
+    // No reason to continue, stump already initialized
     return;
 
   tss->m_pCur = new SlotInformation(

@@ -60,6 +60,8 @@ public:
   /// the method is called during construction.  This method is guaranteed to return correct
   /// results after the first instance of a concrete type is constructed.
   ///
+  /// This list is guaranteed not to contain any AutowiredFast fields defined in the class.
+  ///
   /// The linked list is guaranteed to be in reverse-sorted order
   /// </remarks>
   const SlotInformation* GetSlotInformation(void) const;
