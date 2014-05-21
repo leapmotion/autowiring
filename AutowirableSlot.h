@@ -1,6 +1,7 @@
 #pragma once
 #include "fast_pointer_cast.h"
 #include "SharedPointerSlot.h"
+#include "SlotInformation.h"
 #include MEMORY_HEADER
 
 class CoreContext;
@@ -119,7 +120,9 @@ public:
     DeferrableAutowiring(ctxt),
     m_type(typeid(T)),
     m_fast_pointer_cast(&leap::fast_pointer_cast<T, Object>)
-  {}
+  {
+    SlotInformationStackLocation::RegisterSlot(this);
+  }
 
   virtual ~AutowirableSlot(void) {
     CancelAutowiring();
