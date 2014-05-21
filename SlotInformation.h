@@ -3,6 +3,7 @@
 #include <typeinfo>
 #include MEMORY_HEADER
 
+class ContextMember;
 class DeferrableAutowiring;
 
 /// <summary>
@@ -34,9 +35,13 @@ struct SlotInformation {
 /// </summary>
 struct SlotInformationStump {
   SlotInformationStump(void) :
+    bInitialized(false),
     pHead(nullptr)
   {}
   ~SlotInformationStump(void);
+
+  // Initialization flag, used to indicate that this stump has valid data
+  bool bInitialized;
 
   // Current slot information:
   SlotInformation* pHead;
@@ -48,10 +53,10 @@ struct SlotInformationStump {
 class SlotInformationStackLocation {
 private:
   SlotInformationStackLocation(const SlotInformationStackLocation& rhs) = delete;
+  SlotInformationStackLocation(SlotInformationStackLocation&& rhs) = delete;
   SlotInformationStackLocation(SlotInformationStump* pStump = nullptr, const void* pObj = nullptr, const void* pContextMember = nullptr);
 
 public:
-  SlotInformationStackLocation(SlotInformationStackLocation&& rhs);
   ~SlotInformationStackLocation(void);
 
 private:
@@ -59,36 +64,51 @@ private:
   SlotInformationStackLocation* m_pPrior;
 
   // The pointer location where the stump will be stored:
-  SlotInformationStump* m_pHead;
+  SlotInformationStump* m_pStump;
 
   // Current slot information:
   SlotInformation* m_pCur;
 
   // Information about the object being constructed while this stack location is valid:
-  const void* const m_pObj;
-  const void* const m_pContextMember;
+  const void* m_pObj;
+  const void* m_pContextMember;
 
 public:
+  /// <returns>
+  /// The slot information stump for the specified type
+  /// </returns>
+  template<class T>
+  static SlotInformationStump* GetStump(void) {
+    static std::unique_ptr<SlotInformationStump> s_pSlot(new SlotInformationStump);
+    return s_pSlot.get();
+  }
+
+  /// <summary>
+  /// Default method, does nothing
+  /// </summary>
+  template<class T>
+  static void PushStackLocation(void*) {}
+
   /// <returns>
   /// Creates a new stack location which remains current as long as the return type is not destroyed
   /// </returns>
   /// <param name="pSpace">The pointer to the base of the space about to be constructed</param>
   /// <param name="contextMemberOffset">The offset between the base of the space and the ContextMember field</param>
   template<class T>
-  static SlotInformationStackLocation PushStackLocation(T* pObj) {
-    // Information for this slot
-    static std::unique_ptr<SlotInformationStump> s_pSlot(new SlotInformationStump);
+  static SlotInformationStackLocation PushStackLocation(ContextMember* pContextMember) {
+    T* pObj = static_cast<T*>(pContextMember);
+    auto* pStump = GetStump<T>();
 
     // If we're already initialized, then we have nothing to do.  This line is an optimization; if there
     // is a race here, then the worst-case scenario is an unneeded sequence of memory allocations that
     // will only ever be referenced by this stack location.
-    if(s_pSlot && s_pSlot->pHead)
-      return SlotInformationStackLocation();
+    if(pStump->bInitialized)
+      return SlotInformationStackLocation(pStump);
 
     // New stack location to enclose this stump.  This stack location may be concurrent with respect
     // to other threads, but only one thread will succeed in colonizing this stump with a chain of
     // slot entries
-    return SlotInformationStackLocation(s_pSlot.get(), pObj, static_cast<ContextMember*>(pObj));
+    return SlotInformationStackLocation(pStump, pObj, static_cast<ContextMember*>(pObj));
   }
 
   /// <summary>
@@ -101,4 +121,8 @@ public:
   /// </summary>
   /// <remarks>
   static void RegisterSlot(DeferrableAutowiring* pAutowiring);
+
+  // Operator overloads:
+  void operator=(SlotInformationStackLocation&& rhs) = delete;
+  void operator=(const SlotInformationStackLocation& rhs) = delete;
 };
