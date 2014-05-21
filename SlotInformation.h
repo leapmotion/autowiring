@@ -54,7 +54,7 @@ class SlotInformationStackLocation {
 private:
   SlotInformationStackLocation(const SlotInformationStackLocation& rhs) = delete;
   SlotInformationStackLocation(SlotInformationStackLocation&& rhs) = delete;
-  SlotInformationStackLocation(SlotInformationStump* pStump = nullptr, const void* pObj = nullptr, const void* pContextMember = nullptr);
+  SlotInformationStackLocation(SlotInformationStump* pStump = nullptr, const void* pObj = nullptr, const void* pContextMember = nullptr, size_t extent = 0);
 
 public:
   ~SlotInformationStackLocation(void);
@@ -72,6 +72,7 @@ private:
   // Information about the object being constructed while this stack location is valid:
   const void* m_pObj;
   const void* m_pContextMember;
+  size_t m_extent;
 
 public:
   /// <returns>
@@ -108,7 +109,7 @@ public:
     // New stack location to enclose this stump.  This stack location may be concurrent with respect
     // to other threads, but only one thread will succeed in colonizing this stump with a chain of
     // slot entries
-    return SlotInformationStackLocation(pStump, pObj, static_cast<ContextMember*>(pObj));
+    return SlotInformationStackLocation(pStump, pObj, static_cast<ContextMember*>(pObj), sizeof(T));
   }
 
   /// <summary>
