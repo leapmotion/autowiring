@@ -1,9 +1,6 @@
-// Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
-
 #include "Object.h"
 #include "TeardownNotifier.h"
-#include <assert.h>
 #include MEMORY_HEADER
 
 class CoreContext;
@@ -27,30 +24,12 @@ public:
 
 protected:
   // Member variables:
-  std::weak_ptr<CoreContext> m_context;
+  const std::weak_ptr<CoreContext> m_context;
 
 public:
   // Accessor methods:
   const char* GetName(void) const {return m_name;}
   bool IsOrphaned(void) const {return m_context.expired();}
-
-  /// <summary>
-  /// Assigns the context for this context member
-  /// </summary>
-  /// <remarks>
-  /// This method may be used to assign the member's enclosing context to exactly one value.  It
-  /// is an error to attempt to use this method to change the context member's context once it has
-  /// been assigned.
-  ///
-  /// An exception to this rule is that a context member's context may be updated if the context
-  /// member has been orphaned.
-  ///
-  /// This method is idempotent.
-  /// </remarks>
-  void SetContext(std::shared_ptr<CoreContext>& context) {
-    assert(m_context.lock() == context || m_context.expired());
-    m_context = context;
-  }
 
   /// <summary>
   /// This method is invoked after all embedded Autowired members of this class are initialized
@@ -90,7 +69,7 @@ public:
   /// Note that, if the context is in the process of tearing down, this return value
   /// could be null.
   /// </remarks>
-  std::shared_ptr<CoreContext> GetContext(void) const {return m_context.lock();}
+  std::shared_ptr<CoreContext> GetContext(void) const { return m_context.lock(); }
 
   /// <summary>
   /// Returns a shared pointer that refers to ourselves
