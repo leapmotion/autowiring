@@ -1,5 +1,6 @@
 #pragma once
 #include <typeinfo>
+#include STL_TUPLE_HEADER
 #include MEMORY_HEADER
 
 template<class T>
