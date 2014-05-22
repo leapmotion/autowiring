@@ -603,7 +603,7 @@ public:
   template<class Sigil>
   std::vector<std::shared_ptr<CoreContext>> EnumerateChildContexts(void) {
     std::vector<std::shared_ptr<CoreContext>> retVal;
-    EnumerateChildContexts([&retVal](std::shared_ptr<CoreContext> ctxt) {
+    EnumerateChildContexts(typeid(Sigil), [&retVal](std::shared_ptr<CoreContext> ctxt) {
       retVal.push_back(ctxt);
     });
     return retVal;

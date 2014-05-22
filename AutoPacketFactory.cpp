@@ -45,6 +45,7 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
 }
 
 bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
+  boost::lock_guard<boost::mutex> lk(m_lock);
   m_outstanding = outstanding;
   
   m_stateCondition.notify_all();
@@ -52,6 +53,7 @@ bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
 }
 
 void AutoPacketFactory::Stop(bool graceful) {
+  boost::lock_guard<boost::mutex> lk(m_lock);
   m_wasStopped = true;
   m_outstanding.reset();
   

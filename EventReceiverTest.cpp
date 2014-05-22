@@ -452,3 +452,16 @@ TEST_F(EventReceiverTest, VerifyNoActionWhileStopped) {
   ciInnerDeferred(&CallableInterfaceDeferred::ZeroArgsDeferred)();
   ASSERT_FALSE(sr->m_zero) << "Fired an event in a stopped context which was incorrectly received by a member of that same context";
 }
+
+TEST_F(EventReceiverTest, VerifyCorrectContext){
+  AutoCurrentContext outerCtxt;
+  AutoRequired<SimpleReceiver> receiver;
+  ASSERT_FALSE(receiver->m_zero) << "SimpleReceiver initialized incorrectly";
+  
+  AutoCreateContext innerCtxt;
+  CurrentContextPusher pshr(innerCtxt);
+  
+  AutoFired<CallableInterface> fire(outerCtxt);
+  fire(&CallableInterface::ZeroArgs)();
+  EXPECT_TRUE(receiver->m_zero) << "AutoFired was created with the current context instead of the passed in context";
+}
