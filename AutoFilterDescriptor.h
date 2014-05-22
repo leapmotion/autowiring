@@ -5,6 +5,7 @@
 #include "Decompose.h"
 #include "has_autofilter.h"
 #include "optional_ptr.h"
+#include <functional>
 #include MEMORY_HEADER
 
 class AutoPacket;
@@ -356,9 +357,6 @@ AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
 }
 
 namespace std {
-  template<class T>
-  struct hash;
-
   template<>
   struct hash<AutoFilterDescriptor>
   {
