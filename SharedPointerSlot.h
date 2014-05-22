@@ -102,8 +102,10 @@ public:
   /// </remarks>
   template<class T>
   SharedPointerSlotT<T>& init(void) {
-    // Trivial reset-then-reinit:
+    // Release what we're holding
     reset();
+
+    // Reinitialize, now that the slot is empty
     return *new (this) SharedPointerSlotT<T>();
   }
 
@@ -126,15 +128,11 @@ public:
   /// <summary>
   /// Clears this type, if a shared pointer is currently held
   /// </summary>
-  void reset(void) {
-    if(empty())
-      // Nothing to do, just back out
-      return;
-
-    // We aren't presently empty, we need to release our
-    // current implementation before attempting to reinitialize
-    this->~SharedPointerSlot();
-  }
+  /// <remarks>
+  /// This method will preserve the polymorphic type of this slot--IE, it does not change the return
+  /// value of this->type()
+  /// </remarks>
+  virtual void reset(void) {}
 
   /// <summary>
   /// Attempts to coerce this type to the speceified type
@@ -281,6 +279,11 @@ public:
   bool empty(void) const { return get() == nullptr; }
   operator bool(void) const override { return !!get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
+
+  void reset(void) override {
+    get().reset();
+  }
+
 
   template<class U>
   bool operator==(const std::shared_ptr<U>& rhs) const {
