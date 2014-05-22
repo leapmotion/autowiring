@@ -62,7 +62,7 @@ private:
   /// pipeline packet expiration in order to support expiration notification
   /// broadcasts.
   /// </remarks>
-  ObjectPool<AutoPacket, NoOp, AutoPacketCreator> m_packets;
+  ObjectPool<AutoPacket> m_packets;
 
   // Collection of known subscribers
   typedef std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> t_autoFilterSet;
