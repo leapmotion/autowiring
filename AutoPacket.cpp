@@ -40,6 +40,9 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
         break;
       }
     }
+
+  // Initial reset, required to get into a valid initial state
+  Reset();
 }
 
 AutoPacket::~AutoPacket() {
