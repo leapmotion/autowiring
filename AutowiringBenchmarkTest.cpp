@@ -88,7 +88,7 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiringCache)
     InjectDummy();
     benchmark += boost::chrono::high_resolution_clock::now() - startBench;
   }
-  
+
   EXPECT_GT(baseline, benchmark) << "Autowiring cache not improving performance on subsequent autowirings";
 }
 
@@ -97,25 +97,25 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFast) {
   {
     AutoCreateContext ctxt;
     CurrentContextPusher pshr(ctxt);
-    
+
     AutoRequired<dummy<1>> foo;
     AutowiredFast<dummy<1>> bar;
-    
+
     ASSERT_TRUE(foo) << "AutoRequred member not created";
     EXPECT_TRUE(bar) << "AutowiredFast not satisfied";
   }
-  
+
   {
     AutoCreateContext ctxt;
     CurrentContextPusher pshr(ctxt);
-  
+
     AutowiredFast<dummy<1>> fast;
     Autowired<dummy<1>> wired;
-  
+
     AutoRequired<dummy<1>> required;
-  
+
     ASSERT_TRUE(required) << "AutoRequired member not created";
-  
+
     EXPECT_TRUE(wired.IsAutowired()) << "Deferred Autowiring wasn't satisfied";
     EXPECT_FALSE(fast) << "AutowiredFast member was deferred";
   }
@@ -137,7 +137,7 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFastPerformance) {
     for(int i = 0; i < 500; ++i)
       InjectDummy();
     baseline = boost::chrono::high_resolution_clock::now() - startBase;
-    
+
     auto startBench = boost::chrono::high_resolution_clock::now();
     for(int i = 0; i < 500; ++i) {
       AutowiredFast<dummy<1>>();
@@ -163,6 +163,6 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFastPerformance) {
     }
     benchmark = boost::chrono::high_resolution_clock::now() - startBench;
   }
-  
+
   EXPECT_GT(baseline, benchmark*1.75) << "Fast autowiring is slower than ordinary autowiring";
 }
