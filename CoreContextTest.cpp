@@ -28,25 +28,25 @@ TEST_F(CoreContextTest, TestEnumerateChildren) {
   ASSERT_EQ(1UL, allChildren.count(child1)) << childMissing;
   ASSERT_EQ(1UL, allChildren.count(child2)) << childMissing;
   ASSERT_EQ(1UL, allChildren.count(child3)) << childMissing;
-  
+
   //Check if filtering by sigil works
   AutoCreateContextT<Foo> fooCtxt;
   AutoCreateContextT<Bar> barCtxt;
   auto childFoo = barCtxt->Create<Foo>();
-  
+
   ContextEnumeratorT<Foo> enumerator1(m_create);
-  std::vector<std::shared_ptr<CoreContextT<Foo>>> onlyFoos(enumerator1.begin(), enumerator1.end());
+  std::vector<std::shared_ptr<CoreContext>> onlyFoos(enumerator1.begin(), enumerator1.end());
   ASSERT_EQ(2UL, onlyFoos.size()) << "Didn't collect only contexts with 'Foo' sigil";
   ASSERT_NE(std::find(onlyFoos.begin(), onlyFoos.end(), fooCtxt), onlyFoos.end()) << "Context not enumerated";
   ASSERT_NE(std::find(onlyFoos.begin(), onlyFoos.end(), childFoo), onlyFoos.end()) << "Context not enumerated";
 
   ContextEnumeratorT<Bar> enumerator2(m_create);
-  std::vector<std::shared_ptr<CoreContextT<Bar>>> onlyBars(enumerator2.begin(), enumerator2.end());
+  std::vector<std::shared_ptr<CoreContext>> onlyBars(enumerator2.begin(), enumerator2.end());
   ASSERT_EQ(1UL, onlyBars.size()) << "Didn't collect only contexts with 'Bar' sigil";
   ASSERT_NE(std::find(onlyBars.begin(), onlyBars.end(), barCtxt), onlyBars.end()) << "Context not enumerated";
 
   ContextEnumeratorT<Baz> enumerator3(m_create);
-  std::vector<std::shared_ptr<CoreContextT<Baz>>> noBaz(enumerator3.begin(), enumerator3.end());
+  std::vector<std::shared_ptr<CoreContext>> noBaz(enumerator3.begin(), enumerator3.end());
   ASSERT_TRUE(noBaz.empty()) << "Incorrectly collected contexts with 'Baz' sigil";
 }
 
