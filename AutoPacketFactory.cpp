@@ -7,9 +7,9 @@ AutoPacket* AutoPacketFactory::AutoPacketCreator::operator()() const {
 }
 
 AutoPacketFactory::AutoPacketFactory(void):
-  m_wasStopped(false)
+  m_wasStopped(false),
+  m_packets(~0, ~0, [this] { return new AutoPacket(*this); })
 {
-  m_packets.SetAlloc(AutoPacketCreator(this));
 }
 
 AutoPacketFactory::~AutoPacketFactory() {}
