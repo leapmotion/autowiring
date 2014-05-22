@@ -81,13 +81,13 @@ protected:
     // lock is released.
     boost::lock_guard<boost::mutex> lk(*monitor);
 
-    // Always decrement the count when an object is no longer outstanding
-    assert(m_outstanding);
-    m_outstanding--;
-
     if(monitor->IsAbandoned())
       // Nothing we can do, monitor object abandoned already, just destroy the object
       return;
+
+    // Always decrement the count when an object is no longer outstanding
+    assert(m_outstanding);
+    m_outstanding--;
 
     if(
       // Pool versions have to match, or the object should be dumped
