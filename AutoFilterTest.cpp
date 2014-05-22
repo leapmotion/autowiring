@@ -292,23 +292,30 @@ TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
 }
 
 TEST_F(AutoFilterTest, VerifyReferenceBasedInput) {
-  AutoCurrentContext()->Initiate();
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<FilterGen<Decoration<0>, Decoration<1>&>> makesDec1;
+  std::shared_ptr<AutoPacket> packet;
 
-  // Create a packet and put decoration 0 on it:
-  auto packet = factory->NewPacket();
+  {
+    AutoCreateContext sub;
+    CurrentContextPusher pshr(sub);
+    sub->Initiate();
 
-  // No early call
-  ASSERT_FALSE(makesDec1->m_called) << "Single-input autofilter was invoked prematurely";
+    AutoRequired<AutoPacketFactory> factory;
+    AutoRequired<FilterGen<Decoration<0>, Decoration<1>&>> makesDec1;
 
-  // Now we decorate, after ensuring an early call did not happen
-  packet->Decorate(Decoration<0>());
+    // Create a packet and put decoration 0 on it:
+    packet = factory->NewPacket();
 
-  // Verify that our filter got called when its sole input was satisfied
-  ASSERT_TRUE(makesDec1->m_called) << "Single-input autofilter was not called as expected";
+    // No early call
+    ASSERT_FALSE(makesDec1->m_called) << "Single-input autofilter was invoked prematurely";
 
-  // Now make sure that the packet has the expected decoration:
-  ASSERT_TRUE(packet->Has<Decoration<1>>());
-  AutoCurrentContext()->SignalShutdown(false);
+    // Now we decorate, after ensuring an early call did not happen
+    packet->Decorate(Decoration<0>());
+
+    // Verify that our filter got called when its sole input was satisfied
+    ASSERT_TRUE(makesDec1->m_called) << "Single-input autofilter was not called as expected";
+
+    // Now make sure that the packet has the expected decoration:
+    ASSERT_TRUE(packet->Has<Decoration<1>>());
+    sub->SignalShutdown(false);
+  }
 }
