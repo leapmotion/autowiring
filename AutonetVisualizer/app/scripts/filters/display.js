@@ -10,9 +10,9 @@ angular.module('autoNetApp')
 
 angular.module('autoNetApp')
 .filter('TypeFilter', function(){
-  return function (input, types) {
+  return function (input, type) {
     return _.filter(input, function(ele){
-      return ele.IsAnyType(types);
+      return ele.IsType(type);
     });
   }
 });

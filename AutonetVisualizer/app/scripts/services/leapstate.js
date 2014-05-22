@@ -9,15 +9,16 @@ angular.module('autoNetApp')
     this.name = "Unnamed";
     this.id = id;
 
-    _.extend(this, ctxt)
+    _.extend(this, ctxt);
   }
 
-  Context.prototype.addObject = function(types, objData) {
-    this.objects.push(new LeapObject(types, objData));
+  Context.prototype.addObject = function(obj) {
+    this.objects.push(obj);
   };
 
   function LeapObject(types, objData){
     this.name = objData.name;
+    this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
     this.types = Object.keys(types);
 
     if (types.hasOwnProperty("bolt")) {
@@ -75,6 +76,7 @@ angular.module('autoNetApp')
   //////////////////////////////////////////////////////
 
   var ContextMap = {}; //a map of context.id to contexts
+  var ObjectMap = {}
   var TypeList = [];
   var isSubscribed = false;
 
@@ -103,8 +105,10 @@ angular.module('autoNetApp')
 
   websocket.on('newObject', function(contextID, types, objData) {
     var updatedContext = ContextMap[contextID];
+    var object = new LeapObject(types, objData);
 
-    updatedContext.addObject(types, objData);
+    updatedContext.addObject(object);
+    ObjectMap[object.linkName] = object;
   });
 
   websocket.on('eventFired', function(contextID, eventHash){
@@ -119,6 +123,9 @@ angular.module('autoNetApp')
   return {
     GetContexts: function(){
       return ContextMap;
+    },
+    GetObjects: function() {
+      return ObjectMap;
     },
     isSubscribed: function(){
       return isSubscribed;
