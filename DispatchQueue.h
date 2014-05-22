@@ -42,21 +42,21 @@ public:
 protected:
   // The maximum allowed number of pended dispatches before pended calls start getting dropped
   int m_dispatchCap;
-  
+
   // The dispatch queue proper:
   std::list<DispatchThunkBase*> m_dispatchQueue;
-  
+
   // Priority queue of non-ready events:
   std::priority_queue<DispatchThunkDelayed> m_delayedQueue;
-  
+
   // A lock held when modifications to any element EXCEPT the first element must be made:
   boost::mutex m_dispatchLock;
-  
+
   // Notice when the dispatch queue has been updated:
   boost::condition_variable m_queueUpdated;
-  
+
   bool m_aborted;
-  
+
   /// <summary>
   /// Recommends a point in time to wake up to check for events
   /// </summary>
@@ -98,7 +98,7 @@ protected:
 
     OnPended(std::move(lk));
   }
-  
+
 public:
   /// <returns>
   /// True if there are curerntly any dispatchers ready for execution--IE, DispatchEvent would return true
@@ -148,7 +148,7 @@ public:
   /// </summary>
   virtual bool DEPRECATED(CanAccept(void) const, "CanAccept has been deprecated. Use IsInitiated on the enclosing context instead");
   virtual bool DEPRECATED(DelayUntilCanAccept(void), "CanAccept is deprecated. Use WaitUntilInitiated on the enclosing context instead");
-  
+
   /// <summary>
   /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>
