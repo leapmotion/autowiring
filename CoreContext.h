@@ -138,7 +138,7 @@ protected:
   // All known event receivers and receiver proxies originating from this context:
   typedef std::set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
-  
+
   // List of eventReceivers to be added when this context in initiated
   t_rcvrSet m_delayedEventReceivers;
   
@@ -165,7 +165,7 @@ protected:
     // don't allow new children if shutting down
     if(m_isShutdown)
       throw autowiring_error("Cannot create a child context; this context is already shut down");
-    
+
     t_childList::iterator childIterator;
     {
       // Lock the child list while we insert
@@ -224,6 +224,7 @@ protected:
   void EnableInternal(T*, Bolt<Sigils...>*) {
     Inject<T>();
   }
+
 
   // Enables a boltable class
   template<typename T, typename... Sigils>
@@ -321,7 +322,7 @@ protected:
   /// The caller is responsible for exterior synchronization
   /// </remarks>
   std::shared_ptr<Object> IncrementOutstandingThreadCount(void);
-  
+
   /// <summary>
   /// Mapping and extraction structure used to provide a runtime version of an Object-implementing shared pointer
   /// </summary>
@@ -687,7 +688,7 @@ public:
   /// True if CoreRunnable instances in this context should begin teardown operations
   /// </returns>
   bool IsShutdown(void) const {return m_isShutdown;}
-  
+
   bool IsInitiated(void) const {return m_initiated;}
 
   /// <returns>
@@ -757,10 +758,10 @@ public:
   template<typename MemFn>
   InvokeRelay<MemFn> Invoke(MemFn memFn){
     typedef typename Decompose<MemFn>::type EventType;
-    
+
     if (!std::is_same<AutowiringEvents,EventType>::value)
       GetGlobal()->Invoke(&AutowiringEvents::EventFired)(*this, typeid(EventType));
-    
+
     return GetJunctionBox<EventType>()->Invoke(memFn);
   }
 
@@ -801,7 +802,7 @@ public:
     boost::unique_lock<boost::mutex> lk(m_lock);
     return m_stateChanged.wait_for(lk, duration, [this] {return m_isShutdown && this->m_outstanding.expired(); });
   }
-  
+
   /// <summary>
   /// Wait until the context is initiated or is shutting down
   /// </summary>

@@ -21,7 +21,7 @@ angular.module('autoNetApp')
     this.name = name;
     this.args = args;
   };
-  
+
   function Messages(maxSize){
     this.maxSize = maxSize;
     this.messages = [];
