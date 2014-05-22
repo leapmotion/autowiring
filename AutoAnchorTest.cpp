@@ -43,6 +43,7 @@ TEST_F(AutoAnchorTest, VerifyPostHocSatisfaction) {
 
   // Create a slot in the child context:
   Autowired<SimpleObject> slot;
+  ASSERT_FALSE(slot) << "A slot was satisfied prematurely";
 
   // Now try to autorequire--this will be satisfied in the anchor:
   AutoRequired<SimpleObject> sobj;
