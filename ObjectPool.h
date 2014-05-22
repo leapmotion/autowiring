@@ -5,35 +5,51 @@
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <set>
+#include <functional>
 #include RVALUE_HEADER
 #include MEMORY_HEADER
 
-struct NoOp {
-  template<class T>
-  void operator()(T& op) const {}
-};
-
 template<class T>
-struct Create {
-  T* operator()() const { return new T(); }
-};
+T* DefaultCreate(void) {
+  return new T;
+}
 
 /// <summary>
-/// Templated base class for implementors who wish to have more direct control over Reset and Allocate
+/// Allows the management of a pool of objects based on an embedded factory
 /// </summary>
+/// <param name="T>The type to be pooled</param>
+/// <param name="_Rx">A function object which resets instances returned to the pool</param>
+/// <remarks>
+/// This class is a type of factory that creates an object of type T.  The object pool
+/// creates a shared pointer for the consumer to use, and when the last shared pointer
+/// for that object is destroyed, the wrapped object is returned to this pool rather than
+/// being deleted.  Returned objects may satisfy subsequent requests for construction.
+///
+/// All object pool methods are thread safe.
+///
+/// Issued pool members must be released before the pool goes out of scope
+/// </remarks>
 template<class T>
-class ObjectPoolBase
+class ObjectPool
 {
 public:
-  ObjectPoolBase(size_t limit = ~0, size_t maxPooled = ~0) :
+  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
+  ObjectPool(
+    size_t limit = ~0,
+    size_t maxPooled = ~0,
+    const std::function<T*()>& alloc = &DefaultCreate<T>,
+    const std::function<void(T&)>& rx = [] (T&) {}
+  ) :
     m_monitor(new ObjectPoolMonitor),
     m_limit(limit),
     m_poolVersion(0),
     m_maxPooled(maxPooled),
-    m_outstanding(0)
+    m_outstanding(0),
+    m_rx(rx),
+    m_alloc(alloc)
   {}
 
-  ~ObjectPoolBase(void) {
+  ~ObjectPool(void) {
     // Transition the pool to the abandoned state:
     m_monitor->Abandon();
 
@@ -54,6 +70,12 @@ protected:
   size_t m_maxPooled;
   size_t m_limit;
   size_t m_outstanding;
+
+  // Resetter:
+  std::function<void(T&)> m_rx;
+
+  // Allocator:
+  std::function<T*()> m_alloc;
 
   /// <summary>
   /// Creates a shared pointer to wrap the specified object
@@ -97,7 +119,7 @@ protected:
       m_objs.size() < m_maxPooled
     ) {
       // Reset the object and put it back in the pool:
-      Reset(*ptr);
+      m_rx(*ptr);
       m_objs.push_back(Wrap(unique.release()));
     }
 
@@ -105,16 +127,6 @@ protected:
     if(m_outstanding <= m_limit)
       m_setCondition.notify_all();
   }
-
-  /// <summary>
-  /// Actually performs a reset of the passed object
-  /// </summary>
-  virtual void Reset(T& ptr) = 0;
-
-  /// <summary>
-  /// Creates a new instance of type T
-  /// </summary>
-  virtual T* Allocate(void) const = 0;
 
   /// <summary>
   /// Obtains an element from the object queue, assumes exterior synchronization
@@ -133,7 +145,7 @@ protected:
       lk.unlock();
 
       // We failed to recover an object, create a new one:
-      return Wrap(Allocate());
+      return Wrap(m_alloc());
     }
 
     // Remove, return:
@@ -148,6 +160,11 @@ public:
   size_t GetCached(void) const {
     boost::lock_guard<boost::mutex> lk(*m_monitor);
     return m_objs.size();
+  }
+
+  // Mutator methods:
+  void SetAlloc(const std::function<T*()>& alloc) {
+    m_alloc = alloc;
   }
 
   /// <summary>
@@ -298,47 +315,4 @@ public:
       return !m_outstanding;
     });
   }
-};
-
-/// <summary>
-/// Allows the management of a pool of objects based on an embedded factory
-/// </summary>
-/// <param name="T>The type to be pooled</param>
-/// <param name="_Rx">A function object which resets instances returned to the pool</param>
-/// <remarks>
-/// This class is a type of factory that creates an object of type T.  The object pool
-/// creates a shared pointer for the consumer to use, and when the last shared pointer
-/// for that object is destroyed, the wrapped object is returned to this pool rather than
-/// being deleted.  Returned objects may satisfy subsequent requests for construction.
-///
-/// All object pool methods are thread safe.
-///
-/// Issued pool members must be released before the pool goes out of scope
-/// </remarks>
-template<class T, class _Rx = NoOp, class _Alloc = Create<T>>
-class ObjectPool:
-  public ObjectPoolBase<T>
-{
-public:
-  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
-  ObjectPool(size_t limit = ~0, size_t maxPooled = ~0, _Rx&& rx = _Rx(), _Alloc&& alloc = _Alloc()):
-    ObjectPoolBase<T>(limit, maxPooled),
-    m_rx(std::move(rx)),
-    m_alloc(std::move(alloc))
-  {}
-
-private:
-  // Resetter, where relevant:
-  _Rx m_rx;
-
-  // Allocator, where relevant:
-  _Alloc m_alloc;
-
-protected:
-  void Reset(T& obj) override { m_rx(obj); }
-  virtual T* Allocate(void) const override { return m_alloc(); }
-
-public:
-  void SetRx(_Rx&& rx) { m_rx = std::move(rx); }
-  void SetAlloc(_Alloc&& alloc) { m_alloc = std::move(alloc); }
 };
