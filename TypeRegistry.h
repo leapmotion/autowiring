@@ -22,7 +22,7 @@ struct TypeIdentifier:
   bool Is(const Object* obj){
     return !!dynamic_cast<const T*>(obj);
   }
-  
+
   const std::type_info& Type(){
     return typeid(T);
   }

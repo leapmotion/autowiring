@@ -42,7 +42,7 @@ struct JunctionBoxEntry
 
   CoreContext* const m_owner;
   std::shared_ptr<T> m_ptr;
-  
+
   JunctionBoxEntry& operator=(const JunctionBoxEntry& rhs) {
     // This shouldn't be used. non-c++11 containers require this...
     throw std::runtime_error("Can't copy a JunctionBoxEntry");
@@ -91,7 +91,7 @@ public:
   JunctionBoxBase(void):
     m_isInitiated(false)
   {}
-  
+
   virtual ~JunctionBoxBase(void);
 
 protected:
@@ -101,7 +101,7 @@ protected:
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
   t_stType m_dispatch;
-  
+
   // This JunctionBox can fire and receive events
   bool m_isInitiated;
 
@@ -130,7 +130,7 @@ protected:
 public:
   bool IsInitiated(void) const {return m_isInitiated;}
   void Initiate(void) {m_isInitiated=true;}
-  
+
   // Accessor methods:
   std::vector<std::weak_ptr<EventOutputStreamBase> > * m_PotentialMarshals;
 
@@ -389,7 +389,7 @@ public:
     if(!erp)
       // Context has already been destroyed
       return;
-    
+
     if(!erp->IsInitiated())
       // Context not yet started
       return;
@@ -430,7 +430,7 @@ public:
     if(!erp)
       // Context has already been destroyed
       return true;
-    
+
     if(!erp->IsInitiated())
       // Context not yet started
       return true;
