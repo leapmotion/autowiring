@@ -98,7 +98,7 @@ public:
       throw std::runtime_error("Attempted to create a child context of a parent context which was shutting down");
 
     // Create, and insert into our map:
-    retVal = context->Create<Sigil>();
+    retVal = context->template Create<Sigil>();
     childWeak = retVal;
 
     // Add a teardown listener so we know when to evict from our map:
