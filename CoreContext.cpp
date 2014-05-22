@@ -172,7 +172,7 @@ void CoreContext::Initiate(void) {
     // Short-return if our stop flag has already been set:
     if(m_isShutdown)
       return;
-    
+
     // Update flag value
     m_initiated = true;
   }
@@ -190,10 +190,10 @@ void CoreContext::Initiate(void) {
   // Reacquire the lock to prevent m_threads from being modified while we sit on it
   auto outstanding = IncrementOutstandingThreadCount();
   boost::lock_guard<boost::mutex> lk(m_lock);
-  
+
   // Signal our condition variable
   m_stateChanged.notify_all();
-  
+
   for(auto q : m_threads)
     q->Start(outstanding);
 }
@@ -306,7 +306,7 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
 void CoreContext::BuildCurrentState(void) {
   AutoGlobalContext glbl;
   glbl->Invoke(&AutowiringEvents::NewContext)(*this);
-  
+
   std::unordered_set<Object*> allObjects;
 
   // ContextMembers and CoreRunnables
@@ -392,7 +392,7 @@ void CoreContext::Dump(std::ostream& os) const {
   for(auto q = m_threads.begin(); q != m_threads.end(); q++) {
     BasicThread* pThread = dynamic_cast<BasicThread*>(*q);
     if (!pThread) continue;
-    
+
     const char* name = pThread->GetName();
     os << "Thread " << pThread << " " << (name ? name : "(no name)") << std::endl;
   }
@@ -517,6 +517,7 @@ void CoreContext::UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, 
 void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> entry) {
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
+
     if (!m_initiated) {
       // Delay adding receiver until context is initialized
       m_delayedEventReceivers.insert(entry);
@@ -537,10 +538,10 @@ template<class iter>
 void CoreContext::AddEventReceivers(iter first, iter last) {
   // Must be initiated
   assert(m_initiated);
-  
+
   for(auto q = first; q != last; q++)
     m_junctionBoxManager->AddEventReceiver(*q);
-  
+
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
