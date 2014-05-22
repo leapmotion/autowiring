@@ -72,15 +72,16 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   m_stop = true;
   m_completed = true;
   m_running = false;
-  
+
+
   // No longer running, we MUST release the thread pointer to ensure proper teardown order
   state->m_thisThread.detach();
-  
+
   // Release our hold on the context.  After this point, we have to be VERY CAREFUL that we
   // don't try to refer to any of our own member variables, because our own object may have
   // already gone out of scope.  [this] is potentially dangling.
   ctxt.reset();
-  
+
   // Clear our reference tracker, which will notify anyone who is asleep and also maybe
   // will destroy the entire underlying context.
   refTracker.reset();
@@ -127,7 +128,7 @@ bool BasicThread::Start(std::shared_ptr<Object> outstanding) {
   std::shared_ptr<CoreContext> context = m_context.lock();
   if(!context)
     return false;
-  
+
   {
     boost::lock_guard<boost::mutex> lk(m_state->m_lock);
     if(m_running)
@@ -137,12 +138,12 @@ bool BasicThread::Start(std::shared_ptr<Object> outstanding) {
     if(m_completed)
       // Already completed (perhaps cancelled), short-circuit
       return false;
-    
+
     // Currently running:
     m_running = true;
     m_state->m_stateCondition.notify_all();
   }
-  
+
   // Kick off a thread and return here
   MoveOnly<std::shared_ptr<Object>> out(std::move(outstanding));
   m_state->m_thisThread = boost::thread(
