@@ -65,7 +65,10 @@ struct subscriber_traits<T&> {
   static const eSubscriberInputType subscriberType = outTypeRef;
 
   AutoCheckout<T> operator()(AutoPacket& packet) const {
-    return packet.Checkout<T>();
+    // Inputs by reference are automatically and unconditionally ready:
+    AutoCheckout<T> rv = packet.Checkout<T>();
+    rv.Ready();
+    return rv;
   }
 };
 

@@ -9,6 +9,7 @@ set(Autowiring_SRCS
   at_exit.h
   AnySharedPointer.h
   AutoAnchor.h
+  AutoCheckout.h
   AutoFuture.h
   AutoFuture.cpp
   CoreJob.h
