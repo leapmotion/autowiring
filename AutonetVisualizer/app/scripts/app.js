@@ -21,6 +21,10 @@ angular.module('autoNetApp', [
       templateUrl: 'views/filtergraph.html',
       controller: 'FilterGraphCtrl'
     })
+    .when('/object/:linkName', {
+      templateUrl: 'views/object.html',
+      controller: 'ObjectCtrl'
+    })
     .otherwise({
       redirectTo: '/main'
     });
