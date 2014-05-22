@@ -75,14 +75,17 @@ angular.module('autoNetApp')
   //////////////////////////////////////////////////////
 
   var ContextMap = {}; //a map of context.id to contexts
+  var TypeList = [];
   var isSubscribed = false;
 
-  websocket.on('subscribed', function(){
+  websocket.on('subscribed', function(allTypes) {
     isSubscribed = true;
-  })
+    TypeList = allTypes;
+  });
 
   websocket.on('unsubscribed', function(){
     ContextMap = {};
+    TypeList = [];
     isSubscribed = false;
   });
 
@@ -119,6 +122,9 @@ angular.module('autoNetApp')
     },
     isSubscribed: function(){
       return isSubscribed;
+    },
+    GetAllTypes: function(){
+      return TypeList;
     }
   };
 }]);

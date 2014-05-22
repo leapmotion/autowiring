@@ -1,6 +1,13 @@
-<h3>Delete context</h3>
+<h1 ng-hide="leap.isSubscribed()">Subscribe to edit</h1>
+<h3 ng-show="leap.isSubscribed()">Terminate context</h3>
 <ul>
   <li ng-repeat="(id,ctxt) in leap.GetContexts()" style="position:relative; height:60px; width:300px;">
     {{ctxt.name}}: <a href class="btn btn-danger btn-sm pull-right" ng-click="terminateContext(ctxt)">Terminate</a>
   </li>
 </ul>
+<h3 ng-show="leap.isSubscribed()">Inject Context Member</h3>
+<div style="position:relative;width:300px;" ng-show="leap.isSubscribed()">
+  <select ng-model="selectedType" ng-options="type for type in leap.GetAllTypes()">
+  </select>
+  <a href class="btn btn-success btn-sm pull-right" ng-click="injectContextMember()">Inject</a>
+</div>
