@@ -3,6 +3,7 @@
 #include "SlotInformation.h"
 #include TYPE_TRAITS_HEADER
 #include RVALUE_HEADER
+#include <new>
 
 template<typename T>
 struct has_static_new
@@ -60,7 +61,7 @@ struct CreationRules {
       // Stack location and placement new in one expression
       return
         SlotInformationStackLocation::PushStackLocation<U>(reinterpret_cast<U*>(pSpace)),
-        new (pSpace) U(std::forward<Args>(args)...);
+        ::new (pSpace) U(std::forward<Args>(args)...);
     }
     catch(...) {
       // Don't want memory leaks--but we also want to avoid calling the destructor, here, so we cast to void before freeing
