@@ -30,15 +30,17 @@ public:
   Autowired<SimpleObject> m_sobj;
 };
 
+#define offsetof_nowarn(s,m)   (size_t)&reinterpret_cast<const volatile char&>((((s *)0)->m))
+
 TEST_F(ContextMemberTest, VerifyDetectedMembers)
 {
   AutoRequired<HasAFewSlots> hasAFew;
 
   // Slots defined in reverse order here, because that's how they will be present in the collection
   SlotInformation expected [] = {
-    SlotInformation(nullptr, typeid(SimpleObject), offsetof(HasAFewSlots, m_sobj), false),
-    SlotInformation(nullptr, typeid(SimpleThreadedT<long>), offsetof(HasAFewSlots, m_sthread2), false),
-    SlotInformation(nullptr, typeid(SimpleThreadedT<int>), offsetof(HasAFewSlots, m_sthread1), false)
+    SlotInformation(nullptr, typeid(SimpleObject), offsetof_nowarn(HasAFewSlots, m_sobj), false),
+    SlotInformation(nullptr, typeid(SimpleThreadedT<long>), offsetof_nowarn(HasAFewSlots, m_sthread2), false),
+    SlotInformation(nullptr, typeid(SimpleThreadedT<int>), offsetof_nowarn(HasAFewSlots, m_sthread1), false)
   };
 
   // Validate all pointers are what we expect to find, and in the right order

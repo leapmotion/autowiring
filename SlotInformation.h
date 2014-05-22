@@ -1,5 +1,4 @@
 #pragma once
-#include "AutowirableSlot.h"
 #include <typeinfo>
 #include MEMORY_HEADER
 
@@ -53,7 +52,16 @@ struct SlotInformationStump {
 class SlotInformationStackLocation {
 private:
   SlotInformationStackLocation(const SlotInformationStackLocation& rhs) = delete;
-  SlotInformationStackLocation(SlotInformationStackLocation&& rhs) = delete;
+  SlotInformationStackLocation(SlotInformationStackLocation&& rhs) :
+    m_pPrior(rhs.m_pPrior),
+    m_pStump(rhs.m_pStump),
+    m_pCur(rhs.m_pCur),
+    m_pObj(rhs.m_pObj),
+    m_pContextMember(rhs.m_pContextMember),
+    m_extent(rhs.m_extent)
+  {
+    rhs.m_pStump = nullptr;
+  }
   SlotInformationStackLocation(SlotInformationStump* pStump = nullptr, const void* pObj = nullptr, const void* pContextMember = nullptr, size_t extent = 0);
 
 public:
