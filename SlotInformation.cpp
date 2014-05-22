@@ -22,6 +22,10 @@ SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStump*
 }
 
 SlotInformationStackLocation::~SlotInformationStackLocation(void) {
+  if(!m_pStump)
+    // Rvalue moved, end here
+    return;
+
   // Replace the prior stack location, we were pushed
   tss.reset(m_pPrior);
 
