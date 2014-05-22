@@ -145,6 +145,8 @@ set(AutowiringTest_SRCS
   AutowiringBenchmarkTest.cpp
   AutowiringTest.h
   AutowiringTest.cpp
+  CoreContextTest.h
+  CoreContextTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
   ContextMapTest.h

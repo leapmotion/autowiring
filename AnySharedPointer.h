@@ -12,7 +12,7 @@ public:
   }
 
   template<class T>
-  explicit AnySharedPointer(const std::shared_ptr<T>& rhs) {
+  AnySharedPointer(const std::shared_ptr<T>& rhs) {
     // Delegate the remainder to the assign operation:
     new (m_space) SharedPointerSlotT<T>(rhs);
   }
@@ -30,7 +30,7 @@ private:
   const SharedPointerSlot* slot(void) const { return (const SharedPointerSlot*) m_space; }
 
 public:
-  operator bool(void) const { return slot()->operator bool(); }
+  explicit operator bool(void) const { return slot()->operator bool(); }
 
   SharedPointerSlot& operator*(void) { return *slot(); }
   const SharedPointerSlot& operator*(void) const { return *slot(); }
@@ -40,6 +40,10 @@ public:
 
   template<class T>
   SharedPointerSlotT<T>& as(void) const { return (SharedPointerSlotT<T>&)*slot(); }
+
+  bool operator==(const AnySharedPointer& rhs) const {
+    return *slot() == *rhs.slot();
+  }
 
   /// <summary>
   /// Copy assignment operator
@@ -63,5 +67,10 @@ public:
     return **this = rhs;
   }
 };
+
+template<class T>
+inline bool operator==(const std::shared_ptr<T>& lhs, const AnySharedPointer& rhs) {
+  return rhs == lhs;
+}
 
 static_assert(!std::is_polymorphic<AnySharedPointer>::value, "The shared pointer cannot be polymorphic");
