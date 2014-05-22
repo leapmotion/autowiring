@@ -1,20 +1,18 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "ContextMember.h"
 #include "Autowired.h"
 #include "CoreContext.h"
-#include "Configuration/Config.h"
-
-#ifdef USEAUTONET
-#define ENABLE_NET_MON 1
-#else
-#define ENABLE_NET_MON 0
-#endif
-
+#include "SlotInformation.h"
 
 ContextMember::ContextMember(const char* name):
+  m_context(CoreContext::CurrentContext()),
   m_name(name),
-  m_context(CoreContext::CurrentContext())
-{}
+  m_pSlots(SlotInformationStackLocation::CurrentStackLocation())
+{
+}
 
 ContextMember::~ContextMember() {}
+
+const SlotInformation* ContextMember::GetSlotInformation(void) const {
+  return m_pSlots ? m_pSlots->pHead : nullptr;
+}
