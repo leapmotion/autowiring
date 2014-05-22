@@ -3,7 +3,8 @@
 angular.module('autoNetApp')
 .controller('EditCtrl', ['$scope', 'LeapState', 'websocket', function($scope, LeapState, websocket) {
   $scope.leap = LeapState;
-  $scope.selectedType = LeapState.GetAllTypes()[0];
+  $scope.selectedType = undefined;
+  $scope.selectedCtxt = undefined;
 
   $scope.terminateContext = function(ctxt){
     console.log("Terminate context: ",ctxt.name);
@@ -13,8 +14,8 @@ angular.module('autoNetApp')
   $scope.injectContextMember = function(){
     // Invalid member
     if (_.isUndefined($scope.selectedType)) return;
+    if (_.isUndefined($scope.selectedCtxt)) return;
 
-    console.log($scope.selectedType);
-    websocket.SendMessage('injectContextMember',2, $scope.selectedType);
+    websocket.SendMessage('injectContextMember', $scope.selectedCtxt, $scope.selectedType);
   }
 }]);
