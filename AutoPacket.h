@@ -157,7 +157,7 @@ public:
     // This allows us to install correct entries for decorated input requests
     typedef typename subscriber_traits<T>::type type;
 
-    DecorationDisposition* entry;
+    AnySharedPointer slot;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
       auto q = m_decorations.find(typeid(type));
@@ -165,17 +165,25 @@ public:
         // No parties interested in this entry, return here
         return AutoCheckout<T>(*this, nullptr, &AutoPacket::CompleteCheckout<T>);
 
-      entry = &m_decorations[typeid(type)];
-      if(entry->satisfied)
+      auto& entry = m_decorations[typeid(type)];
+      if(entry.satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
-      entry->isCheckedOut = true;
-      entry->wasCheckedOut = true;
+      if(entry.isCheckedOut)
+        throw std::runtime_error("Cannot check out this decoration, it's already checked out elsewhere");
+      entry.isCheckedOut = true;
+      entry.wasCheckedOut = true;
     }
 
-    auto& enclosure = (entry->m_decoration = std::make_shared<T>());
+    // Construct while the lock was released
+    auto ptr = std::make_shared<T>();
+
+    // Have to find the entry _again_ within the context of a lock and satisfy it here:
+    (boost::lock_guard<boost::mutex>)m_lock,
+    m_decorations[typeid(type)].m_decoration = ptr;
+
     return AutoCheckout<T>(
       *this,
-      enclosure.get(),
+      ptr,
       &AutoPacket::CompleteCheckout<T>
     );
   }

@@ -42,7 +42,10 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
     }
 }
 
-AutoPacket::~AutoPacket() {}
+AutoPacket::~AutoPacket() {
+  m_decorations.clear();
+  m_satCounters.clear();
+}
 
 void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
   auto decoration = m_decorations.find(info);
