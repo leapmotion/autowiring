@@ -10,7 +10,7 @@ struct PeerContextName2 {};
 TEST_F(PeerContextTest, VerifySimplePeerage) {
   // Accept Events
   AutoCurrentContext()->Initiate();
-  
+
   // Insert a simple receiver first:
   AutoRequired<SimpleReceiver> sr;
 
@@ -45,7 +45,7 @@ TEST_F(PeerContextTest, VerifySimplePeerage) {
 
 TEST_F(PeerContextTest, VerifyPeerTransitivity) {
   AutoCurrentContext()->Initiate();
-  
+
   // Insert our simple receiver:
   AutoRequired<SimpleReceiver> sr;
 
@@ -72,7 +72,7 @@ TEST_F(PeerContextTest, VerifyPeerTransitivity) {
 TEST_F(PeerContextTest, VerifyNoAutowiringLeakage) {
   // Accept Events
   AutoCurrentContext()->Initiate();
-  
+
   // Insert a simple object in the base context
   AutoRequired<SimpleObject> obj1;
 

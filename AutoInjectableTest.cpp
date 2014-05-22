@@ -108,7 +108,7 @@ TEST_F(AutoInjectableTest, VerifySimpleThreadWait) {
   // Make a thread and then start it going:
   Autowired<CoreThread> thread;
   ASSERT_TRUE(thread.IsAutowired()) << "Thread was not injected by an injector as expected";
-  
+
   AutoRequired<boost::mutex> barr;
   {
     boost::lock_guard<boost::mutex> lk(*barr);
