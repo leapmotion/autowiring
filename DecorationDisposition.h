@@ -40,5 +40,6 @@ struct DecorationDisposition
     satisfied = false;
     isCheckedOut = false;
     wasCheckedOut = false;
+    m_decoration->reset();
   }
 };

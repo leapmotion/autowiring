@@ -8,7 +8,12 @@ AutoPacket* AutoPacketFactory::AutoPacketCreator::operator()() const {
 
 AutoPacketFactory::AutoPacketFactory(void):
   m_wasStopped(false),
-  m_packets(~0, ~0, [this] { return new AutoPacket(*this); })
+  m_packets(
+    ~0,
+    ~0,
+    [this] { return new AutoPacket(*this); },
+    [] (AutoPacket& packet) { packet.Reset(); }
+  )
 {
 }
 
@@ -18,12 +23,9 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   if (!IsRunning())
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
-  // Obtain a packet:
+  // Obtain a packet, return it
   std::shared_ptr<AutoPacket> retVal;
   m_packets(retVal);
-
-  // Fill the packet with satisfaction information:
-  retVal->Reset();
 
   // Done, return
   return retVal;
