@@ -3,10 +3,6 @@
 angular.module('autoNetApp')
 .controller('ObjectCtrl', ['$scope', '$routeParams', 'LeapState', function ($scope, $routeParams, LeapState) {
   $scope.leap = LeapState;
-  $scope.allObjects = LeapState.GetObjects()
-
-  $scope.$watchCollection('allObjects', function(){
-    $scope.object =   $scope.allObjects[$routeParams['linkName']];
-  });
-
+  $scope.context = LeapState.GetContexts()[$routeParams['contextID']];
+  $scope.object = $scope.context.objects[$routeParams['linkName']];
 }]);
