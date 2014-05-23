@@ -5,15 +5,17 @@ angular.module('autoNetApp')
 
   // Object definitions
   function Context(id, ctxt){
-    this.objects = [];
+    this.objects = {}; //linkName to Object
     this.name = "Unnamed";
     this.id = id;
 
     _.extend(this, ctxt);
+
+    this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
   }
 
   Context.prototype.addObject = function(obj) {
-    this.objects.push(obj);
+    this.objects[obj.linkName] = obj;
   };
 
   function LeapObject(types, objData){
@@ -76,7 +78,6 @@ angular.module('autoNetApp')
   //////////////////////////////////////////////////////
 
   var ContextMap = {}; //a map of context.id to contexts
-  var ObjectMap = {}; //a map of LeapObject.linkName to LeapObject
   var TypeList = [];
   var isSubscribed = false;
 
@@ -108,24 +109,21 @@ angular.module('autoNetApp')
     var object = new LeapObject(types, objData);
 
     updatedContext.addObject(object);
-    ObjectMap[object.linkName] = object;
   });
 
   websocket.on('eventFired', function(contextID, eventHash){
     var updatedContext = ContextMap[contextID];
 
-    for (var i = 0; i<updatedContext.objects.length; i++) {
-      var obj = updatedContext.objects[i];
+    Object.keys(updatedContext.objects).forEach(function(linkName){
+      var obj = updatedContext.objects[linkName];
+      console.log(obj.name);
       obj.eventFired(eventHash.name);
-    }
+    });
   });
 
   return {
     GetContexts: function(){
       return ContextMap;
-    },
-    GetObjects: function() {
-      return ObjectMap;
     },
     isSubscribed: function(){
       return isSubscribed;
