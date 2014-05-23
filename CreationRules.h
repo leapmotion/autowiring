@@ -70,8 +70,11 @@ struct CreationRules {
     }
   }
 
+  template<void* (*)(size_t)>
+  struct alloc_fn {};
+
   template<typename U>
-  static void* Allocate(decltype(U::operator new)*) {
+  static void* Allocate(alloc_fn<&U::operator new>*) {
     return U::operator new(sizeof(U));
   }
 
@@ -80,8 +83,11 @@ struct CreationRules {
     return ::operator new(sizeof(U));
   }
 
+  template<void(*)(void*)>
+  struct free_fn {};
+
   template<typename U>
-  static void Free(void* ptr, decltype(U::operator delete)*) {
+  static void Free(void* ptr, free_fn<&U::operator delete>*) {
     U::operator delete(ptr);
   }
 
