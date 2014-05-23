@@ -55,7 +55,7 @@ struct CreationRules {
     static_assert(!sizeof...(Args) || !has_simple_constructor<U>::value, "Can't inject member with arguments if it has a default constructor");
 
     // Allocate slot first before registration
-    auto* pSpace = new unsigned char[sizeof(U)];
+    auto* pSpace = Allocate<U>(nullptr);
 
     try {
       // Stack location and placement new in one expression
@@ -65,8 +65,34 @@ struct CreationRules {
     }
     catch(...) {
       // Don't want memory leaks--but we also want to avoid calling the destructor, here, so we cast to void before freeing
-      delete[] pSpace;
+      Free<U>(pSpace, nullptr);
       throw;
     }
+  }
+
+  template<void* (*)(size_t)>
+  struct alloc_fn {};
+
+  template<typename U>
+  static void* Allocate(alloc_fn<&U::operator new>*) {
+    return U::operator new(sizeof(U));
+  }
+
+  template<typename U>
+  static void* Allocate(...) {
+    return ::operator new(sizeof(U));
+  }
+
+  template<void(*)(void*)>
+  struct free_fn {};
+
+  template<typename U>
+  static void Free(void* ptr, free_fn<&U::operator delete>*) {
+    U::operator delete(ptr);
+  }
+
+  template<typename U>
+  static void Free(void* ptr, ...) {
+    ::operator delete(ptr);
   }
 };
