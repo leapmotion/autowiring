@@ -99,19 +99,22 @@ class HasOverriddenNewOperator:
 public:
   HasOverriddenNewOperator(bool hitDtor) {
     if(hitDtor)
-      throw std::exception("");
+      throw std::runtime_error("");
   }
 
   static unsigned char s_space[];
   static size_t s_deleterHitCount;
 
-  static void* operator new(size_t){
+  static void* operator new(size_t) {
     return s_space;
   }
   
   static void operator delete(void*) {
     s_deleterHitCount++;
   }
+
+  static void* operator new(size_t size, void* ptr) { return ::operator new(size, ptr); }
+  static void operator delete(void* memory, void* ptr) throw() { return ::operator delete(memory, ptr); }
 };
 
 unsigned char HasOverriddenNewOperator::s_space[sizeof(HasOverriddenNewOperator)];
