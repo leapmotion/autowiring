@@ -76,7 +76,7 @@ angular.module('autoNetApp')
   //////////////////////////////////////////////////////
 
   var ContextMap = {}; //a map of context.id to contexts
-  var ObjectMap = {}
+  var ObjectMap = {}; //a map of LeapObject.linkName to LeapObject
   var TypeList = [];
   var isSubscribed = false;
 
