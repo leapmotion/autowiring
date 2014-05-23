@@ -1,12 +1,11 @@
-// Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
-
 #include "Object.h"
 #include "TeardownNotifier.h"
-#include <assert.h>
 #include MEMORY_HEADER
 
 class CoreContext;
+struct SlotInformation;
+struct SlotInformationStump;
 
 /// <summary>
 /// A class that must be inherited in order to be a member of a context heriarchy
@@ -18,16 +17,19 @@ class ContextMember:
 {
 protected:
   ContextMember(const char* name = nullptr);
-  const char* m_name;
 
 public:
   virtual ~ContextMember();
 
-  friend class CoreContext;
-
 protected:
-  // Member variables:
-  std::weak_ptr<CoreContext> m_context;
+  // Pointer back to the enclosing context
+  const std::weak_ptr<CoreContext> m_context;
+
+  // Name of this Contextmember:
+  const char* m_name;
+
+  // Slots defined on this type, updated as the base type is constructed
+  const SlotInformationStump* m_pSlots;
 
 public:
   // Accessor methods:
@@ -35,22 +37,34 @@ public:
   bool IsOrphaned(void) const {return m_context.expired();}
 
   /// <summary>
-  /// Assigns the context for this context member
+  /// Used to obtain a list of slots defined on this type, for reflection purposes
   /// </summary>
+  /// <returns>
+  /// A pointer to the head of a linked list of slots on this context member
+  /// </returns>
   /// <remarks>
-  /// This method may be used to assign the member's enclosing context to exactly one value.  It
-  /// is an error to attempt to use this method to change the context member's context once it has
-  /// been assigned.
+  /// A slot is an Autowired field defined within a specific type.  Slots are of particular
+  /// interest because they denote a compile-time relationship between two types, and generally
+  /// are one way to understand class relationships in a system.  Furthermore, because of their
+  /// compile-time nature, they are declarative and therefore denote a relationship between
+  /// types, rather than states, which makes it easier to understand how slots are linked.
   ///
-  /// An exception to this rule is that a context member's context may be updated if the context
-  /// member has been orphaned.
+  /// The returned value is cached, and should not be freed or modified as it may be in use
+  /// in other parts of the program.  The behavior of this method is undefined if it's called
+  /// on an object before the object is fully constructed (for instance, if the method is
+  /// invoked from a constructor).  This method will return correct results even if the
+  /// ContextMember type was not the first inherited type.
   ///
-  /// This method is idempotent.
+  /// If this method returns a correct result at any point, then all subsequent calls to this
+  /// method are guaranteed to return correct results, even in the aforementioned case where
+  /// the method is called during construction.  This method is guaranteed to return correct
+  /// results after the first instance of a concrete type is constructed.
+  ///
+  /// This list is guaranteed not to contain any AutowiredFast fields defined in the class.
+  ///
+  /// The linked list is guaranteed to be in reverse-sorted order
   /// </remarks>
-  void SetContext(std::shared_ptr<CoreContext>& context) {
-    assert(m_context.lock() == context || m_context.expired());
-    m_context = context;
-  }
+  const SlotInformation* GetSlotInformation(void) const;
 
   /// <summary>
   /// This method is invoked after all embedded Autowired members of this class are initialized
@@ -90,7 +104,7 @@ public:
   /// Note that, if the context is in the process of tearing down, this return value
   /// could be null.
   /// </remarks>
-  std::shared_ptr<CoreContext> GetContext(void) const {return m_context.lock();}
+  std::shared_ptr<CoreContext> GetContext(void) const { return m_context.lock(); }
 
   /// <summary>
   /// Returns a shared pointer that refers to ourselves

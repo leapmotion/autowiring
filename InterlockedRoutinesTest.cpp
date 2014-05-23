@@ -4,7 +4,7 @@
 #include <boost/thread/barrier.hpp>
 #include <boost/thread/thread.hpp>
 
-template<void* (*fn)(void*volatile*, void*)>
+template<void* (*fn)(void**, void*)>
 void CheckFn() {
   int spot;
 
