@@ -8,6 +8,7 @@ angular.module('autoNetApp')
     this.objects = {}; //linkName to Object
     this.name = "Unnamed";
     this.id = id;
+    this.children = [];
 
     _.extend(this, ctxt);
 
@@ -94,13 +95,26 @@ angular.module('autoNetApp')
 
   websocket.on('newContext', function(contextID, context){
     if (!ContextMap.hasOwnProperty(contextID)) {
-      ContextMap[contextID] = new Context(contextID, context);
+      var newCtxt = new Context(contextID, context);
+      ContextMap[contextID] = newCtxt;
+
+      // Add this to childen of parent context
+      if (ContextMap.hasOwnProperty(newCtxt.parent)) {
+        ContextMap[newCtxt.parent].children.push(contextID);
+      }
     } else {
       console.log('context alreadys exists');
     }
+
+    console.log(ContextMap);
+
   });
 
   websocket.on('expiredContext', function(contextID){
+    var parent = ContextMap[ContextMap[contextID].parent];
+    var index = parent.children.indexOf(contextID);
+    parent.children.splice(index,1);
+
     delete ContextMap[contextID];
   });
 
@@ -112,13 +126,25 @@ angular.module('autoNetApp')
   });
 
   websocket.on('eventFired', function(contextID, eventHash){
-    var updatedContext = ContextMap[contextID];
 
-    Object.keys(updatedContext.objects).forEach(function(linkName){
-      var obj = updatedContext.objects[linkName];
-      console.log(obj.name);
-      obj.eventFired(eventHash.name);
-    });
+    function fireEvent(ctxtID) {
+      if (!ContextMap.hasOwnProperty(ctxtID)) return;
+
+      var updatedContext = ContextMap[ctxtID];
+
+      // Iterated objects in this context, signal event fired
+      Object.keys(updatedContext.objects).forEach(function(linkName){
+        var obj = updatedContext.objects[linkName];
+        obj.eventFired(eventHash.name);
+      });
+
+      // recurse on children
+      for (var i = 0; i < updatedContext.children.length; i++) {
+        fireEvent(updatedContext.children[i]);
+      }
+    }
+
+    fireEvent(contextID);
   });
 
   return {
