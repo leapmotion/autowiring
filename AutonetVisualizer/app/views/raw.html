@@ -1,8 +1,3 @@
-<div class="row">
-  <div class="col-xs-2">
-    <a href class="btn btn-info">{{buttonText}}</a>
-  </div>
-  <ul class="col-xs-10">
-    <li ng-repeat="event in events">{{event.name}}: {{event.args | json}}</li>
-  </ul>
-</div>
+<ul class="col-xs-10">
+  <li ng-repeat="event in events">{{event.name}}: {{event.args | json}}</li>
+</ul>
