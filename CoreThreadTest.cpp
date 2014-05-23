@@ -392,6 +392,18 @@ TEST_F(CoreThreadTest, EnsureContextCurrencyInRundown) {
   ASSERT_EQ(ctxt, tester->m_ctxt) << "Current context was not preserved while a CoreThread was being run down";
 }
 
+TEST_F(CoreThreadTest, AbandonedDispatchers) {
+  auto v = std::make_shared<bool>(false);
+  AutoRequired<CoreThread> ct;
+  *ct += [v] { *v = true; };
+
+  // Graceful shutdown on our enclosing context without starting it:
+  AutoCurrentContext()->SignalShutdown(true);
+
+  // Verify that all lambdas on the CoreThread got called as expected:
+  ASSERT_FALSE(*v) << "Lambdas attached to a CoreThread should not be executed when the enclosing context is terminated without being started";
+}
+
 #ifdef _MSC_VER
 #include "windows.h"
 
