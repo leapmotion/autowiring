@@ -105,9 +105,6 @@ angular.module('autoNetApp')
     } else {
       console.log('context alreadys exists');
     }
-
-    console.log(ContextMap);
-
   });
 
   websocket.on('expiredContext', function(contextID){
