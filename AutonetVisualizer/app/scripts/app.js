@@ -26,8 +26,8 @@ angular.module('autoNetApp', [
       controller: 'ObjectCtrl'
     })
     .when('/context/:contextID', {
-      templateUrl: 'views/object.html',
-      controller: 'ObjectCtrl'
+      templateUrl: 'views/context.html',
+      controller: 'ContextCtrl'
     })
     .otherwise({
       redirectTo: '/main'

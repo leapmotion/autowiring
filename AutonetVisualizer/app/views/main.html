@@ -12,7 +12,7 @@
     <li active-nav="bolt" check="currentFilter"><a>Bolts</a></li>
   </ul>
   <div ng-repeat="(id,context) in leap.GetContexts()" class="section">
-    <h3>{{context.name}}</h3>
+    <h3><a ng-href="#/context/{{id}}">{{context.name}}</a></h3>
     <div class="row">
       <div class="col-xs-3" ng-repeat="object in context.objects | TypeFilter:currentFilter" style="min-height:230px">
         <h4><a ng-href="#/object/{{id}}/{{object.linkName}}">{{object.name}}</a></h4>
