@@ -21,7 +21,7 @@ class SimpleThreadedT:
 {
 public:
   SimpleThreadedT(void) {}
-  
+
   Deferred OnEvent(std::shared_ptr<T> obj) override {
     return Deferred(this);
   }

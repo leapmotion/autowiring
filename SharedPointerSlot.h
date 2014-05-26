@@ -19,7 +19,7 @@ struct SharedPointerSlot {
 public:
   SharedPointerSlot(void) {}
 
-  SharedPointerSlot(const SharedPointerSlot& rhs) {
+  explicit SharedPointerSlot(const SharedPointerSlot& rhs) {
     *this = rhs;
   }
 

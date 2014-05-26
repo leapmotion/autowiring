@@ -1,7 +1,8 @@
 #pragma once
 #include "EnclosedContextTestBase.h"
 
-class AnySharedPointerTest:
+class ContextMemberTest:
   public EnclosedContextTestBase
 {
 };
+

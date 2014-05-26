@@ -86,6 +86,8 @@ set(Autowiring_SRCS
   ReentrantCounter.h
   ReentrantCounter.cpp
   SharedPointerSlot.h
+  SlotInformation.h
+  SlotInformation.cpp
   TeardownNotifier.h
   TeardownNotifier.cpp
   ThreadStatusBlock.h
@@ -157,6 +159,8 @@ set(AutowiringTest_SRCS
   ContextEnumeratorTest.cpp
   ContextMapTest.h
   ContextMapTest.cpp
+  ContextMemberTest.h
+  ContextMemberTest.cpp
   CoreThreadTest.h
   CoreThreadTest.cpp
   BoltTest.h

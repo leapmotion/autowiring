@@ -30,7 +30,7 @@ public:
 
 class FilterA:
   public FilterRoot,
-  public virtual ContextMember
+  public ContextMember
 {
 public:
   FilterA() {}
@@ -117,7 +117,7 @@ public:
 
 class FilterF:
   public FilterRoot,
-  public virtual ContextMember
+  public ContextMember
 {
 public:
   void AutoFilter(const Decoration<0>& dec) {
