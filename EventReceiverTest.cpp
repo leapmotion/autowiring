@@ -38,7 +38,7 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
 TEST_F(EventReceiverTest, VerifyNoReceive) {
   AutoCreateContext ctxt;
   CurrentContextPusher pshr(ctxt);
-  
+
   AutoRequired<SimpleReceiver> receiver;
   AutoFired<CallableInterfaceDeferred> sender;
 
@@ -205,7 +205,7 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
 
       // Verify that it gets caught:
       EXPECT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
-      
+
       subCtxt->SignalShutdown(true);
     }
 
@@ -420,7 +420,7 @@ TEST_F(EventReceiverTest, VerifyMultiplePassByValue) {
 TEST_F(EventReceiverTest, VerifyNoActionWhileStopped) {
   AutoCreateContext outerCtxt;
   CurrentContextPusher outerpshr(outerCtxt);
-  
+
   // Firer which will operate at the outer scope:
   AutoFired<CallableInterface> ciOuter;
   AutoFired<CallableInterfaceDeferred> ciOuterDeferred;
@@ -435,7 +435,7 @@ TEST_F(EventReceiverTest, VerifyNoActionWhileStopped) {
 
   // Inject a simple receiver so we can verify that it didn't catch any events:
   AutoRequired<SimpleReceiver> sr;
-  
+
   ASSERT_FALSE(sr->IsRunning()) << "CoreThread was running in a context that was not started";
 
   // Fire events at the outer scope--this should succeed but should not be picked up by the CoreThread:
@@ -447,7 +447,7 @@ TEST_F(EventReceiverTest, VerifyNoActionWhileStopped) {
 
   // Now try to fire at the inner scope.  These fire calls MUST not be received, because firing an
   // event during context setup (say, during a constructor) is an error.
-  
+
   ASSERT_TRUE(ciInner(&CallableInterface::ZeroArgs)()) << "Firing an event in a stopped context did not silently succeed";
   ciInnerDeferred(&CallableInterfaceDeferred::ZeroArgsDeferred)();
   ASSERT_FALSE(sr->m_zero) << "Fired an event in a stopped context which was incorrectly received by a member of that same context";

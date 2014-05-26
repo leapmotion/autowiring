@@ -18,7 +18,7 @@ enum class ThreadPriority {
   // without causing the types of contention problems resulting from a high-priority operation
   // transitioning to a low-priority state.
   Default,
-  
+
   Idle,
   Lowest,
   BelowNormal,
@@ -26,7 +26,7 @@ enum class ThreadPriority {
   AboveNormal,
   Highest,
   TimeCritical,
-  
+
   // This is a special case for multimedia applications.  Some operating systems, like Windows,
   // can provide additional scheduling guarantees to applications which declare themselves as
   // multimedia-intensive in nature.  For other systems, Multimedia is identical to TimeCritical.
@@ -45,24 +45,24 @@ class BasicThread:
 public:
   /// <param name="pName">An optional name for this thread</param>
   BasicThread(const char* pName = nullptr);
-  
+
   virtual ~BasicThread(void) {}
-  
+
 protected:
   // Internally held thread status block.  This has to be a shared pointer because we need to signal
   // the held state condition after releasing all shared pointers to ourselves, and this could mean
   // we're actually signalling this event after we free ourselves.
   const std::shared_ptr<BasicThreadStateBlock> m_state;
-  
+
   // Flag indicating that we need to stop right now
   bool m_stop;
-  
+
   // Run condition:
   bool m_running;
-  
+
   // Completion condition, true when this thread is no longer running and has run at least once
   bool m_completed;
-  
+
   // The current thread priority
   ThreadPriority m_priority;
 
@@ -105,15 +105,15 @@ protected:
   /// triggering the case described above.
   /// </remarks>
   virtual void DoRun(std::shared_ptr<Object>&& refTracker);
-  
+
   /// <summary>
   /// Performs all cleanup operations that must take place after DoRun
   /// </summary>
   /// <param name="pusher">The last reference to the enclosing context held by this thread</param>
   virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<Object>&& refTracker);
-  
+
   void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
-  
+
   /// <summary>
   /// RAII-style class for use with threads that need temporary priority boosts
   /// </summary>
@@ -125,7 +125,7 @@ protected:
   class ElevatePriority {
   public:
     ElevatePriority(ElevatePriority&) = delete;
-    
+
     ElevatePriority(BasicThread& thread, ThreadPriority priority) :
       m_thread(thread),
       m_oldPriority(thread.m_priority)
@@ -134,13 +134,13 @@ protected:
       if(priority > m_oldPriority)
         m_thread.SetThreadPriority(priority);
     }
-    
+
     ~ElevatePriority(void) {
       // Delevate if the old level is lower than the current level:
       if(m_thread.m_priority > m_oldPriority)
         m_thread.SetThreadPriority(m_oldPriority);
     }
-    
+
   private:
     ThreadPriority m_oldPriority;
     BasicThread& m_thread;
@@ -169,7 +169,7 @@ protected:
   /// interruption exception could result.
   /// </remarks>
   bool ThreadSleep(boost::chrono::nanoseconds timeout);
-  
+
 public:
   // Accessor methods:
   bool ShouldStop(void) const override;
