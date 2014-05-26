@@ -90,3 +90,68 @@ TEST_F(CoreContextTest, ChildEnumerationIsCorrect) {
   ASSERT_EQ(1UL, vec.size()) << "Sigil-restricted child enumeration returned too many contexts";
 }
 
+/// <summary>
+/// Be careful!  The new operator overload on this type only permits one allocation!
+/// </summary>
+class HasOverriddenNewOperator:
+  public ContextMember
+{
+public:
+  HasOverriddenNewOperator(bool hitDtor) {
+    if(hitDtor)
+      throw std::runtime_error("");
+  }
+
+  static unsigned char s_space[];
+  static size_t s_deleterHitCount;
+
+  static void* operator new(size_t) {
+    return s_space;
+  }
+  
+  static void operator delete(void*) {
+    s_deleterHitCount++;
+  }
+
+  static void* operator new(size_t size, void* ptr) { return ::operator new(size, ptr); }
+  static void operator delete(void* memory, void* ptr) throw() { return ::operator delete(memory, ptr); }
+};
+
+unsigned char HasOverriddenNewOperator::s_space[sizeof(HasOverriddenNewOperator)];
+size_t HasOverriddenNewOperator::s_deleterHitCount;
+
+TEST_F(CoreContextTest, CorrectHitAllocatorNew) {
+  HasOverriddenNewOperator::s_deleterHitCount = 0;
+  {
+    AutoCreateContext ctxt;
+    CurrentContextPusher pshr(ctxt);
+
+    // Verify that the overload itsef gets called as expected:
+    ASSERT_EQ(
+      (void*) HasOverriddenNewOperator::s_space,
+      new HasOverriddenNewOperator(false)
+    ) << "Overloaded new operator on a test type did not get invoked as expected";
+
+    // Create an instance which won't throw:
+    auto hono = AutoCurrentContext()->Construct<HasOverriddenNewOperator>(false);
+
+    // Verify the correct new allocator was hit:
+    ASSERT_EQ(
+      (void*)HasOverriddenNewOperator::s_space,
+      (void*)hono.get()
+    ) << "Overridden new allocator was not invoked as anticipated";
+  }
+
+  // Verify that the deleter got hit as anticipated:
+  ASSERT_EQ(1UL, HasOverriddenNewOperator::s_deleterHitCount) << "The correct deleter was not hit under ordinary teardown";
+}
+
+TEST_F(CoreContextTest, CorrectHitExceptionalTeardown) {
+  HasOverriddenNewOperator::s_deleterHitCount = 0;
+
+  // Create our type--we expect this to throw:
+  ASSERT_ANY_THROW(AutoCurrentContext()->Construct<HasOverriddenNewOperator>(true)) << "Construct operation did not propagate an exception to the caller";
+
+  // Now verify that the correct deleter was hit to release partially constructed memory:
+  ASSERT_EQ(1UL, HasOverriddenNewOperator::s_deleterHitCount) << "Deleter was not correctly hit in an exceptional teardown";
+}
