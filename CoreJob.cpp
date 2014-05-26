@@ -68,7 +68,7 @@ bool CoreJob::Start(std::shared_ptr<Object> outstanding) {
   std::shared_ptr<CoreContext> context = m_context.lock();
   if(!context)
     return false;
-  
+
   m_outstanding = outstanding;
   m_running = true;
 
@@ -76,7 +76,7 @@ bool CoreJob::Start(std::shared_ptr<Object> outstanding) {
   if(!m_dispatchQueue.empty())
 	  // Simulate a pending event, because we need to set up our async:
 	  OnPended(std::move(lk));
-  
+
   return true;
 }
 

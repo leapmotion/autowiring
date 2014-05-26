@@ -23,7 +23,7 @@ TEST_F(ObjectPoolTest, VerifyOutstandingLimit) {
 TEST_F(ObjectPoolTest, VerifyAsynchronousUsage) {
   AutoCreateContext ctxt;
   CurrentContextPusher pshr(ctxt);
-  
+
   AutoRequired<SimpleThreadedT<PooledObject>> obj;
   AutoFired<SharedPtrReceiver<PooledObject>> spr;
   ObjectPool<PooledObject> pool(3);
@@ -34,14 +34,14 @@ TEST_F(ObjectPoolTest, VerifyAsynchronousUsage) {
     pool(obj1);
     pool(obj2);
     pool(obj3);
-    
+
     // Block--verify that we _do not_ get any of those objects back while they are
     // still outstanding.
     {
       auto obj4 = pool.WaitFor(boost::chrono::milliseconds(1));
       EXPECT_TRUE(obj4 == nullptr) << "Pool issued another element even though it should have hit its outstanding limit";
     }
-    
+
     // Now we kick off threads:
     AutoCurrentContext()->Initiate();
 
