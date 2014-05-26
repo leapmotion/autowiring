@@ -137,10 +137,6 @@ public:
     return std::shared_ptr<T>::get();
   }
 
-  operator bool(void) const {
-    return (AutowirableSlot<T>&) *this;
-  }
-
   /// <summary>
   /// Allows a lambda function to be called when this slot is autowired
   /// </summary>
@@ -178,7 +174,7 @@ public:
         newHead->Finalize();
         return;
       }
-      
+
       // Try to set the forward link to the current head, and then update our own flink;
       newHead->SetFlink(pFirstChild);
     } while(!m_pFirstChild.compare_exchange_weak(pFirstChild, newHead, std::memory_order_acquire));
@@ -203,20 +199,20 @@ class AutowiredFast:
 {
 public:
   using std::shared_ptr<T>::operator=;
-  
+
   // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
   AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()){
     ctxt->FindByTypeRecursive(*this);
   }
-  
+
   operator bool(void) const {
     return IsAutowired();
   }
-  
+
   operator T*(void) const {
     return std::shared_ptr<T>::get();
   }
-  
+
   bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
 };
 
@@ -321,7 +317,7 @@ public:
     if(!box)
       // Context has been destroyed
       return InvokeRelay<MemFn>();
-    
+
     AutoGlobalContext()->Invoke(&AutowiringEvents::EventFired)(*CoreContext::CurrentContext(),typeid(typename Decompose<MemFn>::type));
 
     return MakeInvokeRelay(box, pfn);
