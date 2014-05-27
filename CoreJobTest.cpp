@@ -114,3 +114,16 @@ TEST_F(CoreJobTest, MoveOnly){
   MoveOnly<CanOnlyMove> first = mo;
   //MoveOnly<CanOnlyMove> second = mo; //error
 }
+
+TEST_F(CoreJobTest, AbandonedDispatchers) {
+  auto v = std::make_shared<bool>(false);
+
+  AutoRequired<CoreJob> cj;
+  *cj += [v] { *v = true; };
+
+  // Graceful shutdown on our enclosing context without starting it:
+  AutoCurrentContext()->SignalShutdown(true);
+
+  // Verify that all lambdas on the CoreThread got called as expected:
+  ASSERT_FALSE(*v) << "Lambdas attached to a CoreJob should not be executed when the enclosing context is terminated without being started";
+}

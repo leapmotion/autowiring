@@ -3,6 +3,7 @@
 #include "JunctionBoxManager.h"
 #include "AutoPacketFactory.h"
 #include "AutowiringEvents.h"
+#include "JunctionBox.h"
 
 JunctionBoxManager::JunctionBoxManager(void) {
   // Enumerate all event types to initialize a new JunctionBox for each

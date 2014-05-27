@@ -367,6 +367,43 @@ TEST_F(CoreThreadTest, ReentrantStopOnTeardown) {
   ASSERT_TRUE(m_create->Wait(boost::chrono::seconds(1))) << "Thread deadlocked when attempting to stop itself from a teardown listener";
 }
 
+class VerifiesCurrentContextOnRundown:
+  public CoreThread
+{
+public:
+  VerifiesCurrentContextOnRundown(void):
+    CoreThread("VerifiesCurrentContextOnRundown")
+  {
+    *this += [] { AutoCurrentContext()->SignalShutdown(); };
+    *this += [this] { m_ctxt = AutoCurrentContext(); };
+  }
+
+  std::shared_ptr<CoreContext> m_ctxt;
+};
+
+TEST_F(CoreThreadTest, EnsureContextCurrencyInRundown) {
+  AutoCurrentContext ctxt;
+
+  // Create our tester class, and then shut down the context.  This should cause a full rundown
+  // on the dispatch queue.
+  AutoRequired<VerifiesCurrentContextOnRundown> tester;
+  ctxt->Initiate();
+  ASSERT_TRUE(ctxt->Wait(boost::chrono::seconds(5))) << "Context did not tear down in a timely fashion";
+  ASSERT_EQ(ctxt, tester->m_ctxt) << "Current context was not preserved while a CoreThread was being run down";
+}
+
+TEST_F(CoreThreadTest, AbandonedDispatchers) {
+  auto v = std::make_shared<bool>(false);
+  AutoRequired<CoreThread> ct;
+  *ct += [v] { *v = true; };
+
+  // Graceful shutdown on our enclosing context without starting it:
+  AutoCurrentContext()->SignalShutdown(true);
+
+  // Verify that all lambdas on the CoreThread got called as expected:
+  ASSERT_FALSE(*v) << "Lambdas attached to a CoreThread should not be executed when the enclosing context is terminated without being started";
+}
+
 #ifdef _MSC_VER
 #include "windows.h"
 
