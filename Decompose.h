@@ -1,7 +1,6 @@
 #pragma once
 #include TYPE_TRAITS_HEADER
 #include <typeinfo>
-#include STL_TUPLE_HEADER
 
 /// <summary>
 /// Extended version of is_same
@@ -52,7 +51,6 @@ struct Decompose<R(W::*)(Args...)> {
   typedef W type;
   typedef R retType;
   static const int N = sizeof...(Args);
-  typedef std::tuple<Args...> t_args;
 
   /// <summary>
   /// Returns an array of length N+1 of argument types on the bound type
