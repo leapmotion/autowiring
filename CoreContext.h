@@ -6,14 +6,13 @@
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
-#include "BasicThread.h"
 #include "CoreRunnable.h"
 #include "ContextMember.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
 #include "fast_pointer_cast.h"
+#include "InvokeRelay.h"
 #include "result_or_default.h"
-#include "JunctionBox.h"
 #include "JunctionBoxManager.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
@@ -21,27 +20,25 @@
 #include "TeardownNotifier.h"
 #include "TypeUnifier.h"
 
-#include <boost/thread/condition.hpp>
-#include <boost/thread/mutex.hpp>
 #include <list>
-#include STL_TUPLE_HEADER
 #include TYPE_INDEX_HEADER
-#include FUNCTIONAL_HEADER
-#include EXCEPTION_PTR_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_MAP
 #include STL_UNORDERED_SET
 
-template<class T, class Fn>
-class AutowirableSlotFn;
-
+struct CoreContextStateBlock;
 class AutoPacketFactory;
 class DeferrableAutowiring;
+class BasicThread;
 class BoltBase;
 class CoreContext;
 class EventOutputStreamBase;
 class GlobalCoreContext;
+class JunctionBoxBase;
 class OutstandingCountTracker;
+
+template<class T, class Fn>
+class AutowirableSlotFn;
 
 template<typename T>
 class Autowired;
@@ -51,6 +48,9 @@ struct Boltable;
 
 template<class T>
 class CoreContextT;
+
+template<typename T>
+class JunctionBox;
 
 enum class ShutdownMode {
   // Shut down gracefully by allowing threads to run down dispatch queues
@@ -68,8 +68,8 @@ class CoreContext:
   public std::enable_shared_from_this<CoreContext>
 {
 protected:
-  CoreContext(std::shared_ptr<CoreContext> pParent);
-  CoreContext(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer);
+  typedef std::list<std::weak_ptr<CoreContext>> t_childList;
+  CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer);
 
 public:
   virtual ~CoreContext(void);
@@ -83,11 +83,11 @@ protected:
   // A pointer to the parent context
   const std::shared_ptr<CoreContext> m_pParent;
 
-  // General purpose lock for this class
-  mutable boost::mutex m_lock;
+  // Back-referencing iterator which refers to ourselves in our parent's child list:
+  const t_childList::iterator m_backReference;
 
-  // Condition, signalled when context state has been changed
-  boost::condition m_stateChanged;
+  // State block for this context:
+  std::unique_ptr<CoreContextStateBlock> m_stateBlock;
 
   // Set if threads in this context should be started when they are added
   bool m_initiated;
@@ -96,7 +96,6 @@ protected:
   bool m_isShutdown;
 
   // Child contexts:
-  typedef std::list<std::weak_ptr<CoreContext>> t_childList;
   t_childList m_children;
 
   // Lists of event receivers, by name.  The type index of "void" is reserved for
@@ -157,65 +156,21 @@ protected:
   std::weak_ptr<Object> m_outstanding;
 
 protected:
+  // Delayed creation routine
+  typedef std::shared_ptr<CoreContext> (*t_pfnCreate)(
+    std::shared_ptr<CoreContext> pParent,
+    t_childList::iterator backReference,
+    std::shared_ptr<CoreContext> pPeer
+  );
+
   /// <summary>
   /// Register new context with parent and notify others of its creation.
   /// </summary>
-  template<typename T>
-  std::shared_ptr<CoreContext> CreateInternal(CoreContextT<T>& newContext) {
-    // don't allow new children if shutting down
-    if(m_isShutdown)
-      throw autowiring_error("Cannot create a child context; this context is already shut down");
+  /// <param name="pfnCreate">A creation routine which can create the desired context</param>
+  std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer);
 
-    t_childList::iterator childIterator;
-    {
-      // Lock the child list while we insert
-      boost::lock_guard<boost::mutex> lk(m_lock);
-
-      // Reserve a place in the list for the child
-      childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
-    }
-
-    // Create the shared pointer for the context--do not add the context to itself,
-    // this creates a dangerous cyclic reference.
-    std::shared_ptr<CoreContext> retVal(
-      &newContext,
-      [this, childIterator] (CoreContext* pContext) {
-        {
-          boost::lock_guard<boost::mutex> lk(m_lock);
-          this->m_children.erase(childIterator);
-        }
-        // Notify AutowiringEvents listeners
-        GetGlobal()->Invoke(&AutowiringEvents::ExpiredContext)(*pContext);
-
-        delete pContext;
-      }
-    );
-    *childIterator = retVal;
-
-    // Notify AutowiringEvents listeners
-    GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal);
-
-    // Save anchored types in context
-    retVal->AddAnchorInternal((T*)nullptr);
-
-    // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
-    CurrentContextPusher pshr(retVal);
-    BroadcastContextCreationNotice(typeid(T));
-
-    return retVal;
-  }
-
-  void AddAnchorInternal(const AutoAnchor<>*) {}
-
-  template<typename... Ts>
-  void AddAnchorInternal(const AutoAnchor<Ts...>*) {
-    static_assert(sizeof...(Ts) != 0, "Cannot anchor nothing");
-
-    bool dummy[] = {
-      (m_anchors.insert(typeid(Ts)), false)...
-    };
-    (void)dummy;
-  }
+  template<typename T, typename... Ts>
+  void AddAnchorInternal(const AutoAnchor<T, Ts...>*) { AddAnchor<T, Ts...>(); }
 
   void AddAnchorInternal(const void*) {}
 
@@ -370,36 +325,16 @@ protected:
   /// <summary>
   /// Scans the memo collection for the specified entry, or adds a deferred resolution marker if resolution was not possible
   /// </summary>
-  template<class T>
-  std::shared_ptr<T> FindByTypeUnsafe(void) const {
-    // If we've attempted to search for this type before, we will return the value of the memo immediately:
-    auto q = m_typeMemos.find(typeid(T));
-    if(q != m_typeMemos.end())
-      // Return the value we found:
-      return q->second.m_value->as<T>();
+  /// <returns>
+  /// The memo entry where this type was found
+  /// </returns>
+  /// <param name="reference">An initialized shared pointer slot which may be used in type detection</param>
+  void FindByType(AnySharedPointer& reference) const;
 
-    // Resolve based on iterated dynamic casts for each concrete type:
-    std::shared_ptr<T> retVal;
-    for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
-      std::shared_ptr<Object> obj = **q;
-      auto casted = std::dynamic_pointer_cast<T>(obj);
-      if(!casted)
-        // No match, try the next entry
-        continue;
-
-      if(retVal)
-        // Resolution ambiguity, cannot proceed
-        throw autowiring_error("An attempt was made to resolve a type which has multiple possible clients");
-
-      retVal = casted;
-    }
-
-    // This entry was not formerly memoized.  Memoize unconditionally.
-    m_typeMemos[typeid(T)].m_value = retVal;
-
-    // Fill out the entry:
-    return retVal;
-  }
+  /// <summary>
+  /// Unsynchronized version of FindByType
+  /// </summary>
+  void FindByTypeUnsafe(AnySharedPointer& reference) const;
 
   /// <summary>
   /// Returns or constructs a new AutoPacketFactory instance
@@ -409,25 +344,25 @@ protected:
   /// <summary>
   /// Adds the specified deferrable autowiring as a general recipient of autowiring events
   /// </summary>
-  template<class T>
-  void AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
-    size_t found = m_typeMemos.count(typeid(T));
+  void AddDeferred(const AnySharedPointer& reference, DeferrableAutowiring* deferrable);
 
-    if(!found)
-      // Slot not presently initialized, need to initialize it:
-      m_typeMemos[typeid(T)].m_value->init<T>();
+  /// <summary>
+  /// Adds a snooper to the snoopers set
+  /// </summary>
+  void InsertSnooper(std::shared_ptr<Object> snooper);
 
-    // Obtain the entry (potentially a second time):
-    MemoEntry& entry = m_typeMemos[typeid(T)];
-
-    // Chain forward the linked list:
-    deferrable->SetFlink(entry.pFirst);
-    entry.pFirst = deferrable;
-  }
+  /// <summary>
+  /// Removes a snooper to the snoopers set
+  /// </summary>
+  void RemoveSnooper(std::shared_ptr<Object> snooper);
   
   /// <summary>
-  /// Remove EventReceiver from parents unless its a member of the parent
+  /// Recursively removes the specified snooper
   /// </summary>
+  /// <remarks>
+  /// This method has no effect if the passed value is presently a snooper in this context; the
+  /// snooper collection must therefore be updated prior to the call to this method.
+  /// </remarks>
   void UnsnoopEvents(Object* snooper, const JunctionBoxEntry<EventReceiver>& traits);
   
   /// <summary>
@@ -440,6 +375,31 @@ public:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const { return m_concreteTypes.size(); }
   virtual const std::type_info& GetSigilType(void) const = 0;
+  t_childList::iterator GetBackReference(void) const { return m_backReference; }
+
+  /// <returns>
+  /// The first child in the set of this context's children
+  /// </returns>
+  std::shared_ptr<CoreContext> FirstChild(void) const;
+
+  /// <returns>
+  /// The next context sharing the same parent, or null if this is the last entry in the list
+  /// </returns>
+  std::shared_ptr<CoreContext> NextSibling(void) const;
+
+  /// <summary>
+  /// Creation helper routine
+  /// </summary>
+  template<class T>
+  static std::shared_ptr<CoreContext> Create(
+    std::shared_ptr<CoreContext> pParent,
+    t_childList::iterator backReference,
+    std::shared_ptr<CoreContext> pPeer
+  ) {
+    return std::static_pointer_cast<CoreContext>(
+      std::make_shared<CoreContextT<T>>(pParent, backReference, pPeer)
+    );
+  }
 
   /// <summary>
   /// Factory to create a new context
@@ -447,7 +407,7 @@ public:
   /// <param name="T">The context sigil.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return CreateInternal<T>(*new CoreContextT<T>(shared_from_this()));
+    return CreateInternal(&CoreContext::Create<T>, nullptr);
   }
 
   /// <summary>
@@ -463,7 +423,7 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
-    return m_pParent->CreateInternal<T>(*new CoreContextT<T>(m_pParent, shared_from_this()));
+    return m_pParent->CreateInternal(&CoreContext::Create<T>, shared_from_this());
   }
 
   /// <summary>
@@ -497,10 +457,14 @@ public:
   template<typename... AnchorTypes>
   void AddAnchor(void) {
     bool dummy[] = {
-      (m_anchors.insert(typeid(AnchorTypes)), false)...
+      (AddAnchor(typeid(AnchorTypes)), false)...
     };
     (void) dummy;
   }
+
+  /// <summary>
+  /// Adds the specified anchor type to the context
+  void AddAnchor(const std::type_info& ti);
 
   /// <summary>
   /// Utility method which will inject the specified types into this context
@@ -597,79 +561,6 @@ public:
   template<class Sigil>
   bool Is(void) const { return GetSigilType() == typeid(Sigil); }
 
-  /// <returns>
-  /// A list of descendant contexts whose sigil type matches the specified sigil type
-  /// </returns>
-  template<class Sigil>
-  std::vector<std::shared_ptr<CoreContext>> EnumerateChildContexts(void) {
-    std::vector<std::shared_ptr<CoreContext>> retVal;
-    EnumerateChildContexts(typeid(Sigil), [&retVal](std::shared_ptr<CoreContext> ctxt) {
-      retVal.push_back(ctxt);
-    });
-    return retVal;
-  }
-
-  /// <summary>
-  /// Enumerates all matching child contexts recursively and passes each child context to the specified lambda
-  /// </summary>
-  /// <param name="sigil">The sigil of the contexts to be passed to the specified lambda</param>
-  /// <param name="fn">The lambda to receive a shared pointer to each matching child context</param>
-  /// <returns>
-  /// True if a complete enumeration has taken place, false if it was aborted by the passed lambda
-  /// </returns>
-  template<class Fn>
-  bool EnumerateChildContexts(const std::type_info &sigil, Fn&& fn) {
-    return EnumerateChildContexts(
-      [&fn, &sigil] (std::shared_ptr<CoreContext> ctxt) -> bool {
-        if(ctxt->GetSigilType() != sigil)
-          // Sigil type doesn't match, skip this one
-          return true;
-
-        // The sigil type matches, then we'll filter it out to the original lambda
-        return result_or_default(fn, true, ctxt);
-      }
-    );
-  }
-
-  /// <summary>
-  /// Full enumeration of all child contexts, including anonymous contexts
-  /// </summary>
-  /// <remarks>
-  /// Do not attempt to create any child contexts from the lambda function, this will cause
-  /// deadlocks.  While it is technically possible to add objects to contexts from the lambda,
-  /// there is a high probability that this will deadlock if any of the added objects directly
-  /// or indirectly cause a child context to be created.
-  ///
-  /// CopyBasicThreadList is guaranteed to be a safe call to be made from this routine.
-  /// </remarks>
-  template<class Fn>
-  bool EnumerateChildContexts(const Fn& fn) {
-    boost::lock_guard<boost::mutex> lock(m_lock);
-    for(auto c = m_children.begin(); c != m_children.end(); c++) {
-      // Recurse:
-      auto shared = c->lock();
-      if(shared && !shared->EnumerateChildContexts(fn))
-        // Enumeration was abandoned
-        return false;
-    }
-
-    // Call the lambda, default to true in case the lambda's return type is void:
-    return result_or_default(fn, true, shared_from_this());
-  }
-
-  /// <summary>
-  /// This is used for visualization purposes to get a list of all the contexts
-  /// Fn must take a shared_ptr to a CoreContext as an argument.
-  /// </summary>
-  template<class Fn>
-  void EnumerateContexts(Fn&& fn) {
-    fn(shared_from_this());
-    boost::lock_guard<boost::mutex> lock(m_lock);
-    for (auto c = m_children.begin(); c != m_children.end(); c++) {
-      c->lock()->EnumerateContexts(fn);
-    }
-  }
-
   /// <summary>
   /// Sends AutowiringEvents to build current state
   /// </summary>
@@ -718,22 +609,6 @@ public:
   }
 
   /// <summary>
-  /// Determines whether the passed type is a member of this context, or any ancestor context
-  /// </summary>
-  template<class T>
-  bool IsMember(const std::shared_ptr<T>& ptr) const {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-
-    auto q = m_typeMemos.find(typeid(*ptr));
-    if(q == m_typeMemos.end())
-      // The true type of the passed entity isn't even in our concrete map, then we short-circuit
-      return false;
-
-    // Found the true type, see if the slots match or if it's a coincidence:
-    return *q->second.m_value == ptr;
-  }
-
-  /// <summary>
   /// Obtains a shared pointer to an event sender _in this context_ matching the specified type
   /// </summary>
   template<class T>
@@ -762,7 +637,7 @@ public:
     if (!std::is_same<AutowiringEvents,EventType>::value)
       GetGlobal()->Invoke(&AutowiringEvents::EventFired)(*this, typeid(EventType));
 
-    return GetJunctionBox<EventType>()->Invoke(memFn);
+    return MakeInvokeRelay(GetJunctionBox<EventType>(), memFn);
   }
 
   /// <summary>
@@ -792,16 +667,12 @@ public:
   /// <summary>
   /// Waits until the context is transitioned to the Stopped state and all threads and child threads have terminated.
   /// </summary>
-  void Wait(void) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    m_stateChanged.wait(lk, [this] {return m_isShutdown && this->m_outstanding.expired();});
-  }
+  void Wait(void);
 
-  template<class Rep, class Period>
-  bool Wait(const boost::chrono::duration<Rep, Period>& duration) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
-    return m_stateChanged.wait_for(lk, duration, [this] {return m_isShutdown && this->m_outstanding.expired(); });
-  }
+  /// <summary>
+  /// Timed overload
+  /// </summary>
+  bool Wait(const boost::chrono::nanoseconds duration);
 
   /// <summary>
   /// Wait until the context is initiated or is shutting down
@@ -875,15 +746,13 @@ public:
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
+    const AddInternalTraits traits(AutoPacketSubscriberSelect<T>(pSnooper), pSnooper);
     static_assert(std::is_base_of<EventReceiver, T>::value ||
                   has_autofilter<T>::value,
                   "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
     
-    const AddInternalTraits traits(AutoPacketSubscriberSelect<T>(pSnooper), pSnooper);
-    
     // Add to collections of snoopers
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_snoopers.insert(traits.pObject.get());
+    InsertSnooper(pSnooper);
 
     // Add EventReceiver
     if(traits.pRecvr)
@@ -902,41 +771,35 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
+    const AddInternalTraits traits(AutoPacketSubscriberSelect<T>(pSnooper), pSnooper);
     static_assert(std::is_base_of<EventReceiver, T>::value ||
                   has_autofilter<T>::value,
                   "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
     
-    const AddInternalTraits traits(AutoPacketSubscriberSelect<T>(pSnooper), pSnooper);
-    
-    // Remove from collection of snoopers
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_snoopers.erase(traits.pObject.get());
+    RemoveSnooper(pSnooper);
+
+    auto oSnooper = std::static_pointer_cast<Object>(pSnooper);
     
     // Cleanup if its an EventReceiver
-    if (std::is_base_of<EventReceiver, T>::value) {
-      JunctionBoxEntry<EventReceiver> receiver(this, traits.pRecvr);
-      
-      // Remove if unsnoop occurs before context is initiated
-      if (!IsInitiated())
-        (boost::lock_guard<boost::mutex>)m_lock,
-        m_delayedEventReceivers.erase(receiver);
-      
-      UnsnoopEvents(traits.pObject.get(), receiver);
-    }
+    if(traits.pRecvr)
+      UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<EventReceiver>(this, traits.pRecvr));
     
     // Cleanup if its a packet listener
-    if (has_autofilter<T>::value) {
+    if(traits.subscriber)
       UnsnoopAutoPacket(traits);
-    }
   }
 
+  /// <summary>
+  /// Remove EventReceiver from parents unless its a member of the parent
+  /// </summary>
   /// <summary>
   /// Locates an available context member in this context
   /// </summary>
   template<class T>
   void FindByType(std::shared_ptr<T>& slot) const {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    slot = FindByTypeUnsafe<T>();
+    AnySharedPointerT<T> ptr;
+    FindByType(ptr);
+    slot = ptr->template as<T>();
   }
 
   /// <summary>
@@ -963,8 +826,7 @@ public:
       return true;
 
     // Failed, defer
-    (boost::lock_guard<boost::mutex>)m_lock,
-    AddDeferredUnsafe<T>(&slot);
+    AddDeferred(AnySharedPointerT<T>(), &slot);
     return false;
   }
 
@@ -996,8 +858,7 @@ public:
       std::forward<Fn>(listener)
     );
 
-    (boost::lock_guard<boost::mutex>)m_lock,
-    AddDeferredUnsafe<T>(retVal);
+    AddDeferred(AnySharedPointerT<T>(), retVal);
     return retVal;
   }
 
@@ -1038,13 +899,12 @@ class CoreContextT:
   public CoreContext
 {
 public:
-  CoreContextT(std::shared_ptr<CoreContext> pParent) :
-    CoreContext(pParent)
-  {}
-
-  CoreContextT(std::shared_ptr<CoreContext> pParent, std::shared_ptr<CoreContext> pPeer) :
-    CoreContext(pParent, pPeer)
-  {}
+  CoreContextT(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
+    CoreContext(pParent, backReference, pPeer)
+  {
+    // Save anchored types in context
+    AddAnchorInternal((T*)nullptr);
+  }
 
   const std::type_info& GetSigilType(void) const override { return typeid(T); }
 };
