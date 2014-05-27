@@ -746,7 +746,6 @@ public:
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    const AddInternalTraits traits(AutoPacketSubscriberSelect<T>(pSnooper), pSnooper);
     static_assert(std::is_base_of<EventReceiver, T>::value ||
                   has_autofilter<T>::value,
                   "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
@@ -772,7 +771,6 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    const AddInternalTraits traits(AutoPacketSubscriberSelect<T>(pSnooper), pSnooper);
     static_assert(std::is_base_of<EventReceiver, T>::value ||
                   has_autofilter<T>::value,
                   "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
@@ -801,7 +799,7 @@ public:
   void FindByType(std::shared_ptr<T>& slot) const {
     AnySharedPointerT<T> ptr;
     FindByType(ptr);
-    slot = ptr->template as<T>();
+    slot = ptr.slot()->template as<T>();
   }
 
   /// <summary>
