@@ -1,0 +1,9 @@
+<h1 ng-hide="leap.isSubscribed()">Subscribe to view context</h1>
+<div ng-show="leap.isSubscribed()">
+  <h1>{{context.name}}</h1>
+  <ul>
+    <li ng-repeat="(linkName,obj) in context.objects">
+      {{obj.name}}
+    </li>
+  </ul>
+</div>
