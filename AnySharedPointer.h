@@ -79,6 +79,16 @@ public:
   AnySharedPointerT(void) {
     new (m_space) SharedPointerSlotT<T>();
   }
+
+  // Convenience method to cast the space to a slot, but with the expected type
+  SharedPointerSlotT<T>* slot(void) { return (SharedPointerSlotT<T>*) m_space; }
+  const SharedPointerSlotT<T>* slot(void) const { return (const SharedPointerSlotT<T>*) m_space; }
+
+  T& operator*(void) { return **slot(); }
+  const T& operator*(void) const { return **slot(); }
+
+  T* operator->(void) { return slot()->get().get(); }
+  const T* operator->(void) const { return slot()->get().get(); }
 };
 
 template<class T>

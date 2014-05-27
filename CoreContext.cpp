@@ -540,7 +540,7 @@ void CoreContext::UnregisterEventReceivers(void) {
     AnySharedPointerT<AutoPacketFactory> pf;
     FindByTypeUnsafe(pf);
     if(pf)
-      m_pParent->RemovePacketSubscribers(pf->as<AutoPacketFactory>()->GetSubscriberVector());
+      m_pParent->RemovePacketSubscribers(*pf);
   }
 
   // Wipe out all collections so we don't try to free these multiple times:
@@ -807,7 +807,6 @@ void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
 }
 
 void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
-  GetPacketFactory()->RemoveSubscriber(traits.subscriber);
   {
     boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
     
@@ -818,7 +817,7 @@ void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
   }
   
   // Always remove from this context's PacketFactory:
-  GetPacketFactory()->RemoveSubscriber(traits.type);
+  GetPacketFactory()->RemoveSubscriber(traits.subscriber);
   
   // Handoff to parent:
   if (m_pParent)
@@ -831,7 +830,8 @@ void CoreContext::RemovePacketSubscribers(const AutoPacketFactory& factory) {
     m_pParent->RemovePacketSubscribers(factory);
 
   // Remove subscribers from our factory AFTER the parent eviction has taken place
-  auto localFactory = FindByTypeUnsafe<AutoPacketFactory>();
+  AnySharedPointerT<AutoPacketFactory> localFactory;
+  FindByTypeUnsafe(localFactory);
   if(localFactory)
     for(auto& cur : factory.GetSubscriberVector())
       localFactory->RemoveSubscriber(cur);
