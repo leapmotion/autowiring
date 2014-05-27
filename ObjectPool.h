@@ -162,6 +162,10 @@ public:
   /// This sets the maximum number of entities that the pool will cache to satisfy a later allocation request
   /// </summary>
   /// <param name="maxPooled">The new maximum cache count</param>
+  /// <remarks>
+  /// If the value of maxPooled is greater than the maximum outstanding limit, it will be made
+  /// equal to the maximum outstanding limit.
+  /// </remarks>
   void SetMaximumPooledEntities(size_t maxPooled) {
     m_maxPooled = maxPooled;
     for(;;) {
@@ -242,6 +246,30 @@ public:
       return m_outstanding < m_limit;
     });
     return ObtainElementUnsafe(lk);
+  }
+
+  /// <summary>
+  /// Causes the pool's internal cache to hold at least the requested number of items
+  /// </summary>
+  /// <remarks>
+  /// The preallocation routine is an optimization routine similar to vector::reserve.  Calling
+  /// this routine can reduce the expense of pointer requests made later, because no allocation
+  /// has to take place at that point.
+  ///
+  /// If the caller requests a reservation that is greater than the maximum pool limit, the
+  /// number of objects allocated will be equal to the maximum pool limit.
+  /// </remarks>
+  void Preallocate(size_t reservation) {
+    if(reservation > m_maxPooled)
+      reservation = m_maxPooled;
+
+    // Check out objects into our vector, allowing them to all return to the pool at once.
+    // This will populate the pool with the desired number of entities, and will trigger
+    // the desired failure condition if we wind up checking out more objects than are
+    // allowed for this pool.
+    std::vector<std::shared_ptr<T>> objs(reservation);
+    while(reservation--)
+      (*this)(objs[reservation]);
   }
 
   /// <summary>
