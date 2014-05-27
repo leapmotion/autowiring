@@ -72,6 +72,15 @@ angular.module('autoNetApp')
 
   InitConnection();
 
+  function SendMessage(msgType) {
+    var packet = {
+      type: msgType,
+      args: Array.prototype.slice.call(arguments, 1)
+    };
+    console.log(packet);
+    socket.send(JSON.stringify(packet));
+  }
+
   return {
     on: function(eventName, callback) {
       console.log('Event Registered: ', eventName);
@@ -83,16 +92,17 @@ angular.module('autoNetApp')
       });
     },
     subscribe: function() {
-      socket.send('subscribe');
+      SendMessage('subscribe')
     },
     unsubscribe: function() {
-      socket.send('unsubscribe');
+      SendMessage('unsubscribe');
     },
     isConnected: function(){
       return isConnected;
     },
     GetEventHistory: function(){
       return EventHistory.messages;
-    }
+    },
+    SendMessage: SendMessage
   };
 }]);

@@ -96,3 +96,13 @@ user-select: none;
     border-bottom: 0;
   }
 }
+
+/**** EDIT *******/
+.edit-item {
+}
+
+.edit-item li {
+  height: 60px;
+}
+
+
