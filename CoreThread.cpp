@@ -12,6 +12,7 @@ void CoreThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shar
   try {
     // If we are asked to rundown while we still have elements in our dispatch queue,
     // we must try to process them:
+    CurrentContextPusher pshr(ctxt);
     DispatchAllEvents();
   }
   catch(...) {

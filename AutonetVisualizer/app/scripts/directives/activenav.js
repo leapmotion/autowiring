@@ -30,7 +30,6 @@ angular.module('autoNetApp')
           evt.stopImmediatePropagation();
           evt.preventDefault();
 
-          console.log('click');
           scope.$apply(function(){
             scope.check = attrs.activeNav;
           });
