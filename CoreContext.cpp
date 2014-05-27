@@ -808,15 +808,20 @@ void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
 }
 
 void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
+  {
+    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+    
+    // If the passed value is currently a snooper, then the caller has snooped a context and also
+    // one of its parents.  End here.
+    if ( m_snoopers.count(traits.pObject.get()) )
+      return;
+  }
+  
+  // Always remove from this context's PacketFactory:
   GetPacketFactory()->RemoveSubscriber(traits.type);
   
-  // Decide if we should unsnoop the parent
-  bool shouldRemove = m_pParent &&
-                      ((boost::lock_guard<boost::mutex>)m_pParent->m_stateBlock->m_lock, true) &&
-                      m_pParent->m_snoopers.find(traits.pObject.get()) == m_pParent->m_snoopers.end();
-  
-  // Check if snooper is a member of the parent
-  if (shouldRemove)
+  // Handoff to parent:
+  if (m_pParent)
     m_pParent->UnsnoopAutoPacket(traits);
 }
 
