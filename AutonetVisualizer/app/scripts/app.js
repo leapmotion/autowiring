@@ -9,6 +9,10 @@ angular.module('autoNetApp', [
       templateUrl: 'views/main.html',
       controller: 'MainCtrl'
     })
+    .when('/edit', {
+      templateUrl: 'views/edit.html',
+      controller: 'EditCtrl'
+    })
     .when('/raw', {
       templateUrl: 'views/raw.html',
       controller: 'RawCtrl'
@@ -16,6 +20,14 @@ angular.module('autoNetApp', [
     .when('/filtergraph', {
       templateUrl: 'views/filtergraph.html',
       controller: 'FilterGraphCtrl'
+    })
+    .when('/object/:contextID/:linkName', {
+      templateUrl: 'views/object.html',
+      controller: 'ObjectCtrl'
+    })
+    .when('/context/:contextID', {
+      templateUrl: 'views/context.html',
+      controller: 'ContextCtrl'
     })
     .otherwise({
       redirectTo: '/main'

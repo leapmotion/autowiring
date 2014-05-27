@@ -1,23 +1,27 @@
 'use strict';
 
 angular.module('autoNetApp')
-.factory('LeapState', function LeapState(websocket) {
+.factory('LeapState', ['websocket', function LeapState(websocket) {
 
   // Object definitions
   function Context(id, ctxt){
-    this.objects = [];
+    this.objects = {}; //linkName to Object
     this.name = "Unnamed";
     this.id = id;
+    this.children = [];
 
-    _.extend(this, ctxt)
+    _.extend(this, ctxt);
+
+    this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
   }
 
-  Context.prototype.addObject = function(types, objData) {
-    this.objects.push(new LeapObject(types, objData));
+  Context.prototype.addObject = function(obj) {
+    this.objects[obj.linkName] = obj;
   };
 
   function LeapObject(types, objData){
     this.name = objData.name;
+    this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
     this.types = Object.keys(types);
 
     if (types.hasOwnProperty("bolt")) {
@@ -75,42 +79,69 @@ angular.module('autoNetApp')
   //////////////////////////////////////////////////////
 
   var ContextMap = {}; //a map of context.id to contexts
+  var TypeList = [];
   var isSubscribed = false;
 
-  websocket.on('subscribed', function(){
+  websocket.on('subscribed', function(allTypes) {
     isSubscribed = true;
-  })
+    TypeList = allTypes;
+  });
 
   websocket.on('unsubscribed', function(){
     ContextMap = {};
+    TypeList = [];
     isSubscribed = false;
   });
 
   websocket.on('newContext', function(contextID, context){
     if (!ContextMap.hasOwnProperty(contextID)) {
-      ContextMap[contextID] = new Context(contextID, context);
+      var newCtxt = new Context(contextID, context);
+      ContextMap[contextID] = newCtxt;
+
+      // Add this to childen of parent context
+      if (ContextMap.hasOwnProperty(newCtxt.parent)) {
+        ContextMap[newCtxt.parent].children.push(contextID);
+      }
     } else {
       console.log('context alreadys exists');
     }
   });
 
   websocket.on('expiredContext', function(contextID){
+    var parent = ContextMap[ContextMap[contextID].parent];
+    var index = parent.children.indexOf(contextID);
+    parent.children.splice(index,1);
+
     delete ContextMap[contextID];
   });
 
   websocket.on('newObject', function(contextID, types, objData) {
     var updatedContext = ContextMap[contextID];
+    var object = new LeapObject(types, objData);
 
-    updatedContext.addObject(types, objData);
+    updatedContext.addObject(object);
   });
 
   websocket.on('eventFired', function(contextID, eventHash){
-    var updatedContext = ContextMap[contextID];
 
-    for (var i = 0; i<updatedContext.objects.length; i++) {
-      var obj = updatedContext.objects[i];
-      obj.eventFired(eventHash.name);
+    function fireEvent(ctxtID) {
+      if (!ContextMap.hasOwnProperty(ctxtID)) return;
+
+      var updatedContext = ContextMap[ctxtID];
+
+      // Iterated objects in this context, signal event fired
+      Object.keys(updatedContext.objects).forEach(function(linkName){
+        var obj = updatedContext.objects[linkName];
+        obj.eventFired(eventHash.name);
+      });
+
+      // recurse on children
+      for (var i = 0; i < updatedContext.children.length; i++) {
+        fireEvent(updatedContext.children[i]);
+      }
     }
+
+    fireEvent(contextID);
   });
 
   return {
@@ -119,6 +150,9 @@ angular.module('autoNetApp')
     },
     isSubscribed: function(){
       return isSubscribed;
+    },
+    GetAllTypes: function(){
+      return TypeList;
     }
   };
-});
+}]);
