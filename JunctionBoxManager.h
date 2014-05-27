@@ -1,14 +1,30 @@
 #pragma once
-#include "JunctionBox.h"
+#include "JunctionBoxBase.h"
+#include "JunctionBoxEntry.h"
 #include "TypeRegistry.h"
 #include "uuid.h"
+#include <map>
+#include <stdexcept>
+#include <vector>
 #include TYPE_INDEX_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_MAP
 #include TYPE_TRAITS_HEADER
 
 class EventReceiver;
+class EventOutputStreamBase;
 class CoreContext;
+class JunctionBoxBase;
+class OutputStreamVector;
+
+template<typename T>
+class EventOutputStream;
+
+template<typename T>
+class JunctionBox;
+
+template<typename T>
+class RegType;
 
 /// <summary>
 /// General manager class of all junction boxes defined in some context
