@@ -357,8 +357,12 @@ protected:
   void RemoveSnooper(std::shared_ptr<Object> snooper);
   
   /// <summary>
-  /// Remove EventReceiver from parents unless its a member of the parent
+  /// Recursively removes the specified snooper
   /// </summary>
+  /// <remarks>
+  /// This method has no effect if the passed value is presently a snooper in this context; the
+  /// snooper collection must therefore be updated prior to the call to this method.
+  /// </remarks>
   void UnsnoopEvents(Object* snooper, const JunctionBoxEntry<EventReceiver>& traits);
   
   /// <summary>

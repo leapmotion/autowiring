@@ -686,22 +686,29 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
 }
 
 void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver) {
-  (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
-  m_delayedEventReceivers.erase(receiver);
-  
-  auto cur = this;
-  do {
-    // Always remove from this junction box manager:
-    cur->m_junctionBoxManager->RemoveEventReceiver(receiver);
+  {
+    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+    if(
+      // If the passed value is currently a snooper, then the caller has snooped a context and also
+      // one of its parents.  End here.
+      m_snoopers.count(oSnooper) ||
 
-    // Traverse up to the parent:
-    cur = cur->m_pParent.get();
+      // If we are an event receiver in this context, then the caller has snooped a context and
+      // is also a proper EventReceiver in one of that context's ancestors--this is a fairly
+      // common case.  We return here, rather than incorrectly unregistering the caller.
+      m_eventReceivers.count(receiver)
+    )
+      return;
+
+    m_delayedEventReceivers.erase(receiver);
   }
-  while(
-    cur &&
-    !cur->m_eventReceivers.count(receiver) &&
-    !cur->m_snoopers.count(oSnooper)
-  );
+  
+  // Always remove from this junction box manager:
+  m_junctionBoxManager->RemoveEventReceiver(receiver);
+
+  // Handoff to parent type:
+  if(m_pParent)
+    m_pParent->UnsnoopEvents(oSnooper, receiver);
 }
 
 void CoreContext::FilterException(void) {
