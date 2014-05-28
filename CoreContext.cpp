@@ -534,13 +534,19 @@ void CoreContext::UnregisterEventReceivers(void) {
     m_junctionBoxManager->RemoveEventReceiver(q);
 
   // Notify our parent (if we have one) that our event receivers are going away:
-  if(m_pParent) {
+  if(m_pParent)
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
 
-    AnySharedPointerT<AutoPacketFactory> pf;
-    FindByTypeUnsafe(pf);
-    if(pf)
+  // Recursively unregister packet factory subscribers:
+  AnySharedPointerT<AutoPacketFactory> pf;
+  FindByTypeUnsafe(pf);
+  if(pf) {
+    // Selective removal from the parent collection only
+    if(m_pParent)
       m_pParent->RemovePacketSubscribers(*pf);
+
+    // For ourselves, we can just clear everything
+    pf->Clear();
   }
 
   // Wipe out all collections so we don't try to free these multiple times:
