@@ -22,14 +22,14 @@ public:
     slot()->~SharedPointerSlot();
   }
 
-private:
+protected:
   unsigned char m_space[sizeof(SharedPointerSlot)];
 
+public:
   // Convenience method to cast the space to a slot
   SharedPointerSlot* slot(void) { return (SharedPointerSlot*) m_space; }
   const SharedPointerSlot* slot(void) const { return (const SharedPointerSlot*) m_space; }
 
-public:
   explicit operator bool(void) const { return slot()->operator bool(); }
 
   SharedPointerSlot& operator*(void) { return *slot(); }
@@ -62,6 +62,19 @@ public:
   template<class T>
   void operator=(const std::shared_ptr<T>& rhs) {
     **this = rhs;
+  }
+};
+
+/// <summary>
+/// Convenience implementation of AnySharedPointer which is initially of type T
+/// </summary>
+template<class T>
+class AnySharedPointerT:
+  public AnySharedPointer
+{
+public:
+  AnySharedPointerT(void) {
+    new (m_space) SharedPointerSlotT<T>();
   }
 };
 
