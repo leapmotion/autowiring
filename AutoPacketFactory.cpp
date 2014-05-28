@@ -33,15 +33,19 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
 
 bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
   boost::lock_guard<boost::mutex> lk(m_lock);
+  if(m_wasStopped)
+    // Cannot start if already stopped
+    return false;
+    
   m_outstanding = outstanding;
-  
   m_stateCondition.notify_all();
   return true;
 }
 
 void AutoPacketFactory::Stop(bool graceful) {
-  // Release any external references before obtaining the lock
-  m_autoFilters.clear();
+  // Return optimization
+  if(m_wasStopped)
+    return;
 
   // Kill the object pool
   m_packets.SetOutstandingLimit(0);
@@ -52,6 +56,14 @@ void AutoPacketFactory::Stop(bool graceful) {
   m_wasStopped = true;
   m_outstanding.reset();
   m_stateCondition.notify_all();
+}
+
+void AutoPacketFactory::Clear(void) {
+  // Trigger a stop first, before trying to release anything
+  Stop(false);
+
+  // Release any external references before obtaining the lock
+  m_autoFilters.clear();
 }
 
 void AutoPacketFactory::Wait(void) {

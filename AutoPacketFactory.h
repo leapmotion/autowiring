@@ -96,6 +96,15 @@ public:
   bool ShouldStop(void) const override { return m_wasStopped; };
 
   /// <summary>
+  /// Causes this AutoPacketFactory to release all of its packet subscribers
+  /// </summary>
+  /// <remarks>
+  /// This method will cause the factory to enter the Stopped state, if it's not there
+  /// alread.  This method is idempotent.
+  /// </remarks>
+  void Clear(void);
+
+  /// <summary>
   /// Registers the passed subscriber, if it defines a method called AutoFilter
   /// </summary>
   /// <remarks>
