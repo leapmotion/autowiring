@@ -2,6 +2,7 @@
 #include "BasicThread.h"
 #include "Autowired.h"
 #include "BasicThreadStateBlock.h"
+#include "ContextEnumerator.h"
 #include "fast_pointer_cast.h"
 #include "move_only.h"
 #include <boost/thread.hpp>
@@ -203,15 +204,11 @@ void BasicThread::Stop(bool graceful) {
 }
 
 void BasicThread::ForceCoreThreadReidentify(void) {
-  AutoGlobalContext global;
-  global->EnumerateChildContexts(
-    [](std::shared_ptr<CoreContext> ctxt) {
-      auto threadListCpy = ctxt->CopyBasicThreadList();
-      for(auto q = threadListCpy.begin(); q != threadListCpy.end(); q++) {
-        (**q).SetCurrentThreadName();
-      }
-    }
-  );
+  for(const auto& ctxt : ContextEnumerator(AutoGlobalContext())) {
+    auto threadListCpy = ctxt->CopyBasicThreadList();
+    for(auto q = threadListCpy.begin(); q != threadListCpy.end(); q++)
+      (**q).SetCurrentThreadName();
+  }
 }
 
 void ForceCoreThreadReidentify(void) {

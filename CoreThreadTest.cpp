@@ -267,12 +267,16 @@ TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
 
   // Pend by an absolute time point, nothing really special here
   std::shared_ptr<bool> x(new bool(false));
-  *t += (boost::chrono::high_resolution_clock::now() + boost::chrono::milliseconds(1)), [&x] { *x = true; };
+  *t += (boost::chrono::high_resolution_clock::now() + boost::chrono::milliseconds(1)), [&t, x] {
+    *x = true;
+    t->Stop();
+  };
+
+  // Verify that this lambda does not run right away:
+  ASSERT_FALSE(*x) << "A timepoint-based delayed dispatch was invoked early";
 
   // Verify that we hit this after one ms of delay
-  ASSERT_FALSE(*x) << "A timepoint-based delayed dispatch was invoked early";
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
-  ASSERT_TRUE(*x) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
+  ASSERT_TRUE(t->WaitFor(boost::chrono::seconds(5))) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
 }
 
 class WaitsALongTimeThenQuits:
