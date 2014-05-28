@@ -433,36 +433,14 @@ void CoreContext::AddAnchor(const std::type_info& ti) {
 void CoreContext::BuildCurrentState(void) {
   AutoGlobalContext glbl;
   glbl->Invoke(&AutowiringEvents::NewContext)(*this);
-
-  std::unordered_set<Object*> allObjects;
-
-  // ContextMembers and CoreRunnables
-  for (auto member : m_contextMembers) {
-    Object* obj = dynamic_cast<Object*>(member);
-    if (obj && allObjects.find(obj)==allObjects.end()) {
-      GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj);
-      allObjects.insert(obj);
-    }
+    
+  // Enumerate objects injected into this context
+  for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
+    std::shared_ptr<Object> obj = **q;
+    GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj.get());
   }
-
-  //Exception Filters
-  for (auto filter : m_filters) {
-    Object* obj = dynamic_cast<Object*>(filter);
-    if (obj && allObjects.find(obj)==allObjects.end()){
-      GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj);
-      allObjects.insert(obj);
-    }
-  }
-
-  //Event Receivers
-  for (auto receiver : m_eventReceivers) {
-    Object* obj = dynamic_cast<Object*>(receiver.m_ptr.get());
-    if (obj && allObjects.find(obj)==allObjects.end()) {
-      GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj);
-      allObjects.insert(obj);
-    }
-  }
-
+  
+  // Recurse on all children
   boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
   for(auto c : m_children) {
     auto cur = c.lock();

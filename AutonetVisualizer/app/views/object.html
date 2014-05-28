@@ -10,7 +10,7 @@
     <span ng-show="object.hasBolts()" style="font-weight:bold;">Bolts onto:</span>
     <li ng-repeat="bolt in object.boltSigils">{{bolt}}</li>
   </ul>
-  <h3>Slots</h3>
+  <h3 ng-show="object.slots.length">Slots</h3>
   <ul>
     <li ng-repeat="slot in object.slots">
       {{slot}}
