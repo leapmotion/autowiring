@@ -6,7 +6,7 @@
 ** for the node and "parent" is the idenifier for the parent node
 */
 angular.module('autoNetApp')
-.directive('directedGraph', function () {
+.directive('directedTree', function () {
   return {
     template: '<canvas width="900" height="400">HTML5 canvas not supported on your browser</canvas>',
     restrict: 'E',
@@ -49,6 +49,66 @@ angular.module('autoNetApp')
           if (node.hasOwnProperty('parent')){
             graph.newEdge(nodeSet[node.parent], nodeSet[node.id]);
           }
+        });
+
+        // Remove any expired nodes
+        _.each(expiredNodes, function(nodeID) {
+          graph.removeNode({id: Number(nodeID)});
+        });
+      });
+    }
+  };
+});
+
+angular.module('autoNetApp')
+.directive('directedGraph', function () {
+  return {
+    template: '<canvas width="1000" height="600">HTML5 canvas not supported on your browser</canvas>',
+    restrict: 'E',
+    replace: true,
+    scope: {
+      nodes: '='
+    },
+    controller: function($scope) {
+      $scope.graph = new Springy.Graph();
+    },
+    link: function(scope, element, attrs) {
+      // Register canvas with jQuery/springy
+      jQuery(function(){
+        jQuery(element).springy({
+          graph: scope.graph
+        })
+      });
+
+      var graph = scope.graph;
+
+      // Set of current nodes in graph
+      var nodeSet = scope.graph.nodeSet;
+
+      // Watch for any new or deleted nodes
+      scope.$watchCollection('nodes', function(nodeMap) {
+        //console.log("nodes updates", nodeMap);
+
+        var nodeIDs = _.keys(nodeMap);
+        var currentNodeIds = _.keys(nodeSet)
+        var newNodes = _.difference(nodeIDs, currentNodeIds);
+        var expiredNodes = _.difference(currentNodeIds, nodeIDs);
+
+        // Add any new nodes
+        _.each(newNodes, function(nodeID) {
+          var node = nodeMap[nodeID];
+          graph.addNode(new Springy.Node(node.linkName, {label:node.name, length:3.0}) );
+        });
+
+        // Add any new edges
+        _.each(newNodes, function(nodeID) {
+          var node = nodeMap[nodeID];
+          console.log("node: ", node);
+          _.each(node.slots, function(slot){
+            if (nodeSet.hasOwnProperty(slot)) {
+              graph.newEdge(nodeSet[nodeID], nodeSet[slot]);
+            }
+          });
         });
 
         // Remove any expired nodes

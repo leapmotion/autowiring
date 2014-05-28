@@ -1,7 +1,7 @@
 <h1 ng-hide="leap.isSubscribed()">Subscribe to view context</h1>
 <div ng-show="leap.isSubscribed()">
   <h1>{{context.name}}</h1>
-  <directed-graph nodes="leap.GetContexts()">
+  <directed-graph nodes="allObjects">
   </directed-graph>
   <ul>
     <li ng-repeat="(linkName,obj) in context.objects">
