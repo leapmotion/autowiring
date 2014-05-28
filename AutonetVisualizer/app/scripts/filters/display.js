@@ -19,5 +19,16 @@ angular.module('autoNetApp')
     return _.filter(input, function(ele){
       return ele.IsType(type);
     });
-  }
+  };
+});
+
+angular.module('autoNetApp')
+.filter('Limit', function(){
+  return function(input, length){
+    if (input.length <= length){
+      return input;
+    }
+
+    return input.substring(0,length-3) + "...";
+  };
 });

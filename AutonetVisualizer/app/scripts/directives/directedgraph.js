@@ -67,7 +67,9 @@ angular.module('autoNetApp')
     restrict: 'E',
     replace: true,
     scope: {
-      nodes: '='
+      nodes: '=',
+      orphans: '=',
+      unidentified: '='
     },
     controller: function($scope) {
       $scope.graph = new Springy.Graph();
@@ -88,9 +90,14 @@ angular.module('autoNetApp')
       // Watch for any new or deleted nodes
       scope.$watchCollection('nodes', function(nodeMap) {
 
+        // List of slots that arn't known by visualizer
+        scope.unidentified = [];
+        // List of context members not in slot graph
+        scope.orphans = [];
+
         _.each(nodeMap, function(node, nodeID){
           // Add node if doesn't exist
-          if (! nodeSet.hasOwnProperty(nodeID)) {
+          if (!nodeSet.hasOwnProperty(nodeID) && node.slots && node.slots.length) {
             graph.addNode(new Springy.Node(node.linkName, {label:node.name}) );
           }
 
@@ -101,12 +108,21 @@ angular.module('autoNetApp')
                 var newNode = nodeMap[slot];
                 graph.addNode(new Springy.Node(newNode.linkName, {label:newNode.name, mass:2.0}) );
               }
-              graph.newEdge(nodeSet[nodeID], nodeSet[slot], {length: 10.0});
+              graph.newEdge(nodeSet[nodeID], nodeSet[slot], {length: 3.0});
             } else {
-              console.log("Unidentified:", slot);
+              scope.unidentified.push(slot);
             }
           }); // each slot
         }); //each nodeMap 
+
+        // Populate list of orphan nodes (not shown in graph)
+        var orphanNodes = {};
+        _.extend(orphanNodes, nodeMap);
+        graph.edges.forEach(function(edge){
+          delete orphanNodes[edge.source.id];
+          delete orphanNodes[edge.target.id];
+        });
+        scope.orphans = _.pluck(orphanNodes, 'name');
 
       });
     }
