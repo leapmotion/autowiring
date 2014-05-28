@@ -87,34 +87,27 @@ angular.module('autoNetApp')
 
       // Watch for any new or deleted nodes
       scope.$watchCollection('nodes', function(nodeMap) {
-        //console.log("nodes updates", nodeMap);
 
-        var nodeIDs = _.keys(nodeMap);
-        var currentNodeIds = _.keys(nodeSet)
-        var newNodes = _.difference(nodeIDs, currentNodeIds);
-        var expiredNodes = _.difference(currentNodeIds, nodeIDs);
+        _.each(nodeMap, function(node, nodeID){
+          // Add node if doesn't exist
+          if (! nodeSet.hasOwnProperty(nodeID)) {
+            graph.addNode(new Springy.Node(node.linkName, {label:node.name}) );
+          }
 
-        // Add any new nodes
-        _.each(newNodes, function(nodeID) {
-          var node = nodeMap[nodeID];
-          graph.addNode(new Springy.Node(node.linkName, {label:node.name, length:3.0}) );
-        });
-
-        // Add any new edges
-        _.each(newNodes, function(nodeID) {
-          var node = nodeMap[nodeID];
-          console.log("node: ", node);
+          // Add edges, and endpoint node if doesn't exist
           _.each(node.slots, function(slot){
-            if (nodeSet.hasOwnProperty(slot)) {
-              graph.newEdge(nodeSet[nodeID], nodeSet[slot]);
+            if (nodeMap.hasOwnProperty(slot)) {
+              if ( !nodeSet.hasOwnProperty(slot)) {
+                var newNode = nodeMap[slot];
+                graph.addNode(new Springy.Node(newNode.linkName, {label:newNode.name, mass:2.0}) );
+              }
+              graph.newEdge(nodeSet[nodeID], nodeSet[slot], {length: 10.0});
+            } else {
+              console.log("Unidentified:", slot);
             }
-          });
-        });
+          }); // each slot
+        }); //each nodeMap 
 
-        // Remove any expired nodes
-        _.each(expiredNodes, function(nodeID) {
-          graph.removeNode({id: Number(nodeID)});
-        });
       });
     }
   };
