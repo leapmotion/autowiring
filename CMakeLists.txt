@@ -37,11 +37,15 @@ set(Autowiring_SRCS
   ContextCreator.h
   ContextCreatorBase.h
   ContextCreatorBase.cpp
+  ContextEnumerator.h
+  ContextEnumerator.cpp
   ContextMap.h
   ContextMember.cpp
   ContextMember.h
   CoreContext.cpp
   CoreContext.h
+  CoreContextStateBlock.h
+  CoreContextStateBlock.cpp
   CoreThread.cpp
   CoreThread.h
   CoreRunnable.h
@@ -61,14 +65,18 @@ set(Autowiring_SRCS
   EventReceiver.cpp
   fast_pointer_cast.h
   JunctionBox.h
-  JunctionBox.cpp
+  JunctionBoxBase.h
+  JunctionBoxBase.cpp
+  JunctionBoxEntry.h
   JunctionBoxManager.h
   JunctionBoxManager.cpp
   ExceptionFilter.h
   FilterPropertyExtractor.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
+  is_any.h
   InterlockedExchange.h
+  InvokeRelay.h
   Object.h
   ObjectPool.h
   ObjectPoolMonitor.h
@@ -147,6 +155,8 @@ set(AutowiringTest_SRCS
   CoreContextTest.cpp
   ContextCleanupTest.h
   ContextCleanupTest.cpp
+  ContextEnumeratorTest.h
+  ContextEnumeratorTest.cpp
   ContextMapTest.h
   ContextMapTest.cpp
   ContextMemberTest.h
