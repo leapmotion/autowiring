@@ -134,9 +134,6 @@ TEST_F(SnoopTest, AmbiguousReciept) {
   AutoFired<UpBroadcastListener> ubl;
   ASSERT_TRUE(ubl.HasListeners()) << "Expected at least one listener--the ParentMember instance";
 
-  // Membership double-check:
-  ASSERT_TRUE(m_create->IsMember(parent)) << "Could not find a just-autowired instance in the current context";
-
   {
     AutoCreateContext subCtxt;
     subCtxt->Snoop(parent);
