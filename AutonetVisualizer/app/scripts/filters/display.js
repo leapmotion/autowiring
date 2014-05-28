@@ -11,6 +11,11 @@ angular.module('autoNetApp')
 angular.module('autoNetApp')
 .filter('TypeFilter', function(){
   return function (input, type) {
+    input = _.sortBy(input, function(ele){return ele.name;});
+
+    if (type === 'all'){
+      return input;
+    }
     return _.filter(input, function(ele){
       return ele.IsType(type);
     });
