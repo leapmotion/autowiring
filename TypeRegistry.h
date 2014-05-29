@@ -1,4 +1,6 @@
 #pragma once
+#include "CreationRules.h"
+#include "CoreContext.h"
 #include <typeinfo>
 #include STL_TUPLE_HEADER
 #include MEMORY_HEADER
@@ -30,13 +32,84 @@ struct TypeIdentifier:
 };
 
 struct TypeRegistryEntry {
-  TypeRegistryEntry(const std::type_info& ti, void(*factory)(std::shared_ptr<JunctionBoxBase>&),
-                                              std::shared_ptr<TypeIdentifierBase>(*identifier)(void));
+  TypeRegistryEntry(const std::type_info& ti);
 
-  const TypeRegistryEntry* pFlink;
+  // Next entry in the list:
+  const TypeRegistryEntry* const pFlink;
+
+  // Type of this entry:
   const std::type_info& ti;
-  void (*const m_NewJunctionBox)(std::shared_ptr<JunctionBoxBase>&);
-  std::shared_ptr<TypeIdentifierBase>(*const m_NewTypeIdentifier)(void);
+
+  /// <summary>
+  /// The runtime type information corresponding to this entry
+  /// </summary>
+  virtual const std::type_info& GetTypeInfo(void) const = 0;
+
+  /// <summary>
+  /// Constructor method, used to generate a new junction box
+  /// </summary>
+  virtual std::shared_ptr<JunctionBoxBase> NewJunctionBox(void) const = 0;
+
+  /// <summary>
+  /// Used to create a type identifier value, for use with AutoNet
+  /// </summary>
+  virtual std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const = 0;
+
+  /// <summary>
+  /// Returns true if an injection is possible on the described type
+  /// </summary>
+  /// <remarks>
+  /// Injection might not be possible if the named type does not have a zero-argument constructor.
+  /// In this case, an exception will be thrown if an attempt is made to call Inject
+  /// </remarks>
+  virtual bool CanInject(void) const = 0;
+
+  /// <summary>
+  /// Injects the type described by this registry entry in the current context
+  /// </summary>
+  /// <remarks>
+  /// If the underlying type cannot be injected, this method will throw an exception
+  /// </remarks>
+  virtual void Inject(void) const = 0;
+};
+
+template<class T>
+struct TypeRegistryEntryT:
+  public TypeRegistryEntry
+{
+  TypeRegistryEntryT(void):
+    TypeRegistryEntry(typeid(T))
+  {}
+
+  virtual const std::type_info& GetTypeInfo(void) const override { return typeid(T); }
+
+  virtual std::shared_ptr<JunctionBoxBase> NewJunctionBox(void) const override {
+    return std::static_pointer_cast<JunctionBoxBase>(
+      std::make_shared<JunctionBox<T>>()
+    );
+  }
+
+  std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const override {
+    return std::static_pointer_cast<TypeIdentifierBase>(
+      std::make_shared<TypeIdentifier<T>>()
+    );
+  }
+
+  bool CanInject(void) const override {
+    return is_injectable<T>::value;
+  }
+
+  template<typename U>
+  typename std::enable_if<is_injectable<U>::value>::type AnyInject(void) const {
+    CoreContext::CurrentContext()->Inject<U>();
+  }
+
+  template<typename U>
+  typename std::enable_if<!is_injectable<U>::value>::type AnyInject(void) const {
+    throw autowiring_error("Attempted to inject a non-injectable type");
+  }
+
+  virtual void Inject(void) const override { AnyInject<T>(); }
 };
 
 extern const TypeRegistryEntry* g_pFirstEntry;
@@ -53,24 +126,8 @@ template<class T>
 class RegType
 {
 public:
-  static const TypeRegistryEntry r;
+  static const TypeRegistryEntryT<T> r;
 };
 
-// JunctionBox casting factory
 template<class T>
-void NewJunctionBox(std::shared_ptr<JunctionBoxBase>& out) {
-  out = std::static_pointer_cast<JunctionBoxBase>(
-    std::make_shared<JunctionBox<T>>()
-  );
-}
-
-// TypeIdentifier casting factory
-template<class T>
-std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) {
-  return std::static_pointer_cast<TypeIdentifierBase>(
-    std::make_shared<TypeIdentifier<T>>()
-  );
-}
-
-template<class T>
-const TypeRegistryEntry RegType<T>::r(typeid(T), &NewJunctionBox<T>, &NewTypeIdentifier<T>);
+const TypeRegistryEntryT<T> RegType<T>::r;
