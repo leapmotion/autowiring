@@ -2,6 +2,7 @@
 #include "AutowirableSlot.h"
 #include "Decompose.h"
 #include "GlobalCoreContext.h"
+#include "TypeRegistry.h"
 #include MEMORY_HEADER
 #include ATOMIC_HEADER
 
@@ -263,6 +264,9 @@ public:
     m_junctionBox(ctxt->GetJunctionBox<T>())
   {
     static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
+
+    // Add an utterance of the TypeRegistry so we can add this AutoFired type to our collection
+    (void) RegType<T>::r;
   }
 
   /// <summary>
@@ -270,7 +274,9 @@ public:
   /// </summary>
   AutoFired(const std::shared_ptr<JunctionBox<T>>& junctionBox) :
     m_junctionBox(junctionBox)
-  {}
+  {
+    (void) RegType<T>::r;
+  }
 
   /// <summary>
   /// Utility constructor, used to support movement operations
