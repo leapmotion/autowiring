@@ -29,19 +29,6 @@ public:
   ~AutoPacketFactory(void);
 
 private:
-  struct AutoPacketCreator {
-    AutoPacketCreator(const AutoPacketCreator& rhs) :
-      factory(rhs.factory)
-    {}
-
-    AutoPacketCreator(AutoPacketFactory* factory = nullptr) : factory(factory) {}
-
-    AutoPacketFactory* factory;
-
-    AutoPacket* operator()() const;
-    void operator=(AutoPacketCreator&& rhs) { factory = rhs.factory; }
-  };
-
   // Lock for this type
   mutable boost::mutex m_lock;
   
@@ -132,4 +119,3 @@ public:
   /// </summary>
   std::shared_ptr<AutoPacket> NewPacket(void);
 };
-
