@@ -12,7 +12,7 @@
   </ul>
   <h3 ng-show="object.slots.length">Slots</h3>
   <ul>
-    <li ng-repeat="slot in object.slots">
+    <li ng-repeat="slot in object.slots | Pluck:'name'">
       {{slot}}
     </li>
   </ul>
