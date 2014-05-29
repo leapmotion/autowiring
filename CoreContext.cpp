@@ -540,14 +540,10 @@ void CoreContext::UnregisterEventReceivers(void) {
   // Recursively unregister packet factory subscribers:
   AnySharedPointerT<AutoPacketFactory> pf;
   FindByTypeUnsafe(pf);
-  if(pf) {
-    // Selective removal from the parent collection only
-    if(m_pParent)
-      m_pParent->RemovePacketSubscribers(*pf);
 
-    // For ourselves, we can just clear everything
-    pf->Clear();
-  }
+  // Selective removal from the parent collection only
+  if(pf && m_pParent)
+    m_pParent->RemovePacketSubscribers(*pf);
 
   // Wipe out all collections so we don't try to free these multiple times:
   m_eventReceivers.clear();
