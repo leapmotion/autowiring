@@ -50,6 +50,10 @@ void AutoPacketFactory::Stop(bool graceful) {
   std::shared_ptr<Object> outstanding;
   outstanding.swap(m_outstanding);
 
+  // Same story with the AutoFilters
+  t_autoFilterSet autoFilters;
+  autoFilters.swap(m_autoFilters);
+
   // Now we can lock, update state, and notify any listeners
   boost::lock_guard<boost::mutex> lk(m_lock);
   m_wasStopped = true;
