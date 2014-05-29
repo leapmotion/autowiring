@@ -328,7 +328,12 @@ public:
     nReceived(0)
   {}
 
-  Deferred AutoFilter(const Decoration<0>& dec) {
+  Deferred AutoFilter(AutoPacket&, const Decoration<0>&) {
+    // First packet is always delayed, this allows the dispatch queue to fill
+    // up with packets, and triggers typical rundown behavior
+    if(!nReceived)
+      boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+
     nReceived++;
     return Deferred(this);
   }
@@ -341,19 +346,23 @@ TEST_F(AutoFilterTest, DeferredRecieptInSubContext) {
 
   static const size_t nPackets = 5;
   AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<DeferredAutoFilter>();
 
   std::vector<std::weak_ptr<AutoPacket>> allPackets;
 
   // Issue a packet before the subcontext is created, hold it for awhile:
   auto preissued = factory->NewPacket();
+  preissued->Decorate(Decoration<0>());
   allPackets.push_back(preissued);
 
   {
     // Create subcontext
     AutoCreateContext ctxt;
-    ctxt->Initiate();
     CurrentContextPusher pshr(ctxt);
     AutoRequired<DeferredAutoFilter> daf;
+
+    // Now we initiate:
+    ctxt->Initiate();
 
     // Issue a few packets, have them get picked up by the subcontext:
     for(size_t i = nPackets; i--;)
