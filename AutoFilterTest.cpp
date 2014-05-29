@@ -319,3 +319,62 @@ TEST_F(AutoFilterTest, VerifyReferenceBasedInput) {
     sub->SignalShutdown(false);
   }
 }
+
+class DeferredAutoFilter:
+  public CoreThread
+{
+public:
+  DeferredAutoFilter(void) :
+    nReceived(0)
+  {}
+
+  Deferred AutoFilter(const Decoration<0>& dec) {
+    nReceived++;
+    return Deferred(this);
+  }
+
+  size_t nReceived;
+};
+
+TEST_F(AutoFilterTest, DeferredRecieptInSubContext) {
+  AutoCurrentContext()->Initiate();
+
+  static const size_t nPackets = 5;
+  AutoRequired<AutoPacketFactory> factory;
+
+  std::vector<std::weak_ptr<AutoPacket>> allPackets;
+
+  // Issue a packet before the subcontext is created, hold it for awhile:
+  auto preissued = factory->NewPacket();
+  allPackets.push_back(preissued);
+
+  {
+    // Create subcontext
+    AutoCreateContext ctxt;
+    ctxt->Initiate();
+    CurrentContextPusher pshr(ctxt);
+    AutoRequired<DeferredAutoFilter> daf;
+
+    // Issue a few packets, have them get picked up by the subcontext:
+    for(size_t i = nPackets; i--;)
+    {
+      auto packet = factory->NewPacket();
+      packet->Decorate(Decoration<0>());
+      allPackets.push_back(packet);
+    }
+
+    // Terminate the subcontext, release references
+    ctxt->SignalShutdown(true);
+    ctxt->Wait();
+
+    // Verify that the filter got all of the packets that it should have gotten:
+    ASSERT_EQ(nPackets, daf->nReceived) << "AutoFilter did not get all packets that were pended to it";
+  }
+
+  // Release the preissued packet:
+  preissued.reset();
+
+  // Now verify that all of our packets are expired:
+  for(auto cur : allPackets)
+    ASSERT_TRUE(cur.expired()) << "Packet did not expire after all recipients went out of scope";
+}
