@@ -408,6 +408,28 @@ TEST_F(CoreThreadTest, AbandonedDispatchers) {
   ASSERT_FALSE(*v) << "Lambdas attached to a CoreThread should not be executed when the enclosing context is terminated without being started";
 }
 
+TEST_F(CoreThreadTest, PendAfterShutdown) {
+  auto v = std::make_shared<bool>(false);
+
+  // Create a CoreThread and pend a lambda to it after terminating the enclosing context.  This will let us track
+  // what happens to the destructor operations on the lambda.
+  AutoCurrentContext()->SignalShutdown(true);
+
+  // We should still be able to inject into a terminated context--the thread just won't start
+  AutoRequired<CoreThread> ct;
+  *ct += [v] {};
+
+  // The dispatch queue length can't have increased as a result of the above.  Again, the CoreThread is supposed
+  // to be terminated by this point and not even running; any dispatchers pended at this point are going to get
+  // leaked until the enclosing context is destroyed.  It would be a different story if the CoreContext were in
+  // rundown mode right now and the thread is still running but wrapping up, but that's definitely not the case
+  // here.
+  ASSERT_EQ(0UL, ct->GetDispatchQueueLength()) << "A dispatcher was incorrectly pended to a CoreThread that was not running";
+
+  // Verify that the lambda was destroyed more or less right away
+  ASSERT_TRUE(v.unique()) << "Shared pointer in a lambda closure appears to have been leaked";
+}
+
 #ifdef _MSC_VER
 #include "windows.h"
 
