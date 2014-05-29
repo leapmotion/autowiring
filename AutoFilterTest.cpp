@@ -387,3 +387,61 @@ TEST_F(AutoFilterTest, DeferredRecieptInSubContext) {
   for(auto cur : allPackets)
     ASSERT_TRUE(cur.expired()) << "Packet did not expire after all recipients went out of scope";
 }
+
+class SimpleIntegerFilter
+{
+public:
+  SimpleIntegerFilter(void) :
+    hit(false)
+  {}
+
+  void AutoFilter(int val) {
+    hit = true;
+  }
+
+  bool hit;
+};
+
+class DeferredIntegerFilter:
+  public CoreThread
+{
+public:
+  DeferredIntegerFilter(void) :
+    CoreThread("DeferredIntegerFilter"),
+    hit(false)
+  {}
+
+  Deferred AutoFilter(int val) {
+    hit = true;
+    return Deferred(this);
+  }
+
+  bool hit;
+};
+
+TEST_F(AutoFilterTest, ImmediateBehaviors) {
+  // Add a few filter entities
+  AutoRequired<SimpleIntegerFilter> sif;
+  AutoRequired<DeferredIntegerFilter> dif;
+
+  AutoCurrentContext()->Initiate();
+
+  AutoRequired<AutoPacketFactory> factory;
+
+  {
+    auto packet = factory->NewPacket();
+
+    // Create an immediate-mode satisfaction
+    int val = 101;
+    packet->DecorateImmediate(&val);
+
+    // Verify we can't decorate this value a second time:
+    ASSERT_ANY_THROW(packet->DecorateImmediate(&val)) << "Expected an exception when a second attempt was made to attach a decoration";
+  }
+
+  // Terminate enclosing context
+  AutoCurrentContext()->SignalShutdown(true);
+
+  ASSERT_TRUE(sif->hit) << "Simple filter was not invoked by immediate-mode decoration";
+  ASSERT_FALSE(dif->hit) << "Deferred filter incorrectly invoked in an immediate mode decoration";
+}
