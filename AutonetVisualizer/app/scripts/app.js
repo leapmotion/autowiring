@@ -1,7 +1,9 @@
 'use strict';
 
 angular.module('autoNetApp', [
-  'ngRoute'
+  'ngAnimate',
+  'ngRoute',
+  'ngSanitize'
 ])
 .config(['$routeProvider', function ($routeProvider) {
   $routeProvider
