@@ -137,6 +137,12 @@ public:
         out = disposition.m_decoration->as<T>().get();
         return true;
       }
+
+      // Second-chance satisfaction with an immediate
+      if(disposition.m_pImmediate) {
+        out = (T*) disposition.m_pImmediate;
+        return true;
+      }
     }
 
     out = nullptr;
@@ -255,9 +261,10 @@ public:
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
       pEntry = &m_decorations[typeid(T)];
-      if(pEntry->satisfied)
+      if(pEntry->wasCheckedOut)
         throw std::runtime_error("Cannot perform immediate decoration with type T, the requested decoration already exists");
       pEntry->satisfied = true;
+      pEntry->wasCheckedOut = true;
     }
 
     // Pulse satisfaction:
@@ -266,7 +273,7 @@ public:
 
     // Mark this entry as unsatisfiable:
     pEntry->satisfied = false;
-    pEntry->wasCheckedOut = true;
+    pEntry->m_pImmediate = nullptr;
 
     // Now trigger a rescan to hit any deferred, unsatisfiable entries:
     MarkUnsatisfiable(typeid(T));
