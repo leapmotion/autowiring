@@ -155,6 +155,22 @@ TEST_F(AnySharedPointerTest, TrivialRelease) {
   ASSERT_TRUE(b.unique()) << "Releasing a slot did not actually release the held value as expected";
 }
 
+TEST_F(AnySharedPointerTest, NoMultipleDelete) {
+  std::shared_ptr<bool> a(new bool);
+  std::weak_ptr<bool> b = a;
+
+  // Create a slot and validate the behavior of reset, and to ensure that the underlying
+  // SharedPointerSlot is not multiply deleted.
+  {
+    AnySharedPointer slot;
+    slot = a;
+    slot->reset();
+  }
+
+  // Now verify that we didn't accidentally overdecrement the count:
+  ASSERT_FALSE(b.expired()) << "Shared pointer prematurely expired; SharedPointerSlot dtor double-strike suspected";
+}
+
 TEST_F(AnySharedPointerTest, InitDerivesCorrectType) {
   AnySharedPointer slot;
   slot->init<int>();

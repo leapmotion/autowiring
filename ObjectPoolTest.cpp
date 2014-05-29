@@ -35,6 +35,8 @@ TEST_F(ObjectPoolTest, VerifyAsynchronousUsage) {
     pool(obj2);
     pool(obj3);
 
+    ASSERT_NE(nullptr, obj1.get()) << "Failed to obtain an entry from a new object pool";
+
     // Block--verify that we _do not_ get any of those objects back while they are
     // still outstanding.
     {

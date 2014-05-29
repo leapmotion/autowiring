@@ -114,7 +114,6 @@ void CoreThread::Stop(bool graceful) {
 }
 
 void CoreThread::Run() {
-
   while(!ShouldStop())
     WaitForEvent();
 }
