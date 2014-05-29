@@ -6,8 +6,6 @@
 #include MEMORY_HEADER
 #include ATOMIC_HEADER
 
-template<class T>
-class Autowired;
 class CoreContext;
 class GlobalCoreContext;
 
@@ -110,6 +108,7 @@ public:
     AutowirableSlot<T>(ctxt->template ResolveAnchor<T>()),
     m_pFirstChild(nullptr)
   {
+    (void) RegType<T>::r;
     ctxt->Autowire(*this);
   }
 
