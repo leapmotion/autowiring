@@ -8,8 +8,8 @@
 template<int N>
 class Decoration {
 public:
-  Decoration(void) :
-    i(N)
+  Decoration(int val = N) :
+    i(val)
   {}
 
   int i;
@@ -125,8 +125,11 @@ public:
   {}
 
   void AutoFilter(AutoPacket& packet, Args... args) {
+    // Detect cases where a non-const reference is already decorated on the input packet
     bool detection [] = {
-      std::is_reference<Args>::value && packet.Has<Args>()...
+      !std::is_const<typename std::remove_reference<Args>::type>::value &&
+      std::is_reference<Args>::value &&
+      packet.Has<Args>()...
     };
 
     for(bool cur : detection)
@@ -137,5 +140,5 @@ public:
   }
 
   bool m_called;
-  std::tuple<typename std::remove_reference<Args>::type...> m_args;
+  std::tuple<typename std::decay<Args>::type...> m_args;
 };
