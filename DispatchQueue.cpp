@@ -10,7 +10,7 @@ DispatchQueue::DispatchQueue(void):
 {}
 
 DispatchQueue::~DispatchQueue(void) {
-  // Teardown:
+  // Wipe out each entry in the queue, we can't call any of them because we're in teardown
   for(auto q = m_dispatchQueue.begin(); q != m_dispatchQueue.end(); q++)
     delete *q;
   
@@ -24,6 +24,9 @@ DispatchQueue::~DispatchQueue(void) {
 void DispatchQueue::Abort(void) {
   boost::lock_guard<boost::mutex> lk(m_dispatchLock);
   m_aborted = true;
+
+  // Do not permit any more lambdas to be pended to our queue:
+  m_dispatchCap = 0;
 
   // Destroy the whole dispatch queue:
   while(!m_dispatchQueue.empty()) {
@@ -90,6 +93,3 @@ bool DispatchQueue::DispatchEvent(void) {
   return true;
 }
 
-// DEPRECATED member functions
-bool DispatchQueue::CanAccept() const {return true;}
-bool DispatchQueue::DelayUntilCanAccept() {return true;}
