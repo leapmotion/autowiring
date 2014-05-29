@@ -67,9 +67,11 @@ angular.module('autoNetApp')
     restrict: 'E',
     replace: true,
     scope: {
-      nodes: '=',
-      orphans: '=',
-      unidentified: '='
+      nodes: '=', //A list of node objects. 
+      orphans: '=', // A list of nodes that are not connected to the main graph
+      unidentified: '=', // A list of node ids that were children of a node, but not in 'Nodes'
+      id: '@', // key of objects in 'nodes' to use as unique identifier
+      children: '@' // key of objects in 'nodes' that contains list of 'id's of child nodes
     },
     controller: function($scope) {
       $scope.graph = new Springy.Graph();
@@ -97,20 +99,30 @@ angular.module('autoNetApp')
 
         _.each(nodeMap, function(node, nodeID){
           // Add node if doesn't exist
-          if (!nodeSet.hasOwnProperty(nodeID) && node.slots && node.slots.length) {
-            graph.addNode(new Springy.Node(node.linkName, {label:node.name}) );
+          if (!nodeSet.hasOwnProperty(nodeID) && node[scope.children] && node[scope.children].length) {
+            graph.addNode(new Springy.Node(node[scope.id], {label:node.name}) );
           }
 
           // Add edges, and endpoint node if doesn't exist
-          _.each(node.slots, function(slot){
-            if (nodeMap.hasOwnProperty(slot)) {
-              if ( !nodeSet.hasOwnProperty(slot)) {
-                var newNode = nodeMap[slot];
-                graph.addNode(new Springy.Node(newNode.linkName, {label:newNode.name, mass:2.0}) );
+          _.each(node[scope.children], function(slot){
+            var slotID = slot[scope.id];
+
+            if (nodeMap.hasOwnProperty(slotID)) {
+              if ( !nodeSet.hasOwnProperty(slotID)) {
+                var newNode = nodeMap[slotID];
+                graph.addNode(new Springy.Node(newNode[scope.id], {label:newNode.name, mass:0.5}) );
               }
-              graph.newEdge(nodeSet[nodeID], nodeSet[slot], {length: 3.0});
+
+              // Determine edge drawing style
+              var edgeData;
+              if (slot.autoRequired){
+                edgeData = {length: 3.0, label:"AutoRequired", color:'#FF3333'}
+              } else {
+                edgeData = {length: 3.0, label:"Autowired", color:'#458B00'}
+              }
+              graph.newEdge(nodeSet[nodeID], nodeSet[slotID], edgeData);
             } else {
-              scope.unidentified.push(slot);
+              scope.unidentified.push(slotID);
             }
           }); // each slot
         }); //each nodeMap 
@@ -122,8 +134,8 @@ angular.module('autoNetApp')
           delete orphanNodes[edge.source.id];
           delete orphanNodes[edge.target.id];
         });
-        scope.orphans = _.pluck(orphanNodes, 'name');
-
+        scope.orphans = _.pluck(orphanNodes, scope.id);
+        scope.unidentified = _.uniq(scope.unidentified);
       });
     }
   };

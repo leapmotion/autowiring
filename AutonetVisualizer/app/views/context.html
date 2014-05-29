@@ -1,7 +1,7 @@
 <h1 ng-hide="leap.isSubscribed()">Subscribe to view context</h1>
 <div ng-show="leap.isSubscribed()">
   <h1>{{context.name}}</h1>
-  <directed-graph nodes="allObjects" unidentified="unidentified" orphans="orphans">
+  <directed-graph  nodes="allObjects" id="name" children="slots" unidentified="unidentified" orphans="orphans">
   </directed-graph>
   <h4 ng-show="orphans.length">Orphans</h4>
   <ul>
