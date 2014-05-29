@@ -1,5 +1,4 @@
 #pragma once
-#include "../AutoPacketListener.h"
 #include "../CoreThread.h"
 #include <boost/thread/barrier.hpp>
 
@@ -9,8 +8,8 @@
 template<int N>
 class Decoration {
 public:
-  Decoration(void) :
-    i(N)
+  Decoration(int val = N) :
+    i(val)
   {}
 
   int i;
@@ -105,16 +104,6 @@ public:
   }
 };
 
-class FilterE:
-  public FilterRoot,
-  public AutoPacketListener
-{
-public:
-  void OnPacketReturned(const AutoPacket& packet) {
-    m_called = true;
-  }
-};
-
 class FilterF:
   public FilterRoot,
   public ContextMember
@@ -123,4 +112,33 @@ public:
   void AutoFilter(const Decoration<0>& dec) {
     m_called = true;
   }
+};
+
+/// <summary>
+/// A generic filter which accepts templated input types
+/// </summary>
+template<class... Args>
+class FilterGen {
+public:
+  FilterGen(void):
+    m_called(false)
+  {}
+
+  void AutoFilter(AutoPacket& packet, Args... args) {
+    // Detect cases where a non-const reference is already decorated on the input packet
+    bool detection [] = {
+      !std::is_const<typename std::remove_reference<Args>::type>::value &&
+      std::is_reference<Args>::value &&
+      packet.Has<Args>()...
+    };
+
+    for(bool cur : detection)
+      ASSERT_FALSE(cur) << "Packet was already decorated with at least one output-only type";
+
+    m_called = true;
+    m_args = std::tie(args...);
+  }
+
+  bool m_called;
+  std::tuple<typename std::decay<Args>::type...> m_args;
 };

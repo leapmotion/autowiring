@@ -1,4 +1,5 @@
 #pragma once
+#include "autowiring_error.h"
 #include "fast_pointer_cast.h"
 #include "Object.h"
 #include MEMORY_HEADER
@@ -53,6 +54,7 @@ protected:
 public:
   virtual operator bool(void) const { return false; }
   virtual operator std::shared_ptr<Object>(void) const { return std::shared_ptr<Object>(); }
+  virtual void* ptr(void) { return nullptr; }
   virtual const void* ptr(void) const { return nullptr; }
 
   /// <summary>
@@ -97,10 +99,12 @@ public:
   /// the specified type
   /// </remarks>
   template<class T>
-  void init(void) {
-    // Trivial reset-then-reinit:
+  SharedPointerSlotT<T>& init(void) {
+    // Release what we're holding
     reset();
-    new (this) SharedPointerSlotT<T>();
+
+    // Reinitialize, now that the slot is empty
+    return *new (this) SharedPointerSlotT<T>();
   }
 
   /// <returns>
@@ -122,15 +126,11 @@ public:
   /// <summary>
   /// Clears this type, if a shared pointer is currently held
   /// </summary>
-  void reset(void) {
-    if(empty())
-      // Nothing to do, just back out
-      return;
-
-    // We aren't presently empty, we need to release our
-    // current implementation before attempting to reinitialize
-    this->~SharedPointerSlot();
-  }
+  /// <remarks>
+  /// This method will preserve the polymorphic type of this slot--IE, it does not change the return
+  /// value of this->type()
+  /// </remarks>
+  virtual void reset(void) {}
 
   /// <summary>
   /// Attempts to coerce this type to the speceified type
@@ -183,31 +183,30 @@ public:
   /// than that, however, the behavior is very similar to boost::any's assignment
   /// implementation.
   /// </remarks>
-  void operator=(const SharedPointerSlot& rhs) {
+  SharedPointerSlot& operator=(const SharedPointerSlot& rhs) {
     // Our own stuff is going away, need to reset ourselves
     this->~SharedPointerSlot();
 
     // Placement construct the right-hand side into ourselves:
     rhs.New(this, sizeof(*this));
+    return *this;
   }
 
   /// <summary>
   /// In-place polymorphic transformer
   /// </summary>
   template<class T>
-  void operator=(const std::shared_ptr<T>& rhs) {
-    if(type() == typeid(T)) {
+  SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
+    if(type() == typeid(T))
       // We can just use the equivalence operator, no need to make two calls
-      *((SharedPointerSlotT<T>*)this) = rhs;
-      return;
-    }
+      return *((SharedPointerSlotT<T>*)this) = rhs;
 
     // Clear out what we're holding:
     reset();
 
     // Now we can safely reinitialize:
     static_assert(sizeof(SharedPointerSlotT<T>) == sizeof(*this), "Cannot instantiate a templated shared pointer slot on this type, it's too large to fit here");
-    new (this) SharedPointerSlotT<T>(rhs);
+    return *new (this) SharedPointerSlotT<T>(rhs);
   }
 };
 
@@ -251,7 +250,13 @@ public:
     return leap::fast_pointer_cast<Object>(get());
   }
 
-  virtual const void* ptr(void) const { return get().get(); }
+  virtual void* ptr(void) override {
+    // At this level, because this type is runtime, we can only provide runtime detection of misuse
+    if(std::is_const<T>::value)
+      throw autowiring_error("Attempted to obtain a non-const void pointer value from a const-type shared pointer");
+    return (void*)get().get();
+  }
+  virtual const void* ptr(void) const override { return get().get(); }
 
   virtual void New(void* pSpace, size_t nBytes) const override {
     if(nBytes < sizeof(*this))
@@ -273,13 +278,27 @@ public:
   operator bool(void) const override { return !!get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
 
+  void reset(void) override {
+    get().reset();
+  }
+
+
   template<class U>
   bool operator==(const std::shared_ptr<U>& rhs) const {
     return get() == rhs;
   }
 
   // We have a better opeartor overload for type T:
-  void operator=(const std::shared_ptr<T>& rhs) {
+  SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
     get() = rhs;
+    return *this;
+  }
+
+  T* operator->(void) const {
+    return get().get();
+  }
+
+  T& operator*(void) const {
+    return *get();
   }
 };
