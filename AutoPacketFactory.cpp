@@ -2,10 +2,6 @@
 #include "AutoPacketFactory.h"
 #include "AutoPacket.h"
 
-AutoPacket* AutoPacketFactory::AutoPacketCreator::operator()() const {
-  return new AutoPacket(*factory);
-}
-
 AutoPacketFactory::AutoPacketFactory(void):
   m_wasStopped(false),
   m_packets(
@@ -14,8 +10,7 @@ AutoPacketFactory::AutoPacketFactory(void):
     [this] { return new AutoPacket(*this); },
     [] (AutoPacket& packet) { packet.Reset(); }
   )
-{
-}
+{}
 
 AutoPacketFactory::~AutoPacketFactory() {}
 
