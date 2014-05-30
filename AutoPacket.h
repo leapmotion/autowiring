@@ -74,7 +74,7 @@ private:
   /// decoration of the passed decoration types.  Such filters will be called even if
   /// some optional inputs remain outstanding.
   /// </remarks>
-  void PulseSatisfaction(const DecorationDisposition* pEntries[], size_t nInfos);
+  void PulseSatisfaction(DecorationDisposition* pEntries[], size_t nInfos);
 
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
