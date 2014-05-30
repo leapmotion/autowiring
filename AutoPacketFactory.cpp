@@ -46,16 +46,17 @@ void AutoPacketFactory::Stop(bool graceful) {
   m_packets.SetOutstandingLimit(0);
   m_packets.ClearCachedEntities();
 
-  // Swap outstanding count into a local var, so we can reset outside of a lock
+  // Queue of local variables to be destroyed when leaving scope
   std::shared_ptr<Object> outstanding;
-
-  // Same story with the AutoFilters
   t_autoFilterSet autoFilters;
 
+  // Lock destruction precedes local variables
   boost::lock_guard<boost::mutex> lk(m_lock);
 
-  // Can't safely do a swap outside of a lock
+  // Swap outstanding count into a local var, so we can reset outside of a lock
   outstanding.swap(m_outstanding);
+
+  // Same story with the AutoFilters
   autoFilters.swap(m_autoFilters);
 
   // Now we can lock, update state, and notify any listeners
