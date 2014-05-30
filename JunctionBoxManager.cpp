@@ -9,9 +9,14 @@
 JunctionBoxManager::JunctionBoxManager(void) {
   // Enumerate all event types to initialize a new JunctionBox for each
   for(auto p = g_pFirstEntry; p; p = p->pFlink)
-    p->m_NewJunctionBox(m_junctionBoxes[p->ti]);
+    if(p->IsEventReceiver())
+      m_junctionBoxes[p->ti] = p->NewJunctionBox();
 
-  //Always allow internal events
+  // Ensure that these two types are specially mentioned:
+  (void) RegType<AutowiringEvents>::r;
+  (void) RegType<AutoPacketListener>::r;
+
+  // Always allow internal events
   m_junctionBoxes[typeid(AutowiringEvents)]->Initiate();
   m_junctionBoxes[typeid(AutoPacketListener)]->Initiate();
 }
