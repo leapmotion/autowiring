@@ -35,11 +35,6 @@ class JunctionBox:
   public JunctionBoxBase
 {
 public:
-  static_assert(
-    std::is_base_of<EventReceiver, T>::value,
-    "If you want an event interface, the interface must inherit from EventReceiver"
-  );
-
   JunctionBox(void):
     m_numberOfDeletions(0)
   {}
