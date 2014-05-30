@@ -3,6 +3,7 @@
 #include "AutoPacket.h"
 
 AutoPacketFactory::AutoPacketFactory(void):
+  ContextMember("AutoPacketFactory"),
   m_wasStopped(false),
   m_packets(
     ~0,

@@ -2,8 +2,8 @@
 #include "Autowired.h"
 #include "AutoPacket.h"
 #include "AutoFilterDescriptor.h"
+#include "ContextMember.h"
 #include "CoreRunnable.h"
-#include "Object.h"
 #include "ObjectPool.h"
 #include <vector>
 #include TYPE_INDEX_HEADER
@@ -14,6 +14,18 @@ class Deferred;
 class DispatchQueue;
 struct AdjacencyEntry;
 
+class AutoFilterBase {
+public:
+  AutoFilterBase(void);
+};
+
+template<class MemFn, MemFn memFn>
+class AutoFilter:
+  public AutoFilterBase
+{
+
+};
+
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
 /// </summary>
@@ -21,7 +33,7 @@ struct AdjacencyEntry;
 /// Generally, only one packet factory is required per context.
 /// </remarks>
 class AutoPacketFactory:
-  public Object,
+  public ContextMember,
   public CoreRunnable
 {
 public:
@@ -32,7 +44,7 @@ private:
   // Lock for this type
   mutable boost::mutex m_lock;
   
-  // Notify when started
+  // State change notification
   boost::condition_variable m_stateCondition;
   
   // Have we been signaled to stop
@@ -105,6 +117,18 @@ public:
   template<class T>
   void AddSubscriber(const std::shared_ptr<T>& rhs) {
     AddSubscriber(AutoFilterDescriptorSelect<T>(rhs));
+  }
+
+  /// <summary>
+  /// Adds an alternative AutoFilter method with the specified caller as the base type
+  /// </summary>
+  template<class MemFn, MemFn memFn>
+  void AddSubscriber(T* ptr) {
+    static_assert(has_autofilter<T>::value, "Cannot add a secondary AutoFilter subscriber on a type that does not have a primary subscriber");
+    
+    // Need to create an empty descriptor slot which will be satisfied later when an instance
+    // of this type is later inserted
+    AnySharedPointerT<typename Decompose<MemFn>::type> empty;
   }
 
   /// <summary>

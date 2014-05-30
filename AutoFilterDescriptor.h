@@ -14,9 +14,6 @@ class Deferred;
 template<class T>
 class auto_pooled;
 
-template<class MemFn>
-struct CallExtractor;
-
 enum eSubscriberInputType {
   // Unused type, refers to an unrecognized input
   inTypeInvalid,
@@ -121,26 +118,38 @@ struct subscriber_traits<AutoPacket&> {
 /// <summary>
 /// Specialization for immediate mode cases
 /// </summary>
-template<class T, class... Args>
-struct CallExtractor<void (T::*)(Args...)>
-{
-  typedef std::false_type deferred;
+template<class MemFn>
+struct CallExtractor;
 
+template<class T, class... Args>
+struct CallExtractor<void (T::*)(Args...)>:
+  Decompose<void (T::*)(Args...)>
+{
+  static const bool deferred = false;
+  static const size_t N = sizeof...(Args);
+
+  /// <summary>
+  /// Binder struct, lets us refer to an instance of Call by type
+  /// </summary>
+  template<void(T::*memFn)(Args...)>
   static void Call(void* pObj, AutoPacket& autoPacket) {
-    ((T*) pObj)->AutoFilter(
+    (((T*) pObj)->*memFn)(
       subscriber_traits<Args>()(autoPacket)...
     );
   }
 };
 
 /// <summary>
-/// Specialization for deferredcases
+/// Specialization for deferred cases
 /// </summary>
 template<class T, class... Args>
-struct CallExtractor<Deferred (T::*)(Args...)>
+struct CallExtractor<Deferred (T::*)(Args...)>:
+  Decompose<void (T::*)(Args...)>
 {
-  typedef std::true_type deferred;
+  static const bool deferred = true;
+  static const size_t N = sizeof...(Args);
 
+  template<Deferred(T::*memFn)(Args...)>
   static void Call(void* pObj, AutoPacket& autoPacket) {
     // Obtain a shared pointer of the AutoPacket in order to ensure the packet
     // stays resident when we pend this lambda to the destination object's
@@ -149,9 +158,9 @@ struct CallExtractor<Deferred (T::*)(Args...)>
 
     // Pend the call to this object's dispatch queue:
     *(T*) pObj += [pObj, pAutoPacket] {
-      ((T*) pObj)->AutoFilter(
+      (((T*) pObj)->*memFn)(
         subscriber_traits<Args>()(*pAutoPacket)...
-      );
+        );
     };
   }
 };
@@ -198,7 +207,6 @@ public:
   typedef void(*t_call)(void*, AutoPacket&);
 
   AutoFilterDescriptor(void) :
-    m_ti(nullptr),
     m_pArgs(nullptr),
     m_deferred(false),
     m_arity(0),
@@ -209,7 +217,6 @@ public:
 
   AutoFilterDescriptor(const AutoFilterDescriptor& rhs) :
     m_autoFilter(rhs.m_autoFilter),
-    m_ti(rhs.m_ti),
     m_pArgs(rhs.m_pArgs),
     m_deferred(rhs.m_deferred),
     m_arity(rhs.m_arity),
@@ -222,27 +229,25 @@ public:
   /// Constructs a new packet subscriber entry based on the specified subscriber
   /// </summary>
   /// <remarks>
-  /// This constructor increments the reference count on the passed object until the
-  /// object is freed.  A subscriber wraps the templated type, automatically mapping
-  /// desired arguments into the correct locations, via use of Decompose::Call and
-  /// a AutoPacket to provide type sources
+  /// This constructor increments the reference count on the passed object until the object is freed.  A
+  /// subscriber wraps the templated type, automatically mapping desired arguments into the correct locations,
+  /// via use of Decompose::Call and a AutoPacket to provide type sources
+  ///
+  /// The caller is responsible for decomposing the desired routine into the target AutoFilter call
   /// </summary>
-  template<class T>
-  AutoFilterDescriptor(const std::shared_ptr<T>& autoFilter) :
+  template<class T, class MemFn>
+  AutoFilterDescriptor(const AnySharedPointer& autoFilter, CallExtractor<MemFn> extractor, t_call pCall) :
     m_autoFilter(autoFilter),
-    m_ti(&typeid(T)),
     m_requiredCount(0),
     m_optionalCount(0),
-    m_pCall(&CallExtractor<decltype(&T::AutoFilter)>::Call)
+    m_arity(extractor.N),
+    m_pArgs(extractor.Enumerate<AutoFilterDescriptorInput>()),
+    m_pCall(pCall)
   {
-    typedef Decompose<decltype(&T::AutoFilter)> t_decompose;
-
     // Cannot register a subscriber with zero arguments:
-    static_assert(t_decompose::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
+    static_assert(CallExtractor<MemFn>::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
-    m_deferred = std::is_same<Deferred, typename t_decompose::retType>::value;
-    m_arity = t_decompose::N;
-    m_pArgs = t_decompose::template Enumerate<AutoFilterDescriptorInput>();
+    m_deferred = extractor.deferred;
     for(auto pArg = m_pArgs; *pArg; pArg++) {
       switch(pArg->subscriberType) {
       case inTypeRequired:
@@ -260,9 +265,6 @@ public:
 protected:
   // A hold on the enclosed autoFilter
   AnySharedPointer m_autoFilter;
-
-  // The type information of this subscriber
-  const std::type_info* m_ti;
 
   // This subscriber's argument types
   const AutoFilterDescriptorInput* m_pArgs;
@@ -295,7 +297,7 @@ public:
   size_t GetRequiredCount(void) const { return m_requiredCount; }
   size_t GetOptionalCount(void) const { return m_optionalCount; }
   const AnySharedPointer& GetAutoFilter(void) const { return m_autoFilter; }
-  const std::type_info* GetAutoFilterTypeInfo(void) const { return m_ti; }
+  const std::type_info* GetAutoFilterTypeInfo(void) const { return &m_autoFilter->type(); }
   const AutoFilterDescriptorInput* GetAutoFilterInput(void) const { return m_pArgs; }
   bool IsDeferred(void) const { return m_deferred; }
 
@@ -338,7 +340,11 @@ class AutoFilterDescriptorSelect:
 {
 public:
   AutoFilterDescriptorSelect(const std::shared_ptr<T>& subscriber) :
-    AutoFilterDescriptor(subscriber)
+    AutoFilterDescriptor(
+      subscriber,
+      CallExtractor<decltype(&T::AutoFilter)>(),
+      &CallExtractor<decltype(&T::AutoFilter)>::Call<&T::AutoFilter>
+    )
   {}
 };
 
@@ -351,6 +357,9 @@ public:
   AutoFilterDescriptorSelect(const std::shared_ptr<T>&) {}
 };
 
+/// <summary>
+/// Utility routine to support the creation of an AutoFilterDescriptor from any member function
+/// </summary>
 template<class T>
 AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
   return AutoFilterDescriptorSelect<T>(ptr);
