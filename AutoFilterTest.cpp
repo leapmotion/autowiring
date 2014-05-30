@@ -48,7 +48,7 @@ TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
 
   packet2->Decorate(Decoration<0>());
 
-  // Verify the second one will no longe have subscriptions  -
+  // Verify the second packet will no longer have subscriptions  -
   // normally removing a subscriber would mean the packet still has the subscriber, but
   // in this case, the subscriber was actually destroyed so the packet has lost a subscriber.
   EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
