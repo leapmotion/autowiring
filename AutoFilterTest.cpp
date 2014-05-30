@@ -419,7 +419,7 @@ public:
   bool hit;
 };
 
-TEST_F(AutoFilterTest, ImmediateBehaviors) {
+TEST_F(AutoFilterTest, SingleImmediate) {
   // Add a few filter entities
   AutoRequired<SimpleIntegerFilter> sif;
   AutoRequired<DeferredIntegerFilter> dif;
@@ -436,7 +436,7 @@ TEST_F(AutoFilterTest, ImmediateBehaviors) {
     packet->DecorateImmediate(&val);
 
     // Verify we can't decorate this value a second time:
-    ASSERT_ANY_THROW(packet->DecorateImmediate(&val)) << "Expected an exception when a second attempt was made to attach a decoration";
+    ASSERT_ANY_THROW(packet->DecorateImmediate(val)) << "Expected an exception when a second attempt was made to attach a decoration";
   }
 
   // Terminate enclosing context
@@ -444,4 +444,20 @@ TEST_F(AutoFilterTest, ImmediateBehaviors) {
 
   ASSERT_TRUE(sif->hit) << "Simple filter was not invoked by immediate-mode decoration";
   ASSERT_FALSE(dif->hit) << "Deferred filter incorrectly invoked in an immediate mode decoration";
+}
+
+TEST_F(AutoFilterTest, MultiImmediate) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterGen<Decoration<0>, Decoration<1>>> fg;
+  
+  auto packet = factory->NewPacket();
+
+  packet->DecorateImmediate(
+    Decoration<0>(),
+    Decoration<1>()
+  );
+
+  // Verify the recipient got called
+  ASSERT_TRUE(fg->m_called) << "Filter not called during multisimultaneous immediate-mode decoration";
 }
