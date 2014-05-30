@@ -79,10 +79,10 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
       satCounter.first->CallAutoFilter(*this);
 }
 
-void AutoPacket::PulseSatisfaction(const DecorationDisposition** ppEntries, size_t nInfos) {
+void AutoPacket::PulseSatisfaction(const DecorationDisposition* pEntries[], size_t nInfos) {
   for(size_t i = 0; i < nInfos; i++) {
     const auto* pEntry = pEntries[i];
-    for(auto& satCounter : pEntry->second.m_subscribers) {
+    for(auto& satCounter : pEntry->m_subscribers) {
       auto& cur = satCounter.first;
       cur->Decrement(satCounter.second);
 
