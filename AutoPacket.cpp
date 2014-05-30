@@ -79,19 +79,26 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
       satCounter.first->CallAutoFilter(*this);
 }
 
-void AutoPacket::PulseSatisfaction(DecorationDisposition* pEntries[], size_t nInfos) {
-  for(size_t i = 0; i < nInfos; i++) {
-    const auto* pEntry = pEntries[i];
-    for(auto& satCounter : pEntry->m_subscribers) {
-      auto& cur = satCounter.first;
-      cur->Decrement(satCounter.second);
+void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
+  typedef std::pair<AutoFilterDescriptor*,int> t_SubMan; //Subscriber, Mandatory remaining
+  typedef std::unordered_map<AutoFilterDescriptor*,int> t_invTypeSubs; //Map from Type to Subscriber, Mandatory remaining
+  t_invTypeSubs subscriberMap;
 
-      if(cur->remaining)
-        // We still have mandatory values outstanding, give up
-        satCounter.first->Increment(satCounter.second);
-      else
-        // Invoke while we still can
-        satCounter.first->CallAutoFilter(*this);
+  //Evaluate temporary mandatory argument counters for all subscribers
+  for(int i = 0; i < nInfos; ++i) {
+    auto& ts = pTypeSubs[i];
+    for(auto& so : ts->m_subscribers) {
+      if (so.second) {
+        //Decrement count of mandatory type arguments
+        t_invTypeSubs::iterator sub = subscriberMap.find(so.first);
+        if (sub == subscriberMap.end()) {
+          sub = subscriberMap.insert(t_SubMan(so.first,so.first->remaining)).first;
+        }
+        --sub->second;
+        if (sub->second == 0) {
+          so.first->CallAutoFilter(*this);
+        }
+      }
     }
   }
 }
