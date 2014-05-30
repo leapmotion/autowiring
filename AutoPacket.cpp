@@ -96,7 +96,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
     for(auto& satCounter : pTypeSubs[i]->m_subscribers) {
       auto& cur = satCounter.first;
       if(cur->remaining)
-        // We still have mandatory values outstanding, give up
+        // We still have mandatory values outstanding, put this counter back
         cur->Increment(satCounter.second);
     }
 }
