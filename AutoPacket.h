@@ -1,5 +1,6 @@
 #pragma once
 #include "AnySharedPointer.h"
+#include "at_exit.h"
 #include "AutoCheckout.h"
 #include "DecorationDisposition.h"
 #include <boost/thread/lock_guard.hpp>
@@ -269,14 +270,16 @@ public:
 
     // Pulse satisfaction:
     pEntry->m_pImmediate = pt;
+
+    MakeAtExit([this, pEntry] {
+      // Mark this entry as unsatisfiable:
+      pEntry->satisfied = false;
+      pEntry->m_pImmediate = nullptr;
+
+      // Now trigger a rescan to hit any deferred, unsatisfiable entries:
+      MarkUnsatisfiable(typeid(T)); 
+    }),
     PulseSatisfaction(typeid(T));
-
-    // Mark this entry as unsatisfiable:
-    pEntry->satisfied = false;
-    pEntry->m_pImmediate = nullptr;
-
-    // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-    MarkUnsatisfiable(typeid(T));
   }
 
   /// <returns>
