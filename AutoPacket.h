@@ -69,7 +69,12 @@ private:
   /// <summary>
   /// Performs a "satisfaction pulse", which will avoid notifying any deferred filters
   /// </summary>
-  void PulseSatisfaction(const std::type_info& info);
+  /// <remarks>
+  /// A satisfaction pulse will call any AutoFilter instances which are satisfied by the
+  /// decoration of the passed decoration types.  Such filters will be called even if
+  /// some optional inputs remain outstanding.
+  /// </remarks>
+  void PulseSatisfaction(const DecorationDisposition** ppEntries, size_t nInfos);
 
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
@@ -254,32 +259,43 @@ public:
   /// The attached decoration is only valid for AutoFilters which are valid during
   /// this call.  The type of the decoration is "T", and the passed pointer is not
   /// copied.
+  ///
+  /// If multiple values are specified, all will be simultaneously made valid and
+  /// then invalidated.
   /// </remarks>
-  template<class T>
-  void DecorateImmediate(const T* pt) {
+  template<class... Ts>
+  void DecorateImmediate(const Ts&... immeds) {
+    // These are the things we're going to be working with while we perform immediate decoration:
+    static const std::type_info* sc_ti [] = {&typeid(Ts)...};
+    const void* pvImmeds[] = {&immeds...};
+    DecorationDisposition* pEntries[sizeof...(Ts)];
+
     // Perform standard decoration with a short initialization:
-    DecorationDisposition* pEntry;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      pEntry = &m_decorations[typeid(T)];
-      if(pEntry->wasCheckedOut)
-        throw std::runtime_error("Cannot perform immediate decoration with type T, the requested decoration already exists");
-      pEntry->satisfied = true;
-      pEntry->wasCheckedOut = true;
+      for(size_t i = 0; i < sizeof...(Ts); i++) {
+        pEntries[i] = &m_decorations[*sc_ti[i]];
+        if(pEntries[i]->wasCheckedOut)
+          throw std::runtime_error("Cannot perform immediate decoration with type T, the requested decoration already exists");
+        pEntries[i]->satisfied = true;
+        pEntries[i]->wasCheckedOut = true;
+        pEntries[i]->m_pImmediate = &pvImmeds[i];
+      }
     }
 
     // Pulse satisfaction:
-    pEntry->m_pImmediate = pt;
-
-    MakeAtExit([this, pEntry] {
-      // Mark this entry as unsatisfiable:
-      pEntry->satisfied = false;
-      pEntry->m_pImmediate = nullptr;
+    MakeAtExit([this, &pEntries] {
+      // Mark entries as unsatisfiable:
+      for(auto pEntry : pEntries) {
+        pEntry->satisfied = false;
+        pEntry->m_pImmediate = nullptr;
+      }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-      MarkUnsatisfiable(typeid(T)); 
+      for(auto ti : sc_ti)
+        MarkUnsatisfiable(*ti);
     }),
-    PulseSatisfaction(typeid(T));
+    PulseSatisfaction(sc_ti, sizeof...(Ts));
   }
 
   /// <returns>

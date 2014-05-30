@@ -79,21 +79,20 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
       satCounter.first->CallAutoFilter(*this);
 }
 
-void AutoPacket::PulseSatisfaction(const std::type_info& info) {
-  auto decoration = m_decorations.find(info);
-  if (decoration == m_decorations.end())
-    return;
-  
-  for(auto& satCounter : decoration->second.m_subscribers) {
-    auto& cur = satCounter.first;
-    cur->Decrement(satCounter.second);
+void AutoPacket::PulseSatisfaction(const DecorationDisposition** ppEntries, size_t nInfos) {
+  for(size_t i = 0; i < nInfos; i++) {
+    const auto* pEntry = pEntries[i];
+    for(auto& satCounter : pEntry->second.m_subscribers) {
+      auto& cur = satCounter.first;
+      cur->Decrement(satCounter.second);
 
-    if(cur->remaining)
-      // We still have mandatory values outstanding, give up
-      satCounter.first->Increment(satCounter.second);
-    else
-      // Invoke while we still can
-      satCounter.first->CallAutoFilter(*this);
+      if(cur->remaining)
+        // We still have mandatory values outstanding, give up
+        satCounter.first->Increment(satCounter.second);
+      else
+        // Invoke while we still can
+        satCounter.first->CallAutoFilter(*this);
+    }
   }
 }
 
