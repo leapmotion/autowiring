@@ -160,7 +160,7 @@ TEST_F(AutoFilterTest, VerifyTeardownArrangement) {
       std::shared_ptr<FilterA> filterA = filterAWeak.lock();
 
       // Unsubscribe the filter:
-      factory->RemoveSubscriber(filterA);
+      factory->RemoveSubscriber(MakeAutoFilterDescriptor(filterA));
     }
 
     // Verify that unsubscription STILL does not result in expiration:
@@ -386,6 +386,30 @@ TEST_F(AutoFilterTest, DeferredRecieptInSubContext) {
   // Now verify that all of our packets are expired:
   for(auto cur : allPackets)
     ASSERT_TRUE(cur.expired()) << "Packet did not expire after all recipients went out of scope";
+}
+
+class HasAWeirdAutoFilterMethod {
+public:
+  HasAWeirdAutoFilterMethod(void):
+    m_called(false)
+  {
+    AutoRequired<AutoPacketFactory> factory;
+    *factory += &HasAWeirdAutoFilterMethod::AutoFilterFoo;
+  }
+
+  void AutoFilterFoo(Decoration<0>) {
+    m_called = true;
+  }
+
+  bool m_called;
+};
+
+TEST_F(AutoFilterTest, AnyAutoFilter) {
+  AutoRequired<HasAWeirdAutoFilterMethod> t;
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet = factory->NewPacket();
+
+  packet->Decorate(Decoration<0>());
 }
 
 class SimpleIntegerFilter
