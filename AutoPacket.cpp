@@ -81,24 +81,17 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
 
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
   // First pass, decrement what we can:
-  for(size_t i = nInfos; i--;)
+  for(size_t i = nInfos; i--;) {
     for(auto& satCounter : pTypeSubs[i]->m_subscribers) {
       auto& cur = satCounter.first;
-      cur->Decrement(satCounter.second);
-
-      if(!cur->remaining)
-        // Invoke while we still can
-        cur->CallAutoFilter(*this);
+      if (satCounter.second) {
+        --cur->remaining;
+        if(!cur->remaining)
+          // Invoke while we still can
+          cur->CallAutoFilter(*this);
+      }
     }
-
-  // Add back anything that was undersatisfied:
-  for(size_t i = nInfos; i--;)
-    for(auto& satCounter : pTypeSubs[i]->m_subscribers) {
-      auto& cur = satCounter.first;
-      if(cur->remaining)
-        // We still have mandatory values outstanding, put this counter back
-        cur->Increment(satCounter.second);
-    }
+  }
 }
 
 void AutoPacket::Reset(void) {
