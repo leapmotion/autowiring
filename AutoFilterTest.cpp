@@ -450,7 +450,7 @@ TEST_F(AutoFilterTest, MultiImmediate) {
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<FilterGen<Decoration<0>, Decoration<1>>> fg;
-  
+
   auto packet = factory->NewPacket();
 
   packet->DecorateImmediate(
@@ -460,4 +460,29 @@ TEST_F(AutoFilterTest, MultiImmediate) {
 
   // Verify the recipient got called
   ASSERT_TRUE(fg->m_called) << "Filter not called during multisimultaneous immediate-mode decoration";
+}
+
+TEST_F(AutoFilterTest, MultiImmediateComplex) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  // All of the filters that we're adding
+  AutoRequired<FilterGen<Decoration<0>>> fg1;
+  AutoRequired<FilterGen<Decoration<1>, optional_ptr<Decoration<2>>>> fg2;
+  AutoRequired<FilterGen<Decoration<0>, Decoration<1>>> fg3;
+  AutoRequired<FilterGen<Decoration<0>, Decoration<2>>> fg4;
+
+  auto packet = factory->NewPacket();
+
+  // The single immediate-mode decoration call, which should satisfy all filters
+  packet->DecorateImmediate(
+    Decoration<0>(),
+    Decoration<1>()
+  );
+
+  // Validate expected behaviors:
+  ASSERT_TRUE(fg1->m_called) << "Trivial filter was not called as expected, even though Decoration<0> should have been available";
+  ASSERT_TRUE(fg2->m_called) << "Filter with an unsatisfied optional argument was not called";
+  ASSERT_TRUE(fg3->m_called) << "Saturated filter was not called as expected";
+  ASSERT_FALSE(fg4->m_called) << "Undersaturated filter was called even though it should not have been";
 }
