@@ -170,7 +170,7 @@ public:
   }
 
   /// <summary>
-  /// Default for std library sorting of non-unique elements.
+  /// Default for std library sorting of repeatable elements.
   /// In order to enable strict ordering std::type_info::before is used.
   /// </summary>
   template<class T>
