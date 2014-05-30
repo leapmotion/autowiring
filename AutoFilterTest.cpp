@@ -433,7 +433,7 @@ TEST_F(AutoFilterTest, SingleImmediate) {
 
     // Create an immediate-mode satisfaction
     int val = 101;
-    packet->DecorateImmediate(&val);
+    packet->DecorateImmediate(val);
 
     // Verify we can't decorate this value a second time:
     ASSERT_ANY_THROW(packet->DecorateImmediate(val)) << "Expected an exception when a second attempt was made to attach a decoration";
