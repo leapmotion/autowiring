@@ -14,6 +14,9 @@ T* DefaultCreate(void) {
   return new T;
 }
 
+template<typename T>
+void DefaultReset(T&){}
+
 /// <summary>
 /// Allows the management of a pool of objects based on an embedded factory
 /// </summary>
@@ -38,7 +41,7 @@ public:
     size_t limit = ~0,
     size_t maxPooled = ~0,
     const std::function<T*()>& alloc = &DefaultCreate<T>,
-    const std::function<void(T&)>& rx = [] (T&) {}
+    const std::function<void(T&)>& rx = &DefaultReset<T>
   ) :
     m_monitor(new ObjectPoolMonitor),
     m_limit(limit),
