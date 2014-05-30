@@ -80,27 +80,25 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
 }
 
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
-  typedef std::pair<AutoFilterDescriptor*,int> t_SubMan; //Subscriber, Mandatory remaining
-  typedef std::unordered_map<AutoFilterDescriptor*,int> t_invTypeSubs; //Map from Type to Subscriber, Mandatory remaining
-  t_invTypeSubs subscriberMap;
+  // First pass, decrement what we can:
+  for(size_t i = nInfos; i--;)
+    for(auto& satCounter : pTypeSubs[i]->m_subscribers) {
+      auto& cur = satCounter.first;
+      cur->Decrement(satCounter.second);
 
-  //Evaluate temporary mandatory argument counters for all subscribers
-  for(int i = 0; i < nInfos; ++i) {
-    auto& ts = pTypeSubs[i];
-    for(auto& so : ts->m_subscribers) {
-      if (so.second) {
-        //Decrement count of mandatory type arguments
-        t_invTypeSubs::iterator sub = subscriberMap.find(so.first);
-        if (sub == subscriberMap.end()) {
-          sub = subscriberMap.insert(t_SubMan(so.first,so.first->remaining)).first;
-        }
-        --sub->second;
-        if (sub->second == 0) {
-          so.first->CallAutoFilter(*this);
-        }
-      }
+      if(!cur->remaining)
+        // Invoke while we still can
+        cur->CallAutoFilter(*this);
     }
-  }
+
+  // Add back anything that was undersatisfied:
+  for(size_t i = nInfos; i--;)
+    for(auto& satCounter : pTypeSubs[i]->m_subscribers) {
+      auto& cur = satCounter.first;
+      if(cur->remaining)
+        // We still have mandatory values outstanding, give up
+        cur->Increment(satCounter.second);
+    }
 }
 
 void AutoPacket::Reset(void) {
