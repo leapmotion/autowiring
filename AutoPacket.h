@@ -74,7 +74,7 @@ private:
   /// decoration of the passed decoration types.  Such filters will be called even if
   /// some optional inputs remain outstanding.
   /// </remarks>
-  void PulseSatisfaction(const DecorationDisposition** ppEntries, size_t nInfos);
+  void PulseSatisfaction(const DecorationDisposition* pEntries[], size_t nInfos);
 
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
@@ -301,7 +301,7 @@ public:
       for(auto ti : sc_ti)
         MarkUnsatisfiable(*ti);
     }),
-    PulseSatisfaction(sc_ti, sizeof...(Ts));
+    PulseSatisfaction(pEntries, sizeof...(Ts));
   }
 
   /// <returns>
