@@ -213,7 +213,7 @@ public:
       // Insert a null entry at this location:
       boost::lock_guard<boost::mutex> lk(m_lock);
       auto& entry = m_decorations[typeid(T)];
-      if(entry.satisfied)
+      if(entry.wasCheckedOut)
         throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
 
       // Mark the entry as appropriate:
@@ -241,9 +241,12 @@ public:
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
       pEntry = &m_decorations[typeid(Type)];
-      if(pEntry->satisfied)
+      if(pEntry->wasCheckedOut)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
+
+      // Mark the entry as appropriate:
       pEntry->satisfied = true;
+      pEntry->wasCheckedOut = true;
     }
 
     SharedPointerSlotT<Type>& retVal = pEntry->m_decoration->init<Type>();
@@ -277,8 +280,11 @@ public:
         pEntries[i] = &m_decorations[*sc_ti[i]];
         if(pEntries[i]->wasCheckedOut)
           throw std::runtime_error("Cannot perform immediate decoration with type T, the requested decoration already exists");
+
+        // Mark the entry as appropriate:
         pEntries[i]->satisfied = true;
         pEntries[i]->wasCheckedOut = true;
+
         pEntries[i]->m_pImmediate = &pvImmeds[i];
       }
     }
