@@ -462,6 +462,22 @@ TEST_F(AutoFilterTest, MultiImmediate) {
   ASSERT_TRUE(fg->m_called) << "Filter not called during multisimultaneous immediate-mode decoration";
 }
 
+TEST_F(AutoFilterTest, ImmediateWithPrior) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  // The filter which should get an immediate hit
+  AutoRequired<FilterGen<Decoration<0>, Decoration<1>, Decoration<2>>> secondChanceImmed;
+
+  // Add a pre-decoration:
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>());
+
+  // Now add immediate decorations to the remainder:
+  packet->DecorateImmediate(Decoration<1>(), Decoration<2>());
+  ASSERT_TRUE(secondChanceImmed->m_called) << "Filter should have been saturated by an immediate call, but was not called as expected";
+}
+
 TEST_F(AutoFilterTest, MultiImmediateComplex) {
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
