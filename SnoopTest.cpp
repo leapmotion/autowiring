@@ -289,7 +289,7 @@ TEST_F(SnoopTest, SimplePackets) {
   
   // Now compleletly satisfy filter. Should snoop across contexts
   packet->Decorate(Decoration<1>());
-  EXPECT_TRUE(filter->m_called) << "Snoop didn't work";
+  EXPECT_TRUE(filter->m_called) << "A snooper did not receive an AutoPacket originating in a snooped context";
   EXPECT_FALSE(detachedFilter->m_called) << "Received a packet from a different context";
   
   //reset

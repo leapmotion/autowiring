@@ -1,7 +1,7 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "AutoAnchor.h"
-#include "AutoPacketSubscriber.h"
+#include "AutoFilterDescriptor.h"
 #include "AutowirableSlot.h"
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
@@ -258,12 +258,12 @@ protected:
   /// <summary>
   /// Forwarding routine, recursively adds a packet subscriber to the internal packet factory
   /// </summary>
-  void AddPacketSubscriber(const AutoPacketSubscriber& rhs);
+  void AddPacketSubscriber(const AutoFilterDescriptor& rhs);
   
   /// <summary>
-  /// Counterparts to the AddPacketSubscriber routine
+  /// Removes all of the subscribers defined in the given AutoPacketFactory from this CoreContext
   /// </summary>
-  void RemovePacketSubscribers(const std::vector<AutoPacketSubscriber>& subscribers);
+  void RemovePacketSubscribers(const AutoPacketFactory& factory);
 
   /// <summary>
   /// Increments the total number of contexts still outstanding
@@ -283,7 +283,7 @@ protected:
   /// </summary>
   struct AddInternalTraits {
     template<class T>
-    AddInternalTraits(const AutoPacketSubscriber& subscriber, const std::shared_ptr<T>& value) :
+    AddInternalTraits(const AutoFilterDescriptor& subscriber, const std::shared_ptr<T>& value) :
       type(typeid(T)),
       subscriber(subscriber),
       value(value),
@@ -306,7 +306,7 @@ protected:
     const AnySharedPointer value;
 
     // The packet subscriber introduction method, if appropriate:
-    const AutoPacketSubscriber subscriber;
+    const AutoFilterDescriptor subscriber;
 
     // There are a lot of interfaces we support, here they all are:
     const std::shared_ptr<Object> pObject;
@@ -494,7 +494,7 @@ public:
 
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
-      AddInternal(AddInternalTraits(AutoPacketSubscriberSelect<T>(retVal), retVal));
+      AddInternal(AddInternalTraits(AutoFilterDescriptorSelect<T>(retVal), retVal));
     }
     catch(autowiring_error&) {
       // We know why this exception occurred.  It's because, while we were constructing our
@@ -746,11 +746,11 @@ public:
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    const AddInternalTraits traits(AutoPacketSubscriberSelect<T>(pSnooper), pSnooper);
     static_assert(std::is_base_of<EventReceiver, T>::value ||
                   has_autofilter<T>::value,
                   "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
     
+    const AddInternalTraits traits(AutoFilterDescriptorSelect<T>(pSnooper), pSnooper);
     // Add to collections of snoopers
     InsertSnooper(pSnooper);
 
@@ -771,11 +771,11 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    const AddInternalTraits traits(AutoPacketSubscriberSelect<T>(pSnooper), pSnooper);
     static_assert(std::is_base_of<EventReceiver, T>::value ||
                   has_autofilter<T>::value,
                   "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
     
+    const AddInternalTraits traits(AutoFilterDescriptorSelect<T>(pSnooper), pSnooper);
     RemoveSnooper(pSnooper);
 
     auto oSnooper = std::static_pointer_cast<Object>(pSnooper);
@@ -799,7 +799,7 @@ public:
   void FindByType(std::shared_ptr<T>& slot) const {
     AnySharedPointerT<T> ptr;
     FindByType(ptr);
-    slot = ptr->template as<T>();
+    slot = ptr.slot()->template as<T>();
   }
 
   /// <summary>
