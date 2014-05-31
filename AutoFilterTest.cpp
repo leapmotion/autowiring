@@ -508,11 +508,16 @@ TEST_F(AutoFilterTest, PostHocSatisfactionAttempt) {
   AutoRequired<AutoPacketFactory> factory;
 
   // Filter that accepts two types, but one of the two will be DecorateImmediate'd too early
-  AutoRequired<FilterGen<Decoration<0>, Decoration<1>>> fg;
+  AutoRequired<FilterGen<Decoration<0>, Decoration<1>>> fg1;
+  AutoRequired<FilterGen<Decoration<2>, Decoration<1>>> fg2;
 
   auto packet = factory->NewPacket();
   packet->DecorateImmediate(Decoration<0>());
   packet->Decorate(Decoration<1>());
 
-  ASSERT_FALSE(fg->m_called) << "An AutoFilter was called when all of its inputs should not have been simultaneously available";
+  ASSERT_FALSE(fg1->m_called) << "An AutoFilter was called when all of its inputs should not have been simultaneously available";
+
+  packet->DecorateImmediate(Decoration<2>());
+
+  ASSERT_TRUE(fg2->m_called) << "An AutoFilter was not called when all of its inputs were simultaneously available";
 }
