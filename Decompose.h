@@ -6,43 +6,26 @@
 /// Extended version of is_same
 /// </summary>
 /// <remarks>
-/// Inherits from true_type if T is the same as any of U1...UN
+/// Inherits from true_type if T is the same as any of Us...
 /// </remarks>
-template<typename... T>
-struct is_any_same{};
+template<typename T, typename... Us>
+struct is_any_same;
 
-template<typename ToCheck>
-struct is_any_same<ToCheck>{
+template<typename T>
+struct is_any_same<T> {
   static const bool value = false;
 };
 
-template<typename ToCheck, typename Head, typename... Tail>
-struct is_any_same<ToCheck, Head, Tail...> {
-  static const bool value = std::is_same<ToCheck, Head>::value || is_any_same<ToCheck, Tail...>::value;
-};
-
-
-struct type_info_constructable {
-  type_info_constructable(const std::type_info* ti = nullptr) :
-    ti(ti)
-  {}
-
-  const std::type_info* ti;
-
-  const std::type_info* operator->(void) const { return ti; }
-  operator const std::type_info*(void) const { return ti; }
-
-  template<class T>
-  struct rebind {
-    operator type_info_constructable(void) const {return type_info_constructable(&typeid(T));}
-  };
+template<typename T, typename U, typename... Us>
+struct is_any_same<T, U, Us...> {
+  static const bool value = std::is_same<T, U>::value || is_any_same<T, Us...>::value;
 };
 
 /// <summary>
 /// Provides some static reflection support for member function pointers
 /// </summary>
 template<class MemFn>
-struct Decompose {};
+struct Decompose;
 
 template<class R, class W, class... Args>
 struct Decompose<R(W::*)(Args...)> {
@@ -81,27 +64,5 @@ struct Decompose<R(W::*)(Args...)> {
   static const T(&Enumerate(void))[N + 1] {
     static const T rb[] = {typename T::template rebind<Args>()..., T()};
     return rb;
-  }
-
-  /// <summary>
-  /// Performs a call on the specified object with the specified member function
-  /// <summary>
-  /// <remarks>
-  /// The passed type object, the last parameter, must be a type repository.  It must support
-  /// a method of the following form:
-  ///
-  /// template&lt;class T&gt;
-  /// const T& Get();
-  ///
-  /// The method must return the object of the desired type, or else it must throw an exception.
-  /// It is the caller's responsibility to ensure that all of the necessary types are available
-  /// before this call is made, in order to prevent such an exception from being thrown.
-  /// </remarks>
-  template<memType memfn, class Repo>
-  static void Call(W* pObj, Repo& repo)
-  {
-    (pObj->*memfn)(
-      repo.template Cast<Args>()...
-    );
   }
 };

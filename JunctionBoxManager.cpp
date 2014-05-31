@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "JunctionBoxManager.h"
 #include "AutoPacketFactory.h"
-#include "AutoPacketListener.h"
 #include "AutowiringEvents.h"
 #include "JunctionBox.h"
 
