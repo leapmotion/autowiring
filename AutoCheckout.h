@@ -15,7 +15,7 @@ public:
     completion(nullptr)
   {}
 
-  AutoCheckout(AutoPacket& parent, T* val, t_completion completion) :
+  AutoCheckout(AutoPacket& parent, const std::shared_ptr<T>& val, t_completion completion) :
     m_parent(&parent),
     m_val(val),
     m_ready(false),
@@ -39,7 +39,7 @@ public:
 
 private:
   AutoPacket* m_parent;
-  T* m_val;
+  std::shared_ptr<T> m_val;
   bool m_ready;
   t_completion completion;
 
@@ -52,8 +52,8 @@ public:
   }
 
   // Operator overloads:
-  operator T*(void) const { return m_val; }
-  T* operator->(void) const { return m_val; }
+  operator T*(void) const { return m_val.get(); }
+  T* operator->(void) const { return m_val.get(); }
   operator bool(void) const { return !!m_val; }
   operator T&(void) const { return *m_val; }
 
