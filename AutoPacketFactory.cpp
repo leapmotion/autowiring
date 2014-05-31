@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacket.h"
+#include <boost/thread/tss.hpp>
+
+static boost::thread_specific_ptr<AutoFilterBase*> pAFB;
 
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
