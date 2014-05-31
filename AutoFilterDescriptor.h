@@ -235,7 +235,7 @@ public:
   ///
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call
   /// </summary>
-  template<class T, class MemFn>
+  template<class MemFn>
   AutoFilterDescriptor(const AnySharedPointer& autoFilter, CallExtractor<MemFn> extractor, t_call pCall) :
     m_autoFilter(autoFilter),
     m_requiredCount(0),
