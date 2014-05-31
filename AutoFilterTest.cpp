@@ -502,3 +502,17 @@ TEST_F(AutoFilterTest, MultiImmediateComplex) {
   ASSERT_TRUE(fg3->m_called) << "Saturated filter was not called as expected";
   ASSERT_FALSE(fg4->m_called) << "Undersaturated filter was called even though it should not have been";
 }
+
+TEST_F(AutoFilterTest, PostHocSatisfactionAttempt) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Filter that accepts two types, but one of the two will be DecorateImmediate'd too early
+  AutoRequired<FilterGen<Decoration<0>, Decoration<1>>> fg;
+
+  auto packet = factory->NewPacket();
+  packet->DecorateImmediate(Decoration<0>());
+  packet->Decorate(Decoration<1>());
+
+  ASSERT_FALSE(fg->m_called) << "An AutoFilter was called when all of its inputs should not have been simultaneously available";
+}
