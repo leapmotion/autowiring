@@ -38,6 +38,9 @@ public:
   SharedPointerSlot* operator->(void) { return slot(); }
   const SharedPointerSlot* operator->(void) const { return slot(); }
 
+  template<class T>
+  SharedPointerSlotT<T>& as(void) const { return (SharedPointerSlotT<T>&)*slot(); }
+
   bool operator==(const AnySharedPointer& rhs) const {
     return *slot() == *rhs.slot();
   }
@@ -52,16 +55,16 @@ public:
   /// than that, however, the behavior is very similar to boost::any's assignment
   /// implementation.
   /// </remarks>
-  void operator=(const AnySharedPointer& rhs) {
-    **this = *rhs;
+  SharedPointerSlot& operator=(const AnySharedPointer& rhs) {
+    return **this = *rhs;
   }
 
   /// <summary>
   /// Convenience overload for shared pointer assignment
   /// </summary>
   template<class T>
-  void operator=(const std::shared_ptr<T>& rhs) {
-    **this = rhs;
+  SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
+    return **this = rhs;
   }
 };
 
@@ -76,6 +79,16 @@ public:
   AnySharedPointerT(void) {
     new (m_space) SharedPointerSlotT<T>();
   }
+
+  // Convenience method to cast the space to a slot, but with the expected type
+  SharedPointerSlotT<T>* slot(void) { return (SharedPointerSlotT<T>*) m_space; }
+  const SharedPointerSlotT<T>* slot(void) const { return (const SharedPointerSlotT<T>*) m_space; }
+
+  T& operator*(void) { return **slot(); }
+  const T& operator*(void) const { return **slot(); }
+
+  T* operator->(void) { return slot()->get().get(); }
+  const T* operator->(void) const { return slot()->get().get(); }
 };
 
 template<class T>
