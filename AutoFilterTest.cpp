@@ -91,6 +91,31 @@ TEST_F(AutoFilterTest, VerifySimpleFilter) {
   EXPECT_TRUE(filterA->m_called) << "Filter was not called even though it was fully satisfied";
 }
 
+TEST_F(AutoFilterTest, VerifyOptionalFilter) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  AutoRequired<FilterGen<Decoration<0>, optional_ptr<Decoration<1>>>> fgA;
+  AutoRequired<FilterGen<optional_ptr<Decoration<1>>, Decoration<0>>> fgB;
+  AutoRequired<FilterGen<optional_ptr<Decoration<0>>, Decoration<1>>> fgC;
+
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>());
+
+  ASSERT_TRUE(fgA->m_called) << "An AutoFilter was not called when all required inputs were simultaneously available";
+  ASSERT_TRUE(fgB->m_called) << "An AutoFilter was not called when all required inputs were simultaneously available";
+  ASSERT_FALSE(fgC->m_called) << "An AutoFilter was called when a required input was not available";
+
+  fgA->m_called = false;
+  fgB->m_called = false;
+
+  packet->Decorate(Decoration<1>());
+
+  ASSERT_FALSE(fgA->m_called) << "An AutoFilter was called repeatedly on the same required input";
+  ASSERT_FALSE(fgB->m_called) << "An AutoFilter was called repeatedly on the same required input";
+  ASSERT_TRUE(fgC->m_called) << "An AutoFilter was not called when all required inputs were simultaneously available";
+}
+
 TEST_F(AutoFilterTest, VerifyNoMultiDecorate) {
   AutoCurrentContext()->Initiate();
 
