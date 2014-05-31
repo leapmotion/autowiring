@@ -87,8 +87,19 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
       if (satCounter.second) {
         --cur->remaining;
         if(!cur->remaining)
-          // Invoke while we still can
+          //Call only when required data is decremented to zero
           cur->CallAutoFilter(*this);
+      }
+    }
+  }
+
+  // Reset all counters
+  // since data in this call will not be available subsequently
+  for(size_t i = nInfos; i--;) {
+    for(auto& satCounter : pTypeSubs[i]->m_subscribers) {
+      auto& cur = satCounter.first;
+      if (satCounter.second) {
+        ++cur->remaining;
       }
     }
   }
