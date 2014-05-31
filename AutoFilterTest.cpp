@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "AutoFilterTest.h"
+#include "AutoFilter.h"
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
 #include "TestFixtures/Decoration.h"
@@ -393,14 +394,13 @@ public:
   HasAWeirdAutoFilterMethod(void):
     m_called(false)
   {
-    AutoRequired<AutoPacketFactory> factory;
-    *factory += &HasAWeirdAutoFilterMethod::AutoFilterFoo;
   }
 
   void AutoFilterFoo(Decoration<0>) {
     m_called = true;
   }
 
+  AutoFilter<decltype(&HasAWeirdAutoFilterMethod::AutoFilterFoo), &HasAWeirdAutoFilterMethod::AutoFilterFoo> af;
   bool m_called;
 };
 

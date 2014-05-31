@@ -10,6 +10,8 @@ set(Autowiring_SRCS
   AnySharedPointer.h
   AutoAnchor.h
   AutoCheckout.h
+  AutoFilter.h
+  AutoFilter.cpp
   AutoFuture.h
   AutoFuture.cpp
   CoreJob.h
