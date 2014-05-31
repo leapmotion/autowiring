@@ -22,7 +22,7 @@ public:
     m_called(false)
   {}
 
-  bool m_called;
+  int m_called;
   Decoration<0> m_zero;
   Decoration<1> m_one;
 };
@@ -35,7 +35,7 @@ public:
   FilterA() {}
   virtual ~FilterA() {}
   void AutoFilter(Decoration<0> zero, Decoration<1> one) {
-    m_called = true;
+    ++m_called;
     m_zero = zero;
     m_one = one;
   }
@@ -53,7 +53,7 @@ public:
   {}
 
   Deferred AutoFilter(Decoration<0> zero, Decoration<1> one) {
-    m_called = true;
+    ++m_called;
     m_zero = zero;
     m_one = one;
     return Deferred(this);
@@ -84,7 +84,7 @@ class FilterC:
 public:
   void AutoFilter(AutoPacket& pkt, const Decoration<0>& zero) {
     // Copy out:
-    m_called = true;
+    ++m_called;
     m_zero = zero;
 
     // Add a decoration:
@@ -100,7 +100,7 @@ class FilterD:
 {
 public:
   void AutoFilter(AutoPacket& pkt) {
-    m_called = true;
+    ++m_called;
   }
 };
 
@@ -110,7 +110,7 @@ class FilterF:
 {
 public:
   void AutoFilter(const Decoration<0>& dec) {
-    m_called = true;
+    ++m_called;
   }
 };
 
@@ -135,10 +135,10 @@ public:
     for(bool cur : detection)
       ASSERT_FALSE(cur) << "Packet was already decorated with at least one output-only type";
 
-    m_called = true;
+    ++m_called;
     m_args = std::tie(args...);
   }
 
-  bool m_called;
+  int m_called;
   std::tuple<typename std::decay<Args>::type...> m_args;
 };
