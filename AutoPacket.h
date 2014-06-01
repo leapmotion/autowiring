@@ -174,12 +174,12 @@ public:
     AnySharedPointer slot;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      auto q = m_decorations.find(typeid(type));
-      if(q == m_decorations.end())
+      auto dFind = m_decorations.find(typeid(type));
+      if(dFind == m_decorations.end())
         // No parties interested in this entry, return here
         return AutoCheckout<T>(*this, nullptr, &AutoPacket::CompleteCheckout<T>);
 
-      auto& entry = m_decorations[typeid(type)];
+      auto& entry = dFind->second;
       if(entry.satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
       if(entry.isCheckedOut)
