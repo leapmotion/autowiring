@@ -46,10 +46,10 @@ struct SatCounter:
   /// <summary>
   /// Decrements the optional, or mandatory counter based on the selection
   /// </summary>
-  /// <returns>True if there are decorations yet unsatisfied, optional or not</returns>
+  /// <returns>True if this decrement yielded satisfaction of all arguments</returns>
   bool Decrement(bool is_mandatory) {
     is_mandatory ? remaining-- : optional--;
-    return remaining || optional;
+    return !(remaining || optional);
   }
 
   /// <returns>False if there are any mandatory or optional elements still outstanding</returns>

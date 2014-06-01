@@ -257,6 +257,8 @@ public:
 
   /// <summary>
   /// Subscribers respond to the decoration arguments immediately or never for this packet.
+  /// Optional argument resolution is forced for any subscriber requiring at least one
+  /// argument of this method
   /// </summary>
   /// <remarks>
   /// Unlike Decorate, the arguments of DecorateImmediate are not copied.
