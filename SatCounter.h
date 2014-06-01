@@ -37,10 +37,7 @@ struct SatCounter:
   /// Convenience parity method, increments the specified counter
   /// </summary>
   void Increment(bool is_optional) {
-    if(is_optional)
-      optional++;
-    else
-      remaining++;
+    is_optional ? ++optional : ++remaining;
   }
 
   /// <summary>
@@ -48,8 +45,21 @@ struct SatCounter:
   /// </summary>
   /// <returns>True if this decrement yielded satisfaction of all arguments</returns>
   bool Decrement(bool is_mandatory) {
-    is_mandatory ? remaining-- : optional--;
-    return !(remaining || optional);
+    is_mandatory ? --remaining : --optional;
+    return remaining == 0 && optional == 0;
+  }
+
+  /// <summary>
+  /// Removes all remaining
+  /// </summary>
+  /// <returns>True if all mandatory arguments are satisfied</returns>
+  bool Resolve() {
+    if (remaining == 0 &&
+        optional != 0) {
+        optional = 0;
+        return true;
+    }
+    return false;
   }
 
   /// <returns>False if there are any mandatory or optional elements still outstanding</returns>
