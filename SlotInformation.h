@@ -92,20 +92,12 @@ public:
     return s_pSlot.get();
   }
 
-  /// <summary>
-  /// Default method, does nothing
-  /// </summary>
-  template<class T>
-  static void PushStackLocation(void*) {}
-
   /// <returns>
   /// Creates a new stack location which remains current as long as the return type is not destroyed
   /// </returns>
   /// <param name="pSpace">The pointer to the base of the space about to be constructed</param>
-  /// <param name="contextMemberOffset">The offset between the base of the space and the ContextMember field</param>
   template<class T>
-  static SlotInformationStackLocation PushStackLocation(ContextMember* pContextMember) {
-    T* pObj = static_cast<T*>(pContextMember);
+  static SlotInformationStackLocation PushStackLocation(T* pSpace) {
     auto* pStump = GetStump<T>();
 
     // If we're already initialized, then we have nothing to do.  This line is an optimization; if there
@@ -117,7 +109,7 @@ public:
     // New stack location to enclose this stump.  This stack location may be concurrent with respect
     // to other threads, but only one thread will succeed in colonizing this stump with a chain of
     // slot entries
-    return SlotInformationStackLocation(pStump, pObj, static_cast<ContextMember*>(pObj), sizeof(T));
+    return SlotInformationStackLocation(pStump, pSpace, static_cast<ContextMember*>(pSpace), sizeof(T));
   }
 
   /// <summary>
