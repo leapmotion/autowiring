@@ -98,38 +98,42 @@ TEST_F(AutoFilterTest, VerifyOptionalFilter) {
   AutoRequired<FilterGen<Decoration<0>, optional_ptr<Decoration<1>>>> fgA;
   AutoRequired<FilterGen<optional_ptr<Decoration<1>>, Decoration<0>>> fgB;
   AutoRequired<FilterGen<optional_ptr<Decoration<0>>, Decoration<1>>> fgC;
+  AutoRequired<FilterGen<Decoration<0>, optional_ptr<Decoration<1>>, optional_ptr<Decoration<2>>>> fgD;
 
+  //Test resolution through parameter satisfaction
   {
     auto packet = factory->NewPacket();
     packet->Decorate(Decoration<0>());
 
-    ASSERT_TRUE(fgA->m_called < 1) << "An AutoFilter was called when an optional input was unresolved";
-    ASSERT_TRUE(fgB->m_called < 1) << "An AutoFilter was called when an optional input was unresolved";
-    ASSERT_TRUE(fgC->m_called < 1) << "An AutoFilter was called when a required input was not available";
+    ASSERT_TRUE(fgA->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when an optional input was unresolved";
+    ASSERT_TRUE(fgB->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when an optional input was unresolved";
+    ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when a required input was not available";
 
     packet->Decorate(Decoration<1>());
 
-    ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter was not called when all inputs were simultaneously available";
-    ASSERT_TRUE(fgB->m_called == 1) << "An AutoFilter was not called when all inputs were simultaneously available";
-    ASSERT_TRUE(fgC->m_called == 1) << "An AutoFilter was not called when all inputs were simultaneously available";
+    ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter was called " << fgA->m_called << " times when all inputs were simultaneously available";
+    ASSERT_TRUE(fgB->m_called == 1) << "An AutoFilter was called " << fgB->m_called << " times when all inputs were simultaneously available";
+    ASSERT_TRUE(fgC->m_called == 1) << "An AutoFilter was called " << fgC->m_called << " times when all inputs were simultaneously available";
+    ASSERT_TRUE(fgD->m_called == 0) << "An AutoFilter was called " << fgD->m_called << " times when an optional input was unresolved";
   }
 
   fgA->m_called = 0;
   fgB->m_called = 0;
   fgC->m_called = 0;
+  fgD->m_called = 0;
 
+  //Test resultion through packet destruction
   {
-    auto packet1 = factory->NewPacket();
-    packet1->Decorate(Decoration<0>());
-
-    //Force resolutionof optional parameters
-    auto packet2 = factory->NewPacket();
-    packet2->Decorate(Decoration<0>());
-
-    ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter was called " << fgA->m_called << " times when all required parameters were available";
-    ASSERT_TRUE(fgB->m_called == 1) << "An AutoFilter was called " << fgB->m_called << " times when all required parameters were available";
-    ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgC->m_called << " times when a required input was not available";
+    auto packet = factory->NewPacket();
+    packet->Decorate(Decoration<0>());
+    packet->Decorate(Decoration<2>());
   }
+  factory->Stop();
+
+  ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter was called " << fgA->m_called << " times when all required inputs were available";
+  ASSERT_TRUE(fgB->m_called == 1) << "An AutoFilter was called " << fgB->m_called << " times when all required inputs were available";
+  ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgC->m_called << " times when a required input was not available";
+  ASSERT_TRUE(fgD->m_called == 1) << "An AutoFilter was called " << fgD->m_called << " times when all required inputs were available";
 }
 
 TEST_F(AutoFilterTest, VerifyNoMultiDecorate) {
