@@ -128,7 +128,6 @@ TEST_F(AutoFilterTest, VerifyOptionalFilter) {
     packet->Decorate(Decoration<0>());
     packet->Decorate(Decoration<2>());
   }
-  factory->Stop();
 
   ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter was called " << fgA->m_called << " times when all required inputs were available";
   ASSERT_TRUE(fgB->m_called == 1) << "An AutoFilter was called " << fgB->m_called << " times when all required inputs were available";
