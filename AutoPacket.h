@@ -51,6 +51,8 @@ private:
   typedef std::unordered_map<std::type_index, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
 
+  void ResolveOptions(void);
+
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
@@ -103,7 +105,7 @@ private:
 
 public:
   /// <summary>
-  /// Clears all decorations and copies over all satisfaction counters
+  /// Resolves all options, clears all decorations and resets all satisfaction counters
   /// </summary>
   void Reset(void);
 

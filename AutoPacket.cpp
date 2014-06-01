@@ -46,8 +46,20 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
 }
 
 AutoPacket::~AutoPacket() {
+  // Last chance for AutoFilter call
+  ResolveOptions();
+
   m_decorations.clear();
   m_satCounters.clear();
+}
+
+void AutoPacket::ResolveOptions(void) {
+  boost::lock_guard<boost::mutex> lk(m_lock);
+  for(auto& decoration : m_decorations)
+    for(auto& satCounter : decoration.second.m_subscribers)
+      if(!satCounter.second)
+        if(satCounter.first->Resolve())
+          satCounter.first->CallAutoFilter(*this);
 }
 
 void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
@@ -106,6 +118,9 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 }
 
 void AutoPacket::Reset(void) {
+  // Last chance for AutoFilter call
+  ResolveOptions();
+
   // Reset all counters:
   for(auto& satCounter : m_satCounters)
     satCounter.Reset();
