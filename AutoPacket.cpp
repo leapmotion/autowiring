@@ -63,7 +63,7 @@ void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
       continue;
 
     // Entry is optional, we will call if we're satisfied after decrementing this optional field
-    if(!satCounter.first->Decrement(false))
+    if(satCounter.first->Decrement(false))
       satCounter.first->CallAutoFilter(*this);
   }
 }
@@ -75,7 +75,7 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
 
   // Update everything
   for(auto& satCounter : decoration->second.m_subscribers)
-    if(!satCounter.first->Decrement(satCounter.second))
+    if(satCounter.first->Decrement(satCounter.second))
       satCounter.first->CallAutoFilter(*this);
 }
 
