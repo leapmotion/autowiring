@@ -1,5 +1,5 @@
 #pragma once
-#include "CreationRules.h"
+#include "has_simple_constructor.h"
 #include "Object.h"
 
 class TypeUnifier: public Object {};
