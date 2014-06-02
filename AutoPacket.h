@@ -1,21 +1,19 @@
 #pragma once
+#include "AnySharedPointer.h"
+#include "at_exit.h"
 #include "AutoCheckout.h"
-#include "auto_out.h"
-#include "auto_pooled.h"
-#include "Enclosure.h"
-#include "Object.h"
-#include "optional_ptr.h"
-#include "SatCounter.h"
-#include <boost/any.hpp>
+#include "DecorationDisposition.h"
+#include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 #include EXCEPTION_PTR_HEADER
 
+struct SatCounter;
 class AutoPacketFactory;
 class AutoPacketProfiler;
-class AutoPacketSubscriber;
+class AutoFilterDescriptor;
 
 template<class T>
 struct subscriber_traits;
@@ -36,70 +34,27 @@ class AutoPacket:
   public std::enable_shared_from_this<AutoPacket>
 {
 public:
+  AutoPacket(const AutoPacket& rhs) = delete;
   AutoPacket(AutoPacketFactory& factory);
   ~AutoPacket(void);
 
 private:
-  /// <remarks>
-  /// A disposition holder, used to maintain initialization state on the key
-  /// </remarks>
-  struct DecorationDisposition {
-    DecorationDisposition(void) :
-      satisfied(false),
-      isCheckedOut(false),
-      pEnclosure(nullptr)
-    {}
+  // A back-link to the previously issued packet in the packet sequence.  May potentially be null,
+  // if this is the first packet issued by the packet factory.
+  std::shared_ptr<AutoPacket> m_prior;
 
-    ~DecorationDisposition(void) {
-      delete pEnclosure;
-    }
-
-    // Flag, used by the caller, to mark this enclosure as satisfied
-    bool satisfied;
-
-    // Flag, set if the internally held object is currently checked out
-    bool isCheckedOut;
-
-    // The enclosure proper:
-    EnclosureBase* pEnclosure;
-
-    template<class T>
-    Enclosure<T>& Initialize(void) {
-      if(!pEnclosure)
-        pEnclosure = new EnclosureImpl<T>();
-      pEnclosure->Reset();
-      return static_cast<Enclosure<T>&>(*pEnclosure);
-    }
-
-    template<class T>
-    Enclosure<T>& Initialize(T&& rhs) {
-      if(pEnclosure)
-        *static_cast<Enclosure<T>*>(pEnclosure) = std::move(rhs);
-      else
-        pEnclosure = new EnclosureImpl<T>(std::move(rhs));
-      return *static_cast<Enclosure<T>*>(pEnclosure);
-    }
-
-    void Release(void) {
-      if(pEnclosure)
-        pEnclosure->Release();
-    }
-  };
-
-  // The associated packet factory:
-  AutoPacketFactory& m_factory;
+  // Saturation counters, constructed when the packet is created and reset each time thereafter
+  std::vector<SatCounter> m_satCounters;
 
   // The set of decorations currently attached to this object, and the associated lock:
   mutable boost::mutex m_lock;
-  mutable std::unordered_map<std::type_index, DecorationDisposition> m_mp;
-
-  // Status counters, copied directly from the degree vector in the packet factory:
-  std::vector<SatCounter> m_satCounters;
+  typedef std::unordered_map<std::type_index, DecorationDisposition> t_decorationMap;
+  t_decorationMap m_decorations;
 
   /// <summary>
-  /// Interior routine to UpdateSatisfaction
+  /// Marks the specified entry as being unsatisfiable
   /// </summary>
-  void UpdateSatisfactionSpecific(size_t subscriberIndex);
+  void MarkUnsatisfiable(const std::type_info& info);
 
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
@@ -109,7 +64,7 @@ private:
   /// This method results in a call to the AutoFilter method on any subscribers which are
   /// satisfied by this decoration.
   /// </remarks>
-  void UpdateSatisfaction(const std::type_info& info, bool is_satisfied);
+  void UpdateSatisfaction(const std::type_info& info);
 
   /// <summary>
   /// Performs a "satisfaction pulse", which will avoid notifying any deferred filters
@@ -123,31 +78,40 @@ private:
   void CompleteCheckout(bool ready) {
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      auto& entry = m_mp[typeid(T)];
-      assert(entry.satisfied);
+      auto& entry = m_decorations[typeid(T)];
 
       if(!ready)
         // Memory must be released, the checkout was cancelled
-        static_cast<Enclosure<T>*>(entry.pEnclosure)->Release();
+        entry.m_decoration->reset();
 
       // Reset the checkout flag before releasing the lock:
       assert(entry.isCheckedOut);
       entry.isCheckedOut = false;
+      entry.satisfied = true;
     }
 
-    UpdateSatisfaction(typeid(T), ready);
+    if(ready)
+      UpdateSatisfaction(typeid(T));
+    else
+      MarkUnsatisfiable(typeid(T));
   }
 
 public:
   /// <summary>
-  /// Releases all exterior references to autowired members
-  /// </summary>
-  void Release(void);
-
-  /// <summary>
   /// Clears all decorations and copies over all satisfaction counters
   /// </summary>
   void Reset(void);
+
+  /// <returns>
+  /// True if this packet posesses a decoration of the specified type
+  /// </returns>
+  template<class T>
+  bool Has(void) const {
+    auto q = m_decorations.find(typeid(T));
+    if(q == m_decorations.end())
+      return false;
+    return q->second.satisfied;
+  }
 
   /// <summary>
   /// Detects the desired type, or throws an exception if such a type cannot be found
@@ -167,29 +131,23 @@ public:
   bool Get(const T*& out) const {
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
-    auto q = m_mp.find(typeid(T));
-    if(q != m_mp.end() && q->second.satisfied) {
-      auto enclosure = static_cast<Enclosure<T>*>(q->second.pEnclosure);
-      assert(enclosure->IsInitialized());
-      if(enclosure) {
-        out = enclosure->get();
+    auto q = m_decorations.find(typeid(T));
+    if(q != m_decorations.end() && q->second.satisfied) {
+      auto& disposition = q->second;
+      if(disposition.m_decoration) {
+        out = disposition.m_decoration->as<T>().get();
+        return true;
+      }
+
+      // Second-chance satisfaction with an immediate
+      if(disposition.m_pImmediate) {
+        out = (T*) disposition.m_pImmediate;
         return true;
       }
     }
 
     out = nullptr;
     return false;
-  }
-
-  /// <summary>
-  /// Provides the passed enumerator function with a list of all interior types
-  /// </summary>
-  template<class Fx>
-  void Enumerate(Fx&& fx) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    for(auto q = m_mp.begin(); q != m_mp.end(); q++)
-      if(q->second.satisfied)
-        fx(q->first, q->second.pEnclosure);
   }
 
   /// <summary>
@@ -206,25 +164,35 @@ public:
     // This allows us to install correct entries for decorated input requests
     typedef typename subscriber_traits<T>::type type;
 
-    DecorationDisposition* entry;
+    AnySharedPointer slot;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
+      auto q = m_decorations.find(typeid(type));
+      if(q == m_decorations.end())
+        // No parties interested in this entry, return here
+        return AutoCheckout<T>(*this, nullptr, &AutoPacket::CompleteCheckout<T>);
 
-      entry = &m_mp[typeid(type)];
-      if(entry->satisfied)
+      auto& entry = m_decorations[typeid(type)];
+      if(entry.satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
-      entry->satisfied = true;
-      entry->isCheckedOut = true;
+      if(entry.isCheckedOut)
+        throw std::runtime_error("Cannot check out this decoration, it's already checked out elsewhere");
+      entry.isCheckedOut = true;
+      entry.wasCheckedOut = true;
     }
 
-    if(HasSubscribers<T>()) {
-      auto& enclosure = entry->Initialize<T>();
-      return AutoCheckout<T>(*this, enclosure.get(), &AutoPacket::CompleteCheckout<T>);
-    }
+    // Construct while the lock was released
+    auto ptr = std::make_shared<T>();
 
-    // Ensure we mark this entry unsatisfiable so that cleanup behavior works as expected
-    entry->Release();
-    return AutoCheckout<T>(*this, nullptr, &AutoPacket::CompleteCheckout<T>);
+    // Have to find the entry _again_ within the context of a lock and satisfy it here:
+    (boost::lock_guard<boost::mutex>)m_lock,
+    m_decorations[typeid(type)].m_decoration = ptr;
+
+    return AutoCheckout<T>(
+      *this,
+      ptr,
+      &AutoPacket::CompleteCheckout<T>
+    );
   }
 
   /// <summary>
@@ -239,17 +207,17 @@ public:
     {
       // Insert a null entry at this location:
       boost::lock_guard<boost::mutex> lk(m_lock);
-      auto& entry = m_mp[typeid(T)];
+      auto& entry = m_decorations[typeid(T)];
       if(entry.satisfied)
         throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
 
       // Mark the entry as appropriate:
       entry.satisfied = true;
-      entry.Release();
+      entry.wasCheckedOut = true;
     }
 
     // Now trigger a rescan:
-    UpdateSatisfaction(typeid(T), false);
+    MarkUnsatisfiable(typeid(T));
   }
 
   /// <summary>
@@ -262,18 +230,21 @@ public:
   /// </remarks>
   template<class T>
   T& Decorate(T&& t) {
+    typedef typename std::remove_reference<T>::type Type;
+
     DecorationDisposition* pEntry;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      pEntry = &m_mp[typeid(T)];
+      pEntry = &m_decorations[typeid(Type)];
       if(pEntry->satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
       pEntry->satisfied = true;
     }
 
-    auto& retVal = pEntry->Initialize(std::move(t));
-    UpdateSatisfaction(typeid(T), true);
-    return *retVal.get();
+    SharedPointerSlotT<Type>& retVal = pEntry->m_decoration->init<Type>();
+    retVal = std::make_shared<Type>(std::forward<T>(t));
+    UpdateSatisfaction(typeid(Type));
+    return *retVal;
   }
 
   /// <summary>
@@ -281,7 +252,8 @@ public:
   /// </summary>
   /// <remarks>
   /// The attached decoration is only valid for AutoFilters which are valid during
-  /// this call.
+  /// this call.  The type of the decoration is "T", and the passed pointer is not
+  /// copied.
   /// </remarks>
   template<class T>
   void DecorateImmediate(const T* pt) {
@@ -289,21 +261,25 @@ public:
     DecorationDisposition* pEntry;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      pEntry = &m_mp[typeid(T)];
-      if(pEntry->satisfied)
+      pEntry = &m_decorations[typeid(T)];
+      if(pEntry->wasCheckedOut)
         throw std::runtime_error("Cannot perform immediate decoration with type T, the requested decoration already exists");
       pEntry->satisfied = true;
+      pEntry->wasCheckedOut = true;
     }
 
     // Pulse satisfaction:
-    auto& enclosure = pEntry->Initialize(const_cast<T*>(pt));
+    pEntry->m_pImmediate = pt;
+
+    MakeAtExit([this, pEntry] {
+      // Mark this entry as unsatisfiable:
+      pEntry->satisfied = false;
+      pEntry->m_pImmediate = nullptr;
+
+      // Now trigger a rescan to hit any deferred, unsatisfiable entries:
+      MarkUnsatisfiable(typeid(T)); 
+    }),
     PulseSatisfaction(typeid(T));
-
-    // Mark this entry as unsatisfiable:
-    enclosure.Release();
-
-    // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-    UpdateSatisfaction(typeid(T), false);
   }
 
   /// <returns>
@@ -317,84 +293,4 @@ public:
   bool HasSubscribers(void) const {return HasSubscribers(typeid(T));}
 
   bool HasSubscribers(const std::type_info& ti) const;
-};
-
-// Default behavior:
-template<class T>
-struct AutoPacketAdaptorHelper {
-  static_assert(
-    std::is_const<typename std::remove_reference<T>::type>::value ||
-    !std::is_reference<T>::value,
-    "If a decoration is desired, it must either be a const reference, or by value"
-  );
-
-  T operator()(AutoPacket& packet) const {
-    return packet.Get<typename std::decay<T>::type>();
-  }
-};
-
-template<class T>
-struct AutoPacketAdaptorHelper<optional_ptr<T>> {
-  // Optional pointer overload, tries to satisfy but doesn't throw if there's a miss
-  optional_ptr<T> operator()(AutoPacket& packet) const {
-    const typename std::decay<T>::type* out;
-    if(packet.Get(out))
-      return out;
-    return nullptr;
-  }
-};
-
-template<class T, bool checkout>
-struct AutoPacketAdaptorHelper<auto_out<T, checkout>> {
-  auto_out<T, checkout> operator()(AutoPacket& packet) const {
-    return auto_out<T, checkout>(packet.Checkout<T>());
-  }
-};
-
-template<>
-struct AutoPacketAdaptorHelper<AutoPacket&> {
-  AutoPacket& operator()(AutoPacket& packet) const {
-    return packet;
-  }
-};
-
-/// <summary>
-/// Utility extractive wrapper
-/// </summary>
-/// <remarks>
-/// This class is useful in instances where implicitly casting is more convenient
-/// than explicitly naming the desired type and pulling it out of the packet with Get.
-///
-/// So, for instance, rather than:
-///
-/// type t = packet.Get<type>();
-///
-/// One could do:
-///
-/// type t = AutoPacketAdaptor(packet);
-///
-/// The packet extractor also provides additional utility extraction routines, which
-/// makes it a much more attractive option than trying to manually invoke Get on the
-/// packet directly.
-/// </remarks>
-class AutoPacketAdaptor {
-public:
-  AutoPacketAdaptor(AutoPacket& packet):
-    packet(packet)
-  {}
-
-private:
-  AutoPacket& packet;
-
-public:
-  // Reflexive overloads:
-  operator AutoPacket*(void) const {return &packet;}
-  operator AutoPacket&(void) const {return packet;}
-  operator std::shared_ptr<AutoPacket>(void) const { return packet.shared_from_this(); }
-
-  template<class T>
-  T Cast(void) const {
-    AutoPacketAdaptorHelper<T> helper;
-    return helper(packet);
-  }
 };

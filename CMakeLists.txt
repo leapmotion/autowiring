@@ -9,19 +9,19 @@ set(Autowiring_SRCS
   at_exit.h
   AnySharedPointer.h
   AutoAnchor.h
+  AutoCheckout.h
   AutoFuture.h
   AutoFuture.cpp
   CoreJob.h
   CoreJob.cpp
+  AutoFilterDescriptor.h
   AutoInjectable.h
   AutoPacket.h
   AutoPacket.cpp
   AutoPacketFactory.h
   AutoPacketFactory.cpp
-  AutoPacketListener.h
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
-  AutoPacketSubscriber.h
   Autowired.h
   Autowired.cpp
   AutowirableSlot.h
@@ -53,6 +53,7 @@ set(Autowiring_SRCS
   CurrentContextPusher.cpp
   CurrentContextPusher.h
   Decompose.h
+  DecorationDisposition.h
   Deserialize.h
   deferred_ptr.h
   DispatchQueue.h
@@ -71,9 +72,9 @@ set(Autowiring_SRCS
   JunctionBoxManager.h
   JunctionBoxManager.cpp
   ExceptionFilter.h
-  FilterPropertyExtractor.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
+  has_autofilter.h
   is_any.h
   InterlockedExchange.h
   InvokeRelay.h
@@ -81,6 +82,8 @@ set(Autowiring_SRCS
   ObjectPool.h
   ObjectPoolMonitor.h
   ObjectPoolMonitor.cpp
+  optional_ptr.h
+  SatCounter.h
   move_only.h
   MicroBolt.h
   ReentrantCounter.h
@@ -143,6 +146,8 @@ set(AutowiringTest_SRCS
   AnySharedPointerTest.cpp
   AutoAnchorTest.h
   AutoAnchorTest.cpp
+  AutoFilterTest.h
+  AutoFilterTest.cpp
   AutoInjectableTest.h
   AutoInjectableTest.cpp
   AutoPacketFactoryTest.h

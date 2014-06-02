@@ -11,7 +11,8 @@ public:
   /// </summary>
   /// <remarks>
   /// It is an error to call this routine more than once.  The passed outstanding shared pointer
-  /// is used to keep tracking of number of simultaneous runnables outstanding.
+  /// is used to keep tracking of number of simultaneous runnables outstanding.  This routine may
+  /// be called even after Stop has been called; the caller MUST return false in this case.
   /// </remarks>
   virtual bool Start(std::shared_ptr<Object> outstanding) = 0;
 
