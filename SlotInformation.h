@@ -48,34 +48,6 @@ template<class T>
 struct SlotInformationStump:
   SlotInformationStumpBase
 {
-  /// <summary>
-  /// Used to obtain a list of slots defined on this type, for reflection purposes
-  /// </summary>
-  /// <returns>
-  /// A pointer to the head of a linked list of slots on this context member
-  /// </returns>
-  /// <remarks>
-  /// A slot is an Autowired field defined within a specific type.  Slots are of particular
-  /// interest because they denote a compile-time relationship between two types, and generally
-  /// are one way to understand class relationships in a system.  Furthermore, because of their
-  /// compile-time nature, they are declarative and therefore denote a relationship between
-  /// types, rather than states, which makes it easier to understand how slots are linked.
-  ///
-  /// The returned value is cached, and should not be freed or modified as it may be in use
-  /// in other parts of the program.  The behavior of this method is undefined if it's called
-  /// on an object before the object is fully constructed (for instance, if the method is
-  /// invoked from a constructor).  This method will return correct results even if the
-  /// ContextMember type was not the first inherited type.
-  ///
-  /// If this method returns a correct result at any point, then all subsequent calls to this
-  /// method are guaranteed to return correct results, even in the aforementioned case where
-  /// the method is called during construction.  This method is guaranteed to return correct
-  /// results after the first instance of a concrete type is constructed.
-  ///
-  /// This list is guaranteed not to contain any AutowiredFast fields defined in the class.
-  ///
-  /// The linked list is guaranteed to be in reverse-sorted order
-  /// </remarks>
   static SlotInformationStump s_stump;
 };
 
