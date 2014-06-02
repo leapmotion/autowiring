@@ -14,6 +14,9 @@ T* DefaultCreate(void) {
   return new T;
 }
 
+template<typename T>
+void DefaultReset(T&){}
+
 /// <summary>
 /// Allows the management of a pool of objects based on an embedded factory
 /// </summary>
@@ -34,20 +37,11 @@ class ObjectPool
 {
 public:
   /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
-#if defined(__GNUC__) && !defined(__clang__)
-  // workaround for gcc 4.6 internal compiler error
-  ObjectPool(
-    size_t limit,
-    size_t maxPooled,
-    const std::function<T*()>& alloc,
-    const std::function<void(T&)>& rx
-  );
-#else
   ObjectPool(
     size_t limit = ~0,
     size_t maxPooled = ~0,
     const std::function<T*()>& alloc = &DefaultCreate<T>,
-    const std::function<void(T&)>& rx = [] (T&) {}
+    const std::function<void(T&)>& rx = &DefaultReset<T>
   ) :
     m_monitor(new ObjectPoolMonitor),
     m_limit(limit),
@@ -57,7 +51,7 @@ public:
     m_rx(rx),
     m_alloc(alloc)
   {}
-#endif
+  
   ~ObjectPool(void) {
     // Transition the pool to the abandoned state:
     m_monitor->Abandon();
@@ -353,21 +347,3 @@ public:
     });
   }
 };
-
-#if defined(__GNUC__) && !defined(__clang__)
-template<class T>
-ObjectPool<T>::ObjectPool(
-  size_t limit = ~0,
-  size_t maxPooled = ~0,
-  const std::function<T*()>& alloc = &DefaultCreate<T>,
-  const std::function<void(T&)>& rx = [] (T&) {}
-) :
-  m_monitor(new ObjectPoolMonitor),
-  m_limit(limit),
-  m_poolVersion(0),
-  m_maxPooled(maxPooled),
-  m_outstanding(0),
-  m_rx(rx),
-  m_alloc(alloc)
-{}
-#endif
