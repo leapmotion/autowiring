@@ -6,13 +6,8 @@
 
 ContextMember::ContextMember(const char* name):
   m_context(CoreContext::CurrentContext()),
-  m_name(name),
-  m_pSlots(SlotInformationStackLocation::CurrentStackLocation())
+  m_name(name)
 {
 }
 
 ContextMember::~ContextMember() {}
-
-const SlotInformation* ContextMember::GetSlotInformation(void) const {
-  return m_pSlots ? m_pSlots->pHead : nullptr;
-}

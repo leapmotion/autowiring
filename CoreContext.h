@@ -490,8 +490,7 @@ public:
     CurrentContextPusher pshr(shared_from_this());
 
     // Cannot safely inject while holding the lock, so we have to unlock and then inject
-    auto information = CreationRules::New<TActual>(std::forward<Args>(args)...);
-    retVal.reset(information.second);
+    retVal.reset(CreationRules::New<TActual>(std::forward<Args>(args)...));
 
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
