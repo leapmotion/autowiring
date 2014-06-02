@@ -5,37 +5,65 @@
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <set>
+#include <functional>
 #include RVALUE_HEADER
 #include MEMORY_HEADER
 
 template<class T>
-struct NoOp {
-  void operator()(T& op) const {}
-};
-
-template<class T>
-struct Create {
-  T* operator()() const { return new T(); }
-};
+T* DefaultCreate(void) {
+  return new T;
+}
 
 /// <summary>
-/// Templated base class for implementors who wish to have more direct control over Reset and Allocate
+/// Allows the management of a pool of objects based on an embedded factory
 /// </summary>
+/// <param name="T>The type to be pooled</param>
+/// <param name="_Rx">A function object which resets instances returned to the pool</param>
+/// <remarks>
+/// This class is a type of factory that creates an object of type T.  The object pool
+/// creates a shared pointer for the consumer to use, and when the last shared pointer
+/// for that object is destroyed, the wrapped object is returned to this pool rather than
+/// being deleted.  Returned objects may satisfy subsequent requests for construction.
+///
+/// All object pool methods are thread safe.
+///
+/// Issued pool members must be released before the pool goes out of scope
+/// </remarks>
 template<class T>
-class ObjectPoolBase
+class ObjectPool
 {
 public:
-  ObjectPoolBase(size_t limit = ~0, size_t maxPooled = ~0) :
+  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
+#if defined(__GNUC__) && !defined(__clang__)
+  // workaround for gcc 4.6 internal compiler error
+  ObjectPool(
+    size_t limit,
+    size_t maxPooled,
+    const std::function<T*()>& alloc,
+    const std::function<void(T&)>& rx
+  );
+#else
+  ObjectPool(
+    size_t limit = ~0,
+    size_t maxPooled = ~0,
+    const std::function<T*()>& alloc = &DefaultCreate<T>,
+    const std::function<void(T&)>& rx = [] (T&) {}
+  ) :
     m_monitor(new ObjectPoolMonitor),
     m_limit(limit),
     m_poolVersion(0),
     m_maxPooled(maxPooled),
-    m_outstanding(0)
+    m_outstanding(0),
+    m_rx(rx),
+    m_alloc(alloc)
   {}
-
-  ~ObjectPoolBase(void) {
+#endif
+  ~ObjectPool(void) {
     // Transition the pool to the abandoned state:
     m_monitor->Abandon();
+
+    // Clear everything in the cache to ensure that the outstanding limit is correctly updated
+    ClearCachedEntities();
   }
 
 protected:
@@ -52,23 +80,11 @@ protected:
   size_t m_limit;
   size_t m_outstanding;
 
-  /// <summary>
-  /// Returns the specified object to the object pool
-  /// </summary>
-  void Return(std::unique_ptr<T>&& ptr) {
-    assert(m_outstanding != 0);
-    // One fewer outstanding count:
-    m_outstanding--;
-    if(m_objs.size() < m_maxPooled) {
-      // Reset, insert, return
-      Reset(*ptr);
-      m_objs.push_back(Wrap(ptr.release()));
-    }
+  // Resetter:
+  std::function<void(T&)> m_rx;
 
-    // If the new outstanding count is less than or equal to the limit, wake up any waiters:
-    if(m_outstanding <= m_limit)
-      m_setCondition.notify_all();
-  }
+  // Allocator:
+  std::function<T*()> m_alloc;
 
   /// <summary>
   /// Creates a shared pointer to wrap the specified object
@@ -83,32 +99,43 @@ protected:
     return std::shared_ptr<T>(
       pObj,
       [this, poolVersion, monitor](T* ptr) {
-        boost::lock_guard<boost::mutex> lk(*monitor);
-        if(monitor->IsAbandoned()) {
-          // Nothing we can do, monitor object abandoned already, just destroy the object
-          delete ptr;
-          return;
-        }
-
-        if(poolVersion == m_poolVersion)
-          // Obtain the monitor lock and return ourselves to the collection:
-          this->Return(std::unique_ptr<T>(ptr));
-        else
-          // Object now obsolete, just destroy it
-          delete ptr;
+        this->Return(poolVersion, monitor, ptr);
       }
     );
   }
 
-  /// <summary>
-  /// Actually performs a reset of the passed object
-  /// </summary>
-  virtual void Reset(T& ptr) = 0;
+  void Return(size_t poolVersion, const std::shared_ptr<ObjectPoolMonitor>& monitor, T* ptr) {
+    // Default behavior will be to destroy the pointer
+    std::unique_ptr<T> unique(ptr);
 
-  /// <summary>
-  /// Creates a new instance of type T
-  /// </summary>
-  virtual T* Allocate(void) const = 0;
+    // Hold the lock next, in order to ensure that destruction happens after the monitor
+    // lock is released.
+    boost::lock_guard<boost::mutex> lk(*monitor);
+
+    if(monitor->IsAbandoned())
+      // Nothing we can do, monitor object abandoned already, just destroy the object
+      return;
+
+    // Always decrement the count when an object is no longer outstanding
+    assert(m_outstanding);
+    m_outstanding--;
+
+    if(
+      // Pool versions have to match, or the object should be dumped
+      poolVersion == m_poolVersion &&
+
+      // Object pool needs to be capable of accepting another object as an input
+      m_objs.size() < m_maxPooled
+    ) {
+      // Reset the object and put it back in the pool:
+      m_rx(*ptr);
+      m_objs.push_back(Wrap(unique.release()));
+    }
+
+    // If the new outstanding count is less than or equal to the limit, wake up any waiters:
+    if(m_outstanding <= m_limit)
+      m_setCondition.notify_all();
+  }
 
   /// <summary>
   /// Obtains an element from the object queue, assumes exterior synchronization
@@ -127,7 +154,7 @@ protected:
       lk.unlock();
 
       // We failed to recover an object, create a new one:
-      return Wrap(Allocate());
+      return Wrap(m_alloc());
     }
 
     // Remove, return:
@@ -144,6 +171,19 @@ public:
     return m_objs.size();
   }
 
+  // Mutator methods:
+  void SetAlloc(const std::function<T*()>& alloc) {
+    m_alloc = alloc;
+  }
+
+  /// <summary>
+  /// Discards all entities currently saved in the pool
+  /// </summary>
+  /// <remarks>
+  /// This method will also cause currently outstanding entities to be freed.  Eventually, once all objects
+  /// return to the pool, the set of objects managed by this pool will be distinct from those objects created
+  /// prior to this call.
+  /// </remarks>
   void ClearCachedEntities(void) {
     // Declare this first, so it's freed last:
     std::vector<std::shared_ptr<T>> objs;
@@ -153,15 +193,22 @@ public:
     // the shared_ptr cleanup lambda.
     boost::lock_guard<boost::mutex> lk(*m_monitor);
     m_poolVersion++;
-    objs = std::move(m_objs);
-    // After moving the object, reset it to a known state
-    m_objs.clear();
+
+    // Swap the cached object collection with an empty one
+    std::swap(objs, m_objs);
+
+    // Technically, all of these entities are now outstanding.  Update accordingly.
+    m_outstanding += objs.size();
   }
 
   /// <summary>
   /// This sets the maximum number of entities that the pool will cache to satisfy a later allocation request
   /// </summary>
   /// <param name="maxPooled">The new maximum cache count</param>
+  /// <remarks>
+  /// If the value of maxPooled is greater than the maximum outstanding limit, it will be made
+  /// equal to the maximum outstanding limit.
+  /// </remarks>
   void SetMaximumPooledEntities(size_t maxPooled) {
     m_maxPooled = maxPooled;
     for(;;) {
@@ -214,7 +261,7 @@ public:
   std::shared_ptr<T> WaitFor(Duration duration) {
     boost::unique_lock<boost::mutex> lk(*m_monitor);
     if(!m_limit)
-      throw autowiring_error("Attempted to perform a timed wait on a pool containing no entities");
+      throw autowiring_error("Attempted to perform a timed wait on a pool that is already in rundown");
 
     if(m_setCondition.wait_for(
         lk,
@@ -242,6 +289,30 @@ public:
       return m_outstanding < m_limit;
     });
     return ObtainElementUnsafe(lk);
+  }
+
+  /// <summary>
+  /// Causes the pool's internal cache to hold at least the requested number of items
+  /// </summary>
+  /// <remarks>
+  /// The preallocation routine is an optimization routine similar to vector::reserve.  Calling
+  /// this routine can reduce the expense of pointer requests made later, because no allocation
+  /// has to take place at that point.
+  ///
+  /// If the caller requests a reservation that is greater than the maximum pool limit, the
+  /// number of objects allocated will be equal to the maximum pool limit.
+  /// </remarks>
+  void Preallocate(size_t reservation) {
+    if(reservation > m_maxPooled)
+      reservation = m_maxPooled;
+
+    // Check out objects into our vector, allowing them to all return to the pool at once.
+    // This will populate the pool with the desired number of entities, and will trigger
+    // the desired failure condition if we wind up checking out more objects than are
+    // allowed for this pool.
+    std::vector<std::shared_ptr<T>> objs(reservation);
+    while(reservation--)
+      (*this)(objs[reservation]);
   }
 
   /// <summary>
@@ -283,45 +354,20 @@ public:
   }
 };
 
-/// <summary>
-/// Allows the management of a pool of objects based on an embedded factory
-/// </summary>
-/// <param name="T>The type to be pooled</param>
-/// <param name="_Rx">A function object which resets instances returned to the pool</param>
-/// <remarks>
-/// This class is a type of factory that creates an object of type T.  The object pool
-/// creates a shared pointer for the consumer to use, and when the last shared pointer
-/// for that object is destroyed, the wrapped object is returned to this pool rather than
-/// being deleted.  Returned objects may satisfy subsequent requests for construction.
-///
-/// All object pool methods are thread safe.
-///
-/// Issued pool members must be released before the pool goes out of scope
-/// </remarks>
-template<class T, class _Rx = NoOp<T>, class _Alloc = Create<T>>
-class ObjectPool:
-  public ObjectPoolBase<T>
-{
-public:
-  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
-  ObjectPool(size_t limit = ~0, size_t maxPooled = ~0, _Rx&& rx = _Rx(), _Alloc&& alloc = _Alloc()):
-    ObjectPoolBase<T>(limit, maxPooled),
-    m_rx(std::move(rx)),
-    m_alloc(std::move(alloc))
-  {}
-
-private:
-  // Resetter, where relevant:
-  _Rx m_rx;
-
-  // Allocator, where relevant:
-  _Alloc m_alloc;
-
-protected:
-  void Reset(T& obj) override { m_rx(obj); }
-  virtual T* Allocate(void) const override { return m_alloc(); }
-
-public:
-  void SetRx(_Rx&& rx) { m_rx = std::move(rx); }
-  void SetAlloc(_Alloc&& alloc) { m_alloc = std::move(alloc); }
-};
+#if defined(__GNUC__) && !defined(__clang__)
+template<class T>
+ObjectPool<T>::ObjectPool(
+  size_t limit = ~0,
+  size_t maxPooled = ~0,
+  const std::function<T*()>& alloc = &DefaultCreate<T>,
+  const std::function<void(T&)>& rx = [] (T&) {}
+) :
+  m_monitor(new ObjectPoolMonitor),
+  m_limit(limit),
+  m_poolVersion(0),
+  m_maxPooled(maxPooled),
+  m_outstanding(0),
+  m_rx(rx),
+  m_alloc(alloc)
+{}
+#endif
