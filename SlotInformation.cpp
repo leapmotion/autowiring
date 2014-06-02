@@ -10,12 +10,11 @@ static boost::thread_specific_ptr<SlotInformationStackLocation> tss([](SlotInfor
 
 SlotInformationStump::~SlotInformationStump(void) {}
 
-SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStump* pStump, const void* pObj, const void* pContextMember, size_t extent) :
+SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStump* pStump, const void* pObj, size_t extent) :
   m_pPrior(tss.get()),
   m_pStump(pStump),
   m_pCur(nullptr),
   m_pObj(pObj),
-  m_pContextMember(pContextMember),
   m_extent(extent)
 {
   tss.reset(this);

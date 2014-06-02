@@ -2,11 +2,10 @@
 #include <typeinfo>
 #include MEMORY_HEADER
 
-class ContextMember;
 class DeferrableAutowiring;
 
 /// <summary>
-/// Represents information about a single slot detected as having been declared in a ContextMember
+/// Represents information about a single slot detected as having been declared in a context member
 /// </summary>
 struct SlotInformation {
   SlotInformation(const SlotInformation* pFlink, const std::type_info& type, size_t slotOffset, bool autoRequired) :
@@ -43,7 +42,7 @@ struct SlotInformationStump {
   bool bInitialized;
 
   // Current slot information:
-  SlotInformation* pHead;
+  const SlotInformation* pHead;
 };
 
 /// <summary>
@@ -57,12 +56,11 @@ private:
     m_pStump(rhs.m_pStump),
     m_pCur(rhs.m_pCur),
     m_pObj(rhs.m_pObj),
-    m_pContextMember(rhs.m_pContextMember),
     m_extent(rhs.m_extent)
   {
     rhs.m_pStump = nullptr;
   }
-  SlotInformationStackLocation(SlotInformationStump* pStump = nullptr, const void* pObj = nullptr, const void* pContextMember = nullptr, size_t extent = 0);
+  SlotInformationStackLocation(SlotInformationStump* pStump = nullptr, size_t extent = 0);
 
 public:
   ~SlotInformationStackLocation(void);
@@ -79,7 +77,6 @@ private:
 
   // Information about the object being constructed while this stack location is valid:
   const void* m_pObj;
-  const void* m_pContextMember;
   size_t m_extent;
 
 public:
@@ -109,7 +106,7 @@ public:
     // New stack location to enclose this stump.  This stack location may be concurrent with respect
     // to other threads, but only one thread will succeed in colonizing this stump with a chain of
     // slot entries
-    return SlotInformationStackLocation(pStump, pSpace, static_cast<ContextMember*>(pSpace), sizeof(T));
+    return SlotInformationStackLocation(pStump, sizeof(T));
   }
 
   /// <summary>
