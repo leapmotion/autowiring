@@ -75,6 +75,8 @@ set(Autowiring_SRCS
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   has_autofilter.h
+  has_simple_constructor.h
+  has_static_new.h
   is_any.h
   InterlockedExchange.h
   InvokeRelay.h
