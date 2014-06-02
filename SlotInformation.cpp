@@ -8,9 +8,7 @@
 // Special file-level allocation with a no-op dtor, because all stack locations are stack-allocated
 static boost::thread_specific_ptr<SlotInformationStackLocation> tss([](SlotInformationStackLocation*) {});
 
-SlotInformationStump::~SlotInformationStump(void) {}
-
-SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStump* pStump, const void* pObj, size_t extent) :
+SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStumpBase* pStump, const void* pObj, size_t extent) :
   m_pPrior(tss.get()),
   m_pStump(pStump),
   m_pCur(nullptr),
@@ -49,7 +47,12 @@ SlotInformationStackLocation::~SlotInformationStackLocation(void) {
     prior.reset(cur);
 }
 
-SlotInformationStump* SlotInformationStackLocation::CurrentStackLocation(void) {
+SlotInformationStackLocation* SlotInformationStackLocation::CurrentStackLocation(void) {
+  // Trivial null defaulting:
+  return tss.get();
+}
+
+SlotInformationStumpBase* SlotInformationStackLocation::CurrentStump(void) {
   // Trivial null defaulting:
   return tss.get() ? tss->m_pStump : nullptr;
 }
