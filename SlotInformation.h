@@ -65,6 +65,7 @@ template<class T>
 struct SlotInformationStump<T, false>:
   SlotInformationStumpBase
 {
+  SlotInformationStump(){}
   static SlotInformationStump s_stump;
 };
 
@@ -74,6 +75,7 @@ struct SlotInformationStump<T, false>:
 template<class T>
 struct SlotInformationStump<T, true>
 {
+  SlotInformationStump(){}
   static SlotInformationStump<typename SelectTypeUnifier<T>::type>& s_stump;
 };
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "has_simple_constructor.h"
 #include "Object.h"
+#include RVALUE_HEADER
 
 class TypeUnifier: public Object {};
 
