@@ -45,7 +45,8 @@ TEST_F(ContextMemberTest, VerifyDetectedMembers)
 
   // Validate all pointers are what we expect to find, and in the right order
   size_t ct = 0;
-  for(auto cur = hasAFew->GetSlotInformation(); cur; cur = cur->pFlink) {
+
+  for(auto cur = SlotInformationStump<HasAFewSlots>::s_stump.pHead; cur; cur = cur->pFlink) {
     // Validate slot types:
     ASSERT_EQ(expected[ct].type, cur->type) << "Slot number " << ct << " had a mismatched type";
     ASSERT_EQ(expected[ct].slotOffset, cur->slotOffset) << "Slot number " << ct << " had a mismatched offset";
@@ -54,28 +55,27 @@ TEST_F(ContextMemberTest, VerifyDetectedMembers)
   ASSERT_EQ(3UL, ct) << "Slot registration detected an insufficient number of created slots";
 }
 
-class AutoRequiresSomething:
-  public ContextMember
+class AutoRequiresSomething
 {
   AutoRequired<HasAFewSlots> m_slots;
   Autowired<SimpleObject> m_simpleObj;
 };
 
-TEST_F(ContextMemberTest, RecursiveRelationship) {
+TEST_F(ContextMemberTest, RecursiveRelationshipNoContextMember) {
   // Create our root type:
   AutoRequired<AutoRequiresSomething> ars;
   AutoRequired<HasAFewSlots> hasAFew;
 
   // Now verify that we only get the type we expect, and none of the transitive types:
   size_t ct = 0;
-  for(auto cur = ars->GetSlotInformation(); cur; cur = cur->pFlink)
+  for(auto cur = SlotInformationStump<AutoRequiresSomething>::s_stump.pHead; cur; cur = cur->pFlink)
     ct++;
   ASSERT_LE(1UL, ct) << "Recursive construction of an AutoRequired type incorrectly mapped in slots in a created field";
   ASSERT_GE(ct, 1UL) << "Recursive construction failed to map a type after an AutoRequired field was constructed";
 
   // Descendant type should also be correctly initialized:
   ct = 0;
-  for(auto cur = hasAFew->GetSlotInformation(); cur; cur = cur->pFlink)
+  for(auto cur = SlotInformationStump<HasAFewSlots>::s_stump.pHead; cur; cur = cur->pFlink)
     ct++;
   ASSERT_EQ(3UL, ct) << "Recursively AutoRequired type did not enumerate all of the expected slots upon reflection";
 }
@@ -96,7 +96,7 @@ TEST_F(ContextMemberTest, TransientAutowiring) {
   AutoRequired<AutowiresInCtor> aictor;
 
   size_t ct = 0;
-  for(auto cur = aictor->GetSlotInformation(); cur; cur = cur->pFlink)
+  for(auto cur = SlotInformationStump<AutowiresInCtor>::s_stump.pHead; cur; cur = cur->pFlink)
     ct++;
 
   ASSERT_EQ(1UL, ct) << "An autowirable slot declared on the stack was incorrectly detected as being a type member";
