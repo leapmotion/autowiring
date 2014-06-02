@@ -49,7 +49,7 @@ protected:
   // Priority queue of non-ready events:
   std::priority_queue<DispatchThunkDelayed> m_delayedQueue;
 
-  // A lock held when modifications to any element EXCEPT the first element must be made:
+  // A lock held when the dispatch queue must be updated:
   boost::mutex m_dispatchLock;
 
   // Notice when the dispatch queue has been updated:
@@ -144,17 +144,11 @@ protected:
 
 public:
   /// <summary>
-  /// Check if DispatchQueue is ready to take events
-  /// </summary>
-  virtual bool DEPRECATED(CanAccept(void) const, "CanAccept has been deprecated. Use IsInitiated on the enclosing context instead");
-  virtual bool DEPRECATED(DelayUntilCanAccept(void), "CanAccept is deprecated. Use WaitUntilInitiated on the enclosing context instead");
-
-  /// <summary>
   /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>
   void AddExisting(DispatchThunkBase* pBase) {
     boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-    if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
+    if(static_cast<int>(m_dispatchQueue.size()) >= m_dispatchCap)
       return;
 
     m_dispatchQueue.push_back(pBase);
@@ -229,7 +223,7 @@ public:
     static_assert(!std::is_pointer<_Fx>::value, "Cannot pend a pointer to a function, we must have direct ownership");
 
     boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-    if(static_cast<int>(m_dispatchQueue.size()) > m_dispatchCap)
+    if(static_cast<int>(m_dispatchQueue.size()) >= m_dispatchCap)
       return;
 
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(std::forward<_Fx>(fx)));

@@ -3,7 +3,6 @@
 #include "CoreContext.h"
 #include "CoreThread.h"
 #include "AutoPacketFactory.h"
-#include "AutoPacketListener.h"
 #include "Autowired.h"
 #include "BoltBase.h"
 #include "CoreContextStateBlock.h"
@@ -513,14 +512,16 @@ void CoreContext::UnregisterEventReceivers(void) {
     m_junctionBoxManager->RemoveEventReceiver(q);
 
   // Notify our parent (if we have one) that our event receivers are going away:
-  if(m_pParent) {
+  if(m_pParent)
     m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
 
-    AnySharedPointerT<AutoPacketFactory> pf;
-    FindByTypeUnsafe(pf);
-    if(pf)
-      m_pParent->RemovePacketSubscribers(pf->as<AutoPacketFactory>()->GetSubscriberVector());
-  }
+  // Recursively unregister packet factory subscribers:
+  AnySharedPointerT<AutoPacketFactory> pf;
+  FindByTypeUnsafe(pf);
+
+  // Selective removal from the parent collection only
+  if(pf && m_pParent)
+    m_pParent->RemovePacketSubscribers(*pf);
 
   // Wipe out all collections so we don't try to free these multiple times:
   m_eventReceivers.clear();
@@ -779,7 +780,7 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
   m_contextMembers.push_back(ptr.get());
 }
 
-void CoreContext::AddPacketSubscriber(const AutoPacketSubscriber& rhs) {
+void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
   GetPacketFactory()->AddSubscriber(rhs);
   if(m_pParent)
     m_pParent->AddPacketSubscriber(rhs);
@@ -796,23 +797,24 @@ void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
   }
   
   // Always remove from this context's PacketFactory:
-  GetPacketFactory()->RemoveSubscriber(traits.type);
+  GetPacketFactory()->RemoveSubscriber(traits.subscriber);
   
   // Handoff to parent:
   if (m_pParent)
     m_pParent->UnsnoopAutoPacket(traits);
 }
 
-void CoreContext::RemovePacketSubscribers(const std::vector<AutoPacketSubscriber> &subscribers) {
+void CoreContext::RemovePacketSubscribers(const AutoPacketFactory& factory) {
   // Notify the parent that it will have to remove these subscribers as well
   if(m_pParent)
-    m_pParent->RemovePacketSubscribers(subscribers);
+    m_pParent->RemovePacketSubscribers(factory);
 
   // Remove subscribers from our factory AFTER the parent eviction has taken place
-  AnySharedPointerT<AutoPacketFactory> pf;
-  FindByTypeUnsafe(pf);
-  if(pf)
-    pf->as<AutoPacketFactory>()->RemoveSubscribers(subscribers.begin(), subscribers.end());
+  AnySharedPointerT<AutoPacketFactory> localFactory;
+  FindByTypeUnsafe(localFactory);
+  if(localFactory)
+    for(auto& cur : factory.GetSubscriberVector())
+      localFactory->RemoveSubscriber(cur);
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {

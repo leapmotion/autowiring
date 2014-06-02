@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "JunctionBoxManager.h"
 #include "AutoPacketFactory.h"
-#include "AutoPacketListener.h"
 #include "AutowiringEvents.h"
 #include "JunctionBox.h"
 
@@ -18,7 +17,6 @@ JunctionBoxManager::JunctionBoxManager(void) {
 
   // Always allow internal events
   m_junctionBoxes[typeid(AutowiringEvents)]->Initiate();
-  m_junctionBoxes[typeid(AutoPacketListener)]->Initiate();
 }
 
 JunctionBoxManager::~JunctionBoxManager(void) {}
