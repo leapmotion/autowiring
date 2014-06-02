@@ -180,7 +180,6 @@ protected:
     Inject<T>();
   }
 
-
   // Enables a boltable class
   template<typename T, typename... Sigils>
   void EnableInternal(T*, Boltable<Sigils...>*) {
