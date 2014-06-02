@@ -4,6 +4,7 @@
 #include "AutoPacketFactory.h"
 #include "AutoPacketProfiler.h"
 #include "SatCounter.h"
+#include <list>
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory):
   m_satCounters(
@@ -46,37 +47,70 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
 }
 
 AutoPacket::~AutoPacket() {
-  m_decorations.clear();
-  m_satCounters.clear();
+  // Last chance for AutoFilter call
+  ResolveOptions();
+
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    m_decorations.clear();
+    m_satCounters.clear();
+  }
+}
+
+void AutoPacket::ResolveOptions(void) {
+  // Queue calls to ensure that calls to Decorate inside of AutoFilter methods
+  // will NOT effect the resolution of optional arguments.
+  std::list<SatCounter*> callQueue;
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    for(auto& decoration : m_decorations)
+      for(auto& satCounter : decoration.second.m_subscribers)
+        if(!satCounter.second)
+          if(satCounter.first->Resolve())
+            callQueue.emplace_back(satCounter.first);
+  }
+  for (SatCounter* call : callQueue)
+    call->CallAutoFilter(*this);
 }
 
 void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
-  auto decoration = m_decorations.find(info);
-  if(decoration == m_decorations.end())
-    // Trivial return, there's no subscriber to this decoration and so we have nothing to do
-    return;
+  DecorationDisposition* decoration;
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    auto dFind = m_decorations.find(info);
+    if(dFind == m_decorations.end())
+      // Trivial return, there's no subscriber to this decoration and so we have nothing to do
+      return;
+    decoration = &dFind->second;
+  }
 
   // Update everything
-  for(auto& satCounter : decoration->second.m_subscribers) {
+  for(auto& satCounter : decoration->m_subscribers) {
     if(satCounter.second)
       // Entry is mandatory, leave it unsatisfaible
       continue;
 
     // Entry is optional, we will call if we're satisfied after decrementing this optional field
-    if(!satCounter.first->Decrement(false))
-      satCounter.first->CallAutoFilter(*this);
+    if(satCounter.first->Decrement(false))
+        satCounter.first->CallAutoFilter(*this);
   }
 }
 
 void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
-  auto decoration = m_decorations.find(info);
-  if(decoration == m_decorations.end())
-    return;
+  DecorationDisposition* decoration;
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    auto dFind = m_decorations.find(info);
+    if(dFind == m_decorations.end())
+      // Trivial return, there's no subscriber to this decoration and so we have nothing to do
+      return;
+    decoration = &dFind->second;
+  }
 
   // Update everything
-  for(auto& satCounter : decoration->second.m_subscribers)
-    if(!satCounter.first->Decrement(satCounter.second))
-      satCounter.first->CallAutoFilter(*this);
+  for(auto& satCounter : decoration->m_subscribers)
+    if(satCounter.first->Decrement(satCounter.second))
+        satCounter.first->CallAutoFilter(*this);
 }
 
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
@@ -106,11 +140,17 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 }
 
 void AutoPacket::Reset(void) {
+  // Last chance for AutoFilter call
+  ResolveOptions();
+
   // Reset all counters:
-  for(auto& satCounter : m_satCounters)
-    satCounter.Reset();
-  for(auto& decoration : m_decorations)
-    decoration.second.Reset();
+  {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    for(auto& satCounter : m_satCounters)
+      satCounter.Reset();
+    for(auto& decoration : m_decorations)
+      decoration.second.Reset();
+  }
 
   // Initial satisfaction of the AutoPacket:
   UpdateSatisfaction(typeid(AutoPacket));
