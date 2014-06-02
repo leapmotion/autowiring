@@ -30,7 +30,7 @@ public:
 
 private:
   // This is the only member of this class.
-  const T* const m_ptr;
+  const T* m_ptr;
 
 public:
   operator bool(void) const { return !!m_ptr; }

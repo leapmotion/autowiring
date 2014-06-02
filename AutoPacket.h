@@ -69,7 +69,12 @@ private:
   /// <summary>
   /// Performs a "satisfaction pulse", which will avoid notifying any deferred filters
   /// </summary>
-  void PulseSatisfaction(const std::type_info& info);
+  /// <remarks>
+  /// A satisfaction pulse will call any AutoFilter instances which are satisfied by the
+  /// decoration of the passed decoration types.  Such filters will be called even if
+  /// some optional inputs remain outstanding.
+  /// </remarks>
+  void PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos);
 
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
@@ -208,7 +213,7 @@ public:
       // Insert a null entry at this location:
       boost::lock_guard<boost::mutex> lk(m_lock);
       auto& entry = m_decorations[typeid(T)];
-      if(entry.satisfied)
+      if(entry.wasCheckedOut)
         throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
 
       // Mark the entry as appropriate:
@@ -236,9 +241,12 @@ public:
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
       pEntry = &m_decorations[typeid(Type)];
-      if(pEntry->satisfied)
+      if(pEntry->wasCheckedOut)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
+
+      // Mark the entry as appropriate:
       pEntry->satisfied = true;
+      pEntry->wasCheckedOut = true;
     }
 
     SharedPointerSlotT<Type>& retVal = pEntry->m_decoration->init<Type>();
@@ -248,38 +256,51 @@ public:
   }
 
   /// <summary>
-  /// Attaches a decoration which will only be valid for the duration of the call
+  /// Subscribers respond to the decoration arguments immediately or never for this packet.
   /// </summary>
   /// <remarks>
-  /// The attached decoration is only valid for AutoFilters which are valid during
-  /// this call.  The type of the decoration is "T", and the passed pointer is not
-  /// copied.
+  /// Unlike Decorate, the arguments of DecorateImmediate are not copied.
+  /// Each decoration is only valid for AutoFilters which are valid during
+  /// this call.
+  /// If multiple values are specified, all will be simultaneously made valid and
+  /// then invalidated.
   /// </remarks>
-  template<class T>
-  void DecorateImmediate(const T* pt) {
+  template<class... Ts>
+  void DecorateImmediate(const Ts&... immeds) {
+    // These are the things we're going to be working with while we perform immediate decoration:
+    static const std::type_info* sc_typeInfo [] = {&typeid(Ts)...};
+    const void* pvImmeds[] = {&immeds...};
+    DecorationDisposition* pTypeSubs[sizeof...(Ts)];
+
     // Perform standard decoration with a short initialization:
-    DecorationDisposition* pEntry;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      pEntry = &m_decorations[typeid(T)];
-      if(pEntry->wasCheckedOut)
-        throw std::runtime_error("Cannot perform immediate decoration with type T, the requested decoration already exists");
-      pEntry->satisfied = true;
-      pEntry->wasCheckedOut = true;
+      for(size_t i = 0; i < sizeof...(Ts); i++) {
+        pTypeSubs[i] = &m_decorations[*sc_typeInfo[i]];
+        if(pTypeSubs[i]->wasCheckedOut)
+          throw std::runtime_error("Cannot perform immediate decoration with type T, the requested decoration already exists");
+
+        // Mark the entry as appropriate:
+        pTypeSubs[i]->satisfied = true;
+        pTypeSubs[i]->wasCheckedOut = true;
+
+        pTypeSubs[i]->m_pImmediate = &pvImmeds[i];
+      }
     }
 
     // Pulse satisfaction:
-    pEntry->m_pImmediate = pt;
-
-    MakeAtExit([this, pEntry] {
-      // Mark this entry as unsatisfiable:
-      pEntry->satisfied = false;
-      pEntry->m_pImmediate = nullptr;
+    MakeAtExit([this, &pTypeSubs] {
+      // Mark entries as unsatisfiable:
+      for(auto pEntry : pTypeSubs) {
+        pEntry->satisfied = false;
+        pEntry->m_pImmediate = nullptr;
+      }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-      MarkUnsatisfiable(typeid(T)); 
+      for(auto ti : sc_typeInfo)
+        MarkUnsatisfiable(*ti);
     }),
-    PulseSatisfaction(typeid(T));
+    PulseSatisfaction(pTypeSubs, sizeof...(Ts));
   }
 
   /// <returns>
