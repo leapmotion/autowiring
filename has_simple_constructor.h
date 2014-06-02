@@ -1,4 +1,5 @@
 #pragma once
+#include TYPE_TRAITS_HEADER
 
 template<typename T, bool isAbstract = std::is_abstract<T>::value>
 struct has_simple_constructor
