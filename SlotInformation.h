@@ -1,4 +1,5 @@
 #pragma once
+#include "TypeUnifier.h"
 #include <typeinfo>
 #include MEMORY_HEADER
 
@@ -44,15 +45,43 @@ struct SlotInformationStumpBase {
   const SlotInformation* pHead;
 };
 
+/// <summary>
+/// Utility type, inherits true_type if T should use the type unifier
+/// </summary>
 template<class T>
-struct SlotInformationStump:
+struct use_unifier:
+  std::integral_constant<
+    bool,
+    !std::is_void<T>::value &&
+    !std::is_scalar<T>::value &&
+    !std::is_base_of<Object, T>::value
+  >
+{};
+
+template<class T, bool needsUnifier = use_unifier<T>::value>
+struct SlotInformationStump;
+
+template<class T>
+struct SlotInformationStump<T, false>:
   SlotInformationStumpBase
 {
   static SlotInformationStump s_stump;
 };
 
+/// <summary>
+/// Specializations for types which will be using the type unifier
+/// </summary>
 template<class T>
-SlotInformationStump<T> SlotInformationStump<T>::s_stump;
+struct SlotInformationStump<T, true>
+{
+  static SlotInformationStump<typename SelectTypeUnifier<T>::type>& s_stump;
+};
+
+template<class T>
+SlotInformationStump<T, false> SlotInformationStump<T, false>::s_stump;
+
+template<class T>
+SlotInformationStump<typename SelectTypeUnifier<T>::type>& SlotInformationStump<T, true>::s_stump = SlotInformationStump<typename SelectTypeUnifier<T>::type>::s_stump;
 
 /// <summary>
 /// A stack location linked list, stored in a per-thread basis and used to track slots
