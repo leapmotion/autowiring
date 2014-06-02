@@ -48,7 +48,6 @@ SlotInformationStackLocation::~SlotInformationStackLocation(void) {
 }
 
 SlotInformationStackLocation* SlotInformationStackLocation::CurrentStackLocation(void) {
-  // Trivial null defaulting:
   return tss.get();
 }
 
