@@ -1,9 +1,9 @@
 #include "stdafx.h"
-#include "AutoFilter.h"
+#include "NewAutoFilter.h"
 #include "SlotInformation.h"
 #include "autowiring_error.h"
 
-AutoFilterBase::AutoFilterBase(const AutoFilterDescriptorStub& stub) :
+NewAutoFilterBase::NewAutoFilterBase(const AutoFilterDescriptorStub& stub) :
   m_stub(stub)
 {
   auto location = SlotInformationStackLocation::CurrentStackLocation();
