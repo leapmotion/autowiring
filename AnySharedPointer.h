@@ -46,6 +46,20 @@ public:
   }
 
   /// <summary>
+  /// Default for std library sorting of unique elements
+  /// </summary>
+  bool operator<(const AnySharedPointer& rhs) const { return *slot() < *rhs.slot();}
+
+  /// <summary>
+  /// Default for std library sorting of repeatable elements
+  /// </summary>
+  bool operator<=(const AnySharedPointer& rhs) const { return *slot() <= *rhs.slot();}
+
+  bool operator>(const AnySharedPointer& rhs) const { return *slot() > *rhs.slot();}
+
+  bool operator>=(const AnySharedPointer& rhs) const { return *slot() >= *rhs.slot();}
+
+  /// <summary>
   /// Copy assignment operator
   /// </summary>
   /// <remarks>
