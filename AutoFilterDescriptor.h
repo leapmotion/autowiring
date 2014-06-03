@@ -133,6 +133,7 @@ struct CallExtractor<void (T::*)(Args...)>:
   /// </summary>
   template<void(T::*memFn)(Args...)>
   static void Call(void* pObj, AutoPacket& autoPacket) {
+    // Handoff
     (((T*) pObj)->*memFn)(
       subscriber_traits<Args>()(autoPacket)...
     );
@@ -160,7 +161,7 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
     *(T*) pObj += [pObj, pAutoPacket] {
       (((T*) pObj)->*memFn)(
         subscriber_traits<Args>()(*pAutoPacket)...
-        );
+      );
     };
   }
 };
@@ -320,6 +321,13 @@ struct AutoFilterDescriptor:
   {}
 
   /// <summary>
+  /// Utility constructor, used when there is no proffered AutoFilter method on a class
+  /// </summary>
+  AutoFilterDescriptor(const AnySharedPointer& autoFilter):
+    m_autoFilter(autoFilter)
+  {}
+
+  /// <summary>
   /// Alternative constructor which can bind a stub
   /// </summary>
   AutoFilterDescriptor(const AnySharedPointer& autoFilter, const AutoFilterDescriptorStub& stub) :
@@ -352,12 +360,9 @@ protected:
 
 public:
   // Accessor methods:
-  bool empty(void) const { return m_autoFilter->empty(); }
+  bool empty(void) const { return !m_pCall || m_autoFilter->empty(); }
+  AnySharedPointer& GetAutoFilter(void) { return m_autoFilter; }
   const AnySharedPointer& GetAutoFilter(void) const { return m_autoFilter; }
-
-  /// <returns>A pointer to the proper subscriber object</returns>
-  void* GetAutoFilterPtr(void) { return m_autoFilter->ptr(); }
-  const void* GetAutoFilterPtr(void) const { return m_autoFilter->ptr(); }
 
   /// <summary>
   /// Releases the bound subscriber and the corresponding arity, causing it to become disabled
@@ -416,7 +421,7 @@ namespace std {
   struct hash<AutoFilterDescriptor>
   {
     size_t operator()(const AutoFilterDescriptor& subscriber) const {
-      return (size_t) subscriber.GetAutoFilterPtr();
+      return (size_t) subscriber.GetAutoFilter()->ptr();
     }
   };
 }
