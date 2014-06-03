@@ -20,10 +20,11 @@ struct DecorationDisposition
   // packet.  In the case of immediate decorations, this value will be invalid.
   AnySharedPointer m_decoration;
 
-  // A pointer to the immediate decoration, if one is specified, or else nullptr
+  // A pointer to the immediate decorations, if one is specified, or else nullptr
   const void* m_pImmediate;
 
-  // Satisfaction counters, with the second part indicating a required entry
+  // Satisfaction counters, with the second part indicating a required entry if true,
+  // or an optional entry if false.
   std::vector<std::pair<SatCounter*, bool>> m_subscribers;
 
   // Flag indicating that this entry is satisfied
