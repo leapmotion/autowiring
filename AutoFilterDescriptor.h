@@ -285,7 +285,8 @@ protected:
 
   // The first argument of this static global is void*, but it is expected that the argument
   // that will actually be passed is of a type corresponding to the member function bound
-  // by this operation.  Strong guarantees must be made that the types
+  // by this operation.  Strong guarantees must be made that the types passed into this routine
+  // are identical to the types expected by the corresponding call.
   t_call m_pCall;
 
 public:
@@ -320,15 +321,37 @@ public:
   t_call GetCall(void) const { return m_pCall; }
 
   /// <returns>
-  /// True if this subscriber instance is empty
+  /// True if this subscriber instance is not empty.
   /// </returns>
   operator bool(void) const { return !empty(); }
 
+  /// <returns>True when both the AutoFilter method and subscriber instance are equal.</returns>
   bool operator==(const AutoFilterDescriptor& rhs) const {
+    // AutoFilter methods are the same for all instances of a class,
+    // and classes may have more than one AutoFilter method,
+    // so both comparisons are required.
     return
       m_pCall == rhs.m_pCall &&
       m_autoFilter == rhs.m_autoFilter;
   }
+
+  /// <summary>
+  /// Default for std library sorting of unique elements
+  /// </summary>
+  bool operator<(const AutoFilterDescriptor& rhs) const {
+    if (m_pCall < rhs.m_pCall)
+      return true;
+    return m_autoFilter < rhs.m_autoFilter;
+  }
+
+  /// <summary>
+  /// Default for std library sorting of repeatable elements
+  /// </summary>
+  bool operator<=(const AutoFilterDescriptor& rhs) const { return *this < rhs || *this == rhs;}
+
+  bool operator>(const AutoFilterDescriptor& rhs) const { return !(*this <= rhs);}
+
+  bool operator>=(const AutoFilterDescriptor& rhs) const { return !(*this < rhs);}
 };
 
 template<class T, bool has_autofilter = has_autofilter<T>::value>

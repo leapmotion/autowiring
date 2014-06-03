@@ -24,6 +24,7 @@ angular.module('autoNetApp')
     this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
     this.types = Object.keys(types);
 
+    // Add bolt information
     if (types.hasOwnProperty("bolt")) {
       this.boltSigils = types.bolt;
       if (this.boltSigils.length === 0){
@@ -31,6 +32,7 @@ angular.module('autoNetApp')
       }
     }
 
+    // Add EventReceiver information
     if (types.hasOwnProperty("eventReceiver")) {
       this.events = {};
       var numEvents = types.eventReceiver.length;
@@ -43,6 +45,11 @@ angular.module('autoNetApp')
       if (numEvents === 0){
         this.events["Nothing!"] = 0;
       }
+    }
+
+    // Add ContextMember information
+    if (types.hasOwnProperty("contextMember")) {
+      this.slots = types.contextMember;
     }
   }
 

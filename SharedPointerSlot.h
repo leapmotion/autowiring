@@ -182,29 +182,60 @@ public:
   }
 
   /// <summary>
-  /// Specialization for the Object base type
+  /// Comparison by reference. Comparison of unequal types always fails,
+  /// even when different type casts of the same instance are referenced.
   /// </summary>
-  bool operator==(const std::shared_ptr<Object>& rhs) const {
-    return this->operator std::shared_ptr<Object>() == rhs;
+  bool operator==(const SharedPointerSlot& rhs) const {
+    // Unequal types are always unequal
+    if(type() != rhs.type())
+      return false;
+    return ptr() == rhs.ptr();
   }
 
+  /// <summary>
+  /// Default for std library sorting of unique elements.
+  /// In order to enable strict ordering std::type_info::before is used.
+  /// </summary>
+  template<class T>
+  bool operator<(const SharedPointerSlot& rhs) const {
+    if(type().before(rhs.type()))
+      return true;
+    return ptr() < rhs.ptr();
+  }
+
+  /// <summary>
+  /// Default for std library sorting of repeatable elements.
+  /// In order to enable strict ordering std::type_info::before is used.
+  /// </summary>
+  template<class T>
+  bool operator<=(const SharedPointerSlot& rhs) const { return *this < rhs || *this == rhs; }
+
+  template<class T>
+  bool operator>(const SharedPointerSlot& rhs) const { return !(*this <= rhs); }
+
+  template<class T>
+  bool operator>=(const SharedPointerSlot& rhs) const { return !(*this < rhs); }
+
+  /// <summary>
+  /// Comparison by reference. Comparison of unequal types always fails,
+  /// even when different type casts of the same instance are referenced.
+  /// </summary>
   template<class T>
   bool operator==(const std::shared_ptr<T>& rhs) const {
-    if(empty())
-      // If we're empty, then we are equal if the rhs is also empty
-      // This means we're basically comparing null to null, and we're going to
-      // generally allow it.
-      return rhs == nullptr;
-
-    // If we're not empty, then we will verify that types match before attempting any
-    // other comparison.  This means that it's possible for types related via a dynamic
-    // cast to fail a comparison--callers must be aware of this possibility.
+    // Unequal types are always unequal
     if(type() != typeid(*rhs))
       return false;
 
     // Everything lines up, coerce ourselves to the derived type and handoff the
     // comparison behavior.
     return (SharedPointerSlotT<T>&)*this == rhs;
+  }
+
+  /// <summary>
+  /// Specialization for the Object base type
+  /// </summary>
+  bool operator==(const std::shared_ptr<Object>& rhs) const {
+    return this->operator std::shared_ptr<Object>() == rhs;
   }
 
   /// <summary>

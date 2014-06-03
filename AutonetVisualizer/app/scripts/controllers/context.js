@@ -6,6 +6,16 @@ angular.module('autoNetApp')
   $scope.allContexts = LeapState.GetContexts();
 
   $scope.$watchCollection('allContexts', function(){
-    $scope.context = $scope.allContexts[$routeParams['contextID']]
+    $scope.context = $scope.allContexts[$routeParams['contextID']];
+    $scope.allObjects = {}
+
+    // Get all objects from parent contexts as well
+    var currentContext = $scope.context;
+    while (!_.isUndefined(currentContext)) {
+      _.extend($scope.allObjects, currentContext.objects);
+      currentContext = $scope.allContexts[currentContext.parent];
+    }
   });
+
+
 }]);
