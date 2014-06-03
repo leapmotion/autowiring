@@ -67,7 +67,7 @@ void AutoPacket::ResolveOptions(void) {
       for(auto& satCounter : decoration.second.m_subscribers)
         if(!satCounter.second)
           if(satCounter.first->Resolve())
-            callQueue.emplace_back(satCounter.first);
+            callQueue.push_back(satCounter.first);
   }
   for (SatCounter* call : callQueue)
     call->CallAutoFilter(*this);
