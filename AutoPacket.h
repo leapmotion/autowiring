@@ -301,7 +301,8 @@ public:
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-      for(auto ti : sc_typeInfo)
+      static const std::type_info* lamda_typeInfos [] = {&typeid(Ts)...};
+      for(auto ti : lamda_typeInfos)
         MarkUnsatisfiable(*ti);
     }),
     PulseSatisfaction(pTypeSubs, sizeof...(Ts));
