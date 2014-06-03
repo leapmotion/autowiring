@@ -3,12 +3,12 @@
 #include "CoreContext.h"
 #include "CoreThread.h"
 #include "AutoPacketFactory.h"
-#include "AutoFilter.h"
 #include "BoltBase.h"
 #include "CoreContextStateBlock.h"
 #include "GlobalCoreContext.h"
 #include "JunctionBox.h"
 #include "MicroBolt.h"
+#include "NewAutoFilter.h"
 #include "TypeRegistry.h"
 #include <algorithm>
 #include <stack>

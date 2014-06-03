@@ -1,26 +1,24 @@
 #pragma once
 #include "AutoFilterDescriptor.h"
 
-class AutoPacket;
-
 /// <summary>
 /// A single custom AutoFilter entry in some type
 /// </summary>
-class AutoFilterBase {
+class NewAutoFilterBase {
 protected:
-  AutoFilterBase(const AutoFilterDescriptorStub& stub);
+  NewAutoFilterBase(const AutoFilterDescriptorStub& stub);
 
 public:
   // The actual descriptor stub
   const AutoFilterDescriptorStub& m_stub;
 
   // The next filter AutoFilter entry in the series
-  AutoFilterBase* pFlink;
+  NewAutoFilterBase* pFlink;
 };
 
 template<class MemFn, MemFn memFn>
-class AutoFilter:
-  public AutoFilterBase
+class NewAutoFilter:
+  public NewAutoFilterBase
 {
 public:
   static const AutoFilterDescriptorStub& GetStub(void) {
@@ -28,7 +26,7 @@ public:
     return s_descriptor;
   }
 
-  AutoFilter(void) :
+  NewAutoFilter(void) :
     AutoFilterBase(GetStub())
   {}
 };
