@@ -217,7 +217,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
     AddPacketSubscriber(traits.subscriber);
 
   // Signal listeners that a new object has been created
-  GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *traits.pObject.get());
+  GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, traits.value);
 }
 
 void CoreContext::FindByType(AnySharedPointer& reference) const {
@@ -434,9 +434,8 @@ void CoreContext::BuildCurrentState(void) {
   glbl->Invoke(&AutowiringEvents::NewContext)(*this);
     
   // Enumerate objects injected into this context
-  for(auto q = m_concreteTypes.begin(); q != m_concreteTypes.end(); q++) {
-    std::shared_ptr<Object> obj = **q;
-    GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *obj.get());
+  for(auto& object : m_concreteTypes) {
+    GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, object);
   }
   
   // Recurse on all children
