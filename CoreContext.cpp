@@ -3,7 +3,7 @@
 #include "CoreContext.h"
 #include "CoreThread.h"
 #include "AutoPacketFactory.h"
-#include "Autowired.h"
+#include "AutoFilter.h"
 #include "BoltBase.h"
 #include "CoreContextStateBlock.h"
 #include "GlobalCoreContext.h"
@@ -215,6 +215,13 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   // Subscribers, if applicable:
   if(traits.subscriber)
     AddPacketSubscriber(traits.subscriber);
+
+  // Ancilliary subscribers, if present:
+  auto& stump = traits.value->GetSlotInformation();
+  for(const auto* pCur = stump.pFirstAutoFilter; pCur; pCur = pCur->pFlink) {
+    AutoFilterDescriptor subscriber(traits.value, pCur->m_stub);
+    AddPacketSubscriber(subscriber);
+  }
 
   // Signal listeners that a new object has been created
   GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, *traits.pObject.get());

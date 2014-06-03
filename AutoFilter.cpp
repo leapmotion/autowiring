@@ -3,8 +3,8 @@
 #include "SlotInformation.h"
 #include "autowiring_error.h"
 
-AutoFilterBase::AutoFilterBase(t_call pCall):
-  pCall(pCall)
+AutoFilterBase::AutoFilterBase(const AutoFilterDescriptorStub& stub) :
+  m_stub(stub)
 {
   auto location = SlotInformationStackLocation::CurrentStackLocation();
 
