@@ -51,6 +51,8 @@ private:
   typedef std::unordered_map<std::type_index, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
 
+  void ResolveOptions(void);
+
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
@@ -103,7 +105,7 @@ private:
 
 public:
   /// <summary>
-  /// Clears all decorations and copies over all satisfaction counters
+  /// Resolves all options, clears all decorations and resets all satisfaction counters
   /// </summary>
   void Reset(void);
 
@@ -172,12 +174,12 @@ public:
     AnySharedPointer slot;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      auto q = m_decorations.find(typeid(type));
-      if(q == m_decorations.end())
+      auto dFind = m_decorations.find(typeid(type));
+      if(dFind == m_decorations.end())
         // No parties interested in this entry, return here
         return AutoCheckout<T>(*this, nullptr, &AutoPacket::CompleteCheckout<T>);
 
-      auto& entry = m_decorations[typeid(type)];
+      auto& entry = dFind->second;
       if(entry.satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
       if(entry.isCheckedOut)
@@ -257,6 +259,8 @@ public:
 
   /// <summary>
   /// Subscribers respond to the decoration arguments immediately or never for this packet.
+  /// Optional argument resolution is forced for any subscriber requiring at least one
+  /// argument of this method
   /// </summary>
   /// <remarks>
   /// Unlike Decorate, the arguments of DecorateImmediate are not copied.
