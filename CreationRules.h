@@ -1,4 +1,5 @@
 #pragma once
+#include "autowiring_error.h"
 #include "ContextMember.h"
 #include "has_simple_constructor.h"
 #include "has_static_new.h"
@@ -7,6 +8,11 @@
 #include RVALUE_HEADER
 #include <new>
 
+template<typename T>
+struct is_injectable
+{
+  static const bool value = has_simple_constructor<T>::value || has_static_new<T>::value;
+};
 
 /// <summary>
 /// Simple structure to centralize knowledge about how to create types with various declarations
