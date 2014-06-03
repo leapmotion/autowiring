@@ -11,12 +11,15 @@
 
   <div class="edit-item col-sm-12 col-md-6">
     <h3>Inject Context Member</h3>
-    <div style="width:350px;">
-      <a href style="margin-top:20px" class="btn btn-success pull-right" ng-click="injectContextMember()" ng-disabled="selectedCtxt===undefined || selectedType==undefined">Inject</a>
+    <div style="width:350px; margin-bottom:20px;">
+      <a href style="margin-top:20px" class="btn btn-success pull-right" ng-click="injectContextMember()">Inject</a>
       <select style="width:240px;" class="form-control" ng-model="selectedType" ng-options="type for type in leap.GetAllTypes()">
       </select>
       <select style="width:240px; margin-top:10px;" class="form-control" ng-model="selectedCtxt" ng-options="ctxt.id as ctxt.name for (id,ctxt) in leap.GetContexts()">
       </select>
+    </div>
+
+    <div class="alert alert-{{alert.type}} animate-repeat" ng-repeat="alert in contextMemberAlerts" ng-bind-html="alert.message">
     </div>
   </div>
 </div>
