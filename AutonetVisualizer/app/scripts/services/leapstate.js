@@ -23,6 +23,7 @@ angular.module('autoNetApp')
     this.name = objData.name;
     this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
     this.types = Object.keys(types);
+    this.slots = objData.slots;
 
     // Add bolt information
     if (types.hasOwnProperty("bolt")) {
@@ -45,11 +46,6 @@ angular.module('autoNetApp')
       if (numEvents === 0){
         this.events["Nothing!"] = 0;
       }
-    }
-
-    // Add ContextMember information
-    if (types.hasOwnProperty("contextMember")) {
-      this.slots = types.contextMember;
     }
   }
 
