@@ -24,9 +24,9 @@ TEST_F(TypeRegistryTest, VerifySimpleLocalRegistration) {
   // of RegType, which means we must enumerate everything, and have to expect a lot of negative
   // matches.
   for(auto p = g_pFirstEntry; p; p = p->pFlink) {
-    if(p->ti == typeid(Registered<1>))
+    if(p->GetTypeInfo() == typeid(Registered<1>))
       exists1 = true;
-    if(p->ti == typeid(Registered<2>))
+    if(p->GetTypeInfo() == typeid(Registered<2>))
       exists2 = true;
 
     // Negative assertion:
@@ -53,4 +53,19 @@ TEST_F(TypeRegistryTest, VerifyExteriorModuleRegistration) {
 
   ASSERT_LT(8UL, nTypes) << "Registration failed to pick up the expected minimum number of types in this test";
   ASSERT_EQ(g_entryCount, nTypes) << "Linked list did not contain the same number of entries as reported in g_entryCount";
+}
+
+class OnlyUsedForRegistrationChecking:
+  public EventReceiver
+{};
+
+TEST_F(TypeRegistryTest, AutoFiredShouldRegister) {
+  AutoFired<OnlyUsedForRegistrationChecking> af;
+
+  // Now that we've got an AutoFired declaration, check for membership:
+  for(auto p = g_pFirstEntry; p; p = p->pFlink)
+    if(typeid(OnlyUsedForRegistrationChecking) == p->ti)
+      return;
+
+  FAIL() << "Failed to find a type which should have been present in a type registry collection";
 }

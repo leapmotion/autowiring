@@ -14,6 +14,9 @@ T* DefaultCreate(void) {
   return new T;
 }
 
+template<typename T>
+void DefaultReset(T&){}
+
 /// <summary>
 /// Allows the management of a pool of objects based on an embedded factory
 /// </summary>
@@ -34,20 +37,11 @@ class ObjectPool
 {
 public:
   /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
-#if defined(__GNUC__) && !defined(__clang__)
-  // workaround for gcc 4.6 internal compiler error
-  ObjectPool(
-    size_t limit,
-    size_t maxPooled,
-    const std::function<T*()>& alloc,
-    const std::function<void(T&)>& rx
-  );
-#else
   ObjectPool(
     size_t limit = ~0,
     size_t maxPooled = ~0,
     const std::function<T*()>& alloc = &DefaultCreate<T>,
-    const std::function<void(T&)>& rx = [] (T&) {}
+    const std::function<void(T&)>& rx = &DefaultReset<T>
   ) :
     m_monitor(new ObjectPoolMonitor),
     m_limit(limit),
@@ -57,7 +51,7 @@ public:
     m_rx(rx),
     m_alloc(alloc)
   {}
-#endif
+  
   ~ObjectPool(void) {
     // Transition the pool to the abandoned state:
     m_monitor->Abandon();
@@ -205,6 +199,10 @@ public:
   /// This sets the maximum number of entities that the pool will cache to satisfy a later allocation request
   /// </summary>
   /// <param name="maxPooled">The new maximum cache count</param>
+  /// <remarks>
+  /// If the value of maxPooled is greater than the maximum outstanding limit, it will be made
+  /// equal to the maximum outstanding limit.
+  /// </remarks>
   void SetMaximumPooledEntities(size_t maxPooled) {
     m_maxPooled = maxPooled;
     for(;;) {
@@ -288,6 +286,30 @@ public:
   }
 
   /// <summary>
+  /// Causes the pool's internal cache to hold at least the requested number of items
+  /// </summary>
+  /// <remarks>
+  /// The preallocation routine is an optimization routine similar to vector::reserve.  Calling
+  /// this routine can reduce the expense of pointer requests made later, because no allocation
+  /// has to take place at that point.
+  ///
+  /// If the caller requests a reservation that is greater than the maximum pool limit, the
+  /// number of objects allocated will be equal to the maximum pool limit.
+  /// </remarks>
+  void Preallocate(size_t reservation) {
+    if(reservation > m_maxPooled)
+      reservation = m_maxPooled;
+
+    // Check out objects into our vector, allowing them to all return to the pool at once.
+    // This will populate the pool with the desired number of entities, and will trigger
+    // the desired failure condition if we wind up checking out more objects than are
+    // allowed for this pool.
+    std::vector<std::shared_ptr<T>> objs(reservation);
+    while(reservation--)
+      (*this)(objs[reservation]);
+  }
+
+  /// <summary>
   /// Creates a new instance of type T and places it in the passed shared pointer
   /// </summary>
   /// <remarks>
@@ -325,21 +347,3 @@ public:
     });
   }
 };
-
-#if defined(__GNUC__) && !defined(__clang__)
-template<class T>
-ObjectPool<T>::ObjectPool(
-  size_t limit = ~0,
-  size_t maxPooled = ~0,
-  const std::function<T*()>& alloc = &DefaultCreate<T>,
-  const std::function<void(T&)>& rx = [] (T&) {}
-) :
-  m_monitor(new ObjectPoolMonitor),
-  m_limit(limit),
-  m_poolVersion(0),
-  m_maxPooled(maxPooled),
-  m_outstanding(0),
-  m_rx(rx),
-  m_alloc(alloc)
-{}
-#endif
