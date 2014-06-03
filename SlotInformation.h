@@ -3,8 +3,8 @@
 #include <typeinfo>
 #include MEMORY_HEADER
 
-class AutoFilterBase;
 class DeferrableAutowiring;
+class NewAutoFilterBase;
 
 /// <summary>
 /// Represents information about a single slot detected as having been declared in a context member
@@ -49,7 +49,7 @@ struct SlotInformationStumpBase {
   // If there are any custom AutoFilter fields defined, this is the first of them
   // Note that these custom fields -only- include fields registered via the AutoFilter
   // registration type
-  AutoFilterBase* pFirstAutoFilter;
+  NewAutoFilterBase* pFirstAutoFilter;
 };
 
 /// <summary>

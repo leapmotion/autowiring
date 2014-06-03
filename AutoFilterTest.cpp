@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "AutoFilterTest.h"
-#include "AutoFilter.h"
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
+#include "NewAutoFilter.h"
 #include "TestFixtures/Decoration.h"
 
 TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
@@ -392,24 +392,39 @@ TEST_F(AutoFilterTest, DeferredRecieptInSubContext) {
 class HasAWeirdAutoFilterMethod {
 public:
   HasAWeirdAutoFilterMethod(void):
-    m_called(false)
+    m_baseValue(101),
+    m_called0(false),
+    m_called1(false),
+    m_called2(false)
   {
   }
 
-  void AutoFilterFoo(Decoration<0>) {
-    m_called = true;
+  void AutoFilter(Decoration<0>) {
+    ASSERT_EQ(101, m_baseValue) << "AutoFilter entry base offset incorrectly computed";
+    m_called0 = true;
   }
 
-  AutoFilter<decltype(&HasAWeirdAutoFilterMethod::AutoFilterFoo), &HasAWeirdAutoFilterMethod::AutoFilterFoo> af;
-  bool m_called;
+  void AutoFilterFoo(Decoration<0>) {
+    ASSERT_EQ(101, m_baseValue) << "AutoFilter entry base offset incorrectly computed";
+    m_called1 = true;
+  }
+
+  NewAutoFilter<decltype(&HasAWeirdAutoFilterMethod::AutoFilterFoo), &HasAWeirdAutoFilterMethod::AutoFilterFoo> af;
+  const int m_baseValue;
+  bool m_called0;
+  bool m_called1;
+  bool m_called2;
 };
 
 TEST_F(AutoFilterTest, AnyAutoFilter) {
+  AutoCurrentContext()->Initiate();
   AutoRequired<HasAWeirdAutoFilterMethod> t;
   AutoRequired<AutoPacketFactory> factory;
   auto packet = factory->NewPacket();
 
   packet->Decorate(Decoration<0>());
+  ASSERT_TRUE(t->m_called0) << "Root AutoFilter method was not invoked as expected";
+  ASSERT_TRUE(t->m_called1) << "Custom AutoFilter method was not invoked as expected";
 }
 
 class SimpleIntegerFilter
