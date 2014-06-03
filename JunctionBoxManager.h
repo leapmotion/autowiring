@@ -1,7 +1,6 @@
 #pragma once
 #include "JunctionBoxBase.h"
 #include "JunctionBoxEntry.h"
-#include "TypeRegistry.h"
 #include "uuid.h"
 #include <map>
 #include <stdexcept>
@@ -23,9 +22,6 @@ class EventOutputStream;
 template<typename T>
 class JunctionBox;
 
-template<typename T>
-class RegType;
-
 /// <summary>
 /// General manager class of all junction boxes defined in some context
 /// </summary>
@@ -37,9 +33,6 @@ public:
   template<typename T>
   std::shared_ptr<JunctionBoxBase> Get(void) {
     const std::type_index& pTypeIndex = typeid(T);
-
-    // Add an utterance of the TypeRegistry so we can add this AutoFired type to our collection
-    (void)RegType<T>::r;
 
     auto box = m_junctionBoxes.find(pTypeIndex);
     assert(box != m_junctionBoxes.end());

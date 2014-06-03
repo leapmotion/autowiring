@@ -1,4 +1,5 @@
 #pragma once
+#include "autowiring_error.h"
 #include "ContextMember.h"
 #include "SlotInformation.h"
 #include TYPE_TRAITS_HEADER
@@ -38,6 +39,11 @@ struct has_simple_constructor<T, true>
   static const bool value = false;
 };
 
+template<typename T>
+struct is_injectable
+{
+  static const bool value = has_simple_constructor<T>::value || has_static_new<T>::value;
+};
 
 /// <summary>
 /// Simple structure to centralize knowledge about how to create types with various declarations
