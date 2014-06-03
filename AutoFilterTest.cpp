@@ -490,6 +490,48 @@ TEST_F(AutoFilterTest, SingleImmediate) {
   ASSERT_FALSE(dif->hit) << "Deferred filter incorrectly invoked in an immediate mode decoration";
 }
 
+class DoesNothingWithSharedPointer:
+  public CoreThread
+{
+public:
+  DoesNothingWithSharedPointer(void):
+    CoreThread("DoesNothingWithSharedPointer"),
+    callCount(0)
+  {}
+
+  size_t callCount;
+
+  Deferred AutoFilter(std::shared_ptr<int>) {
+    callCount++;
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    return Deferred(this);
+  }
+};
+
+TEST_F(AutoFilterTest, NoImplicitDecorationCaching) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  auto ptr = std::make_shared<int>(1012);
+
+  auto doesNothing = AutoRequired<DoesNothingWithSharedPointer>();
+
+  // Generate a bunch of packets, all with the same shared pointer decoration:
+  for(size_t i = 0; i < 100; i++) {
+    // Decorate the packet, forget about it:
+    auto packet = factory->NewPacket();
+    packet->Decorate(ptr);
+  }
+
+  // Final lambda terminates the thread:
+  *doesNothing += [doesNothing] { doesNothing->Stop(); };
+
+  // Block for the thread to stop
+  ASSERT_TRUE(doesNothing->WaitFor(boost::chrono::seconds(10))) << "Thread did not finish processing packets in a timely fashion";
+
+  // Ensure nothing got cached unexpectedly, and that the call count is precisely what we want
+  ASSERT_EQ(100UL, doesNothing->callCount) << "The expected number of calls to AutoFilter were not made";
+  ASSERT_TRUE(ptr.unique()) << "Cached packets (or some other cause) incorrectly held a reference to a shared pointer that should have expired";
+}
 TEST_F(AutoFilterTest, MultiImmediate) {
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
