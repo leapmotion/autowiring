@@ -168,11 +168,29 @@ protected:
   /// </summary>
   /// <param name="pfnCreate">A creation routine which can create the desired context</param>
   std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer);
-
+  
+  // Add to our interal list of Anchor types from AutoAnchors declared in sigil type
   template<typename T, typename... Ts>
   void AddAnchorInternal(const AutoAnchor<T, Ts...>*) { AddAnchor<T, Ts...>(); }
 
   void AddAnchorInternal(const void*) {}
+  
+  // Check if a type anchors to this context's sigil type
+  bool CheckAnchorInSigil(...) const {return false;};
+  
+  template<typename ...T>
+  bool CheckAnchorInSigil(const AutoAnchor<T...>*) const {
+    static_assert(sizeof...(T) != 0, "Can't anchor to nothing.");
+    
+    bool isMatch = false;
+    
+    bool dummy[]{
+      (isMatch = isMatch || typeid(T)==GetSigilType(), false)...
+    };
+    (void)dummy;
+    
+    return isMatch;
+  };
 
   // Adds a bolt proper to this context
   template<typename T, typename... Sigils>
@@ -440,10 +458,15 @@ public:
   /// <summary>
   /// Check if parent context's have AutoAnchored the type in their sigil.
   /// </summary>
-  template<typename Sigil>
+  template<typename T>
   std::shared_ptr<CoreContext> ResolveAnchor(void) {
-    for(auto pCur = m_pParent; pCur; pCur = pCur->m_pParent) {
-      if (pCur->m_anchors.find(typeid(Sigil)) != pCur->m_anchors.end()){
+    for(auto pCur = shared_from_this(); pCur; pCur = pCur->m_pParent) {
+      // Check if pCur anchor's onto the injected type
+      if (pCur->m_anchors.find(typeid(T)) != pCur->m_anchors.end()){
+        return pCur;
+      }
+      // Check if T anchors onto pCur's sigil type
+      if ( pCur->CheckAnchorInSigil((T*)nullptr) ){
         return pCur;
       }
     }
