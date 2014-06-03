@@ -187,3 +187,23 @@ TEST_F(AnySharedPointerTest, VoidReturnExpected) {
   // Validate equivalence of the void operator:
   ASSERT_EQ(v.get(), slot->ptr()) << "Shared pointer slot did not return a void* with an expected value";
 }
+
+struct Bar{};
+struct Baz{};
+struct Derp{};
+struct Foo{
+  Autowired<Bar> bar;
+  AutoRequired<Baz> baz;
+  AutowiredFast<Derp> derp;
+};
+TEST_F(AnySharedPointerTest, SlotInformation) {
+  AutoRequired<Foo> foo;
+
+  AnySharedPointer ptr = foo;
+  int numSlots = 0;
+  for (auto info = ptr->GetSlotInformation().pHead; info; info = info->pFlink){
+    numSlots++;
+  }
+  
+  EXPECT_EQ(1, numSlots) << "Slot informations should reveal 2 slots in Foo";
+}
