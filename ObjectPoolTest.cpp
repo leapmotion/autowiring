@@ -135,3 +135,19 @@ TEST_F(ObjectPoolTest, CanRundownOneIssued) {
   pool.Wait();
   pool.Rundown();
 }
+
+TEST_F(ObjectPoolTest, OutstandingLimitIsOne) {
+  ObjectPool<int> pool(1);
+  AutoRequired<CoreThread> ct;
+  AutoCurrentContext()->Initiate();
+
+  // Bounce 1000 shared pointers into the CoreThread
+  for(size_t i = 0; i < 1000; i++) {
+    // Try to wait on the pool:
+    auto entity = pool.WaitFor(boost::chrono::seconds(10));
+    ASSERT_NE(nullptr, entity) << "Failed to obtain an entity from a single-element pool";
+
+    // Pend a lambda that just holds a closure on the entity:
+    *ct += [entity] {};
+  }
+}
