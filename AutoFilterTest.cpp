@@ -48,7 +48,7 @@ TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
 
   packet2->Decorate(Decoration<0>());
 
-  // Verify the second one will no longe have subscriptions  -
+  // Verify the second packet will no longer have subscriptions  -
   // normally removing a subscriber would mean the packet still has the subscriber, but
   // in this case, the subscriber was actually destroyed so the packet has lost a subscriber.
   EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
@@ -88,7 +88,51 @@ TEST_F(AutoFilterTest, VerifySimpleFilter) {
   packet->Decorate(Decoration<1>());
 
   // A hit should have taken place at this point:
-  EXPECT_TRUE(filterA->m_called) << "Filter was not called even though it was fully satisfied";
+  EXPECT_LT(0, filterA->m_called) << "Filter was not called even though it was fully satisfied";
+}
+
+TEST_F(AutoFilterTest, VerifyOptionalFilter) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  AutoRequired<FilterGen<Decoration<0>, optional_ptr<Decoration<1>>>> fgA;
+  AutoRequired<FilterGen<optional_ptr<Decoration<1>>, Decoration<0>>> fgB;
+  AutoRequired<FilterGen<optional_ptr<Decoration<0>>, Decoration<1>>> fgC;
+  AutoRequired<FilterGen<Decoration<0>, optional_ptr<Decoration<1>>, optional_ptr<Decoration<2>>>> fgD;
+
+  //Test resolution through parameter satisfaction
+  {
+    auto packet = factory->NewPacket();
+    packet->Decorate(Decoration<0>());
+
+    ASSERT_TRUE(fgA->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when an optional input was unresolved";
+    ASSERT_TRUE(fgB->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when an optional input was unresolved";
+    ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when a required input was not available";
+
+    packet->Decorate(Decoration<1>());
+
+    ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter was called " << fgA->m_called << " times when all inputs were simultaneously available";
+    ASSERT_TRUE(fgB->m_called == 1) << "An AutoFilter was called " << fgB->m_called << " times when all inputs were simultaneously available";
+    ASSERT_TRUE(fgC->m_called == 1) << "An AutoFilter was called " << fgC->m_called << " times when all inputs were simultaneously available";
+    ASSERT_TRUE(fgD->m_called == 0) << "An AutoFilter was called " << fgD->m_called << " times when an optional input was unresolved";
+  }
+
+  fgA->m_called = 0;
+  fgB->m_called = 0;
+  fgC->m_called = 0;
+  fgD->m_called = 0;
+
+  //Test resultion through packet destruction
+  {
+    auto packet = factory->NewPacket();
+    packet->Decorate(Decoration<0>());
+    packet->Decorate(Decoration<2>());
+  }
+
+  ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter was called " << fgA->m_called << " times when all required inputs were available";
+  ASSERT_TRUE(fgB->m_called == 1) << "An AutoFilter was called " << fgB->m_called << " times when all required inputs were available";
+  ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgC->m_called << " times when a required input was not available";
+  ASSERT_TRUE(fgD->m_called == 1) << "An AutoFilter was called " << fgD->m_called << " times when all required inputs were available";
 }
 
 TEST_F(AutoFilterTest, VerifyNoMultiDecorate) {
@@ -107,7 +151,7 @@ TEST_F(AutoFilterTest, VerifyNoMultiDecorate) {
 
   // Now finish saturating the filter and ensure we get a call:
   packet->Decorate(Decoration<1>());
-  EXPECT_TRUE(filterA->m_called) << "Filter was not called after being fully satisfied";
+  EXPECT_LT(0, filterA->m_called) << "Filter was not called after being fully satisfied";
 }
 
 TEST_F(AutoFilterTest, VerifyInterThreadDecoration) {
@@ -132,7 +176,7 @@ TEST_F(AutoFilterTest, VerifyInterThreadDecoration) {
   filterB->Wait();
 
   // Verify that the filter method has been called
-  EXPECT_TRUE(filterB->m_called) << "A deferred filter method was not called as expected";
+  EXPECT_LT(0, filterB->m_called) << "A deferred filter method was not called as expected";
 }
 
 TEST_F(AutoFilterTest, VerifyTeardownArrangement) {
@@ -223,7 +267,7 @@ TEST_F(AutoFilterTest, VerifyCheckout) {
   }
 
   // Verify a hit took place now
-  EXPECT_TRUE(filterA->m_called) << "Filter was not called after all decorations were installed";
+  EXPECT_LT(0, filterA->m_called) << "Filter was not called after all decorations were installed";
 }
 
 TEST_F(AutoFilterTest, RollbackCorrectness) {
@@ -281,14 +325,14 @@ TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
   auto packet = factory->NewPacket();
 
   // The mere act of obtaining a packet should have triggered filterD to be fired:
-  EXPECT_TRUE(filterD->m_called) << "Trivial filter was not called as expected";
+  EXPECT_LT(0, filterD->m_called) << "Trivial filter was not called as expected";
 
   // Decorate--should satisfy filterC
   packet->Decorate(Decoration<0>());
-  EXPECT_TRUE(filterC->m_called) << "FilterC should have been satisfied with one decoration";
+  EXPECT_LT(0, filterC->m_called) << "FilterC should have been satisfied with one decoration";
 
   // FilterC should have also satisfied filterA:
-  EXPECT_TRUE(filterA->m_called) << "FilterA should have been satisfied by FilterC";
+  EXPECT_LT(0, filterA->m_called) << "FilterA should have been satisfied by FilterC";
 }
 
 TEST_F(AutoFilterTest, VerifyReferenceBasedInput) {
@@ -312,7 +356,7 @@ TEST_F(AutoFilterTest, VerifyReferenceBasedInput) {
     packet->Decorate(Decoration<0>());
 
     // Verify that our filter got called when its sole input was satisfied
-    ASSERT_TRUE(makesDec1->m_called) << "Single-input autofilter was not called as expected";
+    ASSERT_LT(0, makesDec1->m_called) << "Single-input autofilter was not called as expected";
 
     // Now make sure that the packet has the expected decoration:
     ASSERT_TRUE(packet->Has<Decoration<1>>());
@@ -419,7 +463,7 @@ public:
   bool hit;
 };
 
-TEST_F(AutoFilterTest, ImmediateBehaviors) {
+TEST_F(AutoFilterTest, SingleImmediate) {
   // Add a few filter entities
   AutoRequired<SimpleIntegerFilter> sif;
   AutoRequired<DeferredIntegerFilter> dif;
@@ -433,10 +477,10 @@ TEST_F(AutoFilterTest, ImmediateBehaviors) {
 
     // Create an immediate-mode satisfaction
     int val = 101;
-    packet->DecorateImmediate(&val);
+    packet->DecorateImmediate(val);
 
     // Verify we can't decorate this value a second time:
-    ASSERT_ANY_THROW(packet->DecorateImmediate(&val)) << "Expected an exception when a second attempt was made to attach a decoration";
+    ASSERT_ANY_THROW(packet->DecorateImmediate(val)) << "Expected an exception when a second attempt was made to attach a decoration";
   }
 
   // Terminate enclosing context
@@ -444,4 +488,80 @@ TEST_F(AutoFilterTest, ImmediateBehaviors) {
 
   ASSERT_TRUE(sif->hit) << "Simple filter was not invoked by immediate-mode decoration";
   ASSERT_FALSE(dif->hit) << "Deferred filter incorrectly invoked in an immediate mode decoration";
+}
+
+TEST_F(AutoFilterTest, MultiImmediate) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterGen<Decoration<0>, Decoration<1>>> fg;
+
+  auto packet = factory->NewPacket();
+
+  packet->DecorateImmediate(
+    Decoration<0>(),
+    Decoration<1>()
+  );
+
+  // Verify the recipient got called
+  ASSERT_LT(0, fg->m_called) << "Filter not called during multisimultaneous immediate-mode decoration";
+}
+
+TEST_F(AutoFilterTest, ImmediateWithPrior) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  // The filter which should get an immediate hit
+  AutoRequired<FilterGen<Decoration<0>, Decoration<1>, Decoration<2>>> secondChanceImmed;
+
+  // Add a pre-decoration:
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>());
+
+  // Now add immediate decorations to the remainder:
+  packet->DecorateImmediate(Decoration<1>(), Decoration<2>());
+  ASSERT_LT(0, secondChanceImmed->m_called) << "Filter should have been saturated by an immediate call, but was not called as expected";
+}
+
+TEST_F(AutoFilterTest, MultiImmediateComplex) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  // All of the filters that we're adding
+  AutoRequired<FilterGen<Decoration<0>>> fg1;
+  AutoRequired<FilterGen<Decoration<1>, optional_ptr<Decoration<2>>>> fg2;
+  AutoRequired<FilterGen<Decoration<0>, Decoration<1>>> fg3;
+  AutoRequired<FilterGen<Decoration<0>, Decoration<2>>> fg4;
+
+  auto packet = factory->NewPacket();
+
+  // The single immediate-mode decoration call, which should satisfy all filters
+  packet->DecorateImmediate(
+    Decoration<0>(),
+    Decoration<1>()
+  );
+
+  // Validate expected behaviors:
+  ASSERT_LT(0, fg1->m_called) << "Trivial filter was not called as expected, even though Decoration<0> should have been available";
+  ASSERT_LT(0, fg2->m_called) << "Filter with an unsatisfied optional argument was not called";
+  ASSERT_LT(0, fg3->m_called) << "Saturated filter was not called as expected";
+  ASSERT_EQ(0, fg4->m_called) << "Undersaturated filter was called even though it should not have been";
+}
+
+TEST_F(AutoFilterTest, PostHocSatisfactionAttempt) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Filter that accepts two types, but one of the two will be DecorateImmediate'd too early
+  AutoRequired<FilterGen<Decoration<0>, Decoration<1>>> fg1;
+  AutoRequired<FilterGen<Decoration<2>, Decoration<1>>> fg2;
+
+  auto packet1 = factory->NewPacket();
+  packet1->DecorateImmediate(Decoration<0>());
+  packet1->Decorate(Decoration<1>());
+
+  ASSERT_FALSE(fg1->m_called) << "An AutoFilter was called when all of its inputs should not have been simultaneously available";
+
+  packet1->DecorateImmediate(Decoration<2>());
+
+  EXPECT_LT(0, fg2->m_called) << "An AutoFilter was not called when all of its inputs were simultaneously available";
 }
