@@ -13,7 +13,7 @@
 struct SatCounter;
 class AutoPacketFactory;
 class AutoPacketProfiler;
-class AutoFilterDescriptor;
+struct AutoFilterDescriptor;
 
 template<class T>
 struct subscriber_traits;
