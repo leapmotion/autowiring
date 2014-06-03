@@ -1,4 +1,5 @@
 #pragma once
+#include "AutoFilterDescriptor.h"
 
 class AutoPacket;
 
@@ -6,15 +7,12 @@ class AutoPacket;
 /// A single custom AutoFilter entry in some type
 /// </summary>
 class AutoFilterBase {
-public:
-  typedef void(*t_call)(void*, AutoPacket&);
-
 protected:
-  AutoFilterBase(t_call pCall);
+  AutoFilterBase(const AutoFilterDescriptorStub& stub);
 
 public:
-  // The actual call held by this filter entry
-  const t_call pCall;
+  // The actual descriptor stub
+  const AutoFilterDescriptorStub& m_stub;
 
   // The next filter AutoFilter entry in the series
   AutoFilterBase* pFlink;
@@ -25,7 +23,12 @@ class AutoFilter:
   public AutoFilterBase
 {
 public:
+  static const AutoFilterDescriptorStub& GetStub(void) {
+    static const AutoFilterDescriptorStub s_descriptor(CallExtractor<MemFn>(), &CallExtractor<MemFn>::Call<memFn>);
+    return s_descriptor;
+  }
+
   AutoFilter(void) :
-    AutoFilterBase(&CallExtractor<MemFn>::Call<memFn>)
+    AutoFilterBase(GetStub())
   {}
 };
