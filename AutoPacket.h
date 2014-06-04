@@ -288,7 +288,7 @@ public:
         pTypeSubs[i]->satisfied = true;
         pTypeSubs[i]->wasCheckedOut = true;
 
-        pTypeSubs[i]->m_pImmediate = &pvImmeds[i];
+        pTypeSubs[i]->m_pImmediate = pvImmeds[i];
       }
     }
 
