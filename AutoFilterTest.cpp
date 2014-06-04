@@ -483,6 +483,17 @@ TEST_F(AutoFilterTest, SingleImmediate) {
     ASSERT_ANY_THROW(packet->DecorateImmediate(val)) << "Expected an exception when a second attempt was made to attach a decoration";
   }
 
+  static const int pattern = 1365; //1365 ~ 10101010101
+  AutoRequired<FilterGen<Decoration<pattern>>> fgp;
+  {
+    auto packet = factory->NewPacket();
+    Decoration<pattern> dec;
+    packet->DecorateImmediate(dec);
+
+    ASSERT_TRUE(fgp->m_called == 1) << "Filter should called " << fgp->m_called << " times, expected 1";
+    ASSERT_TRUE(std::get<0>(fgp->m_args).i == pattern) << "Filter argument yielded " << std::get<0>(fgp->m_args).i << "expected " << pattern;
+  }
+
   // Terminate enclosing context
   AutoCurrentContext()->SignalShutdown(true);
 
