@@ -11,7 +11,7 @@ CoreJob::CoreJob(const char* name) :
 {}
 
 void CoreJob::OnPended(boost::unique_lock<boost::mutex>&& lk){
-  if(m_curEvent.valid())
+  if(!m_curEventInTeardown)
     // Something is already outstanding, it will handle dispatching for us.
     return;
 
@@ -20,7 +20,7 @@ void CoreJob::OnPended(boost::unique_lock<boost::mutex>&& lk){
     // ready to initiate it.
     return;
 
-	// Increment outstanding count because we now have an entry out in a thread pooll
+	// Increment outstanding count because we now have an entry out in a thread pool
 	auto outstanding = m_outstanding;
 
 	if(!outstanding)
