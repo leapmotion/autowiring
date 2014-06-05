@@ -13,9 +13,9 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
   )
 {
   // Prime the satisfaction graph for each element:
-  for(auto& autoFilter : m_satCounters)
+  for(auto& satCounter : m_satCounters) {
     for(
-      auto pCur = autoFilter.GetAutoFilterInput();
+      auto pCur = satCounter.GetAutoFilterInput();
       *pCur;
       pCur++
     ) {
@@ -27,10 +27,10 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
         // Should never happen--trivially ignore this entry
         break;
       case inTypeRequired:
-        entry.m_subscribers.push_back(std::make_pair(&autoFilter, true));
+        entry.m_subscribers.push_back(std::make_pair(&satCounter, true));
         break;
       case inTypeOptional:
-        entry.m_subscribers.push_back(std::make_pair(&autoFilter, false));
+        entry.m_subscribers.push_back(std::make_pair(&satCounter, false));
         break;
       case outTypeRef:
       case outTypeRefAutoReady:
@@ -41,9 +41,8 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
         break;
       }
     }
-
-  // Initial reset, required to get into a valid initial state
-  Reset();
+  }
+  Initialize();
 }
 
 AutoPacket::~AutoPacket() {
@@ -139,11 +138,8 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   }
 }
 
-void AutoPacket::Reset(void) {
-  // Last chance for AutoFilter call
-  ResolveOptions();
-
-  // Reset all counters:
+void AutoPacket::Initialize(void) {
+  // Initialize all counters:
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     for(auto& satCounter : m_satCounters)
@@ -154,6 +150,12 @@ void AutoPacket::Reset(void) {
 
   // Initial satisfaction of the AutoPacket:
   UpdateSatisfaction(typeid(AutoPacket));
+}
+
+void AutoPacket::Reset(void) {
+  // Last chance for AutoFilter call
+  ResolveOptions();
+  Initialize();
 }
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
