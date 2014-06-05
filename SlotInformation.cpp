@@ -65,10 +65,7 @@ void SlotInformationStackLocation::RegisterSlot(DeferrableAutowiring* pDeferrabl
     // No reason to continue, stump already initialized
     return;
 
-  if(
-    (unsigned char*) pDeferrable < (unsigned char*) tss->m_pObj ||
-    (unsigned char*) tss->m_pObj + tss->m_extent < (unsigned char*) pDeferrable + sizeof(AutowirableSlot<int>)
-  )
+  if(!tss->Encloses(pDeferrable))
     // Slot is extraneous, falling outside of the bounds of the original object--ignore
     return;
 
