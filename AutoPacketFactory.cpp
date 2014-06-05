@@ -7,7 +7,7 @@ AutoPacketFactory::AutoPacketFactory(void):
   m_packets(
     ~0,
     ~0,
-    [this] { return new AutoPacket(*this); },
+    [this] {return new AutoPacket(*this); },
     [] (AutoPacket& packet) { packet.Reset(); }
   )
 {}
