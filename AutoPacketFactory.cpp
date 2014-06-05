@@ -7,7 +7,13 @@ AutoPacketFactory::AutoPacketFactory(void):
   m_packets(
     ~0,
     ~0,
-    [this] { return new AutoPacket(*this); },
+    [this] {
+      AutoPacket* packet = new AutoPacket(*this);
+      // Initial reset, required to get into a valid initial state.
+      // This can result in calls, so it must happen after initialization.
+      packet->Reset();
+      return packet;
+    },
     [] (AutoPacket& packet) { packet.Reset(); }
   )
 {}
