@@ -91,7 +91,7 @@ TEST_F(AutoFilterTest, VerifySimpleFilter) {
   EXPECT_LT(0, filterA->m_called) << "Filter was not called even though it was fully satisfied";
 }
 
-TEST_F(AutoFilterTest, DISABLED_VerifyOptionalFilter) {
+TEST_F(AutoFilterTest, VerifyOptionalFilter) {
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
 
