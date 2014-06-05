@@ -13,9 +13,9 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
   )
 {
   // Prime the satisfaction graph for each element:
-  for(auto& autoFilter : m_satCounters)
+  for(auto& satCounter : m_satCounters) {
     for(
-      auto pCur = autoFilter.GetAutoFilterInput();
+      auto pCur = satCounter.GetAutoFilterInput();
       *pCur;
       pCur++
     ) {
@@ -27,10 +27,10 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
         // Should never happen--trivially ignore this entry
         break;
       case inTypeRequired:
-        entry.m_subscribers.push_back(std::make_pair(&autoFilter, true));
+        entry.m_subscribers.push_back(std::make_pair(&satCounter, true));
         break;
       case inTypeOptional:
-        entry.m_subscribers.push_back(std::make_pair(&autoFilter, false));
+        entry.m_subscribers.push_back(std::make_pair(&satCounter, false));
         break;
       case outTypeRef:
       case outTypeRefAutoReady:
