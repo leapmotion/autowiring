@@ -51,7 +51,15 @@ private:
   typedef std::unordered_map<std::type_index, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
 
+  /// <summary>
+  /// Last change call with unsatisfied optional arguments
+  /// </summary>
   void ResolveOptions(void);
+
+  /// <summary>
+  /// Resets counters, then decrements subscribers requiring AutoPacket argument.
+  /// </summary>
+  void Initialize(void);
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable

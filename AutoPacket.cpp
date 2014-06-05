@@ -42,6 +42,7 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
       }
     }
   }
+  Initialize();
 }
 
 AutoPacket::~AutoPacket() {
@@ -137,11 +138,8 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   }
 }
 
-void AutoPacket::Reset(void) {
-  // Last chance for AutoFilter call
-  ResolveOptions();
-
-  // Reset all counters:
+void AutoPacket::Initialize(void) {
+  // Initialize all counters:
   {
     boost::lock_guard<boost::mutex> lk(m_lock);
     for(auto& satCounter : m_satCounters)
@@ -152,6 +150,12 @@ void AutoPacket::Reset(void) {
 
   // Initial satisfaction of the AutoPacket:
   UpdateSatisfaction(typeid(AutoPacket));
+}
+
+void AutoPacket::Reset(void) {
+  // Last chance for AutoFilter call
+  ResolveOptions();
+  Initialize();
 }
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
