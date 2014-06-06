@@ -77,7 +77,6 @@ angular.module('autoNetApp')
       type: msgType,
       args: Array.prototype.slice.call(arguments, 1)
     };
-    console.log(packet);
     socket.send(JSON.stringify(packet));
   }
 

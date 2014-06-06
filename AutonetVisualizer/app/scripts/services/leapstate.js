@@ -23,7 +23,9 @@ angular.module('autoNetApp')
     this.name = objData.name;
     this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
     this.types = Object.keys(types);
+    this.slots = objData.slots;
 
+    // Add bolt information
     if (types.hasOwnProperty("bolt")) {
       this.boltSigils = types.bolt;
       if (this.boltSigils.length === 0){
@@ -31,6 +33,7 @@ angular.module('autoNetApp')
       }
     }
 
+    // Add EventReceiver information
     if (types.hasOwnProperty("eventReceiver")) {
       this.events = {};
       var numEvents = types.eventReceiver.length;

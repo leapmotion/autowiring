@@ -1,7 +1,7 @@
 #pragma once
 #include "EventReceiver.h"
 
-class Object;
+struct AnySharedPointer;
 class CoreContext;
 
 class AutowiringEvents:
@@ -10,7 +10,7 @@ class AutowiringEvents:
 public:
   virtual void NewContext(CoreContext&)=0;
   virtual void ExpiredContext(CoreContext&)=0;
-  virtual void NewObject(CoreContext&, const Object&)=0;
+  virtual void NewObject(CoreContext&, const AnySharedPointer&)=0;
   virtual void EventFired(CoreContext&, const std::type_info&)=0;
 };
 
