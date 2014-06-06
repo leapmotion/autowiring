@@ -127,3 +127,59 @@ TEST_F(CoreJobTest, AbandonedDispatchers) {
   // Verify that all lambdas on the CoreThread got called as expected:
   ASSERT_FALSE(*v) << "Lambdas attached to a CoreJob should not be executed when the enclosing context is terminated without being started";
 }
+
+TEST_F(CoreJobTest, RecursiveAdd) {
+  bool first = false;
+  bool second = false;
+  bool third = false;
+  
+  AutoRequired<CoreJob> cj;
+  
+  AutoCurrentContext()->Initiate();
+  
+  *cj += [&first,&second,&third, &cj] {
+    first = true;
+    *cj += [&first,&second,&third,&cj] {
+      second = true;
+      *cj += [&first,&second,&third,&cj] {
+        third = true;
+      };
+      cj->Stop(true);
+    };
+  };
+  
+  cj->Wait();
+  
+  // Verify that all lambdas on the CoreThread got called as expected:
+  EXPECT_TRUE(first) << "Appended lambda didn't set value";
+  EXPECT_TRUE(second) << "Appended lambda didn't set value";
+  EXPECT_TRUE(third) << "Appended lambda didn't set value";
+}
+
+TEST_F(CoreJobTest, RaceCondition) {
+  
+  for (int i=0; i<5; i++) {
+    AutoCreateContext ctxt;
+    CurrentContextPusher pshr(ctxt);
+    AutoRequired<CoreJob> cj;
+    ctxt->Initiate();
+    
+    bool first = false;
+    bool second = false;
+    
+    *cj += [&first] {
+      first = true;
+    };
+    
+    boost::this_thread::sleep(boost::posix_time::milliseconds(i));
+    
+    *cj += [&second, &cj] {
+      second = true;
+    };
+    
+    ctxt->SignalShutdown(true);
+    
+    ASSERT_TRUE(first) << "Failed after set value in lambda";
+    ASSERT_TRUE(second) << "Failed to set value when delayed " << i << " milliseconds";
+  }
+}
