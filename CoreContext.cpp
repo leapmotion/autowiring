@@ -3,12 +3,12 @@
 #include "CoreContext.h"
 #include "CoreThread.h"
 #include "AutoPacketFactory.h"
-#include "Autowired.h"
 #include "BoltBase.h"
 #include "CoreContextStateBlock.h"
 #include "GlobalCoreContext.h"
 #include "JunctionBox.h"
 #include "MicroBolt.h"
+#include "NewAutoFilter.h"
 #include "TypeRegistry.h"
 #include <algorithm>
 #include <stack>
@@ -213,8 +213,18 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   }
 
   // Subscribers, if applicable:
-  if(traits.subscriber)
+  auto& stump = traits.value->GetSlotInformation();
+  if(traits.subscriber) {
     AddPacketSubscriber(traits.subscriber);
+
+    // Ancilliary subscribers, if present:
+    for(const auto* pCur = stump.pFirstAutoFilter; pCur; pCur = pCur->pFlink) {
+      AutoFilterDescriptor subscriber(traits.subscriber.GetAutoFilter(), pCur->m_stub);
+      AddPacketSubscriber(subscriber);
+    }
+  }
+  else if(stump.pFirstAutoFilter)
+    throw autowiring_error("It is an error to make use of NewAutoFilter in a type which does not have an AutoFilter member; please provide an AutoFilter method on this type");
 
   // Signal listeners that a new object has been created
   GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, traits.value);
