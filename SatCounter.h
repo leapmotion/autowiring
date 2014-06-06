@@ -22,7 +22,7 @@ struct SatCounter:
   /// Calls the underlying AutoFilter method with the specified AutoPacketAdapter as input
   /// </summary>
   void CallAutoFilter(AutoPacket& packet) {
-    GetCall()(GetAutoFilterPtr(), packet);
+    GetCall()(GetAutoFilter()->ptr(), packet);
   }
 
   /// <summary>

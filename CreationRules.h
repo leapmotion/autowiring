@@ -1,43 +1,18 @@
 #pragma once
+#include "autowiring_error.h"
 #include "ContextMember.h"
+#include "has_simple_constructor.h"
+#include "has_static_new.h"
 #include "SlotInformation.h"
 #include TYPE_TRAITS_HEADER
 #include RVALUE_HEADER
 #include <new>
 
 template<typename T>
-struct has_static_new
+struct is_injectable
 {
-  template<class Fn, Fn>
-  struct unnamed_constant;
-
-  template<class U>
-  static int select(unnamed_constant<U* (*)(), &U::New>*);
-
-  template<class U>
-  static char select(...);
-
-  static const bool value = sizeof(select<T>(nullptr)) == sizeof(int);
+  static const bool value = has_simple_constructor<T>::value || has_static_new<T>::value;
 };
-
-template<typename T, bool isAbstract = std::is_abstract<T>::value>
-struct has_simple_constructor
-{
-  template<class U>
-  static int select(decltype(U())*);
-
-  template<class U>
-  static char select(...);
-
-  static const bool value = sizeof(select<T>(nullptr)) == sizeof(int);
-};
-
-template<typename T>
-struct has_simple_constructor<T, true>
-{
-  static const bool value = false;
-};
-
 
 /// <summary>
 /// Simple structure to centralize knowledge about how to create types with various declarations
@@ -60,7 +35,7 @@ struct CreationRules {
     try {
       // Stack location and placement new in one expression
       return
-        SlotInformationStackLocation::PushStackLocation<U>(reinterpret_cast<U*>(pSpace)),
+        SlotInformationStackLocation::PushStackLocation<U>(pSpace),
         ::new (pSpace) U(std::forward<Args>(args)...);
     }
     catch(...) {
@@ -74,13 +49,13 @@ struct CreationRules {
   struct alloc_fn {};
 
   template<typename U>
-  static void* Allocate(alloc_fn<&U::operator new>*) {
-    return U::operator new(sizeof(U));
+  static U* Allocate(alloc_fn<&U::operator new>*) {
+    return (U*) U::operator new(sizeof(U));
   }
 
   template<typename U>
-  static void* Allocate(...) {
-    return ::operator new(sizeof(U));
+  static U* Allocate(...) {
+    return (U*) ::operator new(sizeof(U));
   }
 
   template<void(*)(void*)>

@@ -1,10 +1,11 @@
 <div>
   <div class="section">
-    <directed-graph nodes="leap.GetContexts()">
-    </directed-graph>
+    <directed-tree nodes="leap.GetContexts()">
+    </directed-tree>
   </div>
   <div style="height:20px;"></div>
   <ul class="nav nav-pills pull-right" ng-show="leap.isSubscribed()">
+    <li active-nav="all" check="currentFilter"><a>All</a></li>
     <li active-nav="contextMember" check="currentFilter"><a>ContextMembers</a></li>
     <li active-nav="coreRunnable" check="currentFilter"><a>CoreRunnables</a></li>
     <li active-nav="eventReceiver" check="currentFilter"><a>EventReceivers</a></li>
@@ -14,8 +15,8 @@
   <div ng-repeat="(id,context) in leap.GetContexts()" class="section">
     <h3><a ng-href="#/context/{{id}}">{{context.name}}</a></h3>
     <div class="row">
-      <div class="col-xs-3" ng-repeat="object in context.objects | TypeFilter:currentFilter" style="min-height:230px">
-        <h4><a ng-href="#/object/{{id}}/{{object.linkName}}">{{object.name}}</a></h4>
+      <div class="col-xs-3" ng-repeat="object in context.objects | TypeFilter:currentFilter" style="min-height:250px">
+        <h4><a ng-href="#/object/{{id}}/{{object.linkName}}">{{object.name | Limit:30}}</a></h4>
         <ul>
           <li ng-repeat="type in object.types | display">
             {{type}}

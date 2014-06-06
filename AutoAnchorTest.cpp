@@ -57,3 +57,23 @@ TEST_F(AutoAnchorTest, VerifyPostHocSatisfaction) {
   // Verify membership of the anchored type in the associated anchored context:
   ASSERT_EQ(ctxt, sobj->GetContext()) << "An anchored type with an unsatisfied slot in a child context was not injected in the context where it was anchored";
 }
+
+struct Foo{};
+
+struct AnchorsOntoFoo:
+  ContextMember,
+  AutoAnchor<Foo>
+{};
+
+TEST_F(AutoAnchorTest, VerifyMemberBolting) {
+  AutoCreateContextT<Foo> anchorCtxt;
+  auto subCtxt = anchorCtxt->Create<void>();
+  
+  CurrentContextPusher pshr(subCtxt);
+  
+  AutoRequired<SimpleObject> simple;
+  AutoRequired<AnchorsOntoFoo> anchors;
+  
+  EXPECT_EQ(subCtxt, simple->GetContext()) << "Normal AutoRequired ContextMember wasn't injected into the current context";
+  EXPECT_EQ(anchorCtxt, anchors->GetContext()) << "Anchor wasn't resolved correctly for anchoring ContextMember";
+}
