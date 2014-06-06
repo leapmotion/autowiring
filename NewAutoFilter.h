@@ -22,11 +22,11 @@ class NewAutoFilter:
 {
 public:
   static const AutoFilterDescriptorStub& GetStub(void) {
-    static const AutoFilterDescriptorStub s_descriptor(CallExtractor<MemFn>(), &CallExtractor<MemFn>::Call<memFn>);
+    static const AutoFilterDescriptorStub s_descriptor(CallExtractor<MemFn>(), &CallExtractor<MemFn>::template Call<memFn>);
     return s_descriptor;
   }
 
   NewAutoFilter(void) :
-    AutoFilterBase(GetStub())
+    NewAutoFilterBase(GetStub())
   {}
 };

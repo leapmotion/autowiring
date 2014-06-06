@@ -234,7 +234,7 @@ struct AutoFilterDescriptorStub {
     m_requiredCount(0),
     m_optionalCount(0),
     m_arity(extractor.N),
-    m_pArgs(extractor.Enumerate<AutoFilterDescriptorInput>()),
+    m_pArgs(extractor.template Enumerate<AutoFilterDescriptorInput>()),
     m_pCall(pCall)
   {
     // Cannot register a subscriber with zero arguments:
@@ -394,7 +394,7 @@ public:
     AutoFilterDescriptor(
       subscriber,
       CallExtractor<decltype(&T::AutoFilter)>(),
-      &CallExtractor<decltype(&T::AutoFilter)>::Call<&T::AutoFilter>
+      &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
     )
   {}
 };
