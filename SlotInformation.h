@@ -4,6 +4,7 @@
 #include MEMORY_HEADER
 
 class DeferrableAutowiring;
+class NewAutoFilterBase;
 
 /// <summary>
 /// Represents information about a single slot detected as having been declared in a context member
@@ -35,7 +36,8 @@ struct SlotInformation {
 struct SlotInformationStumpBase {
   SlotInformationStumpBase(void) :
     bInitialized(false),
-    pHead(nullptr)
+    pHead(nullptr),
+    pFirstAutoFilter(nullptr)
   {}
 
   // Initialization flag, used to indicate that this stump has valid data
@@ -43,6 +45,11 @@ struct SlotInformationStumpBase {
 
   // Current slot information:
   const SlotInformation* pHead;
+
+  // If there are any custom AutoFilter fields defined, this is the first of them
+  // Note that these custom fields -only- include fields registered via the AutoFilter
+  // registration type
+  NewAutoFilterBase* pFirstAutoFilter;
 };
 
 /// <summary>
@@ -115,6 +122,8 @@ private:
   // Current slot information:
   SlotInformation* m_pCur;
 
+  // If this type has additional AutoFilter routines,
+
   // Information about the object being constructed while this stack location is valid:
   const void* m_pObj;
   size_t m_extent;
@@ -155,7 +164,7 @@ public:
   }
 
   /// <summary>
-  /// Returns the current information stump entry
+  /// Returns the current information stump entry, or null if no stack location exists
   /// </summary>
   static SlotInformationStackLocation* CurrentStackLocation(void);
 

@@ -2,6 +2,7 @@
 #include "AutoFilterTest.h"
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
+#include "NewAutoFilter.h"
 #include "TestFixtures/Decoration.h"
 
 TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
@@ -204,7 +205,7 @@ TEST_F(AutoFilterTest, VerifyTeardownArrangement) {
       std::shared_ptr<FilterA> filterA = filterAWeak.lock();
 
       // Unsubscribe the filter:
-      factory->RemoveSubscriber(filterA);
+      factory->RemoveSubscriber(MakeAutoFilterDescriptor(filterA));
     }
 
     // Verify that unsubscription STILL does not result in expiration:
@@ -430,6 +431,42 @@ TEST_F(AutoFilterTest, DeferredRecieptInSubContext) {
   // Now verify that all of our packets are expired:
   for(auto cur : allPackets)
     ASSERT_TRUE(cur.expired()) << "Packet did not expire after all recipients went out of scope";
+}
+
+class HasAWeirdAutoFilterMethod {
+public:
+  HasAWeirdAutoFilterMethod(void):
+    m_baseValue(101),
+    m_called0(0),
+    m_called1(0)
+  {
+  }
+
+  void AutoFilter(Decoration<0>) {
+    ASSERT_EQ(101, m_baseValue) << "AutoFilter entry base offset incorrectly computed";
+    ++m_called0;
+  }
+
+  void AutoFilterFoo(Decoration<0>) {
+    ASSERT_EQ(101, m_baseValue) << "AutoFilter entry base offset incorrectly computed";
+    ++m_called1;
+  }
+
+  NewAutoFilter<decltype(&HasAWeirdAutoFilterMethod::AutoFilterFoo), &HasAWeirdAutoFilterMethod::AutoFilterFoo> af;
+  const int m_baseValue;
+  int m_called0;
+  int m_called1;
+};
+
+TEST_F(AutoFilterTest, AnyAutoFilter) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<HasAWeirdAutoFilterMethod> t;
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet = factory->NewPacket();
+
+  packet->Decorate(Decoration<0>());
+  ASSERT_TRUE(t->m_called0 == 1) << "Root AutoFilter method was not invoked as expected";
+  ASSERT_TRUE(t->m_called1 == 1) << "Custom AutoFilter method was not invoked as expected";
 }
 
 class SimpleIntegerFilter
