@@ -16,7 +16,7 @@ TEST_F(DecoratorTest, VerifyCorrectExtraction) {
 
   // Run our prop extractor based on a known decorator:
   AutoRequired<FilterA> filterA;
-  AutoFilterDescriptor desc(filterA);
+  AutoFilterDescriptor desc = MakeAutoFilterDescriptor(filterA);
   for(const AutoFilterDescriptorInput* cur = desc.GetAutoFilterInput(); *cur; cur++)
     v.push_back(cur->ti);
   ASSERT_EQ(2UL, v.size()) << "Extracted an insufficient number of types from a known filter function";

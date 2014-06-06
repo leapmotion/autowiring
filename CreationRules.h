@@ -35,7 +35,7 @@ struct CreationRules {
     try {
       // Stack location and placement new in one expression
       return
-        SlotInformationStackLocation::PushStackLocation<U>(reinterpret_cast<U*>(pSpace)),
+        SlotInformationStackLocation::PushStackLocation<U>(pSpace),
         ::new (pSpace) U(std::forward<Args>(args)...);
     }
     catch(...) {
@@ -49,13 +49,13 @@ struct CreationRules {
   struct alloc_fn {};
 
   template<typename U>
-  static void* Allocate(alloc_fn<&U::operator new>*) {
-    return U::operator new(sizeof(U));
+  static U* Allocate(alloc_fn<&U::operator new>*) {
+    return (U*) U::operator new(sizeof(U));
   }
 
   template<typename U>
-  static void* Allocate(...) {
-    return ::operator new(sizeof(U));
+  static U* Allocate(...) {
+    return (U*) ::operator new(sizeof(U));
   }
 
   template<void(*)(void*)>
