@@ -50,12 +50,12 @@ struct CreationRules {
 
   template<typename U>
   static U* Allocate(alloc_fn<&U::operator new>*) {
-    return U::operator new(sizeof(U));
+    return (U*) U::operator new(sizeof(U));
   }
 
   template<typename U>
   static U* Allocate(...) {
-    return ::operator new(sizeof(U));
+    return (U*) ::operator new(sizeof(U));
   }
 
   template<void(*)(void*)>
