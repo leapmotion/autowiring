@@ -3,7 +3,7 @@
 #include "AutoPacket.h"
 #include <boost/thread/tss.hpp>
 
-static boost::thread_specific_ptr<AutoFilterBase*> pAFB;
+static boost::thread_specific_ptr<NewAutoFilterBase*> pAFB;
 
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
