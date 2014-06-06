@@ -13,7 +13,7 @@
 struct SatCounter;
 class AutoPacketFactory;
 class AutoPacketProfiler;
-class AutoFilterDescriptor;
+struct AutoFilterDescriptor;
 
 template<class T>
 struct subscriber_traits;
@@ -51,7 +51,15 @@ private:
   typedef std::unordered_map<std::type_index, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
 
+  /// <summary>
+  /// Last change call with unsatisfied optional arguments
+  /// </summary>
   void ResolveOptions(void);
+
+  /// <summary>
+  /// Resets counters, then decrements subscribers requiring AutoPacket argument.
+  /// </summary>
+  void Initialize(void);
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
@@ -301,7 +309,8 @@ public:
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-      for(auto ti : sc_typeInfo)
+      static const std::type_info* lamda_typeInfos [] = {&typeid(Ts)...};
+      for(auto ti : lamda_typeInfos)
         MarkUnsatisfiable(*ti);
     }),
     PulseSatisfaction(pTypeSubs, sizeof...(Ts));

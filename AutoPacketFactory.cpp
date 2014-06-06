@@ -1,13 +1,17 @@
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacket.h"
+#include <boost/thread/tss.hpp>
+
+static boost::thread_specific_ptr<NewAutoFilterBase*> pAFB;
 
 AutoPacketFactory::AutoPacketFactory(void):
+  ContextMember("AutoPacketFactory"),
   m_wasStopped(false),
   m_packets(
     ~0,
     ~0,
-    [this] { return new AutoPacket(*this); },
+    [this] {return new AutoPacket(*this); },
     [] (AutoPacket& packet) { packet.Reset(); }
   )
 {}
