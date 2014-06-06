@@ -8,14 +8,11 @@
 // Special file-level allocation with a no-op dtor, because all stack locations are stack-allocated
 static boost::thread_specific_ptr<SlotInformationStackLocation> tss([](SlotInformationStackLocation*) {});
 
-SlotInformationStump::~SlotInformationStump(void) {}
-
-SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStump* pStump, const void* pObj, const void* pContextMember, size_t extent) :
+SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStumpBase* pStump, const void* pObj, size_t extent) :
   m_pPrior(tss.get()),
   m_pStump(pStump),
   m_pCur(nullptr),
   m_pObj(pObj),
-  m_pContextMember(pContextMember),
   m_extent(extent)
 {
   tss.reset(this);
@@ -50,7 +47,11 @@ SlotInformationStackLocation::~SlotInformationStackLocation(void) {
     prior.reset(cur);
 }
 
-SlotInformationStump* SlotInformationStackLocation::CurrentStackLocation(void) {
+SlotInformationStackLocation* SlotInformationStackLocation::CurrentStackLocation(void) {
+  return tss.get();
+}
+
+SlotInformationStumpBase* SlotInformationStackLocation::CurrentStump(void) {
   // Trivial null defaulting:
   return tss.get() ? tss->m_pStump : nullptr;
 }
@@ -64,10 +65,7 @@ void SlotInformationStackLocation::RegisterSlot(DeferrableAutowiring* pDeferrabl
     // No reason to continue, stump already initialized
     return;
 
-  if(
-    (unsigned char*) pDeferrable < (unsigned char*) tss->m_pObj ||
-    (unsigned char*) tss->m_pObj + tss->m_extent < (unsigned char*) pDeferrable + sizeof(AutowirableSlot<int>)
-  )
+  if(!tss->Encloses(pDeferrable))
     // Slot is extraneous, falling outside of the bounds of the original object--ignore
     return;
 

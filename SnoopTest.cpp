@@ -277,7 +277,7 @@ TEST_F(SnoopTest, SimplePackets) {
   AutoRequired<FilterA> filter(Tracking);
   AutoRequired<FilterF> detachedFilter(Tracking);
   Pipeline->Snoop(filter);
-  ASSERT_FALSE(filter->m_called) << "Filter called prematurely";
+  ASSERT_FALSE(!!filter->m_called) << "Filter called prematurely";
   ASSERT_FALSE(detachedFilter->m_called) << "Filter called prematurely";
   
   // Add factory to pipeline
@@ -285,11 +285,11 @@ TEST_F(SnoopTest, SimplePackets) {
   auto packet = factory->NewPacket();
   
   packet->Decorate(Decoration<0>());
-  ASSERT_FALSE(filter->m_called) << "Filter called prematurely";
+  ASSERT_FALSE(!!filter->m_called) << "Filter called prematurely";
   
   // Now compleletly satisfy filter. Should snoop across contexts
   packet->Decorate(Decoration<1>());
-  EXPECT_TRUE(filter->m_called) << "A snooper did not receive an AutoPacket originating in a snooped context";
+  EXPECT_TRUE(!!filter->m_called) << "A snooper did not receive an AutoPacket originating in a snooped context";
   EXPECT_FALSE(detachedFilter->m_called) << "Received a packet from a different context";
   
   //reset
@@ -299,6 +299,6 @@ TEST_F(SnoopTest, SimplePackets) {
   auto packet2 = factory->NewPacket();
   packet2->Decorate(Decoration<0>());
   packet2->Decorate(Decoration<1>());
-  EXPECT_FALSE(filter->m_called) << "Unsnoop didn't work";
+  EXPECT_FALSE(!!filter->m_called) << "Unsnoop didn't work";
 }
 

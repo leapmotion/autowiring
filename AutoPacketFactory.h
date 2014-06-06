@@ -2,8 +2,8 @@
 #include "Autowired.h"
 #include "AutoPacket.h"
 #include "AutoFilterDescriptor.h"
+#include "ContextMember.h"
 #include "CoreRunnable.h"
-#include "Object.h"
 #include "ObjectPool.h"
 #include <vector>
 #include TYPE_INDEX_HEADER
@@ -21,7 +21,7 @@ struct AdjacencyEntry;
 /// Generally, only one packet factory is required per context.
 /// </remarks>
 class AutoPacketFactory:
-  public Object,
+  public ContextMember,
   public CoreRunnable
 {
 public:
@@ -32,7 +32,7 @@ private:
   // Lock for this type
   mutable boost::mutex m_lock;
   
-  // Notify when started
+  // State change notification
   boost::condition_variable m_stateCondition;
   
   // Have we been signaled to stop

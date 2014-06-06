@@ -1,12 +1,13 @@
 #pragma once
+#include "TypeUnifier.h"
 #include <typeinfo>
 #include MEMORY_HEADER
 
-class ContextMember;
 class DeferrableAutowiring;
+class NewAutoFilterBase;
 
 /// <summary>
-/// Represents information about a single slot detected as having been declared in a ContextMember
+/// Represents information about a single slot detected as having been declared in a context member
 /// </summary>
 struct SlotInformation {
   SlotInformation(const SlotInformation* pFlink, const std::type_info& type, size_t slotOffset, bool autoRequired) :
@@ -32,19 +33,64 @@ struct SlotInformation {
 /// <summary>
 /// Stump entry, used to anchor a chain of slot information entries
 /// </summary>
-struct SlotInformationStump {
-  SlotInformationStump(void) :
+struct SlotInformationStumpBase {
+  SlotInformationStumpBase(void) :
     bInitialized(false),
-    pHead(nullptr)
+    pHead(nullptr),
+    pFirstAutoFilter(nullptr)
   {}
-  ~SlotInformationStump(void);
 
   // Initialization flag, used to indicate that this stump has valid data
   bool bInitialized;
 
   // Current slot information:
-  SlotInformation* pHead;
+  const SlotInformation* pHead;
+
+  // If there are any custom AutoFilter fields defined, this is the first of them
+  // Note that these custom fields -only- include fields registered via the AutoFilter
+  // registration type
+  NewAutoFilterBase* pFirstAutoFilter;
 };
+
+/// <summary>
+/// Utility type, inherits true_type if T should use the type unifier
+/// </summary>
+template<class T>
+struct use_unifier:
+  std::integral_constant<
+    bool,
+    !std::is_void<T>::value &&
+    !std::is_scalar<T>::value &&
+    !std::is_base_of<Object, T>::value
+  >
+{};
+
+template<class T, bool needsUnifier = use_unifier<T>::value>
+struct SlotInformationStump;
+
+template<class T>
+struct SlotInformationStump<T, false>:
+  SlotInformationStumpBase
+{
+  SlotInformationStump(){}
+  static SlotInformationStump s_stump;
+};
+
+/// <summary>
+/// Specializations for types which will be using the type unifier
+/// </summary>
+template<class T>
+struct SlotInformationStump<T, true>
+{
+  SlotInformationStump(){}
+  static SlotInformationStump<typename SelectTypeUnifier<T>::type>& s_stump;
+};
+
+template<class T>
+SlotInformationStump<T, false> SlotInformationStump<T, false>::s_stump;
+
+template<class T>
+SlotInformationStump<typename SelectTypeUnifier<T>::type>& SlotInformationStump<T, true>::s_stump = SlotInformationStump<typename SelectTypeUnifier<T>::type>::s_stump;
 
 /// <summary>
 /// A stack location linked list, stored in a per-thread basis and used to track slots
@@ -57,12 +103,11 @@ private:
     m_pStump(rhs.m_pStump),
     m_pCur(rhs.m_pCur),
     m_pObj(rhs.m_pObj),
-    m_pContextMember(rhs.m_pContextMember),
     m_extent(rhs.m_extent)
   {
     rhs.m_pStump = nullptr;
   }
-  SlotInformationStackLocation(SlotInformationStump* pStump = nullptr, const void* pObj = nullptr, const void* pContextMember = nullptr, size_t extent = 0);
+  SlotInformationStackLocation(SlotInformationStumpBase* pStump, const void* pObj = nullptr, size_t extent = 0);
 
 public:
   ~SlotInformationStackLocation(void);
@@ -72,41 +117,39 @@ private:
   SlotInformationStackLocation* m_pPrior;
 
   // The pointer location where the stump will be stored:
-  SlotInformationStump* m_pStump;
+  SlotInformationStumpBase* m_pStump;
 
   // Current slot information:
   SlotInformation* m_pCur;
 
+  // If this type has additional AutoFilter routines,
+
   // Information about the object being constructed while this stack location is valid:
   const void* m_pObj;
-  const void* m_pContextMember;
   size_t m_extent;
 
 public:
   /// <returns>
-  /// The slot information stump for the specified type
+  /// True if the passed pointer is inside of the object currently under construction at this stack location
   /// </returns>
-  template<class T>
-  static SlotInformationStump* GetStump(void) {
-    static std::unique_ptr<SlotInformationStump> s_pSlot(new SlotInformationStump);
-    return s_pSlot.get();
+  bool Encloses(const void* ptr) {
+    return m_pObj < ptr && ptr < (char*) m_pObj + m_extent;
   }
 
   /// <summary>
-  /// Default method, does nothing
+  /// The slot information stump for this stack location
   /// </summary>
-  template<class T>
-  static void PushStackLocation(void*) {}
+  SlotInformationStumpBase* GetStump(void) const {
+    return m_pStump;
+  }
 
   /// <returns>
   /// Creates a new stack location which remains current as long as the return type is not destroyed
   /// </returns>
   /// <param name="pSpace">The pointer to the base of the space about to be constructed</param>
-  /// <param name="contextMemberOffset">The offset between the base of the space and the ContextMember field</param>
   template<class T>
-  static SlotInformationStackLocation PushStackLocation(ContextMember* pContextMember) {
-    T* pObj = static_cast<T*>(pContextMember);
-    auto* pStump = GetStump<T>();
+  static SlotInformationStackLocation PushStackLocation(T* pSpace) {
+    auto* pStump = &SlotInformationStump<T>::s_stump;
 
     // If we're already initialized, then we have nothing to do.  This line is an optimization; if there
     // is a race here, then the worst-case scenario is an unneeded sequence of memory allocations that
@@ -117,13 +160,18 @@ public:
     // New stack location to enclose this stump.  This stack location may be concurrent with respect
     // to other threads, but only one thread will succeed in colonizing this stump with a chain of
     // slot entries
-    return SlotInformationStackLocation(pStump, pObj, static_cast<ContextMember*>(pObj), sizeof(T));
+    return SlotInformationStackLocation(pStump, pSpace, sizeof(T));
   }
 
   /// <summary>
-  /// Returns the current information stump entry
+  /// Returns the current information stump entry, or null if no stack location exists
   /// </summary>
-  static SlotInformationStump* CurrentStackLocation(void);
+  static SlotInformationStackLocation* CurrentStackLocation(void);
+
+  /// <summary>
+  /// Returns the stump in the current stack location, or null
+  /// </summary>
+  static SlotInformationStumpBase* CurrentStump(void);
 
   /// <summary>
   /// Registers the named slot with the current stack location
