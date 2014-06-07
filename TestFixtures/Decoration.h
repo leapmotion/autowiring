@@ -106,14 +106,15 @@ public:
 };
 
 /// <summary>
-/// A filter which will simply get hit any time a packet is issued in the current context
+/// An override of the FilterD AutoFilter method
 /// </summary>
 class FilterE:
-public FilterRoot
+public FilterD
 {
 public:
-  void AutoFilter(void) {
+  void AutoFilter(AutoPacket& pkt) {
     ++m_called;
+    pkt.Decorate(Decoration<3>());
   }
 };
 
@@ -156,7 +157,36 @@ public:
   std::tuple<typename std::decay<Args>::type...> m_args;
 };
 
-// Automatically obtains and returns a modified Decoration<0>
+/// <summary>
+/// A filter that should never be called
+/// </summary>
+class BadFilterA:
+public FilterRoot
+{
+public:
+  void AutoFilter(void) {
+    ++m_called;
+  }
+};
+
+/// <summary>
+/// A filter that should trigger a static assert
+/// </summary>
+class BadFilterB:
+public FilterRoot
+{
+public:
+  void AutoFilter(Decoration<0>&) {
+    ++m_called;
+  }
+  void AutoFilter(Decoration<1>&) {
+    ++m_called;
+  }
+};
+
+/// <summary>
+/// Automatically obtains and returns a modified Decoration<0>
+/// </summary>
 class FilterOutA :
   public FilterRoot {
 public:
