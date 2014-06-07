@@ -8,12 +8,7 @@ static boost::thread_specific_ptr<NewAutoFilterBase*> pAFB;
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
   m_wasStopped(false),
-  m_packets(
-    ~0,
-    ~0,
-    [this] {return new AutoPacket(*this); },
-    [] (AutoPacket& packet) { packet.Reset(); }
-  )
+  m_packets(AutoPacket::CreateObjectPool(*this))
 {}
 
 AutoPacketFactory::~AutoPacketFactory() {}
