@@ -318,12 +318,20 @@ TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
   AutoRequired<FilterA> filterA;
   AutoRequired<FilterC> filterC;
   AutoRequired<FilterD> filterD;
+  AutoRequired<FilterD> filterE;
   AutoRequired<AutoPacketFactory> factory;
 
   AutoCurrentContext()->Initiate();
 
   // Obtain a packet first:
   auto packet = factory->NewPacket();
+
+  // The mere act of obtaining a packet should have triggered filterD to be fired:
+  EXPECT_LT(0, filterD->m_called) << "Trivial filter with AutoPacket argument was not called as expected";
+  EXPECT_NO_THROW(packet->Get<Decoration<2>>()) << "Decoration on creation failed";
+
+  // The mere act of obtaining a packet should have triggered filterD to be fired:
+  EXPECT_LT(0, filterE->m_called) << "Trivial filter with no arguments was not called as expected";
 
   // The mere act of obtaining a packet should have triggered filterD to be fired:
   EXPECT_LT(0, filterD->m_called) << "Trivial filter was not called as expected";
