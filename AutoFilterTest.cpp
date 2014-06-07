@@ -644,3 +644,14 @@ TEST_F(AutoFilterTest, PostHocSatisfactionAttempt) {
 
   EXPECT_LT(0, fg2->m_called) << "An AutoFilter was not called when all of its inputs were simultaneously available";
 }
+
+TEST_F(AutoFilterTest, AutoOutTest) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterOutA> fgA;
+  {
+    auto packet = factory->NewPacket();
+    ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter applied to one new packet was called " << fgA->m_called << " times";
+    ASSERT_TRUE(packet->Get<Decoration<0>>().i == 1) << "Decoration data was not initialized by AutoFilter call";
+  }
+}
