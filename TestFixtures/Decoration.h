@@ -1,6 +1,7 @@
 #pragma once
 #include "../CoreThread.h"
 #include <boost/thread/barrier.hpp>
+#include "AutoWiring/has_autofilter.h"
 
 /// <summary>
 /// A simple "decoration" class which will be added to a variety of sample packets
@@ -158,7 +159,7 @@ public:
 };
 
 /// <summary>
-/// A filter that should never be called
+/// A filter that should trigger a static_assert in AutoRequire<BadFilterA>
 /// </summary>
 class BadFilterA:
 public FilterRoot
@@ -170,7 +171,7 @@ public:
 };
 
 /// <summary>
-/// A filter that should trigger a static assert
+/// A filter that should trigger a static_assert in AutoRequire<BadFilterB>
 /// </summary>
 class BadFilterB:
 public FilterRoot
