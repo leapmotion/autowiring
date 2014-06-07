@@ -43,16 +43,26 @@ public:
     const std::function<T*()>& alloc = &DefaultCreate<T>,
     const std::function<void(T&)>& rx = &DefaultReset<T>
   ) :
-    m_monitor(new ObjectPoolMonitor),
     m_limit(limit),
     m_poolVersion(0),
     m_maxPooled(maxPooled),
     m_outstanding(0),
     m_rx(rx),
     m_alloc(alloc)
-  {}
+  {
+    m_monitor.reset(new ObjectPoolMonitor(this));
+  }
   
+  ObjectPool(ObjectPool&& rhs)
+  {
+    *this = std::move(rhs);
+  }
+
   ~ObjectPool(void) {
+    if(!m_monitor)
+      // Nothing to do, type was moved
+      return;
+
     // Transition the pool to the abandoned state:
     m_monitor->Abandon();
 
@@ -87,29 +97,30 @@ protected:
     // Fill the shared pointer with the object we created, and ensure that we override
     // the destructor so that the object is returned to the pool when it falls out of
     // scope.
-    auto monitor = m_monitor;
     size_t poolVersion = m_poolVersion;
+    auto monitor = m_monitor;
 
     return std::shared_ptr<T>(
       pObj,
-      [this, poolVersion, monitor](T* ptr) {
-        this->Return(poolVersion, monitor, ptr);
+      [poolVersion, monitor](T* ptr) {
+        // Default behavior will be to destroy the pointer
+        std::unique_ptr<T> unique(ptr);
+
+        // Hold the lock next, in order to ensure that destruction happens after the monitor
+        // lock is released.
+        boost::lock_guard<boost::mutex> lk(*monitor);
+
+        if(monitor->IsAbandoned())
+          // Nothing we can do, monitor object abandoned already, just destroy the object
+          return;
+
+        // Pass control to the Return method
+        static_cast<ObjectPool<T>*>(monitor->GetOwner())->Return(poolVersion, unique);
       }
     );
   }
 
-  void Return(size_t poolVersion, const std::shared_ptr<ObjectPoolMonitor>& monitor, T* ptr) {
-    // Default behavior will be to destroy the pointer
-    std::unique_ptr<T> unique(ptr);
-
-    // Hold the lock next, in order to ensure that destruction happens after the monitor
-    // lock is released.
-    boost::lock_guard<boost::mutex> lk(*monitor);
-
-    if(monitor->IsAbandoned())
-      // Nothing we can do, monitor object abandoned already, just destroy the object
-      return;
-
+  void Return(size_t poolVersion, std::unique_ptr<T>& unique) {
     // Always decrement the count when an object is no longer outstanding
     assert(m_outstanding);
     m_outstanding--;
@@ -122,7 +133,7 @@ protected:
       m_objs.size() < m_maxPooled
     ) {
       // Reset the object and put it back in the pool:
-      m_rx(*ptr);
+      m_rx(*unique);
       m_objs.push_back(Wrap(unique.release()));
     }
 
@@ -345,5 +356,31 @@ public:
     m_setCondition.wait(lk, [this] {
       return !m_outstanding;
     });
+  }
+
+  // Operator overloads
+  void operator=(ObjectPool<T>&) = delete;
+
+  void operator=(ObjectPool<T>&& rhs) {
+    // Abandon current monitor, we are orphaning current objects
+    if(m_monitor) {
+      m_monitor->SetOwner(&rhs);
+      m_monitor->Abandon();
+    }
+
+    // Lock down rhs while we move things in
+    boost::lock_guard<boost::mutex> lk(*rhs.m_monitor);
+    std::swap(m_monitor, rhs.m_monitor);
+
+    m_poolVersion = rhs.m_poolVersion;
+    m_objs = rhs.m_objs;
+    m_maxPooled = rhs.m_maxPooled;
+    m_limit = rhs.m_limit;
+    m_outstanding = rhs.m_outstanding;
+    std::swap(m_rx, rhs.m_rx);
+    std::swap(m_alloc, rhs.m_alloc);
+
+    // Now we can take ownership of this monitor object:
+    m_monitor->SetOwner(this);
   }
 };
