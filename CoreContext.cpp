@@ -703,11 +703,7 @@ void CoreContext::FilterException(void) {
   bool handled = false;
   for(auto q = m_filters.begin(); q != m_filters.end(); q++)
     try {
-      (*q)->Filter(
-        [] {
-          std::rethrow_exception(std::current_exception());
-        }
-      );
+      (*q)->Filter();
       handled = true;
     } catch(...) {
       // Do nothing
@@ -727,19 +723,15 @@ void CoreContext::FilterException(void) {
 
   // Rethrow if unhandled:
   if(!handled)
-    std::rethrow_exception(std::current_exception());
+    throw;
 }
 
 void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient) {
-  auto rethrower = [] () {
-    std::rethrow_exception(std::current_exception());
-  };
-
   // Filter in order:
   for(CoreContext* pCur = this; pCur; pCur = pCur->GetParentContext().get())
     for(auto q = pCur->m_filters.begin(); q != pCur->m_filters.end(); q++)
       try {
-        (*q)->Filter(rethrower, pProxy, pRecipient);
+        (*q)->Filter(pProxy, pRecipient);
       } catch(...) {
         // Do nothing, filter didn't want to filter this exception
       }
