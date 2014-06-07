@@ -600,6 +600,7 @@ TEST_F(AutoFilterTest, NoImplicitDecorationCaching) {
   ASSERT_EQ(100UL, doesNothing->callCount) << "The expected number of calls to AutoFilter were not made";
   ASSERT_TRUE(ptr.unique()) << "Cached packets (or some other cause) incorrectly held a reference to a shared pointer that should have expired";
 }
+
 TEST_F(AutoFilterTest, MultiImmediate) {
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
@@ -679,10 +680,14 @@ TEST_F(AutoFilterTest, PostHocSatisfactionAttempt) {
 TEST_F(AutoFilterTest, AutoOutTest) {
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<FilterOutA> fgA;
+  AutoRequired<FilterOutA> foA;
+  AutoRequired<FilterOutB> foB;
   {
     auto packet = factory->NewPacket();
-    ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter applied to one new packet was called " << fgA->m_called << " times";
+    ASSERT_TRUE(foA->m_called == 1) << "An AutoFilter applied to one new packet with argument AutoPacket& was called " << foA->m_called << " times";
     ASSERT_TRUE(packet->Get<Decoration<0>>().i == 1) << "Decoration data was not initialized by AutoFilter call";
+    ASSERT_TRUE(packet->Get<Decoration<1>>().i == 1) << "Decoration data was not appended by AutoFilter call";
+
+    ASSERT_TRUE(foB->m_called == 1) << "An AutoFilter applied to one new packet without argument AutoPacket& reference was called " << foB->m_called << " times";
   }
 }
