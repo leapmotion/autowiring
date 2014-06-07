@@ -48,12 +48,6 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
 AutoPacket::~AutoPacket() {
   // Last chance for AutoFilter call
   ResolveOptions();
-
-  {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_decorations.clear();
-    m_satCounters.clear();
-  }
 }
 
 void AutoPacket::ResolveOptions(void) {
