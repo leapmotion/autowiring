@@ -314,11 +314,34 @@ TEST_F(AutoFilterTest, VerifyAntiDecorate) {
   }
 }
 
+/// <summary>
+/// Replicate the static_assert in has_autofilter
+/// </summary>
+template<typename T>
+struct good_autofilter {
+
+  // Evaluates to false when T does not include an AutoFilter method with at least one argument.
+  static const bool value = has_unambiguous_autofilter<T>::value;
+
+  // This class has at least one AutoFilter method
+  struct detect_ambiguous_autofilter : T, test_valid_autofilter {};
+
+  // Ensures a compiler error when the identification of T::AutoFilter is ambiguous.
+  // This cannot be in has_unambiguous_autofilter, since that would be recursive.
+  static const bool test = value || has_unambiguous_autofilter<detect_ambiguous_autofilter>::value;
+};
+
 TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
   AutoRequired<FilterA> filterA;
   AutoRequired<FilterC> filterC;
   AutoRequired<FilterD> filterD;
-  AutoRequired<FilterD> filterE;
+  AutoRequired<FilterE> filterE;
+
+  //DEBUG: Expect compiler warning
+
+  ASSERT_FALSE(good_autofilter<BadFilterA>::test) << "Failed to identify AutoFilter(void)";
+  ASSERT_FALSE(good_autofilter<BadFilterA>::test) << "Failed to identify multiple defintiions of AutoFilter";
+
   AutoRequired<AutoPacketFactory> factory;
 
   AutoCurrentContext()->Initiate();
