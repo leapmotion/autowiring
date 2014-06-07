@@ -820,7 +820,7 @@ void CoreContext::RemovePacketSubscribers(const AutoPacketFactory& factory) {
 
   // Remove subscribers from our factory AFTER the parent eviction has taken place
   AnySharedPointerT<AutoPacketFactory> localFactory;
-  FindByTypeUnsafe(localFactory);
+  FindByType(localFactory);
   if(localFactory)
     for(auto& cur : factory.GetSubscriberVector())
       localFactory->RemoveSubscriber(cur);
