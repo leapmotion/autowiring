@@ -187,11 +187,26 @@ public:
 
 /// <summary>
 /// Automatically obtains and returns a modified Decoration<0>
+/// Appemnds a decoration to pkt.
 /// </summary>
 class FilterOutA :
   public FilterRoot {
 public:
-    void AutoFilter(auto_out<Decoration<0>> zero) {
+    void AutoFilter(AutoPacket& pkt, auto_out<Decoration<0>> zero) {
+      ++m_called;
+      pkt.Decorate(Decoration<1>());
       ++zero->i;
     }
+};
+
+/// <summary>
+/// Automatically obtains and returns a modified Decoration<0>
+/// Does not reference AutoPacket directly.
+/// </summary>
+class FilterOutB :
+public FilterRoot {
+public:
+  void AutoFilter(auto_out<Decoration<2>>) {
+    ++m_called;
+  }
 };
