@@ -1,6 +1,9 @@
 #pragma once
 #include <boost/thread/mutex.hpp>
 
+template<class T>
+class ObjectPool;
+
 /// <summary>
 /// Interior state object of the object pool, provided to allow out-of-order teardown on the object pool
 /// </summary>
@@ -16,12 +19,20 @@ class ObjectPoolMonitor:
   public boost::mutex
 {
 public:
-  ObjectPoolMonitor(void);
+  /// <param name="pOwner">The owner of this object pool monitor</param>
+  ObjectPoolMonitor(void* pOwner);
 
 private:
+  void* m_pOwner;
   bool m_abandoned;
 
 public:
+  // Accessor methods:
+  void* GetOwner(void) const { return m_pOwner; }
+
+  // Mutator methods:
+  void SetOwner(void* pOwner) { m_pOwner = pOwner; }
+
   /// <return>
   /// True if this pool has been abandoned
   /// </return>

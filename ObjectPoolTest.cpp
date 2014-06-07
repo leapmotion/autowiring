@@ -151,3 +151,42 @@ TEST_F(ObjectPoolTest, OutstandingLimitIsOne) {
     *ct += [entity] {};
   }
 }
+
+TEST_F(ObjectPoolTest, MovableObjectPool) {
+  ObjectPool<int> to;
+
+  // Verify a move works correctly when an object has been checked out:
+  {
+    ObjectPool<int> from;
+    auto original = from.Wait();
+    to = std::move(from);
+  }
+
+  // Now verify that the pooled object returned home to the right place:
+  ASSERT_EQ(1UL, to.GetCached()) << "Object pool move operation did not correctly relay checked out types";
+}
+
+TEST_F(ObjectPoolTest, MovableObjectPoolAysnc) {
+  static const size_t sc_count = 10000;
+  ObjectPool<int> from;
+
+  {
+    // Issue a zillion objects from the from pool:
+    std::vector<std::shared_ptr<int>> objs;
+    for(size_t i = sc_count; i--;)
+      objs.push_back(from.Wait());
+
+    // Make a thread, let it hold these objects while we move its pool:
+    *AutoRequired<CoreThread>() += [objs] {};
+  }
+
+  // Kick off threads, then immediately and asynchronously move the pool:
+  AutoCurrentContext()->Initiate();
+  ObjectPool<int> to = std::move(from);
+
+  // Shutdown time:
+  AutoCurrentContext()->SignalShutdown(true);
+
+  // Verify that new pool got all of the objects:
+  ASSERT_EQ(sc_count, to.GetCached()) << "Object pool move operation did not correctly relay checked out types";
+}
