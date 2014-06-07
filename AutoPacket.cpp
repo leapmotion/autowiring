@@ -148,6 +148,11 @@ void AutoPacket::Initialize(void) {
       decoration.second.Reset();
   }
 
+  // Call all subscribers with no required or optional arguments:
+  for (auto& satCounter : m_satCounters)
+    if (satCounter)
+      satCounter.CallAutoFilter(*this);
+
   // Initial satisfaction of the AutoPacket:
   UpdateSatisfaction(typeid(AutoPacket));
 }
