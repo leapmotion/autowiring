@@ -19,7 +19,7 @@ public:
 class FilterRoot {
 public:
   FilterRoot(void) :
-    m_called(false)
+    m_called(0)
   {}
 
   int m_called;
@@ -121,7 +121,7 @@ template<class... Args>
 class FilterGen {
 public:
   FilterGen(void):
-    m_called(false)
+    m_called(0)
   {}
 
   void AutoFilter(AutoPacket& packet, Args... args) {
@@ -141,4 +141,13 @@ public:
 
   int m_called;
   std::tuple<typename std::decay<Args>::type...> m_args;
+};
+
+// Automatically obtains and returns a modified Decoration<0>
+class FilterOutA :
+  public FilterRoot {
+public:
+    void AutoFilter(auto_out<Decoration<0>> zero) {
+      ++zero->i;
+    }
 };
