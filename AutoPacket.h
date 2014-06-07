@@ -3,6 +3,7 @@
 #include "at_exit.h"
 #include "AutoCheckout.h"
 #include "DecorationDisposition.h"
+#include "ObjectPool.h"
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include MEMORY_HEADER
@@ -33,10 +34,14 @@ struct subscriber_traits;
 class AutoPacket:
   public std::enable_shared_from_this<AutoPacket>
 {
-public:
+private:
   AutoPacket(const AutoPacket& rhs) = delete;
   AutoPacket(AutoPacketFactory& factory);
+
+public:
   ~AutoPacket(void);
+
+  static ObjectPool<AutoPacket> CreateObjectPool(AutoPacketFactory& factory);
 
 private:
   // A back-link to the previously issued packet in the packet sequence.  May potentially be null,
@@ -112,11 +117,6 @@ private:
   }
 
 public:
-  /// <summary>
-  /// Resolves all options, clears all decorations and resets all satisfaction counters
-  /// </summary>
-  void Reset(void);
-
   /// <returns>
   /// True if this packet posesses a decoration of the specified type
   /// </returns>
