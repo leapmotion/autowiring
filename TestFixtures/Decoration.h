@@ -101,6 +101,19 @@ class FilterD:
 public:
   void AutoFilter(AutoPacket& pkt) {
     ++m_called;
+    pkt.Decorate(Decoration<2>());
+  }
+};
+
+/// <summary>
+/// A filter which will simply get hit any time a packet is issued in the current context
+/// </summary>
+class FilterE:
+public FilterRoot
+{
+public:
+  void AutoFilter(void) {
+    ++m_called;
   }
 };
 
