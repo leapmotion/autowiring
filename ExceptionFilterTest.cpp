@@ -56,10 +56,10 @@ public:
   bool m_generic;
   bool m_fireSpecific;
 
-  virtual void Filter(const std::function<void()>& rethrower) override {
+  virtual void Filter(void) override {
     m_hit = true;
     try {
-      rethrower();
+      throw;
     } catch(tracking_exception&) {
     } catch(custom_exception& custom) {
       EXPECT_EQ(100, custom.m_value) << "A filtered custom exception did not have the expected member field value";
@@ -69,10 +69,10 @@ public:
     }
   }
 
-  virtual void Filter(const std::function<void()>& rethrower, const JunctionBoxBase* pJunctionBox, EventReceiver* pRecipient) override {
+  virtual void Filter(const JunctionBoxBase* pJunctionBox, EventReceiver* pRecipient) override {
     m_hit = true;
     try {
-      rethrower();
+      throw;
     } catch(custom_exception& custom) {
       EXPECT_EQ(200, custom.m_value) << "A fired exception did not have the expected value, probable copy malfunction";
       m_fireSpecific = true;
