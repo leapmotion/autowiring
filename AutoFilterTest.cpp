@@ -689,5 +689,6 @@ TEST_F(AutoFilterTest, AutoOutTest) {
     ASSERT_TRUE(packet->Get<Decoration<1>>().i == 1) << "Decoration data was not appended by AutoFilter call";
 
     ASSERT_TRUE(foB->m_called == 1) << "An AutoFilter applied to one new packet without argument AutoPacket& reference was called " << foB->m_called << " times";
+    ASSERT_TRUE(packet->Get<Decoration<2>>().i == 2) << "Decoration data was not appended by AutoFilter call";
   }
 }
