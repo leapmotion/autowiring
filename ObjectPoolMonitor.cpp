@@ -2,7 +2,8 @@
 #include "ObjectPoolMonitor.h"
 #include <boost/thread/locks.hpp>
 
-ObjectPoolMonitor::ObjectPoolMonitor(void) :
+ObjectPoolMonitor::ObjectPoolMonitor(void* pOwner) :
+  m_pOwner(pOwner),
   m_abandoned(false)
 {
 }
