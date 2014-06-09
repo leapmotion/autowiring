@@ -48,12 +48,21 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
 AutoPacket::~AutoPacket() {
   // Last chance for AutoFilter call
   ResolveOptions();
+}
 
-  {
-    boost::lock_guard<boost::mutex> lk(m_lock);
-    m_decorations.clear();
-    m_satCounters.clear();
-  }
+ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory) {
+  return ObjectPool<AutoPacket>(
+    ~0,
+    ~0,
+    [&factory] { return new AutoPacket(factory); },
+    [] (AutoPacket& packet) {
+      // Last chance for AutoFilter optional calls
+      packet.ResolveOptions();
+
+      // Reinitialize the whole packet:
+      packet.Initialize();
+    }
+  );
 }
 
 void AutoPacket::ResolveOptions(void) {
@@ -155,12 +164,6 @@ void AutoPacket::Initialize(void) {
 
   // Initial satisfaction of the AutoPacket:
   UpdateSatisfaction(typeid(AutoPacket));
-}
-
-void AutoPacket::Reset(void) {
-  // Last chance for AutoFilter call
-  ResolveOptions();
-  Initialize();
 }
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
