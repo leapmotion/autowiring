@@ -18,15 +18,15 @@ struct is_injectable
 /// Simple structure to centralize knowledge about how to create types with various declarations
 /// </summary>
 struct CreationRules {
-  template<typename U>
-  static typename std::enable_if<has_static_new<U>::value, U*>::type New(void) {
-    return U::New();
+  template<typename U, typename... Args>
+  static typename std::enable_if<has_static_new<U, Args...>::value, U*>::type New(Args&&... args) {
+    return U::New(std::forward<Args>(args)...);
   }
 
   template<typename U, typename... Args>
-  static typename std::enable_if<!has_static_new<U>::value, U*>::type New(Args&&... args) {
+  static typename std::enable_if<!has_static_new<U, Args...>::value, U*>::type New(Args&&... args) {
     static_assert(!std::is_abstract<U>::value, "Cannot create a type which is abstract");
-    static_assert(!has_static_new<U>::value, "Can't inject member with arguments if it has a static new");
+    static_assert(!has_static_new<U, Args...>::value, "Can't inject member with arguments if it has a static new");
     static_assert(!sizeof...(Args) || !has_simple_constructor<U>::value, "Can't inject member with arguments if it has a default constructor");
 
     // Allocate slot first before registration
