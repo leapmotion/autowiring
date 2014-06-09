@@ -1,6 +1,7 @@
 #pragma once
 #include "../CoreThread.h"
 #include <boost/thread/barrier.hpp>
+#include "AutoWiring/has_autofilter.h"
 
 /// <summary>
 /// A simple "decoration" class which will be added to a variety of sample packets
@@ -19,7 +20,7 @@ public:
 class FilterRoot {
 public:
   FilterRoot(void) :
-    m_called(false)
+    m_called(0)
   {}
 
   int m_called;
@@ -101,6 +102,20 @@ class FilterD:
 public:
   void AutoFilter(AutoPacket& pkt) {
     ++m_called;
+    pkt.Decorate(Decoration<2>());
+  }
+};
+
+/// <summary>
+/// An override of the FilterD AutoFilter method
+/// </summary>
+class FilterE:
+public FilterD
+{
+public:
+  void AutoFilter(AutoPacket& pkt) {
+    ++m_called;
+    pkt.Decorate(Decoration<3>());
   }
 };
 
@@ -121,7 +136,7 @@ template<class... Args>
 class FilterGen {
 public:
   FilterGen(void):
-    m_called(false)
+    m_called(0)
   {}
 
   void AutoFilter(AutoPacket& packet, Args... args) {
@@ -141,4 +156,57 @@ public:
 
   int m_called;
   std::tuple<typename std::decay<Args>::type...> m_args;
+};
+
+/// <summary>
+/// A filter that should trigger a static_assert in AutoRequire<BadFilterA>
+/// </summary>
+class BadFilterA:
+public FilterRoot
+{
+public:
+  void AutoFilter(void) {
+    ++m_called;
+  }
+};
+
+/// <summary>
+/// A filter that should trigger a static_assert in AutoRequire<BadFilterB>
+/// </summary>
+class BadFilterB:
+public FilterRoot
+{
+public:
+  void AutoFilter(Decoration<0>&) {
+    ++m_called;
+  }
+  void AutoFilter(Decoration<1>&) {
+    ++m_called;
+  }
+};
+
+/// <summary>
+/// Automatically obtains and returns a modified Decoration<0>
+/// Appemnds a decoration to pkt.
+/// </summary>
+class FilterOutA :
+  public FilterRoot {
+public:
+    void AutoFilter(AutoPacket& pkt, auto_out<Decoration<0>> zero) {
+      ++m_called;
+      pkt.Decorate(Decoration<1>());
+      ++zero->i;
+    }
+};
+
+/// <summary>
+/// Automatically obtains and returns a modified Decoration<0>
+/// Does not reference AutoPacket directly.
+/// </summary>
+class FilterOutB :
+public FilterRoot {
+public:
+  void AutoFilter(auto_out<Decoration<2>>) {
+    ++m_called;
+  }
 };

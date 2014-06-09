@@ -314,16 +314,47 @@ TEST_F(AutoFilterTest, VerifyAntiDecorate) {
   }
 }
 
+/// <summary>
+/// Replicate the static_assert in has_autofilter
+/// </summary>
+template<typename T>
+struct good_autofilter {
+
+  // Evaluates to false when T does not include an AutoFilter method with at least one argument.
+  static const bool value = has_unambiguous_autofilter<T>::value;
+
+  // This class has at least one AutoFilter method
+  struct detect_ambiguous_autofilter : T, test_valid_autofilter {};
+
+  // Ensures a compiler error when the identification of T::AutoFilter is ambiguous.
+  // This cannot be in has_unambiguous_autofilter, since that would be recursive.
+  static const bool test = value || has_unambiguous_autofilter<detect_ambiguous_autofilter>::value;
+};
+
 TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
   AutoRequired<FilterA> filterA;
   AutoRequired<FilterC> filterC;
   AutoRequired<FilterD> filterD;
+  AutoRequired<FilterE> filterE;
+
+  //DEBUG: Expect compiler warning
+
+  ASSERT_FALSE(good_autofilter<BadFilterA>::test) << "Failed to identify AutoFilter(void)";
+  ASSERT_FALSE(good_autofilter<BadFilterA>::test) << "Failed to identify multiple defintiions of AutoFilter";
+
   AutoRequired<AutoPacketFactory> factory;
 
   AutoCurrentContext()->Initiate();
 
   // Obtain a packet first:
   auto packet = factory->NewPacket();
+
+  // The mere act of obtaining a packet should have triggered filterD to be fired:
+  EXPECT_LT(0, filterD->m_called) << "Trivial filter with AutoPacket argument was not called as expected";
+  EXPECT_NO_THROW(packet->Get<Decoration<2>>()) << "Decoration on creation failed";
+
+  // The mere act of obtaining a packet should have triggered filterD to be fired:
+  EXPECT_LT(0, filterE->m_called) << "Trivial filter with no arguments was not called as expected";
 
   // The mere act of obtaining a packet should have triggered filterD to be fired:
   EXPECT_LT(0, filterD->m_called) << "Trivial filter was not called as expected";
@@ -580,6 +611,7 @@ TEST_F(AutoFilterTest, NoImplicitDecorationCaching) {
   ASSERT_EQ(100UL, doesNothing->callCount) << "The expected number of calls to AutoFilter were not made";
   ASSERT_TRUE(ptr.unique()) << "Cached packets (or some other cause) incorrectly held a reference to a shared pointer that should have expired";
 }
+
 TEST_F(AutoFilterTest, MultiImmediate) {
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
@@ -654,6 +686,22 @@ TEST_F(AutoFilterTest, PostHocSatisfactionAttempt) {
   packet1->DecorateImmediate(Decoration<2>());
 
   EXPECT_LT(0, fg2->m_called) << "An AutoFilter was not called when all of its inputs were simultaneously available";
+}
+
+TEST_F(AutoFilterTest, AutoOutTest) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterOutA> foA;
+  AutoRequired<FilterOutB> foB;
+  {
+    auto packet = factory->NewPacket();
+    ASSERT_TRUE(foA->m_called == 1) << "An AutoFilter applied to one new packet with argument AutoPacket& was called " << foA->m_called << " times";
+    ASSERT_TRUE(packet->Get<Decoration<0>>().i == 1) << "Decoration data was not initialized by AutoFilter call";
+    ASSERT_TRUE(packet->Get<Decoration<1>>().i == 1) << "Decoration data was not appended by AutoFilter call";
+
+    ASSERT_TRUE(foB->m_called == 1) << "An AutoFilter applied to one new packet without argument AutoPacket& reference was called " << foB->m_called << " times";
+    ASSERT_TRUE(packet->Get<Decoration<2>>().i == 2) << "Decoration data was not appended by AutoFilter call";
+  }
 }
 
 class WaitsForInternalLock:
