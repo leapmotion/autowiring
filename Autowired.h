@@ -105,11 +105,12 @@ public:
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
 
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
-    AutowirableSlot<T>(ctxt->template ResolveAnchor<T>()),
+    AutowirableSlot<T>(ctxt ? ctxt->template ResolveAnchor<T>() : ctxt),
     m_pFirstChild(nullptr)
   {
     (void) RegType<T>::r;
-    ctxt->Autowire(*this);
+    if(ctxt)
+      ctxt->Autowire(*this);
   }
 
   ~Autowired(void) {
@@ -201,8 +202,9 @@ public:
   using std::shared_ptr<T>::operator=;
 
   // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
-  AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()){
-    ctxt->FindByTypeRecursive(*this);
+  AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) {
+    if(ctxt)
+      ctxt->FindByTypeRecursive(*this);
   }
 
   operator bool(void) const {

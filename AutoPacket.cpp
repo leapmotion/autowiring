@@ -3,15 +3,20 @@
 #include "Autowired.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketProfiler.h"
+#include "ContextEnumerator.h"
 #include "SatCounter.h"
 #include <list>
 
-AutoPacket::AutoPacket(AutoPacketFactory& factory):
-  m_satCounters(
-    factory.GetSubscriberVector().begin(),
-    factory.GetSubscriberVector().end()
-  )
+AutoPacket::AutoPacket(AutoPacketFactory& factory)
 {
+  // Traverse all contexts, adding their packet subscriber vectors one at a time:
+  for(const auto& curContext : ContextEnumerator(factory.GetContext())) {
+    AutowiredFast<AutoPacketFactory> curFactory(curContext);
+    if(curFactory)
+      // Only insert if this context actually has a packet factory
+      curFactory->AppendAutoFiltersTo(m_satCounters);
+  }
+
   // Prime the satisfaction graph for each element:
   for(auto& satCounter : m_satCounters) {
     for(
@@ -42,6 +47,8 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
       }
     }
   }
+
+  // Invoke any output-only AutoFilter routines
   Initialize();
 }
 

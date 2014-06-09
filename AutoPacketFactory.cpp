@@ -7,6 +7,7 @@ static boost::thread_specific_ptr<NewAutoFilterBase*> pAFB;
 
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
+  m_parent(GetContext()->GetParentContext()),
   m_wasStopped(false),
   m_packets(AutoPacket::CreateObjectPool(*this))
 {}
@@ -90,6 +91,11 @@ void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
   // not be specifically invalid; they will simply result in late delivery to certain
   // recipients.  Eventually, all packets will be reset and released.
   m_packets.ClearCachedEntities();
+
+  if(m_parent)
+    // Notify our parent that we were updated, and so the parent will also need to regenerate
+    // any of its packets:
+    m_parent->m_packets.ClearCachedEntities();
 }
 
 void AutoPacketFactory::RemoveSubscriber(const AutoFilterDescriptor& autoFilter) {
