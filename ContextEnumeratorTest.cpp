@@ -2,13 +2,20 @@
 #include "ContextEnumeratorTest.h"
 #include "ContextEnumerator.h"
 
-TEST_F(ContextEnumeratorTest, TrivialEnumeration) {
+TEST_F(ContextEnumeratorTest, DegenerateEnumeration) {
   size_t ct = 0;
   for(const auto& cur : ContextEnumerator(std::shared_ptr<CoreContext>(nullptr))) {
     ASSERT_TRUE(!!cur.get()) << "Context enumerator incorrectly enumerated a null context pointer";
     ct++;
   }
   ASSERT_EQ(0UL, ct) << "An empty enumerator unexpectedly enumerated one or more entries";
+}
+
+TEST_F(ContextEnumeratorTest, TrivialEnumeration) {
+  size_t ct = 0;
+  for(const auto& cur : ContextEnumerator(AutoCurrentContext()))
+    ct++;
+  ASSERT_EQ(1UL, ct) << "Context enumerator failed to enumerate a context with no children";
 }
 
 TEST_F(ContextEnumeratorTest, VerifySimpleEnumeration) {

@@ -23,8 +23,17 @@ const ContextEnumerator::iterator& ContextEnumerator::iterator::operator++(void)
     !(next = m_cur->NextSibling())
   ) {
     // No children, no siblings.  Ascend until we find an ancestor with a sibling.
-    while(m_cur != m_root && !(next = m_cur->NextSibling()))
+    while(
+      // Continue as long as we don't hit the root
+      m_cur != m_root &&
+
+      // And we will also continue as long as our current sibling is null
+      !(next = m_cur->NextSibling())
+    ) {
+      // If we can't stop, then ascend
       m_cur = m_cur->GetParentContext();
+      assert(m_cur);
+    }
   }
 
   // Update, return
