@@ -216,7 +216,7 @@ protected:
   /// <summary>
   /// Unregisters all event receivers in this context
   /// </summary>
-  void UnregisterEventReceivers(void);
+  void UnregisterEventReceiversUnsafe(void);
 
   /// <summary>
   /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
@@ -276,11 +276,6 @@ protected:
   /// Forwarding routine, recursively adds a packet subscriber to the internal packet factory
   /// </summary>
   void AddPacketSubscriber(const AutoFilterDescriptor& rhs);
-  
-  /// <summary>
-  /// Removes all of the subscribers defined in the given AutoPacketFactory from this CoreContext
-  /// </summary>
-  void RemovePacketSubscribers(const AutoPacketFactory& factory);
 
   /// <summary>
   /// Increments the total number of contexts still outstanding
