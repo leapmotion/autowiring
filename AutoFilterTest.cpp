@@ -69,11 +69,14 @@ TEST_F(AutoFilterTest, VerifySimpleFilter) {
 
   // Verify that the subscriber has been properly detected:
   bool bFound = false;
-  for(const auto& cur : factory->GetSubscriberVector())
+  std::vector<AutoFilterDescriptor> descs;
+  factory->AppendAutoFiltersTo(descs);
+  for(const auto& cur : descs)
     if(cur.GetAutoFilter() == filterA) {
       bFound = true;
       break;
     }
+
   ASSERT_TRUE(bFound) << "Failed to find an added subscriber ";
 
   // Obtain a packet from the factory:
