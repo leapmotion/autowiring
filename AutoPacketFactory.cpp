@@ -15,7 +15,9 @@ AutoPacketFactory::AutoPacketFactory(void):
 AutoPacketFactory::~AutoPacketFactory() {}
 
 std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
-  if (!IsRunning())
+  if(ShouldStop())
+    throw autowiring_error("Attempted to create a packet on an AutoPacketFactory that was already terminated");
+  if(!IsRunning())
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
   // Obtain a packet, return it
