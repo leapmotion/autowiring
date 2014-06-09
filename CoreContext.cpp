@@ -63,7 +63,7 @@ CoreContext::~CoreContext(void) {
   NotifyTeardownListeners();
 
   // Make sure events aren't happening anymore:
-  UnregisterEventReceivers();
+  UnregisterEventReceiversUnsafe();
 
   // Tell all context members that we're tearing down:
   for(auto q : m_contextMembers)
@@ -327,7 +327,7 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   // Wipe out the junction box manager, notify anyone waiting on the state condition:
   {
     boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
-    UnregisterEventReceivers();
+    UnregisterEventReceiversUnsafe();
     m_isShutdown = true;
     m_stateBlock->m_stateChanged.notify_all();
   }
@@ -515,7 +515,7 @@ void ShutdownCurrentContext(void) {
   CoreContext::CurrentContext()->SignalShutdown();
 }
 
-void CoreContext::UnregisterEventReceivers(void) {
+void CoreContext::UnregisterEventReceiversUnsafe(void) {
   // Release all event receivers originating from this context:
   for(auto q : m_eventReceivers)
     m_junctionBoxManager->RemoveEventReceiver(q);
@@ -527,10 +527,6 @@ void CoreContext::UnregisterEventReceivers(void) {
   // Recursively unregister packet factory subscribers:
   AnySharedPointerT<AutoPacketFactory> pf;
   FindByTypeUnsafe(pf);
-
-  // Selective removal from the parent collection only
-  if(pf && m_pParent)
-    m_pParent->RemovePacketSubscribers(*pf);
 
   // Wipe out all collections so we don't try to free these multiple times:
   m_eventReceivers.clear();
@@ -803,19 +799,6 @@ void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
   // Handoff to parent:
   if (m_pParent)
     m_pParent->UnsnoopAutoPacket(traits);
-}
-
-void CoreContext::RemovePacketSubscribers(const AutoPacketFactory& factory) {
-  // Notify the parent that it will have to remove these subscribers as well
-  if(m_pParent)
-    m_pParent->RemovePacketSubscribers(factory);
-
-  // Remove subscribers from our factory AFTER the parent eviction has taken place
-  AnySharedPointerT<AutoPacketFactory> localFactory;
-  FindByTypeUnsafe(localFactory);
-  if(localFactory)
-    for(auto& cur : factory.GetSubscriberVector())
-      localFactory->RemoveSubscriber(cur);
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
