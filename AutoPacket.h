@@ -135,7 +135,7 @@ public:
   const T& Get(void) const {
     const T* retVal;
     if(!Get(retVal))
-      throw_rethrowable std::runtime_error("Attempted to obtain a value which was not decorated on this packet");
+      throw_rethrowable autowiring_error("Attempted to obtain a value which was not decorated on this packet");
     return *retVal;
   }
 
