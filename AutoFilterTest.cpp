@@ -655,3 +655,34 @@ TEST_F(AutoFilterTest, PostHocSatisfactionAttempt) {
 
   EXPECT_LT(0, fg2->m_called) << "An AutoFilter was not called when all of its inputs were simultaneously available";
 }
+
+class WaitsForInternalLock:
+  public CoreThread
+{
+public:
+  boost::mutex m_continueLock;
+
+  Deferred AutoFilter(const Decoration<0>& dec) {
+    return Deferred(this);
+  }
+
+  void Run(void) override {
+    (boost::lock_guard<boost::mutex>)m_continueLock;
+    CoreThread::Run();
+  }
+};
+
+TEST_F(AutoFilterTest, NoDeferredImmediateSatisfaction) {
+  // Create a waiter, then obtain its lock before sending it off:
+  AutoRequired<WaitsForInternalLock> wfil;
+  boost::lock_guard<boost::mutex> lk(wfil->m_continueLock);
+  AutoCurrentContext()->Initiate();
+
+  // Now create a packet that we will DecorateImmediate with our decoration:
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet = factory->NewPacket();
+  packet->DecorateImmediate(Decoration<0>());
+
+  // Verify that the thread did not receive anything:
+  ASSERT_EQ(0UL, wfil->GetDispatchQueueLength()) << "Deferred AutoFilter incorrectly received an immediate-mode decoration";
+}
