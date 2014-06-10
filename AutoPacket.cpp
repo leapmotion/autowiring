@@ -3,15 +3,20 @@
 #include "Autowired.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketProfiler.h"
+#include "ContextEnumerator.h"
 #include "SatCounter.h"
 #include <list>
 
-AutoPacket::AutoPacket(AutoPacketFactory& factory):
-  m_satCounters(
-    factory.GetSubscriberVector().begin(),
-    factory.GetSubscriberVector().end()
-  )
+AutoPacket::AutoPacket(AutoPacketFactory& factory)
 {
+  // Traverse all contexts, adding their packet subscriber vectors one at a time:
+  for(const auto& curContext : ContextEnumerator(factory.GetContext())) {
+    AutowiredFast<AutoPacketFactory> curFactory(curContext);
+    if(curFactory)
+      // Only insert if this context actually has a packet factory
+      curFactory->AppendAutoFiltersTo(m_satCounters);
+  }
+
   // Prime the satisfaction graph for each element:
   for(auto& satCounter : m_satCounters) {
     for(
@@ -42,6 +47,8 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory):
       }
     }
   }
+
+  // Invoke any output-only AutoFilter routines
   Initialize();
 }
 
@@ -124,14 +131,21 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
   // First pass, decrement what we can:
   for(size_t i = nInfos; i--;) {
-    for(auto& satCounter : pTypeSubs[i]->m_subscribers) {
-      auto& cur = satCounter.first;
-      if (satCounter.second) {
-        --cur->remaining;
-        if(!cur->remaining)
-          //Call only when required data is decremented to zero
-          cur->CallAutoFilter(*this);
-      }
+    for(std::pair<SatCounter*, bool>& subscriber : pTypeSubs[i]->m_subscribers) {
+      SatCounter* cur = subscriber.first;
+      if(
+        // We only care about mandatory inputs
+        subscriber.second &&
+
+        // We only care about sat counters that aren't deferred--skip everyone else
+        // Deferred calls will be too late.
+        !cur->IsDeferred() &&
+
+        // Now do the decrementation, and only proceed if the decremented value is zero
+        !--cur->remaining
+      )
+        // Finally, a call is safe to make on this type
+        cur->CallAutoFilter(*this);
     }
   }
 
