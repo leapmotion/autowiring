@@ -62,6 +62,12 @@ public:
 
 static_assert(has_static_new<HasANontrivialFactoryNew, int, int>::value, "Factory new not correctly identified on a type with a multi-argument factory new");
 
+class HasAnIncorrectFactoryNew:
+  public HasANontrivialFactoryNew
+{};
+
+static_assert(!has_static_new<HasAnIncorrectFactoryNew>::value, "Factory new was incorrectly detected on a type where the return value of New was not implicitly castable to that type");
+
 TEST_F(FactoryTest, CanForwardFactoryNew) {
   // Inject our type:
   auto hantfn = AutoCurrentContext()->Construct<HasANontrivialFactoryNew>(202, 203);
