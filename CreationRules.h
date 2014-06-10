@@ -20,7 +20,12 @@ struct is_injectable
 struct CreationRules {
   template<typename U, typename... Args>
   static typename std::enable_if<has_static_new<U, Args...>::value, U*>::type New(Args&&... args) {
-    return U::New(std::forward<Args>(args)...);
+    auto retVal = U::New(std::forward<Args>(args)...);
+    static_assert(
+      std::is_convertible<decltype(retVal), U*>::value,
+      "Attempted to create T using T::New, but the return value of T::New is not derived from T"
+    );
+    return retVal;
   }
 
   template<typename U, typename... Args>
