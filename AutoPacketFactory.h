@@ -5,6 +5,7 @@
 #include "ContextMember.h"
 #include "CoreRunnable.h"
 #include "ObjectPool.h"
+#include <list>
 #include <vector>
 #include TYPE_INDEX_HEADER
 #include TYPE_TRAITS_HEADER
@@ -29,6 +30,9 @@ public:
   ~AutoPacketFactory(void);
 
 private:
+  // Parent packet factory, if one exists:
+  Autowired<AutoPacketFactory> m_parent;
+
   // Lock for this type
   mutable boost::mutex m_lock;
   
@@ -67,12 +71,22 @@ private:
   typedef std::unordered_map<std::type_index, DecorationEntry> t_decorationMap;
   t_decorationMap m_decorationMap;
 
+  // Recursive invalidation routine, causes AutoPacket object pools to be dumped to the root
+  void Invalidate(void);
+
   // Utility override, does nothing
   void AddSubscriber(std::false_type) {}
 
 public:
-  // Accessor methods:
-  const t_autoFilterSet& GetSubscriberVector(void) const { return m_autoFilters; }
+  /// <summary>
+  /// Copies the internal set of AutoFilter members to the specified container
+  /// </summary>
+  template<class T>
+  void AppendAutoFiltersTo(T& container) const {
+    boost::lock_guard<boost::mutex> lk(m_lock);
+    container.insert(container.end(), m_autoFilters.begin(), m_autoFilters.end());
+  }
+
   const t_decorationMap& GetDecorations(void) const { return m_decorationMap; }
 
   // CoreRunnable overrides:

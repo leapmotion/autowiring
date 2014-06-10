@@ -7,14 +7,20 @@ static boost::thread_specific_ptr<NewAutoFilterBase*> pAFB;
 
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
+  m_parent(GetContext()->GetParentContext()),
   m_wasStopped(false),
   m_packets(AutoPacket::CreateObjectPool(*this))
 {}
 
-AutoPacketFactory::~AutoPacketFactory() {}
+AutoPacketFactory::~AutoPacketFactory() {
+  // Invalidate the pool and recursively invalidate all parents
+  Invalidate();
+}
 
 std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
-  if (!IsRunning())
+  if(ShouldStop())
+    throw autowiring_error("Attempted to create a packet on an AutoPacketFactory that was already terminated");
+  if(!IsRunning())
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
   // Obtain a packet, return it
@@ -43,7 +49,7 @@ void AutoPacketFactory::Stop(bool graceful) {
 
   // Kill the object pool
   m_packets.SetOutstandingLimit(0);
-  m_packets.ClearCachedEntities();
+  Invalidate();
 
   // Queue of local variables to be destroyed when leaving scope
   std::shared_ptr<Object> outstanding;
@@ -64,11 +70,8 @@ void AutoPacketFactory::Stop(bool graceful) {
 }
 
 void AutoPacketFactory::Clear(void) {
-  // Trigger a stop first, before trying to release anything
+  // Simple handoff to Stop is sufficient
   Stop(false);
-
-  // Release any external references before obtaining the lock
-  m_autoFilters.clear();
 }
 
 void AutoPacketFactory::Wait(void) {
@@ -81,6 +84,12 @@ void AutoPacketFactory::Wait(void) {
   m_packets.Rundown();
 }
 
+void AutoPacketFactory::Invalidate(void) {
+  m_packets.ClearCachedEntities();
+  if(m_parent)
+    m_parent->Invalidate();
+}
+
 void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
   (boost::lock_guard<boost::mutex>)m_lock,
   m_autoFilters.insert(rhs);
@@ -89,7 +98,7 @@ void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
   // packets may be issued between lock reset and object pool reset, these packets will
   // not be specifically invalid; they will simply result in late delivery to certain
   // recipients.  Eventually, all packets will be reset and released.
-  m_packets.ClearCachedEntities();
+  Invalidate();
 }
 
 void AutoPacketFactory::RemoveSubscriber(const AutoFilterDescriptor& autoFilter) {

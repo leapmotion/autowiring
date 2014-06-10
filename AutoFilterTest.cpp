@@ -69,11 +69,14 @@ TEST_F(AutoFilterTest, VerifySimpleFilter) {
 
   // Verify that the subscriber has been properly detected:
   bool bFound = false;
-  for(const auto& cur : factory->GetSubscriberVector())
+  std::vector<AutoFilterDescriptor> descs;
+  factory->AppendAutoFiltersTo(descs);
+  for(const auto& cur : descs)
     if(cur.GetAutoFilter() == filterA) {
       bFound = true;
       break;
     }
+
   ASSERT_TRUE(bFound) << "Failed to find an added subscriber ";
 
   // Obtain a packet from the factory:
@@ -702,4 +705,35 @@ TEST_F(AutoFilterTest, AutoOutTest) {
     ASSERT_TRUE(foB->m_called == 1) << "An AutoFilter applied to one new packet without argument AutoPacket& reference was called " << foB->m_called << " times";
     ASSERT_TRUE(packet->Get<Decoration<2>>().i == 2) << "Decoration data was not appended by AutoFilter call";
   }
+}
+
+class WaitsForInternalLock:
+  public CoreThread
+{
+public:
+  boost::mutex m_continueLock;
+
+  Deferred AutoFilter(const Decoration<0>& dec) {
+    return Deferred(this);
+  }
+
+  void Run(void) override {
+    (boost::lock_guard<boost::mutex>)m_continueLock;
+    CoreThread::Run();
+  }
+};
+
+TEST_F(AutoFilterTest, NoDeferredImmediateSatisfaction) {
+  // Create a waiter, then obtain its lock before sending it off:
+  AutoRequired<WaitsForInternalLock> wfil;
+  boost::lock_guard<boost::mutex> lk(wfil->m_continueLock);
+  AutoCurrentContext()->Initiate();
+
+  // Now create a packet that we will DecorateImmediate with our decoration:
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet = factory->NewPacket();
+  packet->DecorateImmediate(Decoration<0>());
+
+  // Verify that the thread did not receive anything:
+  ASSERT_EQ(0UL, wfil->GetDispatchQueueLength()) << "Deferred AutoFilter incorrectly received an immediate-mode decoration";
 }
