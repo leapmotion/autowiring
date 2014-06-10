@@ -5,7 +5,7 @@
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <set>
-#include <functional>
+#include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include MEMORY_HEADER
 
