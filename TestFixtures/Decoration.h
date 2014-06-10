@@ -1,7 +1,7 @@
 #pragma once
 #include "../CoreThread.h"
+#include "../has_autofilter.h"
 #include <boost/thread/barrier.hpp>
-#include "AutoWiring/has_autofilter.h"
 
 /// <summary>
 /// A simple "decoration" class which will be added to a variety of sample packets
