@@ -13,8 +13,10 @@ TEST_F(ContextEnumeratorTest, DegenerateEnumeration) {
 
 TEST_F(ContextEnumeratorTest, TrivialEnumeration) {
   size_t ct = 0;
-  for(const auto& cur : ContextEnumerator(AutoCurrentContext()))
+  for(const auto& cur : ContextEnumerator(AutoCurrentContext())) {
+    (void) cur;
     ct++;
+  }
   ASSERT_EQ(1UL, ct) << "Context enumerator failed to enumerate a context with no children";
 }
 
@@ -23,8 +25,10 @@ TEST_F(ContextEnumeratorTest, TwoContextEnumerationTest) {
   AutoCreateContext ctxt2;
 
   size_t ct = 0;
-  for(const auto& cur : ContextEnumerator(ctxt1))
+  for(const auto& cur : ContextEnumerator(ctxt1)) {
+    (void) cur;
     ct++;
+  }
   ASSERT_EQ(1UL, ct) << "An attempt to enumerate a context with a sibling did not correctly enumerate one context";
 }
 
