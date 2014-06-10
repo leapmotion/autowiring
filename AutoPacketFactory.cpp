@@ -12,7 +12,10 @@ AutoPacketFactory::AutoPacketFactory(void):
   m_packets(AutoPacket::CreateObjectPool(*this))
 {}
 
-AutoPacketFactory::~AutoPacketFactory() {}
+AutoPacketFactory::~AutoPacketFactory() {
+  // Invalidate the pool and recursively invalidate all parents
+  Invalidate();
+}
 
 std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   if(ShouldStop())
@@ -46,7 +49,7 @@ void AutoPacketFactory::Stop(bool graceful) {
 
   // Kill the object pool
   m_packets.SetOutstandingLimit(0);
-  m_packets.ClearCachedEntities();
+  Invalidate();
 
   // Queue of local variables to be destroyed when leaving scope
   std::shared_ptr<Object> outstanding;
@@ -81,6 +84,12 @@ void AutoPacketFactory::Wait(void) {
   m_packets.Rundown();
 }
 
+void AutoPacketFactory::Invalidate(void) {
+  m_packets.ClearCachedEntities();
+  if(m_parent)
+    m_parent->Invalidate();
+}
+
 void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
   (boost::lock_guard<boost::mutex>)m_lock,
   m_autoFilters.insert(rhs);
@@ -89,12 +98,7 @@ void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
   // packets may be issued between lock reset and object pool reset, these packets will
   // not be specifically invalid; they will simply result in late delivery to certain
   // recipients.  Eventually, all packets will be reset and released.
-  m_packets.ClearCachedEntities();
-
-  if(m_parent)
-    // Notify our parent that we were updated, and so the parent will also need to regenerate
-    // any of its packets:
-    m_parent->m_packets.ClearCachedEntities();
+  Invalidate();
 }
 
 void AutoPacketFactory::RemoveSubscriber(const AutoFilterDescriptor& autoFilter) {
