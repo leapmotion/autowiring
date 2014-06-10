@@ -14,32 +14,27 @@ ContextEnumerator::~ContextEnumerator(void)
 ContextEnumerator::iterator::~iterator(void) {}
 
 const ContextEnumerator::iterator& ContextEnumerator::iterator::operator++(void) {
+  // Use next to guarantee validity of peek at tree structure
   std::shared_ptr<CoreContext> next;
-  if(
-    // Try to traverse into the first child
-    !(next = m_cur->FirstChild()) &&
-
-    // Verify that we haven't hit the root:
-    m_cur != m_root &&
-
-    // If that doesn't work, then try the next sibling
-    !(next = m_cur->NextSibling())
-  ) {
-    // No children, no siblings.  Ascend until we find an ancestor with a sibling.
-    while(
-      // Continue as long as we don't hit the root
-      m_cur != m_root &&
-
-      // And we will also continue as long as our current sibling is null
-      !(next = m_cur->NextSibling())
-    ) {
-      // If we can't stop, then ascend
-      m_cur = m_cur->GetParentContext();
-      assert(m_cur);
-    }
+  // Try to traverse into the first child
+  if ((next = m_cur->FirstChild())) {
+    m_cur = next;
+    return *this;
   }
-
-  // Update, return
+  // If there are no children then check to see if we are at the root node
+  if (m_cur == m_root) {
+    m_cur = nullptr;
+    return *this;
+  }
+  // Try to traverse to the next sibling
+  while (!(next = m_cur->NextSibling())) {
+    if (m_cur == m_root) {
+      // If at the root node, halt traversal
+      m_cur = nullptr;
+      return *this;
+    }
+    m_cur = m_cur->GetParentContext();
+  }
   m_cur = next;
   return *this;
 }
