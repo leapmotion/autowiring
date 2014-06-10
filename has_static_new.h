@@ -1,4 +1,5 @@
 #pragma once
+#include TYPE_TRAITS_HEADER
 
 template<typename T, typename... Args>
 struct has_static_new
@@ -7,7 +8,7 @@ struct has_static_new
   struct unnamed_constant;
 
   template<class U>
-  static int select(decltype(U::New(*(Args*)nullptr...))*);
+  static int select(decltype(U::New(*(typename std::remove_reference<Args>::type*)nullptr...))*);
 
   template<class U>
   static char select(...);
