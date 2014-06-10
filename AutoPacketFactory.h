@@ -71,6 +71,9 @@ private:
   typedef std::unordered_map<std::type_index, DecorationEntry> t_decorationMap;
   t_decorationMap m_decorationMap;
 
+  // Recursive invalidation routine, causes AutoPacket object pools to be dumped to the root
+  void Invalidate(void);
+
   // Utility override, does nothing
   void AddSubscriber(std::false_type) {}
 
