@@ -19,6 +19,9 @@ const ContextEnumerator::iterator& ContextEnumerator::iterator::operator++(void)
     // Try to traverse into the first child
     !(next = m_cur->FirstChild()) &&
 
+    // Verify that we haven't hit the root:
+    m_cur != m_root &&
+
     // If that doesn't work, then try the next sibling
     !(next = m_cur->NextSibling())
   ) {
