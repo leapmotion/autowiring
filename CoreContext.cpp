@@ -115,7 +115,7 @@ std::shared_ptr<CoreContext> CoreContext::FirstChild(void) const {
 }
 
 std::shared_ptr<CoreContext> CoreContext::NextSibling(void) const {
-  // Root context's do not have siblings
+  // Root contexts do not have siblings
   if(!m_pParent)
     return std::shared_ptr<CoreContext>();
 
