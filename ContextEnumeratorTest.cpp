@@ -18,6 +18,16 @@ TEST_F(ContextEnumeratorTest, TrivialEnumeration) {
   ASSERT_EQ(1UL, ct) << "Context enumerator failed to enumerate a context with no children";
 }
 
+TEST_F(ContextEnumeratorTest, TwoContextEnumerationTest) {
+  AutoCreateContext ctxt1;
+  AutoCreateContext ctxt2;
+
+  size_t ct = 0;
+  for(const auto& cur : ContextEnumerator(ctxt1))
+    ct++;
+  ASSERT_EQ(1UL, ct) << "An attempt to enumerate a context with a sibling did not correctly enumerate one context";
+}
+
 TEST_F(ContextEnumeratorTest, VerifySimpleEnumeration) {
   // Create a pair of descendant contexts, verify we don't accidentally hit these when enumerating children
   AutoCreateContext outer;
