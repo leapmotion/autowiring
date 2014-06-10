@@ -67,11 +67,8 @@ void AutoPacketFactory::Stop(bool graceful) {
 }
 
 void AutoPacketFactory::Clear(void) {
-  // Trigger a stop first, before trying to release anything
+  // Simple handoff to Stop is sufficient
   Stop(false);
-
-  // Release any external references before obtaining the lock
-  m_autoFilters.clear();
 }
 
 void AutoPacketFactory::Wait(void) {

@@ -779,8 +779,6 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
 
 void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
   GetPacketFactory()->AddSubscriber(rhs);
-  if(m_pParent)
-    m_pParent->AddPacketSubscriber(rhs);
 }
 
 void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
