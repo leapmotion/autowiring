@@ -62,7 +62,9 @@ template<class T>
 class AutoEnable
 {
 public:
-  AutoEnable(void) { CoreContext::CurrentContext()->Enable<T>(); }
+  AutoEnable(std::shared_ptr<CoreContext> ctxt = CoreContext::CurrentContext()) {
+    ctxt->Enable<T>();
+  }
 };
 
 /// <summary>
