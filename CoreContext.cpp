@@ -100,6 +100,11 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, 
   return retVal;
 }
 
+size_t CoreContext::GetChildCount(void) const {
+  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+  return m_children.size();
+}
+
 std::shared_ptr<CoreContext> CoreContext::FirstChild(void) const {
   boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
 
