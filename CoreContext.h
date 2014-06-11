@@ -194,13 +194,13 @@ protected:
 
   // Adds a bolt proper to this context
   template<typename T, typename... Sigils>
-  void EnableInternal(Bolt<Sigils...>*) {
+  void EnableInternal(T*, Bolt<Sigils...>*) {
     Inject<T>();
   }
 
   // Enables a boltable class
   template<typename T, typename... Sigils>
-  void EnableInternal(Boltable<Sigils...>*) {
+  void EnableInternal(T*, Boltable<Sigils...>*) {
     bool dummy[] = {
       false,
       (AutoRequireMicroBolt<T, Sigils>(), false)...
@@ -448,7 +448,7 @@ public:
   template<class T>
   void Enable(void) {
     static_assert(!std::is_abstract<T>::value, "Cannot enable an abstract class for bolting");
-    EnableInternal<T>((T*)nullptr);
+    EnableInternal((T*)nullptr, (T*)nullptr);
   }
 
   /// <summary>
@@ -456,7 +456,7 @@ public:
   /// </summary>
   template<class T, class... Sigils>
   void BoltTo(void) {
-    EnableInternal<T>((Boltable<Sigils...>*)nullptr);
+    EnableInternal((T*)nullptr, (Boltable<Sigils...>*)nullptr);
   }
 
   /// <summary>
