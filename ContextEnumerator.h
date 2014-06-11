@@ -45,20 +45,18 @@ public:
 
     iterator(void) {}
 
-    iterator(const std::shared_ptr<CoreContext>& root, const std::shared_ptr<CoreContext>& cur = std::shared_ptr<CoreContext>()) :
-      m_root(root),
-      m_cur(cur)
-    {
-    }
+    iterator(const std::shared_ptr<CoreContext>& root, const std::shared_ptr<CoreContext>& cur);
 
     ~iterator(void);
 
   protected:
-    // Root context pointer:
+    // Pointer to the ancestor of the root context:
     const std::shared_ptr<CoreContext> m_root;
 
     // Current context being inspected:
     std::shared_ptr<CoreContext> m_cur;
+
+    void _next(void);
 
   public:
     // Operator overloads:
@@ -72,7 +70,7 @@ public:
 
   // Standard STL duck interface methods:
   iterator begin(void) { return iterator(m_root, m_root); };
-  iterator end(void) { return iterator(m_root); }
+  iterator end(void) { return iterator(m_root, std::shared_ptr<CoreContext>()); }
 };
 
 
