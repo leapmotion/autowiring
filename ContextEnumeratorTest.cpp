@@ -64,6 +64,43 @@ TEST_F(ContextEnumeratorTest, VerifySimpleEnumeration) {
   ASSERT_TRUE(allCtxts.empty()) << "Context enumerator did not encounter all children as expected";
 }
 
+struct NamedContext {};
+
+TEST_F(ContextEnumeratorTest, VerifyComplexEnumeration) {
+  std::shared_ptr<CoreContext> firstNamed, secondNamed;
+
+  AutoCreateContext firstContext;
+  {
+    CurrentContextPusher pshr(firstContext);
+    AutoCreateContextT<NamedContext> named;
+    firstNamed = named;
+  }
+  AutoCreateContext secondContext;
+  {
+    CurrentContextPusher pshr(secondContext);
+    AutoCreateContextT<NamedContext> named;
+    secondNamed = named;
+  }
+
+  // Verify there is only one context under the second context
+  int secondCount = 0;
+  for(auto ctxt : ContextEnumeratorT<NamedContext>(secondContext)) {
+    secondCount++;
+    ASSERT_EQ(ctxt, secondNamed);
+    ASSERT_EQ(ctxt->GetParentContext(), secondContext);
+  }
+  ASSERT_EQ(secondCount, 1) << "Expected exactly one context in the parent context, found " << secondCount;
+
+  // Verify there is only one context under the first context
+  int firstCount = 0;
+  for(auto ctxt : ContextEnumeratorT<NamedContext>(firstContext)) {
+    firstCount++;
+    ASSERT_EQ(ctxt, firstNamed);
+    ASSERT_EQ(ctxt->GetParentContext(), firstContext);
+  }
+  ASSERT_EQ(firstCount, 1) << "Expected exactly one context in the parent context, found " << firstCount;
+}
+
 TEST_F(ContextEnumeratorTest, SimpleRemovalInterference) {
   static const size_t nChildren = 5;
 
