@@ -386,6 +386,7 @@ public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
   size_t GetMemberCount(void) const { return m_concreteTypes.size(); }
+  size_t GetChildCount(void) const;
   virtual const std::type_info& GetSigilType(void) const = 0;
   t_childList::iterator GetBackReference(void) const { return m_backReference; }
 
