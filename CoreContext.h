@@ -194,13 +194,13 @@ protected:
 
   // Adds a bolt proper to this context
   template<typename T, typename... Sigils>
-  void EnableInternal(T*, Bolt<Sigils...>*) {
+  void EnableInternal(Bolt<Sigils...>*) {
     Inject<T>();
   }
 
   // Enables a boltable class
   template<typename T, typename... Sigils>
-  void EnableInternal(T*, Boltable<Sigils...>*) {
+  void EnableInternal(Boltable<Sigils...>*) {
     bool dummy[] = {
       false,
       (AutoRequireMicroBolt<T, Sigils>(), false)...
@@ -447,7 +447,15 @@ public:
   template<class T>
   void Enable(void) {
     static_assert(!std::is_abstract<T>::value, "Cannot enable an abstract class for bolting");
-    EnableInternal((T*)nullptr, (T*)nullptr);
+    EnableInternal<T>((T*)nullptr);
+  }
+
+  /// <summary>
+  /// Causes the specified type T to be injected in any subcontext created with one of the matching sigil types
+  /// </summary>
+  template<class T, class... Sigils>
+  void BoltTo(void) {
+    EnableInternal<T>((Boltable<Sigils...>*)nullptr);
   }
 
   /// <summary>
