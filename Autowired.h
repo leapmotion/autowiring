@@ -244,6 +244,14 @@ public:
     std::shared_ptr<T>(ctxt->template Inject<T>())
   {}
 
+  /// <summary>
+  /// Construct overload, for types which take constructor arguments
+  /// </summary>
+  template<class... Args>
+  AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
+    std::shared_ptr<T>(ctxt->template Construct<T>(std::forward<Args>(args)...))
+  {}
+
   operator bool(void) const {
     return IsAutowired();
   }
