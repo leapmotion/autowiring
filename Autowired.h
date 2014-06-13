@@ -282,7 +282,7 @@ class AutoConstruct:
 public:
   template<class... Args>
   AutoConstruct(Args&&... args) :
-    AutoRequired(CoreContext::CurrentContext(), std::forward<Args>(args)...)
+    AutoRequired<T>(CoreContext::CurrentContext(), std::forward<Args>(args)...)
   {}
 };
 
