@@ -54,4 +54,5 @@ public:
   void Stop(bool graceful) override;
   bool IsRunning(void) const override { return m_running; }
   void Wait(void) override;
+  bool WaitFor(boost::chrono::nanoseconds duration);
 };
