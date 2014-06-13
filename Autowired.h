@@ -272,6 +272,19 @@ public:
   bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
 };
 
+/// <summary>
+/// Convenience class functionally identical to AutoRequired, but specialized to forward ctor arguments
+/// </summary>
+template<class T>
+class AutoConstruct:
+  public AutoRequired<T>
+{
+public:
+  template<class... Args>
+  AutoConstruct(Args&&... args) :
+    AutoRequired(CoreContext::CurrentContext(), std::forward<Args>(args)...)
+  {}
+};
 
 /// <summary>
 /// Convenience class to create an event firer. Also caches the associated JunctionBox
