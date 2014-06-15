@@ -17,6 +17,10 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory)
       curFactory->AppendAutoFiltersTo(m_satCounters);
   }
 
+  // Sort, eliminate duplicates
+  std::sort(m_satCounters.begin(), m_satCounters.end());
+  m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
+
   // Prime the satisfaction graph for each element:
   for(auto& satCounter : m_satCounters) {
     for(
