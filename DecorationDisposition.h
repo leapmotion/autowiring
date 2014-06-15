@@ -38,9 +38,10 @@ struct DecorationDisposition
   bool wasCheckedOut;
 
   void Reset(void) {
+    m_decoration->reset();
+    m_pImmediate = nullptr;
     satisfied = false;
     isCheckedOut = false;
     wasCheckedOut = false;
-    m_decoration->reset();
   }
 };
