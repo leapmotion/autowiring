@@ -59,18 +59,6 @@ private:
   typedef std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> t_autoFilterSet;
   t_autoFilterSet m_autoFilters;
 
-  struct DecorationEntry {
-    // The single statically detected publisher of the outer type
-    AutoFilterDescriptor m_publisher;
-
-    // All subscribers on this entry
-    std::vector<AutoFilterDescriptor> m_subscribers;
-  };
-
-  // Map used to associate a decoration type with the subscribers of that type.
-  typedef std::unordered_map<std::type_index, DecorationEntry> t_decorationMap;
-  t_decorationMap m_decorationMap;
-
   // Recursive invalidation routine, causes AutoPacket object pools to be dumped to the root
   void Invalidate(void);
 
@@ -86,8 +74,6 @@ public:
     boost::lock_guard<boost::mutex> lk(m_lock);
     container.insert(container.end(), m_autoFilters.begin(), m_autoFilters.end());
   }
-
-  const t_decorationMap& GetDecorations(void) const { return m_decorationMap; }
 
   // CoreRunnable overrides:
   bool Start(std::shared_ptr<Object> outstanding) override;
