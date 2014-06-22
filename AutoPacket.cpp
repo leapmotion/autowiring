@@ -43,10 +43,9 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory)
         break;
       case outTypeRef:
       case outTypeRefAutoReady:
-        // We don't do anything with these types.
-        // Optionally, we might want to register them as outputs, or do some kind
-        // of runtime detection that a multi-satisfaction case exists--but for now,
-        // we just trivially ignore them.
+        if(entry.m_publisher)
+          throw autowiring_error("Added two publishers of the same decoration to the same factory");
+        entry.m_publisher = &satCounter;
         break;
       }
     }
