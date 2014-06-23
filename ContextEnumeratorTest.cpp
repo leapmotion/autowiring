@@ -82,6 +82,15 @@ TEST_F(ContextEnumeratorTest, VerifyComplexEnumeration) {
     secondNamed = named;
   }
 
+  // Verify there is only one context under the first context
+  int firstCount = 0;
+  for(auto ctxt : ContextEnumeratorT<NamedContext>(firstContext)) {
+    firstCount++;
+    ASSERT_EQ(ctxt, firstNamed);
+    ASSERT_EQ(ctxt->GetParentContext(), firstContext);
+  }
+  ASSERT_EQ(firstCount, 1) << "Expected exactly one context in the parent context, found " << firstCount;
+
   // Verify there is only one context under the second context
   int secondCount = 0;
   for(auto ctxt : ContextEnumeratorT<NamedContext>(secondContext)) {
@@ -91,14 +100,12 @@ TEST_F(ContextEnumeratorTest, VerifyComplexEnumeration) {
   }
   ASSERT_EQ(secondCount, 1) << "Expected exactly one context in the parent context, found " << secondCount;
 
-  // Verify there is only one context under the first context
-  int firstCount = 0;
-  for(auto ctxt : ContextEnumeratorT<NamedContext>(firstContext)) {
-    firstCount++;
-    ASSERT_EQ(ctxt, firstNamed);
-    ASSERT_EQ(ctxt->GetParentContext(), firstContext);
+  // Verify global context structure
+  int globalCount = 0;
+  for(auto ctxt : ContextEnumeratorT<NamedContext>(AutoGlobalContext())) {
+    globalCount++;
   }
-  ASSERT_EQ(firstCount, 1) << "Expected exactly one context in the parent context, found " << firstCount;
+  ASSERT_EQ(globalCount, 2) << "Expected exactly one context in the parent context, found " << globalCount;
 }
 
 TEST_F(ContextEnumeratorTest, SimpleRemovalInterference) {

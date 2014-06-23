@@ -420,7 +420,8 @@ public:
   size_t nReceived;
 };
 
-TEST_F(AutoFilterTest, DeferredRecieptInSubContext) {
+TEST_F(AutoFilterTest, DISABLED_DeferredRecieptInSubContext)
+{
   AutoCurrentContext()->Initiate();
 
   static const size_t nPackets = 5;
