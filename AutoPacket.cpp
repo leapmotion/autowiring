@@ -17,6 +17,10 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory)
       curFactory->AppendAutoFiltersTo(m_satCounters);
   }
 
+  // Sort, eliminate duplicates
+  std::sort(m_satCounters.begin(), m_satCounters.end());
+  m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
+
   // Prime the satisfaction graph for each element:
   for(auto& satCounter : m_satCounters) {
     for(
@@ -39,10 +43,9 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory)
         break;
       case outTypeRef:
       case outTypeRefAutoReady:
-        // We don't do anything with these types.
-        // Optionally, we might want to register them as outputs, or do some kind
-        // of runtime detection that a multi-satisfaction case exists--but for now,
-        // we just trivially ignore them.
+        if(entry.m_publisher)
+          throw autowiring_error("Added two publishers of the same decoration to the same factory");
+        entry.m_publisher = &satCounter;
         break;
       }
     }
