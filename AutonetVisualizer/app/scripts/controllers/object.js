@@ -1,5 +1,6 @@
 'use strict';
 
+// Controller for the "object" view. See app.js
 angular.module('autoNetApp')
 .controller('ObjectCtrl', ['$scope', '$routeParams', 'LeapState', 'websocket', function ($scope, $routeParams, LeapState, websocket) {
   $scope.leap = LeapState;

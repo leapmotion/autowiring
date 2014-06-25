@@ -1,5 +1,7 @@
 'use strict';
 
+// Application configurations.
+
 angular.module('autoNetApp', [
   'ngAnimate',
   'ngRoute',
