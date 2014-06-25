@@ -11,22 +11,28 @@
 ** The number args for the callback must match the number of args for the
 ** event type
 **
+** Events are broadcast from $rootScope using angular's event system. Event
+** names are namespaced internally using the "leap-" prefix
+**
 ** See controllers/main.js for an example
 */
 
 angular.module('autoNetApp')
 .factory('websocket', ['$rootScope', function($rootScope) {
 
+  // A single event from the server
   function Message(name,args) {
     this.name = name;
     this.args = args;
   };
 
+  // A collection of Message's
   function Messages(maxSize){
     this.maxSize = maxSize;
     this.messages = [];
   }
 
+  // Add message but remove oldest entry if max size
   Messages.prototype.addMessage = function(name, args){
     if (this.messages.length >= this.maxSize){
       this.messages.pop();
@@ -39,11 +45,13 @@ angular.module('autoNetApp')
   var InitConnection = function() {
     socket = new WebSocket('ws://localhost:8000');
 
+    // emit a angular event when receive a server event
     socket.onmessage = function(evt) {
       var msg = JSON.parse(evt.data);
       $rootScope.$emit('leap-'+msg.type, msg.args);
     };
 
+    // Stop polling for websocket server
     socket.onopen = function() {
       clearInterval(interval);
       interval = null;
@@ -51,6 +59,7 @@ angular.module('autoNetApp')
       $rootScope.$digest();
     };
 
+    // Resume polling for websocket server
     socket.onclose = function() {
       console.log('close')
       isConnected = false;
@@ -67,11 +76,13 @@ angular.module('autoNetApp')
 
   var socket = null; //Websocket connection to server
   var interval = null; //Interval for polling for server when disconnected
-  var isConnected = false;
-  var EventHistory = new Messages(200);
+  var isConnected = false; //State variable for status of connection
+  var EventHistory = new Messages(200); // A list of the past 200 events received from the server
 
+  // Attempt to connect to websocket server, poll if can't connect
   InitConnection();
 
+  // Sends a message from the client back to the server
   function SendMessage(msgType) {
     var packet = {
       type: msgType,
