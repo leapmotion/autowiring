@@ -1,5 +1,6 @@
 'use strict';
 
+//Controller for the "Context" view. See app.js for details
 angular.module('autoNetApp')
 .controller('ContextCtrl', ['$scope', 'LeapState', '$routeParams', function ($scope, LeapState, $routeParams) {
   $scope.leap = LeapState;
