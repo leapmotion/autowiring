@@ -8,6 +8,7 @@ angular.module('autoNetApp')
   };
 });
 
+// filters a passed in list of LeapObject's by their type
 angular.module('autoNetApp')
 .filter('TypeFilter', function(){
   return function (input, type) {
@@ -22,6 +23,7 @@ angular.module('autoNetApp')
   };
 });
 
+// limits the input to "length". An elisis is added if the input is truncated
 angular.module('autoNetApp')
 .filter('Limit', function(){
   return function(input, length){

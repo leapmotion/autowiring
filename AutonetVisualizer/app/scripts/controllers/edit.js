@@ -1,5 +1,6 @@
 'use strict';
 
+// Controller for the "edit" view. See app.js for details
 angular.module('autoNetApp')
 .controller('EditCtrl', ['$scope', '$timeout', 'LeapState', 'websocket', function($scope, $timeout, LeapState, websocket) {
   $scope.leap = LeapState;
