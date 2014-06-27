@@ -93,7 +93,6 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, 
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
   std::shared_ptr<CoreContext> retVal = pfnCreate(shared_from_this(), childIterator, pPeer);
-  *childIterator = retVal;
 
   // Notify AutowiringEvents listeners
   GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal);
@@ -107,6 +106,11 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, 
   // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
   BroadcastContextCreationNotice(retVal->GetSigilType());
 
+  // We only consider the context to be completely constructed at this point, after all bolts
+  // have been fired, the injection has taken place, and we're about to return.  We delay
+  // finalizing the introduction of the return value into the list to this point for that
+  // reason.
+  *childIterator = retVal;
   return retVal;
 }
 
