@@ -7,13 +7,13 @@ angular.module('autoNetApp')
 
   function subscribe() {
     if (websocket.isConnected()){
-      websocket.subscribe();
+      websocket.SendMessage("subscribe");
     }
   };
 
   function unsubscribe() {
     if (websocket.isConnected()){
-      websocket.unsubscribe();
+      websocket.SendMessage("unsubscribe");
     }
   };
 

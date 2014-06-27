@@ -101,12 +101,6 @@ angular.module('autoNetApp')
         });
       });
     },
-    subscribe: function() {
-      SendMessage('subscribe')
-    },
-    unsubscribe: function() {
-      SendMessage('unsubscribe');
-    },
     isConnected: function(){
       return isConnected;
     },
