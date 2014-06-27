@@ -196,6 +196,8 @@ set(AutowiringTest_SRCS
   FactoryTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
+  GuardObjectTest.h
+  GuardObjectTest.cpp
   InterlockedRoutinesTest.h
   InterlockedRoutinesTest.cpp
   MarshalingTest.h
@@ -212,8 +214,6 @@ set(AutowiringTest_SRCS
   ReentrantCounterTest.cpp
   SelfSelectingFixtureTest.h
   SelfSelectingFixtureTest.cpp
-  SharedGuardObjectTest.h
-  SharedGuardObjectTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
   CoreJobTest.h
