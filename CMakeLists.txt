@@ -211,6 +211,8 @@ set(AutowiringTest_SRCS
   ReentrantCounterTest.cpp
   SelfSelectingFixtureTest.h
   SelfSelectingFixtureTest.cpp
+  SharedGuardObjectTest.h
+  SharedGuardObjectTest.cpp
   TeardownNotifierTest.h
   TeardownNotifierTest.cpp
   CoreJobTest.h
