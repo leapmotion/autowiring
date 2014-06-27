@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "SharedGuardObjectTest.h"
 #include "shared_object.h"
-#include "guard_object.h"
+#include "unlock_object.h"
 
 TEST_F(SharedGuardObjectTest, SharedTests) {
   shared_object<int> so1; //Default Constructor
@@ -41,25 +41,31 @@ TEST_F(SharedGuardObjectTest, SharedTests) {
 TEST_F(SharedGuardObjectTest, GuardTests) {
   shared_object<int> so1; //Default Constructor
   ASSERT_FALSE(so1.initialized()); //default initialization test
-
   {
-    guard_object<int> so1_hold1 = so1.try_hold(); //successful try_hold
-    ASSERT_TRUE(static_cast<bool>(so1_hold1));
+    unlock_object<int> so1_unlock1(so1); //successful unlock
+    ASSERT_TRUE(static_cast<bool>(so1_unlock1));
 
-    guard_object<int> so1_hold2 = so1.try_hold(); //prevented try_hold
-    ASSERT_FALSE(static_cast<bool>(so1_hold2));
+    unlock_object<int> so1_unlock2(so1, true); //prevented try_unlock
+    ASSERT_FALSE(static_cast<bool>(so1_unlock2));
 
-    so1_hold2 = so1_hold1; //guard_object assignment
-    ASSERT_TRUE(static_cast<bool>(so1_hold2));
-
-    so1_hold1.reset(); //reset
-    ASSERT_FALSE(so1_hold1);
-    so1_hold1.reset(); //reset is idempotent
-
-    guard_object<int> so1_hold3(so1_hold2); //copy constructor
-    *so1_hold2 = 1; //object assignment
-  } //delete one empty and two equal guard_object instances
+    *so1_unlock1 = 1; //object assignment
+  } //delete one empty and one held unlock_object instance
   int val = 0;
-  ASSERT_TRUE(so1.initialized(val)); //condition for guard_object construction
+  ASSERT_TRUE(so1.initialized(val)); //condition for unlock_object construction
   ASSERT_TRUE(val == 1);
+
+  shared_object<int> so2(2); //Default Constructor
+  {
+    unlock_object<int> so_unlock3(so1); //successful unlock
+    ASSERT_TRUE(static_cast<bool>(so_unlock3));
+    ASSERT_TRUE(*so_unlock3 == 1);
+
+    so_unlock3.reset(so2); //reset with argument
+    ASSERT_TRUE(static_cast<bool>(so_unlock3));
+    ASSERT_TRUE(*so_unlock3 == 2);
+
+    so_unlock3.reset(so2); //reset is idempotent
+    ASSERT_TRUE(static_cast<bool>(so_unlock3));
+    ASSERT_TRUE(*so_unlock3 == 2);
+  }
 }
