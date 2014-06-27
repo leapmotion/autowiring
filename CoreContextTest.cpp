@@ -2,6 +2,7 @@
 #include "CoreContextTest.h"
 #include "AutoInjectable.h"
 #include "ContextEnumerator.h"
+#include <boost/thread.hpp>
 #include <set>
 
 class Foo{};
@@ -165,4 +166,37 @@ TEST_F(CoreContextTest, PreBoltInjection) {
 
   // Verify the bolt was hit as expected
   ASSERT_TRUE(myBolt->m_threadPresent) << "Bolt was not correctly fired after injection";
+}
+
+struct NoEnumerateBeforeBoltReturn {};
+
+class BoltThatTakesALongTimeToReturn:
+  public Bolt<NoEnumerateBeforeBoltReturn>
+{
+public:
+  BoltThatTakesALongTimeToReturn(void) :
+    m_bDoneRunning(false)
+  {}
+
+  void ContextCreated(void) override {
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    m_bDoneRunning = true;
+  }
+
+  bool m_bDoneRunning;
+};
+
+TEST_F(CoreContextTest, NoEnumerateBeforeBoltReturn) {
+  AutoCurrentContext ctxt;
+  AutoRequired<BoltThatTakesALongTimeToReturn> longTime;
+
+  // Spin off a thread which will create the new context
+  boost::thread t([ctxt] {
+    AutoCreateContextT<NoEnumerateBeforeBoltReturn>();
+  });
+
+  // Verify that the context does not appear until the bolt has finished running:
+  while(t.try_join_for(boost::chrono::milliseconds(1)))
+    for(auto cur : ContextEnumeratorT<NoEnumerateBeforeBoltReturn>(ctxt))
+      ASSERT_TRUE(longTime->m_bDoneRunning) << "A context was enumerated before a bolt finished running";
 }
