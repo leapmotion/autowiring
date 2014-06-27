@@ -1,6 +1,6 @@
 #pragma once
 #include "EnclosedContextTestBase.h"
 
-class SharedGuardObjectTest:
+class GuardObjectTest:
 public testing::Test {
 };

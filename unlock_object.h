@@ -8,13 +8,13 @@
 
 ///<summary>
 ///A reference to a shared_object that guarantees both existence and exclusive mutability.
-///The construction of a guard_object establishes atomic_object initialization, since
+///The construction of an unlock_object establishes atomic_object initialization, since
 ///the expectation is that the referenced object will be modified.
 ///</summary>
 ///<remarks>
-///Unlike a shared_object a guard_object does not guarantee the existence
+///Unlike a shared_object an unlock_object does not guarantee the existence
 ///of a referenced object. This enables the definition of shared_object::try_unlock().
-///A guard_object is not copiable since it maintains access, and cannot be used to
+///An unlock_object is not copiable since it maintains access, and cannot be used to
 ///instantiate new shared_object instances, since it is not guaranteed to reference
 ///a shared_object.
 ///</remarks>
@@ -34,7 +34,7 @@ public:
   unlock_object() {}
 
   ///<summary>
-  ///Construction from shared_object references the object and maintains a lock.
+  ///Construction from a shared_object references the object and maintains a lock.
   ///</summary>
   ///<remarks>
   ///When _try = true the returned unlock_object might hold nor reference or lock.
@@ -48,6 +48,23 @@ public:
     }
     _arg.m_share->m_initialized = true;
     m_share = _arg.m_share;
+  }
+
+  ///<summary>
+  ///Construction from an atomic_object references the object and maintains a lock.
+  ///</summary>
+  ///<remarks>
+  ///When _try = true the returned unlock_object might hold nor reference or lock.
+  ///</remarks>
+  explicit unlock_object(atomic_object<object>& _arg, bool _try = false) {
+    if (_try &&
+        !_arg.m_lock.try_lock()) {
+      return;
+    } else {
+      _arg.m_lock.lock();
+    }
+    _arg.m_initialized = true;
+    m_share.reset(&_arg, [](atomic_object<object>*){});
   }
 
   ///<summary>
@@ -87,7 +104,7 @@ public:
     m_share = _arg.m_share;
   }
 
-  ///<returns>True when guard_object references and locks a shared_object</returns>
+  ///<returns>True when unlock_object references and locks a shared_object</returns>
   operator bool () {return m_share.operator bool ();}
 
   object& operator * () const {return m_share->m_object;}
