@@ -60,6 +60,19 @@ angular.module('autoNetApp')
   };
 });
 
+// Similar to directedTree, but for arbitrary graphs
+// Specialized for the context view
+
+// Usage:
+// <directed-graph  nodes="allObjects" id="name" children="slots" unidentified="unidentified" orphans="orphans">
+// </directed-graph>
+
+// "allObject" is a list of node objects
+// "name" is the property by which to uniqly identify objects in "allObjects"
+// "childen" is the property which contains a list of childen identifiers
+
+// "unidentified" are "orphans" are outputs, which fill the past in list with extra information.
+// see decription below
 angular.module('autoNetApp')
 .directive('directedGraph', function () {
   return {
