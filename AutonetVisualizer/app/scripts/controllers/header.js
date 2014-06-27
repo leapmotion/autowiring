@@ -4,6 +4,8 @@
 angular.module('autoNetApp')
 .controller('HeaderCtrl', ['$scope', 'websocket', function ($scope, websocket) {
   $scope.isSubscribed = false;
+  $scope.isInBreakpoint = false;
+  $scope.breakpointName = '';
 
   function subscribe() {
     if (websocket.isConnected()){
@@ -40,4 +42,15 @@ angular.module('autoNetApp')
     }
     return con;
   };
+
+  websocket.on('breakpoint', function(name){
+    console.log("breakpoint");
+    $scope.isInBreakpoint = true;
+    $scope.breakpointName = name;
+  });
+
+  $scope.resumeFromBreakpoint = function() {
+    websocket.SendMessage('resumeFromBreakpoint');
+    $scope.isInBreakpoint = false;
+  }
 }]);
