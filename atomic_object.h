@@ -14,8 +14,10 @@ template<class object> class unlock_object;
 ///also tracks the initialization status.
 ///</summary>
 ///<remarks>
-///This class allows atomic assignments which can be used to create a
-///mutable object copies, or to modify the contents of atomic_object.
+///This class supports two modes of use:
+/// - Atomic assignments which can be used to create a mutable local copy,
+///   or to modify the contents of shared_object.
+/// - Held locks, via unlock_object, which will block all other interactions.
 ///</remarks>
 template<class object>
 class atomic_object {
@@ -35,36 +37,24 @@ public:
   m_initialized(false) {};
 
   ///<summary>
-  ///Copy constructor yielding initialized() == _arg.initialized().
-  ///</summary>
-  atomic_object(atomic_object& _arg) {
-    boost::lock_guard<boost::mutex> lock_arg(_arg.m_lock);
-    m_initialized = _arg.m_initialized;
-    m_object = _arg.m_object;
-  }
-
-  ///<summary>
   ///Initialization yielding initialized() == true.
   ///</summary>
+  ///<remarks>
+  ///Intermediate copies can be avoided during construction using:
+  /// atomic_object<object> target(*unlock_object<object>(source));
+  ///</remarks>
   atomic_object(const object& _arg):
   m_initialized(true),
   m_object(_arg) {}
 
   ///<summary>
-  ///Assignment yielding initialized() == _rhs.initialized().
-  ///</summary>
-  atomic_object& operator = (const atomic_object& _rhs) {
-    boost::lock_guard<boost::mutex> lock_this(m_lock);
-    boost::lock_guard<boost::mutex> lock_rhs(_rhs.m_lock);
-    m_initialized = _rhs.m_initialized;
-    m_object = _rhs.m_object;
-    return *this;
-  }
-
-  ///<summary>
   ///Assignment yielding initialized() == true.
   ///</summary>
-  atomic_object& operator = (const object& _rhs) {
+  ///<remarks>
+  ///Intermediate copies can be avoided during assignment using:
+  /// target = *unlock_object<object>(source);
+  ///</remarks>
+  atomic_object<object>& operator = (const object& _rhs) {
     boost::lock_guard<boost::mutex> lock_this(m_lock);
     m_initialized = true;
     m_object = _rhs;

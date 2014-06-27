@@ -1,9 +1,9 @@
 #include "stdafx.h"
-#include "SharedGuardObjectTest.h"
+#include "GuardObjectTest.h"
 #include "shared_object.h"
 #include "unlock_object.h"
 
-TEST_F(SharedGuardObjectTest, SharedTests) {
+TEST_F(GuardObjectTest, SharedTests) {
   shared_object<int> so1; //Default Constructor
   ASSERT_FALSE(so1.initialized()); //default initialization test
 
@@ -38,7 +38,7 @@ TEST_F(SharedGuardObjectTest, SharedTests) {
   ASSERT_TRUE(val == 3);
 }
 
-TEST_F(SharedGuardObjectTest, GuardTests) {
+TEST_F(GuardObjectTest, UnlockTests) {
   shared_object<int> so1; //Default Constructor
   ASSERT_FALSE(so1.initialized()); //default initialization test
   {
