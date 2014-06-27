@@ -44,11 +44,20 @@ class AutoCreateContextT:
   public std::shared_ptr<CoreContext>
 {
 public:
-  AutoCreateContextT(void):
+  AutoCreateContextT(void) :
     std::shared_ptr<CoreContext>(CoreContext::CurrentContext()->Create<T>())
   {}
-  AutoCreateContextT(std::shared_ptr<CoreContext>& ctxt):
+
+  AutoCreateContextT(AutoInjectable&& inj) :
+    std::shared_ptr<CoreContext>(CoreContext::CurrentContext()->Create<T>(std::move(inj)))
+  {}
+
+  AutoCreateContextT(std::shared_ptr<CoreContext>& ctxt) :
     std::shared_ptr<CoreContext>(ctxt->Create<T>())
+  {}
+
+  AutoCreateContextT(std::shared_ptr<CoreContext>& ctxt, AutoInjectable&& inj) :
+    std::shared_ptr<CoreContext>(ctxt->Create<T>(std::move(inj)))
   {}
 };
 
