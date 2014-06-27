@@ -6,62 +6,71 @@
 #include <boost/thread/lock_guard.hpp>
 #include "shared_object.h"
 
-template<class Object> class shared_object;
+template<class object> class shared_object;
 
 ///<summary>
-///A reference to a shared_object that simultaneously holds the lock
+///A reference to a shared_object that simultaneously holds the lock.
 ///</summary>
 ///<remarks>
-///This object may be copied multiple times and will maintain a lock
-///on the shared_object so long as any copy is in existence.
+///The construction of a guard object establishes initialization, since
+///the expectation is that the referenced object will be modified.
 ///</remarks>
-template<class Object>
+template<class object>
 class guard_object:
-private std::shared_ptr<Object> {
-  friend class shared_object<Object>;
+private std::shared_ptr<object> {
+  friend class shared_object<object>;
 
   std::shared_ptr<boost::lock_guard<boost::mutex>> m_hold;
 
-  guard_object(shared_object<Object>& _arg, boost::adopt_lock_t _tag):
+  guard_object(shared_object<object>& _arg, boost::adopt_lock_t _tag):
   m_hold(new boost::lock_guard<boost::mutex>(_arg.m_lock, _tag)) {
-    reset(&_arg.m_object);
+    std::shared_ptr<object>::reset(&_arg.m_object, [](object*){});
+    _arg.m_initialized = true;
   }
 
 public:
+  ///<summary>
+  ///Default constructor, yielding guard_object<object>::operator bool == false;
+  ///</summary>
   guard_object() {}
 
-  ~guard_object() {
-    reset();
-  }
-
-  explicit guard_object(shared_object<Object>& _arg):
+  ///<summary>
+  ///Construction from shared_object references the object and maintains a lock.
+  ///</summary>
+  explicit guard_object(shared_object<object>& _arg):
   m_hold(new boost::lock_guard<boost::mutex>(_arg.m_lock)) {
-    std::shared_ptr<Object>::reset(&_arg.m_object);
+    std::shared_ptr<object>::reset(&_arg.m_object, [](object*){});
+    _arg.m_initialized = true;
   }
 
-  guard_object(const guard_object<Object>& _arg) {
+  ///<summary>
+  ///Copy constructor shares the reference and persists the existing guard lock.
+  ///</summary>
+  guard_object(const guard_object<object>& _arg) {
     m_hold = _arg.m_hold;
-    std::shared_ptr<Object>::operator = (_arg);
+    std::shared_ptr<object>::operator = (_arg);
   }
 
+  ///<summary>
+  ///Assignment shares the reference and persists the existing guard lock.
+  ///</summary>
   guard_object& operator = (const guard_object& _rhs) {
     m_hold = _rhs.m_hold;
-    std::shared_ptr<Object>::operator = (_rhs);
+    std::shared_ptr<object>::operator = (_rhs);
+    return *this;
   }
 
+  ///<summary>
+  ///Reset releases reference and lock, yielding guard_object<object>::operator bool == false;
+  ///</summary>
   void reset() {
     m_hold.reset();
-    std::shared_ptr<Object>::reset();
+    std::shared_ptr<object>::reset();
   }
 
-  void reset(shared_object<Object>& _arg) {
-    m_hold.reset(new boost::lock_guard<boost::mutex>(_arg.m_lock));
-    std::shared_ptr<Object>::reset(&_arg.m_object);
-  }
-
-  ///Expose only methods that can not modify the Object reference
-  using std::shared_ptr<Object>::operator*;
-  using std::shared_ptr<Object>::operator->;
-  using std::shared_ptr<Object>::operator bool;
-  using std::shared_ptr<Object>::use_count;
+  ///Expose only methods that can not modify the object reference
+  using std::shared_ptr<object>::operator*;
+  using std::shared_ptr<object>::operator->;
+  using std::shared_ptr<object>::operator bool;
+  using std::shared_ptr<object>::use_count;
 };
