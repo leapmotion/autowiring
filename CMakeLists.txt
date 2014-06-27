@@ -67,7 +67,6 @@ set(Autowiring_SRCS
   EventReceiver.h
   EventReceiver.cpp
   fast_pointer_cast.h
-  guard_object.h
   JunctionBox.h
   JunctionBoxBase.h
   JunctionBoxBase.cpp
@@ -83,6 +82,9 @@ set(Autowiring_SRCS
   is_any.h
   InterlockedExchange.h
   InvokeRelay.h
+  atomic_object.h
+  shared_object.h
+  unlock_object.h
   Object.h
   ObjectPool.h
   ObjectPoolMonitor.h
@@ -93,7 +95,6 @@ set(Autowiring_SRCS
   MicroBolt.h
   ReentrantCounter.h
   ReentrantCounter.cpp
-  shared_object.h
   SharedPointerSlot.h
   SlotInformation.h
   SlotInformation.cpp
