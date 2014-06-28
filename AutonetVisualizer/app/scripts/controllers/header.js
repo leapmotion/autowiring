@@ -53,7 +53,7 @@ angular.module('autoNetApp')
   });
 
   $scope.resumeFromBreakpoint = function(name) {
-    websocket.SendMessage('resumeFromBreakpoint');
+    websocket.SendMessage('resumeFromBreakpoint', name);
     delete $scope.breakpoints[name];
   }
 }]);
