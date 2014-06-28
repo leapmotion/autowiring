@@ -48,7 +48,6 @@ angular.module('autoNetApp')
   }
 
   websocket.on('breakpoint', function(name){
-    console.log("breakpoint")
     $scope.breakpoints[name] = new Breakpoint(name);
   });
 
