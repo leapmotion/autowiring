@@ -24,6 +24,7 @@ set(Autowiring_SRCS
   AutoPacketFactory.cpp
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
+  AutoSelfUpdate.h
   Autowired.h
   Autowired.cpp
   AutowirableSlot.h
