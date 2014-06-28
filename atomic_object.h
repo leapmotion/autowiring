@@ -2,11 +2,12 @@
 #pragma once
 
 #include "stdafx.h"
+#include <boost/atomic.hpp> //alternative lock = boost::spinlock
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/lock_guard.hpp>
 
-template<class object> class shared_object;
-template<class object> class unlock_object;
+template<class object, class lock> class shared_object;
+template<class object, class lock> class unlock_object;
 
 ///<summary>
 ///This class provides a standard thread-safe wrapper for data structures.
@@ -19,15 +20,16 @@ template<class object> class unlock_object;
 ///   or to modify the contents of shared_object.
 /// - Held locks, via unlock_object, which will block all other interactions.
 ///</remarks>
-template<class object>
+template<class object, class lock = boost::mutex>
 class atomic_object {
-  friend class shared_object<object>;
-  friend class unlock_object<object>;
+  friend class shared_object<object, lock>;
+  friend class unlock_object<object, lock>;
 
+protected:
   //CONTRACT: If !m_initialized then m_object == object();
-  mutable boost::mutex m_lock;
-  bool m_initialized;
+  mutable lock m_lock;
   object m_object;
+  bool m_initialized;
 
 public:
   ///<summary>
@@ -54,8 +56,8 @@ public:
   ///Intermediate copies can be avoided during assignment using:
   /// target = *unlock_object<object>(source);
   ///</remarks>
-  atomic_object<object>& operator = (const object& _rhs) {
-    boost::lock_guard<boost::mutex> lock_this(m_lock);
+  atomic_object<object, lock>& operator = (const object& _rhs) {
+    boost::lock_guard<lock> lock_this(m_lock);
     m_initialized = true;
     m_object = _rhs;
     return *this;
@@ -65,13 +67,13 @@ public:
   ///Cast by copying current state
   ///</summary>
   operator object() const {
-    boost::lock_guard<boost::mutex> lock_this(m_lock);
+    boost::lock_guard<lock> lock_this(m_lock);
     return m_object;
   }
 
   ///<return>True if the object was not assigned default values</return>
   bool initialized() const {
-    boost::lock_guard<boost::mutex> lock_this(m_lock);
+    boost::lock_guard<lock> lock_this(m_lock);
     return m_initialized;
   }
 
@@ -80,7 +82,7 @@ public:
   ///</summary>
   ///<return>True if the object was not assigned default values</return>
   bool initialized(object& _use) {
-    boost::lock_guard<boost::mutex> lock_this(m_lock);
+    boost::lock_guard<lock> lock_this(m_lock);
     if (m_initialized)
       _use = m_object;
     return m_initialized;
@@ -90,7 +92,7 @@ public:
   ///Reset using default constructor yielding initialized() == false.
   ///</summary>
   void reset() {
-    boost::lock_guard<boost::mutex> lock_this(m_lock);
+    boost::lock_guard<lock> lock_this(m_lock);
     m_initialized = false;
     m_object = object();
   }
