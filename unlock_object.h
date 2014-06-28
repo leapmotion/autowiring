@@ -2,8 +2,6 @@
 #pragma once
 
 #include "stdafx.h"
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/lock_guard.hpp>
 #include "shared_object.h"
 
 ///<summary>
@@ -18,14 +16,14 @@
 ///instantiate new shared_object instances, since it is not guaranteed to reference
 ///a shared_object.
 ///</remarks>
-template<class object>
+template<class object, class lock = boost::mutex>
 class unlock_object {
-  friend class shared_object<object>;
+  friend class shared_object<object, lock>;
 
-  std::shared_ptr<atomic_object<object>> m_share;
+  unlock_object(unlock_object<object, lock>& _arg) = delete;
+  unlock_object<object, lock>& operator = (unlock_object<object, lock>& _rhs) = delete;
 
-  unlock_object(unlock_object<object>& _arg) = delete;
-  unlock_object<object>& operator = (unlock_object<object>& _rhs) = delete;
+  std::shared_ptr<atomic_object<object, lock>> m_share;
 
 public:
   ///<summary>
@@ -39,7 +37,7 @@ public:
   ///<remarks>
   ///When _try = true the returned unlock_object might hold nor reference or lock.
   ///</remarks>
-  explicit unlock_object(shared_object<object>& _arg, bool _try = false) {
+  explicit unlock_object(shared_object<object, lock>& _arg, bool _try = false) {
     if (_try &&
         !_arg.m_share->m_lock.try_lock()) {
       return;
@@ -56,7 +54,7 @@ public:
   ///<remarks>
   ///When _try = true the returned unlock_object might hold nor reference or lock.
   ///</remarks>
-  explicit unlock_object(atomic_object<object>& _arg, bool _try = false) {
+  explicit unlock_object(atomic_object<object, lock>& _arg, bool _try = false) {
     if (_try &&
         !_arg.m_lock.try_lock()) {
       return;
@@ -64,7 +62,7 @@ public:
       _arg.m_lock.lock();
     }
     _arg.m_initialized = true;
-    m_share.reset(&_arg, [](atomic_object<object>*){});
+    m_share.reset(&_arg, [](atomic_object<object, lock>*){});
   }
 
   ///<summary>
@@ -96,7 +94,7 @@ public:
   ///This method is idempotent, including when called repeatedly with the same argument.
   ///However, reset(_arg) always releases the any currently held lock.
   ///</remarks>
-  void reset(shared_object<object>& _arg) {
+  void reset(shared_object<object, lock>& _arg) {
     if (m_share)
       reset();
     _arg.m_share->m_lock.lock();

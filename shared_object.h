@@ -2,8 +2,6 @@
 #pragma once
 
 #include "stdafx.h"
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/lock_guard.hpp>
 #include "atomic_object.h"
 
 ///<summary>
@@ -16,44 +14,46 @@
 ///While the referenced atomic_object is thread-safe, this class itself is not,
 ///and is expected to be used as a local reference to a shared resource.
 ///</remarks>
-template<class object>
+template<class object, class lock = boost::mutex>
 class shared_object {
-  friend class unlock_object<object>;
+  friend class unlock_object<object, lock>;
 
   //CONTRACT: m_share == true
-  std::shared_ptr<atomic_object<object>> m_share;
+  std::shared_ptr<atomic_object<object, lock>> m_share;
 
 public:
   ///<summary>
   ///Default constructor instiates an uninitialized atomic_object.
   ///</summary>
   shared_object():
-  m_share(new atomic_object<object>()) {}
+  m_share(new atomic_object<object, lock>()) {}
 
   ///<summary>
   ///Copy constructor instantiates a atomic_object initialized by _arg.
   ///</summary>
   ///<remarks>
-  ///This shares the referenced atomic_object.
-  ///To make a deep copy use shared_object(const atomic_object& _arg).
+  ///This constructor shares the referenced atomic_object.
+  ///To copy the referenced object without an intermediate object copy use:
+  /// shared_object<object> target(*unlock_object<object>(source));
   ///</remakrs>
-  shared_object(const shared_object<object>& _arg):
+  shared_object(const shared_object<object, lock>& _arg):
   m_share(_arg.m_share) {}
 
   ///<summary>
   ///Copy constructor instiates a atomic_object initialized by _arg.
   ///</summary>
   shared_object(const object& _arg):
-  m_share(new atomic_object<object>(_arg)) {}
+  m_share(new atomic_object<object, lock>(_arg)) {}
 
   ///<summary>
   ///Assignment to current atomic_object.
   ///</summary>
   ///<remarks>
   ///This shares the referenced atomic_object.
-  ///To make a deep copy use shared_object(const atomic_object& _arg).
+  ///To assign to the referenced object without an intermediate object copy use:
+  /// target = *unlock_object<object>(source);
   ///</remakrs>
-  shared_object<object>& operator = (const shared_object<object>& _arg) {
+  shared_object<object, lock>& operator = (const shared_object<object, lock>& _arg) {
     m_share = _arg.m_share;
     return *this;
   }
@@ -61,7 +61,7 @@ public:
   ///<summary>
   ///Assignment to current atomic_object.
   ///</summary>
-  shared_object<object>& operator = (const object& _arg) {
+  shared_object<object, lock>& operator = (const object& _arg) {
     *m_share = _arg;
     return *this;
   }
