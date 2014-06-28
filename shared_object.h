@@ -22,6 +22,8 @@ class shared_object {
   std::shared_ptr<atomic_object<object, lock>> m_share;
 
 public:
+  typedef unlock_object<object, lock> unlock;
+
   ///<summary>
   ///Default constructor instiates an uninitialized atomic_object.
   ///</summary>
