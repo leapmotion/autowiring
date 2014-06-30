@@ -30,39 +30,39 @@ public:
   m_share(new atomic_object<object, lock>()) {}
 
   ///<summary>
-  ///Copy constructor references the same atomic_object as _arg.
+  ///Copy constructor references the same atomic_object as source.
   ///</summary>
   ///<remarks>
-  ///To copy the atomic_object referenced by _arg use:
+  ///To copy the atomic_object referenced by source use:
   /// shared_object<object> target(*unlock_object<object>(source));
   ///</remakrs>
-  shared_object(const shared_object<object, lock>& _arg):
-  m_share(_arg.m_share) {}
+  shared_object(const shared_object<object, lock>& source):
+  m_share(source.m_share) {}
 
   ///<summary>
-  ///Copy constructor instantiates a atomic_object initialized by _arg.
+  ///Copy constructor instantiates a atomic_object initialized by source.
   ///</summary>
-  shared_object(const object& _arg):
-  m_share(new atomic_object<object, lock>(_arg)) {}
+  shared_object(const object& source):
+  m_share(new atomic_object<object, lock>(source)) {}
 
 
   ///<summary>
-  ///Assignment to referenced atomic_object from _rhs referenced atomic_object.
+  ///Assignment to referenced atomic_object from source referenced atomic_object.
   ///</summary>
   ///<remarks>
   ///This method is equivalent to:
   /// target = *unlock_object<object>(source);
   ///</remarks>
-  shared_object<object, lock>& operator = (const shared_object<object, lock>& _rhs) {
-    *m_share = *_rhs.m_share;
+  shared_object<object, lock>& operator = (const shared_object<object, lock>& source) {
+    *m_share = *source.m_share;
     return *this;
   }
 
   ///<summary>
   ///Assignment to current atomic_object.
   ///</summary>
-  shared_object<object, lock>& operator = (const object& _arg) {
-    *m_share = _arg;
+  shared_object<object, lock>& operator = (const object& source) {
+    *m_share = source;
     return *this;
   }
 
@@ -82,8 +82,8 @@ public:
   ///Atomic copy of this location to argument location, only if this has location.
   ///</summary>
   ///<return>True if the object was not assigned default values</return>
-  bool initialized(object& _use) {
-    return m_share->initialized(_use);
+  bool initialized(object& target) {
+    return m_share->initialized(target);
   }
 
   ///<summary>
