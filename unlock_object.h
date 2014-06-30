@@ -35,9 +35,9 @@ public:
   ///Construction from a shared_object references the object and maintains a lock.
   ///</summary>
   ///<remarks>
-  ///When _try = true the returned unlock_object might hold nor reference or lock.
+  ///When _try = true the returned unlock_object might hold no reference or lock.
   ///</remarks>
-  explicit unlock_object(shared_object<object, lock>& _arg, bool _try = false) {
+  unlock_object(shared_object<object, lock>& _arg, bool _try = false) {
     if (_try &&
         !_arg.m_share->m_lock.try_lock()) {
       return;
@@ -52,9 +52,9 @@ public:
   ///Construction from an atomic_object references the object and maintains a lock.
   ///</summary>
   ///<remarks>
-  ///When _try = true the returned unlock_object might hold nor reference or lock.
+  ///When _try = true the returned unlock_object might hold no reference or lock.
   ///</remarks>
-  explicit unlock_object(atomic_object<object, lock>& _arg, bool _try = false) {
+  unlock_object(atomic_object<object, lock>& _arg, bool _try = false) {
     if (_try &&
         !_arg.m_lock.try_lock()) {
       return;
