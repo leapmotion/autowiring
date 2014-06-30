@@ -22,7 +22,7 @@ TEST_F(GuardObjectTest, SharedTests) {
   ASSERT_FALSE(so1.initialized());
   so1.reset(); //reset is idempotent
 
-  so1 = so2; //shared_object assignment
+  so1 = so2; //assignment between referenced objects
   ASSERT_TRUE(so1.initialized());
   ASSERT_TRUE(so1 == 2);
 
@@ -31,11 +31,11 @@ TEST_F(GuardObjectTest, SharedTests) {
   ASSERT_TRUE(so3.initialized());
   val = so3; //implicit cast to copy
   ASSERT_TRUE(val == 3);
+  ASSERT_TRUE(so2 == 3); //Shared reference is also modified
+  ASSERT_TRUE(so1 == 2); //Separate reference is not modified
 
-  so1 = so3; //shared_object assignment
-  val = 1;
-  ASSERT_TRUE(so1.initialized(val));
-  ASSERT_TRUE(val == 3);
+  so2 = so3; //Avoid deadlock in self-assignment
+  ASSERT_TRUE(so2 == 3);
 }
 
 TEST_F(GuardObjectTest, UnlockTests) {
