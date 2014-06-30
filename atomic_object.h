@@ -41,49 +41,49 @@ public:
   m_initialized(false) {};
 
   ///<summary>
-  ///Initialization yielding initialized() == _arg.initialized().
+  ///Initialization yielding initialized() == source.initialized().
   ///</summary>
   ///<remarks>
   ///Intermediate copies can be avoided during construction using:
   /// atomic_object<object> target(*unlock_object<object>(source));
   ///</remarks>
-  atomic_object(const atomic_object<object>& _arg) {
-    boost::lock_guard<lock> lock_this(_arg.m_lock);
-    m_object = _arg.m_object;
-    m_initialized = _arg.m_initialized;
+  atomic_object(const atomic_object<object>& source) {
+    boost::lock_guard<lock> lock_this(source.m_lock);
+    m_object = source.m_object;
+    m_initialized = source.m_initialized;
   }
 
   ///<summary>
   ///Initialization yielding initialized() == true.
   ///</summary>
-  atomic_object(const object& _arg):
-  m_object(_arg),
+  atomic_object(const object& source):
+  m_object(source),
   m_initialized(true) {}
 
   ///<summary>
-  ///Assignment yielding initialized() == _rhs.initialized().
+  ///Assignment yielding initialized() == source.initialized().
   ///</summary>
   ///<remarks>
   ///This method avoids deadlocks due to self-assignment, and intermediate
   ///copies due to implicit casting.
   ///</remarks>
-  atomic_object<object, lock>& operator = (const atomic_object<object>& _rhs) {
-    if (this == &_rhs)
+  atomic_object<object, lock>& operator = (const atomic_object<object>& source) {
+    if (this == &source)
       return *this;
     boost::lock_guard<lock> lock_this(m_lock);
-    boost::lock_guard<lock> lock_rhs(_rhs.m_lock);
-    m_object = _rhs.m_object;
-    m_initialized = _rhs.m_initialized;
+    boost::lock_guard<lock> locksource(source.m_lock);
+    m_object = source.m_object;
+    m_initialized = source.m_initialized;
     return *this;
   }
 
   ///<summary>
   ///Assignment yielding initialized() == true.
   ///</summary>
-  atomic_object<object, lock>& operator = (const object& _rhs) {
+  atomic_object<object, lock>& operator = (const object& source) {
     boost::lock_guard<lock> lock_this(m_lock);
     m_initialized = true;
-    m_object = _rhs;
+    m_object = source;
     return *this;
   }
 
@@ -105,10 +105,10 @@ public:
   ///Atomic copy of this location to argument location, only if this has location.
   ///</summary>
   ///<return>True if the object was not assigned default values</return>
-  bool initialized(object& _use) {
+  bool initialized(object& target) {
     boost::lock_guard<lock> lock_this(m_lock);
     if (m_initialized)
-      _use = m_object;
+      target = m_object;
     return m_initialized;
   }
 
