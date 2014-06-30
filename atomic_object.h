@@ -41,23 +41,45 @@ public:
   m_initialized(false) {};
 
   ///<summary>
-  ///Initialization yielding initialized() == true.
+  ///Initialization yielding initialized() == _arg.initialized().
   ///</summary>
   ///<remarks>
   ///Intermediate copies can be avoided during construction using:
   /// atomic_object<object> target(*unlock_object<object>(source));
   ///</remarks>
+  atomic_object(const atomic_object<object>& _arg) {
+    boost::lock_guard<lock> lock_this(_arg.m_lock);
+    m_object = _arg.m_object;
+    m_initialized = _arg.m_initialized;
+  }
+
+  ///<summary>
+  ///Initialization yielding initialized() == true.
+  ///</summary>
   atomic_object(const object& _arg):
-  m_initialized(true),
-  m_object(_arg) {}
+  m_object(_arg),
+  m_initialized(true) {}
+
+  ///<summary>
+  ///Assignment yielding initialized() == _rhs.initialized().
+  ///</summary>
+  ///<remarks>
+  ///This method avoids deadlocks due to self-assignment, and intermediate
+  ///copies due to implicit casting.
+  ///</remarks>
+  atomic_object<object, lock>& operator = (const atomic_object<object>& _rhs) {
+    if (this == &_rhs)
+      return *this;
+    boost::lock_guard<lock> lock_this(m_lock);
+    boost::lock_guard<lock> lock_rhs(_rhs.m_lock);
+    m_object = _rhs.m_object;
+    m_initialized = _rhs.m_initialized;
+    return *this;
+  }
 
   ///<summary>
   ///Assignment yielding initialized() == true.
   ///</summary>
-  ///<remarks>
-  ///Intermediate copies can be avoided during assignment using:
-  /// target = *unlock_object<object>(source);
-  ///</remarks>
   atomic_object<object, lock>& operator = (const object& _rhs) {
     boost::lock_guard<lock> lock_this(m_lock);
     m_initialized = true;

@@ -1,6 +1,6 @@
 #pragma once
 #include "Autowiring/NewAutoFilter.h"
-#include "Autowiring/atomic_object.h"
+#include "Autowiring/shared_object.h"
 #include "Autowiring/unlock_object.h"
 
 ///<summary>
@@ -12,14 +12,14 @@
 ///</remarks>
 template<class object, class lock = boost::mutex>
 class AutoSelfUpdate:
-public atomic_object<object, lock> {
+public shared_object<object, lock> {
 public:
 
-  using atomic_object<object, lock>::operator =;
-  using atomic_object<object, lock>::operator object;
+  using shared_object<object, lock>::operator =;
+  using shared_object<object, lock>::operator object;
 
   void SelfUpdate(object& update) {
-    atomic_object<object, lock>::operator = (update);
+    shared_object<object, lock>::operator = (update);
   }
 
   NewAutoFilter<decltype(&AutoSelfUpdate<object>::SelfUpdate), &AutoSelfUpdate<object>::SelfUpdate> AutoFilter_SelfUpdate;
