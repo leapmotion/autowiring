@@ -1,0 +1,129 @@
+Springy
+====
+
+A force directed graph layout algorithm in JavaScript.
+
+[http://getspringy.com/](http://getspringy.com/)
+
+What is this?
+----
+
+Springy is a force directed graph layout algorithm.
+
+So what does this 'force directed' stuff mean anyway? Excellent question!
+
+It basically means that it uses some real world physics to try and
+figure out how to show a network graph in a nice way.
+
+Try to imagine it as a bunch of springs connected to each other.
+
+
+Demo
+----
+
+[basic](http://dhotson.github.com/springy/demo.html)
+| [simplified API](http://dhotson.github.com/springy/demo-simple.html)
+| [JSON API](http://dhotson.github.com/springy/demo-json.html)
+
+
+Getting Started
+----
+
+springy.js by itself is quite plain and doesn't include any code to do rendering
+or drag and drop etc. It's just for calculating the layout.
+
+The drawing and interaction stuff is mostly up to you.
+
+However, I've written a little helper jQuery plugin called springyui.js
+to help get you started. It's got a semi-decent default renderer and some
+half assed drag and drop.
+
+Basic Usage
+----
+
+See [demo.html](http://dhotson.github.com/springy/demo.html) for the way to
+add nodes and edges to graph and springyui.js for the rendering example.
+
+Springy 1.1+ supports simplified API for adding nodes and edges, see
+[demo-simple.html](http://dhotson.github.com/springy/demo-simple.html):
+
+    var graph = new Springy.Graph();
+    graph.addNodes('mark', 'higgs', 'other', 'etc');
+    graph.addEdges(
+        ['mark', 'higgs'],
+        ['mark', 'etc'],
+        ['mark', 'other']
+    );
+
+Springy 1.2+ also accepts JSON, see
+[demo-json.html](http://dhotson.github.com/springy/demo-json.html):
+
+    graphJSON = {
+      "nodes": ["mark", "higgs", "other", "etc"],
+      "edges": [
+        ["mark", "higgs"],
+        ["mark", "etc"],
+        ["mark", "other"]
+      ]
+    };
+
+    var graph = new Springy.Graph();
+    graph.loadJSON(graphJSON);
+
+
+Advanced Drawing
+----
+
+If you're keen to do your own custom drawing, you'll need to know a few
+things before you get started.
+
+This is the basic graph API, you can create nodes and edges etc.
+
+    // make a new graph
+    var graph = new Springy.Graph();
+
+    // make some nodes
+    var node1 = graph.newNode({label: '1'});
+    var node2 = graph.newNode({label: '2'});
+
+    // connect them with an edge
+    graph.newEdge(node1, node2);
+
+So now to draw this graph, lets make a layout object:
+
+    var layout = new Springy.Layout.ForceDirected(graph, 400.0, 400.0, 0.5);
+
+I've written a Renderer class, which will handle the rendering loop.
+You just need to provide some callbacks to do the actual drawing.
+
+    var renderer = new Springy.Renderer(layout,
+      function clear() {
+        // code to clear screen
+      },
+      function drawEdge(edge, p1, p2) {
+        // draw an edge
+      },
+      function drawNode(node, p) {
+        // draw a node
+      }
+    );
+
+Now, just start the rendering loop:
+
+    renderer.start();
+
+
+Further Reading
+----
+
+Have a look at the code in springy.js.
+Seriously, it's not very much code and it should be pretty easy to understand.
+
+Please let me know if anything is unclear. Feedback is welcome.
+
+
+Acknowledgements
+----
+
+Thanks to [Lachlan Donald](http://github.com/lox) for his helpful suggestions and
+feedback.
