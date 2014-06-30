@@ -11,8 +11,7 @@
 ///</summary>
 ///<remarks>
 ///This class guarantees the existence of a referenced atomic_object.
-///While the referenced atomic_object is thread-safe, this class itself is not,
-///and is expected to be used as a local reference to a shared resource.
+///In order for shared_object to be thread-safe the reference is defined on construction.
 ///</remarks>
 template<class object, class lock = boost::mutex>
 class shared_object {
@@ -31,32 +30,31 @@ public:
   m_share(new atomic_object<object, lock>()) {}
 
   ///<summary>
-  ///Copy constructor instantiates a atomic_object initialized by _arg.
+  ///Copy constructor references the same atomic_object as _arg.
   ///</summary>
   ///<remarks>
-  ///This constructor shares the referenced atomic_object.
-  ///To copy the referenced object without an intermediate object copy use:
+  ///To copy the atomic_object referenced by _arg use:
   /// shared_object<object> target(*unlock_object<object>(source));
   ///</remakrs>
   shared_object(const shared_object<object, lock>& _arg):
   m_share(_arg.m_share) {}
 
   ///<summary>
-  ///Copy constructor instiates a atomic_object initialized by _arg.
+  ///Copy constructor instantiates a atomic_object initialized by _arg.
   ///</summary>
   shared_object(const object& _arg):
   m_share(new atomic_object<object, lock>(_arg)) {}
 
+
   ///<summary>
-  ///Assignment to current atomic_object.
+  ///Assignment to referenced atomic_object from _rhs referenced atomic_object.
   ///</summary>
   ///<remarks>
-  ///This shares the referenced atomic_object.
-  ///To assign to the referenced object without an intermediate object copy use:
+  ///This method is equivalent to:
   /// target = *unlock_object<object>(source);
-  ///</remakrs>
-  shared_object<object, lock>& operator = (const shared_object<object, lock>& _arg) {
-    m_share = _arg.m_share;
+  ///</remarks>
+  shared_object<object, lock>& operator = (const shared_object<object, lock>& _rhs) {
+    *m_share = *_rhs.m_share;
     return *this;
   }
 
@@ -72,7 +70,7 @@ public:
   ///Cast by copying current state
   ///</summary>
   operator object() const {
-    return static_cast<object>(*m_share);
+    return *m_share;
   }
 
   ///<return>True if the object was not assigned default values</return>
