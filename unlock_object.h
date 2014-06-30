@@ -20,23 +20,22 @@ template<class object, class lock = boost::mutex>
 class unlock_object {
   friend class shared_object<object, lock>;
 
-  unlock_object(unlock_object<object, lock>& _arg) = delete;
+  unlock_object(unlock_object<object, lock>& source) = delete;
   unlock_object<object, lock>& operator = (unlock_object<object, lock>& _rhs) = delete;
 
   std::shared_ptr<atomic_object<object, lock>> m_share;
 
-  void unlock(shared_object<object, lock>& _arg) {
-    _arg.m_share->m_lock.lock();
-    _arg.m_share->m_initialized = true;
-    m_share = _arg.m_share;
+  void unlock(shared_object<object, lock>& source) {
+    source.m_share->m_lock.lock();
+    source.m_share->m_initialized = true;
+    m_share = source.m_share;
   }
 
-  void try_unlock(shared_object<object, lock>& _arg) {
-    if(!_arg.m_share->m_lock.try_lock())
+  void try_unlock(shared_object<object, lock>& source) {
+    if(!source.m_share->m_lock.try_lock())
       return;
-
-    _arg.m_share->m_initialized = true;
-    m_share = _arg.m_share;
+    source.m_share->m_initialized = true;
+    m_share = source.m_share;
   }
 
 public:
@@ -49,11 +48,11 @@ public:
   ///Construction from a shared_object references the object and maintains a lock.
   ///</summary>
   ///<param name="should_try">If true, the returned unlock_object might hold no reference or lock</param>
-  unlock_object(shared_object<object, lock>& _arg, bool should_try = false) {
+  unlock_object(shared_object<object, lock>& source, bool should_try = false) {
     if(should_try)
-      try_unlock(_arg);
+      try_unlock(source);
     else
-      unlock(_arg);
+      unlock(source);
   }
 
   ///<summary>
@@ -79,20 +78,20 @@ public:
   }
 
   ///<summary>
-  ///Reset re-targets reference and lock to _arg, yielding bool(this) == false;
+  ///Reset re-targets reference and lock to source, yielding bool(this) == false;
   ///</summary>
   ///<param name="should_try">If true, the returned unlock_object might hold no reference or lock</param>
   ///<remarks>
   ///This method is idempotent, including when called repeatedly with the same argument.
-  ///However, reset(_arg) always releases the any currently held lock.
+  ///However, reset(source) always releases the any currently held lock.
   ///</remarks>
-  void reset(shared_object<object, lock>& _arg, bool should_try = false) {
+  void reset(shared_object<object, lock>& source, bool should_try = false) {
     if (m_share)
       reset();
     if(should_try)
-      try_unlock(_arg);
+      try_unlock(source);
     else
-      unlock(_arg);
+      unlock(source);
   }
 
   ///<returns>True when unlock_object references and locks a shared_object</returns>
