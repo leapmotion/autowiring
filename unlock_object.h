@@ -25,13 +25,16 @@ class unlock_object {
 
   std::shared_ptr<atomic_object<object, lock>> m_share;
 
-  void unlock(shared_object<object, lock>& _arg, bool _try = false) {
-    if (_try &&
-        !_arg.m_share->m_lock.try_lock()) {
+  void unlock(shared_object<object, lock>& _arg) {
+    _arg.m_share->m_lock.lock();
+    _arg.m_share->m_initialized = true;
+    m_share = _arg.m_share;
+  }
+
+  void try_unlock(shared_object<object, lock>& _arg) {
+    if(!_arg.m_share->m_lock.try_lock())
       return;
-    } else {
-      _arg.m_share->m_lock.lock();
-    }
+
     _arg.m_share->m_initialized = true;
     m_share = _arg.m_share;
   }
@@ -44,10 +47,13 @@ public:
 
   ///<summary>
   ///Construction from a shared_object references the object and maintains a lock.
-  ///When _try = true the returned unlock_object might hold no reference or lock.
   ///</summary>
-  unlock_object(shared_object<object, lock>& _arg, bool _try = false) {
-    unlock(_arg, _try);
+  ///<param name="should_try">If true, the returned unlock_object might hold no reference or lock</param>
+  unlock_object(shared_object<object, lock>& _arg, bool should_try = false) {
+    if(should_try)
+      try_unlock(_arg);
+    else
+      unlock(_arg);
   }
 
   ///<summary>
@@ -74,16 +80,19 @@ public:
 
   ///<summary>
   ///Reset re-targets reference and lock to _arg, yielding bool(this) == false;
-  ///When _try = true the returned unlock_object might hold no reference or lock.
   ///</summary>
+  ///<param name="should_try">If true, the returned unlock_object might hold no reference or lock</param>
   ///<remarks>
   ///This method is idempotent, including when called repeatedly with the same argument.
   ///However, reset(_arg) always releases the any currently held lock.
   ///</remarks>
-  void reset(shared_object<object, lock>& _arg, bool _try = false) {
+  void reset(shared_object<object, lock>& _arg, bool should_try = false) {
     if (m_share)
       reset();
-    unlock(_arg, _try);
+    if(should_try)
+      try_unlock(_arg);
+    else
+      unlock(_arg);
   }
 
   ///<returns>True when unlock_object references and locks a shared_object</returns>
