@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "AutoNetServerTest.h"
 #include "AutoNetServer.h"
+#include "Autowired.h"
 #include <boost/chrono.hpp>
 
 class Foo:
