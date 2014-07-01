@@ -7,6 +7,11 @@ angular.module('autoNetApp', [
   'ngRoute',
   'ngSanitize'
 ])
+
+// Constants and Values
+.constant('WEBSOCKET_PORT', 8000)
+
+//Configurations
 .config(['$routeProvider', function ($routeProvider) {
   $routeProvider
     .when('/main', {
