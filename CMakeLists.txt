@@ -12,6 +12,8 @@ set(Autowiring_SRCS
   AutoCheckout.h
   NewAutoFilter.h
   NewAutoFilter.cpp
+  AutoNetServer.h
+  AutoNetServer.cpp
   AutoFuture.h
   AutoFuture.cpp
   CoreJob.h
@@ -82,6 +84,8 @@ set(Autowiring_SRCS
   is_any.h
   InterlockedExchange.h
   InvokeRelay.h
+  Jzon.h
+  Jzon.cpp
   Object.h
   ObjectPool.h
   ObjectPoolMonitor.h
@@ -154,6 +158,8 @@ set(AutowiringTest_SRCS
   AutoFilterTest.cpp
   AutoInjectableTest.h
   AutoInjectableTest.cpp
+  AutoNetServerTest.h
+  AutoNetServerTest.cpp
   AutoPacketFactoryTest.h
   AutoPacketFactoryTest.cpp
   AutowiringBenchmarkTest.h
