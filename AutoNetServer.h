@@ -115,8 +115,8 @@ protected:
   /// <param name="args...">An arg to be passed to client side event handler</param>
   template<typename ...Args>
   void BroadcastMessage(const char* p_type, Args&&... args) {
-    for (auto it = m_Subscribers.begin(); it != m_Subscribers.end(); ++it)
-      SendMessage(*it, p_type, std::forward<Args>(args)...);
+    for (connection_ptr ptr : m_Subscribers)
+      SendMessage(ptr, p_type, std::forward<Args>(args)...);
   }
 
   /// <summary>
@@ -179,6 +179,7 @@ protected:
   
   // The actual server
   std::shared_ptr<websocketpp::server> m_Server;
+  const int m_Port; // Port to listen on
   
   // Handler wrapper. Injects "OnOpen", "OnClose", and "OnMessage" into the websocketpp server
   class Handler :

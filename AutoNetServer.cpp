@@ -7,7 +7,8 @@
 
 AutoNetServer::AutoNetServer():
   CoreThread("AutoNetServer"),
-  m_Server(std::make_shared<websocketpp::server>(websocketpp::server::handler::ptr(new AutoNetServer::Handler(*this))))
+  m_Server(std::make_shared<websocketpp::server>(websocketpp::server::handler::ptr(new AutoNetServer::Handler(*this)))),
+  m_Port(8000)
 {
   for (auto type = g_pFirstEntry; type; type = type->pFlink) {
     if (type->IsEventReceiver())
@@ -33,7 +34,7 @@ AutoNetServer::~AutoNetServer(){}
 void AutoNetServer::Run(void){
   std::cout << "Starting Autonet server..." << std::endl;
 
-  m_Server->start_listen(8000);
+  m_Server->start_listen(m_Port);
 
   auto teardown = MakeAtExit([this] {
     m_Server->close_all();
