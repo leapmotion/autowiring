@@ -18,8 +18,9 @@ body {
   border-bottom: 1px solid #e5e5e5;
 }
 /* Make the masthead heading the same height as the navigation */
-.header span.logo {
+.header .logo {
   display: inline-block;
+  position: relative;
   margin-top: 0;
   margin-bottom: 0;
   line-height: 40px;
@@ -37,15 +38,25 @@ body {
   user-select: none;
 }
 
-.header span.logo.disconnected{
+.header .logo.disconnected{
   cursor: not-allowed;
 }
 
-.header span.logo small {
+.header .logo small {
   font-weight: normal;
   line-height: 1;
   color: #999999;
   font-size: 65%;
+}
+
+.header .version {
+  position:absolute;
+  bottom: 12%;
+  font-size: 12px;
+  line-height: 12px;
+}
+.header .version small{
+  font-size: 10px;
 }
 
 li a{

@@ -2,6 +2,8 @@
   "name": "autonet",
   "version": "0.0.1",
   "private": true,
+  "author": "Graham Tremper <graham@leapmotion.com>",
+  "description": "Visualization client for the Autowiring project",
   "dependencies": {
     "gzippo": "^0.2.0",
     "express": "^4.2.0"
