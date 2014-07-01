@@ -1,6 +1,7 @@
 {
   "name": "autonet",
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "private": true,
   "dependencies": {
     "gzippo": "^0.2.0",
     "express": "^4.2.0"
