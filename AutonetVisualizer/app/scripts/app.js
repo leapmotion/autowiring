@@ -10,6 +10,8 @@ angular.module('autoNetApp', [
 
 // Constants and Values
 .constant('WEBSOCKET_PORT', 8000)
+.constant('VERSION', '0.0.1')
+.constant('LAST_UPDATE_DATE', "2014-07-01")
 
 //Configurations
 .config(['$routeProvider', function ($routeProvider) {
