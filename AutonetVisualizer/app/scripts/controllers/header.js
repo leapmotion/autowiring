@@ -2,11 +2,10 @@
 
 // Handles the buisness logic for the header and subscribe/unsubscribe buttons
 angular.module('autoNetApp')
-.controller('HeaderCtrl', ['$scope', 'websocket', 'VERSION', 'LAST_UPDATE_DATE', function ($scope, websocket, VERSION, LAST_UPDATE_DATE) {
+.controller('HeaderCtrl', ['$scope', 'websocket', 'info', function ($scope, websocket, info) {
   $scope.isSubscribed = false;
   $scope.breakpoints = {};
-  $scope.VERSION = VERSION;
-  $scope.LAST_UPDATE_DATE = LAST_UPDATE_DATE;
+  $scope.info = info;
 
   function subscribe() {
     if (websocket.isConnected()){
