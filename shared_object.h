@@ -92,4 +92,16 @@ public:
   void reset() {
     m_share->reset();
   }
+
+  ///<summary>
+  ///Yields a reference to the gating lock
+  ///</summary>
+  ///<remakrs>
+  ///WARNING: This method opens the possibility of violating the locking conditions.
+  ///This method is provided in order to ensure compatability with methods requiring
+  ///a reference to a manipulatable lock.
+  ///</remarks>
+  lock& gate() const {
+    return m_share->m_lock;
+  }
 };
