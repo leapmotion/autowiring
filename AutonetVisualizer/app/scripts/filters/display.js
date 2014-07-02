@@ -4,7 +4,7 @@
 angular.module('autoNetApp')
 .filter('display', function () {
   return function (input) {
-    return _.without(input, 'bolt', 'eventReceiver');
+    return _.omit(input, "bolt", "eventReceiver");
   };
 });
 
