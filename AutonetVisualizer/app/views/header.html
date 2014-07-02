@@ -1,6 +1,6 @@
 <div class="header section">
   <div class="logo" ng-class="{connected: isConnected(), disconnected: !isConnected()}" ng-click="toggleSubscription()">AutoNet <small ng-show="isSubscribed">Subscribed</small><small ng-show="!isSubscribed">Unsubscribed</small>
-  <div class="version">v{{VERSION}} <small>{{LAST_UPDATE_DATE}}</small></div>
+  <div class="version">v{{info.version}} <small>{{info.deploy_date}}</small></div>
   </div>
 
   <div class="alert alert-warning" style="display:inline; margin-left:40px;" ng-show="isSubscribed && breakpoints | notEmpty">

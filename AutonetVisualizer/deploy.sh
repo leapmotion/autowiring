@@ -12,12 +12,12 @@
 
 
 # Check if there are any uncommited changes
-if [ $(git status --porcelain 2>/dev/null| egrep "^(M| M)" | wc -l) ]
-then
-  echo -e "\nCan't deploy!!!\n"
-  echo "Uncommit changes. Be sure to run 'grunt build' and commit changes to 'dist' directory"
-  exit
-fi
+#if [ $(git status --porcelain 2>/dev/null| egrep "^(M| M)" | wc -l) ]
+#then
+#  echo -e "\nCan't deploy!!!\n"
+#  echo "Uncommit changes. Be sure to run 'grunt build' and commit changes to 'dist' directory"
+#  exit
+#fi
 
 echo "Updating deploy date...."
 heroku config:set DEPLOY_DATE="`date`" --app autonet
