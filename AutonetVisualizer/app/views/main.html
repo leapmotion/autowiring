@@ -18,13 +18,13 @@
       <div class="col-xs-3" ng-repeat="object in context.objects | TypeFilter:currentFilter" style="min-height:250px">
         <h4><a ng-href="#/object/{{id}}/{{object.linkName}}">{{object.name | Limit:30}}</a></h4>
         <ul>
-          <li ng-repeat="type in object.types | display">
+          <li ng-repeat="(type,data) in object.types | display">
             {{type}}
           </li>
           <span ng-show="object.isEventReceiver()" style="font-weight:bold;">Listens to:</span>
-          <li ng-repeat="(event,count) in object.events">{{event}}: {{count}}</li>
-          <span ng-show="object.hasBolts()" style="font-weight:bold;">Bolts onto:</span>
-          <li ng-repeat="bolt in object.boltSigils">{{bolt}}</li>
+          <li ng-repeat="(event,count) in object.types.eventReceiver">{{event}}: {{count}}</li>
+          <span ng-show="object.isBolt()" style="font-weight:bold;">Bolts onto:</span>
+          <li ng-repeat="bolt in object.types.bolt">{{bolt}}</li>
         </ul>
       </div>
     </div>
