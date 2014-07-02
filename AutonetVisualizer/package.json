@@ -51,6 +51,7 @@
   "engines": {
     "node": ">=0.8.0"
   },
+  "main": "web.js",
   "scripts": {
     "test": "grunt test",
     "start": "node web.js"

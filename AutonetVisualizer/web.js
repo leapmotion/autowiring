@@ -1,9 +1,18 @@
 var gzippo = require('gzippo');
 var express = require('express');
+var package = require('./package.json')
 var app = express();
 var port = process.env.PORT || 5000;
- 
-//app.use(express.logger('dev'));
+
+// Get date current version was deployed
+app.get('/api/info/deploy_date', function(req, res){
+  res.send(JSON.stringify(process.env.DEPLOY_DATE));
+});
+
+app.get('/api/info/version', function(req, res){
+  res.send(JSON.stringify(package.version));
+});
+
 app.use(gzippo.staticGzip("" + __dirname + "/dist"));
 
 app.listen(port);
