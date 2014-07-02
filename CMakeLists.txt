@@ -248,8 +248,15 @@ set(
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
-
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
+target_link_libraries(Autowiring websocketpp)
+
+add_library(websocketpp STATIC IMPORTED)
+if(BUILD_WINDOWS)
+  set_property(TARGET websocketpp PROPERTY IMPORTED_LOCATION ${WEBSOCKETPP_DIR}/lib/websocketpp.lib)
+else() # Mac or Linux
+  set_property(TARGET websocketpp PROPERTY IMPORTED_LOCATION ${WEBSOCKETPP_DIR}/lib/libwebsocketpp${STATIC_LIBRARY_SUFFIX})
+endif()
 
 if(NOT BUILD_WINDOWS)
   set(Boost_SYSTEM_LIBRARY libboost_system)
@@ -264,6 +271,14 @@ if(NOT BUILD_WINDOWS)
   add_library(${Boost_CHRONO_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_CHRONO_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_CHRONO_LIBRARY}${STATIC_LIBRARY_SUFFIX})
 
+  set(Boost_REGEX_LIBRARY libboost_regex)
+  add_library(${Boost_REGEX_LIBRARY} STATIC IMPORTED)
+  set_property(TARGET ${Boost_REGEX_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_REGEX_LIBRARY}${STATIC_LIBRARY_SUFFIX})
+  
+  set(Boost_DATE_TIME_LIBRARY libboost_date_time)
+  add_library(${Boost_DATE_TIME_LIBRARY} STATIC IMPORTED)
+  set_property(TARGET ${Boost_DATE_TIME_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_DATE_TIME_LIBRARY}${STATIC_LIBRARY_SUFFIX})
+
   if(Boost_VERSION GREATER 105200)
     set(Boost_ATOMIC_LIBRARY libboost_atomic)
     add_library(${Boost_ATOMIC_LIBRARY} STATIC IMPORTED)
@@ -277,7 +292,7 @@ if(NOT BUILD_WINDOWS)
   if(NOT BUILD_ANDROID)
     target_link_libraries(Autowiring -lpthread)
   endif()
-  target_link_libraries(Autowiring ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY})
+  target_link_libraries(Autowiring ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_DATE_TIME_LIBRARY})
   if(Boost_VERSION GREATER 105200)
     target_link_libraries(Autowiring ${Boost_ATOMIC_LIBRARY})
   endif()
