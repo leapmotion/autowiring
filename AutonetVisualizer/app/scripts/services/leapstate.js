@@ -30,6 +30,7 @@ angular.module('autoNetApp')
     this.name = objData.name;
     this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
     this.types = types;
+    this.displayTypes = _.without(Object.keys(this.types), 'coreThread','bolt','eventReceiver');
     this.slots = objData.slots;
 
     // Converts this.types.eventReceiver from list of types to map from types to fire count
@@ -67,10 +68,15 @@ angular.module('autoNetApp')
     return this.types.hasOwnProperty('eventReceiver');
   }
 
+  // Check if this LeapObject is a CoreThread
+  LeapObject.prototype.isCoreThread = function(){
+    return this.types.hasOwnProperty('coreThread');
+  }
+
   // Try to firer event "evt" on this object
   // Does nothing if this object doesn't receive the event
   LeapObject.prototype.eventFired = function(evt){
-    if (!this.types.hasOwnProperty('eventReceiver')) return;
+    if (!this.isEventReceiver()) return;
 
     if (this.types.eventReceiver.hasOwnProperty(evt)) {
       this.types.eventReceiver[evt]++;
@@ -160,6 +166,20 @@ angular.module('autoNetApp')
     fireEvent(contextID);
   });
 
+  // "contextID": Id of context containing updated object
+  // "name": name of the type being updated
+  // "util": the new utilization
+  websocket.on('coreThreadUtilization', function(contextID, name, util){
+    var updatedContext = ContextMap[contextID];
+    var linkName = name.replace(/\s+/g,'_');
+    var updatedObject = updatedContext.objects[linkName];
+    if (!updatedObject.isCoreThread) {
+      console.log("Tried to updated utilization on non corethread");
+      return;
+    }
+    updatedObject.types.coreThread = util;
+  });
+
   return {
     GetContexts: function(){
       return ContextMap;
@@ -169,6 +189,17 @@ angular.module('autoNetApp')
     },
     GetAllTypes: function(){
       return TypeList;
+    },
+    resolveProgressType: function(value){
+      if (value < 25) {
+        return 'success';
+      } else if (value < 50) {
+        return 'info';
+      } else if (value < 75) {
+        return 'warning';
+      } else {
+        return 'danger';
+      }
     }
   };
 }]);
