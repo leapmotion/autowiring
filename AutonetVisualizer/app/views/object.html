@@ -2,7 +2,7 @@
 <div ng-show="leap.isSubscribed()">
   <h1>{{object.name}}</h1>
   <ul>
-    <li ng-repeat="(type,data) in object.types | display">
+    <li ng-repeat="(type,data) in object.types">
       {{type}}
     </li>
     <span ng-show="object.isEventReceiver()" style="font-weight:bold;">Listens to:</span>

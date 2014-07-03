@@ -96,7 +96,7 @@ angular.module('autoNetApp')
       console.log('Event Registered: ', eventName);
       $rootScope.$on('leap-'+eventName, function(event, args){
         $rootScope.$apply(function(){
-          EventHistory.addMessage(eventName, args);
+          //EventHistory.addMessage(eventName, args);
           callback.apply(socket, args);
         });
       });
@@ -104,9 +104,9 @@ angular.module('autoNetApp')
     isConnected: function(){
       return isConnected;
     },
-    GetEventHistory: function(){
-      return EventHistory.messages;
-    },
+    //GetEventHistory: function(){
+    //  return EventHistory.messages;
+    //},
     SendMessage: SendMessage
   };
 }]);
