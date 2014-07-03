@@ -6,6 +6,8 @@ Its prototype is simple:
 	string sprintf(string format , [mixed arg1 [, mixed arg2 [ ,...]]]);
 
 The placeholders in the format string are marked by "%" and are followed by one or more of these elements, in this order:
+
+* An optional number followed by a "$" sign that selects which argument index to use for the value. If not specified, arguments will be placed in the same order as the placeholders in the input string.
 * An optional "+" sign that forces to preceed the result with a plus or minus sign on numeric values. By default, only the "-" sign is used on negative numbers.
 * An optional padding specifier that says what character to use for padding (if specified). Possible values are 0 or any other character precedeed by a '. The default is to pad with spaces.
 * An optional "-" sign, that causes sprintf to left-align the result of this placeholder. The default is to right-align the result.
@@ -52,12 +54,23 @@ Keywords in replacement fields can be optionally followed by any number of keywo
 	sprintf('Hello %(users[0].name)s, %(users[1].name)s and %(users[2].name)s', {users: users}); // Hello Dolly, Molly and Polly
 Note: mixing positional and named placeholders is not (yet) supported
 
-# As a node.js module
-## Install
+## Computed values
+You can pass in a function as a dynamic value and it will be invoked (with no arguments) in order to compute the value on-the-fly.
+
+    sprintf("Current timestamp: %d", Date.now) // Current timestamp: 1398005382890
+    sprintf("Current date and time: %s", function() { return new Date().toString() })
+
+# Installation
+
+## Via Bower
+
+	bower install sprintf
+
+## Or as a node.js module
 
 	npm install sprintf-js
 
-## How to
+### Usage
 
 	var sprintf = require("sprintf-js").sprintf,
 		vsprintf = require("sprintf-js").vsprintf;
