@@ -1,6 +1,6 @@
 #pragma once
-#include <gtest/gtest.h>
+#include "EnclosedContextTestBase.h"
 
 class AutoNetServerTest:
-  public testing::Test
+  public EnclosedContextTestBase
 {};
