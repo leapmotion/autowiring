@@ -12,18 +12,18 @@
 //  <li route-nav="/raw"><a ng-href="#/raw">Raw</a></li>
 //</ul>
 angular.module('autoNetApp')
-  .directive('routeNav', function () {
+  .directive('routeNav', ['$location', function ($location) {
     return {
       restrict: 'A',
       scope: {},
       link: function postLink(scope, element, attrs) {
+        element.toggleClass('active', attrs.routeNav === $location.path());
         scope.$on('$routeChangeSuccess', function(event, current, previous){
-          var path = attrs.routeNav;
-          element.toggleClass('active',path === current.$$route.originalPath);
+          element.toggleClass('active', attrs.routeNav === $location.path());
         });
       }
     };
-  });
+  }]);
 
 // A simple tab directive. Adds the class "active" to the currently selected tab
 // The state variable for the selected tab is passed in by the attribute "check"
