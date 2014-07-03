@@ -163,10 +163,15 @@ void AutoNetServer::NewObject(CoreContext& ctxt, const AnySharedPointer& object)
       types.Add("contextMember", true);
     }
 
-    auto thread = leap::fast_pointer_cast<CoreRunnable>(objectPtr);
-    if (thread) {
+    auto runnable = leap::fast_pointer_cast<CoreRunnable>(objectPtr);
+    if (runnable) {
       types.Add("coreRunnable", true);
     }
+    
+    //auto thread = leap::fast_pointer_cast<CoreThread>(objectPtr);
+    //if (thread) {
+    //  types.Add("coreThread", 55.0);
+    //}
 
     auto eventRcvr = leap::fast_pointer_cast<EventReceiver>(objectPtr);
     if (eventRcvr) {
