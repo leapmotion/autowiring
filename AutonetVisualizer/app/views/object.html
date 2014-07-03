@@ -1,6 +1,7 @@
 <h1 ng-hide="leap.isSubscribed()">Subscribe to view object</h1>
 <div ng-show="leap.isSubscribed()">
   <h1>{{object.name}}</h1>
+  <progressbar ng-if="object.isCoreThread()" animate="true" class="progress-striped active" type="{{leap.resolveProgressType(object.types.coreThread)}}" value="object.types.coreThread">{{object.types.coreThread}}%</progressbar>
   <ul>
     <li ng-repeat="(type,data) in object.types">
       {{type}}

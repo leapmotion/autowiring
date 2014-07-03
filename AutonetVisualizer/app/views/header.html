@@ -1,5 +1,5 @@
 <div class="header section">
-  <div class="logo" ng-class="{connected: isConnected(), disconnected: !isConnected()}" ng-click="toggleSubscription()">AutoNet <small ng-show="isSubscribed">Subscribed</small><small ng-show="!isSubscribed">Unsubscribed</small>
+  <div class="logo" ng-class="{connected: isConnected(), disconnected: !isConnected()}" ng-click="toggleSubscription()">AutoNet <small ng-if="isSubscribed">Subscribed</small><small ng-if="!isSubscribed">Unsubscribed</small>
   <div class="version">v{{info.version}} <small>{{info.deploy_date}}</small></div>
   </div>
 
