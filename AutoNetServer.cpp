@@ -10,6 +10,9 @@ AutoNetServer::AutoNetServer():
   m_Server(std::make_shared<websocketpp::server>(websocketpp::server::handler::ptr(new AutoNetServer::Handler(*this)))),
   m_Port(8000)
 {
+  m_Server->alog().unset_level(websocketpp::log::alevel::ALL);
+  m_Server->elog().unset_level(websocketpp::log::elevel::ALL);
+
   for (auto type = g_pFirstEntry; type; type = type->pFlink) {
     if (type->IsEventReceiver())
       m_EventTypes.insert(type->NewTypeIdentifier());
@@ -111,7 +114,7 @@ void AutoNetServer::Breakpoint(std::string name){
 
 // Update Functions
 void AutoNetServer::NewContext(CoreContext& newCtxt){
-  CoreContext* ctxt = &newCtxt;
+  auto ctxt = newCtxt.shared_from_this();
 
   *this += [this, ctxt] {
     Jzon::Object context;
@@ -121,15 +124,14 @@ void AutoNetServer::NewContext(CoreContext& newCtxt){
       context.Add("parent", ResolveContextID(ctxt->GetParentContext().get()));
     }
 
-    BroadcastMessage("newContext", ResolveContextID(ctxt), context);
+    BroadcastMessage("newContext", ResolveContextID(ctxt.get()), context);
   };
 }
 
 void AutoNetServer::ExpiredContext(CoreContext& oldCtxt){
-  CoreContext* ctxt = &oldCtxt;
-
-  *this += [this, ctxt] {
-    BroadcastMessage("expiredContext", ResolveContextID(ctxt));
+  int id = ResolveContextID(&oldCtxt);
+  *this += [this, id] {
+    BroadcastMessage("expiredContext", id);
   };
 }
 
