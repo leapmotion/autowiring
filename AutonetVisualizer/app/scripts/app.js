@@ -5,7 +5,8 @@
 angular.module('autoNetApp', [
   'ngAnimate',
   'ngRoute',
-  'ngSanitize'
+  'ngSanitize',
+  'ui.bootstrap'
 ])
 
 // Constants and Values
