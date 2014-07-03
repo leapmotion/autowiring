@@ -12,6 +12,9 @@ body {
   padding-right: 15px;
 }
 
+/* Ui.bootstrap fix */
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
+
 
 /* Custom page header */
 .section {
