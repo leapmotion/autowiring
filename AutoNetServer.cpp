@@ -172,8 +172,8 @@ void AutoNetServer::NewObject(CoreContext& ctxt, const AnySharedPointer& object)
     
     auto thread = leap::fast_pointer_cast<CoreThread>(objectPtr);
     if (thread) {
-      types.Add("coreThread", thread->GetThreadUtilization());
-      m_CoreThreads.insert(thread->GetSelf<CoreThread>());
+      types.Add("coreThread", 0.0);
+      m_CoreThreads[thread->GetSelf<CoreThread>()];
     }
 
     auto eventRcvr = leap::fast_pointer_cast<EventReceiver>(objectPtr);
@@ -284,20 +284,44 @@ CoreContext* AutoNetServer::ResolveContextID(int id) {
 void AutoNetServer::PollCoreThreadUtilization(boost::chrono::milliseconds period){
   *this += period, [this, period] {
     
-    for (auto it = m_CoreThreads.begin(); it != m_CoreThreads.end(); ) {
-      
-      std::shared_ptr<CoreThread> thread(it->lock());
-      if (thread) {
-        // Broadcast current thread utilization
-        int contextID = ResolveContextID(thread->GetContext().get());
-        std::string name = typeid(*thread.get()).name();
-        double utilization = thread->GetThreadUtilization();
-        BroadcastMessage("coreThreadUtilization", contextID, name, utilization);
-        
-        ++it; //Normally increment iterator
-      } else {
-        m_CoreThreads.erase(it++); //Increments iterator after erasing
+    for(auto q = m_CoreThreads.begin(); q != m_CoreThreads.end();) {
+      auto coreThread = q->first.lock();
+      if(!coreThread) {
+        q = m_CoreThreads.erase(q);
+        continue;
       }
+      
+      // Decide whether to query creation time
+      if(q->second.m_createTime == boost::chrono::system_clock::time_point::min()) {
+        q->second.m_createTime = coreThread->GetCreationTime();
+        if(q->second.m_createTime == boost::chrono::system_clock::time_point::min()) {
+          // Thread still not running, circle around
+          q++;
+          continue;
+        }
+      }
+
+      boost::chrono::nanoseconds runtimeKM, runtimeUM;
+      coreThread->GetThreadTimes(runtimeKM, runtimeUM);
+
+      // Determine the amount of time this thread has run since the last time we
+      // asked it for its runtime.
+      boost::chrono::duration<double> deltaRuntimeKM = runtimeKM - q->second.m_lastRuntimeKM;
+      boost::chrono::duration<double> deltaRuntimeUM = runtimeUM - q->second.m_lastRuntimeUM;
+
+      // Update timing values:
+      q->second.m_lastRuntimeKM = runtimeKM;
+      q->second.m_lastRuntimeUM = runtimeUM;
+
+      // Broadcast current thread utilization
+      int contextID = ResolveContextID(coreThread->GetContext().get());
+      std::string name = typeid(*coreThread.get()).name();
+
+      double utilization = 100 * deltaRuntimeKM / period;
+      BroadcastMessage("coreThreadUtilization", contextID, name, utilization);
+
+      // Next!
+      q++;
     }
     
     // Poll again after "period" milliseconds

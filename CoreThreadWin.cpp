@@ -94,19 +94,28 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
   );
 }
 
-int64_t BasicThread::GetCreationTime(void) {
+boost::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
   HANDLE hThread = m_state->m_thisThread.native_handle();
   if(hThread == INVALID_HANDLE_VALUE)
-    return 0;
+    return boost::chrono::system_clock::time_point::min();
+
+  FILETIME ft;
+  GetSystemTimeAsFileTime(&ft);
+  auto xyz = boost::chrono::system_clock::now();
 
   int64_t createTime, kernelTime, userTime, exitTime;
   ::GetThreadTimes(hThread, (LPFILETIME) &createTime, (LPFILETIME) &exitTime, (LPFILETIME) &kernelTime, (LPFILETIME) &userTime);
-  return createTime;
+  return
+    boost::chrono::system_clock::time_point(
+      boost::chrono::system_clock::duration(createTime)
+    );
 }
 
-void BasicThread::GetThreadTimes(int64_t& kernelTime, int64_t& userTime) {
+void BasicThread::GetThreadTimes(boost::chrono::nanoseconds& kernelTime, boost::chrono::nanoseconds& userTime) {
   HANDLE hThread = m_state->m_thisThread.native_handle();
 
-  int64_t createTime, exitTime;
-  ::GetThreadTimes(hThread, (LPFILETIME) &createTime, (LPFILETIME) &exitTime, (LPFILETIME) &kernelTime, (LPFILETIME) &userTime);
+  FILETIME ftCreate, ftExit, ftKernel, ftUser;
+  ::GetThreadTimes(hThread, &ftCreate, &ftExit, &ftKernel, &ftUser);
+  kernelTime = boost::chrono::nanoseconds(100 * (int64_t&) ftKernel);
+  userTime = boost::chrono::nanoseconds(100 * (int64_t&) ftUser);
 }
