@@ -191,11 +191,9 @@ angular.module('autoNetApp')
       return TypeList;
     },
     resolveProgressType: function(value){
-      if (value < 25) {
-        return 'success';
-      } else if (value < 50) {
+      if (value < 80) {
         return 'info';
-      } else if (value < 75) {
+      } else if (value < 95) {
         return 'warning';
       } else {
         return 'danger';
