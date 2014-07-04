@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "BasicThread.h"
 #include "BasicThreadStateBlock.h"
+#include <boost/chrono/process_cpu_clocks.hpp>
 #include <Windows.h>
 #include <Avrt.h>
 
@@ -91,4 +92,21 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
     m_state->m_thisThread.native_handle(),
     nPriority
   );
+}
+
+int64_t BasicThread::GetCreationTime(void) {
+  HANDLE hThread = m_state->m_thisThread.native_handle();
+  if(hThread == INVALID_HANDLE_VALUE)
+    return 0;
+
+  int64_t createTime, kernelTime, userTime, exitTime;
+  ::GetThreadTimes(hThread, (LPFILETIME) &createTime, (LPFILETIME) &exitTime, (LPFILETIME) &kernelTime, (LPFILETIME) &userTime);
+  return createTime;
+}
+
+void BasicThread::GetThreadTimes(int64_t& kernelTime, int64_t& userTime) {
+  HANDLE hThread = m_state->m_thisThread.native_handle();
+
+  int64_t createTime, exitTime;
+  ::GetThreadTimes(hThread, (LPFILETIME) &createTime, (LPFILETIME) &exitTime, (LPFILETIME) &kernelTime, (LPFILETIME) &userTime);
 }
