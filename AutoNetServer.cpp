@@ -43,6 +43,8 @@ void AutoNetServer::Run(void){
     m_Server->close_all();
     m_Server->stop_listen(true);
   });
+  
+  PollCoreThreadUtilization(boost::chrono::milliseconds(1000));
 
   CoreThread::Run();
 }
@@ -67,7 +69,7 @@ void AutoNetServer::OnClose(connection_ptr p_connection){
 
   *this += [this, p_connection] {
     SendMessage(p_connection, "closed");
-    this->m_Subscribers.erase(p_connection);
+    m_Subscribers.erase(p_connection);
   };
 
 }
@@ -170,8 +172,9 @@ void AutoNetServer::NewObject(CoreContext& ctxt, const AnySharedPointer& object)
     
     auto thread = leap::fast_pointer_cast<CoreThread>(objectPtr);
     if (thread) {
-      types.Add("coreThread", 55.0);
-    gi}
+      types.Add("coreThread", thread->GetThreadUtilization());
+      m_CoreThreads.insert(thread->GetSelf<CoreThread>());
+    }
 
     auto eventRcvr = leap::fast_pointer_cast<EventReceiver>(objectPtr);
     if (eventRcvr) {
@@ -234,7 +237,7 @@ void AutoNetServer::HandleSubscribe(connection_ptr p_connection){
 }
 
 void AutoNetServer::HandleUnsubscribe(connection_ptr p_connection){
-  this->m_Subscribers.erase(p_connection);
+  m_Subscribers.erase(p_connection);
   SendMessage(p_connection, "unsubscribed");
 }
 
@@ -276,4 +279,28 @@ int AutoNetServer::ResolveContextID(CoreContext* ctxt) {
 
 CoreContext* AutoNetServer::ResolveContextID(int id) {
   return m_ContextPtrs.at(id);
+}
+
+void AutoNetServer::PollCoreThreadUtilization(boost::chrono::milliseconds period){
+  *this += period, [this, period] {
+    
+    for (auto it = m_CoreThreads.begin(); it != m_CoreThreads.end(); ) {
+      
+      std::shared_ptr<CoreThread> thread(it->lock());
+      if (thread) {
+        // Broadcast current thread utilization
+        int contextID = ResolveContextID(thread->GetContext().get());
+        std::string name = typeid(*thread.get()).name();
+        double utilization = thread->GetThreadUtilization();
+        BroadcastMessage("coreThreadUtilization", contextID, name, utilization);
+        
+        ++it; //Normally increment iterator
+      } else {
+        m_CoreThreads.erase(it++); //Increments iterator after erasing
+      }
+    }
+    
+    // Poll again after "period" milliseconds
+    PollCoreThreadUtilization(period);
+  };
 }
