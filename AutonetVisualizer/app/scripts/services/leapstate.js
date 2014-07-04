@@ -169,7 +169,7 @@ angular.module('autoNetApp')
   // "contextID": Id of context containing updated object
   // "name": name of the type being updated
   // "util": the new utilization
-  websocket.on('coreThreadUtilization', function(contextID, name, util){
+  websocket.on('coreThreadUtilization', function(contextID, name, kernel, user){
     var updatedContext = ContextMap[contextID];
     var linkName = name.replace(/\s+/g,'_');
     var updatedObject = updatedContext.objects[linkName];
@@ -177,7 +177,8 @@ angular.module('autoNetApp')
       console.log("Tried to updated utilization on non corethread");
       return;
     }
-    updatedObject.types.coreThread = util;
+    updatedObject.types.coreThread.kernel = kernel;
+    updatedObject.types.coreThread.user = user;
   });
 
   return {
