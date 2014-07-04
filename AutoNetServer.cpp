@@ -295,16 +295,6 @@ void AutoNetServer::PollCoreThreadUtilization(boost::chrono::milliseconds period
         continue;
       }
       
-      // Decide whether to query creation time
-      if(q->second.m_createTime == boost::chrono::system_clock::time_point::min()) {
-        q->second.m_createTime = coreThread->GetCreationTime();
-        if(q->second.m_createTime == boost::chrono::system_clock::time_point::min()) {
-          // Thread still not running, circle around
-          q++;
-          continue;
-        }
-      }
-
       boost::chrono::nanoseconds runtimeKM, runtimeUM;
       coreThread->GetThreadTimes(runtimeKM, runtimeUM);
 
