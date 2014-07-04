@@ -179,7 +179,19 @@ protected:
   std::map<std::string, std::function<void(void)>> m_AllTypes;
   
   // All CoreThreads
-  std::set<std::weak_ptr<CoreThread>, std::owner_less<std::weak_ptr<CoreThread>>> m_CoreThreads;
+  struct ThreadStats {
+    ThreadStats(void) :
+      m_createTime(boost::chrono::system_clock::time_point::min())
+    {}
+
+    // Time this thread was created (not necessarily the time it was first observed)
+    boost::chrono::system_clock::time_point m_createTime;
+
+    // Last amount of time the thread was known to be running
+    boost::chrono::nanoseconds m_lastRuntimeKM;
+    boost::chrono::nanoseconds m_lastRuntimeUM;
+  };
+  std::map<std::weak_ptr<CoreThread>, ThreadStats, std::owner_less<std::weak_ptr<CoreThread>>> m_CoreThreads;
   
   // Breakpoint functionality
   boost::mutex m_mutex;
