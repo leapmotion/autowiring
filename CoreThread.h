@@ -78,9 +78,4 @@ public:
   /// nothing by default.
   /// </remarks>
   virtual void Stop(bool graceful = false) override;
-  
-  /// <summary>
-  /// Returns the percent of time this thread is processing events from DispatchQueue
-  /// </summary>
-  double GetThreadUtilization();
 };
