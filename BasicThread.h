@@ -242,6 +242,16 @@ public:
   /// <remarks>
   /// </remarks>
   static void ForceCoreThreadReidentify(void);
+
+  /// <returns>
+  /// Returns the time when this thread was created
+  /// </returns>
+  int64_t GetCreationTime(void);
+
+  /// <summary>
+  /// Obtains running time information for this thread
+  /// </summary>
+  void GetThreadTimes(int64_t& kernelTime, int64_t& userTime);
 };
 
 /// <summary>

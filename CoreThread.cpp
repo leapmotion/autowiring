@@ -117,7 +117,3 @@ void CoreThread::Stop(bool graceful) {
   // Pass off to base class handling:
   BasicThread::Stop(graceful);
 }
-
-double CoreThread::GetThreadUtilization(){
-  return double(rand()%100);
-}
