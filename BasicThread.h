@@ -2,6 +2,7 @@
 #include "ContextMember.h"
 #include "CoreRunnable.h"
 #include <boost/chrono/duration.hpp>
+#include <boost/chrono/system_clocks.hpp>
 #include MEMORY_HEADER
 
 struct BasicThreadStateBlock;
@@ -246,12 +247,15 @@ public:
   /// <returns>
   /// Returns the time when this thread was created
   /// </returns>
-  int64_t GetCreationTime(void);
+  /// <remarks>
+  /// If the thread has not yet run, this routine returns boost::chrono::system_clock::time_point::min
+  /// </remarks>
+  boost::chrono::system_clock::time_point GetCreationTime(void);
 
   /// <summary>
   /// Obtains running time information for this thread
   /// </summary>
-  void GetThreadTimes(int64_t& kernelTime, int64_t& userTime);
+  void GetThreadTimes(boost::chrono::nanoseconds& kernelTime, boost::chrono::nanoseconds& userTime);
 };
 
 /// <summary>
