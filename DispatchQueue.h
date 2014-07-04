@@ -41,7 +41,7 @@ public:
 
 protected:
   // The maximum allowed number of pended dispatches before pended calls start getting dropped
-  int m_dispatchCap;
+  size_t m_dispatchCap;
 
   // The dispatch queue proper:
   std::list<DispatchThunkBase*> m_dispatchQueue;
@@ -126,6 +126,11 @@ public:
 
 protected:
   /// <summary>
+  /// Updates the upper bound on the number of allowed pending dispatchers
+  /// </summary>
+  void SetDispatcherCap(size_t dispatchCap) { m_dispatchCap = dispatchCap; }
+
+  /// <summary>
   /// Similar to WaitForEvent, but does not block
   /// </summary>
   /// <returns>True if an event was dispatched, false if the queue was empty when checked</returns>
@@ -148,7 +153,7 @@ public:
   /// </summary>
   void AddExisting(DispatchThunkBase* pBase) {
     boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-    if(static_cast<int>(m_dispatchQueue.size()) >= m_dispatchCap)
+    if(m_dispatchQueue.size() >= m_dispatchCap)
       return;
 
     m_dispatchQueue.push_back(pBase);
@@ -201,6 +206,9 @@ public:
   /// <summary>
   /// Directly pends a delayed dispatch thunk
   /// </summary>
+  /// <remarks>
+  /// This overload will always succeed and does not consult the dispatch cap
+  /// </remarks>
   void operator+=(DispatchThunkDelayed&& rhs) {
     boost::lock_guard<boost::mutex> lk(m_dispatchLock);
 
@@ -223,7 +231,7 @@ public:
     static_assert(!std::is_pointer<_Fx>::value, "Cannot pend a pointer to a function, we must have direct ownership");
 
     boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-    if(static_cast<int>(m_dispatchQueue.size()) >= m_dispatchCap)
+    if(m_dispatchQueue.size() >= m_dispatchCap)
       return;
 
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(std::forward<_Fx>(fx)));
