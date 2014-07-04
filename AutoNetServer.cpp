@@ -171,9 +171,13 @@ void AutoNetServer::NewObject(CoreContext& ctxt, const AnySharedPointer& object)
     }
     
     auto thread = leap::fast_pointer_cast<CoreThread>(objectPtr);
-    if (thread) {
-      types.Add("coreThread", 0.0);
+    if(thread) {
       m_CoreThreads[thread->GetSelf<CoreThread>()];
+
+      Jzon::Object utilization;
+      utilization.Add("kernel", 0.0);
+      utilization.Add("user", 0.0);
+      types.Add("coreThread", utilization);
     }
 
     auto eventRcvr = leap::fast_pointer_cast<EventReceiver>(objectPtr);
@@ -317,8 +321,9 @@ void AutoNetServer::PollCoreThreadUtilization(boost::chrono::milliseconds period
       int contextID = ResolveContextID(coreThread->GetContext().get());
       std::string name = typeid(*coreThread.get()).name();
 
-      double utilization = 100 * deltaRuntimeKM / period;
-      BroadcastMessage("coreThreadUtilization", contextID, name, utilization);
+      double kmPercent = 100 * deltaRuntimeKM / period;
+      double umPercent = 100 * deltaRuntimeUM / period;
+      BroadcastMessage("coreThreadUtilization", contextID, name, kmPercent, umPercent);
 
       // Next!
       q++;
