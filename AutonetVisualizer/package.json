@@ -1,6 +1,6 @@
 {
   "name": "autonet",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "private": true,
   "author": "Graham Tremper <graham@leapmotion.com>",
   "description": "Visualization client for the Autowiring project",
