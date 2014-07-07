@@ -10,25 +10,23 @@ angular.module('autoNetApp')
 
   // A CoreContext
   function Context(id, ctxt){
-    this.objects = {}; //linkName to Object
+    this.objects = {}; //name to Object
     this.name = "Unnamed";
     this.id = id;
     this.children = [];
 
     _.extend(this, ctxt);
-
-    this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
   }
 
   // Add a member to a CoreContext
   Context.prototype.addObject = function(obj) {
-    this.objects[obj.linkName] = obj;
+    this.objects[obj.name] = obj;
   };
 
   // A "leap object". Inclues ContextMembers, CoreThreads, Bolts, etc...
   function LeapObject(types, objData){
     this.name = objData.name;
-    this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
+
     this.types = types;
     this.displayTypes = _.without(Object.keys(this.types), 'coreThread','bolt','eventReceiver');
     this.slots = objData.slots;
@@ -152,8 +150,8 @@ angular.module('autoNetApp')
       var updatedContext = ContextMap[ctxtID];
 
       // Iterated objects in this context, signal event fired
-      Object.keys(updatedContext.objects).forEach(function(linkName){
-        var obj = updatedContext.objects[linkName];
+      Object.keys(updatedContext.objects).forEach(function(name){
+        var obj = updatedContext.objects[name];
         obj.eventFired(eventHash.name);
       });
 
@@ -171,9 +169,8 @@ angular.module('autoNetApp')
   // "util": the new utilization
   websocket.on('coreThreadUtilization', function(contextID, name, kernel, user){
     var updatedContext = ContextMap[contextID];
-    var linkName = name.replace(/\s+/g,'_');
-    var updatedObject = updatedContext.objects[linkName];
-    if (!updatedObject.isCoreThread) {
+    var updatedObject = updatedContext.objects[name];
+    if (!updatedObject ||!updatedObject.isCoreThread()) {
       console.log("Tried to updated utilization on non corethread");
       return;
     }

@@ -9,7 +9,7 @@ angular.module('autoNetApp')
   $scope.$watchCollection('allContexts', function(){
     $scope.context = $scope.allContexts[$routeParams['contextID']];
     if ($scope.context) {
-      $scope.object = $scope.context.objects[$routeParams['linkName']];
+      $scope.object = $scope.context.objects[$routeParams['objName']];
     }
   });
 

@@ -15,7 +15,7 @@
     <h3><a ng-href="#/context/{{id}}">{{context.name}}</a></h3>
     <div class="row">
       <div class="col-xs-3" ng-repeat="object in context.objects | TypeFilter:selectedType" style="min-height:250px">
-        <h4><a ng-href="#/object/{{id}}/{{object.linkName}}">{{object.name | Limit:30}}</a></h4>
+        <h4><a ng-href="#/object/{{id}}/{{object.name}}">{{object.name | Limit:30}}</a></h4>
         <progress ng-if="object.isCoreThread()">
           <bar type="warning" value="object.types.coreThread.kernel+.01"><span ng-hide="object.types.coreThread.kernel < 5">{{object.types.coreThread.kernel}}%</span></bar>
           <bar type="info" value="object.types.coreThread.user"><span ng-hide="object.types.coreThread.user < 5">{{object.types.coreThread.user}}%</span></bar>
