@@ -31,7 +31,7 @@ angular.module('autoNetApp', [
       templateUrl: 'views/filtergraph.html',
       controller: 'FilterGraphCtrl'
     })
-    .when('/object/:contextID/:linkName', {
+    .when('/object/:contextID/:objName', {
       templateUrl: 'views/object.html',
       controller: 'ObjectCtrl'
     })
