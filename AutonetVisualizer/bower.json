@@ -13,7 +13,6 @@
     "angular-route": "~1.2.19",
     "underscore": "~1.6.0",
     "springy": "~2.3.0",
-    "sprintf": "*",
     "angular-animate": "~1.2.16",
     "angular-bootstrap": "~0.11.0"
   },
