@@ -1,10 +1,15 @@
 <h1 ng-hide="leap.isSubscribed()">Subscribe to view object</h1>
 <div ng-show="leap.isSubscribed()">
   <h1>{{object.name}}</h1>
-  <progress ng-if="object.isThread()">
-    <bar type="warning" value="object.types.thread.kernel+.01"><span ng-hide="object.types.thread.kernel < 5">{{object.types.thead.kernel}}%</span></bar>
-    <bar type="info" value="object.types.thread.user"><span ng-hide="object.types.thread.user < 5">{{object.types.thread.user}}%</span></bar>
-  </progress>
+  <div ng-if="object.isThread()">
+    <progress>
+      <bar type="warning" value="object.types.thread.kernel+.01">{{object.types.thread.kernel | number:1}}%</bar>
+      <bar type="info" value="object.types.thread.user">{{object.types.thread.user | number:1}}%</bar>
+    </progress>
+    <div style="margin-top:-15px; margin-bottom:5px">
+      Sys: {{object.types.thread.kernel | number:1}}% User: {{object.types.thread.user | number:1}}% 
+    </div>
+  </div>
   <ul>
     <li ng-repeat="(type,data) in object.types">
       {{type}}

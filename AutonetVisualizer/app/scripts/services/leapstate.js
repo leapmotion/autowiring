@@ -28,7 +28,7 @@ angular.module('autoNetApp')
     this.name = objData.name;
 
     this.types = types;
-    this.displayTypes = _.without(Object.keys(this.types), 'coreThread','bolt','eventReceiver');
+    this.displayTypes = _.without(Object.keys(this.types), 'coreThread','bolt','eventReceiver','thread');
     this.slots = objData.slots;
 
     // Converts this.types.eventReceiver from list of types to map from types to fire count
@@ -187,15 +187,6 @@ angular.module('autoNetApp')
     },
     GetAllTypes: function(){
       return TypeList;
-    },
-    resolveProgressType: function(value){
-      if (value < 80) {
-        return 'info';
-      } else if (value < 95) {
-        return 'warning';
-      } else {
-        return 'danger';
-      }
     }
   };
 }]);
