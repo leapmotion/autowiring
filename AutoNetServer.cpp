@@ -44,7 +44,7 @@ void AutoNetServer::Run(void){
     m_Server->stop_listen(true);
   });
   
-  PollCoreThreadUtilization(boost::chrono::milliseconds(1000));
+  PollThreadUtilization(boost::chrono::milliseconds(1000));
 
   CoreThread::Run();
 }
@@ -170,14 +170,14 @@ void AutoNetServer::NewObject(CoreContext& ctxt, const AnySharedPointer& object)
       types.Add("coreRunnable", true);
     }
     
-    auto thread = leap::fast_pointer_cast<CoreThread>(objectPtr);
+    auto thread = leap::fast_pointer_cast<BasicThread>(objectPtr);
     if(thread) {
-      m_CoreThreads[thread->GetSelf<CoreThread>()];
+      m_Threads[thread->GetSelf<BasicThread>()];
 
       Jzon::Object utilization;
       utilization.Add("kernel", 0.0);
       utilization.Add("user", 0.0);
-      types.Add("coreThread", utilization);
+      types.Add("thread", utilization);
     }
 
     auto eventRcvr = leap::fast_pointer_cast<EventReceiver>(objectPtr);
@@ -285,18 +285,18 @@ CoreContext* AutoNetServer::ResolveContextID(int id) {
   return m_ContextPtrs.at(id);
 }
 
-void AutoNetServer::PollCoreThreadUtilization(boost::chrono::milliseconds period){
+void AutoNetServer::PollThreadUtilization(boost::chrono::milliseconds period){
   *this += period, [this, period] {
     
-    for(auto q = m_CoreThreads.begin(); q != m_CoreThreads.end();) {
-      auto coreThread = q->first.lock();
-      if(!coreThread) {
-        q = m_CoreThreads.erase(q);
+    for(auto q = m_Threads.begin(); q != m_Threads.end();) {
+      std::shared_ptr<BasicThread> thread = q->first.lock();
+      if(!thread) {
+        q = m_Threads.erase(q);
         continue;
       }
       
       boost::chrono::nanoseconds runtimeKM, runtimeUM;
-      coreThread->GetThreadTimes(runtimeKM, runtimeUM);
+      thread->GetThreadTimes(runtimeKM, runtimeUM);
 
       // Determine the amount of time this thread has run since the last time we
       // asked it for its runtime.
@@ -308,18 +308,18 @@ void AutoNetServer::PollCoreThreadUtilization(boost::chrono::milliseconds period
       q->second.m_lastRuntimeUM = runtimeUM;
 
       // Broadcast current thread utilization
-      int contextID = ResolveContextID(coreThread->GetContext().get());
-      std::string name = typeid(*coreThread.get()).name();
+      int contextID = ResolveContextID(thread->GetContext().get());
+      std::string name = typeid(*thread.get()).name();
 
       double kmPercent = 100 * deltaRuntimeKM / period;
       double umPercent = 100 * deltaRuntimeUM / period;
-      BroadcastMessage("coreThreadUtilization", contextID, name, kmPercent, umPercent);
+      BroadcastMessage("threadUtilization", contextID, name, kmPercent, umPercent);
 
       // Next!
       q++;
     }
     
     // Poll again after "period" milliseconds
-    PollCoreThreadUtilization(period);
+    PollThreadUtilization(period);
   };
 }
