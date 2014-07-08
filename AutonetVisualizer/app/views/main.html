@@ -16,10 +16,15 @@
     <div class="row">
       <div class="col-xs-3" ng-repeat="object in context.objects | TypeFilter:selectedType" style="min-height:250px">
         <h4><a ng-href="#/object/{{id}}/{{object.name}}">{{object.name | Limit:30}}</a></h4>
-        <progress ng-if="object.isThread()">
-          <bar type="warning" value="object.types.thread.kernel+.01"><span ng-hide="object.types.thread.kernel < 5">{{object.types.thread.kernel}}%</span></bar>
-          <bar type="info" value="object.types.thread.user"><span ng-hide="object.types.thread.user < 5">{{object.types.thread.user}}%</span></bar>
-        </progress>
+        <div ng-if="object.isThread()">
+          <progress>
+            <bar type="warning" value="object.types.thread.kernel+.01"><span ng-hide="object.types.thread.kernel < 5">{{object.types.thread.kernel | number:1}}%</span></bar>
+            <bar type="info" value="object.types.thread.user"><span ng-hide="object.types.thread.user < 5">{{object.types.thread.user | number:1}}%</span></bar>
+          </progress>
+          <div style="margin-top:-15px; margin-bottom:5px">
+            Sys: {{object.types.thread.kernel | number:1}}% User: {{object.types.thread.user | number:1}}% 
+          </div>
+        </div>
         <ul>
           <li ng-repeat="type in object.displayTypes">
             {{type}}

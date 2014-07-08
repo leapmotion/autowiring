@@ -1,7 +1,9 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "BasicThread.h"
+#include "BasicThreadStateBlock.h"
 #include <pthread.h>
+#include <sys/resource.h>
 
 void BasicThread::SetCurrentThreadName(void) const {
   if(IS_INTERNAL_BUILD)
@@ -17,8 +19,9 @@ boost::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
 }
 
 void BasicThread::GetThreadTimes(boost::chrono::nanoseconds& kernelTime, boost::chrono::nanoseconds& userTime) {
-  std::cout << kernelTime.count() << std::endl;
-  kernelTime += boost::chrono::nanoseconds(400);
-  userTime += boost::chrono::nanoseconds(500);
-  std::cout << kernelTime.count() << std::endl;
+  auto x = m_state->m_thisThread.native_handle();
+  rusage usage;
+  getrusage(RUSAGE_SELF, &usage);
+  kernelTime = boost::chrono::seconds(usage.ru_stime.tv_sec) + boost::chrono::microseconds(usage.ru_stime.tv_usec);
+  userTime = boost::chrono::seconds(usage.ru_utime.tv_sec) + boost::chrono::microseconds(usage.ru_utime.tv_usec);
 }
