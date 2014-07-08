@@ -17,4 +17,8 @@ boost::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
 }
 
 void BasicThread::GetThreadTimes(boost::chrono::nanoseconds& kernelTime, boost::chrono::nanoseconds& userTime) {
+  std::cout << kernelTime.count() << std::endl;
+  kernelTime += boost::chrono::nanoseconds(400);
+  userTime += boost::chrono::nanoseconds(500);
+  std::cout << kernelTime.count() << std::endl;
 }
