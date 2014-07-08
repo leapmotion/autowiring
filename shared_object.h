@@ -96,7 +96,7 @@ public:
   ///<summary>
   ///Yields a reference to the gating lock
   ///</summary>
-  ///<remakrs>
+  ///<remarks>
   ///WARNING: This method opens the possibility of violating the locking conditions.
   ///This method is provided in order to ensure compatability with methods requiring
   ///a reference to a manipulatable lock.

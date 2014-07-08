@@ -120,4 +120,16 @@ public:
     m_initialized = false;
     m_object = object();
   }
+
+  ///<summary>
+  ///Yields a reference to the gating lock
+  ///</summary>
+  ///<remarks>
+  ///WARNING: This method opens the possibility of violating the locking conditions.
+  ///This method is provided in order to ensure compatability with methods requiring
+  ///a reference to a manipulatable lock.
+  ///</remarks>
+  lock& gate() const {
+    return m_lock;
+  }
 };
