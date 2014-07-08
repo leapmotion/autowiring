@@ -1,5 +1,6 @@
 #pragma once
 #include "EventReceiver.h"
+#include TYPE_INDEX_HEADER
 
 struct AnySharedPointer;
 class CoreContext;
