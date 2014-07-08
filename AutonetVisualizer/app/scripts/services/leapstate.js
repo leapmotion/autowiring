@@ -66,9 +66,9 @@ angular.module('autoNetApp')
     return this.types.hasOwnProperty('eventReceiver');
   }
 
-  // Check if this LeapObject is a CoreThread
-  LeapObject.prototype.isCoreThread = function(){
-    return this.types.hasOwnProperty('coreThread');
+  // Check if this LeapObject is a thread
+  LeapObject.prototype.isThread = function(){
+    return this.types.hasOwnProperty('thread');
   }
 
   // Try to firer event "evt" on this object
@@ -167,15 +167,15 @@ angular.module('autoNetApp')
   // "contextID": Id of context containing updated object
   // "name": name of the type being updated
   // "util": the new utilization
-  websocket.on('coreThreadUtilization', function(contextID, name, kernel, user){
+  websocket.on('threadUtilization', function(contextID, name, kernel, user){
     var updatedContext = ContextMap[contextID];
     var updatedObject = updatedContext.objects[name];
-    if (!updatedObject ||!updatedObject.isCoreThread()) {
+    if (!updatedObject ||!updatedObject.isThread()) {
       console.log("Tried to updated utilization on non corethread");
       return;
     }
-    updatedObject.types.coreThread.kernel = kernel;
-    updatedObject.types.coreThread.user = user;
+    updatedObject.types.thread.kernel = kernel;
+    updatedObject.types.thread.user = user;
   });
 
   return {

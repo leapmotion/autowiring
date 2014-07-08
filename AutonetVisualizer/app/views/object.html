@@ -1,9 +1,9 @@
 <h1 ng-hide="leap.isSubscribed()">Subscribe to view object</h1>
 <div ng-show="leap.isSubscribed()">
   <h1>{{object.name}}</h1>
-  <progress ng-if="object.isCoreThread()">
-    <bar type="warning" value="object.types.coreThread.kernel+.01"><span ng-hide="object.types.coreThread.kernel < 5">{{object.types.coreThread.kernel}}%</span></bar>
-    <bar type="info" value="object.types.coreThread.user"><span ng-hide="object.types.coreThread.user < 5">{{object.types.coreThread.user}}%</span></bar>
+  <progress ng-if="object.isThread()">
+    <bar type="warning" value="object.types.thread.kernel+.01"><span ng-hide="object.types.thread.kernel < 5">{{object.types.thead.kernel}}%</span></bar>
+    <bar type="info" value="object.types.thread.user"><span ng-hide="object.types.thread.user < 5">{{object.types.thread.user}}%</span></bar>
   </progress>
   <ul>
     <li ng-repeat="(type,data) in object.types">
