@@ -18,7 +18,7 @@
 */
 
 angular.module('autoNetApp')
-.factory('websocket', ['$rootScope', function($rootScope) {
+.factory('websocket', ['$rootScope', 'WEBSOCKET_PORT', function($rootScope, WEBSOCKET_PORT) {
 
   // A single event from the server
   function Message(name,args) {
@@ -43,7 +43,7 @@ angular.module('autoNetApp')
   // Initialize connection with AutoNetServer
   // Called with SetInterval one a second when disconnected from server
   var InitConnection = function() {
-    socket = new WebSocket('ws://localhost:8000');
+    socket = new WebSocket('ws://localhost:' + WEBSOCKET_PORT);
 
     // emit a angular event when receive a server event
     socket.onmessage = function(evt) {
@@ -96,23 +96,17 @@ angular.module('autoNetApp')
       console.log('Event Registered: ', eventName);
       $rootScope.$on('leap-'+eventName, function(event, args){
         $rootScope.$apply(function(){
-          EventHistory.addMessage(eventName, args);
+          //EventHistory.addMessage(eventName, args);
           callback.apply(socket, args);
         });
       });
     },
-    subscribe: function() {
-      SendMessage('subscribe')
-    },
-    unsubscribe: function() {
-      SendMessage('unsubscribe');
-    },
     isConnected: function(){
       return isConnected;
     },
-    GetEventHistory: function(){
-      return EventHistory.messages;
-    },
+    //GetEventHistory: function(){
+    //  return EventHistory.messages;
+    //},
     SendMessage: SendMessage
   };
 }]);

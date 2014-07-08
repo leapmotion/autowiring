@@ -2,18 +2,20 @@
 
 // Handles the buisness logic for the header and subscribe/unsubscribe buttons
 angular.module('autoNetApp')
-.controller('HeaderCtrl', ['$scope', 'websocket', function ($scope, websocket) {
+.controller('HeaderCtrl', ['$scope', 'websocket', 'info', function ($scope, websocket, info) {
   $scope.isSubscribed = false;
+  $scope.breakpoints = {};
+  $scope.info = info;
 
   function subscribe() {
     if (websocket.isConnected()){
-      websocket.subscribe();
+      websocket.SendMessage("subscribe");
     }
   };
 
   function unsubscribe() {
     if (websocket.isConnected()){
-      websocket.unsubscribe();
+      websocket.SendMessage("unsubscribe");
     }
   };
 
@@ -40,4 +42,18 @@ angular.module('autoNetApp')
     }
     return con;
   };
+
+  //Breakpoint stuff
+  function Breakpoint(name) {
+    this.name = name;
+  }
+
+  websocket.on('breakpoint', function(name){
+    $scope.breakpoints[name] = new Breakpoint(name);
+  });
+
+  $scope.resumeFromBreakpoint = function(name) {
+    websocket.SendMessage('resumeFromBreakpoint', name);
+    delete $scope.breakpoints[name];
+  }
 }]);

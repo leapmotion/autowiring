@@ -27,6 +27,7 @@
 #include STL_UNORDERED_SET
 
 struct CoreContextStateBlock;
+class AutoInjectable;
 class AutoPacketFactory;
 class DeferrableAutowiring;
 class BasicThread;
@@ -167,6 +168,13 @@ protected:
   /// Register new context with parent and notify others of its creation.
   /// </summary>
   /// <param name="pfnCreate">A creation routine which can create the desired context</param>
+  /// <param name="pPeer">The peer context, if one exists</param>
+  /// <param name="inj">An injectable to be inserted into the context before bolts are fired</param>
+  std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer, AutoInjectable&& pInj);
+
+  /// <summary>
+  /// Overload which does not perform injection
+  /// </summary>
   std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer);
   
   // Add to our interal list of Anchor types from AutoAnchors declared in sigil type
@@ -417,6 +425,11 @@ public:
   /// Factory to create a new context
   /// </summary>
   /// <param name="T">The context sigil.</param>
+  template<class T>
+  std::shared_ptr<CoreContext> Create(AutoInjectable&& inj) {
+    return CreateInternal(&CoreContext::Create<T>, nullptr, std::move(inj));
+  }
+
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
     return CreateInternal(&CoreContext::Create<T>, nullptr);

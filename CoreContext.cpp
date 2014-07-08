@@ -1,10 +1,11 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "CoreContext.h"
-#include "CoreThread.h"
+#include "AutoInjectable.h"
 #include "AutoPacketFactory.h"
 #include "BoltBase.h"
 #include "CoreContextStateBlock.h"
+#include "CoreThread.h"
 #include "GlobalCoreContext.h"
 #include "JunctionBox.h"
 #include "MicroBolt.h"
@@ -70,7 +71,11 @@ CoreContext::~CoreContext(void) {
     q->NotifyContextTeardown();
 }
 
-std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer)
+std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer) {
+  return CreateInternal(pfnCreate, pPeer, AutoInjectable());
+}
+
+std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer, AutoInjectable&& inj)
 {
   // don't allow new children if shutting down
   if(m_isShutdown)
@@ -88,15 +93,24 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, 
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
   std::shared_ptr<CoreContext> retVal = pfnCreate(shared_from_this(), childIterator, pPeer);
-  *childIterator = retVal;
 
   // Notify AutowiringEvents listeners
   GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal);
+  
+  // Remainder of operations need to happen with the created context made current
+  CurrentContextPusher pshr(retVal);
+
+  // Inject before broadcasting the creation notice
+  inj();
 
   // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
-  CurrentContextPusher pshr(retVal);
   BroadcastContextCreationNotice(retVal->GetSigilType());
 
+  // We only consider the context to be completely constructed at this point, after all bolts
+  // have been fired, the injection has taken place, and we're about to return.  We delay
+  // finalizing the introduction of the return value into the list to this point for that
+  // reason.
+  *childIterator = retVal;
   return retVal;
 }
 

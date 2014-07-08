@@ -1,7 +1,20 @@
 var gzippo = require('gzippo');
 var express = require('express');
-var app = express();
- 
-//app.use(express.logger('dev'));
+var package = require('./package.json')
+var app = module.exports = express();
+var port = process.env.PORT || 5000;
+
+// Get date current version was deployed
+app.get('/api/info/deploy_date', function(req, res){
+  res.send(JSON.stringify(process.env.DEPLOY_DATE));
+});
+
+app.get('/api/info/version', function(req, res){
+  res.send(JSON.stringify(package.version));
+});
+
+// Serve static content when in production
 app.use(gzippo.staticGzip("" + __dirname + "/dist"));
-app.listen(process.env.PORT || 5000);
+
+app.listen(port);
+console.log("Listening on port: " + port);

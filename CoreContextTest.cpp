@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "CoreContextTest.h"
+#include "AutoInjectable.h"
 #include "ContextEnumerator.h"
+#include <boost/thread.hpp>
 #include <set>
 
 class Foo{};
@@ -135,4 +137,66 @@ TEST_F(CoreContextTest, CorrectHitExceptionalTeardown) {
 
   // Now verify that the correct deleter was hit to release partially constructed memory:
   ASSERT_EQ(1UL, HasOverriddenNewOperator::s_deleterHitCount) << "Deleter was not correctly hit in an exceptional teardown";
+}
+
+struct PreBoltInjectionSigil {};
+
+class BoltThatChecksForAThread:
+  public Bolt<PreBoltInjectionSigil>
+{
+public:
+  BoltThatChecksForAThread(void):
+    m_threadPresent(false)
+  {}
+
+  void ContextCreated(void) override {
+    m_threadPresent = Autowired<CoreThread>().IsAutowired();
+  }
+
+  bool m_threadPresent;
+};
+
+TEST_F(CoreContextTest, PreBoltInjection) {
+  AutoRequired<BoltThatChecksForAThread> myBolt;
+  AutoCreateContextT<PreBoltInjectionSigil> ctxt(MakeInjectable<CoreThread>());
+
+  // Basic functionality check on the injectable
+  Autowired<CoreThread> ct(ctxt);
+  ASSERT_TRUE(ct) << "Injection did not take place in the created context as expected";
+
+  // Verify the bolt was hit as expected
+  ASSERT_TRUE(myBolt->m_threadPresent) << "Bolt was not correctly fired after injection";
+}
+
+struct NoEnumerateBeforeBoltReturn {};
+
+class BoltThatTakesALongTimeToReturn:
+  public Bolt<NoEnumerateBeforeBoltReturn>
+{
+public:
+  BoltThatTakesALongTimeToReturn(void) :
+    m_bDoneRunning(false)
+  {}
+
+  void ContextCreated(void) override {
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    m_bDoneRunning = true;
+  }
+
+  bool m_bDoneRunning;
+};
+
+TEST_F(CoreContextTest, NoEnumerateBeforeBoltReturn) {
+  AutoCurrentContext ctxt;
+  AutoRequired<BoltThatTakesALongTimeToReturn> longTime;
+
+  // Spin off a thread which will create the new context
+  boost::thread t([ctxt] {
+    AutoCreateContextT<NoEnumerateBeforeBoltReturn>();
+  });
+
+  // Verify that the context does not appear until the bolt has finished running:
+  while(t.try_join_for(boost::chrono::milliseconds(1)))
+    for(auto cur : ContextEnumeratorT<NoEnumerateBeforeBoltReturn>(ctxt))
+      ASSERT_TRUE(longTime->m_bDoneRunning) << "A context was enumerated before a bolt finished running";
 }
