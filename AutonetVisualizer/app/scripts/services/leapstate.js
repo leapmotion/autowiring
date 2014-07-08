@@ -29,65 +29,57 @@ angular.module('autoNetApp')
   function LeapObject(types, objData){
     this.name = objData.name;
     this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
-    this.types = Object.keys(types);
+    this.types = types;
+    this.displayTypes = _.without(Object.keys(this.types), 'coreThread','bolt','eventReceiver');
     this.slots = objData.slots;
 
-    // Add bolt information
-    if (types.hasOwnProperty("bolt")) {
-      this.boltSigils = types.bolt;
-      if (this.boltSigils.length === 0){
-        this.boltSigils.push("Everything!");
-      }
-    }
-
-    // Add EventReceiver information
+    // Converts this.types.eventReceiver from list of types to map from types to fire count
     if (types.hasOwnProperty("eventReceiver")) {
-      this.events = {};
+      var events = {};
       var numEvents = types.eventReceiver.length;
 
       for (var evt=0; evt<numEvents; evt++) {
         var eventType = types.eventReceiver[evt];
-        this.events[eventType] = 0;
+        events[eventType] = 0;
       }
 
-      if (numEvents === 0){
-        this.events["Nothing!"] = 0;
-      }
+      this.types.eventReceiver = events;
     }
   }
 
   // Check if this LeapObject is of type "type"
   LeapObject.prototype.IsType = function(type){
-    return _.contains(this.types, type);
+    return this.types.hasOwnProperty(type);
   };
 
   // Check if this LeapObject is a type of on of the keys of "filterTypes"
   LeapObject.prototype.IsAnyType = function(filterTypes){
-    for (var i = 0; i<this.types.length; i++) {
-      var type = this.types[i];
-
-      if (filterTypes.hasOwnProperty(type)) return true;
-    }
-    return false;
+    var inBoth = _.intersection(Object.keys(this.types), Object.keys(filterTypes))
+    return inBoth.length !== 0;
   };
 
   // Check if this LeapObject bolts onto a context
-  LeapObject.prototype.hasBolts = function(){
-    return this.hasOwnProperty('boltSigils');
+  LeapObject.prototype.isBolt = function(){
+    return this.types.hasOwnProperty('bolt');
   }
 
   // Check if this LeapObject receives events
   LeapObject.prototype.isEventReceiver = function(){
-    return this.hasOwnProperty('events');
+    return this.types.hasOwnProperty('eventReceiver');
+  }
+
+  // Check if this LeapObject is a CoreThread
+  LeapObject.prototype.isCoreThread = function(){
+    return this.types.hasOwnProperty('coreThread');
   }
 
   // Try to firer event "evt" on this object
   // Does nothing if this object doesn't receive the event
   LeapObject.prototype.eventFired = function(evt){
-    if (!this.hasOwnProperty('events')) return;
+    if (!this.isEventReceiver()) return;
 
-    if (this.events.hasOwnProperty(evt)) {
-      this.events[evt]++;
+    if (this.types.eventReceiver.hasOwnProperty(evt)) {
+      this.types.eventReceiver[evt]++;
     }
   }
 
@@ -174,6 +166,20 @@ angular.module('autoNetApp')
     fireEvent(contextID);
   });
 
+  // "contextID": Id of context containing updated object
+  // "name": name of the type being updated
+  // "util": the new utilization
+  websocket.on('coreThreadUtilization', function(contextID, name, util){
+    var updatedContext = ContextMap[contextID];
+    var linkName = name.replace(/\s+/g,'_');
+    var updatedObject = updatedContext.objects[linkName];
+    if (!updatedObject.isCoreThread) {
+      console.log("Tried to updated utilization on non corethread");
+      return;
+    }
+    updatedObject.types.coreThread = util;
+  });
+
   return {
     GetContexts: function(){
       return ContextMap;
@@ -183,6 +189,17 @@ angular.module('autoNetApp')
     },
     GetAllTypes: function(){
       return TypeList;
+    },
+    resolveProgressType: function(value){
+      if (value < 25) {
+        return 'success';
+      } else if (value < 50) {
+        return 'info';
+      } else if (value < 75) {
+        return 'warning';
+      } else {
+        return 'danger';
+      }
     }
   };
 }]);

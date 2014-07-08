@@ -7,3 +7,10 @@ angular.module('autoNetApp')
     return _.pluck(input, key);
   };
 });
+
+angular.module('autoNetApp')
+.filter('notEmpty', function () {
+  return function (input) {
+    return !_.isEmpty(input);
+  };
+});

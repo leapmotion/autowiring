@@ -105,17 +105,36 @@ void CoreJob::Stop(bool graceful) {
 }
 
 void CoreJob::Wait() {
-	{
-		boost::unique_lock<boost::mutex> lk(m_dispatchLock);
-		m_queueUpdated.wait(
-			lk,
-			[this] {
-				return ShouldStop() && m_curEventInTeardown;
-			}
-		);
-	}
+  {
+    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+    m_queueUpdated.wait(
+      lk,
+      [this] {
+        return ShouldStop() && m_curEventInTeardown;
+      }
+    );
+  }
 
-	// If the current event is valid, we can block on it until it becomes valid:
-	if(m_curEvent.valid())
-		m_curEvent.wait();
+  // If the current event is valid, we can block on it until it becomes valid:
+  if(m_curEvent.valid())
+    m_curEvent.wait();
+}
+
+bool CoreJob::WaitFor(boost::chrono::nanoseconds duration) {
+  {
+    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+    if(!m_queueUpdated.wait_for(
+      lk,
+      duration,
+      [this] {
+        return ShouldStop() && m_curEventInTeardown;
+      }
+    ))
+      return false;
+  }
+
+  // If the current event is valid, we can block on it until it becomes valid:
+  if(m_curEvent.valid())
+    m_curEvent.wait();
+  return true;
 }

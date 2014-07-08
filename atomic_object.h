@@ -32,8 +32,6 @@ protected:
   bool m_initialized;
 
 public:
-  typedef unlock_object<object, lock> unlock;
-
   ///<summary>
   ///Default constructor yielding initialized() == false.
   ///</summary>

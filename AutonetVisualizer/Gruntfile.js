@@ -147,10 +147,6 @@ module.exports = function (grunt) {
       }
     },
 
-
-
-
-
     // Renames files for browser caching purposes
     rev: {
       dist: {
@@ -355,7 +351,6 @@ module.exports = function (grunt) {
 
   grunt.registerTask('build', [
     'clean:dist',
-    'bower-install',
     'useminPrepare',
     'concurrent:dist',
     'autoprefixer',
@@ -369,6 +364,8 @@ module.exports = function (grunt) {
     'usemin',
     'htmlmin'
   ]);
+
+  grunt.registerTask('heroku', ['build']);
 
   grunt.registerTask('default', [
     'newer:jshint',

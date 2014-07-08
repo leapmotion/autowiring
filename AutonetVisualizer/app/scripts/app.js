@@ -5,8 +5,14 @@
 angular.module('autoNetApp', [
   'ngAnimate',
   'ngRoute',
-  'ngSanitize'
+  'ngSanitize',
+  'ui.bootstrap'
 ])
+
+// Constants and Values
+.constant('WEBSOCKET_PORT', 8000)
+
+//Configurations
 .config(['$routeProvider', function ($routeProvider) {
   $routeProvider
     .when('/main', {
@@ -21,11 +27,7 @@ angular.module('autoNetApp', [
       templateUrl: 'views/raw.html',
       controller: 'RawCtrl'
     })
-    .when('/filtergraph', {
-      templateUrl: 'views/filtergraph.html',
-      controller: 'FilterGraphCtrl'
-    })
-    .when('/object/:contextID/:linkName', {
+    .when('/object/:contextID/:objName', {
       templateUrl: 'views/object.html',
       controller: 'ObjectCtrl'
     })
