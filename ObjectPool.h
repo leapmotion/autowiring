@@ -37,6 +37,7 @@ class ObjectPool
 {
 public:
   /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
+  /// <param name="maxPooled">The maximum number of objects cached by the pool</param>
   ObjectPool(
     size_t limit = ~0,
     size_t maxPooled = ~0,
@@ -52,6 +53,16 @@ public:
   {
     m_monitor.reset(new ObjectPoolMonitor(this));
   }
+
+  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
+  ObjectPool(
+    const std::function<T*()>& alloc,
+    const std::function<void(T&)>& rx = &DefaultReset<T>,
+    size_t limit = ~0,
+    size_t maxPooled = ~0
+  ) :
+    ObjectPool(limit, maxPooled, alloc, rx)
+  {}
   
   ObjectPool(ObjectPool&& rhs)
   {
