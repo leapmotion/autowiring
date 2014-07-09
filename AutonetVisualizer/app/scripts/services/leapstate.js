@@ -23,9 +23,14 @@ angular.module('autoNetApp')
     this.objects[obj.name] = obj;
   };
 
+  Context.prototype.getLink = function(){
+    return "#/context/" + this.id
+  }
+
   // A "leap object". Inclues ContextMembers, CoreThreads, Bolts, etc...
-  function LeapObject(types, objData){
+  function LeapObject(contextID, types, objData){
     this.name = objData.name;
+    this.contextID = contextID
 
     this.types = types;
     this.displayTypes = _.without(Object.keys(this.types), 'coreThread','bolt','eventReceiver','thread');
@@ -43,6 +48,10 @@ angular.module('autoNetApp')
 
       this.types.eventReceiver = events;
     }
+  }
+
+  LeapObject.prototype.getLink = function() {
+    return "#/object/" + this.contextID + "/" + this.name;
   }
 
   // Check if this LeapObject is of type "type"
@@ -135,7 +144,7 @@ angular.module('autoNetApp')
   // "objData": Additional object data, including the name and Autowired slots
   websocket.on('newObject', function(contextID, types, objData) {
     var updatedContext = ContextMap[contextID];
-    var object = new LeapObject(types, objData);
+    var object = new LeapObject(contextID, types, objData);
 
     updatedContext.addObject(object);
   });
