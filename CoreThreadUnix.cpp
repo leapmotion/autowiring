@@ -19,7 +19,6 @@ boost::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
 }
 
 void BasicThread::GetThreadTimes(boost::chrono::nanoseconds& kernelTime, boost::chrono::nanoseconds& userTime) {
-  auto x = m_state->m_thisThread.native_handle();
   rusage usage;
   getrusage(RUSAGE_SELF, &usage);
   kernelTime = boost::chrono::seconds(usage.ru_stime.tv_sec) + boost::chrono::microseconds(usage.ru_stime.tv_usec);
