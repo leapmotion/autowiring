@@ -21,10 +21,12 @@ angular.module('autoNetApp')
 
   websocket.on('subscribed', function(){
     $scope.isSubscribed = true;
+    $scope.$digest();
   });
 
   websocket.on('unsubscribed', function(){
     $scope.isSubscribed = false;
+    $scope.$digest();
   });
 
   $scope.toggleSubscription = function(){
