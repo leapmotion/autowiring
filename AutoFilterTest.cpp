@@ -738,3 +738,47 @@ TEST_F(AutoFilterTest, NoDeferredImmediateSatisfaction) {
   // Verify that the thread did not receive anything:
   ASSERT_EQ(0UL, wfil->GetDispatchQueueLength()) << "Deferred AutoFilter incorrectly received an immediate-mode decoration";
 }
+
+class AcceptsSharedPointerAndReference {
+public:
+  AcceptsSharedPointerAndReference(void) :
+    m_called(false)
+  {}
+
+  bool m_called;
+
+  void AutoFilter(const int& v, std::shared_ptr<int> vShared) {
+    m_called = true;
+    ASSERT_EQ(&v, vShared.get()) << "Shared pointer to a type did not point to the same address as the type reference proper";
+  }
+};
+
+TEST_F(AutoFilterTest, SharedPointerRecieptRules) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<AcceptsSharedPointerAndReference> filter;
+  AutoRequired<FilterGen<std::shared_ptr<int>>> genFilter1;
+  AutoRequired<FilterGen<int>> genFilter2;
+
+  auto packet = factory->NewPacket();
+  packet->Decorate<int>(55);
+
+  ASSERT_TRUE(filter->m_called) << "Redundant-input filter was not called";
+  ASSERT_EQ(1UL, genFilter1->m_called) << "AutoFilter accepting a shared pointer was not called as expected";
+  ASSERT_EQ(1UL, genFilter2->m_called) << "AutoFilter accepting a decorated type was not called as expected";
+}
+
+TEST_F(AutoFilterTest, SharedPointerAliasingRules) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<AcceptsSharedPointerAndReference> filter;
+  AutoRequired<FilterGen<std::shared_ptr<int>>> genFilter1;
+  AutoRequired<FilterGen<int>> genFilter2;
+
+  auto packet = factory->NewPacket();
+  packet->Decorate(std::make_shared<int>(56));
+
+  ASSERT_TRUE(filter->m_called) << "Redundant-input filter was not called";
+  ASSERT_EQ(1UL, genFilter1->m_called) << "AutoFilter accepting a shared pointer was not called as expected";
+  ASSERT_EQ(1UL, genFilter2->m_called) << "AutoFilter accepting a decorated type was not called as expected";
+}
