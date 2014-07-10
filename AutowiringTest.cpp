@@ -33,10 +33,10 @@ class AutowiresOneThingThenQuits:
   public CoreThread
 {
 public:
-  AutoRequired<boost::mutex> m_ctxtLock;
+  AutoRequired<std::mutex> m_ctxtLock;
 
   void Run(void) override {
-    boost::lock_guard<boost::mutex> lk(*m_ctxtLock);
+    std::lock_guard<std::mutex> lk(*m_ctxtLock);
     Autowired<SimpleObject>();
   }
 };
@@ -61,9 +61,9 @@ void InjectAll(void) {
 }
 
 TEST_F(AutowiringTest, PathologicalAutowiringRace) {
-  AutoRequired<boost::mutex> lock;
+  AutoRequired<std::mutex> lock;
 
-  (boost::lock_guard<boost::mutex>)*lock,
+  (std::lock_guard<std::mutex>)*lock,
   InjectAll();
 
   // Now insert at about the same time as other threads are waking up.  If there are synchronization problems

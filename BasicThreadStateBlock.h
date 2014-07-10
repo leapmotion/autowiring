@@ -10,8 +10,8 @@ struct BasicThreadStateBlock:
   ~BasicThreadStateBlock();
 
   // General purpose thread lock and update condition for the lock
-  boost::mutex m_lock;
-  boost::condition_variable m_stateCondition;
+  std::mutex m_lock;
+  std::condition_variable m_stateCondition;
 
   // The current thread, if running
   boost::thread m_thisThread;

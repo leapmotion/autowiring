@@ -25,7 +25,7 @@ public:
 
 protected:
   // Dispatch queue lock:
-  mutable boost::mutex m_lock;
+  mutable std::mutex m_lock;
 
   // Just the DispatchQueue listeners:
   typedef std::unordered_set<DispatchQueue*> t_stType;
@@ -68,7 +68,7 @@ public:
   }
 
   const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const { return m_dispatch; }
-  boost::mutex& GetDispatchQueueLock(void) const { return m_lock; }
+  std::mutex& GetDispatchQueueLock(void) const { return m_lock; }
 
   virtual bool HasListeners(void) const = 0;
 
