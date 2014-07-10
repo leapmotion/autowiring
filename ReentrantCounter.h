@@ -1,5 +1,5 @@
 #pragma once
-#include <boost/chrono/system_clocks.hpp>
+#include <chrono>
 
 struct PerformanceCounter {
   PerformanceCounter(void) :
@@ -8,7 +8,7 @@ struct PerformanceCounter {
   {}
 
   size_t hitCount;
-  boost::chrono::nanoseconds lingerTime;
+  std::chrono::nanoseconds lingerTime;
   
 
   ~PerformanceCounter(){
@@ -23,13 +23,13 @@ class ReentrantCounter {
 public:
   ReentrantCounter(PerformanceCounter& duration);
   ~ReentrantCounter(void);
-  static boost::chrono::nanoseconds globalTimeElapsedSinceStart;  
+  static std::chrono::nanoseconds globalTimeElapsedSinceStart;
   static ReentrantCounter * lastKnownObject;
 private:
   PerformanceCounter& duration;
   ReentrantCounter * objectIObservedOnStart;
   // Construction time:
-  boost::chrono::high_resolution_clock::time_point startTime;
-  boost::chrono::high_resolution_clock::time_point endTime;
-  boost::chrono::nanoseconds myRecordedTimeElapsedSinceStart;
+  std::chrono::high_resolution_clock::time_point startTime;
+  std::chrono::high_resolution_clock::time_point endTime;
+  std::chrono::nanoseconds myRecordedTimeElapsedSinceStart;
 };

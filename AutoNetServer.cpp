@@ -44,7 +44,7 @@ void AutoNetServer::Run(void){
     m_Server->stop_listen(true);
   });
   
-  PollThreadUtilization(boost::chrono::milliseconds(1000));
+  PollThreadUtilization(std::chrono::milliseconds(1000));
 
   CoreThread::Run();
 }
@@ -101,7 +101,7 @@ void AutoNetServer::OnMessage(connection_ptr p_connection, message_ptr p_message
 }
 
 void AutoNetServer::Breakpoint(std::string name){
-  boost::unique_lock<boost::mutex> lk(m_mutex);
+  std::unique_lock<std::mutex> lk(m_mutex);
 
   m_breakpoints.insert(name);
   
@@ -262,7 +262,7 @@ void AutoNetServer::HandleInjectContextMember(int contextID, std::string typeNam
 }
 
 void AutoNetServer::HandleResumeFromBreakpoint(std::string name){
-  boost::unique_lock<boost::mutex> lk(m_mutex);
+  std::unique_lock<std::mutex> lk(m_mutex);
   
   m_breakpoints.erase(name);
   m_breakpoint_cv.notify_all();
@@ -285,7 +285,7 @@ CoreContext* AutoNetServer::ResolveContextID(int id) {
   return m_ContextPtrs.at(id);
 }
 
-void AutoNetServer::PollThreadUtilization(boost::chrono::milliseconds period){
+void AutoNetServer::PollThreadUtilization(std::chrono::milliseconds period){
   *this += period, [this, period] {
     
     for(auto q = m_Threads.begin(); q != m_Threads.end();) {
@@ -295,13 +295,13 @@ void AutoNetServer::PollThreadUtilization(boost::chrono::milliseconds period){
         continue;
       }
       
-      boost::chrono::nanoseconds runtimeKM, runtimeUM;
+      std::chrono::nanoseconds runtimeKM, runtimeUM;
       thread->GetThreadTimes(runtimeKM, runtimeUM);
 
       // Determine the amount of time this thread has run since the last time we
       // asked it for its runtime.
-      boost::chrono::duration<double> deltaRuntimeKM = runtimeKM - q->second.m_lastRuntimeKM;
-      boost::chrono::duration<double> deltaRuntimeUM = runtimeUM - q->second.m_lastRuntimeUM;
+      std::chrono::duration<double> deltaRuntimeKM = runtimeKM - q->second.m_lastRuntimeKM;
+      std::chrono::duration<double> deltaRuntimeUM = runtimeUM - q->second.m_lastRuntimeUM;
 
       // Update timing values:
       q->second.m_lastRuntimeKM = runtimeKM;

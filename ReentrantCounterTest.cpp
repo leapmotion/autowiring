@@ -14,7 +14,7 @@ PerformanceCounter g_timeouts[ARRAYCOUNT(gc_timeouts)];
 size_t g_curOffset = 0;
 
 // Slack value--we allow 1s of slack
-const boost::chrono::seconds slack(1);
+const std::chrono::seconds slack(1);
 
 // Reentrant function proper:
 void Reenter() {
@@ -22,8 +22,8 @@ void Reenter() {
   ReentrantCounter ctr(g_timeouts[g_curOffset]);
 
   // Spin until time-up.  We want precision, so we spin rather than sleep
-  auto finish = boost::chrono::high_resolution_clock::now() + boost::chrono::microseconds(gc_timeouts[g_curOffset]);
-  while(boost::chrono::high_resolution_clock::now() < finish);
+  auto finish = std::chrono::high_resolution_clock::now() + std::chrono::microseconds(gc_timeouts[g_curOffset]);
+  while(std::chrono::high_resolution_clock::now() < finish);
 
   // Reenter every second value:
   if(g_curOffset++ % 2)
@@ -32,15 +32,15 @@ void Reenter() {
 
 TEST_F(ReentrantCounterTest, VerifySimpleBenchmarking) {
   // Total time we will spin for, to test reentrancy:
-  const boost::chrono::microseconds spinTime(1299);
+  const std::chrono::microseconds spinTime(1299);
 
   PerformanceCounter counter;
 
   // Wait for spin-time period:
   {
     ReentrantCounter ctr(counter);
-    auto finish = boost::chrono::high_resolution_clock::now() + spinTime;
-    while(boost::chrono::high_resolution_clock::now() < finish);
+    auto finish = std::chrono::high_resolution_clock::now() + spinTime;
+    while(std::chrono::high_resolution_clock::now() < finish);
   }
 
   // Verify we hit exactly once:
@@ -61,11 +61,11 @@ TEST_F(ReentrantCounterTest, VerifyComplexReentrancy) {
     EXPECT_EQ(1UL, g_timeouts[i].hitCount) << "Performance counter hit too many times";
     EXPECT_LT(
       g_timeouts[i].lingerTime - slack,
-      boost::chrono::microseconds(gc_timeouts[i])
+      std::chrono::microseconds(gc_timeouts[i])
     );
     EXPECT_GT(
       g_timeouts[i].lingerTime + slack,
-      boost::chrono::microseconds(gc_timeouts[i])
+      std::chrono::microseconds(gc_timeouts[i])
     );
   }
 }

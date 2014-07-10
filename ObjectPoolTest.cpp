@@ -40,7 +40,7 @@ TEST_F(ObjectPoolTest, DISABLED_VerifyAsynchronousUsage) {
     // Block--verify that we _do not_ get any of those objects back while they are
     // still outstanding.
     {
-      auto obj4 = pool.WaitFor(boost::chrono::milliseconds(1));
+      auto obj4 = pool.WaitFor(std::chrono::milliseconds(1));
       EXPECT_TRUE(obj4 == nullptr) << "Pool issued another element even though it should have hit its outstanding limit";
     }
 
@@ -55,7 +55,7 @@ TEST_F(ObjectPoolTest, DISABLED_VerifyAsynchronousUsage) {
 
   // This should return more or less right away as objects become available:
   {
-    auto obj4 = pool.WaitFor(boost::chrono::milliseconds(10));
+    auto obj4 = pool.WaitFor(std::chrono::milliseconds(10));
     EXPECT_TRUE(obj4 != nullptr) << "Object pool failed to be notified that it received a new element";
   }
 
@@ -101,7 +101,7 @@ public:
   std::shared_ptr<int> m_ptr;
 
   void Run(void) override {
-    ThreadSleep(boost::chrono::milliseconds(100));
+    ThreadSleep(std::chrono::milliseconds(100));
     m_ptr.reset();
   }
 };
@@ -144,7 +144,7 @@ TEST_F(ObjectPoolTest, OutstandingLimitIsOne) {
   // Bounce 1000 shared pointers into the CoreThread
   for(size_t i = 0; i < 1000; i++) {
     // Try to wait on the pool:
-    auto entity = pool.WaitFor(boost::chrono::seconds(10));
+    auto entity = pool.WaitFor(std::chrono::seconds(10));
     ASSERT_NE(nullptr, entity) << "Failed to obtain an entity from a single-element pool";
 
     // Pend a lambda that just holds a closure on the entity:

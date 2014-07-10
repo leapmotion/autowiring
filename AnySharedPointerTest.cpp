@@ -196,7 +196,7 @@ struct Foo{
   AutoRequired<Baz> baz;
   AutowiredFast<Derp> derp;
 };
-TEST_F(AnySharedPointerTest, SlotInformation) {
+TEST_F(AnySharedPointerTest, DISABLED_SlotInformation) {
   AutoRequired<Foo> foo;
 
   AnySharedPointer ptr = foo;
