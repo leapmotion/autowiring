@@ -238,12 +238,6 @@ TEST_F(AutoFilterTest, VerifyCheckout) {
   // Obtain a packet for use with deferred decoration:
   auto packet = factory->NewPacket();
 
-  {
-    // Verify that an unsubscribed decoration returns a correct checkout:
-    auto unused = packet->Checkout<Decoration<4>>();
-    EXPECT_FALSE(unused) << "Checkout incorrectly generated for unsubscribed decoration";
-  }
-
   // Satisfy the other decoration:
   packet->Decorate(Decoration<1>());
 
