@@ -83,7 +83,7 @@ public:
 
 protected:
   std::shared_ptr<ObjectPoolMonitor> m_monitor;
-  boost::condition_variable m_setCondition;
+  std::condition_variable m_setCondition;
 
   // The set of pooled objects, and the pool version.  The pool version is incremented every
   // time the ClearCachedEntities method is called, and causes entities which might be trying
@@ -119,7 +119,7 @@ protected:
 
         // Hold the lock next, in order to ensure that destruction happens after the monitor
         // lock is released.
-        boost::lock_guard<boost::mutex> lk(*monitor);
+        std::lock_guard<std::mutex> lk(*monitor);
 
         if(monitor->IsAbandoned())
           // Nothing we can do, monitor object abandoned already, just destroy the object
@@ -160,7 +160,7 @@ protected:
   /// This method will unconditionally increment the outstanding count and will not attempt
   /// to perform bounds checking to ensure that the desired element may be issued
   /// </remarks>
-  std::shared_ptr<T> ObtainElementUnsafe(boost::unique_lock<boost::mutex>& lk) {
+  std::shared_ptr<T> ObtainElementUnsafe(std::unique_lock<std::mutex>& lk) {
     // Unconditionally increment the outstanding count:
     m_outstanding++;
 
@@ -183,7 +183,7 @@ public:
   // Accessor methods:
   size_t GetOutstanding(void) const { return m_outstanding; }
   size_t GetCached(void) const {
-    boost::lock_guard<boost::mutex> lk(*m_monitor);
+    std::lock_guard<std::mutex> lk(*m_monitor);
     return m_objs.size();
   }
 
@@ -207,7 +207,7 @@ public:
     // Move all of our objects into a local variable which we can then free at our leisure.  This allows us to
     // perform destruction outside of the scope of a lock, preventing any deadlocks that might occur inside
     // the shared_ptr cleanup lambda.
-    boost::lock_guard<boost::mutex> lk(*m_monitor);
+    std::lock_guard<std::mutex> lk(*m_monitor);
     m_poolVersion++;
 
     // Swap the cached object collection with an empty one
@@ -229,7 +229,7 @@ public:
     m_maxPooled = maxPooled;
     for(;;) {
       std::shared_ptr<T> prior;
-      boost::lock_guard<boost::mutex> lk(*m_monitor);
+      std::lock_guard<std::mutex> lk(*m_monitor);
 
       // Space check:
       if(m_objs.size() <= m_maxPooled)
@@ -258,7 +258,7 @@ public:
   /// an exception.
   /// </remarks>
   void SetOutstandingLimit(size_t limit) {
-    boost::lock_guard<boost::mutex> lk(*m_monitor);
+    std::lock_guard<std::mutex> lk(*m_monitor);
     if(!m_limit && limit)
       // We're throwing an exception if the limit is currently zero and the user is trying to set it 
       // to something other than zero.
@@ -275,7 +275,7 @@ public:
   /// </remarks>
   template<class Duration>
   std::shared_ptr<T> WaitFor(Duration duration) {
-    boost::unique_lock<boost::mutex> lk(*m_monitor);
+    std::unique_lock<std::mutex> lk(*m_monitor);
     if(!m_limit)
       throw autowiring_error("Attempted to perform a timed wait on a pool that is already in rundown");
 
@@ -297,7 +297,7 @@ public:
   /// with a limit of zero
   /// </remarks>
   std::shared_ptr<T> Wait(void) {
-    boost::unique_lock<boost::mutex> lk(*m_monitor);
+    std::unique_lock<std::mutex> lk(*m_monitor);
     if(!m_limit)
       throw autowiring_error("Attempted to perform a timed wait on a pool containing no entities");
 
@@ -343,7 +343,7 @@ public:
     // Force the passed value to be empty so we don't cause a deadlock by accident
     rs.reset();
 
-    boost::unique_lock<boost::mutex> lk(*m_monitor);
+    std::unique_lock<std::mutex> lk(*m_monitor);
     if(m_limit <= m_outstanding)
       // Already at the limit
       return;
@@ -363,7 +363,7 @@ public:
     SetOutstandingLimit(0);
 
     // Now, simply block until everyone comes back to us
-    boost::unique_lock<boost::mutex> lk(*m_monitor);
+    std::unique_lock<std::mutex> lk(*m_monitor);
     m_setCondition.wait(lk, [this] {
       return !m_outstanding;
     });
@@ -380,7 +380,7 @@ public:
     }
 
     // Lock down rhs while we move things in
-    boost::lock_guard<boost::mutex> lk(*rhs.m_monitor);
+    std::lock_guard<std::mutex> lk(*rhs.m_monitor);
     std::swap(m_monitor, rhs.m_monitor);
 
     m_poolVersion = rhs.m_poolVersion;

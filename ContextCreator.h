@@ -41,7 +41,7 @@ public:
   /// </summary>
   template<class Fn>
   void Enumerate(Fn&& fn) {
-    boost::lock_guard<boost::mutex> lk(m_contextLock);
+    std::lock_guard<std::mutex> lk(m_contextLock);
     for(auto q = m_contexts.begin(); q != m_contexts.end(); q++) {
       auto ctxt = q->second.lock();
       if(ctxt)
@@ -56,7 +56,7 @@ public:
   template<class Container>
   Container Enumerate(void) {
     Container container;
-    boost::lock_guard<boost::mutex> lk(m_contextLock);
+    std::lock_guard<std::mutex> lk(m_contextLock);
     for(auto q = m_contexts.begin(); q != m_contexts.end(); q++) {
       auto ctxt = q->second.lock();
       if(ctxt)
@@ -69,7 +69,7 @@ public:
   /// Attempts to find a context with the specified key
   /// </summary>
   std::shared_ptr<CoreContext> FindContext(const Key& key) {
-    boost::lock_guard<boost::mutex> lk(m_contextLock);
+    std::lock_guard<std::mutex> lk(m_contextLock);
     typename t_mpType::iterator q = m_contexts.find(key);
     if(q == m_contexts.end())
       return std::shared_ptr<CoreContext>();
@@ -81,7 +81,7 @@ public:
   /// </summary>
   /// <returns>A pair in which the first element is the created context and the second is a bool set if creation took place</returns>
   std::pair<std::shared_ptr<CoreContext>, bool> CreateContext(const Key& key) {
-    boost::lock_guard<boost::mutex> lk(m_contextLock);
+    std::lock_guard<std::mutex> lk(m_contextLock);
 
     // Obtain and lock a weak pointer, if possible:
     auto& childWeak = m_contexts[key];
@@ -131,7 +131,7 @@ public:
   /// </summary>
   /// <returns>The removed context, if one existed, otherwise nullptr</returns>
   std::shared_ptr<CoreContext> RemoveContext(const Key& key) {
-    boost::lock_guard<boost::mutex> lk(m_contextLock);
+    std::lock_guard<std::mutex> lk(m_contextLock);
     auto q = m_contexts.find(key);
     if(q == m_contexts.end())
       return std::shared_ptr<CoreContext>();
@@ -152,7 +152,7 @@ public:
   /// shared pointers to the context are held by threads currently running in the context.
   /// </remarks>
   void RemoveContext(typename t_mpType::iterator q) {
-    (boost::lock_guard<boost::mutex>)m_contextLock,
+    (std::lock_guard<std::mutex>)m_contextLock,
     m_contexts.erase(q);
   }
 
@@ -168,7 +168,7 @@ public:
   /// in a teardown pathway when this method is called.
   /// </remarks>
   virtual void NotifyContextDestroyed(t_callbackHandle key, CoreContext* pContext) {
-    (boost::lock_guard<boost::mutex>)m_contextLock,
+    (std::lock_guard<std::mutex>)m_contextLock,
     m_contexts.erase(key);
   }
 };
@@ -212,7 +212,7 @@ public:
     unsigned short sentinal;
     // Insert into our list
     {
-      boost::lock_guard<boost::mutex> lock(m_contextLock);
+      std::lock_guard<std::mutex> lock(m_contextLock);
       m_contextList.push_front(child);
       q = m_contextList.begin();
       sentinal = m_clearSentinal;
@@ -223,12 +223,12 @@ public:
     child->AddTeardownListener([this, q, pContext, sentinal] () {
       //invalidate the iterator if we've detected that it has already been removed
       //by a call to Clear
-      if( (boost::lock_guard<boost::mutex>)m_contextLock, sentinal != m_clearSentinal ) {
+      if( (std::lock_guard<std::mutex>)m_contextLock, sentinal != m_clearSentinal ) {
         this->NotifyContextDestroyed(m_contextList.end(), pContext);
       }
       else {
         this->NotifyContextDestroyed(q, pContext);
-        (boost::lock_guard<boost::mutex>)m_contextLock,
+        (std::lock_guard<std::mutex>)m_contextLock,
           m_contextList.erase(q);
       }
     });
@@ -240,7 +240,7 @@ public:
   /// </summary>
   template<class Fn>
   void Enumerate(Fn&& fn) {
-    boost::lock_guard<boost::mutex> lk(m_contextLock);
+    std::lock_guard<std::mutex> lk(m_contextLock);
     for(auto q = m_contextList.begin(); q != m_contextList.end(); q++) {
       auto ctxt = q->lock();
       if(ctxt)
@@ -263,7 +263,7 @@ public:
   /// The container could, in fact, have elements in it at the time control is returned to the caller.
   /// </remarks>
   void Clear(bool wait) {
-    (boost::lock_guard<boost::mutex>)m_contextLock,
+    (std::lock_guard<std::mutex>)m_contextLock,
       m_clearSentinal++;
     ContextCreatorBase::Clear(wait, m_contextList, [] (typename t_contextList::iterator q) { return q->lock();});
   }

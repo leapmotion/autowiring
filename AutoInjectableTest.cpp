@@ -109,25 +109,25 @@ TEST_F(AutoInjectableTest, VerifySimpleThreadWait) {
   Autowired<CoreThread> thread;
   ASSERT_TRUE(thread.IsAutowired()) << "Thread was not injected by an injector as expected";
 
-  AutoRequired<boost::mutex> barr;
+  AutoRequired<std::mutex> barr;
   {
-    boost::lock_guard<boost::mutex> lk(*barr);
+    std::lock_guard<std::mutex> lk(*barr);
 
     // Add a lambda that we intentionally block:
     *thread += [] {
       Autowired<CoreThread> thread;
-      Autowired<boost::mutex> barr;
+      Autowired<std::mutex> barr;
       ASSERT_TRUE(thread && barr) << "Failed to find a required type in the current context";
-      boost::lock_guard<boost::mutex> lk(*barr);
+      std::lock_guard<std::mutex> lk(*barr);
       thread->Stop();
     };
 
     // Instant wait:
-    ASSERT_FALSE(future.WaitFor(boost::chrono::nanoseconds(1))) << "Premature wait return on an injector-provided future";
+    ASSERT_FALSE(future.WaitFor(std::chrono::nanoseconds(1))) << "Premature wait return on an injector-provided future";
   }
 
   // Now that the thread is unblocked, verify that it quits:
-  ASSERT_TRUE(future.WaitFor(boost::chrono::seconds(5))) << "Wait failed to return on an injector-provided future";
+  ASSERT_TRUE(future.WaitFor(std::chrono::seconds(5))) << "Wait failed to return on an injector-provided future";
 }
 
 TEST_F(AutoInjectableTest, VerifyFunctionalInjectable) {

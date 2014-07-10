@@ -37,19 +37,19 @@ public:
   {}
 
 private:
-  boost::mutex m_lock;
+  std::mutex m_lock;
   bool m_shouldContinue;
-  boost::condition_variable s_continueCond;
+  std::condition_variable s_continueCond;
 
 public:
   void Signal(void) {
-    (boost::lock_guard<boost::mutex>)m_lock,
+    (std::lock_guard<std::mutex>)m_lock,
     (m_shouldContinue = true),
     s_continueCond.notify_all();
   }
 
   void Delay(void) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
+    std::unique_lock<std::mutex> lk(m_lock);
     s_continueCond.wait(lk, [this] () {return m_shouldContinue;});
   }
 };
@@ -93,7 +93,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
   const size_t count = 100;
 
   // Teardown lock, counter, and condition:
-  boost::mutex lock;
+  std::mutex lock;
   boost::condition cond;
   int counter = count;
 
@@ -122,7 +122,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
 
       // Add a notifier to signal a continue condition when we have everything we need:
       ctxt->AddTeardownListener([&lock, &cond, &counter] {
-        (boost::lock_guard<boost::mutex>)lock,
+        (std::lock_guard<std::mutex>)lock,
         counter--,
         cond.notify_all();
       });
@@ -136,7 +136,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
   }
 
   // Wait for all contexts to be destroyed
-  boost::unique_lock<boost::mutex> lk(lock);
+  std::unique_lock<std::mutex> lk(lock);
   cond.wait(lk, [&counter] {return counter == 0;});
 
   // Validate that everything expires:

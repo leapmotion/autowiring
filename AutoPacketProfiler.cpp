@@ -10,6 +10,6 @@ AutoPacketProfiler::~AutoPacketProfiler()
 {
 }
 
-void AutoPacketProfiler::AddProfilingInformation(const std::type_info& subscriber, boost::chrono::nanoseconds duration) {
+void AutoPacketProfiler::AddProfilingInformation(const std::type_info& subscriber, std::chrono::nanoseconds duration) {
   m_totalTime[subscriber] += duration;
 }

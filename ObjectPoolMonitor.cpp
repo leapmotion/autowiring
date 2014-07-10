@@ -9,6 +9,6 @@ ObjectPoolMonitor::ObjectPoolMonitor(void* pOwner) :
 }
 
 void ObjectPoolMonitor::Abandon(void) {
-  (boost::lock_guard<boost::mutex>)*this,
+  (std::lock_guard<std::mutex>)*this,
   m_abandoned = true;
 }

@@ -16,7 +16,7 @@ class ObjectPool;
 /// which prevents teardown responsibility from being deferred.
 /// </remarks>
 class ObjectPoolMonitor:
-  public boost::mutex
+  public std::mutex
 {
 public:
   /// <param name="pOwner">The owner of this object pool monitor</param>

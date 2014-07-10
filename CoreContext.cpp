@@ -48,7 +48,7 @@ CoreContext::~CoreContext(void) {
     GetGlobal()->Invoke(&AutowiringEvents::ExpiredContext)(*this);
 
     // Also clear out any parent pointers:
-    boost::lock_guard<boost::mutex> lk(m_pParent->m_stateBlock->m_lock);
+    std::lock_guard<std::mutex> lk(m_pParent->m_stateBlock->m_lock);
     m_pParent->m_children.erase(m_backReference);
   }
 
@@ -84,7 +84,7 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, 
   t_childList::iterator childIterator;
   {
     // Lock the child list while we insert
-    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
     // Reserve a place in the list for the child
     childIterator = m_children.insert(m_children.end(), std::weak_ptr<CoreContext>());
@@ -115,7 +115,7 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, 
 }
 
 std::shared_ptr<CoreContext> CoreContext::FirstChild(void) const {
-  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
   // Just return the first child we successfully obtain a shared pointer for:
   for(const auto& cur : m_children) {
@@ -136,7 +136,7 @@ std::shared_ptr<CoreContext> CoreContext::NextSibling(void) const {
   // Our iterator will always be valid in our parent collection.  Take a copy, lock the parent collection down
   // to prevent it from being modified, and then see what happens when we increment
 
-  boost::lock_guard<boost::mutex> lk(m_pParent->m_stateBlock->m_lock);
+  std::lock_guard<std::mutex> lk(m_pParent->m_stateBlock->m_lock);
   for(
     auto cur = m_backReference;
     ++cur != m_pParent->m_children.end();
@@ -168,7 +168,7 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
     (Object*)1,
     [this, self, parentCount](Object*) {
       // Object being destroyed, notify all recipients
-      boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+      std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
       // Unfortunately, this destructor callback is made before weak pointers are
       // invalidated, which requires that we manually reset the outstanding count
@@ -184,7 +184,7 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
 
 void CoreContext::AddInternal(const AddInternalTraits& traits) {
   {
-    boost::unique_lock<boost::mutex> lk(m_stateBlock->m_lock);
+    std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
 
     // Validate that this addition does not generate an ambiguity:
     auto& v = m_typeMemos[typeid(*traits.pObject)];
@@ -219,7 +219,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
     JunctionBoxEntry<EventReceiver> entry(this, traits.pRecvr);
 
     // Add to our vector of local receivers first:
-    (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
+    (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
     m_eventReceivers.insert(entry);
 
     // Recursively add to all junction box managers up the stack:
@@ -245,7 +245,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
 }
 
 void CoreContext::FindByType(AnySharedPointer& reference) const {
-  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   FindByTypeUnsafe(reference);
 }
 
@@ -299,7 +299,7 @@ std::vector<std::shared_ptr<BasicThread>> CoreContext::CopyBasicThreadList(void)
 
 void CoreContext::Initiate(void) {
   {
-    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     if(m_initiated)
       // Already running
       return;
@@ -324,7 +324,7 @@ void CoreContext::Initiate(void) {
 
   // Reacquire the lock to prevent m_threads from being modified while we sit on it
   auto outstanding = IncrementOutstandingThreadCount();
-  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
   // Signal our condition variable
   m_stateBlock->m_stateChanged.notify_all();
@@ -340,7 +340,7 @@ void CoreContext::InitiateCoreThreads(void) {
 void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   // Wipe out the junction box manager, notify anyone waiting on the state condition:
   {
-    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     UnregisterEventReceiversUnsafe();
     m_isShutdown = true;
     m_stateBlock->m_stateChanged.notify_all();
@@ -357,7 +357,7 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
 
     {
       // Tear down all the children.
-      boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+      std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
       // Fill strong lock series in order to ensure proper teardown interleave:
       childrenInterleave.reserve(m_children.size());
@@ -400,17 +400,17 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
 }
 
 void CoreContext::Wait(void) {
-  boost::unique_lock<boost::mutex> lk(m_stateBlock->m_lock);
+  std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
   m_stateBlock->m_stateChanged.wait(lk, [this] {return m_isShutdown && this->m_outstanding.expired(); });
 }
 
-bool CoreContext::Wait(const boost::chrono::nanoseconds duration) {
-  boost::unique_lock<boost::mutex> lk(m_stateBlock->m_lock);
+bool CoreContext::Wait(const std::chrono::nanoseconds duration) {
+  std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
   return m_stateBlock->m_stateChanged.wait_for(lk, duration, [this] {return m_isShutdown && this->m_outstanding.expired(); });
 }
 
 bool CoreContext::DelayUntilInitiated(void) {
-  boost::unique_lock<boost::mutex> lk(m_stateBlock->m_lock);
+  std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
   m_stateBlock->m_stateChanged.wait(lk, [this] {return m_initiated || m_isShutdown;});
   return !m_isShutdown;
 }
@@ -449,7 +449,7 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
 }
 
 void CoreContext::AddAnchor(const std::type_info& ti) {
-  (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
+  (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
   m_anchors.insert(ti);
 }
 
@@ -463,7 +463,7 @@ void CoreContext::BuildCurrentState(void) {
   }
   
   // Recurse on all children
-  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   for(auto c : m_children) {
     auto cur = c.lock();
     if(!cur)
@@ -475,7 +475,7 @@ void CoreContext::BuildCurrentState(void) {
 }
 
 void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable) {
-  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   auto q = m_typeMemos.find(pDeferrable->GetType());
   if(q == m_typeMemos.end())
     return;
@@ -507,7 +507,7 @@ void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable
 }
 
 void CoreContext::Dump(std::ostream& os) const {
-  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   for(auto q = m_typeMemos.begin(); q != m_typeMemos.end(); q++) {
     os << q->first.name();
     const void* pObj = q->second.m_value->ptr();
@@ -569,7 +569,7 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
-void CoreContext::UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, const std::shared_ptr<Object>& entry) {
+void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const std::shared_ptr<Object>& entry) {
   // Collection of satisfiable lists:
   std::vector<std::pair<const DeferrableUnsynchronizedStrategy*, DeferrableAutowiring*>> satisfiable;
 
@@ -628,7 +628,7 @@ void CoreContext::UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, 
     // Reverse lock before satisfying children:
     lk.unlock();
     ctxt->UpdateDeferredElements(
-      boost::unique_lock<boost::mutex>(ctxt->m_stateBlock->m_lock),
+      std::unique_lock<std::mutex>(ctxt->m_stateBlock->m_lock),
       entry
     );
     lk.lock();
@@ -642,7 +642,7 @@ void CoreContext::UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, 
 
 void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> entry) {
   {
-    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
     if (!m_initiated) {
       // Delay adding receiver until context is initialized
@@ -685,7 +685,7 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
 
 void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver) {
   {
-    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     if(
       // If the passed value is currently a snooper, then the caller has snooped a context and also
       // one of its parents.  End here.
@@ -757,7 +757,7 @@ std::shared_ptr<AutoPacketFactory> CoreContext::GetPacketFactory(void) {
 
 void CoreContext::AddDeferred(const AnySharedPointer& reference, DeferrableAutowiring* deferrable)
 {
-  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
   // Determine whether a type memo exists right now for the thing we're trying to defer.  If it doesn't
   // exist, we need to inject one in order to allow deferred satisfaction to know what kind of type we
@@ -777,12 +777,12 @@ void CoreContext::AddDeferred(const AnySharedPointer& reference, DeferrableAutow
 }
 
 void CoreContext::InsertSnooper(std::shared_ptr<Object> snooper) {
-  (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
+  (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
     m_snoopers.insert(snooper.get());
 }
 
 void CoreContext::RemoveSnooper(std::shared_ptr<Object> snooper) {
-  (boost::lock_guard<boost::mutex>)m_stateBlock->m_lock,
+  (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
   m_snoopers.erase(snooper.get());
 }
 
@@ -797,7 +797,7 @@ void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
 
 void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
   {
-    boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     
     // If the passed value is currently a snooper, then the caller has snooped a context and also
     // one of its parents.  End here.
