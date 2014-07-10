@@ -2,7 +2,8 @@
 #include "CoreJobTest.h"
 #include "CoreJob.h"
 #include "move_only.h"
-#include <boost/thread.hpp>
+#include <thread>
+#include <future>
 
 TEST_F(CoreJobTest, VerifySimpleProperties) {
   AutoRequired<CoreJob> jb;
@@ -10,19 +11,19 @@ TEST_F(CoreJobTest, VerifySimpleProperties) {
   ASSERT_FALSE(m_create->IsInitiated()) << "CoreJob reported it could receive events before its enclosing context was created";
 
   // Create a thread which will delay for acceptance, and then quit:
-  boost::thread t([this] {
+  auto future = std::async(std::__1::launch::async, [this] { //GRAHAM
     m_create->DelayUntilInitiated();
   });
 
   // Verify that this thread doesn't back out right away:
-  ASSERT_FALSE(t.try_join_for(boost::chrono::milliseconds(10))) << "CoreJob did not block a client who was waiting for its readiness to accept dispatchers";
+  ASSERT_EQ(std::future_status::timeout, future.wait_for(std::chrono::milliseconds(10))) << "CoreJob did not block a client who was waiting for its readiness to accept dispatchers";
 
   // Now start the context and verify that certain properties changed as anticipated:
   m_create->Initiate();
   ASSERT_TRUE(m_create->DelayUntilInitiated()) << "CoreJob did not correctly delay for dispatch acceptance";
 
   // Verify that the blocked thread has become unblocked and quits properly:
-  ASSERT_TRUE(t.try_join_for(boost::chrono::seconds(1))) << "CoreJob did not correctly signal a blocked thread that it was ready to accept dispatchers";
+  ASSERT_EQ(std::future_status::ready, future.wait_for(std::chrono::seconds(1))) << "CoreJob did not correctly signal a blocked thread that it was ready to accept dispatchers";
 }
 
 TEST_F(CoreJobTest, VerifySimpleSubmission) {

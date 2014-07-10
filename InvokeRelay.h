@@ -94,7 +94,7 @@ public:
       return;
 
     const auto& dq = erp->GetDispatchQueue();
-    boost::lock_guard<boost::mutex> lk(erp->GetDispatchQueueLock());
+    std::lock_guard<std::mutex> lk(erp->GetDispatchQueueLock());
 
     for(auto q = dq.begin(); q != dq.end(); q++)
       (**q).AddExisting(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...));

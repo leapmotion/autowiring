@@ -14,17 +14,17 @@ public:
   {}
 
   bool m_signalled;
-  boost::mutex m_lock;
-  boost::condition_variable m_condVar;
+  std::mutex m_lock;
+  std::condition_variable m_condVar;
 
   void Signal(void) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
     m_signalled = true;
     m_condVar.notify_all();
   }
 
   void Wait(void) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
+    std::unique_lock<std::mutex> lk(m_lock);
     m_condVar.wait(lk, [this] {return this->m_signalled;});
   }
 };

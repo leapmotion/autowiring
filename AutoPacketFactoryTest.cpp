@@ -44,7 +44,7 @@ public:
     std::swap(packet, m_packet);
 
     // Just wait a bit, then return, just like we said we would
-    this->ThreadSleep(boost::chrono::milliseconds(50));
+    this->ThreadSleep(std::chrono::milliseconds(50));
 
     // Update our variable and then return out:
     m_hasQuit = true;

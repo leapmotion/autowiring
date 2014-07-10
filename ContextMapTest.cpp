@@ -6,6 +6,7 @@
 #include "TestFixtures/ExitRaceThreaded.h"
 #include "TestFixtures/SimpleThreaded.h"
 #include <string>
+#include <thread>
 
 using namespace std;
 
@@ -86,7 +87,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
 
     // Sleep for a little bit and run the verification again.  If the prior expectation fails,
     // but this one succeeds, it could be due to race conditions in CoreThread
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     ctxt = mp.Find("context_withthreads");
     EXPECT_FALSE(ctxt) << "Context was not properly evicted even after waiting for a time to ensure eviction";
   }
@@ -119,7 +120,7 @@ TEST_F(ContextMapTest, ConcurrentDestructionTestPathological) {
     for(size_t i = 0; i < ARRAYCOUNT(threads); i++) {
       auto cur = threads[i].lock();
       if(cur)
-        ASSERT_TRUE(cur->WaitFor(boost::chrono::seconds(1))) << "Spawned thread did not exit in a timely fashion";
+        ASSERT_TRUE(cur->WaitFor(std::chrono::seconds(1))) << "Spawned thread did not exit in a timely fashion";
     }
   }
 }

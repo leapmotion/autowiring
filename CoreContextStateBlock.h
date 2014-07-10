@@ -9,9 +9,9 @@ public:
   ~CoreContextStateBlock(void);
 
   // General purpose lock for this class
-  boost::mutex m_lock;
+  std::mutex m_lock;
 
   // Condition, signalled when context state has been changed
-  boost::condition m_stateChanged;
+  std::condition_variable m_stateChanged;
 };
 

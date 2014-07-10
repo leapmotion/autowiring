@@ -50,17 +50,17 @@ protected:
   std::priority_queue<DispatchThunkDelayed> m_delayedQueue;
 
   // A lock held when the dispatch queue must be updated:
-  boost::mutex m_dispatchLock;
+  std::mutex m_dispatchLock;
 
   // Notice when the dispatch queue has been updated:
-  boost::condition_variable m_queueUpdated;
+  std::condition_variable m_queueUpdated;
 
   bool m_aborted;
 
   /// <summary>
   /// Recommends a point in time to wake up to check for events
   /// </summary>
-  boost::chrono::high_resolution_clock::time_point SuggestSoonestWakeupTimeUnsafe(boost::chrono::high_resolution_clock::time_point latestTime) const;
+  std::chrono::high_resolution_clock::time_point SuggestSoonestWakeupTimeUnsafe(std::chrono::high_resolution_clock::time_point latestTime) const;
 
   /// <summary>
   /// Moves all ready events from the delayed queue into the dispatch queue
@@ -75,7 +75,7 @@ protected:
   /// This method assumes that the dispatch lock is held and that m_aborted is false.  It
   /// is an error to call this method without those preconditions met.
   /// </remarks>
-  void DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk);
+  void DispatchEventUnsafe(std::unique_lock<std::mutex>& lk);
 
   /// <summary>
   /// Utility virtual, called whenever a new event is deferred
@@ -85,14 +85,14 @@ protected:
   /// lock.  The queue is guaranteed to contain at least one element, and may potentially contain more.  The
   /// caller MUST NOT attempt to pend any more events during this call, or a deadlock could occur.
   /// </remarks>
-  virtual void OnPended(boost::unique_lock<boost::mutex>&& lk) {}
+  virtual void OnPended(std::unique_lock<std::mutex>&& lk) {}
 
   /// <summary>
   /// Attaches an element to the end of the dispatch queue without any checks.
   /// </summary>
   template<class _Fx>
   void Pend(_Fx&& fx) {
-    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+    std::unique_lock<std::mutex> lk(m_dispatchLock);
     m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
     m_queueUpdated.notify_all();
 
@@ -147,7 +147,7 @@ public:
   /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>
   void AddExisting(DispatchThunkBase* pBase) {
-    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+    std::unique_lock<std::mutex> lk(m_dispatchLock);
     if(static_cast<int>(m_dispatchQueue.size()) >= m_dispatchCap)
       return;
 
@@ -159,14 +159,14 @@ public:
   template<class Clock>
   class DispatchThunkDelayedExpression {
   public:
-    DispatchThunkDelayedExpression(DispatchQueue* pParent, boost::chrono::time_point<Clock> wakeup) :
+    DispatchThunkDelayedExpression(DispatchQueue* pParent, std::chrono::time_point<Clock> wakeup) :
       m_pParent(pParent),
       m_wakeup(wakeup)
     {}
 
   private:
     DispatchQueue* m_pParent;
-    boost::chrono::time_point<Clock> m_wakeup;
+    std::chrono::time_point<Clock> m_wakeup;
 
   public:
     template<class _Fx>
@@ -183,10 +183,10 @@ public:
   /// Overload for the introduction of a delayed dispatch thunk
   /// </summary>
   template<class Rep, class Period>
-  DispatchThunkDelayedExpression<boost::chrono::high_resolution_clock> operator+=(boost::chrono::duration<Rep, Period> rhs) {
-    return DispatchThunkDelayedExpression<boost::chrono::high_resolution_clock>(
+  DispatchThunkDelayedExpression<std::chrono::high_resolution_clock> operator+=(std::chrono::duration<Rep, Period> rhs) {
+    return DispatchThunkDelayedExpression<std::chrono::high_resolution_clock>(
       this,
-      boost::chrono::high_resolution_clock::now() + rhs
+      std::chrono::high_resolution_clock::now() + rhs
     );
   }
 
@@ -194,7 +194,7 @@ public:
   /// Overload for absolute-time based delayed dispatch thunk
   /// </summary>
   template<class Clock>
-  DispatchThunkDelayedExpression<Clock> operator+=(boost::chrono::time_point<Clock> rhs) {
+  DispatchThunkDelayedExpression<Clock> operator+=(std::chrono::time_point<Clock> rhs) {
     return DispatchThunkDelayedExpression<Clock>(this, rhs);
   }
 
@@ -202,7 +202,7 @@ public:
   /// Directly pends a delayed dispatch thunk
   /// </summary>
   void operator+=(DispatchThunkDelayed&& rhs) {
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    std::lock_guard<std::mutex> lk(m_dispatchLock);
 
     m_delayedQueue.push(std::forward<DispatchThunkDelayed>(rhs));
     if(
@@ -222,7 +222,7 @@ public:
     static_assert(!std::is_base_of<DispatchThunkBase, _Fx>::value, "Overload resolution malfunction, must not doubly wrap a dispatch thunk");
     static_assert(!std::is_pointer<_Fx>::value, "Cannot pend a pointer to a function, we must have direct ownership");
 
-    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+    std::unique_lock<std::mutex> lk(m_dispatchLock);
     if(static_cast<int>(m_dispatchQueue.size()) >= m_dispatchCap)
       return;
 

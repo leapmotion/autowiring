@@ -27,7 +27,7 @@ class ContextMap
 {
 public:
   struct tracker:
-    public boost::mutex
+    public std::mutex
   {
     tracker(void):
       destroyed(false)
@@ -43,7 +43,7 @@ public:
 
   ~ContextMap(void) {
     // Teardown pathway assurance:
-    (boost::lock_guard<boost::mutex>)m_lk,
+    (std::lock_guard<std::mutex>)m_lk,
     (m_tracker->destroyed = true);
 
     // Done, we can release our copy of the shared pointer and end here
@@ -56,7 +56,7 @@ private:
   std::shared_ptr<tracker> m_tracker;
 
   typedef std::unordered_map<Key, std::weak_ptr<CoreContext>> t_mpType;
-  boost::mutex& m_lk;
+  std::mutex& m_lk;
   t_mpType m_contexts;
 
 public:
@@ -65,7 +65,7 @@ public:
 
   template<class Fn>
   void Enumerate(Fn&& fn) {
-    boost::lock_guard<boost::mutex> lk(m_lk);
+    std::lock_guard<std::mutex> lk(m_lk);
     for(auto q = m_contexts.begin(); q != m_contexts.end(); q++) {
       auto ctxt = q->second.lock();
       if(ctxt)
@@ -84,7 +84,7 @@ public:
   /// An exception will be thrown if the passed key is already associated with a context
   /// </remarks>
   void Add(const Key& key, std::shared_ptr<CoreContext>& context) {
-    boost::lock_guard<boost::mutex> lk(m_lk);
+    std::lock_guard<std::mutex> lk(m_lk);
     auto& rhs = m_contexts[key];
     if(!rhs.expired())
       throw_rethrowable autowiring_error("Specified key is already associated with another context");
@@ -99,7 +99,7 @@ public:
         // Context survived the map
         return;
 
-      boost::lock_guard<boost::mutex> lk(*locked);
+      std::lock_guard<std::mutex> lk(*locked);
       if(locked->destroyed)
         // Map passed through teardown pathway while we were trying to lock it
         return;
@@ -130,7 +130,7 @@ public:
   /// Attempts to find a context by the specified key
   /// </summary>
   std::shared_ptr<CoreContext> Find(const Key& key) {
-    boost::lock_guard<boost::mutex> lk(m_lk);
+    std::lock_guard<std::mutex> lk(m_lk);
     auto q = m_contexts.find(key);
 
     return

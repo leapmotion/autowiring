@@ -4,8 +4,6 @@
 #include "AutoCheckout.h"
 #include "DecorationDisposition.h"
 #include "ObjectPool.h"
-#include <boost/thread/lock_guard.hpp>
-#include <boost/thread/mutex.hpp>
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
@@ -52,7 +50,7 @@ private:
   std::vector<SatCounter> m_satCounters;
 
   // The set of decorations currently attached to this object, and the associated lock:
-  mutable boost::mutex m_lock;
+  mutable std::mutex m_lock;
   typedef std::unordered_map<std::type_index, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
 
@@ -97,7 +95,7 @@ private:
   template<class T>
   void CompleteCheckout(bool ready) {
     {
-      boost::lock_guard<boost::mutex> lk(m_lock);
+      std::lock_guard<std::mutex> lk(m_lock);
       auto& entry = m_decorations[typeid(T)];
 
       if(!ready)
@@ -181,7 +179,7 @@ public:
 
     AnySharedPointer slot;
     {
-      boost::lock_guard<boost::mutex> lk(m_lock);
+      std::lock_guard<std::mutex> lk(m_lock);
       auto dFind = m_decorations.find(typeid(type));
       if(dFind == m_decorations.end())
         // No parties interested in this entry, return here
@@ -200,7 +198,7 @@ public:
     auto ptr = std::make_shared<T>();
 
     // Have to find the entry _again_ within the context of a lock and satisfy it here:
-    (boost::lock_guard<boost::mutex>)m_lock,
+    (std::lock_guard<std::mutex>)m_lock,
     m_decorations[typeid(type)].m_decoration = ptr;
 
     return AutoCheckout<T>(
@@ -221,7 +219,7 @@ public:
   void Unsatisfiable(void) {
     {
       // Insert a null entry at this location:
-      boost::lock_guard<boost::mutex> lk(m_lock);
+      std::lock_guard<std::mutex> lk(m_lock);
       auto& entry = m_decorations[typeid(T)];
       if(entry.wasCheckedOut)
         throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
@@ -249,7 +247,7 @@ public:
 
     DecorationDisposition* pEntry;
     {
-      boost::lock_guard<boost::mutex> lk(m_lock);
+      std::lock_guard<std::mutex> lk(m_lock);
       pEntry = &m_decorations[typeid(Type)];
       if(pEntry->wasCheckedOut)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
@@ -286,7 +284,7 @@ public:
 
     // Perform standard decoration with a short initialization:
     {
-      boost::lock_guard<boost::mutex> lk(m_lock);
+      std::lock_guard<std::mutex> lk(m_lock);
       for(size_t i = 0; i < sizeof...(Ts); i++) {
         pTypeSubs[i] = &m_decorations[*sc_typeInfo[i]];
         if(pTypeSubs[i]->wasCheckedOut)
