@@ -44,6 +44,7 @@ void CoreJob::OnPended(boost::unique_lock<boost::mutex>&& lk){
 }
 
 void CoreJob::DispatchAllAndClearCurrent(void) {
+  CurrentContextPusher pshr(GetContext());
   for(;;) {
     // Trivially run down the queue as long as we're in the pool:
     this->DispatchAllEvents();
