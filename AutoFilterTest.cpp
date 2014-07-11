@@ -733,6 +733,91 @@ TEST_F(AutoFilterTest, NoDeferredImmediateSatisfaction) {
   ASSERT_EQ(0UL, wfil->GetDispatchQueueLength()) << "Deferred AutoFilter incorrectly received an immediate-mode decoration";
 }
 
+class AcceptsConstReference {
+public:
+  AcceptsConstReference(void) :
+  m_called(0)
+  {}
+
+  int m_called;
+
+  void AutoFilter(const int& dataIn) {
+    ++m_called;
+  }
+};
+
+class AcceptsSharedPointer {
+public:
+  AcceptsSharedPointer(void) :
+  m_called(0)
+  {}
+
+  int m_called;
+
+  void AutoFilter(std::shared_ptr<int> dataIn) {
+    ++m_called;
+  }
+};
+
+TEST_F(AutoFilterTest, SharedPtrCollapse) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<AcceptsConstReference> constr_filter;
+  AutoRequired<AcceptsSharedPointer> shared_filter;
+
+  int constr_int = 0;
+  std::shared_ptr<int> shared_int = std::make_shared<int>(0);
+  ASSERT_TRUE(static_cast<bool>(shared_int));
+
+  // Decorate(type X) calls AutoFilter(const type& X)
+  // Decorate(type X) calls AutoFilter(shared_ptr<type> X)
+  {
+    auto packet = factory->NewPacket();
+    packet->Decorate(constr_int);
+    ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
+    ASSERT_EQ(1, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
+  }
+  constr_filter->m_called = 0;
+  shared_filter->m_called = 0;
+
+  // Decorate(shared_ptr<type> X) calls AutoFilter(const type& X)
+  // Decorate(shared_ptr<type> X) calls AutoFilter(shared_ptr<type> X)
+  {
+    auto packet = factory->NewPacket();
+    packet->Decorate(shared_int);
+    ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
+    ASSERT_EQ(1, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
+  }
+  constr_filter->m_called = 0;
+  shared_filter->m_called = 0;
+
+  // DecorateImmediate(shared_ptr<type> X) calls AutoFilter(const type& X)
+  // DecorateImmediate(shared_ptr<type> X) calls AutoFilter(shared_ptr<type> X)
+  {
+    auto packet = factory->NewPacket();
+    packet->DecorateImmediate(shared_int);
+    ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
+    ASSERT_EQ(1, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
+  }
+  constr_filter->m_called = 0;
+  shared_filter->m_called = 0;
+
+  // DecorateImmediate(type X) calls AutoFilter(const type& X)
+  // DecorateImmediate(type X) DOES NOT CALL AutoFilter(shared_ptr<type> X)
+  // NOTE: This case is invalid, since DecorateImmediate assumes no validity of X after the function call,
+  // so the construction of a shared_ptr from &X would violate the contract of shared_ptr type.
+  // If an AutoFilter method assumed the validity of shared_ptr<type> Y, a copy could be made that might
+  // become invalid.
+  {
+    auto packet = factory->NewPacket();
+    packet->DecorateImmediate(constr_int);
+    ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
+    ASSERT_EQ(0, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
+  }
+  constr_filter->m_called = 0;
+  shared_filter->m_called = 0;
+}
+
 class AcceptsSharedPointerAndReference {
 public:
   AcceptsSharedPointerAndReference(void) :
