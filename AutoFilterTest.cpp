@@ -791,23 +791,14 @@ TEST_F(AutoFilterTest, SharedPtrCollapse) {
   constr_filter->m_called = 0;
   shared_filter->m_called = 0;
 
-  // DecorateImmediate(shared_ptr<type> X) calls AutoFilter(const type& X)
-  // DecorateImmediate(shared_ptr<type> X) calls AutoFilter(shared_ptr<type> X)
-  {
-    auto packet = factory->NewPacket();
-    packet->DecorateImmediate(shared_int);
-    ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
-    ASSERT_EQ(1, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
-  }
-  constr_filter->m_called = 0;
-  shared_filter->m_called = 0;
-
   // DecorateImmediate(type X) calls AutoFilter(const type& X)
   // DecorateImmediate(type X) DOES NOT CALL AutoFilter(shared_ptr<type> X)
   // NOTE: This case is invalid, since DecorateImmediate assumes no validity of X after the function call,
   // so the construction of a shared_ptr from &X would violate the contract of shared_ptr type.
   // If an AutoFilter method assumed the validity of shared_ptr<type> Y, a copy could be made that might
   // become invalid.
+  // NOTE: DecorateImmediate(shared_ptr<type> X) is unnecessary (a static_assert will be called).
+  // Decorate(shared_ptr<type> X) will share the reference to X instead of making a copy.
   {
     auto packet = factory->NewPacket();
     packet->DecorateImmediate(constr_int);
