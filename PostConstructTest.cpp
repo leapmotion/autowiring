@@ -4,7 +4,7 @@
 #include "Autowired.h"
 #include "ContextMember.h"
 #include "TestFixtures/SimpleObject.h"
-#include <boost/thread/barrier.hpp>
+#include "TestFixtures/ThreadBarrier.h"
 #include <thread>
 
 using namespace std;
@@ -187,7 +187,7 @@ TEST_F(PostConstructTest, MultiNotifyWhenAutowired) {
 
 TEST_F(PostConstructTest, NotificationTeardownRace) {
   std::shared_ptr<CoreContext> pContext;
-  boost::barrier barr(2);
+  ThreadBarrier barr(2);
 
   // This thread sets up the race pathology:
   std::thread t([&] {
