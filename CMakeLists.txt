@@ -82,6 +82,7 @@ set(Autowiring_SRCS
   has_simple_constructor.h
   has_static_new.h
   is_any.h
+  is_shared_ptr.h
   InterlockedExchange.h
   InvokeRelay.h
   Jzon.h
