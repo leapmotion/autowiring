@@ -1,6 +1,6 @@
 #pragma once
-#include "../CoreThread.h"
-#include "../has_autofilter.h"
+#include "Autowiring/CoreThread.h"
+#include "Autowiring/has_autofilter.h"
 #include <boost/thread/barrier.hpp>
 
 /// <summary>

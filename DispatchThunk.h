@@ -1,6 +1,5 @@
 #pragma once
-
-#include <boost/chrono/system_clocks.hpp>
+#include <chrono>
 
 /// <summary>
 /// A simple virtual class used to hold a trivial thunk

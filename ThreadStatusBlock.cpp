@@ -7,12 +7,9 @@ static boost::thread_specific_ptr<ThreadStatusBlock> s_statusBlock;
 
 ThreadStatusBlock::ThreadStatusBlock(void):
   m_context(GlobalCoreContext::Get())
-{
-}
+{}
 
-ThreadStatusBlock::~ThreadStatusBlock(void)
-{
-}
+ThreadStatusBlock::~ThreadStatusBlock(void){}
 
 ThreadStatusBlock* ThreadStatusBlock::Get(void) {
   if(!s_statusBlock.get())

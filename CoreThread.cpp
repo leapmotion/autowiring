@@ -2,7 +2,6 @@
 #include "CoreThread.h"
 #include "Autowired.h"
 #include "BasicThreadStateBlock.h"
-#include <boost/thread.hpp>
 
 CoreThread::CoreThread(const char* pName):
   BasicThread(pName)
