@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "InterlockedRoutinesTest.h"
 #include "InterlockedExchange.h"
+#include "TestFixtures/ThreadBarrier.h"
 #include <thread>
-#include <boost/thread/barrier.hpp>
 
 template<void* (*fn)(void**, void*)>
 void CheckFn() {
@@ -59,7 +59,7 @@ TEST_F(InterlockedRoutinesTest, VerifyCompareExchangePathological) {
   void* counter = &base;
 
   // Barrier, in order to exacerbate race conditions:
-  boost::barrier bar(threadCount);
+  ThreadBarrier bar(threadCount);
 
   auto contender = [&counter, &bar] () {
     void* presumption;
