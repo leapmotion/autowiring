@@ -5,6 +5,7 @@
 #include "DecorationDisposition.h"
 #include "is_shared_ptr.h"
 #include "ObjectPool.h"
+#include "is_any.h"
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include MEMORY_HEADER
