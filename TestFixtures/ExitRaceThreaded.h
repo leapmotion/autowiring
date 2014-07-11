@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Autowiring/CoreThread.h"
-#include <boost/thread/condition_variable.hpp>
 
 /// <summary>
 /// An exit-race signal

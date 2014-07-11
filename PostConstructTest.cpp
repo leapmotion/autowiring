@@ -5,7 +5,7 @@
 #include "ContextMember.h"
 #include "TestFixtures/SimpleObject.h"
 #include <boost/thread/barrier.hpp>
-#include <boost/thread/thread.hpp>
+#include <thread>
 
 using namespace std;
 
@@ -190,7 +190,7 @@ TEST_F(PostConstructTest, NotificationTeardownRace) {
   boost::barrier barr(2);
 
   // This thread sets up the race pathology:
-  boost::thread t([&] {
+  std::thread t([&] {
     for(;;) {
       // Barrier until setup time:
       barr.wait();

@@ -3,7 +3,6 @@
 
 #include "autowiring_error.h"
 #include "CoreContext.h"
-#include <boost/thread/mutex.hpp>
 #include STL_UNORDERED_MAP
 
 extern std::shared_ptr<CoreContext> NewContextThunk(void);
