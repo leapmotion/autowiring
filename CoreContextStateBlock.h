@@ -1,6 +1,5 @@
 #pragma once
-#include <boost/thread/condition.hpp>
-#include <boost/thread/mutex.hpp>
+#include <mutex>
 
 struct CoreContextStateBlock
 {

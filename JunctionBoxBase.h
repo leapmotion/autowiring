@@ -1,6 +1,6 @@
 #pragma once
-#include <boost/thread/mutex.hpp>
 #include <vector>
+#include <mutex>
 #include MEMORY_HEADER
 #include STL_UNORDERED_SET
 

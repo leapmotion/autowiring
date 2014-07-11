@@ -464,7 +464,7 @@ TEST_F(CoreThreadTest, VerifyCanBoostPriority) {
     // in order to force the thread over to the sleep queue and ensure that the priority resolution mechanism is
     // directly tested.
     std::lock_guard<std::mutex> lk(*contended);
-    boost::this_thread::sleep_for(std::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 
   // Need to terminate before we try running a comparison.

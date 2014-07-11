@@ -2,8 +2,6 @@
 #include "autowiring_error.h"
 #include "Object.h"
 #include "ObjectPoolMonitor.h"
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/mutex.hpp>
 #include <set>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
