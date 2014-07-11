@@ -170,10 +170,12 @@ public:
   /// Attempts to coerce this type to the speceified type
   /// </summary>
   template<class T>
-  std::shared_ptr<T> as(void) const {
+  const std::shared_ptr<T>& as(void) const {
+    static const std::shared_ptr<T> s_empty;
+
     if(type() == typeid(void))
       // This is allowed, we always permit null to be cast to the requested type.
-      return std::shared_ptr<T>();
+      return s_empty;
 
     if(type() != typeid(T))
       throw std::runtime_error("Attempted to obtain a shared pointer for an unrelated type");
