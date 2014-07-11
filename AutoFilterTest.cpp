@@ -782,11 +782,13 @@ TEST_F(AutoFilterTest, SharedPtrCollapse) {
 
   // Decorate(shared_ptr<type> X) calls AutoFilter(const type& X)
   // Decorate(shared_ptr<type> X) calls AutoFilter(shared_ptr<type> X)
+  // NOTE: Decorate(shared_ptr<T> X) shares ownership of X instead of copying.
   {
     auto packet = factory->NewPacket();
     packet->Decorate(shared_int);
     ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
     ASSERT_EQ(1, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
+    ASSERT_FALSE(shared_int.unique()) << "Argument of Decorate should be shared, not copied, when possible";
   }
   constr_filter->m_called = 0;
   shared_filter->m_called = 0;
