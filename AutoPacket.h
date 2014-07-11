@@ -3,6 +3,7 @@
 #include "at_exit.h"
 #include "AutoCheckout.h"
 #include "DecorationDisposition.h"
+#include "is_shared_ptr.h"
 #include "ObjectPool.h"
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
@@ -301,6 +302,13 @@ public:
     static const std::type_info* sc_typeInfo [] = {&typeid(Ts)...};
     const void* pvImmeds[] = {&immeds...};
     DecorationDisposition* pTypeSubs[sizeof...(Ts)];
+
+    // None of the inputs may be shared pointers--if any of the inputs are shared pointers, they must be attached
+    // to this packet via Decorate, or else dereferenced and used that way.
+    static_assert(
+      !is_any<is_shared_ptr<Ts>...>::value,
+      "DecorateImmediate must not be used to attach a shared pointer, use Decorate on such a decoration instead"
+    );
 
     // Perform standard decoration with a short initialization:
     {
