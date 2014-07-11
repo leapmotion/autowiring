@@ -195,8 +195,7 @@ class TakesALongTimeToExit:
 public:
   TakesALongTimeToExit(void) :
     barr(2)
-  {
-  }
+  {}
 
   boost::barrier barr;
 

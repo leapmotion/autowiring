@@ -3,8 +3,6 @@
 #include "ContextCreator.h"
 #include "CoreContext.h"
 #include "CoreThread.h"
-#include <boost/thread/condition.hpp>
-#include <boost/thread/mutex.hpp>
 #include <string>
 
 struct EvictionContext {};
@@ -94,7 +92,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
 
   // Teardown lock, counter, and condition:
   std::mutex lock;
-  boost::condition cond;
+  std::condition_variable cond;
   int counter = count;
 
   // Obtain creator pointer:

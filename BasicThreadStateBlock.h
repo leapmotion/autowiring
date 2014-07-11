@@ -1,8 +1,6 @@
 #pragma once
 #include MEMORY_HEADER
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/thread.hpp>
+#include <thread>
 
 struct BasicThreadStateBlock:
   std::enable_shared_from_this<BasicThreadStateBlock>
@@ -14,6 +12,6 @@ struct BasicThreadStateBlock:
   std::condition_variable m_stateCondition;
 
   // The current thread, if running
-  boost::thread m_thisThread;
+  std::thread m_thisThread;
 };
 

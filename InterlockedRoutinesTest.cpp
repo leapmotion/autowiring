@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "InterlockedRoutinesTest.h"
 #include "InterlockedExchange.h"
+#include <thread>
 #include <boost/thread/barrier.hpp>
-#include <boost/thread/thread.hpp>
 
 template<void* (*fn)(void**, void*)>
 void CheckFn() {
@@ -79,9 +79,9 @@ TEST_F(InterlockedRoutinesTest, VerifyCompareExchangePathological) {
     } while(compare_exchange(&counter, addend, presumption) != presumption);
   };
 
-  boost::thread allThreads[threadCount];
+  std::thread allThreads[threadCount];
   for(size_t i = 0; i < threadCount; i++) {
-    allThreads[i] = boost::thread(contender);
+    allThreads[i] = std::thread(contender);
   }
 
   // Wait for all threads to complete:

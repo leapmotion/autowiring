@@ -2,9 +2,9 @@
 
 #include "EventReceiver.h"
 #include "DispatchThunk.h"
-#include <boost/thread/condition_variable.hpp>
 #include <list>
 #include <queue>
+#include <mutex>
 #include RVALUE_HEADER
 #include MEMORY_HEADER
 
@@ -15,8 +15,7 @@ class DispatchQueue;
 /// </summary>
 class dispatch_aborted_exception:
   public std::exception
-{
-};
+{};
 
 /// <summary>
 /// This is an asynchronous queue of zero-argument functions

@@ -1,5 +1,5 @@
 #pragma once
-#include <boost/thread/mutex.hpp>
+#include <mutex>
 
 template<class T>
 class ObjectPool;

@@ -50,16 +50,16 @@ TEST_F(CoreJobTest, VerifyTeardown) {
   bool check3 = false;
 
   *job += [&check1] {
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     check1 = true;
   };
   *job += [&check2] {
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     check2 = true;
   };
   ctxt->Initiate();
   *job += [&check3] {
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     check3 = true;
   };
 
@@ -172,7 +172,7 @@ TEST_F(CoreJobTest, RaceCondition) {
       first = true;
     };
     
-    boost::this_thread::sleep(boost::posix_time::milliseconds(i));
+    std::this_thread::sleep_for(std::chrono::milliseconds(i));
     
     *cj += [&second, &cj] {
       second = true;

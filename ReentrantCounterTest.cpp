@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "ReentrantCounterTest.h"
 #include "ReentrantCounter.h"
-#include <boost/chrono.hpp>
 #include <vector>
 
 // Timeouts, in microseconds:
