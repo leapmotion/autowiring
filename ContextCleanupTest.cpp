@@ -4,9 +4,8 @@
 #include "CoreContext.h"
 #include "TestFixtures/SimpleObject.h"
 #include "TestFixtures/SimpleThreaded.h"
+#include "TestFixtures/ThreadBarrier.h"
 #include <thread>
-
-#include <boost/thread/barrier.hpp>
 
 TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
   class WeakPtrChecker {
@@ -197,7 +196,7 @@ public:
     barr(2)
   {}
 
-  boost::barrier barr;
+  ThreadBarrier barr;
 
   virtual void Run(void) {
     barr.wait();

@@ -1,7 +1,7 @@
 #pragma once
 #include "Autowiring/CoreThread.h"
 #include "Autowiring/has_autofilter.h"
-#include <boost/thread/barrier.hpp>
+#include "ThreadBarrier.h"
 
 /// <summary>
 /// A simple "decoration" class which will be added to a variety of sample packets
@@ -60,7 +60,7 @@ public:
     return Deferred(this);
   }
 
-  boost::barrier m_barr;
+  ThreadBarrier m_barr;
   bool m_excepted;
 
   void Run(void) override {
