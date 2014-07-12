@@ -25,11 +25,9 @@ public:
     ++m_numWaiters;
 
     if (m_numWaiters == m_barrierLimit) {
-      // Notify waiting threads and reset barrier
       m_cv.notify_all();
       m_numWaiters = 0;
     } else {
-      // Wait until "m_barrierLimit" threads wait
       m_cv.wait(lk);
     }
   }

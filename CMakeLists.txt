@@ -103,6 +103,7 @@ set(Autowiring_SRCS
   TeardownNotifier.cpp
   ThreadStatusBlock.h
   ThreadStatusBlock.cpp
+  thread_specific_ptr.h
   TypeRegistry.h
   TypeRegistry.cpp
   TypeUnifier.h
@@ -122,11 +123,13 @@ OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
 set(Autowiring_Win_SRCS
   CoreThreadWin.cpp
   InterlockedExchangeWin.cpp
+  thread_specific_ptr_win.cpp
 )
 
 set(Autowiring_Unix_SRCS
 	CoreThreadUnix.cpp
 	InterlockedExchangeUnix.cpp
+  thread_specific_ptr_unix.cpp
 )
 
 ADD_MSVC_DISABLED_FILES("Unix Source" Autowiring_SRCS ${Autowiring_Unix_SRCS})
@@ -230,6 +233,7 @@ set(AutowiringTest_SRCS
   TestFixtures/SimpleInterface.h
   TestFixtures/SimpleObject.h
   TestFixtures/SimpleThreaded.h
+  TestFixtures/ThreadBarrier.h
   TestFixtures/ThrowingListener.h
   TestFixtures/ThrowsWhenFired.h
   TestFixtures/ThrowsWhenRun.h
