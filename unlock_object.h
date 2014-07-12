@@ -18,8 +18,6 @@
 ///</remarks>
 template<class object, class lock = boost::mutex>
 class unlock_object {
-  friend class shared_object<object, lock>;
-
   unlock_object(unlock_object<object, lock>& source) = delete;
   unlock_object<object, lock>& operator = (unlock_object<object, lock>& _rhs) = delete;
 
