@@ -13,9 +13,9 @@
 #include "TypeRegistry.h"
 #include <algorithm>
 #include <stack>
+#include "thread_specific_ptr.h"
 #include <boost/thread/tss.hpp>
 
-using namespace std;
 
 /// <summary>
 /// A pointer to the current context, specific to the current thread.
@@ -512,8 +512,8 @@ void CoreContext::Dump(std::ostream& os) const {
     os << q->first.name();
     const void* pObj = q->second.m_value->ptr();
     if(pObj)
-      os << " 0x" << hex << pObj;
-    os << endl;
+      os << " 0x" << std::hex << pObj;
+    os << std::endl;
   }
 
   for(auto q = m_threads.begin(); q != m_threads.end(); q++) {
