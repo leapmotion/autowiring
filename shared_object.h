@@ -12,19 +12,33 @@
 ///<remarks>
 ///This class guarantees the existence of a referenced atomic_object.
 ///In order for shared_object to be thread-safe the reference is defined on construction.
+///Defining assignment to apply to the referenced object instead of the reference
+///ensures that the behavior of a shared_object is identical to an atomic_object,
+///since the referenced object cannot be changed.
 ///</remarks>
 template<class object, class lock = boost::mutex>
 class shared_object {
   friend class unlock_object<object, lock>;
 
+protected:
   //CONTRACT: m_share == true
   std::shared_ptr<atomic_object<object, lock>> m_share;
+
+  lock& get_lock() const {
+    return m_share->m_lock;
+  }
+  object& get_object() {
+    return m_share->m_object;
+  }
+  bool& get_initialized() {
+    return m_share->m_initialized;
+  }
 
 public:
   typedef unlock_object<object, lock> unlock;
 
   ///<summary>
-  ///Default constructor instiates an uninitialized atomic_object.
+  ///Default constructor instantiates an uninitialized atomic_object.
   ///</summary>
   shared_object():
   m_share(new atomic_object<object, lock>()) {}
@@ -89,19 +103,11 @@ public:
   ///<summary>
   ///Reset using default constructor yielding initialized() == false.
   ///</summary>
+  ///<remarks>
+  ///This method is equivalent to:
+  /// unlock_object<object>(source)->reset();
+  ///</remarks>
   void reset() {
     m_share->reset();
-  }
-
-  ///<summary>
-  ///Yields a reference to the gating lock
-  ///</summary>
-  ///<remarks>
-  ///WARNING: This method opens the possibility of violating the locking conditions.
-  ///This method is provided in order to ensure compatability with methods requiring
-  ///a reference to a manipulatable lock.
-  ///</remarks>
-  lock& gate() const {
-    return m_share->m_lock;
   }
 };
