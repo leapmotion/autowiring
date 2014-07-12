@@ -3,7 +3,9 @@
 #include "at_exit.h"
 #include "AutoCheckout.h"
 #include "DecorationDisposition.h"
+#include "is_shared_ptr.h"
 #include "ObjectPool.h"
+#include "is_any.h"
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include MEMORY_HEADER
@@ -110,8 +112,11 @@ private:
       entry.satisfied = true;
     }
 
-    if(ready)
+    if(ready) {
+      // Satisfy the base declaration first and then the shared pointer:
       UpdateSatisfaction(typeid(T));
+      UpdateSatisfaction(typeid(std::shared_ptr<T>));
+    }
     else
       MarkUnsatisfiable(typeid(T));
   }
@@ -166,28 +171,45 @@ public:
   }
 
   /// <summary>
+  /// Shared pointer specialization, used to obtain the underlying shared pointer for some type T
+  /// </summary>
+  /// <remarks>
+  /// This specialization cannot be used to obtain a decoration which has been attached to this packet via
+  /// DecorateImmediate
+  /// </summary>
+  template<class T>
+  bool Get(const std::shared_ptr<T>*& out) const {
+    auto q = m_decorations.find(typeid(T));
+    if(q != m_decorations.end() && q->second.satisfied) {
+      auto& disposition = q->second;
+      if(disposition.m_decoration) {
+        out = &disposition.m_decoration->as<T>();
+        return true;
+      }
+    }
+    
+    out = nullptr;
+    return false;
+  }
+
+  /// <summary>
   /// Checks out the specified type, providing it to the caller to be filled in
   /// </summary>
-  /// <param name="use_pool">If set, allocations will use an object pool instead of an
+  /// <param name="ptr">If set, the initial value that will be held by the checkout</param>
   /// <remarks>
   /// The caller must call Ready on the returned value before it falls out of scope in order
   /// to ensure that the checkout is eventually committed.  The checkout will be committed
   /// when it falls out of scope if so marked.
   /// </remarks>
   template<class T>
-  AutoCheckout<T> Checkout(bool use_pool = false) {
+  AutoCheckout<T> Checkout(std::shared_ptr<T> ptr) {
     // This allows us to install correct entries for decorated input requests
     typedef typename subscriber_traits<T>::type type;
 
     AnySharedPointer slot;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
-      auto dFind = m_decorations.find(typeid(type));
-      if(dFind == m_decorations.end())
-        // No parties interested in this entry, return here
-        return AutoCheckout<T>(*this, nullptr, &AutoPacket::CompleteCheckout<T>);
-
-      auto& entry = dFind->second;
+      auto& entry = m_decorations[typeid(type)];
       if(entry.satisfied)
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
       if(entry.isCheckedOut)
@@ -195,9 +217,6 @@ public:
       entry.isCheckedOut = true;
       entry.wasCheckedOut = true;
     }
-
-    // Construct while the lock was released
-    auto ptr = std::make_shared<T>();
 
     // Have to find the entry _again_ within the context of a lock and satisfy it here:
     (boost::lock_guard<boost::mutex>)m_lock,
@@ -208,6 +227,11 @@ public:
       ptr,
       &AutoPacket::CompleteCheckout<T>
     );
+  }
+
+  template<class T>
+  AutoCheckout<T> Checkout(void) {
+    return Checkout(std::make_shared<T>());
   }
 
   /// <summary>
@@ -244,25 +268,21 @@ public:
   /// value regardless of whether any subscribers exist.
   /// </remarks>
   template<class T>
-  T& Decorate(T&& t) {
-    typedef typename std::remove_reference<T>::type Type;
+  const T& Decorate(T t) {
+    return Decorate(std::make_shared<T>(std::forward<T>(t)));
+  }
 
-    DecorationDisposition* pEntry;
-    {
-      boost::lock_guard<boost::mutex> lk(m_lock);
-      pEntry = &m_decorations[typeid(Type)];
-      if(pEntry->wasCheckedOut)
-        throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
-
-      // Mark the entry as appropriate:
-      pEntry->satisfied = true;
-      pEntry->wasCheckedOut = true;
-    }
-
-    SharedPointerSlotT<Type>& retVal = pEntry->m_decoration->init<Type>();
-    retVal = std::make_shared<Type>(std::forward<T>(t));
-    UpdateSatisfaction(typeid(Type));
-    return *retVal;
+  /// <summary>
+  /// Decoration method specialized for shared pointer types
+  /// </summary>
+  /// <remarks>
+  /// This decoration method has the additional benefit that it will make direct use of the passed
+  /// shared pointer.
+  /// </remarks>
+  template<class T>
+  const T& Decorate(std::shared_ptr<T> t) {
+    Checkout<T>(t).Ready();
+    return *t;
   }
 
   /// <summary>
@@ -283,6 +303,13 @@ public:
     static const std::type_info* sc_typeInfo [] = {&typeid(Ts)...};
     const void* pvImmeds[] = {&immeds...};
     DecorationDisposition* pTypeSubs[sizeof...(Ts)];
+
+    // None of the inputs may be shared pointers--if any of the inputs are shared pointers, they must be attached
+    // to this packet via Decorate, or else dereferenced and used that way.
+    static_assert(
+      !is_any<is_shared_ptr<Ts>...>::value,
+      "DecorateImmediate must not be used to attach a shared pointer, use Decorate on such a decoration instead"
+    );
 
     // Perform standard decoration with a short initialization:
     {
