@@ -4,6 +4,7 @@
 #include "AutoCheckout.h"
 #include "DecorationDisposition.h"
 #include "ObjectPool.h"
+#include <cassert>
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP

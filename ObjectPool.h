@@ -3,6 +3,8 @@
 #include "Object.h"
 #include "ObjectPoolMonitor.h"
 #include <set>
+#include <cassert>
+#include <vector>
 #include FUNCTIONAL_HEADER
 #include RVALUE_HEADER
 #include MEMORY_HEADER
