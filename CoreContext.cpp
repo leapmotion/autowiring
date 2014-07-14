@@ -13,8 +13,8 @@
 #include "TypeRegistry.h"
 #include <algorithm>
 #include <stack>
+#include <iostream>
 #include "thread_specific_ptr.h"
-#include <boost/thread/tss.hpp>
 
 
 /// <summary>
@@ -26,7 +26,7 @@
 /// to the global context directly because it could change teardown order if the main thread sets the global context
 /// as current.
 /// </remarks>
-boost::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
+leap::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
 
 // Peer Context Constructor. Called interally by CreatePeer
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
