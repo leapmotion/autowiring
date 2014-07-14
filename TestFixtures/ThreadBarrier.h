@@ -3,6 +3,7 @@
 
 #include <mutex>
 #include <condition_variable>
+#include <chrono>
 
 // An implemenetation of boost::barrier
 // Blocks until N threads call "wait" on this object, then wakes up
@@ -11,7 +12,8 @@ class ThreadBarrier {
 public:
   explicit ThreadBarrier(int n):
     m_barrierLimit(n),
-    m_numWaiters(0)
+    m_numWaiters(0),
+    m_lastReset(std::chrono::system_clock::now())
   {}
 
   virtual ~ThreadBarrier(){}
@@ -23,12 +25,17 @@ public:
   void wait(){
     std::unique_lock<std::mutex> lk(m_mutex);
     ++m_numWaiters;
+    
+    auto now = std::chrono::system_clock::now();
 
     if (m_numWaiters == m_barrierLimit) {
-      m_cv.notify_all();
       m_numWaiters = 0;
+      m_lastReset = now;
+      m_cv.notify_all();
     } else {
-      m_cv.wait(lk);
+      m_cv.wait(lk, [this, now] {
+        return now < m_lastReset;
+      });
     }
   }
 
@@ -38,6 +45,9 @@ private:
 
   // The number of current waiters
   int m_numWaiters;
+  
+  // Time of last reset
+  std::chrono::system_clock::time_point m_lastReset;
 
   // Synchronization for the barrier
   std::mutex m_mutex;
