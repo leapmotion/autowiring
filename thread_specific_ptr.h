@@ -2,6 +2,7 @@
 #include "C++11/cpp11.h"
 #include FUNCTIONAL_HEADER
 
+// Platform specific token for thread local storage
 #if _WIN32
 #define THREAD_LOCAL __declspec( thread )
 #else
