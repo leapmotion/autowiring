@@ -71,7 +71,9 @@ template<class T>
 class AutoEnable
 {
 public:
-  AutoEnable(void) { CoreContext::CurrentContext()->Enable<T>(); }
+  AutoEnable(std::shared_ptr<CoreContext> ctxt = CoreContext::CurrentContext()) {
+    ctxt->Enable<T>();
+  }
 };
 
 /// <summary>
@@ -249,6 +251,14 @@ public:
   // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
     std::shared_ptr<T>(ctxt->template Inject<T>())
+  {}
+
+  /// <summary>
+  /// Construct overload, for types which take constructor arguments
+  /// </summary>
+  template<class... Args>
+  AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
+    std::shared_ptr<T>(ctxt->template Construct<T>(std::forward<Args>(args)...))
   {}
 
   operator bool(void) const {
