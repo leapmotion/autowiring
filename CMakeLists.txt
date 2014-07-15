@@ -26,6 +26,7 @@ set(Autowiring_SRCS
   AutoPacketFactory.cpp
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
+  AutoSelfUpdate.h
   Autowired.h
   Autowired.cpp
   AutowirableSlot.h
@@ -85,6 +86,9 @@ set(Autowiring_SRCS
   is_shared_ptr.h
   InterlockedExchange.h
   InvokeRelay.h
+  atomic_object.h
+  shared_object.h
+  unlock_object.h
   Jzon.h
   Jzon.cpp
   Object.h
@@ -200,6 +204,8 @@ set(AutowiringTest_SRCS
   FactoryTest.cpp
   GlobalInitTest.h
   GlobalInitTest.cpp
+  GuardObjectTest.h
+  GuardObjectTest.cpp
   InterlockedRoutinesTest.h
   InterlockedRoutinesTest.cpp
   MarshalingTest.h
