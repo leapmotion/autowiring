@@ -44,6 +44,7 @@ TEST_F(AutowiringUtilitiesTest, ThreadSpecificPtr) {
   std::this_thread::sleep_for(std::chrono::milliseconds(50));
   
   EXPECT_EQ(5, *s_thread_specific_int);
+  AutoCurrentContext()->SignalShutdown(true);
 }
 
 template<int N>
@@ -94,6 +95,5 @@ TEST_F(AutowiringUtilitiesTest, ThreadBarrierTest) {
   
   barr.wait();
   EXPECT_TRUE(first && second);
-  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  AutoCurrentContext()->SignalShutdown(true);
 }
-

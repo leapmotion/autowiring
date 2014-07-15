@@ -4,7 +4,7 @@
 #include "ContextEnumerator.h"
 #include <set>
 #include THREAD_HEADER
-#include <future>
+#include FUTURE_HEADER
 
 class Foo{};
 class Bar{};

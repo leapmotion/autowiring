@@ -3,7 +3,7 @@
 #include "CoreJob.h"
 #include "move_only.h"
 #include THREAD_HEADER
-#include <future>
+#include FUTURE_HEADER
 
 TEST_F(CoreJobTest, VerifySimpleProperties) {
   AutoRequired<CoreJob> jb;
@@ -11,7 +11,7 @@ TEST_F(CoreJobTest, VerifySimpleProperties) {
   ASSERT_FALSE(m_create->IsInitiated()) << "CoreJob reported it could receive events before its enclosing context was created";
 
   // Create a thread which will delay for acceptance, and then quit:
-  auto future = std::async(std::__1::launch::async, [this] { //GRAHAM
+  auto future = std::async(std::launch::async, [this] { //GRAHAM
     m_create->DelayUntilInitiated();
   });
 
