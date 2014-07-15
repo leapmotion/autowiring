@@ -6,7 +6,7 @@
 #include "TestFixtures/ExitRaceThreaded.h"
 #include "TestFixtures/SimpleThreaded.h"
 #include <string>
-#include <thread>
+#include THREAD_HEADER
 
 using namespace std;
 

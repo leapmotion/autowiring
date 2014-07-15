@@ -2,7 +2,7 @@
 #include "CoreJobTest.h"
 #include "CoreJob.h"
 #include "move_only.h"
-#include <thread>
+#include THREAD_HEADER
 #include <future>
 
 TEST_F(CoreJobTest, VerifySimpleProperties) {

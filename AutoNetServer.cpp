@@ -291,7 +291,7 @@ void AutoNetServer::PollThreadUtilization(std::chrono::milliseconds period){
     for(auto q = m_Threads.begin(); q != m_Threads.end();) {
       std::shared_ptr<BasicThread> thread = q->first.lock();
       if(!thread) {
-        q = m_Threads.erase(q);
+        m_Threads.erase(q++);
         continue;
       }
       

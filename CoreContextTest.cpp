@@ -3,7 +3,7 @@
 #include "AutoInjectable.h"
 #include "ContextEnumerator.h"
 #include <set>
-#include <thread>
+#include THREAD_HEADER
 #include <future>
 
 class Foo{};

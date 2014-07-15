@@ -5,7 +5,7 @@
 #include "TestFixtures/SimpleObject.h"
 #include "TestFixtures/SimpleThreaded.h"
 #include "TestFixtures/ThreadBarrier.h"
-#include <thread>
+#include THREAD_HEADER
 
 TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
   class WeakPtrChecker {

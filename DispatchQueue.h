@@ -4,7 +4,7 @@
 #include "DispatchThunk.h"
 #include <list>
 #include <queue>
-#include <mutex>
+#include MUTEX_HEADER
 #include RVALUE_HEADER
 #include MEMORY_HEADER
 
