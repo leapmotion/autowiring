@@ -100,7 +100,6 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
 
   // Set up a signal manager at global context scope:
   AutoRequired<GlobalSignal> signal;
-
   {
     // Array of objects to test destruction on, and corresponding collection of contexts:
     std::shared_ptr<WaitMember> members[count];
@@ -135,7 +134,8 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
 
   // Wait for all contexts to be destroyed
   std::unique_lock<std::mutex> lk(lock);
-  cond.wait(lk, [&counter] {return counter == 0;});
+  bool wait_status = cond.wait_for(lk, std::chrono::seconds(1), [&counter] {return counter == 0;});
+  ASSERT_TRUE(wait_status) << "All teardown listeners didn't trigger";
 
   // Validate that everything expires:
   EXPECT_EQ(static_cast<size_t>(0), creator->GetSize()) << "Not all contexts were evicted as expected";
