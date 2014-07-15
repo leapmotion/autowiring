@@ -1,6 +1,7 @@
 #pragma once
 #include MEMORY_HEADER
-#include <thread>
+#include THREAD_HEADER
+#include MUTEX_HEADER
 
 struct BasicThreadStateBlock:
   std::enable_shared_from_this<BasicThreadStateBlock>

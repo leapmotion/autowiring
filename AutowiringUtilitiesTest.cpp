@@ -5,7 +5,7 @@
 #include "CoreThread.h"
 #include "thread_specific_ptr.h"
 #include "TestFixtures/ThreadBarrier.h"
-#include <thread>
+#include THREAD_HEADER
 
 static leap::thread_specific_ptr<int> s_thread_specific_int;
 
@@ -52,14 +52,12 @@ class Thread:
 {};
 
 TEST_F(AutowiringUtilitiesTest, ThreadBarrierTest) {
-  AutoCreateContext ctxt;
-  CurrentContextPusher pshr(ctxt);
+  AutoCurrentContext()->Initiate();
   
   ThreadBarrier barr(3);
   ThreadBarrier resultBarr(2);
   AutoRequired<Thread<1>> thread1;
   AutoRequired<Thread<2>> thread2;
-  ctxt->Initiate();
   
   // Make sure barrier waits for 3 threads
   
@@ -87,7 +85,6 @@ TEST_F(AutowiringUtilitiesTest, ThreadBarrierTest) {
   *thread1 += [&barr, &first]{
     first = true;
     barr.wait();
-    
   };
   
   *thread2 += [&barr, &second]{
@@ -97,5 +94,6 @@ TEST_F(AutowiringUtilitiesTest, ThreadBarrierTest) {
   
   barr.wait();
   EXPECT_TRUE(first && second);
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 

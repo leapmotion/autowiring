@@ -1,5 +1,5 @@
 #pragma once
-#include <chrono>
+#include CHRONO_HEADER
 
 /// <summary>
 /// A simple virtual class used to hold a trivial thunk

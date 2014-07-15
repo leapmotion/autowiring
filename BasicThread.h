@@ -2,7 +2,8 @@
 #include "ContextMember.h"
 #include "CoreRunnable.h"
 #include MEMORY_HEADER
-#include <mutex>
+#include MUTEX_HEADER
+#include CHRONO_HEADER
 
 struct BasicThreadStateBlock;
 class BasicThread;
