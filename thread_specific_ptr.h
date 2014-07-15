@@ -2,12 +2,9 @@
 #include "C++11/cpp11.h"
 #include FUNCTIONAL_HEADER
 
+#include <pthread.h>
+
 // Platform specific token for thread local storage
-#if _WIN32
-#define THREAD_LOCAL __declspec( thread )
-#else
-#define THREAD_LOCAL __thread
-#endif
 
 namespace leap {
 
@@ -18,19 +15,24 @@ template<typename T>
 class thread_specific_ptr {
 public:
   thread_specific_ptr():
-    m_cleanupFunction([](T* p){ delete p; })
-  {}
+    m_cleanupFunction([](void* p){ delete static_cast<T*>(p); })
+  {
+    pthread_key_create(&m_key, m_cleanupFunction);
+  }
   
   thread_specific_ptr(std::function<void(T*)> cleanup):
-    m_cleanupFunction(cleanup)
-  {}
+    m_cleanupFunction([](void* p){ delete static_cast<T*>(p); })
+  {
+    pthread_key_create(&m_key, m_cleanupFunction);
+  }
   
   virtual ~thread_specific_ptr(){
     reset();
+    pthread_key_delete(m_key);
   }
   
   T* get() const {
-    return m_ptr;
+    return static_cast<T*>(pthread_getspecific(m_key));
   }
   
   T* operator->() const {
@@ -43,30 +45,23 @@ public:
   
   T* release() {
     T* const temp = get();
-    m_ptr = nullptr;
+    pthread_setspecific(m_key, nullptr);
     return temp;
   }
   
   void reset(T* new_value=nullptr) {
     T* const current_value = get();
-    
     if (current_value != new_value) {
-      m_cleanupFunction(current_value);
-      m_ptr = new_value;
+      pthread_setspecific(m_key, new_value);
     }
   }
   
 private:
   // Functions called the cleanup old value. Defaults to "delete m_ptr"
-  std::function<void(T*)> m_cleanupFunction;
+  void (*m_cleanupFunction)(void *);
   
-  // Store our pointer in thread-local-storage
-  THREAD_LOCAL static T* m_ptr;
+  pthread_key_t m_key;
 };
-
-  // Default value
-template <typename T>
-THREAD_LOCAL T* thread_specific_ptr<T>::m_ptr = nullptr;
   
 } //namespace leap
 

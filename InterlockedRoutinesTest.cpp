@@ -2,7 +2,7 @@
 #include "InterlockedRoutinesTest.h"
 #include "InterlockedExchange.h"
 #include "TestFixtures/ThreadBarrier.h"
-#include <thread>
+#include THREAD_HEADER
 
 template<void* (*fn)(void**, void*)>
 void CheckFn() {

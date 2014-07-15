@@ -1,5 +1,5 @@
 #pragma once
-#include <chrono>
+#include CHRONO_HEADER
 
 struct PerformanceCounter {
   PerformanceCounter(void) :
