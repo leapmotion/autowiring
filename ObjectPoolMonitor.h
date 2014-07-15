@@ -1,5 +1,5 @@
 #pragma once
-#include <mutex>
+#include MUTEX_HEADER
 
 template<class T>
 class ObjectPool;

@@ -1,5 +1,5 @@
 #pragma once
-#include <chrono>
+#include CHRONO_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 

@@ -1,7 +1,7 @@
 // Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
 #include MEMORY_HEADER
-#include <mutex>
+#include MUTEX_HEADER
 
 class CoreContext;
 

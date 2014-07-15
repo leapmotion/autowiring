@@ -4,7 +4,7 @@
 #include "AutoPacketFactory.h"
 #include "NewAutoFilter.h"
 #include "TestFixtures/Decoration.h"
-#include <thread>
+#include THREAD_HEADER
 
 TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
   AutoCurrentContext()->Initiate();

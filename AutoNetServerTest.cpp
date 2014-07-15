@@ -2,7 +2,7 @@
 #include "AutoNetServerTest.h"
 #include "AutoNetServer.h"
 #include "Autowired.h"
-#include <thread>
+#include THREAD_HEADER
 
 class Foo:
   public CoreThread

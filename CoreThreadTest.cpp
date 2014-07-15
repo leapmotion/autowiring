@@ -4,7 +4,7 @@
 #include "Autowired.h"
 #include "at_exit.h"
 #include "TestFixtures/SimpleThreaded.h"
-#include <thread>
+#include THREAD_HEADER
 
 class SpamguardTest:
   public CoreThread
