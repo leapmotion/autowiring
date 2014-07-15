@@ -6,7 +6,7 @@
 #include MEMORY_HEADER
 
 // Special file-level allocation with a no-op dtor, because all stack locations are stack-allocated
-static leap::thread_specific_ptr<SlotInformationStackLocation> tss([](SlotInformationStackLocation*) {});
+static leap::thread_specific_ptr<SlotInformationStackLocation> tss([](void*) {});
 
 SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStumpBase* pStump, const void* pObj, size_t extent) :
   m_pPrior(tss.get()),
