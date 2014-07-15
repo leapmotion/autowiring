@@ -206,6 +206,9 @@ public:
     // This allows us to install correct entries for decorated input requests
     typedef typename subscriber_traits<T>::type type;
 
+    if(!ptr)
+      throw std::runtime_error("Cannot checkout with shared_ptr == nullptr");
+
     AnySharedPointer slot;
     {
       boost::lock_guard<boost::mutex> lk(m_lock);
@@ -219,8 +222,10 @@ public:
     }
 
     // Have to find the entry _again_ within the context of a lock and satisfy it here:
-    (boost::lock_guard<boost::mutex>)m_lock,
-    m_decorations[typeid(type)].m_decoration = ptr;
+    {
+      boost::lock_guard<boost::mutex> lk(m_lock);
+      m_decorations[typeid(type)].m_decoration = ptr;
+    }
 
     return AutoCheckout<T>(
       *this,
