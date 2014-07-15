@@ -106,11 +106,14 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, 
   // Fire all explicit bolts if not an "anonymous" context (has void sigil type)
   BroadcastContextCreationNotice(retVal->GetSigilType());
 
+  boost::lock_guard<boost::mutex> lk(m_stateBlock->m_lock);
   // We only consider the context to be completely constructed at this point, after all bolts
   // have been fired, the injection has taken place, and we're about to return.  We delay
   // finalizing the introduction of the return value into the list to this point for that
   // reason.
   *childIterator = retVal;
+  if(m_isShutdown)
+    retVal->SignalShutdown();
   return retVal;
 }
 
