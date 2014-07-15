@@ -160,6 +160,18 @@ TEST_F(AutoFilterTest, VerifyNoMultiDecorate) {
   EXPECT_LT(0, filterA->m_called) << "Filter was not called after being fully satisfied";
 }
 
+TEST_F(AutoFilterTest, VerifyNoNullCheckout) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  std::shared_ptr<Decoration<0>> nulldeco;
+  ASSERT_FALSE(nulldeco);
+
+  auto packet = factory->NewPacket();
+  EXPECT_THROW(packet->Checkout(nulldeco), std::exception) << "Failed to catch null checkout" << std::endl;
+  EXPECT_THROW(packet->Decorate(nulldeco), std::exception) << "Failed to catch null decoration" << std::endl;
+}
+
 TEST_F(AutoFilterTest, VerifyInterThreadDecoration) {
   AutoRequired<FilterB> filterB;
   AutoRequired<AutoPacketFactory> factory;
