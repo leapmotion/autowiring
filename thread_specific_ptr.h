@@ -14,14 +14,16 @@ namespace leap {
 template<typename T>
 class thread_specific_ptr {
 public:
+  typedef void (*t_cleanupFunction)(void *);
+  
   thread_specific_ptr():
     m_cleanupFunction([](void* p){ delete static_cast<T*>(p); })
   {
     pthread_key_create(&m_key, m_cleanupFunction);
   }
   
-  thread_specific_ptr(std::function<void(T*)> cleanup):
-    m_cleanupFunction([](void* p){ delete static_cast<T*>(p); })
+  thread_specific_ptr(t_cleanupFunction cleanup):
+    m_cleanupFunction(cleanup)
   {
     pthread_key_create(&m_key, m_cleanupFunction);
   }
@@ -58,8 +60,9 @@ public:
   
 private:
   // Functions called the cleanup old value. Defaults to "delete m_ptr"
-  void (*m_cleanupFunction)(void *);
+  t_cleanupFunction m_cleanupFunction;
   
+  // Key to thread local storage
   pthread_key_t m_key;
 };
   
