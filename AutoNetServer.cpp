@@ -91,6 +91,7 @@ void AutoNetServer::OnMessage(connection_ptr p_connection, message_ptr p_message
 
     if (msgType == "subscribe") HandleSubscribe(p_connection);
     else if (msgType == "unsubscribe") HandleUnsubscribe(p_connection);
+    else if (!IS_INTERNAL_BUILD) return; // The following handlers are for internal use only
     else if (msgType == "terminateContext") HandleTerminateContext(msgArgs.Get(0).ToInt());
     else if (msgType == "injectContextMember") HandleInjectContextMember(msgArgs.Get(0).ToInt(), msgArgs.Get(1).ToString());
     else if (msgType == "resumeFromBreakpoint") HandleResumeFromBreakpoint(msgArgs.Get(0).ToString());
