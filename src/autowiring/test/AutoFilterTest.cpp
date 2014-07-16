@@ -172,6 +172,106 @@ TEST_F(AutoFilterTest, VerifyNoNullCheckout) {
   EXPECT_THROW(packet->Decorate(nulldeco), std::exception) << "Failed to catch null decoration" << std::endl;
 }
 
+template<int out, int in>
+class FilterGather {
+public:
+  FilterGather():
+    m_called_out(0),
+    m_called_in(0),
+    m_out(out),
+    m_in(in)
+  {}
+
+  void AutoFilter(AutoPacket& packet) {
+    ++m_called_out;
+    packet.Decorate(Decoration<out>(m_out));
+  }
+
+  void AutoGather(const Decoration<in>& input) {
+    ++m_called_in;
+    m_in = input.i;
+  }
+
+  int m_called_out;
+  int m_called_in;
+  int m_out;
+  int m_in;
+  NewAutoFilter<decltype(&FilterGather<out,in>::AutoGather), &FilterGather<out,in>::AutoGather> FilterGather_AutoGather;
+};
+
+TEST_F(AutoFilterTest, VerifyTwoAutoFilterCalls) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterGather<0,1>> zero2one;
+  AutoRequired<FilterGather<1,0>> one2zero;
+  zero2one->m_out = 3;
+  one2zero->m_out = 4;
+
+  //Verify that calls made on allocation from object pool do not introduce a race condition
+  {
+    std::shared_ptr<AutoPacket> packet = factory->NewPacket();
+    ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << zero2one->m_called_out << " times";
+    ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter of implicitly decorated type was called " << zero2one->m_called_in << " times";
+    ASSERT_EQ(4, zero2one->m_in) << "AutoFilter received incorrect input of " << zero2one->m_in;
+    ASSERT_EQ(1, one2zero->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << one2zero->m_called_out << " times";
+    ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter of implicitly decorated type was called " << one2zero->m_called_in << " times";
+    ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
+    zero2one->m_out = 5;
+    one2zero->m_out = 6;
+  }
+  //Verify that no additional calls are made during return of packet to object pool
+  ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << zero2one->m_called_out << " times";
+  ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter of implicitly decorated type was called " << zero2one->m_called_in << " times";
+  ASSERT_EQ(4, zero2one->m_in) << "AutoFilter received incorrect input of " << zero2one->m_in;
+  ASSERT_EQ(1, one2zero->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << one2zero->m_called_out << " times";
+  ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter of implicitly decorated type was called " << one2zero->m_called_in << " times";
+  ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
+}
+
+template<int out, int in>
+class FilterGatherAutoOut {
+public:
+  FilterGatherAutoOut():
+  m_called_out(0),
+  m_called_in(0),
+  m_out(out),
+  m_in(in)
+  {}
+
+  void AutoFilter(auto_out<Decoration<out>>& output) {
+    ++m_called_out;
+    output->i = m_out;
+  }
+
+  void AutoGather(const Decoration<in>& input) {
+    ++m_called_in;
+    m_in = input.i;
+  }
+
+  int m_called_out;
+  int m_called_in;
+  int m_out;
+  int m_in;
+  NewAutoFilter<decltype(&FilterGather<out,in>::AutoGather), &FilterGather<out,in>::AutoGather> FilterGather_AutoGather;
+};
+
+    ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with auto_out as only argument was called " << zero2one->m_called_out << " times";
+    ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter with auto_out as only argument was called " << zero2one->m_called_in << " times";
+    ASSERT_EQ(4, zero2one->m_in) << "AutoFilter received incorrect input of " << zero2one->m_in;
+    ASSERT_EQ(1, one2zero->m_called_out) << "AutoFilter with auto_out as only argument was called " << one2zero->m_called_out << " times";
+    ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter with auto_out as only argument was called " << one2zero->m_called_in << " times";
+    ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
+    zero2one->m_out = 5;
+    one2zero->m_out = 6;
+  }
+  //Verify that no additional calls are made during return of packet to object pool
+  ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with auto_out as only argument was called " << zero2one->m_called_out << " times";
+  ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter with auto_out as only argument was called " << zero2one->m_called_in << " times";
+  ASSERT_EQ(4, zero2one->m_in) << "AutoFilter received incorrect input of " << zero2one->m_in;
+  ASSERT_EQ(1, one2zero->m_called_out) << "AutoFilter with auto_out as only argument was called " << one2zero->m_called_out << " times";
+  ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter with auto_out as only argument was called " << one2zero->m_called_in << " times";
+  ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
+}
 TEST_F(AutoFilterTest, VerifyInterThreadDecoration) {
   AutoRequired<FilterB> filterB;
   AutoRequired<AutoPacketFactory> factory;
