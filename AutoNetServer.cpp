@@ -1,7 +1,6 @@
 // Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "AutoNetServer.h"
-#include "Autowiring/Autowired.h"
 #include "Autowiring/at_exit.h"
 #include <iostream>
 
@@ -54,50 +53,6 @@ void AutoNetServer::OnStop(void){
     SendMessage(sub, "Closing");
   }
   m_Server->stop();
-}
-
-// Websocket handlers
-void AutoNetServer::OnOpen(connection_ptr p_connection){
-
-  *this += [this, p_connection] {
-    SendMessage(p_connection, "opened");
-  };
-
-}
-
-void AutoNetServer::OnClose(connection_ptr p_connection){
-
-  *this += [this, p_connection] {
-    SendMessage(p_connection, "closed");
-    m_Subscribers.erase(p_connection);
-  };
-
-}
-
-void AutoNetServer::OnMessage(connection_ptr p_connection, message_ptr p_message){
-  
-  Jzon::Object msg;
-  Jzon::Parser parser(msg, p_message->get_payload());
-  if (!parser.Parse()) {
-    std::cout << "Couldn't parse message" << std::endl;
-    SendMessage(p_connection, "invalidMessage", "Couldn't parse message");
-    return;
-  }
-  
-  std::string msgType = msg.Get("type").ToString();
-  Jzon::Array msgArgs = msg.Get("args");
-
-  *this += [this, p_connection, msgType, msgArgs] {
-
-    if (msgType == "subscribe") HandleSubscribe(p_connection);
-    else if (msgType == "unsubscribe") HandleUnsubscribe(p_connection);
-    else if (msgType == "terminateContext") HandleTerminateContext(msgArgs.Get(0).ToInt());
-    else if (msgType == "injectContextMember") HandleInjectContextMember(msgArgs.Get(0).ToInt(), msgArgs.Get(1).ToString());
-    else if (msgType == "resumeFromBreakpoint") HandleResumeFromBreakpoint(msgArgs.Get(0).ToString());
-    else {
-      SendMessage(p_connection, "invalidMessage", "Message type not recognized");
-    };
-  };
 }
 
 void AutoNetServer::Breakpoint(std::string name){
@@ -220,29 +175,6 @@ void AutoNetServer::EventFired(CoreContext& context, const std::type_info& info)
 
     BroadcastMessage("eventFired", contextID, eventHash);
   };
-}
-
-// Handler functions
-void AutoNetServer::HandleSubscribe(connection_ptr p_connection){
-  m_Subscribers.insert(p_connection);
-  
-  Jzon::Array types;
-  for (auto type : m_AllTypes) {
-    types.Add(type.first);
-  }
-
-  SendMessage(p_connection, "subscribed", types);
-  AutoGlobalContext()->BuildCurrentState();
-  
-  // Send breakpoint message
-  for (auto breakpoint : m_breakpoints) {
-    SendMessage(p_connection, "breakpoint", breakpoint);
-  }
-}
-
-void AutoNetServer::HandleUnsubscribe(connection_ptr p_connection){
-  m_Subscribers.erase(p_connection);
-  SendMessage(p_connection, "unsubscribed");
 }
 
 void AutoNetServer::HandleTerminateContext(int contextID) {
