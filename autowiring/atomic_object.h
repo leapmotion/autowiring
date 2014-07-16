@@ -42,7 +42,7 @@ public:
   /// atomic_object<object> target(*unlock_object<object>(source));
   ///</remarks>
   atomic_object(const atomic_object<object>& source) {
-    std::lock_guard<lock> lock_this(source.m_lock);
+    std::lock_guard<lock> lock_source(source.m_lock);
     m_object = source.m_object;
     m_initialized = source.m_initialized;
   }
@@ -64,10 +64,15 @@ public:
   atomic_object<object, lock>& operator = (const atomic_object<object>& source) {
     if (this == &source)
       return *this;
-    std::lock_guard<lock> lock_this(m_lock);
-    std::lock_guard<lock> locksource(source.m_lock);
+    //IMPORTANT: Aquisition of both locks must be atomic.
+    //The following code:
+    //  m_initialized = source.initialized(m_object);
+    //could deadlock with its counterpart in source.
+    std::lock(m_lock, source.m_lock);
     m_object = source.m_object;
     m_initialized = source.m_initialized;
+    m_lock.unlock();
+    source.m_lock.unlock();
     return *this;
   }
 
@@ -96,7 +101,7 @@ public:
   }
 
   ///<summary>
-  ///Atomic copy of this location to argument location, only if this has location.
+  ///Atomic copy of this object to target, only if initialized() == true.
   ///</summary>
   ///<return>True if the object was not assigned default values</return>
   bool initialized(object& target) {
