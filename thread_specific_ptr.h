@@ -2,10 +2,6 @@
 #include "C++11/cpp11.h"
 #include FUNCTIONAL_HEADER
 
-#ifdef _WIN32
-#include <pthread.h>
-#endif
-
 // Platform specific token for thread local storage
 
 namespace leap {
@@ -82,8 +78,7 @@ private:
 };
   
 } //namespace leap
-  
-  
+
 // Platform specifc functions
 #if _WIN32
 #include "thread_specific_ptr_win.h"
