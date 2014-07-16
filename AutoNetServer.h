@@ -1,11 +1,12 @@
 // Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
+#include <websocketpp/websocketpp.hpp>
+#include "Autowiring/CoreThread.h"
+#include "Autowiring/Autowired.h"
 #include "Autowiring/AutowiringEvents.h"
 #include "Autowiring/TypeRegistry.h"
-#include "Autowiring/CoreThread.h"
 #include "Jzon.h"
 
-#include <websocketpp/websocketpp.hpp>
 #include <map>
 #include <set>
 
@@ -20,6 +21,8 @@ public:
   virtual ~AutoNetServer();
 
   //Types
+  //NOTE: These types have undetermined template parameters,
+  //so methods depending on these types must appear in the header.
   typedef websocketpp::server::connection_ptr connection_ptr;
   typedef websocketpp::server::handler::message_ptr message_ptr;
   
@@ -28,12 +31,44 @@ public:
   virtual void OnStop(void) override;
 
   // Server Handler functions
-  void OnOpen(connection_ptr);
-  void OnClose(connection_ptr);
-  void OnMessage(connection_ptr, message_ptr);
+  void OnOpen(connection_ptr p_connection) {
+    *this += [this, p_connection] {
+      SendMessage(p_connection, "opened");
+    };
+  }
+  void OnClose(connection_ptr p_connection) {
+    *this += [this, p_connection] {
+      SendMessage(p_connection, "closed");
+      this->m_Subscribers.erase(p_connection);
+    };
+  }
+  void OnMessage(connection_ptr p_connection, message_ptr p_message) {
+    Jzon::Object msg;
+    Jzon::Parser parser(msg, p_message->get_payload());
+    if (!parser.Parse()) {
+      std::cout << "Couldn't parse message" << std::endl;
+      SendMessage(p_connection, "invalidMessage", "Couldn't parse message");
+      return;
+    }
+
+    std::string msgType = msg.Get("type").ToString();
+    Jzon::Array msgArgs = msg.Get("args");
+
+    *this += [this, p_connection, msgType, msgArgs] {
+
+      if (msgType == "subscribe") HandleSubscribe(p_connection);
+      else if (msgType == "unsubscribe") HandleUnsubscribe(p_connection);
+      else if (msgType == "terminateContext") HandleTerminateContext(msgArgs.Get(0).ToInt());
+      else if (msgType == "injectContextMember") HandleInjectContextMember(msgArgs.Get(0).ToInt(), msgArgs.Get(1).ToString());
+      else if (msgType == "resumeFromBreakpoint") HandleResumeFromBreakpoint(msgArgs.Get(0).ToString());
+      else {
+        SendMessage(p_connection, "invalidMessage", "Message type not recognized");
+      };
+    };
+  }
   
   /// <summary>
-  /// Waits untill resume message is sent from the visualizer
+  /// Waits until resume message is sent from the visualizer
   /// </summary>
   /// <param name="name">The identifier for this breakpoint</param>
   void Breakpoint(std::string name);
@@ -123,13 +158,31 @@ protected:
   /// Called when a "Subscribe" event is sent from a client
   /// </summary>
   /// <param name="client">Client that sent event</param>
-  void HandleSubscribe(connection_ptr client);
+  void HandleSubscribe(connection_ptr p_connection) {
+    m_Subscribers.insert(p_connection);
+
+    Jzon::Array types;
+    for (auto type : m_AllTypes) {
+      types.Add(type.first);
+    }
+
+    SendMessage(p_connection, "subscribed", types);
+    AutoGlobalContext()->BuildCurrentState();
+
+    // Send breakpoint message
+    for (auto breakpoint : m_breakpoints) {
+      SendMessage(p_connection, "breakpoint", breakpoint);
+    }
+  }
 
   /// <summary>
   /// Called when a "Unsubscribe" event is sent from a client
   /// </summary>
   /// <param name="client">Client that sent event</param>
-  void HandleUnsubscribe(connection_ptr client);
+  void HandleUnsubscribe(connection_ptr p_connection) {
+    this->m_Subscribers.erase(p_connection);
+    SendMessage(p_connection, "unsubscribed");
+  }
   
   /// <summary>
   /// Called when a "terminateContext" event is sent from a client

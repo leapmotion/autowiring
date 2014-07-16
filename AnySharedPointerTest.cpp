@@ -188,18 +188,19 @@ TEST_F(AnySharedPointerTest, VoidReturnExpected) {
   ASSERT_EQ(v.get(), slot->ptr()) << "Shared pointer slot did not return a void* with an expected value";
 }
 
-struct Bar{};
-struct Baz{};
-struct Derp{};
-struct Foo{
-  Autowired<Bar> bar;
-  AutoRequired<Baz> baz;
-  AutowiredFast<Derp> derp;
+struct WiredType{};
+struct RequiredType{};
+struct WiredFastType{};
+struct CombinedWireType{
+  Autowired<WiredType> wt;
+  AutoRequired<RequiredType> rt;
+  AutowiredFast<WiredFastType> wft;
 };
 TEST_F(AnySharedPointerTest, SlotInformation) {
-  AutoRequired<Foo> foo;
+  //AutoRequired<WiredFastType> wft;
+  AutoRequired<CombinedWireType> cwt;
 
-  AnySharedPointer ptr = foo;
+  AnySharedPointer ptr = cwt;
   int numSlots = 0;
   for (auto info = ptr->GetSlotInformation().pHead; info; info = info->pFlink){
     numSlots++;

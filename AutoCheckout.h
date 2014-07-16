@@ -53,6 +53,7 @@ public:
 
   // Operator overloads:
   operator T*(void) const { return m_val.get(); }
+  T& operator*(void) const { return *m_val; }
   T* operator->(void) const { return m_val.get(); }
   operator bool(void) const { return !!m_val; }
   operator T&(void) const { return *m_val; }
