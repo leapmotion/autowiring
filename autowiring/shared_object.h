@@ -48,7 +48,8 @@ public:
   ///<remarks>
   ///To copy the atomic_object referenced by source use:
   /// shared_object<object> target(*unlock_object<object>(source));
-  ///</remakrs>
+  ///This method does NOT copy the atomic_object referenced by source.
+  ///</remarks>
   shared_object(const shared_object<object, lock>& source):
   m_share(source.m_share) {}
 
@@ -65,6 +66,7 @@ public:
   ///<remarks>
   ///This method is equivalent to:
   /// target = *unlock_object<object>(source);
+  ///This method does NOT redirect the atomic_object reference to the reference of source.
   ///</remarks>
   shared_object<object, lock>& operator = (const shared_object<object, lock>& source) {
     *m_share = *source.m_share;
@@ -92,7 +94,7 @@ public:
   }
 
   ///<summary>
-  ///Atomic copy of this location to argument location, only if this has location.
+  ///Atomic copy of target to this object, only if initialized() == false.
   ///</summary>
   ///<return>True if the object was not assigned default values</return>
   bool initialized(object& target) {
