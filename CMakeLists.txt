@@ -123,13 +123,13 @@ OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
 set(Autowiring_Win_SRCS
   CoreThreadWin.cpp
   InterlockedExchangeWin.cpp
-  thread_specific_ptr_win.cpp
+  thread_specific_ptr_win.h
 )
 
 set(Autowiring_Unix_SRCS
 	CoreThreadUnix.cpp
 	InterlockedExchangeUnix.cpp
-  thread_specific_ptr_unix.cpp
+  thread_specific_ptr_unix.h
 )
 
 ADD_MSVC_DISABLED_FILES("Unix Source" Autowiring_SRCS ${Autowiring_Unix_SRCS})
