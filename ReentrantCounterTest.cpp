@@ -2,6 +2,7 @@
 #include "ReentrantCounterTest.h"
 #include "ReentrantCounter.h"
 #include <vector>
+#include THREAD_HEADER
 
 // Timeouts, in microseconds:
 const size_t gc_timeouts[] = {500, 221, 3700, 1910, 21100, 442, 9281, 7201, 49102, 701, 222};
@@ -60,11 +61,11 @@ TEST_F(ReentrantCounterTest, VerifyComplexReentrancy) {
     EXPECT_EQ(1UL, g_timeouts[i].hitCount) << "Performance counter hit too many times";
     EXPECT_LT(
       g_timeouts[i].lingerTime - slack,
-      std::chrono::microseconds(gc_timeouts[i])
-    );
+      std::chrono::nanoseconds(gc_timeouts[i])
+    ) << "Error when gc_timeouts = " << gc_timeouts[i];
     EXPECT_GT(
       g_timeouts[i].lingerTime + slack,
-      std::chrono::microseconds(gc_timeouts[i])
-    );
+      std::chrono::nanoseconds(gc_timeouts[i])
+    ) << "Error when gc_timeouts = " << gc_timeouts[i];
   }
 }

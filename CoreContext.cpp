@@ -15,6 +15,7 @@
 #include <stack>
 #include <iostream>
 #include "thread_specific_ptr.h"
+#include <boost/thread/tss.hpp>
 
 /// <summary>
 /// A pointer to the current context, specific to the current thread.

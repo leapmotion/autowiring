@@ -19,3 +19,4 @@ TEST_F(CurrentContextPusherTest, VerifyResetsDuringThrow) {
 
   ASSERT_EQ(current.get(), CoreContext::CurrentContext().get());
 }
+
