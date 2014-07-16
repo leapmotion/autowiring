@@ -2,7 +2,9 @@
 #include "C++11/cpp11.h"
 #include FUNCTIONAL_HEADER
 
+#ifdef _WIN32
 #include <pthread.h>
+#endif
 
 // Platform specific token for thread local storage
 
@@ -14,18 +16,18 @@ namespace leap {
 template<typename T>
 class thread_specific_ptr {
 public:
-  typedef void (*t_cleanupFunction)(void *);
+  typedef void (*t_cleanupFunction)(T *);
   
   thread_specific_ptr():
-    m_cleanupFunction([](void* p){ delete static_cast<T*>(p); })
+    m_cleanupFunction([](T* p){ delete p; })
   {
-    pthread_key_create(&m_key, m_cleanupFunction);
+    init();
   }
   
   thread_specific_ptr(t_cleanupFunction cleanup):
     m_cleanupFunction(cleanup)
   {
-    pthread_key_create(&m_key, m_cleanupFunction);
+    init();
   }
   
   virtual ~thread_specific_ptr(){
@@ -33,9 +35,7 @@ public:
     pthread_key_delete(m_key);
   }
   
-  T* get() const {
-    return static_cast<T*>(pthread_getspecific(m_key));
-  }
+  T* get() const;
   
   T* operator->() const {
     return get();
@@ -47,24 +47,46 @@ public:
   
   T* release() {
     T* const temp = get();
-    pthread_setspecific(m_key, nullptr);
+    set(nullptr);
     return temp;
   }
   
   void reset(T* new_value=nullptr) {
     T* const current_value = get();
+    
     if (current_value != new_value) {
-      pthread_setspecific(m_key, new_value);
+      set(new_value);
+      
+      if (current_value != nullptr) {
+        m_cleanupFunction(current_value);
+      }
     }
   }
   
 private:
+  // Set thread specific value. Used by public facing "release" and "reset"
+  void set(T* value);
+  
+  // Initialize thread specific storage
+  void init();
+  
   // Functions called the cleanup old value. Defaults to "delete m_ptr"
   t_cleanupFunction m_cleanupFunction;
   
-  // Key to thread local storage
-  pthread_key_t m_key;
+  // Platform specifc members
+#if _WIN32
+  
+#else //Mac and linux
+  pthread_key_t m_key; // Key to thread local storage
+#endif
 };
   
 } //namespace leap
-
+  
+  
+// Platform specifc functions
+#if _WIN32
+#include "thread_specific_ptr_win.h"
+#else //Mac and linux
+#include "thread_specific_ptr_unix.h"
+#endif
