@@ -171,6 +171,8 @@ set(AutowiringTest_SRCS
   AutowiringBenchmarkTest.cpp
   AutowiringTest.h
   AutowiringTest.cpp
+  BasicThreadTest.h
+  BasicThreadTest.cpp
   CoreContextTest.h
   CoreContextTest.cpp
   ContextCleanupTest.h
