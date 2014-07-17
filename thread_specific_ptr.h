@@ -2,6 +2,15 @@
 #include "C++11/cpp11.h"
 #include FUNCTIONAL_HEADER
 
+// platform specific headers
+#if _MSC_VER
+#include <windows.h>
+#define TLS_KEY_TYPE DWORD
+#else
+#include <pthread.h>
+#define TLS_KEY_TYPE pthread_key_t
+#endif
+
 // Platform specific token for thread local storage
 
 namespace leap {
@@ -28,7 +37,7 @@ public:
   
   virtual ~thread_specific_ptr(){
     reset();
-    pthread_key_delete(m_key);
+    freeTLS();
   }
   
   T* get() const;
@@ -66,22 +75,24 @@ private:
   // Initialize thread specific storage
   void init();
   
+  // Cleanup thread specific ptr when destoyed
+  void freeTLS();
+  
   // Functions called the cleanup old value. Defaults to "delete m_ptr"
   t_cleanupFunction m_cleanupFunction;
   
-  // Platform specifc members
-#if _WIN32
-  
-#else //Mac and linux
-  pthread_key_t m_key; // Key to thread local storage
-#endif
+  // Key to thread local storage
+  TLS_KEY_TYPE m_key;
 };
   
 } //namespace leap
 
 // Platform specifc functions
-#if _WIN32
+#if _MSC_VER
 #include "thread_specific_ptr_win.h"
 #else //Mac and linux
 #include "thread_specific_ptr_unix.h"
 #endif
+
+// cleanup definitions
+#undef TLS_KEY_TYPE
