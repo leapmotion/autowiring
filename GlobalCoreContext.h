@@ -81,6 +81,7 @@ struct GlobalContextDesignation {
   GlobalContextDesignation(void) {
     CurrentContextPusher pshr(GetGlobalContext());
     W w;
+    GetGlobalContext()->Initiate();
   }
 };
 

@@ -71,7 +71,9 @@ template<class T>
 class AutoEnable
 {
 public:
-  AutoEnable(void) { CoreContext::CurrentContext()->Enable<T>(); }
+  AutoEnable(std::shared_ptr<CoreContext> ctxt = CoreContext::CurrentContext()) {
+    ctxt->Enable<T>();
+  }
 };
 
 /// <summary>
@@ -251,6 +253,14 @@ public:
     std::shared_ptr<T>(ctxt->template Inject<T>())
   {}
 
+  /// <summary>
+  /// Construct overload, for types which take constructor arguments
+  /// </summary>
+  template<class... Args>
+  AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
+    std::shared_ptr<T>(ctxt->template Construct<T>(std::forward<Args>(args)...))
+  {}
+
   operator bool(void) const {
     return IsAutowired();
   }
@@ -262,6 +272,19 @@ public:
   bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
 };
 
+/// <summary>
+/// Convenience class functionally identical to AutoRequired, but specialized to forward ctor arguments
+/// </summary>
+template<class T>
+class AutoConstruct:
+  public AutoRequired<T>
+{
+public:
+  template<class... Args>
+  AutoConstruct(Args&&... args) :
+    AutoRequired<T>(CoreContext::CurrentContext(), std::forward<Args>(args)...)
+  {}
+};
 
 /// <summary>
 /// Convenience class to create an event firer. Also caches the associated JunctionBox

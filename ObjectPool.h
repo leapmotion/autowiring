@@ -187,6 +187,11 @@ public:
     return m_objs.size();
   }
 
+  bool IsEmpty(void) const {
+    std::lock_guard<std::mutex> lk(*m_monitor);
+    return m_objs.empty() && !m_outstanding;
+  }
+
   // Mutator methods:
   void SetAlloc(const std::function<T*()>& alloc) {
     m_alloc = alloc;
@@ -340,15 +345,28 @@ public:
   /// outstanding limit should be careful to check the return of this function.
   /// </remarks>
   void operator()(std::shared_ptr<T>& rs) {
-    // Force the passed value to be empty so we don't cause a deadlock by accident
+    // Force the passed value to be empty so we don't return an empty element by accident
+    // This can possibly happen if the pool cap has been reached and we're reobtaining a shared
+    // pointer from its own pool.
     rs.reset();
 
-    std::unique_lock<std::mutex> lk(*m_monitor);
-    if(m_limit <= m_outstanding)
-      // Already at the limit
-      return;
+    // Now assign:
+    rs = (*this)();
+  }
 
-    rs = ObtainElementUnsafe(lk);
+  /// <summary>
+  /// Convenience overload of operator()
+  /// </summary>
+  std::shared_ptr<T> operator()() {
+    std::unique_lock<std::mutex> lk(*m_monitor);
+    return
+      m_limit <= m_outstanding ?
+
+      // Already at the limit
+      std::shared_ptr<T>() :
+
+      // Can still check out items at this point
+      ObtainElementUnsafe(lk);
   }
 
   /// <summary>
