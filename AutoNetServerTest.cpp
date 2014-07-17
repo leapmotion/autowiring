@@ -4,11 +4,11 @@
 #include "Autowired.h"
 #include THREAD_HEADER
 
-class Foo:
+class TestThread1:
   public CoreThread
 {};
 
-class Bar:
+class TestThread2:
   public CoreThread
 {};
 
@@ -82,7 +82,7 @@ TEST_F(AutoNetServerTest, DISABLED_SimpleTest) {
 
   {
     CurrentContextPusher pshr(ctxt2);
-    AutoRequired<Foo> foo;
+    AutoRequired<TestThread1> foo;
     *foo += std::chrono::seconds(4),[&ctxt]{
       ctxt->Inject<ThisClassGetsAddedLater<4>>();
     };
@@ -102,7 +102,7 @@ TEST_F(AutoNetServerTest, DISABLED_SimpleTest) {
       AutoRequired<ThisClassGetsAddedLater<16>> derp(ctxt);
     };
     *foo += std::chrono::seconds(18),[&newContext, &ctxt2]{
-      newContext = ctxt2->Create<Foo>();
+      newContext = ctxt2->Create<TestThread1>();
     };
     *foo += std::chrono::seconds(20),[&ctxt2]{
       AutoRequired<ThisClassGetsAddedLater<20>> derp(ctxt2);
@@ -127,7 +127,7 @@ TEST_F(AutoNetServerTest, DISABLED_SimpleTest) {
 
   {
     CurrentContextPusher pshr(ctxt3);
-    AutoRequired<Bar> bar;
+    AutoRequired<TestThread2> bar;
   }
 
   ctxt->Wait();

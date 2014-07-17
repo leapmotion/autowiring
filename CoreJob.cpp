@@ -44,6 +44,7 @@ void CoreJob::OnPended(std::unique_lock<std::mutex>&& lk){
 }
 
 void CoreJob::DispatchAllAndClearCurrent(void) {
+  CurrentContextPusher pshr(GetContext());
   for(;;) {
     // Trivially run down the queue as long as we're in the pool:
     this->DispatchAllEvents();
