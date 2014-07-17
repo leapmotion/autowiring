@@ -175,10 +175,16 @@ void AutoPacket::Initialize(void) {
       decoration.second.Reset();
   }
 
-  // Call all subscribers with no required or optional arguments:
+  // Find all subscribers with no required or optional arguments:
+  std::list<SatCounter*> callCounters;
   for (auto& satCounter : m_satCounters)
     if (satCounter)
-      satCounter.CallAutoFilter(*this);
+      callCounters.push_back(&satCounter);
+
+  // Call all subscribers with no required or optional arguments:
+  // NOTE: This may result in decorations that cause other subscribers to be called.
+  for (auto* call : callCounters)
+    call->CallAutoFilter(*this);
 
   // Initial satisfaction of the AutoPacket:
   UpdateSatisfaction(typeid(AutoPacket));
