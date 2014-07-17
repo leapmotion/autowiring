@@ -17,5 +17,11 @@ void thread_specific_ptr<T>::init() {
   typedef void (*t_unsafeCleanup)(void*);
   pthread_key_create(&m_key, (t_unsafeCleanup)m_cleanupFunction);
 }
+  
+template<typename T>
+void thread_specific_ptr<T>::freeTLS() {
+  pthread_key_delete(m_key);
+}
+
 
 }// namespace leap
