@@ -6,7 +6,7 @@
 ** for the node and "parent" is the idenifier for the parent node
 */
 angular.module('autoNetApp')
-.directive('directedTree', function () {
+.directive('directedTree', ['$window', function ($window) {
   return {
     template: '<canvas width="1000" height="400">HTML5 canvas not supported on your browser</canvas>',
     restrict: 'E',
@@ -40,7 +40,13 @@ angular.module('autoNetApp')
         // Add any new nodes
         _.each(newNodes, function(nodeID) {
           var node = nodeMap[nodeID];
-          graph.addNode(new Springy.Node(node.id, {label:node.name}) );;
+          var data = {
+            label:node.name,
+            ondoubleclick: function() {
+              $window.location.href = node.getLink();
+            }
+          };
+          graph.addNode(new Springy.Node(node.id, data));
         });
 
         // Add any new edges
@@ -58,7 +64,7 @@ angular.module('autoNetApp')
       });
     }
   };
-});
+}]);
 
 // Similar to directedTree, but for arbitrary graphs
 // Specialized for the context view
@@ -74,7 +80,7 @@ angular.module('autoNetApp')
 // "unidentified" are "orphans" are outputs, which fill the past in list with extra information.
 // see decription below
 angular.module('autoNetApp')
-.directive('directedGraph', function () {
+.directive('directedGraph', ['$window', function ($window) {
   return {
     template: '<canvas width="1000" height="600">HTML5 canvas not supported on your browser</canvas>',
     restrict: 'E',
@@ -113,7 +119,13 @@ angular.module('autoNetApp')
         _.each(nodeMap, function(node, nodeID){
           // Add node if doesn't exist
           if (!nodeSet.hasOwnProperty(nodeID) && node[scope.children] && node[scope.children].length) {
-            graph.addNode(new Springy.Node(node[scope.id], {label:node.name}) );
+            var data = {
+              label: node.name,
+              ondoubleclick: function(){
+                $window.location.href = node.getLink();
+              }
+            }
+            graph.addNode(new Springy.Node(node[scope.id], data));
           }
 
           // Add edges, and endpoint node if doesn't exist
@@ -123,7 +135,14 @@ angular.module('autoNetApp')
             if (nodeMap.hasOwnProperty(slotID)) {
               if ( !nodeSet.hasOwnProperty(slotID)) {
                 var newNode = nodeMap[slotID];
-                graph.addNode(new Springy.Node(newNode[scope.id], {label:newNode.name, mass:0.5}) );
+                var data = {
+                  label:newNode.name,
+                  mass:0.5,
+                  ondoubleclick: function() {
+                    $window.location.href = newNode.getLink();
+                  }
+                };
+                graph.addNode(new Springy.Node(newNode[scope.id], data));
               }
 
               // Determine edge drawing style
@@ -152,4 +171,4 @@ angular.module('autoNetApp')
       });
     }
   };
-});
+}]);

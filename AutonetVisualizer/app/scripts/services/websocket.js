@@ -77,7 +77,6 @@ angular.module('autoNetApp')
   var socket = null; //Websocket connection to server
   var interval = null; //Interval for polling for server when disconnected
   var isConnected = false; //State variable for status of connection
-  var EventHistory = new Messages(200); // A list of the past 200 events received from the server
 
   // Attempt to connect to websocket server, poll if can't connect
   InitConnection();
@@ -91,22 +90,24 @@ angular.module('autoNetApp')
     socket.send(JSON.stringify(packet));
   }
 
+  var throttledDigest = _.throttle(function(scope){
+    scope.$digest();
+  }, 400);
+
   return {
-    on: function(eventName, callback) {
+    on: function(eventName, callback, scope) {
+      // Check if passed scope, default to $rootScope
+      scope = typeof scope == 'undefined' ? $rootScope : scope;
+
       console.log('Event Registered: ', eventName);
-      $rootScope.$on('leap-'+eventName, function(event, args){
-        $rootScope.$apply(function(){
-          //EventHistory.addMessage(eventName, args);
-          callback.apply(socket, args);
-        });
+      scope.$on('leap-'+eventName, function(event, args){
+        callback.apply(socket, args);
+        throttledDigest(scope);
       });
     },
     isConnected: function(){
       return isConnected;
     },
-    //GetEventHistory: function(){
-    //  return EventHistory.messages;
-    //},
     SendMessage: SendMessage
   };
 }]);

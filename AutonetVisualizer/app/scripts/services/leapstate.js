@@ -10,27 +10,30 @@ angular.module('autoNetApp')
 
   // A CoreContext
   function Context(id, ctxt){
-    this.objects = {}; //linkName to Object
+    this.objects = {}; //name to Object
     this.name = "Unnamed";
     this.id = id;
     this.children = [];
 
     _.extend(this, ctxt);
-
-    this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
   }
 
   // Add a member to a CoreContext
   Context.prototype.addObject = function(obj) {
-    this.objects[obj.linkName] = obj;
+    this.objects[obj.name] = obj;
   };
 
+  Context.prototype.getLink = function(){
+    return "#/context/" + this.id
+  }
+
   // A "leap object". Inclues ContextMembers, CoreThreads, Bolts, etc...
-  function LeapObject(types, objData){
+  function LeapObject(contextID, types, objData){
     this.name = objData.name;
-    this.linkName = this.name.replace(/\s+/g,'_'); //no whitespace
+    this.contextID = contextID
+
     this.types = types;
-    this.displayTypes = _.without(Object.keys(this.types), 'coreThread','bolt','eventReceiver');
+    this.displayTypes = _.without(Object.keys(this.types), 'coreThread','bolt','eventReceiver','thread');
     this.slots = objData.slots;
 
     // Converts this.types.eventReceiver from list of types to map from types to fire count
@@ -45,6 +48,10 @@ angular.module('autoNetApp')
 
       this.types.eventReceiver = events;
     }
+  }
+
+  LeapObject.prototype.getLink = function() {
+    return "#/object/" + this.contextID + "/" + this.name;
   }
 
   // Check if this LeapObject is of type "type"
@@ -68,9 +75,9 @@ angular.module('autoNetApp')
     return this.types.hasOwnProperty('eventReceiver');
   }
 
-  // Check if this LeapObject is a CoreThread
-  LeapObject.prototype.isCoreThread = function(){
-    return this.types.hasOwnProperty('coreThread');
+  // Check if this LeapObject is a thread
+  LeapObject.prototype.isThread = function(){
+    return this.types.hasOwnProperty('thread');
   }
 
   // Try to firer event "evt" on this object
@@ -137,7 +144,7 @@ angular.module('autoNetApp')
   // "objData": Additional object data, including the name and Autowired slots
   websocket.on('newObject', function(contextID, types, objData) {
     var updatedContext = ContextMap[contextID];
-    var object = new LeapObject(types, objData);
+    var object = new LeapObject(contextID, types, objData);
 
     updatedContext.addObject(object);
   });
@@ -152,8 +159,8 @@ angular.module('autoNetApp')
       var updatedContext = ContextMap[ctxtID];
 
       // Iterated objects in this context, signal event fired
-      Object.keys(updatedContext.objects).forEach(function(linkName){
-        var obj = updatedContext.objects[linkName];
+      Object.keys(updatedContext.objects).forEach(function(name){
+        var obj = updatedContext.objects[name];
         obj.eventFired(eventHash.name);
       });
 
@@ -169,15 +176,15 @@ angular.module('autoNetApp')
   // "contextID": Id of context containing updated object
   // "name": name of the type being updated
   // "util": the new utilization
-  websocket.on('coreThreadUtilization', function(contextID, name, util){
+  websocket.on('threadUtilization', function(contextID, name, kernel, user){
     var updatedContext = ContextMap[contextID];
-    var linkName = name.replace(/\s+/g,'_');
-    var updatedObject = updatedContext.objects[linkName];
-    if (!updatedObject.isCoreThread) {
+    var updatedObject = updatedContext.objects[name];
+    if (!updatedObject ||!updatedObject.isThread()) {
       console.log("Tried to updated utilization on non corethread");
       return;
     }
-    updatedObject.types.coreThread = util;
+    updatedObject.types.thread.kernel = kernel;
+    updatedObject.types.thread.user = user;
   });
 
   return {
@@ -189,17 +196,6 @@ angular.module('autoNetApp')
     },
     GetAllTypes: function(){
       return TypeList;
-    },
-    resolveProgressType: function(value){
-      if (value < 25) {
-        return 'success';
-      } else if (value < 50) {
-        return 'info';
-      } else if (value < 75) {
-        return 'warning';
-      } else {
-        return 'danger';
-      }
     }
   };
 }]);

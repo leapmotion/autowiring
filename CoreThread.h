@@ -22,8 +22,6 @@ public:
   virtual ~CoreThread(void) {}
 
 protected:
-
-protected:
   void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
 
   /// <summary>
