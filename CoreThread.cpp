@@ -96,6 +96,11 @@ bool CoreThread::WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost:
   return true;
 }
 
+void CoreThread::Run() {
+  while(!ShouldStop())
+    WaitForEvent();
+}
+
 void CoreThread::Stop(bool graceful) {
   if(graceful) {
     // Pend a call which will invoke Abort once the dispatch queue is done:
@@ -111,9 +116,4 @@ void CoreThread::Stop(bool graceful) {
 
   // Pass off to base class handling:
   BasicThread::Stop(graceful);
-}
-
-void CoreThread::Run() {
-  while(!ShouldStop())
-    WaitForEvent();
 }
