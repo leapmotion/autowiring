@@ -3,7 +3,7 @@
 #include FUNCTIONAL_HEADER
 
 // platform specific headers
-#if _MSC_VER
+#ifdef _MSC_VER
 #include <windows.h>
 #define TLS_KEY_TYPE DWORD
 #else
@@ -88,7 +88,7 @@ private:
 } //namespace leap
 
 // Platform specifc functions
-#if _MSC_VER
+#ifdef _MSC_VER
 #include "thread_specific_ptr_win.h"
 #else //Mac and linux
 #include "thread_specific_ptr_unix.h"
