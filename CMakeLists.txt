@@ -130,8 +130,15 @@ set(Autowiring_Win_SRCS
 )
 
 set(Autowiring_Unix_SRCS
-	CoreThreadUnix.cpp
 	InterlockedExchangeUnix.cpp
+)
+
+set(Autowiring_Mac_SRCS
+	CoreThreadMac.cpp
+)
+
+set(Autowiring_Linux_SRCS
+	CoreThreadLinux.cpp
 )
 
 ADD_MSVC_DISABLED_FILES("Unix Source" Autowiring_SRCS ${Autowiring_Unix_SRCS})
@@ -146,8 +153,19 @@ if(BUILD_WINDOWS)
     enable_language(ASM_MASM)
     set(Autowiring_SRCS interlocked.asm ${Autowiring_SRCS} )
   endif()
-
 else()
+  if(BUILD_MAC)
+    set(Autowiring_SRCS
+      ${Autowiring_Mac_SRCS}
+      ${Autowiring_SRCS}
+    )
+  else()
+    set(Autowiring_SRCS
+      ${Autowiring_Linux_SRCS}
+      ${Autowiring_SRCS}
+    )
+  endif()
+
   set(Autowiring_SRCS
     ${Autowiring_Unix_SRCS}
     ${Autowiring_SRCS}
