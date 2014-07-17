@@ -55,7 +55,7 @@ bool CoreThread::WaitForEvent(std::chrono::milliseconds milliseconds) {
 }
 
 bool CoreThread::WaitForEvent(std::chrono::high_resolution_clock::time_point wakeTime) {
-  if(wakeTime == std::chrono::steady_clock::time_point::max())
+  if(wakeTime == std::chrono::high_resolution_clock::time_point::max())
     // Maximal wait--we can optimize by using the zero-arguments version
     return WaitForEvent(), true;
 
