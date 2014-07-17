@@ -158,7 +158,6 @@ TEST_F(CoreJobTest, RecursiveAdd) {
 }
 
 TEST_F(CoreJobTest, RaceCondition) {
-  
   for (int i=0; i<5; i++) {
     AutoCreateContext ctxt;
     CurrentContextPusher pshr(ctxt);
@@ -183,4 +182,17 @@ TEST_F(CoreJobTest, RaceCondition) {
     ASSERT_TRUE(first) << "Failed after set value in lambda";
     ASSERT_TRUE(second) << "Failed to set value when delayed " << i << " milliseconds";
   }
+}
+
+TEST_F(CoreJobTest, CorrectlyAssignedCurrentContext) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<CoreJob> job;
+
+  std::shared_ptr<CoreContext> ctxt;
+  *job += [&ctxt] { ctxt = AutoCurrentContext(); };
+  *job += [job] { job->Stop(true); };
+  ASSERT_TRUE(job->WaitFor(std::chrono::seconds(5)));
+
+  // Now verify that the job was run in the right thread context:
+  ASSERT_EQ(AutoCurrentContext(), ctxt) << "Job lambda was not run with the correct CoreContext current";
 }
