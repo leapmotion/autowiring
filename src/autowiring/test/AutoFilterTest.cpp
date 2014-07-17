@@ -238,7 +238,8 @@ public:
   m_in(in)
   {}
 
-  void AutoFilter(auto_out<Decoration<out>>& output) {
+  //NOTE: Non-const auto_out yields obscure compiler error.
+  void AutoFilter(const auto_out<Decoration<out>>& output) {
     ++m_called_out;
     output->i = m_out;
   }
@@ -255,23 +256,35 @@ public:
   NewAutoFilter<decltype(&FilterGather<out,in>::AutoGather), &FilterGather<out,in>::AutoGather> FilterGather_AutoGather;
 };
 
+TEST_F(AutoFilterTest, VerifyTwoAutoFilterCallsAutoOut) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterGatherAutoOut<0,1>> zero2one;
+  AutoRequired<FilterGatherAutoOut<1,0>> one2zero;
+  zero2one->m_out = 3;
+  one2zero->m_out = 4;
+
+  //Verify that calls made on allocation from object pool do not introduce a race condition
+  {
+    std::shared_ptr<AutoPacket> packet = factory->NewPacket();
     ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with auto_out as only argument was called " << zero2one->m_called_out << " times";
-    ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter with auto_out as only argument was called " << zero2one->m_called_in << " times";
+    ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter of implicitly decorated type was called " << zero2one->m_called_in << " times";
     ASSERT_EQ(4, zero2one->m_in) << "AutoFilter received incorrect input of " << zero2one->m_in;
     ASSERT_EQ(1, one2zero->m_called_out) << "AutoFilter with auto_out as only argument was called " << one2zero->m_called_out << " times";
-    ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter with auto_out as only argument was called " << one2zero->m_called_in << " times";
+    ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter of implicitly decorated type was called " << one2zero->m_called_in << " times";
     ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
     zero2one->m_out = 5;
     one2zero->m_out = 6;
   }
   //Verify that no additional calls are made during return of packet to object pool
   ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with auto_out as only argument was called " << zero2one->m_called_out << " times";
-  ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter with auto_out as only argument was called " << zero2one->m_called_in << " times";
+  ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter of implicitly decorated type was called " << zero2one->m_called_in << " times";
   ASSERT_EQ(4, zero2one->m_in) << "AutoFilter received incorrect input of " << zero2one->m_in;
   ASSERT_EQ(1, one2zero->m_called_out) << "AutoFilter with auto_out as only argument was called " << one2zero->m_called_out << " times";
-  ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter with auto_out as only argument was called " << one2zero->m_called_in << " times";
+  ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter of implicitly decorated type was called " << one2zero->m_called_in << " times";
   ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
 }
+
 TEST_F(AutoFilterTest, VerifyInterThreadDecoration) {
   AutoRequired<FilterB> filterB;
   AutoRequired<AutoPacketFactory> factory;
