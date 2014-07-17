@@ -210,6 +210,12 @@ protected:
   int ResolveContextID(CoreContext* ctxt);
   CoreContext* ResolveContextID(int id);
   
+  /// <summary>
+  /// Append a lambda to this queue that will poll CoreThreads for their utilization
+  /// </summary>
+  void PollThreadUtilization(boost::chrono::milliseconds period);
+  
+  
   ///////////// Member variables /////////////
 
   // Set of all subscribers
@@ -224,6 +230,14 @@ protected:
   
   // All ContextMembers
   std::map<std::string, std::function<void(void)>> m_AllTypes;
+  
+  // All CoreThreads
+  struct ThreadStats {
+    // Last amount of time the thread was known to be running
+    boost::chrono::nanoseconds m_lastRuntimeKM;
+    boost::chrono::nanoseconds m_lastRuntimeUM;
+  };
+  std::map<std::weak_ptr<BasicThread>, ThreadStats, std::owner_less<std::weak_ptr<BasicThread>>> m_Threads;
   
   // Breakpoint functionality
   boost::mutex m_mutex;

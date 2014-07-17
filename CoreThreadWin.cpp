@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "BasicThread.h"
 #include "BasicThreadStateBlock.h"
+#include <boost/chrono/process_cpu_clocks.hpp>
 #include <Windows.h>
 #include <Avrt.h>
 
@@ -91,4 +92,30 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
     m_state->m_thisThread.native_handle(),
     nPriority
   );
+}
+
+boost::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
+  HANDLE hThread = m_state->m_thisThread.native_handle();
+  if(hThread == INVALID_HANDLE_VALUE)
+    return boost::chrono::system_clock::time_point::min();
+
+  FILETIME ft;
+  GetSystemTimeAsFileTime(&ft);
+  auto xyz = boost::chrono::system_clock::now();
+
+  int64_t createTime, kernelTime, userTime, exitTime;
+  ::GetThreadTimes(hThread, (LPFILETIME) &createTime, (LPFILETIME) &exitTime, (LPFILETIME) &kernelTime, (LPFILETIME) &userTime);
+  return
+    boost::chrono::system_clock::time_point(
+      boost::chrono::system_clock::duration(createTime)
+    );
+}
+
+void BasicThread::GetThreadTimes(boost::chrono::nanoseconds& kernelTime, boost::chrono::nanoseconds& userTime) {
+  HANDLE hThread = m_state->m_thisThread.native_handle();
+
+  FILETIME ftCreate, ftExit, ftKernel, ftUser;
+  ::GetThreadTimes(hThread, &ftCreate, &ftExit, &ftKernel, &ftUser);
+  kernelTime = boost::chrono::nanoseconds(100 * (int64_t&) ftKernel);
+  userTime = boost::chrono::nanoseconds(100 * (int64_t&) ftUser);
 }

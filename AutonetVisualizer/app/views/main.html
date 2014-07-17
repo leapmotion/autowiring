@@ -12,11 +12,19 @@
     <lable class="btn btn-primary" ng-model="selectedType" btn-radio="'bolt'">Bolts</lable>
   </div>
   <div ng-repeat="(id,context) in leap.GetContexts()" class="section">
-    <h3><a ng-href="#/context/{{id}}">{{context.name}}</a></h3>
+    <h3><a ng-href="{{context.getLink()}}">{{context.name}}</a></h3>
     <div class="row">
       <div class="col-xs-3" ng-repeat="object in context.objects | TypeFilter:selectedType" style="min-height:250px">
-        <h4><a ng-href="#/object/{{id}}/{{object.linkName}}">{{object.name | Limit:30}}</a></h4>
-        <progressbar ng-if="object.isCoreThread()" animate="true" class="progress-striped active" type="{{leap.resolveProgressType(object.types.coreThread)}}" value="object.types.coreThread">{{object.types.coreThread}}%</progressbar>
+        <h4><a ng-href="{{object.getLink()}}">{{object.name | Limit:30}}</a></h4>
+        <div ng-if="object.isThread()">
+          <progress>
+            <bar type="warning" value="object.types.thread.kernel+.01"><span ng-hide="object.types.thread.kernel < 5">{{object.types.thread.kernel | number:1}}%</span></bar>
+            <bar type="info" value="object.types.thread.user"><span ng-hide="object.types.thread.user < 5">{{object.types.thread.user | number:1}}%</span></bar>
+          </progress>
+          <div style="margin-top:-15px; margin-bottom:5px">
+            Sys: {{object.types.thread.kernel | number:1}}% User: {{object.types.thread.user | number:1}}% 
+          </div>
+        </div>
         <ul>
           <li ng-repeat="type in object.displayTypes">
             {{type}}
