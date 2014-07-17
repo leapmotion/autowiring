@@ -42,6 +42,8 @@ void AutoNetServer::Run(void){
     m_Server->close_all();
     m_Server->stop_listen(true);
   });
+  
+  PollThreadUtilization(boost::chrono::milliseconds(1000));
 
   CoreThread::Run();
 }
@@ -123,9 +125,14 @@ void AutoNetServer::NewObject(CoreContext& ctxt, const AnySharedPointer& object)
       types.Add("coreRunnable", true);
     }
     
-    auto thread = leap::fast_pointer_cast<CoreThread>(objectPtr);
-    if (thread) {
-      types.Add("coreThread", 55.0);
+    auto thread = leap::fast_pointer_cast<BasicThread>(objectPtr);
+    if(thread) {
+      m_Threads[thread->GetSelf<BasicThread>()];
+
+      Jzon::Object utilization;
+      utilization.Add("kernel", 0.0);
+      utilization.Add("user", 0.0);
+      types.Add("thread", utilization);
     }
 
     auto eventRcvr = leap::fast_pointer_cast<EventReceiver>(objectPtr);
@@ -208,4 +215,43 @@ int AutoNetServer::ResolveContextID(CoreContext* ctxt) {
 
 CoreContext* AutoNetServer::ResolveContextID(int id) {
   return m_ContextPtrs.at(id);
+}
+
+void AutoNetServer::PollThreadUtilization(boost::chrono::milliseconds period){
+  *this += period, [this, period] {
+    
+    for(auto q = m_Threads.begin(); q != m_Threads.end();) {
+      std::shared_ptr<BasicThread> thread = q->first.lock();
+      if(!thread) {
+        m_Threads.erase(q++);
+        continue;
+      }
+      
+      boost::chrono::nanoseconds runtimeKM, runtimeUM;
+      thread->GetThreadTimes(runtimeKM, runtimeUM);
+
+      // Determine the amount of time this thread has run since the last time we
+      // asked it for its runtime.
+      boost::chrono::duration<double> deltaRuntimeKM = runtimeKM - q->second.m_lastRuntimeKM;
+      boost::chrono::duration<double> deltaRuntimeUM = runtimeUM - q->second.m_lastRuntimeUM;
+
+      // Update timing values:
+      q->second.m_lastRuntimeKM = runtimeKM;
+      q->second.m_lastRuntimeUM = runtimeUM;
+
+      // Broadcast current thread utilization
+      int contextID = ResolveContextID(thread->GetContext().get());
+      std::string name = typeid(*thread.get()).name();
+
+      double kmPercent = 100 * deltaRuntimeKM / period;
+      double umPercent = 100 * deltaRuntimeUM / period;
+      BroadcastMessage("threadUtilization", contextID, name, kmPercent, umPercent);
+
+      // Next!
+      q++;
+    }
+    
+    // Poll again after "period" milliseconds
+    PollThreadUtilization(period);
+  };
 }
