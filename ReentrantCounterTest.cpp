@@ -61,11 +61,11 @@ TEST_F(ReentrantCounterTest, VerifyComplexReentrancy) {
     EXPECT_EQ(1UL, g_timeouts[i].hitCount) << "Performance counter hit too many times";
     EXPECT_LT(
       g_timeouts[i].lingerTime - slack,
-      std::chrono::nanoseconds(gc_timeouts[i])
+      std::chrono::microseconds(gc_timeouts[i])
     ) << "Error when gc_timeouts = " << gc_timeouts[i];
     EXPECT_GT(
       g_timeouts[i].lingerTime + slack,
-      std::chrono::nanoseconds(gc_timeouts[i])
+      std::chrono::microseconds(gc_timeouts[i])
     ) << "Error when gc_timeouts = " << gc_timeouts[i];
   }
 }
