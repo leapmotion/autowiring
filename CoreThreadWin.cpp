@@ -34,8 +34,10 @@ void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
 }
 
 void BasicThread::SetCurrentThreadName(void) const {
-  if(IS_INTERNAL_BUILD)
-    ::SetThreadName(m_state->m_thisThread.get_thread_info()->id, m_name);
+  if(IS_INTERNAL_BUILD) {
+    DWORD threadId = ::GetThreadId(static_cast<HANDLE>(m_state->m_thisThread.native_handle()));
+    ::SetThreadName(threadId, m_name);
+  }
 }
 
 bool SetCapturePriority(void) {
