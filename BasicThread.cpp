@@ -7,7 +7,7 @@
 #include "move_only.h"
 
 // Explicit instantiation of supported time point types:
-template<> bool BasicThread::WaitUntil(std::chrono::high_resolution_clock::time_point);
+template<> bool BasicThread::WaitUntil(std::chrono::steady_clock::time_point);
 template<> bool BasicThread::WaitUntil(std::chrono::system_clock::time_point);
 
 BasicThread::BasicThread(const char* pName):

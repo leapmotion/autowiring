@@ -22,8 +22,8 @@ void Reenter() {
   ReentrantCounter ctr(g_timeouts[g_curOffset]);
 
   // Spin until time-up.  We want precision, so we spin rather than sleep
-  auto finish = std::chrono::high_resolution_clock::now() + std::chrono::microseconds(gc_timeouts[g_curOffset]);
-  while(std::chrono::high_resolution_clock::now() < finish);
+  auto finish = std::chrono::steady_clock::now() + std::chrono::microseconds(gc_timeouts[g_curOffset]);
+  while(std::chrono::steady_clock::now() < finish);
 
   // Reenter every second value:
   if(g_curOffset++ % 2)
@@ -39,8 +39,8 @@ TEST_F(ReentrantCounterTest, VerifySimpleBenchmarking) {
   // Wait for spin-time period:
   {
     ReentrantCounter ctr(counter);
-    auto finish = std::chrono::high_resolution_clock::now() + spinTime;
-    while(std::chrono::high_resolution_clock::now() < finish);
+    auto finish = std::chrono::steady_clock::now() + spinTime;
+    while(std::chrono::steady_clock::now() < finish);
   }
 
   // Verify we hit exactly once:

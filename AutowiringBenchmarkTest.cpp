@@ -15,19 +15,19 @@ TEST_F(AutowiringBenchmarkTest, VerifySimplePerformance) {
 
   std::chrono::nanoseconds baseline;
   {
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::steady_clock::now();
     for(size_t i = n; i--;)
       ref[i % 2];
-    baseline = std::chrono::high_resolution_clock::now() - start;
+    baseline = std::chrono::steady_clock::now() - start;
   }
 
   // Time n autowirings:
   std::chrono::nanoseconds benchmark;
   {
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::steady_clock::now();
     for(size_t i = n; i--;)
       Autowired<SimpleObject>();
-    benchmark = (std::chrono::high_resolution_clock::now() - start) / n;
+    benchmark = (std::chrono::steady_clock::now() - start) / n;
   }
 
   EXPECT_GT(baseline * 3. / 2., benchmark) << "Average time to autowire one member was more than 3/2 of a hash map lookup";
@@ -79,13 +79,13 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiringCache)
     AutoCreateContext ctxt;
     CurrentContextPusher pshr(ctxt);
 
-    auto startBase = std::chrono::high_resolution_clock::now();
+    auto startBase = std::chrono::steady_clock::now();
     InjectDummy();
-    baseline += std::chrono::high_resolution_clock::now() - startBase;
+    baseline += std::chrono::steady_clock::now() - startBase;
 
-    auto startBench = std::chrono::high_resolution_clock::now();
+    auto startBench = std::chrono::steady_clock::now();
     InjectDummy();
-    benchmark += std::chrono::high_resolution_clock::now() - startBench;
+    benchmark += std::chrono::steady_clock::now() - startBench;
   }
 
   EXPECT_GT(baseline, benchmark) << "Autowiring cache not improving performance on subsequent autowirings";
@@ -132,12 +132,12 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFastPerformance) {
     InjectDummy();
 
     // Test simple autowiring first:
-    auto startBase = std::chrono::high_resolution_clock::now();
+    auto startBase = std::chrono::steady_clock::now();
     for(int i = 0; i < 500; ++i)
       InjectDummy();
-    baseline = std::chrono::high_resolution_clock::now() - startBase;
+    baseline = std::chrono::steady_clock::now() - startBase;
 
-    auto startBench = std::chrono::high_resolution_clock::now();
+    auto startBench = std::chrono::steady_clock::now();
     for(int i = 0; i < 500; ++i) {
       AutowiredFast<dummy<1>>();
       AutowiredFast<dummy<2>>();
@@ -160,7 +160,7 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFastPerformance) {
       AutowiredFast<dummy<19>>();
       AutowiredFast<dummy<20>>();
     }
-    benchmark = std::chrono::high_resolution_clock::now() - startBench;
+    benchmark = std::chrono::steady_clock::now() - startBench;
   }
 
   EXPECT_GT(baseline, benchmark*1.75) << "Fast autowiring is slower than ordinary autowiring";

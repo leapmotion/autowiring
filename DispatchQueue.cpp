@@ -36,8 +36,8 @@ void DispatchQueue::Abort(void) {
   m_queueUpdated.notify_all();
 }
 
-std::chrono::high_resolution_clock::time_point
-DispatchQueue::SuggestSoonestWakeupTimeUnsafe(std::chrono::high_resolution_clock::time_point latestTime) const {
+std::chrono::steady_clock::time_point
+DispatchQueue::SuggestSoonestWakeupTimeUnsafe(std::chrono::steady_clock::time_point latestTime) const {
   return
     m_delayedQueue.empty() ?
 
@@ -55,7 +55,7 @@ DispatchQueue::SuggestSoonestWakeupTimeUnsafe(std::chrono::high_resolution_clock
 void DispatchQueue::PromoteReadyEventsUnsafe(void) {
   // Move all ready elements out of the delayed queue and into the dispatch queue:
   for(
-    auto now = std::chrono::high_resolution_clock::now();
+    auto now = std::chrono::steady_clock::now();
     !m_delayedQueue.empty() && m_delayedQueue.top().GetReadyTime() < now;
     m_delayedQueue.pop()
   )
