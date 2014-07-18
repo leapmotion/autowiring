@@ -242,7 +242,6 @@ set(AutowiringTest_SRCS
   TestFixtures/SimpleInterface.h
   TestFixtures/SimpleObject.h
   TestFixtures/SimpleThreaded.h
-  TestFixtures/ThreadBarrier.h
   TestFixtures/ThrowingListener.h
   TestFixtures/ThrowsWhenFired.h
   TestFixtures/ThrowsWhenRun.h
