@@ -8,15 +8,26 @@ class SpinsAndThenQuits:
 public:
   SpinsAndThenQuits(size_t spinCount) :
     BasicThread("SpinsAndThenQuits"),
-    m_spinCount(spinCount)
+    m_spinCount(spinCount),
+    m_continue(false)
   {}
 
   volatile size_t m_spinCount;
 
+  bool m_continue;
+  boost::condition_variable m_signal;
+
   boost::chrono::nanoseconds m_kernelTime;
   boost::chrono::nanoseconds m_userTime;
 
+  void Continue(void) {
+    this->PerformStatusUpdate([this] {
+      m_continue = true;
+    });
+  }
+
   void Run(void) override {
+    WaitForStateUpdate([this] { return m_continue; });
     while(m_spinCount--);
     GetThreadTimes(m_kernelTime, m_userTime);
   }
@@ -24,6 +35,8 @@ public:
 
 TEST_F(BasicThreadTest, ValidateThreadTimes) {
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
+
   static const size_t spinCount = 10000000;
   auto spinsThenQuits = ctxt->Construct<SpinsAndThenQuits>(spinCount);
 
@@ -35,7 +48,13 @@ TEST_F(BasicThreadTest, ValidateThreadTimes) {
     benchmark = boost::chrono::high_resolution_clock::now() - startTime;
   }
 
-  ctxt->Initiate();
+  // By this point, not much should have happened:
+  boost::chrono::nanoseconds kernelTime;
+  boost::chrono::nanoseconds userTime;
+  spinsThenQuits->GetThreadTimes(kernelTime, userTime);
+
+  // Kick off the thread and wait for it to exit:
+  spinsThenQuits->Continue();
   ASSERT_TRUE(spinsThenQuits->WaitFor(boost::chrono::seconds(10))) << "Spin-then-quit test took too long to execute";
 
   // Thread should not have been able to complete in less time than we completed, by a factor of ten or so at least
