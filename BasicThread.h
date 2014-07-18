@@ -244,9 +244,9 @@ public:
   /// Returns the time when this thread was created
   /// </returns>
   /// <remarks>
-  /// If the thread has not yet run, this routine returns std::system_clock::time_point::min
+  /// If the thread has not yet run, this routine returns std::steady_clock::time_point::min
   /// </remarks>
-  std::chrono::system_clock::time_point GetCreationTime(void);
+  std::chrono::steady_clock::time_point GetCreationTime(void);
 
   /// <summary>
   /// Obtains running time information for this thread
