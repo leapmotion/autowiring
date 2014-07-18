@@ -4,7 +4,6 @@
 #include "CoreContext.h"
 #include "TestFixtures/SimpleObject.h"
 #include "TestFixtures/SimpleThreaded.h"
-#include "TestFixtures/ThreadBarrier.h"
 #include THREAD_HEADER
 
 TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
@@ -193,13 +192,17 @@ class TakesALongTimeToExit:
 {
 public:
   TakesALongTimeToExit(void) :
-    barr(2)
+    m_canContinue(false)
   {}
 
-  ThreadBarrier barr;
+  bool m_canContinue;
+
+  void Continue(void) {
+    PerformStatusUpdate([this] {m_canContinue = true; });
+  }
 
   virtual void Run(void) {
-    barr.wait();
+    WaitForStateUpdate([this] { return m_canContinue; });
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 };
@@ -215,7 +218,7 @@ TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
   m_create->Initiate();
 
   // Make the thread exit before the enclosing context exits:
-  longTime->barr.wait();
+  longTime->Continue();
   longTime->Stop();
 
   // Now stop the context and perform an explicit wait
