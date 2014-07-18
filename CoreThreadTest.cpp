@@ -6,6 +6,22 @@
 #include "TestFixtures/SimpleThreaded.h"
 #include THREAD_HEADER
 
+static_assert(
+  std::is_same<
+    decltype(std::chrono::steady_clock::now() + std::chrono::seconds(1)),
+    std::chrono::steady_clock::time_point
+  >::value,
+  "Incrementing a steady clock by a second duration did not result in the expected interval type"
+);
+
+static_assert(
+  std::is_same<
+    decltype(std::chrono::steady_clock::now() + std::chrono::microseconds(1)),
+    std::chrono::steady_clock::time_point
+  >::value,
+  "Incrementing a steady clock by a microsecond duration did not result in the expected interval type"
+);
+
 class SpamguardTest:
   public CoreThread
 {
@@ -226,7 +242,7 @@ TEST_F(CoreThreadTest, DISABLED_VerifyDoublePendedDispatchDelay) {
   *t += std::chrono::hours(1), [x] { *x = true; };
 
   // Now pend an event that will be ready just about right away:
-  *t += std::chrono::nanoseconds(1), [y] { *y = true; };
+  *t += std::chrono::microseconds(1), [y] { *y = true; };
 
   // Delay for a short period of time, then check our variable states:
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
