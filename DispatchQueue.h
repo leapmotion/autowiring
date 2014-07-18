@@ -160,17 +160,16 @@ public:
     OnPended(std::move(lk));
   }
 
-  template<class Clock>
   class DispatchThunkDelayedExpression {
   public:
-    DispatchThunkDelayedExpression(DispatchQueue* pParent, std::chrono::time_point<Clock> wakeup) :
+    DispatchThunkDelayedExpression(DispatchQueue* pParent, std::chrono::steady_clock::time_point wakeup) :
       m_pParent(pParent),
       m_wakeup(wakeup)
     {}
 
   private:
     DispatchQueue* m_pParent;
-    std::chrono::time_point<Clock> m_wakeup;
+    std::chrono::steady_clock::time_point m_wakeup;
 
   public:
     template<class _Fx>
@@ -187,19 +186,23 @@ public:
   /// Overload for the introduction of a delayed dispatch thunk
   /// </summary>
   template<class Rep, class Period>
-  DispatchThunkDelayedExpression<std::chrono::steady_clock> operator+=(std::chrono::duration<Rep, Period> rhs) {
-    return DispatchThunkDelayedExpression<std::chrono::steady_clock>(
-      this,
-      std::chrono::steady_clock::now() + rhs
+  DispatchThunkDelayedExpression operator+=(std::chrono::duration<Rep, Period> rhs) {
+    // Verify that the duration is at least microseconds.  If you're getting an assertion here, try
+    // using std::duration_cast<std::chrono::microseconds>(duration)
+    static_assert(
+      Period::num / Period::den <= 1000000,
+      "Dispatch queues cannot be used to describe intervals less than one microseconds in duration"
     );
+
+    std::chrono::steady_clock::time_point timepoint = std::chrono::steady_clock::now() + rhs;
+    return *this += timepoint;
   }
 
   /// <summary>
   /// Overload for absolute-time based delayed dispatch thunk
   /// </summary>
-  template<class Clock>
-  DispatchThunkDelayedExpression<Clock> operator+=(std::chrono::time_point<Clock> rhs) {
-    return DispatchThunkDelayedExpression<Clock>(this, rhs);
+  DispatchThunkDelayedExpression operator+=(std::chrono::steady_clock::time_point rhs) {
+    return DispatchThunkDelayedExpression(this, rhs);
   }
 
   /// <summary>
