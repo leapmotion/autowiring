@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "atomic_object.h"
+#include MEMORY_HEADER
 
 ///<summary>
 ///This class implements the atomic_object interface to a shared reference.
