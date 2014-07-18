@@ -455,9 +455,11 @@ TEST_F(CoreThreadTest, VerifyCanBoostPriority) {
   m_create->Initiate();
 
   // We want all of our threads to run on ONE cpu for awhile, and then we want to put it back at exit
+  DWORD_PTR originalAffinity, systemAffinity;
+  GetProcessAffinityMask(GetCurrentProcess(), &originalAffinity, &systemAffinity);
   SetProcessAffinityMask(GetCurrentProcess(), 1);
-  auto onreturn = MakeAtExit([] {
-    SetProcessAffinityMask(GetCurrentProcess(), ~0);
+  auto onreturn = MakeAtExit([originalAffinity] {
+    SetProcessAffinityMask(GetCurrentProcess(), originalAffinity);
   });
 
   // Poke the conditional variable a lot:
