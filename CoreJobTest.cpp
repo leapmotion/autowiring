@@ -195,3 +195,13 @@ TEST_F(CoreJobTest, CorrectlyAssignedCurrentContext) {
   // Now verify that the job was run in the right thread context:
   ASSERT_EQ(AutoCurrentContext(), ctxt) << "Job lambda was not run with the correct CoreContext current";
 }
+
+TEST_F(CoreJobTest, RecursiveDeadlock) {
+  // Create a CoreJob which will wait for a bit.  Then, delegate its deletion responsibility to the thread
+  // itself, a
+  AutoCreateContext ctxt;
+  AutoRequired<CoreJob> cj(ctxt);
+  *cj += [] {
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+  };
+}
