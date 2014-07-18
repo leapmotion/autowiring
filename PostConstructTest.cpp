@@ -189,7 +189,7 @@ TEST_F(PostConstructTest, NotificationTeardownRace) {
 
   auto quit = false;
   auto shouldQuit = MakeAtExit([&quit] { quit = true; });
-  volatile std::atomic<size_t> counter = 0;
+  std::atomic<size_t> counter{0};
 
   // This thread sets up the race pathology:
   std::thread t([&] {
