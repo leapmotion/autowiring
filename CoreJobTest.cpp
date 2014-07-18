@@ -24,6 +24,8 @@ TEST_F(CoreJobTest, VerifySimpleProperties) {
 
   // Verify that the blocked thread has become unblocked and quits properly:
   ASSERT_EQ(std::future_status::ready, future.wait_for(std::chrono::seconds(1))) << "CoreJob did not correctly signal a blocked thread that it was ready to accept dispatchers";
+
+  m_create->SignalShutdown(true);
 }
 
 TEST_F(CoreJobTest, VerifySimpleSubmission) {
