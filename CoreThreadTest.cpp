@@ -50,7 +50,7 @@ public:
   virtual void Run(void) override {
 
     // Wait for one event using an indefinite timeout, then quit:
-    WaitForEvent(std::chrono::steady_clock::time_point::max());
+    WaitForEvent(std::chrono::high_resolution_clock::time_point::max());
   }
 };
 
