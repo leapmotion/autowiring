@@ -49,12 +49,12 @@ public:
   /// <returns>
   /// False if the timeout period elapsed before an event could be dispatched, true otherwise
   /// </returns>
-  bool WaitForEvent(std::chrono::high_resolution_clock::time_point wakeTime);
+  bool WaitForEvent(std::chrono::steady_clock::time_point wakeTime);
 
   /// <summary>
   /// An unsafe variant of WaitForEvent
   /// </summary>
-  bool WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chrono::high_resolution_clock::time_point wakeTime);
+  bool WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chrono::steady_clock::time_point wakeTime);
 
   /// <summary>
   /// Begins the core thread
