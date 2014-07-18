@@ -218,6 +218,7 @@ CoreContext* AutoNetServer::ResolveContextID(int id) {
 }
 
 void AutoNetServer::PollThreadUtilization(std::chrono::milliseconds period){
+
   *this += period, [this, period] {
     
     for(auto q = m_Threads.begin(); q != m_Threads.end();) {
@@ -243,8 +244,8 @@ void AutoNetServer::PollThreadUtilization(std::chrono::milliseconds period){
       int contextID = ResolveContextID(thread->GetContext().get());
       std::string name = typeid(*thread.get()).name();
 
-      double kmPercent = 100.0 * (deltaRuntimeKM / period);
-      double umPercent = 100.0 * (deltaRuntimeUM / period);
+      double kmPercent = 100.0 * deltaRuntimeKM.count() / period.count();
+      double umPercent = 100.0 * deltaRuntimeUM.count() / period.count();
       BroadcastMessage("threadUtilization", contextID, name, kmPercent, umPercent);
 
       // Next!

@@ -96,20 +96,20 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
   );
 }
 
-std::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
+std::chrono::steady_clock::time_point BasicThread::GetCreationTime(void) {
   HANDLE hThread = m_state->m_thisThread.native_handle();
   if(hThread == INVALID_HANDLE_VALUE)
-    return std::chrono::system_clock::time_point::min();
+    return std::chrono::steady_clock::time_point::min();
 
   FILETIME ft;
   GetSystemTimeAsFileTime(&ft);
-  auto xyz = std::chrono::system_clock::now();
+  auto xyz = std::chrono::steady_clock::now();
 
   int64_t createTime, kernelTime, userTime, exitTime;
   ::GetThreadTimes(hThread, (LPFILETIME) &createTime, (LPFILETIME) &exitTime, (LPFILETIME) &kernelTime, (LPFILETIME) &userTime);
   return
-    std::chrono::system_clock::time_point(
-      std::chrono::system_clock::duration(createTime)
+    std::chrono::steady_clock::time_point(
+      std::chrono::steady_clock::duration(createTime)
     );
 }
 
