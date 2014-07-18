@@ -9,7 +9,7 @@ T* thread_specific_ptr<T>::get() const {
 
 template<typename T>
 void thread_specific_ptr<T>::set(T* value) {
-  TlsSetValue(key, value);
+  TlsSetValue(m_key, value);
 }
 
 template<typename T>
