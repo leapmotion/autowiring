@@ -39,7 +39,7 @@ public:
   /// When this dispatch thunk becomes ready, the associated thunk will be pushed to the back to the owning dispatch queue's
   /// ready queue.
   /// </remarks>
-  DispatchThunkDelayed(std::chrono::high_resolution_clock::time_point readyAt, DispatchThunkBase* thunk) :
+  DispatchThunkDelayed(std::chrono::steady_clock::time_point readyAt, DispatchThunkBase* thunk) :
     m_readyAt(readyAt),
     m_thunk(thunk)
   {}
@@ -64,12 +64,12 @@ public:
 
 private:
   // The time when the thunk becomes ready-to-execute
-  std::chrono::high_resolution_clock::time_point m_readyAt;
+  std::chrono::steady_clock::time_point m_readyAt;
   DispatchThunkBase* m_thunk;
 
 public:
   // Accessor methods:
-  std::chrono::high_resolution_clock::time_point GetReadyTime(void) const { return m_readyAt; }
+  std::chrono::steady_clock::time_point GetReadyTime(void) const { return m_readyAt; }
 
   /// <summary>
   /// Extracts the underlying thunk

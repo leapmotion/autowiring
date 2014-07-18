@@ -59,7 +59,7 @@ protected:
   /// <summary>
   /// Recommends a point in time to wake up to check for events
   /// </summary>
-  std::chrono::high_resolution_clock::time_point SuggestSoonestWakeupTimeUnsafe(std::chrono::high_resolution_clock::time_point latestTime) const;
+  std::chrono::steady_clock::time_point SuggestSoonestWakeupTimeUnsafe(std::chrono::steady_clock::time_point latestTime) const;
 
   /// <summary>
   /// Moves all ready events from the delayed queue into the dispatch queue
@@ -187,10 +187,10 @@ public:
   /// Overload for the introduction of a delayed dispatch thunk
   /// </summary>
   template<class Rep, class Period>
-  DispatchThunkDelayedExpression<std::chrono::high_resolution_clock> operator+=(std::chrono::duration<Rep, Period> rhs) {
-    return DispatchThunkDelayedExpression<std::chrono::high_resolution_clock>(
+  DispatchThunkDelayedExpression<std::chrono::steady_clock> operator+=(std::chrono::duration<Rep, Period> rhs) {
+    return DispatchThunkDelayedExpression<std::chrono::steady_clock>(
       this,
-      std::chrono::high_resolution_clock::now() + rhs
+      std::chrono::steady_clock::now() + rhs
     );
   }
 

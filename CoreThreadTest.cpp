@@ -50,7 +50,7 @@ public:
   virtual void Run(void) override {
 
     // Wait for one event using an indefinite timeout, then quit:
-    WaitForEvent(std::chrono::high_resolution_clock::time_point::max());
+    WaitForEvent(std::chrono::steady_clock::time_point::max());
   }
 };
 
@@ -266,7 +266,7 @@ TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
 
   // Pend by an absolute time point, nothing really special here
   std::shared_ptr<bool> x(new bool(false));
-  *t += (std::chrono::high_resolution_clock::now() + std::chrono::milliseconds(1)), [&t, x] {
+  *t += (std::chrono::steady_clock::now() + std::chrono::milliseconds(1)), [&t, x] {
     *x = true;
     t->Stop();
   };

@@ -51,11 +51,11 @@ void CoreThread::WaitForEvent(void) {
 }
 
 bool CoreThread::WaitForEvent(std::chrono::milliseconds milliseconds) {
-  return WaitForEvent(std::chrono::high_resolution_clock::now() + milliseconds);
+  return WaitForEvent(std::chrono::steady_clock::now() + milliseconds);
 }
 
-bool CoreThread::WaitForEvent(std::chrono::high_resolution_clock::time_point wakeTime) {
-  if(wakeTime == std::chrono::high_resolution_clock::time_point::max())
+bool CoreThread::WaitForEvent(std::chrono::steady_clock::time_point wakeTime) {
+  if(wakeTime == std::chrono::steady_clock::time_point::max())
     // Maximal wait--we can optimize by using the zero-arguments version
     return WaitForEvent(), true;
 
@@ -63,7 +63,7 @@ bool CoreThread::WaitForEvent(std::chrono::high_resolution_clock::time_point wak
   return WaitForEventUnsafe(lk, wakeTime);
 }
 
-bool CoreThread::WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chrono::high_resolution_clock::time_point wakeTime) {
+bool CoreThread::WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chrono::steady_clock::time_point wakeTime) {
   if(m_aborted)
     throw dispatch_aborted_exception();
 

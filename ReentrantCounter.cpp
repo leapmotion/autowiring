@@ -6,7 +6,7 @@ std::chrono::nanoseconds ReentrantCounter::globalTimeElapsedSinceStart(0);
 
 ReentrantCounter::ReentrantCounter(PerformanceCounter& duration) :
   duration(duration),
-  startTime(std::chrono::high_resolution_clock::now())
+  startTime(std::chrono::steady_clock::now())
 {
   objectIObservedOnStart = lastKnownObject;
   lastKnownObject = this;
@@ -15,7 +15,7 @@ ReentrantCounter::ReentrantCounter(PerformanceCounter& duration) :
 
 ReentrantCounter::~ReentrantCounter(void)
 {
-  endTime= std::chrono::high_resolution_clock::now();
+  endTime= std::chrono::steady_clock::now();
   // Unconditionally increment the hit count on this field:
   duration.hitCount++;
   if (lastKnownObject == this) {

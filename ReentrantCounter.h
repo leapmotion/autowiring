@@ -29,7 +29,7 @@ private:
   PerformanceCounter& duration;
   ReentrantCounter * objectIObservedOnStart;
   // Construction time:
-  std::chrono::high_resolution_clock::time_point startTime;
-  std::chrono::high_resolution_clock::time_point endTime;
+  std::chrono::steady_clock::time_point startTime;
+  std::chrono::steady_clock::time_point endTime;
   std::chrono::nanoseconds myRecordedTimeElapsedSinceStart;
 };
