@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "InterlockedRoutinesTest.h"
 #include "InterlockedExchange.h"
-#include "TestFixtures/ThreadBarrier.h"
 #include THREAD_HEADER
+#include <condition_variable>
 
 template<void* (*fn)(void**, void*)>
 void CheckFn() {
@@ -59,13 +59,19 @@ TEST_F(InterlockedRoutinesTest, VerifyCompareExchangePathological) {
   void* counter = &base;
 
   // Barrier, in order to exacerbate race conditions:
-  ThreadBarrier bar(threadCount);
+  std::mutex lock;
+  std::condition_variable cv;
+  bool canContinue = false;
 
-  auto contender = [&counter, &bar] () {
+  auto contender = [&]() {
     void* presumption;
     void* addend;
 
-    bar.wait();
+    {
+      std::unique_lock<std::mutex> lk(lock);
+      if(!cv.wait_for(lk, std::chrono::seconds(5), [&] { return canContinue; }))
+        return;
+    }
 
     do {
       // This is an implementation of interlocked_add that is based on compare-exchange.
@@ -82,6 +88,13 @@ TEST_F(InterlockedRoutinesTest, VerifyCompareExchangePathological) {
   std::thread allThreads[threadCount];
   for(size_t i = 0; i < threadCount; i++) {
     allThreads[i] = std::thread(contender);
+  }
+
+  // Now we can wake up the threads:
+  {
+    std::lock_guard<std::mutex> lk(lock);
+    canContinue = true;
+    cv.notify_all();
   }
 
   // Wait for all threads to complete:

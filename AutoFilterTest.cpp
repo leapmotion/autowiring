@@ -176,7 +176,7 @@ TEST_F(AutoFilterTest, VerifyInterThreadDecoration) {
   EXPECT_FALSE(filterB->m_called) << "A call was made to a thread which should not have been able to process it";
 
   // Wake up the barrier and post a quit message:
-  filterB->m_barr.wait();
+  filterB->Continue();
   *filterB += [&filterB] { filterB->Stop(); };
   filterB->Wait();
 
