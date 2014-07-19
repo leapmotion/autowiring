@@ -67,11 +67,7 @@ void InjectDummy(void) {
   Autowired<dummy<25>>();
 };
 
-#if defined(__GNUC__) && !defined(__clang__)
 TEST_F(AutowiringBenchmarkTest, DISABLED_VerifyAutowiringCache)
-#else
-TEST_F(AutowiringBenchmarkTest, VerifyAutowiringCache)
-#endif
 {
   boost::chrono::nanoseconds baseline(0);
   boost::chrono::nanoseconds benchmark(0);
