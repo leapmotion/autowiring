@@ -227,7 +227,7 @@ void AutoNetServer::PollThreadUtilization(boost::chrono::milliseconds period){
         continue;
       }
       
-      boost::chrono::nanoseconds runtimeKM, runtimeUM;
+      boost::chrono::milliseconds runtimeKM, runtimeUM;
       thread->GetThreadTimes(runtimeKM, runtimeUM);
 
       // Determine the amount of time this thread has run since the last time we
@@ -243,8 +243,8 @@ void AutoNetServer::PollThreadUtilization(boost::chrono::milliseconds period){
       int contextID = ResolveContextID(thread->GetContext().get());
       std::string name = typeid(*thread.get()).name();
 
-      double kmPercent = 100 * deltaRuntimeKM / period;
-      double umPercent = 100 * deltaRuntimeUM / period;
+      double kmPercent = 100 * (deltaRuntimeKM / period);
+      double umPercent = 100 * (deltaRuntimeUM / period);
       BroadcastMessage("threadUtilization", contextID, name, kmPercent, umPercent);
 
       // Next!
