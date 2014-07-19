@@ -21,7 +21,7 @@ boost::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
   return boost::chrono::system_clock::time_point::min();
 }
 
-void BasicThread::GetThreadTimes(boost::chrono::nanoseconds& kernelTime, boost::chrono::nanoseconds& userTime) {
+void BasicThread::GetThreadTimes(boost::chrono::milliseconds& kernelTime, boost::chrono::milliseconds& userTime) {
   // Obtain the thread port from the Unix pthread wrapper
   pthread_t pthread = m_state->m_thisThread.native_handle();
   thread_t threadport = pthread_mach_thread_np(pthread);
@@ -36,6 +36,6 @@ void BasicThread::GetThreadTimes(boost::chrono::nanoseconds& kernelTime, boost::
   proc_pidinfo(getpid(), PROC_PIDTHREADINFO, identifier_info.thread_handle, &info, sizeof(info));
 
   // User time is in 100-ns increments
-  kernelTime = 100 * boost::chrono::nanoseconds(info.pth_system_time);
-  userTime = 100 * boost::chrono::nanoseconds(info.pth_user_time);
+  kernelTime = boost::chrono::milliseconds(info.pth_system_time/1000000);
+  userTime = boost::chrono::milliseconds(info.pth_user_time/1000000);
 }

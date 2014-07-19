@@ -255,7 +255,7 @@ public:
   /// <summary>
   /// Obtains running time information for this thread
   /// </summary>
-  void GetThreadTimes(boost::chrono::nanoseconds& kernelTime, boost::chrono::nanoseconds& userTime);
+  void GetThreadTimes(boost::chrono::milliseconds& kernelTime, boost::chrono::milliseconds& userTime);
 };
 
 /// <summary>
