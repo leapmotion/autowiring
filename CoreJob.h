@@ -29,9 +29,9 @@ private:
   // The current outstanding async in the thread pool, if one exists:
   std::future<void> m_curEvent;
 
-	// Flag, indicating whether curEvent is in a teardown pathway.  This
-	// flag is highly stateful.
-	bool m_curEventInTeardown;
+  // Flag, indicating whether curEvent is in a teardown pathway.  This
+  // flag is highly stateful.
+  bool m_curEventInTeardown;
 
   /// <summary>
   /// Invokes DispatchAllEvents and safely nullifies the current event
@@ -40,7 +40,7 @@ private:
 
 protected:
   // DispatchQueue overrides
-  void OnPended(boost::unique_lock<boost::mutex>&&) override;
+  void OnPended(std::unique_lock<std::mutex>&&) override;
 
   // Resets the outstanding pointer, calls base abort routine
   void Abort(void);
@@ -54,5 +54,5 @@ public:
   void Stop(bool graceful) override;
   bool IsRunning(void) const override { return m_running; }
   void Wait(void) override;
-  bool WaitFor(boost::chrono::nanoseconds duration);
+  bool WaitFor(std::chrono::nanoseconds duration);
 };

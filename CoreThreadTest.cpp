@@ -4,8 +4,23 @@
 #include "Autowired.h"
 #include "at_exit.h"
 #include "TestFixtures/SimpleThreaded.h"
-#include <boost/thread/thread.hpp>
-#include <boost/thread.hpp>
+#include THREAD_HEADER
+
+static_assert(
+  std::is_same<
+    decltype(std::chrono::steady_clock::now() + std::chrono::seconds(1)),
+    std::chrono::steady_clock::time_point
+  >::value,
+  "Incrementing a steady clock by a second duration did not result in the expected interval type"
+);
+
+static_assert(
+  std::is_same<
+    decltype(std::chrono::steady_clock::now() + std::chrono::microseconds(1)),
+    std::chrono::steady_clock::time_point
+  >::value,
+  "Incrementing a steady clock by a microsecond duration did not result in the expected interval type"
+);
 
 class SpamguardTest:
   public CoreThread
@@ -51,7 +66,7 @@ public:
   virtual void Run(void) override {
 
     // Wait for one event using an indefinite timeout, then quit:
-    WaitForEvent(boost::chrono::steady_clock::time_point::max());
+    WaitForEvent(std::chrono::steady_clock::time_point::max());
   }
 };
 
@@ -60,11 +75,11 @@ TEST_F(CoreThreadTest, VerifyIndefiniteDelay) {
   m_create->Initiate();
 
   // Verify that the instance does not quit until we pend something:
-  ASSERT_FALSE(instance->WaitFor(boost::chrono::milliseconds(10))) << "Thread instance exited prematurely, when it should have been waiting indefinitely";
+  ASSERT_FALSE(instance->WaitFor(std::chrono::milliseconds(10))) << "Thread instance exited prematurely, when it should have been waiting indefinitely";
 
   // Now we pend an arbitrary event and verify that we can wait:
   *instance += [] {};
-  ASSERT_TRUE(instance->WaitFor(boost::chrono::milliseconds(10))) << "Instance did not exit after an event was pended which should have woken up its dispatch loop";
+  ASSERT_TRUE(instance->WaitFor(std::chrono::milliseconds(10))) << "Instance did not exit after an event was pended which should have woken up its dispatch loop";
 }
 
 TEST_F(CoreThreadTest, VerifyNestedTermination) {
@@ -110,7 +125,7 @@ public:
   ListenThread() : CoreThread("ListenThread") {}
 
   Deferred SleepFor(int seconds) override {
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     if(ShouldStop())
       throw std::runtime_error("Execution aborted");
 
@@ -178,18 +193,18 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
 
   // Delay until the dispatch loop is actually running, then wait an additional 1ms to let the
   // WaitForEvent call catch on:
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
   // These are flags--we'll set them to true as the test proceeds
   std::shared_ptr<bool> x(new bool(false));
   std::shared_ptr<bool> y(new bool(false));
 
   // Pend a delayed event first, and then an immediate event right afterwards:
-  *t += boost::chrono::hours(1), [x] { *x = true; };
+  *t += std::chrono::hours(1), [x] { *x = true; };
   *t += [y] { *y = true; };
 
   // Verify that, after 100ms, the first event is called and the second event is NOT called:
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
   ASSERT_TRUE(*y) << "A simple ready call was not dispatched within 100ms of being pended";
   ASSERT_FALSE(*x) << "An event which should not have been executed for an hour was executed early";
 }
@@ -202,7 +217,7 @@ TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
 
   // This deferred pend will never actually be executed:
   AutoRequired<CoreThread> t;
-  *t += boost::chrono::hours(1), [x] {};
+  *t += std::chrono::hours(1), [x] {};
 
   // Verify that we have exactly one pended event at this point.
   ASSERT_EQ(1UL, t->GetDispatchQueueLength()) << "Dispatch queue had an unexpected number of pended events";
@@ -224,13 +239,13 @@ TEST_F(CoreThreadTest, DISABLED_VerifyDoublePendedDispatchDelay) {
   // pend an event that won't happen for awhile, in order to trick the dispatch queue into waiting for
   // a lot longer than it should for the next event.
   AutoRequired<CoreThread> t;
-  *t += boost::chrono::hours(1), [x] { *x = true; };
+  *t += std::chrono::hours(1), [x] { *x = true; };
 
   // Now pend an event that will be ready just about right away:
-  *t += boost::chrono::nanoseconds(1), [y] { *y = true; };
+  *t += std::chrono::microseconds(1), [y] { *y = true; };
 
   // Delay for a short period of time, then check our variable states:
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
   // This one shouldn't have been hit yet, it isn't scheduled to be hit for 10s
   ASSERT_FALSE(*x) << "A delayed dispatch was invoked extremely early";
@@ -252,10 +267,10 @@ TEST_F(CoreThreadTest, VerifyTimedSort) {
   // maximum--rather, we use a simple PRNG called a linear congruential generator and hop around
   // the interval [1...12] instead.
   for(size_t i = 1; i != 0; i = (i * 5 + 1) % 16)
-    *t += boost::chrono::milliseconds(i * 3), [&v, i] { v.push_back(i); };
+    *t += std::chrono::milliseconds(i * 3), [&v, i] { v.push_back(i); };
 
   // Delay 50ms for the thread to finish up.  Technically this is 11ms more than we need.
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(75));
+  std::this_thread::sleep_for(std::chrono::milliseconds(75));
 
   // Verify that the resulting vector is sorted.
   ASSERT_TRUE(std::is_sorted(v.begin(), v.end())) << "A timed sort implementation did not generate a sorted sequence as expected";
@@ -267,7 +282,7 @@ TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
 
   // Pend by an absolute time point, nothing really special here
   std::shared_ptr<bool> x(new bool(false));
-  *t += (boost::chrono::high_resolution_clock::now() + boost::chrono::milliseconds(1)), [&t, x] {
+  *t += (std::chrono::steady_clock::now() + std::chrono::milliseconds(1)), [&t, x] {
     *x = true;
     t->Stop();
   };
@@ -276,7 +291,7 @@ TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
   ASSERT_FALSE(*x) << "A timepoint-based delayed dispatch was invoked early";
 
   // Verify that we hit this after one ms of delay
-  ASSERT_TRUE(t->WaitFor(boost::chrono::seconds(5))) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
+  ASSERT_TRUE(t->WaitFor(std::chrono::seconds(5))) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
 }
 
 class WaitsALongTimeThenQuits:
@@ -290,7 +305,7 @@ public:
   bool m_runExiting;
 
   void Run(void) override {
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     m_runExiting = true;
   }
 };
@@ -315,7 +330,7 @@ TEST_F(CoreThreadTest, NestedContextWait) {
 
 TEST_F(CoreThreadTest, WaitBeforeInitiate) {
   // Wait for the outer context before it's actually initiated:
-  ASSERT_FALSE(m_create->Wait(boost::chrono::seconds(0))) << "A wait operation on a context succeeded even though it was not yet started";
+  ASSERT_FALSE(m_create->Wait(std::chrono::seconds(0))) << "A wait operation on a context succeeded even though it was not yet started";
 
   // Stop the outer context without even starting it
   m_create->SignalTerminate();
@@ -325,10 +340,10 @@ TEST_F(CoreThreadTest, WaitBeforeInitiate) {
   AutoRequired<CoreThread> ct;
   ASSERT_TRUE(!ct->IsRunning()) << "A thread added to an already-stopped context was incorrectly marked as running";
   ASSERT_TRUE(ct->ShouldStop()) << "A thread added to an already-stopped context did not report that it should be stopped";
-  ASSERT_TRUE(ct->WaitFor(boost::chrono::seconds(0))) << "A thread added to an already-stopped context did not correctly respond to a zero-duration wait";
+  ASSERT_TRUE(ct->WaitFor(std::chrono::seconds(0))) << "A thread added to an already-stopped context did not correctly respond to a zero-duration wait";
 
   // Wait again.  This should suceed right away.
-  ASSERT_TRUE(m_create->Wait(boost::chrono::seconds(0))) << "Failed to wait on a context which should have already been stopped";
+  ASSERT_TRUE(m_create->Wait(std::chrono::seconds(0))) << "Failed to wait on a context which should have already been stopped";
 }
 
 template<ThreadPriority priority>
@@ -343,14 +358,14 @@ public:
   volatile int64_t val;
 
   // This will be a hotly contested conditional variable
-  AutoRequired<boost::mutex> contended;
+  AutoRequired<std::mutex> contended;
 
   void Run(void) override {
     ElevatePriority p(*this, priority);
 
     while(!ShouldStop()) {
       // Obtain the lock and then increment our value:
-      boost::lock_guard<boost::mutex> lk(*contended);
+      std::lock_guard<std::mutex> lk(*contended);
       val++;
     }
   }
@@ -368,7 +383,7 @@ TEST_F(CoreThreadTest, ReentrantStopOnTeardown) {
   // Kickoff and then delay:
   m_create->Initiate();
   m_create->SignalShutdown();
-  ASSERT_TRUE(m_create->Wait(boost::chrono::seconds(1))) << "Thread deadlocked when attempting to stop itself from a teardown listener";
+  ASSERT_TRUE(m_create->Wait(std::chrono::seconds(1))) << "Thread deadlocked when attempting to stop itself from a teardown listener";
 }
 
 class VerifiesCurrentContextOnRundown:
@@ -392,7 +407,7 @@ TEST_F(CoreThreadTest, EnsureContextCurrencyInRundown) {
   // on the dispatch queue.
   AutoRequired<VerifiesCurrentContextOnRundown> tester;
   ctxt->Initiate();
-  ASSERT_TRUE(ctxt->Wait(boost::chrono::seconds(5))) << "Context did not tear down in a timely fashion";
+  ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Context did not tear down in a timely fashion";
   ASSERT_EQ(ctxt, tester->m_ctxt) << "Current context was not preserved while a CoreThread was being run down";
 }
 
@@ -440,13 +455,15 @@ TEST_F(CoreThreadTest, VerifyCanBoostPriority) {
   m_create->Initiate();
 
   // We want all of our threads to run on ONE cpu for awhile, and then we want to put it back at exit
+  DWORD_PTR originalAffinity, systemAffinity;
+  GetProcessAffinityMask(GetCurrentProcess(), &originalAffinity, &systemAffinity);
   SetProcessAffinityMask(GetCurrentProcess(), 1);
-  auto onreturn = MakeAtExit([] {
-    SetProcessAffinityMask(GetCurrentProcess(), ~0);
+  auto onreturn = MakeAtExit([originalAffinity] {
+    SetProcessAffinityMask(GetCurrentProcess(), originalAffinity);
   });
 
   // Poke the conditional variable a lot:
-  AutoRequired<boost::mutex> contended;
+  AutoRequired<std::mutex> contended;
   for(size_t i = 100; i--;) {
     // We sleep while holding contention lock to force waiting threads into the sleep queue.  The reason we have to do
     // this is due to the way that mutex is implemented under the hood.  The STL mutex uses a high-frequency variable
@@ -464,8 +481,8 @@ TEST_F(CoreThreadTest, VerifyCanBoostPriority) {
     // thread with respect to other threads of the same process.  This is why we hold the lock for a full millisecond,
     // in order to force the thread over to the sleep queue and ensure that the priority resolution mechanism is
     // directly tested.
-    boost::lock_guard<boost::mutex> lk(*contended);
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    std::lock_guard<std::mutex> lk(*contended);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 
   // Need to terminate before we try running a comparison.

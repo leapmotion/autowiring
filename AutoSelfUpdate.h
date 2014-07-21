@@ -10,7 +10,7 @@
 ///In order to ensure that this method will be consistent with any other AutoFilter calls,
 ///the object inherits from atomic_object, which implements basic locking functionality.
 ///</remarks>
-template<class object, class lock = boost::mutex>
+template<class object, class lock = std::mutex>
 class AutoSelfUpdate:
 public atomic_object<object, lock> {
 public:

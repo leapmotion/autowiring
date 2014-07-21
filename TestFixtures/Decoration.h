@@ -1,7 +1,6 @@
 #pragma once
-#include "../CoreThread.h"
-#include "../has_autofilter.h"
-#include <boost/thread/barrier.hpp>
+#include "Autowiring/CoreThread.h"
+#include "Autowiring/has_autofilter.h"
 
 /// <summary>
 /// A simple "decoration" class which will be added to a variety of sample packets
@@ -49,7 +48,6 @@ class FilterB:
 {
 public:
   FilterB(void) :
-    m_barr(2),
     m_excepted(false)
   {}
 
@@ -60,11 +58,16 @@ public:
     return Deferred(this);
   }
 
-  boost::barrier m_barr;
+  bool m_proceed;
   bool m_excepted;
 
+  void Continue(void) {
+    PerformStatusUpdate([this] { m_proceed = true; });
+  }
+
   void Run(void) override {
-    m_barr.wait();
+    WaitForStateUpdate([this] { return m_proceed; });
+
     try {
       CoreThread::Run();
     } catch(dispatch_aborted_exception&) {

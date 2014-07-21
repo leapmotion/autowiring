@@ -1,17 +1,13 @@
 #pragma once
 #include "ContextMember.h"
 #include "CoreRunnable.h"
-#include <boost/chrono/duration.hpp>
-#include <boost/chrono/system_clocks.hpp>
 #include MEMORY_HEADER
+#include MUTEX_HEADER
+#include CHRONO_HEADER
 
 struct BasicThreadStateBlock;
 class BasicThread;
 class CoreContext;
-
-namespace boost {
-  class mutex;
-}
 
 enum class ThreadPriority {
   // This is the default thread priority, it's treated as a value lower than any of the
@@ -91,7 +87,7 @@ protected:
   /// <summary>
   /// Recovers a general lock used to synchronize entities in this thread internally
   /// </summary>
-  boost::mutex& GetLock(void);
+  std::mutex& GetLock(void);
 
   /// <summary>
   /// Routine that sets up the necessary extranea before a call to Run
@@ -169,7 +165,7 @@ protected:
   /// Callers should not invoke this method outside of this thread's thread context, or an
   /// interruption exception could result.
   /// </remarks>
-  bool ThreadSleep(boost::chrono::nanoseconds timeout);
+  bool ThreadSleep(std::chrono::nanoseconds timeout);
 
 public:
   // Accessor methods:
@@ -209,7 +205,7 @@ public:
   /// Timed version of Wait
   /// </summary>
   /// <returns>False if the timeout elapsed, true otherwise</returns>
-  bool WaitFor(boost::chrono::nanoseconds duration);
+  bool WaitFor(std::chrono::nanoseconds duration);
 
   /// <summary>
   /// Timed version of Wait
@@ -248,9 +244,9 @@ public:
   /// Returns the time when this thread was created
   /// </returns>
   /// <remarks>
-  /// If the thread has not yet run, this routine returns boost::chrono::system_clock::time_point::min
+  /// If the thread has not yet run, this routine returns std::steady_clock::time_point::min
   /// </remarks>
-  boost::chrono::system_clock::time_point GetCreationTime(void);
+  std::chrono::steady_clock::time_point GetCreationTime(void);
 
   /// <summary>
   /// Obtains running time information for this thread

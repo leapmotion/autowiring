@@ -2,8 +2,6 @@
 #include "DispatchQueue.h"
 #include "at_exit.h"
 
-using namespace boost::chrono;
-
 DispatchQueue::DispatchQueue(void):
   m_aborted(false),
   m_dispatchCap(1024)
@@ -22,7 +20,7 @@ DispatchQueue::~DispatchQueue(void) {
 }
 
 void DispatchQueue::Abort(void) {
-  boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+  std::lock_guard<std::mutex> lk(m_dispatchLock);
   m_aborted = true;
 
   // Do not permit any more lambdas to be pended to our queue:
@@ -38,7 +36,8 @@ void DispatchQueue::Abort(void) {
   m_queueUpdated.notify_all();
 }
 
-high_resolution_clock::time_point DispatchQueue::SuggestSoonestWakeupTimeUnsafe(high_resolution_clock::time_point latestTime) const {
+std::chrono::steady_clock::time_point
+DispatchQueue::SuggestSoonestWakeupTimeUnsafe(std::chrono::steady_clock::time_point latestTime) const {
   return
     m_delayedQueue.empty() ?
 
@@ -56,7 +55,7 @@ high_resolution_clock::time_point DispatchQueue::SuggestSoonestWakeupTimeUnsafe(
 void DispatchQueue::PromoteReadyEventsUnsafe(void) {
   // Move all ready elements out of the delayed queue and into the dispatch queue:
   for(
-    auto now = boost::chrono::high_resolution_clock::now();
+    auto now = std::chrono::steady_clock::now();
     !m_delayedQueue.empty() && m_delayedQueue.top().GetReadyTime() < now;
     m_delayedQueue.pop()
   )
@@ -64,7 +63,7 @@ void DispatchQueue::PromoteReadyEventsUnsafe(void) {
     m_dispatchQueue.push_back(m_delayedQueue.top().Get());
 }
 
-void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
+void DispatchQueue::DispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
   // Pull the ready thunk off of the front of the queue and pop it while we hold the lock.
   // Then, we will excecute the call while the lock has been released so we do not create
   // deadlocks.
@@ -85,7 +84,7 @@ void DispatchQueue::DispatchEventUnsafe(boost::unique_lock<boost::mutex>& lk) {
 }
 
 bool DispatchQueue::DispatchEvent(void) {
-  boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+  std::unique_lock<std::mutex> lk(m_dispatchLock);
   if(m_dispatchQueue.empty())
     return false;
 

@@ -2,7 +2,6 @@
 #include "CoreThread.h"
 #include "Autowired.h"
 #include "BasicThreadStateBlock.h"
-#include <boost/thread.hpp>
 
 CoreThread::CoreThread(const char* pName):
   BasicThread(pName)
@@ -25,7 +24,7 @@ void CoreThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shar
 }
 
 void CoreThread::WaitForEvent(void) {
-  boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+  std::unique_lock<std::mutex> lk(m_dispatchLock);
   if(m_aborted)
     throw dispatch_aborted_exception();
 
@@ -51,20 +50,20 @@ void CoreThread::WaitForEvent(void) {
     DispatchEventUnsafe(lk);
 }
 
-bool CoreThread::WaitForEvent(boost::chrono::milliseconds milliseconds) {
-  return WaitForEvent(boost::chrono::high_resolution_clock::now() + milliseconds);
+bool CoreThread::WaitForEvent(std::chrono::milliseconds milliseconds) {
+  return WaitForEvent(std::chrono::steady_clock::now() + milliseconds);
 }
 
-bool CoreThread::WaitForEvent(boost::chrono::high_resolution_clock::time_point wakeTime) {
-  if(wakeTime == boost::chrono::steady_clock::time_point::max())
+bool CoreThread::WaitForEvent(std::chrono::steady_clock::time_point wakeTime) {
+  if(wakeTime == std::chrono::steady_clock::time_point::max())
     // Maximal wait--we can optimize by using the zero-arguments version
     return WaitForEvent(), true;
 
-  boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+  std::unique_lock<std::mutex> lk(m_dispatchLock);
   return WaitForEventUnsafe(lk, wakeTime);
 }
 
-bool CoreThread::WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost::chrono::high_resolution_clock::time_point wakeTime) {
+bool CoreThread::WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chrono::steady_clock::time_point wakeTime) {
   if(m_aborted)
     throw dispatch_aborted_exception();
 
@@ -74,7 +73,7 @@ bool CoreThread::WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost:
 
     // Now we wait, either for the timeout to elapse or for the dispatch queue itself to
     // transition to the "aborted" state.
-    boost::cv_status status = m_queueUpdated.wait_until(lk, wakeTime);
+    std::cv_status status = m_queueUpdated.wait_until(lk, wakeTime);
 
     // Short-circuit if the queue was aborted
     if(m_aborted)
@@ -87,7 +86,7 @@ bool CoreThread::WaitForEventUnsafe(boost::unique_lock<boost::mutex>& lk, boost:
     if(!m_dispatchQueue.empty())
       break;
 
-    if(status == boost::cv_status::timeout)
+    if(status == std::cv_status::timeout)
       // Can't proceed, queue is empty and nobody is ready to be run
       return false;
   }

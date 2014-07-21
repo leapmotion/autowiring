@@ -4,9 +4,7 @@
 #include "CoreContext.h"
 #include "TestFixtures/SimpleObject.h"
 #include "TestFixtures/SimpleThreaded.h"
-#include <boost/chrono.hpp>
-#include <boost/thread/barrier.hpp>
-using boost::chrono::milliseconds;
+#include THREAD_HEADER
 
 TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
   class WeakPtrChecker {
@@ -110,7 +108,7 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   context->Initiate();
 
   // No exit initially:
-  EXPECT_FALSE(context->Wait(milliseconds(10))) << "Core context completed prematurely";
+  EXPECT_FALSE(context->Wait(std::chrono::milliseconds(10))) << "Core context completed prematurely";
 
   Autowired<SimpleThreaded> simple;
   ASSERT_TRUE(simple) << "Couldn't autowire the SimpleThreaded object";
@@ -119,7 +117,7 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   context->SignalShutdown();
 
   // Now we verify that exiting happens promptly:
-  EXPECT_TRUE(context->Wait(milliseconds(100))) << "Context did not exit in a timely fashion";
+  EXPECT_TRUE(context->Wait(std::chrono::milliseconds(100))) << "Context did not exit in a timely fashion";
 }
 
 class ReceivesTeardownNotice:
@@ -144,7 +142,7 @@ TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
   // Just create a CoreThread directly and have it pend some lambdas that will take awhile to run:
   auto called = std::make_shared<bool>(false);
   *ct += [] {
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   };
   *ct += [called] { *called = true; };
 
@@ -160,12 +158,12 @@ TEST_F(ContextCleanupTest, VerifyImmediateThreadCleanup) {
   // Just create a CoreThread directly and have it pend some lambdas that will take awhile to run:
   auto called = std::make_shared<bool>(false);
   *ct += [] {
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   };
 
   // Pend another lambda which will wait longer, for systems which will not complete SignalTerminate in 100ms
   *ct += [] {
-    boost::this_thread::sleep_for(boost::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
   };
 
   // This lambda will return right away, and should still be present on the dispatch queue when SignalTerminate
@@ -194,15 +192,18 @@ class TakesALongTimeToExit:
 {
 public:
   TakesALongTimeToExit(void) :
-    barr(2)
-  {
+    m_canContinue(false)
+  {}
+
+  bool m_canContinue;
+
+  void Continue(void) {
+    PerformStatusUpdate([this] {m_canContinue = true; });
   }
 
-  boost::barrier barr;
-
   virtual void Run(void) {
-    barr.wait();
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+    WaitForStateUpdate([this] { return m_canContinue; });
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 };
 
@@ -217,7 +218,7 @@ TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
   m_create->Initiate();
 
   // Make the thread exit before the enclosing context exits:
-  longTime->barr.wait();
+  longTime->Continue();
   longTime->Stop();
 
   // Now stop the context and perform an explicit wait

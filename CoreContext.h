@@ -238,7 +238,7 @@ protected:
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
-  void UpdateDeferredElements(boost::unique_lock<boost::mutex>&& lk, const std::shared_ptr<Object>& entry);
+  void UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const std::shared_ptr<Object>& entry);
 
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
@@ -711,7 +711,7 @@ public:
   /// <summary>
   /// Timed overload
   /// </summary>
-  bool Wait(const boost::chrono::nanoseconds duration);
+  bool Wait(const std::chrono::nanoseconds duration);
 
   /// <summary>
   /// Wait until the context is initiated or is shutting down

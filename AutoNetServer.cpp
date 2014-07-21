@@ -43,7 +43,7 @@ void AutoNetServer::Run(void){
     m_Server->stop_listen(true);
   });
   
-  PollThreadUtilization(boost::chrono::milliseconds(1000));
+  PollThreadUtilization(std::chrono::milliseconds(1000));
 
   CoreThread::Run();
 }
@@ -56,7 +56,7 @@ void AutoNetServer::OnStop(void){
 }
 
 void AutoNetServer::Breakpoint(std::string name){
-  boost::unique_lock<boost::mutex> lk(m_mutex);
+  std::unique_lock<std::mutex> lk(m_mutex);
 
   m_breakpoints.insert(name);
   
@@ -194,7 +194,7 @@ void AutoNetServer::HandleInjectContextMember(int contextID, std::string typeNam
 }
 
 void AutoNetServer::HandleResumeFromBreakpoint(std::string name){
-  boost::unique_lock<boost::mutex> lk(m_mutex);
+  std::unique_lock<std::mutex> lk(m_mutex);
   
   m_breakpoints.erase(name);
   m_breakpoint_cv.notify_all();
@@ -217,7 +217,8 @@ CoreContext* AutoNetServer::ResolveContextID(int id) {
   return m_ContextPtrs.at(id);
 }
 
-void AutoNetServer::PollThreadUtilization(boost::chrono::milliseconds period){
+void AutoNetServer::PollThreadUtilization(std::chrono::milliseconds period){
+
   *this += period, [this, period] {
     
     for(auto q = m_Threads.begin(); q != m_Threads.end();) {
@@ -232,8 +233,8 @@ void AutoNetServer::PollThreadUtilization(boost::chrono::milliseconds period){
 
       // Determine the amount of time this thread has run since the last time we
       // asked it for its runtime.
-      boost::chrono::duration<double> deltaRuntimeKM = runtimeKM - q->second.m_lastRuntimeKM;
-      boost::chrono::duration<double> deltaRuntimeUM = runtimeUM - q->second.m_lastRuntimeUM;
+      std::chrono::duration<double> deltaRuntimeKM = runtimeKM - q->second.m_lastRuntimeKM;
+      std::chrono::duration<double> deltaRuntimeUM = runtimeUM - q->second.m_lastRuntimeUM;
 
       // Update timing values:
       q->second.m_lastRuntimeKM = runtimeKM;
@@ -244,8 +245,10 @@ void AutoNetServer::PollThreadUtilization(boost::chrono::milliseconds period){
       std::string name = typeid(*thread.get()).name();
 
       double kmPercent = 100 * (deltaRuntimeKM / period);
+      double umPercent = 100 * (deltaRuntimeUM / period);
+      
       // Make sure user + kernel percent < 100.0
-      double umPercent = std::min(100 * (deltaRuntimeUM / period), 99.9 - kmPercent);
+      umPercent = std::min(umPercent, 99.9 - kmPercent);
       
       if (kmPercent >= 0.0 && umPercent >= 0.0) {
         BroadcastMessage("threadUtilization", contextID, name, kmPercent, umPercent);

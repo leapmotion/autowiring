@@ -22,7 +22,7 @@ std::shared_ptr<GlobalCoreContext> GlobalCoreContext::Get() {
   if(getGlobalContextSharedPtr())
     return getGlobalContextSharedPtr();
 
-  boost::lock_guard<boost::mutex> lk(getInitLock());
+  std::lock_guard<std::mutex> lk(getInitLock());
   if(getGlobalContextSharedPtr())
     // Multi-init by another thread, just short-circuit here
     return getGlobalContextSharedPtr();
