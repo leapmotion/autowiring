@@ -99,8 +99,6 @@ set(Autowiring_SRCS
   SatCounter.h
   move_only.h
   MicroBolt.h
-  ReentrantCounter.h
-  ReentrantCounter.cpp
   SharedPointerSlot.h
   SlotInformation.h
   SlotInformation.cpp
@@ -223,8 +221,6 @@ set(AutowiringTest_SRCS
   PeerContextTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
-  ReentrantCounterTest.h
-  ReentrantCounterTest.cpp
   SelfSelectingFixtureTest.h
   SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.h
