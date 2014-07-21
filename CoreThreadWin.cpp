@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "BasicThread.h"
 #include "BasicThreadStateBlock.h"
-#include <boost/chrono/process_cpu_clocks.hpp>
+#include CHRONO_HEADER
 #include <Windows.h>
 #include <Avrt.h>
 
@@ -37,8 +37,10 @@ void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
 }
 
 void BasicThread::SetCurrentThreadName(void) const {
-  if(IS_INTERNAL_BUILD)
-    ::SetThreadName(m_state->m_thisThread.get_thread_info()->id, m_name);
+  if(IS_INTERNAL_BUILD) {
+    DWORD threadId = ::GetThreadId(static_cast<HANDLE>(m_state->m_thisThread.native_handle()));
+    ::SetThreadName(threadId, m_name);
+  }
 }
 
 bool SetCapturePriority(void) {
@@ -97,20 +99,20 @@ void BasicThread::SetThreadPriority(ThreadPriority threadPriority) {
   );
 }
 
-boost::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
+std::chrono::steady_clock::time_point BasicThread::GetCreationTime(void) {
   HANDLE hThread = m_state->m_thisThread.native_handle();
   if(hThread == INVALID_HANDLE_VALUE)
-    return boost::chrono::system_clock::time_point::min();
+    return std::chrono::steady_clock::time_point::min();
 
   FILETIME ft;
   GetSystemTimeAsFileTime(&ft);
-  auto xyz = boost::chrono::system_clock::now();
+  auto xyz = std::chrono::steady_clock::now();
 
   int64_t createTime, kernelTime, userTime, exitTime;
   ::GetThreadTimes(hThread, (LPFILETIME) &createTime, (LPFILETIME) &exitTime, (LPFILETIME) &kernelTime, (LPFILETIME) &userTime);
   return
-    boost::chrono::system_clock::time_point(
-      boost::chrono::system_clock::duration(createTime)
+    std::chrono::steady_clock::time_point(
+      std::chrono::steady_clock::duration(createTime)
     );
 }
 

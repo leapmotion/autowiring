@@ -1,9 +1,9 @@
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacket.h"
-#include <boost/thread/tss.hpp>
+#include "thread_specific_ptr.h"
 
-static boost::thread_specific_ptr<NewAutoFilterBase*> pAFB;
+static leap::thread_specific_ptr<NewAutoFilterBase*> pAFB;
 
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
@@ -32,7 +32,7 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
 }
 
 bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
-  boost::lock_guard<boost::mutex> lk(m_lock);
+  std::lock_guard<std::mutex> lk(m_lock);
   if(m_wasStopped)
     // Cannot start if already stopped
     return false;
@@ -56,7 +56,7 @@ void AutoPacketFactory::Stop(bool graceful) {
   t_autoFilterSet autoFilters;
 
   // Lock destruction precedes local variables
-  boost::lock_guard<boost::mutex> lk(m_lock);
+  std::lock_guard<std::mutex> lk(m_lock);
 
   // Swap outstanding count into a local var, so we can reset outside of a lock
   outstanding.swap(m_outstanding);
@@ -76,7 +76,7 @@ void AutoPacketFactory::Clear(void) {
 
 void AutoPacketFactory::Wait(void) {
   {
-    boost::unique_lock<boost::mutex> lk(m_lock);
+    std::unique_lock<std::mutex> lk(m_lock);
     m_stateCondition.wait(lk, [this]{return ShouldStop(); });
   }
 
@@ -91,7 +91,7 @@ void AutoPacketFactory::Invalidate(void) {
 }
 
 void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
-  (boost::lock_guard<boost::mutex>)m_lock,
+  (std::lock_guard<std::mutex>)m_lock,
   m_autoFilters.insert(rhs);
 
   // Trigger object pool reset after releasing the lock.  While it's possible that some
@@ -104,7 +104,7 @@ void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
 void AutoPacketFactory::RemoveSubscriber(const AutoFilterDescriptor& autoFilter) {
   // Trivial removal from the autofilter set:
   {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
     m_autoFilters.erase(autoFilter);
   }
 

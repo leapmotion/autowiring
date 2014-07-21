@@ -51,14 +51,14 @@ public:
   /// </remarks>
   static void Release(void) {
     // Release local:
-    boost::lock_guard<boost::mutex> lk(getInitLock());
+    std::lock_guard<std::mutex> lk(getInitLock());
     getGlobalContextSharedPtr().reset();
   }
 
 private:
   // Global context shared pointer and lock:
-  static inline boost::mutex& getInitLock() {
-    static boost::mutex s_initLock;
+  static inline std::mutex& getInitLock() {
+    static std::mutex s_initLock;
     return s_initLock;
   }
 

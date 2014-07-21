@@ -2,7 +2,8 @@
 #include "CoreJobTest.h"
 #include "CoreJob.h"
 #include "move_only.h"
-#include <boost/thread.hpp>
+#include THREAD_HEADER
+#include FUTURE_HEADER
 
 TEST_F(CoreJobTest, VerifySimpleProperties) {
   AutoRequired<CoreJob> jb;
@@ -10,19 +11,21 @@ TEST_F(CoreJobTest, VerifySimpleProperties) {
   ASSERT_FALSE(m_create->IsInitiated()) << "CoreJob reported it could receive events before its enclosing context was created";
 
   // Create a thread which will delay for acceptance, and then quit:
-  boost::thread t([this] {
+  auto future = std::async(std::launch::async, [this] { //GRAHAM
     m_create->DelayUntilInitiated();
   });
 
   // Verify that this thread doesn't back out right away:
-  ASSERT_FALSE(t.try_join_for(boost::chrono::milliseconds(10))) << "CoreJob did not block a client who was waiting for its readiness to accept dispatchers";
+  ASSERT_EQ(std::future_status::timeout, future.wait_for(std::chrono::milliseconds(10))) << "CoreJob did not block a client who was waiting for its readiness to accept dispatchers";
 
   // Now start the context and verify that certain properties changed as anticipated:
   m_create->Initiate();
   ASSERT_TRUE(m_create->DelayUntilInitiated()) << "CoreJob did not correctly delay for dispatch acceptance";
 
   // Verify that the blocked thread has become unblocked and quits properly:
-  ASSERT_TRUE(t.try_join_for(boost::chrono::seconds(1))) << "CoreJob did not correctly signal a blocked thread that it was ready to accept dispatchers";
+  ASSERT_EQ(std::future_status::ready, future.wait_for(std::chrono::seconds(1))) << "CoreJob did not correctly signal a blocked thread that it was ready to accept dispatchers";
+
+  m_create->SignalShutdown(true);
 }
 
 TEST_F(CoreJobTest, VerifySimpleSubmission) {
@@ -49,16 +52,16 @@ TEST_F(CoreJobTest, VerifyTeardown) {
   bool check3 = false;
 
   *job += [&check1] {
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     check1 = true;
   };
   *job += [&check2] {
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
     check2 = true;
   };
   ctxt->Initiate();
   *job += [&check3] {
-    boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     check3 = true;
   };
 
@@ -170,7 +173,7 @@ TEST_F(CoreJobTest, RaceCondition) {
       first = true;
     };
     
-    boost::this_thread::sleep(boost::posix_time::milliseconds(i));
+    std::this_thread::sleep_for(std::chrono::milliseconds(i));
     
     *cj += [&second, &cj] {
       second = true;
@@ -190,8 +193,18 @@ TEST_F(CoreJobTest, CorrectlyAssignedCurrentContext) {
   std::shared_ptr<CoreContext> ctxt;
   *job += [&ctxt] { ctxt = AutoCurrentContext(); };
   *job += [job] { job->Stop(true); };
-  ASSERT_TRUE(job->WaitFor(boost::chrono::seconds(5)));
+  ASSERT_TRUE(job->WaitFor(std::chrono::seconds(5)));
 
   // Now verify that the job was run in the right thread context:
   ASSERT_EQ(AutoCurrentContext(), ctxt) << "Job lambda was not run with the correct CoreContext current";
+}
+
+TEST_F(CoreJobTest, RecursiveDeadlock) {
+  // Create a CoreJob which will wait for a bit.  Then, delegate its deletion responsibility to the thread
+  // itself, a
+  AutoCreateContext ctxt;
+  AutoRequired<CoreJob> cj(ctxt);
+  *cj += [] {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  };
 }

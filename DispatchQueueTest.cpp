@@ -53,13 +53,13 @@ TEST_F(DispatchQueueTest, PathologicalStartAndStop){
   // We don't need a strong guarantee that these threads exit in a timely fashion, just that they
   // do so _eventually_.
   t1->Stop(true);
-  ASSERT_TRUE(t1->WaitFor(boost::chrono::seconds(10)));
+  ASSERT_TRUE(t1->WaitFor(std::chrono::seconds(10)));
   t2->Stop(true);
-  ASSERT_TRUE(t2->WaitFor(boost::chrono::seconds(10)));
+  ASSERT_TRUE(t2->WaitFor(std::chrono::seconds(10)));
   t3->Stop(true);
-  ASSERT_TRUE(t3->WaitFor(boost::chrono::seconds(10)));
+  ASSERT_TRUE(t3->WaitFor(std::chrono::seconds(10)));
   t4->Stop(true);
-  ASSERT_TRUE(t4->WaitFor(boost::chrono::seconds(10)));
+  ASSERT_TRUE(t4->WaitFor(std::chrono::seconds(10)));
 }
 
 

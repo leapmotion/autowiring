@@ -99,8 +99,6 @@ set(Autowiring_SRCS
   SatCounter.h
   move_only.h
   MicroBolt.h
-  ReentrantCounter.h
-  ReentrantCounter.cpp
   SharedPointerSlot.h
   SlotInformation.h
   SlotInformation.cpp
@@ -108,6 +106,7 @@ set(Autowiring_SRCS
   TeardownNotifier.cpp
   ThreadStatusBlock.h
   ThreadStatusBlock.cpp
+  thread_specific_ptr.h
   TypeRegistry.h
   TypeRegistry.cpp
   TypeUnifier.h
@@ -127,10 +126,12 @@ OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
 set(Autowiring_Win_SRCS
   CoreThreadWin.cpp
   InterlockedExchangeWin.cpp
+  thread_specific_ptr_win.h
 )
 
 set(Autowiring_Unix_SRCS
 	InterlockedExchangeUnix.cpp
+  thread_specific_ptr_unix.h
 )
 
 set(Autowiring_Mac_SRCS
@@ -189,6 +190,8 @@ set(AutowiringTest_SRCS
   AutowiringBenchmarkTest.cpp
   AutowiringTest.h
   AutowiringTest.cpp
+  AutowiringUtilitiesTest.h
+  AutowiringUtilitiesTest.cpp
   BasicThreadTest.h
   BasicThreadTest.cpp
   CoreContextTest.h
@@ -238,8 +241,6 @@ set(AutowiringTest_SRCS
   PeerContextTest.cpp
   PostConstructTest.h
   PostConstructTest.cpp
-  ReentrantCounterTest.h
-  ReentrantCounterTest.cpp
   SelfSelectingFixtureTest.h
   SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.h
@@ -299,10 +300,6 @@ endif()
 
 
 if(NOT BUILD_WINDOWS)
-  set(Boost_SYSTEM_LIBRARY libboost_system)
-  add_library(${Boost_SYSTEM_LIBRARY} STATIC IMPORTED)
-  set_property(TARGET ${Boost_SYSTEM_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_SYSTEM_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-
   set(Boost_THREAD_LIBRARY libboost_thread)
   add_library(${Boost_THREAD_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_THREAD_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_THREAD_LIBRARY}${STATIC_LIBRARY_SUFFIX})
@@ -319,6 +316,10 @@ if(NOT BUILD_WINDOWS)
   add_library(${Boost_DATE_TIME_LIBRARY} STATIC IMPORTED)
   set_property(TARGET ${Boost_DATE_TIME_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_DATE_TIME_LIBRARY}${STATIC_LIBRARY_SUFFIX})
 
+  set(Boost_SYSTEM_LIBRARY libboost_system)
+  add_library(${Boost_SYSTEM_LIBRARY} STATIC IMPORTED)
+  set_property(TARGET ${Boost_SYSTEM_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_SYSTEM_LIBRARY}${STATIC_LIBRARY_SUFFIX})
+
   if(Boost_VERSION GREATER 105200)
     set(Boost_ATOMIC_LIBRARY libboost_atomic)
     add_library(${Boost_ATOMIC_LIBRARY} STATIC IMPORTED)
@@ -332,7 +333,7 @@ if(NOT BUILD_WINDOWS)
   if(NOT BUILD_ANDROID)
     target_link_libraries(Autowiring -lpthread)
   endif()
-  target_link_libraries(Autowiring ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_DATE_TIME_LIBRARY})
+  target_link_libraries(Autowiring ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY})
   if(Boost_VERSION GREATER 105200)
     target_link_libraries(Autowiring ${Boost_ATOMIC_LIBRARY})
   endif()

@@ -3,8 +3,6 @@
 #include "ContextCreator.h"
 #include "CoreContext.h"
 #include "CoreThread.h"
-#include <boost/thread/condition.hpp>
-#include <boost/thread/mutex.hpp>
 #include <string>
 
 struct EvictionContext {};
@@ -37,19 +35,19 @@ public:
   {}
 
 private:
-  boost::mutex m_lock;
+  std::mutex m_lock;
   bool m_shouldContinue;
-  boost::condition_variable s_continueCond;
+  std::condition_variable s_continueCond;
 
 public:
   void Signal(void) {
-    (boost::lock_guard<boost::mutex>)m_lock,
+    (std::lock_guard<std::mutex>)m_lock,
     (m_shouldContinue = true),
     s_continueCond.notify_all();
   }
 
   void Delay(void) {
-    boost::unique_lock<boost::mutex> lk(m_lock);
+    std::unique_lock<std::mutex> lk(m_lock);
     s_continueCond.wait(lk, [this] () {return m_shouldContinue;});
   }
 };
@@ -93,8 +91,8 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
   const size_t count = 100;
 
   // Teardown lock, counter, and condition:
-  boost::mutex lock;
-  boost::condition cond;
+  std::mutex lock;
+  std::condition_variable cond;
   int counter = count;
 
   // Obtain creator pointer:
@@ -102,7 +100,6 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
 
   // Set up a signal manager at global context scope:
   AutoRequired<GlobalSignal> signal;
-
   {
     // Array of objects to test destruction on, and corresponding collection of contexts:
     std::shared_ptr<WaitMember> members[count];
@@ -122,7 +119,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
 
       // Add a notifier to signal a continue condition when we have everything we need:
       ctxt->AddTeardownListener([&lock, &cond, &counter] {
-        (boost::lock_guard<boost::mutex>)lock,
+        (std::lock_guard<std::mutex>)lock,
         counter--,
         cond.notify_all();
       });
@@ -136,8 +133,9 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
   }
 
   // Wait for all contexts to be destroyed
-  boost::unique_lock<boost::mutex> lk(lock);
-  cond.wait(lk, [&counter] {return counter == 0;});
+  std::unique_lock<std::mutex> lk(lock);
+  bool wait_status = cond.wait_for(lk, std::chrono::seconds(1), [&counter] {return counter == 0;});
+  ASSERT_TRUE(wait_status) << "All teardown listeners didn't trigger";
 
   // Validate that everything expires:
   EXPECT_EQ(static_cast<size_t>(0), creator->GetSize()) << "Not all contexts were evicted as expected";

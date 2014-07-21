@@ -14,8 +14,8 @@ void BasicThread::SetCurrentThreadName(void) const {
     pthread_setname_np(pthread_self(), m_name);
 }
 
-boost::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
-  return boost::chrono::system_clock::time_point::min();
+std::chrono::steady_clock::time_point BasicThread::GetCreationTime(void) {
+  return std::chrono::steady_clock::time_point::min();
 }
 
 void BasicThread::GetThreadTimes(boost::chrono::milliseconds& kernelTime, boost::chrono::milliseconds& userTime) {

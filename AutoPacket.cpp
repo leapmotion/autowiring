@@ -80,7 +80,7 @@ void AutoPacket::ResolveOptions(void) {
   // will NOT effect the resolution of optional arguments.
   std::list<SatCounter*> callQueue;
   {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
     for(auto& decoration : m_decorations)
       for(auto& satCounter : decoration.second.m_subscribers)
         if(!satCounter.second)
@@ -94,7 +94,7 @@ void AutoPacket::ResolveOptions(void) {
 void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
   DecorationDisposition* decoration;
   {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
     auto dFind = m_decorations.find(info);
     if(dFind == m_decorations.end())
       // Trivial return, there's no subscriber to this decoration and so we have nothing to do
@@ -117,7 +117,7 @@ void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
 void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
   DecorationDisposition* decoration;
   {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
     auto dFind = m_decorations.find(info);
     if(dFind == m_decorations.end())
       // Trivial return, there's no subscriber to this decoration and so we have nothing to do
@@ -167,7 +167,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 void AutoPacket::Initialize(void) {
   // Initialize all counters:
   {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
     for(auto& satCounter : m_satCounters)
       satCounter.Reset();
     for(auto& decoration : m_decorations)

@@ -10,7 +10,7 @@ CoreJob::CoreJob(const char* name) :
   m_shouldStop(false)
 {}
 
-void CoreJob::OnPended(boost::unique_lock<boost::mutex>&& lk){
+void CoreJob::OnPended(std::unique_lock<std::mutex>&& lk){
   if(!m_curEventInTeardown)
     // Something is already outstanding, it will handle dispatching for us.
     return;
@@ -52,7 +52,7 @@ void CoreJob::DispatchAllAndClearCurrent(void) {
     // Check the size of the queue.  Could be that someone added something
     // between when we finished looping, and when we obtained the lock, and
     // we don't want to exit our pool if that has happened.
-    boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+    std::lock_guard<std::mutex> lk(m_dispatchLock);
 		if(AreAnyDispatchersReady())
 			continue;
 
@@ -73,7 +73,7 @@ bool CoreJob::Start(std::shared_ptr<Object> outstanding) {
   m_outstanding = outstanding;
   m_running = true;
 
-  boost::unique_lock<boost::mutex> lk;
+  std::unique_lock<std::mutex> lk;
   if(!m_dispatchQueue.empty())
 	  // Simulate a pending event, because we need to set up our async:
 	  OnPended(std::move(lk));
@@ -100,14 +100,14 @@ void CoreJob::Stop(bool graceful) {
 	m_outstanding.reset();
 
   // Hit our condition variable to wake up any listeners:
-  boost::lock_guard<boost::mutex> lk(m_dispatchLock);
+  std::lock_guard<std::mutex> lk(m_dispatchLock);
   m_shouldStop = true;
   m_queueUpdated.notify_all();
 }
 
 void CoreJob::Wait() {
   {
-    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+    std::unique_lock<std::mutex> lk(m_dispatchLock);
     m_queueUpdated.wait(
       lk,
       [this] {
@@ -121,9 +121,9 @@ void CoreJob::Wait() {
     m_curEvent.wait();
 }
 
-bool CoreJob::WaitFor(boost::chrono::nanoseconds duration) {
+bool CoreJob::WaitFor(std::chrono::nanoseconds duration) {
   {
-    boost::unique_lock<boost::mutex> lk(m_dispatchLock);
+    std::unique_lock<std::mutex> lk(m_dispatchLock);
     if(!m_queueUpdated.wait_for(
       lk,
       duration,
