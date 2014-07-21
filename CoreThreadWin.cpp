@@ -5,6 +5,9 @@
 #include <Windows.h>
 #include <Avrt.h>
 
+using boost::chrono::milliseconds;
+using boost::chrono::nanoseconds;
+
 #pragma pack(push, 8)
 typedef struct tagTHREADNAME_INFO
 {
@@ -111,11 +114,11 @@ boost::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
     );
 }
 
-void BasicThread::GetThreadTimes(boost::chrono::nanoseconds& kernelTime, boost::chrono::nanoseconds& userTime) {
+void BasicThread::GetThreadTimes(boost::chrono::milliseconds& kernelTime, boost::chrono::milliseconds& userTime) {
   HANDLE hThread = m_state->m_thisThread.native_handle();
 
   FILETIME ftCreate, ftExit, ftKernel, ftUser;
   ::GetThreadTimes(hThread, &ftCreate, &ftExit, &ftKernel, &ftUser);
-  kernelTime = boost::chrono::nanoseconds(100 * (int64_t&) ftKernel);
-  userTime = boost::chrono::nanoseconds(100 * (int64_t&) ftUser);
+  kernelTime = boost::chrono::duration_cast<milliseconds>(nanoseconds(100 * (int64_t&) ftKernel));
+  userTime = boost::chrono::duration_cast<milliseconds>(nanoseconds(100 * (int64_t&) ftUser));
 }
