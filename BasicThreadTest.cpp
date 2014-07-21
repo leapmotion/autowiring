@@ -17,8 +17,8 @@ public:
   bool m_continue;
   boost::condition_variable m_signal;
 
-  boost::chrono::nanoseconds m_kernelTime;
-  boost::chrono::nanoseconds m_userTime;
+  boost::chrono::milliseconds m_kernelTime;
+  boost::chrono::milliseconds m_userTime;
 
   void Continue(void) {
     this->PerformStatusUpdate([this] {
@@ -49,8 +49,8 @@ TEST_F(BasicThreadTest, ValidateThreadTimes) {
   }
 
   // By this point, not much should have happened:
-  boost::chrono::nanoseconds kernelTime;
-  boost::chrono::nanoseconds userTime;
+  boost::chrono::milliseconds kernelTime;
+  boost::chrono::milliseconds userTime;
   spinsThenQuits->GetThreadTimes(kernelTime, userTime);
 
   // Kick off the thread and wait for it to exit:
