@@ -2,7 +2,8 @@
 #include "InterlockedRoutinesTest.h"
 #include "InterlockedExchange.h"
 #include THREAD_HEADER
-#include <condition_variable>
+#include MUTEX_HEADER
+#include CHRONO_HEADER
 
 template<void* (*fn)(void**, void*)>
 void CheckFn() {

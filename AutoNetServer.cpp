@@ -228,7 +228,7 @@ void AutoNetServer::PollThreadUtilization(std::chrono::milliseconds period){
         continue;
       }
       
-      boost::chrono::milliseconds runtimeKM, runtimeUM;
+      std::chrono::milliseconds runtimeKM, runtimeUM;
       thread->GetThreadTimes(runtimeKM, runtimeUM);
 
       // Determine the amount of time this thread has run since the last time we

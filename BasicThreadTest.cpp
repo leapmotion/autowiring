@@ -15,10 +15,10 @@ public:
   volatile size_t m_spinCount;
 
   bool m_continue;
-  boost::condition_variable m_signal;
+  std::condition_variable m_signal;
 
-  boost::chrono::milliseconds m_kernelTime;
-  boost::chrono::milliseconds m_userTime;
+  std::chrono::milliseconds m_kernelTime;
+  std::chrono::milliseconds m_userTime;
 
   void Continue(void) {
     this->PerformStatusUpdate([this] {
@@ -41,21 +41,21 @@ TEST_F(BasicThreadTest, ValidateThreadTimes) {
   auto spinsThenQuits = ctxt->Construct<SpinsAndThenQuits>(spinCount);
 
   // Instantaneous benchmark on the time it takes to decrement the counter value:
-  boost::chrono::nanoseconds benchmark;
+  std::chrono::nanoseconds benchmark;
   {
-    auto startTime = boost::chrono::high_resolution_clock::now();
+    auto startTime = std::chrono::high_resolution_clock::now();
     for(volatile size_t i = spinCount; i--;);
-    benchmark = boost::chrono::high_resolution_clock::now() - startTime;
+    benchmark = std::chrono::high_resolution_clock::now() - startTime;
   }
 
   // By this point, not much should have happened:
-  boost::chrono::milliseconds kernelTime;
-  boost::chrono::milliseconds userTime;
+  std::chrono::milliseconds kernelTime;
+  std::chrono::milliseconds userTime;
   spinsThenQuits->GetThreadTimes(kernelTime, userTime);
 
   // Kick off the thread and wait for it to exit:
   spinsThenQuits->Continue();
-  ASSERT_TRUE(spinsThenQuits->WaitFor(boost::chrono::seconds(10))) << "Spin-then-quit test took too long to execute";
+  ASSERT_TRUE(spinsThenQuits->WaitFor(std::chrono::seconds(10))) << "Spin-then-quit test took too long to execute";
 
   // Thread should not have been able to complete in less time than we completed, by a factor of ten or so at least
   ASSERT_LE(benchmark, spinsThenQuits->m_userTime * 10) <<
