@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "atomic_object.h"
+#include MEMORY_HEADER
 
 ///<summary>
 ///This class implements the atomic_object interface to a shared reference.
@@ -16,7 +17,7 @@
 ///ensures that the behavior of a shared_object is identical to an atomic_object,
 ///since the referenced object cannot be changed.
 ///</remarks>
-template<class object, class lock = boost::mutex>
+template<class object, class lock = std::mutex>
 class shared_object {
   friend class unlock_object<object, lock>;
 

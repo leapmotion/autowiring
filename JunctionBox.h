@@ -8,7 +8,6 @@
 #include "InvokeRelay.h"
 #include "JunctionBoxBase.h"
 #include "JunctionBoxEntry.h"
-#include <boost/thread/mutex.hpp>
 #include <set>
 #include STL_TUPLE_HEADER
 #include RVALUE_HEADER
@@ -78,7 +77,7 @@ public:
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
   /// </summary>
   bool HasListeners(void) const override {
-    return (boost::lock_guard<boost::mutex>)m_lock, !m_st.empty();
+    return (std::lock_guard<std::mutex>)m_lock, !m_st.empty();
   }
 
   void Add(const JunctionBoxEntry<EventReceiver>& rhs) override {
@@ -98,7 +97,7 @@ public:
   /// Adds the specified observer to receive events dispatched from this instace
   /// </summary>
   void Add(const JunctionBoxEntry<T>& rhs) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
 
     // Trivial insert
     m_st.insert(rhs);
@@ -113,7 +112,7 @@ public:
   /// Removes the specified observer from the set currently configured to receive events
   /// </summary>
   void Remove(const JunctionBoxEntry<T>& rhs) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
 
     // Update the deletion count
     m_numberOfDeletions++;
@@ -133,7 +132,7 @@ public:
   /// <return>False if an exception was thrown by a recipient, true otherwise</return>
   template<class Fn, class... Args>
   bool FireCurried(const Fn& fn, Args&... args) const {
-    boost::unique_lock<boost::mutex> lk(m_lock);
+    std::unique_lock<std::mutex> lk(m_lock);
     int deleteCount = m_numberOfDeletions;
 
     // Set of contexts that need to be torn down in the event of an exception:

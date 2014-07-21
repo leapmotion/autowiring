@@ -213,7 +213,7 @@ protected:
   /// <summary>
   /// Append a lambda to this queue that will poll CoreThreads for their utilization
   /// </summary>
-  void PollThreadUtilization(boost::chrono::milliseconds period);
+  void PollThreadUtilization(std::chrono::milliseconds period);
   
   
   ///////////// Member variables /////////////
@@ -240,8 +240,8 @@ protected:
   std::map<std::weak_ptr<BasicThread>, ThreadStats, std::owner_less<std::weak_ptr<BasicThread>>> m_Threads;
   
   // Breakpoint functionality
-  boost::mutex m_mutex;
-  boost::condition_variable m_breakpoint_cv;
+  std::mutex m_mutex;
+  std::condition_variable m_breakpoint_cv;
   std::set<std::string> m_breakpoints;
   
   // The actual server

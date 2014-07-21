@@ -1,18 +1,15 @@
 #include "stdafx.h"
 #include "ThreadStatusBlock.h"
 #include "GlobalCoreContext.h"
-#include <boost/thread/tss.hpp>
+#include "thread_specific_ptr.h"
 
-static boost::thread_specific_ptr<ThreadStatusBlock> s_statusBlock;
+static leap::thread_specific_ptr<ThreadStatusBlock> s_statusBlock;
 
 ThreadStatusBlock::ThreadStatusBlock(void):
   m_context(GlobalCoreContext::Get())
-{
-}
+{}
 
-ThreadStatusBlock::~ThreadStatusBlock(void)
-{
-}
+ThreadStatusBlock::~ThreadStatusBlock(void){}
 
 ThreadStatusBlock* ThreadStatusBlock::Get(void) {
   if(!s_statusBlock.get())

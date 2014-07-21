@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "AutowiringBenchmarkTest.h"
 #include "TestFixtures/SimpleObject.h"
-#include <boost/chrono/system_clocks.hpp>
 
 TEST_F(AutowiringBenchmarkTest, VerifySimplePerformance) {
   const size_t n = 10000;
@@ -14,21 +13,21 @@ TEST_F(AutowiringBenchmarkTest, VerifySimplePerformance) {
   ref[0] = 212;
   ref[1] = 21;
 
-  boost::chrono::nanoseconds baseline;
+  std::chrono::nanoseconds baseline;
   {
-    auto start = boost::chrono::high_resolution_clock::now();
+    auto start = std::chrono::steady_clock::now();
     for(size_t i = n; i--;)
       ref[i % 2];
-    baseline = boost::chrono::high_resolution_clock::now() - start;
+    baseline = std::chrono::steady_clock::now() - start;
   }
 
   // Time n autowirings:
-  boost::chrono::nanoseconds benchmark;
+  std::chrono::nanoseconds benchmark;
   {
-    auto start = boost::chrono::high_resolution_clock::now();
+    auto start = std::chrono::steady_clock::now();
     for(size_t i = n; i--;)
       Autowired<SimpleObject>();
-    benchmark = (boost::chrono::high_resolution_clock::now() - start) / n;
+    benchmark = (std::chrono::steady_clock::now() - start) / n;
   }
 
   EXPECT_GT(baseline * 3. / 2., benchmark) << "Average time to autowire one member was more than 3/2 of a hash map lookup";
@@ -67,26 +66,22 @@ void InjectDummy(void) {
   Autowired<dummy<25>>();
 };
 
-#if defined(__GNUC__) && !defined(__clang__)
 TEST_F(AutowiringBenchmarkTest, DISABLED_VerifyAutowiringCache)
-#else
-TEST_F(AutowiringBenchmarkTest, VerifyAutowiringCache)
-#endif
 {
-  boost::chrono::nanoseconds baseline(0);
-  boost::chrono::nanoseconds benchmark(0);
+  std::chrono::nanoseconds baseline(0);
+  std::chrono::nanoseconds benchmark(0);
 
   for(int i = 0; i<100; ++i) {
     AutoCreateContext ctxt;
     CurrentContextPusher pshr(ctxt);
 
-    auto startBase = boost::chrono::high_resolution_clock::now();
+    auto startBase = std::chrono::steady_clock::now();
     InjectDummy();
-    baseline += boost::chrono::high_resolution_clock::now() - startBase;
+    baseline += std::chrono::steady_clock::now() - startBase;
 
-    auto startBench = boost::chrono::high_resolution_clock::now();
+    auto startBench = std::chrono::steady_clock::now();
     InjectDummy();
-    benchmark += boost::chrono::high_resolution_clock::now() - startBench;
+    benchmark += std::chrono::steady_clock::now() - startBench;
   }
 
   EXPECT_GT(baseline, benchmark) << "Autowiring cache not improving performance on subsequent autowirings";
@@ -122,8 +117,8 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFast) {
 }
 
 TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFastPerformance) {
-  boost::chrono::nanoseconds baseline;
-  boost::chrono::nanoseconds benchmark;
+  std::chrono::nanoseconds baseline;
+  std::chrono::nanoseconds benchmark;
   {
     // All of these tests will operate in the same context:
     AutoCreateContext ctxt;
@@ -133,12 +128,12 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFastPerformance) {
     InjectDummy();
 
     // Test simple autowiring first:
-    auto startBase = boost::chrono::high_resolution_clock::now();
+    auto startBase = std::chrono::steady_clock::now();
     for(int i = 0; i < 500; ++i)
       InjectDummy();
-    baseline = boost::chrono::high_resolution_clock::now() - startBase;
+    baseline = std::chrono::steady_clock::now() - startBase;
 
-    auto startBench = boost::chrono::high_resolution_clock::now();
+    auto startBench = std::chrono::steady_clock::now();
     for(int i = 0; i < 500; ++i) {
       AutowiredFast<dummy<1>>();
       AutowiredFast<dummy<2>>();
@@ -161,7 +156,7 @@ TEST_F(AutowiringBenchmarkTest, VerifyAutowiredFastPerformance) {
       AutowiredFast<dummy<19>>();
       AutowiredFast<dummy<20>>();
     }
-    benchmark = boost::chrono::high_resolution_clock::now() - startBench;
+    benchmark = std::chrono::steady_clock::now() - startBench;
   }
 
   EXPECT_GT(baseline, benchmark*1.75) << "Fast autowiring is slower than ordinary autowiring";

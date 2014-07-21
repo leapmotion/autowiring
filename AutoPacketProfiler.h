@@ -1,5 +1,5 @@
 #pragma once
-#include <boost/chrono/system_clocks.hpp>
+#include CHRONO_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 
@@ -18,7 +18,7 @@ private:
   /// <summary>
   /// Total amount of time spent in any one subscriber
   /// </summary>
-  std::unordered_map<std::type_index, boost::chrono::nanoseconds> m_totalTime;
+  std::unordered_map<std::type_index, std::chrono::nanoseconds> m_totalTime;
 
 public:
   /// <summary>
@@ -31,6 +31,6 @@ public:
   /// </summary>
   /// <param name="subscriber">The type_info of the subscriber</param>
   /// <param name="duration">The total duration of the just-made call</param>
-  void AddProfilingInformation(const std::type_info& subscriber, boost::chrono::nanoseconds duration);
+  void AddProfilingInformation(const std::type_info& subscriber, std::chrono::nanoseconds duration);
 };
 

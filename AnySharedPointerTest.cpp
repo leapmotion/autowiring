@@ -196,8 +196,8 @@ struct CombinedWireType{
   AutoRequired<RequiredType> rt;
   AutowiredFast<WiredFastType> wft;
 };
+
 TEST_F(AnySharedPointerTest, SlotInformation) {
-  //AutoRequired<WiredFastType> wft;
   AutoRequired<CombinedWireType> cwt;
 
   AnySharedPointer ptr = cwt;

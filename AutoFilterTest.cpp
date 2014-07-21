@@ -4,6 +4,7 @@
 #include "AutoPacketFactory.h"
 #include "NewAutoFilter.h"
 #include "TestFixtures/Decoration.h"
+#include THREAD_HEADER
 
 TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
   AutoCurrentContext()->Initiate();
@@ -175,7 +176,7 @@ TEST_F(AutoFilterTest, VerifyInterThreadDecoration) {
   EXPECT_FALSE(filterB->m_called) << "A call was made to a thread which should not have been able to process it";
 
   // Wake up the barrier and post a quit message:
-  filterB->m_barr.wait();
+  filterB->Continue();
   *filterB += [&filterB] { filterB->Stop(); };
   filterB->Wait();
 
@@ -405,7 +406,7 @@ public:
     // First packet is always delayed, this allows the dispatch queue to fill
     // up with packets, and triggers typical rundown behavior
     if(!nReceived)
-      boost::this_thread::sleep_for(boost::chrono::milliseconds(10));
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     nReceived++;
     return Deferred(this);
@@ -580,7 +581,7 @@ public:
 
   Deferred AutoFilter(std::shared_ptr<int>) {
     callCount++;
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     return Deferred(this);
   }
 };
@@ -603,7 +604,7 @@ TEST_F(AutoFilterTest, NoImplicitDecorationCaching) {
   *doesNothing += [doesNothing] { doesNothing->Stop(); };
 
   // Block for the thread to stop
-  ASSERT_TRUE(doesNothing->WaitFor(boost::chrono::seconds(10))) << "Thread did not finish processing packets in a timely fashion";
+  ASSERT_TRUE(doesNothing->WaitFor(std::chrono::seconds(10))) << "Thread did not finish processing packets in a timely fashion";
 
   // Ensure nothing got cached unexpectedly, and that the call count is precisely what we want
   ASSERT_EQ(100UL, doesNothing->callCount) << "The expected number of calls to AutoFilter were not made";
@@ -706,14 +707,14 @@ class WaitsForInternalLock:
   public CoreThread
 {
 public:
-  boost::mutex m_continueLock;
+  std::mutex m_continueLock;
 
   Deferred AutoFilter(const Decoration<0>& dec) {
     return Deferred(this);
   }
 
   void Run(void) override {
-    (boost::lock_guard<boost::mutex>)m_continueLock;
+    (std::lock_guard<std::mutex>)m_continueLock;
     CoreThread::Run();
   }
 };
@@ -721,7 +722,7 @@ public:
 TEST_F(AutoFilterTest, NoDeferredImmediateSatisfaction) {
   // Create a waiter, then obtain its lock before sending it off:
   AutoRequired<WaitsForInternalLock> wfil;
-  boost::lock_guard<boost::mutex> lk(wfil->m_continueLock);
+  std::lock_guard<std::mutex> lk(wfil->m_continueLock);
   AutoCurrentContext()->Initiate();
 
   // Now create a packet that we will DecorateImmediate with our decoration:

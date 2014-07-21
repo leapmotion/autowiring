@@ -2,9 +2,7 @@
 #pragma once
 
 #include "stdafx.h"
-#include <boost/atomic.hpp> //alternative lock = boost::spinlock
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/lock_guard.hpp>
+#include MUTEX_HEADER
 
 template<class object, class lock> class shared_object;
 template<class object, class lock> class unlock_object;
@@ -20,7 +18,7 @@ template<class object, class lock> class unlock_object;
 ///   or to modify the contents of shared_object.
 /// - Held locks, via unlock_object, which will block all other interactions.
 ///</remarks>
-template<class object, class lock = boost::mutex>
+template<class object, class lock = std::mutex>
 class atomic_object {
   friend class shared_object<object, lock>;
   friend class unlock_object<object, lock>;
@@ -46,7 +44,7 @@ public:
   /// atomic_object<object> target(*unlock_object<object>(source));
   ///</remarks>
   atomic_object(const atomic_object<object>& source) {
-    boost::lock_guard<lock> lock_this(source.m_lock);
+    std::lock_guard<lock> lock_this(source.m_lock);
     m_object = source.m_object;
     m_initialized = source.m_initialized;
   }
@@ -68,8 +66,8 @@ public:
   atomic_object<object, lock>& operator = (const atomic_object<object>& source) {
     if (this == &source)
       return *this;
-    boost::lock_guard<lock> lock_this(m_lock);
-    boost::lock_guard<lock> locksource(source.m_lock);
+    std::lock_guard<lock> lock_this(m_lock);
+    std::lock_guard<lock> locksource(source.m_lock);
     m_object = source.m_object;
     m_initialized = source.m_initialized;
     return *this;
@@ -79,7 +77,7 @@ public:
   ///Assignment yielding initialized() == true.
   ///</summary>
   atomic_object<object, lock>& operator = (const object& source) {
-    boost::lock_guard<lock> lock_this(m_lock);
+    std::lock_guard<lock> lock_this(m_lock);
     m_initialized = true;
     m_object = source;
     return *this;
@@ -89,13 +87,13 @@ public:
   ///Cast by copying current state
   ///</summary>
   operator object() const {
-    boost::lock_guard<lock> lock_this(m_lock);
+    std::lock_guard<lock> lock_this(m_lock);
     return m_object;
   }
 
   ///<return>True if the object was not assigned default values</return>
   bool initialized() const {
-    boost::lock_guard<lock> lock_this(m_lock);
+    std::lock_guard<lock> lock_this(m_lock);
     return m_initialized;
   }
 
@@ -104,7 +102,7 @@ public:
   ///</summary>
   ///<return>True if the object was not assigned default values</return>
   bool initialized(object& target) {
-    boost::lock_guard<lock> lock_this(m_lock);
+    std::lock_guard<lock> lock_this(m_lock);
     if (m_initialized)
       target = m_object;
     return m_initialized;
@@ -114,7 +112,7 @@ public:
   ///Reset using default constructor yielding initialized() == false.
   ///</summary>
   void reset() {
-    boost::lock_guard<lock> lock_this(m_lock);
+    std::lock_guard<lock> lock_this(m_lock);
     m_initialized = false;
     m_object = object();
   }

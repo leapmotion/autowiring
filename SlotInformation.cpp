@@ -2,11 +2,11 @@
 #include "SlotInformation.h"
 #include "InterlockedExchange.h"
 #include "Autowired.h"
-#include <boost/thread/tss.hpp>
+#include "thread_specific_ptr.h"
 #include MEMORY_HEADER
 
 // Special file-level allocation with a no-op dtor, because all stack locations are stack-allocated
-static boost::thread_specific_ptr<SlotInformationStackLocation> tss([](SlotInformationStackLocation*) {});
+static leap::thread_specific_ptr<SlotInformationStackLocation> tss([](SlotInformationStackLocation*) {});
 
 SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStumpBase* pStump, const void* pObj, size_t extent) :
   m_pPrior(tss.get()),

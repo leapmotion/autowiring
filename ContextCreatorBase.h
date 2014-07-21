@@ -1,9 +1,7 @@
 // Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
-
 #include MEMORY_HEADER
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/locks.hpp>
+#include MUTEX_HEADER
 
 class CoreContext;
 
@@ -14,7 +12,7 @@ public:
 
 protected:
   // Lock:
-  boost::mutex m_contextLock;
+  std::mutex m_contextLock;
 
   // Local context pointer:
   std::weak_ptr<CoreContext> m_context;
@@ -31,7 +29,7 @@ protected:
   void Clear(bool wait, Ctr& ctr, Fx&& locker) {
     if(!wait) {
       // Trivial signal-clear-return:
-      boost::lock_guard<boost::mutex> lk(m_contextLock);
+      std::lock_guard<std::mutex> lk(m_contextLock);
       for(auto q = ctr.begin(); q != ctr.end(); q++) {
         auto locked = locker(q);
         if(locked)
@@ -45,7 +43,7 @@ protected:
 
     // Copy out and clear:
     {
-      boost::lock_guard<boost::mutex> lk(m_contextLock);
+      std::lock_guard<std::mutex> lk(m_contextLock);
       for(auto q = ctr.begin(); q != ctr.end(); q++) {
         auto locked = locker(q);
         if(locked)
