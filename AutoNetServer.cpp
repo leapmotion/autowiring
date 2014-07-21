@@ -244,8 +244,12 @@ void AutoNetServer::PollThreadUtilization(boost::chrono::milliseconds period){
       std::string name = typeid(*thread.get()).name();
 
       double kmPercent = 100 * (deltaRuntimeKM / period);
-      double umPercent = 100 * (deltaRuntimeUM / period);
-      BroadcastMessage("threadUtilization", contextID, name, kmPercent, umPercent);
+      // Make sure user + kernel percent < 100.0
+      double umPercent = std::min(100 * (deltaRuntimeUM / period), 99.9 - kmPercent);
+      
+      if (kmPercent >= 0.0 && umPercent >= 0.0) {
+        BroadcastMessage("threadUtilization", contextID, name, kmPercent, umPercent);
+      }
 
       // Next!
       q++;

@@ -12,6 +12,9 @@
 #include <iostream>
 #include <thread>
 
+using boost::chrono::milliseconds;
+using boost::chrono::nanoseconds;
+
 void BasicThread::SetCurrentThreadName(void) const {
   if(IS_INTERNAL_BUILD)
     pthread_setname_np(m_name);
@@ -32,10 +35,10 @@ void BasicThread::GetThreadTimes(boost::chrono::milliseconds& kernelTime, boost:
   thread_info(threadport, THREAD_IDENTIFIER_INFO, (thread_info_t) &identifier_info, &tident_count);
 
   // Finally, we can obtain the actual thread times the user wants to know about
-  proc_threadinfo info = {};
+  proc_threadinfo info;
   proc_pidinfo(getpid(), PROC_PIDTHREADINFO, identifier_info.thread_handle, &info, sizeof(info));
 
-  // User time is in 100-ns increments
-  kernelTime = boost::chrono::milliseconds(info.pth_system_time/1000000);
-  userTime = boost::chrono::milliseconds(info.pth_user_time/1000000);
+  // User time is in ns increments
+  kernelTime = boost::chrono::duration_cast<milliseconds>(nanoseconds(info.pth_system_time));
+  userTime = boost::chrono::duration_cast<milliseconds>(nanoseconds(info.pth_user_time));
 }
