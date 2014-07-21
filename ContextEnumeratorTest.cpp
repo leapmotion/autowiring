@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "ContextEnumeratorTest.h"
 #include "ContextEnumerator.h"
+#include MEMORY_HEADER
 
 TEST_F(ContextEnumeratorTest, DegenerateEnumeration) {
   size_t ct = 0;
