@@ -5,7 +5,6 @@
 #include "Autowiring/CoreThread.h"
 #include "TestFixtures/FiresManyEventsWhenRun.h"
 #include "TestFixtures/SimpleReceiver.h"
-#include <boost/thread/barrier.hpp>
 #include <stdexcept>
 #include <vector>
 

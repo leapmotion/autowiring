@@ -1,5 +1,5 @@
 #pragma once
-#include "../CoreThread.h"
+#include "Autowiring/CoreThread.h"
 #include <vector>
 
 /// <summary>
@@ -127,8 +127,8 @@ public:
 
 private:
   // Continuity signal:
-  boost::mutex m_lock;
-  boost::condition_variable m_continueCond;
+  std::mutex m_lock;
+  std::condition_variable m_continueCond;
   bool m_barrierDone;
 
 public:
@@ -203,7 +203,7 @@ public:
   /// Invoked to cause Run to continue its processing
   /// </summary>
   void Proceed(void) {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
     if(m_barrierDone)
       return;
     m_barrierDone = true;
@@ -215,7 +215,7 @@ public:
   ///
   void Run(void) override {
     {
-      boost::unique_lock<boost::mutex> lk(m_lock);
+      std::unique_lock<std::mutex> lk(m_lock);
       m_continueCond.wait(lk, [this]() {return m_barrierDone; });
     }
     CoreThread::Run();

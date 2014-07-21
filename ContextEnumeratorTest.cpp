@@ -166,3 +166,4 @@ TEST_F(ContextEnumeratorTest, ComplexRemovalInterference) {
   for(auto& cur : eliminated)
     ASSERT_TRUE(cur.expired()) << "Found an element that was iterated after it should have been unreachable";
 }
+

@@ -16,7 +16,7 @@
 ///An unlock_object cannot be applied to an atomic_object, since continued existence of the
 ///referenced object would not be guaranteed.
 ///</remarks>
-template<class object, class lock = boost::mutex>
+template<class object, class lock = std::mutex>
 class unlock_object {
   unlock_object(unlock_object<object, lock>& source) = delete;
   unlock_object<object, lock>& operator = (unlock_object<object, lock>& _rhs) = delete;

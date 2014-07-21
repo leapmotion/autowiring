@@ -34,10 +34,10 @@ private:
   Autowired<AutoPacketFactory> m_parent;
 
   // Lock for this type
-  mutable boost::mutex m_lock;
+  mutable std::mutex m_lock;
   
   // State change notification
-  boost::condition_variable m_stateCondition;
+  std::condition_variable m_stateCondition;
   
   // Have we been signaled to stop
   bool m_wasStopped;
@@ -71,7 +71,7 @@ public:
   /// </summary>
   template<class T>
   void AppendAutoFiltersTo(T& container) const {
-    boost::lock_guard<boost::mutex> lk(m_lock);
+    std::lock_guard<std::mutex> lk(m_lock);
     container.insert(container.end(), m_autoFilters.begin(), m_autoFilters.end());
   }
 

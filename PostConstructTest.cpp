@@ -4,8 +4,7 @@
 #include "Autowired.h"
 #include "ContextMember.h"
 #include "TestFixtures/SimpleObject.h"
-#include <boost/thread/barrier.hpp>
-#include <boost/thread/thread.hpp>
+#include THREAD_HEADER
 
 using namespace std;
 
@@ -187,15 +186,20 @@ TEST_F(PostConstructTest, MultiNotifyWhenAutowired) {
 
 TEST_F(PostConstructTest, NotificationTeardownRace) {
   std::shared_ptr<CoreContext> pContext;
-  boost::barrier barr(2);
+
+  auto quit = false;
+  auto shouldQuit = MakeAtExit([&quit] { quit = true; });
+  std::atomic<size_t> counter{0};
 
   // This thread sets up the race pathology:
-  boost::thread t([&] {
-    for(;;) {
+  std::thread t([&] {
+    while(!quit) {
       // Barrier until setup time:
-      barr.wait();
+      while(counter != 1)
+        std::this_thread::yield();
+
       if(!pContext)
-        return;
+        break;
 
       // Set the context current, then try to autowire:
       CurrentContextPusher pshr(pContext);
@@ -204,7 +208,7 @@ TEST_F(PostConstructTest, NotificationTeardownRace) {
 
       // Now barrier, and then we will try to race against the context
       // for teardown.
-      barr.wait();
+      counter++;
     }
   });
 
@@ -214,16 +218,21 @@ TEST_F(PostConstructTest, NotificationTeardownRace) {
     pContext = ctxt;
 
     // Wake up the other thread, let it set a notify-when-autowired:
-    barr.wait();
-    barr.wait();
+    counter++;
+    while(counter != 2)
+      std::this_thread::yield();
+
+    // Counter goes back to zero before we make the next loop iteration:
+    counter = 0;
 
     // Now we reset our pContext pointer, and then tell the thread
     // to race with us against context teardown:
     pContext.reset();
   }
 
-  // Signal the thread again that we're done, then join it:
-  barr.wait();
+  // All done, wait for the thread to back out:
+  quit = true;
+  counter = 1;
   t.join();
 }
 
