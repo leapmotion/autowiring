@@ -9,22 +9,23 @@
 #include <sys/proc_info.h>
 #include <sys/sysctl.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <iostream>
-#include <thread>
+#include THREAD_HEADER
 
-using boost::chrono::milliseconds;
-using boost::chrono::nanoseconds;
+using std::chrono::milliseconds;
+using std::chrono::nanoseconds;
 
 void BasicThread::SetCurrentThreadName(void) const {
   if(IS_INTERNAL_BUILD)
     pthread_setname_np(m_name);
 }
 
-boost::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
-  return boost::chrono::system_clock::time_point::min();
+std::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
+  return std::chrono::system_clock::time_point::min();
 }
 
-void BasicThread::GetThreadTimes(boost::chrono::milliseconds& kernelTime, boost::chrono::milliseconds& userTime) {
+void BasicThread::GetThreadTimes(std::chrono::milliseconds& kernelTime, std::chrono::milliseconds& userTime) {
   // Obtain the thread port from the Unix pthread wrapper
   pthread_t pthread = m_state->m_thisThread.native_handle();
   thread_t threadport = pthread_mach_thread_np(pthread);
@@ -39,6 +40,6 @@ void BasicThread::GetThreadTimes(boost::chrono::milliseconds& kernelTime, boost:
   proc_pidinfo(getpid(), PROC_PIDTHREADINFO, identifier_info.thread_handle, &info, sizeof(info));
 
   // User time is in ns increments
-  kernelTime = boost::chrono::duration_cast<milliseconds>(nanoseconds(info.pth_system_time));
-  userTime = boost::chrono::duration_cast<milliseconds>(nanoseconds(info.pth_user_time));
+  kernelTime = std::chrono::duration_cast<milliseconds>(nanoseconds(info.pth_system_time));
+  userTime = std::chrono::duration_cast<milliseconds>(nanoseconds(info.pth_user_time));
 }

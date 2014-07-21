@@ -234,8 +234,8 @@ protected:
   // All CoreThreads
   struct ThreadStats {
     // Last amount of time the thread was known to be running
-    boost::chrono::milliseconds m_lastRuntimeKM;
-    boost::chrono::milliseconds m_lastRuntimeUM;
+    std::chrono::milliseconds m_lastRuntimeKM;
+    std::chrono::milliseconds m_lastRuntimeUM;
   };
   std::map<std::weak_ptr<BasicThread>, ThreadStats, std::owner_less<std::weak_ptr<BasicThread>>> m_Threads;
   
