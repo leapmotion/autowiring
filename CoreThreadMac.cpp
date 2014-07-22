@@ -21,8 +21,8 @@ void BasicThread::SetCurrentThreadName(void) const {
     pthread_setname_np(m_name);
 }
 
-std::chrono::system_clock::time_point BasicThread::GetCreationTime(void) {
-  return std::chrono::system_clock::time_point::min();
+std::chrono::steady_clock::time_point BasicThread::GetCreationTime(void) {
+  return std::chrono::steady_clock::time_point::min();
 }
 
 void BasicThread::GetThreadTimes(std::chrono::milliseconds& kernelTime, std::chrono::milliseconds& userTime) {
