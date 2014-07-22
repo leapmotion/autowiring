@@ -244,8 +244,9 @@ void AutoNetServer::PollThreadUtilization(std::chrono::milliseconds period){
       int contextID = ResolveContextID(thread->GetContext().get());
       std::string name = typeid(*thread.get()).name();
 
-      double kmPercent = 100 * (deltaRuntimeKM / period);
-      double umPercent = 100 * (deltaRuntimeUM / period);
+      std::chrono::duration<double> periodDbl = period;
+      double kmPercent = 100.0 * (deltaRuntimeKM.count() / periodDbl.count());
+      double umPercent = 100.0 * (deltaRuntimeUM.count() / periodDbl.count());
       
       // Make sure user + kernel percent < 100.0
       umPercent = std::min(umPercent, 99.9 - kmPercent);
