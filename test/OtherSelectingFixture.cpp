@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "OtherSelectingFixture.h"
-#include "MicroBolt.h"
+#include "src/MicroBolt.h"
 
 OtherSelectingFixture::OtherSelectingFixture()
 {

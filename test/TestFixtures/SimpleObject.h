@@ -1,6 +1,6 @@
 #pragma once
-#include "Autowiring/ContextMember.h"
-#include "Autowiring/TypeUnifier.h"
+#include "ContextMember.h"
+#include "TypeUnifier.h"
 #include TYPE_TRAITS_HEADER
 
 // Simple ContextMember class:

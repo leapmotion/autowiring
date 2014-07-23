@@ -5,6 +5,9 @@
 #include <Windows.h>
 #include <Avrt.h>
 
+// Because Windows.h screws up min
+#undef min
+
 using std::chrono::milliseconds;
 using std::chrono::nanoseconds;
 
@@ -37,10 +40,8 @@ void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
 }
 
 void BasicThread::SetCurrentThreadName(void) const {
-  if(IS_INTERNAL_BUILD) {
-    DWORD threadId = ::GetThreadId(static_cast<HANDLE>(m_state->m_thisThread.native_handle()));
-    ::SetThreadName(threadId, m_name);
-  }
+  DWORD threadId = ::GetThreadId(static_cast<HANDLE>(m_state->m_thisThread.native_handle()));
+  ::SetThreadName(threadId, m_name);
 }
 
 bool SetCapturePriority(void) {

@@ -1,6 +1,6 @@
 #pragma once
-#include "Autowiring/CoreThread.h"
-#include "Autowiring/has_autofilter.h"
+#include "CoreThread.h"
+#include "has_autofilter.h"
 
 /// <summary>
 /// A simple "decoration" class which will be added to a variety of sample packets
