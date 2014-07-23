@@ -1,1 +1,17 @@
+CMakeFiles
+CMakeCache.txt
+*.vcxproj
+*.filters
+cmake_install.cmake
+*.sln
+*.sdf
+*.suo
+*.opensdf
+*.ipch
+*.dir
+Win32
+Debug
+Release
+install_manifest.txt
+*.user
 .DS_Store
