@@ -1,8 +1,8 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "EventReceiverTest.h"
-#include "Autowiring/Autowired.h"
-#include "Autowiring/CoreThread.h"
+#include "Autowired.h"
+#include "CoreThread.h"
 #include "TestFixtures/FiresManyEventsWhenRun.h"
 #include "TestFixtures/SimpleReceiver.h"
 #include <stdexcept>

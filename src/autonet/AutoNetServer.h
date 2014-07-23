@@ -1,12 +1,12 @@
 // Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
-#include <websocketpp/websocketpp.hpp>
-#include "Autowiring/CoreThread.h"
-#include "Autowiring/Autowired.h"
-#include "Autowiring/AutowiringEvents.h"
-#include "Autowiring/TypeRegistry.h"
+#include "CoreThread.h"
+#include "Autowired.h"
+#include "AutowiringEvents.h"
+#include "TypeRegistry.h"
 #include "Jzon.h"
-
+#include <websocketpp/server.hpp>
+#include <websocketpp/config/asio_no_tls.hpp>
 #include <map>
 #include <set>
 
@@ -23,49 +23,27 @@ public:
   //Types
   //NOTE: These types have undetermined template parameters,
   //so methods depending on these types must appear in the header.
-  typedef websocketpp::server::connection_ptr connection_ptr;
-  typedef websocketpp::server::handler::message_ptr message_ptr;
+  typedef websocketpp::server<websocketpp::config::asio> server;
+  typedef server::message_ptr message_ptr;
   
   // Functions from CoreContext
   virtual void Run(void) override;
   virtual void OnStop(void) override;
 
   // Server Handler functions
-  void OnOpen(connection_ptr p_connection) {
-    *this += [this, p_connection] {
-      SendMessage(p_connection, "opened");
+  void OnOpen(websocketpp::connection_hdl hdl) {
+    *this += [this, hdl] {
+      SendMessage(hdl, "opened");
     };
   }
-  void OnClose(connection_ptr p_connection) {
-    *this += [this, p_connection] {
-      SendMessage(p_connection, "closed");
-      this->m_Subscribers.erase(p_connection);
+  void OnClose(websocketpp::connection_hdl hdl) {
+    *this += [this, hdl] {
+      SendMessage(hdl, "closed");
+      this->m_Subscribers.erase(hdl);
     };
   }
-  void OnMessage(connection_ptr p_connection, message_ptr p_message) {
-    Jzon::Object msg;
-    Jzon::Parser parser(msg, p_message->get_payload());
-    if (!parser.Parse()) {
-      std::cout << "Couldn't parse message" << std::endl;
-      SendMessage(p_connection, "invalidMessage", "Couldn't parse message");
-      return;
-    }
 
-    std::string msgType = msg.Get("type").ToString();
-    Jzon::Array msgArgs = msg.Get("args");
-
-    *this += [this, p_connection, msgType, msgArgs] {
-
-      if (msgType == "subscribe") HandleSubscribe(p_connection);
-      else if (msgType == "unsubscribe") HandleUnsubscribe(p_connection);
-      else if (msgType == "terminateContext") HandleTerminateContext(msgArgs.Get(0).ToInt());
-      else if (msgType == "injectContextMember") HandleInjectContextMember(msgArgs.Get(0).ToInt(), msgArgs.Get(1).ToString());
-      else if (msgType == "resumeFromBreakpoint") HandleResumeFromBreakpoint(msgArgs.Get(0).ToString());
-      else {
-        SendMessage(p_connection, "invalidMessage", "Message type not recognized");
-      };
-    };
-  }
+  void OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message);
   
   /// <summary>
   /// Waits until resume message is sent from the visualizer
@@ -103,7 +81,7 @@ protected:
   /// <summary>
   /// Sends a message to specified client.
   /// </summary>
-  /// <param name="p_connection">Connection pointer on which to send message</param>
+  /// <param name="hdl">Connection pointer on which to send message</param>
   /// <param name="pRecipient">Message name in CamelCase</param>
   /// <param name="args...">The first argument to be passed to client side event handler</param>
   /// <param name="args...">Remaining arguments to be passed to client side event handler</param>
@@ -111,7 +89,7 @@ protected:
   /// Client callback with same number of arguments passed here will be called
   /// </remarks>
   template<typename Arg, typename... Args>
-  void SendMessage(connection_ptr p_connection, const char* p_type, Arg&& arg, Args&&... args){
+  void SendMessage(websocketpp::connection_hdl hdl, const char* p_type, Arg&& arg, Args&&... args){
     Jzon::Object msg;
     msg.Add("type", p_type);
     
@@ -123,25 +101,18 @@ protected:
     (void)dummy;
     
     msg.Add("args", arguments);
-    
-    Jzon::Writer writer(msg, Jzon::NoFormat);
-    writer.Write();
-    p_connection->send(writer.GetResult());
+    SendMessage(hdl, msg);
   }
 
   /// <summary>
   /// Sends a zero-argument message to specified client.
   /// </summary>
-  void SendMessage(connection_ptr p_connection, const char* p_type){
-    Jzon::Object msg;
-    msg.Add("type", p_type);
-    Jzon::Array arguments;
-    msg.Add("args", arguments);
-    
-    Jzon::Writer writer(msg, Jzon::NoFormat);
-    writer.Write();
-    p_connection->send(writer.GetResult());
-  }
+  void SendMessage(websocketpp::connection_hdl hdl, const char* p_type);
+
+  /// <summary>
+  /// Sends a zero-argument message to specified client.
+  /// </summary>
+  void SendMessage(websocketpp::connection_hdl hdl, const Jzon::Object& msg);
 
   /// <summary>
   /// Broadcast a message to all subscribers.
@@ -150,7 +121,7 @@ protected:
   /// <param name="args...">An arg to be passed to client side event handler</param>
   template<typename ...Args>
   void BroadcastMessage(const char* p_type, Args&&... args) {
-    for (connection_ptr ptr : m_Subscribers)
+    for (websocketpp::connection_hdl ptr : m_Subscribers)
       SendMessage(ptr, p_type, std::forward<Args>(args)...);
   }
 
@@ -158,20 +129,20 @@ protected:
   /// Called when a "Subscribe" event is sent from a client
   /// </summary>
   /// <param name="client">Client that sent event</param>
-  void HandleSubscribe(connection_ptr p_connection) {
-    m_Subscribers.insert(p_connection);
+  void HandleSubscribe(websocketpp::connection_hdl hdl) {
+    m_Subscribers.insert(hdl);
 
     Jzon::Array types;
     for (auto type : m_AllTypes) {
       types.Add(type.first);
     }
 
-    SendMessage(p_connection, "subscribed", types);
+    SendMessage(hdl, "subscribed", types);
     AutoGlobalContext()->BuildCurrentState();
 
     // Send breakpoint message
     for (auto breakpoint : m_breakpoints) {
-      SendMessage(p_connection, "breakpoint", breakpoint);
+      SendMessage(hdl, "breakpoint", breakpoint);
     }
   }
 
@@ -179,9 +150,9 @@ protected:
   /// Called when a "Unsubscribe" event is sent from a client
   /// </summary>
   /// <param name="client">Client that sent event</param>
-  void HandleUnsubscribe(connection_ptr p_connection) {
-    this->m_Subscribers.erase(p_connection);
-    SendMessage(p_connection, "unsubscribed");
+  void HandleUnsubscribe(websocketpp::connection_hdl hdl) {
+    this->m_Subscribers.erase(hdl);
+    SendMessage(hdl, "unsubscribed");
   }
   
   /// <summary>
@@ -219,7 +190,7 @@ protected:
   ///////////// Member variables /////////////
 
   // Set of all subscribers
-  std::set<connection_ptr> m_Subscribers;
+  std::set<websocketpp::connection_hdl, std::owner_less<websocketpp::connection_hdl>> m_Subscribers;
 
   // one-to-one map of contexts to integers
   std::map<CoreContext*, int> m_ContextIDs;
@@ -245,21 +216,6 @@ protected:
   std::set<std::string> m_breakpoints;
   
   // The actual server
-  std::shared_ptr<websocketpp::server> m_Server;
+  std::shared_ptr<server> m_Server;
   const int m_Port; // Port to listen on
-  
-  // Handler wrapper. Injects "OnOpen", "OnClose", and "OnMessage" into the websocketpp server
-  class Handler :
-    public websocketpp::server::handler
-  {
-  public:
-    Handler(AutoNetServer& SocketServer) : m_SocketServer(SocketServer) {}
-    
-    virtual void on_open(connection_ptr con){ m_SocketServer.OnOpen(con); };
-    virtual void on_close(connection_ptr con){ m_SocketServer.OnClose(con); };
-    virtual void on_message(connection_ptr con, message_ptr msg){ m_SocketServer.OnMessage(con,msg); };
-    
-  private:
-    AutoNetServer& m_SocketServer;
-  };
 };
