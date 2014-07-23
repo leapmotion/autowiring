@@ -1,5 +1,5 @@
 #pragma once
-#include "Autowiring/CoreThread.h"
+#include "CoreThread.h"
 #include <vector>
 
 /// <summary>
