@@ -4,6 +4,7 @@
 
 #include <math.h>
 #include <assert.h>
+#define NOMINMAX
 
 #ifndef _MSC_VER
   #include <stdlib.h>
