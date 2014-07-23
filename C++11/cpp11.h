@@ -183,6 +183,7 @@
 
 #if LAMBDAS_AVAILABLE && STL11_ALLOWED
   #define FUNCTIONAL_HEADER <functional>
+  #define _WEBSOCKETPP_CPP11_FUNCTIONAL_
 #else
   #define FUNCTIONAL_HEADER "C++11/boost_functional.h"
 #endif
@@ -219,6 +220,7 @@
  */
 #if STL11_ALLOWED
   #define RVALUE_HEADER <memory>
+  #define _WEBSOCKETPP_CPP11_MEMORY_
 #else
   // Remove literal references in order to fix another missing header problem on *nix
   // Defined by default on C++11 Clang
@@ -281,6 +283,13 @@
   #define UTILITY_HEADER <utility>
 #else
   #define UTILITY_HEADER "C++11/boost_utility.h"
+#endif
+
+/**
+ * System error
+ */
+#if STL11_ALLOWED
+  #define _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
 #endif
 
 /*********************

@@ -172,27 +172,6 @@ endif()
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
-target_link_libraries(Autowiring debug websocketpp_debug)
-target_link_libraries(Autowiring optimized websocketpp_release)
-
-add_library(websocketpp STATIC IMPORTED)
-if(WIN32)
-  set_property(TARGET websocketpp PROPERTY IMPORTED_LOCATION ${WEBSOCKETPP_DIR}/lib/websocketpp.lib)
-else() # Mac or Linux
-  set_property(TARGET websocketpp PROPERTY IMPORTED_LOCATION ${WEBSOCKETPP_DIR}/lib/libwebsocketpp${STATIC_LIBRARY_SUFFIX})
-endif()
-
-add_library(websocketpp_debug STATIC IMPORTED)
-add_library(websocketpp_release STATIC IMPORTED)
-
-if(WIN32)
-  set_property(TARGET websocketpp_debug PROPERTY IMPORTED_LOCATION ${WEBSOCKETPP_DIR}/lib/websocketppd.lib)
-  set_property(TARGET websocketpp_release PROPERTY IMPORTED_LOCATION ${WEBSOCKETPP_DIR}/lib/websocketpp.lib)
-else() # Linux and Mac
-  set_property(TARGET websocketpp_debug PROPERTY IMPORTED_LOCATION ${WEBSOCKETPP_DIR}/lib/libwebsocketpp${STATIC_LIBRARY_SUFFIX})
-  set_property(TARGET websocketpp_release PROPERTY IMPORTED_LOCATION ${WEBSOCKETPP_DIR}/lib/libwebsocketpp${STATIC_LIBRARY_SUFFIX})
-endif()
-
 
 if(NOT WIN32)
   set(Boost_THREAD_LIBRARY libboost_thread)
