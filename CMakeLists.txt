@@ -49,3 +49,23 @@ install (FILES
   COMPONENT dev
 )
 
+# This is the upgrade GUID.  Part of the GUID is derived from the major version number.  Any time
+# the major version number is adjusted, the upgrade GUID changes.  This allows multiple versions
+# of the same product to be installed on a user's system at the same time, but also means that
+# manual uninstallation of older versions is required.
+#
+# For more information on the rationale for this process, see the discussion on semantic versioning
+# found at http://semver.org/
+SET(CPACK_WIX_UPGRADE_GUID "{060E5EDD-229${AUTOWIRING_MAJOR_VERSION}-4AD8-BAFA-A303D5696A2D}")
+
+# Packaging stuff, if an installer is being made insteadINCLUDE(InstallRequiredSystemLibraries)
+SET(CPACK_GENERATOR "WIX")
+SET(CPACK_PACKAGE_VENDOR "Leap Motion")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ReadMe.md")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Autowiring")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
+SET(CPACK_PACKAGE_VERSION_MAJOR "${AUTOWIRING_MAJOR_VERSION}")
+SET(CPACK_PACKAGE_VERSION_MINOR "${AUTOWIRING_MINOR_VERSION}")
+SET(CPACK_PACKAGE_VERSION_PATCH "${AUTOWIRING_PATCH_VERSION}")
+SET(CPACK_PACKAGE_INSTALL_DIRECTORY "autowiring ${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}")
+INCLUDE(CPack)
