@@ -172,6 +172,7 @@ endif()
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
+install(TARGETS Autowiring DESTINATION lib)
 
 if(NOT WIN32)
   set(Boost_THREAD_LIBRARY libboost_thread)
@@ -212,3 +213,14 @@ if(NOT WIN32)
     target_link_libraries(Autowiring ${Boost_ATOMIC_LIBRARY})
   endif()
 endif()
+
+foreach (src ${Autowiring_SRCS})
+  string(REGEX MATCH ".*\\.h" hfile ${src})
+  if(hfile)
+    install(
+      FILES ${hfile}
+      DESTINATION "include/Autowiring"
+      COMPONENT dev
+    )
+  endif()
+endforeach()
