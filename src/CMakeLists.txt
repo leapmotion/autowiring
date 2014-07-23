@@ -1,3 +1,9 @@
+include_directories(
+    ..
+  )
+
+add_subdirectory(AutoNet)
+
 set(Autowiring_SRCS
   AnySharedPointer.h
   at_exit.h
@@ -6,8 +12,6 @@ set(Autowiring_SRCS
   AutoCheckout.h
   NewAutoFilter.h
   NewAutoFilter.cpp
-  AutoNetServer.h
-  AutoNetServer.cpp
   AutoFuture.h
   AutoFuture.cpp
   CoreJob.h
@@ -114,8 +118,6 @@ if(NOT APPLE)
     uuid.cpp
   )
 endif()
-
-OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
 
 set(Autowiring_Win_SRCS
   CoreThreadWin.cpp
@@ -230,8 +232,4 @@ if(NOT WIN32)
   if(Boost_VERSION GREATER 105200)
     target_link_libraries(Autowiring ${Boost_ATOMIC_LIBRARY})
   endif()
-endif()
-
-if(BUILD_AUTONET)
-  add_definitions(-USEAUTONET)
 endif()
