@@ -1,4 +1,5 @@
 #pragma once
+#include "C++11/cpp11.h"
 #include <list>
 #include FUNCTIONAL_HEADER
 
