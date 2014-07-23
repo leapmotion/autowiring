@@ -4,7 +4,7 @@
 
 #include <math.h>
 #include <assert.h>
-#include "ocuConfig.h"
+#include "C++11/cpp11.h"
 
 #ifndef _MSC_VER
   #include <stdlib.h>
