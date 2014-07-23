@@ -1,16 +1,17 @@
 // Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #include "stdafx.h"
 #include "AutoNetServer.h"
-#include "Autowiring/at_exit.h"
+#include "at_exit.h"
 #include <iostream>
 
 AutoNetServer::AutoNetServer():
   CoreThread("AutoNetServer"),
-  m_Server(std::make_shared<websocketpp::server>(websocketpp::server::handler::ptr(new AutoNetServer::Handler(*this)))),
+  m_Server(std::make_shared<server>()),
   m_Port(8000)
 {
-  m_Server->alog().unset_level(websocketpp::log::alevel::ALL);
-  m_Server->elog().unset_level(websocketpp::log::elevel::ALL);
+  m_Server->set_message_handler([this] (websocketpp::connection_hdl hdl, message_ptr msg) {
+    OnMessage(hdl, msg);
+  });
 
   for (auto type = g_pFirstEntry; type; type = type->pFlink) {
     if (type->IsEventReceiver())
@@ -36,15 +37,11 @@ AutoNetServer::~AutoNetServer(){}
 void AutoNetServer::Run(void){
   std::cout << "Starting Autonet server..." << std::endl;
 
-  m_Server->start_listen(m_Port);
-
-  auto teardown = MakeAtExit([this] {
-    m_Server->close_all();
-    m_Server->stop_listen(true);
-  });
+  m_Server->init_asio();
+  m_Server->start_accept();
+  m_Server->run();
   
   PollThreadUtilization(std::chrono::milliseconds(1000));
-
   CoreThread::Run();
 }
 
@@ -53,6 +50,29 @@ void AutoNetServer::OnStop(void){
     SendMessage(sub, "Closing");
   }
   m_Server->stop();
+}
+
+void AutoNetServer::OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message) {
+  Jzon::Object msg;
+  Jzon::Parser parser(msg, p_message->get_payload());
+  if(!parser.Parse()) {
+    std::cout << "Couldn't parse message" << std::endl;
+    SendMessage(hdl, "invalidMessage", "Couldn't parse message");
+    return;
+  }
+
+  std::string msgType = msg.Get("type").ToString();
+  Jzon::Array msgArgs = msg.Get("args");
+
+  *this += [this, hdl, msgType, msgArgs] {
+    if(msgType == "subscribe") HandleSubscribe(hdl);
+    else if(msgType == "unsubscribe") HandleUnsubscribe(hdl);
+    else if(msgType == "terminateContext") HandleTerminateContext(msgArgs.Get(0).ToInt());
+    else if(msgType == "injectContextMember") HandleInjectContextMember(msgArgs.Get(0).ToInt(), msgArgs.Get(1).ToString());
+    else if(msgType == "resumeFromBreakpoint") HandleResumeFromBreakpoint(msgArgs.Get(0).ToString());
+    else
+      SendMessage(hdl, "invalidMessage", "Message type not recognized");
+  };
 }
 
 void AutoNetServer::Breakpoint(std::string name){
@@ -175,6 +195,20 @@ void AutoNetServer::EventFired(CoreContext& context, const std::type_info& info)
 
     BroadcastMessage("eventFired", contextID, eventHash);
   };
+}
+
+void AutoNetServer::SendMessage(websocketpp::connection_hdl hdl, const char* p_type) {
+  Jzon::Object msg;
+  msg.Add("type", p_type);
+  Jzon::Array arguments;
+  msg.Add("args", arguments);
+  SendMessage(hdl, msg);
+}
+
+void AutoNetServer::SendMessage(websocketpp::connection_hdl hdl, const Jzon::Object& msg) {
+  Jzon::Writer writer(msg, Jzon::NoFormat);
+  writer.Write();
+  m_Server->send(hdl, writer.GetResult(), websocketpp::frame::opcode::text);
 }
 
 void AutoNetServer::HandleTerminateContext(int contextID) {
