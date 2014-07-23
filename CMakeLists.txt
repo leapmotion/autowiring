@@ -26,5 +26,6 @@ function(ADD_MSVC_DISABLED_FILES SourceGroupName SourcesVar ...)
   endif(WIN32)
 endfunction(ADD_MSVC_DISABLED_FILES)
 
+add_subdirectory(C++11)
 add_subdirectory(src)
 add_subdirectory(test)
