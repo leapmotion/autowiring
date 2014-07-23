@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "SelfSelectingFixture.h"
-#include "MicroBolt.h"
+#include "src/MicroBolt.h"
 
 SelfSelectingFixture::SelfSelectingFixture(void) :
   magic(10010)
