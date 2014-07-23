@@ -16,3 +16,10 @@ Release
 install_manifest.txt
 *.user
 .DS_Store
+CPackConfig.cmake
+CPackSourceConfig.cmake
+*.wixobj
+*.msi
+autowiring-config.cmake
+autowiring-configVersion.cmake
+install_manifest_*.txt
