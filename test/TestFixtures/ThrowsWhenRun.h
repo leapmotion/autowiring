@@ -1,6 +1,6 @@
 #pragma once
 #include "ThrowingListener.h"
-#include "Autowiring/CoreThread.h"
+#include "CoreThread.h"
 
 template<class Ex>
 class ThrowsWhenRun:
