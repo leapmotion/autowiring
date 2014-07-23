@@ -1,0 +1,7 @@
+# - Config file for the websocketpp package
+# It defines the following variables
+#  AUTOWIRING_FOUND - indicates that the module was found
+#  AUTOWIRING_INCLUDE_DIR - include directories
+
+set(AUTOWIRING_FOUND TRUE)
+set(AUTOWIRING_INCLUDE_DIR "@INSTALL_INCLUDE_DIR@")
