@@ -1,7 +1,7 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
 
-#include "Autowired.h"
+#include "src/Autowired.h"
 #include <gtest/gtest.h>
 #include MEMORY_HEADER
 
