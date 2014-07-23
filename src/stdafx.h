@@ -4,11 +4,13 @@
 
 #include <math.h>
 #include <assert.h>
-#include "ocuConfig.h"
 
 #ifndef _MSC_VER
   #include <stdlib.h>
 #endif
+
+// C++11 glue logic, for platforms that have incomplete C++11 support
+#include "C++11/cpp11.h"
 
 // Very unusual syntax -- function taking an array of fixed size, and returning
 // a character array of that same size
