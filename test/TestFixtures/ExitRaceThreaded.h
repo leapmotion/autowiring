@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Autowiring/CoreThread.h"
+#include "CoreThread.h"
 
 /// <summary>
 /// An exit-race signal
