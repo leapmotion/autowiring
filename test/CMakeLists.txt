@@ -1,14 +1,13 @@
 include_directories(
-    ../gtest-1.7.0
-    ../gtest-1.7.0/include
     ../src
     ..
+    gtest-1.7.0/fused-src
+    gtest-1.7.0/include
   )
 
 OPTION(BUILD_AUTONET "Enable autonet features of autowiring project." OFF)
 
 set(AutowiringTest_SRCS
-  gtest-all-guard.cpp
   AnySharedPointerTest.h
   AnySharedPointerTest.cpp
   AutoAnchorTest.h
@@ -97,6 +96,7 @@ set(AutowiringTest_SRCS
   TestFixtures/MultiInherit.h
   UuidTest.h
   UuidTest.cpp
+  gtest-all-guard.cpp
 )
 
 if(BUILD_AUTONET)
