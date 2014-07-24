@@ -12,11 +12,11 @@ template<> bool BasicThread::WaitUntil(std::chrono::system_clock::time_point);
 
 BasicThread::BasicThread(const char* pName):
   ContextMember(pName),
-  m_priority(ThreadPriority::Default),
   m_state(std::make_shared<BasicThreadStateBlock>()),
   m_stop(false),
   m_running(false),
-  m_completed(false)
+  m_completed(false),
+  m_priority(ThreadPriority::Default)
 {}
 
 std::mutex& BasicThread::GetLock(void) {
