@@ -305,8 +305,8 @@ protected:
     template<class T>
     AddInternalTraits(const AutoFilterDescriptor& subscriber, const std::shared_ptr<T>& value) :
       type(typeid(T)),
-      subscriber(subscriber),
       value(value),
+      subscriber(subscriber),
       pObject(leap::fast_pointer_cast<Object>(value)),
       pContextMember(leap::fast_pointer_cast<ContextMember>(value)),
       pCoreRunnable(leap::fast_pointer_cast<CoreRunnable>(value)),
