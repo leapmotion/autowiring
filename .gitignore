@@ -1,3 +1,4 @@
+build/
 CMakeFiles
 CMakeCache.txt
 *.vcxproj
