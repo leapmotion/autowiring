@@ -7,6 +7,11 @@ set(autowiring_VERSION_MAJOR 0)
 set(autowiring_VERSION_MINOR 1)
 set(autowiring_VERSION_PATCH 0)
 
+# Apple needs special additional flags to build with C++11
+if(APPLE)
+  set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+endif()
+
 # Adds a precompiled header
 MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar)
   if(MSVC)
