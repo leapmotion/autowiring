@@ -135,17 +135,17 @@ void AutoNetServer::NewObject(CoreContext& ctxt, const AnySharedPointer& object)
     }
     
     // Add type information
-    auto member = leap::fast_pointer_cast<ContextMember>(objectPtr);
+    auto member = autowiring::fast_pointer_cast<ContextMember>(objectPtr);
     if (member) {
       types.Add("contextMember", true);
     }
 
-    auto runnable = leap::fast_pointer_cast<CoreRunnable>(objectPtr);
+    auto runnable = autowiring::fast_pointer_cast<CoreRunnable>(objectPtr);
     if (runnable) {
       types.Add("coreRunnable", true);
     }
     
-    auto thread = leap::fast_pointer_cast<BasicThread>(objectPtr);
+    auto thread = autowiring::fast_pointer_cast<BasicThread>(objectPtr);
     if(thread) {
       m_Threads[thread->GetSelf<BasicThread>()];
 
@@ -155,7 +155,7 @@ void AutoNetServer::NewObject(CoreContext& ctxt, const AnySharedPointer& object)
       types.Add("thread", utilization);
     }
 
-    auto eventRcvr = leap::fast_pointer_cast<EventReceiver>(objectPtr);
+    auto eventRcvr = autowiring::fast_pointer_cast<EventReceiver>(objectPtr);
     if (eventRcvr) {
       Jzon::Array listenerTypes;
       for (auto event : m_EventTypes) {
@@ -166,12 +166,12 @@ void AutoNetServer::NewObject(CoreContext& ctxt, const AnySharedPointer& object)
       types.Add("eventReceiver", listenerTypes);
     }
 
-    auto filter = leap::fast_pointer_cast<ExceptionFilter>(objectPtr);
+    auto filter = autowiring::fast_pointer_cast<ExceptionFilter>(objectPtr);
     if (filter) {
       types.Add("exceptionFilter", true);
     }
 
-    auto bolt = leap::fast_pointer_cast<BoltBase>(objectPtr);
+    auto bolt = autowiring::fast_pointer_cast<BoltBase>(objectPtr);
     if (bolt) {
       Jzon::Array sigils;
       for(auto cur = bolt->GetContextSigils(); *cur; cur++){

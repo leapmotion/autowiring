@@ -13,7 +13,7 @@
 
 // Platform specific token for thread local storage
 
-namespace leap {
+namespace autowiring {
 
 // <summary>
 // Holds a ptr in thread local storage. Same interface as boost::thread_specific_ptr
@@ -85,7 +85,7 @@ private:
   TLS_KEY_TYPE m_key;
 };
   
-} //namespace leap
+} //namespace autowiring
 
 // Platform specifc functions
 #ifdef _MSC_VER
