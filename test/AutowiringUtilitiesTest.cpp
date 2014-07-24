@@ -6,7 +6,7 @@
 #include "thread_specific_ptr.h"
 #include THREAD_HEADER
 
-static leap::thread_specific_ptr<int> s_thread_specific_int;
+static autowiring::thread_specific_ptr<int> s_thread_specific_int;
 
 class Thread1:
   public BasicThread

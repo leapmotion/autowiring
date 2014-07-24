@@ -1,6 +1,6 @@
 #pragma once
 
-namespace leap {
+namespace autowiring {
 
 template<typename T>
 T* thread_specific_ptr<T>::get() const {
@@ -24,4 +24,4 @@ void thread_specific_ptr<T>::freeTLS() {
 }
 
 
-}// namespace leap
+}// namespace autowiring
