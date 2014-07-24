@@ -87,8 +87,6 @@ set(Autowiring_SRCS
   atomic_object.h
   shared_object.h
   unlock_object.h
-  Jzon.h
-  Jzon.cpp
   Object.h
   ObjectPool.h
   ObjectPoolMonitor.h
