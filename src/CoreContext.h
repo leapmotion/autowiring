@@ -305,14 +305,14 @@ protected:
     template<class T>
     AddInternalTraits(const AutoFilterDescriptor& subscriber, const std::shared_ptr<T>& value) :
       type(typeid(T)),
-      subscriber(subscriber),
       value(value),
-      pObject(leap::fast_pointer_cast<Object>(value)),
-      pContextMember(leap::fast_pointer_cast<ContextMember>(value)),
-      pCoreRunnable(leap::fast_pointer_cast<CoreRunnable>(value)),
-      pFilter(leap::fast_pointer_cast<ExceptionFilter>(value)),
-      pBoltBase(leap::fast_pointer_cast<BoltBase>(value)),
-      pRecvr(leap::fast_pointer_cast<EventReceiver>(value))
+      subscriber(subscriber),
+      pObject(autowiring::fast_pointer_cast<Object>(value)),
+      pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
+      pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
+      pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
+      pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
+      pRecvr(autowiring::fast_pointer_cast<EventReceiver>(value))
     {
       if(!pObject)
         throw autowiring_error("Cannot add a type which does not implement Object");

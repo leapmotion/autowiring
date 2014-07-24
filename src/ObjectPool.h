@@ -44,15 +44,14 @@ public:
     const std::function<T*()>& alloc = &DefaultCreate<T>,
     const std::function<void(T&)>& rx = &DefaultReset<T>
   ) :
-    m_limit(limit),
+    m_monitor(std::make_shared<ObjectPoolMonitor>(this)),
     m_poolVersion(0),
     m_maxPooled(maxPooled),
+    m_limit(limit),
     m_outstanding(0),
     m_rx(rx),
     m_alloc(alloc)
-  {
-    m_monitor.reset(new ObjectPoolMonitor(this));
-  }
+  {}
 
   /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
   ObjectPool(

@@ -20,7 +20,7 @@ TEST_F(ObjectPoolTest, VerifyOutstandingLimit) {
   EXPECT_TRUE(obj3 == nullptr) << "Object pool issued more objects than it was authorized to issue";
 }
 
-TEST_F(ObjectPoolTest, DISABLED_VerifyAsynchronousUsage) {
+TEST_F(ObjectPoolTest, VerifyAsynchronousUsage) {
   AutoCreateContext ctxt;
   CurrentContextPusher pshr(ctxt);
 

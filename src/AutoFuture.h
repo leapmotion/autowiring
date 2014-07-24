@@ -21,7 +21,7 @@ public:
   /// </summary>
   template<class T>
   void operator+=(const std::shared_ptr<T>& rhs) {
-    auto pThread = leap::fast_pointer_cast<CoreThread>(rhs);
+    auto pThread = autowiring::fast_pointer_cast<CoreThread>(rhs);
     if(pThread)
       threads.push_back(pThread);
   }

@@ -227,7 +227,7 @@ TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
   ASSERT_FALSE(x.unique()) << "A pended event was freed before it was called, and appears to be present in a dispatch queue";
 }
 
-TEST_F(CoreThreadTest, DISABLED_VerifyDoublePendedDispatchDelay) {
+TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
   // Immediately pend threads:
   m_create->Initiate();
 

@@ -5,6 +5,7 @@
 #include <map>
 #include <stdexcept>
 #include <vector>
+#include <cassert>
 #include TYPE_INDEX_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_MAP
