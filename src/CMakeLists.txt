@@ -176,47 +176,12 @@ endif()
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
-install(TARGETS Autowiring DESTINATION lib COMPONENT autowiring CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
-
-if(NOT WIN32)
-  set(Boost_THREAD_LIBRARY libboost_thread)
-  add_library(${Boost_THREAD_LIBRARY} STATIC IMPORTED)
-  set_property(TARGET ${Boost_THREAD_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_THREAD_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-
-  set(Boost_CHRONO_LIBRARY libboost_chrono)
-  add_library(${Boost_CHRONO_LIBRARY} STATIC IMPORTED)
-  set_property(TARGET ${Boost_CHRONO_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_CHRONO_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-
-  set(Boost_REGEX_LIBRARY libboost_regex)
-  add_library(${Boost_REGEX_LIBRARY} STATIC IMPORTED)
-  set_property(TARGET ${Boost_REGEX_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_REGEX_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-  
-  set(Boost_DATE_TIME_LIBRARY libboost_date_time)
-  add_library(${Boost_DATE_TIME_LIBRARY} STATIC IMPORTED)
-  set_property(TARGET ${Boost_DATE_TIME_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_DATE_TIME_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-
-  set(Boost_SYSTEM_LIBRARY libboost_system)
-  add_library(${Boost_SYSTEM_LIBRARY} STATIC IMPORTED)
-  set_property(TARGET ${Boost_SYSTEM_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_SYSTEM_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-
-  if(Boost_VERSION GREATER 105200)
-    set(Boost_ATOMIC_LIBRARY libboost_atomic)
-    add_library(${Boost_ATOMIC_LIBRARY} STATIC IMPORTED)
-    set_property(TARGET ${Boost_ATOMIC_LIBRARY} PROPERTY IMPORTED_LOCATION ${Boost_LIBRARY_DIRS}/${Boost_ATOMIC_LIBRARY}${STATIC_LIBRARY_SUFFIX})
-  endif()
-
-  if(NOT APPLE AND NOT BUILD_ANDROID)
-    # Linux non-Android only
-    target_link_libraries(Autowiring -lrt)
-  endif()
-  if(NOT BUILD_ANDROID)
-    target_link_libraries(Autowiring -lpthread)
-  endif()
-  target_link_libraries(Autowiring ${Boost_THREAD_LIBRARY} ${Boost_CHRONO_LIBRARY} ${Boost_REGEX_LIBRARY} ${Boost_DATE_TIME_LIBRARY} ${Boost_SYSTEM_LIBRARY})
-  if(Boost_VERSION GREATER 105200)
-    target_link_libraries(Autowiring ${Boost_ATOMIC_LIBRARY})
-  endif()
+if(Boost_FOUND)
+  # Might as well reference the boost libraries to satisfy link dependencies, if we know they exist
+  target_link_libraries(Autowiring ${Boost_LIBRARIES})
 endif()
+
+install(TARGETS Autowiring DESTINATION lib COMPONENT autowiring CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
 foreach (src ${Autowiring_SRCS})
   string(REGEX MATCH ".*\\.h" hfile ${src})
