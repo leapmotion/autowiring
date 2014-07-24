@@ -1,12 +1,12 @@
 include_directories(..)
 
-find_package(websocketpp)
+find_package(websocketpp QUIET)
 if(NOT websocketpp_FOUND)
   message("Skipping Autonet build, websocketpp not found")
   return()
 endif()
 
-find_package(Boost)
+find_package(Boost QUIET)
 if(NOT Boost_FOUND)
   message("Cannot build Autonet, boost not installed on this system")
   return()
