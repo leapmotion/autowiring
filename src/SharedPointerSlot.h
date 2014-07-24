@@ -314,7 +314,7 @@ public:
   const std::shared_ptr<T>& get(void) const { return *(std::shared_ptr<T>*)m_space; }
 
   virtual operator std::shared_ptr<Object>(void) const override {
-    return leap::fast_pointer_cast<Object>(get());
+    return autowiring::fast_pointer_cast<Object>(get());
   }
 
   virtual void* ptr(void) override {
@@ -333,7 +333,7 @@ public:
 
   bool try_assign(const std::shared_ptr<Object>& rhs) override {
     // Just perform a dynamic cast:
-    auto casted = leap::fast_pointer_cast<T>(rhs);
+    auto casted = autowiring::fast_pointer_cast<T>(rhs);
     if(!casted)
       return false;
 
