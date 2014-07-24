@@ -3,7 +3,7 @@
 #include "AutoPacket.h"
 #include "thread_specific_ptr.h"
 
-static leap::thread_specific_ptr<NewAutoFilterBase*> pAFB;
+static autowiring::thread_specific_ptr<NewAutoFilterBase*> pAFB;
 
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),

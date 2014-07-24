@@ -119,7 +119,7 @@ public:
   AutowirableSlot(const std::shared_ptr<CoreContext>& ctxt) :
     DeferrableAutowiring(ctxt),
     m_type(typeid(T)),
-    m_fast_pointer_cast(&leap::fast_pointer_cast<T, Object>)
+    m_fast_pointer_cast(&autowiring::fast_pointer_cast<T, Object>)
   {
     SlotInformationStackLocation::RegisterSlot(this);
   }

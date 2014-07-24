@@ -66,7 +66,7 @@ void InjectDummy(void) {
   Autowired<dummy<25>>();
 };
 
-TEST_F(AutowiringBenchmarkTest, DISABLED_VerifyAutowiringCache)
+TEST_F(AutowiringBenchmarkTest, VerifyAutowiringCache)
 {
   std::chrono::nanoseconds baseline(0);
   std::chrono::nanoseconds benchmark(0);
