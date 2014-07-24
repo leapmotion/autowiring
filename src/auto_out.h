@@ -18,16 +18,16 @@ template<class T, bool auto_ready = true>
 class auto_out {
 public:
   auto_out(auto_out&& rhs) :
-    m_checkout(std::move(rhs.m_checkout)),
-    m_cancelled(false)
+    m_cancelled(false),
+    m_checkout(std::move(rhs.m_checkout))
   {
     // Ensure we do not try to multiply commit this checkout:
     rhs.m_cancelled = true;
   }
 
   explicit auto_out(AutoCheckout<T>&& checkout) :
-    m_checkout(std::move(checkout)),
-    m_cancelled(false)
+    m_cancelled(false),
+    m_checkout(std::move(checkout))
   {}
 
   ~auto_out(void) {
