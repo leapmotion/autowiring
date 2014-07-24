@@ -57,6 +57,11 @@ install (FILES
 # found at http://semver.org/
 SET(CPACK_WIX_UPGRADE_GUID "{060E5EDD-229${autowiring_VERSION_MAJOR}-4AD8-BAFA-A303D5696A2D}")
 
+# Need a custom wix installation template so that we update the CMake package registry correctly
+# Only really needed on Windows; Mac and Linux have pretty good default search behavior, so we
+# leave those alone.
+SET(CPACK_WIX_TEMPLATE autowiring.wxs)
+
 # Packaging stuff, if an installer is being made insteadINCLUDE(InstallRequiredSystemLibraries)
 SET(CPACK_GENERATOR "WIX")
 SET(CPACK_PACKAGE_VENDOR "Leap Motion")
