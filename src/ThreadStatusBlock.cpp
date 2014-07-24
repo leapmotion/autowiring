@@ -3,7 +3,7 @@
 #include "GlobalCoreContext.h"
 #include "thread_specific_ptr.h"
 
-static leap::thread_specific_ptr<ThreadStatusBlock> s_statusBlock;
+static autowiring::thread_specific_ptr<ThreadStatusBlock> s_statusBlock;
 
 ThreadStatusBlock::ThreadStatusBlock(void):
   m_context(GlobalCoreContext::Get())
