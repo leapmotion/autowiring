@@ -3,7 +3,7 @@
 #include MEMORY_HEADER
 #include TYPE_TRAITS_HEADER
 
-namespace leap {
+namespace autowiring {
   /// <summary>
   /// Identical to static_pointer_cast if U inherits T, dynamic_pointer_cast otherwise
   /// </summary>

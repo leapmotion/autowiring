@@ -415,7 +415,7 @@ public:
   size_t nReceived;
 };
 
-TEST_F(AutoFilterTest, DISABLED_DeferredRecieptInSubContext)
+TEST_F(AutoFilterTest, DeferredRecieptInSubContext)
 {
   AutoCurrentContext()->Initiate();
 

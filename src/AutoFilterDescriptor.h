@@ -231,16 +231,16 @@ struct AutoFilterDescriptorStub {
   template<class MemFn>
   AutoFilterDescriptorStub(CallExtractor<MemFn> extractor, t_call pCall) :
     m_pType(&typeid(typename Decompose<MemFn>::type)),
+    m_pArgs(extractor.template Enumerate<AutoFilterDescriptorInput>()),
+    m_deferred(extractor.deferred),
+    m_arity(extractor.N),
     m_requiredCount(0),
     m_optionalCount(0),
-    m_arity(extractor.N),
-    m_pArgs(extractor.template Enumerate<AutoFilterDescriptorInput>()),
     m_pCall(pCall)
   {
     // Cannot register a subscriber with zero arguments:
     static_assert(CallExtractor<MemFn>::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
-    m_deferred = extractor.deferred;
     for(auto pArg = m_pArgs; *pArg; pArg++) {
       switch(pArg->subscriberType) {
       case inTypeRequired:
