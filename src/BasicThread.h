@@ -124,8 +124,8 @@ protected:
     ElevatePriority(ElevatePriority&) = delete;
 
     ElevatePriority(BasicThread& thread, ThreadPriority priority) :
-      m_thread(thread),
-      m_oldPriority(thread.m_priority)
+      m_oldPriority(thread.m_priority),
+      m_thread(thread)
     {
       // Elevate if the new level is higher than the old level:
       if(priority > m_oldPriority)

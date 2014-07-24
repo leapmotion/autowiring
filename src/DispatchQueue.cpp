@@ -3,8 +3,8 @@
 #include "at_exit.h"
 
 DispatchQueue::DispatchQueue(void):
-  m_aborted(false),
-  m_dispatchCap(1024)
+  m_dispatchCap(1024),
+  m_aborted(false)
 {}
 
 DispatchQueue::~DispatchQueue(void) {

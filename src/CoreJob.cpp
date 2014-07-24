@@ -5,9 +5,9 @@
 
 CoreJob::CoreJob(const char* name) :
   ContextMember(name),
-	m_curEventInTeardown(true),
   m_running(false),
-  m_shouldStop(false)
+  m_shouldStop(false),
+  m_curEventInTeardown(true)
 {}
 
 void CoreJob::OnPended(std::unique_lock<std::mutex>&& lk){
