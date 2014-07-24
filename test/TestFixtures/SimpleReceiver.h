@@ -118,12 +118,11 @@ class SimpleReceiver:
 public:
   SimpleReceiver(void) :
     CoreThread("SimpleReceiver"),
+    m_barrierDone(false),
     m_zero(false),
     m_one(false),
-    m_oneArg(0),
-    m_barrierDone(false)
-  {
-  }
+    m_oneArg(0)
+  {}
 
 private:
   // Continuity signal:
