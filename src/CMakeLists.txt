@@ -170,7 +170,7 @@ endif()
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
-install(TARGETS Autowiring DESTINATION lib)
+install(TARGETS Autowiring DESTINATION lib COMPONENT autowiring CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
 if(NOT WIN32)
   set(Boost_THREAD_LIBRARY libboost_thread)
@@ -218,7 +218,7 @@ foreach (src ${Autowiring_SRCS})
     install(
       FILES ${hfile}
       DESTINATION "include/Autowiring"
-      COMPONENT dev
+      COMPONENT autowiring
     )
   endif()
 endforeach()
