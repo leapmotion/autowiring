@@ -10,8 +10,7 @@ using std::chrono::milliseconds;
 using std::chrono::microseconds;
 
 void BasicThread::SetCurrentThreadName(void) const {
-  if(IS_INTERNAL_BUILD)
-    pthread_setname_np(pthread_self(), m_name);
+  pthread_setname_np(pthread_self(), m_name);
 }
 
 std::chrono::steady_clock::time_point BasicThread::GetCreationTime(void) {
