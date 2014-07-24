@@ -17,6 +17,8 @@ include_directories(${Boost_INCLUDE_DIR})
 set(AutoNet_SRCS
   AutoNetServer.h
   AutoNetServer.cpp
+  Jzon.h
+  Jzon.cpp
 )
 
 include_directories(${WEBSOCKETPP_INCLUDE_DIR})
