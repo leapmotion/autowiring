@@ -124,3 +124,7 @@ ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
 target_link_libraries(AutowiringTest Autowiring AutowiringFixture)
 set_property(TARGET AutowiringTest PROPERTY FOLDER "Autowiring")
+
+# This is a unit test, let CMake know this
+add_test(NAME AutowiringTestCmd COMMAND $<TARGET_FILE:AutowiringTest>)
+set_property(TEST AutowiringTestCmd APPEND PROPERTY DEPENDS AutowiringTest)
