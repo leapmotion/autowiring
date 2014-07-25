@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <vector>
 #include MEMORY_HEADER
@@ -38,4 +39,3 @@ public:
   // The currently active context for this thread:
   std::shared_ptr<CoreContext> m_context;
 };
-

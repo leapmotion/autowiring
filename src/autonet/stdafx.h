@@ -1,7 +1,5 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _STDAFX_H
-#define _STDAFX_H
-
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+#pragma once
 #include <math.h>
 #include <assert.h>
 #define NOMINMAX
@@ -19,5 +17,3 @@ template<class T, int n>
 const char (&ArraySize(const T (&vals)[n]))[n];
 
 #define ARRAYCOUNT(x) sizeof(ArraySize(x))
-
-#endif

@@ -1,5 +1,5 @@
-#ifndef _LOCK_REDUCED_LIST_H
-#define _LOCK_REDUCED_LIST_H
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+#pragma once
 
 template<class T>
 class LockFreeList {
@@ -63,5 +63,3 @@ public:
     }
   }
 };
-
-#endif

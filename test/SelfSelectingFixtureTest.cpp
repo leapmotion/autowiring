@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "SelfSelectingFixtureTest.h"
 #include "SelfSelectingFixture.h"
@@ -64,4 +65,3 @@ TEST_F(SelfSelectingFixtureTest, ExteriorFixtureTest) {
   // Verify that both bolts, including the one we shall not name, made it in:
   ASSERT_EQ(2UL, created->GetMemberCount()) << "An unuttered fixture was eliminated by the linker unexpectedly";
 }
-
