@@ -185,6 +185,10 @@ if(Boost_FOUND)
   target_link_libraries(Autowiring ${Boost_LIBRARIES})
 endif()
 
+if(UNIX)
+  target_link_libraries(Autowiring pthread)
+endif()
+
 install(TARGETS Autowiring DESTINATION lib COMPONENT autowiring CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
 foreach (src ${Autowiring_SRCS})
