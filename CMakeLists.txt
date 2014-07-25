@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(autowiring)
+include(CTest)
 
 # TODO: Use the VERSION attribute for the "project" setting instead after upgrading
 # the cmake_minimum_required to version 3.0
@@ -7,9 +8,13 @@ set(autowiring_VERSION_MAJOR 0)
 set(autowiring_VERSION_MINOR 1)
 set(autowiring_VERSION_PATCH 0)
 
-# Apple needs special additional flags to build with C++11
-if(APPLE)
+# Clang needs special additional flags to build with C++11
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  message("Clang C++11")
   set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  message("GCC C++11")
+  set(CMAKE_CXX_FLAGS "-std=c++11")
 endif()
 
 # Adds a precompiled header
@@ -44,6 +49,9 @@ add_subdirectory(test)
 
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
+
+# We have unit test projects via googletest, they're added in the places where they are defined
+enable_testing()
 
 # Install autowiring-config.cmake and autowiring-configVersion.cmake
 install (FILES
