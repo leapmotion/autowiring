@@ -1,11 +1,15 @@
-include_directories(
-    ..
-  )
+include_directories(..)
 
 add_subdirectory(AutoNet)
 
+if(APPLE)
+  # Boost is actually required on Mac
+  find_package(Boost REQUIRED)
+else()
+  find_package(Boost QUIET)
+endif()
+
 # If we can find boost, then go ahead and pull in its include directory
-find_package(Boost QUIET)
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIR})
 endif()
