@@ -1,6 +1,6 @@
 include_directories(..)
 
-add_subdirectory(AutoNet)
+add_subdirectory(autonet)
 
 if(APPLE)
   # Boost is actually required on Mac
