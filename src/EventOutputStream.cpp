@@ -1,16 +1,13 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "Autowired.h"
 #include "EventOutputStream.h"
 #include <memory>
 #include <cstring>
 
-EventOutputStreamBase::EventOutputStreamBase(void)
-{
-}
+EventOutputStreamBase::EventOutputStreamBase(void){}
 
-EventOutputStreamBase::~EventOutputStreamBase(void)
-{
-}
+EventOutputStreamBase::~EventOutputStreamBase(void){}
 
 bool EventOutputStreamBase::IsEmpty(void) const {
   return !m_OutputStream.str().size();

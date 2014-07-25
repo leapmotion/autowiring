@@ -1,10 +1,9 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "CoreContext.h"
 
 template<class T>
-struct EnableBoltInternal {
-
-};
+struct EnableBoltInternal {};
 
 // A special class designed to make it easier to detect when our context is the global context
 class GlobalCoreContext:
@@ -84,4 +83,3 @@ struct GlobalContextDesignation {
     GetGlobalContext()->Initiate();
   }
 };
-
