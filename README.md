@@ -1,4 +1,4 @@
-Autowiring Page
-===============
+Autowiring Website
+==================
 
-This branch will be statically served by github at autowiring.io. The context for this page has yet to be created
+This branch is served by github at [autowiring.io](http://leapmotion.github.io/autowiring).
