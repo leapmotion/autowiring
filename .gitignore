@@ -23,3 +23,6 @@ CPackSourceConfig.cmake
 autowiring-config.cmake
 autowiring-configVersion.cmake
 install_manifest_*.txt
+*.cmake
+Testing
+DartConfiguration.tcl
