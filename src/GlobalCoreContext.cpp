@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "GlobalCoreContext.h"
 
@@ -14,8 +15,7 @@ GlobalCoreContext::GlobalCoreContext(void):
   SetCurrent();
 }
 
-GlobalCoreContext::~GlobalCoreContext(void) {
-}
+GlobalCoreContext::~GlobalCoreContext(void) {}
 
 // Obtains the currently generated global context:
 std::shared_ptr<GlobalCoreContext> GlobalCoreContext::Get() {

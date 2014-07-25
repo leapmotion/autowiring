@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "EnclosedContextTestBase.h"
 
@@ -17,4 +18,3 @@ public:
   AutoRequired<MyCtorDtorListenerN<1>> listener1;
   AutoRequired<MyCtorDtorListenerN<2>> listener2;
 };
-

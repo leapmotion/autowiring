@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
 /// <summary>
@@ -37,4 +38,3 @@ public:
   const T* operator->(void) const { return m_ptr; }
   operator const T*(void) const { return m_ptr; }
 };
-

@@ -1,5 +1,5 @@
-#ifndef _LOCK_REDUCED_COLLECTION_H
-#define _LOCK_REDUCED_COLLECTION_H
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+#pragma once
 #include "InterlockedExchange.h"
 #include "ObjectPool.h"
 #include STL_UNORDERED_SET
@@ -218,5 +218,3 @@ public:
     return false;
   }
 };
-
-#endif

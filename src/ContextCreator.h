@@ -1,6 +1,5 @@
-// Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-
 #include "ContextCreatorBase.h"
 #include "CoreContext.h"
 #include STL_UNORDERED_MAP

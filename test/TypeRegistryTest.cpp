@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TypeRegistryTest.h"
 #include "GlobalCoreContext.h"
@@ -8,8 +9,7 @@
 template<int>
 class Registered:
   public EventReceiver
-{
-};
+{};
 
 TEST_F(TypeRegistryTest, VerifySimpleLocalRegistration) {
   // Register two entries statically by uttering the static member's name:
