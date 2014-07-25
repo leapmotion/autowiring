@@ -7,6 +7,8 @@
 #include "is_shared_ptr.h"
 #include "ObjectPool.h"
 #include "is_any.h"
+#include <sstream>
+#include <typeinfo>
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
@@ -167,8 +169,12 @@ public:
   template<class T>
   const T& Get(void) const {
     const T* retVal;
-    if(!Get(retVal))
-      throw_rethrowable autowiring_error("Attempted to obtain a value which was not decorated on this packet");
+    if(!Get(retVal)) {
+      std::stringstream ss;
+      ss << "Attempted to obtain a type " << typeid(retVal).name()
+         << " which was not decorated on this packet";
+      throw std::runtime_error(ss.str());
+    }
     return *retVal;
   }
 
@@ -243,12 +249,16 @@ public:
       auto& entry = m_decorations[typeid(type)];
       if (entry.satisfied) {
         std::stringstream ss;
-        ss << "Cannot decorate this packet with type " << typeid(type).name()
+        ss << "Cannot decorate this packet with type " << typeid(*ptr).name()
            << ", the requested decoration already exists";
         throw std::runtime_error(ss.str());
       }
-      if(entry.isCheckedOut)
-        throw std::runtime_error("Cannot check out this decoration, it's already checked out elsewhere");
+      if(entry.isCheckedOut) {
+        std::stringstream ss;
+        ss << "Cannot check out decoration of type " << typeid(*ptr).name()
+           << ", it is already checked out elsewhere";
+        throw std::runtime_error(ss.str());
+      }
       entry.isCheckedOut = true;
       entry.wasCheckedOut = true;
     }
@@ -353,8 +363,12 @@ public:
       std::lock_guard<std::mutex> lk(m_lock);
       for(size_t i = 0; i < sizeof...(Ts); i++) {
         pTypeSubs[i] = &m_decorations[*sc_typeInfo[i]];
-        if(pTypeSubs[i]->wasCheckedOut)
-          throw std::runtime_error("Cannot perform immediate decoration with type T, the requested decoration already exists");
+        if(pTypeSubs[i]->wasCheckedOut) {
+          std::stringstream ss;
+          ss << "Cannot perform immediate decoration with type " << sc_typeInfo[i]->name()
+             << ", the requested decoration already exists";
+          throw std::runtime_error(ss.str());
+        }
 
         // Mark the entry as appropriate:
         pTypeSubs[i]->satisfied = true;
