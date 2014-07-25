@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "is_any.h"
 #include "JunctionBox.h"
@@ -147,7 +148,6 @@ public:
     );
   }
 };
-
 
 /// <summary>
 /// Makes an invocation relay for a particular junction box and function pointer

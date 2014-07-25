@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
 namespace autowiring {
@@ -22,6 +23,5 @@ template<typename T>
 void thread_specific_ptr<T>::freeTLS() {
   pthread_key_delete(m_key);
 }
-
 
 }// namespace autowiring

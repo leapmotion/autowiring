@@ -1,10 +1,9 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "UuidTest.h"
 #include "uuid.h"
 
-DECLARE_UUID(MyX, "01234567-89AB-CDEF-FEDC-BA9876543210")
-{
-};
+DECLARE_UUID(MyX, "01234567-89AB-CDEF-FEDC-BA9876543210"){};
 
 TEST_F(UuidTest, VerifySimpleUuid) {
   // Verify table properties:

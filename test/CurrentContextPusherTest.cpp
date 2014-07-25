@@ -1,4 +1,4 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "CurrentContextPusherTest.h"
 #include "CoreContext.h"
@@ -19,4 +19,3 @@ TEST_F(CurrentContextPusherTest, VerifyResetsDuringThrow) {
 
   ASSERT_EQ(current.get(), CoreContext::CurrentContext().get());
 }
-
