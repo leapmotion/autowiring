@@ -1,8 +1,13 @@
 // Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
-#include <thread>
-#define NOMINMAX
 
+// Only include these headers in cases where a pch can be generated
+// Currently this is only supported on MSVC
+#ifdef _MSC_VER
+  #include <thread>
+  #define NOMINMAX
+#endif
+	
 #ifndef _MSC_VER
   #include <stdlib.h>
 #endif
