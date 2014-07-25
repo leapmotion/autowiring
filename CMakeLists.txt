@@ -7,9 +7,13 @@ set(autowiring_VERSION_MAJOR 0)
 set(autowiring_VERSION_MINOR 1)
 set(autowiring_VERSION_PATCH 0)
 
-# Apple needs special additional flags to build with C++11
-if(APPLE)
+# Clang needs special additional flags to build with C++11
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  message("Clang C++11")
   set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  message("GCC C++11")
+  set(CMAKE_CXX_FLAGS "-std=c++11")
 endif()
 
 # Adds a precompiled header
