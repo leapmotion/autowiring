@@ -241,8 +241,12 @@ public:
     {
       std::lock_guard<std::mutex> lk(m_lock);
       auto& entry = m_decorations[typeid(type)];
-      if(entry.satisfied)
-        throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
+      if (entry.satisfied) {
+        std::stringstream ss;
+        ss << "Cannot decorate this packet with type " << typeid(type).name()
+           << ", the requested decoration already exists";
+        throw std::runtime_error(ss.str());
+      }
       if(entry.isCheckedOut)
         throw std::runtime_error("Cannot check out this decoration, it's already checked out elsewhere");
       entry.isCheckedOut = true;
