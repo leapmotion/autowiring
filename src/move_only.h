@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
 // Workaround until you can move values into a lambda capture in C++14

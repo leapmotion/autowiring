@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "PeerContextTest.h"
 #include "CoreThread.h"
@@ -89,7 +90,3 @@ TEST_F(PeerContextTest, VerifyNoAutowiringLeakage) {
   ASSERT_NE(obj1, obj1prime) << "Autowired objects of the same type in peer contexts should be seperate instances";
 
 }
-
-
-
-

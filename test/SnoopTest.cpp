@@ -1,4 +1,4 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "SnoopTest.h"
 #include "TestFixtures/Decoration.h"
@@ -301,4 +301,3 @@ TEST_F(SnoopTest, SimplePackets) {
   packet2->Decorate(Decoration<1>());
   EXPECT_FALSE(!!filter->m_called) << "Unsnoop didn't work";
 }
-

@@ -1,15 +1,13 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "ContextEnumerator.h"
 #include "CoreContext.h"
 
 ContextEnumerator::ContextEnumerator(const std::shared_ptr<CoreContext>& root):
   m_root(root)
-{
-}
+{}
 
-ContextEnumerator::~ContextEnumerator(void)
-{
-}
+ContextEnumerator::~ContextEnumerator(void) {}
 
 ContextEnumerator::iterator::iterator(const std::shared_ptr<CoreContext>& root, const std::shared_ptr<CoreContext>& cur) :
   m_root(root ? root->GetParentContext() : nullptr),
