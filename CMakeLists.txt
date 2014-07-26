@@ -26,6 +26,11 @@ include(CMakeModules/pch.cmake)
 get_filename_component(AUTOWIRING_ROOT_DIR . ABSOLUTE)
 if(CMAKE_SOURCE_DIR STREQUAL AUTOWIRING_ROOT_DIR)
   set(AUTOWIRING_BUILD_TESTS_DEFAULT ON)
+  
+  # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
+  # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
+  # wants us to do.
+  set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 else()
   set(AUTOWIRING_BUILD_TESTS_DEFAULT OFF)
 endif()
@@ -37,6 +42,9 @@ function(add_googletest dirname)
   endif()
 endfunction()
 
+# We have unit test projects via googletest, they're added in the places where they are defined
+enable_testing()
+
 # We want everyone to be compilable as though they have this root project in their search tree,
 # because external entities will likely have just that
 include_directories(.)
@@ -44,9 +52,6 @@ add_subdirectory(src)
 
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
-
-# We have unit test projects via googletest, they're added in the places where they are defined
-enable_testing()
 
 # Install autowiring-config.cmake and autowiring-configVersion.cmake
 install (FILES
