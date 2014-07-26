@@ -1,6 +1,6 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _CPP11_
-#define _CPP11_
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+#pragma once
+
 // The reason this header exists is due to the asymmetric availability of C++11 on our
 // various compiler targets.  In particular, none of the typical headers for C++11 support
 // exist when building with libstdc++ on Apple, so we have to disable it across the board.
@@ -346,6 +346,4 @@ namespace std {
   #define ALIGNED_ALLOC_HEADER <malloc.h>
   #define cpp11_aligned_alloc memalign
   #define cpp11_aligned_free free
-#endif
-
 #endif
