@@ -19,9 +19,10 @@ endif()
 
 include(CMakeModules/pch.cmake)
 
-add_subdirectory(C++11)
+# We want everyone to be compilable as though they have this root project in their search tree,
+# because external entities will likely have just that
+include_directories(.)
 add_subdirectory(src)
-add_subdirectory(test)
 
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
