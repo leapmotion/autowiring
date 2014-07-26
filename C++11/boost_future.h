@@ -1,5 +1,5 @@
-#ifndef _BOOST_FUTURE_HEADER_H
-#define _BOOST_FUTURE_HEADER_H
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+#pragma once
 
 #if defined(BOOST_THREAD_FUTURE_HPP) && !defined(BOOST_THREAD_PROVIDES_FUTURE)
   #error Define BOOST_THREAD_PROVIDES_FUTURE before including boost/thread
@@ -16,5 +16,3 @@ namespace std {
   using boost::async;
   using boost::launch;
 }
-
-#endif

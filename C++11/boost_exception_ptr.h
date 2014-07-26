@@ -1,6 +1,5 @@
-// Copyright (c) 2010 - 2013 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _BOOST_EXCEPTION_PTR_H
-#define _BOOST_EXCEPTION_PTR_H
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+#pragma once
 
 #include <boost/exception_ptr.hpp>
 namespace std {
@@ -19,4 +18,3 @@ public:
 
 // Use cast constructor to have throw_exception use BOOST_THROW_EXCEPTION to throw the exception
 #define throw_rethrowable (throw_exception_util)
-#endif

@@ -1,5 +1,6 @@
-#ifndef _BOOST_TYPE_TRAITS_H
-#define _BOOST_TYPE_TRAITS_H
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+#pragma once
+
 #include <boost/type_traits/conditional.hpp>
 #include <boost/type_traits/decay.hpp>
 #include <boost/type_traits/has_trivial_constructor.hpp>
@@ -47,4 +48,3 @@ namespace std {
 	  typedef _Type type;
 	};
 }
-#endif

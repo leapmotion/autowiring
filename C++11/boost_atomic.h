@@ -1,6 +1,5 @@
-// Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
-#ifndef _BOOST_ATOMIC_H
-#define _BOOST_ATOMIC_H
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+#pragma once
 
 #include <boost/atomic.hpp>
 namespace std {
@@ -16,5 +15,3 @@ namespace std {
 #define ATOMIC_FLAG_INIT
 #endif
 }
-
-#endif
