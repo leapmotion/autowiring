@@ -19,6 +19,24 @@ endif()
 
 include(CMakeModules/pch.cmake)
 
+# We don't build tests unless we're being built by ourselves in our own source tree
+# When we're embedded in someone else's subtree, it's not likely that they will want
+# us to bring all of our unit tests in with us.  Though, if they do desire this, they
+# can always set the AUTOWIRING_BUILD_TESTS flag
+get_filename_component(AUTOWIRING_ROOT_DIR . ABSOLUTE)
+if(CMAKE_SOURCE_DIR STREQUAL AUTOWIRING_ROOT_DIR)
+  set(AUTOWIRING_BUILD_TESTS_DEFAULT ON)
+else()
+  set(AUTOWIRING_BUILD_TESTS_DEFAULT OFF)
+endif()
+
+option(AUTOWIRING_BUILD_TESTS "Build Autowiring unit tests" ${AUTOWIRING_BUILD_TESTS_DEFAULT})
+function(add_googletest dirname)
+  if(AUTOWIRING_BUILD_TESTS)
+    add_subdirectory(${dirname})
+  endif()
+endfunction()
+
 # We want everyone to be compilable as though they have this root project in their search tree,
 # because external entities will likely have just that
 include_directories(.)
