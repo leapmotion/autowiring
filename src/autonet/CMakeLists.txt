@@ -10,7 +10,7 @@ if(NOT Boost_FOUND)
   return()
 endif()
 
-add_subdirectory(test)
+add_googletest(test)
 include_directories(${Boost_INCLUDE_DIR} ${WEBSOCKETPP_INCLUDE_DIR})
 
 set(AutoNet_SRCS
