@@ -1,0 +1,13 @@
+set(
+  AutoNetTest_SRCS
+  AutoNetServerTest.h
+  AutoNetServerTest.cpp
+)
+
+ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutoNetTest_SRCS)
+add_executable(AutoNetTest ${AutoNetTest_SRCS})
+target_link_libraries(AutoNetTest Autowiring AutowiringFixture)
+set_property(TARGET AutoNetTest PROPERTY FOLDER "Autowiring")
+
+# This is a unit test, let CMake know this
+add_test(NAME AutoNetTest COMMAND $<TARGET_FILE:AutoNetTest>)
