@@ -12,7 +12,6 @@ set(
   make_unique.h
   memory.h
   memory_nostl11.h
-  qt5.h
   stdafx.cpp
   stdafx.h
   type_index.h
