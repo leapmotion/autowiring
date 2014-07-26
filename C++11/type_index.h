@@ -1,5 +1,6 @@
-#ifndef _CUSTOM_TYPE_INDEX_H
-#define _CUSTOM_TYPE_INDEX_H
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+#pragma once
+
 #include TYPE_TRAITS_HEADER
 #include <typeinfo>
 #include <tr1/functional_hash.h>
@@ -46,5 +47,3 @@ namespace tr1 {
 }
 
 };
-
-#endif

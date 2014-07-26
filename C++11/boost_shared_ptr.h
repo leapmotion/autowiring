@@ -1,6 +1,8 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+#pragma once
+
 // We need to use the boost version of shared_ptr everywhere
 // if it isn't provided by the framework
-#pragma once
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdelete-non-virtual-dtor"
 #include <boost/smart_ptr/make_shared.hpp>
@@ -10,6 +12,7 @@
 #include <boost/smart_ptr/owner_less.hpp>
 #pragma GCC diagnostic pop
 #include <boost/asio/detail/shared_ptr.hpp>
+
 namespace std {
   using boost::shared_ptr;
   using boost::weak_ptr;
