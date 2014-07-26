@@ -159,21 +159,25 @@ TEST_F(AutoFilterTest, VerifyNoMultiDecorate) {
   packet->Decorate(Decoration<1>());
   EXPECT_LT(0, filterA->m_called) << "Filter was not called after being fully satisfied";
 
-  // Verify that DecorateImmedaite also yields an exception
-  Decoration<0> localDeco0;
-  EXPECT_ANY_THROW(packet->DecorateImmediate(localDeco0)) << "Redundant immediate decoration did not throw an exception as expected";
-
   //NOTE: A typedef will throw an exception
   typedef Decoration<0> isDeco0type;
-  EXPECT_ANY_THROW(packet->DecorateImmediate(isDeco0type())) << "Typedef failed to throw exception";
+  EXPECT_ANY_THROW(packet->Decorate(isDeco0type())) << "Typedef failed to throw exception";
+
+  //NOTE: A shared_ptr to an existing type will throw an exception
+  std::shared_ptr<Decoration<0>> sharedDeco0(new Decoration<0>);
+  EXPECT_ANY_THROW(packet->Decorate(sharedDeco0)) << "Reduction of shared_ptr to base type failed";
 
   //NOTE: Inheritance will not throw an exception
   class ofDeco0alias: public Decoration<0> {};
   try {
     packet->Decorate(ofDeco0alias());
   } catch (...) {
-    FAIL() << "Class with inheritance reinterpreted as child type";
+    FAIL() << "Class with inheritance from existing decoration reinterpreted as child type";
   }
+
+  // Verify that DecorateImmedaite also yields an exception
+  Decoration<0> localDeco0;
+  EXPECT_ANY_THROW(packet->DecorateImmediate(localDeco0)) << "Redundant immediate decoration did not throw an exception as expected";
 
   EXPECT_ANY_THROW(packet->DecorateImmediate(Decoration<2>(), Decoration<2>())) << "Repeated type in immediate decoration was not identified as an error";
 }
