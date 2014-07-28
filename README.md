@@ -2,21 +2,11 @@
 
 Autowiring is an [inversion-of-control](http://en.wikipedia.org/wiki/Inversion_of_control) framework for C++11. It provides a declarative way to manage resources through [dependency injection](http://en.wikipedia.org/wiki/Dependency_injection). Instead of explicitly instantiating dependencies, simply declare what you need and Autowiring will manage object creation and wiring.
 
-# Platform Support
+# Build [![Build Status](https://travis-ci.org/leapmotion/autowiring.png)](https://travis-ci.org/leapmotion/autowiring)
 
-While Autowiring is written using C++11 features, it supports linking the non-C++11 STL. The `C++11/` directory provides [boost](http://www.boost.org/) shims for missing C++11 library features.
+Autowiring project structure is specified with [CMake](http://www.cmake.org/). Simply point CMake to the root project directory and generate your desired project file. While Autowiring is written using C++11 features, it supports linking the non-C++11 STL. The `C++11/` directory provides [boost](http://www.boost.org/) shims for missing C++11 library features.
 
-Supported Compilers:
-* Clang
-* GCC
-* VS2012+
-
-# Build and Install Locally
-
-Autowiring project structure is specified with [CMake](http://www.cmake.org/). Simply point CMake to the root project directory and generate your desired project file.
-
-Mac
-----
+### Mac
 
 Mac dependencies are installed with [port](http://guide.macports.org/) or [brew](http://brew.sh/).  If you have port installed, this will build the project:
 
@@ -28,8 +18,7 @@ Mac dependencies are installed with [port](http://guide.macports.org/) or [brew]
     make test
     sudo make install
 
-Unix
-----
+### Unix
 
 The commands for Unix are different depending on what package manager you're using.  Ubuntu's package manager is apt-get, OpenSUSE uses zypper, and
 CentOS systems use yum.  The major apparent difference to the user will be that the package to install has a different name.  For Ubuntu, do this:
@@ -42,8 +31,7 @@ CentOS systems use yum.  The major apparent difference to the user will be that 
     make test
     sudo make install
 
-Windows
-----
+### Windows
 
 Unfortunately, Windows doesn't have any sort of nifty package manager, and this requires that you download and install the boost dependency by hand.  Once
 you've followed the instructions for installing boost as indicated [here](http://www.boost.org/doc/libs/1_55_0/doc/html/bbv2/installation.html) you will
@@ -59,7 +47,7 @@ At this point, you'll have a solution file in your root directory called "Autowi
 target then Autowiring will be installed on your system.  As with the other platforms, CMake will be able to find autowiring when it's installed this way
 via the [find_package](http://www.cmake.org/cmake/help/v3.0/command/find_package.html) command.
 
-# Build the installer
+# Install
 
 Autowiring uses CPack, which knows how to use rpm/deb/wix/dragndrop, and will target the correct version depending on which system you're on.  To build
 the installer on Windows, you must first download the [wix toolset](http://wixtoolset.org/).  Other CMake installations on the current system will be able
