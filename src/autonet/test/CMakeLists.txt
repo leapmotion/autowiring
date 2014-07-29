@@ -1,6 +1,10 @@
+include_directories(
+  ${PROJECT_SOURCE_DIR}/src/autowiring/test
+)
+
 set(
   AutoNetTest_SRCS
-  AutoNetServerTest.h
+  AutoNetServerTest.hpp
   AutoNetServerTest.cpp
 )
 

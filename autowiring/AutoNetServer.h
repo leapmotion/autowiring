@@ -4,7 +4,7 @@
 #include "Autowired.h"
 #include "AutowiringEvents.h"
 #include "TypeRegistry.h"
-#include "Jzon.h"
+#include <jzon/Jzon.h>
 #include <websocketpp/server.hpp>
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <map>

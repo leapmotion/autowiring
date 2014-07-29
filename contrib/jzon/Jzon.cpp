@@ -1,4 +1,3 @@
-#include "stdafx.h"
 /*
 Copyright (c) 2013 Johannes Häggqvist
 
