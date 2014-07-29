@@ -16,7 +16,10 @@ T* DefaultCreate(void) {
 }
 
 template<typename T>
-void DefaultReset(T&){}
+void DefaultInitialize(T&){}
+
+template<typename T>
+void DefaultFinalize(T&){}
 
 /// <summary>
 /// Allows the management of a pool of objects based on an embedded factory
@@ -43,25 +46,28 @@ public:
     size_t limit = ~0,
     size_t maxPooled = ~0,
     const std::function<T*()>& alloc = &DefaultCreate<T>,
-    const std::function<void(T&)>& rx = &DefaultReset<T>
+    const std::function<void(T&)>& initial = &DefaultInitialize<T>,
+    const std::function<void(T&)>& final = &DefaultFinalize<T>
   ) :
     m_monitor(std::make_shared<ObjectPoolMonitor>(this)),
     m_poolVersion(0),
     m_maxPooled(maxPooled),
     m_limit(limit),
     m_outstanding(0),
-    m_rx(rx),
-    m_alloc(alloc)
+    m_alloc(alloc),
+    m_initial(initial),
+    m_final(final)
   {}
 
   /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
   ObjectPool(
     const std::function<T*()>& alloc,
-    const std::function<void(T&)>& rx = &DefaultReset<T>,
+    const std::function<void(T&)>& initial = &DefaultInitialize<T>,
+    const std::function<void(T&)>& final = &DefaultFinalize<T>,
     size_t limit = ~0,
     size_t maxPooled = ~0
   ) :
-    ObjectPool(limit, maxPooled, alloc, rx)
+    ObjectPool(limit, maxPooled, alloc, initial, final)
   {}
   
   ObjectPool(ObjectPool&& rhs)
@@ -95,8 +101,9 @@ protected:
   size_t m_limit;
   size_t m_outstanding;
 
-  // Resetter:
-  std::function<void(T&)> m_rx;
+  // Resetters:
+  std::function<void(T&)> m_initial;
+  std::function<void(T&)> m_final;
 
   // Allocator:
   std::function<T*()> m_alloc;
@@ -144,7 +151,7 @@ protected:
       m_objs.size() < m_maxPooled
     ) {
       // Reset the object and put it back in the pool:
-      m_rx(*unique);
+      m_final(*unique);
       m_objs.push_back(Wrap(unique.release()));
     }
 
@@ -170,11 +177,14 @@ protected:
       lk.unlock();
 
       // We failed to recover an object, create a new one:
-      return Wrap(m_alloc());
+      auto obj = Wrap(m_alloc());
+      m_initial(*obj);
+      return obj;
     }
 
     // Remove, return:
     auto obj = m_objs.back();
+    m_initial(*obj);
     m_objs.pop_back();
     return obj;
   }
@@ -406,8 +416,9 @@ public:
     m_maxPooled = rhs.m_maxPooled;
     m_limit = rhs.m_limit;
     m_outstanding = rhs.m_outstanding;
-    std::swap(m_rx, rhs.m_rx);
     std::swap(m_alloc, rhs.m_alloc);
+    std::swap(m_initial, rhs.m_initial);
+    std::swap(m_final, rhs.m_final);
 
     // Now we can take ownership of this monitor object:
     m_monitor->SetOwner(this);
