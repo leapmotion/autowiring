@@ -1,9 +1,5 @@
 add_googletest(test)
 
-# These source files should all be treated as being local to their corresponding headers, so
-# we add the autowiring include path directly
-#include_directories(${CMAKE_SOURCE_DIR}/autowiring)
-
 set(Autowiring_SRCS
   at_exit.h
   AnySharedPointer.h

@@ -1,4 +1,4 @@
-find_package(Boost QUIET)
+find_package(Boost QUIET COMPONENTS system)
 if(NOT Boost_FOUND)
   message("Cannot build Autonet, boost not installed on this system")
   return()
@@ -15,4 +15,5 @@ set(AutoNet_SRCS
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutoNet_SRCS)
 add_library(AutoNet STATIC ${AutoNet_SRCS})
-target_link_libraries(AutoNet jzon)
+target_link_libraries(AutoNet Autowiring jzon ${Boost_LIBRARIES})
+set_property(TARGET AutoNet PROPERTY FOLDER "Autowiring")

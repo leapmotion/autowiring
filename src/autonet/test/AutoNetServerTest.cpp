@@ -65,7 +65,7 @@ TEST_F(AutoNetServerTest, Breakpoint) {
   autonet->Breakpoint("Main");
 }
 
-TEST_F(AutoNetServerTest, DISABLED_SimpleTest) {
+TEST_F(AutoNetServerTest, SimpleTest) {
   AutoGlobalContext global;
   auto ctxt = global->Create<ContextA>();
   CurrentContextPusher pshr(ctxt);
@@ -77,6 +77,8 @@ TEST_F(AutoNetServerTest, DISABLED_SimpleTest) {
   auto ctxt3 = ctxt->Create<ContextC>();
 
   ctxt2->Initiate();
+  
+  ctxt->Wait();
 
   std::shared_ptr<CoreContext> newContext;
 
