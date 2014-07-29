@@ -12,7 +12,6 @@
 #include STL_UNORDERED_MAP
 #include EXCEPTION_PTR_HEADER
 
-struct SatCounter;
 class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
@@ -58,14 +57,44 @@ private:
   t_decorationMap m_decorations;
 
   /// <summary>
-  /// Last change call with unsatisfied optional arguments
+  /// Resets satisfaction counters and decoration status.
   /// </summary>
-  void ResolveOptions(void);
+  /// <remarks>
+  /// Is it expected that AutoPacketFactory will call methods in the following order:
+  /// AutoPacket(); //Construction in ObjectPool
+  /// Initialize(); //Issued from ObjectPool
+  /// Decorate();
+  /// ... //More Decorate calls
+  /// Finalize(); //Returned to ObjectPool
+  /// Initialize();
+  /// ... //More Issue & Return cycles
+  /// ~AutoPacket(); //Destruction in ObjectPool
+  /// Reset() must be called before the body of Initialize() in order to begin in the
+  /// correct state. It must also be called after the body of Finalize() in order to
+  /// avoid holding shared_ptr references.
+  /// Therefore Reset() is called at the conclusion of both AutoPacket() and Finalize().
+  /// </remarks>
+  void Reset(void);
 
   /// <summary>
-  /// Resets counters, then decrements subscribers requiring AutoPacket argument.
+  /// Decrements subscribers requiring AutoPacket argument then calls all initializing subscribers.
   /// </summary>
+  /// <remarks>
+  /// Initialize is called when a packet is issued by the AutoPacketFactory.
+  /// It is not called when the Packet is created since that could result in
+  /// spurious calls when no packet is issued.
+  /// </remarks>
   void Initialize(void);
+
+  /// <summary>
+  /// Last chance call with unsatisfied optional arguments.
+  /// </summary>
+  /// <remarks>
+  /// This is called when the packet is returned to the AutoPacketFactory.
+  /// It is not called when the Packet is destroyed, since that could result in
+  /// suprious calles when no packet is issued.
+  /// </remarks>
+  void Finalize(void);
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
