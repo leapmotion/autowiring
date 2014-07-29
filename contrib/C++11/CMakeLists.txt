@@ -1,6 +1,7 @@
-set(
-  Cpp11_SRCS
+set(Cpp11_SRCS
+  boost_array.h
   boost_atomic.h
+  boost_chrono.h
   boost_exception_ptr.h
   boost_functional.h
   boost_future.h
@@ -18,9 +19,3 @@ set(
   unique_ptr.h
 )
 
-if(BUILD_WINDOWS)
-  # warngs: stdafx.cpp.o has no symbols
-  # test-compile on Windows, although not necessary there either
-  add_library(Cpp11 STATIC ${Cpp11_SRCS})
-  set_property(TARGET Cpp11 PROPERTY FOLDER "Utility")
-endif()
