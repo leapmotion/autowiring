@@ -90,15 +90,6 @@ set(AutowiringTest_SRCS
   gtest-all-guard.cpp
 )
 
-if(BUILD_AUTONET)
-  set(
-    AutowiringTest_SRCS
-    AutoNetServerTest.hpp
-    AutoNetServerTest.cpp
-    ${AutowiringTest_SRCS}
-  )
-endif()
-
 set(
   AutowiringFixture_SRCS
   SelfSelectingFixture.hpp

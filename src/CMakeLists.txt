@@ -1,6 +1,7 @@
 include_directories(
   # Need to make sure all of our tests can find gtest
-  ../contrib/gtest-1.7.0/fused-src
+  ${PROJECT_SOURCE_DIR}/contrib/gtest-1.7.0/fused-src
+  ${PROJECT_SOURCE_DIR}/autowiring
 )
 
 if(APPLE)

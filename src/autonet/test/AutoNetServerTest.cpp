@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "AutoNetServerTest.h"
-#include "autonet/AutoNetServer.h"
+#include "AutoNetServerTest.hpp"
+#include "AutoNetServer.h"
 #include "Autowired.h"
 #include THREAD_HEADER
 
@@ -19,7 +19,7 @@ class ThisClassGetsAddedLater:
 
 template<int T>
 class ThisThreadGetsAddedLater:
-public CoreThread
+  public CoreThread
 {};
 
 class ContextA {};

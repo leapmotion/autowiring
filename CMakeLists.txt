@@ -47,8 +47,12 @@ enable_testing()
 
 # We want everyone to be compilable as though they have this root project in their search tree,
 # because external entities will likely have just that
-include_directories(.)
+include_directories(
+  .
+  contrib
+)
 add_subdirectory(src)
+add_subdirectory(contrib)
 
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
