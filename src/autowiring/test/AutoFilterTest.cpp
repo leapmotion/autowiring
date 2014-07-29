@@ -196,6 +196,7 @@ public:
   int m_called_in;
   int m_out;
   int m_in;
+
   NewAutoFilter<decltype(&FilterGather<out,in>::AutoGather), &FilterGather<out,in>::AutoGather> FilterGather_AutoGather;
 };
 
@@ -219,6 +220,7 @@ TEST_F(AutoFilterTest, VerifyTwoAutoFilterCalls) {
     zero2one->m_out = 5;
     one2zero->m_out = 6;
   }
+
   //Verify that no additional calls are made during return of packet to object pool
   ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << zero2one->m_called_out << " times";
   ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter of implicitly decorated type was called " << zero2one->m_called_in << " times";
