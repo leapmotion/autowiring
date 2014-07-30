@@ -4,6 +4,11 @@ if(NOT Boost_FOUND)
   return()
 endif()
 
+option(AUTOWIRING_BUILD_AUTONET "Build Autonet debugging server" ${AUTOWIRING_BUILD_AUTONET_DEFAULT})
+if(NOT AUTOWIRING_BUILD_AUTONET)
+  return()
+endif()
+
 add_googletest(test)
 include_directories(
   ${Boost_INCLUDE_DIR}

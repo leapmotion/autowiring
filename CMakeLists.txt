@@ -26,6 +26,8 @@ include(CMakeModules/pch.cmake)
 get_filename_component(AUTOWIRING_ROOT_DIR . ABSOLUTE)
 if(CMAKE_SOURCE_DIR STREQUAL AUTOWIRING_ROOT_DIR)
   set(AUTOWIRING_BUILD_TESTS_DEFAULT ON)
+  set(AUTOWIRING_BUILD_EXAMPLES_DEFAULT ON)
+  set(AUTOWIRING_BUILD_AUTONET_DEFAULT ON)
   
   # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
@@ -33,6 +35,8 @@ if(CMAKE_SOURCE_DIR STREQUAL AUTOWIRING_ROOT_DIR)
   set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 else()
   set(AUTOWIRING_BUILD_TESTS_DEFAULT OFF)
+  set(AUTOWIRING_BUILD_EXAMPLES_DEFAULT OFF)
+  set(AUTOWIRING_BUILD_AUTONET_DEFAULT OFF)
 endif()
 
 option(AUTOWIRING_BUILD_TESTS "Build Autowiring unit tests" ${AUTOWIRING_BUILD_TESTS_DEFAULT})
@@ -53,8 +57,13 @@ include_directories(
 )
 add_subdirectory(src)
 add_subdirectory(contrib)
-add_subdirectory(examples)
+# Build examples
+option(AUTOWIRING_BUILD_EXAMPLES "Build Autowiring examples" ${AUTOWIRING_BUILD_EXAMPLES_DEFAULT})
+if(AUTOWIRING_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 
+# CMake configurations
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
 
