@@ -77,53 +77,45 @@ TEST_F(AutoNetServerTest, SimpleTest) {
   auto ctxt3 = ctxt->Create<ContextC>();
 
   ctxt2->Initiate();
-  
-  ctxt->Wait();
 
   std::shared_ptr<CoreContext> newContext;
 
   {
     CurrentContextPusher pshr(ctxt2);
     AutoRequired<TestThread1> foo;
-    *foo += std::chrono::seconds(4),[&ctxt]{
+    *foo += std::chrono::seconds(1),[&ctxt]{
       ctxt->Inject<ThisClassGetsAddedLater<4>>();
     };
-    *foo += std::chrono::seconds(6),[&ctxt]{
+    *foo += std::chrono::seconds(2),[&ctxt]{
       ctxt->Inject<ThisThreadGetsAddedLater<6>>();
     };
-    *foo += std::chrono::seconds(8),[&ctxt2]{
+    *foo += std::chrono::seconds(3),[&ctxt2]{
       AutoRequired<ThisClassGetsAddedLater<8>> derp(ctxt2);
     };
-    *foo += std::chrono::seconds(12),[&ctxt3]{
+    *foo += std::chrono::seconds(4),[&ctxt3]{
       AutoRequired<ThisClassGetsAddedLater<12>> derp(ctxt3);
     };
-    *foo += std::chrono::seconds(14),[&ctxt3]{
+    *foo += std::chrono::seconds(5),[&ctxt3]{
       AutoRequired<ThisThreadGetsAddedLater<14>> derp(ctxt3);
     };
-    *foo += std::chrono::seconds(16),[&ctxt]{
+    *foo += std::chrono::seconds(6),[&ctxt]{
       AutoRequired<ThisClassGetsAddedLater<16>> derp(ctxt);
     };
-    *foo += std::chrono::seconds(18),[&newContext, &ctxt2]{
+    *foo += std::chrono::seconds(7),[&newContext, &ctxt2]{
       newContext = ctxt2->Create<TestThread1>();
     };
-    *foo += std::chrono::seconds(20),[&ctxt2]{
+    *foo += std::chrono::seconds(8),[&ctxt2]{
       AutoRequired<ThisClassGetsAddedLater<20>> derp(ctxt2);
     };
-    *foo += std::chrono::seconds(24),[&ctxt3]{
+    *foo += std::chrono::seconds(9),[&ctxt3]{
       AutoRequired<ThisClassGetsAddedLater<24>> derp(ctxt3);
     };
-    *foo += std::chrono::seconds(28),[&ctxt]{
-      AutoRequired<ThisClassGetsAddedLater<28>> derp(ctxt);
-    };
-    *foo += std::chrono::seconds(32),[&ctxt2]{
-      AutoRequired<ThisClassGetsAddedLater<32>> derp(ctxt2);
-    };
-    *foo += std::chrono::seconds(34),[&ctxt3]{
+    *foo += std::chrono::seconds(10),[&ctxt3]{
       ctxt3->SignalShutdown(true);
       ctxt3.reset();
     };
-    *foo += std::chrono::seconds(36),[&ctxt]{
-      AutoRequired<ThisClassGetsAddedLater<36>> derp(ctxt);
+    *foo += std::chrono::seconds(12), [&ctxt]{
+      ctxt->SignalShutdown();
     };
   }
 
