@@ -4,13 +4,11 @@
 #include "Autowired.h"
 #include "AutowiringEvents.h"
 #include "TypeRegistry.h"
-#include <jzon/Jzon.h>
+#include <json11/json11.hpp>
 #include <websocketpp/server.hpp>
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <map>
 #include <set>
-
-class Value;
 
 class AutoNetServer:
   public CoreThread,
@@ -21,8 +19,6 @@ public:
   virtual ~AutoNetServer();
 
   //Types
-  //NOTE: These types have undetermined template parameters,
-  //so methods depending on these types must appear in the header.
   typedef websocketpp::server<websocketpp::config::asio> server;
   typedef server::message_ptr message_ptr;
   
@@ -31,18 +27,8 @@ public:
   virtual void OnStop(void) override;
 
   // Server Handler functions
-  void OnOpen(websocketpp::connection_hdl hdl) {
-    *this += [this, hdl] {
-      SendMessage(hdl, "opened");
-    };
-  }
-  void OnClose(websocketpp::connection_hdl hdl) {
-    *this += [this, hdl] {
-      SendMessage(hdl, "closed");
-      this->m_Subscribers.erase(hdl);
-    };
-  }
-
+  void OnOpen(websocketpp::connection_hdl hdl);
+  void OnClose(websocketpp::connection_hdl hdl);
   void OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message);
   
   /// <summary>
@@ -83,36 +69,21 @@ protected:
   /// </summary>
   /// <param name="hdl">Connection pointer on which to send message</param>
   /// <param name="pRecipient">Message name in CamelCase</param>
-  /// <param name="args...">The first argument to be passed to client side event handler</param>
-  /// <param name="args...">Remaining arguments to be passed to client side event handler</param>
+  /// <param name="args...">Arguments to be passed to client side event handler</param>
   /// <remarks>
   /// Client callback with same number of arguments passed here will be called
   /// </remarks>
-  template<typename Arg, typename... Args>
-  void SendMessage(websocketpp::connection_hdl hdl, const char* p_type, Arg&& arg, Args&&... args){
-    Jzon::Object msg;
-    msg.Add("type", p_type);
+  template<typename... Args>
+  void SendMessage(websocketpp::connection_hdl hdl, const char* p_type, Args&&... args){
+    using json11::Json;
     
-    Jzon::Array arguments;
-    bool dummy[] = {
-      (arguments.Add(arg),false),
-      (arguments.Add(args),false)...
+    Json msg = Json::object {
+      {"type", p_type},
+      {"args", Json::array{args...}}
     };
-    (void)dummy;
     
-    msg.Add("args", arguments);
-    SendMessage(hdl, msg);
+    m_Server->send(hdl, msg.dump(), websocketpp::frame::opcode::text);
   }
-
-  /// <summary>
-  /// Sends a zero-argument message to specified client.
-  /// </summary>
-  void SendMessage(websocketpp::connection_hdl hdl, const char* p_type);
-
-  /// <summary>
-  /// Sends a zero-argument message to specified client.
-  /// </summary>
-  void SendMessage(websocketpp::connection_hdl hdl, const Jzon::Object& msg);
 
   /// <summary>
   /// Broadcast a message to all subscribers.
@@ -129,31 +100,13 @@ protected:
   /// Called when a "Subscribe" event is sent from a client
   /// </summary>
   /// <param name="client">Client that sent event</param>
-  void HandleSubscribe(websocketpp::connection_hdl hdl) {
-    m_Subscribers.insert(hdl);
-
-    Jzon::Array types;
-    for (auto type : m_AllTypes) {
-      types.Add(type.first);
-    }
-
-    SendMessage(hdl, "subscribed", types);
-    AutoGlobalContext()->BuildCurrentState();
-
-    // Send breakpoint message
-    for (auto breakpoint : m_breakpoints) {
-      SendMessage(hdl, "breakpoint", breakpoint);
-    }
-  }
+  void HandleSubscribe(websocketpp::connection_hdl hdl);
 
   /// <summary>
   /// Called when a "Unsubscribe" event is sent from a client
   /// </summary>
   /// <param name="client">Client that sent event</param>
-  void HandleUnsubscribe(websocketpp::connection_hdl hdl) {
-    this->m_Subscribers.erase(hdl);
-    SendMessage(hdl, "unsubscribed");
-  }
+  void HandleUnsubscribe(websocketpp::connection_hdl hdl);
   
   /// <summary>
   /// Called when a "terminateContext" event is sent from a client
@@ -187,8 +140,10 @@ protected:
   void PollThreadUtilization(std::chrono::milliseconds period);
   
   
-  ///////////// Member variables /////////////
-
+  /*******************************************
+  *             Member variables             *
+  *******************************************/
+  
   // Set of all subscribers
   std::set<websocketpp::connection_hdl, std::owner_less<websocketpp::connection_hdl>> m_Subscribers;
 
