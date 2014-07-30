@@ -185,5 +185,6 @@ void AutoPacket::Initialize(void) {
 }
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
+  std::lock_guard<std::mutex> lk(m_lock);
   return m_decorations.count(ti) != 0;
 }
