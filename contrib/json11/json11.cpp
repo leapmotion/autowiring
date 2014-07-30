@@ -158,7 +158,7 @@ protected:
 
 class JsonDouble final : public Value<Json::NUMBER, double> {
     double number_value() const { return m_value; }
-    int int_value() const { return m_value; }
+    int int_value() const { return static_cast<int>(m_value); }
     bool equals(const JsonValue * other) const { return m_value == other->number_value(); }
     bool less(const JsonValue * other)   const { return m_value <  other->number_value(); }
 public:
@@ -171,7 +171,7 @@ class JsonInt final : public Value<Json::NUMBER, int> {
     bool equals(const JsonValue * other) const { return m_value == other->number_value(); }
     bool less(const JsonValue * other)   const { return m_value <  other->number_value(); }
 public:
-    JsonInt(double value) : Value(value) {}
+    JsonInt(double value) : Value(static_cast<int>(value)) {}
 };
 
 class JsonBoolean final : public Value<Json::BOOL, bool> {
@@ -380,16 +380,16 @@ struct JsonParser {
             return;
 
         if (pt < 0x80) {
-            out += pt;
+            out += static_cast<char>(pt);
         } else if (pt < 0x800) {
-            out += (pt >> 6) | 0xC0;
-            out += (pt & 0x3F) | 0x80;
+            out += static_cast<char>(pt >> 6) | 0xC0;
+            out += static_cast<char>(pt & 0x3F) | 0x80;
         } else if (pt < 0x10000) {
-            out += (pt >> 12) | 0xE0;
+            out += static_cast<char>(pt >> 12) | 0xE0;
             out += ((pt >> 6) & 0x3F) | 0x80;
             out += (pt & 0x3F) | 0x80;
         } else {
-            out += (pt >> 18) | 0xF0;
+            out += static_cast<char>(pt >> 18) | 0xF0;
             out += ((pt >> 12) & 0x3F) | 0x80;
             out += ((pt >> 6) & 0x3F) | 0x80;
             out += (pt & 0x3F) | 0x80;
