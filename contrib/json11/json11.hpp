@@ -116,7 +116,7 @@ public:
     template <class V>
     Json(
         const typename std::enable_if<
-            std::is_constructible<Json, decltype(std::declval<M>().begin()->first)>::value,
+            std::is_constructible<Json, decltype(std::declval<V>().begin()->first)>::value,
             V
         >::type& v
     ) :
