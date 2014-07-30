@@ -19,10 +19,13 @@ install_manifest.txt
 CPackConfig.cmake
 CPackSourceConfig.cmake
 *.wixobj
-*.msi
 autowiring-config.cmake
 autowiring-configVersion.cmake
 install_manifest_*.txt
 *.cmake
 Testing
 DartConfiguration.tcl
+autowiring-*-*.dmg
+autowiring-*-*.deb
+autowiring-*-*.rpm
+autowiring-*-*.msi
