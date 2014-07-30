@@ -148,6 +148,7 @@ public:
   /// </summary>
   template<class T>
   bool Get(const T*& out) const {
+    std::lock_guard<std::mutex> lk(m_lock);
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
     auto q = m_decorations.find(typeid(T));
@@ -178,6 +179,7 @@ public:
   /// </summary>
   template<class T>
   bool Get(const std::shared_ptr<T>*& out) const {
+    std::lock_guard<std::mutex> lk(m_lock);
     auto q = m_decorations.find(typeid(T));
     if(q != m_decorations.end() && q->second.satisfied) {
       auto& disposition = q->second;
@@ -216,13 +218,9 @@ public:
         throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
       if(entry.isCheckedOut)
         throw std::runtime_error("Cannot check out this decoration, it's already checked out elsewhere");
+
       entry.isCheckedOut = true;
       entry.wasCheckedOut = true;
-    }
-
-    // Have to find the entry _again_ within the context of a lock and satisfy it here:
-    {
-      std::lock_guard<std::mutex> lk(m_lock);
       m_decorations[typeid(type)].m_decoration = ptr;
     }
 

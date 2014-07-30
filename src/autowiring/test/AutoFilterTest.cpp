@@ -856,3 +856,33 @@ TEST_F(AutoFilterTest, SharedPointerAliasingRules) {
   ASSERT_EQ(1UL, genFilter1->m_called) << "AutoFilter accepting a shared pointer was not called as expected";
   ASSERT_EQ(1UL, genFilter2->m_called) << "AutoFilter accepting a decorated type was not called as expected";
 }
+
+TEST_F(AutoFilterTest, GetSharedPointer) {
+  AutoCurrentContext()->Initiate();
+
+  // Attach a simple decoration
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>());
+
+  // Verify we can get this decoration back
+  const std::shared_ptr<Decoration<0>>* dec;
+  packet->Get(dec);
+  ASSERT_TRUE(dec != nullptr) << "Failed to obtain a shared pointer for a decoration that was just added";
+
+  // Now add a bunch of other decorations:
+  packet->Decorate(Decoration<1>());
+  packet->Decorate(Decoration<2>());
+  packet->Decorate(Decoration<3>());
+  packet->Decorate(Decoration<4>());
+  packet->Decorate(Decoration<5>());
+  packet->Decorate(Decoration<6>());
+  packet->Decorate(Decoration<7>());
+  packet->Decorate(Decoration<8>());
+  packet->Decorate(Decoration<9>());
+
+  // Verify nothing moved:
+  const std::shared_ptr<Decoration<0>>* dec2;
+  packet->Get(dec2);
+  ASSERT_EQ(dec, dec2) << "Decoration was moved incorrectly after updates were made";
+}
