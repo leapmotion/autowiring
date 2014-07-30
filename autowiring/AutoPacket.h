@@ -40,6 +40,16 @@ private:
   AutoPacket(const AutoPacket& rhs) = delete;
   AutoPacket(AutoPacketFactory& factory);
 
+  //DEBUG BEGIN: Verify adherence to life plans
+  //QUESTION: Does this need to be promoted to a condition
+  //for calling Finalize in the destructor?
+  int debug_lifecycle;
+  static const int lifecycle_construct = 0;
+  static const int lifecycle_inpool = 1;
+  static const int lifecycle_issued = 2;
+  static const int lifecycle_destruct = 3;
+  //DEBUG END
+
 public:
   ~AutoPacket(void);
 
@@ -237,6 +247,12 @@ public:
   /// </remarks>
   template<class T>
   AutoCheckout<T> Checkout(std::shared_ptr<T> ptr) {
+    if (!(debug_lifecycle == lifecycle_issued)) {
+      std::stringstream ss;
+      ss << "Checkout called in lifecycle: " << debug_lifecycle;
+      //throw std::runtime_error(ss.str());
+    }
+
     // This allows us to install correct entries for decorated input requests
     typedef typename subscriber_traits<T>::type type;
 
@@ -290,6 +306,12 @@ public:
   /// </remarks>
   template<class T>
   void Unsatisfiable(void) {
+    if (!(debug_lifecycle == lifecycle_issued)) {
+      std::stringstream ss;
+      ss << "Unsatisfiable called in lifecycle: " << debug_lifecycle;
+      //throw std::runtime_error(ss.str());
+    }
+
     {
       // Insert a null entry at this location:
       std::lock_guard<std::mutex> lk(m_lock);
@@ -328,6 +350,12 @@ public:
   /// </remarks>
   template<class T>
   const T& Decorate(std::shared_ptr<T> t) {
+    if (!(debug_lifecycle == lifecycle_issued)) {
+      std::stringstream ss;
+      ss << "Decorate called in lifecycle: " << debug_lifecycle;
+      //throw std::runtime_error(ss.str());
+    }
+
     Checkout<T>(t).Ready();
     return *t;
   }
@@ -346,6 +374,12 @@ public:
   /// </remarks>
   template<class... Ts>
   void DecorateImmediate(const Ts&... immeds) {
+    if (!(debug_lifecycle == lifecycle_issued)) {
+      std::stringstream ss;
+      ss << "DecorateImmediate called in lifecycle: " << debug_lifecycle;
+      //throw std::runtime_error(ss.str());
+    }
+
     // These are the things we're going to be working with while we perform immediate decoration:
     static const std::type_info* sc_typeInfo [] = {&typeid(Ts)...};
     const void* pvImmeds[] = {&immeds...};

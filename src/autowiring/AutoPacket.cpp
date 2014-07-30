@@ -10,7 +10,7 @@
 
 #include <iostream>
 
-AutoPacket::AutoPacket(AutoPacketFactory& factory)
+AutoPacket::AutoPacket(AutoPacketFactory& factory) : debug_lifecycle(0)
 {
   // Traverse all contexts, adding their packet subscriber vectors one at a time:
   for(const auto& curContext : ContextEnumerator(factory.GetContext())) {
@@ -59,7 +59,15 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory)
 
 // This must appear in .cpp in order to avoid compilation failure due to:
 // "Arithmetic on a point to an incomplete type 'SatCounter'"
-AutoPacket::~AutoPacket() {}
+AutoPacket::~AutoPacket() {
+  if (debug_lifecycle == lifecycle_issued) {
+    std::cout << "Destruct before Finalize!" << std::endl;
+  }
+  if (debug_lifecycle == lifecycle_destruct) {
+    throw std::runtime_error("Destruct called Twice!");
+  }
+  debug_lifecycle = 3;
+}
 
 ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory) {
   return ObjectPool<AutoPacket>(
@@ -145,6 +153,13 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 }
 
 void AutoPacket::Reset(void) {
+  if (!(debug_lifecycle == lifecycle_construct || debug_lifecycle == lifecycle_issued)) {
+    std::stringstream ss;
+    ss << "Reset called in lifecycle: " << debug_lifecycle;
+    //throw std::runtime_error(ss.str());
+  }
+  debug_lifecycle = lifecycle_inpool;
+
   // Initialize all counters:
   std::lock_guard<std::mutex> lk(m_lock);
   for(auto& satCounter : m_satCounters)
@@ -156,6 +171,13 @@ void AutoPacket::Reset(void) {
 }
 
 void AutoPacket::Initialize(void) {
+  if (!(debug_lifecycle == lifecycle_inpool)) {
+    std::stringstream ss;
+    ss << "Initialize called in lifecycle: " << debug_lifecycle;
+    //throw std::runtime_error(ss.str());
+  }
+  debug_lifecycle = lifecycle_issued;
+
   // Find all subscribers with no required or optional arguments:
   std::list<SatCounter*> callCounters;
   for (auto& satCounter : m_satCounters)
@@ -172,6 +194,12 @@ void AutoPacket::Initialize(void) {
 }
 
 void AutoPacket::Finalize(void) {
+  if (!(debug_lifecycle == lifecycle_issued)) {
+    std::stringstream ss;
+    ss << "Finalize called in lifecycle: " << debug_lifecycle;
+    //throw std::runtime_error(ss.str());
+  }
+
   // Queue calls to ensure that calls to Decorate inside of AutoFilter methods
   // will NOT effect the resolution of optional arguments.
   std::list<SatCounter*> callQueue;
