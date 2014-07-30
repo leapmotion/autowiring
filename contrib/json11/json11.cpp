@@ -36,6 +36,11 @@ using std::make_shared;
 using std::initializer_list;
 using std::move;
 
+#ifdef _MSC_VER
+    // MSVC has funny names for snprintf, we just use it instead
+    #define snprintf(str, size, format, ...) _snprintf_s(str, size, _TRUNCATE, format, __VA_ARGS__)
+#endif
+
 /* * * * * * * * * * * * * * * * * * * *
  * Serialization
  */
@@ -158,7 +163,7 @@ protected:
 
 class JsonDouble final : public Value<Json::NUMBER, double> {
     double number_value() const { return m_value; }
-    int int_value() const { return m_value; }
+    int int_value() const { return static_cast<int>(m_value); }
     bool equals(const JsonValue * other) const { return m_value == other->number_value(); }
     bool less(const JsonValue * other)   const { return m_value <  other->number_value(); }
 public:
@@ -171,7 +176,7 @@ class JsonInt final : public Value<Json::NUMBER, int> {
     bool equals(const JsonValue * other) const { return m_value == other->number_value(); }
     bool less(const JsonValue * other)   const { return m_value <  other->number_value(); }
 public:
-    JsonInt(double value) : Value(value) {}
+    JsonInt(double value) : Value(static_cast<int>(value)) {}
 };
 
 class JsonBoolean final : public Value<Json::BOOL, bool> {
@@ -212,6 +217,8 @@ public:
  * Static globals - static-init-safe
  */
 struct Statics {
+    Statics() {}
+
     const std::shared_ptr<JsonValue> null = make_shared<JsonNull>();
     const std::shared_ptr<JsonValue> t = make_shared<JsonBoolean>(true);
     const std::shared_ptr<JsonValue> f = make_shared<JsonBoolean>(false);
@@ -235,8 +242,8 @@ const Json & static_null() {
  * Constructors
  */
 
-Json::Json() noexcept                  : m_ptr(statics().null) {}
-Json::Json(std::nullptr_t) noexcept    : m_ptr(statics().null) {}
+Json::Json() JSON11_NOEXCEPT                  : m_ptr(statics().null) {}
+Json::Json(std::nullptr_t) JSON11_NOEXCEPT : m_ptr(statics().null) {}
 Json::Json(double value)               : m_ptr(make_shared<JsonDouble>(value)) {}
 Json::Json(int value)                  : m_ptr(make_shared<JsonInt>(value)) {}
 Json::Json(bool value)                 : m_ptr(value ? statics().t : statics().f) {}
@@ -380,16 +387,16 @@ struct JsonParser {
             return;
 
         if (pt < 0x80) {
-            out += pt;
+            out += static_cast<char>(pt);
         } else if (pt < 0x800) {
-            out += (pt >> 6) | 0xC0;
-            out += (pt & 0x3F) | 0x80;
+            out += static_cast<char>(pt >> 6) | 0xC0;
+            out += static_cast<char>(pt & 0x3F) | 0x80;
         } else if (pt < 0x10000) {
-            out += (pt >> 12) | 0xE0;
+            out += static_cast<char>(pt >> 12) | 0xE0;
             out += ((pt >> 6) & 0x3F) | 0x80;
             out += (pt & 0x3F) | 0x80;
         } else {
-            out += (pt >> 18) | 0xF0;
+            out += static_cast<char>(pt >> 18) | 0xF0;
             out += ((pt >> 12) & 0x3F) | 0x80;
             out += ((pt >> 6) & 0x3F) | 0x80;
             out += (pt & 0x3F) | 0x80;
