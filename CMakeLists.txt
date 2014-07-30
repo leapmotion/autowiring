@@ -53,6 +53,7 @@ include_directories(
 )
 add_subdirectory(src)
 add_subdirectory(contrib)
+add_subdirectory(examples)
 
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
