@@ -217,6 +217,8 @@ public:
  * Static globals - static-init-safe
  */
 struct Statics {
+    Statics() {}
+
     const std::shared_ptr<JsonValue> null = make_shared<JsonNull>();
     const std::shared_ptr<JsonValue> t = make_shared<JsonBoolean>(true);
     const std::shared_ptr<JsonValue> f = make_shared<JsonBoolean>(false);
