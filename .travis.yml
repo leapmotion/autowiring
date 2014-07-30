@@ -29,6 +29,8 @@ script:
   - export LD_LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.8:$LD_LIBRARY_PATH
   - make -j 16 || make
   - make test
+after_failure:
+  - cat Testing/Temporary/LastTest.log 2> /dev/null
 os:
   - linux
   - osx
