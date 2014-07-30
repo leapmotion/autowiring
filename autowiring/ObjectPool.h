@@ -228,17 +228,11 @@ public:
     // Declare this first, so it's freed last:
     std::vector<std::unique_ptr<T>> objs;
 
-    // Move all of our objects into a local variable which we can then free at our leisure.  This allows us to
-    // perform destruction outside of the scope of a lock, preventing any deadlocks that might occur inside
-    // the shared_ptr cleanup lambda.
+    // Default destructor is using in object pool, so it is safe to destroy all
+    // in pool while holding lock.
     std::lock_guard<std::mutex> lk(*m_monitor);
     m_poolVersion++;
-
-    // Swap the cached object collection with an empty one
-    std::swap(objs, m_objs);
-
-    // Technically, all of these entities are now outstanding.  Update accordingly.
-    m_outstanding += objs.size();
+    m_objs.clear();
   }
 
   /// <summary>
