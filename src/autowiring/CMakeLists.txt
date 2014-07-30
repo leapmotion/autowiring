@@ -1,9 +1,5 @@
 add_googletest(test)
 
-# These source files should all be treated as being local to their corresponding headers, so
-# we add the autowiring include path directly
-include_directories(../../autowiring)
-
 set(Autowiring_SRCS
   at_exit.h
   AnySharedPointer.h
@@ -160,7 +156,7 @@ set(Autowiring_SRCS)
 foreach(i ${Autowiring_SRCS_TEMP})
   string(REGEX MATCH ".*\\.h" hfile ${i})
   if(hfile)
-    list(APPEND Autowiring_SRCS ../../autowiring/${i})
+    list(APPEND Autowiring_SRCS ${PROJECT_SOURCE_DIR}/autowiring/${i})
   else()
     list(APPEND Autowiring_SRCS ${i})
   endif()

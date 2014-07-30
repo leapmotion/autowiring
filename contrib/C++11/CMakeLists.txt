@@ -1,0 +1,22 @@
+set(Cpp11_SRCS
+  boost_array.h
+  boost_atomic.h
+  boost_chrono.h
+  boost_exception_ptr.h
+  boost_functional.h
+  boost_future.h
+  boost_rvalue.h
+  boost_shared_ptr.h
+  boost_system_error.h
+  boost_thread.h
+  boost_tuple.h
+  boost_type_traits.h
+  boost_utility.h
+  cpp11.h
+  make_unique.h
+  memory.h
+  memory_nostl11.h
+  mutex.h
+  type_index.h
+  unique_ptr.h
+)
