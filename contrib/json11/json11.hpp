@@ -56,6 +56,17 @@
 #include <memory>
 #include <initializer_list>
 
+#ifdef _MSC_VER
+  // noexcept was added to MSVC in Visual Studio 2014
+  #if _MSC_VER > 1800
+    #define JSON11_NOEXCEPT noexcept
+  #else
+    #define JSON11_NOEXCEPT throw()
+  #endif
+#else
+  #define JSON11_NOEXCEPT noexcept
+#endif
+
 namespace json11 {
 
 class JsonValue;
@@ -72,8 +83,8 @@ public:
     typedef std::map<std::string, Json> object;
 
     // Constructors for the various types of JSON value.
-    Json() noexcept;                // NUL
-    Json(std::nullptr_t) noexcept;  // NUL
+    Json() JSON11_NOEXCEPT;                // NUL
+    Json(std::nullptr_t) JSON11_NOEXCEPT;  // NUL
     Json(double value);             // NUMBER
     Json(int value);                // NUMBER
     Json(bool value);               // BOOL
