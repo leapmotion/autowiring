@@ -10,7 +10,9 @@
 
 #include <iostream>
 
-AutoPacket::AutoPacket(AutoPacketFactory& factory) {
+AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding):
+  m_outstandingRemote(outstanding)
+{
   // Traverse all contexts, adding their packet subscriber vectors one at a time:
   for(const auto& curContext : ContextEnumerator(factory.GetContext())) {
     AutowiredFast<AutoPacketFactory> curFactory(curContext);
@@ -60,11 +62,11 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory) {
 // "Arithmetic on a point to an incomplete type 'SatCounter'"
 AutoPacket::~AutoPacket() {}
 
-ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory) {
+ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding) {
   return ObjectPool<AutoPacket>(
     ~0,
     ~0,
-    [&factory] { return new AutoPacket(factory); },
+    [&factory, &outstanding] { return new AutoPacket(factory, outstanding); },
     [] (AutoPacket& packet) { packet.Initialize(); },
     [] (AutoPacket& packet) { packet.Finalize(); }
   );
@@ -155,6 +157,11 @@ void AutoPacket::Reset(void) {
 }
 
 void AutoPacket::Initialize(void) {
+  // Hold an outstanding count from the parent packet factory
+  m_outstanding = m_outstandingRemote;
+  if(!m_outstanding)
+    throw autowiring_error("Cannot proceed with this packet, enclosing context already expired");
+
   // Find all subscribers with no required or optional arguments:
   std::list<SatCounter*> callCounters;
   for (auto& satCounter : m_satCounters)

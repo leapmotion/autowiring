@@ -38,12 +38,12 @@ class AutoPacket:
 {
 private:
   AutoPacket(const AutoPacket& rhs) = delete;
-  AutoPacket(AutoPacketFactory& factory);
+  AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
 
 public:
   ~AutoPacket(void);
 
-  static ObjectPool<AutoPacket> CreateObjectPool(AutoPacketFactory& factory);
+  static ObjectPool<AutoPacket> CreateObjectPool(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
 
 private:
   // A back-link to the previously issued packet in the packet sequence.  May potentially be null,
@@ -57,6 +57,10 @@ private:
   mutable std::mutex m_lock;
   typedef std::unordered_map<std::type_index, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
+
+  // Outstanding count local and remote holds:
+  std::shared_ptr<Object> m_outstanding;
+  const std::shared_ptr<Object>& m_outstandingRemote;
 
   /// <summary>
   /// Resets satisfaction counters and decoration status.
