@@ -246,7 +246,6 @@ public:
   void SetMaximumPooledEntities(size_t maxPooled) {
     m_maxPooled = maxPooled;
     for(;;) {
-      std::unique_ptr<T> prior;
       std::lock_guard<std::mutex> lk(*m_monitor);
 
       // Space check:
@@ -254,12 +253,7 @@ public:
         // Managed to get the size down sufficiently, we can continue:
         return;
 
-      // Removing an entry from the cache, must increase the outstanding count at this point
-      m_outstanding++;
-
-      // Funny syntax needed to ensure destructors run while we aren't holding any locks.  The prior
-      // shared_ptr will be reset after the lock is released, guaranteeing the desired ordering.
-      prior = std::move(m_objs.back());
+      // Remove unique pointer
       m_objs.pop_back();
     }
   }
