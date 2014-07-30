@@ -119,4 +119,7 @@ public:
   /// satisfaction graph
   /// </summary>
   std::shared_ptr<AutoPacket> NewPacket(void);
+
+  /// <returns>the number of outstanding AutoPackets</returns>
+  size_t GetOutstanding(void) const { return m_packets.GetOutstanding(); }
 };

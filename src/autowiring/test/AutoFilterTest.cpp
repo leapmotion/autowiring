@@ -112,8 +112,8 @@ TEST_F(AutoFilterTest, VerifyOptionalFilter) {
     packet->Decorate(Decoration<0>());
 
     ASSERT_TRUE(fgA->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when an optional input was unresolved";
-    ASSERT_TRUE(fgB->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when an optional input was unresolved";
-    ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when a required input was not available";
+    ASSERT_TRUE(fgB->m_called == 0) << "An AutoFilter was called " << fgB->m_called << " times when an optional input was unresolved";
+    ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgC->m_called << " times when a required input was not available";
 
     packet->Decorate(Decoration<1>());
 
@@ -133,6 +133,11 @@ TEST_F(AutoFilterTest, VerifyOptionalFilter) {
     auto packet = factory->NewPacket();
     packet->Decorate(Decoration<0>());
     packet->Decorate(Decoration<2>());
+
+    ASSERT_TRUE(fgA->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " before optional arguments were resolved";
+    ASSERT_TRUE(fgB->m_called == 0) << "An AutoFilter was called " << fgB->m_called << " before optional arguments were resolved";
+    ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgC->m_called << " before optional arguments were resolved";
+    ASSERT_TRUE(fgD->m_called == 0) << "An AutoFilter was called " << fgD->m_called << " before optional arguments were resolved";
   }
 
   ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter was called " << fgA->m_called << " times when all required inputs were available";
@@ -699,9 +704,11 @@ TEST_F(AutoFilterTest, SingleImmediate) {
     // Verify we can't decorate this value a second time:
     ASSERT_ANY_THROW(packet->DecorateImmediate(val)) << "Expected an exception when a second attempt was made to attach a decoration";
   }
+  ASSERT_EQ(0, factory->GetOutstanding()) << "Destroyed packet remains outstanding";
 
   static const int pattern = 1365; //1365 ~ 10101010101
   AutoRequired<FilterGen<Decoration<pattern>>> fgp;
+  ASSERT_EQ(0, factory->GetOutstanding()) << "Outstanding packet count is correct after incrementing m_poolVersion due to AutoFilter addition";
   {
     auto packet = factory->NewPacket();
     Decoration<pattern> dec;
@@ -710,6 +717,7 @@ TEST_F(AutoFilterTest, SingleImmediate) {
     ASSERT_TRUE(fgp->m_called == 1) << "Filter should called " << fgp->m_called << " times, expected 1";
     ASSERT_TRUE(std::get<0>(fgp->m_args).i == pattern) << "Filter argument yielded " << std::get<0>(fgp->m_args).i << "expected " << pattern;
   }
+  ASSERT_EQ(0, factory->GetOutstanding()) << "Destroyed packet remains outstanding";
 
   // Terminate enclosing context
   AutoCurrentContext()->SignalShutdown(true);
