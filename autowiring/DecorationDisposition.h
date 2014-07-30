@@ -10,6 +10,11 @@ struct SatCounter;
 /// </remarks>
 struct DecorationDisposition
 {
+  DecorationDisposition(const DecorationDisposition&) = delete;
+  DecorationDisposition(DecorationDisposition&&) = delete;
+  void operator=(const DecorationDisposition&) = delete;
+  void operator=(DecorationDisposition&&) = delete;
+
   DecorationDisposition(void) :
     m_pImmediate(nullptr),
     m_publisher(nullptr),
