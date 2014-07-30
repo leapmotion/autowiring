@@ -31,7 +31,7 @@ public:
   Autowired<SimpleObject> m_sobj;
 };
 
-#define offsetof_nowarn(s,m)   (size_t)&reinterpret_cast<const volatile char&>((((s *)0)->m))
+#define offsetof_nowarn(s,m)   ((size_t)&reinterpret_cast<const volatile char&>((((s *)1)->m)) - 1)
 
 TEST_F(ContextMemberTest, VerifyDetectedMembers)
 {
