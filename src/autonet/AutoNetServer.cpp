@@ -3,28 +3,30 @@
 #include "AutoNetServer.h"
 #include "at_exit.h"
 #include <iostream>
+#include FUTURE_HEADER
+
+using std::placeholders::_1;
+using std::placeholders::_2;
+using json11::Json;
 
 AutoNetServer::AutoNetServer():
   CoreThread("AutoNetServer"),
   m_Server(std::make_shared<server>()),
   m_Port(8000)
 {
-  m_Server->set_message_handler([this] (websocketpp::connection_hdl hdl, message_ptr msg) {
-    OnMessage(hdl, msg);
-  });
-
+  // Register handlers and configure websocketpp
+  m_Server->init_asio();
+  m_Server->set_open_handler(std::bind(&AutoNetServer::OnOpen, this, ::_1));
+  m_Server->set_close_handler(std::bind(&AutoNetServer::OnClose, this, ::_1));
+  m_Server->set_message_handler(std::bind(&AutoNetServer::OnMessage, this, ::_1, ::_2));
+  
+  // Generate lists of types from type registry
   for (auto type = g_pFirstEntry; type; type = type->pFlink) {
     if (type->IsEventReceiver())
       m_EventTypes.insert(type->NewTypeIdentifier());
     
-    if (type->CanInject()){
+    if (type->CanInject()) {
       m_AllTypes[type->ti.name()] = [type]{
-        std::cout
-        << "Injecting "
-        << type->ti.name()
-        << " into "
-        << AutoCurrentContext()->GetSigilType().name()
-        << std::endl;
         type->Inject();
       };
     }
@@ -33,43 +35,58 @@ AutoNetServer::AutoNetServer():
 
 AutoNetServer::~AutoNetServer(){}
 
-//Core Thread methods
+// CoreThread overrides
 void AutoNetServer::Run(void){
   std::cout << "Starting Autonet server..." << std::endl;
 
-  m_Server->init_asio();
+  m_Server->listen(m_Port);
   m_Server->start_accept();
-  m_Server->run();
+  auto websocket = std::async(std::launch::async,[this]{
+    m_Server->run();
+  });
+  
   
   PollThreadUtilization(std::chrono::milliseconds(1000));
   CoreThread::Run();
 }
 
-void AutoNetServer::OnStop(void){
-  for (auto sub : m_Subscribers){
-    SendMessage(sub, "Closing");
-  }
+void AutoNetServer::OnStop(void) {
   m_Server->stop();
 }
 
+// Server Handler functions
+void AutoNetServer::OnOpen(websocketpp::connection_hdl hdl) {
+  *this += [this, hdl] {
+    SendMessage(hdl, "opened");
+  };
+}
+void AutoNetServer::OnClose(websocketpp::connection_hdl hdl) {
+  *this += [this, hdl] {
+    SendMessage(hdl, "closed");
+    this->m_Subscribers.erase(hdl);
+  };
+}
+
 void AutoNetServer::OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message) {
-  Jzon::Object msg;
-  Jzon::Parser parser(msg, p_message->get_payload());
-  if(!parser.Parse()) {
-    std::cout << "Couldn't parse message" << std::endl;
+  // Parse string from client
+  std::string err;
+  Json msg = Json::parse(p_message->get_payload(), err);
+  
+  if (!err.empty()) {
+    std::cout << "Parse error: " << err << std::endl;
     SendMessage(hdl, "invalidMessage", "Couldn't parse message");
     return;
   }
-
-  std::string msgType = msg.Get("type").ToString();
-  Jzon::Array msgArgs = msg.Get("args");
+  
+  std::string msgType = msg["type"].string_value();
+  Json::array msgArgs = msg["args"].array_items();
 
   *this += [this, hdl, msgType, msgArgs] {
     if(msgType == "subscribe") HandleSubscribe(hdl);
     else if(msgType == "unsubscribe") HandleUnsubscribe(hdl);
-    else if(msgType == "terminateContext") HandleTerminateContext(msgArgs.Get(0).ToInt());
-    else if(msgType == "injectContextMember") HandleInjectContextMember(msgArgs.Get(0).ToInt(), msgArgs.Get(1).ToString());
-    else if(msgType == "resumeFromBreakpoint") HandleResumeFromBreakpoint(msgArgs.Get(0).ToString());
+    else if(msgType == "terminateContext") HandleTerminateContext(msgArgs[0].int_value());
+    else if(msgType == "injectContextMember") HandleInjectContextMember(msgArgs[0].int_value(), msgArgs[1].string_value());
+    else if(msgType == "resumeFromBreakpoint") HandleResumeFromBreakpoint(msgArgs[0].string_value());
     else
       SendMessage(hdl, "invalidMessage", "Message type not recognized");
   };
@@ -94,11 +111,12 @@ void AutoNetServer::NewContext(CoreContext& newCtxt){
   auto ctxt = newCtxt.shared_from_this();
 
   *this += [this, ctxt] {
-    Jzon::Object context;
-    context.Add("name", ctxt->GetSigilType().name());
+    Json::object context {
+      {"name", ctxt->GetSigilType().name()}
+    };
 
     if (ctxt->GetParentContext()){
-      context.Add("parent", ResolveContextID(ctxt->GetParentContext().get()));
+      context["parent"] = ResolveContextID(ctxt->GetParentContext().get());
     }
 
     BroadcastMessage("newContext", ResolveContextID(ctxt.get()), context);
@@ -116,73 +134,73 @@ void AutoNetServer::NewObject(CoreContext& ctxt, const AnySharedPointer& object)
   int contextID = ResolveContextID(&ctxt);
   
   *this += [this, object, contextID]{
-    Jzon::Object objData;
-    Jzon::Object types;
-    std::shared_ptr<Object> objectPtr = *object;
+    Json::object objData;
+    Json::object types;
+    std::shared_ptr<Object> objectPtr(*object);
 
     // Add object data
-    objData.Add("name", typeid(*objectPtr).name());
+    objData["name"] = typeid(*objectPtr).name();
     {
-      Jzon::Array slots;
+      Json::array slots;
       for (auto slot = object->GetSlotInformation().pHead; slot; slot = slot->pFlink) {
-        Jzon::Object slotData;
-        slotData.Add("name", slot->type.name());
-        slotData.Add("autoRequired", slot->autoRequired);
-        slotData.Add("offset", int(slot->slotOffset));
-        slots.Add(slotData);
+        slots.push_back(Json::object{
+          {"name", slot->type.name()},
+          {"autoRequired", slot->autoRequired},
+          {"offset", int(slot->slotOffset)}
+        });
       }
-      objData.Add("slots", slots);
+      objData["slots"] = slots;
     }
     
     // Add type information
     auto member = autowiring::fast_pointer_cast<ContextMember>(objectPtr);
     if (member) {
-      types.Add("contextMember", true);
+      types["contextMember"] = true;
     }
 
     auto runnable = autowiring::fast_pointer_cast<CoreRunnable>(objectPtr);
     if (runnable) {
-      types.Add("coreRunnable", true);
+      types["coreRunnable"] = true;
     }
     
     auto thread = autowiring::fast_pointer_cast<BasicThread>(objectPtr);
     if(thread) {
+      // Create slot in map
       m_Threads[thread->GetSelf<BasicThread>()];
-
-      Jzon::Object utilization;
-      utilization.Add("kernel", 0.0);
-      utilization.Add("user", 0.0);
-      types.Add("thread", utilization);
+      
+      types["thread"] = Json::object{
+        {"kernal", 0.0},
+        {"user", 0.0}
+      };
     }
 
     auto eventRcvr = autowiring::fast_pointer_cast<EventReceiver>(objectPtr);
     if (eventRcvr) {
-      Jzon::Array listenerTypes;
+      Json::array listenerTypes;
       for (auto event : m_EventTypes) {
         if (event->Is(objectPtr.get()))
-          listenerTypes.Add(event->Type().name());
+          listenerTypes.push_back(event->Type().name());
       }
 
-      types.Add("eventReceiver", listenerTypes);
+      types["eventReceiver"] = listenerTypes;
     }
 
     auto filter = autowiring::fast_pointer_cast<ExceptionFilter>(objectPtr);
     if (filter) {
-      types.Add("exceptionFilter", true);
+      types["exceptionFilter"] = true;
     }
 
     auto bolt = autowiring::fast_pointer_cast<BoltBase>(objectPtr);
     if (bolt) {
-      Jzon::Array sigils;
+      Json::array sigils;
       for(auto cur = bolt->GetContextSigils(); *cur; cur++){
-        sigils.Add((*cur)->name());
+        sigils.push_back((*cur)->name());
       }
-      types.Add("bolt", sigils);
+      types["bolt"] = sigils;
     }
   
     BroadcastMessage("newObject", contextID, types, objData);
   };
-  
 }
 
 void AutoNetServer::EventFired(CoreContext& context, const std::type_info& info){
@@ -190,25 +208,30 @@ void AutoNetServer::EventFired(CoreContext& context, const std::type_info& info)
   std::string name = info.name();
 
   *this += [this, contextID, name] {
-    Jzon::Object eventHash;
-    eventHash.Add("name", name);
-
-    BroadcastMessage("eventFired", contextID, eventHash);
+    BroadcastMessage("eventFired", contextID, Json::object{{"name", name}});
   };
 }
 
-void AutoNetServer::SendMessage(websocketpp::connection_hdl hdl, const char* p_type) {
-  Jzon::Object msg;
-  msg.Add("type", p_type);
-  Jzon::Array arguments;
-  msg.Add("args", arguments);
-  SendMessage(hdl, msg);
+void AutoNetServer::HandleSubscribe(websocketpp::connection_hdl hdl) {
+  m_Subscribers.insert(hdl);
+  
+  Json::array types;
+  for (auto type : m_AllTypes) {
+    types.push_back(type.first);
+  }
+  
+  SendMessage(hdl, "subscribed", types);
+  AutoGlobalContext()->BuildCurrentState();
+  
+  // Send breakpoint message
+  for (auto& breakpoint : m_breakpoints) {
+    SendMessage(hdl, "breakpoint", breakpoint);
+  }
 }
 
-void AutoNetServer::SendMessage(websocketpp::connection_hdl hdl, const Jzon::Object& msg) {
-  Jzon::Writer writer(msg, Jzon::NoFormat);
-  writer.Write();
-  m_Server->send(hdl, writer.GetResult(), websocketpp::frame::opcode::text);
+void AutoNetServer::HandleUnsubscribe(websocketpp::connection_hdl hdl) {
+  this->m_Subscribers.erase(hdl);
+  SendMessage(hdl, "unsubscribed");
 }
 
 void AutoNetServer::HandleTerminateContext(int contextID) {
