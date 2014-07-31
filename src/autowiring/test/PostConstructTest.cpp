@@ -257,9 +257,10 @@ TEST_F(PostConstructTest, VerifyAllInstancesSatisfied) {
 
 TEST_F(PostConstructTest, ContextNotifyWhenAutowired) {
   auto called = std::make_shared<bool>(false);
+  AutoCurrentContext ctxt;
   
   // Now we'd like to be notified when SimpleObject gets added:
-  m_create->NotifyWhenAutowired<SimpleObject>(
+  ctxt->NotifyWhenAutowired<SimpleObject>(
     [called] {
       *called = true;
     }

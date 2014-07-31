@@ -108,6 +108,7 @@ public:
 };
 
 TEST_F(ObjectPoolTest, EmptyPoolIssuance) {
+  AutoCurrentContext ctxt;
   ObjectPool<int> pool;
 
   // Create the thread which will hold the shared pointer for awhile:
@@ -123,7 +124,7 @@ TEST_F(ObjectPoolTest, EmptyPoolIssuance) {
   EXPECT_ANY_THROW(pool.Wait()) << "An attempt to obtain an element on an empty pool did not throw an exception as expected";
 
   // Now see if we can delay for the thread to back out:
-  m_create->Initiate();
+  ctxt->Initiate();
   pool.Rundown();
 
   // Verify that it got released as expected:

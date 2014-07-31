@@ -304,11 +304,12 @@ TEST_F(EventReceiverTest, PathologicalTransmitterTest) {
 }
 
 TEST_F(EventReceiverTest, VerifyDirectInvocation) {
+  AutoCurrentContext ctxt;
   AutoRequired<SimpleReceiver> receiver;
 
   // Indirect invocation:
-  m_create->Invoke(&CallableInterface::ZeroArgs)();
-  m_create->Invoke(&CallableInterface::OneArg)(100);
+  ctxt->Invoke(&CallableInterface::ZeroArgs)();
+  ctxt->Invoke(&CallableInterface::OneArg)(100);
 
   // Verify that stuff happens even when the thread isn't running:
   EXPECT_TRUE(receiver->m_zero);

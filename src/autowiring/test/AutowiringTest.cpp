@@ -8,7 +8,7 @@
 
 TEST_F(AutowiringTest, VerifyAutowiredFast) {
   // Add an object:
-  m_create->Inject<SimpleObject>();
+  AutoCurrentContext()->Inject<SimpleObject>();
 
   // Verify that AutowiredFast can find this object
   AutowiredFast<SimpleObject> sobj;

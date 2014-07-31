@@ -80,9 +80,10 @@ public:
 };
 
 TEST_F(BoltTest, VerifySimpleInjection) {
+  AutoCurrentContext ctxt;
   AutoEnable<InjectsIntoPipeline>();
 
-  auto created = m_create->Create<Pipeline>();
+  auto created = ctxt->Create<Pipeline>();
 
   // Verify that the SimpleObject didn't accidentally get injected out here:
   {
@@ -143,10 +144,11 @@ TEST_F(BoltTest, VerifyCreationBubbling) {
 }
 
 TEST_F(BoltTest, VerifyMultipleInjection) {
+  AutoCurrentContext ctxt;
   AutoEnable<InjectsIntoBoth>();
 
-  auto created = m_create->Create<Pipeline>();
-  auto created2 = m_create->Create<OtherContext>();
+  auto created = ctxt->Create<Pipeline>();
+  auto created2 = ctxt->Create<OtherContext>();
 
   // Verify that the SimpleObject didn't accidentally get injected out here:
   {
@@ -168,6 +170,7 @@ TEST_F(BoltTest, VerifyMultipleInjection) {
 }
 
 TEST_F(BoltTest, EmptyBolt) {
+  AutoCurrentContext ctxt;
   AutoEnable<InjectsIntoEverything>();
   Autowired<CountObject> so;
   EXPECT_FALSE(so.IsAutowired()) << "CountObject injected into outer context";
@@ -180,7 +183,7 @@ TEST_F(BoltTest, EmptyBolt) {
     ASSERT_EQ(1, innerSo->count) << "ContextCreated() called incorrect number of times";
   }
 
-  auto created2 = m_create->Create<Pipeline>();
+  auto created2 = ctxt->Create<Pipeline>();
   {
     CurrentContextPusher pshr(created2);
     Autowired<CountObject> innerSo;

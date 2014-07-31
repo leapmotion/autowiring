@@ -3,9 +3,9 @@
 
 #include <C++11/cpp11.h>
 #include <gtest/gtest.h>
+#include <autowiring/autowiring.h>
 
 #ifdef _MSC_VER
-  #include <autowiring/Autowired.h>
   #include <thread>
   #include <mutex>
 #endif

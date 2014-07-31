@@ -3,5 +3,5 @@
 #include "EnclosedContextTestBase.hpp"
 
 class ContextEnumeratorTest:
-  public EnclosedContextTestBase
+  public testing::Test
 {};
