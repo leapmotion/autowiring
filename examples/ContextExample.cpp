@@ -22,10 +22,9 @@ int main() {
   //// GlobalCoreContext ////
   ///////////////////////////
   { 
-    // The CoreContext is the basic unit of organization. They are organized
-    // in a tree structure, the root of which is the GlobalCoreContext. Each
-    // thread keeps track of its current context, which defaults to
-    // GlobalCoreContext
+    // The CoreContext is the basic unit of organization in Autowriring. They are organized
+    // in a tree structure, the root of which is the GlobalCoreContext. Each thread
+    // keeps track of its current context, which defaults to GlobalCoreContext
   
     // This creates a shared_ptr to the global context
     AutoGlobalContext global;
@@ -46,7 +45,7 @@ int main() {
     // A helper type 'AutoCreateContext' will call Create on the current context
     // automatically
     
-    AutoGlobalContext global; //same as AutoCurrentContext
+    AutoGlobalContext global; //same as AutoCurrentContext here
 
     // Create's a chile of the current context
     AutoCreateContext childCtxt; // Same as childCtxt = AutoCurrentContext()->Create<void>();
@@ -83,6 +82,8 @@ int main() {
     // the same instance
     AutoRequired<Foo> foo2;
     check("foo2 is the same instance as foo", foo==foo2);
+    std::cout << "foo2 value of 'x': " << foo2->x << std::endl;
+    
   } // 'ctxt' and all members a destroyed when the context goes out of scope
   
   //////////////////////
@@ -112,11 +113,11 @@ int main() {
       // Bar has an Autowrired<Foo> classmember
       AutoRequired<Bar> bar;
       
-      check("Foo member of bar isn't satisfied", !bar->foo);
+      check("Foo member of bar is satisfied before AutoRequired", bar->foo);
       
       // If we inject Foo into the context, the Autowired<Foo> member of Bar will be satisfied
       AutoRequired<Foo>();
-      check("Foo member of bar now is satisfied", bar->foo);
+      check("Foo member of bar is satisfied after AutoRequired", bar->foo);
     }
   }
 }
