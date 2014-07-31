@@ -54,9 +54,9 @@ public:
     m_maxPooled(maxPooled),
     m_limit(limit),
     m_outstanding(0),
-    m_alloc(alloc),
     m_initial(initial),
-    m_final(final)
+    m_final(final),
+    m_alloc(alloc)
   {}
 
   /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>

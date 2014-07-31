@@ -10,14 +10,14 @@ class JunctionBox;
 
 // Generate and index tuple
 template<int ...>
-struct seq {};
+struct index_tuple {};
 
 template<int N, int... S>
-struct gen_seq: gen_seq<N - 1, N - 1, S...> {};
+struct gen_index_tuple: gen_index_tuple<N - 1, N - 1, S...> {};
 
 template<int... S>
-struct gen_seq<0, S...> {
-  typedef seq<S...> type;
+struct gen_index_tuple<0, S...> {
+  typedef index_tuple<S...> type;
 };
 
 /// <summary>
@@ -49,13 +49,13 @@ private:
   /// Places a call to the bound member function pointer by unpacking a lambda into it
   /// </summary>
   template<int... S>
-  void CallByUnpackingTuple(seq<S...>) {
+  void CallByUnpackingTuple(index_tuple<S...>) {
     (m_obj.*m_fnPtr)(std::move(std::get<S>(m_args))...);
   }
 
 public:
   void operator()(void) override {
-    CallByUnpackingTuple(typename gen_seq<sizeof...(Args)>::type());
+    CallByUnpackingTuple(typename gen_index_tuple<sizeof...(Args)>::type());
   }
 };
 

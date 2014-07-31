@@ -252,7 +252,9 @@ public:
   // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
     std::shared_ptr<T>(ctxt->template Inject<T>())
-  {}
+  {
+    (void)RegType<T>::r;
+  }
 
   /// <summary>
   /// Construct overload, for types which take constructor arguments

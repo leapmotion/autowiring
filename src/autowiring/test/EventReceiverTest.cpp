@@ -465,3 +465,25 @@ TEST_F(EventReceiverTest, VerifyCorrectContext){
   fire(&CallableInterface::ZeroArgs)();
   EXPECT_TRUE(receiver->m_zero) << "AutoFired was created with the current context instead of the passed in context";
 }
+
+TEST_F(EventReceiverTest, EventChain){
+  class Middle:
+    public EventReceiver
+  {
+  public:
+    virtual void MyEvent() = 0;
+  };
+  
+  class MyReceiver:
+    public Middle
+  {
+  public:
+    virtual void MyEvent() {
+      ASSERT_TRUE(true);
+    }
+  };
+  
+  AutoRequired<MyReceiver> recr;
+  AutoCurrentContext ctxt;
+  ctxt->Invoke(&MyReceiver::MyEvent)();
+}
