@@ -8,7 +8,10 @@
 #include "SatCounter.h"
 #include <list>
 
-AutoPacket::AutoPacket(AutoPacketFactory& factory)
+#include <iostream>
+
+AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding):
+  m_outstandingRemote(outstanding)
 {
   // Traverse all contexts, adding their packet subscriber vectors one at a time:
   for(const auto& curContext : ContextEnumerator(factory.GetContext())) {
@@ -52,44 +55,21 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory)
     }
   }
 
-  // Invoke any output-only AutoFilter routines
-  Initialize();
+  Reset();
 }
 
-AutoPacket::~AutoPacket() {
-  // Last chance for AutoFilter call
-  ResolveOptions();
-}
+// This must appear in .cpp in order to avoid compilation failure due to:
+// "Arithmetic on a point to an incomplete type 'SatCounter'"
+AutoPacket::~AutoPacket() {}
 
-ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory) {
+ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding) {
   return ObjectPool<AutoPacket>(
     ~0,
     ~0,
-    [&factory] { return new AutoPacket(factory); },
-    [] (AutoPacket& packet) {
-      // Last chance for AutoFilter optional calls
-      packet.ResolveOptions();
-
-      // Reinitialize the whole packet:
-      packet.Initialize();
-    }
+    [&factory, &outstanding] { return new AutoPacket(factory, outstanding); },
+    [] (AutoPacket& packet) { packet.Initialize(); },
+    [] (AutoPacket& packet) { packet.Finalize(); }
   );
-}
-
-void AutoPacket::ResolveOptions(void) {
-  // Queue calls to ensure that calls to Decorate inside of AutoFilter methods
-  // will NOT effect the resolution of optional arguments.
-  std::list<SatCounter*> callQueue;
-  {
-    std::lock_guard<std::mutex> lk(m_lock);
-    for(auto& decoration : m_decorations)
-      for(auto& satCounter : decoration.second.m_subscribers)
-        if(!satCounter.second)
-          if(satCounter.first->Resolve())
-            callQueue.push_back(satCounter.first);
-  }
-  for (SatCounter* call : callQueue)
-    call->CallAutoFilter(*this);
 }
 
 void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
@@ -165,23 +145,54 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   }
 }
 
-void AutoPacket::Initialize(void) {
+void AutoPacket::Reset(void) {
   // Initialize all counters:
-  {
-    std::lock_guard<std::mutex> lk(m_lock);
-    for(auto& satCounter : m_satCounters)
-      satCounter.Reset();
-    for(auto& decoration : m_decorations)
-      decoration.second.Reset();
-  }
+  std::lock_guard<std::mutex> lk(m_lock);
+  for(auto& satCounter : m_satCounters)
+    satCounter.Reset();
 
-  // Call all subscribers with no required or optional arguments:
+  // Clear all references:
+  for(auto& decoration : m_decorations)
+    decoration.second.Reset();
+}
+
+void AutoPacket::Initialize(void) {
+  // Hold an outstanding count from the parent packet factory
+  m_outstanding = m_outstandingRemote;
+  if(!m_outstanding)
+    throw autowiring_error("Cannot proceed with this packet, enclosing context already expired");
+
+  // Find all subscribers with no required or optional arguments:
+  std::list<SatCounter*> callCounters;
   for (auto& satCounter : m_satCounters)
     if (satCounter)
-      satCounter.CallAutoFilter(*this);
+      callCounters.push_back(&satCounter);
+
+  // Call all subscribers with no required or optional arguments:
+  // NOTE: This may result in decorations that cause other subscribers to be called.
+  for (auto* call : callCounters)
+    call->CallAutoFilter(*this);
 
   // Initial satisfaction of the AutoPacket:
   UpdateSatisfaction(typeid(AutoPacket));
+}
+
+void AutoPacket::Finalize(void) {
+  // Queue calls to ensure that calls to Decorate inside of AutoFilter methods
+  // will NOT effect the resolution of optional arguments.
+  std::list<SatCounter*> callQueue;
+  {
+    std::lock_guard<std::mutex> lk(m_lock);
+    for(auto& decoration : m_decorations)
+      for(auto& satCounter : decoration.second.m_subscribers)
+        if(!satCounter.second)
+          if(satCounter.first->Resolve())
+            callQueue.push_back(satCounter.first);
+  }
+  for (SatCounter* call : callQueue)
+    call->CallAutoFilter(*this);
+
+  Reset();
 }
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {

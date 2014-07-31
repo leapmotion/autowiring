@@ -10,7 +10,7 @@ AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
   m_parent(GetContext()->GetParentContext()),
   m_wasStopped(false),
-  m_packets(AutoPacket::CreateObjectPool(*this))
+  m_packets(AutoPacket::CreateObjectPool(*this, m_outstanding))
 {}
 
 AutoPacketFactory::~AutoPacketFactory() {

@@ -112,8 +112,8 @@ TEST_F(AutoFilterTest, VerifyOptionalFilter) {
     packet->Decorate(Decoration<0>());
 
     ASSERT_TRUE(fgA->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when an optional input was unresolved";
-    ASSERT_TRUE(fgB->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when an optional input was unresolved";
-    ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when a required input was not available";
+    ASSERT_TRUE(fgB->m_called == 0) << "An AutoFilter was called " << fgB->m_called << " times when an optional input was unresolved";
+    ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgC->m_called << " times when a required input was not available";
 
     packet->Decorate(Decoration<1>());
 
@@ -133,6 +133,11 @@ TEST_F(AutoFilterTest, VerifyOptionalFilter) {
     auto packet = factory->NewPacket();
     packet->Decorate(Decoration<0>());
     packet->Decorate(Decoration<2>());
+
+    ASSERT_TRUE(fgA->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " before optional arguments were resolved";
+    ASSERT_TRUE(fgB->m_called == 0) << "An AutoFilter was called " << fgB->m_called << " before optional arguments were resolved";
+    ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgC->m_called << " before optional arguments were resolved";
+    ASSERT_TRUE(fgD->m_called == 0) << "An AutoFilter was called " << fgD->m_called << " before optional arguments were resolved";
   }
 
   ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter was called " << fgA->m_called << " times when all required inputs were available";
@@ -158,6 +163,155 @@ TEST_F(AutoFilterTest, VerifyNoMultiDecorate) {
   // Now finish saturating the filter and ensure we get a call:
   packet->Decorate(Decoration<1>());
   EXPECT_LT(0, filterA->m_called) << "Filter was not called after being fully satisfied";
+
+  //NOTE: A typedef will throw an exception
+  typedef Decoration<0> isDeco0type;
+  EXPECT_ANY_THROW(packet->Decorate(isDeco0type())) << "Typedef failed to throw exception";
+
+  //NOTE: A shared_ptr to an existing type will throw an exception
+  std::shared_ptr<Decoration<0>> sharedDeco0(new Decoration<0>);
+  EXPECT_ANY_THROW(packet->Decorate(sharedDeco0)) << "Reduction of shared_ptr to base type failed";
+
+  //NOTE: Inheritance will not throw an exception
+  class ofDeco0alias: public Decoration<0> {};
+  try {
+    packet->Decorate(ofDeco0alias());
+  } catch (...) {
+    FAIL() << "Class with inheritance from existing decoration reinterpreted as child type";
+  }
+
+  // Verify that DecorateImmedaite also yields an exception
+  Decoration<0> localDeco0;
+  EXPECT_ANY_THROW(packet->DecorateImmediate(localDeco0)) << "Redundant immediate decoration did not throw an exception as expected";
+
+  EXPECT_ANY_THROW(packet->DecorateImmediate(Decoration<2>(), Decoration<2>())) << "Repeated type in immediate decoration was not identified as an error";
+}
+
+TEST_F(AutoFilterTest, VerifyNoNullCheckout) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  std::shared_ptr<Decoration<0>> nulldeco;
+  ASSERT_FALSE(nulldeco);
+
+  auto packet = factory->NewPacket();
+  EXPECT_THROW(packet->Checkout(nulldeco), std::exception) << "Failed to catch null checkout" << std::endl;
+  EXPECT_THROW(packet->Decorate(nulldeco), std::exception) << "Failed to catch null decoration" << std::endl;
+}
+
+template<int out, int in>
+class FilterGather {
+public:
+  FilterGather():
+    m_called_out(0),
+    m_called_in(0),
+    m_out(out),
+    m_in(in)
+  {}
+
+  void AutoFilter(AutoPacket& packet) {
+    ++m_called_out;
+    packet.Decorate(Decoration<out>(m_out));
+  }
+
+  void AutoGather(const Decoration<in>& input) {
+    ++m_called_in;
+    m_in = input.i;
+  }
+
+  int m_called_out;
+  int m_called_in;
+  int m_out;
+  int m_in;
+
+  NewAutoFilter<decltype(&FilterGather<out,in>::AutoGather), &FilterGather<out,in>::AutoGather> FilterGather_AutoGather;
+};
+
+TEST_F(AutoFilterTest, VerifyTwoAutoFilterCalls) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterGather<0,1>> zero2one;
+  AutoRequired<FilterGather<1,0>> one2zero;
+  zero2one->m_out = 3;
+  one2zero->m_out = 4;
+
+  //Verify that calls made on allocation from object pool do not introduce a race condition
+  {
+    std::shared_ptr<AutoPacket> packet = factory->NewPacket();
+    ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << zero2one->m_called_out << " times";
+    ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter of implicitly decorated type was called " << zero2one->m_called_in << " times";
+    ASSERT_EQ(4, zero2one->m_in) << "AutoFilter received incorrect input of " << zero2one->m_in;
+    ASSERT_EQ(1, one2zero->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << one2zero->m_called_out << " times";
+    ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter of implicitly decorated type was called " << one2zero->m_called_in << " times";
+    ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
+    zero2one->m_out = 5;
+    one2zero->m_out = 6;
+  }
+
+  //Verify that no additional calls are made during return of packet to object pool
+  ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << zero2one->m_called_out << " times";
+  ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter of implicitly decorated type was called " << zero2one->m_called_in << " times";
+  ASSERT_EQ(4, zero2one->m_in) << "AutoFilter received incorrect input of " << zero2one->m_in;
+  ASSERT_EQ(1, one2zero->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << one2zero->m_called_out << " times";
+  ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter of implicitly decorated type was called " << one2zero->m_called_in << " times";
+  ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
+}
+
+template<int out, int in>
+class FilterGatherAutoOut {
+public:
+  FilterGatherAutoOut():
+  m_called_out(0),
+  m_called_in(0),
+  m_out(out),
+  m_in(in)
+  {}
+
+  //NOTE: Non-const auto_out yields obscure compiler error.
+  void AutoFilter(const auto_out<Decoration<out>>& output) {
+    ++m_called_out;
+    output->i = m_out;
+  }
+
+  void AutoGather(const Decoration<in>& input) {
+    ++m_called_in;
+    m_in = input.i;
+  }
+
+  int m_called_out;
+  int m_called_in;
+  int m_out;
+  int m_in;
+  NewAutoFilter<decltype(&FilterGather<out,in>::AutoGather), &FilterGather<out,in>::AutoGather> FilterGather_AutoGather;
+};
+
+TEST_F(AutoFilterTest, VerifyTwoAutoFilterCallsAutoOut) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterGatherAutoOut<0,1>> zero2one;
+  AutoRequired<FilterGatherAutoOut<1,0>> one2zero;
+  zero2one->m_out = 3;
+  one2zero->m_out = 4;
+
+  //Verify that calls made on allocation from object pool do not introduce a race condition
+  {
+    std::shared_ptr<AutoPacket> packet = factory->NewPacket();
+    ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with auto_out as only argument was called " << zero2one->m_called_out << " times";
+    ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter of implicitly decorated type was called " << zero2one->m_called_in << " times";
+    ASSERT_EQ(4, zero2one->m_in) << "AutoFilter received incorrect input of " << zero2one->m_in;
+    ASSERT_EQ(1, one2zero->m_called_out) << "AutoFilter with auto_out as only argument was called " << one2zero->m_called_out << " times";
+    ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter of implicitly decorated type was called " << one2zero->m_called_in << " times";
+    ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
+    zero2one->m_out = 5;
+    one2zero->m_out = 6;
+  }
+  //Verify that no additional calls are made during return of packet to object pool
+  ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with auto_out as only argument was called " << zero2one->m_called_out << " times";
+  ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter of implicitly decorated type was called " << zero2one->m_called_in << " times";
+  ASSERT_EQ(4, zero2one->m_in) << "AutoFilter received incorrect input of " << zero2one->m_in;
+  ASSERT_EQ(1, one2zero->m_called_out) << "AutoFilter with auto_out as only argument was called " << one2zero->m_called_out << " times";
+  ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter of implicitly decorated type was called " << one2zero->m_called_in << " times";
+  ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
 }
 
 TEST_F(AutoFilterTest, VerifyInterThreadDecoration) {
@@ -567,9 +721,11 @@ TEST_F(AutoFilterTest, SingleImmediate) {
     // Verify we can't decorate this value a second time:
     ASSERT_ANY_THROW(packet->DecorateImmediate(val)) << "Expected an exception when a second attempt was made to attach a decoration";
   }
+  ASSERT_EQ(0, factory->GetOutstanding()) << "Destroyed packet remains outstanding";
 
   static const int pattern = 1365; //1365 ~ 10101010101
   AutoRequired<FilterGen<Decoration<pattern>>> fgp;
+  ASSERT_EQ(0, factory->GetOutstanding()) << "Outstanding packet count is correct after incrementing m_poolVersion due to AutoFilter addition";
   {
     auto packet = factory->NewPacket();
     Decoration<pattern> dec;
@@ -578,6 +734,7 @@ TEST_F(AutoFilterTest, SingleImmediate) {
     ASSERT_TRUE(fgp->m_called == 1) << "Filter should called " << fgp->m_called << " times, expected 1";
     ASSERT_TRUE(std::get<0>(fgp->m_args).i == pattern) << "Filter argument yielded " << std::get<0>(fgp->m_args).i << "expected " << pattern;
   }
+  ASSERT_EQ(0, factory->GetOutstanding()) << "Destroyed packet remains outstanding";
 
   // Terminate enclosing context
   AutoCurrentContext()->SignalShutdown(true);

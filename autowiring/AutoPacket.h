@@ -7,12 +7,13 @@
 #include "is_shared_ptr.h"
 #include "ObjectPool.h"
 #include "is_any.h"
+#include <sstream>
+#include <typeinfo>
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 #include EXCEPTION_PTR_HEADER
 
-struct SatCounter;
 class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
@@ -37,12 +38,12 @@ class AutoPacket:
 {
 private:
   AutoPacket(const AutoPacket& rhs) = delete;
-  AutoPacket(AutoPacketFactory& factory);
+  AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
 
 public:
   ~AutoPacket(void);
 
-  static ObjectPool<AutoPacket> CreateObjectPool(AutoPacketFactory& factory);
+  static ObjectPool<AutoPacket> CreateObjectPool(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
 
 private:
   // A back-link to the previously issued packet in the packet sequence.  May potentially be null,
@@ -57,15 +58,49 @@ private:
   typedef std::unordered_map<std::type_index, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
 
-  /// <summary>
-  /// Last change call with unsatisfied optional arguments
-  /// </summary>
-  void ResolveOptions(void);
+  // Outstanding count local and remote holds:
+  std::shared_ptr<Object> m_outstanding;
+  const std::shared_ptr<Object>& m_outstandingRemote;
 
   /// <summary>
-  /// Resets counters, then decrements subscribers requiring AutoPacket argument.
+  /// Resets satisfaction counters and decoration status.
   /// </summary>
+  /// <remarks>
+  /// Is it expected that AutoPacketFactory will call methods in the following order:
+  /// AutoPacket(); //Construction in ObjectPool
+  /// Initialize(); //Issued from ObjectPool
+  /// Decorate();
+  /// ... //More Decorate calls
+  /// Finalize(); //Returned to ObjectPool
+  /// Initialize();
+  /// ... //More Issue & Return cycles
+  /// ~AutoPacket(); //Destruction in ObjectPool
+  /// Reset() must be called before the body of Initialize() in order to begin in the
+  /// correct state. It must also be called after the body of Finalize() in order to
+  /// avoid holding shared_ptr references.
+  /// Therefore Reset() is called at the conclusion of both AutoPacket() and Finalize().
+  /// </remarks>
+  void Reset(void);
+
+  /// <summary>
+  /// Decrements subscribers requiring AutoPacket argument then calls all initializing subscribers.
+  /// </summary>
+  /// <remarks>
+  /// Initialize is called when a packet is issued by the AutoPacketFactory.
+  /// It is not called when the Packet is created since that could result in
+  /// spurious calls when no packet is issued.
+  /// </remarks>
   void Initialize(void);
+
+  /// <summary>
+  /// Last chance call with unsatisfied optional arguments.
+  /// </summary>
+  /// <remarks>
+  /// This is called when the packet is returned to the AutoPacketFactory.
+  /// It is not called when the Packet is destroyed, since that could result in
+  /// suprious calles when no packet is issued.
+  /// </remarks>
+  void Finalize(void);
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
@@ -138,8 +173,12 @@ public:
   template<class T>
   const T& Get(void) const {
     const T* retVal;
-    if(!Get(retVal))
-      throw_rethrowable autowiring_error("Attempted to obtain a value which was not decorated on this packet");
+    if(!Get(retVal)) {
+      std::stringstream ss;
+      ss << "Attempted to obtain a type " << typeid(retVal).name()
+         << " which was not decorated on this packet";
+      throw std::runtime_error(ss.str());
+    }
     return *retVal;
   }
 
@@ -214,11 +253,18 @@ public:
     {
       std::lock_guard<std::mutex> lk(m_lock);
       auto& entry = m_decorations[typeid(type)];
-      if(entry.satisfied)
-        throw std::runtime_error("Cannot decorate this packet with type T, the requested decoration already exists");
-      if(entry.isCheckedOut)
-        throw std::runtime_error("Cannot check out this decoration, it's already checked out elsewhere");
-
+      if (entry.satisfied) {
+        std::stringstream ss;
+        ss << "Cannot decorate this packet with type " << typeid(*ptr).name()
+           << ", the requested decoration already exists";
+        throw std::runtime_error(ss.str());
+      }
+      if(entry.isCheckedOut) {
+        std::stringstream ss;
+        ss << "Cannot check out decoration of type " << typeid(*ptr).name()
+           << ", it is already checked out elsewhere";
+        throw std::runtime_error(ss.str());
+      }
       entry.isCheckedOut = true;
       entry.wasCheckedOut = true;
       m_decorations[typeid(type)].m_decoration = ptr;
@@ -318,8 +364,12 @@ public:
       std::lock_guard<std::mutex> lk(m_lock);
       for(size_t i = 0; i < sizeof...(Ts); i++) {
         pTypeSubs[i] = &m_decorations[*sc_typeInfo[i]];
-        if(pTypeSubs[i]->wasCheckedOut)
-          throw std::runtime_error("Cannot perform immediate decoration with type T, the requested decoration already exists");
+        if(pTypeSubs[i]->wasCheckedOut) {
+          std::stringstream ss;
+          ss << "Cannot perform immediate decoration with type " << sc_typeInfo[i]->name()
+             << ", the requested decoration already exists";
+          throw std::runtime_error(ss.str());
+        }
 
         // Mark the entry as appropriate:
         pTypeSubs[i]->satisfied = true;
