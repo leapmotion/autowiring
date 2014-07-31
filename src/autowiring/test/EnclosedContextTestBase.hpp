@@ -1,9 +1,37 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-
-#include <autowiring/Autowired.h>
-#include <gtest/gtest.h>
 #include MEMORY_HEADER
+
+/// <summary>
+/// General purpose exception filter, used for tracking exceptions thrown from unit test CoreThreads
+/// </summary>
+class EnclosedContextExceptionFilter:
+  public ContextMember,
+  public ExceptionFilter
+{
+public:
+  EnclosedContextExceptionFilter(void) :
+    ContextMember("EnclosedContextExceptionFilter"),
+    m_excepted(false)
+  {}
+
+  bool m_excepted;
+
+  const std::type_info* m_ti;
+  std::string m_what;
+
+  void Filter(void) override {
+    m_excepted = true;
+    try {
+      throw;
+    }
+    catch(std::exception& except) {
+      m_ti = &typeid(except);
+      m_what = except.what();
+    }
+    catch(...) {}
+  }
+};
 
 /// <summary>
 /// Provides a test fixture which ensures proper cleanup of a created subcontext
@@ -15,45 +43,14 @@
 /// destructor which performs teardown in a different way.
 /// </remarks>
 class EnclosedContextTestBase:
-  public testing::Test
+  public testing::EmptyTestEventListener
 {
-public:
-  EnclosedContextTestBase(void):
-    m_pshr(m_create)
-  {
-    m_createWeak = m_create;
-  }
-
-  ~EnclosedContextTestBase(void) {
-    // Only attempt teardown if it hasn't already happened:
-    auto ctxt = m_createWeak.lock();
-    if(!ctxt)
-      return;
-
-    ctxt->SignalShutdown();
-
-    // Do not allow teardown to take more than a millisecond
-    if(!ctxt->Wait(std::chrono::milliseconds(250))) {
-      // Critical error--took too long to tear down
-      assert(false);
-    }
-  }
-
-protected:
-  // The context proper.  This is automatically assigned as the current
-  // context when SetUp is invoked.
-  AutoCreateContext m_create;
-
-  // Currency pusher:
-  CurrentContextPusher m_pshr;
- 
 private:
   // Weak pointer to the created context, used to detect proper context destruction
   std::weak_ptr<CoreContext> m_createWeak;
 
 public:
-  /// <returns>
-  /// True if there are no outstanding pointers to the created context, except the one held by base
-  /// </returns>
-  bool IsContextClean(void) const {return m_create.unique();}
+  // Base overrides:
+  void OnTestStart(const testing::TestInfo& info) override;
+  void OnTestEnd(const testing::TestInfo& info) override;
 };

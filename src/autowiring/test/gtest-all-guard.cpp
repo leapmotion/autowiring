@@ -4,6 +4,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-private-field"
 #endif
+#include "EnclosedContextTestBase.hpp"
 #include <gtest/gtest-all.cc>
 #include <iostream>
 
@@ -23,6 +24,8 @@ int main(int argc, char* argv[])
   g_argc = argc;
   g_argv = argv;
 
+  auto& listeners = testing::UnitTest::GetInstance()->listeners();
+  listeners.Append(new EnclosedContextTestBase);
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

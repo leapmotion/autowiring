@@ -120,7 +120,6 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
   EXPECT_TRUE(listener2->m_hitDeferred) << "Failed to hit a listener's deferred call";
 
   // Release all of our pointers:
-  m_create.reset();
   listener1.reset();
   listener2.reset();
 

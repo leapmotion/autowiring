@@ -42,6 +42,7 @@ set(AutowiringTest_SRCS
   DtorCorrectnessTest.hpp
   DtorCorrectnessTest.cpp
   EnclosedContextTestBase.hpp
+  EnclosedContextTestBase.cpp
   ExceptionFilterTest.hpp
   ExceptionFilterTest.cpp
   EventReceiverTest.hpp

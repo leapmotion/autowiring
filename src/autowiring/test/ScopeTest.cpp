@@ -109,6 +109,7 @@ TEST_F(ScopeTest, AutowiringHeapMangle){
 }
 
 TEST_F(ScopeTest, AutowiringOrdering) {
+  AutoCurrentContext ctxt;
   AutoCreateContext outer;
   CurrentContextPusher outerPshr(outer);
   AutoCreateContext inner1;
@@ -155,7 +156,7 @@ TEST_F(ScopeTest, AutowiringOrdering) {
     // Verify preconditions and postconditions on autowiring:
     ASSERT_FALSE(d.IsAutowired());
     ASSERT_FALSE(d2.IsAutowired());
-    AutoRequired<D> derp(m_create);
+    AutoRequired<D> derp(ctxt);
 
     ASSERT_TRUE(d.IsAutowired()) << "Outer scope autowired field failed to be instantiated on an element created in an interior scope";
     ASSERT_TRUE(d2.IsAutowired()) << "Interior scope field failed to be satisfied by a field initiated at an outer context";
