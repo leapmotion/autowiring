@@ -459,9 +459,26 @@ TEST_F(AutoFilterTest, DeferredRecieptInSubContext)
   // Release the preissued packet:
   preissued.reset();
 
+  // Index of packets that were not expired at the time of detection
+  std::set<size_t> notExpired;
+
   // Now verify that all of our packets are expired:
-  for(auto cur : allPackets)
-    ASSERT_TRUE(cur.expired()) << "Packet did not expire after all recipients went out of scope";
+  for(size_t i = 0; i < allPackets.size(); i++)
+    if(!allPackets[i].expired())
+      notExpired.insert(i);
+
+  if(!notExpired.empty()) {
+    // Delay for a bit, see if they expire later:
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    for(size_t i = 0; i < allPackets.size(); i++)
+      ASSERT_TRUE(allPackets[i].expired()) << "Packet " << i << " did not expire even after a delay that should have allowed it to expire";
+   
+    // They did, tell the user what didn't expire the first time around
+    std::stringstream ss;
+    for(auto index : notExpired)
+      ss << index << " ";
+    FAIL() << "These packets did not expire after all recipients went out of scope: " << ss.str();
+  }
 }
 
 class HasAWeirdAutoFilterMethod {
