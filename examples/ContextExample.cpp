@@ -19,7 +19,9 @@ public:
 
 int main() {
   ///////////////////////////
-  //// GlobalCoreContext ////
+  //                       //
+  //   GlobalCoreContext   //
+  //                       //
   ///////////////////////////
   { 
     // The CoreContext is the basic unit of organization in Autowriring. They are organized
@@ -37,7 +39,9 @@ int main() {
   }
 
   /////////////////////////////////////////////////
-  //// Context Creation and Switching Contexts ////
+  //                                             //
+  //   Context Creation and Switching Contexts   //
+  //                                             //
   /////////////////////////////////////////////////
   {
     // New contexts can be created using the 'Create' factory method on a context.
@@ -61,9 +65,11 @@ int main() {
     // Back in global context
   }
   
-  //////////////////////////////////////////////////////////
-  ////  Adding members to a context with AutoRequired   ////
-  //////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////
+  //                                                   //
+  //   Adding members to a context with AutoRequired   //
+  //                                                   //
+  ///////////////////////////////////////////////////////
   {
     // Switch to a child context
     AutoCreateContext ctxt;
@@ -87,7 +93,9 @@ int main() {
   } // 'ctxt' and all members a destroyed when the context goes out of scope
   
   //////////////////////
-  ////  Autowired   ////
+  //                  //
+  //     Autowired    //
+  //                  //
   //////////////////////
   {
     {
