@@ -146,12 +146,11 @@ bool BasicThread::Start(std::shared_ptr<Object> outstanding) {
   }
 
   // Kick off a thread and return here
-  MoveOnly<std::shared_ptr<Object>> out(std::move(outstanding));
   m_state->m_thisThread = std::thread(
-    [this, out] {
-      this->DoRun(std::move(out.value));
-    }
+    std::bind(&BasicThread::DoRun, this, std::placeholders::_1),
+    std::move(outstanding)
   );
+  
   return true;
 }
 
