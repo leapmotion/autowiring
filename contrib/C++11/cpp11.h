@@ -40,22 +40,6 @@
 #endif
 
 /*********************
- * Check nullptr availability
- *********************/
-#if _MSC_VER >= 1500
-  #define NULLPTR_AVAILABLE 1
-#elif CLANG_CHECK(3, 0) && (__cplusplus >= 201103 || defined(_LIBCPP_VERSION))
-  // Nullptr added to clang in version 3.0
-  #define NULLPTR_AVAILABLE 1
-#else
-  #define NULLPTR_AVAILABLE 0
-#endif
-
-#if !NULLPTR_AVAILABLE
-  #define nullptr 0
-#endif
-
-/*********************
  * Check override keyword availability
  *********************/
 #if __cplusplus < 201103 && !defined(_MSC_VER)
