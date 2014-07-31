@@ -73,33 +73,47 @@ protected:
 };
 
 TEST_F(ObjectPoolTest, LifeCycleTestLimitOne) {
-  std::shared_ptr<ObjectPool<LifeCycle>> pool(LifeCycle::NewObjectPool(~1, ~1));
-  std::shared_ptr<LifeCycle> obj;
+  std::shared_ptr<ObjectPool<LifeCycle>> pool(LifeCycle::NewObjectPool(2, 2));
+  std::shared_ptr<LifeCycle> objHold, objDrop;
 
-  // Create & Issue
+  // Create in Pool
   try {
-    (*pool)(obj);
-  } catch (std::runtime_error e) {
-    FAIL() << e.what();
-  }
-
-  // Return to Pool
-  try {
-    obj.reset();
+    pool->Preallocate(1);
   } catch (std::runtime_error e) {
     FAIL() << e.what();
   }
 
   // Issue from Pool
   try {
-    (*pool)(obj);
+    (*pool)(objHold);
   } catch (std::runtime_error e) {
     FAIL() << e.what();
   }
 
-  // Return & Destroy
+  // Issue from Pool with implicit Creation of objDrop
+  try {
+    (*pool)(objDrop);
+  } catch (std::runtime_error e) {
+    FAIL() << e.what();
+  }
+
+  // Return to Pool
+  try {
+    objDrop.reset();
+  } catch (std::runtime_error e) {
+    FAIL() << e.what();
+  }
+
+  // Destroy Pool with implicit Destruction of objDrop
   try {
     pool.reset();
+  } catch (std::runtime_error e) {
+    FAIL() << e.what();
+  }
+
+  // Return to Pool redirected to Destruction of objHold
+  try {
+    objHold.reset();
   } catch (std::runtime_error e) {
     FAIL() << e.what();
   }
