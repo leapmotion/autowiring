@@ -21,6 +21,90 @@ TEST_F(ObjectPoolTest, VerifyOutstandingLimit) {
   EXPECT_TRUE(obj3 == nullptr) << "Object pool issued more objects than it was authorized to issue";
 }
 
+class LifeCycle {
+  //Lock ensures that status checks are atomic.
+  //This does not prevent asynchronous calls.
+  std::mutex lock;
+  enum LifeStage {
+    construct,
+    pooled,
+    issued,
+    destruct
+  } stage;
+
+public:
+  LifeCycle() : stage(construct) {
+    std::lock_guard<std::mutex> guard(lock);
+    if (stage == construct)
+      stage = pooled;
+    else
+      throw std::runtime_error("Initialization interrupted");
+  }
+
+  ~LifeCycle() {
+    lock.lock();
+    if (stage != pooled)
+      throw std::runtime_error("Destructor called before Finalize");
+    lock.unlock();
+  }
+
+  static ObjectPool<LifeCycle>* NewObjectPool(size_t limit = ~0, size_t maxPooled = ~0) {
+    return new ObjectPool<LifeCycle>(limit, maxPooled,
+      [] { return new LifeCycle(); },
+      [] (LifeCycle& life) { life.Initialize(); },
+      [] (LifeCycle& life) { life.Finalize(); }
+    );
+  }
+
+protected:
+  void Initialize() {
+    std::lock_guard<std::mutex> guard(lock);
+    if (stage != pooled)
+      throw std::runtime_error("Initialize called on object not pooled");
+    stage = issued;
+  }
+
+  void Finalize() {
+    std::lock_guard<std::mutex> guard(lock);
+    if (stage != issued)
+      throw std::runtime_error("Finalize called on object not issued");
+    stage = pooled;
+  }
+};
+
+TEST_F(ObjectPoolTest, LifeCycleTestLimitOne) {
+  std::shared_ptr<ObjectPool<LifeCycle>> pool(LifeCycle::NewObjectPool(~1, ~1));
+  std::shared_ptr<LifeCycle> obj;
+
+  // Create & Issue
+  try {
+    (*pool)(obj);
+  } catch (std::runtime_error e) {
+    FAIL() << e.what();
+  }
+
+  // Return to Pool
+  try {
+    obj.reset();
+  } catch (std::runtime_error e) {
+    FAIL() << e.what();
+  }
+
+  // Issue from Pool
+  try {
+    (*pool)(obj);
+  } catch (std::runtime_error e) {
+    FAIL() << e.what();
+  }
+
+  // Return & Destroy
+  try {
+    pool.reset();
+  } catch (std::runtime_error e) {
+    FAIL() << e.what();
+  }
+}
+
 TEST_F(ObjectPoolTest, VerifyAsynchronousUsage) {
   AutoCreateContext ctxt;
   CurrentContextPusher pshr(ctxt);
