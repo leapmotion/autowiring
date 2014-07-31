@@ -88,7 +88,6 @@ set(Autowiring_SRCS
   ObjectPoolMonitor.cpp
   optional_ptr.h
   SatCounter.h
-  move_only.h
   MicroBolt.h
   SharedPointerSlot.h
   SlotInformation.h

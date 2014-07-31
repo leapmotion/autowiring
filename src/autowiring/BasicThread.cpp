@@ -5,7 +5,6 @@
 #include "BasicThreadStateBlock.h"
 #include "ContextEnumerator.h"
 #include "fast_pointer_cast.h"
-#include "move_only.h"
 
 // Explicit instantiation of supported time point types:
 template<> bool BasicThread::WaitUntil(std::chrono::steady_clock::time_point);
