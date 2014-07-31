@@ -21,6 +21,10 @@
 // If Boost.Thread is used, we want it to provide the new name for its <future> class
 #define BOOST_THREAD_PROVIDES_FUTURE
 
+#ifndef __has_feature
+  #define __has_feature(x) (AUTOWIRE_##x)
+#endif
+
 /*********************
  * __func__ function name support
  *********************/
@@ -37,22 +41,6 @@
 #else
   #define STL_UNORDERED_SET <unordered_set>
   #define STL_UNORDERED_MAP <unordered_map>
-#endif
-
-/*********************
- * Check nullptr availability
- *********************/
-#if _MSC_VER >= 1500
-  #define NULLPTR_AVAILABLE 1
-#elif CLANG_CHECK(3, 0) && (__cplusplus >= 201103 || defined(_LIBCPP_VERSION))
-  // Nullptr added to clang in version 3.0
-  #define NULLPTR_AVAILABLE 1
-#else
-  #define NULLPTR_AVAILABLE 0
-#endif
-
-#if !NULLPTR_AVAILABLE
-  #define nullptr 0
 #endif
 
 /*********************
@@ -160,8 +148,10 @@
  * noexcept support
  *********************/
 #ifdef _MSC_VER
+  #define AUTOWIRE_cxx_noexcept 0
   #define NOEXCEPT(x)
 #else
+  #define AUTOWIRE_cxx_noexcept 1
   #define NOEXCEPT(x) x noexcept
 #endif
 
