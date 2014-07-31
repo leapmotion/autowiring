@@ -1072,3 +1072,29 @@ TEST_F(AutoFilterTest, WaitWhilePacketOutstanding) {
   packet.reset();
   ASSERT_TRUE(ctxt->Wait(std::chrono::milliseconds(1))) << "Wait incorrectly timed out when nothing should have been running";
 }
+
+class DecoratesAndAcceptsNothing:
+  public CoreThread
+{
+public:
+  Deferred AutoFilter(Decoration<0>& dec) {
+    dec.i = 105;
+    return Deferred(this);
+  }
+};
+
+TEST_F(AutoFilterTest, DeferredDecorateOnly) {
+  AutoCurrentContext ctxt;
+  AutoRequired<DecoratesAndAcceptsNothing> daan;
+  AutoRequired<AutoPacketFactory> factory;
+
+  ctxt->Initiate();
+  auto packet = factory->NewPacket();
+
+  ctxt->SignalShutdown();
+  ASSERT_TRUE(daan->WaitFor(std::chrono::seconds(5)));
+
+  const Decoration<0>* dec;
+  ASSERT_TRUE(packet->Get(dec)) << "Deferred decorator didn't attach a decoration to an issued packet";
+  ASSERT_EQ(105, dec->i) << "Deferred decorate-only AutoFilter did not properly attach before context termination";
+}
