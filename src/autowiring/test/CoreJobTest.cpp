@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "CoreJobTest.hpp"
 #include <autowiring/CoreJob.h>
-#include <autowiring/move_only.h>
 #include THREAD_HEADER
 #include FUTURE_HEADER
 
@@ -12,7 +11,7 @@ TEST_F(CoreJobTest, VerifySimpleProperties) {
   ASSERT_FALSE(m_create->IsInitiated()) << "CoreJob reported it could receive events before its enclosing context was created";
 
   // Create a thread which will delay for acceptance, and then quit:
-  auto future = std::async(std::launch::async, [this] { //GRAHAM
+  auto future = std::async(std::launch::async, [this] {
     m_create->DelayUntilInitiated();
   });
 
@@ -99,24 +98,6 @@ TEST_F(CoreJobTest, VerifyNoEventReceivers){
 
   fire(&SimpleListen::SetFlag)();
   EXPECT_FALSE(listener->m_flag) << "Lister recived event event though it wasn't initiated";
-}
-
-class CanOnlyMove {
-public:
-  CanOnlyMove(){}
-  ~CanOnlyMove(){}
-  CanOnlyMove(const CanOnlyMove& derp) = delete;
-  CanOnlyMove(CanOnlyMove&& derp){}
-};
-
-TEST_F(CoreJobTest, MoveOnly){
-  CanOnlyMove move;
-  //CanOnlyMove derp = move; //error
-
-  MoveOnly<CanOnlyMove> mo(std::move(move));
-
-  MoveOnly<CanOnlyMove> first = mo;
-  //MoveOnly<CanOnlyMove> second = mo; //error
 }
 
 TEST_F(CoreJobTest, AbandonedDispatchers) {
