@@ -3,12 +3,6 @@
 #include <iostream>
 #include <memory>
 
-class MyEventReceiver:
-  public EventReceiver
-{
-  
-};
-
-int main(){
+int main() {
   std::cout << "Hello World" << std::endl;
 }
