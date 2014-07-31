@@ -125,10 +125,11 @@ TEST_F(AutoPacketFactoryTest, AutoPacketFactoryCycle) {
     ASSERT_EQ(55, hapfr->m_value) << "AutoFilter did not receive a packet as expected";
   }
 
-  // Verify that the context went out of scope as expected
-  ASSERT_TRUE(ctxtWeak.expired()) << "AutoPacketFactory incorrectly held a cyclic reference even after the context was shut down";
+  // The context cannot go out of socpe until all packets in the context are out of scope
+  ASSERT_FALSE(ctxtWeak.expired()) << "Context went out of scope before all packets were finished being processed";
 
   // Now we can release the packet and verify that everything gets cleaned up:
   packet.reset();
+  ASSERT_TRUE(ctxtWeak.expired()) << "AutoPacketFactory incorrectly held a cyclic reference even after the context was shut down";
   ASSERT_TRUE(hapfrWeak.expired()) << "The last packet from a factory was released; this should have resulted in teardown, but it did not";
 }
