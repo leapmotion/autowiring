@@ -21,6 +21,10 @@
 // If Boost.Thread is used, we want it to provide the new name for its <future> class
 #define BOOST_THREAD_PROVIDES_FUTURE
 
+#ifndef __has_feature
+  #define __has_feature(x) (AUTOWIRE_##x)
+#endif
+
 /*********************
  * __func__ function name support
  *********************/
@@ -144,8 +148,10 @@
  * noexcept support
  *********************/
 #ifdef _MSC_VER
+  #define AUTOWIRE_cxx_noexcept 0
   #define NOEXCEPT(x)
 #else
+  #define AUTOWIRE_cxx_noexcept 1
   #define NOEXCEPT(x) x noexcept
 #endif
 
