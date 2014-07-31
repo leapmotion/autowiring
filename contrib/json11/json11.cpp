@@ -242,11 +242,11 @@ const Json & static_null() {
  * Constructors
  */
 
-Json::Json() JSON11_NOEXCEPT                  : m_ptr(statics().null) {}
-Json::Json(std::nullptr_t) JSON11_NOEXCEPT : m_ptr(statics().null) {}
+Json::Json() JSON11_NOEXCEPT           : m_ptr(statics().null) {}
+Json::Json(std::nullptr_t)             : m_ptr(statics().null) {}
 Json::Json(double value)               : m_ptr(make_shared<JsonDouble>(value)) {}
 Json::Json(int value)                  : m_ptr(make_shared<JsonInt>(value)) {}
-Json::Json(bool value)                 : m_ptr(value ? statics().t : statics().f) {}
+Json::Json(bool value) JSON11_NOEXCEPT : m_ptr(value ? statics().t : statics().f) {}
 Json::Json(const string &value)        : m_ptr(make_shared<JsonString>(value)) {}
 Json::Json(string &&value)             : m_ptr(make_shared<JsonString>(move(value))) {}
 Json::Json(const char * value)         : m_ptr(make_shared<JsonString>(value)) {}
