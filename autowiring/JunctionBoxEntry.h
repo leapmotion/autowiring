@@ -22,14 +22,12 @@ template<class T>
 struct JunctionBoxEntry:
   JunctionBoxEntryBase
 {
-  typedef typename SelectTypeUnifier<T>::type EntryType_t;
-  
   JunctionBoxEntry(CoreContext* owner, std::shared_ptr<T> ptr) :
     JunctionBoxEntryBase(owner),
-    m_ptr(autowiring::fast_pointer_cast<EntryType_t>(ptr))
+    m_ptr(ptr)
   {}
 
-  std::shared_ptr<EntryType_t> m_ptr;
+  std::shared_ptr<T> m_ptr;
 
   JunctionBoxEntry& operator=(const JunctionBoxEntry& rhs) {
     // This shouldn't be used. non-c++11 containers require this...

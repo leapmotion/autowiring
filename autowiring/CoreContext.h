@@ -673,11 +673,12 @@ public:
   template<typename MemFn>
   InvokeRelay<MemFn> Invoke(MemFn memFn){
     typedef typename Decompose<MemFn>::type EventType;
+    typedef typename SelectTypeUnifier<EventType>::type UnifiedType;
 
     if (!std::is_same<AutowiringEvents,EventType>::value)
       GetGlobal()->Invoke(&AutowiringEvents::EventFired)(*this, typeid(EventType));
 
-    return MakeInvokeRelay(GetJunctionBox<EventType>(), memFn);
+    return MakeInvokeRelay(GetJunctionBox<UnifiedType>(), memFn);
   }
 
   /// <summary>
