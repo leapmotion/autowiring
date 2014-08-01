@@ -145,7 +145,9 @@ public:
         fn(*currentEvent.m_ptr, args...);
       } catch(...) {
         teardown.push_back(ContextDumbToWeak(currentEvent.m_owner));
-        this->FilterFiringException(currentEvent.m_ptr);
+        
+        typedef typename SelectTypeUnifier<T>::type ObjectBase_t;
+        this->FilterFiringException(autowiring::fast_pointer_cast<ObjectBase_t>(currentEvent.m_ptr));
       }
       lk.lock();
 
