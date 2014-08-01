@@ -47,6 +47,8 @@ set(AutowiringTest_SRCS
   ExceptionFilterTest.cpp
   EventReceiverTest.hpp
   EventReceiverTest.cpp
+  EventRegistryTest.hpp
+  EventRegistryTest.cpp
   FactoryTest.hpp
   FactoryTest.cpp
   GlobalInitTest.hpp

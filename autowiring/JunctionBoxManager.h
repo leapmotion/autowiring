@@ -39,7 +39,7 @@ public:
     const std::type_index& pTypeIndex = typeid(T);
 
     auto box = m_junctionBoxes.find(pTypeIndex);
-    assert(box != m_junctionBoxes.end() && "If junction box isn't found, EventRegistry isn't working");
+    assert(box != m_junctionBoxes.end() && "If JunctionBox isn't found, EventRegistry isn't working");
 
     //Check here if any listening marshals might be interested in receiving the fired args
     auto mapfinditerator = m_eventOutputStreams.find(pTypeIndex);

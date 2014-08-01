@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "CreationRules.h"
-#include "CoreContext.h"
 #include <typeinfo>
 #include STL_TUPLE_HEADER
 #include MEMORY_HEADER
@@ -84,9 +83,6 @@ struct TypeRegistryEntryT:
 
   virtual const std::type_info& GetTypeInfo(void) const override { return typeid(T); }
 
-  //GRAHAM
-  //bool IsEventReceiver(void) const override { return std::is_base_of<EventReceiver, T>::value; }
-
   virtual std::shared_ptr<JunctionBoxBase> NewJunctionBox(void) const override {
     return std::static_pointer_cast<JunctionBoxBase>(
       std::make_shared<JunctionBox<T>>()
@@ -105,7 +101,7 @@ struct TypeRegistryEntryT:
 
   template<typename U>
   typename std::enable_if<is_injectable<U>::value>::type AnyInject(void) const {
-    CoreContext::CurrentContext()->Inject<U>();
+    //CoreContext::CurrentContext()->Inject<U>();
   }
 
   template<typename U>
@@ -116,8 +112,8 @@ struct TypeRegistryEntryT:
   virtual void Inject(void) const override { AnyInject<T>(); }
 };
 
-extern const TypeRegistryEntry* g_pFirstEntry;
-extern size_t g_entryCount;
+extern const TypeRegistryEntry* g_pFirstTypeEntry;
+extern size_t g_typeEntryCount;
 
 /// <summary>
 /// Adds the specified type to the universal type registry

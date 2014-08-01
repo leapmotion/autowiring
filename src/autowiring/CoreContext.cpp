@@ -10,7 +10,6 @@
 #include "JunctionBox.h"
 #include "MicroBolt.h"
 #include "NewAutoFilter.h"
-#include "TypeRegistry.h"
 #include <algorithm>
 #include <stack>
 #include <iostream>

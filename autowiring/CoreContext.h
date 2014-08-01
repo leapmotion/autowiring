@@ -19,6 +19,7 @@
 #include "EventInputStream.h"
 #include "ExceptionFilter.h"
 #include "TeardownNotifier.h"
+#include "TypeRegistry.h"
 #include "TypeUnifier.h"
 
 #include <list>
@@ -115,8 +116,7 @@ protected:
   struct MemoEntry {
     MemoEntry(void) :
       pFirst(nullptr)
-    {
-    }
+    {}
 
     // The first deferrable autowiring which requires this type, if one exists:
     DeferrableAutowiring* pFirst;
@@ -512,6 +512,9 @@ public:
   /// </summary>
   template<typename T, typename... Args>
   std::shared_ptr<T> Construct(Args&&... args) {
+    // Add this type to the TypeRegistry
+    (void) RegType<T>::r;
+    
     // If T doesn't inherit Object, then we need to compose a unifying type which does
     typedef typename SelectTypeUnifier<T>::type TActual;
     static_assert(std::is_base_of<Object, TActual>::value, "Constructive type does not implement Object as expected");
@@ -786,12 +789,8 @@ public:
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    // GRAHAM
-    //static_assert(std::is_base_of<EventReceiver, T>::value ||
-    //              has_autofilter<T>::value,
-    //              "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
-    
     const AddInternalTraits traits(AutoFilterDescriptorSelect<T>(pSnooper), pSnooper);
+    
     // Add to collections of snoopers
     InsertSnooper(pSnooper);
 
@@ -812,14 +811,10 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    //GRAHAM
-    //static_assert(std::is_base_of<EventReceiver, T>::value ||
-    //              has_autofilter<T>::value,
-    //              "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
-    
     const AddInternalTraits traits(AutoFilterDescriptorSelect<T>(pSnooper), pSnooper);
+    
     RemoveSnooper(pSnooper);
-
+    
     auto oSnooper = std::static_pointer_cast<Object>(pSnooper);
     
     // Cleanup if its an EventReceiver
