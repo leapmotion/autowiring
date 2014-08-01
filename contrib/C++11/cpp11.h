@@ -70,7 +70,7 @@
  * exception_ptr availability
  *********************/
 #if (defined(__APPLE__) && !defined(_LIBCPP_VERSION)) || __ANDROID__
-  #define EXCEPTION_PTR_HEADER <C++11/boost_exception_ptr.h>
+  #define EXCEPTION_PTR_HEADER <contrib/C++11/boost_exception_ptr.h>
 #else
   #define EXCEPTION_PTR_HEADER <stdexcept>
   #define throw_rethrowable throw
@@ -82,7 +82,7 @@
 #if STL11_ALLOWED
   #define SYSTEM_ERROR_HEADER <system_error>
 #else
-  #define SYSTEM_ERROR_HEADER <C++11/boost_system_error.h>
+  #define SYSTEM_ERROR_HEADER <contrib/C++11/boost_system_error.h>
 #endif
 
 /*********************
@@ -91,7 +91,7 @@
 #if _MSC_VER >= 1700 || (STL11_ALLOWED && !__ANDROID__)
   #define FUTURE_HEADER <future>
 #else
-  #define FUTURE_HEADER <C++11/boost_future.h>
+  #define FUTURE_HEADER <contrib/C++11/boost_future.h>
 #endif
 
 /**
@@ -101,7 +101,7 @@
 #if STL11_ALLOWED
   #define TYPE_INDEX_HEADER <typeindex>
 #else
-  #define TYPE_INDEX_HEADER <C++11/type_index.h>
+  #define TYPE_INDEX_HEADER <contrib/C++11/type_index.h>
 #endif
 
 /*********************
@@ -122,7 +122,7 @@
     #define TYPE_TRAITS_HEADER <type_traits>
   #endif
 #else
-  #define TYPE_TRAITS_HEADER <C++11/boost_type_traits.h>
+  #define TYPE_TRAITS_HEADER <contrib/C++11/boost_type_traits.h>
 #endif
 
 /*********************
@@ -139,9 +139,9 @@
 #endif
 
 #if SHARED_PTR_IN_STL && STL11_ALLOWED
-  #define MEMORY_HEADER <C++11/memory.h>
+  #define MEMORY_HEADER <contrib/C++11/memory.h>
 #else
-  #define MEMORY_HEADER <C++11/memory_nostl11.h>
+  #define MEMORY_HEADER <contrib/C++11/memory_nostl11.h>
 #endif
 
 /*********************
@@ -175,7 +175,7 @@
   #define FUNCTIONAL_HEADER <functional>
   #define _WEBSOCKETPP_CPP11_FUNCTIONAL_
 #else
-  #define FUNCTIONAL_HEADER <C++11/boost_functional.h>
+  #define FUNCTIONAL_HEADER <contrib/C++11/boost_functional.h>
 #endif
 
 #ifndef LAMBDAS_AVAILABLE
@@ -196,7 +196,7 @@
 #if ARRAYS_AVAILABLE
 #define ARRAY_HEADER <array>
 #else
-#define ARRAY_HEADER <C++11/boost_array.h>
+#define ARRAY_HEADER <contrib/C++11/boost_array.h>
 #endif
 
 /**
@@ -217,7 +217,7 @@
   #if !defined(__APPLE__) || __cplusplus >= 201103L
     #define BOOST_NO_UNICODE_LITERALS 1
   #endif
-  #define RVALUE_HEADER <C++11/boost_rvalue.h>
+  #define RVALUE_HEADER <contrib/C++11/boost_rvalue.h>
 #endif
 
 /**
@@ -226,7 +226,7 @@
 #if STL11_ALLOWED
   #define ATOMIC_HEADER <atomic>
 #else
-  #define ATOMIC_HEADER <C++11/boost_atomic.h>
+  #define ATOMIC_HEADER <contrib/C++11/boost_atomic.h>
 #endif
 
 /**
@@ -235,16 +235,16 @@
 #if STL11_ALLOWED
   #define STL_TUPLE_HEADER <tuple>
 #else
-  #define STL_TUPLE_HEADER <C++11/boost_tuple.h>
+  #define STL_TUPLE_HEADER <contrib/C++11/boost_tuple.h>
 #endif
 
  /**
  * Mutex
  */
 #if STL11_ALLOWED && !__ANDROID__
-  #define MUTEX_HEADER <C++11/mutex.h>
+  #define MUTEX_HEADER <contrib/C++11/mutex.h>
 #else
-  #define MUTEX_HEADER <C++11/boost_mutex.h>
+  #define MUTEX_HEADER <contrib/C++11/boost_mutex.h>
 #endif
 
 /**
@@ -254,7 +254,7 @@
   #define THREAD_HEADER <thread>
   #define _WEBSOCKETPP_CPP11_THREAD_
 #else
-  #define THREAD_HEADER <C++11/boost_thread.h>
+  #define THREAD_HEADER <contrib/C++11/boost_thread.h>
 #endif
 
  /**
@@ -263,7 +263,7 @@
 #if STL11_ALLOWED && !__ANDROID__
   #define CHRONO_HEADER <chrono>
 #else
-  #define CHRONO_HEADER <C++11/boost_chrono.h>
+  #define CHRONO_HEADER <contrib/C++11/boost_chrono.h>
 #endif
 
  /**
@@ -272,7 +272,7 @@
 #if STL11_ALLOWED
   #define UTILITY_HEADER <utility>
 #else
-  #define UTILITY_HEADER <C++11/boost_utility.h>
+  #define UTILITY_HEADER <contrib/C++11/boost_utility.h>
 #endif
 
 /**
