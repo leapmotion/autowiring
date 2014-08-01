@@ -60,6 +60,8 @@ set(Autowiring_SRCS
   EventInputStream.h
   EventOutputStream.h
   EventOutputStream.cpp
+  EventRegistry.h
+  EventRegistry.cpp
   fast_pointer_cast.h
   JunctionBox.h
   JunctionBoxBase.h

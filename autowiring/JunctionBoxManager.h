@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "EventRegistry.h"
 #include "JunctionBoxBase.h"
 #include "JunctionBoxEntry.h"
 #include "uuid.h"
@@ -33,10 +34,12 @@ public:
 
   template<typename T>
   std::shared_ptr<JunctionBoxBase> Get(void) {
+    // Add this type to the event registry. All events call this function
+    (void)RegEvent<T>::r;
     const std::type_index& pTypeIndex = typeid(T);
 
     auto box = m_junctionBoxes.find(pTypeIndex);
-    assert(box != m_junctionBoxes.end());
+    assert(box != m_junctionBoxes.end() && "If junction box isn't found, EventRegistry isn't working");
 
     //Check here if any listening marshals might be interested in receiving the fired args
     auto mapfinditerator = m_eventOutputStreams.find(pTypeIndex);

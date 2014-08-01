@@ -46,11 +46,6 @@ struct TypeRegistryEntry {
   /// </summary>
   virtual const std::type_info& GetTypeInfo(void) const = 0;
 
-  /// <returns>
-  /// True if this type is an event receiver type
-  /// </returns>
-  //virtual bool IsEventReceiver(void) const = 0;
-
   /// <summary>
   /// Constructor method, used to generate a new junction box
   /// </summary>
