@@ -3,7 +3,6 @@
 #include "ExceptionFilterTest.hpp"
 #include "TestFixtures/ThrowsWhenFired.hpp"
 #include "TestFixtures/ThrowsWhenRun.hpp"
-#include <autowiring/EventReceiver.h>
 #include <autowiring/ExceptionFilter.h>
 #include <stdexcept>
 #include <sstream>
@@ -69,7 +68,7 @@ public:
     }
   }
 
-  virtual void Filter(const JunctionBoxBase* pJunctionBox, EventReceiver* pRecipient) override {
+  virtual void Filter(const JunctionBoxBase* pJunctionBox, Object* pRecipient) override {
     m_hit = true;
     try {
       throw;

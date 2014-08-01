@@ -49,7 +49,7 @@ struct TypeRegistryEntry {
   /// <returns>
   /// True if this type is an event receiver type
   /// </returns>
-  virtual bool IsEventReceiver(void) const = 0;
+  //virtual bool IsEventReceiver(void) const = 0;
 
   /// <summary>
   /// Constructor method, used to generate a new junction box
@@ -89,7 +89,7 @@ struct TypeRegistryEntryT:
 
   virtual const std::type_info& GetTypeInfo(void) const override { return typeid(T); }
 
-  bool IsEventReceiver(void) const override { return std::is_base_of<EventReceiver, T>::value; }
+  //bool IsEventReceiver(void) const override { return std::is_base_of<EventReceiver, T>::value; }
 
   virtual std::shared_ptr<JunctionBoxBase> NewJunctionBox(void) const override {
     return std::static_pointer_cast<JunctionBoxBase>(

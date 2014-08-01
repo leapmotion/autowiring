@@ -299,8 +299,6 @@ public:
   AutoFired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
     m_junctionBox(ctxt->GetJunctionBox<T>())
   {
-    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
-
     // Add an utterance of the TypeRegistry so we can add this AutoFired type to our collection
     (void) RegType<T>::r;
   }

@@ -2,7 +2,6 @@
 #pragma once
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
-#include "EventReceiver.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
 #include "fast_pointer_cast.h"
@@ -17,7 +16,6 @@
 #include TYPE_TRAITS_HEADER
 
 class CoreContext;
-class EventReceiver;
 class JunctionBoxBase;
 
 template<typename T>
@@ -81,14 +79,14 @@ public:
     return (std::lock_guard<std::mutex>)m_lock, !m_st.empty();
   }
 
-  void Add(const JunctionBoxEntry<EventReceiver>& rhs) override {
+  void Add(const JunctionBoxEntry<Object>& rhs) override {
     auto casted = rhs.Rebind<T>();
     if(casted)
       // Proposed type is directly one of our receivers
       Add(casted);
   }
 
-  void Remove(const JunctionBoxEntry<EventReceiver>& rhs) override {
+  void Remove(const JunctionBoxEntry<Object>& rhs) override {
     auto casted = rhs.Rebind<T>();
     if(casted)
       Remove(casted);

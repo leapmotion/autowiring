@@ -70,5 +70,5 @@ public:
   /// <remarks>
   /// Implementors can use "throw" with no arguments to trigger a rethrow of the originating exception.
   /// </remarks>
-  virtual void Filter(const JunctionBoxBase* pJunctionBox, EventReceiver* pRecipient) {}
+  virtual void Filter(const JunctionBoxBase* pJunctionBox, Object* pRecipient) {}
 };

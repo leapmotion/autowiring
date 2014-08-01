@@ -8,8 +8,7 @@
 JunctionBoxManager::JunctionBoxManager(void) {
   // Enumerate all event types to initialize a new JunctionBox for each
   for(auto p = g_pFirstEntry; p; p = p->pFlink)
-    if(p->IsEventReceiver())
-      m_junctionBoxes[p->ti] = p->NewJunctionBox();
+    m_junctionBoxes[p->ti] = p->NewJunctionBox();
 
   // Ensure that these two types are specially mentioned:
   (void) RegType<AutowiringEvents>::r;
