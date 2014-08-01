@@ -12,7 +12,7 @@ class Object;
 
 // Checks if an Object* listens to a event T;
 struct EventIdentifierBase {
-  virtual bool Is(const Object* obj) = 0;
+  virtual bool IsFiredBy(const Object* obj) = 0;
   virtual const std::type_info& Type() = 0;
 };
 
@@ -21,7 +21,7 @@ struct EventIdentifier:
   public EventIdentifierBase
 {
   // true if "obj" is an event receiver for T
-  bool Is(const Object* obj){
+  bool IsFiredBy(const Object* obj){
     return !!dynamic_cast<const T*>(obj);
   }
   

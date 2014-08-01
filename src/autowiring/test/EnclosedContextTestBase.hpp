@@ -1,5 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include <autowiring/ContextMember.h>
+#include <autowiring/ExceptionFilter.h>
 #include MEMORY_HEADER
 
 /// <summary>

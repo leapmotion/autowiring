@@ -3,5 +3,5 @@
 #include <EnclosedContextTestBase.hpp>
 
 class AutoNetServerTest:
-  public EnclosedContextTestBase
+  public testing::Test
 {};
