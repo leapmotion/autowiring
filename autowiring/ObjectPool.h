@@ -116,9 +116,6 @@ protected:
   /// The Finalize function will be applied is in the shared_ptr destructor.
   /// </remarks>
   std::shared_ptr<T> Wrap(T* pObj) {
-    // Initialize the issued object
-    m_initial(*pObj);
-
     // Fill the shared pointer with the object we created, and ensure that we override
     // the destructor so that the object is returned to the pool when it falls out of
     // scope.
@@ -126,7 +123,7 @@ protected:
     auto monitor = m_monitor;
     std::function<void(T&)> final = m_final;
 
-    return std::shared_ptr<T>(
+    auto retVal = std::shared_ptr<T>(
       pObj,
       [poolVersion, monitor, final](T* ptr) {
         // Finalize object before destruction or return to pool
@@ -147,6 +144,12 @@ protected:
         static_cast<ObjectPool<T>*>(monitor->GetOwner())->Return(poolVersion, unique);
       }
     );
+
+    // Initialize the issued object, now that a shared pointer has been created for it
+    m_initial(*pObj);
+
+    // All done
+    return retVal;
   }
 
   void Return(size_t poolVersion, std::unique_ptr<T>& unique) {

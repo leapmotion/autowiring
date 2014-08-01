@@ -345,16 +345,17 @@ public:
   /// If multiple values are specified, all will be simultaneously made valid and
   /// then invalidated.
   /// </remarks>
-  template<class... Ts>
-  void DecorateImmediate(const Ts&... immeds) {
+  template<class T, class... Ts>
+  void DecorateImmediate(const T& immed, const Ts&... immeds) {
     // These are the things we're going to be working with while we perform immediate decoration:
-    static const std::type_info* sc_typeInfo [] = {&typeid(Ts)...};
-    const void* pvImmeds[] = {&immeds...};
-    DecorationDisposition* pTypeSubs[sizeof...(Ts)];
+    static const std::type_info* sc_typeInfo [] = {&typeid(T), &typeid(Ts)...};
+    const void* pvImmeds [] = {&immed, &immeds...};
+    DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)];
 
     // None of the inputs may be shared pointers--if any of the inputs are shared pointers, they must be attached
     // to this packet via Decorate, or else dereferenced and used that way.
     static_assert(
+      !is_shared_ptr<T>::value &&
       !is_any<is_shared_ptr<Ts>...>::value,
       "DecorateImmediate must not be used to attach a shared pointer, use Decorate on such a decoration instead"
     );
@@ -362,7 +363,7 @@ public:
     // Perform standard decoration with a short initialization:
     {
       std::lock_guard<std::mutex> lk(m_lock);
-      for(size_t i = 0; i < sizeof...(Ts); i++) {
+      for(size_t i = 0; i <= sizeof...(Ts); i++) {
         pTypeSubs[i] = &m_decorations[*sc_typeInfo[i]];
         if(pTypeSubs[i]->wasCheckedOut) {
           std::stringstream ss;
@@ -388,11 +389,11 @@ public:
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-      static const std::type_info* lamda_typeInfos [] = {&typeid(Ts)...};
+      static const std::type_info* lamda_typeInfos [] = {&typeid(T), &typeid(Ts)...};
       for(auto ti : lamda_typeInfos)
         MarkUnsatisfiable(*ti);
     }),
-    PulseSatisfaction(pTypeSubs, sizeof...(Ts));
+    PulseSatisfaction(pTypeSubs, 1 + sizeof...(Ts));
   }
 
   /// <returns>
