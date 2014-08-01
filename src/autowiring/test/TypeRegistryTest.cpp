@@ -7,9 +7,7 @@
 #include <autowiring/TypeRegistry.h>
 
 template<int>
-class Registered:
-  public EventReceiver
-{};
+class Registered{};
 
 TEST_F(TypeRegistryTest, VerifySimpleLocalRegistration) {
   // Register two entries statically by uttering the static member's name:
@@ -55,9 +53,7 @@ TEST_F(TypeRegistryTest, VerifyExteriorModuleRegistration) {
   ASSERT_EQ(g_entryCount, nTypes) << "Linked list did not contain the same number of entries as reported in g_entryCount";
 }
 
-class OnlyUsedForRegistrationChecking:
-  public EventReceiver
-{};
+class OnlyUsedForRegistrationChecking {};
 
 TEST_F(TypeRegistryTest, AutoFiredShouldRegister) {
   AutoFired<OnlyUsedForRegistrationChecking> af;

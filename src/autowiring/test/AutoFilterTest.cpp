@@ -4,6 +4,7 @@
 #include "TestFixtures/Decoration.hpp"
 #include <autowiring/AutoPacket.h>
 #include <autowiring/AutoPacketFactory.h>
+#include <autowiring/Deferred.h>
 #include <autowiring/NewAutoFilter.h>
 #include THREAD_HEADER
 

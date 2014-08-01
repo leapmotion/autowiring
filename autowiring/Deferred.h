@@ -34,13 +34,3 @@ public:
     assert(false);
   }
 };
-
-/// <summary>
-/// Used to identify event recipients
-/// </summary>
-class EventReceiver {
-public:
-  virtual ~EventReceiver(void) {
-  }
-};
-

@@ -4,7 +4,6 @@
 #include FUNCTIONAL_HEADER
 
 class JunctionBoxBase;
-class EventReceiver;
 
 /// <summary>
 /// Implements an exception filter type, invoked when an unhandled exception is thrown

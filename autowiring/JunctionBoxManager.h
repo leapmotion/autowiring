@@ -12,7 +12,6 @@
 #include STL_UNORDERED_MAP
 #include TYPE_TRAITS_HEADER
 
-class EventReceiver;
 class EventOutputStreamBase;
 class CoreContext;
 class JunctionBoxBase;
@@ -62,8 +61,8 @@ public:
   /// </summary>
   void Initiate(void);
 
-  void AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver);
-  void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
+  void AddEventReceiver(JunctionBoxEntry<Object> receiver);
+  void RemoveEventReceiver(JunctionBoxEntry<Object> pRecvr);
 
   /// <summary>
   /// This method checks whether eventoutputstream listeners for the given type still exist.
@@ -110,7 +109,6 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<EventOutputStream<T>> CreateEventOutputStream(void) {
-    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot create an output stream based on a non-event type");
     static_assert(uuid_of<T>::value, "Cannot create an output stream on type T, the type was not defined with DECLARE_UUID");
     auto retval =  std::make_shared<EventOutputStream<T>>();
     auto upcastptr = static_cast<std::shared_ptr<EventOutputStreamBase>>(retval);

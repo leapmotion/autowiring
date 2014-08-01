@@ -223,7 +223,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
 
   // Event receivers:
   if(traits.pRecvr) {
-    JunctionBoxEntry<EventReceiver> entry(this, traits.pRecvr);
+    JunctionBoxEntry<Object> entry(this, traits.pRecvr);
 
     // Add to our vector of local receivers first:
     (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
@@ -647,7 +647,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     cur.first->Finalize(cur.second);
 }
 
-void CoreContext::AddEventReceiver(JunctionBoxEntry<EventReceiver> entry) {
+void CoreContext::AddEventReceiver(JunctionBoxEntry<Object> entry) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
@@ -690,7 +690,7 @@ void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSe
     m_pParent->RemoveEventReceivers(first, last);
 }
 
-void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<EventReceiver>& receiver) {
+void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<Object>& receiver) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     if(
@@ -743,7 +743,7 @@ void CoreContext::FilterException(void) {
     throw;
 }
 
-void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient) {
+void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, Object* pRecipient) {
   // Filter in order:
   for(CoreContext* pCur = this; pCur; pCur = pCur->GetParentContext().get())
     for(auto q = pCur->m_filters.begin(); q != pCur->m_filters.end(); q++)

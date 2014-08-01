@@ -1,5 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "TypeUnifier.h"
+#include "fast_pointer_cast.h"
 #include <stdexcept>
 #include MEMORY_HEADER
 
@@ -20,12 +22,14 @@ template<class T>
 struct JunctionBoxEntry:
   JunctionBoxEntryBase
 {
+  typedef typename SelectTypeUnifier<T>::type EntryType_t;
+  
   JunctionBoxEntry(CoreContext* owner, std::shared_ptr<T> ptr) :
     JunctionBoxEntryBase(owner),
-    m_ptr(ptr)
+    m_ptr(autowiring::fast_pointer_cast<EntryType_t>(ptr))
   {}
 
-  std::shared_ptr<T> m_ptr;
+  std::shared_ptr<EntryType_t> m_ptr;
 
   JunctionBoxEntry& operator=(const JunctionBoxEntry& rhs) {
     // This shouldn't be used. non-c++11 containers require this...

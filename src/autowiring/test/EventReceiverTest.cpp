@@ -332,9 +332,7 @@ TEST_F(EventReceiverTest, NoEventsAfterShutdown) {
   EXPECT_FALSE(receiver->m_zero) << "A context member caught an event after its enclosing context was torn down";
 }
 
-class PassByValueInterface:
-  public virtual EventReceiver
-{
+class PassByValueInterface {
 public:
   PassByValueInterface() {}
   virtual ~PassByValueInterface() {}
@@ -467,9 +465,7 @@ TEST_F(EventReceiverTest, VerifyCorrectContext){
 }
 
 TEST_F(EventReceiverTest, EventChain){
-  class Middle:
-    public EventReceiver
-  {
+  class Middle{
   public:
     virtual void MyEvent() = 0;
   };

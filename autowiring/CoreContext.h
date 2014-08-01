@@ -137,7 +137,7 @@ protected:
   std::vector<ExceptionFilter*> m_filters;
 
   // All known event receivers and receiver proxies originating from this context:
-  typedef std::set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
+  typedef std::set<JunctionBoxEntry<Object>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
 
   // List of eventReceivers to be added when this context in initiated
@@ -245,7 +245,7 @@ protected:
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
   /// <param name="pRecvr">The junction box entry corresponding to the receiver type</param>
-  void AddEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
+  void AddEventReceiver(JunctionBoxEntry<Object> pRecvr);
 
   /// <summary>
   /// Add delayed event receivers
@@ -313,7 +313,7 @@ protected:
       pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
       pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
       pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
-      pRecvr(autowiring::fast_pointer_cast<EventReceiver>(value))
+      pRecvr(autowiring::fast_pointer_cast<Object>(value))
     {
       if(!pObject)
         throw autowiring_error("Cannot add a type which does not implement Object");
@@ -335,7 +335,7 @@ protected:
     const std::shared_ptr<CoreRunnable> pCoreRunnable;
     const std::shared_ptr<ExceptionFilter> pFilter;
     const std::shared_ptr<BoltBase> pBoltBase;
-    const std::shared_ptr<EventReceiver> pRecvr;
+    const std::shared_ptr<Object> pRecvr;
   };
 
   /// <summary>
@@ -384,7 +384,7 @@ protected:
   /// This method has no effect if the passed value is presently a snooper in this context; the
   /// snooper collection must therefore be updated prior to the call to this method.
   /// </remarks>
-  void UnsnoopEvents(Object* snooper, const JunctionBoxEntry<EventReceiver>& traits);
+  void UnsnoopEvents(Object* snooper, const JunctionBoxEntry<Object>& traits);
   
   /// <summary>
   /// Forwarding routine, only removes from this context
@@ -771,7 +771,7 @@ public:
   /// </summary>
   /// <param name="pProxy">The sender of the event</param>
   /// <param name="pRecipient">The recipient of the event</param>
-  void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient);
+  void FilterFiringException(const JunctionBoxBase* pProxy, Object* pRecipient);
 
   /// <summary>
   /// Enables the passed event receiver to obtain messages broadcast by this context
@@ -786,9 +786,10 @@ public:
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    static_assert(std::is_base_of<EventReceiver, T>::value ||
-                  has_autofilter<T>::value,
-                  "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
+    // GRAHAM
+    //static_assert(std::is_base_of<EventReceiver, T>::value ||
+    //              has_autofilter<T>::value,
+    //              "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
     
     const AddInternalTraits traits(AutoFilterDescriptorSelect<T>(pSnooper), pSnooper);
     // Add to collections of snoopers
@@ -796,7 +797,7 @@ public:
 
     // Add EventReceiver
     if(traits.pRecvr)
-      AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, traits.pRecvr));
+      AddEventReceiver(JunctionBoxEntry<Object>(this, traits.pRecvr));
     
     // Add PacketSubscriber;
     if(traits.subscriber)
@@ -811,9 +812,10 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    static_assert(std::is_base_of<EventReceiver, T>::value ||
-                  has_autofilter<T>::value,
-                  "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
+    //GRAHAM
+    //static_assert(std::is_base_of<EventReceiver, T>::value ||
+    //              has_autofilter<T>::value,
+    //              "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
     
     const AddInternalTraits traits(AutoFilterDescriptorSelect<T>(pSnooper), pSnooper);
     RemoveSnooper(pSnooper);
@@ -822,7 +824,7 @@ public:
     
     // Cleanup if its an EventReceiver
     if(traits.pRecvr)
-      UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<EventReceiver>(this, traits.pRecvr));
+      UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<Object>(this, traits.pRecvr));
     
     // Cleanup if its a packet listener
     if(traits.subscriber)

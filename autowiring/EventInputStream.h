@@ -54,14 +54,7 @@ struct Expression<R(W::*)(ToBindArgs...) >: public ExpressionBase
 /// Allows the deserialization of events from an output stream, in order to replay them in-process
 /// </summary>
 template<class T>
-class EventInputStream
-{
-public:
-  static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot instantiate an event input stream on a non-event type");
-
-private:
-  std::map<std::string, std::shared_ptr<ExpressionBase> > m_EventMap;
-
+class EventInputStream {
 public:
   EventInputStream(){}
 
@@ -118,4 +111,7 @@ public:
     }
     return location + 1;
   }
+  
+private:
+  std::map<std::string, std::shared_ptr<ExpressionBase> > m_EventMap;
 };

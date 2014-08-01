@@ -22,9 +22,7 @@ class dispatch_aborted_exception:
 /// <remarks>
 /// A DispatchQueue is a type of event receiver which allows for the reception of deferred events.
 /// </remarks>
-class DispatchQueue:
-  public virtual EventReceiver
-{
+class DispatchQueue {
 public:
   DispatchQueue(void);
 

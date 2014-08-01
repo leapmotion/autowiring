@@ -89,6 +89,7 @@ struct TypeRegistryEntryT:
 
   virtual const std::type_info& GetTypeInfo(void) const override { return typeid(T); }
 
+  //GRAHAM
   //bool IsEventReceiver(void) const override { return std::is_base_of<EventReceiver, T>::value; }
 
   virtual std::shared_ptr<JunctionBoxBase> NewJunctionBox(void) const override {

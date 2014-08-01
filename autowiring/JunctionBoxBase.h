@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <vector>
+#include "Object.h"
 #include MUTEX_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_SET

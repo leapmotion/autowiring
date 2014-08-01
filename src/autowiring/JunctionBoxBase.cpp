@@ -13,7 +13,7 @@ void JunctionBoxBase::TerminateAll(const std::vector<std::weak_ptr<CoreContext>>
   }
 }
 
-void JunctionBoxBase::FilterFiringException(const std::shared_ptr<EventReceiver>& pRecipient) const {
+void JunctionBoxBase::FilterFiringException(const std::shared_ptr<Object>& pRecipient) const {
   // Obtain the current context and pass control:
   CoreContext::CurrentContext()->FilterFiringException(this, pRecipient.get());
 }

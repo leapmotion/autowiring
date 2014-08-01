@@ -2,6 +2,7 @@
 #pragma once
 #include "AutowirableSlot.h"
 #include "Decompose.h"
+#include "Deferred.h"
 #include "GlobalCoreContext.h"
 #include "TypeRegistry.h"
 #include MEMORY_HEADER
