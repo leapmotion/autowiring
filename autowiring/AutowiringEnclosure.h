@@ -1,17 +1,19 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include <autowiring/autowiring.h>
+#include <gtest/gtest.h>
 #include MEMORY_HEADER
 
 /// <summary>
 /// General purpose exception filter, used for tracking exceptions thrown from unit test CoreThreads
 /// </summary>
-class EnclosedContextExceptionFilter:
+class AutowiringEnclosureExceptionFilter:
   public ContextMember,
   public ExceptionFilter
 {
 public:
-  EnclosedContextExceptionFilter(void) :
-    ContextMember("EnclosedContextExceptionFilter"),
+  AutowiringEnclosureExceptionFilter(void) :
+    ContextMember("AutowiringEnclosureExceptionFilter"),
     m_excepted(false)
   {}
 
@@ -42,7 +44,7 @@ public:
 /// tests complete in a timely fashion.  If a longer stop duration is desired, you must provide a
 /// destructor which performs teardown in a different way.
 /// </remarks>
-class EnclosedContextTestBase:
+class AutowiringEnclosure:
   public testing::EmptyTestEventListener
 {
 private:

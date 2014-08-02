@@ -1,4 +1,5 @@
 add_googletest(test)
+add_googletest(benchmark)
 
 set(Autowiring_SRCS
   at_exit.h
@@ -149,18 +150,7 @@ else()
   set(Autowiring_SRCS ${Autowiring_Unix_SRCS} ${Autowiring_SRCS})
 endif()
 
-# All include files are located in /autowiring from here, so prepend that to all sources
-set(Autowiring_SRCS_TEMP ${Autowiring_SRCS})
-set(Autowiring_SRCS)
-foreach(i ${Autowiring_SRCS_TEMP})
-  string(REGEX MATCH ".*\\.h" hfile ${i})
-  if(hfile)
-    list(APPEND Autowiring_SRCS ${PROJECT_SOURCE_DIR}/autowiring/${i})
-  else()
-    list(APPEND Autowiring_SRCS ${i})
-  endif()
-endforeach()
-
+rewrite_header_paths(Autowiring_SRCS)
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")

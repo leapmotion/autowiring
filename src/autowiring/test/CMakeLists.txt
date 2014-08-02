@@ -9,8 +9,6 @@ set(AutowiringTest_SRCS
   AutoInjectableTest.cpp
   AutoPacketFactoryTest.hpp
   AutoPacketFactoryTest.cpp
-  AutowiringBenchmarkTest.hpp
-  AutowiringBenchmarkTest.cpp
   AutowiringTest.hpp
   AutowiringTest.cpp
   AutowiringUtilitiesTest.hpp
@@ -41,8 +39,6 @@ set(AutowiringTest_SRCS
   DispatchQueueTest.cpp
   DtorCorrectnessTest.hpp
   DtorCorrectnessTest.cpp
-  EnclosedContextTestBase.hpp
-  EnclosedContextTestBase.cpp
   ExceptionFilterTest.hpp
   ExceptionFilterTest.cpp
   EventReceiverTest.hpp
@@ -88,7 +84,6 @@ set(AutowiringTest_SRCS
   TestFixtures/MultiInherit.hpp
   UuidTest.hpp
   UuidTest.cpp
-  gtest-all-guard.cpp
 )
 
 set(
@@ -105,7 +100,7 @@ set_property(TARGET AutowiringFixture PROPERTY FOLDER "Autowiring")
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
-target_link_libraries(AutowiringTest Autowiring AutowiringFixture)
+target_link_libraries(AutowiringTest Autowiring AutowiringFixture AutoTesting)
 set_property(TARGET AutowiringTest PROPERTY FOLDER "Autowiring")
 
 # This is a unit test, let CMake know this

@@ -23,6 +23,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "-std=c++11")
 endif()
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 include(CMakeModules/pch.cmake)
 
 # We don't build tests unless we're being built by ourselves in our own source tree
@@ -50,6 +51,21 @@ function(add_googletest dirname)
   if(AUTOWIRING_BUILD_TESTS)
     add_subdirectory(${dirname})
   endif()
+endfunction()
+
+function(rewrite_header_paths target_SRC_VAR)
+  # All include files are located in /autowiring from here, so prepend that to all sources
+  set(SRCS_TEMP ${${target_SRC_VAR}})
+  set(SRCS)
+  foreach(i ${SRCS_TEMP})
+    string(REGEX MATCH ".*\\.h" hfile ${i})
+    if(hfile)
+      list(APPEND SRCS ${PROJECT_SOURCE_DIR}/autowiring/${i})
+    else()
+      list(APPEND SRCS ${i})
+    endif()
+  endforeach()
+  set(${target_SRC_VAR} ${SRCS} PARENT_SCOPE)
 endfunction()
 
 # We have unit test projects via googletest, they're added in the places where they are defined

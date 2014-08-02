@@ -18,3 +18,4 @@ endif()
 
 add_subdirectory(autonet)
 add_subdirectory(autowiring)
+add_subdirectory(autotesting)
