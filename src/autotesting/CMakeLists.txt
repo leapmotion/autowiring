@@ -1,6 +1,7 @@
 set(AutoTesting_SOURCES
   AutowiringEnclosure.h
   AutowiringEnclosure.cpp
+  gtest-all-guard.h
   gtest-all-guard.cpp
 )
 
