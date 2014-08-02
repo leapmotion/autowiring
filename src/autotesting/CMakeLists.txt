@@ -1,6 +1,7 @@
 set(AutoTesting_SOURCES
-  EnclosedContextTestBase.h
-  EnclosedContextTestBase.cpp
+  AutowiringEnclosure.h
+  AutowiringEnclosure.cpp
+  gtest-all-guard.cpp
 )
 
 rewrite_header_paths(AutoTesting_SOURCES)

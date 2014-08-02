@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "EnclosedContextTestBase.h"
+#include "AutowiringEnclosure.h"
 
 struct TestInfoProxy {
   TestInfoProxy(const testing::TestInfo& info) :
@@ -9,8 +9,8 @@ struct TestInfoProxy {
   const testing::TestInfo& m_info;
 };
 
-void EnclosedContextTestBase::OnTestStart(const testing::TestInfo& info) {
-  AutoRequired<EnclosedContextExceptionFilter> filter;
+void AutowiringEnclosure::OnTestStart(const testing::TestInfo& info) {
+  AutoRequired<AutowiringEnclosureExceptionFilter> filter;
 
   // The context proper.  This is automatically assigned as the current
   // context when SetUp is invoked.
@@ -18,16 +18,16 @@ void EnclosedContextTestBase::OnTestStart(const testing::TestInfo& info) {
   create->Construct<TestInfoProxy>(info);
 
   // Add exception filter in this context:
-  create->Inject<EnclosedContextExceptionFilter>();
+  create->Inject<AutowiringEnclosureExceptionFilter>();
 
   // Now make it current and let the test run:
   create->SetCurrent();
 }
 
-void EnclosedContextTestBase::OnTestEnd(const testing::TestInfo& info) {
+void AutowiringEnclosure::OnTestEnd(const testing::TestInfo& info) {
   // Verify we can grab the test case back out and that the pointer is correct:
   Autowired<TestInfoProxy> ti;
-  Autowired<EnclosedContextExceptionFilter> ecef;
+  Autowired<AutowiringEnclosureExceptionFilter> ecef;
   auto ctxt = ecef ? ecef->GetContext() : nullptr;
 
   // Unconditionally reset the global context as the current context
