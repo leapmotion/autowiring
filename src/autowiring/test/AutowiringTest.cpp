@@ -76,3 +76,31 @@ TEST_F(AutowiringTest, PathologicalAutowiringRace) {
   // in spin-up or tear-down, 
   AutoRequired<SimpleObject>();
 }
+
+class ChecksForExceptions:
+  public ExceptionFilter
+{
+public:
+  ChecksForExceptions(void):
+    m_called(false)
+  {}
+
+  bool m_called;
+
+  void Filter(void) override {
+    m_called = true;
+  }
+};
+
+class ThrowsExceptionInCtor {
+public:
+  ThrowsExceptionInCtor(void) {
+    throw std::exception();
+  }
+};
+
+TEST_F(AutowiringTest, AUTOTHROW_CanSeeThrownAutoDesiredExceptions) {
+  AutoRequired<ChecksForExceptions> cfe;
+  AutoDesired<ThrowsExceptionInCtor>();
+  ASSERT_TRUE(cfe->m_called) << "Exception was not caught by exception filter in Autowiring context";
+}
