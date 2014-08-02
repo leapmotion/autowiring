@@ -1,4 +1,5 @@
 add_googletest(test)
+add_googletest(benchmark)
 
 set(Autowiring_SRCS
   at_exit.h

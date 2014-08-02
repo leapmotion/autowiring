@@ -9,8 +9,6 @@ set(AutowiringTest_SRCS
   AutoInjectableTest.cpp
   AutoPacketFactoryTest.hpp
   AutoPacketFactoryTest.cpp
-  AutowiringBenchmarkTest.hpp
-  AutowiringBenchmarkTest.cpp
   AutowiringTest.hpp
   AutowiringTest.cpp
   AutowiringUtilitiesTest.hpp

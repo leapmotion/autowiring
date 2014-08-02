@@ -1,13 +1,14 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutowiringBenchmarkTest.hpp"
-#include "TestFixtures/SimpleObject.hpp"
+
+class Foo {};
 
 TEST_F(AutowiringBenchmarkTest, VerifySimplePerformance) {
   const size_t n = 10000;
 
   // Insert the object:
-  AutoRequired<SimpleObject>();
+  AutoRequired<Foo>();
 
   // Time n hash map hits, in order to get a baseline:
   std::unordered_map<int, int> ref;
@@ -27,7 +28,7 @@ TEST_F(AutowiringBenchmarkTest, VerifySimplePerformance) {
   {
     auto start = std::chrono::steady_clock::now();
     for(size_t i = n; i--;)
-      Autowired<SimpleObject>();
+      Autowired<Foo>();
     benchmark = (std::chrono::steady_clock::now() - start) / n;
   }
 
