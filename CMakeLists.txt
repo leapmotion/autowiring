@@ -63,6 +63,7 @@ include_directories(
 )
 add_subdirectory(src)
 add_subdirectory(contrib)
+
 # Build examples
 option(AUTOWIRING_BUILD_EXAMPLES "Build Autowiring examples" ${AUTOWIRING_BUILD_EXAMPLES_DEFAULT})
 if(AUTOWIRING_BUILD_EXAMPLES)
