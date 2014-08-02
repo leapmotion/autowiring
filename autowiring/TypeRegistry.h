@@ -1,14 +1,11 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "CreationRules.h"
+#include "CoreContext.h"
 #include <typeinfo>
 #include STL_TUPLE_HEADER
 #include MEMORY_HEADER
 
-template<class T>
-class JunctionBox;
-
-class JunctionBoxBase;
 class Object;
 
 // Checks if an Object* listens to a event T;
@@ -46,11 +43,6 @@ struct TypeRegistryEntry {
   virtual const std::type_info& GetTypeInfo(void) const = 0;
 
   /// <summary>
-  /// Constructor method, used to generate a new junction box
-  /// </summary>
-  virtual std::shared_ptr<JunctionBoxBase> NewJunctionBox(void) const = 0;
-
-  /// <summary>
   /// Used to create a type identifier value, for use with AutoNet
   /// </summary>
   virtual std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const = 0;
@@ -82,12 +74,6 @@ struct TypeRegistryEntryT:
   {}
 
   virtual const std::type_info& GetTypeInfo(void) const override { return typeid(T); }
-
-  virtual std::shared_ptr<JunctionBoxBase> NewJunctionBox(void) const override {
-    return std::static_pointer_cast<JunctionBoxBase>(
-      std::make_shared<JunctionBox<T>>()
-    );
-  }
 
   std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const override {
     return std::static_pointer_cast<TypeIdentifierBase>(

@@ -19,7 +19,7 @@
 #include "EventInputStream.h"
 #include "ExceptionFilter.h"
 #include "TeardownNotifier.h"
-#include "TypeRegistry.h"
+#include "EventRegistry.h"
 #include "TypeUnifier.h"
 
 #include <list>
@@ -512,9 +512,6 @@ public:
   /// </summary>
   template<typename T, typename... Args>
   std::shared_ptr<T> Construct(Args&&... args) {
-    // Add this type to the TypeRegistry
-    (void) RegType<T>::r;
-    
     // If T doesn't inherit Object, then we need to compose a unifying type which does
     typedef typename SelectTypeUnifier<T>::type TActual;
     static_assert(std::is_base_of<Object, TActual>::value, "Constructive type does not implement Object as expected");
