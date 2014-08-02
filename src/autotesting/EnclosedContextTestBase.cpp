@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "EnclosedContextTestBase.hpp"
+#include "EnclosedContextTestBase.h"
 
 struct TestInfoProxy {
   TestInfoProxy(const testing::TestInfo& info) :

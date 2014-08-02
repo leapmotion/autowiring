@@ -16,10 +16,10 @@ int g_argc;
 char** g_argv;
 
 template<class T, int n>
-const char (&ArraySizer(const T (&vals)[n]))[n];
+const char(&ArraySizer(const T(&vals)[n]))[n];
 #define ARYLEN(x) sizeof(ArraySizer(x))
 
-int main(int argc, char* argv[])
+int main(int argc, char* argv [])
 {
   g_argc = argc;
   g_argv = argv;
