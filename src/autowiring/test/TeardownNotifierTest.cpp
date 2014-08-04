@@ -1,7 +1,10 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "TeardownNotifierTest.hpp"
 #include <autowiring/Autowired.h>
+
+class TeardownNotifierTest:
+  public testing::Test
+{};
 
 class SimpleMember:
   public ContextMember

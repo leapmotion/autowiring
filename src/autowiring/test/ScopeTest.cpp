@@ -1,9 +1,12 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "ScopeTest.hpp"
 #include "TestFixtures/SimpleObject.hpp"
 #include <autowiring/Autowired.h>
 #include <autowiring/GlobalCoreContext.h>
+
+class ScopeTest:
+  public testing::Test
+{};
 
 TEST_F(ScopeTest, VerifyGlobalExists) {
   // Verify that we at least get a global scope

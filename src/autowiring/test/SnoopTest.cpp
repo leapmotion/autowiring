@@ -1,7 +1,10 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "SnoopTest.hpp"
 #include "TestFixtures/Decoration.hpp"
+
+class SnoopTest:
+  public testing::Test
+{};
 
 class UpBroadcastListener:
   public virtual EventReceiver

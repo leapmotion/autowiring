@@ -1,10 +1,13 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "InterlockedRoutinesTest.hpp"
 #include <autowiring/InterlockedExchange.h>
 #include THREAD_HEADER
 #include MUTEX_HEADER
 #include CHRONO_HEADER
+
+class InterlockedRoutinesTest:
+  public testing::Test
+{};
 
 template<void* (*fn)(void**, void*)>
 void CheckFn() {

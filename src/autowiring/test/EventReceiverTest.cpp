@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "EventReceiverTest.hpp"
 #include "TestFixtures/FiresManyEventsWhenRun.hpp"
 #include "TestFixtures/SimpleReceiver.hpp"
 #include <autowiring/Autowired.h>
@@ -10,12 +9,15 @@
 
 using namespace std;
 
-EventReceiverTest::EventReceiverTest(void) {
-  AutoCurrentContext ctxt;
-
-  // Start up the context:
-  ctxt->Initiate();
-}
+class EventReceiverTest:
+  public testing::Test
+{
+public:
+  EventReceiverTest(void) {
+    // Start up the context:
+    AutoCurrentContext()->Initiate();
+  }
+};
 
 TEST_F(EventReceiverTest, SimpleMethodCall) {
   AutoRequired<SimpleReceiver> receiver;

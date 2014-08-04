@@ -1,7 +1,10 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "UuidTest.hpp"
 #include <autowiring/uuid.h>
+
+class UuidTest:
+  public testing::Test
+{};
 
 DECLARE_UUID(MyX, "01234567-89AB-CDEF-FEDC-BA9876543210"){};
 

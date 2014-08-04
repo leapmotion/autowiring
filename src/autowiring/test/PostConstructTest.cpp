@@ -1,10 +1,13 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "PostConstructTest.hpp"
 #include "TestFixtures/SimpleObject.hpp"
 #include <autowiring/Autowired.h>
 #include <autowiring/ContextMember.h>
 #include THREAD_HEADER
+
+class PostConstructTest:
+  public testing::Test
+{};
 
 using namespace std;
 

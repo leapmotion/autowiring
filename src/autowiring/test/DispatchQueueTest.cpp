@@ -1,10 +1,14 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "DispatchQueueTest.hpp"
 #include <autowiring/CoreThread.h>
 #include <autowiring/DispatchQueue.h>
 
 using namespace std;
+
+class DispatchQueueTest:
+  public testing::Test,
+  public DispatchQueue
+{};
 
 class EventMaker:
   public CoreThread

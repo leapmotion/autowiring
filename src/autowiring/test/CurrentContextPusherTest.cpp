@@ -1,9 +1,12 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "CurrentContextPusherTest.hpp"
 #include <autowiring/Autowired.h>
 #include <autowiring/CoreContext.h>
 #include <autowiring/CurrentContextPusher.h>
+
+class CurrentContextPusherTest:
+  public testing::Test
+{};
 
 using namespace std;
 

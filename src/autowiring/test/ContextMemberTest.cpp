@@ -1,8 +1,11 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "ContextMemberTest.hpp"
 #include "TestFixtures/SimpleObject.hpp"
 #include "TestFixtures/SimpleThreaded.hpp"
+
+class ContextMemberTest:
+  public testing::Test
+{};
 
 class IsAContextMember:
   public ContextMember

@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "AutowiringTest.hpp"
 #include "gtest-all-guard.h"
 #include "TestFixtures/SimpleObject.hpp"
 #include "TestFixtures/SimpleReceiver.hpp"
@@ -10,6 +9,10 @@
 int main(int argc, const char* argv []) {
   return autotesting_main(argc, argv);
 }
+
+class AutowiringTest:
+  public testing::Test
+{};
 
 TEST_F(AutowiringTest, VerifyAutowiredFast) {
   // Add an object:

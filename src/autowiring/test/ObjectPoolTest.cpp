@@ -1,8 +1,11 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "ObjectPoolTest.hpp"
 #include "TestFixtures/SimpleThreaded.hpp"
 #include <autowiring/ObjectPool.h>
+
+class ObjectPoolTest:
+  public testing::Test
+{};
 
 class PooledObject {
 };

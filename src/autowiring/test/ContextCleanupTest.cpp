@@ -1,11 +1,14 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "ContextCleanupTest.hpp"
 #include "TestFixtures/SimpleObject.hpp"
 #include "TestFixtures/SimpleThreaded.hpp"
 #include <autowiring/Autowired.h>
 #include <autowiring/CoreContext.h>
 #include THREAD_HEADER
+
+class ContextCleanupTest:
+  public testing::Test
+{};
 
 TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
   class WeakPtrChecker {
