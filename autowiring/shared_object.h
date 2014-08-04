@@ -29,7 +29,13 @@ protected:
   object& get_object() {
     return m_share->m_object;
   }
+  const object& get_object() const {
+    return m_share->m_object;
+  }
   bool& get_initialized() {
+    return m_share->m_initialized;
+  }
+  const bool& get_initialized() const {
     return m_share->m_initialized;
   }
 

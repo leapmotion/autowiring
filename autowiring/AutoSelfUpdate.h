@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "Autowiring/NewAutoFilter.h"
-#include "Autowiring/atomic_object.h"
+#include "Autowiring/shared_object.h"
 
 ///<summary>
 ///Enables an automatic self-update when a packet is decorated with the object type.
@@ -9,20 +9,43 @@
 ///</summary>
 ///<remarks>
 ///In order to ensure that this method will be consistent with any other AutoFilter calls,
-///the object inherits from atomic_object, which implements basic locking functionality.
+///the object inherits from shared_object, which implements basic locking functionality.
 ///</remarks>
 template<class object, class lock = std::mutex>
 class AutoSelfUpdate:
-public atomic_object<object, lock> {
+public shared_object<object, lock> {
+protected:
+  using shared_object<object, lock>::get_lock;
+  using shared_object<object, lock>::get_object;
+
 public:
+  AutoSelfUpdate() {}
+  AutoSelfUpdate(const shared_object<object, lock>& source) : shared_object<object, lock>(source) {}
+  AutoSelfUpdate(const object& source) : shared_object<object, lock>(source) {}
+  using shared_object<object, lock>::operator =;
+  using shared_object<object, lock>::operator object;
 
+  //The distinct type assigned to the prior value of the object
+  class prior_object: public object {
+  public:
+    prior_object(const object& source): object(source) {}
+  };
+
+  //Avoid intermediate copy by defining an explicit cast
+  operator prior_object() const {
+    std::lock_guard<lock> lock_this(get_lock());
+    return prior_object(get_object());
+  }
+
+  //Decorates all packets with instances of prior_object
   void AutoFilter(AutoPacket& packet) {
-    //TODO: Decorate with prior<object>
+    packet.Decorate(this->operator prior_object());
   }
 
-  void SelfUpdate(object& update) {
-    atomic_object<object, lock>::operator = (update);
+  //Updates this object
+  void AutoGather(const object& update) {
+    shared_object<object, lock>::operator = (update);
   }
 
-  NewAutoFilter<decltype(&AutoSelfUpdate<object>::SelfUpdate), &AutoSelfUpdate<object>::SelfUpdate> AutoFilter_SelfUpdate;
+  NewAutoFilter<decltype(&AutoSelfUpdate<object>::AutoGather), &AutoSelfUpdate<object>::AutoGather> SelfUpdate;
 };
