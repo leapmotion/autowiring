@@ -13,3 +13,17 @@ set_property(TARGET EventExample PROPERTY FOLDER "Examples")
 add_executable(AutoFilterExample AutoFilterExample.cpp)
 target_link_libraries(AutoFilterExample Autowiring)
 set_property(TARGET AutoFilterExample PROPERTY FOLDER "Examples")
+
+find_package(Boost QUIET COMPONENTS system)
+if(NOT Boost_FOUND)
+  message("Cannot build AutoNetExample, boost not installed on this system")
+  return()
+endif()
+
+include_directories(
+  ${Boost_INCLUDE_DIR}
+)
+
+add_executable(AutoNetExample AutoNetExample.cpp)
+target_link_libraries(AutoNetExample Autowiring AutoNet)
+set_property(TARGET AutoNetExample PROPERTY FOLDER "Examples")
