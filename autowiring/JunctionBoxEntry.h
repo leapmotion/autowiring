@@ -1,7 +1,5 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "TypeUnifier.h"
-#include "fast_pointer_cast.h"
 #include <stdexcept>
 #include MEMORY_HEADER
 

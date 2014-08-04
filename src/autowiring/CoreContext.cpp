@@ -221,8 +221,8 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   }
 
   // Event receivers:
-  if(traits.pRecvr) {
-    JunctionBoxEntry<Object> entry(this, traits.pRecvr);
+  if(traits.receivesEvents) {
+    JunctionBoxEntry<Object> entry(this, traits.pObject);
 
     // Add to our vector of local receivers first:
     (std::lock_guard<std::mutex>)m_stateBlock->m_lock,

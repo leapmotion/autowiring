@@ -304,7 +304,7 @@ protected:
   /// </summary>
   struct AddInternalTraits {
     template<class T>
-    AddInternalTraits(const std::shared_ptr<typename SelectTypeUnifier<T>::type>& value, T* dummy) :
+    AddInternalTraits(const std::shared_ptr<typename SelectTypeUnifier<T>::type>& value, T*) :
       type(typeid(T)),
       value(value),
       subscriber(AutoFilterDescriptorSelect<T>(value)),
@@ -313,7 +313,14 @@ protected:
       pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
       pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
       pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
-      pRecvr(autowiring::fast_pointer_cast<Object>(value))
+      receivesEvents([this]{
+        for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink) {
+          auto identifier = evt->NewEventIdentifier();
+          if (identifier->IsSameAs(pObject.get()))
+            return true;
+        }
+        return false;
+      }())
     {
       if(!pObject)
         throw autowiring_error("Cannot add a type which does not implement Object");
@@ -335,7 +342,9 @@ protected:
     const std::shared_ptr<CoreRunnable> pCoreRunnable;
     const std::shared_ptr<ExceptionFilter> pFilter;
     const std::shared_ptr<BoltBase> pBoltBase;
-    const std::shared_ptr<Object> pRecvr;
+    
+    // Does this type receive events?
+    const bool receivesEvents;
   };
 
   /// <summary>
@@ -792,8 +801,8 @@ public:
     InsertSnooper(pSnooper);
 
     // Add EventReceiver
-    if(traits.pRecvr)
-      AddEventReceiver(JunctionBoxEntry<Object>(this, traits.pRecvr));
+    if(traits.receivesEvents)
+      AddEventReceiver(JunctionBoxEntry<Object>(this, traits.pObject));
     
     // Add PacketSubscriber;
     if(traits.subscriber)
@@ -815,8 +824,8 @@ public:
     auto oSnooper = std::static_pointer_cast<Object>(pSnooper);
     
     // Cleanup if its an EventReceiver
-    if(traits.pRecvr)
-      UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<Object>(this, traits.pRecvr));
+    if(traits.receivesEvents)
+      UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<Object>(this, traits.pObject));
     
     // Cleanup if its a packet listener
     if(traits.subscriber)

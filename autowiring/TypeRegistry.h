@@ -87,7 +87,7 @@ struct TypeRegistryEntryT:
 
   template<typename U>
   typename std::enable_if<is_injectable<U>::value>::type AnyInject(void) const {
-    //CoreContext::CurrentContext()->Inject<U>();
+    CoreContext::CurrentContext()->Inject<U>();
   }
 
   template<typename U>

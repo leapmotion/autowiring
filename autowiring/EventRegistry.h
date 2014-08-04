@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <typeinfo>
+#include TYPE_TRAITS_HEADER
 #include STL_TUPLE_HEADER
 #include MEMORY_HEADER
 
@@ -12,7 +13,7 @@ class Object;
 
 // Checks if an Object* listens to a event T;
 struct EventIdentifierBase {
-  virtual bool IsFiredBy(const Object* obj) = 0;
+  virtual bool IsSameAs(const Object* obj) = 0;
   virtual const std::type_info& Type() = 0;
 };
 
@@ -21,7 +22,7 @@ struct EventIdentifier:
   public EventIdentifierBase
 {
   // true if "obj" is an event receiver for T
-  bool IsFiredBy(const Object* obj){
+  bool IsSameAs(const Object* obj){
     return !!dynamic_cast<const T*>(obj);
   }
   

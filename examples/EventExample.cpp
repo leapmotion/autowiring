@@ -9,12 +9,10 @@
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-// Autowiring events are just function calls on member functions in a context.
+// Autowiring events are just calls on member functions of in a context.
 // All context members that implement function pointer you "fire" will be called
 
-class MyEvent:
-  public EventReceiver
-{
+class MyEvent {
 public:
   virtual void myFunction(int) = 0;
 };
@@ -81,7 +79,7 @@ int main(){
   
   // You can also manually fire events on a context with `Invoke`
   // Since the function pointer is to `BarEvent`, `FooEvent` won't receive the event
-  //ctxt->Invoke(&BarEvent::myFunction)(77);
-  //std::cout << "Foo should be 42: " << foo->getSecret() << std::endl;
-  //std::cout << "Bar should be 77: " << bar->getSecret() << std::endl;
+  ctxt->Invoke(&BarEvent::myFunction)(77);
+  std::cout << "Foo should be 42: " << foo->getSecret() << std::endl;
+  std::cout << "Bar should be 77: " << bar->getSecret() << std::endl;
 }

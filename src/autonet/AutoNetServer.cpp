@@ -177,7 +177,7 @@ void AutoNetServer::NewObject(CoreContext& ctxt, const AnySharedPointer& object)
     {
       Json::array listenerTypes;
       for (auto& event : m_EventTypes) {
-        if (event->IsFiredBy(objectPtr.get()))
+        if (event->IsSameAs(objectPtr.get()))
           listenerTypes.push_back(event->Type().name());
       }
       

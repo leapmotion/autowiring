@@ -8,6 +8,7 @@
 #include "InvokeRelay.h"
 #include "JunctionBoxBase.h"
 #include "JunctionBoxEntry.h"
+#include "TypeUnifier.h"
 #include <set>
 #include STL_TUPLE_HEADER
 #include RVALUE_HEADER
@@ -146,8 +147,9 @@ public:
       } catch(...) {
         teardown.push_back(ContextDumbToWeak(currentEvent.m_owner));
         
-        typedef typename SelectTypeUnifier<T>::type ObjectBase_t;
-        this->FilterFiringException(autowiring::fast_pointer_cast<ObjectBase_t>(currentEvent.m_ptr));
+        // If T doesn't inherit Object, then we need to cast to a unifying type which does
+        typedef typename SelectTypeUnifier<T>::type TActual;
+        this->FilterFiringException(autowiring::fast_pointer_cast<TActual>(currentEvent.m_ptr));
       }
       lk.lock();
 
