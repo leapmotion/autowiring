@@ -281,7 +281,9 @@ public:
 ///
 ///  try {
 ///    AutoCurrentContext()->Inject&lt;T&gt;();
-///  catch(...) {}
+///  catch(...) {
+///    AutoCurrentContext()->FilterException();
+///  }
 ///  Autowired&lt;T&gt; foo;
 ///
 /// Users who wish to know whether an exception was thrown may replace uses of AutoDesired with the above
@@ -294,7 +296,9 @@ class AutoDesired:
 public:
   AutoDesired(void) {
     try { AutoRequired<T>(); }
-    catch(...) {}
+    catch(...) {
+      CoreContext::CurrentContext()->FilterException();
+    }
   }
 };
 
