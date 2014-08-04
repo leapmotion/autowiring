@@ -1,7 +1,10 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "BasicThreadTest.hpp"
 #include <autowiring/BasicThread.h>
+
+class BasicThreadTest:
+  public testing::Test
+{};
 
 class SpinsAndThenQuits:
   public BasicThread

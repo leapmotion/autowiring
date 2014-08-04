@@ -1,12 +1,15 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "AutoFilterTest.hpp"
 #include "TestFixtures/Decoration.hpp"
 #include <autowiring/AutoPacket.h>
 #include <autowiring/AutoPacketFactory.h>
 #include <autowiring/Deferred.h>
 #include <autowiring/NewAutoFilter.h>
 #include THREAD_HEADER
+
+class AutoFilterTest:
+  public testing::Test
+{};
 
 TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
   AutoCurrentContext()->Initiate();

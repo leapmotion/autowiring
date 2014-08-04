@@ -1,7 +1,10 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "AutoPacketFactoryTest.hpp"
 #include <autowiring/CoreThread.h>
+
+class AutoPacketFactoryTest:
+  public testing::Test
+{};
 
 TEST_F(AutoPacketFactoryTest, VerifyNoIssueWhileNotStarted) {
   AutoRequired<AutoPacketFactory> factory;

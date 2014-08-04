@@ -1,9 +1,12 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "AnySharedPointerTest.hpp"
 #include "TestFixtures/SimpleObject.hpp"
 #include <autowiring/AnySharedPointer.h>
 #include <autowiring/autowiring.h>
+
+class AnySharedPointerTest:
+  public testing::Test
+{};
 
 class MyUnusedClass {};
 

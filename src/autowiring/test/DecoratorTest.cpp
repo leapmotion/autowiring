@@ -1,16 +1,20 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "DecoratorTest.hpp"
 #include "TestFixtures/Decoration.hpp"
 #include <autowiring/AutoPacket.h>
 #include <autowiring/AutoPacketFactory.h>
 
 using namespace std;
 
-DecoratorTest::DecoratorTest(void) {
-  // All decorator tests must run from an initiated context
-  AutoCurrentContext()->Initiate();
-}
+class DecoratorTest:
+  public testing::Test
+{
+public:
+  DecoratorTest(void) {
+    // All decorator tests must run from an initiated context
+    AutoCurrentContext()->Initiate();
+  }
+};
 
 TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   vector<const type_info*> v;

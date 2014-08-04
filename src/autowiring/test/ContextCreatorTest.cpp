@@ -1,10 +1,13 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "ContextCreatorTest.hpp"
 #include <autowiring/ContextCreator.h>
 #include <autowiring/CoreContext.h>
 #include <autowiring/CoreThread.h>
 #include <string>
+
+class ContextCreatorTest:
+  public testing::Test
+{};
 
 struct EvictionContext {};
 

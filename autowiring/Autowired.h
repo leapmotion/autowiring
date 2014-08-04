@@ -282,6 +282,35 @@ public:
 };
 
 /// <summary>
+/// Convenience class which attempts to inject type T and discards any exceptions
+/// </summary>
+/// <remarks>
+/// Use of this type is functionally equivalent to the following:
+///
+///  try {
+///    AutoCurrentContext()->Inject&lt;T&gt;();
+///  catch(...) {
+///    AutoCurrentContext()->FilterException();
+///  }
+///  Autowired&lt;T&gt; foo;
+///
+/// Users who wish to know whether an exception was thrown may replace uses of AutoDesired with the above
+/// and perform their own handling.
+/// </remarks>
+template<class T>
+class AutoDesired:
+  public Autowired<T>
+{
+public:
+  AutoDesired(void) {
+    try { AutoRequired<T>(); }
+    catch(...) {
+      CoreContext::CurrentContext()->FilterException();
+    }
+  }
+};
+
+/// <summary>
 /// Convenience class functionally identical to AutoRequired, but specialized to forward ctor arguments
 /// </summary>
 template<class T>

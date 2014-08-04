@@ -1,12 +1,16 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "ContextMapTest.hpp"
 #include "TestFixtures/ExitRaceThreaded.hpp"
 #include "TestFixtures/SimpleThreaded.hpp"
 #include <autowiring/Autowired.h>
 #include <autowiring/ContextMap.h>
 #include <string>
 #include THREAD_HEADER
+
+class ContextMapTest:
+  public testing::Test
+{
+};
 
 using namespace std;
 

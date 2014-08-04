@@ -1,12 +1,15 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "ExceptionFilterTest.hpp"
 #include "TestFixtures/ThrowsWhenFired.hpp"
 #include "TestFixtures/ThrowsWhenRun.hpp"
 #include <autowiring/ExceptionFilter.h>
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
+
+class ExceptionFilterTest:
+  public testing::Test
+{};
 
 using namespace std;
 

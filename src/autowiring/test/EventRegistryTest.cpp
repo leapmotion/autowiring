@@ -1,10 +1,13 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "EventRegistryTest.hpp"
 #include <autowiring/Autowired.h>
 #include <autowiring/GlobalCoreContext.h>
 #include <autowiring/JunctionBox.h>
 #include <autowiring/TypeRegistry.h>
+
+class EventRegistryTest:
+  public testing::Test
+{};
 
 template<int>
 class Registered{};

@@ -1,9 +1,13 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "MultiInheritTest.hpp"
 #include "TestFixtures/MultiInherit.hpp"
 #include <autowiring/Autowired.h>
 #include <autowiring/CoreContext.h>
+
+class MultiInheritTest:
+  public testing::Test
+{
+};
 
 class Shared {
 public:

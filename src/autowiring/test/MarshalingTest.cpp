@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "MarshalingTest.hpp"
 #include <autowiring/EventInputStream.h>
 #include <autowiring/EventOutputStream.h>
 #include <autowiring/CoreThread.h>
@@ -9,6 +8,9 @@
 #include <string>
 #include <sstream>
 
+class MarshalingTest:
+  public testing::Test
+{};
                                                          
 /*
 EXTRA SPECS to code to that have not yet been implemented as unit tests.

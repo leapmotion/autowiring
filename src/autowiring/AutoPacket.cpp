@@ -73,6 +73,7 @@ ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory, 
 }
 
 void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
+  std::list<SatCounter*> callQueue;
   DecorationDisposition* decoration;
   {
     std::lock_guard<std::mutex> lk(m_lock);
@@ -80,66 +81,86 @@ void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
     if(dFind == m_decorations.end())
       // Trivial return, there's no subscriber to this decoration and so we have nothing to do
       return;
+
+    // Update satisfaction inside of lock
     decoration = &dFind->second;
-  }
+    for(auto& satCounter : decoration->m_subscribers) {
+      if(satCounter.second)
+        // Entry is mandatory, leave it unsatisfaible
+        continue;
 
-  // Update everything
-  for(auto& satCounter : decoration->m_subscribers) {
-    if(satCounter.second)
-      // Entry is mandatory, leave it unsatisfaible
-      continue;
-
-    // Entry is optional, we will call if we're satisfied after decrementing this optional field
-    if(satCounter.first->Decrement(false))
-        satCounter.first->CallAutoFilter(*this);
-  }
-}
-
-void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
-  DecorationDisposition* decoration;
-  {
-    std::lock_guard<std::mutex> lk(m_lock);
-    auto dFind = m_decorations.find(info);
-    if(dFind == m_decorations.end())
-      // Trivial return, there's no subscriber to this decoration and so we have nothing to do
-      return;
-    decoration = &dFind->second;
-  }
-
-  // Update everything
-  for(auto& satCounter : decoration->m_subscribers)
-    if(satCounter.first->Decrement(satCounter.second))
-        satCounter.first->CallAutoFilter(*this);
-}
-
-void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
-  // First pass, decrement what we can:
-  for(size_t i = nInfos; i--;) {
-    for(std::pair<SatCounter*, bool>& subscriber : pTypeSubs[i]->m_subscribers) {
-      SatCounter* cur = subscriber.first;
-      if(
-        // We only care about mandatory inputs
-        subscriber.second &&
-
-        // We only care about sat counters that aren't deferred--skip everyone else
-        // Deferred calls will be too late.
-        !cur->IsDeferred() &&
-
-        // Now do the decrementation, and only proceed if the decremented value is zero
-        !--cur->remaining
-      )
-        // Finally, a call is safe to make on this type
-        cur->CallAutoFilter(*this);
+      // Entry is optional, we will call if we're satisfied after decrementing this optional field
+      if(satCounter.first->Decrement(false))
+        callQueue.push_back(satCounter.first);
     }
   }
 
+  // Make calls outside of lock, to avoid deadlock from decorations in methods
+  for (SatCounter* call : callQueue)
+    call->CallAutoFilter(*this);
+}
+
+void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
+  std::list<SatCounter*> callQueue;
+  DecorationDisposition* decoration;
+  {
+    std::lock_guard<std::mutex> lk(m_lock);
+    auto dFind = m_decorations.find(info);
+    if(dFind == m_decorations.end())
+      // Trivial return, there's no subscriber to this decoration and so we have nothing to do
+      return;
+
+    // Update satisfaction inside of lock
+    decoration = &dFind->second;
+    for(auto& satCounter : decoration->m_subscribers)
+      if(satCounter.first->Decrement(satCounter.second))
+        callQueue.push_back(satCounter.first);
+  }
+
+  // Make calls outside of lock, to avoid deadlock from decorations in methods
+  for (SatCounter* call : callQueue)
+    call->CallAutoFilter(*this);
+}
+
+void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
+  std::list<SatCounter*> callQueue;
+  // First pass, decrement what we can:
+  {
+    std::lock_guard<std::mutex> lk(m_lock);
+    for(size_t i = nInfos; i--;) {
+      for(std::pair<SatCounter*, bool>& subscriber : pTypeSubs[i]->m_subscribers) {
+        SatCounter* cur = subscriber.first;
+        if(
+          // We only care about mandatory inputs
+          subscriber.second &&
+
+          // We only care about sat counters that aren't deferred--skip everyone else
+          // Deferred calls will be too late.
+          !cur->IsDeferred() &&
+
+          // Now do the decrementation, and only proceed if the decremented value is zero
+          !--cur->remaining
+        )
+          // Finally, queue a call for this type
+          callQueue.push_back(cur);
+      }
+    }
+  }
+
+  // Make calls outside of lock, to avoid deadlock from decorations in methods
+  for (SatCounter* call : callQueue)
+    call->CallAutoFilter(*this);
+
   // Reset all counters
   // since data in this call will not be available subsequently
-  for(size_t i = nInfos; i--;) {
-    for(auto& satCounter : pTypeSubs[i]->m_subscribers) {
-      auto& cur = satCounter.first;
-      if (satCounter.second) {
-        ++cur->remaining;
+  {
+    std::lock_guard<std::mutex> lk(m_lock);
+    for(size_t i = nInfos; i--;) {
+      for(auto& satCounter : pTypeSubs[i]->m_subscribers) {
+        auto& cur = satCounter.first;
+        if (satCounter.second) {
+          ++cur->remaining;
+        }
       }
     }
   }

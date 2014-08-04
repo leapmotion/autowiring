@@ -1,10 +1,13 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "CoreThreadTest.hpp"
 #include "TestFixtures/SimpleThreaded.hpp"
 #include <autowiring/at_exit.h>
 #include <autowiring/Autowired.h>
 #include THREAD_HEADER
+
+class CoreThreadTest:
+  public testing::Test
+{};
 
 static_assert(
   std::is_same<
