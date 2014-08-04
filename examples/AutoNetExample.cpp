@@ -2,7 +2,6 @@
 #include <autowiring/Autowired.h>
 #include <autowiring/AutoNetServer.h>
 #include <iostream>
-#include <thread>
 
 // 
 // AutoNetServer
