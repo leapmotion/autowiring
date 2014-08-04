@@ -304,10 +304,10 @@ protected:
   /// </summary>
   struct AddInternalTraits {
     template<class T>
-    AddInternalTraits(const AutoFilterDescriptor& subscriber, const std::shared_ptr<T>& value) :
+    AddInternalTraits(const std::shared_ptr<typename SelectTypeUnifier<T>::type>& value, T* dummy) :
       type(typeid(T)),
       value(value),
-      subscriber(subscriber),
+      subscriber(AutoFilterDescriptorSelect<T>(value)),
       pObject(autowiring::fast_pointer_cast<Object>(value)),
       pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
       pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
@@ -534,7 +534,7 @@ public:
 
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
-      AddInternal(AddInternalTraits(AutoFilterDescriptorSelect<T>(retVal), retVal));
+      AddInternal(AddInternalTraits(retVal, (T*)nullptr));
     }
     catch(autowiring_error&) {
       // We know why this exception occurred.  It's because, while we were constructing our
@@ -786,7 +786,7 @@ public:
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    const AddInternalTraits traits(AutoFilterDescriptorSelect<T>(pSnooper), pSnooper);
+    const AddInternalTraits traits(pSnooper, (T*)nullptr);
     
     // Add to collections of snoopers
     InsertSnooper(pSnooper);
@@ -808,7 +808,7 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    const AddInternalTraits traits(AutoFilterDescriptorSelect<T>(pSnooper), pSnooper);
+    const AddInternalTraits traits(pSnooper, (T*)nullptr);
     
     RemoveSnooper(pSnooper);
     
