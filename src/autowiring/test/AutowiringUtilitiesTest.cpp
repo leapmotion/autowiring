@@ -1,11 +1,14 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "AutowiringUtilitiesTest.hpp"
 #include <autowiring/Autowired.h>
 #include <autowiring/BasicThread.h>
 #include <autowiring/CoreThread.h>
 #include <autowiring/thread_specific_ptr.h>
 #include THREAD_HEADER
+
+class AutowiringUtilitiesTest:
+  public testing::Test
+{};
 
 static autowiring::thread_specific_ptr<int> s_thread_specific_int;
 

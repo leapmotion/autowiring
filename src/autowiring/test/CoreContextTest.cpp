@@ -1,11 +1,14 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "CoreContextTest.hpp"
 #include <autowiring/AutoInjectable.h>
 #include <autowiring/ContextEnumerator.h>
 #include <set>
 #include THREAD_HEADER
 #include FUTURE_HEADER
+
+class CoreContextTest:
+  public testing::Test
+{};
 
 class Foo{};
 class Bar{};

@@ -1,8 +1,11 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "GuardObjectTest.hpp"
 #include <autowiring/shared_object.h>
 #include <autowiring/unlock_object.h>
+
+class GuardObjectTest:
+  public testing::Test
+{};
 
 TEST_F(GuardObjectTest, SharedTests) {
   shared_object<int> so1; //Default Constructor

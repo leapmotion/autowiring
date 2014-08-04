@@ -1,9 +1,12 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "CoreJobTest.hpp"
 #include <autowiring/CoreJob.h>
 #include THREAD_HEADER
 #include FUTURE_HEADER
+
+class CoreJobTest:
+  public testing::Test
+{};
 
 TEST_F(CoreJobTest, VerifySimpleProperties) {
   AutoRequired<CoreJob> jb;

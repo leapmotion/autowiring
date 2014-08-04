@@ -1,12 +1,15 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "BoltTest.hpp"
 #include <autowiring/Autowired.h>
 #include <autowiring/Bolt.h>
 #include <autowiring/ContextCreator.h>
 #include "TestFixtures/SimpleObject.hpp"
 #include <string>
 #include <iostream>
+
+class BoltTest:
+  public testing::Test
+{};
 
 struct Pipeline {};
 struct OtherContext {};

@@ -1,8 +1,11 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "ContextEnumeratorTest.hpp"
 #include <autowiring/ContextEnumerator.h>
 #include MEMORY_HEADER
+
+class ContextEnumeratorTest:
+  public testing::Test
+{};
 
 TEST_F(ContextEnumeratorTest, DegenerateEnumeration) {
   size_t ct = 0;

@@ -1,9 +1,12 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "PeerContextTest.hpp"
 #include "TestFixtures/SimpleObject.hpp"
 #include "TestFixtures/SimpleReceiver.hpp"
 #include <autowiring/CoreThread.h>
+
+class PeerContextTest:
+  public testing::Test
+{};
 
 struct PeerContextName1 {};
 struct PeerContextName2 {};

@@ -1,8 +1,11 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "AutoInjectableTest.hpp"
 #include "TestFixtures/SimpleObject.hpp"
 #include <autowiring/AutoInjectable.h>
+
+class AutoInjectableTest:
+  public testing::Test
+{};
 
 TEST_F(AutoInjectableTest, VerifySimpleInjection) {
   auto injector = MakeInjectable<SimpleObject>();

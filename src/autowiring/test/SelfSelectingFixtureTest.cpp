@@ -1,9 +1,12 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "SelfSelectingFixtureTest.hpp"
 #include "SelfSelectingFixture.hpp"
 #include "OtherSelectingFixture.hpp"
 #include <autowiring/MicroBolt.h>
+
+class SelfSelectingFixtureTest:
+  public testing::Test
+{};
 
 struct SelfSelect {};
 

@@ -1,10 +1,13 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "FactoryTest.hpp"
 #include "TestFixtures/SimpleInterface.hpp"
 #include <iostream>
 
 using namespace std;
+
+class FactoryTest:
+  public testing::Test
+{};
 
 /// <summary>
 /// Compile-time check to ensure that unconstructable types are identified correctly
