@@ -1063,3 +1063,25 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
   ASSERT_TRUE(packet->Get(dec)) << "Deferred decorator didn't attach a decoration to an issued packet";
   ASSERT_EQ(105, dec->i) << "Deferred decorate-only AutoFilter did not properly attach before context termination";
 }
+
+TEST_F(AutoFilterTest, AutoSelfUpdateTwoContexts) {
+  AutoCreateContext contextA;
+  {
+    CurrentContextPusher pusher(contextA);
+    try {
+      AutoRequired<AutoSelfUpdate<Decoration<0>>> filter;
+    } catch (...) {
+      FAIL() << "Failed to create AutoSelfUpdate in contextA";
+    }
+  }
+
+  AutoCreateContext contextB;
+  {
+    CurrentContextPusher pusher(contextB);
+    try {
+      AutoRequired<AutoSelfUpdate<Decoration<0>>> filter;
+    } catch (...) {
+      FAIL() << "Failed to create AutoSelfUpdate in contextB";
+    }
+  }
+}
