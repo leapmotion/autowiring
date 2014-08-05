@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "AutowiringBenchmarkTest.hpp"
 #include "gtest-all-guard.h"
 
 class Foo {};
@@ -8,6 +7,10 @@ class Foo {};
 int main(int argc, const char* argv[]) {
   return autotesting_main(argc, argv);
 }
+
+class AutowiringBenchmarkTest:
+  public testing::Test
+{};
 
 TEST_F(AutowiringBenchmarkTest, VerifySimplePerformance) {
   const size_t n = 10000;

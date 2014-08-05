@@ -3,7 +3,6 @@ if(NOT AUTOWIRING_BUILD_BENCHMARKS)
 endif()
 
 set(AutowiringBenchmarkTest_SRCS
-  AutowiringBenchmarkTest.hpp
   AutowiringBenchmarkTest.cpp
 )
 
