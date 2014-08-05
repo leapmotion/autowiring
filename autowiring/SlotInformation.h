@@ -123,8 +123,6 @@ private:
   // Current slot information:
   SlotInformation* m_pCur;
 
-  // If this type has additional AutoFilter routines,
-
   // Information about the object being constructed while this stack location is valid:
   const void* m_pObj;
   size_t m_extent;
@@ -150,18 +148,11 @@ public:
   /// <param name="pSpace">The pointer to the base of the space about to be constructed</param>
   template<class T>
   static SlotInformationStackLocation PushStackLocation(T* pSpace) {
-    auto* pStump = &SlotInformationStump<T>::s_stump;
-
-    // If we're already initialized, then we have nothing to do.  This line is an optimization; if there
-    // is a race here, then the worst-case scenario is an unneeded sequence of memory allocations that
-    // will only ever be referenced by this stack location.
-    if(pStump->bInitialized)
-      return SlotInformationStackLocation(pStump);
-
-    // New stack location to enclose this stump.  This stack location may be concurrent with respect
-    // to other threads, but only one thread will succeed in colonizing this stump with a chain of
-    // slot entries
-    return SlotInformationStackLocation(pStump, pSpace, sizeof(T));
+    return SlotInformationStackLocation(
+      &SlotInformationStump<T>::s_stump,
+      pSpace,
+      sizeof(T)
+    );
   }
 
   /// <summary>
