@@ -6,10 +6,6 @@
 #include STL_TUPLE_HEADER
 #include MEMORY_HEADER
 
-template<class T>
-class JunctionBox;
-
-class JunctionBoxBase;
 class Object;
 
 // Checks if an Object* listens to a event T;
@@ -46,16 +42,6 @@ struct TypeRegistryEntry {
   /// </summary>
   virtual const std::type_info& GetTypeInfo(void) const = 0;
 
-  /// <returns>
-  /// True if this type is an event receiver type
-  /// </returns>
-  virtual bool IsEventReceiver(void) const = 0;
-
-  /// <summary>
-  /// Constructor method, used to generate a new junction box
-  /// </summary>
-  virtual std::shared_ptr<JunctionBoxBase> NewJunctionBox(void) const = 0;
-
   /// <summary>
   /// Used to create a type identifier value, for use with AutoNet
   /// </summary>
@@ -89,14 +75,6 @@ struct TypeRegistryEntryT:
 
   virtual const std::type_info& GetTypeInfo(void) const override { return typeid(T); }
 
-  bool IsEventReceiver(void) const override { return std::is_base_of<EventReceiver, T>::value; }
-
-  virtual std::shared_ptr<JunctionBoxBase> NewJunctionBox(void) const override {
-    return std::static_pointer_cast<JunctionBoxBase>(
-      std::make_shared<JunctionBox<T>>()
-    );
-  }
-
   std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const override {
     return std::static_pointer_cast<TypeIdentifierBase>(
       std::make_shared<TypeIdentifier<T>>()
@@ -120,8 +98,8 @@ struct TypeRegistryEntryT:
   virtual void Inject(void) const override { AnyInject<T>(); }
 };
 
-extern const TypeRegistryEntry* g_pFirstEntry;
-extern size_t g_entryCount;
+extern const TypeRegistryEntry* g_pFirstTypeEntry;
+extern size_t g_typeEntryCount;
 
 /// <summary>
 /// Adds the specified type to the universal type registry

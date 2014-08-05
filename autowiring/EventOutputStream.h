@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <cassert>
 
 #include MEMORY_HEADER
 #include TYPE_TRAITS_HEADER

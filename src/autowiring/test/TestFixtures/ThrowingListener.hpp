@@ -1,9 +1,6 @@
 #pragma once
-#include <autowiring/EventReceiver.h>
 
-class ThrowingListener:
-  public virtual EventReceiver
-{
+class ThrowingListener {
 public:
   ThrowingListener(void) {}
   virtual void DoThrow(void) = 0;

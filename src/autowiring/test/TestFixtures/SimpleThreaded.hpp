@@ -4,9 +4,7 @@
 #include <autowiring/CoreThread.h>
 
 template<class T>
-class SharedPtrReceiver:
-  public virtual EventReceiver
-{
+class SharedPtrReceiver {
 public:
   virtual Deferred OnEvent(std::shared_ptr<T> obj) = 0;
 };

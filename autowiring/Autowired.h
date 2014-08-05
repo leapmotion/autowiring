@@ -2,6 +2,7 @@
 #pragma once
 #include "AutowirableSlot.h"
 #include "Decompose.h"
+#include "Deferred.h"
 #include "GlobalCoreContext.h"
 #include "TypeRegistry.h"
 #include MEMORY_HEADER
@@ -120,6 +121,7 @@ public:
     AutowirableSlot<T>(ctxt ? ctxt->template ResolveAnchor<T>() : ctxt),
     m_pFirstChild(nullptr)
   {
+    // Add this type to the TypeRegistry
     (void) RegType<T>::r;
     if(ctxt)
       ctxt->Autowire(*this);
@@ -252,7 +254,10 @@ public:
   // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
     std::shared_ptr<T>(ctxt->template Inject<T>())
-  {}
+  {
+    // Add this type to the TypeRegistry
+    (void) RegType<T>::r;
+  }
 
   /// <summary>
   /// Construct overload, for types which take constructor arguments
@@ -260,7 +265,10 @@ public:
   template<class... Args>
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
     std::shared_ptr<T>(ctxt->template Construct<T>(std::forward<Args>(args)...))
-  {}
+  {
+    // Add this type to the TypeRegistry
+    (void) RegType<T>::r;
+  }
 
   operator bool(void) const {
     return IsAutowired();
@@ -325,21 +333,14 @@ template<class T>
 public:
   AutoFired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
     m_junctionBox(ctxt->GetJunctionBox<T>())
-  {
-    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot AutoFire a non-event type, your type must inherit EventReceiver");
-
-    // Add an utterance of the TypeRegistry so we can add this AutoFired type to our collection
-    (void) RegType<T>::r;
-  }
+  {}
 
   /// <summary>
   /// Utility constructor, used when the receiver is already known
   /// </summary>
   AutoFired(const std::shared_ptr<JunctionBox<T>>& junctionBox) :
     m_junctionBox(junctionBox)
-  {
-    (void) RegType<T>::r;
-  }
+  {}
 
   /// <summary>
   /// Utility constructor, used to support movement operations

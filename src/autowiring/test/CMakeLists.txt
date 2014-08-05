@@ -23,6 +23,7 @@ set(AutowiringTest_SRCS
   DtorCorrectnessTest.cpp
   ExceptionFilterTest.cpp
   EventReceiverTest.cpp
+  EventRegistryTest.cpp
   FactoryTest.cpp
   GlobalInitTest.hpp
   GlobalInitTest.cpp

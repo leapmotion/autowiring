@@ -118,8 +118,7 @@ TEST_F(CoreThreadTest, VerifyNestedTermination) {
   ASSERT_FALSE(st->IsRunning()) << "Child thread was running even though the enclosing context was terminated";
 }
 
-class SleepEvent : public virtual EventReceiver
-{
+class SleepEvent {
 public:
   virtual Deferred SleepFor(int seconds) = 0;
   virtual Deferred SleepForThenThrow(int seconds) = 0;

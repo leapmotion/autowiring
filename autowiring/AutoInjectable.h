@@ -23,7 +23,7 @@ public:
   {}
 
   void operator()(AutoFuture* pFuture) const override {
-    auto added = CallByUnpackingTuple(typename gen_seq<sizeof...(Args)>::type());
+    auto added = CallByUnpackingTuple(typename gen_index_tuple<sizeof...(Args)>::type());
     if(pFuture)
       *pFuture += added;
   }
@@ -32,7 +32,7 @@ private:
   const std::tuple<Args...> m_args;
 
   template<int... S>
-  std::shared_ptr<T> CallByUnpackingTuple(seq<S...>) const {
+  std::shared_ptr<T> CallByUnpackingTuple(index_tuple<S...>) const {
     auto ctxt = CoreContext::CurrentContext();
     return ctxt->Construct<T>(std::get<S>(m_args)...);
   }

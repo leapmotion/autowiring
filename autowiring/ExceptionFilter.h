@@ -4,7 +4,6 @@
 #include FUNCTIONAL_HEADER
 
 class JunctionBoxBase;
-class EventReceiver;
 
 /// <summary>
 /// Implements an exception filter type, invoked when an unhandled exception is thrown
@@ -70,5 +69,5 @@ public:
   /// <remarks>
   /// Implementors can use "throw" with no arguments to trigger a rethrow of the originating exception.
   /// </remarks>
-  virtual void Filter(const JunctionBoxBase* pJunctionBox, EventReceiver* pRecipient) {}
+  virtual void Filter(const JunctionBoxBase* pJunctionBox, Object* pRecipient) {}
 };

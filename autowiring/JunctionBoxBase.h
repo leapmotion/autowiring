@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <vector>
+#include "Object.h"
 #include MUTEX_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_SET
@@ -8,7 +9,6 @@
 class CoreContext;
 class DispatchQueue;
 class EventOutputStreamBase;
-class EventReceiver;
 
 template<class T>
 struct JunctionBoxEntry;
@@ -47,7 +47,7 @@ protected:
   /// This is a convenience routine, its only purpose is to add the "this" parameter to the
   /// call to FilterFiringException
   /// </remarks>
-  void FilterFiringException(const std::shared_ptr<EventReceiver>& pReceiver) const;
+  void FilterFiringException(const std::shared_ptr<Object>& pReceiver) const;
 
   /// <summary>
   /// Converts a dumb pointer into a weak pointer
@@ -74,6 +74,6 @@ public:
   virtual bool HasListeners(void) const = 0;
 
   // Event attachment and detachment pure virtuals
-  virtual void Add(const JunctionBoxEntry<EventReceiver>& rhs) = 0;
-  virtual void Remove(const JunctionBoxEntry<EventReceiver>& rhs) = 0;
+  virtual void Add(const JunctionBoxEntry<Object>& rhs) = 0;
+  virtual void Remove(const JunctionBoxEntry<Object>& rhs) = 0;
 };

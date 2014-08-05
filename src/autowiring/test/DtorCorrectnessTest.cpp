@@ -28,9 +28,7 @@ public:
 std::atomic<int> CtorDtorCopyCounter::s_outstanding;
 std::atomic<size_t> CtorDtorCopyCounter::s_construction;
 
-class CtorDtorListener:
-  public virtual EventReceiver
-{
+class CtorDtorListener {
 public:
   virtual void DoFired(CtorDtorCopyCounter ctr) = 0;
   virtual Deferred DoDeferred(CtorDtorCopyCounter ctr) = 0;

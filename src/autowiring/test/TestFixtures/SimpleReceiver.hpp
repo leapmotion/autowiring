@@ -87,8 +87,7 @@ public:
   int m_value;
 };
 
-class CallableInterface:
-  public virtual EventReceiver
+class CallableInterface
 {
 public:
   virtual void ZeroArgs(void) {}
@@ -99,8 +98,7 @@ public:
   virtual void NoCopyMethod(NoCopyClass& noCopy) {}
 };
 
-class CallableInterfaceDeferred:
-  public virtual EventReceiver
+class CallableInterfaceDeferred
 {
 public:
   virtual Deferred CopyVectorDeferred(const std::vector<int>& vec) = 0;

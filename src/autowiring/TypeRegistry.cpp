@@ -4,13 +4,13 @@
 #include "JunctionBox.h"
 
 // Head of a linked list which will have node for every event type
-const TypeRegistryEntry* g_pFirstEntry = nullptr;
-size_t g_entryCount = 0;
+const TypeRegistryEntry* g_pFirstTypeEntry = nullptr;
+size_t g_typeEntryCount = 0;
 
 TypeRegistryEntry::TypeRegistryEntry(const std::type_info& ti) :
-  pFlink(g_pFirstEntry),
+  pFlink(g_pFirstTypeEntry),
   ti(ti)
 {
-  g_entryCount++;
-  g_pFirstEntry = this;
+  g_typeEntryCount++;
+  g_pFirstTypeEntry = this;
 }

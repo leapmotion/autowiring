@@ -7,13 +7,9 @@
 
 JunctionBoxManager::JunctionBoxManager(void) {
   // Enumerate all event types to initialize a new JunctionBox for each
-  for(auto p = g_pFirstEntry; p; p = p->pFlink)
-    if(p->IsEventReceiver())
-      m_junctionBoxes[p->ti] = p->NewJunctionBox();
-
-  // Ensure that these two types are specially mentioned:
-  (void) RegType<AutowiringEvents>::r;
-
+  for (auto p = g_pFirstEventEntry; p; p = p->pFlink)
+    m_junctionBoxes[p->ti] = p->NewJunctionBox();
+  
   // Always allow internal events
   m_junctionBoxes[typeid(AutowiringEvents)]->Initiate();
 }
@@ -25,13 +21,13 @@ void JunctionBoxManager::Initiate(void) {
     q.second->Initiate();
 }
 
-void JunctionBoxManager::AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
+void JunctionBoxManager::AddEventReceiver(JunctionBoxEntry<Object> receiver) {
   // Notify all junctionboxes that there is a new event
   for(auto q : m_junctionBoxes)
     q.second->Add(receiver);
 }
 
-void JunctionBoxManager::RemoveEventReceiver(JunctionBoxEntry<EventReceiver> receiver) {
+void JunctionBoxManager::RemoveEventReceiver(JunctionBoxEntry<Object> receiver) {
   // Notify all compatible senders that we're going away:
   for(auto q : m_junctionBoxes)
     q.second->Remove(receiver);

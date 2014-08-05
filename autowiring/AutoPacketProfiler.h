@@ -34,4 +34,3 @@ public:
   /// <param name="duration">The total duration of the just-made call</param>
   void AddProfilingInformation(const std::type_info& subscriber, std::chrono::nanoseconds duration);
 };
-

@@ -62,8 +62,7 @@ struct StandardType : public Auto::Serialize{
   }
 };
 
-DECLARE_UUID(EventWithUuid, "6EC2129F-5DD7-43D5-ACB5-864E8BB5D6B4") :
-  public virtual EventReceiver
+DECLARE_UUID(EventWithUuid, "6EC2129F-5DD7-43D5-ACB5-864E8BB5D6B4")
 {
 public:
   virtual void SampleEventFiring(const std::string* str) = 0;

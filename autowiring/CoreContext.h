@@ -19,6 +19,7 @@
 #include "EventInputStream.h"
 #include "ExceptionFilter.h"
 #include "TeardownNotifier.h"
+#include "EventRegistry.h"
 #include "TypeUnifier.h"
 
 #include <list>
@@ -115,8 +116,7 @@ protected:
   struct MemoEntry {
     MemoEntry(void) :
       pFirst(nullptr)
-    {
-    }
+    {}
 
     // The first deferrable autowiring which requires this type, if one exists:
     DeferrableAutowiring* pFirst;
@@ -137,7 +137,7 @@ protected:
   std::vector<ExceptionFilter*> m_filters;
 
   // All known event receivers and receiver proxies originating from this context:
-  typedef std::set<JunctionBoxEntry<EventReceiver>> t_rcvrSet;
+  typedef std::set<JunctionBoxEntry<Object>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
 
   // List of eventReceivers to be added when this context in initiated
@@ -245,7 +245,7 @@ protected:
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
   /// <param name="pRecvr">The junction box entry corresponding to the receiver type</param>
-  void AddEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
+  void AddEventReceiver(JunctionBoxEntry<Object> pRecvr);
 
   /// <summary>
   /// Add delayed event receivers
@@ -304,16 +304,23 @@ protected:
   /// </summary>
   struct AddInternalTraits {
     template<class T>
-    AddInternalTraits(const AutoFilterDescriptor& subscriber, const std::shared_ptr<T>& value) :
+    AddInternalTraits(const std::shared_ptr<typename SelectTypeUnifier<T>::type>& value, T*) :
       type(typeid(T)),
       value(value),
-      subscriber(subscriber),
+      subscriber(AutoFilterDescriptorSelect<T>(value)),
       pObject(autowiring::fast_pointer_cast<Object>(value)),
       pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
       pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
       pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
       pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
-      pRecvr(autowiring::fast_pointer_cast<EventReceiver>(value))
+      receivesEvents([this]{
+        for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink) {
+          auto identifier = evt->NewEventIdentifier();
+          if (identifier->IsSameAs(pObject.get()))
+            return true;
+        }
+        return false;
+      }())
     {
       if(!pObject)
         throw autowiring_error("Cannot add a type which does not implement Object");
@@ -335,7 +342,9 @@ protected:
     const std::shared_ptr<CoreRunnable> pCoreRunnable;
     const std::shared_ptr<ExceptionFilter> pFilter;
     const std::shared_ptr<BoltBase> pBoltBase;
-    const std::shared_ptr<EventReceiver> pRecvr;
+    
+    // Does this type receive events?
+    const bool receivesEvents;
   };
 
   /// <summary>
@@ -384,7 +393,7 @@ protected:
   /// This method has no effect if the passed value is presently a snooper in this context; the
   /// snooper collection must therefore be updated prior to the call to this method.
   /// </remarks>
-  void UnsnoopEvents(Object* snooper, const JunctionBoxEntry<EventReceiver>& traits);
+  void UnsnoopEvents(Object* snooper, const JunctionBoxEntry<Object>& traits);
   
   /// <summary>
   /// Forwarding routine, only removes from this context
@@ -534,7 +543,7 @@ public:
 
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
-      AddInternal(AddInternalTraits(AutoFilterDescriptorSelect<T>(retVal), retVal));
+      AddInternal(AddInternalTraits(retVal, (T*)nullptr));
     }
     catch(autowiring_error&) {
       // We know why this exception occurred.  It's because, while we were constructing our
@@ -771,7 +780,7 @@ public:
   /// </summary>
   /// <param name="pProxy">The sender of the event</param>
   /// <param name="pRecipient">The recipient of the event</param>
-  void FilterFiringException(const JunctionBoxBase* pProxy, EventReceiver* pRecipient);
+  void FilterFiringException(const JunctionBoxBase* pProxy, Object* pRecipient);
 
   /// <summary>
   /// Enables the passed event receiver to obtain messages broadcast by this context
@@ -786,17 +795,14 @@ public:
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    static_assert(std::is_base_of<EventReceiver, T>::value ||
-                  has_autofilter<T>::value,
-                  "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
+    const AddInternalTraits traits(pSnooper, (T*)nullptr);
     
-    const AddInternalTraits traits(AutoFilterDescriptorSelect<T>(pSnooper), pSnooper);
     // Add to collections of snoopers
     InsertSnooper(pSnooper);
 
     // Add EventReceiver
-    if(traits.pRecvr)
-      AddEventReceiver(JunctionBoxEntry<EventReceiver>(this, traits.pRecvr));
+    if(traits.receivesEvents)
+      AddEventReceiver(JunctionBoxEntry<Object>(this, traits.pObject));
     
     // Add PacketSubscriber;
     if(traits.subscriber)
@@ -811,18 +817,15 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    static_assert(std::is_base_of<EventReceiver, T>::value ||
-                  has_autofilter<T>::value,
-                  "Cannot snoop on a type which is not an EventReceiver or implements AutoFilter");
+    const AddInternalTraits traits(pSnooper, (T*)nullptr);
     
-    const AddInternalTraits traits(AutoFilterDescriptorSelect<T>(pSnooper), pSnooper);
     RemoveSnooper(pSnooper);
-
+    
     auto oSnooper = std::static_pointer_cast<Object>(pSnooper);
     
     // Cleanup if its an EventReceiver
-    if(traits.pRecvr)
-      UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<EventReceiver>(this, traits.pRecvr));
+    if(traits.receivesEvents)
+      UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<Object>(this, traits.pObject));
     
     // Cleanup if its a packet listener
     if(traits.subscriber)

@@ -2,13 +2,13 @@
 #pragma once
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
-#include "EventReceiver.h"
 #include "EventOutputStream.h"
 #include "EventInputStream.h"
 #include "fast_pointer_cast.h"
 #include "InvokeRelay.h"
 #include "JunctionBoxBase.h"
 #include "JunctionBoxEntry.h"
+#include "TypeUnifier.h"
 #include <set>
 #include STL_TUPLE_HEADER
 #include RVALUE_HEADER
@@ -17,7 +17,6 @@
 #include TYPE_TRAITS_HEADER
 
 class CoreContext;
-class EventReceiver;
 class JunctionBoxBase;
 
 template<typename T>
@@ -81,14 +80,14 @@ public:
     return (std::lock_guard<std::mutex>)m_lock, !m_st.empty();
   }
 
-  void Add(const JunctionBoxEntry<EventReceiver>& rhs) override {
+  void Add(const JunctionBoxEntry<Object>& rhs) override {
     auto casted = rhs.Rebind<T>();
     if(casted)
       // Proposed type is directly one of our receivers
       Add(casted);
   }
 
-  void Remove(const JunctionBoxEntry<EventReceiver>& rhs) override {
+  void Remove(const JunctionBoxEntry<Object>& rhs) override {
     auto casted = rhs.Rebind<T>();
     if(casted)
       Remove(casted);
@@ -147,7 +146,10 @@ public:
         fn(*currentEvent.m_ptr, args...);
       } catch(...) {
         teardown.push_back(ContextDumbToWeak(currentEvent.m_owner));
-        this->FilterFiringException(currentEvent.m_ptr);
+        
+        // If T doesn't inherit Object, then we need to cast to a unifying type which does
+        typedef typename SelectTypeUnifier<T>::type TActual;
+        this->FilterFiringException(autowiring::fast_pointer_cast<TActual>(currentEvent.m_ptr));
       }
       lk.lock();
 

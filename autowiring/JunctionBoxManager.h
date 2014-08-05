@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "EventRegistry.h"
 #include "JunctionBoxBase.h"
 #include "JunctionBoxEntry.h"
 #include "uuid.h"
@@ -12,7 +13,6 @@
 #include STL_UNORDERED_MAP
 #include TYPE_TRAITS_HEADER
 
-class EventReceiver;
 class EventOutputStreamBase;
 class CoreContext;
 class JunctionBoxBase;
@@ -34,10 +34,12 @@ public:
 
   template<typename T>
   std::shared_ptr<JunctionBoxBase> Get(void) {
+    // Add this type to the event registry. All events call this function
+    (void)RegEvent<T>::r;
     const std::type_index& pTypeIndex = typeid(T);
 
     auto box = m_junctionBoxes.find(pTypeIndex);
-    assert(box != m_junctionBoxes.end());
+    assert(box != m_junctionBoxes.end() && "If JunctionBox isn't found, EventRegistry isn't working");
 
     //Check here if any listening marshals might be interested in receiving the fired args
     auto mapfinditerator = m_eventOutputStreams.find(pTypeIndex);
@@ -62,8 +64,8 @@ public:
   /// </summary>
   void Initiate(void);
 
-  void AddEventReceiver(JunctionBoxEntry<EventReceiver> receiver);
-  void RemoveEventReceiver(JunctionBoxEntry<EventReceiver> pRecvr);
+  void AddEventReceiver(JunctionBoxEntry<Object> receiver);
+  void RemoveEventReceiver(JunctionBoxEntry<Object> pRecvr);
 
   /// <summary>
   /// This method checks whether eventoutputstream listeners for the given type still exist.
@@ -110,7 +112,6 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<EventOutputStream<T>> CreateEventOutputStream(void) {
-    static_assert(std::is_base_of<EventReceiver, T>::value, "Cannot create an output stream based on a non-event type");
     static_assert(uuid_of<T>::value, "Cannot create an output stream on type T, the type was not defined with DECLARE_UUID");
     auto retval =  std::make_shared<EventOutputStream<T>>();
     auto upcastptr = static_cast<std::shared_ptr<EventOutputStreamBase>>(retval);

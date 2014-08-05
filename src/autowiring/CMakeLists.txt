@@ -54,15 +54,15 @@ set(Autowiring_SRCS
   Decompose.h
   DecorationDisposition.h
   Deserialize.h
-  deferred_ptr.h
+  Deferred.h
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunk.h
   EventInputStream.h
   EventOutputStream.h
   EventOutputStream.cpp
-  EventReceiver.h
-  EventReceiver.cpp
+  EventRegistry.h
+  EventRegistry.cpp
   fast_pointer_cast.h
   JunctionBox.h
   JunctionBoxBase.h

@@ -1,6 +1,8 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoNetServer.h"
+#include "TypeRegistry.h"
+#include "EventRegistry.h"
 #include "at_exit.h"
 #include <iostream>
 #include FUTURE_HEADER
@@ -20,17 +22,14 @@ AutoNetServer::AutoNetServer():
   m_Server->set_close_handler(std::bind(&AutoNetServer::OnClose, this, ::_1));
   m_Server->set_message_handler(std::bind(&AutoNetServer::OnMessage, this, ::_1, ::_2));
   
-  // Generate lists of types from type registry
-  for (auto type = g_pFirstEntry; type; type = type->pFlink) {
-    if (type->IsEventReceiver())
-      m_EventTypes.insert(type->NewTypeIdentifier());
-    
-    if (type->CanInject()) {
-      m_AllTypes[type->ti.name()] = [type]{
-        type->Inject();
-      };
-    }
-  }
+  // Generate list of all types from type registry
+  for (auto type = g_pFirstTypeEntry; type; type = type->pFlink)
+    if (type->CanInject())
+      m_AllTypes[type->ti.name()] = [type]{ type->Inject(); };
+  
+  // Generate list of all events from event registry
+  for (auto event = g_pFirstEventEntry; event; event = event->pFlink)
+    m_EventTypes.insert(event->NewEventIdentifier());
 }
 
 AutoNetServer::~AutoNetServer(){}
@@ -174,15 +173,16 @@ void AutoNetServer::NewObject(CoreContext& ctxt, const AnySharedPointer& object)
       };
     }
 
-    auto eventRcvr = autowiring::fast_pointer_cast<EventReceiver>(objectPtr);
-    if (eventRcvr) {
+    // Check if type receives any events
+    {
       Json::array listenerTypes;
-      for (auto event : m_EventTypes) {
-        if (event->Is(objectPtr.get()))
+      for (auto& event : m_EventTypes) {
+        if (event->IsSameAs(objectPtr.get()))
           listenerTypes.push_back(event->Type().name());
       }
-
-      types["eventReceiver"] = listenerTypes;
+      
+      if (!listenerTypes.empty())
+        types["eventReceiver"] = listenerTypes;
     }
 
     auto filter = autowiring::fast_pointer_cast<ExceptionFilter>(objectPtr);

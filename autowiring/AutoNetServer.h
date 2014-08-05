@@ -3,12 +3,13 @@
 #include "CoreThread.h"
 #include "Autowired.h"
 #include "AutowiringEvents.h"
-#include "TypeRegistry.h"
 #include <json11/json11.hpp>
 #include <websocketpp/server.hpp>
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <map>
 #include <set>
+
+struct EventIdentifierBase;
 
 class AutoNetServer:
   public CoreThread,
@@ -152,7 +153,7 @@ protected:
   std::map<int, CoreContext*> m_ContextPtrs;
 
   // All event types
-  std::set<std::shared_ptr<TypeIdentifierBase>> m_EventTypes;
+  std::set<std::shared_ptr<EventIdentifierBase>> m_EventTypes;
   
   // All ContextMembers
   std::map<std::string, std::function<void(void)>> m_AllTypes;

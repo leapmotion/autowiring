@@ -75,9 +75,7 @@ TEST_F(CoreJobTest, VerifyTeardown) {
   EXPECT_TRUE(check3) << "Lambda 3 didn't finish";
 }
 
-struct SimpleListen:
-  virtual EventReceiver
-{
+struct SimpleListen{
   SimpleListen():
     m_flag(false)
   {}

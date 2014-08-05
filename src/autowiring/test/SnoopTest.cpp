@@ -6,9 +6,7 @@ class SnoopTest:
   public testing::Test
 {};
 
-class UpBroadcastListener:
-  public virtual EventReceiver
-{
+class UpBroadcastListener {
 public:
   virtual void SimpleCall(void) {}
 };
@@ -48,9 +46,7 @@ class IgnoredParentMember:
   public SnoopTestBase
 {};
 
-class SimpleEvent:
-public virtual EventReceiver
-{
+class SimpleEvent {
 public:
   virtual void ZeroArgs(void) {}
 };
