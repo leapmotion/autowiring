@@ -1,8 +1,20 @@
-#include "stdafx.h"
-#include "AutoNetServerTest.hpp"
-#include "AutoNetServer.h"
-#include "Autowired.h"
-#include THREAD_HEADER
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+#include <autowiring/Autowired.h>
+#include <autowiring/AutoNetServer.h>
+#include <iostream>
+
+// 
+// AutoNetServer
+// 
+// This example creates a sample context structure to view with the
+// AutoNetVisualizer. It creates contexts and adds dummy context members
+// at timed intervals to show off the dynamic nature of the visualizer.
+// You can view the visualizer at leapmotion.github.io/autonet
+// 
+
+// 
+// Declaration of dummy classes to view in the visualizer
+// 
 
 class TestThread1:
   public CoreThread
@@ -26,63 +38,38 @@ class ContextA {};
 class ContextB {};
 class ContextC {};
 
-class ExposedAutoNetServer:
-  public AutoNetServer
-{
-public:
-  using AutoNetServer::HandleResumeFromBreakpoint;
-};
 
-class BreakpointThread:
-  public BasicThread
-{
-  void Run(void) override {
-    Autowired<AutoNetServer> autonet;
-    autonet->Breakpoint("InThread");
-    std::cout << "Thread finished" << std::endl;
-  }
-};
-
-class WaitsThenSimulatesResume:
-  public BasicThread
-{
-  void Run(void) override {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    AutowiredFast<AutoNetServer> autonet;
-    auto autonetInternal = static_cast<ExposedAutoNetServer*>(autonet.get());
-    autonetInternal->HandleResumeFromBreakpoint("Main");
-    autonetInternal->HandleResumeFromBreakpoint("InThread");
-  }
-};
-
-TEST_F(AutoNetServerTest, Breakpoint) {
-  AutoCurrentContext()->Initiate();
-  AutoRequired<AutoNetServer> autonet;
-  AutoRequired<BreakpointThread> thread;
-  AutoRequired<WaitsThenSimulatesResume>();
-  
-  autonet->Breakpoint("Main");
-}
-
-TEST_F(AutoNetServerTest, SimpleTest) {
+int main() {
   AutoGlobalContext global;
   auto ctxt = global->Create<ContextA>();
   CurrentContextPusher pshr(ctxt);
 
+  // To use the visualizer, you just need to AutoRequire the AutoNetServer
   AutoRequired<AutoNetServer> server;
-  ctxt->Initiate();
 
+  // Initiate context to start threads
+  ctxt->Initiate();
+  
+  // Create a bunch of example Contexts and Context Members
   auto ctxt2 = ctxt->Create<ContextB>();
   auto ctxt3 = ctxt->Create<ContextC>();
-
+  
   ctxt2->Initiate();
-
+  
+  {
+    CurrentContextPusher pshr(ctxt3);
+    AutoRequired<TestThread2> bar;
+  }
+  
   std::shared_ptr<CoreContext> newContext;
-
+  
   {
     CurrentContextPusher pshr(ctxt2);
     AutoRequired<TestThread1> foo;
+    
+    // Give time to open AutoNet Visualizer
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+    
     *foo += std::chrono::seconds(1),[&ctxt]{
       ctxt->Inject<ThisClassGetsAddedLater<4>>();
     };
@@ -114,15 +101,8 @@ TEST_F(AutoNetServerTest, SimpleTest) {
       ctxt3->SignalShutdown(true);
       ctxt3.reset();
     };
-    *foo += std::chrono::seconds(12), [&ctxt]{
-      ctxt->SignalShutdown();
-    };
   }
 
-  {
-    CurrentContextPusher pshr(ctxt3);
-    AutoRequired<TestThread2> bar;
-  }
-
+  // This will wait indefinitly untill you manual quit the example
   ctxt->Wait();
 }

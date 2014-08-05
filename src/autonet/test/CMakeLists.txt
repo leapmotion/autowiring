@@ -5,8 +5,7 @@ include_directories(
 
 set(
   AutoNetTest_SRCS
-  AutoNetServerTest.hpp
-  AutoNetServerTest.cpp
+  BreakpointTest.cpp
   gtest-all-guard.cpp
 )
 
