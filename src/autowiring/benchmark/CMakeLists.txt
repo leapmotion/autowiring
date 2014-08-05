@@ -4,6 +4,7 @@ endif()
 
 set(AutowiringBenchmarkTest_SRCS
   AutowiringBenchmarkTest.cpp
+  CanBoostPriorityTest.cpp
 )
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringBenchmarkTest_SRCS)
