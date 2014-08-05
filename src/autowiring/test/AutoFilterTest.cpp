@@ -1068,20 +1068,12 @@ TEST_F(AutoFilterTest, AutoSelfUpdateTwoContexts) {
   AutoCreateContext contextA;
   {
     CurrentContextPusher pusher(contextA);
-    try {
-      AutoRequired<AutoSelfUpdate<Decoration<0>>> filter;
-    } catch (...) {
-      FAIL() << "Failed to create AutoSelfUpdate in contextA";
-    }
+    ASSERT_NO_THROW(AutoRequired<AutoSelfUpdate<Decoration<0>>>()) << "Failed to create AutoSelfUpdate in contextA";
   }
 
   AutoCreateContext contextB;
   {
     CurrentContextPusher pusher(contextB);
-    try {
-      AutoRequired<AutoSelfUpdate<Decoration<0>>> filter;
-    } catch (...) {
-      FAIL() << "Failed to create AutoSelfUpdate in contextB";
-    }
+    ASSERT_NO_THROW(AutoRequired<AutoSelfUpdate<Decoration<0>>>()) << "Failed to create AutoSelfUpdate in contextB";
   }
 }
