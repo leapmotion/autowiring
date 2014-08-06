@@ -7,12 +7,16 @@
 #include "is_shared_ptr.h"
 #include "ObjectPool.h"
 #include "is_any.h"
+#include "is_auto_filter.h"
 #include <sstream>
 #include <typeinfo>
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 #include EXCEPTION_PTR_HEADER
+
+//DEBUG
+#include <iostream>
 
 class AutoPacketFactory;
 class AutoPacketProfiler;
@@ -312,7 +316,7 @@ public:
   /// </summary>
   /// <returns>A reference to the internally persisted object</returns>
   /// <remarks>
-  /// Unlike Publish, the Decorate method is unconditional and will install the passed
+  /// The Decorate method is unconditional and will install the passed
   /// value regardless of whether any subscribers exist.
   /// </remarks>
   template<class T>
@@ -394,6 +398,17 @@ public:
         MarkUnsatisfiable(*ti);
     }),
     PulseSatisfaction(pTypeSubs, 1 + sizeof...(Ts));
+  }
+
+  /// <summary>
+  /// Adds a function to be called as an AutoFilter for this packet only.
+  /// </summary>
+  template<class Ret, class... Args>
+  void AddRecipient(std::function<Ret(Args...)> f) {
+    std::cout << "Decoration overload for std::function called" << std::endl;
+    //(1) Decide whether the function can be used as an AutoFilter
+    //(2) Update (with lock) the slot information for this packet only.
+    //PROBLEM: I need to make sure that the slot does not remain on the packet.
   }
 
   /// <returns>
