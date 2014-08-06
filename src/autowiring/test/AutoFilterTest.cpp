@@ -1070,6 +1070,42 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
 }
 
 typedef std::function<void(const Decoration<0>&, auto_out<Decoration<1>>)> FilterFunctionType;
+
+typedef std::function<void(void)> NonFilterFunctionType0;
+typedef std::function<void(Decoration<1> noEdge, const Decoration<0>& typeIn)> NonFilterFunctionType1;
+typedef std::function<void(const Decoration<0>& typeIn, Decoration<1> noEdge)> NonFilterFunctionType2;
+typedef std::function<int(const Decoration<0>& typeIn, auto_out<Decoration<1>>& typeOut)> NonFilterFunctionType3;
+
+TEST_F(AutoFilterTest, AutoFilterTemplateTests) {
+  ASSERT_TRUE(is_auto_out<auto_out<Decoration<0>>>::value) << "Type of auto_out instance incorrectly identified";
+
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter_arg<Decoration<0>&>::value)) << "Validity of AutoFilter input incorrectly identified";
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter_arg<const Decoration<0>>::value)) << "Validity of AutoFilter input incorrectly identified";
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter_arg<Decoration<0>>::value)) << "Validity of AutoFilter input incorrectly identified";
+
+  ASSERT_TRUE(static_cast<const bool>(is_auto_filter_arg<const Decoration<0>&>::value)) << "Validity of AutoFilter input incorrectly identified";
+  ASSERT_TRUE(static_cast<const bool>(is_auto_filter_arg<auto_out<Decoration<0>>>::value)) << "Validity of AutoFilter output incorrectly indentified";
+  ASSERT_TRUE(static_cast<const bool>(is_auto_filter_arg<auto_out<Decoration<0>>&>::value)) << "Validity of AutoFilter output incorrectly indentified";
+
+  ASSERT_FALSE(static_cast<const bool>(all_auto_filter_args<const Decoration<0>&, Decoration<0>>::value)) << "Invalid argument list incorrectly identified";
+  ASSERT_FALSE(static_cast<const bool>(all_auto_filter_args<Decoration<0>, const Decoration<0>&>::value)) << "Invalid argument list incorrectly identified";
+  ASSERT_FALSE(static_cast<const bool>(all_auto_filter_args<>::value)) << "Invalid argument list incorrectly identified";
+  ASSERT_TRUE(static_cast<const bool>(all_auto_filter_args<const Decoration<0>&>::value)) << "Valid argument list incorrectly identified";
+  ASSERT_TRUE(static_cast<const bool>(all_auto_filter_args<auto_out<Decoration<1>>>::value)) << "Valid argument list incorrectly identified";
+  ASSERT_TRUE(static_cast<const bool>(all_auto_filter_args<const Decoration<0>&, auto_out<Decoration<1>>>::value)) << "Valid argument list incorrectly identified";
+
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter_return<int>::value)) << "Incorrect identification of int as valid AutoFilter return type";
+  ASSERT_TRUE(static_cast<const bool>(is_auto_filter_return<void>::value)) << "Incorrect identification of void as invalid AutoFilter return type";
+  ASSERT_TRUE(static_cast<const bool>(is_auto_filter_return<Deferred>::value)) << "Incorrect identification of Deferred as invalid AutoFilter return type";
+
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter<NonFilterFunctionType0>::value)) << "Trivial function identified as valid";
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter<NonFilterFunctionType1>::value)) << "Function with invalid first argument identified as valid";
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter<NonFilterFunctionType2>::value)) << "Function with invalid second argument identified as valid";
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter<NonFilterFunctionType3>::value)) << "Function with invalid return type identified as valid";
+
+  ASSERT_TRUE(static_cast<const bool>(is_auto_filter<FilterFunctionType>::value)) << "Valid AutoFilter function identified as invalid";
+}
+
 void FilterFunction(const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
   typeOut->i += 1 + typeIn.i;
 }

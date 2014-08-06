@@ -78,6 +78,7 @@ set(Autowiring_SRCS
   has_static_new.h
   is_any.h
   is_shared_ptr.h
+  is_auto_filter.h
   InterlockedExchange.h
   InvokeRelay.h
   atomic_object.h
