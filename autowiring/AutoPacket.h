@@ -405,6 +405,7 @@ public:
   /// </summary>
   template<class Ret, class... Args>
   void AddRecipient(std::function<Ret(Args...)> f) {
+    static_assert(is_auto_filter<std::function<Ret(Args...)>>::value, "Either arguments or return are not allowed types for AutoFilter methods");
     std::cout << "Decoration overload for std::function called" << std::endl;
     //(1) Decide whether the function can be used as an AutoFilter
     //(2) Update (with lock) the slot information for this packet only.
