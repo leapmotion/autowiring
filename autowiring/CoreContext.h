@@ -315,7 +315,7 @@ protected:
       pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
       receivesEvents([this]{
         for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink) {
-          auto identifier = evt->NewEventIdentifier();
+          auto identifier = evt->NewTypeIdentifier();
           if (identifier->IsSameAs(pObject.get()))
             return true;
         }

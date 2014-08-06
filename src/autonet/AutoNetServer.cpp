@@ -52,7 +52,7 @@ AutoNetServer::AutoNetServer():
   
   // Generate list of all events from event registry
   for (auto event = g_pFirstEventEntry; event; event = event->pFlink)
-    m_EventTypes.insert(event->NewEventIdentifier());
+    m_EventTypes.insert(event->NewTypeIdentifier());
 }
 
 AutoNetServer::~AutoNetServer(){}
