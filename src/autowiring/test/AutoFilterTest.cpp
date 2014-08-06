@@ -1068,3 +1068,87 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
   ASSERT_TRUE(packet->Get(dec)) << "Deferred decorator didn't attach a decoration to an issued packet";
   ASSERT_EQ(105, dec->i) << "Deferred decorate-only AutoFilter did not properly attach before context termination";
 }
+
+typedef std::function<void(const Decoration<0>&, auto_out<Decoration<1>>)> FilterFunctionType;
+void FilterFunction(const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
+  typeOut->i += 1 + typeIn.i;
+}
+
+TEST_F(AutoFilterTest, DISABLED_FunctionDecorationTest) {
+  // AddRecipient that is an instance of std::function f : a -> b
+  // This must be satisfied by decoration of type a,
+  // independent of the order of decoration.
+  //(1) From function
+  //(2) From method
+  //(3) From lambda
+
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  //Decoration with data first
+  {
+    auto packet = factory->NewPacket();
+    packet->Decorate(Decoration<0>());
+    packet->AddRecipient(FilterFunctionType(FilterFunction));
+    const Decoration<1>* getdec;
+    ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
+  }
+
+  //Decoration with function first
+  {
+    auto packet = factory->NewPacket();
+    packet->AddRecipient(FilterFunctionType(FilterFunction));
+    packet->Decorate(Decoration<0>());
+    const Decoration<1>* getdec;
+    ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
+  }
+}
+
+TEST_F(AutoFilterTest, DISABLED_FunctionDecorationLambdaTest) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  //Decoration with function first
+  {
+    auto packet = factory->NewPacket();
+    int addType = 1;
+    packet->AddRecipient(FilterFunctionType([addType] (const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
+      typeOut->i += 1 + typeIn.i;
+    }));
+    packet->Decorate(Decoration<0>());
+    const Decoration<1>* getdec;
+    ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
+    ASSERT_EQ(1+addType, getdec->i) << "Increment was not applied";
+  }
+}
+
+typedef std::function<void(auto_out<Decoration<0>>)> InjectorFunctionType;
+
+TEST_F(AutoFilterTest, DISABLED_FunctionInjectorTest) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  auto packet = factory->NewPacket();
+  int addType = 1;
+  packet->AddRecipient(InjectorFunctionType([addType](auto_out<Decoration<0>> typeOut) {
+    typeOut->i += addType;
+  }));
+  const Decoration<0>* getdec;
+  ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
+  ASSERT_EQ(0+addType, getdec->i) << "Increment was not applied";
+}
+
+typedef std::function<void(const Decoration<1>&)> ExtractorFunctionType;
+
+TEST_F(AutoFilterTest, DISABLED_FunctionExtractorTest) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  auto packet = factory->NewPacket();
+  int extType = -1;
+  packet->AddRecipient(ExtractorFunctionType([&extType](const Decoration<1>& typeIn) {
+    extType = typeIn.i;
+  }));
+  packet->Decorate(Decoration<1>());
+  ASSERT_EQ(1, extType) << "Decoration type was not extracted";
+}
