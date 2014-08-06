@@ -194,3 +194,54 @@ TEST_F(BoltTest, EmptyBolt) {
     ASSERT_EQ(1, innerSo->count) << "ContextCreated() called incorrect number of times";
   }
 }
+
+template<class target>
+class TargetBoltable: public Boltable<target> {
+  static int numCons;
+  static int numDest;
+
+public:
+  static void InitializeNum() {
+    numCons = 0;
+    numDest = 0;
+  }
+  static int ConstructedNum() {return numCons;}
+  static int DestructedNum() {return numDest;}
+
+  TargetBoltable() {++numCons;}
+  ~TargetBoltable() {++numDest;}
+};
+template<class target>
+int TargetBoltable<target>::numCons = 0;
+template<class target>
+int TargetBoltable<target>::numDest = 0;
+
+TEST_F(BoltTest, BoltBeforeContext) {
+  AutoCurrentContext ctxt;
+  TargetBoltable<Pipeline>::InitializeNum();
+  AutoEnable<TargetBoltable<Pipeline>>();
+  ASSERT_EQ(0, TargetBoltable<Pipeline>::ConstructedNum()) << "Instantiated Boltable without context";
+  auto otherCtx = ctxt->Create<OtherContext>();
+  ASSERT_EQ(0, TargetBoltable<Pipeline>::ConstructedNum()) << "Instantiated on creation of unmatched context";
+
+  {
+    auto created = ctxt->Create<Pipeline>();
+    ASSERT_EQ(1, TargetBoltable<Pipeline>::ConstructedNum()) << "Failed to instantiate on creation of matching context";
+  }
+  ASSERT_EQ(1, TargetBoltable<Pipeline>::DestructedNum()) << "Failed to be destroyed with matching context";
+}
+
+TEST_F(BoltTest, BoltAfterContext) {
+  AutoCurrentContext ctxt;
+  TargetBoltable<OtherContext>::InitializeNum();
+  TargetBoltable<Pipeline>::InitializeNum();
+
+  {
+    auto created = ctxt->Create<Pipeline>();
+    AutoEnable<TargetBoltable<OtherContext>>();
+    ASSERT_EQ(0, TargetBoltable<OtherContext>::ConstructedNum()) << "Instantiated Boltable without context";
+    AutoEnable<TargetBoltable<Pipeline>>();
+    ASSERT_EQ(1, TargetBoltable<Pipeline>::ConstructedNum()) << "Failed to instantiate on creation of matching context";
+  }
+  ASSERT_EQ(1, TargetBoltable<Pipeline>::DestructedNum()) << "Failed to be destroyed with matching context";
+}
