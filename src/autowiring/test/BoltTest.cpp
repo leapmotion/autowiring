@@ -231,7 +231,7 @@ TEST_F(BoltTest, BoltBeforeContext) {
   ASSERT_EQ(1, TargetBoltable<Pipeline>::DestructedNum()) << "Failed to be destroyed with matching context";
 }
 
-TEST_F(BoltTest, DISABLED_BoltAfterContext) {
+TEST_F(BoltTest, BoltAfterContext) {
   AutoCurrentContext ctxt;
   TargetBoltable<OtherContext>::InitializeNum();
   TargetBoltable<Pipeline>::InitializeNum();
