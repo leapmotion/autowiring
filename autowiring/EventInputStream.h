@@ -2,6 +2,7 @@
 #pragma once
 #include "Decompose.h"
 #include "Deserialize.h"
+#include "index_tuple.h"
 #include <string>
 #include <sstream>
 #include <deque>
@@ -39,11 +40,11 @@ struct Expression<R(W::*)(ToBindArgs...) >: public ExpressionBase
   /// parameter pack expansion.
   /// </summary>
   void DeserializeAndForward(std::deque<std::string> & d){
-    DeserializeAndForward(d, typename Auto::make_index_tuple<ToBindArgs...>::type());
+    DeserializeAndForward(d, typename make_index_tuple<sizeof...(ToBindArgs)>::type());
   }
 
-  template<unsigned... I>
-  void DeserializeAndForward(std::deque<std::string> & d, Auto::index_tuple<I...>){
+  template<int... I>
+  void DeserializeAndForward(std::deque<std::string> & d, index_tuple<I...>){
     auto it = d.begin();
     AutoFired<W> sender;
     sender(m_memfunc)(Auto::deser<ToBindArgs>::deserialize(it[I])...);

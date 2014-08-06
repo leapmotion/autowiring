@@ -23,7 +23,7 @@ public:
   {}
 
   void operator()(AutoFuture* pFuture) const override {
-    auto added = CallByUnpackingTuple(typename gen_index_tuple<sizeof...(Args)>::type());
+    auto added = CallByUnpackingTuple(typename make_index_tuple<sizeof...(Args)>::type());
     if(pFuture)
       *pFuture += added;
   }

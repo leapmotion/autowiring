@@ -10,8 +10,7 @@ using namespace std;
 DeferrableAutowiring::DeferrableAutowiring(const std::shared_ptr<CoreContext>& context) :
   m_context(context),
   m_pFlink(nullptr)
-{
-}
+{}
 
 DeferrableAutowiring::~DeferrableAutowiring(void) {
   // Clients MUST call CancelAutowiring from their destructor--if this line is being hit,

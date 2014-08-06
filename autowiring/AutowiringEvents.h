@@ -5,6 +5,10 @@
 struct AnySharedPointer;
 class CoreContext;
 
+/// <summary>
+/// These events are broadcast internally by Autowiring
+/// for visualizing internal behavior.
+/// </summary
 class AutowiringEvents {
 public:
   virtual void NewContext(CoreContext&)=0;
