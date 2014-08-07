@@ -1,10 +1,14 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "CreationRules.h"
-#include "CoreContext.h"
 #include "TypeIdentifier.h"
 #include STL_TUPLE_HEADER
 #include MEMORY_HEADER
+
+namespace autowiring {
+  template<typename T>
+  void InjectCurrent(void);
+}
 
 struct TypeRegistryEntry {
   TypeRegistryEntry(const std::type_info& ti);
@@ -65,7 +69,7 @@ struct TypeRegistryEntryT:
 
   template<typename U>
   typename std::enable_if<is_injectable<U>::value>::type AnyInject(void) const {
-    CoreContext::CurrentContext()->Inject<U>();
+    autowiring::InjectCurrent<U>();
   }
 
   template<typename U>

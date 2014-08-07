@@ -4,7 +4,6 @@
 #include "Decompose.h"
 #include "Deferred.h"
 #include "GlobalCoreContext.h"
-#include "TypeRegistry.h"
 #include MEMORY_HEADER
 #include ATOMIC_HEADER
 
@@ -121,8 +120,6 @@ public:
     AutowirableSlot<T>(ctxt ? ctxt->template ResolveAnchor<T>() : ctxt),
     m_pFirstChild(nullptr)
   {
-    // Add this type to the TypeRegistry
-    (void) RegType<T>::r;
     if(ctxt)
       ctxt->Autowire(*this);
   }
@@ -254,10 +251,7 @@ public:
   // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
     std::shared_ptr<T>(ctxt->template Inject<T>())
-  {
-    // Add this type to the TypeRegistry
-    (void) RegType<T>::r;
-  }
+  {}
 
   /// <summary>
   /// Construct overload, for types which take constructor arguments
@@ -265,10 +259,7 @@ public:
   template<class... Args>
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
     std::shared_ptr<T>(ctxt->template Construct<T>(std::forward<Args>(args)...))
-  {
-    // Add this type to the TypeRegistry
-    (void) RegType<T>::r;
-  }
+  {}
 
   operator bool(void) const {
     return IsAutowired();
