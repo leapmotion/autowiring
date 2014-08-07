@@ -28,8 +28,8 @@ SlotInformationStackLocation::~SlotInformationStackLocation(void) {
   tss.reset(m_pPrior);
 
   if(
-    // Do not attempt the update if this stump is initialized already, it could
-    // mean that our value is presently invalid
+    // Do not attempt the update if this stump is initialized already, because it
+    // means that someone else has already filled this in.
     !m_pStump->bInitialized &&
 
     // We can only end here if the swap succeeds, otherwise we're going to have
@@ -42,7 +42,8 @@ SlotInformationStackLocation::~SlotInformationStackLocation(void) {
     return;
   }
 
-  // Stump already filled in, prevent leaks by destroying this stump entry:
+  // Stump already filled in by someone else before we could get to it.  We don't want
+  // to leak memory, so we need to destroy our linked list of slot informations.
   std::unique_ptr<const SlotInformation> prior;
   for(const auto* cur = m_pCur; cur; cur = cur->pFlink)
     prior.reset(cur);
