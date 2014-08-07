@@ -1142,6 +1142,7 @@ TEST_F(AutoFilterTest, DISABLED_FunctionDecorationTest) {
   }
 
   //Decoration with function first
+  //NOTE: This test also catches failures to flush temporary subscriber information
   {
     auto packet = factory->NewPacket();
     packet->AddRecipient(FilterFunctionType(FilterFunction));

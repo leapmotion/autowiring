@@ -55,6 +55,9 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>
     }
   }
 
+  // Record divide between subscribers & recipients
+  m_subscriberNum = m_satCounters.size();
+
   Reset();
 }
 
@@ -213,7 +216,103 @@ void AutoPacket::Finalize(void) {
   for (SatCounter* call : callQueue)
     call->CallAutoFilter(*this);
 
+  // Remove all recipients & clean up the decorations list
+  // ASSERT: This reverse the order of accumulation,
+  // so searching for the subscriber is avoided.
+  while (m_satCounters.size() > m_subscriberNum) {
+    SatCounter& recipient = m_satCounters.back();
+
+    for(auto pCur = recipient.GetAutoFilterInput();
+        *pCur;
+        pCur++
+        ) {
+      DecorationDisposition& entry = m_decorations[*pCur->ti];
+      switch(pCur->subscriberType) {
+        case inTypeInvalid:
+          // Should never happen--trivially ignore this entry
+          break;
+        case inTypeRequired:
+          assert(entry.m_subscribers.size() > 0);
+          assert(&recipient == entry.m_subscribers.back().first);
+          entry.m_subscribers.pop_back();
+          break;
+        case inTypeOptional:
+          assert(entry.m_subscribers.size() > 0);
+          assert(&recipient == entry.m_subscribers.back().first);
+          entry.m_subscribers.pop_back();
+          break;
+        case outTypeRef:
+        case outTypeRefAutoReady:
+          assert(&recipient == entry.m_publisher);
+          entry.m_publisher = nullptr;
+          break;
+      }
+    }
+
+    m_satCounters.pop_back();
+  }
+
+  // Remove decoration dispositions specific to subscribers
+  t_decorationMap::iterator dItr = m_decorations.begin();
+  t_decorationMap::iterator dEnd = m_decorations.end();
+  while (dItr != dEnd) {
+    if (dItr->second.m_subscribers.empty())
+      dItr = m_decorations.erase(dItr);
+    else
+      ++dItr;
+  }
+
   Reset();
+}
+
+void AutoPacket::InitializeRecipient(const AutoFilterDescriptor& descriptor) {
+  SatCounter* call = nullptr;
+  {
+    std::lock_guard<std::mutex> lk(m_lock);
+
+    // (1) Append & Initialize new satisfaction counter
+    m_satCounters.push_back(descriptor);
+    SatCounter& recipient = m_satCounters.back();
+    recipient.Reset();
+
+    // (2) Update satisfaction & Append types from subscriber
+    for(auto pCur = recipient.GetAutoFilterInput();
+        *pCur;
+        pCur++
+        ) {
+      DecorationDisposition& entry = m_decorations[*pCur->ti];
+      switch(pCur->subscriberType) {
+        case inTypeInvalid:
+          // Should never happen--trivially ignore this entry
+          break;
+        case inTypeRequired:
+          entry.m_subscribers.push_back(std::make_pair(&recipient, true));
+          if (entry.satisfied)
+            recipient.Decrement(true);
+          break;
+        case inTypeOptional:
+          entry.m_subscribers.push_back(std::make_pair(&recipient, false));
+          if (entry.satisfied)
+            recipient.Decrement(false);
+          break;
+        case outTypeRef:
+        case outTypeRefAutoReady:
+          if(entry.m_publisher)
+            throw autowiring_error("Added two publishers of the same decoration to the same factory");
+          entry.m_publisher = &recipient;
+          break;
+      }
+    }
+
+    // (3) Check call status inside of lock
+    if (recipient) {
+      call = &recipient;
+    }
+  }
+
+  // (3) If all types are satisfied, call AutoFilter now.
+  if (call)
+    call->CallAutoFilter(*this);
 }
 
 bool AutoPacket::HasSubscribers(const std::type_info& ti) const {

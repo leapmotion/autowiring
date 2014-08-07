@@ -56,6 +56,7 @@ private:
 
   // Saturation counters, constructed when the packet is created and reset each time thereafter
   std::vector<SatCounter> m_satCounters;
+  size_t m_subscriberNum;
 
   // The set of decorations currently attached to this object, and the associated lock:
   mutable std::mutex m_lock;
@@ -105,6 +106,11 @@ private:
   /// suprious calles when no packet is issued.
   /// </remarks>
   void Finalize(void);
+
+  /// <summary>
+  /// Adds a recipient for data associated only with this issuance of the packet.
+  /// </summary>
+  void InitializeRecipient(const AutoFilterDescriptor& descriptor);
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
@@ -405,11 +411,8 @@ public:
   /// </summary>
   template<class Ret, class... Args>
   void AddRecipient(std::function<Ret(Args...)> f) {
-    static_assert(is_auto_filter<std::function<Ret(Args...)>>::value, "Either arguments or return are not allowed types for AutoFilter methods");
-    std::cout << "Decoration overload for std::function called" << std::endl;
-    //(1) Decide whether the function can be used as an AutoFilter
-    //(2) Update (with lock) the slot information for this packet only.
-    //PROBLEM: I need to make sure that the slot does not remain on the packet.
+    std::shared_ptr<MicroAutoFilter<Ret, Args...>> filter(new MicroAutoFilter<Ret, Args...>(f));
+    InitializeRecipient(MakeAutoFilterDescriptor(filter));
   }
 
   /// <returns>
