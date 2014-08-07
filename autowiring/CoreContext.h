@@ -518,8 +518,10 @@ public:
 
   /// <summary>
   /// Utility method which will inject the specified types into this context
-  /// Arguments will be passed to the T constructor if provided
   /// </summary>
+  /// <remarks>
+  /// Arguments will be passed to the T constructor if provided
+  /// </remarks>
   template<typename T, typename... Args>
   std::shared_ptr<T> Construct(Args&&... args) {
     // Add this type to the TypeRegistry
