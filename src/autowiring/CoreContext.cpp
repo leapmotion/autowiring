@@ -239,7 +239,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
 
     // Ancilliary subscribers, if present:
     for(const auto* pCur = stump.pFirstAutoFilter; pCur; pCur = pCur->pFlink) {
-      AutoFilterDescriptor subscriber(traits.subscriber.GetAutoFilter(), pCur->stub);
+      AutoFilterDescriptor subscriber(traits.subscriber.GetAutoFilter(), pCur->m_stub);
       AddPacketSubscriber(subscriber);
     }
   }

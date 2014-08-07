@@ -29,13 +29,7 @@ protected:
   object& get_object() {
     return m_share->m_object;
   }
-  const object& get_object() const {
-    return m_share->m_object;
-  }
   bool& get_initialized() {
-    return m_share->m_initialized;
-  }
-  const bool& get_initialized() const {
     return m_share->m_initialized;
   }
 
@@ -54,8 +48,7 @@ public:
   ///<remarks>
   ///To copy the atomic_object referenced by source use:
   /// shared_object<object> target(*unlock_object<object>(source));
-  ///This method does NOT copy the atomic_object referenced by source.
-  ///</remarks>
+  ///</remakrs>
   shared_object(const shared_object<object, lock>& source):
   m_share(source.m_share) {}
 
@@ -72,7 +65,6 @@ public:
   ///<remarks>
   ///This method is equivalent to:
   /// target = *unlock_object<object>(source);
-  ///This method does NOT redirect the atomic_object reference to the reference of source.
   ///</remarks>
   shared_object<object, lock>& operator = (const shared_object<object, lock>& source) {
     *m_share = *source.m_share;
@@ -94,29 +86,13 @@ public:
     return *m_share;
   }
 
-  ///<summary>
-  ///Reset using default constructor yielding initialized() == false.
-  ///</summary>
-  ///<return>True if the object was not assigned default values</return>
-  bool reset() {
-    return m_share->reset();
-  }
-
   ///<return>True if the object was not assigned default values</return>
   bool initialized() const {
     return m_share->initialized();
   }
 
   ///<summary>
-  ///Atomic copy of target to this object, only if initialized() == false.
-  ///</summary>
-  ///<return>True if the object was not assigned default values</return>
-  bool reset(const object& target) {
-    return m_share->reset(target);
-  }
-
-  ///<summary>
-  ///Atomic copy of this object to target, only if initialized() == true.
+  ///Atomic copy of this location to argument location, only if this has location.
   ///</summary>
   ///<return>True if the object was not assigned default values</return>
   bool initialized(object& target) {
@@ -124,33 +100,13 @@ public:
   }
 
   ///<summary>
-  ///If uninitialized uses target for initialization.
-  ///If initialized assigns current value to target.
+  ///Reset using default constructor yielding initialized() == false.
   ///</summary>
-  ///<returns> Returns +1 for transfer from target to this, -1 for transfer from this to target</returns>
-  int transfer(object& target) {
-    return m_share->transfer(target);
-  }
-
-  ///<summary>
-  ///If neither this nor target are uninitialized, no transfer occurs.
-  ///If this is uninitialized and target is not, then this is initialized by target.
-  ///If target is uninitialized and this is, then target is initialized by this.
-  ///If both this and target are initialized, no transforer occurs.
-  ///</summary>
-  ///<returns> Returns +1 for transfer from target to this, -1 for transfer from this to target, else 0</returns>
-  int transfer(atomic_object<object, lock>& target) {
-    return m_share->transfer(target);
-  }
-
-  ///<summary>
-  ///If neither this nor target are uninitialized, no transfer occurs.
-  ///If this is uninitialized and target is not, then this is initialized by target.
-  ///If target is uninitialized and this is, then target is initialized by this.
-  ///If both this and target are initialized, no transforer occurs.
-  ///</summary>
-  ///<returns> Returns +1 for transfer from target to this, -1 for transfer from this to target, else 0</returns>
-  int transfer(shared_object<object, lock>& target) {
-    return m_share->transfer(target.m_share);
+  ///<remarks>
+  ///This method is equivalent to:
+  /// unlock_object<object>(source)->reset();
+  ///</remarks>
+  void reset() {
+    m_share->reset();
   }
 };
