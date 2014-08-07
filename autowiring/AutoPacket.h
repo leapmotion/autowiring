@@ -7,7 +7,7 @@
 #include "is_shared_ptr.h"
 #include "ObjectPool.h"
 #include "is_any.h"
-#include "is_auto_filter.h"
+#include "MicroAutoFilter.h"
 #include <sstream>
 #include <typeinfo>
 #include MEMORY_HEADER

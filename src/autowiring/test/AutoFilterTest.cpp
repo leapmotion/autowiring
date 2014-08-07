@@ -1106,6 +1106,17 @@ TEST_F(AutoFilterTest, AutoFilterTemplateTests) {
   ASSERT_TRUE(static_cast<const bool>(is_auto_filter<FilterFunctionType>::value)) << "Valid AutoFilter function identified as invalid";
 }
 
+TEST_F(AutoFilterTest, MicroAutoFilterTests) {
+  int extVal = -1;
+  std::function<void(const int&)> filter([&extVal] (const int& getVal) {
+    extVal = getVal;
+  });
+  MicroAutoFilter<void, const int&> makeImmediate(filter);
+  int setVal = 1;
+  makeImmediate.AutoFilter(setVal);
+  ASSERT_EQ(1, extVal);
+}
+
 void FilterFunction(const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
   typeOut->i += 1 + typeIn.i;
 }

@@ -90,6 +90,7 @@ set(Autowiring_SRCS
   ObjectPoolMonitor.cpp
   optional_ptr.h
   SatCounter.h
+  MicroAutoFilter.h
   MicroBolt.h
   SharedPointerSlot.h
   SlotInformation.h
