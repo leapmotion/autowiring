@@ -47,7 +47,7 @@ struct Expression<R(W::*)(ToBindArgs...) >: public ExpressionBase
   void DeserializeAndForward(std::deque<std::string> & d, index_tuple<I...>){
     auto it = d.begin();
     AutoFired<W> sender;
-    sender(m_memfunc)(Auto::deser<ToBindArgs>::deserialize(it[I])...);
+    sender(m_memfunc)(autowiring::deser<ToBindArgs>::deserialize(it[I])...);
   }
 };
 

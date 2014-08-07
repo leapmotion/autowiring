@@ -5,7 +5,7 @@
 /// <summary>
 /// Support class for deserializing byte-streams input as std::string into a variety of formats
 /// </summary>
-namespace Auto {
+namespace autowiring {
   struct SerializableSigil{};
 
   struct Serialize:

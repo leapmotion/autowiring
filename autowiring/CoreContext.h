@@ -938,6 +938,9 @@ public:
   }
 };
 
+/// <summary>
+/// Forward-declarable version of CoreContext::InjectCurrent
+/// </summary>
 namespace autowiring {
   template<typename T>
   void InjectCurrent(void){

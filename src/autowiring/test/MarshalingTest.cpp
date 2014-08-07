@@ -29,7 +29,7 @@ If the types aren't POD. At the very least, tests need to be written which viola
 "I can do everything with stringstreams" implementation currently passing
 */
 
-struct StandardType : public Auto::Serialize{
+struct StandardType : public autowiring::Serialize{
   std::string m_str1;
   std::string m_str2;
   std::string m_str3;
