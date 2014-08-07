@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "Autowiring/NewAutoFilter.h"
-#include "Autowiring/shared_object.h"
+#include "NewAutoFilter.h"
+#include "shared_object.h"
 
 ///<summary>
 ///Enables an automatic self-update when a packet is decorated with the object type.
