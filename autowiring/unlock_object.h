@@ -9,7 +9,7 @@
 ///</summary>
 ///<remarks>
 ///An unlock_object cannot be copied by construction or assignment since it maintains access.
-///An unlock_object cannot be used to instantiate new shared_object instances,
+///An unlock_object and cannot be used to instantiate new shared_object instances,
 ///because it is not guaranteed to reference a shared_object.
 ///An unlock_object cannot be applied to an atomic_object, since continued existence of the
 ///referenced object would not be guaranteed.
@@ -18,7 +18,6 @@ template<class object, class lock = std::mutex>
 class unlock_object {
   unlock_object(unlock_object<object, lock>& source) = delete;
   unlock_object<object, lock>& operator = (unlock_object<object, lock>& _rhs) = delete;
-  unlock_object<object, lock>* operator & () = delete;
 
   std::shared_ptr<atomic_object<object, lock>> m_share;
 
@@ -62,12 +61,12 @@ public:
   }
 
   ///<summary>
-  ///Releases reference and lock, yielding bool(this) == false;
+  ///Reset releases reference and lock, yielding bool(this) == false;
   ///</summary>
   ///<remarks>
   ///This method is idempotent.
   ///</remarks>
-  void release() {
+  void reset() {
     if (m_share) {
       m_share->m_lock.unlock();
       m_share.reset();
@@ -75,16 +74,16 @@ public:
   }
 
   ///<summary>
-  ///Aquires a lock on and reference to source, yielding unlock_object<object>::operator bool(this) == true;
+  ///Reset re-targets reference and lock to source, yielding bool(this) == false;
   ///</summary>
   ///<param name="should_try">If true, the returned unlock_object might hold no reference or lock</param>
   ///<remarks>
   ///This method is idempotent, including when called repeatedly with the same argument.
   ///However, reset(source) always releases the any currently held lock.
   ///</remarks>
-  void acquire(shared_object<object, lock>& source, bool should_try = false) {
+  void reset(shared_object<object, lock>& source, bool should_try = false) {
     if (m_share)
-      release();
+      reset();
     if(should_try)
       try_unlock(source);
     else

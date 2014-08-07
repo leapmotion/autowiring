@@ -13,23 +13,10 @@ SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStumpB
   m_pPrior(tss.get()),
   m_pStump(pStump),
   m_pCur(nullptr),
-  m_pLastLink(nullptr),
   m_pObj(pObj),
   m_extent(extent)
 {
   tss.reset(this);
-}
-
-template<class T>
-void UpdateOrCascadeDelete(T* ptr, const T*& dest) {
-  if(!compare_exchange<T>(&dest, ptr, nullptr))
-    // Exchange passed, the destination now owns this pointer
-    return;
-
-  // Failed the exchange, return here
-  std::unique_ptr<const T> prior;
-  for(const auto* cur = ptr; cur; cur = cur->pFlink)
-    prior.reset(cur);
 }
 
 SlotInformationStackLocation::~SlotInformationStackLocation(void) {
@@ -40,11 +27,25 @@ SlotInformationStackLocation::~SlotInformationStackLocation(void) {
   // Replace the prior stack location, we were pushed
   tss.reset(m_pPrior);
 
-  UpdateOrCascadeDelete(m_pCur, m_pStump->pHead);
-  UpdateOrCascadeDelete(m_pLastLink, m_pStump->pFirstAutoFilter);
+  if(
+    // Do not attempt the update if this stump is initialized already, it could
+    // mean that our value is presently invalid
+    !m_pStump->bInitialized &&
 
-  // Unconditionally update to true, no CAS needed
-  m_pStump->bInitialized = true;
+    // We can only end here if the swap succeeds, otherwise we're going to have
+    // to leave the value that's here already and tear down our list
+    !compare_exchange<SlotInformation>(&m_pStump->pHead, m_pCur, nullptr)
+  ) {
+    // No reason to CAS this boolean field--we're going to unconditionally make
+    // this spot initialized.
+    m_pStump->bInitialized = true;
+    return;
+  }
+
+  // Stump already filled in, prevent leaks by destroying this stump entry:
+  std::unique_ptr<const SlotInformation> prior;
+  for(const auto* cur = m_pCur; cur; cur = cur->pFlink)
+    prior.reset(cur);
 }
 
 SlotInformationStackLocation* SlotInformationStackLocation::CurrentStackLocation(void) {
@@ -76,11 +77,4 @@ void SlotInformationStackLocation::RegisterSlot(DeferrableAutowiring* pDeferrabl
     reinterpret_cast<const unsigned char*>(tss->m_pObj),
     false
   );
-}
-
-void SlotInformationStackLocation::RegisterSlot(const AutoFilterDescriptorStub& stub) {
-  if(!tss.get() || tss->m_pStump->bInitialized)
-    return;
-
-  tss->m_pLastLink = new AutoFilterDescriptorStubLink(stub, tss->m_pLastLink);
 }
