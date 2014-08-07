@@ -20,6 +20,7 @@
 #include "ExceptionFilter.h"
 #include "TeardownNotifier.h"
 #include "EventRegistry.h"
+#include "TypeRegistry.h"
 #include "TypeUnifier.h"
 
 #include <list>
@@ -315,7 +316,7 @@ protected:
       pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
       receivesEvents([this]{
         for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink) {
-          auto identifier = evt->NewEventIdentifier();
+          auto identifier = evt->NewTypeIdentifier();
           if (identifier->IsSameAs(pObject.get()))
             return true;
         }
@@ -521,6 +522,9 @@ public:
   /// </summary>
   template<typename T, typename... Args>
   std::shared_ptr<T> Construct(Args&&... args) {
+    // Add this type to the TypeRegistry
+    (void) RegType<T>::r;
+    
     // If T doesn't inherit Object, then we need to compose a unifying type which does
     typedef typename SelectTypeUnifier<T>::type TActual;
     static_assert(std::is_base_of<Object, TActual>::value, "Constructive type does not implement Object as expected");
@@ -935,6 +939,16 @@ public:
 };
 
 /// <summary>
+/// Forward-declarable version of CoreContext::InjectCurrent
+/// </summary>
+namespace autowiring {
+  template<typename T>
+  void InjectCurrent(void){
+    CoreContext::InjectCurrent<T>();
+  }
+}
+
+/// <summary>
 /// Constant type optimization for named sigil types
 /// </summary>
 template<class T>
@@ -960,3 +974,4 @@ template<typename T, typename... Sigil>
 void CoreContext::AutoRequireMicroBolt(void) {
   Inject<MicroBolt<T, Sigil...>>();
 }
+

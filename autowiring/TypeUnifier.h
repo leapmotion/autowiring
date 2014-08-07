@@ -22,8 +22,7 @@ template<class T>
 class TypeUnifierSimple:
   public T,
   public TypeUnifier
-{
-};
+{};
 
 /// <summary>
 /// Utility class which allows us to either use the pure type T, or a unifier, as appropriate

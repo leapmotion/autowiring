@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include <typeinfo>
+#include "TypeIdentifier.h"
 #include TYPE_TRAITS_HEADER
 #include STL_TUPLE_HEADER
 #include MEMORY_HEADER
@@ -9,27 +9,6 @@ template<class T>
 class JunctionBox;
 
 class JunctionBoxBase;
-class Object;
-
-// Checks if an Object* listens to a event T;
-struct EventIdentifierBase {
-  virtual bool IsSameAs(const Object* obj) = 0;
-  virtual const std::type_info& Type() = 0;
-};
-
-template<typename T>
-struct EventIdentifier:
-  public EventIdentifierBase
-{
-  // true if "obj" is an event receiver for T
-  bool IsSameAs(const Object* obj){
-    return !!dynamic_cast<const T*>(obj);
-  }
-  
-  const std::type_info& Type(){
-    return typeid(T);
-  }
-};
 
 struct EventRegistryEntry {
   EventRegistryEntry(const std::type_info& ti);
@@ -53,7 +32,7 @@ struct EventRegistryEntry {
   /// <summary>
   /// Used to create a type identifier value, for use with AutoNet
   /// </summary>
-  virtual std::shared_ptr<EventIdentifierBase> NewEventIdentifier(void) const = 0;
+  virtual std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const = 0;
 };
 
 template<class T>
@@ -73,9 +52,9 @@ struct EventRegistryEntryT:
     );
   }
 
-  std::shared_ptr<EventIdentifierBase> NewEventIdentifier(void) const override {
-    return std::static_pointer_cast<EventIdentifierBase>(
-      std::make_shared<EventIdentifier<T>>()
+  std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const override {
+    return std::static_pointer_cast<TypeIdentifierBase>(
+      std::make_shared<TypeIdentifier<T>>()
     );
   }
 };
