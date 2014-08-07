@@ -5,6 +5,7 @@
 #include <autowiring/AutoPacketFactory.h>
 #include <autowiring/Deferred.h>
 #include <autowiring/NewAutoFilter.h>
+#include "AutoSelfUpdate.h"
 #include THREAD_HEADER
 
 class AutoFilterTest:
@@ -1005,32 +1006,26 @@ TEST_F(AutoFilterTest, SharedPointerAliasingRules) {
   ASSERT_EQ(1UL, genFilter2->m_called) << "AutoFilter accepting a decorated type was not called as expected";
 }
 
-TEST_F(AutoFilterTest, GetSharedPointer) {
-  // Attach a simple decoration
+TEST_F(AutoFilterTest, AutoSelfUpdateTest) {
+  AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
-  auto packet = factory->NewPacket();
-  packet->Decorate(Decoration<0>());
+  AutoRequired<AutoSelfUpdate<Decoration<0>>> filter;
 
-  // Verify we can get this decoration back
-  const std::shared_ptr<Decoration<0>>* dec;
-  packet->Get(dec);
-  ASSERT_TRUE(dec != nullptr) << "Failed to obtain a shared pointer for a decoration that was just added";
+  {
+    auto packet = factory->NewPacket();
+    ASSERT_TRUE(packet->Has<AutoSelfUpdate<Decoration<0>>::prior_object>()) << "Missing status update from AutoSelfUpdate";
+    Decoration<0> mod_deco;
+    mod_deco.i = 1;
+    packet->Decorate(mod_deco);
+    Decoration<0> get_deco = *filter; //Implicit cast from AutoSelfUpdate
+    ASSERT_EQ(1, get_deco.i) << "AutoSelfUpdate did not update";
+  }
 
-  // Now add a bunch of other decorations:
-  packet->Decorate(Decoration<1>());
-  packet->Decorate(Decoration<2>());
-  packet->Decorate(Decoration<3>());
-  packet->Decorate(Decoration<4>());
-  packet->Decorate(Decoration<5>());
-  packet->Decorate(Decoration<6>());
-  packet->Decorate(Decoration<7>());
-  packet->Decorate(Decoration<8>());
-  packet->Decorate(Decoration<9>());
-
-  // Verify nothing moved:
-  const std::shared_ptr<Decoration<0>>* dec2;
-  packet->Get(dec2);
-  ASSERT_EQ(dec, dec2) << "Decoration was moved incorrectly after updates were made";
+  {
+    auto packet = factory->NewPacket();
+    Decoration<0> get_deco = packet->Get<AutoSelfUpdate<Decoration<0>>::prior_object>(); //Implicit cast from prior_object
+    ASSERT_EQ(1, get_deco.i) << "Status updated yielded incorrect prior";
+  }
 }
 
 TEST_F(AutoFilterTest, WaitWhilePacketOutstanding) {
@@ -1067,4 +1062,18 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
   const Decoration<0>* dec;
   ASSERT_TRUE(packet->Get(dec)) << "Deferred decorator didn't attach a decoration to an issued packet";
   ASSERT_EQ(105, dec->i) << "Deferred decorate-only AutoFilter did not properly attach before context termination";
+}
+
+TEST_F(AutoFilterTest, AutoSelfUpdateTwoContexts) {
+  AutoCreateContext contextA;
+  {
+    CurrentContextPusher pusher(contextA);
+    ASSERT_NO_THROW(AutoRequired<AutoSelfUpdate<Decoration<0>>>()) << "Failed to create AutoSelfUpdate in contextA";
+  }
+
+  AutoCreateContext contextB;
+  {
+    CurrentContextPusher pusher(contextB);
+    ASSERT_NO_THROW(AutoRequired<AutoSelfUpdate<Decoration<0>>>()) << "Failed to create AutoSelfUpdate in contextB";
+  }
 }

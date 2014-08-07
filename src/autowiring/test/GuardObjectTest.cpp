@@ -64,11 +64,11 @@ TEST_F(GuardObjectTest, UnlockTests) {
     ASSERT_TRUE(static_cast<bool>(so_unlock3));
     ASSERT_TRUE(*so_unlock3 == 1);
 
-    so_unlock3.reset(so2); //reset with argument
+    so_unlock3.acquire(so2); //reset with argument
     ASSERT_TRUE(static_cast<bool>(so_unlock3));
     ASSERT_TRUE(*so_unlock3 == 2);
 
-    so_unlock3.reset(so2); //reset is idempotent
+    so_unlock3.acquire(so2); //reset is idempotent
     ASSERT_TRUE(static_cast<bool>(so_unlock3));
     ASSERT_TRUE(*so_unlock3 == 2);
   }
