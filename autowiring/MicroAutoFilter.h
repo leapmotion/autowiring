@@ -26,7 +26,7 @@ struct MicroAutoFilter<void, Args...> {
 
   void AutoFilter(Args... args) {
     if (m_filter)
-      return m_filter(args...);
+      return m_filter(std::move(args)...);
   }
 
 protected:
