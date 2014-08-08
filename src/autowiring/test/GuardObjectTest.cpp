@@ -1,77 +1,108 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include <autowiring/shared_object.h>
+#include <autowiring/atomic_object.h>
 #include <autowiring/unlock_object.h>
 
 class GuardObjectTest:
-  public testing::Test
+public testing::Test
 {};
 
-/*
-TEST_F(GuardObjectTest, SharedTests) {
-  shared_object<int> so1; //Default Constructor
-  ASSERT_FALSE(so1.initialized()); //default initialization test
+class copy_count {
+  mutable int m_copy;
 
-  int val = 0;
-  so1 = 1; //object assignment
-  ASSERT_TRUE(so1.initialized(val)); //atomic assignment & initialization test
-  ASSERT_TRUE(val == 1);
+public:
+  copy_count(): m_copy(0) {}
 
-  val = 2;
-  shared_object<int> so2(val); //object copy constructor
-  val = 1;
-  ASSERT_TRUE(so2.initialized(val));
-  ASSERT_TRUE(val == 2);
-
-  so1.reset(); //reset
-  ASSERT_FALSE(so1.initialized());
-  so1.reset(); //reset is idempotent
-
-  so1 = so2; //assignment between referenced objects
-  ASSERT_TRUE(so1.initialized());
-  ASSERT_TRUE(so1 == 2);
-
-  so2 = 3;
-  shared_object<int> so3(so2); //shared_object copy constructor
-  ASSERT_TRUE(so3.initialized());
-  val = so3; //implicit cast to copy
-  ASSERT_TRUE(val == 3);
-  ASSERT_TRUE(so2 == 3); //Shared reference is also modified
-  ASSERT_TRUE(so1 == 2); //Separate reference is not modified
-
-  so2 = so3; //Avoid deadlock in self-assignment
-  ASSERT_TRUE(so2 == 3);
-}
-
-TEST_F(GuardObjectTest, UnlockTests) {
-  shared_object<int> so1; //Default Constructor
-  ASSERT_FALSE(so1.initialized()); //default initialization test
-  {
-    unlock_object<int> so1_unlock1(so1); //successful unlock
-    ASSERT_TRUE(static_cast<bool>(so1_unlock1));
-
-    unlock_object<int> so1_unlock2(so1, true); //prevented try_unlock
-    ASSERT_FALSE(static_cast<bool>(so1_unlock2));
-
-    *so1_unlock1 = 1; //object assignment
-  } //delete one empty and one held unlock_object instance
-  int val = 0;
-  ASSERT_TRUE(so1.initialized(val)); //condition for unlock_object construction
-  ASSERT_TRUE(val == 1);
-
-  shared_object<int> so2(2); //Default Constructor
-  {
-    unlock_object<int> so_unlock3(so1); //successful unlock
-    ASSERT_TRUE(static_cast<bool>(so_unlock3));
-    ASSERT_TRUE(*so_unlock3 == 1);
-
-    so_unlock3.acquire(so2); //reset with argument
-    ASSERT_TRUE(static_cast<bool>(so_unlock3));
-    ASSERT_TRUE(*so_unlock3 == 2);
-
-    so_unlock3.acquire(so2); //reset is idempotent
-    ASSERT_TRUE(static_cast<bool>(so_unlock3));
-    ASSERT_TRUE(*so_unlock3 == 2);
+  copy_count(const copy_count& source): m_copy(source.m_copy + 1) {
+    source.m_copy = m_copy;
   }
+
+  copy_count& operator = (const copy_count& source) {
+    ++source.m_copy;
+    m_copy = source.m_copy;
+    return *this;
+  }
+
+  int count() {
+    return m_copy;
+  }
+};
+
+TEST_F(GuardObjectTest, AtomicTests) {
+  copy_count add_count;
+  atomic_object<copy_count> atomic(add_count); //atomic.count == add_count == 1
+  ASSERT_EQ(1, add_count.count());
+
+  //Verify casting to base type by copy
+  add_count = atomic; //atomic.count == 2
+  ASSERT_EQ(3, add_count.count());
+
+  //Verify that deadlock in self-assignment is avoided
+  atomic = atomic; //atomic.count == 2
+  add_count = atomic; //atomic.count == 3
+  ASSERT_EQ(4, add_count.count());
+
+  //Verify that construction from atomic object does not deadlock
+  atomic_object<copy_count> atomic_new(atomic); //atomic_new == atomic_count == 4
+  add_count = atomic; //atomic.count == 5
+  ASSERT_EQ(6, add_count.count());
 }
-*/
+
+TEST_F(GuardObjectTest, UnlockMemberTests) {
+  atomic_object<copy_count>::shared counter(new atomic_object<copy_count>());
+  copy_count add_count;
+
+  //Verify unlock, assignment and re-lock
+  {
+    //PROBLEM: Existence guarantee is not possible for objects on stack!
+
+    atomic_object<copy_count>::unlock unlock(counter);
+    ASSERT_EQ(0, unlock->count());
+    //NOTE: Implicit cast-by-copy made only one copy from the original
+
+    //Test dereferencing member access
+    *unlock = add_count;
+    ASSERT_EQ(1, unlock->count());
+  }
+
+  //Verify unlock on destruction
+  atomic_object<copy_count>::unlock try_unlock(counter, true);
+  ASSERT_TRUE(try_unlock);
+  try_unlock.release();
+  ASSERT_FALSE(try_unlock);
+}
+
+TEST_F(GuardObjectTest, UnlockBlockingTests) {
+  //Verify exclusion
+  {
+    atomic_object<int>::shared shared;
+
+    //Verify that no reference is aquired
+    atomic_object<int>::unlock unlock(shared);
+    ASSERT_FALSE(unlock);
+
+    shared.reset(new atomic_object<int>());
+    unlock.acquire(shared);
+    ASSERT_TRUE(unlock);
+    ASSERT_EQ(2, shared.use_count());
+    unlock.acquire(shared);
+    ASSERT_TRUE(unlock);
+    ASSERT_EQ(2, shared.use_count());
+
+    //Verify that no reference is aquired
+    atomic_object<int>::unlock try_unlock(shared, true);
+    ASSERT_FALSE(try_unlock);
+    ASSERT_EQ(2, shared.use_count());
+  }
+
+  //Verify existence guarantee
+  atomic_object<int>::unlock keeper;
+  {
+    atomic_object<int>::shared shared(new atomic_object<int>(0));
+    keeper.acquire(shared);
+    ASSERT_TRUE(keeper);
+    ASSERT_EQ(2, shared.use_count());
+  }
+  ASSERT_TRUE(keeper);
+  *keeper = 1;
+}

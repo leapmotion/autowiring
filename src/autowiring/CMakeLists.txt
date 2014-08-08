@@ -82,7 +82,6 @@ set(Autowiring_SRCS
   InterlockedExchange.h
   InvokeRelay.h
   atomic_object.h
-  shared_object.h
   unlock_object.h
   Object.h
   ObjectPool.h

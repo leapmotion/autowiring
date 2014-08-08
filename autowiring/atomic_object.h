@@ -2,7 +2,7 @@
 #pragma once
 #include MUTEX_HEADER
 
-template<class object, class lock> class shared_object;
+#include "unlock_object.h"
 template<class object, class lock> class unlock_object;
 
 ///<summary>
@@ -11,13 +11,15 @@ template<class object, class lock> class unlock_object;
 ///<remarks>
 ///This class supports two modes of use:
 /// - Atomic assignments which can be used to create a mutable local copy,
-///   or to modify the contents of shared_object.
+///   or to modify the contents of atomic_object.
 /// - Held locks, via child classes that manipulate the protected lock member.
 ///</remarks>
 template<class object, class lock = std::mutex>
 class atomic_object {
-  friend class shared_object<object, lock>;
+public:
   friend class unlock_object<object, lock>;
+  typedef unlock_object<object, lock> unlock;
+  typedef std::shared_ptr<atomic_object<object, lock>> shared;
 
 protected:
   //CONTRACT: If !m_initialized then m_object == object();
@@ -53,8 +55,8 @@ public:
   ///Assignment yielding initialized() == source.initialized().
   ///</summary>
   ///<remarks>
-  ///This method avoids deadlocks due to self-assignment, and intermediate
-  ///copies due to implicit casting.
+  ///This method avoids deadlocks due to self-assignment,
+  ///and intermediate copies due to implicit casting.
   ///</remarks>
   atomic_object<object, lock>& operator = (const atomic_object<object>& source) {
     if (this == &source)

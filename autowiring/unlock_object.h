@@ -1,60 +1,48 @@
 // Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
-#include "shared_object.h"
+#include "atomic_object.h"
+template<class object, class lock> class atomic_object;
 
 ///<summary>
-///A reference to a shared_object that guarantees both existence and exclusive mutability.
+///A reference to a atomic_object that guarantees both existence and exclusive mutability.
 ///</summary>
 ///<remarks>
 ///An unlock_object cannot be copied by construction or assignment since it maintains access.
-///An unlock_object cannot be used to instantiate new shared_object instances,
-///because it is not guaranteed to reference a shared_object.
-///An unlock_object cannot be applied to an atomic_object, since continued existence of the
-///referenced object would not be guaranteed.
+///An unlock_object cannot be used to extend the existence of an atomic_object.
 ///</remarks>
 template<class object, class lock = std::mutex>
 class unlock_object {
-  unlock_object(unlock_object<object, lock>& source) = delete;
+public:
+  typedef atomic_object<object, lock> atomic;
+  typedef typename atomic::shared shared;
+
+  unlock_object(const unlock_object<object, lock>& source) = delete;
   unlock_object<object, lock>& operator = (unlock_object<object, lock>& _rhs) = delete;
   unlock_object<object, lock>* operator & () = delete;
 
-  std::shared_ptr<atomic_object<object, lock>> m_share;
-
-  void unlock(shared_object<object, lock>& source) {
-    source.m_share->m_lock.lock();
-    m_share = source.m_share;
-  }
-
-  void try_unlock(shared_object<object, lock>& source) {
-    if(!source.m_share->m_lock.try_lock())
-      return;
-    m_share = source.m_share;
-  }
+protected:
+  //CONTRACT: m_shared != nullptr while m_shared->m_lock is held
+  shared m_shared;
 
 public:
   ///<summary>
-  ///Default constructor, yielding unlock_object<object>::operator bool == false;
+  ///Default constructor, yielding bool(*this) == false;
   ///</summary>
   unlock_object() {}
 
   ///<summary>
-  ///Construction from a shared_object references the object and maintains a lock.
+  ///Construction references the object and maintains a lock, yielding bool(*this) == true;
   ///</summary>
   ///<param name="should_try">If true, the returned unlock_object might hold no reference or lock</param>
-  unlock_object(shared_object<object, lock>& source, bool should_try = false) {
-    if(should_try)
-      try_unlock(source);
-    else
-      unlock(source);
+  unlock_object(shared& source, bool should_try = false) {
+    acquire(source, should_try);
   }
 
   ///<summary>
   ///Destruction releases any shared reference and any held lock.
   ///</summary>
   ~unlock_object() {
-    if (m_share) {
-      m_share->m_lock.unlock();
-    }
+    release();
   }
 
   ///<summary>
@@ -64,32 +52,38 @@ public:
   ///This method is idempotent.
   ///</remarks>
   void release() {
-    if (m_share) {
-      m_share->m_lock.unlock();
-      m_share.reset();
+    if (m_shared) {
+      m_shared->m_lock.unlock();
+      m_shared.reset();
     }
   }
 
   ///<summary>
-  ///Aquires a lock on and reference to source, yielding unlock_object<object>::operator bool(this) == true;
+  ///Aquires a lock on and reference to source, yielding bool(*this) == true;
   ///</summary>
   ///<param name="should_try">If true, the returned unlock_object might hold no reference or lock</param>
   ///<remarks>
   ///This method is idempotent, including when called repeatedly with the same argument.
-  ///However, reset(source) always releases the any currently held lock.
+  ///However, acquire(source) always releases the any currently held lock.
   ///</remarks>
-  void acquire(shared_object<object, lock>& source, bool should_try = false) {
-    if (m_share)
-      release();
-    if(should_try)
-      try_unlock(source);
-    else
-      unlock(source);
+  void acquire(shared& source, bool should_try = false) {
+    release();
+    if (!source) {
+      return;
+    }
+    if (!should_try) {
+      source->m_lock.lock();
+    } else if (!source->m_lock.try_lock()) {
+      return;
+    }
+    m_shared = source;
   }
 
-  ///<returns>True when unlock_object references and locks a shared_object</returns>
-  operator bool () {return m_share.operator bool ();}
+  ///<returns>True when unlock_object references and locks a atomic_object</returns>
+  operator bool () {
+    return m_shared.operator bool ();
+  }
 
-  object& operator * () const {return m_share->m_object;}
-  object* operator -> () const {return &m_share->m_object;}
+  object& operator * () const {return m_shared->m_object;}
+  object* operator -> () const {return &m_shared->m_object;}
 };
