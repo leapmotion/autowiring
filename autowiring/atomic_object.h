@@ -14,10 +14,12 @@ template<class object, class lock> class unlock_object;
 ///   or to modify the contents of atomic_object.
 /// - Held locks, via child classes that manipulate the protected lock member.
 ///</remarks>
-template<class object, class lock = std::mutex>
+template<class object_type, class lock_type = std::mutex>
 class atomic_object {
 public:
-  friend class unlock_object<object, lock>;
+  friend class unlock_object<object_type, lock_type>;
+  typedef object_type object;
+  typedef lock_type lock;
   typedef unlock_object<object, lock> unlock;
   typedef std::shared_ptr<atomic_object<object, lock>> shared;
 

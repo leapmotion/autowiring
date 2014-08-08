@@ -10,10 +10,12 @@ template<class object, class lock> class atomic_object;
 ///An unlock_object cannot be copied by construction or assignment since it maintains access.
 ///An unlock_object cannot be used to extend the existence of an atomic_object.
 ///</remarks>
-template<class object, class lock = std::mutex>
+template<class object_type, class lock_type = std::mutex>
 class unlock_object {
 public:
-  typedef atomic_object<object, lock> atomic;
+  typedef object_type object;
+  typedef atomic_object<object_type, lock_type> atomic;
+  typedef typename atomic::lock lock;
   typedef typename atomic::shared shared;
 
   unlock_object(const unlock_object<object, lock>& source) = delete;
