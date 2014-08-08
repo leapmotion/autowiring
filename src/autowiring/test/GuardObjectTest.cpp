@@ -7,6 +7,7 @@ class GuardObjectTest:
   public testing::Test
 {};
 
+/*
 TEST_F(GuardObjectTest, SharedTests) {
   shared_object<int> so1; //Default Constructor
   ASSERT_FALSE(so1.initialized()); //default initialization test
@@ -73,3 +74,4 @@ TEST_F(GuardObjectTest, UnlockTests) {
     ASSERT_TRUE(*so_unlock3 == 2);
   }
 }
+*/

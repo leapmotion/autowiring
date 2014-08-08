@@ -1,11 +1,9 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
 #include "shared_object.h"
 
 ///<summary>
 ///A reference to a shared_object that guarantees both existence and exclusive mutability.
-///The construction of an unlock_object establishes atomic_object initialization, since
-///the expectation is that the referenced object will be modified.
 ///</summary>
 ///<remarks>
 ///An unlock_object cannot be copied by construction or assignment since it maintains access.
@@ -24,14 +22,12 @@ class unlock_object {
 
   void unlock(shared_object<object, lock>& source) {
     source.m_share->m_lock.lock();
-    source.m_share->m_initialized = true;
     m_share = source.m_share;
   }
 
   void try_unlock(shared_object<object, lock>& source) {
     if(!source.m_share->m_lock.try_lock())
       return;
-    source.m_share->m_initialized = true;
     m_share = source.m_share;
   }
 
