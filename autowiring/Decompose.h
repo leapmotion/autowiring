@@ -4,25 +4,6 @@
 #include <typeinfo>
 
 /// <summary>
-/// Extended version of is_same
-/// </summary>
-/// <remarks>
-/// Inherits from true_type if T is the same as any of Us...
-/// </remarks>
-template<typename T, typename... Us>
-struct is_any_same;
-
-template<typename T>
-struct is_any_same<T> {
-  static const bool value = false;
-};
-
-template<typename T, typename U, typename... Us>
-struct is_any_same<T, U, Us...> {
-  static const bool value = std::is_same<T, U>::value || is_any_same<T, Us...>::value;
-};
-
-/// <summary>
 /// Provides some static reflection support for member function pointers
 /// </summary>
 template<class MemFn>

@@ -33,7 +33,6 @@ struct CreationRules {
   static typename std::enable_if<!has_static_new<U, Args...>::value, U*>::type New(Args&&... args) {
     static_assert(!std::is_abstract<U>::value, "Cannot create a type which is abstract");
     static_assert(!has_static_new<U, Args...>::value, "Can't inject member with arguments if it has a static new");
-    static_assert(!sizeof...(Args) || !has_simple_constructor<U>::value, "Can't inject member with arguments if it has a default constructor");
 
     // Allocate slot first before registration
     auto* pSpace = Allocate<U>(nullptr);

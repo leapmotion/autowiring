@@ -76,6 +76,7 @@ set(Autowiring_SRCS
   has_autofilter.h
   has_simple_constructor.h
   has_static_new.h
+  index_tuple.h
   is_any.h
   is_shared_ptr.h
   is_auto_filter.h
@@ -100,6 +101,7 @@ set(Autowiring_SRCS
   ThreadStatusBlock.h
   ThreadStatusBlock.cpp
   thread_specific_ptr.h
+  TypeIdentifier.h
   TypeRegistry.h
   TypeRegistry.cpp
   TypeUnifier.h

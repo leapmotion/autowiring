@@ -4,8 +4,18 @@
 #include <typeinfo>
 #include MEMORY_HEADER
 
+struct AutoFilterDescriptorStub;
 class DeferrableAutowiring;
-class NewAutoFilterBase;
+
+struct AutoFilterDescriptorStubLink {
+  AutoFilterDescriptorStubLink(const AutoFilterDescriptorStub& stub, const AutoFilterDescriptorStubLink* pFlink) :
+    stub(stub),
+    pFlink(pFlink)
+  {}
+
+  const AutoFilterDescriptorStub& stub;
+  const AutoFilterDescriptorStubLink* const pFlink;
+};
 
 /// <summary>
 /// Represents information about a single slot detected as having been declared in a context member
@@ -50,7 +60,7 @@ struct SlotInformationStumpBase {
   // If there are any custom AutoFilter fields defined, this is the first of them
   // Note that these custom fields -only- include fields registered via the AutoFilter
   // registration type
-  NewAutoFilterBase* pFirstAutoFilter;
+  const AutoFilterDescriptorStubLink* pFirstAutoFilter;
 };
 
 /// <summary>
@@ -123,7 +133,8 @@ private:
   // Current slot information:
   SlotInformation* m_pCur;
 
-  // If this type has additional AutoFilter routines,
+  // Most recent AutoFilter descriptor link:
+  AutoFilterDescriptorStubLink* m_pLastLink;
 
   // Information about the object being constructed while this stack location is valid:
   const void* m_pObj;
@@ -150,18 +161,11 @@ public:
   /// <param name="pSpace">The pointer to the base of the space about to be constructed</param>
   template<class T>
   static SlotInformationStackLocation PushStackLocation(T* pSpace) {
-    auto* pStump = &SlotInformationStump<T>::s_stump;
-
-    // If we're already initialized, then we have nothing to do.  This line is an optimization; if there
-    // is a race here, then the worst-case scenario is an unneeded sequence of memory allocations that
-    // will only ever be referenced by this stack location.
-    if(pStump->bInitialized)
-      return SlotInformationStackLocation(pStump);
-
-    // New stack location to enclose this stump.  This stack location may be concurrent with respect
-    // to other threads, but only one thread will succeed in colonizing this stump with a chain of
-    // slot entries
-    return SlotInformationStackLocation(pStump, pSpace, sizeof(T));
+    return SlotInformationStackLocation(
+      &SlotInformationStump<T>::s_stump,
+      pSpace,
+      sizeof(T)
+    );
   }
 
   /// <summary>
@@ -177,8 +181,12 @@ public:
   /// <summary>
   /// Registers the named slot with the current stack location
   /// </summary>
-  /// <remarks>
   static void RegisterSlot(DeferrableAutowiring* pAutowiring);
+
+  /// <summary>
+  /// Registers a NewAutoFilter with this SlotInformation
+  /// </summary>
+  static void RegisterSlot(const AutoFilterDescriptorStub& stub);
 
   // Operator overloads:
   void operator=(SlotInformationStackLocation&& rhs) = delete;

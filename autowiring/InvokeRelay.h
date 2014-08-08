@@ -1,24 +1,13 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "is_any.h"
+#include "index_tuple.h"
 #include "JunctionBox.h"
 
 class Deferred;
 
 template<typename T>
 class JunctionBox;
-
-// Generate and index tuple
-template<int ...>
-struct index_tuple {};
-
-template<int N, int... S>
-struct gen_index_tuple: gen_index_tuple<N - 1, N - 1, S...> {};
-
-template<int... S>
-struct gen_index_tuple<0, S...> {
-  typedef index_tuple<S...> type;
-};
 
 /// <summary>
 /// A fully bound member function call
@@ -55,7 +44,7 @@ private:
 
 public:
   void operator()(void) override {
-    CallByUnpackingTuple(typename gen_index_tuple<sizeof...(Args)>::type());
+    CallByUnpackingTuple(typename make_index_tuple<sizeof...(Args)>::type());
   }
 };
 

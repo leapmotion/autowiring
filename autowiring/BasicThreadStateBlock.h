@@ -16,4 +16,3 @@ struct BasicThreadStateBlock:
   // The current thread, if running
   std::thread m_thisThread;
 };
-

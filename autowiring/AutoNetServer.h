@@ -9,7 +9,7 @@
 #include <map>
 #include <set>
 
-struct EventIdentifierBase;
+struct TypeIdentifierBase;
 
 class AutoNetServer:
   public CoreThread,
@@ -153,7 +153,7 @@ protected:
   std::map<int, CoreContext*> m_ContextPtrs;
 
   // All event types
-  std::set<std::shared_ptr<EventIdentifierBase>> m_EventTypes;
+  std::set<std::shared_ptr<TypeIdentifierBase>> m_EventTypes;
   
   // All ContextMembers
   std::map<std::string, std::function<void(void)>> m_AllTypes;

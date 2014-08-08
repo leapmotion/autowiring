@@ -8,13 +8,6 @@
 class NewAutoFilterBase {
 protected:
   NewAutoFilterBase(const AutoFilterDescriptorStub& stub);
-
-public:
-  // The actual descriptor stub
-  const AutoFilterDescriptorStub& m_stub;
-
-  // The next filter AutoFilter entry in the series
-  NewAutoFilterBase* pFlink;
 };
 
 template<class MemFn, MemFn memFn>
