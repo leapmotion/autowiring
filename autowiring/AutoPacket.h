@@ -7,12 +7,16 @@
 #include "is_shared_ptr.h"
 #include "ObjectPool.h"
 #include "is_any.h"
+#include "MicroAutoFilter.h"
 #include <sstream>
 #include <typeinfo>
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 #include EXCEPTION_PTR_HEADER
+
+//DEBUG
+#include <iostream>
 
 class AutoPacketFactory;
 class AutoPacketProfiler;
@@ -52,6 +56,7 @@ private:
 
   // Saturation counters, constructed when the packet is created and reset each time thereafter
   std::vector<SatCounter> m_satCounters;
+  size_t m_subscriberNum;
 
   // The set of decorations currently attached to this object, and the associated lock:
   mutable std::mutex m_lock;
@@ -101,6 +106,11 @@ private:
   /// suprious calles when no packet is issued.
   /// </remarks>
   void Finalize(void);
+
+  /// <summary>
+  /// Adds a recipient for data associated only with this issuance of the packet.
+  /// </summary>
+  void InitializeRecipient(const AutoFilterDescriptor& descriptor);
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
@@ -312,7 +322,7 @@ public:
   /// </summary>
   /// <returns>A reference to the internally persisted object</returns>
   /// <remarks>
-  /// Unlike Publish, the Decorate method is unconditional and will install the passed
+  /// The Decorate method is unconditional and will install the passed
   /// value regardless of whether any subscribers exist.
   /// </remarks>
   template<class T>
@@ -394,6 +404,15 @@ public:
         MarkUnsatisfiable(*ti);
     }),
     PulseSatisfaction(pTypeSubs, 1 + sizeof...(Ts));
+  }
+
+  /// <summary>
+  /// Adds a function to be called as an AutoFilter for this packet only.
+  /// </summary>
+  template<class Ret, class... Args>
+  void AddRecipient(std::function<Ret(Args...)> f) {
+    std::shared_ptr<MicroAutoFilter<Ret, Args...>> filter(new MicroAutoFilter<Ret, Args...>(f));
+    InitializeRecipient(MakeAutoFilterDescriptor(filter));
   }
 
   /// <returns>

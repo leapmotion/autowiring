@@ -1028,6 +1028,20 @@ TEST_F(AutoFilterTest, AutoSelfUpdateTest) {
   }
 }
 
+TEST_F(AutoFilterTest, AutoSelfUpdateTwoContexts) {
+  AutoCreateContext contextA;
+  {
+    CurrentContextPusher pusher(contextA);
+    ASSERT_NO_THROW(AutoRequired<AutoSelfUpdate<Decoration<0>>>()) << "Failed to create AutoSelfUpdate in contextA";
+  }
+
+  AutoCreateContext contextB;
+  {
+    CurrentContextPusher pusher(contextB);
+    ASSERT_NO_THROW(AutoRequired<AutoSelfUpdate<Decoration<0>>>()) << "Failed to create AutoSelfUpdate in contextB";
+  }
+}
+
 TEST_F(AutoFilterTest, WaitWhilePacketOutstanding) {
   AutoRequired<AutoPacketFactory> factory;
   auto packet = factory->NewPacket();
@@ -1064,16 +1078,134 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
   ASSERT_EQ(105, dec->i) << "Deferred decorate-only AutoFilter did not properly attach before context termination";
 }
 
-TEST_F(AutoFilterTest, AutoSelfUpdateTwoContexts) {
-  AutoCreateContext contextA;
+typedef std::function<void(const Decoration<0>&, auto_out<Decoration<1>>)> FilterFunctionType;
+
+typedef std::function<void(void)> NonFilterFunctionType0;
+typedef std::function<void(Decoration<1> noEdge, const Decoration<0>& typeIn)> NonFilterFunctionType1;
+typedef std::function<void(const Decoration<0>& typeIn, Decoration<1> noEdge)> NonFilterFunctionType2;
+typedef std::function<int(const Decoration<0>& typeIn, auto_out<Decoration<1>>& typeOut)> NonFilterFunctionType3;
+
+TEST_F(AutoFilterTest, AutoFilterTemplateTests) {
+  ASSERT_TRUE(is_auto_out<auto_out<Decoration<0>>>::value) << "Type of auto_out instance incorrectly identified";
+
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter_arg<Decoration<0>&>::value)) << "Validity of AutoFilter input incorrectly identified";
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter_arg<const Decoration<0>>::value)) << "Validity of AutoFilter input incorrectly identified";
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter_arg<Decoration<0>>::value)) << "Validity of AutoFilter input incorrectly identified";
+
+  ASSERT_TRUE(static_cast<const bool>(is_auto_filter_arg<const Decoration<0>&>::value)) << "Validity of AutoFilter input incorrectly identified";
+  ASSERT_TRUE(static_cast<const bool>(is_auto_filter_arg<auto_out<Decoration<0>>>::value)) << "Validity of AutoFilter output incorrectly indentified";
+  ASSERT_TRUE(static_cast<const bool>(is_auto_filter_arg<auto_out<Decoration<0>>&>::value)) << "Validity of AutoFilter output incorrectly indentified";
+
+  ASSERT_FALSE(static_cast<const bool>(all_auto_filter_args<const Decoration<0>&, Decoration<0>>::value)) << "Invalid argument list incorrectly identified";
+  ASSERT_FALSE(static_cast<const bool>(all_auto_filter_args<Decoration<0>, const Decoration<0>&>::value)) << "Invalid argument list incorrectly identified";
+  ASSERT_FALSE(static_cast<const bool>(all_auto_filter_args<>::value)) << "Invalid argument list incorrectly identified";
+  ASSERT_TRUE(static_cast<const bool>(all_auto_filter_args<const Decoration<0>&>::value)) << "Valid argument list incorrectly identified";
+  ASSERT_TRUE(static_cast<const bool>(all_auto_filter_args<auto_out<Decoration<1>>>::value)) << "Valid argument list incorrectly identified";
+  ASSERT_TRUE(static_cast<const bool>(all_auto_filter_args<const Decoration<0>&, auto_out<Decoration<1>>>::value)) << "Valid argument list incorrectly identified";
+
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter_return<int>::value)) << "Incorrect identification of int as valid AutoFilter return type";
+  ASSERT_TRUE(static_cast<const bool>(is_auto_filter_return<void>::value)) << "Incorrect identification of void as invalid AutoFilter return type";
+  ASSERT_TRUE(static_cast<const bool>(is_auto_filter_return<Deferred>::value)) << "Incorrect identification of Deferred as invalid AutoFilter return type";
+
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter<NonFilterFunctionType0>::value)) << "Trivial function identified as valid";
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter<NonFilterFunctionType1>::value)) << "Function with invalid first argument identified as valid";
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter<NonFilterFunctionType2>::value)) << "Function with invalid second argument identified as valid";
+  ASSERT_FALSE(static_cast<const bool>(is_auto_filter<NonFilterFunctionType3>::value)) << "Function with invalid return type identified as valid";
+
+  ASSERT_TRUE(static_cast<const bool>(is_auto_filter<FilterFunctionType>::value)) << "Valid AutoFilter function identified as invalid";
+}
+
+TEST_F(AutoFilterTest, MicroAutoFilterTests) {
+  int extVal = -1;
+  std::function<void(const int&)> filter([&extVal] (const int& getVal) {
+    extVal = getVal;
+  });
+  MicroAutoFilter<void, const int&> makeImmediate(filter);
+  int setVal = 1;
+  makeImmediate.AutoFilter(setVal);
+  ASSERT_EQ(1, extVal);
+}
+
+void FilterFunction(const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
+  typeOut->i += 1 + typeIn.i;
+}
+
+TEST_F(AutoFilterTest, DISABLED_FunctionDecorationTest) {
+  // AddRecipient that is an instance of std::function f : a -> b
+  // This must be satisfied by decoration of type a,
+  // independent of the order of decoration.
+  //(1) From function
+  //(2) From method
+  //(3) From lambda
+
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  //Decoration with data first
   {
-    CurrentContextPusher pusher(contextA);
-    ASSERT_NO_THROW(AutoRequired<AutoSelfUpdate<Decoration<0>>>()) << "Failed to create AutoSelfUpdate in contextA";
+    auto packet = factory->NewPacket();
+    packet->Decorate(Decoration<0>());
+    packet->AddRecipient(FilterFunctionType(FilterFunction));
+    const Decoration<1>* getdec;
+    ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
   }
 
-  AutoCreateContext contextB;
+  //Decoration with function first
+  //NOTE: This test also catches failures to flush temporary subscriber information
   {
-    CurrentContextPusher pusher(contextB);
-    ASSERT_NO_THROW(AutoRequired<AutoSelfUpdate<Decoration<0>>>()) << "Failed to create AutoSelfUpdate in contextB";
+    auto packet = factory->NewPacket();
+    packet->AddRecipient(FilterFunctionType(FilterFunction));
+    packet->Decorate(Decoration<0>());
+    const Decoration<1>* getdec;
+    ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
   }
+}
+
+TEST_F(AutoFilterTest, DISABLED_FunctionDecorationLambdaTest) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  //Decoration with function first
+  {
+    auto packet = factory->NewPacket();
+    int addType = 1;
+    packet->AddRecipient(FilterFunctionType([addType] (const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
+      typeOut->i += 1 + typeIn.i;
+    }));
+    packet->Decorate(Decoration<0>());
+    const Decoration<1>* getdec;
+    ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
+    ASSERT_EQ(1+addType, getdec->i) << "Increment was not applied";
+  }
+}
+
+typedef std::function<void(auto_out<Decoration<0>>)> InjectorFunctionType;
+
+TEST_F(AutoFilterTest, DISABLED_FunctionInjectorTest) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  auto packet = factory->NewPacket();
+  int addType = 1;
+  packet->AddRecipient(InjectorFunctionType([addType](auto_out<Decoration<0>> typeOut) {
+    typeOut->i += addType;
+  }));
+  const Decoration<0>* getdec;
+  ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
+  ASSERT_EQ(0+addType, getdec->i) << "Increment was not applied";
+}
+
+typedef std::function<void(const Decoration<1>&)> ExtractorFunctionType;
+
+TEST_F(AutoFilterTest, DISABLED_FunctionExtractorTest) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  auto packet = factory->NewPacket();
+  int extType = -1;
+  packet->AddRecipient(ExtractorFunctionType([&extType](const Decoration<1>& typeIn) {
+    extType = typeIn.i;
+  }));
+  packet->Decorate(Decoration<1>());
+  ASSERT_EQ(1, extType) << "Decoration type was not extracted";
 }
