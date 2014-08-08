@@ -8,13 +8,14 @@ template<class object, class lock> class atomic_object;
 ///</summary>
 ///<remarks>
 ///An unlock_object cannot be copied by construction or assignment since it maintains access.
-///An unlock_object cannot be used to extend the existence of an atomic_object.
+///An unlock_object cannot be used to extend the existence of an atomic_object beyond the
+///span of existence of the unlock_object.
 ///</remarks>
 template<class object_type, class lock_type = std::mutex>
 class unlock_object {
 public:
-  typedef object_type object;
   typedef atomic_object<object_type, lock_type> atomic;
+  typedef typename atomic::object object;
   typedef typename atomic::lock lock;
   typedef typename atomic::shared shared;
 
@@ -36,7 +37,7 @@ public:
   ///Construction references the object and maintains a lock, yielding bool(*this) == true;
   ///</summary>
   ///<param name="should_try">If true, the returned unlock_object might hold no reference or lock</param>
-  unlock_object(shared& source, bool should_try = false) {
+  unlock_object(shared source, bool should_try = false) {
     acquire(source, should_try);
   }
 
@@ -68,7 +69,7 @@ public:
   ///This method is idempotent, including when called repeatedly with the same argument.
   ///However, acquire(source) always releases the any currently held lock.
   ///</remarks>
-  void acquire(shared& source, bool should_try = false) {
+  void acquire(shared source, bool should_try = false) {
     release();
     if (!source) {
       return;
