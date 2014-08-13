@@ -5,6 +5,7 @@
 #include <autowiring/AutoPacketFactory.h>
 #include <autowiring/Deferred.h>
 #include <autowiring/NewAutoFilter.h>
+#include <autowiring/DeclareAutoFilter.h>
 #include <autowiring/AutoSelfUpdate.h>
 #include THREAD_HEADER
 
@@ -1133,16 +1134,12 @@ struct MultiFilter01 {
 
   MultiFilter01() {
     // Constructor wraps each method in an AutoFilter call
-    AutoConstruct<MicroAutoFilter<void, const Decoration<0>&>>([this] (const Decoration<0>& arg) {
-      Call0(std::move(arg));
-    });
-    AutoConstruct<MicroAutoFilter<void, const Decoration<1>&>>([this] (const Decoration<1>& arg) {
-      Call1(std::move(arg));
-    });
+    DeclareAutoFilter(this, &MultiFilter01::Call0);
+    DeclareAutoFilter(this, &MultiFilter01::Call1);
   }
 };
 
-TEST_F(AutoFilterTest, MultiMicroAutoFilter) {
+TEST_F(AutoFilterTest, DeclareAutoFilterTest) {
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<MultiFilter01> mf01;
