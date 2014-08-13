@@ -1126,17 +1126,50 @@ TEST_F(AutoFilterTest, MicroAutoFilterTests) {
   ASSERT_EQ(1, extVal);
 }
 
+struct MultiFilter01 {
+  std::list<int> call_vals;
+  void Call0(const Decoration<0>& arg) { call_vals.push_back(arg.i); }
+  void Call1(const Decoration<1>& arg) { call_vals.push_back(arg.i); }
+
+  MultiFilter01() {
+    // Constructor wraps each method in an AutoFilter call
+    AutoConstruct<MicroAutoFilter<void, const Decoration<0>&>>([this] (const Decoration<0>& arg) {
+      Call0(std::move(arg));
+    });
+    AutoConstruct<MicroAutoFilter<void, const Decoration<1>&>>([this] (const Decoration<1>& arg) {
+      Call1(std::move(arg));
+    });
+  }
+};
+
+TEST_F(AutoFilterTest, MultiMicroAutoFilter) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<MultiFilter01> mf01;
+
+  auto packetA = factory->NewPacket();
+  packetA->Decorate(Decoration<0>());
+  ASSERT_EQ(1, mf01->call_vals.size()) << "Failed to call AutoFilter wrapped method";
+  ASSERT_EQ(0, mf01->call_vals.back()) << "Calling value was not propagated";
+
+  auto packetB = factory->NewPacket();
+  packetB->Decorate(Decoration<1>());
+  ASSERT_EQ(2, mf01->call_vals.size()) << "Failed to call AutoFilter wrapped method";
+  ASSERT_EQ(1, mf01->call_vals.back()) << "Calling value was not propagated";
+
+  packetA->Decorate(Decoration<1>(2));
+  ASSERT_EQ(3, mf01->call_vals.size()) << "Failed to call AutoFilter wrapped method";
+  ASSERT_EQ(2, mf01->call_vals.back()) << "Calling value was not propagated";
+}
+
 void FilterFunction(const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
   typeOut->i += 1 + typeIn.i;
 }
 
-TEST_F(AutoFilterTest, DISABLED_FunctionDecorationTest) {
+TEST_F(AutoFilterTest, FunctionDecorationTest) {
   // AddRecipient that is an instance of std::function f : a -> b
   // This must be satisfied by decoration of type a,
   // independent of the order of decoration.
-  //(1) From function
-  //(2) From method
-  //(3) From lambda
 
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
@@ -1161,7 +1194,7 @@ TEST_F(AutoFilterTest, DISABLED_FunctionDecorationTest) {
   }
 }
 
-TEST_F(AutoFilterTest, DISABLED_FunctionDecorationLambdaTest) {
+TEST_F(AutoFilterTest, FunctionDecorationLambdaTest) {
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
 
@@ -1181,7 +1214,7 @@ TEST_F(AutoFilterTest, DISABLED_FunctionDecorationLambdaTest) {
 
 typedef std::function<void(auto_out<Decoration<0>>)> InjectorFunctionType;
 
-TEST_F(AutoFilterTest, DISABLED_FunctionInjectorTest) {
+TEST_F(AutoFilterTest, FunctionInjectorTest) {
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
 
@@ -1197,7 +1230,7 @@ TEST_F(AutoFilterTest, DISABLED_FunctionInjectorTest) {
 
 typedef std::function<void(const Decoration<1>&)> ExtractorFunctionType;
 
-TEST_F(AutoFilterTest, DISABLED_FunctionExtractorTest) {
+TEST_F(AutoFilterTest, FunctionExtractorTest) {
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
 
