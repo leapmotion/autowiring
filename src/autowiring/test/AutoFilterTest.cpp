@@ -5,7 +5,7 @@
 #include <autowiring/AutoPacketFactory.h>
 #include <autowiring/Deferred.h>
 #include <autowiring/NewAutoFilter.h>
-#include "AutoSelfUpdate.h"
+#include <autowiring/AutoSelfUpdate.h>
 #include THREAD_HEADER
 
 class AutoFilterTest:
