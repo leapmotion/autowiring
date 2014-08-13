@@ -12,9 +12,11 @@ class TypeUnifierComplex:
   public TypeUnifier
 {
 public:
-  template<class... Args>
-  TypeUnifierComplex(Args&&... args) :
-    T(std::forward<Args>(args)...)
+  TypeUnifierComplex(void) {}
+
+  template<class Arg, class... Args>
+  TypeUnifierComplex(Arg&& arg, Args&&... args) :
+    T(std::forward<Arg>(arg), std::forward<Args>(args)...)
   {}
 };
 
