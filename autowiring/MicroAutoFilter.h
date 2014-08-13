@@ -14,7 +14,7 @@
 template<class Ret, class... Args>
 struct MicroAutoFilter {
   // This case pertains only when the return value is not recognized
-  static_assert(is_auto_filter_return<Ret>{},
+  static_assert(is_auto_filter_return<Ret>::value,
                 "The return is not an allowed type for AutoFilter methods");
 };
 template<class... Args>

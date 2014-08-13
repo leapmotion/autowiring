@@ -31,8 +31,8 @@ struct is_auto_out<auto_out<Arg, auto_ready>> :
 template<class Arg>
 struct is_auto_filter_arg :
   std::integral_constant<bool,
-    (std::is_reference<Arg>{} && std::is_const<typename std::remove_reference<Arg>::type>{}) ||
-     is_auto_out<typename std::remove_reference<Arg>::type>{}
+    (std::is_reference<Arg>::value && std::is_const<typename std::remove_reference<Arg>::type>::value) ||
+     is_auto_out<typename std::remove_reference<Arg>::type>::value
   >
 {};
 
@@ -51,7 +51,7 @@ struct all_auto_filter_args :
 {};
 template<class Head, class... Tail>
 struct all_auto_filter_args<Head, Tail...> :
-  std::integral_constant<bool, is_auto_filter_arg<Head>{} && all_auto_filter_args<Tail...>{}>
+  std::integral_constant<bool, is_auto_filter_arg<Head>::value && all_auto_filter_args<Tail...>::value>
 {};
 template<class Head>
 struct all_auto_filter_args<Head> :
@@ -66,8 +66,8 @@ struct all_auto_filter_args<Head> :
 template<class Ret>
 struct is_auto_filter_return :
   std::integral_constant<bool,
-    std::is_same<void, Ret>{} ||
-    std::is_same<Deferred, Ret>{}
+    std::is_same<void, Ret>::value ||
+    std::is_same<Deferred, Ret>::value
   >
 {};
 
@@ -80,5 +80,5 @@ struct is_auto_filter :
 {};
 template <class Ret, class... Args>
 struct is_auto_filter<std::function<Ret(Args...)>> :
-  std::integral_constant<bool, is_auto_filter_return<Ret>{} && all_auto_filter_args<Args...>{}>
+  std::integral_constant<bool, is_auto_filter_return<Ret>::value && all_auto_filter_args<Args...>::value>
 {};
