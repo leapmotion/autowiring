@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include "Autowired.h"
+#include "CoreContext.h"
 #include "MicroAutoFilter.h"
 
 /// <summary>
@@ -13,8 +13,12 @@
 /// for each method that should be used as an AutoFilter.
 /// </remarks>
 template<class Base, class Ret, class... Args>
-std::shared_ptr<MicroAutoFilter<Ret, Args...>> DeclareAutoFilter(Base* that, Ret (Base::*filter)(Args...)) {\
-  return AutoConstruct<MicroAutoFilter<Ret, Args...>>([that, filter] (Args... args) {
-    return (that->*filter)(args...);
-  });
+std::shared_ptr<MicroAutoFilter<Ret, Args...>> DeclareAutoFilter(Base* that, Ret (Base::*filter)(Args...)) {
+  return std::shared_ptr<MicroAutoFilter<Ret, Args...>>(
+    AutoCurrentContext()->template Construct<MicroAutoFilter<Ret, Args...>>(
+      [that, filter] (Args... args) {
+        return (that->*filter)(args...);
+      }
+    )
+  );
 }
