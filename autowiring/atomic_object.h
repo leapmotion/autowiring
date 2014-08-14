@@ -3,6 +3,7 @@
 #include MUTEX_HEADER
 
 #include "unlock_object.h"
+
 template<class object, class lock> class unlock_object;
 
 ///<summary>
@@ -24,7 +25,6 @@ public:
   typedef std::shared_ptr<atomic_object<object, lock>> shared;
 
 protected:
-  //CONTRACT: If !m_initialized then m_object == object();
   mutable lock m_lock;
   object m_object;
 
@@ -35,12 +35,8 @@ public:
   atomic_object() {};
 
   ///<summary>
-  ///Initialization yielding initialized() == source.initialized().
+  ///Thread-safe copy constructor
   ///</summary>
-  ///<remarks>
-  ///Intermediate copies can be avoided during construction using:
-  /// atomic_object<object> target(*unlock_object<object>(source));
-  ///</remarks>
   atomic_object(const atomic_object<object>& source) {
     std::lock_guard<lock> lock_source(source.m_lock);
     m_object = source.m_object;
@@ -75,7 +71,7 @@ public:
   }
 
   ///<summary>
-  ///Assignment yielding initialized() == true.
+  ///Assignment overload
   ///</summary>
   atomic_object<object, lock>& operator = (const object& source) {
     std::lock_guard<lock> lock_this(m_lock);
