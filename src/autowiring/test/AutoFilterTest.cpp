@@ -108,6 +108,24 @@ TEST_F(AutoFilterTest, VerifySimpleFilter) {
   EXPECT_LT(0, filterA->m_called) << "Filter was not called even though it was fully satisfied";
 }
 
+template<int N>
+class ChildDecoration : Decoration<N> {};
+
+TEST_F(AutoFilterTest, VerifyTypeUsage) {
+  AutoRequired<FilterA> filterA;
+  AutoRequired<AutoPacketFactory> factory;
+
+  // EXPECT: No attempt is made to cast decorations to parent types.
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>()); // Fulfills first requirement
+  ASSERT_EQ(0, filterA->m_called) << "AutoFilter called with incomplete arguments";
+  packet->Decorate(ChildDecoration<1>()); // Does not fulfill second requirement
+  ASSERT_EQ(0, filterA->m_called) << "AutoFilter using derived type";
+  EXPECT_NO_THROW(packet->Decorate(Decoration<1>(2))) << "Decoration with parent type conflicts with derived type";
+  ASSERT_EQ(1, filterA->m_called) << "AutoFilter was not called when all arguments were available";
+  ASSERT_EQ(2, filterA->m_one.i) << "AutoFilter was called using derived type instead of parent";
+}
+
 TEST_F(AutoFilterTest, VerifyOptionalFilter) {
   AutoRequired<AutoPacketFactory> factory;
 
