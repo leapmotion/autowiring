@@ -158,8 +158,10 @@ rewrite_header_paths(Autowiring_SRCS)
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
+
+# Might as well reference the boost libraries to satisfy link dependencies, if we know they exist
+find_package(Boost COMPONENTS system date_time QUIET)
 if(Boost_FOUND)
-  # Might as well reference the boost libraries to satisfy link dependencies, if we know they exist
   target_link_libraries(Autowiring ${Boost_LIBRARIES})
 endif()
 
