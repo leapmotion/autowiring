@@ -14,7 +14,7 @@ add_executable(AutoFilterExample AutoFilterExample.cpp)
 target_link_libraries(AutoFilterExample Autowiring)
 set_property(TARGET AutoFilterExample PROPERTY FOLDER "Examples")
 
-find_package(Boost QUIET COMPONENTS system)
+find_package(Boost QUIET)
 if(NOT Boost_FOUND)
   message("Cannot build AutoNetExample, boost not installed on this system")
   return()
