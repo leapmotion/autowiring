@@ -13,6 +13,7 @@ set(Autowiring_SRCS
   CoreJob.h
   CoreJob.cpp
   AutoFilterDescriptor.h
+  AutoFilterPipe.h
   AutoInjectable.h
   AutoPacket.h
   AutoPacket.cpp
