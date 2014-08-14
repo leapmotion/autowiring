@@ -172,7 +172,7 @@ TEST_F(CoreThreadTest, AUTOTHROW_VerifyNoLeakOnExecptions) {
   CurrentContextPusher pshr(ctxt);
 
   AutoRequired<ListenThread> listener;
-  std::shared_ptr<std::string> value(new std::string("sentinal"));
+  auto value = std::make_shared<std::string>("sentinal");
 
   std::weak_ptr<std::string> watcher(value);
   try
@@ -205,8 +205,8 @@ TEST_F(CoreThreadTest, VerifyDelayedDispatchQueueSimple) {
   std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
   // These are flags--we'll set them to true as the test proceeds
-  std::shared_ptr<bool> x(new bool(false));
-  std::shared_ptr<bool> y(new bool(false));
+  auto x = std::make_shared<bool>(false);
+  auto y = std::make_shared<bool>(false);
 
   // Pend a delayed event first, and then an immediate event right afterwards:
   *t += std::chrono::hours(1), [x] { *x = true; };
@@ -223,7 +223,7 @@ TEST_F(CoreThreadTest, VerifyNoDelayDoubleFree) {
   ctxt->Initiate();
 
   // We won't actually be referencing this, we just want to make sure it's not destroyed early
-  std::shared_ptr<bool> x(new bool);
+  auto x = std::make_shared<bool>();
 
   // This deferred pend will never actually be executed:
   AutoRequired<CoreThread> t;
@@ -244,8 +244,8 @@ TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
   ctxt->Initiate();
 
   // Some variables that we will set to true as the test proceeds:
-  std::shared_ptr<bool> x(new bool(false));
-  std::shared_ptr<bool> y(new bool(false));
+  auto x = std::make_shared<bool>(false);
+  auto y = std::make_shared<bool>(false);
 
   // Create a thread as before, and pend a few events.  The order, here, is important.  We intentionally
   // pend an event that won't happen for awhile, in order to trick the dispatch queue into waiting for
@@ -295,7 +295,7 @@ TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
   AutoRequired<CoreThread> t;
 
   // Pend by an absolute time point, nothing really special here
-  std::shared_ptr<bool> x(new bool(false));
+  auto x = std::make_shared<bool>(false);
   *t += (std::chrono::steady_clock::now() + std::chrono::milliseconds(1)), [&t, x] {
     *x = true;
     t->Stop();

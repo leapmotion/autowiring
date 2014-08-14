@@ -43,7 +43,7 @@ TEST_F(AutoConstructTest, CanConstructRvalueCtor) {
     AutoCreateContext ctxt;
     CurrentContextPusher pshr(ctxt);
 
-    std::unique_ptr<std::shared_ptr<int>> forwarded(new std::shared_ptr<int>(originalPtr));
+    auto forwarded = std::make_unique<std::shared_ptr<int>>(originalPtr);
     AutoConstruct<CanOnlyAcceptMovedInput> coami(std::move(forwarded));
 
     // Should have the correct number of references, no more and no less

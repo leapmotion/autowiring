@@ -411,8 +411,7 @@ public:
   /// </summary>
   template<class Ret, class... Args>
   void AddRecipient(std::function<Ret(Args...)> f) {
-    std::shared_ptr<MicroAutoFilter<Ret, Args...>> filter(new MicroAutoFilter<Ret, Args...>(f));
-    InitializeRecipient(MakeAutoFilterDescriptor(filter));
+    InitializeRecipient(MakeAutoFilterDescriptor(std::make_shared<MicroAutoFilter<Ret, Args...>>(f)));
   }
 
   /// <returns>

@@ -52,8 +52,7 @@ TEST_F(AnySharedPointerTest, SimpleDestructorStrike)
   SharedPointerSlot& slot = *new(buf) SharedPointerSlot;
 
   // In-place polymorphism on the slot:
-  std::shared_ptr<MyUnusedClass> unused(new MyUnusedClass);
-  slot = unused;
+  slot = std::make_shared<MyUnusedClass>();
 
   // Destructor shouldn't be hit until we call it:
   ASSERT_FALSE(mucSlot.dtorStrike()) << "Destructor was struck prematurely";
@@ -79,9 +78,9 @@ TEST_F(AnySharedPointerTest, AnySharedPointerRelease) {
 }
 
 TEST_F(AnySharedPointerTest, SlotReassignment) {
-  std::shared_ptr<bool> sharedPointerA(new bool);
-  std::shared_ptr<bool> sharedPointerB(new bool);
-  std::shared_ptr<int> sharedPointerC(new int);
+  auto sharedPointerA = std::make_shared<bool>();
+  auto sharedPointerB = std::make_shared<bool>();
+  auto sharedPointerC = std::make_shared<int>();
 
   // Make our slot, and start off with a shared pointer of one type:
   AnySharedPointer slot;
@@ -101,7 +100,7 @@ TEST_F(AnySharedPointerTest, SlotReassignment) {
 }
 
 TEST_F(AnySharedPointerTest, SlotsInVector) {
-  std::shared_ptr<bool> sharedPtr(new bool);
+  auto sharedPtr = std::make_shared<bool>();
 
   {
     std::vector<AnySharedPointer> slots;
@@ -118,7 +117,7 @@ TEST_F(AnySharedPointerTest, SlotsInVector) {
 }
 
 TEST_F(AnySharedPointerTest, SlotDuplication) {
-  std::shared_ptr<bool> sharedPtr(new bool);
+  auto sharedPtr = std::make_shared<bool>();
 
   AnySharedPointer slot2;
 
@@ -143,8 +142,8 @@ TEST_F(AnySharedPointerTest, SlotDuplication) {
 }
 
 TEST_F(AnySharedPointerTest, TrivialRelease) {
-  std::shared_ptr<bool> a(new bool);
-  std::shared_ptr<int> b(new int);
+  auto a = std::make_shared<bool>();
+  auto b = std::make_shared<int>();
 
   // Assign the slot to two different values, and make sure that they are released properly
   AnySharedPointer slot;
@@ -160,7 +159,7 @@ TEST_F(AnySharedPointerTest, TrivialRelease) {
 }
 
 TEST_F(AnySharedPointerTest, NoMultipleDelete) {
-  std::shared_ptr<bool> a(new bool);
+  auto a = std::make_shared<bool>();
   std::weak_ptr<bool> b = a;
 
   // Create a slot and validate the behavior of reset, and to ensure that the underlying
