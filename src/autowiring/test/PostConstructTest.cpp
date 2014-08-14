@@ -17,7 +17,7 @@ class ContextExposer:
 public:
   size_t DeferredCount(void) const {
     size_t ct = 0;
-    for(auto& entry : CoreContext::m_typeMemos)
+    for(const auto& entry : CoreContext::m_typeMemos)
       for(auto cur = entry.second.pFirst; cur; cur = cur->GetFlink())
         ct++;
     return ct;

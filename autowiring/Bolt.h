@@ -19,11 +19,11 @@ class Bolt:
 {
 public:
   const t_TypeInfoVector GetContextSigils(void) const override {
-    static const std::type_info* sc_types[] = {
+    static const std::type_info* s_types[] = {
       &typeid(Sigil)...,
       nullptr
     };
-    return sc_types;
+    return s_types;
   }
 
   static_assert(!is_any_same<void, Sigil...>::value, "Can't use 'void' as a sigil type");
@@ -35,7 +35,7 @@ class Bolt<>:
 {
 public:
   const t_TypeInfoVector GetContextSigils(void) const override {
-    static const std::type_info* sc_types[] = {nullptr};
-    return sc_types;
+    static const std::type_info* s_types[] = {nullptr};
+    return s_types;
   }
 };

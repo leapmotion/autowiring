@@ -24,7 +24,7 @@ TEST_F(CoreContextTest, TestEnumerateChildren) {
 
   // Enumerate and see what we get back:
   std::set<std::shared_ptr<CoreContext>> allChildren;
-  for(auto cur : CurrentContextEnumerator())
+  for(const auto& cur : CurrentContextEnumerator())
     allChildren.insert(cur);
 
   // Verify we get exactly four back:
@@ -70,7 +70,7 @@ TEST_F(CoreContextTest, TestEarlyLambdaReturn) {
   // Enumerate, but stop after three:
   std::vector<std::shared_ptr<CoreContext>> allChildren;
   size_t totalSoFar = 0;
-  for(auto& ctxt : CurrentContextEnumerator()) {
+  for(const auto& ctxt : CurrentContextEnumerator()) {
     if(totalSoFar++ == 3)
       break;
     allChildren.push_back(ctxt);

@@ -65,7 +65,7 @@ CoreContext::~CoreContext(void) {
   UnregisterEventReceiversUnsafe();
 
   // Tell all context members that we're tearing down:
-  for(auto q : m_contextMembers)
+  for(ContextMember* q : m_contextMembers)
     q->NotifyContextTeardown();
 }
 
@@ -335,7 +335,7 @@ void CoreContext::Initiate(void) {
   // Signal our condition variable
   m_stateBlock->m_stateChanged.notify_all();
 
-  for(auto q : m_threads)
+  for(CoreRunnable* q : m_threads)
     q->Start(outstanding);
 }
 
@@ -470,7 +470,7 @@ void CoreContext::BuildCurrentState(void) {
   
   // Recurse on all children
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-  for(auto c : m_children) {
+  for(const auto& c : m_children) {
     auto cur = c.lock();
     if(!cur)
       continue;
@@ -538,8 +538,8 @@ void ShutdownCurrentContext(void) {
 
 void CoreContext::UnregisterEventReceiversUnsafe(void) {
   // Release all event receivers originating from this context:
-  for(auto q : m_eventReceivers)
-    m_junctionBoxManager->RemoveEventReceiver(q);
+  for(const auto& entry : m_eventReceivers)
+    m_junctionBoxManager->RemoveEventReceiver(entry);
 
   // Notify our parent (if we have one) that our event receivers are going away:
   if(m_pParent)
@@ -605,7 +605,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
       auto top = stk.top();
       stk.pop();
 
-      for(auto* pNext = top; pNext; pNext = pNext->GetFlink()) {
+      for(DeferrableAutowiring* pNext = top; pNext; pNext = pNext->GetFlink()) {
         pNext->SatisfyAutowiring(value.m_value->shared_ptr());
 
         // See if there's another chain we need to process:
@@ -642,7 +642,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
   lk.unlock();
 
   // Run through everything else and finalize it all:
-  for(auto cur : satisfiable)
+  for(const auto& cur : satisfiable)
     cur.first->Finalize(cur.second);
 }
 

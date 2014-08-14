@@ -49,8 +49,8 @@ void AutowiringEnclosure::OnTestEnd(const testing::TestInfo& info) {
     assert(false);
   }
 
-  static const char sc_autothrow[] = "AUTOTHROW_";
-  if(!strncmp(sc_autothrow, info.name(), ARRAYCOUNT(sc_autothrow) - 1))
+  static const char s_autothrow[] = "AUTOTHROW_";
+  if(!strncmp(s_autothrow, info.name(), ARRAYCOUNT(s_autothrow) - 1))
     // Throw expected, end here
     return;
 
