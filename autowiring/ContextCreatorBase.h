@@ -30,8 +30,8 @@ protected:
     if(!wait) {
       // Trivial signal-clear-return:
       std::lock_guard<std::mutex> lk(m_contextLock);
-      for(auto q = ctr.begin(); q != ctr.end(); q++) {
-        auto locked = locker(q);
+      for(const auto& ctxt : ctr) {
+        auto locked = locker(ctxt);
         if(locked)
           locked->SignalShutdown();
       }
@@ -44,8 +44,8 @@ protected:
     // Copy out and clear:
     {
       std::lock_guard<std::mutex> lk(m_contextLock);
-      for(auto q = ctr.begin(); q != ctr.end(); q++) {
-        auto locked = locker(q);
+      for(const auto& ctxt : ctr) {
+        auto locked = locker(ctxt);
         if(locked)
           locked->SignalShutdown();
       }
@@ -54,8 +54,8 @@ protected:
     }
 
     // Signal everyone first, then wait in a second pass:
-    for(auto q = ctrCopy.begin(); q != ctrCopy.end(); q++) {
-      auto locked = locker(q);
+    for(const auto& ctxt : ctrCopy) {
+      auto locked = locker(ctxt);
       if(locked)
         locked->Wait();
     }

@@ -365,8 +365,7 @@ public:
     // None of the inputs may be shared pointers--if any of the inputs are shared pointers, they must be attached
     // to this packet via Decorate, or else dereferenced and used that way.
     static_assert(
-      !is_shared_ptr<T>::value &&
-      !is_any<is_shared_ptr<Ts>...>::value,
+      !is_any<is_shared_ptr<T>, is_shared_ptr<Ts>...>::value,
       "DecorateImmediate must not be used to attach a shared pointer, use Decorate on such a decoration instead"
     );
 
@@ -399,8 +398,7 @@ public:
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-      static const std::type_info* lamda_typeInfos [] = {&typeid(T), &typeid(Ts)...};
-      for(auto ti : lamda_typeInfos)
+      for(const std::type_info* ti : {&typeid(T), &typeid(Ts)...})
         MarkUnsatisfiable(*ti);
     }),
     PulseSatisfaction(pTypeSubs, 1 + sizeof...(Ts));
@@ -411,7 +409,9 @@ public:
   /// </summary>
   template<class Ret, class... Args>
   void AddRecipient(std::function<Ret(Args...)> f) {
-    InitializeRecipient(MakeAutoFilterDescriptor(std::make_shared<MicroAutoFilter<Ret, Args...>>(f)));
+    InitializeRecipient(
+      MakeAutoFilterDescriptor(std::make_shared<MicroAutoFilter<Ret, Args...>>(f))
+    );
   }
 
   /// <returns>

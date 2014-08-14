@@ -64,11 +64,10 @@ public:
   template<class Fn>
   void Enumerate(Fn&& fn) {
     std::lock_guard<std::mutex> lk(m_lk);
-    for(auto q = m_contexts.begin(); q != m_contexts.end(); q++) {
-      auto ctxt = q->second.lock();
-      if(ctxt)
-        if(!fn(q->first, ctxt))
-          return;
+    for(const auto& entry : m_contexts) {
+      auto ctxt = entry.second.lock();
+      if(ctxt && !fn(entry.first, ctxt))
+        return;
     }
   }
 

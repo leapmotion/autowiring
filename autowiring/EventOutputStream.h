@@ -52,9 +52,8 @@ public:
     static std::map<std::string, MemFn> my_map = local;
     if(str == "Query")
     {
-      for(auto it = my_map.begin(); it != my_map.end(); ++it)
-      {
-        if((it->second) == memfn) return it->first;
+      for(const auto& entry : my_map) {
+        if((entry.second) == memfn) return entry.first;
       }
       return "";
     }

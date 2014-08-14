@@ -83,11 +83,9 @@ public:
       // Context not yet started
       return;
 
-    const auto& dq = erp->GetDispatchQueue();
     std::lock_guard<std::mutex> lk(erp->GetDispatchQueueLock());
-
-    for(auto q = dq.begin(); q != dq.end(); q++)
-      (**q).AddExisting(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(**q), fnPtr, args...));
+    for(DispatchQueue* q : erp->GetDispatchQueue())
+      q->AddExisting(new CurriedInvokeRelay<T, Args...>(dynamic_cast<T&>(*q), fnPtr, args...));
   }
 };
 
