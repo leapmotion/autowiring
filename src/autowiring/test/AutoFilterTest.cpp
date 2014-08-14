@@ -4,6 +4,7 @@
 #include <autowiring/AutoPacket.h>
 #include <autowiring/AutoPacketFactory.h>
 #include <autowiring/Deferred.h>
+#include <autowiring/AutoFilterPipe.h>
 #include <autowiring/NewAutoFilter.h>
 #include <autowiring/DeclareAutoFilter.h>
 #include <autowiring/AutoSelfUpdate.h>
@@ -1253,4 +1254,155 @@ TEST_F(AutoFilterTest, FunctionExtractorTest) {
   }));
   packet->Decorate(Decoration<1>());
   ASSERT_EQ(1, extType) << "Decoration type was not extracted";
+}
+
+class FilterDiamondIn:
+  public ContextMember
+{
+public:
+  int m_called;
+  FilterDiamondIn(void) : m_called(0) {}
+  void AutoFilter(auto_out<Decoration<0>>& init) {
+    ++m_called;
+    init->i = 1;
+  }
+};
+
+class FilterDiamondA:
+  public ContextMember
+{
+public:
+  int m_called;
+  FilterDiamondA(void) : m_called(0) {}
+  void AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>>& out) {
+    ++m_called;
+    out->i = 2;
+  }
+};
+
+class FilterDiamondB:
+  public ContextMember
+{
+public:
+  int m_called;
+  FilterDiamondB(void) : m_called(0) {}
+  void AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>>& out) {
+    ++m_called;
+    out->i = 3;
+  }
+};
+
+class FilterDiamondOut:
+  public ContextMember
+{
+public:
+  int m_called;
+  Decoration<1> m_inLast;
+  FilterDiamondOut(void) : m_called(0) {}
+  void AutoFilter(const Decoration<1>& in) {
+    ++m_called;
+    m_inLast = in;
+  }
+};
+
+class DiamondFilter:
+  public ContextMember
+{
+public:
+  DiamondFilter() {
+    Reset();
+  }
+
+  void Reset() {
+    In_expected = 0;
+    A_expected = 0;
+    B_expected = 0;
+    Out_expected = 0;
+  }
+
+  void Verify() {
+    ASSERT_EQ(In_expected, In->m_called) << "Diamond Filter I called " << In->m_called << " expected " << In_expected;
+    ASSERT_EQ(A_expected, A->m_called) << "Diamond Filter A called " << A->m_called << " expected " << A_expected;
+    ASSERT_EQ(B_expected, B->m_called) << "Diamond Filter B called " << B->m_called << " expected " << B_expected;
+    ASSERT_EQ(Out_expected, Out->m_called) << "Diamond Filter O called " << Out->m_called << " expected " << Out_expected;
+  }
+
+  AutoRequired<FilterDiamondIn> In;
+  AutoRequired<FilterDiamondA> A;
+  AutoRequired<FilterDiamondB> B;
+  AutoRequired<FilterDiamondOut> Out;
+
+  int In_expected;
+  int A_expected;
+  int B_expected;
+  int Out_expected;
+};
+
+TEST_F(AutoFilterTest, DISABLED_AutoEdgeTest) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  DiamondFilter diamond;
+
+  //Demonstrate repeated decoration error
+  //ASSERT_THROW(factory->NewPacket(), std::runtime_error e) << "Multiple decoration yielded no exception";
+  //fdI->m_called = 0; fdA->m_called = 0; fdB->m_called = 0; fdO->m_called = 0;
+
+  //Permit DiamondIn to use pipes only
+  AutoTransmitPipe<FilterDiamondIn, Decoration<0>> fdIPiped;
+  {
+    //Verify that Decoration<0> will not be received by fdA or fdB
+    std::shared_ptr<AutoPacket> packet;
+    ASSERT_NO_THROW(packet = factory->NewPacket()) << "Multiple decoration yielded no exception";
+    ++diamond.In_expected;
+    diamond.Verify();
+
+    //Verify that DiamondOut will accept data from any source
+    packet->Decorate(Decoration<1>());
+    ++diamond.Out_expected;
+    diamond.Verify();
+  }
+
+  {
+    //Connect DiamondIn to DiamondA
+    AutoFilterPipe<FilterDiamondIn, FilterDiamondA, Decoration<0>> fdIAEdge;
+    {
+      ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
+      ++diamond.In_expected;
+      ++diamond.A_expected;
+      diamond.Verify();
+    }
+  }
+
+  {
+    //Connect DiamondIn to DiamondB
+    AutoFilterPipe<FilterDiamondIn, FilterDiamondB, Decoration<0>> fdIBEdge;
+    {
+      ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
+      ++diamond.In_expected;
+      ++diamond.B_expected;
+      ++diamond.Out_expected;
+      diamond.Verify();
+    }
+
+    //Permit DiamondOut to use pipes only
+    AutoReceivePipe<FilterDiamondOut, Decoration<1>> fdOPiped;
+    {
+      //Verify that DiamondOut will not receive data in the absence of declared pipes
+      ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
+      ++diamond.In_expected;
+      ++diamond.B_expected;
+      diamond.Verify();
+    }
+
+    //Connected DiamondB to DiamondOut
+    AutoFilterPipe<FilterDiamondB, FilterDiamondOut, Decoration<1>> fdBOEdge;
+    {
+      //Verify that DiamondOut receives data from the declared pipe
+      ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
+      ++diamond.In_expected;
+      ++diamond.B_expected;
+      ++diamond.Out_expected;
+      diamond.Verify();
+    }
+  }
 }
