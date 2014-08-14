@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "AutoNetServerImpl.hpp"
-#include "Autowiring.h"
+#include "autowiring.h"
 #include "at_exit.h"
 #include "EventRegistry.h"
 #include "TypeRegistry.h"
