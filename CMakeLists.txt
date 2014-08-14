@@ -8,6 +8,12 @@ set(autowiring_VERSION_MAJOR 0)
 set(autowiring_VERSION_MINOR 1)
 set(autowiring_VERSION_PATCH 0)
 
+# If there's an external libraries directory path, use it as a search prefix
+if(EXTERNAL_LIBRARY_DIR)
+  list(APPEND CMAKE_PREFIX_PATH ${EXTERNAL_LIBRARY_DIR})
+  list(APPEND CMAKE_INCLUDE_PATH ${EXTERNAL_LIBRARY_DIR})
+endif()
+
 # Clang needs special additional flags to build with C++11
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   message("Clang C++11")
