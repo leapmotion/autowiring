@@ -2,6 +2,7 @@
 #pragma once
 #include <math.h>
 #include <assert.h>
+#include <cctype>
 #define NOMINMAX
 
 #ifndef _MSC_VER

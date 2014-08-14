@@ -2,6 +2,7 @@
 #include <autowiring/Autowired.h>
 #include <autowiring/AutoNetServer.h>
 #include <iostream>
+#include THREAD_HEADER
 
 // 
 // AutoNetServer
