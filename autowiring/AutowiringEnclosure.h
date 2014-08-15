@@ -105,7 +105,7 @@ public:
     }
 
     static const char sc_autothrow [] = "AUTOTHROW_";
-    if(!strncmp(sc_autothrow, info.name(), ARRAYCOUNT(sc_autothrow) - 1))
+    if(!strncmp(sc_autothrow, info.name(), sizeof(sc_autothrow) - 1))
       // Throw expected, end here
       return;
 
