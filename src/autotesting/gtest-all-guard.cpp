@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "AutowiringEnclosure.h"
 #include <gtest/gtest-all.cc>
+#include "AutowiringEnclosure.h"
 
 using namespace std;
 
