@@ -144,8 +144,10 @@ bool BasicThread::Start(std::shared_ptr<Object> outstanding) {
     m_state->m_stateCondition.notify_all();
   }
 
-  // Kick off a thread and return here
-  m_state->m_thisThread = std::thread(
+  // Place the new thread entity directly in the space where it goes to avoid
+  // any kind of races arising from asynchronous access to this space
+  m_state->m_thisThread.~thread();
+  new (&m_state->m_thisThread) std::thread(
     [this, outstanding] () mutable {
       this->DoRun(std::move(outstanding));
     }
