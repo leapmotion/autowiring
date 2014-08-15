@@ -50,10 +50,6 @@ public:
   static ObjectPool<AutoPacket> CreateObjectPool(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
 
 private:
-  // A back-link to the previously issued packet in the packet sequence.  May potentially be null,
-  // if this is the first packet issued by the packet factory.
-  std::shared_ptr<AutoPacket> m_prior;
-
   // Saturation counters, constructed when the packet is created and reset each time thereafter
   std::vector<SatCounter> m_satCounters;
   size_t m_subscriberNum;
