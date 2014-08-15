@@ -8,25 +8,47 @@ set(autowiring_VERSION_MAJOR 0)
 set(autowiring_VERSION_MINOR 1)
 set(autowiring_VERSION_PATCH 0)
 
+# Determine whether Autowiring has been embedded in another project
+set(AUTOWIRING_IS_EMBEDDED (CMAKE_SOURCE_DIR STREQUAL AUTOWIRING_ROOT_DIR))
+
 # If there's an external libraries directory path, use it as a search prefix
 if(EXTERNAL_LIBRARY_DIR)
   list(APPEND CMAKE_PREFIX_PATH ${EXTERNAL_LIBRARY_DIR})
   list(APPEND CMAKE_INCLUDE_PATH ${EXTERNAL_LIBRARY_DIR})
 endif()
 
-# Clang needs special additional flags to build with C++11
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  message("Clang C++11")
-  if (APPLE)
-    # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
-    set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+# Offer option for USE_LIBCXX only if not defined by enclosing project
+# Check for existing definition of USE_LIBCXX
+if(NOT DEFINED USE_LIBCXX)
+  option(USE_LIBCXX "Build Autowiring using c++11" ON)
+else()
+  if(${USE_LIBCXX})
+    message("Parent project has set USE_LIBCXX = ON -> Build Autowiring using c++11")
   else()
-    set(CMAKE_CXX_FLAGS "-std=c++11")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
+    message("Parent project has set USE_LIBCXX = OFF -> Build Autowiring using c++98")
   endif()
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  message("GCC C++11")
-  set(CMAKE_CXX_FLAGS "-std=c++11")
+endif()
+
+# Macro for deprecated functionality needed to comply with c++98 std implementations
+if(NOT USE_LIBCXX)
+  add_definitions(-DAUTOWIRING_UNSAFE_HASHTABLE)
+endif()
+
+if(USE_LIBCXX)
+  # Clang needs special additional flags to build with C++11
+  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    message("Clang C++11")
+    if (APPLE)
+      # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
+      set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+    else()
+      set(CMAKE_CXX_FLAGS "-std=c++11")
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
+    endif()
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    message("GCC C++11")
+    set(CMAKE_CXX_FLAGS "-std=c++11")
+  endif()
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -38,7 +60,7 @@ set(AUTOWIRING_BUILD_AUTONET_DEFAULT ON)
 # us to bring all of our unit tests in with us.  Though, if they do desire this, they
 # can always set the AUTOWIRING_BUILD_TESTS flag
 get_filename_component(AUTOWIRING_ROOT_DIR . ABSOLUTE)
-if(CMAKE_SOURCE_DIR STREQUAL AUTOWIRING_ROOT_DIR)
+if(AUTOWIRING_IS_EMBEDDED)
   set(AUTOWIRING_BUILD_TESTS_DEFAULT ON)
   set(AUTOWIRING_BUILD_EXAMPLES_DEFAULT ON)
   
