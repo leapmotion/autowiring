@@ -717,13 +717,14 @@ void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<Object>
 
 void CoreContext::FilterException(void) {
   bool handled = false;
-  for(ExceptionFilter* filter : m_filters)
+  for(ExceptionFilter* filter : m_filters) {
     try {
       filter->Filter();
       handled = true;
     } catch(...) {
       // Do nothing
     }
+  }
 
   // Pass to parent if one exists:
   if(m_pParent) {
@@ -746,12 +747,13 @@ void CoreContext::FilterException(void) {
 void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, Object* pRecipient) {
   // Filter in order:
   for(CoreContext* pCur = this; pCur; pCur = pCur->GetParentContext().get())
-    for(ExceptionFilter* filter : pCur->m_filters)
+    for(ExceptionFilter* filter : pCur->m_filters) {
       try {
         filter->Filter(pProxy, pRecipient);
       } catch(...) {
         // Do nothing, filter didn't want to filter this exception
       }
+    }
 }
 
 std::shared_ptr<AutoPacketFactory> CoreContext::GetPacketFactory(void) {
