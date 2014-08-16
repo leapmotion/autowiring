@@ -10,10 +10,46 @@ struct SatCounter;
 /// </remarks>
 struct DecorationDisposition
 {
-  DecorationDisposition(const DecorationDisposition&) = delete;
+#if !AUTOWIRING_UNSAFE_HASHTABLE
   DecorationDisposition(DecorationDisposition&&) = delete;
-  void operator=(const DecorationDisposition&) = delete;
   void operator=(DecorationDisposition&&) = delete;
+  DecorationDisposition(const DecorationDisposition& source) = delete;
+  void operator=(const DecorationDisposition& source) = delete;
+#else //!AUTOWIRING_UNSAFE_HASHTABLE
+  // The methods below are needed for c++98 builds
+  DecorationDisposition(DecorationDisposition&& source) :
+    m_decoration(source.m_decoration),
+    m_pImmediate(source.m_pImmediate),
+    m_publisher(source.m_publisher),
+    satisfied(source.satisfied),
+    isCheckedOut(source.isCheckedOut),
+    wasCheckedOut(source.wasCheckedOut)
+  {}
+  void operator=(DecorationDisposition&& source) {
+    m_decoration = std::move(source.m_decoration);
+    m_pImmediate = source.m_pImmediate;
+    source.m_pImmediate = nullptr;
+    m_publisher = source.m_publisher;
+    satisfied = source.satisfied;
+    isCheckedOut = source.isCheckedOut;
+    wasCheckedOut = source.wasCheckedOut;
+  }
+  DecorationDisposition(const DecorationDisposition& source) :
+    m_pImmediate(nullptr),
+    m_publisher(source.m_publisher),
+    satisfied(source.satisfied),
+    isCheckedOut(source.isCheckedOut),
+    wasCheckedOut(source.wasCheckedOut)
+  {}
+  void operator=(const DecorationDisposition& source) {
+    m_decoration->reset();
+    m_pImmediate = nullptr;
+    m_publisher = source.m_publisher;
+    satisfied = source.satisfied;
+    isCheckedOut = source.isCheckedOut;
+    wasCheckedOut = source.wasCheckedOut;
+  }
+#endif //!AUTOWIRING_UNSAFE_HASHTABLE
 
   DecorationDisposition(void) :
     m_pImmediate(nullptr),
