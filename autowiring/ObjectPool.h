@@ -129,18 +129,19 @@ protected:
         // Finalize object before destruction or return to pool
         final(*ptr);
 
-        // Hold the lock next, in order to ensure that destruction happens after the monitor
-        // lock is released.
-        std::lock_guard<std::mutex> lk(*monitor);
-
-        if(monitor->IsAbandoned()) {
-          // Nothing we can do, monitor object abandoned already, just destroy the object
-          delete ptr;
-          return;
+        bool inPool = false;
+        {
+          // Obtain lock before deciding whether to delete or return to pool
+          std::lock_guard<std::mutex> lk(*monitor);
+          if(!monitor->IsAbandoned()) {
+            // Attempt to return object to pool
+            inPool = static_cast<ObjectPool<T>*>(monitor->GetOwner())->ReturnUnsafe(poolVersion, ptr);
+          }
         }
-
-        // Pass control to the Return method
-        static_cast<ObjectPool<T>*>(monitor->GetOwner())->Return(poolVersion, ptr);
+        if (!inPool) {
+          // Destroy returning object outside of lock
+          delete ptr;
+        }
       }
     );
 
@@ -151,28 +152,30 @@ protected:
     return retVal;
   }
 
-  void Return(size_t poolVersion, T* ptr) {
+  bool ReturnUnsafe(size_t poolVersion, T* ptr) {
     // ASSERT: Object has already been finalized
     // Always decrement the count when an object is no longer outstanding
     assert(m_outstanding);
     m_outstanding--;
 
+    bool inPool = false;
     if(
       // Pool versions have to match, or the object should be dumped
       poolVersion == m_poolVersion &&
 
       // Object pool needs to be capable of accepting another object as an input
       m_objs.size() < m_maxPooled
-    )
+       ) {
       // Return the object to the pool:
       m_objs.push_back(ptr);
-    else
-      // Destroy the object, it's going out of scope
-      delete ptr;
+      inPool = true;
+    }
 
     // If the new outstanding count is less than or equal to the limit, wake up any waiters:
     if(m_outstanding <= m_limit)
       m_setCondition.notify_all();
+
+    return inPool;
   }
 
   /// <summary>
