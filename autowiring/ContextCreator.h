@@ -41,11 +41,10 @@ public:
   template<class Fn>
   void Enumerate(Fn&& fn) {
     std::lock_guard<std::mutex> lk(m_contextLock);
-    for(auto q = m_contexts.begin(); q != m_contexts.end(); q++) {
-      auto ctxt = q->second.lock();
-      if(ctxt)
-        if(!fn(q->first, ctxt))
-          return;
+    for(const auto& entry : m_contexts) {
+      auto ctxt = entry.second.lock();
+      if(ctxt && !fn(entry.first, ctxt))
+        return;
     }
   }
 
@@ -56,8 +55,8 @@ public:
   Container Enumerate(void) {
     Container container;
     std::lock_guard<std::mutex> lk(m_contextLock);
-    for(auto q = m_contexts.begin(); q != m_contexts.end(); q++) {
-      auto ctxt = q->second.lock();
+    for(const auto& entry : m_contexts) {
+      auto ctxt = entry.second.lock();
       if(ctxt)
         container.insert(container.end(), ctxt);
     }
@@ -69,10 +68,10 @@ public:
   /// </summary>
   std::shared_ptr<CoreContext> FindContext(const Key& key) {
     std::lock_guard<std::mutex> lk(m_contextLock);
-    typename t_mpType::iterator q = m_contexts.find(key);
-    if(q == m_contexts.end())
+    auto entry = m_contexts.find(key);
+    if(entry == m_contexts.end())
       return std::shared_ptr<CoreContext>();
-    return q->second.lock();
+    return entry.second.lock();
   }
 
   /// <summary>
@@ -122,7 +121,7 @@ public:
   /// The contaner could, in fact, have elements in it at the time control is returned to the caller.
   /// </remarks>
   void Clear(bool wait) {
-    ContextCreatorBase::Clear(wait, m_contexts, [] (typename t_mpType::iterator q) {return q->second.lock();});
+    ContextCreatorBase::Clear(wait, m_contexts, [] (const typename t_mpType::value_type& q) {return q.second.lock();});
   }
 
   /// <summary>
@@ -240,10 +239,9 @@ public:
   template<class Fn>
   void Enumerate(Fn&& fn) {
     std::lock_guard<std::mutex> lk(m_contextLock);
-    for(auto q = m_contextList.begin(); q != m_contextList.end(); q++) {
-      auto ctxt = q->lock();
-      if(ctxt)
-      if(!fn(ctxt))
+    for(const auto& weak_ctxt : m_contextList) {
+      auto ctxt = weak_ctxt.lock();
+      if(ctxt && !fn(ctxt))
         return;
     }
   }
@@ -264,7 +262,7 @@ public:
   void Clear(bool wait) {
     (std::lock_guard<std::mutex>)m_contextLock,
       m_clearSentinal++;
-    ContextCreatorBase::Clear(wait, m_contextList, [] (typename t_contextList::iterator q) { return q->lock();});
+    ContextCreatorBase::Clear(wait, m_contextList, [] (const typename t_contextList::value_type& q) { return q.lock();});
   }
 
   /// <summary>

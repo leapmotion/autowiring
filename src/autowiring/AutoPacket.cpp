@@ -87,7 +87,7 @@ void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
 
     // Update satisfaction inside of lock
     decoration = &dFind->second;
-    for(auto& satCounter : decoration->m_subscribers) {
+    for(const auto& satCounter : decoration->m_subscribers) {
       if(satCounter.second)
         // Entry is mandatory, leave it unsatisfaible
         continue;
@@ -115,7 +115,7 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
 
     // Update satisfaction inside of lock
     decoration = &dFind->second;
-    for(auto& satCounter : decoration->m_subscribers)
+    for(const auto& satCounter : decoration->m_subscribers)
       if(satCounter.first->Decrement(satCounter.second))
         callQueue.push_back(satCounter.first);
   }
@@ -159,8 +159,8 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   {
     std::lock_guard<std::mutex> lk(m_lock);
     for(size_t i = nInfos; i--;) {
-      for(auto& satCounter : pTypeSubs[i]->m_subscribers) {
-        auto& cur = satCounter.first;
+      for(const auto& satCounter : pTypeSubs[i]->m_subscribers) {
+        SatCounter* cur = satCounter.first;
         if (satCounter.second) {
           ++cur->remaining;
         }
@@ -194,7 +194,7 @@ void AutoPacket::Initialize(void) {
 
   // Call all subscribers with no required or optional arguments:
   // NOTE: This may result in decorations that cause other subscribers to be called.
-  for (auto* call : callCounters)
+  for (SatCounter* call : callCounters)
     call->CallAutoFilter(*this);
 
   // Initial satisfaction of the AutoPacket:

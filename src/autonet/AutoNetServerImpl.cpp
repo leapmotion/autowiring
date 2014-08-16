@@ -200,7 +200,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const AnySharedPointer& obj
     // Check if type receives any events
     {
       Json::array listenerTypes;
-      for(auto& event : m_EventTypes) {
+      for(const auto& event : m_EventTypes) {
         if(event->IsSameAs(objectPtr.get()))
           listenerTypes.push_back(demangle(event->Type()));
       }
@@ -240,7 +240,7 @@ void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
   m_Subscribers.insert(hdl);
 
   Json::array types;
-  for(auto type : m_AllTypes) {
+  for(const auto& type : m_AllTypes) {
     types.push_back(type.first);
   }
 
@@ -248,7 +248,7 @@ void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
   AutoGlobalContext()->BuildCurrentState();
 
   // Send breakpoint message
-  for(auto& breakpoint : m_breakpoints) {
+  for(const auto& breakpoint : m_breakpoints) {
     SendMessage(hdl, "breakpoint", breakpoint);
   }
 }

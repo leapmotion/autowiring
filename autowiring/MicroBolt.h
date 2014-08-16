@@ -23,10 +23,8 @@ public:
     // NOTE: Injection of T into all matching contexts may result in
     // multiple calls to Inject<T>() if a matching context
     // is created during traversal.
-    std::shared_ptr<CoreContext> rootContext = CoreContext::CurrentContext();
-    auto listSigils = {ContextEnumeratorT<Sigils>(rootContext)...};
-    for (auto findSigil : listSigils)
-      for (auto context : findSigil)
+    for(auto findSigil : {ContextEnumeratorT<Sigils>(CoreContext::CurrentContext())...})
+      for(auto context : findSigil)
         context->template Inject<T>();
   }
   void ContextCreated(void) override;

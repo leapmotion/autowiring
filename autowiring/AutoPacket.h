@@ -357,27 +357,27 @@ public:
   /// </remarks>
   template<class T, class... Ts>
   void DecorateImmediate(const T& immed, const Ts&... immeds) {
-    // These are the things we're going to be working with while we perform immediate decoration:
-    static const std::type_info* sc_typeInfo [] = {&typeid(T), &typeid(Ts)...};
-    const void* pvImmeds [] = {&immed, &immeds...};
-    DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)];
-
     // None of the inputs may be shared pointers--if any of the inputs are shared pointers, they must be attached
     // to this packet via Decorate, or else dereferenced and used that way.
     static_assert(
-      !is_shared_ptr<T>::value &&
-      !is_any<is_shared_ptr<Ts>...>::value,
+      !is_any<is_shared_ptr<T>, is_shared_ptr<Ts>...>::value,
       "DecorateImmediate must not be used to attach a shared pointer, use Decorate on such a decoration instead"
     );
+    
+    // These are the things we're going to be working with while we perform immediate decoration:
+    static const std::type_info* s_argTypes [] = {&typeid(T), &typeid(Ts)...};
+    static const size_t s_arity = 1 + sizeof...(Ts);
+    const void* pvImmeds [] = {&immed, &immeds...};
+    DecorationDisposition* pTypeSubs[s_arity];
 
     // Perform standard decoration with a short initialization:
     {
       std::lock_guard<std::mutex> lk(m_lock);
-      for(size_t i = 0; i <= sizeof...(Ts); i++) {
-        pTypeSubs[i] = &m_decorations[*sc_typeInfo[i]];
+      for(size_t i = 0; i < s_arity; i++) {
+        pTypeSubs[i] = &m_decorations[*s_argTypes[i]];
         if(pTypeSubs[i]->wasCheckedOut) {
           std::stringstream ss;
-          ss << "Cannot perform immediate decoration with type " << sc_typeInfo[i]->name()
+          ss << "Cannot perform immediate decoration with type " << s_argTypes[i]->name()
              << ", the requested decoration already exists";
           throw std::runtime_error(ss.str());
         }
@@ -393,17 +393,16 @@ public:
     // Pulse satisfaction:
     MakeAtExit([this, &pTypeSubs] {
       // Mark entries as unsatisfiable:
-      for(auto pEntry : pTypeSubs) {
+      for(DecorationDisposition*  pEntry : pTypeSubs) {
         pEntry->satisfied = false;
         pEntry->m_pImmediate = nullptr;
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-      static const std::type_info* lamda_typeInfos [] = {&typeid(T), &typeid(Ts)...};
-      for(auto ti : lamda_typeInfos)
+      for(const std::type_info* ti : s_argTypes)
         MarkUnsatisfiable(*ti);
     }),
-    PulseSatisfaction(pTypeSubs, 1 + sizeof...(Ts));
+    PulseSatisfaction(pTypeSubs, s_arity);
   }
 
   /// <summary>
@@ -411,8 +410,9 @@ public:
   /// </summary>
   template<class Ret, class... Args>
   void AddRecipient(std::function<Ret(Args...)> f) {
-    std::shared_ptr<MicroAutoFilter<Ret, Args...>> filter(new MicroAutoFilter<Ret, Args...>(f));
-    InitializeRecipient(MakeAutoFilterDescriptor(filter));
+    InitializeRecipient(
+      MakeAutoFilterDescriptor(std::make_shared<MicroAutoFilter<Ret, Args...>>(f))
+    );
   }
 
   /// <returns>

@@ -19,8 +19,9 @@ TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
 
     std::weak_ptr<WeakPtrChecker> self;
   };
-
-  std::shared_ptr<WeakPtrChecker>(new WeakPtrChecker);
+  
+  // Construct, the destroy
+  std::make_shared<WeakPtrChecker>();
 }
 
 TEST_F(ContextCleanupTest, VerifyNoEarlyDtor) {

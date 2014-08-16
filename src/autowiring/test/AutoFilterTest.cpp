@@ -177,7 +177,7 @@ TEST_F(AutoFilterTest, VerifyNoMultiDecorate) {
   EXPECT_ANY_THROW(packet->Decorate(isDeco0type())) << "Typedef failed to throw exception";
 
   //NOTE: A shared_ptr to an existing type will throw an exception
-  std::shared_ptr<Decoration<0>> sharedDeco0(new Decoration<0>);
+  auto sharedDeco0 = std::make_shared<Decoration<0>>();
   EXPECT_ANY_THROW(packet->Decorate(sharedDeco0)) << "Reduction of shared_ptr to base type failed";
 
   //NOTE: Inheritance will not throw an exception
@@ -350,7 +350,7 @@ TEST_F(AutoFilterTest, VerifyTeardownArrangement) {
     std::shared_ptr<AutoPacket> packet;
     {
       // Create the filter and subscribe it
-      std::shared_ptr<FilterA> filterA(new FilterA);
+      auto filterA = std::make_shared<FilterA>();
       filterAWeak = filterA;
       factory->AddSubscriber(filterA);
 

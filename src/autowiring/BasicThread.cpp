@@ -205,9 +205,8 @@ void BasicThread::Stop(bool graceful) {
 
 void BasicThread::ForceCoreThreadReidentify(void) {
   for(const auto& ctxt : ContextEnumerator(AutoGlobalContext())) {
-    auto threadListCpy = ctxt->CopyBasicThreadList();
-    for(auto q = threadListCpy.begin(); q != threadListCpy.end(); q++)
-      (**q).SetCurrentThreadName();
+    for(const auto& thread : ctxt->CopyBasicThreadList())
+      thread->SetCurrentThreadName();
   }
 }
 

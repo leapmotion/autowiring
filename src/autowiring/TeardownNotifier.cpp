@@ -8,8 +8,8 @@ TeardownNotifier::~TeardownNotifier(void) {
 }
 
 void TeardownNotifier::NotifyTeardownListeners(void) {
-  for(auto q = m_teardownListeners.begin(); q != m_teardownListeners.end(); q++)
-    (*q)();
+  for(const auto& listener : m_teardownListeners)
+    listener();
   m_teardownListeners.clear();
 }
 

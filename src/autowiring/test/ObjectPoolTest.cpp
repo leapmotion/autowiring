@@ -305,13 +305,13 @@ TEST_F(ObjectPoolTest, MovableObjectPool) {
 }
 
 TEST_F(ObjectPoolTest, MovableObjectPoolAysnc) {
-  static const size_t sc_count = 10000;
+  static const size_t s_count = 10000;
   ObjectPool<int> from;
 
   {
     // Issue a zillion objects from the from pool:
     std::vector<std::shared_ptr<int>> objs;
-    for(size_t i = sc_count; i--;)
+    for(size_t i = s_count; i--;)
       objs.push_back(from.Wait());
 
     // Make a thread, let it hold these objects while we move its pool:
@@ -326,5 +326,5 @@ TEST_F(ObjectPoolTest, MovableObjectPoolAysnc) {
   AutoCurrentContext()->SignalShutdown(true);
 
   // Verify that new pool got all of the objects:
-  ASSERT_EQ(sc_count, to.GetCached()) << "Object pool move operation did not correctly relay checked out types";
+  ASSERT_EQ(s_count, to.GetCached()) << "Object pool move operation did not correctly relay checked out types";
 }
