@@ -166,6 +166,9 @@ protected:
     )
       // Return the object to the pool:
       m_objs.push_back(ptr);
+    else
+      // Destroy the object, it's going out of scope
+      delete ptr;
 
     // If the new outstanding count is less than or equal to the limit, wake up any waiters:
     if(m_outstanding <= m_limit)
