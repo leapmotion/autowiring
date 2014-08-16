@@ -43,9 +43,8 @@ public:
     std::lock_guard<std::mutex> lk(m_contextLock);
     for(const auto& entry : m_contexts) {
       auto ctxt = entry.second.lock();
-      if(ctxt)
-        if(!fn(entry.first, ctxt))
-          return;
+      if(ctxt && !fn(entry.first, ctxt))
+        return;
     }
   }
 
