@@ -95,7 +95,7 @@ protected:
   // time the ClearCachedEntities method is called, and causes entities which might be trying
   // to return to the pool to instead free themselves.
   size_t m_poolVersion;
-  std::vector<std::unique_ptr<T>> m_objs;
+  std::vector<T*> m_objs;
 
   size_t m_maxPooled;
   size_t m_limit;
@@ -129,19 +129,18 @@ protected:
         // Finalize object before destruction or return to pool
         final(*ptr);
 
-        // Default behavior will be to destroy the pointer
-        std::unique_ptr<T> unique(ptr);
-
         // Hold the lock next, in order to ensure that destruction happens after the monitor
         // lock is released.
         std::lock_guard<std::mutex> lk(*monitor);
 
-        if(monitor->IsAbandoned())
+        if(monitor->IsAbandoned()) {
           // Nothing we can do, monitor object abandoned already, just destroy the object
+          delete ptr;
           return;
+        }
 
         // Pass control to the Return method
-        static_cast<ObjectPool<T>*>(monitor->GetOwner())->Return(poolVersion, unique);
+        static_cast<ObjectPool<T>*>(monitor->GetOwner())->Return(poolVersion, ptr);
       }
     );
 
@@ -152,7 +151,7 @@ protected:
     return retVal;
   }
 
-  void Return(size_t poolVersion, std::unique_ptr<T>& unique) {
+  void Return(size_t poolVersion, T* ptr) {
     // ASSERT: Object has already been finalized
     // Always decrement the count when an object is no longer outstanding
     assert(m_outstanding);
@@ -164,10 +163,9 @@ protected:
 
       // Object pool needs to be capable of accepting another object as an input
       m_objs.size() < m_maxPooled
-    ) {
+    )
       // Return the object to the pool:
-      m_objs.emplace_back(std::move(unique));
-    }
+      m_objs.push_back(ptr);
 
     // If the new outstanding count is less than or equal to the limit, wake up any waiters:
     if(m_outstanding <= m_limit)
@@ -196,8 +194,8 @@ protected:
     }
 
     // Transition from pooled to issued:
-    std::shared_ptr<T> iObj = Wrap(m_objs.back().release()); // Takes ownership
-    m_objs.pop_back(); // Removes non-referencing object
+    std::shared_ptr<T> iObj = Wrap(m_objs.back()); // Takes ownership
+    m_objs.pop_back(); // Remove unsafe reference
     return iObj;
   }
 
@@ -228,14 +226,11 @@ public:
   /// prior to this call.
   /// </remarks>
   void ClearCachedEntities(void) {
-    // Declare this first, so it's freed last:
-    std::vector<std::unique_ptr<T>> objs;
-
-    // Default destructor is using in object pool, so it is safe to destroy all
-    // in pool while holding lock.
     std::lock_guard<std::mutex> lk(*m_monitor);
-    m_poolVersion++;
+    for (T* obj : m_objs)
+      delete obj;
     m_objs.clear();
+    m_poolVersion++;
   }
 
   /// <summary>
@@ -257,6 +252,7 @@ public:
         return;
 
       // Remove unique pointer
+      delete m_objs.back();
       m_objs.pop_back();
     }
   }
