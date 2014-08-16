@@ -25,30 +25,33 @@ TEST_F(ObjectPoolTest, VerifyOutstandingLimit) {
 }
 
 class LifeCycle {
+  static int constructNum;
+  static int destructNum;
+  static std::mutex numLock;
+
   //Lock ensures that status checks are atomic.
   //This does not prevent asynchronous calls.
-  std::mutex lock;
+  std::mutex stageLock;
   enum LifeStage {
-    construct,
     pooled,
-    issued,
-    destruct
+    issued
   } stage;
 
 public:
-  LifeCycle() : stage(construct) {
-    std::lock_guard<std::mutex> guard(lock);
-    if (stage == construct)
-      stage = pooled;
-    else
-      throw std::runtime_error("Initialization interrupted");
+  LifeCycle() : stage(pooled) {
+    std::lock_guard<std::mutex> guard(numLock);
+    ++constructNum;
   }
 
   ~LifeCycle() {
-    lock.lock();
-    if (stage != pooled)
+    {
+      std::lock_guard<std::mutex> guard(numLock);
+      ++destructNum;
+    }
+    std::lock_guard<std::mutex> guard(stageLock);
+    if (stage != pooled) {
       throw std::runtime_error("Destructor called before Finalize");
-    lock.unlock();
+    }
   }
 
   static ObjectPool<LifeCycle>* NewObjectPool(size_t limit = ~0, size_t maxPooled = ~0) {
@@ -59,23 +62,43 @@ public:
     );
   }
 
+  static void InitializeNum() {
+    std::lock_guard<std::mutex> guard(numLock);
+    constructNum = 0;
+    destructNum = 0;
+  }
+  static int ConstructNum() {
+    std::lock_guard<std::mutex> guard(numLock);
+    return constructNum;
+  }
+  static int DestructNum() {
+    std::lock_guard<std::mutex> guard(numLock);
+    return destructNum;
+  }
+
 protected:
   void Initialize() {
-    std::lock_guard<std::mutex> guard(lock);
+    std::lock_guard<std::mutex> guard(stageLock);
     if (stage != pooled)
       throw std::runtime_error("Initialize called on object not pooled");
     stage = issued;
   }
 
   void Finalize() {
-    std::lock_guard<std::mutex> guard(lock);
+    std::lock_guard<std::mutex> guard(stageLock);
     if (stage != issued)
       throw std::runtime_error("Finalize called on object not issued");
     stage = pooled;
   }
 };
 
+std::mutex LifeCycle::numLock;
+int LifeCycle::constructNum = 0;
+int LifeCycle::destructNum = 0;
+
 TEST_F(ObjectPoolTest, LifeCycleTestLimitOne) {
+  LifeCycle::InitializeNum();
+  
   std::shared_ptr<ObjectPool<LifeCycle>> pool(LifeCycle::NewObjectPool(2, 2));
   std::shared_ptr<LifeCycle> objHold, objDrop;
 
@@ -85,6 +108,8 @@ TEST_F(ObjectPoolTest, LifeCycleTestLimitOne) {
   } catch (std::runtime_error e) {
     FAIL() << e.what();
   }
+  ASSERT_EQ(1, LifeCycle::ConstructNum());
+  ASSERT_EQ(0, LifeCycle::DestructNum());
 
   // Issue from Pool
   try {
@@ -92,6 +117,8 @@ TEST_F(ObjectPoolTest, LifeCycleTestLimitOne) {
   } catch (std::runtime_error e) {
     FAIL() << e.what();
   }
+  ASSERT_EQ(1, LifeCycle::ConstructNum());
+  ASSERT_EQ(0, LifeCycle::DestructNum());
 
   // Issue from Pool with implicit Creation of objDrop
   try {
@@ -99,6 +126,8 @@ TEST_F(ObjectPoolTest, LifeCycleTestLimitOne) {
   } catch (std::runtime_error e) {
     FAIL() << e.what();
   }
+  ASSERT_EQ(2, LifeCycle::ConstructNum());
+  ASSERT_EQ(0, LifeCycle::DestructNum());
 
   // Return to Pool
   try {
@@ -106,6 +135,8 @@ TEST_F(ObjectPoolTest, LifeCycleTestLimitOne) {
   } catch (std::runtime_error e) {
     FAIL() << e.what();
   }
+  ASSERT_EQ(2, LifeCycle::ConstructNum());
+  ASSERT_EQ(0, LifeCycle::DestructNum());
 
   // Destroy Pool with implicit Destruction of objDrop
   try {
@@ -113,6 +144,8 @@ TEST_F(ObjectPoolTest, LifeCycleTestLimitOne) {
   } catch (std::runtime_error e) {
     FAIL() << e.what();
   }
+  ASSERT_EQ(2, LifeCycle::ConstructNum());
+  ASSERT_EQ(1, LifeCycle::DestructNum());
 
   // Return to Pool redirected to Destruction of objHold
   try {
@@ -120,9 +153,11 @@ TEST_F(ObjectPoolTest, LifeCycleTestLimitOne) {
   } catch (std::runtime_error e) {
     FAIL() << e.what();
   }
+  ASSERT_EQ(2, LifeCycle::ConstructNum());
+  ASSERT_EQ(2, LifeCycle::DestructNum());
 }
 
-TEST_F(ObjectPoolTest, VerifyAsynchronousUsage) {
+TEST_F(ObjectPoolTest, DISABLED_VerifyAsynchronousUsage) {
   AutoCreateContext ctxt;
   CurrentContextPusher pshr(ctxt);
 

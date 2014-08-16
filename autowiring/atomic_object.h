@@ -1,5 +1,6 @@
 // Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
+#include MEMORY_HEADER
 #include MUTEX_HEADER
 
 #include "unlock_object.h"

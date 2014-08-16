@@ -1,12 +1,17 @@
 #pragma once
 #include "AutoNetServer.h"
 #include "AutowiringEvents.h"
-#include <cctype>
 #include <json11/json11.hpp>
-#include <websocketpp/server.hpp>
-#include <websocketpp/config/asio_no_tls.hpp>
+#include <cctype>
 #include <map>
 #include <set>
+
+// Need to redefine this namespace so we don't create linker problems.  Such problems may be
+// created if our static library is imported by another project that uses an incompatible
+// version of websocketpp.
+#define websocketpp websocketpp_autonet
+#include <websocketpp/server.hpp>
+#include <websocketpp/config/asio_no_tls.hpp>
 
 struct TypeIdentifierBase;
 

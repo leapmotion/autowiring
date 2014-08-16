@@ -41,7 +41,7 @@ void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
 }
 
 void BasicThread::SetCurrentThreadName(void) const {
-  DWORD threadId = ::GetThreadId(static_cast<HANDLE>(m_state->m_thisThread.native_handle()));
+  DWORD threadId = ::GetThreadId(m_state->m_thisThread.native_handle());
   ::SetThreadName(threadId, m_name);
 }
 
