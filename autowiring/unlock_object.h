@@ -1,6 +1,8 @@
 // Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
 #include "atomic_object.h"
+#include MUTEX_HEADER
+
 template<class object, class lock> class atomic_object;
 
 ///<summary>
