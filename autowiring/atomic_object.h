@@ -1,9 +1,9 @@
 // Copyright (c) 2010 - 2014 Leap Motion. All rights reserved. Proprietary and confidential.
 #pragma once
+#include "unlock_object.h"
 #include MEMORY_HEADER
 #include MUTEX_HEADER
-
-#include "unlock_object.h"
+#include TYPE_TRAITS_HEADER
 
 template<class object, class lock> class unlock_object;
 
@@ -60,12 +60,19 @@ public:
   atomic_object<object, lock>& operator = (const atomic_object<object>& source) {
     if (this == &source)
       return *this;
-    //IMPORTANT: Aquisition of both locks must be atomic.
-    //The following code:
-    //  m_initialized = source.initialized(m_object);
-    //could deadlock with its counterpart in source.
-    std::lock(m_lock, source.m_lock);
+
+    // Use memory well-ordering to establish a lock heirarchy
+    if(this < &source) {
+      m_lock.lock();
+      source.m_lock.lock();
+    }
+    else {
+      source.m_lock.lock();
+      m_lock.lock();
+    }
+
     m_object = source.m_object;
+
     m_lock.unlock();
     source.m_lock.unlock();
     return *this;
