@@ -373,7 +373,7 @@ public:
     // Perform standard decoration with a short initialization:
     {
       std::lock_guard<std::mutex> lk(m_lock);
-      for(size_t i = 0; i <= sizeof...(Ts); i++) {
+      for(size_t i = 0; i < s_arity; i++) {
         pTypeSubs[i] = &m_decorations[*s_argTypes[i]];
         if(pTypeSubs[i]->wasCheckedOut) {
           std::stringstream ss;
