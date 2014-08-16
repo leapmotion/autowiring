@@ -8,6 +8,8 @@
 #include "optional_ptr.h"
 #include <functional>
 #include MEMORY_HEADER
+#include STL_UNORDERED_SET
+#include STL_UNORDERED_MAP
 
 class AutoPacket;
 class Deferred;
@@ -19,18 +21,22 @@ enum eSubscriberInputType {
   // Unused type, refers to an unrecognized input
   inTypeInvalid,
 
+  // Required Input ~ const T&
   // Specifies that this argument is mandatory for the AutoFilter to be called
   inTypeRequired,
 
+  // Optional Input
   // Specifies that this argument is optional--the filter generally may be called
   // any time all required arguments are satisfied, no matter how many optional
   // arguments remain
   inTypeOptional,
 
+  // Optional Output ~ shared_ptr<T>&
   // Specifies that the argument is an output which must be satisfied manually by
   // the caller
   outTypeRef,
 
+  // Required Output
   // Specifies that the argument will automatically be marked ready, unless explicitly
   // cancelled by the caller.
   outTypeRefAutoReady
@@ -167,6 +173,9 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
   }
 };
 
+/// <summary>
+/// AutoFilter argument disposition
+/// </summary>
 struct AutoFilterDescriptorInput {
   AutoFilterDescriptorInput(void) :
     ti(nullptr),
@@ -214,6 +223,7 @@ struct AutoFilterDescriptorStub {
   AutoFilterDescriptorStub(const AutoFilterDescriptorStub& rhs) :
     m_pType(rhs.m_pType),
     m_pArgs(rhs.m_pArgs),
+    m_dataMap(rhs.m_dataMap),
     m_deferred(rhs.m_deferred),
     m_arity(rhs.m_arity),
     m_requiredCount(rhs.m_requiredCount),
@@ -243,6 +253,7 @@ struct AutoFilterDescriptorStub {
     static_assert(CallExtractor<MemFn>::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
     for(auto pArg = m_pArgs; *pArg; pArg++) {
+      m_dataMap[*pArg->ti];
       switch(pArg->subscriberType) {
       case inTypeRequired:
         m_requiredCount++;
@@ -261,7 +272,22 @@ protected:
   const std::type_info* m_pType;
 
   // This subscriber's argument types
+  // NOTE: This is a reference to a static generated list,
+  // therefor it MUST be const and MUST be shallow-copied.
   const AutoFilterDescriptorInput* m_pArgs;
+
+  // Mutable properties determined by Auto*Pipe
+  struct DataFlow {
+    // Default = Broadcast Input: AutoFilter accepts data from any input
+    // Default = Broadcast Output: Any AutoFilter can receive this data
+    // Pipelined Input: AutoFilter only accepts data from declared pipes
+    // Pipelined Output: AutoFilter only sends data to declared pipes
+    DataFlow() : broadcast(true) {}
+    bool broadcast;
+    std::unordered_set<std::type_index> halfpipes;
+  };
+  typedef std::unordered_map<std::type_index, DataFlow> FlowMap;
+  FlowMap m_dataMap;
 
   // Set if this is a deferred subscriber.  Deferred subscribers cannot receive immediate-style
   // decorations, and have additional handling considerations when dealing with non-copyable
@@ -301,6 +327,42 @@ public:
   /// subscribers, or an exception will be thrown.
   /// </remarks>
   t_call GetCall(void) const { return m_pCall; }
+
+  /// <summary>
+  /// Sends or receives broadcast instances of the input or output type.
+  /// </summary>
+  /// <remarks>
+  /// The dataType must declared by the AutoFilter method for this call to have an effect.
+  /// </remarks>
+  /// <param="dataType">specifies the data type (input or output) to broadcast</param>
+  /// <param="enable">when false disables broadcasting</param>
+  void Broadcast(const std::type_info* dataType, bool enable = true) {
+    FlowMap::iterator flow = m_dataMap.find(*dataType);
+    if (flow == m_dataMap.end())
+      return;
+    flow->second.broadcast = enable;
+  }
+
+  /// <summary>
+  /// Creates a data half-pipe from this node to the target node for the specifed data.
+  /// </summary>
+  /// <remarks>
+  /// A complete pipe requires that both the input and output nodes are modified.
+  /// This method only modifies this node - the other half-pipe requires a call to the other node.
+  /// The dataType must declared by the AutoFilter method for this call to have an effect.
+  /// </remarks>
+  /// <param="dataType">specifies the data type (input or output) to pipe</param>
+  /// <param="nodeType">determines the target node that will receive the data</param>
+  /// <param="enable">when false removes a pipe, if it exists</param>
+  void HalfPipe(const std::type_info* dataType, const std::type_info* nodeType, bool enable = true) {
+    FlowMap::iterator flow = m_dataMap.find(*dataType);
+    if (flow == m_dataMap.end())
+      return;
+    if (enable)
+      flow->second.halfpipes.insert(*nodeType);
+    else
+      flow->second.halfpipes.erase(*nodeType);
+  }
 };
 
 /// <summary>

@@ -3,6 +3,8 @@
 
 //IMPORTANT: These modifiers should apply until destroyed.
 //IMPORTANT: This logic must be applicable to contexts.
+//IMPORTANT: The same intermediate type should be able to appear,
+// provided that it appears on separate pipes.
 
 /// <summary>
 /// Declares a pipe of data from transmitter to receiver.
