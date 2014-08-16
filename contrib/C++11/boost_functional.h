@@ -17,6 +17,5 @@ namespace std {
     boost::lambda::placeholder1_type _1;
     boost::lambda::placeholder2_type _2;
     boost::lambda::placeholder3_type _3;
-    boost::lambda::placeholder4_type _4;
   }
 }
