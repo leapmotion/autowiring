@@ -1008,7 +1008,6 @@ TEST_F(AutoFilterTest, SharedPointerAliasingRules) {
 }
 
 TEST_F(AutoFilterTest, AutoSelfUpdateTest) {
-  AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<AutoSelfUpdate<Decoration<0>>> filter;
 
@@ -1140,7 +1139,6 @@ struct MultiFilter01 {
 };
 
 TEST_F(AutoFilterTest, DeclareAutoFilterTest) {
-  AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<MultiFilter01> mf01;
 
@@ -1168,7 +1166,6 @@ TEST_F(AutoFilterTest, FunctionDecorationTest) {
   // This must be satisfied by decoration of type a,
   // independent of the order of decoration.
 
-  AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
 
   //Decoration with data first
@@ -1192,7 +1189,6 @@ TEST_F(AutoFilterTest, FunctionDecorationTest) {
 }
 
 TEST_F(AutoFilterTest, FunctionDecorationLambdaTest) {
-  AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
 
   //Decoration with function first
@@ -1212,7 +1208,6 @@ TEST_F(AutoFilterTest, FunctionDecorationLambdaTest) {
 typedef std::function<void(auto_out<Decoration<0>>)> InjectorFunctionType;
 
 TEST_F(AutoFilterTest, FunctionInjectorTest) {
-  AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
 
   auto packet = factory->NewPacket();
@@ -1228,7 +1223,6 @@ TEST_F(AutoFilterTest, FunctionInjectorTest) {
 typedef std::function<void(const Decoration<1>&)> ExtractorFunctionType;
 
 TEST_F(AutoFilterTest, FunctionExtractorTest) {
-  AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
 
   auto packet = factory->NewPacket();
