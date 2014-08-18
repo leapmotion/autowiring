@@ -157,6 +157,9 @@ endif()
 rewrite_header_paths(Autowiring_SRCS)
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 add_library(Autowiring STATIC ${Autowiring_SRCS})
+if(CMAKE_MAJOR_VERSION GREATER 2)
+  target_include_directories(Autowiring INTERFACE "../..")
+endif()
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
 
 # Might as well reference the boost libraries to satisfy link dependencies, if we know they exist
