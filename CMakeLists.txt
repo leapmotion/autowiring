@@ -9,7 +9,11 @@ set(autowiring_VERSION_MINOR 1)
 set(autowiring_VERSION_PATCH 0)
 
 # Determine whether Autowiring has been embedded in another project
-set(AUTOWIRING_IS_EMBEDDED (CMAKE_SOURCE_DIR STREQUAL AUTOWIRING_ROOT_DIR))
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  set(AUTOWIRING_IS_EMBEDDED)
+else()
+  set(AUTOWIRING_IS_EMBEDDED "TRUE")
+endif()
 
 # If there's an external libraries directory path, use it as a search prefix
 if(EXTERNAL_LIBRARY_DIR)
@@ -61,6 +65,9 @@ set(AUTOWIRING_BUILD_AUTONET_DEFAULT ON)
 # can always set the AUTOWIRING_BUILD_TESTS flag
 get_filename_component(AUTOWIRING_ROOT_DIR . ABSOLUTE)
 if(AUTOWIRING_IS_EMBEDDED)
+  set(AUTOWIRING_BUILD_TESTS_DEFAULT OFF)
+  set(AUTOWIRING_BUILD_EXAMPLES_DEFAULT OFF)
+else()
   set(AUTOWIRING_BUILD_TESTS_DEFAULT ON)
   set(AUTOWIRING_BUILD_EXAMPLES_DEFAULT ON)
   
@@ -68,9 +75,6 @@ if(AUTOWIRING_IS_EMBEDDED)
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
   # wants us to do.
   set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-else()
-  set(AUTOWIRING_BUILD_TESTS_DEFAULT OFF)
-  set(AUTOWIRING_BUILD_EXAMPLES_DEFAULT OFF)
 endif()
 
 option(AUTOWIRING_BUILD_TESTS "Build Autowiring unit tests" ${AUTOWIRING_BUILD_TESTS_DEFAULT})
