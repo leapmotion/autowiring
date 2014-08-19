@@ -320,6 +320,35 @@ public:
   bool IsDeferred(void) const { return m_deferred; }
   const std::type_info* GetAutoFilterTypeInfo(void) const { return m_pType; }
 
+
+  /// <summary>
+  /// Data flow type (input/output, required/optional) of the argument type.
+  /// </summary>
+  /// <remarks>
+  /// Returns eSubscriberInputType::inTypeInvalid when no argument is of the requested type.
+  /// </remarks>
+  eSubscriberInputType GetArgumentType(const std::type_info* argType) {
+    for(auto pArg = m_pArgs; *pArg; pArg++) {
+      if (pArg->ti == argType) {
+        return pArg->subscriberType;
+      }
+    }
+    return eSubscriberInputType::inTypeInvalid;
+  }
+
+  /// <summary>
+  /// Copies the data flow information for the argument type to the flow argument.
+  /// </summary>
+  /// <returns>true when the argument type is found</returns>
+  bool GetDataFlow(const std::type_info* argType, DataFlow& flow) {
+    FlowMap::const_iterator data = m_dataMap.find(*argType);
+    if (data != m_dataMap.end()) {
+      flow = data->second;
+      return true;
+    }
+    return false;
+  }
+
   /// <returns>A call lambda wrapping the associated subscriber</returns>
   /// <remarks>
   /// Parameters for the associated subscriber are obtained by querying the packet.
