@@ -10,15 +10,15 @@
 template<class W, class Selector>
 struct has_valid_autofilter {
   // Evaluates to false for W::AutoFilter(void), else to true.
-	static const int N = Decompose<decltype(&W::AutoFilter)>::N;
-	static const bool value = Decompose<decltype(&W::AutoFilter)>::N != 0;
+  static const int N = Decompose<decltype(&W::AutoFilter)>::N;
+  static const bool value = Decompose<decltype(&W::AutoFilter)>::N != 0;
 };
 
 // Specialization pertains only when W has no AutoFilter method.
 template<class W>
 struct has_valid_autofilter<W, std::false_type> {
-	static const int N = -1;
-	static const bool value = false;
+  static const int N = -1;
+  static const bool value = false;
 };
 
 //===========================================================
@@ -45,11 +45,11 @@ struct has_unambiguous_autofilter
   template<class U>
   static std::true_type select(unnamed_constant<decltype(&U::AutoFilter), &U::AutoFilter>*);
 
-	// Conveninece typedef used externally:
-	typedef has_valid_autofilter<T, decltype(select<T>(nullptr))> has_valid;
+  // Conveninece typedef used externally:
+  typedef has_valid_autofilter<T, decltype(select<T>(nullptr))> has_valid;
 
   // Evaluates to true only if T includes a unique AutoFilter method with at least one argument.
-	static const bool value = has_valid::value;
+  static const bool value = has_valid::value;
 };
 
 class AutoPacket;
@@ -71,15 +71,15 @@ struct has_autofilter {
   static const bool value = has_unambiguous_autofilter<T>::value;
 
   // This class has at least one AutoFilter method
-	struct detect_ambiguous_autofilter: T, test_valid_autofilter {};
+  struct detect_ambiguous_autofilter: T, test_valid_autofilter {};
 
-	// Validate the case most likely to have problems
-	static_assert(has_unambiguous_autofilter<T>::has_valid::N != 0, "Cannot define AutoFilter(void), your AutoFilter routine must take at least one argument");
+  // Validate the case most likely to have problems
+  static_assert(has_unambiguous_autofilter<T>::has_valid::N != 0, "Cannot define AutoFilter(void), your AutoFilter routine must take at least one argument");
 
   // Ensures a compiler error when the identification of T::AutoFilter is ambiguous.
   // This cannot be in has_unambiguous_autofilter, since that would be recursive.
   static_assert(
-		value || has_unambiguous_autofilter<detect_ambiguous_autofilter>::value,
-		"Cannot define more than one AutoFilter method and all AutoFilter methods must be public"
-	);
+    value || has_unambiguous_autofilter<detect_ambiguous_autofilter>::value,
+    "Cannot define more than one AutoFilter method and all AutoFilter methods must be public"
+  );
 };

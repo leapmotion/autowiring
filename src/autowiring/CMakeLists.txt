@@ -123,16 +123,16 @@ set(Autowiring_Win_SRCS
 )
 
 set(Autowiring_Unix_SRCS
-	InterlockedExchangeUnix.cpp
+  InterlockedExchangeUnix.cpp
   thread_specific_ptr_unix.h
 )
 
 set(Autowiring_Mac_SRCS
-	CoreThreadMac.cpp
+  CoreThreadMac.cpp
 )
 
 set(Autowiring_Linux_SRCS
-	CoreThreadLinux.cpp
+  CoreThreadLinux.cpp
 )
 
 ADD_MSVC_DISABLED_FILES("Unix Source" Autowiring_SRCS ${Autowiring_Unix_SRCS})

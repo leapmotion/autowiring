@@ -59,7 +59,7 @@ AutoNetServerImpl::~AutoNetServerImpl()
 }
 
 AutoNetServer* NewAutoNetServerImpl(void) {
-	return new AutoNetServerImpl;
+  return new AutoNetServerImpl;
 }
 
 // CoreThread overrides

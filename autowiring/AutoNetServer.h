@@ -14,9 +14,9 @@ protected:
 
 public:
   virtual ~AutoNetServer();
-	static AutoNetServer* New(void) {
-		return NewAutoNetServerImpl();
-	}
+  static AutoNetServer* New(void) {
+    return NewAutoNetServerImpl();
+  }
 
   /// <summary>
   /// Waits until resume message is sent from the visualizer
