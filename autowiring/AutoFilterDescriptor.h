@@ -201,6 +201,18 @@ struct AutoFilterDescriptorInput {
       return subscriber_traits<T>();
     }
   };
+
+  static bool isInput(eSubscriberInputType argType) {
+    return argType == inTypeRequired || argType == inTypeOptional;
+  }
+
+  static bool isOutput(eSubscriberInputType argType) {
+    return argType == outTypeRef || argType == outTypeRefAutoReady;
+  }
+
+  bool isInput() const { return isInput(subscriberType); }
+
+  bool isOutput() const { return isOutput(subscriberType); }
 };
 
 /// <summary>
@@ -320,20 +332,19 @@ public:
   bool IsDeferred(void) const { return m_deferred; }
   const std::type_info* GetAutoFilterTypeInfo(void) const { return m_pType; }
 
-
   /// <summary>
-  /// Data flow type (input/output, required/optional) of the argument type.
+  /// Orientation (input/output, required/optional) of the argument type.
   /// </summary>
   /// <remarks>
-  /// Returns eSubscriberInputType::inTypeInvalid when no argument is of the requested type.
+  /// Returns nullptr when no argument is of the requested type.
   /// </remarks>
-  eSubscriberInputType GetArgumentType(const std::type_info* argType) {
+  const AutoFilterDescriptorInput* GetArgumentType(const std::type_info* argType) {
     for(auto pArg = m_pArgs; *pArg; pArg++) {
       if (pArg->ti == argType) {
-        return pArg->subscriberType;
+        return pArg;
       }
     }
-    return eSubscriberInputType::inTypeInvalid;
+    return nullptr;
   }
 
   /// <summary>
