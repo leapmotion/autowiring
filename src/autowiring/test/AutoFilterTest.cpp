@@ -469,7 +469,6 @@ TEST_F(AutoFilterTest, VerifyAntiDecorate) {
 /// </summary>
 template<typename T>
 struct good_autofilter {
-
   // Evaluates to false when T does not include an AutoFilter method with at least one argument.
   static const bool value = has_unambiguous_autofilter<T>::value;
 
