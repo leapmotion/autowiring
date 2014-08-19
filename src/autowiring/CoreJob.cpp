@@ -20,27 +20,27 @@ void CoreJob::OnPended(std::unique_lock<std::mutex>&& lk){
     // ready to initiate it.
     return;
 
-	// Increment outstanding count because we now have an entry out in a thread pool
-	auto outstanding = m_outstanding;
+  // Increment outstanding count because we now have an entry out in a thread pool
+  auto outstanding = m_outstanding;
 
-	if(!outstanding)
-		// We're currently signalled to stop, we must empty the queue and then
-		// return here--we can't accept dispatch delivery on a stopped queue.
-		while(!m_dispatchQueue.empty()) {
-			delete m_dispatchQueue.front();
-			m_dispatchQueue.pop_front();
-		}
-	else {
-		// Need to ask the thread pool to handle our events again:
-		m_curEventInTeardown = false;
-		m_curEvent = std::async(
-			std::launch::async,
-			[this, outstanding] () mutable {
-				this->DispatchAllAndClearCurrent();
-				outstanding.reset();
-			}
-		);
-	}
+  if(!outstanding)
+    // We're currently signalled to stop, we must empty the queue and then
+    // return here--we can't accept dispatch delivery on a stopped queue.
+    while(!m_dispatchQueue.empty()) {
+      delete m_dispatchQueue.front();
+      m_dispatchQueue.pop_front();
+    }
+  else {
+    // Need to ask the thread pool to handle our events again:
+    m_curEventInTeardown = false;
+    m_curEvent = std::async(
+      std::launch::async,
+      [this, outstanding] () mutable {
+        this->DispatchAllAndClearCurrent();
+        outstanding.reset();
+      }
+    );
+  }
 }
 
 void CoreJob::DispatchAllAndClearCurrent(void) {
@@ -53,13 +53,13 @@ void CoreJob::DispatchAllAndClearCurrent(void) {
     // between when we finished looping, and when we obtained the lock, and
     // we don't want to exit our pool if that has happened.
     std::lock_guard<std::mutex> lk(m_dispatchLock);
-		if(AreAnyDispatchersReady())
-			continue;
+    if(AreAnyDispatchersReady())
+      continue;
 
-		// Indicate that we're tearing down and will be done very soon.  This is
-		// a signal to consumers that a call to m_curEvent.wait() will be nearly
-		// non-blocking.
-		m_curEventInTeardown = true;
+    // Indicate that we're tearing down and will be done very soon.  This is
+    // a signal to consumers that a call to m_curEvent.wait() will be nearly
+    // non-blocking.
+    m_curEventInTeardown = true;
     m_queueUpdated.notify_all();
     break;
   }
@@ -75,8 +75,8 @@ bool CoreJob::Start(std::shared_ptr<Object> outstanding) {
 
   std::unique_lock<std::mutex> lk;
   if(!m_dispatchQueue.empty())
-	  // Simulate a pending event, because we need to set up our async:
-	  OnPended(std::move(lk));
+    // Simulate a pending event, because we need to set up our async:
+    OnPended(std::move(lk));
 
   return true;
 }
@@ -90,14 +90,14 @@ void CoreJob::Stop(bool graceful) {
   if(graceful)
     // Pend a call which will invoke Abort once the dispatch queue is done:
     DispatchQueue::Pend(
-			[this] {this->Abort();}
-		);
-	else
+      [this] {this->Abort();}
+    );
+  else
     // Abort the dispatch queue so anyone waiting will wake up
     Abort();
 
-	// Reset the outstanding pointer, we don't intend to hold it anymore:
-	m_outstanding.reset();
+  // Reset the outstanding pointer, we don't intend to hold it anymore:
+  m_outstanding.reset();
 
   // Hit our condition variable to wake up any listeners:
   std::lock_guard<std::mutex> lk(m_dispatchLock);

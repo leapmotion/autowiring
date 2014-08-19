@@ -81,7 +81,7 @@ void DispatchQueue::DispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
         m_queueUpdated.notify_all();
     }
   ),
-	(*thunk)();
+  (*thunk)();
 }
 
 bool DispatchQueue::DispatchEvent(void) {
