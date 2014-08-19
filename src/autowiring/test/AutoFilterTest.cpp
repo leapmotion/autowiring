@@ -4,7 +4,6 @@
 #include <autowiring/AutoPacket.h>
 #include <autowiring/AutoPacketFactory.h>
 #include <autowiring/Deferred.h>
-#include <autowiring/AutoFilterPipe.h>
 #include <autowiring/NewAutoFilter.h>
 #include <autowiring/DeclareAutoFilter.h>
 #include <autowiring/AutoSelfUpdate.h>
@@ -1348,7 +1347,7 @@ TEST_F(AutoFilterTest, DISABLED_AutoEdgeTest) {
   //fdI->m_called = 0; fdA->m_called = 0; fdB->m_called = 0; fdO->m_called = 0;
 
   //Permit DiamondIn to use pipes only
-  AutoTransmitPipe<FilterDiamondIn, Decoration<0>> fdIPiped;
+  factory->BroadcastDataOut<FilterDiamondIn>(&typeid(Decoration<0>),false);
   {
     //Verify that Decoration<0> will not be received by fdA or fdB
     std::shared_ptr<AutoPacket> packet;
@@ -1362,47 +1361,45 @@ TEST_F(AutoFilterTest, DISABLED_AutoEdgeTest) {
     diamond.Verify();
   }
 
+  //Connect DiamondIn to DiamondA
+  factory->PipeData<FilterDiamondIn, FilterDiamondA>(&typeid(Decoration<0>));
   {
-    //Connect DiamondIn to DiamondA
-    AutoFilterPipe<FilterDiamondIn, FilterDiamondA, Decoration<0>> fdIAEdge;
-    {
-      ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
-      ++diamond.In_expected;
-      ++diamond.A_expected;
-      diamond.Verify();
-    }
+    ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
+    ++diamond.In_expected;
+    ++diamond.A_expected;
+    diamond.Verify();
+  }
+  //Disconnect DiamondIn from DiamondA
+  factory->PipeData<FilterDiamondIn, FilterDiamondA>(&typeid(Decoration<0>), false);
+
+  //Connect DiamondIn to DiamondB
+  factory->PipeData<FilterDiamondIn, FilterDiamondB>(&typeid(Decoration<0>));
+  {
+    ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
+    ++diamond.In_expected;
+    ++diamond.B_expected;
+    ++diamond.Out_expected;
+    diamond.Verify();
   }
 
+  //Permit DiamondOut to use pipes only
+  factory->BroadcastDataIn<FilterDiamondOut>(nullptr,false); //Applies to ALL data types
   {
-    //Connect DiamondIn to DiamondB
-    AutoFilterPipe<FilterDiamondIn, FilterDiamondB, Decoration<0>> fdIBEdge;
-    {
-      ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
-      ++diamond.In_expected;
-      ++diamond.B_expected;
-      ++diamond.Out_expected;
-      diamond.Verify();
-    }
+    //Verify that DiamondOut will not receive data in the absence of declared pipes
+    ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
+    ++diamond.In_expected;
+    ++diamond.B_expected;
+    diamond.Verify();
+  }
 
-    //Permit DiamondOut to use pipes only
-    AutoReceivePipe<FilterDiamondOut, Decoration<1>> fdOPiped;
-    {
-      //Verify that DiamondOut will not receive data in the absence of declared pipes
-      ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
-      ++diamond.In_expected;
-      ++diamond.B_expected;
-      diamond.Verify();
-    }
-
-    //Connected DiamondB to DiamondOut
-    AutoFilterPipe<FilterDiamondB, FilterDiamondOut, Decoration<1>> fdBOEdge;
-    {
-      //Verify that DiamondOut receives data from the declared pipe
-      ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
-      ++diamond.In_expected;
-      ++diamond.B_expected;
-      ++diamond.Out_expected;
-      diamond.Verify();
-    }
+  //Connected DiamondB to DiamondOut
+  factory->PipeData<FilterDiamondB, FilterDiamondOut>(); //Applies to ALL data types
+  {
+    //Verify that DiamondOut receives data from the declared pipe
+    ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
+    ++diamond.In_expected;
+    ++diamond.B_expected;
+    ++diamond.Out_expected;
+    diamond.Verify();
   }
 }
