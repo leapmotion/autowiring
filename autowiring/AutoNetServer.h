@@ -2,6 +2,10 @@
 #pragma once
 #include "CoreThread.h"
 
+class AutoNetServer;
+
+extern AutoNetServer* NewAutoNetServerImpl(void);
+
 class AutoNetServer:
   public CoreThread
 {
@@ -10,7 +14,9 @@ protected:
 
 public:
   virtual ~AutoNetServer();
-  static AutoNetServer* New(void);
+	static AutoNetServer* New(void) {
+		return NewAutoNetServerImpl();
+	}
 
   /// <summary>
   /// Waits until resume message is sent from the visualizer

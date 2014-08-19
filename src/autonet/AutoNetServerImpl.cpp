@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "AutoNetServerImpl.hpp"
-#include "autowiring.h"
 #include "at_exit.h"
+#include "autowiring.h"
 #include "EventRegistry.h"
 #include "TypeRegistry.h"
 #include <iostream>
@@ -56,6 +56,10 @@ AutoNetServerImpl::AutoNetServerImpl(void) :
 
 AutoNetServerImpl::~AutoNetServerImpl()
 {
+}
+
+AutoNetServer* NewAutoNetServerImpl(void) {
+	return new AutoNetServerImpl;
 }
 
 // CoreThread overrides

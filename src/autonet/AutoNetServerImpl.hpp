@@ -172,3 +172,7 @@ protected:
   const int m_Port; // Port to listen on
 };
 
+/// <summary>
+/// Equivalent to new AutoNetServerImpl
+/// </summary>
+AutoNetServer* NewAutoNetServerImpl(void);
