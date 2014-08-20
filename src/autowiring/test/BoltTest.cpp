@@ -211,6 +211,7 @@ public:
   TargetBoltable() {++numCons;}
   ~TargetBoltable() {++numDest;}
 };
+
 template<class target>
 int TargetBoltable<target>::numCons = 0;
 template<class target>
