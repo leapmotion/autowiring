@@ -36,6 +36,7 @@ public:
       LoopInject<Sigils>(ctxt)...,
       false
     };
+    (void)dummy;
   }
   void ContextCreated(void) override;
 };
