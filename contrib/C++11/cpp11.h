@@ -15,6 +15,7 @@
   #define STL11_ALLOWED 1
 #endif
 
+#define IS_CLANG defined(__clang_major__)
 #define CLANG_CHECK(maj, min) (__clang_major__ == maj && __clang_minor__ >= min || __clang_major__ > maj)
 #define GCC_CHECK(maj, min) (__GNUC__ == maj && __GNUC_MINOR__  >= min || __GNUC__ > maj)
 
@@ -44,6 +45,21 @@
 #endif
 
 /*********************
+* initializer_list header
+*********************/
+#if IS_CLANG
+	#define HAS_INITIALIZER_LIST __has_include(<initializer_list>) && __has_feature(cxx_generalized_initializers)
+	#if HAS_INITIALIZER_LIST
+		#define INITIALIZER_LIST_HEADER <initializer_list>
+	#else
+		#define INITIALIZER_LIST_HEADER <contrib/C++11/empty_file.h>
+	#endif
+#else
+	#define HAS_INITIALIZER_LIST 1
+	#define INITIALIZER_LIST_HEADER <initializer_list>
+#endif
+
+/*********************
  * Check override keyword availability
  *********************/
 #if __cplusplus < 201103 && !defined(_MSC_VER)
@@ -64,6 +80,10 @@
 #if !HAS_STATIC_ASSERT || !STL11_ALLOWED
   // Static assert completely disabled if it's not available
   #define static_assert(...)
+#endif
+
+#if defined(_MSC_VER) || !IS_CLANG
+	#define AUTOWIRE_cxx_override_control 1
 #endif
 
 /*********************
@@ -129,7 +149,7 @@
  * Decide what version of shared_ptr we are going to use
  *********************/
 
-// Nullptr available in VS10
+// Shared pointer available in VS10
 #if _MSC_VER >= 1500
   #define SHARED_PTR_IN_STL 1
 #elif __cplusplus > 199711L || __GXX_EXPERIMENTAL_CXX0X__
@@ -142,6 +162,35 @@
   #define MEMORY_HEADER <contrib/C++11/memory.h>
 #else
   #define MEMORY_HEADER <contrib/C++11/memory_nostl11.h>
+#endif
+
+// Nullptr_t has odd availability
+#ifdef _MSC_VER
+	#define HAS_NULLPTR_T 1
+#elif IS_CLANG
+	#define HAS_NULLPTR_T (STL11_ALLOWED && __has_feature(cxx_nullptr))
+#elif __cplusplus > 199711L
+	#define HAS_NULLPTR_T 1
+#else
+	// No idea--better safe than sorry?
+	#define HAS_NULLPTR_T 0
+#endif
+
+#if ! HAS_NULLPTR_T
+	// Have to provide our own dummy type, then, there's no header for this one
+	namespace std { typedef decltype(nullptr) nullptr_t; }
+#endif
+
+
+/*********************
+ * Specific support for is_constructible
+ *********************/
+#ifdef _MSC_VER
+  #define AUTOWIRE_cxx_is_constructible 1
+#elif IS_CLANG
+  #define AUTOWIRE_cxx_is_constructible STL11_ALLOWED
+#else
+  #define AUTOWIRE_cxx_is_constructible 1
 #endif
 
 /*********************
