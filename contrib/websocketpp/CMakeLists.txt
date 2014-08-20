@@ -50,14 +50,6 @@ set (WEBSOCKETPP_BUILD_ROOT ${CMAKE_CURRENT_BINARY_DIR})
 set (WEBSOCKETPP_BIN ${WEBSOCKETPP_BUILD_ROOT}/bin)
 set (WEBSOCKETPP_LIB ${WEBSOCKETPP_BUILD_ROOT}/lib)
 
-# CMake install step prefix. I assume linux users want the prefix to
-# be the default /usr or /usr/local so this is only adjusted on Windows.
-# - Windows: Build the INSTALL project in your solution file.
-# - Linux/OSX: make install.
-if (MSVC)
-    set (CMAKE_INSTALL_PREFIX "${WEBSOCKETPP_ROOT}/install")
-endif ()
-
 ############  Build customization
 
 # Override from command line "CMake -D<OPTION>=TRUE/FALSE/0/1/ON/OFF"
@@ -226,12 +218,12 @@ print_used_build_config()
 
 export (PACKAGE websocketpp)
 
-configure_file (websocketpp-config.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-config.cmake" @ONLY)
-configure_file (websocketpp-configVersion.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake" @ONLY)
+configure_file (websocketpp-config.cmake.in websocketpp-config.cmake @ONLY)
+configure_file (websocketpp-configVersion.cmake.in websocketpp-configVersion.cmake @ONLY)
 
 # Install the websocketpp-config.cmake and websocketpp-configVersion.cmake
 install (FILES
-  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-config.cmake"
-  "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/websocketpp-configVersion.cmake"
+  "websocketpp-config.cmake"
+  "websocketpp-configVersion.cmake"
   DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
 
