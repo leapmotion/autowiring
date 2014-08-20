@@ -105,6 +105,7 @@ enable_testing()
 include_directories(
   .
   contrib
+  contrib/websocketpp
 )
 add_subdirectory(src)
 add_subdirectory(contrib)
