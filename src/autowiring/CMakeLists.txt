@@ -163,7 +163,7 @@ endif()
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
 
 # Might as well reference the boost libraries to satisfy link dependencies, if we know they exist
-find_package(Boost COMPONENTS thread atomic system chrono date_time QUIET)
+find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
 if(Boost_FOUND)
   target_link_libraries(Autowiring ${Boost_LIBRARIES})
 endif()
