@@ -7,7 +7,7 @@
   #include <thread>
   #define NOMINMAX
 #endif
-	
+
 #ifndef _MSC_VER
   #include <stdlib.h>
 #endif
