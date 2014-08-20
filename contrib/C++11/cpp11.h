@@ -172,8 +172,8 @@
 #elif __cplusplus > 199711L
 	#define HAS_NULLPTR_T 1
 #else
-	// No idea--better safe than sorry?
-	#define HAS_NULLPTR_T 0
+	// No idea--better safe than sorry!
+	#define HAS_NULLPTR_T 1
 #endif
 
 #if ! HAS_NULLPTR_T
