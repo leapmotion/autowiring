@@ -109,9 +109,11 @@ public:
         // TODO: decide if it is best to silently fail here or produce some sort
         //       of warning or exception.
         const std::string& key3 = req.get_header("Sec-WebSocket-Key3");
-        std::copy(key3.c_str(),
-                  key3.c_str()+(std::min)(static_cast<size_t>(8), key3.size()),
-                  &key_final[8]);
+        memcpy(
+          &key_final[8],
+          key3.c_str(),
+          std::min(static_cast<size_t>(8), key3.size())
+        );
 
         res.append_header(
             "Sec-WebSocket-Key3",
@@ -362,11 +364,9 @@ private:
         num = static_cast<uint32_t>(strtoul(digits.c_str(), NULL, 10));
         if (spaces > 0 && num > 0) {
             num = htonl(num/spaces);
-            std::copy(reinterpret_cast<char*>(&num),
-                      reinterpret_cast<char*>(&num)+4,
-                      result);
+            *(uint32_t*) result = num;
         } else {
-            std::fill(result,result+4,0);
+            *(uint32_t*) result = 0;
         }
     }
 
