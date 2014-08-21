@@ -796,15 +796,17 @@ TEST_F(AutoFilterTest, MultiImmediate) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<FilterGen<Decoration<0>, Decoration<1>>> fg;
 
-  auto packet = factory->NewPacket();
+  {
+    auto packet = factory->NewPacket();
+    packet->DecorateImmediate(
+      Decoration<0>(),
+      Decoration<1>()
+    );
 
-  packet->DecorateImmediate(
-    Decoration<0>(),
-    Decoration<1>()
-  );
-
-  // Verify the recipient got called
-  ASSERT_LT(0, fg->m_called) << "Filter not called during multisimultaneous immediate-mode decoration";
+    // Verify the recipient got called
+    ASSERT_EQ(1, fg->m_called) << "Filter not called during multisimultaneous immediate-mode decoration";
+  }
+  ASSERT_EQ(1, fg->m_called) << "Filter called repeatedly";
 }
 
 TEST_F(AutoFilterTest, ImmediateWithPrior) {
@@ -813,13 +815,16 @@ TEST_F(AutoFilterTest, ImmediateWithPrior) {
   // The filter which should get an immediate hit
   AutoRequired<FilterGen<Decoration<0>, Decoration<1>, Decoration<2>>> secondChanceImmed;
 
-  // Add a pre-decoration:
-  auto packet = factory->NewPacket();
-  packet->Decorate(Decoration<0>());
+  {
+    // Add a pre-decoration:
+    auto packet = factory->NewPacket();
+    packet->Decorate(Decoration<0>());
 
-  // Now add immediate decorations to the remainder:
-  packet->DecorateImmediate(Decoration<1>(), Decoration<2>());
-  ASSERT_LT(0, secondChanceImmed->m_called) << "Filter should have been saturated by an immediate call, but was not called as expected";
+    // Now add immediate decorations to the remainder:
+    packet->DecorateImmediate(Decoration<1>(), Decoration<2>());
+    ASSERT_EQ(1, secondChanceImmed->m_called) << "Filter should have been saturated by an immediate call, but was not called as expected";
+  }
+  ASSERT_EQ(1, secondChanceImmed->m_called) << "Filter was called repeatedly";
 }
 
 TEST_F(AutoFilterTest, MultiImmediateComplex) {
@@ -831,19 +836,26 @@ TEST_F(AutoFilterTest, MultiImmediateComplex) {
   AutoRequired<FilterGen<Decoration<0>, Decoration<1>>> fg3;
   AutoRequired<FilterGen<Decoration<0>, Decoration<2>>> fg4;
 
-  auto packet = factory->NewPacket();
+  {
+    // The single immediate-mode decoration call, which should satisfy all but fg4
+    auto packet = factory->NewPacket();
+    packet->DecorateImmediate(
+      Decoration<0>(),
+      Decoration<1>()
+    );
 
-  // The single immediate-mode decoration call, which should satisfy all filters
-  packet->DecorateImmediate(
-    Decoration<0>(),
-    Decoration<1>()
-  );
+    // Validate expected behaviors:
+    ASSERT_EQ(1, fg1->m_called) << "Trivial filter was not called as expected, even though Decoration<0> should have been available";
+    ASSERT_EQ(1, fg2->m_called) << "Filter with an unsatisfied optional argument was not called";
+    ASSERT_EQ(1, fg3->m_called) << "Saturated filter was not called as expected";
+    ASSERT_EQ(0, fg4->m_called) << "Undersaturated filter was called even though it should not have been";
+  }
 
   // Validate expected behaviors:
-  ASSERT_LT(0, fg1->m_called) << "Trivial filter was not called as expected, even though Decoration<0> should have been available";
-  ASSERT_LT(0, fg2->m_called) << "Filter with an unsatisfied optional argument was not called";
-  ASSERT_LT(0, fg3->m_called) << "Saturated filter was not called as expected";
-  ASSERT_EQ(0, fg4->m_called) << "Undersaturated filter was called even though it should not have been";
+  ASSERT_EQ(1, fg1->m_called) << "Trivial filter was called repeatedly";
+  ASSERT_EQ(1, fg2->m_called) << "Filter with an unsatisfied optional argument was called repeatedly";
+  ASSERT_EQ(1, fg3->m_called) << "Saturated filter was not called as expected was called repeatedly";
+  ASSERT_EQ(0, fg4->m_called) << "Undersaturated filter was called";
 }
 
 TEST_F(AutoFilterTest, PostHocSatisfactionAttempt) {
