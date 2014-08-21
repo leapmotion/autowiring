@@ -51,6 +51,7 @@ set(Autowiring_SRCS
   CreationRules.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
+  DataFlow.h
   DeclareAutoFilter.h
   Decompose.h
   DecorationDisposition.h

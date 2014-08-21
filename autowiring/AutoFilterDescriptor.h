@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
+#include "DataFlow.h"
 #include "AutoPacket.h"
 #include "auto_out.h"
 #include "Decompose.h"
@@ -279,19 +280,6 @@ struct AutoFilterDescriptorStub {
       }
     }
   }
-
-  // Mutable properties determined by Auto*Pipe
-  struct DataFlow {
-    // DEFAULT: No data flow
-    DataFlow() : broadcast(false) {}
-
-    // Broadcast Input: AutoFilter accepts data from any input
-    // Broadcast Output: Any AutoFilter can receive this data
-    // Pipelined Input: AutoFilter only accepts data from declared pipes
-    // Pipelined Output: AutoFilter only sends data to declared pipes
-    bool broadcast;
-    std::unordered_set<std::type_index> halfpipes;
-  };
 
 protected:
   // Type of the subscriber itself
