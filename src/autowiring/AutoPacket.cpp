@@ -46,6 +46,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     if (flow.broadcast) {
       // Broadcast source is void
       DecorationDisposition& entry = m_decorations[Index(*pCur->ti, typeid(void))];
+      entry.m_type = pCur->ti;
 
       // Decide what to do with this entry:
       switch(pCur->subscriberType) {
@@ -76,6 +77,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     for (auto halfpipe : flow.halfpipes) {
       // Pipe terminating type is defined by halfpipe
       DecorationDisposition& entry = m_decorations[std::make_tuple(std::type_index(*pCur->ti), halfpipe)];
+      entry.m_type = pCur->ti;
 
       // Decide what to do with this entry:
       switch(pCur->subscriberType) {

@@ -157,6 +157,7 @@ private:
     {
       std::lock_guard<std::mutex> lk(m_lock);
       auto& entry = m_decorations[Index(typeid(T), source)];
+      assert(entry.m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
 
       if(!ready)
         // Memory must be released, the checkout was cancelled
@@ -275,6 +276,8 @@ public:
     {
       std::lock_guard<std::mutex> lk(m_lock);
       auto& entry = m_decorations[Index(typeid(type), source)];
+      entry.m_type = &typeid(type); // Ensure correct type if instantiated here
+
       if (entry.satisfied) {
         std::stringstream ss;
         ss << "Cannot decorate this packet with type " << typeid(*ptr).name()
@@ -289,7 +292,7 @@ public:
       }
       entry.isCheckedOut = true;
       entry.wasCheckedOut = true;
-      m_decorations[Index(typeid(type), source)].m_decoration = ptr;
+      entry.m_decoration = ptr;
     }
 
     return AutoCheckout<T>(
@@ -317,6 +320,7 @@ public:
       // Insert a null entry at this location:
       std::lock_guard<std::mutex> lk(m_lock);
       auto& entry = m_decorations[Index(typeid(T), source)];
+      entry.m_type = &typeid(T); // Ensure correct type if instantiated here
       if(entry.wasCheckedOut)
         throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
 
@@ -368,7 +372,7 @@ public:
   /// </remarks>
   template<class T, class... Ts>
   void DecorateImmediate(const T& immed, const Ts&... immeds) {
-    // TODO: DecorateImmediate can only broadcast
+    // TODO: DecorateImmediate can only broadcast - change this to allow sourced immediate decoration.
     const std::type_info& source = typeid(void);
 
     // None of the inputs may be shared pointers--if any of the inputs are shared pointers, they must be attached
@@ -389,6 +393,7 @@ public:
       std::lock_guard<std::mutex> lk(m_lock);
       for(size_t i = 0; i < s_arity; i++) {
         pTypeSubs[i] = &m_decorations[Index(*s_argTypes[i], source)];
+        pTypeSubs[i]->m_type = s_argTypes[i]; // Ensure correct type if instantiated here
         if(pTypeSubs[i]->wasCheckedOut) {
           std::stringstream ss;
           ss << "Cannot perform immediate decoration with type " << s_argTypes[i]->name()
@@ -419,9 +424,14 @@ public:
     PulseSatisfaction(pTypeSubs, s_arity);
   }
 
+  // TODO: Tests to verify that Snoop and AddRecipient cannot pick up piped data.
+
   /// <summary>
   /// Adds a function to be called as an AutoFilter for this packet only.
   /// </summary>
+  /// <remarks>
+  /// Recipients added in this way cannot receive piped data, since they are anonymous.
+  /// </remarks>
   template<class Ret, class... Args>
   void AddRecipient(std::function<Ret(Args...)> f) {
     InitializeRecipient(
