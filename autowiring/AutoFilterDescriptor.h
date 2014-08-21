@@ -265,7 +265,8 @@ struct AutoFilterDescriptorStub {
     static_assert(CallExtractor<MemFn>::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
     for(auto pArg = m_pArgs; *pArg; pArg++) {
-      m_dataMap[*pArg->ti];
+      // DEFAULT: All data is broadcast
+      m_dataMap[*pArg->ti].broadcast = true;
       switch(pArg->subscriberType) {
       case inTypeRequired:
         m_requiredCount++;
@@ -279,6 +280,19 @@ struct AutoFilterDescriptorStub {
     }
   }
 
+  // Mutable properties determined by Auto*Pipe
+  struct DataFlow {
+    // DEFAULT: No data flow
+    DataFlow() : broadcast(false) {}
+
+    // Broadcast Input: AutoFilter accepts data from any input
+    // Broadcast Output: Any AutoFilter can receive this data
+    // Pipelined Input: AutoFilter only accepts data from declared pipes
+    // Pipelined Output: AutoFilter only sends data to declared pipes
+    bool broadcast;
+    std::unordered_set<std::type_index> halfpipes;
+  };
+
 protected:
   // Type of the subscriber itself
   const std::type_info* m_pType;
@@ -287,17 +301,6 @@ protected:
   // NOTE: This is a reference to a static generated list,
   // therefor it MUST be const and MUST be shallow-copied.
   const AutoFilterDescriptorInput* m_pArgs;
-
-  // Mutable properties determined by Auto*Pipe
-  struct DataFlow {
-    // Default = Broadcast Input: AutoFilter accepts data from any input
-    // Default = Broadcast Output: Any AutoFilter can receive this data
-    // Pipelined Input: AutoFilter only accepts data from declared pipes
-    // Pipelined Output: AutoFilter only sends data to declared pipes
-    DataFlow() : broadcast(true) {}
-    bool broadcast;
-    std::unordered_set<std::type_index> halfpipes;
-  };
   typedef std::unordered_map<std::type_index, DataFlow> FlowMap;
   FlowMap m_dataMap;
 
@@ -351,13 +354,12 @@ public:
   /// Copies the data flow information for the argument type to the flow argument.
   /// </summary>
   /// <returns>true when the argument type is found</returns>
-  bool GetDataFlow(const std::type_info* argType, DataFlow& flow) {
+  DataFlow GetDataFlow(const std::type_info* argType) const {
     FlowMap::const_iterator data = m_dataMap.find(*argType);
     if (data != m_dataMap.end()) {
-      flow = data->second;
-      return true;
+      return data->second;
     }
-    return false;
+    return DataFlow(); //DEFAULT: No flow
   }
 
   /// <returns>A call lambda wrapping the associated subscriber</returns>
