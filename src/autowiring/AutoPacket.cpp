@@ -277,6 +277,17 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   }
 }
 
+DataFlow AutoPacket::GetDataFlow(const DecorationDisposition& entry) {
+  DataFlow flow; //DEFAULT: No broadcast, no pipes
+  if (!entry.m_publisher) {
+    // Broadcast is always true for added or snooping recipients
+    flow.broadcast = true;
+  } else {
+    flow = entry.m_publisher->GetDataFlow(entry.m_type);
+  }
+  return flow;
+}
+
 void AutoPacket::Reset(void) {
   // Initialize all counters:
   std::lock_guard<std::mutex> lk(m_lock);
