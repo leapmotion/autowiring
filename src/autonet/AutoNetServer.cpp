@@ -4,7 +4,6 @@
 
 AutoNetServer::AutoNetServer():
   CoreThread("AutoNetServer")
-{
-}
+{}
 
 AutoNetServer::~AutoNetServer(){}
