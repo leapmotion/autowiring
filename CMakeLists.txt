@@ -120,38 +120,41 @@ endif()
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
 
-# Install autowiring-config.cmake and autowiring-configVersion.cmake
-install (FILES
-  "autowiring-config.cmake"
-  "autowiring-configVersion.cmake"
-  DESTINATION cmake
-  COMPONENT autowiring
-)
+# Only attempt to do anything with cpack if we're being built stand-alone
+if(NOT AUTOWIRING_IS_EMBEDDED)
+  # Install autowiring-config.cmake and autowiring-configVersion.cmake
+  install (FILES
+    "${CMAKE_BINARY_DIR}/contrib/autowiring/autowiring-config.cmake"
+    "${CMAKE_BINARY_DIR}/contrib/autowiring/autowiring-configVersion.cmake"
+    DESTINATION "${CMAKE_SOURCE_DIR}/cmake"
+    COMPONENT autowiring
+  )
 
-# This is the upgrade GUID.  Part of the GUID is derived from the major version number.  Any time
-# the major version number is adjusted, the upgrade GUID changes.  This allows multiple versions
-# of the same product to be installed on a user's system at the same time, but also means that
-# manual uninstallation of older versions is required.
-#
-# For more information on the rationale for this process, see the discussion on semantic versioning
-# found at http://semver.org/
-SET(CPACK_WIX_UPGRADE_GUID "{060E5EDD-229${autowiring_VERSION_MAJOR}-4AD8-BAFA-A303D5696A2D}")
+  # This is the upgrade GUID.  Part of the GUID is derived from the major version number.  Any time
+  # the major version number is adjusted, the upgrade GUID changes.  This allows multiple versions
+  # of the same product to be installed on a user's system at the same time, but also means that
+  # manual uninstallation of older versions is required.
+  #
+  # For more information on the rationale for this process, see the discussion on semantic versioning
+  # found at http://semver.org/
+  SET(CPACK_WIX_UPGRADE_GUID "{060E5EDD-229${autowiring_VERSION_MAJOR}-4AD8-BAFA-A303D5696A2D}")
 
-# Need a custom wix installation template so that we update the CMake package registry correctly
-# Only really needed on Windows; Mac and Linux have pretty good default search behavior, so we
-# leave those alone.
-SET(CPACK_WIX_TEMPLATE autowiring.wxs)
+  # Need a custom wix installation template so that we update the CMake package registry correctly
+  # Only really needed on Windows; Mac and Linux have pretty good default search behavior, so we
+  # leave those alone.
+  SET(CPACK_WIX_TEMPLATE autowiring.wxs)
 
-# Packaging stuff, if an installer is being made insteadINCLUDE(InstallRequiredSystemLibraries)
-SET(CPACK_GENERATOR "WIX")
-SET(CPACK_PACKAGE_VENDOR "Leap Motion")
-SET(CPACK_PACKAGE_CONTACT "cmercenary@gmail.com")
-SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Autowiring")
-SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
-SET(CPACK_PACKAGE_VERSION_MAJOR "${autowiring_VERSION_MAJOR}")
-SET(CPACK_PACKAGE_VERSION_MINOR "${autowiring_VERSION_MINOR}")
-SET(CPACK_PACKAGE_VERSION_PATCH "${autowiring_VERSION_PATCH}")
-SET(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "autowiring")
-SET(CPACK_PACKAGE_INSTALL_DIRECTORY "autowiring ${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}")
-INCLUDE(CPack)
+  # Packaging stuff, if an installer is being made insteadINCLUDE(InstallRequiredSystemLibraries)
+  SET(CPACK_GENERATOR "WIX")
+  SET(CPACK_PACKAGE_VENDOR "Leap Motion")
+  SET(CPACK_PACKAGE_CONTACT "cmercenary@gmail.com")
+  SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+  SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Autowiring")
+  SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt")
+  SET(CPACK_PACKAGE_VERSION_MAJOR "${autowiring_VERSION_MAJOR}")
+  SET(CPACK_PACKAGE_VERSION_MINOR "${autowiring_VERSION_MINOR}")
+  SET(CPACK_PACKAGE_VERSION_PATCH "${autowiring_VERSION_PATCH}")
+  SET(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "autowiring")
+  SET(CPACK_PACKAGE_INSTALL_DIRECTORY "autowiring ${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}")
+  INCLUDE(CPack)
+endif()
