@@ -77,6 +77,7 @@ set(Autowiring_SRCS
   has_autofilter.h
   has_simple_constructor.h
   has_static_new.h
+  hash_tuple.h
   index_tuple.h
   is_any.h
   is_shared_ptr.h
