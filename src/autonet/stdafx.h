@@ -9,6 +9,9 @@
 
 #ifndef _MSC_VER
   #include <stdlib.h>
+#else
+  #define _WEBSOCKETPP_CPP11_CHRONO_
+  #define _WEBSOCKETPP_LOCALTIME_S_
 #endif
 
 // C++11 glue logic, for platforms that have incomplete C++11 support

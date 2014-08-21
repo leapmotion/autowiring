@@ -249,9 +249,7 @@ struct extended_header {
         int offset = copy_payload(payload_size);
 
         // Copy Masking Key
-        uint32_converter temp32;
-        temp32.i = masking_key;
-        std::copy(temp32.c,temp32.c+4,bytes+offset);
+        (int&) bytes[offset] = masking_key;
     }
 
     uint8_t bytes[MAX_EXTENDED_HEADER_LENGTH];
@@ -856,7 +854,7 @@ inline size_t byte_mask_circ(uint8_t * input, uint8_t * output, size_t length,
     size_t prepared_key)
 {
     uint32_converter key;
-    key.i = prepared_key;
+    key.i = (uint32_t)prepared_key;
 
     for (size_t i = 0; i < length; ++i) {
         output[i] = input[i] ^ key.c[i % 4];

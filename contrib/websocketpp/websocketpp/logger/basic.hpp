@@ -132,7 +132,16 @@ private:
     // TODO: find a workaround for this or make this format user settable
     static std::ostream & timestamp(std::ostream & os) {
         std::time_t t = std::time(NULL);
-        std::tm* lt = std::localtime(&t);
+        std::tm* lt;
+
+        #ifdef _WEBSOCKETPP_LOCALTIME_S_
+          std::tm lts;
+          lt = &lts;
+          localtime_s(lt, &t);
+        #else
+          lt = std::localtime(&t);
+        #endif
+
         #ifdef _WEBSOCKETPP_CPP11_CHRONO_
             return os << std::put_time(lt,"%Y-%m-%d %H:%M:%S");
         #else // Falls back to strftime, which requires a temporary copy of the string.
