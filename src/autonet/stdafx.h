@@ -3,7 +3,9 @@
 #include <math.h>
 #include <assert.h>
 #include <cctype>
-#define NOMINMAX
+#ifndef NOMINMAX
+  #define NOMINMAX
+#endif
 
 #ifndef _MSC_VER
   #include <stdlib.h>
