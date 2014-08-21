@@ -49,16 +49,18 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
       entry.m_type = pCur->ti;
 
       // Decide what to do with this entry:
+      // NOTE: Recipients added via AddReceiver can receiver broadcast data,
+      // so it is necessary to decrement the receiver's counters when it is added.
       switch(pCur->subscriberType) {
         case inTypeRequired:
           entry.m_subscribers.push_back(std::make_pair(&satCounter, true));
           if (entry.satisfied)
-            satCounter.Decrement(true);
+            satCounter.Decrement(*pCur->ti, typeid(void), true);
           break;
         case inTypeOptional:
           entry.m_subscribers.push_back(std::make_pair(&satCounter, false));
           if (entry.satisfied)
-            satCounter.Decrement(false);
+            satCounter.Decrement(*pCur->ti, typeid(void), false);
           break;
         case outTypeRef:
         case outTypeRefAutoReady:
@@ -80,6 +82,8 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
       entry.m_type = pCur->ti;
 
       // Decide what to do with this entry:
+      // NOTE: Recipients added via AddReceiver cannot receive piped data,
+      // and subscribers are added before the packet is decorated.
       switch(pCur->subscriberType) {
         case inTypeRequired:
           entry.m_subscribers.push_back(std::make_pair(&satCounter, true));
@@ -193,7 +197,7 @@ void AutoPacket::MarkUnsatisfiable(const std::type_info& info, const std::type_i
         continue;
 
       // Entry is optional, we will call if we're satisfied after decrementing this optional field
-      if(satCounter.first->Decrement(false))
+      if(satCounter.first->Decrement(info, source, false))
         callQueue.push_back(satCounter.first);
     }
   }
@@ -212,12 +216,10 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, const std::type_
       // Trivial return, there's no subscriber to this decoration and so we have nothing to do
       return;
 
-    // TODO: I need to make the subscriber decrement include source information
-
     // Update satisfaction inside of lock
     DecorationDisposition* decoration = &dFind->second;
     for(const auto& satCounter : decoration->m_subscribers)
-      if(satCounter.first->Decrement(satCounter.second))
+      if(satCounter.first->Decrement(info, source, satCounter.second))
         callQueue.push_back(satCounter.first);
   }
 
@@ -227,6 +229,9 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, const std::type_
 }
 
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
+  // TODO: DecorateImmediate can only broadcast - change this to allow sourced immediate decoration.
+  const std::type_info& source = typeid(void);
+
   std::list<SatCounter*> callQueue;
   // First pass, decrement what we can:
   {
@@ -242,8 +247,10 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
           // Deferred calls will be too late.
           !cur->IsDeferred() &&
 
-          // Now do the decrementation, and only proceed if the decremented value is zero
-          !--cur->remaining
+          // Now do the decrementation and proceed even if optional > 0,
+          // since this is the only opportunity to fulfill the arguments
+          (cur->Decrement(*pTypeSubs[i]->m_type, source, true) ||
+           cur->remaining == 0)
         )
           // Finally, queue a call for this type
           callQueue.push_back(cur);
@@ -263,7 +270,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
       for(const auto& satCounter : pTypeSubs[i]->m_subscribers) {
         SatCounter* cur = satCounter.first;
         if (satCounter.second) {
-          ++cur->remaining;
+          cur->Increment(*pTypeSubs[i]->m_type, source, true);
         }
       }
     }

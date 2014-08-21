@@ -34,20 +34,41 @@ struct SatCounter:
     optional = m_optionalCount;
   }
 
-  /// <summary>
-  /// Convenience parity method, increments the specified counter
-  /// </summary>
-  void Increment(bool is_optional) {
-    is_optional ? ++optional : ++remaining;
+  bool IsInput(const std::type_index& data, const std::type_index& source) {
+    auto dataFlow = m_dataMap.find(data);
+    if (dataFlow != m_dataMap.end()) {
+      if (dataFlow->second.broadcast) {
+        if (source == typeid(void)) {
+          return true;
+        }
+      } else {
+        if (dataFlow->second.halfpipes.find(source) != dataFlow->second.halfpipes.end()) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /// <summary>
-  /// Decrements the optional, or mandatory counter based on the selection
+  /// Conditionally decrements AutoFilter argument satisfaction.
   /// </summary>
   /// <returns>True if this decrement yielded satisfaction of all arguments</returns>
-  bool Decrement(bool is_mandatory) {
-    is_mandatory ? --remaining : --optional;
-    return remaining == 0 && optional == 0;
+  bool Decrement(const std::type_index& data, const std::type_index& source, bool is_mandatory) {
+    if (IsInput(data, source)) {
+      is_mandatory ? --remaining : --optional;
+      return remaining == 0 && optional == 0;
+    }
+    return false;
+  }
+
+  /// <summary>
+  /// Conditionally increments AutoFilter argument satisfaction.
+  /// </summary>
+  void Increment(const std::type_index& data, const std::type_index& source, bool is_mandatory) {
+    if (IsInput(data, source)) {
+      is_mandatory ? ++remaining : ++optional;
+    }
   }
 
   /// <summary>
