@@ -103,6 +103,9 @@ struct subscriber_traits<optional_ptr<T>> {
   }
 };
 
+/// <summary>
+/// Output types
+/// </summary>
 template<class T, bool auto_ready>
 struct subscriber_traits<auto_out<T, auto_ready>> {
   typedef T type;
@@ -113,6 +116,9 @@ struct subscriber_traits<auto_out<T, auto_ready>> {
   }
 };
 
+/// <summary>
+/// Dependent type enabling argument
+/// </summary>
 template<>
 struct subscriber_traits<AutoPacket&> {
   typedef AutoPacket type;

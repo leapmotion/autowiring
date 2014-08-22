@@ -125,174 +125,180 @@ AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(const std::type_
 }
 
 void AutoPacketFactory::BroadcastOneDataOut(const std::type_info* nodeType, const std::type_info* dataType, bool enable) {
-  std::lock_guard<std::mutex> guard(m_lock);
+  {
+    std::lock_guard<std::mutex> guard(m_lock);
 
-  // Find and copy the AutoFilterDescriptor instance.
-  AutoFilterDescriptor update = GetTypeDescriptorUnsafe(nodeType);
-  if (!update.GetAutoFilterTypeInfo())
-    return;
+    // Find and copy the AutoFilterDescriptor instance.
+    AutoFilterDescriptor update = GetTypeDescriptorUnsafe(nodeType);
+    if (!update.GetAutoFilterTypeInfo())
+      return;
 
-  const AutoFilterDescriptorInput* argDescriptor = update.GetArgumentType(dataType);
-  if (!argDescriptor ||
-      !argDescriptor->isOutput()) {
-    std::stringstream ss;
-    ss << "Attempted to transmit broadcasts of a type " << dataType->name()
-    << " that is not an output of " << nodeType->name();
-    throw std::runtime_error(ss.str());
+    const AutoFilterDescriptorInput* argDescriptor = update.GetArgumentType(dataType);
+    if (!argDescriptor ||
+        !argDescriptor->isOutput()) {
+      std::stringstream ss;
+      ss << "Attempted to transmit broadcasts of a type " << dataType->name()
+      << " that is not an output of " << nodeType->name();
+      throw std::runtime_error(ss.str());
+    }
+
+    // Extract, modify and insert the broadcast state
+    m_autoFilters.erase(update);
+    update.Broadcast(dataType, enable);
+    m_autoFilters.insert(update);
   }
-
-  // Extract, modify and insert the broadcast state
-  m_autoFilters.erase(update);
-  update.Broadcast(dataType, enable);
-  m_autoFilters.insert(update);
-
   Invalidate();
 }
 
 void AutoPacketFactory::BroadcastAllDataOut(const std::type_info* nodeType, bool enable) {
-  std::lock_guard<std::mutex> guard(m_lock);
+  {
+    std::lock_guard<std::mutex> guard(m_lock);
 
-  // Find and copy the AutoFilterDescriptor instance.
-  AutoFilterDescriptor update = GetTypeDescriptorUnsafe(nodeType);
-  if (!update.GetAutoFilterTypeInfo())
-    return;
+    // Find and copy the AutoFilterDescriptor instance.
+    AutoFilterDescriptor update = GetTypeDescriptorUnsafe(nodeType);
+    if (!update.GetAutoFilterTypeInfo())
+      return;
 
-  // Extract, modify and insert the broadcast state
-  m_autoFilters.erase(update);
-  // All input data types accept broadcasts
-  // NOTE: Iteration is over a static array terminated with nullptr
-  for (const AutoFilterDescriptorInput* pArg = update.GetAutoFilterInput(); *pArg; ++pArg) {
-    if (pArg->isOutput())
-      update.Broadcast(pArg->ti, enable);
+    // Extract, modify and insert the broadcast state
+    m_autoFilters.erase(update);
+    // All input data types accept broadcasts
+    // NOTE: Iteration is over a static array terminated with nullptr
+    for (const AutoFilterDescriptorInput* pArg = update.GetAutoFilterInput(); *pArg; ++pArg) {
+      if (pArg->isOutput())
+        update.Broadcast(pArg->ti, enable);
+    }
+    m_autoFilters.insert(update);
   }
-  m_autoFilters.insert(update);
-
   Invalidate();
 }
 
 void AutoPacketFactory::BroadcastOneDataIn(const std::type_info* nodeType, const std::type_info* dataType, bool enable) {
-  std::lock_guard<std::mutex> guard(m_lock);
+  {
+    std::lock_guard<std::mutex> guard(m_lock);
 
-  // Find and copy the AutoFilterDescriptor instance.
-  AutoFilterDescriptor update = GetTypeDescriptorUnsafe(nodeType);
-  if (!update.GetAutoFilterTypeInfo())
-    return;
+    // Find and copy the AutoFilterDescriptor instance.
+    AutoFilterDescriptor update = GetTypeDescriptorUnsafe(nodeType);
+    if (!update.GetAutoFilterTypeInfo())
+      return;
 
-  const AutoFilterDescriptorInput* argDescriptor = update.GetArgumentType(dataType);
-  if (!argDescriptor ||
-      !argDescriptor->isInput()) {
-    std::stringstream ss;
-    ss << "Attempted to receive broadcasts of a type " << dataType->name()
-    << " that is not an input to " << nodeType->name();
-    throw std::runtime_error(ss.str());
+    const AutoFilterDescriptorInput* argDescriptor = update.GetArgumentType(dataType);
+    if (!argDescriptor ||
+        !argDescriptor->isInput()) {
+      std::stringstream ss;
+      ss << "Attempted to receive broadcasts of a type " << dataType->name()
+      << " that is not an input to " << nodeType->name();
+      throw std::runtime_error(ss.str());
+    }
+
+    // Extract, modify and insert the broadcast state
+    m_autoFilters.erase(update);
+    update.Broadcast(dataType, enable);
+    m_autoFilters.insert(update);
   }
-
-  // Extract, modify and insert the broadcast state
-  m_autoFilters.erase(update);
-  update.Broadcast(dataType, enable);
-  m_autoFilters.insert(update);
-
   Invalidate();
 }
 
 void AutoPacketFactory::BroadcastAllDataIn(const std::type_info* nodeType, bool enable) {
-  std::lock_guard<std::mutex> guard(m_lock);
+  {
+    std::lock_guard<std::mutex> guard(m_lock);
 
-  // Find and copy the AutoFilterDescriptor instance.
-  AutoFilterDescriptor update = GetTypeDescriptorUnsafe(nodeType);
-  if (!update.GetAutoFilterTypeInfo())
-    return;
+    // Find and copy the AutoFilterDescriptor instance.
+    AutoFilterDescriptor update = GetTypeDescriptorUnsafe(nodeType);
+    if (!update.GetAutoFilterTypeInfo())
+      return;
 
-  // Extract, modify and insert the broadcast state
-  m_autoFilters.erase(update);
-  // All input data types accept broadcasts
-  // NOTE: Iteration is over a static array terminated with nullptr
-  for (const AutoFilterDescriptorInput* pArg = update.GetAutoFilterInput(); *pArg; ++pArg) {
-    if (pArg->isInput())
-      update.Broadcast(pArg->ti, enable);
+    // Extract, modify and insert the broadcast state
+    m_autoFilters.erase(update);
+    // All input data types accept broadcasts
+    // NOTE: Iteration is over a static array terminated with nullptr
+    for (const AutoFilterDescriptorInput* pArg = update.GetAutoFilterInput(); *pArg; ++pArg) {
+      if (pArg->isInput())
+        update.Broadcast(pArg->ti, enable);
+    }
+    m_autoFilters.insert(update);
   }
-  m_autoFilters.insert(update);
-
   Invalidate();
 }
 
 void AutoPacketFactory::PipeOneData(const std::type_info* nodeOutType, const std::type_info* nodeInType, const std::type_info* dataType, bool enable) {
-  std::lock_guard<std::mutex> guard(m_lock);
+  {
+    std::lock_guard<std::mutex> guard(m_lock);
 
-  // Find and copy both AutoFilterDescriptor instances.
-  AutoFilterDescriptor updateOut = GetTypeDescriptorUnsafe(nodeOutType);
-  AutoFilterDescriptor updateIn = GetTypeDescriptorUnsafe(nodeInType);
-  if (!updateOut.GetAutoFilterTypeInfo() ||
-      !updateIn.GetAutoFilterTypeInfo())
-    return;
+    // Find and copy both AutoFilterDescriptor instances.
+    AutoFilterDescriptor updateOut = GetTypeDescriptorUnsafe(nodeOutType);
+    AutoFilterDescriptor updateIn = GetTypeDescriptorUnsafe(nodeInType);
+    if (!updateOut.GetAutoFilterTypeInfo() ||
+        !updateIn.GetAutoFilterTypeInfo())
+      return;
 
-  // Find both data types
-  const AutoFilterDescriptorInput* argOutDescriptor = updateOut.GetArgumentType(dataType);
-  const AutoFilterDescriptorInput* argInDescriptor = updateIn.GetArgumentType(dataType);
-  if (!argInDescriptor ||
-      !argOutDescriptor) {
-    std::stringstream ss;
-    ss << "Attempted to pipe data of a type " << dataType->name()
-    << " that is not an an argument of both ouput " << nodeOutType->name()
-    << " and input " << nodeInType->name();
-    throw std::runtime_error(ss.str());
+    // Find both data types
+    const AutoFilterDescriptorInput* argOutDescriptor = updateOut.GetArgumentType(dataType);
+    const AutoFilterDescriptorInput* argInDescriptor = updateIn.GetArgumentType(dataType);
+    if (!argInDescriptor ||
+        !argOutDescriptor) {
+      std::stringstream ss;
+      ss << "Attempted to pipe data of a type " << dataType->name()
+      << " that is not an an argument of both ouput " << nodeOutType->name()
+      << " and input " << nodeInType->name();
+      throw std::runtime_error(ss.str());
+    }
+
+    // Verify IO compatability
+    if (!argOutDescriptor->isOutput() ||
+        !argInDescriptor->isInput()) {
+      std::stringstream ss;
+      ss << "Attempted to pipe data of a type " << dataType->name()
+      << " with incompatible orientations from output " << nodeOutType->name()
+      << " to input " << nodeInType->name();
+      throw std::runtime_error(ss.str());
+    }
+
+    // Extract, modify and insert the half-pipes
+    m_autoFilters.erase(updateOut);
+    m_autoFilters.erase(updateIn);
+    updateOut.HalfPipe(dataType, nodeInType, enable);
+    updateIn.HalfPipe(dataType, nodeOutType, enable);
+    m_autoFilters.insert(updateOut);
+    m_autoFilters.insert(updateIn);
   }
-
-  // Verify IO compatability
-  if (!argOutDescriptor->isOutput() ||
-      !argInDescriptor->isInput()) {
-    std::stringstream ss;
-    ss << "Attempted to pipe data of a type " << dataType->name()
-    << " with incompatible orientations from output " << nodeOutType->name()
-    << " to input " << nodeInType->name();
-    throw std::runtime_error(ss.str());
-  }
-
-  // Extract, modify and insert the half-pipes
-  m_autoFilters.erase(updateOut);
-  m_autoFilters.erase(updateIn);
-  updateOut.HalfPipe(dataType, nodeInType, enable);
-  updateIn.HalfPipe(dataType, nodeOutType, enable);
-  m_autoFilters.insert(updateOut);
-  m_autoFilters.insert(updateIn);
-
   Invalidate();
 }
 
 void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std::type_info* nodeInType, bool enable) {
-  std::lock_guard<std::mutex> guard(m_lock);
+  {
+    std::lock_guard<std::mutex> guard(m_lock);
 
-  // Find and copy both AutoFilterDescriptor instances.
-  AutoFilterDescriptor updateOut = GetTypeDescriptorUnsafe(nodeOutType);
-  AutoFilterDescriptor updateIn = GetTypeDescriptorUnsafe(nodeInType);
-  if (!updateOut.GetAutoFilterTypeInfo() ||
-      !updateIn.GetAutoFilterTypeInfo())
-    return;
+    // Find and copy both AutoFilterDescriptor instances.
+    AutoFilterDescriptor updateOut = GetTypeDescriptorUnsafe(nodeOutType);
+    AutoFilterDescriptor updateIn = GetTypeDescriptorUnsafe(nodeInType);
+    if (!updateOut.GetAutoFilterTypeInfo() ||
+        !updateIn.GetAutoFilterTypeInfo())
+      return;
 
-  // List all correctly oriented arguments
-  std::unordered_set<const std::type_info*> dataOutTypes;
-  dataOutTypes.reserve(updateOut.GetArity());
-  for (const AutoFilterDescriptorInput* pArg = updateOut.GetAutoFilterInput(); *pArg; ++pArg) {
-    if (pArg->isOutput())
-      dataOutTypes.insert(pArg->ti);
+    // List all correctly oriented arguments
+    std::unordered_set<const std::type_info*> dataOutTypes;
+    dataOutTypes.reserve(updateOut.GetArity());
+    for (const AutoFilterDescriptorInput* pArg = updateOut.GetAutoFilterInput(); *pArg; ++pArg) {
+      if (pArg->isOutput())
+        dataOutTypes.insert(pArg->ti);
+    }
+    std::unordered_set<const std::type_info*> dataInTypes;
+    dataInTypes.reserve(updateIn.GetArity());
+    for (const AutoFilterDescriptorInput* pArg = updateIn.GetAutoFilterInput(); *pArg; ++pArg) {
+      if (pArg->isInput())
+        if (dataOutTypes.find(pArg->ti) != dataOutTypes.end())
+          dataInTypes.insert(pArg->ti);
+    }
+
+    // Extract, modify and insert the half-pipes
+    m_autoFilters.erase(updateOut);
+    m_autoFilters.erase(updateIn);
+    for (const std::type_info* dataType : dataInTypes) {
+      updateOut.HalfPipe(dataType, nodeInType, enable);
+      updateIn.HalfPipe(dataType, nodeOutType, enable);
+    }
+    m_autoFilters.insert(updateOut);
+    m_autoFilters.insert(updateIn);
   }
-  std::unordered_set<const std::type_info*> dataInTypes;
-  dataInTypes.reserve(updateIn.GetArity());
-  for (const AutoFilterDescriptorInput* pArg = updateIn.GetAutoFilterInput(); *pArg; ++pArg) {
-    if (pArg->isInput())
-      if (dataOutTypes.find(pArg->ti) != dataOutTypes.end())
-        dataInTypes.insert(pArg->ti);
-  }
-
-  // Extract, modify and insert the half-pipes
-  m_autoFilters.erase(updateOut);
-  m_autoFilters.erase(updateIn);
-  for (const std::type_info* dataType : dataInTypes) {
-    updateOut.HalfPipe(dataType, nodeInType, enable);
-    updateIn.HalfPipe(dataType, nodeOutType, enable);
-  }
-  m_autoFilters.insert(updateOut);
-  m_autoFilters.insert(updateIn);
-
   Invalidate();
 }

@@ -1277,7 +1277,7 @@ class FilterDiamondIn:
 public:
   int m_called;
   FilterDiamondIn(void) : m_called(0) {}
-  void AutoFilter(auto_out<Decoration<0>>& init) {
+  void AutoFilter(auto_out<Decoration<0>> init) {
     ++m_called;
     init->i = 1;
   }
@@ -1289,7 +1289,7 @@ class FilterDiamondA:
 public:
   int m_called;
   FilterDiamondA(void) : m_called(0) {}
-  void AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>>& out) {
+  void AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>> out) {
     ++m_called;
     out->i = 2;
   }
@@ -1301,7 +1301,7 @@ class FilterDiamondB:
 public:
   int m_called;
   FilterDiamondB(void) : m_called(0) {}
-  void AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>>& out) {
+  void AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>> out) {
     ++m_called;
     out->i = 3;
   }
