@@ -130,7 +130,7 @@ protected:
   // This is a list of concrete types, indexed by the true type of each element.
   std::vector<AnySharedPointer> m_concreteTypes;
 
-  // This is a memoization map used to memoize any already-detected interfaces.  The map
+  // This is a memoization map used to memoize any already-detected interfaces.
   mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;
 
   // All known context members, exception filters:
@@ -871,6 +871,10 @@ public:
   /// </summary>
   template<class T>
   bool Autowire(AutowirableSlot<T>& slot) {
+    // FIXME: This is subject to a race condition!
+    // If the desired member is added between FindByTypeRecursive
+    // and AddDeferred it will never be wired!
+
     if(FindByTypeRecursive(slot))
       return true;
 
@@ -883,7 +887,8 @@ public:
   /// Adds a post-attachment listener in this context for a particular autowired member
   /// </summary>
   /// <returns>
-  /// A pointer to a deferrable autowiring function which the caller may safely ignore if it's not needed
+  /// A pointer to a deferrable autowiring function which the caller may safely ignore if it's not needed.
+  /// Returns nullptr if the call was made immediately.
   /// </returns>
   /// <remarks>
   /// This method will succeed if slot was constructed in this context or any parent context.  If the
@@ -902,6 +907,16 @@ public:
   /// </remarks>
   template<class T, class Fn>
   const AutowirableSlotFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
+    /// GOAL: Check for satisfaction, return if satisfied, defer if not.
+    /// PROBLEM: UpdateDeferredElements only applies to NEW members.
+    /// PROBLEM: This needs to occur in a single atomic sequence.
+
+    std::shared_ptr<T> slot;
+    if (FindByTypeRecursive(slot)) {
+      listener();
+      return nullptr;
+    }
+
     auto retVal = MakeAutowirableSlotFn<T>(
       shared_from_this(),
       std::forward<Fn>(listener)

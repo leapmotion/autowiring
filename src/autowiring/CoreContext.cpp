@@ -481,6 +481,9 @@ void CoreContext::BuildCurrentState(void) {
 }
 
 void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable) {
+  if (!pDeferrable)
+    return;
+
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   auto q = m_typeMemos.find(pDeferrable->GetType());
   if(q == m_typeMemos.end())
