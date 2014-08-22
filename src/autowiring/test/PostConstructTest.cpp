@@ -264,10 +264,9 @@ TEST_F(PostConstructTest, ContextNotifyWhenAutowired) {
   
   // Now we'd like to be notified when SimpleObject gets added:
   ctxt->NotifyWhenAutowired<SimpleObject>(
-    [called] {
+  [called] {
       *called = true;
-    }
-  );
+  });
 
   // Should only be two uses, at this point, of the capture of the above lambda:
   EXPECT_EQ(2L, called.use_count()) << "Unexpected number of references held in a capture lambda";
@@ -277,6 +276,26 @@ TEST_F(PostConstructTest, ContextNotifyWhenAutowired) {
 
   // Insert the SimpleObject, see if the lambda got hit:
   AutoRequired<SimpleObject>();
+  ASSERT_TRUE(*called) << "Context-wide autowiring notification was not hit as expected when a matching type was injected into a context";
+
+  // Our shared pointer should be unique by this point, because the lambda should have been destroyed
+  ASSERT_TRUE(called.unique()) << "Autowiring notification lambda was not properly cleaned up";
+}
+
+TEST_F(PostConstructTest, ContextNotifyWhenAutowiredPostConstruct) {
+  auto called = std::make_shared<bool>(false);
+  AutoCurrentContext ctxt;
+
+  // Create an object that will satisfy subsequent notification call:
+  AutoRequired<SimpleObject> sobj;
+
+  // Notification should be immediate:
+  ctxt->NotifyWhenAutowired<SimpleObject>(
+  [called] {
+      *called = true;
+  });
+
+  // Insert the SimpleObject, see if the lambda got hit:
   ASSERT_TRUE(*called) << "Context-wide autowiring notification was not hit as expected when a matching type was injected into a context";
 
   // Our shared pointer should be unique by this point, because the lambda should have been destroyed
