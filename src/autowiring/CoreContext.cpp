@@ -284,18 +284,23 @@ void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   m_typeMemos[type].m_value = reference;
 }
 
-void CoreContext::FindByTypeRecursiveUnsafe(AnySharedPointer& reference) const {
+void CoreContext::FindByTypeRecursiveUnsafe(AnySharedPointer&& reference, const std::function<void(AnySharedPointer&)>& terminal) const {
   FindByTypeUnsafe(reference);
-  if (reference)
+  if (reference) {
     // Type satisfied in current context
+    terminal(reference);
     return;
+  }
 
   if (m_pParent) {
+    std::lock_guard<std::mutex> guard(m_pParent->m_stateBlock->m_lock);
     // Recurse while holding lock on this context
     // NOTE: Deadlock is only possible if there is a simultaneous descending locked chain,
     // but by definition of contexts this is forbidden.
-    std::lock_guard<std::mutex> guard(m_pParent->m_stateBlock->m_lock);
-    m_pParent->FindByTypeRecursiveUnsafe(reference);
+    m_pParent->FindByTypeRecursiveUnsafe(std::move(reference), terminal);
+  } else {
+    // Call function while holding all locks through global scope.
+    terminal(reference);
   }
 }
 

@@ -25,8 +25,9 @@
 #include "TypeUnifier.h"
 
 #include <list>
-#include TYPE_INDEX_HEADER
 #include MEMORY_HEADER
+#include FUNCTIONAL_HEADER
+#include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 #include STL_UNORDERED_SET
 
@@ -370,7 +371,10 @@ protected:
   /// <summary>
   /// Recursive locking for Autowire satisfaction search
   /// </summary>
-  void FindByTypeRecursiveUnsafe(AnySharedPointer& reference) const;
+  /// <remarks>
+  /// The argument &&reference enables implicit type from AnySharedPointerT<T>.
+  /// </remarks>
+  void FindByTypeRecursiveUnsafe(AnySharedPointer&& reference, const std::function<void(AnySharedPointer&)>& terminal) const;
 
   /// <summary>
   /// Returns or constructs a new AutoPacketFactory instance
@@ -861,12 +865,13 @@ public:
   /// </summary>
   template<class T>
   bool FindByTypeRecursive(std::shared_ptr<T>& slot) {
-    AnySharedPointerT<T> reference;
     {
       std::lock_guard<std::mutex> guard(m_stateBlock->m_lock);
-      FindByTypeRecursiveUnsafe(reference);
+      FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
+      [&slot](AnySharedPointer& reference){
+        slot = reference.slot()->template as<T>();
+      });
     }
-    slot = reference.slot()->template as<T>();
     return static_cast<bool>(slot);
   }
 
@@ -875,15 +880,16 @@ public:
   /// </summary>
   template<class T>
   bool Autowire(AutowirableSlot<T>& slot) {
-    AnySharedPointerT<T> reference;
     {
       std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-      FindByTypeRecursiveUnsafe(reference);
-      if (!slot) {
-        AddDeferredUnsafe(AnySharedPointerT<T>(), &slot);
-      }
+      FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
+      [this, &slot](AnySharedPointer& reference){
+        slot = reference.slot()->template as<T>();
+        if (!slot) {
+          AddDeferredUnsafe(AnySharedPointerT<T>(), &slot);
+        }
+      });
     }
-    slot = reference.slot()->template as<T>();
     return static_cast<bool>(slot);
   }
 
@@ -912,19 +918,20 @@ public:
   template<class T, class Fn>
   const AutowirableSlotFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
     AutowirableSlotFn<T, Fn>* retVal = nullptr;
-    AnySharedPointerT<T> asp;
     {
       std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-      FindByTypeRecursiveUnsafe(asp);
-      if (asp) {
-        listener();
-      } else {
-        retVal = MakeAutowirableSlotFn<T>(
-          shared_from_this(),
-          std::forward<Fn>(listener)
-        );
-        AddDeferredUnsafe(asp, retVal);
-      }
+      FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
+      [this, &listener, &retVal](AnySharedPointer& reference) {
+        if (reference) {
+          listener();
+        } else {
+          retVal = MakeAutowirableSlotFn<T>(
+            shared_from_this(),
+            std::forward<Fn>(listener)
+          );
+          AddDeferredUnsafe(reference, retVal);
+        }
+      });
     }
     return retVal;
   }
