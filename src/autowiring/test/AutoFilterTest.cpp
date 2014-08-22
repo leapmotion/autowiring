@@ -1358,64 +1358,41 @@ TEST_F(AutoFilterTest, DISABLED_AutoEdgeTest) {
   AutoRequired<AutoPacketFactory> factory;
   DiamondFilter diamond;
 
-  //Demonstrate repeated decoration error
-  //ASSERT_THROW(factory->NewPacket(), std::runtime_error e) << "Multiple decoration yielded no exception";
-  //fdI->m_called = 0; fdA->m_called = 0; fdB->m_called = 0; fdO->m_called = 0;
+  //Diamond configuration will throw on creation of the packet,
+  //but would have failed during the decoration process.
+  ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "Failed to anticipate broadcast collision";
+  diamond.Reset();
 
-  //Permit DiamondIn to use pipes only
+  //Incorrect pipe declarations will throw
+  ASSERT_THROW(factory->BroadcastDataIn<FilterDiamondIn>(&typeid(Decoration<1>),false), std::runtime_error) << "Failed to throw missing type";
+  ASSERT_THROW(factory->BroadcastDataIn<FilterDiamondA>(&typeid(Decoration<1>),false), std::runtime_error) << "Failed to throw incorrect orientation";
+
+  //Permit DiamondA to use pipes only, which will prevent data collision
+  factory->BroadcastDataOut<FilterDiamondA>(&typeid(Decoration<1>),false);
+  ASSERT_NO_THROW(factory->NewPacket()) << "Incorrect data collision";
+  ++diamond.In_expected;
+  ++diamond.B_expected;
+  ++diamond.Out_expected;
+  diamond.Verify();
+  diamond.Reset();
+
+  //Permit DiamondIn to use pipes only, which will prevent data propagation
   factory->BroadcastDataOut<FilterDiamondIn>(&typeid(Decoration<0>),false);
-  {
-    //Verify that Decoration<0> will not be received by fdA or fdB
-    std::shared_ptr<AutoPacket> packet;
-    ASSERT_NO_THROW(packet = factory->NewPacket()) << "Multiple decoration yielded no exception";
-    ++diamond.In_expected;
-    diamond.Verify();
-
-    //Verify that DiamondOut will accept data from any source
-    packet->Decorate(Decoration<1>());
-    ++diamond.Out_expected;
-    diamond.Verify();
-  }
+  factory->NewPacket();
+  ++diamond.In_expected;
+  diamond.Verify();
+  diamond.Reset();
 
   //Connect DiamondIn to DiamondA
   factory->PipeData<FilterDiamondIn, FilterDiamondA>(&typeid(Decoration<0>));
-  {
-    ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
-    ++diamond.In_expected;
-    ++diamond.A_expected;
-    diamond.Verify();
-  }
-  //Disconnect DiamondIn from DiamondA
-  factory->PipeData<FilterDiamondIn, FilterDiamondA>(&typeid(Decoration<0>), false);
+  factory->NewPacket();
+  ++diamond.In_expected;
+  ++diamond.A_expected;
+  diamond.Verify();
+  diamond.Reset();
 
-  //Connect DiamondIn to DiamondB
-  factory->PipeData<FilterDiamondIn, FilterDiamondB>(&typeid(Decoration<0>));
-  {
-    ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
-    ++diamond.In_expected;
-    ++diamond.B_expected;
-    ++diamond.Out_expected;
-    diamond.Verify();
-  }
-
-  //Permit DiamondOut to use pipes only
-  factory->BroadcastDataIn<FilterDiamondOut>(nullptr,false); //Applies to ALL data types
-  {
-    //Verify that DiamondOut will not receive data in the absence of declared pipes
-    ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
-    ++diamond.In_expected;
-    ++diamond.B_expected;
-    diamond.Verify();
-  }
-
-  //Connected DiamondB to DiamondOut
-  factory->PipeData<FilterDiamondB, FilterDiamondOut>(); //Applies to ALL data types
-  {
-    //Verify that DiamondOut receives data from the declared pipe
-    ASSERT_NO_THROW(factory->NewPacket()) << "Multiple decoration yielded no exception";
-    ++diamond.In_expected;
-    ++diamond.B_expected;
-    ++diamond.Out_expected;
-    diamond.Verify();
-  }
+  //Connect DiamondA to DiamondOut, which will cause a collision
+  factory->PipeData<FilterDiamondA, FilterDiamondOut>(); //Pipe all correctly oriented types
+  ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "Data failed to collide";
+  diamond.Reset();
 }
