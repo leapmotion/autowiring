@@ -52,3 +52,25 @@ TEST_F(AutoConstructTest, CanConstructRvalueCtor) {
 
   ASSERT_TRUE(originalPtr.unique()) << "Memory leak detected due to incorrect forwarding of a unique pointer";
 }
+
+class ClassWithAutoInit {
+public:
+  ClassWithAutoInit(void) :
+    m_constructed(true),
+    m_postConstructed(false)
+  {}
+
+  void AutoInit(void) {
+    ASSERT_TRUE(m_constructed) << "A postconstruct routine was called BEFORE the corresponding constructor";
+    m_postConstructed = true;
+  }
+
+  bool m_constructed;
+  bool m_postConstructed;
+};
+
+TEST_F(AutoConstructTest, PostConstructGetsCalled) {
+  AutoRequired<ClassWithAutoInit> cwai;
+  ASSERT_TRUE(cwai->m_constructed) << "Trivial constructor call was not made as expected";
+  ASSERT_TRUE(cwai->m_postConstructed) << "Auto-initialization routine was not called on an initializable type";
+}
