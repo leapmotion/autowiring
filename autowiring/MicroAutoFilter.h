@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include "is_auto_filter.h"
+#include "is_autofilter.h"
 #include "Deferred.h"
 
 /// <summary>
@@ -14,7 +14,7 @@
 template<class Ret, class... Args>
 struct MicroAutoFilter {
   // This case pertains only when the return value is not recognized
-  static_assert(is_auto_filter_return<Ret>::value,
+  static_assert(is_autofilter_return<Ret>::value,
                 "The return is not an allowed type for AutoFilter methods");
 };
 template<class... Args>

@@ -82,7 +82,7 @@ set(Autowiring_SRCS
   index_tuple.h
   is_any.h
   is_shared_ptr.h
-  is_auto_filter.h
+  is_autofilter.h
   InterlockedExchange.h
   InvokeRelay.h
   atomic_object.h
