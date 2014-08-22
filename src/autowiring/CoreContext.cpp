@@ -4,7 +4,6 @@
 #include "AutoInjectable.h"
 #include "AutoPacketFactory.h"
 #include "BoltBase.h"
-#include "CoreContextStateBlock.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
 #include "JunctionBox.h"
@@ -283,6 +282,21 @@ void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
 
   // This entry was not formerly memoized.  Memoize unconditionally.
   m_typeMemos[type].m_value = reference;
+}
+
+void CoreContext::FindByTypeRecursiveUnsafe(AnySharedPointer& reference) const {
+  FindByTypeUnsafe(reference);
+  if (reference)
+    // Type satisfied in current context
+    return;
+
+  if (m_pParent) {
+    // Recurse while holding lock on this context
+    // NOTE: Deadlock is only possible if there is a simultaneous descending locked chain,
+    // but by definition of contexts this is forbidden.
+    std::lock_guard<std::mutex> guard(m_pParent->m_stateBlock->m_lock);
+    m_pParent->FindByTypeRecursiveUnsafe(reference);
+  }
 }
 
 std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
@@ -767,10 +781,7 @@ std::shared_ptr<AutoPacketFactory> CoreContext::GetPacketFactory(void) {
   return pf;
 }
 
-void CoreContext::AddDeferred(const AnySharedPointer& reference, DeferrableAutowiring* deferrable)
-{
-  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-
+void CoreContext::AddDeferredUnsafe(const AnySharedPointer& reference, DeferrableAutowiring* deferrable) {
   // Determine whether a type memo exists right now for the thing we're trying to defer.  If it doesn't
   // exist, we need to inject one in order to allow deferred satisfaction to know what kind of type we
   // are trying to satisfy at this point.
