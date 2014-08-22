@@ -4,7 +4,6 @@
 #include "AutoInjectable.h"
 #include "AutoPacketFactory.h"
 #include "BoltBase.h"
-#include "CoreContextStateBlock.h"
 #include "CoreThread.h"
 #include "GlobalCoreContext.h"
 #include "JunctionBox.h"
@@ -285,6 +284,26 @@ void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   m_typeMemos[type].m_value = reference;
 }
 
+void CoreContext::FindByTypeRecursiveUnsafe(AnySharedPointer&& reference, const std::function<void(AnySharedPointer&)>& terminal) const {
+  FindByTypeUnsafe(reference);
+  if (reference) {
+    // Type satisfied in current context
+    terminal(reference);
+    return;
+  }
+
+  if (m_pParent) {
+    std::lock_guard<std::mutex> guard(m_pParent->m_stateBlock->m_lock);
+    // Recurse while holding lock on this context
+    // NOTE: Deadlock is only possible if there is a simultaneous descending locked chain,
+    // but by definition of contexts this is forbidden.
+    m_pParent->FindByTypeRecursiveUnsafe(std::move(reference), terminal);
+  } else {
+    // Call function while holding all locks through global scope.
+    terminal(reference);
+  }
+}
+
 std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
   return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GlobalCoreContext::Get());
 }
@@ -481,6 +500,9 @@ void CoreContext::BuildCurrentState(void) {
 }
 
 void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable) {
+  if (!pDeferrable)
+    return;
+
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   auto q = m_typeMemos.find(pDeferrable->GetType());
   if(q == m_typeMemos.end())
@@ -764,10 +786,7 @@ std::shared_ptr<AutoPacketFactory> CoreContext::GetPacketFactory(void) {
   return pf;
 }
 
-void CoreContext::AddDeferred(const AnySharedPointer& reference, DeferrableAutowiring* deferrable)
-{
-  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-
+void CoreContext::AddDeferredUnsafe(const AnySharedPointer& reference, DeferrableAutowiring* deferrable) {
   // Determine whether a type memo exists right now for the thing we're trying to defer.  If it doesn't
   // exist, we need to inject one in order to allow deferred satisfaction to know what kind of type we
   // are trying to satisfy at this point.
