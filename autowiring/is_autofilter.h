@@ -49,9 +49,15 @@ struct is_optional_ptr<optional_ptr<Arg>> :
  const T*& -> OPTIONAL INPUT (nullptr initial state indicates absence)
  T*& -> OPTIONAL OUTPUT (initialized to nullptr, nullptr final state indicates absence)
 
+ TODO: It is desireable to have the optional output drawn from an object pool.
+ Therefore it is necessary create something like a const_shared_ptr that inherits from
+ shared_ptr but provides only const references.
+ const_shared_ptr<T>& -> OPTIONAL INPUT (nullptr initial state indicates absence)
+ shared_ptr<T>& -> OPTIONAL OUTPUT (initialized to nullptr, nullptr final state indicates absence)
+
  Extensions to Dependent Types are always satisfied by the current AutoPacket:
- const AutoPacket& -> Dependent Sum Type (Allows arbitrary extractions)
- AutoPacket& -> Dependent Function Type (Allows arbitrary decorations, also extractions)
+ const AutoPacket& -> Called as first step of finalize, if other arguments are present
+ AutoPacket& -> Called initially, or when other arguments are present
 
  Extensions to Split & Merge arguments are satisfied by dependent packets:
  array_type<shared_ptr<AutoPacket, MoveToConstArray>>& -> Split Node = OUTPUT (called with empty array)
