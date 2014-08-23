@@ -295,7 +295,7 @@ void CoreContext::FindByTypeRecursiveUnsafe(AnySharedPointer&& reference, const 
   if (m_pParent) {
     std::lock_guard<std::mutex> guard(m_pParent->m_stateBlock->m_lock);
     // Recurse while holding lock on this context
-    // NOTE: Deadlock is only possible if there is a simultaneous descending locked chain,
+    // NOTE: Racing Deadlock is only possible if there is a simultaneous descending locked chain,
     // but by definition of contexts this is forbidden.
     m_pParent->FindByTypeRecursiveUnsafe(std::move(reference), terminal);
   } else {
