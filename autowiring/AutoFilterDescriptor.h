@@ -397,10 +397,11 @@ public:
   /// <param="dataType">specifies the data type (input or output) to broadcast</param>
   /// <param="enable">when false disables broadcasting</param>
   void Broadcast(const std::type_info* dataType, bool enable = true) {
-    FlowMap::iterator flow = m_dataMap.find(*dataType);
-    if (flow == m_dataMap.end())
+    FlowMap::iterator flowFind = m_dataMap.find(*dataType);
+    if (flowFind == m_dataMap.end())
       return;
-    flow->second.broadcast = enable;
+    DataFlow& flow = flowFind->second;
+    flow.broadcast = enable;
   }
 
   /// <summary>
@@ -415,13 +416,14 @@ public:
   /// <param="nodeType">determines the target node that will receive the data</param>
   /// <param="enable">when false removes a pipe, if it exists</param>
   void HalfPipe(const std::type_info* dataType, const std::type_info* nodeType, bool enable = true) {
-    FlowMap::iterator flow = m_dataMap.find(*dataType);
-    if (flow == m_dataMap.end())
+    FlowMap::iterator flowFind = m_dataMap.find(*dataType);
+    if (flowFind == m_dataMap.end())
       return;
+    DataFlow& flow = flowFind->second;
     if (enable)
-      flow->second.halfpipes.insert(*nodeType);
+      flow.halfpipes.insert(*nodeType);
     else
-      flow->second.halfpipes.erase(*nodeType);
+      flow.halfpipes.erase(*nodeType);
   }
 };
 

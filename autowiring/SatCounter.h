@@ -51,8 +51,8 @@ struct SatCounter:
   bool IsInput(const std::type_index& data, const std::type_info& source) {
     auto dataFlow = m_dataMap.find(data);
     if (dataFlow != m_dataMap.end()) {
-      if (dataFlow->second.broadcast) {
-        if (source == typeid(void)) {
+      if (source == typeid(void)) {
+        if (dataFlow->second.broadcast) {
           return true;
         }
       } else {
