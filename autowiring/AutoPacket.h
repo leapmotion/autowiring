@@ -20,7 +20,6 @@
 class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
-struct AutoFilterDescriptor;
 
 template<class T>
 struct subscriber_traits;
@@ -74,7 +73,12 @@ private:
   /// Broadcast is always true for added or snooping recipients.
   /// Pipes are always absent for added or snooping recipients.
   /// </remarks>
-  DataFlow GetDataFlow(const DecorationDisposition& entry);
+  DataFlow GetDataFlow(const DecorationDisposition& entry) const;
+
+  /// <summary>
+  /// Retrieve data flow information from source
+  /// </summary>
+  DataFlow GetDataFlow(const std::type_info& data, const std::type_info& source);
 
   /// <summary>
   /// Adds all AutoFilter argument information for a recipient
@@ -165,41 +169,63 @@ private:
   /// <param name="ready">Ready flag, set to false if the decoration should be marked unsatisfiable</param>
   template<class T>
   void CompleteCheckout(bool ready, const std::type_info& source = typeid(void)) {
-    //TODO: Move all of this to cpp : CompleteDecoration
-    DataFlow flow; //DEFAULT: No broadcast, no pipes
+    // This allows us to retrieve correct entries for decorated input requests
+    typedef typename subscriber_traits<T>::type type;
+
+    DecorationDisposition* broadDeco = nullptr;
+    DecorationDisposition* pipedDeco = nullptr;
     {
       std::lock_guard<std::mutex> lk(m_lock);
-      auto& entry = m_decorations[Index(typeid(T), source)];
 
-      assert(entry.m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
-      assert(entry.isCheckedOut); // CompleteCheckout must follow Checkout
+      DataFlow flow = GetDataFlow(typeid(type), source);
+      if (flow.broadcast) {
+        broadDeco = &m_decorations[Index(typeid(type), typeid(void))];
 
-      flow = GetDataFlow(entry);
+        assert(broadDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
+        assert(broadDeco->isCheckedOut); // CompleteCheckout must follow Checkout
 
-      if(!ready)
-        // Memory must be released, the checkout was cancelled
-        entry.m_decoration->reset();
+        if(!ready)
+          // Memory must be released, the checkout was cancelled
+          broadDeco->m_decoration->reset();
 
-      // Reset the checkout flag before releasing the lock:
-      entry.isCheckedOut = false;
-      entry.satisfied = true;
+        // Reset the checkout flag before releasing the lock:
+        broadDeco->isCheckedOut = false;
+        broadDeco->satisfied = true;
+      }
+      if (flow.halfpipes.size() > 0) {
+        pipedDeco = &m_decorations[Index(typeid(type), source)];
+
+        assert(pipedDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
+        assert(pipedDeco->isCheckedOut); // CompleteCheckout must follow Checkout
+
+        if(!ready)
+          // Memory must be released, the checkout was cancelled
+          pipedDeco->m_decoration->reset();
+
+        // Reset the checkout flag before releasing the lock:
+        broadDeco->isCheckedOut = false;
+        broadDeco->satisfied = true;
+      }
     }
 
     if(ready) {
       // Satisfy the base declaration first and then the shared pointer:
-      if (flow.broadcast) {
+      if (broadDeco) {
         UpdateSatisfaction(typeid(T), typeid(void));
         UpdateSatisfaction(typeid(std::shared_ptr<T>), typeid(void));
       }
-      if (flow.halfpipes.size() > 0) {
+      if (pipedDeco) {
         // NOTE: Only publish with source if pipes are declared - this prevents
         // added or snooping filters from satisfying piped input declarations.
-        UpdateSatisfaction(typeid(T), typeid(source));
-        UpdateSatisfaction(typeid(std::shared_ptr<T>), typeid(source));
+        UpdateSatisfaction(typeid(T), source);
+        UpdateSatisfaction(typeid(std::shared_ptr<T>), source);
       }
+    } else {
+      if (broadDeco)
+        MarkUnsatisfiable(typeid(T), typeid(void));
+      if (pipedDeco)
+        MarkUnsatisfiable(typeid(T), source);
     }
-    else
-      MarkUnsatisfiable(typeid(T), source);
   }
 
 public:
@@ -238,7 +264,8 @@ public:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
     auto q = m_decorations.find(Index(typeid(T), source));
-    if(q != m_decorations.end() && q->second.satisfied) {
+    if(q != m_decorations.end() &&
+       q->second.satisfied) {
       auto& disposition = q->second;
       if(disposition.m_decoration) {
         out = disposition.m_decoration->as<T>().get();
@@ -296,10 +323,11 @@ public:
     if(!ptr)
       throw std::runtime_error("Cannot checkout with shared_ptr == nullptr");
 
-    AnySharedPointer slot;
-    {
+    DataFlow flow = GetDataFlow(typeid(type), source);
+    if (flow.broadcast) {
       std::lock_guard<std::mutex> lk(m_lock);
-      auto& entry = m_decorations[Index(typeid(type), source)];
+
+      auto& entry = m_decorations[Index(typeid(type), typeid(void))];
       entry.m_type = &typeid(type); // Ensure correct type if instantiated here
 
       if (entry.satisfied) {
@@ -318,11 +346,34 @@ public:
       entry.wasCheckedOut = true;
       entry.m_decoration = ptr;
     }
+    if (flow.halfpipes.size() > 0) {
+      std::lock_guard<std::mutex> lk(m_lock);
+
+      auto& entry = m_decorations[Index(typeid(type), source)];
+      entry.m_type = &typeid(type); // Ensure correct type if instantiated here
+
+      if (entry.satisfied) {
+        std::stringstream ss;
+        ss << "Cannot decorate this packet with type " << typeid(*ptr).name()
+        << ", the requested decoration already exists";
+        throw std::runtime_error(ss.str());
+      }
+      if(entry.isCheckedOut) {
+        std::stringstream ss;
+        ss << "Cannot check out decoration of type " << typeid(*ptr).name()
+        << ", it is already checked out elsewhere";
+        throw std::runtime_error(ss.str());
+      }
+      entry.isCheckedOut = true;
+      entry.wasCheckedOut = true;
+      entry.m_decoration = ptr;
+    }
 
     return AutoCheckout<T>(
       *this,
       ptr,
-      &AutoPacket::CompleteCheckout<T>
+      &AutoPacket::CompleteCheckout<T>,
+      source
     );
   }
 

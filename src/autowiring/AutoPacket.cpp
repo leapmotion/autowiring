@@ -4,6 +4,7 @@
 #include "Autowired.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketProfiler.h"
+#include "AutoFilterDescriptor.h"
 #include "ContextEnumerator.h"
 #include "SatCounter.h"
 #include <list>
@@ -277,7 +278,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   }
 }
 
-DataFlow AutoPacket::GetDataFlow(const DecorationDisposition& entry) {
+DataFlow AutoPacket::GetDataFlow(const DecorationDisposition& entry) const {
   DataFlow flow; //DEFAULT: No broadcast, no pipes
   if (!entry.m_publisher) {
     // Broadcast is always true for added or snooping recipients
@@ -285,6 +286,15 @@ DataFlow AutoPacket::GetDataFlow(const DecorationDisposition& entry) {
   } else {
     flow = entry.m_publisher->GetDataFlow(entry.m_type);
   }
+  return flow;
+}
+
+DataFlow AutoPacket::GetDataFlow(const std::type_info& data, const std::type_info& source) {
+  DataFlow flow; //DEFAULT: No pipes
+  flow.broadcast = true; //DEFAULT: Broadcast data from anonymous sources
+  for (size_t sat = 0; sat < m_subscriberNum; ++sat)
+    if (&source == m_satCounters[sat].GetAutoFilterTypeInfo())
+      flow = m_satCounters[sat].GetDataFlow(&data);
   return flow;
 }
 
@@ -303,7 +313,7 @@ void AutoPacket::Initialize(void) {
   // Hold an outstanding count from the parent packet factory
   m_outstanding = m_outstandingRemote;
   if(!m_outstanding)
-    throw autowiring_error("Cannot proceed with this packet, enclosing context already expired");
+    throw std::runtime_error("Cannot proceed with this packet, enclosing context already expired");
 
   // Find all subscribers with no required or optional arguments:
   std::list<SatCounter*> callCounters;

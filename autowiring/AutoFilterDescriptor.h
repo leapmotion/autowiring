@@ -6,9 +6,9 @@
 #include "auto_out.h"
 #include "Decompose.h"
 #include "has_autofilter.h"
-#include "optional_ptr.h"
-#include <functional>
+#include "is_autofilter.h"
 #include MEMORY_HEADER
+#include FUNCTIONAL_HEADER
 #include STL_UNORDERED_SET
 #include STL_UNORDERED_MAP
 
@@ -55,10 +55,11 @@ struct subscriber_traits {
   );
 
   typedef T type;
+  typedef const T& ret_type;
   static const eSubscriberInputType subscriberType = inTypeRequired;
 
-  const T& operator()(AutoPacket& packet) const {
-    return packet.Get<T>();
+  const T& operator()(AutoPacket& packet, const std::type_info& source) const {
+    return packet.Get<T>(source);
   }
 };
 
@@ -68,11 +69,12 @@ struct subscriber_traits {
 template<class T>
 struct subscriber_traits<T&> {
   typedef T type;
+  typedef AutoCheckout<T> ret_type;
   static const eSubscriberInputType subscriberType = outTypeRef;
 
-  AutoCheckout<T> operator()(AutoPacket& packet) const {
+  AutoCheckout<T> operator()(AutoPacket& packet, const std::type_info& source) const {
     // Inputs by reference are automatically and unconditionally ready:
-    AutoCheckout<T> rv = packet.Checkout<T>();
+    AutoCheckout<T> rv = packet.Checkout<T>(source);
     rv.Ready();
     return rv;
   }
@@ -92,12 +94,13 @@ struct subscriber_traits<const T&>:
 template<class T>
 struct subscriber_traits<optional_ptr<T>> {
   typedef T type;
+  typedef optional_ptr<T> ret_type;
   static const eSubscriberInputType subscriberType = inTypeOptional;
 
   // Optional pointer overload, tries to satisfy but doesn't throw if there's a miss
-  optional_ptr<T> operator()(AutoPacket& packet) const {
+  optional_ptr<T> operator()(AutoPacket& packet, const std::type_info& source) const {
     const typename std::decay<T>::type* out;
-    if(packet.Get(out))
+    if(packet.Get(out, source))
       return out;
     return nullptr;
   }
@@ -109,10 +112,11 @@ struct subscriber_traits<optional_ptr<T>> {
 template<class T, bool auto_ready>
 struct subscriber_traits<auto_out<T, auto_ready>> {
   typedef T type;
+  typedef auto_out<T, auto_ready> ret_type;
   static const eSubscriberInputType subscriberType = auto_ready ? outTypeRef : outTypeRefAutoReady;
 
-  auto_out<T, auto_ready> operator()(AutoPacket& packet) const {
-    return auto_out<T, auto_ready>(packet.Checkout<T>());
+  auto_out<T, auto_ready> operator()(AutoPacket& packet, const std::type_info& source) const {
+    return auto_out<T, auto_ready>(packet.Checkout<T>(source));
   }
 };
 
@@ -122,10 +126,25 @@ struct subscriber_traits<auto_out<T, auto_ready>> {
 template<>
 struct subscriber_traits<AutoPacket&> {
   typedef AutoPacket type;
+  typedef AutoPacket& ret_type;
   static const eSubscriberInputType subscriberType = inTypeRequired;
 
-  AutoPacket& operator()(AutoPacket& packet) const {
+  AutoPacket& operator()(AutoPacket& packet, const std::type_info&) const {
     return packet;
+  }
+};
+
+/// <summary>
+/// Provides a means of associating dynamic source types with static argument types
+/// </summary>
+template<class Arg>
+struct sourced_checkout {
+  typename subscriber_traits<Arg>::ret_type operator()(AutoPacket& packet, const DataFill& satisfaction) const {
+    DataFill::const_iterator source_find = satisfaction.find(typeid(typename subscriber_traits<Arg>::type));
+    if (source_find != satisfaction.end()) {
+      return subscriber_traits<Arg>()(packet, *source_find->second);
+    }
+    return subscriber_traits<Arg>()(packet, typeid(void));
   }
 };
 
@@ -146,10 +165,10 @@ struct CallExtractor<void (T::*)(Args...)>:
   /// Binder struct, lets us refer to an instance of Call by type
   /// </summary>
   template<void(T::*memFn)(Args...)>
-  static void Call(void* pObj, AutoPacket& autoPacket) {
+  static void Call(void* pObj, AutoPacket& autoPacket, const DataFill& satisfaction) {
     // Handoff
     (((T*) pObj)->*memFn)(
-      subscriber_traits<Args>()(autoPacket)...
+      sourced_checkout<Args>()(autoPacket, satisfaction)...
     );
   }
 };
@@ -165,16 +184,19 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
   static const size_t N = sizeof...(Args);
 
   template<Deferred(T::*memFn)(Args...)>
-  static void Call(void* pObj, AutoPacket& autoPacket) {
+  static void Call(void* pObj, AutoPacket& autoPacket, const DataFill& satisfaction) {
     // Obtain a shared pointer of the AutoPacket in order to ensure the packet
     // stays resident when we pend this lambda to the destination object's
     // dispatch queue.
     auto pAutoPacket = autoPacket.shared_from_this();
 
     // Pend the call to this object's dispatch queue:
-    *(T*) pObj += [pObj, pAutoPacket] {
+    // WARNING: The DataFill information will be referenced,
+    // since it should be from a SatCounter associated to autoPacket,
+    // and will therefore have the same lifecycle as the AutoPacket.
+    *(T*) pObj += [pObj, pAutoPacket, &satisfaction] {
       (((T*) pObj)->*memFn)(
-        subscriber_traits<Args>()(*pAutoPacket)...
+        sourced_checkout<Args>()(*pAutoPacket, satisfaction)...
       );
     };
   }
@@ -227,7 +249,7 @@ struct AutoFilterDescriptorInput {
 /// </summary>
 struct AutoFilterDescriptorStub {
   // The type of the call centralizer
-  typedef void(*t_call)(void*, AutoPacket&);
+  typedef void(*t_call)(void*, AutoPacket&, const DataFill&);
 
   AutoFilterDescriptorStub(void) :
     m_pType(nullptr),
@@ -443,7 +465,7 @@ struct AutoFilterDescriptor:
   /// <remarks>
   /// This constructor increments the reference count on the passed object until the object is freed.  A
   /// subscriber wraps the templated type, automatically mapping desired arguments into the correct locations,
-  /// via use of Decompose::Call and a AutoPacket to provide type sources
+  /// via use of Decompose::Call and a AutoPacket to provide type satisfaction
   ///
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call
   /// </summary>
