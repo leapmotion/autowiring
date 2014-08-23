@@ -203,8 +203,8 @@ private:
           pipedDeco->m_decoration->reset();
 
         // Reset the checkout flag before releasing the lock:
-        broadDeco->isCheckedOut = false;
-        broadDeco->satisfied = true;
+        pipedDeco->isCheckedOut = false;
+        pipedDeco->satisfied = true;
       }
     }
 
