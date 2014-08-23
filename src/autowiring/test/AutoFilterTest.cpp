@@ -4,6 +4,7 @@
 #include <autowiring/AutoPacket.h>
 #include <autowiring/AutoPacketFactory.h>
 #include <autowiring/Deferred.h>
+#include <Autowiring/optional_ptr.h>
 #include <autowiring/NewAutoFilter.h>
 #include <autowiring/DeclareAutoFilter.h>
 #include <autowiring/AutoSelfUpdate.h>
@@ -1358,19 +1359,20 @@ TEST_F(AutoFilterTest, DISABLED_AutoEdgeTest) {
   AutoRequired<AutoPacketFactory> factory;
   DiamondFilter diamond;
 
-  //Diamond configuration will throw on creation of the packet,
-  //but would have failed during the decoration process.
+  //Diamond configuration will throw on creation of the packet, preventing any calls
   ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "Failed to anticipate broadcast collision";
+  diamond.Verify();
   diamond.Reset();
 
   //Incorrect pipe declarations will throw
   ASSERT_THROW(factory->BroadcastDataIn<FilterDiamondIn>(&typeid(Decoration<1>),false), std::runtime_error) << "Failed to throw missing type";
   ASSERT_THROW(factory->BroadcastDataIn<FilterDiamondA>(&typeid(Decoration<1>),false), std::runtime_error) << "Failed to throw incorrect orientation";
 
-  //Permit DiamondA to use pipes only, which will prevent data collision
+  //Permit DiamondA to use pipes only, which will prevent data collision, even though all filters are called.
   factory->BroadcastDataOut<FilterDiamondA>(&typeid(Decoration<1>),false);
   ASSERT_NO_THROW(factory->NewPacket()) << "Incorrect data collision";
   ++diamond.In_expected;
+  ++diamond.A_expected;
   ++diamond.B_expected;
   ++diamond.Out_expected;
   diamond.Verify();
