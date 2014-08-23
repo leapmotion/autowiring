@@ -2,6 +2,7 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "AutoFilterDescriptor.h"
+#include <sstream>
 
 /// <summary>
 /// A single subscription counter entry
@@ -19,6 +20,10 @@ struct SatCounter:
   // The OPTIONAL remaining counter:
   size_t optional;
 
+  // The sources satisfying each argument
+  typedef std::unordered_map<std::type_index, const std::type_info*> DataFill;
+  DataFill satisfaction;
+
   /// <summary>
   /// Calls the underlying AutoFilter method with the specified AutoPacketAdapter as input
   /// </summary>
@@ -32,9 +37,11 @@ struct SatCounter:
   void Reset(void) {
     remaining = m_requiredCount;
     optional = m_optionalCount;
+    satisfaction.clear();
+    satisfaction.reserve(m_requiredCount + m_optionalCount);
   }
 
-  bool IsInput(const std::type_index& data, const std::type_index& source) {
+  bool IsInput(const std::type_index& data, const std::type_info& source) {
     auto dataFlow = m_dataMap.find(data);
     if (dataFlow != m_dataMap.end()) {
       if (dataFlow->second.broadcast) {
@@ -54,8 +61,17 @@ struct SatCounter:
   /// Conditionally decrements AutoFilter argument satisfaction.
   /// </summary>
   /// <returns>True if this decrement yielded satisfaction of all arguments</returns>
-  bool Decrement(const std::type_index& data, const std::type_index& source, bool is_mandatory) {
+  bool Decrement(const std::type_index& data, const std::type_info& source, bool is_mandatory) {
     if (IsInput(data, source)) {
+      if (satisfaction.find(data) != satisfaction.end()) {
+        std::stringstream ss;
+        ss << "Repeated data type " << data.name()
+        << " provided by " << satisfaction.find(data)->second->name()
+        << " and also by " << source.name()
+        << std::endl;
+        throw std::runtime_error(ss.str());
+      }
+      satisfaction[data] = &source;
       is_mandatory ? --remaining : --optional;
       return remaining == 0 && optional == 0;
     }
@@ -65,7 +81,7 @@ struct SatCounter:
   /// <summary>
   /// Conditionally increments AutoFilter argument satisfaction.
   /// </summary>
-  void Increment(const std::type_index& data, const std::type_index& source, bool is_mandatory) {
+  void Increment(const std::type_index& data, const std::type_info& source, bool is_mandatory) {
     if (IsInput(data, source)) {
       is_mandatory ? ++remaining : ++optional;
     }
