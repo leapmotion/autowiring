@@ -51,10 +51,8 @@ public:
   /// <summary>
   /// Causes the wrapped packet to be committed when the checkout is destroyed
   /// </summary>
-  /// <param="source">attributes data source to specified type</param>
-  void Ready(const std::type_info& source = typeid(void)) {
+  void Ready() {
     m_ready = true;
-    m_source = &source;
   }
 
   // Operator overloads:
