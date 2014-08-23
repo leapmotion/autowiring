@@ -302,3 +302,55 @@ TEST_F(PostConstructTest, ContextNotifyWhenAutowiredPostConstruct) {
   ASSERT_TRUE(called.unique()) << "Autowiring notification lambda was not properly cleaned up";
 }
 
+class OtherObject : public SimpleObject {};
+
+TEST_F(PostConstructTest, RecursiveNotificationPreConstruction) {
+  auto called = std::make_shared<bool>(false);
+  AutoCurrentContext ctxt;
+
+  // Ensure that nested calls do not created deadlock
+  // Notification should be deferred:
+  ctxt->NotifyWhenAutowired<SimpleObject>(
+  [called] {
+    AutoCurrentContext()->NotifyWhenAutowired<OtherObject>(
+    [called] {
+      *called = true;
+    });
+  });
+
+  // Create an object that will satisfy subsequent notification call:
+  AutoRequired<SimpleObject> sobj;
+  AutoRequired<OtherObject> oobj;
+
+  // Insert the SimpleObject, see if the lambda got hit:
+  ASSERT_TRUE(*called) << "Context-wide autowiring notification was not hit as expected when a matching type was injected into a context";
+
+  // Our shared pointer should be unique by this point, because the lambda should have been destroyed
+  ASSERT_TRUE(called.unique()) << "Autowiring notification lambda was not properly cleaned up";
+}
+
+TEST_F(PostConstructTest, RecursiveNotificationPostConstruction) {
+  auto called = std::make_shared<bool>(false);
+  AutoCurrentContext ctxt;
+
+  // Create an object that will satisfy subsequent notification call:
+  AutoRequired<SimpleObject> sobj;
+  AutoRequired<OtherObject> oobj;
+
+  // Ensure that nested calls do not created deadlock
+  // Notification should be immediate:
+  ctxt->NotifyWhenAutowired<SimpleObject>(
+  [called] {
+    AutoCurrentContext()->NotifyWhenAutowired<OtherObject>(
+    [called] {
+      *called = true;
+    });
+  });
+
+  // Insert the SimpleObject, see if the lambda got hit:
+  ASSERT_TRUE(*called) << "Context-wide autowiring notification was not hit as expected when a matching type was injected into a context";
+
+  // Our shared pointer should be unique by this point, because the lambda should have been destroyed
+  ASSERT_TRUE(called.unique()) << "Autowiring notification lambda was not properly cleaned up";
+}
+
