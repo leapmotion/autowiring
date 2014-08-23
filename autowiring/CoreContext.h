@@ -917,13 +917,14 @@ public:
   /// </remarks>
   template<class T, class Fn>
   const AutowirableSlotFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
+    bool found = false;
     AutowirableSlotFn<T, Fn>* retVal = nullptr;
     {
       std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
       FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
-      [this, &listener, &retVal](AnySharedPointer& reference) {
+      [this, &listener, &retVal, &found](AnySharedPointer& reference) {
         if (reference) {
-          listener();
+          found = true;
         } else {
           retVal = MakeAutowirableSlotFn<T>(
             shared_from_this(),
@@ -933,6 +934,10 @@ public:
         }
       });
     }
+    if (found)
+      // Make call outside of lock
+      // NOTE: existential guarantees of context enable this.
+      listener();
     return retVal;
   }
 
