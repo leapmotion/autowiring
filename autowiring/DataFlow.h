@@ -9,12 +9,16 @@
 /// </summary>
 struct DataFlow {
   // DEFAULT: No data flow
-  DataFlow() : broadcast(false) {}
+  DataFlow() :
+    output(false),
+    broadcast(false)
+  {}
 
-  // Broadcast Input: AutoFilter accepts data from any input
   // Broadcast Output: Any AutoFilter can receive this data
-  // Pipelined Input: AutoFilter only accepts data from declared pipes
   // Pipelined Output: AutoFilter only sends data to declared pipes
+  // Broadcast Input: AutoFilter accepts data from any input
+  // Pipelined Input: AutoFilter only accepts data from declared pipes
+  bool output;
   bool broadcast;
   std::unordered_set<std::type_index> halfpipes;
 };

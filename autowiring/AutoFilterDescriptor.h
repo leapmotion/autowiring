@@ -273,7 +273,9 @@ struct AutoFilterDescriptorStub {
 
     for(auto pArg = m_pArgs; *pArg; pArg++) {
       // DEFAULT: All data is broadcast
-      m_dataMap[*pArg->ti].broadcast = true;
+      DataFlow& data = m_dataMap[*pArg->ti];
+      data.output = AutoFilterDescriptorInput::isOutput(pArg->subscriberType);
+      data.broadcast = true;
       switch(pArg->subscriberType) {
       case inTypeRequired:
         m_requiredCount++;
