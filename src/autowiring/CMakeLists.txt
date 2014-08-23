@@ -56,6 +56,7 @@ set(Autowiring_SRCS
   DecorationDisposition.h
   Deserialize.h
   Deferred.h
+  demangle.hpp
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunk.h

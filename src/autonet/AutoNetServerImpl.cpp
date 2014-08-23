@@ -1,31 +1,13 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoNetServerImpl.hpp"
 #include "at_exit.h"
 #include "autowiring.h"
+#include "demangle.hpp"
 #include "EventRegistry.h"
 #include "TypeRegistry.h"
 #include <iostream>
 #include FUTURE_HEADER
-
-//
-// Demangle type names on mac and linux.
-// Just returns type_info.name() on windows
-//
-#if __GNUG__
-#include <cxxabi.h>
-static std::string demangle(const std::type_info& ti) {
-  int status;
-  std::unique_ptr<char, void(*)(void*)> res{
-    abi::__cxa_demangle(ti.name(), nullptr, nullptr, &status),
-    std::free
-  };
-  return std::string(status == 0 ? res.get() : ti.name());
-}
-#else
-static std::string demangle(const std::type_info& ti) {
-  return std::string(ti.name());
-}
-#endif
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -47,7 +29,7 @@ AutoNetServerImpl::AutoNetServerImpl(void) :
   // Generate list of all types from type registry
   for(auto type = g_pFirstTypeEntry; type; type = type->pFlink)
     if(type->CanInject())
-      m_AllTypes[demangle(type->ti)] = [type]{ type->Inject(); };
+      m_AllTypes[autowiring::demangle(type->ti)] = [type]{ type->Inject(); };
 
   // Generate list of all events from event registry
   for(auto event = g_pFirstEventEntry; event; event = event->pFlink)
@@ -139,7 +121,7 @@ void AutoNetServerImpl::NewContext(CoreContext& newCtxt){
 
   *this += [this, ctxt] {
     Json::object context{
-        {"name", demangle(ctxt->GetSigilType())}
+        {"name", autowiring::demangle(ctxt->GetSigilType())}
     };
 
     if(ctxt->GetParentContext()){
@@ -166,12 +148,12 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const AnySharedPointer& obj
     std::shared_ptr<Object> objectPtr(*object);
 
     // Add object data
-    objData["name"] = demangle(typeid(*objectPtr));
+    objData["name"] = autowiring::demangle(typeid(*objectPtr));
     {
       Json::array slots;
       for(auto slot = object->GetSlotInformation().pHead; slot; slot = slot->pFlink) {
         slots.push_back(Json::object{
-            {"name", demangle(slot->type)},
+            {"name", autowiring::demangle(slot->type)},
             {"autoRequired", slot->autoRequired},
             {"offset", int(slot->slotOffset)}
         });
@@ -206,7 +188,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const AnySharedPointer& obj
       Json::array listenerTypes;
       for(const auto& event : m_EventTypes) {
         if(event->IsSameAs(objectPtr.get()))
-          listenerTypes.push_back(demangle(event->Type()));
+          listenerTypes.push_back(autowiring::demangle(event->Type()));
       }
 
       if(!listenerTypes.empty())
@@ -222,7 +204,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const AnySharedPointer& obj
     if(bolt) {
       Json::array sigils;
       for(auto cur = bolt->GetContextSigils(); *cur; cur++){
-        sigils.push_back(demangle(**cur));
+        sigils.push_back(autowiring::demangle(**cur));
       }
       types["bolt"] = sigils;
     }
@@ -233,7 +215,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const AnySharedPointer& obj
 
 void AutoNetServerImpl::EventFired(CoreContext& context, const std::type_info& info){
   int contextID = ResolveContextID(&context);
-  std::string name = demangle(info);
+  std::string name = autowiring::demangle(info);
 
   *this += [this, contextID, name] {
     BroadcastMessage("eventFired", contextID, Json::object{{"name", name}});
@@ -329,7 +311,7 @@ void AutoNetServerImpl::PollThreadUtilization(std::chrono::milliseconds period){
 
       // Broadcast current thread utilization
       int contextID = ResolveContextID(thread->GetContext().get());
-      std::string name = demangle(typeid(*thread.get()));
+      std::string name = autowiring::demangle(typeid(*thread.get()));
 
       std::chrono::duration<double> periodDbl = period;
       double kmPercent = 100.0 * (deltaRuntimeKM.count() / periodDbl.count());
