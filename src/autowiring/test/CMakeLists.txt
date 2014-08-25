@@ -11,6 +11,7 @@ set(AutowiringTest_SRCS
   BoltTest.cpp
   CoreContextTest.cpp
   CoreJobTest.cpp
+  CoreRunnableTest.cpp
   ContextCleanupTest.cpp
   ContextEnumeratorTest.cpp
   ContextMapTest.cpp
