@@ -7,6 +7,7 @@
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
+#include "CoreContextStateBlock.h"
 #include "CoreRunnable.h"
 #include "ContextMember.h"
 #include "CreationRules.h"
@@ -25,12 +26,12 @@
 #include "TypeUnifier.h"
 
 #include <list>
-#include TYPE_INDEX_HEADER
 #include MEMORY_HEADER
+#include FUNCTIONAL_HEADER
+#include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 #include STL_UNORDERED_SET
 
-struct CoreContextStateBlock;
 class AutoInjectable;
 class AutoPacketFactory;
 class DeferrableAutowiring;
@@ -131,7 +132,7 @@ protected:
   // This is a list of concrete types, indexed by the true type of each element.
   std::vector<AnySharedPointer> m_concreteTypes;
 
-  // This is a memoization map used to memoize any already-detected interfaces.  The map
+  // This is a memoization map used to memoize any already-detected interfaces.
   mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;
 
   // All known context members, exception filters:
@@ -369,6 +370,14 @@ protected:
   void FindByTypeUnsafe(AnySharedPointer& reference) const;
 
   /// <summary>
+  /// Recursive locking for Autowire satisfaction search
+  /// </summary>
+  /// <remarks>
+  /// The argument &&reference enables implicit type from AnySharedPointerT<T>.
+  /// </remarks>
+  void FindByTypeRecursiveUnsafe(AnySharedPointer&& reference, const std::function<void(AnySharedPointer&)>& terminal) const;
+
+  /// <summary>
   /// Returns or constructs a new AutoPacketFactory instance
   /// </summary>
   std::shared_ptr<AutoPacketFactory> GetPacketFactory(void);
@@ -376,7 +385,7 @@ protected:
   /// <summary>
   /// Adds the specified deferrable autowiring as a general recipient of autowiring events
   /// </summary>
-  void AddDeferred(const AnySharedPointer& reference, DeferrableAutowiring* deferrable);
+  void AddDeferredUnsafe(const AnySharedPointer& reference, DeferrableAutowiring* deferrable);
 
   /// <summary>
   /// Adds a snooper to the snoopers set
@@ -850,9 +859,9 @@ public:
   /// </summary>
   template<class T>
   void FindByType(std::shared_ptr<T>& slot) const {
-    AnySharedPointerT<T> ptr;
-    FindByType(ptr);
-    slot = ptr.slot()->template as<T>();
+    AnySharedPointerT<T> reference;
+    FindByType(reference);
+    slot = reference.slot()->template as<T>();
   }
 
   /// <summary>
@@ -860,14 +869,14 @@ public:
   /// </summary>
   template<class T>
   bool FindByTypeRecursive(std::shared_ptr<T>& slot) {
-    // First-chance resolution in this context and ancestor contexts:
-    for(CoreContext* pCur = this; pCur; pCur = pCur->m_pParent.get()) {
-      pCur->FindByType(slot);
-      if(slot)
-        return true;
+    {
+      std::lock_guard<std::mutex> guard(m_stateBlock->m_lock);
+      FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
+      [&slot](AnySharedPointer& reference){
+        slot = reference.slot()->template as<T>();
+      });
     }
-
-    return false;
+    return static_cast<bool>(slot);
   }
 
   /// <summary>
@@ -875,19 +884,25 @@ public:
   /// </summary>
   template<class T>
   bool Autowire(AutowirableSlot<T>& slot) {
-    if(FindByTypeRecursive(slot))
-      return true;
-
-    // Failed, defer
-    AddDeferred(AnySharedPointerT<T>(), &slot);
-    return false;
+    {
+      std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+      FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
+      [this, &slot](AnySharedPointer& reference){
+        slot = reference.slot()->template as<T>();
+        if (!slot) {
+          AddDeferredUnsafe(AnySharedPointerT<T>(), &slot);
+        }
+      });
+    }
+    return static_cast<bool>(slot);
   }
 
   /// <summary>
   /// Adds a post-attachment listener in this context for a particular autowired member
   /// </summary>
   /// <returns>
-  /// A pointer to a deferrable autowiring function which the caller may safely ignore if it's not needed
+  /// A pointer to a deferrable autowiring function which the caller may safely ignore if it's not needed.
+  /// Returns nullptr if the call was made immediately.
   /// </returns>
   /// <remarks>
   /// This method will succeed if slot was constructed in this context or any parent context.  If the
@@ -906,12 +921,27 @@ public:
   /// </remarks>
   template<class T, class Fn>
   const AutowirableSlotFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
-    auto retVal = MakeAutowirableSlotFn<T>(
-      shared_from_this(),
-      std::forward<Fn>(listener)
-    );
-
-    AddDeferred(AnySharedPointerT<T>(), retVal);
+    bool found = false;
+    AutowirableSlotFn<T, Fn>* retVal = nullptr;
+    {
+      std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+      FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
+      [this, &listener, &retVal, &found](AnySharedPointer& reference) {
+        if (reference) {
+          found = true;
+        } else {
+          retVal = MakeAutowirableSlotFn<T>(
+            shared_from_this(),
+            std::forward<Fn>(listener)
+          );
+          AddDeferredUnsafe(reference, retVal);
+        }
+      });
+    }
+    if (found)
+      // Make call outside of lock
+      // NOTE: existential guarantees of context enable this.
+      listener();
     return retVal;
   }
 
