@@ -323,6 +323,11 @@ std::vector<std::shared_ptr<BasicThread>> CoreContext::CopyBasicThreadList(void)
 }
 
 void CoreContext::Initiate(void) {
+  // First-pass check, used to prevent recursive deadlocks traceable to here that might
+  // result from entities trying to initiate subcontexts from CoreRunnable::Start
+  if(m_initiated || m_isShutdown)
+    return;
+
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     if(m_initiated)
