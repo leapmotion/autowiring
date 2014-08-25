@@ -12,6 +12,7 @@
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
 #include "fast_pointer_cast.h"
+#include "has_autoinit.h"
 #include "InvokeRelay.h"
 #include "result_or_default.h"
 #include "JunctionBoxManager.h"
@@ -546,6 +547,9 @@ public:
 
     // Cannot safely inject while holding the lock, so we have to unlock and then inject
     retVal.reset(CreationRules::New<TActual>(std::forward<Args>(args)...));
+
+    // AutoInit if sensible to do so:
+    CallAutoInit(*retVal, has_autoinit<T>());
 
     try {
       // Pass control to the insertion routine, which will handle injection from this point:

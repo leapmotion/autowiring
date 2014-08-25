@@ -53,8 +53,9 @@ TEST_F(AutoConstructTest, CanConstructRvalueCtor) {
   ASSERT_TRUE(originalPtr.unique()) << "Memory leak detected due to incorrect forwarding of a unique pointer";
 }
 
-class ClassWithAutoInit {
-public:
+struct ClassWithAutoInit:
+  std::enable_shared_from_this<ClassWithAutoInit>
+{
   ClassWithAutoInit(void) :
     m_constructed(true),
     m_postConstructed(false)
@@ -63,11 +64,16 @@ public:
   void AutoInit(void) {
     ASSERT_TRUE(m_constructed) << "A postconstruct routine was called BEFORE the corresponding constructor";
     m_postConstructed = true;
+
+    auto myself = shared_from_this();
+    ASSERT_EQ(this, myself.get()) << "Reflexive shared_from_this did not return a shared pointer to this as expected";
   }
 
   bool m_constructed;
   bool m_postConstructed;
 };
+
+static_assert(has_autoinit<ClassWithAutoInit>::value, "AutoInit-bearing class did not pass a static type check");
 
 TEST_F(AutoConstructTest, PostConstructGetsCalled) {
   AutoRequired<ClassWithAutoInit> cwai;
