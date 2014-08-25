@@ -80,3 +80,16 @@ TEST_F(AutoConstructTest, PostConstructGetsCalled) {
   ASSERT_TRUE(cwai->m_constructed) << "Trivial constructor call was not made as expected";
   ASSERT_TRUE(cwai->m_postConstructed) << "Auto-initialization routine was not called on an initializable type";
 }
+
+struct PostConstructThrowsException {
+  void AutoInit(void) const {
+    throw std::runtime_error("Autoinit crashing for no reason");
+  }
+};
+
+TEST_F(AutoConstructTest, PostConstructCanSafelyThrow) {
+  ASSERT_ANY_THROW(AutoRequired<PostConstructThrowsException>()) << "AutoInit call threw an exception, but it was incorrectly eaten by Autowiring";
+
+  Autowired<PostConstructThrowsException> pcte;
+  ASSERT_FALSE(pcte.IsAutowired()) << "A context member which threw an exception post-construction was incorrectly introduced into a context";
+}
