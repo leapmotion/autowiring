@@ -354,3 +354,43 @@ TEST_F(PostConstructTest, RecursiveNotificationPostConstruction) {
   ASSERT_TRUE(called.unique()) << "Autowiring notification lambda was not properly cleaned up";
 }
 
+struct ClassWithAutoInit:
+  std::enable_shared_from_this<ClassWithAutoInit>
+{
+  ClassWithAutoInit(void) :
+    m_constructed(true),
+    m_postConstructed(false)
+  {}
+
+  void AutoInit(void) {
+    ASSERT_TRUE(m_constructed) << "A postconstruct routine was called BEFORE the corresponding constructor";
+    m_postConstructed = true;
+
+    auto myself = shared_from_this();
+    ASSERT_EQ(this, myself.get()) << "Reflexive shared_from_this did not return a shared pointer to this as expected";
+  }
+
+  bool m_constructed;
+  bool m_postConstructed;
+};
+
+static_assert(has_autoinit<ClassWithAutoInit>::value, "AutoInit-bearing class did not pass a static type check");
+
+TEST_F(PostConstructTest, PostConstructGetsCalled) {
+  AutoRequired<ClassWithAutoInit> cwai;
+  ASSERT_TRUE(cwai->m_constructed) << "Trivial constructor call was not made as expected";
+  ASSERT_TRUE(cwai->m_postConstructed) << "Auto-initialization routine was not called on an initializable type";
+}
+
+struct PostConstructThrowsException {
+  void AutoInit(void) const {
+    throw std::runtime_error("Autoinit crashing for no reason");
+  }
+};
+
+TEST_F(PostConstructTest, PostConstructCanSafelyThrow) {
+  ASSERT_ANY_THROW(AutoRequired<PostConstructThrowsException>()) << "AutoInit call threw an exception, but it was incorrectly eaten by Autowiring";
+
+  Autowired<PostConstructThrowsException> pcte;
+  ASSERT_FALSE(pcte.IsAutowired()) << "A context member which threw an exception post-construction was incorrectly introduced into a context";
+}

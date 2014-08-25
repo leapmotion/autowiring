@@ -74,6 +74,7 @@ set(Autowiring_SRCS
   ExceptionFilter.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
+  has_autoinit.h
   has_autofilter.h
   has_simple_constructor.h
   has_static_new.h
