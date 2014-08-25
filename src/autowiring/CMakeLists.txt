@@ -6,8 +6,7 @@ set(Autowiring_SRCS
   AnySharedPointer.h
   AutoAnchor.h
   AutoCheckout.h
-  NewAutoFilter.h
-  NewAutoFilter.cpp
+  AutoRestarter.h
   AutoFuture.h
   AutoFuture.cpp
   CoreJob.h
@@ -93,6 +92,8 @@ set(Autowiring_SRCS
   SatCounter.h
   MicroAutoFilter.h
   MicroBolt.h
+  NewAutoFilter.h
+  NewAutoFilter.cpp
   SharedPointerSlot.h
   SlotInformation.h
   SlotInformation.cpp

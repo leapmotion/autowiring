@@ -5,6 +5,7 @@ set(AutowiringTest_SRCS
   AutoFilterTest.cpp
   AutoInjectableTest.cpp
   AutoPacketFactoryTest.cpp
+  AutoRestarterTest.cpp
   AutowiringTest.cpp
   AutowiringUtilitiesTest.cpp
   BasicThreadTest.cpp
@@ -68,6 +69,12 @@ set_property(TARGET AutowiringFixture PROPERTY FOLDER "Autowiring")
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
 target_link_libraries(AutowiringTest Autowiring AutowiringFixture AutoTesting)
+
+# Link AutoNet if we've got it
+if(AUTOWIRING_BUILD_AUTONET)
+  target_link_libraries(AutowiringTest AutoNet)
+endif()
+
 set_property(TARGET AutowiringTest PROPERTY FOLDER "Autowiring")
 
 # This is a unit test, let CMake know this
