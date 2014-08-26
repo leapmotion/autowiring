@@ -24,7 +24,7 @@ struct CreationRules {
     auto retVal = U::New(std::forward<Args>(args)...);
     static_assert(
       std::is_convertible<decltype(retVal), U*>::value,
-      "Attempted to create T using T::New, but the return value of T::New is not derived from T"
+      "Attempted to create T using T::New, but the type of T::New() is not derived from T"
     );
     return retVal;
   }
@@ -32,7 +32,7 @@ struct CreationRules {
   template<typename U, typename... Args>
   static typename std::enable_if<!has_static_new<U, Args...>::value, U*>::type New(Args&&... args) {
     static_assert(!std::is_abstract<U>::value, "Cannot create a type which is abstract");
-    static_assert(!has_static_new<U, Args...>::value, "Can't inject member with arguments if it has a static new");
+    static_assert(!has_static_new<U, Args...>::value, "Can't inject member with arguments if it has a static New");
 
     // Allocate slot first before registration
     auto* pSpace = Allocate<U>(nullptr);
