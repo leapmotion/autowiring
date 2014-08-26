@@ -16,7 +16,7 @@
 namespace autowiring {
 #if __GNUG__ // Mac and linux
   
-  std::string demangle(const std::type_info& ti) {
+  static inline std::string demangle(const std::type_info& ti) {
     int status;
     std::unique_ptr<char, void(*)(void*)> res{
       abi::__cxa_demangle(ti.name(), nullptr, nullptr, &status),
@@ -27,14 +27,14 @@ namespace autowiring {
   
 #else // Windows
   
-  std::string demangle(const std::type_info& ti) {
+  static inline std::string demangle(const std::type_info& ti) {
     return std::string(ti.name());
   }
   
 #endif
   
   template<typename T>
-  std::string demangle(T) {
+  static inline std::string demangle(T) {
     return demangle(typeid(T));
   }
 }//namespace autowiring
