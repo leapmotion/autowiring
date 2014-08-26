@@ -306,13 +306,17 @@ public:
 /// </summary>
 template<class T>
 class AutoConstruct:
-  public AutoRequired<T>
+  public std::shared_ptr<T>
 {
 public:
   template<class... Args>
   AutoConstruct(Args&&... args) :
-    AutoRequired<T>(CoreContext::CurrentContext(), std::forward<Args>(args)...)
+    std::shared_ptr<T>(CoreContext::CurrentContext()->template Construct<T>(std::forward<Args&&>(args)...))
   {}
+
+  operator bool(void) const { return IsAutowired(); }
+  operator T*(void) const { return std::shared_ptr<T>::get(); }
+  bool IsAutowired(void) const { return std::shared_ptr<T>::get() != nullptr; }
 };
 
 /// <summary>
