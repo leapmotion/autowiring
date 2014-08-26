@@ -26,10 +26,15 @@ namespace autowiring {
   }
   
 #else // Windows
-
+  
   std::string demangle(const std::type_info& ti) {
     return std::string(ti.name());
   }
   
 #endif
+  
+  template<typename T>
+  std::string demangle(T) {
+    return demangle(typeid(T));
+  }
 }//namespace autowiring
