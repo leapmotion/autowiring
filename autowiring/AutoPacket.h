@@ -4,6 +4,7 @@
 #include "at_exit.h"
 #include "AutoCheckout.h"
 #include "DecorationDisposition.h"
+#include "demangle.h"
 #include "is_shared_ptr.h"
 #include "ObjectPool.h"
 #include "is_any.h"
@@ -14,9 +15,6 @@
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 #include EXCEPTION_PTR_HEADER
-
-//DEBUG
-#include <iostream>
 
 class AutoPacketFactory;
 class AutoPacketProfiler;
@@ -185,7 +183,7 @@ public:
     const T* retVal;
     if(!Get(retVal)) {
       std::stringstream ss;
-      ss << "Attempted to obtain a type " << typeid(retVal).name()
+      ss << "Attempted to obtain a type " << autowiring::demangle(retVal)
          << " which was not decorated on this packet";
       throw std::runtime_error(ss.str());
     }
@@ -265,13 +263,13 @@ public:
       auto& entry = m_decorations[typeid(type)];
       if (entry.satisfied) {
         std::stringstream ss;
-        ss << "Cannot decorate this packet with type " << typeid(*ptr).name()
+        ss << "Cannot decorate this packet with type " << autowiring::demangle(*ptr)
            << ", the requested decoration already exists";
         throw std::runtime_error(ss.str());
       }
       if(entry.isCheckedOut) {
         std::stringstream ss;
-        ss << "Cannot check out decoration of type " << typeid(*ptr).name()
+        ss << "Cannot check out decoration of type " << autowiring::demangle(*ptr)
            << ", it is already checked out elsewhere";
         throw std::runtime_error(ss.str());
       }
@@ -377,7 +375,7 @@ public:
         pTypeSubs[i] = &m_decorations[*s_argTypes[i]];
         if(pTypeSubs[i]->wasCheckedOut) {
           std::stringstream ss;
-          ss << "Cannot perform immediate decoration with type " << s_argTypes[i]->name()
+          ss << "Cannot perform immediate decoration with type " << autowiring::demangle(s_argTypes[i])
              << ", the requested decoration already exists";
           throw std::runtime_error(ss.str());
         }

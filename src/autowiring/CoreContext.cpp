@@ -5,6 +5,7 @@
 #include "AutoPacketFactory.h"
 #include "BoltBase.h"
 #include "CoreThread.h"
+#include "demangle.h"
 #include "GlobalCoreContext.h"
 #include "JunctionBox.h"
 #include "MicroBolt.h"
@@ -543,7 +544,7 @@ void CoreContext::Dump(std::ostream& os) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   
   for(const auto& entry : m_typeMemos) {
-    os << entry.first.name();
+    os << autowiring::demangle(entry.first);
     const void* pObj = entry.second.m_value->ptr();
     if(pObj)
       os << " 0x" << std::hex << pObj;
