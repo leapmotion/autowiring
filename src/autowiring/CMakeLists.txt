@@ -179,14 +179,14 @@ if(Threads_FOUND)
 endif()
 
 if(NOT AUTOWIRING_IS_EMBEDDED)
-  install(TARGETS Autowiring DESTINATION ${CMAKE_BINARY_DIR}/lib COMPONENT autowiring CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
+  install(TARGETS Autowiring DESTINATION lib COMPONENT autowiring CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
   foreach (src ${Autowiring_SRCS})
     string(REGEX MATCH ".*\\.h" hfile ${src})
     if(hfile)
       install(
         FILES ${hfile}
-        DESTINATION "${CMAKE_SOURCE_DIR}/include/Autowiring"
+        DESTINATION "include/Autowiring"
         COMPONENT autowiring
       )
     endif()

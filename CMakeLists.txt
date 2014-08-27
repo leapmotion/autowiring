@@ -124,9 +124,9 @@ configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake 
 if(NOT AUTOWIRING_IS_EMBEDDED)
   # Install autowiring-config.cmake and autowiring-configVersion.cmake
   install (FILES
-    "${CMAKE_BINARY_DIR}/contrib/autowiring/autowiring-config.cmake"
-    "${CMAKE_BINARY_DIR}/contrib/autowiring/autowiring-configVersion.cmake"
-    DESTINATION "${CMAKE_SOURCE_DIR}/cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/autowiring-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/autowiring-configVersion.cmake"
+    DESTINATION "cmake"
     COMPONENT autowiring
   )
 
