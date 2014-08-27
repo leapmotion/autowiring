@@ -16,9 +16,6 @@
 #include STL_UNORDERED_MAP
 #include EXCEPTION_PTR_HEADER
 
-//DEBUG
-#include <iostream>
-
 class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
