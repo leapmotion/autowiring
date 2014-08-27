@@ -32,6 +32,7 @@ script:
   - export LD_LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.8:$LD_LIBRARY_PATH
   - make -j 8 || make
   - make test
+  - cpack . -D "DEB"
 after_failure:
   - cat Testing/Temporary/LastTest.log 2> /dev/null
 os:
