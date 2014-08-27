@@ -124,9 +124,9 @@ configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake 
 if(NOT AUTOWIRING_IS_EMBEDDED)
   # Install autowiring-config.cmake and autowiring-configVersion.cmake
   install (FILES
-    "${CMAKE_BINARY_DIR}/contrib/autowiring/autowiring-config.cmake"
-    "${CMAKE_BINARY_DIR}/contrib/autowiring/autowiring-configVersion.cmake"
-    DESTINATION "${CMAKE_SOURCE_DIR}/cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/autowiring-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/autowiring-configVersion.cmake"
+    DESTINATION "cmake"
     COMPONENT autowiring
   )
 
@@ -144,8 +144,8 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   # leave those alone.
   SET(CPACK_WIX_TEMPLATE autowiring.wxs)
 
-  # Packaging stuff, if an installer is being made insteadINCLUDE(InstallRequiredSystemLibraries)
-  SET(CPACK_GENERATOR "WIX")
+  # Packaging stuff, if an installer is being made instead
+  INCLUDE(InstallRequiredSystemLibraries)
   SET(CPACK_PACKAGE_VENDOR "Leap Motion")
   SET(CPACK_PACKAGE_CONTACT "cmercenary@gmail.com")
   SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
