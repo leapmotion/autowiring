@@ -34,7 +34,7 @@ namespace autowiring {
 #endif
   
   template<typename T>
-  static inline std::string demangle(T) {
+  static inline std::string demangle(const T&) {
     return demangle(typeid(T));
   }
 }//namespace autowiring

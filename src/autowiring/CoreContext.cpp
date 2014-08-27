@@ -5,7 +5,7 @@
 #include "AutoPacketFactory.h"
 #include "BoltBase.h"
 #include "CoreThread.h"
-#include "demangle.hpp"
+#include "demangle.h"
 #include "GlobalCoreContext.h"
 #include "JunctionBox.h"
 #include "MicroBolt.h"

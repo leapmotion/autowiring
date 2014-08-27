@@ -3,7 +3,7 @@
 #include "AutoNetServerImpl.hpp"
 #include "at_exit.h"
 #include "autowiring.h"
-#include "demangle.hpp"
+#include "demangle.h"
 #include "EventRegistry.h"
 #include "TypeRegistry.h"
 #include <iostream>

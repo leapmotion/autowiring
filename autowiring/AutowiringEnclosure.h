@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <autowiring/autowiring.h>
-#include "demangle.hpp"
+#include "demangle.h"
 #include MEMORY_HEADER
 
 #ifndef GTEST_INCLUDE_GTEST_GTEST_H_
