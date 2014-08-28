@@ -3,9 +3,9 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/autowiring/test
 )
 
-set(
-  AutoNetTest_SRCS
+set(AutoNetTest_SRCS
   BreakpointTest.cpp
+  WebsocketTest.cpp
   gtest-all-guard.cpp
 )
 
