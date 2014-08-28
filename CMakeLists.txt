@@ -31,11 +31,6 @@ else()
   endif()
 endif()
 
-# Macro for deprecated functionality needed to comply with c++98 std implementations
-if(NOT USE_LIBCXX)
-  add_definitions(-DAUTOWIRING_UNSAFE_HASHTABLE)
-endif()
-
 if(USE_LIBCXX)
   # Clang needs special additional flags to build with C++11
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -119,6 +114,7 @@ endif()
 # CMake configurations
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
+configure_file(autowiring-config.h.in ${PROJECT_SOURCE_DIR}/autowiring/AutowiringConfig.h @ONLY)
 
 # Only attempt to do anything with cpack if we're being built stand-alone
 if(NOT AUTOWIRING_IS_EMBEDDED)
