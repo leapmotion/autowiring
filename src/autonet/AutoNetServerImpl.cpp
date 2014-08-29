@@ -7,6 +7,7 @@
 #include "EventRegistry.h"
 #include "TypeRegistry.h"
 #include <iostream>
+#include FUTURE_HEADER
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -18,6 +19,7 @@ AutoNetServerImpl::AutoNetServerImpl(void) :
   // Configure websocketpp
   m_Server.init_asio();
   m_Server.set_access_channels(websocketpp::log::alevel::none);
+  m_Server.set_error_channels(websocketpp::log::elevel::warn);
 
   // Register handlers
   m_Server.set_open_handler(std::bind(&AutoNetServerImpl::OnOpen, this, ::_1));
@@ -45,9 +47,11 @@ AutoNetServer* NewAutoNetServerImpl(void) {
 // CoreThread overrides
 void AutoNetServerImpl::Run(void){
   std::cout << "Starting Autonet server..." << std::endl;
-
+  
   m_Server.listen(m_Port);
   m_Server.start_accept();
+  
+  // blocks until the server finishes
   auto websocket = std::async(std::launch::async, [this]{
     m_Server.run();
   });

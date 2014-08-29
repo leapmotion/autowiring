@@ -2,7 +2,6 @@
 #pragma once
 #include "AutoNetServer.h"
 #include "AutowiringEvents.h"
-#include FUTURE_HEADER
 #include <json11/json11.hpp>
 #include <cctype>
 #include <map>

@@ -6,6 +6,8 @@
 #endif
 #include <gtest/gtest-all.cc>
 #include <iostream>
+#include <csignal>
+#include <autowiring/autowiring.h>
 
 using namespace testing::internal;
 using namespace std;
@@ -20,6 +22,12 @@ const char (&ArraySizer(const T (&vals)[n]))[n];
 
 int main(int argc, char* argv[])
 {
+  signal(SIGINT, [](int param){
+    AutoGlobalContext ctxt;
+    ctxt->SignalTerminate();
+    ctxt->Wait();
+  });
+  
   g_argc = argc;
   g_argv = argv;
 
