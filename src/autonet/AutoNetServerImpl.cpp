@@ -7,24 +7,22 @@
 #include "EventRegistry.h"
 #include "TypeRegistry.h"
 #include <iostream>
-#include FUTURE_HEADER
 
 using std::placeholders::_1;
 using std::placeholders::_2;
 using json11::Json;
 
 AutoNetServerImpl::AutoNetServerImpl(void) :
-  m_Server(std::make_shared<server>()),
   m_Port(8000)
 {
   // Configure websocketpp
-  m_Server->init_asio();
-  m_Server->set_access_channels(websocketpp::log::alevel::none);
+  m_Server.init_asio();
+  m_Server.set_access_channels(websocketpp::log::alevel::none);
 
   // Register handlers
-  m_Server->set_open_handler(std::bind(&AutoNetServerImpl::OnOpen, this, ::_1));
-  m_Server->set_close_handler(std::bind(&AutoNetServerImpl::OnClose, this, ::_1));
-  m_Server->set_message_handler(std::bind(&AutoNetServerImpl::OnMessage, this, ::_1, ::_2));
+  m_Server.set_open_handler(std::bind(&AutoNetServerImpl::OnOpen, this, ::_1));
+  m_Server.set_close_handler(std::bind(&AutoNetServerImpl::OnClose, this, ::_1));
+  m_Server.set_message_handler(std::bind(&AutoNetServerImpl::OnMessage, this, ::_1, ::_2));
 
   // Generate list of all types from type registry
   for(auto type = g_pFirstTypeEntry; type; type = type->pFlink)
@@ -48,19 +46,23 @@ AutoNetServer* NewAutoNetServerImpl(void) {
 void AutoNetServerImpl::Run(void){
   std::cout << "Starting Autonet server..." << std::endl;
 
-  m_Server->listen(m_Port);
-  m_Server->start_accept();
+  m_Server.listen(m_Port);
+  m_Server.start_accept();
   auto websocket = std::async(std::launch::async, [this]{
-    m_Server->run();
+    m_Server.run();
   });
-
 
   PollThreadUtilization(std::chrono::milliseconds(1000));
   CoreThread::Run();
 }
 
 void AutoNetServerImpl::OnStop(void) {
-  m_Server->stop();
+  if (m_Server.is_listening())
+    m_Server.stop_listening();
+  
+  for (auto& conn : m_Subscribers) {
+    m_Server.close(conn, websocketpp::close::status::normal, "closed");
+  }
 }
 
 // Server Handler functions
@@ -71,7 +73,6 @@ void AutoNetServerImpl::OnOpen(websocketpp::connection_hdl hdl) {
 }
 void AutoNetServerImpl::OnClose(websocketpp::connection_hdl hdl) {
   *this += [this, hdl] {
-    SendMessage(hdl, "closed");
     this->m_Subscribers.erase(hdl);
   };
 }

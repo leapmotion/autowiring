@@ -32,7 +32,7 @@ TEST_F(WebsocketTest, CleanShutdown) {
     AutoRequired<AutoNetServer>();
     
     ctxt->Initiate();
-    ctxt->Wait(std::chrono::milliseconds(200));
+    ctxt->Wait(std::chrono::seconds(1));
     ctxt->SignalShutdown(true);
   }
   
@@ -42,7 +42,7 @@ TEST_F(WebsocketTest, CleanShutdown) {
     AutoRequired<AutoNetServer>();
     
     ctxt->Initiate();
-    ctxt->Wait(std::chrono::milliseconds(200));
+    ctxt->Wait(std::chrono::seconds(1));
     ctxt->SignalShutdown(true);
   }
   
@@ -52,7 +52,7 @@ TEST_F(WebsocketTest, CleanShutdown) {
     AutoRequired<AutoNetServer>();
     
     ctxt->Initiate();
-    ctxt->Wait(std::chrono::milliseconds(200));
+    ctxt->Wait(std::chrono::seconds(1));
     ctxt->SignalShutdown(true);
   }
 }
