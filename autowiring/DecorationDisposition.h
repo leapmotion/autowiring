@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "AutowiringConfig.h"
 #include "AnySharedPointer.h"
 #include <vector>
 
@@ -10,12 +11,12 @@ struct SatCounter;
 /// </remarks>
 struct DecorationDisposition
 {
-#if !AUTOWIRING_UNSAFE_HASHTABLE
+#if AUTOWIRING_USE_LIBCXX
   DecorationDisposition(DecorationDisposition&&) = delete;
   void operator=(DecorationDisposition&&) = delete;
   DecorationDisposition(const DecorationDisposition& source) = delete;
   void operator=(const DecorationDisposition& source) = delete;
-#else //!AUTOWIRING_UNSAFE_HASHTABLE
+#else
   // The methods below are needed for c++98 builds
   DecorationDisposition(DecorationDisposition&& source) :
     m_decoration(source.m_decoration),
@@ -49,7 +50,7 @@ struct DecorationDisposition
     isCheckedOut = source.isCheckedOut;
     wasCheckedOut = source.wasCheckedOut;
   }
-#endif //!AUTOWIRING_UNSAFE_HASHTABLE
+#endif //AUTOWIRING_USE_LIBCXX
 
   DecorationDisposition(void) :
     m_pImmediate(nullptr),
