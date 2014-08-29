@@ -11,8 +11,8 @@
 // created if our static library is imported by another project that uses an incompatible
 // version of websocketpp.
 #define websocketpp websocketpp_autonet
-#include <websocketpp/server.hpp>
 #include <websocketpp/config/asio_no_tls.hpp>
+#include <websocketpp/server.hpp>
 
 struct TypeIdentifierBase;
 
@@ -25,10 +25,10 @@ public:
   ~AutoNetServerImpl();
 
   //Types
-  typedef websocketpp::server<websocketpp::config::asio> server;
-  typedef server::message_ptr message_ptr;
+  typedef websocketpp::server<websocketpp::config::asio> t_server;
+  typedef t_server::message_ptr message_ptr;
 
-  // Functions from CoreContext
+  // Functions from BasicThread
   virtual void Run(void) override;
   virtual void OnStop(void) override;
 
@@ -86,7 +86,7 @@ protected:
         {"args", Json::array{args...}}
     };
 
-    m_Server->send(hdl, msg.dump(), websocketpp::frame::opcode::text);
+    m_Server.send(hdl, msg.dump(), websocketpp::frame::opcode::text);
   }
 
   /// <summary>
@@ -169,7 +169,7 @@ protected:
   std::set<std::string> m_breakpoints;
 
   // The actual server
-  std::shared_ptr<server> m_Server;
+  t_server m_Server;
   const int m_Port; // Port to listen on
 };
 
