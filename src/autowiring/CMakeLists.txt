@@ -25,6 +25,7 @@ set(Autowiring_SRCS
   AutowirableSlot.h
   AutowirableSlot.cpp
   AutowiringEvents.h
+  autowiring.h
   autowiring_error.h
   BasicThread.h
   BasicThread.cpp
@@ -55,6 +56,7 @@ set(Autowiring_SRCS
   DecorationDisposition.h
   Deserialize.h
   Deferred.h
+  DefaultAutoNetServer.cpp
   demangle.h
   DispatchQueue.h
   DispatchQueue.cpp
