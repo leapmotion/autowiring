@@ -35,5 +35,5 @@ endforeach()
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutoNet_SRCS)
 add_library(AutoNet STATIC ${AutoNet_SRCS})
-target_link_libraries(AutoNet Autowiring json11 ${Boost_LIBRARIES})
+target_link_libraries(AutoNet json11 ${Boost_LIBRARIES})
 set_property(TARGET AutoNet PROPERTY FOLDER "Autowiring")
