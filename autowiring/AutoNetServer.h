@@ -14,6 +14,7 @@ protected:
 
 public:
   virtual ~AutoNetServer();
+
   static AutoNetServer* New(void) {
     return NewAutoNetServerImpl();
   }
@@ -26,6 +27,4 @@ public:
 
   // Allows a breakpoint previously set with Breakpoint to be resumed
   virtual void HandleResumeFromBreakpoint(std::string name) = 0;
-
-protected:
 };
