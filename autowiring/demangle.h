@@ -32,7 +32,11 @@ namespace autowiring {
   }
   
 #endif
-  
+
+  static inline std::string demangle(const std::type_info* ti) {
+    return demangle(*ti);
+  }
+
   template<typename T>
   static inline std::string demangle(const T&) {
     return demangle(typeid(T));
