@@ -375,7 +375,7 @@ public:
         pTypeSubs[i] = &m_decorations[*s_argTypes[i]];
         if(pTypeSubs[i]->wasCheckedOut) {
           std::stringstream ss;
-          ss << "Cannot perform immediate decoration with type " << autowiring::demangle(s_argTypes[i])
+          ss << "Cannot perform immediate decoration with type " << autowiring::demangle(*s_argTypes[i])
              << ", the requested decoration already exists";
           throw std::runtime_error(ss.str());
         }
