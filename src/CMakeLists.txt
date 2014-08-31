@@ -5,10 +5,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/autowiring
 )
 
-set(Boost_USE_STATIC_LIBS        ON)
-set(Boost_USE_MULTITHREADED      ON)
-set(Boost_USE_STATIC_RUNTIME    OFF)
-
 if(APPLE)
   # Boost is actually required on Mac
   find_package(Boost REQUIRED)
