@@ -10,7 +10,7 @@ class DefaultAutoNetServer:
   public AutoNetServer
 {
 public:
-  DefaultAutoNetServer(void);
+  DefaultAutoNetServer(void) {}
 
   void Breakpoint(std::string name) {}
   void HandleResumeFromBreakpoint(std::string name) {}
