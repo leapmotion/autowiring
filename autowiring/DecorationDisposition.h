@@ -54,6 +54,7 @@ struct DecorationDisposition
 
   DecorationDisposition(void) :
     m_pImmediate(nullptr),
+    m_type(nullptr),
     m_publisher(nullptr),
     satisfied(false),
     isCheckedOut(false),
@@ -66,6 +67,9 @@ struct DecorationDisposition
 
   // A pointer to the immediate decorations, if one is specified, or else nullptr
   const void* m_pImmediate;
+
+  // The type of the decoration.
+  const std::type_info* m_type;
 
   // Provider for this decoration, where it can be statically inferred.  Note that a provider for
   // this decoration may exist even if this value is null, in the event that dynamic decoration is
@@ -89,6 +93,7 @@ struct DecorationDisposition
   void Reset(void) {
     m_decoration->reset();
     m_pImmediate = nullptr;
+    m_type = nullptr;
     satisfied = false;
     isCheckedOut = false;
     wasCheckedOut = false;

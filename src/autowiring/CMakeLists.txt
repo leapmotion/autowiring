@@ -51,6 +51,7 @@ set(Autowiring_SRCS
   CreationRules.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
+  DataFlow.h
   DeclareAutoFilter.h
   Decompose.h
   DecorationDisposition.h
@@ -80,10 +81,11 @@ set(Autowiring_SRCS
   has_autofilter.h
   has_simple_constructor.h
   has_static_new.h
+  hash_tuple.h
   index_tuple.h
   is_any.h
   is_shared_ptr.h
-  is_auto_filter.h
+  is_autofilter.h
   InterlockedExchange.h
   InvokeRelay.h
   atomic_object.h

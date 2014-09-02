@@ -31,6 +31,9 @@ public:
     m_checkout(std::move(checkout))
   {}
 
+  auto_out(void):
+    m_cancelled(false)
+  {}
   ~auto_out(void) {
     if(!m_cancelled)
       m_checkout.Ready();
