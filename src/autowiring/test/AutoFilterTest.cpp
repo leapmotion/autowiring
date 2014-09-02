@@ -128,6 +128,44 @@ TEST_F(AutoFilterTest, VerifyTypeUsage) {
   ASSERT_EQ(2, filterA->m_one.i) << "AutoFilter was called using derived type instead of parent";
 }
 
+class FilterFirst {
+public:
+  int m_called;
+
+  FilterFirst() : m_called(0) {};
+
+  void AutoFilter(AutoPacket& pkt) {
+    ++m_called;
+    pkt.Decorate(Decoration<0>());
+  }
+};
+
+class FilterLast {
+public:
+  int m_called;
+
+  FilterLast() : m_called(0) {};
+
+  void AutoFilter(const AutoPacket& pkt) {
+    ++m_called;
+    ASSERT_TRUE(pkt.Has<Decoration<0>>()) << "Missing FilterFirst Decoration<0>";
+  }
+};
+
+TEST_F(AutoFilterTest, DISABLED_VerifyFirstLastCalls) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterFirst> first;
+  AutoRequired<FilterLast> last;
+
+  {
+    auto pkt = factory->NewPacket();
+    ASSERT_EQ(1, first->m_called) << "First-call filter was not applied";
+    ASSERT_EQ(0, last->m_called) << "Last-call filter was called early";
+  }
+  ASSERT_EQ(1, first->m_called) << "First-call filter was applied as final call";
+  ASSERT_EQ(1, last->m_called) << "Last-call filter was not applied";
+}
+
 TEST_F(AutoFilterTest, VerifyOptionalFilter) {
   AutoRequired<AutoPacketFactory> factory;
 
