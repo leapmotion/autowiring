@@ -20,6 +20,7 @@ set(Autowiring_SRCS
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
   AutoSelfUpdate.h
+  AutoTimeStamp.h
   Autowired.h
   Autowired.cpp
   AutowirableSlot.h
