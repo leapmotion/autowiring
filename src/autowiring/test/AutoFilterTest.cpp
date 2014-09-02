@@ -8,6 +8,7 @@
 #include <autowiring/NewAutoFilter.h>
 #include <autowiring/DeclareAutoFilter.h>
 #include <autowiring/AutoSelfUpdate.h>
+#include <autowiring/AutoTimeStamp.h>
 #include THREAD_HEADER
 
 class AutoFilterTest:
@@ -1073,6 +1074,12 @@ TEST_F(AutoFilterTest, AutoSelfUpdateTwoContexts) {
     CurrentContextPusher pusher(contextB);
     ASSERT_NO_THROW(AutoRequired<AutoSelfUpdate<Decoration<0>>>()) << "Failed to create AutoSelfUpdate in contextB";
   }
+}
+
+TEST_F(AutoFilterTest, AutoTimeStampTest) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<AutoTimeStamp> stamper;
+  ASSERT_TRUE(factory->NewPacket()->Has<AutoTimeStamp::time>()) << "Failed to stamp packet on initialization";
 }
 
 TEST_F(AutoFilterTest, WaitWhilePacketOutstanding) {
