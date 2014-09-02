@@ -4,7 +4,7 @@
 #include <autowiring/AutoPacket.h>
 #include <autowiring/AutoPacketFactory.h>
 #include <autowiring/Deferred.h>
-#include <Autowiring/optional_ptr.h>
+#include <autowiring/optional_ptr.h>
 #include <autowiring/NewAutoFilter.h>
 #include <autowiring/DeclareAutoFilter.h>
 #include <autowiring/AutoSelfUpdate.h>
