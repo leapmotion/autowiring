@@ -488,11 +488,10 @@ public:
     // Pulse satisfaction:
     MakeAtExit([this, &pTypeSubs, &source] {
       // Mark entries as unsatisfiable:
-      for(DecorationDisposition*  pEntry : pTypeSubs) {
       // IMPORTANT: isCheckedOut = true prevents subsequent decorations of this type
+      // IMPORTANT: m_pImmediate != nullptr records having used DecorateImmediate
+      for(DecorationDisposition*  pEntry : pTypeSubs)
         pEntry->satisfied = false;
-        pEntry->m_pImmediate = nullptr;
-      }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
       for(const std::type_info* ti : s_argTypes)
