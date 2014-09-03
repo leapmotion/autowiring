@@ -346,7 +346,6 @@ public:
         throw std::runtime_error(ss.str());
       }
       entry.isCheckedOut = true;
-      entry.wasCheckedOut = true;
       entry.m_decoration = ptr;
     }
     if (flow.halfpipes.size() > 0) {
@@ -368,7 +367,6 @@ public:
         throw std::runtime_error(ss.str());
       }
       entry.isCheckedOut = true;
-      entry.wasCheckedOut = true;
       entry.m_decoration = ptr;
     }
 
@@ -399,12 +397,12 @@ public:
       std::lock_guard<std::mutex> lk(m_lock);
       auto& entry = m_decorations[Index(typeid(T), source)];
       entry.m_type = &typeid(T); // Ensure correct type if instantiated here
-      if(entry.wasCheckedOut)
+      if(entry.satisfied ||
+         entry.isCheckedOut)
         throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
 
-      // Mark the entry as appropriate:
-      entry.satisfied = true;
-      entry.wasCheckedOut = true;
+      // Mark the entry as permanently checked-out
+      entry.isCheckedOut = true;
     }
 
     // Now trigger a rescan:
@@ -472,7 +470,8 @@ public:
       for(size_t i = 0; i < s_arity; i++) {
         pTypeSubs[i] = &m_decorations[Index(*s_argTypes[i], source)];
         pTypeSubs[i]->m_type = s_argTypes[i]; // Ensure correct type if instantiated here
-        if(pTypeSubs[i]->wasCheckedOut) {
+        if(pTypeSubs[i]->satisfied ||
+           pTypeSubs[i]->isCheckedOut) {
           std::stringstream ss;
           ss << "Cannot perform immediate decoration with type " << autowiring::demangle(*s_argTypes[i])
              << ", the requested decoration already exists";
@@ -480,9 +479,8 @@ public:
         }
 
         // Mark the entry as appropriate:
+        pTypeSubs[i]->isCheckedOut = true;
         pTypeSubs[i]->satisfied = true;
-        pTypeSubs[i]->wasCheckedOut = true;
-
         pTypeSubs[i]->m_pImmediate = pvImmeds[i];
       }
     }
@@ -491,6 +489,7 @@ public:
     MakeAtExit([this, &pTypeSubs, &source] {
       // Mark entries as unsatisfiable:
       for(DecorationDisposition*  pEntry : pTypeSubs) {
+      // IMPORTANT: isCheckedOut = true prevents subsequent decorations of this type
         pEntry->satisfied = false;
         pEntry->m_pImmediate = nullptr;
       }

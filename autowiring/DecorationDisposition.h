@@ -56,9 +56,8 @@ struct DecorationDisposition
     m_pImmediate(nullptr),
     m_type(nullptr),
     m_publisher(nullptr),
-    satisfied(false),
     isCheckedOut(false),
-    wasCheckedOut(false)
+    satisfied(false)
   {}
 
   // The decoration proper--potentially, this decoration might be from a prior execution of this
@@ -80,22 +79,21 @@ struct DecorationDisposition
   // or an optional entry if false.
   std::vector<std::pair<SatCounter*, bool>> m_subscribers;
 
-  // Flag indicating that this entry is satisfied
-  bool satisfied;
-
-  // Indicates that the internally held object is currently checked out
+  // Indicates that the internally held object is currently checked out,
+  // but might not be satisfied, since the data is being prepared.
   bool isCheckedOut;
 
-  // Indicates that this entry was checked out at some point in the past, and can no longer be
-  // checked out for a subsequent satisfaction
-  bool wasCheckedOut;
+  // Flag indicating that this entry is satisfied
+  // This implies that the entry has been previously checked out.
+  // NOTE: In order to make a type unsatisfiable set (and persist)
+  // isCheckedOut == true && satisfied == false
+  bool satisfied;
 
   void Reset(void) {
     m_decoration->reset();
     m_pImmediate = nullptr;
     m_type = nullptr;
-    satisfied = false;
     isCheckedOut = false;
-    wasCheckedOut = false;
+    satisfied = false;
   }
 };
