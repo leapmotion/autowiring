@@ -345,6 +345,14 @@ void AutoPacket::Finalize(void) {
   for (SatCounter* call : callQueue)
     call->CallAutoFilter(*this);
 
+  // No further type satisfaction is allowed
+  // IMPORTANT: This prevents last-call decorations using auto_out,
+  // but does not effect const AutoPacket&, which requires no Checkout.
+  for (auto& decoration : m_decorations) {
+    decoration.second.satisfied = true;
+    decoration.second.wasCheckedOut = true;
+  }
+
   // Last-call indicated by argumument type const AutoPacket&:
   UpdateSatisfaction(typeid(subscriber_traits<const AutoPacket&>::type));
 
