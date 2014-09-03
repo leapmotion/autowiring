@@ -152,7 +152,7 @@ public:
   }
 };
 
-TEST_F(AutoFilterTest, DISABLED_VerifyFirstLastCalls) {
+TEST_F(AutoFilterTest, VerifyFirstLastCalls) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<FilterFirst> first;
   AutoRequired<FilterLast> last;

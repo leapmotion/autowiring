@@ -326,8 +326,8 @@ void AutoPacket::Initialize(void) {
   for (SatCounter* call : callCounters)
     call->CallAutoFilter(*this);
 
-  // Initial satisfaction of the AutoPacket:
-  UpdateSatisfaction(typeid(AutoPacket));
+  // First-call indicated by argumument type AutoPacket&:
+  UpdateSatisfaction(typeid(subscriber_traits<AutoPacket&>::type));
 }
 
 void AutoPacket::Finalize(void) {
@@ -344,6 +344,9 @@ void AutoPacket::Finalize(void) {
   }
   for (SatCounter* call : callQueue)
     call->CallAutoFilter(*this);
+
+  // Last-call indicated by argumument type const AutoPacket&:
+  UpdateSatisfaction(typeid(subscriber_traits<const AutoPacket&>::type));
 
   // Remove all recipients & clean up the decorations list
   // ASSERT: This reverses the order of accumulation,
