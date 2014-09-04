@@ -168,6 +168,36 @@ struct all_autofilter_args<Head> :
 {};
 
 /// <summary>
+/// Determines whether all arguments are inputs.
+/// </summary>
+/// <remarks>
+/// This enables static validation of final-call AutoFilter functions.
+/// </remarks>
+template<class... Args>
+struct all_autofilter_inputs :
+  std::false_type
+{};
+template<class Head, class... Tail>
+struct all_autofilter_inputs<Head, Tail...> :
+  std::integral_constant<bool, is_autofilter_arg<Head>::is_input && all_autofilter_inputs<Tail...>::value>
+{};
+
+/// <summary>
+/// Determines whether all arguments are inputs.
+/// </summary>
+/// <remarks>
+/// This enables static validation of issue-call AutoFilter functions.
+/// </remarks>
+template<class... Args>
+struct all_autofilter_outputs :
+  std::false_type
+{};
+template<class Head, class... Tail>
+struct all_autofilter_outputs<Head, Tail...> :
+  std::integral_constant<bool, is_autofilter_arg<Head>::is_output && all_autofilter_outputs<Tail...>::value>
+{};
+
+/// <summary>
 /// Determines whether the return value of a function is allowed for an AutoFilter:
 /// - void
 /// - Deferred
