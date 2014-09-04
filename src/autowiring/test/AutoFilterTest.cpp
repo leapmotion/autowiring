@@ -9,6 +9,7 @@
 #include <autowiring/DeclareAutoFilter.h>
 #include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/AutoTimeStamp.h>
+#include <autowiring/SatCounter.h>
 #include THREAD_HEADER
 
 class AutoFilterTest:
@@ -191,6 +192,62 @@ TEST_F(AutoFilterTest, VerifyFirstLastCalls) {
   }
   ASSERT_EQ(1, first->m_called) << "First-call filter was applied as final call";
   ASSERT_EQ(1, lastD0->m_called) << "Last-call filter was not applied";
+}
+
+class AntiFilter {
+protected:
+  typedef MicroAutoFilter<void, const Decoration<0>&> t_BaseFilter;
+  std::shared_ptr<t_BaseFilter> m_BaseMicroFilter;
+
+public:
+  int m_calledBase;
+  int m_calledAuto;
+
+  AntiFilter() {
+    m_BaseMicroFilter = DeclareAutoFilter(this, &AntiFilter::BaseFilter);
+  }
+
+  /// Normal AutoFilter call, implemented by MicroAutoFilter
+  void BaseFilter(const Decoration<0>& deco) {
+    ++m_calledBase;
+  }
+
+  /// Called when AutoPacket is exiting scope
+  /// FIXME: This cannot be a MicroAutoFilter because the call type is not distinctive.
+  void AutoFilter(const AutoPacket& pkt) {
+    if (pkt.GetSatisfaction(typeid(t_BaseFilter)).called) {
+      /// BaseFilter has already been called for this packet
+      return;
+    }
+    ++m_calledAuto;
+    ASSERT_FALSE(pkt.Has<Decoration<0>>()) << "BaseFilter should have been called";
+  }
+};
+
+TEST_F(AutoFilterTest, TestAntiFilter) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<AntiFilter> anti;
+
+  // Issue & return a packet without decorating
+  {
+    auto pkt = factory->NewPacket();
+    ASSERT_EQ(0, anti->m_calledBase) << "Called BaseFilter without Decoration<0>";
+    ASSERT_EQ(0, anti->m_calledAuto) << "Called AutoFilter without Decoration<0>";
+  }
+  ASSERT_EQ(0, anti->m_calledBase) << "Called BaseFilter without Decoration<0>";
+  ASSERT_EQ(1, anti->m_calledAuto) << "Failed to call AutoFilter when BaseFilter was not called";
+  anti->m_calledBase = 0;
+  anti->m_calledAuto = 0;
+
+  // Issue & decoration a packet
+  {
+    auto pkt = factory->NewPacket();
+    pkt->Decorate(Decoration<0>());
+    ASSERT_EQ(1, anti->m_calledBase) << "Failed to call BaseFilter with Decoration<0>";
+    ASSERT_EQ(0, anti->m_calledAuto) << "Called AutoFilter with Decoration<0>";
+  }
+  ASSERT_EQ(1, anti->m_calledBase) << "Call BaseFilter multiple times with Decoration<0>";
+  ASSERT_EQ(0, anti->m_calledAuto) << "Called AutoFilter with Decoration<0>";
 }
 
 class FilterFail {
