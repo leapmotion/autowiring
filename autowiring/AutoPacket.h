@@ -522,8 +522,5 @@ public:
   /// This method is used to determine whether an AutoFilter recipient existed
   /// for the specified type at the time the packet was created
   /// </remarks>
-  template<class T>
-  bool HasSubscribers(const std::type_info& source = typeid(void)) const {return HasSubscribers(typeid(T), source);}
-
-  bool HasSubscribers(const std::type_info& ti, const std::type_info& source = typeid(void)) const;
+  bool HasSubscribers(const std::type_info& data, const std::type_info& source = typeid(void)) const;
 };

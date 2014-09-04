@@ -72,15 +72,15 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
   auto packet1 = factory->NewPacket();
 
   // Verify subscription-free status:
-  EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
+  EXPECT_FALSE(packet1->HasSubscribers(typeid(Decoration<0>))) << "Subscription exists where one should not have existed";
 
   // Create another packet where a subscriber exists:
   AutoRequired<FilterA> filterA;
   auto packet2 = factory->NewPacket();
 
   // Verify the first packet still does not have subscriptions:
-  EXPECT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
+  EXPECT_FALSE(packet1->HasSubscribers(typeid(Decoration<0>))) << "Subscription was incorrectly, retroactively added to a packet";
 
   // Verify the second one does:
-  EXPECT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
+  EXPECT_TRUE(packet2->HasSubscribers(typeid(Decoration<0>))) << "Packet lacked an expected subscription";
 }
