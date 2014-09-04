@@ -7,6 +7,7 @@
 #include <autowiring/optional_ptr.h>
 #include <autowiring/NewAutoFilter.h>
 #include <autowiring/DeclareAutoFilter.h>
+#include <autowiring/DeclareElseFilter.h>
 #include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/AutoTimeStamp.h>
 #include <autowiring/SatCounter.h>
@@ -194,60 +195,92 @@ TEST_F(AutoFilterTest, VerifyFirstLastCalls) {
   ASSERT_EQ(1, lastD0->m_called) << "Last-call filter was not applied";
 }
 
-class ElseFilter {
+class LogicFilter {
 protected:
-  typedef BasedAutoFilter<ElseFilter, void, const AutoPacket&> t_BasedFilter;
-  std::shared_ptr<t_BasedFilter> m_BasedMicroFilter;
+  typedef BasedAutoFilter<LogicFilter, void, const Decoration<1>&> t_Next;
+  std::shared_ptr<MicroElseFilter<LogicFilter>> m_MicroElseFilter;
+  std::shared_ptr<t_Next> m_BasedNextFilter;
+  std::shared_ptr<MicroElseFilter<t_Next>> m_MicroNextElseFilter;
 
 public:
-  int m_calledBase;
   int m_calledAuto;
+  int m_calledElse;
+  int m_calledNext;
+  int m_calledNextElse;
 
-  ElseFilter() {
-    m_BasedMicroFilter = DeclareAutoFilter(this, &ElseFilter::AntiFilter);
+  LogicFilter() {
+    m_MicroElseFilter = DeclareElseFilter(this, &LogicFilter::ElseFilter);
+    m_BasedNextFilter = DeclareAutoFilter(this, &LogicFilter::NextFilter);
+    m_MicroNextElseFilter = DeclareElseFilter<LogicFilter, t_Next>(this, &LogicFilter::NextElseFilter);
+    Reset();
   }
 
   /// Normal AutoFilter call, implemented by MicroAutoFilter
   void AutoFilter(const Decoration<0>& deco) {
-    ++m_calledBase;
+    ++m_calledAuto;
   }
 
-  /// Called when AutoPacket is exiting scope
-  /// FIXME: This cannot be a MicroAutoFilter because the call type is not distinctive.
-  void AntiFilter(const AutoPacket& pkt) {
-    if (pkt.GetSatisfaction(typeid(ElseFilter)).called) {
-      /// BaseFilter has already been called for this packet
-      return;
-    }
-    ++m_calledAuto;
-    ASSERT_FALSE(pkt.Has<Decoration<0>>()) << "BaseFilter should have been called";
+  /// Called when AutoFilter is not
+  void ElseFilter(const AutoPacket& packet) {
+    ++m_calledElse;
+    ASSERT_FALSE(packet.Has<Decoration<0>>()) << "AutoFilter should have been called";
+  }
+
+  /// Declared AutoFilter call, implemented by MicroAutoFilter
+  void NextFilter(const Decoration<1>& deco) {
+    ++m_calledNext;
+  }
+
+  /// Declared AutoFilter call, implemented by MicroAutoFilter
+  void NextElseFilter(const AutoPacket& packet) {
+    ++m_calledNextElse;
+    ASSERT_FALSE(packet.Has<Decoration<1>>()) << "NextFilter should have been called";
+  }
+
+  void Reset() {
+    m_calledAuto = 0;
+    m_calledElse = 0;
+    m_calledNext = 0;
+    m_calledNextElse = 0;
   }
 };
 
 TEST_F(AutoFilterTest, TestAntiFilter) {
   AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<ElseFilter> anti;
+  AutoRequired<LogicFilter> logic;
 
   // Issue & return a packet without decorating
   {
     auto pkt = factory->NewPacket();
-    ASSERT_EQ(0, anti->m_calledBase) << "Called BaseFilter without Decoration<0>";
-    ASSERT_EQ(0, anti->m_calledAuto) << "Called AutoFilter without Decoration<0>";
+    ASSERT_EQ(0, logic->m_calledAuto) << "Called AutoFilter without Decoration<0>";
+    ASSERT_EQ(0, logic->m_calledElse) << "Called ElseFilter before packet final-calls";
+    ASSERT_EQ(0, logic->m_calledNext) << "Called NextFilter without Decoration<0>";
+    ASSERT_EQ(0, logic->m_calledNextElse) << "Called NextElseFilter before packet final-calls";
   }
-  ASSERT_EQ(0, anti->m_calledBase) << "Called BaseFilter without Decoration<0>";
-  ASSERT_EQ(1, anti->m_calledAuto) << "Failed to call AutoFilter when BaseFilter was not called";
-  anti->m_calledBase = 0;
-  anti->m_calledAuto = 0;
+  ASSERT_EQ(0, logic->m_calledAuto) << "Called AutoFilter without Decoration<0>";
+  ASSERT_EQ(1, logic->m_calledElse) << "Failed to call ElseFilter in packet final-calls";
+  ASSERT_EQ(0, logic->m_calledNext) << "Called NextFilter without Decoration<0>";
+  ASSERT_EQ(1, logic->m_calledNextElse) << "Failed to call NextElseFilter in packet final-calls";
+  logic->Reset();
 
   // Issue & decoration a packet
   {
     auto pkt = factory->NewPacket();
     pkt->Decorate(Decoration<0>());
-    ASSERT_EQ(1, anti->m_calledBase) << "Failed to call BaseFilter with Decoration<0>";
-    ASSERT_EQ(0, anti->m_calledAuto) << "Called AutoFilter with Decoration<0>";
+    ASSERT_EQ(1, logic->m_calledAuto) << "Failed to call AutoFilter with Decoration<0>";
+    ASSERT_EQ(0, logic->m_calledElse) << "Called ElseFilter before packet final-calls";
+    ASSERT_EQ(0, logic->m_calledNext) << "Called NextFilter without Decoration<0>";
+    ASSERT_EQ(0, logic->m_calledNextElse) << "Called NextElseFilter before packet final-calls";
+    pkt->Decorate(Decoration<1>());
+    ASSERT_EQ(1, logic->m_calledAuto) << "Multiple calls to AutoFilter with Decoration<0>";
+    ASSERT_EQ(0, logic->m_calledElse) << "Called ElseFilter before packet final-calls";
+    ASSERT_EQ(1, logic->m_calledNext) << "Failed to call NextFilter with Decoration<1>";
+    ASSERT_EQ(0, logic->m_calledNextElse) << "Called NextElseFilter before packet final-calls";
   }
-  ASSERT_EQ(1, anti->m_calledBase) << "Call BaseFilter multiple times with Decoration<0>";
-  ASSERT_EQ(0, anti->m_calledAuto) << "Called AutoFilter with Decoration<0>";
+  ASSERT_EQ(1, logic->m_calledAuto) << "Multiple calls to AutoFilter with Decoration<0>";
+  ASSERT_EQ(0, logic->m_calledElse) << "Called ElseFilter in packet final-calls";
+  ASSERT_EQ(1, logic->m_calledNext) << "Multiple calls to NextFilter with Decoration<1>";
+  ASSERT_EQ(0, logic->m_calledNextElse) << "Called NextElseFilter in packet final-calls";
 }
 
 class FilterFail {
