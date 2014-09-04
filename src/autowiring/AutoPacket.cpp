@@ -45,7 +45,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     auto flow = satCounter.GetDataFlow(pCur->ti);
     if (flow.broadcast) {
       // Broadcast source is void
-      DecorationDisposition& entry = m_decorations[Index(*pCur->ti, typeid(void))];
+      DecorationDisposition& entry = m_decorations[DSIndex(*pCur->ti, typeid(void))];
       entry.m_type = pCur->ti;
 
       // Decide what to do with this entry:
@@ -117,7 +117,7 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
     auto flow = satCounter.GetDataFlow(pCur->ti);
     if (flow.broadcast) {
       // Broadcast source is void
-      DecorationDisposition& entry = m_decorations[Index(*pCur->ti, typeid(void))];
+      DecorationDisposition& entry = m_decorations[DSIndex(*pCur->ti, typeid(void))];
 
       // Decide what to do with this entry:
       switch(pCur->subscriberType) {
@@ -184,7 +184,7 @@ void AutoPacket::MarkUnsatisfiable(const std::type_info& info, const std::type_i
   std::list<SatCounter*> callQueue;
   {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto dFind = m_decorations.find(Index(info, source));
+    auto dFind = m_decorations.find(DSIndex(info, source));
     if(dFind == m_decorations.end())
       // Trivial return, there's no subscriber to this decoration and so we have nothing to do
       return;
@@ -211,7 +211,7 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, const std::type_
   std::list<SatCounter*> callQueue;
   {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto dFind = m_decorations.find(Index(info, source));
+    auto dFind = m_decorations.find(DSIndex(info, source));
     if(dFind == m_decorations.end())
       // Trivial return, there's no subscriber to this decoration and so we have nothing to do
       return;
@@ -410,7 +410,7 @@ SatCounter AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {
 std::list<SatCounter> AutoPacket::GetSubscribers(const std::type_info& data, const std::type_info& source) const {
   std::lock_guard<std::mutex> lk(m_lock);
   std::list<SatCounter> subscribers;
-  t_decorationMap::const_iterator decoration = m_decorations.find(Index(data, source));
+  t_decorationMap::const_iterator decoration = m_decorations.find(DSIndex(data, source));
   if (decoration != m_decorations.end())
     for (auto& subscriber : decoration->second.m_subscribers)
       subscribers.push_back(*subscriber.first);
@@ -428,5 +428,5 @@ std::list<DecorationDisposition> AutoPacket::GetDispositions(const std::type_inf
 
 bool AutoPacket::HasSubscribers(const std::type_info& data, const std::type_info& source) const {
   std::lock_guard<std::mutex> lk(m_lock);
-  return m_decorations.count(Index(data, source)) != 0;
+  return m_decorations.count(DSIndex(data, source)) != 0;
 }

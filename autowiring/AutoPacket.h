@@ -57,16 +57,12 @@ private:
 
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
+  // NOTE: The following should be a constexp
+  std::tuple<std::type_index, std::type_index> (&DSIndex)(std::type_index&&, std::type_index&&)
+    = std::make_tuple<std::type_index, std::type_index>;
   typedef std::unordered_map<std::tuple<std::type_index, std::type_index>, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
   mutable std::mutex m_lock;
-
-  /// <summary>
-  /// Convert type_info pairs to type_index tuple.
-  /// </summary>
-  static std::tuple<std::type_index, std::type_index> Index(const std::type_info& data, const std::type_info& source) {
-    return std::make_tuple<std::type_index, std::type_index>(data, source);
-  }
 
   /// <summary>
   /// Retrieve data flow information for a decoration
@@ -181,7 +177,7 @@ private:
 
       DataFlow flow = GetDataFlow(typeid(type), source);
       if (flow.broadcast) {
-        broadDeco = &m_decorations[Index(typeid(type), typeid(void))];
+        broadDeco = &m_decorations[DSIndex(typeid(type), typeid(void))];
 
         assert(broadDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
         assert(broadDeco->isCheckedOut); // CompleteCheckout must follow Checkout
@@ -195,7 +191,7 @@ private:
         broadDeco->satisfied = true;
       }
       if (flow.halfpipes.size() > 0) {
-        pipedDeco = &m_decorations[Index(typeid(type), source)];
+        pipedDeco = &m_decorations[DSIndex(typeid(type), source)];
 
         assert(pipedDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
         assert(pipedDeco->isCheckedOut); // CompleteCheckout must follow Checkout
@@ -236,7 +232,7 @@ public:
   /// </returns>
   template<class T>
   bool Has(const std::type_info& source = typeid(void)) const {
-    auto q = m_decorations.find(Index(typeid(T), source));
+    auto q = m_decorations.find(DSIndex(typeid(T), source));
     if(q == m_decorations.end())
       return false;
     return q->second.satisfied;
@@ -264,7 +260,7 @@ public:
   bool Get(const T*& out, const std::type_info& source = typeid(void)) const {
     std::lock_guard<std::mutex> lk(m_lock);
 
-    auto q = m_decorations.find(Index(typeid(T), source));
+    auto q = m_decorations.find(DSIndex(typeid(T), source));
     if(q != m_decorations.end() &&
        q->second.satisfied) {
       auto& disposition = q->second;
@@ -294,7 +290,7 @@ public:
   template<class T>
   bool Get(const std::shared_ptr<T>*& out, const std::type_info& source = typeid(void)) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto q = m_decorations.find(Index(typeid(T), source));
+    auto q = m_decorations.find(DSIndex(typeid(T), source));
     if(q != m_decorations.end() && q->second.satisfied) {
       auto& disposition = q->second;
       if(disposition.m_decoration) {
@@ -331,7 +327,7 @@ public:
     if (flow.broadcast) {
       std::lock_guard<std::mutex> lk(m_lock);
 
-      auto& entry = m_decorations[Index(typeid(type), typeid(void))];
+      auto& entry = m_decorations[DSIndex(typeid(type), typeid(void))];
       entry.m_type = &typeid(type); // Ensure correct type if instantiated here
 
       if (entry.satisfied) {
@@ -352,7 +348,7 @@ public:
     if (flow.halfpipes.size() > 0) {
       std::lock_guard<std::mutex> lk(m_lock);
 
-      auto& entry = m_decorations[Index(typeid(type), source)];
+      auto& entry = m_decorations[DSIndex(typeid(type), source)];
       entry.m_type = &typeid(type); // Ensure correct type if instantiated here
 
       if (entry.satisfied) {
@@ -396,7 +392,7 @@ public:
     {
       // Insert a null entry at this location:
       std::lock_guard<std::mutex> lk(m_lock);
-      auto& entry = m_decorations[Index(typeid(T), source)];
+      auto& entry = m_decorations[DSIndex(typeid(T), source)];
       entry.m_type = &typeid(T); // Ensure correct type if instantiated here
       if(entry.satisfied ||
          entry.isCheckedOut)
@@ -469,7 +465,7 @@ public:
     {
       std::lock_guard<std::mutex> lk(m_lock);
       for(size_t i = 0; i < s_arity; i++) {
-        pTypeSubs[i] = &m_decorations[Index(*s_argTypes[i], source)];
+        pTypeSubs[i] = &m_decorations[DSIndex(*s_argTypes[i], source)];
         pTypeSubs[i]->m_type = s_argTypes[i]; // Ensure correct type if instantiated here
         if(pTypeSubs[i]->satisfied ||
            pTypeSubs[i]->isCheckedOut) {
@@ -530,12 +526,6 @@ public:
   /// </remarks>
   std::list<DecorationDisposition> GetDispositions(const std::type_info& data) const;
 
-  /// <returns>
-  /// True if the indicated type has been requested for use by some consumer
-  /// </returns>
-  /// <remarks>
-  /// This method is used to determine whether an AutoFilter recipient existed
-  /// for the specified type at the time the packet was created
-  /// </remarks>
+  /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   bool HasSubscribers(const std::type_info& data, const std::type_info& source = typeid(void)) const;
 };
