@@ -7,7 +7,6 @@
 #include "AutoFilterDescriptor.h"
 #include "ContextEnumerator.h"
 #include "SatCounter.h"
-#include <list>
 
 // This must appear in .cpp in order to avoid compilation failure due to:
 // "Arithmetic on a point to an incomplete type 'SatCounter'"
@@ -28,12 +27,12 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>
   std::sort(m_satCounters.begin(), m_satCounters.end());
   m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
 
+  // Record divide between subscribers & recipients
+  m_subscriberNum = m_satCounters.size();
+
   // Prime the satisfaction graph for each element:
   for(auto& satCounter : m_satCounters)
     AddSatCounter(satCounter);
-
-  // Record divide between subscribers & recipients
-  m_subscriberNum = m_satCounters.size();
 
   Reset();
 }
@@ -395,12 +394,39 @@ void AutoPacket::InitializeRecipient(const AutoFilterDescriptor& descriptor) {
     }
   }
 
-  // (3) If all types are satisfied, call AutoFilter now.
+  // (4) If all types are satisfied, call AutoFilter now.
   if (call)
     call->CallAutoFilter(*this);
 }
 
-bool AutoPacket::HasSubscribers(const std::type_info& ti, const std::type_info& source) const {
+SatCounter AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {
   std::lock_guard<std::mutex> lk(m_lock);
-  return m_decorations.count(Index(ti, source)) != 0;
+  for (auto& sat : m_satCounters)
+    if (sat.GetType() == &subscriber)
+      return sat;
+  return SatCounter();
+}
+
+std::list<SatCounter> AutoPacket::GetSubscribers(const std::type_info& data, const std::type_info& source) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  std::list<SatCounter> subscribers;
+  t_decorationMap::const_iterator decoration = m_decorations.find(Index(data, source));
+  if (decoration != m_decorations.end())
+    for (auto& subscriber : decoration->second.m_subscribers)
+      subscribers.push_back(*subscriber.first);
+  return subscribers;
+}
+
+std::list<DecorationDisposition> AutoPacket::GetDispositions(const std::type_info& data) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  std::list<DecorationDisposition> dispositions;
+  for (auto& disposition : m_decorations)
+    if (disposition.second.m_type == &data)
+      dispositions.push_back(disposition.second);
+  return dispositions;
+}
+
+bool AutoPacket::HasSubscribers(const std::type_info& data, const std::type_info& source) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  return m_decorations.count(Index(data, source)) != 0;
 }

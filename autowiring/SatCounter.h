@@ -10,11 +10,33 @@
 struct SatCounter:
   public AutoFilterDescriptor
 {
-  SatCounter(const AutoFilterDescriptor& rhs) :
-    AutoFilterDescriptor(rhs)
+  SatCounter(void):
+    remaining(0),
+    optional(0)
   {}
 
-  // The MANDATORY remaining counter:
+  SatCounter(const AutoFilterDescriptor& source):
+    AutoFilterDescriptor(source),
+    remaining(0),
+    optional(0)
+  {}
+
+  SatCounter(const SatCounter& source):
+    AutoFilterDescriptor(source),
+    remaining(source.remaining),
+    optional(source.optional),
+    satisfaction(source.satisfaction)
+  {}
+
+  SatCounter& operator = (const SatCounter& source) {
+    AutoFilterDescriptor::operator = (source);
+    remaining = source.remaining;
+    optional = source.optional;
+    satisfaction = source.satisfaction;
+    return *this;
+  }
+
+  // The REQUIRED remaining counter:
   size_t remaining;
 
   // The OPTIONAL remaining counter:

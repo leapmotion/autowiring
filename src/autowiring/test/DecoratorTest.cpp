@@ -3,6 +3,7 @@
 #include "TestFixtures/Decoration.hpp"
 #include <autowiring/AutoPacket.h>
 #include <autowiring/AutoPacketFactory.h>
+#include <autowiring/SatCounter.h>
 
 using namespace std;
 
@@ -79,8 +80,19 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
   auto packet2 = factory->NewPacket();
 
   // Verify the first packet still does not have subscriptions:
+  EXPECT_EQ(nullptr, packet1->GetSatisfaction(typeid(FilterA)).GetType()) << "Subscription was incorrectly, retroactively added to a packet";
+  EXPECT_TRUE(packet1->GetSubscribers(typeid(Decoration<0>)).empty()) << "Subscription was incorrectly, retroactively added to a packet";
+  EXPECT_TRUE(packet1->GetDispositions(typeid(Decoration<0>)).empty()) << "Subscription was incorrectly, retroactively added to a packet";
   EXPECT_FALSE(packet1->HasSubscribers(typeid(Decoration<0>))) << "Subscription was incorrectly, retroactively added to a packet";
 
   // Verify the second one does:
+  auto sat = packet2->GetSatisfaction(typeid(FilterA));
+  EXPECT_NE(nullptr, sat.GetType()) << "Packet lacked an expected subscription";
+  EXPECT_TRUE(sat.IsInput(typeid(Decoration<0>),typeid(void))) << "Incorrect input test";
+  auto subs = packet2->GetSubscribers(typeid(Decoration<0>));
+  EXPECT_EQ(1UL, subs.size()) << "Incorrect subscriber count";
+  auto disps = packet2->GetDispositions(typeid(Decoration<0>));
+  EXPECT_EQ(1UL, disps.size()) << "Incorrect count of expected decorations";
+  EXPECT_FALSE(disps.front().satisfied) << "Incorrect satisfaction status";
   EXPECT_TRUE(packet2->HasSubscribers(typeid(Decoration<0>))) << "Packet lacked an expected subscription";
 }

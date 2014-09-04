@@ -370,6 +370,7 @@ protected:
 
 public:
   // Accessor methods:
+  const std::type_info* GetType() const { return m_pType; }
   size_t GetArity(void) const { return m_arity; }
   size_t GetRequiredCount(void) const { return m_requiredCount; }
   size_t GetOptionalCount(void) const { return m_optionalCount; }

@@ -11,6 +11,7 @@
 #include "is_any.h"
 #include "MicroAutoFilter.h"
 #include "hash_tuple.h"
+#include <list>
 #include <sstream>
 #include <typeinfo>
 #include MEMORY_HEADER
@@ -500,8 +501,6 @@ public:
     PulseSatisfaction(pTypeSubs, s_arity);
   }
 
-  // TODO: Tests to verify that Snoop and AddRecipient cannot pick up piped data.
-
   /// <summary>
   /// Adds a function to be called as an AutoFilter for this packet only.
   /// </summary>
@@ -514,6 +513,22 @@ public:
       MakeAutoFilterDescriptor(std::make_shared<MicroAutoFilter<Ret, Args...>>(f))
     );
   }
+
+  /// <returns>A reference to the satisfaction counter for the specified type</returns>
+  /// <remarks>
+  /// If the type is not a subscriber GetSatisfaction().GetType() == nullptr will be true
+  /// </remarks>
+  SatCounter GetSatisfaction(const std::type_info& subscriber) const;
+
+  /// <returns>All subscribers to the specified data and source</returns>
+  std::list<SatCounter> GetSubscribers(const std::type_info& data, const std::type_info& source = typeid(void)) const;
+
+  /// <returns>All decoration dispositions associated with the data type</returns>
+  /// <remarks>
+  /// This method is useful for determining whether flow conditions (broadcast, pipes
+  /// immediate decorations) resulted in missed data.
+  /// </remarks>
+  std::list<DecorationDisposition> GetDispositions(const std::type_info& data) const;
 
   /// <returns>
   /// True if the indicated type has been requested for use by some consumer
