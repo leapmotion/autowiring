@@ -19,7 +19,7 @@ public:
   typedef typename atomic::lock lock;
   typedef typename atomic::unlock unlock;
   typedef typename atomic::shared shared;
-  typedef MicroAutoFilter<void, const object&> gather;
+  typedef BasedAutoFilter<AutoSelfUpdate<object_type>, void, const object&> gather;
 
   /// <summary>
   /// The type assigned to the prior value of the object
@@ -57,6 +57,6 @@ public:
     return m_gather;
   }
 
-private:
+protected:
   std::shared_ptr<gather> m_gather;
 };

@@ -194,28 +194,28 @@ TEST_F(AutoFilterTest, VerifyFirstLastCalls) {
   ASSERT_EQ(1, lastD0->m_called) << "Last-call filter was not applied";
 }
 
-class AntiFilter {
+class ElseFilter {
 protected:
-  typedef MicroAutoFilter<void, const Decoration<0>&> t_BaseFilter;
-  std::shared_ptr<t_BaseFilter> m_BaseMicroFilter;
+  typedef BasedAutoFilter<ElseFilter, void, const AutoPacket&> t_BasedFilter;
+  std::shared_ptr<t_BasedFilter> m_BasedMicroFilter;
 
 public:
   int m_calledBase;
   int m_calledAuto;
 
-  AntiFilter() {
-    m_BaseMicroFilter = DeclareAutoFilter(this, &AntiFilter::BaseFilter);
+  ElseFilter() {
+    m_BasedMicroFilter = DeclareAutoFilter(this, &ElseFilter::AntiFilter);
   }
 
   /// Normal AutoFilter call, implemented by MicroAutoFilter
-  void BaseFilter(const Decoration<0>& deco) {
+  void AutoFilter(const Decoration<0>& deco) {
     ++m_calledBase;
   }
 
   /// Called when AutoPacket is exiting scope
   /// FIXME: This cannot be a MicroAutoFilter because the call type is not distinctive.
-  void AutoFilter(const AutoPacket& pkt) {
-    if (pkt.GetSatisfaction(typeid(t_BaseFilter)).called) {
+  void AntiFilter(const AutoPacket& pkt) {
+    if (pkt.GetSatisfaction(typeid(ElseFilter)).called) {
       /// BaseFilter has already been called for this packet
       return;
     }
@@ -226,7 +226,7 @@ public:
 
 TEST_F(AutoFilterTest, TestAntiFilter) {
   AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<AntiFilter> anti;
+  AutoRequired<ElseFilter> anti;
 
   // Issue & return a packet without decorating
   {
