@@ -11,6 +11,7 @@
 #include "is_any.h"
 #include "MicroAutoFilter.h"
 #include "hash_tuple.h"
+#include <list>
 #include <sstream>
 #include <typeinfo>
 #include MEMORY_HEADER
@@ -56,16 +57,13 @@ private:
 
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
+  // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
+  static std::tuple<std::type_index, std::type_index> DSIndex(std::type_index&& x, std::type_index&& y) {
+    return std::make_tuple(x, y);
+  }
   typedef std::unordered_map<std::tuple<std::type_index, std::type_index>, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
   mutable std::mutex m_lock;
-
-  /// <summary>
-  /// Convert type_info pairs to type_index tuple.
-  /// </summary>
-  static std::tuple<std::type_index, std::type_index> Index(const std::type_info& data, const std::type_info& source) {
-    return std::make_tuple<std::type_index, std::type_index>(data, source);
-  }
 
   /// <summary>
   /// Retrieve data flow information for a decoration
@@ -180,7 +178,7 @@ private:
 
       autowiring::DataFlow flow = GetDataFlow(typeid(type), source);
       if (flow.broadcast) {
-        broadDeco = &m_decorations[Index(typeid(type), typeid(void))];
+        broadDeco = &m_decorations[DSIndex(typeid(type), typeid(void))];
 
         assert(broadDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
         assert(broadDeco->isCheckedOut); // CompleteCheckout must follow Checkout
@@ -194,7 +192,7 @@ private:
         broadDeco->satisfied = true;
       }
       if (flow.halfpipes.size() > 0) {
-        pipedDeco = &m_decorations[Index(typeid(type), source)];
+        pipedDeco = &m_decorations[DSIndex(typeid(type), source)];
 
         assert(pipedDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
         assert(pipedDeco->isCheckedOut); // CompleteCheckout must follow Checkout
@@ -235,7 +233,7 @@ public:
   /// </returns>
   template<class T>
   bool Has(const std::type_info& source = typeid(void)) const {
-    auto q = m_decorations.find(Index(typeid(T), source));
+    auto q = m_decorations.find(DSIndex(typeid(T), source));
     if(q == m_decorations.end())
       return false;
     return q->second.satisfied;
@@ -263,7 +261,7 @@ public:
   bool Get(const T*& out, const std::type_info& source = typeid(void)) const {
     std::lock_guard<std::mutex> lk(m_lock);
 
-    auto q = m_decorations.find(Index(typeid(T), source));
+    auto q = m_decorations.find(DSIndex(typeid(T), source));
     if(q != m_decorations.end() &&
        q->second.satisfied) {
       auto& disposition = q->second;
@@ -293,7 +291,7 @@ public:
   template<class T>
   bool Get(const std::shared_ptr<T>*& out, const std::type_info& source = typeid(void)) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto q = m_decorations.find(Index(typeid(T), source));
+    auto q = m_decorations.find(DSIndex(typeid(T), source));
     if(q != m_decorations.end() && q->second.satisfied) {
       auto& disposition = q->second;
       if(disposition.m_decoration) {
@@ -330,7 +328,7 @@ public:
     if (flow.broadcast) {
       std::lock_guard<std::mutex> lk(m_lock);
 
-      auto& entry = m_decorations[Index(typeid(type), typeid(void))];
+      auto& entry = m_decorations[DSIndex(typeid(type), typeid(void))];
       entry.m_type = &typeid(type); // Ensure correct type if instantiated here
 
       if (entry.satisfied) {
@@ -346,13 +344,12 @@ public:
         throw std::runtime_error(ss.str());
       }
       entry.isCheckedOut = true;
-      entry.wasCheckedOut = true;
       entry.m_decoration = ptr;
     }
     if (flow.halfpipes.size() > 0) {
       std::lock_guard<std::mutex> lk(m_lock);
 
-      auto& entry = m_decorations[Index(typeid(type), source)];
+      auto& entry = m_decorations[DSIndex(typeid(type), source)];
       entry.m_type = &typeid(type); // Ensure correct type if instantiated here
 
       if (entry.satisfied) {
@@ -368,7 +365,6 @@ public:
         throw std::runtime_error(ss.str());
       }
       entry.isCheckedOut = true;
-      entry.wasCheckedOut = true;
       entry.m_decoration = ptr;
     }
 
@@ -397,14 +393,14 @@ public:
     {
       // Insert a null entry at this location:
       std::lock_guard<std::mutex> lk(m_lock);
-      auto& entry = m_decorations[Index(typeid(T), source)];
+      auto& entry = m_decorations[DSIndex(typeid(T), source)];
       entry.m_type = &typeid(T); // Ensure correct type if instantiated here
-      if(entry.wasCheckedOut)
+      if(entry.satisfied ||
+         entry.isCheckedOut)
         throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
 
-      // Mark the entry as appropriate:
-      entry.satisfied = true;
-      entry.wasCheckedOut = true;
+      // Mark the entry as permanently checked-out
+      entry.isCheckedOut = true;
     }
 
     // Now trigger a rescan:
@@ -470,9 +466,10 @@ public:
     {
       std::lock_guard<std::mutex> lk(m_lock);
       for(size_t i = 0; i < s_arity; i++) {
-        pTypeSubs[i] = &m_decorations[Index(*s_argTypes[i], source)];
+        pTypeSubs[i] = &m_decorations[DSIndex(*s_argTypes[i], source)];
         pTypeSubs[i]->m_type = s_argTypes[i]; // Ensure correct type if instantiated here
-        if(pTypeSubs[i]->wasCheckedOut) {
+        if(pTypeSubs[i]->satisfied ||
+           pTypeSubs[i]->isCheckedOut) {
           std::stringstream ss;
           ss << "Cannot perform immediate decoration with type " << autowiring::demangle(*s_argTypes[i])
              << ", the requested decoration already exists";
@@ -480,9 +477,8 @@ public:
         }
 
         // Mark the entry as appropriate:
+        pTypeSubs[i]->isCheckedOut = true;
         pTypeSubs[i]->satisfied = true;
-        pTypeSubs[i]->wasCheckedOut = true;
-
         pTypeSubs[i]->m_pImmediate = pvImmeds[i];
       }
     }
@@ -490,10 +486,10 @@ public:
     // Pulse satisfaction:
     MakeAtExit([this, &pTypeSubs, &source] {
       // Mark entries as unsatisfiable:
-      for(DecorationDisposition*  pEntry : pTypeSubs) {
+      // IMPORTANT: isCheckedOut = true prevents subsequent decorations of this type
+      // IMPORTANT: m_pImmediate != nullptr records having used DecorateImmediate
+      for(DecorationDisposition*  pEntry : pTypeSubs)
         pEntry->satisfied = false;
-        pEntry->m_pImmediate = nullptr;
-      }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
       for(const std::type_info* ti : s_argTypes)
@@ -501,8 +497,6 @@ public:
     }),
     PulseSatisfaction(pTypeSubs, s_arity);
   }
-
-  // TODO: Tests to verify that Snoop and AddRecipient cannot pick up piped data.
 
   /// <summary>
   /// Adds a function to be called as an AutoFilter for this packet only.
@@ -517,15 +511,22 @@ public:
     );
   }
 
-  /// <returns>
-  /// True if the indicated type has been requested for use by some consumer
-  /// </returns>
+  /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>
-  /// This method is used to determine whether an AutoFilter recipient existed
-  /// for the specified type at the time the packet was created
+  /// If the type is not a subscriber GetSatisfaction().GetType() == nullptr will be true
   /// </remarks>
-  template<class T>
-  bool HasSubscribers(const std::type_info& source = typeid(void)) const {return HasSubscribers(typeid(T), source);}
+  SatCounter GetSatisfaction(const std::type_info& subscriber) const;
 
-  bool HasSubscribers(const std::type_info& ti, const std::type_info& source = typeid(void)) const;
+  /// <returns>All subscribers to the specified data and source</returns>
+  std::list<SatCounter> GetSubscribers(const std::type_info& data, const std::type_info& source = typeid(void)) const;
+
+  /// <returns>All decoration dispositions associated with the data type</returns>
+  /// <remarks>
+  /// This method is useful for determining whether flow conditions (broadcast, pipes
+  /// immediate decorations) resulted in missed data.
+  /// </remarks>
+  std::list<DecorationDisposition> GetDispositions(const std::type_info& data) const;
+
+  /// <returns>True if the indicated type has been requested for use by some consumer</returns>
+  bool HasSubscribers(const std::type_info& data, const std::type_info& source = typeid(void)) const;
 };

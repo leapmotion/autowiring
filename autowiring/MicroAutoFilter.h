@@ -20,7 +20,7 @@ struct MicroAutoFilter {
 template<class... Args>
 struct MicroAutoFilter<void, Args...> {
   MicroAutoFilter(const std::function<void(Args...)>& filter) : m_filter(filter) {
-    static_assert(all_auto_filter_args<Args...>::value,
+    static_assert(all_autofilter_args<Args...>::value,
                   "At least one argument is not an allowed type for AutoFilter methods");
   }
 
@@ -35,7 +35,7 @@ protected:
 template<class... Args>
 struct MicroAutoFilter<Deferred, Args...> {
   MicroAutoFilter(const std::function<void(Args...)>& filter) : m_filter(filter) {
-    static_assert(all_auto_filter_args<Args...>::value,
+    static_assert(all_autofilter_args<Args...>::value,
                   "At least one argument is not an allowed type for AutoFilter methods");
   }
 

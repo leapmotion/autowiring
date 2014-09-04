@@ -4,6 +4,18 @@
 #include "CoreContext.h"
 #include "MicroAutoFilter.h"
 
+/// <summary>Child of MicroAutoFilter that retains base type</summary>
+template<class Base, class Ret, class... Args>
+class BasedAutoFilter
+{
+protected:
+  MicroAutoFilter<Ret, Args...> m_micro;
+
+public:
+  BasedAutoFilter(const std::function<void(Args...)>& filter) : m_micro(filter) {}
+  Ret AutoFilter(Args... args) { return m_micro.AutoFilter(args...); }
+};
+
 /// <summary>
 /// Wraps any method in a MicroAutoFilter class and registers it with the current context.
 /// </summary>
@@ -13,12 +25,10 @@
 /// for each method that should be used as an AutoFilter.
 /// </remarks>
 template<class Base, class Ret, class... Args>
-std::shared_ptr<MicroAutoFilter<Ret, Args...>> DeclareAutoFilter(Base* that, Ret (Base::*filter)(Args...)) {
-  return std::shared_ptr<MicroAutoFilter<Ret, Args...>>(
-    AutoCurrentContext()->template Construct<MicroAutoFilter<Ret, Args...>>(
-      [that, filter] (Args... args) {
-        return (that->*filter)(args...);
-      }
-    )
+std::shared_ptr<BasedAutoFilter<Base, Ret, Args...>> DeclareAutoFilter(Base* that, Ret (Base::*filter)(Args...)) {
+  return AutoCurrentContext()->template Construct<BasedAutoFilter<Base, Ret, Args...>>(
+    [that, filter] (Args... args) {
+      return (that->*filter)(args...);
+    }
   );
 }

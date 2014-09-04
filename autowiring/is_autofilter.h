@@ -155,16 +155,46 @@ struct is_autofilter_arg :
 /// as the only argument.
 /// </remarks>
 template<class... Args>
-struct all_auto_filter_args :
+struct all_autofilter_args :
   std::false_type
 {};
 template<class Head, class... Tail>
-struct all_auto_filter_args<Head, Tail...> :
-  std::integral_constant<bool, is_autofilter_arg<Head>::value && all_auto_filter_args<Tail...>::value>
+struct all_autofilter_args<Head, Tail...> :
+  std::integral_constant<bool, is_autofilter_arg<Head>::value && all_autofilter_args<Tail...>::value>
 {};
 template<class Head>
-struct all_auto_filter_args<Head> :
+struct all_autofilter_args<Head> :
   is_autofilter_arg<Head>
+{};
+
+/// <summary>
+/// Determines whether all arguments are inputs.
+/// </summary>
+/// <remarks>
+/// This enables static validation of final-call AutoFilter functions.
+/// </remarks>
+template<class... Args>
+struct all_autofilter_inputs :
+  std::false_type
+{};
+template<class Head, class... Tail>
+struct all_autofilter_inputs<Head, Tail...> :
+  std::integral_constant<bool, is_autofilter_arg<Head>::is_input && all_autofilter_inputs<Tail...>::value>
+{};
+
+/// <summary>
+/// Determines whether all arguments are inputs.
+/// </summary>
+/// <remarks>
+/// This enables static validation of issue-call AutoFilter functions.
+/// </remarks>
+template<class... Args>
+struct all_autofilter_outputs :
+  std::false_type
+{};
+template<class Head, class... Tail>
+struct all_autofilter_outputs<Head, Tail...> :
+  std::integral_constant<bool, is_autofilter_arg<Head>::is_output && all_autofilter_outputs<Tail...>::value>
 {};
 
 /// <summary>
@@ -189,5 +219,5 @@ struct is_autofilter :
 {};
 template <class Ret, class... Args>
 struct is_autofilter<std::function<Ret(Args...)>> :
-  std::integral_constant<bool, is_autofilter_return<Ret>::value && all_auto_filter_args<Args...>::value>
+  std::integral_constant<bool, is_autofilter_return<Ret>::value && all_autofilter_args<Args...>::value>
 {};
