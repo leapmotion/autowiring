@@ -1274,12 +1274,12 @@ TEST_F(AutoFilterTest, AutoFilterTemplateTests) {
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<optional_ptr<Decoration<0>>>::value)) << "Validity of AutoFilter output incorrectly indentified";
   //ASSERT_FALSE(static_cast<const bool>(is_autofilter_arg<optional_ptr<Decoration<0>>&>::value)) << "Validity of AutoFilter output incorrectly indentified";
 
-  ASSERT_FALSE(static_cast<const bool>(all_auto_filter_args<const Decoration<0>&, Decoration<0>>::value)) << "Invalid argument list incorrectly identified";
-  ASSERT_FALSE(static_cast<const bool>(all_auto_filter_args<Decoration<0>, const Decoration<0>&>::value)) << "Invalid argument list incorrectly identified";
-  ASSERT_FALSE(static_cast<const bool>(all_auto_filter_args<>::value)) << "Invalid argument list incorrectly identified";
-  ASSERT_TRUE(static_cast<const bool>(all_auto_filter_args<const Decoration<0>&>::value)) << "Valid argument list incorrectly identified";
-  ASSERT_TRUE(static_cast<const bool>(all_auto_filter_args<auto_out<Decoration<1>>>::value)) << "Valid argument list incorrectly identified";
-  ASSERT_TRUE(static_cast<const bool>(all_auto_filter_args<const Decoration<0>&, auto_out<Decoration<1>>>::value)) << "Valid argument list incorrectly identified";
+  ASSERT_FALSE(static_cast<const bool>(all_autofilter_args<const Decoration<0>&, Decoration<0>>::value)) << "Invalid argument list incorrectly identified";
+  ASSERT_FALSE(static_cast<const bool>(all_autofilter_args<Decoration<0>, const Decoration<0>&>::value)) << "Invalid argument list incorrectly identified";
+  ASSERT_FALSE(static_cast<const bool>(all_autofilter_args<>::value)) << "Invalid argument list incorrectly identified";
+  ASSERT_TRUE(static_cast<const bool>(all_autofilter_args<const Decoration<0>&>::value)) << "Valid argument list incorrectly identified";
+  ASSERT_TRUE(static_cast<const bool>(all_autofilter_args<auto_out<Decoration<1>>>::value)) << "Valid argument list incorrectly identified";
+  ASSERT_TRUE(static_cast<const bool>(all_autofilter_args<const Decoration<0>&, auto_out<Decoration<1>>>::value)) << "Valid argument list incorrectly identified";
 
   ASSERT_FALSE(static_cast<const bool>(is_autofilter_return<int>::value)) << "Incorrect identification of int as valid AutoFilter return type";
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_return<void>::value)) << "Incorrect identification of void as invalid AutoFilter return type";
