@@ -9,6 +9,8 @@
 #include "SatCounter.h"
 #include <list>
 
+using namespace autowiring;
+
 // This must appear in .cpp in order to avoid compilation failure due to:
 // "Arithmetic on a point to an incomplete type 'SatCounter'"
 AutoPacket::~AutoPacket() {}
