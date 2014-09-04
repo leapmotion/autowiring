@@ -26,7 +26,7 @@ namespace std
     template<int N, class Head, class... Tail>
     static size_t hash_tuple(const std::tuple<Types...>& value) {
       static const int I = N - sizeof...(Tail) - 1;
-      return hash_combine(std::hash<Head>()(std::get<I>(value)), hash_tuple<N, Tail...>(value));
+      return (size_t)hash_combine(std::hash<Head>()(std::get<I>(value)), hash_tuple<N, Tail...>(value));
     }
 
   public:
