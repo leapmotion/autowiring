@@ -58,8 +58,9 @@ private:
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
   // NOTE: The following should be a constexp
-  std::tuple<std::type_index, std::type_index> (&DSIndex)(std::type_index&&, std::type_index&&)
-    = std::make_tuple<std::type_index, std::type_index>;
+  static std::tuple<std::type_index, std::type_index> DSIndex(std::type_index&& x, std::type_index&& y) {
+    return std::make_tuple(x, y);
+  }
   typedef std::unordered_map<std::tuple<std::type_index, std::type_index>, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
   mutable std::mutex m_lock;
