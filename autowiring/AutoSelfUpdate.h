@@ -10,11 +10,11 @@
 /// In order to ensure that this method will be consistent with any other AutoFilter calls,
 /// the object inherits from atomic_object, which implements basic locking functionality.
 /// </remarks>
-template<class object_type, class lock_type = std::mutex>
+template<class object_type>
 class AutoSelfUpdate:
-public atomic_object<object_type, lock_type> {
+public atomic_object<object_type> {
 public:
-  typedef atomic_object<object_type, lock_type> atomic;
+  typedef atomic_object<object_type> atomic;
   typedef typename atomic::object object;
   typedef typename atomic::lock lock;
   typedef typename atomic::unlock unlock;
@@ -31,8 +31,8 @@ public:
   };
 
   AutoSelfUpdate(void) {
-    // Instanties a MicroAutoFilter for the AutoGather method
-    m_gather = DeclareAutoFilter(this, &AutoSelfUpdate<object_type, lock_type>::AutoGather);
+    // Instanties a BasedAutoFilter for the AutoGather method
+    m_gather = DeclareAutoFilter(this, &AutoSelfUpdate<object_type>::AutoGather);
   }
   using atomic_object<object, lock>::operator =;
   using atomic_object<object, lock>::operator object;
