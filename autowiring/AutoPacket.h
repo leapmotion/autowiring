@@ -57,7 +57,7 @@ private:
 
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
-  // NOTE: The following should be a constexp
+  // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
   static std::tuple<std::type_index, std::type_index> DSIndex(std::type_index&& x, std::type_index&& y) {
     return std::make_tuple(x, y);
   }

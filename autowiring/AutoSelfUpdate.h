@@ -35,8 +35,8 @@ public:
     m_gather = DeclareAutoFilter(this, &AutoSelfUpdate<object_type>::AutoGather);
   }
   using atomic_object<object, lock>::operator=;
-
   operator object(void) {
+    // NOTE: This avoids "using" keyword with a cast operator overload
     return *(atomic_object<object, lock>*)this;
   }
 
