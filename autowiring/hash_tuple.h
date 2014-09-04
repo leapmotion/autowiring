@@ -6,10 +6,10 @@ namespace std
 {
   template<class... Types>
   struct hash<std::tuple<Types...>> {
-    static size_t hash_combine(const size_t& lhs, const size_t& rhs) {
+    static uint64_t hash_combine(const size_t& lhs, const size_t& rhs) {
       //return lhs ^ rhs;
       //static const size_t salt = 0x9e3779b9;
-      static const size_t salt = 0x278dde6e5fd29e00;
+      static const uint64_t salt = 0x278dde6e5fd29e00;
       return rhs ^ (salt + (lhs << 6) + (lhs >> 2));
       // Adding pseudo-random bits reduces collisions between consecutive values
       // 0 < 1/phi < 1 so the denominator includes a shift.
