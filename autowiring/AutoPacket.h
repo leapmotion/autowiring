@@ -262,7 +262,6 @@ public:
   template<class T>
   bool Get(const T*& out, const std::type_info& source = typeid(void)) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
     auto q = m_decorations.find(Index(typeid(T), source));
     if(q != m_decorations.end() &&
@@ -318,6 +317,9 @@ public:
   /// </remarks>
   template<class T>
   AutoCheckout<T> Checkout(std::shared_ptr<T> ptr, const std::type_info& source = typeid(void)) {
+    /// Injunction to prevent existential loops:
+    static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
+
     // This allows us to install correct entries for decorated input requests
     typedef typename subscriber_traits<T>::type type;
 

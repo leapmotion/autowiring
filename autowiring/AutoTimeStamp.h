@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <autowiring/AutoPacket.h>
+#include <autowiring/auto_out.h>
 #include CHRONO_HEADER
 
 /// <summary>
@@ -13,12 +13,10 @@ public:
   /// <summary>Alias type for maximum precision timing<summary>
   class time : public std::chrono::high_resolution_clock::time_point {};
 
-  /// <summary>Called when packet is issued, adds AutoTimeStamp::time instance</summary>
+  /// <summary>Records time of issue of AutoPacket</summary>
   /// <remarks>
-  /// AutoPacketFactory.NewPacket()->Has<AutoTimeStamp::time>() == true
-  /// in a context that includes an AutoTimeStamp instance.
+  /// Default constructor yielding current time is called by auto_out<time>.
+  /// AutoPacketFactory.NewPacket()->Has<AutoTimeStamp::time>() == true.
   /// </remarks>
-  void AutoFilter(AutoPacket& packet) {
-    packet.Decorate(time());
-  }
+  void AutoFilter(auto_out<time>) {}
 };

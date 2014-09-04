@@ -58,7 +58,7 @@ struct subscriber_traits {
   typedef const T& ret_type;
   static const eSubscriberInputType subscriberType = inTypeRequired;
 
-  const T& operator()(AutoPacket& packet, const std::type_info& source) const {
+  ret_type operator()(AutoPacket& packet, const std::type_info& source) const {
     return packet.Get<T>(source);
   }
 };
@@ -72,7 +72,7 @@ struct subscriber_traits<T&> {
   typedef AutoCheckout<T> ret_type;
   static const eSubscriberInputType subscriberType = outTypeRef;
 
-  AutoCheckout<T> operator()(AutoPacket& packet, const std::type_info& source) const {
+  ret_type operator()(AutoPacket& packet, const std::type_info& source) const {
     // Inputs by reference are automatically and unconditionally ready:
     AutoCheckout<T> rv = packet.Checkout<T>(source);
     rv.Ready();
@@ -98,7 +98,7 @@ struct subscriber_traits<optional_ptr<T>> {
   static const eSubscriberInputType subscriberType = inTypeOptional;
 
   // Optional pointer overload, tries to satisfy but doesn't throw if there's a miss
-  optional_ptr<T> operator()(AutoPacket& packet, const std::type_info& source) const {
+  ret_type operator()(AutoPacket& packet, const std::type_info& source) const {
     const typename std::decay<T>::type* out;
     if(packet.Get(out, source))
       return out;
@@ -115,21 +115,45 @@ struct subscriber_traits<auto_out<T, auto_ready>> {
   typedef auto_out<T, auto_ready> ret_type;
   static const eSubscriberInputType subscriberType = auto_ready ? outTypeRef : outTypeRefAutoReady;
 
-  auto_out<T, auto_ready> operator()(AutoPacket& packet, const std::type_info& source) const {
+  ret_type operator()(AutoPacket& packet, const std::type_info& source) const {
     return auto_out<T, auto_ready>(packet.Checkout<T>(source));
   }
 };
 
 /// <summary>
-/// Dependent type enabling argument
+/// AutoPacket& is satisfied immediately when AutoPacket is initialized
 /// </summary>
 template<>
 struct subscriber_traits<AutoPacket&> {
-  typedef AutoPacket type;
+private:
+  /// Sigil to distinguish AutoPacket&
+  class first_call_sigil {};
+
+public:
+  typedef first_call_sigil type;
   typedef AutoPacket& ret_type;
   static const eSubscriberInputType subscriberType = inTypeRequired;
 
-  AutoPacket& operator()(AutoPacket& packet, const std::type_info&) const {
+  ret_type operator()(AutoPacket& packet, const std::type_info&) const {
+    return packet;
+  }
+};
+
+/// <summary>
+/// const AutoPacket& is not satisfied until AutoPacket is finalized
+/// </summary>
+template<>
+struct subscriber_traits<const AutoPacket&> {
+private:
+  /// Sigil to distinguish const AutoPacket&
+  class final_call_sigil {};
+
+public:
+  typedef final_call_sigil type;
+  typedef const AutoPacket& ret_type;
+  static const eSubscriberInputType subscriberType = inTypeRequired;
+
+  ret_type operator()(AutoPacket& packet, const std::type_info&) const {
     return packet;
   }
 };

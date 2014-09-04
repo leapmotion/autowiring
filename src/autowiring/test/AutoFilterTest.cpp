@@ -128,6 +128,83 @@ TEST_F(AutoFilterTest, VerifyTypeUsage) {
   ASSERT_EQ(2, filterA->m_one.i) << "AutoFilter was called using derived type instead of parent";
 }
 
+class FilterFirst {
+public:
+  int m_called;
+
+  FilterFirst() : m_called(0) {};
+
+  void AutoFilter(AutoPacket& pkt) {
+    ++m_called;
+    pkt.Decorate(Decoration<0>());
+  }
+};
+
+class FilterLast {
+public:
+  int m_called;
+
+  FilterLast() : m_called(0) {};
+
+  void AutoFilter(const AutoPacket& pkt) {
+    ++m_called;
+    ASSERT_TRUE(pkt.Has<Decoration<0>>()) << "Missing FilterFirst Decoration<0>";
+  }
+};
+
+class FilterLastD0 {
+public:
+  int m_called;
+
+  FilterLastD0() : m_called(0) {};
+
+  void AutoFilter(const AutoPacket& pkt, const Decoration<0>& dec) {
+    ++m_called;
+    ASSERT_EQ(0, dec.i) << "Incorrect decoration value";
+  }
+};
+
+class FilterLastD1 {
+public:
+  int m_called;
+
+  FilterLastD1() : m_called(0) {};
+
+  void AutoFilter(const AutoPacket& pkt, const Decoration<1>& dec) {
+    ++m_called;
+    FAIL() << "Final-Call to AutoFilter with unsatisfied type";
+  }
+};
+
+TEST_F(AutoFilterTest, VerifyFirstLastCalls) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterFirst> first;
+  AutoRequired<FilterLast> last;
+  AutoRequired<FilterLastD0> lastD0;
+  AutoRequired<FilterLastD1> lastD1;
+
+  {
+    auto pkt = factory->NewPacket();
+    ASSERT_EQ(1, first->m_called) << "First-call filter was not applied";
+    ASSERT_EQ(0, last->m_called) << "Last-call filter was called early";
+    ASSERT_EQ(0, lastD0->m_called) << "Last-call filter was not applied";
+  }
+  ASSERT_EQ(1, first->m_called) << "First-call filter was applied as final call";
+  ASSERT_EQ(1, lastD0->m_called) << "Last-call filter was not applied";
+}
+
+class FilterFail {
+public:
+  void AutoFilter(const AutoPacket&, auto_out<Decoration<0>>) {}
+};
+
+// PROBLEM: Exception is thrown correctly, but is not caught by test.
+TEST_F(AutoFilterTest, DISABLED_VerifyFinalImmutability) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterFail> fail;
+  ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "Failed to catch post-final decoration";
+}
+
 TEST_F(AutoFilterTest, VerifyOptionalFilter) {
   AutoRequired<AutoPacketFactory> factory;
 

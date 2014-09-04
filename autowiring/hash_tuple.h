@@ -25,11 +25,8 @@ namespace std
     // General: combine hash<head> with recursion on tail
     template<int N, class Head, class... Tail>
     static size_t hash_tuple(const std::tuple<Types...>& value) {
-      return (size_t)hash_combine(
-        std::hash<Head>()(
-          std::get<N - sizeof...(Tail) - 1>(value)),
-          hash_tuple<N, Tail...>(value)
-        );
+      static const int I = N - sizeof...(Tail) - 1;
+      return (size_t)hash_combine(std::hash<Head>()(std::get<I>(value)), hash_tuple<N, Tail...>(value));
     }
 
   public:
