@@ -34,8 +34,11 @@ public:
     // Instanties a BasedAutoFilter for the AutoGather method
     m_gather = DeclareAutoFilter(this, &AutoSelfUpdate<object_type>::AutoGather);
   }
-  using atomic_object<object, lock>::operator =;
-  using atomic_object<object, lock>::operator object;
+  using atomic_object<object, lock>::operator=;
+
+  operator object(void) {
+    return *(atomic_object<object, lock>*)this;
+  }
 
   /// <summary>
   /// Decorates all packets with instances of prior_object
