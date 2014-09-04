@@ -12,7 +12,7 @@
 using namespace autowiring;
 
 // This must appear in .cpp in order to avoid compilation failure due to:
-// "Arithmetic on a point to an incomplete type 'SatCounter'"
+// "Arithmetic on a pointer to an incomplete type 'SatCounter'"
 AutoPacket::~AutoPacket() {}
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding):
