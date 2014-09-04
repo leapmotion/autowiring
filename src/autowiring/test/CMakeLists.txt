@@ -71,7 +71,7 @@ add_executable(AutowiringTest ${AutowiringTest_SRCS})
 target_link_libraries(AutowiringTest Autowiring AutowiringFixture AutoTesting)
 
 # Link AutoNet if we've got it
-if(AUTOWIRING_BUILD_AUTONET)
+if(TARGET AutoNet)
   target_link_libraries(AutowiringTest AutoNet)
 endif()
 
