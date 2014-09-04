@@ -4,6 +4,8 @@
 #include STL_UNORDERED_SET
 #include STL_UNORDERED_MAP
 
+namespace autowiring {
+
 /// <summary>
 /// Mutable properties used by AutoFilterDescriptor to describe data pipes.
 /// </summary>
@@ -27,3 +29,5 @@ struct DataFlow {
 /// Key is argument type, value is source type.
 /// If the data is broadcast value will be &typeid(void)
 typedef std::unordered_map<std::type_index, const std::type_info*> DataFill;
+
+}

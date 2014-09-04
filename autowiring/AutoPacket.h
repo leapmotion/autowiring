@@ -74,12 +74,12 @@ private:
   /// Broadcast is always true for added or snooping recipients.
   /// Pipes are always absent for added or snooping recipients.
   /// </remarks>
-  DataFlow GetDataFlow(const DecorationDisposition& entry) const;
+  autowiring::DataFlow GetDataFlow(const DecorationDisposition& entry) const;
 
   /// <summary>
   /// Retrieve data flow information from source
   /// </summary>
-  DataFlow GetDataFlow(const std::type_info& data, const std::type_info& source);
+  autowiring::DataFlow GetDataFlow(const std::type_info& data, const std::type_info& source);
 
   /// <summary>
   /// Adds all AutoFilter argument information for a recipient
@@ -178,7 +178,7 @@ private:
     {
       std::lock_guard<std::mutex> lk(m_lock);
 
-      DataFlow flow = GetDataFlow(typeid(type), source);
+      autowiring::DataFlow flow = GetDataFlow(typeid(type), source);
       if (flow.broadcast) {
         broadDeco = &m_decorations[Index(typeid(type), typeid(void))];
 
@@ -326,7 +326,7 @@ public:
     if(!ptr)
       throw std::runtime_error("Cannot checkout with shared_ptr == nullptr");
 
-    DataFlow flow = GetDataFlow(typeid(type), source);
+    autowiring::DataFlow flow = GetDataFlow(typeid(type), source);
     if (flow.broadcast) {
       std::lock_guard<std::mutex> lk(m_lock);
 
