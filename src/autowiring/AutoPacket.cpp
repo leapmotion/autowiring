@@ -213,6 +213,14 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, const std::type_
   std::list<SatCounter*> callQueue;
   {
     std::lock_guard<std::mutex> lk(m_lock);
+    if (info != typeid(subscriber_traits<const AutoPacket&>::type)) {
+      switch (m_lifecyle) {
+        case disable_decorate: throw std::runtime_error("Cannot provide decorations in final-call (const AutoPacket&) AutoFilter methods");
+        case disable_update: return; // Quietly prevent recusion during optional_ptr resolution
+        default: break; //enable_all
+      }
+    }
+
     auto dFind = m_decorations.find(DSIndex(info, source));
     if(dFind == m_decorations.end())
       // Trivial return, there's no subscriber to this decoration and so we have nothing to do
@@ -238,6 +246,12 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   // First pass, decrement what we can:
   {
     std::lock_guard<std::mutex> lk(m_lock);
+    switch (m_lifecyle) {
+      case disable_decorate: throw std::runtime_error("Cannot provide decorations in final-call (const AutoPacket&) AutoFilter methods");
+      case disable_update: return; // Quietly prevent recusion during optional_ptr resolution
+      default: break; //enable_all
+    }
+
     for(size_t i = nInfos; i--;) {
       for(std::pair<SatCounter*, bool>& subscriber : pTypeSubs[i]->m_subscribers) {
         SatCounter* cur = subscriber.first;
@@ -316,6 +330,9 @@ void AutoPacket::Initialize(void) {
   if(!m_outstanding)
     throw std::runtime_error("Cannot proceed with this packet, enclosing context already expired");
 
+  // Enter issued state
+  m_lifecyle = enable_all;
+
   // Find all subscribers with no required or optional arguments:
   std::list<SatCounter*> callCounters;
   for (auto& satCounter : m_satCounters)
@@ -343,16 +360,12 @@ void AutoPacket::Finalize(void) {
           if(satCounter.first->Resolve())
             callQueue.push_back(satCounter.first);
   }
+  m_lifecyle = disable_update;
   for (SatCounter* call : callQueue)
     call->CallAutoFilter(*this);
 
-  // No further type checkouts are allowed
-  // IMPORTANT: This prevents last-call decorations using auto_out,
-  // but does not effect const AutoPacket&, which requires no Checkout.
-  for (auto& decoration : m_decorations)
-    decoration.second.isCheckedOut = true;
-
   // Last-call indicated by argumument type const AutoPacket&:
+  m_lifecyle = disable_decorate;
   UpdateSatisfaction(typeid(subscriber_traits<const AutoPacket&>::type));
 
   // Remove all recipients & clean up the decorations list

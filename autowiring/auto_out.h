@@ -18,9 +18,21 @@
 template<class T, bool auto_ready = true>
 class auto_out {
 public:
-  auto_out(auto_out&& rhs) :
+  /// <remarks>
+  /// Copy constructor is a move.
+  /// This enables compliance with the expected non-reference argument type auto_out<T>.
+  ///</remarks>
+  auto_out(auto_out& rhs) :
     m_cancelled(false),
     m_checkout(std::move(rhs.m_checkout))
+  {
+    // Ensure we do not try to multiply commit this checkout:
+    rhs.m_cancelled = true;
+  }
+
+  auto_out(auto_out&& rhs) :
+  m_cancelled(false),
+  m_checkout(std::move(rhs.m_checkout))
   {
     // Ensure we do not try to multiply commit this checkout:
     rhs.m_cancelled = true;
@@ -59,6 +71,14 @@ class auto_out<T, false>:
   public AutoCheckout<T>
 {
 public:
+  /// <remarks>
+  /// Copy constructor is a move.
+  /// This enables compliance with the expected non-reference argument type auto_out<T, false>.
+  /// </remarks>
+  auto_out(auto_out& rhs):
+    AutoCheckout<T>(std::move(rhs))
+  {}
+
   auto_out(auto_out&& rhs):
     AutoCheckout<T>(std::move(rhs))
   {}
