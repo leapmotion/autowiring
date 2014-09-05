@@ -133,3 +133,25 @@ TEST_F(FactoryTest, CompatibleFactoryNewCall) {
   auto aliased = AutoCreateContext()->Construct<HasAliasedConstructorType>(22);
   ASSERT_EQ(22, aliased->m_value) << "Failed to pass a compatible value to an aliasing constructor type";
 }
+
+class FactoryNewAbstractBase:
+  public ContextMember
+{
+public:
+  static FactoryNewAbstractBase* New(void);
+};
+
+class FactoryNewConcreteType:
+  public FactoryNewAbstractBase
+{};
+
+FactoryNewAbstractBase* FactoryNewAbstractBase::New(void) {
+  return new FactoryNewConcreteType;
+}
+
+TEST_F(FactoryTest, VerifyCanAutowireActualType) {
+  AutoRequired<FactoryNewAbstractBase> myBase;
+  Autowired<FactoryNewConcreteType> concrete;
+
+  ASSERT_TRUE(concrete.IsAutowired()) << "Failed to find the concrete derived type in a factory new construction in a case where it is known to exist";
+}
