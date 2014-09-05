@@ -192,12 +192,19 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   {
     std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
 
-    // Validate that this addition does not generate an ambiguity:
-    auto& v = m_typeMemos[typeid(*traits.pObject)];
-    if(*v.m_value == traits.pObject)
-      throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
-    if(*v.m_value)
-      throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+    // Validate that this addition does not generate an ambiguity.  We need to use the proper type of
+    // pObject, rather than the type passed in via traits.type, because the proper type might be a
+    // concrete type defined in another context or potentially a unifier type.  Creating a slot here
+    // is also undesirable because the complete type is not available and we can't create a dynaimc
+    // caster to identify when this slot gets satisfied.
+    auto q = m_typeMemos.find(typeid(*traits.pObject));
+    if(q != m_typeMemos.end()) {
+      auto& v = q->second;
+      if(*v.m_value == traits.pObject)
+        throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
+      if(*v.m_value)
+        throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+    }
 
     // Add the new concrete type:
     m_concreteTypes.push_back(traits.value);
