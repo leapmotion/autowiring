@@ -293,11 +293,10 @@ public:
   void AutoFilter(const AutoPacket&, auto_out<Decoration<1>>) {}
 };
 
-TEST_F(AutoFilterTest, DISABLED_VerifyFinalImmutability) {
+TEST_F(AutoFilterTest, VerifyFinalImmutability) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<FilterFinalGood> good;
 
-  //FIXME!
   ASSERT_NO_THROW(factory->NewPacket()) << "If checkout is not completed there should be no error";
 
   // PROBLEM: Exception is thrown correctly, but is not caught by test.
@@ -666,31 +665,42 @@ TEST_F(AutoFilterTest, VerifyAntiDecorate) {
 class OptionalResolveFilter {
 public:
   size_t m_called;
-  OptionalResolveFilter() : m_called(0) {};
+  OptionalResolveFilter() : m_called(0) {
+    DeclareAutoFilter(this, &OptionalResolveFilter::NextFilter1);
+    DeclareAutoFilter(this, &OptionalResolveFilter::NextFilter2);
+  };
 
-  void AutoFilter(AutoPacket& pkt, optional_ptr<Decoration<-1>> opt) {
+  void AutoFilter(AutoPacket& pkt, optional_ptr<Decoration<0>> opt) {
     ++m_called;
-    if (pkt.Has<Decoration<-2>>()) return; //Cannot attempt decorations
+    if (pkt.Has<Decoration<-1>>()) return; //Cannot attempt decorations
 
     if (opt) {
       //Called before final
-      ASSERT_NO_THROW(pkt.Decorate(Decoration<-2>())) << "Decoration should be allowed";
-      ASSERT_TRUE(pkt.Has<Decoration<-2>>());
+      ASSERT_NO_THROW(pkt.Decorate(Decoration<-1>())) << "Decoration should be allowed";
+      ASSERT_TRUE(pkt.Has<Decoration<-1>>());
 
-      Decoration<-3> deco;
+      Decoration<-2> deco;
       ASSERT_NO_THROW(pkt.DecorateImmediate(deco)) << "Decoration should be allowed";
     } else {
       //Called during final
-      ASSERT_NO_THROW(pkt.Decorate(Decoration<-2>())) << "Decoration should be blocked quietly";
-      ASSERT_FALSE(pkt.Has<Decoration<-2>>());
+      ASSERT_NO_THROW(pkt.Decorate(Decoration<-1>())) << "Decoration should be blocked quietly";
+      ASSERT_TRUE(pkt.Has<Decoration<-1>>()) << "Resolved AutoFilter calls should be able to add decorations";
 
-      Decoration<-3> deco;
+      Decoration<-2> deco;
       ASSERT_NO_THROW(pkt.DecorateImmediate(deco)) << "Decoration should be blocked quietly";
     }
   }
+
+  void NextFilter1(AutoPacket& pkt, const Decoration<-1>& dec) {
+    ASSERT_TRUE(pkt.Has<Decoration<0>>()) << "NextFilter1 called during optional resolution";
+  }
+
+  void NextFilter2(AutoPacket& pkt, const Decoration<-2>& dec) {
+    ASSERT_TRUE(pkt.Has<Decoration<0>>()) << "NextFilter2 called during optional resolution";
+  }
 };
 
-TEST_F(AutoFilterTest, DISABLED_BlockResolveRecursion) {
+TEST_F(AutoFilterTest, BlockResolveRecursion) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<OptionalResolveFilter> resolve;
 
@@ -698,7 +708,7 @@ TEST_F(AutoFilterTest, DISABLED_BlockResolveRecursion) {
   resolve->m_called = 0;
   {
     auto pkt = factory->NewPacket();
-    pkt->Decorate(Decoration<-1>());
+    pkt->Decorate(Decoration<0>());
     ASSERT_EQ(1, resolve->m_called) << "Failed to call AutoFilter with satisfied optional argument";
   }
   ASSERT_EQ(1, resolve->m_called) << "Multiple calls to AutoFilter with satisfied optional argument";
