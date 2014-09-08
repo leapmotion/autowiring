@@ -48,7 +48,7 @@
 * initializer_list header
 *********************/
 #if IS_CLANG
-	#define HAS_INITIALIZER_LIST __has_include(<initializer_list>) && __has_feature(cxx_generalized_initializers)
+	#define HAS_INITIALIZER_LIST __has_feature(cxx_generalized_initializers)
 	#if HAS_INITIALIZER_LIST
 		#define INITIALIZER_LIST_HEADER <initializer_list>
 	#else
