@@ -1649,3 +1649,42 @@ TEST_F(AutoFilterTest, AutoEdgeTest) {
   ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "Data failed to collide";
    */
 }
+
+class FilterD0 {
+public:
+  void AutoFilter(auto_out<Decoration<0>> out) {}
+};
+
+class Filter1D0 {
+public:
+  void AutoFilter(auto_out<Decoration<0>> out) {
+    out->i = 1;
+  }
+};
+
+class Filter2D0 {
+public:
+  void AutoFilter(auto_out<Decoration<0>> out) {
+    out->i = 2;
+  }
+};
+
+TEST_F(AutoFilterTest, VerifyNonBroadcastOutput) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  AutoRequired<FilterD0> fD0;
+  AutoRequired<Filter1D0> f1D0;
+  AutoRequired<Filter2D0> f2D0;
+
+  // No broadcast from f1D0 and f2D0
+  factory->BroadcastDataOut<Filter1D0>(nullptr,false);
+  factory->BroadcastDataOut<Filter2D0>(nullptr,false);
+
+  std::shared_ptr<AutoPacket> pkt;
+  ASSERT_NO_THROW(pkt = factory->NewPacket()) << "Multi-Decorate hit an exception";
+
+  ASSERT_TRUE(pkt->Has<Decoration<0>>()) << "Broadcast data should be present";
+  ASSERT_FALSE(pkt->Has<Decoration<0>>(typeid(FilterD0))) << "Sourced data should be absent from broadcasting source";
+  ASSERT_TRUE(pkt->Has<Decoration<0>>(typeid(Filter1D0))) << "Sourced data should be present from non-broadcasting source";
+  ASSERT_TRUE(pkt->Has<Decoration<0>>(typeid(Filter2D0))) << "Sourced data should be present from non-broadcasting source";
+}
