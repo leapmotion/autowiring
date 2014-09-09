@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "atomic_object.h"
 #include "DeclareAutoFilter.h"
@@ -34,25 +35,25 @@ public:
     // Instanties a BasedAutoFilter for the AutoGather method
     m_gather = DeclareAutoFilter(this, &AutoSelfUpdate<object_type>::AutoGather);
   }
-  using atomic_object<object, lock>::operator=;
+  using atomic::operator=;
   operator object(void) {
     // NOTE: This avoids "using" keyword with a cast operator overload
-    return *(atomic_object<object, lock>*)this;
+    return *(atomic*)this;
   }
 
   /// <summary>
   /// Decorates all packets with instances of prior_object
   /// </summary>
   void AutoFilter(prior_object& prior) {
-    std::lock_guard<lock> lock_this(atomic_object<object, lock>::m_lock);
-    prior = atomic_object<object, lock>::m_object;
+    std::lock_guard<lock> lock_this(atomic::m_lock);
+    prior = atomic::m_object;
   }
 
   /// <summary>
   /// Updates this object to equal the most recent decoration by object
   /// </summary>
   void AutoGather(const object& update) {
-    atomic_object<object, lock>::operator = (update);
+    atomic::operator = (update);
   }
 
   /// <returns>a reference to the MicroAutoFilter instance calling AutoGather</returns>
