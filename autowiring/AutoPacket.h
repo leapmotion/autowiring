@@ -293,6 +293,49 @@ public:
     return false;
   }
 
+  /// <returns>
+  /// The number of sources for the specified type
+  /// </returns>
+  /// <remarks>
+  /// This method should ONLY be called during the final-call sequence.
+  /// Before that time, the number of instances of a type may vary.
+  /// <remarks>
+  template<class T>
+  int HasAll() const {
+    std::lock_guard<std::mutex> lk(m_lock);
+
+    int all = 0;
+    for (auto& deco : m_decorations) {
+      if (std::get<0>(deco.first) == std::type_index(typeid(T))) {
+        ++all;
+      }
+    }
+    return all;
+  }
+
+  /// <summary>
+  /// Returns all decorations of the specified type, indexed by source
+  /// </summary>
+  /// <remarks>
+  /// This method should ONLY be called during the final-call sequence.
+  /// Before that time, the number of instances of a type may vary.
+  /// <remarks>
+  template<class T>
+  std::unordered_map<std::type_index, std::shared_ptr<T>> GetAll() const {
+    std::lock_guard<std::mutex> lk(m_lock);
+
+    std::unordered_map<std::type_index, std::shared_ptr<T>> all;
+    for (const auto& deco : m_decorations) {
+      if (std::get<0>(deco.first) == std::type_index(typeid(T))) {
+        const auto& disposition = deco.second;
+        if(disposition.m_decoration) {
+          all[std::get<1>(deco.first)] = disposition.m_decoration->as<T>();
+        }
+      }
+    }
+    return all;
+  }
+
   /// <summary>
   /// Shared pointer specialization, used to obtain the underlying shared pointer for some type T
   /// </summary>
