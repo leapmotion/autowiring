@@ -198,7 +198,10 @@ private:
         broadDeco->isCheckedOut = false;
         broadDeco->satisfied = true;
       }
-      if (flow.halfpipes.size() > 0) {
+      if (flow.halfpipes.size() > 0 ||
+          !flow.broadcast) {
+        // IMPORTANT: If data isn't broadcast it should be provided with a source.
+        // This enables extraction of multiple types without collision.
         pipedDeco = &m_decorations[DSIndex(typeid(type), source)];
 
         assert(pipedDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
@@ -240,6 +243,8 @@ public:
   /// </returns>
   template<class T>
   bool Has(const std::type_info& source = typeid(void)) const {
+    std::lock_guard<std::mutex> lk(m_lock);
+
     auto q = m_decorations.find(DSIndex(typeid(T), source));
     if(q == m_decorations.end())
       return false;
@@ -353,7 +358,8 @@ public:
       entry.isCheckedOut = true;
       entry.m_decoration = ptr;
     }
-    if (flow.halfpipes.size() > 0) {
+    if (flow.halfpipes.size() > 0 ||
+        !flow.broadcast) {
       std::lock_guard<std::mutex> lk(m_lock);
 
       auto& entry = m_decorations[DSIndex(typeid(type), source)];

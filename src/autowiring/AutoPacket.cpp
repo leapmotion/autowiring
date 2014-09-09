@@ -96,7 +96,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
         case outTypeRef:
         case outTypeRefAutoReady:
           /// IMPORTANT: Allow multiple publishers of the same type, provided they are to distinct sources.
-          if(entry.m_publisher) {
+          if(entry.m_publisher == &satCounter) {
             std::stringstream ss;
             ss << "Added identical data pipes from " << satCounter.GetAutoFilterTypeInfo()->name() << " of type " << pCur->ti->name();
             throw std::runtime_error(ss.str());

@@ -114,10 +114,6 @@ public:
   /// <param name="autoFilter">The AutoFilter to be removed</param>
   void RemoveSubscriber(const AutoFilterDescriptor& autoFilter);
 
-  /// PROBLEM: GetTypeDescriptor can yield multiple instances of Autofilter for a given type.
-  /// SOLUTION: MicroAutoFilter will appear to be repeated only when the input & output is identical.
-  /// TODO: Test this. IDEA: Use AutoSelfUpdate, and add MicroAutoFilter typedef for convenience.
-
   /// <summary>
   /// Sets the broadcast status for the specified output from the node.
   /// </summary>
