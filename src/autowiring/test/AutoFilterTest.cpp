@@ -11,6 +11,7 @@
 #include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/AutoTimeStamp.h>
 #include <autowiring/SatCounter.h>
+#include <autowiring/AutoMerge.h>
 #include THREAD_HEADER
 
 class AutoFilterTest:
@@ -1650,6 +1651,8 @@ TEST_F(AutoFilterTest, AutoEdgeTest) {
    */
 }
 
+class MergeSlaveContext {};
+
 class FilterD0 {
 public:
   void AutoFilter(auto_out<Decoration<0>> out) {}
@@ -1670,21 +1673,33 @@ public:
 };
 
 TEST_F(AutoFilterTest, VerifyNonBroadcastOutput) {
-  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<AutoMerge<Decoration<0>, MergeSlaveContext>> merge;
 
-  AutoRequired<FilterD0> fD0;
-  AutoRequired<Filter1D0> f1D0;
-  AutoRequired<Filter2D0> f2D0;
+  AutoCreateContextT<MergeSlaveContext> slave_context;
+  slave_context->Initiate();
+  {
+    CurrentContextPusher pusher(slave_context);
+    AutoRequired<AutoPacketFactory> factory;
 
-  // No broadcast from f1D0 and f2D0
-  factory->BroadcastDataOut<Filter1D0>(nullptr,false);
-  factory->BroadcastDataOut<Filter2D0>(nullptr,false);
+    AutoRequired<FilterD0> fD0;
+    AutoRequired<Filter1D0> f1D0;
+    AutoRequired<Filter2D0> f2D0;
 
-  std::shared_ptr<AutoPacket> pkt;
-  ASSERT_NO_THROW(pkt = factory->NewPacket()) << "Multi-Decorate hit an exception";
+    // No broadcast from f1D0 and f2D0
+    factory->BroadcastDataOut<Filter1D0>(nullptr,false);
+    factory->BroadcastDataOut<Filter2D0>(nullptr,false);
 
-  ASSERT_TRUE(pkt->Has<Decoration<0>>()) << "Broadcast data should be present";
-  ASSERT_FALSE(pkt->Has<Decoration<0>>(typeid(FilterD0))) << "Sourced data should be absent from broadcasting source";
-  ASSERT_TRUE(pkt->Has<Decoration<0>>(typeid(Filter1D0))) << "Sourced data should be present from non-broadcasting source";
-  ASSERT_TRUE(pkt->Has<Decoration<0>>(typeid(Filter2D0))) << "Sourced data should be present from non-broadcasting source";
+    std::shared_ptr<AutoPacket> pkt;
+    ASSERT_NO_THROW(pkt = factory->NewPacket()) << "Multi-Decorate hit an exception";
+
+    ASSERT_TRUE(pkt->Has<Decoration<0>>()) << "Broadcast data should be present";
+    ASSERT_FALSE(pkt->Has<Decoration<0>>(typeid(FilterD0))) << "Sourced data should be absent from broadcasting source";
+    ASSERT_TRUE(pkt->Has<Decoration<0>>(typeid(Filter1D0))) << "Sourced data should be present from non-broadcasting source";
+    ASSERT_TRUE(pkt->Has<Decoration<0>>(typeid(Filter2D0))) << "Sourced data should be present from non-broadcasting source";
+  }
+
+  {
+    AutoMerge<Decoration<0>, MergeSlaveContext>::unlock mergeD0(merge);
+    ASSERT_EQ(3, mergeD0->size()) << "Failed to collect all data";
+  }
 }
