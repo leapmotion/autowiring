@@ -65,8 +65,8 @@ private:
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
   // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
-  static std::tuple<std::type_index, std::type_index> DSIndex(std::type_index&& x, std::type_index&& y) {
-    return std::make_tuple(x, y);
+  static std::tuple<std::type_index, std::type_index> DSIndex(const std::type_index& data, const std::type_index& source) {
+    return std::make_tuple(data, source);
   }
   typedef std::unordered_map<std::tuple<std::type_index, std::type_index>, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
@@ -293,49 +293,6 @@ public:
     return false;
   }
 
-  /// <returns>
-  /// The number of sources for the specified type
-  /// </returns>
-  /// <remarks>
-  /// This method should ONLY be called during the final-call sequence.
-  /// Before that time, the number of instances of a type may vary.
-  /// <remarks>
-  template<class T>
-  int HasAll() const {
-    std::lock_guard<std::mutex> lk(m_lock);
-
-    int all = 0;
-    for (auto& deco : m_decorations) {
-      if (std::get<0>(deco.first) == std::type_index(typeid(T))) {
-        ++all;
-      }
-    }
-    return all;
-  }
-
-  /// <summary>
-  /// Returns all decorations of the specified type, indexed by source
-  /// </summary>
-  /// <remarks>
-  /// This method should ONLY be called during the final-call sequence.
-  /// Before that time, the number of instances of a type may vary.
-  /// <remarks>
-  template<class T>
-  std::unordered_map<std::type_index, std::shared_ptr<T>> GetAll() const {
-    std::lock_guard<std::mutex> lk(m_lock);
-
-    std::unordered_map<std::type_index, std::shared_ptr<T>> all;
-    for (const auto& deco : m_decorations) {
-      if (std::get<0>(deco.first) == std::type_index(typeid(T))) {
-        const auto& disposition = deco.second;
-        if(disposition.m_decoration) {
-          all[std::get<1>(deco.first)] = disposition.m_decoration->as<T>();
-        }
-      }
-    }
-    return all;
-  }
-
   /// <summary>
   /// Shared pointer specialization, used to obtain the underlying shared pointer for some type T
   /// </summary>
@@ -357,6 +314,61 @@ public:
     
     out = nullptr;
     return false;
+  }
+
+  /// <returns>
+  /// The number of sources for the specified type supplied to the specified target
+  /// </returns>
+  /// <param name="target">Default value counts all broadcast data</param>
+  /// <remarks>
+  /// This method should ONLY be called during the final-call sequence.
+  /// Before that time, the number of instances of a type may vary.
+  /// </remarks>
+  template<class T>
+  int HasAll(const std::type_info& target = typeid(void)) const {
+    std::lock_guard<std::mutex> lk(m_lock);
+
+    int all = 0;
+    for (auto& deco : m_decorations) {
+      if (std::get<0>(deco.first) == typeid(T) &&
+          deco.second.satisfied) {
+        autowiring::DataFlow flow = GetDataFlow(deco.second);
+        if (flow.output &&
+            ((flow.broadcast && target == typeid(void)) ||
+              flow.halfpipes.find(target) != flow.halfpipes.end())) {
+          ++all;
+        }
+      }
+    }
+    return all;
+  }
+
+  /// <returns>
+  /// All decorations of the specified type supplied to the specified target, indexed by source
+  /// </summary>
+  /// </returns>
+  /// <param name="target">Default value retrieves all broadcast data</param>
+  /// <remarks>
+  /// This method should ONLY be called during the final-call sequence.
+  /// Before that time, the number of instances of a type may vary.
+  /// </remarks>
+  template<class T>
+  std::unordered_map<std::type_index, std::shared_ptr<T>> GetAll(const std::type_info& target = typeid(void)) const {
+    std::lock_guard<std::mutex> lk(m_lock);
+
+    std::unordered_map<std::type_index, std::shared_ptr<T>> all;
+    for (const auto& deco : m_decorations) {
+      if (std::get<0>(deco.first) == std::type_index(typeid(T)) &&
+          deco.second.satisfied) {
+        autowiring::DataFlow flow = GetDataFlow(deco.second);
+        if (flow.output &&
+            ((flow.broadcast && target == typeid(void)) ||
+              flow.halfpipes.find(target) != flow.halfpipes.end())) {
+          all[std::get<1>(deco.first)] = deco.second.m_decoration->as<T>();
+        }
+      }
+    }
+    return all;
   }
 
   /// <summary>

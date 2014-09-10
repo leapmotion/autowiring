@@ -44,34 +44,35 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
       *pCur;
       pCur++
       ) {
-    auto flow = satCounter.GetDataFlow(pCur->ti);
+    const std::type_info& dataType = *pCur->ti;
+    auto flow = satCounter.GetDataFlow(&dataType);
     if (flow.broadcast) {
       // Broadcast source is void
-      DecorationDisposition& entry = m_decorations[DSIndex(*pCur->ti, typeid(void))];
-      entry.m_type = pCur->ti;
+      DecorationDisposition* entry = &m_decorations[DSIndex(dataType, typeid(void))];
+      entry->m_type = pCur->ti;
 
       // Decide what to do with this entry:
       // NOTE: Recipients added via AddReceiver can receiver broadcast data,
       // so it is necessary to decrement the receiver's counters when it is added.
       switch(pCur->subscriberType) {
         case inTypeRequired:
-          entry.m_subscribers.push_back(std::make_pair(&satCounter, true));
-          if (entry.satisfied)
-            satCounter.Decrement(*pCur->ti, typeid(void), true);
+          entry->m_subscribers.push_back(std::make_pair(&satCounter, true));
+          if (entry->satisfied)
+            satCounter.Decrement(dataType, typeid(void), true);
           break;
         case inTypeOptional:
-          entry.m_subscribers.push_back(std::make_pair(&satCounter, false));
-          if (entry.satisfied)
-            satCounter.Decrement(*pCur->ti, typeid(void), false);
+          entry->m_subscribers.push_back(std::make_pair(&satCounter, false));
+          if (entry->satisfied)
+            satCounter.Decrement(dataType, typeid(void), false);
           break;
         case outTypeRef:
         case outTypeRefAutoReady:
-          if(entry.m_publisher) {
+          if(entry->m_publisher) {
             std::stringstream ss;
             ss << "Added identical data broadcasts of type " << pCur->ti->name();
             throw std::runtime_error(ss.str());
           }
-          entry.m_publisher = &satCounter;
+          entry->m_publisher = &satCounter;
           break;
         default: //inTypeInvalid
           // Should never happen--trivially ignore this entry
@@ -80,28 +81,33 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     }
     for (auto halfpipe : flow.halfpipes) {
       // Pipe terminating type is defined by halfpipe
-      DecorationDisposition& entry = m_decorations[std::make_tuple(std::type_index(*pCur->ti), halfpipe)];
-      entry.m_type = pCur->ti;
+      DecorationDisposition* entry;
+      if (flow.output) {
+        entry = &m_decorations[DSIndex(dataType, *satCounter.GetType())];
+      } else {
+        entry = &m_decorations[DSIndex(dataType, halfpipe)];
+      }
+      entry->m_type = pCur->ti;
 
       // Decide what to do with this entry:
       // NOTE: Recipients added via AddReceiver cannot receive piped data,
       // and subscribers are added before the packet is decorated.
       switch(pCur->subscriberType) {
         case inTypeRequired:
-          entry.m_subscribers.push_back(std::make_pair(&satCounter, true));
+          entry->m_subscribers.push_back(std::make_pair(&satCounter, true));
           break;
         case inTypeOptional:
-          entry.m_subscribers.push_back(std::make_pair(&satCounter, false));
+          entry->m_subscribers.push_back(std::make_pair(&satCounter, false));
           break;
         case outTypeRef:
         case outTypeRefAutoReady:
           /// IMPORTANT: Allow multiple publishers of the same type, provided they are to distinct sources.
-          if(entry.m_publisher == &satCounter) {
+          if(entry->m_publisher == &satCounter) {
             std::stringstream ss;
             ss << "Added identical data pipes from " << satCounter.GetAutoFilterTypeInfo()->name() << " of type " << pCur->ti->name();
             throw std::runtime_error(ss.str());
           }
-          entry.m_publisher = &satCounter;
+          entry->m_publisher = &satCounter;
           break;
         default: //inTypeInvalid
           // Should never happen--trivially ignore this entry
@@ -116,27 +122,28 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
       *pCur;
       pCur++
       ) {
-    auto flow = satCounter.GetDataFlow(pCur->ti);
+    const std::type_info& dataType = *pCur->ti;
+    auto flow = satCounter.GetDataFlow(&dataType);
     if (flow.broadcast) {
       // Broadcast source is void
-      DecorationDisposition& entry = m_decorations[DSIndex(*pCur->ti, typeid(void))];
+      DecorationDisposition* entry = &m_decorations[DSIndex(dataType, typeid(void))];
 
       // Decide what to do with this entry:
       switch(pCur->subscriberType) {
         case inTypeRequired:
-          assert(entry.m_subscribers.size() > 0);
-          assert(&satCounter == entry.m_subscribers.back().first);
-          entry.m_subscribers.pop_back();
+          assert(entry->m_subscribers.size() > 0);
+          assert(&satCounter == entry->m_subscribers.back().first);
+          entry->m_subscribers.pop_back();
           break;
         case inTypeOptional:
-          assert(entry.m_subscribers.size() > 0);
-          assert(&satCounter == entry.m_subscribers.back().first);
-          entry.m_subscribers.pop_back();
+          assert(entry->m_subscribers.size() > 0);
+          assert(&satCounter == entry->m_subscribers.back().first);
+          entry->m_subscribers.pop_back();
           break;
         case outTypeRef:
         case outTypeRefAutoReady:
-          assert(&satCounter == entry.m_publisher);
-          entry.m_publisher = nullptr;
+          assert(&satCounter == entry->m_publisher);
+          entry->m_publisher = nullptr;
           break;
         default: //inTypeInvalid
           // Should never happen--trivially ignore this entry
@@ -145,24 +152,29 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
     }
     for (auto halfpipe : flow.halfpipes) {
       // Pipe terminating type is defined by halfpipe
-      DecorationDisposition& entry = m_decorations[std::make_tuple(std::type_index(*pCur->ti), halfpipe)];
+      DecorationDisposition* entry;
+      if (flow.output) {
+        entry = &m_decorations[DSIndex(dataType, *satCounter.GetType())];
+      } else {
+        entry = &m_decorations[DSIndex(dataType, halfpipe)];
+      }
 
       // Decide what to do with this entry:
       switch(pCur->subscriberType) {
         case inTypeRequired:
-          assert(entry.m_subscribers.size() > 0);
-          assert(&satCounter == entry.m_subscribers.back().first);
-          entry.m_subscribers.pop_back();
+          assert(entry->m_subscribers.size() > 0);
+          assert(&satCounter == entry->m_subscribers.back().first);
+          entry->m_subscribers.pop_back();
           break;
         case inTypeOptional:
-          assert(entry.m_subscribers.size() > 0);
-          assert(&satCounter == entry.m_subscribers.back().first);
-          entry.m_subscribers.pop_back();
+          assert(entry->m_subscribers.size() > 0);
+          assert(&satCounter == entry->m_subscribers.back().first);
+          entry->m_subscribers.pop_back();
           break;
         case outTypeRef:
         case outTypeRefAutoReady:
-          assert(&satCounter == entry.m_publisher);
-          entry.m_publisher = nullptr;
+          assert(&satCounter == entry->m_publisher);
+          entry->m_publisher = nullptr;
           break;
         default: //inTypeInvalid
           // Should never happen--trivially ignore this entry
@@ -213,6 +225,7 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, const std::type_
   std::list<SatCounter*> callQueue;
   {
     std::lock_guard<std::mutex> lk(m_lock);
+
     if (info != typeid(subscriber_traits<const AutoPacket&>::type)) {
       switch (m_lifecyle) {
         case disable_decorate: throw std::runtime_error("Cannot provide decorations in final-call (const AutoPacket&) AutoFilter methods");
