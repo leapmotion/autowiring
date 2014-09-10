@@ -65,7 +65,13 @@ public:
   }
 
   /// <summary>Final call in slave context to extract all data of the specified type</summary>
+  /// <remarks>
+  /// This will only gather data that is directed to this source, identified by the gather type.
+  /// </remarks>
   void AutoGather(const AutoPacket& slave_data) {
-    atomic::operator = (slave_data.GetAll<merge_type>());
+    std::lock_guard<lock> guard(atomic::m_lock);
+    atomic::m_object = (slave_data.GetAll<merge_type>(typeid(gather)));
+    auto broadcast = (slave_data.GetAll<merge_type>(typeid(void)));
+    atomic::m_object.insert(broadcast.begin(), broadcast.end());
   }
 };

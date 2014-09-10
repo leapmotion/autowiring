@@ -1653,7 +1653,12 @@ TEST_F(AutoFilterTest, AutoEdgeTest) {
 
 class MergeSlaveContext {};
 
-class FilterD0 {
+class FilterID0 {
+public:
+  void AutoFilter(const Decoration<0>& out) {}
+};
+
+class FilterOD0 {
 public:
   void AutoFilter(auto_out<Decoration<0>> out) {}
 };
@@ -1672,8 +1677,9 @@ public:
   }
 };
 
-TEST_F(AutoFilterTest, VerifyNonBroadcastOutput) {
+TEST_F(AutoFilterTest, VerifyMergedOutputs) {
   AutoRequired<AutoMerge<Decoration<0>, MergeSlaveContext>> merge;
+  typedef AutoMerge<Decoration<0>, MergeSlaveContext>::gather t_SlaveGather;
 
   AutoCreateContextT<MergeSlaveContext> slave_context;
   slave_context->Initiate();
@@ -1681,25 +1687,36 @@ TEST_F(AutoFilterTest, VerifyNonBroadcastOutput) {
     CurrentContextPusher pusher(slave_context);
     AutoRequired<AutoPacketFactory> factory;
 
-    AutoRequired<FilterD0> fD0;
+    AutoRequired<FilterID0> fID0;
+    AutoRequired<FilterOD0> fOD0;
     AutoRequired<Filter1D0> f1D0;
     AutoRequired<Filter2D0> f2D0;
 
     // No broadcast from f1D0 and f2D0
+    factory->BroadcastDataIn<FilterID0>(nullptr,false);
     factory->BroadcastDataOut<Filter1D0>(nullptr,false);
     factory->BroadcastDataOut<Filter2D0>(nullptr,false);
+
+    // Pipe each filter to the injected merge
+    factory->PipeData<Filter1D0, t_SlaveGather>();
+    factory->PipeData<Filter2D0, FilterID0>();
 
     std::shared_ptr<AutoPacket> pkt;
     ASSERT_NO_THROW(pkt = factory->NewPacket()) << "Multi-Decorate hit an exception";
 
     ASSERT_TRUE(pkt->Has<Decoration<0>>()) << "Broadcast data should be present";
-    ASSERT_FALSE(pkt->Has<Decoration<0>>(typeid(FilterD0))) << "Sourced data should be absent from broadcasting source";
+    ASSERT_FALSE(pkt->Has<Decoration<0>>(typeid(FilterOD0))) << "Sourced data should be absent from broadcasting source";
     ASSERT_TRUE(pkt->Has<Decoration<0>>(typeid(Filter1D0))) << "Sourced data should be present from non-broadcasting source";
     ASSERT_TRUE(pkt->Has<Decoration<0>>(typeid(Filter2D0))) << "Sourced data should be present from non-broadcasting source";
+
+    // Final-Call methods
+    ASSERT_EQ(1, pkt->HasAll<Decoration<0>>()) << "Single Broadcast source only";
+    ASSERT_EQ(1, pkt->HasAll<Decoration<0>>(typeid(t_SlaveGather))) << "Single Piped source only";
+    ASSERT_EQ(1, pkt->HasAll<Decoration<0>>(typeid(FilterID0))) << "Single Piped source only";
   }
 
   {
-    AutoMerge<Decoration<0>, MergeSlaveContext>::unlock mergeD0(merge);
-    ASSERT_EQ(3, mergeD0->size()) << "Failed to collect all data";
+    AutoMerge<Decoration<0>, MergeSlaveContext>::unlock unlock_merge(merge);
+    ASSERT_EQ(2, unlock_merge->size()) << "Failed to collect piped data";
   }
 }
