@@ -1,77 +1,49 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <autowiring/Bolt.h>
-#include <autowiring/DeclareAutoFilter.h>
-#include <autowiring/atomic_object.h>
 #include <autowiring/AutoPacket.h>
 #include <unordered_set>
-
-// TODO: Find a way to propagate target information, and make sure that it is used
-// when GetAll or HasAll are called.
-// NOTE: This is important, since the gather should be ONLY for data that is piped in.
-// NOTE: This means that additional steps are required since data must be piped to
-// the merge node.
-// IDEA: If this is the goal, then there should be a helper function to declare pipes.
 
 /// <summary>
 /// Extracts all instances of a type from a slave-context on each execution of that context.
 /// </summary>
 /// <remarks>
-/// It is expected that AutoMerge is a member of the parent of both master and slave contexts.
-/// AutoFilters in child contexts are called by AutoPackets created in the parent context.
-/// However, a merge of all instances of a type is undefined until the execution of the slave-context
-/// is complete.
-/// Therefore, in order to ensure that the termination of execution of the slave context is
-/// well defined, it cannot be a child of the master context.
-/// Thus, in order to ensure discovery of both master and slave contexts, AutoMerge is
-/// expected to be a member of a parent context of both.
+/// It is expected that the merged data is desired in another context.
+/// Let MasterFilter exist in the Master context, and let AutoMerge exist in the Slave context.
+/// When MasterFilter::AutoFilter(AutoPacket& packet, ...) is called in the Master context it will
+/// initiate execution of the Slave context as follows:
+///   std::shared_ptr<AutoPacket> master_packet = packet.shared_from_this();
+///   {
+///     std::shared_ptr<AutoPacket> slave_packet = slave_factory->NewPacket();
+///     slave_packet.Decorate([master_packet] (const AutoMerge<merge_type>::merge_data& data)
+///       master_packet.Decorate(data);
+///     )
+///   }
+/// This ensures that before Finalize is called on master_packet it will be decorated with the
+/// merged data from slave_context. Because the Slave context may include Deferred AutoFilter
+/// methods, it cannot be guaranteed that the data will be immediately available.
 /// </remarks>
-template<class merge_type, class slave_sigil>
-class AutoMerge :
-  public Bolt<slave_sigil>,
-  public atomic_object<std::unordered_map<std::type_index, std::shared_ptr<merge_type>>>
+template<class merge_type>
+class AutoMerge
 {
 public:
-  typedef atomic_object<std::unordered_map<std::type_index, std::shared_ptr<merge_type>>> atomic;
-  typedef typename atomic::object object;
-  typedef typename atomic::lock lock;
-  typedef typename atomic::unlock unlock;
-  typedef typename atomic::shared shared;
-  typedef BasedAutoFilter<AutoMerge<merge_type, slave_sigil>, void, const AutoPacket&> gather;
-
-protected:
-  /// Reference to the slave context
-  std::weak_ptr<CoreContext> m_slave_context;
-
-public:
-  AutoMerge() {}
-  using atomic::operator=;
-  operator object(void) {
-    // NOTE: This avoids "using" keyword with a cast operator overload
-    return *(atomic*)this;
-  }
-
-  void ContextCreated() {
-    if (!m_slave_context.expired()) {
-      throw std::runtime_error("AutoMerge cannot reference multuple slave contexts");
-    }
-
-    // Maintain a reference to the slave context
-    m_slave_context = AutoCurrentContext();
-
-    // Inject a gather node into the slave context
-    DeclareAutoFilter(this, &AutoMerge<merge_type, slave_sigil>::AutoGather);
-  }
+  typedef std::unordered_map<std::type_index, std::shared_ptr<merge_type>> merge_data;
+  typedef std::function<void(const merge_data&)> merge_call;
 
   /// <summary>Final call in slave context to extract all data of the specified type</summary>
   /// <remarks>
   /// This will only gather data that is directed to this source, identified by the gather type.
   /// </remarks>
-  void AutoGather(const AutoPacket& slave_data) {
-    std::lock_guard<lock> guard(atomic::m_lock);
-    atomic::m_object = (slave_data.GetAll<merge_type>(typeid(gather)));
-    auto broadcast = (slave_data.GetAll<merge_type>(typeid(void)));
-    atomic::m_object.insert(broadcast.begin(), broadcast.end());
+  void AutoFilter(const AutoPacket& slave_data, const std::function<void(const merge_data&)>& master_call) {
+    if (!master_call)
+      return;
+
+    // Gather relevant data of the specified type
+    merge_data unordered = slave_data.GetAll<merge_type>(typeid(AutoMerge<merge_type>));
+    merge_data broadcast = slave_data.GetAll<merge_type>(typeid(void));
+    unordered.insert(broadcast.begin(), broadcast.end());
+
+    // Call the master function decorating this packet
+    master_call(unordered);
   }
 };
