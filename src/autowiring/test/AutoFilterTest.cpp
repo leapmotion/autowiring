@@ -1668,8 +1668,6 @@ TEST_F(AutoFilterTest, AutoEdgeTest) {
    */
 }
 
-class MergeSlaveContext {};
-
 template<int num = 0>
 class FilterOD0 {
 public:
@@ -1698,7 +1696,9 @@ TEST_F(AutoFilterTest, VerifyMergedOutputs) {
   factory->BroadcastDataOut<FilterOD0<1>>(nullptr,false);
   factory->BroadcastDataOut<FilterOD0<2>>(nullptr,false);
 
-  // fID0 ->
+  // f0D0 is broadcast, and will be received by merge
+  // f1D0 -> merge only
+  // f2D0 -> fID0 only
   factory->PipeData<FilterOD0<1>, AutoMerge<Decoration<0>>>();
   factory->PipeData<FilterOD0<2>, FilterID0>();
 
@@ -1729,19 +1729,14 @@ public:
   void AutoFilter(const Decoration<0>&, auto_out<Decoration<1>>) {}
 };
 
+class SlaveContext {};
+class MasterContext {};
+
 TEST_F(AutoFilterTest, VerifyContextStile) {
   std::shared_ptr<AutoStile<const Decoration<0>&, Decoration<1>&>> stile;
   std::shared_ptr<AutoPacketFactory> master_factory;
 
-  AutoCreateContext master_context;
-  {
-    CurrentContextPusher pusher(master_context);
-    master_factory = AutoRequired<AutoPacketFactory>();
-    stile = AutoRequired<AutoStile<const Decoration<0>&, Decoration<1>&>>();
-    master_context->Initiate();
-  }
-
-  AutoCreateContext slave_context;
+  AutoCreateContextT<SlaveContext> slave_context;
   {
     CurrentContextPusher pusher(slave_context);
     AutoRequired<AutoPacketFactory>();
@@ -1749,7 +1744,15 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
     slave_context->Initiate();
   }
 
-  stile->Collar(slave_context.get());
+  AutoCreateContextT<MasterContext> master_context;
+  {
+    CurrentContextPusher pusher(master_context);
+    master_factory = AutoRequired<AutoPacketFactory>();
+    stile = AutoRequired<AutoStile<const Decoration<0>&, Decoration<1>&>>();
+    master_context->Initiate();
+  }
+
+  stile->Leash(slave_context.get());
   {
     CurrentContextPusher pusher(master_context);
     std::shared_ptr<AutoPacket> master_packet;
@@ -1759,8 +1762,43 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
   }
 }
 
-/*
 TEST_F(AutoFilterTest, ExtractMergedData) {
-  // TODO: Demonstrate extraction of merged data using a stile
+  std::shared_ptr<AutoStile<const AutoMergeStile<Decoration<0>>::merge_call&>> stile;
+  std::shared_ptr<AutoPacketFactory> master_factory;
+
+  AutoCreateContextT<SlaveContext> slave_context;
+  {
+    CurrentContextPusher pusher(slave_context);
+
+    AutoRequired<AutoPacketFactory>();
+    AutoRequired<FilterOD0<0>> f0D0;
+    AutoRequired<FilterOD0<1>> f1D0;
+
+    slave_context->Initiate();
+  }
+
+  AutoCreateContextT<MasterContext> master_context;
+  {
+    CurrentContextPusher pusher(master_context);
+
+    master_factory = AutoRequired<AutoPacketFactory>();
+    stile = AutoRequired<AutoStile<const AutoMergeStile<Decoration<0>>::merge_call&>>();
+    AutoConstruct<AutoMergeStile<Decoration<0>>> merge(*slave_context);
+
+    merge->GetMerge()->PipeToMerge<FilterOD0<0>>();
+    merge->GetMerge()->PipeToMerge<FilterOD0<1>>();
+
+    master_context->Initiate();
+  }
+
+  stile->Leash(slave_context.get());
+  {
+    CurrentContextPusher pusher(master_context);
+    std::shared_ptr<AutoPacket> master_packet;
+    master_packet = master_factory->NewPacket();
+    master_packet->Decorate(Decoration<0>());
+    const AutoMergeStile<Decoration<0>>::merge_data* data = nullptr;
+    ASSERT_TRUE(master_packet->Get(data)) << "Stile failed to send & retrieve data";
+    ASSERT_EQ(2, data->size()) << "Merge failed to gather all data";
+  }
 }
-*/
