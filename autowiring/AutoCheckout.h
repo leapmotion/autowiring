@@ -1,5 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include <typeinfo>
+#include MEMORY_HEADER
 
 class AutoPacket;
 
@@ -41,6 +43,9 @@ public:
   }
 
 private:
+  // NOTE: m_parent cannot be a shared_ptr since it may be created during the resolution
+  // of optional_ptr arguments, in which case the shared_ptr to m_parent will be expired.
+  // Using a regular pointer enables decoration during the final call.
   AutoPacket* m_parent;
   std::shared_ptr<T> m_val;
   bool m_ready;
