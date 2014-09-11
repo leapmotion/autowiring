@@ -34,16 +34,22 @@ public:
   /// <remarks>
   /// This will only gather data that is directed to this source, identified by the gather type.
   /// </remarks>
-  void AutoFilter(const AutoPacket& slave_data, const std::function<void(const merge_data&)>& master_call) {
-    if (!master_call)
+  void AutoFilter(const AutoPacket& packet, const std::function<void(const merge_data&)>& call) {
+    if (!call)
       return;
 
     // Gather relevant data of the specified type
-    merge_data unordered = slave_data.GetAll<merge_type>(typeid(AutoMerge<merge_type>));
-    merge_data broadcast = slave_data.GetAll<merge_type>(typeid(void));
+    merge_data unordered = packet.GetAll<merge_type>(typeid(AutoMerge<merge_type>));
+    merge_data broadcast = packet.GetAll<merge_type>(typeid(void));
     unordered.insert(broadcast.begin(), broadcast.end());
 
+    // Merge with prior merged data
+    if (packet.Has<merge_data>()) {
+      merge_data priordata = packet.Get<merge_data>();
+      unordered.insert(priordata.begin(), priordata.end());
+    }
+
     // Call the master function decorating this packet
-    master_call(unordered);
+    call(unordered);
   }
 };
