@@ -140,8 +140,8 @@ struct is_autofilter_arg :
 
   static const bool is_input = is_required_input<Arg>::value || is_optional_input<Arg>::value || is_optional_ptr<Arg>::value;
   static const bool is_output = is_required_output<Arg>::value || is_optional_output<Arg>::value || is_auto_out<Arg>::value;
-  static const bool is_required = is_required_input<Arg>::value || is_required_output<Arg>::value || (is_auto_out<Arg>::ready && is_auto_out<Arg>::ready);
-  static const bool is_optional = is_optional_input<Arg>::value || is_optional_output<Arg>::value || is_optional_ptr<Arg>::value || (is_auto_out<Arg>::ready && !is_auto_out<Arg>::ready);
+  static const bool is_required = is_required_input<Arg>::value || is_required_output<Arg>::value || (is_auto_out<Arg>::value && is_auto_out<Arg>::ready);
+  static const bool is_optional = is_optional_input<Arg>::value || is_optional_output<Arg>::value || is_optional_ptr<Arg>::value || (is_auto_out<Arg>::value && !is_auto_out<Arg>::ready);
 };
 
 /// <summary>

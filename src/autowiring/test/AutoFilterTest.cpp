@@ -1365,10 +1365,26 @@ typedef std::function<void(const Decoration<0>& typeIn, Decoration<1> noEdge)> N
 typedef std::function<int(const Decoration<0>& typeIn, auto_out<Decoration<1>>& typeOut)> NonFilterFunctionType3;
 
 TEST_F(AutoFilterTest, AutoFilterTemplateTests) {
+  ASSERT_TRUE(static_cast<const bool>(is_required_input<const Decoration<0>&>::value)) << "Input type FAIL";
+  ASSERT_TRUE(static_cast<const bool>(is_required_output<Decoration<0>&>::value)) << "Output type FAIL";
+  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<const Decoration<0>&>::is_input)) << "Input type FAIL";
+  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<Decoration<0>&>::is_output)) << "Output type FAIL";
+
+  ASSERT_TRUE(is_optional_ptr<optional_ptr<Decoration<0>>>::value) << "Type of optional_ptr instance incorrectly identified";
   ASSERT_TRUE(is_auto_out<auto_out<Decoration<0>>>::value) << "Type of auto_out instance incorrectly identified";
 
   ASSERT_FALSE(static_cast<const bool>(is_autofilter_arg<const Decoration<0>>::value)) << "Validity of AutoFilter input incorrectly identified";
   ASSERT_FALSE(static_cast<const bool>(is_autofilter_arg<Decoration<0>>::value)) << "Validity of AutoFilter input incorrectly identified";
+
+  ASSERT_TRUE(is_autofilter_arg<const Decoration<0>&>::is_input) << "Incorrect IO assessment";
+  ASSERT_TRUE(is_autofilter_arg<Decoration<0>&>::is_output) << "Incorrect IO assessment";
+  ASSERT_TRUE(is_autofilter_arg<auto_out<Decoration<0>>>::is_output) << "Incorrect IO assessment";
+
+  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<const Decoration<0>&>::is_required)) << "Incorrect OR assessment";
+  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<Decoration<0>&>::is_required)) << "Incorrect OR assessment";
+  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<auto_out<Decoration<0>, true>>::is_required)) << "Incorrect OR assessment";
+  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<optional_ptr<Decoration<0>>>::is_optional)) << "Incorrect OR assessment";
+  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<auto_out<Decoration<0>, false>>::is_optional)) << "Incorrect OR assessment";
 
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<const Decoration<0>&>::value)) << "Validity of AutoFilter input incorrectly identified";
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<Decoration<0>&>::value)) << "Validity of AutoFilter output incorrectly identified";
