@@ -124,12 +124,12 @@ public:
   void BroadcastDataOut(const std::type_info* dataType = nullptr, bool enable = true) {
     const std::type_info* nodeType = &typeid(node);
     if (dataType) {
-      AutoCurrentContext()->NotifyWhenAutowired<node>(
+      GetContext()->NotifyWhenAutowired<node>(
         [this, nodeType, dataType, enable](){
         BroadcastOneDataOut(nodeType, dataType, enable);
       });
     } else {
-      AutoCurrentContext()->NotifyWhenAutowired<node>(
+      GetContext()->NotifyWhenAutowired<node>(
         [this, nodeType, enable](){
         BroadcastAllDataOut(nodeType, enable);
       });
@@ -146,12 +146,12 @@ public:
   void BroadcastDataIn(const std::type_info* dataType = nullptr, bool enable = true) {
     const std::type_info* nodeType = &typeid(node);
     if (dataType) {
-      AutoCurrentContext()->NotifyWhenAutowired<node>(
+      GetContext()->NotifyWhenAutowired<node>(
         [this, nodeType, dataType, enable](){
         BroadcastOneDataIn(nodeType, dataType, enable);
       });
     } else {
-      AutoCurrentContext()->NotifyWhenAutowired<node>(
+      GetContext()->NotifyWhenAutowired<node>(
         [this, nodeType, enable](){
         BroadcastAllDataIn(nodeType, enable);
       });
@@ -174,17 +174,17 @@ public:
     const std::type_info* nodeOutType = &typeid(nodeOut);
     const std::type_info* nodeInType = &typeid(nodeIn);
     if (dataType) {
-      AutoCurrentContext()->NotifyWhenAutowired<nodeIn>(
+      GetContext()->NotifyWhenAutowired<nodeIn>(
         [this, nodeOutType, nodeInType, dataType, enable](){
-        AutoCurrentContext()->NotifyWhenAutowired<nodeIn>(
+        GetContext()->NotifyWhenAutowired<nodeIn>(
         [this, nodeOutType, nodeInType, dataType, enable](){
           PipeOneData(nodeOutType, nodeInType, dataType, enable);
         });
       });
     } else {
-      AutoCurrentContext()->NotifyWhenAutowired<nodeIn>(
+      GetContext()->NotifyWhenAutowired<nodeIn>(
         [this, nodeOutType, nodeInType, enable](){
-        AutoCurrentContext()->NotifyWhenAutowired<nodeIn>(
+        GetContext()->NotifyWhenAutowired<nodeIn>(
         [this, nodeOutType, nodeInType, enable](){
           PipeAllData(nodeOutType, nodeInType, enable);
         });
