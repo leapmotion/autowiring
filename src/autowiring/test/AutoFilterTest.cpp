@@ -12,6 +12,7 @@
 #include <autowiring/AutoTimeStamp.h>
 #include <autowiring/SatCounter.h>
 #include <autowiring/AutoMerge.h>
+#include <autowiring/AutoStile.h>
 #include THREAD_HEADER
 
 class AutoFilterTest:
@@ -1722,3 +1723,44 @@ TEST_F(AutoFilterTest, VerifyMergedOutputs) {
   }
   ASSERT_EQ(2, extracted.size()) << "Should collect 1 broadcast & 1 pipe";
 }
+
+class Junction01 {
+public:
+  void AutoFilter(const Decoration<0>&, auto_out<Decoration<1>>) {}
+};
+
+TEST_F(AutoFilterTest, VerifyContextStile) {
+  std::shared_ptr<AutoStile<const Decoration<0>&, Decoration<1>&>> stile;
+  std::shared_ptr<AutoPacketFactory> master_factory;
+
+  AutoCreateContext master_context;
+  {
+    CurrentContextPusher pusher(master_context);
+    master_factory = AutoRequired<AutoPacketFactory>();
+    stile = AutoRequired<AutoStile<const Decoration<0>&, Decoration<1>&>>();
+    master_context->Initiate();
+  }
+
+  AutoCreateContext slave_context;
+  {
+    CurrentContextPusher pusher(slave_context);
+    AutoRequired<AutoPacketFactory>();
+    AutoRequired<Junction01>();
+    slave_context->Initiate();
+  }
+
+  stile->Collar(slave_context.get());
+  {
+    CurrentContextPusher pusher(master_context);
+    std::shared_ptr<AutoPacket> master_packet;
+    master_packet = master_factory->NewPacket();
+    master_packet->Decorate(Decoration<0>());
+    ASSERT_TRUE(master_packet->Has<Decoration<1>>()) << "Stile failed to send & retrieve data";
+  }
+}
+
+/*
+TEST_F(AutoFilterTest, ExtractMergedData) {
+  // TODO: Demonstrate extraction of merged data using a stile
+}
+*/
