@@ -34,7 +34,8 @@ public:
     completion(rhs.completion)
   {
     rhs.m_parent = nullptr;
-    rhs.m_val = nullptr;
+    rhs.m_val.reset();
+    rhs.m_ready = false;
   }
 
   ~AutoCheckout(void) {
@@ -48,7 +49,7 @@ private:
   // Using a regular pointer enables decoration during the final call.
   AutoPacket* m_parent;
   std::shared_ptr<T> m_val;
-  bool m_ready;
+  mutable bool m_ready;
   const std::type_info* m_source;
   t_completion completion;
 
@@ -56,7 +57,7 @@ public:
   /// <summary>
   /// Causes the wrapped packet to be committed when the checkout is destroyed
   /// </summary>
-  void Ready() {
+  void Ready() const {
     m_ready = true;
   }
 
@@ -67,12 +68,18 @@ public:
   operator bool(void) const { return !!m_val; }
   operator T&(void) const { return *m_val; }
 
+  // <summary>Assignment by move</summary>
   AutoCheckout& operator=(AutoCheckout&& rhs) {
-    std::swap(m_parent, rhs.m_parent);
-    std::swap(m_val, rhs.m_val);
+    m_parent = rhs.m_parent;
+    m_val = rhs.m_val;
     m_ready = rhs.m_ready;
     m_source = rhs.m_source;
     completion = rhs.completion;
+
+    rhs.m_parent = nullptr;
+    rhs.m_val.reset();
+    rhs.m_ready = false;
+
     return *this;
   }
 };

@@ -22,7 +22,7 @@ public:
   /// Copy constructor is a move.
   /// This enables compliance with the expected non-reference argument type auto_out<T>.
   ///</remarks>
-  auto_out(auto_out& rhs) :
+  auto_out(const auto_out& rhs) :
     m_cancelled(false),
     m_checkout(std::move(rhs.m_checkout))
   {
@@ -53,9 +53,12 @@ public:
 
 private:
   mutable bool m_cancelled;
-  AutoCheckout<T> m_checkout;
+  mutable AutoCheckout<T> m_checkout;
 
 public:
+  //<summary>Mimics interface of auto_out<T, false> </summary>
+  void Ready() const {}
+
   T* ptr(void) const { return m_checkout; }
 
   void Cancel(void) const { m_cancelled = true; }
