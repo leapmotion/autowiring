@@ -898,7 +898,8 @@ public:
   }
 
   /// <summary>
-  /// Adds a post-attachment listener in this context for a particular autowired member
+  /// Adds a post-attachment listener in this context for a particular autowired member.
+  /// There is no guarantee for the context in which the listener will be called.
   /// </summary>
   /// <returns>
   /// A pointer to a deferrable autowiring function which the caller may safely ignore if it's not needed.
