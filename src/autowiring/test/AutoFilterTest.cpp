@@ -11,6 +11,7 @@
 #include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/AutoTimeStamp.h>
 #include <autowiring/SatCounter.h>
+#include <autowiring/AutoMerge.h>
 #include THREAD_HEADER
 
 class AutoFilterTest:
@@ -1648,4 +1649,60 @@ TEST_F(AutoFilterTest, AutoEdgeTest) {
   factory->PipeData<FilterDiamondA, FilterDiamondOut>(); //Pipe all correctly oriented types
   ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "Data failed to collide";
    */
+}
+
+class MergeSlaveContext {};
+
+template<int num = 0>
+class FilterOD0 {
+public:
+  void AutoFilter(auto_out<Decoration<0>> out) {
+    out->i = 0;
+  }
+};
+
+class FilterID0 {
+public:
+  void AutoFilter(const Decoration<0>& in) {}
+};
+
+TEST_F(AutoFilterTest, VerifyMergedOutputs) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  AutoRequired<FilterOD0<0>> f0D0_broadcast;
+  AutoRequired<FilterOD0<1>> f1D0_pipe_merge;
+  AutoRequired<FilterOD0<2>> f1D0_pipe_fID0;
+  AutoRequired<FilterID0> fID0_pipe_f2D0;
+
+  AutoRequired<AutoMerge<Decoration<0>>> merge;
+
+  // No broadcast from f1D0 and f2D0
+  factory->BroadcastDataIn<FilterID0>(nullptr,false);
+  factory->BroadcastDataOut<FilterOD0<1>>(nullptr,false);
+  factory->BroadcastDataOut<FilterOD0<2>>(nullptr,false);
+
+  // fID0 ->
+  factory->PipeData<FilterOD0<1>, AutoMerge<Decoration<0>>>();
+  factory->PipeData<FilterOD0<2>, FilterID0>();
+
+  AutoMerge<Decoration<0>>::merge_data extracted;
+  {
+    std::shared_ptr<AutoPacket> packet;
+    ASSERT_NO_THROW(packet = factory->NewPacket()) << "Multi-Decorate hit an exception";
+    packet->Decorate(AutoMerge<Decoration<0>>::merge_call([&extracted](const AutoMerge<Decoration<0>>::merge_data& data) {
+      extracted = data;
+    }));
+
+    ASSERT_TRUE(packet->Has<Decoration<0>>()) << "Broadcast data should be present";
+    ASSERT_FALSE(packet->Has<Decoration<0>>(typeid(FilterOD0<0>))) << "Sourced data should be absent from broadcasting source";
+    ASSERT_TRUE(packet->Has<Decoration<0>>(typeid(FilterOD0<1>))) << "Sourced data should be present from non-broadcasting source";
+    ASSERT_TRUE(packet->Has<Decoration<0>>(typeid(FilterOD0<2>))) << "Sourced data should be present from non-broadcasting source";
+
+    // Final-Call methods
+    // TODO: Make these throw if called early!
+    ASSERT_EQ(1, packet->HasAll<Decoration<0>>()) << "Single Broadcast source only";
+    ASSERT_EQ(1, packet->HasAll<Decoration<0>>(typeid(AutoMerge<Decoration<0>>))) << "Single Piped source only";
+    ASSERT_EQ(1, packet->HasAll<Decoration<0>>(typeid(FilterID0))) << "Single Piped source only";
+  }
+  ASSERT_EQ(2, extracted.size()) << "Should collect 1 broadcast & 1 pipe";
 }

@@ -126,6 +126,11 @@ AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(const std::type_
 
 void AutoPacketFactory::BroadcastOneDataOut(const std::type_info* nodeType, const std::type_info* dataType, bool enable) {
   {
+    if (IsAutoPacketType(*dataType)) {
+      // AutoPacket is always broacast to the entire context
+      return;
+    }
+
     std::lock_guard<std::mutex> guard(m_lock);
 
     // Find and copy the AutoFilterDescriptor instance.
@@ -174,6 +179,11 @@ void AutoPacketFactory::BroadcastAllDataOut(const std::type_info* nodeType, bool
 
 void AutoPacketFactory::BroadcastOneDataIn(const std::type_info* nodeType, const std::type_info* dataType, bool enable) {
   {
+    if (IsAutoPacketType(*dataType)) {
+      // AutoPacket is always broacast to the entire context
+      return;
+    }
+
     std::lock_guard<std::mutex> guard(m_lock);
 
     // Find and copy the AutoFilterDescriptor instance.
@@ -212,7 +222,8 @@ void AutoPacketFactory::BroadcastAllDataIn(const std::type_info* nodeType, bool 
     // All input data types accept broadcasts
     // NOTE: Iteration is over a static array terminated with nullptr
     for (const AutoFilterDescriptorInput* pArg = update.GetAutoFilterInput(); *pArg; ++pArg) {
-      if (pArg->isInput())
+      if (pArg->isInput() &&
+          !IsAutoPacketType(*pArg->ti))
         update.Broadcast(pArg->ti, enable);
     }
     m_autoFilters.insert(update);
@@ -221,6 +232,11 @@ void AutoPacketFactory::BroadcastAllDataIn(const std::type_info* nodeType, bool 
 }
 
 void AutoPacketFactory::PipeOneData(const std::type_info* nodeOutType, const std::type_info* nodeInType, const std::type_info* dataType, bool enable) {
+  if (IsAutoPacketType(*dataType)) {
+    // AutoPacket is always broacast to the entire context
+    return;
+  }
+
   {
     std::lock_guard<std::mutex> guard(m_lock);
 
@@ -231,25 +247,22 @@ void AutoPacketFactory::PipeOneData(const std::type_info* nodeOutType, const std
         !updateIn.GetAutoFilterTypeInfo())
       return;
 
+    // Check for AutoPacket& (or const AutoPacket&) arguments
+    bool allOut =
+      updateOut.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type));
+    bool allIn =
+      updateIn.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type)) ||
+      updateIn.GetArgumentType(&typeid(subscriber_traits<const AutoPacket&>::type));
+
     // Find both data types
     const AutoFilterDescriptorInput* argOutDescriptor = updateOut.GetArgumentType(dataType);
     const AutoFilterDescriptorInput* argInDescriptor = updateIn.GetArgumentType(dataType);
-    if (!argInDescriptor ||
-        !argOutDescriptor) {
+    if (!(allOut || (argOutDescriptor && argOutDescriptor->isOutput())) ||
+        !(allIn || (argInDescriptor && argInDescriptor->isInput()))) {
       std::stringstream ss;
       ss << "Attempted to pipe data of a type " << dataType->name()
-      << " that is not an an argument of both ouput " << nodeOutType->name()
-      << " and input " << nodeInType->name();
-      throw std::runtime_error(ss.str());
-    }
-
-    // Verify IO compatability
-    if (!argOutDescriptor->isOutput() ||
-        !argInDescriptor->isInput()) {
-      std::stringstream ss;
-      ss << "Attempted to pipe data of a type " << dataType->name()
-      << " with incompatible orientations from output " << nodeOutType->name()
-      << " to input " << nodeInType->name();
+      << " that is not an ouput of " << nodeOutType->name()
+      << " and an input to " << nodeInType->name();
       throw std::runtime_error(ss.str());
     }
 
@@ -275,19 +288,39 @@ void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std
         !updateIn.GetAutoFilterTypeInfo())
       return;
 
+    // Check for AutoPacket& (or const AutoPacket&) arguments
+    bool allOut =
+      updateOut.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type));
+    bool allIn =
+      updateIn.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type)) ||
+      updateIn.GetArgumentType(&typeid(subscriber_traits<const AutoPacket&>::type));
+
     // List all correctly oriented arguments
     std::unordered_set<const std::type_info*> dataOutTypes;
+    std::unordered_set<const std::type_info*> dataInTypes;
     dataOutTypes.reserve(updateOut.GetArity());
     for (const AutoFilterDescriptorInput* pArg = updateOut.GetAutoFilterInput(); *pArg; ++pArg) {
-      if (pArg->isOutput())
+      if (IsAutoPacketType(*pArg->ti))
+        continue;
+      if (allOut || pArg->isOutput()) {
         dataOutTypes.insert(pArg->ti);
+        if (allIn)
+          dataInTypes.insert(pArg->ti);
+      }
     }
-    std::unordered_set<const std::type_info*> dataInTypes;
     dataInTypes.reserve(updateIn.GetArity());
     for (const AutoFilterDescriptorInput* pArg = updateIn.GetAutoFilterInput(); *pArg; ++pArg) {
-      if (pArg->isInput())
-        if (dataOutTypes.find(pArg->ti) != dataOutTypes.end())
+      if (IsAutoPacketType(*pArg->ti))
+        continue;
+      if (allIn || pArg->isInput()) {
+        // Include only output types
+        if (allOut ||
+            dataOutTypes.find(pArg->ti) != dataOutTypes.end()) {
           dataInTypes.insert(pArg->ti);
+          if (allOut)
+            dataInTypes.insert(pArg->ti);
+        }
+      }
     }
 
     // Extract, modify and insert the half-pipes

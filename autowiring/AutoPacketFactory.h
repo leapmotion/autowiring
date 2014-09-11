@@ -114,10 +114,6 @@ public:
   /// <param name="autoFilter">The AutoFilter to be removed</param>
   void RemoveSubscriber(const AutoFilterDescriptor& autoFilter);
 
-  /// PROBLEM: GetTypeDescriptor can yield multiple instances of Autofilter for a given type.
-  /// SOLUTION: MicroAutoFilter will appear to be repeated only when the input & output is identical.
-  /// TODO: Test this. IDEA: Use AutoSelfUpdate, and add MicroAutoFilter typedef for convenience.
-
   /// <summary>
   /// Sets the broadcast status for the specified output from the node.
   /// </summary>
@@ -166,7 +162,12 @@ public:
   /// Establishes a data pipe from nodeIn to nodeOut.
   /// </summary>
   /// <remarks>
-  /// When dataType = nullptr pipes are established for all declared data.
+  /// When dataType = nullptr pipes are established for all declared data
+  /// that are outputs of nodeOut and inputs to nodeIn
+  /// If nodeOut includes AutoPacket& as an argument then pipes will be defined
+  /// for all declared input types of nodeIn. Likewise, if nodeIn declares
+  /// AutoPacket& or const AutoPacket& as an argument then pipes will be defined
+  /// for all declared outputs of nodeOut.
   /// </remarks>
   template<class nodeOut, class nodeIn>
   void PipeData(const std::type_info* dataType = nullptr, bool enable = true) {
@@ -208,6 +209,13 @@ protected:
 
   void PipeOneData(const std::type_info* nodeOutType, const std::type_info* nodeInType, const std::type_info* dataType, bool enable);
   void PipeAllData(const std::type_info* nodeOutType, const std::type_info* nodeInType, bool enable);
+
+  static bool IsAutoPacketType(const std::type_info& dataType) {
+    return
+    dataType == typeid(AutoPacket) ||
+    dataType == typeid(subscriber_traits<AutoPacket&>::type) ||
+    dataType == typeid(subscriber_traits<const AutoPacket&>::type);
+  }
 
 public:
   /// <summary>
