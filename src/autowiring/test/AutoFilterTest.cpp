@@ -1733,7 +1733,7 @@ class SlaveContext {};
 class MasterContext {};
 
 TEST_F(AutoFilterTest, VerifyContextStile) {
-  std::shared_ptr<AutoStile<const Decoration<0>&, Decoration<1>&>> stile;
+  std::shared_ptr<AutoStile<const Decoration<0>&, auto_out<Decoration<1>>>> stile;
   std::shared_ptr<AutoPacketFactory> master_factory;
 
   AutoCreateContextT<SlaveContext> slave_context;
@@ -1748,11 +1748,11 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
   {
     CurrentContextPusher pusher(master_context);
     master_factory = AutoRequired<AutoPacketFactory>();
-    stile = AutoRequired<AutoStile<const Decoration<0>&, Decoration<1>&>>();
+    stile = AutoRequired<AutoStile<const Decoration<0>&, auto_out<Decoration<1>>>>();
     master_context->Initiate();
   }
 
-  stile->Leash(slave_context.get());
+  stile->Leash(slave_context);
   {
     CurrentContextPusher pusher(master_context);
     std::shared_ptr<AutoPacket> master_packet;
@@ -1791,7 +1791,7 @@ TEST_F(AutoFilterTest, ExtractMergedData) {
     master_context->Initiate();
   }
 
-  stile->Leash(slave_context.get());
+  stile->Leash(slave_context);
   {
     CurrentContextPusher pusher(master_context);
     std::shared_ptr<AutoPacket> master_packet;
