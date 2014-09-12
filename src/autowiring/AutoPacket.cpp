@@ -353,8 +353,7 @@ void AutoPacket::ImplementCheckout(AnySharedPointer* ptr, const std::type_info& 
   }
 }
 
-void AutoPacket::ImplementComplete(bool ready, const std::type_info& data, const std::type_info& source,
-                                   const std::type_info& base_type, const std::type_info& shared_type) {
+void AutoPacket::ImplementComplete(bool ready, const std::type_info& data, const std::type_info& source) {
   DecorationDisposition* broadDeco = nullptr;
   DecorationDisposition* pipedDeco = nullptr;
   {
@@ -397,20 +396,20 @@ void AutoPacket::ImplementComplete(bool ready, const std::type_info& data, const
   if(ready) {
     // Satisfy the base declaration first and then the shared pointer:
     if (broadDeco) {
-      UpdateSatisfaction(base_type, typeid(void));
-      UpdateSatisfaction(shared_type, typeid(void));
+      UpdateSatisfaction(broadDeco->m_decoration->type(), typeid(void));
+      UpdateSatisfaction(broadDeco->m_decoration->shared_type(), typeid(void));
     }
     if (pipedDeco) {
       // NOTE: Only publish with source if pipes are declared - this prevents
       // added or snooping filters from satisfying piped input declarations.
-      UpdateSatisfaction(base_type, source);
-      UpdateSatisfaction(shared_type, source);
+      UpdateSatisfaction(pipedDeco->m_decoration->type(), source);
+      UpdateSatisfaction(pipedDeco->m_decoration->shared_type(), source);
     }
   } else {
     if (broadDeco)
-      MarkUnsatisfiable(base_type, typeid(void));
+      MarkUnsatisfiable(broadDeco->m_decoration->type(), typeid(void));
     if (pipedDeco)
-      MarkUnsatisfiable(base_type, source);
+      MarkUnsatisfiable(pipedDeco->m_decoration->type(), source);
   }
 }
 

@@ -174,8 +174,7 @@ private:
   void ImplementCheckout(AnySharedPointer* ptr, const std::type_info& data, const std::type_info& source);
 
   /// <summary>Un-templated implementation of CompleteCheckout</summary>
-  void ImplementComplete(bool ready, const std::type_info& data, const std::type_info& source,
-                         const std::type_info& base_type, const std::type_info& shared_type);
+  void ImplementComplete(bool ready, const std::type_info& data, const std::type_info& source);
 
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
@@ -184,8 +183,7 @@ private:
   void CompleteCheckout(bool ready, const std::type_info& source = typeid(void)) {
     // This allows us to retrieve correct entries for decorated input requests
     const std::type_info& data = typeid(typename subscriber_traits<T>::type);
-
-    ImplementComplete(ready, data, source, typeid(T), typeid(std::shared_ptr<T>));
+    ImplementComplete(ready, data, source);
   }
 
 public:
@@ -336,12 +334,11 @@ public:
     /// Injunction to prevent existential loops:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
-    // This allows us to install correct entries for decorated input requests
-    const std::type_info& data = typeid(typename subscriber_traits<T>::type);
-
     if(!ptr)
       throw std::runtime_error("Cannot checkout with shared_ptr == nullptr");
 
+    // This allows us to install correct entries for decorated input requests
+    const std::type_info& data = typeid(typename subscriber_traits<T>::type);
     AnySharedPointer any_ptr(ptr);
     ImplementCheckout(&any_ptr, data, source);
     return AutoCheckout<T>(
