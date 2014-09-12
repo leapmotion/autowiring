@@ -306,6 +306,114 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   }
 }
 
+void AutoPacket::ImplementCheckout(AnySharedPointer* ptr, const std::type_info& data, const std::type_info& source) {
+  autowiring::DataFlow flow = GetDataFlow(data, source);
+  if (flow.broadcast) {
+    std::lock_guard<std::mutex> lk(m_lock);
+
+    auto& entry = m_decorations[DSIndex(data, typeid(void))];
+    entry.m_type = &data; // Ensure correct type if instantiated here
+
+    if (entry.satisfied) {
+      std::stringstream ss;
+      ss << "Cannot decorate this packet with type " << autowiring::demangle(*ptr)
+      << ", the requested decoration already exists";
+      throw std::runtime_error(ss.str());
+    }
+    if(entry.isCheckedOut) {
+      std::stringstream ss;
+      ss << "Cannot check out decoration of type " << autowiring::demangle(*ptr)
+      << ", it is already checked out elsewhere";
+      throw std::runtime_error(ss.str());
+    }
+    entry.isCheckedOut = true;
+    entry.m_decoration = *ptr;
+  }
+  if (flow.halfpipes.size() > 0 ||
+      !flow.broadcast) {
+    std::lock_guard<std::mutex> lk(m_lock);
+
+    auto& entry = m_decorations[DSIndex(data, source)];
+    entry.m_type = &data; // Ensure correct type if instantiated here
+
+    if (entry.satisfied) {
+      std::stringstream ss;
+      ss << "Cannot decorate this packet with type " << typeid(*ptr).name()
+      << ", the requested decoration already exists";
+      throw std::runtime_error(ss.str());
+    }
+    if(entry.isCheckedOut) {
+      std::stringstream ss;
+      ss << "Cannot check out decoration of type " << typeid(*ptr).name()
+      << ", it is already checked out elsewhere";
+      throw std::runtime_error(ss.str());
+    }
+    entry.isCheckedOut = true;
+    entry.m_decoration = *ptr;
+  }
+}
+
+void AutoPacket::ImplementComplete(bool ready, const std::type_info& data, const std::type_info& source,
+                                   const std::type_info& base_type, const std::type_info& shared_type) {
+  DecorationDisposition* broadDeco = nullptr;
+  DecorationDisposition* pipedDeco = nullptr;
+  {
+    std::lock_guard<std::mutex> lk(m_lock);
+
+    autowiring::DataFlow flow = GetDataFlow(data, source);
+    if (flow.broadcast) {
+      broadDeco = &m_decorations[DSIndex(data, typeid(void))];
+
+      assert(broadDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
+      assert(broadDeco->isCheckedOut); // CompleteCheckout must follow Checkout
+
+      if(!ready)
+        // Memory must be released, the checkout was cancelled
+        broadDeco->m_decoration->reset();
+
+      // Reset the checkout flag before releasing the lock:
+      broadDeco->isCheckedOut = false;
+      broadDeco->satisfied = true;
+    }
+    if (flow.halfpipes.size() > 0 ||
+        !flow.broadcast) {
+      // IMPORTANT: If data isn't broadcast it should be provided with a source.
+      // This enables extraction of multiple types without collision.
+      pipedDeco = &m_decorations[DSIndex(data, source)];
+
+      assert(pipedDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
+      assert(pipedDeco->isCheckedOut); // CompleteCheckout must follow Checkout
+
+      if(!ready)
+        // Memory must be released, the checkout was cancelled
+        pipedDeco->m_decoration->reset();
+
+      // Reset the checkout flag before releasing the lock:
+      pipedDeco->isCheckedOut = false;
+      pipedDeco->satisfied = true;
+    }
+  }
+
+  if(ready) {
+    // Satisfy the base declaration first and then the shared pointer:
+    if (broadDeco) {
+      UpdateSatisfaction(base_type, typeid(void));
+      UpdateSatisfaction(shared_type, typeid(void));
+    }
+    if (pipedDeco) {
+      // NOTE: Only publish with source if pipes are declared - this prevents
+      // added or snooping filters from satisfying piped input declarations.
+      UpdateSatisfaction(base_type, source);
+      UpdateSatisfaction(shared_type, source);
+    }
+  } else {
+    if (broadDeco)
+      MarkUnsatisfiable(base_type, typeid(void));
+    if (pipedDeco)
+      MarkUnsatisfiable(base_type, source);
+  }
+}
+
 DataFlow AutoPacket::GetDataFlow(const DecorationDisposition& entry) const {
   DataFlow flow; //DEFAULT: No broadcast, no pipes
   if (!entry.m_publisher) {

@@ -170,71 +170,22 @@ private:
   /// </remarks>
   void PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos);
 
+  /// <summary>Un-templated implementation of Checkout</summary>
+  void ImplementCheckout(AnySharedPointer* ptr, const std::type_info& data, const std::type_info& source);
+
+  /// <summary>Un-templated implementation of CompleteCheckout</summary>
+  void ImplementComplete(bool ready, const std::type_info& data, const std::type_info& source,
+                         const std::type_info& base_type, const std::type_info& shared_type);
+
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
   /// <param name="ready">Ready flag, set to false if the decoration should be marked unsatisfiable</param>
   template<class T>
   void CompleteCheckout(bool ready, const std::type_info& source = typeid(void)) {
     // This allows us to retrieve correct entries for decorated input requests
-    typedef typename subscriber_traits<T>::type type;
+    const std::type_info& data = typeid(typename subscriber_traits<T>::type);
 
-    DecorationDisposition* broadDeco = nullptr;
-    DecorationDisposition* pipedDeco = nullptr;
-    {
-      std::lock_guard<std::mutex> lk(m_lock);
-
-      autowiring::DataFlow flow = GetDataFlow(typeid(type), source);
-      if (flow.broadcast) {
-        broadDeco = &m_decorations[DSIndex(typeid(type), typeid(void))];
-
-        assert(broadDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
-        assert(broadDeco->isCheckedOut); // CompleteCheckout must follow Checkout
-
-        if(!ready)
-          // Memory must be released, the checkout was cancelled
-          broadDeco->m_decoration->reset();
-
-        // Reset the checkout flag before releasing the lock:
-        broadDeco->isCheckedOut = false;
-        broadDeco->satisfied = true;
-      }
-      if (flow.halfpipes.size() > 0 ||
-          !flow.broadcast) {
-        // IMPORTANT: If data isn't broadcast it should be provided with a source.
-        // This enables extraction of multiple types without collision.
-        pipedDeco = &m_decorations[DSIndex(typeid(type), source)];
-
-        assert(pipedDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
-        assert(pipedDeco->isCheckedOut); // CompleteCheckout must follow Checkout
-
-        if(!ready)
-          // Memory must be released, the checkout was cancelled
-          pipedDeco->m_decoration->reset();
-
-        // Reset the checkout flag before releasing the lock:
-        pipedDeco->isCheckedOut = false;
-        pipedDeco->satisfied = true;
-      }
-    }
-
-    if(ready) {
-      // Satisfy the base declaration first and then the shared pointer:
-      if (broadDeco) {
-        UpdateSatisfaction(typeid(T), typeid(void));
-        UpdateSatisfaction(typeid(std::shared_ptr<T>), typeid(void));
-      }
-      if (pipedDeco) {
-        // NOTE: Only publish with source if pipes are declared - this prevents
-        // added or snooping filters from satisfying piped input declarations.
-        UpdateSatisfaction(typeid(T), source);
-        UpdateSatisfaction(typeid(std::shared_ptr<T>), source);
-      }
-    } else {
-      if (broadDeco)
-        MarkUnsatisfiable(typeid(T), typeid(void));
-      if (pipedDeco)
-        MarkUnsatisfiable(typeid(T), source);
-    }
+    ImplementComplete(ready, data, source, typeid(T), typeid(std::shared_ptr<T>));
   }
 
 public:
@@ -386,56 +337,13 @@ public:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
     // This allows us to install correct entries for decorated input requests
-    typedef typename subscriber_traits<T>::type type;
+    const std::type_info& data = typeid(typename subscriber_traits<T>::type);
 
     if(!ptr)
       throw std::runtime_error("Cannot checkout with shared_ptr == nullptr");
 
-    autowiring::DataFlow flow = GetDataFlow(typeid(type), source);
-    if (flow.broadcast) {
-      std::lock_guard<std::mutex> lk(m_lock);
-
-      auto& entry = m_decorations[DSIndex(typeid(type), typeid(void))];
-      entry.m_type = &typeid(type); // Ensure correct type if instantiated here
-
-      if (entry.satisfied) {
-        std::stringstream ss;
-        ss << "Cannot decorate this packet with type " << autowiring::demangle(*ptr)
-           << ", the requested decoration already exists";
-        throw std::runtime_error(ss.str());
-      }
-      if(entry.isCheckedOut) {
-        std::stringstream ss;
-        ss << "Cannot check out decoration of type " << autowiring::demangle(*ptr)
-           << ", it is already checked out elsewhere";
-        throw std::runtime_error(ss.str());
-      }
-      entry.isCheckedOut = true;
-      entry.m_decoration = ptr;
-    }
-    if (flow.halfpipes.size() > 0 ||
-        !flow.broadcast) {
-      std::lock_guard<std::mutex> lk(m_lock);
-
-      auto& entry = m_decorations[DSIndex(typeid(type), source)];
-      entry.m_type = &typeid(type); // Ensure correct type if instantiated here
-
-      if (entry.satisfied) {
-        std::stringstream ss;
-        ss << "Cannot decorate this packet with type " << typeid(*ptr).name()
-        << ", the requested decoration already exists";
-        throw std::runtime_error(ss.str());
-      }
-      if(entry.isCheckedOut) {
-        std::stringstream ss;
-        ss << "Cannot check out decoration of type " << typeid(*ptr).name()
-        << ", it is already checked out elsewhere";
-        throw std::runtime_error(ss.str());
-      }
-      entry.isCheckedOut = true;
-      entry.m_decoration = ptr;
-    }
-
+    AnySharedPointer any_ptr(ptr);
+    ImplementCheckout(&any_ptr, data, source);
     return AutoCheckout<T>(
       *this,
       ptr,
