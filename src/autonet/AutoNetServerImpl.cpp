@@ -21,6 +21,10 @@ AutoNetServerImpl::AutoNetServerImpl(void) :
   m_Server.set_access_channels(websocketpp::log::alevel::none);
   m_Server.set_error_channels(websocketpp::log::elevel::warn);
 
+  // HACK: Work-around for AutoNet server shutdown
+  // asio listen error: system:48 (Address already in use)
+  m_Server.set_reuse_addr(true);
+
   // Register handlers
   m_Server.set_open_handler(std::bind(&AutoNetServerImpl::OnOpen, this, ::_1));
   m_Server.set_close_handler(std::bind(&AutoNetServerImpl::OnClose, this, ::_1));
