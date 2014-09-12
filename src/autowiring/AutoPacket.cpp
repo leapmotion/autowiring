@@ -131,12 +131,12 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
       // Decide what to do with this entry:
       switch(pCur->subscriberType) {
         case inTypeRequired:
-          assert(entry->m_subscribers.size() > 0);
+          assert(!entry->m_subscribers.empty());
           assert(&satCounter == entry->m_subscribers.back().first);
           entry->m_subscribers.pop_back();
           break;
         case inTypeOptional:
-          assert(entry->m_subscribers.size() > 0);
+          assert(!entry->m_subscribers.empty());
           assert(&satCounter == entry->m_subscribers.back().first);
           entry->m_subscribers.pop_back();
           break;
@@ -162,12 +162,12 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
       // Decide what to do with this entry:
       switch(pCur->subscriberType) {
         case inTypeRequired:
-          assert(entry->m_subscribers.size() > 0);
+          assert(!entry->m_subscribers.empty());
           assert(&satCounter == entry->m_subscribers.back().first);
           entry->m_subscribers.pop_back();
           break;
         case inTypeOptional:
-          assert(entry->m_subscribers.size() > 0);
+          assert(!entry->m_subscribers.empty());
           assert(&satCounter == entry->m_subscribers.back().first);
           entry->m_subscribers.pop_back();
           break;
@@ -327,20 +327,20 @@ void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& dat
     entry.isCheckedOut = true;
     entry.m_decoration = *ptr;
   }
-  if (flow.halfpipes.size() > 0 ||
+  if (!flow.halfpipes.empty() ||
       !flow.broadcast) {
     auto& entry = m_decorations[DSIndex(data, source)];
     entry.m_type = &data; // Ensure correct type if instantiated here
 
     if (entry.satisfied) {
       std::stringstream ss;
-      ss << "Cannot decorate this packet with type " << typeid(*ptr).name()
+      ss << "Cannot decorate this packet with type " << autowiring::demangle(*ptr)
       << ", the requested decoration already exists";
       throw std::runtime_error(ss.str());
     }
     if(entry.isCheckedOut) {
       std::stringstream ss;
-      ss << "Cannot check out decoration of type " << typeid(*ptr).name()
+      ss << "Cannot check out decoration of type " << autowiring::demangle(*ptr)
       << ", it is already checked out elsewhere";
       throw std::runtime_error(ss.str());
     }
@@ -366,7 +366,7 @@ void AutoPacket::UnsafeComplete(bool ready, const std::type_info& data, const st
     broadDeco->isCheckedOut = false;
     broadDeco->satisfied = true;
   }
-  if (flow.halfpipes.size() > 0 ||
+  if (!flow.halfpipes.empty() ||
       !flow.broadcast) {
     // IMPORTANT: If data isn't broadcast it should be provided with a source.
     // This enables extraction of multiple types without collision.
