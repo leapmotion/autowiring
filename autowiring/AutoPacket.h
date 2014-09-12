@@ -170,20 +170,46 @@ private:
   /// </remarks>
   void PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos);
 
-  /// <summary>Un-templated implementation of Checkout</summary>
-  void ImplementCheckout(AnySharedPointer* ptr, const std::type_info& data, const std::type_info& source);
+  /// <summary>Un-templated & locked component of Checkout</summary>
+  void UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& data, const std::type_info& source);
 
-  /// <summary>Un-templated implementation of CompleteCheckout</summary>
-  void ImplementComplete(bool ready, const std::type_info& data, const std::type_info& source);
+  /// <summary>Un-templated & locked component of CompleteCheckout</summary>
+  void UnsafeComplete(bool ready, const std::type_info& data, const std::type_info& source,
+                      DecorationDisposition* &broadDeco, DecorationDisposition* &pipedDeco);
 
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
   /// <param name="ready">Ready flag, set to false if the decoration should be marked unsatisfiable</param>
   template<class T>
   void CompleteCheckout(bool ready, const std::type_info& source = typeid(void)) {
-    // This allows us to retrieve correct entries for decorated input requests
-    const std::type_info& data = typeid(typename subscriber_traits<T>::type);
-    ImplementComplete(ready, data, source);
+    DecorationDisposition* broadDeco = nullptr;
+    DecorationDisposition* pipedDeco = nullptr;
+
+    {
+      std::lock_guard<std::mutex> guard(m_lock);
+      // This allows us to retrieve correct entries for decorated input requests
+      const std::type_info& data = typeid(typename subscriber_traits<T>::type);
+      UnsafeComplete(ready, data, source, broadDeco, pipedDeco);
+    }
+
+    if(ready) {
+      // Satisfy the base declaration first and then the shared pointer:
+      if (broadDeco) {
+        UpdateSatisfaction(broadDeco->m_decoration->type(), typeid(void));
+        UpdateSatisfaction(broadDeco->m_decoration->shared_type(), typeid(void));
+      }
+      if (pipedDeco) {
+        // NOTE: Only publish with source if pipes are declared - this prevents
+        // added or snooping filters from satisfying piped input declarations.
+        UpdateSatisfaction(pipedDeco->m_decoration->type(), source);
+        UpdateSatisfaction(pipedDeco->m_decoration->shared_type(), source);
+      }
+    } else {
+      if (broadDeco)
+        MarkUnsatisfiable(broadDeco->m_decoration->type(), typeid(void));
+      if (pipedDeco)
+        MarkUnsatisfiable(pipedDeco->m_decoration->type(), source);
+    }
   }
 
 public:
@@ -320,6 +346,17 @@ public:
     return all;
   }
 
+  /// <summary>Shares all broadcast data from this packet with the recipient packet</summary>
+  /// <remarks>
+  /// This method should ONLY be called during the final-call sequence.
+  /// This method is expected to be used to bridge data to a sibling context.
+  /// Therefore, only broadcast data will be shared, since pipes between sibling
+  /// contexts cannot be defined.
+  /// Furthermore, types that are unsatisfied in this context will not be marked as
+  /// unsatisfied in the recipient - only present data will be provided.
+  /// </remarks>
+  void ForwardAll(std::shared_ptr<AutoPacket> recipient) const;
+
   /// <summary>
   /// Checks out the specified type, providing it to the caller to be filled in
   /// </summary>
@@ -340,7 +377,10 @@ public:
     // This allows us to install correct entries for decorated input requests
     const std::type_info& data = typeid(typename subscriber_traits<T>::type);
     AnySharedPointer any_ptr(ptr);
-    ImplementCheckout(&any_ptr, data, source);
+    {
+      std::lock_guard<std::mutex> guard(m_lock);
+      UnsafeCheckout(&any_ptr, data, source);
+    }
     return AutoCheckout<T>(
       *this,
       ptr,
