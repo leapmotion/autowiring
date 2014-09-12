@@ -154,9 +154,14 @@ public:
   bool is(void) const { return type() == typeid(T); }
 
   /// <returns>
-  /// Returns the type of the shared pointer held in this slot, or typeid(void) if empty
+  /// Returns the template type of the shared pointer held in this slot, or typeid(void) if empty
   /// </returns>
   virtual const std::type_info& type(void) const { return typeid(void); }
+
+  /// <returns>
+  /// Returns the type for the shared pointer held in this slot, or typeid(shared_ptr<void>) if empty
+  /// </returns>
+  virtual const std::type_info& shared_type(void) const { return typeid(std::shared_ptr<void>); }
 
   /// <summary>
   /// Clears this type, if a shared pointer is currently held
@@ -168,7 +173,7 @@ public:
   virtual void reset(void) {}
 
   /// <summary>
-  /// Attempts to coerce this type to the speceified type
+  /// Attempts to coerce this type to the specified type
   /// </summary>
   template<class T>
   const std::shared_ptr<T>& as(void) const {
@@ -349,6 +354,7 @@ public:
   bool empty(void) const { return get() == nullptr; }
   operator bool(void) const override { return !!get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
+  const std::type_info& shared_type(void) const override { return typeid(std::shared_ptr<T>); }
 
   void reset(void) override {
     get().reset();

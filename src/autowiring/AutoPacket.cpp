@@ -131,12 +131,12 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
       // Decide what to do with this entry:
       switch(pCur->subscriberType) {
         case inTypeRequired:
-          assert(entry->m_subscribers.size() > 0);
+          assert(!entry->m_subscribers.empty());
           assert(&satCounter == entry->m_subscribers.back().first);
           entry->m_subscribers.pop_back();
           break;
         case inTypeOptional:
-          assert(entry->m_subscribers.size() > 0);
+          assert(!entry->m_subscribers.empty());
           assert(&satCounter == entry->m_subscribers.back().first);
           entry->m_subscribers.pop_back();
           break;
@@ -162,12 +162,12 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
       // Decide what to do with this entry:
       switch(pCur->subscriberType) {
         case inTypeRequired:
-          assert(entry->m_subscribers.size() > 0);
+          assert(!entry->m_subscribers.empty());
           assert(&satCounter == entry->m_subscribers.back().first);
           entry->m_subscribers.pop_back();
           break;
         case inTypeOptional:
-          assert(entry->m_subscribers.size() > 0);
+          assert(!entry->m_subscribers.empty());
           assert(&satCounter == entry->m_subscribers.back().first);
           entry->m_subscribers.pop_back();
           break;
@@ -303,6 +303,133 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
         }
       }
     }
+  }
+}
+
+void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& data, const std::type_info& source) {
+  autowiring::DataFlow flow = GetDataFlow(data, source);
+  if (flow.broadcast) {
+    auto& entry = m_decorations[DSIndex(data, typeid(void))];
+    entry.m_type = &data; // Ensure correct type if instantiated here
+
+    if (entry.satisfied) {
+      std::stringstream ss;
+      ss << "Cannot decorate this packet with type " << autowiring::demangle(*ptr)
+      << ", the requested decoration already exists";
+      throw std::runtime_error(ss.str());
+    }
+    if(entry.isCheckedOut) {
+      std::stringstream ss;
+      ss << "Cannot check out decoration of type " << autowiring::demangle(*ptr)
+      << ", it is already checked out elsewhere";
+      throw std::runtime_error(ss.str());
+    }
+    entry.isCheckedOut = true;
+    entry.m_decoration = *ptr;
+  }
+  if (!flow.halfpipes.empty() ||
+      !flow.broadcast) {
+    auto& entry = m_decorations[DSIndex(data, source)];
+    entry.m_type = &data; // Ensure correct type if instantiated here
+
+    if (entry.satisfied) {
+      std::stringstream ss;
+      ss << "Cannot decorate this packet with type " << autowiring::demangle(*ptr)
+      << ", the requested decoration already exists";
+      throw std::runtime_error(ss.str());
+    }
+    if(entry.isCheckedOut) {
+      std::stringstream ss;
+      ss << "Cannot check out decoration of type " << autowiring::demangle(*ptr)
+      << ", it is already checked out elsewhere";
+      throw std::runtime_error(ss.str());
+    }
+    entry.isCheckedOut = true;
+    entry.m_decoration = *ptr;
+  }
+}
+
+void AutoPacket::UnsafeComplete(bool ready, const std::type_info& data, const std::type_info& source,
+                                DecorationDisposition* &broadDeco, DecorationDisposition* &pipedDeco) {
+  autowiring::DataFlow flow = GetDataFlow(data, source);
+  if (flow.broadcast) {
+    broadDeco = &m_decorations[DSIndex(data, typeid(void))];
+
+    assert(broadDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
+    assert(broadDeco->isCheckedOut); // CompleteCheckout must follow Checkout
+
+    if(!ready)
+      // Memory must be released, the checkout was cancelled
+      broadDeco->m_decoration->reset();
+
+    // Reset the checkout flag before releasing the lock:
+    broadDeco->isCheckedOut = false;
+    broadDeco->satisfied = true;
+  }
+  if (!flow.halfpipes.empty() ||
+      !flow.broadcast) {
+    // IMPORTANT: If data isn't broadcast it should be provided with a source.
+    // This enables extraction of multiple types without collision.
+    pipedDeco = &m_decorations[DSIndex(data, source)];
+
+    assert(pipedDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
+    assert(pipedDeco->isCheckedOut); // CompleteCheckout must follow Checkout
+
+    if(!ready)
+      // Memory must be released, the checkout was cancelled
+      pipedDeco->m_decoration->reset();
+
+    // Reset the checkout flag before releasing the lock:
+    pipedDeco->isCheckedOut = false;
+    pipedDeco->satisfied = true;
+  }
+}
+
+void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
+  std::list<DecorationDisposition*> decoQueue;
+  {
+    // Use memory well-ordering to establish a lock heirarchy
+    if(this < recipient.get()) {
+      m_lock.lock();
+      recipient->m_lock.lock();
+    }
+    else {
+      recipient->m_lock.lock();
+      m_lock.lock();
+    }
+
+    for (auto& decoration : m_decorations) {
+      // Only existing data is propagated
+      // Unsatisfiable quilifiers are NOT propagated
+      if (!decoration.second.satisfied)
+        continue;
+
+      // Only broadcast data is propagated
+      const std::type_info& source(typeid(void));
+      if (std::get<1>(decoration.first) != source)
+        continue;
+
+
+      const std::type_info& data = *decoration.second.m_type;
+      AnySharedPointer any_ptr(decoration.second.m_decoration);
+      recipient->UnsafeCheckout(&any_ptr, data, source);
+
+      DecorationDisposition* broadDeco = nullptr;
+      DecorationDisposition* pipedDeco = nullptr;
+      recipient->UnsafeComplete(true, data, source, broadDeco, pipedDeco);
+
+      decoQueue.push_back(broadDeco);
+    }
+
+    m_lock.unlock();
+    recipient->m_lock.unlock();
+  }
+
+  // Recipient satisfaction is updated outside of lock
+  for (DecorationDisposition* broadDeco : decoQueue) {
+    // Satisfy the base declaration first and then the shared pointer:
+    recipient->UpdateSatisfaction(broadDeco->m_decoration->type(), typeid(void));
+    recipient->UpdateSatisfaction(broadDeco->m_decoration->shared_type(), typeid(void));
   }
 }
 
