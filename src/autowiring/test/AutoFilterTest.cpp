@@ -1802,3 +1802,24 @@ TEST_F(AutoFilterTest, ExtractMergedData) {
     ASSERT_EQ(2, data->size()) << "Merge failed to gather all data";
   }
 }
+
+TEST_F(AutoFilterTest, VerifyForwardAll) {
+  const std::shared_ptr<Decoration<0>>* contents = nullptr;
+  AutoRequired<AutoPacketFactory> factory;
+  std::shared_ptr<AutoPacket> toPacket = factory->NewPacket();
+  {
+    std::shared_ptr<AutoPacket> fromPacket = factory->NewPacket();
+    fromPacket->Decorate(Decoration<0>(1));
+    contents = nullptr; //contents does not own referenced data
+    ASSERT_TRUE(fromPacket->Get(contents)) << "ForwardedAll failed to move data";
+    ASSERT_EQ(1, (*contents)->i) << "ForwardedAll failed to move data";
+
+    fromPacket->ForwardAll(toPacket);
+    contents = nullptr; //contents does not own referenced data
+    ASSERT_TRUE(toPacket->Get(contents)) << "ForwardedAll failed to move data";
+    ASSERT_EQ(1, (*contents)->i) << "ForwardedAll failed to move data";
+  }
+  contents = nullptr; //contents does not own referenced data
+  ASSERT_TRUE(toPacket->Get(contents)) << "Forwarded data is not persistent";
+  ASSERT_EQ(1, (*contents)->i) << "Forwarded data is not persistent";
+}
