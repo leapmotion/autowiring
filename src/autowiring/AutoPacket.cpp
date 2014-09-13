@@ -306,6 +306,13 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   }
 }
 
+bool AutoPacket::UnsafeHas(const std::type_info& data, const std::type_info& source) const {
+  auto q = m_decorations.find(DSIndex(data, source));
+  if(q == m_decorations.end())
+    return false;
+  return q->second.satisfied;
+}
+
 void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& data, const std::type_info& source) {
   autowiring::DataFlow flow = GetDataFlow(data, source);
   if (flow.broadcast) {
