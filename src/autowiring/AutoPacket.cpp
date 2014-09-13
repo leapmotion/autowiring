@@ -26,7 +26,7 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>
   }
 
   // Sort, eliminate duplicates
-  std::sort(m_satCounters.begin(), m_satCounters.end());
+  m_satCounters.sort();
   m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
 
   // Record divide between subscribers & recipients
@@ -306,6 +306,13 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   }
 }
 
+bool AutoPacket::UnsafeHas(const std::type_info& data, const std::type_info& source) const {
+  auto q = m_decorations.find(DSIndex(data, source));
+  if(q == m_decorations.end())
+    return false;
+  return q->second.satisfied;
+}
+
 void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& data, const std::type_info& source) {
   autowiring::DataFlow flow = GetDataFlow(data, source);
   if (flow.broadcast) {
@@ -401,6 +408,7 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
     for (auto& decoration : m_decorations) {
       // Only existing data is propagated
       // Unsatisfiable quilifiers are NOT propagated
+      // ASSERT: AutoPacket types are never marked "satisfied"
       if (!decoration.second.satisfied)
         continue;
 
@@ -409,8 +417,12 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
       if (std::get<1>(decoration.first) != source)
         continue;
 
-
       const std::type_info& data = *decoration.second.m_type;
+
+      // Quietly drop data that is already present on recipient
+      if (recipient->UnsafeHas(data, typeid(void)))
+        continue;
+
       AnySharedPointer any_ptr(decoration.second.m_decoration);
       recipient->UnsafeCheckout(&any_ptr, data, source);
 
@@ -447,9 +459,14 @@ DataFlow AutoPacket::GetDataFlow(const DecorationDisposition& entry) const {
 DataFlow AutoPacket::GetDataFlow(const std::type_info& data, const std::type_info& source) {
   DataFlow flow; //DEFAULT: No pipes
   flow.broadcast = true; //DEFAULT: Broadcast data from anonymous sources
-  for (size_t sat = 0; sat < m_subscriberNum; ++sat)
-    if (&source == m_satCounters[sat].GetAutoFilterTypeInfo())
-      flow = m_satCounters[sat].GetDataFlow(&data);
+  size_t sat_ind = 0;
+  for (auto& sat : m_satCounters) {
+    if (sat_ind > m_subscriberNum)
+      break;
+    if (&source == sat.GetAutoFilterTypeInfo())
+      flow = sat.GetDataFlow(&data);
+    ++sat_ind;
+  }
   return flow;
 }
 

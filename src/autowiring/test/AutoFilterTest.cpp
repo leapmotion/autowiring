@@ -1724,6 +1724,27 @@ TEST_F(AutoFilterTest, VerifyMergedOutputs) {
   ASSERT_EQ(2, extracted.size()) << "Should collect 1 broadcast & 1 pipe";
 }
 
+TEST_F(AutoFilterTest, VerifyForwardAll) {
+  const std::shared_ptr<Decoration<0>>* contents = nullptr;
+  AutoRequired<AutoPacketFactory> factory;
+  std::shared_ptr<AutoPacket> toPacket = factory->NewPacket();
+  {
+    std::shared_ptr<AutoPacket> fromPacket = factory->NewPacket();
+    fromPacket->Decorate(Decoration<0>(1));
+    contents = nullptr; //contents does not own referenced data
+    ASSERT_TRUE(fromPacket->Get(contents)) << "ForwardedAll failed to move data";
+    ASSERT_EQ(1, (*contents)->i) << "ForwardedAll failed to move data";
+
+    fromPacket->ForwardAll(toPacket);
+    contents = nullptr; //contents does not own referenced data
+    ASSERT_TRUE(toPacket->Get(contents)) << "ForwardedAll failed to move data";
+    ASSERT_EQ(1, (*contents)->i) << "ForwardedAll failed to move data";
+  }
+  contents = nullptr; //contents does not own referenced data
+  ASSERT_TRUE(toPacket->Get(contents)) << "Forwarded data is not persistent";
+  ASSERT_EQ(1, (*contents)->i) << "Forwarded data is not persistent";
+}
+
 class Junction01 {
 public:
   void AutoFilter(const Decoration<0>&, auto_out<Decoration<1>>) {}
@@ -1733,6 +1754,7 @@ class SlaveContext {};
 class MasterContext {};
 
 TEST_F(AutoFilterTest, VerifyContextStile) {
+  // Stile injects Decoration<0> and extracts Decoration<1>
   std::shared_ptr<AutoStile<const Decoration<0>&, auto_out<Decoration<1>>>> stile;
   std::shared_ptr<AutoPacketFactory> master_factory;
 
@@ -1749,6 +1771,37 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
     CurrentContextPusher pusher(master_context);
     master_factory = AutoRequired<AutoPacketFactory>();
     stile = AutoRequired<AutoStile<const Decoration<0>&, auto_out<Decoration<1>>>>();
+    master_context->Initiate();
+  }
+
+  stile->Leash(slave_context);
+  {
+    CurrentContextPusher pusher(master_context);
+    std::shared_ptr<AutoPacket> master_packet;
+    master_packet = master_factory->NewPacket();
+    master_packet->Decorate(Decoration<0>());
+    ASSERT_TRUE(master_packet->Has<Decoration<1>>()) << "Stile failed to send & retrieve data";
+  }
+}
+
+TEST_F(AutoFilterTest, VerifyStileExtractAll) {
+  // Stile injects Decoration<0> and extracts Decoration<1>
+  std::shared_ptr<AutoStile<const Decoration<0>&>> stile;
+  std::shared_ptr<AutoPacketFactory> master_factory;
+
+  AutoCreateContextT<SlaveContext> slave_context;
+  {
+    CurrentContextPusher pusher(slave_context);
+    AutoRequired<AutoPacketFactory>();
+    AutoRequired<Junction01>();
+    slave_context->Initiate();
+  }
+
+  AutoCreateContextT<MasterContext> master_context;
+  {
+    CurrentContextPusher pusher(master_context);
+    master_factory = AutoRequired<AutoPacketFactory>();
+    stile = AutoRequired<AutoStile<const Decoration<0>&>>();
     master_context->Initiate();
   }
 
@@ -1801,25 +1854,4 @@ TEST_F(AutoFilterTest, ExtractMergedData) {
     ASSERT_TRUE(master_packet->Get(data)) << "Stile failed to send & retrieve data";
     ASSERT_EQ(2, data->size()) << "Merge failed to gather all data";
   }
-}
-
-TEST_F(AutoFilterTest, VerifyForwardAll) {
-  const std::shared_ptr<Decoration<0>>* contents = nullptr;
-  AutoRequired<AutoPacketFactory> factory;
-  std::shared_ptr<AutoPacket> toPacket = factory->NewPacket();
-  {
-    std::shared_ptr<AutoPacket> fromPacket = factory->NewPacket();
-    fromPacket->Decorate(Decoration<0>(1));
-    contents = nullptr; //contents does not own referenced data
-    ASSERT_TRUE(fromPacket->Get(contents)) << "ForwardedAll failed to move data";
-    ASSERT_EQ(1, (*contents)->i) << "ForwardedAll failed to move data";
-
-    fromPacket->ForwardAll(toPacket);
-    contents = nullptr; //contents does not own referenced data
-    ASSERT_TRUE(toPacket->Get(contents)) << "ForwardedAll failed to move data";
-    ASSERT_EQ(1, (*contents)->i) << "ForwardedAll failed to move data";
-  }
-  contents = nullptr; //contents does not own referenced data
-  ASSERT_TRUE(toPacket->Get(contents)) << "Forwarded data is not persistent";
-  ASSERT_EQ(1, (*contents)->i) << "Forwarded data is not persistent";
 }

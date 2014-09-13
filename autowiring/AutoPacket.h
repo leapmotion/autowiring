@@ -59,7 +59,8 @@ private:
   } m_lifecyle;
 
   // Saturation counters, constructed when the packet is created and reset each time thereafter
-  std::vector<SatCounter> m_satCounters;
+  // IMPORTANT: Elements in m_satCounters MUST be stationary, since they will be referenced!
+  std::list<SatCounter> m_satCounters;
   size_t m_subscriberNum;
 
   // The set of decorations currently attached to this object, and the associated lock:
@@ -170,6 +171,9 @@ private:
   /// </remarks>
   void PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos);
 
+  /// <summary>Un-templated & locked component of Has</summary>
+  bool UnsafeHas(const std::type_info& data, const std::type_info& source = typeid(void)) const;
+
   /// <summary>Un-templated & locked component of Checkout</summary>
   void UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& data, const std::type_info& source);
 
@@ -216,14 +220,14 @@ public:
   /// <returns>
   /// True if this packet posesses a decoration of the specified type
   /// </returns>
+  /// <remarks>
+  /// Although "AutoPacket &" and "const AutoPacket&" argument types will be
+  /// satisfied, the AutoPacket does not "have" these types.
+  /// </remarks>
   template<class T>
   bool Has(const std::type_info& source = typeid(void)) const {
     std::lock_guard<std::mutex> lk(m_lock);
-
-    auto q = m_decorations.find(DSIndex(typeid(T), source));
-    if(q == m_decorations.end())
-      return false;
-    return q->second.satisfied;
+    return UnsafeHas(typeid(T), source);
   }
 
   /// <summary>
