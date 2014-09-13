@@ -59,7 +59,8 @@ private:
   } m_lifecyle;
 
   // Saturation counters, constructed when the packet is created and reset each time thereafter
-  std::vector<SatCounter> m_satCounters;
+  // IMPORTANT: Elements in m_satCounters MUST be stationary, since they will be referenced!
+  std::list<SatCounter> m_satCounters;
   size_t m_subscriberNum;
 
   // The set of decorations currently attached to this object, and the associated lock:

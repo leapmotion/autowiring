@@ -26,7 +26,7 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>
   }
 
   // Sort, eliminate duplicates
-  std::sort(m_satCounters.begin(), m_satCounters.end());
+  m_satCounters.sort();
   m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
 
   // Record divide between subscribers & recipients
@@ -459,9 +459,14 @@ DataFlow AutoPacket::GetDataFlow(const DecorationDisposition& entry) const {
 DataFlow AutoPacket::GetDataFlow(const std::type_info& data, const std::type_info& source) {
   DataFlow flow; //DEFAULT: No pipes
   flow.broadcast = true; //DEFAULT: Broadcast data from anonymous sources
-  for (size_t sat = 0; sat < m_subscriberNum; ++sat)
-    if (&source == m_satCounters[sat].GetAutoFilterTypeInfo())
-      flow = m_satCounters[sat].GetDataFlow(&data);
+  size_t sat_ind = 0;
+  for (auto& sat : m_satCounters) {
+    if (sat_ind > m_subscriberNum)
+      break;
+    if (&source == sat.GetAutoFilterTypeInfo())
+      flow = sat.GetDataFlow(&data);
+    ++sat_ind;
+  }
   return flow;
 }
 
