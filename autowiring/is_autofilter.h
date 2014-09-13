@@ -181,9 +181,13 @@ template<class Head, class... Tail>
 struct all_autofilter_inputs<Head, Tail...> :
   std::integral_constant<bool, is_autofilter_arg<Head>::is_input && all_autofilter_inputs<Tail...>::value>
 {};
+template<>
+struct all_autofilter_inputs<> :
+  std::true_type //All elements of an empty list are of the specified type
+{};
 
 /// <summary>
-/// Determines whether all arguments are inputs.
+/// Determines whether all arguments are outputs.
 /// </summary>
 /// <remarks>
 /// This enables static validation of issue-call AutoFilter functions.
@@ -195,6 +199,48 @@ struct all_autofilter_outputs :
 template<class Head, class... Tail>
 struct all_autofilter_outputs<Head, Tail...> :
   std::integral_constant<bool, is_autofilter_arg<Head>::is_output && all_autofilter_outputs<Tail...>::value>
+{};
+template<>
+struct all_autofilter_outputs<> :
+  std::true_type //All elements of an empty list are of the specified type
+{};
+
+/// <summary>
+/// Determines whether any arguments are inputs.
+/// </summary>
+/// <remarks>
+/// This enables static validation of final-call AutoFilter functions.
+/// </remarks>
+template<class... Args>
+struct any_autofilter_inputs :
+  std::false_type
+{};
+template<class Head, class... Tail>
+struct any_autofilter_inputs<Head, Tail...> :
+  std::integral_constant<bool, is_autofilter_arg<Head>::is_input || all_autofilter_inputs<Tail...>::value>
+{};
+template<>
+struct any_autofilter_inputs<> :
+  std::false_type //No elements of an empty list are of the specified type
+{};
+
+/// <summary>
+/// Determines whether any arguments are outputs.
+/// </summary>
+/// <remarks>
+/// This enables static validation of issue-call AutoFilter functions.
+/// </remarks>
+template<class... Args>
+struct any_autofilter_outputs :
+  std::false_type
+{};
+template<class Head, class... Tail>
+struct any_autofilter_outputs<Head, Tail...> :
+  std::integral_constant<bool, is_autofilter_arg<Head>::is_output || all_autofilter_outputs<Tail...>::value>
+{};
+template<>
+struct any_autofilter_outputs<> :
+  std::false_type //No elements of an empty list are of the specified type
 {};
 
 /// <summary>
