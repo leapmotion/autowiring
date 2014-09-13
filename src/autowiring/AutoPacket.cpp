@@ -408,6 +408,7 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
     for (auto& decoration : m_decorations) {
       // Only existing data is propagated
       // Unsatisfiable quilifiers are NOT propagated
+      // ASSERT: AutoPacket types are never marked "satisfied"
       if (!decoration.second.satisfied)
         continue;
 
@@ -416,8 +417,12 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
       if (std::get<1>(decoration.first) != source)
         continue;
 
-
       const std::type_info& data = *decoration.second.m_type;
+
+      // Quietly drop data that is already present on recipient
+      if (recipient->UnsafeHas(data, typeid(void)))
+        continue;
+
       AnySharedPointer any_ptr(decoration.second.m_decoration);
       recipient->UnsafeCheckout(&any_ptr, data, source);
 

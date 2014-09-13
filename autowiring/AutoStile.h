@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <autowiring/is_autofilter.h>
+#include "AutoPacket.h"
 #include MEMORY_HEADER
 
 /// <summary>
@@ -9,8 +9,15 @@
 /// The AutoStile Args use the same syntax as AutoFilter:
 /// - "const T&" denote inputs to the slave context.
 /// - "auto_out<T>" denote an outputs from the slave context.
+/// - If no inputs are declared then no data will be injected
+/// (Execution of the slave_context is deferred until needed)
+/// - If no outputs are declared then *all* data will extracted
+/// (If no data needs to be extracted the slave_context should follow this context.)
+/// ASSERT: Injection and extraction of all data will not yield multiple decorations,
+/// since AutoPacket::ForwardAll prevents this from occurring.
 /// PROBLEM: shared_ptr references cannot be used, so data is always copied.
-/// PROBLEM: T& inputs cannot be used, since they will be destroyed before their
+/// PROBLEM: T& inputs cannot be used, since their associated checkout will complete
+/// before assignment happens.
 /// WARNING: auto_out<T> will *still* be conditional on the production of that type
 /// in the slave context.
 /// value can be set.
@@ -22,9 +29,8 @@
 ///
 /// If merged data is required from the context then it is necessary to decorate the
 /// master_packet with an extraction function, and declare the type of that function
-/// as an *input* argument of the AutoStile.
-///
-/// TODO: Example code to implement this...
+/// as an *input* argument of the AutoStile. The decoration and type are provided by
+/// the AutoMergeStile class.
 ///
 /// </remarks>
 template<class... Args>
@@ -37,14 +43,14 @@ protected:
 
   /// <summary>Decorator for input shares the reference to master_data</summary>
   template<class data_pipe>
-  typename std::enable_if<is_autofilter_arg<data_pipe>::is_input, bool>::type DecorateContext(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe master_data) {
+  static typename std::enable_if<is_autofilter_arg<data_pipe>::is_input, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe master_data) {
     slave_packet->Decorate(master_data);
-    return true;
+    return true; //Place holder in variadic initializer
   }
 
-  /// <summar>Decorator for output creates an extraction for slave_data</summary>
+  /// <summary>Decorator for output creates an extraction for slave_data</summary>
   template<class data_pipe>
-  typename std::enable_if<is_autofilter_arg<data_pipe>::is_output, bool>::type DecorateContext(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe master_data) {
+  static typename std::enable_if<is_autofilter_arg<data_pipe>::is_output, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe master_data) {
     static_assert(is_auto_out<data_pipe>::value, "AutoStile outputs must be auto_out<T>");
     // Extract the base type and define the input type "const base_type&"
     typedef typename is_autofilter_arg<data_pipe>::type base_type;
@@ -60,7 +66,14 @@ protected:
       *master_data = slave_data;
       master_data.Ready();
     }));
-    return true;
+    return true; //Place holder in variadic initializer
+  }
+
+  /// <summary>Inject all data into the slave_context</summary>
+  static void ForwardStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet) {
+    slave_packet->AddRecipient<void, const AutoPacket&>(std::function<void(const AutoPacket&)>([master_packet](const AutoPacket& slave_packet) {
+      slave_packet.ForwardAll(master_packet);
+    }));
   }
 
 public:
@@ -76,8 +89,15 @@ public:
     // Initiate the slave context
     std::shared_ptr<AutoPacket> master_packet = packet.shared_from_this();
     std::shared_ptr<AutoPacket> slave_packet = slave_factory->NewPacket();
-    bool init[] = {DecorateContext<Args>(slave_packet, master_packet, data)...};
+    bool init[] = {DecorationStile<Args>(slave_packet, master_packet, data)...,
+      false}; //Final argument is required in the case of an empty variadic template
     (void)init;
+
+    // If no extracted types are specified, extract all data
+    // ASSERT: ForwardAll will not conflict with existing decorations
+    // NOTE: all_autofilter_inputs<>::value == true, since all in empty are inputs
+    if (all_autofilter_inputs<Args...>::value)
+      ForwardStile(slave_packet, master_packet);
   }
 
   void Leash(std::weak_ptr<CoreContext> slave_context = std::weak_ptr<CoreContext>()) {
