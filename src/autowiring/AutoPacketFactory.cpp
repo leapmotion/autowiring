@@ -249,7 +249,7 @@ void AutoPacketFactory::PipeOneData(const std::type_info* nodeOutType, const std
 
     // Check for AutoPacket& (or const AutoPacket&) arguments
     bool allOut =
-      updateOut.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type));
+      !!updateOut.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type));
     bool allIn =
       updateIn.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type)) ||
       updateIn.GetArgumentType(&typeid(subscriber_traits<const AutoPacket&>::type));
@@ -290,7 +290,7 @@ void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std
 
     // Check for AutoPacket& (or const AutoPacket&) arguments
     bool allOut =
-      updateOut.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type));
+      !!updateOut.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type));
     bool allIn =
       updateIn.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type)) ||
       updateIn.GetArgumentType(&typeid(subscriber_traits<const AutoPacket&>::type));
