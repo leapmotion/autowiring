@@ -34,14 +34,6 @@ public:
   bool IsOrphaned(void) const {return m_context.expired();}
 
   /// <summary>
-  /// This method is invoked after all embedded Autowired members of this class are initialized
-  /// </summary>
-  /// <remarks>
-  /// Not currently implemented
-  /// </remarks>
-  virtual void PostConstruct(void) {}
-
-  /// <summary>
   /// Invoked by the parent context when the parent context is about to be destroyed
   /// </summary>
   /// <remarks>
