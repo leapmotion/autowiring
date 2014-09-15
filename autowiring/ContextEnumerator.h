@@ -19,6 +19,9 @@ class CoreContextT;
 /// children at the time of the first call to iterator::operator++.  It will also enumerate some of the children which
 /// were added after the call to operator++.  It is guaranteed not to enumerate any context which is currently being
 /// destroyed.
+///
+/// All context enumerators are inclusive, meaning that they will also enumerate the root.  The root is guaranteed to be
+/// enumerated before any children.
 /// </remarks>
 class ContextEnumerator
 {
