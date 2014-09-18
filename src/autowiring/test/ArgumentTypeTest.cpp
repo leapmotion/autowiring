@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
+#include <autowiring/auto_io.h>
 #include <autowiring/auto_out.h>
 #include <autowiring/has_autofilter.h>
 #include <autowiring/is_autofilter.h>
@@ -80,4 +81,27 @@ TEST_F(ArgumentTypeTest, AutoFilterTemplateTests) {
   ASSERT_FALSE(static_cast<const bool>(is_autofilter<NonFilterFunctionType3>::value)) << "Function with invalid return type identified as valid";
 
   ASSERT_TRUE(static_cast<const bool>(is_autofilter<FilterFunctionType>::value)) << "Valid AutoFilter function identified as invalid";
+}
+
+TEST_F(ArgumentTypeTest, TestAutoIn) {
+  AutoRequired<AutoPacketFactory> factory;
+  std::shared_ptr<AutoPacket> packet = factory->NewPacket();
+  packet->Decorate(Argument<0>(1));
+  auto_in<Argument<0>> in(*packet);
+  ASSERT_TRUE(in.is_input) << "Incorrect orientation";
+  ASSERT_TRUE(in.is_output) << "Incorrect orientation";
+  ASSERT_EQ(1, in->i) << "Incorrect initialization";
+
+  // Base Cast
+  const Argument<0>& base_in = in;
+  ASSERT_EQ(1, base_in.i) << "Incorrect base cast";
+
+  // Shared Cast
+  std::shared_ptr<const Argument<0>> shared_in = in;
+  ASSERT_EQ(1, shared_in->i) << "Incorrect base cast";
+
+  // Deduced Type
+  auto_arg<const Argument<0>&> arg(*packet);
+  shared_in = arg;
+  ASSERT_EQ(3, in.use_count()) << "AutoPacket + in + arg == 3";
 }
