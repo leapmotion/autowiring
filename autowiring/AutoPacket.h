@@ -273,12 +273,12 @@ public:
   }
 
   /// <summary>
-  /// Shared pointer specialization, used to obtain the underlying shared pointer for some type T
+  /// Shared pointer specialization of const T*&, used to obtain the underlying shared pointer for some type T
   /// </summary>
   /// <remarks>
   /// This specialization cannot be used to obtain a decoration which has been attached to this packet via
-  /// DecorateImmediate
-  /// </summary>
+  /// DecorateImmediate.
+  /// </remarks>
   template<class T>
   bool Get(const std::shared_ptr<T>*& out, const std::type_info& source = typeid(void)) const {
     std::lock_guard<std::mutex> lk(m_lock);
@@ -292,6 +292,22 @@ public:
     }
     
     out = nullptr;
+    return false;
+  }
+
+  /// <summary>
+  /// Shared pointer specialization, used to obtain the underlying shared pointer for some type T
+  /// </summary>
+  template<class T>
+  bool Get(std::shared_ptr<const T>& out, const std::type_info& source = typeid(void)) const {
+    const std::shared_ptr<T>* ptr = nullptr;
+    Get(ptr, source);
+    if (ptr) {
+      out = *ptr;
+      return true;
+    }
+
+    out.reset();
     return false;
   }
 
