@@ -614,7 +614,19 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
   // Collection of satisfiable lists:
   std::vector<std::pair<const DeferrableUnsynchronizedStrategy*, DeferrableAutowiring*>> satisfiable;
 
-  // Notify any autowired field whose autowiring was deferred
+  // Notify any autowired field whose autowiring was deferred.  We do this by processing each entry
+  // in the entire type memos collection.  These entries are keyed on the type of the memo, and the
+  // value is a linked list of trees of deferred autowiring instances that will need to be called
+  // if the corresponding memo type has been satisfied.
+  //
+  // A tree data structure is used, here, specifically because there are cases where child nodes
+  // on a tree should only be called if and only if the root node is still present.  For instance,
+  // creating an Autowired field adds a tree to this list with the root node referring to the
+  // Autowired field itself, and then invoking Autowired::NotifyWhenAutowired attaches a child to
+  // this tree.  If the Autowired instance is destroyed, the lambda registered for notification is
+  // also removed at the same time.
+  //
+  // Each connected nonroot deferrable autowiring is referred to as a "dependant chain".
   std::stack<DeferrableAutowiring*> stk;
   for(auto& cur : m_typeMemos) {
     auto& value = cur.second;
