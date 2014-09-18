@@ -931,7 +931,7 @@ public:
         if (reference) {
           found = true;
         } else {
-          retVal = MakeAutowirableSlotFn<T>(
+          retVal = new AutowirableSlotFn<T, Fn>(
             shared_from_this(),
             std::forward<Fn>(listener)
           );
@@ -939,7 +939,8 @@ public:
         }
       });
     }
-    if (found)
+
+    if(found)
       // Make call outside of lock
       // NOTE: existential guarantees of context enable this.
       listener();

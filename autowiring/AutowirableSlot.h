@@ -211,9 +211,4 @@ public:
 };
 
 template<class T, class Fn>
-AutowirableSlotFn<T, Fn>* MakeAutowirableSlotFn(const std::shared_ptr<CoreContext>& ctxt, Fn fn) {
-  return new AutowirableSlotFn<T, Fn>(ctxt, std::forward<Fn>(fn));
-}
-
-template<class T, class Fn>
 const typename AutowirableSlotFn<T, Fn>::Strategy AutowirableSlotFn<T, Fn>::s_strategy;
