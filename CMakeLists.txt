@@ -125,7 +125,7 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
     DESTINATION "cmake"
     COMPONENT autowiring
   )
-
+  install(EXPORT AutowiringTargets FILE AutowiringTargets.cmake NAMESPACE Autowiring:: DESTINATION cmake)
   # This is the upgrade GUID.  Part of the GUID is derived from the major version number.  Any time
   # the major version number is adjusted, the upgrade GUID changes.  This allows multiple versions
   # of the same product to be installed on a user's system at the same time, but also means that

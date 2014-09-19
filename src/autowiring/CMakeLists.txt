@@ -168,9 +168,11 @@ endif()
 
 rewrite_header_paths(Autowiring_SRCS)
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
+
 add_library(Autowiring STATIC ${Autowiring_SRCS})
+
 if(CMAKE_MAJOR_VERSION GREATER 2)
-  target_include_directories(Autowiring INTERFACE "../..")
+  target_include_directories(Autowiring INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>" "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>")
 endif()
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
 
@@ -189,7 +191,11 @@ if(Threads_FOUND)
 endif()
 
 if(NOT AUTOWIRING_IS_EMBEDDED)
-  install(TARGETS Autowiring DESTINATION lib COMPONENT autowiring CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
+  install(TARGETS Autowiring EXPORT AutowiringTargets
+    DESTINATION lib
+    COMPONENT autowiring 
+    CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+  )
 
   foreach (src ${Autowiring_SRCS})
     string(REGEX MATCH ".*\\.h" hfile ${src})
