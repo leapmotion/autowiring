@@ -53,7 +53,6 @@ TEST_F(ArgumentTypeTest, AutoFilterTemplateTests) {
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<const Argument<0>&>::is_required)) << "Incorrect OR assessment";
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<Argument<0>&>::is_required)) << "Incorrect OR assessment";
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<optional_ptr<Argument<0>>>::is_optional)) << "Incorrect OR assessment";
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<auto_out<Argument<0>>>::is_optional)) << "Incorrect OR assessment";
 
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<const Argument<0>&>::value)) << "Validity of AutoFilter input incorrectly identified";
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<Argument<0>&>::value)) << "Validity of AutoFilter output incorrectly identified";
@@ -87,21 +86,47 @@ TEST_F(ArgumentTypeTest, TestAutoIn) {
   AutoRequired<AutoPacketFactory> factory;
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   packet->Decorate(Argument<0>(1));
-  auto_in<Argument<0>> in(packet);
+  auto_in<Argument<0>> in(packet, typeid(void));
   ASSERT_TRUE(in.is_input) << "Incorrect orientation";
-  ASSERT_TRUE(in.is_output) << "Incorrect orientation";
+  ASSERT_FALSE(in.is_output) << "Incorrect orientation";
   ASSERT_EQ(1, in->i) << "Incorrect initialization";
 
   // Base Cast
-  const Argument<0>& base_in = in;
-  ASSERT_EQ(1, base_in.i) << "Incorrect base cast";
+  {
+    const Argument<0>& base_in = in;
+    ASSERT_EQ(1, base_in.i) << "Incorrect base cast";
+  }
 
   // Shared Cast
-  std::shared_ptr<const Argument<0>> shared_in = in;
-  ASSERT_EQ(1, shared_in->i) << "Incorrect base cast";
+  {
+    std::shared_ptr<const Argument<0>> shared_in = in;
+    ASSERT_EQ(1, shared_in->i) << "Incorrect base cast";
+  }
 
   // Deduced Type
   auto_arg<const Argument<0>&> arg(packet);
-  shared_in = arg;
   ASSERT_EQ(3, in.use_count()) << "AutoPacket + in + arg == 3";
+}
+
+TEST_F(ArgumentTypeTest, TestAutoOut) {
+  AutoRequired<AutoPacketFactory> factory;
+  std::shared_ptr<AutoPacket> packet = factory->NewPacket();
+  {
+    auto_out_new<Argument<0>> out(packet, typeid(void));
+    ASSERT_FALSE(out.is_input) << "Incorrect orientation";
+    ASSERT_TRUE(out.is_output) << "Incorrect orientation";
+
+    out->i = 1;
+
+    // Copy
+    auto_out_new<Argument<0>> out1(out);
+
+    // Assign
+    auto_out_new<Argument<0>> out2;
+    out2 = out1;
+  }
+
+  const Argument<0>* arg = nullptr;
+  ASSERT_TRUE(packet->Get(arg)) << "Missing output";
+  ASSERT_EQ(1, arg->i) << "Output was not copied";
 }
