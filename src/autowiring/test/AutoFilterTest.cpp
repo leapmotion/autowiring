@@ -285,6 +285,22 @@ TEST_F(AutoFilterTest, TestLogicFilter) {
   ASSERT_EQ(0, logic->m_calledNextElse) << "Called NextElseFilter in packet final-calls";
 }
 
+class FilterOut {
+public:
+  void AutoFilter(auto_out_new<Decoration<0>> out) {
+    out->i = 1;
+  }
+};
+
+TEST_F(AutoFilterTest, VerifyAutoOut) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterOut> out;
+  std::shared_ptr<AutoPacket> packet = factory->NewPacket();
+  const Decoration<0>* result = nullptr;
+  ASSERT_TRUE(packet->Get(result)) << "Output missing";
+  ASSERT_EQ(result->i, 1) << "Output incorrect";
+}
+
 class FilterFinalGood {
 public:
   void AutoFilter(const AutoPacket&, auto_out<Decoration<0>, false>) {}

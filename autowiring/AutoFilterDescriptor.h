@@ -121,6 +121,20 @@ struct subscriber_traits<auto_out<T, auto_ready>> {
 };
 
 /// <summary>
+/// Output types
+/// </summary>
+template<class T>
+struct subscriber_traits<auto_out_new<T>> {
+  typedef T type;
+  typedef auto_out_new<T> ret_type;
+  static const eSubscriberInputType subscriberType = outTypeRefAutoReady;
+
+  ret_type operator()(AutoPacket& packet, const std::type_info& source) const {
+    return auto_out_new<T>(packet.shared_from_this(), source);
+  }
+};
+
+/// <summary>
 /// AutoPacket& is satisfied immediately when AutoPacket is initialized
 /// </summary>
 template<>
