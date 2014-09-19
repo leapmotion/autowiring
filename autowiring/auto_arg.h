@@ -5,7 +5,7 @@
 #include <autowiring/auto_out.h>
 
 /*
- The auto_arg<T> classes are used to generate of auto_in and auto_out_new types
+ The auto_arg<T> classes are used to generate of auto_in and auto_out types
  based on the argument type.
  The core functionality is that all argument types are treated as standard
  types, and can be re-derived from those standard types.
@@ -118,10 +118,10 @@ public:
 /// </summary>
 template<class type>
 class auto_arg<type&>:
-  public auto_out_new<type>
+  public auto_out<type>
 {
 public:
-  typedef auto_out_new<type> auto_type;
+  typedef auto_out<type> auto_type;
 
   using typename auto_type::id_type;
   using typename auto_type::base_type;
@@ -134,19 +134,19 @@ public:
   using auto_type::operator typename auto_type::shared_type;
 
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    auto_out_new<type>(packet, source)
+    auto_out<type>(packet, source)
   {}
 };
 
 /// <summary>
-/// Specialization for "std::unique_ptr<T, std::function<void(T*)>>" ~ auto_out_new<T>
+/// Specialization for "std::unique_ptr<T, std::function<void(T*)>>" ~ auto_out<T>
 /// </summary>
 template<class type>
 class auto_arg<std::unique_ptr<type, std::function<void(type*)>>>:
-  public auto_out_new<type>
+  public auto_out<type>
 {
 public:
-  typedef auto_out_new<type> auto_type;
+  typedef auto_out<type> auto_type;
 
   using typename auto_type::id_type;
   using typename auto_type::base_type;
@@ -159,19 +159,19 @@ public:
   using auto_type::operator typename auto_type::shared_type;
 
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    auto_out_new<type>(packet, source)
+    auto_out<type>(packet, source)
   {}
 };
 
 /// <summary>
-/// Specialization for equivalent type auto_out_new<T>
+/// Specialization for equivalent type auto_out<T>
 /// </summary>
 template<class type>
-class auto_arg<auto_out_new<type>>:
-public auto_out_new<type>
+class auto_arg<auto_out<type>>:
+public auto_out<type>
 {
 public:
-  typedef auto_out_new<type> auto_type;
+  typedef auto_out<type> auto_type;
 
   using typename auto_type::id_type;
   using typename auto_type::base_type;
@@ -184,7 +184,7 @@ public:
   using auto_type::operator typename auto_type::shared_type;
 
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    auto_out_new<type>(packet, source)
+    auto_out<type>(packet, source)
   {}
 };
 

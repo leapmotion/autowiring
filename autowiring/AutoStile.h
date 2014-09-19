@@ -43,14 +43,14 @@ protected:
 
   /// <summary>Decorator for input shares the reference to master_data</summary>
   template<class data_pipe>
-  static typename std::enable_if<is_autofilter_arg<data_pipe>::is_input, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe master_data) {
+  static typename std::enable_if<is_autofilter_arg<data_pipe>::is_input, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe& master_data) {
     slave_packet->Decorate(master_data);
     return true; //Place holder in variadic initializer
   }
 
   /// <summary>Decorator for output creates an extraction for slave_data</summary>
   template<class data_pipe>
-  static typename std::enable_if<is_autofilter_arg<data_pipe>::is_output, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe master_data) {
+  static typename std::enable_if<is_autofilter_arg<data_pipe>::is_output, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe& master_data) {
     static_assert(is_auto_out<data_pipe>::value, "AutoStile outputs must be auto_out<T>");
     // Extract the base type and define the input type "const base_type&"
     typedef typename is_autofilter_arg<data_pipe>::type base_type;
@@ -60,11 +60,10 @@ protected:
       >::type
     >::type in_type;
 
-    slave_packet->AddRecipient<void, in_type>(std::function<void(in_type slave_data)>([master_data](in_type slave_data) {
+    slave_packet->AddRecipient<void, in_type>(std::function<void(in_type slave_data)>([&master_data](in_type slave_data) {
       //NOTE: The lambda copy of master_data is implicitly a move of AutoCheckout,
-      // so this lambda has sole responsability for calling CompleteCheckout.
+      // so this lambda has sole responsibility for calling CompleteCheckout.
       *master_data = slave_data;
-      master_data.Ready();
     }));
     return true; //Place holder in variadic initializer
   }

@@ -5,7 +5,7 @@
 #include TYPE_TRAITS_HEADER
 
 class Deferred;
-template<class T, bool auto_ready> class auto_out;
+template<class T> class auto_out;
 template<class T> class optional_ptr;
 
 /// <summary>
@@ -16,14 +16,12 @@ struct is_auto_out :
 std::false_type
 {
   typedef Arg type;
-  static const bool ready = false;
 };
-template<class Arg, bool auto_ready>
-struct is_auto_out<auto_out<Arg, auto_ready>> :
+template<class Arg>
+struct is_auto_out<auto_out<Arg>> :
 std::true_type
 {
   typedef Arg type;
-  static const bool ready = auto_ready;
 };
 
 /// <summary>
@@ -41,30 +39,6 @@ struct is_optional_ptr<optional_ptr<Arg>> :
 {
   typedef Arg type;
 };
-
-/*
- AutoFilter argument orientations:
- const T& -> REQUIRED INPUT
- T& -> REQUIRED OUTPUT
- const T*& -> OPTIONAL INPUT (nullptr initial state indicates absence)
- T*& -> OPTIONAL OUTPUT (initialized to nullptr, nullptr final state indicates absence)
-
- TODO: It is desireable to have the optional output drawn from an object pool.
- Therefore it is necessary create something like a const_shared_ptr that inherits from
- shared_ptr but provides only const references.
- const_shared_ptr<T>& -> OPTIONAL INPUT (nullptr initial state indicates absence)
- shared_ptr<T>& -> OPTIONAL OUTPUT (initialized to nullptr, nullptr final state indicates absence)
-
- Extensions to Dependent Types are always satisfied by the current AutoPacket:
- const AutoPacket& -> Called as first step of finalize, if other arguments are present
- AutoPacket& -> Called initially, or when other arguments are present
-
- Extensions to Split & Merge arguments are satisfied by dependent packets:
- array_type<shared_ptr<AutoPacket, MoveToConstArray>>& -> Split Node = OUTPUT (called with empty array)
- const array_type<shared_ptr<AutoPacket, MoveToObjectPool>>& -> Merge Node = INPUT (called only when array is full)
- Destruction of packets in the split array moves them to the merge array,
- and destruction of the merge array returns them to the object pool.
- */
 
 template<class Arg>
 struct is_required_input :
@@ -140,8 +114,8 @@ struct is_autofilter_arg :
 
   static const bool is_input = is_required_input<Arg>::value || is_optional_input<Arg>::value || is_optional_ptr<Arg>::value;
   static const bool is_output = is_required_output<Arg>::value || is_optional_output<Arg>::value || is_auto_out<Arg>::value;
-  static const bool is_required = is_required_input<Arg>::value || is_required_output<Arg>::value || (is_auto_out<Arg>::value && is_auto_out<Arg>::ready);
-  static const bool is_optional = is_optional_input<Arg>::value || is_optional_output<Arg>::value || is_optional_ptr<Arg>::value || (is_auto_out<Arg>::value && !is_auto_out<Arg>::ready);
+  static const bool is_required = is_required_input<Arg>::value || is_required_output<Arg>::value;
+  static const bool is_optional = is_optional_input<Arg>::value || is_optional_output<Arg>::value || is_optional_ptr<Arg>::value || is_auto_out<Arg>::value;
 };
 
 /// <summary>

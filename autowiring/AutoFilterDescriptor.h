@@ -109,28 +109,14 @@ struct subscriber_traits<optional_ptr<T>> {
 /// <summary>
 /// Output types
 /// </summary>
-template<class T, bool auto_ready>
-struct subscriber_traits<auto_out<T, auto_ready>> {
-  typedef T type;
-  typedef auto_out<T, auto_ready> ret_type;
-  static const eSubscriberInputType subscriberType = auto_ready ? outTypeRef : outTypeRefAutoReady;
-
-  ret_type operator()(AutoPacket& packet, const std::type_info& source) const {
-    return auto_out<T, auto_ready>(packet.Checkout<T>(source));
-  }
-};
-
-/// <summary>
-/// Output types
-/// </summary>
 template<class T>
-struct subscriber_traits<auto_out_new<T>> {
+struct subscriber_traits<auto_out<T>> {
   typedef T type;
-  typedef auto_out_new<T> ret_type;
+  typedef auto_out<T> ret_type;
   static const eSubscriberInputType subscriberType = outTypeRefAutoReady;
 
   ret_type operator()(AutoPacket& packet, const std::type_info& source) const {
-    return auto_out_new<T>(packet.shared_from_this(), source);
+    return auto_out<T>(packet.shared_from_this(), source);
   }
 };
 

@@ -112,17 +112,17 @@ TEST_F(ArgumentTypeTest, TestAutoOut) {
   AutoRequired<AutoPacketFactory> factory;
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   {
-    auto_out_new<Argument<0>> out(packet, typeid(void));
+    auto_out<Argument<0>> out(packet, typeid(void));
     ASSERT_FALSE(out.is_input) << "Incorrect orientation";
     ASSERT_TRUE(out.is_output) << "Incorrect orientation";
 
     out->i = 1;
 
     // Copy
-    auto_out_new<Argument<0>> out1(out);
+    auto_out<Argument<0>> out1(out);
 
     // Assign
-    auto_out_new<Argument<0>> out2;
+    auto_out<Argument<0>> out2;
     out2 = out1;
   }
 
