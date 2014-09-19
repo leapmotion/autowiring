@@ -17,7 +17,7 @@ class auto_in:
   public std::shared_ptr<const type>
 {
 public:
-  typedef type arg_type;
+  typedef type id_type;
   typedef const type& base_type;
   typedef std::shared_ptr<const type> shared_type;
 
@@ -32,7 +32,30 @@ public:
     return *this;
   }
 
-  auto_in (std::shared_ptr<AutoPacket> packet) {
-    packet->Get(*this);
+  auto_in ():
+    shared_type(nullptr)
+  {}
+
+  auto_in (auto_in<type>& rhs):
+    shared_type(rhs)
+  {}
+
+  auto_in (auto_in<type>&& rhs) {
+    std::swap<shared_type>(*this, rhs);
+  }
+
+  auto_in& operator = (auto_in<type>& rhs) {
+    shared_type::operator = (rhs);
+    return *this;
+  }
+
+  auto_in& operator = (auto_in<type>&& rhs) {
+    shared_type::reset();
+    std::swap<shared_type>(*this, rhs);
+    return *this;
+  }
+
+  auto_in (std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)) {
+    packet->Get(*this, source);
   }
 };

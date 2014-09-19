@@ -311,6 +311,54 @@ public:
     return false;
   }
 
+  /// <summary>
+  /// Transfers ownership of argument to AutoPacket
+  /// </summary>
+  template<class T>
+  void Put(T* in, const std::type_info& source = typeid(void)) {
+    const std::type_info& data = typeid(T);
+
+    autowiring::DataFlow flow = GetDataFlow(data, source);
+    if (flow.broadcast) {
+      auto& entry = m_decorations[DSIndex(data, typeid(void))];
+      if (entry.satisfied ||
+          entry.isCheckedOut) {
+        std::stringstream ss;
+        ss << "Cannot put type " << autowiring::demangle(typeid(T))
+        << " from source " << autowiring::demangle(source)
+        << " on AutoPacket, the requested broadcast already exists";
+        throw std::runtime_error(ss.str());
+      }
+
+      entry.m_decoration = std::shared_ptr<T>(in);
+      entry.m_type = &data; // Ensure correct type if instantiated here
+      entry.satisfied = true;
+      entry.isCheckedOut = false;
+
+      UpdateSatisfaction(data, typeid(void));
+      UpdateSatisfaction(typeid(std::shared_ptr<T>), typeid(void));
+    }
+    if (!flow.halfpipes.empty()) {
+      auto& entry = m_decorations[DSIndex(data, source)];
+      if (entry.satisfied ||
+          entry.isCheckedOut) {
+        std::stringstream ss;
+        ss << "Cannot put type " << autowiring::demangle(typeid(T))
+        << " from source " << autowiring::demangle(source)
+        << " on AutoPacket, the requested pipe already exists";
+        throw std::runtime_error(ss.str());
+      }
+
+      entry.m_decoration = std::shared_ptr<T>(in);
+      entry.m_type = &data; // Ensure correct type if instantiated here
+      entry.satisfied = true;
+      entry.isCheckedOut = false;
+
+      UpdateSatisfaction(data, source);
+      UpdateSatisfaction(typeid(std::shared_ptr<T>), source);
+    }
+  }
+
   /// <returns>
   /// The number of sources for the specified type supplied to the specified target
   /// </returns>

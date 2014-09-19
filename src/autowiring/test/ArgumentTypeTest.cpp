@@ -52,9 +52,8 @@ TEST_F(ArgumentTypeTest, AutoFilterTemplateTests) {
 
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<const Argument<0>&>::is_required)) << "Incorrect OR assessment";
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<Argument<0>&>::is_required)) << "Incorrect OR assessment";
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<auto_out<Argument<0>, true>>::is_required)) << "Incorrect OR assessment";
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<optional_ptr<Argument<0>>>::is_optional)) << "Incorrect OR assessment";
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<auto_out<Argument<0>, false>>::is_optional)) << "Incorrect OR assessment";
+  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<auto_out<Argument<0>>>::is_optional)) << "Incorrect OR assessment";
 
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<const Argument<0>&>::value)) << "Validity of AutoFilter input incorrectly identified";
   ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<Argument<0>&>::value)) << "Validity of AutoFilter output incorrectly identified";
