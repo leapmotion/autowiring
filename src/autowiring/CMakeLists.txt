@@ -3,8 +3,9 @@ add_googletest(benchmark)
 
 set(Autowiring_SRCS
   at_exit.h
+  auto_in.h
   auto_out.h
-  auto_io.h
+  auto_arg.h
   AnySharedPointer.h
   AutoAnchor.h
   AutoCheckout.h
