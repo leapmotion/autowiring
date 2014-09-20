@@ -22,7 +22,7 @@ class auto_out:
 {
 public:
   typedef type id_type;
-  typedef const type& base_type;
+  typedef type& base_type;
   typedef std::unique_ptr<type, std::function<void(type*)>> shared_type;
 
   static const bool is_input = false;

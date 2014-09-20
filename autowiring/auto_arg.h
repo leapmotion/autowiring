@@ -15,27 +15,57 @@
  */
 
 /// <summary>
-/// Base case pertaining to unusable argument types in AutoFilter methods.
+/// Reinterpret copied argument as input
 /// </summary>
-/// <remarks>
-/// The type nullptr_t can only be fullfilled by nullptr.
-/// </remarks>
 template<class type>
-class auto_arg
+class auto_arg:
+  public auto_in<type>
 {
-  typedef std::nullptr_t auto_type;
+public:
+  typedef auto_in<type> auto_type;
 
-  typedef std::nullptr_t id_type;
-  typedef std::nullptr_t base_type;
-  typedef std::shared_ptr<std::nullptr_t> shared_type;
+  using typename auto_type::id_type;
+  using typename auto_type::base_type;
+  using typename auto_type::shared_type;
 
-  static const bool is_input = false;
-  static const bool is_output = false;
+  using auto_type::is_input;
+  using auto_type::is_output;
 
-  operator base_type () { return nullptr; }
-  operator shared_type () { return std::shared_ptr<std::nullptr_t>(); }
+  using auto_type::operator typename auto_type::base_type;
+  using auto_type::operator typename auto_type::shared_type;
 
-  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)) {}
+  auto_arg() {}
+
+  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
+    auto_in<type>(packet, source)
+  {}
+};
+
+/// <summary>
+/// Reinterpret copied argument as input
+/// </summary>
+template<class type>
+class auto_arg<const type>:
+  public auto_in<type>
+{
+public:
+  typedef auto_in<type> auto_type;
+
+  using typename auto_type::id_type;
+  using typename auto_type::base_type;
+  using typename auto_type::shared_type;
+
+  using auto_type::is_input;
+  using auto_type::is_output;
+
+  using auto_type::operator typename auto_type::base_type;
+  using auto_type::operator typename auto_type::shared_type;
+
+  auto_arg() {}
+
+  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
+    auto_in<type>(packet, source)
+  {}
 };
 
 /// <summary>
@@ -57,6 +87,8 @@ public:
 
   using auto_type::operator typename auto_type::base_type;
   using auto_type::operator typename auto_type::shared_type;
+
+  auto_arg() {}
 
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_in<type>(packet, source)
@@ -83,6 +115,8 @@ public:
   using auto_type::operator typename auto_type::base_type;
   using auto_type::operator typename auto_type::shared_type;
 
+  auto_arg() {}
+
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_in<type>(packet, source)
   {}
@@ -107,6 +141,8 @@ public:
 
   using auto_type::operator typename auto_type::base_type;
   using auto_type::operator typename auto_type::shared_type;
+
+  auto_arg() {}
 
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_in<type>(packet, source)
@@ -133,6 +169,8 @@ public:
   using auto_type::operator typename auto_type::base_type;
   using auto_type::operator typename auto_type::shared_type;
 
+  auto_arg() {}
+
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_out<type>(packet, source)
   {}
@@ -158,6 +196,8 @@ public:
   using auto_type::operator typename auto_type::base_type;
   using auto_type::operator typename auto_type::shared_type;
 
+  auto_arg() {}
+
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_out<type>(packet, source)
   {}
@@ -168,7 +208,7 @@ public:
 /// </summary>
 template<class type>
 class auto_arg<auto_out<type>>:
-public auto_out<type>
+  public auto_out<type>
 {
 public:
   typedef auto_out<type> auto_type;
@@ -183,14 +223,92 @@ public:
   using auto_type::operator typename auto_type::base_type;
   using auto_type::operator typename auto_type::shared_type;
 
+  auto_arg() {}
+
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_out<type>(packet, source)
   {}
 };
 
-/*
-class auto_pipe
+/// <summary>
+/// Specialization for first-call "AutoPacket&"
+/// </summary>
+template<>
+class auto_arg<AutoPacket&>
+{
+protected:
+  /// Sigil to distinguish AutoPacket&
+  class first_call_sigil {};
 
+  std::shared_ptr<AutoPacket> m_packet;
 
-class auto_actor
-*/
+public:
+  typedef AutoPacket& auto_type;
+
+  typedef first_call_sigil id_type;
+  typedef AutoPacket& base_type;
+  typedef std::shared_ptr<AutoPacket> shared_type;
+
+  // Although AutoPacket& enable both inputs and outputs
+  // its availability is handled as an input.
+  static const bool is_input = true;
+  static const bool is_output = false;
+
+  operator base_type () const {
+    return *m_packet;
+  }
+
+  operator shared_type () {
+    return m_packet;
+  }
+
+  auto_arg() {}
+
+  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
+    m_packet(packet)
+  {}
+};
+
+/// <summary>
+/// Specialization for final-call "const AutoPacket&"
+/// </summary>
+/// <remarks>
+/// This is called during Finalize, so the shared_ptr may
+/// be invalidated if the associated ObjectPool is cleared.
+/// Therefore it is essential that this cannot be used with
+/// deferred calls.
+/// </remarks>
+template<>
+class auto_arg<const AutoPacket&>
+{
+protected:
+  /// Sigil to distinguish const AutoPacket&
+  class final_call_sigil {};
+
+  std::shared_ptr<AutoPacket> m_packet;
+
+public:
+  typedef const AutoPacket& auto_type;
+
+  typedef final_call_sigil id_type;
+  typedef const AutoPacket& base_type;
+  typedef std::weak_ptr<const AutoPacket> shared_type;
+
+  // const AutoPacket& can only be used to observe data
+  static const bool is_input = true;
+  static const bool is_output = false;
+
+  operator base_type () const {
+    return *m_packet;
+  }
+
+  operator shared_type () {
+    return m_packet;
+  }
+
+  auto_arg() {}
+  
+  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
+    m_packet(packet)
+  {}
+};
