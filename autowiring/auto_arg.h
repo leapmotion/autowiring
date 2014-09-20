@@ -231,6 +231,33 @@ public:
 };
 
 /// <summary>
+/// Specialization for equivalent type optional_ptr<T>
+/// </summary>
+template<class type>
+class auto_arg<optional_ptr<type>>:
+  public optional_ptr<type>
+{
+public:
+  typedef optional_ptr<type> auto_type;
+
+  using typename auto_type::id_type;
+  using typename auto_type::base_type;
+  using typename auto_type::shared_type;
+
+  using auto_type::is_input;
+  using auto_type::is_output;
+
+  using auto_type::operator typename auto_type::base_type;
+  using auto_type::operator typename auto_type::shared_type;
+
+  auto_arg() {}
+
+  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
+    optional_ptr<type>(packet, source)
+  {}
+};
+
+/// <summary>
 /// Specialization for first-call "AutoPacket&"
 /// </summary>
 template<>

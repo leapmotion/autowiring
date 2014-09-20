@@ -298,15 +298,26 @@ public:
   /// <summary>
   /// Shared pointer specialization, used to obtain the underlying shared pointer for some type T
   /// </summary>
+  /// <remarks>
+  /// This method can return an argument of DecorateImmediate as a shared_ptr<T> without a deleter.
+  /// PROBLEM: This use case implies that holding shared_ptr references to decorations is NOT SAFE.
+  /// </remarks>
   template<class T>
   bool Get(std::shared_ptr<const T>& out, const std::type_info& source = typeid(void)) const {
-    const std::shared_ptr<T>* ptr = nullptr;
-    Get(ptr, source);
-    if (ptr) {
-      out = *ptr;
-      return true;
+    std::lock_guard<std::mutex> lk(m_lock);
+    auto deco = m_decorations.find(DSIndex(typeid(T), source));
+    if(deco != m_decorations.end() &&
+       deco->second.satisfied) {
+      auto& disposition = deco->second;
+      if(disposition.m_decoration) {
+        out = disposition.m_decoration->as<T>();
+        return true;
+      } else if (disposition.m_pImmediate) {
+        // Wrap immediate reference in shared_ptr without deleter
+        out = std::shared_ptr<const T>(reinterpret_cast<const T*>(disposition.m_pImmediate), [](const T*){});
+        return true;
+      }
     }
-
     out.reset();
     return false;
   }
@@ -568,9 +579,10 @@ public:
     MakeAtExit([this, &pTypeSubs, &source] {
       // Mark entries as unsatisfiable:
       // IMPORTANT: isCheckedOut = true prevents subsequent decorations of this type
-      // IMPORTANT: m_pImmediate != nullptr records having used DecorateImmediate
-      for(DecorationDisposition*  pEntry : pTypeSubs)
+      for(DecorationDisposition*  pEntry : pTypeSubs) {
+        pEntry->m_pImmediate = nullptr;
         pEntry->satisfied = false;
+      }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
       for(const std::type_info* ti : s_argTypes)

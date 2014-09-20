@@ -190,7 +190,11 @@ ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory, 
     ~0,
     [&factory, &outstanding] { return new AutoPacket(factory, outstanding); },
     [] (AutoPacket& packet) { packet.Initialize(); },
-    [] (AutoPacket& packet) { packet.Finalize(); }
+    [] (AutoPacket& packet) {
+      // IMPORTANT: Create shared_ptr with no destructor to enable outputs to AutoPacket
+      std::shared_ptr<AutoPacket> shared(&packet, [](AutoPacket*){});
+      packet.Finalize();
+    }
   );
 }
 
