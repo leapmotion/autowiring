@@ -121,7 +121,7 @@ public:
     m_pFirstChild(nullptr)
   {
     if(ctxt)
-      ctxt->Autowire(*this);
+      ctxt->Autowire(*this, *this);
   }
 
   ~Autowired(void) {
@@ -146,9 +146,23 @@ private:
 
 public:
   operator T*(void) const {
-    return std::shared_ptr<T>::get();
+    return
+      static_cast<const AnySharedPointerT<T>*>(
+        static_cast<const AnySharedPointer*>(
+          this
+        )
+      )->slot()->get().get();
   }
 
+  operator const std::shared_ptr<T>&(void) const {
+    return
+      static_cast<const AnySharedPointerT<T>*>(
+        static_cast<const AnySharedPointer*>(
+          this
+        )
+      )->slot()->get();
+  }
+  
   /// <summary>
   /// Allows a lambda function to be called when this slot is autowired
   /// </summary>

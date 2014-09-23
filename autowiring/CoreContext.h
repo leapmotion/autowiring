@@ -883,13 +883,13 @@ public:
   /// Registers a slot to be autowired
   /// </summary>
   template<class T>
-  bool Autowire(AutowirableSlot<T>& slot) {
+  bool Autowire(AnySharedPointer& dest, AutowirableSlot<T>& slot) {
     {
       std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
       FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
-      [this, &slot](AnySharedPointer& reference){
-        slot = reference.slot()->template as<T>();
-        if (!slot) {
+      [this, &dest, &slot](AnySharedPointer& reference){
+        dest = reference.slot()->template as<T>();
+        if(!dest) {
           AddDeferredUnsafe(AnySharedPointerT<T>(), &slot);
         }
       });
