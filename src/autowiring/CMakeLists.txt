@@ -120,6 +120,7 @@ set(Autowiring_SRCS
   TypeRegistry.cpp
   TypeUnifier.h
   uuid.h
+  var_logic.h
 )
 
 if(NOT APPLE)

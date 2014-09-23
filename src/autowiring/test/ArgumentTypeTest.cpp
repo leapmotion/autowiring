@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
+#include "var_logic.h"
 #include <autowiring/auto_in.h>
 #include <autowiring/auto_out.h>
 #include <autowiring/auto_arg.h>
@@ -15,6 +16,15 @@ public:
     AutoCurrentContext()->Initiate();
   }
 };
+
+TEST_F(ArgumentTypeTest, constexpr_in_template) {
+  ASSERT_TRUE(var_or<bool>(true)) << "Single argument should be invariant";
+  ASSERT_FALSE(var_or<bool>(false)) << "Single argument should be invariant";
+  ASSERT_TRUE(static_cast<const bool>(std::integral_constant<bool, var_or(true,false)>::value)) << "True || False == True";
+  ASSERT_TRUE(var_and<bool>(true)) << "Single argument should be invariant";
+  ASSERT_FALSE(var_and<bool>(false)) << "Single argument should be invariant";
+  ASSERT_FALSE(static_cast<const bool>(std::integral_constant<bool, var_and(true,false)>::value)) << "True && False == False";
+}
 
 template<int N>
 class Argument {
