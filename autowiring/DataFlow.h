@@ -19,6 +19,7 @@ namespace autowiring {
     // Pipelined Output: AutoFilter only sends data to declared pipes
     // Broadcast Input: AutoFilter accepts data from any input
     // Pipelined Input: AutoFilter only accepts data from declared pipes
+    bool input;
     bool output;
     bool broadcast;
     std::unordered_set<std::type_index> halfpipes;

@@ -52,31 +52,20 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
       entry->m_type = &dataType;
 
       // Decide what to do with this entry:
-      // NOTE: Recipients added via AddReceiver can receiver broadcast data,
+      // NOTE: Recipients added via AddReceiver can receive broadcast data,
       // so it is necessary to decrement the receiver's counters when it is added.
-      switch(pCur->subscriberType) {
-        case inTypeRequired:
-          entry->m_subscribers.push_back(std::make_pair(&satCounter, true));
-          if (entry->satisfied)
-            satCounter.Decrement(dataType, typeid(void), true);
-          break;
-        case inTypeOptional:
-          entry->m_subscribers.push_back(std::make_pair(&satCounter, false));
-          if (entry->satisfied)
-            satCounter.Decrement(dataType, typeid(void), false);
-          break;
-        case outTypeRef:
-        case outTypeRefAutoReady:
-          if(entry->m_publisher) {
-            std::stringstream ss;
-            ss << "Added identical data broadcasts of type " << pCur->ti->name();
-            throw std::runtime_error(ss.str());
-          }
-          entry->m_publisher = &satCounter;
-          break;
-        default: //inTypeInvalid
-          // Should never happen--trivially ignore this entry
-          break;
+      if (pCur->is_input) {
+        entry->m_subscribers.push_back(std::make_pair(&satCounter, !pCur->is_optional));
+        if (entry->satisfied)
+          satCounter.Decrement(dataType, typeid(void), !pCur->is_optional);
+      }
+      if (pCur->is_output) {
+        if(entry->m_publisher) {
+          std::stringstream ss;
+          ss << "Added identical data broadcasts of type " << pCur->ti->name();
+          throw std::runtime_error(ss.str());
+        }
+        entry->m_publisher = &satCounter;
       }
     }
     for (auto halfpipe : flow.halfpipes) {
@@ -92,26 +81,16 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
       // Decide what to do with this entry:
       // NOTE: Recipients added via AddReceiver cannot receive piped data,
       // and subscribers are added before the packet is decorated.
-      switch(pCur->subscriberType) {
-        case inTypeRequired:
-          entry->m_subscribers.push_back(std::make_pair(&satCounter, true));
-          break;
-        case inTypeOptional:
-          entry->m_subscribers.push_back(std::make_pair(&satCounter, false));
-          break;
-        case outTypeRef:
-        case outTypeRefAutoReady:
-          /// IMPORTANT: Allow multiple publishers of the same type, provided they are to distinct sources.
-          if(entry->m_publisher == &satCounter) {
-            std::stringstream ss;
-            ss << "Added identical data pipes from " << satCounter.GetAutoFilterTypeInfo()->name() << " of type " << pCur->ti->name();
-            throw std::runtime_error(ss.str());
-          }
-          entry->m_publisher = &satCounter;
-          break;
-        default: //inTypeInvalid
-          // Should never happen--trivially ignore this entry
-          break;
+      if (pCur->is_input) {
+        entry->m_subscribers.push_back(std::make_pair(&satCounter, !pCur->is_optional));
+      }
+      if (pCur->is_output) {
+        if(entry->m_publisher) {
+          std::stringstream ss;
+          ss << "Added identical data pipes from " << satCounter.GetAutoFilterTypeInfo()->name() << " of type " << pCur->ti->name();
+          throw std::runtime_error(ss.str());
+        }
+        entry->m_publisher = &satCounter;
       }
     }
   }
@@ -129,25 +108,14 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
       DecorationDisposition* entry = &m_decorations[DSIndex(dataType, typeid(void))];
 
       // Decide what to do with this entry:
-      switch(pCur->subscriberType) {
-        case inTypeRequired:
-          assert(!entry->m_subscribers.empty());
-          assert(&satCounter == entry->m_subscribers.back().first);
-          entry->m_subscribers.pop_back();
-          break;
-        case inTypeOptional:
-          assert(!entry->m_subscribers.empty());
-          assert(&satCounter == entry->m_subscribers.back().first);
-          entry->m_subscribers.pop_back();
-          break;
-        case outTypeRef:
-        case outTypeRefAutoReady:
-          assert(&satCounter == entry->m_publisher);
-          entry->m_publisher = nullptr;
-          break;
-        default: //inTypeInvalid
-          // Should never happen--trivially ignore this entry
-          break;
+      if (pCur->is_input) {
+        assert(!entry->m_subscribers.empty());
+        assert(&satCounter == entry->m_subscribers.back().first);
+        entry->m_subscribers.pop_back();
+      }
+      if (pCur->is_output) {
+        assert(&satCounter == entry->m_publisher);
+        entry->m_publisher = nullptr;
       }
     }
     for (auto halfpipe : flow.halfpipes) {
@@ -160,25 +128,14 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
       }
 
       // Decide what to do with this entry:
-      switch(pCur->subscriberType) {
-        case inTypeRequired:
-          assert(!entry->m_subscribers.empty());
-          assert(&satCounter == entry->m_subscribers.back().first);
-          entry->m_subscribers.pop_back();
-          break;
-        case inTypeOptional:
-          assert(!entry->m_subscribers.empty());
-          assert(&satCounter == entry->m_subscribers.back().first);
-          entry->m_subscribers.pop_back();
-          break;
-        case outTypeRef:
-        case outTypeRefAutoReady:
-          assert(&satCounter == entry->m_publisher);
-          entry->m_publisher = nullptr;
-          break;
-        default: //inTypeInvalid
-          // Should never happen--trivially ignore this entry
-          break;
+      if (pCur->is_input) {
+        assert(!entry->m_subscribers.empty());
+        assert(&satCounter == entry->m_subscribers.back().first);
+        entry->m_subscribers.pop_back();
+      }
+      if (pCur->is_output) {
+        assert(&satCounter == entry->m_publisher);
+        entry->m_publisher = nullptr;
       }
     }
   }
@@ -282,7 +239,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 
           // We cannot satisfy shared_ptr arguments, since the implied existence
           // guarantee of shared_ptr is violated
-          !cur->GetArgumentType(pTypeSubs[i]->m_type)->isp &&
+          !cur->GetArgumentType(pTypeSubs[i]->m_type)->is_shared &&
 
           // Now do the decrementation and proceed even if optional > 0,
           // since this is the only opportunity to fulfill the arguments
