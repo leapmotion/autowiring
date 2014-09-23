@@ -111,4 +111,5 @@ inline bool operator==(const std::shared_ptr<T>& lhs, const AnySharedPointer& rh
   return rhs == lhs;
 }
 
-static_assert(!std::is_polymorphic<AnySharedPointer>::value, "The shared pointer cannot be polymorphic");
+static_assert(sizeof(AnySharedPointerT<int>) == sizeof(AnySharedPointer), "AnySharedPointer realization cannot have members");
+static_assert(!std::is_polymorphic<AnySharedPointer>::value, "The shared pointer cannot be polymorphic, this prevents the root type from being aliased correctly");
