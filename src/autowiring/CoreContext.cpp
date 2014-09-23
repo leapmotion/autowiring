@@ -292,24 +292,18 @@ void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   m_typeMemos[type].m_value = reference;
 }
 
-void CoreContext::FindByTypeRecursiveUnsafe(AnySharedPointer&& reference, const std::function<void(AnySharedPointer&)>& terminal) const {
+void CoreContext::FindByTypeRecursive(AnySharedPointer& reference, const AutoSearchLambda& searchFn) const {
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   FindByTypeUnsafe(reference);
-  if (reference) {
-    // Type satisfied in current context
-    terminal(reference);
-    return;
-  }
+  if(!m_pParent || reference)
+    // Type satisfied in current context, or there is nowhere to recurse to--call the terminal function in any case
+    return searchFn();
 
-  if (m_pParent) {
-    std::lock_guard<std::mutex> guard(m_pParent->m_stateBlock->m_lock);
-    // Recurse while holding lock on this context
-    // NOTE: Racing Deadlock is only possible if there is a simultaneous descending locked chain,
-    // but by definition of contexts this is forbidden.
-    m_pParent->FindByTypeRecursiveUnsafe(std::move(reference), terminal);
-  } else {
-    // Call function while holding all locks through global scope.
-    terminal(reference);
-  }
+  // Recurse while holding lock on this context
+  // NOTE: Racing Deadlock is only possible if there is an ambiguity or cycle in the traversal order
+  // of contexts.  Because context trees are guaranteed to be acyclical and are also fixed at construction
+  // time, a strict locking heirarchy is inferred, and a deadlock therefore impossible.
+  m_pParent->FindByTypeRecursive(reference, searchFn);
 }
 
 std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
@@ -811,18 +805,18 @@ std::shared_ptr<AutoPacketFactory> CoreContext::GetPacketFactory(void) {
   return pf;
 }
 
-void CoreContext::AddDeferredUnsafe(const AnySharedPointer& reference, DeferrableAutowiring* deferrable) {
+void CoreContext::AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
   // Determine whether a type memo exists right now for the thing we're trying to defer.  If it doesn't
   // exist, we need to inject one in order to allow deferred satisfaction to know what kind of type we
   // are trying to satisfy at this point.
-  size_t found = m_typeMemos.count(reference->type());
+  size_t found = m_typeMemos.count(deferrable->GetType());
 
   if(!found)
     // Slot not presently initialized, need to initialize it:
-    m_typeMemos[reference->type()].m_value = reference;
+    m_typeMemos[deferrable->GetType()].m_value = deferrable->GetSharedPointer();
 
   // Obtain the entry (potentially a second time):
-  MemoEntry& entry = m_typeMemos[reference->type()];
+  MemoEntry& entry = m_typeMemos[deferrable->GetType()];
 
   // Chain forward the linked list:
   deferrable->SetFlink(entry.pFirst);

@@ -292,9 +292,10 @@ TEST_F(PostConstructTest, ContextNotifyWhenAutowiredPostConstruct) {
 
   // Notification should be immediate:
   ctxt->NotifyWhenAutowired<SimpleObject>(
-  [called] {
+    [called] {
       *called = true;
-  });
+    }
+  );
 
   // Insert the SimpleObject, see if the lambda got hit:
   ASSERT_TRUE(*called) << "Context-wide autowiring notification was not hit as expected when a matching type was injected into a context";

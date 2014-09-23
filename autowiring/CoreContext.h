@@ -66,6 +66,27 @@ enum class ShutdownMode {
   Immediate
 };
 
+class AutoSearchLambda {
+public:
+  /// <summary>
+  /// Invoked at the conclusion of a FindByTypeRecursive search operation
+  /// </summary>
+  /// <remarks>
+  /// No information is passed about the success or failure of the search operation.  Implementors of this interface are
+  /// required to store enough context about the AnySharedPointer passed as the first argument to FindByTypeRecursive to
+  /// determine the status of this operation, if that status is interesting.
+  /// </remarks>
+  virtual void operator()() const = 0;
+};
+
+class AutoSearchLambdaDefault:
+  public AutoSearchLambda
+{
+public:
+  // AutoSearchLambda overrides:
+  void operator()() const override {}
+};
+
 /// <summary>
 /// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain
 /// </summary>
@@ -372,10 +393,7 @@ protected:
   /// <summary>
   /// Recursive locking for Autowire satisfaction search
   /// </summary>
-  /// <remarks>
-  /// The argument &&reference enables implicit type from AnySharedPointerT<T>.
-  /// </remarks>
-  void FindByTypeRecursiveUnsafe(AnySharedPointer&& reference, const std::function<void(AnySharedPointer&)>& terminal) const;
+  void FindByTypeRecursive(AnySharedPointer& reference, const AutoSearchLambda& searchFn) const;
 
   /// <summary>
   /// Returns or constructs a new AutoPacketFactory instance
@@ -383,9 +401,9 @@ protected:
   std::shared_ptr<AutoPacketFactory> GetPacketFactory(void);
 
   /// <summary>
-  /// Adds the specified deferrable autowiring as a general recipient of autowiring events
+  /// Adds the specified deferrable autowiring to be satisfied at a later date when its matched type is inserted
   /// </summary>
-  void AddDeferredUnsafe(const AnySharedPointer& reference, DeferrableAutowiring* deferrable);
+  void AddDeferredUnsafe(DeferrableAutowiring* deferrable);
 
   /// <summary>
   /// Adds a snooper to the snoopers set
@@ -868,34 +886,82 @@ public:
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
   template<class T>
-  bool FindByTypeRecursive(std::shared_ptr<T>& slot) {
-    {
-      std::lock_guard<std::mutex> guard(m_stateBlock->m_lock);
-      FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
-      [&slot](AnySharedPointer& reference){
-        slot = reference.slot()->template as<T>();
-      });
-    }
-    return static_cast<bool>(slot);
+  void FindByTypeRecursive(std::shared_ptr<T>& ptr) {
+    AnySharedPointerT<T> slot;
+    FindByTypeRecursive(slot, AutoSearchLambdaDefault());
+    ptr = slot.slot()->get();
   }
+
+  /// <summary>
+  /// Identical to Autowire, but will not register the passed slot for deferred resolution
+  /// </summary>
+  template<class T>
+  void FindByTypeRecursive(AnySharedPointerT<T>& slot) {
+    FindByTypeRecursive(slot, AutoSearchLambdaDefault());
+  }
+
+  template<class T>
+  class AutoSearchLambdaAutowire:
+    public AutoSearchLambda
+  {
+  public:
+    AutoSearchLambdaAutowire(CoreContext& ctxt, AnySharedPointerT<T>& ref, DeferrableAutowiring& defer) :
+      ctxt(ctxt),
+      ref(ref),
+      defer(defer)
+    {}
+
+    CoreContext& ctxt;
+    AnySharedPointerT<T>& ref;
+    DeferrableAutowiring& defer;
+
+    void operator()() const override {
+      // If the slot wasn't autowired, complete the satisfaction here
+      if(!ref)
+        ctxt.AddDeferredUnsafe(&defer);
+    }
+  };
 
   /// <summary>
   /// Registers a slot to be autowired
   /// </summary>
+  /// <param name="ref">The space where the resolved shared pointer will be stored</param>
+  /// <param name="defer">
+  /// In the event that resolution was not successful, the deferrable that will be used to perform delayed satisfaction
+  /// </param>
   template<class T>
-  bool Autowire(AnySharedPointer& dest, AutowirableSlot<T>& slot) {
-    {
-      std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-      FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
-      [this, &dest, &slot](AnySharedPointer& reference){
-        dest = reference.slot()->template as<T>();
-        if(!dest) {
-          AddDeferredUnsafe(AnySharedPointerT<T>(), &slot);
-        }
-      });
-    }
-    return static_cast<bool>(slot);
+  void Autowire(AnySharedPointerT<T>& ref, DeferrableAutowiring& defer) {
+    FindByTypeRecursive(
+      ref,
+      AutoSearchLambdaAutowire<T>(*this, ref, defer)
+    );
   }
+
+  template<class T, class Fn>
+  class AutoSearchLambdaNotifyWhenAutowired:
+    public AutoSearchLambda,
+    public AnySharedPointerT<T>
+  {
+  public:
+    AutoSearchLambdaNotifyWhenAutowired(CoreContext& ctxt, Fn& fn) :
+      ctxt(ctxt),
+      fn(fn),
+      resultSlot(nullptr)
+    {}
+
+    CoreContext& ctxt;
+    Fn& fn;
+    mutable AutowirableSlotFn<T, Fn>* resultSlot;
+
+    void operator()() const override {
+      if(*this)
+        // Matched successfully, do not attempt to defer
+        return;
+
+      resultSlot = new AutowirableSlotFn<T, Fn>(ctxt.shared_from_this(), std::forward<Fn>(fn));
+      ctxt.AddDeferredUnsafe(resultSlot);
+    }
+  };
 
   /// <summary>
   /// Adds a post-attachment listener in this context for a particular autowired member.
@@ -922,29 +988,15 @@ public:
   /// </remarks>
   template<class T, class Fn>
   const AutowirableSlotFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
-    bool found = false;
-    AutowirableSlotFn<T, Fn>* retVal = nullptr;
-    {
-      std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-      FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
-      [this, &listener, &retVal, &found](AnySharedPointer& reference) {
-        if (reference) {
-          found = true;
-        } else {
-          retVal = new AutowirableSlotFn<T, Fn>(
-            shared_from_this(),
-            std::forward<Fn>(listener)
-          );
-          AddDeferredUnsafe(reference, retVal);
-        }
-      });
-    }
+    AutoSearchLambdaNotifyWhenAutowired<T, Fn> searchFn(*this, listener);
+    FindByTypeRecursive(searchFn, searchFn);
 
-    if(found)
-      // Make call outside of lock
-      // NOTE: existential guarantees of context enable this.
+    if(searchFn)
+      // Success!  We can satisfy the listener call right away, and be assured that the listener
+      // will be able to find what it's looking for in this context without holding down a lock,
+      // because entities can't be removed from a context.
       listener();
-    return retVal;
+    return searchFn.resultSlot;
   }
 
   /// <summary>

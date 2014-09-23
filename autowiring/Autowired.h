@@ -121,7 +121,12 @@ public:
     m_pFirstChild(nullptr)
   {
     if(ctxt)
-      ctxt->Autowire(*this, *this);
+      ctxt->Autowire(
+      *static_cast<AnySharedPointerT<T>*>(
+        static_cast<AnySharedPointer*>(this)
+      ),
+      *this
+    );
   }
 
   ~Autowired(void) {
