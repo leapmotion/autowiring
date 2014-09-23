@@ -488,8 +488,7 @@ public:
   m_in(in)
   {}
 
-  //NOTE: Non-const auto_out yields obscure compiler error.
-  void AutoFilter(const auto_out<Decoration<out>>& output) {
+  void AutoFilter(auto_out<Decoration<out>> output) {
     ++m_called_out;
     output->i = m_out;
   }
@@ -764,7 +763,8 @@ TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
   //DEBUG: Expect compiler warning
 
   ASSERT_FALSE(good_autofilter<BadFilterA>::test) << "Failed to identify AutoFilter(void)";
-  ASSERT_FALSE(good_autofilter<BadFilterA>::test) << "Failed to identify multiple defintiions of AutoFilter";
+  ASSERT_FALSE(good_autofilter<BadFilterB>::test) << "Failed to identify multiple definitions of AutoFilter";
+  ASSERT_FALSE(good_autofilter<BadFilterC>::test) << "Failed to identify equivalent AutoFilter argument id types";
 
   AutoRequired<AutoPacketFactory> factory;
 
@@ -1254,44 +1254,14 @@ TEST_F(AutoFilterTest, SharedPtrCollapse) {
   shared_filter->m_called = 0;
 }
 
-class AcceptsSharedPointerAndReference {
-public:
-  AcceptsSharedPointerAndReference(void) :
-    m_called(false)
-  {}
-
-  bool m_called;
-
-  void AutoFilter(const int& v, std::shared_ptr<int> vShared) {
-    m_called = true;
-    ASSERT_EQ(&v, vShared.get()) << "Shared pointer to a type did not point to the same address as the type reference proper";
-  }
-};
-
-TEST_F(AutoFilterTest, SharedPointerRecieptRules) {
+TEST_F(AutoFilterTest, SharedPointerAliasingRules) {
   AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<AcceptsSharedPointerAndReference> filter;
   AutoRequired<FilterGen<std::shared_ptr<int>>> genFilter1;
   AutoRequired<FilterGen<int>> genFilter2;
 
   auto packet = factory->NewPacket();
   packet->Decorate<int>(55);
 
-  ASSERT_TRUE(filter->m_called) << "Redundant-input filter was not called";
-  ASSERT_EQ(1UL, genFilter1->m_called) << "AutoFilter accepting a shared pointer was not called as expected";
-  ASSERT_EQ(1UL, genFilter2->m_called) << "AutoFilter accepting a decorated type was not called as expected";
-}
-
-TEST_F(AutoFilterTest, SharedPointerAliasingRules) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<AcceptsSharedPointerAndReference> filter;
-  AutoRequired<FilterGen<std::shared_ptr<int>>> genFilter1;
-  AutoRequired<FilterGen<int>> genFilter2;
-
-  auto packet = factory->NewPacket();
-  packet->Decorate(std::make_shared<int>(56));
-
-  ASSERT_TRUE(filter->m_called) << "Redundant-input filter was not called";
   ASSERT_EQ(1UL, genFilter1->m_called) << "AutoFilter accepting a shared pointer was not called as expected";
   ASSERT_EQ(1UL, genFilter2->m_called) << "AutoFilter accepting a decorated type was not called as expected";
 }

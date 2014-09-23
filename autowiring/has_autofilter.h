@@ -1,25 +1,58 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "Decompose.h"
+#include "is_any.h"
+#include "auto_arg.h"
 
 //==========================================
 // Test whether AutoFilter has > 0 arguments
 //==========================================
 
-// Resolves only when Selector is not of type std::false_type.
-template<class W, class Selector>
-struct has_valid_autofilter {
+// IMPORTANT: This evaluation must occur only when it has been
+// determined that the class has a unique AutoFilter method.
+template<bool Selector, class W>
+struct has_nonzero_arguments:
+  std::integral_constant<bool,
+    Decompose<decltype(&W::AutoFilter)>::N != 0
+  >
+{
   // Evaluates to false for W::AutoFilter(void), else to true.
   static const int N = Decompose<decltype(&W::AutoFilter)>::N;
-  static const bool value = Decompose<decltype(&W::AutoFilter)>::N != 0;
 };
 
 // Specialization pertains only when W has no AutoFilter method.
 template<class W>
-struct has_valid_autofilter<W, std::false_type> {
+struct has_nonzero_arguments<false, W>:
+  std::false_type
+{
   static const int N = -1;
-  static const bool value = false;
 };
+
+//=============================================
+// Test whether AutoFilter has unique arguments
+//=============================================
+template<class MemFn>
+struct all_distinct_arguments;
+
+// IMPORTANT: This evaluation must occur only when it has been
+// determined that the class has a unique AutoFilter method taking
+// at least one argument.
+template<class R, class W, class... Args>
+struct all_distinct_arguments<R(W::*)(Args...)>:
+  std::integral_constant<bool,
+    !is_any_repeated<typename auto_arg<Args>::id_type...>::value
+  >
+{};
+
+template<bool Selector, class W>
+struct has_distinct_arguments:
+  all_distinct_arguments<decltype(&W::AutoFilter)>
+{};
+
+template<class W>
+struct has_distinct_arguments<false, W>:
+  std::false_type
+{};
 
 //===========================================================
 // Test for existence of unique AutoFilter with > 0 arguments
@@ -29,6 +62,7 @@ struct has_valid_autofilter<W, std::false_type> {
 // Evaluates with value == false when:
 // - There is no AutoFilter method
 // - There is an AutoFilter(void) method
+// - The AutoFilter method repeats arguments
 // - There is more than one AutoFilter method
 template<typename T>
 struct has_unambiguous_autofilter
@@ -45,11 +79,8 @@ struct has_unambiguous_autofilter
   template<class U>
   static std::true_type select(unnamed_constant<decltype(&U::AutoFilter), &U::AutoFilter>*);
 
-  // Conveninece typedef used externally:
-  typedef has_valid_autofilter<T, decltype(select<T>(nullptr))> has_valid;
-
   // Evaluates to true only if T includes a unique AutoFilter method with at least one argument.
-  static const bool value = has_valid::value;
+  static const bool value = has_distinct_arguments<has_nonzero_arguments<decltype(select<T>(nullptr))::value, T>::value, T>::value;
 };
 
 class AutoPacket;
@@ -73,13 +104,11 @@ struct has_autofilter {
   // This class has at least one AutoFilter method
   struct detect_ambiguous_autofilter: T, test_valid_autofilter {};
 
-  // Validate the case most likely to have problems
-  static_assert(has_unambiguous_autofilter<T>::has_valid::N != 0, "Cannot define AutoFilter(void), your AutoFilter routine must take at least one argument");
-
   // Ensures a compiler error when the identification of T::AutoFilter is ambiguous.
   // This cannot be in has_unambiguous_autofilter, since that would be recursive.
   static_assert(
-    value || has_unambiguous_autofilter<detect_ambiguous_autofilter>::value,
+    value ||
+    has_unambiguous_autofilter<detect_ambiguous_autofilter>::value,
     "Cannot define more than one AutoFilter method and all AutoFilter methods must be public"
   );
 };

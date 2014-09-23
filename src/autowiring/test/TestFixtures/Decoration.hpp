@@ -164,6 +164,7 @@ public:
 
 /// <summary>
 /// A filter that should trigger a static_assert in AutoRequire<BadFilterA>
+/// due to absence of AutoFilter arguments.
 /// </summary>
 class BadFilterA:
 public FilterRoot
@@ -176,6 +177,7 @@ public:
 
 /// <summary>
 /// A filter that should trigger a static_assert in AutoRequire<BadFilterB>
+/// due to repeated finitions of AutoFilter.
 /// </summary>
 class BadFilterB:
 public FilterRoot
@@ -187,6 +189,15 @@ public:
   void AutoFilter(Decoration<1>&) {
     ++m_called;
   }
+};
+
+/// <summary>
+/// A filter that should trigger a static_assert in AutoRequire<BadFilterA>
+/// due to id equivalent of AutoFilter arguments.
+/// </summary>
+class BadFilterC:
+public FilterRoot {
+  void AutoFilter(const int& in, std::shared_ptr<const int> same) {}
 };
 
 /// <summary>
