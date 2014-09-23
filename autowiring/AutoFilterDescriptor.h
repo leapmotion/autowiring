@@ -565,7 +565,7 @@ class AutoFilterDescriptorSelect:
 public:
   AutoFilterDescriptorSelect(const std::shared_ptr<T>& subscriber) :
     AutoFilterDescriptor(
-      subscriber,
+      AnySharedPointer(subscriber),
       CallExtractor<decltype(&T::AutoFilter)>(),
       &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
     )

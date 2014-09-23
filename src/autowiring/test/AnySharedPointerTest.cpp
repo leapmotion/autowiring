@@ -204,7 +204,7 @@ struct CombinedWireType{
 TEST_F(AnySharedPointerTest, SlotInformation) {
   AutoRequired<CombinedWireType> cwt;
 
-  AnySharedPointer ptr = cwt;
+  AnySharedPointer ptr(cwt);
   int numSlots = 0;
   for (auto info = ptr->GetSlotInformation().pHead; info; info = info->pFlink){
     numSlots++;

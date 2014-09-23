@@ -3,6 +3,7 @@
 #include "fast_pointer_cast.h"
 #include "SharedPointerSlot.h"
 #include "SlotInformation.h"
+#include "AnySharedPointer.h"
 #include MEMORY_HEADER
 
 class CoreContext;
@@ -48,9 +49,11 @@ public:
 /// <summary>
 /// Utility class which represents any kind of autowiring entry that may be deferred to a later date
 /// </summary>
-class DeferrableAutowiring {
+class DeferrableAutowiring:
+  protected AnySharedPointer
+{
 public:
-  DeferrableAutowiring(const std::shared_ptr<CoreContext>& context);
+  DeferrableAutowiring(AnySharedPointer&& witness, const std::shared_ptr<CoreContext>& context);
   virtual ~DeferrableAutowiring(void);
 
 protected:
@@ -67,7 +70,6 @@ protected:
   // The next entry to be autowired in this sequence
   DeferrableAutowiring* m_pFlink;
 
-protected:
   /// <summary>
   /// Causes this deferrable to unregister itself with the enclosing context
   /// </summary>
@@ -76,6 +78,7 @@ protected:
 public:
   // Accessor methods:
   DeferrableAutowiring* GetFlink(void) { return m_pFlink; }
+  const AnySharedPointer& GetSharedPointer(void) const { return *this; }
 
   // Mutator methods:
   void SetFlink(DeferrableAutowiring* pFlink) {
@@ -85,7 +88,9 @@ public:
   /// <returns>
   /// The type on which this deferred slot is bound
   /// </returns>
-  virtual const std::type_info& GetType(void) const = 0;
+  const std::type_info& GetType(void) const {
+    return AnySharedPointer::slot()->type();
+  }
 
   /// <returns>
   /// The strategy that should be used to satisfy this slot
@@ -110,16 +115,13 @@ public:
 
 template<class T>
 class AutowirableSlot:
-  public DeferrableAutowiring,
-  public std::shared_ptr<T>
+  public DeferrableAutowiring
 {
 public:
   typedef T value_type;
-  typedef std::shared_ptr<T> t_ptrType;
 
   AutowirableSlot(const std::shared_ptr<CoreContext>& ctxt) :
-    DeferrableAutowiring(ctxt),
-    m_type(typeid(T)),
+    DeferrableAutowiring(AnySharedPointerT<T>(), ctxt),
     m_fast_pointer_cast(&autowiring::fast_pointer_cast<T, Object>)
   {
     SlotInformationStackLocation::RegisterSlot(this);
@@ -129,26 +131,45 @@ public:
     CancelAutowiring();
   }
 
-  const std::type_info& m_type;
   std::shared_ptr<T>(*const m_fast_pointer_cast)(const std::shared_ptr<Object>&);
 
-  // Must be final, because we use this in our dtor and need its behavior to be fixed:
-  const std::type_info& GetType(void) const override {
-    return m_type;
+  /// <remarks>
+  /// Shadowing GetType call, provided here as a virtual function optimization
+  /// </remarks>
+  const std::type_info& GetType(void) const {
+    return typeid(T);
   }
 
+  // DeferrableAutowiring overrides:
   void SatisfyAutowiring(const void* pvSharedPtr) override {
     // Cast over and assign:
-    (std::shared_ptr<T>&)*this = *(const std::shared_ptr<T>*)pvSharedPtr;
+    *this = *(const std::shared_ptr<T>*)pvSharedPtr;
+  }
+
+  bool IsAutowired(void) const { return !!get(); }
+
+  T* get(void) const {
+    return
+      static_cast<const AnySharedPointerT<T>*>(
+        static_cast<const AnySharedPointer*>(
+          this
+        )
+      )->slot()->get().get();
+  }
+
+  T* operator->(void) const {
+    return get();
   }
 
   explicit operator bool(void) const {
     return IsAutowired();
   }
 
-  bool IsAutowired(void) const { return !!t_ptrType::get(); }
+  T& operator*(void) const {
+    return *get();
+  }
 
-  using std::shared_ptr<T>::operator=;
+  using AnySharedPointer::operator=;
 };
 
 /// <summary>
@@ -193,7 +214,7 @@ public:
   /// </summary>
   void Finalize(void) {
     // Let the lambda execute as it sees fit:
-    CallThroughObj<Fn>(&Fn::operator());
+    CallThroughObj(fn, &Fn::operator());
 
     // Call the lambda, remove all accountability to the context, self-destruct, and return:
     this->m_context.reset();
@@ -201,7 +222,7 @@ public:
   }
 
   template<class L, class Ret, class... Args>
-  void CallThroughObj(Ret(L::*pfn)(Args...) const) {
+  void CallThroughObj(const Fn& fn, Ret(L::*pfn)(Args...) const) {
     (fn.*pfn)(
       (Args) *this...
     );
@@ -209,11 +230,6 @@ public:
 
   const DeferrableUnsynchronizedStrategy* GetStrategy(void) override { return &s_strategy; }
 };
-
-template<class T, class Fn>
-AutowirableSlotFn<T, Fn>* MakeAutowirableSlotFn(const std::shared_ptr<CoreContext>& ctxt, Fn fn) {
-  return new AutowirableSlotFn<T, Fn>(ctxt, std::forward<Fn>(fn));
-}
 
 template<class T, class Fn>
 const typename AutowirableSlotFn<T, Fn>::Strategy AutowirableSlotFn<T, Fn>::s_strategy;
