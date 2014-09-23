@@ -264,9 +264,10 @@ TEST_F(PostConstructTest, ContextNotifyWhenAutowired) {
   
   // Now we'd like to be notified when SimpleObject gets added:
   ctxt->NotifyWhenAutowired<SimpleObject>(
-  [called] {
+    [called] {
       *called = true;
-  });
+    }
+  );
 
   // Should only be two uses, at this point, of the capture of the above lambda:
   EXPECT_EQ(2L, called.use_count()) << "Unexpected number of references held in a capture lambda";

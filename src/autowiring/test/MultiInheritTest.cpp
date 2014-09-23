@@ -50,7 +50,7 @@ TEST_F(MultiInheritTest, VerifyCast) {
   ASSERT_TRUE(wiredPobj.IsAutowired()) << "Autowiring failed for a multi-inheritance object";
 
   // Verify that we get a pObj back with correct casting:
-  EXPECT_EQ(obj, wiredPobj) << "Autowiring failed on a multiple inheritance object";
+  EXPECT_EQ(obj.get(), wiredPobj.get()) << "Autowiring failed on a multiple inheritance object";
 }
 
 TEST_F(MultiInheritTest, VerifyBaseInitializer) {

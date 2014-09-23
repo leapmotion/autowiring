@@ -119,7 +119,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
       // Add in an object to test asynchronous destruction:
       AutoRequired<WaitMember> obj;
       members[i] = obj;
-      ASSERT_EQ(signal, obj->m_signal) << "Dependent context wiring did not correctly match to the enclosing scope";
+      ASSERT_EQ(signal.get(), obj->m_signal.get()) << "Dependent context wiring did not correctly match to the enclosing scope";
 
       // Add a notifier to signal a continue condition when we have everything we need:
       ctxt->AddTeardownListener([&lock, &cond, &counter] {

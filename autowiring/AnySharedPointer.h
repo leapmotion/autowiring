@@ -8,12 +8,12 @@ public:
     new (m_space) SharedPointerSlot;
   }
 
-  AnySharedPointer(const AnySharedPointer& rhs) {
+  explicit AnySharedPointer(const AnySharedPointer& rhs) {
     new (m_space) SharedPointerSlot(*rhs.slot());
   }
 
   template<class T>
-  AnySharedPointer(const std::shared_ptr<T>& rhs) {
+  explicit AnySharedPointer(const std::shared_ptr<T>& rhs) {
     // Delegate the remainder to the assign operation:
     new (m_space) SharedPointerSlotT<T>(rhs);
   }
@@ -44,6 +44,11 @@ public:
 
   bool operator==(const AnySharedPointer& rhs) const {
     return *slot() == *rhs.slot();
+  }
+
+  template<class T>
+  bool operator==(const std::shared_ptr<T>& rhs) const {
+    return *slot() == rhs;
   }
 
   /// <summary>
