@@ -49,7 +49,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     if (flow.broadcast) {
       // Broadcast source is void
       DecorationDisposition* entry = &m_decorations[DSIndex(dataType, typeid(void))];
-      entry->m_type = pCur->ti;
+      entry->m_type = &dataType;
 
       // Decide what to do with this entry:
       // NOTE: Recipients added via AddReceiver can receiver broadcast data,
@@ -87,7 +87,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
       } else {
         entry = &m_decorations[DSIndex(dataType, halfpipe)];
       }
-      entry->m_type = pCur->ti;
+      entry->m_type = &dataType;
 
       // Decide what to do with this entry:
       // NOTE: Recipients added via AddReceiver cannot receive piped data,
@@ -230,7 +230,7 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, const std::type_
   {
     std::lock_guard<std::mutex> lk(m_lock);
 
-    if (info != typeid(subscriber_traits<const AutoPacket&>::type)) {
+    if (info != typeid(auto_arg<const AutoPacket&>::id_type)) {
       switch (m_lifecyle) {
         case disable_decorate: throw std::runtime_error("Cannot provide decorations in final-call (const AutoPacket&) AutoFilter methods");
         case disable_update: return; // Quietly prevent recusion during optional_ptr resolution
@@ -279,6 +279,10 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
           // We only care about sat counters that aren't deferred--skip everyone else
           // Deferred calls will be too late.
           !cur->IsDeferred() &&
+
+          // We cannot satisfy shared_ptr arguments, since the implied existence
+          // guarantee of shared_ptr is violated
+          !cur->GetArgumentType(pTypeSubs[i]->m_type)->isp &&
 
           // Now do the decrementation and proceed even if optional > 0,
           // since this is the only opportunity to fulfill the arguments
@@ -445,7 +449,6 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   for (DecorationDisposition* broadDeco : decoQueue) {
     // Satisfy the base declaration first and then the shared pointer:
     recipient->UpdateSatisfaction(broadDeco->m_decoration->type(), typeid(void));
-    recipient->UpdateSatisfaction(broadDeco->m_decoration->shared_type(), typeid(void));
   }
 }
 
@@ -506,7 +509,7 @@ void AutoPacket::Initialize(void) {
     call->CallAutoFilter(*this);
 
   // First-call indicated by argumument type AutoPacket&:
-  UpdateSatisfaction(typeid(subscriber_traits<AutoPacket&>::type));
+  UpdateSatisfaction(typeid(auto_arg<AutoPacket&>::id_type));
 }
 
 void AutoPacket::Finalize(void) {
@@ -527,7 +530,7 @@ void AutoPacket::Finalize(void) {
 
   // Last-call indicated by argumument type const AutoPacket&:
   m_lifecyle = disable_decorate;
-  UpdateSatisfaction(typeid(subscriber_traits<const AutoPacket&>::type));
+  UpdateSatisfaction(typeid(auto_arg<const AutoPacket&>::id_type));
 
   // Remove all recipients & clean up the decorations list
   // ASSERT: This reverses the order of accumulation,

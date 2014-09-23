@@ -1,12 +1,13 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
-#include "DataFlow.h"
 #include "AutoPacket.h"
-#include "auto_out.h"
+#include "DataFlow.h"
+#include "auto_arg.h"
 #include "Decompose.h"
 #include "has_autofilter.h"
 #include "is_autofilter.h"
+#include "is_shared_ptr.h"
 #include MEMORY_HEADER
 #include FUNCTIONAL_HEADER
 #include STL_UNORDERED_SET
@@ -192,7 +193,7 @@ struct CallExtractor<void (T::*)(Args...)>:
   static void Call(void* pObj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
     // Handoff
     (((T*) pObj)->*memFn)(
-      sourced_checkout<Args>()(autoPacket, satisfaction)...
+      auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source<typename auto_arg<Args>::base_type>())...
     );
   }
 };
@@ -220,7 +221,7 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
     // and will therefore have the same lifecycle as the AutoPacket.
     *(T*) pObj += [pObj, pAutoPacket, &satisfaction] {
       (((T*) pObj)->*memFn)(
-        sourced_checkout<Args>()(*pAutoPacket, satisfaction)...
+        auto_arg<Args>(pAutoPacket, *satisfaction.source<typename auto_arg<Args>::base_type>())...
       );
     };
   }
@@ -231,16 +232,19 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
 /// </summary>
 struct AutoFilterDescriptorInput {
   AutoFilterDescriptorInput(void) :
+    isp(false),
     ti(nullptr),
     subscriberType(inTypeInvalid)
   {}
 
   template<class T>
-  AutoFilterDescriptorInput(subscriber_traits<T>&& traits) :
-    ti(&typeid(typename subscriber_traits<T>::type)),
+  AutoFilterDescriptorInput(auto_arg<T>&& traits) :
+  isp(is_shared_ptr<T>::value),
+    ti(&typeid(typename auto_arg<T>::id_type)),
     subscriberType(subscriber_traits<T>::subscriberType)
   {}
 
+  const bool isp;
   const std::type_info* const ti;
   const eSubscriberInputType subscriberType;
 
@@ -251,21 +255,21 @@ struct AutoFilterDescriptorInput {
   template<class T>
   struct rebind {
     operator AutoFilterDescriptorInput() {
-      return subscriber_traits<T>();
+      return auto_arg<T>();
     }
   };
 
-  static bool isInput(eSubscriberInputType argType) {
+  static bool IsInputArg(eSubscriberInputType argType) {
     return argType == inTypeRequired || argType == inTypeOptional;
   }
 
-  static bool isOutput(eSubscriberInputType argType) {
+  static bool IsOutputArg(eSubscriberInputType argType) {
     return argType == outTypeRef || argType == outTypeRefAutoReady;
   }
 
-  bool isInput() const { return isInput(subscriberType); }
+  bool IsInputArg() const { return IsInputArg(subscriberType); }
 
-  bool isOutput() const { return isOutput(subscriberType); }
+  bool IsOutputArg() const { return IsOutputArg(subscriberType); }
 };
 
 /// <summary>
@@ -318,10 +322,11 @@ struct AutoFilterDescriptorStub {
     static_assert(CallExtractor<MemFn>::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
     for(auto pArg = m_pArgs; *pArg; pArg++) {
-      // DEFAULT: All data is broadcast
       autowiring::DataFlow& data = m_dataMap[*pArg->ti];
-      data.output = AutoFilterDescriptorInput::isOutput(pArg->subscriberType);
+
+      // DEFAULT: All data is broadcast
       data.broadcast = true;
+      data.output = AutoFilterDescriptorInput::IsOutputArg(pArg->subscriberType);
       switch(pArg->subscriberType) {
       case inTypeRequired:
         m_requiredCount++;

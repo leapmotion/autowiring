@@ -158,11 +158,6 @@ public:
   /// </returns>
   virtual const std::type_info& type(void) const { return typeid(void); }
 
-  /// <returns>
-  /// Returns the type for the shared pointer held in this slot, or typeid(shared_ptr<void>) if empty
-  /// </returns>
-  virtual const std::type_info& shared_type(void) const { return typeid(std::shared_ptr<void>); }
-
   /// <summary>
   /// Clears this type, if a shared pointer is currently held
   /// </summary>
@@ -354,7 +349,6 @@ public:
   bool empty(void) const { return get() == nullptr; }
   operator bool(void) const override { return !!get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
-  const std::type_info& shared_type(void) const override { return typeid(std::shared_ptr<T>); }
 
   void reset(void) override {
     get().reset();

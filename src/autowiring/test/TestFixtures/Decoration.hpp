@@ -35,7 +35,7 @@ class FilterA:
 public:
   FilterA() {}
   virtual ~FilterA() {}
-  void AutoFilter(Decoration<0> zero, Decoration<1> one) {
+  void AutoFilter(const Decoration<0>& zero, const Decoration<1>& one) {
     ++m_called;
     m_zero = zero;
     m_one = one;
@@ -52,7 +52,7 @@ public:
     m_excepted(false)
   {}
 
-  Deferred AutoFilter(Decoration<0> zero, Decoration<1> one) {
+  Deferred AutoFilter(const Decoration<0>& zero, const Decoration<1>& one) {
     ++m_called;
     m_zero = zero;
     m_one = one;
@@ -183,10 +183,10 @@ class BadFilterB:
 public FilterRoot
 {
 public:
-  void AutoFilter(Decoration<0>&) {
+  void AutoFilter(const Decoration<0>&) {
     ++m_called;
   }
-  void AutoFilter(Decoration<1>&) {
+  void AutoFilter(const Decoration<1>&) {
     ++m_called;
   }
 };

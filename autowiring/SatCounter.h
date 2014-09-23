@@ -51,8 +51,7 @@ struct SatCounter:
   size_t optional;
 
   // The sources satisfying each argument
-  typedef std::unordered_map<std::type_index, const std::type_info*> DataFill;
-  DataFill satisfaction;
+  autowiring::DataFill satisfaction;
 
   /// <summary>
   /// Calls the underlying AutoFilter method with the specified AutoPacketAdapter as input
@@ -137,6 +136,9 @@ struct SatCounter:
   /// </summary>
   /// <returns>True if all mandatory arguments are satisfied</returns>
   bool Resolve() {
+    if (IsDeferred())
+      // IMPORTANT: Deferred calls cannot be finalized
+      return false;
     if (remaining == 0 &&
         optional != 0) {
         optional = 0;

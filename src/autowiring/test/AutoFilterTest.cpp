@@ -1017,7 +1017,7 @@ public:
 
   size_t callCount;
 
-  Deferred AutoFilter(std::shared_ptr<int>) {
+  Deferred AutoFilter(std::shared_ptr<const int>) {
     callCount++;
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
     return Deferred(this);
@@ -1198,7 +1198,7 @@ public:
 
   int m_called;
 
-  void AutoFilter(std::shared_ptr<int> dataIn) {
+  void AutoFilter(std::shared_ptr<const int> dataIn) {
     ++m_called;
   }
 };
@@ -1256,7 +1256,7 @@ TEST_F(AutoFilterTest, SharedPtrCollapse) {
 
 TEST_F(AutoFilterTest, SharedPointerAliasingRules) {
   AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<FilterGen<std::shared_ptr<int>>> genFilter1;
+  AutoRequired<FilterGen<std::shared_ptr<const int>>> genFilter1;
   AutoRequired<FilterGen<int>> genFilter2;
 
   auto packet = factory->NewPacket();

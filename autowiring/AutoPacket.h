@@ -23,9 +23,6 @@ class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
 
-template<class T>
-struct subscriber_traits;
-
 /// <summary>
 /// A decorator-style processing packet
 /// </summary>
@@ -186,27 +183,24 @@ private:
   /// <param name="ready">Ready flag, set to false if the decoration should be marked unsatisfiable</param>
   template<class T>
   void CompleteCheckout(bool ready, const std::type_info& source = typeid(void)) {
+    const std::type_info& data = typeid(T);
+
     DecorationDisposition* broadDeco = nullptr;
     DecorationDisposition* pipedDeco = nullptr;
-
     {
       std::lock_guard<std::mutex> guard(m_lock);
       // This allows us to retrieve correct entries for decorated input requests
-      const std::type_info& data = typeid(typename subscriber_traits<T>::type);
       UnsafeComplete(ready, data, source, broadDeco, pipedDeco);
     }
 
     if(ready) {
-      // Satisfy the base declaration first and then the shared pointer:
       if (broadDeco) {
         UpdateSatisfaction(broadDeco->m_decoration->type(), typeid(void));
-        UpdateSatisfaction(broadDeco->m_decoration->shared_type(), typeid(void));
       }
       if (pipedDeco) {
         // NOTE: Only publish with source if pipes are declared - this prevents
         // added or snooping filters from satisfying piped input declarations.
         UpdateSatisfaction(pipedDeco->m_decoration->type(), source);
-        UpdateSatisfaction(pipedDeco->m_decoration->shared_type(), source);
       }
     } else {
       if (broadDeco)
@@ -248,6 +242,10 @@ public:
   /// <summary>
   /// Determines whether this pipeline packet contains an entry of the specified type
   /// </summary>
+  /// <remarks>
+  /// This method is also used by DecorateImmediate to extract pointers to data that is
+  /// valid ONLY during recursive satisfaction calls.
+  /// </remarks>
   template<class T>
   bool Get(const T*& out, const std::type_info& source = typeid(void)) const {
     std::lock_guard<std::mutex> lk(m_lock);
@@ -447,6 +445,8 @@ public:
   /// </remarks>
   template<class T>
   AutoCheckout<T> Checkout(std::shared_ptr<T> ptr, const std::type_info& source = typeid(void)) {
+    const std::type_info& data = typeid(T);
+
     /// Injunction to prevent existential loops:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
@@ -454,7 +454,6 @@ public:
       throw std::runtime_error("Cannot checkout with shared_ptr == nullptr");
 
     // This allows us to install correct entries for decorated input requests
-    const std::type_info& data = typeid(typename subscriber_traits<T>::type);
     AnySharedPointer any_ptr(ptr);
     {
       std::lock_guard<std::mutex> guard(m_lock);
