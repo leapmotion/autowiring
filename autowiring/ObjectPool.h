@@ -94,6 +94,8 @@ protected:
   // The set of pooled objects, and the pool version.  The pool version is incremented every
   // time the ClearCachedEntities method is called, and causes entities which might be trying
   // to return to the pool to instead free themselves.
+  // IMPORTANT: m_objs cannot be a vector of std::unique_ptr instances because the required move
+  // implementation of std::vector is missing when not building with c++11.
   size_t m_poolVersion;
   std::vector<T*> m_objs;
 
