@@ -32,8 +32,12 @@ public:
   using auto_type::is_input;
   using auto_type::is_output;
 
-  using auto_type::operator typename auto_type::base_type;
-  using auto_type::operator typename auto_type::shared_type;
+  operator typename auto_type::base_type () {
+    return auto_type::operator typename auto_type::base_type();
+  }
+  operator typename auto_type::shared_type () {
+    return auto_type::operator typename auto_type::shared_type();
+  }
 
   auto_arg() {}
 
@@ -62,8 +66,12 @@ public:
   using auto_type::is_input;
   using auto_type::is_output;
 
-  using auto_type::operator typename auto_type::base_type;
-  using auto_type::operator typename auto_type::shared_type;
+  operator typename auto_type::base_type () {
+    return auto_type::operator typename auto_type::base_type();
+  }
+  operator typename auto_type::shared_type () {
+    return auto_type::operator typename auto_type::shared_type();
+  }
 
   auto_arg() {}
 
@@ -92,8 +100,12 @@ public:
   using auto_type::is_input;
   using auto_type::is_output;
 
-  using auto_type::operator typename auto_type::base_type;
-  using auto_type::operator typename auto_type::shared_type;
+  operator typename auto_type::base_type () {
+    return auto_type::operator typename auto_type::base_type();
+  }
+  operator typename auto_type::shared_type () {
+    return auto_type::operator typename auto_type::shared_type();
+  }
 
   auto_arg() {}
 
@@ -122,8 +134,12 @@ public:
   using auto_type::is_input;
   using auto_type::is_output;
 
-  using auto_type::operator typename auto_type::base_type;
-  using auto_type::operator typename auto_type::shared_type;
+  operator typename auto_type::base_type () {
+    return auto_type::operator typename auto_type::base_type();
+  }
+  operator typename auto_type::shared_type () {
+    return auto_type::operator typename auto_type::shared_type();
+  }
 
   auto_arg() {}
 
@@ -152,8 +168,12 @@ public:
   using auto_type::is_input;
   using auto_type::is_output;
 
-  using auto_type::operator typename auto_type::base_type;
-  using auto_type::operator typename auto_type::shared_type;
+  operator typename auto_type::base_type () {
+    return auto_type::operator typename auto_type::base_type();
+  }
+  operator typename auto_type::shared_type () {
+    return auto_type::operator typename auto_type::shared_type();
+  }
 
   auto_arg() {}
 
@@ -182,8 +202,12 @@ public:
   using auto_type::is_input;
   using auto_type::is_output;
 
-  using auto_type::operator typename auto_type::base_type;
-  using auto_type::operator typename auto_type::shared_type;
+  operator typename auto_type::base_type () {
+    return auto_type::operator typename auto_type::base_type();
+  }
+  operator typename auto_type::shared_type () {
+    return auto_type::operator typename auto_type::shared_type();
+  }
 
   auto_arg() {}
 
@@ -212,8 +236,12 @@ public:
   using auto_type::is_input;
   using auto_type::is_output;
 
-  using auto_type::operator typename auto_type::base_type;
-  using auto_type::operator typename auto_type::shared_type;
+  operator typename auto_type::base_type () {
+    return auto_type::operator typename auto_type::base_type();
+  }
+  operator typename auto_type::shared_type () {
+    return auto_type::operator typename auto_type::shared_type();
+  }
 
   auto_arg() {}
 
@@ -242,8 +270,12 @@ public:
   using auto_type::is_input;
   using auto_type::is_output;
 
-  using auto_type::operator typename auto_type::base_type;
-  using auto_type::operator typename auto_type::shared_type;
+  operator typename auto_type::base_type () {
+    return auto_type::operator typename auto_type::base_type();
+  }
+  operator typename auto_type::shared_type () {
+    return auto_type::operator typename auto_type::shared_type();
+  }
 
   auto_arg() {}
 
@@ -272,8 +304,12 @@ public:
   using auto_type::is_input;
   using auto_type::is_output;
 
-  using auto_type::operator typename auto_type::base_type;
-  using auto_type::operator typename auto_type::shared_type;
+  operator typename auto_type::base_type () {
+    return auto_type::operator typename auto_type::base_type();
+  }
+  operator typename auto_type::shared_type () {
+    return auto_type::operator typename auto_type::shared_type();
+  }
 
   auto_arg() {}
 
@@ -312,7 +348,6 @@ public:
   operator base_type () const {
     return *m_packet;
   }
-
   operator shared_type () {
     return m_packet;
   }
@@ -359,7 +394,6 @@ public:
   operator base_type () const {
     return *m_packet;
   }
-
   operator shared_type () {
     return m_packet;
   }
