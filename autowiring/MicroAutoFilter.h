@@ -25,12 +25,13 @@ struct MicroAutoFilter<void, Args...> {
 
   void AutoFilter(Args... args) {
     if (m_filter)
-      return m_filter(args...);
+      return m_filter(std::forward<Args>(args)...);
   }
 
 protected:
   std::function<void(Args...)> m_filter;
 };
+
 template<class... Args>
 struct MicroAutoFilter<Deferred, Args...> {
   MicroAutoFilter(const std::function<void(Args...)>& filter):
