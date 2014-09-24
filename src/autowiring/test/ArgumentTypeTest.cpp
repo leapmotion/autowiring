@@ -15,12 +15,14 @@ public:
 };
 
 TEST_F(ArgumentTypeTest, constexpr_in_template) {
-  ASSERT_TRUE(var_or<bool>(true)) << "Single argument should be invariant";
-  ASSERT_FALSE(var_or<bool>(false)) << "Single argument should be invariant";
-  ASSERT_TRUE(static_cast<const bool>(std::integral_constant<bool, var_or(true,false)>::value)) << "True || False == True";
-  ASSERT_TRUE(var_and<bool>(true)) << "Single argument should be invariant";
-  ASSERT_FALSE(var_and<bool>(false)) << "Single argument should be invariant";
-  ASSERT_FALSE(static_cast<const bool>(std::integral_constant<bool, var_and(true,false)>::value)) << "True && False == False";
+  ASSERT_FALSE(var_or<>::value) << "False is idempotent with respect to Or";
+  ASSERT_TRUE(var_or<true>::value) << "Single argument should be invariant";
+  ASSERT_FALSE(var_or<false>::value) << "Single argument should be invariant";
+  ASSERT_TRUE(static_cast<const bool>(var_or<true,false>::value)) << "True || False == True";
+  ASSERT_TRUE(var_and<>::value) << "True is idempotent with respect to Or";
+  ASSERT_TRUE(var_and<true>::value) << "Single argument should be invariant";
+  ASSERT_FALSE(var_and<false>::value) << "Single argument should be invariant";
+  ASSERT_FALSE(static_cast<const bool>(var_and<true,false>::value)) << "True && False == False";
 }
 
 template<int N>

@@ -84,7 +84,7 @@ public:
       false}; //Final argument is required in the case of an empty variadic template
     (void)init;
 
-    if (var_and(auto_arg<Args>::is_input...)) {
+    if (var_and<auto_arg<Args>::is_input...>::value) {
       ForwardStile(slave_packet, master_packet);
     }
   }
