@@ -10,6 +10,10 @@
  based on the argument type.
  The core functionality is that all argument types are treated as standard
  types, and can be re-derived from those standard types.
+ It is expected that every parent of auto_arg will define:
+ - id_type (an unqualified type)
+ - base_type (a type qualified by const and/or &)
+ - shared_type (the pointer type from which the parent inherits)
  Furthermore, by classifying arguments in terms of orientation and fundamental
  type, auto_arg enables the specification of a principal type to any class
  implementing an AutoFilter method.
@@ -24,10 +28,6 @@ class auto_arg:
 {
 public:
   typedef auto_in<type> auto_type;
-
-  using typename auto_type::id_type;
-  using typename auto_type::base_type;
-  using typename auto_type::shared_type;
 
   using auto_type::is_input;
   using auto_type::is_output;
@@ -59,10 +59,6 @@ class auto_arg<const type>:
 public:
   typedef auto_in<type> auto_type;
 
-  using typename auto_type::id_type;
-  using typename auto_type::base_type;
-  using typename auto_type::shared_type;
-
   using auto_type::is_input;
   using auto_type::is_output;
 
@@ -92,10 +88,6 @@ class auto_arg<const type&>:
 {
 public:
   typedef auto_in<type> auto_type;
-
-  using typename auto_type::id_type;
-  using typename auto_type::base_type;
-  using typename auto_type::shared_type;
 
   using auto_type::is_input;
   using auto_type::is_output;
@@ -127,10 +119,6 @@ class auto_arg<std::shared_ptr<const type>>:
 public:
   typedef auto_in<type> auto_type;
 
-  using typename auto_type::id_type;
-  using typename auto_type::base_type;
-  using typename auto_type::shared_type;
-
   using auto_type::is_input;
   using auto_type::is_output;
 
@@ -160,10 +148,6 @@ class auto_arg<auto_in<type>>:
 {
 public:
   typedef auto_in<type> auto_type;
-
-  using typename auto_type::id_type;
-  using typename auto_type::base_type;
-  using typename auto_type::shared_type;
 
   using auto_type::is_input;
   using auto_type::is_output;
@@ -195,10 +179,6 @@ class auto_arg<type&>:
 public:
   typedef auto_out<type> auto_type;
 
-  using typename auto_type::id_type;
-  using typename auto_type::base_type;
-  using typename auto_type::shared_type;
-
   using auto_type::is_input;
   using auto_type::is_output;
 
@@ -228,10 +208,6 @@ class auto_arg<std::unique_ptr<type, std::function<void(type*)>>>:
 {
 public:
   typedef auto_out<type> auto_type;
-
-  using typename auto_type::id_type;
-  using typename auto_type::base_type;
-  using typename auto_type::shared_type;
 
   using auto_type::is_input;
   using auto_type::is_output;
@@ -263,10 +239,6 @@ class auto_arg<auto_out<type>>:
 public:
   typedef auto_out<type> auto_type;
 
-  using typename auto_type::id_type;
-  using typename auto_type::base_type;
-  using typename auto_type::shared_type;
-
   using auto_type::is_input;
   using auto_type::is_output;
 
@@ -296,10 +268,6 @@ class auto_arg<optional_ptr<type>>:
 {
 public:
   typedef optional_ptr<type> auto_type;
-
-  using typename auto_type::id_type;
-  using typename auto_type::base_type;
-  using typename auto_type::shared_type;
 
   using auto_type::is_input;
   using auto_type::is_output;
