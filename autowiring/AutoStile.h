@@ -1,26 +1,23 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
+#include "var_logic.h"
 #include "AutoPacket.h"
 #include MEMORY_HEADER
 
 /// <summary>
 /// AutoStile provides a means of calling a context as though it is an AutoFilter.
 /// The AutoStile Args use the same syntax as AutoFilter:
-/// - "const T&" denote inputs to the slave context.
-/// - "auto_out<T>" denote an outputs from the slave context.
-/// - If no inputs are declared then no data will be injected
-/// (Execution of the slave_context is deferred until needed)
-/// - If no outputs are declared then *all* data will extracted
-/// (If no data needs to be extracted the slave_context should follow this context.)
+/// - Input types will be injected in to the slave packet
+/// - Output types (auto_out only) will be extracted from the slave packet
+/// - The absence of any output types indicates that *all* data from the slave context
+/// should be output. This is because AutoPacket& is already an argument, and cannot
+/// be repeated.
 /// ASSERT: Injection and extraction of all data will not yield multiple decorations,
 /// since AutoPacket::ForwardAll prevents this from occurring.
-/// PROBLEM: shared_ptr references cannot be used, so data is always copied.
-/// PROBLEM: T& inputs cannot be used, since their associated checkout will complete
-/// before assignment happens.
-/// WARNING: auto_out<T> will *still* be conditional on the production of that type
-/// in the slave context.
-/// value can be set.
+/// NOTE: If shared input types are used data copying will be avoided.
+/// IMPORTANT: Unshared output types cannot be used, since they will be available
+/// before the execution of any Deferred methods in the slave context.
 /// </summary>
 /// <remarks>
 /// When AutoStile::AutoFilter is called it initiates execution of a Slave context,
@@ -36,39 +33,34 @@
 template<class... Args>
 class AutoStile
 {
-  static_assert(all_autofilter_args<Args...>::value, "AutoStile: All template types must be AutoFilter argument types");
-
 protected:
   std::weak_ptr<AutoPacketFactory> m_slave_factory;
 
   /// <summary>Decorator for input shares the reference to master_data</summary>
   template<class data_pipe>
-  static typename std::enable_if<is_autofilter_arg<data_pipe>::is_input, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe& master_data) {
+  static typename std::enable_if<auto_arg<data_pipe>::is_input, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe& master_data) {
     slave_packet->Decorate(master_data);
-    return true; //Place holder in variadic initializer
+    return true; //Place-holder in variadic initializer
   }
 
   /// <summary>Decorator for output creates an extraction for slave_data</summary>
   template<class data_pipe>
-  static typename std::enable_if<is_autofilter_arg<data_pipe>::is_output, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe& master_data) {
-    static_assert(is_auto_out<data_pipe>::value, "AutoStile outputs must be auto_out<T>");
-    // Extract the base type and define the input type "const base_type&"
-    typedef typename is_autofilter_arg<data_pipe>::type base_type;
-    typedef typename std::add_lvalue_reference<
-      typename std::add_const<
-        base_type
-      >::type
-    >::type in_type;
+  static typename std::enable_if<auto_arg<data_pipe>::is_output, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe& master_data) {
+    static_assert(std::is_same<data_pipe, auto_out<typename auto_arg<data_pipe>::id_type>>::value, "Output types must be auto_out");
 
-    slave_packet->AddRecipient<void, in_type>(std::function<void(in_type slave_data)>([&master_data](in_type slave_data) {
-      //NOTE: The lambda copy of master_data is implicitly a move of AutoCheckout,
-      // so this lambda has sole responsibility for calling CompleteCheckout.
-      *master_data = slave_data;
+    // Reverse argument orientation for AutoFilter in slave context
+    typedef auto_in<typename auto_arg<data_pipe>::id_type> slave_in_type;
+
+    slave_packet->AddRecipient<void, slave_in_type>(std::function<void(slave_in_type slave_data)>([&master_data](slave_in_type slave_data) {
+      // NOTE: The lambda copy of master_data is implicitly a move of AutoCheckout,
+      // so this lambda has sole responsibility for providing the requested data.
+      // NOTE: This is a deep copy, not a shared resource.
+      *master_data = *slave_data;
     }));
-    return true; //Place holder in variadic initializer
+    return true; //Place-holder in variadic initializer
   }
 
-  /// <summary>Inject all data into the slave_context</summary>
+  /// <summary>Inject all data from slave_packet into master_packet</summary>
   static void ForwardStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet) {
     slave_packet->AddRecipient<void, const AutoPacket&>(std::function<void(const AutoPacket&)>([master_packet](const AutoPacket& slave_packet) {
       slave_packet.ForwardAll(master_packet);
@@ -92,11 +84,9 @@ public:
       false}; //Final argument is required in the case of an empty variadic template
     (void)init;
 
-    // If no extracted types are specified, extract all data
-    // ASSERT: ForwardAll will not conflict with existing decorations
-    // NOTE: all_autofilter_inputs<>::value == true, since all in empty are inputs
-    if (all_autofilter_inputs<Args...>::value)
+    if (var_and(auto_arg<Args>::is_input...)) {
       ForwardStile(slave_packet, master_packet);
+    }
   }
 
   void Leash(std::weak_ptr<CoreContext> slave_context = std::weak_ptr<CoreContext>()) {

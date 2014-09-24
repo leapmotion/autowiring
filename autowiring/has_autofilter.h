@@ -4,25 +4,47 @@
 #include "is_any.h"
 #include "auto_arg.h"
 
+//=======================================
+// Test whether return type is meaningful
+//=======================================
+
+/// <summary>
+/// Determines whether the return value of a function is allowed for an AutoFilter:
+/// - void
+/// - Deferred
+/// </summary>
+template<class W, bool Selector = true>
+struct has_autofilter_return :
+  std::integral_constant<bool,
+    std::is_same<void, typename Decompose<decltype(&W::AutoFilter)>::retType>::value ||
+    std::is_same<Deferred, typename Decompose<decltype(&W::AutoFilter)>::retType>::value
+  >
+{};
+
+// Specialization pertains only when W has no AutoFilter method.
+template<class W>
+struct has_autofilter_return<W, false>:
+  std::false_type
+{};
+
 //==========================================
 // Test whether AutoFilter has > 0 arguments
 //==========================================
 
 // IMPORTANT: This evaluation must occur only when it has been
 // determined that the class has a unique AutoFilter method.
-template<bool Selector, class W>
-struct has_nonzero_arguments:
+template<class W, bool Selector>
+struct has_autofilter_arity:
   std::integral_constant<bool,
     Decompose<decltype(&W::AutoFilter)>::N != 0
   >
 {
-  // Evaluates to false for W::AutoFilter(void), else to true.
   static const int N = Decompose<decltype(&W::AutoFilter)>::N;
 };
 
 // Specialization pertains only when W has no AutoFilter method.
 template<class W>
-struct has_nonzero_arguments<false, W>:
+struct has_autofilter_arity<W, false>:
   std::false_type
 {
   static const int N = -1;
@@ -44,13 +66,13 @@ struct all_distinct_arguments<R(W::*)(Args...)>:
   >
 {};
 
-template<bool Selector, class W>
+template<class W, bool Selector = true>
 struct has_distinct_arguments:
   all_distinct_arguments<decltype(&W::AutoFilter)>
 {};
 
 template<class W>
-struct has_distinct_arguments<false, W>:
+struct has_distinct_arguments<W, false>:
   std::false_type
 {};
 
@@ -79,8 +101,18 @@ struct has_unambiguous_autofilter
   template<class U>
   static std::true_type select(unnamed_constant<decltype(&U::AutoFilter), &U::AutoFilter>*);
 
-  // Evaluates to true only if T includes a unique AutoFilter method with at least one argument.
-  static const bool value = has_distinct_arguments<has_nonzero_arguments<decltype(select<T>(nullptr))::value, T>::value, T>::value;
+  // Evaluates to true only if T includes a unique AutoFilter method,
+  // with a meaningful return type,
+  // with at least one argument,
+  // and with all argument id types distinct
+  static const bool value =
+    has_distinct_arguments<T,
+    has_autofilter_arity<T,
+    has_autofilter_return<T,
+    decltype(select<T>(nullptr))::value
+    >::value
+    >::value
+    >::value;
 };
 
 class AutoPacket;

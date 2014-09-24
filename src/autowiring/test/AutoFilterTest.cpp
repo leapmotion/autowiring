@@ -1677,7 +1677,9 @@ TEST_F(AutoFilterTest, VerifyForwardAll) {
 
 class Junction01 {
 public:
-  void AutoFilter(const Decoration<0>&, auto_out<Decoration<1>>) {}
+  void AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>> out) {
+    out->i = in.i;
+  }
 };
 
 class SlaveContext {};

@@ -6,7 +6,6 @@
 #include "auto_arg.h"
 #include "Decompose.h"
 #include "has_autofilter.h"
-#include "is_autofilter.h"
 #include "is_shared_ptr.h"
 #include MEMORY_HEADER
 #include FUNCTIONAL_HEADER
@@ -86,15 +85,8 @@ struct AutoFilterDescriptorInput {
   AutoFilterDescriptorInput(auto_arg<T>&& traits) :
     is_input(auto_arg<T>::is_input),
     is_output(auto_arg<T>::is_output),
-    is_optional(
-      std::is_same<
-        typename auto_arg<T>::auto_type,
-        optional_ptr<typename auto_arg<T>::id_type>>::value ||
-      std::is_same<
-        typename auto_arg<T>::auto_type,
-        auto_out<typename auto_arg<T>::id_type>>::value
-    ),
-    is_shared(is_shared_ptr<T>::value),
+    is_optional(auto_arg<T>::is_optional),
+    is_shared(auto_arg<T>::is_shared),
     ti(&typeid(typename auto_arg<T>::id_type))
   {}
 

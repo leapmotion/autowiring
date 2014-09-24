@@ -3,6 +3,7 @@
 
 #include <autowiring/auto_in.h>
 #include <autowiring/auto_out.h>
+#include <autowiring/optional_ptr.h>
 
 /*
  The auto_arg<T> classes are used to generate of auto_in and auto_out types
@@ -39,6 +40,9 @@ public:
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_in<type>(packet, source)
   {}
+
+  static const bool is_shared = false;
+  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -66,6 +70,9 @@ public:
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_in<type>(packet, source)
   {}
+
+  static const bool is_shared = false;
+  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -93,6 +100,9 @@ public:
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_in<type>(packet, source)
   {}
+
+  static const bool is_shared = false;
+  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -120,6 +130,9 @@ public:
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_in<type>(packet, source)
   {}
+
+  static const bool is_shared = true;
+  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -147,6 +160,9 @@ public:
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_in<type>(packet, source)
   {}
+
+  static const bool is_shared = true;
+  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -174,6 +190,9 @@ public:
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_out<type>(packet, source)
   {}
+
+  static const bool is_shared = false;
+  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -201,6 +220,9 @@ public:
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_out<type>(packet, source)
   {}
+
+  static const bool is_shared = true;
+  static const bool is_optional = true;
 };
 
 /// <summary>
@@ -228,6 +250,9 @@ public:
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     auto_out<type>(packet, source)
   {}
+
+  static const bool is_shared = true;
+  static const bool is_optional = true;
 };
 
 /// <summary>
@@ -255,6 +280,9 @@ public:
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     optional_ptr<type>(packet, source)
   {}
+
+  static const bool is_shared = true;
+  static const bool is_optional = true;
 };
 
 /// <summary>
@@ -294,6 +322,9 @@ public:
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     m_packet(packet)
   {}
+
+  static const bool is_shared = false;
+  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -338,4 +369,7 @@ public:
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     m_packet(packet)
   {}
+
+  static const bool is_shared = false;
+  static const bool is_optional = false;
 };
