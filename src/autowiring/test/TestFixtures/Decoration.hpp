@@ -196,7 +196,9 @@ public:
 /// due to id equivalent of AutoFilter arguments.
 /// </summary>
 class BadFilterC:
-public FilterRoot {
+  public FilterRoot
+{
+public:
   void AutoFilter(const int& in, std::shared_ptr<const int> same) {}
 };
 
