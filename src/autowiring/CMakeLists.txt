@@ -3,7 +3,9 @@ add_googletest(benchmark)
 
 set(Autowiring_SRCS
   at_exit.h
+  auto_in.h
   auto_out.h
+  auto_arg.h
   AnySharedPointer.h
   AutoAnchor.h
   AutoCheckout.h
@@ -90,7 +92,6 @@ set(Autowiring_SRCS
   index_tuple.h
   is_any.h
   is_shared_ptr.h
-  is_autofilter.h
   InterlockedExchange.h
   InvokeRelay.h
   atomic_object.h
@@ -118,6 +119,7 @@ set(Autowiring_SRCS
   TypeRegistry.cpp
   TypeUnifier.h
   uuid.h
+  var_logic.h
 )
 
 if(NOT APPLE)

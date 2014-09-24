@@ -213,8 +213,8 @@ protected:
   static bool IsAutoPacketType(const std::type_info& dataType) {
     return
     dataType == typeid(AutoPacket) ||
-    dataType == typeid(subscriber_traits<AutoPacket&>::type) ||
-    dataType == typeid(subscriber_traits<const AutoPacket&>::type);
+    dataType == typeid(auto_arg<AutoPacket&>::id_type) ||
+    dataType == typeid(auto_arg<const AutoPacket&>::id_type);
   }
 
 public:

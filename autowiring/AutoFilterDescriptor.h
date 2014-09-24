@@ -1,12 +1,12 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
-#include "DataFlow.h"
 #include "AutoPacket.h"
-#include "auto_out.h"
+#include "DataFlow.h"
+#include "auto_arg.h"
 #include "Decompose.h"
 #include "has_autofilter.h"
-#include "is_autofilter.h"
+#include "is_shared_ptr.h"
 #include MEMORY_HEADER
 #include FUNCTIONAL_HEADER
 #include STL_UNORDERED_SET
@@ -14,163 +14,6 @@
 
 class AutoPacket;
 class Deferred;
-
-template<class T>
-class auto_pooled;
-
-enum eSubscriberInputType {
-  // Unused type, refers to an unrecognized input
-  inTypeInvalid,
-
-  // Required Input ~ const T&
-  // Specifies that this argument is mandatory for the AutoFilter to be called
-  inTypeRequired,
-
-  // Optional Input
-  // Specifies that this argument is optional--the filter generally may be called
-  // any time all required arguments are satisfied, no matter how many optional
-  // arguments remain
-  inTypeOptional,
-
-  // Optional Output ~ shared_ptr<T>&
-  // Specifies that the argument is an output which must be satisfied manually by
-  // the caller
-  outTypeRef,
-
-  // Required Output
-  // Specifies that the argument will automatically be marked ready, unless explicitly
-  // cancelled by the caller.
-  outTypeRefAutoReady
-};
-
-/// <summary>
-/// Default behavior, which is to just obtain an input for the specified type
-/// </summary>
-template<class T>
-struct subscriber_traits {
-  static_assert(
-    std::is_const<typename std::remove_reference<T>::type>::value ||
-    !std::is_reference<T>::value,
-    "If a decoration is desired, it must either be a const reference, or by value"
-  );
-
-  typedef T type;
-  typedef const T& ret_type;
-  static const eSubscriberInputType subscriberType = inTypeRequired;
-
-  ret_type operator()(AutoPacket& packet, const std::type_info& source) const {
-    return packet.Get<T>(source);
-  }
-};
-
-/// <summary>
-/// Output behavior for the single specified type
-/// </summary>
-template<class T>
-struct subscriber_traits<T&> {
-  typedef T type;
-  typedef AutoCheckout<T> ret_type;
-  static const eSubscriberInputType subscriberType = outTypeRef;
-
-  ret_type operator()(AutoPacket& packet, const std::type_info& source) const {
-    // Inputs by reference are automatically and unconditionally ready:
-    AutoCheckout<T> rv = packet.Checkout<T>(source);
-    rv.Ready();
-    return rv;
-  }
-};
-
-/// <summary>
-/// Mandatory input type
-/// </summary>
-template<class T>
-struct subscriber_traits<const T&>:
-  subscriber_traits<T>
-{};
-
-/// <summary>
-/// Optional input type
-/// </summary>
-template<class T>
-struct subscriber_traits<optional_ptr<T>> {
-  typedef T type;
-  typedef optional_ptr<T> ret_type;
-  static const eSubscriberInputType subscriberType = inTypeOptional;
-
-  // Optional pointer overload, tries to satisfy but doesn't throw if there's a miss
-  ret_type operator()(AutoPacket& packet, const std::type_info& source) const {
-    const typename std::decay<T>::type* out;
-    if(packet.Get(out, source))
-      return out;
-    return nullptr;
-  }
-};
-
-/// <summary>
-/// Output types
-/// </summary>
-template<class T, bool auto_ready>
-struct subscriber_traits<auto_out<T, auto_ready>> {
-  typedef T type;
-  typedef auto_out<T, auto_ready> ret_type;
-  static const eSubscriberInputType subscriberType = auto_ready ? outTypeRef : outTypeRefAutoReady;
-
-  ret_type operator()(AutoPacket& packet, const std::type_info& source) const {
-    return auto_out<T, auto_ready>(packet.Checkout<T>(source));
-  }
-};
-
-/// <summary>
-/// AutoPacket& is satisfied immediately when AutoPacket is initialized
-/// </summary>
-template<>
-struct subscriber_traits<AutoPacket&> {
-private:
-  /// Sigil to distinguish AutoPacket&
-  class first_call_sigil {};
-
-public:
-  typedef first_call_sigil type;
-  typedef AutoPacket& ret_type;
-  static const eSubscriberInputType subscriberType = inTypeRequired;
-
-  ret_type operator()(AutoPacket& packet, const std::type_info&) const {
-    return packet;
-  }
-};
-
-/// <summary>
-/// const AutoPacket& is not satisfied until AutoPacket is finalized
-/// </summary>
-template<>
-struct subscriber_traits<const AutoPacket&> {
-private:
-  /// Sigil to distinguish const AutoPacket&
-  class final_call_sigil {};
-
-public:
-  typedef final_call_sigil type;
-  typedef const AutoPacket& ret_type;
-  static const eSubscriberInputType subscriberType = inTypeRequired;
-
-  ret_type operator()(AutoPacket& packet, const std::type_info&) const {
-    return packet;
-  }
-};
-
-/// <summary>
-/// Provides a means of associating dynamic source types with static argument types
-/// </summary>
-template<class Arg>
-struct sourced_checkout {
-  typename subscriber_traits<Arg>::ret_type operator()(AutoPacket& packet, const autowiring::DataFill& satisfaction) const {
-    autowiring::DataFill::const_iterator source_find = satisfaction.find(typeid(typename subscriber_traits<Arg>::type));
-    if (source_find != satisfaction.end()) {
-      return subscriber_traits<Arg>()(packet, *source_find->second);
-    }
-    return subscriber_traits<Arg>()(packet, typeid(void));
-  }
-};
 
 /// <summary>
 /// Specialization for immediate mode cases
@@ -192,7 +35,7 @@ struct CallExtractor<void (T::*)(Args...)>:
   static void Call(void* pObj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
     // Handoff
     (((T*) pObj)->*memFn)(
-      sourced_checkout<Args>()(autoPacket, satisfaction)...
+      auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source<typename auto_arg<Args>::base_type>())...
     );
   }
 };
@@ -220,7 +63,7 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
     // and will therefore have the same lifecycle as the AutoPacket.
     *(T*) pObj += [pObj, pAutoPacket, &satisfaction] {
       (((T*) pObj)->*memFn)(
-        sourced_checkout<Args>()(*pAutoPacket, satisfaction)...
+        auto_arg<Args>(pAutoPacket, *satisfaction.source<typename auto_arg<Args>::base_type>())...
       );
     };
   }
@@ -231,18 +74,27 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
 /// </summary>
 struct AutoFilterDescriptorInput {
   AutoFilterDescriptorInput(void) :
-    ti(nullptr),
-    subscriberType(inTypeInvalid)
+    is_input(false),
+    is_output(false),
+    is_optional(false),
+    is_shared(false),
+    ti(nullptr)
   {}
 
   template<class T>
-  AutoFilterDescriptorInput(subscriber_traits<T>&& traits) :
-    ti(&typeid(typename subscriber_traits<T>::type)),
-    subscriberType(subscriber_traits<T>::subscriberType)
+  AutoFilterDescriptorInput(auto_arg<T>&& traits) :
+    is_input(auto_arg<T>::is_input),
+    is_output(auto_arg<T>::is_output),
+    is_optional(auto_arg<T>::is_optional),
+    is_shared(auto_arg<T>::is_shared),
+    ti(&typeid(typename auto_arg<T>::id_type))
   {}
 
+  const bool is_input;
+  const bool is_output;
+  const bool is_optional;
+  const bool is_shared;
   const std::type_info* const ti;
-  const eSubscriberInputType subscriberType;
 
   operator bool(void) const {
     return !!ti;
@@ -251,21 +103,9 @@ struct AutoFilterDescriptorInput {
   template<class T>
   struct rebind {
     operator AutoFilterDescriptorInput() {
-      return subscriber_traits<T>();
+      return auto_arg<T>();
     }
   };
-
-  static bool isInput(eSubscriberInputType argType) {
-    return argType == inTypeRequired || argType == inTypeOptional;
-  }
-
-  static bool isOutput(eSubscriberInputType argType) {
-    return argType == outTypeRef || argType == outTypeRefAutoReady;
-  }
-
-  bool isInput() const { return isInput(subscriberType); }
-
-  bool isOutput() const { return isOutput(subscriberType); }
 };
 
 /// <summary>
@@ -318,19 +158,18 @@ struct AutoFilterDescriptorStub {
     static_assert(CallExtractor<MemFn>::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
 
     for(auto pArg = m_pArgs; *pArg; pArg++) {
-      // DEFAULT: All data is broadcast
       autowiring::DataFlow& data = m_dataMap[*pArg->ti];
-      data.output = AutoFilterDescriptorInput::isOutput(pArg->subscriberType);
+
+      // DEFAULT: All data is broadcast
       data.broadcast = true;
-      switch(pArg->subscriberType) {
-      case inTypeRequired:
-        m_requiredCount++;
-        break;
-      case inTypeOptional:
-        m_optionalCount++;
-        break;
-      default:
-        break;
+      data.input = pArg->is_input;
+      data.output = pArg->is_output;
+      if (pArg->is_input) {
+        if (pArg->is_optional) {
+          ++m_optionalCount;
+          continue;
+        }
+        ++m_requiredCount;
       }
     }
   }

@@ -23,9 +23,6 @@ class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
 
-template<class T>
-struct subscriber_traits;
-
 /// <summary>
 /// A decorator-style processing packet
 /// </summary>
@@ -186,27 +183,24 @@ private:
   /// <param name="ready">Ready flag, set to false if the decoration should be marked unsatisfiable</param>
   template<class T>
   void CompleteCheckout(bool ready, const std::type_info& source = typeid(void)) {
+    const std::type_info& data = typeid(T);
+
     DecorationDisposition* broadDeco = nullptr;
     DecorationDisposition* pipedDeco = nullptr;
-
     {
       std::lock_guard<std::mutex> guard(m_lock);
       // This allows us to retrieve correct entries for decorated input requests
-      const std::type_info& data = typeid(typename subscriber_traits<T>::type);
       UnsafeComplete(ready, data, source, broadDeco, pipedDeco);
     }
 
     if(ready) {
-      // Satisfy the base declaration first and then the shared pointer:
       if (broadDeco) {
         UpdateSatisfaction(broadDeco->m_decoration->type(), typeid(void));
-        UpdateSatisfaction(broadDeco->m_decoration->shared_type(), typeid(void));
       }
       if (pipedDeco) {
         // NOTE: Only publish with source if pipes are declared - this prevents
         // added or snooping filters from satisfying piped input declarations.
         UpdateSatisfaction(pipedDeco->m_decoration->type(), source);
-        UpdateSatisfaction(pipedDeco->m_decoration->shared_type(), source);
       }
     } else {
       if (broadDeco)
@@ -248,6 +242,10 @@ public:
   /// <summary>
   /// Determines whether this pipeline packet contains an entry of the specified type
   /// </summary>
+  /// <remarks>
+  /// This method is also used by DecorateImmediate to extract pointers to data that is
+  /// valid ONLY during recursive satisfaction calls.
+  /// </remarks>
   template<class T>
   bool Get(const T*& out, const std::type_info& source = typeid(void)) const {
     std::lock_guard<std::mutex> lk(m_lock);
@@ -273,12 +271,12 @@ public:
   }
 
   /// <summary>
-  /// Shared pointer specialization, used to obtain the underlying shared pointer for some type T
+  /// Shared pointer specialization of const T*&, used to obtain the underlying shared pointer for some type T
   /// </summary>
   /// <remarks>
   /// This specialization cannot be used to obtain a decoration which has been attached to this packet via
-  /// DecorateImmediate
-  /// </summary>
+  /// DecorateImmediate.
+  /// </remarks>
   template<class T>
   bool Get(const std::shared_ptr<T>*& out, const std::type_info& source = typeid(void)) const {
     std::lock_guard<std::mutex> lk(m_lock);
@@ -293,6 +291,81 @@ public:
     
     out = nullptr;
     return false;
+  }
+
+  /// <summary>
+  /// Shared pointer specialization, used to obtain the underlying shared pointer for some type T
+  /// </summary>
+  /// <remarks>
+  /// This method can return an argument of DecorateImmediate as a shared_ptr<T> without a deleter.
+  /// PROBLEM: This use case implies that holding shared_ptr references to decorations is NOT SAFE.
+  /// </remarks>
+  template<class T>
+  bool Get(std::shared_ptr<const T>& out, const std::type_info& source = typeid(void)) const {
+    std::lock_guard<std::mutex> lk(m_lock);
+    auto deco = m_decorations.find(DSIndex(typeid(T), source));
+    if(deco != m_decorations.end() &&
+       deco->second.satisfied) {
+      auto& disposition = deco->second;
+      if(disposition.m_decoration) {
+        out = disposition.m_decoration->as<T>();
+        return true;
+      } else if (disposition.m_pImmediate) {
+        // Wrap immediate reference in shared_ptr without deleter
+        out = std::shared_ptr<const T>(reinterpret_cast<const T*>(disposition.m_pImmediate), [](const T*){});
+        return true;
+      }
+    }
+    out.reset();
+    return false;
+  }
+
+  /// <summary>
+  /// Transfers ownership of argument to AutoPacket
+  /// </summary>
+  template<class T>
+  void Put(T* in, const std::type_info& source = typeid(void)) {
+    const std::type_info& data = typeid(T);
+
+    autowiring::DataFlow flow = GetDataFlow(data, source);
+    if (flow.broadcast) {
+      auto& entry = m_decorations[DSIndex(data, typeid(void))];
+      if (entry.satisfied ||
+          entry.isCheckedOut) {
+        std::stringstream ss;
+        ss << "Cannot put type " << autowiring::demangle(typeid(T))
+        << " from source " << autowiring::demangle(source)
+        << " on AutoPacket, the requested broadcast already exists";
+        throw std::runtime_error(ss.str());
+      }
+
+      entry.m_decoration = std::shared_ptr<T>(in);
+      entry.m_type = &data; // Ensure correct type if instantiated here
+      entry.satisfied = true;
+      entry.isCheckedOut = false;
+
+      UpdateSatisfaction(data, typeid(void));
+      UpdateSatisfaction(typeid(std::shared_ptr<T>), typeid(void));
+    }
+    if (!flow.halfpipes.empty()) {
+      auto& entry = m_decorations[DSIndex(data, source)];
+      if (entry.satisfied ||
+          entry.isCheckedOut) {
+        std::stringstream ss;
+        ss << "Cannot put type " << autowiring::demangle(typeid(T))
+        << " from source " << autowiring::demangle(source)
+        << " on AutoPacket, the requested pipe already exists";
+        throw std::runtime_error(ss.str());
+      }
+
+      entry.m_decoration = std::shared_ptr<T>(in);
+      entry.m_type = &data; // Ensure correct type if instantiated here
+      entry.satisfied = true;
+      entry.isCheckedOut = false;
+
+      UpdateSatisfaction(data, source);
+      UpdateSatisfaction(typeid(std::shared_ptr<T>), source);
+    }
   }
 
   /// <returns>
@@ -372,6 +445,8 @@ public:
   /// </remarks>
   template<class T>
   AutoCheckout<T> Checkout(std::shared_ptr<T> ptr, const std::type_info& source = typeid(void)) {
+    const std::type_info& data = typeid(T);
+
     /// Injunction to prevent existential loops:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
 
@@ -379,7 +454,6 @@ public:
       throw std::runtime_error("Cannot checkout with shared_ptr == nullptr");
 
     // This allows us to install correct entries for decorated input requests
-    const std::type_info& data = typeid(typename subscriber_traits<T>::type);
     AnySharedPointer any_ptr(ptr);
     {
       std::lock_guard<std::mutex> guard(m_lock);
@@ -504,9 +578,10 @@ public:
     MakeAtExit([this, &pTypeSubs, &source] {
       // Mark entries as unsatisfiable:
       // IMPORTANT: isCheckedOut = true prevents subsequent decorations of this type
-      // IMPORTANT: m_pImmediate != nullptr records having used DecorateImmediate
-      for(DecorationDisposition*  pEntry : pTypeSubs)
+      for(DecorationDisposition*  pEntry : pTypeSubs) {
+        pEntry->m_pImmediate = nullptr;
         pEntry->satisfied = false;
+      }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
       for(const std::type_info* ti : s_argTypes)

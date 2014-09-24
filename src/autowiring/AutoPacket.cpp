@@ -7,6 +7,7 @@
 #include "AutoFilterDescriptor.h"
 #include "ContextEnumerator.h"
 #include "SatCounter.h"
+#include <algorithm>
 
 using namespace autowiring;
 
@@ -49,34 +50,23 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     if (flow.broadcast) {
       // Broadcast source is void
       DecorationDisposition* entry = &m_decorations[DSIndex(dataType, typeid(void))];
-      entry->m_type = pCur->ti;
+      entry->m_type = &dataType;
 
       // Decide what to do with this entry:
-      // NOTE: Recipients added via AddReceiver can receiver broadcast data,
+      // NOTE: Recipients added via AddReceiver can receive broadcast data,
       // so it is necessary to decrement the receiver's counters when it is added.
-      switch(pCur->subscriberType) {
-        case inTypeRequired:
-          entry->m_subscribers.push_back(std::make_pair(&satCounter, true));
-          if (entry->satisfied)
-            satCounter.Decrement(dataType, typeid(void), true);
-          break;
-        case inTypeOptional:
-          entry->m_subscribers.push_back(std::make_pair(&satCounter, false));
-          if (entry->satisfied)
-            satCounter.Decrement(dataType, typeid(void), false);
-          break;
-        case outTypeRef:
-        case outTypeRefAutoReady:
-          if(entry->m_publisher) {
-            std::stringstream ss;
-            ss << "Added identical data broadcasts of type " << pCur->ti->name();
-            throw std::runtime_error(ss.str());
-          }
-          entry->m_publisher = &satCounter;
-          break;
-        default: //inTypeInvalid
-          // Should never happen--trivially ignore this entry
-          break;
+      if (pCur->is_input) {
+        entry->m_subscribers.push_back(std::make_pair(&satCounter, !pCur->is_optional));
+        if (entry->satisfied)
+          satCounter.Decrement(dataType, typeid(void), !pCur->is_optional);
+      }
+      if (pCur->is_output) {
+        if(entry->m_publisher) {
+          std::stringstream ss;
+          ss << "Added identical data broadcasts of type " << pCur->ti->name();
+          throw std::runtime_error(ss.str());
+        }
+        entry->m_publisher = &satCounter;
       }
     }
     for (auto halfpipe : flow.halfpipes) {
@@ -87,31 +77,21 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
       } else {
         entry = &m_decorations[DSIndex(dataType, halfpipe)];
       }
-      entry->m_type = pCur->ti;
+      entry->m_type = &dataType;
 
       // Decide what to do with this entry:
       // NOTE: Recipients added via AddReceiver cannot receive piped data,
       // and subscribers are added before the packet is decorated.
-      switch(pCur->subscriberType) {
-        case inTypeRequired:
-          entry->m_subscribers.push_back(std::make_pair(&satCounter, true));
-          break;
-        case inTypeOptional:
-          entry->m_subscribers.push_back(std::make_pair(&satCounter, false));
-          break;
-        case outTypeRef:
-        case outTypeRefAutoReady:
-          /// IMPORTANT: Allow multiple publishers of the same type, provided they are to distinct sources.
-          if(entry->m_publisher == &satCounter) {
-            std::stringstream ss;
-            ss << "Added identical data pipes from " << satCounter.GetAutoFilterTypeInfo()->name() << " of type " << pCur->ti->name();
-            throw std::runtime_error(ss.str());
-          }
-          entry->m_publisher = &satCounter;
-          break;
-        default: //inTypeInvalid
-          // Should never happen--trivially ignore this entry
-          break;
+      if (pCur->is_input) {
+        entry->m_subscribers.push_back(std::make_pair(&satCounter, !pCur->is_optional));
+      }
+      if (pCur->is_output) {
+        if(entry->m_publisher) {
+          std::stringstream ss;
+          ss << "Added identical data pipes from " << satCounter.GetAutoFilterTypeInfo()->name() << " of type " << pCur->ti->name();
+          throw std::runtime_error(ss.str());
+        }
+        entry->m_publisher = &satCounter;
       }
     }
   }
@@ -129,25 +109,14 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
       DecorationDisposition* entry = &m_decorations[DSIndex(dataType, typeid(void))];
 
       // Decide what to do with this entry:
-      switch(pCur->subscriberType) {
-        case inTypeRequired:
-          assert(!entry->m_subscribers.empty());
-          assert(&satCounter == entry->m_subscribers.back().first);
-          entry->m_subscribers.pop_back();
-          break;
-        case inTypeOptional:
-          assert(!entry->m_subscribers.empty());
-          assert(&satCounter == entry->m_subscribers.back().first);
-          entry->m_subscribers.pop_back();
-          break;
-        case outTypeRef:
-        case outTypeRefAutoReady:
-          assert(&satCounter == entry->m_publisher);
-          entry->m_publisher = nullptr;
-          break;
-        default: //inTypeInvalid
-          // Should never happen--trivially ignore this entry
-          break;
+      if (pCur->is_input) {
+        assert(!entry->m_subscribers.empty());
+        assert(&satCounter == entry->m_subscribers.back().first);
+        entry->m_subscribers.pop_back();
+      }
+      if (pCur->is_output) {
+        assert(&satCounter == entry->m_publisher);
+        entry->m_publisher = nullptr;
       }
     }
     for (auto halfpipe : flow.halfpipes) {
@@ -160,25 +129,14 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
       }
 
       // Decide what to do with this entry:
-      switch(pCur->subscriberType) {
-        case inTypeRequired:
-          assert(!entry->m_subscribers.empty());
-          assert(&satCounter == entry->m_subscribers.back().first);
-          entry->m_subscribers.pop_back();
-          break;
-        case inTypeOptional:
-          assert(!entry->m_subscribers.empty());
-          assert(&satCounter == entry->m_subscribers.back().first);
-          entry->m_subscribers.pop_back();
-          break;
-        case outTypeRef:
-        case outTypeRefAutoReady:
-          assert(&satCounter == entry->m_publisher);
-          entry->m_publisher = nullptr;
-          break;
-        default: //inTypeInvalid
-          // Should never happen--trivially ignore this entry
-          break;
+      if (pCur->is_input) {
+        assert(!entry->m_subscribers.empty());
+        assert(&satCounter == entry->m_subscribers.back().first);
+        entry->m_subscribers.pop_back();
+      }
+      if (pCur->is_output) {
+        assert(&satCounter == entry->m_publisher);
+        entry->m_publisher = nullptr;
       }
     }
   }
@@ -190,7 +148,11 @@ ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory, 
     ~0,
     [&factory, &outstanding] { return new AutoPacket(factory, outstanding); },
     [] (AutoPacket& packet) { packet.Initialize(); },
-    [] (AutoPacket& packet) { packet.Finalize(); }
+    [] (AutoPacket& packet) {
+      // IMPORTANT: Create shared_ptr with no destructor to enable outputs to AutoPacket
+      std::shared_ptr<AutoPacket> shared(&packet, [](AutoPacket*){});
+      packet.Finalize();
+    }
   );
 }
 
@@ -226,7 +188,7 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, const std::type_
   {
     std::lock_guard<std::mutex> lk(m_lock);
 
-    if (info != typeid(subscriber_traits<const AutoPacket&>::type)) {
+    if (info != typeid(auto_arg<const AutoPacket&>::id_type)) {
       switch (m_lifecyle) {
         case disable_decorate: throw std::runtime_error("Cannot provide decorations in final-call (const AutoPacket&) AutoFilter methods");
         case disable_update: return; // Quietly prevent recusion during optional_ptr resolution
@@ -275,6 +237,10 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
           // We only care about sat counters that aren't deferred--skip everyone else
           // Deferred calls will be too late.
           !cur->IsDeferred() &&
+
+          // We cannot satisfy shared_ptr arguments, since the implied existence
+          // guarantee of shared_ptr is violated
+          !cur->GetArgumentType(pTypeSubs[i]->m_type)->is_shared &&
 
           // Now do the decrementation and proceed even if optional > 0,
           // since this is the only opportunity to fulfill the arguments
@@ -441,7 +407,6 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   for (DecorationDisposition* broadDeco : decoQueue) {
     // Satisfy the base declaration first and then the shared pointer:
     recipient->UpdateSatisfaction(broadDeco->m_decoration->type(), typeid(void));
-    recipient->UpdateSatisfaction(broadDeco->m_decoration->shared_type(), typeid(void));
   }
 }
 
@@ -502,7 +467,7 @@ void AutoPacket::Initialize(void) {
     call->CallAutoFilter(*this);
 
   // First-call indicated by argumument type AutoPacket&:
-  UpdateSatisfaction(typeid(subscriber_traits<AutoPacket&>::type));
+  UpdateSatisfaction(typeid(auto_arg<AutoPacket&>::id_type));
 }
 
 void AutoPacket::Finalize(void) {
@@ -523,7 +488,7 @@ void AutoPacket::Finalize(void) {
 
   // Last-call indicated by argumument type const AutoPacket&:
   m_lifecyle = disable_decorate;
-  UpdateSatisfaction(typeid(subscriber_traits<const AutoPacket&>::type));
+  UpdateSatisfaction(typeid(auto_arg<const AutoPacket&>::id_type));
 
   // Remove all recipients & clean up the decorations list
   // ASSERT: This reverses the order of accumulation,

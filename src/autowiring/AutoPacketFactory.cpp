@@ -140,7 +140,7 @@ void AutoPacketFactory::BroadcastOneDataOut(const std::type_info* nodeType, cons
 
     const AutoFilterDescriptorInput* argDescriptor = update.GetArgumentType(dataType);
     if (!argDescriptor ||
-        !argDescriptor->isOutput()) {
+        !argDescriptor->is_output) {
       std::stringstream ss;
       ss << "Attempted to transmit broadcasts of a type " << dataType->name()
       << " that is not an output of " << nodeType->name();
@@ -169,7 +169,7 @@ void AutoPacketFactory::BroadcastAllDataOut(const std::type_info* nodeType, bool
     // All input data types accept broadcasts
     // NOTE: Iteration is over a static array terminated with nullptr
     for (const AutoFilterDescriptorInput* pArg = update.GetAutoFilterInput(); *pArg; ++pArg) {
-      if (pArg->isOutput())
+      if (pArg->is_output)
         update.Broadcast(pArg->ti, enable);
     }
     m_autoFilters.insert(update);
@@ -193,7 +193,7 @@ void AutoPacketFactory::BroadcastOneDataIn(const std::type_info* nodeType, const
 
     const AutoFilterDescriptorInput* argDescriptor = update.GetArgumentType(dataType);
     if (!argDescriptor ||
-        !argDescriptor->isInput()) {
+        !argDescriptor->is_input) {
       std::stringstream ss;
       ss << "Attempted to receive broadcasts of a type " << dataType->name()
       << " that is not an input to " << nodeType->name();
@@ -222,7 +222,7 @@ void AutoPacketFactory::BroadcastAllDataIn(const std::type_info* nodeType, bool 
     // All input data types accept broadcasts
     // NOTE: Iteration is over a static array terminated with nullptr
     for (const AutoFilterDescriptorInput* pArg = update.GetAutoFilterInput(); *pArg; ++pArg) {
-      if (pArg->isInput() &&
+      if (pArg->is_input &&
           !IsAutoPacketType(*pArg->ti))
         update.Broadcast(pArg->ti, enable);
     }
@@ -249,16 +249,16 @@ void AutoPacketFactory::PipeOneData(const std::type_info* nodeOutType, const std
 
     // Check for AutoPacket& (or const AutoPacket&) arguments
     bool allOut =
-      !!updateOut.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type));
+      !!updateOut.GetArgumentType(&typeid(auto_arg<AutoPacket&>::id_type));
     bool allIn =
-      updateIn.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type)) ||
-      updateIn.GetArgumentType(&typeid(subscriber_traits<const AutoPacket&>::type));
+      updateIn.GetArgumentType(&typeid(auto_arg<AutoPacket&>::id_type)) ||
+      updateIn.GetArgumentType(&typeid(auto_arg<const AutoPacket&>::id_type));
 
     // Find both data types
     const AutoFilterDescriptorInput* argOutDescriptor = updateOut.GetArgumentType(dataType);
     const AutoFilterDescriptorInput* argInDescriptor = updateIn.GetArgumentType(dataType);
-    if (!(allOut || (argOutDescriptor && argOutDescriptor->isOutput())) ||
-        !(allIn || (argInDescriptor && argInDescriptor->isInput()))) {
+    if (!(allOut || (argOutDescriptor && argOutDescriptor->is_output)) ||
+        !(allIn || (argInDescriptor && argInDescriptor->is_input))) {
       std::stringstream ss;
       ss << "Attempted to pipe data of a type " << dataType->name()
       << " that is not an ouput of " << nodeOutType->name()
@@ -290,10 +290,10 @@ void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std
 
     // Check for AutoPacket& (or const AutoPacket&) arguments
     bool allOut =
-      !!updateOut.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type));
+      !!updateOut.GetArgumentType(&typeid(auto_arg<AutoPacket&>::id_type));
     bool allIn =
-      updateIn.GetArgumentType(&typeid(subscriber_traits<AutoPacket&>::type)) ||
-      updateIn.GetArgumentType(&typeid(subscriber_traits<const AutoPacket&>::type));
+      updateIn.GetArgumentType(&typeid(auto_arg<AutoPacket&>::id_type)) ||
+      updateIn.GetArgumentType(&typeid(auto_arg<const AutoPacket&>::id_type));
 
     // List all correctly oriented arguments
     std::unordered_set<const std::type_info*> dataOutTypes;
@@ -302,7 +302,7 @@ void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std
     for (const AutoFilterDescriptorInput* pArg = updateOut.GetAutoFilterInput(); *pArg; ++pArg) {
       if (IsAutoPacketType(*pArg->ti))
         continue;
-      if (allOut || pArg->isOutput()) {
+      if (allOut || pArg->is_output) {
         dataOutTypes.insert(pArg->ti);
         if (allIn)
           dataInTypes.insert(pArg->ti);
@@ -312,7 +312,7 @@ void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std
     for (const AutoFilterDescriptorInput* pArg = updateIn.GetAutoFilterInput(); *pArg; ++pArg) {
       if (IsAutoPacketType(*pArg->ti))
         continue;
-      if (allIn || pArg->isInput()) {
+      if (allIn || pArg->is_input) {
         // Include only output types
         if (allOut ||
             dataOutTypes.find(pArg->ti) != dataOutTypes.end()) {

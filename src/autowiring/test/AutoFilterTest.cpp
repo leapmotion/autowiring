@@ -285,27 +285,42 @@ TEST_F(AutoFilterTest, TestLogicFilter) {
   ASSERT_EQ(0, logic->m_calledNextElse) << "Called NextElseFilter in packet final-calls";
 }
 
-class FilterFinalGood {
+class FilterOut {
 public:
-  void AutoFilter(const AutoPacket&, auto_out<Decoration<0>, false>) {}
+  void AutoFilter(auto_out<Decoration<0>> out) {
+    out->i = 1;
+  }
 };
 
-class FilterFinalFail {
+TEST_F(AutoFilterTest, VerifyAutoOut) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterOut> out;
+  std::shared_ptr<AutoPacket> packet = factory->NewPacket();
+  const Decoration<0>* result = nullptr;
+  ASSERT_TRUE(packet->Get(result)) << "Output missing";
+  ASSERT_EQ(result->i, 1) << "Output incorrect";
+}
+
+class FilterFinalFail1 {
+public:
+  void AutoFilter(optional_ptr<Decoration<0>>, auto_out<Decoration<1>>) {}
+};
+
+class FilterFinalFail2 {
 public:
   void AutoFilter(const AutoPacket&, auto_out<Decoration<1>>) {}
 };
 
-TEST_F(AutoFilterTest, VerifyFinalImmutability) {
+TEST_F(AutoFilterTest, DISABLED_VerifyFinalImmutability) {
   AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<FilterFinalGood> good;
-
-  ASSERT_NO_THROW(factory->NewPacket()) << "If checkout is not completed there should be no error";
+  AutoRequired<FilterFinalFail1> fail1;
+  ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "Output holds shared_ptr to packet, which is invalid in Finalize";
 
   // PROBLEM: Exception is thrown correctly, but is not caught by test.
-  /*
-  AutoRequired<FilterFinalFail> fail;
-  ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "Failed to catch post-final decoration";
-   */
+  AutoRequired<FilterFinalFail2> fail2;
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>());
+  ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "Output holds shared_ptr to packet, which is invalid in Finalize";
 }
 
 TEST_F(AutoFilterTest, VerifyOptionalFilter) {
@@ -473,8 +488,7 @@ public:
   m_in(in)
   {}
 
-  //NOTE: Non-const auto_out yields obscure compiler error.
-  void AutoFilter(const auto_out<Decoration<out>>& output) {
+  void AutoFilter(auto_out<Decoration<out>> output) {
     ++m_called_out;
     output->i = m_out;
   }
@@ -749,7 +763,8 @@ TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
   //DEBUG: Expect compiler warning
 
   ASSERT_FALSE(good_autofilter<BadFilterA>::test) << "Failed to identify AutoFilter(void)";
-  ASSERT_FALSE(good_autofilter<BadFilterA>::test) << "Failed to identify multiple defintiions of AutoFilter";
+  ASSERT_FALSE(good_autofilter<BadFilterB>::test) << "Failed to identify multiple definitions of AutoFilter";
+  ASSERT_FALSE(good_autofilter<BadFilterC>::test) << "Failed to identify equivalent AutoFilter argument id types";
 
   AutoRequired<AutoPacketFactory> factory;
 
@@ -1002,7 +1017,7 @@ public:
 
   size_t callCount;
 
-  Deferred AutoFilter(std::shared_ptr<int>) {
+  Deferred AutoFilter(std::shared_ptr<const int>) {
     callCount++;
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
     return Deferred(this);
@@ -1183,7 +1198,7 @@ public:
 
   int m_called;
 
-  void AutoFilter(std::shared_ptr<int> dataIn) {
+  void AutoFilter(std::shared_ptr<const int> dataIn) {
     ++m_called;
   }
 };
@@ -1239,44 +1254,14 @@ TEST_F(AutoFilterTest, SharedPtrCollapse) {
   shared_filter->m_called = 0;
 }
 
-class AcceptsSharedPointerAndReference {
-public:
-  AcceptsSharedPointerAndReference(void) :
-    m_called(false)
-  {}
-
-  bool m_called;
-
-  void AutoFilter(const int& v, std::shared_ptr<int> vShared) {
-    m_called = true;
-    ASSERT_EQ(&v, vShared.get()) << "Shared pointer to a type did not point to the same address as the type reference proper";
-  }
-};
-
-TEST_F(AutoFilterTest, SharedPointerRecieptRules) {
+TEST_F(AutoFilterTest, SharedPointerAliasingRules) {
   AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<AcceptsSharedPointerAndReference> filter;
-  AutoRequired<FilterGen<std::shared_ptr<int>>> genFilter1;
+  AutoRequired<FilterGen<std::shared_ptr<const int>>> genFilter1;
   AutoRequired<FilterGen<int>> genFilter2;
 
   auto packet = factory->NewPacket();
   packet->Decorate<int>(55);
 
-  ASSERT_TRUE(filter->m_called) << "Redundant-input filter was not called";
-  ASSERT_EQ(1UL, genFilter1->m_called) << "AutoFilter accepting a shared pointer was not called as expected";
-  ASSERT_EQ(1UL, genFilter2->m_called) << "AutoFilter accepting a decorated type was not called as expected";
-}
-
-TEST_F(AutoFilterTest, SharedPointerAliasingRules) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<AcceptsSharedPointerAndReference> filter;
-  AutoRequired<FilterGen<std::shared_ptr<int>>> genFilter1;
-  AutoRequired<FilterGen<int>> genFilter2;
-
-  auto packet = factory->NewPacket();
-  packet->Decorate(std::make_shared<int>(56));
-
-  ASSERT_TRUE(filter->m_called) << "Redundant-input filter was not called";
   ASSERT_EQ(1UL, genFilter1->m_called) << "AutoFilter accepting a shared pointer was not called as expected";
   ASSERT_EQ(1UL, genFilter2->m_called) << "AutoFilter accepting a decorated type was not called as expected";
 }
@@ -1358,63 +1343,6 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
   ASSERT_EQ(105, dec->i) << "Deferred decorate-only AutoFilter did not properly attach before context termination";
 }
 
-typedef std::function<void(const Decoration<0>&, auto_out<Decoration<1>>)> FilterFunctionType;
-
-typedef std::function<void(void)> NonFilterFunctionType0;
-typedef std::function<void(Decoration<1> noEdge, const Decoration<0>& typeIn)> NonFilterFunctionType1;
-typedef std::function<void(const Decoration<0>& typeIn, Decoration<1> noEdge)> NonFilterFunctionType2;
-typedef std::function<int(const Decoration<0>& typeIn, auto_out<Decoration<1>>& typeOut)> NonFilterFunctionType3;
-
-TEST_F(AutoFilterTest, AutoFilterTemplateTests) {
-  ASSERT_TRUE(static_cast<const bool>(is_required_input<const Decoration<0>&>::value)) << "Input type FAIL";
-  ASSERT_TRUE(static_cast<const bool>(is_required_output<Decoration<0>&>::value)) << "Output type FAIL";
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<const Decoration<0>&>::is_input)) << "Input type FAIL";
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<Decoration<0>&>::is_output)) << "Output type FAIL";
-
-  ASSERT_TRUE(is_optional_ptr<optional_ptr<Decoration<0>>>::value) << "Type of optional_ptr instance incorrectly identified";
-  ASSERT_TRUE(is_auto_out<auto_out<Decoration<0>>>::value) << "Type of auto_out instance incorrectly identified";
-
-  ASSERT_FALSE(static_cast<const bool>(is_autofilter_arg<const Decoration<0>>::value)) << "Validity of AutoFilter input incorrectly identified";
-  ASSERT_FALSE(static_cast<const bool>(is_autofilter_arg<Decoration<0>>::value)) << "Validity of AutoFilter input incorrectly identified";
-
-  ASSERT_TRUE(is_autofilter_arg<const Decoration<0>&>::is_input) << "Incorrect IO assessment";
-  ASSERT_TRUE(is_autofilter_arg<Decoration<0>&>::is_output) << "Incorrect IO assessment";
-  ASSERT_TRUE(is_autofilter_arg<auto_out<Decoration<0>>>::is_output) << "Incorrect IO assessment";
-
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<const Decoration<0>&>::is_required)) << "Incorrect OR assessment";
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<Decoration<0>&>::is_required)) << "Incorrect OR assessment";
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<auto_out<Decoration<0>, true>>::is_required)) << "Incorrect OR assessment";
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<optional_ptr<Decoration<0>>>::is_optional)) << "Incorrect OR assessment";
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<auto_out<Decoration<0>, false>>::is_optional)) << "Incorrect OR assessment";
-
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<const Decoration<0>&>::value)) << "Validity of AutoFilter input incorrectly identified";
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<Decoration<0>&>::value)) << "Validity of AutoFilter output incorrectly identified";
-
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<auto_out<Decoration<0>>>::value)) << "Validity of AutoFilter output incorrectly indentified";
-  //ASSERT_FALSE(static_cast<const bool>(is_autofilter_arg<auto_out<Decoration<0>>&>::value)) << "Validity of AutoFilter output incorrectly indentified";
-
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_arg<optional_ptr<Decoration<0>>>::value)) << "Validity of AutoFilter output incorrectly indentified";
-  //ASSERT_FALSE(static_cast<const bool>(is_autofilter_arg<optional_ptr<Decoration<0>>&>::value)) << "Validity of AutoFilter output incorrectly indentified";
-
-  ASSERT_FALSE(static_cast<const bool>(all_autofilter_args<const Decoration<0>&, Decoration<0>>::value)) << "Invalid argument list incorrectly identified";
-  ASSERT_FALSE(static_cast<const bool>(all_autofilter_args<Decoration<0>, const Decoration<0>&>::value)) << "Invalid argument list incorrectly identified";
-  ASSERT_FALSE(static_cast<const bool>(all_autofilter_args<>::value)) << "Invalid argument list incorrectly identified";
-  ASSERT_TRUE(static_cast<const bool>(all_autofilter_args<const Decoration<0>&>::value)) << "Valid argument list incorrectly identified";
-  ASSERT_TRUE(static_cast<const bool>(all_autofilter_args<auto_out<Decoration<1>>>::value)) << "Valid argument list incorrectly identified";
-  ASSERT_TRUE(static_cast<const bool>(all_autofilter_args<const Decoration<0>&, auto_out<Decoration<1>>>::value)) << "Valid argument list incorrectly identified";
-
-  ASSERT_FALSE(static_cast<const bool>(is_autofilter_return<int>::value)) << "Incorrect identification of int as valid AutoFilter return type";
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_return<void>::value)) << "Incorrect identification of void as invalid AutoFilter return type";
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter_return<Deferred>::value)) << "Incorrect identification of Deferred as invalid AutoFilter return type";
-
-  ASSERT_FALSE(static_cast<const bool>(is_autofilter<NonFilterFunctionType0>::value)) << "Trivial function identified as valid";
-  ASSERT_FALSE(static_cast<const bool>(is_autofilter<NonFilterFunctionType1>::value)) << "Function with invalid first argument identified as valid";
-  ASSERT_FALSE(static_cast<const bool>(is_autofilter<NonFilterFunctionType2>::value)) << "Function with invalid second argument identified as valid";
-  ASSERT_FALSE(static_cast<const bool>(is_autofilter<NonFilterFunctionType3>::value)) << "Function with invalid return type identified as valid";
-
-  ASSERT_TRUE(static_cast<const bool>(is_autofilter<FilterFunctionType>::value)) << "Valid AutoFilter function identified as invalid";
-}
-
 TEST_F(AutoFilterTest, MicroAutoFilterTests) {
   int extVal = -1;
   std::function<void(const int&)> filter([&extVal] (const int& getVal) {
@@ -1460,6 +1388,8 @@ TEST_F(AutoFilterTest, DeclareAutoFilterTest) {
 void FilterFunction(const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
   typeOut->i += 1 + typeIn.i;
 }
+
+typedef std::function<void(const Decoration<0>&, auto_out<Decoration<1>>)> FilterFunctionType;
 
 TEST_F(AutoFilterTest, FunctionDecorationTest) {
   // AddRecipient that is an instance of std::function f : a -> b
@@ -1747,7 +1677,9 @@ TEST_F(AutoFilterTest, VerifyForwardAll) {
 
 class Junction01 {
 public:
-  void AutoFilter(const Decoration<0>&, auto_out<Decoration<1>>) {}
+  void AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>> out) {
+    out->i = in.i;
+  }
 };
 
 class SlaveContext {};

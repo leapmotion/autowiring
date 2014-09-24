@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <autowiring/AutoInjectable.h>
 #include <autowiring/ContextEnumerator.h>
+#include <algorithm>
 #include <set>
 #include THREAD_HEADER
 #include FUTURE_HEADER

@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include "is_autofilter.h"
 #include "Deferred.h"
 
 /// <summary>
@@ -13,31 +12,31 @@
 /// </remarks>
 template<class Ret, class... Args>
 struct MicroAutoFilter {
-  // This case pertains only when the return value is not recognized
-  static_assert(is_autofilter_return<Ret>::value,
-                "The return is not an allowed type for AutoFilter methods");
+  MicroAutoFilter(const std::function<void(Args...)>&) {}
+
+  // This AutoFilter method will be identified as invalid due to the return type
+  Ret AutoFilter(Args...) {}
 };
 template<class... Args>
 struct MicroAutoFilter<void, Args...> {
-  MicroAutoFilter(const std::function<void(Args...)>& filter) : m_filter(filter) {
-    static_assert(all_autofilter_args<Args...>::value,
-                  "At least one argument is not an allowed type for AutoFilter methods");
-  }
+  MicroAutoFilter(const std::function<void(Args...)>& filter):
+    m_filter(filter)
+  {}
 
   void AutoFilter(Args... args) {
     if (m_filter)
-      return m_filter(args...);
+      return m_filter(std::forward<Args>(args)...);
   }
 
 protected:
   std::function<void(Args...)> m_filter;
 };
+
 template<class... Args>
 struct MicroAutoFilter<Deferred, Args...> {
-  MicroAutoFilter(const std::function<void(Args...)>& filter) : m_filter(filter) {
-    static_assert(all_autofilter_args<Args...>::value,
-                  "At least one argument is not an allowed type for AutoFilter methods");
-  }
+  MicroAutoFilter(const std::function<void(Args...)>& filter):
+    m_filter(filter)
+  {}
 
   Deferred AutoFilter(Args... args) {
     if (m_filter)
