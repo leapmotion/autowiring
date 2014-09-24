@@ -7,6 +7,7 @@
 #include "AutoFilterDescriptor.h"
 #include "ContextEnumerator.h"
 #include "SatCounter.h"
+#include <algorithm>
 
 using namespace autowiring;
 

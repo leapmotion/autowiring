@@ -3,6 +3,7 @@
 #include "TestFixtures/SimpleThreaded.hpp"
 #include <autowiring/at_exit.h>
 #include <autowiring/Autowired.h>
+#include <algorithm>
 #include THREAD_HEADER
 
 class CoreThreadTest:

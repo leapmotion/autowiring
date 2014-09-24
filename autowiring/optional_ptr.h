@@ -38,7 +38,7 @@ public:
     shared_type(nullptr)
   {}
 
-  optional_ptr (optional_ptr<type>& rhs):
+  optional_ptr (const optional_ptr<type>& rhs):
     shared_type(rhs)
   {}
 
