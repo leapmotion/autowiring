@@ -5,4 +5,10 @@ if(APPLE AND NOT USE_LIBCXX)
 endif()
 
 add_library(json11 STATIC json11.cpp json11.hpp)
-set_property(TARGET json11 PROPERTY FOLDER "contrib")
+
+# Hide contrib/ when we are embedded
+if(AUTOWIRING_IS_EMBEDDED)
+  set_property(TARGET json11 PROPERTY FOLDER "Autowiring/contrib")
+else()
+  set_property(TARGET json11 PROPERTY FOLDER "contrib")
+endif()
