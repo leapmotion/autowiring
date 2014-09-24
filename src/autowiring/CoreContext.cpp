@@ -188,7 +188,7 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   return retVal;
 }
 
-void CoreContext::AddInternal(const AddInternalTraits& traits) {
+void CoreContext::AddInternal(const ObjectTraits& traits) {
   {
     std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
 
@@ -842,7 +842,7 @@ void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
   GetPacketFactory()->AddSubscriber(rhs);
 }
 
-void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
+void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     
