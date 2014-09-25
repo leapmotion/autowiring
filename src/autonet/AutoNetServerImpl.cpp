@@ -192,6 +192,17 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
       };
     }
 
+    // Check if type implements an AutoFilter
+    if (!object.subscriber.empty()) {
+      Json::object args;
+      for (auto pArg = object.subscriber.GetAutoFilterInput(); *pArg; ++pArg) {
+        args.insert(std::pair<std::string, Json>(
+          autowiring::demangle(pArg->ti),
+            Json::array{pArg->is_input, pArg->is_output}));
+      }
+      types["autoFilter"] = args;
+    }
+
     // Check if type receives any events
     {
       Json::array listenerTypes;
