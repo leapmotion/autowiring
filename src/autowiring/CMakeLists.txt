@@ -100,6 +100,7 @@ set(Autowiring_SRCS
   ObjectPool.h
   ObjectPoolMonitor.h
   ObjectPoolMonitor.cpp
+  ObjectTraits.h
   optional_ptr.h
   SatCounter.h
   MicroAutoFilter.h

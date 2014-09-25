@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
+#include "ObjectTraits.h"
 #include "AutoAnchor.h"
 #include "AutoFilterDescriptor.h"
 #include "AutowirableSlot.h"
@@ -151,7 +152,7 @@ protected:
   };
 
   // This is a list of concrete types, indexed by the true type of each element.
-  std::vector<AnySharedPointer> m_concreteTypes;
+  std::vector<ObjectTraits> m_concreteTypes;
 
   // This is a memoization map used to memoize any already-detected interfaces.
   mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;
@@ -324,57 +325,9 @@ protected:
   std::shared_ptr<Object> IncrementOutstandingThreadCount(void);
 
   /// <summary>
-  /// Mapping and extraction structure used to provide a runtime version of an Object-implementing shared pointer
-  /// </summary>
-  struct AddInternalTraits {
-    template<class T>
-    AddInternalTraits(const std::shared_ptr<typename SelectTypeUnifier<T>::type>& value, T*) :
-      type(typeid(T)),
-      value(value),
-      subscriber(AutoFilterDescriptorSelect<T>(value)),
-      pObject(autowiring::fast_pointer_cast<Object>(value)),
-      pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
-      pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
-      pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
-      pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
-      receivesEvents([this]{
-        for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink) {
-          auto identifier = evt->NewTypeIdentifier();
-          if (identifier->IsSameAs(pObject.get()))
-            return true;
-        }
-        return false;
-      }())
-    {
-      if(!pObject)
-        throw autowiring_error("Cannot add a type which does not implement Object");
-    }
-
-    // The declared original type:
-    const std::type_info& type;
-
-    // A holder to store the original shared pointer, to ensure that type information propagates
-    // correctly on the right-hand side of our map
-    const AnySharedPointer value;
-
-    // The packet subscriber introduction method, if appropriate:
-    const AutoFilterDescriptor subscriber;
-
-    // There are a lot of interfaces we support, here they all are:
-    const std::shared_ptr<Object> pObject;
-    const std::shared_ptr<ContextMember> pContextMember;
-    const std::shared_ptr<CoreRunnable> pCoreRunnable;
-    const std::shared_ptr<ExceptionFilter> pFilter;
-    const std::shared_ptr<BoltBase> pBoltBase;
-    
-    // Does this type receive events?
-    const bool receivesEvents;
-  };
-
-  /// <summary>
   /// Internal type introduction routine
   /// </summary>
-  void AddInternal(const AddInternalTraits& traits);
+  void AddInternal(const ObjectTraits& traits);
 
   /// <summary>
   /// Scans the memo collection for the specified entry, or adds a deferred resolution marker if resolution was not possible
@@ -427,7 +380,7 @@ protected:
   /// <summary>
   /// Forwarding routine, only removes from this context
   /// </summary>
-  void UnsnoopAutoPacket(const AddInternalTraits& traits);
+  void UnsnoopAutoPacket(const ObjectTraits& traits);
 
 public:
   // Accessor methods:
@@ -580,7 +533,7 @@ public:
 
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
-      AddInternal(AddInternalTraits(retVal, (T*)nullptr));
+      AddInternal(ObjectTraits(retVal, (T*)nullptr));
     }
     catch(autowiring_error&) {
       // We know why this exception occurred.  It's because, while we were constructing our
@@ -832,7 +785,7 @@ public:
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    const AddInternalTraits traits(pSnooper, (T*)nullptr);
+    const ObjectTraits traits(pSnooper, (T*)nullptr);
     
     // Add to collections of snoopers
     InsertSnooper(pSnooper);
@@ -854,7 +807,7 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    const AddInternalTraits traits(pSnooper, (T*)nullptr);
+    const ObjectTraits traits(pSnooper, (T*)nullptr);
     
     RemoveSnooper(pSnooper);
     

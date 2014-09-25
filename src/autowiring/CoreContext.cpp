@@ -188,7 +188,7 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   return retVal;
 }
 
-void CoreContext::AddInternal(const AddInternalTraits& traits) {
+void CoreContext::AddInternal(const ObjectTraits& traits) {
   {
     std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
 
@@ -207,7 +207,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
     }
 
     // Add the new concrete type:
-    m_concreteTypes.push_back(traits.value);
+    m_concreteTypes.push_back(traits);
 
     // Insert each context element:
     if(traits.pContextMember)
@@ -254,7 +254,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
     throw autowiring_error("It is an error to make use of NewAutoFilter in a type which does not have an AutoFilter member; please provide an AutoFilter method on this type");
 
   // Signal listeners that a new object has been created
-  GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, traits.value);
+  GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, traits);
 }
 
 void CoreContext::FindByType(AnySharedPointer& reference) const {
@@ -276,7 +276,7 @@ void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   // Resolve based on iterated dynamic casts for each concrete type:
   bool assigned = false;
   for(const auto& type : m_concreteTypes) {
-    if(!reference->try_assign(*type))
+    if(!reference->try_assign(*type.value))
       // No match, try the next entry
       continue;
 
@@ -842,7 +842,7 @@ void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
   GetPacketFactory()->AddSubscriber(rhs);
 }
 
-void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
+void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     

@@ -14,6 +14,7 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 
+struct ObjectTraits;
 struct TypeIdentifierBase;
 
 class AutoNetServerImpl:
@@ -58,7 +59,7 @@ public:
   /// </summary>
   /// <param name="ctxt">Context containing the object</param>
   /// <param name="obj">The object</param>
-  virtual void NewObject(CoreContext& ctxt, const AnySharedPointer& obj) override;
+  virtual void NewObject(CoreContext& ctxt, const ObjectTraits& obj) override;
 
   /// <summary>
   /// Updates server when a context has expired

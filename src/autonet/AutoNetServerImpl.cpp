@@ -4,6 +4,7 @@
 #include "at_exit.h"
 #include "autowiring.h"
 #include "demangle.h"
+#include "ObjectTraits.h"
 #include "EventRegistry.h"
 #include "TypeRegistry.h"
 #include <iostream>
@@ -148,19 +149,18 @@ void AutoNetServerImpl::ExpiredContext(CoreContext& oldCtxt){
   };
 }
 
-void AutoNetServerImpl::NewObject(CoreContext& ctxt, const AnySharedPointer& object){
+void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object){
   int contextID = ResolveContextID(&ctxt);
 
   *this += [this, object, contextID]{
     Json::object objData;
     Json::object types;
-    std::shared_ptr<Object> objectPtr(*object);
 
     // Add object data
-    objData["name"] = autowiring::demangle(typeid(*objectPtr));
+    objData["name"] = autowiring::demangle(typeid(*object.pObject));
     {
       Json::array slots;
-      for(auto slot = object->GetSlotInformation().pHead; slot; slot = slot->pFlink) {
+      for(auto slot = object.value->GetSlotInformation().pHead; slot; slot = slot->pFlink) {
         slots.push_back(Json::object{
             {"name", autowiring::demangle(slot->type)},
             {"autoRequired", slot->autoRequired},
@@ -171,17 +171,17 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const AnySharedPointer& obj
     }
 
     // Add type information
-    auto member = autowiring::fast_pointer_cast<ContextMember>(objectPtr);
+    auto member = object.pContextMember;
     if(member) {
       types["contextMember"] = true;
     }
 
-    auto runnable = autowiring::fast_pointer_cast<CoreRunnable>(objectPtr);
+    auto runnable = object.pCoreRunnable;
     if(runnable) {
       types["coreRunnable"] = true;
     }
 
-    auto thread = autowiring::fast_pointer_cast<BasicThread>(objectPtr);
+    auto thread = object.pBasicThread;
     if(thread) {
       // Create slot in map
       m_Threads[thread->GetSelf<BasicThread>()];
@@ -196,7 +196,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const AnySharedPointer& obj
     {
       Json::array listenerTypes;
       for(const auto& event : m_EventTypes) {
-        if(event->IsSameAs(objectPtr.get()))
+        if(event->IsSameAs(object.pObject.get()))
           listenerTypes.push_back(autowiring::demangle(event->Type()));
       }
 
@@ -204,12 +204,12 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const AnySharedPointer& obj
         types["eventReceiver"] = listenerTypes;
     }
 
-    auto filter = autowiring::fast_pointer_cast<ExceptionFilter>(objectPtr);
+    auto filter = object.pFilter;
     if(filter) {
       types["exceptionFilter"] = true;
     }
 
-    auto bolt = autowiring::fast_pointer_cast<BoltBase>(objectPtr);
+    auto bolt = object.pBoltBase;
     if(bolt) {
       Json::array sigils;
       for(auto cur = bolt->GetContextSigils(); *cur; cur++){
