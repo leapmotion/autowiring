@@ -11,6 +11,7 @@
 #include "Object.h"
 #include "ContextMember.h"
 #include "CoreRunnable.h"
+#include "BasicThread.h"
 #include "ExceptionFilter.h"
 #include "BoltBase.h"
 
@@ -28,6 +29,7 @@ struct ObjectTraits {
   pObject(autowiring::fast_pointer_cast<Object>(value)),
   pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
   pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
+  pBasicThread(autowiring::fast_pointer_cast<BasicThread>(value)),
   pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
   pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
   receivesEvents([this]{
@@ -57,6 +59,7 @@ struct ObjectTraits {
   const std::shared_ptr<Object> pObject;
   const std::shared_ptr<ContextMember> pContextMember;
   const std::shared_ptr<CoreRunnable> pCoreRunnable;
+  const std::shared_ptr<BasicThread> pBasicThread;
   const std::shared_ptr<ExceptionFilter> pFilter;
   const std::shared_ptr<BoltBase> pBoltBase;
 

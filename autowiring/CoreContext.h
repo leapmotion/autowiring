@@ -152,7 +152,7 @@ protected:
   };
 
   // This is a list of concrete types, indexed by the true type of each element.
-  std::vector<AnySharedPointer> m_concreteTypes;
+  std::vector<ObjectTraits> m_concreteTypes;
 
   // This is a memoization map used to memoize any already-detected interfaces.
   mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;

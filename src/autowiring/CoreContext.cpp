@@ -207,7 +207,7 @@ void CoreContext::AddInternal(const ObjectTraits& traits) {
     }
 
     // Add the new concrete type:
-    m_concreteTypes.push_back(traits.value);
+    m_concreteTypes.push_back(traits);
 
     // Insert each context element:
     if(traits.pContextMember)
@@ -254,7 +254,7 @@ void CoreContext::AddInternal(const ObjectTraits& traits) {
     throw autowiring_error("It is an error to make use of NewAutoFilter in a type which does not have an AutoFilter member; please provide an AutoFilter method on this type");
 
   // Signal listeners that a new object has been created
-  GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, traits.value);
+  GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, traits);
 }
 
 void CoreContext::FindByType(AnySharedPointer& reference) const {
@@ -276,7 +276,7 @@ void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   // Resolve based on iterated dynamic casts for each concrete type:
   bool assigned = false;
   for(const auto& type : m_concreteTypes) {
-    if(!reference->try_assign(*type))
+    if(!reference->try_assign(*type.value))
       // No match, try the next entry
       continue;
 
