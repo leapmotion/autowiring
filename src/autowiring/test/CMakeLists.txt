@@ -11,6 +11,7 @@ set(AutowiringTest_SRCS
   AutowiringUtilitiesTest.cpp
   BasicThreadTest.cpp
   BoltTest.cpp
+  CallExtractor.h
   CoreContextTest.cpp
   CoreJobTest.cpp
   CoreRunnableTest.cpp

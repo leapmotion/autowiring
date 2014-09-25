@@ -2,8 +2,9 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "AutoPacket.h"
-#include "DataFlow.h"
 #include "auto_arg.h"
+#include "CallExtractor.h"
+#include "DataFlow.h"
 #include "Decompose.h"
 #include "has_autofilter.h"
 #include "is_shared_ptr.h"
@@ -14,60 +15,6 @@
 
 class AutoPacket;
 class Deferred;
-
-/// <summary>
-/// Specialization for immediate mode cases
-/// </summary>
-template<class MemFn>
-struct CallExtractor;
-
-template<class T, class... Args>
-struct CallExtractor<void (T::*)(Args...)>:
-  Decompose<void (T::*)(Args...)>
-{
-  static const bool deferred = false;
-  static const size_t N = sizeof...(Args);
-
-  /// <summary>
-  /// Binder struct, lets us refer to an instance of Call by type
-  /// </summary>
-  template<void(T::*memFn)(Args...)>
-  static void Call(void* pObj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
-    // Handoff
-    (((T*) pObj)->*memFn)(
-      auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source<typename auto_arg<Args>::base_type>())...
-    );
-  }
-};
-
-/// <summary>
-/// Specialization for deferred cases
-/// </summary>
-template<class T, class... Args>
-struct CallExtractor<Deferred (T::*)(Args...)>:
-  Decompose<void (T::*)(Args...)>
-{
-  static const bool deferred = true;
-  static const size_t N = sizeof...(Args);
-
-  template<Deferred(T::*memFn)(Args...)>
-  static void Call(void* pObj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
-    // Obtain a shared pointer of the AutoPacket in order to ensure the packet
-    // stays resident when we pend this lambda to the destination object's
-    // dispatch queue.
-    auto pAutoPacket = autoPacket.shared_from_this();
-
-    // Pend the call to this object's dispatch queue:
-    // WARNING: The autowiring::DataFill information will be referenced,
-    // since it should be from a SatCounter associated to autoPacket,
-    // and will therefore have the same lifecycle as the AutoPacket.
-    *(T*) pObj += [pObj, pAutoPacket, &satisfaction] {
-      (((T*) pObj)->*memFn)(
-        auto_arg<Args>(pAutoPacket, *satisfaction.source<typename auto_arg<Args>::base_type>())...
-      );
-    };
-  }
-};
 
 /// <summary>
 /// AutoFilter argument disposition
@@ -146,7 +93,7 @@ struct AutoFilterDescriptorStub {
   /// </summary>
   template<class MemFn>
   AutoFilterDescriptorStub(CallExtractor<MemFn> extractor, t_call pCall) :
-    m_pType(&typeid(typename Decompose<MemFn>::type)),
+    m_pType(&typeid(typename CallExtractor<MemFn>::type)),
     m_pArgs(extractor.template Enumerate<AutoFilterDescriptorInput>()),
     m_deferred(extractor.deferred),
     m_arity(extractor.N),

@@ -3,19 +3,9 @@
 #include TYPE_TRAITS_HEADER
 #include <typeinfo>
 
-/// <summary>
-/// Provides some static reflection support for member function pointers
-/// </summary>
-template<class MemFn>
-struct Decompose;
-
-template<class R, class W, class... Args>
-struct Decompose<R(W::*)(Args...)> {
-  typedef R (W::*memType)(Args...);
-  typedef void fnType(Args...);
-  typedef W type;
-  typedef R retType;
-  static const int N = sizeof...(Args);
+template<class... Ts>
+struct TemplatePack {
+  static const int N = sizeof...(Ts);
 
   /// <summary>
   /// Returns an array of length N+1 of argument types on the bound type
@@ -26,7 +16,7 @@ struct Decompose<R(W::*)(Args...)> {
   /// argument function pointer.
   /// </remarks>
   static const std::type_info* (&Enumerate(void))[N + 1] {
-    static const std::type_info* ti[] = {&typeid(Args)..., nullptr};
+    static const std::type_info* ti [] = {&typeid(Ts)..., nullptr};
     return ti;
   }
 
@@ -44,7 +34,32 @@ struct Decompose<R(W::*)(Args...)> {
   /// </remarks>
   template<class T>
   static const T(&Enumerate(void))[N + 1] {
-    static const T rb[] = {typename T::template rebind<Args>()..., T()};
+    static const T rb [] = {typename T::template rebind<Ts>()..., T()};
     return rb;
   }
+};
+
+/// <summary>
+/// Provides some static reflection support for member function pointers
+/// </summary>
+template<class MemFn>
+struct Decompose;
+
+template<class R, class W, class... Args>
+struct Decompose<R(W::*)(Args...)> :
+  TemplatePack<Args...>
+{
+  typedef R(W::*memType)(Args...);
+  typedef void fnType(Args...);
+  typedef W type;
+  typedef R retType;
+};
+
+template<class R, class... Args>
+struct Decompose<R(*)(Args...)> :
+  TemplatePack<Args...>
+{
+  typedef void fnType(Args...);
+  typedef void type;
+  typedef R retType;
 };

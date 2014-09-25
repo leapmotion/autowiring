@@ -1389,8 +1389,6 @@ void FilterFunction(const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut
   typeOut->i += 1 + typeIn.i;
 }
 
-typedef std::function<void(const Decoration<0>&, auto_out<Decoration<1>>)> FilterFunctionType;
-
 TEST_F(AutoFilterTest, FunctionDecorationTest) {
   // AddRecipient that is an instance of std::function f : a -> b
   // This must be satisfied by decoration of type a,
@@ -1402,7 +1400,7 @@ TEST_F(AutoFilterTest, FunctionDecorationTest) {
   {
     auto packet = factory->NewPacket();
     packet->Decorate(Decoration<0>());
-    packet->AddRecipient(FilterFunctionType(FilterFunction));
+    packet->AddRecipient(FilterFunction);
     const Decoration<1>* getdec;
     ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
   }
@@ -1411,7 +1409,7 @@ TEST_F(AutoFilterTest, FunctionDecorationTest) {
   //NOTE: This test also catches failures to flush temporary subscriber information
   {
     auto packet = factory->NewPacket();
-    packet->AddRecipient(FilterFunctionType(FilterFunction));
+    packet->AddRecipient(FilterFunction);
     packet->Decorate(Decoration<0>());
     const Decoration<1>* getdec;
     ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
@@ -1425,9 +1423,9 @@ TEST_F(AutoFilterTest, FunctionDecorationLambdaTest) {
   {
     auto packet = factory->NewPacket();
     int addType = 1;
-    packet->AddRecipient(FilterFunctionType([addType] (const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
+    packet->AddRecipient([addType] (const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
       typeOut->i += 1 + typeIn.i;
-    }));
+    });
     packet->Decorate(Decoration<0>());
     const Decoration<1>* getdec;
     ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
@@ -1435,16 +1433,14 @@ TEST_F(AutoFilterTest, FunctionDecorationLambdaTest) {
   }
 }
 
-typedef std::function<void(auto_out<Decoration<0>>)> InjectorFunctionType;
-
 TEST_F(AutoFilterTest, FunctionInjectorTest) {
   AutoRequired<AutoPacketFactory> factory;
 
   auto packet = factory->NewPacket();
   int addType = 1;
-  packet->AddRecipient(InjectorFunctionType([addType](auto_out<Decoration<0>> typeOut) {
+  packet->AddRecipient([addType](auto_out<Decoration<0>> typeOut) {
     typeOut->i += addType;
-  }));
+  });
   const Decoration<0>* getdec;
   ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
   ASSERT_EQ(0+addType, getdec->i) << "Increment was not applied";

@@ -17,6 +17,7 @@ struct MicroAutoFilter {
   // This AutoFilter method will be identified as invalid due to the return type
   Ret AutoFilter(Args...) {}
 };
+
 template<class... Args>
 struct MicroAutoFilter<void, Args...> {
   MicroAutoFilter(const std::function<void(Args...)>& filter):

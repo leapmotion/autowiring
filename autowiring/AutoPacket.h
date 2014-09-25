@@ -1,14 +1,15 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
-#include "at_exit.h"
-#include "DataFlow.h"
 #include "AutoCheckout.h"
+#include "at_exit.h"
+#include "CallExtractor.h"
+#include "DataFlow.h"
 #include "DecorationDisposition.h"
 #include "demangle.h"
+#include "is_any.h"
 #include "is_shared_ptr.h"
 #include "ObjectPool.h"
-#include "is_any.h"
 #include "MicroAutoFilter.h"
 #include "hash_tuple.h"
 #include <list>
@@ -596,11 +597,43 @@ public:
   /// <remarks>
   /// Recipients added in this way cannot receive piped data, since they are anonymous.
   /// </remarks>
-  template<class Ret, class... Args>
-  void AddRecipient(std::function<Ret(Args...)> f) {
+  template<class Fn>
+  void AddRecipient(Fn&& fn) {
+    auto subscriber = std::make_shared<Fn>(std::forward<Fn>(fn));
+    typedef decltype(&Fn::operator()) t_memfn;
     InitializeRecipient(
-      MakeAutoFilterDescriptor(std::make_shared<MicroAutoFilter<Ret, Args...>>(f))
+      AutoFilterDescriptor(
+        AnySharedPointer(subscriber),
+        CallExtractor<t_memfn>(),
+        &CallExtractor<t_memfn>::template Call<&Fn::operator()>
+      )
     );
+  }
+
+  template<class RetType, class... Args>
+  void AddRecipient(RetType(*pfn)(Args...)) {
+    // Token shared pointer, used to provide a pointer to pfn because we can't
+    // capture it in a template processing context.  Hopefully this can be changed
+    // once MSVC adopts constexpr.
+    AnySharedPointer subscriber(
+      std::shared_ptr<RetType(Args...)>(
+        pfn,
+        [](decltype(pfn)){}
+      )
+    );
+    InitializeRecipient(
+      AutoFilterDescriptor(
+        subscriber,
+        CallExtractor<decltype(pfn)>(),
+        &CallExtractor<decltype(pfn)>::Call
+      )
+    );
+  }
+
+  // Convenience overload:
+  template<class RetType, class... Args>
+  void AddRecipient(RetType(&pfn)(Args...)) {
+    return AddRecipient(&pfn);
   }
 
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
