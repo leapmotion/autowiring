@@ -1711,8 +1711,11 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
     CurrentContextPusher pusher(master_context);
     std::shared_ptr<AutoPacket> master_packet;
     master_packet = master_factory->NewPacket();
-    master_packet->Decorate(Decoration<0>());
-    ASSERT_TRUE(master_packet->Has<Decoration<1>>()) << "Stile failed to send & retrieve data";
+    int init = -1;
+    master_packet->Decorate(Decoration<0>(init));
+    const Decoration<1>* out;
+    ASSERT_TRUE(master_packet->Get(out)) << "Stile failed to send & retrieve data";
+    ASSERT_EQ(init, out->i) << "Output was not from junction in slave context";
   }
 }
 

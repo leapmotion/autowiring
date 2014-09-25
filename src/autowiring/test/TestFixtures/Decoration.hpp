@@ -223,7 +223,8 @@ public:
 class FilterOutB :
 public FilterRoot {
 public:
-  void AutoFilter(auto_out<Decoration<2>>) {
+  void AutoFilter(auto_out<Decoration<2>> two) {
     ++m_called;
+    two.make(); //invoke default constructor
   }
 };
