@@ -597,9 +597,11 @@ public:
   /// Recipients added in this way cannot receive piped data, since they are anonymous.
   /// </remarks>
   template<class Ret, class... Args>
-  void AddRecipient(std::function<Ret(Args...)> f) {
+  void AddRecipient(std::function<Ret(Args...)>&& filter) {
+    // NOTE: This cannot directly construct an AutoFilterDescriptor, since that
+    // requires a circular dependency due to CallExtractor::Call.
     InitializeRecipient(
-      MakeAutoFilterDescriptor(std::make_shared<MicroAutoFilter<Ret, Args...>>(f))
+      MakeAutoFilterDescriptor(std::make_shared<MicroAutoFilter<Ret, Args...>>(std::move(filter)))
     );
   }
 
