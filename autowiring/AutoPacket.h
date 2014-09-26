@@ -345,7 +345,6 @@ public:
       entry.isCheckedOut = false;
 
       UpdateSatisfaction(data, typeid(void));
-      UpdateSatisfaction(typeid(std::shared_ptr<T>), typeid(void));
     }
     if (!flow.halfpipes.empty()) {
       auto& entry = m_decorations[DSIndex(data, source)];
@@ -364,7 +363,6 @@ public:
       entry.isCheckedOut = false;
 
       UpdateSatisfaction(data, source);
-      UpdateSatisfaction(typeid(std::shared_ptr<T>), source);
     }
   }
 
