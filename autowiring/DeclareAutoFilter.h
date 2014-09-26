@@ -4,7 +4,7 @@
 #include "CoreContext.h"
 #include "MicroAutoFilter.h"
 
-/// <summary>Child of MicroAutoFilter that retains base type</summary>
+/// <summary>Child of MicroAutoFilter that is additionally distinguished by base type</summary>
 template<class Base, class Ret, class... Args>
 class BasedAutoFilter
 {
@@ -12,7 +12,7 @@ protected:
   MicroAutoFilter<Ret, Args...> m_micro;
 
 public:
-  BasedAutoFilter(const std::function<void(Args...)>& filter) : m_micro(filter) {}
+  BasedAutoFilter(const std::function<void(Args...)>&& filter) : m_micro(std::move(filter)) {}
   Ret AutoFilter(Args... args) { return m_micro.AutoFilter(args...); }
 };
 

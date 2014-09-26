@@ -1345,10 +1345,10 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
 
 TEST_F(AutoFilterTest, MicroAutoFilterTests) {
   int extVal = -1;
-  std::function<void(const int&)> filter([&extVal] (const int& getVal) {
+  MicroAutoFilter<void, const int&> makeImmediate(
+  [&extVal] (const int& getVal) {
     extVal = getVal;
   });
-  MicroAutoFilter<void, const int&> makeImmediate(filter);
   int setVal = 1;
   makeImmediate.AutoFilter(setVal);
   ASSERT_EQ(1, extVal);

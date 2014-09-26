@@ -226,7 +226,7 @@ public:
   {}
 
   static const bool is_shared = true;
-  static const bool is_optional = true;
+  static const bool is_optional = false;
 };
 
 /// <summary>
