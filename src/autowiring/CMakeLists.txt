@@ -30,6 +30,7 @@ set(Autowiring_SRCS
   Autowired.cpp
   AutowirableSlot.h
   AutowirableSlot.cpp
+  AutowiringConfig.h
   AutowiringEvents.h
   autowiring.h
   autowiring_error.h
@@ -205,7 +206,7 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
     if(hfile)
       install(
         FILES ${hfile}
-        DESTINATION "include/Autowiring"
+        DESTINATION "include/autowiring"
         COMPONENT autowiring
       )
     endif()

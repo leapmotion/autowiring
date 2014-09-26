@@ -1,3 +1,7 @@
+cmake_minimum_required(VERSION 3.0.0)
+include(../version.cmake)
+find_package(autowiring ${autowiring_VERSION} REQUIRED)
+
 add_executable(ContextExample ContextExample.cpp)
 target_link_libraries(ContextExample Autowiring)
 set_property(TARGET ContextExample PROPERTY FOLDER "Examples")
