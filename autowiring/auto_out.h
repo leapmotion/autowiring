@@ -90,11 +90,6 @@ public:
     m_source(&source)
   {}
 
-  /// <returns>True when commited to output</returns>
-  operator bool () const {
-    return shared_type::operator bool();
-  }
-
   /// <summary>Exchanges this and rhs</summary>
   void swap(auto_out<type>& rhs) {
     std::swap<shared_type>(*this, rhs);
@@ -125,6 +120,11 @@ public:
     // Prevent any subsequent commitments to output
     m_packet.reset();
     m_source = nullptr;
+  }
+
+  /// <returns>True when commited to output</returns>
+  operator bool () const {
+    return shared_type::operator bool();
   }
 
   type* get() {
