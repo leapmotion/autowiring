@@ -51,6 +51,8 @@ protected:
     // Reverse argument orientation for AutoFilter in slave context
     typedef auto_in<typename auto_arg<data_pipe>::id_type> slave_in_type;
 
+    // PROBLEM: Using a reference means that calls with a Deferred dependency will obtain an invalid reference.
+    // PROBLEM: It is necessary to forward the auto_out argument, in order to prevent copying.
     slave_packet->AddRecipient<void, slave_in_type>(std::function<void(slave_in_type slave_data)>([&master_data](slave_in_type slave_data) {
       // NOTE: The lambda copy of master_data is implicitly a move of AutoCheckout,
       // so this lambda has sole responsibility for providing the requested data.
