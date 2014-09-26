@@ -1687,7 +1687,12 @@ class MasterContext {};
 
 TEST_F(AutoFilterTest, VerifyContextStile) {
   // Stile injects Decoration<0> and extracts Decoration<1>
-  std::shared_ptr<AutoStile<const Decoration<0>&, auto_out<Decoration<1>>>> stile;
+  typedef AutoStile<
+    const Decoration<0>&,
+    auto_out<Decoration<1>>,
+    auto_out<Decoration<2>>
+  > test_stile;
+  std::shared_ptr<test_stile> stile;
   std::shared_ptr<AutoPacketFactory> master_factory;
 
   AutoCreateContextT<SlaveContext> slave_context;
@@ -1702,7 +1707,7 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
   {
     CurrentContextPusher pusher(master_context);
     master_factory = AutoRequired<AutoPacketFactory>();
-    stile = AutoRequired<AutoStile<const Decoration<0>&, auto_out<Decoration<1>>>>();
+    stile = AutoRequired<test_stile>();
     master_context->Initiate();
   }
 
@@ -1713,9 +1718,11 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
     master_packet = master_factory->NewPacket();
     int init = -1;
     master_packet->Decorate(Decoration<0>(init));
-    const Decoration<1>* out;
-    ASSERT_TRUE(master_packet->Get(out)) << "Stile failed to send & retrieve data";
-    ASSERT_EQ(init, out->i) << "Output was not from junction in slave context";
+    const Decoration<1>* out1;
+    ASSERT_TRUE(master_packet->Get(out1)) << "Stile failed to send & retrieve data";
+    ASSERT_EQ(init, out1->i) << "Output was not from junction in slave context";
+    const Decoration<2>* out2;
+    ASSERT_FALSE(master_packet->Get(out2)) << "Decoration<2> was not produced in slave context";
   }
 }
 
