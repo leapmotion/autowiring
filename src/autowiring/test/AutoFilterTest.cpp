@@ -1717,7 +1717,7 @@ public:
 class SlaveContext {};
 class MasterContext {};
 
-TEST_F(AutoFilterTest, DISABLED_VerifyContextStile) {
+TEST_F(AutoFilterTest, VerifyContextStile) {
   // Stile injects Decoration<0> and extracts Decoration<1>
   typedef AutoStile<
     const Decoration<0>&,
