@@ -192,6 +192,13 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
       };
     }
 
+    // Check if this object inherits from AutoPacketFactory or
+    // advertises an AutoPacketFactory member by providing a cast
+    // to AutoPacketFactory&.
+    if (object.isAutoPacketSource) {
+      types["isAutoPacketSource"] = true;
+    }
+
     // Check if type implements an AutoFilter
     if (!object.subscriber.empty()) {
       Json::object args;
