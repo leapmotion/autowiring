@@ -39,7 +39,11 @@ struct ObjectTraits {
         return true;
     }
     return false;
-  }())
+  }()),
+  isAutoPacketSource(
+    std::is_convertible<T, AutoPacketFactory>::value || // via inheritance
+    std::is_convertible<T&, AutoPacketFactory&>::value //via casting
+  )
   {
     if(!pObject)
       throw autowiring_error("Cannot add a type which does not implement Object");
@@ -65,4 +69,7 @@ struct ObjectTraits {
 
   // Does this type receive events?
   const bool receivesEvents;
+
+  // Does this type generate AutoPackets?
+  const bool isAutoPacketSource;
 };

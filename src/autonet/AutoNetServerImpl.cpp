@@ -192,11 +192,10 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
       };
     }
 
-    // Check if this is capable of initializing AutoPackets.
-    // IMPORTANT: This field ensures that any object inheriting from
-    // AutoPacketFactory or providing a cast to AutoPacketFactory
-    // (exposing an AutoPacketFactory member) will be recognized.
-    if (dynamic_cast<AutoPacketFactory*>(object.pObject.get())) {
+    // Check if this object inherits from AutoPacketFactory or
+    // advertises an AutoPacketFactory member by providing a cast
+    // to AutoPacketFactory&.
+    if (object.isAutoPacketSource) {
       types["isAutoPacketSource"] = true;
     }
 
