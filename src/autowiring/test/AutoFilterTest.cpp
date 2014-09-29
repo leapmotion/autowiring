@@ -225,7 +225,7 @@ public:
   /// Called when AutoFilter is not
   void ElseFilter(const AutoPacket& packet) {
     ++m_calledElse;
-    ASSERT_FALSE(packet.Has<Decoration<0>>()) << "AutoFilter should have been called";
+    ASSERT_FALSE(packet.Has<Decoration<0>>()) << "AutoFilter should not have been called";
   }
 
   /// Declared AutoFilter call, implemented by MicroAutoFilter
@@ -236,7 +236,7 @@ public:
   /// Declared AutoFilter call, implemented by MicroAutoFilter
   void NextElseFilter(const AutoPacket& packet) {
     ++m_calledNextElse;
-    ASSERT_FALSE(packet.Has<Decoration<1>>()) << "NextFilter should have been called";
+    ASSERT_FALSE(packet.Has<Decoration<1>>()) << "NextFilter should not have been called";
   }
 
   void Reset() {
@@ -273,6 +273,7 @@ TEST_F(AutoFilterTest, TestLogicFilter) {
     ASSERT_EQ(0, logic->m_calledElse) << "Called ElseFilter before packet final-calls";
     ASSERT_EQ(0, logic->m_calledNext) << "Called NextFilter without Decoration<0>";
     ASSERT_EQ(0, logic->m_calledNextElse) << "Called NextElseFilter before packet final-calls";
+
     pkt->Decorate(Decoration<1>());
     ASSERT_EQ(1, logic->m_calledAuto) << "Multiple calls to AutoFilter with Decoration<0>";
     ASSERT_EQ(0, logic->m_calledElse) << "Called ElseFilter before packet final-calls";
