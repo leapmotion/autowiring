@@ -23,23 +23,25 @@
 struct ObjectTraits {
   template<class T>
   ObjectTraits(const std::shared_ptr<typename SelectTypeUnifier<T>::type>& value, T*) :
-  type(typeid(T)),
-  value(value),
-  subscriber(AutoFilterDescriptorSelect<T>(value)),
-  pObject(autowiring::fast_pointer_cast<Object>(value)),
-  pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
-  pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
-  pBasicThread(autowiring::fast_pointer_cast<BasicThread>(value)),
-  pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
-  pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
-  receivesEvents([this]{
-    for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink) {
-      auto identifier = evt->NewTypeIdentifier();
-      if (identifier->IsSameAs(pObject.get()))
-        return true;
-    }
-    return false;
-  }())
+    type(typeid(T)),
+    value(value),
+    subscriber(AutoFilterDescriptorSelect<T>(value)),
+    pObject(autowiring::fast_pointer_cast<Object>(value)),
+    pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
+    pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
+    pBasicThread(autowiring::fast_pointer_cast<BasicThread>(value)),
+    pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
+    pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
+    receivesEvents(
+      [this]{
+        for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink) {
+          auto identifier = evt->NewTypeIdentifier();
+          if (identifier->IsSameAs(pObject.get()))
+            return true;
+        }
+        return false;
+      }()
+    )
   {
     if(!pObject)
       throw autowiring_error("Cannot add a type which does not implement Object");
