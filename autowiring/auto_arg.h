@@ -59,16 +59,6 @@ class auto_arg<const type>:
 public:
   typedef auto_in<type> auto_type;
 
-  using auto_type::is_input;
-  using auto_type::is_output;
-
-  operator typename auto_type::base_type () {
-    return auto_type::operator typename auto_type::base_type();
-  }
-  operator typename auto_type::shared_type () {
-    return auto_type::operator typename auto_type::shared_type();
-  }
-
   auto_arg() {}
 
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
@@ -88,16 +78,6 @@ class auto_arg<const type&>:
 {
 public:
   typedef auto_in<type> auto_type;
-
-  using auto_type::is_input;
-  using auto_type::is_output;
-
-  operator typename auto_type::base_type () {
-    return auto_type::operator typename auto_type::base_type();
-  }
-  operator typename auto_type::shared_type () {
-    return auto_type::operator typename auto_type::shared_type();
-  }
 
   auto_arg() {}
 
