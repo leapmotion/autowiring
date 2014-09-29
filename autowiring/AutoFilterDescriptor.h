@@ -252,6 +252,11 @@ struct AutoFilterDescriptor:
 {
   AutoFilterDescriptor(void) {}
 
+  AutoFilterDescriptor(AutoFilterDescriptor&& rhs) :
+    AutoFilterDescriptorStub(std::move(rhs)),
+    m_autoFilter(rhs.m_autoFilter)
+  {}
+
   AutoFilterDescriptor(const AutoFilterDescriptor& rhs) :
     AutoFilterDescriptorStub(rhs),
     m_autoFilter(rhs.m_autoFilter)
@@ -262,6 +267,15 @@ struct AutoFilterDescriptor:
   /// </summary>
   AutoFilterDescriptor(const AnySharedPointer& autoFilter):
     m_autoFilter(autoFilter)
+  {}
+
+  template<class T>
+  AutoFilterDescriptor(const std::shared_ptr<T>& subscriber) :
+    AutoFilterDescriptor(
+      AnySharedPointer(subscriber),
+      CallExtractor<decltype(&T::AutoFilter)>(),
+      &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
+    )
   {}
 
   /// <summary>
@@ -290,6 +304,46 @@ struct AutoFilterDescriptor:
     // Cannot register a subscriber with zero arguments:
     static_assert(CallExtractor<MemFn>::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
   }
+
+  /// <summary>
+  /// Adds a function to be called as an AutoFilter for this packet only.
+  /// </summary>
+  /// <remarks>
+  /// Recipients added in this way cannot receive piped data, since they are anonymous.
+  /// </remarks>
+  template<class Fn>
+  AutoFilterDescriptor(Fn fn):
+    AutoFilterDescriptor(
+      AnySharedPointer(std::make_shared<Fn>(std::forward<Fn>(fn))),
+      CallExtractor<decltype(&Fn::operator())>(),
+      &CallExtractor<decltype(&Fn::operator())>::template Call<&Fn::operator()>
+    )
+  {}
+
+  template<class RetType, class... Args>
+  AutoFilterDescriptor(RetType(*pfn)(Args...)):
+    AutoFilterDescriptor(
+      // Token shared pointer, used to provide a pointer to pfn because we can't
+      // capture it in a template processing context.  Hopefully this can be changed
+      // once MSVC adopts constexpr.
+      AnySharedPointer(
+        std::shared_ptr<RetType(Args...)>(
+          pfn,
+          [](decltype(pfn)){}
+        )
+      ),
+
+      // The remainder is fairly straightforward
+      CallExtractor<decltype(pfn)>(),
+      &CallExtractor<decltype(pfn)>::Call
+    )
+  {}
+
+  // Convenience overload:
+  template<class RetType, class... Args>
+  AutoFilterDescriptor(RetType(&pfn)(Args...)):
+    AutoFilterDescriptor(&pfn)
+  {}
 
 protected:
   // A hold on the enclosed autoFilter
@@ -345,26 +399,23 @@ public:
 
 template<class T, bool has_autofilter = has_autofilter<T>::value>
 class AutoFilterDescriptorSelect:
-  public std::true_type,
-  public AutoFilterDescriptor
+  public std::true_type
 {
 public:
   AutoFilterDescriptorSelect(const std::shared_ptr<T>& subscriber) :
-    AutoFilterDescriptor(
-      AnySharedPointer(subscriber),
-      CallExtractor<decltype(&T::AutoFilter)>(),
-      &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
-    )
+    desc(subscriber)
   {}
+
+  const AutoFilterDescriptor desc;
 };
 
 template<class T>
 class AutoFilterDescriptorSelect<T, false>:
-  public std::false_type,
-  public AutoFilterDescriptor
+  public std::false_type
 {
 public:
   AutoFilterDescriptorSelect(const std::shared_ptr<T>&) {}
+  const AutoFilterDescriptor desc;
 };
 
 /// <summary>
@@ -372,7 +423,7 @@ public:
 /// </summary>
 template<class T>
 AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
-  return AutoFilterDescriptorSelect<T>(ptr);
+  return std::move(AutoFilterDescriptorSelect<T>(ptr).desc);
 }
 
 namespace std {

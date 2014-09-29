@@ -140,11 +140,6 @@ private:
   void Finalize(void);
 
   /// <summary>
-  /// Adds a recipient for data associated only with this issuance of the packet.
-  /// </summary>
-  void InitializeRecipient(const AutoFilterDescriptor& descriptor);
-
-  /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
   void MarkUnsatisfiable(const std::type_info& info, const std::type_info& source = typeid(void));
@@ -592,49 +587,12 @@ public:
   }
 
   /// <summary>
-  /// Adds a function to be called as an AutoFilter for this packet only.
+  /// Adds a recipient for data associated only with this issuance of the packet.
   /// </summary>
   /// <remarks>
   /// Recipients added in this way cannot receive piped data, since they are anonymous.
   /// </remarks>
-  template<class Fn>
-  void AddRecipient(Fn&& fn) {
-    auto subscriber = std::make_shared<Fn>(std::forward<Fn>(fn));
-    typedef decltype(&Fn::operator()) t_memfn;
-    InitializeRecipient(
-      AutoFilterDescriptor(
-        AnySharedPointer(subscriber),
-        CallExtractor<t_memfn>(),
-        &CallExtractor<t_memfn>::template Call<&Fn::operator()>
-      )
-    );
-  }
-
-  template<class RetType, class... Args>
-  void AddRecipient(RetType(*pfn)(Args...)) {
-    // Token shared pointer, used to provide a pointer to pfn because we can't
-    // capture it in a template processing context.  Hopefully this can be changed
-    // once MSVC adopts constexpr.
-    AnySharedPointer subscriber(
-      std::shared_ptr<RetType(Args...)>(
-        pfn,
-        [](decltype(pfn)){}
-      )
-    );
-    InitializeRecipient(
-      AutoFilterDescriptor(
-        subscriber,
-        CallExtractor<decltype(pfn)>(),
-        &CallExtractor<decltype(pfn)>::Call
-      )
-    );
-  }
-
-  // Convenience overload:
-  template<class RetType, class... Args>
-  void AddRecipient(RetType(&pfn)(Args...)) {
-    return AddRecipient(&pfn);
-  }
+  void AddRecipient(const AutoFilterDescriptor& descriptor);
 
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>

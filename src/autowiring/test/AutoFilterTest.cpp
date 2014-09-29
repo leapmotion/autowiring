@@ -579,7 +579,7 @@ TEST_F(AutoFilterTest, VerifyTeardownArrangement) {
       std::shared_ptr<FilterA> filterA = filterAWeak.lock();
 
       // Unsubscribe the filter:
-      factory->RemoveSubscriber(MakeAutoFilterDescriptor(filterA));
+      factory->RemoveSubscriber(filterA);
     }
 
     // Verify that unsubscription STILL does not result in expiration:
