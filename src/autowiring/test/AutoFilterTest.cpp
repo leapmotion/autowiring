@@ -149,6 +149,18 @@ public:
   }
 };
 
+class FilterFirstValidateInheritance:
+  public FilterFirst
+{};
+
+static_assert(
+  std::is_same<
+    FilterFirst,
+    Decompose<decltype(&FilterFirstValidateInheritance::AutoFilter)>::type
+  >::value,
+  "Decomposed type did not correctly name the implementing type of an inherited method"
+);
+
 class FilterLast {
 public:
   int m_called;
