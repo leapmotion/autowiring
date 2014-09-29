@@ -5,6 +5,37 @@
 #include "AutoPacket.h"
 #include MEMORY_HEADER
 
+template<class T, bool is_input = auto_arg<T>::is_input>
+struct AutoDecorationStile;
+
+template<class T>
+struct AutoDecorationStile<T, true>
+{
+  /// <summary>Decorator for input shares the reference to master_data</summary>
+  static void DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, T& master_data) {
+    slave_packet->Decorate(master_data);
+  }
+};
+
+template<class T>
+struct AutoDecorationStile<T, false>
+{
+  /// <summary>Decorator for output creates an extraction for slave_data</summary>
+  static void DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, T& master_data) {
+    static_assert(std::is_same<T, auto_out<typename auto_arg<T>::id_type>>::value, "Output types must be auto_out");
+
+    // Reverse argument orientation for AutoFilter in slave context
+    typedef auto_in<typename auto_arg<T>::id_type> slave_in_type;
+
+    slave_packet->AddRecipient([&master_data](slave_in_type slave_data) {
+      // NOTE: The lambda copy of master_data is implicitly a move of AutoCheckout,
+      // so this lambda has sole responsibility for providing the requested data.
+      // NOTE: This is a deep copy, not a shared resource.
+      *master_data = *slave_data;
+    });
+  }
+};
+
 /// <summary>
 /// AutoStile provides a means of calling a context as though it is an AutoFilter.
 /// The AutoStile Args use the same syntax as AutoFilter:
@@ -36,35 +67,11 @@ class AutoStile
 protected:
   std::weak_ptr<AutoPacketFactory> m_slave_factory;
 
-  /// <summary>Decorator for input shares the reference to master_data</summary>
-  template<class data_pipe>
-  static typename std::enable_if<auto_arg<data_pipe>::is_input, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe& master_data) {
-    slave_packet->Decorate(master_data);
-    return true; //Place-holder in variadic initializer
-  }
-
-  /// <summary>Decorator for output creates an extraction for slave_data</summary>
-  template<class data_pipe>
-  static typename std::enable_if<auto_arg<data_pipe>::is_output, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe& master_data) {
-    static_assert(std::is_same<data_pipe, auto_out<typename auto_arg<data_pipe>::id_type>>::value, "Output types must be auto_out");
-
-    // Reverse argument orientation for AutoFilter in slave context
-    typedef auto_in<typename auto_arg<data_pipe>::id_type> slave_in_type;
-
-    slave_packet->AddRecipient<void, slave_in_type>([&master_data](slave_in_type slave_data) {
-      // NOTE: The lambda copy of master_data is implicitly a move of AutoCheckout,
-      // so this lambda has sole responsibility for providing the requested data.
-      // NOTE: This is a deep copy, not a shared resource.
-      *master_data = *slave_data;
-    });
-    return true; //Place-holder in variadic initializer
-  }
-
   /// <summary>Inject all data from slave_packet into master_packet</summary>
   static void ForwardStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet) {
-    slave_packet->AddRecipient<void, const AutoPacket&>(std::function<void(const AutoPacket&)>([master_packet](const AutoPacket& slave_packet) {
+    slave_packet->AddRecipient([master_packet](const AutoPacket& slave_packet) {
       slave_packet.ForwardAll(master_packet);
-    }));
+    });
   }
 
 public:
@@ -80,10 +87,9 @@ public:
     // Initiate the slave context
     std::shared_ptr<AutoPacket> master_packet = packet.shared_from_this();
     std::shared_ptr<AutoPacket> slave_packet = slave_factory->NewPacket();
-    bool init [] = {
-      DecorationStile<Args>(slave_packet, master_packet, data)...
+    std::initializer_list<bool>{
+      (AutoDecorationStile<Args>::DecorationStile(slave_packet, master_packet, data), false)...
     };
-    (void)init;
 
     if (var_and<auto_arg<Args>::is_input...>::value) {
       ForwardStile(slave_packet, master_packet);

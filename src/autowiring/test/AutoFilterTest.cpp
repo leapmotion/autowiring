@@ -1702,6 +1702,9 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
     master_context->Initiate();
   }
 
+  static_assert(auto_arg<const Decoration<0>&>::is_input, "Input type not correctly recognized");
+  static_assert(auto_arg<auto_out<Decoration<1>>>::is_output, "Output type not correctly recognized");
+
   stile->Leash(slave_context);
   {
     CurrentContextPusher pusher(master_context);
