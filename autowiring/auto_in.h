@@ -1,8 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-
+#include "AutoPacket.h"
 #include MEMORY_HEADER
-#include <autowiring/AutoPacket.h>
 
 /// <summary>
 /// Fundamental type of required input arguments of AutoFilter methods.
