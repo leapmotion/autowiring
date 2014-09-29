@@ -6,7 +6,7 @@ include(CTest)
 # the cmake_minimum_required to version 3.0
 set(autowiring_VERSION_MAJOR 0)
 set(autowiring_VERSION_MINOR 1)
-set(autowiring_VERSION_PATCH 1)
+set(autowiring_VERSION_PATCH 2)
 
 # Determine whether Autowiring has been embedded in another project
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
