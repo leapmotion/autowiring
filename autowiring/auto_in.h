@@ -36,26 +36,16 @@ public:
     shared_type(nullptr)
   {}
 
-  auto_in (auto_in<type>& rhs):
-    shared_type(rhs)
+  auto_in (auto_in<type>&& rhs):
+    std::shared_ptr<const type>(std::move(rhs))
   {}
 
-  auto_in (auto_in<type>&& rhs) {
-    std::swap<shared_type>(*this, rhs);
-  }
-
-  auto_in& operator = (auto_in<type>& rhs) {
-    shared_type::operator = (rhs);
-    return *this;
+  auto_in(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)) {
+    packet->Get(*this, source);
   }
 
   auto_in& operator = (auto_in<type>&& rhs) {
-    shared_type::reset();
-    std::swap<shared_type>(*this, rhs);
+    *this = std::forward<auto_in<type>&&>(rhs);
     return *this;
-  }
-
-  auto_in (std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)) {
-    packet->Get(*this, source);
   }
 };

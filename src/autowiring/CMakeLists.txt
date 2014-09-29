@@ -39,6 +39,7 @@ set(Autowiring_SRCS
   BasicThreadStateBlock.cpp
   Bolt.h
   BoltBase.h
+  CallExtractor.h
   ContextCreator.h
   ContextCreatorBase.h
   ContextCreatorBase.cpp

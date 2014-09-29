@@ -3,6 +3,8 @@
 #include "DataFlow.h"
 #include "Decompose.h"
 
+class Deferred;
+
 /// <summary>
 /// Specialization for immediate mode cases
 /// </summary>

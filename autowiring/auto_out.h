@@ -36,41 +36,24 @@ public:
     return *this;
   }
 
-  auto_out ():
-    shared_type(nullptr)
+  auto_out() {}
+
+  auto_out(auto_out<type>&& rhs):
+    shared_type(std::move(rhs))
   {}
-
-
-  /// <summary>Copy constructor is equivalent to a move</summary>
-  auto_out (auto_out<type>& rhs) {
-    std::swap<shared_type>(*this, rhs);
-  }
-
-  auto_out (auto_out<type>&& rhs) {
-    std::swap<shared_type>(*this, rhs);
-  }
-
-  /// <summary>Assignment from is equivalent to a move</summary>
-  /// <remarks>
-  /// If the lhs auto_out has a non-null reference that reference
-  /// will be finalized before assignment.
-  /// </remarks>
-  auto_out& operator = (auto_out<type>& rhs) {
-    shared_type::reset();
-    std::swap<shared_type>(*this, rhs);
-    return *this;
-  }
-
-  auto_out& operator = (auto_out<type>&& rhs) {
-    shared_type::reset();
-    std::swap<shared_type>(*this, rhs);
-    return *this;
-  }
 
   auto_out (std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    shared_type(new type(), std::function<void(type*)>([packet, &source](type* ptr){
-      // NOTE: This is only called when ptr is valid
-      packet->Put(ptr, source);
-    }))
+    shared_type(
+      new type(),
+      std::function<void(type*)>([packet, &source](type* ptr){
+        // NOTE: This is only called when ptr is valid
+        packet->Put(ptr, source);
+      })
+    )
   {}
+
+  auto_out& operator = (auto_out<type>&& rhs) {
+    shared_type::operator=(std::move(rhs));
+    return *this;
+  }
 };
