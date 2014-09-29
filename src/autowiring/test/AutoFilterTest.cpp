@@ -134,11 +134,16 @@ TEST_F(AutoFilterTest, VerifyTypeUsage) {
 
 class FilterFirst {
 public:
+  FilterFirst(void):
+    m_magic(0xDEADBEEF),
+    m_called(0)
+  {}
+
+  const int m_magic;
   int m_called;
 
-  FilterFirst() : m_called(0) {};
-
   void AutoFilter(AutoPacket& pkt) {
+    ASSERT_EQ(0xDEADBEEF, m_magic) << "Magic value was corrupted, pointer was not adjusted to the correct offset";
     ++m_called;
     pkt.Decorate(Decoration<0>());
   }
