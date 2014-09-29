@@ -25,7 +25,7 @@ struct SatCounter:
   {}
 
   SatCounter(const SatCounter& source):
-    AutoFilterDescriptor(source),
+    AutoFilterDescriptor(static_cast<const AutoFilterDescriptor&>(source)),
     called(source.called),
     remaining(source.remaining),
     optional(source.optional),
@@ -63,7 +63,7 @@ struct SatCounter:
       throw std::runtime_error(ss.str());
     }
     called = true;
-    GetCall()(GetAutoFilter()->ptr(), packet, satisfaction);
+    GetCall()(GetAutoFilter(), packet, satisfaction);
   }
 
   /// <summary>

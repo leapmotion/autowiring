@@ -134,15 +134,32 @@ TEST_F(AutoFilterTest, VerifyTypeUsage) {
 
 class FilterFirst {
 public:
+  FilterFirst(void):
+    m_magic(0xDEADBEEF),
+    m_called(0)
+  {}
+
+  const int m_magic;
   int m_called;
 
-  FilterFirst() : m_called(0) {};
-
   void AutoFilter(AutoPacket& pkt) {
+    ASSERT_EQ(0xDEADBEEF, m_magic) << "Magic value was corrupted, pointer was not adjusted to the correct offset";
     ++m_called;
     pkt.Decorate(Decoration<0>());
   }
 };
+
+class FilterFirstValidateInheritance:
+  public FilterFirst
+{};
+
+static_assert(
+  std::is_same<
+    FilterFirst,
+    Decompose<decltype(&FilterFirstValidateInheritance::AutoFilter)>::type
+  >::value,
+  "Decomposed type did not correctly name the implementing type of an inherited method"
+);
 
 class FilterLast {
 public:
@@ -579,7 +596,7 @@ TEST_F(AutoFilterTest, VerifyTeardownArrangement) {
       std::shared_ptr<FilterA> filterA = filterAWeak.lock();
 
       // Unsubscribe the filter:
-      factory->RemoveSubscriber(MakeAutoFilterDescriptor(filterA));
+      factory->RemoveSubscriber(filterA);
     }
 
     // Verify that unsubscription STILL does not result in expiration:
@@ -1389,8 +1406,6 @@ void FilterFunction(const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut
   typeOut->i += 1 + typeIn.i;
 }
 
-typedef std::function<void(const Decoration<0>&, auto_out<Decoration<1>>)> FilterFunctionType;
-
 TEST_F(AutoFilterTest, FunctionDecorationTest) {
   // AddRecipient that is an instance of std::function f : a -> b
   // This must be satisfied by decoration of type a,
@@ -1402,7 +1417,7 @@ TEST_F(AutoFilterTest, FunctionDecorationTest) {
   {
     auto packet = factory->NewPacket();
     packet->Decorate(Decoration<0>());
-    packet->AddRecipient(FilterFunctionType(FilterFunction));
+    packet->AddRecipient(FilterFunction);
     const Decoration<1>* getdec;
     ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
   }
@@ -1411,7 +1426,7 @@ TEST_F(AutoFilterTest, FunctionDecorationTest) {
   //NOTE: This test also catches failures to flush temporary subscriber information
   {
     auto packet = factory->NewPacket();
-    packet->AddRecipient(FilterFunctionType(FilterFunction));
+    packet->AddRecipient(FilterFunction);
     packet->Decorate(Decoration<0>());
     const Decoration<1>* getdec;
     ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
@@ -1425,9 +1440,9 @@ TEST_F(AutoFilterTest, FunctionDecorationLambdaTest) {
   {
     auto packet = factory->NewPacket();
     int addType = 1;
-    packet->AddRecipient(FilterFunctionType([addType] (const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
+    packet->AddRecipient([addType] (const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
       typeOut->i += 1 + typeIn.i;
-    }));
+    });
     packet->Decorate(Decoration<0>());
     const Decoration<1>* getdec;
     ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
@@ -1435,16 +1450,14 @@ TEST_F(AutoFilterTest, FunctionDecorationLambdaTest) {
   }
 }
 
-typedef std::function<void(auto_out<Decoration<0>>)> InjectorFunctionType;
-
 TEST_F(AutoFilterTest, FunctionInjectorTest) {
   AutoRequired<AutoPacketFactory> factory;
 
   auto packet = factory->NewPacket();
   int addType = 1;
-  packet->AddRecipient(InjectorFunctionType([addType](auto_out<Decoration<0>> typeOut) {
+  packet->AddRecipient([addType](auto_out<Decoration<0>> typeOut) {
     typeOut->i += addType;
-  }));
+  });
   const Decoration<0>* getdec;
   ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
   ASSERT_EQ(0+addType, getdec->i) << "Increment was not applied";
@@ -1705,6 +1718,9 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
     stile = AutoRequired<AutoStile<const Decoration<0>&, auto_out<Decoration<1>>>>();
     master_context->Initiate();
   }
+
+  static_assert(auto_arg<const Decoration<0>&>::is_input, "Input type not correctly recognized");
+  static_assert(auto_arg<auto_out<Decoration<1>>>::is_output, "Output type not correctly recognized");
 
   stile->Leash(slave_context);
   {

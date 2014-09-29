@@ -112,11 +112,11 @@ TEST_F(ArgumentTypeTest, TestAutoOut) {
     out->i = 1;
 
     // Copy
-    auto_out<Argument<0>> out1(out);
+    auto_out<Argument<0>> out1(std::move(out));
 
     // Assign
     auto_out<Argument<0>> out2;
-    out2 = out1;
+    out2 = std::move(out1);
   }
 
   const Argument<0>* arg = nullptr;

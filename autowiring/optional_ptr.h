@@ -38,26 +38,16 @@ public:
     shared_type(nullptr)
   {}
 
-  optional_ptr (const optional_ptr<type>& rhs):
-    shared_type(rhs)
+  optional_ptr (optional_ptr<type>&& rhs):
+    std::shared_ptr<const type>(std::move(rhs))
   {}
 
-  optional_ptr (optional_ptr<type>&& rhs) {
-    std::swap<shared_type>(*this, rhs);
-  }
-
-  optional_ptr& operator = (optional_ptr<type>& rhs) {
-    shared_type::operator = (rhs);
-    return *this;
+  optional_ptr(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)) {
+    packet->Get(*this, source);
   }
 
   optional_ptr& operator = (optional_ptr<type>&& rhs) {
-    shared_type::reset();
-    std::swap<shared_type>(*this, rhs);
+    *this = std::forward<std::shared_ptr<const type>&&>(rhs);
     return *this;
-  }
-
-  optional_ptr (std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)) {
-    packet->Get(*this, source);
   }
 };

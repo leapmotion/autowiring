@@ -105,7 +105,7 @@ public:
   /// </summary>
   template<class T>
   void AddSubscriber(const std::shared_ptr<T>& rhs) {
-    AddSubscriber(AutoFilterDescriptorSelect<T>(rhs));
+    AddSubscriber(MakeAutoFilterDescriptor<T>(rhs));
   }
 
   /// <summary>

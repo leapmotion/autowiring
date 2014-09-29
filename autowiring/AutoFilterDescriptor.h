@@ -2,8 +2,9 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "AutoPacket.h"
-#include "DataFlow.h"
 #include "auto_arg.h"
+#include "CallExtractor.h"
+#include "DataFlow.h"
 #include "Decompose.h"
 #include "has_autofilter.h"
 #include "is_shared_ptr.h"
@@ -14,60 +15,6 @@
 
 class AutoPacket;
 class Deferred;
-
-/// <summary>
-/// Specialization for immediate mode cases
-/// </summary>
-template<class MemFn>
-struct CallExtractor;
-
-template<class T, class... Args>
-struct CallExtractor<void (T::*)(Args...)>:
-  Decompose<void (T::*)(Args...)>
-{
-  static const bool deferred = false;
-  static const size_t N = sizeof...(Args);
-
-  /// <summary>
-  /// Binder struct, lets us refer to an instance of Call by type
-  /// </summary>
-  template<void(T::*memFn)(Args...)>
-  static void Call(void* pObj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
-    // Handoff
-    (((T*) pObj)->*memFn)(
-      auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source<typename auto_arg<Args>::base_type>())...
-    );
-  }
-};
-
-/// <summary>
-/// Specialization for deferred cases
-/// </summary>
-template<class T, class... Args>
-struct CallExtractor<Deferred (T::*)(Args...)>:
-  Decompose<void (T::*)(Args...)>
-{
-  static const bool deferred = true;
-  static const size_t N = sizeof...(Args);
-
-  template<Deferred(T::*memFn)(Args...)>
-  static void Call(void* pObj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
-    // Obtain a shared pointer of the AutoPacket in order to ensure the packet
-    // stays resident when we pend this lambda to the destination object's
-    // dispatch queue.
-    auto pAutoPacket = autoPacket.shared_from_this();
-
-    // Pend the call to this object's dispatch queue:
-    // WARNING: The autowiring::DataFill information will be referenced,
-    // since it should be from a SatCounter associated to autoPacket,
-    // and will therefore have the same lifecycle as the AutoPacket.
-    *(T*) pObj += [pObj, pAutoPacket, &satisfaction] {
-      (((T*) pObj)->*memFn)(
-        auto_arg<Args>(pAutoPacket, *satisfaction.source<typename auto_arg<Args>::base_type>())...
-      );
-    };
-  }
-};
 
 /// <summary>
 /// AutoFilter argument disposition
@@ -112,9 +59,6 @@ struct AutoFilterDescriptorInput {
 /// The unbound part of an AutoFilter, includes everything except the AnySharedPointer
 /// </summary>
 struct AutoFilterDescriptorStub {
-  // The type of the call centralizer
-  typedef void(*t_call)(void*, AutoPacket&, const autowiring::DataFill&);
-
   AutoFilterDescriptorStub(void) :
     m_pType(nullptr),
     m_pArgs(nullptr),
@@ -141,12 +85,12 @@ struct AutoFilterDescriptorStub {
   /// </summary>
   /// <remarks>
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call.  The extractor
-  /// is required to carry information about the type of the proper member function to be called; t_call is required
-  /// to be instantiated by the caller and point to the AutoFilter proxy routine.
+  /// is required to carry information about the type of the proper member function to be called; t_extractedCall is
+  /// required to be instantiated by the caller and point to the AutoFilter proxy routine.
   /// </summary>
   template<class MemFn>
-  AutoFilterDescriptorStub(CallExtractor<MemFn> extractor, t_call pCall) :
-    m_pType(&typeid(typename Decompose<MemFn>::type)),
+  AutoFilterDescriptorStub(CallExtractor<MemFn> extractor, t_extractedCall pCall) :
+    m_pType(&typeid(typename CallExtractor<MemFn>::type)),
     m_pArgs(extractor.template Enumerate<AutoFilterDescriptorInput>()),
     m_deferred(extractor.deferred),
     m_arity(extractor.N),
@@ -205,7 +149,7 @@ protected:
   // that will actually be passed is of a type corresponding to the member function bound
   // by this operation.  Strong guarantees must be made that the types passed into this routine
   // are identical to the types expected by the corresponding call.
-  t_call m_pCall;
+  t_extractedCall m_pCall;
 
 public:
   // Accessor methods:
@@ -250,7 +194,7 @@ public:
   /// The packet must already be decorated with all required parameters for the
   /// subscribers, or an exception will be thrown.
   /// </remarks>
-  t_call GetCall(void) const { return m_pCall; }
+  t_extractedCall GetCall(void) const { return m_pCall; }
 
   /// <summary>
   /// Sends or receives broadcast instances of the input or output type.
@@ -305,6 +249,11 @@ struct AutoFilterDescriptor:
 {
   AutoFilterDescriptor(void) {}
 
+  AutoFilterDescriptor(AutoFilterDescriptor&& rhs) :
+    AutoFilterDescriptorStub(std::move(rhs)),
+    m_autoFilter(rhs.m_autoFilter)
+  {}
+
   AutoFilterDescriptor(const AutoFilterDescriptor& rhs) :
     AutoFilterDescriptorStub(rhs),
     m_autoFilter(rhs.m_autoFilter)
@@ -315,6 +264,15 @@ struct AutoFilterDescriptor:
   /// </summary>
   AutoFilterDescriptor(const AnySharedPointer& autoFilter):
     m_autoFilter(autoFilter)
+  {}
+
+  template<class T>
+  AutoFilterDescriptor(const std::shared_ptr<T>& subscriber) :
+    AutoFilterDescriptor(
+      AnySharedPointer(subscriber),
+      CallExtractor<decltype(&T::AutoFilter)>(),
+      &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
+    )
   {}
 
   /// <summary>
@@ -336,13 +294,53 @@ struct AutoFilterDescriptor:
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call
   /// </summary>
   template<class MemFn>
-  AutoFilterDescriptor(const AnySharedPointer& autoFilter, CallExtractor<MemFn> extractor, t_call pCall) :
+  AutoFilterDescriptor(const AnySharedPointer& autoFilter, CallExtractor<MemFn> extractor, t_extractedCall pCall) :
     AutoFilterDescriptorStub(extractor, pCall),
     m_autoFilter(autoFilter)
   {
     // Cannot register a subscriber with zero arguments:
     static_assert(CallExtractor<MemFn>::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
   }
+
+  /// <summary>
+  /// Adds a function to be called as an AutoFilter for this packet only.
+  /// </summary>
+  /// <remarks>
+  /// Recipients added in this way cannot receive piped data, since they are anonymous.
+  /// </remarks>
+  template<class Fn>
+  AutoFilterDescriptor(Fn fn):
+    AutoFilterDescriptor(
+      AnySharedPointer(std::make_shared<Fn>(std::forward<Fn>(fn))),
+      CallExtractor<decltype(&Fn::operator())>(),
+      &CallExtractor<decltype(&Fn::operator())>::template Call<&Fn::operator()>
+    )
+  {}
+
+  template<class RetType, class... Args>
+  AutoFilterDescriptor(RetType(*pfn)(Args...)):
+    AutoFilterDescriptor(
+      // Token shared pointer, used to provide a pointer to pfn because we can't
+      // capture it in a template processing context.  Hopefully this can be changed
+      // once MSVC adopts constexpr.
+      AnySharedPointer(
+        std::shared_ptr<RetType(Args...)>(
+          pfn,
+          [](decltype(pfn)){}
+        )
+      ),
+
+      // The remainder is fairly straightforward
+      CallExtractor<decltype(pfn)>(),
+      &CallExtractor<decltype(pfn)>::Call
+    )
+  {}
+
+  // Convenience overload:
+  template<class RetType, class... Args>
+  AutoFilterDescriptor(RetType(&pfn)(Args...)):
+    AutoFilterDescriptor(&pfn)
+  {}
 
 protected:
   // A hold on the enclosed autoFilter
@@ -398,26 +396,23 @@ public:
 
 template<class T, bool has_autofilter = has_autofilter<T>::value>
 class AutoFilterDescriptorSelect:
-  public std::true_type,
-  public AutoFilterDescriptor
+  public std::true_type
 {
 public:
   AutoFilterDescriptorSelect(const std::shared_ptr<T>& subscriber) :
-    AutoFilterDescriptor(
-      AnySharedPointer(subscriber),
-      CallExtractor<decltype(&T::AutoFilter)>(),
-      &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
-    )
+    desc(subscriber)
   {}
+
+  const AutoFilterDescriptor desc;
 };
 
 template<class T>
 class AutoFilterDescriptorSelect<T, false>:
-  public std::false_type,
-  public AutoFilterDescriptor
+  public std::false_type
 {
 public:
   AutoFilterDescriptorSelect(const std::shared_ptr<T>&) {}
+  const AutoFilterDescriptor desc;
 };
 
 /// <summary>
@@ -425,7 +420,7 @@ public:
 /// </summary>
 template<class T>
 AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
-  return AutoFilterDescriptorSelect<T>(ptr);
+  return std::move(AutoFilterDescriptorSelect<T>(ptr).desc);
 }
 
 namespace std {

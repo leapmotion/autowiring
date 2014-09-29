@@ -1,14 +1,15 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
-#include "at_exit.h"
-#include "DataFlow.h"
 #include "AutoCheckout.h"
+#include "at_exit.h"
+#include "CallExtractor.h"
+#include "DataFlow.h"
 #include "DecorationDisposition.h"
 #include "demangle.h"
+#include "is_any.h"
 #include "is_shared_ptr.h"
 #include "ObjectPool.h"
-#include "is_any.h"
 #include "MicroAutoFilter.h"
 #include "hash_tuple.h"
 #include <list>
@@ -137,11 +138,6 @@ private:
   /// suprious calles when no packet is issued.
   /// </remarks>
   void Finalize(void);
-
-  /// <summary>
-  /// Adds a recipient for data associated only with this issuance of the packet.
-  /// </summary>
-  void InitializeRecipient(const AutoFilterDescriptor& descriptor);
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
@@ -591,17 +587,12 @@ public:
   }
 
   /// <summary>
-  /// Adds a function to be called as an AutoFilter for this packet only.
+  /// Adds a recipient for data associated only with this issuance of the packet.
   /// </summary>
   /// <remarks>
   /// Recipients added in this way cannot receive piped data, since they are anonymous.
   /// </remarks>
-  template<class Ret, class... Args>
-  void AddRecipient(std::function<Ret(Args...)> f) {
-    InitializeRecipient(
-      MakeAutoFilterDescriptor(std::make_shared<MicroAutoFilter<Ret, Args...>>(f))
-    );
-  }
+  void AddRecipient(const AutoFilterDescriptor& descriptor);
 
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>
