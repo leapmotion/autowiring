@@ -35,6 +35,7 @@ template<class T, class... Args>
 struct CallExtractor<void (T::*)(Args...)>:
   Decompose<void (T::*)(Args...)>
 {
+  static const bool stateless = false;
   static const bool deferred = false;
   static const size_t N = sizeof...(Args);
 
@@ -51,12 +52,33 @@ struct CallExtractor<void (T::*)(Args...)>:
 };
 
 /// <summary>
+/// Specialization for stateless AutoFilter routines
+/// </summary>
+template<class T, class... Args>
+struct CallExtractor<void (T::*)(Args...) const> :
+  Decompose<void (T::*)(Args...)>
+{
+  static const bool stateless = true;
+  static const bool deferred = false;
+  static const size_t N = sizeof...(Args);
+  
+  template<void(T::*memFn)(Args...) const>
+  static void Call(void* pObj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
+    // Handoff
+    (((const T*) pObj)->*memFn)(
+      auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source<typename auto_arg<Args>::base_type>())...
+    );
+  }
+};
+
+/// <summary>
 /// Specialization for deferred cases
 /// </summary>
 template<class T, class... Args>
 struct CallExtractor<Deferred (T::*)(Args...)>:
   Decompose<void (T::*)(Args...)>
 {
+  static const bool stateless = false;
   static const bool deferred = true;
   static const size_t N = sizeof...(Args);
 
