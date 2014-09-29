@@ -2,6 +2,7 @@
 #pragma once
 
 #include MEMORY_HEADER
+#include <functional>
 #include <autowiring/AutoPacket.h>
 
 /// <summary>
