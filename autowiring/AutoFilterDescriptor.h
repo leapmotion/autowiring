@@ -59,9 +59,6 @@ struct AutoFilterDescriptorInput {
 /// The unbound part of an AutoFilter, includes everything except the AnySharedPointer
 /// </summary>
 struct AutoFilterDescriptorStub {
-  // The type of the call centralizer
-  typedef void(*t_call)(void*, AutoPacket&, const autowiring::DataFill&);
-
   AutoFilterDescriptorStub(void) :
     m_pType(nullptr),
     m_pArgs(nullptr),
@@ -88,11 +85,11 @@ struct AutoFilterDescriptorStub {
   /// </summary>
   /// <remarks>
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call.  The extractor
-  /// is required to carry information about the type of the proper member function to be called; t_call is required
-  /// to be instantiated by the caller and point to the AutoFilter proxy routine.
+  /// is required to carry information about the type of the proper member function to be called; t_extractedCall is
+  /// required to be instantiated by the caller and point to the AutoFilter proxy routine.
   /// </summary>
   template<class MemFn>
-  AutoFilterDescriptorStub(CallExtractor<MemFn> extractor, t_call pCall) :
+  AutoFilterDescriptorStub(CallExtractor<MemFn> extractor, t_extractedCall pCall) :
     m_pType(&typeid(typename CallExtractor<MemFn>::type)),
     m_pArgs(extractor.template Enumerate<AutoFilterDescriptorInput>()),
     m_deferred(extractor.deferred),
@@ -152,7 +149,7 @@ protected:
   // that will actually be passed is of a type corresponding to the member function bound
   // by this operation.  Strong guarantees must be made that the types passed into this routine
   // are identical to the types expected by the corresponding call.
-  t_call m_pCall;
+  t_extractedCall m_pCall;
 
 public:
   // Accessor methods:
@@ -197,7 +194,7 @@ public:
   /// The packet must already be decorated with all required parameters for the
   /// subscribers, or an exception will be thrown.
   /// </remarks>
-  t_call GetCall(void) const { return m_pCall; }
+  t_extractedCall GetCall(void) const { return m_pCall; }
 
   /// <summary>
   /// Sends or receives broadcast instances of the input or output type.
@@ -297,7 +294,7 @@ struct AutoFilterDescriptor:
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call
   /// </summary>
   template<class MemFn>
-  AutoFilterDescriptor(const AnySharedPointer& autoFilter, CallExtractor<MemFn> extractor, t_call pCall) :
+  AutoFilterDescriptor(const AnySharedPointer& autoFilter, CallExtractor<MemFn> extractor, t_extractedCall pCall) :
     AutoFilterDescriptorStub(extractor, pCall),
     m_autoFilter(autoFilter)
   {
