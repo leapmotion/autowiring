@@ -63,7 +63,7 @@ struct SatCounter:
       throw std::runtime_error(ss.str());
     }
     called = true;
-    GetCall()(GetAutoFilter()->ptr(), packet, satisfaction);
+    GetCall()(GetAutoFilter(), packet, satisfaction);
   }
 
   /// <summary>

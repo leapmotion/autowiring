@@ -7,6 +7,9 @@
 
 class Deferred;
 
+// The type of the call centralizer
+typedef void(*t_extractedCall)(const AnySharedPointer& obj, AutoPacket&, const autowiring::DataFill&);
+
 /// <summary>
 /// Specialization for immediate mode cases
 /// </summary>
@@ -22,7 +25,9 @@ struct CallExtractor<RetType (*)(Args...)>:
   /// <summary>
   /// Binder struct, lets us refer to an instance of Call by type
   /// </summary>
-  static void Call(void* pfn, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
+  static void Call(const AnySharedPointer& obj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
+    const void* pfn = obj->ptr();
+
     // This is the true type of the input, it's the fnptr itself, not a function object
     typedef RetType(*t_pfn)(Args...);
 
@@ -45,7 +50,15 @@ struct CallExtractor<void (T::*)(Args...)>:
   /// Binder struct, lets us refer to an instance of Call by type
   /// </summary>
   template<void(T::*memFn)(Args...)>
-  static void Call(void* pObj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
+  static void Call(const AnySharedPointer& obj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
+    const void* pObj = obj->ptr();
+
+    // This exception type indicates that an attempt was made to construct an AutoFilterDescriptor with an
+    // AnySharedPointer which was not the type of its own member function.  Be sure to cast the AnySharedPointer
+    // to the correct foundation type before attempting to construct an AutoFilterDescriptor.
+    const std::type_info& ti = obj->type();
+    assert(typeid(typename SelectTypeUnifier<T>::type) == ti);
+
     // Handoff
     (((T*) pObj)->*memFn)(
       auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source<typename auto_arg<Args>::base_type>())...
@@ -65,7 +78,9 @@ struct CallExtractor<void (T::*)(Args...) const> :
   static const size_t N = sizeof...(Args);
   
   template<void(T::*memFn)(Args...) const>
-  static void Call(void* pObj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
+  static void Call(const AnySharedPointer& obj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
+    const void* pObj = obj->ptr();
+
     // Handoff
     (((const T*) pObj)->*memFn)(
       auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source<typename auto_arg<Args>::base_type>())...
@@ -85,7 +100,9 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
   static const size_t N = sizeof...(Args);
 
   template<Deferred(T::*memFn)(Args...)>
-  static void Call(void* pObj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
+  static void Call(const AnySharedPointer& obj, AutoPacket& autoPacket, const autowiring::DataFill& satisfaction) {
+    const void* pObj = obj->ptr();
+
     // Obtain a shared pointer of the AutoPacket in order to ensure the packet
     // stays resident when we pend this lambda to the destination object's
     // dispatch queue.
