@@ -469,6 +469,7 @@ template<int out, int in>
 class FilterGather {
 public:
   FilterGather():
+    FilterGather_AutoGather(this, &FilterGather<out, in>::AutoGather),
     m_called_out(0),
     m_called_in(0),
     m_out(out),
@@ -480,6 +481,8 @@ public:
     packet.Decorate(Decoration<out>(m_out));
   }
 
+
+  NewAutoFilter FilterGather_AutoGather;
   void AutoGather(const Decoration<in>& input) {
     ++m_called_in;
     m_in = input.i;
@@ -489,8 +492,6 @@ public:
   int m_called_in;
   int m_out;
   int m_in;
-
-  NewAutoFilter<decltype(&FilterGather<out,in>::AutoGather), &FilterGather<out,in>::AutoGather> FilterGather_AutoGather;
 };
 
 TEST_F(AutoFilterTest, VerifyTwoAutoFilterCalls) {
@@ -526,10 +527,11 @@ template<int out, int in>
 class FilterGatherAutoOut {
 public:
   FilterGatherAutoOut():
-  m_called_out(0),
-  m_called_in(0),
-  m_out(out),
-  m_in(in)
+    FilterGather_AutoGather(this, &FilterGatherAutoOut<out, in>::AutoGather),
+    m_called_out(0),
+    m_called_in(0),
+    m_out(out),
+    m_in(in)
   {}
 
   void AutoFilter(auto_out<Decoration<out>> output) {
@@ -537,6 +539,7 @@ public:
     output->i = m_out;
   }
 
+  NewAutoFilter FilterGather_AutoGather;
   void AutoGather(const Decoration<in>& input) {
     ++m_called_in;
     m_in = input.i;
@@ -546,7 +549,6 @@ public:
   int m_called_in;
   int m_out;
   int m_in;
-  NewAutoFilter<decltype(&FilterGather<out,in>::AutoGather), &FilterGather<out,in>::AutoGather> FilterGather_AutoGather;
 };
 
 TEST_F(AutoFilterTest, VerifyTwoAutoFilterCallsAutoOut) {
@@ -948,6 +950,7 @@ TEST_F(AutoFilterTest, DeferredRecieptInSubContext) {
 class HasAWeirdAutoFilterMethod {
 public:
   HasAWeirdAutoFilterMethod(void):
+    af(this, &HasAWeirdAutoFilterMethod::AutoFilterFoo),
     m_baseValue(101),
     m_called0(0),
     m_called1(0)
@@ -964,7 +967,7 @@ public:
     ++m_called1;
   }
 
-  NewAutoFilter<decltype(&HasAWeirdAutoFilterMethod::AutoFilterFoo), &HasAWeirdAutoFilterMethod::AutoFilterFoo> af;
+  NewAutoFilter af;
   const int m_baseValue;
   int m_called0;
   int m_called1;
