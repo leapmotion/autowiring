@@ -29,16 +29,6 @@ class auto_arg:
 public:
   typedef auto_in<type> auto_type;
 
-  using auto_type::is_input;
-  using auto_type::is_output;
-
-  operator typename auto_type::base_type () {
-    return auto_type::operator typename auto_type::base_type();
-  }
-  operator typename auto_type::shared_type () {
-    return auto_type::operator typename auto_type::shared_type();
-  }
-
   auto_arg() {}
 
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
@@ -58,16 +48,6 @@ class auto_arg<const type>:
 {
 public:
   typedef auto_in<type> auto_type;
-
-  using auto_type::is_input;
-  using auto_type::is_output;
-
-  operator typename auto_type::base_type () {
-    return auto_type::operator typename auto_type::base_type();
-  }
-  operator typename auto_type::shared_type () {
-    return auto_type::operator typename auto_type::shared_type();
-  }
 
   auto_arg() {}
 
@@ -89,16 +69,6 @@ class auto_arg<const type&>:
 public:
   typedef auto_in<type> auto_type;
 
-  using auto_type::is_input;
-  using auto_type::is_output;
-
-  operator typename auto_type::base_type () {
-    return auto_type::operator typename auto_type::base_type();
-  }
-  operator typename auto_type::shared_type () {
-    return auto_type::operator typename auto_type::shared_type();
-  }
-
   auto_arg() {}
 
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
@@ -118,16 +88,6 @@ class auto_arg<std::shared_ptr<const type>>:
 {
 public:
   typedef auto_in<type> auto_type;
-
-  using auto_type::is_input;
-  using auto_type::is_output;
-
-  operator typename auto_type::base_type () {
-    return auto_type::operator typename auto_type::base_type();
-  }
-  operator typename auto_type::shared_type () {
-    return auto_type::operator typename auto_type::shared_type();
-  }
 
   auto_arg() {}
 
@@ -149,16 +109,6 @@ class auto_arg<auto_in<type>>:
 public:
   typedef auto_in<type> auto_type;
 
-  using auto_type::is_input;
-  using auto_type::is_output;
-
-  operator typename auto_type::base_type () {
-    return auto_type::operator typename auto_type::base_type();
-  }
-  operator typename auto_type::shared_type () {
-    return auto_type::operator typename auto_type::shared_type();
-  }
-
   auto_arg() {}
 
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
@@ -178,16 +128,6 @@ class auto_arg<type&>:
 {
 public:
   typedef auto_out<type> auto_type;
-
-  using auto_type::is_input;
-  using auto_type::is_output;
-
-  operator typename auto_type::base_type () {
-    return auto_type::operator typename auto_type::base_type();
-  }
-  operator typename auto_type::shared_type () {
-    return auto_type::operator typename auto_type::shared_type();
-  }
 
   auto_arg() {}
 
@@ -209,16 +149,6 @@ class auto_arg<std::shared_ptr<type>>:
 public:
   typedef auto_out<type> auto_type;
 
-  using auto_type::is_input;
-  using auto_type::is_output;
-
-  operator typename auto_type::base_type () {
-    return auto_type::operator typename auto_type::base_type();
-  }
-  operator typename auto_type::shared_type () {
-    return auto_type::operator typename auto_type::shared_type();
-  }
-
   auto_arg() {}
 
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
@@ -239,16 +169,6 @@ class auto_arg<auto_out<type>>:
 public:
   typedef auto_out<type> auto_type;
 
-  using auto_type::is_input;
-  using auto_type::is_output;
-
-  operator typename auto_type::base_type () {
-    return auto_type::operator typename auto_type::base_type();
-  }
-  operator typename auto_type::shared_type () {
-    return auto_type::operator typename auto_type::shared_type();
-  }
-
   auto_arg() {}
 
   auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
@@ -268,16 +188,6 @@ class auto_arg<optional_ptr<type>>:
 {
 public:
   typedef optional_ptr<type> auto_type;
-
-  using auto_type::is_input;
-  using auto_type::is_output;
-
-  operator typename auto_type::base_type () {
-    return auto_type::operator typename auto_type::base_type();
-  }
-  operator typename auto_type::shared_type () {
-    return auto_type::operator typename auto_type::shared_type();
-  }
 
   auto_arg() {}
 
