@@ -25,7 +25,7 @@ struct ObjectTraits {
   ObjectTraits(const std::shared_ptr<typename SelectTypeUnifier<T>::type>& value, T*) :
     type(typeid(T)),
     value(value),
-    subscriber(AutoFilterDescriptorSelect<T>(value)),
+    subscriber(MakeAutoFilterDescriptor(value)),
     pObject(autowiring::fast_pointer_cast<Object>(value)),
     pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
     pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),

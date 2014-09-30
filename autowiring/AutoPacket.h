@@ -139,11 +139,6 @@ private:
   void Finalize(void);
 
   /// <summary>
-  /// Adds a recipient for data associated only with this issuance of the packet.
-  /// </summary>
-  void InitializeRecipient(const AutoFilterDescriptor& descriptor);
-
-  /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
   void MarkUnsatisfiable(const std::type_info& info, const std::type_info& source = typeid(void));
@@ -641,19 +636,12 @@ public:
   }
 
   /// <summary>
-  /// Adds a function to be called as an AutoFilter for this packet only.
+  /// Adds a recipient for data associated only with this issuance of the packet.
   /// </summary>
   /// <remarks>
   /// Recipients added in this way cannot receive piped data, since they are anonymous.
   /// </remarks>
-  template<class Ret, class... Args>
-  void AddRecipient(std::function<Ret(Args...)>&& filter) {
-    // NOTE: This cannot directly construct an AutoFilterDescriptor, since that
-    // requires a circular dependency due to CallExtractor::Call.
-    InitializeRecipient(
-      MakeAutoFilterDescriptor(std::make_shared<MicroAutoFilter<Ret, Args...>>(std::move(filter)))
-    );
-  }
+  void AddRecipient(const AutoFilterDescriptor& descriptor);
 
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>

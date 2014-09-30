@@ -512,7 +512,7 @@ void AutoPacket::Finalize(void) {
   Reset();
 }
 
-void AutoPacket::InitializeRecipient(const AutoFilterDescriptor& descriptor) {
+void AutoPacket::AddRecipient(const AutoFilterDescriptor& descriptor) {
   SatCounter* call = nullptr;
   {
     std::lock_guard<std::mutex> lk(m_lock);
