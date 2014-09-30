@@ -810,7 +810,6 @@ TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
 
   ASSERT_FALSE(good_autofilter<BadFilterA>::test) << "Failed to identify AutoFilter(void)";
   ASSERT_FALSE(good_autofilter<BadFilterB>::test) << "Failed to identify multiple definitions of AutoFilter";
-  ASSERT_FALSE(good_autofilter<BadFilterC>::test) << "Failed to identify equivalent AutoFilter argument id types";
 
   AutoRequired<AutoPacketFactory> factory;
 
