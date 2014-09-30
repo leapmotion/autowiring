@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "Decompose.h"
+#include "Deferred.h"
 #include "is_any.h"
-#include "auto_arg.h"
 
 //=======================================
 // Test whether return type is meaningful
@@ -61,9 +61,7 @@ struct all_distinct_arguments;
 // at least one argument.
 template<class R, class W, class... Args>
 struct all_distinct_arguments<R(W::*)(Args...)>:
-  std::integral_constant<bool,
-    !is_any_repeated<typename auto_arg<Args>::id_type...>::value
-  >
+  std::integral_constant<bool, !is_any_repeated<Args...>::value>
 {};
 
 template<class W, bool Selector = true>
