@@ -205,7 +205,7 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
     if(hfile)
       install(
         FILES ${hfile}
-        DESTINATION "include/Autowiring"
+        DESTINATION "include/autowiring"
         COMPONENT autowiring
       )
     endif()
