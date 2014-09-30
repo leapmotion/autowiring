@@ -296,9 +296,35 @@ TEST_F(AutoFilterTest, VerifyAutoOut) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<FilterOut> out;
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
-  const Decoration<0>* result = nullptr;
-  ASSERT_TRUE(packet->Get(result)) << "Output missing";
-  ASSERT_EQ(result->i, 1) << "Output incorrect";
+  const Decoration<0>* result0 = nullptr;
+  ASSERT_TRUE(packet->Get(result0)) << "Output missing";
+  ASSERT_EQ(result0->i, 1) << "Output incorrect";
+}
+
+class FilterOutDeferred:
+  public CoreThread
+{
+public:
+  Deferred AutoFilter(auto_out<Decoration<0>> out) {
+    out.make(); //Default constructor sets i == 0
+    return Deferred(this);
+  }
+};
+
+TEST_F(AutoFilterTest, VerifyAutoOutDeferred) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterOutDeferred> out;
+  AutoRequired<FilterLast> last;
+  {
+    std::shared_ptr<AutoPacket> packet = factory->NewPacket();
+    // Creation of packet triggers Deferred AutoFilter call
+    // Destruction of packet trigerrs FilterLast, which tests
+    // for the existence of Decoration<0> on the packet
+  }
+  out->Stop(true); // Run-down all queued calls (out)
+  out->Wait(); // Wait for calls to compelte (last)
+
+  ASSERT_EQ(last->m_called, 1) << "FilterLast was not called";
 }
 
 class FilterFinalFail1 {
@@ -1345,10 +1371,10 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
 
 TEST_F(AutoFilterTest, MicroAutoFilterTests) {
   int extVal = -1;
-  std::function<void(const int&)> filter([&extVal] (const int& getVal) {
+  MicroAutoFilter<void, const int&> makeImmediate(
+  [&extVal] (const int& getVal) {
     extVal = getVal;
   });
-  MicroAutoFilter<void, const int&> makeImmediate(filter);
   int setVal = 1;
   makeImmediate.AutoFilter(setVal);
   ASSERT_EQ(1, extVal);
@@ -1675,10 +1701,16 @@ TEST_F(AutoFilterTest, VerifyForwardAll) {
   ASSERT_EQ(1, (*contents)->i) << "Forwarded data is not persistent";
 }
 
-class Junction01 {
+class JunctionDeferred01:
+  public CoreThread
+{
 public:
-  void AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>> out) {
+  Deferred AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>> out) {
+    // Wait for AutoStile method to exit
+    AutoCurrentContext()->Wait(std::chrono::milliseconds(10));
+    
     out->i = in.i;
+    return Deferred(this);
   }
 };
 
@@ -1687,14 +1719,19 @@ class MasterContext {};
 
 TEST_F(AutoFilterTest, VerifyContextStile) {
   // Stile injects Decoration<0> and extracts Decoration<1>
-  std::shared_ptr<AutoStile<const Decoration<0>&, auto_out<Decoration<1>>>> stile;
+  typedef AutoStile<
+    const Decoration<0>&,
+    auto_out<Decoration<1>>,
+    auto_out<Decoration<2>>
+  > test_stile;
+  std::shared_ptr<test_stile> stile;
   std::shared_ptr<AutoPacketFactory> master_factory;
 
   AutoCreateContextT<SlaveContext> slave_context;
   {
     CurrentContextPusher pusher(slave_context);
     AutoRequired<AutoPacketFactory>();
-    AutoRequired<Junction01>();
+    AutoRequired<JunctionDeferred01>();
     slave_context->Initiate();
   }
 
@@ -1702,7 +1739,7 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
   {
     CurrentContextPusher pusher(master_context);
     master_factory = AutoRequired<AutoPacketFactory>();
-    stile = AutoRequired<AutoStile<const Decoration<0>&, auto_out<Decoration<1>>>>();
+    stile = AutoRequired<test_stile>();
     master_context->Initiate();
   }
 
@@ -1711,10 +1748,27 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
     CurrentContextPusher pusher(master_context);
     std::shared_ptr<AutoPacket> master_packet;
     master_packet = master_factory->NewPacket();
-    master_packet->Decorate(Decoration<0>());
-    ASSERT_TRUE(master_packet->Has<Decoration<1>>()) << "Stile failed to send & retrieve data";
+    int init = -1;
+    master_packet->Decorate(Decoration<0>(init));
+
+    // Create a last-call so that completion of slave context
+    // is verified.
+    master_packet->AddRecipient(std::function<void(const AutoPacket&)>([init](const AutoPacket& master_final){
+      const Decoration<1>* out1;
+      ASSERT_TRUE(master_final.Get(out1)) << "Stile failed to send & retrieve data";
+      ASSERT_EQ(init, out1->i) << "Output was not from junction in slave context";
+      const Decoration<2>* out2;
+      ASSERT_FALSE(master_final.Get(out2)) << "Decoration<2> was not produced in slave context";
+    }));
   }
 }
+
+class Junction01 {
+public:
+  void AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>> out) {
+    out->i = in.i;
+  }
+};
 
 TEST_F(AutoFilterTest, VerifyStileExtractAll) {
   // Stile injects Decoration<0> and extracts Decoration<1>

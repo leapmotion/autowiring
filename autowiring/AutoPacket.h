@@ -345,7 +345,6 @@ public:
       entry.isCheckedOut = false;
 
       UpdateSatisfaction(data, typeid(void));
-      UpdateSatisfaction(typeid(std::shared_ptr<T>), typeid(void));
     }
     if (!flow.halfpipes.empty()) {
       auto& entry = m_decorations[DSIndex(data, source)];
@@ -364,7 +363,58 @@ public:
       entry.isCheckedOut = false;
 
       UpdateSatisfaction(data, source);
-      UpdateSatisfaction(typeid(std::shared_ptr<T>), source);
+    }
+  }
+
+  /// <summary>
+  /// Shares ownership of argument with AutoPacket
+  /// </summary>
+  /// <remarks>
+  /// This can be used to:
+  /// - place data on the AutoPack from an ObjectPool
+  /// - move data from one AutoPacket to another without copying
+  /// - alias the type of a decoration on AutoPacket
+  /// </remarks>
+  template<class T>
+  void Put(std::shared_ptr<const T> in, const std::type_info& source = typeid(void)) {
+    const std::type_info& data = typeid(T);
+
+    autowiring::DataFlow flow = GetDataFlow(data, source);
+    if (flow.broadcast) {
+      auto& entry = m_decorations[DSIndex(data, typeid(void))];
+      if (entry.satisfied ||
+          entry.isCheckedOut) {
+        std::stringstream ss;
+        ss << "Cannot put type " << autowiring::demangle(typeid(T))
+        << " from source " << autowiring::demangle(source)
+        << " on AutoPacket, the requested broadcast already exists";
+        throw std::runtime_error(ss.str());
+      }
+
+      entry.m_decoration = in;
+      entry.m_type = &data; // Ensure correct type if instantiated here
+      entry.satisfied = true;
+      entry.isCheckedOut = false;
+
+      UpdateSatisfaction(data, typeid(void));
+    }
+    if (!flow.halfpipes.empty()) {
+      auto& entry = m_decorations[DSIndex(data, source)];
+      if (entry.satisfied ||
+          entry.isCheckedOut) {
+        std::stringstream ss;
+        ss << "Cannot put type " << autowiring::demangle(typeid(T))
+        << " from source " << autowiring::demangle(source)
+        << " on AutoPacket, the requested pipe already exists";
+        throw std::runtime_error(ss.str());
+      }
+
+      entry.m_decoration = in;
+      entry.m_type = &data; // Ensure correct type if instantiated here
+      entry.satisfied = true;
+      entry.isCheckedOut = false;
+
+      UpdateSatisfaction(data, source);
     }
   }
 
@@ -597,9 +647,11 @@ public:
   /// Recipients added in this way cannot receive piped data, since they are anonymous.
   /// </remarks>
   template<class Ret, class... Args>
-  void AddRecipient(std::function<Ret(Args...)> f) {
+  void AddRecipient(std::function<Ret(Args...)>&& filter) {
+    // NOTE: This cannot directly construct an AutoFilterDescriptor, since that
+    // requires a circular dependency due to CallExtractor::Call.
     InitializeRecipient(
-      MakeAutoFilterDescriptor(std::make_shared<MicroAutoFilter<Ret, Args...>>(f))
+      MakeAutoFilterDescriptor(std::make_shared<MicroAutoFilter<Ret, Args...>>(std::move(filter)))
     );
   }
 
