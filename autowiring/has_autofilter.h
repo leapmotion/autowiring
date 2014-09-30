@@ -107,11 +107,12 @@ struct has_unambiguous_autofilter
   // and with all argument id types distinct
   static const bool value =
     has_distinct_arguments<T,
-    has_autofilter_arity<T,
-    has_autofilter_return<T,
-    decltype(select<T>(nullptr))::value
-    >::value
-    >::value
+      has_autofilter_arity<T,
+        has_autofilter_return<
+          T,
+          decltype(select<T>(nullptr))::value
+        >::value
+      >::value
     >::value;
 };
 
