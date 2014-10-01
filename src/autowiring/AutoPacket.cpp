@@ -63,7 +63,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
       if (pCur->is_output) {
         if(entry->m_publisher) {
           std::stringstream ss;
-          ss << "Added identical data broadcasts of type " << pCur->ti->name();
+          ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti);
           throw std::runtime_error(ss.str());
         }
         entry->m_publisher = &satCounter;
