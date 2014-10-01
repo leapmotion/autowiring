@@ -40,11 +40,11 @@ namespace std {
   using boost::is_convertible;
 
   template<bool _Test, class _Type = void>
-	struct enable_if {};
+  struct enable_if {};
 
   template<class _Type>
-	struct enable_if<true, _Type>
-	{
-	  typedef _Type type;
-	};
+  struct enable_if<true, _Type>
+  {
+    typedef _Type type;
+  };
 }

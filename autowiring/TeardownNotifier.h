@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "contrib/C++11/cpp11.h"
+#include "C++11/cpp11.h"
 #include <list>
 #include FUNCTIONAL_HEADER
 
