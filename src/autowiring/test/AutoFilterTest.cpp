@@ -1646,7 +1646,7 @@ template<int num = 0>
 class FilterOD0 {
 public:
   void AutoFilter(auto_out<Decoration<0>> out) {
-    out->i = 0;
+    out->i = num;
   }
 };
 
@@ -1684,13 +1684,16 @@ TEST_F(AutoFilterTest, VerifyMergedOutputs) {
       extracted = data;
     }));
 
-    ASSERT_TRUE(packet->Has<Decoration<0>>()) << "Broadcast data should be present";
-    ASSERT_FALSE(packet->Has<Decoration<0>>(typeid(FilterOD0<0>))) << "Sourced data should be absent from broadcasting source";
-    ASSERT_TRUE(packet->Has<Decoration<0>>(typeid(FilterOD0<1>))) << "Sourced data should be present from non-broadcasting source";
-    ASSERT_TRUE(packet->Has<Decoration<0>>(typeid(FilterOD0<2>))) << "Sourced data should be present from non-broadcasting source";
+    const Decoration<0>* dec0;
+    ASSERT_TRUE(packet->Get(dec0)) << "Broadcast data should be present";
+    ASSERT_EQ(dec0->i, 0) << "Incorrect value for broadcast data";
+    ASSERT_FALSE(packet->Get(dec0, typeid(FilterOD0<0>))) << "Sourced data should be absent from broadcasting source";
+    ASSERT_TRUE(packet->Get(dec0, typeid(FilterOD0<1>))) << "Sourced data should be present from non-broadcasting source";
+    ASSERT_EQ(dec0->i, 1) << "Incorrect value for piped data";
+    ASSERT_TRUE(packet->Get(dec0, typeid(FilterOD0<2>))) << "Sourced data should be present from non-broadcasting source";
+    ASSERT_EQ(dec0->i, 2) << "Incorrect value for piped data";
 
     // Final-Call methods
-    // TODO: Make these throw if called early!
     ASSERT_EQ(1, packet->HasAll<Decoration<0>>()) << "Single Broadcast source only";
     ASSERT_EQ(1, packet->HasAll<Decoration<0>>(typeid(AutoMerge<Decoration<0>>))) << "Single Piped source only";
     ASSERT_EQ(1, packet->HasAll<Decoration<0>>(typeid(FilterID0))) << "Single Piped source only";
