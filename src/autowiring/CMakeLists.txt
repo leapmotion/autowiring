@@ -20,6 +20,7 @@ set(Autowiring_SRCS
   AutoRestarter.h
   AutoFuture.h
   AutoFuture.cpp
+  AutowiringConfig.h
   CoreJob.h
   CoreJob.cpp
   AutoFilterDescriptor.h
