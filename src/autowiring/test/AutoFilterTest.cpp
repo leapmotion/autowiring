@@ -324,7 +324,7 @@ class FilterOutDeferred:
 {
 public:
   Deferred AutoFilter(auto_out<Decoration<0>> out) {
-    out.make(); //Default constructor sets i == 0
+    //Default constructor sets i == 0
     return Deferred(this);
   }
 };
@@ -1596,7 +1596,7 @@ public:
   int Out_expected;
 };
 
-TEST_F(AutoFilterTest, AutoEdgeTest) {
+TEST_F(AutoFilterTest, DataPipeTest) {
   AutoCurrentContext()->Initiate();
   AutoRequired<AutoPacketFactory> factory;
   DiamondFilter diamond;

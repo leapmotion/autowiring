@@ -371,7 +371,7 @@ public:
   /// - alias the type of a decoration on AutoPacket
   /// </remarks>
   template<class T>
-  void Put(std::shared_ptr<const T> in, const std::type_info& source = typeid(void)) {
+  void Put(std::shared_ptr<T> in, const std::type_info& source = typeid(void)) {
     const std::type_info& data = typeid(T);
 
     autowiring::DataFlow flow = GetDataFlow(data, source);

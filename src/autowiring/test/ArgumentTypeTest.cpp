@@ -116,7 +116,7 @@ TEST_F(ArgumentTypeTest, TestAutoOut) {
     auto_out<Argument<0>> out1(std::move(out));
 
     // Assign by move
-    auto_out<Argument<0>> out2;
+    auto_out<Argument<0>> out2(packet, typeid(void));
     out2 = std::move(out1);
   }
 

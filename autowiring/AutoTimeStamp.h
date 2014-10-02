@@ -18,7 +18,5 @@ public:
   /// Default constructor yielding current time is called by auto_out<time>.
   /// AutoPacketFactory.NewPacket()->Has<AutoTimeStamp::time>() == true.
   /// </remarks>
-  void AutoFilter(auto_out<time> t) {
-    t.make(); // Invoke construction here
-  }
+  void AutoFilter(auto_out<time> t) {}
 };

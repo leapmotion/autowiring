@@ -140,7 +140,7 @@ public:
 };
 
 /// <summary>
-/// Specialization for "std::unique_ptr<T, std::function<void(T*)>>" ~ auto_out<T>
+/// Specialization for "std::shared_ptr<T>" ~ auto_out<T>
 /// </summary>
 template<class type>
 class auto_arg<std::shared_ptr<type>>:
