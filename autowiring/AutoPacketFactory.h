@@ -122,7 +122,7 @@ public:
   /// </remarks>
   template<class node>
   void BroadcastDataOut(const std::type_info* dataType = nullptr, bool enable = true) {
-    const std::type_info* nodeType = &typeid(node);
+    const std::type_info* nodeType = &typeid(typename SelectTypeUnifier<node>::type);
     if (dataType) {
       GetContext()->NotifyWhenAutowired<node>(
         [this, nodeType, dataType, enable](){
@@ -144,7 +144,7 @@ public:
   /// </remarks>
   template<class node>
   void BroadcastDataIn(const std::type_info* dataType = nullptr, bool enable = true) {
-    const std::type_info* nodeType = &typeid(node);
+    const std::type_info* nodeType = &typeid(typename SelectTypeUnifier<node>::type);
     if (dataType) {
       GetContext()->NotifyWhenAutowired<node>(
         [this, nodeType, dataType, enable](){
@@ -171,10 +171,10 @@ public:
   /// </remarks>
   template<class nodeOut, class nodeIn>
   void PipeData(const std::type_info* dataType = nullptr, bool enable = true) {
-    const std::type_info* nodeOutType = &typeid(nodeOut);
-    const std::type_info* nodeInType = &typeid(nodeIn);
+    const std::type_info* nodeOutType = &typeid(typename SelectTypeUnifier<nodeOut>::type);
+    const std::type_info* nodeInType = &typeid(typename SelectTypeUnifier<nodeIn>::type);
     if (dataType) {
-      GetContext()->NotifyWhenAutowired<nodeIn>(
+      GetContext()->NotifyWhenAutowired<nodeOut>(
         [this, nodeOutType, nodeInType, dataType, enable](){
         GetContext()->NotifyWhenAutowired<nodeIn>(
         [this, nodeOutType, nodeInType, dataType, enable](){
@@ -182,7 +182,7 @@ public:
         });
       });
     } else {
-      GetContext()->NotifyWhenAutowired<nodeIn>(
+      GetContext()->NotifyWhenAutowired<nodeOut>(
         [this, nodeOutType, nodeInType, enable](){
         GetContext()->NotifyWhenAutowired<nodeIn>(
         [this, nodeOutType, nodeInType, enable](){

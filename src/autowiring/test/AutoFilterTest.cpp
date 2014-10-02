@@ -1665,16 +1665,16 @@ TEST_F(AutoFilterTest, VerifyMergedOutputs) {
 
   AutoRequired<AutoMerge<Decoration<0>>> merge;
 
-  // No broadcast from f1D0 and f2D0
+  // Configure Data Flow
   factory->BroadcastDataIn<FilterID0>(nullptr,false);
   factory->BroadcastDataOut<FilterOD0<1>>(nullptr,false);
   factory->BroadcastDataOut<FilterOD0<2>>(nullptr,false);
-
+  factory->PipeData<FilterOD0<1>, AutoMerge<Decoration<0>>>();
+  factory->PipeData<FilterOD0<2>, FilterID0>();
+  // Resulting Flow:
   // f0D0 is broadcast, and will be received by merge
   // f1D0 -> merge only
   // f2D0 -> fID0 only
-  factory->PipeData<FilterOD0<1>, AutoMerge<Decoration<0>>>();
-  factory->PipeData<FilterOD0<2>, FilterID0>();
 
   AutoMerge<Decoration<0>>::merge_data extracted;
   {
@@ -1687,16 +1687,16 @@ TEST_F(AutoFilterTest, VerifyMergedOutputs) {
     const Decoration<0>* dec0;
     ASSERT_TRUE(packet->Get(dec0)) << "Broadcast data should be present";
     ASSERT_EQ(dec0->i, 0) << "Incorrect value for broadcast data";
-    ASSERT_FALSE(packet->Get(dec0, typeid(FilterOD0<0>))) << "Sourced data should be absent from broadcasting source";
-    ASSERT_TRUE(packet->Get(dec0, typeid(FilterOD0<1>))) << "Sourced data should be present from non-broadcasting source";
+    ASSERT_FALSE(packet->Get(dec0, typeid(typename SelectTypeUnifier<FilterOD0<0>>::type))) << "Sourced data should be absent from broadcasting source";
+    ASSERT_TRUE(packet->Get(dec0, typeid(typename SelectTypeUnifier<FilterOD0<1>>::type))) << "Sourced data should be present from non-broadcasting source";
     ASSERT_EQ(dec0->i, 1) << "Incorrect value for piped data";
-    ASSERT_TRUE(packet->Get(dec0, typeid(FilterOD0<2>))) << "Sourced data should be present from non-broadcasting source";
+    ASSERT_TRUE(packet->Get(dec0, typeid(typename SelectTypeUnifier<FilterOD0<2>>::type))) << "Sourced data should be present from non-broadcasting source";
     ASSERT_EQ(dec0->i, 2) << "Incorrect value for piped data";
 
     // Final-Call methods
     ASSERT_EQ(1, packet->HasAll<Decoration<0>>()) << "Single Broadcast source only";
-    ASSERT_EQ(1, packet->HasAll<Decoration<0>>(typeid(AutoMerge<Decoration<0>>))) << "Single Piped source only";
-    ASSERT_EQ(1, packet->HasAll<Decoration<0>>(typeid(FilterID0))) << "Single Piped source only";
+    ASSERT_EQ(1, packet->HasAll<Decoration<0>>(typeid(typename SelectTypeUnifier<AutoMerge<Decoration<0>>>::type))) << "Single Piped source only";
+    ASSERT_EQ(1, packet->HasAll<Decoration<0>>(typeid(typename SelectTypeUnifier<FilterID0>::type))) << "Single Piped source only";
   }
   ASSERT_EQ(2, extracted.size()) << "Should collect 1 broadcast & 1 pipe";
 }

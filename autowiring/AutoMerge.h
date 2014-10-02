@@ -30,7 +30,7 @@ public:
       return;
 
     // Gather relevant data of the specified type
-    merge_data unordered = packet.GetAll<merge_type>(typeid(AutoMerge<merge_type>));
+    merge_data unordered = packet.GetAll<merge_type>(typeid(typename SelectTypeUnifier<AutoMerge<merge_type>>::type));
     merge_data broadcast = packet.GetAll<merge_type>(typeid(void));
     unordered.insert(broadcast.begin(), broadcast.end());
 
