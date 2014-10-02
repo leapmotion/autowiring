@@ -90,6 +90,17 @@ public:
     return *this;
   }
 
+  /// <summary>Output will be shared data provided by rhs</summary>
+  /// <remarks>
+  /// This method faciliates output of shared ObjectPool data, with
+  /// destructors defined accordingly.
+  /// </remarks>
+  auto_out& operator = (std::shared_ptr<type> rhs) {
+    cancel();
+    shared_type::operator = (rhs);
+    m_makeable = false;
+  }
+
   auto_out (std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
     m_packet(packet),
     m_source(&source),

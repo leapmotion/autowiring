@@ -319,6 +319,24 @@ TEST_F(AutoFilterTest, VerifyAutoOut) {
   ASSERT_EQ(result0->i, 1) << "Output incorrect";
 }
 
+class FilterOutPooled {
+  ObjectPool<Decoration<0>> m_pool;
+public:
+  void AutoFilter(auto_out<Decoration<0>> out) {
+    out = m_pool();
+    out-> i = 1;
+  }
+};
+
+TEST_F(AutoFilterTest, VerifyAutoOutPooled) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterOutPooled> out;
+  std::shared_ptr<AutoPacket> packet = factory->NewPacket();
+  const Decoration<0>* result0 = nullptr;
+  ASSERT_TRUE(packet->Get(result0)) << "Output missing";
+  ASSERT_EQ(result0->i, 1) << "Output incorrect";
+}
+
 class FilterOutDeferred:
   public CoreThread
 {
