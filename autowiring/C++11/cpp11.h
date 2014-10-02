@@ -48,15 +48,15 @@
 * initializer_list header
 *********************/
 #if IS_CLANG
-	#define HAS_INITIALIZER_LIST __has_feature(cxx_generalized_initializers)
-	#if HAS_INITIALIZER_LIST
-		#define INITIALIZER_LIST_HEADER <initializer_list>
-	#else
-		#define INITIALIZER_LIST_HEADER <contrib/C++11/empty_file.h>
-	#endif
+  #define HAS_INITIALIZER_LIST __has_feature(cxx_generalized_initializers)
+  #if HAS_INITIALIZER_LIST
+    #define INITIALIZER_LIST_HEADER <initializer_list>
+  #else
+  #define INITIALIZER_LIST_HEADER <autowiring/C++11/empty_file.h>
+  #endif
 #else
-	#define HAS_INITIALIZER_LIST 1
-	#define INITIALIZER_LIST_HEADER <initializer_list>
+  #define HAS_INITIALIZER_LIST 1
+  #define INITIALIZER_LIST_HEADER <initializer_list>
 #endif
 
 /*********************
@@ -83,14 +83,14 @@
 #endif
 
 #if defined(_MSC_VER) || !IS_CLANG
-	#define AUTOWIRE_cxx_override_control 1
+  #define AUTOWIRE_cxx_override_control 1
 #endif
 
 /*********************
  * exception_ptr availability
  *********************/
 #if (defined(__APPLE__) && !defined(_LIBCPP_VERSION)) || __ANDROID__
-  #define EXCEPTION_PTR_HEADER <contrib/C++11/boost_exception_ptr.h>
+  #define EXCEPTION_PTR_HEADER <autowiring/C++11/boost_exception_ptr.h>
 #else
   #define EXCEPTION_PTR_HEADER <stdexcept>
   #define throw_rethrowable throw
@@ -102,7 +102,7 @@
 #if STL11_ALLOWED
   #define SYSTEM_ERROR_HEADER <system_error>
 #else
-  #define SYSTEM_ERROR_HEADER <contrib/C++11/boost_system_error.h>
+  #define SYSTEM_ERROR_HEADER <autowiring/C++11/boost_system_error.h>
 #endif
 
 /*********************
@@ -111,7 +111,7 @@
 #if _MSC_VER >= 1700 || (STL11_ALLOWED && !__ANDROID__)
   #define FUTURE_HEADER <future>
 #else
-  #define FUTURE_HEADER <contrib/C++11/boost_future.h>
+  #define FUTURE_HEADER <autowiring/C++11/boost_future.h>
 #endif
 
 /**
@@ -121,7 +121,7 @@
 #if STL11_ALLOWED
   #define TYPE_INDEX_HEADER <typeindex>
 #else
-  #define TYPE_INDEX_HEADER <contrib/C++11/type_index.h>
+  #define TYPE_INDEX_HEADER <autowiring/C++11/type_index.h>
 #endif
 
 /*********************
@@ -142,7 +142,7 @@
     #define TYPE_TRAITS_HEADER <type_traits>
   #endif
 #else
-  #define TYPE_TRAITS_HEADER <contrib/C++11/boost_type_traits.h>
+  #define TYPE_TRAITS_HEADER <autowiring/C++11/boost_type_traits.h>
 #endif
 
 /*********************
@@ -159,26 +159,26 @@
 #endif
 
 #if SHARED_PTR_IN_STL && STL11_ALLOWED
-  #define MEMORY_HEADER <contrib/C++11/memory.h>
+  #define MEMORY_HEADER <autowiring/C++11/memory.h>
 #else
-  #define MEMORY_HEADER <contrib/C++11/memory_nostl11.h>
+  #define MEMORY_HEADER <autowiring/C++11/memory_nostl11.h>
 #endif
 
 // Nullptr_t has odd availability
 #ifdef _MSC_VER
-	#define HAS_NULLPTR_T 1
+  #define HAS_NULLPTR_T 1
 #elif IS_CLANG
-	#define HAS_NULLPTR_T (STL11_ALLOWED && __has_feature(cxx_nullptr))
+  #define HAS_NULLPTR_T (STL11_ALLOWED && __has_feature(cxx_nullptr))
 #elif __cplusplus > 199711L
-	#define HAS_NULLPTR_T 1
+  #define HAS_NULLPTR_T 1
 #else
-	// No idea--better safe than sorry!
-	#define HAS_NULLPTR_T 1
+  // No idea--better safe than sorry!
+  #define HAS_NULLPTR_T 1
 #endif
 
 #if ! HAS_NULLPTR_T
-	// Have to provide our own dummy type, then, there's no header for this one
-	namespace std { typedef decltype(nullptr) nullptr_t; }
+  // Have to provide our own dummy type, then, there's no header for this one
+  namespace std { typedef decltype(nullptr) nullptr_t; }
 #endif
 
 
@@ -224,7 +224,7 @@
   #define FUNCTIONAL_HEADER <functional>
   #define _WEBSOCKETPP_CPP11_FUNCTIONAL_
 #else
-  #define FUNCTIONAL_HEADER <contrib/C++11/boost_functional.h>
+  #define FUNCTIONAL_HEADER <autowiring/C++11/boost_functional.h>
 #endif
 
 #ifndef LAMBDAS_AVAILABLE
@@ -245,7 +245,7 @@
 #if ARRAYS_AVAILABLE
 #define ARRAY_HEADER <array>
 #else
-#define ARRAY_HEADER <contrib/C++11/boost_array.h>
+#define ARRAY_HEADER <autowiring/C++11/boost_array.h>
 #endif
 
 /**
@@ -266,7 +266,7 @@
   #if !defined(__APPLE__) || __cplusplus >= 201103L
     #define BOOST_NO_UNICODE_LITERALS 1
   #endif
-  #define RVALUE_HEADER <contrib/C++11/boost_rvalue.h>
+  #define RVALUE_HEADER <autowiring/C++11/boost_rvalue.h>
 #endif
 
 /**
@@ -275,7 +275,7 @@
 #if STL11_ALLOWED
   #define ATOMIC_HEADER <atomic>
 #else
-  #define ATOMIC_HEADER <contrib/C++11/boost_atomic.h>
+  #define ATOMIC_HEADER <autowiring/C++11/boost_atomic.h>
 #endif
 
 /**
@@ -284,16 +284,16 @@
 #if STL11_ALLOWED
   #define STL_TUPLE_HEADER <tuple>
 #else
-  #define STL_TUPLE_HEADER <contrib/C++11/boost_tuple.h>
+  #define STL_TUPLE_HEADER <autowiring/C++11/boost_tuple.h>
 #endif
 
  /**
  * Mutex
  */
 #if STL11_ALLOWED && !__ANDROID__
-  #define MUTEX_HEADER <contrib/C++11/mutex.h>
+  #define MUTEX_HEADER <autowiring/C++11/mutex.h>
 #else
-  #define MUTEX_HEADER <contrib/C++11/boost_mutex.h>
+  #define MUTEX_HEADER <autowiring/C++11/boost_mutex.h>
 #endif
 
 /**
@@ -303,7 +303,7 @@
   #define THREAD_HEADER <thread>
   #define _WEBSOCKETPP_CPP11_THREAD_
 #else
-  #define THREAD_HEADER <contrib/C++11/boost_thread.h>
+  #define THREAD_HEADER <autowiring/C++11/boost_thread.h>
 #endif
 
  /**
@@ -312,7 +312,7 @@
 #if STL11_ALLOWED && !__ANDROID__
   #define CHRONO_HEADER <chrono>
 #else
-  #define CHRONO_HEADER <contrib/C++11/boost_chrono.h>
+  #define CHRONO_HEADER <autowiring/C++11/boost_chrono.h>
 #endif
 
  /**
@@ -321,7 +321,7 @@
 #if STL11_ALLOWED
   #define UTILITY_HEADER <utility>
 #else
-  #define UTILITY_HEADER <contrib/C++11/boost_utility.h>
+  #define UTILITY_HEADER <autowiring/C++11/boost_utility.h>
 #endif
 
 /**

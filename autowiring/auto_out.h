@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
+#include "AutoPacket.h"
 #include MEMORY_HEADER
-#include <autowiring/AutoPacket.h>
 
 /// <summary>
 /// Declares an output of an AutoFilter method via an argument.

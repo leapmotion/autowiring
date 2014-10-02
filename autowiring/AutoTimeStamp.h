@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <autowiring/auto_out.h>
+#include "auto_out.h"
 #include CHRONO_HEADER
 
 /// <summary>
