@@ -1,5 +1,13 @@
+#
+# Setup testing
+#
+
 add_googletest(test)
 add_googletest(benchmark)
+
+#
+# Configure source files
+#
 
 set(Autowiring_SRCS
   at_exit.h
@@ -12,6 +20,7 @@ set(Autowiring_SRCS
   AutoRestarter.h
   AutoFuture.h
   AutoFuture.cpp
+  AutowiringConfig.h
   CoreJob.h
   CoreJob.cpp
   AutoFilterDescriptor.h
@@ -173,6 +182,10 @@ endif()
 rewrite_header_paths(Autowiring_SRCS)
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 
+#
+# Configure library
+#
+
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 
 if(CMAKE_MAJOR_VERSION GREATER 2)
@@ -194,6 +207,10 @@ if(Threads_FOUND)
   endif()
 endif()
 
+#
+# Install library
+#
+
 if(NOT AUTOWIRING_IS_EMBEDDED)
   install(TARGETS Autowiring EXPORT AutowiringTargets
     DESTINATION lib
@@ -201,14 +218,9 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
     CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
   )
 
-  foreach (src ${Autowiring_SRCS})
-    string(REGEX MATCH ".*\\.h" hfile ${src})
-    if(hfile)
-      install(
-        FILES ${hfile}
-        DESTINATION "include/Autowiring"
-        COMPONENT autowiring
-      )
-    endif()
-  endforeach()
+  install(
+    DIRECTORY ${PROJECT_SOURCE_DIR}/autowiring/
+    DESTINATION include/autowiring
+    FILES_MATCHING PATTERN "*.h"
+  )
 endif()

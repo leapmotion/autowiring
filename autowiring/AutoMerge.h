@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <autowiring/AutoPacket.h>
-#include <unordered_set>
+#include "AutoPacket.h"
+#include STL_UNORDERED_SET
 
 /// <summary>
 /// Extracts all instances of a type from a slave-context on each execution of that context.
