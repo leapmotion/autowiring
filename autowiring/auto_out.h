@@ -99,6 +99,7 @@ public:
     cancel();
     shared_type::operator = (rhs);
     m_makeable = false;
+    return *this;
   }
 
   auto_out (std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
