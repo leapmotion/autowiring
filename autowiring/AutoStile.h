@@ -31,7 +31,7 @@ struct AutoDecorationStile<data_pipe, false>
     typedef auto_in<typename auto_arg<data_pipe>::id_type> slave_in_type;
 
     // HACK: Move sematics do not work with lambdas, so it is necessary to reproduce the auto_out signative using master_packet.
-    master_data.reset();
+    master_data.cancel();
     const std::type_info* stile_source = &master_type;
     slave_packet->AddRecipient([master_packet, stile_source](slave_in_type slave_data) {
       master_packet->Put(slave_data, *stile_source);

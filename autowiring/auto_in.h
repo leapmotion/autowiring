@@ -16,6 +16,9 @@ template <class type>
 class auto_in:
   public std::shared_ptr<const type>
 {
+  auto_in (auto_in<type>& rhs) = delete;
+  auto_in& operator = (auto_in<type>& rhs) = delete;
+
 public:
   typedef type id_type;
   typedef const type& base_type;
@@ -35,18 +38,8 @@ public:
   auto_in ():
     shared_type(nullptr)
   {}
-
-  auto_in (auto_in<type>& rhs):
-    shared_type(rhs)
-  {}
-
   auto_in (auto_in<type>&& rhs) {
-    std::swap<shared_type>(*this, rhs);
-  }
-
-  auto_in& operator = (auto_in<type>& rhs) {
-    shared_type::operator = (rhs);
-    return *this;
+    operator = (std::move(rhs));
   }
 
   auto_in& operator = (auto_in<type>&& rhs) {
