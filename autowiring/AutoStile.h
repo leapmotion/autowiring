@@ -51,20 +51,20 @@ protected:
     // Reverse argument orientation for AutoFilter in slave context
     typedef auto_in<typename auto_arg<data_pipe>::id_type> slave_in_type;
 
-    slave_packet->AddRecipient<void, slave_in_type>(std::function<void(slave_in_type slave_data)>([&master_data](slave_in_type slave_data) {
-      // NOTE: The lambda copy of master_data is implicitly a move of AutoCheckout,
-      // so this lambda has sole responsibility for providing the requested data.
-      // NOTE: This is a deep copy, not a shared resource.
-      *master_data = *slave_data;
-    }));
+    // HACK: Move sematics do not work with lambdas, so it is necessary to reproduce the auto_out signative using master_packet.
+    master_data.reset();
+    const std::type_info* stile_source = &typeid(AutoStile<Args...>);
+    slave_packet->AddRecipient([master_packet, stile_source](slave_in_type slave_data) {
+      master_packet->Put(slave_data, *stile_source);
+    });
     return true; //Place-holder in variadic initializer
   }
 
   /// <summary>Inject all data from slave_packet into master_packet</summary>
   static void ForwardStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet) {
-    slave_packet->AddRecipient<void, const AutoPacket&>(std::function<void(const AutoPacket&)>([master_packet](const AutoPacket& slave_packet) {
+    slave_packet->AddRecipient([master_packet](const AutoPacket& slave_packet) {
       slave_packet.ForwardAll(master_packet);
-    }));
+    });
   }
 
 public:
@@ -80,8 +80,9 @@ public:
     // Initiate the slave context
     std::shared_ptr<AutoPacket> master_packet = packet.shared_from_this();
     std::shared_ptr<AutoPacket> slave_packet = slave_factory->NewPacket();
-    bool init[] = {DecorationStile<Args>(slave_packet, master_packet, data)...,
-      false}; //Final argument is required in the case of an empty variadic template
+    bool init [] = {
+      DecorationStile<Args>(slave_packet, master_packet, data)...
+    };
     (void)init;
 
     if (var_and<auto_arg<Args>::is_input...>::value) {
@@ -107,3 +108,10 @@ public:
     });
   }
 };
+
+/// <summary>
+/// Zero input argument style specialization
+/// </summary>
+template<>
+class AutoStile<>
+{};

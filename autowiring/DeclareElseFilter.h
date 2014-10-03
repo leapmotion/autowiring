@@ -5,17 +5,21 @@
 #include "SatCounter.h"
 
 /// <summary>If Base::AutoFilter is not called, this will execute a Final-Call method</summary>
-template<class Base>
+template<class>
 class MicroElseFilter
 {
 protected:
+  const std::type_info& type;
   std::function<void(const AutoPacket&)> m_filter;
 
 public:
-  MicroElseFilter(const std::function<void(const AutoPacket&)>& filter) : m_filter(filter) {}
+  MicroElseFilter(const std::type_info& type, const std::function<void(const AutoPacket&)>& filter):
+    type(type),
+    m_filter(filter)
+  {}
 
   void AutoFilter(const AutoPacket& packet) {
-    if (packet.GetSatisfaction(typeid(Base)).called) {
+    if(packet.GetSatisfaction(type).called) {
       /// Base::AutoFilter has already been called for this packet
       return;
     }
@@ -33,7 +37,10 @@ public:
 /// </remarks>
 template<class Base>
 std::shared_ptr<MicroElseFilter<Base>> DeclareElseFilter(Base* that, void (Base::*filter)(const AutoPacket&)) {
+  typedef typename SelectTypeUnifier<Base>::type t_repType;
+
   return AutoCurrentContext()->template Construct<MicroElseFilter<Base>>(
+    typeid(t_repType),
     [that, filter] (const AutoPacket& packet) {
       return (that->*filter)(packet);
     }
@@ -50,9 +57,20 @@ std::shared_ptr<MicroElseFilter<Base>> DeclareElseFilter(Base* that, void (Base:
 /// </remarks>
 template<class Base, class Next>
 std::shared_ptr<MicroElseFilter<Next>> DeclareElseFilter(
-  Base* that,
-  void (Base::*filter)(const AutoPacket&)) {
+    Base* that,
+    void (Base::*filter)(const AutoPacket&)
+  )
+{
+  // If this type will use a unifier, we need to declare the else filter on the unifier type,
+  // not the represented type, because the unifier type will be the actual true type of the
+  // class in the context.
+  // TODO:  The fact that this is necessary implies that the concept of an else-filter based
+  // on whether an AutoFilter declared on a particular type may be ill-formed; it might be
+  // necessary to revisit this concept and instead declare a contingent filter piecewise in
+  // terms of its input arguments rather than in terms of another filter entry.
+  typedef typename SelectTypeUnifier<Base>::type t_repType;
   return AutoCurrentContext()->template Construct<MicroElseFilter<Next>>(
+    typeid(t_repType),
     [that, filter] (const AutoPacket& packet) {
       return (that->*filter)(packet);
     }

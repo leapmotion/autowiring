@@ -112,16 +112,12 @@ void AutoPacketFactory::RemoveSubscriber(const AutoFilterDescriptor& autoFilter)
 }
 
 AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(const std::type_info* nodeType) {
-  AutoFilterDescriptor descriptor;
   //ASSUME: type_info uniquely specifies descriptor
-  for (auto& af : m_autoFilters) {
-    if (af.GetAutoFilterTypeInfo() == nodeType) {
-      descriptor = af;
-      break;
-    }
-  }
-  //NOTE: If descriptor was not found descriptor.GetAutoFilterTypeInfo() == nullptr
-  return descriptor;
+  for (auto& af : m_autoFilters)
+    if (af.GetAutoFilterTypeInfo() == nodeType)
+      return af;
+
+  return AutoFilterDescriptor();
 }
 
 void AutoPacketFactory::BroadcastOneDataOut(const std::type_info* nodeType, const std::type_info* dataType, bool enable) {

@@ -70,8 +70,7 @@ template<class T>
 struct use_unifier:
   std::integral_constant<
     bool,
-    !std::is_void<T>::value &&
-    !std::is_scalar<T>::value &&
+    std::is_class<T>::value &&
     !std::is_base_of<Object, T>::value
   >
 {};

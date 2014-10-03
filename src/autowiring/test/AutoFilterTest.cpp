@@ -134,15 +134,32 @@ TEST_F(AutoFilterTest, VerifyTypeUsage) {
 
 class FilterFirst {
 public:
+  FilterFirst(void):
+    m_magic(0xDEADBEEF),
+    m_called(0)
+  {}
+
+  const int m_magic;
   int m_called;
 
-  FilterFirst() : m_called(0) {};
-
   void AutoFilter(AutoPacket& pkt) {
+    ASSERT_EQ(0xDEADBEEF, m_magic) << "Magic value was corrupted, pointer was not adjusted to the correct offset";
     ++m_called;
     pkt.Decorate(Decoration<0>());
   }
 };
+
+class FilterFirstValidateInheritance:
+  public FilterFirst
+{};
+
+static_assert(
+  std::is_same<
+    FilterFirst,
+    Decompose<decltype(&FilterFirstValidateInheritance::AutoFilter)>::type
+  >::value,
+  "Decomposed type did not correctly name the implementing type of an inherited method"
+);
 
 class FilterLast {
 public:
@@ -225,7 +242,7 @@ public:
   /// Called when AutoFilter is not
   void ElseFilter(const AutoPacket& packet) {
     ++m_calledElse;
-    ASSERT_FALSE(packet.Has<Decoration<0>>()) << "AutoFilter should have been called";
+    ASSERT_FALSE(packet.Has<Decoration<0>>()) << "AutoFilter should not have been called";
   }
 
   /// Declared AutoFilter call, implemented by MicroAutoFilter
@@ -236,7 +253,7 @@ public:
   /// Declared AutoFilter call, implemented by MicroAutoFilter
   void NextElseFilter(const AutoPacket& packet) {
     ++m_calledNextElse;
-    ASSERT_FALSE(packet.Has<Decoration<1>>()) << "NextFilter should have been called";
+    ASSERT_FALSE(packet.Has<Decoration<1>>()) << "NextFilter should not have been called";
   }
 
   void Reset() {
@@ -273,6 +290,7 @@ TEST_F(AutoFilterTest, TestLogicFilter) {
     ASSERT_EQ(0, logic->m_calledElse) << "Called ElseFilter before packet final-calls";
     ASSERT_EQ(0, logic->m_calledNext) << "Called NextFilter without Decoration<0>";
     ASSERT_EQ(0, logic->m_calledNextElse) << "Called NextElseFilter before packet final-calls";
+
     pkt->Decorate(Decoration<1>());
     ASSERT_EQ(1, logic->m_calledAuto) << "Multiple calls to AutoFilter with Decoration<0>";
     ASSERT_EQ(0, logic->m_calledElse) << "Called ElseFilter before packet final-calls";
@@ -296,9 +314,35 @@ TEST_F(AutoFilterTest, VerifyAutoOut) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<FilterOut> out;
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
-  const Decoration<0>* result = nullptr;
-  ASSERT_TRUE(packet->Get(result)) << "Output missing";
-  ASSERT_EQ(result->i, 1) << "Output incorrect";
+  const Decoration<0>* result0 = nullptr;
+  ASSERT_TRUE(packet->Get(result0)) << "Output missing";
+  ASSERT_EQ(result0->i, 1) << "Output incorrect";
+}
+
+class FilterOutDeferred:
+  public CoreThread
+{
+public:
+  Deferred AutoFilter(auto_out<Decoration<0>> out) {
+    out.make(); //Default constructor sets i == 0
+    return Deferred(this);
+  }
+};
+
+TEST_F(AutoFilterTest, VerifyAutoOutDeferred) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FilterOutDeferred> out;
+  AutoRequired<FilterLast> last;
+  {
+    std::shared_ptr<AutoPacket> packet = factory->NewPacket();
+    // Creation of packet triggers Deferred AutoFilter call
+    // Destruction of packet trigerrs FilterLast, which tests
+    // for the existence of Decoration<0> on the packet
+  }
+  out->Stop(true); // Run-down all queued calls (out)
+  out->Wait(); // Wait for calls to compelte (last)
+
+  ASSERT_EQ(last->m_called, 1) << "FilterLast was not called";
 }
 
 class FilterFinalFail1 {
@@ -425,6 +469,7 @@ template<int out, int in>
 class FilterGather {
 public:
   FilterGather():
+    FilterGather_AutoGather(this, &FilterGather<out, in>::AutoGather),
     m_called_out(0),
     m_called_in(0),
     m_out(out),
@@ -436,6 +481,8 @@ public:
     packet.Decorate(Decoration<out>(m_out));
   }
 
+
+  NewAutoFilter FilterGather_AutoGather;
   void AutoGather(const Decoration<in>& input) {
     ++m_called_in;
     m_in = input.i;
@@ -445,8 +492,6 @@ public:
   int m_called_in;
   int m_out;
   int m_in;
-
-  NewAutoFilter<decltype(&FilterGather<out,in>::AutoGather), &FilterGather<out,in>::AutoGather> FilterGather_AutoGather;
 };
 
 TEST_F(AutoFilterTest, VerifyTwoAutoFilterCalls) {
@@ -482,10 +527,11 @@ template<int out, int in>
 class FilterGatherAutoOut {
 public:
   FilterGatherAutoOut():
-  m_called_out(0),
-  m_called_in(0),
-  m_out(out),
-  m_in(in)
+    FilterGather_AutoGather(this, &FilterGatherAutoOut<out, in>::AutoGather),
+    m_called_out(0),
+    m_called_in(0),
+    m_out(out),
+    m_in(in)
   {}
 
   void AutoFilter(auto_out<Decoration<out>> output) {
@@ -493,6 +539,7 @@ public:
     output->i = m_out;
   }
 
+  NewAutoFilter FilterGather_AutoGather;
   void AutoGather(const Decoration<in>& input) {
     ++m_called_in;
     m_in = input.i;
@@ -502,7 +549,6 @@ public:
   int m_called_in;
   int m_out;
   int m_in;
-  NewAutoFilter<decltype(&FilterGather<out,in>::AutoGather), &FilterGather<out,in>::AutoGather> FilterGather_AutoGather;
 };
 
 TEST_F(AutoFilterTest, VerifyTwoAutoFilterCallsAutoOut) {
@@ -579,7 +625,7 @@ TEST_F(AutoFilterTest, VerifyTeardownArrangement) {
       std::shared_ptr<FilterA> filterA = filterAWeak.lock();
 
       // Unsubscribe the filter:
-      factory->RemoveSubscriber(MakeAutoFilterDescriptor(filterA));
+      factory->RemoveSubscriber(filterA);
     }
 
     // Verify that unsubscription STILL does not result in expiration:
@@ -764,7 +810,6 @@ TEST_F(AutoFilterTest, VerifyReflexiveReciept) {
 
   ASSERT_FALSE(good_autofilter<BadFilterA>::test) << "Failed to identify AutoFilter(void)";
   ASSERT_FALSE(good_autofilter<BadFilterB>::test) << "Failed to identify multiple definitions of AutoFilter";
-  ASSERT_FALSE(good_autofilter<BadFilterC>::test) << "Failed to identify equivalent AutoFilter argument id types";
 
   AutoRequired<AutoPacketFactory> factory;
 
@@ -904,6 +949,7 @@ TEST_F(AutoFilterTest, DeferredRecieptInSubContext) {
 class HasAWeirdAutoFilterMethod {
 public:
   HasAWeirdAutoFilterMethod(void):
+    af(this, &HasAWeirdAutoFilterMethod::AutoFilterFoo),
     m_baseValue(101),
     m_called0(0),
     m_called1(0)
@@ -920,7 +966,7 @@ public:
     ++m_called1;
   }
 
-  NewAutoFilter<decltype(&HasAWeirdAutoFilterMethod::AutoFilterFoo), &HasAWeirdAutoFilterMethod::AutoFilterFoo> af;
+  NewAutoFilter af;
   const int m_baseValue;
   int m_called0;
   int m_called1;
@@ -1345,10 +1391,10 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
 
 TEST_F(AutoFilterTest, MicroAutoFilterTests) {
   int extVal = -1;
-  std::function<void(const int&)> filter([&extVal] (const int& getVal) {
+  MicroAutoFilter<void, const int&> makeImmediate(
+  [&extVal] (const int& getVal) {
     extVal = getVal;
   });
-  MicroAutoFilter<void, const int&> makeImmediate(filter);
   int setVal = 1;
   makeImmediate.AutoFilter(setVal);
   ASSERT_EQ(1, extVal);
@@ -1602,7 +1648,7 @@ template<int num = 0>
 class FilterOD0 {
 public:
   void AutoFilter(auto_out<Decoration<0>> out) {
-    out->i = 0;
+    out->i = num;
   }
 };
 
@@ -1621,16 +1667,16 @@ TEST_F(AutoFilterTest, VerifyMergedOutputs) {
 
   AutoRequired<AutoMerge<Decoration<0>>> merge;
 
-  // No broadcast from f1D0 and f2D0
+  // Configure Data Flow
   factory->BroadcastDataIn<FilterID0>(nullptr,false);
   factory->BroadcastDataOut<FilterOD0<1>>(nullptr,false);
   factory->BroadcastDataOut<FilterOD0<2>>(nullptr,false);
-
+  factory->PipeData<FilterOD0<1>, AutoMerge<Decoration<0>>>();
+  factory->PipeData<FilterOD0<2>, FilterID0>();
+  // Resulting Flow:
   // f0D0 is broadcast, and will be received by merge
   // f1D0 -> merge only
   // f2D0 -> fID0 only
-  factory->PipeData<FilterOD0<1>, AutoMerge<Decoration<0>>>();
-  factory->PipeData<FilterOD0<2>, FilterID0>();
 
   AutoMerge<Decoration<0>>::merge_data extracted;
   {
@@ -1640,16 +1686,19 @@ TEST_F(AutoFilterTest, VerifyMergedOutputs) {
       extracted = data;
     }));
 
-    ASSERT_TRUE(packet->Has<Decoration<0>>()) << "Broadcast data should be present";
-    ASSERT_FALSE(packet->Has<Decoration<0>>(typeid(FilterOD0<0>))) << "Sourced data should be absent from broadcasting source";
-    ASSERT_TRUE(packet->Has<Decoration<0>>(typeid(FilterOD0<1>))) << "Sourced data should be present from non-broadcasting source";
-    ASSERT_TRUE(packet->Has<Decoration<0>>(typeid(FilterOD0<2>))) << "Sourced data should be present from non-broadcasting source";
+    const Decoration<0>* dec0;
+    ASSERT_TRUE(packet->Get(dec0)) << "Broadcast data should be present";
+    ASSERT_EQ(dec0->i, 0) << "Incorrect value for broadcast data";
+    ASSERT_FALSE(packet->Get(dec0, typeid(typename SelectTypeUnifier<FilterOD0<0>>::type))) << "Sourced data should be absent from broadcasting source";
+    ASSERT_TRUE(packet->Get(dec0, typeid(typename SelectTypeUnifier<FilterOD0<1>>::type))) << "Sourced data should be present from non-broadcasting source";
+    ASSERT_EQ(dec0->i, 1) << "Incorrect value for piped data";
+    ASSERT_TRUE(packet->Get(dec0, typeid(typename SelectTypeUnifier<FilterOD0<2>>::type))) << "Sourced data should be present from non-broadcasting source";
+    ASSERT_EQ(dec0->i, 2) << "Incorrect value for piped data";
 
     // Final-Call methods
-    // TODO: Make these throw if called early!
     ASSERT_EQ(1, packet->HasAll<Decoration<0>>()) << "Single Broadcast source only";
-    ASSERT_EQ(1, packet->HasAll<Decoration<0>>(typeid(AutoMerge<Decoration<0>>))) << "Single Piped source only";
-    ASSERT_EQ(1, packet->HasAll<Decoration<0>>(typeid(FilterID0))) << "Single Piped source only";
+    ASSERT_EQ(1, packet->HasAll<Decoration<0>>(typeid(typename SelectTypeUnifier<AutoMerge<Decoration<0>>>::type))) << "Single Piped source only";
+    ASSERT_EQ(1, packet->HasAll<Decoration<0>>(typeid(typename SelectTypeUnifier<FilterID0>::type))) << "Single Piped source only";
   }
   ASSERT_EQ(2, extracted.size()) << "Should collect 1 broadcast & 1 pipe";
 }
@@ -1675,10 +1724,16 @@ TEST_F(AutoFilterTest, VerifyForwardAll) {
   ASSERT_EQ(1, (*contents)->i) << "Forwarded data is not persistent";
 }
 
-class Junction01 {
+class JunctionDeferred01:
+  public CoreThread
+{
 public:
-  void AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>> out) {
+  Deferred AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>> out) {
+    // Wait for AutoStile method to exit
+    AutoCurrentContext()->Wait(std::chrono::milliseconds(10));
+    
     out->i = in.i;
+    return Deferred(this);
   }
 };
 
@@ -1687,14 +1742,19 @@ class MasterContext {};
 
 TEST_F(AutoFilterTest, VerifyContextStile) {
   // Stile injects Decoration<0> and extracts Decoration<1>
-  std::shared_ptr<AutoStile<const Decoration<0>&, auto_out<Decoration<1>>>> stile;
+  typedef AutoStile<
+    const Decoration<0>&,
+    auto_out<Decoration<1>>,
+    auto_out<Decoration<2>>
+  > test_stile;
+  std::shared_ptr<test_stile> stile;
   std::shared_ptr<AutoPacketFactory> master_factory;
 
   AutoCreateContextT<SlaveContext> slave_context;
   {
     CurrentContextPusher pusher(slave_context);
     AutoRequired<AutoPacketFactory>();
-    AutoRequired<Junction01>();
+    AutoRequired<JunctionDeferred01>();
     slave_context->Initiate();
   }
 
@@ -1702,7 +1762,7 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
   {
     CurrentContextPusher pusher(master_context);
     master_factory = AutoRequired<AutoPacketFactory>();
-    stile = AutoRequired<AutoStile<const Decoration<0>&, auto_out<Decoration<1>>>>();
+    stile = AutoRequired<test_stile>();
     master_context->Initiate();
   }
 
@@ -1711,10 +1771,27 @@ TEST_F(AutoFilterTest, VerifyContextStile) {
     CurrentContextPusher pusher(master_context);
     std::shared_ptr<AutoPacket> master_packet;
     master_packet = master_factory->NewPacket();
-    master_packet->Decorate(Decoration<0>());
-    ASSERT_TRUE(master_packet->Has<Decoration<1>>()) << "Stile failed to send & retrieve data";
+    int init = -1;
+    master_packet->Decorate(Decoration<0>(init));
+
+    // Create a last-call so that completion of slave context
+    // is verified.
+    master_packet->AddRecipient(std::function<void(const AutoPacket&)>([init](const AutoPacket& master_final){
+      const Decoration<1>* out1;
+      ASSERT_TRUE(master_final.Get(out1)) << "Stile failed to send & retrieve data";
+      ASSERT_EQ(init, out1->i) << "Output was not from junction in slave context";
+      const Decoration<2>* out2;
+      ASSERT_FALSE(master_final.Get(out2)) << "Decoration<2> was not produced in slave context";
+    }));
   }
 }
+
+class Junction01 {
+public:
+  void AutoFilter(const Decoration<0>& in, auto_out<Decoration<1>> out) {
+    out->i = in.i;
+  }
+};
 
 TEST_F(AutoFilterTest, VerifyStileExtractAll) {
   // Stile injects Decoration<0> and extracts Decoration<1>

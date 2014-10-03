@@ -1,6 +1,9 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
+#include "AutoPacket.h"
+#include MEMORY_HEADER
+
 /// <summary>
 /// A wrapper type, used to indicate a pointer which may optionally be satisfied
 /// </summary>
