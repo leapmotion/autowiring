@@ -45,9 +45,9 @@ public:
     shared_type(rhs)
   {}
 
-  optional_ptr (optional_ptr<type>&& rhs) {
-    std::swap<shared_type>(*this, rhs);
-  }
+  optional_ptr (optional_ptr<type>&& rhs):
+    shared_type(std::move(rhs))
+  {}
 
   optional_ptr& operator = (optional_ptr<type>& rhs) {
     shared_type::operator = (rhs);
@@ -56,7 +56,7 @@ public:
 
   optional_ptr& operator = (optional_ptr<type>&& rhs) {
     shared_type::reset();
-    std::swap<shared_type>(*this, rhs);
+    static_cast<shared_type&>(*this) = std::move(rhs);
     return *this;
   }
 
