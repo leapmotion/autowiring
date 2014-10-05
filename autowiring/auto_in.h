@@ -38,13 +38,14 @@ public:
   auto_in ():
     shared_type(nullptr)
   {}
-  auto_in (auto_in<type>&& rhs) {
-    operator = (std::move(rhs));
-  }
+
+  auto_in (auto_in<type>&& rhs):
+    shared_type(std::move(rhs))
+  {}
 
   auto_in& operator = (auto_in<type>&& rhs) {
     shared_type::reset();
-    std::swap<shared_type>(*this, rhs);
+    static_cast<shared_type&>(*this) = std::move(rhs);
     return *this;
   }
 
