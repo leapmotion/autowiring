@@ -39,6 +39,7 @@ set(Autowiring_SRCS
   Autowired.cpp
   AutowirableSlot.h
   AutowirableSlot.cpp
+  AutowiringConfig.h
   AutowiringEvents.h
   autowiring.h
   autowiring_error.h

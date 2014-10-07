@@ -1,12 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
-project(autowiring)
+cmake_minimum_required(VERSION 3.0)
+include(version.cmake)
+project(autowiring VERSION ${autowiring_VERSION})
 include(CTest)
-
-# TODO: Use the VERSION attribute for the "project" setting instead after upgrading
-# the cmake_minimum_required to version 3.0
-set(autowiring_VERSION_MAJOR 0)
-set(autowiring_VERSION_MINOR 1)
-set(autowiring_VERSION_PATCH 2)
 
 # Determine whether Autowiring has been embedded in another project
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
@@ -33,15 +28,14 @@ endif()
 
 if(USE_LIBCXX)
   # Clang needs special additional flags to build with C++11
-  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+    # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
+    message("AppleClang C++11")
+    set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     message("Clang C++11")
-    if (APPLE)
-      # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
-      set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
-    else()
-      set(CMAKE_CXX_FLAGS "-std=c++11")
-      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
-    endif()
+    set(CMAKE_CXX_FLAGS "-std=c++11")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     message("GCC C++11")
     set(CMAKE_CXX_FLAGS "-std=c++11")
@@ -103,12 +97,6 @@ include_directories(
   contrib/websocketpp
 )
 
-# Build examples
-option(AUTOWIRING_BUILD_EXAMPLES "Build Autowiring examples" ${AUTOWIRING_BUILD_EXAMPLES_DEFAULT})
-if(AUTOWIRING_BUILD_EXAMPLES)
-  add_subdirectory(examples)
-endif()
-
 # CMake configurations
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
@@ -117,6 +105,9 @@ configure_file(autowiring-config.h.in ${PROJECT_SOURCE_DIR}/autowiring/Autowirin
 # Recurse through source directories
 add_subdirectory(src)
 add_subdirectory(contrib)
+
+# Export library
+export(EXPORT AutowiringTargets FILE AutowiringTargets.cmake NAMESPACE Autowiring::)
 
 # Only attempt to do anything with cpack if we're being built stand-alone
 if(NOT AUTOWIRING_IS_EMBEDDED)

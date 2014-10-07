@@ -122,6 +122,6 @@ int main() {
     };
   }
 
-  // This will wait indefinitly untill you manual quit the example
+  // This will wait indefinitly until you manually quit the example
   ctxt->Wait();
 }
