@@ -192,7 +192,7 @@ public:
 };
 
 /// <summary>
-/// A filter that should trigger a static_assert in AutoRequire<BadFilterA>
+/// A filter that should trigger a static_assert in AutoRequire<BadFilterC>
 /// due to id equivalent of AutoFilter arguments.
 /// </summary>
 class BadFilterC:
@@ -223,7 +223,7 @@ public:
 class FilterOutB :
 public FilterRoot {
 public:
-  void AutoFilter(auto_out<Decoration<2>>) {
+  void AutoFilter(auto_out<Decoration<2>> two) {
     ++m_called;
   }
 };

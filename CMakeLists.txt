@@ -96,13 +96,15 @@ include_directories(
   contrib
   contrib/websocketpp
 )
-add_subdirectory(src)
-add_subdirectory(contrib)
 
 # CMake configurations
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
 configure_file(autowiring-config.h.in ${PROJECT_SOURCE_DIR}/autowiring/AutowiringConfig.h @ONLY)
+
+# Recurse through source directories
+add_subdirectory(src)
+add_subdirectory(contrib)
 
 # Only attempt to do anything with cpack if we're being built stand-alone
 if(NOT AUTOWIRING_IS_EMBEDDED)

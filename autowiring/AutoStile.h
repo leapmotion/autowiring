@@ -5,6 +5,40 @@
 #include "AutoPacket.h"
 #include MEMORY_HEADER
 
+template<class data_pipe, bool is_input = auto_arg<data_pipe>::is_input>
+struct AutoDecorationStile;
+
+template<class data_pipe>
+struct AutoDecorationStile<data_pipe, true>
+{
+  /// <summary>Decorator for input shares the reference to master_data</summary>
+  static void DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet,
+                              data_pipe& master_data, const std::type_info& master_type) {
+    slave_packet->Decorate(master_data);
+  }
+};
+
+template<class data_pipe>
+struct AutoDecorationStile<data_pipe, false>
+{
+  /// <summary>Decorator for output creates an extraction for slave_data</summary>
+  static void DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet,
+                              data_pipe& master_data, const std::type_info& master_type) {
+    static_assert(std::is_same<data_pipe, auto_out<typename auto_arg<data_pipe>::id_type>>::value,
+                  "Output types must be declared as auto_out<T>");
+
+    // Reverse argument orientation for AutoFilter in slave context
+    typedef auto_in<typename auto_arg<data_pipe>::id_type> slave_in_type;
+
+    // HACK: Move sematics do not work with lambdas, so it is necessary to reproduce the auto_out signative using master_packet.
+    master_data.cancel();
+    const std::type_info* stile_source = &master_type;
+    slave_packet->AddRecipient([master_packet, stile_source](slave_in_type slave_data) {
+      master_packet->Put(slave_data, *stile_source);
+    });
+  }
+};
+
 /// <summary>
 /// AutoStile provides a means of calling a context as though it is an AutoFilter.
 /// The AutoStile Args use the same syntax as AutoFilter:
@@ -36,35 +70,11 @@ class AutoStile
 protected:
   std::weak_ptr<AutoPacketFactory> m_slave_factory;
 
-  /// <summary>Decorator for input shares the reference to master_data</summary>
-  template<class data_pipe>
-  static typename std::enable_if<auto_arg<data_pipe>::is_input, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe& master_data) {
-    slave_packet->Decorate(master_data);
-    return true; //Place-holder in variadic initializer
-  }
-
-  /// <summary>Decorator for output creates an extraction for slave_data</summary>
-  template<class data_pipe>
-  static typename std::enable_if<auto_arg<data_pipe>::is_output, bool>::type DecorationStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet, data_pipe& master_data) {
-    static_assert(std::is_same<data_pipe, auto_out<typename auto_arg<data_pipe>::id_type>>::value, "Output types must be auto_out");
-
-    // Reverse argument orientation for AutoFilter in slave context
-    typedef auto_in<typename auto_arg<data_pipe>::id_type> slave_in_type;
-
-    slave_packet->AddRecipient<void, slave_in_type>(std::function<void(slave_in_type slave_data)>([&master_data](slave_in_type slave_data) {
-      // NOTE: The lambda copy of master_data is implicitly a move of AutoCheckout,
-      // so this lambda has sole responsibility for providing the requested data.
-      // NOTE: This is a deep copy, not a shared resource.
-      *master_data = *slave_data;
-    }));
-    return true; //Place-holder in variadic initializer
-  }
-
   /// <summary>Inject all data from slave_packet into master_packet</summary>
   static void ForwardStile(std::shared_ptr<AutoPacket>& slave_packet, std::shared_ptr<AutoPacket>& master_packet) {
-    slave_packet->AddRecipient<void, const AutoPacket&>(std::function<void(const AutoPacket&)>([master_packet](const AutoPacket& slave_packet) {
+    slave_packet->AddRecipient([master_packet](const AutoPacket& slave_packet) {
       slave_packet.ForwardAll(master_packet);
-    }));
+    });
   }
 
 public:
@@ -80,9 +90,10 @@ public:
     // Initiate the slave context
     std::shared_ptr<AutoPacket> master_packet = packet.shared_from_this();
     std::shared_ptr<AutoPacket> slave_packet = slave_factory->NewPacket();
-    bool init[] = {DecorationStile<Args>(slave_packet, master_packet, data)...,
-      false}; //Final argument is required in the case of an empty variadic template
-    (void)init;
+    const std::type_info& master_type = typeid(AutoStile<Args...>);
+    (void) std::initializer_list<bool> {
+      (AutoDecorationStile<Args>::DecorationStile(slave_packet, master_packet, data, master_type), false)...
+    };
 
     if (var_and<auto_arg<Args>::is_input...>::value) {
       ForwardStile(slave_packet, master_packet);
@@ -107,3 +118,10 @@ public:
     });
   }
 };
+
+/// <summary>
+/// Zero input argument Stile specialization
+/// </summary>
+template<>
+class AutoStile<>
+{};

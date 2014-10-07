@@ -12,15 +12,15 @@
 /// </remarks>
 template<class Ret, class... Args>
 struct MicroAutoFilter {
-  MicroAutoFilter(const std::function<void(Args...)>&) {}
+  MicroAutoFilter(const std::function<void(Args...)>&&) {}
 
   // This AutoFilter method will be identified as invalid due to the return type
   Ret AutoFilter(Args...) {}
 };
 template<class... Args>
 struct MicroAutoFilter<void, Args...> {
-  MicroAutoFilter(const std::function<void(Args...)>& filter):
-    m_filter(filter)
+  MicroAutoFilter(const std::function<void(Args...)>&& filter):
+    m_filter(std::move(filter))
   {}
 
   void AutoFilter(Args... args) {
@@ -34,8 +34,8 @@ protected:
 
 template<class... Args>
 struct MicroAutoFilter<Deferred, Args...> {
-  MicroAutoFilter(const std::function<void(Args...)>& filter):
-    m_filter(filter)
+  MicroAutoFilter(const std::function<void(Args...)>&& filter):
+    m_filter(std::move(filter))
   {}
 
   Deferred AutoFilter(Args... args) {

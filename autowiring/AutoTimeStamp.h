@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <autowiring/auto_out.h>
+#include "auto_out.h"
 #include CHRONO_HEADER
 
 /// <summary>
@@ -18,5 +18,5 @@ public:
   /// Default constructor yielding current time is called by auto_out<time>.
   /// AutoPacketFactory.NewPacket()->Has<AutoTimeStamp::time>() == true.
   /// </remarks>
-  void AutoFilter(auto_out<time>) {}
+  void AutoFilter(auto_out<time> t) {}
 };

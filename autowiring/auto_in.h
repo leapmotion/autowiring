@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
+#include "AutoPacket.h"
 #include MEMORY_HEADER
-#include <autowiring/AutoPacket.h>
 
 /// <summary>
 /// Fundamental type of required input arguments of AutoFilter methods.
@@ -16,6 +16,9 @@ template <class type>
 class auto_in:
   public std::shared_ptr<const type>
 {
+  auto_in (auto_in<type>& rhs) = delete;
+  auto_in& operator = (auto_in<type>& rhs) = delete;
+
 public:
   typedef type id_type;
   typedef const type& base_type;
@@ -36,22 +39,13 @@ public:
     shared_type(nullptr)
   {}
 
-  auto_in (auto_in<type>& rhs):
-    shared_type(rhs)
+  auto_in (auto_in<type>&& rhs):
+    shared_type(std::move(rhs))
   {}
-
-  auto_in (auto_in<type>&& rhs) {
-    std::swap<shared_type>(*this, rhs);
-  }
-
-  auto_in& operator = (auto_in<type>& rhs) {
-    shared_type::operator = (rhs);
-    return *this;
-  }
 
   auto_in& operator = (auto_in<type>&& rhs) {
     shared_type::reset();
-    std::swap<shared_type>(*this, rhs);
+    static_cast<shared_type&>(*this) = std::move(rhs);
     return *this;
   }
 
