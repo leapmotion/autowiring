@@ -106,6 +106,9 @@ configure_file(autowiring-config.h.in ${PROJECT_SOURCE_DIR}/autowiring/Autowirin
 add_subdirectory(src)
 add_subdirectory(contrib)
 
+# Export library
+export(EXPORT AutowiringTargets FILE AutowiringTargets.cmake NAMESPACE Autowiring::)
+
 # Only attempt to do anything with cpack if we're being built stand-alone
 if(NOT AUTOWIRING_IS_EMBEDDED)
   # Install autowiring-config.cmake and autowiring-configVersion.cmake
