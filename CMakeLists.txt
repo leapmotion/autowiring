@@ -53,10 +53,8 @@ set(AUTOWIRING_BUILD_AUTONET_DEFAULT ON)
 get_filename_component(AUTOWIRING_ROOT_DIR . ABSOLUTE)
 if(AUTOWIRING_IS_EMBEDDED)
   set(AUTOWIRING_BUILD_TESTS_DEFAULT OFF)
-  set(AUTOWIRING_BUILD_EXAMPLES_DEFAULT OFF)
 else()
   set(AUTOWIRING_BUILD_TESTS_DEFAULT ON)
-  set(AUTOWIRING_BUILD_EXAMPLES_DEFAULT ON)
   
   # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
