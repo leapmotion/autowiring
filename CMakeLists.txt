@@ -62,6 +62,7 @@ else()
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
   # wants us to do.
   set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+  set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 endif()
 
 option(AUTOWIRING_BUILD_TESTS "Build Autowiring unit tests" ${AUTOWIRING_BUILD_TESTS_DEFAULT})
