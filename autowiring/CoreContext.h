@@ -999,6 +999,8 @@ class CoreContextT:
   public CoreContext
 {
 public:
+  static const std::type_info& sc_type;
+
   CoreContextT(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
     CoreContext(pParent, backReference, pPeer)
   {
@@ -1006,8 +1008,11 @@ public:
     AddAnchorInternal((T*)nullptr);
   }
 
-  const std::type_info& GetSigilType(void) const override { return typeid(T); }
+  const std::type_info& GetSigilType(void) const override { return sc_type; }
 };
+
+template<class T>
+const std::type_info& CoreContextT<T>::sc_type = typeid(T);
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 
