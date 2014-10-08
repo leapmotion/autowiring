@@ -1,0 +1,192 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>autowiring</id>
+        <version>0.2.2</version>
+        <authors>Leap Motion</authors>
+        <owners>Leap Motion</owners>
+        <projectUrl>http://autowiring.io</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>A C++11 Concurrent Inversion of Control framework</description>
+        <summary>Autowiring is an inversion-of-control framework for C++11. It provides a declarative way to manage resources through dependency injection.</summary>
+        <copyright>Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.</copyright>
+        <language>en-US</language>
+        <tags>c++ ioc concurrent c++11</tags>
+        <dependencies>
+            <dependency id="boost" version="1.56.0.0" />
+        </dependencies>
+    </metadata>
+    <files>
+        <file src="autowiring\C++11\boost_array.h" target="build\native\include\autowiring\C++11\boost_array.h" />
+        <file src="autowiring\C++11\boost_atomic.h" target="build\native\include\autowiring\C++11\boost_atomic.h" />
+        <file src="autowiring\C++11\boost_chrono.h" target="build\native\include\autowiring\C++11\boost_chrono.h" />
+        <file src="autowiring\C++11\boost_exception_ptr.h" target="build\native\include\autowiring\C++11\boost_exception_ptr.h" />
+        <file src="autowiring\C++11\boost_functional.h" target="build\native\include\autowiring\C++11\boost_functional.h" />
+        <file src="autowiring\C++11\boost_future.h" target="build\native\include\autowiring\C++11\boost_future.h" />
+        <file src="autowiring\C++11\boost_mutex.h" target="build\native\include\autowiring\C++11\boost_mutex.h" />
+        <file src="autowiring\C++11\boost_rvalue.h" target="build\native\include\autowiring\C++11\boost_rvalue.h" />
+        <file src="autowiring\C++11\boost_shared_ptr.h" target="build\native\include\autowiring\C++11\boost_shared_ptr.h" />
+        <file src="autowiring\C++11\boost_system_error.h" target="build\native\include\autowiring\C++11\boost_system_error.h" />
+        <file src="autowiring\C++11\boost_thread.h" target="build\native\include\autowiring\C++11\boost_thread.h" />
+        <file src="autowiring\C++11\boost_tuple.h" target="build\native\include\autowiring\C++11\boost_tuple.h" />
+        <file src="autowiring\C++11\boost_type_traits.h" target="build\native\include\autowiring\C++11\boost_type_traits.h" />
+        <file src="autowiring\C++11\boost_utility.h" target="build\native\include\autowiring\C++11\boost_utility.h" />
+        <file src="autowiring\C++11\cpp11.h" target="build\native\include\autowiring\C++11\cpp11.h" />
+        <file src="autowiring\C++11\empty_file.h" target="build\native\include\autowiring\C++11\empty_file.h" />
+        <file src="autowiring\C++11\make_unique.h" target="build\native\include\autowiring\C++11\make_unique.h" />
+        <file src="autowiring\C++11\memory.h" target="build\native\include\autowiring\C++11\memory.h" />
+        <file src="autowiring\C++11\memory_nostl11.h" target="build\native\include\autowiring\C++11\memory_nostl11.h" />
+        <file src="autowiring\C++11\mutex.h" target="build\native\include\autowiring\C++11\mutex.h" />
+        <file src="autowiring\C++11\README.md" target="build\native\include\autowiring\C++11\README.md" />
+        <file src="autowiring\C++11\type_index.h" target="build\native\include\autowiring\C++11\type_index.h" />
+        <file src="autowiring\C++11\unique_ptr.h" target="build\native\include\autowiring\C++11\unique_ptr.h" />
+        <file src="autowiring\AnySharedPointer.h" target="build\native\include\autowiring\AnySharedPointer.h" />
+        <file src="autowiring\atomic_object.h" target="build\native\include\autowiring\atomic_object.h" />
+        <file src="autowiring\at_exit.h" target="build\native\include\autowiring\at_exit.h" />
+        <file src="autowiring\AutoAnchor.h" target="build\native\include\autowiring\AutoAnchor.h" />
+        <file src="autowiring\AutoCheckout.h" target="build\native\include\autowiring\AutoCheckout.h" />
+        <file src="autowiring\AutoFilterDescriptor.h" target="build\native\include\autowiring\AutoFilterDescriptor.h" />
+        <file src="autowiring\AutoFuture.h" target="build\native\include\autowiring\AutoFuture.h" />
+        <file src="autowiring\AutoInjectable.h" target="build\native\include\autowiring\AutoInjectable.h" />
+        <file src="autowiring\AutoMerge.h" target="build\native\include\autowiring\AutoMerge.h" />
+        <file src="autowiring\AutoNetServer.h" target="build\native\include\autowiring\AutoNetServer.h" />
+        <file src="autowiring\AutoPacket.h" target="build\native\include\autowiring\AutoPacket.h" />
+        <file src="autowiring\AutoPacketFactory.h" target="build\native\include\autowiring\AutoPacketFactory.h" />
+        <file src="autowiring\AutoPacketProfiler.h" target="build\native\include\autowiring\AutoPacketProfiler.h" />
+        <file src="autowiring\AutoRestarter.h" target="build\native\include\autowiring\AutoRestarter.h" />
+        <file src="autowiring\AutoSelfUpdate.h" target="build\native\include\autowiring\AutoSelfUpdate.h" />
+        <file src="autowiring\AutoStile.h" target="build\native\include\autowiring\AutoStile.h" />
+        <file src="autowiring\AutoTimeStamp.h" target="build\native\include\autowiring\AutoTimeStamp.h" />
+        <file src="autowiring\AutowirableSlot.h" target="build\native\include\autowiring\AutowirableSlot.h" />
+        <file src="autowiring\Autowired.h" target="build\native\include\autowiring\Autowired.h" />
+        <file src="autowiring\autowiring.h" target="build\native\include\autowiring\autowiring.h" />
+        <file src="autowiring\AutowiringConfig.h" target="build\native\include\autowiring\AutowiringConfig.h" />
+        <file src="autowiring\AutowiringEnclosure.h" target="build\native\include\autowiring\AutowiringEnclosure.h" />
+        <file src="autowiring\AutowiringEvents.h" target="build\native\include\autowiring\AutowiringEvents.h" />
+        <file src="autowiring\autowiring_error.h" target="build\native\include\autowiring\autowiring_error.h" />
+        <file src="autowiring\auto_arg.h" target="build\native\include\autowiring\auto_arg.h" />
+        <file src="autowiring\auto_in.h" target="build\native\include\autowiring\auto_in.h" />
+        <file src="autowiring\auto_out.h" target="build\native\include\autowiring\auto_out.h" />
+        <file src="autowiring\auto_pooled.h" target="build\native\include\autowiring\auto_pooled.h" />
+        <file src="autowiring\BasicThread.h" target="build\native\include\autowiring\BasicThread.h" />
+        <file src="autowiring\BasicThreadStateBlock.h" target="build\native\include\autowiring\BasicThreadStateBlock.h" />
+        <file src="autowiring\Bolt.h" target="build\native\include\autowiring\Bolt.h" />
+        <file src="autowiring\BoltBase.h" target="build\native\include\autowiring\BoltBase.h" />
+        <file src="autowiring\CallExtractor.h" target="build\native\include\autowiring\CallExtractor.h" />
+        <file src="autowiring\ContextCreator.h" target="build\native\include\autowiring\ContextCreator.h" />
+        <file src="autowiring\ContextCreatorBase.h" target="build\native\include\autowiring\ContextCreatorBase.h" />
+        <file src="autowiring\ContextEnumerator.h" target="build\native\include\autowiring\ContextEnumerator.h" />
+        <file src="autowiring\ContextMap.h" target="build\native\include\autowiring\ContextMap.h" />
+        <file src="autowiring\ContextMember.h" target="build\native\include\autowiring\ContextMember.h" />
+        <file src="autowiring\CoreContext.h" target="build\native\include\autowiring\CoreContext.h" />
+        <file src="autowiring\CoreContextStateBlock.h" target="build\native\include\autowiring\CoreContextStateBlock.h" />
+        <file src="autowiring\CoreJob.h" target="build\native\include\autowiring\CoreJob.h" />
+        <file src="autowiring\CoreRunnable.h" target="build\native\include\autowiring\CoreRunnable.h" />
+        <file src="autowiring\CoreThread.h" target="build\native\include\autowiring\CoreThread.h" />
+        <file src="autowiring\CreationRules.h" target="build\native\include\autowiring\CreationRules.h" />
+        <file src="autowiring\CurrentContextPusher.h" target="build\native\include\autowiring\CurrentContextPusher.h" />
+        <file src="autowiring\DataFlow.h" target="build\native\include\autowiring\DataFlow.h" />
+        <file src="autowiring\DeclareAutoFilter.h" target="build\native\include\autowiring\DeclareAutoFilter.h" />
+        <file src="autowiring\DeclareElseFilter.h" target="build\native\include\autowiring\DeclareElseFilter.h" />
+        <file src="autowiring\Decompose.h" target="build\native\include\autowiring\Decompose.h" />
+        <file src="autowiring\DecorationDisposition.h" target="build\native\include\autowiring\DecorationDisposition.h" />
+        <file src="autowiring\Deferred.h" target="build\native\include\autowiring\Deferred.h" />
+        <file src="autowiring\demangle.h" target="build\native\include\autowiring\demangle.h" />
+        <file src="autowiring\Deserialize.h" target="build\native\include\autowiring\Deserialize.h" />
+        <file src="autowiring\DispatchQueue.h" target="build\native\include\autowiring\DispatchQueue.h" />
+        <file src="autowiring\DispatchThunk.h" target="build\native\include\autowiring\DispatchThunk.h" />
+        <file src="autowiring\EventInputStream.h" target="build\native\include\autowiring\EventInputStream.h" />
+        <file src="autowiring\EventOutputStream.h" target="build\native\include\autowiring\EventOutputStream.h" />
+        <file src="autowiring\EventRegistry.h" target="build\native\include\autowiring\EventRegistry.h" />
+        <file src="autowiring\ExceptionFilter.h" target="build\native\include\autowiring\ExceptionFilter.h" />
+        <file src="autowiring\fast_pointer_cast.h" target="build\native\include\autowiring\fast_pointer_cast.h" />
+        <file src="autowiring\GlobalCoreContext.h" target="build\native\include\autowiring\GlobalCoreContext.h" />
+        <file src="autowiring\gtest-all-guard.h" target="build\native\include\autowiring\gtest-all-guard.h" />
+        <file src="autowiring\hash_tuple.h" target="build\native\include\autowiring\hash_tuple.h" />
+        <file src="autowiring\has_autofilter.h" target="build\native\include\autowiring\has_autofilter.h" />
+        <file src="autowiring\has_autoinit.h" target="build\native\include\autowiring\has_autoinit.h" />
+        <file src="autowiring\has_simple_constructor.h" target="build\native\include\autowiring\has_simple_constructor.h" />
+        <file src="autowiring\has_static_new.h" target="build\native\include\autowiring\has_static_new.h" />
+        <file src="autowiring\index_tuple.h" target="build\native\include\autowiring\index_tuple.h" />
+        <file src="autowiring\InterlockedExchange.h" target="build\native\include\autowiring\InterlockedExchange.h" />
+        <file src="autowiring\InvokeRelay.h" target="build\native\include\autowiring\InvokeRelay.h" />
+        <file src="autowiring\is_any.h" target="build\native\include\autowiring\is_any.h" />
+        <file src="autowiring\is_shared_ptr.h" target="build\native\include\autowiring\is_shared_ptr.h" />
+        <file src="autowiring\JunctionBox.h" target="build\native\include\autowiring\JunctionBox.h" />
+        <file src="autowiring\JunctionBoxBase.h" target="build\native\include\autowiring\JunctionBoxBase.h" />
+        <file src="autowiring\JunctionBoxEntry.h" target="build\native\include\autowiring\JunctionBoxEntry.h" />
+        <file src="autowiring\JunctionBoxManager.h" target="build\native\include\autowiring\JunctionBoxManager.h" />
+        <file src="autowiring\LockFreeList.h" target="build\native\include\autowiring\LockFreeList.h" />
+        <file src="autowiring\LockReducedCollection.h" target="build\native\include\autowiring\LockReducedCollection.h" />
+        <file src="autowiring\MicroAutoFilter.h" target="build\native\include\autowiring\MicroAutoFilter.h" />
+        <file src="autowiring\MicroBolt.h" target="build\native\include\autowiring\MicroBolt.h" />
+        <file src="autowiring\NewAutoFilter.h" target="build\native\include\autowiring\NewAutoFilter.h" />
+        <file src="autowiring\Object.h" target="build\native\include\autowiring\Object.h" />
+        <file src="autowiring\ObjectPool.h" target="build\native\include\autowiring\ObjectPool.h" />
+        <file src="autowiring\ObjectPoolMonitor.h" target="build\native\include\autowiring\ObjectPoolMonitor.h" />
+        <file src="autowiring\ObjectTraits.h" target="build\native\include\autowiring\ObjectTraits.h" />
+        <file src="autowiring\optional_ptr.h" target="build\native\include\autowiring\optional_ptr.h" />
+        <file src="autowiring\result_or_default.h" target="build\native\include\autowiring\result_or_default.h" />
+        <file src="autowiring\SatCounter.h" target="build\native\include\autowiring\SatCounter.h" />
+        <file src="autowiring\SharedPointerSlot.h" target="build\native\include\autowiring\SharedPointerSlot.h" />
+        <file src="autowiring\SlotInformation.h" target="build\native\include\autowiring\SlotInformation.h" />
+        <file src="autowiring\TeardownNotifier.h" target="build\native\include\autowiring\TeardownNotifier.h" />
+        <file src="autowiring\ThreadStatusBlock.h" target="build\native\include\autowiring\ThreadStatusBlock.h" />
+        <file src="autowiring\thread_specific_ptr.h" target="build\native\include\autowiring\thread_specific_ptr.h" />
+        <file src="autowiring\thread_specific_ptr_unix.h" target="build\native\include\autowiring\thread_specific_ptr_unix.h" />
+        <file src="autowiring\thread_specific_ptr_win.h" target="build\native\include\autowiring\thread_specific_ptr_win.h" />
+        <file src="autowiring\TypeIdentifier.h" target="build\native\include\autowiring\TypeIdentifier.h" />
+        <file src="autowiring\TypeRegistry.h" target="build\native\include\autowiring\TypeRegistry.h" />
+        <file src="autowiring\TypeUnifier.h" target="build\native\include\autowiring\TypeUnifier.h" />
+        <file src="autowiring\unlock_object.h" target="build\native\include\autowiring\unlock_object.h" />
+        <file src="autowiring\uuid.h" target="build\native\include\autowiring\uuid.h" />
+        <file src="autowiring\var_logic.h" target="build\native\include\autowiring\var_logic.h" />
+        <file src="lib\Debug\Autowiring.lib" target="build\native\lib\x86\debug\autowiring.lib" />
+        <file src="lib\Release\Autowiring.lib" target="build\native\lib\x86\release\autowiring.lib" />
+        <file src="nuget\build\native\Autowiring.targets" target="build\native\Autowiring.targets" />
+        <file src="src\autonet\AutoNetServer.cpp" target="src\autonet\AutoNetServer.cpp" />
+        <file src="src\autonet\AutoNetServerImpl.cpp" target="src\autonet\AutoNetServerImpl.cpp" />
+        <file src="src\autonet\AutoNetServerImpl.hpp" target="src\autonet\AutoNetServerImpl.hpp" />
+        <file src="src\autonet\stdafx.cpp" target="src\autonet\stdafx.cpp" />
+        <file src="src\autowiring\AutoFuture.cpp" target="src\autowiring\AutoFuture.cpp" />
+        <file src="src\autowiring\AutoInjectable.cpp" target="src\autowiring\AutoInjectable.cpp" />
+        <file src="src\autowiring\AutoPacket.cpp" target="src\autowiring\AutoPacket.cpp" />
+        <file src="src\autowiring\AutoPacketFactory.cpp" target="src\autowiring\AutoPacketFactory.cpp" />
+        <file src="src\autowiring\AutoPacketProfiler.cpp" target="src\autowiring\AutoPacketProfiler.cpp" />
+        <file src="src\autowiring\AutowirableSlot.cpp" target="src\autowiring\AutowirableSlot.cpp" />
+        <file src="src\autowiring\Autowired.cpp" target="src\autowiring\Autowired.cpp" />
+        <file src="src\autowiring\BasicThread.cpp" target="src\autowiring\BasicThread.cpp" />
+        <file src="src\autowiring\BasicThreadStateBlock.cpp" target="src\autowiring\BasicThreadStateBlock.cpp" />
+        <file src="src\autowiring\ContextCreatorBase.cpp" target="src\autowiring\ContextCreatorBase.cpp" />
+        <file src="src\autowiring\ContextEnumerator.cpp" target="src\autowiring\ContextEnumerator.cpp" />
+        <file src="src\autowiring\ContextMember.cpp" target="src\autowiring\ContextMember.cpp" />
+        <file src="src\autowiring\CoreContext.cpp" target="src\autowiring\CoreContext.cpp" />
+        <file src="src\autowiring\CoreContextStateBlock.cpp" target="src\autowiring\CoreContextStateBlock.cpp" />
+        <file src="src\autowiring\CoreJob.cpp" target="src\autowiring\CoreJob.cpp" />
+        <file src="src\autowiring\CoreThread.cpp" target="src\autowiring\CoreThread.cpp" />
+        <file src="src\autowiring\CoreThreadLinux.cpp" target="src\autowiring\CoreThreadLinux.cpp" />
+        <file src="src\autowiring\CoreThreadMac.cpp" target="src\autowiring\CoreThreadMac.cpp" />
+        <file src="src\autowiring\CoreThreadWin.cpp" target="src\autowiring\CoreThreadWin.cpp" />
+        <file src="src\autowiring\CurrentContextPusher.cpp" target="src\autowiring\CurrentContextPusher.cpp" />
+        <file src="src\autowiring\DefaultAutoNetServer.cpp" target="src\autowiring\DefaultAutoNetServer.cpp" />
+        <file src="src\autowiring\DispatchQueue.cpp" target="src\autowiring\DispatchQueue.cpp" />
+        <file src="src\autowiring\EventOutputStream.cpp" target="src\autowiring\EventOutputStream.cpp" />
+        <file src="src\autowiring\EventRegistry.cpp" target="src\autowiring\EventRegistry.cpp" />
+        <file src="src\autowiring\GlobalCoreContext.cpp" target="src\autowiring\GlobalCoreContext.cpp" />
+        <file src="src\autowiring\InterlockedExchangeUnix.cpp" target="src\autowiring\InterlockedExchangeUnix.cpp" />
+        <file src="src\autowiring\InterlockedExchangeWin.cpp" target="src\autowiring\InterlockedExchangeWin.cpp" />
+        <file src="src\autowiring\JunctionBoxBase.cpp" target="src\autowiring\JunctionBoxBase.cpp" />
+        <file src="src\autowiring\JunctionBoxManager.cpp" target="src\autowiring\JunctionBoxManager.cpp" />
+        <file src="src\autowiring\NewAutoFilter.cpp" target="src\autowiring\NewAutoFilter.cpp" />
+        <file src="src\autowiring\ObjectPoolMonitor.cpp" target="src\autowiring\ObjectPoolMonitor.cpp" />
+        <file src="src\autowiring\SlotInformation.cpp" target="src\autowiring\SlotInformation.cpp" />
+        <file src="src\autowiring\stdafx.cpp" target="src\autowiring\stdafx.cpp" />
+        <file src="src\autowiring\stdafx.h" target="src\autowiring\stdafx.h" />
+        <file src="src\autowiring\TeardownNotifier.cpp" target="src\autowiring\TeardownNotifier.cpp" />
+        <file src="src\autowiring\ThreadStatusBlock.cpp" target="src\autowiring\ThreadStatusBlock.cpp" />
+        <file src="src\autowiring\TypeRegistry.cpp" target="src\autowiring\TypeRegistry.cpp" />
+        <file src="src\autowiring\uuid.cpp" target="src\autowiring\uuid.cpp" />
+        <file src="nuget\tools\init.ps1" target="tools\init.ps1" />
+        <file src="nuget\tools\autowiring.natvis" target="tools\autowiring.natvis" />
+    </files>
+</package>
