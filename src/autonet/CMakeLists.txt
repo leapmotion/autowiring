@@ -19,6 +19,8 @@ set(AutoNet_SRCS
   AutoNetServer.h
   AutoNetServerImpl.cpp
   AutoNetServerImpl.hpp
+  ${PROJECT_SOURCE_DIR}/contrib/json11/json11.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/json11/json11.hpp
 )
 
 # All include files are located in /autowiring from here, so prepend that to all sources
@@ -26,7 +28,7 @@ rewrite_header_paths(AutoNet_SRCS)
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutoNet_SRCS)
 
 add_library(AutoNet STATIC ${AutoNet_SRCS})
-target_link_libraries(AutoNet json11 ${Boost_LIBRARIES})
+target_link_libraries(AutoNet Autowiring ${Boost_LIBRARIES})
 set_property(TARGET AutoNet PROPERTY FOLDER "Autowiring")
 
 #
