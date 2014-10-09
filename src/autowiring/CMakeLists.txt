@@ -188,10 +188,10 @@ ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 #
 
 add_library(Autowiring STATIC ${Autowiring_SRCS})
-
-if(CMAKE_MAJOR_VERSION GREATER 2)
-  target_include_directories(Autowiring INTERFACE "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>" "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>")
-endif()
+target_include_directories(Autowiring INTERFACE
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
+  "$<INSTALL_INTERFACE:include>"
+)
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
 
 # Might as well reference the boost libraries to satisfy link dependencies, if we know they exist
@@ -217,11 +217,5 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
     DESTINATION lib
     COMPONENT autowiring 
     CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
-  )
-
-  install(
-    DIRECTORY ${PROJECT_SOURCE_DIR}/autowiring/
-    DESTINATION include/autowiring
-    FILES_MATCHING PATTERN "*.h"
   )
 endif()
