@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+  <Type Name="autowiring::thread_specific_ptr&lt;std::shared_ptr&lt;CoreContext&gt;&gt;">
+    <DisplayString Condition="TlsGetValue(m_key) == nullptr">(none)</DisplayString>
+    <DisplayString>{reinterpret_cast&lt;std::shared_ptr&lt;CoreContext&gt;*&gt;(TlsGetValue(m_key)),na}</DisplayString>
+    <Expand>
+      <ExpandedItem>reinterpret_cast&lt;std::shared_ptr&lt;CoreContext&gt;*&gt;(TlsGetValue(m_key))</ExpandedItem>
+    </Expand>
+  </Type>
+
+  <Type Name="std::shared_ptr&lt;CoreContext&gt;">
+    <DisplayString>{_Ptr,na}</DisplayString>
+    <Expand>
+      <Item Name="[ptr]">*_Ptr</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="CoreContextT&lt;*&gt;">
+    <AlternativeType Name="GlobalCoreContext"/>
+    
+    <DisplayString Condition="strcmp(sc_type._M_d_name, &quot;.?AVGlobalCoreContext@@&quot;) == 0">[Global Context]</DisplayString>
+    <DisplayString Condition="*(char*)sc_type._M_data == 'v'">[ ]</DisplayString>
+    <DisplayString Condition="sc_type._M_data != nullptr">[{((char*)sc_type._M_data + 6 + (*(char*)sc_type._M_data == 's')),sb}]</DisplayString>
+    <Expand>
+      <Item Name="Contents">m_concreteTypes</Item>
+
+      <Synthetic Name="State" Condition="!m_initiated">
+        <DisplayString>Not Started</DisplayString>
+      </Synthetic>
+      <Synthetic Name="State" Condition="m_initiated &amp;&amp; !m_isShutdown">
+        <DisplayString>Running</DisplayString>
+      </Synthetic>
+      <Synthetic Name="State" Condition="m_isShutdown &amp;&amp; (m_outstanding._Ptr != 0) &amp;&amp; (m_outstanding._Rep-&gt;_Uses == 0)   &amp;&amp; (m_outstanding._Rep-&gt;_Weaks == 1)">
+        <DisplayString>Shutting Down</DisplayString>
+      </Synthetic>
+      <Synthetic Name="State" Condition="m_isShutdown">
+        <DisplayString>Terminated</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+
+  <Type Name="std::vector&lt;ObjectTraits, std::allocator&lt;ObjectTraits&gt;&gt;">
+    <DisplayString>[size = {_Mylast - _Myfirst}]</DisplayString>
+    <Expand>
+      <Item Name="Size">_Mylast - _Myfirst</Item>
+      <ArrayItems>
+        <Size>_Mylast - _Myfirst</Size>
+        <ValuePointer>_Myfirst</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+
+  <Type Name="ObjectTraits">
+    <DisplayString Condition="type._M_data != nullptr">[{((char*)type._M_data + 6 + (*(char*)type._M_data == 's')),sb}, uses = {((std::shared_ptr&lt;Object&gt;*)((SharedPointerSlot*)value.m_space)-&gt;m_space)-&gt;_Rep-&gt;_Uses}]</DisplayString>
+    <DisplayString>?</DisplayString>
+    <Expand>
+      <Item Name="Pointer">pObject._Ptr,na</Item>
+
+      <Item Name="AutoFilter" Condition="subscriber.m_pCall != nullptr">subscriber</Item>
+
+      <Synthetic Name="Exception Filter" Condition="pFilter._Ptr != nullptr">
+        <DisplayString>true</DisplayString>
+      </Synthetic>
+
+      <Item Name="Member Name" Condition="pContextMember._Ptr &amp;&amp; pContextMember._Ptr-&gt;m_name">
+        pContextMember._Ptr-&gt;m_name,sb
+      </Item>
+      <Synthetic Name="Member Name" Condition="pContextMember._Ptr &amp;&amp; !pContextMember._Ptr-&gt;m_name">
+        <DisplayString>(none)</DisplayString>
+      </Synthetic>
+
+      <Synthetic Name="Thread State" Condition="pBasicThread._Ptr != nullptr">
+        <DisplayString Condition="pBasicThread._Ptr->m_completed">Complete</DisplayString>
+        <DisplayString Condition="pBasicThread._Ptr->m_running &amp;&amp; !pBasicThread._Ptr->m_stop">Running</DisplayString>
+        <DisplayString Condition="pBasicThread._Ptr->m_running">Shutting Down</DisplayString>
+        <DisplayString Condition="pBasicThread._Ptr->m_stop">Cancelled</DisplayString>
+        <DisplayString>Not Started</DisplayString>
+      </Synthetic>
+
+      <Item Name="Event Receiver">receivesEvents</Item>
+
+      <Synthetic Name="Bolt" Condition="pBoltBase._Ptr != nullptr">
+        <DisplayString>Bolt</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+
+  <Type Name="AutoFilterDescriptor">
+    <DisplayString Condition="m_deferred">[{m_requiredCount} in, {m_arity - m_requiredCount} out, deferred]</DisplayString>
+    <DisplayString>[{m_requiredCount} in, {m_arity - m_requiredCount} out]</DisplayString>
+    <Expand>
+      <ArrayItems>
+        <Size>m_arity</Size>
+        <ValuePointer>m_pArgs</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+
+  <Type Name="AutoFilterDescriptorInput">
+    <DisplayString Condition="is_input &amp;&amp; is_optional">in, opt: [{((char*)ti-&gt;_M_data + 6 + (*(char*)ti-&gt;_M_data == 's')),sb}]</DisplayString>
+    <DisplayString Condition="is_input == true">in: [{((char*)ti-&gt;_M_data + 6 + (*(char*)ti-&gt;_M_data == 's')),sb}]</DisplayString>
+    <DisplayString Condition="is_output == true">out: [{((char*)ti-&gt;_M_data + 6 + (*(char*)ti-&gt;_M_data == 's')),sb}]</DisplayString>
+  </Type>
+
+  <Type Name="SatCounter">
+    <DisplayString Condition="called">[called]</DisplayString>
+    <DisplayString>[{remaining + optional} remaining]</DisplayString>
+    <Expand>
+      <Item Name="[remaining]">remaining + optional</Item>
+      <Item Name="[called]">called</Item>
+      <ExpandedItem>(AutoFilterDescriptor*)this</ExpandedItem>
+    </Expand>
+  </Type>
+  
+  <Type Name="AutoPacketFactory">
+    <DisplayString>Packet Factory</DisplayString>
+    <Expand>
+      <Item Name="Filters">
+        m_autoFilters
+      </Item>
+    </Expand>
+  </Type>
+
+  <Type Name="SharedPointerSlot">
+    <DisplayString>(null)</DisplayString>
+    <Expand>
+      <Synthetic Name="[ptr]">
+        <DisplayString>(null)</DisplayString>
+      </Synthetic>
+    </Expand>
+  </Type>
+
+  <Type Name="SharedPointerSlotT&lt;*&gt;">
+    <DisplayString>{(std::shared_ptr&lt;$T1&gt;*)m_space}</DisplayString>
+    <Expand>
+      <ExpandedItem>(std::shared_ptr&lt;$T1&gt;*)m_space</ExpandedItem>
+    </Expand>
+  </Type>
+
+  <Type Name="AnySharedPointer">
+    <DisplayString>{(SharedPointerSlot*)m_space,na}</DisplayString>
+    <Expand>
+      <ExpandedItem>(SharedPointerSlot*)m_space</ExpandedItem>
+    </Expand>
+  </Type>
+  
+  <Type Name="DecorationDisposition">
+    <DisplayString>{((char*)m_type-&gt;_M_data + 6 + (*(char*)m_type-&gt;_M_data == 's')),sb}</DisplayString>
+    <Expand>
+      <ExpandedItem>m_decoration</ExpandedItem>
+    </Expand>
+  </Type>
+
+  <Type Name="std::list&lt;std::pair&lt;std::tuple&lt;std::type_index,std::type_index&gt;const ,DecorationDisposition&gt;,std::allocator&lt;std::pair&lt;std::tuple&lt;std::type_index,std::type_index&gt;const ,DecorationDisposition&gt; &gt; &gt;">
+    <Expand>
+      <LinkedListItems>
+        <Size>_Mysize</Size>
+        <HeadPointer>_Myhead-&gt;_Next</HeadPointer>
+        <NextPointer>_Next</NextPointer>
+        <ValueNode>_Myval.second</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+  
+  <Type Name="AutoPacket">
+    <DisplayString>[ {m_decorations._List._Mysize} decorations ]</DisplayString>
+    <Expand>
+      <Item Name="Decorations">m_decorations</Item>
+      <Item Name="Subscribers">m_satCounters</Item>
+    </Expand>
+  </Type>
+
+</AutoVisualizer>
