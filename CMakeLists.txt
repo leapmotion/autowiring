@@ -117,6 +117,14 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
     DESTINATION "cmake"
     COMPONENT autowiring
   )
+
+  # Install public header files
+  install(
+    DIRECTORY ${PROJECT_SOURCE_DIR}/autowiring/
+    DESTINATION include/autowiring
+    FILES_MATCHING PATTERN "*.h"
+  )
+
   install(EXPORT AutowiringTargets FILE AutowiringTargets.cmake NAMESPACE Autowiring:: DESTINATION cmake)
   # This is the upgrade GUID.  Part of the GUID is derived from the major version number.  Any time
   # the major version number is adjusted, the upgrade GUID changes.  This allows multiple versions
