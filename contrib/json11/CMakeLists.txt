@@ -11,4 +11,10 @@ if(AUTOWIRING_IS_EMBEDDED)
   set_property(TARGET json11 PROPERTY FOLDER "Autowiring/contrib")
 else()
   set_property(TARGET json11 PROPERTY FOLDER "contrib")
+
+  install(TARGETS json11 EXPORT AutowiringTargets
+    DESTINATION lib
+    COMPONENT autowiring 
+    CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+  )
 endif()
