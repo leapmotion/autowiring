@@ -24,7 +24,7 @@
 /// to the global context directly because it could change teardown order if the main thread sets the global context
 /// as current.
 /// </remarks>
-static autowiring::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
+static autowiring::thread_specific_ptr<std::shared_ptr<CoreContext>> autoCurrentContext;
 
 // Peer Context Constructor. Called interally by CreatePeer
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
@@ -50,12 +50,12 @@ CoreContext::~CoreContext(void) {
     m_pParent->m_children.erase(m_backReference);
   }
 
-  // The s_curContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
+  // The autoCurrentContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
   // still holds a reference to us, then we have a serious problem.
   assert(
-    !s_curContext.get() ||
-    !s_curContext.get()->use_count() ||
-    s_curContext.get()->get() != this
+    !autoCurrentContext.get() ||
+    !autoCurrentContext.get()->use_count() ||
+    autoCurrentContext.get()->get() != this
   );
 
   // Notify all ContextMember instances that their parent is going away
@@ -448,10 +448,10 @@ bool CoreContext::DelayUntilInitiated(void) {
 }
 
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
-  if(!s_curContext.get())
+  if(!autoCurrentContext.get())
     return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
 
-  std::shared_ptr<CoreContext>* retVal = s_curContext.get();
+  std::shared_ptr<CoreContext>* retVal = autoCurrentContext.get();
   assert(retVal);
   assert(*retVal);
   return *retVal;
@@ -882,10 +882,10 @@ std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
     throw std::runtime_error("Attempted to make a CoreContext current from a CoreContext ctor");
 
   std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContext();
-  s_curContext.reset(new std::shared_ptr<CoreContext>(newCurrent));
+  autoCurrentContext.reset(new std::shared_ptr<CoreContext>(newCurrent));
   return retVal;
 }
 
 void CoreContext::EvictCurrent(void) {
-  s_curContext.reset();
+  autoCurrentContext.reset();
 }
