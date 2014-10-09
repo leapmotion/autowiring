@@ -124,7 +124,9 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
     FILES_MATCHING PATTERN "*.h"
   )
 
+  # Targets file is needed in order to describe how to link Autowiring to the rest of the system
   install(EXPORT AutowiringTargets FILE AutowiringTargets.cmake NAMESPACE Autowiring:: DESTINATION cmake)
+
   # This is the upgrade GUID.  Part of the GUID is derived from the major version number.  Any time
   # the major version number is adjusted, the upgrade GUID changes.  This allows multiple versions
   # of the same product to be installed on a user's system at the same time, but also means that
