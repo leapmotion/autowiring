@@ -25,6 +25,7 @@ struct ObjectTraits {
   ObjectTraits(const std::shared_ptr<typename SelectTypeUnifier<T>::type>& value, T*) :
     type(typeid(T)),
     value(value),
+    cast_offset(this->value->cast_offset()),
     subscriber(MakeAutoFilterDescriptor(value)),
     pObject(autowiring::fast_pointer_cast<Object>(value)),
     pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
@@ -53,6 +54,9 @@ struct ObjectTraits {
   // A holder to store the original shared pointer, to ensure that type information propagates
   // correctly on the right-hand side of our map
   const AnySharedPointer value;
+
+  // Offset of the void pointer to the embedded Object
+  const size_t cast_offset;
 
   // The packet subscriber introduction method, if appropriate:
   const AutoFilterDescriptor subscriber;
