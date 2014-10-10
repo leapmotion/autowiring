@@ -142,6 +142,16 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   # leave those alone.
   SET(CPACK_WIX_TEMPLATE autowiring.wxs)
 
+  # Pick the generator in an appropriate way
+  if(WIN32)
+    set(CPACK_GENERATOR WIX ZIP)
+  elseif(APPLE)
+    # TODO: Add Bundle as a generator here
+    set(CPACK_GENERATOR TGZ)
+  else()
+    set(CPACK_GENERATOR TGZ DEB)
+  endif()
+
   # Packaging stuff, if an installer is being made instead
   INCLUDE(InstallRequiredSystemLibraries)
   SET(CPACK_PACKAGE_VENDOR "Leap Motion")
