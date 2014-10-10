@@ -196,9 +196,13 @@ target_include_directories(Autowiring INTERFACE
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
 
 # Might as well reference the boost libraries to satisfy link dependencies, if we know they exist
-find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
-if(Boost_FOUND)
-  target_link_libraries(Autowiring ${Boost_LIBRARIES})
+# Windows doesn't need these libraries, though, and so we avoid linking them so as to avoid cluttering
+# up our dependencies on Windows
+if(!WIN32)
+  find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
+  if(Boost_FOUND)
+    target_link_libraries(Autowiring ${Boost_LIBRARIES})
+  endif()
 endif()
 
 # Need multithreading services if available

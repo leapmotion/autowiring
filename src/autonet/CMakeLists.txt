@@ -28,8 +28,8 @@ rewrite_header_paths(AutoNet_SRCS)
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutoNet_SRCS)
 
 add_library(AutoNet STATIC ${AutoNet_SRCS})
-target_link_libraries(AutoNet Autowiring ${Boost_LIBRARIES})
 set_target_properties(AutoNet PROPERTIES DEBUG_POSTFIX d)
+target_link_libraries(AutoNet Autowiring)
 set_property(TARGET AutoNet PROPERTY FOLDER "Autowiring")
 
 #
