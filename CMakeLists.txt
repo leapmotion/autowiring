@@ -110,7 +110,7 @@ export(EXPORT AutowiringTargets FILE AutowiringTargets.cmake NAMESPACE Autowirin
 # Only attempt to do anything with cpack if we're being built stand-alone
 if(NOT AUTOWIRING_IS_EMBEDDED)
   # Install autowiring-config.cmake and autowiring-configVersion.cmake
-  install (FILES
+  install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/autowiring-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/autowiring-configVersion.cmake"
     DESTINATION "cmake"
@@ -121,11 +121,12 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   install(
     DIRECTORY ${PROJECT_SOURCE_DIR}/autowiring/
     DESTINATION include/autowiring
+    COMPONENT autowiring
     FILES_MATCHING PATTERN "*.h"
   )
 
   # Targets file is needed in order to describe how to link Autowiring to the rest of the system
-  install(EXPORT AutowiringTargets FILE AutowiringTargets.cmake NAMESPACE Autowiring:: DESTINATION cmake)
+  install(EXPORT AutowiringTargets FILE AutowiringTargets.cmake COMPONENT autowiring NAMESPACE Autowiring:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
   # This is the upgrade GUID.  Part of the GUID is derived from the major version number.  Any time
   # the major version number is adjusted, the upgrade GUID changes.  This allows multiple versions
