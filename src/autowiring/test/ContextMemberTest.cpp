@@ -105,3 +105,58 @@ TEST_F(ContextMemberTest, TransientAutowiring) {
 
   ASSERT_EQ(1UL, ct) << "An autowirable slot declared on the stack was incorrectly detected as being a type member";
 }
+
+struct RefersToTweedleDee;
+struct RefersToTweedleDum;
+
+struct RefersToTweedleDee {
+  Autowired<RefersToTweedleDum> td;
+};
+struct RefersToTweedleDum {
+  Autowired<RefersToTweedleDee> td;
+};
+
+TEST_F(ContextMemberTest, SimpleResetCase) {
+  Autowired<CoreThread>().reset();
+}
+
+TEST_F(ContextMemberTest, CanStillObtainWeakPointer) {
+  std::weak_ptr<SimpleObject> cm;
+
+  {
+    // We should be able to get a weak pointer from an Autowired field
+    AutoCreateContext ctxt;
+    ctxt->Inject<SimpleObject>();
+    cm = Autowired<SimpleObject>(ctxt);
+  }
+
+  // Now verify that the weak pointer expired properly
+  ASSERT_TRUE(cm.expired()) << "Weak pointer to an autowired slot did not reset as expected";
+}
+
+TEST_F(ContextMemberTest, ComplexResetCase) {
+  std::weak_ptr<CoreContext> ctxtWeak;
+  std::weak_ptr<RefersToTweedleDee> deeWeak;
+  std::weak_ptr<RefersToTweedleDum> dumWeak;
+
+  {
+    // Set up the cycle:
+    AutoCreateContext ctxt;
+    ctxtWeak = ctxt;
+    ctxt->Inject<RefersToTweedleDee, RefersToTweedleDum>();
+
+    // Now try to reset the cycle:
+    Autowired<RefersToTweedleDee> dee(ctxt);
+    Autowired<RefersToTweedleDum> dum(ctxt);
+    dee->td.reset();
+
+    // Get weak pointers so we can verify that everything cleaned up
+    deeWeak = dee;
+    dumWeak = dum;
+  }
+
+  // Context should have gone away by now
+  ASSERT_TRUE(ctxtWeak.expired()) << "Context was leaked even after a local cycle was reset";
+  ASSERT_TRUE(dumWeak.expired()) << "Leak detected of a member that was explicitly released";
+  ASSERT_TRUE(deeWeak.expired()) << "Leak detected of a member that was not explicitly released";
+}
