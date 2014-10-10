@@ -59,8 +59,17 @@ else()
   # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
   # wants us to do.
-  set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-  set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+
+  # Libraries not only all wind up in the libraries directory, but we also keep them all together
+  # here by putting them in the same place, regardless of whether they are debug or release.  This
+  # makes globbing them together much easier.
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/lib)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/lib)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${PROJECT_BINARY_DIR}/lib)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/lib)
 endif()
 
 option(AUTOWIRING_BUILD_TESTS "Build Autowiring unit tests" ${AUTOWIRING_BUILD_TESTS_DEFAULT})
