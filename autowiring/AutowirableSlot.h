@@ -91,6 +91,11 @@ public:
   const std::type_info& GetType(void) const {
     return AnySharedPointer::slot()->type();
   }
+  
+  // Reset this pointer. Similar to shared_ptr::reset().
+  void reset() {
+    slot()->reset();
+  }
 
   /// <returns>
   /// The strategy that should be used to satisfy this slot
