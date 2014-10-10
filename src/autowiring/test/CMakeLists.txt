@@ -55,8 +55,7 @@ set(AutowiringTest_SRCS
   UuidTest.cpp
 )
 
-set(
-  AutowiringFixture_SRCS
+set(AutowiringFixture_SRCS
   SelfSelectingFixture.hpp
   SelfSelectingFixture.cpp
   OtherSelectingFixture.hpp

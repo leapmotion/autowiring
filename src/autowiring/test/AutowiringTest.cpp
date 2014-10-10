@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "gtest-all-guard.h"
+#include "gtest-all-guard.hpp"
 #include "TestFixtures/SimpleObject.hpp"
 #include "TestFixtures/SimpleReceiver.hpp"
 #include <autowiring/Autowired.h>

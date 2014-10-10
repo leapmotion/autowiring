@@ -3,6 +3,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/contrib/gtest-1.7.0/fused-src
   ${PROJECT_SOURCE_DIR}/autowiring
   ${PROJECT_SOURCE_DIR}/src/autowiring
+  ${PROJECT_SOURCE_DIR}/src/autotesting
 )
 
 if(APPLE)

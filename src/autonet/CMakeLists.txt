@@ -1,4 +1,4 @@
-find_package(Boost COMPONENTS regex QUIET)
+find_package(Boost COMPONENTS regex system QUIET)
 if(NOT Boost_FOUND)
   message("Cannot build Autonet, boost not installed on this system")
   return()
