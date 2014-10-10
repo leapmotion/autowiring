@@ -61,7 +61,7 @@ script:
 
   # Build examples from installed Autowiring
   - cd examples 
-    && cmake . -DUSE_LIBCXX=ON
+    && cmake .
     && make
     && cd ..
 
