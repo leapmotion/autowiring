@@ -3,6 +3,12 @@
 #  AUTOWIRING_FOUND - indicates that the module was found
 #  AUTOWIRING_INCLUDE_DIR - include directories
 
-include(@CMAKE_INSTALL_PREFIX@/cmake/AutowiringTargets.cmake)
 set(autowiring_FOUND TRUE)
-set(autowiring_INCLUDE_DIR "@CMAKE_INSTALL_PREFIX@/include")
+
+if (EXISTS @CMAKE_INSTALL_PREFIX@/cmake/AutowiringTargets.cmake)
+  include(@CMAKE_INSTALL_PREFIX@/cmake/AutowiringTargets.cmake)
+  set(autowiring_INCLUDE_DIR "@CMAKE_INSTALL_PREFIX@/include")
+else()
+  include(${CMAKE_CURRENT_LIST_DIR}/AutowiringTargets.cmake)
+  set(autowiring_INCLUDE_DIR "@PROJECT_SOURCE_DIR@")
+endif()
