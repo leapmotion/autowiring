@@ -9,35 +9,32 @@ find_package(autowiring ${autowiring_VERSION_REQUESTED} EXACT REQUIRED NO_CMAKE_
 message("Found autowiring ${autowiring_VERSION}")
 message("Include dir is ${autowiring_INCLUDE_DIR}")
 
-# Use C++11
-if(USE_LIBCXX)
-  # Clang needs special additional flags to build with C++11
-  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-    # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
-    message("AppleClang C++11")
-    set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    message("Clang C++11")
-    set(CMAKE_CXX_FLAGS "-std=c++11")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    message("GCC C++11")
-    set(CMAKE_CXX_FLAGS "-std=c++11")
-  endif()
+# Clang needs special additional flags to build with C++11
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+  # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
+  message("AppleClang C++11")
+  set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  message("Clang C++11")
+  set(CMAKE_CXX_FLAGS "-std=c++11")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  message("GCC C++11")
+  set(CMAKE_CXX_FLAGS "-std=c++11")
 endif()
 
 
 add_executable(ContextExample ContextExample.cpp)
-target_link_libraries(ContextExample Autowiring)
+target_link_libraries(ContextExample Autowiring::Autowiring)
 
 add_executable(ThreadExample ThreadExample.cpp)
-target_link_libraries(ThreadExample Autowiring)
+target_link_libraries(ThreadExample Autowiring::Autowiring)
 
 add_executable(EventExample EventExample.cpp)
-target_link_libraries(EventExample Autowiring)
+target_link_libraries(EventExample Autowiring::Autowiring)
 
 add_executable(AutoFilterExample AutoFilterExample.cpp)
-target_link_libraries(AutoFilterExample Autowiring)
+target_link_libraries(AutoFilterExample Autowiring::Autowiring)
 
 # Need multithreading services if available
 find_package(Threads)
@@ -62,7 +59,7 @@ if(TARGET Autowiring::AutoNet)
   )
 
   add_executable(AutoNetExample AutoNetExample.cpp)
-  target_link_libraries(AutoNetExample Autowiring AutoNet ${Boost_LIBRARIES})
+  target_link_libraries(AutoNetExample Autowiring::Autowiring Autowiring::AutoNet ${Boost_LIBRARIES})
   if(Threads_FOUND)
     if(CMAKE_USE_PTHREADS_INIT)
       target_link_libraries(AutoNetExample ${CMAKE_THREAD_LIBS_INIT})
