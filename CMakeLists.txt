@@ -165,7 +165,6 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   endif()
 
   # Packaging stuff, if an installer is being made instead
-  INCLUDE(InstallRequiredSystemLibraries)
   SET(CPACK_PACKAGE_VENDOR "Leap Motion")
   SET(CPACK_PACKAGE_CONTACT "cmercenary@gmail.com")
   SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
