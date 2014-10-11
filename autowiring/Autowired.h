@@ -168,6 +168,15 @@ public:
       )->slot()->get();
   }
   
+  operator std::weak_ptr<T>(void) const {
+    return
+      static_cast<const AnySharedPointerT<T>*>(
+        static_cast<const AnySharedPointer*>(
+          this
+        )
+      )->slot()->get();
+  }
+  
   /// <summary>
   /// Allows a lambda function to be called when this slot is autowired
   /// </summary>
