@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/Decoration.hpp"
+#include "TestFixtures/SimpleObject.hpp"
 
 class SnoopTest:
   public testing::Test
@@ -299,4 +300,13 @@ TEST_F(SnoopTest, SimplePackets) {
   packet2->Decorate(Decoration<0>());
   packet2->Decorate(Decoration<1>());
   EXPECT_FALSE(!!filter->m_called) << "Unsnoop didn't work";
+}
+
+TEST_F(SnoopTest, CanSnoopAutowired) {
+  AutoCurrentContext ctxt;
+  ctxt->Inject<SimpleObject>();
+
+  // Now autowire what we injeced and verify we can snoop this directly
+  Autowired<SimpleObject> so;
+  ctxt->Snoop(so);
 }

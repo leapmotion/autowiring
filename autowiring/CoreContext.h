@@ -800,6 +800,14 @@ public:
   }
 
   /// <summary>
+  /// Resolution overload
+  /// </summary>
+  template<class T>
+  void Snoop(const Autowired<T>& snooper) {
+    return Snoop(static_cast<const std::shared_ptr<T>&>(snooper));
+  }
+
+  /// <summary>
   /// Unregisters an event receiver previously registered to receive snooped events
   /// </summary>
   /// <remarks>
