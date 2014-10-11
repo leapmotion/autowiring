@@ -59,9 +59,21 @@ else()
   # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
   # wants us to do.
-  set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-  set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+  # Libraries not only all wind up in the libraries directory, but we also keep them all together
+  # here by putting them in the same place, regardless of whether they are debug or release.  This
+  # makes globbing them together much easier.
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/lib)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/lib)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
 endif()
+
+# Postfix on all debug libraries should be "d"
+set(CMAKE_DEBUG_POSTFIX d)
 
 option(AUTOWIRING_BUILD_TESTS "Build Autowiring unit tests" ${AUTOWIRING_BUILD_TESTS_DEFAULT})
 function(add_googletest dirname)
@@ -141,9 +153,25 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   # Only really needed on Windows; Mac and Linux have pretty good default search behavior, so we
   # leave those alone.
   SET(CPACK_WIX_TEMPLATE autowiring.wxs)
+  SET(CPACK_MONOLITHIC_INSTALL ON)
+  
+  # Run the script that will grab the debug and release configurations and install them during packaging
+  set(CPACK_INSTALL_COMMANDS
+    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Debug --target install"
+    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Release --target install"
+  )
+
+  # Pick the generator in an appropriate way
+  if(WIN32)
+    set(CPACK_GENERATOR WIX ZIP)
+  elseif(APPLE)
+    # TODO: Add Bundle as a generator here
+    set(CPACK_GENERATOR TGZ)
+  else()
+    set(CPACK_GENERATOR TGZ DEB)
+  endif()
 
   # Packaging stuff, if an installer is being made instead
-  INCLUDE(InstallRequiredSystemLibraries)
   SET(CPACK_PACKAGE_VENDOR "Leap Motion")
   SET(CPACK_PACKAGE_CONTACT "cmercenary@gmail.com")
   SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
@@ -153,6 +181,6 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   SET(CPACK_PACKAGE_VERSION_MINOR "${autowiring_VERSION_MINOR}")
   SET(CPACK_PACKAGE_VERSION_PATCH "${autowiring_VERSION_PATCH}")
   SET(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "autowiring")
-  SET(CPACK_PACKAGE_INSTALL_DIRECTORY "autowiring ${CMake_VERSION_MAJOR}.${CMake_VERSION_MINOR}")
+  SET(CPACK_PACKAGE_INSTALL_DIRECTORY "autowiring")
   INCLUDE(CPack)
 endif()
