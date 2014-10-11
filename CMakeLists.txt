@@ -72,6 +72,9 @@ else()
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${PROJECT_BINARY_DIR}/lib)
 endif()
 
+# Postfix on all debug libraries should be "d"
+set(CMAKE_DEBUG_POSTFIX d)
+
 option(AUTOWIRING_BUILD_TESTS "Build Autowiring unit tests" ${AUTOWIRING_BUILD_TESTS_DEFAULT})
 function(add_googletest dirname)
   if(AUTOWIRING_BUILD_TESTS)
