@@ -647,7 +647,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
       stk.pop();
 
       for(DeferrableAutowiring* pNext = top; pNext; pNext = pNext->GetFlink()) {
-        pNext->SatisfyAutowiring(value.m_value->shared_ptr());
+        pNext->SatisfyAutowiring(value.m_value);
 
         // See if there's another chain we need to process:
         auto child = pNext->ReleaseDependentChain();

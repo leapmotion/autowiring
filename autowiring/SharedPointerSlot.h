@@ -288,7 +288,13 @@ public:
   }
 };
 
-template<class T, bool is_object = std::is_base_of<Object, T>::value>
+struct SharedPointerSlotTOffsetBase {
+  static int cast_offset() {
+    throw std::bad_cast();
+  }
+};
+
+template<typename T, bool is_object = std::is_base_of<Object, T>::value>
 struct SharedPointerSlotTOffset {
   static int cast_offset() {
     return static_cast<int>(reinterpret_cast<int64_t>(
@@ -297,12 +303,8 @@ struct SharedPointerSlotTOffset {
   }
 };
 
-template<class T>
-struct SharedPointerSlotTOffset<T, false> {
-  static int cast_offset() {
-    throw std::bad_cast();
-  }
-};
+template<typename T>
+struct SharedPointerSlotTOffset<T, false> : SharedPointerSlotTOffsetBase {};
 
 template<class T>
 struct SharedPointerSlotT:
@@ -316,6 +318,10 @@ struct SharedPointerSlotT:
 
     // Make use of our space to make a shared pointer:
     new (m_space) std::shared_ptr<T>(rhs);
+  }
+
+  SharedPointerSlotT(const SharedPointerSlotT<T>& rhs) {
+    new (m_space) std::shared_ptr<T>(rhs.get());
   }
 
   ~SharedPointerSlotT(void) override {
@@ -360,7 +366,7 @@ public:
   virtual void New(void* pSpace, size_t nBytes) const override {
     if(nBytes < sizeof(*this))
       throw std::runtime_error("Attempted to construct a SharedPointerSlotT in a space that was too small");
-    new (pSpace) SharedPointerSlotT<T>(get());
+    new (pSpace) SharedPointerSlotT<T>(*this);
   }
 
   bool try_assign(const std::shared_ptr<Object>& rhs) override {
