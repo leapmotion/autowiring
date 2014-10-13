@@ -14,6 +14,7 @@ set(AutowiringTest_SRCS
   CoreContextTest.cpp
   CoreJobTest.cpp
   CoreRunnableTest.cpp
+  CommonUseCasesTest.cpp
   ContextCleanupTest.cpp
   ContextEnumeratorTest.cpp
   ContextMapTest.cpp
@@ -60,6 +61,8 @@ set(AutowiringFixture_SRCS
   SelfSelectingFixture.cpp
   OtherSelectingFixture.hpp
   OtherSelectingFixture.cpp
+  HasForwardOnlyType.hpp
+  HasForwardOnlyType.cpp
 )
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringFixture_SRCS)
