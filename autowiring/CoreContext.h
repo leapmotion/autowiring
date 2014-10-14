@@ -558,16 +558,23 @@ public:
   }
 
   /// <summary>
+  /// Synonym for Inject, but propagates no return value
+  /// </summary>
+  template<typename T>
+  void InjectNR(void) { Inject<T>(); }
+
+  /// <summary>
   /// A simple utility method which will inject the specified types into the current context when called
   /// </summary>
   template<typename T1, typename T2, typename... Ts>
   void Inject(void) {
-    bool dummy[] = {
-      (Inject<T1>(), false),
-      (Inject<T2>(), false),
-      (Inject<Ts>(), false)...
+    static void (CoreContext::*const inject [])() = {
+      &CoreContext::InjectNR<T1>,
+      &CoreContext::InjectNR<T2>,
+      &CoreContext::InjectNR<Ts>...
     };
-    (void) dummy;
+    for(auto f : inject)
+      (this->*f)();
   }
 
   /// <summary>
@@ -575,11 +582,7 @@ public:
   /// </summary>
   template<typename... Ts>
   static void InjectCurrent(void) {
-    auto ctxt = CurrentContext();
-    bool dummy [] = {
-      (ctxt->Inject<Ts>(), false)...
-    };
-    (void) dummy;
+    CurrentContext()->Inject<Ts...>();
   }
 
   /// <summary>
