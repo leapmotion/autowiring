@@ -3,6 +3,9 @@ set(AutowiringTest_SRCS
   ArgumentTypeTest.cpp
   AutoAnchorTest.cpp
   AutoConstructTest.cpp
+  AutoFilterFunctionTest.cpp
+  AutoFilterPipeTest.cpp
+  AutoFilterSequencing.cpp
   AutoFilterTest.cpp
   AutoInjectableTest.cpp
   AutoPacketFactoryTest.cpp
