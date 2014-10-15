@@ -350,7 +350,7 @@ void CoreContext::Initiate(void) {
 
   // Now we can add the event receivers we haven't been able to add because the context
   // wasn't yet started:
-  AddEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
+  AddEventReceivers(m_delayedEventReceivers);
   m_delayedEventReceivers.clear();
   m_junctionBoxManager->Initiate();
 
@@ -572,7 +572,7 @@ void CoreContext::UnregisterEventReceiversUnsafe(void) {
 
   // Notify our parent (if we have one) that our event receivers are going away:
   if(m_pParent)
-    m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+    m_pParent->RemoveEventReceivers(m_eventReceivers);
 
   // Recursively unregister packet factory subscribers:
   AnySharedPointerT<AutoPacketFactory> pf;
@@ -687,7 +687,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     cur.first->Finalize(cur.second);
 }
 
-void CoreContext::AddEventReceiver(JunctionBoxEntry<Object> entry) {
+void CoreContext::AddEventReceiver(const JunctionBoxEntry<Object>& entry) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
@@ -707,27 +707,26 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<Object> entry) {
 }
 
 
-template<class iter>
-void CoreContext::AddEventReceivers(iter first, iter last) {
+void CoreContext::AddEventReceivers(const t_rcvrSet& receivers) {
   // Must be initiated
   assert(m_initiated);
 
-  for(auto q = first; q != last; q++)
-    m_junctionBoxManager->AddEventReceiver(*q);
+  for(const auto& q : receivers)
+    m_junctionBoxManager->AddEventReceiver(q);
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
-    m_pParent->AddEventReceivers(first, last);
+    m_pParent->AddEventReceivers(receivers);
 }
 
-void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
-  for(auto q = first; q != last; q++)
-    m_junctionBoxManager->RemoveEventReceiver(*q);
+void CoreContext::RemoveEventReceivers(const t_rcvrSet& receivers) {
+  for(const auto& q : receivers)
+    m_junctionBoxManager->RemoveEventReceiver(q);
 
   // Detour to the parent collection (if necessary)
   if(m_pParent)
-    m_pParent->RemoveEventReceivers(first, last);
+    m_pParent->RemoveEventReceivers(receivers);
 }
 
 void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<Object>& receiver) {

@@ -270,18 +270,17 @@ protected:
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
   /// <param name="pRecvr">The junction box entry corresponding to the receiver type</param>
-  void AddEventReceiver(JunctionBoxEntry<Object> pRecvr);
+  void AddEventReceiver(const JunctionBoxEntry<Object>& pRecvr);
 
   /// <summary>
   /// Add delayed event receivers
   /// </summary>
-  template<class iter>
-  void AddEventReceivers(iter first, iter last);
+  void AddEventReceivers(const t_rcvrSet& receivers);
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
   /// </summary>
-  void RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
+  void RemoveEventReceivers(const t_rcvrSet& receivers);
 
   /// <summary>
   /// Adds an object of any kind to the IOC container
