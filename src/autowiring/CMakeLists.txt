@@ -15,7 +15,6 @@ set(Autowiring_SRCS
   auto_out.h
   auto_arg.h
   AnySharedPointer.h
-  AutoAnchor.h
   AutoCheckout.h
   AutoRestarter.h
   AutoFuture.h

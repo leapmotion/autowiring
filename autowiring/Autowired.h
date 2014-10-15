@@ -117,7 +117,7 @@ public:
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
 
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
-    AutowirableSlot<T>(ctxt ? ctxt->template ResolveAnchor<T>() : ctxt),
+    AutowirableSlot<T>(ctxt),
     m_pFirstChild(nullptr)
   {
     if(ctxt)

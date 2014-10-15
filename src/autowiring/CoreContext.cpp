@@ -480,11 +480,6 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
     m_nameListeners[typeid(void)].push_back(pBase.get());
 }
 
-void CoreContext::AddAnchor(const std::type_info& ti) {
-  (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
-  m_anchors.insert(ti);
-}
-
 void CoreContext::BuildCurrentState(void) {
   AutoGlobalContext glbl;
   glbl->Invoke(&AutowiringEvents::NewContext)(*this);

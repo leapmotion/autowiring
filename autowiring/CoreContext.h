@@ -2,7 +2,6 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "ObjectTraits.h"
-#include "AutoAnchor.h"
 #include "AutoFilterDescriptor.h"
 #include "AutowirableSlot.h"
 #include "AutowiringEvents.h"
@@ -131,10 +130,6 @@ protected:
   typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
 
-  // These are the types which will be created in this context if an attempt is made to inject them
-  // into any child context.
-  std::set<std::type_index> m_anchors;
-
   /// <summary>
   /// Represents a single entry, together with any deferred elements waiting on the satisfaction of this entry
   /// </summary>
@@ -202,29 +197,6 @@ protected:
   /// Overload which does not perform injection
   /// </summary>
   std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer);
-  
-  // Add to our interal list of Anchor types from AutoAnchors declared in sigil type
-  template<typename T, typename... Ts>
-  void AddAnchorInternal(const AutoAnchor<T, Ts...>*) { AddAnchor<T, Ts...>(); }
-
-  void AddAnchorInternal(const void*) {}
-  
-  // Check if a type anchors to this context's sigil type
-  bool CheckAnchorInSigil(...) const {return false;};
-  
-  template<typename ...T>
-  bool CheckAnchorInSigil(const AutoAnchor<T...>*) const {
-    static_assert(sizeof...(T) != 0, "Can't anchor to nothing.");
-    
-    bool isMatch = false;
-    
-    bool dummy[]{
-      (isMatch = isMatch || typeid(T)==GetSigilType(), false)...
-    };
-    (void)dummy;
-    
-    return isMatch;
-  };
 
   // Adds a bolt proper to this context
   template<typename T, typename... Sigils>
@@ -464,39 +436,6 @@ public:
   }
 
   /// <summary>
-  /// Check if parent context's have AutoAnchored the type in their sigil.
-  /// </summary>
-  template<typename T>
-  std::shared_ptr<CoreContext> ResolveAnchor(void) {
-    for(auto pCur = shared_from_this(); pCur; pCur = pCur->m_pParent) {
-      // Check if pCur anchor's onto the injected type
-      if (pCur->m_anchors.find(typeid(T)) != pCur->m_anchors.end()){
-        return pCur;
-      }
-      // Check if T anchors onto pCur's sigil type
-      if ( pCur->CheckAnchorInSigil((T*)nullptr) ){
-        return pCur;
-      }
-    }
-    return shared_from_this();
-  }
-
-  /// <summary>
-  /// Add an additional anchor type to the context
-  /// </summary>
-  template<typename... AnchorTypes>
-  void AddAnchor(void) {
-    bool dummy[] = {
-      (AddAnchor(typeid(AnchorTypes)), false)...
-    };
-    (void) dummy;
-  }
-
-  /// <summary>
-  /// Adds the specified anchor type to the context
-  void AddAnchor(const std::type_info& ti);
-
-  /// <summary>
   /// Utility method which will inject the specified types into this context
   /// </summary>
   /// <remarks>
@@ -553,7 +492,7 @@ public:
   /// </returns>
   template<typename T>
   std::shared_ptr<T> Inject(void) {
-    return ResolveAnchor<T>()->template Construct<T>();
+    return Construct<T>();
   }
 
   /// <summary>
@@ -1013,10 +952,7 @@ public:
 
   CoreContextT(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
     CoreContext(pParent, backReference, pPeer)
-  {
-    // Save anchored types in context
-    AddAnchorInternal((T*)nullptr);
-  }
+  {}
 
   const std::type_info& GetSigilType(void) const override { return sc_type; }
 };
