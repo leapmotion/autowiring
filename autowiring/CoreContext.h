@@ -504,7 +504,7 @@ public:
   /// </summary>
   template <class T>
   bool CheckEventOutputStream(void){
-    return m_junctionBoxManager->CheckEventOutputStream<T>();
+    return m_junctionBoxManager->CheckEventOutputStream(typeid(T));
   }
 
   /// <returns>
@@ -565,8 +565,11 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<JunctionBox<T>> GetJunctionBox(void) {
+    // Add this type to the event registry. All events call this function
+    (void)RegEvent<T>::r;
+    
     return std::static_pointer_cast<JunctionBox<T>, JunctionBoxBase>(
-      m_junctionBoxManager->Get<T>()
+      m_junctionBoxManager->Get(typeid(T))
     );
   }
 
