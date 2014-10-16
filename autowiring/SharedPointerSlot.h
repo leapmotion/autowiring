@@ -173,24 +173,6 @@ public:
   }
 
   /// <summary>
-  /// Default for std library sorting of unique elements.
-  /// In order to enable strict ordering std::type_info::before is used.
-  /// </summary>
-  bool operator<(const SharedPointerSlot& rhs) const {
-    if(type().before(rhs.type()))
-      return true;
-    return ptr() < rhs.ptr();
-  }
-
-  /// <summary>
-  /// Default for std library sorting of repeatable elements.
-  /// In order to enable strict ordering std::type_info::before is used.
-  /// </summary>
-  bool operator<=(const SharedPointerSlot& rhs) const { return *this < rhs || *this == rhs; }
-  bool operator>(const SharedPointerSlot& rhs) const { return !(*this <= rhs); }
-  bool operator>=(const SharedPointerSlot& rhs) const { return !(*this < rhs); }
-
-  /// <summary>
   /// Comparison by reference. Comparison of unequal types always fails,
   /// even when different type casts of the same instance are referenced.
   /// </summary>
