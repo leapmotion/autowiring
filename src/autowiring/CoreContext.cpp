@@ -240,7 +240,7 @@ void CoreContext::AddInternal(const ObjectTraits& traits) {
   }
 
   // Subscribers, if applicable:
-  auto& stump = traits.value->GetSlotInformation();
+  const auto& stump = traits.stump;
   if(traits.subscriber) {
     AddPacketSubscriber(traits.subscriber);
 
