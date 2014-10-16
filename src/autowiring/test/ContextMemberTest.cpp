@@ -16,7 +16,7 @@ static_assert(std::is_base_of<ContextMember, IsAContextMember>::value, "Expected
 TEST_F(ContextMemberTest, AlienMembership) {
   // Create a new context, and construct an arbitrary ContextMember in it
   AutoCreateContext subCtxt;
-  auto cc = subCtxt->Inject<IsAContextMember>();
+  auto cc = subCtxt->Construct<IsAContextMember>();
 
   ASSERT_EQ(subCtxt, cc->GetContext()) << "ContextMember did not correctly obtain a pointer to its enclosing context";
 }

@@ -485,34 +485,15 @@ public:
   }
 
   /// <summary>
-  /// A simple utility method which will inject a single type when called
-  /// </summary>
-  /// <returns>
-  /// The injected type
-  /// </returns>
-  template<typename T>
-  std::shared_ptr<T> Inject(void) {
-    return Construct<T>();
-  }
-
-  /// <summary>
-  /// Synonym for Inject, but propagates no return value
-  /// </summary>
-  template<typename T>
-  void InjectNR(void) { Inject<T>(); }
-
-  /// <summary>
   /// A simple utility method which will inject the specified types into the current context when called
   /// </summary>
-  template<typename T1, typename T2, typename... Ts>
+  template<typename T, typename... Ts>
   void Inject(void) {
-    static void (CoreContext::*const inject [])() = {
-      &CoreContext::InjectNR<T1>,
-      &CoreContext::InjectNR<T2>,
-      &CoreContext::InjectNR<Ts>...
+    const bool dummy[] = {
+      (Construct<T>(), false),
+      (Construct<Ts>(), false)...
     };
-    for(auto f : inject)
-      (this->*f)();
+    (void)dummy;
   }
 
   /// <summary>
@@ -968,4 +949,3 @@ template<typename T, typename... Sigil>
 void CoreContext::AutoRequireMicroBolt(void) {
   Inject<MicroBolt<T, Sigil...>>();
 }
-

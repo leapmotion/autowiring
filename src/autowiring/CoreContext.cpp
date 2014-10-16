@@ -795,7 +795,7 @@ std::shared_ptr<AutoPacketFactory> CoreContext::GetPacketFactory(void) {
   std::shared_ptr<AutoPacketFactory> pf;
   FindByType(pf);
   if(!pf)
-    pf = Inject<AutoPacketFactory>();
+    pf = Construct<AutoPacketFactory>();
   return pf;
 }
 

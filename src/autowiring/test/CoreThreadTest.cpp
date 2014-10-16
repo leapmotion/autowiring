@@ -332,7 +332,7 @@ TEST_F(CoreThreadTest, NestedContextWait) {
   ctxt->Initiate();
 
   // Create a subcontext which has our delay thread in it:
-  auto waitsAwhile = ctxt->Inject<WaitsALongTimeThenQuits>();
+  auto waitsAwhile = ctxt->Construct<WaitsALongTimeThenQuits>();
   ctxt->Initiate();
 
   // Stop and delay on the outer context:

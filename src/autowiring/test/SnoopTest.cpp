@@ -170,7 +170,7 @@ TEST_F(SnoopTest, AvoidDoubleReciept) {
     child->Initiate();
     {
       CurrentContextPusher pshr(child);
-      childMember = child->Inject<ChildMember>();
+      childMember = child->Construct<ChildMember>();
 
       // Snoop
       child->Snoop(parentMember);
