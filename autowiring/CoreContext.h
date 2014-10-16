@@ -745,6 +745,14 @@ public:
     if(traits.subscriber)
       UnsnoopAutoPacket(traits);
   }
+  
+  /// <summary>
+  /// Resolution overload
+  /// </summary>
+  template<class T>
+  void Unsnoop(const Autowired<T>& snooper) {
+    return Unsnoop(static_cast<const std::shared_ptr<T>&>(snooper));
+  }
 
   /// <summary>
   /// Remove EventReceiver from parents unless its a member of the parent

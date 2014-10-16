@@ -150,15 +150,6 @@ private:
   std::atomic<AutowirableSlot<T>*> m_pFirstChild;
 
 public:
-  operator T*(void) const {
-    return
-      static_cast<const AnySharedPointerT<T>*>(
-        static_cast<const AnySharedPointer*>(
-          this
-        )
-      )->slot()->get().get();
-  }
-
   operator const std::shared_ptr<T>&(void) const {
     return
       static_cast<const AnySharedPointerT<T>*>(
@@ -169,12 +160,11 @@ public:
   }
   
   operator std::weak_ptr<T>(void) const {
-    return
-      static_cast<const AnySharedPointerT<T>*>(
-        static_cast<const AnySharedPointer*>(
-          this
-        )
-      )->slot()->get();
+    return this->operator const std::shared_ptr<T>&();
+  }
+  
+  operator T*(void) const {
+    return this->operator const std::shared_ptr<T>&().get();
   }
   
   /// <summary>
