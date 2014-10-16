@@ -54,7 +54,7 @@ protected:
   virtual void assign(const SharedPointerSlot& rhs) {}
 
 public:
-  virtual operator bool(void) const { return false; }
+  operator bool(void) const { return empty(); }
   virtual operator std::shared_ptr<Object>(void) const { return std::shared_ptr<Object>(); }
   virtual void* ptr(void) { return nullptr; }
   virtual const void* ptr(void) const { return nullptr; }
@@ -384,7 +384,6 @@ public:
   }
 
   bool empty(void) const { return get() == nullptr; }
-  operator bool(void) const override { return !!get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
 
   void reset(void) override {
