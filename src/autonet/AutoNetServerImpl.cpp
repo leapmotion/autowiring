@@ -160,7 +160,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
     objData["name"] = autowiring::demangle(typeid(*object.pObject));
     {
       Json::array slots;
-      for(auto slot = object.value->GetSlotInformation().pHead; slot; slot = slot->pFlink) {
+      for(auto slot = object.stump.pHead; slot; slot = slot->pFlink) {
         slots.push_back(Json::object{
             {"name", autowiring::demangle(slot->type)},
             {"autoRequired", slot->autoRequired},

@@ -21,11 +21,8 @@ public:
   {}
 };
 
-template<class T, class Memfn>
-class TypeUnifierComplexAutoFilter;
-
 template<class T, class RetType, class... Args>
-class TypeUnifierComplexAutoFilter<T, RetType (T::*)(Args...)>:
+class TypeUnifierComplexAutoFilter:
   public T,
   public TypeUnifier
 {
@@ -49,6 +46,15 @@ public:
   RetType AutoFilter(Args... args) {
     return T::AutoFilter(std::forward<Args>(args)...);
   }
+};
+
+template<class MemFn>
+struct TypeUnifierComplexAutoFilterSelect;
+
+template<class T, class RetType, class... Args>
+struct TypeUnifierComplexAutoFilterSelect<RetType(T::*)(Args...)>
+{
+  typedef TypeUnifierComplexAutoFilter<T, RetType, Args...> type;
 };
 
 /// <summary>
@@ -76,6 +82,6 @@ struct SelectTypeUnifier<T, false, false> {
 
 // Otherwise, if there's a complex ctor, we have to use Args
 template<class T>
-struct SelectTypeUnifier<T, false, true> {
-  typedef TypeUnifierComplexAutoFilter<T, decltype(&T::AutoFilter)> type;
-};
+struct SelectTypeUnifier<T, false, true>:
+  TypeUnifierComplexAutoFilterSelect<decltype(&T::AutoFilter)>
+{};

@@ -88,20 +88,17 @@ struct AutoFilterDescriptorStub {
   /// is required to carry information about the type of the proper member function to be called; t_extractedCall is
   /// required to be instantiated by the caller and point to the AutoFilter proxy routine.
   /// </summary>
-  template<class MemFn>
-  AutoFilterDescriptorStub(CallExtractor<MemFn> extractor, t_extractedCall pCall) :
-    m_pType(&typeid(typename CallExtractor<MemFn>::type)),
-    m_pArgs(extractor.template Enumerate<AutoFilterDescriptorInput>()),
-    m_deferred(extractor.deferred),
-    m_arity(extractor.N),
+  AutoFilterDescriptorStub(const std::type_info* pType, const AutoFilterDescriptorInput* pArgs, bool deferred, t_extractedCall pCall) :
+    m_pType(pType),
+    m_pArgs(pArgs),
+    m_deferred(deferred),
+    m_arity(0),
     m_requiredCount(0),
     m_optionalCount(0),
     m_pCall(pCall)
   {
-    // Cannot register a subscriber with zero arguments:
-    static_assert(CallExtractor<MemFn>::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
-
     for(auto pArg = m_pArgs; *pArg; pArg++) {
+      m_arity++;
       autowiring::DataFlow& data = m_dataMap[*pArg->ti];
 
       // DEFAULT: All data is broadcast
@@ -282,8 +279,27 @@ struct AutoFilterDescriptor:
   AutoFilterDescriptor(const std::shared_ptr<T>& subscriber) :
     AutoFilterDescriptor(
       AnySharedPointer(subscriber),
-      CallExtractor<decltype(&T::AutoFilter)>(),
+      &typeid(T),
+      Decompose<decltype(&T::AutoFilter)>::template Enumerate<AutoFilterDescriptorInput>::types,
+      CallExtractor<decltype(&T::AutoFilter)>::deferred,
       &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
+    )
+  {}
+
+  /// <summary>
+  /// Adds a function to be called as an AutoFilter for this packet only.
+  /// </summary>
+  /// <remarks>
+  /// Recipients added in this way cannot receive piped data, since they are anonymous.
+  /// </remarks>
+  template<class Fn>
+  AutoFilterDescriptor(Fn fn):
+    AutoFilterDescriptor(
+      AnySharedPointer(std::make_shared<Fn>(std::forward<Fn>(fn))),
+      &typeid(Fn),
+      CallExtractor<decltype(&Fn::operator())>::template Enumerate<AutoFilterDescriptorInput>::types,
+      false,
+      &CallExtractor<decltype(&Fn::operator())>::template Call<&Fn::operator()>
     )
   {}
 
@@ -305,28 +321,9 @@ struct AutoFilterDescriptor:
   ///
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call
   /// </summary>
-  template<class MemFn>
-  AutoFilterDescriptor(const AnySharedPointer& autoFilter, CallExtractor<MemFn> extractor, t_extractedCall pCall) :
-    AutoFilterDescriptorStub(extractor, pCall),
+  AutoFilterDescriptor(const AnySharedPointer& autoFilter, const std::type_info* pType, const AutoFilterDescriptorInput* pArgs, bool deferred, t_extractedCall pCall) :
+    AutoFilterDescriptorStub(pType, pArgs, deferred, pCall),
     m_autoFilter(autoFilter)
-  {
-    // Cannot register a subscriber with zero arguments:
-    static_assert(CallExtractor<MemFn>::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
-  }
-
-  /// <summary>
-  /// Adds a function to be called as an AutoFilter for this packet only.
-  /// </summary>
-  /// <remarks>
-  /// Recipients added in this way cannot receive piped data, since they are anonymous.
-  /// </remarks>
-  template<class Fn>
-  AutoFilterDescriptor(Fn fn):
-    AutoFilterDescriptor(
-      AnySharedPointer(std::make_shared<Fn>(std::forward<Fn>(fn))),
-      CallExtractor<decltype(&Fn::operator())>(),
-      &CallExtractor<decltype(&Fn::operator())>::template Call<&Fn::operator()>
-    )
   {}
 
   template<class RetType, class... Args>

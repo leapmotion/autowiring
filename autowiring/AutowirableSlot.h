@@ -112,10 +112,9 @@ public:
   /// <summary>
   /// Satisfies autowiring with a so-called "witness slot" which is guaranteed to be satisfied on the same type
   /// </summary>
-  /// <remarks>
-  /// The passed value must be a void pointer exactly to a shared_ptr of type T that matches this slot
-  /// </remarks>
-  virtual void SatisfyAutowiring(const void* pvSharedPtr) = 0;
+  virtual void SatisfyAutowiring(const AnySharedPointer& ptr) {
+    (AnySharedPointer&)*this = ptr;
+  }
 };
 
 template<class T>
@@ -143,12 +142,6 @@ public:
   /// </remarks>
   const std::type_info& GetType(void) const {
     return typeid(T);
-  }
-
-  // DeferrableAutowiring overrides:
-  void SatisfyAutowiring(const void* pvSharedPtr) override {
-    // Cast over and assign:
-    *this = *(const std::shared_ptr<T>*)pvSharedPtr;
   }
 
   bool IsAutowired(void) const { return !!get(); }

@@ -201,18 +201,6 @@ struct CombinedWireType{
   AutowiredFast<WiredFastType> wft;
 };
 
-TEST_F(AnySharedPointerTest, SlotInformation) {
-  AutoRequired<CombinedWireType> cwt;
-
-  AnySharedPointer ptr(cwt);
-  int numSlots = 0;
-  for (auto info = ptr->GetSlotInformation().pHead; info; info = info->pFlink){
-    numSlots++;
-  }
-  
-  EXPECT_EQ(1, numSlots) << "Slot informations should reveal 2 slots in Foo";
-}
-
 #pragma pack(1)
 class ConfoundingBaseClass {
 public:
