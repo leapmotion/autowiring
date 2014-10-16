@@ -59,7 +59,7 @@ TEST_F(ScopeTest, AddWithArguments){
   //Add context member with non-simple constructor
   AutoCurrentContext ctxt;
 
-  ctxt->Construct<NoSimpleConstructor>(10);
+  ctxt->Inject<NoSimpleConstructor>(10);
 
   Autowired<NoSimpleConstructor> wired;
 
@@ -74,7 +74,8 @@ TEST_F(ScopeTest, StaticInject){
   EXPECT_FALSE(preA.IsAutowired());
   EXPECT_FALSE(preB.IsAutowired());
 
-  CoreContext::InjectCurrent<A,B>();
+  CoreContext::InjectCurrent<A>();
+  CoreContext::InjectCurrent<B>();
 
   Autowired<A> a;
   Autowired<B> b;

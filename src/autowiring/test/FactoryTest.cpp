@@ -74,7 +74,7 @@ static_assert(!has_static_new<HasAnIncorrectFactoryNew>::value, "Factory new was
 
 TEST_F(FactoryTest, CanForwardFactoryNew) {
   // Inject our type:
-  auto hantfn = AutoCurrentContext()->Construct<HasANontrivialFactoryNew>(202, 203);
+  auto hantfn = AutoCurrentContext()->Inject<HasANontrivialFactoryNew>(202, 203);
 
   // Validate that the factory new method was called as expected, and the ctor itself was not directly invoked:
   ASSERT_EQ(202, hantfn->m_first) << "Nontrivial factory-bearing type did not receive an argument as expected";
@@ -104,11 +104,11 @@ public:
 
 TEST_F(FactoryTest, CanUseBothStrategies) {
   // Inject type using the first strategy:
-  auto first = AutoCreateContext()->Construct<HasFactoryNewAndRegularCtor>(101);
+  auto first = AutoCreateContext()->Inject<HasFactoryNewAndRegularCtor>(101);
   ASSERT_EQ(101, first->m_first) << "Failed to construct a mixed-strategy type using a constructor strategy";
 
   // Now inject using the second strategy:
-  auto second = AutoCreateContext()->Construct<HasFactoryNewAndRegularCtor>(201, 202);
+  auto second = AutoCreateContext()->Inject<HasFactoryNewAndRegularCtor>(201, 202);
   ASSERT_NE(202, second->m_first) << "Mixed-strategy construction strategy passed arguments directly to the constructor, rather than via New";
   ASSERT_EQ(201, second->m_first) << "Failed to construct a mixed-strategy type using a factory strategy";
 }
@@ -130,7 +130,7 @@ public:
 };
 
 TEST_F(FactoryTest, CompatibleFactoryNewCall) {
-  auto aliased = AutoCreateContext()->Construct<HasAliasedConstructorType>(22);
+  auto aliased = AutoCreateContext()->Inject<HasAliasedConstructorType>(22);
   ASSERT_EQ(22, aliased->m_value) << "Failed to pass a compatible value to an aliasing constructor type";
 }
 

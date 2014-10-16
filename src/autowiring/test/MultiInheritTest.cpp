@@ -43,7 +43,7 @@ TEST_F(MultiInheritTest, VerifyCast) {
   CurrentContextPusher pshr(ctxt);
 
   // Insert a MultiInherit object:
-  auto obj = ctxt->Construct<MultiInherit>();
+  auto obj = ctxt->Inject<MultiInherit>();
 
   // Autowire in the pObj:
   Autowired<MultiInherit> wiredPobj;

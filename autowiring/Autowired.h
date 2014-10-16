@@ -278,7 +278,7 @@ public:
 
   // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
-    std::shared_ptr<T>(ctxt->template Construct<T>())
+    std::shared_ptr<T>(ctxt->template Inject<T>())
   {}
 
   /// <summary>
@@ -286,7 +286,7 @@ public:
   /// </summary>
   template<class... Args>
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
-    std::shared_ptr<T>(ctxt->template Construct<T>(std::forward<Args>(args)...))
+    std::shared_ptr<T>(ctxt->template Inject<T>(std::forward<Args>(args)...))
   {}
 
   operator bool(void) const {
@@ -339,7 +339,7 @@ class AutoConstruct:
 public:
   template<class... Args>
   AutoConstruct(Args&&... args) :
-    std::shared_ptr<T>(CoreContext::CurrentContext()->template Construct<T>(std::forward<Args&&>(args)...))
+    std::shared_ptr<T>(CoreContext::CurrentContext()->template Inject<T>(std::forward<Args&&>(args)...))
   {}
 
   operator bool(void) const { return IsAutowired(); }

@@ -442,7 +442,7 @@ public:
   /// Arguments will be passed to the T constructor if provided
   /// </remarks>
   template<typename T, typename... Args>
-  std::shared_ptr<T> Construct(Args&&... args) {
+  std::shared_ptr<T> Inject(Args&&... args) {
     // Add this type to the TypeRegistry
     (void) RegType<T>::r;
     
@@ -485,24 +485,15 @@ public:
   }
 
   /// <summary>
-  /// A simple utility method which will inject the specified types into the current context when called
-  /// </summary>
-  template<typename T, typename... Ts>
-  void Inject(void) {
-    const bool dummy[] = {
-      (Construct<T>(), false),
-      (Construct<Ts>(), false)...
-    };
-    (void)dummy;
-  }
-
-  /// <summary>
   /// Static version of Inject that uses the current context
   /// </summary>
-  template<typename... Ts>
+  template<typename T>
   static void InjectCurrent(void) {
-    CurrentContext()->Inject<Ts...>();
+    CurrentContext()->Inject<T>();
   }
+  
+  template<typename T, typename... Args>
+  std::shared_ptr<T> DEPRECATED(Construct(Args&&... args), "'Construct' is deprecated, use 'Inject' instead");
 
   /// <summary>
   /// This method checks whether eventoutputstream listeners for the given type still exist.
@@ -919,6 +910,12 @@ namespace autowiring {
   void InjectCurrent(void){
     CoreContext::InjectCurrent<T>();
   }
+}
+
+// Deprecated, use Inject
+template<typename T, typename... Args>
+std::shared_ptr<T> CoreContext::Construct(Args&&... args) {
+  return Inject<T>(std::forward<Args>(args)...);
 }
 
 /// <summary>

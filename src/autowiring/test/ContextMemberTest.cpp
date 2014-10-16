@@ -16,7 +16,7 @@ static_assert(std::is_base_of<ContextMember, IsAContextMember>::value, "Expected
 TEST_F(ContextMemberTest, AlienMembership) {
   // Create a new context, and construct an arbitrary ContextMember in it
   AutoCreateContext subCtxt;
-  auto cc = subCtxt->Construct<IsAContextMember>();
+  auto cc = subCtxt->Inject<IsAContextMember>();
 
   ASSERT_EQ(subCtxt, cc->GetContext()) << "ContextMember did not correctly obtain a pointer to its enclosing context";
 }
@@ -143,7 +143,8 @@ TEST_F(ContextMemberTest, ComplexResetCase) {
     // Set up the cycle:
     AutoCreateContext ctxt;
     ctxtWeak = ctxt;
-    ctxt->Inject<RefersToTweedleDee, RefersToTweedleDum>();
+    ctxt->Inject<RefersToTweedleDee>();
+    ctxt->Inject<RefersToTweedleDum>();
 
     // Now try to reset the cycle:
     Autowired<RefersToTweedleDee> dee(ctxt);
