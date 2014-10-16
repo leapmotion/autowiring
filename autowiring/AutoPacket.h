@@ -176,34 +176,7 @@ private:
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
   /// <param name="ready">Ready flag, set to false if the decoration should be marked unsatisfiable</param>
-  template<class T>
-  void CompleteCheckout(bool ready, const std::type_info& source = typeid(void)) {
-    const std::type_info& data = typeid(T);
-
-    DecorationDisposition* broadDeco = nullptr;
-    DecorationDisposition* pipedDeco = nullptr;
-    {
-      std::lock_guard<std::mutex> guard(m_lock);
-      // This allows us to retrieve correct entries for decorated input requests
-      UnsafeComplete(ready, data, source, broadDeco, pipedDeco);
-    }
-
-    if(ready) {
-      if (broadDeco) {
-        UpdateSatisfaction(broadDeco->m_decoration->type(), typeid(void));
-      }
-      if (pipedDeco) {
-        // NOTE: Only publish with source if pipes are declared - this prevents
-        // added or snooping filters from satisfying piped input declarations.
-        UpdateSatisfaction(pipedDeco->m_decoration->type(), source);
-      }
-    } else {
-      if (broadDeco)
-        MarkUnsatisfiable(broadDeco->m_decoration->type(), typeid(void));
-      if (pipedDeco)
-        MarkUnsatisfiable(pipedDeco->m_decoration->type(), source);
-    }
-  }
+  void CompleteCheckout(bool ready, const std::type_info& data, const std::type_info& source = typeid(void));
 
 public:
   /// <returns>
@@ -507,7 +480,7 @@ public:
     return AutoCheckout<T>(
       *this,
       ptr,
-      &AutoPacket::CompleteCheckout<T>,
+      &AutoPacket::CompleteCheckout,
       source
     );
   }

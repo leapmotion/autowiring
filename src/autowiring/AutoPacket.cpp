@@ -358,6 +358,32 @@ void AutoPacket::UnsafeComplete(bool ready, const std::type_info& data, const st
   }
 }
 
+void AutoPacket::CompleteCheckout(bool ready, const std::type_info& data, const std::type_info& source) {
+  DecorationDisposition* broadDeco = nullptr;
+  DecorationDisposition* pipedDeco = nullptr;
+  {
+    std::lock_guard<std::mutex> guard(m_lock);
+    // This allows us to retrieve correct entries for decorated input requests
+    UnsafeComplete(ready, data, source, broadDeco, pipedDeco);
+  }
+  
+  if(ready) {
+    if (broadDeco) {
+      UpdateSatisfaction(broadDeco->m_decoration->type(), typeid(void));
+    }
+    if (pipedDeco) {
+      // NOTE: Only publish with source if pipes are declared - this prevents
+      // added or snooping filters from satisfying piped input declarations.
+      UpdateSatisfaction(pipedDeco->m_decoration->type(), source);
+    }
+  } else {
+    if (broadDeco)
+      MarkUnsatisfiable(broadDeco->m_decoration->type(), typeid(void));
+    if (pipedDeco)
+      MarkUnsatisfiable(pipedDeco->m_decoration->type(), source);
+  }
+}
+
 void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   std::list<DecorationDisposition*> decoQueue;
   {
