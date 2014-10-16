@@ -14,8 +14,3 @@ class CUCTSample {};
 TEST_F(CommonUseCasesTest, AutowiredForwardType) {
   HasForwardOnlyType f;
 }
-
-TEST_F(CommonUseCasesTest, CanMultiInject) {
-  AutoCurrentContext ctxt;
-  ctxt->Inject<CUCTSample, CUCTSample, CUCTSample, CUCTSample>();
-}
