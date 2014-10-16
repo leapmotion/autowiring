@@ -2,7 +2,6 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "ObjectTraits.h"
-#include "AutoAnchor.h"
 #include "AutoFilterDescriptor.h"
 #include "AutowirableSlot.h"
 #include "AutowiringEvents.h"
@@ -131,10 +130,6 @@ protected:
   typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
 
-  // These are the types which will be created in this context if an attempt is made to inject them
-  // into any child context.
-  std::set<std::type_index> m_anchors;
-
   /// <summary>
   /// Represents a single entry, together with any deferred elements waiting on the satisfaction of this entry
   /// </summary>
@@ -202,29 +197,6 @@ protected:
   /// Overload which does not perform injection
   /// </summary>
   std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer);
-  
-  // Add to our interal list of Anchor types from AutoAnchors declared in sigil type
-  template<typename T, typename... Ts>
-  void AddAnchorInternal(const AutoAnchor<T, Ts...>*) { AddAnchor<T, Ts...>(); }
-
-  void AddAnchorInternal(const void*) {}
-  
-  // Check if a type anchors to this context's sigil type
-  bool CheckAnchorInSigil(...) const {return false;};
-  
-  template<typename ...T>
-  bool CheckAnchorInSigil(const AutoAnchor<T...>*) const {
-    static_assert(sizeof...(T) != 0, "Can't anchor to nothing.");
-    
-    bool isMatch = false;
-    
-    bool dummy[]{
-      (isMatch = isMatch || typeid(T)==GetSigilType(), false)...
-    };
-    (void)dummy;
-    
-    return isMatch;
-  };
 
   // Adds a bolt proper to this context
   template<typename T, typename... Sigils>
@@ -270,18 +242,17 @@ protected:
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
   /// <param name="pRecvr">The junction box entry corresponding to the receiver type</param>
-  void AddEventReceiver(JunctionBoxEntry<Object> pRecvr);
+  void AddEventReceiver(const JunctionBoxEntry<Object>& pRecvr);
 
   /// <summary>
   /// Add delayed event receivers
   /// </summary>
-  template<class iter>
-  void AddEventReceivers(iter first, iter last);
+  void AddEventReceivers(const t_rcvrSet& receivers);
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
   /// </summary>
-  void RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
+  void RemoveEventReceivers(const t_rcvrSet& receivers);
 
   /// <summary>
   /// Adds an object of any kind to the IOC container
@@ -465,46 +436,13 @@ public:
   }
 
   /// <summary>
-  /// Check if parent context's have AutoAnchored the type in their sigil.
-  /// </summary>
-  template<typename T>
-  std::shared_ptr<CoreContext> ResolveAnchor(void) {
-    for(auto pCur = shared_from_this(); pCur; pCur = pCur->m_pParent) {
-      // Check if pCur anchor's onto the injected type
-      if (pCur->m_anchors.find(typeid(T)) != pCur->m_anchors.end()){
-        return pCur;
-      }
-      // Check if T anchors onto pCur's sigil type
-      if ( pCur->CheckAnchorInSigil((T*)nullptr) ){
-        return pCur;
-      }
-    }
-    return shared_from_this();
-  }
-
-  /// <summary>
-  /// Add an additional anchor type to the context
-  /// </summary>
-  template<typename... AnchorTypes>
-  void AddAnchor(void) {
-    bool dummy[] = {
-      (AddAnchor(typeid(AnchorTypes)), false)...
-    };
-    (void) dummy;
-  }
-
-  /// <summary>
-  /// Adds the specified anchor type to the context
-  void AddAnchor(const std::type_info& ti);
-
-  /// <summary>
   /// Utility method which will inject the specified types into this context
   /// </summary>
   /// <remarks>
   /// Arguments will be passed to the T constructor if provided
   /// </remarks>
   template<typename T, typename... Args>
-  std::shared_ptr<T> Construct(Args&&... args) {
+  std::shared_ptr<T> Inject(Args&&... args) {
     // Add this type to the TypeRegistry
     (void) RegType<T>::r;
     
@@ -547,43 +485,15 @@ public:
   }
 
   /// <summary>
-  /// A simple utility method which will inject a single type when called
-  /// </summary>
-  /// <returns>
-  /// The injected type
-  /// </returns>
-  template<typename T>
-  std::shared_ptr<T> Inject(void) {
-    return ResolveAnchor<T>()->template Construct<T>();
-  }
-
-  /// <summary>
-  /// Synonym for Inject, but propagates no return value
-  /// </summary>
-  template<typename T>
-  void InjectNR(void) { Inject<T>(); }
-
-  /// <summary>
-  /// A simple utility method which will inject the specified types into the current context when called
-  /// </summary>
-  template<typename T1, typename T2, typename... Ts>
-  void Inject(void) {
-    static void (CoreContext::*const inject [])() = {
-      &CoreContext::InjectNR<T1>,
-      &CoreContext::InjectNR<T2>,
-      &CoreContext::InjectNR<Ts>...
-    };
-    for(auto f : inject)
-      (this->*f)();
-  }
-
-  /// <summary>
   /// Static version of Inject that uses the current context
   /// </summary>
-  template<typename... Ts>
+  template<typename T>
   static void InjectCurrent(void) {
-    CurrentContext()->Inject<Ts...>();
+    CurrentContext()->Inject<T>();
   }
+  
+  template<typename T, typename... Args>
+  std::shared_ptr<T> DEPRECATED(Construct(Args&&... args), "'Construct' is deprecated, use 'Inject' instead");
 
   /// <summary>
   /// This method checks whether eventoutputstream listeners for the given type still exist.
@@ -594,7 +504,7 @@ public:
   /// </summary>
   template <class T>
   bool CheckEventOutputStream(void){
-    return m_junctionBoxManager->CheckEventOutputStream<T>();
+    return m_junctionBoxManager->CheckEventOutputStream(typeid(T));
   }
 
   /// <returns>
@@ -655,8 +565,11 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<JunctionBox<T>> GetJunctionBox(void) {
+    // Add this type to the event registry. All events call this function
+    (void)RegEvent<T>::r;
+    
     return std::static_pointer_cast<JunctionBox<T>, JunctionBoxBase>(
-      m_junctionBoxManager->Get<T>()
+      m_junctionBoxManager->Get(typeid(T))
     );
   }
 
@@ -832,6 +745,14 @@ public:
     if(traits.subscriber)
       UnsnoopAutoPacket(traits);
   }
+  
+  /// <summary>
+  /// Resolution overload
+  /// </summary>
+  template<class T>
+  void Unsnoop(const Autowired<T>& snooper) {
+    return Unsnoop(static_cast<const std::shared_ptr<T>&>(snooper));
+  }
 
   /// <summary>
   /// Remove EventReceiver from parents unless its a member of the parent
@@ -1002,6 +923,12 @@ namespace autowiring {
   }
 }
 
+// Deprecated, use Inject
+template<typename T, typename... Args>
+std::shared_ptr<T> CoreContext::Construct(Args&&... args) {
+  return Inject<T>(std::forward<Args>(args)...);
+}
+
 /// <summary>
 /// Constant type optimization for named sigil types
 /// </summary>
@@ -1014,10 +941,7 @@ public:
 
   CoreContextT(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
     CoreContext(pParent, backReference, pPeer)
-  {
-    // Save anchored types in context
-    AddAnchorInternal((T*)nullptr);
-  }
+  {}
 
   const std::type_info& GetSigilType(void) const override { return sc_type; }
 };
@@ -1033,4 +957,3 @@ template<typename T, typename... Sigil>
 void CoreContext::AutoRequireMicroBolt(void) {
   Inject<MicroBolt<T, Sigil...>>();
 }
-

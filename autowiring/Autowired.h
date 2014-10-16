@@ -117,7 +117,7 @@ public:
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
 
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
-    AutowirableSlot<T>(ctxt ? ctxt->template ResolveAnchor<T>() : ctxt),
+    AutowirableSlot<T>(ctxt),
     m_pFirstChild(nullptr)
   {
     if(ctxt)
@@ -150,15 +150,6 @@ private:
   std::atomic<AutowirableSlot<T>*> m_pFirstChild;
 
 public:
-  operator T*(void) const {
-    return
-      static_cast<const AnySharedPointerT<T>*>(
-        static_cast<const AnySharedPointer*>(
-          this
-        )
-      )->slot()->get().get();
-  }
-
   operator const std::shared_ptr<T>&(void) const {
     return
       static_cast<const AnySharedPointerT<T>*>(
@@ -169,12 +160,11 @@ public:
   }
   
   operator std::weak_ptr<T>(void) const {
-    return
-      static_cast<const AnySharedPointerT<T>*>(
-        static_cast<const AnySharedPointer*>(
-          this
-        )
-      )->slot()->get();
+    return this->operator const std::shared_ptr<T>&();
+  }
+  
+  operator T*(void) const {
+    return this->operator const std::shared_ptr<T>&().get();
   }
   
   /// <summary>
@@ -286,7 +276,7 @@ public:
   /// </summary>
   template<class... Args>
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
-    std::shared_ptr<T>(ctxt->template Construct<T>(std::forward<Args>(args)...))
+    std::shared_ptr<T>(ctxt->template Inject<T>(std::forward<Args>(args)...))
   {}
 
   operator bool(void) const {
@@ -339,7 +329,7 @@ class AutoConstruct:
 public:
   template<class... Args>
   AutoConstruct(Args&&... args) :
-    std::shared_ptr<T>(CoreContext::CurrentContext()->template Construct<T>(std::forward<Args&&>(args)...))
+    std::shared_ptr<T>(CoreContext::CurrentContext()->template Inject<T>(std::forward<Args&&>(args)...))
   {}
 
   operator bool(void) const { return IsAutowired(); }

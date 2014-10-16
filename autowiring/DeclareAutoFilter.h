@@ -26,7 +26,7 @@ public:
 /// </remarks>
 template<class Base, class Ret, class... Args>
 std::shared_ptr<BasedAutoFilter<Base, Ret, Args...>> DeclareAutoFilter(Base* that, Ret (Base::*filter)(Args...)) {
-  return AutoCurrentContext()->template Construct<BasedAutoFilter<Base, Ret, Args...>>(
+  return AutoCurrentContext()->template Inject<BasedAutoFilter<Base, Ret, Args...>>(
     [that, filter] (Args... args) {
       return (that->*filter)(args...);
     }

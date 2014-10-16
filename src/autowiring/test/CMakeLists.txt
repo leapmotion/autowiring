@@ -1,7 +1,6 @@
 set(AutowiringTest_SRCS
   AnySharedPointerTest.cpp
   ArgumentTypeTest.cpp
-  AutoAnchorTest.cpp
   AutoConstructTest.cpp
   AutoFilterFunctionTest.cpp
   AutoFilterPipeTest.cpp

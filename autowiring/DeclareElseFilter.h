@@ -39,7 +39,7 @@ template<class Base>
 std::shared_ptr<MicroElseFilter<Base>> DeclareElseFilter(Base* that, void (Base::*filter)(const AutoPacket&)) {
   typedef typename SelectTypeUnifier<Base>::type t_repType;
 
-  return AutoCurrentContext()->template Construct<MicroElseFilter<Base>>(
+  return AutoCurrentContext()->template Inject<MicroElseFilter<Base>>(
     typeid(t_repType),
     [that, filter] (const AutoPacket& packet) {
       return (that->*filter)(packet);
@@ -69,7 +69,7 @@ std::shared_ptr<MicroElseFilter<Next>> DeclareElseFilter(
   // necessary to revisit this concept and instead declare a contingent filter piecewise in
   // terms of its input arguments rather than in terms of another filter entry.
   typedef typename SelectTypeUnifier<Base>::type t_repType;
-  return AutoCurrentContext()->template Construct<MicroElseFilter<Next>>(
+  return AutoCurrentContext()->template Inject<MicroElseFilter<Next>>(
     typeid(t_repType),
     [that, filter] (const AutoPacket& packet) {
       return (that->*filter)(packet);

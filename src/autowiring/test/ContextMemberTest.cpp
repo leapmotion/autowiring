@@ -143,7 +143,8 @@ TEST_F(ContextMemberTest, ComplexResetCase) {
     // Set up the cycle:
     AutoCreateContext ctxt;
     ctxtWeak = ctxt;
-    ctxt->Inject<RefersToTweedleDee, RefersToTweedleDum>();
+    ctxt->Inject<RefersToTweedleDee>();
+    ctxt->Inject<RefersToTweedleDum>();
 
     // Now try to reset the cycle:
     Autowired<RefersToTweedleDee> dee(ctxt);

@@ -71,7 +71,7 @@ public:
     // The context proper.  This is automatically assigned as the current
     // context when SetUp is invoked.
     AutoCreateContext create;
-    create->Construct<TestInfoProxy>(info);
+    create->Inject<TestInfoProxy>(info);
 
     // Add exception filter in this context:
     create->Inject<AutowiringEnclosureExceptionFilter>();

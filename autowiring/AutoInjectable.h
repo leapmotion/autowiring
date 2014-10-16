@@ -34,7 +34,7 @@ private:
   template<int... S>
   std::shared_ptr<T> CallByUnpackingTuple(index_tuple<S...>) const {
     auto ctxt = CoreContext::CurrentContext();
-    return ctxt->Construct<T>(std::get<S>(m_args)...);
+    return ctxt->Inject<T>(std::get<S>(m_args)...);
   }
 };
 
@@ -47,7 +47,7 @@ class AutoInjectableExpression<T>:
 {
 public:
   void operator()(AutoFuture* pFuture) const override {
-    auto added = CoreContext::CurrentContext()->Construct<T>();
+    auto added = CoreContext::CurrentContext()->Inject<T>();
     if(pFuture)
       *pFuture += added;
   }
