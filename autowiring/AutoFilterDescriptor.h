@@ -91,7 +91,7 @@ struct AutoFilterDescriptorStub {
   template<class MemFn>
   AutoFilterDescriptorStub(CallExtractor<MemFn> extractor, t_extractedCall pCall) :
     m_pType(&typeid(typename CallExtractor<MemFn>::type)),
-    m_pArgs(extractor.template Enumerate<AutoFilterDescriptorInput>()),
+    m_pArgs(CallExtractor<MemFn>::Enumerate<AutoFilterDescriptorInput>::types),
     m_deferred(extractor.deferred),
     m_arity(extractor.N),
     m_requiredCount(0),

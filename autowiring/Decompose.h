@@ -7,19 +7,6 @@ template<class... Ts>
 struct TemplatePack {
   static const int N = sizeof...(Ts);
 
-  /// <summary>
-  /// Returns an array of length N+1 of argument types on the bound type
-  /// </summary>
-  /// <remarks>
-  /// The last entry in this list is guaranteed to be nullptr.  The list's actual size is
-  /// one larger than the number of arguments, in order to allow a proper return for a zero-
-  /// argument function pointer.
-  /// </remarks>
-  static const std::type_info* (&Enumerate(void))[N + 1] {
-    static const std::type_info* ti [] = {&typeid(Ts)..., nullptr};
-    return ti;
-  }
-
   /// <returns>
   /// An array of type T, parameterized by the bound function's arguments
   /// </returns>
@@ -33,11 +20,14 @@ struct TemplatePack {
   /// base type T, or it must be a function returning a value of type T.
   /// </remarks>
   template<class T>
-  static const T(&Enumerate(void))[N + 1] {
-    static const T rb [] = {typename T::template rebind<Ts>()..., T()};
-    return rb;
-  }
+  struct Enumerate {
+    static const T types[N + 1];
+  };
 };
+
+template<class... Ts>
+template<class T>
+const T TemplatePack<Ts...>::Enumerate<T>::types[] = {typename T::template rebind<Ts>()..., T()};
 
 /// <summary>
 /// Provides some static reflection support for member function pointers
