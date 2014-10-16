@@ -38,10 +38,15 @@ struct CreationRules {
     auto* pSpace = Allocate<U>(nullptr);
 
     try {
-      // Stack location and placement new in one expression
-      return
-        SlotInformationStackLocation::PushStackLocation<U>(pSpace),
-        ::new (pSpace) U(std::forward<Args>(args)...);
+      // Push a new stack location so that all constructors from here know the injected type under construction
+      SlotInformationStackLocation loc(
+        &SlotInformationStump<U>::s_stump,
+        pSpace,
+        sizeof(U)
+      );
+
+      // And now we create our space
+      return ::new (pSpace) U(std::forward<Args>(args)...);
     }
     catch(...) {
       // Don't want memory leaks--but we also want to avoid calling the destructor, here, so we cast to void before freeing

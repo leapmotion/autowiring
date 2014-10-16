@@ -54,43 +54,10 @@ protected:
   virtual void assign(const SharedPointerSlot& rhs) {}
 
 public:
-  virtual operator bool(void) const { return false; }
+  operator bool(void) const { return !empty(); }
   virtual operator std::shared_ptr<Object>(void) const { return std::shared_ptr<Object>(); }
   virtual void* ptr(void) { return nullptr; }
   virtual const void* ptr(void) const { return nullptr; }
-
-  /// <summary>
-  /// Used to obtain a list of slots defined on this type, for reflection purposes
-  /// </summary>
-  /// <returns>
-  /// A pointer to the head of a linked list of slots on this context member
-  /// </returns>
-  /// <remarks>
-  /// A slot is an Autowired field defined within a specific type.  Slots are of particular
-  /// interest because they denote a compile-time relationship between two types, and generally
-  /// are one way to understand class relationships in a system.  Furthermore, because of their
-  /// compile-time nature, they are declarative and therefore denote a relationship between
-  /// types, rather than states, which makes it easier to understand how slots are linked.
-  ///
-  /// The returned value is cached, and should not be freed or modified as it may be in use
-  /// in other parts of the program.  The behavior of this method is undefined if it's called
-  /// on an object before the object is fully constructed (for instance, if the method is
-  /// invoked from a constructor).  This method will return correct results even if the
-  /// ContextMember type was not the first inherited type.
-  ///
-  /// If this method returns a correct result at any point, then all subsequent calls to this
-  /// method are guaranteed to return correct results, even in the aforementioned case where
-  /// the method is called during construction.  This method is guaranteed to return correct
-  /// results after the first instance of a concrete type is constructed.
-  ///
-  /// This list is guaranteed not to contain any AutowiredFast fields defined in the class.
-  ///
-  /// The linked list is guaranteed to be in reverse-sorted order
-  /// </remarks>
-  virtual const SlotInformationStumpBase& GetSlotInformation(void) const {
-    static const SlotInformationStump<void> unused;
-    return unused;
-  }
 
   /// <summary>
   /// Performs a placement new on the specified space with a type matching the current instance
@@ -209,7 +176,6 @@ public:
   /// Default for std library sorting of unique elements.
   /// In order to enable strict ordering std::type_info::before is used.
   /// </summary>
-  template<class T>
   bool operator<(const SharedPointerSlot& rhs) const {
     if(type().before(rhs.type()))
       return true;
@@ -220,13 +186,8 @@ public:
   /// Default for std library sorting of repeatable elements.
   /// In order to enable strict ordering std::type_info::before is used.
   /// </summary>
-  template<class T>
   bool operator<=(const SharedPointerSlot& rhs) const { return *this < rhs || *this == rhs; }
-
-  template<class T>
   bool operator>(const SharedPointerSlot& rhs) const { return !(*this <= rhs); }
-
-  template<class T>
   bool operator>=(const SharedPointerSlot& rhs) const { return !(*this < rhs); }
 
   /// <summary>
@@ -288,7 +249,13 @@ public:
   }
 };
 
-template<class T, bool is_object = std::is_base_of<Object, T>::value>
+struct SharedPointerSlotTOffsetBase {
+  static int cast_offset() {
+    throw std::bad_cast();
+  }
+};
+
+template<typename T, bool is_object = std::is_base_of<Object, T>::value>
 struct SharedPointerSlotTOffset {
   static int cast_offset() {
     return static_cast<int>(reinterpret_cast<int64_t>(
@@ -297,12 +264,8 @@ struct SharedPointerSlotTOffset {
   }
 };
 
-template<class T>
-struct SharedPointerSlotTOffset<T, false> {
-  static int cast_offset() {
-    throw std::bad_cast();
-  }
-};
+template<typename T>
+struct SharedPointerSlotTOffset<T, false> : SharedPointerSlotTOffsetBase {};
 
 template<class T>
 struct SharedPointerSlotT:
@@ -316,6 +279,10 @@ struct SharedPointerSlotT:
 
     // Make use of our space to make a shared pointer:
     new (m_space) std::shared_ptr<T>(rhs);
+  }
+
+  SharedPointerSlotT(const SharedPointerSlotT<T>& rhs) {
+    new (m_space) std::shared_ptr<T>(rhs.get());
   }
 
   ~SharedPointerSlotT(void) override {
@@ -355,12 +322,14 @@ public:
       throw autowiring_error("Attempted to obtain a non-const void pointer value from a const-type shared pointer");
     return (void*)get().get();
   }
-  virtual const void* ptr(void) const override { return get().get(); }
+  virtual const void* ptr(void) const override {
+    return get().get();
+  }
 
   virtual void New(void* pSpace, size_t nBytes) const override {
     if(nBytes < sizeof(*this))
       throw std::runtime_error("Attempted to construct a SharedPointerSlotT in a space that was too small");
-    new (pSpace) SharedPointerSlotT<T>(get());
+    new (pSpace) SharedPointerSlotT<T>(*this);
   }
 
   bool try_assign(const std::shared_ptr<Object>& rhs) override {
@@ -373,12 +342,7 @@ public:
     return true;
   }
 
-  const SlotInformationStumpBase& GetSlotInformation(void) const override {
-    return SlotInformationStump<T>::s_stump;
-  }
-
   bool empty(void) const { return get() == nullptr; }
-  operator bool(void) const override { return !!get().get(); }
   const std::type_info& type(void) const override { return typeid(T); }
 
   void reset(void) override {

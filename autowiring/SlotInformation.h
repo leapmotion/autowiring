@@ -82,7 +82,6 @@ template<class T>
 struct SlotInformationStump<T, false>:
   SlotInformationStumpBase
 {
-  SlotInformationStump(){}
   static SlotInformationStump s_stump;
 };
 
@@ -90,36 +89,27 @@ struct SlotInformationStump<T, false>:
 /// Specializations for types which will be using the type unifier
 /// </summary>
 template<class T>
-struct SlotInformationStump<T, true>
+struct SlotInformationStump<T, true>:
+  public SlotInformationStump<typename SelectTypeUnifier<T>::type>
 {
-  SlotInformationStump(){}
-  static SlotInformationStump<typename SelectTypeUnifier<T>::type>& s_stump;
 };
 
 template<class T>
 SlotInformationStump<T, false> SlotInformationStump<T, false>::s_stump;
 
-template<class T>
-SlotInformationStump<typename SelectTypeUnifier<T>::type>& SlotInformationStump<T, true>::s_stump = SlotInformationStump<typename SelectTypeUnifier<T>::type>::s_stump;
-
 /// <summary>
 /// A stack location linked list, stored in a per-thread basis and used to track slots
 /// </summary>
 class SlotInformationStackLocation {
-private:
+public:
   SlotInformationStackLocation(const SlotInformationStackLocation& rhs) = delete;
-  SlotInformationStackLocation(SlotInformationStackLocation&& rhs) :
-    m_pPrior(rhs.m_pPrior),
-    m_pStump(rhs.m_pStump),
-    m_pCur(rhs.m_pCur),
-    m_pObj(rhs.m_pObj),
-    m_extent(rhs.m_extent)
-  {
-    rhs.m_pStump = nullptr;
-  }
+  SlotInformationStackLocation(SlotInformationStackLocation&& rhs) = delete;
+
+  /// <summary>
+  /// Registers a new stack location on the current thread, used to provide slot reflection services in Autowiring
+  /// </summary>
   SlotInformationStackLocation(SlotInformationStumpBase* pStump, const void* pObj = nullptr, size_t extent = 0);
 
-public:
   ~SlotInformationStackLocation(void);
 
 private:
@@ -152,19 +142,6 @@ public:
   /// </summary>
   SlotInformationStumpBase* GetStump(void) const {
     return m_pStump;
-  }
-
-  /// <returns>
-  /// Creates a new stack location which remains current as long as the return type is not destroyed
-  /// </returns>
-  /// <param name="pSpace">The pointer to the base of the space about to be constructed</param>
-  template<class T>
-  static SlotInformationStackLocation PushStackLocation(T* pSpace) {
-    return SlotInformationStackLocation(
-      &SlotInformationStump<T>::s_stump,
-      pSpace,
-      sizeof(T)
-    );
   }
 
   /// <summary>
