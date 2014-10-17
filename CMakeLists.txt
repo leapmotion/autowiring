@@ -154,11 +154,13 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   # leave those alone.
   SET(CPACK_WIX_TEMPLATE autowiring.wxs)
   SET(CPACK_MONOLITHIC_INSTALL ON)
-  
+
   # Run the script that will grab the debug and release configurations and install them during packaging
   set(CPACK_INSTALL_COMMANDS
-    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Debug --target install"
-    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Release --target install"
+    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Debug --target all_build"
+    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Release --target all_build"
+    "${CMAKE_COMMAND} -DBUILD_TYPE=Debug -P \\\"${CMAKE_SOURCE_DIR}/cmake_package.cmake\\\""
+    "${CMAKE_COMMAND} -DBUILD_TYPE=Release -P \\\"${CMAKE_SOURCE_DIR}/cmake_package.cmake\\\""
   )
 
   # Pick the generator in an appropriate way
