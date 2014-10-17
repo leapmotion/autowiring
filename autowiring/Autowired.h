@@ -365,24 +365,6 @@ public:
 private:
   std::weak_ptr<JunctionBox<T>> m_junctionBox;
 
-  template<class MemFn, bool isDeferred = std::is_same<typename Decompose<MemFn>::retType, Deferred>::value>
-  struct Selector {
-    typedef std::function<typename Decompose<MemFn>::fnType> retType;
-
-    static inline retType Select(JunctionBox<T>* pJunctionBox, MemFn pfn) {
-      return pJunctionBox->Defer(pfn);
-    }
-  };
-
-  template<class MemFn>
-  struct Selector<MemFn, false> {
-    typedef std::function<typename Decompose<MemFn>::fnType> retType;
-
-    static inline retType Select(JunctionBox<T>* pJunctionBox, MemFn pfn) {
-      return pJunctionBox->Fire(pfn);
-    }
-  };
-
 public:
   bool HasListeners(void) const {
     //TODO: Refactor this so it isn't messy

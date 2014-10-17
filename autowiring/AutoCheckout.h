@@ -8,7 +8,7 @@ class AutoPacket;
 template<class T>
 class AutoCheckout {
 public:
-  typedef void (AutoPacket::*t_completion)(bool, const std::type_info&);
+  typedef void (AutoPacket::*t_completion)(bool, const std::type_info&, const std::type_info&);
 
   AutoCheckout(void) :
     m_parent(nullptr),
@@ -40,7 +40,7 @@ public:
 
   ~AutoCheckout(void) {
     if(m_val)
-      (m_parent->*completion)(m_ready, *m_source);
+      (m_parent->*completion)(m_ready, typeid(T), *m_source);
   }
 
 private:
