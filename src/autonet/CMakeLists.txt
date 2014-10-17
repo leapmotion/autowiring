@@ -1,4 +1,4 @@
-find_package(Boost COMPONENTS regex system QUIET)
+find_package(Boost COMPONENTS system QUIET)
 if(NOT Boost_FOUND)
   message("Cannot build Autonet, boost not installed on this system")
   return()
@@ -13,6 +13,11 @@ add_googletest(test)
 include_directories(
   ${Boost_INCLUDE_DIR}
 )
+
+# Needed to link boost on windows
+if(WIN32)
+  link_directories(${Boost_LIBRARY_DIRS})
+endif()
 
 set(AutoNet_SRCS
   AutoNetServer.cpp
