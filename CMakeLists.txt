@@ -72,8 +72,14 @@ else()
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
 endif()
 
+# 64-bit installations should suffix with 64
+if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
+  set(CMAKE_DEBUG_POSTFIX "64")
+  set(CMAKE_RELEASE_POSTFIX "64")
+endif()
+
 # Postfix on all debug libraries should be "d"
-set(CMAKE_DEBUG_POSTFIX d)
+set(CMAKE_DEBUG_POSTFIX d${CMAKE_DEBUG_POSTFIX})
 
 option(AUTOWIRING_BUILD_TESTS "Build Autowiring unit tests" ${AUTOWIRING_BUILD_TESTS_DEFAULT})
 function(add_googletest dirname)
@@ -152,7 +158,7 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   # Need a custom wix installation template so that we update the CMake package registry correctly
   # Only really needed on Windows; Mac and Linux have pretty good default search behavior, so we
   # leave those alone.
-  SET(CPACK_WIX_TEMPLATE autowiring.wxs)
+  SET(CPACK_WIX_TEMPLATE "${CMAKE_SOURCE_DIR}/autowiring.wxs")
   SET(CPACK_MONOLITHIC_INSTALL ON)
 
   # Run the script that will grab the debug and release configurations and install them during packaging
