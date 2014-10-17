@@ -13,14 +13,14 @@ set(AutoNetTest_SRCS
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutoNetTest_SRCS)
 
-add_executable(AutoNetTest ${AutoNetTest_SRCS})
-target_link_libraries(AutoNetTest AutoTesting AutoNet Autowiring ${Boost_LIBRARIES})
-set_property(TARGET AutoNetTest PROPERTY FOLDER "Autowiring")
-
 # Needed to link boost on windows
 if(WIN32)
   link_directories(${Boost_LIBRARY_DIRS})
-endif(WIN32)
+endif()
+
+add_executable(AutoNetTest ${AutoNetTest_SRCS})
+target_link_libraries(AutoNetTest AutoTesting AutoNet Autowiring ${Boost_LIBRARIES})
+set_property(TARGET AutoNetTest PROPERTY FOLDER "Autowiring")
 
 # This is a unit test, let CMake know this
 add_test(NAME AutoNetTest COMMAND $<TARGET_FILE:AutoNetTest>)
