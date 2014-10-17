@@ -151,6 +151,13 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   # Targets file is needed in order to describe how to link Autowiring to the rest of the system
   install(EXPORT AutowiringTargets FILE AutowiringTargets.cmake COMPONENT autowiring NAMESPACE Autowiring:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
+  # 64-bit installations get a different upgrade GUID
+  if(CMAKE_SIZEOF_VOID_P STREQUAL 8)
+    set(autowiring_GUID_LAST_CHAR E)
+  else()
+    set(autowiring_GUID_LAST_CHAR D)
+  endif()
+
   # This is the upgrade GUID.  Part of the GUID is derived from the major version number.  Any time
   # the major version number is adjusted, the upgrade GUID changes.  This allows multiple versions
   # of the same product to be installed on a user's system at the same time, but also means that
@@ -158,7 +165,7 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   #
   # For more information on the rationale for this process, see the discussion on semantic versioning
   # found at http://semver.org/
-  SET(CPACK_WIX_UPGRADE_GUID "{060E5EDD-229${autowiring_VERSION_MAJOR}-4AD8-BAFA-A303D5696A2D}")
+  SET(CPACK_WIX_UPGRADE_GUID "{060E5EDD-229${autowiring_VERSION_MAJOR}-4AD8-BAFA-A303D5696A2${autowiring_GUID_LAST_CHAR}}")
 
   # Need a custom wix installation template so that we update the CMake package registry correctly
   # Only really needed on Windows; Mac and Linux have pretty good default search behavior, so we
