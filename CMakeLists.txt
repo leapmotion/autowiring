@@ -72,8 +72,14 @@ else()
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
 endif()
 
+# 64-bit installations should suffix with 64
+if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
+  set(CMAKE_DEBUG_POSTFIX "64")
+  set(CMAKE_RELEASE_POSTFIX "64")
+endif()
+
 # Postfix on all debug libraries should be "d"
-set(CMAKE_DEBUG_POSTFIX d)
+set(CMAKE_DEBUG_POSTFIX d${CMAKE_DEBUG_POSTFIX})
 
 option(AUTOWIRING_BUILD_TESTS "Build Autowiring unit tests" ${AUTOWIRING_BUILD_TESTS_DEFAULT})
 function(add_googletest dirname)
@@ -109,6 +115,11 @@ include_directories(
 )
 
 # CMake configurations
+if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
+  set(autowiring_ARCHITECTURE "64")
+else()
+  set(autowiring_ARCHITECTURE "32")
+endif()
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
 configure_file(AutowiringConfig.h.in ${PROJECT_SOURCE_DIR}/autowiring/AutowiringConfig.h @ONLY)
@@ -140,6 +151,13 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   # Targets file is needed in order to describe how to link Autowiring to the rest of the system
   install(EXPORT AutowiringTargets FILE AutowiringTargets.cmake COMPONENT autowiring NAMESPACE Autowiring:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
+  # 64-bit installations get a different upgrade GUID
+  if(CMAKE_SIZEOF_VOID_P STREQUAL 8)
+    set(autowiring_GUID_LAST_CHAR E)
+  else()
+    set(autowiring_GUID_LAST_CHAR D)
+  endif()
+
   # This is the upgrade GUID.  Part of the GUID is derived from the major version number.  Any time
   # the major version number is adjusted, the upgrade GUID changes.  This allows multiple versions
   # of the same product to be installed on a user's system at the same time, but also means that
@@ -147,12 +165,12 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   #
   # For more information on the rationale for this process, see the discussion on semantic versioning
   # found at http://semver.org/
-  SET(CPACK_WIX_UPGRADE_GUID "{060E5EDD-229${autowiring_VERSION_MAJOR}-4AD8-BAFA-A303D5696A2D}")
+  SET(CPACK_WIX_UPGRADE_GUID "{060E5EDD-229${autowiring_VERSION_MAJOR}-4AD8-BAFA-A303D5696A2${autowiring_GUID_LAST_CHAR}}")
 
   # Need a custom wix installation template so that we update the CMake package registry correctly
   # Only really needed on Windows; Mac and Linux have pretty good default search behavior, so we
   # leave those alone.
-  SET(CPACK_WIX_TEMPLATE autowiring.wxs)
+  SET(CPACK_WIX_TEMPLATE "${CMAKE_SOURCE_DIR}/autowiring.wxs")
   SET(CPACK_MONOLITHIC_INSTALL ON)
 
   # Run the script that will grab the debug and release configurations and install them during packaging

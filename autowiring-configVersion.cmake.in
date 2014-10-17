@@ -1,5 +1,12 @@
 set(PACKAGE_VERSION "@autowiring_VERSION@")
 
+# Verify that we have a bit depth matching the bit depth desired by the customer
+if(NOT ${CMAKE_SIZEOF_VOID_P} STREQUAL @CMAKE_SIZEOF_VOID_P@)
+  set(PACKAGE_VERSION_COMPATIBLE FALSE)
+  set(PACKAGE_VERSION_UNSUITABLE TRUE)
+  return()
+endif()
+
 # Check whether the requested PACKAGE_FIND_VERSION is compatible
 if("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}")
   set(PACKAGE_VERSION_COMPATIBLE FALSE)
