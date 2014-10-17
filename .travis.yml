@@ -52,7 +52,7 @@ before_script:
 script:
   # Build Autowriring, run unit tests, and install
   - make -j 8 || make
-  - make test
+  - ctest --output-on-failure
   - sudo make install
 
   # Package
