@@ -115,6 +115,11 @@ include_directories(
 )
 
 # CMake configurations
+if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
+  set(autowiring_ARCHITECTURE "64")
+else()
+  set(autowiring_ARCHITECTURE "32")
+endif()
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
 configure_file(AutowiringConfig.h.in ${PROJECT_SOURCE_DIR}/autowiring/AutowiringConfig.h @ONLY)
