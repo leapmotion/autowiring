@@ -11,6 +11,7 @@ cmake_install.cmake
 *.opensdf
 *.ipch
 *.dir
+*.lib
 Win32
 Debug
 Release
@@ -35,3 +36,4 @@ autowiring/AutowiringConfig.h
 *.nupkg
 lib/*.*
 autowiring-*-*.zip
+_CPack_Packages
