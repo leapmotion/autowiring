@@ -1,4 +1,4 @@
-find_package(Boost COMPONENTS regex system QUIET)
+find_package(Boost COMPONENTS system QUIET)
 if(NOT Boost_FOUND)
   message("Cannot build Autonet, boost not installed on this system")
   return()
@@ -14,6 +14,11 @@ include_directories(
   ${Boost_INCLUDE_DIR}
 )
 
+# Needed to link boost on windows
+if(WIN32)
+  link_directories(${Boost_LIBRARY_DIRS})
+endif()
+
 set(AutoNet_SRCS
   AutoNetServer.cpp
   AutoNetServer.h
@@ -27,9 +32,9 @@ set(AutoNet_SRCS
 rewrite_header_paths(AutoNet_SRCS)
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutoNet_SRCS)
 
-add_library(AutoNet STATIC ${AutoNet_SRCS})
+add_library(AutoNet SHARED ${AutoNet_SRCS})
 set_target_properties(AutoNet PROPERTIES DEBUG_POSTFIX d)
-target_link_libraries(AutoNet Autowiring)
+target_link_libraries(AutoNet Autowiring ${Boost_LIBRARIES})
 set_property(TARGET AutoNet PROPERTY FOLDER "Autowiring")
 
 #

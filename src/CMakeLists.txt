@@ -6,16 +6,20 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/autotesting
 )
 
-if(APPLE)
-  # Boost is actually required on Mac
-  find_package(Boost REQUIRED)
-else()
-  find_package(Boost)
-endif()
+# The boost C++11 shim is required when building without USE_LIBCXX
+if(NOT USE_LIBCXX)
+  find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
 
-# If we can find boost, then go ahead and pull in its include directory
-if(Boost_FOUND)
+  if (NOT Boost_FOUND)
+    message(FATAL_ERROR "Boost is required when building without USE_LIBCXX")
+  endif()
+
   include_directories(${Boost_INCLUDE_DIR})
+
+  # Needed to link boost on windows
+  if(WIN32)
+    link_directories(${Boost_LIBRARY_DIRS})
+  endif()
 endif()
 
 add_subdirectory(autonet)
