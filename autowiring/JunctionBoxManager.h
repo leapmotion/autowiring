@@ -20,9 +20,6 @@ class OutputStreamVector;
 template<typename T>
 class EventOutputStream;
 
-template<typename T>
-class JunctionBox;
-
 /// <summary>
 /// General manager class of all junction boxes defined in some context
 /// </summary>

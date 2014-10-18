@@ -4,11 +4,19 @@
 #include "AutoPacketFactory.h"
 #include "AutowiringEvents.h"
 #include "JunctionBox.h"
+#include "EventRegistry.h"
 
 JunctionBoxManager::JunctionBoxManager(void) {
   // Enumerate all event types to initialize a new JunctionBox for each
   for (auto p = g_pFirstEventEntry; p; p = p->pFlink)
     m_junctionBoxes[p->ti] = p->NewJunctionBox();
+  
+  // HACK, EventRegistry isn't detecting AutowiringEvents
+  m_junctionBoxes[typeid(AutowiringEvents)] = std::make_shared<JunctionBox<AutowiringEvents>>();
+  
+  // Make sure AutowiringEvents is in EventRegistry
+  assert(m_junctionBoxes.find(typeid(AutowiringEvents)) != m_junctionBoxes.end()
+         && "AutowiringEvents wasn't added to the event registry");
   
   // Always allow internal events
   m_junctionBoxes[typeid(AutowiringEvents)]->Initiate();
