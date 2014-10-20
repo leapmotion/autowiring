@@ -114,13 +114,17 @@ TEST_F(AutoInjectableTest, VerifyInjectableAdditionPermutation3) {
   ASSERT_TRUE(mySimpleObj.IsAutowired()) << "Combined injectable failed to introduce a zero-arguments constructed";
 }
 
+class DummyObj:
+  public ContextMember
+{};
+
 TEST_F(AutoInjectableTest, VerifySimpleThreadWait) {
   // Immediate kickoff:
   AutoCurrentContext()->Initiate();
 
   // Make an injectable, run it, and stuff it right into a future:
   AutoFuture future;
-  MakeInjectable<CoreThread>()(&future);
+  MakeInjectable<DummyObj, CoreThread>()(&future);
 
   // Make a thread and then start it going:
   Autowired<CoreThread> thread;

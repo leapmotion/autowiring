@@ -138,7 +138,7 @@ public:
     if(pValue)
       pValue->operator()(pFuture);
     if(pFLink)
-      pFLink->operator()();
+      pFLink->operator()(pFuture);
   }
 
   AutoInjectable& operator+=(AutoInjectable&& other) {
