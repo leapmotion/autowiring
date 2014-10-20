@@ -7,6 +7,19 @@ class AutoInjectableTest:
   public testing::Test
 {};
 
+
+TEST_F(AutoInjectableTest, BaseInjectableCase) {
+  AutoCurrentContext ctxt;
+  const size_t initial = ctxt->GetMemberCount();
+
+  // Make a null injectable, and inject it
+  auto base = MakeInjectable<>();
+  base();
+
+  // Verify that the context membership count did not change
+  ASSERT_EQ(initial, ctxt->GetMemberCount()) << "Null injectable unexpectedly altered the context member count--it must have injected something";
+}
+
 TEST_F(AutoInjectableTest, VerifySimpleInjection) {
   auto injector = MakeInjectable<SimpleObject>();
   injector();
@@ -101,13 +114,17 @@ TEST_F(AutoInjectableTest, VerifyInjectableAdditionPermutation3) {
   ASSERT_TRUE(mySimpleObj.IsAutowired()) << "Combined injectable failed to introduce a zero-arguments constructed";
 }
 
+class DummyObj:
+  public ContextMember
+{};
+
 TEST_F(AutoInjectableTest, VerifySimpleThreadWait) {
   // Immediate kickoff:
   AutoCurrentContext()->Initiate();
 
   // Make an injectable, run it, and stuff it right into a future:
   AutoFuture future;
-  MakeInjectable<CoreThread>()(&future);
+  MakeInjectable<DummyObj, CoreThread>()(&future);
 
   // Make a thread and then start it going:
   Autowired<CoreThread> thread;
