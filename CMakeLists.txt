@@ -175,8 +175,8 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
 
   # Run the script that will grab the debug and release configurations and install them during packaging
   set(CPACK_INSTALL_COMMANDS
-    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Debug --target all_build"
-    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Release --target all_build"
+    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Debug"
+    "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Release"
     "${CMAKE_COMMAND} -DBUILD_TYPE=Debug -P \\\"${CMAKE_SOURCE_DIR}/cmake_package.cmake\\\""
     "${CMAKE_COMMAND} -DBUILD_TYPE=Release -P \\\"${CMAKE_SOURCE_DIR}/cmake_package.cmake\\\""
   )
