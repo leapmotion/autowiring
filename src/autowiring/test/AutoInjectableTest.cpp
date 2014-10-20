@@ -7,6 +7,19 @@ class AutoInjectableTest:
   public testing::Test
 {};
 
+
+TEST_F(AutoInjectableTest, BaseInjectableCase) {
+  AutoCurrentContext ctxt;
+  const size_t initial = ctxt->GetMemberCount();
+
+  // Make a null injectable, and inject it
+  auto base = MakeInjectable<>();
+  base();
+
+  // Verify that the context membership count did not change
+  ASSERT_EQ(initial, ctxt->GetMemberCount()) << "Null injectable unexpectedly altered the context member count--it must have injected something";
+}
+
 TEST_F(AutoInjectableTest, VerifySimpleInjection) {
   auto injector = MakeInjectable<SimpleObject>();
   injector();
