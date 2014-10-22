@@ -5,11 +5,10 @@
 
 # Check if local build
 if ("@CMAKE_CURRENT_BINARY_DIR@" STREQUAL CMAKE_CURRENT_LIST_DIR)
-  include("${CMAKE_CURRENT_LIST_DIR}/AutowiringTargets.cmake")
   set(autowiring_INCLUDE_DIR "@PROJECT_SOURCE_DIR@")
 else()
-  include("@CMAKE_INSTALL_PREFIX@/cmake/AutowiringTargets.cmake")
-  set(autowiring_INCLUDE_DIR "@CMAKE_INSTALL_PREFIX@/include")
+  set(autowiring_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/../include")
 endif()
 
+include("${CMAKE_CURRENT_LIST_DIR}/AutowiringTargets.cmake")
 set(autowiring_FOUND TRUE)
