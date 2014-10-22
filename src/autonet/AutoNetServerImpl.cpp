@@ -252,7 +252,7 @@ void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
   }
 
   SendMessage(hdl, "subscribed", types);
-  AutoGlobalContext()->BuildCurrentState();
+  GetContext()->BuildCurrentState();
 
   // Send breakpoint message
   for(const auto& breakpoint : m_breakpoints) {
