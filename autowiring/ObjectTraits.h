@@ -8,6 +8,7 @@
 #include "AnySharedPointer.h"
 #include "AutoFilterDescriptor.h"
 
+#include "AutowiringEvents.h"
 #include "Object.h"
 #include "ContextMember.h"
 #include "CoreRunnable.h"
@@ -41,7 +42,7 @@ struct ObjectTraits {
           if (identifier->IsSameAs(pObject.get()))
             return true;
         }
-        return false;
+        return !!dynamic_cast<const AutowiringEvents*>(pObject.get());
       }()
     )
   {
