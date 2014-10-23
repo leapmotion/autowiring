@@ -11,8 +11,8 @@
 // created if our static library is imported by another project that uses an incompatible
 // version of websocketpp.
 #define websocketpp websocketpp_autonet
-#include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
+#include <websocketpp/config/asio_no_tls.hpp>
 
 struct ObjectTraits;
 struct TypeIdentifierBase;
