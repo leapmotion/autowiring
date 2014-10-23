@@ -264,7 +264,7 @@ private:
         }
 
         uint64_converter temp64;
-        temp64.i = lib::net::htonll(payload_size);
+        temp64.i = lib::net::htonll_good(payload_size);
         std::copy(temp64.c+payload_offset,temp64.c+8,bytes);
 
         return 8-payload_offset;
@@ -581,7 +581,7 @@ inline uint16_t get_extended_size(const extended_header &e) {
 inline uint64_t get_jumbo_size(const extended_header &e) {
     uint64_converter temp64;
     std::copy(e.bytes,e.bytes+8,temp64.c);
-    return lib::net::ntohll(temp64.i);
+    return lib::net::ntohll_good(temp64.i);
 }
 
 /// Extract the full payload size field from a WebSocket header
