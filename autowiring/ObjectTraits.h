@@ -42,6 +42,7 @@ struct ObjectTraits {
           if (identifier->IsSameAs(pObject.get()))
             return true;
         }
+        // HACK: Manually check if type implements AutowiringEvents
         return !!dynamic_cast<const AutowiringEvents*>(pObject.get());
       }()
     )

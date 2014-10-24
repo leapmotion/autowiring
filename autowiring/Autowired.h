@@ -198,7 +198,7 @@ public:
 /// </remarks>
 template<class T>
 class AutoRequired:
-public std::shared_ptr<T>
+  public std::shared_ptr<T>
 {
 public:
   using std::shared_ptr<T>::operator=;
@@ -227,7 +227,7 @@ public:
   //
   // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
-  std::shared_ptr<T>(ctxt->template Inject<T>())
+    std::shared_ptr<T>(ctxt->template Inject<T>())
   {}
   
   /// <summary>
@@ -235,7 +235,7 @@ public:
   /// </summary>
   template<class... Args>
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
-  std::shared_ptr<T>(ctxt->template Inject<T>(std::forward<Args>(args)...))
+    std::shared_ptr<T>(ctxt->template Inject<T>(std::forward<Args>(args)...))
   {}
   
   operator bool(void) const {
