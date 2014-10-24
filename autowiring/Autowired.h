@@ -66,18 +66,6 @@ typedef AutoCreateContextT<void> AutoCreateContext;
 
 
 /// <summary>
-/// Idiom to enable boltable classes
-/// </summary>
-template<class T>
-class AutoEnable
-{
-public:
-  AutoEnable(std::shared_ptr<CoreContext> ctxt = CoreContext::CurrentContext()) {
-    ctxt->Enable<T>();
-  }
-};
-
-/// <summary>
 /// An autowired template class that forms the foundation of the context consumer system
 /// </summary>
 /// <param name="T">The class whose type is to be found.  Must be an EXACT match.</param>
@@ -92,30 +80,6 @@ class Autowired:
   public AutowirableSlot<T>
 {
 public:
-  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-  // If you are getting an error tracked to this line, ensure that class T is totally
-  // defined at the point where the Autowired instance is constructed.  Generally,
-  // such errors are tracked to missing header files.  A common mistake, for instance,
-  // is to do something like this:
-  //
-  // class MyClass;
-  //
-  // struct MyStructure {
-  //   Autowired<MyClass> m_member;
-  // };
-  //
-  // At the time m_member is instantiated, MyClass is an incomplete type.  So, when the
-  // compiler tries to instantiate AutowiredCreator::Create (the function you're in right
-  // now!) it finds that it can't create a new instance of type MyClass because it has
-  // no idea how to construct it!
-  //
-  // This problem can be fixed two ways:  You can include the definition of MyClass before
-  // MyStructure is defined, OR, you can give MyStructure a nontrivial constructor, and
-  // then ensure that the definition of MyClass is available before the nontrivial
-  // constructor is defined.
-  //
-  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
     AutowirableSlot<T>(ctxt),
     m_pFirstChild(nullptr)
@@ -221,6 +185,71 @@ public:
 };
 
 /// <summary>
+/// Similar to Autowired, Creates a new instance if this instance isn't autowired
+/// </summary>
+/// <remarks>
+/// This class is simply a convenience class and provides a declarative way to name a required dependency.
+///
+/// If type T has a static member function called New, the helper's Create routine will attempt call
+/// this function instead of the default constructor, even if the default constructor has been supplied,
+/// and even if the arity of the New routine is not zero.
+///
+/// To prevent this behavior, use a name other than New.
+/// </remarks>
+template<class T>
+class AutoRequired:
+public std::shared_ptr<T>
+{
+public:
+  using std::shared_ptr<T>::operator=;
+  
+  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
+  // If you are getting an error tracked to this line, ensure that class T is totally
+  // defined at the point where the Autowired instance is constructed.  Generally,
+  // such errors are tracked to missing header files.  A common mistake, for instance,
+  // is to do something like this:
+  //
+  // class MyClass;
+  //
+  // struct MyStructure {
+  //   Autowired<MyClass> m_member;
+  // };
+  //
+  // At the time m_member is instantiated, MyClass is an incomplete type.  So, when the
+  // compiler tries to instantiate AutowiredCreator::Create (the function you're in right
+  // now!) it finds that it can't create a new instance of type MyClass because it has
+  // no idea how to construct it!
+  //
+  // This problem can be fixed two ways:  You can include the definition of MyClass before
+  // MyStructure is defined, OR, you can give MyStructure a nontrivial constructor, and
+  // then ensure that the definition of MyClass is available before the nontrivial
+  // constructor is defined.
+  //
+  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
+  AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
+  std::shared_ptr<T>(ctxt->template Inject<T>())
+  {}
+  
+  /// <summary>
+  /// Construct overload, for types which take constructor arguments
+  /// </summary>
+  template<class... Args>
+  AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
+  std::shared_ptr<T>(ctxt->template Inject<T>(std::forward<Args>(args)...))
+  {}
+  
+  operator bool(void) const {
+    return IsAutowired();
+  }
+  
+  operator T*(void) const {
+    return std::shared_ptr<T>::get();
+  }
+  
+  bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
+};
+
+/// <summary>
 /// Similar to Autowired, but doesn't defer creation if types doesn't already exist
 /// </summary>
 template<class T>
@@ -230,7 +259,7 @@ class AutowiredFast:
 public:
   using std::shared_ptr<T>::operator=;
 
-  // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
+  // !!!!! Read comment in AutoRequired if you get a compiler error here !!!!!
   AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) {
     if(ctxt)
       ctxt->FindByTypeRecursive(*this);
@@ -248,46 +277,16 @@ public:
 };
 
 /// <summary>
-/// Similar to Autowired, Creates a new instance if this instance isn't autowired
+/// Idiom to enable boltable classes
 /// </summary>
-/// <remarks>
-/// This class is simply a convenience class and provides a declarative way to name a required dependency.
-///
-/// If type T has a static member function called New, the helper's Create routine will attempt call
-/// this function instead of the default constructor, even if the default constructor has been supplied,
-/// and even if the arity of the New routine is not zero.
-///
-/// To prevent this behavior, use a name other than New.
-/// </remarks>
 template<class T>
-class AutoRequired:
-  public std::shared_ptr<T>
+class AutoEnable
 {
 public:
-  using std::shared_ptr<T>::operator=;
-
-  // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
-  AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
-    std::shared_ptr<T>(ctxt->template Inject<T>())
-  {}
-
-  /// <summary>
-  /// Construct overload, for types which take constructor arguments
-  /// </summary>
-  template<class... Args>
-  AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
-    std::shared_ptr<T>(ctxt->template Inject<T>(std::forward<Args>(args)...))
-  {}
-
-  operator bool(void) const {
-    return IsAutowired();
+  // !!!!! Read comment in AutoRequired if you get a compiler error here !!!!!
+  AutoEnable(std::shared_ptr<CoreContext> ctxt = CoreContext::CurrentContext()) {
+    ctxt->Enable<T>();
   }
-
-  operator T*(void) const {
-    return std::shared_ptr<T>::get();
-  }
-
-  bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
 };
 
 /// <summary>
