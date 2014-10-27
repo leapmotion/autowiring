@@ -427,3 +427,10 @@ TEST_F(AutoFilterPipeTest, VerifyTwoAutoFilterCallsAutoOut) {
   ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter of implicitly decorated type was called " << one2zero->m_called_in << " times";
   ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
 }
+
+TEST_F(AutoFilterPipeTest, EmptyTupleHash) {
+  std::tuple<> empty;
+  std::hash<std::tuple<>> hasher;
+  size_t foo = hasher(empty);
+  ASSERT_EQ(foo, 0);
+}

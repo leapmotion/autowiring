@@ -26,19 +26,20 @@ else()
   endif()
 endif()
 
+set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
 if(USE_LIBCXX)
   # Clang needs special additional flags to build with C++11
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
     # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
     message("AppleClang C++11")
-    set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     message("Clang C++11")
-    set(CMAKE_CXX_FLAGS "-std=c++11")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     message("GCC C++11")
-    set(CMAKE_CXX_FLAGS "-std=c++11")
   endif()
 endif()
 
