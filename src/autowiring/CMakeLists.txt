@@ -107,6 +107,7 @@ set(Autowiring_SRCS
   atomic_object.h
   unlock_object.h
   Object.h
+  Object.cpp
   ObjectPool.h
   ObjectPoolMonitor.h
   ObjectPoolMonitor.cpp
