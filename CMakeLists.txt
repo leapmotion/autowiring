@@ -26,8 +26,10 @@ else()
   endif()
 endif()
 
-set(CMAKE_CXX_FLAGS "-std=c++11")
-set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
+if(NOT WIN32)
+  set(CMAKE_CXX_FLAGS "-std=c++11")
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
+endif()
 if(USE_LIBCXX)
   # Clang needs special additional flags to build with C++11
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
