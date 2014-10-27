@@ -7,6 +7,9 @@
   #define NOMINMAX
 #endif
 
+// Defined when we are exporting symbols
+#define AUTOWIRING_EXPORT_AUTONET
+
 #ifndef _MSC_VER
   #include <stdlib.h>
 #else
