@@ -34,7 +34,7 @@ if(USE_LIBCXX)
     # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
     message("AppleClang C++11")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     message("Clang C++11")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
