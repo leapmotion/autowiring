@@ -74,7 +74,7 @@ struct SatCounter:
     remaining = m_requiredCount;
     optional = m_optionalCount;
     satisfaction.clear();
-    satisfaction.reserve(m_requiredCount + m_optionalCount);
+    //C++11satisfaction.reserve(m_requiredCount + m_optionalCount);
 
     // Insert this type as a provider of output arguments
     for (auto& data : m_dataMap) {

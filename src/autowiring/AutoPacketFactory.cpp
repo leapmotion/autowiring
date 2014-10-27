@@ -294,7 +294,7 @@ void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std
     // List all correctly oriented arguments
     std::unordered_set<const std::type_info*> dataOutTypes;
     std::unordered_set<const std::type_info*> dataInTypes;
-    dataOutTypes.reserve(updateOut.GetArity());
+    //C++11dataOutTypes.reserve(updateOut.GetArity());
     for (const AutoFilterDescriptorInput* pArg = updateOut.GetAutoFilterInput(); *pArg; ++pArg) {
       if (IsAutoPacketType(*pArg->ti))
         continue;
@@ -304,7 +304,7 @@ void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std
           dataInTypes.insert(pArg->ti);
       }
     }
-    dataInTypes.reserve(updateIn.GetArity());
+    //C++11dataInTypes.reserve(updateIn.GetArity());
     for (const AutoFilterDescriptorInput* pArg = updateIn.GetAutoFilterInput(); *pArg; ++pArg) {
       if (IsAutoPacketType(*pArg->ti))
         continue;
