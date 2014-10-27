@@ -7,9 +7,13 @@
   #define NOMINMAX
 #endif
 
+// Defined when we are exporting symbols
+#define AUTOWIRING_EXPORT_AUTONET
+
 #ifndef _MSC_VER
   #include <stdlib.h>
 #else
+  #define _WINSOCK_DEPRECATED_NO_WARNINGS
   #define _WEBSOCKETPP_CPP11_CHRONO_
   #define _WEBSOCKETPP_LOCALTIME_S_
 #endif

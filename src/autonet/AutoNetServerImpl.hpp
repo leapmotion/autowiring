@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AutoNetServer.h"
 #include "AutowiringEvents.h"
@@ -13,6 +14,7 @@
 #include <websocketpp/server.hpp>
 #include <websocketpp/config/asio_no_tls.hpp>
 
+struct ObjectTraits;
 struct TypeIdentifierBase;
 
 class AutoNetServerImpl:
@@ -24,10 +26,10 @@ public:
   ~AutoNetServerImpl();
 
   //Types
-  typedef websocketpp::server<websocketpp::config::asio> server;
-  typedef server::message_ptr message_ptr;
+  typedef websocketpp::server<websocketpp::config::asio> t_server;
+  typedef t_server::message_ptr message_ptr;
 
-  // Functions from CoreContext
+  // Functions from BasicThread
   virtual void Run(void) override;
   virtual void OnStop(void) override;
 
@@ -57,7 +59,7 @@ public:
   /// </summary>
   /// <param name="ctxt">Context containing the object</param>
   /// <param name="obj">The object</param>
-  virtual void NewObject(CoreContext& ctxt, const AnySharedPointer& obj) override;
+  virtual void NewObject(CoreContext& ctxt, const ObjectTraits& obj) override;
 
   /// <summary>
   /// Updates server when a context has expired
@@ -85,7 +87,7 @@ protected:
         {"args", Json::array{args...}}
     };
 
-    m_Server->send(hdl, msg.dump(), websocketpp::frame::opcode::text);
+    m_Server.send(hdl, msg.dump(), websocketpp::frame::opcode::text);
   }
 
   /// <summary>
@@ -168,7 +170,7 @@ protected:
   std::set<std::string> m_breakpoints;
 
   // The actual server
-  std::shared_ptr<server> m_Server;
+  t_server m_Server;
   const int m_Port; // Port to listen on
 };
 

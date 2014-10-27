@@ -74,10 +74,10 @@ TEST_F(ContextCleanupTest, VerifyContextDtor) {
       AutoRequired<SimpleObject> simple;
       objVerifier = simple;
 
-      // Should be exactly two references to this object--one held by us, and two held by the context
-      // One of the context-held references is held in the concrete types collection, and the other is
-      // stored as a memo in the memos collection.
-      EXPECT_EQ(3, objVerifier.use_count()) << "Unexpected number of references to a newly constructed object";
+      // Each ObjectTraits instance holds 2 strong references to SimpleObject, as Object type and as ContextMember type.
+      // One instance is held in CoreContext::m_concreteTypes and the other in the CoreContext::m_typeMemos.
+      // Finally, once more reference is held by the shared_ptr<SimpleObject> inheritance of simple.
+      EXPECT_EQ(5, objVerifier.use_count()) << "Unexpected number of references to a newly constructed object";
 
       // Reference count should be unchanged:
       EXPECT_EQ(2, contextVerifier.use_count()) << "Reference count changed unexpectedly after addition of an object";

@@ -2,22 +2,24 @@ include_directories(
   # Need to make sure all of our tests can find gtest
   ${PROJECT_SOURCE_DIR}/contrib/gtest-1.7.0/fused-src
   ${PROJECT_SOURCE_DIR}/autowiring
+  ${PROJECT_SOURCE_DIR}/src/autowiring
+  ${PROJECT_SOURCE_DIR}/src/autotesting
 )
 
-set(Boost_USE_STATIC_LIBS        ON)
-set(Boost_USE_MULTITHREADED      ON)
-set(Boost_USE_STATIC_RUNTIME    OFF)
+# The boost C++11 shim is required when building without USE_LIBCXX
+if(NOT USE_LIBCXX)
+  find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
 
-if(APPLE)
-  # Boost is actually required on Mac
-  find_package(Boost REQUIRED)
-else()
-  find_package(Boost)
-endif()
+  if (NOT Boost_FOUND)
+    message(FATAL_ERROR "Boost is required when building without USE_LIBCXX")
+  endif()
 
-# If we can find boost, then go ahead and pull in its include directory
-if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIR})
+
+  # Needed to link boost on windows
+  if(WIN32)
+    link_directories(${Boost_LIBRARY_DIRS})
+  endif()
 endif()
 
 add_subdirectory(autonet)

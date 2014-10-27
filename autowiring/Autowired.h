@@ -66,18 +66,6 @@ typedef AutoCreateContextT<void> AutoCreateContext;
 
 
 /// <summary>
-/// Idiom to enable boltable classes
-/// </summary>
-template<class T>
-class AutoEnable
-{
-public:
-  AutoEnable(std::shared_ptr<CoreContext> ctxt = CoreContext::CurrentContext()) {
-    ctxt->Enable<T>();
-  }
-};
-
-/// <summary>
 /// An autowired template class that forms the foundation of the context consumer system
 /// </summary>
 /// <param name="T">The class whose type is to be found.  Must be an EXACT match.</param>
@@ -92,36 +80,17 @@ class Autowired:
   public AutowirableSlot<T>
 {
 public:
-  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-  // If you are getting an error tracked to this line, ensure that class T is totally
-  // defined at the point where the Autowired instance is constructed.  Generally,
-  // such errors are tracked to missing header files.  A common mistake, for instance,
-  // is to do something like this:
-  //
-  // class MyClass;
-  //
-  // struct MyStructure {
-  //   Autowired<MyClass> m_member;
-  // };
-  //
-  // At the time m_member is instantiated, MyClass is an incomplete type.  So, when the
-  // compiler tries to instantiate AutowiredCreator::Create (the function you're in right
-  // now!) it finds that it can't create a new instance of type MyClass because it has
-  // no idea how to construct it!
-  //
-  // This problem can be fixed two ways:  You can include the definition of MyClass before
-  // MyStructure is defined, OR, you can give MyStructure a nontrivial constructor, and
-  // then ensure that the definition of MyClass is available before the nontrivial
-  // constructor is defined.
-  //
-  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
-
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
-    AutowirableSlot<T>(ctxt ? ctxt->template ResolveAnchor<T>() : ctxt),
+    AutowirableSlot<T>(ctxt),
     m_pFirstChild(nullptr)
   {
     if(ctxt)
-      ctxt->Autowire(*this);
+      ctxt->Autowire(
+      *static_cast<AnySharedPointerT<T>*>(
+        static_cast<AnySharedPointer*>(this)
+      ),
+      *this
+    );
   }
 
   ~Autowired(void) {
@@ -145,10 +114,23 @@ private:
   std::atomic<AutowirableSlot<T>*> m_pFirstChild;
 
 public:
-  operator T*(void) const {
-    return std::shared_ptr<T>::get();
+  operator const std::shared_ptr<T>&(void) const {
+    return
+      static_cast<const AnySharedPointerT<T>*>(
+        static_cast<const AnySharedPointer*>(
+          this
+        )
+      )->slot()->get();
   }
-
+  
+  operator std::weak_ptr<T>(void) const {
+    return this->operator const std::shared_ptr<T>&();
+  }
+  
+  operator T*(void) const {
+    return this->operator const std::shared_ptr<T>&().get();
+  }
+  
   /// <summary>
   /// Allows a lambda function to be called when this slot is autowired
   /// </summary>
@@ -182,7 +164,7 @@ public:
       if(pFirstChild == this) {
         // Trivially satisfy, and then return.  This might look like a leak, but it's not, because we know
         // that Finalize is going to destroy the object.
-        newHead->SatisfyAutowiring((std::shared_ptr<T>*)this);
+        newHead->SatisfyAutowiring(*this);
         newHead->Finalize();
         return;
       }
@@ -203,33 +185,6 @@ public:
 };
 
 /// <summary>
-/// Similar to Autowired, but doesn't defer creation if types doesn't already exist
-/// </summary>
-template<class T>
-class AutowiredFast:
-  public std::shared_ptr<T>
-{
-public:
-  using std::shared_ptr<T>::operator=;
-
-  // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
-  AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) {
-    if(ctxt)
-      ctxt->FindByTypeRecursive(*this);
-  }
-
-  operator bool(void) const {
-    return IsAutowired();
-  }
-
-  operator T*(void) const {
-    return std::shared_ptr<T>::get();
-  }
-
-  bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
-};
-
-/// <summary>
 /// Similar to Autowired, Creates a new instance if this instance isn't autowired
 /// </summary>
 /// <remarks>
@@ -247,19 +202,68 @@ class AutoRequired:
 {
 public:
   using std::shared_ptr<T>::operator=;
-
-  // !!!!! Read comment in Autowired if you get a compiler error here !!!!!
+  
+  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
+  // If you are getting an error tracked to this line, ensure that class T is totally
+  // defined at the point where the Autowired instance is constructed.  Generally,
+  // such errors are tracked to missing header files.  A common mistake, for instance,
+  // is to do something like this:
+  //
+  // class MyClass;
+  //
+  // struct MyStructure {
+  //   Autowired<MyClass> m_member;
+  // };
+  //
+  // At the time m_member is instantiated, MyClass is an incomplete type.  So, when the
+  // compiler tries to instantiate AutowiredCreator::Create (the function you're in right
+  // now!) it finds that it can't create a new instance of type MyClass because it has
+  // no idea how to construct it!
+  //
+  // This problem can be fixed two ways:  You can include the definition of MyClass before
+  // MyStructure is defined, OR, you can give MyStructure a nontrivial constructor, and
+  // then ensure that the definition of MyClass is available before the nontrivial
+  // constructor is defined.
+  //
+  // !!!!! READ THIS IF YOU ARE GETTING A COMPILER ERROR HERE !!!!!
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()):
     std::shared_ptr<T>(ctxt->template Inject<T>())
   {}
-
+  
   /// <summary>
   /// Construct overload, for types which take constructor arguments
   /// </summary>
   template<class... Args>
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
-    std::shared_ptr<T>(ctxt->template Construct<T>(std::forward<Args>(args)...))
+    std::shared_ptr<T>(ctxt->template Inject<T>(std::forward<Args>(args)...))
   {}
+  
+  operator bool(void) const {
+    return IsAutowired();
+  }
+  
+  operator T*(void) const {
+    return std::shared_ptr<T>::get();
+  }
+  
+  bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
+};
+
+/// <summary>
+/// Similar to Autowired, but doesn't defer creation if types doesn't already exist
+/// </summary>
+template<class T>
+class AutowiredFast:
+  public std::shared_ptr<T>
+{
+public:
+  using std::shared_ptr<T>::operator=;
+
+  // !!!!! Read comment in AutoRequired if you get a compiler error here !!!!!
+  AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) {
+    if(ctxt)
+      ctxt->FindByTypeRecursive(*this);
+  }
 
   operator bool(void) const {
     return IsAutowired();
@@ -270,6 +274,19 @@ public:
   }
 
   bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
+};
+
+/// <summary>
+/// Idiom to enable boltable classes
+/// </summary>
+template<class T>
+class AutoEnable
+{
+public:
+  // !!!!! Read comment in AutoRequired if you get a compiler error here !!!!!
+  AutoEnable(std::shared_ptr<CoreContext> ctxt = CoreContext::CurrentContext()) {
+    ctxt->Enable<T>();
+  }
 };
 
 /// <summary>
@@ -311,7 +328,7 @@ class AutoConstruct:
 public:
   template<class... Args>
   AutoConstruct(Args&&... args) :
-    std::shared_ptr<T>(CoreContext::CurrentContext()->template Construct<T>(std::forward<Args&&>(args)...))
+    std::shared_ptr<T>(CoreContext::CurrentContext()->template Inject<T>(std::forward<Args&&>(args)...))
   {}
 
   operator bool(void) const { return IsAutowired(); }
@@ -346,24 +363,6 @@ public:
 
 private:
   std::weak_ptr<JunctionBox<T>> m_junctionBox;
-
-  template<class MemFn, bool isDeferred = std::is_same<typename Decompose<MemFn>::retType, Deferred>::value>
-  struct Selector {
-    typedef std::function<typename Decompose<MemFn>::fnType> retType;
-
-    static inline retType Select(JunctionBox<T>* pJunctionBox, MemFn pfn) {
-      return pJunctionBox->Defer(pfn);
-    }
-  };
-
-  template<class MemFn>
-  struct Selector<MemFn, false> {
-    typedef std::function<typename Decompose<MemFn>::fnType> retType;
-
-    static inline retType Select(JunctionBox<T>* pJunctionBox, MemFn pfn) {
-      return pJunctionBox->Fire(pfn);
-    }
-  };
 
 public:
   bool HasListeners(void) const {

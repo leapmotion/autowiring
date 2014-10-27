@@ -7,7 +7,8 @@
 
 using namespace std;
 
-DeferrableAutowiring::DeferrableAutowiring(const std::shared_ptr<CoreContext>& context) :
+DeferrableAutowiring::DeferrableAutowiring(AnySharedPointer&& witness, const std::shared_ptr<CoreContext>& context) :
+  AnySharedPointer(std::move(witness)),
   m_context(context),
   m_pFlink(nullptr)
 {}

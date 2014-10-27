@@ -5,6 +5,7 @@
 #include "AutoPacketFactory.h"
 #include "BoltBase.h"
 #include "CoreThread.h"
+#include "demangle.h"
 #include "GlobalCoreContext.h"
 #include "JunctionBox.h"
 #include "MicroBolt.h"
@@ -23,7 +24,7 @@
 /// to the global context directly because it could change teardown order if the main thread sets the global context
 /// as current.
 /// </remarks>
-static autowiring::thread_specific_ptr<std::shared_ptr<CoreContext>> s_curContext;
+static autowiring::thread_specific_ptr<std::shared_ptr<CoreContext>> autoCurrentContext;
 
 // Peer Context Constructor. Called interally by CreatePeer
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
@@ -49,12 +50,12 @@ CoreContext::~CoreContext(void) {
     m_pParent->m_children.erase(m_backReference);
   }
 
-  // The s_curContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
+  // The autoCurrentContext pointer holds a shared_ptr to this--if we're in a dtor, and our caller
   // still holds a reference to us, then we have a serious problem.
   assert(
-    !s_curContext.get() ||
-    !s_curContext.get()->use_count() ||
-    s_curContext.get()->get() != this
+    !autoCurrentContext.get() ||
+    !autoCurrentContext.get()->use_count() ||
+    autoCurrentContext.get()->get() != this
   );
 
   // Notify all ContextMember instances that their parent is going away
@@ -187,19 +188,26 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   return retVal;
 }
 
-void CoreContext::AddInternal(const AddInternalTraits& traits) {
+void CoreContext::AddInternal(const ObjectTraits& traits) {
   {
     std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
 
-    // Validate that this addition does not generate an ambiguity:
-    auto& v = m_typeMemos[typeid(*traits.pObject)];
-    if(*v.m_value == traits.pObject)
-      throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
-    if(*v.m_value)
-      throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+    // Validate that this addition does not generate an ambiguity.  We need to use the proper type of
+    // pObject, rather than the type passed in via traits.type, because the proper type might be a
+    // concrete type defined in another context or potentially a unifier type.  Creating a slot here
+    // is also undesirable because the complete type is not available and we can't create a dynaimc
+    // caster to identify when this slot gets satisfied.
+    auto q = m_typeMemos.find(typeid(*traits.pObject));
+    if(q != m_typeMemos.end()) {
+      auto& v = q->second;
+      if(*v.m_value == traits.pObject)
+        throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
+      if(*v.m_value)
+        throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+    }
 
     // Add the new concrete type:
-    m_concreteTypes.push_back(traits.value);
+    m_concreteTypes.push_back(traits);
 
     // Insert each context element:
     if(traits.pContextMember)
@@ -232,7 +240,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
   }
 
   // Subscribers, if applicable:
-  auto& stump = traits.value->GetSlotInformation();
+  const auto& stump = traits.stump;
   if(traits.subscriber) {
     AddPacketSubscriber(traits.subscriber);
 
@@ -246,7 +254,7 @@ void CoreContext::AddInternal(const AddInternalTraits& traits) {
     throw autowiring_error("It is an error to make use of NewAutoFilter in a type which does not have an AutoFilter member; please provide an AutoFilter method on this type");
 
   // Signal listeners that a new object has been created
-  GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, traits.value);
+  GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, traits);
 }
 
 void CoreContext::FindByType(AnySharedPointer& reference) const {
@@ -268,7 +276,7 @@ void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   // Resolve based on iterated dynamic casts for each concrete type:
   bool assigned = false;
   for(const auto& type : m_concreteTypes) {
-    if(!reference->try_assign(*type))
+    if(!reference->try_assign(*type.value))
       // No match, try the next entry
       continue;
 
@@ -284,24 +292,18 @@ void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   m_typeMemos[type].m_value = reference;
 }
 
-void CoreContext::FindByTypeRecursiveUnsafe(AnySharedPointer&& reference, const std::function<void(AnySharedPointer&)>& terminal) const {
+void CoreContext::FindByTypeRecursive(AnySharedPointer& reference, const AutoSearchLambda& searchFn) const {
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   FindByTypeUnsafe(reference);
-  if (reference) {
-    // Type satisfied in current context
-    terminal(reference);
-    return;
-  }
+  if(!m_pParent || reference)
+    // Type satisfied in current context, or there is nowhere to recurse to--call the terminal function in any case
+    return searchFn();
 
-  if (m_pParent) {
-    std::lock_guard<std::mutex> guard(m_pParent->m_stateBlock->m_lock);
-    // Recurse while holding lock on this context
-    // NOTE: Racing Deadlock is only possible if there is a simultaneous descending locked chain,
-    // but by definition of contexts this is forbidden.
-    m_pParent->FindByTypeRecursiveUnsafe(std::move(reference), terminal);
-  } else {
-    // Call function while holding all locks through global scope.
-    terminal(reference);
-  }
+  // Recurse while holding lock on this context
+  // NOTE: Racing Deadlock is only possible if there is an ambiguity or cycle in the traversal order
+  // of contexts.  Because context trees are guaranteed to be acyclical and are also fixed at construction
+  // time, a strict locking heirarchy is inferred, and a deadlock therefore impossible.
+  m_pParent->FindByTypeRecursive(reference, searchFn);
 }
 
 std::shared_ptr<CoreContext> CoreContext::GetGlobal(void) {
@@ -348,7 +350,7 @@ void CoreContext::Initiate(void) {
 
   // Now we can add the event receivers we haven't been able to add because the context
   // wasn't yet started:
-  AddEventReceivers(m_delayedEventReceivers.begin(), m_delayedEventReceivers.end());
+  AddEventReceivers(m_delayedEventReceivers);
   m_delayedEventReceivers.clear();
   m_junctionBoxManager->Initiate();
 
@@ -446,10 +448,10 @@ bool CoreContext::DelayUntilInitiated(void) {
 }
 
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
-  if(!s_curContext.get())
+  if(!autoCurrentContext.get())
     return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
 
-  std::shared_ptr<CoreContext>* retVal = s_curContext.get();
+  std::shared_ptr<CoreContext>* retVal = autoCurrentContext.get();
   assert(retVal);
   assert(*retVal);
   return *retVal;
@@ -476,11 +478,6 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
 
   if(!*pBase->GetContextSigils())
     m_nameListeners[typeid(void)].push_back(pBase.get());
-}
-
-void CoreContext::AddAnchor(const std::type_info& ti) {
-  (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
-  m_anchors.insert(ti);
 }
 
 void CoreContext::BuildCurrentState(void) {
@@ -543,7 +540,7 @@ void CoreContext::Dump(std::ostream& os) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   
   for(const auto& entry : m_typeMemos) {
-    os << entry.first.name();
+    os << autowiring::demangle(entry.first);
     const void* pObj = entry.second.m_value->ptr();
     if(pObj)
       os << " 0x" << std::hex << pObj;
@@ -570,7 +567,7 @@ void CoreContext::UnregisterEventReceiversUnsafe(void) {
 
   // Notify our parent (if we have one) that our event receivers are going away:
   if(m_pParent)
-    m_pParent->RemoveEventReceivers(m_eventReceivers.begin(), m_eventReceivers.end());
+    m_pParent->RemoveEventReceivers(m_eventReceivers);
 
   // Recursively unregister packet factory subscribers:
   AnySharedPointerT<AutoPacketFactory> pf;
@@ -606,7 +603,19 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
   // Collection of satisfiable lists:
   std::vector<std::pair<const DeferrableUnsynchronizedStrategy*, DeferrableAutowiring*>> satisfiable;
 
-  // Notify any autowired field whose autowiring was deferred
+  // Notify any autowired field whose autowiring was deferred.  We do this by processing each entry
+  // in the entire type memos collection.  These entries are keyed on the type of the memo, and the
+  // value is a linked list of trees of deferred autowiring instances that will need to be called
+  // if the corresponding memo type has been satisfied.
+  //
+  // A tree data structure is used, here, specifically because there are cases where child nodes
+  // on a tree should only be called if and only if the root node is still present.  For instance,
+  // creating an Autowired field adds a tree to this list with the root node referring to the
+  // Autowired field itself, and then invoking Autowired::NotifyWhenAutowired attaches a child to
+  // this tree.  If the Autowired instance is destroyed, the lambda registered for notification is
+  // also removed at the same time.
+  //
+  // Each connected nonroot deferrable autowiring is referred to as a "dependant chain".
   std::stack<DeferrableAutowiring*> stk;
   for(auto& cur : m_typeMemos) {
     auto& value = cur.second;
@@ -633,7 +642,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
       stk.pop();
 
       for(DeferrableAutowiring* pNext = top; pNext; pNext = pNext->GetFlink()) {
-        pNext->SatisfyAutowiring(value.m_value->shared_ptr());
+        pNext->SatisfyAutowiring(value.m_value);
 
         // See if there's another chain we need to process:
         auto child = pNext->ReleaseDependentChain();
@@ -673,7 +682,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     cur.first->Finalize(cur.second);
 }
 
-void CoreContext::AddEventReceiver(JunctionBoxEntry<Object> entry) {
+void CoreContext::AddEventReceiver(const JunctionBoxEntry<Object>& entry) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
@@ -693,27 +702,26 @@ void CoreContext::AddEventReceiver(JunctionBoxEntry<Object> entry) {
 }
 
 
-template<class iter>
-void CoreContext::AddEventReceivers(iter first, iter last) {
+void CoreContext::AddEventReceivers(const t_rcvrSet& receivers) {
   // Must be initiated
   assert(m_initiated);
 
-  for(auto q = first; q != last; q++)
-    m_junctionBoxManager->AddEventReceiver(*q);
+  for(const auto& q : receivers)
+    m_junctionBoxManager->AddEventReceiver(q);
 
   // Delegate ascending resolution, where possible.  This ensures that the parent context links
   // this event receiver to compatible senders in the parent context itself.
   if(m_pParent)
-    m_pParent->AddEventReceivers(first, last);
+    m_pParent->AddEventReceivers(receivers);
 }
 
-void CoreContext::RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last) {
-  for(auto q = first; q != last; q++)
-    m_junctionBoxManager->RemoveEventReceiver(*q);
+void CoreContext::RemoveEventReceivers(const t_rcvrSet& receivers) {
+  for(const auto& q : receivers)
+    m_junctionBoxManager->RemoveEventReceiver(q);
 
   // Detour to the parent collection (if necessary)
   if(m_pParent)
-    m_pParent->RemoveEventReceivers(first, last);
+    m_pParent->RemoveEventReceivers(receivers);
 }
 
 void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<Object>& receiver) {
@@ -791,18 +799,18 @@ std::shared_ptr<AutoPacketFactory> CoreContext::GetPacketFactory(void) {
   return pf;
 }
 
-void CoreContext::AddDeferredUnsafe(const AnySharedPointer& reference, DeferrableAutowiring* deferrable) {
+void CoreContext::AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
   // Determine whether a type memo exists right now for the thing we're trying to defer.  If it doesn't
   // exist, we need to inject one in order to allow deferred satisfaction to know what kind of type we
   // are trying to satisfy at this point.
-  size_t found = m_typeMemos.count(reference->type());
+  size_t found = m_typeMemos.count(deferrable->GetType());
 
   if(!found)
     // Slot not presently initialized, need to initialize it:
-    m_typeMemos[reference->type()].m_value = reference;
+    m_typeMemos[deferrable->GetType()].m_value = deferrable->GetSharedPointer();
 
   // Obtain the entry (potentially a second time):
-  MemoEntry& entry = m_typeMemos[reference->type()];
+  MemoEntry& entry = m_typeMemos[deferrable->GetType()];
 
   // Chain forward the linked list:
   deferrable->SetFlink(entry.pFirst);
@@ -828,7 +836,7 @@ void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
   GetPacketFactory()->AddSubscriber(rhs);
 }
 
-void CoreContext::UnsnoopAutoPacket(const AddInternalTraits& traits) {
+void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     
@@ -868,10 +876,10 @@ std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
     throw std::runtime_error("Attempted to make a CoreContext current from a CoreContext ctor");
 
   std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContext();
-  s_curContext.reset(new std::shared_ptr<CoreContext>(newCurrent));
+  autoCurrentContext.reset(new std::shared_ptr<CoreContext>(newCurrent));
   return retVal;
 }
 
 void CoreContext::EvictCurrent(void) {
-  s_curContext.reset();
+  autoCurrentContext.reset();
 }

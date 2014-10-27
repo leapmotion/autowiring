@@ -1,29 +1,68 @@
-add_executable(ContextExample ContextExample.cpp)
-target_link_libraries(ContextExample Autowiring)
-set_property(TARGET ContextExample PROPERTY FOLDER "Examples")
+cmake_minimum_required(VERSION 3.0.0)
+include(../version.cmake)
 
-add_executable(ThreadExample ThreadExample.cpp)
-target_link_libraries(ThreadExample Autowiring)
-set_property(TARGET ThreadExample PROPERTY FOLDER "Examples")
+project(examples)
 
-add_executable(EventExample EventExample.cpp)
-target_link_libraries(EventExample Autowiring)
-set_property(TARGET EventExample PROPERTY FOLDER "Examples")
+set(autowiring_VERSION_REQUESTED ${autowiring_VERSION})
+set(autowiring_VERSION)
+find_package(autowiring ${autowiring_VERSION_REQUESTED} EXACT REQUIRED NO_CMAKE_BUILDS_PATH)
+message("Found autowiring ${autowiring_VERSION}")
+message("Include dir is ${autowiring_INCLUDE_DIR}")
 
-add_executable(AutoFilterExample AutoFilterExample.cpp)
-target_link_libraries(AutoFilterExample Autowiring)
-set_property(TARGET AutoFilterExample PROPERTY FOLDER "Examples")
-
-find_package(Boost QUIET)
-if(NOT Boost_FOUND)
-  message("Cannot build AutoNetExample, boost not installed on this system")
-  return()
+# Clang needs special additional flags to build with C++11
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+  # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
+  message("AppleClang C++11")
+  set(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libc++")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  message("Clang C++11")
+  set(CMAKE_CXX_FLAGS "-std=c++11")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  message("GCC C++11")
+  set(CMAKE_CXX_FLAGS "-std=c++11")
 endif()
 
-include_directories(
-  ${Boost_INCLUDE_DIR}
-)
 
-add_executable(AutoNetExample AutoNetExample.cpp)
-target_link_libraries(AutoNetExample Autowiring AutoNet)
-set_property(TARGET AutoNetExample PROPERTY FOLDER "Examples")
+add_executable(ContextExample ContextExample.cpp)
+target_link_libraries(ContextExample Autowiring::Autowiring)
+
+add_executable(ThreadExample ThreadExample.cpp)
+target_link_libraries(ThreadExample Autowiring::Autowiring)
+
+add_executable(EventExample EventExample.cpp)
+target_link_libraries(EventExample Autowiring::Autowiring)
+
+add_executable(AutoFilterExample AutoFilterExample.cpp)
+target_link_libraries(AutoFilterExample Autowiring::Autowiring)
+
+# Need multithreading services if available
+find_package(Threads)
+if(Threads_FOUND)
+  if(CMAKE_USE_PTHREADS_INIT)
+    target_link_libraries(ContextExample ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(ThreadExample ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(EventExample ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(AutoFilterExample ${CMAKE_THREAD_LIBS_INIT})
+  endif()
+endif()
+
+if(TARGET Autowiring::AutoNet)
+  find_package(Boost COMPONENTS thread atomic chrono system date_time regex QUIET)
+  if(NOT Boost_FOUND)
+    message("Cannot build AutoNetExample, boost not installed on this system")
+    return()
+  endif()
+
+  include_directories(
+    ${Boost_INCLUDE_DIR}
+  )
+
+  add_executable(AutoNetExample AutoNetExample.cpp)
+  target_link_libraries(AutoNetExample Autowiring::Autowiring Autowiring::AutoNet ${Boost_LIBRARIES})
+  if(Threads_FOUND)
+    if(CMAKE_USE_PTHREADS_INIT)
+      target_link_libraries(AutoNetExample ${CMAKE_THREAD_LIBS_INIT})
+    endif()
+  endif()
+endif()

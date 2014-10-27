@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <autowiring/autowiring.h>
+#include "demangle.h"
 #include MEMORY_HEADER
 
 #ifndef GTEST_INCLUDE_GTEST_GTEST_H_
@@ -70,7 +71,7 @@ public:
     // The context proper.  This is automatically assigned as the current
     // context when SetUp is invoked.
     AutoCreateContext create;
-    create->Construct<TestInfoProxy>(info);
+    create->Inject<TestInfoProxy>(info);
 
     // Add exception filter in this context:
     create->Inject<AutowiringEnclosureExceptionFilter>();
@@ -112,6 +113,6 @@ public:
     // If an exception occurred somewhere, report it:
     ASSERT_FALSE(ecef->m_excepted)
       << "An unhandled exception occurred in this context" << std::endl
-      << "[" << (ecef->m_ti ? ecef->m_ti->name() : "unknown") << "] " << ecef->m_what;
+      << "[" << (ecef->m_ti ? autowiring::demangle(*ecef->m_ti) : "unknown") << "] " << ecef->m_what;
   }
 };

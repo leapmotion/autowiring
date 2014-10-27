@@ -1,6 +1,9 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
+#include "AutoPacket.h"
+#include MEMORY_HEADER
+
 /// <summary>
 /// A wrapper type, used to indicate a pointer which may optionally be satisfied
 /// </summary>
@@ -9,32 +12,55 @@
 /// method.  The caller is responsible for testing a field for correctness.
 ///
 /// Consumers are cautioned against using optional_ptr where not necessary.  Users of
-/// optional_ptr will only be notified that a field is satisfied until the packet is
+/// optional_ptr will only be notified that a field is not satisfied when the packet is
 /// about to be destroyed, or the field has been explicitly marked as unsatisfiable
 /// (for example, due to a failed checkout).
 /// </remarks>
-template<class T>
-class optional_ptr
+template <class type>
+class optional_ptr:
+  public std::shared_ptr<const type>
 {
 public:
-  optional_ptr(const T* ptr = nullptr) :
-    m_ptr(ptr)
+  typedef type id_type;
+  typedef const type* base_type;
+  typedef std::shared_ptr<const type> shared_type;
+  // WARNING: optional_ptr<T>::shared_type == auto_in<T>::shared_type
+
+  static const bool is_input = true;
+  static const bool is_output = false;
+
+  operator base_type () const {
+    return this->get();
+  }
+
+  operator shared_type () {
+    return *this;
+  }
+
+  optional_ptr ():
+    shared_type(nullptr)
   {}
 
-  optional_ptr(const T& rhs) :
-    m_ptr(&rhs)
+  optional_ptr (const optional_ptr<type>& rhs):
+    shared_type(rhs)
   {}
 
-  optional_ptr(const optional_ptr& rhs) :
-    m_ptr(rhs.m_ptr)
+  optional_ptr (optional_ptr<type>&& rhs):
+    shared_type(std::move(rhs))
   {}
 
-private:
-  // This is the only member of this class.
-  const T* m_ptr;
+  optional_ptr& operator = (optional_ptr<type>& rhs) {
+    shared_type::operator = (rhs);
+    return *this;
+  }
 
-public:
-  operator bool(void) const { return !!m_ptr; }
-  const T* operator->(void) const { return m_ptr; }
-  operator const T*(void) const { return m_ptr; }
+  optional_ptr& operator = (optional_ptr<type>&& rhs) {
+    shared_type::reset();
+    static_cast<shared_type&>(*this) = std::move(rhs);
+    return *this;
+  }
+
+  optional_ptr (std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)) {
+    packet->Get(*this, source);
+  }
 };

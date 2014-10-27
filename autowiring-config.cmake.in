@@ -1,7 +1,14 @@
-# - Config file for the websocketpp package
+# - Config file for the autowiring package
 # It defines the following variables
-#  AUTOWIRING_FOUND - indicates that the module was found
-#  AUTOWIRING_INCLUDE_DIR - include directories
+#  autowiring_FOUND - indicates that the module was found
+#  autowiring_INCLUDE_DIR - include directories
 
+# Check if local build
+if ("@CMAKE_CURRENT_BINARY_DIR@" STREQUAL CMAKE_CURRENT_LIST_DIR)
+  set(autowiring_INCLUDE_DIR "@PROJECT_SOURCE_DIR@")
+else()
+  set(autowiring_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/../include")
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/AutowiringTargets.cmake")
 set(autowiring_FOUND TRUE)
-set(autowiring_INCLUDE_DIR "@INSTALL_INCLUDE_DIR@")

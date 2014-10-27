@@ -14,8 +14,8 @@ class CreationDetectionBolt:
 {
 public:
   CreationDetectionBolt(void):
-    called(false),
-    nContextsCreated(0)
+    nContextsCreated(0),
+    called(false)
   {}
 
   void ContextCreated(void) override {

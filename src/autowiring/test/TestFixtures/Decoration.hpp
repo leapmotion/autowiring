@@ -1,3 +1,4 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <autowiring/CoreThread.h>
 #include <autowiring/has_autofilter.h>
@@ -34,7 +35,7 @@ class FilterA:
 public:
   FilterA() {}
   virtual ~FilterA() {}
-  void AutoFilter(Decoration<0> zero, Decoration<1> one) {
+  void AutoFilter(const Decoration<0>& zero, const Decoration<1>& one) {
     ++m_called;
     m_zero = zero;
     m_one = one;
@@ -51,7 +52,7 @@ public:
     m_excepted(false)
   {}
 
-  Deferred AutoFilter(Decoration<0> zero, Decoration<1> one) {
+  Deferred AutoFilter(const Decoration<0>& zero, const Decoration<1>& one) {
     ++m_called;
     m_zero = zero;
     m_one = one;
@@ -163,6 +164,7 @@ public:
 
 /// <summary>
 /// A filter that should trigger a static_assert in AutoRequire<BadFilterA>
+/// due to absence of AutoFilter arguments.
 /// </summary>
 class BadFilterA:
 public FilterRoot
@@ -175,17 +177,29 @@ public:
 
 /// <summary>
 /// A filter that should trigger a static_assert in AutoRequire<BadFilterB>
+/// due to repeated finitions of AutoFilter.
 /// </summary>
 class BadFilterB:
 public FilterRoot
 {
 public:
-  void AutoFilter(Decoration<0>&) {
+  void AutoFilter(const Decoration<0>&) {
     ++m_called;
   }
-  void AutoFilter(Decoration<1>&) {
+  void AutoFilter(const Decoration<1>&) {
     ++m_called;
   }
+};
+
+/// <summary>
+/// A filter that should trigger a static_assert in AutoRequire<BadFilterC>
+/// due to id equivalent of AutoFilter arguments.
+/// </summary>
+class BadFilterC:
+  public FilterRoot
+{
+public:
+  void AutoFilter(const int& in, std::shared_ptr<const int> same) {}
 };
 
 /// <summary>
@@ -209,7 +223,7 @@ public:
 class FilterOutB :
 public FilterRoot {
 public:
-  void AutoFilter(auto_out<Decoration<2>>) {
+  void AutoFilter(auto_out<Decoration<2>> two) {
     ++m_called;
   }
 };

@@ -2,185 +2,46 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "AutoPacket.h"
-#include "auto_out.h"
+#include "auto_arg.h"
+#include "CallExtractor.h"
+#include "DataFlow.h"
 #include "Decompose.h"
 #include "has_autofilter.h"
-#include "optional_ptr.h"
-#include <functional>
+#include "is_shared_ptr.h"
 #include MEMORY_HEADER
+#include FUNCTIONAL_HEADER
+#include STL_UNORDERED_SET
+#include STL_UNORDERED_MAP
 
 class AutoPacket;
 class Deferred;
 
-template<class T>
-class auto_pooled;
-
-enum eSubscriberInputType {
-  // Unused type, refers to an unrecognized input
-  inTypeInvalid,
-
-  // Specifies that this argument is mandatory for the AutoFilter to be called
-  inTypeRequired,
-
-  // Specifies that this argument is optional--the filter generally may be called
-  // any time all required arguments are satisfied, no matter how many optional
-  // arguments remain
-  inTypeOptional,
-
-  // Specifies that the argument is an output which must be satisfied manually by
-  // the caller
-  outTypeRef,
-
-  // Specifies that the argument will automatically be marked ready, unless explicitly
-  // cancelled by the caller.
-  outTypeRefAutoReady
-};
-
 /// <summary>
-/// Default behavior, which is to just obtain an input for the specified type
+/// AutoFilter argument disposition
 /// </summary>
-template<class T>
-struct subscriber_traits {
-  static_assert(
-    std::is_const<typename std::remove_reference<T>::type>::value ||
-    !std::is_reference<T>::value,
-    "If a decoration is desired, it must either be a const reference, or by value"
-  );
-
-  typedef T type;
-  static const eSubscriberInputType subscriberType = inTypeRequired;
-
-  const T& operator()(AutoPacket& packet) const {
-    return packet.Get<T>();
-  }
-};
-
-/// <summary>
-/// Output behavior for the single specified type
-/// </summary>
-template<class T>
-struct subscriber_traits<T&> {
-  typedef T type;
-  static const eSubscriberInputType subscriberType = outTypeRef;
-
-  AutoCheckout<T> operator()(AutoPacket& packet) const {
-    // Inputs by reference are automatically and unconditionally ready:
-    AutoCheckout<T> rv = packet.Checkout<T>();
-    rv.Ready();
-    return rv;
-  }
-};
-
-/// <summary>
-/// Mandatory input type
-/// </summary>
-template<class T>
-struct subscriber_traits<const T&>:
-  subscriber_traits<T>
-{};
-
-/// <summary>
-/// Optional input type
-/// </summary>
-template<class T>
-struct subscriber_traits<optional_ptr<T>> {
-  typedef T type;
-  static const eSubscriberInputType subscriberType = inTypeOptional;
-
-  // Optional pointer overload, tries to satisfy but doesn't throw if there's a miss
-  optional_ptr<T> operator()(AutoPacket& packet) const {
-    const typename std::decay<T>::type* out;
-    if(packet.Get(out))
-      return out;
-    return nullptr;
-  }
-};
-
-template<class T, bool auto_ready>
-struct subscriber_traits<auto_out<T, auto_ready>> {
-  typedef T type;
-  static const eSubscriberInputType subscriberType = auto_ready ? outTypeRef : outTypeRefAutoReady;
-
-  auto_out<T, auto_ready> operator()(AutoPacket& packet) const {
-    return auto_out<T, auto_ready>(packet.Checkout<T>());
-  }
-};
-
-template<>
-struct subscriber_traits<AutoPacket&> {
-  typedef AutoPacket type;
-  static const eSubscriberInputType subscriberType = inTypeRequired;
-
-  AutoPacket& operator()(AutoPacket& packet) const {
-    return packet;
-  }
-};
-
-/// <summary>
-/// Specialization for immediate mode cases
-/// </summary>
-template<class MemFn>
-struct CallExtractor;
-
-template<class T, class... Args>
-struct CallExtractor<void (T::*)(Args...)>:
-  Decompose<void (T::*)(Args...)>
-{
-  static const bool deferred = false;
-  static const size_t N = sizeof...(Args);
-
-  /// <summary>
-  /// Binder struct, lets us refer to an instance of Call by type
-  /// </summary>
-  template<void(T::*memFn)(Args...)>
-  static void Call(void* pObj, AutoPacket& autoPacket) {
-    // Handoff
-    (((T*) pObj)->*memFn)(
-      subscriber_traits<Args>()(autoPacket)...
-    );
-  }
-};
-
-/// <summary>
-/// Specialization for deferred cases
-/// </summary>
-template<class T, class... Args>
-struct CallExtractor<Deferred (T::*)(Args...)>:
-  Decompose<void (T::*)(Args...)>
-{
-  static const bool deferred = true;
-  static const size_t N = sizeof...(Args);
-
-  template<Deferred(T::*memFn)(Args...)>
-  static void Call(void* pObj, AutoPacket& autoPacket) {
-    // Obtain a shared pointer of the AutoPacket in order to ensure the packet
-    // stays resident when we pend this lambda to the destination object's
-    // dispatch queue.
-    auto pAutoPacket = autoPacket.shared_from_this();
-
-    // Pend the call to this object's dispatch queue:
-    *(T*) pObj += [pObj, pAutoPacket] {
-      (((T*) pObj)->*memFn)(
-        subscriber_traits<Args>()(*pAutoPacket)...
-      );
-    };
-  }
-};
-
 struct AutoFilterDescriptorInput {
   AutoFilterDescriptorInput(void) :
-    ti(nullptr),
-    subscriberType(inTypeInvalid)
+    is_input(false),
+    is_output(false),
+    is_optional(false),
+    is_shared(false),
+    ti(nullptr)
   {}
 
   template<class T>
-  AutoFilterDescriptorInput(subscriber_traits<T>&& traits) :
-    ti(&typeid(typename subscriber_traits<T>::type)),
-    subscriberType(subscriber_traits<T>::subscriberType)
+  AutoFilterDescriptorInput(auto_arg<T>&& traits) :
+    is_input(auto_arg<T>::is_input),
+    is_output(auto_arg<T>::is_output),
+    is_optional(auto_arg<T>::is_optional),
+    is_shared(auto_arg<T>::is_shared),
+    ti(&typeid(typename auto_arg<T>::id_type))
   {}
 
+  const bool is_input;
+  const bool is_output;
+  const bool is_optional;
+  const bool is_shared;
   const std::type_info* const ti;
-  const eSubscriberInputType subscriberType;
 
   operator bool(void) const {
     return !!ti;
@@ -189,7 +50,7 @@ struct AutoFilterDescriptorInput {
   template<class T>
   struct rebind {
     operator AutoFilterDescriptorInput() {
-      return subscriber_traits<T>();
+      return auto_arg<T>();
     }
   };
 };
@@ -198,9 +59,6 @@ struct AutoFilterDescriptorInput {
 /// The unbound part of an AutoFilter, includes everything except the AnySharedPointer
 /// </summary>
 struct AutoFilterDescriptorStub {
-  // The type of the call centralizer
-  typedef void(*t_call)(void*, AutoPacket&);
-
   AutoFilterDescriptorStub(void) :
     m_pType(nullptr),
     m_pArgs(nullptr),
@@ -214,6 +72,7 @@ struct AutoFilterDescriptorStub {
   AutoFilterDescriptorStub(const AutoFilterDescriptorStub& rhs) :
     m_pType(rhs.m_pType),
     m_pArgs(rhs.m_pArgs),
+    m_dataMap(rhs.m_dataMap),
     m_deferred(rhs.m_deferred),
     m_arity(rhs.m_arity),
     m_requiredCount(rhs.m_requiredCount),
@@ -226,32 +85,32 @@ struct AutoFilterDescriptorStub {
   /// </summary>
   /// <remarks>
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call.  The extractor
-  /// is required to carry information about the type of the proper member function to be called; t_call is required
-  /// to be instantiated by the caller and point to the AutoFilter proxy routine.
+  /// is required to carry information about the type of the proper member function to be called; t_extractedCall is
+  /// required to be instantiated by the caller and point to the AutoFilter proxy routine.
   /// </summary>
-  template<class MemFn>
-  AutoFilterDescriptorStub(CallExtractor<MemFn> extractor, t_call pCall) :
-    m_pType(&typeid(typename Decompose<MemFn>::type)),
-    m_pArgs(extractor.template Enumerate<AutoFilterDescriptorInput>()),
-    m_deferred(extractor.deferred),
-    m_arity(extractor.N),
+  AutoFilterDescriptorStub(const std::type_info* pType, const AutoFilterDescriptorInput* pArgs, bool deferred, t_extractedCall pCall) :
+    m_pType(pType),
+    m_pArgs(pArgs),
+    m_deferred(deferred),
+    m_arity(0),
     m_requiredCount(0),
     m_optionalCount(0),
     m_pCall(pCall)
   {
-    // Cannot register a subscriber with zero arguments:
-    static_assert(CallExtractor<MemFn>::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
-
     for(auto pArg = m_pArgs; *pArg; pArg++) {
-      switch(pArg->subscriberType) {
-      case inTypeRequired:
-        m_requiredCount++;
-        break;
-      case inTypeOptional:
-        m_optionalCount++;
-        break;
-      default:
-        break;
+      m_arity++;
+      autowiring::DataFlow& data = m_dataMap[*pArg->ti];
+
+      // DEFAULT: All data is broadcast
+      data.broadcast = true;
+      data.input = pArg->is_input;
+      data.output = pArg->is_output;
+      if (pArg->is_input) {
+        if (pArg->is_optional) {
+          ++m_optionalCount;
+          continue;
+        }
+        ++m_requiredCount;
       }
     }
   }
@@ -261,7 +120,11 @@ protected:
   const std::type_info* m_pType;
 
   // This subscriber's argument types
+  // NOTE: This is a reference to a static generated list,
+  // therefor it MUST be const and MUST be shallow-copied.
   const AutoFilterDescriptorInput* m_pArgs;
+  typedef std::unordered_map<std::type_index, autowiring::DataFlow> FlowMap;
+  FlowMap m_dataMap;
 
   // Set if this is a deferred subscriber.  Deferred subscribers cannot receive immediate-style
   // decorations, and have additional handling considerations when dealing with non-copyable
@@ -283,10 +146,11 @@ protected:
   // that will actually be passed is of a type corresponding to the member function bound
   // by this operation.  Strong guarantees must be made that the types passed into this routine
   // are identical to the types expected by the corresponding call.
-  t_call m_pCall;
+  t_extractedCall m_pCall;
 
 public:
   // Accessor methods:
+  const std::type_info* GetType() const { return m_pType; }
   size_t GetArity(void) const { return m_arity; }
   size_t GetRequiredCount(void) const { return m_requiredCount; }
   size_t GetOptionalCount(void) const { return m_optionalCount; }
@@ -294,13 +158,78 @@ public:
   bool IsDeferred(void) const { return m_deferred; }
   const std::type_info* GetAutoFilterTypeInfo(void) const { return m_pType; }
 
+  /// <summary>
+  /// Orientation (input/output, required/optional) of the argument type.
+  /// </summary>
+  /// <remarks>
+  /// Returns nullptr when no argument is of the requested type.
+  /// </remarks>
+  const AutoFilterDescriptorInput* GetArgumentType(const std::type_info* argType) {
+    for(auto pArg = m_pArgs; *pArg; pArg++) {
+      if (pArg->ti == argType) {
+        return pArg;
+      }
+    }
+    return nullptr;
+  }
+
+  /// <summary>
+  /// Copies the data flow information for the argument type to the flow argument.
+  /// </summary>
+  /// <returns>true when the argument type is found</returns>
+  autowiring::DataFlow GetDataFlow(const std::type_info* argType) const {
+    FlowMap::const_iterator data = m_dataMap.find(*argType);
+    if (data != m_dataMap.end()) {
+      return data->second;
+    }
+    return autowiring::DataFlow(); //DEFAULT: No flow
+  }
+
   /// <returns>A call lambda wrapping the associated subscriber</returns>
   /// <remarks>
   /// Parameters for the associated subscriber are obtained by querying the packet.
   /// The packet must already be decorated with all required parameters for the
   /// subscribers, or an exception will be thrown.
   /// </remarks>
-  t_call GetCall(void) const { return m_pCall; }
+  t_extractedCall GetCall(void) const { return m_pCall; }
+
+  /// <summary>
+  /// Sends or receives broadcast instances of the input or output type.
+  /// </summary>
+  /// <remarks>
+  /// The dataType must declared by the AutoFilter method for this call to have an effect.
+  /// </remarks>
+  /// <param="dataType">specifies the data type (input or output) to broadcast</param>
+  /// <param="enable">when false disables broadcasting</param>
+  void Broadcast(const std::type_info* dataType, bool enable = true) {
+    FlowMap::iterator flowFind = m_dataMap.find(*dataType);
+    if (flowFind == m_dataMap.end())
+      return;
+    autowiring::DataFlow& flow = flowFind->second;
+    flow.broadcast = enable;
+  }
+
+  /// <summary>
+  /// Creates a data half-pipe from this node to the target node for the specifed data.
+  /// </summary>
+  /// <remarks>
+  /// A complete pipe requires that both the input and output nodes are modified.
+  /// This method only modifies this node - the other half-pipe requires a call to the other node.
+  /// The dataType must declared by the AutoFilter method for this call to have an effect.
+  /// </remarks>
+  /// <param="dataType">specifies the data type (input or output) to pipe</param>
+  /// <param="nodeType">determines the target node that will receive the data</param>
+  /// <param="enable">when false removes a pipe, if it exists</param>
+  void HalfPipe(const std::type_info* dataType, const std::type_info* nodeType, bool enable = true) {
+    FlowMap::iterator flowFind = m_dataMap.find(*dataType);
+    if (flowFind == m_dataMap.end())
+      return;
+    autowiring::DataFlow& flow = flowFind->second;
+    if (enable)
+      flow.halfpipes.insert(*nodeType);
+    else
+      flow.halfpipes.erase(*nodeType);
+  }
 };
 
 /// <summary>
@@ -322,11 +251,56 @@ struct AutoFilterDescriptor:
     m_autoFilter(rhs.m_autoFilter)
   {}
 
+  AutoFilterDescriptor& operator=(const AutoFilterDescriptor& rhs) {
+    AutoFilterDescriptorStub::operator = (rhs);
+    m_autoFilter = rhs.m_autoFilter;
+    return *this;
+  }
+
+  AutoFilterDescriptor(AutoFilterDescriptor&& rhs) :
+    AutoFilterDescriptorStub(std::move(rhs)),
+    m_autoFilter(std::move(rhs.m_autoFilter))
+  {}
+
+  AutoFilterDescriptor& operator=(AutoFilterDescriptor&& rhs) {
+    AutoFilterDescriptorStub::operator = (std::move(rhs));
+    m_autoFilter = std::move(rhs.m_autoFilter);
+    return *this;
+  }
+
   /// <summary>
   /// Utility constructor, used when there is no proffered AutoFilter method on a class
   /// </summary>
   AutoFilterDescriptor(const AnySharedPointer& autoFilter):
     m_autoFilter(autoFilter)
+  {}
+
+  template<class T>
+  AutoFilterDescriptor(const std::shared_ptr<T>& subscriber) :
+    AutoFilterDescriptor(
+      AnySharedPointer(subscriber),
+      &typeid(T),
+      Decompose<decltype(&T::AutoFilter)>::template Enumerate<AutoFilterDescriptorInput>::types,
+      CallExtractor<decltype(&T::AutoFilter)>::deferred,
+      &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
+    )
+  {}
+
+  /// <summary>
+  /// Adds a function to be called as an AutoFilter for this packet only.
+  /// </summary>
+  /// <remarks>
+  /// Recipients added in this way cannot receive piped data, since they are anonymous.
+  /// </remarks>
+  template<class Fn>
+  AutoFilterDescriptor(Fn fn):
+    AutoFilterDescriptor(
+      AnySharedPointer(std::make_shared<Fn>(std::forward<Fn>(fn))),
+      &typeid(Fn),
+      CallExtractor<decltype(&Fn::operator())>::template Enumerate<AutoFilterDescriptorInput>::types,
+      false,
+      &CallExtractor<decltype(&Fn::operator())>::template Call<&Fn::operator()>
+    )
   {}
 
   /// <summary>
@@ -343,18 +317,39 @@ struct AutoFilterDescriptor:
   /// <remarks>
   /// This constructor increments the reference count on the passed object until the object is freed.  A
   /// subscriber wraps the templated type, automatically mapping desired arguments into the correct locations,
-  /// via use of Decompose::Call and a AutoPacket to provide type sources
+  /// via use of Decompose::Call and a AutoPacket to provide type satisfaction
   ///
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call
   /// </summary>
-  template<class MemFn>
-  AutoFilterDescriptor(const AnySharedPointer& autoFilter, CallExtractor<MemFn> extractor, t_call pCall) :
-    AutoFilterDescriptorStub(extractor, pCall),
+  AutoFilterDescriptor(const AnySharedPointer& autoFilter, const std::type_info* pType, const AutoFilterDescriptorInput* pArgs, bool deferred, t_extractedCall pCall) :
+    AutoFilterDescriptorStub(pType, pArgs, deferred, pCall),
     m_autoFilter(autoFilter)
-  {
-    // Cannot register a subscriber with zero arguments:
-    static_assert(CallExtractor<MemFn>::N, "Cannot register a subscriber whose AutoFilter method is arity zero");
-  }
+  {}
+
+  template<class RetType, class... Args>
+  AutoFilterDescriptor(RetType(*pfn)(Args...)):
+    AutoFilterDescriptor(
+      // Token shared pointer, used to provide a pointer to pfn because we can't
+      // capture it in a template processing context.  Hopefully this can be changed
+      // once MSVC adopts constexpr.
+      AnySharedPointer(
+        std::shared_ptr<RetType(Args...)>(
+          pfn,
+          [](decltype(pfn)){}
+        )
+      ),
+
+      // The remainder is fairly straightforward
+      CallExtractor<decltype(pfn)>(),
+      &CallExtractor<decltype(pfn)>::Call
+    )
+  {}
+
+  // Convenience overload:
+  template<class RetType, class... Args>
+  AutoFilterDescriptor(RetType(&pfn)(Args...)):
+    AutoFilterDescriptor(&pfn)
+  {}
 
 protected:
   // A hold on the enclosed autoFilter
@@ -410,26 +405,23 @@ public:
 
 template<class T, bool has_autofilter = has_autofilter<T>::value>
 class AutoFilterDescriptorSelect:
-  public std::true_type,
-  public AutoFilterDescriptor
+  public std::true_type
 {
 public:
   AutoFilterDescriptorSelect(const std::shared_ptr<T>& subscriber) :
-    AutoFilterDescriptor(
-      subscriber,
-      CallExtractor<decltype(&T::AutoFilter)>(),
-      &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
-    )
+    desc(subscriber)
   {}
+
+  const AutoFilterDescriptor desc;
 };
 
 template<class T>
 class AutoFilterDescriptorSelect<T, false>:
-  public std::false_type,
-  public AutoFilterDescriptor
+  public std::false_type
 {
 public:
   AutoFilterDescriptorSelect(const std::shared_ptr<T>&) {}
+  const AutoFilterDescriptor desc;
 };
 
 /// <summary>
@@ -437,7 +429,7 @@ public:
 /// </summary>
 template<class T>
 AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
-  return AutoFilterDescriptorSelect<T>(ptr);
+  return std::move(AutoFilterDescriptorSelect<T>(ptr).desc);
 }
 
 namespace std {

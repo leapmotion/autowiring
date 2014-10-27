@@ -1,18 +1,30 @@
+#
+# Setup testing
+#
+
 add_googletest(test)
 add_googletest(benchmark)
 
+#
+# Configure source files
+#
+
 set(Autowiring_SRCS
   at_exit.h
+  auto_in.h
+  auto_out.h
+  auto_arg.h
   AnySharedPointer.h
-  AutoAnchor.h
   AutoCheckout.h
   AutoRestarter.h
   AutoFuture.h
   AutoFuture.cpp
+  AutowiringConfig.h
   CoreJob.h
   CoreJob.cpp
   AutoFilterDescriptor.h
   AutoInjectable.h
+  AutoMerge.h
   AutoPacket.h
   AutoPacket.cpp
   AutoPacketFactory.h
@@ -20,11 +32,15 @@ set(Autowiring_SRCS
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
   AutoSelfUpdate.h
+  AutoStile.h
+  AutoTimeStamp.h
   Autowired.h
   Autowired.cpp
   AutowirableSlot.h
   AutowirableSlot.cpp
+  AutowiringConfig.h
   AutowiringEvents.h
+  autowiring.h
   autowiring_error.h
   BasicThread.h
   BasicThread.cpp
@@ -32,6 +48,7 @@ set(Autowiring_SRCS
   BasicThreadStateBlock.cpp
   Bolt.h
   BoltBase.h
+  CallExtractor.h
   ContextCreator.h
   ContextCreatorBase.h
   ContextCreatorBase.cpp
@@ -50,11 +67,15 @@ set(Autowiring_SRCS
   CreationRules.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
+  DataFlow.h
   DeclareAutoFilter.h
+  DeclareElseFilter.h
   Decompose.h
   DecorationDisposition.h
   Deserialize.h
   Deferred.h
+  DefaultAutoNetServer.cpp
+  demangle.h
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunk.h
@@ -77,10 +98,10 @@ set(Autowiring_SRCS
   has_autofilter.h
   has_simple_constructor.h
   has_static_new.h
+  hash_tuple.h
   index_tuple.h
   is_any.h
   is_shared_ptr.h
-  is_auto_filter.h
   InterlockedExchange.h
   InvokeRelay.h
   atomic_object.h
@@ -89,6 +110,7 @@ set(Autowiring_SRCS
   ObjectPool.h
   ObjectPoolMonitor.h
   ObjectPoolMonitor.cpp
+  ObjectTraits.h
   optional_ptr.h
   SatCounter.h
   MicroAutoFilter.h
@@ -108,6 +130,7 @@ set(Autowiring_SRCS
   TypeRegistry.cpp
   TypeUnifier.h
   uuid.h
+  var_logic.h
 )
 
 if(NOT APPLE)
@@ -158,15 +181,21 @@ endif()
 
 rewrite_header_paths(Autowiring_SRCS)
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
+
+#
+# Configure library
+#
+
 add_library(Autowiring STATIC ${Autowiring_SRCS})
-if(CMAKE_MAJOR_VERSION GREATER 2)
-  target_include_directories(Autowiring INTERFACE "../..")
-endif()
+target_include_directories(Autowiring INTERFACE
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
+  "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+)
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
 
-# Might as well reference the boost libraries to satisfy link dependencies, if we know they exist
-find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
-if(Boost_FOUND)
+# The boost C++11 shim is required when building without USE_LIBCXX
+if(NOT USE_LIBCXX)
+  find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
   target_link_libraries(Autowiring ${Boost_LIBRARIES})
 endif()
 
@@ -178,17 +207,14 @@ if(Threads_FOUND)
   endif()
 endif()
 
-if(NOT AUTOWIRING_IS_EMBEDDED)
-  install(TARGETS Autowiring DESTINATION ${CMAKE_BINARY_DIR}/lib COMPONENT autowiring CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
+#
+# Install library
+#
 
-  foreach (src ${Autowiring_SRCS})
-    string(REGEX MATCH ".*\\.h" hfile ${src})
-    if(hfile)
-      install(
-        FILES ${hfile}
-        DESTINATION "${CMAKE_SOURCE_DIR}/include/Autowiring"
-        COMPONENT autowiring
-      )
-    endif()
-  endforeach()
+if(NOT AUTOWIRING_IS_EMBEDDED)
+  install(TARGETS Autowiring EXPORT AutowiringTargets
+    DESTINATION lib
+    COMPONENT autowiring 
+    CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+  )
 endif()

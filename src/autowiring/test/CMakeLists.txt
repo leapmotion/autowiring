@@ -1,7 +1,10 @@
 set(AutowiringTest_SRCS
   AnySharedPointerTest.cpp
-  AutoAnchorTest.cpp
+  ArgumentTypeTest.cpp
   AutoConstructTest.cpp
+  AutoFilterFunctionTest.cpp
+  AutoFilterPipeTest.cpp
+  AutoFilterSequencing.cpp
   AutoFilterTest.cpp
   AutoInjectableTest.cpp
   AutoPacketFactoryTest.cpp
@@ -13,6 +16,7 @@ set(AutowiringTest_SRCS
   CoreContextTest.cpp
   CoreJobTest.cpp
   CoreRunnableTest.cpp
+  CommonUseCasesTest.cpp
   ContextCleanupTest.cpp
   ContextEnumeratorTest.cpp
   ContextMapTest.cpp
@@ -54,12 +58,13 @@ set(AutowiringTest_SRCS
   UuidTest.cpp
 )
 
-set(
-  AutowiringFixture_SRCS
+set(AutowiringFixture_SRCS
   SelfSelectingFixture.hpp
   SelfSelectingFixture.cpp
   OtherSelectingFixture.hpp
   OtherSelectingFixture.cpp
+  HasForwardOnlyType.hpp
+  HasForwardOnlyType.cpp
 )
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringFixture_SRCS)
@@ -71,7 +76,7 @@ add_executable(AutowiringTest ${AutowiringTest_SRCS})
 target_link_libraries(AutowiringTest Autowiring AutowiringFixture AutoTesting)
 
 # Link AutoNet if we've got it
-if(AUTOWIRING_BUILD_AUTONET)
+if(TARGET AutoNet)
   target_link_libraries(AutowiringTest AutoNet)
 endif()
 

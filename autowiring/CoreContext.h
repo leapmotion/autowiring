@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
-#include "AutoAnchor.h"
+#include "ObjectTraits.h"
 #include "AutoFilterDescriptor.h"
 #include "AutowirableSlot.h"
 #include "AutowiringEvents.h"
@@ -66,6 +66,27 @@ enum class ShutdownMode {
   Immediate
 };
 
+class AutoSearchLambda {
+public:
+  /// <summary>
+  /// Invoked at the conclusion of a FindByTypeRecursive search operation
+  /// </summary>
+  /// <remarks>
+  /// No information is passed about the success or failure of the search operation.  Implementors of this interface are
+  /// required to store enough context about the AnySharedPointer passed as the first argument to FindByTypeRecursive to
+  /// determine the status of this operation, if that status is interesting.
+  /// </remarks>
+  virtual void operator()() const = 0;
+};
+
+class AutoSearchLambdaDefault:
+  public AutoSearchLambda
+{
+public:
+  // AutoSearchLambda overrides:
+  void operator()() const override {}
+};
+
 /// <summary>
 /// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain
 /// </summary>
@@ -109,10 +130,6 @@ protected:
   typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
 
-  // These are the types which will be created in this context if an attempt is made to inject them
-  // into any child context.
-  std::set<std::type_index> m_anchors;
-
   /// <summary>
   /// Represents a single entry, together with any deferred elements waiting on the satisfaction of this entry
   /// </summary>
@@ -130,7 +147,7 @@ protected:
   };
 
   // This is a list of concrete types, indexed by the true type of each element.
-  std::vector<AnySharedPointer> m_concreteTypes;
+  std::vector<ObjectTraits> m_concreteTypes;
 
   // This is a memoization map used to memoize any already-detected interfaces.
   mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;
@@ -180,29 +197,6 @@ protected:
   /// Overload which does not perform injection
   /// </summary>
   std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer);
-  
-  // Add to our interal list of Anchor types from AutoAnchors declared in sigil type
-  template<typename T, typename... Ts>
-  void AddAnchorInternal(const AutoAnchor<T, Ts...>*) { AddAnchor<T, Ts...>(); }
-
-  void AddAnchorInternal(const void*) {}
-  
-  // Check if a type anchors to this context's sigil type
-  bool CheckAnchorInSigil(...) const {return false;};
-  
-  template<typename ...T>
-  bool CheckAnchorInSigil(const AutoAnchor<T...>*) const {
-    static_assert(sizeof...(T) != 0, "Can't anchor to nothing.");
-    
-    bool isMatch = false;
-    
-    bool dummy[]{
-      (isMatch = isMatch || typeid(T)==GetSigilType(), false)...
-    };
-    (void)dummy;
-    
-    return isMatch;
-  };
 
   // Adds a bolt proper to this context
   template<typename T, typename... Sigils>
@@ -248,18 +242,17 @@ protected:
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
   /// <param name="pRecvr">The junction box entry corresponding to the receiver type</param>
-  void AddEventReceiver(JunctionBoxEntry<Object> pRecvr);
+  void AddEventReceiver(const JunctionBoxEntry<Object>& pRecvr);
 
   /// <summary>
   /// Add delayed event receivers
   /// </summary>
-  template<class iter>
-  void AddEventReceivers(iter first, iter last);
+  void AddEventReceivers(const t_rcvrSet& receivers);
 
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
   /// </summary>
-  void RemoveEventReceivers(t_rcvrSet::const_iterator first, t_rcvrSet::const_iterator last);
+  void RemoveEventReceivers(const t_rcvrSet& receivers);
 
   /// <summary>
   /// Adds an object of any kind to the IOC container
@@ -303,57 +296,9 @@ protected:
   std::shared_ptr<Object> IncrementOutstandingThreadCount(void);
 
   /// <summary>
-  /// Mapping and extraction structure used to provide a runtime version of an Object-implementing shared pointer
-  /// </summary>
-  struct AddInternalTraits {
-    template<class T>
-    AddInternalTraits(const std::shared_ptr<typename SelectTypeUnifier<T>::type>& value, T*) :
-      type(typeid(T)),
-      value(value),
-      subscriber(AutoFilterDescriptorSelect<T>(value)),
-      pObject(autowiring::fast_pointer_cast<Object>(value)),
-      pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
-      pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
-      pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
-      pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
-      receivesEvents([this]{
-        for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink) {
-          auto identifier = evt->NewTypeIdentifier();
-          if (identifier->IsSameAs(pObject.get()))
-            return true;
-        }
-        return false;
-      }())
-    {
-      if(!pObject)
-        throw autowiring_error("Cannot add a type which does not implement Object");
-    }
-
-    // The declared original type:
-    const std::type_info& type;
-
-    // A holder to store the original shared pointer, to ensure that type information propagates
-    // correctly on the right-hand side of our map
-    const AnySharedPointer value;
-
-    // The packet subscriber introduction method, if appropriate:
-    const AutoFilterDescriptor subscriber;
-
-    // There are a lot of interfaces we support, here they all are:
-    const std::shared_ptr<Object> pObject;
-    const std::shared_ptr<ContextMember> pContextMember;
-    const std::shared_ptr<CoreRunnable> pCoreRunnable;
-    const std::shared_ptr<ExceptionFilter> pFilter;
-    const std::shared_ptr<BoltBase> pBoltBase;
-    
-    // Does this type receive events?
-    const bool receivesEvents;
-  };
-
-  /// <summary>
   /// Internal type introduction routine
   /// </summary>
-  void AddInternal(const AddInternalTraits& traits);
+  void AddInternal(const ObjectTraits& traits);
 
   /// <summary>
   /// Scans the memo collection for the specified entry, or adds a deferred resolution marker if resolution was not possible
@@ -372,10 +317,7 @@ protected:
   /// <summary>
   /// Recursive locking for Autowire satisfaction search
   /// </summary>
-  /// <remarks>
-  /// The argument &&reference enables implicit type from AnySharedPointerT<T>.
-  /// </remarks>
-  void FindByTypeRecursiveUnsafe(AnySharedPointer&& reference, const std::function<void(AnySharedPointer&)>& terminal) const;
+  void FindByTypeRecursive(AnySharedPointer& reference, const AutoSearchLambda& searchFn) const;
 
   /// <summary>
   /// Returns or constructs a new AutoPacketFactory instance
@@ -383,9 +325,9 @@ protected:
   std::shared_ptr<AutoPacketFactory> GetPacketFactory(void);
 
   /// <summary>
-  /// Adds the specified deferrable autowiring as a general recipient of autowiring events
+  /// Adds the specified deferrable autowiring to be satisfied at a later date when its matched type is inserted
   /// </summary>
-  void AddDeferredUnsafe(const AnySharedPointer& reference, DeferrableAutowiring* deferrable);
+  void AddDeferredUnsafe(DeferrableAutowiring* deferrable);
 
   /// <summary>
   /// Adds a snooper to the snoopers set
@@ -409,7 +351,7 @@ protected:
   /// <summary>
   /// Forwarding routine, only removes from this context
   /// </summary>
-  void UnsnoopAutoPacket(const AddInternalTraits& traits);
+  void UnsnoopAutoPacket(const ObjectTraits& traits);
 
 public:
   // Accessor methods:
@@ -494,46 +436,13 @@ public:
   }
 
   /// <summary>
-  /// Check if parent context's have AutoAnchored the type in their sigil.
-  /// </summary>
-  template<typename T>
-  std::shared_ptr<CoreContext> ResolveAnchor(void) {
-    for(auto pCur = shared_from_this(); pCur; pCur = pCur->m_pParent) {
-      // Check if pCur anchor's onto the injected type
-      if (pCur->m_anchors.find(typeid(T)) != pCur->m_anchors.end()){
-        return pCur;
-      }
-      // Check if T anchors onto pCur's sigil type
-      if ( pCur->CheckAnchorInSigil((T*)nullptr) ){
-        return pCur;
-      }
-    }
-    return shared_from_this();
-  }
-
-  /// <summary>
-  /// Add an additional anchor type to the context
-  /// </summary>
-  template<typename... AnchorTypes>
-  void AddAnchor(void) {
-    bool dummy[] = {
-      (AddAnchor(typeid(AnchorTypes)), false)...
-    };
-    (void) dummy;
-  }
-
-  /// <summary>
-  /// Adds the specified anchor type to the context
-  void AddAnchor(const std::type_info& ti);
-
-  /// <summary>
   /// Utility method which will inject the specified types into this context
   /// </summary>
   /// <remarks>
   /// Arguments will be passed to the T constructor if provided
   /// </remarks>
   template<typename T, typename... Args>
-  std::shared_ptr<T> Construct(Args&&... args) {
+  std::shared_ptr<T> Inject(Args&&... args) {
     // Add this type to the TypeRegistry
     (void) RegType<T>::r;
     
@@ -562,7 +471,7 @@ public:
 
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
-      AddInternal(AddInternalTraits(retVal, (T*)nullptr));
+      AddInternal(ObjectTraits(retVal, (T*)nullptr));
     }
     catch(autowiring_error&) {
       // We know why this exception occurred.  It's because, while we were constructing our
@@ -576,40 +485,15 @@ public:
   }
 
   /// <summary>
-  /// A simple utility method which will inject a single type when called
-  /// </summary>
-  /// <returns>
-  /// The injected type
-  /// </returns>
-  template<typename T>
-  std::shared_ptr<T> Inject(void) {
-    return ResolveAnchor<T>()->template Construct<T>();
-  }
-
-  /// <summary>
-  /// A simple utility method which will inject the specified types into the current context when called
-  /// </summary>
-  template<typename T1, typename T2, typename... Ts>
-  void Inject(void) {
-    bool dummy[] = {
-      (Inject<T1>(), false),
-      (Inject<T2>(), false),
-      (Inject<Ts>(), false)...
-    };
-    (void) dummy;
-  }
-
-  /// <summary>
   /// Static version of Inject that uses the current context
   /// </summary>
-  template<typename... Ts>
+  template<typename T>
   static void InjectCurrent(void) {
-    auto ctxt = CurrentContext();
-    bool dummy [] = {
-      (ctxt->Inject<Ts>(), false)...
-    };
-    (void) dummy;
+    CurrentContext()->Inject<T>();
   }
+  
+  template<typename T, typename... Args>
+  std::shared_ptr<T> DEPRECATED(Construct(Args&&... args), "'Construct' is deprecated, use 'Inject' instead");
 
   /// <summary>
   /// This method checks whether eventoutputstream listeners for the given type still exist.
@@ -620,7 +504,7 @@ public:
   /// </summary>
   template <class T>
   bool CheckEventOutputStream(void){
-    return m_junctionBoxManager->CheckEventOutputStream<T>();
+    return m_junctionBoxManager->CheckEventOutputStream(typeid(T));
   }
 
   /// <returns>
@@ -681,8 +565,11 @@ public:
   /// </summary>
   template<class T>
   std::shared_ptr<JunctionBox<T>> GetJunctionBox(void) {
+    // Add this type to the event registry. All events call this function
+    (void)RegEvent<T>::r;
+    
     return std::static_pointer_cast<JunctionBox<T>, JunctionBoxBase>(
-      m_junctionBoxManager->Get<T>()
+      m_junctionBoxManager->Get(typeid(T))
     );
   }
 
@@ -814,7 +701,7 @@ public:
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    const AddInternalTraits traits(pSnooper, (T*)nullptr);
+    const ObjectTraits traits(pSnooper, (T*)nullptr);
     
     // Add to collections of snoopers
     InsertSnooper(pSnooper);
@@ -829,6 +716,14 @@ public:
   }
 
   /// <summary>
+  /// Resolution overload
+  /// </summary>
+  template<class T>
+  void Snoop(const Autowired<T>& snooper) {
+    return Snoop(static_cast<const std::shared_ptr<T>&>(snooper));
+  }
+
+  /// <summary>
   /// Unregisters an event receiver previously registered to receive snooped events
   /// </summary>
   /// <remarks>
@@ -836,7 +731,7 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    const AddInternalTraits traits(pSnooper, (T*)nullptr);
+    const ObjectTraits traits(pSnooper, (T*)nullptr);
     
     RemoveSnooper(pSnooper);
     
@@ -849,6 +744,14 @@ public:
     // Cleanup if its a packet listener
     if(traits.subscriber)
       UnsnoopAutoPacket(traits);
+  }
+  
+  /// <summary>
+  /// Resolution overload
+  /// </summary>
+  template<class T>
+  void Unsnoop(const Autowired<T>& snooper) {
+    return Unsnoop(static_cast<const std::shared_ptr<T>&>(snooper));
   }
 
   /// <summary>
@@ -868,37 +771,86 @@ public:
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
   template<class T>
-  bool FindByTypeRecursive(std::shared_ptr<T>& slot) {
-    {
-      std::lock_guard<std::mutex> guard(m_stateBlock->m_lock);
-      FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
-      [&slot](AnySharedPointer& reference){
-        slot = reference.slot()->template as<T>();
-      });
-    }
-    return static_cast<bool>(slot);
+  void FindByTypeRecursive(std::shared_ptr<T>& ptr) {
+    AnySharedPointerT<T> slot;
+    FindByTypeRecursive(slot, AutoSearchLambdaDefault());
+    ptr = slot.slot()->get();
   }
+
+  /// <summary>
+  /// Identical to Autowire, but will not register the passed slot for deferred resolution
+  /// </summary>
+  template<class T>
+  void FindByTypeRecursive(AnySharedPointerT<T>& slot) {
+    FindByTypeRecursive(slot, AutoSearchLambdaDefault());
+  }
+
+  template<class T>
+  class AutoSearchLambdaAutowire:
+    public AutoSearchLambda
+  {
+  public:
+    AutoSearchLambdaAutowire(CoreContext& ctxt, AnySharedPointerT<T>& ref, DeferrableAutowiring& defer) :
+      ctxt(ctxt),
+      ref(ref),
+      defer(defer)
+    {}
+
+    CoreContext& ctxt;
+    AnySharedPointerT<T>& ref;
+    DeferrableAutowiring& defer;
+
+    void operator()() const override {
+      // If the slot wasn't autowired, complete the satisfaction here
+      if(!ref)
+        ctxt.AddDeferredUnsafe(&defer);
+    }
+  };
 
   /// <summary>
   /// Registers a slot to be autowired
   /// </summary>
+  /// <param name="ref">The space where the resolved shared pointer will be stored</param>
+  /// <param name="defer">
+  /// In the event that resolution was not successful, the deferrable that will be used to perform delayed satisfaction
+  /// </param>
   template<class T>
-  bool Autowire(AutowirableSlot<T>& slot) {
-    {
-      std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-      FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
-      [this, &slot](AnySharedPointer& reference){
-        slot = reference.slot()->template as<T>();
-        if (!slot) {
-          AddDeferredUnsafe(AnySharedPointerT<T>(), &slot);
-        }
-      });
-    }
-    return static_cast<bool>(slot);
+  void Autowire(AnySharedPointerT<T>& ref, DeferrableAutowiring& defer) {
+    FindByTypeRecursive(
+      ref,
+      AutoSearchLambdaAutowire<T>(*this, ref, defer)
+    );
   }
 
+  template<class T, class Fn>
+  class AutoSearchLambdaNotifyWhenAutowired:
+    public AutoSearchLambda,
+    public AnySharedPointerT<T>
+  {
+  public:
+    AutoSearchLambdaNotifyWhenAutowired(CoreContext& ctxt, Fn& fn) :
+      ctxt(ctxt),
+      fn(fn),
+      resultSlot(nullptr)
+    {}
+
+    CoreContext& ctxt;
+    Fn& fn;
+    mutable AutowirableSlotFn<T, Fn>* resultSlot;
+
+    void operator()() const override {
+      if(*this)
+        // Matched successfully, do not attempt to defer
+        return;
+
+      resultSlot = new AutowirableSlotFn<T, Fn>(ctxt.shared_from_this(), std::forward<Fn>(fn));
+      ctxt.AddDeferredUnsafe(resultSlot);
+    }
+  };
+
   /// <summary>
-  /// Adds a post-attachment listener in this context for a particular autowired member
+  /// Adds a post-attachment listener in this context for a particular autowired member.
+  /// There is no guarantee for the context in which the listener will be called.
   /// </summary>
   /// <returns>
   /// A pointer to a deferrable autowiring function which the caller may safely ignore if it's not needed.
@@ -921,28 +873,15 @@ public:
   /// </remarks>
   template<class T, class Fn>
   const AutowirableSlotFn<T, Fn>* NotifyWhenAutowired(Fn&& listener) {
-    bool found = false;
-    AutowirableSlotFn<T, Fn>* retVal = nullptr;
-    {
-      std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-      FindByTypeRecursiveUnsafe(AnySharedPointerT<T>(),
-      [this, &listener, &retVal, &found](AnySharedPointer& reference) {
-        if (reference) {
-          found = true;
-        } else {
-          retVal = MakeAutowirableSlotFn<T>(
-            shared_from_this(),
-            std::forward<Fn>(listener)
-          );
-          AddDeferredUnsafe(reference, retVal);
-        }
-      });
-    }
-    if (found)
-      // Make call outside of lock
-      // NOTE: existential guarantees of context enable this.
+    AutoSearchLambdaNotifyWhenAutowired<T, Fn> searchFn(*this, listener);
+    FindByTypeRecursive(searchFn, searchFn);
+
+    if(searchFn)
+      // Success!  We can satisfy the listener call right away, and be assured that the listener
+      // will be able to find what it's looking for in this context without holding down a lock,
+      // because entities can't be removed from a context.
       listener();
-    return retVal;
+    return searchFn.resultSlot;
   }
 
   /// <summary>
@@ -984,6 +923,12 @@ namespace autowiring {
   }
 }
 
+// Deprecated, use Inject
+template<typename T, typename... Args>
+std::shared_ptr<T> CoreContext::Construct(Args&&... args) {
+  return Inject<T>(std::forward<Args>(args)...);
+}
+
 /// <summary>
 /// Constant type optimization for named sigil types
 /// </summary>
@@ -992,15 +937,17 @@ class CoreContextT:
   public CoreContext
 {
 public:
+  static const std::type_info& sc_type;
+
   CoreContextT(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
     CoreContext(pParent, backReference, pPeer)
-  {
-    // Save anchored types in context
-    AddAnchorInternal((T*)nullptr);
-  }
+  {}
 
-  const std::type_info& GetSigilType(void) const override { return typeid(T); }
+  const std::type_info& GetSigilType(void) const override { return sc_type; }
 };
+
+template<class T>
+const std::type_info& CoreContextT<T>::sc_type = typeid(T);
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 
@@ -1010,4 +957,3 @@ template<typename T, typename... Sigil>
 void CoreContext::AutoRequireMicroBolt(void) {
   Inject<MicroBolt<T, Sigil...>>();
 }
-

@@ -34,7 +34,7 @@ private:
   template<int... S>
   std::shared_ptr<T> CallByUnpackingTuple(index_tuple<S...>) const {
     auto ctxt = CoreContext::CurrentContext();
-    return ctxt->Construct<T>(std::get<S>(m_args)...);
+    return ctxt->Inject<T>(std::get<S>(m_args)...);
   }
 };
 
@@ -47,7 +47,7 @@ class AutoInjectableExpression<T>:
 {
 public:
   void operator()(AutoFuture* pFuture) const override {
-    auto added = CoreContext::CurrentContext()->Construct<T>();
+    auto added = CoreContext::CurrentContext()->Inject<T>();
     if(pFuture)
       *pFuture += added;
   }
@@ -138,7 +138,7 @@ public:
     if(pValue)
       pValue->operator()(pFuture);
     if(pFLink)
-      pFLink->operator()();
+      pFLink->operator()(pFuture);
   }
 
   AutoInjectable& operator+=(AutoInjectable&& other) {
@@ -201,18 +201,24 @@ AutoInjectable MakeInjectable(Arg1 arg1, Args... args) {
 }
 
 template<class... Ts>
-AutoInjectable MakeInjectable(void)  {
-  if(sizeof...(Ts) == 0)
-    return AutoInjectable();
+struct SelectInjRoutine {
+  static AutoInjectable MakeInjectable(void) {
+    AutoInjectable vals [] = {AutoInjectable(new AutoInjectableExpression<Ts>())...};
+    AutoInjectable retVal(std::move(vals[0]));
+    for(size_t i = 1; i < sizeof...(Ts); i++)
+      retVal += std::move(vals[i]);
+    return retVal;
+  }
+};
 
-  AutoInjectable injs [] {
-    AutoInjectable(new AutoInjectableExpression<Ts>())...
-  };
+template<>
+struct SelectInjRoutine<> {
+  static AutoInjectable MakeInjectable(void) { return AutoInjectable(); }
+};
 
-  AutoInjectable retVal(std::move(injs[0]));
-  for(auto& cur : injs)
-    retVal += std::move(cur);
-  return retVal;
+template<class... Ts>
+AutoInjectable MakeInjectable(void) {
+  return SelectInjRoutine<Ts...>::MakeInjectable();
 }
 
 template<class Fn>

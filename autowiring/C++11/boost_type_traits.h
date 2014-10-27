@@ -8,6 +8,7 @@
 #include <boost/type_traits/is_abstract.hpp>
 #include <boost/type_traits/is_array.hpp>
 #include <boost/type_traits/is_base_of.hpp>
+#include <boost/type_traits/is_class.hpp>
 #include <boost/type_traits/is_const.hpp>
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
@@ -26,6 +27,7 @@ namespace std {
   using boost::integral_constant;
   using boost::is_abstract;
   using boost::is_array;
+  using boost::is_class;
   using boost::is_base_of;
   using boost::is_const;
   using boost::is_floating_point;
@@ -40,11 +42,11 @@ namespace std {
   using boost::is_convertible;
 
   template<bool _Test, class _Type = void>
-	struct enable_if {};
+  struct enable_if {};
 
   template<class _Type>
-	struct enable_if<true, _Type>
-	{
-	  typedef _Type type;
-	};
+  struct enable_if<true, _Type>
+  {
+    typedef _Type type;
+  };
 }

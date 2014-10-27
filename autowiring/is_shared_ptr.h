@@ -19,4 +19,6 @@ struct is_shared_ptr<const T> :
 template<class T>
 struct is_shared_ptr<std::shared_ptr<T>> :
   public std::true_type
-{};
+{
+  typedef T type;
+};

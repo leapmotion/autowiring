@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <autowiring/AutoInjectable.h>
 #include <autowiring/ContextEnumerator.h>
+#include <algorithm>
 #include <set>
 #include THREAD_HEADER
 #include FUTURE_HEADER
@@ -125,7 +126,7 @@ TEST_F(CoreContextTest, CorrectHitAllocatorNew) {
     ) << "Overloaded new operator on a test type did not get invoked as expected";
 
     // Create an instance which won't throw:
-    auto hono = AutoCurrentContext()->Construct<HasOverriddenNewOperator>(false);
+    auto hono = AutoCurrentContext()->Inject<HasOverriddenNewOperator>(false);
 
     // Verify the correct new allocator was hit:
     ASSERT_EQ(
@@ -142,7 +143,7 @@ TEST_F(CoreContextTest, CorrectHitExceptionalTeardown) {
   HasOverriddenNewOperator::s_deleterHitCount = 0;
 
   // Create our type--we expect this to throw:
-  ASSERT_ANY_THROW(AutoCurrentContext()->Construct<HasOverriddenNewOperator>(true)) << "Construct operation did not propagate an exception to the caller";
+  ASSERT_ANY_THROW(AutoCurrentContext()->Inject<HasOverriddenNewOperator>(true)) << "Construct operation did not propagate an exception to the caller";
 
   // Now verify that the correct deleter was hit to release partially constructed memory:
   ASSERT_EQ(1UL, HasOverriddenNewOperator::s_deleterHitCount) << "Deleter was not correctly hit in an exceptional teardown";

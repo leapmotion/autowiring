@@ -1,26 +1,43 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AutoFilterDescriptor.h"
+#include "autowiring.h"
 
 /// <summary>
 /// A single custom AutoFilter entry in some type
 /// </summary>
-class NewAutoFilterBase {
-protected:
-  NewAutoFilterBase(const AutoFilterDescriptorStub& stub);
-};
+template<class MemFn>
+class NewAutoFilterForwarder;
 
-template<class MemFn, MemFn memFn>
-class NewAutoFilter:
-  public NewAutoFilterBase
+template<class RetType, class T, class... Args>
+class NewAutoFilterForwarder<RetType(T::*)(Args...)>
 {
 public:
-  static const AutoFilterDescriptorStub& GetStub(void) {
-    static const AutoFilterDescriptorStub s_descriptor(CallExtractor<MemFn>(), &CallExtractor<MemFn>::template Call<memFn>);
-    return s_descriptor;
-  }
+  typedef RetType(T::*t_memfn)(Args...);
 
-  NewAutoFilter(void) :
-    NewAutoFilterBase(GetStub())
+  NewAutoFilterForwarder(T* p, t_memfn pfn) :
+    p(p),
+    pfn(pfn)
   {}
+
+private:
+  T* const p;
+  const t_memfn pfn;
+
+public:
+  void AutoFilter(Args... args) {
+    (p->*pfn)(std::forward<Args>(args)...);
+  }
+};
+
+/// <summary>
+/// Constructs a relay for a secondary AutoFilter function
+/// </summary>
+class NewAutoFilter
+{
+public:
+  template<class RetVal, class T, class... Args>
+  NewAutoFilter(T* ptr, RetVal (T::*memfn)(Args...)) {
+    AutoConstruct<NewAutoFilterForwarder<RetVal(T::*)(Args...)>> ar(ptr, memfn);
+  }
 };

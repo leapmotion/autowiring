@@ -35,6 +35,21 @@ class ThisThreadGetsAddedLater:
   public CoreThread
 {};
 
+template<int N>
+class TestData {
+public:
+  int value;
+  TestData(int n = N): value(n) {}
+};
+
+template<typename... Args>
+class TestAutoFilter:
+  public ContextMember //Needed in order to be displayed by AutoNet
+{
+public:
+  void AutoFilter(Args... a) {}
+};
+
 class ContextA {};
 class ContextB {};
 class ContextC {};
@@ -67,6 +82,9 @@ int main() {
   {
     CurrentContextPusher pshr(ctxt2);
     AutoRequired<TestThread1> foo;
+
+    AutoRequired<TestAutoFilter<const TestData<0>&, TestData<1>&>> filter01;
+    AutoRequired<TestAutoFilter<const TestData<1>&, TestData<2>&>> filter12;
     
     // Give time to open AutoNet Visualizer
     std::this_thread::sleep_for(std::chrono::seconds(10));
@@ -104,6 +122,6 @@ int main() {
     };
   }
 
-  // This will wait indefinitly untill you manual quit the example
+  // This will wait indefinitly until you manually quit the example
   ctxt->Wait();
 }

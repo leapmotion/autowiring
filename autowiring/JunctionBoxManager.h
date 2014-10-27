@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "EventRegistry.h"
 #include "JunctionBoxBase.h"
 #include "JunctionBoxEntry.h"
 #include "uuid.h"
@@ -21,9 +20,6 @@ class OutputStreamVector;
 template<typename T>
 class EventOutputStream;
 
-template<typename T>
-class JunctionBox;
-
 /// <summary>
 /// General manager class of all junction boxes defined in some context
 /// </summary>
@@ -32,32 +28,10 @@ public:
   JunctionBoxManager();
   virtual ~JunctionBoxManager();
 
-  template<typename T>
-  std::shared_ptr<JunctionBoxBase> Get(void) {
-    // Add this type to the event registry. All events call this function
-    (void)RegEvent<T>::r;
-    const std::type_index& pTypeIndex = typeid(T);
-
-    auto box = m_junctionBoxes.find(pTypeIndex);
-    assert(box != m_junctionBoxes.end() && "If JunctionBox isn't found, EventRegistry isn't working");
-
-    //Check here if any listening marshals might be interested in receiving the fired args
-    auto mapfinditerator = m_eventOutputStreams.find(pTypeIndex);
-    std::vector<std::weak_ptr<EventOutputStreamBase> > * OutputStreamVector = nullptr;
-    if (mapfinditerator != m_eventOutputStreams.end()){
-      //no vec on this type yet. So create it, pass it, and wait for it to get filled later
-      OutputStreamVector = &(mapfinditerator->second);
-    }
-    else {
-      std::vector<std::weak_ptr<EventOutputStreamBase> > newvec;
-      m_eventOutputStreams[pTypeIndex] = newvec; //assignment copy constructor invoked;
-      auto it  = m_eventOutputStreams.find(pTypeIndex);
-      OutputStreamVector = &(it->second);
-    }
-
-    (box->second)->SetPotentialMarshals(OutputStreamVector);
-    return box->second;
-  }
+  /// <summary>
+  /// Get a JunctionBox by type
+  /// </summary>
+  std::shared_ptr<JunctionBoxBase> Get(const std::type_index& pTypeIndex);
 
   /// <summary>
   /// Allows this JunctionBox manager to begin processing events
@@ -74,38 +48,12 @@ public:
   /// If any live ones found return true. Otherwise false.
   /// NOTE: this func does lazy cleanup on weakptrs ptng to suff that has fallen out of scope.
   /// </summary>
-  template <class T>
-  bool CheckEventOutputStream(void){
-    auto mapfinditerator = m_eventOutputStreams.find(typeid(T));
-    if(mapfinditerator != m_eventOutputStreams.end()) {
-      auto v = (mapfinditerator->second);
-      auto it = v.begin();
-      while(it != v.end()) {
-        if((*it).lock())
-          return true;
-        it = v.erase(it);
-      }
-      return false; //return false if iterated through whole vec without seeing any live pointers.
-    }
-    return false;  //return false if no vec with that type
-  }
+  bool CheckEventOutputStream(const std::type_index& type);
 
   /// <summary>
   /// Adds the named eventoutputstream to the collection of known eventoutputstreams
   /// </summary>
-  template <class T>
-  void AddEventOutputStream(std::weak_ptr<EventOutputStreamBase> pRecvr){
-    auto mapfinditerator = m_eventOutputStreams.find(typeid(T));
-    if (mapfinditerator != m_eventOutputStreams.end()){
-      // If the type exists already, find the correspoonding outputstreambase and push it back.
-      mapfinditerator->second.push_back(pRecvr);
-    }
-    else {
-      std::vector<std::weak_ptr<EventOutputStreamBase> > newvec;
-      newvec.push_back(pRecvr);
-      m_eventOutputStreams[typeid(T)] = newvec; //assignment copy constructor invoked;
-    }
-  }
+  void AddEventOutputStream(const std::type_index& type, std::weak_ptr<EventOutputStreamBase> pRecvr);
 
   /// <summary>
   /// Creates a new event stream based on the provided event type
@@ -116,7 +64,7 @@ public:
     auto retval =  std::make_shared<EventOutputStream<T>>();
     auto upcastptr = static_cast<std::shared_ptr<EventOutputStreamBase>>(retval);
     std::weak_ptr<EventOutputStreamBase> weakStreamPtr = upcastptr;
-    AddEventOutputStream<T>(weakStreamPtr);
+    AddEventOutputStream(typeid(T), weakStreamPtr);
     return retval;
   }
 

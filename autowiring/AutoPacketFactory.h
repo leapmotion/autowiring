@@ -10,7 +10,7 @@
 #include <vector>
 #include TYPE_INDEX_HEADER
 #include TYPE_TRAITS_HEADER
-#include STL_UNORDERED_MAP
+#include STL_UNORDERED_SET
 
 class Deferred;
 class DispatchQueue;
@@ -88,7 +88,7 @@ public:
   /// </summary>
   /// <remarks>
   /// This method will cause the factory to enter the Stopped state, if it's not there
-  /// alread.  This method is idempotent.
+  /// already.  This method is idempotent.
   /// </remarks>
   void Clear(void);
 
@@ -105,7 +105,7 @@ public:
   /// </summary>
   template<class T>
   void AddSubscriber(const std::shared_ptr<T>& rhs) {
-    AddSubscriber(AutoFilterDescriptorSelect<T>(rhs));
+    AddSubscriber(MakeAutoFilterDescriptor<T>(rhs));
   }
 
   /// <summary>
@@ -114,6 +114,110 @@ public:
   /// <param name="autoFilter">The AutoFilter to be removed</param>
   void RemoveSubscriber(const AutoFilterDescriptor& autoFilter);
 
+  /// <summary>
+  /// Sets the broadcast status for the specified output from the node.
+  /// </summary>
+  /// <remarks>
+  /// When dataType = nullptr the broadcast status is set for all declared input and output data.
+  /// </remarks>
+  template<class node>
+  void BroadcastDataOut(const std::type_info* dataType = nullptr, bool enable = true) {
+    const std::type_info* nodeType = &typeid(typename SelectTypeUnifier<node>::type);
+    if (dataType) {
+      GetContext()->NotifyWhenAutowired<node>(
+        [this, nodeType, dataType, enable](){
+        BroadcastOneDataOut(nodeType, dataType, enable);
+      });
+    } else {
+      GetContext()->NotifyWhenAutowired<node>(
+        [this, nodeType, enable](){
+        BroadcastAllDataOut(nodeType, enable);
+      });
+    }
+  }
+
+  /// <summary>
+  /// Sets the broadcast status for the specified output from the node.
+  /// </summary>
+  /// <remarks>
+  /// When dataType = nullptr the broadcast status is set for all declared input and output data.
+  /// </remarks>
+  template<class node>
+  void BroadcastDataIn(const std::type_info* dataType = nullptr, bool enable = true) {
+    const std::type_info* nodeType = &typeid(typename SelectTypeUnifier<node>::type);
+    if (dataType) {
+      GetContext()->NotifyWhenAutowired<node>(
+        [this, nodeType, dataType, enable](){
+        BroadcastOneDataIn(nodeType, dataType, enable);
+      });
+    } else {
+      GetContext()->NotifyWhenAutowired<node>(
+        [this, nodeType, enable](){
+        BroadcastAllDataIn(nodeType, enable);
+      });
+    }
+  }
+
+  /// <summary>
+  /// Establishes a data pipe from nodeIn to nodeOut.
+  /// </summary>
+  /// <remarks>
+  /// When dataType = nullptr pipes are established for all declared data
+  /// that are outputs of nodeOut and inputs to nodeIn
+  /// If nodeOut includes AutoPacket& as an argument then pipes will be defined
+  /// for all declared input types of nodeIn. Likewise, if nodeIn declares
+  /// AutoPacket& or const AutoPacket& as an argument then pipes will be defined
+  /// for all declared outputs of nodeOut.
+  /// </remarks>
+  template<class nodeOut, class nodeIn>
+  void PipeData(const std::type_info* dataType = nullptr, bool enable = true) {
+    const std::type_info* nodeOutType = &typeid(typename SelectTypeUnifier<nodeOut>::type);
+    const std::type_info* nodeInType = &typeid(typename SelectTypeUnifier<nodeIn>::type);
+    if (dataType) {
+      GetContext()->NotifyWhenAutowired<nodeOut>(
+        [this, nodeOutType, nodeInType, dataType, enable](){
+        GetContext()->NotifyWhenAutowired<nodeIn>(
+        [this, nodeOutType, nodeInType, dataType, enable](){
+          PipeOneData(nodeOutType, nodeInType, dataType, enable);
+        });
+      });
+    } else {
+      GetContext()->NotifyWhenAutowired<nodeOut>(
+        [this, nodeOutType, nodeInType, enable](){
+        GetContext()->NotifyWhenAutowired<nodeIn>(
+        [this, nodeOutType, nodeInType, enable](){
+          PipeAllData(nodeOutType, nodeInType, enable);
+        });
+      });
+    }
+  }
+
+protected:
+  /// <summary>
+  /// Returns a description of the AutoFilter associated with the type nodeType
+  /// </summary>
+  /// <remarks>
+  /// If a matching description was not found GetTypeDescriptor(type).GetAutoFilterTypeInfo() == nullptr
+  /// </remarks>
+  AutoFilterDescriptor GetTypeDescriptorUnsafe(const std::type_info* nodeType);
+
+  void BroadcastOneDataIn(const std::type_info* nodeType, const std::type_info* dataType, bool enable);
+  void BroadcastAllDataIn(const std::type_info* nodeType, bool enable);
+
+  void BroadcastOneDataOut(const std::type_info* nodeType, const std::type_info* dataType, bool enable);
+  void BroadcastAllDataOut(const std::type_info* nodeType, bool enable);
+
+  void PipeOneData(const std::type_info* nodeOutType, const std::type_info* nodeInType, const std::type_info* dataType, bool enable);
+  void PipeAllData(const std::type_info* nodeOutType, const std::type_info* nodeInType, bool enable);
+
+  static bool IsAutoPacketType(const std::type_info& dataType) {
+    return
+    dataType == typeid(AutoPacket) ||
+    dataType == typeid(auto_arg<AutoPacket&>::id_type) ||
+    dataType == typeid(auto_arg<const AutoPacket&>::id_type);
+  }
+
+public:
   /// <summary>
   /// Obtains a new packet from the object pool and configures it with the current
   /// satisfaction graph

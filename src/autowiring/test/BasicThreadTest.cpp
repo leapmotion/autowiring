@@ -42,7 +42,7 @@ TEST_F(BasicThreadTest, ValidateThreadTimes) {
   ctxt->Initiate();
 
   static const size_t spinCount = 10000000;
-  auto spinsThenQuits = ctxt->Construct<SpinsAndThenQuits>(spinCount);
+  auto spinsThenQuits = ctxt->Inject<SpinsAndThenQuits>(spinCount);
 
   // Instantaneous benchmark on the time it takes to decrement the counter value:
   std::chrono::nanoseconds benchmark;

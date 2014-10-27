@@ -19,6 +19,7 @@
  * THE SOFTWARE.
  */
 
+#include "stdafx.h"
 #include "json11.hpp"
 #include <cassert>
 #include <cstdlib>
