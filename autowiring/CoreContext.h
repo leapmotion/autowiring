@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
-#include "ObjectTraits.h"
+#include "AutoFactory.h"
 #include "AutoFilterDescriptor.h"
 #include "AutowirableSlot.h"
 #include "AutowiringEvents.h"
@@ -12,16 +12,18 @@
 #include "ContextMember.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
+#include "EventOutputStream.h"
+#include "EventInputStream.h"
+#include "EventRegistry.h"
+#include "ExceptionFilter.h"
 #include "fast_pointer_cast.h"
 #include "has_autoinit.h"
 #include "InvokeRelay.h"
-#include "result_or_default.h"
 #include "JunctionBoxManager.h"
-#include "EventOutputStream.h"
-#include "EventInputStream.h"
-#include "ExceptionFilter.h"
+#include "member_new_type.h"
+#include "ObjectTraits.h"
+#include "result_or_default.h"
 #include "TeardownNotifier.h"
-#include "EventRegistry.h"
 #include "TypeRegistry.h"
 #include "TypeUnifier.h"
 
@@ -312,7 +314,7 @@ protected:
   /// <summary>
   /// Unsynchronized version of FindByType
   /// </summary>
-  void FindByTypeUnsafe(AnySharedPointer& reference) const;
+  MemoEntry& FindByTypeUnsafe(AnySharedPointer& reference) const;
 
   /// <summary>
   /// Recursive locking for Autowire satisfaction search
@@ -352,6 +354,35 @@ protected:
   /// Forwarding routine, only removes from this context
   /// </summary>
   void UnsnoopAutoPacket(const ObjectTraits& traits);
+
+  /// <summary>
+  /// Registers the specified type as a provider factory for some other type
+  /// </summary>
+  /// <param name="factory">The type which performs the construction</param>
+  /// <param name="type">The type which may be constructed</param>
+  void RegisterFactory(AnySharedPointer&& factory, AnySharedPointer&& type);
+
+  template<class T>
+  void RegisterFactory(autowiring::member_new_type<T, autowiring::factorytype::single_ret>) {
+    // Single factory, just inject this type and be done with it:
+    Inject<
+      AutoFactory<
+        T,
+        member_new_type<T, factorytype::single_ret>::type
+      >
+    >();
+  }
+
+  template<class T>
+  void RegisterFactory(autowiring::member_new_type<T, autowiring::factorytype::multi_ret>) {
+    RegisterFactory(
+      AnySharedPointerT<T>(),
+      AnySharedPointerT<typename member_new_type<T, factorytype::single_ret>::type>()
+    );
+  }
+
+  template<class T>
+  static void RegisterFactory(autowiring::member_new_type<T, autowiring::factorytype::none>) {}
 
 public:
   // Accessor methods:
@@ -464,7 +495,7 @@ public:
     CurrentContextPusher pshr(shared_from_this());
 
     // Cannot safely inject while holding the lock, so we have to unlock and then inject
-    retVal.reset(CreationRules::New<TActual>(std::forward<Args>(args)...));
+    retVal.reset(autowiring::CreationRules<TActual, Args...>::New(std::forward<Args>(args)...));
 
     // AutoInit if sensible to do so:
     CallAutoInit(*retVal, has_autoinit<T>());
@@ -481,6 +512,10 @@ public:
       // Construct.
       FindByType(retVal);
     }
+
+    // Factory registration if sensible to do so, but only after the underlying type has been
+    // added, so that the proper type can succeed
+    RegisterFactory(autowiring::member_new_type<T>());
     return retVal;
   }
 

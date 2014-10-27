@@ -262,7 +262,7 @@ void CoreContext::FindByType(AnySharedPointer& reference) const {
   FindByTypeUnsafe(reference);
 }
 
-void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
+CoreContext::MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   const std::type_info& type = reference->type();
 
   // If we've attempted to search for this type before, we will return the value of the memo immediately:
@@ -270,7 +270,7 @@ void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   if(q != m_typeMemos.end()) {
     // We can copy over and return here
     reference = q->second.m_value;
-    return;
+    return q->second;
   }
 
   // Resolve based on iterated dynamic casts for each concrete type:
@@ -289,7 +289,9 @@ void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   }
 
   // This entry was not formerly memoized.  Memoize unconditionally.
-  m_typeMemos[type].m_value = reference;
+  MemoEntry& retVal = m_typeMemos[type];
+  retVal.m_value = reference;
+  return retVal;
 }
 
 void CoreContext::FindByTypeRecursive(AnySharedPointer& reference, const AutoSearchLambda& searchFn) const {
@@ -852,6 +854,24 @@ void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {
   // Handoff to parent:
   if (m_pParent)
     m_pParent->UnsnoopAutoPacket(traits);
+}
+
+void CoreContext::RegisterFactory(AnySharedPointer&& factory, AnySharedPointer&& type) {
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+
+  // Locate a slot for the downstream type.  If it already exists, there's no need to register a
+  // factory for it.
+  MemoEntry& memo = FindByTypeUnsafe(type);
+  if(type)
+    return;
+
+  // Find the factory type--by this point it must exist
+  FindByTypeUnsafe(factory);
+  if(!factory)
+    throw std::runtime_error("Attempted to register a factory that does not yet exist in the context");
+
+  // Now, indicate to anyone attempting to construct this type that it's something
+  // we intend to create a factory for:
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {

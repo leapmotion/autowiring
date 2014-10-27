@@ -17,6 +17,7 @@ set(Autowiring_SRCS
   AnySharedPointer.h
   AutoCheckout.h
   AutoRestarter.h
+  AutoFactory.h
   AutoFuture.h
   AutoFuture.cpp
   AutowiringConfig.h
@@ -105,7 +106,7 @@ set(Autowiring_SRCS
   InterlockedExchange.h
   InvokeRelay.h
   atomic_object.h
-  unlock_object.h
+  member_new_type.h
   Object.h
   ObjectPool.h
   ObjectPoolMonitor.h
@@ -129,6 +130,7 @@ set(Autowiring_SRCS
   TypeRegistry.h
   TypeRegistry.cpp
   TypeUnifier.h
+  unlock_object.h
   uuid.h
   var_logic.h
 )
