@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include TYPE_INDEX_HEADER
 
 class CoreContext;
 
@@ -13,7 +14,8 @@ typedef const std::type_info*const* t_TypeInfoVector;
 class BoltBase
 {
 public:
-  virtual ~BoltBase(void) {}
+  BoltBase(void);
+  virtual ~BoltBase(void);
 
   /// <summary>
   /// Returns a null-termianted list of one (or more) sigil types that this bolt cares about

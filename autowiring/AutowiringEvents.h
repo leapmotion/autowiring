@@ -11,6 +11,9 @@ class CoreContext;
 /// </summary
 class AutowiringEvents {
 public:
+  AutowiringEvents(void);
+  virtual ~AutowiringEvents(void);
+  
   virtual void NewContext(CoreContext&)=0;
   virtual void ExpiredContext(CoreContext&)=0;
   virtual void NewObject(CoreContext&, const ObjectTraits&)=0;

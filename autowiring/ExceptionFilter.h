@@ -1,9 +1,9 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-
 #include FUNCTIONAL_HEADER
 
 class JunctionBoxBase;
+class Object;
 
 /// <summary>
 /// Implements an exception filter type, invoked when an unhandled exception is thrown
@@ -47,7 +47,8 @@ class JunctionBoxBase;
 class ExceptionFilter
 {
 public:
-  virtual ~ExceptionFilter(void) {}
+  ExceptionFilter(void);
+  virtual ~ExceptionFilter(void);
 
   /// <summary>
   /// This method is invoked when an exception has been thrown by CoreThread::Run

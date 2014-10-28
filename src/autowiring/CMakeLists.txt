@@ -40,14 +40,17 @@ set(Autowiring_SRCS
   AutowirableSlot.cpp
   AutowiringConfig.h
   AutowiringEvents.h
+  AutowiringEvents.cpp
   autowiring.h
   autowiring_error.h
+  autowiring_error.cpp
   BasicThread.h
   BasicThread.cpp
   BasicThreadStateBlock.h
   BasicThreadStateBlock.cpp
   Bolt.h
   BoltBase.h
+  BoltBase.cpp
   CallExtractor.h
   ContextCreator.h
   ContextCreatorBase.h
@@ -64,6 +67,7 @@ set(Autowiring_SRCS
   CoreThread.cpp
   CoreThread.h
   CoreRunnable.h
+  CoreRunnable.cpp
   CreationRules.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
@@ -92,6 +96,7 @@ set(Autowiring_SRCS
   JunctionBoxManager.h
   JunctionBoxManager.cpp
   ExceptionFilter.h
+  ExceptionFilter.cpp
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   has_autoinit.h
