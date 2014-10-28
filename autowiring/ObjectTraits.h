@@ -26,7 +26,6 @@ struct ObjectTraits {
     actual_type(typeid(*value)),
     stump(SlotInformationStump<T>::s_stump),
     value(value),
-    cast_offset(this->value->cast_offset()),
     subscriber(MakeAutoFilterDescriptor(value)),
     pObject(autowiring::fast_pointer_cast<Object>(value)),
     pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
@@ -45,10 +44,7 @@ struct ObjectTraits {
         return !!dynamic_cast<const AutowiringEvents*>(pObject.get());
       }()
     )
-  {
-    if(!pObject)
-      throw autowiring_error("Cannot add a type which does not implement Object");
-  }
+  {}
 
   // The type of the passed pointer
   const std::type_info& type;
@@ -91,9 +87,6 @@ struct ObjectTraits {
   // A holder to store the original shared pointer, to ensure that type information propagates
   // correctly on the right-hand side of our map
   const AnySharedPointer value;
-
-  // Offset of the void pointer to the embedded Object
-  const size_t cast_offset;
 
   // The packet subscriber introduction method, if appropriate:
   const AutoFilterDescriptor subscriber;
