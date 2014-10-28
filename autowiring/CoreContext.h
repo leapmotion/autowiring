@@ -320,11 +320,6 @@ protected:
   void FindByTypeRecursive(AnySharedPointer& reference, const AutoSearchLambda& searchFn) const;
 
   /// <summary>
-  /// Returns or constructs a new AutoPacketFactory instance
-  /// </summary>
-  std::shared_ptr<AutoPacketFactory> GetPacketFactory(void);
-
-  /// <summary>
   /// Adds the specified deferrable autowiring to be satisfied at a later date when its matched type is inserted
   /// </summary>
   void AddDeferredUnsafe(DeferrableAutowiring* deferrable);
