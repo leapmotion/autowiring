@@ -33,7 +33,6 @@
 #include STL_UNORDERED_SET
 
 class AutoInjectable;
-class AutoPacketFactory;
 class DeferrableAutowiring;
 class BasicThread;
 class BoltBase;

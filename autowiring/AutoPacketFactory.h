@@ -13,8 +13,12 @@
 #include STL_UNORDERED_SET
 
 struct AdjacencyEntry;
+class AutoPacketFactory;
 class Deferred;
 class DispatchQueue;
+
+extern template struct std::default_delete<AutoPacketFactory>;
+extern template class std::shared_ptr<AutoPacketFactory>;
 
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
