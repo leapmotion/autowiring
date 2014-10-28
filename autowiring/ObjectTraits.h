@@ -1,30 +1,29 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <typeinfo>
-#include MEMORY_HEADER
-
-#include "fast_pointer_cast.h"
 #include "AnySharedPointer.h"
 #include "AutoFilterDescriptor.h"
-
 #include "AutowiringEvents.h"
-#include "Object.h"
+#include "BoltBase.h"
 #include "ContextMember.h"
 #include "CoreRunnable.h"
 #include "BasicThread.h"
 #include "ExceptionFilter.h"
-#include "BoltBase.h"
-
 #include "EventRegistry.h"
+#include "fast_pointer_cast.h"
+#include "Object.h"
+
+#include <typeinfo>
+#include MEMORY_HEADER
 
 /// <summary>
 /// Mapping and extraction structure used to provide a runtime version of an Object-implementing shared pointer
 /// </summary>
 struct ObjectTraits {
-  template<class T>
-  ObjectTraits(const std::shared_ptr<typename SelectTypeUnifier<T>::type>& value, T*) :
+  template<class TActual, class T>
+  ObjectTraits(const std::shared_ptr<TActual>& value, T*) :
     type(typeid(T)),
+    actual_type(typeid(*value)),
     stump(SlotInformationStump<T>::s_stump),
     value(value),
     cast_offset(this->value->cast_offset()),
@@ -51,8 +50,13 @@ struct ObjectTraits {
       throw autowiring_error("Cannot add a type which does not implement Object");
   }
 
-  // The declared original type:
+  // The type of the passed pointer
   const std::type_info& type;
+
+  // The "actual type" used by Autowiring.  This type may differ from ObjectTraits::type in cases
+  // where a type unifier is used, or if the concrete type is defined in an external module--for
+  // instance, by a class factory.
+  const std::type_info& actual_type;
 
   /// <summary>
   /// Used to obtain a list of slots defined on this type, for reflection purposes
