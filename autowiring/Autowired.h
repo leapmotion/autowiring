@@ -7,8 +7,12 @@
 #include MEMORY_HEADER
 #include ATOMIC_HEADER
 
+class AutoPacketFactory;
 class CoreContext;
 class GlobalCoreContext;
+
+extern template struct std::default_delete<AutoPacketFactory>;
+extern template class std::shared_ptr<AutoPacketFactory>;
 
 /// <summary>
 /// Provides a simple way to obtain a reference to the current context

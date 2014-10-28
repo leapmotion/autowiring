@@ -18,7 +18,7 @@ class Deferred;
 class DispatchQueue;
 
 extern template struct std::default_delete<AutoPacketFactory>;
-extern template class std::shared_ptr<AutoPacketFactory>;
+extern template class ObjectPool<AutoPacket>;
 
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
