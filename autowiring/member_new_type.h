@@ -8,10 +8,8 @@ enum class factorytype {
   none,
 
   // IType* New(void);
-  single_ret,
-
   // std::tuple<IType1, IType2> New(void);
-  multi_ret,
+  ret_val,
 
   // void New(IType1*&, IType2*&);
   multi_byref
@@ -27,22 +25,22 @@ struct sel_valuetype {
 
 template<class T, class U>
 struct sel_valuetype<T* (U::*)()> {
-  static const factorytype value = factorytype::single_ret;
+  static const factorytype value = factorytype::ret_val;
 };
 
 template<class T, class U>
 struct sel_valuetype<T* (U::*)() const> {
-  static const factorytype value = factorytype::single_ret;
+  static const factorytype value = factorytype::ret_val;
 };
 
 template<class... Ts, class U>
 struct sel_valuetype<std::tuple<Ts*...>(U::*)()> {
-  static const factorytype value = factorytype::multi_ret;
+  static const factorytype value = factorytype::ret_val;
 };
 
 template<class... Ts, class U>
 struct sel_valuetype<std::tuple<Ts*...>(U::*)() const> {
-  static const factorytype value = factorytype::multi_ret;
+  static const factorytype value = factorytype::ret_val;
 };
 
 template<class... Ts, class U>
@@ -89,9 +87,8 @@ struct member_new_type
 };
 
 template<class T>
-struct member_new_type<T, factorytype::single_ret> {
-  static const factorytype factory = factorytype::single_ret;
-  typedef typename std::remove_pointer<typename Decompose<decltype(&T::New)>::retType>::type type;
+struct member_new_type<T, factorytype::ret_val> {
+  static const factorytype factory = factorytype::ret_val;
 };
 
 }

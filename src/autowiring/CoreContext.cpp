@@ -856,24 +856,6 @@ void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {
     m_pParent->UnsnoopAutoPacket(traits);
 }
 
-void CoreContext::RegisterFactory(AnySharedPointer&& factory, AnySharedPointer&& type) {
-  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-
-  // Locate a slot for the downstream type.  If it already exists, there's no need to register a
-  // factory for it.
-  MemoEntry& memo = FindByTypeUnsafe(type);
-  if(type)
-    return;
-
-  // Find the factory type--by this point it must exist
-  FindByTypeUnsafe(factory);
-  if(!factory)
-    throw std::runtime_error("Attempted to register a factory that does not yet exist in the context");
-
-  // Now, indicate to anyone attempting to construct this type that it's something
-  // we intend to create a factory for:
-}
-
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
   rhs.Dump(os);
   return os;

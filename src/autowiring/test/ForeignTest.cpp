@@ -46,8 +46,8 @@ public:
 
 using namespace autowiring;
 
-static_assert(member_new_type<ForeignFactoryA>::factory == factorytype::single_ret, "Single return member return type not correctly extracted");
-static_assert(member_new_type<ForeignFactoryB>::factory == factorytype::multi_ret, "Multi-ret member return type not correctly extracted");
+static_assert(member_new_type<ForeignFactoryA>::factory == factorytype::ret_val, "Single return member return type not correctly extracted");
+static_assert(member_new_type<ForeignFactoryB>::factory == factorytype::ret_val, "Multi-ret member return type not correctly extracted");
 static_assert(member_new_type<ForeignFactoryC>::factory == factorytype::multi_byref, "Multi-ret byref return member return type not correctly extracted");
 
 class ForeignTest:
@@ -56,7 +56,7 @@ class ForeignTest:
 
 
 
-TEST_F(ForeignTest, ForeignFactoryTest) {
+TEST_F(ForeignTest, ForeignFactoryATest) {
   // Inject the factory, this should cause it to be registered as a factory
   AutoRequired<ForeignFactoryA> factory;
 
@@ -66,4 +66,17 @@ TEST_F(ForeignTest, ForeignFactoryTest) {
   // knowledge on how to perform the satisfaction at compile time.
   AutoRequired<ForeignType> ft;
   ASSERT_TRUE(ft.IsAutowired()) << "Factory-constructed type was not autowired as expected";
+}
+
+// Not currently supported!  Maybe someday if someone needs it
+TEST_F(ForeignTest, DISALBED_ForeignFactoryBTest) {
+  AutoRequired<ForeignFactoryB> factory;
+
+  // Now try to use the factory to construct our unrelated type, as before
+  AutoRequired<ForeignType> ft;
+  ASSERT_TRUE(ft.IsAutowired()) << "Factory-constructed type was not autowired as expected";
+
+  // Now see if we can also obtain the implementation pointer this time, because of the tuple-style return
+  Autowired<ForeignTypeImpl> impl;
+  ASSERT_TRUE(impl.IsAutowired()) << "Tuple-returning factory's interfaces were not all registered by the containing CoreContext";
 }

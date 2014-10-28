@@ -156,26 +156,10 @@ protected:
   /// which has one of the signatures defined <see ref="factorytype">factorytype</see>
   /// </remarks>
   template<class T>
-  class AutoFactory:
-    public Object
-  {
-  public:
-    virtual T* operator()(void) const = 0;
-  };
+  class AutoFactory;
 
   template<class T, class Fn>
-  class AutoFactoryFn:
-    public AutoFactory<T>
-  {
-  public:
-    AutoFactoryFn(Fn&& fn) :
-      fn(std::move(fn))
-    {}
-
-    const Fn fn;
-
-    T* operator()(void) const override { return fn(); }
-  };
+  class AutoFactoryFn;
 
   // This is a list of concrete types, indexed by the true type of each element.
   std::vector<ObjectTraits> m_concreteTypes;
@@ -393,44 +377,26 @@ protected:
   /// </summary>
   template<class Fn>
   void RegisterFactoryFn(Fn&& fn) {
-    Inject<
-      AutoFactoryFn<std::remove_pointer<decltype(fn())>::type, Fn>
-    >(std::forward<Fn>(fn));
+    Inject<AutoFactoryFn<std::remove_pointer<decltype(fn())>::type, Fn>>(std::forward<Fn>(fn));
   }
 
   /// <summary>
   /// Registers a new foreign factory type without explicitly specifying the returned value type
   /// </summary>
   /// <param name="Factory">The factory type to be added</param>
+  /// <param name="obj">A reference to the factory proper</param>
   template<class Factory>
-  void RegisterFactory(Factory& obj, autowiring::member_new_type<Factory, autowiring::factorytype::single_ret>) {
-    // Single factory, just inject this type and be done with it:
-    RegisterFactoryFn(
-      [&obj] { return obj.New(); }
-    );
-  }
-
-  template<class Factory>
-  void RegisterFactory(Factory& obj, autowiring::member_new_type<Factory, autowiring::factorytype::multi_ret>) {
-    RegisterFactory(
-      AnySharedPointerT<Factory>(),
-      AnySharedPointerT<typename member_new_type<Factory, factorytype::single_ret>::type>()
-    );
+  void RegisterFactory(Factory& obj, autowiring::member_new_type<Factory, autowiring::factorytype::ret_val>) {
+    RegisterFactoryFn([&obj] { return obj.New(); });
   }
 
   template<class Factory>
   void RegisterFactory(Factory& obj, autowiring::member_new_type<Factory, autowiring::factorytype::multi_byref>) {
+    static_assert(false, "This return type must be implemented");
   }
 
   template<class Factory>
   void RegisterFactory(const Factory&, autowiring::member_new_type<Factory, autowiring::factorytype::none>) {}
-
-  /// <summary>
-  /// Registers the specified type as a provider factory for some other type
-  /// </summary>
-  /// <param name="factory">The type which performs the construction</param>
-  /// <param name="type">The type which may be constructed</param>
-  void RegisterFactory(AnySharedPointer&& factory, AnySharedPointer&& type);
 
 public:
   // Accessor methods:
@@ -439,6 +405,13 @@ public:
   size_t GetChildCount(void) const;
   virtual const std::type_info& GetSigilType(void) const = 0;
   t_childList::iterator GetBackReference(void) const { return m_backReference; }
+  const std::shared_ptr<CoreContext>& GetParentContext(void) const { return m_pParent; }
+
+  /// <returns>
+  /// True if the sigil type of this CoreContext matches the specified sigil type
+  /// </returns>
+  template<class Sigil>
+  bool Is(void) const { return GetSigilType() == typeid(Sigil); }
 
   /// <returns>
   /// The first child in the set of this context's children
@@ -582,12 +555,6 @@ public:
   bool CheckEventOutputStream(void){
     return m_junctionBoxManager->CheckEventOutputStream(typeid(T));
   }
-
-  /// <returns>
-  /// True if the sigil type of this CoreContext matches the specified sigil type
-  /// </returns>
-  template<class Sigil>
-  bool Is(void) const { return GetSigilType() == typeid(Sigil); }
 
   /// <summary>
   /// Sends AutowiringEvents to build current state
@@ -738,11 +705,6 @@ public:
   /// when a context is first constructed by a thread.
   /// </remarks>
   static std::shared_ptr<CoreContext> CurrentContext(void);
-
-  /// <summary>
-  /// Obtains a pointer to the parent context
-  /// </summary>
-  const std::shared_ptr<CoreContext>& GetParentContext(void) const {return m_pParent;}
 
   /// <summary>
   /// Filters std::current_exception using any registered exception filters, or rethrows.
@@ -1034,11 +996,48 @@ void CoreContext::AutoRequireMicroBolt(void) {
   Inject<MicroBolt<T, Sigil...>>();
 }
 
+template<class T>
+class CoreContext::AutoFactory
+{
+public:
+  virtual T* operator()(CoreContext& ctxt) const = 0;
+};
+
+template<class T, class Fn>
+class CoreContext::AutoFactoryFn :
+  public Object,
+  public CoreContext::AutoFactory<T>
+{
+public:
+  AutoFactoryFn(Fn&& fn) :
+    fn(std::move(fn))
+  {}
+
+  const Fn fn;
+
+  T* operator()(CoreContext&) const override { return fn(); }
+};
+
+template<class... Ts, class Fn>
+class CoreContext::AutoFactoryFn<std::tuple<Ts...>, Fn> :
+  public Object,
+  CoreContext::AutoFactory<Ts>...
+{
+public:
+  AutoFactoryFn(Fn&& fn) :
+    fn(std::move(fn))
+  {}
+
+  const Fn fn;
+};
+
 template<typename T, typename... Args>
 T* autowiring::crh<autowiring::construction_strategy::foreign_factory, T, Args...>::New(CoreContext& ctxt, Args&&... args) {
   AnySharedPointerT<CoreContext::AutoFactory<T>> af;
   ctxt.FindByType(af);
   if(!af)
     throw autowiring_error("Attempted to AutoRequire an interface, but failed to find a factory for this interface in the current context");
-  return (*af)();
+
+  // Standard factory invocation:
+  return (*af)(ctxt);
 }
