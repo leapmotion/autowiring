@@ -356,33 +356,41 @@ protected:
   void UnsnoopAutoPacket(const ObjectTraits& traits);
 
   /// <summary>
+  /// Registers a new foreign factory type without explicitly specifying the returned value type
+  /// </summary>
+  /// <param name="Factory">The factory type to be added</param>
+  template<class Factory>
+  void RegisterFactory(Factory& obj, autowiring::member_new_type<Factory, autowiring::factorytype::single_ret>) {
+    // Single factory, just inject this type and be done with it:
+    Inject<
+      AutoFactory<
+        Factory,
+        member_new_type<T, factorytype::single_ret>::type
+      >
+    >(obj);
+  }
+
+  template<class Factory>
+  void RegisterFactory(Factory& obj, autowiring::member_new_type<Factory, autowiring::factorytype::multi_ret>) {
+    RegisterFactory(
+      AnySharedPointerT<Factory>(),
+      AnySharedPointerT<typename member_new_type<Factory, factorytype::single_ret>::type>()
+      );
+  }
+
+  template<class Factory>
+  void RegisterFactory(Factory& obj, autowiring::member_new_type<Factory, autowiring::factorytype::multi_byref>) {
+  }
+
+  template<class Factory>
+  void RegisterFactory(Factory&, autowiring::member_new_type<Factory, autowiring::factorytype::none>) {}
+
+  /// <summary>
   /// Registers the specified type as a provider factory for some other type
   /// </summary>
   /// <param name="factory">The type which performs the construction</param>
   /// <param name="type">The type which may be constructed</param>
   void RegisterFactory(AnySharedPointer&& factory, AnySharedPointer&& type);
-
-  template<class T>
-  void RegisterFactory(autowiring::member_new_type<T, autowiring::factorytype::single_ret>) {
-    // Single factory, just inject this type and be done with it:
-    Inject<
-      AutoFactory<
-        T,
-        member_new_type<T, factorytype::single_ret>::type
-      >
-    >();
-  }
-
-  template<class T>
-  void RegisterFactory(autowiring::member_new_type<T, autowiring::factorytype::multi_ret>) {
-    RegisterFactory(
-      AnySharedPointerT<T>(),
-      AnySharedPointerT<typename member_new_type<T, factorytype::single_ret>::type>()
-    );
-  }
-
-  template<class T>
-  static void RegisterFactory(autowiring::member_new_type<T, autowiring::factorytype::none>) {}
 
 public:
   // Accessor methods:
@@ -493,9 +501,7 @@ public:
 
     // We must make ourselves current for the remainder of this call:
     CurrentContextPusher pshr(shared_from_this());
-
-    // Cannot safely inject while holding the lock, so we have to unlock and then inject
-    retVal.reset(autowiring::CreationRules<TActual, Args...>::New(std::forward<Args>(args)...));
+    retVal.reset(autowiring::CreationRules<TActual, Args...>::New(*this, std::forward<Args>(args)...));
 
     // AutoInit if sensible to do so:
     CallAutoInit(*retVal, has_autoinit<T>());
@@ -515,7 +521,7 @@ public:
 
     // Factory registration if sensible to do so, but only after the underlying type has been
     // added, so that the proper type can succeed
-    RegisterFactory(autowiring::member_new_type<T>());
+    RegisterFactory(*retVal, autowiring::member_new_type<T>());
     return retVal;
   }
 
@@ -806,7 +812,7 @@ public:
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
   template<class T>
-  void FindByTypeRecursive(std::shared_ptr<T>& ptr) {
+  void FindByTypeRecursive(std::shared_ptr<T>& ptr) const {
     AnySharedPointerT<T> slot;
     FindByTypeRecursive(slot, AutoSearchLambdaDefault());
     ptr = slot.slot()->get();
@@ -816,7 +822,7 @@ public:
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
   template<class T>
-  void FindByTypeRecursive(AnySharedPointerT<T>& slot) {
+  void FindByTypeRecursive(AnySharedPointerT<T>& slot) const {
     FindByTypeRecursive(slot, AutoSearchLambdaDefault());
   }
 
@@ -991,4 +997,14 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 template<typename T, typename... Sigil>
 void CoreContext::AutoRequireMicroBolt(void) {
   Inject<MicroBolt<T, Sigil...>>();
+}
+
+template<typename T, typename... Args>
+T* autowiring::crh<autowiring::construction_strategy::foreign_factory, T, Args...>::New(CoreContext& ctxt, Args&&... args) {
+  AnySharedPointerT<AutoFactory<T>> af;
+  ctxt->FindByType(af);
+  if(!af)
+    throw autowiring_error("Attempted to AutoRequire an interface, but failed to find a factory for this interface in the current context");
+
+  return af->Construct(*this);
 }

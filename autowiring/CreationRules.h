@@ -80,8 +80,16 @@ class crh;
 template<class T, class... Args>
 struct crh<construction_strategy::factory_new, T, Args...>
 {
-  static T* New(Args&&... args) {
-    auto retVal = T::New(std::forward<Args>(args)...);
+  // Actual constructed type is directly the specified type
+  typedef T TActual;
+  
+  static_assert(
+    std::is_base_of<Object, T>::value || !has_static_new<T>::value,
+    "If type T provides a static New method, then the constructed type MUST directly inherit Object"
+  );
+
+  static T* New(const CoreContext&, Args&&... args) {
+    auto* retVal = T::New(std::forward<Args>(args)...);
     static_assert(
       std::is_convertible<decltype(retVal), T*>::value,
       "Attempted to create T using T::New, but the type of T::New() is not derived from T"
@@ -92,27 +100,30 @@ struct crh<construction_strategy::factory_new, T, Args...>
 
 template<class T, class... Args>
 struct crh<construction_strategy::standard, T, Args...> {
-  static T* New(Args&&... args) {
-    static_assert(!std::is_abstract<T>::value, "Cannot create a type which is abstract");
-    static_assert(!has_static_new<T, Args...>::value, "Can't inject member with arguments if it has a static New");
+  // If T doesn't inherit Object, then we need to compose a unifying type which does
+  typedef typename SelectTypeUnifier<T>::type TActual;
 
+  static_assert(!std::is_abstract<T>::value, "Cannot create a type which is abstract");
+  static_assert(!has_static_new<T, Args...>::value, "Can't inject member with arguments if it has a static New");
+
+  static TActual* New(const CoreContext&, Args&&... args) {
     // Allocate slot first before registration
-    auto* pSpace = Allocate<T>(nullptr);
+    auto* pSpace = Allocate<TActual>(nullptr);
 
     try {
       // Push a new stack location so that all constructors from here know the injected type under construction
       SlotInformationStackLocation loc(
         &SlotInformationStump<T>::s_stump,
         pSpace,
-        sizeof(T)
+        sizeof(TActual)
       );
 
       // And now we create our space
-      return ::new (pSpace) T(std::forward<Args>(args)...);
+      return ::new (pSpace) TActual(std::forward<Args>(args)...);
     }
     catch(...) {
       // Don't want memory leaks--but we also want to avoid calling the destructor, here, so we cast to void before freeing
-      Free<T>(pSpace, nullptr);
+      Free<TActual>(pSpace, nullptr);
       throw;
     }
   }
@@ -120,12 +131,11 @@ struct crh<construction_strategy::standard, T, Args...> {
 
 template<class T, class... Args>
 struct crh<construction_strategy::foreign_factory, T, Args...> {
-  static T* New(Args&&... args) {
-    // First, try to find the factory in the parent context
+  typedef T TActual;
 
-    // Failed to get anything, end here
-    return nullptr;
-  }
+  // The definition of this method has to be provided in CoreContext.h because it actually makes use
+  // of the CoreContext argument
+  static T* New(CoreContext& ctxt, Args&&... args);
 };
 
 /// <summary>
@@ -134,6 +144,7 @@ struct crh<construction_strategy::foreign_factory, T, Args...> {
 template<class T, class... Args>
 struct CreationRules :
   crh<select_strategy<T, Args...>::value, T, Args...>
-{};
+{
+};
 
 }

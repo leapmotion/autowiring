@@ -9,12 +9,18 @@
 /// register yourself as a factory producing a certain type, use the static new method
 /// which has one of the signatures defined <see ref="factorytype">factorytype</see>
 /// </remarks>
-template<class Factory, class Type>
+template<class Fn, class Type>
 class AutoFactory final:
   public ContextMember
 {
 public:
-  void Inject(CoreContext& ctxt) {
+  AutoFactory(Fn&& factory):
+    factory(std::move(factory))
+  {}
 
+  Fn& factory;
+
+  Type* Construct(void) const {
+    return factory();
   }
 };

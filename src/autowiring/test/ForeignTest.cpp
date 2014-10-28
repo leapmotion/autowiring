@@ -4,7 +4,7 @@
 class ForeignType {
 public:
   typedef void base;
-  virtual ~ForeignType(void) = 0;
+  virtual ~ForeignType(void) {}
 
   virtual void foo(void) = 0;
 };
