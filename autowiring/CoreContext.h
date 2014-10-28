@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
-#include "AutoFactory.h"
 #include "AutoFilterDescriptor.h"
 #include "AutowirableSlot.h"
 #include "AutowiringEvents.h"
@@ -148,6 +147,26 @@ protected:
     AnySharedPointer m_value;
   };
 
+  /// <summary>
+  /// A proxy context member that knows how to create a factory for a particular type
+  /// </summary>
+  /// <remarks>
+  /// This is an internal routine!  Don't try to use it yourself!  If you would like to
+  /// register yourself as a factory producing a certain type, use the static new method
+  /// which has one of the signatures defined <see ref="factorytype">factorytype</see>
+  /// </remarks>
+  template<class T>
+  class AutoFactory:
+    public Object
+  {
+  public:
+    AutoFactory(std::function<T*()>&& factory) :
+      factory(std::move(factory))
+    {}
+
+    const std::function<T*()> factory;
+  };
+
   // This is a list of concrete types, indexed by the true type of each element.
   std::vector<ObjectTraits> m_concreteTypes;
 
@@ -178,6 +197,10 @@ protected:
   // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
   // Destructor does nothing; this is by design.
   std::weak_ptr<Object> m_outstanding;
+
+  // Creation rules are allowed to refer to private methods in this type
+  template<autowiring::construction_strategy, class T, class... Args>
+  friend class autowiring::crh;
 
 protected:
   // Delayed creation routine
@@ -363,11 +386,10 @@ protected:
   void RegisterFactory(Factory& obj, autowiring::member_new_type<Factory, autowiring::factorytype::single_ret>) {
     // Single factory, just inject this type and be done with it:
     Inject<
-      AutoFactory<
-        Factory,
-        member_new_type<T, factorytype::single_ret>::type
-      >
-    >(obj);
+      AutoFactory<member_new_type<Factory, factorytype::single_ret>::type>
+    >(
+      [&obj] {return obj.New(); }
+    );
   }
 
   template<class Factory>
@@ -375,7 +397,7 @@ protected:
     RegisterFactory(
       AnySharedPointerT<Factory>(),
       AnySharedPointerT<typename member_new_type<Factory, factorytype::single_ret>::type>()
-      );
+    );
   }
 
   template<class Factory>
@@ -383,7 +405,7 @@ protected:
   }
 
   template<class Factory>
-  void RegisterFactory(Factory&, autowiring::member_new_type<Factory, autowiring::factorytype::none>) {}
+  void RegisterFactory(const Factory&, autowiring::member_new_type<Factory, autowiring::factorytype::none>) {}
 
   /// <summary>
   /// Registers the specified type as a provider factory for some other type
@@ -482,26 +504,21 @@ public:
   /// </remarks>
   template<typename T, typename... Args>
   std::shared_ptr<T> Inject(Args&&... args) {
+    // Creator proxy, knows how to create the type we intend to inject
+    typedef autowiring::CreationRules<T, Args...> CreationRules;
+
     // Add this type to the TypeRegistry
     (void) RegType<T>::r;
-    
-    // If T doesn't inherit Object, then we need to compose a unifying type which does
-    typedef typename SelectTypeUnifier<T>::type TActual;
-    static_assert(std::is_base_of<Object, TActual>::value, "Constructive type does not implement Object as expected");
-    static_assert(
-      std::is_base_of<Object, T>::value || !has_static_new<T>::value,
-      "If type T provides a static New method, then the constructed type MUST directly inherit Object"
-    );
 
     // First see if the object has already been injected:
-    std::shared_ptr<TActual> retVal;
+    std::shared_ptr<CreationRules::TActual> retVal;
     FindByType(retVal);
     if(retVal)
       return retVal;
 
     // We must make ourselves current for the remainder of this call:
     CurrentContextPusher pshr(shared_from_this());
-    retVal.reset(autowiring::CreationRules<TActual, Args...>::New(*this, std::forward<Args>(args)...));
+    retVal.reset(CreationRules::New(*this, std::forward<Args>(args)...));
 
     // AutoInit if sensible to do so:
     CallAutoInit(*retVal, has_autoinit<T>());
@@ -521,7 +538,7 @@ public:
 
     // Factory registration if sensible to do so, but only after the underlying type has been
     // added, so that the proper type can succeed
-    RegisterFactory(*retVal, autowiring::member_new_type<T>());
+    RegisterFactory(*retVal, autowiring::member_new_type<CreationRules::TActual>());
     return retVal;
   }
 
@@ -1001,10 +1018,9 @@ void CoreContext::AutoRequireMicroBolt(void) {
 
 template<typename T, typename... Args>
 T* autowiring::crh<autowiring::construction_strategy::foreign_factory, T, Args...>::New(CoreContext& ctxt, Args&&... args) {
-  AnySharedPointerT<AutoFactory<T>> af;
-  ctxt->FindByType(af);
+  AnySharedPointerT<CoreContext::AutoFactory<T>> af;
+  ctxt.FindByType(af);
   if(!af)
     throw autowiring_error("Attempted to AutoRequire an interface, but failed to find a factory for this interface in the current context");
-
-  return af->Construct(*this);
+  return af->factory();
 }
