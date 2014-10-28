@@ -7,5 +7,6 @@
 /// </summary>
 class Object {
 public:
-  virtual ~Object(void) {}
+  Object(void);
+  virtual ~Object(void);
 };

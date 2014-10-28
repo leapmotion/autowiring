@@ -19,6 +19,7 @@
 #include STL_UNORDERED_MAP
 #include EXCEPTION_PTR_HEADER
 
+class AutoPacket;
 class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
@@ -40,6 +41,7 @@ class AutoPacket:
 {
 private:
   AutoPacket(const AutoPacket& rhs) = delete;
+  AutoPacket(AutoPacket&&) = delete;
   AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
 
 public:

@@ -19,8 +19,7 @@ class CoreThread:
 public:
   /// <param name="pName">An optional name for this thread</param>
   CoreThread(const char* pName = nullptr);
-
-  virtual ~CoreThread(void) {}
+  virtual ~CoreThread(void);
 
 protected:
   void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}

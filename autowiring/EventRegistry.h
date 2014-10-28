@@ -1,12 +1,10 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "TypeIdentifier.h"
+#include "JunctionBox.h"
 #include TYPE_TRAITS_HEADER
 #include STL_TUPLE_HEADER
 #include MEMORY_HEADER
-
-template<class T>
-class JunctionBox;
 
 class JunctionBoxBase;
 

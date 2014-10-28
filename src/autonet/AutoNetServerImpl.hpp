@@ -19,7 +19,7 @@ struct TypeIdentifierBase;
 
 class AutoNetServerImpl:
   public AutoNetServer,
-  public AutowiringEvents
+  public virtual AutowiringEvents
 {
 public:
   AutoNetServerImpl();

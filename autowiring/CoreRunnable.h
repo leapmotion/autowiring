@@ -6,6 +6,9 @@ class Object;
 
 class CoreRunnable {
 public:
+  CoreRunnable(void);
+  virtual ~CoreRunnable(void);
+  
   /// <summary>
   /// Causes this runnable to begin processing
   /// </summary>
