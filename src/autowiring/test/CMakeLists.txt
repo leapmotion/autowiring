@@ -70,6 +70,9 @@ set(AutowiringFixture_SRCS
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringFixture_SRCS)
 add_library(AutowiringFixture ${AutowiringFixture_SRCS})
 set_property(TARGET AutowiringFixture PROPERTY FOLDER "Autowiring")
+if(NOT WIN32)
+  set_target_properties(AutowiringFixture PROPERTIES COMPILE_FLAGS "-fvisibility=hidden")
+endif()
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
