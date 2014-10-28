@@ -5,3 +5,5 @@
 AutowiringEvents::AutowiringEvents(void){}
 
 AutowiringEvents::~AutowiringEvents(void){}
+
+template class RegEvent<AutowiringEvents>;

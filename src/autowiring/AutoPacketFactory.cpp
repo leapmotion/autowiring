@@ -330,3 +330,6 @@ void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std
   }
   Invalidate();
 }
+
+template class RegType<AutoPacketFactory>;
+template struct SlotInformationStump<AutoPacketFactory, false>;

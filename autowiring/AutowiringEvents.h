@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "EventRegistry.h"
 #include TYPE_INDEX_HEADER
 
 struct ObjectTraits;
@@ -20,4 +21,6 @@ public:
   virtual void EventFired(CoreContext&, const std::type_info&)=0;
 };
 
-
+// Extern explicit template instantiation declarations added to prevent
+// exterior instantation of internally used template instances
+extern template class RegEvent<AutowiringEvents>;

@@ -227,3 +227,8 @@ public:
   /// <returns>the number of outstanding AutoPackets</returns>
   size_t GetOutstanding(void) const { return m_packets.GetOutstanding(); }
 };
+
+// Extern explicit template instantiation declarations added to prevent
+// exterior instantation of internally used template instances
+extern template class RegType<AutoPacketFactory>;
+extern template struct SlotInformationStump<AutoPacketFactory, false>;
