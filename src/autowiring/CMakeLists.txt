@@ -24,6 +24,7 @@ set(Autowiring_SRCS
   CoreJob.cpp
   AutoFilterDescriptor.h
   AutoInjectable.h
+  AutoInjectable.cpp
   AutoMerge.h
   AutoPacket.h
   AutoPacket.cpp

@@ -334,4 +334,4 @@ void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std
 template class RegType<AutoPacketFactory>;
 template struct SlotInformationStump<AutoPacketFactory, false>;
 template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;
-template struct std::default_delete<AutoPacketFactory>;
+template class std::shared_ptr<AutoPacketFactory>;

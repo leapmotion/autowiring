@@ -3,10 +3,10 @@
 #include "AutoFuture.h"
 #include "CoreContext.h"
 
-class AutoInjectableExpressionBase
-{
+class AutoInjectableExpressionBase {
 public:
-  virtual ~AutoInjectableExpressionBase(void) {}
+  AutoInjectableExpressionBase(void);
+  virtual ~AutoInjectableExpressionBase(void);
   virtual void operator()(AutoFuture* pFuture) const = 0;
 };
 
@@ -99,29 +99,11 @@ private:
 class AutoInjectable
 {
 public:
-  AutoInjectable(AutoInjectableExpressionBase* pValue = nullptr) :
-    pValue(pValue),
-    pFLink(nullptr)
-  {}
+  AutoInjectable(AutoInjectableExpressionBase* pValue = nullptr);
+  AutoInjectable(AutoInjectable&& rhs);
+  AutoInjectable(const AutoInjectable &rhs);
 
-  AutoInjectable(AutoInjectable&& rhs):
-    pValue(rhs.pValue),
-    pFLink(rhs.pFLink)
-  {
-    rhs.pFLink = nullptr;
-  }
-
-  AutoInjectable(const AutoInjectable &rhs) :
-    pValue(rhs.pValue),
-    pFLink(rhs.pFLink ? new AutoInjectable(*rhs.pFLink) : nullptr)
-  {
-  }
-
-  ~AutoInjectable()
-  {
-    delete pFLink;
-    pFLink = nullptr;
-  }
+  ~AutoInjectable();
 
   /// <summary>
   /// Primary injection operation, injects this injectable's payload into the current context
@@ -225,3 +207,5 @@ template<class Fn>
 AutoInjectable MakeInjectableFn(Fn&& fn) {
   return AutoInjectable(new AutoInjectableExpressionFn<Fn>(std::move(fn)));
 }
+
+extern template class std::shared_ptr<AutoInjectableExpressionBase>;
