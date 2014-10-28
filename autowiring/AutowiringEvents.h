@@ -24,3 +24,4 @@ public:
 // Extern explicit template instantiation declarations added to prevent
 // exterior instantation of internally used template instances
 extern template class RegEvent<AutowiringEvents>;
+extern template class TypeUnifierComplex<AutowiringEvents>;
