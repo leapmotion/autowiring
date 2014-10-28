@@ -160,11 +160,21 @@ protected:
     public Object
   {
   public:
-    AutoFactory(std::function<T*()>&& factory) :
-      factory(std::move(factory))
+    virtual T* operator()(void) const = 0;
+  };
+
+  template<class T, class Fn>
+  class AutoFactoryFn:
+    public AutoFactory<T>
+  {
+  public:
+    AutoFactoryFn(Fn&& fn) :
+      fn(std::move(fn))
     {}
 
-    const std::function<T*()> factory;
+    const Fn fn;
+
+    T* operator()(void) const override { return fn(); }
   };
 
   // This is a list of concrete types, indexed by the true type of each element.
@@ -379,16 +389,24 @@ protected:
   void UnsnoopAutoPacket(const ObjectTraits& traits);
 
   /// <summary>
+  /// Registers a factory _function_, a lambda which is capable of constructing decltype(fn())
+  /// </summary>
+  template<class Fn>
+  void RegisterFactoryFn(Fn&& fn) {
+    Inject<
+      AutoFactoryFn<std::remove_pointer<decltype(fn())>::type, Fn>
+    >(std::forward<Fn>(fn));
+  }
+
+  /// <summary>
   /// Registers a new foreign factory type without explicitly specifying the returned value type
   /// </summary>
   /// <param name="Factory">The factory type to be added</param>
   template<class Factory>
   void RegisterFactory(Factory& obj, autowiring::member_new_type<Factory, autowiring::factorytype::single_ret>) {
     // Single factory, just inject this type and be done with it:
-    Inject<
-      AutoFactory<member_new_type<Factory, factorytype::single_ret>::type>
-    >(
-      [&obj] {return obj.New(); }
+    RegisterFactoryFn(
+      [&obj] { return obj.New(); }
     );
   }
 
@@ -1022,5 +1040,5 @@ T* autowiring::crh<autowiring::construction_strategy::foreign_factory, T, Args..
   ctxt.FindByType(af);
   if(!af)
     throw autowiring_error("Attempted to AutoRequire an interface, but failed to find a factory for this interface in the current context");
-  return af->factory();
+  return (*af)();
 }
