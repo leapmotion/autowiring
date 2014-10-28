@@ -16,8 +16,6 @@ struct AdjacencyEntry;
 class Deferred;
 class DispatchQueue;
 
-extern template struct std::default_delete<AutoPacketFactory>;
-
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
 /// </summary>

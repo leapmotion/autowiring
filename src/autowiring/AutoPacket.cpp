@@ -9,9 +9,6 @@
 #include "SatCounter.h"
 #include <algorithm>
 
-template class std::enable_shared_from_this<AutoPacket>;
-template class ObjectPool<AutoPacket>;
-
 using namespace autowiring;
 
 // This must appear in .cpp in order to avoid compilation failure due to:

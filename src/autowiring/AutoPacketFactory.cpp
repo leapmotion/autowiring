@@ -4,8 +4,6 @@
 #include "AutoPacket.h"
 #include "thread_specific_ptr.h"
 
-template struct std::default_delete<AutoPacketFactory>;
-
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
   m_parent(GetContext()->GetParentContext()),

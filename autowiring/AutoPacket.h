@@ -24,9 +24,6 @@ class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
 
-extern template class std::enable_shared_from_this<AutoPacket>;
-extern template class ObjectPool<AutoPacket>;
-
 /// <summary>
 /// A decorator-style processing packet
 /// </summary>
