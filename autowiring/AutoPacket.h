@@ -19,9 +19,13 @@
 #include STL_UNORDERED_MAP
 #include EXCEPTION_PTR_HEADER
 
+class AutoPacket;
 class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
+
+extern template class std::enable_shared_from_this<AutoPacket>;
+extern template class ObjectPool<AutoPacket>;
 
 /// <summary>
 /// A decorator-style processing packet
@@ -40,6 +44,7 @@ class AutoPacket:
 {
 private:
   AutoPacket(const AutoPacket& rhs) = delete;
+  AutoPacket(AutoPacket&&) = delete;
   AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
 
 public:

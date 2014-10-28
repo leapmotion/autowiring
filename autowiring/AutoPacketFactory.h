@@ -12,9 +12,11 @@
 #include TYPE_TRAITS_HEADER
 #include STL_UNORDERED_SET
 
+struct AdjacencyEntry;
 class Deferred;
 class DispatchQueue;
-struct AdjacencyEntry;
+
+extern template struct std::default_delete<AutoPacketFactory>;
 
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
@@ -233,4 +235,3 @@ public:
 extern template class RegType<AutoPacketFactory>;
 extern template struct SlotInformationStump<AutoPacketFactory, false>;
 extern template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;
-extern template class std::shared_ptr<AutoPacketFactory>;
