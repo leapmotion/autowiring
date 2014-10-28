@@ -195,6 +195,8 @@ ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 #
 
 add_library(Autowiring STATIC ${Autowiring_SRCS})
+set_target_properties(Autowiring PROPERTIES COMPILE_FLAGS "-fvisibility=hidden")
+
 target_include_directories(Autowiring INTERFACE
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
   "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
