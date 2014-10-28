@@ -59,12 +59,14 @@ set(AutowiringTest_SRCS
 )
 
 set(AutowiringFixture_SRCS
-  SelfSelectingFixture.hpp
-  SelfSelectingFixture.cpp
-  OtherSelectingFixture.hpp
-  OtherSelectingFixture.cpp
   HasForwardOnlyType.hpp
   HasForwardOnlyType.cpp
+  MentionsVariousOtherTypes.hpp
+  MentionsVariousOtherTypes.cpp
+  OtherSelectingFixture.hpp
+  OtherSelectingFixture.cpp
+  SelfSelectingFixture.hpp
+  SelfSelectingFixture.cpp
 )
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringFixture_SRCS)
