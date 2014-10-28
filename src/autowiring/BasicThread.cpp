@@ -19,6 +19,8 @@ BasicThread::BasicThread(const char* pName):
   m_priority(ThreadPriority::Default)
 {}
 
+BasicThread::~BasicThread(void){}
+
 std::mutex& BasicThread::GetLock(void) {
   return m_state->m_lock;
 }

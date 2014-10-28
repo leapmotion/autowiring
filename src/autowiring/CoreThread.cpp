@@ -8,6 +8,8 @@ CoreThread::CoreThread(const char* pName):
   BasicThread(pName)
 {}
 
+CoreThread::~CoreThread(void){}
+
 void CoreThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<Object>&& refTracker) {
   try {
     // If we are asked to rundown while we still have elements in our dispatch queue,

@@ -14,6 +14,7 @@ set(Autowiring_SRCS
   auto_in.h
   auto_out.h
   auto_arg.h
+  auto_arg.cpp
   AnySharedPointer.h
   AutoCheckout.h
   AutoRestarter.h
@@ -24,6 +25,7 @@ set(Autowiring_SRCS
   CoreJob.cpp
   AutoFilterDescriptor.h
   AutoInjectable.h
+  AutoInjectable.cpp
   AutoMerge.h
   AutoPacket.h
   AutoPacket.cpp
@@ -40,14 +42,17 @@ set(Autowiring_SRCS
   AutowirableSlot.cpp
   AutowiringConfig.h
   AutowiringEvents.h
+  AutowiringEvents.cpp
   autowiring.h
   autowiring_error.h
+  autowiring_error.cpp
   BasicThread.h
   BasicThread.cpp
   BasicThreadStateBlock.h
   BasicThreadStateBlock.cpp
   Bolt.h
   BoltBase.h
+  BoltBase.cpp
   CallExtractor.h
   ContextCreator.h
   ContextCreatorBase.h
@@ -64,6 +69,7 @@ set(Autowiring_SRCS
   CoreThread.cpp
   CoreThread.h
   CoreRunnable.h
+  CoreRunnable.cpp
   CreationRules.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
@@ -92,6 +98,7 @@ set(Autowiring_SRCS
   JunctionBoxManager.h
   JunctionBoxManager.cpp
   ExceptionFilter.h
+  ExceptionFilter.cpp
   GlobalCoreContext.cpp
   GlobalCoreContext.h
   has_autoinit.h
@@ -107,6 +114,7 @@ set(Autowiring_SRCS
   atomic_object.h
   unlock_object.h
   Object.h
+  Object.cpp
   ObjectPool.h
   ObjectPoolMonitor.h
   ObjectPoolMonitor.cpp
@@ -187,6 +195,8 @@ ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 #
 
 add_library(Autowiring STATIC ${Autowiring_SRCS})
+set_target_properties(Autowiring PROPERTIES COMPILE_FLAGS "-fvisibility=hidden")
+
 target_include_directories(Autowiring INTERFACE
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
   "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"

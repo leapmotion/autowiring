@@ -33,7 +33,7 @@ struct CallExtractor<RetType (*)(Args...)>:
 
     // Handoff
     ((t_pfn)pfn)(
-      auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source<typename auto_arg<Args>::base_type>())...
+      auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source(typeid(typename auto_arg<Args>::base_type)))...
     );
   }
 };
@@ -60,7 +60,7 @@ struct CallExtractor<void (T::*)(Args...)>:
 
     // Handoff
     (((T*) pObj)->*memFn)(
-      auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source<typename auto_arg<Args>::base_type>())...
+      auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source(typeid(typename auto_arg<Args>::base_type)))...
     );
   }
 };
@@ -82,7 +82,7 @@ struct CallExtractor<void (T::*)(Args...) const> :
 
     // Handoff
     (((const T*) pObj)->*memFn)(
-      auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source<typename auto_arg<Args>::base_type>())...
+      auto_arg<Args>(autoPacket.shared_from_this(), *satisfaction.source(typeid(typename auto_arg<Args>::base_type)))...
     );
   }
 };
@@ -113,7 +113,7 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
     // and will therefore have the same lifecycle as the AutoPacket.
     *(T*) pObj += [pObj, pAutoPacket, &satisfaction] {
       (((T*) pObj)->*memFn)(
-        auto_arg<Args>(pAutoPacket, *satisfaction.source<typename auto_arg<Args>::base_type>())...
+        auto_arg<Args>(pAutoPacket, *satisfaction.source(typeid(typename auto_arg<Args>::base_type)))...
       );
     };
   }

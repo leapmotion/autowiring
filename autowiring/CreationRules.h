@@ -18,9 +18,35 @@ struct is_injectable
 /// <summary>
 /// Simple structure to centralize knowledge about how to create types with various declarations
 /// </summary>
-struct CreationRules {
+namespace CreationRules {
+  template<void* (*)(size_t)>
+  struct alloc_fn {};
+  
+  template<typename U>
+  U* Allocate(alloc_fn<&U::operator new>*) {
+    return (U*) U::operator new(sizeof(U));
+  }
+  
+  template<typename U>
+  U* Allocate(...) {
+    return (U*) ::operator new(sizeof(U));
+  }
+  
+  template<void(*)(void*)>
+  struct free_fn {};
+  
+  template<typename U>
+  void Free(void* ptr, free_fn<&U::operator delete>*) {
+    U::operator delete(ptr);
+  }
+  
+  template<typename U>
+  void Free(void* ptr, ...) {
+    ::operator delete(ptr);
+  }
+  
   template<typename U, typename... Args>
-  static typename std::enable_if<has_static_new<U, Args...>::value, U*>::type New(Args&&... args) {
+  typename std::enable_if<has_static_new<U, Args...>::value, U*>::type New(Args&&... args) {
     auto retVal = U::New(std::forward<Args>(args)...);
     static_assert(
       std::is_convertible<decltype(retVal), U*>::value,
@@ -30,7 +56,7 @@ struct CreationRules {
   }
 
   template<typename U, typename... Args>
-  static typename std::enable_if<!has_static_new<U, Args...>::value, U*>::type New(Args&&... args) {
+  typename std::enable_if<!has_static_new<U, Args...>::value, U*>::type New(Args&&... args) {
     static_assert(!std::is_abstract<U>::value, "Cannot create a type which is abstract");
     static_assert(!has_static_new<U, Args...>::value, "Can't inject member with arguments if it has a static New");
 
@@ -54,30 +80,4 @@ struct CreationRules {
       throw;
     }
   }
-
-  template<void* (*)(size_t)>
-  struct alloc_fn {};
-
-  template<typename U>
-  static U* Allocate(alloc_fn<&U::operator new>*) {
-    return (U*) U::operator new(sizeof(U));
-  }
-
-  template<typename U>
-  static U* Allocate(...) {
-    return (U*) ::operator new(sizeof(U));
-  }
-
-  template<void(*)(void*)>
-  struct free_fn {};
-
-  template<typename U>
-  static void Free(void* ptr, free_fn<&U::operator delete>*) {
-    U::operator delete(ptr);
-  }
-
-  template<typename U>
-  static void Free(void* ptr, ...) {
-    ::operator delete(ptr);
-  }
-};
+}

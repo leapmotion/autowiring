@@ -6,9 +6,8 @@ class autowiring_error:
   public std::exception
 {
 public:
-  autowiring_error(const char* what):
-    m_what(what)
-  {}
+  autowiring_error(const char* what);
+  virtual ~autowiring_error(void);
 
 private:
   const char* m_what;

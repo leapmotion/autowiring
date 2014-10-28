@@ -43,8 +43,7 @@ class BasicThread:
 public:
   /// <param name="pName">An optional name for this thread</param>
   BasicThread(const char* pName = nullptr);
-
-  virtual ~BasicThread(void) {}
+  virtual ~BasicThread(void);
 
 protected:
   // Internally held thread status block.  This has to be a shared pointer because we need to signal
