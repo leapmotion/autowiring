@@ -33,6 +33,13 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   return retVal;
 }
 
+bool AutoPacketFactory::IsAutoPacketType(const std::type_info& dataType) {
+  return
+    dataType == typeid(AutoPacket) ||
+    dataType == typeid(auto_arg<AutoPacket&>::id_type) ||
+    dataType == typeid(auto_arg<const AutoPacket&>::id_type);
+}
+
 bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
   std::lock_guard<std::mutex> lk(m_lock);
   if(m_wasStopped)
@@ -332,6 +339,10 @@ void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std
     m_autoFilters.insert(updateIn);
   }
   Invalidate();
+}
+
+size_t AutoPacketFactory::GetOutstanding(void) const {
+  return m_packets.GetOutstanding();
 }
 
 template class RegType<AutoPacketFactory>;

@@ -214,12 +214,7 @@ protected:
   void PipeOneData(const std::type_info* nodeOutType, const std::type_info* nodeInType, const std::type_info* dataType, bool enable);
   void PipeAllData(const std::type_info* nodeOutType, const std::type_info* nodeInType, bool enable);
 
-  static bool IsAutoPacketType(const std::type_info& dataType) {
-    return
-    dataType == typeid(AutoPacket) ||
-    dataType == typeid(auto_arg<AutoPacket&>::id_type) ||
-    dataType == typeid(auto_arg<const AutoPacket&>::id_type);
-  }
+  static bool IsAutoPacketType(const std::type_info& dataType);
 
 public:
   /// <summary>
@@ -229,7 +224,7 @@ public:
   std::shared_ptr<AutoPacket> NewPacket(void);
 
   /// <returns>the number of outstanding AutoPackets</returns>
-  size_t GetOutstanding(void) const { return m_packets.GetOutstanding(); }
+  size_t GetOutstanding(void) const;
 };
 
 // Extern explicit template instantiation declarations added to prevent
