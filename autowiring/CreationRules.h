@@ -75,7 +75,7 @@ static void Free(void* ptr, ...) {
 /// Creation rules helper type, used to select one of the creation strategies based on an arglist
 /// </summary>
 template<construction_strategy, class T, class... Args>
-class crh;
+struct crh;
 
 template<class T, class... Args>
 struct crh<construction_strategy::factory_new, T, Args...>

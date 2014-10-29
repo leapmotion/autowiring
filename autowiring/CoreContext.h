@@ -194,7 +194,7 @@ protected:
 
   // Creation rules are allowed to refer to private methods in this type
   template<autowiring::construction_strategy, class T, class... Args>
-  friend class autowiring::crh;
+  friend struct autowiring::crh;
 
 protected:
   // Delayed creation routine
