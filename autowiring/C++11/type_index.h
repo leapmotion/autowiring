@@ -21,6 +21,10 @@ public:
     return (_info->before(*rhs._info) != 0);
   }
 
+  bool operator!=(const type_index& rhs) const {
+    return !operator==(rhs);
+  }
+
   size_t hash_code() const {
     return (size_t)_info;
   }

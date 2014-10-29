@@ -12,11 +12,11 @@ namespace std {
     {}
     virtual ~tuple(void){}
 
-    bool operator==(const tuple<Ts...>& other){
+    bool operator==(const tuple<Ts...>& other) const {
       return m_tuple == other.m_tuple;
     }
 
-    bool operator<(const tuple<Ts...>& other){
+    bool operator<(const tuple<Ts...>& other) const {
       return m_tuple < other.m_tuple;
     }
 

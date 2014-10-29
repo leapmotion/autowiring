@@ -406,7 +406,7 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
 
       // Only broadcast data is propagated
       const std::type_info& source(typeid(void));
-      if (std::get<1>(decoration.first).operator==(source))
+      if (std::get<1>(decoration.first) != source)
         continue;
 
       const std::type_info& data = *decoration.second.m_type;
