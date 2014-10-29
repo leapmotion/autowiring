@@ -11,8 +11,7 @@ class type_index {
 public:
   type_index(const type_info& info):
     _info(&info)
-  {
-  }
+  {}
 
   bool operator==(const type_index& rhs) const {
     return *_info == *rhs._info;
