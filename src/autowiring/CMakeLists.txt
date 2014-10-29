@@ -112,7 +112,7 @@ set(Autowiring_SRCS
   InterlockedExchange.h
   InvokeRelay.h
   atomic_object.h
-  unlock_object.h
+  member_new_type.h
   Object.h
   Object.cpp
   ObjectPool.h
@@ -137,6 +137,7 @@ set(Autowiring_SRCS
   TypeRegistry.h
   TypeRegistry.cpp
   TypeUnifier.h
+  unlock_object.h
   uuid.h
   var_logic.h
 )

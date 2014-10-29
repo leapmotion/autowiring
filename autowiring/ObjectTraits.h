@@ -1,33 +1,31 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <typeinfo>
-#include MEMORY_HEADER
-
-#include "fast_pointer_cast.h"
 #include "AnySharedPointer.h"
 #include "AutoFilterDescriptor.h"
-
 #include "AutowiringEvents.h"
-#include "Object.h"
+#include "BoltBase.h"
 #include "ContextMember.h"
 #include "CoreRunnable.h"
 #include "BasicThread.h"
 #include "ExceptionFilter.h"
-#include "BoltBase.h"
-
 #include "EventRegistry.h"
+#include "fast_pointer_cast.h"
+#include "Object.h"
+
+#include <typeinfo>
+#include MEMORY_HEADER
 
 /// <summary>
 /// Mapping and extraction structure used to provide a runtime version of an Object-implementing shared pointer
 /// </summary>
 struct ObjectTraits {
-  template<class T>
-  ObjectTraits(const std::shared_ptr<typename SelectTypeUnifier<T>::type>& value, T*) :
+  template<class TActual, class T>
+  ObjectTraits(const std::shared_ptr<TActual>& value, T*) :
     type(typeid(T)),
+    actual_type(typeid(*value)),
     stump(SlotInformationStump<T>::s_stump),
     value(value),
-    cast_offset(this->value->cast_offset()),
     subscriber(MakeAutoFilterDescriptor(value)),
     pObject(autowiring::fast_pointer_cast<Object>(value)),
     pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
@@ -46,13 +44,15 @@ struct ObjectTraits {
         return !!dynamic_cast<const AutowiringEvents*>(pObject.get());
       }()
     )
-  {
-    if(!pObject)
-      throw autowiring_error("Cannot add a type which does not implement Object");
-  }
+  {}
 
-  // The declared original type:
+  // The type of the passed pointer
   const std::type_info& type;
+
+  // The "actual type" used by Autowiring.  This type may differ from ObjectTraits::type in cases
+  // where a type unifier is used, or if the concrete type is defined in an external module--for
+  // instance, by a class factory.
+  const std::type_info& actual_type;
 
   /// <summary>
   /// Used to obtain a list of slots defined on this type, for reflection purposes
@@ -87,9 +87,6 @@ struct ObjectTraits {
   // A holder to store the original shared pointer, to ensure that type information propagates
   // correctly on the right-hand side of our map
   const AnySharedPointer value;
-
-  // Offset of the void pointer to the embedded Object
-  const size_t cast_offset;
 
   // The packet subscriber introduction method, if appropriate:
   const AutoFilterDescriptor subscriber;
