@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacket.h"
+#include "fast_pointer_cast.h"
 #include "thread_specific_ptr.h"
 
 template struct std::default_delete<AutoPacketFactory>;
@@ -349,3 +350,4 @@ size_t AutoPacketFactory::GetOutstanding(void) const {
 template class RegType<AutoPacketFactory>;
 template struct SlotInformationStump<AutoPacketFactory, false>;
 template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;
+template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, Object>(const std::shared_ptr<Object>& Other);
