@@ -4,8 +4,25 @@
 #include <boost/tuple/tuple.hpp>
 
 namespace std {
-  using boost::tuple;
-  using boost::get;
-  using boost::make_tuple;
-  using boost::tie;
-}
+  template<typename... Ts>
+  class tuple {
+  public:
+    tuple(const Ts&... ele):
+      m_tuple(ele...)
+    {}
+    virtual ~tuple(void){}
+
+    boost::tuple<Ts...> m_tuple;
+  };
+
+  template<int I, typename... Ts>
+  auto get(const ::std::tuple<Ts...>& tup) -> decltype(boost::get<I>(tup.m_tuple)) {
+    return boost::get<I>(tup.m_tuple);
+  }
+
+  template<typename... Ts>
+  ::std::tuple<Ts...> make_tuple(const Ts&... ele) {
+    return ::std::tuple<Ts...>(ele...);
+  }
+
+}//namespace std
