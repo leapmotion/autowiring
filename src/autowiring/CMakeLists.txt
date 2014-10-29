@@ -16,6 +16,7 @@ set(Autowiring_SRCS
   auto_arg.h
   auto_arg.cpp
   AnySharedPointer.h
+  AnySharedPointer.cpp
   AutoCheckout.h
   AutoRestarter.h
   AutoFuture.h
@@ -82,6 +83,7 @@ set(Autowiring_SRCS
   Deferred.h
   DefaultAutoNetServer.cpp
   demangle.h
+  demangle.cpp
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunk.h
@@ -112,7 +114,7 @@ set(Autowiring_SRCS
   InterlockedExchange.h
   InvokeRelay.h
   atomic_object.h
-  unlock_object.h
+  member_new_type.h
   Object.h
   Object.cpp
   ObjectPool.h
@@ -137,6 +139,7 @@ set(Autowiring_SRCS
   TypeRegistry.h
   TypeRegistry.cpp
   TypeUnifier.h
+  unlock_object.h
   uuid.h
   var_logic.h
 )
@@ -195,6 +198,16 @@ ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 #
 
 add_library(Autowiring STATIC ${Autowiring_SRCS})
+
+# On Unix, 64-bit code will need to be compiled as position-independent code
+if(UNIX)
+  if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
+    set_target_properties(Autowiring PROPERTIES COMPILE_FLAGS "-fPIC -fvisibility=hidden")
+  else()
+    set_target_properties(Autowiring PROPERTIES COMPILE_FLAGS "-fvisibility=hidden")
+  endif()
+endif()
+
 target_include_directories(Autowiring INTERFACE
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
   "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"

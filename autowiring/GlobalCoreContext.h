@@ -48,23 +48,12 @@ public:
   /// thread holds a reference to the current global context via SetCurrent, it is
   /// the caller's responsibility to manually release that reference via EvictCurrent.
   /// </remarks>
-  static void Release(void) {
-    // Release local:
-    std::lock_guard<std::mutex> lk(getInitLock());
-    getGlobalContextSharedPtr().reset();
-  }
+  static void Release(void);
 
 private:
   // Global context shared pointer and lock:
-  static inline std::mutex& getInitLock() {
-    static std::mutex s_initLock;
-    return s_initLock;
-  }
-
-  static inline std::shared_ptr<GlobalCoreContext>& getGlobalContextSharedPtr() {
-    static std::shared_ptr<GlobalCoreContext> s_globalContextSharedPtr;
-    return s_globalContextSharedPtr;
-  }
+  static std::mutex& getInitLock();
+  static std::shared_ptr<GlobalCoreContext>& getGlobalContextSharedPtr();
 };
 
 /// <summary>

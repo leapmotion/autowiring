@@ -27,7 +27,7 @@ else()
 endif()
 
 if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "-std=c++11")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
 endif()
 if(USE_LIBCXX)
@@ -42,6 +42,11 @@ if(USE_LIBCXX)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     message("GCC C++11")
+  endif()
+  
+  # Also need position-independent code to make things work correctly on certain 64-bit machines
+  if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
   endif()
 endif()
 

@@ -41,6 +41,22 @@ std::shared_ptr<GlobalCoreContext> GlobalCoreContext::Get() {
   return ptr;
 }
 
+void GlobalCoreContext::Release(void) {
+  // Release local:
+  std::lock_guard<std::mutex> lk(getInitLock());
+  getGlobalContextSharedPtr().reset();
+}
+
+std::mutex& GlobalCoreContext::getInitLock() {
+  static std::mutex s_initLock;
+  return s_initLock;
+}
+
+std::shared_ptr<GlobalCoreContext>& GlobalCoreContext::getGlobalContextSharedPtr() {
+  static std::shared_ptr<GlobalCoreContext> s_globalContextSharedPtr;
+  return s_globalContextSharedPtr;
+}
+
 std::shared_ptr<GlobalCoreContext> GetGlobalContext(void) {
   return GlobalCoreContext::Get();
 }
