@@ -199,6 +199,8 @@ public:
   /// </summary>
   template<class T>
   const T& Get(const std::type_info& source = typeid(void)) const {
+    static_assert(!std::is_same<T, AnySharedPointer>::value, "Oops!");
+
     const T* retVal;
     if(!Get(retVal, source)) {
       std::stringstream ss;
