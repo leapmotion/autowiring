@@ -377,7 +377,7 @@ protected:
   /// </summary>
   template<class Fn>
   void RegisterFactoryFn(Fn&& fn) {
-    Inject<AutoFactoryFn<std::remove_pointer<decltype(fn())>::type, Fn>>(std::forward<Fn>(fn));
+    Inject<AutoFactoryFn<typename std::remove_pointer<decltype(fn())>::type, Fn>>(std::forward<Fn>(fn));
   }
 
   /// <summary>
@@ -388,11 +388,6 @@ protected:
   template<class Factory>
   void RegisterFactory(Factory& obj, autowiring::member_new_type<Factory, autowiring::factorytype::ret_val>) {
     RegisterFactoryFn([&obj] { return obj.New(); });
-  }
-
-  template<class Factory>
-  void RegisterFactory(Factory& obj, autowiring::member_new_type<Factory, autowiring::factorytype::multi_byref>) {
-    static_assert(false, "This return type must be implemented");
   }
 
   template<class Factory>
@@ -502,7 +497,7 @@ public:
     (void) RegType<T>::r;
 
     // First see if the object has already been injected:
-    std::shared_ptr<CreationRules::TActual> retVal;
+    std::shared_ptr<typename CreationRules::TActual> retVal;
     FindByType(retVal);
     if(retVal)
       return retVal;
@@ -529,7 +524,7 @@ public:
 
     // Factory registration if sensible to do so, but only after the underlying type has been
     // added, so that the proper type can succeed
-    RegisterFactory(*retVal, autowiring::member_new_type<CreationRules::TActual>());
+    RegisterFactory(*retVal, autowiring::member_new_type<typename CreationRules::TActual>());
     return retVal;
   }
 
