@@ -12,9 +12,9 @@
 #include TYPE_TRAITS_HEADER
 #include STL_UNORDERED_SET
 
+struct AdjacencyEntry;
 class Deferred;
 class DispatchQueue;
-struct AdjacencyEntry;
 
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
@@ -227,3 +227,9 @@ public:
   /// <returns>the number of outstanding AutoPackets</returns>
   size_t GetOutstanding(void) const { return m_packets.GetOutstanding(); }
 };
+
+// Extern explicit template instantiation declarations added to prevent
+// exterior instantation of internally used template instances
+extern template class RegType<AutoPacketFactory>;
+extern template struct SlotInformationStump<AutoPacketFactory, false>;
+extern template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;

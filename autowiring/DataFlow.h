@@ -32,9 +32,8 @@ namespace autowiring {
     public std::unordered_map<std::type_index, const std::type_info*>
   {
   public:
-    template<class Arg>
-    const std::type_info* source() const {
-      std::unordered_map<std::type_index, const std::type_info*>::const_iterator itr = find(typeid(Arg));
+    const std::type_info* source(const std::type_index& arg) const {
+      std::unordered_map<std::type_index, const std::type_info*>::const_iterator itr = find(arg);
       if (itr != end())
         return itr->second;
       return &typeid(void);

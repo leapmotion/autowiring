@@ -207,7 +207,11 @@ class auto_arg<AutoPacket&>
 {
 protected:
   /// Sigil to distinguish AutoPacket&
-  class first_call_sigil {};
+  class first_call_sigil {
+  public:
+    first_call_sigil(void);
+    virtual ~first_call_sigil(void);
+  };
 
   std::shared_ptr<AutoPacket> m_packet;
 
@@ -254,7 +258,11 @@ class auto_arg<const AutoPacket&>
 {
 protected:
   /// Sigil to distinguish const AutoPacket&
-  class final_call_sigil {};
+  class final_call_sigil {
+  public:
+    final_call_sigil(void);
+    virtual ~final_call_sigil(void);
+  };
 
   std::shared_ptr<AutoPacket> m_packet;
 

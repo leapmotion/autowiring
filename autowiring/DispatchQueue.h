@@ -14,7 +14,11 @@ class DispatchQueue;
 /// </summary>
 class dispatch_aborted_exception:
   public std::exception
-{};
+{
+public:
+  dispatch_aborted_exception(void);
+  virtual ~dispatch_aborted_exception(void);
+};
 
 /// <summary>
 /// This is an asynchronous queue of zero-argument functions
