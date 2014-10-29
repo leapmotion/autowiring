@@ -5,8 +5,6 @@
 #include "fast_pointer_cast.h"
 #include "thread_specific_ptr.h"
 
-template struct std::default_delete<AutoPacketFactory>;
-template class std::shared_ptr<AutoPacketFactory>;
 template class ObjectPool<AutoPacket>;
 
 AutoPacketFactory::AutoPacketFactory(void):

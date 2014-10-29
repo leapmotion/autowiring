@@ -226,9 +226,7 @@ public:
 
 // Extern explicit template instantiation declarations added to prevent
 // exterior instantation of internally used template instances
-extern template struct std::default_delete<AutoPacketFactory>;
 extern template class ObjectPool<AutoPacket>;
-extern template class std::shared_ptr<AutoPacketFactory>;
 extern template class RegType<AutoPacketFactory>;
 extern template struct SlotInformationStump<AutoPacketFactory, false>;
 extern template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;
