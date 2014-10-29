@@ -70,7 +70,7 @@ TEST_F(ForeignTest, ForeignFactoryATest) {
 }
 
 // Not currently supported!  Maybe someday if someone needs it
-TEST_F(ForeignTest, DISALBED_ForeignFactoryBTest) {
+TEST_F(ForeignTest, DISABLED_ForeignFactoryBTest) {
   AutoRequired<ForeignFactoryB> factory;
 
   // Now try to use the factory to construct our unrelated type, as before
