@@ -125,7 +125,6 @@ set(Autowiring_SRCS
   MicroAutoFilter.h
   MicroBolt.h
   NewAutoFilter.h
-  NewAutoFilter.cpp
   SharedPointerSlot.h
   SlotInformation.h
   SlotInformation.cpp
