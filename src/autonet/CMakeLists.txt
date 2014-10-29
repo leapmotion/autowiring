@@ -29,13 +29,26 @@ set(AutoNet_SRCS
   ${PROJECT_SOURCE_DIR}/contrib/json11/json11.hpp
 )
 
+set(AutoBoostWebSocketServer_SRCS
+  AutoBoostWebSocketServer.cpp
+  AutoBoostWebSocketServer.hpp
+  IWebSocketServer.hpp
+  ${PROJECT_SOURCE_DIR}/contrib/json11/json11.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/json11/json11.hpp
+)
+
+# All include files are located in /autowiring from here, so prepend that to all sources
+rewrite_header_paths(AutoBoostWebSocketServer_SRCS)
+ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutoBoostWebSocketServer_SRCS)
+add_library(abwss SHARED ${AutoBoostWebSocketServer_SRCS})
+target_link_libraries(abwss ${Boost_LIBRARIES})
+set_property(TARGET abwss PROPERTY FOLDER "Autowiring")
+
 # All include files are located in /autowiring from here, so prepend that to all sources
 rewrite_header_paths(AutoNet_SRCS)
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutoNet_SRCS)
-
-add_library(AutoNet SHARED ${AutoNet_SRCS})
-target_link_libraries(AutoNet Autowiring ${Boost_LIBRARIES})
-set_target_properties(AutoNet PROPERTIES INTERFACE_LINK_LIBRARIES Autowiring)
+add_library(AutoNet ${AutoNet_SRCS})
+set_target_properties(AutoNet PROPERTIES INTERFACE_LINK_LIBRARIES "Autowiring;abwss")
 
 set_property(TARGET AutoNet PROPERTY FOLDER "Autowiring")
 
@@ -44,7 +57,7 @@ set_property(TARGET AutoNet PROPERTY FOLDER "Autowiring")
 #
 
 if(NOT AUTOWIRING_IS_EMBEDDED)
-  install(TARGETS AutoNet EXPORT AutowiringTargets
+  install(TARGETS AutoNet abwss EXPORT AutowiringTargets
     DESTINATION lib
     COMPONENT autowiring 
     CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
