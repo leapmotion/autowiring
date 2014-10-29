@@ -17,9 +17,6 @@ class AutoPacketFactory;
 class Deferred;
 class DispatchQueue;
 
-extern template struct std::default_delete<AutoPacketFactory>;
-extern template class ObjectPool<AutoPacket>;
-
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
 /// </summary>
@@ -229,8 +226,10 @@ public:
 
 // Extern explicit template instantiation declarations added to prevent
 // exterior instantation of internally used template instances
+extern template struct std::default_delete<AutoPacketFactory>;
+extern template class ObjectPool<AutoPacket>;
+extern template class std::shared_ptr<AutoPacketFactory>;
 extern template class RegType<AutoPacketFactory>;
 extern template struct SlotInformationStump<AutoPacketFactory, false>;
 extern template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;
-
 extern template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, Object>(const std::shared_ptr<Object>& Other);
