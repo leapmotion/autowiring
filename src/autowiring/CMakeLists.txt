@@ -82,6 +82,7 @@ set(Autowiring_SRCS
   Deferred.h
   DefaultAutoNetServer.cpp
   demangle.h
+  demangle.cpp
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunk.h
