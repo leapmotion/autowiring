@@ -1,4 +1,3 @@
-set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost COMPONENTS system QUIET)
 if(NOT Boost_FOUND)
   message("Cannot build Autonet, boost not installed on this system")
