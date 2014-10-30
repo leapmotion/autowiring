@@ -104,7 +104,7 @@ TEST_F(AnySharedPointerTest, SlotsInVector) {
   auto sharedPtr = std::make_shared<bool>();
 
   {
-    std::vector<AnySharedPointer> slots;
+    std::list<AnySharedPointer> slots;
 
     // Initialize with a lot of copies of sharedPtr
     for(size_t i = 0; i < 10; i++) {
@@ -190,51 +190,4 @@ TEST_F(AnySharedPointerTest, VoidReturnExpected) {
 
   // Validate equivalence of the void operator:
   ASSERT_EQ(v.get(), slot->ptr()) << "Shared pointer slot did not return a void* with an expected value";
-}
-
-struct WiredType{};
-struct RequiredType{};
-struct WiredFastType{};
-struct CombinedWireType{
-  Autowired<WiredType> wt;
-  AutoRequired<RequiredType> rt;
-  AutowiredFast<WiredFastType> wft;
-};
-
-#pragma pack(1)
-class ConfoundingBaseClass {
-public:
-  virtual ~ConfoundingBaseClass(void) {}
-
-  int padding;
-};
-
-class MyKnownBaseObj:
-  public ConfoundingBaseClass,
-  public Object
-{
-};
-#pragma pack()
-
-TEST_F(AnySharedPointerTest, CorrectBaseOffsetReporting) {
-  auto myObj = std::make_shared<MyKnownBaseObj>();
-
-  // Perform standard assignment
-  AnySharedPointer ptr(myObj);
-
-  // Verify that no unexpected type collapse has taken place.  We really do need the address of Object* to be different
-  // from the address of the most derived type, because if the offsets are the same then we are just testing against zero,
-  // and it's possible that this could yield a higher false positive rate
-  ConfoundingBaseClass* pConfound = myObj.get();
-  Object* pObj = myObj.get();
-  ASSERT_NE((void*) pConfound, (void*) pObj) << "Objects were expected to have different offsets, test cannot proceed";
-  ASSERT_NE((void*) myObj.get(), (void*) pObj) << "Object offset was coincident with the base type, this test will not produce meaningful results";
-
-  // An in-place multiple cast shouldn't result in aliasing either:
-  Object* pCastedObject = static_cast<Object*>(reinterpret_cast<MyKnownBaseObj*>(1));
-  ASSERT_NE(1, static_cast<int>(reinterpret_cast<int64_t>(pCastedObject))) << "In-place cast of a dummy pointer was degenerate";
-
-  // Now verify that everything is packed as we expect
-  size_t realOffset = reinterpret_cast<char*>(pObj) - reinterpret_cast<char*>(myObj.get());
-  ASSERT_EQ(realOffset, ptr->cast_offset()) << "Offset to the base type was not correctly computed";
 }

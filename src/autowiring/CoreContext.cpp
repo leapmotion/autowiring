@@ -192,12 +192,12 @@ void CoreContext::AddInternal(const ObjectTraits& traits) {
   {
     std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
 
-    // Validate that this addition does not generate an ambiguity.  We need to use the proper type of
-    // pObject, rather than the type passed in via traits.type, because the proper type might be a
+    // Validate that this addition does not generate an ambiguity.  We need to use the actual type of
+    // the value, rather than the type passed in via traits.type, because the proper type might be a
     // concrete type defined in another context or potentially a unifier type.  Creating a slot here
     // is also undesirable because the complete type is not available and we can't create a dynaimc
     // caster to identify when this slot gets satisfied.
-    auto q = m_typeMemos.find(typeid(*traits.pObject));
+    auto q = m_typeMemos.find(traits.actual_type);
     if(q != m_typeMemos.end()) {
       auto& v = q->second;
       if(*v.m_value == traits.pObject)
@@ -262,7 +262,7 @@ void CoreContext::FindByType(AnySharedPointer& reference) const {
   FindByTypeUnsafe(reference);
 }
 
-void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
+CoreContext::MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   const std::type_info& type = reference->type();
 
   // If we've attempted to search for this type before, we will return the value of the memo immediately:
@@ -270,7 +270,7 @@ void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   if(q != m_typeMemos.end()) {
     // We can copy over and return here
     reference = q->second.m_value;
-    return;
+    return q->second;
   }
 
   // Resolve based on iterated dynamic casts for each concrete type:
@@ -289,7 +289,9 @@ void CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
   }
 
   // This entry was not formerly memoized.  Memoize unconditionally.
-  m_typeMemos[type].m_value = reference;
+  MemoEntry& retVal = m_typeMemos[type];
+  retVal.m_value = reference;
+  return retVal;
 }
 
 void CoreContext::FindByTypeRecursive(AnySharedPointer& reference, const AutoSearchLambda& searchFn) const {

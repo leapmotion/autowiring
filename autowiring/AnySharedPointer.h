@@ -4,13 +4,8 @@
 
 struct AnySharedPointer {
 public:
-  AnySharedPointer(void) {
-    new (m_space) SharedPointerSlot;
-  }
-
-  explicit AnySharedPointer(const AnySharedPointer& rhs) {
-    new (m_space) SharedPointerSlot(*rhs.slot());
-  }
+  AnySharedPointer(void);
+  explicit AnySharedPointer(const AnySharedPointer& rhs);
 
   template<class T>
   explicit AnySharedPointer(const std::shared_ptr<T>& rhs) {
@@ -18,10 +13,7 @@ public:
     new (m_space) SharedPointerSlotT<T>(rhs);
   }
 
-  ~AnySharedPointer(void) {
-    // Pass control to the *real* destructor:
-    slot()->~SharedPointerSlot();
-  }
+  ~AnySharedPointer(void);
 
 protected:
   unsigned char m_space[sizeof(SharedPointerSlot)];
@@ -115,6 +107,3 @@ template<class T>
 inline bool operator==(const std::shared_ptr<T>& lhs, const AnySharedPointer& rhs) {
   return rhs == lhs;
 }
-
-static_assert(sizeof(AnySharedPointerT<int>) == sizeof(AnySharedPointer), "AnySharedPointer realization cannot have members");
-static_assert(!std::is_polymorphic<AnySharedPointer>::value, "The shared pointer cannot be polymorphic, this prevents the root type from being aliased correctly");

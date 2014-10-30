@@ -135,16 +135,6 @@ public:
   virtual void reset(void) {}
 
   /// <summary>
-  /// Utility service method, used to perform a semidynamic cast
-  /// </summary>
-  /// <returns>
-  /// The number of bytes that must be added to the return value of this->ptr() in order to obtain an Object*
-  /// </returns>
-  virtual int cast_offset(void) const {
-    return 0;
-  }
-
-  /// <summary>
   /// Attempts to coerce this type to the specified type
   /// </summary>
   template<class T>
@@ -231,24 +221,6 @@ public:
   }
 };
 
-struct SharedPointerSlotTOffsetBase {
-  static int cast_offset() {
-    throw std::bad_cast();
-  }
-};
-
-template<typename T, bool is_object = std::is_base_of<Object, T>::value>
-struct SharedPointerSlotTOffset {
-  static int cast_offset() {
-    return static_cast<int>(reinterpret_cast<int64_t>(
-      static_cast<Object*>(reinterpret_cast<T*>(1))
-    )) - 1;
-  }
-};
-
-template<typename T>
-struct SharedPointerSlotTOffset<T, false> : SharedPointerSlotTOffsetBase {};
-
 template<class T>
 struct SharedPointerSlotT:
   SharedPointerSlot
@@ -291,11 +263,6 @@ public:
 
   virtual operator std::shared_ptr<Object>(void) const override {
     return autowiring::fast_pointer_cast<Object>(get());
-  }
-
-  int cast_offset(void) const override {
-    // Should be safe, unless we expect sizeof(T) > 2^32
-    return SharedPointerSlotTOffset<T>::cast_offset();
   }
 
   virtual void* ptr(void) override {

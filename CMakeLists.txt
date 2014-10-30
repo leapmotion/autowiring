@@ -43,6 +43,11 @@ if(USE_LIBCXX)
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     message("GCC C++11")
   endif()
+  
+  # Also need position-independent code to make things work correctly on certain 64-bit machines
+  if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+  endif()
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)

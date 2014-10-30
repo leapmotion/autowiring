@@ -16,8 +16,6 @@ public:
   void HandleResumeFromBreakpoint(std::string name) {}
 };
 
-#if !AUTOWIRING_BUILD_AUTONET
 AutoNetServer* NewAutoNetServerImpl(void) {
   return new DefaultAutoNetServer;
 }
-#endif

@@ -2,10 +2,6 @@ set(AutowiringTest_SRCS
   AnySharedPointerTest.cpp
   ArgumentTypeTest.cpp
   AutoConstructTest.cpp
-  AutoFilterFunctionTest.cpp
-  AutoFilterPipeTest.cpp
-  AutoFilterSequencing.cpp
-  AutoFilterTest.cpp
   AutoInjectableTest.cpp
   AutoPacketFactoryTest.cpp
   AutoRestarterTest.cpp
@@ -32,6 +28,7 @@ set(AutowiringTest_SRCS
   EventReceiverTest.cpp
   EventRegistryTest.cpp
   FactoryTest.cpp
+  ForeignTest.cpp
   GlobalInitTest.hpp
   GlobalInitTest.cpp
   GuardObjectTest.cpp
@@ -57,6 +54,15 @@ set(AutowiringTest_SRCS
   TestFixtures/MultiInherit.hpp
   UuidTest.cpp
 )
+
+if(USE_LIBCXX)
+  set(AutowiringTest_SRCS ${AutowiringTest_SRCS}
+    AutoFilterFunctionTest.cpp
+    AutoFilterPipeTest.cpp
+    AutoFilterSequencing.cpp
+    AutoFilterTest.cpp
+  )
+endif()
 
 set(AutowiringFixture_SRCS
   SelfSelectingFixture.hpp

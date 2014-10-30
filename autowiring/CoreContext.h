@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
-#include "ObjectTraits.h"
 #include "AutoFilterDescriptor.h"
 #include "AutowirableSlot.h"
 #include "AutowiringEvents.h"
@@ -12,16 +11,18 @@
 #include "ContextMember.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
+#include "EventOutputStream.h"
+#include "EventInputStream.h"
+#include "EventRegistry.h"
+#include "ExceptionFilter.h"
 #include "fast_pointer_cast.h"
 #include "has_autoinit.h"
 #include "InvokeRelay.h"
-#include "result_or_default.h"
 #include "JunctionBoxManager.h"
-#include "EventOutputStream.h"
-#include "EventInputStream.h"
-#include "ExceptionFilter.h"
+#include "member_new_type.h"
+#include "ObjectTraits.h"
+#include "result_or_default.h"
 #include "TeardownNotifier.h"
-#include "EventRegistry.h"
 #include "TypeRegistry.h"
 #include "TypeUnifier.h"
 
@@ -146,8 +147,22 @@ protected:
     AnySharedPointer m_value;
   };
 
+  /// <summary>
+  /// A proxy context member that knows how to create a factory for a particular type
+  /// </summary>
+  /// <remarks>
+  /// This is an internal routine!  Don't try to use it yourself!  If you would like to
+  /// register yourself as a factory producing a certain type, use the static new method
+  /// which has one of the signatures defined <see ref="factorytype">factorytype</see>
+  /// </remarks>
+  template<class T>
+  class AutoFactory;
+
+  template<class T, class Fn>
+  class AutoFactoryFn;
+
   // This is a list of concrete types, indexed by the true type of each element.
-  std::vector<ObjectTraits> m_concreteTypes;
+  std::list<ObjectTraits> m_concreteTypes;
 
   // This is a memoization map used to memoize any already-detected interfaces.
   mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;
@@ -176,6 +191,10 @@ protected:
   // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
   // Destructor does nothing; this is by design.
   std::weak_ptr<Object> m_outstanding;
+
+  // Creation rules are allowed to refer to private methods in this type
+  template<autowiring::construction_strategy, class T, class... Args>
+  friend struct autowiring::crh;
 
 protected:
   // Delayed creation routine
@@ -312,7 +331,7 @@ protected:
   /// <summary>
   /// Unsynchronized version of FindByType
   /// </summary>
-  void FindByTypeUnsafe(AnySharedPointer& reference) const;
+  MemoEntry& FindByTypeUnsafe(AnySharedPointer& reference) const;
 
   /// <summary>
   /// Recursive locking for Autowire satisfaction search
@@ -353,6 +372,27 @@ protected:
   /// </summary>
   void UnsnoopAutoPacket(const ObjectTraits& traits);
 
+  /// <summary>
+  /// Registers a factory _function_, a lambda which is capable of constructing decltype(fn())
+  /// </summary>
+  template<class Fn>
+  void RegisterFactoryFn(Fn&& fn) {
+    Inject<AutoFactoryFn<typename std::remove_pointer<decltype(fn())>::type, Fn>>(std::forward<Fn>(fn));
+  }
+
+  /// <summary>
+  /// Registers a new foreign factory type without explicitly specifying the returned value type
+  /// </summary>
+  /// <param name="Factory">The factory type to be added</param>
+  /// <param name="obj">A reference to the factory proper</param>
+  template<class Factory>
+  void RegisterFactory(Factory& obj, autowiring::member_new_type<Factory, autowiring::factorytype::ret_val>) {
+    RegisterFactoryFn([&obj] { return obj.New(); });
+  }
+
+  template<class Factory>
+  void RegisterFactory(const Factory&, autowiring::member_new_type<Factory, autowiring::factorytype::none>) {}
+
 public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
@@ -360,6 +400,13 @@ public:
   size_t GetChildCount(void) const;
   virtual const std::type_info& GetSigilType(void) const = 0;
   t_childList::iterator GetBackReference(void) const { return m_backReference; }
+  const std::shared_ptr<CoreContext>& GetParentContext(void) const { return m_pParent; }
+
+  /// <returns>
+  /// True if the sigil type of this CoreContext matches the specified sigil type
+  /// </returns>
+  template<class Sigil>
+  bool Is(void) const { return GetSigilType() == typeid(Sigil); }
 
   /// <returns>
   /// The first child in the set of this context's children
@@ -443,28 +490,21 @@ public:
   /// </remarks>
   template<typename T, typename... Args>
   std::shared_ptr<T> Inject(Args&&... args) {
+    // Creator proxy, knows how to create the type we intend to inject
+    typedef autowiring::CreationRules<T, Args...> CreationRules;
+
     // Add this type to the TypeRegistry
     (void) RegType<T>::r;
-    
-    // If T doesn't inherit Object, then we need to compose a unifying type which does
-    typedef typename SelectTypeUnifier<T>::type TActual;
-    static_assert(std::is_base_of<Object, TActual>::value, "Constructive type does not implement Object as expected");
-    static_assert(
-      std::is_base_of<Object, T>::value || !has_static_new<T>::value,
-      "If type T provides a static New method, then the constructed type MUST directly inherit Object"
-    );
 
     // First see if the object has already been injected:
-    std::shared_ptr<TActual> retVal;
+    std::shared_ptr<typename CreationRules::TActual> retVal;
     FindByType(retVal);
     if(retVal)
       return retVal;
 
     // We must make ourselves current for the remainder of this call:
     CurrentContextPusher pshr(shared_from_this());
-
-    // Cannot safely inject while holding the lock, so we have to unlock and then inject
-    retVal.reset(CreationRules::New<TActual>(std::forward<Args>(args)...));
+    retVal.reset(CreationRules::New(*this, std::forward<Args>(args)...));
 
     // AutoInit if sensible to do so:
     CallAutoInit(*retVal, has_autoinit<T>());
@@ -481,6 +521,10 @@ public:
       // Construct.
       FindByType(retVal);
     }
+
+    // Factory registration if sensible to do so, but only after the underlying type has been
+    // added, so that the proper type can succeed
+    RegisterFactory(*retVal, autowiring::member_new_type<typename CreationRules::TActual>());
     return retVal;
   }
 
@@ -506,12 +550,6 @@ public:
   bool CheckEventOutputStream(void){
     return m_junctionBoxManager->CheckEventOutputStream(typeid(T));
   }
-
-  /// <returns>
-  /// True if the sigil type of this CoreContext matches the specified sigil type
-  /// </returns>
-  template<class Sigil>
-  bool Is(void) const { return GetSigilType() == typeid(Sigil); }
 
   /// <summary>
   /// Sends AutowiringEvents to build current state
@@ -664,11 +702,6 @@ public:
   static std::shared_ptr<CoreContext> CurrentContext(void);
 
   /// <summary>
-  /// Obtains a pointer to the parent context
-  /// </summary>
-  const std::shared_ptr<CoreContext>& GetParentContext(void) const {return m_pParent;}
-
-  /// <summary>
   /// Filters std::current_exception using any registered exception filters, or rethrows.
   /// </summary>
   /// <remarks>
@@ -771,7 +804,7 @@ public:
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
   template<class T>
-  void FindByTypeRecursive(std::shared_ptr<T>& ptr) {
+  void FindByTypeRecursive(std::shared_ptr<T>& ptr) const {
     AnySharedPointerT<T> slot;
     FindByTypeRecursive(slot, AutoSearchLambdaDefault());
     ptr = slot.slot()->get();
@@ -781,7 +814,7 @@ public:
   /// Identical to Autowire, but will not register the passed slot for deferred resolution
   /// </summary>
   template<class T>
-  void FindByTypeRecursive(AnySharedPointerT<T>& slot) {
+  void FindByTypeRecursive(AnySharedPointerT<T>& slot) const {
     FindByTypeRecursive(slot, AutoSearchLambdaDefault());
   }
 
@@ -956,4 +989,50 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 template<typename T, typename... Sigil>
 void CoreContext::AutoRequireMicroBolt(void) {
   Inject<MicroBolt<T, Sigil...>>();
+}
+
+template<class T>
+class CoreContext::AutoFactory
+{
+public:
+  virtual T* operator()(CoreContext& ctxt) const = 0;
+};
+
+template<class T, class Fn>
+class CoreContext::AutoFactoryFn :
+  public Object,
+  public CoreContext::AutoFactory<T>
+{
+public:
+  AutoFactoryFn(Fn&& fn) :
+    fn(std::move(fn))
+  {}
+
+  const Fn fn;
+
+  T* operator()(CoreContext&) const override { return fn(); }
+};
+
+template<class... Ts, class Fn>
+class CoreContext::AutoFactoryFn<std::tuple<Ts...>, Fn> :
+  public Object,
+  CoreContext::AutoFactory<Ts>...
+{
+public:
+  AutoFactoryFn(Fn&& fn) :
+    fn(std::move(fn))
+  {}
+
+  const Fn fn;
+};
+
+template<typename T, typename... Args>
+T* autowiring::crh<autowiring::construction_strategy::foreign_factory, T, Args...>::New(CoreContext& ctxt, Args&&... args) {
+  AnySharedPointerT<CoreContext::AutoFactory<T>> af;
+  ctxt.FindByType(af);
+  if(!af)
+    throw autowiring_error("Attempted to AutoRequire an interface, but failed to find a factory for this interface in the current context");
+
+  // Standard factory invocation:
+  return (*af)(ctxt);
 }
