@@ -2,10 +2,36 @@
 #pragma once
 
 #include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
 
 namespace std {
-  using boost::tuple;
-  using boost::get;
-  using boost::make_tuple;
-  using boost::tie;
-}
+  template<typename... Ts>
+  class tuple {
+  public:
+    tuple(const Ts&... ele):
+      m_tuple(ele...)
+    {}
+    virtual ~tuple(void){}
+
+    bool operator==(const tuple<Ts...>& other) const {
+      return m_tuple == other.m_tuple;
+    }
+
+    bool operator<(const tuple<Ts...>& other) const {
+      return m_tuple < other.m_tuple;
+    }
+
+    boost::tuple<Ts...> m_tuple;
+  };
+
+  template<int I, typename... Ts>
+  auto get(const ::std::tuple<Ts...>& tup) -> decltype(boost::get<I>(tup.m_tuple)) {
+    return boost::get<I>(tup.m_tuple);
+  }
+
+  template<typename... Ts>
+  ::std::tuple<Ts...> make_tuple(const Ts&... ele) {
+    return ::std::tuple<Ts...>(ele...);
+  }
+
+}//namespace std

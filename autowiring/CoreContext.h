@@ -162,7 +162,7 @@ protected:
   class AutoFactoryFn;
 
   // This is a list of concrete types, indexed by the true type of each element.
-  std::vector<ObjectTraits> m_concreteTypes;
+  std::list<ObjectTraits> m_concreteTypes;
 
   // This is a memoization map used to memoize any already-detected interfaces.
   mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;
