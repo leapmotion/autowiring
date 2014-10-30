@@ -81,7 +81,6 @@ set(Autowiring_SRCS
   DecorationDisposition.h
   Deserialize.h
   Deferred.h
-  DefaultAutoNetServer.cpp
   demangle.h
   demangle.cpp
   DispatchQueue.h
@@ -126,7 +125,6 @@ set(Autowiring_SRCS
   MicroAutoFilter.h
   MicroBolt.h
   NewAutoFilter.h
-  NewAutoFilter.cpp
   SharedPointerSlot.h
   SlotInformation.h
   SlotInformation.cpp
@@ -143,6 +141,10 @@ set(Autowiring_SRCS
   uuid.h
   var_logic.h
 )
+
+if(NOT AUTOWIRING_BUILD_AUTONET)
+  list(APPEND Autowiring_SRCS DefaultAutoNetServer.cpp)
+endif()
 
 if(NOT APPLE)
   # avoid warning: has no symbols
