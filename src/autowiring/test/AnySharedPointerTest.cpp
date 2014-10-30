@@ -104,7 +104,7 @@ TEST_F(AnySharedPointerTest, SlotsInVector) {
   auto sharedPtr = std::make_shared<bool>();
 
   {
-    std::vector<AnySharedPointer> slots;
+    std::list<AnySharedPointer> slots;
 
     // Initialize with a lot of copies of sharedPtr
     for(size_t i = 0; i < 10; i++) {
