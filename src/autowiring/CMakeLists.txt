@@ -216,8 +216,8 @@ target_include_directories(Autowiring INTERFACE
 )
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
 
-# The boost C++11 shim is required when building without USE_LIBCXX
-if(NOT USE_LIBCXX)
+# The boost C++11 shim is required when building without autowiring_USE_LIBCXX
+if(NOT autowiring_USE_LIBCXX)
   find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
   target_link_libraries(Autowiring ${Boost_LIBRARIES})
 endif()

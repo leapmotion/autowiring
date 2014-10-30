@@ -16,13 +16,13 @@ if(EXTERNAL_LIBRARY_DIR)
   list(APPEND CMAKE_INCLUDE_PATH ${EXTERNAL_LIBRARY_DIR})
 endif()
 
-# Offer option for USE_LIBCXX only if not defined by enclosing project
-# Check for existing definition of USE_LIBCXX
-if(NOT DEFINED USE_LIBCXX)
-  option(USE_LIBCXX "Build Autowiring using c++11" ON)
+# Offer option for autowiring_USE_LIBCXX only if not defined by enclosing project
+# Check for existing definition of autowiring_USE_LIBCXX
+if(NOT DEFINED autowiring_USE_LIBCXX)
+  option(autowiring_USE_LIBCXX "Build Autowiring using c++11" ON)
 else()
-  if(NOT USE_LIBCXX)
-    message("Parent project has set USE_LIBCXX = OFF -> Build Autowiring using c++98")
+  if(NOT autowiring_USE_LIBCXX)
+    message("Parent project has set autowiring_USE_LIBCXX = OFF -> Build Autowiring using c++98")
   endif()
 endif()
 
@@ -30,7 +30,7 @@ if(NOT WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
 endif()
-if(USE_LIBCXX)
+if(autowiring_USE_LIBCXX)
   # Clang needs special additional flags to build with C++11
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
     # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
