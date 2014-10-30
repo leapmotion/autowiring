@@ -7,6 +7,22 @@ if(NOT ${CMAKE_SIZEOF_VOID_P} STREQUAL @CMAKE_SIZEOF_VOID_P@)
   return()
 endif()
 
+# Determine whether the user's request (either implied or explicit) for libstdc++ can
+# be met by this verison of Autowiring
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+  # If this value isn't defined, then we assume the user's request is "on"
+  if(NOT DEFINED autowiring_USE_LIBCXX)
+    SET(autowiring_USE_LIBCXX ON)
+  endif()
+
+  # Our built version must be the same as the requested version.  If it's not, then we are
+  # not a match for the user's request
+  if((NOT ${autowiring_USE_LIBCXX} AND @autowiring_USE_LIBCXX@) OR (${autowiring_USE_LIBCXX} AND NOT @autowiring_USE_LIBCXX@))
+    set(PACKAGE_VERSION_COMPATIBLE FALSE)
+    set(PACKAGE_VERSION_UNSUITABLE TRUE)
+  endif()
+endif()
+
 # Check whether the requested PACKAGE_FIND_VERSION is compatible
 if("${PACKAGE_VERSION}" VERSION_LESS "${PACKAGE_FIND_VERSION}")
   set(PACKAGE_VERSION_COMPATIBLE FALSE)

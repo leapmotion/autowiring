@@ -55,7 +55,7 @@ set(AutowiringTest_SRCS
   UuidTest.cpp
 )
 
-if(USE_LIBCXX)
+if(autowiring_USE_LIBCXX)
   set(AutowiringTest_SRCS ${AutowiringTest_SRCS}
     AutoFilterFunctionTest.cpp
     AutoFilterPipeTest.cpp
