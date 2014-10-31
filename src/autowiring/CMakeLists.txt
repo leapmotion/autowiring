@@ -216,10 +216,11 @@ target_include_directories(Autowiring INTERFACE
 )
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
 
-# The boost C++11 shim is required when building without autowiring_USE_LIBCXX
-if(NOT autowiring_USE_LIBCXX)
+# The boost C++11 shim is required when building without autowiring_USE_LIBCXX off Windows
+# We do not mention the link libraries; rather, we require that downstream clients
+# satisfy this link dependency.
+if(NOT WIN32 AND NOT autowiring_USE_LIBCXX)
   find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
-  target_link_libraries(Autowiring ${Boost_LIBRARIES})
 endif()
 
 # Need multithreading services if available
