@@ -16,6 +16,13 @@ if(EXTERNAL_LIBRARY_DIR)
   list(APPEND CMAKE_INCLUDE_PATH ${EXTERNAL_LIBRARY_DIR})
 endif()
 
+if(CMAKE_COMPILER_IS_GNUCC)
+  option(autowiring_BUILD_64 "Target a 32-bit build" OFF)
+  if(autowiring_BUILD_64)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
+  endif()
+endif()
+
 if(NOT WIN32)
   # Offer option for autowiring_USE_LIBCXX
   # Check for existing definition of autowiring_USE_LIBCXX
