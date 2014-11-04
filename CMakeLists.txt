@@ -32,6 +32,19 @@ if(NOT WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
   set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
 endif()
+
+if(CMAKE_COMPILER_IS_GNUCC)
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8")
+    message(FATAL_ERROR "GCC version 4.8 minimum is required to build Autowiring")
+  endif()
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "18.0")
+    message(FATAL_ERROR "MSVC 2013 minimum is required to build Autowiring")
+  endif()
+endif()
+
+message("Version number ${CMAKE_CXX_COMPILER_VERSION}")
+
 if(autowiring_USE_LIBCXX)
   # Clang needs special additional flags to build with C++11
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
