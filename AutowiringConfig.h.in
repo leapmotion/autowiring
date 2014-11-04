@@ -9,8 +9,8 @@
 #cmakedefine01 AUTOWIRING_BUILD_AUTONET
 
 // Are we linking with C++11 STL?
-#cmakedefine01 USE_LIBCXX
-#if USE_LIBCXX
+#cmakedefine01 autowiring_USE_LIBCXX
+#if autowiring_USE_LIBCXX
 #define AUTOWIRING_USE_LIBCXX 1
 #else
 #define AUTOWIRING_USE_LIBCXX 0

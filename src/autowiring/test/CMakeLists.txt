@@ -80,6 +80,10 @@ set_property(TARGET AutowiringFixture PROPERTY FOLDER "Autowiring")
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
 target_link_libraries(AutowiringTest Autowiring AutowiringFixture AutoTesting)
+if(WIN32 AND NOT autowiring_USE_LIBCXX)
+  find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
+  target_link_libraries(AutowiringTest ${Boost_LIBRARIES})
+endif()
 
 # Link AutoNet if we've got it
 if(TARGET AutoNet)
