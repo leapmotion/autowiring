@@ -16,13 +16,15 @@ if(EXTERNAL_LIBRARY_DIR)
   list(APPEND CMAKE_INCLUDE_PATH ${EXTERNAL_LIBRARY_DIR})
 endif()
 
-# Offer option for autowiring_USE_LIBCXX only if not defined by enclosing project
-# Check for existing definition of autowiring_USE_LIBCXX
-if(NOT DEFINED autowiring_USE_LIBCXX)
-  option(autowiring_USE_LIBCXX "Build Autowiring using c++11" ON)
-else()
-  if(NOT autowiring_USE_LIBCXX)
-    message("Parent project has set autowiring_USE_LIBCXX = OFF -> Build Autowiring using c++98")
+if(NOT WIN32)
+  # Offer option for autowiring_USE_LIBCXX
+  # Check for existing definition of autowiring_USE_LIBCXX
+  if(NOT DEFINED autowiring_USE_LIBCXX)
+    option(autowiring_USE_LIBCXX "Build Autowiring using c++11" ON)
+  else()
+    if(NOT autowiring_USE_LIBCXX)
+      message("Parent project has set autowiring_USE_LIBCXX = OFF -> Build Autowiring using c++98")
+    endif()
   endif()
 endif()
 
