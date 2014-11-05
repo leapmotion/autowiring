@@ -328,3 +328,25 @@ TEST_F(ObjectPoolTest, MovableObjectPoolAysnc) {
   // Verify that new pool got all of the objects:
   ASSERT_EQ(s_count, to.GetCached()) << "Object pool move operation did not correctly relay checked out types";
 }
+
+TEST_F(ObjectPoolTest, VerifyInitializerFinalizer) {
+  auto initFlag = std::make_shared<bool>(false);
+  auto termFlag = std::make_shared<bool>(false);
+
+  ObjectPool<bool> pool(
+    &DefaultCreate<bool>,
+    [initFlag](bool&) { *initFlag = true; },
+    [termFlag](bool&) { *termFlag = true; }
+  );
+
+  // Issue a shared pointer, this shouldn't invoke the finalizer but should invoke the initializer
+  auto issued = pool.Wait();
+  ASSERT_TRUE(*initFlag) << "Item issued from a pool was not properly initialized";
+  ASSERT_FALSE(*termFlag) << "Item issued from a pool was finalized before it was released";
+
+  // Now return the issued item, and verify that the correct functions get called
+  *initFlag = false;
+  issued.reset();
+  ASSERT_FALSE(*initFlag) << "Returned item incorrectly caused a new initialization";
+  ASSERT_TRUE(*termFlag) << "Returned item was not correctly finalized";
+}
