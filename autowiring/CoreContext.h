@@ -34,7 +34,6 @@
 #include STL_UNORDERED_SET
 
 class AutoInjectable;
-class AutoPacketFactory;
 class DeferrableAutowiring;
 class BasicThread;
 class BoltBase;
@@ -337,11 +336,6 @@ protected:
   /// Recursive locking for Autowire satisfaction search
   /// </summary>
   void FindByTypeRecursive(AnySharedPointer& reference, const AutoSearchLambda& searchFn) const;
-
-  /// <summary>
-  /// Returns or constructs a new AutoPacketFactory instance
-  /// </summary>
-  std::shared_ptr<AutoPacketFactory> GetPacketFactory(void);
 
   /// <summary>
   /// Adds the specified deferrable autowiring to be satisfied at a later date when its matched type is inserted

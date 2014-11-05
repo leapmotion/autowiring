@@ -1,9 +1,9 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "auto_arg.h"
+#include "AutoPacket.h"
 #include "DataFlow.h"
 #include "Decompose.h"
-#include "AutoPacket.h"
-#include "auto_arg.h"
 
 class Deferred;
 

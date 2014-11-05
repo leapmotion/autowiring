@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-
 #include "auto_in.h"
 #include "auto_out.h"
 #include "optional_ptr.h"

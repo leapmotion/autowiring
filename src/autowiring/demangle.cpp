@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "demangle.h"
+#include "AnySharedPointer.h"
 
 #if __GNUG__ // Mac and linux
 
@@ -21,6 +22,11 @@ std::string autowiring::demangle(const std::type_info& ti) {
 
 #endif
 
+std::string autowiring::demangle(const AnySharedPointer& ptr) {
+  return autowiring::demangle(ptr->type());
+}
+
 std::string autowiring::demangle(const std::type_info* ti) {
   return autowiring::demangle(*ti);
 }
+
