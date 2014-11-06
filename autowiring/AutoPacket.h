@@ -2,15 +2,15 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "at_exit.h"
-#include "DataFlow.h"
 #include "AutoCheckout.h"
+#include "DataFlow.h"
 #include "DecorationDisposition.h"
 #include "demangle.h"
-#include "is_shared_ptr.h"
-#include "ObjectPool.h"
-#include "is_any.h"
-#include "MicroAutoFilter.h"
 #include "hash_tuple.h"
+#include "is_any.h"
+#include "is_shared_ptr.h"
+#include "MicroAutoFilter.h"
+#include "ObjectPool.h"
 #include <list>
 #include <sstream>
 #include <typeinfo>
@@ -199,6 +199,8 @@ public:
   /// </summary>
   template<class T>
   const T& Get(const std::type_info& source = typeid(void)) const {
+    static_assert(!std::is_same<T, AnySharedPointer>::value, "Oops!");
+
     const T* retVal;
     if(!Get(retVal, source)) {
       std::stringstream ss;

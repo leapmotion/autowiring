@@ -3,6 +3,7 @@
 #include "is_any.h"
 #include "index_tuple.h"
 #include "JunctionBox.h"
+#include STL_TUPLE_HEADER
 
 class Deferred;
 

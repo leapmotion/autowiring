@@ -1,10 +1,49 @@
 set(PACKAGE_VERSION "@autowiring_VERSION@")
 
-# Verify that we have a bit depth matching the bit depth desired by the customer
-if(NOT ${CMAKE_SIZEOF_VOID_P} STREQUAL @CMAKE_SIZEOF_VOID_P@)
+# If the customer has an override architecture requirement, use that
+if(DEFINED autowiring_ARCHITECTURE)
+  set(autowiring_64_BIT amd64 x86_64 x64)
+  list(FIND autowiring_64_BIT ${autowiring_ARCHITECTURE} i)
+  if(NOT i EQUAL -1)
+    set(autowiring_WORD_WIDTH 8)
+  endif()
+
+  set(autowiring_32_BIT i386 x86)
+  list(FIND autowiring_32_BIT ${autowiring_ARCHITECTURE} i)
+  if(NOT i EQUAL -1)
+    set(autowiring_WORD_WIDTH 4)
+  endif()
+
+  if(NOT DEFINED autowiring_WORD_WIDTH)
+    message(WARNING "Unrecognized architecture ${autowiring_ARCHITECTURE}")
+    set(autowiring_WORD_WIDTH -1)
+  endif()
+else()
+  # User wants whatever they are currently configured to use, if not specified otherwise
+  set(autowiring_WORD_WIDTH ${CMAKE_SIZEOF_VOID_P})
+endif()
+
+# Verify that we have a word width matching the bit depth desired by the customer
+if(NOT autowiring_WORD_WIDTH STREQUAL @CMAKE_SIZEOF_VOID_P@)
   set(PACKAGE_VERSION_COMPATIBLE FALSE)
   set(PACKAGE_VERSION_UNSUITABLE TRUE)
   return()
+endif()
+
+# Determine whether the user's request (either implied or explicit) for libstdc++ can
+# be met by this verison of Autowiring
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+  # If this value isn't defined, then we assume the user's request is "on"
+  if(NOT DEFINED autowiring_USE_LIBCXX)
+    SET(autowiring_USE_LIBCXX ON)
+  endif()
+
+  # Our built version must be the same as the requested version.  If it's not, then we are
+  # not a match for the user's request
+  if((NOT ${autowiring_USE_LIBCXX} AND @autowiring_USE_LIBCXX@) OR (${autowiring_USE_LIBCXX} AND NOT @autowiring_USE_LIBCXX@))
+    set(PACKAGE_VERSION_COMPATIBLE FALSE)
+    set(PACKAGE_VERSION_UNSUITABLE TRUE)
+  endif()
 endif()
 
 # Check whether the requested PACKAGE_FIND_VERSION is compatible

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Deferred.h"
+#include FUNCTIONAL_HEADER
 
 /// <summary>
 /// Transmutes a function returning void to an instance that can be called by AutoPacket.

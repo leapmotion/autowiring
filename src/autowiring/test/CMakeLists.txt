@@ -2,10 +2,6 @@ set(AutowiringTest_SRCS
   AnySharedPointerTest.cpp
   ArgumentTypeTest.cpp
   AutoConstructTest.cpp
-  AutoFilterFunctionTest.cpp
-  AutoFilterPipeTest.cpp
-  AutoFilterSequencing.cpp
-  AutoFilterTest.cpp
   AutoInjectableTest.cpp
   AutoPacketFactoryTest.cpp
   AutoRestarterTest.cpp
@@ -59,22 +55,40 @@ set(AutowiringTest_SRCS
   UuidTest.cpp
 )
 
+if(autowiring_USE_LIBCXX)
+  set(AutowiringTest_SRCS ${AutowiringTest_SRCS}
+    AutoFilterFunctionTest.cpp
+    AutoFilterPipeTest.cpp
+    AutoFilterSequencing.cpp
+    AutoFilterTest.cpp
+  )
+endif()
+
 set(AutowiringFixture_SRCS
-  SelfSelectingFixture.hpp
-  SelfSelectingFixture.cpp
-  OtherSelectingFixture.hpp
-  OtherSelectingFixture.cpp
   HasForwardOnlyType.hpp
   HasForwardOnlyType.cpp
+  MentionsVariousOtherTypes.hpp
+  MentionsVariousOtherTypes.cpp
+  OtherSelectingFixture.hpp
+  OtherSelectingFixture.cpp
+  SelfSelectingFixture.hpp
+  SelfSelectingFixture.cpp
 )
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringFixture_SRCS)
 add_library(AutowiringFixture ${AutowiringFixture_SRCS})
 set_property(TARGET AutowiringFixture PROPERTY FOLDER "Autowiring")
+if(NOT WIN32)
+  set_target_properties(AutowiringFixture PROPERTIES COMPILE_FLAGS "-fvisibility=hidden")
+endif()
 
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringTest_SRCS)
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
 target_link_libraries(AutowiringTest Autowiring AutowiringFixture AutoTesting)
+if(NOT WIN32 AND NOT autowiring_USE_LIBCXX)
+  find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
+  target_link_libraries(AutowiringTest ${Boost_LIBRARIES})
+endif()
 
 # Link AutoNet if we've got it
 if(TARGET AutoNet)

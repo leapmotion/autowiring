@@ -54,13 +54,18 @@ struct sel_valuetype<void (U::*)(Ts*&...) const> {
   static const factorytype value = factorytype::multi_byref;
 };
 
+template<factorytype ft>
+struct factorytype_const {
+  static const factorytype value = ft;
+};
+  
 template<class T>
 struct member_new_type_helper {
   template<class U>
-  static std::integral_constant<factorytype, factorytype::none> select(...);
+  static factorytype_const<factorytype::none> select(...);
 
   template<class U>
-  static std::integral_constant<factorytype, sel_valuetype<decltype(&U::New)>::value> select(void*);
+  static factorytype_const<sel_valuetype<decltype(&U::New)>::value> select(void*);
 
   // Conveninece typedef used externally:
   typedef decltype(select<T>(nullptr)) factory_value_type;

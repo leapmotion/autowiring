@@ -34,7 +34,6 @@
 #include STL_UNORDERED_SET
 
 class AutoInjectable;
-class AutoPacketFactory;
 class DeferrableAutowiring;
 class BasicThread;
 class BoltBase;
@@ -162,7 +161,7 @@ protected:
   class AutoFactoryFn;
 
   // This is a list of concrete types, indexed by the true type of each element.
-  std::vector<ObjectTraits> m_concreteTypes;
+  std::list<ObjectTraits> m_concreteTypes;
 
   // This is a memoization map used to memoize any already-detected interfaces.
   mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;
@@ -337,11 +336,6 @@ protected:
   /// Recursive locking for Autowire satisfaction search
   /// </summary>
   void FindByTypeRecursive(AnySharedPointer& reference, const AutoSearchLambda& searchFn) const;
-
-  /// <summary>
-  /// Returns or constructs a new AutoPacketFactory instance
-  /// </summary>
-  std::shared_ptr<AutoPacketFactory> GetPacketFactory(void);
 
   /// <summary>
   /// Adds the specified deferrable autowiring to be satisfied at a later date when its matched type is inserted
