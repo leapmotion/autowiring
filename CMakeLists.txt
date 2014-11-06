@@ -3,6 +3,15 @@ include(version.cmake)
 project(autowiring VERSION ${autowiring_VERSION})
 include(CTest)
 
+# Need to classify the architecture before we run anything else
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+  set(autowiring_ARCHITECTURE "arm")
+elseif(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
+  set(autowiring_ARCHITECTURE "x64")
+else()
+  set(autowiring_ARCHITECTURE "x86")
+endif()
+
 # Determine whether Autowiring has been embedded in another project
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   set(AUTOWIRING_IS_EMBEDDED)
@@ -74,7 +83,13 @@ endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 include(CMakeModules/pch.cmake)
-set(AUTOWIRING_BUILD_AUTONET_DEFAULT ON)
+
+if(autowiring_ARCHITECTURE STREQUAL "arm")
+  # Currently cannot build Autonet for ARM, so default this off on that platform
+  set(AUTOWIRING_BUILD_AUTONET_DEFAULT OFF)
+else()
+  set(AUTOWIRING_BUILD_AUTONET_DEFAULT ON)
+endif()
 
 # We don't build tests unless we're being built by ourselves in our own source tree
 # When we're embedded in someone else's subtree, it's not likely that they will want
@@ -102,11 +117,22 @@ else()
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
 endif()
 
-# 64-bit installations should suffix with 64
+# ARM installations should have "arm" as the suffix for the generated libraries and should be
+# position-independent
+if(autowiring_ARCHITECTURE STREQUAL "arm")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
+  foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
+    string(TOUPPER ${config} config)
+    string(CONCAT CMAKE_${config}_POSTFIX CMAKE_${config}_POSTFIX "64")
+  endforeach()
+endif()
+
+# 64-bit installations should suffix with 64 regardless of the CPU type (arm or intel)
 if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
   foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
     string(TOUPPER ${config} config)
-    set(CMAKE_${config}_POSTFIX "64")
+    string(CONCAT CMAKE_${config}_POSTFIX CMAKE_${config}_POSTFIX "64")
   endforeach()
 endif()
 
@@ -147,11 +173,6 @@ include_directories(
 )
 
 # CMake configurations
-if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
-  set(autowiring_ARCHITECTURE "64")
-else()
-  set(autowiring_ARCHITECTURE "32")
-endif()
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
 configure_file(AutowiringConfig.h.in ${PROJECT_SOURCE_DIR}/autowiring/AutowiringConfig.h @ONLY)

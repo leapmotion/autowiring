@@ -47,6 +47,13 @@ At this point, you'll have a solution file in your root directory called "Autowi
 target then Autowiring will be installed on your system.  As with the other platforms, CMake will be able to find autowiring when it's installed this way
 via the [find_package](http://www.cmake.org/cmake/help/v3.0/command/find_package.html) command.
 
+### Android
+
+Building on Android requires the use of a toolchain file.  You will need to use an alternate prefix path if you are trying to cross-compile, the prefix path
+should contain your version of the Boost libraries built for Android.  To configure, use the following invocation:
+
+    cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake -DCMAKE_PREFIX_PATH:PATH=/your/lib/path
+
 # Install
 
 Autowiring uses CPack, which knows how to use rpm/deb/wix/dragndrop, and will target the correct version depending on which system you're on.  To build
