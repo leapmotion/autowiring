@@ -67,7 +67,7 @@ if(autowiring_USE_LIBCXX)
   endif()
   
   # Also need position-independent code to make things work correctly on certain 64-bit machines
-  if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
+  if(NOT WIN32 AND ${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
   endif()
 endif()
