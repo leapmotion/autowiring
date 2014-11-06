@@ -104,8 +104,10 @@ endif()
 
 # 64-bit installations should suffix with 64
 if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
-  set(CMAKE_DEBUG_POSTFIX "64")
-  set(CMAKE_RELEASE_POSTFIX "64")
+  foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
+    string(TOUPPER ${config} config)
+    set(CMAKE_${config}_POSTFIX "64")
+  endforeach()
 endif()
 
 # Postfix on all debug libraries should be "d"
