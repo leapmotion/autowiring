@@ -14,6 +14,7 @@
 #include <list>
 #include <sstream>
 #include <typeinfo>
+#include CHRONO_HEADER
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
@@ -64,6 +65,9 @@ private:
 
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   std::shared_ptr<AutoPacketFactory> m_parentFactory;
+
+  // Hold the time point at which this packet was last initalized.
+  std::chrono::high_resolution_clock::time_point m_initTime;
 
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.

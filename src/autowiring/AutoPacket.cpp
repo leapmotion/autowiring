@@ -474,6 +474,9 @@ void AutoPacket::Reset(void) {
 }
 
 void AutoPacket::Initialize(void) {
+  // Record the timepoint of initialization
+  m_initTime = std::chrono::high_resolution_clock::now();
+
   // Hold an outstanding count from the parent packet factory
   m_outstanding = m_outstandingRemote;
   if(!m_outstanding)
@@ -535,6 +538,10 @@ void AutoPacket::Finalize(void) {
     else
       ++dItr;
   }
+
+  m_parentFactory->RecordPacketDuration(
+    std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::high_resolution_clock::now() - m_initTime));
 
   Reset();
 }
