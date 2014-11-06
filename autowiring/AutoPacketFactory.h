@@ -8,6 +8,7 @@
 #include "ObjectPool.h"
 #include <list>
 #include <vector>
+#include CHRONO_HEADER
 #include TYPE_INDEX_HEADER
 #include TYPE_TRAITS_HEADER
 #include STL_UNORDERED_SET
@@ -60,6 +61,11 @@ private:
   // Collection of known subscribers
   typedef std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> t_autoFilterSet;
   t_autoFilterSet m_autoFilters;
+
+  // Accumulators used to compute statistics about AutoPacket lifespan.
+  long long m_packetCount;
+  double m_packetDurationSum;
+  double m_packetDurationSqSum;
 
   // Recursive invalidation routine, causes AutoPacket object pools to be dumped to the root
   void Invalidate(void);
@@ -222,6 +228,45 @@ public:
 
   /// <returns>the number of outstanding AutoPackets</returns>
   size_t GetOutstanding(void) const;
+
+  /// <summary>
+  /// Called by each AutoPacket's Finalize method to allow the factory
+  /// to record statistics about packet lifespan.
+  /// </summary>
+  /// <param name="duration">
+  /// The total lifetime of the AutoPacket that is being Finalized
+  /// </param>
+  void RecordPacketDuration(std::chrono::nanoseconds duration);
+
+  /// <summary>
+  /// Returns the number of packets which have recorded duration statistics
+  /// since the most recent statistics reset.
+  /// </summary>
+  long long GetTotalPacketCount(void) { return m_packetCount; }
+
+  /// <summary>
+  /// Returns the mean lifespan of AutoPackets in nanoseconds since the last statistics reset.
+  /// </summary>
+  /// <remarks>
+  /// If the factory is left to run for an extended period of time without a reset
+  /// the mean will decrease erroneously due to saturation of the accumulator.
+  /// </remarks>
+  double GetMeanPacketLifetime(void);
+
+  /// <summary>
+  /// Returns the standard deviation of the lifespans of AutoPackets in nanoseconds since
+  /// most recent statistics reset.
+  /// </summary>
+  /// <remarks>
+  /// If the factory is left to run for an extended period of time without a reset
+  /// the standard deviation will behave erraticly due to saturation of the accumulators.
+  /// </remarks>
+  double GetPacketLifetimeStandardDeviation(void);
+
+  /// <summary>
+  /// Resets the statistics accumulators stored by the AutoPacketFactory.
+  /// </summary>
+  void ResetPacketStatistics(void);
 };
 
 // Extern explicit template instantiation declarations added to prevent
