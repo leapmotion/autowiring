@@ -1,5 +1,14 @@
 set(PACKAGE_VERSION "@autowiring_VERSION@")
 
+if(autowiring_DEBUG)
+  message("Debug mode on")
+  message("autowiring_VERSION: @autowiring_VERSION@")
+  message("autowiring_ARCHITECTURE: ${autowiring_ARCHITECTURE}")
+  message("CMAKE_SIZEOF_VOID_P: @CMAKE_SIZEOF_VOID_P@")
+  message("Installed using autowiring_USE_LIBCXX: @autowiring_USE_LIBCXX@")
+  message("Configured using autowiring_USE_LIBCXX: ${autowiring_USE_LIBCXX}")
+endif()
+
 # If the customer has an override architecture requirement, use that
 if(DEFINED autowiring_ARCHITECTURE)
   set(autowiring_64_BIT amd64 x86_64 x64)
@@ -21,6 +30,10 @@ if(DEFINED autowiring_ARCHITECTURE)
 else()
   # User wants whatever they are currently configured to use, if not specified otherwise
   set(autowiring_WORD_WIDTH ${CMAKE_SIZEOF_VOID_P})
+endif()
+
+if(autowiring_DEBUG)
+ message("autowiring_WORD_WIDTH: ${autowiring_WORD_WIDTH}")
 endif()
 
 # Verify that we have a word width matching the bit depth desired by the customer
