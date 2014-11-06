@@ -62,6 +62,9 @@ private:
   std::list<SatCounter> m_satCounters;
   size_t m_subscriberNum;
 
+  // A pointer back to the factory that created us. Used for recording lifetime statistics.
+  std::shared_ptr<AutoPacketFactory> m_parentFactory;
+
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
   // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.

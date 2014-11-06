@@ -16,6 +16,7 @@ using namespace autowiring;
 AutoPacket::~AutoPacket() {}
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding):
+  m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
   m_outstandingRemote(outstanding)
 {
   // Traverse all contexts, adding their packet subscriber vectors one at a time:
