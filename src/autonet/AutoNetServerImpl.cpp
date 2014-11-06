@@ -4,6 +4,7 @@
 #include "at_exit.h"
 #include "autowiring.h"
 #include "demangle.h"
+#include "IWebSocketServer.hpp"
 #include "ObjectTraits.h"
 #include "EventRegistry.h"
 #include "TypeRegistry.h"
@@ -14,23 +15,9 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 using json11::Json;
 
-AutoNetServerImpl::AutoNetServerImpl(void) :
-  m_Port(8000)
+AutoNetServerImpl::AutoNetServerImpl(void):
+  m_server(IWebSocketServer::New(*this))
 {
-  // Configure websocketpp
-  m_Server.init_asio();
-  m_Server.set_access_channels(websocketpp::log::alevel::none);
-  m_Server.set_error_channels(websocketpp::log::elevel::warn);
-
-  // HACK: Work-around for AutoNet server shutdown
-  // asio listen error: system:48 (Address already in use)
-  m_Server.set_reuse_addr(true);
-
-  // Register handlers
-  m_Server.set_open_handler(std::bind(&AutoNetServerImpl::OnOpen, this, ::_1));
-  m_Server.set_close_handler(std::bind(&AutoNetServerImpl::OnClose, this, ::_1));
-  m_Server.set_message_handler(std::bind(&AutoNetServerImpl::OnMessage, this, ::_1, ::_2));
-
   // Generate list of all types from type registry
   for(auto type = g_pFirstTypeEntry; type; type = type->pFlink)
     if(type->CanInject())
@@ -45,58 +32,35 @@ AutoNetServerImpl::~AutoNetServerImpl()
 {
 }
 
-AutoNetServer* NewAutoNetServerImpl(void) {
+AutoNetServer* AutoNetServer::New(void) {
   return new AutoNetServerImpl;
 }
 
 // CoreThread overrides
 void AutoNetServerImpl::Run(void){
   std::cout << "Starting Autonet server..." << std::endl;
-  
-  m_Server.listen(m_Port);
-  m_Server.start_accept();
-  
-  // blocks until the server finishes
-  auto websocket = std::async(std::launch::async, [this]{
-    m_Server.run();
-  });
 
-  PollThreadUtilization(std::chrono::milliseconds(1000));
+  auto websocket = std::async(std::launch::async, [this]{
+    m_server->Start();
+  });
   CoreThread::Run();
 }
 
 void AutoNetServerImpl::OnStop(void) {
-  if (m_Server.is_listening())
-    m_Server.stop_listening();
-  
-  for (auto& conn : m_Subscribers) {
-    m_Server.close(conn, websocketpp::close::status::normal, "closed");
-  }
+  m_server->Stop();
+  for(auto& cur : m_Subscribers)
+    m_server->Close(cur);
+  m_Subscribers.clear();
 }
 
 // Server Handler functions
 void AutoNetServerImpl::OnOpen(websocketpp::connection_hdl hdl) {
   *this += [this, hdl] {
-    SendMessage(hdl, "opened");
-  };
-}
-void AutoNetServerImpl::OnClose(websocketpp::connection_hdl hdl) {
-  *this += [this, hdl] {
-    this->m_Subscribers.erase(hdl);
+    m_server->SendClientMessage(hdl, "opened");
   };
 }
 
-void AutoNetServerImpl::OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message) {
-  // Parse string from client
-  std::string err;
-  Json msg = Json::parse(p_message->get_payload(), err);
-
-  if(!err.empty()) {
-    std::cout << "Parse error: " << err << std::endl;
-    SendMessage(hdl, "invalidMessage", "Couldn't parse message");
-    return;
-  }
-
+void AutoNetServerImpl::OnMessage(websocketpp::connection_hdl hdl, const json11::Json& msg) {
   std::string msgType = msg["type"].string_value();
   Json::array msgArgs = msg["args"].array_items();
 
@@ -107,7 +71,7 @@ void AutoNetServerImpl::OnMessage(websocketpp::connection_hdl hdl, message_ptr p
     else if(msgType == "injectContextMember") HandleInjectContextMember(msgArgs[0].int_value(), msgArgs[1].string_value());
     else if(msgType == "resumeFromBreakpoint") HandleResumeFromBreakpoint(msgArgs[0].string_value());
     else
-      SendMessage(hdl, "invalidMessage", "Message type not recognized");
+      m_server->SendClientMessage(hdl, "invalidMessage", "Message type not recognized");
   };
 }
 
@@ -251,18 +215,18 @@ void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
     types.push_back(type.first);
   }
 
-  SendMessage(hdl, "subscribed", types);
+  m_server->SendClientMessage(hdl, "subscribed", types);
   GetContext()->BuildCurrentState();
 
   // Send breakpoint message
   for(const auto& breakpoint : m_breakpoints) {
-    SendMessage(hdl, "breakpoint", breakpoint);
+    m_server->SendClientMessage(hdl, "breakpoint", breakpoint);
   }
 }
 
 void AutoNetServerImpl::HandleUnsubscribe(websocketpp::connection_hdl hdl) {
   this->m_Subscribers.erase(hdl);
-  SendMessage(hdl, "unsubscribed");
+  m_server->SendClientMessage(hdl, "unsubscribed");
 }
 
 void AutoNetServerImpl::HandleTerminateContext(int contextID) {

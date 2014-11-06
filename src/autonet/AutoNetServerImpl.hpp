@@ -2,41 +2,28 @@
 #pragma once
 #include "AutoNetServer.h"
 #include "AutowiringEvents.h"
+#include "IWebSocketServer.hpp"
 #include <json11/json11.hpp>
 #include <cctype>
 #include <map>
 #include <set>
 
-// Need to redefine this namespace so we don't create linker problems.  Such problems may be
-// created if our static library is imported by another project that uses an incompatible
-// version of websocketpp.
-#define websocketpp websocketpp_autonet
-#include <websocketpp/server.hpp>
-#include <websocketpp/config/asio_no_tls.hpp>
-
+class IWebSocketServer;
 struct ObjectTraits;
 struct TypeIdentifierBase;
 
 class AutoNetServerImpl:
   public AutoNetServer,
+  public IWebSocketServer::Listener,
   public virtual AutowiringEvents
 {
 public:
   AutoNetServerImpl();
   ~AutoNetServerImpl();
 
-  //Types
-  typedef websocketpp::server<websocketpp::config::asio> t_server;
-  typedef t_server::message_ptr message_ptr;
-
   // Functions from BasicThread
-  virtual void Run(void) override;
-  virtual void OnStop(void) override;
-
-  // Server Handler functions
-  void OnOpen(websocketpp::connection_hdl hdl);
-  void OnClose(websocketpp::connection_hdl hdl);
-  void OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message);
+  void Run(void) override;
+  void OnStop(void) override;
 
   // AutoNetServer overrides:
   void Breakpoint(std::string name) override;
@@ -68,28 +55,12 @@ public:
   /// <param name="evtInfo">The event type</param>
   virtual void EventFired(CoreContext& ctxt, const std::type_info& evtInfo) override;
 
+  // IWebSocketServer::Listener overrides
+  void OnOpen(websocketpp::connection_hdl hdl) override;
+  void OnClose(websocketpp::connection_hdl hdl) override {}
+  void OnMessage(websocketpp::connection_hdl hdl, const json11::Json& msg) override;
+
 protected:
-  /// <summary>
-  /// Sends a message to specified client.
-  /// </summary>
-  /// <param name="hdl">Connection pointer on which to send message</param>
-  /// <param name="pRecipient">Message name in CamelCase</param>
-  /// <param name="args...">Arguments to be passed to client side event handler</param>
-  /// <remarks>
-  /// Client callback with same number of arguments passed here will be called
-  /// </remarks>
-  template<typename... Args>
-  void SendMessage(websocketpp::connection_hdl hdl, const char* p_type, Args&&... args){
-    using json11::Json;
-
-    Json msg = Json::object{
-        {"type", p_type},
-        {"args", Json::array{args...}}
-    };
-
-    m_Server.send(hdl, msg.dump(), websocketpp::frame::opcode::text);
-  }
-
   /// <summary>
   /// Broadcast a message to all subscribers.
   /// </summary>
@@ -98,7 +69,7 @@ protected:
   template<typename ...Args>
   void BroadcastMessage(const char* p_type, Args&&... args) {
     for(websocketpp::connection_hdl ptr : m_Subscribers)
-      SendMessage(ptr, p_type, std::forward<Args>(args)...);
+      m_server->SendClientMessage(ptr, p_type, std::forward<Args>(args)...);
   }
 
   /// <summary>
@@ -143,6 +114,9 @@ protected:
   *             Member variables             *
   *******************************************/
 
+  // Pointer to our boost server implementation
+  const std::unique_ptr<IWebSocketServer> m_server;
+
   // Set of all subscribers
   std::set<websocketpp::connection_hdl, std::owner_less<websocketpp::connection_hdl>> m_Subscribers;
 
@@ -168,13 +142,4 @@ protected:
   std::mutex m_mutex;
   std::condition_variable m_breakpoint_cv;
   std::set<std::string> m_breakpoints;
-
-  // The actual server
-  t_server m_Server;
-  const int m_Port; // Port to listen on
 };
-
-/// <summary>
-/// Equivalent to new AutoNetServerImpl
-/// </summary>
-AutoNetServer* NewAutoNetServerImpl(void);
