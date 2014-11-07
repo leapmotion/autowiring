@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.0)
 
 # Need to classify the architecture before we run anything else
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
-  set(autowiring_ARCHITECTURE "arm")
-elseif(CMAKE_SIZEOF_VOID_P STREQUAL 8)
-  set(autowiring_ARCHITECTURE "x64")
-else()
-  set(autowiring_ARCHITECTURE "x84")
+if(NOT DEFINED autowiring_ARCHITECTURE)
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+    set(autowiring_ARCHITECTURE "arm")
+  elseif(CMAKE_SIZEOF_VOID_P STREQUAL 4)
+    set(autowiring_ARCHITECTURE "x84")
+  else()
+    set(autowiring_ARCHITECTURE "x64")
+  endif()
 endif()
 message(STATUS "Using architecture: ${autowiring_ARCHITECTURE}")
 
@@ -72,7 +74,7 @@ if(autowiring_USE_LIBCXX)
   endif()
   
   # Also need position-independent code to make things work correctly on certain 64-bit machines
-  if(NOT WIN32 AND ${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
+  if(NOT WIN32 AND NOT CMAKE_SIZEOF_VOID_P STREQUAL 4)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
   endif()
 endif()
