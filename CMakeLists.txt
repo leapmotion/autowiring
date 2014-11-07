@@ -6,7 +6,7 @@ include(CTest)
 # Need to classify the architecture before we run anything else
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
   set(autowiring_ARCHITECTURE "arm")
-elseif(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
+elseif(CMAKE_SIZEOF_VOID_P STREQUAL "8")
   set(autowiring_ARCHITECTURE "x64")
 else()
   set(autowiring_ARCHITECTURE "x86")
