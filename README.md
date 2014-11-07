@@ -31,6 +31,10 @@ CentOS systems use yum.  The major apparent difference to the user will be that 
     make test
     sudo make install
 
+If you want to build for 32-bit Linux, run the following CMake command instead:
+
+    cmake . -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_C_FLAGS=-m32
+
 ### Windows
 
 Unfortunately, Windows doesn't have any sort of nifty package manager, and this requires that you download and install the boost dependency by hand.  Once
