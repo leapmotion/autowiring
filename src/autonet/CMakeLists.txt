@@ -9,6 +9,10 @@ if(NOT AUTOWIRING_BUILD_AUTONET)
   return()
 endif()
 
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+  message(FATAL_ERROR "Cannot currently build Autonet for ARM processors")
+endif()
+
 add_googletest(test)
 include_directories(
   ${Boost_INCLUDE_DIR}
