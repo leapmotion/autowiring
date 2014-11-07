@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
+include(version.cmake)
+project(autowiring VERSION ${autowiring_VERSION})
 
 # Need to classify the architecture before we run anything else
-if(NOT DEFINED autowiring_ARCHITECTURE)
+if(NOT autowiring_ARCHITECTURE MATCHES "arm|x86|x64")
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
     set(autowiring_ARCHITECTURE "arm")
   elseif(CMAKE_SIZEOF_VOID_P STREQUAL 4)
@@ -9,6 +11,11 @@ if(NOT DEFINED autowiring_ARCHITECTURE)
   else()
     set(autowiring_ARCHITECTURE "x64")
   endif()
+endif()
+if (autowiring_ARCHITECTURE STREQUAL "x64")
+  set(BUILD_64 ON)
+else()
+  set(BUILD_64 OFF)
 endif()
 message(STATUS "Using architecture: ${autowiring_ARCHITECTURE}")
 
@@ -25,8 +32,6 @@ if(EXTERNAL_LIBRARY_DIR)
   list(APPEND CMAKE_INCLUDE_PATH ${EXTERNAL_LIBRARY_DIR})
 endif()
 
-include(version.cmake)
-project(autowiring VERSION ${autowiring_VERSION})
 include(CTest)
 include(CheckTypeSize)
 
@@ -74,7 +79,7 @@ if(autowiring_USE_LIBCXX)
   endif()
   
   # Also need position-independent code to make things work correctly on certain 64-bit machines
-  if(NOT WIN32 AND NOT CMAKE_SIZEOF_VOID_P STREQUAL 4)
+  if(NOT WIN32 AND BUILD_64)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
   endif()
 endif()
@@ -127,7 +132,7 @@ if(autowiring_ARCHITECTURE STREQUAL "arm")
 endif()
 
 # 64-bit installations should suffix with 64 regardless of the CPU type (arm or intel)
-if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
+if(BUILD_64)
   foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
     string(TOUPPER ${config} config)
     string(CONCAT CMAKE_${config}_POSTFIX CMAKE_${config}_POSTFIX "64")
@@ -204,7 +209,7 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   install(EXPORT AutowiringTargets FILE AutowiringTargets.cmake COMPONENT autowiring NAMESPACE Autowiring:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
   # 64-bit installations get a different upgrade GUID
-  if(CMAKE_SIZEOF_VOID_P STREQUAL 8)
+  if(BUILD_64)
     set(autowiring_GUID_LAST_CHAR E)
   else()
     set(autowiring_GUID_LAST_CHAR D)
