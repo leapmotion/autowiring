@@ -51,12 +51,20 @@ At this point, you'll have a solution file in your root directory called "Autowi
 target then Autowiring will be installed on your system.  As with the other platforms, CMake will be able to find autowiring when it's installed this way
 via the [find_package](http://www.cmake.org/cmake/help/v3.0/command/find_package.html) command.
 
-### Android
+### Arm-linux
 
 Building on Android requires the use of a toolchain file.  You will need to use an alternate prefix path if you are trying to cross-compile, the prefix path
 should contain your version of the Boost libraries built for Android.  To configure, use the following invocation:
 
     cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake -DCMAKE_PREFIX_PATH:PATH=/your/lib/path
+
+### Android
+
+Similar requirements to Arm-linux, you must specify a toolchain file.  You must also specify the path to your Android toolchain directory.  Make sure you update
+/opt/android-standalone-toolchain to point to your actual Android standalone toolchain directory.  If you aren't cross-compiling, then simply run cmake with
+no options.
+
+    cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-android.cmake -DLLVM_ANDROID_TOOLCHAIN_DIR=/opt/android-standalone-toolchain
 
 # Install
 
