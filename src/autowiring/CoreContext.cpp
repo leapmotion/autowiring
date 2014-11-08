@@ -855,7 +855,7 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
 
 void CoreContext::DebugPrintCurrentExceptionInformation() {
   try {
-    std::rethrow_exception(std::current_exception());
+    throw;
   } catch(std::exception& ex) {
     std::cerr << ex.what() << std::endl;
   } catch(...) {
