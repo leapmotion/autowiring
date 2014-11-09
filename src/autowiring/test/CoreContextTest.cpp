@@ -201,12 +201,17 @@ TEST_F(CoreContextTest, NoEnumerateBeforeBoltReturn) {
   AutoRequired<BoltThatTakesALongTimeToReturn> longTime;
 
   // Spin off a thread which will create the new context
-  auto t = std::async(std::launch::async, [ctxt] {
+  auto finished = std::make_shared<bool>(false);
+  std::thread t([finished, ctxt] {
     AutoCreateContextT<NoEnumerateBeforeBoltReturn>();
+    *finished = true;
   });
 
   // Verify that the context does not appear until the bolt has finished running:
-  while(t.wait_for(std::chrono::milliseconds(1)) != std::future_status::ready)
+  while(!*finished)
     for(auto cur : ContextEnumeratorT<NoEnumerateBeforeBoltReturn>(ctxt))
       ASSERT_TRUE(longTime->m_bDoneRunning) << "A context was enumerated before a bolt finished running";
+
+  // Need to block until this thread is done
+  t.join();
 }
