@@ -4,6 +4,7 @@
 #include "AutoPacket.h"
 #include "fast_pointer_cast.h"
 #include "thread_specific_ptr.h"
+#include <cmath>
 
 template class ObjectPool<AutoPacket>;
 
