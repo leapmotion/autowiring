@@ -21,9 +21,9 @@ message(STATUS "Using architecture: ${autowiring_ARCHITECTURE}")
 
 # Determine whether Autowiring has been embedded in another project
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  set(AUTOWIRING_IS_EMBEDDED)
+  set(AUTOWIRING_IS_EMBEDDED OFF)
 else()
-  set(AUTOWIRING_IS_EMBEDDED "TRUE")
+  set(AUTOWIRING_IS_EMBEDDED ON)
 endif()
 
 # If there's an external libraries directory path, use it as a search prefix
