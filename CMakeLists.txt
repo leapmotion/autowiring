@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.0)
 include(version.cmake)
 project(autowiring VERSION ${autowiring_VERSION})
 
+include(CTest)
+include(CheckTypeSize)
+
 # Need to classify the architecture before we run anything else
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
   set(autowiring_ARCHITECTURE "arm")
@@ -28,10 +31,7 @@ if(EXTERNAL_LIBRARY_DIR)
   list(APPEND CMAKE_INCLUDE_PATH ${EXTERNAL_LIBRARY_DIR})
 endif()
 
-include(CTest)
-include(CheckTypeSize)
-
-if(NOT WIN32)
+if(APPLE)
   # Offer option for autowiring_USE_LIBCXX
   # Check for existing definition of autowiring_USE_LIBCXX
   if(NOT DEFINED autowiring_USE_LIBCXX)
@@ -41,11 +41,9 @@ if(NOT WIN32)
       message("Parent project has set autowiring_USE_LIBCXX = OFF -> Build Autowiring using c++98")
     endif()
   endif()
-endif()
-
-if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
+else()
+  # Always use libc++ on other platforms
+  set(autowiring_USE_LIBCXX ON)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
@@ -60,24 +58,33 @@ endif()
 
 message("Version number ${CMAKE_CXX_COMPILER_VERSION}")
 
-if(autowiring_USE_LIBCXX)
-  # Clang needs special additional flags to build with C++11
-  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-    # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
+# Always use c++11 compiler
+if(NOT WIN32)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
+
+# Clang needs special additional flags to build with C++11
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+  # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
+  if(autowiring_USE_LIBCXX)
     message("AppleClang C++11")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    message("Clang C++11")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    message("GCC C++11")
+  else()
+    message("AppleClang C++11 with libstdc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
   endif()
-  
-  # Also need position-independent code to make things work correctly on certain 64-bit machines
-  if(NOT WIN32 AND autowiring_BUILD_64)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-  endif()
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  message("Clang C++11")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  message("GCC C++11")
+endif()
+
+# Also need position-independent code to make things work correctly on certain 64-bit machines
+if(NOT WIN32 AND autowiring_BUILD_64)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
