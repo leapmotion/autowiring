@@ -130,7 +130,7 @@ if(autowiring_ARCHITECTURE STREQUAL "arm")
 
   foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
     string(TOUPPER ${config} config)
-    string(CONCAT CMAKE_${config}_POSTFIX CMAKE_${config}_POSTFIX "64")
+    string(CONCAT CMAKE_${config}_POSTFIX "${CMAKE_${config}_POSTFIX}" "64")
   endforeach()
 endif()
 
@@ -138,7 +138,7 @@ endif()
 if(autowiring_BUILD_64)
   foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
     string(TOUPPER ${config} config)
-    string(CONCAT CMAKE_${config}_POSTFIX CMAKE_${config}_POSTFIX "64")
+    string(CONCAT CMAKE_${config}_POSTFIX "${CMAKE_${config}_POSTFIX}" "64")
   endforeach()
 endif()
 
