@@ -4,6 +4,7 @@
 #include "AutoPacket.h"
 #include "fast_pointer_cast.h"
 #include "thread_specific_ptr.h"
+#include <cmath>
 
 template class ObjectPool<AutoPacket>;
 
@@ -11,7 +12,10 @@ AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
   m_parent(GetContext()->GetParentContext()),
   m_wasStopped(false),
-  m_packets(AutoPacket::CreateObjectPool(*this, m_outstanding))
+  m_packets(AutoPacket::CreateObjectPool(*this, m_outstanding)),
+  m_packetCount(0),
+  m_packetDurationSum(0),
+  m_packetDurationSqSum(0)
 {}
 
 AutoPacketFactory::~AutoPacketFactory() {
@@ -343,6 +347,30 @@ void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std
 
 size_t AutoPacketFactory::GetOutstanding(void) const {
   return m_packets.GetOutstanding();
+}
+
+void AutoPacketFactory::RecordPacketDuration(std::chrono::nanoseconds duration) {
+  std::unique_lock<std::mutex> lk(m_lock);
+  ++m_packetCount;
+  m_packetDurationSum += duration.count();
+  m_packetDurationSqSum += duration.count() * duration.count();
+}
+
+double AutoPacketFactory::GetMeanPacketLifetime(void) {
+  return m_packetDurationSum / m_packetCount;
+}
+
+double AutoPacketFactory::GetPacketLifetimeStandardDeviation(void) {
+  double mean = m_packetDurationSum / m_packetCount;
+  double variance = m_packetDurationSqSum / m_packetCount - mean * mean;
+  return std::sqrt(variance >= 0.0 ? variance : 0.0 );
+}
+
+void AutoPacketFactory::ResetPacketStatistics(void) {
+  std::unique_lock<std::mutex> lk(m_lock);
+  m_packetCount = 0;
+  m_packetDurationSum = 0.0;
+  m_packetDurationSqSum = 0.0;
 }
 
 template class RegType<AutoPacketFactory>;

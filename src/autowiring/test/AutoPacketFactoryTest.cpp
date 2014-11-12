@@ -1,6 +1,8 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/CoreThread.h>
+#include CHRONO_HEADER
+#include THREAD_HEADER
 
 class AutoPacketFactoryTest:
   public testing::Test
@@ -135,4 +137,41 @@ TEST_F(AutoPacketFactoryTest, AutoPacketFactoryCycle) {
   packet.reset();
   ASSERT_TRUE(ctxtWeak.expired()) << "AutoPacketFactory incorrectly held a cyclic reference even after the context was shut down";
   ASSERT_TRUE(hapfrWeak.expired()) << "The last packet from a factory was released; this should have resulted in teardown, but it did not";
+}
+
+class DelaysAutoPacketsOneMS {
+public:
+  DelaysAutoPacketsOneMS(void) {}
+
+  void AutoFilter(int value) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+};
+
+TEST_F(AutoPacketFactoryTest, AutoPacketStatistics) {
+  // Create a context, fill it up, kick it off:
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+  AutoRequired<DelaysAutoPacketsOneMS> dapoms(ctxt);
+  AutoRequired<AutoPacketFactory> factory(ctxt);
+  ctxt->Initiate();
+
+  int numPackets = 20;
+
+  // Send 20 packets which should all be delayed 1ms
+  for (int i = 0; i < numPackets; ++i) {
+    auto packet = factory->NewPacket();
+    packet->Decorate(i);
+  }
+
+  // Shutdown our context, and rundown our factory
+  ctxt->SignalShutdown();
+  factory->Wait();
+
+  // Ensure that the statistics are not too wrong
+  // We delayed each packet by one ms, and our statistics are given in nanoseconds
+  double packetDelay = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(1)).count();
+  ASSERT_EQ(numPackets, factory->GetTotalPacketCount()) << "The factory did not get enough packets";
+
+  ASSERT_LE(packetDelay, factory->GetMeanPacketLifetime()) << "The mean packet lifetime was less than the delay on each packet";
 }
