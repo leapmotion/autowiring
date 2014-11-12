@@ -5,6 +5,7 @@ project(examples)
 
 set(autowiring_VERSION_REQUESTED ${autowiring_VERSION})
 set(autowiring_VERSION)
+set(autowiring_DEBUG ON)
 find_package(autowiring ${autowiring_VERSION_REQUESTED} EXACT REQUIRED NO_CMAKE_BUILDS_PATH)
 message("Found autowiring ${autowiring_VERSION}")
 message("Include dir is ${autowiring_INCLUDE_DIR}")

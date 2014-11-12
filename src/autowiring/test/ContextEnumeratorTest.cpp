@@ -108,9 +108,9 @@ TEST_F(ContextEnumeratorTest, VerifyComplexEnumeration) {
 
   // Verify global context structure
   auto enumerator = ContextEnumeratorT<NamedContext>(AutoGlobalContext());
-  int globalCount = std::distance(enumerator.begin(), enumerator.end());
+  size_t globalCount = std::distance(enumerator.begin(), enumerator.end());
   
-  ASSERT_EQ(globalCount, 2) << "Expected exactly one context in the parent context, found " << globalCount;
+  ASSERT_EQ(globalCount, 2UL) << "Expected exactly one context in the parent context, found " << globalCount;
 }
 
 TEST_F(ContextEnumeratorTest, SimpleRemovalInterference) {

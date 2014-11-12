@@ -31,6 +31,10 @@ CentOS systems use yum.  The major apparent difference to the user will be that 
     make test
     sudo make install
 
+If you want to build for 32-bit Linux, run the following CMake command instead:
+
+    cmake . -DCMAKE_CXX_FLAGS=-m32 -DCMAKE_C_FLAGS=-m32
+
 ### Windows
 
 Unfortunately, Windows doesn't have any sort of nifty package manager, and this requires that you download and install the boost dependency by hand.  Once
@@ -46,6 +50,21 @@ Studio 2012 or better.  Other build systems will probably work, but they aren't 
 At this point, you'll have a solution file in your root directory called "Autowiring.sln", if you run Visual Studio as an adminstrator and build the INSTALL
 target then Autowiring will be installed on your system.  As with the other platforms, CMake will be able to find autowiring when it's installed this way
 via the [find_package](http://www.cmake.org/cmake/help/v3.0/command/find_package.html) command.
+
+### Arm-linux
+
+Building on Android requires the use of a toolchain file.  You will need to use an alternate prefix path if you are trying to cross-compile, the prefix path
+should contain your version of the Boost libraries built for Android.  To configure, use the following invocation:
+
+    cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake -DCMAKE_PREFIX_PATH:PATH=/your/lib/path
+
+### Android
+
+Similar requirements to Arm-linux, you must specify a toolchain file.  You must also specify the path to your Android toolchain directory.  Make sure you update
+/opt/android-standalone-toolchain to point to your actual Android standalone toolchain directory.  If you aren't cross-compiling, then simply run cmake with
+no options.
+
+    cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-android.cmake -DLLVM_ANDROID_TOOLCHAIN_DIR=/opt/android-standalone-toolchain
 
 # Install
 

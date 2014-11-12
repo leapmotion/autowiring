@@ -9,6 +9,10 @@ if(NOT AUTOWIRING_BUILD_AUTONET)
   return()
 endif()
 
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+  message(FATAL_ERROR "Cannot currently build Autonet for ARM processors")
+endif()
+
 add_googletest(test)
 include_directories(
   ${Boost_INCLUDE_DIR}
@@ -33,7 +37,7 @@ rewrite_header_paths(AutoNet_SRCS)
 ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutoNet_SRCS)
 
 add_library(AutoNet SHARED ${AutoNet_SRCS})
-target_link_libraries(AutoNet Autowiring ${Boost_LIBRARIES})
+target_link_libraries(AutoNet PRIVATE ${Boost_LIBRARIES} Autowiring)
 set_target_properties(AutoNet PROPERTIES INTERFACE_LINK_LIBRARIES Autowiring)
 
 set_property(TARGET AutoNet PROPERTY FOLDER "Autowiring")

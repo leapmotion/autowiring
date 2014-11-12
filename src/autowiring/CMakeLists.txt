@@ -201,25 +201,17 @@ ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
 
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 
-# On Unix, 64-bit code will need to be compiled as position-independent code
-if(UNIX)
-  if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
-    set_target_properties(Autowiring PROPERTIES COMPILE_FLAGS "-fPIC -fvisibility=hidden")
-  else()
-    set_target_properties(Autowiring PROPERTIES COMPILE_FLAGS "-fvisibility=hidden")
-  endif()
-endif()
-
 target_include_directories(Autowiring INTERFACE
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
   "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
 )
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
 
-# The boost C++11 shim is required when building without autowiring_USE_LIBCXX
-if(NOT autowiring_USE_LIBCXX)
+# The boost C++11 shim is required when building without autowiring_USE_LIBCXX off Windows
+# We do not mention the link libraries; rather, we require that downstream clients
+# satisfy this link dependency.
+if(NOT WIN32 AND NOT autowiring_USE_LIBCXX)
   find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
-  target_link_libraries(Autowiring ${Boost_LIBRARIES})
 endif()
 
 # Need multithreading services if available

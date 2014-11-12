@@ -793,14 +793,6 @@ void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, Object* p
     }
 }
 
-std::shared_ptr<AutoPacketFactory> CoreContext::GetPacketFactory(void) {
-  std::shared_ptr<AutoPacketFactory> pf;
-  FindByType(pf);
-  if(!pf)
-    pf = Inject<AutoPacketFactory>();
-  return pf;
-}
-
 void CoreContext::AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
   // Determine whether a type memo exists right now for the thing we're trying to defer.  If it doesn't
   // exist, we need to inject one in order to allow deferred satisfaction to know what kind of type we
@@ -835,7 +827,7 @@ void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
 }
 
 void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
-  GetPacketFactory()->AddSubscriber(rhs);
+  Inject<AutoPacketFactory>()->AddSubscriber(rhs);
 }
 
 void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {
@@ -849,7 +841,7 @@ void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {
   }
   
   // Always remove from this context's PacketFactory:
-  GetPacketFactory()->RemoveSubscriber(traits.subscriber);
+  Inject<AutoPacketFactory>()->RemoveSubscriber(traits.subscriber);
   
   // Handoff to parent:
   if (m_pParent)
@@ -863,7 +855,7 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
 
 void CoreContext::DebugPrintCurrentExceptionInformation() {
   try {
-    std::rethrow_exception(std::current_exception());
+    throw;
   } catch(std::exception& ex) {
     std::cerr << ex.what() << std::endl;
   } catch(...) {

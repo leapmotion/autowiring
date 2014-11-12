@@ -13,6 +13,7 @@
 #include STL_UNORDERED_SET
 
 struct AdjacencyEntry;
+class AutoPacketFactory;
 class Deferred;
 class DispatchQueue;
 
@@ -210,12 +211,7 @@ protected:
   void PipeOneData(const std::type_info* nodeOutType, const std::type_info* nodeInType, const std::type_info* dataType, bool enable);
   void PipeAllData(const std::type_info* nodeOutType, const std::type_info* nodeInType, bool enable);
 
-  static bool IsAutoPacketType(const std::type_info& dataType) {
-    return
-    dataType == typeid(AutoPacket) ||
-    dataType == typeid(auto_arg<AutoPacket&>::id_type) ||
-    dataType == typeid(auto_arg<const AutoPacket&>::id_type);
-  }
+  static bool IsAutoPacketType(const std::type_info& dataType);
 
 public:
   /// <summary>
@@ -225,11 +221,13 @@ public:
   std::shared_ptr<AutoPacket> NewPacket(void);
 
   /// <returns>the number of outstanding AutoPackets</returns>
-  size_t GetOutstanding(void) const { return m_packets.GetOutstanding(); }
+  size_t GetOutstanding(void) const;
 };
 
 // Extern explicit template instantiation declarations added to prevent
 // exterior instantation of internally used template instances
+extern template class ObjectPool<AutoPacket>;
 extern template class RegType<AutoPacketFactory>;
 extern template struct SlotInformationStump<AutoPacketFactory, false>;
 extern template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;
+extern template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, Object>(const std::shared_ptr<Object>& Other);

@@ -2,7 +2,10 @@
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacket.h"
+#include "fast_pointer_cast.h"
 #include "thread_specific_ptr.h"
+
+template class ObjectPool<AutoPacket>;
 
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
@@ -28,6 +31,13 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
 
   // Done, return
   return retVal;
+}
+
+bool AutoPacketFactory::IsAutoPacketType(const std::type_info& dataType) {
+  return
+    dataType == typeid(AutoPacket) ||
+    dataType == typeid(auto_arg<AutoPacket&>::id_type) ||
+    dataType == typeid(auto_arg<const AutoPacket&>::id_type);
 }
 
 bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
@@ -331,6 +341,11 @@ void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std
   Invalidate();
 }
 
+size_t AutoPacketFactory::GetOutstanding(void) const {
+  return m_packets.GetOutstanding();
+}
+
 template class RegType<AutoPacketFactory>;
 template struct SlotInformationStump<AutoPacketFactory, false>;
 template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;
+template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, Object>(const std::shared_ptr<Object>& Other);

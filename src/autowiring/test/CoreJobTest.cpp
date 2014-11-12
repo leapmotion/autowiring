@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include <autowiring/CoreJob.h>
 #include THREAD_HEADER
-#include FUTURE_HEADER
 
 class CoreJobTest:
   public testing::Test
@@ -15,21 +14,34 @@ TEST_F(CoreJobTest, VerifySimpleProperties) {
   ASSERT_FALSE(ctxt->IsInitiated()) << "CoreJob reported it could receive events before its enclosing context was created";
 
   // Create a thread which will delay for acceptance, and then quit:
-  auto future = std::async(std::launch::async, [this, &ctxt] {
+  std::mutex lock;
+  std::condition_variable cv;
+  auto done = std::make_shared<bool>(false);
+  std::thread t([&] {
     ctxt->DelayUntilInitiated();
+
+    (std::lock_guard<std::mutex>)lock,
+    *done = true,
+    cv.notify_all();
   });
 
+  auto wait = [&] (std::chrono::milliseconds timeout) {
+    std::unique_lock<std::mutex> lk(lock);
+    return cv.wait_for(lk, timeout, [&] { return *done; });
+  };
+
   // Verify that this thread doesn't back out right away:
-  ASSERT_EQ(std::future_status::timeout, future.wait_for(std::chrono::milliseconds(10))) << "CoreJob did not block a client who was waiting for its readiness to accept dispatchers";
+  ASSERT_FALSE(wait(std::chrono::milliseconds(10))) << "CoreJob did not block a client who was waiting for its readiness to accept dispatchers";
 
   // Now start the context and verify that certain properties changed as anticipated:
   ctxt->Initiate();
   ASSERT_TRUE(ctxt->DelayUntilInitiated()) << "CoreJob did not correctly delay for dispatch acceptance";
 
   // Verify that the blocked thread has become unblocked and quits properly:
-  ASSERT_EQ(std::future_status::ready, future.wait_for(std::chrono::seconds(1))) << "CoreJob did not correctly signal a blocked thread that it was ready to accept dispatchers";
+  ASSERT_TRUE(wait(std::chrono::seconds(1))) << "CoreJob did not correctly signal a blocked thread that it was ready to accept dispatchers";
 
   ctxt->SignalShutdown(true);
+  t.join();
 }
 
 TEST_F(CoreJobTest, VerifySimpleSubmission) {

@@ -28,7 +28,7 @@ public:
 class ForeignFactoryB {
 public:
   std::tuple<ForeignType*, ForeignTypeImpl*> New(void) {
-    ForeignTypeImpl* rv;
+    ForeignTypeImpl* rv = nullptr;
     return std::tuple<ForeignType*, ForeignTypeImpl*>(rv, rv);
   }
 };

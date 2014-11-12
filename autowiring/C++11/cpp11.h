@@ -89,7 +89,7 @@
 /*********************
  * exception_ptr availability
  *********************/
-#if (defined(__APPLE__) && !defined(_LIBCPP_VERSION)) || __ANDROID__
+#if (defined(__APPLE__) && !defined(_LIBCPP_VERSION))
   #define EXCEPTION_PTR_HEADER <autowiring/C++11/boost_exception_ptr.h>
 #else
   #define EXCEPTION_PTR_HEADER <stdexcept>
@@ -108,9 +108,10 @@
 /*********************
  * future availability
  *********************/
-#if _MSC_VER >= 1700 || (STL11_ALLOWED && !__ANDROID__)
+#if (_MSC_VER >= 1700 || (STL11_ALLOWED)) && !__ANDROID__
   #define FUTURE_HEADER <future>
 #else
+  // As of NDK r10, we still don't have an implementation of "future" for Android
   #define FUTURE_HEADER <autowiring/C++11/boost_future.h>
 #endif
 
@@ -290,7 +291,7 @@
  /**
  * Mutex
  */
-#if STL11_ALLOWED && !__ANDROID__
+#if STL11_ALLOWED
   #define MUTEX_HEADER <autowiring/C++11/mutex.h>
 #else
   #define MUTEX_HEADER <autowiring/C++11/boost_mutex.h>
@@ -299,7 +300,7 @@
 /**
  * Thread
  */
-#if STL11_ALLOWED && !__ANDROID__
+#if STL11_ALLOWED
   #define THREAD_HEADER <thread>
   #define _WEBSOCKETPP_CPP11_THREAD_
 #else
@@ -309,7 +310,7 @@
  /**
  * Chrono
  */
-#if STL11_ALLOWED && !__ANDROID__
+#if STL11_ALLOWED
   #define CHRONO_HEADER <chrono>
 #else
   #define CHRONO_HEADER <autowiring/C++11/boost_chrono.h>

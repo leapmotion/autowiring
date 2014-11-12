@@ -1,13 +1,28 @@
 cmake_minimum_required(VERSION 3.0)
 include(version.cmake)
 project(autowiring VERSION ${autowiring_VERSION})
+
 include(CTest)
+include(CheckTypeSize)
+
+# Need to classify the architecture before we run anything else
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
+  set(autowiring_ARCHITECTURE "arm")
+  set(autowiring_BUILD_64 OFF)
+elseif(CMAKE_SIZEOF_VOID_P STREQUAL 4)
+  set(autowiring_ARCHITECTURE "x86")
+  set(autowiring_BUILD_64 OFF)
+else()
+  set(autowiring_ARCHITECTURE "x64")
+  set(autowiring_BUILD_64 ON)
+endif()
+message(STATUS "Using architecture: ${autowiring_ARCHITECTURE}")
 
 # Determine whether Autowiring has been embedded in another project
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  set(AUTOWIRING_IS_EMBEDDED)
+  set(AUTOWIRING_IS_EMBEDDED OFF)
 else()
-  set(AUTOWIRING_IS_EMBEDDED "TRUE")
+  set(AUTOWIRING_IS_EMBEDDED ON)
 endif()
 
 # If there's an external libraries directory path, use it as a search prefix
@@ -16,43 +31,71 @@ if(EXTERNAL_LIBRARY_DIR)
   list(APPEND CMAKE_INCLUDE_PATH ${EXTERNAL_LIBRARY_DIR})
 endif()
 
-# Offer option for autowiring_USE_LIBCXX only if not defined by enclosing project
-# Check for existing definition of autowiring_USE_LIBCXX
-if(NOT DEFINED autowiring_USE_LIBCXX)
-  option(autowiring_USE_LIBCXX "Build Autowiring using c++11" ON)
+if(APPLE)
+  # Offer option for autowiring_USE_LIBCXX
+  # Check for existing definition of autowiring_USE_LIBCXX
+  if(NOT DEFINED autowiring_USE_LIBCXX)
+    option(autowiring_USE_LIBCXX "Build Autowiring using c++11" ON)
+  else()
+    if(NOT autowiring_USE_LIBCXX)
+      message("Parent project has set autowiring_USE_LIBCXX = OFF -> Build Autowiring using c++98")
+    endif()
+  endif()
 else()
-  if(NOT autowiring_USE_LIBCXX)
-    message("Parent project has set autowiring_USE_LIBCXX = OFF -> Build Autowiring using c++98")
+  # Always use libc++ on other platforms
+  set(autowiring_USE_LIBCXX ON)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCC)
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8")
+    message(FATAL_ERROR "GCC version 4.8 minimum is required to build Autowiring")
+  endif()
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "18.0")
+    message(FATAL_ERROR "MSVC 2013 minimum is required to build Autowiring")
   endif()
 endif()
 
+message("Version number ${CMAKE_CXX_COMPILER_VERSION}")
+
+# Always use c++11 compiler
 if(NOT WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
 endif()
-if(autowiring_USE_LIBCXX)
-  # Clang needs special additional flags to build with C++11
-  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-    # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
+
+# Clang needs special additional flags to build with C++11
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+  # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
+  if(autowiring_USE_LIBCXX)
     message("AppleClang C++11")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    message("Clang C++11")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    message("GCC C++11")
+  else()
+    message("AppleClang C++11 with libstdc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
   endif()
-  
-  # Also need position-independent code to make things work correctly on certain 64-bit machines
-  if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-  endif()
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  message("Clang C++11")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  message("GCC C++11")
+endif()
+
+# Also need position-independent code to make things work correctly on certain 64-bit machines
+if(NOT WIN32 AND autowiring_BUILD_64)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 include(CMakeModules/pch.cmake)
-set(AUTOWIRING_BUILD_AUTONET_DEFAULT ON)
+
+if(autowiring_ARCHITECTURE STREQUAL "arm")
+  # Currently cannot build Autonet for ARM, so default this off on that platform
+  set(AUTOWIRING_BUILD_AUTONET_DEFAULT OFF)
+else()
+  set(AUTOWIRING_BUILD_AUTONET_DEFAULT ON)
+endif()
 
 # We don't build tests unless we're being built by ourselves in our own source tree
 # When we're embedded in someone else's subtree, it's not likely that they will want
@@ -80,10 +123,23 @@ else()
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/lib)
 endif()
 
-# 64-bit installations should suffix with 64
-if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
-  set(CMAKE_DEBUG_POSTFIX "64")
-  set(CMAKE_RELEASE_POSTFIX "64")
+# ARM installations should have "arm" as the suffix for the generated libraries and should be
+# position-independent
+if(autowiring_ARCHITECTURE STREQUAL "arm")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
+  foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
+    string(TOUPPER ${config} config)
+    string(CONCAT CMAKE_${config}_POSTFIX "${CMAKE_${config}_POSTFIX}" "64")
+  endforeach()
+endif()
+
+# 64-bit installations should suffix with 64 regardless of the CPU type (arm or intel)
+if(autowiring_BUILD_64)
+  foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
+    string(TOUPPER ${config} config)
+    string(CONCAT CMAKE_${config}_POSTFIX "${CMAKE_${config}_POSTFIX}" "64")
+  endforeach()
 endif()
 
 # Postfix on all debug libraries should be "d"
@@ -123,14 +179,10 @@ include_directories(
 )
 
 # CMake configurations
-if(${CMAKE_SIZEOF_VOID_P} STREQUAL 8)
-  set(autowiring_ARCHITECTURE "64")
-else()
-  set(autowiring_ARCHITECTURE "32")
-endif()
 configure_file(autowiring-config.cmake.in autowiring-config.cmake @ONLY)
 configure_file(autowiring-configVersion.cmake.in autowiring-configVersion.cmake @ONLY)
 configure_file(AutowiringConfig.h.in ${PROJECT_SOURCE_DIR}/autowiring/AutowiringConfig.h @ONLY)
+configure_file(Autowiring.nuspec.in ${PROJECT_BINARY_DIR}/Autowiring.nuspec @ONLY)
 
 # Recurse through source directories
 add_subdirectory(src)
@@ -160,7 +212,7 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   install(EXPORT AutowiringTargets FILE AutowiringTargets.cmake COMPONENT autowiring NAMESPACE Autowiring:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
   # 64-bit installations get a different upgrade GUID
-  if(CMAKE_SIZEOF_VOID_P STREQUAL 8)
+  if(autowiring_BUILD_64)
     set(autowiring_GUID_LAST_CHAR E)
   else()
     set(autowiring_GUID_LAST_CHAR D)
