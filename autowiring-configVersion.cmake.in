@@ -4,8 +4,8 @@ if(autowiring_DEBUG)
   message(STATUS "Debug mode on")
   message(STATUS "Installed autowiring_VERSION: @autowiring_VERSION@")
 
-  message(STATUS "Installed autowiring_ARCHITECTURE: @autowiring_ARCHITECTURE@")
-  message(STATUS "Configured autowiring_ARCHITECTURE: ${autowiring_ARCHITECTURE}")
+  message(STATUS "Installed autowiring_BUILD_ARCHITECTURES: @autowiring_BUILD_ARCHITECTURES@")
+  message(STATUS "Configured autowiring_BUILD_ARCHITECTURES: ${autowiring_BUILD_ARCHITECTURES}")
 
   message(STATUS "Installed CMAKE_SIZEOF_VOID_P: @CMAKE_SIZEOF_VOID_P@")
   message(STATUS "Configured CMAKE_SIZEOF_VOID_P: ${CMAKE_SIZEOF_VOID_P}")
@@ -16,50 +16,53 @@ endif()
 
 # If the customer has an override architecture requirement, use that
 if(DEFINED autowiring_ARCHITECTURE)
-  string(REGEX MATCH "amd64|x86_64|x64" autowiring_is_x64 ${autowiring_ARCHITECTURE})
-  string(REGEX MATCH "i386|x86" autowiring_is_x86 ${autowiring_ARCHITECTURE})
-  string(REGEX MATCH "arm" autowiring_is_arm ${autowiring_ARCHITECTURE})
+  foreach(i IN LISTS autowiring_ARCH)
+    string(REGEX MATCH "amd64|x86_64|x64" autowiring_is_x64 ${i})
+    string(REGEX MATCH "i386|x86" autowiring_is_x86 ${i})
+    string(REGEX MATCH "arm" autowiring_is_arm ${i})
 
-  # Clear the autowiring_ARCHITECTURE variable so we can tell if something went wrong
-  set(autowiring_ARCHITECTURE)
-
-  # Classify
-  if(autowiring_is_x86)
-    set(autowiring_ARCHITECTURE x86)
-  elseif(autowiring_is_x64)
-    set(autowiring_ARCHITECTURE x64)
-  elseif(autowiring_is_arm)
-    set(autowiring_ARCHITECTURE arm)
-  endif()
-
-  if(NOT DEFINED autowiring_ARCHITECTURE)
-    message(WARNING "Unrecognized architecture ${autowiring_ARCHITECTURE}")
-    set(autowiring_WORD_WIDTH -1)
-  endif()
+    # Classify
+    if(autowiring_is_x86)
+      list(APPEND autowiring_ARCHITECTURES x86)
+    elseif(autowiring_is_x64)
+      list(APPEND autowiring_ARCHITECTURES x64)
+    elseif(autowiring_is_arm)
+      list(APPEND autowiring_ARCHITECTURES arm)
+    else()
+      message(WARNING "Unrecognized architecture ${i}")
+    endif()
+  endforeach()
 else()
   # Try to infer what the user wants
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
-    set(autowiring_ARCHITECTURE arm)
+    set(autowiring_ARCHITECTURES arm)
   elseif(CMAKE_SIZEOF_VOID_P EQUAL "8")
-    set(autowiring_ARCHITECTURE x64)
+    set(autowiring_ARCHITECTURES x64)
   else()
-    set(autowiring_ARCHITECTURE x86)
+    set(autowiring_ARCHITECTURES x86)
   endif()
 endif()
 
 if(autowiring_DEBUG)
   message(STATUS "autowiring_ARCHITECTURE: ${autowiring_ARCHITECTURE}")
+  message(STATUS "autowiring_ARCHITECTURES: ${autowiring_ARCHITECTURES}")
 endif()
 
-# Verify that we have a word width matching the bit depth desired by the customer
-if(NOT autowiring_ARCHITECTURE STREQUAL "@autowiring_ARCHITECTURE@")
-  set(PACKAGE_VERSION_COMPATIBLE FALSE)
-  set(PACKAGE_VERSION_UNSUITABLE TRUE)
-  if(autowiring_DEBUG)
-    message(STATUS "Requested architecture of ${autowiring_ARCHITECTURE} not compatible with @autowiring_ARCHITECTURE@")
+# Architectures we were built with
+set(autowiring_BUILD_ARCHITECTURES @autowiring_BUILD_ARCHITECTURES@)
+
+# Verify that we match all of the architectures requested by the customer
+foreach(i IN LISTS autowiring_ARCHITECTURES)
+  list(FIND autowiring_BUILD_ARCHITECTURES $i found)
+  if(found EQUAL -1)
+    set(PACKAGE_VERSION_COMPATIBLE FALSE)
+    set(PACKAGE_VERSION_UNSUITABLE TRUE)
+    if(autowiring_DEBUG)
+      message(STATUS "Requested architecture of ${autowiring_ARCHITECTURE} not compatible with @autowiring_BUILD_ARCHITECTURES@")
+    endif()
+    return()
   endif()
-  return()
-endif()
+endforeach()
 
 # Determine whether the user's request (either implied or explicit) for libstdc++ can
 # be met by this verison of Autowiring

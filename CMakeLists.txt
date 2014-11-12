@@ -5,18 +5,27 @@ project(autowiring VERSION ${autowiring_VERSION})
 include(CTest)
 include(CheckTypeSize)
 
+if(APPLE)
+  option(autowiring_BUILD_FAT "Build fat binaries for Autowiring" ON)
+  set(CMAKE_OSX_ARCHITECTURES "x86_64;i386" CACHE STRING "Mac OS X build architectures" FORCE)
+endif()
+
 # Need to classify the architecture before we run anything else
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
-  set(autowiring_ARCHITECTURE "arm")
+  set(autowiring_BUILD_ARM ON)
+  set(autowiring_BUILD_ARCHITECTURES "arm")
   set(autowiring_BUILD_64 OFF)
+elseif(CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64;i386")
+  set(autowiring_BUILD_ARCHITECTURES x64 x86)
+  set(autowiring_BUILD_64 ON)
 elseif(CMAKE_SIZEOF_VOID_P STREQUAL 4)
-  set(autowiring_ARCHITECTURE "x86")
+  set(autowiring_BUILD_ARCHITECTURES "x86")
   set(autowiring_BUILD_64 OFF)
 else()
-  set(autowiring_ARCHITECTURE "x64")
+  set(autowiring_BUILD_ARCHITECTURES "x64")
   set(autowiring_BUILD_64 ON)
 endif()
-message(STATUS "Using architecture: ${autowiring_ARCHITECTURE}")
+message(STATUS "Using architecture: ${autowiring_BUILD_ARCHITECTURES}")
 
 # Determine whether Autowiring has been embedded in another project
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
@@ -56,7 +65,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   endif()
 endif()
 
-message("Version number ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "Compiler version ${CMAKE_CXX_COMPILER_VERSION}")
 
 # Always use c++11 compiler
 if(NOT WIN32)
@@ -67,19 +76,19 @@ endif()
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
   # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
   if(autowiring_USE_LIBCXX)
-    message("AppleClang C++11")
+    message(STATUS "AppleClang C++11")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
   else()
-    message("AppleClang C++11 with libstdc++")
+    message(STATUS "AppleClang C++11 with libstdc++")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
   endif()
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  message("Clang C++11")
+  message(STATUS "Clang C++11")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  message("GCC C++11")
+  message(STATUS "GCC C++11")
 endif()
 
 # Also need position-independent code to make things work correctly on certain 64-bit machines
@@ -90,7 +99,7 @@ endif()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 include(CMakeModules/pch.cmake)
 
-if(autowiring_ARCHITECTURE STREQUAL "arm")
+if(autowiring_BUILD_ARM)
   # Currently cannot build Autonet for ARM, so default this off on that platform
   set(AUTOWIRING_BUILD_AUTONET_DEFAULT OFF)
 else()
@@ -125,7 +134,7 @@ endif()
 
 # ARM installations should have "arm" as the suffix for the generated libraries and should be
 # position-independent
-if(autowiring_ARCHITECTURE STREQUAL "arm")
+if(autowiring_BUILD_ARM)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
   foreach(config IN LISTS CMAKE_CONFIGURATION_TYPES)
