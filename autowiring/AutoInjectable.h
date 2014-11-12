@@ -10,8 +10,6 @@ public:
   virtual void operator()(AutoFuture* pFuture) const = 0;
 };
 
-extern template class std::shared_ptr<AutoInjectableExpressionBase>;
-
 /// <summary>
 /// An expression type, which generally encapsulates a single injection operation
 /// </summary>
