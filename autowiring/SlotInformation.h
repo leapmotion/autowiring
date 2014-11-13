@@ -45,11 +45,15 @@ struct SlotInformation {
 /// Stump entry, used to anchor a chain of slot information entries
 /// </summary>
 struct SlotInformationStumpBase {
-  SlotInformationStumpBase(void) :
+  SlotInformationStumpBase(const std::type_info& ti) :
+    ti(ti),
     bInitialized(false),
     pHead(nullptr),
     pFirstAutoFilter(nullptr)
   {}
+
+  // RTTI to which this stump pertains
+  const std::type_info& ti;
 
   // Initialization flag, used to indicate that this stump has valid data
   bool bInitialized;
@@ -82,6 +86,10 @@ template<class T>
 struct SlotInformationStump<T, false>:
   SlotInformationStumpBase
 {
+  SlotInformationStump(void):
+    SlotInformationStumpBase(typeid(T))
+  {}
+
   static SlotInformationStump s_stump;
 };
 
