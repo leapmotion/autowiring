@@ -4,7 +4,6 @@
 
 AutoInjectableExpressionBase::AutoInjectableExpressionBase(void){}
 AutoInjectableExpressionBase::~AutoInjectableExpressionBase(void){}
-template class std::shared_ptr<AutoInjectableExpressionBase>;
 
 AutoInjectable::AutoInjectable(AutoInjectableExpressionBase* pValue) :
   pValue(pValue),
