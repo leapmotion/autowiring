@@ -6,6 +6,19 @@ Autowiring is an [inversion-of-control](http://en.wikipedia.org/wiki/Inversion_o
 
 Autowiring project structure is specified with [CMake](http://www.cmake.org/). Simply point CMake to the root project directory and generate your desired project file. While Autowiring is written using C++11 features, it supports linking the non-C++11 STL. The `C++11/` directory provides [boost](http://www.boost.org/) shims for missing C++11 library features.
 
+### CMake Options
+
+Because AutoNet has a Boost dependency, it can sometimes be desirable to influence how Boost should be linked to the project.  You can influence the decision
+making process by setting CMake Boost attributes, which are described by the [cmake documentation](http://www.cmake.org/cmake/help/v3.0/module/FindBoost.html).
+A common use case is to statically link to a pre-specified installation of boost.  To do this, run CMake as follows:
+
+    cmake . \ 
+      -DBOOST_ROOT:PATH=/path/to/boost \ 
+      -DBoost_USE_STATIC_LIBS:BOOL=ON \ 
+      -DBoost_NO_SYSTEM_PATHS:BOOL=ON
+
+Watch the cases, you will get "unused variable" warnings if you don't match what is written above exactly.
+
 ### Mac
 
 Mac dependencies are installed with [port](http://guide.macports.org/) or [brew](http://brew.sh/).  If you have port installed, this will build the project:
@@ -17,6 +30,12 @@ Mac dependencies are installed with [port](http://guide.macports.org/) or [brew]
     make
     make test
     sudo make install
+
+This will configure the project to build fat binaries by default.  If you wish to build only 64-bit binaries, use the following CMake command instead:
+
+    cmake . -DCMAKE_OSX_ARCHITECTURES:STRING=x86_64
+
+Note that AutoNet will be built for 64-bit only, unless your Boost installation was built as fat binaries.
 
 ### Unix
 
