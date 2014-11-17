@@ -16,7 +16,7 @@ endif()
 
 # If the customer has an override architecture requirement, use that
 if(DEFINED autowiring_ARCHITECTURE)
-  foreach(i IN LISTS autowiring_ARCH)
+  foreach(i IN LISTS autowiring_ARCHITECTURE)
     string(REGEX MATCH "amd64|x86_64|x64" autowiring_is_x64 ${i})
     string(REGEX MATCH "i386|x86" autowiring_is_x86 ${i})
     string(REGEX MATCH "arm" autowiring_is_arm ${i})
@@ -50,10 +50,13 @@ endif()
 
 # Architectures we were built with
 set(autowiring_BUILD_ARCHITECTURES @autowiring_BUILD_ARCHITECTURES@)
+if(autowiring_DEBUG)
+  message(STATUS "autowiring_BUILD_ARCHITECTURES: ${autowiring_BUILD_ARCHITECTURES}")
+endif()
 
 # Verify that we match all of the architectures requested by the customer
 foreach(i IN LISTS autowiring_ARCHITECTURES)
-  list(FIND autowiring_BUILD_ARCHITECTURES $i found)
+  list(FIND autowiring_BUILD_ARCHITECTURES ${i} found)
   if(found EQUAL -1)
     set(PACKAGE_VERSION_COMPATIBLE FALSE)
     set(PACKAGE_VERSION_UNSUITABLE TRUE)
@@ -71,12 +74,21 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
   if(NOT DEFINED autowiring_USE_LIBCXX)
     SET(autowiring_USE_LIBCXX ON)
   endif()
+  
+  if(autowiring_DEBUG)
+    message(STATUS "Installed autowiring_USE_LIBCXX: @autowiring_USE_LIBCXX@")
+    message(STATUS "Configured autowiring_USE_LIBCXX: ${autowiring_USE_LIBCXX}")
+  endif()
 
   # Our built version must be the same as the requested version.  If it's not, then we are
   # not a match for the user's request
   if((NOT ${autowiring_USE_LIBCXX} AND @autowiring_USE_LIBCXX@) OR (${autowiring_USE_LIBCXX} AND NOT @autowiring_USE_LIBCXX@))
+    if(autowiring_DEBUG)
+      message("User C++ runtime library request incompatible with locally built version")
+    endif()
     set(PACKAGE_VERSION_COMPATIBLE FALSE)
     set(PACKAGE_VERSION_UNSUITABLE TRUE)
+    return()
   endif()
 endif()
 
@@ -87,5 +99,9 @@ else()
   set(PACKAGE_VERSION_COMPATIBLE TRUE)
   if ("${PACKAGE_VERSION}" VERSION_EQUAL "${PACKAGE_FIND_VERSION}")
     set(PACKAGE_VERSION_EXACT TRUE)
+  endif()
+  
+  if(autowiring_DEBUG)
+    message(STATUS "Using Autowiring in ${CMAKE_CURRENT_SOURCE_DIR}")
   endif()
 endif()
