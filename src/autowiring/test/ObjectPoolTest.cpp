@@ -280,7 +280,7 @@ TEST_F(ObjectPoolTest, RundownWhileWaiting) {
   auto first = pool.Wait();
   
   auto future = std::async(std::launch::async, [&pool]{
-    ASSERT_ANY_THROW(auto second = pool.Wait()) << "pool should through if it is rundown while threads are waiting";
+    ASSERT_ANY_THROW(auto second = pool.Wait()) << "pool should throw if it is rundown while threads are waiting";
   });
   
   // Make sure async call is waiting
