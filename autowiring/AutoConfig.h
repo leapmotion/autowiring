@@ -12,7 +12,7 @@ public:
   template<class TMemberName>
   struct ConfigTypeExtractor {};
 
-  AutoConfigBase(const std::type_info& tiMemberName);
+  AutoConfigBase(const std::type_info& tiName);
 
   // Name of the class enclosing this configuration field
   const std::string Class;
