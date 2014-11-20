@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "TestFixtures/SimpleThreaded.hpp"
 #include <autowiring/ObjectPool.h>
+#include FUTURE_HEADER
 
 class ObjectPoolTest:
   public testing::Test
@@ -271,6 +272,24 @@ TEST_F(ObjectPoolTest, CanRundownOneIssued) {
   // No conditions to be checked, we just know these routines should not deadlock.
   ObjectPool<int> pool;
   pool.Wait();
+  pool.Rundown();
+}
+
+TEST_F(ObjectPoolTest, RundownWhileWaiting) {
+  ObjectPool<int> pool(1);
+  auto first = pool.Wait();
+  
+  std::mutex mut;
+  
+  std::unique_lock<std::mutex> lk1(mut);
+  auto future = std::async(std::launch::async, [&pool, &lk1]{
+    ASSERT_ANY_THROW((lk1.unlock(), pool.Wait())) << "pool should throw if it is rundown while threads are waiting";
+  });
+  
+  // Make sure async call is waiting
+  std::unique_lock<std::mutex> lk2(mut);
+  
+  first.reset();
   pool.Rundown();
 }
 

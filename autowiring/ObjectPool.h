@@ -321,6 +321,9 @@ public:
       throw autowiring_error("Attempted to perform a timed wait on a pool containing no entities");
 
     m_setCondition.wait(lk, [this] {
+      if(!m_limit)
+        throw autowiring_error("Attempted to rundown ObjectPool while performing a wait");
+
       return m_outstanding < m_limit;
     });
     return ObtainElementUnsafe(lk);
