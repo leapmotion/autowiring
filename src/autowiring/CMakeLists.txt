@@ -193,7 +193,7 @@ else()
 endif()
 
 rewrite_header_paths(Autowiring_SRCS)
-ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
+add_pch(Autowiring_SRCS "stdafx.h" "stdafx.cpp")
 
 #
 # Configure library

@@ -36,7 +36,7 @@ set(AutoNet_SRCS
 
 # All include files are located in /autowiring from here, so prepend that to all sources
 rewrite_header_paths(AutoNet_SRCS)
-ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutoNet_SRCS)
+add_pch(AutoNet_SRCS "stdafx.h" "stdafx.cpp")
 
 add_library(AutoNet SHARED ${AutoNet_SRCS})
 target_link_libraries(AutoNet PRIVATE ${Boost_LIBRARIES} Autowiring)
