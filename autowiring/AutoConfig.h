@@ -32,7 +32,12 @@ public:
   AutoConfig(void) :
     AutoConfigBase(typeid(ConfigTypeExtractor<TMemberName>))
   {}
-  
+
+private:
+  T* value;
+  AutoRequired<AutoConfigManager> m_manager;
+
+public:
   operator T(void){
     return *value;
   }
@@ -40,8 +45,15 @@ public:
   operator const T&(void){
     return *value;
   }
-  
-private:
-  T* value;
-  AutoRequired<AutoConfigManager> m_manager;
+
+  /// <returns>
+  /// True if this configurable field has been satisfied with a value
+  /// </returns>
+  bool IsConfigured(void) const {
+    return false;
+  }
+
+  const T& operator*(void) const {
+    return value;
+  }
 };
