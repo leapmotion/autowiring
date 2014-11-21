@@ -5,6 +5,7 @@
 #include "demangle.h"
 #include <regex>
 #include <iostream>
+#include <sstream>
 
 using namespace autowiring;
 
@@ -29,9 +30,14 @@ static std::string CurrentStumpName(void) {
   return sm.str(1);
 }
 
+static std::string FormatFieldName(const std::string& cls, const std::string& name) {
+  std::stringstream ss;
+  ss << cls << "." << name;
+  return ss.str();
+}
+
 AutoConfigBase::AutoConfigBase(const std::type_info& tiMemberName):
   Class(CurrentStumpName()),
-  Name(ExtractFieldName(tiMemberName))
-{
-  
-}
+  Name(ExtractFieldName(tiMemberName)),
+  Field(FormatFieldName(Class, Name))
+{}

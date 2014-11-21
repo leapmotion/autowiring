@@ -7,7 +7,7 @@
 struct AnySharedPointer;
 
 class AutoConfigManager {
-private:
+public:
   std::unordered_map<std::string, AnySharedPointer> m_attributes;
 
 public:

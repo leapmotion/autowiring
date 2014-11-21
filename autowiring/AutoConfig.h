@@ -6,6 +6,8 @@
 #include <string>
 #include <typeinfo>
 
+struct AnySharedPointer;
+
 /// <summary>
 /// Utility base type for configuration members
 /// </summary>
@@ -22,6 +24,9 @@ public:
 
   // Name of the type proper
   const std::string Name;
+  
+  // Concatinated field name
+  const std::string Field;
 };
 
 template<class T, class TMemberName>
@@ -30,24 +35,25 @@ class AutoConfig:
 {
 public:
   AutoConfig(void) :
-    AutoConfigBase(typeid(ConfigTypeExtractor<TMemberName>))
+    AutoConfigBase(typeid(ConfigTypeExtractor<TMemberName>)),
+    value(m_manager->m_attributes[Field])
   {}
 
 private:
-  T* value;
   AutoRequired<AutoConfigManager> m_manager;
+  AnySharedPointer& value;
 
 public:
   operator T(void){
-    return *value;
+    return value;
   }
   
   operator const T&(void){
-    return *value;
+    return value;
   }
   
   const T& operator*(void) const {
-    return *value;
+    return *value.as<T>();
   }
 
   /// <returns>
