@@ -122,7 +122,7 @@ struct crh<construction_strategy::standard, T, Args...> {
       return ::new (pSpace) TActual(std::forward<Args>(args)...);
     }
     catch(...) {
-      // Don't want memory leaks--but we also want to avoid calling the destructor, here, so we cast to void before freeing
+      // Use our free method, which will correctly invoke the deallocator for this space
       Free<TActual>(pSpace, nullptr);
       throw;
     }
