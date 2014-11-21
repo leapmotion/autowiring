@@ -2,6 +2,7 @@
 #pragma once
 #include "Autowired.h"
 #include "AutoConfigManager.h"
+#include "ConfigRegistry.h"
 
 #include <string>
 #include <typeinfo>
@@ -36,31 +37,36 @@ class AutoConfig:
 public:
   AutoConfig(void) :
     AutoConfigBase(typeid(ConfigTypeExtractor<TMemberName>)),
-    value(m_manager->m_attributes[Field])
-  {}
+    m_isConfigured(m_manager->m_attributes.count(Field)),
+    m_value(m_manager->m_attributes[Field])
+  {
+    // Register with config registry
+    (void)RegConfig<ConfigTypeExtractor<TMemberName>>::r;
+  }
 
 private:
   AutoRequired<AutoConfigManager> m_manager;
-  AnySharedPointer& value;
+  bool m_isConfigured;
+  AnySharedPointer& m_value;
 
 public:
   operator T(void){
-    return value;
+    return m_value;
   }
   
   operator const T&(void){
-    return value;
+    return m_value;
   }
   
   const T& operator*(void) const {
-    return *value.as<T>();
+    return *m_value.as<T>();
   }
 
   /// <returns>
   /// True if this configurable field has been satisfied with a value
   /// </returns>
   bool IsConfigured(void) const {
-    return false;
+    return m_isConfigured;
   }
 };
 

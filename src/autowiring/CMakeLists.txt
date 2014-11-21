@@ -58,6 +58,8 @@ set(Autowiring_SRCS
   BoltBase.h
   BoltBase.cpp
   CallExtractor.h
+  ConfigRegistry.h
+  ConfigRegistry.cpp
   ContextCreator.h
   ContextCreatorBase.h
   ContextCreatorBase.cpp

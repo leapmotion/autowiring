@@ -8,6 +8,10 @@ struct AnySharedPointer;
 
 class AutoConfigManager {
 public:
+  AutoConfigManager();
+  virtual ~AutoConfigManager();
+  
+public:
   std::unordered_map<std::string, AnySharedPointer> m_attributes;
 
 public:
