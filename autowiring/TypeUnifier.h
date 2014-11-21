@@ -79,8 +79,7 @@ struct SelectTypeUnifier<T, false, false> {
   typedef TypeUnifierComplex<T> type;
 };
 
-
-// Otherwise, if there's a complex ctor, we have to use Args
+// If an AutoFilter is present on this type, a special forwarding AutoFilter is necessary
 template<class T>
 struct SelectTypeUnifier<T, false, true>:
   TypeUnifierComplexAutoFilterSelect<decltype(&T::AutoFilter)>
