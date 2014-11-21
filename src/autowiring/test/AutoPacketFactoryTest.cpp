@@ -170,7 +170,7 @@ TEST_F(AutoPacketFactoryTest, AutoPacketStatistics) {
 
   // Ensure that the statistics are not too wrong
   // We delayed each packet by one ms, and our statistics are given in nanoseconds
-  double packetDelay = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(1)).count();
+  double packetDelay = (double) std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(1)).count();
   ASSERT_EQ(numPackets, factory->GetTotalPacketCount()) << "The factory did not get enough packets";
 
   ASSERT_LE(packetDelay, factory->GetMeanPacketLifetime()) << "The mean packet lifetime was less than the delay on each packet";
