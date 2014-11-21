@@ -8,15 +8,28 @@
 
 using namespace autowiring;
 
-static const std::regex namePattern("AutoConfigBase::ConfigTypeExtractor<(\\w*)>");
+static const std::regex namePattern(".*ConfigTypeExtractor<(?:class |struct )?(\\w*)>");
+static const std::regex classPattern("TypeUnifierComplex<(\\w*)>");
 
-static std::string getName(const std::type_info& ti) {
+static std::string ExtractFieldName(const std::type_info& ti) {
   std::smatch sm;
   std::regex_match(demangle(ti), sm, namePattern);
   assert(sm.size() == 2 && "Regex couldn't find type name");
   return sm.str(1);
 }
 
+static std::string CurrentStumpName(void) {
+  const auto* cs = SlotInformationStackLocation::CurrentStump();
+  if (!cs)
+    return std::string();
+
+  std::smatch sm;
+  std::regex_match(demangle(cs->ti), sm, classPattern);
+  assert(sm.size() == 2 && "Regex couldn't find class name");
+  return sm.str(1);
+}
+
 AutoConfigBase::AutoConfigBase(const std::type_info& tiMemberName):
-  Name(getName(tiMemberName))
+  Class(CurrentStumpName()),
+  Name(ExtractFieldName(tiMemberName))
 {}

@@ -11,8 +11,8 @@ struct MyConfigurableClass {
 };
 
 TEST_F(AutoConfigTest, VerifyCorrectDeconstruction) {
-  MyConfigurableClass mcc;
+  AutoRequired<MyConfigurableClass> mcc;
 
-  EXPECT_STREQ("MyConfigurableClass", mcc.m_myName.Class.c_str()) << "Configuration variable enclosing class was not correctly extracted";
-  EXPECT_STREQ("XYZ", mcc.m_myName.Name.c_str()) << "Configuration variable name was not correctly extracted";
+  EXPECT_STREQ("MyConfigurableClass", mcc->m_myName.Class.c_str()) << "Configuration variable enclosing class was not correctly extracted";
+  EXPECT_STREQ("XYZ", mcc->m_myName.Name.c_str()) << "Configuration variable name was not correctly extracted";
 }
