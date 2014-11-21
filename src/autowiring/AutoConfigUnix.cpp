@@ -19,7 +19,7 @@ static std::string ExtractFieldName(const std::type_info& ti) {
 }
 
 static std::string CurrentStumpName(void) {
-  const auto* cs = SlotInformationStackLocation::CurrentStump();
+  const SlotInformationStumpBase* cs = SlotInformationStackLocation::CurrentStump();
   if (!cs)
     return std::string();
 
@@ -32,4 +32,6 @@ static std::string CurrentStumpName(void) {
 AutoConfigBase::AutoConfigBase(const std::type_info& tiMemberName):
   Class(CurrentStumpName()),
   Name(ExtractFieldName(tiMemberName))
-{}
+{
+  
+}

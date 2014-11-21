@@ -45,6 +45,10 @@ public:
   operator const T&(void){
     return *value;
   }
+  
+  const T& operator*(void) const {
+    return *value;
+  }
 
   /// <returns>
   /// True if this configurable field has been satisfied with a value
@@ -52,8 +56,5 @@ public:
   bool IsConfigured(void) const {
     return false;
   }
-
-  const T& operator*(void) const {
-    return value;
-  }
 };
+

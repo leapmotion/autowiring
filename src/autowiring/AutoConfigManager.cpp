@@ -3,4 +3,10 @@
 #include "AutoConfig.h"
 #include "AnySharedPointer.h"
 
+void AutoConfigManager::Set(const char* name, const char* value) {
+  Set(name, std::string(value));
+}
 
+void AutoConfigManager::SetParsed(const char *name, const char *value) {
+  
+}

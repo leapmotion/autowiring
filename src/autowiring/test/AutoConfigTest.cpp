@@ -44,7 +44,7 @@ TEST_F(AutoConfigTest, VerifyPostHocAssignment) {
 }
 
 TEST_F(AutoConfigTest, VerifyRecursiveSearch) {
-  AutoRequired<AutoConfigManager> mcc;
+  AutoRequired<AutoConfigManager> acm;
   acm->Set("MyConfigurableClass.XYZ", 1001);
 
   {
