@@ -9,7 +9,7 @@
 using namespace autowiring;
 
 static const std::regex namePattern(".*ConfigTypeExtractor<(?:class |struct )?(\\w*)>");
-static const std::regex classPattern("TypeUnifierComplex<(\\w*)>");
+static const std::regex classPattern(".*TypeUnifierComplex<(?:class |struct )?(\\w*)>");
 
 static std::string ExtractFieldName(const std::type_info& ti) {
   std::smatch sm;

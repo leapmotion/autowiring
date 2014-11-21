@@ -1,5 +1,8 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "Autowired.h"
+#include "AutoConfigManager.h"
+
 #include <string>
 #include <typeinfo>
 
@@ -29,6 +32,16 @@ public:
   AutoConfig(void) :
     AutoConfigBase(typeid(ConfigTypeExtractor<TMemberName>))
   {}
-
-  T value;
+  
+  operator T(void){
+    return *value;
+  }
+  
+  operator const T&(void){
+    return *value;
+  }
+  
+private:
+  T* value;
+  AutoRequired<AutoConfigManager> m_manager;
 };
