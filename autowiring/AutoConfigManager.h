@@ -16,6 +16,7 @@ public:
   virtual ~AutoConfigManager();
   
 private:
+  std::mutex m_lock;
   std::unordered_map<std::string, AnySharedPointer> m_attributes;
 
 public:
@@ -40,8 +41,10 @@ public:
     
     for(const auto& ctxt : ContextEnumerator(GetContext())) {
       AutowiredFast<AutoConfigManager> mgmt(ctxt);
-      if(mgmt)
+      if(mgmt) {
+        std::lock_guard<std::mutex> lk(mgmt->m_lock);
         mgmt->m_attributes[name] = AnySharedPointer(std::make_shared<T>(value));
+      }
     }
   }
 

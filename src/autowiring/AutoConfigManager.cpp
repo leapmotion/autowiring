@@ -16,6 +16,7 @@ AutoConfigManager::AutoConfigManager(void){
     AutowiredFast<AutoConfigManager> mgmt(ctxt);
     
     if (mgmt)
+      std::lock_guard<std::mutex> lk(mgmt->m_lock);
       for (const auto& entry : mgmt->m_attributes)
         m_attributes.insert(entry);
 
@@ -26,6 +27,7 @@ AutoConfigManager::AutoConfigManager(void){
 AutoConfigManager::~AutoConfigManager(void){}
 
 AnySharedPointer& AutoConfigManager::Get(const std::string& name) {
+  std::lock_guard<std::mutex> lk(m_lock);
   return m_attributes[name];
 }
 
