@@ -37,8 +37,7 @@ class AutoConfig:
 public:
   AutoConfig(void) :
     AutoConfigBase(typeid(ConfigTypeExtractor<TMemberName>)),
-    m_isConfigured(m_manager->m_attributes.count(Field)),
-    m_value(m_manager->m_attributes[Field])
+    m_value(m_manager->Get(Field))
   {
     // Register with config registry
     (void)RegConfig<ConfigTypeExtractor<TMemberName>>::r;
@@ -46,7 +45,6 @@ public:
 
 private:
   AutoRequired<AutoConfigManager> m_manager;
-  bool m_isConfigured;
   AnySharedPointer& m_value;
 
 public:
@@ -66,7 +64,7 @@ public:
   /// True if this configurable field has been satisfied with a value
   /// </returns>
   bool IsConfigured(void) const {
-    return m_isConfigured;
+    return !m_value->empty();
   }
 };
 

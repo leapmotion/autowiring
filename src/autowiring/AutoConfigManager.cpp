@@ -11,10 +11,14 @@ AutoConfigManager::AutoConfigManager(void){}
 
 AutoConfigManager::~AutoConfigManager(void){}
 
-void AutoConfigManager::Set(const char* name, const char* value) {
+AnySharedPointer& AutoConfigManager::Get(const std::string& name) {
+  return m_attributes[name];
+}
+
+void AutoConfigManager::Set(const std::string& name, const char* value) {
   Set(name, std::string(value));
 }
 
-void AutoConfigManager::SetParsed(const char *name, const char *value) {
+void AutoConfigManager::SetParsed(const std::string& name, const std::string& value) {
   
 }

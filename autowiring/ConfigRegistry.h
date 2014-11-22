@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "TypeIdentifier.h"
 #include MEMORY_HEADER
+#include <string>
 
 struct ConfigRegistryEntry {
   ConfigRegistryEntry(const std::type_info& ti);
@@ -11,16 +11,11 @@ struct ConfigRegistryEntry {
 
   // Type of this entry:
   const std::type_info& ti;
-
-  /// <summary>
-  /// The runtime type information corresponding to this entry
-  /// </summary>
-  virtual const std::type_info& GetTypeInfo(void) const = 0;
-
-  /// <summary>
-  /// Used to create a type identifier value, for use with AutoNet
-  /// </summary>
-  virtual std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const = 0;
+  
+  // Configuration name
+  const std::string name;
+  
+  bool is(const std::type_info& ti) const;
 };
 
 template<class T>
@@ -31,13 +26,6 @@ struct ConfigRegistryEntryT:
     ConfigRegistryEntry(typeid(T))
   {}
 
-  virtual const std::type_info& GetTypeInfo(void) const override { return typeid(T); }
-
-  std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const override {
-    return std::static_pointer_cast<TypeIdentifierBase>(
-      std::make_shared<TypeIdentifier<T>>()
-    );
-  }
 };
 
 extern const ConfigRegistryEntry* g_pFirstConfigEntry;
