@@ -38,12 +38,20 @@ public:
   /// </remarks>
   template<class T>
   void Set(const std::string& name, const T& value) {
+    // Set value in this AutoConfigManager
+    std::lock_guard<std::mutex> lk(m_lock);
+    m_attributes[name] = AnySharedPointer(std::make_shared<T>(value));
     
+    // Recurse through child contexts and set if value hasn't already been set
     for(const auto& ctxt : ContextEnumerator(GetContext())) {
+      if (ctxt == GetContext())
+        continue;
+      
       AutowiredFast<AutoConfigManager> mgmt(ctxt);
       if(mgmt) {
         std::lock_guard<std::mutex> lk(mgmt->m_lock);
-        mgmt->m_attributes[name] = AnySharedPointer(std::make_shared<T>(value));
+        if (mgmt->m_attributes[name]->empty())
+          mgmt->m_attributes[name] = m_attributes[name];
       }
     }
   }
