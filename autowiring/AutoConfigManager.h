@@ -8,7 +8,9 @@
 
 struct AnySharedPointer;
 
-class AutoConfigManager {
+class AutoConfigManager:
+  public ContextMember
+{
 public:
   AutoConfigManager();
   virtual ~AutoConfigManager();
@@ -35,20 +37,12 @@ public:
   /// </remarks>
   template<class T>
   void Set(const std::string& name, const T& value) {
-    // Check if field is used in program
-    bool match = false;
-    for(auto entry = g_pFirstConfigEntry; entry; entry = entry->pFlink) {
-      if (entry->is(typeid(T))) {
-        match = true;
-        break;
-      }
+    
+    for(const auto& ctxt : ContextEnumerator(GetContext())) {
+      AutowiredFast<AutoConfigManager> mgmt(ctxt);
+      if(mgmt)
+        mgmt->m_attributes[name] = AnySharedPointer(std::make_shared<T>(value));
     }
-    
-    // Throw exception if config field not used in program.
-    if (!match)
-      throw autowiring_error("Config not used in program");
-    
-    m_attributes[name] = AnySharedPointer(std::make_shared<T>(value));
   }
 
   void Set(const std::string& name, const char* value);

@@ -9,16 +9,15 @@
 using namespace autowiring;
 
 AutoConfigManager::AutoConfigManager(void){
-  std::shared_ptr<CoreContext> ctxt = AutoCurrentContext()->GetParentContext();
+  std::shared_ptr<CoreContext> ctxt = GetContext()->GetParentContext();
   
   // iterate ancestor contexts, filling any configs
   while (ctxt) {
-    Autowired<AutoConfigManager> mgmt(ctxt);
+    AutowiredFast<AutoConfigManager> mgmt(ctxt);
     
     if (mgmt)
       for (const auto& entry : mgmt->m_attributes)
-        if (!m_attributes.count(entry.first))
-          m_attributes.insert(entry);
+        m_attributes.insert(entry);
 
     ctxt = ctxt->GetParentContext();
   }
