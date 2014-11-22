@@ -4,10 +4,25 @@
 #include "AnySharedPointer.h"
 #include "demangle.h"
 #include <iostream>
+#include <vector>
 
 using namespace autowiring;
 
-AutoConfigManager::AutoConfigManager(void){}
+AutoConfigManager::AutoConfigManager(void){
+  std::shared_ptr<CoreContext> ctxt = AutoCurrentContext()->GetParentContext();
+  
+  // iterate ancestor contexts, filling any configs
+  while (ctxt) {
+    Autowired<AutoConfigManager> mgmt(ctxt);
+    
+    if (mgmt)
+      for (const auto& entry : mgmt->m_attributes)
+        if (!m_attributes.count(entry.first))
+          m_attributes.insert(entry);
+
+    ctxt = ctxt->GetParentContext();
+  }
+}
 
 AutoConfigManager::~AutoConfigManager(void){}
 

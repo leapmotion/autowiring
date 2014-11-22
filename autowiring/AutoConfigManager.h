@@ -44,12 +44,13 @@ public:
       }
     }
     
+    // Throw exception if config field not used in program.
     if (!match)
       throw autowiring_error("Config not used in program");
     
     m_attributes[name] = AnySharedPointer(std::make_shared<T>(value));
   }
-  
+
   void Set(const std::string& name, const char* value);
 
   /// <summary>
