@@ -22,10 +22,9 @@ template<typename T>
 void DefaultFinalize(T&){}
 
 /// <summary>
-/// Allows the management of a pool of objects based on an embedded factory
+/// Allows the management of a pool of objects based on an embedded factory.
 /// </summary>
-/// <param name="T>The type to be pooled</param>
-/// <param name="_Rx">A function object which resets instances returned to the pool</param>
+/// <param name="T>The type to be pooled.</param>
 /// <remarks>
 /// This class is a type of factory that creates an object of type T.  The object pool
 /// creates a shared pointer for the consumer to use, and when the last shared pointer
@@ -34,14 +33,14 @@ void DefaultFinalize(T&){}
 ///
 /// All object pool methods are thread safe.
 ///
-/// Issued pool members must be released before the pool goes out of scope
+/// Issued pool members must be released before the pool goes out of scope.
 /// </remarks>
 template<class T>
 class ObjectPool
 {
 public:
-  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
-  /// <param name="maxPooled">The maximum number of objects cached by the pool</param>
+  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time.</param>
+  /// <param name="maxPooled">The maximum number of objects cached by the pool.</param>
   ObjectPool(
     size_t limit = ~0,
     size_t maxPooled = ~0,
@@ -59,7 +58,8 @@ public:
     m_alloc(alloc)
   {}
 
-  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time</param>
+  /// <param name="limit">The maximum number of objects this pool will allow to be outstanding at any time.</param>
+  /// <param name="maxPooled">The maximum number of objects cached by the pool.</param>
   ObjectPool(
     const std::function<T*()>& alloc,
     const std::function<void(T&)>& initial = &DefaultInitialize<T>,
@@ -111,7 +111,7 @@ protected:
   std::function<T*()> m_alloc;
 
   /// <summary>
-  /// Creates a shared pointer to wrap the specified object while it is issued
+  /// Creates a shared pointer to wrap the specified object while it is issued.
   /// </summary>
   /// <remarks>
   /// The Initialize is applied immediate when Wrap is called.
@@ -128,12 +128,12 @@ protected:
     auto retVal = std::shared_ptr<T>(
       pObj,
       [poolVersion, monitor, final](T* ptr) {
-        // Finalize object before destruction or return to pool
+        // Finalize object before destruction or return to pool.
         final(*ptr);
 
         bool inPool = false;
         {
-          // Obtain lock before deciding whether to delete or return to pool
+          // Obtain lock before deciding whether to delete or return to pool.
           std::lock_guard<std::mutex> lk(*monitor);
           if(!monitor->IsAbandoned()) {
             // Attempt to return object to pool
@@ -141,13 +141,13 @@ protected:
           }
         }
         if (!inPool) {
-          // Destroy returning object outside of lock
+          // Destroy returning object outside of lock.
           delete ptr;
         }
       }
     );
 
-    // Initialize the issued object, now that a shared pointer has been created for it
+    // Initialize the issued object, now that a shared pointer has been created for it.
     m_initial(*pObj);
 
     // All done
@@ -155,17 +155,17 @@ protected:
   }
 
   bool ReturnUnsafe(size_t poolVersion, T* ptr) {
-    // ASSERT: Object has already been finalized
-    // Always decrement the count when an object is no longer outstanding
+    // ASSERT: Object has already been finalized.
+    // Always decrement the count when an object is no longer outstanding.
     assert(m_outstanding);
     m_outstanding--;
 
     bool inPool = false;
     if(
-      // Pool versions have to match, or the object should be dumped
+      // Pool versions have to match, or the object should be dumped.
       poolVersion == m_poolVersion &&
 
-      // Object pool needs to be capable of accepting another object as an input
+      // Object pool needs to be capable of accepting another object as an input.
       m_objs.size() < m_maxPooled
        ) {
       // Return the object to the pool:
@@ -181,11 +181,11 @@ protected:
   }
 
   /// <summary>
-  /// Obtains an element from the object queue, assumes exterior synchronization
+  /// Obtains an element from the object queue, assumes exterior synchronization.
   /// </summary>
   /// <remarks>
   /// This method will unconditionally increment the outstanding count and will not attempt
-  /// to perform bounds checking to ensure that the desired element may be issued
+  /// to perform bounds checking to ensure that the desired element may be issued.
   /// </remarks>
   std::shared_ptr<T> ObtainElementUnsafe(std::unique_lock<std::mutex>& lk) {
     // Unconditionally increment the outstanding count:
@@ -226,7 +226,7 @@ public:
   }
 
   /// <summary>
-  /// Discards all entities currently saved in the pool
+  /// Discards all entities currently saved in the pool.
   /// </summary>
   /// <remarks>
   /// This method will also cause currently outstanding entities to be freed.  Eventually, once all objects
@@ -242,7 +242,7 @@ public:
   }
 
   /// <summary>
-  /// This sets the maximum number of entities that the pool will cache to satisfy a later allocation request
+  /// This sets the maximum number of entities that the pool will cache to satisfy a later allocation request.
   /// </summary>
   /// <param name="maxPooled">The new maximum cache count</param>
   /// <remarks>
@@ -266,7 +266,7 @@ public:
   }
 
   /// <summary>
-  /// Sets the maximum number of objects this pool will permit to be outstanding at time
+  /// Sets the maximum number of objects this pool will permit to be outstanding at time.
   /// </summary>
   /// <remarks>
   /// A user may assign the limit to a value lower than the current limit.  In this case, Wait will block
@@ -286,11 +286,11 @@ public:
   }
 
   /// <summary>
-  /// Blocks until an object becomes available from the pool, or the timeout has elapsed
+  /// Blocks until an object becomes available from the pool, or the timeout has elapsed.
   /// </summary>
   /// <remarks>
   /// This method will throw an autowiring_error if an attempt is made to obtain an element from a pool
-  /// with a limit of zero
+  /// with a limit of zero. If WaitFor returns due to timeout, it will return an invalid shared pointer.
   /// </remarks>
   template<class Duration>
   std::shared_ptr<T> WaitFor(Duration duration) {
@@ -309,16 +309,16 @@ public:
   }
 
   /// <summary>
-  /// Blocks until an object becomes available from the pool
+  /// Blocks until an object becomes available from the pool.
   /// </summary>
   /// <remarks>
   /// This method will throw an autowiring_error if an attempt is made to obtain an element from a pool
-  /// with a limit of zero
+  /// with a limit of zero. This method will never return an invalid shared pointer.
   /// </remarks>
   std::shared_ptr<T> Wait(void) {
     std::unique_lock<std::mutex> lk(*m_monitor);
     if(!m_limit)
-      throw autowiring_error("Attempted to perform a timed wait on a pool containing no entities");
+      throw autowiring_error("Attempted to perform a wait on a pool containing no entities");
 
     m_setCondition.wait(lk, [this] {
       if(!m_limit)
@@ -354,7 +354,7 @@ public:
   }
 
   /// <summary>
-  /// Creates a new instance of type T and places it in the passed shared pointer
+  /// Creates a new instance of type T and places it in the passed shared pointer.
   /// </summary>
   /// <remarks>
   /// If the outstanding count is set to anything except -1, this method could potentially
@@ -362,7 +362,7 @@ public:
   /// outstanding limit should be careful to check the return of this function.
   /// </remarks>
   void operator()(std::shared_ptr<T>& rs) {
-    // Force the passed value to be empty so we don't return an empty element by accident
+    // Force the passed value to be empty so we don't return an empty element by accident.
     // This can possibly happen if the pool cap has been reached and we're reobtaining a shared
     // pointer from its own pool.
     rs.reset();
@@ -372,7 +372,7 @@ public:
   }
 
   /// <summary>
-  /// Convenience overload of operator()
+  /// Convenience overload of operator().
   /// </summary>
   std::shared_ptr<T> operator()() {
     std::unique_lock<std::mutex> lk(*m_monitor);
@@ -387,10 +387,10 @@ public:
   }
 
   /// <summary>
-  /// Blocks until all outstanding entries have been returned, and prevents the issuance of any new items
+  /// Blocks until all outstanding entries have been returned, and prevents the issuance of any new items.
   /// </summary>
   /// <remarks>
-  /// This method is idempotent
+  /// This method is idempotent.
   /// </remarks>
   void Rundown(void) {
     // Clear our pool and prevent the issuance of any new entities:
