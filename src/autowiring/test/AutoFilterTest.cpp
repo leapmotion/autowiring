@@ -1173,3 +1173,19 @@ TEST_F(AutoFilterTest, DeclareAutoFilterTest) {
   ASSERT_EQ(3, mf01->call_vals.size()) << "Failed to call AutoFilter wrapped method";
   ASSERT_EQ(2, mf01->call_vals.back()) << "Calling value was not propagated";
 }
+
+class MyInheritingAutoFilter:
+  public FilterGen<std::vector<int>>
+{};
+
+TEST_F(AutoFilterTest, AutoFilterInBaseClass) {
+  AutoRequired<MyInheritingAutoFilter> d;
+  AutoRequired<AutoPacketFactory> f;
+
+  // Packet decoration shouldn't cause problems by itself
+  auto packet = f->NewPacket();
+  packet->Decorate(std::vector<int>{0, 1, 2});
+
+  // Trivial validation that we got something back
+  ASSERT_EQ(1UL, d->m_called) << "Filter defined in base class was not called the expected number of times";
+}
