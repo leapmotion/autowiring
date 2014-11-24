@@ -260,11 +260,16 @@ TEST_F(CoreThreadTest, VerifyDoublePendedDispatchDelay) {
   // Delay for a short period of time, then check our variable states:
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-  // This one shouldn't have been hit yet, it isn't scheduled to be hit for 10s
+  // This one shouldn't have been hit yet, it isn't scheduled to be hit for 1hr
   ASSERT_FALSE(*x) << "A delayed dispatch was invoked extremely early";
 
-  // This one should have been ready almost at the same time as it was pended
-  ASSERT_TRUE(*y) << "An out-of-order delayed dispatch was not executed in time as expected";
+  // This one should become ready very fast, but we won't wait long for it:
+  auto start = std::chrono::high_resolution_clock::now();
+  while(std::chrono::high_resolution_clock::now() - start < std::chrono::seconds(1))
+    if(*y)
+      return;
+
+  FAIL() << "An out-of-order delayed dispatch was not executed in time as expected";
 }
 
 TEST_F(CoreThreadTest, VerifyTimedSort) {
