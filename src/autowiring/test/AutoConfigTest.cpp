@@ -89,3 +89,18 @@ TEST_F(AutoConfigTest, VerifyDuplicateConfigAssignment) {
   ASSERT_EQ(324, *clz1->m_myName);
   ASSERT_EQ(1111, *clz2->m_myName);
 }
+
+namespace Outer {
+  class Inner {
+  public:
+    AutoConfig<int, struct ZZZ> zzz;
+  };
+}
+
+TEST_F(AutoConfigTest, NestedNamespaceTest) {
+  AutoRequired<AutoConfigManager> acm;
+  acm->SetParsed("Outer.Inner.ZZZ", "222");
+
+  AutoRequired<Outer::Inner> inner;
+  ASSERT_EQ(222, inner->zzz) << "Nested namespace type did not have the correct value";
+}
