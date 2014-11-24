@@ -6,6 +6,11 @@ AnySharedPointer::AnySharedPointer(void) {
   new (m_space) SharedPointerSlot;
 }
 
+AnySharedPointer::AnySharedPointer(AnySharedPointer&& rhs)
+{
+  new (m_space) SharedPointerSlot(std::move(*rhs.slot()));
+}
+
 AnySharedPointer::AnySharedPointer(const AnySharedPointer& rhs) {
   new (m_space) SharedPointerSlot(*rhs.slot());
 }
