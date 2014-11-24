@@ -40,7 +40,7 @@ public:
     m_value(m_manager->Get(Field))
   {
     // Register with config registry
-    (void)RegConfig<ConfigTypeExtractor<TMemberName>>::r;
+    (void)RegConfig<T, ConfigTypeExtractor<TMemberName>>::r;
   }
 
 private:

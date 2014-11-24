@@ -2,6 +2,8 @@
 #pragma once
 #include MEMORY_HEADER
 #include <string>
+#include <sstream>
+#include "AnySharedPointer.h"
 
 struct ConfigRegistryEntry {
   ConfigRegistryEntry(const std::type_info& ti);
@@ -15,17 +17,26 @@ struct ConfigRegistryEntry {
   // Configuration name
   const std::string name;
   
-  bool is(const std::type_info& ti) const;
+  bool validName(const std::type_info& ti) const;
+  
+  virtual AnySharedPointer& parse(const std::string&) const = 0;
 };
 
-template<class T>
+template<class T, class NAME>
 struct ConfigRegistryEntryT:
   public ConfigRegistryEntry
 {
   ConfigRegistryEntryT(void):
-    ConfigRegistryEntry(typeid(T))
+    ConfigRegistryEntry(typeid(NAME))
   {}
-
+  
+  AnySharedPointer& parse(const std::string& str) const {
+    std::istringstream ss(str);
+    T val;
+    ss >> val;
+    AnySharedPointer retval(std::make_shared<T>(val));
+    return retval;
+  }
 };
 
 extern const ConfigRegistryEntry* g_pFirstConfigEntry;
@@ -38,12 +49,12 @@ extern size_t g_confgiEntryCount;
 /// Any instance of this type registry parameterized on type T will be added to the
 /// global static type registry, and this registry is computed at link time.
 /// </remarks>
-template<class T>
+template<class T, class NAME>
 class RegConfig
 {
 public:
-  static const ConfigRegistryEntryT<T> r;
+  static const ConfigRegistryEntryT<T, NAME> r;
 };
 
-template<class T>
-const ConfigRegistryEntryT<T> RegConfig<T>::r;
+template<class T, class NAME>
+const ConfigRegistryEntryT<T, NAME> RegConfig<T, NAME>::r;

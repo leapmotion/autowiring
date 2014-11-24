@@ -15,7 +15,7 @@ AutoConfigManager::AutoConfigManager(void){
   while (ctxt) {
     AutowiredFast<AutoConfigManager> mgmt(ctxt);
     
-    if (mgmt.IsAutowired())
+    if (mgmt)
       //FIXME: This lock causes a segfault
       //std::lock_guard<std::mutex> lk(mgmt->m_lock);
       for (const auto& entry : mgmt->m_attributes)

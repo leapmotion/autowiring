@@ -26,6 +26,6 @@ ConfigRegistryEntry::ConfigRegistryEntry(const std::type_info& tinfo) :
   g_pFirstConfigEntry = this;
 }
 
-bool ConfigRegistryEntry::is(const std::type_info& tinfo) const {
+bool ConfigRegistryEntry::validName(const std::type_info& tinfo) const {
   return name == ExtractFieldName(tinfo);
 }

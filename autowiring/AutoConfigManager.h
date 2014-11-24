@@ -38,6 +38,8 @@ public:
   /// </remarks>
   template<class T>
   void Set(const std::string& name, const T& value) {
+    
+    
     // Set value in this AutoConfigManager
     std::lock_guard<std::mutex> lk(m_lock);
     m_attributes[name] = AnySharedPointer(std::make_shared<T>(value));
@@ -56,6 +58,9 @@ public:
     }
   }
 
+  /// <summary>
+  /// Overload for c-style string. Converts to std::string
+  /// </summary>
   void Set(const std::string& name, const char* value);
 
   /// <summary>
