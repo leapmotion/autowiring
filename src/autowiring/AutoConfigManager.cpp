@@ -15,11 +15,11 @@ AutoConfigManager::AutoConfigManager(void){
   while (ctxt) {
     AutowiredFast<AutoConfigManager> mgmt(ctxt);
     
-    if (mgmt)
-      //FIXME: This lock causes a segfault
-      //std::lock_guard<std::mutex> lk(mgmt->m_lock);
+    if(mgmt) {
+      std::lock_guard<std::mutex> lk(mgmt->m_lock);
       for (const auto& entry : mgmt->m_attributes)
         m_attributes.insert(entry);
+    }
 
     ctxt = ctxt->GetParentContext();
   }
