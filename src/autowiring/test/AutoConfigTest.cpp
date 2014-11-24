@@ -11,6 +11,10 @@ struct MyConfigurableClass {
   AutoConfig<int, struct XYZ> m_myName;
 };
 
+struct MyConfigurableClass2 {
+  AutoConfig<int, struct XYZ> m_myName;
+};
+
 TEST_F(AutoConfigTest, VerifyCorrectDeconstruction) {
   AutoRequired<MyConfigurableClass> mcc;
 
@@ -72,4 +76,16 @@ TEST_F(AutoConfigTest, VerifyParsedAssignment) {
 
   // Assignment to a string type should result in an appropriate coercion to the right value
   acm->SetParsed("MyConfigurableClass.XYZ", "324");
+}
+
+TEST_F(AutoConfigTest, VerifyDuplicateConfigAssignment) {
+  AutoRequired<AutoConfigManager> acm;
+  acm->SetParsed("MyConfigurableClass.XYZ", "324");
+  acm->SetParsed("MyConfigurableClass2.XYZ", "1111");
+
+  AutoRequired<MyConfigurableClass> clz1;
+  AutoRequired<MyConfigurableClass2> clz2;
+
+  ASSERT_EQ(324, *clz1->m_myName);
+  ASSERT_EQ(1111, *clz2->m_myName);
 }
