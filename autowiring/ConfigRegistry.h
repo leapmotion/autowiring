@@ -19,7 +19,7 @@ struct ConfigRegistryEntry {
   
   bool validName(const std::type_info& ti) const;
   
-  virtual AnySharedPointer& parse(const std::string&) const = 0;
+  virtual AnySharedPointer parse(const std::string&) const = 0;
 };
 
 template<class T, class NAME>
@@ -30,12 +30,11 @@ struct ConfigRegistryEntryT:
     ConfigRegistryEntry(typeid(NAME))
   {}
   
-  AnySharedPointer& parse(const std::string& str) const {
+  AnySharedPointer parse(const std::string& str) const {
     std::istringstream ss(str);
     T val;
     ss >> val;
-    AnySharedPointer retval(std::make_shared<T>(val));
-    return retval;
+    return AnySharedPointer(std::make_shared<T>(val));
   }
 };
 
