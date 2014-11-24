@@ -5,6 +5,7 @@
 struct AnySharedPointer {
 public:
   AnySharedPointer(void);
+  AnySharedPointer(AnySharedPointer&& rhs);
   explicit AnySharedPointer(const AnySharedPointer& rhs);
 
   template<class T>
