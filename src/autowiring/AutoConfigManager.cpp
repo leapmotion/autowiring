@@ -38,9 +38,10 @@ void AutoConfigManager::Set(const std::string& key, const char* value) {
 }
 
 void AutoConfigManager::SetParsed(const std::string& key, const std::string& value) {
+  std::lock_guard<std::mutex> lk(m_lock);
+  
   for (auto config = g_pFirstConfigEntry; config; config = config->pFlink) {
     if (config->is(key)){
-      std::lock_guard<std::mutex> lk(m_lock);
       m_attributes[key] = config->parse(value);
       return;
     }

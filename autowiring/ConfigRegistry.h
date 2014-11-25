@@ -16,6 +16,8 @@ struct ConfigRegistryEntry {
   
   bool is(const std::string& key) const;
   
+  virtual bool verifyType(const std::type_info& ti) const = 0;
+  
   virtual AnySharedPointer parse(const std::string&) const = 0;
 };
 
@@ -26,6 +28,10 @@ struct ConfigRegistryEntryT:
   ConfigRegistryEntryT(void):
     ConfigRegistryEntry(typeid(Key))
   {}
+  
+  bool verifyType(const std::type_info& ti) const {
+    return typeid(T) == ti;
+  }
   
   AnySharedPointer parse(const std::string& str) const {
     std::istringstream ss(str);
