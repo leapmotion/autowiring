@@ -38,6 +38,8 @@ function(conditional_sources condition_var)
 
   source_group(${conditional_sources_GROUP_NAME} FILES ${conditional_sources_FILES})
 
+  separate_arguments(condition_var)
+  verbose_message("Evaluating conditional as: ${condition_var}")
   if(NOT (${condition_var}))
     set_source_files_properties( ${conditional_sources_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
     verbose_message("Setting INACTIVE source group \"${conditional_sources_GROUP_NAME}\" with files ${conditional_sources_FILES}")
