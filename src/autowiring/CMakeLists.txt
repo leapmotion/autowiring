@@ -19,6 +19,7 @@ set(Autowiring_SRCS
   AnySharedPointer.cpp
   AutoCheckout.h
   AutoConfig.h
+  AutoConfigParser.hpp
   AutoConfigManager.h
   AutoConfigManager.cpp
   AutoRestarter.h

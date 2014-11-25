@@ -10,24 +10,21 @@ struct ConfigRegistryEntry {
 
   // Next entry in the list:
   const ConfigRegistryEntry* const pFlink;
-
-  // Type of this entry:
-  const std::type_info& ti;
   
   // Configuration name
-  const std::string name;
+  const std::string m_key;
   
-  bool validName(const std::type_info& ti) const;
+  bool is(const std::string& key) const;
   
   virtual AnySharedPointer parse(const std::string&) const = 0;
 };
 
-template<class T, class NAME>
+template<class T, class Key>
 struct ConfigRegistryEntryT:
   public ConfigRegistryEntry
 {
   ConfigRegistryEntryT(void):
-    ConfigRegistryEntry(typeid(NAME))
+    ConfigRegistryEntry(typeid(Key))
   {}
   
   AnySharedPointer parse(const std::string& str) const {
@@ -48,12 +45,12 @@ extern size_t g_confgiEntryCount;
 /// Any instance of this type registry parameterized on type T will be added to the
 /// global static type registry, and this registry is computed at link time.
 /// </remarks>
-template<class T, class NAME>
+template<class T, class Key>
 class RegConfig
 {
 public:
-  static const ConfigRegistryEntryT<T, NAME> r;
+  static const ConfigRegistryEntryT<T, Key> r;
 };
 
-template<class T, class NAME>
-const ConfigRegistryEntryT<T, NAME> RegConfig<T, NAME>::r;
+template<class T, class Key>
+const ConfigRegistryEntryT<T, Key> RegConfig<T, Key>::r;

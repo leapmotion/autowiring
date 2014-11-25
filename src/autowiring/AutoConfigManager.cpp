@@ -5,6 +5,7 @@
 #include "demangle.h"
 #include <iostream>
 #include <vector>
+#include <sstream>
 
 using namespace autowiring;
 
@@ -37,5 +38,11 @@ void AutoConfigManager::Set(const std::string& name, const char* value) {
 }
 
 void AutoConfigManager::SetParsed(const std::string& name, const std::string& value) {
-  throw autowiring_error("Can't parse value");
+  //for(auto config = g_pFirstConfigEntry; config; config = config->pFlink) {
+  //
+  //}
+  
+  std::stringstream ss;
+  ss << "Cant parse '" << value <<"' for key '" << name << "'.";
+  throw autowiring_error(ss.str().c_str());
 }
