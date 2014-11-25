@@ -39,7 +39,6 @@
 include (CheckIncludeFiles)
 include (CheckLibraryExists)
 include (CheckSymbolExists)
-include (VerboseMessage)
 set(Threads_FOUND FALSE)
 
 # Do we have sproc?
@@ -177,11 +176,13 @@ if(CMAKE_USE_PTHREADS_INIT)
   endif()
 endif()
 
-include(CreateImportTargetHelpers)
-include(FindPackageHandleStandardArgs)
+include(${CMAKE_ROOT}/Modules/FindPackageHandleStandardArgs.cmake)
+find_package_handle_standard_args(Threads DEFAULT_MSG Threads_FOUND)
 
-verbose_message("Threads library was found -- CMAKE_THREAD_LIBS_INIT = \"${CMAKE_THREAD_LIBS_INIT}\"")
-
-set(Threads_LIBRARY ${CMAKE_THREAD_LIBS_INIT})
-find_package_handle_standard_args(Threads REQUIRED_VARS Threads_LIBRARY)
-generate_import_target(Threads STATIC)
+if(${CMAKE_THREAD_LIBS_INIT})
+  include(CreateImportTargetHelpers)
+  set(Threads_LIBRARY ${CMAKE_THREAD_LIBS_INIT})
+  generate_import_target(Threads STATIC)
+else()
+  add_library(Threads::Threads INTERFACE IMPORTED)
+endif()
