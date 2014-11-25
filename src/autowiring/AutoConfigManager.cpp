@@ -67,6 +67,6 @@ void AutoConfigManager::SetParsed(const std::string& key, const std::string& val
   
   // Error if key wasn't found in registry
   std::stringstream ss;
-  ss << "Cant parse '" << value <<"' for key '" << key << "'.";
-  throw autowiring_error(ss.str().c_str());
+  ss << "Cant parse '" << value <<"' for key '" << key << "'";
+  throw autowiring_error(ss.str());
 }

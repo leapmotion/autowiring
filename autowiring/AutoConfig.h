@@ -49,7 +49,7 @@ private:
   typedef ConfigTypeExtractor<TKey...> t_field;
   
 public:
-  static_assert(sizeof...(TKey)==1 || sizeof...(TKey)==2, "Must provide a field and optional namespace");
+  static_assert(sizeof...(TKey)==1 || sizeof...(TKey)==2, "Must provide a key and optional namespace");
   
   AutoConfig(void) :
     AutoConfigBase(typeid(t_field)),

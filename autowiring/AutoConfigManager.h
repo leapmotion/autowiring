@@ -50,8 +50,9 @@ public:
       if (config->is(key)){
         if (!config->verifyType(typeid(T))) {
           std::stringstream ss;
-          ss << "Attempting to set config '" << key << "' with incorrect type " << autowiring::demangle(typeid(T));
-          throw autowiring_error(ss.str().c_str());
+          ss << "Attempting to set config '" << key << "' with incorrect type '"
+            << autowiring::demangle(typeid(T)) << "'";
+          throw autowiring_error(ss.str());
         }
         configFound = true;
         break;
@@ -60,8 +61,8 @@ public:
     
     if (!configFound) {
       std::stringstream ss;
-      ss << "No configuration found for key '" << key << "'.";
-      throw autowiring_error(ss.str().c_str());
+      ss << "No configuration found for key '" << key << "'";
+      throw autowiring_error(ss.str());
     }
     
     // Set value in this AutoConfigManager

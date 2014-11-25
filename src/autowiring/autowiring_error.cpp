@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "autowiring_error.h"
 
-autowiring_error::autowiring_error(const char* what):
+autowiring_error::autowiring_error(const std::string& what):
   m_what(what)
 {}
 

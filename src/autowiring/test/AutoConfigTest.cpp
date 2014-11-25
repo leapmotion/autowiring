@@ -40,7 +40,6 @@ TEST_F(AutoConfigTest, VerifyPostHocAssignment) {
   Autowired<AutoConfigManager> acm;
   ASSERT_TRUE(acm.IsAutowired()) << "AutoConfig field did not inject a configuration manager into this context as expected";
 
-  // 
   acm->Set("MyConfigurableClass.XYZ", 323);
 
   // Now inject the type which expects this value to be assigned:
@@ -86,6 +85,8 @@ TEST_F(AutoConfigTest, VerifyParsedAssignment) {
 
   // Direct assignment to a string should not work, the type isn't a string it's an int
   ASSERT_ANY_THROW(acm->Set("MyConfigurableClass.XYZ", "327")) << "An attempt to assign a value to an unrelated type did not generate an exception as expected";
+  
+  ASSERT_ANY_THROW(acm->Set("MyConfigurableClass.XYZ", 3.0)) << "An attempt to assign a value to an unrelated type did not generate an exception as expected";
 
   // Assignment to a string type should result in an appropriate coercion to the right value
   acm->SetParsed("MyConfigurableClass.XYZ", "324");
