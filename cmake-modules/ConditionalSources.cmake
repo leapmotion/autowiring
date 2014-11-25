@@ -24,14 +24,14 @@
 # the ${ARGV} from being parsed by cmake's macro preprocessor.
 include(VerboseMessage)
 
-function(conditional_sources condition_var ...)
   include(CMakeParseArguments)
   cmake_parse_arguments(conditional_sources "" "GROUP_NAME" "FILES" ${ARGV})
+function(conditional_sources condition_var)
 
   source_group(${conditional_sources_GROUP_NAME} FILES ${conditional_sources_FILES})
 
   if(NOT (${condition_var}))
-    set_source_files_properties( ${ARGN} PROPERTIES HEADER_FILE_ONLY TRUE)
+    set_source_files_properties( ${conditional_sources_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
     verbose_message("Setting INACTIVE source group \"${conditional_sources_GROUP_NAME}\" with files ${conditional_sources_FILES}")
   else()
     verbose_message("Setting source group \"${conditional_sources_GROUP_NAME}\" with files ${conditional_sources_FILES}")
@@ -39,7 +39,7 @@ function(conditional_sources condition_var ...)
 endfunction()
 
 #as conditional_sources, but also appends the soruces to the source_list_var
-function(add_conditional_sources source_list_var condition_var ...)
+function(add_conditional_sources source_list_var condition_var)
   list(REMOVE_AT ARGV 0)
   conditional_sources(${ARGV})
 
