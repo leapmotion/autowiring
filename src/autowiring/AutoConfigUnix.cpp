@@ -6,25 +6,27 @@
 #include <sstream>
 #include <iostream>
 
-static const std::regex namePattern(".*ConfigTypeExtractor<(?:class |struct )?(\\w*)(?:, (?:class |struct )?(\\w*))>$");
+static const std::regex namePattern(".*ConfigTypeExtractor<(?:class |struct )?(\\w*)(?:, (?:class |struct )?(\\w*))?>$");
+static const int NAMESPACE_INDEX = 1;
+static const int FIELD_INDEX = 2;
 
 static std::string FormatKey(const std::smatch& match) {
-  // If no namespace, just return match
-  if (match.size() == 2) {
-    return match.str(1);
+  // If no namespace, then field will be empty
+  if (match.str(FIELD_INDEX).empty()) {
+    return match.str(NAMESPACE_INDEX);
   }
   
   std::stringstream ss;
-  ss << match.str(1) << "." << match.str(2);
+  ss << match.str(NAMESPACE_INDEX) << "." << match.str(FIELD_INDEX);
+  std::cout << "KEY: " << ss.str() << std::endl;
   return ss.str();
 }
 
 static std::string ExtractKey(const std::type_info& ti) {
   std::smatch sm;
-  std::cout << autowiring::demangle(ti) << std::endl;
   std::regex_match(autowiring::demangle(ti), sm, namePattern);
   
-  assert(sm.size() == 2 || sm.size() == 3 && "Regex couldn't find type name");
+  assert(sm.size() == 3 && "Regex couldn't properly parse type name");
   
   return FormatKey(sm);
 }

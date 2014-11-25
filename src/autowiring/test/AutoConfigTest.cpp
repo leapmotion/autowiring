@@ -67,6 +67,19 @@ TEST_F(AutoConfigTest, VerifyRecursiveSearch) {
   }
 }
 
+struct DefaultName {
+  AutoConfig<int, struct defaultname1> m_def;
+};
+
+TEST_F(AutoConfigTest, DefaultNamespace) {
+  AutoRequired<AutoConfigManager> acm;
+  acm->Set("defaultname1", 123);
+  
+  AutoRequired<DefaultName> def;
+  
+  ASSERT_EQ(123, *def->m_def);
+}
+
 TEST_F(AutoConfigTest, VerifyParsedAssignment) {
   // We must also be able to support implicit string-to-type conversion via the shift operator for this type
   AutoRequired<AutoConfigManager> acm;

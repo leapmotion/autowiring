@@ -17,7 +17,7 @@ class AutoConfigBase
 {
 public:
   // Template paramaters reversed so optional namespace is last
-  template<class TField, class TNamespace = void>
+  template<class... TField>
   struct ConfigTypeExtractor {};
 
   AutoConfigBase(const std::type_info& tiName);
