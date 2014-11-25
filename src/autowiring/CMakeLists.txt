@@ -173,7 +173,7 @@ set(Autowiring_Linux_SRCS
   CoreThreadLinux.cpp
 )
 
-ADD_MSVC_DISABLED_FILES("Unix Source" Autowiring_SRCS ${Autowiring_Unix_SRCS})
+add_conditional_sources(Autowiring_SRCS "NOT WIN32" GROUP_NAME "Unix Source" ${Autowiring_Unix_SRCS})
 
 if(WIN32)
  set(Autowiring_SRCS ${Autowiring_Win_SRCS} ${Autowiring_SRCS})

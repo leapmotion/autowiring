@@ -100,14 +100,6 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules")
 include(AddPCH)
 include(ConditionalSources)
-function(ADD_MSVC_DISABLED_FILES SourceGroupName SourcesVar ...)
-  if(WIN32)
-    set_source_files_properties( ${ARGN} PROPERTIES HEADER_FILE_ONLY TRUE )
-    source_group(${SourceGroupName} FILES ${ARGN})
-  set(${SourcesVar} ${${SourcesVar}} ${ARGN} PARENT_SCOPE)
-  endif(WIN32)
-endfunction(ADD_MSVC_DISABLED_FILES)
-
 
 if(autowiring_BUILD_ARM)
   # Currently cannot build Autonet for ARM, so default this off on that platform
