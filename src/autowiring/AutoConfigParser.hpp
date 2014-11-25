@@ -25,7 +25,7 @@ static std::string FormatKey(const std::smatch& match) {
 static std::string ExtractKey(const std::type_info& ti) {
   // Regex pattern
   static const std::regex NamePattern(
-    ".*ConfigTypeExtractor<(?:class |struct )?(\\w*)(?:, (?:class |struct )?(\\w*))?>$"
+    "^.*ConfigTypeExtractor<(?:class |struct )?(\\w*)(?:, (?:class |struct )?(\\w*))?>$"
   );
   
   std::smatch sm;

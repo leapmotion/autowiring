@@ -19,6 +19,9 @@ public:
 private:
   std::mutex m_lock;
   std::unordered_map<std::string, AnySharedPointer> m_attributes;
+  
+  // Set an AnySharedPointer. This must be external synchronized
+  void SetInternal(const std::string& key, const AnySharedPointer& value);
 
 public:
   /// <summary>
@@ -62,22 +65,9 @@ public:
     }
     
     // Set value in this AutoConfigManager
-    m_attributes[key] = AnySharedPointer(std::make_shared<T>(value));
-    
-    // Recurse through child contexts and set if value hasn't already been set
-    for(const auto& ctxt : ContextEnumerator(GetContext())) {
-      if (ctxt == GetContext())
-        continue;
-      
-      AutowiredFast<AutoConfigManager> mgmt(ctxt);
-      if(mgmt) {
-        std::lock_guard<std::mutex> lk(mgmt->m_lock);
-        if (mgmt->m_attributes[key]->empty())
-          mgmt->m_attributes[key] = m_attributes[key];
-      }
-    }
+    SetInternal(key, AnySharedPointer(std::make_shared<T>(value)));
   }
-
+  
   /// <summary>
   /// Overload for c-style string. Converts to std::string
   /// </summary>

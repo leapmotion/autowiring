@@ -19,9 +19,10 @@ set(Autowiring_SRCS
   AnySharedPointer.cpp
   AutoCheckout.h
   AutoConfig.h
-  AutoConfigParser.hpp
+  AutoConfig.cpp
   AutoConfigManager.h
   AutoConfigManager.cpp
+  AutoConfigParser.hpp
   AutoRestarter.h
   AutoFuture.h
   AutoFuture.cpp
@@ -163,14 +164,12 @@ endif()
 
 set(Autowiring_Win_SRCS
   CoreThreadWin.cpp
-  AutoConfigWin.cpp
   InterlockedExchangeWin.cpp
   thread_specific_ptr_win.h
 )
 
 set(Autowiring_Unix_SRCS
   InterlockedExchangeUnix.cpp
-  AutoConfigUnix.cpp
   thread_specific_ptr_unix.h
 )
 

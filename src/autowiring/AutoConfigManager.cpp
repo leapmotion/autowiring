@@ -28,6 +28,24 @@ AutoConfigManager::AutoConfigManager(void){
 
 AutoConfigManager::~AutoConfigManager(void){}
 
+void AutoConfigManager::SetInternal(const std::string& key, const AnySharedPointer& value) {
+  // Set value in this AutoConfigManager
+  m_attributes[key] = value;
+  
+  // Recurse through child contexts and set if value hasn't already been set
+  for(const auto& ctxt : ContextEnumerator(GetContext())) {
+    if (ctxt == GetContext())
+      continue;
+    
+    AutowiredFast<AutoConfigManager> mgmt(ctxt);
+    if(mgmt) {
+      std::lock_guard<std::mutex> lk(mgmt->m_lock);
+      if (mgmt->m_attributes[key]->empty())
+        mgmt->m_attributes[key] = m_attributes[key];
+    }
+  }
+}
+
 AnySharedPointer& AutoConfigManager::Get(const std::string& key) {
   std::lock_guard<std::mutex> lk(m_lock);
   return m_attributes[key];
@@ -42,7 +60,7 @@ void AutoConfigManager::SetParsed(const std::string& key, const std::string& val
   
   for (auto config = g_pFirstConfigEntry; config; config = config->pFlink) {
     if (config->is(key)){
-      m_attributes[key] = config->parse(value);
+      SetInternal(key, config->parse(value));
       return;
     }
   }
