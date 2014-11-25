@@ -24,9 +24,17 @@
 # the ${ARGV} from being parsed by cmake's macro preprocessor.
 include(VerboseMessage)
 
+macro(_conditional_sources_parse_arguments)
   include(CMakeParseArguments)
   cmake_parse_arguments(conditional_sources "" "GROUP_NAME" "FILES" ${ARGN})
+
+  if(NOT DEFINED conditional_sources_FILES)
+    set(conditional_sources_FILES ${conditional_sources_UNPARSED_ARGUMENTS})
+  endif()
+endmacro()
+
 function(conditional_sources condition_var)
+  _conditional_sources_parse_arguments(${ARGN})
 
   source_group(${conditional_sources_GROUP_NAME} FILES ${conditional_sources_FILES})
 
@@ -43,9 +51,10 @@ function(add_conditional_sources source_list_var condition_var)
   list(REMOVE_AT ARGV 0)
   conditional_sources(${ARGV})
 
-  include(CMakeParseArguments)
-  cmake_parse_arguments(add_conditional_sources "" "" "FILES" ${ARGV})
-  set(${source_list_var} ${${source_list_var}} ${add_conditional_sources_FILES} PARENT_SCOPE)
+  _conditional_sources_parse_arguments(${ARGN})
+
+  set(${source_list_var} ${${source_list_var}} ${conditional_sources_FILES} PARENT_SCOPE)
+  verbose_message("Adding ${conditional_sources_FILES} to ${source_list_var}")
 endfunction()
 
 #defines 'func_name' and add_'func_name' shorthands for add_conditional_sources with pre-set conditions.
