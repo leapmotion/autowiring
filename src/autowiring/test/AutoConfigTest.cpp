@@ -8,18 +8,18 @@ class AutoConfigTest:
 {};
 
 struct MyConfigurableClass {
-  AutoConfig<int, struct XYZ> m_myName;
+  AutoConfig<int, MyConfigurableClass , struct XYZ> m_myName;
 };
 
 struct MyConfigurableClass2 {
-  AutoConfig<int, struct XYZ> m_myName;
+  AutoConfig<int, MyConfigurableClass2, struct XYZ> m_myName;
 };
 
 TEST_F(AutoConfigTest, VerifyCorrectDeconstruction) {
   AutoRequired<MyConfigurableClass> mcc;
 
-  EXPECT_STREQ("MyConfigurableClass", mcc->m_myName.Class.c_str()) << "Configuration variable enclosing class was not correctly extracted";
-  EXPECT_STREQ("XYZ", mcc->m_myName.Name.c_str()) << "Configuration variable name was not correctly extracted";
+  EXPECT_STREQ("MyConfigurableClass.XYZ", mcc->m_myName.m_key.c_str())
+    << "Configuration variable name was not correctly extracted";
 }
 
 TEST_F(AutoConfigTest, VerifySimpleAssignment) {
@@ -88,19 +88,4 @@ TEST_F(AutoConfigTest, VerifyDuplicateConfigAssignment) {
 
   ASSERT_EQ(324, *clz1->m_myName);
   ASSERT_EQ(1111, *clz2->m_myName);
-}
-
-namespace Outer {
-  class Inner {
-  public:
-    AutoConfig<int, struct ZZZ> zzz;
-  };
-}
-
-TEST_F(AutoConfigTest, NestedNamespaceTest) {
-  AutoRequired<AutoConfigManager> acm;
-  acm->SetParsed("Outer.Inner.ZZZ", "222");
-
-  AutoRequired<Outer::Inner> inner;
-  ASSERT_EQ(222, inner->zzz) << "Nested namespace type did not have the correct value";
 }

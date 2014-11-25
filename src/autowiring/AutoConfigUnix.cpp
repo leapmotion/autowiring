@@ -2,39 +2,33 @@
 #include "stdafx.h"
 #include "AutoConfig.h"
 #include "demangle.h"
-#include "SlotInformation.h"
 #include <regex>
 #include <sstream>
+#include <iostream>
 
-static const std::regex namePattern(".*ConfigTypeExtractor<(?:class |struct )?(\\w*)>");
-static const std::regex classPattern(".*TypeUnifierComplex<(?:class |struct )?(\\w*)>");
+static const std::regex namePattern(".*ConfigTypeExtractor<(?:class |struct )?(\\w*)(?:, (?:class |struct )?(\\w*))>$");
 
-static std::string ExtractFieldName(const std::type_info& ti) {
-  std::smatch sm;
-  std::regex_match(autowiring::demangle(ti), sm, namePattern);
-  assert(sm.size() == 2 && "Regex couldn't find type name");
-  return sm.str(1);
-}
-
-static std::string CurrentStumpName(void) {
-  const SlotInformationStumpBase* cs = SlotInformationStackLocation::CurrentStump();
-  if (!cs)
-    return std::string();
+static std::string FormatKey(const std::smatch& match) {
+  // If no namespace, just return match
+  if (match.size() == 2) {
+    return match.str(1);
+  }
   
-  std::smatch sm;
-  std::regex_match(autowiring::demangle(cs->ti), sm, classPattern);
-  assert(sm.size() == 2 && "Regex couldn't find class name");
-  return sm.str(1);
-}
-
-static std::string FormatFieldName(const std::string& cls, const std::string& name) {
   std::stringstream ss;
-  ss << cls << "." << name;
+  ss << match.str(1) << "." << match.str(2);
   return ss.str();
 }
 
-AutoConfigBase::AutoConfigBase(const std::type_info& tiMemberName):
-  Class(CurrentStumpName()),
-  Name(ExtractFieldName(tiMemberName)),
-  Field(FormatFieldName(Class, Name))
+static std::string ExtractKey(const std::type_info& ti) {
+  std::smatch sm;
+  std::cout << autowiring::demangle(ti) << std::endl;
+  std::regex_match(autowiring::demangle(ti), sm, namePattern);
+  
+  assert(sm.size() == 2 || sm.size() == 3 && "Regex couldn't find type name");
+  
+  return FormatKey(sm);
+}
+
+AutoConfigBase::AutoConfigBase(const std::type_info& ti):
+  m_key(ExtractKey(ti))
 {}

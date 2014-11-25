@@ -3,6 +3,7 @@
 #include "Autowired.h"
 #include "AutoConfigManager.h"
 #include "ConfigRegistry.h"
+#include "is_any.h"
 
 #include <string>
 #include <typeinfo>
@@ -15,32 +16,32 @@ struct AnySharedPointer;
 class AutoConfigBase
 {
 public:
-  template<class TMemberName>
+  // Template paramaters reversed so optional namespace is last
+  template<class TField, class TNamespace = void>
   struct ConfigTypeExtractor {};
 
   AutoConfigBase(const std::type_info& tiName);
 
-  // Name of the class enclosing this configuration field
-  const std::string Class;
-
-  // Name of the type proper
-  const std::string Name;
-  
-  // Concatinated field name
-  const std::string Field;
+  // Key used to identify this config value
+  const std::string m_key;
 };
 
-template<class T, class TMemberName>
+template<class T, class... TField>
 class AutoConfig:
   public AutoConfigBase
 {
 public:
+  static_assert(!is_any<std::is_same<void, TField>...>::value, "void can't be used as a config name");
+  static_assert(sizeof...(TField)==1 || sizeof...(TField)==2, "must provide a field and optional namespace");
+  
+  typedef ConfigTypeExtractor<TField...> t_field;
+  
   AutoConfig(void) :
-    AutoConfigBase(typeid(ConfigTypeExtractor<TMemberName>)),
-    m_value(m_manager->Get(Field))
+    AutoConfigBase(typeid(t_field)),
+    m_value(m_manager->Get(m_key))
   {
     // Register with config registry
-    (void)RegConfig<T, ConfigTypeExtractor<TMemberName>>::r;
+    (void)RegConfig<T, t_field>::r;
   }
 
 private:
@@ -67,4 +68,3 @@ public:
     return !m_value->empty();
   }
 };
-

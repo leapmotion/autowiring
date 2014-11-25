@@ -37,5 +37,5 @@ void AutoConfigManager::Set(const std::string& name, const char* value) {
 }
 
 void AutoConfigManager::SetParsed(const std::string& name, const std::string& value) {
-  
+  throw autowiring_error("Can't parse value");
 }
