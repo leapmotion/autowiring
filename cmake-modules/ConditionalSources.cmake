@@ -25,7 +25,7 @@
 include(VerboseMessage)
 
   include(CMakeParseArguments)
-  cmake_parse_arguments(conditional_sources "" "GROUP_NAME" "FILES" ${ARGV})
+  cmake_parse_arguments(conditional_sources "" "GROUP_NAME" "FILES" ${ARGN})
 function(conditional_sources condition_var)
 
   source_group(${conditional_sources_GROUP_NAME} FILES ${conditional_sources_FILES})
