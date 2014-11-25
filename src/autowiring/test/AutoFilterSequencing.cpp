@@ -111,7 +111,12 @@ public:
   int m_calledNext;
   int m_calledNextElse;
 
-  LogicFilter() {
+  LogicFilter() :
+    m_calledAuto(0),
+    m_calledElse(0),
+    m_calledNext(0),
+    m_calledNextElse(0)
+  {
     m_MicroElseFilter = DeclareElseFilter(this, &LogicFilter::ElseFilter);
     m_BasedNextFilter = DeclareAutoFilter(this, &LogicFilter::NextFilter);
     m_MicroNextElseFilter = DeclareElseFilter<LogicFilter, t_Next>(this, &LogicFilter::NextElseFilter);
