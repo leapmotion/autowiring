@@ -28,21 +28,26 @@ AutoConfigManager::AutoConfigManager(void){
 
 AutoConfigManager::~AutoConfigManager(void){}
 
-AnySharedPointer& AutoConfigManager::Get(const std::string& name) {
+AnySharedPointer& AutoConfigManager::Get(const std::string& key) {
   std::lock_guard<std::mutex> lk(m_lock);
-  return m_attributes[name];
+  return m_attributes[key];
 }
 
-void AutoConfigManager::Set(const std::string& name, const char* value) {
-  Set(name, std::string(value));
+void AutoConfigManager::Set(const std::string& key, const char* value) {
+  Set(key, std::string(value));
 }
 
-void AutoConfigManager::SetParsed(const std::string& name, const std::string& value) {
-  //for(auto config = g_pFirstConfigEntry; config; config = config->pFlink) {
-  //
-  //}
+void AutoConfigManager::SetParsed(const std::string& key, const std::string& value) {
+  for (auto config = g_pFirstConfigEntry; config; config = config->pFlink) {
+    if (config->is(key)){
+      std::lock_guard<std::mutex> lk(m_lock);
+      m_attributes[key] = config->parse(value);
+      return;
+    }
+  }
   
+  // Error if key wasn't found in registry
   std::stringstream ss;
-  ss << "Cant parse '" << value <<"' for key '" << name << "'.";
+  ss << "Cant parse '" << value <<"' for key '" << key << "'.";
   throw autowiring_error(ss.str().c_str());
 }

@@ -8,7 +8,7 @@ class AutoConfigTest:
 {};
 
 struct MyConfigurableClass {
-  AutoConfig<int, MyConfigurableClass , struct XYZ> m_myName;
+  AutoConfig<int, MyConfigurableClass, struct XYZ> m_myName;
 };
 
 struct MyConfigurableClass2 {
