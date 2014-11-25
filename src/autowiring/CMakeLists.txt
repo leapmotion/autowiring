@@ -154,43 +154,39 @@ if(NOT APPLE)
   )
 endif()
 
-set(Autowiring_Win_SRCS
+add_windows_sources(Autowiring_SRCS
   CoreThreadWin.cpp
   InterlockedExchangeWin.cpp
   thread_specific_ptr_win.h
 )
 
-set(Autowiring_Unix_SRCS
-  InterlockedExchangeUnix.cpp
-  thread_specific_ptr_unix.h
+add_mac_sources(Autowiring_SRCS
+  CoreThreadMac.cpp
 )
 
-set(Autowiring_Mac_SRCS
-  CoreThreadMac.cpp
+add_unix_sources( Autowiring_SRCS
+  InterlockedExchangeUnix.cpp
+  thread_specific_ptr_unix.h
 )
 
 set(Autowiring_Linux_SRCS
   CoreThreadLinux.cpp
 )
 
-add_conditional_sources(Autowiring_SRCS "NOT WIN32" GROUP_NAME "Unix Source" ${Autowiring_Unix_SRCS})
+add_conditional_sources( Autowiring_SRCS "NOT MSVC" GROUP_NAME "Non-Windows Source" FILES ${Autowiring_Unix_SRCS})
 
-if(WIN32)
- set(Autowiring_SRCS ${Autowiring_Win_SRCS} ${Autowiring_SRCS})
-
-  if(!BUILD_64_BIT)
-    enable_language(ASM_MASM)
-    set(Autowiring_SRCS interlocked.asm ${Autowiring_SRCS} )
-  endif()
-else()
-  if(APPLE)
-    set(Autowiring_SRCS ${Autowiring_Mac_SRCS} ${Autowiring_SRCS})
-  else()
-    set(Autowiring_SRCS ${Autowiring_Linux_SRCS} ${Autowiring_SRCS})
-  endif()
-
-  set(Autowiring_SRCS ${Autowiring_Unix_SRCS} ${Autowiring_SRCS})
+add_conditional_sources(Autowiring_SRCS "WIN32 AND NOT BUILD_64_BIT"
+  GROUP_NAME "ASMx86 Source"
+  FILES interlocked.asm
+)
+if(WIN32 AND NOT BUILD_64_BIT)
+  enable_language(ASM_MASM)
 endif()
+
+add_conditional_sources(Autowiring_SRCS "NOT WIN32 AND NOT APPLE" 
+  GROUP_NAME "Linux Source"
+  FILES CoreThreadLinux.cpp
+)
 
 rewrite_header_paths(Autowiring_SRCS)
 add_pch(Autowiring_SRCS "stdafx.h" "stdafx.cpp")
