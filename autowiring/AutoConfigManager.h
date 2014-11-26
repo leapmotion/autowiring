@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include STL_UNORDERED_MAP
+#include STL_UNORDERED_SET
 #include MEMORY_HEADER
 
 struct AnySharedPointer;
@@ -19,11 +20,13 @@ public:
 private:
   std::mutex m_lock;
   std::unordered_map<std::string, AnySharedPointer> m_attributes;
-  
-  // Set an AnySharedPointer. This must be external synchronized
-  void SetInternal(const std::string& key, const AnySharedPointer& value);
 
 public:
+  /// <summary>
+  /// Check if this key has been set
+  /// </summary>
+  bool IsConfigured(const std::string& key);
+  
   /// <summary>
   /// Get a reference to where the config value is stored
   /// </summary>
@@ -66,7 +69,7 @@ public:
     }
     
     // Set value in this AutoConfigManager
-    SetInternal(key, AnySharedPointer(std::make_shared<T>(value)));
+    m_attributes[key] = AnySharedPointer(std::make_shared<T>(value));
   }
   
   /// <summary>

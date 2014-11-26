@@ -52,8 +52,7 @@ public:
   static_assert(sizeof...(TKey)==1 || sizeof...(TKey)==2, "Must provide a key and optional namespace");
   
   AutoConfig(void) :
-    AutoConfigBase(typeid(t_field)),
-    m_value(m_manager->Get(m_key))
+    AutoConfigBase(typeid(t_field))
   {
     // Register with config registry
     (void)RegConfig<T, t_field>::r;
@@ -61,25 +60,17 @@ public:
 
 private:
   AutoRequired<AutoConfigManager> m_manager;
-  AnySharedPointer& m_value;
 
 public:
-  operator T(void){
-    return m_value;
-  }
-  
-  operator const T&(void){
-    return m_value;
-  }
   
   const T& operator*(void) const {
-    return *m_value.as<T>();
+    return *m_manager->Get(m_key).template as<T>();
   }
 
   /// <returns>
   /// True if this configurable field has been satisfied with a value
   /// </returns>
   bool IsConfigured(void) const {
-    return !m_value->empty();
+    return m_manager->IsConfigured(m_key);
   }
 };

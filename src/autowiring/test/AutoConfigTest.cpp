@@ -8,24 +8,24 @@ class AutoConfigTest:
 {};
 
 struct MyConfigurableClass {
-  AutoConfig<int, MyConfigurableClass, struct XYZ> m_myName;
+  AutoConfig<int, struct Namespace1, struct XYZ> m_myName;
 };
 
 struct MyConfigurableClass2 {
-  AutoConfig<int, MyConfigurableClass2, struct XYZ> m_myName;
+  AutoConfig<int, struct Namespace2, struct XYZ> m_myName;
 };
 
 TEST_F(AutoConfigTest, VerifyCorrectDeconstruction) {
   AutoRequired<MyConfigurableClass> mcc;
 
-  EXPECT_STREQ("MyConfigurableClass.XYZ", mcc->m_myName.m_key.c_str())
+  EXPECT_STREQ("Namespace1.XYZ", mcc->m_myName.m_key.c_str())
     << "Configuration variable name was not correctly extracted";
 }
 
 TEST_F(AutoConfigTest, VerifySimpleAssignment) {
   // Set an attribute in the manager before injecting anything:
   AutoRequired<AutoConfigManager> acm;
-  acm->Set("MyConfigurableClass.XYZ", 323);
+  acm->Set("Namespace1.XYZ", 323);
 
   // Now inject the type which expects this value to be assigned:
   AutoRequired<MyConfigurableClass> mcc;
@@ -40,7 +40,7 @@ TEST_F(AutoConfigTest, VerifyPostHocAssignment) {
   Autowired<AutoConfigManager> acm;
   ASSERT_TRUE(acm.IsAutowired()) << "AutoConfig field did not inject a configuration manager into this context as expected";
 
-  acm->Set("MyConfigurableClass.XYZ", 323);
+  acm->Set("Namespace1.XYZ", 323);
 
   // Now inject the type which expects this value to be assigned:
   ASSERT_EQ(323, *mcc->m_myName) << "Configurable type did not receive a value as expected";
@@ -48,7 +48,7 @@ TEST_F(AutoConfigTest, VerifyPostHocAssignment) {
 
 TEST_F(AutoConfigTest, VerifyRecursiveSearch) {
   AutoRequired<AutoConfigManager> acm;
-  acm->Set("MyConfigurableClass.XYZ", 1001);
+  acm->Set("Namespace1.XYZ", 1001);
 
   {
     AutoCreateContext ctxt;
@@ -61,7 +61,7 @@ TEST_F(AutoConfigTest, VerifyRecursiveSearch) {
 
     // This must work as expected--a local context override will rewrite configuration values in the local scope
     AutoRequired<AutoConfigManager> sub_mcc;
-    sub_mcc->Set("MyConfigurableClass.XYZ", 1002);
+    sub_mcc->Set("Namespace1.XYZ", 1002);
     ASSERT_EQ(1002, *mcc->m_myName) << "Override of a configurable value in a derived class did not take place as expected";
   }
 }
@@ -84,18 +84,18 @@ TEST_F(AutoConfigTest, VerifyParsedAssignment) {
   AutoRequired<AutoConfigManager> acm;
 
   // Direct assignment to a string should not work, the type isn't a string it's an int
-  ASSERT_ANY_THROW(acm->Set("MyConfigurableClass.XYZ", "327")) << "An attempt to assign a value to an unrelated type did not generate an exception as expected";
+  ASSERT_ANY_THROW(acm->Set("Namespace1.XYZ", "327")) << "An attempt to assign a value to an unrelated type did not generate an exception as expected";
   
-  ASSERT_ANY_THROW(acm->Set("MyConfigurableClass.XYZ", 3.0)) << "An attempt to assign a value to an unrelated type did not generate an exception as expected";
+  ASSERT_ANY_THROW(acm->Set("Namespace1.XYZ", 3.0)) << "An attempt to assign a value to an unrelated type did not generate an exception as expected";
 
   // Assignment to a string type should result in an appropriate coercion to the right value
-  acm->SetParsed("MyConfigurableClass.XYZ", "324");
+  acm->SetParsed("Namespace1.XYZ", "324");
 }
 
 TEST_F(AutoConfigTest, VerifyDuplicateConfigAssignment) {
   AutoRequired<AutoConfigManager> acm;
-  acm->SetParsed("MyConfigurableClass.XYZ", "324");
-  acm->SetParsed("MyConfigurableClass2.XYZ", "1111");
+  acm->SetParsed("Namespace1.XYZ", "324");
+  acm->SetParsed("Namespace2.XYZ", "1111");
 
   AutoRequired<MyConfigurableClass> clz1;
   AutoRequired<MyConfigurableClass2> clz2;
