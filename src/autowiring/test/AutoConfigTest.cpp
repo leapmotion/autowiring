@@ -100,16 +100,17 @@ TEST_F(AutoConfigTest, VerifyDuplicateConfigAssignment) {
   AutoRequired<MyConfigurableClass> clz1;
   AutoRequired<MyConfigurableClass2> clz2;
 
-  ASSERT_EQ(324, clz1->m_myName);
+  ASSERT_EQ(324, *clz1->m_myName);
   ASSERT_EQ(1111, clz2->m_myName);
 }
 
-TEST_F(AutoConfigTest, ChangeConfig) {
+TEST_F(AutoConfigTest, VerifySet) {
+  AutoRequired<AutoConfigManager> acm;
+  acm->Set("Namespace1.XYZ", 324);
+  
   AutoRequired<MyConfigurableClass> clz1;
+  ASSERT_EQ(324, clz1->m_myName);
   
-  clz1->m_myName = 42;
-  
-  Autowired<AutoConfigManager> acm;
-  
-  ASSERT_EQ(42, *acm->Get("Namespace1.XYZ").as<int>());
+  clz1->m_myName.Set(42);
+  ASSERT_EQ(42, clz1->m_myName);
 }

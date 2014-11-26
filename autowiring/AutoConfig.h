@@ -63,14 +63,12 @@ private:
 
 public:
   
-  operator T() const {
+  operator const T&() const {
     return *m_manager->Get(m_key).template as<T>();
   }
   
-  AutoConfig<T, TKey...>& operator=(const T& rhs) {
-    m_manager->Set(m_key, rhs);
-    
-    return *this;
+  const T& operator*() const {
+    return operator const T&();
   }
 
   /// <returns>
@@ -78,5 +76,12 @@ public:
   /// </returns>
   bool IsConfigured(void) const {
     return m_manager->IsConfigured(m_key);
+  }
+  
+  /// <summary>
+  /// Set value on this context's AutoConfigManager
+  /// <summary>
+  void Set(const T& value) {
+    m_manager->Set(m_key, value);
   }
 };

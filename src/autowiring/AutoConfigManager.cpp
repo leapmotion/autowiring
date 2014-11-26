@@ -14,8 +14,7 @@ AutoConfigManager::~AutoConfigManager(void){}
 
 bool AutoConfigManager::IsConfigured(const std::string& key) {
   // iterate ancestor contexts, filling any configs
-  std::shared_ptr<CoreContext> ctxt = GetContext();
-  while (ctxt) {
+  for (auto ctxt = GetContext(); ctxt; ctxt = ctxt->GetParentContext()) {
     AutowiredFast<AutoConfigManager> mgmt(ctxt);
     
     if(mgmt) {
@@ -24,8 +23,6 @@ bool AutoConfigManager::IsConfigured(const std::string& key) {
         return true;
       }
     }
-    
-    ctxt = ctxt->GetParentContext();
   }
   
   // Key not found
@@ -41,8 +38,7 @@ AnySharedPointer& AutoConfigManager::Get(const std::string& key) {
   }
   
   // iterate ancestor contexts, filling any configs
-  std::shared_ptr<CoreContext> ctxt = GetContext()->GetParentContext();
-  while (ctxt) {
+  for (auto ctxt = GetContext()->GetParentContext(); ctxt; ctxt = ctxt->GetParentContext()) {
     AutowiredFast<AutoConfigManager> mgmt(ctxt);
     
     if(mgmt) {
@@ -51,13 +47,11 @@ AnySharedPointer& AutoConfigManager::Get(const std::string& key) {
         return mgmt->m_attributes[key];
       }
     }
-    
-    ctxt = ctxt->GetParentContext();
   }
   
   // Key not found, throw exception
   std::stringstream ss;
-  ss << "Attepted to get key '" << key <<"' which hasn't been set";
+  ss << "Attepted to get key '" << key << "' which hasn't been set";
   throw autowiring_error(ss.str());
 }
 
