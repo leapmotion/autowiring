@@ -29,7 +29,7 @@ TEST_F(AutoConfigTest, VerifySimpleAssignment) {
 
   // Now inject the type which expects this value to be assigned:
   AutoRequired<MyConfigurableClass> mcc;
-  ASSERT_EQ(323, *mcc->m_myName) << "Configurable type did not receive a value as expected";
+  ASSERT_EQ(323, mcc->m_myName) << "Configurable type did not receive a value as expected";
 }
 
 TEST_F(AutoConfigTest, VerifyPostHocAssignment) {
@@ -43,7 +43,7 @@ TEST_F(AutoConfigTest, VerifyPostHocAssignment) {
   acm->Set("Namespace1.XYZ", 323);
 
   // Now inject the type which expects this value to be assigned:
-  ASSERT_EQ(323, *mcc->m_myName) << "Configurable type did not receive a value as expected";
+  ASSERT_EQ(323, mcc->m_myName) << "Configurable type did not receive a value as expected";
 }
 
 TEST_F(AutoConfigTest, VerifyRecursiveSearch) {
@@ -57,12 +57,12 @@ TEST_F(AutoConfigTest, VerifyRecursiveSearch) {
     // Now inject an element here, and verify that it was wired up as expected:
     AutoRequired<MyConfigurableClass> mcc;
     ASSERT_TRUE(mcc->m_myName.IsConfigured()) << "A configurable value was not configured as expected";
-    ASSERT_EQ(1001, *mcc->m_myName) << "Configurable value obtained from a parent scope did not have the correct value";
+    ASSERT_EQ(1001, mcc->m_myName) << "Configurable value obtained from a parent scope did not have the correct value";
 
     // This must work as expected--a local context override will rewrite configuration values in the local scope
     AutoRequired<AutoConfigManager> sub_mcc;
     sub_mcc->Set("Namespace1.XYZ", 1002);
-    ASSERT_EQ(1002, *mcc->m_myName) << "Override of a configurable value in a derived class did not take place as expected";
+    ASSERT_EQ(1002, mcc->m_myName) << "Override of a configurable value in a derived class did not take place as expected";
   }
 }
 
@@ -76,7 +76,7 @@ TEST_F(AutoConfigTest, DefaultNamespace) {
   
   AutoRequired<DefaultName> def;
   
-  ASSERT_EQ(123, *def->m_def);
+  ASSERT_EQ(123, def->m_def);
 }
 
 TEST_F(AutoConfigTest, VerifyParsedAssignment) {
@@ -100,6 +100,16 @@ TEST_F(AutoConfigTest, VerifyDuplicateConfigAssignment) {
   AutoRequired<MyConfigurableClass> clz1;
   AutoRequired<MyConfigurableClass2> clz2;
 
-  ASSERT_EQ(324, *clz1->m_myName);
-  ASSERT_EQ(1111, *clz2->m_myName);
+  ASSERT_EQ(324, clz1->m_myName);
+  ASSERT_EQ(1111, clz2->m_myName);
+}
+
+TEST_F(AutoConfigTest, ChangeConfig) {
+  AutoRequired<MyConfigurableClass> clz1;
+  
+  clz1->m_myName = 42;
+  
+  Autowired<AutoConfigManager> acm;
+  
+  ASSERT_EQ(42, *acm->Get("Namespace1.XYZ").as<int>());
 }

@@ -54,7 +54,7 @@ public:
         if (!config->verifyType(typeid(T))) {
           std::stringstream ss;
           ss << "Attempting to set config '" << key << "' with incorrect type '"
-            << autowiring::demangle(typeid(T)) << "'";
+             << autowiring::demangle(typeid(T)) << "'";
           throw autowiring_error(ss.str());
         }
         configFound = true;

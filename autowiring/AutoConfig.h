@@ -63,8 +63,14 @@ private:
 
 public:
   
-  const T& operator*(void) const {
+  operator T() const {
     return *m_manager->Get(m_key).template as<T>();
+  }
+  
+  AutoConfig<T, TKey...>& operator=(const T& rhs) {
+    m_manager->Set(m_key, rhs);
+    
+    return *this;
   }
 
   /// <returns>
