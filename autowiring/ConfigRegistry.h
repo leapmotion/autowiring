@@ -4,6 +4,8 @@
 #include <string>
 #include <sstream>
 #include "AnySharedPointer.h"
+#include "autowiring_error.h"
+#include "demangle.h"
 
 struct ConfigRegistryEntry {
   ConfigRegistryEntry(const std::type_info& ti);
@@ -37,6 +39,12 @@ struct ConfigRegistryEntryT:
     std::istringstream ss(str);
     T val;
     ss >> val;
+    if (ss.fail()) {
+      std::stringstream msg;
+      msg << "Failed to parse '" << str << "' as type '"
+          << autowiring::demangle(typeid(T)) << "'";
+      throw autowiring_error(msg.str());
+    }
     return AnySharedPointer(std::make_shared<T>(val));
   }
 };

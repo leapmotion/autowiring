@@ -83,5 +83,8 @@ public:
   /// <remarks>
   /// This method will throw an exception if there is no string converter available on this type
   /// </remarks>
-  void SetParsed(const std::string& key, const std::string& value);
+  /// <returns>
+  /// True if value successfully set, False if key not found.
+  /// </return>
+  bool SetParsed(const std::string& key, const std::string& value);
 };

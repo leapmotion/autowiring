@@ -89,13 +89,13 @@ TEST_F(AutoConfigTest, VerifyParsedAssignment) {
   ASSERT_ANY_THROW(acm->Set("Namespace1.XYZ", 3.0)) << "An attempt to assign a value to an unrelated type did not generate an exception as expected";
 
   // Assignment to a string type should result in an appropriate coercion to the right value
-  acm->SetParsed("Namespace1.XYZ", "324");
+  ASSERT_TRUE(acm->SetParsed("Namespace1.XYZ", "324"));
 }
 
 TEST_F(AutoConfigTest, VerifyDuplicateConfigAssignment) {
   AutoRequired<AutoConfigManager> acm;
-  acm->SetParsed("Namespace1.XYZ", "324");
-  acm->SetParsed("Namespace2.XYZ", "1111");
+  ASSERT_TRUE(acm->SetParsed("Namespace1.XYZ", "324"));
+  ASSERT_TRUE(acm->SetParsed("Namespace2.XYZ", "1111"));
 
   AutoRequired<MyConfigurableClass> clz1;
   AutoRequired<MyConfigurableClass2> clz2;
