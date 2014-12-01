@@ -103,7 +103,7 @@ protected:
   typedef BasedAutoFilter<LogicFilter, void, const Decoration<1>&> t_Next;
   std::shared_ptr<MicroElseFilter<LogicFilter>> m_MicroElseFilter;
   std::shared_ptr<t_Next> m_BasedNextFilter;
-  std::shared_ptr<MicroElseFilter<t_Next>> m_MicroNextElseFilter;
+  std::shared_ptr<MicroElseFilter<LogicFilter>> m_MicroNextElseFilter;
 
 public:
   int m_calledAuto;
@@ -119,7 +119,7 @@ public:
   {
     m_MicroElseFilter = DeclareElseFilter(this, &LogicFilter::ElseFilter);
     m_BasedNextFilter = DeclareAutoFilter(this, &LogicFilter::NextFilter);
-    m_MicroNextElseFilter = DeclareElseFilter<LogicFilter, t_Next>(this, &LogicFilter::NextElseFilter);
+    m_MicroNextElseFilter = DeclareElseFilter(&t_Next::AutoFilter, this, &LogicFilter::NextElseFilter);
     Reset();
   }
 
