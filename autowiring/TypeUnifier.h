@@ -22,7 +22,7 @@ public:
 };
 
 template<class TrueType, class MemFn>
-struct TypeUnifierComplexAutoFilter;
+class TypeUnifierComplexAutoFilter;
 
 template<class TrueType, class T, class RetType, class... Args>
 class TypeUnifierComplexAutoFilter<TrueType, RetType(T::*)(Args...)>:

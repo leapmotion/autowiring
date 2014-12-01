@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-
+#include "ContextMember.h"
 #include "Deferred.h"
 #include FUNCTIONAL_HEADER
 
@@ -12,15 +12,22 @@
 /// The default constructor yields an AutoFilter that does nothing.
 /// </remarks>
 template<class Ret, class... Args>
-struct MicroAutoFilter {
-  MicroAutoFilter(const std::function<void(Args...)>&&) {}
+struct MicroAutoFilter:
+  public ContextMember
+{
+  MicroAutoFilter(const std::function<void(Args...)>&&):
+    ContextMember("MicroAutoFilter")
+  {}
 
   // This AutoFilter method will be identified as invalid due to the return type
   Ret AutoFilter(Args...) {}
 };
 template<class... Args>
-struct MicroAutoFilter<void, Args...> {
+struct MicroAutoFilter<void, Args...>:
+  public ContextMember
+{
   MicroAutoFilter(const std::function<void(Args...)>&& filter):
+    ContextMember("MicroAutoFilter"),
     m_filter(std::move(filter))
   {}
 
@@ -34,8 +41,11 @@ protected:
 };
 
 template<class... Args>
-struct MicroAutoFilter<Deferred, Args...> {
+struct MicroAutoFilter<Deferred, Args...> :
+  public ContextMember
+{
   MicroAutoFilter(const std::function<void(Args...)>&& filter):
+    ContextMember("MicroAutoFilter"),
     m_filter(std::move(filter))
   {}
 
