@@ -1,12 +1,13 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-
+#include "ContextMember.h"
 #include "DeclareElseFilter.h"
 #include "SatCounter.h"
 
 /// <summary>If Base::AutoFilter is not called, this will execute a Final-Call method</summary>
 template<class>
-class MicroElseFilter
+class MicroElseFilter:
+  public ContextMember
 {
 protected:
   const std::type_info& type;
@@ -14,6 +15,7 @@ protected:
 
 public:
   MicroElseFilter(const std::type_info& type, const std::function<void(const AutoPacket&)>& filter):
+    ContextMember("MicroElseFilter"),
     type(type),
     m_filter(filter)
   {}
