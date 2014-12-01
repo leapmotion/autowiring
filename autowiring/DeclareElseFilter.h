@@ -27,8 +27,8 @@ protected:
 };
 
 /// <summary>If Base::AutoFilter is not called, this will execute a Final-Call method</summary>
-template<class Base, class... Args>
-class MicroElseFilter:
+template<class Base, class Arg, class... Args>
+class MicroElseFilter<Base, Arg, Args...>:
   public MicroElseFilter<Base>
 {
 public:
@@ -37,12 +37,12 @@ public:
   {}
 
   void AutoFilter(const AutoPacket& packet) {
-    const bool has_all[] = {packet.Has<Args>()... };
+    const bool has_all[] = {packet.Has<Arg>(), packet.Has<Args>()... };
 
     for(bool cur : has_all)
       if(!cur) {
         // Missing decoration, base filter wasn't called
-        (this->base->*filter)(packet);
+        (this->base->*(this->filter))(packet);
         return;
       }
 
