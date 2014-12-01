@@ -56,7 +56,7 @@ struct CallExtractor<void (T::*)(Args...)>:
     // This exception type indicates that an attempt was made to construct an AutoFilterDescriptor with an
     // AnySharedPointer which was not the type of its own member function.  Be sure to cast the AnySharedPointer
     // to the correct foundation type before attempting to construct an AutoFilterDescriptor.
-    assert(typeid(typename SelectTypeUnifier<T>::type) == obj->type());
+    assert(typeid(T) == obj->type());
 
     // Handoff
     (((T*) pObj)->*memFn)(
