@@ -1189,3 +1189,20 @@ TEST_F(AutoFilterTest, AutoFilterInBaseClass) {
   // Trivial validation that we got something back
   ASSERT_EQ(1UL, d->m_called) << "Filter defined in base class was not called the expected number of times";
 }
+
+class MyInheritingAutoFilterNoAlias:
+  public ContextMember,
+  public FilterGen<std::vector<int>>
+{};
+
+TEST_F(AutoFilterTest, AutoFilterInBaseClassNoAlias) {
+  AutoRequired<MyInheritingAutoFilterNoAlias> d;
+  AutoRequired<AutoPacketFactory> f;
+
+  // Packet decoration shouldn't cause problems by itself
+  auto packet = f->NewPacket();
+  packet->Decorate(std::vector<int>{0, 1, 2});
+
+  // Trivial validation that we got something back
+  ASSERT_EQ(1UL, d->m_called) << "Filter defined in base class in an Object-inheriting type was not called the expected number of times";
+}
