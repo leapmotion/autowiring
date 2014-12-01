@@ -163,7 +163,7 @@ public:
   void AutoFilter(const Decoration<0>& in) {}
 };
 
-TEST_F(AutoFilterPipeTest, VerifyMergedOutputs) {
+TEST_F(AutoFilterPipeTest, DISABLED_VerifyMergedOutputs) {
   AutoRequired<AutoPacketFactory> factory;
 
   AutoRequired<FilterOD0<0>> f0D0_broadcast;
@@ -330,7 +330,7 @@ TEST_F(AutoFilterPipeTest, VerifyStileExtractAll) {
   }
 }
 
-TEST_F(AutoFilterPipeTest, ExtractMergedData) {
+TEST_F(AutoFilterPipeTest, DISABLED_ExtractMergedData) {
   std::shared_ptr<AutoStile<const AutoMergeStile<Decoration<0>>::merge_call&>> stile;
   std::shared_ptr<AutoPacketFactory> master_factory;
 
