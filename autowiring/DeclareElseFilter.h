@@ -42,7 +42,7 @@ public:
     for(bool cur : has_all)
       if(!cur) {
         // Missing decoration, base filter wasn't called
-        (base->*filter)(packet);
+        (this->base->*filter)(packet);
         return;
       }
 
