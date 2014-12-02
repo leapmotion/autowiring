@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include "TestFixtures/SimpleThreaded.hpp"
 #include <autowiring/ObjectPool.h>
+#include FUTURE_HEADER
+#include THREAD_HEADER
 
 class ObjectPoolTest:
   public testing::Test
@@ -272,6 +274,47 @@ TEST_F(ObjectPoolTest, CanRundownOneIssued) {
   ObjectPool<int> pool;
   pool.Wait();
   pool.Rundown();
+}
+
+class ExposedObjectPool:
+  public ObjectPool<int>
+{
+public:
+  using ObjectPool<int>::m_monitor;
+};
+
+TEST_F(ObjectPoolTest, RundownWhileWaiting) {
+  ObjectPool<int> pool(1);
+  auto first = pool.Wait();
+  
+  std::mutex lock;
+  std::condition_variable cv;
+  bool proceed = false;
+
+  auto future = std::async(std::launch::async, [&] {
+    {
+      std::lock_guard<std::mutex> lk(lock);
+      proceed = true;
+      cv.notify_all();
+    }
+    ASSERT_ANY_THROW(pool.Wait()) << "Wait operation should throw if it is rundown while threads are waiting";
+  });
+  
+  // Block until the async call is at least started
+  std::unique_lock<std::mutex> lk(lock);
+  ASSERT_TRUE(
+    cv.wait_for(lk, std::chrono::seconds(5), [&proceed] { return proceed; })
+  ) << "Dependent thread did not initiate in time";
+
+  // Block until the thread is (probably) waiting
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  
+  // Now, ensure no crashing:
+  first.reset();
+  pool.Rundown();
+
+  // Make sure the thread goes away before we do:
+  future.wait();
 }
 
 TEST_F(ObjectPoolTest, OutstandingLimitIsOne) {

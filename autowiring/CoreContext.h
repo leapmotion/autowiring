@@ -494,7 +494,7 @@ public:
     std::shared_ptr<typename CreationRules::TActual> retVal;
     FindByType(retVal);
     if(retVal)
-      return retVal;
+      return std::static_pointer_cast<T>(retVal);
 
     // We must make ourselves current for the remainder of this call:
     CurrentContextPusher pshr(shared_from_this());
@@ -519,7 +519,7 @@ public:
     // Factory registration if sensible to do so, but only after the underlying type has been
     // added, so that the proper type can succeed
     RegisterFactory(*retVal, autowiring::member_new_type<typename CreationRules::TActual>());
-    return retVal;
+    return std::static_pointer_cast<T>(retVal);
   }
 
   /// <summary>
