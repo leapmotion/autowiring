@@ -3,6 +3,7 @@
 #include "TestFixtures/SimpleThreaded.hpp"
 #include <autowiring/ObjectPool.h>
 #include FUTURE_HEADER
+#include THREAD_HEADER
 
 class ObjectPoolTest:
   public testing::Test
