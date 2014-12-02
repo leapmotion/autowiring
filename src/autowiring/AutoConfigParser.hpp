@@ -1,42 +1,84 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "demangle.h"
-#include <regex>
+#include "expect.hpp"
 #include <sstream>
 #include <iostream>
-
-// Explicit implementation of '\\w', which isn't supported in GCC 4.8
-#define REGEX_WORD "((?:a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z|"\
-                       "A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|W|X|Y|Z|"\
-                       "0|1|2|3|4|5|6|7|8|9|_)*)"
+#include <cstring>
 
 namespace autowiring {
 
-static std::string FormatKey(const std::smatch& match) {
-  // Indicies into the regex match
-  static const int NAMESPACE_INDEX = 1;
-  static const int FIELD_INDEX = 2;
   
-  // If no namespace, then field will be empty
-  if (match.str(FIELD_INDEX).empty()) {
-    return match.str(NAMESPACE_INDEX);
+#if __GNUG__// Mac and linux
+  
+static std::string ExtractKey(const std::type_info& ti) {
+  //Extract Namespace and value from typename
+  //AutoConfigBase::ConfigTypeExtractor<Namespace, Value>
+  
+  std::stringstream ss(demangle(ti));
+  
+  std::string arg1;
+  std::string arg2;
+  ss >> expect("AutoConfigBase::ConfigTypeExtractor<");
+  ss >> arg1;
+  
+  // If arg1 contains a comma, there are 2 arguments
+  auto found = arg1.find(",");
+  if (found != std::string::npos) {
+    ss >> arg2;
+    
+    // Remove trailing ","
+    arg1.pop_back();
+    
+    // Remove trailing '>'
+    arg2.pop_back();
+    
+    std::stringstream key;
+    key << arg1 << "." << arg2;
+    return key.str();
+    
+  } else {
+    // Remove trailing '>'
+    arg1.pop_back();
+    return arg1;
   }
-  
-  std::stringstream ss;
-  ss << match.str(NAMESPACE_INDEX) << "." << match.str(FIELD_INDEX);
-  return ss.str();
 }
+  
+#else // Windows
 
 static std::string ExtractKey(const std::type_info& ti) {
-  // Regex pattern for extracting template argument names
-  static const std::regex NamePattern(
-    "^.*ConfigTypeExtractor<(?:class |struct )?" REGEX_WORD "(?:, (?:class |struct )?" REGEX_WORD ")?>$"
-  );
+  //Extract Namespace and value from typename
+  //struct AutoConfigBase::ConfigTypeExtractor<struct Namespace, struct Value>
   
-  std::smatch sm;
-  std::regex_match(demangle(ti), sm, NamePattern);
+  std::stringstream ss(demangle(ti));
   
-  return FormatKey(sm);
+  std::string arg1;
+  std::string arg2;
+  ss >> expect("struct AutoConfigBase::ConfigTypeExtractor<struct");
+  ss >> arg1;
+  
+  // If arg1 contains a comma, there are 2 arguments
+  auto found = arg1.find(",struct");
+  if (found != std::string::npos) {
+    ss >> arg2;
+    
+    // Remove trailing ",struct"
+    arg1 = arg1.substr(0, found)
+    
+    // Remove trailing '>'
+    arg2.pop_back();
+    
+    std::stringstream key;
+    key << arg1 << "." << arg2;
+    return key.str();
+    
+  } else {
+    // Remove trailing '>'
+    arg1.pop_back();
+    return arg1;
+  }
 }
+
+#endif
   
 }//namespace autowiring

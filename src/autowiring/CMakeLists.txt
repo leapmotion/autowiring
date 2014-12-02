@@ -93,7 +93,7 @@ set(Autowiring_SRCS
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunk.h
-  expect.h
+  expect.hpp
   EventInputStream.h
   EventOutputStream.h
   EventOutputStream.cpp
