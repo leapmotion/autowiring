@@ -278,7 +278,13 @@ struct AutoFilterDescriptor:
   template<class T>
   AutoFilterDescriptor(const std::shared_ptr<T>& subscriber) :
     AutoFilterDescriptor(
-      AnySharedPointer(subscriber),
+      AnySharedPointer(
+        // Because T::AutoFilter might actually be present in a _base type_ of T, it's important that
+        // AnySharedPointer be instantiated with a pointer to the base type where the AutoFilter is
+        // actually defined.  In order to obtain this name, we decompose this member function, and
+        // then take the type of the decomposed result.
+        std::static_pointer_cast<typename Decompose<decltype(&T::AutoFilter)>::type>(subscriber)
+      ),
       &typeid(T),
       Decompose<decltype(&T::AutoFilter)>::template Enumerate<AutoFilterDescriptorInput>::types,
       CallExtractor<decltype(&T::AutoFilter)>::deferred,
