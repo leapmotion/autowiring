@@ -13,7 +13,7 @@ std::string autowiring::ExtractKeyUnix(std::stringstream& ss) {
   
   std::string arg1;
   std::string arg2;
-  ss >> autowiring::expect("AutoConfigBase::ConfigTypeExtractor<");
+  ss >> expect("AutoConfigBase::ConfigTypeExtractor<");
   ss >> arg1;
   
   // If arg1 contains a comma, there are 2 arguments
@@ -44,7 +44,7 @@ std::string autowiring::ExtractKeyWin(std::stringstream& ss) {
   
   std::string arg1;
   std::string arg2;
-  ss >> expect("struct AutoConfigBase::ConfigTypeExtractor<struct");
+  ss >> expect("struct") >> expect("AutoConfigBase::ConfigTypeExtractor<struct");
   ss >> arg1;
   
   // If arg1 contains a comma, there are 2 arguments
@@ -70,7 +70,7 @@ std::string autowiring::ExtractKeyWin(std::stringstream& ss) {
 }
 
 std::string autowiring::ExtractKey(const std::type_info& ti) {
-  std::string demangled = autowiring::demangle(ti);
+  std::string demangled = demangle(ti);
   std::stringstream ss(demangled);
 
   return
