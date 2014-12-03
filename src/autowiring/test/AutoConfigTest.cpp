@@ -139,3 +139,25 @@ TEST_F(AutoConfigTest, ExtractKeyTestWin) {
     autowiring::ExtractKeyWin(win).c_str()
   ) << "Windows key extraction implementation mismatch";
 }
+
+class TypeWithoutAShiftOperator {
+public:
+  int foo;
+};
+
+TEST_F(AutoConfigTest, TypeWithoutAShiftOperatorTest) {
+  AutoConfig<TypeWithoutAShiftOperator, struct MyValue> taso;
+
+  AutoCurrentContext ctxt;
+  AutoRequired<AutoConfigManager> mgr;
+
+  // Indirect assignment should cause an exception
+  ASSERT_ANY_THROW(mgr->Set("MyValue", "")) << "Expected a throw in a case where a configurable value was used which cannot be assigned";
+
+  // Direct assignment should be supported still
+  TypeWithoutAShiftOperator tasoVal;
+  tasoVal.foo = 592;
+  mgr->Set<TypeWithoutAShiftOperator>("MyValue", tasoVal);
+
+  ASSERT_EQ(592, taso->foo) << "Value assignment did not result in an update to a non-serializable configuration field";
+}
