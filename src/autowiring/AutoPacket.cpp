@@ -271,6 +271,24 @@ void AutoPacket::CompleteCheckout(bool ready, const std::type_info& data) {
       MarkUnsatisfiable(entry->m_decoration->type());
 }
 
+void AutoPacket::Put(AnySharedPointer&& in) {
+  const std::type_info& ti = in->type();
+  auto& entry = m_decorations[ti];
+  if(entry.satisfied || entry.isCheckedOut) {
+    std::stringstream ss;
+    ss << "Cannot put type " << autowiring::demangle(in->type())
+      << " on AutoPacket, the requested broadcast already exists";
+    throw std::runtime_error(ss.str());
+  }
+
+  entry.m_decoration = std::move(in);
+  entry.m_type = &ti;
+  entry.satisfied = true;
+  entry.isCheckedOut = false;
+
+  UpdateSatisfaction(ti);
+}
+
 void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   std::list<DecorationDisposition*> decoQueue;
   {
