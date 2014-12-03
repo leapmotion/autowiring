@@ -75,13 +75,11 @@ void AutoConfigManager::Set(const std::string& key, const char* value) {
 bool AutoConfigManager::SetParsed(const std::string& key, const std::string& value) {
   std::lock_guard<std::mutex> lk(m_lock);
   
-  for (auto config = g_pFirstConfigEntry; config; config = config->pFlink) {
-    if (config->is(key)){
-      m_attributes[key] = config->parse(value);
-      return true;
-    }
+  // Key not found
+  if (!m_registry.count(key)) {
+    return false;
   }
   
-  // Key not found
-  return false;
+  m_attributes[key] = m_registry.at(key)->parse(value);
+  return true;
 }

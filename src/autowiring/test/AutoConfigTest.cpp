@@ -145,19 +145,22 @@ public:
   int foo;
 };
 
-TEST_F(AutoConfigTest, TypeWithoutAShiftOperatorTest) {
-  AutoConfig<TypeWithoutAShiftOperator, struct MyValue> taso;
+struct NoShift {
+  AutoConfig<TypeWithoutAShiftOperator, struct MyNoShift> m_noshift;
+};
 
-  AutoCurrentContext ctxt;
+TEST_F(AutoConfigTest, TypeWithoutAShiftOperatorTest) {
+  AutoRequired<NoShift> noshift;
+
   AutoRequired<AutoConfigManager> mgr;
 
   // Indirect assignment should cause an exception
-  ASSERT_ANY_THROW(mgr->Set("MyValue", "")) << "Expected a throw in a case where a configurable value was used which cannot be assigned";
+  ASSERT_ANY_THROW(mgr->Set("MyNoShift", "")) << "Expected a throw in a case where a configurable value was used which cannot be assigned";
 
   // Direct assignment should be supported still
   TypeWithoutAShiftOperator tasoVal;
   tasoVal.foo = 592;
-  mgr->Set<TypeWithoutAShiftOperator>("MyValue", tasoVal);
+  mgr->Set<TypeWithoutAShiftOperator>("MyNoShift", tasoVal);
 
-  ASSERT_EQ(592, taso->foo) << "Value assignment did not result in an update to a non-serializable configuration field";
+  ASSERT_EQ(592, noshift->m_noshift->foo) << "Value assignment did not result in an update to a non-serializable configuration field";
 }

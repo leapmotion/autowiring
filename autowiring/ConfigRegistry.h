@@ -23,6 +23,23 @@ struct ConfigRegistryEntry {
   virtual AnySharedPointer parse(const std::string&) const = 0;
 };
 
+template<typename T>
+struct has_stream {
+  template<class U>
+  static auto select(std::istream* is, U* u) -> decltype(*is >> *u);
+  
+  template<class U>
+  static void select(...);
+  
+  static const bool value = !std::is_same<void, decltype(select<T>(nullptr, nullptr))>::value;
+};
+
+template<class U>
+static auto select(std::istream& is, U u) -> decltype(is >> u) {
+  is >> u;
+  return is;
+}
+
 template<class T, class Key>
 struct ConfigRegistryEntryT:
   public ConfigRegistryEntry
@@ -31,11 +48,18 @@ struct ConfigRegistryEntryT:
     ConfigRegistryEntry(typeid(Key))
   {}
   
-  bool verifyType(const std::type_info& ti) const {
+  bool verifyType(const std::type_info& ti) const override {
     return typeid(T) == ti;
   }
   
-  AnySharedPointer parse(const std::string& str) const {
+  AnySharedPointer parse(const std::string& str) const override {
+    return parseInternal<T>(str);
+  }
+  
+  // Only use if there is a stream operator
+  template<typename U>
+  typename std::enable_if<has_stream<U>::value, AnySharedPointer>::type
+  parseInternal(const std::string& str) const {
     std::istringstream ss(str);
     T val;
     ss >> std::boolalpha >> val;
@@ -48,6 +72,13 @@ struct ConfigRegistryEntryT:
     }
     return AnySharedPointer(std::make_shared<T>(val));
   }
+  
+  template<typename U>
+  typename std::enable_if<!has_stream<U>::value, AnySharedPointer>::type
+  parseInternal(const std::string&) const {
+    throw autowiring_error("This type doesn't support stream conversions.\
+                           Define one if you want this to be parsable");
+  };
 };
 
 extern const ConfigRegistryEntry* g_pFirstConfigEntry;
