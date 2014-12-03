@@ -38,3 +38,4 @@ lib/*.*
 autowiring-*-*.zip
 _CPack_Packages
 win64/Autowiring.nuspec
+Autowiring.nuspec
