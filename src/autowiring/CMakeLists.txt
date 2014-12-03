@@ -18,6 +18,12 @@ set(Autowiring_SRCS
   AnySharedPointer.h
   AnySharedPointer.cpp
   AutoCheckout.h
+  AutoConfig.h
+  AutoConfig.cpp
+  AutoConfigManager.h
+  AutoConfigManager.cpp
+  AutoConfigParser.hpp
+  AutoConfigParser.cpp
   AutoRestarter.h
   AutoFuture.h
   AutoFuture.cpp
@@ -55,6 +61,8 @@ set(Autowiring_SRCS
   BoltBase.h
   BoltBase.cpp
   CallExtractor.h
+  ConfigRegistry.h
+  ConfigRegistry.cpp
   ContextCreator.h
   ContextCreatorBase.h
   ContextCreatorBase.cpp
@@ -86,6 +94,7 @@ set(Autowiring_SRCS
   DispatchQueue.h
   DispatchQueue.cpp
   DispatchThunk.h
+  expect.hpp
   EventInputStream.h
   EventOutputStream.h
   EventOutputStream.cpp

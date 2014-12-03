@@ -1,0 +1,87 @@
+// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+#pragma once
+#include "Autowired.h"
+#include "AutoConfigManager.h"
+#include "ConfigRegistry.h"
+#include "is_any.h"
+
+#include <string>
+#include <typeinfo>
+
+struct AnySharedPointer;
+
+/// <summary>
+/// Utility base type for configuration members
+/// </summary>
+class AutoConfigBase
+{
+protected:
+  // Template arguemnts TKey specify the key and optional namespace for a config attribute
+  template<class... TKey>
+  struct ConfigTypeExtractor {};
+  
+public:
+  AutoConfigBase(const std::type_info& tiName);
+
+  // Key used to identify this config value
+  const std::string m_key;
+};
+
+/// <summary>
+/// Register an attribute with the AutoConfig system. For example
+///
+/// AutoConfig<int, struct MyNamespace, struct MyKey> m_myVal;
+/// defines the key "MyNamespace.MyKey"
+///
+/// The Namespace field is optional, so
+/// AutoConfig<int, struct MyKey> m_myVal;
+/// defines the key "MyKey"
+///
+/// AutoConfig values can be set from the AutoConfigManager. The string key
+/// is used as the identifier for the value
+/// </summary>
+template<class T, class... TKey>
+class AutoConfig:
+  public AutoConfigBase
+{
+private:
+  // Specifies the optional namespace and key for this config attribute
+  typedef ConfigTypeExtractor<TKey...> t_field;
+  
+public:
+  static_assert(sizeof...(TKey)==1 || sizeof...(TKey)==2, "Must provide a key and optional namespace");
+  
+  AutoConfig(void) :
+    AutoConfigBase(typeid(t_field))
+  {
+    // Register with config registry
+    (void)RegConfig<T, t_field>::r;
+  }
+
+private:
+  AutoRequired<AutoConfigManager> m_manager;
+
+public:
+  
+  operator const T&() const {
+    return *m_manager->Get(m_key).template as<T>();
+  }
+  
+  const T& operator*() const {
+    return operator const T&();
+  }
+
+  /// <returns>
+  /// True if this configurable field has been satisfied with a value
+  /// </returns>
+  bool IsConfigured(void) const {
+    return m_manager->IsConfigured(m_key);
+  }
+  
+  /// <summary>
+  /// Set value on this context's AutoConfigManager
+  /// <summary>
+  void Set(const T& value) {
+    m_manager->Set(m_key, value);
+  }
+};
