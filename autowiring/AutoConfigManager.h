@@ -20,6 +20,7 @@ public:
 private:
   std::mutex m_lock;
   std::unordered_map<std::string, AnySharedPointer> m_attributes;
+  const std::unordered_map<std::string, const ConfigRegistryEntry*> m_registry;
 
 public:
   /// <summary>
@@ -47,24 +48,16 @@ public:
   void Set(const std::string& key, const T& value) {
     std::lock_guard<std::mutex> lk(m_lock);
     
-    // Iterate through all registered configs to verify the key and type match.
-    bool configFound = false;
-    for (auto config = g_pFirstConfigEntry; config; config = config->pFlink) {
-      if (config->is(key)){
-        if (!config->verifyType(typeid(T))) {
-          std::stringstream ss;
-          ss << "Attempting to set config '" << key << "' with incorrect type '"
-             << autowiring::demangle(typeid(T)) << "'";
-          throw autowiring_error(ss.str());
-        }
-        configFound = true;
-        break;
-      }
-    }
-    
-    if (!configFound) {
+    if (!m_registry.count(key)) {
       std::stringstream ss;
       ss << "No configuration found for key '" << key << "'";
+      throw autowiring_error(ss.str());
+    }
+    
+    if (!m_registry.at(key)->verifyType(typeid(T))) {
+      std::stringstream ss;
+      ss << "Attempting to set config '" << key << "' with incorrect type '"
+         << autowiring::demangle(typeid(T)) << "'";
       throw autowiring_error(ss.str());
     }
     

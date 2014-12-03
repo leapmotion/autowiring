@@ -9,7 +9,20 @@
 
 using namespace autowiring;
 
-AutoConfigManager::AutoConfigManager(void){}
+static std::unordered_map<std::string, const ConfigRegistryEntry*> FillRegistry(void) {
+  std::unordered_map<std::string, const ConfigRegistryEntry*> registry;
+  
+  for (auto config = g_pFirstConfigEntry; config; config = config->pFlink) {
+    registry[config->m_key] = config;
+  }
+  
+  return registry;
+}
+
+AutoConfigManager::AutoConfigManager(void):
+  m_registry(FillRegistry())
+{}
+
 AutoConfigManager::~AutoConfigManager(void){}
 
 bool AutoConfigManager::IsConfigured(const std::string& key) {
