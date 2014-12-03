@@ -49,7 +49,7 @@ public:
     return *this;
   }
 
-  auto_in (std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)) {
-    packet->Get(*this, source);
+  auto_in (std::shared_ptr<AutoPacket> packet) {
+    packet->Get(*this);
   }
 };

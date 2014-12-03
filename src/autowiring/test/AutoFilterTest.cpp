@@ -11,8 +11,6 @@
 #include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/AutoTimeStamp.h>
 #include <autowiring/SatCounter.h>
-#include <autowiring/AutoMerge.h>
-#include <autowiring/AutoStile.h>
 #include THREAD_HEADER
 
 class AutoFilterTest:

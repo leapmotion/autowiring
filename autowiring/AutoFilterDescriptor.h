@@ -4,7 +4,6 @@
 #include "AutoPacket.h"
 #include "auto_arg.h"
 #include "CallExtractor.h"
-#include "DataFlow.h"
 #include "Decompose.h"
 #include "has_autofilter.h"
 #include "is_shared_ptr.h"
@@ -72,7 +71,6 @@ struct AutoFilterDescriptorStub {
   AutoFilterDescriptorStub(const AutoFilterDescriptorStub& rhs) :
     m_pType(rhs.m_pType),
     m_pArgs(rhs.m_pArgs),
-    m_dataMap(rhs.m_dataMap),
     m_deferred(rhs.m_deferred),
     m_arity(rhs.m_arity),
     m_requiredCount(rhs.m_requiredCount),
@@ -99,12 +97,7 @@ struct AutoFilterDescriptorStub {
   {
     for(auto pArg = m_pArgs; *pArg; pArg++) {
       m_arity++;
-      autowiring::DataFlow& data = m_dataMap[*pArg->ti];
 
-      // DEFAULT: All data is broadcast
-      data.broadcast = true;
-      data.input = pArg->is_input;
-      data.output = pArg->is_output;
       if (pArg->is_input) {
         if (pArg->is_optional) {
           ++m_optionalCount;
@@ -121,10 +114,8 @@ protected:
 
   // This subscriber's argument types
   // NOTE: This is a reference to a static generated list,
-  // therefor it MUST be const and MUST be shallow-copied.
+  // therefore it MUST be const and MUST be shallow-copied.
   const AutoFilterDescriptorInput* m_pArgs;
-  typedef std::unordered_map<std::type_index, autowiring::DataFlow> FlowMap;
-  FlowMap m_dataMap;
 
   // Set if this is a deferred subscriber.  Deferred subscribers cannot receive immediate-style
   // decorations, and have additional handling considerations when dealing with non-copyable
@@ -173,18 +164,6 @@ public:
     return nullptr;
   }
 
-  /// <summary>
-  /// Copies the data flow information for the argument type to the flow argument.
-  /// </summary>
-  /// <returns>true when the argument type is found</returns>
-  autowiring::DataFlow GetDataFlow(const std::type_info* argType) const {
-    FlowMap::const_iterator data = m_dataMap.find(*argType);
-    if (data != m_dataMap.end()) {
-      return data->second;
-    }
-    return autowiring::DataFlow(); //DEFAULT: No flow
-  }
-
   /// <returns>A call lambda wrapping the associated subscriber</returns>
   /// <remarks>
   /// Parameters for the associated subscriber are obtained by querying the packet.
@@ -192,44 +171,6 @@ public:
   /// subscribers, or an exception will be thrown.
   /// </remarks>
   t_extractedCall GetCall(void) const { return m_pCall; }
-
-  /// <summary>
-  /// Sends or receives broadcast instances of the input or output type.
-  /// </summary>
-  /// <remarks>
-  /// The dataType must declared by the AutoFilter method for this call to have an effect.
-  /// </remarks>
-  /// <param="dataType">specifies the data type (input or output) to broadcast</param>
-  /// <param="enable">when false disables broadcasting</param>
-  void Broadcast(const std::type_info* dataType, bool enable = true) {
-    FlowMap::iterator flowFind = m_dataMap.find(*dataType);
-    if (flowFind == m_dataMap.end())
-      return;
-    autowiring::DataFlow& flow = flowFind->second;
-    flow.broadcast = enable;
-  }
-
-  /// <summary>
-  /// Creates a data half-pipe from this node to the target node for the specifed data.
-  /// </summary>
-  /// <remarks>
-  /// A complete pipe requires that both the input and output nodes are modified.
-  /// This method only modifies this node - the other half-pipe requires a call to the other node.
-  /// The dataType must declared by the AutoFilter method for this call to have an effect.
-  /// </remarks>
-  /// <param="dataType">specifies the data type (input or output) to pipe</param>
-  /// <param="nodeType">determines the target node that will receive the data</param>
-  /// <param="enable">when false removes a pipe, if it exists</param>
-  void HalfPipe(const std::type_info* dataType, const std::type_info* nodeType, bool enable = true) {
-    FlowMap::iterator flowFind = m_dataMap.find(*dataType);
-    if (flowFind == m_dataMap.end())
-      return;
-    autowiring::DataFlow& flow = flowFind->second;
-    if (enable)
-      flow.halfpipes.insert(*nodeType);
-    else
-      flow.halfpipes.erase(*nodeType);
-  }
 };
 
 /// <summary>

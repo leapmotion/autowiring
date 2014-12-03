@@ -60,7 +60,7 @@ public:
     return *this;
   }
 
-  optional_ptr (std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)) {
-    packet->Get(*this, source);
+  optional_ptr (std::shared_ptr<AutoPacket> packet) {
+    packet->Get(*this);
   }
 };

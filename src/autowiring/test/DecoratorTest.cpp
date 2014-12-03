@@ -88,7 +88,6 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
   // Verify the second one does:
   auto sat = packet2->GetSatisfaction(typeid(FilterA));
   EXPECT_NE(nullptr, sat.GetType()) << "Packet lacked an expected subscription";
-  EXPECT_TRUE(sat.IsInput(typeid(Decoration<0>),typeid(void))) << "Incorrect input test";
   auto subs = packet2->GetSubscribers(typeid(Decoration<0>));
   EXPECT_EQ(1UL, subs.size()) << "Incorrect subscriber count";
   auto disps = packet2->GetDispositions(typeid(Decoration<0>));
