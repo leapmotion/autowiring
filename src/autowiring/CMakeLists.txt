@@ -33,7 +33,6 @@ set(Autowiring_SRCS
   AutoFilterDescriptor.h
   AutoInjectable.h
   AutoInjectable.cpp
-  AutoMerge.h
   AutoPacket.h
   AutoPacket.cpp
   AutoPacketFactory.h
@@ -41,7 +40,6 @@ set(Autowiring_SRCS
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
   AutoSelfUpdate.h
-  AutoStile.h
   AutoTimeStamp.h
   Autowired.h
   Autowired.cpp
@@ -82,7 +80,6 @@ set(Autowiring_SRCS
   CreationRules.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
-  DataFlow.h
   DeclareAutoFilter.h
   DeclareElseFilter.h
   Decompose.h

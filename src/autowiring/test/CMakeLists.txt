@@ -60,7 +60,6 @@ set(AutowiringTest_SRCS
 if(autowiring_USE_LIBCXX)
   set(AutowiringTest_SRCS ${AutowiringTest_SRCS}
     AutoFilterFunctionTest.cpp
-    AutoFilterPipeTest.cpp
     AutoFilterSequencing.cpp
     AutoFilterTest.cpp
   )

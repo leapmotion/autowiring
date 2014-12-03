@@ -23,7 +23,6 @@ class auto_out:
 
 protected:
   std::shared_ptr<AutoPacket> m_packet;
-  const std::type_info* m_source;
   bool m_makeable;
 
   /// </remarks>
@@ -56,15 +55,14 @@ public:
   }
 
   /// <summary>Destruction of auto_out makes type data available</summary>
-  ~auto_out () {
-    if (shared_type::operator bool())
-      m_packet->Put(static_cast<shared_type>(*this), *m_source);
+  ~auto_out(void) {
+    if(shared_type::operator bool())
+      m_packet->Put(static_cast<shared_type>(*this));
     else if (m_makeable)
-      m_packet->Put(new type(), *m_source);
+      m_packet->Put(new type());
   }
 
-  auto_out ():
-    m_source(nullptr),
+  auto_out(void) :
     m_makeable(false)
   {}
 
@@ -83,8 +81,6 @@ public:
     cancel();
     shared_type::operator = (std::move(rhs));
     m_packet = std::move(rhs.m_packet);
-    m_source = rhs.m_source;
-    rhs.m_source = nullptr;
     m_makeable = rhs.m_makeable;
     rhs.m_makeable = false;
     return *this;
@@ -102,9 +98,8 @@ public:
     return *this;
   }
 
-  auto_out (std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
+  auto_out (std::shared_ptr<AutoPacket> packet):
     m_packet(packet),
-    m_source(&source),
     m_makeable(true)
   {}
 

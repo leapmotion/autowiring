@@ -42,103 +42,47 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>
 }
 
 void AutoPacket::AddSatCounter(SatCounter& satCounter) {
-  for(auto pCur = satCounter.GetAutoFilterInput();
-      *pCur;
-      pCur++
-      ) {
+  for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
     const std::type_info& dataType = *pCur->ti;
-    auto flow = satCounter.GetDataFlow(&dataType);
-    if (flow.broadcast) {
-      // Broadcast source is void
-      DecorationDisposition* entry = &m_decorations[DSIndex(dataType, typeid(void))];
-      entry->m_type = &dataType;
 
-      // Decide what to do with this entry:
-      // NOTE: Recipients added via AddReceiver can receive broadcast data,
-      // so it is necessary to decrement the receiver's counters when it is added.
-      if (pCur->is_input) {
-        entry->m_subscribers.push_back(std::make_pair(&satCounter, !pCur->is_optional));
-        if (entry->satisfied)
-          satCounter.Decrement(dataType, typeid(void), !pCur->is_optional);
-      }
-      if (pCur->is_output) {
-        if(entry->m_publisher) {
-          std::stringstream ss;
-          ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti);
-          throw std::runtime_error(ss.str());
-        }
-        entry->m_publisher = &satCounter;
-      }
+    // Broadcast source is void
+    DecorationDisposition* entry = &m_decorations[dataType];
+    entry->m_type = &dataType;
+
+    // Decide what to do with this entry:
+    // NOTE: Recipients added via AddReceiver can receive broadcast data,
+    // so it is necessary to decrement the receiver's counters when it is added.
+    if (pCur->is_input) {
+      entry->m_subscribers.push_back(std::make_pair(&satCounter, !pCur->is_optional));
+      if (entry->satisfied)
+        satCounter.Decrement(dataType, !pCur->is_optional);
     }
-    for (auto halfpipe : flow.halfpipes) {
-      // Pipe terminating type is defined by halfpipe
-      DecorationDisposition* entry;
-      if (flow.output) {
-        entry = &m_decorations[DSIndex(dataType, *satCounter.GetType())];
-      } else {
-        entry = &m_decorations[DSIndex(dataType, halfpipe)];
+    if (pCur->is_output) {
+      if(entry->m_publisher) {
+        std::stringstream ss;
+        ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti);
+        throw std::runtime_error(ss.str());
       }
-      entry->m_type = &dataType;
-
-      // Decide what to do with this entry:
-      // NOTE: Recipients added via AddReceiver cannot receive piped data,
-      // and subscribers are added before the packet is decorated.
-      if (pCur->is_input) {
-        entry->m_subscribers.push_back(std::make_pair(&satCounter, !pCur->is_optional));
-      }
-      if (pCur->is_output) {
-        if(entry->m_publisher) {
-          std::stringstream ss;
-          ss << "Added identical data pipes from " << satCounter.GetAutoFilterTypeInfo()->name() << " of type " << pCur->ti->name();
-          throw std::runtime_error(ss.str());
-        }
-        entry->m_publisher = &satCounter;
-      }
+      entry->m_publisher = &satCounter;
     }
   }
 }
 
 void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
-  for(auto pCur = satCounter.GetAutoFilterInput();
-      *pCur;
-      pCur++
-      ) {
+  for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
     const std::type_info& dataType = *pCur->ti;
-    auto flow = satCounter.GetDataFlow(&dataType);
-    if (flow.broadcast) {
-      // Broadcast source is void
-      DecorationDisposition* entry = &m_decorations[DSIndex(dataType, typeid(void))];
 
-      // Decide what to do with this entry:
-      if (pCur->is_input) {
-        assert(!entry->m_subscribers.empty());
-        assert(&satCounter == entry->m_subscribers.back().first);
-        entry->m_subscribers.pop_back();
-      }
-      if (pCur->is_output) {
-        assert(&satCounter == entry->m_publisher);
-        entry->m_publisher = nullptr;
-      }
+    DecorationDisposition* entry = &m_decorations[dataType];
+
+    // Decide what to do with this entry:
+    if (pCur->is_input) {
+      assert(!entry->m_subscribers.empty());
+      assert(&satCounter == entry->m_subscribers.back().first);
+      entry->m_subscribers.pop_back();
     }
-    for (auto halfpipe : flow.halfpipes) {
-      // Pipe terminating type is defined by halfpipe
-      DecorationDisposition* entry;
-      if (flow.output) {
-        entry = &m_decorations[DSIndex(dataType, *satCounter.GetType())];
-      } else {
-        entry = &m_decorations[DSIndex(dataType, halfpipe)];
-      }
-
-      // Decide what to do with this entry:
-      if (pCur->is_input) {
-        assert(!entry->m_subscribers.empty());
-        assert(&satCounter == entry->m_subscribers.back().first);
-        entry->m_subscribers.pop_back();
-      }
-      if (pCur->is_output) {
-        assert(&satCounter == entry->m_publisher);
-        entry->m_publisher = nullptr;
-      }
+    if (pCur->is_output) {
+      assert(&satCounter == entry->m_publisher);
+      entry->m_publisher = nullptr;
     }
   }
 }
@@ -157,11 +101,11 @@ ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory, 
   );
 }
 
-void AutoPacket::MarkUnsatisfiable(const std::type_info& info, const std::type_info& source) {
+void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
   std::list<SatCounter*> callQueue;
   {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto dFind = m_decorations.find(DSIndex(info, source));
+    auto dFind = m_decorations.find(info);
     if(dFind == m_decorations.end())
       // Trivial return, there's no subscriber to this decoration and so we have nothing to do
       return;
@@ -174,7 +118,7 @@ void AutoPacket::MarkUnsatisfiable(const std::type_info& info, const std::type_i
         continue;
 
       // Entry is optional, we will call if we're satisfied after decrementing this optional field
-      if(satCounter.first->Decrement(info, source, false))
+      if(satCounter.first->Decrement(info, false))
         callQueue.push_back(satCounter.first);
     }
   }
@@ -184,7 +128,7 @@ void AutoPacket::MarkUnsatisfiable(const std::type_info& info, const std::type_i
     call->CallAutoFilter(*this);
 }
 
-void AutoPacket::UpdateSatisfaction(const std::type_info& info, const std::type_info& source) {
+void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
   std::list<SatCounter*> callQueue;
   {
     std::lock_guard<std::mutex> lk(m_lock);
@@ -197,7 +141,7 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, const std::type_
       }
     }
 
-    auto dFind = m_decorations.find(DSIndex(info, source));
+    auto dFind = m_decorations.find(info);
     if(dFind == m_decorations.end())
       // Trivial return, there's no subscriber to this decoration and so we have nothing to do
       return;
@@ -205,7 +149,7 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, const std::type_
     // Update satisfaction inside of lock
     DecorationDisposition* decoration = &dFind->second;
     for(const auto& satCounter : decoration->m_subscribers)
-      if(satCounter.first->Decrement(info, source, satCounter.second))
+      if(satCounter.first->Decrement(info, satCounter.second))
         callQueue.push_back(satCounter.first);
   }
 
@@ -215,9 +159,6 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info, const std::type_
 }
 
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
-  // TODO: DecorateImmediate can only broadcast - change this to allow sourced immediate decoration.
-  const std::type_info& source = typeid(void);
-
   std::list<SatCounter*> callQueue;
   // First pass, decrement what we can:
   {
@@ -245,7 +186,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 
           // Now do the decrementation and proceed even if optional > 0,
           // since this is the only opportunity to fulfill the arguments
-          (cur->Decrement(*pTypeSubs[i]->m_type, source, true) ||
+          (cur->Decrement(*pTypeSubs[i]->m_type, true) ||
            cur->remaining == 0)
         )
           // Finally, queue a call for this type
@@ -266,123 +207,68 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
       for(const auto& satCounter : pTypeSubs[i]->m_subscribers) {
         SatCounter* cur = satCounter.first;
         if (satCounter.second) {
-          cur->Increment(*pTypeSubs[i]->m_type, source, true);
+          cur->Increment(*pTypeSubs[i]->m_type, true);
         }
       }
     }
   }
 }
 
-bool AutoPacket::UnsafeHas(const std::type_info& data, const std::type_info& source) const {
-  auto q = m_decorations.find(DSIndex(data, source));
+bool AutoPacket::UnsafeHas(const std::type_info& data) const {
+  auto q = m_decorations.find(data);
   if(q == m_decorations.end())
     return false;
   return q->second.satisfied;
 }
 
-void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& data, const std::type_info& source) {
-  autowiring::DataFlow flow = GetDataFlow(data, source);
-  if (flow.broadcast) {
-    auto& entry = m_decorations[DSIndex(data, typeid(void))];
-    entry.m_type = &data; // Ensure correct type if instantiated here
+void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& data) {
+  auto& entry = m_decorations[data];
+  entry.m_type = &data; // Ensure correct type if instantiated here
 
-    if (entry.satisfied) {
-      std::stringstream ss;
-      ss << "Cannot decorate this packet with type " << autowiring::demangle(*ptr)
-      << ", the requested decoration already exists";
-      throw std::runtime_error(ss.str());
-    }
-    if(entry.isCheckedOut) {
-      std::stringstream ss;
-      ss << "Cannot check out decoration of type " << autowiring::demangle(*ptr)
-      << ", it is already checked out elsewhere";
-      throw std::runtime_error(ss.str());
-    }
-    entry.isCheckedOut = true;
-    entry.m_decoration = *ptr;
+  if (entry.satisfied) {
+    std::stringstream ss;
+    ss << "Cannot decorate this packet with type " << autowiring::demangle(*ptr)
+    << ", the requested decoration already exists";
+    throw std::runtime_error(ss.str());
   }
-  if (!flow.halfpipes.empty() ||
-      !flow.broadcast) {
-    auto& entry = m_decorations[DSIndex(data, source)];
-    entry.m_type = &data; // Ensure correct type if instantiated here
-
-    if (entry.satisfied) {
-      std::stringstream ss;
-      ss << "Cannot decorate this packet with type " << autowiring::demangle(*ptr)
-      << ", the requested decoration already exists";
-      throw std::runtime_error(ss.str());
-    }
-    if(entry.isCheckedOut) {
-      std::stringstream ss;
-      ss << "Cannot check out decoration of type " << autowiring::demangle(*ptr)
-      << ", it is already checked out elsewhere";
-      throw std::runtime_error(ss.str());
-    }
-    entry.isCheckedOut = true;
-    entry.m_decoration = *ptr;
+  if(entry.isCheckedOut) {
+    std::stringstream ss;
+    ss << "Cannot check out decoration of type " << autowiring::demangle(*ptr)
+    << ", it is already checked out elsewhere";
+    throw std::runtime_error(ss.str());
   }
+  entry.isCheckedOut = true;
+  entry.m_decoration = *ptr;
 }
 
-void AutoPacket::UnsafeComplete(bool ready, const std::type_info& data, const std::type_info& source,
-                                DecorationDisposition* &broadDeco, DecorationDisposition* &pipedDeco) {
-  autowiring::DataFlow flow = GetDataFlow(data, source);
-  if (flow.broadcast) {
-    broadDeco = &m_decorations[DSIndex(data, typeid(void))];
+void AutoPacket::UnsafeComplete(bool ready, const std::type_info& data, DecorationDisposition*& entry) {
+  entry = &m_decorations[data];
 
-    assert(broadDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
-    assert(broadDeco->isCheckedOut); // CompleteCheckout must follow Checkout
+  assert(entry->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
+  assert(entry->isCheckedOut); // CompleteCheckout must follow Checkout
 
-    if(!ready)
-      // Memory must be released, the checkout was cancelled
-      broadDeco->m_decoration->reset();
+  if(!ready)
+    // Memory must be released, the checkout was cancelled
+    entry->m_decoration->reset();
 
-    // Reset the checkout flag before releasing the lock:
-    broadDeco->isCheckedOut = false;
-    broadDeco->satisfied = true;
-  }
-  if (!flow.halfpipes.empty() ||
-      !flow.broadcast) {
-    // IMPORTANT: If data isn't broadcast it should be provided with a source.
-    // This enables extraction of multiple types without collision.
-    pipedDeco = &m_decorations[DSIndex(data, source)];
-
-    assert(pipedDeco->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
-    assert(pipedDeco->isCheckedOut); // CompleteCheckout must follow Checkout
-
-    if(!ready)
-      // Memory must be released, the checkout was cancelled
-      pipedDeco->m_decoration->reset();
-
-    // Reset the checkout flag before releasing the lock:
-    pipedDeco->isCheckedOut = false;
-    pipedDeco->satisfied = true;
-  }
+  // Reset the checkout flag before releasing the lock:
+  entry->isCheckedOut = false;
+  entry->satisfied = true;
 }
 
-void AutoPacket::CompleteCheckout(bool ready, const std::type_info& data, const std::type_info& source) {
-  DecorationDisposition* broadDeco = nullptr;
-  DecorationDisposition* pipedDeco = nullptr;
+void AutoPacket::CompleteCheckout(bool ready, const std::type_info& data) {
+  DecorationDisposition* entry = nullptr;
   {
-    std::lock_guard<std::mutex> guard(m_lock);
     // This allows us to retrieve correct entries for decorated input requests
-    UnsafeComplete(ready, data, source, broadDeco, pipedDeco);
+    std::lock_guard<std::mutex> guard(m_lock);
+    UnsafeComplete(ready, data, entry);
   }
   
-  if(ready) {
-    if (broadDeco) {
-      UpdateSatisfaction(broadDeco->m_decoration->type(), typeid(void));
-    }
-    if (pipedDeco) {
-      // NOTE: Only publish with source if pipes are declared - this prevents
-      // added or snooping filters from satisfying piped input declarations.
-      UpdateSatisfaction(pipedDeco->m_decoration->type(), source);
-    }
-  } else {
-    if (broadDeco)
-      MarkUnsatisfiable(broadDeco->m_decoration->type(), typeid(void));
-    if (pipedDeco)
-      MarkUnsatisfiable(pipedDeco->m_decoration->type(), source);
-  }
+  if(entry)
+    if(ready)
+      UpdateSatisfaction(entry->m_decoration->type());
+    else
+      MarkUnsatisfiable(entry->m_decoration->type());
 }
 
 void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
@@ -405,25 +291,18 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
       if (!decoration.second.satisfied)
         continue;
 
-      // Only broadcast data is propagated
-      const std::type_info& source(typeid(void));
-      if (std::get<1>(decoration.first) != source)
-        continue;
-
       const std::type_info& data = *decoration.second.m_type;
 
       // Quietly drop data that is already present on recipient
-      if (recipient->UnsafeHas(data, typeid(void)))
+      if (recipient->UnsafeHas(data))
         continue;
 
       AnySharedPointer any_ptr(decoration.second.m_decoration);
-      recipient->UnsafeCheckout(&any_ptr, data, source);
+      recipient->UnsafeCheckout(&any_ptr, data);
 
-      DecorationDisposition* broadDeco = nullptr;
-      DecorationDisposition* pipedDeco = nullptr;
-      recipient->UnsafeComplete(true, data, source, broadDeco, pipedDeco);
-
-      decoQueue.push_back(broadDeco);
+      DecorationDisposition* entry = nullptr;
+      recipient->UnsafeComplete(true, data, entry);
+      decoQueue.push_back(entry);
     }
 
     m_lock.unlock();
@@ -433,33 +312,8 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   // Recipient satisfaction is updated outside of lock
   for (DecorationDisposition* broadDeco : decoQueue) {
     // Satisfy the base declaration first and then the shared pointer:
-    recipient->UpdateSatisfaction(broadDeco->m_decoration->type(), typeid(void));
+    recipient->UpdateSatisfaction(broadDeco->m_decoration->type());
   }
-}
-
-DataFlow AutoPacket::GetDataFlow(const DecorationDisposition& entry) const {
-  DataFlow flow; //DEFAULT: No broadcast, no pipes
-  if (!entry.m_publisher) {
-    // Broadcast is always true for added or snooping recipients
-    flow.broadcast = true;
-  } else {
-    flow = entry.m_publisher->GetDataFlow(entry.m_type);
-  }
-  return flow;
-}
-
-DataFlow AutoPacket::GetDataFlow(const std::type_info& data, const std::type_info& source) {
-  DataFlow flow; //DEFAULT: No pipes
-  flow.broadcast = true; //DEFAULT: Broadcast data from anonymous sources
-  size_t sat_ind = 0;
-  for (auto& sat : m_satCounters) {
-    if (sat_ind > m_subscriberNum)
-      break;
-    if (&source == sat.GetAutoFilterTypeInfo())
-      flow = sat.GetDataFlow(&data);
-    ++sat_ind;
-  }
-  return flow;
 }
 
 void AutoPacket::Reset(void) {
@@ -578,10 +432,10 @@ SatCounter AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {
   return SatCounter();
 }
 
-std::list<SatCounter> AutoPacket::GetSubscribers(const std::type_info& data, const std::type_info& source) const {
+std::list<SatCounter> AutoPacket::GetSubscribers(const std::type_info& data) const {
   std::lock_guard<std::mutex> lk(m_lock);
   std::list<SatCounter> subscribers;
-  t_decorationMap::const_iterator decoration = m_decorations.find(DSIndex(data, source));
+  t_decorationMap::const_iterator decoration = m_decorations.find(data);
   if (decoration != m_decorations.end())
     for (auto& subscriber : decoration->second.m_subscribers)
       subscribers.push_back(*subscriber.first);
@@ -597,7 +451,7 @@ std::list<DecorationDisposition> AutoPacket::GetDispositions(const std::type_inf
   return dispositions;
 }
 
-bool AutoPacket::HasSubscribers(const std::type_info& data, const std::type_info& source) const {
+bool AutoPacket::HasSubscribers(const std::type_info& data) const {
   std::lock_guard<std::mutex> lk(m_lock);
-  return m_decorations.count(DSIndex(data, source)) != 0;
+  return m_decorations.count(data) != 0;
 }

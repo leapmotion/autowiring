@@ -30,8 +30,8 @@ public:
 
   auto_arg() {}
 
-  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    auto_in<type>(packet, source)
+  auto_arg(std::shared_ptr<AutoPacket> packet):
+    auto_in<type>(packet)
   {}
 
   static const bool is_shared = false;
@@ -50,8 +50,8 @@ public:
 
   auto_arg() {}
 
-  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    auto_in<type>(packet, source)
+  auto_arg(std::shared_ptr<AutoPacket> packet):
+    auto_in<type>(packet)
   {}
 
   static const bool is_shared = false;
@@ -70,8 +70,8 @@ public:
 
   auto_arg() {}
 
-  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    auto_in<type>(packet, source)
+  auto_arg(std::shared_ptr<AutoPacket> packet):
+    auto_in<type>(packet)
   {}
 
   static const bool is_shared = false;
@@ -90,8 +90,8 @@ public:
 
   auto_arg() {}
 
-  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    auto_in<type>(packet, source)
+  auto_arg(std::shared_ptr<AutoPacket> packet):
+    auto_in<type>(packet)
   {}
 
   static const bool is_shared = true;
@@ -110,8 +110,8 @@ public:
 
   auto_arg() {}
 
-  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    auto_in<type>(packet, source)
+  auto_arg(std::shared_ptr<AutoPacket> packet):
+    auto_in<type>(packet)
   {}
 
   static const bool is_shared = true;
@@ -130,8 +130,8 @@ public:
 
   auto_arg() {}
 
-  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    auto_out<type>(packet, source)
+  auto_arg(std::shared_ptr<AutoPacket> packet):
+    auto_out<type>(packet)
   {}
 
   static const bool is_shared = false;
@@ -150,8 +150,8 @@ public:
 
   auto_arg() {}
 
-  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    auto_out<type>(packet, source)
+  auto_arg(std::shared_ptr<AutoPacket> packet):
+    auto_out<type>(packet)
   {}
 
   static const bool is_shared = true;
@@ -170,8 +170,8 @@ public:
 
   auto_arg() {}
 
-  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    auto_out<type>(packet, source)
+  auto_arg(std::shared_ptr<AutoPacket> packet):
+    auto_out<type>(packet)
   {}
 
   static const bool is_shared = true;
@@ -190,8 +190,8 @@ public:
 
   auto_arg() {}
 
-  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    optional_ptr<type>(packet, source)
+  auto_arg(std::shared_ptr<AutoPacket> packet):
+    optional_ptr<type>(packet)
   {}
 
   static const bool is_shared = true;

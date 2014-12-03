@@ -8,21 +8,19 @@ class AutoPacket;
 template<class T>
 class AutoCheckout {
 public:
-  typedef void (AutoPacket::*t_completion)(bool, const std::type_info&, const std::type_info&);
+  typedef void (AutoPacket::*t_completion)(bool, const std::type_info&);
 
   AutoCheckout(void) :
     m_parent(nullptr),
     m_val(nullptr),
     m_ready(false),
-    m_source(&typeid(void)),
     completion(nullptr)
   {}
 
-  AutoCheckout(AutoPacket& parent, const std::shared_ptr<T>& val, t_completion completion, const std::type_info& source = typeid(void)) :
+  AutoCheckout(AutoPacket& parent, const std::shared_ptr<T>& val, t_completion completion) :
     m_parent(&parent),
     m_val(val),
     m_ready(false),
-    m_source(&source),
     completion(completion)
   {}
 
@@ -30,7 +28,6 @@ public:
     m_parent(rhs.m_parent),
     m_val(rhs.m_val),
     m_ready(rhs.m_ready),
-    m_source(rhs.m_source),
     completion(rhs.completion)
   {
     rhs.m_parent = nullptr;
@@ -40,7 +37,7 @@ public:
 
   ~AutoCheckout(void) {
     if(m_val)
-      (m_parent->*completion)(m_ready, typeid(T), *m_source);
+      (m_parent->*completion)(m_ready, typeid(T));
   }
 
 private:
@@ -50,7 +47,6 @@ private:
   AutoPacket* m_parent;
   std::shared_ptr<T> m_val;
   mutable bool m_ready;
-  const std::type_info* m_source;
   t_completion completion;
 
 public:
@@ -73,7 +69,6 @@ public:
     m_parent = rhs.m_parent;
     m_val = rhs.m_val;
     m_ready = rhs.m_ready;
-    m_source = rhs.m_source;
     completion = rhs.completion;
 
     rhs.m_parent = nullptr;

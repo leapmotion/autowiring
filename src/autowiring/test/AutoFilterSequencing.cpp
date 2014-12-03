@@ -2,8 +2,6 @@
 #include "stdafx.h"
 #include "TestFixtures/Decoration.hpp"
 #include <autowiring/autowiring.h>
-#include <autowiring/AutoMerge.h>
-#include <autowiring/AutoStile.h>
 #include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/DeclareElseFilter.h>
 

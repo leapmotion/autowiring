@@ -79,7 +79,7 @@ TEST_F(ArgumentTypeTest, TestAutoIn) {
   AutoRequired<AutoPacketFactory> factory;
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   packet->Decorate(Argument<0>(1));
-  auto_in<Argument<0>> in(packet, typeid(void));
+  auto_in<Argument<0>> in(packet);
   ASSERT_TRUE(in.is_input) << "Incorrect orientation";
   ASSERT_FALSE(in.is_output) << "Incorrect orientation";
   ASSERT_EQ(1, in->i) << "Incorrect initialization";
@@ -105,7 +105,7 @@ TEST_F(ArgumentTypeTest, TestAutoOut) {
   AutoRequired<AutoPacketFactory> factory;
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   {
-    auto_out<Argument<0>> out(packet, typeid(void));
+    auto_out<Argument<0>> out(packet);
     ASSERT_FALSE(out.is_input) << "Incorrect orientation";
     ASSERT_TRUE(out.is_output) << "Incorrect orientation";
 
@@ -116,7 +116,7 @@ TEST_F(ArgumentTypeTest, TestAutoOut) {
     auto_out<Argument<0>> out1(std::move(out));
 
     // Assign by move
-    auto_out<Argument<0>> out2(packet, typeid(void));
+    auto_out<Argument<0>> out2(packet);
     out2 = std::move(out1);
   }
 
