@@ -71,6 +71,10 @@ public:
     return operator const T&();
   }
 
+  const T* operator->(void) const {
+    return m_manager->Get(m_key)->template as<T>().get();
+  }
+
   /// <returns>
   /// True if this configurable field has been satisfied with a value
   /// </returns>
