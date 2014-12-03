@@ -63,7 +63,7 @@ static std::string ExtractKey(const std::type_info& ti) {
     ss >> arg2;
     
     // Remove trailing ",struct"
-    arg1 = arg1.substr(0, found)
+    arg1 = arg1.substr(0, found);
     
     // Remove trailing '>'
     arg2.pop_back();
