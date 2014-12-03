@@ -38,7 +38,8 @@ struct ConfigRegistryEntryT:
   AnySharedPointer parse(const std::string& str) const {
     std::istringstream ss(str);
     T val;
-    ss >> val;
+    ss >> std::boolalpha >> val;
+    
     if (ss.fail()) {
       std::stringstream msg;
       msg << "Failed to parse '" << str << "' as type '"

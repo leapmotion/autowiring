@@ -33,6 +33,21 @@ TEST_F(AutoConfigTest, VerifySimpleAssignment) {
   ASSERT_EQ(323, mcc->m_myName) << "Configurable type did not receive a value as expected";
 }
 
+struct MyBoolClass {
+  AutoConfig<bool, struct bool_space, struct my_bool> m_bool;
+};
+
+TEST_F(AutoConfigTest, VerifyBool) {
+  AutoRequired<AutoConfigManager> acm;
+  AutoRequired<MyBoolClass> clz1;
+  
+  acm->Set("bool_space.my_bool", true);
+  ASSERT_TRUE(clz1->m_bool);
+  
+  acm->SetParsed("bool_space.my_bool", "false");
+  ASSERT_FALSE(clz1->m_bool);
+}
+
 TEST_F(AutoConfigTest, VerifyPostHocAssignment) {
   // Inject the configurable type first
   AutoRequired<MyConfigurableClass> mcc;
