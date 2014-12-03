@@ -9,7 +9,7 @@ set(AutoNetTest_SRCS
   WebsocketTest.cpp
 )
 
-ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutoNetTest_SRCS)
+add_pch(AutoNetTest_SRCS "stdafx.h" "stdafx.cpp")
 
 add_executable(AutoNetTest ${AutoNetTest_SRCS})
 target_link_libraries(AutoNetTest AutoTesting AutoNet Autowiring)
