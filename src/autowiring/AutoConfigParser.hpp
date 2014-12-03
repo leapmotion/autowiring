@@ -8,14 +8,9 @@
 
 namespace autowiring {
 
-  
-#if __GNUG__// Mac and linux
-  
-static std::string ExtractKey(const std::type_info& ti) {
+static std::string ExtractKeyUnix(std::stringstream& ss) {
   //Extract Namespace and value from typename
   //AutoConfigBase::ConfigTypeExtractor<Namespace, Value>
-  
-  std::stringstream ss(demangle(ti));
   
   std::string arg1;
   std::string arg2;
@@ -43,14 +38,10 @@ static std::string ExtractKey(const std::type_info& ti) {
     return arg1;
   }
 }
-  
-#else // Windows
 
-static std::string ExtractKey(const std::type_info& ti) {
+static std::string ExtractKeyWin(std::stringstream& ss) {
   //Extract Namespace and value from typename
   //struct AutoConfigBase::ConfigTypeExtractor<struct Namespace, struct Value>
-  
-  std::stringstream ss(demangle(ti));
   
   std::string arg1;
   std::string arg2;
@@ -79,6 +70,16 @@ static std::string ExtractKey(const std::type_info& ti) {
   }
 }
 
+static std::string ExtractKey(const std::type_info& ti) {
+  std::string demangled = demangle(ti);
+  std::stringstream ss(demangled);
+
+  return
+#if __GNUG__// Mac and linux
+    ExtractKeyUnix(ss);
+#else // Windows
+    ExtractKeyWin(ss);
 #endif
-  
+}
+
 }//namespace autowiring

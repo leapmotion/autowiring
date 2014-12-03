@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <autowiring/AutoConfig.h>
 #include <autowiring/AutoConfigManager.h>
+#include <src/autowiring/AutoConfigParser.hpp>
 
 class AutoConfigTest:
   public testing::Test
@@ -113,4 +114,11 @@ TEST_F(AutoConfigTest, VerifySet) {
   
   clz1->m_myName.Set(42);
   ASSERT_EQ(42, clz1->m_myName);
+}
+
+TEST_F(AutoConfigTest, ExtractKeyTestWin) {
+  ASSERT_STREQ(
+    "Namespace1.XYZ",
+    autowiring::ExtractKeyWin(std::stringstream("struct AutoConfigBase::ConfigTypeExtractor<struct Namespace1,struct XYZ>")).c_str()
+  ) << "Windows key extraction implementation mismatch";
 }
