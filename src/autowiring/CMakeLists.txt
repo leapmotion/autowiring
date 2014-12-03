@@ -23,6 +23,7 @@ set(Autowiring_SRCS
   AutoConfigManager.h
   AutoConfigManager.cpp
   AutoConfigParser.hpp
+  AutoConfigParser.cpp
   AutoRestarter.h
   AutoFuture.h
   AutoFuture.cpp

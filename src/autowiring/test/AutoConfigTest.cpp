@@ -117,8 +117,10 @@ TEST_F(AutoConfigTest, VerifySet) {
 }
 
 TEST_F(AutoConfigTest, ExtractKeyTestWin) {
+  std::stringstream win("struct AutoConfigBase::ConfigTypeExtractor<struct Namespace1,struct XYZ>");
+  
   ASSERT_STREQ(
     "Namespace1.XYZ",
-    autowiring::ExtractKeyWin(std::stringstream("struct AutoConfigBase::ConfigTypeExtractor<struct Namespace1,struct XYZ>")).c_str()
+    autowiring::ExtractKeyWin(win).c_str()
   ) << "Windows key extraction implementation mismatch";
 }
