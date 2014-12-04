@@ -17,18 +17,15 @@ ContextEnumerator::iterator::iterator(const std::shared_ptr<CoreContext>& root, 
 ContextEnumerator::iterator::~iterator(void) {}
 
 void ContextEnumerator::iterator::_next(const std::shared_ptr<CoreContext>& start) {
-  std::shared_ptr<CoreContext> i;
-  for(
-    // Try to traverse the first child if possible:
-    i = start;
-
-    // Continue until we find something and we haven't walked off the end:
-    !i && m_cur;
-
+  // First node to search
+  std::shared_ptr<CoreContext> i = start;
+  
+  // Continue until we find something and we haven't walked off the end:
+  while(!i && m_cur) {
     // m_cur is ascending, we are right-traversing
-    i = m_cur->NextSibling(),
-    m_cur = m_cur->GetParentContext()
-  );
+    i = m_cur->NextSibling();
+    m_cur = m_cur->GetParentContext();
+  }
 
   if(m_cur == m_root)
     // Root hit, done traversing

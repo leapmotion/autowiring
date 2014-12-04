@@ -7,7 +7,7 @@
 #include "autowiring_error.h"
 #include "demangle.h"
 
-// Check if 'T' has a valid stream converion operator
+// Check if 'T' has a valid stream conversion operator
 template<typename T>
 struct has_stream {
   template<class U>
