@@ -88,23 +88,35 @@ void AutoConfigManager::SetInternal(const std::string& key, AnySharedPointer val
   }
   
   // Recursivly set values in desendent contexts
-  for (const auto& ctxt : ContextEnumerator(GetContext())) {
+  auto enumerator = ContextEnumerator(GetContext());
+  auto ctxt = enumerator.begin();
+  while (ctxt != enumerator.end()) {
     // We already set this context's value
-    if (ctxt == GetContext())
+    if (*ctxt == GetContext())
+      ++ctxt;
       continue;
     
     AutowiredFast<AutoConfigManager> mgmt;
     if (mgmt) {
       std::lock_guard<std::mutex>(mgmt->m_lock);
-      // Don't set value if 'mgmt' has set the value itself
-      if (!mgmt->m_setHere.count(key)) {
-        mgmt->m_attributes[key] = value;
+      
+      // If value was set in 'mgmt', stop recursing this branch
+      if (mgmt->m_setHere.count(key)){
         
-        // Call callbacks for this key
-        for (const auto& cb : m_callbacks[key]) {
-          cb(value);
-        }
+        // Stop recursing down this branch, continue to sibling
+        ctxt.NextSibling();
+        continue;
       }
+      
+      // Continue recursing down branch
+      mgmt->m_attributes[key] = value;
+      
+      // Call callbacks for this key
+      for (const auto& cb : m_callbacks[key])
+        cb(value);
+      
     }
+    // Continue to next context
+    ++ctxt;
   }
 }
