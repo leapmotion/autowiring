@@ -170,3 +170,43 @@ TEST_F(AutoConfigTest, Callbacks) {
   
   acm->Set("Namespace1.XYZ", 42);
 }
+
+TEST_F(AutoConfigTest, NestedContexts) {
+  // Set up contexts and members
+  AutoCurrentContext ctxt_outer;
+  std::shared_ptr<CoreContext> ctxt_middle = ctxt_outer->Create<void>();
+  std::shared_ptr<CoreContext> ctxt_inner = ctxt_middle->Create<void>();
+  
+  AutoRequired<MyConfigurableClass> mcc_outer(ctxt_outer);
+  AutoRequired<MyConfigurableClass> mcc_middle(ctxt_middle);
+  AutoRequired<MyConfigurableClass> mcc_inner(ctxt_inner);
+  
+  AutoRequired<AutoConfigManager> acm_outer(ctxt_outer);
+  AutoRequired<AutoConfigManager> acm_middle(ctxt_middle);
+  
+  // Set initial value
+  acm_outer->Set("Namespace1.XYZ", 42);
+  ASSERT_EQ(42, *mcc_outer->m_myName) << "Config value not set";
+  ASSERT_EQ(42, *mcc_middle->m_myName) << "Config value not set in descendant context";
+  ASSERT_EQ(42, *mcc_inner->m_myName) << "Config value not set in descendant context";
+  
+  // Set middle, inner shouldn't be able to be set from outer after this
+  bool callback_hit1 = false;
+  mcc_inner->m_myName += [&callback_hit1](int) {
+    callback_hit1 = true;
+  };
+  acm_middle->Set("Namespace1.XYZ", 1337);
+  ASSERT_EQ(42, *mcc_outer->m_myName) << "Config value changed in outer context";
+  ASSERT_EQ(1337, *mcc_middle->m_myName) << "Config value not set";
+  ASSERT_EQ(1337, *mcc_inner->m_myName) << "Config value not set in child context";
+  ASSERT_TRUE(callback_hit1) << "Callback not hit in inner context";
+  
+  // Set from outter, inner should be shielded my middle context
+  mcc_inner->m_myName += [](int) {
+    FAIL() << "This callback should never be hit";
+  };
+  acm_outer->Set("Namespace1.XYZ", 999);
+  ASSERT_EQ(999, *mcc_outer->m_myName) << "Config value not set";
+  ASSERT_EQ(1337, *mcc_middle->m_myName) << "Config value overwritten when value was set in this context";
+  ASSERT_EQ(1337, *mcc_inner->m_myName) << "Config value overwritten when value was set in parent context";;
+}

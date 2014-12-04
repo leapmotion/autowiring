@@ -17,6 +17,9 @@ public:
   AutoConfigManager();
   virtual ~AutoConfigManager();
   
+  // Callback function type
+  typedef std::function<void(const AnySharedPointer&)> t_callback;
+  
 private:
   std::mutex m_lock;
   
@@ -30,7 +33,7 @@ private:
   std::unordered_set<std::string> m_setHere;
   
   // map of callbacks registered for a key
-  std::unordered_map<std::string, std::vector<std::function<void(const AnySharedPointer&)>>> m_callbacks;
+  std::unordered_map<std::string, std::vector<t_callback>> m_callbacks;
 
 public:
   /// <summary>

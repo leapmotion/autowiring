@@ -22,16 +22,12 @@ static std::unordered_map<std::string, const ConfigRegistryEntry*> FillRegistry(
 AutoConfigManager::AutoConfigManager(void):
   m_registry(FillRegistry())
 {
-  // Fill content from parent AutoConfigManagers
-  for (auto ctxt = GetContext()->GetParentContext(); ctxt; ctxt = ctxt->GetParentContext()) {
-    AutowiredFast<AutoConfigManager> mgmt;
-    
-    // Found closest AutoConfigManager, use its attributes and return
-    if (mgmt) {
-      std::lock_guard<std::mutex> lk(mgmt->m_lock);
-      m_attributes = mgmt->m_attributes;
-      return;
-    }
+  // Copy parents config settings
+  auto parent = GetContext()->GetParentContext();
+  if (parent) {
+    AutoRequired<AutoConfigManager> mgmt(parent);
+    std::lock_guard<std::mutex> lk(mgmt->m_lock);
+    m_attributes = mgmt->m_attributes;
   }
 }
 
@@ -72,7 +68,7 @@ bool AutoConfigManager::SetParsed(const std::string& key, const std::string& val
   return true;
 }
 
-void AutoConfigManager::AddCallback(const std::string& key, std::function<void(const AnySharedPointer&)>&& fx) {
+void AutoConfigManager::AddCallback(const std::string& key, t_callback&& fx) {
   std::lock_guard<std::mutex> lk(m_lock);
   m_callbacks[key].push_back(fx);
 }
@@ -87,35 +83,32 @@ void AutoConfigManager::SetInternal(const std::string& key, AnySharedPointer val
     cb(value);
   }
   
-  // Recursivly set values in desendent contexts
+  // Enumerate descendant contexts
   auto enumerator = ContextEnumerator(GetContext());
   auto ctxt = enumerator.begin();
+  
+  // Skip current context
+  ++ctxt;
+  
+  // Recursivly set values in desendent contexts
   while (ctxt != enumerator.end()) {
-    // We already set this context's value
-    if (*ctxt == GetContext())
-      ++ctxt;
-      continue;
     
-    AutowiredFast<AutoConfigManager> mgmt;
-    if (mgmt) {
-      std::lock_guard<std::mutex>(mgmt->m_lock);
-      
-      // If value was set in 'mgmt', stop recursing this branch
-      if (mgmt->m_setHere.count(key)){
-        
-        // Stop recursing down this branch, continue to sibling
-        ctxt.NextSibling();
-        continue;
-      }
-      
-      // Continue recursing down branch
-      mgmt->m_attributes[key] = value;
-      
-      // Call callbacks for this key
-      for (const auto& cb : m_callbacks[key])
-        cb(value);
-      
+    // Make sure we get the AutoConfigManager from "ctxt"
+    AutoRequired<AutoConfigManager> mgmt(*ctxt);
+    std::lock_guard<std::mutex>(mgmt->m_lock);
+    
+    // Check if value set from this context
+    // If so, stop recursing down this branch, continue to sibling
+    if (mgmt->m_setHere.count(key)){
+      ctxt.NextSibling();
+      continue;
     }
+    
+    mgmt->m_attributes[key] = value;
+    
+    for (const auto& cb : mgmt->m_callbacks[key])
+      cb(value);
+    
     // Continue to next context
     ++ctxt;
   }
