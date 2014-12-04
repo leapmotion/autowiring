@@ -7,6 +7,18 @@
 #include "autowiring_error.h"
 #include "demangle.h"
 
+// Check if 'T' has a valid stream conversion operator
+template<typename T>
+struct has_stream {
+  template<class U>
+  static auto select(std::istream* is, U* u) -> decltype(*is >> *u);
+  
+  template<class U>
+  static void select(...);
+  
+  static const bool value = !std::is_same<void, decltype(select<T>(nullptr, nullptr))>::value;
+};
+
 struct ConfigRegistryEntry {
   ConfigRegistryEntry(const std::type_info& ti);
 
@@ -31,14 +43,24 @@ struct ConfigRegistryEntryT:
     ConfigRegistryEntry(typeid(Key))
   {}
   
-  bool verifyType(const std::type_info& ti) const {
+  bool verifyType(const std::type_info& ti) const override {
     return typeid(T) == ti;
   }
+
+  // Parse string into this ConfigEntry's type. Throw an exception
+  // if no such stream operator exists
+  AnySharedPointer parse(const std::string& str) const override {
+    return parseInternal<T>(str);
+  }
   
-  AnySharedPointer parse(const std::string& str) const {
+  // Only use if there is a stream operator
+  template<typename U>
+  typename std::enable_if<has_stream<U>::value, AnySharedPointer>::type
+  parseInternal(const std::string& str) const {
     std::istringstream ss(str);
     T val;
-    ss >> val;
+    ss >> std::boolalpha >> val;
+    
     if (ss.fail()) {
       std::stringstream msg;
       msg << "Failed to parse '" << str << "' as type '"
@@ -47,6 +69,14 @@ struct ConfigRegistryEntryT:
     }
     return AnySharedPointer(std::make_shared<T>(val));
   }
+
+  // Throw exception if there is no stream operator
+  template<typename U>
+  typename std::enable_if<!has_stream<U>::value, AnySharedPointer>::type
+  parseInternal(const std::string&) const {
+    throw autowiring_error("This type doesn't support stream conversions.\
+                           Define one if you want this to be parsable");
+  };
 };
 
 extern const ConfigRegistryEntry* g_pFirstConfigEntry;

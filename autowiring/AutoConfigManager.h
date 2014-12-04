@@ -17,10 +17,24 @@ public:
   AutoConfigManager();
   virtual ~AutoConfigManager();
   
+  // Callback function type
+  typedef std::function<void(const AnySharedPointer&)> t_callback;
+  
 private:
+  // lock for all members
   std::mutex m_lock;
-  std::unordered_map<std::string, AnySharedPointer> m_attributes;
+  
+  // local map of the Config registry
   const std::unordered_map<std::string, const ConfigRegistryEntry*> m_registry;
+  
+  // Values of AutoConfigs in this context
+  std::unordered_map<std::string, AnySharedPointer> m_attributes;
+  
+  // Set of keys for values set from this context
+  std::unordered_set<std::string> m_setHere;
+  
+  // map of callbacks registered for a key
+  std::unordered_map<std::string, std::vector<t_callback>> m_callbacks;
 
 public:
   /// <summary>
@@ -62,7 +76,7 @@ public:
     }
     
     // Set value in this AutoConfigManager
-    m_attributes[key] = AnySharedPointer(std::make_shared<T>(value));
+    SetInternal(key, AnySharedPointer(std::make_shared<T>(value)));
   }
   
   /// <summary>
@@ -80,4 +94,12 @@ public:
   /// True if value successfully set, False if key not found.
   /// </return>
   bool SetParsed(const std::string& key, const std::string& value);
+  
+  // Add a callback for when key is changed
+  void AddCallback(const std::string& key, std::function<void(const AnySharedPointer&)>&& fx);
+  
+private:
+  // Handles setting a value that has already been parsed into an AnySharedPointer
+  // Must hold m_lock when calling this
+  void SetInternal(const std::string& key, AnySharedPointer value);
 };

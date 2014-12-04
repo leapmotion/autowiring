@@ -62,13 +62,12 @@ private:
   AutoRequired<AutoConfigManager> m_manager;
 
 public:
-  
-  operator const T&() const {
+  const T& operator*() const {
     return *m_manager->Get(m_key).template as<T>();
   }
-  
-  const T& operator*() const {
-    return operator const T&();
+
+  const T* operator->(void) const {
+    return m_manager->Get(m_key)->template as<T>().get();
   }
 
   /// <returns>
@@ -78,10 +77,10 @@ public:
     return m_manager->IsConfigured(m_key);
   }
   
-  /// <summary>
-  /// Set value on this context's AutoConfigManager
-  /// <summary>
-  void Set(const T& value) {
-    m_manager->Set(m_key, value);
+  // Add a callback for when this config value changes
+  void operator+=(std::function<void(const T&)>&& fx) {
+    m_manager->AddCallback(m_key, [fx](const AnySharedPointer& val){
+      fx(*val.template as<T>());
+    });
   }
 };

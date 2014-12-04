@@ -60,9 +60,11 @@ public:
     // Current context being inspected:
     std::shared_ptr<CoreContext> m_cur;
 
-    void _next(void);
+    void _next(const std::shared_ptr<CoreContext>& start);
 
   public:
+    const iterator& NextSibling(void);
+    
     // Operator overloads:
     const iterator& operator++(void);
     const std::shared_ptr<CoreContext>& operator*(void) const { return m_cur; }
