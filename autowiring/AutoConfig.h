@@ -81,11 +81,4 @@ public:
   bool IsConfigured(void) const {
     return m_manager->IsConfigured(m_key);
   }
-  
-  /// <summary>
-  /// Set value on this context's AutoConfigManager
-  /// <summary>
-  void Set(const T& value) {
-    m_manager->Set(m_key, value);
-  }
 };

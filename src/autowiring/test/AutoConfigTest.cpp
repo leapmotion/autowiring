@@ -120,17 +120,6 @@ TEST_F(AutoConfigTest, VerifyDuplicateConfigAssignment) {
   ASSERT_EQ(1111, clz2->m_myName);
 }
 
-TEST_F(AutoConfigTest, VerifySet) {
-  AutoRequired<AutoConfigManager> acm;
-  acm->Set("Namespace1.XYZ", 324);
-  
-  AutoRequired<MyConfigurableClass> clz1;
-  ASSERT_EQ(324, clz1->m_myName);
-  
-  clz1->m_myName.Set(42);
-  ASSERT_EQ(42, clz1->m_myName);
-}
-
 TEST_F(AutoConfigTest, ExtractKeyTestWin) {
   std::stringstream win("struct AutoConfigBase::ConfigTypeExtractor<struct Namespace1,struct XYZ>");
   
