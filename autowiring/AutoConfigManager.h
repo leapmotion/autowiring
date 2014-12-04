@@ -21,6 +21,7 @@ public:
   typedef std::function<void(const AnySharedPointer&)> t_callback;
   
 private:
+  // lock for all members
   std::mutex m_lock;
   
   // local map of the Config registry
