@@ -153,3 +153,20 @@ TEST_F(AutoConfigTest, TypeWithoutAShiftOperatorTest) {
 
   ASSERT_EQ(592, noshift->m_noshift->foo) << "Value assignment did not result in an update to a non-serializable configuration field";
 }
+
+TEST_F(AutoConfigTest, Callbacks) {
+  AutoRequired<AutoConfigManager> acm;
+  AutoRequired<MyConfigurableClass> mcc;
+  
+  acm->Set("Namespace1.XYZ", 4);
+  
+  mcc->m_myName += [](int val) {
+    ASSERT_EQ(val, 42);
+  };
+  
+  mcc->m_myName += [](int val) {
+    ASSERT_EQ(val, 42);
+  };
+  
+  acm->Set("Namespace1.XYZ", 42);
+}

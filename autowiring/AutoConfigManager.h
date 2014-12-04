@@ -19,9 +19,18 @@ public:
   
 private:
   std::mutex m_lock;
-  std::unordered_map<std::string, AnySharedPointer> m_attributes;
-  std::unordered_set<std::string> m_setHere;
+  
+  // local map of the Config registry
   const std::unordered_map<std::string, const ConfigRegistryEntry*> m_registry;
+  
+  // Values of AutoConfigs in this context
+  std::unordered_map<std::string, AnySharedPointer> m_attributes;
+  
+  // Set of keys for values set from this context
+  std::unordered_set<std::string> m_setHere;
+  
+  // map of callbacks registered for a key
+  std::unordered_map<std::string, std::vector<std::function<void(const AnySharedPointer&)>>> m_callbacks;
 
 public:
   /// <summary>
@@ -82,6 +91,11 @@ public:
   /// </return>
   bool SetParsed(const std::string& key, const std::string& value);
   
+  // Add a callback for when key is changed
+  void AddCallback(const std::string& key, std::function<void(const AnySharedPointer&)>&& fx);
+  
 private:
+  // Handles setting a value that has already been parsed into an AnySharedPointer
+  // Must hold m_lock when calling this
   void SetInternal(const std::string& key, AnySharedPointer value);
 };

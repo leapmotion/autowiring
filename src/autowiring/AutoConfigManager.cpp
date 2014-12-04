@@ -72,10 +72,20 @@ bool AutoConfigManager::SetParsed(const std::string& key, const std::string& val
   return true;
 }
 
+void AutoConfigManager::AddCallback(const std::string& key, std::function<void(const AnySharedPointer&)>&& fx) {
+  std::lock_guard<std::mutex> lk(m_lock);
+  m_callbacks[key].push_back(fx);
+}
+
 void AutoConfigManager::SetInternal(const std::string& key, AnySharedPointer value) {
   // Set value and mark that value was set from here
   m_attributes[key] = value;
   m_setHere.insert(key);
+  
+  // Call callbacks for this key
+  for (const auto& cb : m_callbacks[key]) {
+    cb(value);
+  }
   
   // Recursivly set values in desendent contexts
   for (const auto& ctxt : ContextEnumerator(GetContext())) {
@@ -86,9 +96,15 @@ void AutoConfigManager::SetInternal(const std::string& key, AnySharedPointer val
     AutowiredFast<AutoConfigManager> mgmt;
     if (mgmt) {
       std::lock_guard<std::mutex>(mgmt->m_lock);
-      // Don't set value if 'mgmt' set the value itself
-      if (!mgmt->m_setHere.count(key))
+      // Don't set value if 'mgmt' has set the value itself
+      if (!mgmt->m_setHere.count(key)) {
         mgmt->m_attributes[key] = value;
+        
+        // Call callbacks for this key
+        for (const auto& cb : m_callbacks[key]) {
+          cb(value);
+        }
+      }
     }
   }
 }
