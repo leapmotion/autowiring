@@ -63,12 +63,8 @@ private:
 
 public:
   
-  operator const T&() const {
-    return *m_manager->Get(m_key).template as<T>();
-  }
-  
   const T& operator*() const {
-    return operator const T&();
+    return *m_manager->Get(m_key).template as<T>();
   }
 
   const T* operator->(void) const {

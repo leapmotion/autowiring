@@ -20,6 +20,7 @@ public:
 private:
   std::mutex m_lock;
   std::unordered_map<std::string, AnySharedPointer> m_attributes;
+  std::unordered_set<std::string> m_setHere;
   const std::unordered_map<std::string, const ConfigRegistryEntry*> m_registry;
 
 public:
@@ -62,7 +63,7 @@ public:
     }
     
     // Set value in this AutoConfigManager
-    m_attributes[key] = AnySharedPointer(std::make_shared<T>(value));
+    SetInternal(key, AnySharedPointer(std::make_shared<T>(value)));
   }
   
   /// <summary>
@@ -80,4 +81,7 @@ public:
   /// True if value successfully set, False if key not found.
   /// </return>
   bool SetParsed(const std::string& key, const std::string& value);
+  
+private:
+  void SetInternal(const std::string& key, AnySharedPointer value);
 };

@@ -21,25 +21,25 @@ static std::unordered_map<std::string, const ConfigRegistryEntry*> FillRegistry(
 
 AutoConfigManager::AutoConfigManager(void):
   m_registry(FillRegistry())
-{}
+{
+  // Fill content from parent AutoConfigManagers
+  for (auto ctxt = GetContext()->GetParentContext(); ctxt; ctxt = ctxt->GetParentContext()) {
+    AutowiredFast<AutoConfigManager> mgmt;
+    
+    // Found closest AutoConfigManager, use its attributes and return
+    if (mgmt) {
+      std::lock_guard<std::mutex> lk(mgmt->m_lock);
+      m_attributes = mgmt->m_attributes;
+      return;
+    }
+  }
+}
 
 AutoConfigManager::~AutoConfigManager(void){}
 
 bool AutoConfigManager::IsConfigured(const std::string& key) {
-  // iterate ancestor contexts, filling any configs
-  for (auto ctxt = GetContext(); ctxt; ctxt = ctxt->GetParentContext()) {
-    AutowiredFast<AutoConfigManager> mgmt(ctxt);
-    
-    if(mgmt) {
-      std::lock_guard<std::mutex> lk(mgmt->m_lock);
-      if (mgmt->m_attributes.count(key)) {
-        return true;
-      }
-    }
-  }
-  
-  // Key not found
-  return false;
+  std::lock_guard<std::mutex> lk(m_lock);
+  return m_attributes.count(key);
 }
 
 AnySharedPointer& AutoConfigManager::Get(const std::string& key) {
@@ -48,18 +48,6 @@ AnySharedPointer& AutoConfigManager::Get(const std::string& key) {
   // Check this first
   if (m_attributes.count(key)) {
     return m_attributes[key];
-  }
-  
-  // iterate ancestor contexts, filling any configs
-  for (auto ctxt = GetContext()->GetParentContext(); ctxt; ctxt = ctxt->GetParentContext()) {
-    AutowiredFast<AutoConfigManager> mgmt(ctxt);
-    
-    if(mgmt) {
-      std::lock_guard<std::mutex> lk(mgmt->m_lock);
-      if (mgmt->m_attributes.count(key)) {
-        return mgmt->m_attributes[key];
-      }
-    }
   }
   
   // Key not found, throw exception
@@ -80,6 +68,27 @@ bool AutoConfigManager::SetParsed(const std::string& key, const std::string& val
     return false;
   }
   
-  m_attributes[key] = m_registry.at(key)->parse(value);
+  SetInternal(key, m_registry.at(key)->parse(value));
   return true;
+}
+
+void AutoConfigManager::SetInternal(const std::string& key, AnySharedPointer value) {
+  // Set value and mark that value was set from here
+  m_attributes[key] = value;
+  m_setHere.insert(key);
+  
+  // Recursivly set values in desendent contexts
+  for (const auto& ctxt : ContextEnumerator(GetContext())) {
+    // We already set this context's value
+    if (ctxt == GetContext())
+      continue;
+    
+    AutowiredFast<AutoConfigManager> mgmt;
+    if (mgmt) {
+      std::lock_guard<std::mutex>(mgmt->m_lock);
+      // Don't set value if 'mgmt' set the value itself
+      if (!mgmt->m_setHere.count(key))
+        mgmt->m_attributes[key] = value;
+    }
+  }
 }
