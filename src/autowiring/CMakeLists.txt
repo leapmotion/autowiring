@@ -170,7 +170,7 @@ add_mac_sources(Autowiring_SRCS
   CoreThreadMac.cpp
 )
 
-add_unix_sources( Autowiring_SRCS
+add_unix_sources(Autowiring_SRCS
   InterlockedExchangeUnix.cpp
   thread_specific_ptr_unix.h
 )
