@@ -20,9 +20,6 @@ class auto_out
 public:
   typedef T id_type;
 
-  static const bool is_input = false;
-  static const bool is_output = true;
-
   auto_out(const auto_out& rhs) = delete;
   auto_out(auto_out&& rhs) :
     m_packet(rhs.m_packet),

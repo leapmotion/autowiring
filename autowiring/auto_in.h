@@ -29,12 +29,25 @@ private:
   const T& m_value;
 
 public:
-  const T& value(void) const {
-    return m_value;
-  }
-
-  // Convenience overloads:
   operator const T&() const { return m_value; }
   const T& operator*(void) const { return m_value; }
   const T* operator->(void) const { return &m_value; }
+};
+
+
+template<>
+class auto_in<AutoPacket>
+{
+public:
+  auto_in(AutoPacket& packet) :
+    packet(packet)
+  {}
+
+private:
+  AutoPacket& packet;
+
+public:
+  operator AutoPacket&() const { return packet; }
+  AutoPacket& operator*(void) const { return packet; }
+  AutoPacket* operator->(void) const { return &packet; }
 };
