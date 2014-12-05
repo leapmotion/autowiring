@@ -22,7 +22,6 @@ struct AutoFilterDescriptorInput {
   AutoFilterDescriptorInput(void) :
     is_input(false),
     is_output(false),
-    is_optional(false),
     is_shared(false),
     ti(nullptr)
   {}
@@ -31,14 +30,12 @@ struct AutoFilterDescriptorInput {
   AutoFilterDescriptorInput(auto_arg<T>&& traits) :
     is_input(auto_arg<T>::is_input),
     is_output(auto_arg<T>::is_output),
-    is_optional(auto_arg<T>::is_optional),
     is_shared(auto_arg<T>::is_shared),
     ti(&typeid(typename auto_arg<T>::id_type))
   {}
 
   const bool is_input;
   const bool is_output;
-  const bool is_optional;
   const bool is_shared;
   const std::type_info* const ti;
 
@@ -64,7 +61,6 @@ struct AutoFilterDescriptorStub {
     m_deferred(false),
     m_arity(0),
     m_requiredCount(0),
-    m_optionalCount(0),
     m_pCall(nullptr)
   {}
 
@@ -74,7 +70,6 @@ struct AutoFilterDescriptorStub {
     m_deferred(rhs.m_deferred),
     m_arity(rhs.m_arity),
     m_requiredCount(rhs.m_requiredCount),
-    m_optionalCount(rhs.m_optionalCount),
     m_pCall(rhs.m_pCall)
   {}
 
@@ -92,19 +87,13 @@ struct AutoFilterDescriptorStub {
     m_deferred(deferred),
     m_arity(0),
     m_requiredCount(0),
-    m_optionalCount(0),
     m_pCall(pCall)
   {
     for(auto pArg = m_pArgs; *pArg; pArg++) {
       m_arity++;
 
-      if (pArg->is_input) {
-        if (pArg->is_optional) {
-          ++m_optionalCount;
-          continue;
-        }
+      if (pArg->is_input)
         ++m_requiredCount;
-      }
     }
   }
 
@@ -127,11 +116,8 @@ protected:
   // correctly.
   size_t m_arity;
 
-  // The number of argumetns declared to be required:
+  // The number of arguments declared to be required:
   size_t m_requiredCount;
-
-  // The number of arguments declared to be optional:
-  size_t m_optionalCount;
 
   // The first argument of this static global is void*, but it is expected that the argument
   // that will actually be passed is of a type corresponding to the member function bound
@@ -144,7 +130,6 @@ public:
   const std::type_info* GetType() const { return m_pType; }
   size_t GetArity(void) const { return m_arity; }
   size_t GetRequiredCount(void) const { return m_requiredCount; }
-  size_t GetOptionalCount(void) const { return m_optionalCount; }
   const AutoFilterDescriptorInput* GetAutoFilterInput(void) const { return m_pArgs; }
   bool IsDeferred(void) const { return m_deferred; }
   const std::type_info* GetAutoFilterTypeInfo(void) const { return m_pType; }

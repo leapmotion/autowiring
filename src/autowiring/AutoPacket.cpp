@@ -53,9 +53,9 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     // NOTE: Recipients added via AddReceiver can receive broadcast data,
     // so it is necessary to decrement the receiver's counters when it is added.
     if (pCur->is_input) {
-      entry->m_subscribers.push_back(std::make_pair(&satCounter, !pCur->is_optional));
+      entry->m_subscribers.push_back(&satCounter);
       if (entry->satisfied)
-        satCounter.Decrement(dataType, !pCur->is_optional);
+        satCounter.Decrement(dataType);
     }
     if (pCur->is_output) {
       if(entry->m_publisher) {
@@ -77,7 +77,7 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
     // Decide what to do with this entry:
     if (pCur->is_input) {
       assert(!entry->m_subscribers.empty());
-      assert(&satCounter == entry->m_subscribers.back().first);
+      assert(&satCounter == entry->m_subscribers.back());
       entry->m_subscribers.pop_back();
     }
     if (pCur->is_output) {
@@ -102,30 +102,8 @@ ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory, 
 }
 
 void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
-  std::list<SatCounter*> callQueue;
-  {
-    std::lock_guard<std::mutex> lk(m_lock);
-    auto dFind = m_decorations.find(info);
-    if(dFind == m_decorations.end())
-      // Trivial return, there's no subscriber to this decoration and so we have nothing to do
-      return;
-
-    // Update satisfaction inside of lock
-    DecorationDisposition* decoration = &dFind->second;
-    for(const auto& satCounter : decoration->m_subscribers) {
-      if(satCounter.second)
-        // Entry is mandatory, leave it unsatisfaible
-        continue;
-
-      // Entry is optional, we will call if we're satisfied after decrementing this optional field
-      if(satCounter.first->Decrement(info, false))
-        callQueue.push_back(satCounter.first);
-    }
-  }
-
-  // Make calls outside of lock, to avoid deadlock from decorations in methods
-  for (SatCounter* call : callQueue)
-    call->CallAutoFilter(*this);
+  // TODO:
+  // Add an anti-present decoration
 }
 
 void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
@@ -149,8 +127,8 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
     // Update satisfaction inside of lock
     DecorationDisposition* decoration = &dFind->second;
     for(const auto& satCounter : decoration->m_subscribers)
-      if(satCounter.first->Decrement(info, satCounter.second))
-        callQueue.push_back(satCounter.first);
+      if(satCounter->Decrement(info))
+        callQueue.push_back(satCounter);
   }
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
@@ -170,12 +148,8 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
     }
 
     for(size_t i = nInfos; i--;) {
-      for(std::pair<SatCounter*, bool>& subscriber : pTypeSubs[i]->m_subscribers) {
-        SatCounter* cur = subscriber.first;
+      for(SatCounter*& cur : pTypeSubs[i]->m_subscribers) {
         if(
-          // We only care about mandatory inputs
-          subscriber.second &&
-
           // We only care about sat counters that aren't deferred--skip everyone else
           // Deferred calls will be too late.
           !cur->IsDeferred() &&
@@ -186,7 +160,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 
           // Now do the decrementation and proceed even if optional > 0,
           // since this is the only opportunity to fulfill the arguments
-          (cur->Decrement(*pTypeSubs[i]->m_type, true) ||
+          (cur->Decrement(*pTypeSubs[i]->m_type) ||
            cur->remaining == 0)
         )
           // Finally, queue a call for this type
@@ -203,14 +177,9 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   // since data in this call will not be available subsequently
   {
     std::lock_guard<std::mutex> lk(m_lock);
-    for(size_t i = nInfos; i--;) {
-      for(const auto& satCounter : pTypeSubs[i]->m_subscribers) {
-        SatCounter* cur = satCounter.first;
-        if (satCounter.second) {
-          cur->Increment(*pTypeSubs[i]->m_type, true);
-        }
-      }
-    }
+    for(size_t i = nInfos; i--;)
+      for(const auto& cur : pTypeSubs[i]->m_subscribers)
+          cur->Increment(*pTypeSubs[i]->m_type);
   }
 }
 
@@ -355,25 +324,8 @@ void AutoPacket::Initialize(void) {
 }
 
 void AutoPacket::Finalize(void) {
-  // Queue calls to ensure that calls to Decorate inside of AutoFilter methods
-  // will NOT effect the resolution of optional arguments.
-  std::list<SatCounter*> callQueue;
-  {
-    std::lock_guard<std::mutex> lk(m_lock);
-    for(auto& decoration : m_decorations)
-      for(auto& satCounter : decoration.second.m_subscribers)
-        if(!satCounter.second)
-          if(satCounter.first->Resolve())
-            callQueue.push_back(satCounter.first);
-  }
   m_lifecyle = disable_update;
-  for (SatCounter* call : callQueue)
-    call->CallAutoFilter(*this);
-
-  // Last-call indicated by argumument type const AutoPacket&:
   m_lifecyle = disable_decorate;
-  UpdateSatisfaction(typeid(auto_arg<const AutoPacket&>::id_type));
-
   // Remove all recipients & clean up the decorations list
   // ASSERT: This reverses the order of accumulation,
   // so searching for the subscriber is avoided.
@@ -438,7 +390,7 @@ std::list<SatCounter> AutoPacket::GetSubscribers(const std::type_info& data) con
   t_decorationMap::const_iterator decoration = m_decorations.find(data);
   if (decoration != m_decorations.end())
     for (auto& subscriber : decoration->second.m_subscribers)
-      subscribers.push_back(*subscriber.first);
+      subscribers.push_back(*subscriber);
   return subscribers;
 }
 

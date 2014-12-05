@@ -2,7 +2,6 @@
 #pragma once
 #include "auto_in.h"
 #include "auto_out.h"
-#include "optional_ptr.h"
 
 /*
  The auto_arg<T> classes are used to generate of auto_in and auto_out types
@@ -35,7 +34,6 @@ public:
   {}
 
   static const bool is_shared = false;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -55,7 +53,6 @@ public:
   {}
 
   static const bool is_shared = false;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -75,7 +72,6 @@ public:
   {}
 
   static const bool is_shared = false;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -95,7 +91,6 @@ public:
   {}
 
   static const bool is_shared = true;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -115,7 +110,6 @@ public:
   {}
 
   static const bool is_shared = true;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -135,7 +129,6 @@ public:
   {}
 
   static const bool is_shared = false;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -155,7 +148,6 @@ public:
   {}
 
   static const bool is_shared = true;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -175,27 +167,6 @@ public:
   {}
 
   static const bool is_shared = true;
-  static const bool is_optional = true;
-};
-
-/// <summary>
-/// Specialization for equivalent type optional_ptr<T>
-/// </summary>
-template<class type>
-class auto_arg<optional_ptr<type>>:
-  public optional_ptr<type>
-{
-public:
-  typedef optional_ptr<type> auto_type;
-
-  auto_arg() {}
-
-  auto_arg(std::shared_ptr<AutoPacket> packet):
-    optional_ptr<type>(packet)
-  {}
-
-  static const bool is_shared = true;
-  static const bool is_optional = true;
 };
 
 /// <summary>

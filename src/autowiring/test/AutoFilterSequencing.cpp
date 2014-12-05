@@ -215,25 +215,3 @@ TEST_F(AutoFilterSequencing, VerifyAutoOutDeferred) {
 
   ASSERT_EQ(last->m_called, 1) << "FilterLast was not called";
 }
-
-class FilterFinalFail1 {
-public:
-  void AutoFilter(optional_ptr<Decoration<0>>, auto_out<Decoration<1>>) {}
-};
-
-class FilterFinalFail2 {
-public:
-  void AutoFilter(const AutoPacket&, auto_out<Decoration<1>>) {}
-};
-
-TEST_F(AutoFilterSequencing, DISABLED_VerifyFinalImmutability) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<FilterFinalFail1> fail1;
-  ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "Output holds shared_ptr to packet, which is invalid in Finalize";
-
-  // PROBLEM: Exception is thrown correctly, but is not caught by test.
-  AutoRequired<FilterFinalFail2> fail2;
-  auto packet = factory->NewPacket();
-  packet->Decorate(Decoration<0>());
-  ASSERT_THROW(factory->NewPacket(), std::runtime_error) << "Output holds shared_ptr to packet, which is invalid in Finalize";
-}

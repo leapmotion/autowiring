@@ -41,7 +41,6 @@ typedef const Argument<0> copied_in_const;
 typedef const Argument<0>& required_in;
 typedef std::shared_ptr<const Argument<0>> required_in_shared;
 typedef auto_in<Argument<0>> fundamental_in;
-typedef optional_ptr<Argument<0>> optional_in_shared;
 typedef Argument<0>& required_out;
 typedef std::shared_ptr<Argument<0>> required_out_shared;
 typedef auto_out<Argument<0>> fundamental_out;
@@ -56,23 +55,15 @@ TEST_F(ArgumentTypeTest, AutoFilterTemplateTests) {
 
   ASSERT_TRUE(auto_arg<fundamental_in>::is_input) << "Should be input";
   ASSERT_TRUE(auto_arg<fundamental_in>::is_shared) << "Input is a shared ptr";
-  ASSERT_FALSE(auto_arg<fundamental_in>::is_optional) << "Input is not optional";
-
-  ASSERT_TRUE(auto_arg<optional_in_shared>::is_input) << "Should be input";
-  ASSERT_TRUE(auto_arg<optional_in_shared>::is_shared) << "Input is a shared ptr";
-  ASSERT_TRUE(auto_arg<optional_in_shared>::is_optional) << "Input is not optional";
 
   ASSERT_FALSE(auto_arg<required_out>::is_input) << "Should be output";
   ASSERT_FALSE(auto_arg<required_out>::is_shared) << "Output is a shared ptr";
-  ASSERT_FALSE(auto_arg<required_out>::is_optional) << "Output is not optional";
 
   ASSERT_FALSE(auto_arg<required_out_shared>::is_input) << "Should be output";
   ASSERT_TRUE(auto_arg<required_out_shared>::is_shared) << "Output is a shared ptr";
-  ASSERT_FALSE(auto_arg<required_out_shared>::is_optional) << "Output is optional";
 
   ASSERT_FALSE(auto_arg<fundamental_out>::is_input) << "Should be output";
   ASSERT_TRUE(auto_arg<fundamental_out>::is_shared) << "Output is a shared ptr";
-  ASSERT_TRUE(auto_arg<fundamental_out>::is_optional) << "Output is optional";
 }
 
 TEST_F(ArgumentTypeTest, TestAutoIn) {

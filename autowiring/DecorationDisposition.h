@@ -74,9 +74,8 @@ struct DecorationDisposition
   // taking place.
   SatCounter* m_publisher;
 
-  // Satisfaction counters, with the second part indicating a required entry if true,
-  // or an optional entry if false.
-  std::vector<std::pair<SatCounter*, bool>> m_subscribers;
+  // Satisfaction counters
+  std::vector<SatCounter*> m_subscribers;
 
   // Indicates that the internally held object is currently checked out,
   // but might not be satisfied, since the data is being prepared.
