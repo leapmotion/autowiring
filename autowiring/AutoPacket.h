@@ -50,13 +50,6 @@ public:
   static ObjectPool<AutoPacket> CreateObjectPool(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
 
 private:
-  // Lifecycle mutability flag
-  enum Mutability {
-    enable_all = 0,
-    disable_update = 1, //Disables update while resolving optional arguments
-    disable_decorate = 2 //Disables decorate while resolving final calls
-  } m_lifecyle;
-
   // Saturation counters, constructed when the packet is created and reset each time thereafter
   // IMPORTANT: Elements in m_satCounters MUST be stationary, since they will be referenced!
   std::list<SatCounter> m_satCounters;

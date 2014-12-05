@@ -81,7 +81,6 @@ set(Autowiring_SRCS
   CurrentContextPusher.cpp
   CurrentContextPusher.h
   DeclareAutoFilter.h
-  DeclareElseFilter.h
   Decompose.h
   DecorationDisposition.h
   Deserialize.h
@@ -126,7 +125,6 @@ set(Autowiring_SRCS
   ObjectPoolMonitor.h
   ObjectPoolMonitor.cpp
   ObjectTraits.h
-  optional_ptr.h
   SatCounter.h
   MicroAutoFilter.h
   MicroBolt.h

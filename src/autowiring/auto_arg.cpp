@@ -5,5 +5,3 @@
 auto_arg<AutoPacket&>::first_call_sigil::first_call_sigil(void){}
 auto_arg<AutoPacket&>::first_call_sigil::~first_call_sigil(void){}
 
-auto_arg<const AutoPacket&>::final_call_sigil::final_call_sigil(void){}
-auto_arg<const AutoPacket&>::final_call_sigil::~final_call_sigil(void){}
