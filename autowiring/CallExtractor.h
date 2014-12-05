@@ -59,7 +59,7 @@ struct CallExtractor<void (T::*)(Args...)>:
 
     // Handoff
     (((T*) pObj)->*memFn)(
-      auto_arg<Args>(autoPacket.shared_from_this())...
+      auto_arg<Args>(autoPacket)...
     );
   }
 };
@@ -81,7 +81,7 @@ struct CallExtractor<void (T::*)(Args...) const> :
 
     // Handoff
     (((const T*) pObj)->*memFn)(
-      auto_arg<Args>(autoPacket.shared_from_this())...
+      auto_arg<Args>(autoPacket)...
     );
   }
 };
@@ -112,7 +112,7 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
     // and will therefore have the same lifecycle as the AutoPacket.
     *(T*) pObj += [pObj, pAutoPacket] {
       (((T*) pObj)->*memFn)(
-        auto_arg<Args>(pAutoPacket)...
+        auto_arg<Args>(*pAutoPacket)...
       );
     };
   }

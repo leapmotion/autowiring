@@ -27,7 +27,7 @@ struct AutoFilterDescriptorInput {
   {}
 
   template<class T>
-  AutoFilterDescriptorInput(auto_arg<T>&& traits) :
+  AutoFilterDescriptorInput(auto_arg<T>*) :
     is_input(auto_arg<T>::is_input),
     is_output(auto_arg<T>::is_output),
     is_shared(auto_arg<T>::is_shared),
@@ -46,7 +46,7 @@ struct AutoFilterDescriptorInput {
   template<class T>
   struct rebind {
     operator AutoFilterDescriptorInput() {
-      return auto_arg<T>();
+      return AutoFilterDescriptorInput((auto_arg<T>*)nullptr);
     }
   };
 };
