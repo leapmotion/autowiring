@@ -264,11 +264,12 @@ void AutoPacket::CompleteCheckout(bool ready, const std::type_info& data) {
     UnsafeComplete(ready, data, entry);
   }
   
-  if(entry)
-    if(ready)
+  if (entry) {
+    if (ready)
       UpdateSatisfaction(entry->m_decoration->type());
     else
       MarkUnsatisfiable(entry->m_decoration->type());
+  }
 }
 
 void AutoPacket::Put(AnySharedPointer&& in) {
