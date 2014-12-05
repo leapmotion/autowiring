@@ -78,5 +78,5 @@ endmacro()
 #Some good defaults
 add_named_conditional_functions("windows_sources" "Windows Source" WIN32)
 add_named_conditional_functions("mac_sources" "Mac Source" APPLE)
-add_named_conditional_functions("unix_sources" "Unix Source" "UNIX AND NOT APPLE AND NOT WIN32")
+add_named_conditional_functions("unix_sources" "Unix Source" "UNIX AND NOT WIN32")
 add_named_conditional_functions("resource_files" "Resource Files" FALSE)
