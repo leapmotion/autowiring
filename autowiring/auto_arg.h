@@ -2,7 +2,6 @@
 #pragma once
 #include "auto_in.h"
 #include "auto_out.h"
-#include "optional_ptr.h"
 
 /*
  The auto_arg<T> classes are used to generate of auto_in and auto_out types
@@ -35,7 +34,6 @@ public:
   {}
 
   static const bool is_shared = false;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -55,7 +53,6 @@ public:
   {}
 
   static const bool is_shared = false;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -75,7 +72,6 @@ public:
   {}
 
   static const bool is_shared = false;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -95,7 +91,6 @@ public:
   {}
 
   static const bool is_shared = true;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -115,7 +110,6 @@ public:
   {}
 
   static const bool is_shared = true;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -135,7 +129,6 @@ public:
   {}
 
   static const bool is_shared = false;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -155,7 +148,6 @@ public:
   {}
 
   static const bool is_shared = true;
-  static const bool is_optional = false;
 };
 
 /// <summary>
@@ -175,27 +167,6 @@ public:
   {}
 
   static const bool is_shared = true;
-  static const bool is_optional = true;
-};
-
-/// <summary>
-/// Specialization for equivalent type optional_ptr<T>
-/// </summary>
-template<class type>
-class auto_arg<optional_ptr<type>>:
-  public optional_ptr<type>
-{
-public:
-  typedef optional_ptr<type> auto_type;
-
-  auto_arg() {}
-
-  auto_arg(std::shared_ptr<AutoPacket> packet):
-    optional_ptr<type>(packet)
-  {}
-
-  static const bool is_shared = true;
-  static const bool is_optional = true;
 };
 
 /// <summary>
@@ -235,7 +206,7 @@ public:
 
   auto_arg() {}
 
-  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
+  auto_arg(std::shared_ptr<AutoPacket> packet) :
     m_packet(packet)
   {}
 
@@ -253,42 +224,13 @@ public:
 /// deferred calls.
 /// </remarks>
 template<>
-class auto_arg<const AutoPacket&>
+class auto_arg<const AutoPacket&>:
+  public auto_arg<AutoPacket&>
 {
-protected:
-  /// Sigil to distinguish const AutoPacket&
-  class final_call_sigil {
-  public:
-    final_call_sigil(void);
-    virtual ~final_call_sigil(void);
-  };
-
-  std::shared_ptr<AutoPacket> m_packet;
-
 public:
-  typedef const AutoPacket& auto_type;
+  auto_arg(void) {}
 
-  typedef final_call_sigil id_type;
-  typedef const AutoPacket& base_type;
-  typedef std::weak_ptr<const AutoPacket> shared_type;
-
-  // const AutoPacket& can only be used to observe data
-  static const bool is_input = true;
-  static const bool is_output = false;
-
-  operator base_type () const {
-    return *m_packet;
-  }
-  operator shared_type () {
-    return m_packet;
-  }
-
-  auto_arg() {}
-  
-  auto_arg(std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)):
-    m_packet(packet)
+  auto_arg(std::shared_ptr<const AutoPacket> packet) :
+    auto_arg<AutoPacket&>(std::const_pointer_cast<AutoPacket>(packet))
   {}
-
-  static const bool is_shared = false;
-  static const bool is_optional = false;
 };
