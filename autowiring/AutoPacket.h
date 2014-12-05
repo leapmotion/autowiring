@@ -281,26 +281,21 @@ public:
   }
 
   /// <summary>
+  /// De-templated placement method
+  /// </summary>
+  void Put(AnySharedPointer&& in);
+
+  /// <summary>
   /// Transfers ownership of argument to AutoPacket
   /// </summary>
+  /// <remarks>
+  /// This method may throw an exception.  Ownership is unconditionally transferred to this class
+  /// even in the event an exception is thrown, thus the passed pointer is guaranteed to be cleaned
+  /// up properly in all cases.
+  /// </remarks>
   template<class T>
   void Put(T* in) {
-    const std::type_info& data = typeid(T);
-
-    auto& entry = m_decorations[data];
-    if (entry.satisfied || entry.isCheckedOut) {
-      std::stringstream ss;
-      ss << "Cannot put type " << autowiring::demangle(typeid(T))
-      << " on AutoPacket, the requested broadcast already exists";
-      throw std::runtime_error(ss.str());
-    }
-
-    entry.m_decoration = std::shared_ptr<T>(in);
-    entry.m_type = &data; // Ensure correct type if instantiated here
-    entry.satisfied = true;
-    entry.isCheckedOut = false;
-
-    UpdateSatisfaction(data);
+    Put(AnySharedPointer(std::shared_ptr<T>(in)));
   }
 
   /// <summary>
@@ -314,22 +309,7 @@ public:
   /// </remarks>
   template<class T>
   void Put(std::shared_ptr<T> in) {
-    const std::type_info& data = typeid(T);
-
-    auto& entry = m_decorations[data];
-    if (entry.satisfied || entry.isCheckedOut) {
-      std::stringstream ss;
-      ss << "Cannot put type " << autowiring::demangle(typeid(T))
-      << " on AutoPacket, the requested broadcast already exists";
-      throw std::runtime_error(ss.str());
-    }
-
-    entry.m_decoration = in;
-    entry.m_type = &data; // Ensure correct type if instantiated here
-    entry.satisfied = true;
-    entry.isCheckedOut = false;
-
-    UpdateSatisfaction(data);
+    Put(AnySharedPointer(std::move(in)));
   }
 
   /// <summary>Shares all broadcast data from this packet with the recipient packet</summary>
