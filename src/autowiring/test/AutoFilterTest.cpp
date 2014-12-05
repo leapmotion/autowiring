@@ -892,7 +892,16 @@ TEST_F(AutoFilterTest, AutoSelfUpdateTwoContexts) {
 TEST_F(AutoFilterTest, AutoTimeStampTest) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<AutoTimeStamp> stamper;
-  ASSERT_TRUE(factory->NewPacket()->Has<std::chrono::high_resolution_clock::time_point>()) << "Failed to stamp packet on initialization";
+  auto then = std::chrono::high_resolution_clock::now();
+  auto packet = factory->NewPacket();
+  const std::chrono::high_resolution_clock::time_point* pLater;
+  ASSERT_TRUE(packet->Get(pLater)) << "Failed to stamp packet on initialization";
+
+  auto now = std::chrono::high_resolution_clock::now();
+
+  // Ensure that events happened in the order expected
+  ASSERT_LE(then, *pLater) << "Packet timestamp is from a point in time before the test was started";
+  ASSERT_LE(*pLater, now) << "Packet timestampe is dated after test conclusion";
 }
 
 TEST_F(AutoFilterTest, WaitWhilePacketOutstanding) {
