@@ -39,7 +39,7 @@ AutoConfigManager::~AutoConfigManager(void){}
 
 bool AutoConfigManager::IsConfigured(const std::string& key) {
   std::lock_guard<std::mutex> lk(m_lock);
-  return m_attributes.count(key);
+  return !!m_attributes.count(key);
 }
 
 AnySharedPointer& AutoConfigManager::Get(const std::string& key) {
