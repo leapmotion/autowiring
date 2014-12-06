@@ -75,7 +75,7 @@ endif()
 if(NOT NO_INSTALL_AUTONET AND NOT AUTOWIRING_IS_EMBEDDED)
   install(TARGETS AutoNet EXPORT AutowiringTargets
     DESTINATION lib
-    COMPONENT autowiring 
+    COMPONENT autowiring
     CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
   )
 endif()
