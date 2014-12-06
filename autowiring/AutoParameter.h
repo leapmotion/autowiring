@@ -19,6 +19,7 @@ public:
   AutoParameter() :
     AutoConfig<T, struct AutoParam, TKey>()
   {
+    Set(TKey::Default());
     // TODO:
     //    REQUIRED: default value.
     //    OPTIONAL: validator.

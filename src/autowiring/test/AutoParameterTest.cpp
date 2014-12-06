@@ -9,33 +9,23 @@ class AutoParameterTest:
 
 
 struct MyParamClass1 {
-  AutoParameter<int, struct MyIntParam1> m_param;
-};
-
-TEST_F(AutoParameterTest, VerifyDefaultValueRequired) {
-  ASSERT_ANY_THROW(AutoRequired<MyParamClass1>())
-  << "Should not allow parameter without default value";
-}
-
-
-struct MyParamClass2 {
-  struct MyIntParam2 {
+  struct MyIntParam1 {
     static constexpr int Default() { return 15; }
   };
   
-  AutoParameter<int, MyIntParam2> m_param;
+  AutoParameter<int, MyIntParam1> m_param;
 };
 
 TEST_F(AutoParameterTest, VerifyCorrectDeconstruction) {
-  AutoRequired<MyParamClass2> mpc;
+  AutoRequired<MyParamClass1> mpc;
   auto& param = mpc->m_param;
   
-  EXPECT_STREQ("AutoParam.MyIntClass1", param.m_key.c_str())
+  EXPECT_STREQ("AutoParam.MyParamClass1::MyIntParam1", param.m_key.c_str())
     << "Configuration variable name was not correctly extracted";
 }
 
 TEST_F(AutoParameterTest, VerifyDefaultValue) {
-  AutoRequired<MyParamClass2> mpc;
+  AutoRequired<MyParamClass1> mpc;
   auto& param = mpc->m_param;
   
   ASSERT_EQ(*param, 15)
@@ -43,7 +33,7 @@ TEST_F(AutoParameterTest, VerifyDefaultValue) {
 }
 
 TEST_F(AutoParameterTest, VerifyResetToDefaultValue) {
-  AutoRequired<MyParamClass2> mpc;
+  AutoRequired<MyParamClass1> mpc;
   auto& param = mpc->m_param;
 
   ASSERT_TRUE(param.Set(30) && *param == 30)
