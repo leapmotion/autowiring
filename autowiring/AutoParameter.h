@@ -4,9 +4,9 @@
 
 /// <summary>
 /// Register an AutoParameter with "AutoParam" namespace in AutoConfigManager.
-/// In addition to being the lookup string, the Key also:
-///   - Contains the default value
-///   - Supply a validator function (optional)
+/// In addition to being the lookup string, the Key also implements:
+///   - static constexpr T Default()
+///   - (optional) static bool Validate(const T&)
 ///
 /// AutoParameter uses AutoConfig under the hood and will use "AutoParam" as
 /// its namespace
