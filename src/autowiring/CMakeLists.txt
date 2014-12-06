@@ -10,67 +10,68 @@ add_googletest(benchmark)
 #
 
 set(Autowiring_SRCS
-  at_exit.h
-  auto_in.h
-  auto_out.h
-  auto_arg.h
-  auto_arg.cpp
-  AnySharedPointer.h
   AnySharedPointer.cpp
+  AnySharedPointer.h
+  atomic_object.h
+  at_exit.h
   AutoCheckout.h
-  AutoRestarter.h
-  AutoFuture.h
-  AutoFuture.cpp
-  AutowiringConfig.h
-  CoreJob.h
-  CoreJob.cpp
   AutoFilterDescriptor.h
-  AutoInjectable.h
+  AutoFuture.cpp
+  AutoFuture.h
   AutoInjectable.cpp
+  AutoInjectable.h
   AutoMerge.h
-  AutoPacket.h
   AutoPacket.cpp
-  AutoPacketFactory.h
+  AutoPacket.h
   AutoPacketFactory.cpp
-  AutoPacketProfiler.h
+  AutoPacketFactory.h
   AutoPacketProfiler.cpp
+  AutoPacketProfiler.h
+  AutoRestarter.h
   AutoSelfUpdate.h
   AutoStile.h
   AutoTimeStamp.h
-  Autowired.h
-  Autowired.cpp
-  AutowirableSlot.h
   AutowirableSlot.cpp
-  AutowiringConfig.h
-  AutowiringEvents.h
-  AutowiringEvents.cpp
+  AutowirableSlot.h
+  Autowired.cpp
+  Autowired.h
   autowiring.h
-  autowiring_error.h
+  AutowiringConfig.h
+  AutowiringConfig.h
+  AutowiringEvents.cpp
+  AutowiringEvents.h
   autowiring_error.cpp
-  BasicThread.h
+  autowiring_error.h
+  auto_arg.cpp
+  auto_arg.h
+  auto_in.h
+  auto_out.h
   BasicThread.cpp
-  BasicThreadStateBlock.h
+  BasicThread.h
   BasicThreadStateBlock.cpp
+  BasicThreadStateBlock.h
   Bolt.h
-  BoltBase.h
   BoltBase.cpp
+  BoltBase.h
   CallExtractor.h
   ContextCreator.h
-  ContextCreatorBase.h
   ContextCreatorBase.cpp
-  ContextEnumerator.h
+  ContextCreatorBase.h
   ContextEnumerator.cpp
+  ContextEnumerator.h
   ContextMap.h
   ContextMember.cpp
   ContextMember.h
   CoreContext.cpp
   CoreContext.h
-  CoreContextStateBlock.h
   CoreContextStateBlock.cpp
+  CoreContextStateBlock.h
+  CoreJob.cpp
+  CoreJob.h
+  CoreRunnable.cpp
+  CoreRunnable.h
   CoreThread.cpp
   CoreThread.h
-  CoreRunnable.h
-  CoreRunnable.cpp
   CreationRules.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
@@ -79,63 +80,62 @@ set(Autowiring_SRCS
   DeclareElseFilter.h
   Decompose.h
   DecorationDisposition.h
-  Deserialize.h
   Deferred.h
-  demangle.h
   demangle.cpp
-  DispatchQueue.h
+  demangle.h
+  Deserialize.h
   DispatchQueue.cpp
+  DispatchQueue.h
   DispatchThunk.h
   EventInputStream.h
-  EventOutputStream.h
   EventOutputStream.cpp
-  EventRegistry.h
+  EventOutputStream.h
   EventRegistry.cpp
-  fast_pointer_cast.h
-  JunctionBox.h
-  JunctionBoxBase.h
-  JunctionBoxBase.cpp
-  JunctionBoxEntry.h
-  JunctionBoxManager.h
-  JunctionBoxManager.cpp
-  ExceptionFilter.h
+  EventRegistry.h
   ExceptionFilter.cpp
+  ExceptionFilter.h
+  fast_pointer_cast.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
-  has_autoinit.h
+  hash_tuple.h
   has_autofilter.h
+  has_autoinit.h
   has_simple_constructor.h
   has_static_new.h
-  hash_tuple.h
   index_tuple.h
-  is_any.h
-  is_shared_ptr.h
   InterlockedExchange.h
   InvokeRelay.h
-  atomic_object.h
+  is_any.h
+  is_shared_ptr.h
+  JunctionBox.h
+  JunctionBoxBase.cpp
+  JunctionBoxBase.h
+  JunctionBoxEntry.h
+  JunctionBoxManager.cpp
+  JunctionBoxManager.h
   member_new_type.h
-  Object.h
-  Object.cpp
-  ObjectPool.h
-  ObjectPoolMonitor.h
-  ObjectPoolMonitor.cpp
-  ObjectTraits.h
-  optional_ptr.h
-  SatCounter.h
   MicroAutoFilter.h
   MicroBolt.h
   NewAutoFilter.h
+  Object.cpp
+  Object.h
+  ObjectPool.h
+  ObjectPoolMonitor.cpp
+  ObjectPoolMonitor.h
+  ObjectTraits.h
+  optional_ptr.h
+  SatCounter.h
   SharedPointerSlot.h
-  SlotInformation.h
   SlotInformation.cpp
-  TeardownNotifier.h
+  SlotInformation.h
   TeardownNotifier.cpp
-  ThreadStatusBlock.h
+  TeardownNotifier.h
   ThreadStatusBlock.cpp
+  ThreadStatusBlock.h
   thread_specific_ptr.h
   TypeIdentifier.h
-  TypeRegistry.h
   TypeRegistry.cpp
+  TypeRegistry.h
   TypeUnifier.h
   unlock_object.h
   uuid.h
@@ -229,7 +229,7 @@ endif()
 if(NOT AUTOWIRING_IS_EMBEDDED)
   install(TARGETS Autowiring EXPORT AutowiringTargets
     DESTINATION lib
-    COMPONENT autowiring 
+    COMPONENT autowiring
     CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
   )
 endif()
