@@ -26,10 +26,6 @@ public:
     //    Make sure
   }
   
-  void Reset() {
-    // TODO: Reset to default
-  }
-  
   bool Set(const T& value) {
     // TODO: validate, set, etc
     

@@ -39,7 +39,8 @@ TEST_F(AutoParameterTest, VerifyResetToDefaultValue) {
   ASSERT_TRUE(param.Set(30) && *param == 30)
     << "Could not set the parameter to another value";
   
-  param.Reset();
+  // Reset
+  param.Set(MyParamClass1::MyIntParam1::Default());
   
   ASSERT_EQ(*param, 15)
     << "Parameter was not properly reset to its default value";
