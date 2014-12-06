@@ -53,13 +53,13 @@ TEST_F(ArgumentTypeTest, AutoFilterTemplateTests) {
   ASSERT_TRUE(auto_arg<required_in_shared>::is_shared) << "Input is a shared ptr";
 
   ASSERT_TRUE(auto_arg<fundamental_in>::is_input) << "Should be input";
-  ASSERT_TRUE(auto_arg<fundamental_in>::is_shared) << "Input is a shared ptr";
+  ASSERT_FALSE(auto_arg<fundamental_in>::is_shared) << "Input is not explicitly a shared ptr";
 
   ASSERT_FALSE(auto_arg<required_out>::is_input) << "Should be output";
   ASSERT_FALSE(auto_arg<required_out>::is_shared) << "Output is a shared ptr";
 
   ASSERT_FALSE(auto_arg<fundamental_out>::is_input) << "Should be output";
-  ASSERT_TRUE(auto_arg<fundamental_out>::is_shared) << "Output is a shared ptr";
+  ASSERT_FALSE(auto_arg<fundamental_out>::is_shared) << "Output is a shared ptr";
 }
 
 TEST_F(ArgumentTypeTest, TestAutoIn) {
@@ -84,17 +84,18 @@ TEST_F(ArgumentTypeTest, TestAutoIn) {
   }
 
   // Deduced Type
-  auto_arg<std::shared_ptr<const Argument<0>>> arg(*packet);
-  ASSERT_EQ(1, in.value().use_count()) << "AutoPacket should be the sole shared pointer reference";
+  auto_arg<std::shared_ptr<const Argument<0>>>::type arg(*packet);
+  ASSERT_EQ(1, in->use_count()) << "AutoPacket should be the sole shared pointer reference";
 }
 
 TEST_F(ArgumentTypeTest, TestAutoOut) {
   AutoRequired<AutoPacketFactory> factory;
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   {
-    auto_out<Argument<0>> out(*packet);
-    ASSERT_FALSE(out.is_input) << "Incorrect orientation";
-    ASSERT_TRUE(out.is_output) << "Incorrect orientation";
+    typedef auto_arg<Argument<0>&> t_argType;
+    t_argType::type out(*packet);
+    ASSERT_FALSE(t_argType::is_input) << "Incorrect orientation";
+    ASSERT_TRUE(t_argType::is_output) << "Incorrect orientation";
 
     // Implicit commitment to output
     out->i = 1;

@@ -21,14 +21,13 @@
 /// Reinterpret copied argument as input
 /// </summary>
 template<class T>
-class auto_arg:
-  public auto_in<T>
+class auto_arg
 {
 public:
-  auto_arg(AutoPacket& packet):
-    auto_in<T>(packet)
-  {}
-
+  typedef auto_in<T> type;
+  typedef T id_type;
+  static const bool is_input = true;
+  static const bool is_output = false;
   static const bool is_shared = false;
 };
 
@@ -37,45 +36,28 @@ public:
 /// </summary>
 template<class T>
 class auto_arg<const T>:
-  public auto_in<T>
-{
-public:
-  auto_arg(AutoPacket& packet):
-    auto_in<T>(packet)
-  {}
-
-  static const bool is_shared = false;
-};
+  public auto_arg<T>
+{};
 
 /// <summary>
 /// Specialization for "const T&" ~ auto_in<T>
 /// </summary>
 template<class T>
-class auto_arg<const T&>:
-  public auto_in<T>
-{
-public:
-  auto_arg(AutoPacket& packet):
-    auto_in<T>(packet)
-  {}
-
-  static const bool is_shared = false;
-};
+class auto_arg<const T&> :
+  public auto_arg<T>
+{};
 
 /// <summary>
 /// Specialization for "std::shared_ptr<const T>" ~ auto_in<T>
 /// </summary>
 template<class T>
-class auto_arg<std::shared_ptr<const T>>:
-  public auto_in<std::shared_ptr<const T>>
+class auto_arg<std::shared_ptr<const T>>
 {
 public:
+  typedef auto_in<std::shared_ptr<const T>> type;
   typedef T id_type;
-
-  auto_arg(AutoPacket& packet):
-    auto_in<std::shared_ptr<const T>>(packet)
-  {}
-
+  static const bool is_input = true;
+  static const bool is_output = false;
   static const bool is_shared = true;
 };
 
@@ -84,15 +66,8 @@ public:
 /// </summary>
 template<class T>
 class auto_arg<auto_in<T>>:
-  public auto_in<T>
-{
-public:
-  auto_arg(AutoPacket& packet):
-    auto_in<T>(packet)
-  {}
-
-  static const bool is_shared = true;
-};
+  public auto_arg<T>
+{};
 
 /// <summary>
 /// Specialization for "T&" ~ auto_in<T>
@@ -102,12 +77,10 @@ class auto_arg<T&> :
   public auto_out<T>
 {
 public:
-  typedef auto_out<T> auto_type;
-
-  auto_arg(AutoPacket& packet) :
-    auto_out<T>(packet)
-  {}
-
+  typedef auto_out<T> type;
+  typedef T id_type;
+  static const bool is_input = false;
+  static const bool is_output = true;
   static const bool is_shared = false;
 };
 
@@ -115,16 +88,9 @@ public:
 /// Specialization for "std::shared_ptr<T>&" ~ auto_in<T>
 /// </summary>
 template<class T>
-class auto_arg<std::shared_ptr<T>&> :
-  public auto_out<T>
-{
-public:
-  auto_arg(AutoPacket& packet) :
-    auto_out<T>(packet)
-  {}
-
-  static const bool is_shared = false;
-};
+class auto_arg<std::shared_ptr<T>&>:
+  public auto_arg<T&>
+{};
 
 /// <summary>
 /// Forbidden input T
@@ -142,70 +108,23 @@ class auto_arg<std::shared_ptr<T>> {
 /// </summary>
 template<class T>
 class auto_arg<auto_out<T>>:
-  public auto_out<T>
-{
-public:
-  auto_arg(AutoPacket& packet):
-    auto_out<T>(packet)
-  {}
+  public auto_arg<T&>
+{};
 
-  static const bool is_shared = true;
-};
 
 /// <summary>
-/// Specialization for first-call "AutoPacket&"
+/// AutoPacket specialization
 /// </summary>
+/// <remarks>
+/// This type is treated as an input type because it supports concurrent modification
+/// </remarks>
 template<>
 class auto_arg<AutoPacket&>
 {
 public:
-  auto_arg(AutoPacket& packet) :
-    m_packet(packet)
-  {}
-
-protected:
-  /// Sigil to distinguish AutoPacket&
-  class first_call_sigil {
-  public:
-    first_call_sigil(void);
-    virtual ~first_call_sigil(void);
-  };
-
-  AutoPacket& m_packet;
-
-public:
-  typedef first_call_sigil id_type;
-
-  // Although AutoPacket& enable both inputs and outputs
-  // its availability is handled as an input.
+  typedef auto_in<AutoPacket> type;
+  typedef AutoPacket id_type;
   static const bool is_input = true;
   static const bool is_output = false;
-
-  operator AutoPacket&(void) const {
-    return m_packet;
-  }
-  operator std::shared_ptr<AutoPacket>(void) {
-    return m_packet.shared_from_this();
-  }
-
   static const bool is_shared = false;
-};
-
-/// <summary>
-/// Specialization for final-call "const AutoPacket&"
-/// </summary>
-/// <remarks>
-/// This is called during Finalize, so the shared_ptr may
-/// be invalidated if the associated ObjectPool is cleared.
-/// Therefore it is essential that this cannot be used with
-/// deferred calls.
-/// </remarks>
-template<>
-class auto_arg<const AutoPacket&>:
-  public auto_arg<AutoPacket&>
-{
-public:
-  auto_arg(const AutoPacket& packet) :
-    auto_arg<AutoPacket&>(const_cast<AutoPacket&>(packet))
-  {}
 };

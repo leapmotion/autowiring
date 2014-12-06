@@ -14,7 +14,6 @@ set(Autowiring_SRCS
   auto_in.h
   auto_out.h
   auto_arg.h
-  auto_arg.cpp
   AnySharedPointer.h
   AnySharedPointer.cpp
   AutoCheckout.h
