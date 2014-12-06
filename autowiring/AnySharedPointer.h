@@ -97,7 +97,7 @@ public:
   SharedPointerSlotT<T>* slot(void) { return (SharedPointerSlotT<T>*) m_space; }
   const SharedPointerSlotT<T>* slot(void) const { return (const SharedPointerSlotT<T>*) m_space; }
 
-  T& operator*(void) { return **slot(); }
+  T& operator*(void) { return *slot()->get(); }
   const T& operator*(void) const { return **slot(); }
 
   T* operator->(void) { return slot()->get().get(); }

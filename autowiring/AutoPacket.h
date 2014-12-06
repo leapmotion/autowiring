@@ -482,6 +482,15 @@ public:
   /// </remarks>
   void AddRecipient(const AutoFilterDescriptor& descriptor);
 
+  /// <summary>
+  /// Convenience overload, identical in behavior to AddRecipient
+  /// </summary>
+  template<class Fx>
+  AutoPacket& operator+=(Fx&& fx) {
+    AddRecipient(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
+    return *this;
+  }
+
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>
   /// If the type is not a subscriber GetSatisfaction().GetType() == nullptr will be true
