@@ -58,7 +58,7 @@ public:
     (void)RegConfig<T, t_field>::r;
   }
 
-private:
+protected:
   AutoRequired<AutoConfigManager> m_manager;
 
 public:

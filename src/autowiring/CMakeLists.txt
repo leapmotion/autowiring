@@ -39,6 +39,7 @@ set(Autowiring_SRCS
   AutoPacketFactory.cpp
   AutoPacketProfiler.h
   AutoPacketProfiler.cpp
+  AutoParameter.h
   AutoSelfUpdate.h
   AutoTimeStamp.h
   Autowired.h
