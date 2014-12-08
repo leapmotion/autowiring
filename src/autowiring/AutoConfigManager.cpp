@@ -77,6 +77,10 @@ void AutoConfigManager::AddCallback(const std::string& key, t_callback&& fx) {
   m_callbacks[key].push_back(fx);
 }
 
+bool AutoConfigManager::AddValidator(const std::string& key, t_validator&& validator) {
+  return true;
+}
+
 void AutoConfigManager::SetInternal(const std::string& key, AnySharedPointer value) {
   // Set value and mark that value was set from here
   m_attributes[key] = value;

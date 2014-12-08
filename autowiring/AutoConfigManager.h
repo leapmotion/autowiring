@@ -20,6 +20,9 @@ public:
   // Callback function type
   typedef std::function<void(const AnySharedPointer&)> t_callback;
   
+  // Validator function type
+  typedef std::function<bool(const AnySharedPointer&)> t_validator;
+  
 private:
   // lock for all members
   std::mutex m_lock;
@@ -96,7 +99,10 @@ public:
   bool SetParsed(const std::string& key, const std::string& value);
   
   // Add a callback for when key is changed
-  void AddCallback(const std::string& key, std::function<void(const AnySharedPointer&)>&& fx);
+  void AddCallback(const std::string& key, t_callback&& fx);
+  
+  // Add a validator for a config value
+  bool AddValidator(const std::string& key, t_validator&& validator);
   
 private:
   // Handles setting a value that has already been parsed into an AnySharedPointer
