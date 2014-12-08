@@ -20,6 +20,9 @@ public:
   // Callback function type
   typedef std::function<void(const AnySharedPointer&)> t_callback;
   
+  // Validator function type
+  typedef std::function<bool(const AnySharedPointer&)> t_validator;
+  
 private:
   // lock for all members
   std::mutex m_lock;
@@ -28,13 +31,16 @@ private:
   const std::unordered_map<std::string, const ConfigRegistryEntry*> m_registry;
   
   // Values of AutoConfigs in this context
-  std::unordered_map<std::string, AnySharedPointer> m_attributes;
+  std::unordered_map<std::string, AnySharedPointer> m_values;
   
   // Set of keys for values set from this context
   std::unordered_set<std::string> m_setHere;
   
   // map of callbacks registered for a key
   std::unordered_map<std::string, std::vector<t_callback>> m_callbacks;
+  
+  // map of validators registered for a key
+  std::unordered_map<std::string, std::vector<t_validator>> m_validators;
 
 public:
   /// <summary>
@@ -76,7 +82,7 @@ public:
     }
     
     // Set value in this AutoConfigManager
-    SetInternal(key, AnySharedPointer(std::make_shared<T>(value)));
+    SetRecursive(key, AnySharedPointer(std::make_shared<T>(value)));
   }
   
   /// <summary>
@@ -96,10 +102,17 @@ public:
   bool SetParsed(const std::string& key, const std::string& value);
   
   // Add a callback for when key is changed
-  void AddCallback(const std::string& key, std::function<void(const AnySharedPointer&)>&& fx);
+  void AddCallback(const std::string& key, t_callback&& fx);
+  
+  // Add a validator for a config value
+  void AddValidator(const std::string& key, t_validator&& validator);
   
 private:
-  // Handles setting a value that has already been parsed into an AnySharedPointer
+  // Handles setting a value recursivly to all child contexts
   // Must hold m_lock when calling this
-  void SetInternal(const std::string& key, AnySharedPointer value);
+  void SetRecursive(const std::string& key, AnySharedPointer value);
+  
+  // Set a value in this manager, check validators, call callbacks
+  // Must hold m_lock when calling this
+  void SetInternal(const std::string& key, const AnySharedPointer& value);
 };
