@@ -16,8 +16,6 @@ void FilterFunction(const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut
   typeOut->i += 1 + typeIn.i;
 }
 
-typedef std::function<void(const Decoration<0>&, auto_out<Decoration<1>>)> FilterFunctionType;
-
 TEST_F(AutoFilterFunctionalTest, FunctionDecorationTest) {
   // AddRecipient that is an instance of std::function f : a -> b
   // This must be satisfied by decoration of type a,
@@ -29,7 +27,7 @@ TEST_F(AutoFilterFunctionalTest, FunctionDecorationTest) {
   {
     auto packet = factory->NewPacket();
     packet->Decorate(Decoration<0>());
-    packet->AddRecipient(FilterFunctionType(FilterFunction));
+    packet->AddRecipient(AutoFilterDescriptor(&FilterFunction));
     const Decoration<1>* getdec;
     ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
   }
@@ -38,7 +36,7 @@ TEST_F(AutoFilterFunctionalTest, FunctionDecorationTest) {
   //NOTE: This test also catches failures to flush temporary subscriber information
   {
     auto packet = factory->NewPacket();
-    packet->AddRecipient(FilterFunctionType(FilterFunction));
+    packet->AddRecipient(AutoFilterDescriptor(&FilterFunction));
     packet->Decorate(Decoration<0>());
     const Decoration<1>* getdec;
     ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
@@ -52,9 +50,15 @@ TEST_F(AutoFilterFunctionalTest, FunctionDecorationLambdaTest) {
   {
     auto packet = factory->NewPacket();
     int addType = 1;
-    packet->AddRecipient(FilterFunctionType([addType](const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
-      typeOut->i += 1 + typeIn.i;
-    }));
+    auto sentry = std::make_shared<bool>(true);
+    *packet +=
+      [addType, sentry](const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
+        typeOut->i += 1 + typeIn.i;
+      };
+
+    // Sentry's use count should be precisely two at this point
+    ASSERT_EQ(2UL, sentry.use_count()) << "Appended recipient lambda was destroyed unexpectedly when it should have been pended";
+
     packet->Decorate(Decoration<0>());
     const Decoration<1>* getdec;
     ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
@@ -62,31 +66,27 @@ TEST_F(AutoFilterFunctionalTest, FunctionDecorationLambdaTest) {
   }
 }
 
-typedef std::function<void(auto_out<Decoration<0>>)> InjectorFunctionType;
-
 TEST_F(AutoFilterFunctionalTest, FunctionInjectorTest) {
   AutoRequired<AutoPacketFactory> factory;
 
   auto packet = factory->NewPacket();
   int addType = 1;
-  packet->AddRecipient(InjectorFunctionType([addType](auto_out<Decoration<0>> typeOut) {
+  packet->AddRecipient([addType](auto_out<Decoration<0>> typeOut) {
     typeOut->i += addType;
-  }));
+  });
   const Decoration<0>* getdec;
   ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
   ASSERT_EQ(0 + addType, getdec->i) << "Increment was not applied";
 }
-
-typedef std::function<void(const Decoration<1>&)> ExtractorFunctionType;
 
 TEST_F(AutoFilterFunctionalTest, FunctionExtractorTest) {
   AutoRequired<AutoPacketFactory> factory;
 
   auto packet = factory->NewPacket();
   int extType = -1;
-  packet->AddRecipient(ExtractorFunctionType([&extType](const Decoration<1>& typeIn) {
+  packet->AddRecipient([&extType](const Decoration<1>& typeIn) {
     extType = typeIn.i;
-  }));
+  });
   packet->Decorate(Decoration<1>());
   ASSERT_EQ(1, extType) << "Decoration type was not extracted";
 }

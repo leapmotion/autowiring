@@ -32,7 +32,7 @@ struct CallExtractor<RetType (*)(Args...)>:
 
     // Handoff
     ((t_pfn)pfn)(
-      typename auto_arg<Args>::type(autoPacket.shared_from_this())...
+      typename auto_arg<Args>::type(autoPacket)...
     );
   }
 };

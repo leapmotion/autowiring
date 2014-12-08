@@ -63,7 +63,7 @@ private:
 
 public:
   const T& operator*() const {
-    return *m_manager->Get(m_key).template as<T>();
+    return *m_manager->Get(m_key).template as<T>().get();
   }
 
   const T* operator->(void) const {
@@ -80,7 +80,7 @@ public:
   // Add a callback for when this config value changes
   void operator+=(std::function<void(const T&)>&& fx) {
     m_manager->AddCallback(m_key, [fx](const AnySharedPointer& val){
-      fx(*val.template as<T>());
+      fx(*val.template as<T>().get());
     });
   }
 };

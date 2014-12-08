@@ -265,22 +265,19 @@ struct AutoFilterDescriptor:
       // capture it in a template processing context.  Hopefully this can be changed
       // once MSVC adopts constexpr.
       AnySharedPointer(
-        std::shared_ptr<RetType(Args...)>(
-          pfn,
-          [](decltype(pfn)){}
+        std::shared_ptr<void>(
+          (void*)pfn,
+          [](void*){}
         )
       ),
 
       // The remainder is fairly straightforward
-      CallExtractor<decltype(pfn)>(),
-      &CallExtractor<decltype(pfn)>::Call
-    )
-  {}
+      &typeid(pfn),
 
-  // Convenience overload:
-  template<class RetType, class... Args>
-  AutoFilterDescriptor(RetType(&pfn)(Args...)):
-    AutoFilterDescriptor(&pfn)
+      CallExtractor<decltype(pfn)>::template Enumerate<AutoFilterDescriptorInput>::types,
+      false,
+      CallExtractor<decltype(pfn)>::Call
+    )
   {}
 
 protected:

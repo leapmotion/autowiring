@@ -272,7 +272,7 @@ public:
     return (void*)get().get();
   }
   virtual const void* ptr(void) const override {
-    return get().get();
+    return (const void*)get().get();
   }
 
   virtual void New(void* pSpace, size_t nBytes) const override {
@@ -311,9 +311,5 @@ public:
 
   T* operator->(void) const {
     return get().get();
-  }
-
-  T& operator*(void) const {
-    return *get();
   }
 };
