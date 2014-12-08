@@ -79,12 +79,12 @@ void AutoConfigManager::AddCallback(const std::string& key, t_callback&& fx) {
 
 void AutoConfigManager::AddValidator(const std::string& key, t_validator&& validator) {
   std::lock_guard<std::mutex> lk(m_lock);
-  if(validator(m_values[key])) {
-     m_validators[key].push_back(validator);
-  } else {
+  if(m_values.count(key) && !validator(m_values[key])) {
     std::stringstream ss;
     ss << "Current value for key '" << key << "' is invalid";
     throw autowiring_error(ss.str());
+  } else {
+    m_validators[key].push_back(validator);
   }
 }
 

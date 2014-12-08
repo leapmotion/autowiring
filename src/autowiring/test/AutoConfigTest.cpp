@@ -234,6 +234,11 @@ TEST_F(AutoConfigTest, Validators) {
   AutoRequired<AutoConfigManager> acm;
   AutoRequired<MyConfigurableClass> mcc;
   
+  // Add validator to key that hasn't been set
+  acm->AddValidator("Namespace1.XYZ", [](const AnySharedPointer& ptr){
+    return true;
+  });
+  
   acm->Set("Namespace1.XYZ", 42);
   ASSERT_EQ(42, *mcc->m_myName);
   
@@ -245,4 +250,11 @@ TEST_F(AutoConfigTest, Validators) {
   
   ASSERT_ANY_THROW(acm->Set("Namespace1.XYZ", 1337)) << "Should throw exception when setting invalid value";
   ASSERT_EQ(42, *mcc->m_myName);
+  
+  // Assert adding validator that doesn't validate current value throws execpetion
+  ASSERT_ANY_THROW(acm->AddValidator("Namespace1.XYZ", [](const AnySharedPointer& ptr){
+    const int val = *ptr->as<int>();
+    
+    return (val < 0);
+  }));
 }
