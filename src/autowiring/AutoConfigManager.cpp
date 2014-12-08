@@ -30,7 +30,7 @@ AutoConfigManager::AutoConfigManager(void):
     // Is there AutoConfigManager in an ancestor?
     if (mgmt) {
       std::lock_guard<std::mutex> lk(mgmt->m_lock);
-      m_attributes = mgmt->m_attributes;
+      m_values = mgmt->m_values;
     }
   }
 }
@@ -39,15 +39,15 @@ AutoConfigManager::~AutoConfigManager(void){}
 
 bool AutoConfigManager::IsConfigured(const std::string& key) {
   std::lock_guard<std::mutex> lk(m_lock);
-  return !!m_attributes.count(key);
+  return !!m_values.count(key);
 }
 
 AnySharedPointer& AutoConfigManager::Get(const std::string& key) {
   std::lock_guard<std::mutex> lk(m_lock);
   
   // Check this first
-  if (m_attributes.count(key)) {
-    return m_attributes[key];
+  if (m_values.count(key)) {
+    return m_values[key];
   }
   
   // Key not found, throw exception
@@ -77,19 +77,20 @@ void AutoConfigManager::AddCallback(const std::string& key, t_callback&& fx) {
   m_callbacks[key].push_back(fx);
 }
 
-bool AutoConfigManager::AddValidator(const std::string& key, t_validator&& validator) {
-  return true;
+void AutoConfigManager::AddValidator(const std::string& key, t_validator&& validator) {
+  std::lock_guard<std::mutex> lk(m_lock);
+  if(validator(m_values[key])) {
+     m_validators[key].push_back(validator);
+  } else {
+    std::stringstream ss;
+    ss << "Current value for key '" << key << "' is invalid";
+    throw autowiring_error(ss.str());
+  }
 }
 
-void AutoConfigManager::SetInternal(const std::string& key, AnySharedPointer value) {
-  // Set value and mark that value was set from here
-  m_attributes[key] = value;
-  m_setHere.insert(key);
-  
-  // Call callbacks for this key
-  for (const auto& cb : m_callbacks[key]) {
-    cb(value);
-  }
+void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer value) {
+  // Actually set the value in this manager
+  SetInternal(key, value);
   
   // Enumerate descendant contexts
   auto enumerator = ContextEnumerator(GetContext());
@@ -113,14 +114,33 @@ void AutoConfigManager::SetInternal(const std::string& key, AnySharedPointer val
         ctxt.NextSibling();
         continue;
       }
-    
-      mgmt->m_attributes[key] = value;
-    
-      for (const auto& cb : mgmt->m_callbacks[key])
-        cb(value);
+      
+      //Actaully set the value
+      mgmt->SetInternal(key, value);
     
       // Continue to next context
       ++ctxt;
     }
+  }
+ 
+  // Mark that value was succefully set from this manager
+  m_setHere.insert(key);
+}
+
+void AutoConfigManager::SetInternal(const std::string& key, const AnySharedPointer& value) {
+  // Call all validators for this key
+  for (auto const& fx : m_validators[key]) {
+    if (!fx(value)){
+      std::stringstream ss;
+      ss << "Attempted to set key '" << key << "'which didin't pass validator";
+      throw autowiring_error(ss.str());
+    }
+  }
+  
+  m_values[key] = value;
+  
+  // Call callbacks for this key
+  for (const auto& cb : m_callbacks[key]) {
+    cb(value);
   }
 }
