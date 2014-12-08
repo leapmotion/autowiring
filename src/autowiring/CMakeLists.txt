@@ -112,6 +112,7 @@ set(Autowiring_SRCS
   has_autofilter.h
   has_simple_constructor.h
   has_static_new.h
+  has_validate.h
   hash_tuple.h
   index_tuple.h
   is_any.h

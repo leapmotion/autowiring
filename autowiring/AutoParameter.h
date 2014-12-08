@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AutoConfig.h"
+#include "has_validate.h"
 
 /// <summary>
 /// Register an AutoParameter with "AutoParam" namespace in AutoConfigManager.
@@ -19,15 +20,17 @@ public:
   AutoParameter() :
     AutoConfig<T, struct AutoParam, TKey>()
   {
-    Set(TKey::Default());
-    // TODO:
-    //    REQUIRED: default value.
-    //    OPTIONAL: validator.
-    //    Make sure
+    T defaultValue = TKey::Default();
+    if (!CallValidate<T, TKey>(defaultValue, has_validate<TKey>())) {
+      throw autowiring_error("invalid value for key: " + this->m_key);
+    }
+    Set(defaultValue);
   }
   
   bool Set(const T& value) {
-    // TODO: validate, set, etc
+    if (!CallValidate<T, TKey>(value, has_validate<TKey>())) {
+      return false;
+    }
     
     this->m_manager->Set(this->m_key, value);
     return true;
