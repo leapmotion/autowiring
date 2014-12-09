@@ -49,7 +49,7 @@ public:
     (void)RegConfig<T, TKey...>::r;
   }
 
-private:
+protected:
   AutoRequired<AutoConfigManager> m_manager;
 
 public:
