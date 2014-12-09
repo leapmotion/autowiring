@@ -93,3 +93,20 @@ TEST_F(AutoParameterTest, VerifyInvalidDefaultValue) {
   ASSERT_ANY_THROW(AutoRequired<MyParamClass3>())
     << "Cannot construct a parameter where default value is invalid";
 }
+
+struct MyParamClass4 {
+  struct MyIntParam4 {
+    static constexpr int Default() { return 15; }
+    static bool Validate(const int& value) { return 10 <= value && value <= 20; }
+  };
+  
+  AutoParameter<int, MyIntParam4> m_param;
+};
+
+TEST_F(AutoParameterTest, VerifyInvalidPreconfiguredValue) {
+  AutoRequired<AutoConfigManager> acm;
+  acm->Set("AutoParam.MyParamClass4::MyIntParam4", 0);
+  
+  ASSERT_ANY_THROW(AutoRequired<MyParamClass4>())
+    << "Should not be able to initialize a parameter that had a previous value set that is invalid with new validation";
+}

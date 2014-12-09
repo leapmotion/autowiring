@@ -25,7 +25,7 @@ public:
       throw autowiring_error("invalid default value for key: " + this->m_key);
     }
 
-    if (this->IsConfigured() && isValid(this->template operator*())) {
+    if (this->IsConfigured() && !isValid(this->template operator*())) {
       throw autowiring_error("currently configured value is invalid for key: " + this->m_key);
     }
     
