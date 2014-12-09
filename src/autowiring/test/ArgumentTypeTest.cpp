@@ -42,7 +42,6 @@ typedef const Argument<0>& required_in;
 typedef std::shared_ptr<const Argument<0>> required_in_shared;
 typedef auto_in<Argument<0>> fundamental_in;
 typedef Argument<0>& required_out;
-typedef std::shared_ptr<Argument<0>> required_out_shared;
 typedef auto_out<Argument<0>> fundamental_out;
 
 TEST_F(ArgumentTypeTest, AutoFilterTemplateTests) {
@@ -54,30 +53,27 @@ TEST_F(ArgumentTypeTest, AutoFilterTemplateTests) {
   ASSERT_TRUE(auto_arg<required_in_shared>::is_shared) << "Input is a shared ptr";
 
   ASSERT_TRUE(auto_arg<fundamental_in>::is_input) << "Should be input";
-  ASSERT_TRUE(auto_arg<fundamental_in>::is_shared) << "Input is a shared ptr";
+  ASSERT_FALSE(auto_arg<fundamental_in>::is_shared) << "Input is not explicitly a shared ptr";
 
   ASSERT_FALSE(auto_arg<required_out>::is_input) << "Should be output";
   ASSERT_FALSE(auto_arg<required_out>::is_shared) << "Output is a shared ptr";
 
-  ASSERT_FALSE(auto_arg<required_out_shared>::is_input) << "Should be output";
-  ASSERT_TRUE(auto_arg<required_out_shared>::is_shared) << "Output is a shared ptr";
-
   ASSERT_FALSE(auto_arg<fundamental_out>::is_input) << "Should be output";
-  ASSERT_TRUE(auto_arg<fundamental_out>::is_shared) << "Output is a shared ptr";
+  ASSERT_FALSE(auto_arg<fundamental_out>::is_shared) << "Output is a shared ptr";
 }
 
 TEST_F(ArgumentTypeTest, TestAutoIn) {
   AutoRequired<AutoPacketFactory> factory;
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   packet->Decorate(Argument<0>(1));
-  auto_in<Argument<0>> in(packet);
+  auto_in<std::shared_ptr<const Argument<0>>> in(*packet);
   ASSERT_TRUE(in.is_input) << "Incorrect orientation";
   ASSERT_FALSE(in.is_output) << "Incorrect orientation";
-  ASSERT_EQ(1, in->i) << "Incorrect initialization";
+  ASSERT_EQ(1, in->get()->i) << "Incorrect initialization";
 
   // Base Cast
   {
-    const Argument<0>& base_in = in;
+    const Argument<0>& base_in = **in;
     ASSERT_EQ(1, base_in.i) << "Incorrect base cast";
   }
 
@@ -88,27 +84,21 @@ TEST_F(ArgumentTypeTest, TestAutoIn) {
   }
 
   // Deduced Type
-  auto_arg<const Argument<0>&> arg(packet);
-  ASSERT_EQ(3, in.use_count()) << "AutoPacket + in + arg == 3";
+  auto_arg<std::shared_ptr<const Argument<0>>>::type arg(*packet);
+  ASSERT_EQ(1, in->use_count()) << "AutoPacket should be the sole shared pointer reference";
 }
 
 TEST_F(ArgumentTypeTest, TestAutoOut) {
   AutoRequired<AutoPacketFactory> factory;
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   {
-    auto_out<Argument<0>> out(packet);
-    ASSERT_FALSE(out.is_input) << "Incorrect orientation";
-    ASSERT_TRUE(out.is_output) << "Incorrect orientation";
+    typedef auto_arg<Argument<0>&> t_argType;
+    t_argType::type out(*packet);
+    ASSERT_FALSE(t_argType::is_input) << "Incorrect orientation";
+    ASSERT_TRUE(t_argType::is_output) << "Incorrect orientation";
 
     // Implicit commitment to output
     out->i = 1;
-
-    // Copy by move
-    auto_out<Argument<0>> out1(std::move(out));
-
-    // Assign by move
-    auto_out<Argument<0>> out2(packet);
-    out2 = std::move(out1);
   }
 
   const Argument<0>* arg = nullptr;

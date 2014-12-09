@@ -204,8 +204,7 @@ public:
     std::lock_guard<std::mutex> lk(m_lock);
 
     auto q = m_decorations.find(typeid(T));
-    if(q != m_decorations.end() &&
-       q->second.satisfied) {
+    if(q != m_decorations.end() && q->second.satisfied) {
       auto& disposition = q->second;
       if(disposition.m_decoration) {
         out = disposition.m_decoration->as<T>().get();
@@ -271,6 +270,13 @@ public:
     }
     out.reset();
     return false;
+  }
+
+  template<class T>
+  const std::shared_ptr<const T>& GetShared(void) const {
+    const std::shared_ptr<const T>* retVal;
+    Get(retVal);
+    return *retVal;
   }
 
   /// <summary>
@@ -475,6 +481,15 @@ public:
   /// Recipients added in this way cannot receive piped data, since they are anonymous.
   /// </remarks>
   void AddRecipient(const AutoFilterDescriptor& descriptor);
+
+  /// <summary>
+  /// Convenience overload, identical in behavior to AddRecipient
+  /// </summary>
+  template<class Fx>
+  AutoPacket& operator+=(Fx&& fx) {
+    AddRecipient(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
+    return *this;
+  }
 
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>

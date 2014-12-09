@@ -7,49 +7,47 @@
 /// <summary>
 /// Fundamental type of required input arguments of AutoFilter methods.
 /// </summary>
-/// <remarks>
-/// Argument types that resolve to and from auto_in are:
-///  const T&
-///  std::shared_ptr<const T>
-/// </remarks>
-template <class type>
-class auto_in:
-  public std::shared_ptr<const type>
+template<class T>
+class auto_in
 {
-  auto_in (auto_in<type>& rhs) = delete;
-  auto_in& operator = (auto_in<type>& rhs) = delete;
-
 public:
-  typedef type id_type;
-  typedef const type& base_type;
-  typedef std::shared_ptr<const type> shared_type;
-
+  typedef T id_type;
   static const bool is_input = true;
   static const bool is_output = false;
 
-  operator base_type () const {
-    return *(this->get());
+  static const T& Get(AutoPacket& packet) {
+    const T* out;
+    packet.Get(out);
+    return *out;
   }
 
-  operator shared_type () {
-    return *this;
-  }
-
-  auto_in ():
-    shared_type(nullptr)
+  auto_in(AutoPacket& packet) :
+    m_value(Get(packet))
   {}
 
-  auto_in (auto_in<type>&& rhs):
-    shared_type(std::move(rhs))
+private:
+  const T& m_value;
+
+public:
+  operator const T&() const { return m_value; }
+  const T& operator*(void) const { return m_value; }
+  const T* operator->(void) const { return &m_value; }
+};
+
+
+template<>
+class auto_in<AutoPacket>
+{
+public:
+  auto_in(AutoPacket& packet) :
+    packet(packet)
   {}
 
-  auto_in& operator = (auto_in<type>&& rhs) {
-    shared_type::reset();
-    static_cast<shared_type&>(*this) = std::move(rhs);
-    return *this;
-  }
+private:
+  AutoPacket& packet;
 
-  auto_in (std::shared_ptr<AutoPacket> packet) {
-    packet->Get(*this);
-  }
+public:
+  operator AutoPacket&() const { return packet; }
+  AutoPacket& operator*(void) const { return packet; }
+  AutoPacket* operator->(void) const { return &packet; }
 };

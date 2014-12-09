@@ -233,7 +233,7 @@ void AutoPacket::Put(AnySharedPointer&& in) {
   if(entry.satisfied || entry.isCheckedOut) {
     std::stringstream ss;
     ss << "Cannot put type " << autowiring::demangle(in->type())
-      << " on AutoPacket, the requested broadcast already exists";
+      << " on AutoPacket, the requested type already exists";
     throw std::runtime_error(ss.str());
   }
 

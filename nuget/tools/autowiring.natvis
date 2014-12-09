@@ -18,7 +18,7 @@
 
   <Type Name="CoreContextT&lt;*&gt;">
     <AlternativeType Name="GlobalCoreContext"/>
-    
+
     <DisplayString Condition="strcmp(sc_type._M_d_name, &quot;.?AVGlobalCoreContext@@&quot;) == 0">[Global Context]</DisplayString>
     <DisplayString Condition="*(char*)sc_type._M_data == 'v'">[ ]</DisplayString>
     <DisplayString Condition="sc_type._M_data != nullptr">[{((char*)sc_type._M_data + 6 + (*(char*)sc_type._M_data == 's')),sb}]</DisplayString>
@@ -112,7 +112,7 @@
       <ExpandedItem>(AutoFilterDescriptor*)this</ExpandedItem>
     </Expand>
   </Type>
-  
+
   <Type Name="AutoPacketFactory">
     <DisplayString>Packet Factory</DisplayString>
     <Expand>
@@ -144,7 +144,7 @@
       <ExpandedItem>(SharedPointerSlot*)m_space</ExpandedItem>
     </Expand>
   </Type>
-  
+
   <Type Name="DecorationDisposition">
     <DisplayString>{((char*)m_type-&gt;_M_data + 6 + (*(char*)m_type-&gt;_M_data == 's')),sb}</DisplayString>
     <Expand>
@@ -152,7 +152,7 @@
     </Expand>
   </Type>
 
-  <Type Name="std::list&lt;std::pair&lt;std::tuple&lt;std::type_index,std::type_index&gt;const ,DecorationDisposition&gt;,std::allocator&lt;std::pair&lt;std::tuple&lt;std::type_index,std::type_index&gt;const ,DecorationDisposition&gt; &gt; &gt;">
+  <Type Name="std::list&lt;std::pair&lt;std::type_index const, DecorationDisposition&gt;,std::allocator&lt;std::pair&lt;std::type_index const, DecorationDisposition&gt; &gt; &gt;">
     <Expand>
       <LinkedListItems>
         <Size>_Mysize</Size>
@@ -162,7 +162,7 @@
       </LinkedListItems>
     </Expand>
   </Type>
-  
+
   <Type Name="AutoPacket">
     <DisplayString>[ {m_decorations._List._Mysize} decorations ]</DisplayString>
     <Expand>

@@ -12,7 +12,7 @@ target_link_libraries(AutoTesting Autowiring)
 if(NOT AUTOWIRING_IS_EMBEDDED)
   install(TARGETS AutoTesting EXPORT AutowiringTargets
     DESTINATION lib
-    COMPONENT autowiring 
+    COMPONENT autowiring
     CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
   )
 endif()

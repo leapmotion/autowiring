@@ -27,7 +27,7 @@ struct AutoFilterDescriptorInput {
   {}
 
   template<class T>
-  AutoFilterDescriptorInput(auto_arg<T>&& traits) :
+  AutoFilterDescriptorInput(auto_arg<T>*) :
     is_input(auto_arg<T>::is_input),
     is_output(auto_arg<T>::is_output),
     is_shared(auto_arg<T>::is_shared),
@@ -46,7 +46,7 @@ struct AutoFilterDescriptorInput {
   template<class T>
   struct rebind {
     operator AutoFilterDescriptorInput() {
-      return auto_arg<T>();
+      return AutoFilterDescriptorInput((auto_arg<T>*)nullptr);
     }
   };
 };
@@ -265,22 +265,19 @@ struct AutoFilterDescriptor:
       // capture it in a template processing context.  Hopefully this can be changed
       // once MSVC adopts constexpr.
       AnySharedPointer(
-        std::shared_ptr<RetType(Args...)>(
-          pfn,
-          [](decltype(pfn)){}
+        std::shared_ptr<void>(
+          (void*)pfn,
+          [](void*){}
         )
       ),
 
       // The remainder is fairly straightforward
-      CallExtractor<decltype(pfn)>(),
-      &CallExtractor<decltype(pfn)>::Call
-    )
-  {}
+      &typeid(pfn),
 
-  // Convenience overload:
-  template<class RetType, class... Args>
-  AutoFilterDescriptor(RetType(&pfn)(Args...)):
-    AutoFilterDescriptor(&pfn)
+      CallExtractor<decltype(pfn)>::template Enumerate<AutoFilterDescriptorInput>::types,
+      false,
+      CallExtractor<decltype(pfn)>::Call
+    )
   {}
 
 protected:

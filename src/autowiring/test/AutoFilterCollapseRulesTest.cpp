@@ -38,26 +38,13 @@ public:
   }
 };
 
-class ProducesSharedPointer {
-public:
-  ProducesSharedPointer(void) :
-    m_called(0)
-  {}
-
-  int m_called;
-
-  void AutoFilter(std::shared_ptr<const int> dataIn) {
-    ++m_called;
-  }
-};
-
 TEST_F(AutoFilterCollapseRulesTest, SharedPtrCollapse) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<AcceptsConstReference> constr_filter;
   AutoRequired<AcceptsSharedPointer> shared_filter;
 
-  int constr_int = 0;
-  std::shared_ptr<int> shared_int = std::make_shared<int>(0);
+  int constr_int = 222;
+  std::shared_ptr<int> shared_int = std::make_shared<int>(232);
   ASSERT_TRUE(static_cast<bool>(shared_int));
 
   // Decorate(type X) calls AutoFilter(const type& X)
@@ -112,4 +99,29 @@ TEST_F(AutoFilterCollapseRulesTest, SharedPointerAliasingRules) {
 
   ASSERT_EQ(1UL, genFilter1->m_called) << "AutoFilter accepting a shared pointer was not called as expected";
   ASSERT_EQ(1UL, genFilter2->m_called) << "AutoFilter accepting a decorated type was not called as expected";
+}
+
+class ProducesSharedPointer {
+public:
+  ProducesSharedPointer(void) :
+    m_called(0)
+  {}
+
+  int m_called;
+
+  void AutoFilter(std::shared_ptr<int>& output) {
+    ++m_called;
+    output = std::make_shared<int>(55);
+  }
+};
+
+TEST_F(AutoFilterCollapseRulesTest, AutoFilterSharedAliasingRules) {
+  AutoRequired<ProducesSharedPointer> produces;
+  AutoRequired<FilterGen<int>> consumes;
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Decorate the packet, verify attribute presence:
+  auto packet = factory->NewPacket();
+  ASSERT_TRUE(packet->Has<int>()) << "Filter producing a shared pointer of type int did not correctly collapse to the basic int type";
+  ASSERT_EQ(55, std::get<0>(consumes->m_args)) << "Filter consuming a shared pointer output was not called as expected";
 }
