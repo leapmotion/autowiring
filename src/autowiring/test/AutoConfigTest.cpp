@@ -121,7 +121,7 @@ TEST_F(AutoConfigTest, VerifyDuplicateConfigAssignment) {
 }
 
 TEST_F(AutoConfigTest, ExtractKeyTestWin) {
-  std::stringstream win("struct AutoConfigBase::ConfigTypeExtractor<struct Namespace1,struct XYZ>");
+  std::stringstream win("struct ConfigTypeExtractor<struct Namespace1,struct XYZ>");
   
   ASSERT_STREQ(
     "Namespace1.XYZ",

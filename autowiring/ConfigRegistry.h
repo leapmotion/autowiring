@@ -35,12 +35,16 @@ struct ConfigRegistryEntry {
   virtual AnySharedPointer parse(const std::string&) const = 0;
 };
 
-template<class T, class Key>
+// Template arguemnts TKey specify the key and optional namespace for a config attribute
+template<class... TKey>
+struct ConfigTypeExtractor {};
+
+template<class T, class... TKey>
 struct ConfigRegistryEntryT:
   public ConfigRegistryEntry
 {
   ConfigRegistryEntryT(void):
-    ConfigRegistryEntry(typeid(Key))
+    ConfigRegistryEntry(typeid(ConfigTypeExtractor<TKey...>))
   {}
   
   bool verifyType(const std::type_info& ti) const override {
@@ -89,12 +93,12 @@ extern size_t g_confgiEntryCount;
 /// Any instance of this type registry parameterized on type T will be added to the
 /// global static type registry, and this registry is computed at link time.
 /// </remarks>
-template<class T, class Key>
+template<class T, class... TKey>
 class RegConfig
 {
 public:
-  static const ConfigRegistryEntryT<T, Key> r;
+  static const ConfigRegistryEntryT<T, TKey...> r;
 };
 
-template<class T, class Key>
-const ConfigRegistryEntryT<T, Key> RegConfig<T, Key>::r;
+template<class T, class... TKey>
+const ConfigRegistryEntryT<T, TKey...> RegConfig<T, TKey...>::r;
