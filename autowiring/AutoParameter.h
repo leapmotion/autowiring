@@ -18,21 +18,43 @@ class AutoParameter:
 {
 public:
   AutoParameter() :
-    AutoConfig<T, struct AutoParam, TKey>()
+    AutoConfig<T, struct AutoParam, TKey>(),
+    m_default(TKey::Default())
   {
-    T defaultValue = TKey::Default();
-    if (!CallValidate<T, TKey>(defaultValue, has_validate<TKey>())) {
-      throw autowiring_error("invalid value for key: " + this->m_key);
+    if (!isValid(m_default)) {
+      throw autowiring_error("invalid default value for key: " + this->m_key);
     }
-    Set(defaultValue);
+
+    if (this->IsConfigured() && isValid(this->template operator*())) {
+      throw autowiring_error("currently configured value is invalid for key: " + this->m_key);
+    }
+  }
+  
+  const T& operator*() const {
+    return this->IsConfigured() ?
+      this->template AutoConfig<T, struct AutoParam, TKey>::operator*() :
+      m_default;
+  }
+  
+  const T* operator->(void) const {
+    return this->IsConfigured() ?
+      this->template AutoConfig<T, struct AutoParam, TKey>::operator->() :
+      &m_default;
   }
   
   bool Set(const T& value) {
-    if (!CallValidate<T, TKey>(value, has_validate<TKey>())) {
+    if (!isValid(value)) {
       return false;
     }
     
     this->m_manager->Set(this->m_key, value);
     return true;
+  }
+  
+protected:
+  const T m_default;
+  
+  bool isValid(const T& value) const {
+    return CallValidate<T, TKey>(value, has_validate<TKey>());
   }
 };

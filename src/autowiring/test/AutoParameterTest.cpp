@@ -30,6 +30,16 @@ TEST_F(AutoParameterTest, VerifyDefaultValue) {
   
   ASSERT_EQ(*param, 15)
     << "Default value was not properly set";
+  ASSERT_FALSE(param.IsConfigured())
+    << "Using the default value does not mean the parameter should be configured/set";
+}
+
+TEST_F(AutoParameterTest, VerifySetShouldCallConfigure) {
+  AutoRequired<MyParamClass1> mpc;
+  auto& param = mpc->m_param;
+  
+  ASSERT_TRUE(param.Set(MyParamClass1::MyIntParam1::Default()) && param.IsConfigured())
+    << "Settung the variable should configure it in the auto config manager";
 }
 
 TEST_F(AutoParameterTest, VerifyResetToDefaultValue) {
