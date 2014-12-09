@@ -28,6 +28,10 @@ public:
     if (this->IsConfigured() && isValid(this->template operator*())) {
       throw autowiring_error("currently configured value is invalid for key: " + this->m_key);
     }
+    
+    this->m_manager->AddValidator(this->m_key, [this](const AnySharedPointer& val) -> bool {
+      return isValid(*val.template as<T>().get());
+    });
   }
   
   const T& operator*() const {
