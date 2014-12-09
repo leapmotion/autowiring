@@ -32,6 +32,7 @@ set(Autowiring_SRCS
   AutoPacketFactory.h
   AutoPacketProfiler.cpp
   AutoPacketProfiler.h
+  AutoParameter.h
   AutoRestarter.h
   AutoSelfUpdate.h
   AutoTimeStamp.h
@@ -106,6 +107,8 @@ set(Autowiring_SRCS
   has_autoinit.h
   has_simple_constructor.h
   has_static_new.h
+  has_validate.h
+  hash_tuple.h
   index_tuple.h
   InterlockedExchange.h
   InvokeRelay.h
