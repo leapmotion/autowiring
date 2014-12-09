@@ -16,6 +16,11 @@ struct MyParamClass1 {
   AutoParameter<int, MyIntParam1> m_param;
 };
 
+static_assert(
+  !has_validate<MyParamClass1::MyIntParam1>::value,
+  "has_validate SFINAE class incorrectly detected validator on MyIntParam1"
+);
+
 TEST_F(AutoParameterTest, VerifyCorrectDeconstruction) {
   AutoRequired<MyParamClass1> mpc;
   auto& param = mpc->m_param;
@@ -65,6 +70,11 @@ struct MyParamClass2 {
   
   AutoParameter<int, MyIntParam2> m_param;
 };
+
+static_assert(
+  has_validate<MyParamClass2::MyIntParam2>::value,
+  "has_validate SFINAE class failed to detect a validator on MyIntParam2"
+);
 
 TEST_F(AutoParameterTest, VerifyValidationFunction) {
   AutoRequired<MyParamClass2> mpc;
