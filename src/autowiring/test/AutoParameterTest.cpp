@@ -10,7 +10,7 @@ class AutoParameterTest:
 
 struct MyParamClass1 {
   struct MyIntParam1 {
-    static constexpr int Default() { return 15; }
+    static int Default() { return 15; }
   };
   
   AutoParameter<int, MyIntParam1> m_param;
@@ -59,7 +59,7 @@ TEST_F(AutoParameterTest, VerifyResetToDefaultValue) {
 
 struct MyParamClass2 {
   struct MyIntParam2 {
-    static constexpr int Default() { return 15; }
+    static int Default() { return 15; }
     static bool Validate(const int& value) { return 10 <= value && value <= 20; }
   };
   
@@ -82,7 +82,7 @@ TEST_F(AutoParameterTest, VerifyValidationFunction) {
 
 struct MyParamClass3 {
   struct MyIntParam3 {
-    static constexpr int Default() { return 0; }
+    static int Default() { return 0; }
     static bool Validate(const int& value) { return 10 <= value && value <= 20; }
   };
   
@@ -96,7 +96,7 @@ TEST_F(AutoParameterTest, VerifyInvalidDefaultValue) {
 
 struct MyParamClass4 {
   struct MyIntParam4 {
-    static constexpr int Default() { return 15; }
+    static int Default() { return 15; }
     static bool Validate(const int& value) { return 10 <= value && value <= 20; }
   };
   
