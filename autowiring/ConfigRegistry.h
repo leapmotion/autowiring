@@ -42,6 +42,19 @@ struct ConfigRegistryEntry {
 template<class... TKey>
 struct ConfigTypeExtractor {};
 
+template<typename... Ts>
+struct get_last;
+
+template<typename T, typename... Ts>
+struct get_last<T, Ts...>{
+  typedef typename get_last<Ts...>::last last;
+};
+
+template<typename T>
+struct get_last<T>{
+  typedef T last;
+};
+
 template<class T, class... TKey>
 struct ConfigRegistryEntryT:
   public ConfigRegistryEntry
@@ -87,7 +100,7 @@ struct ConfigRegistryEntryT:
 
   std::function<bool(const AnySharedPointer&)> validator(void) const override {
     return [] (const AnySharedPointer& ptr) {
-      typedef decltype(std::get<sizeof...(TKey)-1>(std::tuple<TKey...>())) validator_t;
+      typedef typename get_last<TKey...>::last validator_t;
       return CallValidate<T, validator_t>(*ptr.template as<T>().get(), has_validate<validator_t>());
     };
   }
