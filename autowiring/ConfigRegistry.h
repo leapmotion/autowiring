@@ -21,13 +21,16 @@ struct has_stream {
 };
 
 struct ConfigRegistryEntry {
-  ConfigRegistryEntry(const std::type_info& ti);
+  ConfigRegistryEntry(const std::type_info& ti, bool has_validator);
 
   // Next entry in the list:
   const ConfigRegistryEntry* const pFlink;
   
   // Configuration name
   const std::string m_key;
+  
+  // True if a validator was provided
+  const bool m_has_validator;
   
   bool is(const std::string& key) const;
   
@@ -59,8 +62,11 @@ template<class T, class... TKey>
 struct ConfigRegistryEntryT:
   public ConfigRegistryEntry
 {
+  // The "key" proper, without the namespace
+  typedef typename get_last<TKey...>::last t_key;
+  
   ConfigRegistryEntryT(void):
-    ConfigRegistryEntry(typeid(ConfigTypeExtractor<TKey...>))
+    ConfigRegistryEntry(typeid(ConfigTypeExtractor<TKey...>), has_validate<t_key>())
   {}
   
   bool verifyType(const std::type_info& ti) const override {
@@ -100,8 +106,7 @@ struct ConfigRegistryEntryT:
 
   std::function<bool(const AnySharedPointer&)> validator(void) const override {
     return [] (const AnySharedPointer& ptr) {
-      typedef typename get_last<TKey...>::last validator_t;
-      return CallValidate<T, validator_t>(*ptr.template as<T>().get(), has_validate<validator_t>());
+      return CallValidate<T, t_key>(*ptr.template as<T>().get(), has_validate<t_key>());
     };
   }
 };

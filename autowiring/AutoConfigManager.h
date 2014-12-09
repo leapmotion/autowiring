@@ -24,11 +24,14 @@ public:
   typedef std::function<bool(const AnySharedPointer&)> t_validator;
   
 private:
+  // local map of the config registry
+  static const std::unordered_map<std::string, const ConfigRegistryEntry*> s_registry;
+  
+  // map of validators registered for a key
+  static const std::unordered_map<std::string, std::vector<t_validator>> s_validators;
+  
   // lock for all members
   std::mutex m_lock;
-  
-  // local map of the Config registry
-  const std::unordered_map<std::string, const ConfigRegistryEntry*> m_registry;
   
   // Values of AutoConfigs in this context
   std::unordered_map<std::string, AnySharedPointer> m_values;
@@ -38,15 +41,17 @@ private:
   
   // map of callbacks registered for a key
   std::unordered_map<std::string, std::vector<t_callback>> m_callbacks;
-  
-  // map of validators registered for a key
-  std::unordered_map<std::string, std::vector<t_validator>> m_validators;
 
 public:
   /// <summary>
   /// Check if this key has been set
   /// </summary>
   bool IsConfigured(const std::string& key);
+  
+  /// <summary>
+  /// Check if this key was inherited from an ancestor context
+  /// </summary>
+  bool IsInherited(const std::string& key);
   
   /// <summary>
   /// Get a reference to where the config value is stored
@@ -66,15 +71,14 @@ public:
   /// </remarks>
   template<class T>
   void Set(const std::string& key, const T& value) {
-    std::lock_guard<std::mutex> lk(m_lock);
     
-    if (!m_registry.count(key)) {
+    if (!s_registry.count(key)) {
       std::stringstream ss;
       ss << "No configuration found for key '" << key << "'";
       throw autowiring_error(ss.str());
     }
     
-    if (!m_registry.at(key)->verifyType(typeid(T))) {
+    if (!s_registry.at(key)->verifyType(typeid(T))) {
       std::stringstream ss;
       ss << "Attempting to set config '" << key << "' with incorrect type '"
          << autowiring::demangle(typeid(T)) << "'";
@@ -104,9 +108,6 @@ public:
   // Add a callback for when key is changed
   void AddCallback(const std::string& key, t_callback&& fx);
   
-  // Add a validator for a config value
-  void AddValidator(const std::string& key, t_validator&& validator);
-  
 private:
   // Handles setting a value recursivly to all child contexts
   // Must hold m_lock when calling this
@@ -114,5 +115,5 @@ private:
   
   // Set a value in this manager, check validators, call callbacks
   // Must hold m_lock when calling this
-  void SetInternal(const std::string& key, const AnySharedPointer& value);
+  void SetInternal(const std::string& key, const AnySharedPointer& value, bool setFromHere=false);
 };

@@ -9,6 +9,7 @@
 
 using namespace autowiring;
 
+// Create map of all config values in the program
 static std::unordered_map<std::string, const ConfigRegistryEntry*> FillRegistry(void) {
   std::unordered_map<std::string, const ConfigRegistryEntry*> registry;
   
@@ -19,9 +20,23 @@ static std::unordered_map<std::string, const ConfigRegistryEntry*> FillRegistry(
   return registry;
 }
 
-AutoConfigManager::AutoConfigManager(void):
-  m_registry(FillRegistry())
-{
+// Create map of all validators specified
+static std::unordered_map<std::string, std::vector<AutoConfigManager::t_validator>> FillValidators(void) {
+  std::unordered_map<std::string, std::vector<AutoConfigManager::t_validator>> validator;
+  
+  for (auto config = g_pFirstConfigEntry; config; config = config->pFlink) {
+    if (config->m_has_validator) {
+      validator[config->m_key].push_back(config->validator());
+    }
+  }
+  
+  return validator;
+}
+
+const std::unordered_map<std::string, const ConfigRegistryEntry*> AutoConfigManager::s_registry = FillRegistry();
+const std::unordered_map<std::string, std::vector<AutoConfigManager::t_validator>> AutoConfigManager::s_validators = FillValidators();
+
+AutoConfigManager::AutoConfigManager(void){
   // Copy parents config settings
   auto parent = GetContext()->GetParentContext();
   if (parent) {
@@ -40,6 +55,11 @@ AutoConfigManager::~AutoConfigManager(void){}
 bool AutoConfigManager::IsConfigured(const std::string& key) {
   std::lock_guard<std::mutex> lk(m_lock);
   return !!m_values.count(key);
+}
+
+bool AutoConfigManager::IsInherited(const std::string& key) {
+  std::lock_guard<std::mutex> lk(m_lock);
+  return !m_setHere.count(key);
 }
 
 AnySharedPointer& AutoConfigManager::Get(const std::string& key) {
@@ -61,14 +81,12 @@ void AutoConfigManager::Set(const std::string& key, const char* value) {
 }
 
 bool AutoConfigManager::SetParsed(const std::string& key, const std::string& value) {
-  std::lock_guard<std::mutex> lk(m_lock);
-  
   // Key not found
-  if (!m_registry.count(key)) {
+  if (!s_registry.count(key)) {
     return false;
   }
   
-  SetInternal(key, m_registry.at(key)->parse(value));
+  SetInternal(key, s_registry.at(key)->parse(value));
   return true;
 }
 
@@ -77,20 +95,9 @@ void AutoConfigManager::AddCallback(const std::string& key, t_callback&& fx) {
   m_callbacks[key].push_back(fx);
 }
 
-void AutoConfigManager::AddValidator(const std::string& key, t_validator&& validator) {
-  std::lock_guard<std::mutex> lk(m_lock);
-  if(m_values.count(key) && !validator(m_values[key])) {
-    std::stringstream ss;
-    ss << "Current value for key '" << key << "' is invalid";
-    throw autowiring_error(ss.str());
-  } else {
-    m_validators[key].push_back(validator);
-  }
-}
-
 void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer value) {
   // Actually set the value in this manager
-  SetInternal(key, value);
+  SetInternal(key, value, true);
   
   // Enumerate descendant contexts
   auto enumerator = ContextEnumerator(GetContext());
@@ -106,11 +113,10 @@ void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer va
     std::shared_ptr<AutoConfigManager> mgmt;
     (*ctxt)->FindByType(mgmt);
     if (mgmt) {
-      std::lock_guard<std::mutex>(mgmt->m_lock);
     
       // Check if value set from this context
       // If so, stop recursing down this branch, continue to sibling
-      if (mgmt->m_setHere.count(key)){
+      if (!mgmt->IsInherited(key)){
         ctxt.NextSibling();
         continue;
       }
@@ -122,22 +128,29 @@ void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer va
       ++ctxt;
     }
   }
- 
-  // Mark that value was succefully set from this manager
-  m_setHere.insert(key);
 }
 
-void AutoConfigManager::SetInternal(const std::string& key, const AnySharedPointer& value) {
+void AutoConfigManager::SetInternal(const std::string& key, const AnySharedPointer& value, bool setFromHere) {
+  
   // Call all validators for this key
-  for (auto const& fx : m_validators[key]) {
-    if (!fx(value)){
-      std::stringstream ss;
-      ss << "Attempted to set key '" << key << "'which didin't pass validator";
-      throw autowiring_error(ss.str());
+  if (s_validators.count(key)) {
+    for (auto const& fx : s_validators.at(key)) {
+      if (!fx(value)){
+        std::stringstream ss;
+        ss << "Attempted to set key '" << key << "'which didin't pass validator";
+        throw autowiring_error(ss.str());
+      }
     }
   }
   
+  // Lock when modifiy local maps
+  std::lock_guard<std::mutex> lk(m_lock);
   m_values[key] = value;
+  
+  // Mark if this key was set from here, and not inherited
+  if (setFromHere){
+    m_setHere.insert(key);
+  }
   
   // Call callbacks for this key
   for (const auto& cb : m_callbacks[key]) {

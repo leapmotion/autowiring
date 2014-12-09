@@ -230,46 +230,16 @@ TEST_F(AutoConfigTest, NestedContexts) {
   ASSERT_TRUE(callback_hit2) << "Callback not called on sibling of context where value was previously set";
 }
 
-TEST_F(AutoConfigTest, Validators) {
-  AutoRequired<AutoConfigManager> acm;
-  AutoRequired<MyConfigurableClass> mcc;
-  
-  // Add validator to key that hasn't been set
-  acm->AddValidator("Namespace1.XYZ", [](const AnySharedPointer& ptr){
-    return true;
-  });
-  
-  acm->Set("Namespace1.XYZ", 42);
-  ASSERT_EQ(42, *mcc->m_myName);
-  
-  acm->AddValidator("Namespace1.XYZ", [](const AnySharedPointer& ptr){
-    const int val = *ptr->as<int>();
-    
-    return (val < 50);
-  });
-  
-  ASSERT_ANY_THROW(acm->Set("Namespace1.XYZ", 1337)) << "Should throw exception when setting invalid value";
-  ASSERT_EQ(42, *mcc->m_myName);
-  
-  // Assert adding validator that doesn't validate current value throws execpetion
-  ASSERT_ANY_THROW(acm->AddValidator("Namespace1.XYZ", [](const AnySharedPointer& ptr){
-    const int val = *ptr->as<int>();
-    
-    return (val < 0);
-  }));
-}
-
+struct ValidatedKey{
+  static bool Validate(const int& value) {
+    return value > 5;
+  }
+};
 struct MyValidatedClass{
-  struct ValidatedKey{
-    static bool Validate(const int& value) {
-      return value > 5;
-    }
-  };
-
   AutoConfig<int, ValidatedKey> m_config;
 };
 
-TEST_F(AutoConfigTest, ImplicitValidator) {
+TEST_F(AutoConfigTest, Validators) {
   AutoRequired<AutoConfigManager> acm;
   
   ASSERT_ANY_THROW(acm->Set("ValidatedKey", 2)) << "AutoConfigManager didn't regect invalid value";
@@ -277,10 +247,10 @@ TEST_F(AutoConfigTest, ImplicitValidator) {
   AutoRequired<MyValidatedClass> valid;
   
   acm->Set("ValidatedKey", 42);
-  ASSERT_EQ(41, *valid->m_config) << "Value not set for key";
+  ASSERT_EQ(42, *valid->m_config) << "Value not set for key";
   
   ASSERT_ANY_THROW(acm->Set("ValidatedKey", 1)) << "AutoConfigManager didn't regect invalid value";
-  ASSERT_EQ(41, *valid->m_config) << "Value not set for key";
+  ASSERT_EQ(42, *valid->m_config) << "Value not set for key";
   
   acm->Set("ValidatedKey", 1337);
   ASSERT_EQ(1337, *valid->m_config) << "Value not set for key";
