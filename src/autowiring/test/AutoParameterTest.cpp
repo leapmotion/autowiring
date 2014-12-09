@@ -57,17 +57,17 @@ TEST_F(AutoParameterTest, VerifyResetToDefaultValue) {
 }
 
 
-struct MyParamClass3 {
-  struct MyIntParam3 {
+struct MyParamClass2 {
+  struct MyIntParam2 {
     static constexpr int Default() { return 15; }
     static bool Validate(const int& value) { return 10 <= value && value <= 20; }
   };
   
-  AutoParameter<int, MyIntParam3> m_param;
+  AutoParameter<int, MyIntParam2> m_param;
 };
 
 TEST_F(AutoParameterTest, VerifyValidationFunction) {
-  AutoRequired<MyParamClass3> mpc;
+  AutoRequired<MyParamClass2> mpc;
   auto& param = mpc->m_param;
   
   ASSERT_FALSE(param.Set(9))
