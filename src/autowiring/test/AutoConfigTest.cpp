@@ -258,3 +258,30 @@ TEST_F(AutoConfigTest, Validators) {
     return (val < 0);
   }));
 }
+
+struct MyValidatedClass{
+  struct ValidatedKey{
+    static bool Validate(const int& value) {
+      return value > 5;
+    }
+  };
+
+  AutoConfig<int, ValidatedKey> m_config;
+};
+
+TEST_F(AutoConfigTest, ImplicitValidator) {
+  AutoRequired<AutoConfigManager> acm;
+  
+  ASSERT_ANY_THROW(acm->Set("ValidatedKey", 2)) << "AutoConfigManager didn't regect invalid value";
+  
+  AutoRequired<MyValidatedClass> valid;
+  
+  acm->Set("ValidatedKey", 42);
+  ASSERT_EQ(41, *valid->m_config) << "Value not set for key";
+  
+  ASSERT_ANY_THROW(acm->Set("ValidatedKey", 1)) << "AutoConfigManager didn't regect invalid value";
+  ASSERT_EQ(41, *valid->m_config) << "Value not set for key";
+  
+  acm->Set("ValidatedKey", 1337);
+  ASSERT_EQ(1337, *valid->m_config) << "Value not set for key";
+}
