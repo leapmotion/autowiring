@@ -6,6 +6,7 @@
 #include "AnySharedPointer.h"
 #include "autowiring_error.h"
 #include "demangle.h"
+#include "has_validate.h"
 
 // Check if 'T' has a valid stream conversion operator
 template<typename T>
@@ -33,6 +34,8 @@ struct ConfigRegistryEntry {
   virtual bool verifyType(const std::type_info& ti) const = 0;
   
   virtual AnySharedPointer parse(const std::string&) const = 0;
+  
+  virtual std::function<bool(const AnySharedPointer&)> validator(void) const = 0;
 };
 
 // Template arguemnts TKey specify the key and optional namespace for a config attribute
@@ -81,6 +84,13 @@ struct ConfigRegistryEntryT:
     throw autowiring_error("This type doesn't support stream conversions.\
                            Define one if you want this to be parsable");
   };
+
+  std::function<bool(const AnySharedPointer&)> validator(void) const override {
+    return [] (const AnySharedPointer& ptr) {
+      typedef decltype(std::get<sizeof...(TKey)-1>(std::tuple<TKey...>())) validator_t;
+      return CallValidate<T, validator_t>(*ptr.template as<T>().get(), has_validate<validator_t>());
+    };
+  }
 };
 
 extern const ConfigRegistryEntry* g_pFirstConfigEntry;

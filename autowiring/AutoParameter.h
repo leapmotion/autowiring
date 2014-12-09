@@ -12,6 +12,8 @@
 /// AutoParameter uses AutoConfig under the hood and will use "AutoParam" as
 /// its namespace
 /// </summary>
+struct AutoParam{};
+
 template<class T, class TKey>
 class AutoParameter:
   public AutoConfig<T, struct AutoParam, TKey>
