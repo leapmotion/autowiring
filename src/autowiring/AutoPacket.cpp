@@ -32,7 +32,7 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>
   m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
 
   // Record divide between subscribers & recipients
-  m_subscriberNum = m_satCounters.size();
+  m_firstSubscriber = m_satCounters.begin();
 
   // Prime the satisfaction graph for each element:
   for(auto& satCounter : m_satCounters)
@@ -322,15 +322,11 @@ void AutoPacket::Initialize(void) {
 }
 
 void AutoPacket::Finalize(void) {
-
   // Remove all recipients & clean up the decorations list
-  // ASSERT: This reverses the order of accumulation,
-  // so searching for the subscriber is avoided.
-  while (m_satCounters.size() > m_subscriberNum) {
-    SatCounter& recipient = m_satCounters.back();
-    RemoveSatCounter(recipient);
-    m_satCounters.pop_back();
-  }
+  // ASSERT: This reverses the order of accumulation, so searching for the subscriber is avoided.
+  for(auto q = m_satCounters.begin(); q != m_firstSubscriber; q++)
+    RemoveSatCounter(*q);
+  m_satCounters.erase(m_satCounters.begin(), m_firstSubscriber);
 
   // Remove decoration dispositions specific to subscribers
   t_decorationMap::iterator dItr = m_decorations.begin();
@@ -357,9 +353,8 @@ AutoPacket::Recipient AutoPacket::AddRecipient(const AutoFilterDescriptor& descr
     std::lock_guard<std::mutex> lk(m_lock);
 
     // (1) Append & Initialize new satisfaction counter
-    m_satCounters.push_back(descriptor);
-    retVal.position = m_satCounters.end();
-    retVal.position--;
+    m_satCounters.push_front(descriptor);
+    retVal.position = m_satCounters.begin();
     recipient = &m_satCounters.back();
     recipient->Reset();
 
@@ -382,11 +377,9 @@ void AutoPacket::RemoveRecipient(Recipient&& recipient) {
   recipient.position = m_satCounters.end();
 
   // Remove the recipient from our list
-  {
-    std::lock_guard<std::mutex> lk(m_lock);
-    RemoveSatCounter(*q);
-    m_satCounters.erase(q);
-  }
+  std::lock_guard<std::mutex> lk(m_lock);
+  RemoveSatCounter(*q);
+  m_satCounters.erase(q);
 }
 
 SatCounter AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {

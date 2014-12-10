@@ -56,9 +56,11 @@ public:
 
 private:
   // Saturation counters, constructed when the packet is created and reset each time thereafter
-  // IMPORTANT: Elements in m_satCounters MUST be stationary, since they will be referenced!
   std::list<SatCounter> m_satCounters;
-  size_t m_subscriberNum;
+
+  // An iterator referring to the first permanent subscriber in the list of satisfaction counters
+  // Temporary subscribers are pushed to the front of the list prior to this iterator
+  std::list<SatCounter>::iterator m_firstSubscriber;
 
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   std::shared_ptr<AutoPacketFactory> m_parentFactory;
