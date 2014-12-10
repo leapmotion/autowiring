@@ -10,11 +10,16 @@ class AutoParameterTest:
 
 struct MyParamClass1 {
   struct MyIntParam1 {
-    static constexpr int Default() { return 15; }
+    static int Default() { return 15; }
   };
   
   AutoParameter<int, MyIntParam1> m_param;
 };
+
+static_assert(
+  !has_validate<MyParamClass1::MyIntParam1>::value,
+  "has_validate SFINAE class incorrectly detected validator on MyIntParam1"
+);
 
 TEST_F(AutoParameterTest, VerifyCorrectDeconstruction) {
   AutoRequired<MyParamClass1> mpc;
@@ -59,12 +64,17 @@ TEST_F(AutoParameterTest, VerifyResetToDefaultValue) {
 
 struct MyParamClass2 {
   struct MyIntParam2 {
-    static constexpr int Default() { return 15; }
+    static int Default() { return 15; }
     static bool Validate(const int& value) { return 10 <= value && value <= 20; }
   };
   
   AutoParameter<int, MyIntParam2> m_param;
 };
+
+static_assert(
+  has_validate<MyParamClass2::MyIntParam2>::value,
+  "has_validate SFINAE class failed to detect a validator on MyIntParam2"
+);
 
 TEST_F(AutoParameterTest, VerifyValidationFunction) {
   AutoRequired<MyParamClass2> mpc;
@@ -82,7 +92,7 @@ TEST_F(AutoParameterTest, VerifyValidationFunction) {
 
 struct MyParamClass3 {
   struct MyIntParam3 {
-    static constexpr int Default() { return 0; }
+    static int Default() { return 0; }
     static bool Validate(const int& value) { return 10 <= value && value <= 20; }
   };
   
@@ -96,7 +106,7 @@ TEST_F(AutoParameterTest, VerifyInvalidDefaultValue) {
 
 struct MyParamClass4 {
   struct MyIntParam4 {
-    static constexpr int Default() { return 15; }
+    static int Default() { return 15; }
     static bool Validate(const int& value) { return 10 <= value && value <= 20; }
   };
   
