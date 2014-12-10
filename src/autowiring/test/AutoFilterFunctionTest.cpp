@@ -90,3 +90,20 @@ TEST_F(AutoFilterFunctionalTest, FunctionExtractorTest) {
   packet->Decorate(Decoration<1>());
   ASSERT_EQ(1, extType) << "Decoration type was not extracted";
 }
+
+TEST_F(AutoFilterFunctionalTest, RecipientRemovalTest) {
+  auto called = std::make_shared<bool>(false);
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Add a recipient and then remove it, verify it doesn't get called
+  auto packet = factory->NewPacket();
+  AutoPacket::Recipient recipient =
+    (
+      *packet += [called] (const Decoration<0>&) {
+        *called = true;
+      }
+    );
+  packet->RemoveRecipient(std::move(recipient));
+
+  ASSERT_FALSE(*called) << "A recipient that should have been removed was called";
+}

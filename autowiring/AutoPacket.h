@@ -47,6 +47,11 @@ private:
 public:
   ~AutoPacket();
 
+  struct Recipient {
+    // The iterator pointing to the location where the satisfaction counter was inserted
+    std::list<SatCounter>::iterator position;
+  };
+
   static ObjectPool<AutoPacket> CreateObjectPool(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
 
 private:
@@ -76,7 +81,7 @@ private:
   /// <summary>
   /// Removes all AutoFilter argument information for a recipient
   /// </summary>
-  void RemoveSatCounter(SatCounter& satCounter);
+  void RemoveSatCounter(const SatCounter& satCounter);
 
   // Outstanding count local and remote holds:
   std::shared_ptr<Object> m_outstanding;
@@ -478,17 +483,22 @@ public:
   /// Adds a recipient for data associated only with this issuance of the packet.
   /// </summary>
   /// <remarks>
-  /// Recipients added in this way cannot receive piped data, since they are anonymous.
+  /// This method is not idempotent.  The returned Recipient structure may be used to remove
+  /// the recipient safely at any point.  The caller MUST NOT attempt 
   /// </remarks>
-  void AddRecipient(const AutoFilterDescriptor& descriptor);
+  Recipient AddRecipient(const AutoFilterDescriptor& descriptor);
+
+  /// <summary>
+  /// Removes a previously added packet recipient
+  /// </summary>
+  void RemoveRecipient(Recipient&& recipient);
 
   /// <summary>
   /// Convenience overload, identical in behavior to AddRecipient
   /// </summary>
   template<class Fx>
-  AutoPacket& operator+=(Fx&& fx) {
-    AddRecipient(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
-    return *this;
+  Recipient operator+=(Fx&& fx) {
+    return AddRecipient(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
   }
 
   /// <returns>A reference to the satisfaction counter for the specified type</returns>

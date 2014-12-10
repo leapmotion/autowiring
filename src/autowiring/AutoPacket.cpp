@@ -44,14 +44,10 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>
 void AutoPacket::AddSatCounter(SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
     const std::type_info& dataType = *pCur->ti;
-
-    // Broadcast source is void
     DecorationDisposition* entry = &m_decorations[dataType];
     entry->m_type = &dataType;
 
     // Decide what to do with this entry:
-    // NOTE: Recipients added via AddReceiver can receive broadcast data,
-    // so it is necessary to decrement the receiver's counters when it is added.
     if (pCur->is_input) {
       entry->m_subscribers.push_back(&satCounter);
       if (entry->satisfied)
@@ -68,7 +64,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
   }
 }
 
-void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
+void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
     const std::type_info& dataType = *pCur->ti;
 
@@ -353,28 +349,44 @@ void AutoPacket::Finalize(void) {
   Reset();
 }
 
-void AutoPacket::AddRecipient(const AutoFilterDescriptor& descriptor) {
-  SatCounter* call = nullptr;
+AutoPacket::Recipient AutoPacket::AddRecipient(const AutoFilterDescriptor& descriptor) {
+  Recipient retVal;
+  SatCounter* recipient;
+
   {
     std::lock_guard<std::mutex> lk(m_lock);
 
     // (1) Append & Initialize new satisfaction counter
     m_satCounters.push_back(descriptor);
-    SatCounter& recipient = m_satCounters.back();
-    recipient.Reset();
+    retVal.position = m_satCounters.end();
+    retVal.position--;
+    recipient = &m_satCounters.back();
+    recipient->Reset();
 
     // (2) Update satisfaction & Append types from subscriber
-    AddSatCounter(recipient);
+    AddSatCounter(*recipient);
 
-    // (3) Check call status inside of lock
-    if (recipient) {
-      call = &recipient;
-    }
+    // (3) Short-circuit if we don't need to call
+    if(!*recipient)
+      return retVal;
   }
 
-  // (4) If all types are satisfied, call AutoFilter now.
-  if (call)
-    call->CallAutoFilter(*this);
+  // (4) All types are satisfied, call AutoFilter now.
+  recipient->CallAutoFilter(*this);
+  return retVal;
+}
+
+void AutoPacket::RemoveRecipient(Recipient&& recipient) {
+  // Copy out the iterator, and eliminate the iterator from the source structure
+  auto q = recipient.position;
+  recipient.position = m_satCounters.end();
+
+  // Remove the recipient from our list
+  {
+    std::lock_guard<std::mutex> lk(m_lock);
+    RemoveSatCounter(*q);
+    m_satCounters.erase(q);
+  }
 }
 
 SatCounter AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {
