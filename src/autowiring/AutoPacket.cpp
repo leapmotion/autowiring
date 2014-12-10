@@ -11,13 +11,10 @@
 
 using namespace autowiring;
 
-// This must appear in .cpp in order to avoid compilation failure due to:
-// "Arithmetic on a pointer to an incomplete type 'SatCounter'"
-AutoPacket::~AutoPacket() {}
-
-AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding):
+AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
-  m_outstandingRemote(outstanding)
+  m_outstanding(std::move(outstanding)),
+  m_initTime(std::chrono::high_resolution_clock::now())
 {
   // Traverse all contexts, adding their packet subscriber vectors one at a time:
   for(const auto& curContext : ContextEnumerator(factory.GetContext())) {
@@ -38,7 +35,21 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>
   for(auto& satCounter : m_satCounters)
     AddSatCounter(satCounter);
 
-  Reset();
+  // Initialize all counters:
+  for (auto& satCounter : m_satCounters)
+    satCounter.Reset();
+
+  // Clear all references:
+  for (auto& decoration : m_decorations)
+    decoration.second.Reset();
+}
+
+AutoPacket::~AutoPacket(void) {
+  m_parentFactory->RecordPacketDuration(
+    std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::high_resolution_clock::now() - m_initTime
+    )
+  );
 }
 
 void AutoPacket::AddSatCounter(SatCounter& satCounter) {
@@ -81,20 +92,6 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
       entry->m_publisher = nullptr;
     }
   }
-}
-
-ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding) {
-  return ObjectPool<AutoPacket>(
-    ~0,
-    ~0,
-    [&factory, &outstanding] { return new AutoPacket(factory, outstanding); },
-    [] (AutoPacket& packet) { packet.Initialize(); },
-    [] (AutoPacket& packet) {
-      // IMPORTANT: Create shared_ptr with no destructor to enable outputs to AutoPacket
-      std::shared_ptr<AutoPacket> shared(&packet, [](AutoPacket*){});
-      packet.Finalize();
-    }
-  );
 }
 
 void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
@@ -284,65 +281,6 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
     // Satisfy the base declaration first and then the shared pointer:
     recipient->UpdateSatisfaction(broadDeco->m_decoration->type());
   }
-}
-
-void AutoPacket::Reset(void) {
-  // Initialize all counters:
-  std::lock_guard<std::mutex> lk(m_lock);
-  for(auto& satCounter : m_satCounters)
-    satCounter.Reset();
-
-  // Clear all references:
-  for(auto& decoration : m_decorations)
-    decoration.second.Reset();
-}
-
-void AutoPacket::Initialize(void) {
-  // Record the timepoint of initialization
-  m_initTime = std::chrono::high_resolution_clock::now();
-
-  // Hold an outstanding count from the parent packet factory
-  m_outstanding = m_outstandingRemote;
-  if(!m_outstanding)
-    throw std::runtime_error("Cannot proceed with this packet, enclosing context already expired");
-
-  // Find all subscribers with no required or optional arguments:
-  std::list<SatCounter*> callCounters;
-  for (auto& satCounter : m_satCounters)
-    if (satCounter)
-      callCounters.push_back(&satCounter);
-
-  // Call all subscribers with no required or optional arguments:
-  // NOTE: This may result in decorations that cause other subscribers to be called.
-  for (SatCounter* call : callCounters)
-    call->CallAutoFilter(*this);
-
-  // First-call indicated by argumument type AutoPacket&:
-  UpdateSatisfaction(typeid(auto_arg<AutoPacket&>::id_type));
-}
-
-void AutoPacket::Finalize(void) {
-  // Remove all recipients & clean up the decorations list
-  // ASSERT: This reverses the order of accumulation, so searching for the subscriber is avoided.
-  for(auto q = m_satCounters.begin(); q != m_firstSubscriber; q++)
-    RemoveSatCounter(*q);
-  m_satCounters.erase(m_satCounters.begin(), m_firstSubscriber);
-
-  // Remove decoration dispositions specific to subscribers
-  t_decorationMap::iterator dItr = m_decorations.begin();
-  t_decorationMap::iterator dEnd = m_decorations.end();
-  while (dItr != dEnd) {
-    if (dItr->second.m_subscribers.empty())
-      dItr = m_decorations.erase(dItr);
-    else
-      ++dItr;
-  }
-
-  m_parentFactory->RecordPacketDuration(
-    std::chrono::duration_cast<std::chrono::nanoseconds>(
-      std::chrono::high_resolution_clock::now() - m_initTime));
-
-  Reset();
 }
 
 AutoPacket::Recipient AutoPacket::AddRecipient(const AutoFilterDescriptor& descriptor) {

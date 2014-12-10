@@ -28,6 +28,8 @@ set(Autowiring_SRCS
   AutoInjectable.h
   AutoPacket.cpp
   AutoPacket.h
+  AutoPacketInternal.cpp
+  AutoPacketInternal.h
   AutoPacketFactory.cpp
   AutoPacketFactory.h
   AutoPacketProfiler.cpp
