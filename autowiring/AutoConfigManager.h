@@ -105,14 +105,14 @@ public:
   /// </return>
   bool SetParsed(const std::string& key, const std::string& value);
   
-  // Add a callback for when key is changed
+  // Add a callback for when key is changed in this context
   void AddCallback(const std::string& key, t_callback&& fx);
   
 private:
   // Handles setting a value recursivly to all child contexts
   void SetRecursive(const std::string& key, AnySharedPointer value);
   
-  // Set a value in this manager, check validators, call callbacks
+  // Set a value in this manager, call callbacks
   // Must hold m_lock when calling this
   void SetInternal(const std::string& key, const AnySharedPointer& value);
 };

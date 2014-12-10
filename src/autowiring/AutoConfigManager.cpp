@@ -86,7 +86,12 @@ bool AutoConfigManager::SetParsed(const std::string& key, const std::string& val
     return false;
   }
   
-  SetRecursive(key, s_registry.at(key)->parse(value));
+  try {
+    SetRecursive(key, s_registry.at(key)->parse(value));
+  } catch (autowiring_error& e){
+    std::cerr << e.what() << std::endl;
+    return false;
+  }
   return true;
 }
 
@@ -130,7 +135,7 @@ void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer va
     std::shared_ptr<AutoConfigManager> mgmt;
     (*ctxt)->FindByType(mgmt);
     if (mgmt) {
-      std::lock_guard<std::mutex> child_lk(mgmt->m_lock);
+      std::lock_guard<std::mutex> descendant_lk(mgmt->m_lock);
     
       // Check if value was set from this context
       // If so, stop recursing down this branch, continue to sibling
