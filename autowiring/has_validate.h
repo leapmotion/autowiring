@@ -5,14 +5,21 @@
 
 template<class T>
 struct has_validate_function {
+};
+
+/// <summary>
+/// Detects whether the specified type T has a static method with the name Validate
+/// </summary>
+template<class T>
+struct has_validate {
   template<class Fn, Fn>
   struct unnamed_constant;
 
   template<class U>
-  static std::false_type select(...);
+  static std::true_type select(decltype(&U::Validate));
 
   template<class U>
-  static std::true_type select(unnamed_constant<decltype(&U::Validate), &U::Validate>*);
+  static std::false_type select(...);
 
   // Conveninece typedef used externally:
   typedef decltype(select<T>(nullptr)) has_valid;
@@ -21,19 +28,11 @@ struct has_validate_function {
   static const bool value = has_valid::value;
 };
 
-/// <summary>
-/// Detects whether the specified type T has a static method with the name Validate
-/// </summary>
-template<class T>
-struct has_validate : has_validate_function<T>::has_valid {};
-
-template<class Object, class Validator>
-static bool CallValidate(const Object& obj, std::true_type) {
+template<class T, class Validator>
+static bool CallValidate(const T& obj, std::true_type) {
   return Validator::Validate(obj);
 }
 
-template<class Object, class Validator>
-static bool CallValidate(const Object& obj, std::false_type) {
-  return true;
-}
+template<class T, class Validator>
+static bool CallValidate(const T& obj, std::false_type) {return true;}
 

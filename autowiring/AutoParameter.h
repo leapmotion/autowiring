@@ -29,8 +29,9 @@ public:
   }
   
   const T& operator*() const {
-    return this->IsConfigured() ?
-      this->template AutoConfig<T, struct AutoParam, TKey>::operator*() :
+    return
+      this->IsConfigured() ?
+      AutoConfig<T, struct AutoParam, TKey>::operator*() :
       m_default;
   }
   
@@ -53,6 +54,6 @@ protected:
   const T m_default;
   
   bool isValid(const T& value) const {
-    return CallValidate<T, TKey>(value, has_validate<TKey>());
+    return CallValidate<T, TKey>(value, typename has_validate<TKey>::has_valid());
   }
 };

@@ -66,7 +66,7 @@ struct ConfigRegistryEntryT:
   typedef typename get_last<TKey...>::last t_key;
   
   ConfigRegistryEntryT(void):
-    ConfigRegistryEntry(typeid(ConfigTypeExtractor<TKey...>), has_validate<t_key>())
+    ConfigRegistryEntry(typeid(ConfigTypeExtractor<TKey...>), has_validate<t_key>::value)
   {}
   
   bool verifyType(const std::type_info& ti) const override {
@@ -106,7 +106,7 @@ struct ConfigRegistryEntryT:
 
   std::function<bool(const AnySharedPointer&)> validator(void) const override {
     return [] (const AnySharedPointer& ptr) {
-      return CallValidate<T, t_key>(*ptr.template as<T>().get(), has_validate<t_key>());
+      return CallValidate<T, t_key>(*ptr.template as<T>().get(), typename has_validate<t_key>::has_valid());
     };
   }
 };
