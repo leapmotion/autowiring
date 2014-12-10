@@ -115,8 +115,8 @@ struct MyParamClass4 {
 
 TEST_F(AutoParameterTest, VerifyInvalidPreconfiguredValue) {
   AutoRequired<AutoConfigManager> acm;
-  acm->Set("AutoParam.MyParamClass4::MyIntParam4", 0);
+  ASSERT_ANY_THROW(acm->Set("AutoParam.MyParamClass4::MyIntParam4", 0));
   
-  ASSERT_ANY_THROW(AutoRequired<MyParamClass4>())
-    << "Should not be able to initialize a parameter that had a previous value set that is invalid with new validation";
+  AutoRequired<MyParamClass4> my4;
+  ASSERT_EQ(15, *my4->m_param);
 }
