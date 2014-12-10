@@ -20,31 +20,7 @@ struct has_stream {
   static const bool value = !std::is_same<void, decltype(select<T>(nullptr, nullptr))>::value;
 };
 
-struct ConfigRegistryEntry {
-  ConfigRegistryEntry(const std::type_info& ti, bool has_validator);
-
-  // Next entry in the list:
-  const ConfigRegistryEntry* const pFlink;
-  
-  // Configuration name
-  const std::string m_key;
-  
-  // True if a validator was provided
-  const bool m_has_validator;
-  
-  bool is(const std::string& key) const;
-  
-  virtual bool verifyType(const std::type_info& ti) const = 0;
-  
-  virtual AnySharedPointer parse(const std::string&) const = 0;
-  
-  virtual std::function<bool(const AnySharedPointer&)> validator(void) const = 0;
-};
-
-// Template arguemnts TKey specify the key and optional namespace for a config attribute
-template<class... TKey>
-struct ConfigTypeExtractor {};
-
+// Get last type in parameter pack
 template<typename... Ts>
 struct get_last;
 
@@ -57,6 +33,38 @@ template<typename T>
 struct get_last<T>{
   typedef T last;
 };
+
+// Stores information about an AutoConfig entry
+struct ConfigRegistryEntry {
+  ConfigRegistryEntry(const std::type_info& ti, bool has_validator);
+
+  // Next entry in the list:
+  const ConfigRegistryEntry* const pFlink;
+  
+  // Configuration name
+  const std::string m_key;
+  
+  // True if a validator was provided
+  const bool m_has_validator;
+  
+  // Is this key identify this entry?
+  bool is(const std::string& key) const;
+  
+  // Verify 'ti' is the same type as this entry's value
+  virtual bool verifyType(const std::type_info& ti) const = 0;
+  
+  // Parse a string into this entrie's value type.
+  // Type must have operator>> T defined
+  virtual AnySharedPointer parse(const std::string&) const = 0;
+  
+  // Returns function which validates this input. The validator function is
+  // defined as KEY::Validate(const T&) where KEY is the type identifing this entry
+  virtual std::function<bool(const AnySharedPointer&)> validator(void) const = 0;
+};
+
+// Template arguemnts TKey specify the key and optional namespace for a config attribute
+template<class... TKey>
+struct ConfigTypeExtractor {};
 
 template<class T, class... TKey>
 struct ConfigRegistryEntryT:

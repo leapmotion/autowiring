@@ -1,9 +1,10 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "ConfigRegistry.h"
 #include "autowiring_error.h"
+#include "ConfigRegistry.h"
 #include <string>
 #include <sstream>
+#include <vector>
 #include STL_UNORDERED_MAP
 #include STL_UNORDERED_SET
 #include MEMORY_HEADER

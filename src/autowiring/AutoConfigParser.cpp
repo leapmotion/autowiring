@@ -3,8 +3,6 @@
 #include "AutoConfigParser.hpp"
 #include "demangle.h"
 #include "expect.hpp"
-#include <iostream>
-#include <cstring>
 
   
 std::string autowiring::ExtractKeyUnix(std::stringstream& ss) {

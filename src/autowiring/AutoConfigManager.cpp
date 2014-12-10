@@ -2,10 +2,6 @@
 #include "stdafx.h"
 #include "AutoConfig.h"
 #include "AnySharedPointer.h"
-#include "demangle.h"
-#include <iostream>
-#include <vector>
-#include <sstream>
 
 using namespace autowiring;
 
