@@ -9,7 +9,7 @@
 
 using namespace autowiring;
 
-// Create map of all config values in the program
+// Create map of all config values in the registry
 static std::unordered_map<std::string, const ConfigRegistryEntry*> FillRegistry(void) {
   std::unordered_map<std::string, const ConfigRegistryEntry*> registry;
   
@@ -37,7 +37,7 @@ const std::unordered_map<std::string, const ConfigRegistryEntry*> AutoConfigMana
 const std::unordered_map<std::string, std::vector<AutoConfigManager::t_validator>> AutoConfigManager::s_validators = FillValidators();
 
 AutoConfigManager::AutoConfigManager(void){
-  // Copy parents config settings
+  // Copy parent's config settings
   auto parent = GetContext()->GetParentContext();
   if (parent) {
     AutowiredFast<AutoConfigManager> mgmt(parent);
@@ -65,7 +65,6 @@ bool AutoConfigManager::IsInherited(const std::string& key) {
 AnySharedPointer& AutoConfigManager::Get(const std::string& key) {
   std::lock_guard<std::mutex> lk(m_lock);
   
-  // Check this first
   if (m_values.count(key)) {
     return m_values[key];
   }
@@ -86,12 +85,7 @@ bool AutoConfigManager::SetParsed(const std::string& key, const std::string& val
     return false;
   }
   
-  try {
-    SetRecursive(key, s_registry.at(key)->parse(value));
-  } catch (autowiring_error& e){
-    std::cerr << e.what() << std::endl;
-    return false;
-  }
+  SetRecursive(key, s_registry.at(key)->parse(value));
   return true;
 }
 
@@ -112,13 +106,13 @@ void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer va
     }
   }
   
-  // Grab lock until done setting
+  // Grab lock until done setting value
   std::lock_guard<std::mutex> lk(m_lock);
   
   // Actually set the value in this manager
   SetInternal(key, value);
   
-  // Mark the value was set from this manager
+  // Mark key set from this manager
   m_setHere.insert(key);
   
   // Enumerate descendant contexts
@@ -138,7 +132,7 @@ void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer va
       std::lock_guard<std::mutex> descendant_lk(mgmt->m_lock);
     
       // Check if value was set from this context
-      // If so, stop recursing down this branch, continue to sibling
+      // If so, stop recursing down this branch, continue to next sibling
       if (mgmt->m_setHere.count(key)){
         ctxt.NextSibling();
         continue;
