@@ -54,6 +54,6 @@ protected:
   const T m_default;
   
   bool isValid(const T& value) const {
-    return CallValidate<T, TKey>(value, typename has_validate<TKey>::has_valid());
+    return CallValidate<T, TKey>::Call(value);
   }
 };

@@ -106,7 +106,7 @@ struct ConfigRegistryEntryT:
 
   std::function<bool(const AnySharedPointer&)> validator(void) const override {
     return [] (const AnySharedPointer& ptr) {
-      return CallValidate<T, t_key>(*ptr.as<T>().get(), typename has_validate<t_key>::has_valid());
+      return CallValidate<T, t_key>::Call(*ptr.as<T>().get());
     };
   }
 };
