@@ -3,19 +3,19 @@
 #include TYPE_TRAITS_HEADER
 
 /// <summary>
-/// Check if any T::value is true
+/// Check if any T is true
 /// </summary>
 /// <remarks>
 /// Check is_any<...>::value for result
 /// </remarks>
-template<typename... T>
-struct is_any{
+template<bool... val>
+struct is_any {
   static const bool value = false;
 };
 
-template<typename Head, typename... Tail>
-struct is_any<Head, Tail...>{
-  static const bool value = Head::value || is_any<Tail...>::value;
+template<bool Head, bool... Tail>
+struct is_any<Head, Tail...> {
+  static const bool value = Head || is_any<Tail...>::value;
 };
 
 /// <summary>
