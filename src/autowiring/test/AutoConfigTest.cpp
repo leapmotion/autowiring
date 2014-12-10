@@ -195,6 +195,7 @@ TEST_F(AutoConfigTest, NestedContexts) {
   ASSERT_EQ(42, *mcc_middle->m_myName) << "Config value not set in descendant context";
   ASSERT_EQ(42, *mcc_sibling->m_myName) << "Config value not set in descendant context";
   ASSERT_EQ(42, *mcc_inner->m_myName) << "Config value not set in descendant context";
+  EXPECT_TRUE(acm_middle->IsInherited("Namespace1.XYZ")) << "Inherited key not marked as such";
   
   // Set middle, inner shouldn't be able to be set from outer after this
   bool callback_hit1 = false;

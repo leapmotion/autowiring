@@ -1,20 +1,11 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "Decompose.h"
-#include <iostream>
-
-template<class T>
-struct has_validate_function {
-};
 
 /// <summary>
 /// Detects whether the specified type T has a static method with the name Validate
 /// </summary>
 template<class T>
 struct has_validate {
-  template<class Fn, Fn>
-  struct unnamed_constant;
-
   template<class U>
   static std::true_type select(decltype(&U::Validate));
 

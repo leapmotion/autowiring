@@ -9,7 +9,7 @@
   
 std::string autowiring::ExtractKeyUnix(std::stringstream& ss) {
   //Extract Namespace and value from typename
-  //AutoConfigBase::ConfigTypeExtractor<Namespace, Value>
+  //ConfigTypeExtractor<Namespace, Value>
   
   std::string arg1;
   std::string arg2;
@@ -40,7 +40,7 @@ std::string autowiring::ExtractKeyUnix(std::stringstream& ss) {
 
 std::string autowiring::ExtractKeyWin(std::stringstream& ss) {
   //Extract Namespace and value from typename
-  //struct AutoConfigBase::ConfigTypeExtractor<struct Namespace, struct Value>
+  //struct ConfigTypeExtractor<struct Namespace, struct Value>
   
   std::string arg1;
   std::string arg2;
