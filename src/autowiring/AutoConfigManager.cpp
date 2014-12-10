@@ -2,10 +2,6 @@
 #include "stdafx.h"
 #include "AutoConfig.h"
 #include "AnySharedPointer.h"
-#include "demangle.h"
-#include <iostream>
-#include <vector>
-#include <sstream>
 
 using namespace autowiring;
 
@@ -59,7 +55,7 @@ bool AutoConfigManager::IsConfigured(const std::string& key) {
 
 bool AutoConfigManager::IsInherited(const std::string& key) {
   std::lock_guard<std::mutex> lk(m_lock);
-  return !m_setHere.count(key);
+  return m_values.count(key) && !m_setHere.count(key);
 }
 
 AnySharedPointer& AutoConfigManager::Get(const std::string& key) {

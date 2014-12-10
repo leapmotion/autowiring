@@ -3,10 +3,9 @@
 #include "Autowired.h"
 #include "AutoConfigManager.h"
 #include "ConfigRegistry.h"
-#include "is_any.h"
 
 #include <string>
-#include <typeinfo>
+#include TYPE_INDEX_HEADER
 
 struct AnySharedPointer;
 
