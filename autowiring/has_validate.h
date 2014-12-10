@@ -28,11 +28,14 @@ struct has_validate {
   static const bool value = has_valid::value;
 };
 
-template<class T, class Validator>
-static bool CallValidate(const T& obj, std::true_type) {
-  return Validator::Validate(obj);
-}
+template<class T, class Validator, bool validatable = has_validate<Validator>::value>
+struct CallValidate {
+  static bool Call(const T&) { return true; }
+};
 
 template<class T, class Validator>
-static bool CallValidate(const T& obj, std::false_type) {return true;}
-
+struct CallValidate<T, Validator, true> {
+  static bool Call(const T& obj) {
+    return Validator::Validate(obj); 
+  }
+};
