@@ -434,7 +434,7 @@ public:
     // None of the inputs may be shared pointers--if any of the inputs are shared pointers, they must be attached
     // to this packet via Decorate, or else dereferenced and used that way.
     static_assert(
-      !is_any<is_shared_ptr<T>, is_shared_ptr<Ts>...>::value,
+      !is_any<is_shared_ptr<T>::value, is_shared_ptr<Ts>::value...>::value,
       "DecorateImmediate must not be used to attach a shared pointer, use Decorate on such a decoration instead"
     );
     
@@ -503,6 +503,12 @@ public:
     return AddRecipient(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
   }
 
+  /// <summary>
+  /// Convenience overload, provided to allow the attachment of receive-only filters to a const AutoPacket
+  /// </summary>
+  template<class Fx>
+  const AutoPacket& operator+=(Fx&& fx) const;
+
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>
   /// If the type is not a subscriber GetSatisfaction().GetType() == nullptr will be true
@@ -522,3 +528,16 @@ public:
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   bool HasSubscribers(const std::type_info& data) const;
 };
+
+#include "CallExtractor.h"
+
+template<class Fx>
+const AutoPacket& AutoPacket::operator+=(Fx&& fx) const
+{
+  static_assert(
+    !CallExtractor<decltype(&Fx::operator())>::has_outputs,
+    "Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types"
+  );
+  *const_cast<AutoPacket*>(this) += std::forward<Fx&&>(fx);
+  return *this;
+}

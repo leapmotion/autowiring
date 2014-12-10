@@ -68,7 +68,7 @@ public:
     erp(nullptr)
   {}
 
-  static_assert(!is_any<std::is_rvalue_reference<Args>...>::value, "Can't use rvalue references as event argument type");
+  static_assert(!is_any<std::is_rvalue_reference<Args>::value...>::value, "Can't use rvalue references as event argument type");
 
 private:
   std::shared_ptr<JunctionBox<T>> erp;
@@ -103,7 +103,7 @@ public:
     erp(nullptr)
   {}
 
-  static_assert(!is_any<std::is_rvalue_reference<Args>...>::value, "Can't use rvalue references as event argument type");
+  static_assert(!is_any<std::is_rvalue_reference<Args>::value...>::value, "Can't use rvalue references as event argument type");
 
 private:
   std::shared_ptr<JunctionBox<T>> erp;
