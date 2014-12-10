@@ -15,11 +15,6 @@ struct AnySharedPointer;
 /// </summary>
 class AutoConfigBase
 {
-protected:
-  // Template arguemnts TKey specify the key and optional namespace for a config attribute
-  template<class... TKey>
-  struct ConfigTypeExtractor {};
-  
 public:
   AutoConfigBase(const std::type_info& tiName);
 
@@ -44,18 +39,14 @@ template<class T, class... TKey>
 class AutoConfig:
   public AutoConfigBase
 {
-private:
-  // Specifies the optional namespace and key for this config attribute
-  typedef ConfigTypeExtractor<TKey...> t_field;
-  
 public:
   static_assert(sizeof...(TKey)==1 || sizeof...(TKey)==2, "Must provide a key and optional namespace");
   
   AutoConfig(void) :
-    AutoConfigBase(typeid(t_field))
+    AutoConfigBase(typeid(ConfigTypeExtractor<TKey...>))
   {
     // Register with config registry
-    (void)RegConfig<T, t_field>::r;
+    (void)RegConfig<T, TKey...>::r;
   }
 
 protected:

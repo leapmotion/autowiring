@@ -7,9 +7,10 @@
 const ConfigRegistryEntry* g_pFirstConfigEntry = nullptr;
 size_t g_configEntryCount = 0;
 
-ConfigRegistryEntry::ConfigRegistryEntry(const std::type_info& tinfo) :
+ConfigRegistryEntry::ConfigRegistryEntry(const std::type_info& tinfo, bool has_validator) :
   pFlink(g_pFirstConfigEntry),
-  m_key(autowiring::ExtractKey(tinfo))
+  m_key(autowiring::ExtractKey(tinfo)),
+  m_has_validator(has_validator)
 {
   g_configEntryCount++;
   g_pFirstConfigEntry = this;

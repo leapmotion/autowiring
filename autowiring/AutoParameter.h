@@ -12,6 +12,8 @@
 /// AutoParameter uses AutoConfig under the hood and will use "AutoParam" as
 /// its namespace
 /// </summary>
+struct AutoParam{};
+
 template<class T, class TKey>
 class AutoParameter:
   public AutoConfig<T, struct AutoParam, TKey>
@@ -24,14 +26,6 @@ public:
     if (!isValid(m_default)) {
       throw autowiring_error("invalid default value for key: " + this->m_key);
     }
-
-    if (this->IsConfigured() && !isValid(**this)) {
-      throw autowiring_error("currently configured value is invalid for key: " + this->m_key);
-    }
-    
-    this->m_manager->AddValidator(this->m_key, [this](const AnySharedPointer& val) -> bool {
-      return isValid(*val.template as<T>().get());
-    });
   }
   
   const T& operator*() const {
