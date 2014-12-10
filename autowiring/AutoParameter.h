@@ -57,3 +57,27 @@ protected:
     return CallValidate<T, TKey>::Call(value);
   }
 };
+
+/// <summary>
+/// Default Key helper for parameters that only need a default value
+/// </summary>
+template<typename T, T DEFAULT>
+struct DefaultKey
+{
+public:
+  static T Default() { return DEFAULT; }
+};
+
+/// <summary>
+/// Key helper for parameters that will specify default, min and max
+/// </summary>
+template<typename T, T DEFAULT, T MIN, T MAX>
+struct DefaultMinMaxKey : public DefaultKey<T, DEFAULT>
+{
+public:
+  static_assert(MIN <= DEFAULT && DEFAULT <= MAX, "Default value must be within range");
+  
+  static bool Validate(const T& value) {
+    return MIN <= value && value <= MAX;
+  }
+};
