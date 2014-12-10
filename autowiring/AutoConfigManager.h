@@ -110,10 +110,9 @@ public:
   
 private:
   // Handles setting a value recursivly to all child contexts
-  // Must hold m_lock when calling this
   void SetRecursive(const std::string& key, AnySharedPointer value);
   
   // Set a value in this manager, check validators, call callbacks
   // Must hold m_lock when calling this
-  void SetInternal(const std::string& key, const AnySharedPointer& value, bool setFromHere=false);
+  void SetInternal(const std::string& key, const AnySharedPointer& value);
 };
