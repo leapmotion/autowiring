@@ -20,7 +20,7 @@ class AutoParameter:
   public AutoConfig<T, AutoParam, TKey>
 {
 public:
-  static_assert(std::is_constructible<TKey>(), "Cannot use the default keys provided. You must subclass and use your own");
+  static_assert(std::is_constructible<TKey>::value, "Cannot use the default keys provided. You must subclass and use your own");
   
   AutoParameter() :
     AutoConfig<T, AutoParam, TKey>(),
