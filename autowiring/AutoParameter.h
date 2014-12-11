@@ -62,8 +62,16 @@ protected:
 };
 
 /// <summary>
-/// Default Key helper for parameters that only need a default value
+/// Base class for providing an easy way to specify just a default value
 /// </summary>
+/// <remarks>
+/// Because the class names are used as keys to be stored in the AutoConfigManager, these classes cannot be used
+/// directly and must be subclassed:
+///
+///   struct MyDefaultKey : DefaultKey<int, 15> {};
+///   AutoParameter<int, MyDefaultKey> param;
+///
+/// </remarks>
 template<typename T, T DEFAULT>
 struct DefaultKey
 {
@@ -75,8 +83,16 @@ protected:
 };
 
 /// <summary>
-/// Key helper for parameters that will specify default, min and max
+/// Base class for providing an easy way to default, min and max values
 /// </summary>
+/// <remarks>
+/// Because the class names are used as keys to be stored in the AutoConfigManager, these classes cannot be used
+/// directly and must be subclassed:
+///
+///   struct MyDefaultMinMaxKey : DefaultMinMaxKey<int, 15, 10, 20> {};
+///   AutoParameter<int, MyDefaultMinMaxKey> param;
+///
+/// </remarks>
 template<typename T, T DEFAULT, T MIN, T MAX>
 struct DefaultMinMaxKey : public DefaultKey<T, DEFAULT>
 {
