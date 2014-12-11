@@ -120,3 +120,39 @@ TEST_F(AutoParameterTest, VerifyInvalidPreconfiguredValue) {
   AutoRequired<MyParamClass4> my4;
   ASSERT_EQ(15, *my4->m_param);
 }
+
+struct MyParamClass5 {
+  struct MyDefaultKey : DefaultKey<int, 15> {};
+  AutoParameter<int, MyDefaultKey> m_param;
+};
+
+TEST_F(AutoParameterTest, VerifyDefaultKey) {
+  AutoRequired<MyParamClass5> mpc;
+  auto& param = mpc->m_param;
+  
+  ASSERT_EQ(*param, 15)
+    << "Default value was not properly set";
+  ASSERT_FALSE(param.IsConfigured())
+    << "Using the default value does not mean the parameter should be configured/set";
+}
+
+struct MyParamClass6 {
+  struct MyMinMaxKey : DefaultMinMaxKey<int, 15, 10, 20> {};
+  AutoParameter<int, MyMinMaxKey> m_param;
+};
+
+TEST_F(AutoParameterTest, VerifyDefaultMinMaxKey) {
+  AutoRequired<MyParamClass6> mpc;
+  auto& param = mpc->m_param;
+  
+  ASSERT_EQ(*param, 15)
+    << "Default ";
+  
+  ASSERT_FALSE(param.Set(9))
+    << "Set() should return false when setting invalid value";
+  ASSERT_EQ(*param, 15)
+    << "Failed set attempts should not have altered the previous state";
+  
+  ASSERT_TRUE(param.Set(10) && *param == 10)
+    << "Should be able to set values that are valid according to the validation function";
+}
