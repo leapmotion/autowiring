@@ -21,6 +21,17 @@ public:
   }
 };
 
+TEST_F(AutoFilterTest, GetOutstandingTest) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  {
+    auto packet = factory->NewPacket();
+    ASSERT_EQ(1UL, factory->GetOutstanding()) << "Factory outstanding count mismatch";
+  }
+
+  ASSERT_EQ(0UL, factory->GetOutstanding()) << "Factory outstanding did not go to zero after releasing the only outstanding packet";
+}
+
 TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
   // Create a packet while the factory has no subscribers:
   AutoRequired<AutoPacketFactory> parentFactory;
@@ -138,6 +149,7 @@ public:
 TEST_F(AutoFilterTest, VerifyAutoOut) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<FilterOut> out;
+
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   const Decoration<0>* result0 = nullptr;
   ASSERT_TRUE(packet->Get(result0)) << "Output missing";

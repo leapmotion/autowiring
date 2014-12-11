@@ -42,9 +42,9 @@ class AutoPacket:
 private:
   AutoPacket(const AutoPacket& rhs) = delete;
   AutoPacket(AutoPacket&&) = delete;
-  AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
 
 public:
+  AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
 
   struct Recipient {
@@ -52,9 +52,7 @@ public:
     std::list<SatCounter>::iterator position;
   };
 
-  static ObjectPool<AutoPacket> CreateObjectPool(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
-
-private:
+protected:
   // Saturation counters, constructed when the packet is created and reset each time thereafter
   std::list<SatCounter> m_satCounters;
 
@@ -63,10 +61,10 @@ private:
   std::list<SatCounter>::iterator m_firstSubscriber;
 
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
-  std::shared_ptr<AutoPacketFactory> m_parentFactory;
+  const std::shared_ptr<AutoPacketFactory> m_parentFactory;
 
   // Hold the time point at which this packet was last initalized.
-  std::chrono::high_resolution_clock::time_point m_initTime;
+  const std::chrono::high_resolution_clock::time_point m_initTime;
 
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
@@ -74,6 +72,16 @@ private:
   typedef std::unordered_map<std::type_index, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
   mutable std::mutex m_lock;
+
+  /// <summary>
+  /// Last chance call with unsatisfied optional arguments.
+  /// </summary>
+  /// <remarks>
+  /// This is called when the packet is returned to the AutoPacketFactory.
+  /// It is not called when the Packet is destroyed, since that could result in
+  /// suprious calles when no packet is issued.
+  /// </remarks>
+  void Finalize(void);
 
   /// <summary>
   /// Adds all AutoFilter argument information for a recipient
@@ -86,48 +94,7 @@ private:
   void RemoveSatCounter(const SatCounter& satCounter);
 
   // Outstanding count local and remote holds:
-  std::shared_ptr<Object> m_outstanding;
-  const std::shared_ptr<Object>& m_outstandingRemote;
-
-  /// <summary>
-  /// Resets satisfaction counters and decoration status.
-  /// </summary>
-  /// <remarks>
-  /// Is it expected that AutoPacketFactory will call methods in the following order:
-  /// AutoPacket(); //Construction in ObjectPool
-  /// Initialize(); //Issued from ObjectPool
-  /// Decorate();
-  /// ... //More Decorate calls
-  /// Finalize(); //Returned to ObjectPool
-  /// Initialize();
-  /// ... //More Issue & Return cycles
-  /// ~AutoPacket(); //Destruction in ObjectPool
-  /// Reset() must be called before the body of Initialize() in order to begin in the
-  /// correct state. It must also be called after the body of Finalize() in order to
-  /// avoid holding shared_ptr references.
-  /// Therefore Reset() is called at the conclusion of both AutoPacket() and Finalize().
-  /// </remarks>
-  void Reset(void);
-
-  /// <summary>
-  /// Decrements subscribers requiring AutoPacket argument then calls all initializing subscribers.
-  /// </summary>
-  /// <remarks>
-  /// Initialize is called when a packet is issued by the AutoPacketFactory.
-  /// It is not called when the Packet is created since that could result in
-  /// spurious calls when no packet is issued.
-  /// </remarks>
-  void Initialize(void);
-
-  /// <summary>
-  /// Last chance call with unsatisfied optional arguments.
-  /// </summary>
-  /// <remarks>
-  /// This is called when the packet is returned to the AutoPacketFactory.
-  /// It is not called when the Packet is destroyed, since that could result in
-  /// suprious calles when no packet is issued.
-  /// </remarks>
-  void Finalize(void);
+  const std::shared_ptr<void> m_outstanding;
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
