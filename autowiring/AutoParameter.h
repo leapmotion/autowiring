@@ -2,6 +2,7 @@
 #pragma once
 #include "AutoConfig.h"
 #include "has_validate.h"
+#include <type_traits>
 
 /// <summary>
 /// Register an AutoParameter with "AutoParam" namespace in AutoConfigManager.
@@ -19,6 +20,8 @@ class AutoParameter:
   public AutoConfig<T, struct AutoParam, TKey>
 {
 public:
+  static_assert(std::is_constructible<TKey>(), "Cannot use the default keys provided. You must subclass and use your own");
+  
   AutoParameter() :
     AutoConfig<T, struct AutoParam, TKey>(),
     m_default(TKey::Default())
@@ -66,6 +69,9 @@ struct DefaultKey
 {
 public:
   static T Default() { return DEFAULT; }
+  
+protected:
+  virtual ~DefaultKey() = 0;
 };
 
 /// <summary>
@@ -80,4 +86,7 @@ public:
   static bool Validate(const T& value) {
     return MIN <= value && value <= MAX;
   }
+  
+protected:
+  virtual ~DefaultMinMaxKey() = 0;
 };
