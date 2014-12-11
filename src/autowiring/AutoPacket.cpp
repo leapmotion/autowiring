@@ -28,9 +28,6 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outst
   m_satCounters.sort();
   m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
 
-  // Record divide between subscribers & recipients
-  m_firstSubscriber = m_satCounters.begin();
-
   // Prime the satisfaction graph for each element:
   for(auto& satCounter : m_satCounters)
     AddSatCounter(satCounter);

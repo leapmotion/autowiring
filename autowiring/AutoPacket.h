@@ -53,18 +53,17 @@ public:
   };
 
 protected:
-  // Saturation counters, constructed when the packet is created and reset each time thereafter
-  std::list<SatCounter> m_satCounters;
-
-  // An iterator referring to the first permanent subscriber in the list of satisfaction counters
-  // Temporary subscribers are pushed to the front of the list prior to this iterator
-  std::list<SatCounter>::iterator m_firstSubscriber;
-
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
 
   // Hold the time point at which this packet was last initalized.
   const std::chrono::high_resolution_clock::time_point m_initTime;
+
+  // Outstanding count local and remote holds:
+  const std::shared_ptr<void> m_outstanding;
+
+  // Saturation counters, constructed when the packet is created and reset each time thereafter
+  std::list<SatCounter> m_satCounters;
 
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
@@ -72,16 +71,6 @@ protected:
   typedef std::unordered_map<std::type_index, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
   mutable std::mutex m_lock;
-
-  /// <summary>
-  /// Last chance call with unsatisfied optional arguments.
-  /// </summary>
-  /// <remarks>
-  /// This is called when the packet is returned to the AutoPacketFactory.
-  /// It is not called when the Packet is destroyed, since that could result in
-  /// suprious calles when no packet is issued.
-  /// </remarks>
-  void Finalize(void);
 
   /// <summary>
   /// Adds all AutoFilter argument information for a recipient
@@ -92,9 +81,6 @@ protected:
   /// Removes all AutoFilter argument information for a recipient
   /// </summary>
   void RemoveSatCounter(const SatCounter& satCounter);
-
-  // Outstanding count local and remote holds:
-  const std::shared_ptr<void> m_outstanding;
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
