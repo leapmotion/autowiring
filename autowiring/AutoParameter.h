@@ -4,6 +4,8 @@
 #include "has_validate.h"
 #include <type_traits>
 
+struct AutoParam{};
+
 /// <summary>
 /// Register an AutoParameter with "AutoParam" namespace in AutoConfigManager.
 /// In addition to being the lookup string, the Key also implements:
@@ -13,17 +15,15 @@
 /// AutoParameter uses AutoConfig under the hood and will use "AutoParam" as
 /// its namespace
 /// </summary>
-struct AutoParam{};
-
 template<class T, class TKey>
 class AutoParameter:
-  public AutoConfig<T, struct AutoParam, TKey>
+  public AutoConfig<T, AutoParam, TKey>
 {
 public:
   static_assert(std::is_constructible<TKey>(), "Cannot use the default keys provided. You must subclass and use your own");
   
   AutoParameter() :
-    AutoConfig<T, struct AutoParam, TKey>(),
+    AutoConfig<T, AutoParam, TKey>(),
     m_default(TKey::Default())
   {
     if (!isValid(m_default)) {
@@ -34,13 +34,13 @@ public:
   const T& operator*() const {
     return
       this->IsConfigured() ?
-      AutoConfig<T, struct AutoParam, TKey>::operator*() :
+      AutoConfig<T, AutoParam, TKey>::operator*() :
       m_default;
   }
   
   const T* operator->(void) const {
     return this->IsConfigured() ?
-      this->template AutoConfig<T, struct AutoParam, TKey>::operator->() :
+      this->template AutoConfig<T, AutoParam, TKey>::operator->() :
       &m_default;
   }
   
