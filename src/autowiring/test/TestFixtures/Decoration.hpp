@@ -141,7 +141,7 @@ class FilterGen {
 public:
   FilterGen(void):
     m_called(0),
-    m_args(Args()...)
+    m_args()
   {}
 
   void AutoFilter(AutoPacket& packet, Args... args) {
