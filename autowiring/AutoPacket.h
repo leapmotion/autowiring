@@ -73,6 +73,16 @@ protected:
   mutable std::mutex m_lock;
 
   /// <summary>
+  /// Checks out the decoration named by the specified type information and attaches the specified immediate pointer to it
+  /// </summary>
+  /// <remarks>
+  /// An immediate checkout differs from a standard checkout in that the internally held decoration is only temporarily
+  /// available.  Thus, callers are either satisfied at the point of decoration, or will not be satisfied for that
+  /// type.
+  /// </remarks>
+  DecorationDisposition& CheckoutImmediateUnsafe(const std::type_info& ti, const void* pvImmed);
+
+  /// <summary>
   /// Adds all AutoFilter argument information for a recipient
   /// </summary>
   void AddSatCounter(SatCounter& satCounter);
@@ -390,33 +400,15 @@ public:
       !is_any<is_shared_ptr<T>::value, is_shared_ptr<Ts>::value...>::value,
       "DecorateImmediate must not be used to attach a shared pointer, use Decorate on such a decoration instead"
     );
-    
-    // These are the things we're going to be working with while we perform immediate decoration:
-    static const std::type_info* s_argTypes [] = {&typeid(T), &typeid(Ts)...};
-    static const size_t s_arity = 1 + sizeof...(Ts);
-    const void* pvImmeds [] = {&immed, &immeds...};
-    DecorationDisposition* pTypeSubs[s_arity];
 
     // Perform standard decoration with a short initialization:
-    {
-      std::lock_guard<std::mutex> lk(m_lock);
-      for(size_t i = 0; i < s_arity; i++) {
-        pTypeSubs[i] = &m_decorations[*s_argTypes[i]];
-        pTypeSubs[i]->m_type = s_argTypes[i]; // Ensure correct type if instantiated here
-        if(pTypeSubs[i]->satisfied ||
-           pTypeSubs[i]->isCheckedOut) {
-          std::stringstream ss;
-          ss << "Cannot perform immediate decoration with type " << autowiring::demangle(*s_argTypes[i])
-             << ", the requested decoration already exists";
-          throw std::runtime_error(ss.str());
-        }
+    std::unique_lock<std::mutex> lk(m_lock);
+    DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)] = {
+      &CheckoutImmediateUnsafe(typeid(T), &immed),
+      &CheckoutImmediateUnsafe(typeid(Ts), &immeds)...
+    };
+    lk.unlock();
 
-        // Mark the entry as appropriate:
-        pTypeSubs[i]->isCheckedOut = true;
-        pTypeSubs[i]->satisfied = true;
-        pTypeSubs[i]->m_pImmediate = pvImmeds[i];
-      }
-    }
 
     // Pulse satisfaction:
     MakeAtExit([this, &pTypeSubs] {
@@ -428,10 +420,10 @@ public:
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-      for(const std::type_info* ti : s_argTypes)
+      for(const std::type_info* ti : {&typeid(T), &typeid(Ts)...})
         MarkUnsatisfiable(*ti);
     }),
-    PulseSatisfaction(pTypeSubs, s_arity);
+    PulseSatisfaction(pTypeSubs, 1 + sizeof...(Ts));
   }
 
   /// <summary>

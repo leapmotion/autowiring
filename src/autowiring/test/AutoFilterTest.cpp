@@ -1026,3 +1026,4 @@ TEST_F(AutoFilterTest, AutoFilterInBaseClassNoAlias) {
   // Trivial validation that we got something back
   ASSERT_EQ(1UL, d->m_called) << "Filter defined in base class in an Object-inheriting type was not called the expected number of times";
 }
+
