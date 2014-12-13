@@ -181,12 +181,13 @@ set(Autowiring_Linux_SRCS
   CoreThreadLinux.cpp
 )
 
-add_conditional_sources( Autowiring_SRCS "NOT MSVC" GROUP_NAME "Non-Windows Source" FILES ${Autowiring_Unix_SRCS})
+add_conditional_sources(Autowiring_SRCS "NOT MSVC" GROUP_NAME "Non-Windows Source" FILES ${Autowiring_Unix_SRCS})
 
-add_conditional_sources(Autowiring_SRCS "WIN32 AND NOT BUILD_64_BIT"
+add_conditional_sources(Autowiring_SRCS "WIN32 AND NOT autowiring_BUILD_64"
   GROUP_NAME "ASMx86 Source"
   FILES interlocked.asm
 )
+
 if(WIN32 AND NOT BUILD_64_BIT)
   enable_language(ASM_MASM)
 endif()
