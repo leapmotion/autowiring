@@ -38,7 +38,7 @@ TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
   std::shared_ptr<AutoPacket> firstPacket = parentFactory->NewPacket();
 
   // Verify subscription-free status:
-  EXPECT_FALSE(firstPacket->HasSubscribers(typeid(Decoration<0>))) << "Subscription exists where one should not have existed";
+  EXPECT_FALSE(firstPacket->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
 
   std::shared_ptr<AutoPacket> strongPacket;
   std::weak_ptr<AutoPacket> weakPacket;
@@ -54,14 +54,14 @@ TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
       AutoRequired<FilterA> subFilter;
       filterChecker = subFilter;
     }
-    EXPECT_FALSE(firstPacket->HasSubscribers(typeid(Decoration<0>))) << "Subscription was incorrectly, retroactively added to a packet";
+    EXPECT_FALSE(firstPacket->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
 
     //Create a packet where a subscriber exists only in a subcontext
     strongPacket = parentFactory->NewPacket();
     std::shared_ptr<AutoPacket> holdPacket = parentFactory->NewPacket();
     weakPacket = holdPacket;
-    EXPECT_TRUE(strongPacket->HasSubscribers(typeid(Decoration<0>))) << "Packet lacked expected subscription from subcontext";
-    EXPECT_TRUE(weakPacket.lock()->HasSubscribers(typeid(Decoration<0>))) << "Packet lacked expected subscription from subcontext";
+    EXPECT_TRUE(strongPacket->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
+    EXPECT_TRUE(weakPacket.lock()->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
   }
   EXPECT_TRUE(weakPacket.expired()) << "Packet was not destroyed when it's subscribers were removed";
   EXPECT_FALSE(filterChecker.expired()) << "Packet keeping subcontext member alive";
@@ -69,12 +69,12 @@ TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
   // Verify the second packet will no longer have subscriptions  -
   // normally removing a subscriber would mean the packet still has the subscriber, but
   // in this case, the subscriber was actually destroyed so the packet has lost a subscriber.
-  EXPECT_TRUE(strongPacket->HasSubscribers(typeid(Decoration<0>))) << "Missing subscriber from destroyed subcontext";
+  EXPECT_TRUE(strongPacket->HasSubscribers<Decoration<0>>()) << "Missing subscriber from destroyed subcontext";
 
   // Call the subscriber... this will either succeed or segfault.
   strongPacket->Decorate(Decoration<0>());
   strongPacket->Decorate(Decoration<1>());
-  EXPECT_TRUE(strongPacket->HasSubscribers(typeid(Decoration<0>))) << "Calling a subscriber should not remove it";
+  EXPECT_TRUE(strongPacket->HasSubscribers<Decoration<0>>()) << "Calling a subscriber should not remove it";
   {
     std::shared_ptr<FilterA> holdFilter = filterChecker.lock();
     ASSERT_EQ(1, holdFilter->m_called) << "Subcontext filter was not called";
@@ -82,7 +82,7 @@ TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
 
   // Create a packet after the subcontext has been destroyed
   auto lastPacket = parentFactory->NewPacket();
-  EXPECT_FALSE(lastPacket->HasSubscribers(typeid(Decoration<0>))) << "Subscription was incorrectly, retroactively added to a packet";
+  EXPECT_FALSE(lastPacket->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
 
   // Verify that strongPacket was responsible for keeping subFilter alive
   strongPacket.reset();
@@ -336,14 +336,14 @@ TEST_F(AutoFilterTest, VerifyTeardownArrangement) {
 
     //Create a new packet after having removed the only filter on it.
     auto packet2 = factory->NewPacket();
-    ASSERT_FALSE(packet2->HasSubscribers(typeid(Decoration<0>))) << "A packet had subscriptions after the only subscriber was removed.";
+    ASSERT_FALSE(packet2->HasSubscribers<Decoration<0>>()) << "A packet had subscriptions after the only subscriber was removed.";
 
     // Satisfy the packet:
     packet->Decorate(Decoration<0>());
     packet->Decorate(Decoration<1>());
 
     auto packet3 = factory->NewPacket();
-    ASSERT_FALSE(packet3->HasSubscribers(typeid(Decoration<0>))) << "A packet had subscriptions after the only subscriber was removed.";
+    ASSERT_FALSE(packet3->HasSubscribers<Decoration<0>>()) << "A packet had subscriptions after the only subscriber was removed.";
   }
 
   // Filter should be expired now:

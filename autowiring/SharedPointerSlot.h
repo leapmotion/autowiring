@@ -7,7 +7,7 @@
 #include MEMORY_HEADER
 #include <stdexcept>
 
-template<class T>
+template<class T, bool use_object = true>
 struct SharedPointerSlotT;
 
 /// <summary>
@@ -141,14 +141,32 @@ public:
   const std::shared_ptr<T>& as(void) const {
     static const std::shared_ptr<T> s_empty;
 
-    if(type() == typeid(void))
+    if (type() == typeid(void))
       // This is allowed, we always permit null to be cast to the requested type.
       return s_empty;
 
-    if(type() != typeid(T))
+    if (type() != typeid(T))
       throw std::runtime_error("Attempted to obtain a shared pointer for an unrelated type");
 
-    return ((SharedPointerSlotT<T>*)this)->get();
+    // Instantiate the static cast with "false" because this function should not be attempting to
+    // instantiate any casts.
+    return static_cast<const SharedPointerSlotT<T, false>*>(this)->get();
+  }
+
+  /// <summary>
+  /// Identical to as(), but performs no type safety checks
+  /// </summary>
+  template<class T>
+  const std::shared_ptr<T>& as_unsafe(void) const {
+    static const std::shared_ptr<T> s_empty;
+
+    if (type() == typeid(void))
+      // This is allowed, we always permit null to be cast to the requested type.
+      return s_empty;
+
+    // Instantiate the static cast with "false" because this function should not be attempting to
+    // instantiate any casts.
+    return static_cast<const SharedPointerSlotT<T, false>*>(this)->get();
   }
 
   /// <summary>
@@ -208,9 +226,11 @@ public:
   /// </summary>
   template<class T>
   SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
-    if(type() == typeid(T))
+    if (type() == typeid(T)) {
       // We can just use the equivalence operator, no need to make two calls
-      return *((SharedPointerSlotT<T>*)this) = rhs;
+      *((SharedPointerSlotT<T>*)this) = rhs;
+      return *((SharedPointerSlotT<T>*)this);
+    }
 
     // Clear out what we're holding:
     reset();
@@ -222,7 +242,7 @@ public:
 };
 
 template<class T>
-struct SharedPointerSlotT:
+struct SharedPointerSlotT<T, false>:
   SharedPointerSlot
 {
   SharedPointerSlotT(const std::shared_ptr<T>& rhs = std::shared_ptr<T>()) {
@@ -235,7 +255,7 @@ struct SharedPointerSlotT:
     new (m_space) std::shared_ptr<T>(rhs);
   }
 
-  SharedPointerSlotT(const SharedPointerSlotT<T>& rhs) {
+  SharedPointerSlotT(const SharedPointerSlotT<T, false>& rhs) {
     new (m_space) std::shared_ptr<T>(rhs.get());
   }
 
@@ -261,10 +281,6 @@ public:
   std::shared_ptr<T>& get(void) { return *(std::shared_ptr<T>*)m_space; }
   const std::shared_ptr<T>& get(void) const { return *(std::shared_ptr<T>*)m_space; }
 
-  virtual operator std::shared_ptr<Object>(void) const override {
-    return autowiring::fast_pointer_cast<Object>(get());
-  }
-
   virtual void* ptr(void) override {
     // At this level, because this type is runtime, we can only provide runtime detection of misuse
     if(std::is_const<T>::value)
@@ -278,17 +294,7 @@ public:
   virtual void New(void* pSpace, size_t nBytes) const override {
     if(nBytes < sizeof(*this))
       throw std::runtime_error("Attempted to construct a SharedPointerSlotT in a space that was too small");
-    new (pSpace) SharedPointerSlotT<T>(*this);
-  }
-
-  bool try_assign(const std::shared_ptr<Object>& rhs) override {
-    // Just perform a dynamic cast:
-    auto casted = autowiring::fast_pointer_cast<T>(rhs);
-    if(!casted)
-      return false;
-
-    get() = casted;
-    return true;
+    new (pSpace) SharedPointerSlotT<T, false>(*this);
   }
 
   bool empty(void) const { return get() == nullptr; }
@@ -304,12 +310,53 @@ public:
   }
 
   // We have a better opeartor overload for type T:
-  SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
+  void operator=(const std::shared_ptr<T>& rhs) {
     get() = rhs;
-    return *this;
   }
 
   T* operator->(void) const {
     return get().get();
   }
+};
+
+template<class T>
+struct SharedPointerSlotT<T, true>:
+  SharedPointerSlotT<T, false>
+{
+  SharedPointerSlotT(void) {}
+
+  SharedPointerSlotT(const std::shared_ptr<T>& rhs) :
+    SharedPointerSlotT<T, false>(rhs)
+  {}
+
+  SharedPointerSlotT(const SharedPointerSlotT<T, true>& rhs) :
+    SharedPointerSlotT<T, false>(rhs)
+  {}
+
+  SharedPointerSlotT(SharedPointerSlotT<T>&& rhs) :
+    SharedPointerSlotT<T>(std::move(rhs))
+  {}
+
+  virtual void New(void* pSpace, size_t nBytes) const override {
+    if (nBytes < sizeof(*this))
+      throw std::runtime_error("Attempted to construct a SharedPointerSlotT in a space that was too small");
+    new (pSpace) SharedPointerSlotT<T, true>(*this);
+  }
+
+  bool try_assign(const std::shared_ptr<Object>& rhs) override {
+    // Just perform a dynamic cast:
+    auto casted = autowiring::fast_pointer_cast<T>(rhs);
+    if (!casted)
+      return false;
+
+    SharedPointerSlotT<T, false>::get() = casted;
+    return true;
+  }
+
+  virtual operator std::shared_ptr<Object>(void) const override {
+    return autowiring::fast_pointer_cast<Object>(SharedPointerSlotT<T, false>::get());
+  }
+
+  using SharedPointerSlotT<T, false>::operator=;
+  using SharedPointerSlotT<T, false>::operator==;
 };

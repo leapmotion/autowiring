@@ -14,6 +14,7 @@ set(Autowiring_SRCS
   AnySharedPointer.h
   atomic_object.h
   at_exit.h
+  auto_id.h
   AutoCheckout.h
   AutoConfig.cpp
   AutoConfig.h

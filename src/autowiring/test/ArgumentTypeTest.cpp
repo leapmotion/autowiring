@@ -66,14 +66,14 @@ TEST_F(ArgumentTypeTest, TestAutoIn) {
   AutoRequired<AutoPacketFactory> factory;
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   packet->Decorate(Argument<0>(1));
-  auto_in<std::shared_ptr<const Argument<0>>> in(*packet);
+  auto_in<const Argument<0>> in(*packet);
   ASSERT_TRUE(in.is_input) << "Incorrect orientation";
   ASSERT_FALSE(in.is_output) << "Incorrect orientation";
-  ASSERT_EQ(1, in->get()->i) << "Incorrect initialization";
+  ASSERT_EQ(1, in->i) << "Incorrect initialization";
 
   // Base Cast
   {
-    const Argument<0>& base_in = **in;
+    const Argument<0>& base_in = *in;
     ASSERT_EQ(1, base_in.i) << "Incorrect base cast";
   }
 
@@ -85,7 +85,7 @@ TEST_F(ArgumentTypeTest, TestAutoIn) {
 
   // Deduced Type
   auto_arg<std::shared_ptr<const Argument<0>>>::type arg(*packet);
-  ASSERT_EQ(1, in->use_count()) << "AutoPacket should be the sole shared pointer reference";
+  ASSERT_TRUE(in.get().unique()) << "AutoPacket should store the sole shared pointer reference";
 }
 
 TEST_F(ArgumentTypeTest, TestAutoOut) {
