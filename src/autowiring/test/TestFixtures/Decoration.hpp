@@ -136,12 +136,12 @@ public:
 /// <summary>
 /// A generic filter which accepts templated input types
 /// </summary>
+#if AUTOWIRING_USE_LIBCXX
 template<class... Args>
 class FilterGen {
 public:
   FilterGen(void):
-    m_called(0),
-    m_args()
+    m_called(0)
   {}
 
   void AutoFilter(AutoPacket& packet, Args... args) {
@@ -162,6 +162,7 @@ public:
   int m_called;
   std::tuple<typename std::decay<Args>::type...> m_args;
 };
+#endif
 
 /// <summary>
 /// A filter that should trigger a static_assert in AutoRequire<BadFilterA>
