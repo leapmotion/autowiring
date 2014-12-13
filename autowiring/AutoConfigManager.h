@@ -79,7 +79,7 @@ public:
       throw autowiring_error(ss.str());
     }
     
-    if (!s_registry.at(key)->verifyType(typeid(T))) {
+    if (!s_registry.find(key)->second->verifyType(typeid(T))) {
       std::stringstream ss;
       ss << "Attempting to set config '" << key << "' with incorrect type '"
          << autowiring::demangle(typeid(T)) << "'";

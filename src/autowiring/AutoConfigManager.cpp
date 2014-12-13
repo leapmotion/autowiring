@@ -81,7 +81,7 @@ bool AutoConfigManager::SetParsed(const std::string& key, const std::string& val
     return false;
   }
   
-  SetRecursive(key, s_registry.at(key)->parse(value));
+  SetRecursive(key, s_registry.find(key)->second->parse(value));
   return true;
 }
 
@@ -93,7 +93,7 @@ void AutoConfigManager::AddCallback(const std::string& key, t_callback&& fx) {
 void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer value) {
   // Call all validators for this key
   if (s_validators.count(key)) {
-    for (auto const& fx : s_validators.at(key)) {
+    for (auto const& fx : s_validators.find(key)->second) {
       if (!fx(value)){
         std::stringstream ss;
         ss << "Attempted to set key '" << key << "'which didin't pass validator";

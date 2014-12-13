@@ -140,7 +140,8 @@ template<class... Args>
 class FilterGen {
 public:
   FilterGen(void):
-    m_called(0)
+    m_called(0),
+    m_args(Args()...)
   {}
 
   void AutoFilter(AutoPacket& packet, Args... args) {
