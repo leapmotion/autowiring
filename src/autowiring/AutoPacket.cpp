@@ -13,8 +13,8 @@ using namespace autowiring;
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
-  m_outstanding(std::move(outstanding)),
-  m_initTime(std::chrono::high_resolution_clock::now())
+  m_initTime(std::chrono::high_resolution_clock::now()),
+  m_outstanding(std::move(outstanding))
 {
   // Traverse all contexts, adding their packet subscriber vectors one at a time:
   for(const auto& curContext : ContextEnumerator(factory.GetContext())) {
@@ -47,6 +47,28 @@ AutoPacket::~AutoPacket(void) {
       std::chrono::high_resolution_clock::now() - m_initTime
     )
   );
+}
+
+DecorationDisposition& AutoPacket::CheckoutImmediateUnsafe(const std::type_info& ti, const void* pvImmed)
+{
+  // Obtain the decoration disposition of the entry we will be returning
+  DecorationDisposition& dec = m_decorations[ti];
+
+  // Ensure correct type if instantiated here
+  dec.m_type = &ti;
+
+  if (dec.satisfied || dec.isCheckedOut) {
+    std::stringstream ss;
+    ss << "Cannot perform immediate decoration with type " << autowiring::demangle(ti)
+       << ", the requested decoration already exists";
+    throw std::runtime_error(ss.str());
+  }
+
+  // Mark the entry as appropriate:
+  dec.isCheckedOut = true;
+  dec.satisfied = true;
+  dec.m_pImmediate = pvImmed;
+  return dec;
 }
 
 void AutoPacket::AddSatCounter(SatCounter& satCounter) {
