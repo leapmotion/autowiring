@@ -13,15 +13,10 @@ class StartsSubcontextWhileStarting:
 public:
   AutoCreateContext m_myContext;
 
-  bool Start(std::shared_ptr<Object> outstanding) override {
+  bool DoStart() override {
     m_myContext->Initiate();
-    return true;
+    return false;
   }
-
-  void Stop(bool graceful) override {}
-  bool IsRunning(void) const override { return false; }
-  bool ShouldStop(void) const override { return true; }
-  void Wait(void) override {}
 };
 
 TEST_F(CoreRunnableTest, CanStartSubcontextWhileInitiating) {

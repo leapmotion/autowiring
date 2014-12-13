@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include MEMORY_HEADER
+#include MUTEX_HEADER
 
 class Object;
 
@@ -13,13 +14,13 @@ private:
   // Set to true if this runnable was ever signalled to start
   bool m_wasStarted;
 
-  // The outstanding count, held for as long as processing is underway
-  std::shared_ptr<Object> m_outstanding;
-
   // Set to true if this runnable should terminate processing
   bool m_shouldStop;
 
 protected:
+  // The outstanding count, held for as long as processing is underway
+  std::shared_ptr<Object> m_outstanding;
+
   std::mutex m_lock;
   std::condition_variable m_cv;
 
@@ -30,7 +31,7 @@ protected:
   /// <remarks>
   /// This method will be called at most once.
   /// </remarks>
-  virtual bool DoStart(void) = 0;
+  virtual bool DoStart(void) { return false; };
 
   /// <summary>
   /// Invoked by the base class when a Stop call has been made
@@ -38,7 +39,15 @@ protected:
   /// <remarks>
   /// This method will be called at most once, and may potentially be called even 
   /// </remarks>
-  virtual void OnStop(bool graceful) = 0;
+  virtual void OnStop(bool graceful) {};
+
+  /// <summary>
+  /// Invoked by the base class when a Wait call has been made, to ensure all cleanups have happened after the Stop call
+  /// </summary>
+  /// <remarks>
+  /// This call should not block for extended periods of time.
+  /// </remarks>
+  virtual void DoAdditionalWait() {};
 
 public:
   // Accessor methods:
@@ -64,7 +73,7 @@ public:
   /// On return of this method, regardless of the return value, a subsequent call to Wait is
   /// guaranteed to either return immediately, or once the thread implementation completes.
   /// </remarks>
-  virtual void Stop(bool graceful);
+  void Stop(bool graceful = true);
 
   /// <summary>
   /// Waits for this object to start running, and then stop running
@@ -74,5 +83,11 @@ public:
   /// <summary>
   /// Waits for this object to start running, and then stop running
   /// </summary>
-  void WaitFor(std::chrono::nanoseconds timeout);
+  bool WaitFor(std::chrono::nanoseconds timeout);
+
+  /// <summary>
+  /// Waits for this object to start running, and then stop running
+  /// </summary>
+  template<typename TimeType>
+  bool WaitUntil(TimeType timepoint);
 };

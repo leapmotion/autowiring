@@ -6,10 +6,6 @@
 #include "ContextEnumerator.h"
 #include "fast_pointer_cast.h"
 
-// Explicit instantiation of supported time point types:
-template<> bool BasicThread::WaitUntil(std::chrono::steady_clock::time_point);
-template<> bool BasicThread::WaitUntil(std::chrono::system_clock::time_point);
-
 BasicThread::BasicThread(const char* pName):
   ContextMember(pName),
   m_state(std::make_shared<BasicThreadStateBlock>()),
@@ -79,6 +75,9 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   // No longer running, we MUST release the thread pointer to ensure proper teardown order
   state->m_thisThread.detach();
 
+  // Tell our CoreRunnable parent that we're done to ensure that our reference count will be cleared.
+  Stop(false);
+
   // Release our hold on the context.  After this point, we have to be VERY CAREFUL that we
   // don't try to refer to any of our own member variables, because our own object may have
   // already gone out of scope.  [this] is potentially dangling.
@@ -111,43 +110,22 @@ void BasicThread::PerformStatusUpdate(const std::function<void()>& fn) {
   m_state->m_stateCondition.notify_all();
 }
 
-bool BasicThread::ShouldStop(void) const {
-  auto context = ContextMember::GetContext();
-  return m_stop || !context || context->IsShutdown();
-}
-
-bool BasicThread::IsRunning(void) const {
-  std::lock_guard<std::mutex> lk(m_state->m_lock);
-  return m_running;
-}
-
 bool BasicThread::ThreadSleep(std::chrono::nanoseconds timeout) {
   std::unique_lock<std::mutex> lk(m_state->m_lock);
   return m_state->m_stateCondition.wait_for(lk, timeout, [this] { return ShouldStop(); });
 }
 
-bool BasicThread::Start(std::shared_ptr<Object> outstanding) {
+bool BasicThread::DoStart() {
   std::shared_ptr<CoreContext> context = m_context.lock();
   if(!context)
     return false;
 
-  {
-    std::lock_guard<std::mutex> lk(m_state->m_lock);
-    if(m_running)
-      // Already running, short-circuit
-      return true;
-
-    if(m_completed)
-      // Already completed (perhaps cancelled), short-circuit
-      return false;
-
-    // Currently running:
-    m_running = true;
-    m_state->m_stateCondition.notify_all();
-  }
+  // Currently running:
+  m_running = true;
 
   // Place the new thread entity directly in the space where it goes to avoid
   // any kind of races arising from asynchronous access to this space
+  auto outstanding = m_outstanding;
   m_state->m_thisThread.~thread();
   new (&m_state->m_thisThread) std::thread(
     [this, outstanding] () mutable {
@@ -157,7 +135,13 @@ bool BasicThread::Start(std::shared_ptr<Object> outstanding) {
   return true;
 }
 
-void BasicThread::Wait(void) {
+void BasicThread::OnStop(bool graceful) {
+  if (!m_running) {
+    m_completed = true;
+  }
+}
+
+void BasicThread::DoAdditionalWait(void) {
   std::unique_lock<std::mutex> lk(m_state->m_lock);
   m_state->m_stateCondition.wait(
     lk,
@@ -165,45 +149,6 @@ void BasicThread::Wait(void) {
   );
 }
 
-bool BasicThread::WaitFor(std::chrono::nanoseconds duration) {
-  std::unique_lock<std::mutex> lk(m_state->m_lock);
-  return m_state->m_stateCondition.wait_for(
-    lk,
-    duration,
-    [this] {return this->m_completed; }
-  );
-}
-
-template<class TimeType>
-bool BasicThread::WaitUntil(TimeType timepoint) {
-  std::unique_lock<std::mutex> lk(m_state->m_lock);
-  return m_state->m_stateCondition.wait_until(
-    lk,
-    timepoint,
-    [this] {return this->m_completed; }
-  );
-}
-
-void BasicThread::Stop(bool graceful) {
-  {
-    std::lock_guard<std::mutex> lk(m_state->m_lock);
-
-    // Trivial return check:
-    if(m_stop)
-      return;
-
-    // If we're not running, mark ourselves complete
-    if(!m_running)
-      m_completed = true;
-
-    // Now we send the appropriate trigger:
-    m_stop = true;
-    m_state->m_stateCondition.notify_all();
-  }
-
-  // Event notification takes place outside of the context of a lock
-  OnStop();
-}
 
 void BasicThread::ForceCoreThreadReidentify(void) {
   for(const auto& ctxt : ContextEnumerator(AutoGlobalContext())) {

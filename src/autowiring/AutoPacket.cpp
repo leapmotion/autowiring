@@ -13,8 +13,8 @@ using namespace autowiring;
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
-  m_outstanding(std::move(outstanding)),
-  m_initTime(std::chrono::high_resolution_clock::now())
+  m_initTime(std::chrono::high_resolution_clock::now()),
+  m_outstanding(std::move(outstanding))
 {
   // Traverse all contexts, adding their packet subscriber vectors one at a time:
   for(const auto& curContext : ContextEnumerator(factory.GetContext())) {
