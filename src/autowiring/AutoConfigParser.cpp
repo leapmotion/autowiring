@@ -20,10 +20,10 @@ std::string autowiring::ExtractKeyUnix(std::stringstream& ss) {
     ss >> arg2;
     
     // Remove trailing ","
-    arg1.pop_back();
+    arg1.resize(arg1.size()-1);
     
     // Remove trailing '>'
-    arg2.pop_back();
+    arg2.resize(arg2.size()-1);
     
     std::stringstream key;
     key << arg1 << "." << arg2;
@@ -31,7 +31,7 @@ std::string autowiring::ExtractKeyUnix(std::stringstream& ss) {
     
   } else {
     // Remove trailing '>'
-    arg1.pop_back();
+    arg1.resize(arg1.size()-1);
     return arg1;
   }
 }
@@ -54,7 +54,7 @@ std::string autowiring::ExtractKeyWin(std::stringstream& ss) {
     arg1 = arg1.substr(0, found);
     
     // Remove trailing '>'
-    arg2.pop_back();
+    arg2.resize(arg2.size()-1);
     
     std::stringstream key;
     key << arg1 << "." << arg2;
@@ -62,7 +62,7 @@ std::string autowiring::ExtractKeyWin(std::stringstream& ss) {
     
   } else {
     // Remove trailing '>'
-    arg1.pop_back();
+    arg1.resize(arg1.size()-1);
     return arg1;
   }
 }

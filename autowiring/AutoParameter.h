@@ -2,7 +2,7 @@
 #pragma once
 #include "AutoConfig.h"
 #include "has_validate.h"
-#include <type_traits>
+#include TYPE_TRAITS_HEADER
 
 struct AutoParam{};
 
