@@ -42,24 +42,28 @@ class AutoPacket:
 private:
   AutoPacket(const AutoPacket& rhs) = delete;
   AutoPacket(AutoPacket&&) = delete;
-  AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
 
 public:
+  AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
 
-  static ObjectPool<AutoPacket> CreateObjectPool(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding);
+  struct Recipient {
+    // The iterator pointing to the location where the satisfaction counter was inserted
+    std::list<SatCounter>::iterator position;
+  };
 
-private:
-  // Saturation counters, constructed when the packet is created and reset each time thereafter
-  // IMPORTANT: Elements in m_satCounters MUST be stationary, since they will be referenced!
-  std::list<SatCounter> m_satCounters;
-  size_t m_subscriberNum;
-
+protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
-  std::shared_ptr<AutoPacketFactory> m_parentFactory;
+  const std::shared_ptr<AutoPacketFactory> m_parentFactory;
 
   // Hold the time point at which this packet was last initalized.
-  std::chrono::high_resolution_clock::time_point m_initTime;
+  const std::chrono::high_resolution_clock::time_point m_initTime;
+
+  // Outstanding count local and remote holds:
+  const std::shared_ptr<void> m_outstanding;
+
+  // Saturation counters, constructed when the packet is created and reset each time thereafter
+  std::list<SatCounter> m_satCounters;
 
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
@@ -76,51 +80,7 @@ private:
   /// <summary>
   /// Removes all AutoFilter argument information for a recipient
   /// </summary>
-  void RemoveSatCounter(SatCounter& satCounter);
-
-  // Outstanding count local and remote holds:
-  std::shared_ptr<Object> m_outstanding;
-  const std::shared_ptr<Object>& m_outstandingRemote;
-
-  /// <summary>
-  /// Resets satisfaction counters and decoration status.
-  /// </summary>
-  /// <remarks>
-  /// Is it expected that AutoPacketFactory will call methods in the following order:
-  /// AutoPacket(); //Construction in ObjectPool
-  /// Initialize(); //Issued from ObjectPool
-  /// Decorate();
-  /// ... //More Decorate calls
-  /// Finalize(); //Returned to ObjectPool
-  /// Initialize();
-  /// ... //More Issue & Return cycles
-  /// ~AutoPacket(); //Destruction in ObjectPool
-  /// Reset() must be called before the body of Initialize() in order to begin in the
-  /// correct state. It must also be called after the body of Finalize() in order to
-  /// avoid holding shared_ptr references.
-  /// Therefore Reset() is called at the conclusion of both AutoPacket() and Finalize().
-  /// </remarks>
-  void Reset(void);
-
-  /// <summary>
-  /// Decrements subscribers requiring AutoPacket argument then calls all initializing subscribers.
-  /// </summary>
-  /// <remarks>
-  /// Initialize is called when a packet is issued by the AutoPacketFactory.
-  /// It is not called when the Packet is created since that could result in
-  /// spurious calls when no packet is issued.
-  /// </remarks>
-  void Initialize(void);
-
-  /// <summary>
-  /// Last chance call with unsatisfied optional arguments.
-  /// </summary>
-  /// <remarks>
-  /// This is called when the packet is returned to the AutoPacketFactory.
-  /// It is not called when the Packet is destroyed, since that could result in
-  /// suprious calles when no packet is issued.
-  /// </remarks>
-  void Finalize(void);
+  void RemoveSatCounter(const SatCounter& satCounter);
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
@@ -427,7 +387,7 @@ public:
     // None of the inputs may be shared pointers--if any of the inputs are shared pointers, they must be attached
     // to this packet via Decorate, or else dereferenced and used that way.
     static_assert(
-      !is_any<is_shared_ptr<T>, is_shared_ptr<Ts>...>::value,
+      !is_any<is_shared_ptr<T>::value, is_shared_ptr<Ts>::value...>::value,
       "DecorateImmediate must not be used to attach a shared pointer, use Decorate on such a decoration instead"
     );
     
@@ -478,18 +438,29 @@ public:
   /// Adds a recipient for data associated only with this issuance of the packet.
   /// </summary>
   /// <remarks>
-  /// Recipients added in this way cannot receive piped data, since they are anonymous.
+  /// This method is not idempotent.  The returned Recipient structure may be used to remove
+  /// the recipient safely at any point.  The caller MUST NOT attempt 
   /// </remarks>
-  void AddRecipient(const AutoFilterDescriptor& descriptor);
+  Recipient AddRecipient(const AutoFilterDescriptor& descriptor);
+
+  /// <summary>
+  /// Removes a previously added packet recipient
+  /// </summary>
+  void RemoveRecipient(Recipient&& recipient);
 
   /// <summary>
   /// Convenience overload, identical in behavior to AddRecipient
   /// </summary>
   template<class Fx>
-  AutoPacket& operator+=(Fx&& fx) {
-    AddRecipient(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
-    return *this;
+  Recipient operator+=(Fx&& fx) {
+    return AddRecipient(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
   }
+
+  /// <summary>
+  /// Convenience overload, provided to allow the attachment of receive-only filters to a const AutoPacket
+  /// </summary>
+  template<class Fx>
+  const AutoPacket& operator+=(Fx&& fx) const;
 
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>
@@ -510,3 +481,16 @@ public:
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   bool HasSubscribers(const std::type_info& data) const;
 };
+
+#include "CallExtractor.h"
+
+template<class Fx>
+const AutoPacket& AutoPacket::operator+=(Fx&& fx) const
+{
+  static_assert(
+    !CallExtractor<decltype(&Fx::operator())>::has_outputs,
+    "Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types"
+  );
+  *const_cast<AutoPacket*>(this) += std::forward<Fx&&>(fx);
+  return *this;
+}

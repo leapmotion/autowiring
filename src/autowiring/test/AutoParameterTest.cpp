@@ -10,11 +10,16 @@ class AutoParameterTest:
 
 struct MyParamClass1 {
   struct MyIntParam1 {
-    static constexpr int Default() { return 15; }
+    static int Default() { return 15; }
   };
   
   AutoParameter<int, MyIntParam1> m_param;
 };
+
+static_assert(
+  !has_validate<MyParamClass1::MyIntParam1>::value,
+  "has_validate SFINAE class incorrectly detected validator on MyIntParam1"
+);
 
 TEST_F(AutoParameterTest, VerifyCorrectDeconstruction) {
   AutoRequired<MyParamClass1> mpc;
@@ -59,12 +64,17 @@ TEST_F(AutoParameterTest, VerifyResetToDefaultValue) {
 
 struct MyParamClass2 {
   struct MyIntParam2 {
-    static constexpr int Default() { return 15; }
+    static int Default() { return 15; }
     static bool Validate(const int& value) { return 10 <= value && value <= 20; }
   };
   
   AutoParameter<int, MyIntParam2> m_param;
 };
+
+static_assert(
+  has_validate<MyParamClass2::MyIntParam2>::value,
+  "has_validate SFINAE class failed to detect a validator on MyIntParam2"
+);
 
 TEST_F(AutoParameterTest, VerifyValidationFunction) {
   AutoRequired<MyParamClass2> mpc;
@@ -82,7 +92,7 @@ TEST_F(AutoParameterTest, VerifyValidationFunction) {
 
 struct MyParamClass3 {
   struct MyIntParam3 {
-    static constexpr int Default() { return 0; }
+    static int Default() { return 0; }
     static bool Validate(const int& value) { return 10 <= value && value <= 20; }
   };
   
@@ -96,7 +106,7 @@ TEST_F(AutoParameterTest, VerifyInvalidDefaultValue) {
 
 struct MyParamClass4 {
   struct MyIntParam4 {
-    static constexpr int Default() { return 15; }
+    static int Default() { return 15; }
     static bool Validate(const int& value) { return 10 <= value && value <= 20; }
   };
   
@@ -105,8 +115,44 @@ struct MyParamClass4 {
 
 TEST_F(AutoParameterTest, VerifyInvalidPreconfiguredValue) {
   AutoRequired<AutoConfigManager> acm;
-  acm->Set("AutoParam.MyParamClass4::MyIntParam4", 0);
+  ASSERT_ANY_THROW(acm->Set("AutoParam.MyParamClass4::MyIntParam4", 0));
   
-  ASSERT_ANY_THROW(AutoRequired<MyParamClass4>())
-    << "Should not be able to initialize a parameter that had a previous value set that is invalid with new validation";
+  AutoRequired<MyParamClass4> my4;
+  ASSERT_EQ(15, *my4->m_param);
+}
+
+struct MyParamClass5 {
+  struct MyDefaultKey : DefaultKey<int, 15> {};
+  AutoParameter<int, MyDefaultKey> m_param;
+};
+
+TEST_F(AutoParameterTest, VerifyDefaultKey) {
+  AutoRequired<MyParamClass5> mpc;
+  auto& param = mpc->m_param;
+  
+  ASSERT_EQ(*param, 15)
+    << "Default value was not properly set";
+  ASSERT_FALSE(param.IsConfigured())
+    << "Using the default value does not mean the parameter should be configured/set";
+}
+
+struct MyParamClass6 {
+  struct MyMinMaxKey : DefaultMinMaxKey<int, 15, 10, 20> {};
+  AutoParameter<int, MyMinMaxKey> m_param;
+};
+
+TEST_F(AutoParameterTest, VerifyDefaultMinMaxKey) {
+  AutoRequired<MyParamClass6> mpc;
+  auto& param = mpc->m_param;
+  
+  ASSERT_EQ(*param, 15)
+    << "Default ";
+  
+  ASSERT_FALSE(param.Set(9))
+    << "Set() should return false when setting invalid value";
+  ASSERT_EQ(*param, 15)
+    << "Failed set attempts should not have altered the previous state";
+  
+  ASSERT_TRUE(param.Set(10) && *param == 10)
+    << "Should be able to set values that are valid according to the validation function";
 }

@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
-#include "AutoPacket.h"
+#include "AutoPacketInternal.h"
 #include "fast_pointer_cast.h"
 #include "thread_specific_ptr.h"
 #include <cmath>
@@ -12,7 +12,7 @@ AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
   m_parent(GetContext()->GetParentContext()),
   m_wasStopped(false),
-  m_packets(AutoPacket::CreateObjectPool(*this, m_outstanding)),
+  m_outstanding(0),
   m_packetCount(0),
   m_packetDurationSum(0),
   m_packetDurationSqSum(0)
@@ -29,11 +29,12 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   if(!IsRunning())
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
-  // Obtain a packet, return it
-  std::shared_ptr<AutoPacket> retVal;
-  m_packets(retVal);
-
-  // Done, return
+  // Obtain a packet, initialize it, return it
+  auto retVal = std::make_shared<AutoPacketInternal>(
+    *this,
+    GetInternalOutstanding()
+  );
+  retVal->Initialize();
   return retVal;
 }
 
@@ -55,13 +56,33 @@ bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
   return true;
 }
 
+std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
+  auto retVal = m_outstandingInternal.lock();
+  if (retVal)
+    return retVal;
+
+  auto outstanding = m_outstanding;
+  retVal = std::shared_ptr<void>(
+    (void*)1,
+    [this, outstanding] (void*) mutable {
+      std::lock_guard<std::mutex> lk(m_lock);
+      m_stateCondition.notify_all();
+
+      // Weak pointer will prevent our lambda from being destroyed, so we manually reset
+      // the outstanding counter in order to force it to be reset here
+      outstanding.reset();
+    }
+  );
+  m_outstandingInternal = retVal;
+  return retVal;
+}
+
 void AutoPacketFactory::Stop(bool graceful) {
   // Return optimization
   if(m_wasStopped)
     return;
 
   // Kill the object pool
-  m_packets.SetOutstandingLimit(0);
   Invalidate();
 
   // Queue of local variables to be destroyed when leaving scope
@@ -88,17 +109,16 @@ void AutoPacketFactory::Clear(void) {
 }
 
 void AutoPacketFactory::Wait(void) {
-  {
-    std::unique_lock<std::mutex> lk(m_lock);
-    m_stateCondition.wait(lk, [this]{ return ShouldStop(); });
-  }
-
-  // Now we need to block until all packets come back to the object pool:
-  m_packets.Rundown();
+  std::unique_lock<std::mutex> lk(m_lock);
+  m_stateCondition.wait(
+    lk,
+    [this]{
+      return ShouldStop() && m_outstandingInternal.expired();
+    }
+  );
 }
 
 void AutoPacketFactory::Invalidate(void) {
-  m_packets.ClearCachedEntities();
   if(m_parent)
     m_parent->Invalidate();
 }
@@ -135,7 +155,7 @@ AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(const std::type_
 }
 
 size_t AutoPacketFactory::GetOutstanding(void) const {
-  return m_packets.GetOutstanding();
+  return m_outstandingInternal.use_count();
 }
 
 void AutoPacketFactory::RecordPacketDuration(std::chrono::nanoseconds duration) {

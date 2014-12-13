@@ -1,18 +1,16 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "Decompose.h"
-#include <iostream>
 
+/// <summary>
+/// Detects whether the specified type T has a static method with the name Validate
+/// </summary>
 template<class T>
-struct has_validate_function {
-  template<class Fn, Fn>
-  struct unnamed_constant;
+struct has_validate {
+  template<class U>
+  static std::true_type select(decltype(&U::Validate));
 
   template<class U>
   static std::false_type select(...);
-
-  template<class U>
-  static std::true_type select(unnamed_constant<decltype(&U::Validate), &U::Validate>*);
 
   // Conveninece typedef used externally:
   typedef decltype(select<T>(nullptr)) has_valid;
@@ -21,19 +19,14 @@ struct has_validate_function {
   static const bool value = has_valid::value;
 };
 
-/// <summary>
-/// Detects whether the specified type T has a static method with the name Validate
-/// </summary>
-template<class T>
-struct has_validate : has_validate_function<T>::has_valid {};
+template<class T, class Validator, bool validatable = has_validate<Validator>::value>
+struct CallValidate {
+  static bool Call(const T&) { return true; }
+};
 
-template<class Object, class Validator>
-static bool CallValidate(const Object& obj, std::true_type) {
-  return Validator::Validate(obj);
-}
-
-template<class Object, class Validator>
-static bool CallValidate(const Object& obj, std::false_type) {
-  return true;
-}
-
+template<class T, class Validator>
+struct CallValidate<T, Validator, true> {
+  static bool Call(const T& obj) {
+    return Validator::Validate(obj); 
+  }
+};

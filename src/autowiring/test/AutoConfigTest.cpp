@@ -121,7 +121,7 @@ TEST_F(AutoConfigTest, VerifyDuplicateConfigAssignment) {
 }
 
 TEST_F(AutoConfigTest, ExtractKeyTestWin) {
-  std::stringstream win("struct AutoConfigBase::ConfigTypeExtractor<struct Namespace1,struct XYZ>");
+  std::stringstream win("struct ConfigTypeExtractor<struct Namespace1,struct XYZ>");
   
   ASSERT_STREQ(
     "Namespace1.XYZ",
@@ -195,6 +195,7 @@ TEST_F(AutoConfigTest, NestedContexts) {
   ASSERT_EQ(42, *mcc_middle->m_myName) << "Config value not set in descendant context";
   ASSERT_EQ(42, *mcc_sibling->m_myName) << "Config value not set in descendant context";
   ASSERT_EQ(42, *mcc_inner->m_myName) << "Config value not set in descendant context";
+  EXPECT_TRUE(acm_middle->IsInherited("Namespace1.XYZ")) << "Inherited key not marked as such";
   
   // Set middle, inner shouldn't be able to be set from outer after this
   bool callback_hit1 = false;
@@ -230,31 +231,28 @@ TEST_F(AutoConfigTest, NestedContexts) {
   ASSERT_TRUE(callback_hit2) << "Callback not called on sibling of context where value was previously set";
 }
 
+struct ValidatedKey{
+  static bool Validate(const int& value) {
+    return value > 5;
+  }
+};
+struct MyValidatedClass{
+  AutoConfig<int, ValidatedKey> m_config;
+};
+
 TEST_F(AutoConfigTest, Validators) {
   AutoRequired<AutoConfigManager> acm;
-  AutoRequired<MyConfigurableClass> mcc;
   
-  // Add validator to key that hasn't been set
-  acm->AddValidator("Namespace1.XYZ", [](const AnySharedPointer& ptr){
-    return true;
-  });
+  ASSERT_ANY_THROW(acm->Set("ValidatedKey", 2)) << "AutoConfigManager didn't regect invalid value";
   
-  acm->Set("Namespace1.XYZ", 42);
-  ASSERT_EQ(42, *mcc->m_myName);
+  AutoRequired<MyValidatedClass> valid;
   
-  acm->AddValidator("Namespace1.XYZ", [](const AnySharedPointer& ptr){
-    const int val = *ptr->as<int>();
-    
-    return (val < 50);
-  });
+  acm->Set("ValidatedKey", 42);
+  ASSERT_EQ(42, *valid->m_config) << "Value not set for key";
   
-  ASSERT_ANY_THROW(acm->Set("Namespace1.XYZ", 1337)) << "Should throw exception when setting invalid value";
-  ASSERT_EQ(42, *mcc->m_myName);
+  ASSERT_ANY_THROW(acm->Set("ValidatedKey", 1)) << "AutoConfigManager didn't regect invalid value";
+  ASSERT_EQ(42, *valid->m_config) << "Value not set for key";
   
-  // Assert adding validator that doesn't validate current value throws execpetion
-  ASSERT_ANY_THROW(acm->AddValidator("Namespace1.XYZ", [](const AnySharedPointer& ptr){
-    const int val = *ptr->as<int>();
-    
-    return (val < 0);
-  }));
+  acm->Set("ValidatedKey", 1337);
+  ASSERT_EQ(1337, *valid->m_config) << "Value not set for key";
 }

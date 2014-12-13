@@ -5,7 +5,6 @@
 #include "AutoFilterDescriptor.h"
 #include "ContextMember.h"
 #include "CoreRunnable.h"
-#include "ObjectPool.h"
 #include <list>
 #include <vector>
 #include CHRONO_HEADER
@@ -48,15 +47,8 @@ private:
   // Outstanding reference if this factory is currently running:
   std::shared_ptr<Object> m_outstanding;
 
-  /// <summary>
-  /// An independently maintained object pool just for packets
-  /// </summary>
-  /// <remarks>
-  /// The object pool defined here is provided mainly to allow detection of
-  /// pipeline packet expiration in order to support expiration notification
-  /// broadcasts.
-  /// </remarks>
-  ObjectPool<AutoPacket> m_packets;
+  // Internal outstanding reference for issued packet:
+  std::weak_ptr<void> m_outstandingInternal;
 
   // Collection of known subscribers
   typedef std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> t_autoFilterSet;
@@ -66,6 +58,9 @@ private:
   long long m_packetCount;
   double m_packetDurationSum;
   double m_packetDurationSqSum;
+
+  // Returns the internal outstanding count, for use with AutoPacket
+  std::shared_ptr<void> GetInternalOutstanding(void);
 
   // Recursive invalidation routine, causes AutoPacket object pools to be dumped to the root
   void Invalidate(void);

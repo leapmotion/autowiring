@@ -11,13 +11,10 @@
 
 using namespace autowiring;
 
-// This must appear in .cpp in order to avoid compilation failure due to:
-// "Arithmetic on a pointer to an incomplete type 'SatCounter'"
-AutoPacket::~AutoPacket() {}
-
-AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding):
+AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
-  m_outstandingRemote(outstanding)
+  m_outstanding(std::move(outstanding)),
+  m_initTime(std::chrono::high_resolution_clock::now())
 {
   // Traverse all contexts, adding their packet subscriber vectors one at a time:
   for(const auto& curContext : ContextEnumerator(factory.GetContext())) {
@@ -31,27 +28,34 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory, const std::shared_ptr<Object>
   m_satCounters.sort();
   m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
 
-  // Record divide between subscribers & recipients
-  m_subscriberNum = m_satCounters.size();
-
   // Prime the satisfaction graph for each element:
   for(auto& satCounter : m_satCounters)
     AddSatCounter(satCounter);
 
-  Reset();
+  // Initialize all counters:
+  for (auto& satCounter : m_satCounters)
+    satCounter.Reset();
+
+  // Clear all references:
+  for (auto& decoration : m_decorations)
+    decoration.second.Reset();
+}
+
+AutoPacket::~AutoPacket(void) {
+  m_parentFactory->RecordPacketDuration(
+    std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::high_resolution_clock::now() - m_initTime
+    )
+  );
 }
 
 void AutoPacket::AddSatCounter(SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
     const std::type_info& dataType = *pCur->ti;
-
-    // Broadcast source is void
     DecorationDisposition* entry = &m_decorations[dataType];
     entry->m_type = &dataType;
 
     // Decide what to do with this entry:
-    // NOTE: Recipients added via AddReceiver can receive broadcast data,
-    // so it is necessary to decrement the receiver's counters when it is added.
     if (pCur->is_input) {
       entry->m_subscribers.push_back(&satCounter);
       if (entry->satisfied)
@@ -68,7 +72,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
   }
 }
 
-void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
+void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
     const std::type_info& dataType = *pCur->ti;
 
@@ -85,20 +89,6 @@ void AutoPacket::RemoveSatCounter(SatCounter& satCounter) {
       entry->m_publisher = nullptr;
     }
   }
-}
-
-ObjectPool<AutoPacket> AutoPacket::CreateObjectPool(AutoPacketFactory& factory, const std::shared_ptr<Object>& outstanding) {
-  return ObjectPool<AutoPacket>(
-    ~0,
-    ~0,
-    [&factory, &outstanding] { return new AutoPacket(factory, outstanding); },
-    [] (AutoPacket& packet) { packet.Initialize(); },
-    [] (AutoPacket& packet) {
-      // IMPORTANT: Create shared_ptr with no destructor to enable outputs to AutoPacket
-      std::shared_ptr<AutoPacket> shared(&packet, [](AutoPacket*){});
-      packet.Finalize();
-    }
-  );
 }
 
 void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
@@ -290,91 +280,41 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   }
 }
 
-void AutoPacket::Reset(void) {
-  // Initialize all counters:
-  std::lock_guard<std::mutex> lk(m_lock);
-  for(auto& satCounter : m_satCounters)
-    satCounter.Reset();
+AutoPacket::Recipient AutoPacket::AddRecipient(const AutoFilterDescriptor& descriptor) {
+  Recipient retVal;
+  SatCounter* recipient;
 
-  // Clear all references:
-  for(auto& decoration : m_decorations)
-    decoration.second.Reset();
-}
-
-void AutoPacket::Initialize(void) {
-  // Record the timepoint of initialization
-  m_initTime = std::chrono::high_resolution_clock::now();
-
-  // Hold an outstanding count from the parent packet factory
-  m_outstanding = m_outstandingRemote;
-  if(!m_outstanding)
-    throw std::runtime_error("Cannot proceed with this packet, enclosing context already expired");
-
-  // Find all subscribers with no required or optional arguments:
-  std::list<SatCounter*> callCounters;
-  for (auto& satCounter : m_satCounters)
-    if (satCounter)
-      callCounters.push_back(&satCounter);
-
-  // Call all subscribers with no required or optional arguments:
-  // NOTE: This may result in decorations that cause other subscribers to be called.
-  for (SatCounter* call : callCounters)
-    call->CallAutoFilter(*this);
-
-  // First-call indicated by argumument type AutoPacket&:
-  UpdateSatisfaction(typeid(auto_arg<AutoPacket&>::id_type));
-}
-
-void AutoPacket::Finalize(void) {
-
-  // Remove all recipients & clean up the decorations list
-  // ASSERT: This reverses the order of accumulation,
-  // so searching for the subscriber is avoided.
-  while (m_satCounters.size() > m_subscriberNum) {
-    SatCounter& recipient = m_satCounters.back();
-    RemoveSatCounter(recipient);
-    m_satCounters.pop_back();
-  }
-
-  // Remove decoration dispositions specific to subscribers
-  t_decorationMap::iterator dItr = m_decorations.begin();
-  t_decorationMap::iterator dEnd = m_decorations.end();
-  while (dItr != dEnd) {
-    if (dItr->second.m_subscribers.empty())
-      dItr = m_decorations.erase(dItr);
-    else
-      ++dItr;
-  }
-
-  m_parentFactory->RecordPacketDuration(
-    std::chrono::duration_cast<std::chrono::nanoseconds>(
-      std::chrono::high_resolution_clock::now() - m_initTime));
-
-  Reset();
-}
-
-void AutoPacket::AddRecipient(const AutoFilterDescriptor& descriptor) {
-  SatCounter* call = nullptr;
   {
     std::lock_guard<std::mutex> lk(m_lock);
 
     // (1) Append & Initialize new satisfaction counter
-    m_satCounters.push_back(descriptor);
-    SatCounter& recipient = m_satCounters.back();
-    recipient.Reset();
+    m_satCounters.push_front(descriptor);
+    retVal.position = m_satCounters.begin();
+    recipient = &m_satCounters.back();
+    recipient->Reset();
 
     // (2) Update satisfaction & Append types from subscriber
-    AddSatCounter(recipient);
+    AddSatCounter(*recipient);
 
-    // (3) Check call status inside of lock
-    if (recipient) {
-      call = &recipient;
-    }
+    // (3) Short-circuit if we don't need to call
+    if(!*recipient)
+      return retVal;
   }
 
-  // (4) If all types are satisfied, call AutoFilter now.
-  if (call)
-    call->CallAutoFilter(*this);
+  // (4) All types are satisfied, call AutoFilter now.
+  recipient->CallAutoFilter(*this);
+  return retVal;
+}
+
+void AutoPacket::RemoveRecipient(Recipient&& recipient) {
+  // Copy out the iterator, and eliminate the iterator from the source structure
+  auto q = recipient.position;
+  recipient.position = m_satCounters.end();
+
+  // Remove the recipient from our list
+  std::lock_guard<std::mutex> lk(m_lock);
+  RemoveSatCounter(*q);
+  m_satCounters.erase(q);
 }
 
 SatCounter AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {

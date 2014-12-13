@@ -90,3 +90,37 @@ TEST_F(AutoFilterFunctionalTest, FunctionExtractorTest) {
   packet->Decorate(Decoration<1>());
   ASSERT_EQ(1, extType) << "Decoration type was not extracted";
 }
+
+TEST_F(AutoFilterFunctionalTest, RecipientRemovalTest) {
+  auto called = std::make_shared<bool>(false);
+  AutoRequired<AutoPacketFactory> factory;
+
+  // Add a recipient and then remove it, verify it doesn't get called
+  auto packet = factory->NewPacket();
+  AutoPacket::Recipient recipient =
+    (
+      *packet += [called] (const Decoration<0>&) {
+        *called = true;
+      }
+    );
+  packet->RemoveRecipient(std::move(recipient));
+
+  ASSERT_FALSE(*called) << "A recipient that should have been removed was called";
+}
+
+TEST_F(AutoFilterFunctionalTest, ObservingFunctionTest) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  auto packet = factory->NewPacket();
+
+  // Attach a lambda to a const version of this packet:
+  auto called = std::make_shared<bool>(false);
+  static_cast<const AutoPacket&>(*packet) += [called](const Decoration<0>& dec, Decoration<1> dec1) {
+    *called = true;
+  };
+
+  // Verify that a call was made as expected once we decorate:
+  packet->Decorate(Decoration<0>());
+  packet->Decorate(Decoration<1>());
+  ASSERT_TRUE(*called) << "Receive-only filter attached to a const packet image was not correctly called";
+}
