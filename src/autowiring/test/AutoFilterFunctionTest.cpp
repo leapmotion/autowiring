@@ -124,3 +124,30 @@ TEST_F(AutoFilterFunctionalTest, ObservingFunctionTest) {
   packet->Decorate(Decoration<1>());
   ASSERT_TRUE(*called) << "Receive-only filter attached to a const packet image was not correctly called";
 }
+
+
+TEST_F(AutoFilterFunctionalTest, TripleFunctionTest) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  auto packet = factory->NewPacket();
+
+  // Attach two lambdas, verify they each get called when we expect;
+  auto called1 = std::make_shared<bool>(false);
+  auto called2 = std::make_shared<bool>(false);
+  auto called3 = std::make_shared<bool>(false);
+  *packet += [called1](const Decoration<0>&) { *called1 = true; };
+  *packet += [called2](const Decoration<0>&, const Decoration<1>&) { *called2 = true; };
+  *packet += [called3](const Decoration<1>&) { *called3 = true; };
+
+  // Only the third method should be called
+  packet->Decorate(Decoration<1>());
+
+  ASSERT_FALSE(*called1) << "Incorrect filter method called in response to Decorate";
+  ASSERT_FALSE(*called2) << "Incorrect filter method called in response to Decorate";
+  ASSERT_TRUE(*called3) << "Filter method called when a decoration was absent";
+
+  // Now the other two should be called:
+  packet->Decorate(Decoration<0>());
+  ASSERT_TRUE(*called1) << "Final observer method was not invoked as expected";
+  ASSERT_TRUE(*called2) << "Two-argument observer method not invoked as expected";
+}
