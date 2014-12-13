@@ -10,6 +10,7 @@
 #include "is_shared_ptr.h"
 #include "MicroAutoFilter.h"
 #include "ObjectPool.h"
+#include "TeardownNotifier.h"
 #include <list>
 #include <sstream>
 #include <typeinfo>
@@ -37,7 +38,8 @@ struct AutoFilterDescriptor;
 /// manually with the Advertise function.
 /// </remarks>
 class AutoPacket:
-  public std::enable_shared_from_this<AutoPacket>
+  public std::enable_shared_from_this<AutoPacket>,
+  public TeardownNotifier
 {
 private:
   AutoPacket(const AutoPacket& rhs) = delete;
