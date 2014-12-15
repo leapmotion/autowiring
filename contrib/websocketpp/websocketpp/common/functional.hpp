@@ -50,9 +50,9 @@ namespace lib {
     using std::ref;
     namespace placeholders = std::placeholders;
 #else
-    using boost::function;
-    using boost::bind;
-    using boost::ref;
+    using autoboost::function;
+    using autoboost::bind;
+    using autoboost::ref;
     namespace placeholders {
         /// \todo this feels hacky, is there a better way?
         using ::_1;
