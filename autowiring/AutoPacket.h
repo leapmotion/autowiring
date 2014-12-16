@@ -230,18 +230,7 @@ public:
   }
 
   template<class T>
-  bool DEPRECATED(Get(const std::shared_ptr<T>*& out) const, "This version of Get is deprecated due to the dangers it implies, do not use") {
-    static_assert(!std::is_const<T>::value, "Overload resolution selected an incorrect version of Get");
-
-    const DecorationDisposition* pDisposition = GetDisposition<T>();
-    if (!pDisposition || !pDisposition->m_decoration) {
-      out = nullptr;
-      return false;
-    }
-
-    out = &pDisposition->m_decoration->as_unsafe<T>();
-    return true;
-  }
+  bool DEPRECATED(Get(const std::shared_ptr<T>*& out) const, "This version of Get is deprecated due to the dangers it implies, do not use");
 
   /// <summary>
   /// Shared pointer specialization of const T*&, used to obtain the underlying shared pointer for some type T
@@ -538,4 +527,18 @@ const AutoPacket& AutoPacket::operator+=(Fx&& fx) const
   );
   *const_cast<AutoPacket*>(this) += std::forward<Fx&&>(fx);
   return *this;
+}
+
+template<class T>
+bool AutoPacket::Get(const std::shared_ptr<T>*& out) const {
+  static_assert(!std::is_const<T>::value, "Overload resolution selected an incorrect version of Get");
+
+  const DecorationDisposition* pDisposition = GetDisposition<T>();
+  if (!pDisposition || !pDisposition->m_decoration) {
+    out = nullptr;
+    return false;
+  }
+
+  out = &pDisposition->m_decoration->as_unsafe<T>();
+  return true;
 }
