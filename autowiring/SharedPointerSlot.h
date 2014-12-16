@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "auto_id.h"
 #include "autowiring_error.h"
 #include "fast_pointer_cast.h"
 #include "Object.h"
@@ -118,7 +119,7 @@ public:
   /// True if this pointer slot holds an instance of the specified type
   /// </returns>
   template<class T>
-  bool is(void) const { return type() == typeid(T); }
+  bool is(void) const { return type() == typeid(auto_id<T>); }
 
   /// <returns>
   /// Returns the template type of the shared pointer held in this slot, or typeid(void) if empty
@@ -145,7 +146,7 @@ public:
       // This is allowed, we always permit null to be cast to the requested type.
       return s_empty;
 
-    if (type() != typeid(T))
+    if (type() != typeid(auto_id<T>))
       throw std::runtime_error("Attempted to obtain a shared pointer for an unrelated type");
 
     // Instantiate the static cast with "false" because this function should not be attempting to
@@ -187,7 +188,7 @@ public:
   template<class T>
   bool operator==(const std::shared_ptr<T>& rhs) const {
     // Unequal types are always unequal
-    if(type() != typeid(*rhs))
+    if(type() != typeid(auto_id<T>))
       return false;
 
     // Everything lines up, coerce ourselves to the derived type and handoff the
@@ -226,7 +227,7 @@ public:
   /// </summary>
   template<class T>
   SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
-    if (type() == typeid(T)) {
+    if (type() == typeid(auto_id<T>)) {
       // We can just use the equivalence operator, no need to make two calls
       *((SharedPointerSlotT<T>*)this) = rhs;
       return *((SharedPointerSlotT<T>*)this);
@@ -298,7 +299,7 @@ public:
   }
 
   bool empty(void) const { return get() == nullptr; }
-  const std::type_info& type(void) const override { return typeid(T); }
+  const std::type_info& type(void) const override { return typeid(auto_id<T>); }
 
   void reset(void) override {
     get().reset();
