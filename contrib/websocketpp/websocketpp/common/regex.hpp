@@ -48,9 +48,9 @@ namespace lib {
     using std::regex;
     using std::regex_match;
 #else
-    using boost::cmatch;
-    using boost::regex;
-    using boost::regex_match;
+    using autoboost::cmatch;
+    using autoboost::regex;
+    using autoboost::regex_match;
 #endif
 
 } // namespace lib

@@ -47,10 +47,10 @@ namespace asio {
 namespace tls_socket {
 
 /// The signature of the socket_init_handler for this socket policy
-typedef lib::function<void(connection_hdl,boost::asio::ssl::stream<
-    boost::asio::ip::tcp::socket>&)> socket_init_handler;
+typedef lib::function<void(connection_hdl,autoboost::asio::ssl::stream<
+    autoboost::asio::ip::tcp::socket>&)> socket_init_handler;
 /// The signature of the tls_init_handler for this socket policy
-typedef lib::function<lib::shared_ptr<boost::asio::ssl::context>(connection_hdl)>
+typedef lib::function<lib::shared_ptr<autoboost::asio::ssl::context>(connection_hdl)>
     tls_init_handler;
 
 /// TLS enabled Boost ASIO connection socket component
@@ -66,17 +66,17 @@ public:
     typedef lib::shared_ptr<type> ptr;
 
     /// Type of the ASIO socket being used
-    typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> socket_type;
+    typedef autoboost::asio::ssl::stream<autoboost::asio::ip::tcp::socket> socket_type;
     /// Type of a shared pointer to the ASIO socket being used
     typedef lib::shared_ptr<socket_type> socket_ptr;
     /// Type of a pointer to the ASIO io_service being used
-    typedef boost::asio::io_service* io_service_ptr;
+    typedef autoboost::asio::io_service* io_service_ptr;
     /// Type of a pointer to the ASIO io_service strand being used
-    typedef lib::shared_ptr<boost::asio::io_service::strand> strand_ptr;
+    typedef lib::shared_ptr<autoboost::asio::io_service::strand> strand_ptr;
     /// Type of a shared pointer to the ASIO TLS context being used
-    typedef lib::shared_ptr<boost::asio::ssl::context> context_ptr;
+    typedef lib::shared_ptr<autoboost::asio::ssl::context> context_ptr;
 
-    typedef boost::system::error_code boost_error;
+    typedef autoboost::system::error_code boost_error;
 
     explicit connection() {
         //std::cout << "transport::asio::tls_socket::connection constructor"
@@ -158,8 +158,8 @@ public:
     std::string get_remote_endpoint(lib::error_code &ec) const {
         std::stringstream s;
 
-        boost::system::error_code bec;
-        boost::asio::ip::tcp::endpoint ep = m_socket->lowest_layer().remote_endpoint(bec);
+        autoboost::system::error_code bec;
+        autoboost::asio::ip::tcp::endpoint ep = m_socket->lowest_layer().remote_endpoint(bec);
 
         if (bec) {
             ec = error::make_error_code(error::pass_through);
@@ -176,7 +176,7 @@ protected:
     /// Perform one time initializations
     /**
      * init_asio is called once immediately after construction to initialize
-     * boost::asio components to the io_service
+     * autoboost::asio components to the io_service
      *
      * @param service A pointer to the endpoint's io_service
      * @param strand A pointer to the connection's strand
@@ -263,7 +263,7 @@ protected:
         m_hdl = hdl;
     }
 
-    void handle_init(init_handler callback,boost::system::error_code const & ec)
+    void handle_init(init_handler callback,autoboost::system::error_code const & ec)
     {
         if (ec) {
             m_ec = socket::make_error_code(socket::error::tls_handshake_failed);
@@ -302,8 +302,8 @@ protected:
      * @param ec The error code to translate_ec
      * @return The translated error code
      */
-    lib::error_code translate_ec(boost::system::error_code ec) {
-        if (ec.category() == boost::asio::error::get_ssl_category()) {
+    lib::error_code translate_ec(autoboost::system::error_code ec) {
+        if (ec.category() == autoboost::asio::error::get_ssl_category()) {
             if (ERR_GET_REASON(ec.value()) == SSL_R_SHORT_READ) {
                 return make_error_code(transport::error::tls_short_read);
             } else {
@@ -320,9 +320,9 @@ protected:
 private:
     socket_type::handshake_type get_handshake_type() {
         if (m_is_server) {
-            return boost::asio::ssl::stream_base::server;
+            return autoboost::asio::ssl::stream_base::server;
         } else {
-            return boost::asio::ssl::stream_base::client;
+            return autoboost::asio::ssl::stream_base::client;
         }
     }
 

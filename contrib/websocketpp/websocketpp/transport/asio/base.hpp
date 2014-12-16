@@ -42,9 +42,9 @@
 
 namespace websocketpp {
 namespace transport {
-/// Transport policy that uses boost::asio
+/// Transport policy that uses autoboost::asio
 /**
- * This policy uses a single boost::asio io_service to provide transport
+ * This policy uses a single autoboost::asio io_service to provide transport
  * services to a WebSocket++ endpoint.
  */
 namespace asio {
@@ -56,7 +56,7 @@ namespace asio {
 // requests. If the memory is in use when an allocation request is made, the
 // allocator delegates allocation to the global heap.
 class handler_allocator
-  : private boost::noncopyable
+  : private autoboost::noncopyable
 {
 public:
   handler_allocator()
@@ -91,7 +91,7 @@ public:
 
 private:
   // Storage space used for handler-based custom memory allocation.
-  boost::aligned_storage<1024> storage_;
+  autoboost::aligned_storage<1024> storage_;
 
   // Whether the handler-based custom allocation storage has been used.
   bool in_use_;
@@ -158,13 +158,13 @@ inline custom_alloc_handler<Handler> make_custom_alloc_handler(
 template <typename config>
 class endpoint;
 
-typedef lib::function<void(boost::system::error_code const &)>
+typedef lib::function<void(autoboost::system::error_code const &)>
     socket_shutdown_handler;
 
-typedef lib::function<void (boost::system::error_code const & ec,
+typedef lib::function<void (autoboost::system::error_code const & ec,
     size_t bytes_transferred)> async_read_handler;
 
-typedef lib::function<void (boost::system::error_code const & ec,
+typedef lib::function<void (autoboost::system::error_code const & ec,
     size_t bytes_transferred)> async_write_handler;
 
 typedef lib::function<void (lib::error_code const & ec)> pre_init_handler;

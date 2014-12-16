@@ -56,8 +56,8 @@ namespace lib {
     using std::random_device;
     using std::uniform_int_distribution;
 #else
-    using boost::random::random_device;
-    using boost::random::uniform_int_distribution;
+    using autoboost::random::random_device;
+    using autoboost::random::uniform_int_distribution;
 #endif
 
 } // namespace lib
