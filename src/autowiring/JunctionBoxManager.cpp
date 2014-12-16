@@ -11,9 +11,6 @@ JunctionBoxManager::JunctionBoxManager(void) {
   for (auto p = g_pFirstEventEntry; p; p = p->pFlink)
     m_junctionBoxes[p->ti] = p->NewJunctionBox();
   
-  // HACK, EventRegistry isn't detecting AutowiringEvents
-  m_junctionBoxes[typeid(AutowiringEvents)] = std::make_shared<JunctionBox<AutowiringEvents>>();
-  
   // Make sure AutowiringEvents is in EventRegistry
   assert(m_junctionBoxes.find(typeid(AutowiringEvents)) != m_junctionBoxes.end()
          && "AutowiringEvents wasn't added to the event registry");
