@@ -1,12 +1,10 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
-#include "AutoPacketInternal.h"
+#include "AutoPacketInternal.hpp"
 #include "fast_pointer_cast.h"
 #include "thread_specific_ptr.h"
 #include <cmath>
-
-template class ObjectPool<AutoPacket>;
 
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),

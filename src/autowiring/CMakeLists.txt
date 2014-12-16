@@ -29,7 +29,7 @@ set(Autowiring_SRCS
   AutoPacket.cpp
   AutoPacket.h
   AutoPacketInternal.cpp
-  AutoPacketInternal.h
+  AutoPacketInternal.hpp
   AutoPacketFactory.cpp
   AutoPacketFactory.h
   AutoPacketProfiler.cpp
