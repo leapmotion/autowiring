@@ -4,17 +4,7 @@
 
 class AutoNetServer;
 
-#ifdef _MSC_VER
-  #ifdef AUTOWIRING_EXPORT_AUTONET
-    #define AUTONET_EXPORT __declspec(dllexport)
-  #else
-    #define AUTONET_EXPORT __declspec(dllimport)
-  #endif
-#else
-  #define AUTONET_EXPORT
-#endif
-
-extern AUTONET_EXPORT AutoNetServer* NewAutoNetServerImpl(void);
+extern AutoNetServer* NewAutoNetServerImpl(void);
 
 class AutoNetServer:
   public CoreThread
