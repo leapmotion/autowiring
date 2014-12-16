@@ -11,6 +11,7 @@
 
 // define BOOST_SYSTEM_SOURCE so that <boost/system/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
+#include "stdafx.h"
 #define BOOST_SYSTEM_SOURCE
 
 #include <boost/system/error_code.hpp>
