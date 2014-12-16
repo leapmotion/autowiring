@@ -1026,3 +1026,17 @@ TEST_F(AutoFilterTest, AutoFilterInBaseClassNoAlias) {
   // Trivial validation that we got something back
   ASSERT_EQ(1UL, d->m_called) << "Filter defined in base class in an Object-inheriting type was not called the expected number of times";
 }
+
+TEST_F(AutoFilterTest, PacketTeardownNotificationCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  auto called = std::make_shared<bool>(false);
+
+  {
+    auto packet = factory->NewPacket();
+    packet->AddTeardownListener([called] { *called = true; });
+    ASSERT_FALSE(*called) << "Teardown listener called before packet was destroyed";
+  }
+
+  ASSERT_TRUE(*called) << "Teardown listener was not called after packet destruction";
+  ASSERT_TRUE(called.unique()) << "Teardown listener lambda function was leaked";
+}
