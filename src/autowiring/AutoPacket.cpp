@@ -370,3 +370,8 @@ bool AutoPacket::HasSubscribers(const std::type_info& data) const {
   std::lock_guard<std::mutex> lk(m_lock);
   return m_decorations.count(data) != 0;
 }
+
+std::shared_ptr<AutoPacket> AutoPacket::Successor(void) const {
+  std::shared_ptr<AutoPacket> retVal;
+  return retVal;
+}

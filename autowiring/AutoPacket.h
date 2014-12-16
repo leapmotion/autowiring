@@ -474,6 +474,11 @@ public:
 
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   bool HasSubscribers(const std::type_info& data) const;
+
+  /// <summary>
+  /// Returns the next packet that will be issued by the packet factory in this context relative to this context
+  /// </summary>
+  std::shared_ptr<AutoPacket> Successor(void) const;
 };
 
 #include "CallExtractor.h"
