@@ -6,11 +6,14 @@
 #include "JunctionBox.h"
 #include "EventRegistry.h"
 
+template class RegEvent<AutowiringEvents>;
+template class TypeUnifierComplex<AutowiringEvents>;
+
 JunctionBoxManager::JunctionBoxManager(void) {
   // Enumerate all event types to initialize a new JunctionBox for each
   for (auto p = g_pFirstEventEntry; p; p = p->pFlink)
     m_junctionBoxes[p->ti] = p->NewJunctionBox();
-  
+
   // Make sure AutowiringEvents is in EventRegistry
   assert(m_junctionBoxes.find(typeid(AutowiringEvents)) != m_junctionBoxes.end()
          && "AutowiringEvents wasn't added to the event registry");
