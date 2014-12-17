@@ -46,6 +46,7 @@ private:
   AutoPacket(AutoPacket&&) = delete;
 
 public:
+  // Must hold the lock to 'factory' when calling this constructor
   AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
 

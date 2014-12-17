@@ -16,8 +16,11 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outst
   m_initTime(std::chrono::high_resolution_clock::now()),
   m_outstanding(std::move(outstanding))
 {
-  // Traverse all contexts, adding their packet subscriber vectors one at a time:
-  for(const auto& curContext : ContextEnumerator(factory.GetContext())) {
+  // Add filters from our factory. We're holding the lock for this factory, so use unsafe
+  factory.AppendAutoFiltersToUnsafe(m_satCounters);
+  
+  // Traverse all descendant contexts, adding their packet subscriber vectors one at a time:
+  for(const auto& curContext : ContextEnumerator(factory.GetContext()->FirstChild())) {
     AutowiredFast<AutoPacketFactory> curFactory(curContext);
     if(curFactory)
       // Only insert if this context actually has a packet factory
@@ -374,7 +377,7 @@ bool AutoPacket::HasSubscribers(const std::type_info& data) const {
 std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
   std::lock_guard<std::mutex> lk(m_lock);
   
-  // If successor already exists, construct it
+  // If successor already exists, use it
   if (!m_successor.expired()){
     return m_successor.lock();
   }

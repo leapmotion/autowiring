@@ -9,6 +9,7 @@ class AutoPacketInternal:
   public AutoPacket
 {
 public:
+  // Must hold the lock to 'factory' when calling this constructor
   AutoPacketInternal(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacketInternal(void);
 

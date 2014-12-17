@@ -78,6 +78,10 @@ public:
   template<class T>
   void AppendAutoFiltersTo(T& container) const {
     std::lock_guard<std::mutex> lk(m_lock);
+    AppendAutoFiltersToUnsafe(container);
+  }
+  template<class T>
+  void AppendAutoFiltersToUnsafe(T& container) const {
     container.insert(container.end(), m_autoFilters.begin(), m_autoFilters.end());
   }
 
