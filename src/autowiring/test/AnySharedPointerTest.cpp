@@ -128,7 +128,7 @@ TEST_F(AnySharedPointerTest, SlotDuplication) {
     ASSERT_FALSE(slot1->empty()) << "A slot initialized from a shared pointer was incorrectly marked as empty";
 
     // Verify the type came across:
-    EXPECT_EQ(typeid(bool), slot1->type()) << "Dynamic initialization did not correctly adjust the dynamic type";
+    EXPECT_EQ(typeid(auto_id<bool>), slot1->type()) << "Dynamic initialization did not correctly adjust the dynamic type";
 
     // Now copy it over:
     slot2 = slot1;
@@ -179,7 +179,7 @@ TEST_F(AnySharedPointerTest, InitDerivesCorrectType) {
   AnySharedPointer slot;
   slot->init<int>();
 
-  ASSERT_EQ(typeid(int), slot->type()) << "A manually initialized slot did not have the expected type";
+  ASSERT_EQ(typeid(auto_id<int>), slot->type()) << "A manually initialized slot did not have the expected type";
 }
 
 TEST_F(AnySharedPointerTest, VoidReturnExpected) {

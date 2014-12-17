@@ -89,6 +89,23 @@ TEST_F(AutoFilterCollapseRulesTest, SharedPtrCollapse) {
   shared_filter->m_called = 0;
 }
 
+class UnnamedExternalClass;
+
+class AcceptsUnnamedExternalClass {
+public:
+  void AutoFilter(const UnnamedExternalClass&) {}
+};
+
+class AcceptsUnnamedExternalClassSharedPtr {
+public:
+  void AutoFilter(std::shared_ptr<const UnnamedExternalClass>) {}
+};
+
+TEST_F(AutoFilterCollapseRulesTest, CanAcceptUndefinedSharedPointerInput) {
+  AutoRequired<AcceptsUnnamedExternalClass> auec;
+  AutoRequired<AcceptsUnnamedExternalClassSharedPtr> auecsp;
+}
+
 #if AUTOWIRING_USE_LIBCXX
 TEST_F(AutoFilterCollapseRulesTest, SharedPointerAliasingRules) {
   AutoRequired<AutoPacketFactory> factory;

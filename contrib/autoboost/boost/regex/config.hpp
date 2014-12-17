@@ -207,17 +207,6 @@
 #  define BOOST_REGEX_DECL
 #endif
 
-#if !defined(BOOST_REGEX_NO_LIB) && !defined(BOOST_REGEX_SOURCE) && !defined(BOOST_ALL_NO_LIB) && defined(__cplusplus)
-#  define BOOST_LIB_NAME autoboost_regex
-#  if defined(BOOST_REGEX_DYN_LINK) || defined(BOOST_ALL_DYN_LINK)
-#     define BOOST_DYN_LINK
-#  endif
-#  ifdef BOOST_REGEX_DIAG
-#     define BOOST_LIB_DIAGNOSTIC
-#  endif
-#  include <boost/config/auto_link.hpp>
-#endif
-
 /*****************************************************************************
  *
  *  Set up function call type:

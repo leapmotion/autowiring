@@ -88,15 +88,6 @@ endif()
 add_pch(AutowiringTest_SRCS "stdafx.h" "stdafx.cpp")
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
 target_link_libraries(AutowiringTest Autowiring AutowiringFixture AutoTesting)
-if(NOT WIN32 AND NOT autowiring_USE_LIBCXX)
-  find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
-  target_link_libraries(AutowiringTest ${Boost_LIBRARIES})
-endif()
-
-# Need boost thread on android, because of our use of std::async
-if(BUILD_ANDROID)
-  target_link_libraries(AutowiringTest ${Boost_LIBRARIES})
-endif()
 
 # Need boost thread on android, because of our use of std::async
 if(BUILD_ANDROID)

@@ -6,16 +6,6 @@ class AutoNetServer;
 
 extern AutoNetServer* NewAutoNetServerImpl(void);
 
-#ifdef _MSC_VER
-  #ifdef AUTOWIRING_EXPORT_AUTONET
-    #define AUTONET_EXPORT __declspec(dllexport)
-  #else
-    #define AUTONET_EXPORT __declspec(dllimport)
-  #endif
-#else
-  #define AUTONET_EXPORT
-#endif
-
 class AutoNetServer:
   public CoreThread
 {
@@ -25,7 +15,7 @@ protected:
 public:
   virtual ~AutoNetServer();
 
-  static AUTONET_EXPORT AutoNetServer* New(void) {
+  static AutoNetServer* New(void) {
     return NewAutoNetServerImpl();
   }
 
