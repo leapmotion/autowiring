@@ -49,11 +49,20 @@ class AutoPacketGraph
 public:
   AutoPacketGraph();
   
+protected:
+  // A mapping of an edge to the number of times it was delivered
+  typedef std::unordered_map<DeliveryEdge, size_t, std::hash<DeliveryEdge>> t_deliveryGraph;
+  t_deliveryGraph m_deliveryGraph;
+  
+  // A lock for this type
+  mutable std::mutex m_lock;
+  
   /// <summary>
   /// Add an edge to the graph given the following parameters
   /// </summary>
   void AddEdge(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input);
   
+public:
   /// <summary>
   /// Get a copy of the packet via AutoFilter
   /// </summary>
@@ -63,11 +72,4 @@ public:
   /// Write the graph to a file in graphviz format
   /// </summary>
   bool WriteGV(const std::string& filename) const;
-  
-protected:
-  // A mapping of an edge to the number of times it was delivered
-  std::unordered_map<DeliveryEdge, size_t, std::hash<DeliveryEdge>> m_deliveryGraph;
-  
-  // A lock for this type
-  mutable std::mutex m_lock;
 };

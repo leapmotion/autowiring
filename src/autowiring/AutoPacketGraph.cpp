@@ -9,10 +9,10 @@
 #include <fstream>
 #include <string>
 
+
 AutoPacketGraph::AutoPacketGraph()
 {
 }
-
 
 void AutoPacketGraph::AddEdge(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input) {
   DeliveryEdge edge { ti, descriptor, input };
@@ -52,7 +52,7 @@ bool AutoPacketGraph::WriteGV(const std::string& filename) const
     return false;
   }
   
-  file << "digraph \"" << autowiring::demangle(CoreContext::CurrentContext()->GetSigilType()) << " context\" {\n";
+  file << "digraph \"" << autowiring::demangle(CoreContext::CurrentContext()->GetSigilType()) << " context\" {" << std::endl;
   
   std::lock_guard<std::mutex> lk(m_lock);
   
