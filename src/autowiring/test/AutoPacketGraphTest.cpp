@@ -102,7 +102,7 @@ TEST_F(AutoPacketGraphTest, SimpleAutoGraph) {
 //    ASSERT_EQ(int2, receiver4->m_int2);
   }
   
-  graph->ExportGV("/Users/jnguyen/Desktop/graph.gv");
+  graph->WriteGV("/Users/jnguyen/Desktop/graph.gv");
   
   // Shutdown our context, and rundown our factory
   ctxt->SignalShutdown();

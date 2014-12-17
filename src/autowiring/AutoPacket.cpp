@@ -55,12 +55,12 @@ AutoPacket::~AutoPacket(void) {
       DecorationDisposition& decoration = itr.second;
       
       if (decoration.m_publisher) {
-        apg->RecordDelivery(decoration.m_type, *decoration.m_publisher, false);
+        apg->AddEdge(decoration.m_type, *decoration.m_publisher, false);
       }
       
       for (auto& subscriber : decoration.m_subscribers) {
         if (subscriber->called) {
-          apg->RecordDelivery(decoration.m_type, *subscriber, true);
+          apg->AddEdge(decoration.m_type, *subscriber, true);
         }
       }
     }

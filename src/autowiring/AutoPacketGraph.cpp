@@ -9,7 +9,20 @@ AutoPacketGraph::AutoPacketGraph()
 {
 }
 
-bool AutoPacketGraph::ExportGV(const std::string& filename) const
+
+void AutoPacketGraph::AddEdge(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input) {
+  DeliveryEdge edge { ti, descriptor, input };
+  
+  std::lock_guard<std::mutex> lk(m_lock);
+  auto itr = m_deliveryGraph.find(edge);
+  if (itr == m_deliveryGraph.end()) {
+    m_deliveryGraph[edge] = 1;
+  } else {
+    itr->second++;
+  }
+}
+
+bool AutoPacketGraph::WriteGV(const std::string& filename) const
 {
   std::ofstream file(filename);
   if (!file && !file.good()) {
@@ -41,16 +54,4 @@ bool AutoPacketGraph::ExportGV(const std::string& filename) const
   file << "}\n";
   
   return true;
-}
-
-void AutoPacketGraph::RecordDelivery(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input) {
-  DeliveryEdge edge { ti, descriptor, input };
-  
-  std::lock_guard<std::mutex> lk(m_lock);
-  auto itr = m_deliveryGraph.find(edge);
-  if (itr == m_deliveryGraph.end()) {
-    m_deliveryGraph[edge] = 1;
-  } else {
-    itr->second++;
-  }
 }

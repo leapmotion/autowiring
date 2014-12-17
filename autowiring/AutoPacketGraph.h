@@ -49,9 +49,15 @@ class AutoPacketGraph
 public:
   AutoPacketGraph();
   
-  bool ExportGV(const std::string& filename) const;
+  /// <summary>
+  /// Add an edge to the graph given the following parameters
+  /// </summary>
+  void AddEdge(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input);
   
-  void RecordDelivery(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input);
+  /// <summary>
+  /// Write the graph to a file in graphviz format
+  /// </summary>
+  bool WriteGV(const std::string& filename) const;
   
 protected:
   // A mapping
