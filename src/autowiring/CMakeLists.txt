@@ -2,8 +2,10 @@
 # Setup testing
 #
 
-add_googletest(test)
-add_googletest(benchmark)
+if(autowiring_USE_LIBCXX)
+  add_googletest(test)
+  add_googletest(benchmark)
+endif()
 
 #
 # Configure source files
