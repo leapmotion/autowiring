@@ -14,7 +14,7 @@ class CoreJob:
 {
 public:
   CoreJob(const char* name = nullptr);
-  virtual ~CoreJob(){};
+  virtual ~CoreJob(void) {};
 
 private:
   // Flag, set to true when it's time to start dispatching

@@ -66,7 +66,7 @@ void CoreJob::DispatchAllAndClearCurrent(void) {
   }
 }
 
-bool CoreJob::DoStart() {
+bool CoreJob::DoStart(void) {
   std::shared_ptr<CoreContext> context = m_context.lock();
   if(!context) {
     return false;
@@ -75,9 +75,10 @@ bool CoreJob::DoStart() {
   m_running = true;
 
   std::unique_lock<std::mutex> lk;
-  if(!m_dispatchQueue.empty())
+  if(!m_dispatchQueue.empty()) {
     // Simulate a pending event, because we need to set up our async:
     OnPended(std::move(lk));
+  }
 
   return true;
 }
@@ -88,17 +89,18 @@ void CoreJob::Abort(void) {
 }
 
 void CoreJob::OnStop(bool graceful) {
-  if(graceful)
+  if(graceful) {
     // Pend a call which will invoke Abort once the dispatch queue is done:
     DispatchQueue::Pend(
       [this] {this->Abort();}
     );
-  else
+  } else {
     // Abort the dispatch queue so anyone waiting will wake up
     Abort();
+  }
 }
 
-void CoreJob::DoAdditionalWait() {
+void CoreJob::DoAdditionalWait(void) {
   if(m_curEvent.valid())
     m_curEvent.wait();
 }

@@ -37,7 +37,7 @@ protected:
   /// Invoked by the base class when a Stop call has been made
   /// </summary>
   /// <remarks>
-  /// This method will be called at most once, and may potentially be called even 
+  /// This method will be called at most once. 
   /// </remarks>
   virtual void OnStop(bool graceful) {};
 

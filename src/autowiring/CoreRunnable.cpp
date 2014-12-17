@@ -2,8 +2,6 @@
 #include "stdafx.h"
 #include "CoreRunnable.h"
 
-#include <iostream>
-
 // Explicit instantiation of supported time point types:
 template<> bool CoreRunnable::WaitUntil(std::chrono::steady_clock::time_point);
 template<> bool CoreRunnable::WaitUntil(std::chrono::system_clock::time_point);
@@ -17,9 +15,10 @@ CoreRunnable::~CoreRunnable(void) {}
 
 void CoreRunnable::Start(std::shared_ptr<Object> outstanding) {
   std::lock_guard<std::mutex> lk(m_lock);
-  if(m_wasStarted || m_outstanding || m_shouldStop)
+  if(m_wasStarted || m_outstanding || m_shouldStop) {
     // We have already been started or stopped, end here
     return;
+  }
 
   m_wasStarted = true;
   m_outstanding = outstanding;
@@ -75,4 +74,3 @@ bool CoreRunnable::WaitUntil(TimeType timepoint) {
   }
   return false;
 }
-
