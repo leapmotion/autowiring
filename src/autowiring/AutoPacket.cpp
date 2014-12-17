@@ -208,8 +208,8 @@ void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& dat
   entry.m_decoration = *ptr;
 }
 
-void AutoPacket::UnsafeComplete(bool ready, const std::type_info& data, DecorationDisposition*& entry) {
-  entry = &m_decorations[data];
+void AutoPacket::UnsafeComplete(bool ready, const std::type_info& ti, DecorationDisposition*& entry) {
+  entry = &m_decorations[ti];
 
   assert(entry->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
   assert(entry->isCheckedOut); // CompleteCheckout must follow Checkout
@@ -223,28 +223,69 @@ void AutoPacket::UnsafeComplete(bool ready, const std::type_info& data, Decorati
   entry->satisfied = true;
 }
 
-void AutoPacket::CompleteCheckout(bool ready, const std::type_info& data) {
+void AutoPacket::CompleteCheckout(bool ready, const std::type_info& ti) {
   DecorationDisposition* entry = nullptr;
   {
     // This allows us to retrieve correct entries for decorated input requests
     std::lock_guard<std::mutex> guard(m_lock);
-    UnsafeComplete(ready, data, entry);
+    UnsafeComplete(ready, ti, entry);
   }
   
   if (entry) {
     if (ready)
-      UpdateSatisfaction(entry->m_decoration->type());
+      UpdateSatisfaction(ti);
     else
-      MarkUnsatisfiable(entry->m_decoration->type());
+      MarkUnsatisfiable(ti);
   }
 }
 
-void AutoPacket::Put(AnySharedPointer&& in) {
-  const std::type_info& ti = in->type();
+const DecorationDisposition* AutoPacket::GetDisposition(const std::type_info& ti) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+
+  auto q = m_decorations.find(ti);
+  if (q != m_decorations.end() && q->second.satisfied)
+    return &q->second;
+
+  return nullptr;
+}
+
+bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  return m_decorations.count(ti) != 0;
+}
+
+const SatCounter& AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  for (auto& sat : m_satCounters)
+    if (sat.GetType() == &subscriber)
+      return sat;
+  throw autowiring_error("Attempted to get the satisfaction counter for an unavailable subscriber");
+}
+
+std::list<SatCounter> AutoPacket::GetSubscribers(const std::type_info& ti) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  std::list<SatCounter> subscribers;
+  t_decorationMap::const_iterator decoration = m_decorations.find(ti);
+  if (decoration != m_decorations.end())
+    for (auto& subscriber : decoration->second.m_subscribers)
+      subscribers.push_back(*subscriber);
+  return subscribers;
+}
+
+std::list<DecorationDisposition> AutoPacket::GetDispositions(const std::type_info& ti) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  std::list<DecorationDisposition> dispositions;
+  for (auto& disposition : m_decorations)
+    if (disposition.second.m_type == &ti)
+      dispositions.push_back(disposition.second);
+  return dispositions;
+}
+
+void AutoPacket::Put(const std::type_info& ti, SharedPointerSlot&& in) {
   auto& entry = m_decorations[ti];
   if(entry.satisfied || entry.isCheckedOut) {
     std::stringstream ss;
-    ss << "Cannot put type " << autowiring::demangle(in->type())
+    ss << "Cannot put type " << autowiring::demangle(in.type())
       << " on AutoPacket, the requested type already exists";
     throw std::runtime_error(ss.str());
   }
@@ -337,36 +378,4 @@ void AutoPacket::RemoveRecipient(Recipient&& recipient) {
   std::lock_guard<std::mutex> lk(m_lock);
   RemoveSatCounter(*q);
   m_satCounters.erase(q);
-}
-
-SatCounter AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {
-  std::lock_guard<std::mutex> lk(m_lock);
-  for (auto& sat : m_satCounters)
-    if (sat.GetType() == &subscriber)
-      return sat;
-  return SatCounter();
-}
-
-std::list<SatCounter> AutoPacket::GetSubscribers(const std::type_info& data) const {
-  std::lock_guard<std::mutex> lk(m_lock);
-  std::list<SatCounter> subscribers;
-  t_decorationMap::const_iterator decoration = m_decorations.find(data);
-  if (decoration != m_decorations.end())
-    for (auto& subscriber : decoration->second.m_subscribers)
-      subscribers.push_back(*subscriber);
-  return subscribers;
-}
-
-std::list<DecorationDisposition> AutoPacket::GetDispositions(const std::type_info& data) const {
-  std::lock_guard<std::mutex> lk(m_lock);
-  std::list<DecorationDisposition> dispositions;
-  for (auto& disposition : m_decorations)
-    if (disposition.second.m_type == &data)
-      dispositions.push_back(disposition.second);
-  return dispositions;
-}
-
-bool AutoPacket::HasSubscribers(const std::type_info& data) const {
-  std::lock_guard<std::mutex> lk(m_lock);
-  return m_decorations.count(data) != 0;
 }

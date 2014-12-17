@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "auto_id.h"
 #include <typeinfo>
 #include MEMORY_HEADER
 
@@ -37,7 +38,7 @@ public:
 
   ~AutoCheckout(void) {
     if(m_val)
-      (m_parent->*completion)(m_ready, typeid(T));
+      (m_parent->*completion)(m_ready, typeid(auto_id<T>));
   }
 
 private:
