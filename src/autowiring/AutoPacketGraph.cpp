@@ -21,8 +21,7 @@ bool AutoPacketGraph::ExportGV(const std::string& filename) const
   std::lock_guard<std::mutex> lk(m_lock);
   for (auto& itr : m_deliveryGraph) {
     const DeliveryEdge& edge = itr.first;
-    // TODO: use counts and labels
-//    size_t count = itr.second;
+    size_t count = itr.second;
     
     // string format: "type" -> "AutoFilter" (or vice versa)
     std::stringstream ss;
@@ -32,7 +31,9 @@ bool AutoPacketGraph::ExportGV(const std::string& filename) const
     } else {
       ss << autowiring::demangle(edge.descriptor.GetType()) << "\" -> \"" << autowiring::demangle(edge.type_info);
     }
-    ss << "\"" << std::endl;
+    
+    // TODO: count should probably be optional
+    ss << "\" [label=\"" << count << "\"];" << std::endl;
     
     file << ss.str();
   }
