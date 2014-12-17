@@ -18,6 +18,7 @@ bool AutoPacketGraph::ExportGV(const std::string& filename) const
   
   file << "digraph AutoPacketGraph {\n";
   
+  std::lock_guard<std::mutex> lk(m_lock);
   for (auto& itr : m_deliveryGraph) {
     const DeliveryEdge& edge = itr.first;
     // TODO: use counts and labels
@@ -44,6 +45,7 @@ bool AutoPacketGraph::ExportGV(const std::string& filename) const
 void AutoPacketGraph::RecordDelivery(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input) {
   DeliveryEdge edge { ti, descriptor, input };
   
+  std::lock_guard<std::mutex> lk(m_lock);
   auto itr = m_deliveryGraph.find(edge);
   if (itr == m_deliveryGraph.end()) {
     m_deliveryGraph[edge] = 1;

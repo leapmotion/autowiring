@@ -56,4 +56,7 @@ public:
 protected:
   // A mapping
   std::unordered_map<DeliveryEdge, size_t, std::hash<DeliveryEdge>> m_deliveryGraph;
+  
+  // A lock for this type
+  mutable std::mutex m_lock;
 };
