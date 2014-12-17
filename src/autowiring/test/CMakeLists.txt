@@ -6,6 +6,7 @@ set(AutowiringTest_SRCS
   AutoFilterCollapseRulesTest.cpp
   AutoInjectableTest.cpp
   AutoPacketFactoryTest.cpp
+  AutoPacketGraphTest.cpp
   AutoParameterTest.cpp
   AutoRestarterTest.cpp
   AutowiringTest.cpp

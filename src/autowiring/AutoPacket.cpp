@@ -3,6 +3,7 @@
 #include "AutoPacket.h"
 #include "Autowired.h"
 #include "AutoPacketFactory.h"
+#include "AutoPacketGraph.h"
 #include "AutoPacketProfiler.h"
 #include "AutoFilterDescriptor.h"
 #include "ContextEnumerator.h"
@@ -47,6 +48,23 @@ AutoPacket::~AutoPacket(void) {
       std::chrono::high_resolution_clock::now() - m_initTime
     )
   );
+  
+  Autowired<AutoPacketGraph> apg;
+  if (apg) {
+    for (auto& itr : m_decorations) {
+      DecorationDisposition& decoration = itr.second;
+      
+      if (decoration.m_publisher) {
+        apg->RecordDelivery(decoration.m_type, *decoration.m_publisher, false);
+      }
+      
+      for (auto& subscriber : decoration.m_subscribers) {
+        if (subscriber->called) {
+          apg->RecordDelivery(decoration.m_type, *subscriber, true);
+        }
+      }
+    }
+  }
 }
 
 DecorationDisposition& AutoPacket::CheckoutImmediateUnsafe(const std::type_info& ti, const void* pvImmed)
