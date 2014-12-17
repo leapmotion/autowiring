@@ -48,17 +48,33 @@ bool AutoPacketGraph::WriteGV(const std::string& filename) const
   file << "digraph AutoPacketGraph {\n";
   
   std::lock_guard<std::mutex> lk(m_lock);
+  
+  // Containers for the unique types and descriptors
+  std::unordered_set<const std::type_info*> types;
+  std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> descriptors;
+  
+  // draw the edges
   for (auto& itr : m_deliveryGraph) {
-    const DeliveryEdge& edge = itr.first;
-    size_t count = itr.second;
+    auto& edge = itr.first;
+    auto type = edge.type_info;
+    auto& descriptor = edge.descriptor;
+    auto count = itr.second;
+    
+    if (types.find(type) == types.end()) {
+      types.insert(type);
+    }
+    
+    if (descriptors.find(descriptor) == descriptors.end()) {
+      descriptors.insert(descriptor);
+    }
     
     // string format: "type" -> "AutoFilter" (or vice versa)
     std::stringstream ss;
     ss << "  \"";
     if (edge.input) {
-      ss << autowiring::demangle(edge.type_info) << "\" -> \"" << autowiring::demangle(edge.descriptor.GetType());
+      ss << autowiring::demangle(type) << "\" -> \"" << autowiring::demangle(descriptor.GetType());
     } else {
-      ss << autowiring::demangle(edge.descriptor.GetType()) << "\" -> \"" << autowiring::demangle(edge.type_info);
+      ss << autowiring::demangle(descriptor.GetType()) << "\" -> \"" << autowiring::demangle(type);
     }
     
     // TODO: count should probably be optional
@@ -66,6 +82,14 @@ bool AutoPacketGraph::WriteGV(const std::string& filename) const
     
     file << ss.str();
   }
+  file << std::endl;
+  
+  // Setup the shapes for the types and descriptors
+  for (auto& type : types)
+    file << "  \"" << autowiring::demangle(type) << "\" [shape=box];" << std::endl;
+  
+  for (auto& descriptor : descriptors)
+    file << "  \"" << autowiring::demangle(descriptor.GetType()) << "\" [shape=ellipse];" << std::endl;
   
   file << "}\n";
   
