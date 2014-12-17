@@ -12,6 +12,11 @@ namespace std {
       m_tuple(ele...)
     {}
     virtual ~tuple(void){}
+    
+    tuple& operator=(const tuple<Ts...>& other) {
+      m_tuple = other.m_tuple;
+      return *this;
+    }
 
     bool operator==(const tuple<Ts...>& other) const {
       return m_tuple == other.m_tuple;
@@ -23,6 +28,11 @@ namespace std {
 
     boost::tuple<Ts...> m_tuple;
   };
+  
+  template<typename... Ts>
+  ::std::tuple<Ts...> tie(const Ts&... val) {
+    return ::std::tuple<Ts...>(val...) ;
+  }
 
   template<int I, typename... Ts>
   auto get(const ::std::tuple<Ts...>& tup) -> decltype(boost::get<I>(tup.m_tuple)) {

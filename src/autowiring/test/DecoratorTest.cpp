@@ -28,8 +28,8 @@ TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   ASSERT_EQ(2UL, v.size()) << "Extracted an insufficient number of types from a known filter function";
 
   // Arguments MUST be in order:
-  EXPECT_EQ(typeid(Decoration<0>), *v[0]);
-  EXPECT_EQ(typeid(Decoration<1>), *v[1]);
+  ASSERT_EQ(typeid(auto_id<Decoration<0>>), *v[0]);
+  ASSERT_EQ(typeid(auto_id<Decoration<1>>), *v[1]);
 }
 
 TEST_F(DecoratorTest, VerifyEmptyExtraction) {
@@ -37,7 +37,7 @@ TEST_F(DecoratorTest, VerifyEmptyExtraction) {
 
   // Should be possible to obtain this value and have it remain valid even after the descriptor is gone
   const AutoFilterDescriptorInput* v = MakeAutoFilterDescriptor(obj).GetAutoFilterInput();
-  EXPECT_EQ(nullptr, v) << "Extracted arguments from an object known not to have a Filter method";
+  ASSERT_EQ(nullptr, v) << "Extracted arguments from an object known not to have a Filter method";
 }
 
 TEST_F(DecoratorTest, VerifySimplePacketDecoration) {
@@ -57,14 +57,14 @@ TEST_F(DecoratorTest, VerifySimplePacketDecoration) {
   auto& dec2 = packet->Get<Decoration<2>>();
 
   // Verify identities:
-  EXPECT_EQ(&knownDec0, &dec0) << "Decoration 0 returned at an incorrect location";
-  EXPECT_EQ(&knownDec1, &dec1) << "Decoration 1 returned at an incorrect location";
-  EXPECT_EQ(&knownDec2, &dec2) << "Decoration 2 returned at an incorrect location";
+  ASSERT_EQ(&knownDec0, &dec0) << "Decoration 0 returned at an incorrect location";
+  ASSERT_EQ(&knownDec1, &dec1) << "Decoration 1 returned at an incorrect location";
+  ASSERT_EQ(&knownDec2, &dec2) << "Decoration 2 returned at an incorrect location";
 
   // Verify content correctness:
-  EXPECT_EQ(0, dec0.i) << "Decoration 0 incorrectly persisted";
-  EXPECT_EQ(1, dec1.i) << "Decoration 1 incorrectly persisted";
-  EXPECT_EQ(2, dec2.i) << "Decoration 2 incorrectly persisted";
+  ASSERT_EQ(0, dec0.i) << "Decoration 0 incorrectly persisted";
+  ASSERT_EQ(1, dec1.i) << "Decoration 1 incorrectly persisted";
+  ASSERT_EQ(2, dec2.i) << "Decoration 2 incorrectly persisted";
 }
 
 TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
@@ -73,26 +73,24 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
   auto packet1 = factory->NewPacket();
 
   // Verify subscription-free status:
-  EXPECT_FALSE(packet1->HasSubscribers(typeid(Decoration<0>))) << "Subscription exists where one should not have existed";
+  ASSERT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
 
   // Create another packet where a subscriber exists:
   AutoRequired<FilterA> filterA;
   auto packet2 = factory->NewPacket();
 
   // Verify the first packet still does not have subscriptions:
-  EXPECT_EQ(nullptr, packet1->GetSatisfaction(typeid(FilterA)).GetType()) << "Subscription was incorrectly, retroactively added to a packet";
-  EXPECT_TRUE(packet1->GetSubscribers(typeid(Decoration<0>)).empty()) << "Subscription was incorrectly, retroactively added to a packet";
-  EXPECT_TRUE(packet1->GetDispositions(typeid(Decoration<0>)).empty()) << "Subscription was incorrectly, retroactively added to a packet";
-  EXPECT_FALSE(packet1->HasSubscribers(typeid(Decoration<0>))) << "Subscription was incorrectly, retroactively added to a packet";
+  ASSERT_THROW(packet1->GetSatisfaction<FilterA>(), autowiring_error) << "Subscription was incorrectly, retroactively added to a packet";
+  ASSERT_TRUE(packet1->GetSubscribers<Decoration<0>>().empty()) << "Subscription was incorrectly, retroactively added to a packet";
+  ASSERT_TRUE(packet1->GetDispositions<Decoration<0>>().empty()) << "Subscription was incorrectly, retroactively added to a packet";
+  ASSERT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
 
   // Verify the second one does:
-  auto sat = packet2->GetSatisfaction(typeid(FilterA));
-  EXPECT_NE(nullptr, sat.GetType()) << "Packet lacked an expected subscription";
-  EXPECT_TRUE(sat.IsInput(typeid(Decoration<0>),typeid(void))) << "Incorrect input test";
-  auto subs = packet2->GetSubscribers(typeid(Decoration<0>));
-  EXPECT_EQ(1UL, subs.size()) << "Incorrect subscriber count";
-  auto disps = packet2->GetDispositions(typeid(Decoration<0>));
-  EXPECT_EQ(1UL, disps.size()) << "Incorrect count of expected decorations";
-  EXPECT_FALSE(disps.front().satisfied) << "Incorrect satisfaction status";
-  EXPECT_TRUE(packet2->HasSubscribers(typeid(Decoration<0>))) << "Packet lacked an expected subscription";
+  ASSERT_THROW(packet2->GetSatisfaction<FilterA>(), autowiring_error) << "Packet lacked an expected subscription";
+  auto subs = packet2->GetSubscribers<Decoration<0>>();
+  ASSERT_EQ(1UL, subs.size()) << "Incorrect subscriber count";
+  auto disps = packet2->GetDispositions<Decoration<0>>();
+  ASSERT_EQ(1UL, disps.size()) << "Incorrect count of expected decorations";
+  ASSERT_FALSE(disps.front().satisfied) << "Incorrect satisfaction status";
+  ASSERT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
 }

@@ -7,49 +7,55 @@
 /// <summary>
 /// Fundamental type of required input arguments of AutoFilter methods.
 /// </summary>
-/// <remarks>
-/// Argument types that resolve to and from auto_in are:
-///  const T&
-///  std::shared_ptr<const T>
-/// </remarks>
-template <class type>
-class auto_in:
-  public std::shared_ptr<const type>
+template<class T>
+class auto_in
 {
-  auto_in (auto_in<type>& rhs) = delete;
-  auto_in& operator = (auto_in<type>& rhs) = delete;
-
 public:
-  typedef type id_type;
-  typedef const type& base_type;
-  typedef std::shared_ptr<const type> shared_type;
-
+  typedef std::shared_ptr<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
 
-  operator base_type () const {
-    return *(this->get());
-  }
-
-  operator shared_type () {
-    return *this;
-  }
-
-  auto_in ():
-    shared_type(nullptr)
+  auto_in(AutoPacket& packet) :
+    packet(packet),
+    m_value(packet.Get<T>())
   {}
 
-  auto_in (auto_in<type>&& rhs):
-    shared_type(std::move(rhs))
+private:
+  const AutoPacket& packet;
+  const T& m_value;
+
+public:
+  DEPRECATED(operator bool(void) const, "This test is unnecessary, auto_in will always be satisfied") {
+    return true;
+  }
+
+  const std::shared_ptr<const T>& get(void) const {
+    const std::shared_ptr<const T>* retVal;
+    if(!packet.Get(retVal))
+      throw std::runtime_error("Shared pointer not available on this type");
+    return *retVal;
+  }
+
+  operator const T&() const { return m_value; }
+  operator std::shared_ptr<const T>() const { return get(); }
+  const T& operator*(void) const { return m_value; }
+  const T* operator->(void) const { return &m_value; }
+};
+
+
+template<>
+class auto_in<AutoPacket>
+{
+public:
+  auto_in(AutoPacket& packet) :
+    packet(packet)
   {}
 
-  auto_in& operator = (auto_in<type>&& rhs) {
-    shared_type::reset();
-    static_cast<shared_type&>(*this) = std::move(rhs);
-    return *this;
-  }
+private:
+  AutoPacket& packet;
 
-  auto_in (std::shared_ptr<AutoPacket> packet, const std::type_info& source = typeid(void)) {
-    packet->Get(*this, source);
-  }
+public:
+  operator AutoPacket&() const { return packet; }
+  AutoPacket& operator*(void) const { return packet; }
+  AutoPacket* operator->(void) const { return &packet; }
 };

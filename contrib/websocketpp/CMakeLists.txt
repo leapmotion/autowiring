@@ -137,64 +137,7 @@ if (BUILD_TESTS OR BUILD_EXAMPLES)
 
     ############ Dependencies
 
-    # Set BOOST_ROOT env variable or pass with cmake -DBOOST_ROOT=path.
-    # BOOST_ROOT can also be defined by a previous run from cmake cache.
-    if (NOT "$ENV{BOOST_ROOT_CPP11}" STREQUAL "")
-        # Scons documentation for BOOST_ROOT_CPP11:
-        # "look for optional second boostroot compiled with clang's libc++ STL library
-        # this prevents warnings/errors when linking code built with two different
-        # incompatible STL libraries."
-        file (TO_CMAKE_PATH "$ENV{BOOST_ROOT_CPP11}" BOOST_ROOT)
-        set (BOOST_ROOT ${BOOST_ROOT} CACHE PATH "BOOST_ROOT dependency path" FORCE)
-    endif ()
-    if ("${BOOST_ROOT}" STREQUAL "")
-        file (TO_CMAKE_PATH "$ENV{BOOST_ROOT}" BOOST_ROOT)
-        # Cache BOOST_ROOT for runs that do not define $ENV{BOOST_ROOT}.
-        set (BOOST_ROOT ${BOOST_ROOT} CACHE PATH "BOOST_ROOT dependency path" FORCE)
-    endif ()
-
-    message ("* Configuring Boost")
-    message (STATUS "-- Using BOOST_ROOT")
-    message (STATUS "       " ${BOOST_ROOT})
-
-    if (MSVC)
-        set (Boost_USE_MULTITHREADED TRUE)
-        set (Boost_USE_STATIC_LIBS TRUE)
-    else ()
-        set (Boost_USE_MULTITHREADED FALSE)
-        set (Boost_USE_STATIC_LIBS FALSE)
-    endif ()
-
-    set (Boost_FIND_REQUIRED TRUE)
-    set (Boost_FIND_QUIETLY TRUE)
-    set (Boost_DEBUG FALSE)
-    set (Boost_USE_MULTITHREADED TRUE)
-    set (Boost_ADDITIONAL_VERSIONS "1.39.0" "1.40.0" "1.41.0" "1.42.0" "1.43.0" "1.44.0" "1.46.1") # todo: someone who knows better spesify these!
-
-    find_package (Boost 1.39.0 COMPONENTS "${WEBSOCKETPP_BOOST_LIBS}")
-
-    if (Boost_FOUND)
-        # Boost is a project wide global dependency.
-        include_directories (${Boost_INCLUDE_DIRS})
-        link_directories (${Boost_LIBRARY_DIRS})
-
-        # Pretty print status
-        message (STATUS "-- Include Directories")
-        foreach (include_dir ${Boost_INCLUDE_DIRS})
-            message (STATUS "       " ${include_dir})
-        endforeach ()
-        message (STATUS "-- Library Directories")
-        foreach (library_dir ${Boost_LIBRARY_DIRS})
-            message (STATUS "       " ${library_dir})
-        endforeach ()
-        message (STATUS "-- Libraries")
-        foreach (boost_lib ${Boost_LIBRARIES})
-            message (STATUS "       " ${boost_lib})
-        endforeach ()
-        message ("")
-    else ()
-        message (FATAL_ERROR "Failed to find required dependency: boost")
-    endif ()
+    include_directories (${PROJECT_SOURCE_DIR}/contrib/autoboost)
 
     find_package(OpenSSL)
 endif()
@@ -226,4 +169,3 @@ install (FILES
   "websocketpp-config.cmake"
   "websocketpp-configVersion.cmake"
   DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
-

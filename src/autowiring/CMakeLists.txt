@@ -2,140 +2,151 @@
 # Setup testing
 #
 
-add_googletest(test)
-add_googletest(benchmark)
+if(autowiring_USE_LIBCXX)
+  add_googletest(test)
+  add_googletest(benchmark)
+endif()
 
 #
 # Configure source files
 #
 
 set(Autowiring_SRCS
+  AnySharedPointer.cpp
+  AnySharedPointer.h
+  atomic_object.h
   at_exit.h
+  auto_id.h
+  AutoCheckout.h
+  AutoConfig.cpp
+  AutoConfig.h
+  AutoConfigManager.cpp
+  AutoConfigManager.h
+  AutoConfigParser.cpp
+  AutoConfigParser.hpp
+  AutoFilterDescriptor.h
+  AutoFuture.cpp
+  AutoFuture.h
+  AutoInjectable.cpp
+  AutoInjectable.h
+  AutoPacket.cpp
+  AutoPacket.h
+  AutoPacketInternal.cpp
+  AutoPacketInternal.h
+  AutoPacketFactory.cpp
+  AutoPacketFactory.h
+  AutoPacketProfiler.cpp
+  AutoPacketProfiler.h
+  AutoParameter.h
+  AutoRestarter.h
+  AutoSelfUpdate.h
+  AutoTimeStamp.h
+  AutowirableSlot.cpp
+  AutowirableSlot.h
+  Autowired.cpp
+  Autowired.h
+  autowiring.h
+  AutowiringConfig.h
+  AutowiringConfig.h
+  AutowiringEvents.cpp
+  AutowiringEvents.h
+  autowiring_error.cpp
+  autowiring_error.h
+  auto_arg.h
   auto_in.h
   auto_out.h
-  auto_arg.h
-  auto_arg.cpp
-  AnySharedPointer.h
-  AnySharedPointer.cpp
-  AutoCheckout.h
-  AutoRestarter.h
-  AutoFuture.h
-  AutoFuture.cpp
-  AutowiringConfig.h
-  CoreJob.h
-  CoreJob.cpp
-  AutoFilterDescriptor.h
-  AutoInjectable.h
-  AutoInjectable.cpp
-  AutoMerge.h
-  AutoPacket.h
-  AutoPacket.cpp
-  AutoPacketFactory.h
-  AutoPacketFactory.cpp
-  AutoPacketProfiler.h
-  AutoPacketProfiler.cpp
-  AutoSelfUpdate.h
-  AutoStile.h
-  AutoTimeStamp.h
-  Autowired.h
-  Autowired.cpp
-  AutowirableSlot.h
-  AutowirableSlot.cpp
-  AutowiringConfig.h
-  AutowiringEvents.h
-  AutowiringEvents.cpp
-  autowiring.h
-  autowiring_error.h
-  autowiring_error.cpp
-  BasicThread.h
   BasicThread.cpp
-  BasicThreadStateBlock.h
+  BasicThread.h
   BasicThreadStateBlock.cpp
+  BasicThreadStateBlock.h
   Bolt.h
-  BoltBase.h
   BoltBase.cpp
+  BoltBase.h
   CallExtractor.h
+  ConfigRegistry.cpp
+  ConfigRegistry.h
   ContextCreator.h
-  ContextCreatorBase.h
   ContextCreatorBase.cpp
-  ContextEnumerator.h
+  ContextCreatorBase.h
   ContextEnumerator.cpp
+  ContextEnumerator.h
   ContextMap.h
   ContextMember.cpp
   ContextMember.h
   CoreContext.cpp
   CoreContext.h
-  CoreContextStateBlock.h
   CoreContextStateBlock.cpp
+  CoreContextStateBlock.h
+  CoreJob.cpp
+  CoreJob.h
+  CoreRunnable.cpp
+  CoreRunnable.h
   CoreThread.cpp
   CoreThread.h
-  CoreRunnable.h
-  CoreRunnable.cpp
   CreationRules.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
-  DataFlow.h
   DeclareAutoFilter.h
-  DeclareElseFilter.h
   Decompose.h
   DecorationDisposition.h
-  Deserialize.h
   Deferred.h
-  demangle.h
   demangle.cpp
-  DispatchQueue.h
+  demangle.h
+  Deserialize.h
   DispatchQueue.cpp
+  DispatchQueue.h
   DispatchThunk.h
   EventInputStream.h
-  EventOutputStream.h
   EventOutputStream.cpp
-  EventRegistry.h
+  EventOutputStream.h
   EventRegistry.cpp
-  fast_pointer_cast.h
-  JunctionBox.h
-  JunctionBoxBase.h
-  JunctionBoxBase.cpp
-  JunctionBoxEntry.h
-  JunctionBoxManager.h
-  JunctionBoxManager.cpp
-  ExceptionFilter.h
+  EventRegistry.h
   ExceptionFilter.cpp
+  ExceptionFilter.h
+  expect.hpp
+  fast_pointer_cast.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
-  has_autoinit.h
+  hash_tuple.h
   has_autofilter.h
+  has_autoinit.h
   has_simple_constructor.h
   has_static_new.h
+  has_validate.h
   hash_tuple.h
   index_tuple.h
-  is_any.h
-  is_shared_ptr.h
   InterlockedExchange.h
   InvokeRelay.h
-  atomic_object.h
+  is_any.h
+  is_shared_ptr.h
+  JunctionBox.h
+  JunctionBoxBase.cpp
+  JunctionBoxBase.h
+  JunctionBoxEntry.h
+  JunctionBoxManager.cpp
+  JunctionBoxManager.h
   member_new_type.h
-  Object.h
-  Object.cpp
-  ObjectPool.h
-  ObjectPoolMonitor.h
-  ObjectPoolMonitor.cpp
-  ObjectTraits.h
-  optional_ptr.h
-  SatCounter.h
   MicroAutoFilter.h
   MicroBolt.h
   NewAutoFilter.h
+  Object.cpp
+  Object.h
+  ObjectPool.h
+  ObjectPoolMonitor.cpp
+  ObjectPoolMonitor.h
+  ObjectTraits.h
+  SatCounter.h
   SharedPointerSlot.h
-  SlotInformation.h
   SlotInformation.cpp
-  TeardownNotifier.h
+  SlotInformation.h
   TeardownNotifier.cpp
-  ThreadStatusBlock.h
+  TeardownNotifier.h
   ThreadStatusBlock.cpp
+  ThreadStatusBlock.h
   thread_specific_ptr.h
   TypeIdentifier.h
-  TypeRegistry.h
   TypeRegistry.cpp
+  TypeRegistry.h
   TypeUnifier.h
   unlock_object.h
   uuid.h
@@ -154,46 +165,43 @@ if(NOT APPLE)
   )
 endif()
 
-set(Autowiring_Win_SRCS
+add_windows_sources(Autowiring_SRCS
   CoreThreadWin.cpp
   InterlockedExchangeWin.cpp
   thread_specific_ptr_win.h
 )
 
-set(Autowiring_Unix_SRCS
-  InterlockedExchangeUnix.cpp
-  thread_specific_ptr_unix.h
+add_mac_sources(Autowiring_SRCS
+  CoreThreadMac.cpp
 )
 
-set(Autowiring_Mac_SRCS
-  CoreThreadMac.cpp
+add_unix_sources(Autowiring_SRCS
+  InterlockedExchangeUnix.cpp
+  thread_specific_ptr_unix.h
 )
 
 set(Autowiring_Linux_SRCS
   CoreThreadLinux.cpp
 )
 
-ADD_MSVC_DISABLED_FILES("Unix Source" Autowiring_SRCS ${Autowiring_Unix_SRCS})
+add_conditional_sources(Autowiring_SRCS "NOT MSVC" GROUP_NAME "Non-Windows Source" FILES ${Autowiring_Unix_SRCS})
 
-if(WIN32)
- set(Autowiring_SRCS ${Autowiring_Win_SRCS} ${Autowiring_SRCS})
+add_conditional_sources(Autowiring_SRCS "WIN32 AND NOT autowiring_BUILD_64"
+  GROUP_NAME "ASMx86 Source"
+  FILES interlocked.asm
+)
 
-  if(!BUILD_64_BIT)
-    enable_language(ASM_MASM)
-    set(Autowiring_SRCS interlocked.asm ${Autowiring_SRCS} )
-  endif()
-else()
-  if(APPLE)
-    set(Autowiring_SRCS ${Autowiring_Mac_SRCS} ${Autowiring_SRCS})
-  else()
-    set(Autowiring_SRCS ${Autowiring_Linux_SRCS} ${Autowiring_SRCS})
-  endif()
-
-  set(Autowiring_SRCS ${Autowiring_Unix_SRCS} ${Autowiring_SRCS})
+if(WIN32 AND NOT BUILD_64_BIT)
+  enable_language(ASM_MASM)
 endif()
 
+add_conditional_sources(Autowiring_SRCS "NOT WIN32 AND NOT APPLE"
+  GROUP_NAME "Linux Source"
+  FILES CoreThreadLinux.cpp
+)
+
 rewrite_header_paths(Autowiring_SRCS)
-ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" Autowiring_SRCS)
+add_pch(Autowiring_SRCS "stdafx.h" "stdafx.cpp")
 
 #
 # Configure library
@@ -229,7 +237,7 @@ endif()
 if(NOT AUTOWIRING_IS_EMBEDDED)
   install(TARGETS Autowiring EXPORT AutowiringTargets
     DESTINATION lib
-    COMPONENT autowiring 
+    COMPONENT autowiring
     CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
   )
 endif()

@@ -49,18 +49,8 @@ if(Threads_FOUND)
 endif()
 
 if(TARGET Autowiring::AutoNet)
-  find_package(Boost COMPONENTS thread atomic chrono system date_time regex QUIET)
-  if(NOT Boost_FOUND)
-    message("Cannot build AutoNetExample, boost not installed on this system")
-    return()
-  endif()
-
-  include_directories(
-    ${Boost_INCLUDE_DIR}
-  )
-
   add_executable(AutoNetExample AutoNetExample.cpp)
-  target_link_libraries(AutoNetExample Autowiring::Autowiring Autowiring::AutoNet ${Boost_LIBRARIES})
+  target_link_libraries(AutoNetExample Autowiring::Autowiring Autowiring::AutoNet)
   if(Threads_FOUND)
     if(CMAKE_USE_PTHREADS_INIT)
       target_link_libraries(AutoNetExample ${CMAKE_THREAD_LIBS_INIT})

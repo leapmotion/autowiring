@@ -5,7 +5,6 @@
 #include "AutoFilterDescriptor.h"
 #include "ContextMember.h"
 #include "CoreRunnable.h"
-#include "ObjectPool.h"
 #include <list>
 #include <vector>
 #include CHRONO_HEADER
@@ -48,15 +47,8 @@ private:
   // Outstanding reference if this factory is currently running:
   std::shared_ptr<Object> m_outstanding;
 
-  /// <summary>
-  /// An independently maintained object pool just for packets
-  /// </summary>
-  /// <remarks>
-  /// The object pool defined here is provided mainly to allow detection of
-  /// pipeline packet expiration in order to support expiration notification
-  /// broadcasts.
-  /// </remarks>
-  ObjectPool<AutoPacket> m_packets;
+  // Internal outstanding reference for issued packet:
+  std::weak_ptr<void> m_outstandingInternal;
 
   // Collection of known subscribers
   typedef std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> t_autoFilterSet;
@@ -66,6 +58,9 @@ private:
   long long m_packetCount;
   double m_packetDurationSum;
   double m_packetDurationSqSum;
+
+  // Returns the internal outstanding count, for use with AutoPacket
+  std::shared_ptr<void> GetInternalOutstanding(void);
 
   // Recursive invalidation routine, causes AutoPacket object pools to be dumped to the root
   void Invalidate(void);
@@ -121,84 +116,6 @@ public:
   /// <param name="autoFilter">The AutoFilter to be removed</param>
   void RemoveSubscriber(const AutoFilterDescriptor& autoFilter);
 
-  /// <summary>
-  /// Sets the broadcast status for the specified output from the node.
-  /// </summary>
-  /// <remarks>
-  /// When dataType = nullptr the broadcast status is set for all declared input and output data.
-  /// </remarks>
-  template<class node>
-  void BroadcastDataOut(const std::type_info* dataType = nullptr, bool enable = true) {
-    const std::type_info* nodeType = &typeid(typename SelectTypeUnifier<node>::type);
-    if (dataType) {
-      GetContext()->NotifyWhenAutowired<node>(
-        [this, nodeType, dataType, enable](){
-        BroadcastOneDataOut(nodeType, dataType, enable);
-      });
-    } else {
-      GetContext()->NotifyWhenAutowired<node>(
-        [this, nodeType, enable](){
-        BroadcastAllDataOut(nodeType, enable);
-      });
-    }
-  }
-
-  /// <summary>
-  /// Sets the broadcast status for the specified output from the node.
-  /// </summary>
-  /// <remarks>
-  /// When dataType = nullptr the broadcast status is set for all declared input and output data.
-  /// </remarks>
-  template<class node>
-  void BroadcastDataIn(const std::type_info* dataType = nullptr, bool enable = true) {
-    const std::type_info* nodeType = &typeid(typename SelectTypeUnifier<node>::type);
-    if (dataType) {
-      GetContext()->NotifyWhenAutowired<node>(
-        [this, nodeType, dataType, enable](){
-        BroadcastOneDataIn(nodeType, dataType, enable);
-      });
-    } else {
-      GetContext()->NotifyWhenAutowired<node>(
-        [this, nodeType, enable](){
-        BroadcastAllDataIn(nodeType, enable);
-      });
-    }
-  }
-
-  /// <summary>
-  /// Establishes a data pipe from nodeIn to nodeOut.
-  /// </summary>
-  /// <remarks>
-  /// When dataType = nullptr pipes are established for all declared data
-  /// that are outputs of nodeOut and inputs to nodeIn
-  /// If nodeOut includes AutoPacket& as an argument then pipes will be defined
-  /// for all declared input types of nodeIn. Likewise, if nodeIn declares
-  /// AutoPacket& or const AutoPacket& as an argument then pipes will be defined
-  /// for all declared outputs of nodeOut.
-  /// </remarks>
-  template<class nodeOut, class nodeIn>
-  void PipeData(const std::type_info* dataType = nullptr, bool enable = true) {
-    const std::type_info* nodeOutType = &typeid(typename SelectTypeUnifier<nodeOut>::type);
-    const std::type_info* nodeInType = &typeid(typename SelectTypeUnifier<nodeIn>::type);
-    if (dataType) {
-      GetContext()->NotifyWhenAutowired<nodeOut>(
-        [this, nodeOutType, nodeInType, dataType, enable](){
-        GetContext()->NotifyWhenAutowired<nodeIn>(
-        [this, nodeOutType, nodeInType, dataType, enable](){
-          PipeOneData(nodeOutType, nodeInType, dataType, enable);
-        });
-      });
-    } else {
-      GetContext()->NotifyWhenAutowired<nodeOut>(
-        [this, nodeOutType, nodeInType, enable](){
-        GetContext()->NotifyWhenAutowired<nodeIn>(
-        [this, nodeOutType, nodeInType, enable](){
-          PipeAllData(nodeOutType, nodeInType, enable);
-        });
-      });
-    }
-  }
-
 protected:
   /// <summary>
   /// Returns a description of the AutoFilter associated with the type nodeType
@@ -207,15 +124,6 @@ protected:
   /// If a matching description was not found GetTypeDescriptor(type).GetAutoFilterTypeInfo() == nullptr
   /// </remarks>
   AutoFilterDescriptor GetTypeDescriptorUnsafe(const std::type_info* nodeType);
-
-  void BroadcastOneDataIn(const std::type_info* nodeType, const std::type_info* dataType, bool enable);
-  void BroadcastAllDataIn(const std::type_info* nodeType, bool enable);
-
-  void BroadcastOneDataOut(const std::type_info* nodeType, const std::type_info* dataType, bool enable);
-  void BroadcastAllDataOut(const std::type_info* nodeType, bool enable);
-
-  void PipeOneData(const std::type_info* nodeOutType, const std::type_info* nodeInType, const std::type_info* dataType, bool enable);
-  void PipeAllData(const std::type_info* nodeOutType, const std::type_info* nodeInType, bool enable);
 
   static bool IsAutoPacketType(const std::type_info& dataType);
 

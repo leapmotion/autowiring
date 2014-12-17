@@ -54,12 +54,12 @@ namespace lib {
 
     typedef std::unique_ptr<unsigned char[]> unique_ptr_uchar_array;
 #else
-    using boost::shared_ptr;
-    using boost::weak_ptr;
-    using boost::enable_shared_from_this;
-    using boost::static_pointer_cast;
+    using autoboost::shared_ptr;
+    using autoboost::weak_ptr;
+    using autoboost::enable_shared_from_this;
+    using autoboost::static_pointer_cast;
 
-    typedef boost::scoped_array<unsigned char> unique_ptr_uchar_array;
+    typedef autoboost::scoped_array<unsigned char> unique_ptr_uchar_array;
 #endif
 
 } // namespace lib

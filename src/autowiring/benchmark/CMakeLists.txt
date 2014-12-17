@@ -7,7 +7,7 @@ set(AutowiringBenchmarkTest_SRCS
   CanBoostPriorityTest.cpp
 )
 
-ADD_MSVC_PRECOMPILED_HEADER("stdafx.h" "stdafx.cpp" AutowiringBenchmarkTest_SRCS)
+add_pch(AutowiringBenchmarkTest_SRCS "stdafx.h" "stdafx.cpp")
 add_executable(AutowiringBenchmarkTest ${AutowiringBenchmarkTest_SRCS})
 target_link_libraries(AutowiringBenchmarkTest Autowiring AutowiringFixture AutoTesting)
 set_property(TARGET AutowiringBenchmarkTest PROPERTY FOLDER "Autowiring")

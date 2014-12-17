@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
-#include "AutoPacket.h"
+#include "AutoPacketInternal.h"
 #include "fast_pointer_cast.h"
 #include "thread_specific_ptr.h"
 #include <cmath>
@@ -12,7 +12,7 @@ AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
   m_parent(GetContext()->GetParentContext()),
   m_wasStopped(false),
-  m_packets(AutoPacket::CreateObjectPool(*this, m_outstanding)),
+  m_outstanding(0),
   m_packetCount(0),
   m_packetDurationSum(0),
   m_packetDurationSqSum(0)
@@ -29,11 +29,12 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   if(!IsRunning())
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
-  // Obtain a packet, return it
-  std::shared_ptr<AutoPacket> retVal;
-  m_packets(retVal);
-
-  // Done, return
+  // Obtain a packet, initialize it, return it
+  auto retVal = std::make_shared<AutoPacketInternal>(
+    *this,
+    GetInternalOutstanding()
+  );
+  retVal->Initialize();
   return retVal;
 }
 
@@ -55,13 +56,33 @@ bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
   return true;
 }
 
+std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
+  auto retVal = m_outstandingInternal.lock();
+  if (retVal)
+    return retVal;
+
+  auto outstanding = m_outstanding;
+  retVal = std::shared_ptr<void>(
+    (void*)1,
+    [this, outstanding] (void*) mutable {
+      std::lock_guard<std::mutex> lk(m_lock);
+      m_stateCondition.notify_all();
+
+      // Weak pointer will prevent our lambda from being destroyed, so we manually reset
+      // the outstanding counter in order to force it to be reset here
+      outstanding.reset();
+    }
+  );
+  m_outstandingInternal = retVal;
+  return retVal;
+}
+
 void AutoPacketFactory::Stop(bool graceful) {
   // Return optimization
   if(m_wasStopped)
     return;
 
   // Kill the object pool
-  m_packets.SetOutstandingLimit(0);
   Invalidate();
 
   // Queue of local variables to be destroyed when leaving scope
@@ -88,17 +109,16 @@ void AutoPacketFactory::Clear(void) {
 }
 
 void AutoPacketFactory::Wait(void) {
-  {
-    std::unique_lock<std::mutex> lk(m_lock);
-    m_stateCondition.wait(lk, [this]{ return ShouldStop(); });
-  }
-
-  // Now we need to block until all packets come back to the object pool:
-  m_packets.Rundown();
+  std::unique_lock<std::mutex> lk(m_lock);
+  m_stateCondition.wait(
+    lk,
+    [this]{
+      return ShouldStop() && m_outstandingInternal.expired();
+    }
+  );
 }
 
 void AutoPacketFactory::Invalidate(void) {
-  m_packets.ClearCachedEntities();
   if(m_parent)
     m_parent->Invalidate();
 }
@@ -134,219 +154,8 @@ AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(const std::type_
   return AutoFilterDescriptor();
 }
 
-void AutoPacketFactory::BroadcastOneDataOut(const std::type_info* nodeType, const std::type_info* dataType, bool enable) {
-  {
-    if (IsAutoPacketType(*dataType)) {
-      // AutoPacket is always broacast to the entire context
-      return;
-    }
-
-    std::lock_guard<std::mutex> guard(m_lock);
-
-    // Find and copy the AutoFilterDescriptor instance.
-    AutoFilterDescriptor update = GetTypeDescriptorUnsafe(nodeType);
-    if (!update.GetAutoFilterTypeInfo())
-      return;
-
-    const AutoFilterDescriptorInput* argDescriptor = update.GetArgumentType(dataType);
-    if (!argDescriptor ||
-        !argDescriptor->is_output) {
-      std::stringstream ss;
-      ss << "Attempted to transmit broadcasts of a type " << dataType->name()
-      << " that is not an output of " << nodeType->name();
-      throw std::runtime_error(ss.str());
-    }
-
-    // Extract, modify and insert the broadcast state
-    m_autoFilters.erase(update);
-    update.Broadcast(dataType, enable);
-    m_autoFilters.insert(update);
-  }
-  Invalidate();
-}
-
-void AutoPacketFactory::BroadcastAllDataOut(const std::type_info* nodeType, bool enable) {
-  {
-    std::lock_guard<std::mutex> guard(m_lock);
-
-    // Find and copy the AutoFilterDescriptor instance.
-    AutoFilterDescriptor update = GetTypeDescriptorUnsafe(nodeType);
-    if (!update.GetAutoFilterTypeInfo())
-      return;
-
-    // Extract, modify and insert the broadcast state
-    m_autoFilters.erase(update);
-    // All input data types accept broadcasts
-    // NOTE: Iteration is over a static array terminated with nullptr
-    for (const AutoFilterDescriptorInput* pArg = update.GetAutoFilterInput(); *pArg; ++pArg) {
-      if (pArg->is_output)
-        update.Broadcast(pArg->ti, enable);
-    }
-    m_autoFilters.insert(update);
-  }
-  Invalidate();
-}
-
-void AutoPacketFactory::BroadcastOneDataIn(const std::type_info* nodeType, const std::type_info* dataType, bool enable) {
-  {
-    if (IsAutoPacketType(*dataType)) {
-      // AutoPacket is always broacast to the entire context
-      return;
-    }
-
-    std::lock_guard<std::mutex> guard(m_lock);
-
-    // Find and copy the AutoFilterDescriptor instance.
-    AutoFilterDescriptor update = GetTypeDescriptorUnsafe(nodeType);
-    if (!update.GetAutoFilterTypeInfo())
-      return;
-
-    const AutoFilterDescriptorInput* argDescriptor = update.GetArgumentType(dataType);
-    if (!argDescriptor ||
-        !argDescriptor->is_input) {
-      std::stringstream ss;
-      ss << "Attempted to receive broadcasts of a type " << dataType->name()
-      << " that is not an input to " << nodeType->name();
-      throw std::runtime_error(ss.str());
-    }
-
-    // Extract, modify and insert the broadcast state
-    m_autoFilters.erase(update);
-    update.Broadcast(dataType, enable);
-    m_autoFilters.insert(update);
-  }
-  Invalidate();
-}
-
-void AutoPacketFactory::BroadcastAllDataIn(const std::type_info* nodeType, bool enable) {
-  {
-    std::lock_guard<std::mutex> guard(m_lock);
-
-    // Find and copy the AutoFilterDescriptor instance.
-    AutoFilterDescriptor update = GetTypeDescriptorUnsafe(nodeType);
-    if (!update.GetAutoFilterTypeInfo())
-      return;
-
-    // Extract, modify and insert the broadcast state
-    m_autoFilters.erase(update);
-    // All input data types accept broadcasts
-    // NOTE: Iteration is over a static array terminated with nullptr
-    for (const AutoFilterDescriptorInput* pArg = update.GetAutoFilterInput(); *pArg; ++pArg) {
-      if (pArg->is_input &&
-          !IsAutoPacketType(*pArg->ti))
-        update.Broadcast(pArg->ti, enable);
-    }
-    m_autoFilters.insert(update);
-  }
-  Invalidate();
-}
-
-void AutoPacketFactory::PipeOneData(const std::type_info* nodeOutType, const std::type_info* nodeInType, const std::type_info* dataType, bool enable) {
-  if (IsAutoPacketType(*dataType)) {
-    // AutoPacket is always broacast to the entire context
-    return;
-  }
-
-  {
-    std::lock_guard<std::mutex> guard(m_lock);
-
-    // Find and copy both AutoFilterDescriptor instances.
-    AutoFilterDescriptor updateOut = GetTypeDescriptorUnsafe(nodeOutType);
-    AutoFilterDescriptor updateIn = GetTypeDescriptorUnsafe(nodeInType);
-    if (!updateOut.GetAutoFilterTypeInfo() ||
-        !updateIn.GetAutoFilterTypeInfo())
-      return;
-
-    // Check for AutoPacket& (or const AutoPacket&) arguments
-    bool allOut =
-      !!updateOut.GetArgumentType(&typeid(auto_arg<AutoPacket&>::id_type));
-    bool allIn =
-      updateIn.GetArgumentType(&typeid(auto_arg<AutoPacket&>::id_type)) ||
-      updateIn.GetArgumentType(&typeid(auto_arg<const AutoPacket&>::id_type));
-
-    // Find both data types
-    const AutoFilterDescriptorInput* argOutDescriptor = updateOut.GetArgumentType(dataType);
-    const AutoFilterDescriptorInput* argInDescriptor = updateIn.GetArgumentType(dataType);
-    if (!(allOut || (argOutDescriptor && argOutDescriptor->is_output)) ||
-        !(allIn || (argInDescriptor && argInDescriptor->is_input))) {
-      std::stringstream ss;
-      ss << "Attempted to pipe data of a type " << dataType->name()
-      << " that is not an ouput of " << nodeOutType->name()
-      << " and an input to " << nodeInType->name();
-      throw std::runtime_error(ss.str());
-    }
-
-    // Extract, modify and insert the half-pipes
-    m_autoFilters.erase(updateOut);
-    m_autoFilters.erase(updateIn);
-    updateOut.HalfPipe(dataType, nodeInType, enable);
-    updateIn.HalfPipe(dataType, nodeOutType, enable);
-    m_autoFilters.insert(updateOut);
-    m_autoFilters.insert(updateIn);
-  }
-  Invalidate();
-}
-
-void AutoPacketFactory::PipeAllData(const std::type_info* nodeOutType, const std::type_info* nodeInType, bool enable) {
-  {
-    std::lock_guard<std::mutex> guard(m_lock);
-
-    // Find and copy both AutoFilterDescriptor instances.
-    AutoFilterDescriptor updateOut = GetTypeDescriptorUnsafe(nodeOutType);
-    AutoFilterDescriptor updateIn = GetTypeDescriptorUnsafe(nodeInType);
-    if (!updateOut.GetAutoFilterTypeInfo() ||
-        !updateIn.GetAutoFilterTypeInfo())
-      return;
-
-    // Check for AutoPacket& (or const AutoPacket&) arguments
-    bool allOut =
-      !!updateOut.GetArgumentType(&typeid(auto_arg<AutoPacket&>::id_type));
-    bool allIn =
-      updateIn.GetArgumentType(&typeid(auto_arg<AutoPacket&>::id_type)) ||
-      updateIn.GetArgumentType(&typeid(auto_arg<const AutoPacket&>::id_type));
-
-    // List all correctly oriented arguments
-    std::unordered_set<const std::type_info*> dataOutTypes;
-    std::unordered_set<const std::type_info*> dataInTypes;
-    for (const AutoFilterDescriptorInput* pArg = updateOut.GetAutoFilterInput(); *pArg; ++pArg) {
-      if (IsAutoPacketType(*pArg->ti))
-        continue;
-      if (allOut || pArg->is_output) {
-        dataOutTypes.insert(pArg->ti);
-        if (allIn)
-          dataInTypes.insert(pArg->ti);
-      }
-    }
-    
-    for (const AutoFilterDescriptorInput* pArg = updateIn.GetAutoFilterInput(); *pArg; ++pArg) {
-      if (IsAutoPacketType(*pArg->ti))
-        continue;
-      if (allIn || pArg->is_input) {
-        // Include only output types
-        if (allOut ||
-            dataOutTypes.find(pArg->ti) != dataOutTypes.end()) {
-          dataInTypes.insert(pArg->ti);
-          if (allOut)
-            dataInTypes.insert(pArg->ti);
-        }
-      }
-    }
-
-    // Extract, modify and insert the half-pipes
-    m_autoFilters.erase(updateOut);
-    m_autoFilters.erase(updateIn);
-    for (const std::type_info* dataType : dataInTypes) {
-      updateOut.HalfPipe(dataType, nodeInType, enable);
-      updateIn.HalfPipe(dataType, nodeOutType, enable);
-    }
-    m_autoFilters.insert(updateOut);
-    m_autoFilters.insert(updateIn);
-  }
-  Invalidate();
-}
-
 size_t AutoPacketFactory::GetOutstanding(void) const {
-  return m_packets.GetOutstanding();
+  return m_outstandingInternal.use_count();
 }
 
 void AutoPacketFactory::RecordPacketDuration(std::chrono::nanoseconds duration) {

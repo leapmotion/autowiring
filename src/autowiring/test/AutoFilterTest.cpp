@@ -4,15 +4,11 @@
 #include <autowiring/AutoPacket.h>
 #include <autowiring/AutoPacketFactory.h>
 #include <autowiring/Deferred.h>
-#include <autowiring/optional_ptr.h>
 #include <autowiring/NewAutoFilter.h>
 #include <autowiring/DeclareAutoFilter.h>
-#include <autowiring/DeclareElseFilter.h>
 #include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/AutoTimeStamp.h>
 #include <autowiring/SatCounter.h>
-#include <autowiring/AutoMerge.h>
-#include <autowiring/AutoStile.h>
 #include THREAD_HEADER
 
 class AutoFilterTest:
@@ -25,13 +21,24 @@ public:
   }
 };
 
+TEST_F(AutoFilterTest, GetOutstandingTest) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  {
+    auto packet = factory->NewPacket();
+    ASSERT_EQ(1UL, factory->GetOutstanding()) << "Factory outstanding count mismatch";
+  }
+
+  ASSERT_EQ(0UL, factory->GetOutstanding()) << "Factory outstanding did not go to zero after releasing the only outstanding packet";
+}
+
 TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
   // Create a packet while the factory has no subscribers:
   AutoRequired<AutoPacketFactory> parentFactory;
   std::shared_ptr<AutoPacket> firstPacket = parentFactory->NewPacket();
 
   // Verify subscription-free status:
-  EXPECT_FALSE(firstPacket->HasSubscribers(typeid(Decoration<0>))) << "Subscription exists where one should not have existed";
+  EXPECT_FALSE(firstPacket->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
 
   std::shared_ptr<AutoPacket> strongPacket;
   std::weak_ptr<AutoPacket> weakPacket;
@@ -47,14 +54,14 @@ TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
       AutoRequired<FilterA> subFilter;
       filterChecker = subFilter;
     }
-    EXPECT_FALSE(firstPacket->HasSubscribers(typeid(Decoration<0>))) << "Subscription was incorrectly, retroactively added to a packet";
+    EXPECT_FALSE(firstPacket->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
 
     //Create a packet where a subscriber exists only in a subcontext
     strongPacket = parentFactory->NewPacket();
     std::shared_ptr<AutoPacket> holdPacket = parentFactory->NewPacket();
     weakPacket = holdPacket;
-    EXPECT_TRUE(strongPacket->HasSubscribers(typeid(Decoration<0>))) << "Packet lacked expected subscription from subcontext";
-    EXPECT_TRUE(weakPacket.lock()->HasSubscribers(typeid(Decoration<0>))) << "Packet lacked expected subscription from subcontext";
+    EXPECT_TRUE(strongPacket->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
+    EXPECT_TRUE(weakPacket.lock()->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
   }
   EXPECT_TRUE(weakPacket.expired()) << "Packet was not destroyed when it's subscribers were removed";
   EXPECT_FALSE(filterChecker.expired()) << "Packet keeping subcontext member alive";
@@ -62,12 +69,12 @@ TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
   // Verify the second packet will no longer have subscriptions  -
   // normally removing a subscriber would mean the packet still has the subscriber, but
   // in this case, the subscriber was actually destroyed so the packet has lost a subscriber.
-  EXPECT_TRUE(strongPacket->HasSubscribers(typeid(Decoration<0>))) << "Missing subscriber from destroyed subcontext";
+  EXPECT_TRUE(strongPacket->HasSubscribers<Decoration<0>>()) << "Missing subscriber from destroyed subcontext";
 
   // Call the subscriber... this will either succeed or segfault.
   strongPacket->Decorate(Decoration<0>());
   strongPacket->Decorate(Decoration<1>());
-  EXPECT_TRUE(strongPacket->HasSubscribers(typeid(Decoration<0>))) << "Calling a subscriber should not remove it";
+  EXPECT_TRUE(strongPacket->HasSubscribers<Decoration<0>>()) << "Calling a subscriber should not remove it";
   {
     std::shared_ptr<FilterA> holdFilter = filterChecker.lock();
     ASSERT_EQ(1, holdFilter->m_called) << "Subcontext filter was not called";
@@ -75,7 +82,7 @@ TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
 
   // Create a packet after the subcontext has been destroyed
   auto lastPacket = parentFactory->NewPacket();
-  EXPECT_FALSE(lastPacket->HasSubscribers(typeid(Decoration<0>))) << "Subscription was incorrectly, retroactively added to a packet";
+  EXPECT_FALSE(lastPacket->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
 
   // Verify that strongPacket was responsible for keeping subFilter alive
   strongPacket.reset();
@@ -142,6 +149,7 @@ public:
 TEST_F(AutoFilterTest, VerifyAutoOut) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<FilterOut> out;
+
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   const Decoration<0>* result0 = nullptr;
   ASSERT_TRUE(packet->Get(result0)) << "Output missing";
@@ -164,54 +172,6 @@ TEST_F(AutoFilterTest, VerifyAutoOutPooled) {
   const Decoration<0>* result0 = nullptr;
   ASSERT_TRUE(packet->Get(result0)) << "Output missing";
   ASSERT_EQ(result0->i, 1) << "Output incorrect";
-}
-
-TEST_F(AutoFilterTest, VerifyOptionalFilter) {
-  AutoRequired<AutoPacketFactory> factory;
-
-  AutoRequired<FilterGen<Decoration<0>, optional_ptr<Decoration<1>>>> fgA;
-  AutoRequired<FilterGen<optional_ptr<Decoration<1>>, Decoration<0>>> fgB;
-  AutoRequired<FilterGen<optional_ptr<Decoration<0>>, Decoration<1>>> fgC;
-  AutoRequired<FilterGen<Decoration<0>, optional_ptr<Decoration<1>>, optional_ptr<Decoration<2>>>> fgD;
-
-  //Test resolution through parameter satisfaction
-  {
-    auto packet = factory->NewPacket();
-    packet->Decorate(Decoration<0>());
-
-    ASSERT_TRUE(fgA->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " times when an optional input was unresolved";
-    ASSERT_TRUE(fgB->m_called == 0) << "An AutoFilter was called " << fgB->m_called << " times when an optional input was unresolved";
-    ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgC->m_called << " times when a required input was not available";
-
-    packet->Decorate(Decoration<1>());
-
-    ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter was called " << fgA->m_called << " times when all inputs were simultaneously available";
-    ASSERT_TRUE(fgB->m_called == 1) << "An AutoFilter was called " << fgB->m_called << " times when all inputs were simultaneously available";
-    ASSERT_TRUE(fgC->m_called == 1) << "An AutoFilter was called " << fgC->m_called << " times when all inputs were simultaneously available";
-    ASSERT_TRUE(fgD->m_called == 0) << "An AutoFilter was called " << fgD->m_called << " times when an optional input was unresolved";
-  }
-
-  fgA->m_called = 0;
-  fgB->m_called = 0;
-  fgC->m_called = 0;
-  fgD->m_called = 0;
-
-  //Test resultion through packet destruction
-  {
-    auto packet = factory->NewPacket();
-    packet->Decorate(Decoration<0>());
-    packet->Decorate(Decoration<2>());
-
-    ASSERT_TRUE(fgA->m_called == 0) << "An AutoFilter was called " << fgA->m_called << " before optional arguments were resolved";
-    ASSERT_TRUE(fgB->m_called == 0) << "An AutoFilter was called " << fgB->m_called << " before optional arguments were resolved";
-    ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgC->m_called << " before optional arguments were resolved";
-    ASSERT_TRUE(fgD->m_called == 0) << "An AutoFilter was called " << fgD->m_called << " before optional arguments were resolved";
-  }
-
-  ASSERT_TRUE(fgA->m_called == 1) << "An AutoFilter was called " << fgA->m_called << " times when all required inputs were available";
-  ASSERT_TRUE(fgB->m_called == 1) << "An AutoFilter was called " << fgB->m_called << " times when all required inputs were available";
-  ASSERT_TRUE(fgC->m_called == 0) << "An AutoFilter was called " << fgC->m_called << " times when a required input was not available";
-  ASSERT_TRUE(fgD->m_called == 1) << "An AutoFilter was called " << fgD->m_called << " times when all required inputs were available";
 }
 
 TEST_F(AutoFilterTest, VerifyNoMultiDecorate) {
@@ -376,14 +336,14 @@ TEST_F(AutoFilterTest, VerifyTeardownArrangement) {
 
     //Create a new packet after having removed the only filter on it.
     auto packet2 = factory->NewPacket();
-    ASSERT_FALSE(packet2->HasSubscribers(typeid(Decoration<0>))) << "A packet had subscriptions after the only subscriber was removed.";
+    ASSERT_FALSE(packet2->HasSubscribers<Decoration<0>>()) << "A packet had subscriptions after the only subscriber was removed.";
 
     // Satisfy the packet:
     packet->Decorate(Decoration<0>());
     packet->Decorate(Decoration<1>());
 
     auto packet3 = factory->NewPacket();
-    ASSERT_FALSE(packet3->HasSubscribers(typeid(Decoration<0>))) << "A packet had subscriptions after the only subscriber was removed.";
+    ASSERT_FALSE(packet3->HasSubscribers<Decoration<0>>()) << "A packet had subscriptions after the only subscriber was removed.";
   }
 
   // Filter should be expired now:
@@ -465,66 +425,6 @@ TEST_F(AutoFilterTest, VerifyAntiDecorate) {
     packet->Decorate(Decoration<0>());
     EXPECT_ANY_THROW(packet->Unsatisfiable<Decoration<0>>()) << "Succeeded in marking an already-existing decoration as unsatisfiable";
   }
-}
-
-class OptionalResolveFilter {
-public:
-  size_t m_called;
-  OptionalResolveFilter() : m_called(0) {
-    DeclareAutoFilter(this, &OptionalResolveFilter::NextFilter1);
-    DeclareAutoFilter(this, &OptionalResolveFilter::NextFilter2);
-  };
-
-  void AutoFilter(AutoPacket& pkt, optional_ptr<Decoration<0>> opt) {
-    ++m_called;
-    if (pkt.Has<Decoration<-1>>()) return; //Cannot attempt decorations
-
-    if (opt) {
-      //Called before final
-      ASSERT_NO_THROW(pkt.Decorate(Decoration<-1>())) << "Decoration should be allowed";
-      ASSERT_TRUE(pkt.Has<Decoration<-1>>());
-
-      Decoration<-2> deco;
-      ASSERT_NO_THROW(pkt.DecorateImmediate(deco)) << "Decoration should be allowed";
-    } else {
-      //Called during final
-      ASSERT_NO_THROW(pkt.Decorate(Decoration<-1>())) << "Decoration should be blocked quietly";
-      ASSERT_TRUE(pkt.Has<Decoration<-1>>()) << "Resolved AutoFilter calls should be able to add decorations";
-
-      Decoration<-2> deco;
-      ASSERT_NO_THROW(pkt.DecorateImmediate(deco)) << "Decoration should be blocked quietly";
-    }
-  }
-
-  void NextFilter1(AutoPacket& pkt, const Decoration<-1>& dec) {
-    ASSERT_TRUE(pkt.Has<Decoration<0>>()) << "NextFilter1 called during optional resolution";
-  }
-
-  void NextFilter2(AutoPacket& pkt, const Decoration<-2>& dec) {
-    ASSERT_TRUE(pkt.Has<Decoration<0>>()) << "NextFilter2 called during optional resolution";
-  }
-};
-
-TEST_F(AutoFilterTest, BlockResolveRecursion) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<OptionalResolveFilter> resolve;
-
-  //Verify decoration success when optional is satisfied
-  resolve->m_called = 0;
-  {
-    auto pkt = factory->NewPacket();
-    pkt->Decorate(Decoration<0>());
-    ASSERT_EQ(1, resolve->m_called) << "Failed to call AutoFilter with satisfied optional argument";
-  }
-  ASSERT_EQ(1, resolve->m_called) << "Multiple calls to AutoFilter with satisfied optional argument";
-
-  //Verify decoration blocking when optional is resolved
-  resolve->m_called = 0;
-  {
-    auto pkt = factory->NewPacket();
-    ASSERT_EQ(0, resolve->m_called) << "Called AutoFilter with missing optional argument";
-  }
-  ASSERT_EQ(1, resolve->m_called) << "Failed to call AutoFilter with resolved optional argument";
 }
 
 /// <summary>
@@ -877,7 +777,6 @@ TEST_F(AutoFilterTest, MultiImmediateComplex) {
 
   // All of the filters that we're adding
   AutoRequired<FilterGen<Decoration<0>>> fg1;
-  AutoRequired<FilterGen<Decoration<1>, optional_ptr<Decoration<2>>>> fg2;
   AutoRequired<FilterGen<Decoration<0>, Decoration<1>>> fg3;
   AutoRequired<FilterGen<Decoration<0>, Decoration<2>>> fg4;
 
@@ -891,14 +790,12 @@ TEST_F(AutoFilterTest, MultiImmediateComplex) {
 
     // Validate expected behaviors:
     ASSERT_EQ(1, fg1->m_called) << "Trivial filter was not called as expected, even though Decoration<0> should have been available";
-    ASSERT_EQ(1, fg2->m_called) << "Filter with an unsatisfied optional argument was not called";
     ASSERT_EQ(1, fg3->m_called) << "Saturated filter was not called as expected";
     ASSERT_EQ(0, fg4->m_called) << "Undersaturated filter was called even though it should not have been";
   }
 
   // Validate expected behaviors:
   ASSERT_EQ(1, fg1->m_called) << "Trivial filter was called repeatedly";
-  ASSERT_EQ(1, fg2->m_called) << "Filter with an unsatisfied optional argument was called repeatedly";
   ASSERT_EQ(1, fg3->m_called) << "Saturated filter was not called as expected was called repeatedly";
   ASSERT_EQ(0, fg4->m_called) << "Undersaturated filter was called";
 }
@@ -932,7 +829,10 @@ TEST_F(AutoFilterTest, AutoOutTest) {
     ASSERT_TRUE(packet->Get<Decoration<1>>().i == 1) << "Decoration data was not appended by AutoFilter call";
 
     ASSERT_TRUE(foB->m_called == 1) << "An AutoFilter applied to one new packet without argument AutoPacket& reference was called " << foB->m_called << " times";
-    ASSERT_TRUE(packet->Get<Decoration<2>>().i == 2) << "Decoration data was not appended by AutoFilter call";
+
+    const Decoration<2>* pDec2;
+    ASSERT_TRUE(packet->Get(pDec2)) << "Decoration<2> was not present on the packet";
+    ASSERT_TRUE(pDec2->i == 2) << "Decoration data was not appended by AutoFilter call";
   }
 }
 
@@ -964,95 +864,6 @@ TEST_F(AutoFilterTest, NoDeferredImmediateSatisfaction) {
 
   // Verify that the thread did not receive anything:
   ASSERT_EQ(0UL, wfil->GetDispatchQueueLength()) << "Deferred AutoFilter incorrectly received an immediate-mode decoration";
-}
-
-class AcceptsConstReference {
-public:
-  AcceptsConstReference(void) :
-  m_called(0)
-  {}
-
-  int m_called;
-
-  void AutoFilter(const int& dataIn) {
-    ++m_called;
-  }
-};
-
-class AcceptsSharedPointer {
-public:
-  AcceptsSharedPointer(void) :
-  m_called(0)
-  {}
-
-  int m_called;
-
-  void AutoFilter(std::shared_ptr<const int> dataIn) {
-    ++m_called;
-  }
-};
-
-TEST_F(AutoFilterTest, SharedPtrCollapse) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<AcceptsConstReference> constr_filter;
-  AutoRequired<AcceptsSharedPointer> shared_filter;
-
-  int constr_int = 0;
-  std::shared_ptr<int> shared_int = std::make_shared<int>(0);
-  ASSERT_TRUE(static_cast<bool>(shared_int));
-
-  // Decorate(type X) calls AutoFilter(const type& X)
-  // Decorate(type X) calls AutoFilter(shared_ptr<type> X)
-  {
-    auto packet = factory->NewPacket();
-    packet->Decorate(constr_int);
-    ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
-    ASSERT_EQ(1, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
-  }
-  constr_filter->m_called = 0;
-  shared_filter->m_called = 0;
-
-  // Decorate(shared_ptr<type> X) calls AutoFilter(const type& X)
-  // Decorate(shared_ptr<type> X) calls AutoFilter(shared_ptr<type> X)
-  // NOTE: Decorate(shared_ptr<T> X) shares ownership of X instead of copying.
-  {
-    auto packet = factory->NewPacket();
-    packet->Decorate(shared_int);
-    ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
-    ASSERT_EQ(1, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
-    ASSERT_FALSE(shared_int.unique()) << "Argument of Decorate should be shared, not copied, when possible";
-  }
-  constr_filter->m_called = 0;
-  shared_filter->m_called = 0;
-
-  // DecorateImmediate(type X) calls AutoFilter(const type& X)
-  // DecorateImmediate(type X) DOES NOT CALL AutoFilter(shared_ptr<type> X)
-  // NOTE: This case is invalid, since DecorateImmediate assumes no validity of X after the function call,
-  // so the construction of a shared_ptr from &X would violate the contract of shared_ptr type.
-  // If an AutoFilter method assumed the validity of shared_ptr<type> Y, a copy could be made that might
-  // become invalid.
-  // NOTE: DecorateImmediate(shared_ptr<type> X) is unnecessary (a static_assert will be called).
-  // Decorate(shared_ptr<type> X) will share the reference to X instead of making a copy.
-  {
-    auto packet = factory->NewPacket();
-    packet->DecorateImmediate(constr_int);
-    ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
-    ASSERT_EQ(0, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
-  }
-  constr_filter->m_called = 0;
-  shared_filter->m_called = 0;
-}
-
-TEST_F(AutoFilterTest, SharedPointerAliasingRules) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<FilterGen<std::shared_ptr<const int>>> genFilter1;
-  AutoRequired<FilterGen<int>> genFilter2;
-
-  auto packet = factory->NewPacket();
-  packet->Decorate<int>(55);
-
-  ASSERT_EQ(1UL, genFilter1->m_called) << "AutoFilter accepting a shared pointer was not called as expected";
-  ASSERT_EQ(1UL, genFilter2->m_called) << "AutoFilter accepting a decorated type was not called as expected";
 }
 
 TEST_F(AutoFilterTest, AutoSelfUpdateTest) {
@@ -1093,7 +904,16 @@ TEST_F(AutoFilterTest, AutoSelfUpdateTwoContexts) {
 TEST_F(AutoFilterTest, AutoTimeStampTest) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<AutoTimeStamp> stamper;
-  ASSERT_TRUE(factory->NewPacket()->Has<AutoTimeStamp::time>()) << "Failed to stamp packet on initialization";
+  auto then = std::chrono::high_resolution_clock::now();
+  auto packet = factory->NewPacket();
+  const std::chrono::high_resolution_clock::time_point* pLater;
+  ASSERT_TRUE(packet->Get(pLater)) << "Failed to stamp packet on initialization";
+
+  auto now = std::chrono::high_resolution_clock::now();
+
+  // Ensure that events happened in the order expected
+  ASSERT_LE(then, *pLater) << "Packet timestamp is from a point in time before the test was started";
+  ASSERT_LE(*pLater, now) << "Packet timestampe is dated after test conclusion";
 }
 
 TEST_F(AutoFilterTest, WaitWhilePacketOutstanding) {
@@ -1205,4 +1025,18 @@ TEST_F(AutoFilterTest, AutoFilterInBaseClassNoAlias) {
 
   // Trivial validation that we got something back
   ASSERT_EQ(1UL, d->m_called) << "Filter defined in base class in an Object-inheriting type was not called the expected number of times";
+}
+
+TEST_F(AutoFilterTest, PacketTeardownNotificationCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  auto called = std::make_shared<bool>(false);
+
+  {
+    auto packet = factory->NewPacket();
+    packet->AddTeardownListener([called] { *called = true; });
+    ASSERT_FALSE(*called) << "Teardown listener called before packet was destroyed";
+  }
+
+  ASSERT_TRUE(*called) << "Teardown listener was not called after packet destruction";
+  ASSERT_TRUE(called.unique()) << "Teardown listener lambda function was leaked";
 }

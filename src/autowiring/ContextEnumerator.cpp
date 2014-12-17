@@ -16,19 +16,16 @@ ContextEnumerator::iterator::iterator(const std::shared_ptr<CoreContext>& root, 
 
 ContextEnumerator::iterator::~iterator(void) {}
 
-void ContextEnumerator::iterator::_next(void) {
-  std::shared_ptr<CoreContext> i;
-  for(
-    // Try to traverse the first child if possible:
-    i = m_cur->FirstChild();
-
-    // Continue until we find something and we haven't walked off the end:
-    !i && m_cur;
-
+void ContextEnumerator::iterator::_next(const std::shared_ptr<CoreContext>& start) {
+  // First node to search
+  std::shared_ptr<CoreContext> i = start;
+  
+  // Continue until we find something and we haven't walked off the end:
+  while(!i && m_cur) {
     // m_cur is ascending, we are right-traversing
-    i = m_cur->NextSibling(),
-    m_cur = m_cur->GetParentContext()
-  );
+    i = m_cur->NextSibling();
+    m_cur = m_cur->GetParentContext();
+  }
 
   if(m_cur == m_root)
     // Root hit, done traversing
@@ -38,8 +35,14 @@ void ContextEnumerator::iterator::_next(void) {
     m_cur = i;
 }
 
+
+const ContextEnumerator::iterator& ContextEnumerator::iterator::NextSibling(void) {
+  _next(m_cur->NextSibling());
+  return *this;
+}
+
 const ContextEnumerator::iterator& ContextEnumerator::iterator::operator++(void) {
-  _next();
+  _next(m_cur->FirstChild());
   return *this;
 }
 

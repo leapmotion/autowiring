@@ -136,6 +136,7 @@ public:
 /// <summary>
 /// A generic filter which accepts templated input types
 /// </summary>
+#if AUTOWIRING_USE_LIBCXX
 template<class... Args>
 class FilterGen {
 public:
@@ -161,6 +162,7 @@ public:
   int m_called;
   std::tuple<typename std::decay<Args>::type...> m_args;
 };
+#endif
 
 /// <summary>
 /// A filter that should trigger a static_assert in AutoRequire<BadFilterA>
@@ -225,5 +227,6 @@ public FilterRoot {
 public:
   void AutoFilter(auto_out<Decoration<2>> two) {
     ++m_called;
+    two = std::make_shared<Decoration<2>>();
   }
 };

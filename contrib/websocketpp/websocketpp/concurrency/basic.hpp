@@ -33,7 +33,7 @@
 namespace websocketpp {
 namespace concurrency {
 
-/// Concurrency policy that uses std::mutex / boost::mutex
+/// Concurrency policy that uses std::mutex / autoboost::mutex
 class basic {
 public:
     typedef lib::mutex mutex_type;

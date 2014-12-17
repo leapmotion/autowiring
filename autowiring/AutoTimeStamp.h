@@ -10,13 +10,12 @@
 /// </summary>
 class AutoTimeStamp {
 public:
-  /// <summary>Alias type for maximum precision timing<summary>
-  class time : public std::chrono::high_resolution_clock::time_point {};
-
   /// <summary>Records time of issue of AutoPacket</summary>
   /// <remarks>
   /// Default constructor yielding current time is called by auto_out<time>.
   /// AutoPacketFactory.NewPacket()->Has<AutoTimeStamp::time>() == true.
   /// </remarks>
-  void AutoFilter(auto_out<time> t) {}
+  void AutoFilter(auto_out<std::chrono::high_resolution_clock::time_point> t) {
+    t = std::chrono::high_resolution_clock::now();
+  }
 };
