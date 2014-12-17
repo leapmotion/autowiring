@@ -22,6 +22,22 @@ void AutoPacketGraph::AddEdge(const std::type_info* ti, const AutoFilterDescript
   }
 }
 
+void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
+  packet.AddTeardownListener([this, &packet] () {
+    for (auto& decoration : packet.GetDispositions()) {
+      if (decoration.m_publisher) {
+        AddEdge(decoration.m_type, *decoration.m_publisher, false);
+      }
+      
+      for (auto& subscriber : decoration.m_subscribers) {
+        if (subscriber->called) {
+          AddEdge(decoration.m_type, *subscriber, true);
+        }
+      }
+    }
+  });
+}
+
 bool AutoPacketGraph::WriteGV(const std::string& filename) const
 {
   std::ofstream file(filename);

@@ -3,7 +3,6 @@
 #include "AutoPacket.h"
 #include "Autowired.h"
 #include "AutoPacketFactory.h"
-#include "AutoPacketGraph.h"
 #include "AutoPacketProfiler.h"
 #include "AutoFilterDescriptor.h"
 #include "ContextEnumerator.h"
@@ -49,22 +48,8 @@ AutoPacket::~AutoPacket(void) {
     )
   );
   
-  Autowired<AutoPacketGraph> apg;
-  if (apg) {
-    for (auto& itr : m_decorations) {
-      DecorationDisposition& decoration = itr.second;
-      
-      if (decoration.m_publisher) {
-        apg->AddEdge(decoration.m_type, *decoration.m_publisher, false);
-      }
-      
-      for (auto& subscriber : decoration.m_subscribers) {
-        if (subscriber->called) {
-          apg->AddEdge(decoration.m_type, *subscriber, true);
-        }
-      }
-    }
-  }
+  // Needed for the AutoPacketGraph
+  NotifyTeardownListeners();
 }
 
 DecorationDisposition& AutoPacket::CheckoutImmediateUnsafe(const std::type_info& ti, const void* pvImmed)
@@ -373,6 +358,14 @@ std::list<SatCounter> AutoPacket::GetSubscribers(const std::type_info& data) con
     for (auto& subscriber : decoration->second.m_subscribers)
       subscribers.push_back(*subscriber);
   return subscribers;
+}
+
+std::list<DecorationDisposition> AutoPacket::GetDispositions() const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  std::list<DecorationDisposition> dispositions;
+  for (auto& disposition : m_decorations)
+    dispositions.push_back(disposition.second);
+  return dispositions;
 }
 
 std::list<DecorationDisposition> AutoPacket::GetDispositions(const std::type_info& data) const {

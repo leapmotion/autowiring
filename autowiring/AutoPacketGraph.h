@@ -1,9 +1,10 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AutoFilterDescriptor.h"
+#include "AutoPacket.h"
+#include "DecorationDisposition.h"
 #include "SatCounter.h"
 #include STL_UNORDERED_MAP
-
 
 
 /// <summary>
@@ -53,6 +54,8 @@ public:
   /// Add an edge to the graph given the following parameters
   /// </summary>
   void AddEdge(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input);
+  
+  void AutoFilter(AutoPacket& packet);
   
   /// <summary>
   /// Write the graph to a file in graphviz format

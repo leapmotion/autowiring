@@ -465,6 +465,12 @@ public:
   /// <returns>All subscribers to the specified data</returns>
   std::list<SatCounter> GetSubscribers(const std::type_info& data) const;
 
+  /// <returns>All decoration dispositions</returns>
+  /// <remarks>
+  /// This method is useful for getting a picture of the entire disposition graph
+  /// </remarks>
+  std::list<DecorationDisposition> GetDispositions() const;
+
   /// <returns>All decoration dispositions associated with the data type</returns>
   /// <remarks>
   /// This method is useful for determining whether flow conditions (broadcast, pipes
