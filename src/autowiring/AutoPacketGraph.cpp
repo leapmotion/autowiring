@@ -53,20 +53,20 @@ bool AutoPacketGraph::WriteGV(const std::string& filename) const
   std::unordered_set<const std::type_info*> types;
   std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> descriptors;
   
-  // draw the edges
   for (auto& itr : m_deliveryGraph) {
     auto& edge = itr.first;
     auto type = edge.type_info;
     auto& descriptor = edge.descriptor;
     auto count = itr.second;
     
-    if (types.find(type) == types.end()) {
-      types.insert(type);
-    }
+    // TODO: skip if type == AutoPacketGraph
     
-    if (descriptors.find(descriptor) == descriptors.end()) {
+    // Get a unique set of types/descriptors
+    if (types.find(type) == types.end())
+      types.insert(type);
+    
+    if (descriptors.find(descriptor) == descriptors.end())
       descriptors.insert(descriptor);
-    }
     
     // string format: "type" -> "AutoFilter" (or vice versa)
     std::stringstream ss;
