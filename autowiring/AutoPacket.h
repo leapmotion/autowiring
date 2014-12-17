@@ -452,8 +452,11 @@ public:
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-      for (const std::type_info* ti : {&typeid(auto_id<T>), &typeid(auto_id<Ts>)...})
-        MarkUnsatisfiable(*ti);
+      bool dummy[] = {
+        (MarkUnsatisfiable(typeid(auto_id<T>)), false),
+        (MarkUnsatisfiable(typeid(auto_id<Ts>)), false)...
+      };
+      (void)dummy;
     }),
     PulseSatisfaction(pTypeSubs, 1 + sizeof...(Ts));
   }
