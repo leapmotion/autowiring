@@ -3,7 +3,6 @@
 
 #include "AnySharedPointer.h"
 #include "AutoFilterDescriptor.h"
-#include "AutowiringEvents.h"
 #include "BoltBase.h"
 #include "ContextMember.h"
 #include "CoreRunnable.h"
@@ -40,8 +39,8 @@ struct ObjectTraits {
           if (identifier->IsSameAs(pObject.get()))
             return true;
         }
-        // HACK: Manually check if type implements AutowiringEvents
-        return !!dynamic_cast<const AutowiringEvents*>(pObject.get());
+        // "T" not found in event registry
+        return false;
       }()
     )
   {}
