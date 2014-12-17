@@ -452,8 +452,16 @@ public:
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
+#if autowiring_USE_LIBCXX
       for (const std::type_info* ti : {&typeid(auto_id<T>), &typeid(auto_id<Ts>)...})
         MarkUnsatisfiable(*ti);
+#else
+      bool dummy[] = {
+        (MarkUnsatisfiable(typeid(auto_id<T>)), false),
+        (MarkUnsatisfiable(typeid(auto_id<Ts>)), false)...
+      };
+      (void)dummy;
+#endif
     }),
     PulseSatisfaction(pTypeSubs, 1 + sizeof...(Ts));
   }
