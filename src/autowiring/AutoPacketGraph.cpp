@@ -4,6 +4,7 @@
 #include "AutoPacketProfiler.h"
 #include "demangle.h"
 #include <fstream>
+#include <string>
 
 AutoPacketGraph::AutoPacketGraph()
 {
@@ -50,8 +51,8 @@ bool AutoPacketGraph::WriteGV(const std::string& filename) const
   std::lock_guard<std::mutex> lk(m_lock);
   
   // Containers for the unique types and descriptors
-  std::unordered_set<const std::type_info*> types;
-  std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> descriptors;
+  std::unordered_set<std::string> typeNames;
+  std::unordered_set<std::string> descriptorNames;
   
   for (auto& itr : m_deliveryGraph) {
     auto& edge = itr.first;
@@ -61,20 +62,23 @@ bool AutoPacketGraph::WriteGV(const std::string& filename) const
     
     // TODO: skip if type == AutoPacketGraph
     
-    // Get a unique set of types/descriptors
-    if (types.find(type) == types.end())
-      types.insert(type);
+    std::string typeName = autowiring::demangle(type);
+    std::string descriptorName = autowiring::demangle(descriptor.GetType());
     
-    if (descriptors.find(descriptor) == descriptors.end())
-      descriptors.insert(descriptor);
+    // Get a unique set of types/descriptors
+    if (typeNames.find(typeName) == typeNames.end())
+      typeNames.insert(typeName);
+    
+    if (descriptorNames.find(descriptorName) == descriptorNames.end())
+      descriptorNames.insert(descriptorName);
     
     // string format: "type" -> "AutoFilter" (or vice versa)
     std::stringstream ss;
     ss << "  \"";
     if (edge.input) {
-      ss << autowiring::demangle(type) << "\" -> \"" << autowiring::demangle(descriptor.GetType());
+      ss << typeName << "\" -> \"" << descriptorName;
     } else {
-      ss << autowiring::demangle(descriptor.GetType()) << "\" -> \"" << autowiring::demangle(type);
+      ss << descriptorName << "\" -> \"" << typeName;
     }
     
     // TODO: count should probably be optional
@@ -85,11 +89,11 @@ bool AutoPacketGraph::WriteGV(const std::string& filename) const
   file << std::endl;
   
   // Setup the shapes for the types and descriptors
-  for (auto& type : types)
-    file << "  \"" << autowiring::demangle(type) << "\" [shape=box];" << std::endl;
+  for (auto& typeName : typeNames)
+    file << "  \"" << typeName << "\" [shape=box];" << std::endl;
   
-  for (auto& descriptor : descriptors)
-    file << "  \"" << autowiring::demangle(descriptor.GetType()) << "\" [shape=ellipse];" << std::endl;
+  for (auto& descriptorName : descriptorNames)
+    file << "  \"" << descriptorName << "\" [shape=ellipse];" << std::endl;
   
   file << "}\n";
   
