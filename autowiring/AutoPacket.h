@@ -57,6 +57,9 @@ public:
 protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
+  
+  // The successor to this packet
+  std::weak_ptr<AutoPacket> m_successor;
 
   // Hold the time point at which this packet was last initalized.
   const std::chrono::high_resolution_clock::time_point m_initTime;
@@ -478,7 +481,7 @@ public:
   /// <summary>
   /// Returns the next packet that will be issued by the packet factory in this context relative to this context
   /// </summary>
-  std::shared_ptr<AutoPacket> Successor(void) const;
+  std::shared_ptr<AutoPacket> Successor(void);
 };
 
 #include "CallExtractor.h"

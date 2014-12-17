@@ -371,7 +371,15 @@ bool AutoPacket::HasSubscribers(const std::type_info& data) const {
   return m_decorations.count(data) != 0;
 }
 
-std::shared_ptr<AutoPacket> AutoPacket::Successor(void) const {
-  std::shared_ptr<AutoPacket> retVal;
+std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
+  std::lock_guard<std::mutex> lk(m_lock);
+  
+  // If successor already exists, construct it
+  if (!m_successor.expired()){
+    return m_successor.lock();
+  }
+  
+  std::shared_ptr<AutoPacket> retVal = m_parentFactory->ConstructPacket();
+  m_successor = retVal;
   return retVal;
 }

@@ -27,11 +27,25 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   if(!IsRunning())
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
-  // Obtain a packet, initialize it, return it
-  auto retVal = std::make_shared<AutoPacketInternal>(
-    *this,
-    GetInternalOutstanding()
-  );
+  // Hack, this currently can't be called while holding a lock
+  std::shared_ptr<AutoPacket> retVal;
+  
+  // Obtain a packet from previous packet if it still exists
+  if (auto prev = m_prevPacket.lock()) {
+    retVal = prev->Successor();
+  } else {
+    retVal = ConstructPacket();
+  }
+  
+  // Store new packet as previous packet
+  std::lock_guard<std::mutex> lk(m_lock);
+  m_prevPacket = retVal;
+  return retVal;
+}
+
+std::shared_ptr<AutoPacket> AutoPacketFactory::ConstructPacket(void) {
+  // Hack, this currently can't be called while holding a lock
+  std::shared_ptr<AutoPacketInternal> retVal = std::make_shared<AutoPacketInternal>(*this, GetInternalOutstanding());
   retVal->Initialize();
   return retVal;
 }
