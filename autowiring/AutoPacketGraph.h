@@ -2,8 +2,6 @@
 #pragma once
 #include "AutoFilterDescriptor.h"
 #include "AutoPacket.h"
-#include "DecorationDisposition.h"
-#include "SatCounter.h"
 #include STL_UNORDERED_MAP
 
 

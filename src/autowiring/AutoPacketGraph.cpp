@@ -3,7 +3,9 @@
 #include "AutoPacketGraph.h"
 #include "AutoPacketProfiler.h"
 #include "CoreContext.h"
+#include "DecorationDisposition.h"
 #include "demangle.h"
+#include "SatCounter.h"
 #include <fstream>
 #include <string>
 
