@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "AutoPacketGraph.h"
 #include "AutoPacketProfiler.h"
+#include "CoreContext.h"
 #include "demangle.h"
 #include <fstream>
 #include <string>
@@ -46,7 +47,7 @@ bool AutoPacketGraph::WriteGV(const std::string& filename) const
     return false;
   }
   
-  file << "digraph AutoPacketGraph {\n";
+  file << "digraph \"" << autowiring::demangle(CoreContext::CurrentContext()->GetSigilType()) << " context\" {\n";
   
   std::lock_guard<std::mutex> lk(m_lock);
   
