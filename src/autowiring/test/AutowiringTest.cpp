@@ -107,3 +107,28 @@ TEST_F(AutowiringTest, AUTOTHROW_CanSeeThrownAutoDesiredExceptions) {
   AutoDesired<ThrowsExceptionInCtor>();
   ASSERT_TRUE(cfe->m_called) << "Exception was not caught by exception filter in Autowiring context";
 }
+
+class PublicBase {
+public:
+  PublicBase(void) {}
+  virtual ~PublicBase(void) {}
+};
+
+class PrivateBase {
+public:
+  PrivateBase(void) {}
+  virtual ~PrivateBase(void) {}
+};
+
+class Derived : public PublicBase, private PrivateBase {
+public:
+  Derived(void) {}
+  ~Derived(void) {}
+};
+
+TEST_F(AutowiringTest, TestFailureOfDynamicCast) {
+  Derived d;
+  PublicBase *pub = static_cast<PublicBase*>(&d);
+  ASSERT_EQ(dynamic_cast<PrivateBase*>(pub), nullptr) << "Dynamic cast failed to give nullptr when cross casting to a private base class";
+  static_assert(!std::is_base_of<Derived, PrivateBase>::value, "is_base_of said a private base was a base");
+}
