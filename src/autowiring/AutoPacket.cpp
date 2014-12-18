@@ -378,8 +378,8 @@ std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
   std::lock_guard<std::mutex> lk(m_lock);
   
   // If successor already exists, use it
-  if (!m_successor.expired()){
-    return m_successor.lock();
+  if (m_successor){
+    return m_successor;
   }
   
   std::shared_ptr<AutoPacket> retVal = m_parentFactory->ConstructPacket();

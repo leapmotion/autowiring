@@ -94,3 +94,17 @@ TEST_F(AutoFilterSequencing, PacketReverseSuccessor) {
 
   ASSERT_EQ(packet2, packet1->Successor()) << "Successor packet obtained after generation from the factory did not match as expected";
 }
+
+TEST_F(AutoFilterSequencing, ManySuccessors) {
+  AutoRequired<AutoPacketFactory> factory;
+  
+  auto packetA = factory->NewPacket();
+  auto packet5 = packetA->Successor()->Successor()->Successor()->Successor();
+  
+  auto packetB = factory->NewPacket();
+  auto packetC = factory->NewPacket();
+  auto packetD = factory->NewPacket();
+  auto packetE = factory->NewPacket();
+  
+  ASSERT_EQ(packet5, packetE) << "Successor packet obtained after generation from the factory did not match as expected";
+}

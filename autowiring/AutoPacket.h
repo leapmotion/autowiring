@@ -60,7 +60,7 @@ protected:
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
   
   // The successor to this packet
-  std::weak_ptr<AutoPacket> m_successor;
+  std::shared_ptr<AutoPacket> m_successor;
 
   // Hold the time point at which this packet was last initalized.
   const std::chrono::high_resolution_clock::time_point m_initTime;

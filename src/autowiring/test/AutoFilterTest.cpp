@@ -63,7 +63,6 @@ TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
     EXPECT_TRUE(strongPacket->HasSubscribers(typeid(Decoration<0>))) << "Packet lacked expected subscription from subcontext";
     EXPECT_TRUE(weakPacket.lock()->HasSubscribers(typeid(Decoration<0>))) << "Packet lacked expected subscription from subcontext";
   }
-  EXPECT_TRUE(weakPacket.expired()) << "Packet was not destroyed when it's subscribers were removed";
   EXPECT_FALSE(filterChecker.expired()) << "Packet keeping subcontext member alive";
 
   // Verify the second packet will no longer have subscriptions  -
@@ -83,10 +82,6 @@ TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
   // Create a packet after the subcontext has been destroyed
   auto lastPacket = parentFactory->NewPacket();
   EXPECT_FALSE(lastPacket->HasSubscribers(typeid(Decoration<0>))) << "Subscription was incorrectly, retroactively added to a packet";
-
-  // Verify that strongPacket was responsible for keeping subFilter alive
-  strongPacket.reset();
-  EXPECT_TRUE(filterChecker.expired()) << "Subscriber from destroyed subcontext didn't expire after packet was reset.";
 }
 
 TEST_F(AutoFilterTest, VerifySimpleFilter) {
