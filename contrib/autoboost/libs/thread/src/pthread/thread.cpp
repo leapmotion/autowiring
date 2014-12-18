@@ -27,10 +27,6 @@
 #include <unistd.h>
 #endif
 
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/trim.hpp>
-#include <boost/lexical_cast.hpp>
-
 #include <fstream>
 #include <string>
 #include <set>
