@@ -47,6 +47,7 @@ private:
   AutoPacket(AutoPacket&&) = delete;
 
 public:
+  // Must hold the lock to 'factory' when calling this constructor
   AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
 
@@ -58,6 +59,9 @@ public:
 protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
+  
+  // The successor to this packet
+  std::shared_ptr<AutoPacket> m_successor;
 
   // Hold the time point at which this packet was last initalized.
   const std::chrono::high_resolution_clock::time_point m_initTime;
@@ -517,6 +521,11 @@ public:
     return GetDispositions(typeid(auto_id<T>));
   }
 
+  /// <summary>
+  /// Returns the next packet that will be issued by the packet factory in this context relative to this context
+  /// </summary>
+  std::shared_ptr<AutoPacket> Successor(void);
+  
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   template<class T>
   bool HasSubscribers(void) const {

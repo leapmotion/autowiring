@@ -1,12 +1,10 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
-#include "AutoPacketInternal.h"
+#include "AutoPacketInternal.hpp"
 #include "fast_pointer_cast.h"
 #include "thread_specific_ptr.h"
 #include <cmath>
-
-template class ObjectPool<AutoPacket>;
 
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
@@ -27,11 +25,19 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   if(!IsRunning())
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
-  // Obtain a packet, initialize it, return it
-  auto retVal = std::make_shared<AutoPacketInternal>(
-    *this,
-    GetInternalOutstanding()
-  );
+  std::lock_guard<std::mutex> lk(m_lock);
+  
+  // Obtain a packet from previous packet if it still exists
+  auto prev = m_prevPacket.lock();
+  auto retVal = prev ? prev->Successor() : ConstructPacket();
+  
+  // Store new packet as previous packet
+  m_prevPacket = retVal;
+  return retVal;
+}
+
+std::shared_ptr<AutoPacket> AutoPacketFactory::ConstructPacket(void) {
+  auto retVal = std::make_shared<AutoPacketInternal>(*this, GetInternalOutstanding());
   retVal->Initialize();
   return retVal;
 }

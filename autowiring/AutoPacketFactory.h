@@ -43,6 +43,9 @@ private:
 
   // Internal outstanding reference for issued packet:
   std::weak_ptr<void> m_outstandingInternal;
+  
+  // The last packet issued from this factory
+  std::weak_ptr<AutoPacket> m_prevPacket;
 
   // Collection of known subscribers
   typedef std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> t_autoFilterSet;
@@ -69,6 +72,10 @@ public:
   template<class T>
   void AppendAutoFiltersTo(T& container) const {
     std::lock_guard<std::mutex> lk(m_lock);
+    AppendAutoFiltersToUnsafe(container);
+  }
+  template<class T>
+  void AppendAutoFiltersToUnsafe(T& container) const {
     container.insert(container.end(), m_autoFilters.begin(), m_autoFilters.end());
   }
 
@@ -125,6 +132,8 @@ public:
   /// satisfaction graph
   /// </summary>
   std::shared_ptr<AutoPacket> NewPacket(void);
+
+  std::shared_ptr<AutoPacket> ConstructPacket(void);
 
   /// <returns>the number of outstanding AutoPackets</returns>
   size_t GetOutstanding(void) const;
