@@ -25,7 +25,7 @@ class auto_arg
 {
 public:
   typedef auto_in<T> type;
-  typedef T id_type;
+  typedef auto_id<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
@@ -54,8 +54,8 @@ template<class T>
 class auto_arg<std::shared_ptr<const T>>
 {
 public:
-  typedef auto_in<std::shared_ptr<const T>> type;
-  typedef T id_type;
+  typedef auto_in<const T> type;
+  typedef auto_id<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = true;
@@ -78,7 +78,7 @@ class auto_arg<T&> :
 {
 public:
   typedef auto_out<T> type;
-  typedef T id_type;
+  typedef auto_id<T> id_type;
   static const bool is_input = false;
   static const bool is_output = true;
   static const bool is_shared = false;

@@ -54,11 +54,11 @@ namespace lib {
     using std::unique_lock;
     using std::condition_variable;
 #else
-    using boost::mutex;
-    using boost::lock_guard;
-    using boost::thread;
-    using boost::unique_lock;
-    using boost::condition_variable;
+    using autoboost::mutex;
+    using autoboost::lock_guard;
+    using autoboost::thread;
+    using autoboost::unique_lock;
+    using autoboost::condition_variable;
 #endif
 
 } // namespace lib

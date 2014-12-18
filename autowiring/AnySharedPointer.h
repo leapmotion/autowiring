@@ -73,11 +73,18 @@ public:
   }
 
   /// <summary>
+  /// Convenience overload for slot assignment
+  /// </summary>
+  SharedPointerSlot& operator=(const SharedPointerSlot& rhs) {
+    return *slot() = rhs;
+  }
+
+  /// <summary>
   /// Convenience overload for shared pointer assignment
   /// </summary>
   template<class T>
-  SharedPointerSlotT<T>& operator=(const std::shared_ptr<T>& rhs) {
-    return **this = rhs;
+  void operator=(const std::shared_ptr<T>& rhs) {
+    **this = rhs;
   }
 };
 

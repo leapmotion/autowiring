@@ -40,12 +40,6 @@ private:
   
   // State change notification
   std::condition_variable m_stateCondition;
-  
-  // Have we been signaled to stop
-  bool m_wasStopped;
-
-  // Outstanding reference if this factory is currently running:
-  std::shared_ptr<Object> m_outstanding;
 
   // Internal outstanding reference for issued packet:
   std::weak_ptr<void> m_outstandingInternal;
@@ -86,11 +80,9 @@ public:
   }
 
   // CoreRunnable overrides:
-  bool Start(std::shared_ptr<Object> outstanding) override;
-  void Stop(bool graceful = false) override;
-  void Wait(void) override;
-  bool IsRunning(void) const override { return m_outstanding && !m_wasStopped; };
-  bool ShouldStop(void) const override { return m_wasStopped; };
+  bool DoStart(void) override;
+  void OnStop(bool graceful) override;
+  void DoAdditionalWait(void) override;
 
   /// <summary>
   /// Causes this AutoPacketFactory to release all of its packet subscribers

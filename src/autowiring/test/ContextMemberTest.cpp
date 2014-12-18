@@ -42,9 +42,9 @@ TEST_F(ContextMemberTest, VerifyDetectedMembers)
 
   // Slots defined in reverse order here, because that's how they will be present in the collection
   SlotInformation expected [] = {
-    SlotInformation(nullptr, typeid(SimpleObject), offsetof_nowarn(HasAFewSlots, m_sobj), false),
-    SlotInformation(nullptr, typeid(SimpleThreadedT<long>), offsetof_nowarn(HasAFewSlots, m_sthread2), false),
-    SlotInformation(nullptr, typeid(SimpleThreadedT<int>), offsetof_nowarn(HasAFewSlots, m_sthread1), false)
+    SlotInformation(nullptr, typeid(auto_id<SimpleObject>), offsetof_nowarn(HasAFewSlots, m_sobj), false),
+    SlotInformation(nullptr, typeid(auto_id<SimpleThreadedT<long>>), offsetof_nowarn(HasAFewSlots, m_sthread2), false),
+    SlotInformation(nullptr, typeid(auto_id<SimpleThreadedT<int>>), offsetof_nowarn(HasAFewSlots, m_sthread1), false)
   };
 
   // Validate all pointers are what we expect to find, and in the right order

@@ -11,25 +11,33 @@ template<class T>
 class auto_in
 {
 public:
-  typedef T id_type;
+  typedef std::shared_ptr<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
 
-  static const T& Get(AutoPacket& packet) {
-    const T* out;
-    packet.Get(out);
-    return *out;
-  }
-
   auto_in(AutoPacket& packet) :
-    m_value(Get(packet))
+    packet(packet),
+    m_value(packet.Get<T>())
   {}
 
 private:
+  const AutoPacket& packet;
   const T& m_value;
 
 public:
+  DEPRECATED(operator bool(void) const, "This test is unnecessary, auto_in will always be satisfied") {
+    return true;
+  }
+
+  const std::shared_ptr<const T>& get(void) const {
+    const std::shared_ptr<const T>* retVal;
+    if(!packet.Get(retVal))
+      throw std::runtime_error("Shared pointer not available on this type");
+    return *retVal;
+  }
+
   operator const T&() const { return m_value; }
+  operator std::shared_ptr<const T>() const { return get(); }
   const T& operator*(void) const { return m_value; }
   const T* operator->(void) const { return &m_value; }
 };

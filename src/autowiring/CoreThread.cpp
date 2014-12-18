@@ -44,13 +44,14 @@ void CoreThread::WaitForEvent(void) {
     !this->m_dispatchQueue.empty();
   });
 
-  if(m_dispatchQueue.empty())
+  if(m_dispatchQueue.empty()) {
     // The delay queue has items but the dispatch queue does not, we need to switch
     // to the suggested sleep timeout variant:
     WaitForEventUnsafe(lk, m_delayedQueue.top().GetReadyTime());
-  else
+  } else {
     // We have an event, we can just hop over to this variant:
     DispatchEventUnsafe(lk);
+  }
 }
 
 bool CoreThread::WaitForEvent(std::chrono::milliseconds milliseconds) {
@@ -58,9 +59,10 @@ bool CoreThread::WaitForEvent(std::chrono::milliseconds milliseconds) {
 }
 
 bool CoreThread::WaitForEvent(std::chrono::steady_clock::time_point wakeTime) {
-  if(wakeTime == std::chrono::steady_clock::time_point::max())
+  if(wakeTime == std::chrono::steady_clock::time_point::max()) {
     // Maximal wait--we can optimize by using the zero-arguments version
     return WaitForEvent(), true;
+  }
 
   std::unique_lock<std::mutex> lk(m_dispatchLock);
   return WaitForEventUnsafe(lk, wakeTime);
@@ -103,7 +105,7 @@ void CoreThread::Run() {
     WaitForEvent();
 }
 
-void CoreThread::Stop(bool graceful) {
+void CoreThread::OnStop(bool graceful) {
   if(graceful) {
     // Pend a call which will invoke Abort once the dispatch queue is done:
     DispatchQueue::Pend([this] {
@@ -117,5 +119,5 @@ void CoreThread::Stop(bool graceful) {
     DispatchQueue::Abort();
 
   // Pass off to base class handling:
-  BasicThread::Stop(graceful);
+  BasicThread::OnStop(graceful);
 }

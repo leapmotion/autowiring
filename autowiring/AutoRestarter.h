@@ -52,21 +52,18 @@ public:
   const AutoRestarterConfig config;
 
   // CoreRunnable overrides:
-  bool Start(std::shared_ptr<Object> outstanding) override {
+  bool DoStart() override {
     // Start the enclosed context, do nothing else
     auto ctxt = GetContext();
     if(ctxt && config.startWhenCreated)
       ctxt->Initiate();
-    return true;
+    return false;
   }
 
-  void Stop(bool graceful) override {
+  void OnStop(bool graceful) override {
     std::lock_guard<std::mutex> lk(m_lock);
     m_context.reset();
   }
-  bool IsRunning(void) const override { return false; }
-  bool ShouldStop(void) const override { return true; }
-  void Wait(void) override {}
 
 private:
   mutable std::mutex m_lock;
@@ -84,21 +81,13 @@ private:
     // Parent restarter, we hand control here when we're stopped
     AutoRestarter<Sigil>& ar;
 
-    bool Start(std::shared_ptr<Object> outstanding) override {
-      m_outstanding = outstanding;
+    bool DoStart(void) override {
       return true;
     }
 
-    void Stop(bool graceful) override {
+    void OnStop(bool graceful) override {
       ar.OnContextStopped(*this);
-      m_outstanding.reset();
     }
-
-    std::shared_ptr<Object> m_outstanding;
-
-    bool IsRunning(void) const override { return false; }
-    bool ShouldStop(void) const override { return false; }
-    void Wait(void) {}
   };
 
 protected:

@@ -46,7 +46,7 @@ namespace lib {
 #ifdef _WEBSOCKETPP_CPP11_CHRONO_
     using std::chrono::system_clock;
 #else
-    using boost::chrono::system_clock;
+    using autoboost::chrono::system_clock;
 #endif
 
 } // namespace lib
