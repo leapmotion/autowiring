@@ -15,6 +15,14 @@
   #define STL11_ALLOWED 1
 #endif
 
+// If Autowiring is currently being built, we want to use the "autoboost" namespace in order to
+// avoid requiring a dependency on Boost.
+#ifdef AUTOWIRING_IS_BEING_BUILT
+  #define AUTOWIRING_BOOST_NAME autoboost
+#else
+  #define AUTOWIRING_BOOST_NAME boost
+#endif
+
 #define IS_CLANG defined(__clang_major__)
 #define CLANG_CHECK(maj, min) (__clang_major__ == maj && __clang_minor__ >= min || __clang_major__ > maj)
 #define GCC_CHECK(maj, min) (__GNUC__ == maj && __GNUC_MINOR__  >= min || __GNUC__ > maj)
