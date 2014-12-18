@@ -23,11 +23,11 @@ public:
   AutoRequired<Shared> m_member;
 };
 
-class Derived:
+class MultiInheritDerived:
   public Base
 {
 public:
-  Derived(void) {
+  MultiInheritDerived(void) {
     EXPECT_TRUE(Base::m_member.IsAutowired()) << "Base AutoRequired member was not initialized properly";
     EXPECT_EQ(100, Base::m_member->m_i) << "Autowired instance was not properly constructed";
     EXPECT_TRUE(m_secondMember.IsAutowired()) << "Failed to autowire a type which should have been injected in this context";
@@ -57,7 +57,7 @@ TEST_F(MultiInheritTest, VerifyBaseInitializer) {
   AutoCreateContext ctxt;
   CurrentContextPusher pshr(ctxt);
 
-  Derived derived;
+  MultiInheritDerived derived;
 
   // Expect that something autowires when we're done at least:
   EXPECT_TRUE(derived.m_member.IsAutowired());
