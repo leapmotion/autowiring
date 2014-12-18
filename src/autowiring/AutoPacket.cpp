@@ -377,12 +377,10 @@ bool AutoPacket::HasSubscribers(const std::type_info& data) const {
 std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
   std::lock_guard<std::mutex> lk(m_lock);
   
-  // If successor already exists, use it
-  if (m_successor){
-    return m_successor;
+  // If successor doesn't already exists, create it
+  if (!m_successor){
+    m_successor = m_parentFactory->ConstructPacket();
   }
   
-  std::shared_ptr<AutoPacket> retVal = m_parentFactory->ConstructPacket();
-  m_successor = retVal;
-  return retVal;
+  return m_successor;
 }
