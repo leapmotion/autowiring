@@ -2,11 +2,15 @@
 #include "stdafx.h"
 #include "CoreJob.h"
 #include "CoreContext.h"
+#include FUTURE_HEADER
 
 CoreJob::CoreJob(const char* name) :
   ContextMember(name),
   m_running(false),
   m_curEventInTeardown(true)
+{}
+
+CoreJob::~CoreJob(void)
 {}
 
 void CoreJob::OnPended(std::unique_lock<std::mutex>&& lk){
@@ -34,12 +38,16 @@ void CoreJob::OnPended(std::unique_lock<std::mutex>&& lk){
   } else {
     // Need to ask the thread pool to handle our events again:
     m_curEventInTeardown = false;
-    m_curEvent = std::async(
-      std::launch::async,
-      [this, outstanding] () mutable {
-        this->DispatchAllAndClearCurrent();
-        outstanding.reset();
-      }
+    m_curEvent.reset(
+      new std::future<void>(
+        std::async(
+          std::launch::async,
+          [this, outstanding] () mutable {
+            this->DispatchAllAndClearCurrent();
+            outstanding.reset();
+          }
+        )
+      )
     );
   }
 }
@@ -101,6 +109,8 @@ void CoreJob::OnStop(bool graceful) {
 }
 
 void CoreJob::DoAdditionalWait(void) {
-  if(m_curEvent.valid())
-    m_curEvent.wait();
+  if (m_curEvent) {
+    m_curEvent->wait();
+    m_curEvent.reset();
+  }
 }
