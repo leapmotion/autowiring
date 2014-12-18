@@ -6,11 +6,6 @@
 
 class Object;
 
-namespace std {
-  template<class T>
-  class future;
-};
-
 class CoreJob:
   public ContextMember,
   public DispatchQueue,
@@ -25,7 +20,7 @@ private:
   bool m_running;
 
   // The current outstanding async in the thread pool, if one exists:
-  std::unique_ptr<std::future<void>> m_curEvent;
+  void* m_curEvent;
 
   // Flag, indicating whether curEvent is in a teardown pathway.  This
   // flag is highly stateful.
