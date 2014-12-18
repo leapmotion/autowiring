@@ -40,15 +40,12 @@ private:
   
   // State change notification
   std::condition_variable m_stateCondition;
-  
-  // Have we been signaled to stop
-  bool m_wasStopped;
-
-  // Outstanding reference if this factory is currently running:
-  std::shared_ptr<Object> m_outstanding;
 
   // Internal outstanding reference for issued packet:
   std::weak_ptr<void> m_outstandingInternal;
+  
+  // The last packet issued from this factory
+  std::weak_ptr<AutoPacket> m_prevPacket;
 
   // Collection of known subscribers
   typedef std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> t_autoFilterSet;
@@ -75,15 +72,17 @@ public:
   template<class T>
   void AppendAutoFiltersTo(T& container) const {
     std::lock_guard<std::mutex> lk(m_lock);
+    AppendAutoFiltersToUnsafe(container);
+  }
+  template<class T>
+  void AppendAutoFiltersToUnsafe(T& container) const {
     container.insert(container.end(), m_autoFilters.begin(), m_autoFilters.end());
   }
 
   // CoreRunnable overrides:
-  bool Start(std::shared_ptr<Object> outstanding) override;
-  void Stop(bool graceful = false) override;
-  void Wait(void) override;
-  bool IsRunning(void) const override { return m_outstanding && !m_wasStopped; };
-  bool ShouldStop(void) const override { return m_wasStopped; };
+  bool DoStart(void) override;
+  void OnStop(bool graceful) override;
+  void DoAdditionalWait(void) override;
 
   /// <summary>
   /// Causes this AutoPacketFactory to release all of its packet subscribers
@@ -133,6 +132,8 @@ public:
   /// satisfaction graph
   /// </summary>
   std::shared_ptr<AutoPacket> NewPacket(void);
+
+  std::shared_ptr<AutoPacket> ConstructPacket(void);
 
   /// <returns>the number of outstanding AutoPackets</returns>
   size_t GetOutstanding(void) const;

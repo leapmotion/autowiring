@@ -32,7 +32,7 @@ set(Autowiring_SRCS
   AutoPacket.cpp
   AutoPacket.h
   AutoPacketInternal.cpp
-  AutoPacketInternal.h
+  AutoPacketInternal.hpp
   AutoPacketFactory.cpp
   AutoPacketFactory.h
   AutoPacketGraph.cpp
@@ -211,6 +211,7 @@ add_pch(Autowiring_SRCS "stdafx.h" "stdafx.cpp")
 
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 
+target_include_directories(Autowiring PRIVATE "${CMAKE_SOURCE_DIR}/contrib/autoboost")
 target_include_directories(Autowiring INTERFACE
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
   "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"

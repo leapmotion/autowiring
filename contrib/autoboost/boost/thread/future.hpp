@@ -5,8 +5,8 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef BOOST_THREAD_FUTURE_HPP
-#define BOOST_THREAD_FUTURE_HPP
+#ifndef AUTOBOOST_BOOST_THREAD_FUTURE_HPP
+#define AUTOBOOST_BOOST_THREAD_FUTURE_HPP
 
 #include <boost/thread/detail/config.hpp>
 

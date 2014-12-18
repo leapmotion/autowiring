@@ -21,7 +21,6 @@
 // basic_serializer_map so we can have a one map / archive type. 
 
 #include <boost/config.hpp>
-#include <boost/archive/detail/auto_link_archive.hpp>
 #include <boost/archive/detail/abi_prefix.hpp> // must be the last header
 
 namespace autoboost {

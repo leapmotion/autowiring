@@ -62,3 +62,49 @@ public:
     return Deferred(this);
   }
 };
+
+TEST_F(AutoFilterSequencing, SuccessorAliasRules) {
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet1 = factory->NewPacket();
+  auto packet2 = packet1->Successor();
+  ASSERT_TRUE(!!packet2) << "Returned successor packet was null";
+
+  auto expected = factory->NewPacket();
+
+  ASSERT_EQ(expected, packet2) << "Expected that the successor packet would match the next packet returned by the factory";
+}
+
+TEST_F(AutoFilterSequencing, SuccessorHoldViolationCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet1 = factory->NewPacket();
+  auto packet2 = packet1->Successor();
+
+  ASSERT_TRUE(packet1.unique()) << "Expected that the first issued packet shared pointer not to be aliased anywhere";
+
+  packet1.reset();
+
+  ASSERT_TRUE(packet2.unique()) << "Expected that a successor packet would be unique when the principal was destroyed";
+}
+
+TEST_F(AutoFilterSequencing, PacketReverseSuccessor) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  auto packet1 = factory->NewPacket();
+  auto packet2 = factory->NewPacket();
+
+  ASSERT_EQ(packet2, packet1->Successor()) << "Successor packet obtained after generation from the factory did not match as expected";
+}
+
+TEST_F(AutoFilterSequencing, ManySuccessors) {
+  AutoRequired<AutoPacketFactory> factory;
+  
+  auto packetA = factory->NewPacket();
+  auto packet5 = packetA->Successor()->Successor()->Successor()->Successor();
+  
+  auto packetB = factory->NewPacket();
+  auto packetC = factory->NewPacket();
+  auto packetD = factory->NewPacket();
+  auto packetE = factory->NewPacket();
+  
+  ASSERT_EQ(packet5, packetE) << "Successor packet obtained after generation from the factory did not match as expected";
+}
