@@ -52,12 +52,12 @@ public:
   const AutoRestarterConfig config;
 
   // CoreRunnable overrides:
-  bool DoStart() override {
+  bool OnStart() override {
     // Start the enclosed context, do nothing else
     auto ctxt = GetContext();
     if(ctxt && config.startWhenCreated)
       ctxt->Initiate();
-    return false;
+    return true;
   }
 
   void OnStop(bool graceful) override {
@@ -81,7 +81,7 @@ private:
     // Parent restarter, we hand control here when we're stopped
     AutoRestarter<Sigil>& ar;
 
-    bool DoStart(void) override {
+    bool OnStart(void) override {
       return true;
     }
 

@@ -67,6 +67,19 @@ public:
   void Run(void) override;
 
   /// <summary>
+  /// Provides derived members with a way of obtaining notification that this thread is being stopped
+  /// </summary>
+  /// <remarks>
+  /// This method is called before the dispatch queue is aborted or run down.  Users wishing to perform
+  /// operations gracefully during termination should pend these operations as lambdas to the thread's
+  /// dispatch queue; these lambdas will be invoked if graceful termination is requested, and destroyed
+  /// without invocation otherwise.
+  ///
+  /// The base implementation of this method is guaranteed to do nothing.
+  /// </remarks>
+  virtual void OnStop(void) {}
+
+  /// <summary>
   /// Event which may be used to perform custom handling when the thread is told to stop
   /// </summary>
   /// <param name="graceful">Set to true to rundown the dispatch queue before quitting</param>
@@ -74,8 +87,8 @@ public:
   /// This method is called when the thread should stop.  When invoked, the value of
   /// CoreThread::ShouldStop is guaranteed to be true.
   ///
-  /// Callers are not required to call CoreThread::OnStop.  This method is guaranteed to do
+  /// Derived classes are not required to call CoreThread::OnStop.  This method is guaranteed to do
   /// nothing by default.
   /// </remarks>
-  void OnStop(bool graceful) override;
+  void OnStop(bool graceful) override final;
 };
