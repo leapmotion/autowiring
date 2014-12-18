@@ -7,8 +7,8 @@
   #define NOMINMAX
 #endif
 
-// Defined when we are exporting symbols
-#define AUTOWIRING_EXPORT_AUTONET
+// Defined when Autowiring is being built, as opposed to when it is being linked
+#define AUTOWIRING_IS_BEING_BUILT
 
 #ifndef _MSC_VER
   #include <stdlib.h>
