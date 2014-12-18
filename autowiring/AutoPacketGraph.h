@@ -51,8 +51,8 @@ public:
   
 protected:
   // A mapping of an edge to the number of times it was delivered
-  typedef std::unordered_map<DeliveryEdge, size_t, std::hash<DeliveryEdge>> t_deliveryGraph;
-  t_deliveryGraph m_deliveryGraph;
+  typedef std::unordered_map<DeliveryEdge, size_t, std::hash<DeliveryEdge>> t_deliveryEdges;
+  t_deliveryEdges m_deliveryGraph;
   
   // A lock for this type
   mutable std::mutex m_lock;
@@ -67,6 +67,11 @@ public:
   /// Get a copy of the packet via AutoFilter
   /// </summary>
   void AutoFilter(AutoPacket& packet);
+  
+  /// <summary>
+  /// Get a mapping of the DeliveryEdge to the number of times the AutoFilter was called
+  /// </summary>
+  t_deliveryEdges GetEdgeCounts() const;
   
   /// <summary>
   /// Write the graph to a file in graphviz format

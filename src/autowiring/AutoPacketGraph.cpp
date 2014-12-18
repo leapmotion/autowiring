@@ -45,6 +45,10 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
   });
 }
 
+AutoPacketGraph::t_deliveryEdges AutoPacketGraph::GetEdgeCounts() const {
+  return m_deliveryGraph;
+}
+
 bool AutoPacketGraph::WriteGV(const std::string& filename) const
 {
   std::ofstream file(filename);
