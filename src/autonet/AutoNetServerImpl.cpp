@@ -65,7 +65,7 @@ void AutoNetServerImpl::Run(void){
   CoreThread::Run();
 }
 
-void AutoNetServerImpl::OnStop(void) {
+void AutoNetServerImpl::OnStop(bool graceful) {
   if (m_Server.is_listening())
     m_Server.stop_listening();
   

@@ -64,7 +64,7 @@ public:
   /// The default implementation of Run will simply call WaitForEvent in a loop until it's
   /// told to quit.
   /// </remarks>
-  virtual void Run() override;
+  void Run(void) override;
 
   /// <summary>
   /// Event which may be used to perform custom handling when the thread is told to stop
@@ -77,5 +77,5 @@ public:
   /// Callers are not required to call CoreThread::OnStop.  This method is guaranteed to do
   /// nothing by default.
   /// </remarks>
-  virtual void Stop(bool graceful = false) override;
+  void OnStop(bool graceful) override;
 };
