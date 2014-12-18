@@ -27,14 +27,6 @@
 # define BOOST_COROUTINES_DECL
 #endif
 
-#if ! defined(BOOST_COROUTINES_SOURCE) && ! defined(BOOST_ALL_NO_LIB) && ! defined(BOOST_COROUTINES_NO_LIB)
-# define BOOST_LIB_NAME autoboost_coroutine
-# if defined(BOOST_ALL_DYN_LINK) || defined(BOOST_COROUTINES_DYN_LINK)
-#  define BOOST_DYN_LINK
-# endif
-# include <boost/config/auto_link.hpp>
-#endif
-
 #if defined(BOOST_USE_SEGMENTED_STACKS)
 # if ! ( (defined(__GNUC__) && __GNUC__ > 3 && __GNUC_MINOR__ > 6) || \
          (defined(__clang__) && __clang_major__ > 2 && __clang_minor__ > 3) )

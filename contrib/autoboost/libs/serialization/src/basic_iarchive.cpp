@@ -41,8 +41,6 @@ namespace std{
 #include <boost/archive/detail/basic_pointer_iserializer.hpp>
 #include <boost/archive/detail/basic_iarchive.hpp>
 
-#include <boost/archive/detail/auto_link_archive.hpp>
-
 using namespace autoboost::serialization;
 
 namespace autoboost {

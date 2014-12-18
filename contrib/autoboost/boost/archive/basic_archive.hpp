@@ -22,7 +22,6 @@
 #include <boost/noncopyable.hpp>
 #include <boost/integer_traits.hpp>
 
-#include <boost/archive/detail/auto_link_archive.hpp>
 #include <boost/archive/detail/abi_prefix.hpp> // must be the last header
 
 namespace autoboost {
