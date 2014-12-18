@@ -22,7 +22,6 @@
 #include <boost/archive/basic_archive.hpp>
 #include <boost/archive/detail/decl.hpp>
 #include <boost/archive/detail/basic_serializer.hpp>
-#include <boost/archive/detail/auto_link_archive.hpp>
 #include <boost/archive/detail/abi_prefix.hpp> // must be the last header
 
 #ifdef BOOST_MSVC

@@ -20,7 +20,6 @@
 #include <cstddef> // NULL, size_t
 #include <cwchar>   // for mbstate_t
 #include <boost/config.hpp>
-#include <boost/archive/detail/auto_link_archive.hpp>
 #include <boost/archive/detail/abi_prefix.hpp> // must be the last header
 
 #if defined(BOOST_NO_STDC_NAMESPACE)

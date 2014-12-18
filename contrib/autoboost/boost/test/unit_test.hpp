@@ -19,24 +19,6 @@
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test_suite.hpp>
 
-//____________________________________________________________________________//
-
-// ************************************************************************** //
-// **************                 Auto Linking                 ************** //
-// ************************************************************************** //
-
-#if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_TEST_NO_LIB) && \
-    !defined(BOOST_TEST_SOURCE) && !defined(BOOST_TEST_INCLUDED)
-#  define BOOST_LIB_NAME autoboost_unit_test_framework
-
-#  if defined(BOOST_ALL_DYN_LINK) || defined(BOOST_TEST_DYN_LINK)
-#    define BOOST_DYN_LINK
-#  endif
-
-#  include <boost/config/auto_link.hpp>
-
-#endif  // auto-linking disabled
-
 // ************************************************************************** //
 // **************                  unit_test_main              ************** //
 // ************************************************************************** //
