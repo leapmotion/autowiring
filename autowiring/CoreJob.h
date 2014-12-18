@@ -3,7 +3,6 @@
 #include "ContextMember.h"
 #include "DispatchQueue.h"
 #include "CoreRunnable.h"
-#include FUTURE_HEADER
 
 class Object;
 
@@ -14,14 +13,14 @@ class CoreJob:
 {
 public:
   CoreJob(const char* name = nullptr);
-  virtual ~CoreJob(void) {};
+  virtual ~CoreJob(void);
 
 private:
   // Flag, set to true when it's time to start dispatching
   bool m_running;
 
   // The current outstanding async in the thread pool, if one exists:
-  std::future<void> m_curEvent;
+  void* m_curEvent;
 
   // Flag, indicating whether curEvent is in a teardown pathway.  This
   // flag is highly stateful.
