@@ -106,6 +106,9 @@ void CoreThread::Run() {
 }
 
 void CoreThread::OnStop(bool graceful) {
+  // Base class handling first:
+  BasicThread::OnStop(graceful);
+
   if(graceful) {
     // Pend a call which will invoke Abort once the dispatch queue is done:
     DispatchQueue::Pend([this] {
@@ -117,7 +120,4 @@ void CoreThread::OnStop(bool graceful) {
   } else
     // Abort the dispatch queue so anyone waiting will wake up
     DispatchQueue::Abort();
-
-  // Pass off to base class handling:
-  BasicThread::OnStop(graceful);
 }

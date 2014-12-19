@@ -176,7 +176,7 @@ protected:
   /// Start will not be called from more than one place on the same object.  The thread
   /// will be invoked from the context which was active at the time the thread was created.
   /// </remarks>
-  bool DoStart() override;
+  bool OnStart() override;
 
   void OnStop(bool graceful) override;
 
@@ -192,6 +192,16 @@ public:
   /// told to quit.
   /// </remarks>
   virtual void Run() = 0;
+
+  /// <summary>
+  /// Provides derived members with a way of obtaining notification that this thread is being stopped
+  /// </summary>
+  /// <remarks>
+  /// Callers must not perform any time-consuming operations in this callback; the method may be called
+  /// from a time-sensitive context and unacceptable system performance could result if long-duration
+  /// operations are undertaken here.
+  /// </remarks>
+  virtual void OnStop(void) {}
 
   /// <summary>
   /// Forces all Autowiring threads to reidentify themselves

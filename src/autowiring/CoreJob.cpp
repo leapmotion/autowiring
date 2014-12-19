@@ -27,7 +27,7 @@ void CoreJob::OnPended(std::unique_lock<std::mutex>&& lk){
   }
 
   // Increment outstanding count because we now have an entry out in a thread pool
-  auto outstanding = m_outstanding;
+  auto outstanding = GetOutstanding();
 
   if(!outstanding) {
     // We're currently signalled to stop, we must empty the queue and then
@@ -43,12 +43,14 @@ void CoreJob::OnPended(std::unique_lock<std::mutex>&& lk){
     if (m_curEvent)
       delete static_cast<std::future<void>*>(m_curEvent);
     
-    m_curEvent = new std::future<void>(std::async(std::launch::async,
-                   [this, outstanding] () mutable {
-                     this->DispatchAllAndClearCurrent();
-                     outstanding.reset();
-                   }
-                 ));
+    m_curEvent = new std::future<void>(
+      std::async(
+        std::launch::async,
+        [this, outstanding] () mutable {
+          this->DispatchAllAndClearCurrent();
+          outstanding.reset();
+        }
+      ));
   }
 }
 
@@ -74,7 +76,7 @@ void CoreJob::DispatchAllAndClearCurrent(void) {
   }
 }
 
-bool CoreJob::DoStart(void) {
+bool CoreJob::OnStart(void) {
   std::shared_ptr<CoreContext> context = m_context.lock();
   if(!context) {
     return false;

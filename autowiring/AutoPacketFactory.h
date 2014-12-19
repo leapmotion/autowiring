@@ -77,7 +77,7 @@ public:
   }
 
   // CoreRunnable overrides:
-  bool DoStart(void) override;
+  bool OnStart(void) override;
   void OnStop(bool graceful) override;
   void DoAdditionalWait(void) override;
 
@@ -133,7 +133,7 @@ public:
   std::shared_ptr<AutoPacketInternal> ConstructPacket(void);
 
   /// <returns>the number of outstanding AutoPackets</returns>
-  size_t GetOutstanding(void) const;
+  size_t GetOutstandingPacketCount(void) const;
 
   /// <summary>
   /// Called by each AutoPacket's Finalize method to allow the factory

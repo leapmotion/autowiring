@@ -13,41 +13,48 @@ CoreRunnable::CoreRunnable(void):
 
 CoreRunnable::~CoreRunnable(void) {}
 
-void CoreRunnable::Start(std::shared_ptr<Object> outstanding) {
+const std::shared_ptr<Object>& CoreRunnable::GetOutstanding(void) const {
+  return m_outstanding;
+}
+
+bool CoreRunnable::Start(std::shared_ptr<Object> outstanding) {
   std::lock_guard<std::mutex> lk(m_lock);
-  if(m_wasStarted || m_outstanding || m_shouldStop) {
+  if(m_wasStarted || m_outstanding || m_shouldStop)
     // We have already been started or stopped, end here
-    return;
-  }
+    return true;
 
   m_wasStarted = true;
   m_outstanding = outstanding;
-  if(!DoStart()) {
+  if(!OnStart()) {
     m_shouldStop = true;
     m_outstanding.reset();
-    return;
+
+    // Immediately invoke a graceless stop in response
+    OnStop(false);
   }
+
+  return true;
 }
 
 void CoreRunnable::Stop(bool graceful) {
-  if(m_shouldStop) {
-    // We were never started or have already stopped, end here
-    return;
-  } else if (!m_wasStarted) {
-    // We were never started, and now we never will be.
+  if (!m_shouldStop) {
+    // Stop flag should be pulled high
     m_shouldStop = true;
+
+    // Do not call this method more than once:
     OnStop(graceful);
-    return;
   }
 
-  std::shared_ptr<Object> outstanding;
+  if (m_outstanding) {
+    std::shared_ptr<Object> outstanding;
+    std::lock_guard<std::mutex> lk(m_lock);
 
-  m_shouldStop = true;
-  OnStop(graceful);
+    // Ensure we do not invoke the outstanding count dtor while holding a lock
+    outstanding.swap(m_outstanding);
 
-  std::lock_guard<std::mutex> lk(m_lock);
-  outstanding.swap(m_outstanding);
-  m_cv.notify_all();
+    // Everything looks good now
+    m_cv.notify_all();
+  }
 }
 
 void CoreRunnable::Wait(void) {

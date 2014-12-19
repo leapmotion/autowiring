@@ -11,27 +11,33 @@ public:
   virtual ~CoreRunnable(void);
   
 private:
-  // Set to true if this runnable was ever signalled to start
+  // Set to true if this runnable was ever signaled to start
   bool m_wasStarted;
 
   // Set to true if this runnable should terminate processing
   bool m_shouldStop;
 
-protected:
   // The outstanding count, held for as long as processing is underway
   std::shared_ptr<Object> m_outstanding;
 
+protected:
   std::mutex m_lock;
   std::condition_variable m_cv;
+
+  /// <returns>
+  /// A reference to the current outstanding counter
+  /// </returns>
+  const std::shared_ptr<Object>& GetOutstanding(void) const;
 
   /// <summary>
   /// Method invoked from Start when this class is being asked to begin processing
   /// </summary>
   /// <returns>True if processing has started, false otherwise</returns>
   /// <remarks>
-  /// This method will be called at most once.
+  /// This method will be called at most once.  Returning false from this method will result in an immediate invocation
+  /// of the OnStop(false).
   /// </remarks>
-  virtual bool DoStart(void) { return false; };
+  virtual bool OnStart(void) { return false; };
 
   /// <summary>
   /// Invoked by the base class when a Stop call has been made
@@ -58,13 +64,16 @@ public:
   /// <summary>
   /// Causes this runnable to begin processing
   /// </summary>
-  /// <returns>True if this call resulted in a successful start the first time, false in all other cases</returns>
+  /// <returns>This method always returns true</returns>
   /// <remarks>
   /// It is an error to call this routine more than once.  The passed outstanding shared pointer
   /// is used to keep tracking of number of simultaneous runnables outstanding.  This routine may
   /// be called even after Stop has been called; the caller MUST return false in this case.
+  ///
+  /// Callers should strongly prefer not to override Start if possible.  Instead, override OnStart and
+  /// obtain an instance of the outstanding pointer via GetOutstanding
   /// </remarks>
-  void Start(std::shared_ptr<Object> outstanding);
+  virtual bool Start(std::shared_ptr<Object> outstanding);
 
   /// <summary>
   /// Stops this runnable, optionally performing graceful cleanup if requested
