@@ -13,44 +13,27 @@ class AutoPacketGraphTest:
 class APReceiver1 {
 public:
   APReceiver1(void) {}
-  
-  void AutoFilter(Decoration<0> d0) {
-    m_int0 = d0.i;
-  }
-  
-  int m_int0;
+  void AutoFilter(Decoration<0> d0) { }
 };
 
 class APReceiver2 {
 public:
   APReceiver2(void) {}
-  
-  void AutoFilter(Decoration<0> d0, Decoration<1>& d1) {
-    m_int0 = d0.i;
-    
-    d1.i = m_int1;
-  }
-  
-  int m_int0;
-  int m_int1;
+  void AutoFilter(Decoration<0> d0, Decoration<1>& d1) { }
 };
 
 class APReceiver3 {
 public:
   APReceiver3(void) {}
-  
-  void AutoFilter(Decoration<0> d0, Decoration<1> d1) {
-    m_int0 = d0.i;
-    m_int1 = d1.i;
-  }
-  
-  int m_int0;
-  int m_int1;
+  void AutoFilter(Decoration<0> d0, Decoration<1> d1) { }
 };
 
 class APReceiver4 {
 public:
   APReceiver4(void) {}
+  void AutoFilter(Decoration<0> d0, Decoration<2> d2) { }
+};
+
   
   void AutoFilter(Decoration<0> d0, Decoration<2> d2) {
     m_int0 = d0.i;
