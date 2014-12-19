@@ -23,6 +23,20 @@ AutoPacket::~AutoPacket(void) {
       std::chrono::high_resolution_clock::now() - m_initTime
     )
   );
+  
+  // Create vector of all successor packets that will be destroyed
+  // This prevents recursive AutoPacket destructor calls
+  std::vector<std::shared_ptr<AutoPacket>> packets;  
+  
+  // Recurse through unique successors, storing them in our vector
+  for (AutoPacket* current = this; current->m_successor.unique();) {
+    packets.push_back(current->m_successor);
+    
+    // Reset and continue to next successor
+    AutoPacket* prev_current = current;
+    current = current->m_successor.get();
+    prev_current->m_successor.reset();
+  }
 }
 
 DecorationDisposition& AutoPacket::CheckoutImmediateUnsafe(const std::type_info& ti, const void* pvImmed)
