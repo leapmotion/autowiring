@@ -34,61 +34,88 @@ public:
   void AutoFilter(Decoration<0> d0, Decoration<2> d2) { }
 };
 
-  
-  void AutoFilter(Decoration<0> d0, Decoration<2> d2) {
-    m_int0 = d0.i;
-    m_int2 = d2.i;
-  }
-  
-  int m_int0;
-  int m_int2;
-};
 
-TEST_F(AutoPacketGraphTest, SimpleAutoGraph) {
+TEST_F(AutoPacketGraphTest, VerifyEmptyGraphBeforeCtxtInit) {
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+  
+  AutoRequired<AutoPacketGraph> graph;
+  ASSERT_TRUE(graph->GetEdgeCounts().empty())
+    << "Graph did not start out empty before context initiation";
+  
+  ctxt->Initiate();
+  
+  ASSERT_TRUE(graph->GetEdgeCounts().empty())
+    << "Graph did not stay empty after context initiation";
+  
+  ctxt->SignalShutdown();
+}
+
+TEST_F(AutoPacketGraphTest, VerifyEmptyGraphAfterCtxtInit) {
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+  
+  ctxt->Initiate();
+  
+  AutoRequired<AutoPacketGraph> graph;
+  ASSERT_TRUE(graph->GetEdgeCounts().empty())
+    << "Graph did not start out empty";
+  
+  ctxt->SignalShutdown();
+}
+
+TEST_F(AutoPacketGraphTest, VerifySimpleEdgeFromObjectBeforeInit) {
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+  
+  AutoRequired<AutoPacketGraph> graph;
+  AutoRequired<APReceiver1> receiver1;
+  
+  ASSERT_TRUE(graph->GetEdgeCounts().empty())
+    << "Graph should still be empty before context is initialized";
+  
+  ctxt->Initiate();
+  
+  ASSERT_EQ(1UL, graph->GetEdgeCounts().size())
+    << "Graph did not detect AutoFilter from object after being initiated";
+  
+  ctxt->SignalShutdown();
+}
+
+TEST_F(AutoPacketGraphTest, VerifySimpleInputFilter) {
+  // TODO
+}
+
+TEST_F(AutoPacketGraphTest, VerifySimpleOutputFilter) {
+  // TODO
+}
+
+TEST_F(AutoPacketGraphTest, VerifyPacketDecorationIncrementingCount) {
+  // TODO
+}
+
+TEST_F(AutoPacketGraphTest, VerifyLoadAutoFilterSystem) {
   AutoCreateContext ctxt;
   CurrentContextPusher pshr(ctxt);
   
   AutoRequired<AutoPacketFactory> factory(ctxt);
   AutoRequired<AutoPacketGraph> graph;
   
+  ctxt->Initiate();
+  
   AutoRequired<APReceiver1> receiver1;
   AutoRequired<APReceiver2> receiver2;
   AutoRequired<APReceiver3> receiver3;
   AutoRequired<APReceiver4> receiver4;
   
-  ctxt->Initiate();
+  AutoPacketGraph::t_deliveryEdges edges = graph->GetEdgeCounts();
   
-  int int0 = 12;
-  int int1 = 34;
-  int int2 = 56;
+  ASSERT_EQ(7UL, edges.size())
+    << "Graph could not load the edges from new objects";
   
-  receiver2->m_int1 = int1;
-  
-  {
-    // decorate 1
-    auto packet = factory->NewPacket();
-    packet->Decorate(Decoration<0>(int0));
-
-    // TODO: add some real test cases
-//    ASSERT_EQ(int0, receiver1->m_int0);
-//    
-//    ASSERT_EQ(int0, receiver2->m_int0);
-//    
-//    ASSERT_EQ(int0, receiver3->m_int0);
-//    ASSERT_EQ(int1, receiver3->m_int1);
-    
-    // decorate 2
-    packet->Decorate(Decoration<2>(int2));
-
-    // TODO: add some real test cases
-//    ASSERT_EQ(int0, receiver4->m_int0);
-//    ASSERT_EQ(int2, receiver4->m_int2);
+  for (auto& itr : edges) {
+    ASSERT_EQ(0UL, itr.second)
+      << "Coutn should be 0 since packets have not been delivered yet";
   }
-  
-  graph->WriteGV("/Users/jnguyen/Desktop/graph.gv");
-  
-  // Shutdown our context, and rundown our factory
-  ctxt->SignalShutdown();
-  factory->Wait();
-  
 }
+

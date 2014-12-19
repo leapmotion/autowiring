@@ -7,22 +7,64 @@
 #include "SatCounter.h"
 #include <fstream>
 #include <string>
+#include FUNCTIONAL_HEADER
 
-
-AutoPacketGraph::AutoPacketGraph()
-{
+AutoPacketGraph::AutoPacketGraph() {
 }
 
-void AutoPacketGraph::AddEdge(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input) {
+void AutoPacketGraph::LoadEdges() {
+  std::lock_guard<std::mutex> lk(m_lock);
+  
+  std::list<AutoFilterDescriptor> descriptors;
+  m_factory->AppendAutoFiltersTo(descriptors);
+  
+  // Sort, eliminate duplicates
+  descriptors.sort();
+  descriptors.erase(std::unique(descriptors.begin(), descriptors.end()), descriptors.end());
+  
+  for (auto& descriptor : descriptors) {
+    for(auto pCur = descriptor.GetAutoFilterInput(); *pCur; pCur++) {
+      const std::type_info& type_info = *pCur->ti;
+      
+      // Skip the AutoPacketGraph
+      const std::type_info& descType = m_factory->GetContext()->GetAutoTypeId(descriptor.GetAutoFilter());
+      if (descType == typeid(AutoPacketGraph)) {
+        continue;
+      }
+      
+      if (pCur->is_input) {
+        DeliveryEdge edge { &type_info, descriptor, true };
+        if (m_deliveryGraph.find(edge) == m_deliveryGraph.end()) {
+          m_deliveryGraph[edge] = 0;
+        }
+      }
+      
+      if (pCur->is_output) {
+        DeliveryEdge edge { &type_info, descriptor, false };
+        if (m_deliveryGraph.find(edge) == m_deliveryGraph.end()) {
+          m_deliveryGraph[edge] = 0;
+        }
+      }
+    }
+  }
+}
+
+void AutoPacketGraph::RecordDelivery(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input) {
   DeliveryEdge edge { ti, descriptor, input };
   
-  std::lock_guard<std::mutex> lk(m_lock);
   auto itr = m_deliveryGraph.find(edge);
-  if (itr == m_deliveryGraph.end()) {
-    m_deliveryGraph[edge] = 1;
-  } else {
-    itr->second++;
-  }
+  assert(itr != m_deliveryGraph.end());
+  itr->second++;
+}
+
+void AutoPacketGraph::NewObject(CoreContext&, const ObjectTraits&) {
+  LoadEdges();
+}
+
+bool AutoPacketGraph::DoStart(void) {
+  LoadEdges();
+  
+  return false;
 }
 
 void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
@@ -32,12 +74,12 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
       auto type = decoration.m_type;
       
       if (publisher && publisher->called) {
-        AddEdge(type, *publisher, false);
+        RecordDelivery(type, *publisher, false);
       }
       
       for (auto& subscriber : decoration.m_subscribers) {
         if (subscriber->called) {
-          AddEdge(type, *subscriber, true);
+          RecordDelivery(type, *subscriber, true);
         }
       }
     }
@@ -48,8 +90,7 @@ AutoPacketGraph::t_deliveryEdges AutoPacketGraph::GetEdgeCounts() const {
   return m_deliveryGraph;
 }
 
-bool AutoPacketGraph::WriteGV(const std::string& filename) const
-{
+bool AutoPacketGraph::WriteGV(const std::string& filename) const {
   std::ofstream file(filename);
   if (!file && !file.good()) {
     return false;
@@ -69,6 +110,7 @@ bool AutoPacketGraph::WriteGV(const std::string& filename) const
     auto& descriptor = edge.descriptor;
     auto count = itr.second;
     
+    // Skip the AutoPacketGraph
     const std::type_info& descType = m_factory->GetContext()->GetAutoTypeId(descriptor.GetAutoFilter());
     if (descType == typeid(AutoPacketGraph)) {
       continue;

@@ -4,6 +4,8 @@
 #include "AutoPacket.h"
 #include "AutoPacketFactory.h"
 #include "Autowired.h"
+#include "AutowiringEvents.h"
+#include "CoreRunnable.h"
 #include STL_UNORDERED_MAP
 
 
@@ -46,26 +48,46 @@ namespace std {
 /// <summary>
 /// Graphical visualization of AutoPackets
 /// </summary>
-class AutoPacketGraph
+class AutoPacketGraph:
+  public AutowiringEvents,
+  public CoreRunnable
 {
 public:
   AutoPacketGraph();
   
+  typedef std::unordered_map<DeliveryEdge, size_t, std::hash<DeliveryEdge>> t_deliveryEdges;
+  
 protected:
   // A mapping of an edge to the number of times it was delivered
-  typedef std::unordered_map<DeliveryEdge, size_t, std::hash<DeliveryEdge>> t_deliveryEdges;
   t_deliveryEdges m_deliveryGraph;
   
   // A lock for this type
   mutable std::mutex m_lock;
   
   // Reference to the AutoPacketFactory
-  Autowired<AutoPacketFactory> m_factory;
+  AutoRequired<AutoPacketFactory> m_factory;
   
   /// <summary>
-  /// Add an edge to the graph given the following parameters
+  /// Scan all of the objects and add any AutoFilter's from all of the objects in a system.
   /// </summary>
-  void AddEdge(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input);
+  /// <remarks>
+  /// This function will scan all of the objects (and rescan) and only add new edges to our graph.
+  /// </remarks>
+  void LoadEdges();
+  
+  /// <summary>
+  /// Record the delivery of a packet and increment the number of times the packet has been delivered
+  /// </summary>
+  void RecordDelivery(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input);
+  
+  /// AutowiringEvents overrides
+  virtual void NewContext(CoreContext&) {}
+  virtual void ExpiredContext(CoreContext&) {}
+  virtual void EventFired(CoreContext&, const std::type_info&) {}
+  virtual void NewObject(CoreContext&, const ObjectTraits&);
+  
+  /// CoreRunnable overrides
+  virtual bool DoStart(void);
   
 public:
   /// <summary>
