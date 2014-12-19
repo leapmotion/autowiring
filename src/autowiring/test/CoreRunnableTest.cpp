@@ -13,7 +13,7 @@ class StartsSubcontextWhileStarting:
 public:
   AutoCreateContext m_myContext;
 
-  bool DoStart(void) override {
+  bool OnStart(void) override {
     m_myContext->Initiate();
     return false;
   }

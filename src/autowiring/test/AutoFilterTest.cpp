@@ -26,10 +26,10 @@ TEST_F(AutoFilterTest, GetOutstandingTest) {
 
   {
     auto packet = factory->NewPacket();
-    ASSERT_EQ(1UL, factory->GetOutstanding()) << "Factory outstanding count mismatch";
+    ASSERT_EQ(1UL, factory->GetOutstandingPacketCount()) << "Factory outstanding count mismatch";
   }
 
-  ASSERT_EQ(0UL, factory->GetOutstanding()) << "Factory outstanding did not go to zero after releasing the only outstanding packet";
+  ASSERT_EQ(0UL, factory->GetOutstandingPacketCount()) << "Factory outstanding did not go to zero after releasing the only outstanding packet";
 }
 
 TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
@@ -668,11 +668,11 @@ TEST_F(AutoFilterTest, SingleImmediate) {
     // Verify we can't decorate this value a second time:
     ASSERT_ANY_THROW(packet->DecorateImmediate(val)) << "Expected an exception when a second attempt was made to attach a decoration";
   }
-  ASSERT_EQ(0, factory->GetOutstanding()) << "Destroyed packet remains outstanding";
+  ASSERT_EQ(0, factory->GetOutstandingPacketCount()) << "Destroyed packet remains outstanding";
 
   static const int pattern = 1365; //1365 ~ 10101010101
   AutoRequired<FilterGen<Decoration<pattern>>> fgp;
-  ASSERT_EQ(0, factory->GetOutstanding()) << "Outstanding packet count is correct after incrementing m_poolVersion due to AutoFilter addition";
+  ASSERT_EQ(0, factory->GetOutstandingPacketCount()) << "Outstanding packet count is correct after incrementing m_poolVersion due to AutoFilter addition";
   {
     auto packet = factory->NewPacket();
     Decoration<pattern> dec;
@@ -681,7 +681,7 @@ TEST_F(AutoFilterTest, SingleImmediate) {
     ASSERT_TRUE(fgp->m_called == 1) << "Filter should called " << fgp->m_called << " times, expected 1";
     ASSERT_TRUE(std::get<0>(fgp->m_args).i == pattern) << "Filter argument yielded " << std::get<0>(fgp->m_args).i << "expected " << pattern;
   }
-  ASSERT_EQ(0, factory->GetOutstanding()) << "Destroyed packet remains outstanding";
+  ASSERT_EQ(0, factory->GetOutstandingPacketCount()) << "Destroyed packet remains outstanding";
 
   // Terminate enclosing context
   AutoCurrentContext()->SignalShutdown(true);
