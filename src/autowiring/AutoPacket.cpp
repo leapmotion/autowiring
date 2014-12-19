@@ -3,6 +3,7 @@
 #include "AutoPacket.h"
 #include "Autowired.h"
 #include "AutoPacketFactory.h"
+#include "AutoPacketInternal.hpp"
 #include "AutoPacketProfiler.h"
 #include "AutoFilterDescriptor.h"
 #include "ContextEnumerator.h"
@@ -15,34 +16,7 @@ AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outst
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
   m_initTime(std::chrono::high_resolution_clock::now()),
   m_outstanding(std::move(outstanding))
-{
-  // Add filters from our factory. We're holding the lock for this factory, so use unsafe
-  factory.AppendAutoFiltersToUnsafe(m_satCounters);
-  
-  // Traverse all descendant contexts, adding their packet subscriber vectors one at a time:
-  for(const auto& curContext : ContextEnumerator(factory.GetContext()->FirstChild())) {
-    AutowiredFast<AutoPacketFactory> curFactory(curContext);
-    if(curFactory)
-      // Only insert if this context actually has a packet factory
-      curFactory->AppendAutoFiltersTo(m_satCounters);
-  }
-
-  // Sort, eliminate duplicates
-  m_satCounters.sort();
-  m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
-
-  // Prime the satisfaction graph for each element:
-  for(auto& satCounter : m_satCounters)
-    AddSatCounter(satCounter);
-
-  // Initialize all counters:
-  for (auto& satCounter : m_satCounters)
-    satCounter.Reset();
-
-  // Clear all references:
-  for (auto& decoration : m_decorations)
-    decoration.second.Reset();
-}
+{}
 
 AutoPacket::~AutoPacket(void) {
   m_parentFactory->RecordPacketDuration(
@@ -383,7 +357,7 @@ void AutoPacket::RemoveRecipient(Recipient&& recipient) {
   m_satCounters.erase(q);
 }
 
-std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
+std::shared_ptr<AutoPacketInternal> AutoPacket::SuccessorInternal(void) {
   std::lock_guard<std::mutex> lk(m_lock);
   
   // If successor doesn't already exists, create it
@@ -392,4 +366,8 @@ std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
   }
   
   return m_successor;
+}
+
+std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
+  return SuccessorInternal();
 }
