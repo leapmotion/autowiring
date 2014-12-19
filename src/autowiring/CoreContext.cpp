@@ -371,13 +371,20 @@ void CoreContext::Initiate(void) {
 
   // Reacquire the lock to prevent m_threads from being modified while we sit on it
   auto outstanding = IncrementOutstandingThreadCount();
-  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+  
+  // Get the end of the thread list that we have at the time of lock acquisition
+  t_threadList::iterator end;
+  
+  {
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+    end = m_threads.end();
+    
+    // Signal our condition variable
+    m_stateBlock->m_stateChanged.notify_all();
+  }
 
-  // Signal our condition variable
-  m_stateBlock->m_stateChanged.notify_all();
-
-  for(CoreRunnable* q : m_threads)
-    q->Start(outstanding);
+  for (auto q = m_threads.begin(); q != end; ++q)
+    (*q)->Start(outstanding);
 }
 
 void CoreContext::InitiateCoreThreads(void) {
