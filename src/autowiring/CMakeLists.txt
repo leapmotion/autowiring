@@ -55,6 +55,7 @@ set(Autowiring_SRCS
   auto_arg.h
   auto_in.h
   auto_out.h
+  auto_prev.h
   BasicThread.cpp
   BasicThread.h
   BasicThreadStateBlock.cpp
