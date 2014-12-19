@@ -12,6 +12,9 @@ AutoPacketInternal::AutoPacketInternal(AutoPacketFactory& factory, std::shared_p
 AutoPacketInternal::~AutoPacketInternal(void) {}
 
 void AutoPacketInternal::Initialize(void) {
+  // Mark init time of packet
+  this->m_initTime = std::chrono::high_resolution_clock::now();
+
   // Traverse all descendant contexts, adding their packet subscriber vectors one at a time:
   for(const auto& curContext : ContextEnumerator(m_parentFactory->GetContext())) {
     AutowiredFast<AutoPacketFactory> curFactory(curContext);

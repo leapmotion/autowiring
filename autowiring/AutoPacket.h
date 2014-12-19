@@ -65,7 +65,7 @@ protected:
   std::shared_ptr<AutoPacketInternal> m_successor;
 
   // Hold the time point at which this packet was last initalized.
-  const std::chrono::high_resolution_clock::time_point m_initTime;
+  std::chrono::high_resolution_clock::time_point m_initTime;
 
   // Outstanding count local and remote holds:
   const std::shared_ptr<void> m_outstanding;
