@@ -3,6 +3,7 @@
 #include "AutoPacketInternal.hpp"
 #include "AutoPacketFactory.h"
 #include "SatCounter.h"
+#include <algorithm>
 
 AutoPacketInternal::AutoPacketInternal(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding) :
   AutoPacket(factory, std::move(outstanding))

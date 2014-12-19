@@ -28,9 +28,12 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   std::shared_ptr<AutoPacketInternal> retVal;
   {
     std::lock_guard<std::mutex> lk(m_lock);
-    retVal = m_nextPacket;
+    
+    // New packet issued
+    ++m_packetCount;
   
     // Create a new next packet
+    retVal = m_nextPacket;
     m_nextPacket = retVal->SuccessorInternal();
   }
   
@@ -151,12 +154,12 @@ AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(const std::type_
 }
 
 size_t AutoPacketFactory::GetOutstanding(void) const {
-  return m_outstandingInternal.use_count();
+  // Next packet is stored internally, don't count that packet
+  return m_outstandingInternal.use_count() - 1;
 }
 
 void AutoPacketFactory::RecordPacketDuration(std::chrono::nanoseconds duration) {
   std::unique_lock<std::mutex> lk(m_lock);
-  ++m_packetCount;
   m_packetDurationSum += duration.count();
   m_packetDurationSqSum += duration.count() * duration.count();
 }

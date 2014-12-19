@@ -82,6 +82,7 @@ TEST_F(AutoFilterSequencing, SuccessorHoldViolationCheck) {
   ASSERT_TRUE(packet1.unique()) << "Expected that the first issued packet shared pointer not to be aliased anywhere";
 
   packet1.reset();
+  factory->NewPacket();
 
   ASSERT_TRUE(packet2.unique()) << "Expected that a successor packet would be unique when the principal was destroyed";
 }
