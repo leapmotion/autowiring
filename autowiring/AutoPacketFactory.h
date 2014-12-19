@@ -16,6 +16,7 @@ struct AdjacencyEntry;
 class AutoPacketFactory;
 class Deferred;
 class DispatchQueue;
+class AutoPacketInternal;
 
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
@@ -45,7 +46,7 @@ private:
   std::weak_ptr<void> m_outstandingInternal;
   
   // The last packet issued from this factory
-  std::weak_ptr<AutoPacket> m_prevPacket;
+  std::shared_ptr<AutoPacketInternal> m_nextPacket;
 
   // Collection of known subscribers
   typedef std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> t_autoFilterSet;
@@ -72,10 +73,6 @@ public:
   template<class T>
   void AppendAutoFiltersTo(T& container) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    AppendAutoFiltersToUnsafe(container);
-  }
-  template<class T>
-  void AppendAutoFiltersToUnsafe(T& container) const {
     container.insert(container.end(), m_autoFilters.begin(), m_autoFilters.end());
   }
 
@@ -133,7 +130,7 @@ public:
   /// </summary>
   std::shared_ptr<AutoPacket> NewPacket(void);
 
-  std::shared_ptr<AutoPacket> ConstructPacket(void);
+  std::shared_ptr<AutoPacketInternal> ConstructPacket(void);
 
   /// <returns>the number of outstanding AutoPackets</returns>
   size_t GetOutstandingPacketCount(void) const;

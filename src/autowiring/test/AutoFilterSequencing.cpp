@@ -82,6 +82,7 @@ TEST_F(AutoFilterSequencing, SuccessorHoldViolationCheck) {
   ASSERT_TRUE(packet1.unique()) << "Expected that the first issued packet shared pointer not to be aliased anywhere";
 
   packet1.reset();
+  factory->NewPacket();
 
   ASSERT_TRUE(packet2.unique()) << "Expected that a successor packet would be unique when the principal was destroyed";
 }
@@ -97,14 +98,33 @@ TEST_F(AutoFilterSequencing, PacketReverseSuccessor) {
 
 TEST_F(AutoFilterSequencing, ManySuccessors) {
   AutoRequired<AutoPacketFactory> factory;
+  {
+    auto packetA = factory->NewPacket();
+    auto packet5 = packetA->Successor()->Successor()->Successor()->Successor();
+
+    factory->NewPacket();
+    factory->NewPacket();
+    factory->NewPacket();
+    auto packetE = factory->NewPacket();
   
-  auto packetA = factory->NewPacket();
-  auto packet5 = packetA->Successor()->Successor()->Successor()->Successor();
+    ASSERT_EQ(packet5, packetE) << "Successor packet obtained after generation from the factory did not match as expected";
+  }
   
-  auto packetB = factory->NewPacket();
-  auto packetC = factory->NewPacket();
-  auto packetD = factory->NewPacket();
-  auto packetE = factory->NewPacket();
-  
-  ASSERT_EQ(packet5, packetE) << "Successor packet obtained after generation from the factory did not match as expected";
+  AutoRequired<FilterFirst> first;
+  {
+    auto packetA = factory->NewPacket();
+    packetA->Successor()->Successor()->Successor()->Successor();
+    ASSERT_EQ(1, first->m_called) << "AutoFilter triggered from successor";
+
+    factory->NewPacket();
+    ASSERT_EQ(2, first->m_called) << "AutoFilter not triggered from new packet";
+    factory->NewPacket();
+    ASSERT_EQ(3, first->m_called) << "AutoFilter not triggered from new packet";
+    factory->NewPacket();
+    ASSERT_EQ(4, first->m_called) << "AutoFilter not triggered from new packet";
+    factory->NewPacket();
+    ASSERT_EQ(5, first->m_called) << "AutoFilter not triggered from new packet";
+    factory->NewPacket();
+    ASSERT_EQ(6, first->m_called) << "AutoFilter not triggered from new packet";
+  }
 }
