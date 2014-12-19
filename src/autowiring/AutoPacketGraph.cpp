@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoPacketGraph.h"
-#include "AutoPacketProfiler.h"
 #include "CoreContext.h"
 #include "DecorationDisposition.h"
 #include "demangle.h"
@@ -70,10 +69,13 @@ bool AutoPacketGraph::WriteGV(const std::string& filename) const
     auto& descriptor = edge.descriptor;
     auto count = itr.second;
     
-    // TODO: skip if type == AutoPacketGraph
+    const std::type_info& descType = m_factory->GetContext()->GetAutoTypeId(descriptor.GetAutoFilter());
+    if (descType == typeid(AutoPacketGraph)) {
+      continue;
+    }
     
     std::string typeName = autowiring::demangle(type);
-    std::string descriptorName = autowiring::demangle(descriptor.GetType());
+    std::string descriptorName = autowiring::demangle(descType);
     
     // Get a unique set of types/descriptors
     if (typeNames.find(typeName) == typeNames.end())

@@ -2,6 +2,8 @@
 #pragma once
 #include "AutoFilterDescriptor.h"
 #include "AutoPacket.h"
+#include "AutoPacketFactory.h"
+#include "Autowired.h"
 #include STL_UNORDERED_MAP
 
 
@@ -56,6 +58,9 @@ protected:
   
   // A lock for this type
   mutable std::mutex m_lock;
+  
+  // Reference to the AutoPacketFactory
+  Autowired<AutoPacketFactory> m_factory;
   
   /// <summary>
   /// Add an edge to the graph given the following parameters
