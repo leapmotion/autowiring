@@ -443,3 +443,37 @@ TEST_F(CoreThreadTest, PendAfterShutdown) {
   // Verify that the lambda was destroyed more or less right away
   ASSERT_TRUE(v.unique()) << "Shared pointer in a lambda closure appears to have been leaked";
 }
+
+class BTOverridesOnStopHandler:
+  public BasicThread
+{
+public:
+  BTOverridesOnStopHandler(void) : got_stopped(false) {}
+  bool got_stopped;
+
+  void Run(void) override {}
+
+  void OnStop(void) override { got_stopped = true; }
+};
+
+class CTOverridesOnStopHandler:
+  public CoreThread
+{
+public:
+  CTOverridesOnStopHandler(void) : got_stopped(false) {}
+  bool got_stopped;
+  void OnStop(void) override { got_stopped = true; }
+};
+
+TEST_F(CoreThreadTest, VerifyThreadGetsOnStop) {
+  AutoRequired<BTOverridesOnStopHandler> bsoosh;
+  AutoRequired<CTOverridesOnStopHandler> ctoosh;
+
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+  ctxt->SignalShutdown();
+  ctxt->Wait();
+
+  EXPECT_TRUE(bsoosh->got_stopped) << "BasicThread instance did not receive an OnStop notification as expected";
+  EXPECT_TRUE(ctoosh->got_stopped) << "CoreThread instance did not receive an OnStop notification as expected";
+}
