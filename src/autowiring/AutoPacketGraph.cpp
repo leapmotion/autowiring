@@ -61,7 +61,7 @@ void AutoPacketGraph::NewObject(CoreContext&, const ObjectTraits&) {
   LoadEdges();
 }
 
-bool AutoPacketGraph::DoStart(void) {
+bool AutoPacketGraph::OnStart(void) {
   LoadEdges();
   
   return false;

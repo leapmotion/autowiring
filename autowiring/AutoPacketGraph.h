@@ -81,13 +81,13 @@ protected:
   void RecordDelivery(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input);
   
   /// AutowiringEvents overrides
-  virtual void NewContext(CoreContext&) {}
-  virtual void ExpiredContext(CoreContext&) {}
-  virtual void EventFired(CoreContext&, const std::type_info&) {}
-  virtual void NewObject(CoreContext&, const ObjectTraits&);
+  virtual void NewContext(CoreContext&) override {}
+  virtual void ExpiredContext(CoreContext&) override {}
+  virtual void EventFired(CoreContext&, const std::type_info&) override {}
+  virtual void NewObject(CoreContext&, const ObjectTraits&) override;
   
   /// CoreRunnable overrides
-  virtual bool DoStart(void);
+  virtual bool OnStart(void) override;
   
 public:
   /// <summary>
