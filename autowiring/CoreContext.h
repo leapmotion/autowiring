@@ -115,6 +115,9 @@ protected:
 
   // State block for this context:
   std::unique_ptr<CoreContextStateBlock> m_stateBlock;
+  
+  // Set if a thread is added and needs to be run
+  bool m_beforeRunning;
 
   // Set if threads in this context should be started when they are added
   bool m_initiated;
