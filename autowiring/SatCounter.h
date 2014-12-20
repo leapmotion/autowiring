@@ -66,14 +66,14 @@ struct SatCounter:
   /// Conditionally decrements AutoFilter argument satisfaction.
   /// </summary>
   /// <returns>True if this decrement yielded satisfaction of all arguments</returns>
-  bool Decrement(const std::type_index& data) {
+  bool Decrement(void) {
     return !--remaining;
   }
 
   /// <summary>
   /// Conditionally increments AutoFilter argument satisfaction.
   /// </summary>
-  void Increment(const std::type_index& data) {
+  void Increment(void) {
     ++remaining;
   }
 

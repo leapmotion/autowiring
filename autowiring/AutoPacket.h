@@ -27,6 +27,38 @@ class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
 
+struct DecorationKey {
+  DecorationKey(const DecorationKey& rhs) :
+    index(rhs.index),
+    tshift(rhs.tshift)
+  {}
+
+  DecorationKey(const std::type_info& ti, int tshift = 0) :
+    index(ti),
+    tshift(tshift)
+  {}
+
+  // The type index
+  std::type_index index;
+
+  // Zero refers to a decoration created on this packet, a positive number [tshift] indicates
+  // a decoration attached [tshift] packets ago.
+  int tshift;
+
+  bool operator==(const DecorationKey& rhs) const {
+    return index == rhs.index && tshift == rhs.tshift;
+  }
+};
+
+namespace std {
+  template<>
+  struct hash<DecorationKey> {
+    size_t operator()(const DecorationKey& key)const {
+      return key.index.hash_code() + key.tshift;
+    }
+  };
+}
+
 /// <summary>
 /// A decorator-style processing packet
 /// </summary>
@@ -60,7 +92,7 @@ public:
 protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
-  
+
   // The successor to this packet
   std::shared_ptr<AutoPacketInternal> m_successor;
 
@@ -76,7 +108,7 @@ protected:
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
   // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
-  typedef std::unordered_map<std::type_index, DecorationDisposition> t_decorationMap;
+  typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
   mutable std::mutex m_lock;
 
@@ -103,7 +135,7 @@ protected:
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
-  void MarkUnsatisfiable(const std::type_info& info);
+  void MarkUnsatisfiable(const DecorationKey& info);
 
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
@@ -113,7 +145,7 @@ protected:
   /// This method results in a call to the AutoFilter method on any subscribers which are
   /// satisfied by this decoration.
   /// </remarks>
-  void UpdateSatisfaction(const std::type_info& info);
+  void UpdateSatisfaction(const DecorationKey& info);
 
   /// <summary>
   /// Performs a "satisfaction pulse", which will avoid notifying any deferred filters
@@ -132,18 +164,18 @@ protected:
   void UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& data);
 
   /// <summary>Un-templated & locked component of CompleteCheckout</summary>
-  void UnsafeComplete(bool ready, const std::type_info& ti, DecorationDisposition*& entry);
+  AnySharedPointer UnsafeComplete(bool ready, const DecorationKey& ti, DecorationDisposition*& entry);
 
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
   /// <param name="ready">Ready flag, set to false if the decoration should be marked unsatisfiable</param>
-  void CompleteCheckout(bool ready, const std::type_info& data);
+  void CompleteCheckout(bool ready, const DecorationKey& data);
 
   /// <summary>
   /// Retrieves the decoration disposition corresponding to some type
   /// </summary>
   /// <returns>The disposition, if the decoration exists and is satisfied, otherwise nullptr</returns>
-  const DecorationDisposition* GetDisposition(const std::type_info& ti) const;
+  const DecorationDisposition* GetDisposition(const DecorationKey& ti) const;
 
   /// <summary>
   /// Retrieves the decoration disposition corresponding to some type
@@ -152,9 +184,14 @@ protected:
   /// <remarks>
   /// This method also does type aliasing in order to avoid attempted references to undefined types
   /// </remarks>
-  template<class T>
+  template<class T, int N>
   const DecorationDisposition* GetDisposition(void) const {
-    return GetDisposition(typeid(auto_id<T>));
+    return GetDisposition(
+        DecorationKey(
+          typeid(auto_id<T>),
+          N
+        )
+      );
   }
 
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
@@ -216,7 +253,7 @@ public:
   /// </remarks>
   template<class T>
   bool Get(const T*& out) const {
-    const DecorationDisposition* pDisposition = GetDisposition<T>();
+    const DecorationDisposition* pDisposition = GetDisposition<T, 0>();
     if (pDisposition) {
       if (pDisposition->m_decoration) {
         out = static_cast<const T*>(pDisposition->m_decoration->ptr());
@@ -240,14 +277,15 @@ public:
   /// <summary>
   /// Shared pointer specialization of const T*&, used to obtain the underlying shared pointer for some type T
   /// </summary>
+  /// <param name="N">The number back to retrieve</param>
   /// <remarks>
   /// This specialization cannot be used to obtain a decoration which has been attached to this packet via
   /// DecorateImmediate.
   /// </remarks>
-  template<class T>
+  template<class T, int N = 0>
   bool Get(const std::shared_ptr<const T>*& out) const {
     // Decoration must be present and the shared pointer itself must also be present
-    const DecorationDisposition* pDisposition = GetDisposition<T>();
+    const DecorationDisposition* pDisposition = GetDisposition<T, N>();
     if (!pDisposition || !pDisposition->m_decoration) {
       out = nullptr;
       return false;
@@ -339,7 +377,7 @@ public:
   /// when it falls out of scope if so marked.
   /// </remarks>
   template<class T>
-  AutoCheckout<T> Checkout(std::shared_ptr<T> ptr) {
+  AutoCheckout<T> Checkout(std::shared_ptr<T> ptr, int tshift = 0) {
     const std::type_info& data = typeid(auto_id<T>);
 
     /// Injunction to prevent existential loops:
@@ -354,6 +392,7 @@ public:
       std::lock_guard<std::mutex> guard(m_lock);
       UnsafeCheckout(&any_ptr, data);
     }
+
     return AutoCheckout<T>(
       *this,
       ptr,

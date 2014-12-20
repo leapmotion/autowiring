@@ -5,11 +5,12 @@
 #include MEMORY_HEADER
 
 class AutoPacket;
+struct DecorationKey;
 
 template<class T>
 class AutoCheckout {
 public:
-  typedef void (AutoPacket::*t_completion)(bool, const std::type_info&);
+  typedef void (AutoPacket::*t_completion)(bool, const DecorationKey&);
 
   AutoCheckout(void) :
     m_parent(nullptr),

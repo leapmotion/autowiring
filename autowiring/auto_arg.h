@@ -2,6 +2,7 @@
 #pragma once
 #include "auto_in.h"
 #include "auto_out.h"
+#include "auto_prev.h"
 
 /*
  The auto_arg<T> classes are used to generate of auto_in and auto_out types
@@ -29,6 +30,7 @@ public:
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
+  static const int tshift = 0;
 };
 
 /// <summary>
@@ -59,6 +61,7 @@ public:
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = true;
+  static const int tshift = 0;
 };
 
 /// <summary>
@@ -82,6 +85,7 @@ public:
   static const bool is_input = false;
   static const bool is_output = true;
   static const bool is_shared = false;
+  static const int tshift = 0;
 };
 
 /// <summary>
@@ -111,6 +115,18 @@ class auto_arg<auto_out<T>>:
   public auto_arg<T&>
 {};
 
+template<class T, int N>
+class auto_arg<auto_prev<T, N>>
+{
+public:
+  typedef auto_prev<T> type;
+  typedef auto_id<T> id_type;
+
+  static const bool is_input = true;
+  static const bool is_output = false;
+  static const bool is_shared = false;
+  static const int tshift = N;
+};
 
 /// <summary>
 /// AutoPacket specialization
@@ -127,4 +143,5 @@ public:
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
+  static const int tshift = 0;
 };

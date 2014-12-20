@@ -64,14 +64,16 @@ DecorationDisposition& AutoPacket::CheckoutImmediateUnsafe(const std::type_info&
 void AutoPacket::AddSatCounter(SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
     const std::type_info& dataType = *pCur->ti;
-    DecorationDisposition* entry = &m_decorations[dataType];
+
+    DecorationKey key(dataType, pCur->tshift);
+    DecorationDisposition* entry = &m_decorations[key];
     entry->m_type = &dataType;
 
     // Decide what to do with this entry:
     if (pCur->is_input) {
       entry->m_subscribers.push_back(&satCounter);
       if (entry->satisfied)
-        satCounter.Decrement(dataType);
+        satCounter.Decrement();
     }
     if (pCur->is_output) {
       if(entry->m_publisher) {
@@ -103,12 +105,12 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
   }
 }
 
-void AutoPacket::MarkUnsatisfiable(const std::type_info& info) {
+void AutoPacket::MarkUnsatisfiable(const DecorationKey& info) {
   // TODO:
   // Add an anti-present decoration
 }
 
-void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
+void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
   std::list<SatCounter*> callQueue;
   {
     std::lock_guard<std::mutex> lk(m_lock);
@@ -121,7 +123,7 @@ void AutoPacket::UpdateSatisfaction(const std::type_info& info) {
     // Update satisfaction inside of lock
     DecorationDisposition* decoration = &dFind->second;
     for(const auto& satCounter : decoration->m_subscribers)
-      if(satCounter->Decrement(info))
+      if(satCounter->Decrement())
         callQueue.push_back(satCounter);
   }
 
@@ -148,8 +150,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 
           // Now do the decrementation and proceed even if optional > 0,
           // since this is the only opportunity to fulfill the arguments
-          (cur->Decrement(*pTypeSubs[i]->m_type) ||
-           cur->remaining == 0)
+          (cur->Decrement() || cur->remaining == 0)
         )
           // Finally, queue a call for this type
           callQueue.push_back(cur);
@@ -167,7 +168,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
     std::lock_guard<std::mutex> lk(m_lock);
     for(size_t i = nInfos; i--;)
       for(const auto& cur : pTypeSubs[i]->m_subscribers)
-          cur->Increment(*pTypeSubs[i]->m_type);
+          cur->Increment();
   }
 }
 
@@ -198,8 +199,8 @@ void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& dat
   entry.m_decoration = *ptr;
 }
 
-void AutoPacket::UnsafeComplete(bool ready, const std::type_info& ti, DecorationDisposition*& entry) {
-  entry = &m_decorations[ti];
+AnySharedPointer AutoPacket::UnsafeComplete(bool ready, const DecorationKey& key, DecorationDisposition*& entry) {
+  entry = &m_decorations[key];
 
   assert(entry->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
   assert(entry->isCheckedOut); // CompleteCheckout must follow Checkout
@@ -211,14 +212,34 @@ void AutoPacket::UnsafeComplete(bool ready, const std::type_info& ti, Decoration
   // Reset the checkout flag before releasing the lock:
   entry->isCheckedOut = false;
   entry->satisfied = true;
+  return AnySharedPointer(entry->m_decoration);
 }
 
-void AutoPacket::CompleteCheckout(bool ready, const std::type_info& ti) {
+void AutoPacket::CompleteCheckout(bool ready, const DecorationKey& ti) {
   DecorationDisposition* entry = nullptr;
+  AnySharedPointer decoration;
   {
     // This allows us to retrieve correct entries for decorated input requests
     std::lock_guard<std::mutex> guard(m_lock);
-    UnsafeComplete(ready, ti, entry);
+    decoration = UnsafeComplete(ready, ti, entry);
+  }
+
+  DecorationKey successorPrior(ti);
+  successorPrior.tshift++;
+  auto q = m_decorations.find(successorPrior);
+  if (q != m_decorations.end()) {
+    auto successorPacket = Successor();
+
+    std::lock_guard<std::mutex> lk(successorPacket->m_lock);
+    auto& disposition = successorPacket->m_decorations[successorPrior];
+
+    if (
+      !disposition.isCheckedOut &&
+      !disposition.satisfied
+    ) {
+      disposition.m_decoration = decoration;
+      disposition.satisfied = true;
+    }
   }
   
   if (entry) {
@@ -229,7 +250,7 @@ void AutoPacket::CompleteCheckout(bool ready, const std::type_info& ti) {
   }
 }
 
-const DecorationDisposition* AutoPacket::GetDisposition(const std::type_info& ti) const {
+const DecorationDisposition* AutoPacket::GetDisposition(const DecorationKey& ti) const {
   std::lock_guard<std::mutex> lk(m_lock);
 
   auto q = m_decorations.find(ti);

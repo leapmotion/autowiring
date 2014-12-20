@@ -23,7 +23,8 @@ struct AutoFilterDescriptorInput {
     is_input(false),
     is_output(false),
     is_shared(false),
-    ti(nullptr)
+    ti(nullptr),
+    tshift(0)
   {}
 
   template<class T>
@@ -31,13 +32,15 @@ struct AutoFilterDescriptorInput {
     is_input(auto_arg<T>::is_input),
     is_output(auto_arg<T>::is_output),
     is_shared(auto_arg<T>::is_shared),
-    ti(&typeid(typename auto_arg<T>::id_type))
+    ti(&typeid(typename auto_arg<T>::id_type)),
+    tshift(auto_arg<T>::tshift)
   {}
 
   const bool is_input;
   const bool is_output;
   const bool is_shared;
   const std::type_info* const ti;
+  const int tshift;
 
   operator bool(void) const {
     return !!ti;
