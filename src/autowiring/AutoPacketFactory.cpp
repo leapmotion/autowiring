@@ -25,21 +25,24 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   if(!IsRunning())
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
-  std::lock_guard<std::mutex> lk(m_lock);
+  std::shared_ptr<AutoPacketInternal> retVal;
+  {
+    std::lock_guard<std::mutex> lk(m_lock);
+    
+    // New packet issued
+    ++m_packetCount;
   
-  // Obtain a packet from previous packet if it still exists
-  auto prev = m_prevPacket.lock();
-  auto retVal = prev ? prev->Successor() : ConstructPacket();
+    // Create a new next packet
+    retVal = m_nextPacket;
+    m_nextPacket = retVal->SuccessorInternal();
+  }
   
-  // Store new packet as previous packet
-  m_prevPacket = retVal;
+  retVal->Initialize();
   return retVal;
 }
 
-std::shared_ptr<AutoPacket> AutoPacketFactory::ConstructPacket(void) {
-  auto retVal = std::make_shared<AutoPacketInternal>(*this, GetInternalOutstanding());
-  retVal->Initialize();
-  return retVal;
+std::shared_ptr<AutoPacketInternal> AutoPacketFactory::ConstructPacket(void) {
+  return std::make_shared<AutoPacketInternal>(*this, GetInternalOutstanding());
 }
 
 bool AutoPacketFactory::IsAutoPacketType(const std::type_info& dataType) {
@@ -71,6 +74,10 @@ std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
 }
 
 bool AutoPacketFactory::OnStart(void) {
+  // Initialize first packet
+  m_nextPacket = ConstructPacket();
+  
+  // Wake us up. We're starting now
   m_stateCondition.notify_all();
   return true;
 }
@@ -81,6 +88,9 @@ void AutoPacketFactory::OnStop(bool graceful) {
 
   // Queue of local variables to be destroyed when leaving scope
   t_autoFilterSet autoFilters;
+  
+  // Reset next packet, it will never be issued
+  m_nextPacket.reset();
 
   // Lock destruction precedes local variables
   std::lock_guard<std::mutex> lk(m_lock);
@@ -144,12 +154,12 @@ AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(const std::type_
 }
 
 size_t AutoPacketFactory::GetOutstandingPacketCount(void) const {
-  return m_outstandingInternal.use_count();
+  // Next packet is stored internally, don't count that packet
+  return m_outstandingInternal.use_count() - 1;
 }
 
 void AutoPacketFactory::RecordPacketDuration(std::chrono::nanoseconds duration) {
   std::unique_lock<std::mutex> lk(m_lock);
-  ++m_packetCount;
   m_packetDurationSum += duration.count();
   m_packetDurationSqSum += duration.count() * duration.count();
 }

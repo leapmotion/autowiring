@@ -3,6 +3,7 @@
 #include "AutoPacketInternal.hpp"
 #include "AutoPacketFactory.h"
 #include "SatCounter.h"
+#include <algorithm>
 
 AutoPacketInternal::AutoPacketInternal(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding) :
   AutoPacket(factory, std::move(outstanding))
@@ -11,6 +12,33 @@ AutoPacketInternal::AutoPacketInternal(AutoPacketFactory& factory, std::shared_p
 AutoPacketInternal::~AutoPacketInternal(void) {}
 
 void AutoPacketInternal::Initialize(void) {
+  // Mark init time of packet
+  this->m_initTime = std::chrono::high_resolution_clock::now();
+
+  // Traverse all descendant contexts, adding their packet subscriber vectors one at a time:
+  for(const auto& curContext : ContextEnumerator(m_parentFactory->GetContext())) {
+    AutowiredFast<AutoPacketFactory> curFactory(curContext);
+    if(curFactory)
+      // Only insert if this context actually has a packet factory
+      curFactory->AppendAutoFiltersTo(m_satCounters);
+  }
+  
+  // Sort, eliminate duplicates
+  m_satCounters.sort();
+  m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
+  
+  // Prime the satisfaction graph for each element:
+  for(auto& satCounter : m_satCounters)
+    AddSatCounter(satCounter);
+  
+  // Initialize all counters:
+  for (auto& satCounter : m_satCounters)
+    satCounter.Reset();
+  
+  // Clear all references:
+  for (auto& decoration : m_decorations)
+    decoration.second.Reset();
+  
   // Find all subscribers with no required or optional arguments:
   std::list<SatCounter*> callCounters;
   for (auto& satCounter : m_satCounters)

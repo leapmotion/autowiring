@@ -22,6 +22,7 @@
 #include EXCEPTION_PTR_HEADER
 
 class AutoPacket;
+class AutoPacketInternal;
 class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
@@ -61,10 +62,10 @@ protected:
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
   
   // The successor to this packet
-  std::shared_ptr<AutoPacket> m_successor;
+  std::shared_ptr<AutoPacketInternal> m_successor;
 
   // Hold the time point at which this packet was last initalized.
-  const std::chrono::high_resolution_clock::time_point m_initTime;
+  std::chrono::high_resolution_clock::time_point m_initTime;
 
   // Outstanding count local and remote holds:
   const std::shared_ptr<void> m_outstanding;
@@ -530,6 +531,7 @@ public:
   /// <summary>
   /// Returns the next packet that will be issued by the packet factory in this context relative to this context
   /// </summary>
+  std::shared_ptr<AutoPacketInternal> SuccessorInternal(void);
   std::shared_ptr<AutoPacket> Successor(void);
   
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>

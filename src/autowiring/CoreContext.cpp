@@ -31,6 +31,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iter
   m_pParent(pParent),
   m_backReference(backReference),
   m_stateBlock(new CoreContextStateBlock),
+  m_beforeRunning(false),
   m_initiated(false),
   m_isShutdown(false),
   m_junctionBoxManager(
@@ -225,9 +226,6 @@ void CoreContext::AddInternal(const ObjectTraits& traits) {
     if(traits.pContextMember)
       AddContextMember(traits.pContextMember);
 
-    if(traits.pCoreRunnable)
-      AddCoreRunnable(traits.pCoreRunnable);
-
     if(traits.pFilter)
       m_filters.push_back(traits.pFilter.get());
 
@@ -238,6 +236,10 @@ void CoreContext::AddInternal(const ObjectTraits& traits) {
     // to be considered.
     UpdateDeferredElements(std::move(lk), m_concreteTypes.back());
   }
+  
+  // Moving this outside the lock because AddCoreRunnable will perform the checks inside its function
+  if(traits.pCoreRunnable)
+    AddCoreRunnable(traits.pCoreRunnable);
 
   // Event receivers:
   if(traits.receivesEvents) {
@@ -392,11 +394,20 @@ void CoreContext::InitiateCoreThreads(void) {
 }
 
 void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
+  // As we signal shutdown, there may be a CoreRunnable that is in the "running" state.  If so,
+  // then we will skip that thread as we signal the list of threads to shutdown.
+  t_threadList::iterator firstThreadToStop;
+  
   // Wipe out the junction box manager, notify anyone waiting on the state condition:
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     UnregisterEventReceiversUnsafe();
     m_isShutdown = true;
+    
+    firstThreadToStop = m_threads.begin();
+    if (m_beforeRunning)
+      ++firstThreadToStop;
+    
     m_stateBlock->m_stateChanged.notify_all();
   }
 
@@ -438,8 +449,8 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
 
   // Pass notice to all child threads:
   bool graceful = (shutdownMode == ShutdownMode::Graceful);
-  for(CoreRunnable* runnable : m_threads)
-    runnable->Stop(graceful);
+  for (auto itr = firstThreadToStop; itr != m_threads.end(); ++itr)
+    (*itr)->Stop(graceful);
 
   // Signal our condition variable
   m_stateBlock->m_stateChanged.notify_all();
@@ -480,16 +491,40 @@ std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
 }
 
 void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
-  // Insert into the linked list of threads first:
-  m_threads.push_front(ptr.get());
+  // Performing a double check.
+  bool shouldRun;
+  {
+    std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
+    
+    // Insert into the linked list of threads first:
+    m_threads.push_front(ptr.get());
+    
+    // Check if we're already running, this means we're late to the party and need to start _now_.
+    shouldRun = m_initiated;
+    
+    // Signal that we are in the "running"
+    m_beforeRunning = true;
+  }
 
-  if(m_initiated)
-    // We're already running, this means we're late to the party and need to start _now_.
+  // Run this thread without the lock
+  if(shouldRun)
     ptr->Start(IncrementOutstandingThreadCount());
+  
 
-  if(m_isShutdown)
-    // We're really late to the party, it's already over.  Make sure the thread's stop
-    // overrides are called and that it transitions to a stopped state.
+  // Check if the stop signal was sent between the time we started running until now.  If so, then
+  // we will stop the thread manually here.
+  bool shouldStopHere;
+  {
+    std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
+    
+    // Signal that we have stopped "running"
+    m_beforeRunning = false;
+    
+    // If SignalShutdown() was invoked while we were "running", then we will need to stop this thread ourselves
+    shouldStopHere = m_isShutdown;
+  }
+
+  if(shouldStopHere)
     ptr->Stop(false);
 }
 
