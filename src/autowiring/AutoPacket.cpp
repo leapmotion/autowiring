@@ -370,17 +370,13 @@ void AutoPacket::RemoveRecipient(Recipient&& recipient) {
   m_satCounters.erase(q);
 }
 
-std::shared_ptr<AutoPacketInternal> AutoPacket::SuccessorInternal(void) {
+std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
   std::lock_guard<std::mutex> lk(m_lock);
-  
+
   // If successor doesn't already exists, create it
   if (!m_successor){
     m_successor = m_parentFactory->ConstructPacket();
   }
-  
-  return m_successor;
-}
 
-std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
-  return SuccessorInternal();
+  return m_successor;
 }

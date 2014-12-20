@@ -525,7 +525,6 @@ public:
   /// <summary>
   /// Returns the next packet that will be issued by the packet factory in this context relative to this context
   /// </summary>
-  std::shared_ptr<AutoPacketInternal> SuccessorInternal(void);
   std::shared_ptr<AutoPacket> Successor(void);
   
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
