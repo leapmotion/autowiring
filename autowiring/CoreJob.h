@@ -40,7 +40,7 @@ protected:
 
 public:
   // "CoreRunnable" overrides
-  bool DoStart(void) override;
+  bool OnStart(void) override;
   void OnStop(bool graceful) override;
   void DoAdditionalWait(void) override;
 };

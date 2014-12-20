@@ -54,7 +54,7 @@ std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
   if (retVal)
     return retVal;
 
-  auto outstanding = m_outstanding;
+  std::shared_ptr<Object> outstanding = GetOutstanding();
   retVal = std::shared_ptr<void>(
     (void*)1,
     [this, outstanding] (void*) mutable {
@@ -70,7 +70,7 @@ std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
   return retVal;
 }
 
-bool AutoPacketFactory::DoStart(void) {
+bool AutoPacketFactory::OnStart(void) {
   m_stateCondition.notify_all();
   return true;
 }
@@ -143,7 +143,7 @@ AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(const std::type_
   return AutoFilterDescriptor();
 }
 
-size_t AutoPacketFactory::GetOutstanding(void) const {
+size_t AutoPacketFactory::GetOutstandingPacketCount(void) const {
   return m_outstandingInternal.use_count();
 }
 

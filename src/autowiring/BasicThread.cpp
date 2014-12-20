@@ -114,7 +114,7 @@ bool BasicThread::ThreadSleep(std::chrono::nanoseconds timeout) {
   return m_state->m_stateCondition.wait_for(lk, timeout, [this] { return ShouldStop(); });
 }
 
-bool BasicThread::DoStart(void) {
+bool BasicThread::OnStart(void) {
   std::shared_ptr<CoreContext> context = m_context.lock();
   if(!context)
     return false;
@@ -124,7 +124,7 @@ bool BasicThread::DoStart(void) {
 
   // Place the new thread entity directly in the space where it goes to avoid
   // any kind of races arising from asynchronous access to this space
-  auto outstanding = m_outstanding;
+  auto outstanding = GetOutstanding();
   m_state->m_thisThread.~thread();
   new (&m_state->m_thisThread) std::thread(
     [this, outstanding] () mutable {
@@ -139,6 +139,9 @@ void BasicThread::OnStop(bool graceful) {
   if (!m_running) {
     m_completed = true;
   }
+
+  // Always invoke stop handler:
+  OnStop();
 }
 
 void BasicThread::DoAdditionalWait(void) {

@@ -31,7 +31,7 @@ public:
 
   // Functions from BasicThread
   virtual void Run(void) override;
-  virtual void OnStop(bool graceful) override;
+  virtual void OnStop(void) override;
 
   // Server Handler functions
   void OnOpen(websocketpp::connection_hdl hdl);
