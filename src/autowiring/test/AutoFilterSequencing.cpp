@@ -3,6 +3,7 @@
 #include "TestFixtures/Decoration.hpp"
 #include <autowiring/autowiring.h>
 #include <autowiring/AutoSelfUpdate.h>
+#include <autowiring/auto_prev.h>
 
 class AutoFilterSequencing:
   public testing::Test
@@ -127,4 +128,34 @@ TEST_F(AutoFilterSequencing, ManySuccessors) {
     factory->NewPacket();
     ASSERT_EQ(6, first->m_called) << "AutoFilter not triggered from new packet";
   }
+}
+
+class PrevFilter {
+public:
+  PrevFilter(void):
+    m_called(0)
+  {}
+  
+  int prev_value;
+  int m_called;
+  
+  void AutoFilter(int current, auto_prev<int> prev) {
+    ++m_called;
+    if (prev) {
+      EXPECT_EQ(prev_value, *prev) << "auto_prev isn't set to the previous value";
+    }
+    prev_value = current;
+  }
+};
+
+TEST_F(AutoFilterSequencing, SimplePrev) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<PrevFilter> filter;
+  
+  for (int i=0; i<10; ++i) {
+    auto packet = factory->NewPacket();
+    packet->Decorate(i);
+  }
+  
+  ASSERT_EQ(10, filter->m_called) << "AutoFilter not called";
 }

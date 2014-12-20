@@ -9,4 +9,18 @@
 /// from the previous packet. It's null for the the first packet
 /// </remarks>
 template<class T>
-struct auto_prev {};
+struct auto_prev {
+  auto_prev(const std::shared_ptr<T>& val):
+    m_value(val)
+  {}
+
+  operator bool(void) const {
+    return bool(m_value);
+  }
+
+  const T& operator*(void) const {
+    return *m_value;
+  }
+
+  std::shared_ptr<T> m_value;
+};
