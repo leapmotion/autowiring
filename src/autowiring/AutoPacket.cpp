@@ -179,20 +179,20 @@ bool AutoPacket::UnsafeHas(const std::type_info& data) const {
   return q->second.satisfied;
 }
 
-void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& data) {
-  auto& entry = m_decorations[data];
-  entry.m_type = &data; // Ensure correct type if instantiated here
+void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const DecorationKey& key) {
+  auto& entry = m_decorations[key];
+  entry.m_type = &key.ti; // Ensure correct type if instantiated here
 
   if (entry.satisfied) {
     std::stringstream ss;
     ss << "Cannot decorate this packet with type " << autowiring::demangle(*ptr)
-    << ", the requested decoration already exists";
+       << ", the requested decoration already exists";
     throw std::runtime_error(ss.str());
   }
   if(entry.isCheckedOut) {
     std::stringstream ss;
     ss << "Cannot check out decoration of type " << autowiring::demangle(*ptr)
-    << ", it is already checked out elsewhere";
+       << ", it is already checked out elsewhere";
     throw std::runtime_error(ss.str());
   }
   entry.isCheckedOut = true;
@@ -223,30 +223,29 @@ void AutoPacket::CompleteCheckout(bool ready, const DecorationKey& ti) {
     std::lock_guard<std::mutex> guard(m_lock);
     decoration = UnsafeComplete(ready, ti, entry);
   }
+  
+  // Priors update on the next key:
+  if (entry) {
+    if (ready)
+      UpdateSatisfaction(ti);
+    else
+      MarkUnsatisfiable(ti);
+  }
 
+  // If there are any filters on _this_ packet that desire to know the prior packet, then
+  // we must proactively preserve the value of this decoration for our successor.
   DecorationKey successorPrior(ti);
   successorPrior.tshift++;
   auto q = m_decorations.find(successorPrior);
   if (q != m_decorations.end()) {
     auto successorPacket = Successor();
 
-    std::lock_guard<std::mutex> lk(successorPacket->m_lock);
-    auto& disposition = successorPacket->m_decorations[successorPrior];
-
-    if (
-      !disposition.isCheckedOut &&
-      !disposition.satisfied
-    ) {
-      disposition.m_decoration = decoration;
-      disposition.satisfied = true;
+    // Checkout, satisfy:
+    {
+      std::lock_guard<std::mutex> lk(successorPacket->m_lock);
+      successorPacket->UnsafeCheckout(&decoration, successorPrior);
     }
-  }
-  
-  if (entry) {
-    if (ready)
-      UpdateSatisfaction(ti);
-    else
-      MarkUnsatisfiable(ti);
+    successorPacket->CompleteCheckout(true, successorPrior);
   }
 }
 

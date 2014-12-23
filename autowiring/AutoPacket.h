@@ -29,24 +29,24 @@ struct AutoFilterDescriptor;
 
 struct DecorationKey {
   DecorationKey(const DecorationKey& rhs) :
-    index(rhs.index),
+    ti(rhs.ti),
     tshift(rhs.tshift)
   {}
 
   DecorationKey(const std::type_info& ti, int tshift = 0) :
-    index(ti),
+    ti(ti),
     tshift(tshift)
   {}
 
   // The type index
-  std::type_index index;
+  const std::type_info& ti;
 
   // Zero refers to a decoration created on this packet, a positive number [tshift] indicates
   // a decoration attached [tshift] packets ago.
   int tshift;
 
   bool operator==(const DecorationKey& rhs) const {
-    return index == rhs.index && tshift == rhs.tshift;
+    return ti == rhs.ti && tshift == rhs.tshift;
   }
 };
 
@@ -54,7 +54,7 @@ namespace std {
   template<>
   struct hash<DecorationKey> {
     size_t operator()(const DecorationKey& key)const {
-      return key.index.hash_code() + key.tshift;
+      return key.ti.hash_code() + key.tshift;
     }
   };
 }
@@ -161,10 +161,10 @@ protected:
   bool UnsafeHas(const std::type_info& data) const;
 
   /// <summary>Un-templated & locked component of Checkout</summary>
-  void UnsafeCheckout(AnySharedPointer* ptr, const std::type_info& data);
+  void UnsafeCheckout(AnySharedPointer* ptr, const DecorationKey& key);
 
   /// <summary>Un-templated & locked component of CompleteCheckout</summary>
-  AnySharedPointer UnsafeComplete(bool ready, const DecorationKey& ti, DecorationDisposition*& entry);
+  AnySharedPointer UnsafeComplete(bool ready, const DecorationKey& key, DecorationDisposition*& entry);
 
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
