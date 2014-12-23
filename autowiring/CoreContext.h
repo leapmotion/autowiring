@@ -393,6 +393,18 @@ protected:
   template<class Factory>
   void RegisterFactory(const Factory&, autowiring::member_new_type<Factory, autowiring::factorytype::none>) {}
 
+  // Internal resolvers, used to determine which teardown style the user would like to use
+  template<class Fx>
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void)) { TeardownNotifier::AddTeardownListener(fx); }
+
+  template<class Fx>
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&)) { TeardownNotifier::AddTeardownListener([fx, this] () mutable { fx(*this); }); }
+  template<class Fx>
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void) const) { TeardownNotifier::AddTeardownListener(fx); }
+
+  template<class Fx>
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&) const) { TeardownNotifier::AddTeardownListener([fx, this] () mutable { fx(*this); }); }
+
 public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
@@ -934,6 +946,14 @@ public:
       // because entities can't be removed from a context.
       listener();
     return searchFn.resultSlot;
+  }
+
+  /// <summary>
+  /// Adds a teardown notifier which receives a pointer to this context on destruction
+  /// </summary>
+  template<class Fx>
+  void AddTeardownListener(Fx&& fx) {
+    AddTeardownListener2<Fx>(std::forward<Fx&&>(fx), &Fx::operator());
   }
 
   /// <summary>
