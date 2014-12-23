@@ -110,11 +110,6 @@ public:
   void AutoFilter(AutoPacket& packet);
   
   /// <summary>
-  /// Get a mapping of the DeliveryEdge to the number of times the AutoFilter was called
-  /// </summary>
-  t_deliveryEdges GetEdgeCounts() const;
-  
-  /// <summary>
   /// Write the graph to a file in graphviz format
   /// </summary>
   /// <param name="filename">
