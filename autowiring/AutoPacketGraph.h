@@ -117,5 +117,11 @@ public:
   /// <summary>
   /// Write the graph to a file in graphviz format
   /// </summary>
-  bool WriteGV(const std::string& filename) const;
+  /// <param name="filename">
+  /// The name of the file to write the graph to
+  /// </param>
+  /// <param name="numPackets">
+  /// Include the number of times the packet was delivered
+  /// </param>
+  bool WriteGV(const std::string& filename, bool numPackets = false) const;
 };

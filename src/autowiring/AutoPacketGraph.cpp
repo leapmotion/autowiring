@@ -102,7 +102,7 @@ AutoPacketGraph::t_deliveryEdges AutoPacketGraph::GetEdgeCounts() const {
   return m_deliveryGraph;
 }
 
-bool AutoPacketGraph::WriteGV(const std::string& filename) const {
+bool AutoPacketGraph::WriteGV(const std::string& filename, bool numPackets) const {
   std::ofstream file(filename);
   if (!file && !file.good()) {
     return false;
@@ -142,13 +142,15 @@ bool AutoPacketGraph::WriteGV(const std::string& filename) const {
     std::stringstream ss;
     ss << "  \"";
     if (edge.input) {
-      ss << typeName << "\" -> \"" << descriptorName;
+      ss << typeName << "\" -> \"" << descriptorName << "\"";
     } else {
-      ss << descriptorName << "\" -> \"" << typeName;
+      ss << descriptorName << "\" -> \"" << typeName << "\"";
     }
     
-    // TODO: count should probably be optional
-    ss << "\" [label=\"" << count << "\"];" << std::endl;
+    if (numPackets)
+      ss << "[label=\"" << count << "\"];";
+    
+    ss << std::endl;
     
     file << ss.str();
   }
