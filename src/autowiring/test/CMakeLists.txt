@@ -4,6 +4,7 @@ set(AutowiringTest_SRCS
   AutoConfigTest.cpp
   AutoConstructTest.cpp
   AutoFilterCollapseRulesTest.cpp
+  AutoFilterDiagnosticsTest.cpp
   AutoInjectableTest.cpp
   AutoPacketFactoryTest.cpp
   AutoParameterTest.cpp

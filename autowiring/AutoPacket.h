@@ -512,6 +512,12 @@ public:
     return GetSubscribers(typeid(auto_id<T>));
   }
 
+  /// <returns>All decoration dispositions</returns>
+  /// <remarks>
+  /// This method is useful for getting a picture of the entire disposition graph
+  /// </remarks>
+  std::list<DecorationDisposition> GetDispositions() const;
+
   /// <returns>All decoration dispositions associated with the data type</returns>
   /// <remarks>
   /// This method is useful for determining whether flow conditions (broadcast, pipes

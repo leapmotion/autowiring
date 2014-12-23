@@ -35,6 +35,8 @@ set(Autowiring_SRCS
   AutoPacketInternal.hpp
   AutoPacketFactory.cpp
   AutoPacketFactory.h
+  AutoPacketGraph.cpp
+  AutoPacketGraph.h
   AutoPacketProfiler.cpp
   AutoPacketProfiler.h
   AutoParameter.h

@@ -157,6 +157,18 @@ std::shared_ptr<CoreContext> CoreContext::NextSibling(void) const {
   return std::shared_ptr<CoreContext>();
 }
 
+const std::type_info& CoreContext::GetAutoTypeId(const AnySharedPointer& ptr) const {
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+
+  const std::type_info& ti = ptr->type();
+  auto q = m_typeMemos.find(ti);
+  if (q == m_typeMemos.end() || !q->second.pObjTraits)
+    throw autowiring_error("Attempted to obtain the true type of a shared pointer that was not a member of this context");
+
+  const ObjectTraits* pObjTraits = q->second.pObjTraits;
+  return pObjTraits->type;
+}
+
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   std::shared_ptr<Object> retVal = m_outstanding.lock();
   if(retVal)
@@ -222,7 +234,7 @@ void CoreContext::AddInternal(const ObjectTraits& traits) {
 
     // Notify any autowiring field that is currently waiting that we have a new member
     // to be considered.
-    UpdateDeferredElements(std::move(lk), traits.pObject);
+    UpdateDeferredElements(std::move(lk), m_concreteTypes.back());
   }
   
   // Moving this outside the lock because AddCoreRunnable will perform the checks inside its function
@@ -276,23 +288,24 @@ CoreContext::MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& referenc
   }
 
   // Resolve based on iterated dynamic casts for each concrete type:
-  bool assigned = false;
+  const ObjectTraits* pObjTraits = nullptr;
   for(const auto& type : m_concreteTypes) {
     if(!reference->try_assign(*type.value))
       // No match, try the next entry
       continue;
 
-    if(assigned)
+    if (pObjTraits)
       // Resolution ambiguity, cannot proceed
       throw autowiring_error("An attempt was made to resolve a type which has multiple possible clients");
 
-    // Update the found-flag:
-    assigned = true;
+    // Update the object traits reference:
+    pObjTraits = &type;
   }
 
   // This entry was not formerly memoized.  Memoize unconditionally.
   MemoEntry& retVal = m_typeMemos[type];
   retVal.m_value = reference;
+  retVal.pObjTraits = pObjTraits;
   return retVal;
 }
 
@@ -360,13 +373,20 @@ void CoreContext::Initiate(void) {
 
   // Reacquire the lock to prevent m_threads from being modified while we sit on it
   auto outstanding = IncrementOutstandingThreadCount();
-  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+  
+  // Get the beginning of the thread list that we have at the time of lock acquisition
+  t_threadList::iterator beginning;
+  
+  {
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+    beginning = m_threads.begin();
+    
+    // Signal our condition variable
+    m_stateBlock->m_stateChanged.notify_all();
+  }
 
-  // Signal our condition variable
-  m_stateBlock->m_stateChanged.notify_all();
-
-  for(CoreRunnable* q : m_threads)
-    q->Start(outstanding);
+  for (auto q = beginning; q != m_threads.end(); ++q)
+    (*q)->Start(outstanding);
 }
 
 void CoreContext::InitiateCoreThreads(void) {
@@ -636,7 +656,7 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
-void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const std::shared_ptr<Object>& entry) {
+void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const ObjectTraits& entry) {
   // Collection of satisfiable lists:
   std::vector<std::pair<const DeferrableUnsynchronizedStrategy*, DeferrableAutowiring*>> satisfiable;
 
@@ -655,7 +675,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
   // Each connected nonroot deferrable autowiring is referred to as a "dependant chain".
   std::stack<DeferrableAutowiring*> stk;
   for(auto& cur : m_typeMemos) {
-    auto& value = cur.second;
+    MemoEntry& value = cur.second;
 
     if(value.m_value)
       // This entry is already satisfied, no need to process it
@@ -664,8 +684,11 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     // Determine whether the current candidate element satisfies the autowiring we are considering.
     // This is done internally via a dynamic cast on the interface type for which this polymorphic
     // base type was constructed.
-    if(!value.m_value->try_assign(entry))
+    if(!value.m_value->try_assign(entry.pObject))
       continue;
+
+    // Success, assign the traits
+    value.pObjTraits = &entry;
 
     // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
     // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
