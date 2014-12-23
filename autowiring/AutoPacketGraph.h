@@ -68,6 +68,20 @@ protected:
   AutoRequired<AutoPacketFactory> m_factory;
   
   /// <summary>
+  /// Demangle a type name as well as stripping "auto_in< >"
+  /// </summary>
+  /// <remarks>
+  /// The ">" that encloses the templates will have extra spaces between them, for instance
+  ///
+  ///    auto_in<Class>
+  ///    auto_in<Class<T> >
+  ///    auto_in<Class1<Class2, Class3<Class4> > >
+  ///
+  /// All we care about is matching "^auto_in<(.*)>$"
+  /// </remarks>
+  std::string DemangleTypeName(const std::type_info* type_info) const;
+  
+  /// <summary>
   /// Scan all of the objects and add any AutoFilter's from all of the objects in a system.
   /// </summary>
   /// <remarks>

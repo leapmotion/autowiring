@@ -12,6 +12,18 @@
 AutoPacketGraph::AutoPacketGraph() {
 }
 
+std::string AutoPacketGraph::DemangleTypeName(const std::type_info* type_info) const {
+  std::string demangled = autowiring::demangle(type_info);
+  
+  size_t demangledLength = demangled.length();
+  size_t newLength =
+    demangled[demangledLength - 2] == ' ' ?
+    demangledLength - 10 :
+    demangledLength - 9;
+  
+  return demangled.substr(demangled.find("<") + 1, newLength);
+}
+
 void AutoPacketGraph::LoadEdges() {
   std::lock_guard<std::mutex> lk(m_lock);
   
@@ -116,7 +128,7 @@ bool AutoPacketGraph::WriteGV(const std::string& filename) const {
       continue;
     }
     
-    std::string typeName = autowiring::demangle(type);
+    std::string typeName = DemangleTypeName(type);
     std::string descriptorName = autowiring::demangle(descType);
     
     // Get a unique set of types/descriptors
