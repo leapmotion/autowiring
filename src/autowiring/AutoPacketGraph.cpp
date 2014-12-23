@@ -5,6 +5,7 @@
 #include "DecorationDisposition.h"
 #include "demangle.h"
 #include "SatCounter.h"
+#include <algorithm>
 #include <fstream>
 #include <string>
 #include FUNCTIONAL_HEADER
