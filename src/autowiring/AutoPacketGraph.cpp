@@ -90,6 +90,12 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
       }
       
       for (auto& subscriber : decoration.m_subscribers) {
+        // Skip the AutoPacketGraph
+        const std::type_info& descType = m_factory->GetContext()->GetAutoTypeId(subscriber->GetAutoFilter());
+        if (descType == typeid(AutoPacketGraph)) {
+          continue;
+        }
+        
         if (subscriber->called) {
           RecordDelivery(type, *subscriber, true);
         }
