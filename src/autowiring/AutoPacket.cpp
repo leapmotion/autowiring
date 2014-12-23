@@ -347,7 +347,6 @@ AutoPacket::Recipient AutoPacket::AddRecipient(const AutoFilterDescriptor& descr
     m_satCounters.push_front(descriptor);
     retVal.position = m_satCounters.begin();
     recipient = &m_satCounters.front();
-    recipient->Reset();
 
     // (2) Update satisfaction & Append types from subscriber
     AddSatCounter(*recipient);
