@@ -31,6 +31,7 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iter
   m_pParent(pParent),
   m_backReference(backReference),
   m_stateBlock(new CoreContextStateBlock),
+  m_beforeRunning(false),
   m_initiated(false),
   m_isShutdown(false),
   m_junctionBoxManager(
@@ -156,6 +157,18 @@ std::shared_ptr<CoreContext> CoreContext::NextSibling(void) const {
   return std::shared_ptr<CoreContext>();
 }
 
+const std::type_info& CoreContext::GetAutoTypeId(const AnySharedPointer& ptr) const {
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+
+  const std::type_info& ti = ptr->type();
+  auto q = m_typeMemos.find(ti);
+  if (q == m_typeMemos.end() || !q->second.pObjTraits)
+    throw autowiring_error("Attempted to obtain the true type of a shared pointer that was not a member of this context");
+
+  const ObjectTraits* pObjTraits = q->second.pObjTraits;
+  return pObjTraits->type;
+}
+
 std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   std::shared_ptr<Object> retVal = m_outstanding.lock();
   if(retVal)
@@ -213,9 +226,6 @@ void CoreContext::AddInternal(const ObjectTraits& traits) {
     if(traits.pContextMember)
       AddContextMember(traits.pContextMember);
 
-    if(traits.pCoreRunnable)
-      AddCoreRunnable(traits.pCoreRunnable);
-
     if(traits.pFilter)
       m_filters.push_back(traits.pFilter.get());
 
@@ -224,8 +234,12 @@ void CoreContext::AddInternal(const ObjectTraits& traits) {
 
     // Notify any autowiring field that is currently waiting that we have a new member
     // to be considered.
-    UpdateDeferredElements(std::move(lk), traits.pObject);
+    UpdateDeferredElements(std::move(lk), m_concreteTypes.back());
   }
+  
+  // Moving this outside the lock because AddCoreRunnable will perform the checks inside its function
+  if(traits.pCoreRunnable)
+    AddCoreRunnable(traits.pCoreRunnable);
 
   // Event receivers:
   if(traits.receivesEvents) {
@@ -274,23 +288,24 @@ CoreContext::MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& referenc
   }
 
   // Resolve based on iterated dynamic casts for each concrete type:
-  bool assigned = false;
+  const ObjectTraits* pObjTraits = nullptr;
   for(const auto& type : m_concreteTypes) {
     if(!reference->try_assign(*type.value))
       // No match, try the next entry
       continue;
 
-    if(assigned)
+    if (pObjTraits)
       // Resolution ambiguity, cannot proceed
       throw autowiring_error("An attempt was made to resolve a type which has multiple possible clients");
 
-    // Update the found-flag:
-    assigned = true;
+    // Update the object traits reference:
+    pObjTraits = &type;
   }
 
   // This entry was not formerly memoized.  Memoize unconditionally.
   MemoEntry& retVal = m_typeMemos[type];
   retVal.m_value = reference;
+  retVal.pObjTraits = pObjTraits;
   return retVal;
 }
 
@@ -358,13 +373,20 @@ void CoreContext::Initiate(void) {
 
   // Reacquire the lock to prevent m_threads from being modified while we sit on it
   auto outstanding = IncrementOutstandingThreadCount();
-  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+  
+  // Get the beginning of the thread list that we have at the time of lock acquisition
+  t_threadList::iterator beginning;
+  
+  {
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+    beginning = m_threads.begin();
+    
+    // Signal our condition variable
+    m_stateBlock->m_stateChanged.notify_all();
+  }
 
-  // Signal our condition variable
-  m_stateBlock->m_stateChanged.notify_all();
-
-  for(CoreRunnable* q : m_threads)
-    q->Start(outstanding);
+  for (auto q = beginning; q != m_threads.end(); ++q)
+    (*q)->Start(outstanding);
 }
 
 void CoreContext::InitiateCoreThreads(void) {
@@ -372,11 +394,20 @@ void CoreContext::InitiateCoreThreads(void) {
 }
 
 void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
+  // As we signal shutdown, there may be a CoreRunnable that is in the "running" state.  If so,
+  // then we will skip that thread as we signal the list of threads to shutdown.
+  t_threadList::iterator firstThreadToStop;
+  
   // Wipe out the junction box manager, notify anyone waiting on the state condition:
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     UnregisterEventReceiversUnsafe();
     m_isShutdown = true;
+    
+    firstThreadToStop = m_threads.begin();
+    if (m_beforeRunning)
+      ++firstThreadToStop;
+    
     m_stateBlock->m_stateChanged.notify_all();
   }
 
@@ -418,8 +449,8 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
 
   // Pass notice to all child threads:
   bool graceful = (shutdownMode == ShutdownMode::Graceful);
-  for(CoreRunnable* runnable : m_threads)
-    runnable->Stop(graceful);
+  for (auto itr = firstThreadToStop; itr != m_threads.end(); ++itr)
+    (*itr)->Stop(graceful);
 
   // Signal our condition variable
   m_stateBlock->m_stateChanged.notify_all();
@@ -460,16 +491,40 @@ std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
 }
 
 void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
-  // Insert into the linked list of threads first:
-  m_threads.push_front(ptr.get());
+  // Performing a double check.
+  bool shouldRun;
+  {
+    std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
+    
+    // Insert into the linked list of threads first:
+    m_threads.push_front(ptr.get());
+    
+    // Check if we're already running, this means we're late to the party and need to start _now_.
+    shouldRun = m_initiated;
+    
+    // Signal that we are in the "running"
+    m_beforeRunning = true;
+  }
 
-  if(m_initiated)
-    // We're already running, this means we're late to the party and need to start _now_.
+  // Run this thread without the lock
+  if(shouldRun)
     ptr->Start(IncrementOutstandingThreadCount());
+  
 
-  if(m_isShutdown)
-    // We're really late to the party, it's already over.  Make sure the thread's stop
-    // overrides are called and that it transitions to a stopped state.
+  // Check if the stop signal was sent between the time we started running until now.  If so, then
+  // we will stop the thread manually here.
+  bool shouldStopHere;
+  {
+    std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
+    
+    // Signal that we have stopped "running"
+    m_beforeRunning = false;
+    
+    // If SignalShutdown() was invoked while we were "running", then we will need to stop this thread ourselves
+    shouldStopHere = m_isShutdown;
+  }
+
+  if(shouldStopHere)
     ptr->Stop(false);
 }
 
@@ -601,7 +656,7 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
-void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const std::shared_ptr<Object>& entry) {
+void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const ObjectTraits& entry) {
   // Collection of satisfiable lists:
   std::vector<std::pair<const DeferrableUnsynchronizedStrategy*, DeferrableAutowiring*>> satisfiable;
 
@@ -620,7 +675,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
   // Each connected nonroot deferrable autowiring is referred to as a "dependant chain".
   std::stack<DeferrableAutowiring*> stk;
   for(auto& cur : m_typeMemos) {
-    auto& value = cur.second;
+    MemoEntry& value = cur.second;
 
     if(value.m_value)
       // This entry is already satisfied, no need to process it
@@ -629,8 +684,11 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     // Determine whether the current candidate element satisfies the autowiring we are considering.
     // This is done internally via a dynamic cast on the interface type for which this polymorphic
     // base type was constructed.
-    if(!value.m_value->try_assign(entry))
+    if(!value.m_value->try_assign(entry.pObject))
       continue;
+
+    // Success, assign the traits
+    value.pObjTraits = &entry;
 
     // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
     // nullifying the flink, and by ensuring that the memo is satisfied at the point where we

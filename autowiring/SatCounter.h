@@ -19,7 +19,7 @@ struct SatCounter:
   SatCounter(const AutoFilterDescriptor& source):
     AutoFilterDescriptor(source),
     called(false),
-    remaining(0)
+    remaining(m_requiredCount)
   {}
 
   SatCounter(const SatCounter& source):
@@ -27,13 +27,6 @@ struct SatCounter:
     called(source.called),
     remaining(source.remaining)
   {}
-
-  SatCounter& operator = (const SatCounter& source) {
-    AutoFilterDescriptor::operator = (source);
-    called = source.called;
-    remaining = source.remaining;
-    return *this;
-  }
 
   // The number of times the AutoFilter is called
   bool called;
@@ -52,14 +45,6 @@ struct SatCounter:
     }
     called = true;
     GetCall()(GetAutoFilter(), packet);
-  }
-
-  /// <summary>
-  /// Resets the remaining counter to its initial value
-  /// </summary>
-  void Reset(void) {
-    called = false;
-    remaining = m_requiredCount;
   }
 
   /// <summary>

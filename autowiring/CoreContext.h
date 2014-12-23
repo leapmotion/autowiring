@@ -106,6 +106,25 @@ public:
   /// </summary>
   static std::shared_ptr<CoreContext> GetGlobal(void);
 
+  /// <summary>
+  /// Represents a single entry, together with any deferred elements waiting on the satisfaction of this entry
+  /// </summary>
+  struct MemoEntry {
+    MemoEntry(void) :
+      pFirst(nullptr)
+    {}
+
+    // The first deferrable autowiring which requires this type, if one exists:
+    DeferrableAutowiring* pFirst;
+
+    // A back reference to the concrete type from which this memo was generated:
+    const ObjectTraits* pObjTraits;
+
+    // Once this memo entry is satisfied, this will contain the AnySharedPointer instance that performs
+    // the satisfaction
+    AnySharedPointer m_value;
+  };
+
 protected:
   // A pointer to the parent context
   const std::shared_ptr<CoreContext> m_pParent;
@@ -115,6 +134,9 @@ protected:
 
   // State block for this context:
   std::unique_ptr<CoreContextStateBlock> m_stateBlock;
+  
+  // Set if a thread is added and needs to be run
+  bool m_beforeRunning;
 
   // Set if threads in this context should be started when they are added
   bool m_initiated;
@@ -129,22 +151,6 @@ protected:
   // bolts for all context types.
   typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
-
-  /// <summary>
-  /// Represents a single entry, together with any deferred elements waiting on the satisfaction of this entry
-  /// </summary>
-  struct MemoEntry {
-    MemoEntry(void) :
-      pFirst(nullptr)
-    {}
-
-    // The first deferrable autowiring which requires this type, if one exists:
-    DeferrableAutowiring* pFirst;
-
-    // Once this memo entry is satisfied, this will contain the AnySharedPointer instance that performs
-    // the satisfaction
-    AnySharedPointer m_value;
-  };
 
   /// <summary>
   /// A proxy context member that knows how to create a factory for a particular type
@@ -254,7 +260,7 @@ protected:
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
-  void UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const std::shared_ptr<Object>& entry);
+  void UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const ObjectTraits& entry);
 
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
@@ -387,6 +393,18 @@ protected:
   template<class Factory>
   void RegisterFactory(const Factory&, autowiring::member_new_type<Factory, autowiring::factorytype::none>) {}
 
+  // Internal resolvers, used to determine which teardown style the user would like to use
+  template<class Fx>
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void)) { TeardownNotifier::AddTeardownListener(fx); }
+
+  template<class Fx>
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&)) { TeardownNotifier::AddTeardownListener([fx, this] () mutable { fx(*this); }); }
+  template<class Fx>
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void) const) { TeardownNotifier::AddTeardownListener(fx); }
+
+  template<class Fx>
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&) const) { TeardownNotifier::AddTeardownListener([fx, this] () mutable { fx(*this); }); }
+
 public:
   // Accessor methods:
   bool IsGlobalContext(void) const { return !m_pParent; }
@@ -411,6 +429,19 @@ public:
   /// The next context sharing the same parent, or null if this is the last entry in the list
   /// </returns>
   std::shared_ptr<CoreContext> NextSibling(void) const;
+
+  /// <returns>
+  /// The type identifier of the specified type identifier
+  /// </returns>
+  /// <remarks>
+  /// The returned type structure will be the actual type of the specified object as defined at the time of
+  /// injection.  In the case of a static factory new or AutoFactory new, this type will be the type of the
+  /// interface.  All other members are the concrete type actually injected, as opposed to the type unifier
+  /// for that type.
+  ///
+  /// This method will throw an exception if the passed shared pointer is not strictly a member of this context
+  /// </remarks>
+  const std::type_info& GetAutoTypeId(const AnySharedPointer& ptr) const;
 
   /// <summary>
   /// Creation helper routine
@@ -490,15 +521,21 @@ public:
     // Add this type to the TypeRegistry
     (void) RegType<T>::r;
 
-    // First see if the object has already been injected:
-    std::shared_ptr<typename CreationRules::TActual> retVal;
-    FindByType(retVal);
-    if(retVal)
-      return std::static_pointer_cast<T>(retVal);
+    // First see if the base object type has already been injected.  This is also necessary to
+    // ensure that a memo slot is created for the type by itself, in cases where the injected
+    // member does not inherit Object and this member is eventually satisfied by one that does.
+    {
+      std::shared_ptr<T> pure;
+      FindByType(pure);
+      if (pure)
+        return pure;
+    }
 
     // We must make ourselves current for the remainder of this call:
     CurrentContextPusher pshr(shared_from_this());
-    retVal.reset(CreationRules::New(*this, std::forward<Args>(args)...));
+    std::shared_ptr<typename CreationRules::TActual> retVal(
+      CreationRules::New(*this, std::forward<Args>(args)...)
+    );
 
     // AutoInit if sensible to do so:
     CallAutoInit(*retVal, has_autoinit<T>());
@@ -909,6 +946,14 @@ public:
       // because entities can't be removed from a context.
       listener();
     return searchFn.resultSlot;
+  }
+
+  /// <summary>
+  /// Adds a teardown notifier which receives a pointer to this context on destruction
+  /// </summary>
+  template<class Fx>
+  void AddTeardownListener(Fx&& fx) {
+    AddTeardownListener2<Fx>(std::forward<Fx&&>(fx), &Fx::operator());
   }
 
   /// <summary>

@@ -37,6 +37,9 @@ AutoPacket::~AutoPacket(void) {
     current = current->m_successor.get();
     prev_current->m_successor.reset();
   }
+  
+  // Needed for the AutoPacketGraph
+  NotifyTeardownListeners();
 }
 
 DecorationDisposition& AutoPacket::CheckoutImmediateUnsafe(const std::type_info& ti, const void* pvImmed)
@@ -364,7 +367,6 @@ AutoPacket::Recipient AutoPacket::AddRecipient(const AutoFilterDescriptor& descr
     m_satCounters.push_front(descriptor);
     retVal.position = m_satCounters.begin();
     recipient = &m_satCounters.front();
-    recipient->Reset();
 
     // (2) Update satisfaction & Append types from subscriber
     AddSatCounter(*recipient);
@@ -388,6 +390,14 @@ void AutoPacket::RemoveRecipient(Recipient&& recipient) {
   std::lock_guard<std::mutex> lk(m_lock);
   RemoveSatCounter(*q);
   m_satCounters.erase(q);
+}
+
+std::list<DecorationDisposition> AutoPacket::GetDispositions() const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  std::list<DecorationDisposition> dispositions;
+  for (auto& disposition : m_decorations)
+    dispositions.push_back(disposition.second);
+  return dispositions;
 }
 
 std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {

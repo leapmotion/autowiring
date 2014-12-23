@@ -31,14 +31,6 @@ void AutoPacketInternal::Initialize(void) {
   for(auto& satCounter : m_satCounters)
     AddSatCounter(satCounter);
   
-  // Initialize all counters:
-  for (auto& satCounter : m_satCounters)
-    satCounter.Reset();
-  
-  // Clear all references:
-  for (auto& decoration : m_decorations)
-    decoration.second.Reset();
-  
   // Find all subscribers with no required or optional arguments:
   std::list<SatCounter*> callCounters;
   for (auto& satCounter : m_satCounters)

@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include <autowiring/Autowired.h>
+#include <autowiring/autowiring.h>
 
 class TeardownNotifierTest:
   public testing::Test
@@ -45,4 +45,20 @@ TEST_F(TeardownNotifierTest, ReferenceMemberInTeardown) {
   }
 
   EXPECT_TRUE(hit) << "Failed to reference a member of a context in it's teardown listener";
+}
+
+TEST_F(TeardownNotifierTest, CanAutowireInTeardown) {
+  bool foundSimpleMember = false;
+  bool calledNotifier = false;
+  {
+    AutoCreateContext ctxt;
+    AutoRequired<SimpleMember> sm(ctxt);
+    ctxt->AddTeardownListener([&foundSimpleMember, &calledNotifier](const CoreContext& ctxt) {
+      foundSimpleMember = AutowiredFast<SimpleMember>(&ctxt).IsAutowired();
+      calledNotifier = true;
+    });
+  }
+
+  ASSERT_TRUE(foundSimpleMember) << "Failed to find a context member in teardown with AutowiredFast";
+  ASSERT_TRUE(calledNotifier) << "Teardown notifier not called as expected";
 }

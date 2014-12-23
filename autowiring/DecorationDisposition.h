@@ -46,6 +46,7 @@ struct DecorationDisposition
     m_type(source.m_type),
     m_pImmediate(source.m_pImmediate),
     m_publisher(source.m_publisher),
+    m_subscribers(source.m_subscribers),
     isCheckedOut(source.isCheckedOut),
     satisfied(source.satisfied)
   {}
@@ -54,6 +55,7 @@ struct DecorationDisposition
     m_type = source.m_type;
     m_pImmediate = source.m_pImmediate;
     m_publisher = source.m_publisher;
+    m_subscribers = source.m_subscribers;
     isCheckedOut = source.isCheckedOut;
     satisfied = source.satisfied;
     return *this;
