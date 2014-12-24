@@ -22,13 +22,6 @@ if(NOT autowiring_USE_LIBCXX)
   endif()
 endif()
 
-# Android also requires boost, but a more limited subset:
-if(BUILD_ANDROID)
-  find_package(Boost COMPONENTS thread REQUIRED)
-  include_directories(${Boost_INCLUDE_DIR})
-  message("Include dirs are ${Boost_INCLUDE_DIR}")
-endif()
-
 add_subdirectory(autonet)
 add_subdirectory(autowiring)
 add_subdirectory(autotesting)

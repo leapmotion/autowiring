@@ -19,7 +19,6 @@
 #include <istream>
 
 #include <boost/config.hpp>
-#include <boost/archive/detail/auto_link_archive.hpp>
 #include <boost/archive/basic_text_iprimitive.hpp>
 #include <boost/archive/basic_text_iarchive.hpp>
 #include <boost/archive/detail/register_archive.hpp>

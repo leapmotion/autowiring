@@ -26,7 +26,6 @@ namespace std{
 } // namespace std
 #endif
 
-#include <boost/archive/detail/auto_link_archive.hpp>
 #include <boost/archive/basic_text_oprimitive.hpp>
 #include <boost/archive/basic_xml_oarchive.hpp>
 #include <boost/archive/detail/register_archive.hpp>

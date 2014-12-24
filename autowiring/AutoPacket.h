@@ -22,6 +22,7 @@
 #include EXCEPTION_PTR_HEADER
 
 class AutoPacket;
+class AutoPacketInternal;
 class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
@@ -47,6 +48,7 @@ private:
   AutoPacket(AutoPacket&&) = delete;
 
 public:
+  // Must hold the lock to 'factory' when calling this constructor
   AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
 
@@ -58,9 +60,12 @@ public:
 protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
+  
+  // The successor to this packet
+  std::shared_ptr<AutoPacketInternal> m_successor;
 
   // Hold the time point at which this packet was last initalized.
-  const std::chrono::high_resolution_clock::time_point m_initTime;
+  std::chrono::high_resolution_clock::time_point m_initTime;
 
   // Outstanding count local and remote holds:
   const std::shared_ptr<void> m_outstanding;
@@ -507,6 +512,12 @@ public:
     return GetSubscribers(typeid(auto_id<T>));
   }
 
+  /// <returns>All decoration dispositions</returns>
+  /// <remarks>
+  /// This method is useful for getting a picture of the entire disposition graph
+  /// </remarks>
+  std::list<DecorationDisposition> GetDispositions() const;
+
   /// <returns>All decoration dispositions associated with the data type</returns>
   /// <remarks>
   /// This method is useful for determining whether flow conditions (broadcast, pipes
@@ -517,6 +528,12 @@ public:
     return GetDispositions(typeid(auto_id<T>));
   }
 
+  /// <summary>
+  /// Returns the next packet that will be issued by the packet factory in this context relative to this context
+  /// </summary>
+  std::shared_ptr<AutoPacketInternal> SuccessorInternal(void);
+  std::shared_ptr<AutoPacket> Successor(void);
+  
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   template<class T>
   bool HasSubscribers(void) const {

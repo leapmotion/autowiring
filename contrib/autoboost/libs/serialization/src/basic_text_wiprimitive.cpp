@@ -21,7 +21,6 @@
 #include <istream>
 
 #define BOOST_WARCHIVE_SOURCE
-#include <boost/archive/detail/auto_link_warchive.hpp>
 #include <boost/archive/impl/basic_text_iprimitive.ipp>
 
 namespace autoboost {

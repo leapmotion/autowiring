@@ -1,6 +1,9 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
+// Internal build flag for namespace discrimination
+#define AUTOWIRING_IS_BEING_BUILT
+
 #include <C++11/cpp11.h>
 #include <gtest/gtest.h>
 #include <autowiring/autowiring.h>

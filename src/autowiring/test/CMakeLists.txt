@@ -4,6 +4,7 @@ set(AutowiringTest_SRCS
   AutoConfigTest.cpp
   AutoConstructTest.cpp
   AutoFilterCollapseRulesTest.cpp
+  AutoFilterDiagnosticsTest.cpp
   AutoInjectableTest.cpp
   AutoPacketFactoryTest.cpp
   AutoParameterTest.cpp
@@ -87,6 +88,7 @@ endif()
 add_pch(AutowiringTest_SRCS "stdafx.h" "stdafx.cpp")
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
 target_link_libraries(AutowiringTest Autowiring AutowiringFixture AutoTesting)
+target_include_directories(AutowiringTest PRIVATE "${CMAKE_SOURCE_DIR}/contrib/autoboost")
 
 # Need boost thread on android, because of our use of std::async
 if(BUILD_ANDROID)

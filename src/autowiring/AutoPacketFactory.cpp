@@ -1,18 +1,14 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
-#include "AutoPacketInternal.h"
+#include "AutoPacketInternal.hpp"
 #include "fast_pointer_cast.h"
 #include "thread_specific_ptr.h"
 #include <cmath>
 
-template class ObjectPool<AutoPacket>;
-
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
   m_parent(GetContext()->GetParentContext()),
-  m_wasStopped(false),
-  m_outstanding(0),
   m_packetCount(0),
   m_packetDurationSum(0),
   m_packetDurationSqSum(0)
@@ -29,13 +25,24 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   if(!IsRunning())
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
-  // Obtain a packet, initialize it, return it
-  auto retVal = std::make_shared<AutoPacketInternal>(
-    *this,
-    GetInternalOutstanding()
-  );
+  std::shared_ptr<AutoPacketInternal> retVal;
+  {
+    std::lock_guard<std::mutex> lk(m_lock);
+    
+    // New packet issued
+    ++m_packetCount;
+  
+    // Create a new next packet
+    retVal = m_nextPacket;
+    m_nextPacket = retVal->SuccessorInternal();
+  }
+  
   retVal->Initialize();
   return retVal;
+}
+
+std::shared_ptr<AutoPacketInternal> AutoPacketFactory::ConstructPacket(void) {
+  return std::make_shared<AutoPacketInternal>(*this, GetInternalOutstanding());
 }
 
 bool AutoPacketFactory::IsAutoPacketType(const std::type_info& dataType) {
@@ -45,23 +52,12 @@ bool AutoPacketFactory::IsAutoPacketType(const std::type_info& dataType) {
     dataType == typeid(auto_arg<const AutoPacket&>::id_type);
 }
 
-bool AutoPacketFactory::Start(std::shared_ptr<Object> outstanding) {
-  std::lock_guard<std::mutex> lk(m_lock);
-  if(m_wasStopped)
-    // Cannot start if already stopped
-    return false;
-    
-  m_outstanding = outstanding;
-  m_stateCondition.notify_all();
-  return true;
-}
-
 std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
   auto retVal = m_outstandingInternal.lock();
   if (retVal)
     return retVal;
 
-  auto outstanding = m_outstanding;
+  std::shared_ptr<Object> outstanding = GetOutstanding();
   retVal = std::shared_ptr<void>(
     (void*)1,
     [this, outstanding] (void*) mutable {
@@ -77,38 +73,36 @@ std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
   return retVal;
 }
 
-void AutoPacketFactory::Stop(bool graceful) {
-  // Return optimization
-  if(m_wasStopped)
-    return;
+bool AutoPacketFactory::OnStart(void) {
+  // Initialize first packet
+  m_nextPacket = ConstructPacket();
+  
+  // Wake us up. We're starting now
+  m_stateCondition.notify_all();
+  return true;
+}
 
+void AutoPacketFactory::OnStop(bool graceful) {
   // Kill the object pool
   Invalidate();
 
   // Queue of local variables to be destroyed when leaving scope
-  std::shared_ptr<Object> outstanding;
   t_autoFilterSet autoFilters;
+  
+  // Reset next packet, it will never be issued
+  m_nextPacket.reset();
 
   // Lock destruction precedes local variables
   std::lock_guard<std::mutex> lk(m_lock);
-
-  // Swap outstanding count into a local var, so we can reset outside of a lock
-  outstanding.swap(m_outstanding);
 
   // Same story with the AutoFilters
   autoFilters.swap(m_autoFilters);
 
   // Now we can lock, update state, and notify any listeners
-  m_wasStopped = true;
   m_stateCondition.notify_all();
 }
 
-void AutoPacketFactory::Clear(void) {
-  // Simple handoff to Stop is sufficient
-  Stop(false);
-}
-
-void AutoPacketFactory::Wait(void) {
+void AutoPacketFactory::DoAdditionalWait(void) {
   std::unique_lock<std::mutex> lk(m_lock);
   m_stateCondition.wait(
     lk,
@@ -116,6 +110,11 @@ void AutoPacketFactory::Wait(void) {
       return ShouldStop() && m_outstandingInternal.expired();
     }
   );
+}
+
+void AutoPacketFactory::Clear(void) {
+  // Simple handoff to Stop is sufficient
+  Stop(false);
 }
 
 void AutoPacketFactory::Invalidate(void) {
@@ -154,13 +153,13 @@ AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(const std::type_
   return AutoFilterDescriptor();
 }
 
-size_t AutoPacketFactory::GetOutstanding(void) const {
-  return m_outstandingInternal.use_count();
+size_t AutoPacketFactory::GetOutstandingPacketCount(void) const {
+  // Next packet is stored internally, don't count that packet
+  return m_outstandingInternal.use_count() - 1;
 }
 
 void AutoPacketFactory::RecordPacketDuration(std::chrono::nanoseconds duration) {
   std::unique_lock<std::mutex> lk(m_lock);
-  ++m_packetCount;
   m_packetDurationSum += duration.count();
   m_packetDurationSqSum += duration.count() * duration.count();
 }

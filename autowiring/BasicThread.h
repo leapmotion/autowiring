@@ -167,11 +167,6 @@ protected:
   /// </remarks>
   bool ThreadSleep(std::chrono::nanoseconds timeout);
 
-public:
-  // Accessor methods:
-  bool ShouldStop(void) const override;
-  bool IsRunning(void) const override;
-
   /// <summary>
   /// Causes a new thread to be created in which the Run method will be invoked
   /// </summary>
@@ -181,8 +176,13 @@ public:
   /// Start will not be called from more than one place on the same object.  The thread
   /// will be invoked from the context which was active at the time the thread was created.
   /// </remarks>
-  virtual bool Start(std::shared_ptr<Object> outstanding);
+  bool OnStart() override;
 
+  void OnStop(bool graceful) override;
+
+  void DoAdditionalWait() override;
+
+public:
   /// <summary>
   /// Begins the core thread
   /// </summary>
@@ -194,44 +194,14 @@ public:
   virtual void Run() = 0;
 
   /// <summary>
-  /// Waits until the core thread is launched and then terminates
+  /// Provides derived members with a way of obtaining notification that this thread is being stopped
   /// </summary>
   /// <remarks>
-  /// Unlike Join, this method may be invoked even if the CoreThread isn't running
-  /// </remarks>
-  void Wait(void) override;
-
-  /// <summary>
-  /// Timed version of Wait
-  /// </summary>
-  /// <returns>False if the timeout elapsed, true otherwise</returns>
-  bool WaitFor(std::chrono::nanoseconds duration);
-
-  /// <summary>
-  /// Timed version of Wait
-  /// </summary>
-  /// <returns>False if the timeout elapsed, true otherwise</returns>
-  template<class TimeType>
-  bool WaitUntil(TimeType timepoint);
-
-  /// <summary>
-  /// Event which may be used to perform custom handling when the thread is told to stop
-  /// </summary>
-  /// <param name="graceful">Set to true to rundown the dispatch queue before quitting</param>
-  /// <remarks>
-  /// This method is called when the thread should stop.  When invoked, the value of
-  /// CoreThread::ShouldStop is guaranteed to be true.
-  ///
-  /// Callers are not required to call CoreThread::OnStop.  This method is guaranteed to do
-  /// nothing by default.
+  /// Callers must not perform any time-consuming operations in this callback; the method may be called
+  /// from a time-sensitive context and unacceptable system performance could result if long-duration
+  /// operations are undertaken here.
   /// </remarks>
   virtual void OnStop(void) {}
-
-  /// <summary>
-  /// This is an override method that will cause ShouldStop to return true,
-  /// regardless of what the global stop setting is.
-  /// </summary>
-  virtual void Stop(bool graceful = false);
 
   /// <summary>
   /// Forces all Autowiring threads to reidentify themselves

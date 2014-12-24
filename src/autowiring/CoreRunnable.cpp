@@ -2,6 +2,82 @@
 #include "stdafx.h"
 #include "CoreRunnable.h"
 
-CoreRunnable::CoreRunnable(void){}
+// Explicit instantiation of supported time point types:
+template<> bool CoreRunnable::WaitUntil(std::chrono::steady_clock::time_point);
+template<> bool CoreRunnable::WaitUntil(std::chrono::system_clock::time_point);
 
-CoreRunnable::~CoreRunnable(void){}
+CoreRunnable::CoreRunnable(void):
+  m_wasStarted(false),
+  m_shouldStop(false)
+{}
+
+CoreRunnable::~CoreRunnable(void) {}
+
+const std::shared_ptr<Object>& CoreRunnable::GetOutstanding(void) const {
+  return m_outstanding;
+}
+
+bool CoreRunnable::Start(std::shared_ptr<Object> outstanding) {
+  std::lock_guard<std::mutex> lk(m_lock);
+  if(m_wasStarted || m_outstanding || m_shouldStop)
+    // We have already been started or stopped, end here
+    return true;
+
+  m_wasStarted = true;
+  m_outstanding = outstanding;
+  if(!OnStart()) {
+    m_shouldStop = true;
+    m_outstanding.reset();
+
+    // Immediately invoke a graceless stop in response
+    OnStop(false);
+  }
+
+  return true;
+}
+
+void CoreRunnable::Stop(bool graceful) {
+  if (!m_shouldStop) {
+    // Stop flag should be pulled high
+    m_shouldStop = true;
+
+    // Do not call this method more than once:
+    OnStop(graceful);
+  }
+
+  if (m_outstanding) {
+    std::shared_ptr<Object> outstanding;
+    std::lock_guard<std::mutex> lk(m_lock);
+
+    // Ensure we do not invoke the outstanding count dtor while holding a lock
+    outstanding.swap(m_outstanding);
+
+    // Everything looks good now
+    m_cv.notify_all();
+  }
+}
+
+void CoreRunnable::Wait(void) {
+  std::unique_lock<std::mutex> lk(m_lock);
+  m_cv.wait(lk, [this](){ return ShouldStop() && !IsRunning(); });
+  DoAdditionalWait();
+}
+
+bool CoreRunnable::WaitFor(std::chrono::nanoseconds timeout) {
+  std::unique_lock<std::mutex> lk(m_lock);
+  if (m_cv.wait_for(lk, timeout, [this](){ return ShouldStop() && !IsRunning(); })) {
+    DoAdditionalWait();
+    return true;
+  }
+  return false;
+}
+
+template<typename TimeType>
+bool CoreRunnable::WaitUntil(TimeType timepoint) {
+  std::unique_lock<std::mutex> lk(m_lock);
+  if (m_cv.wait_until(lk, timepoint, [this](){ return ShouldStop() && !IsRunning(); })) {
+    DoAdditionalWait();
+    return true;
+  }
+  return false;
+}

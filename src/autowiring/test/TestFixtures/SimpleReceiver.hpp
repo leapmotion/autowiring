@@ -193,7 +193,7 @@ public:
   }
 
   // Overridden here so we can hit the barrier if we're still waiting on it
-  void OnStop() override {
+  void OnStop(void) override {
     Proceed();
   }
 

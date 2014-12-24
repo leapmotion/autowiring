@@ -16,6 +16,7 @@ struct AdjacencyEntry;
 class AutoPacketFactory;
 class Deferred;
 class DispatchQueue;
+class AutoPacketInternal;
 
 /// <summary>
 /// A configurable factory class for pipeline packets with a built-in object pool
@@ -40,15 +41,12 @@ private:
   
   // State change notification
   std::condition_variable m_stateCondition;
-  
-  // Have we been signaled to stop
-  bool m_wasStopped;
-
-  // Outstanding reference if this factory is currently running:
-  std::shared_ptr<Object> m_outstanding;
 
   // Internal outstanding reference for issued packet:
   std::weak_ptr<void> m_outstandingInternal;
+  
+  // The last packet issued from this factory
+  std::shared_ptr<AutoPacketInternal> m_nextPacket;
 
   // Collection of known subscribers
   typedef std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> t_autoFilterSet;
@@ -79,11 +77,9 @@ public:
   }
 
   // CoreRunnable overrides:
-  bool Start(std::shared_ptr<Object> outstanding) override;
-  void Stop(bool graceful = false) override;
-  void Wait(void) override;
-  bool IsRunning(void) const override { return m_outstanding && !m_wasStopped; };
-  bool ShouldStop(void) const override { return m_wasStopped; };
+  bool OnStart(void) override;
+  void OnStop(bool graceful) override;
+  void DoAdditionalWait(void) override;
 
   /// <summary>
   /// Causes this AutoPacketFactory to release all of its packet subscribers
@@ -134,8 +130,10 @@ public:
   /// </summary>
   std::shared_ptr<AutoPacket> NewPacket(void);
 
+  std::shared_ptr<AutoPacketInternal> ConstructPacket(void);
+
   /// <returns>the number of outstanding AutoPackets</returns>
-  size_t GetOutstanding(void) const;
+  size_t GetOutstandingPacketCount(void) const;
 
   /// <summary>
   /// Called by each AutoPacket's Finalize method to allow the factory
