@@ -372,7 +372,8 @@ public:
   bool HasListeners(void) const {
     //TODO: Refactor this so it isn't messy
     //check: does it have any direct listeners, or are any appropriate marshalling objects wired into the immediate context?
-    return !m_junctionBox.expired() && m_junctionBox.lock()->HasListeners();
+    auto junctionBox = m_junctionBox.lock();
+    return junctionBox && junctionBox->HasListeners();
   }
 
   template<class MemFn>
