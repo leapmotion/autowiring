@@ -967,11 +967,6 @@ public:
   void Dump(std::ostream& os) const;
 
   /// <summary>
-  /// Utility routine to print information about the current exception
-  /// </summary>
-  static void DebugPrintCurrentExceptionInformation();
-
-  /// <summary>
   /// Creates a new event stream based on the provided event type
   /// </summary>
   template<class T>

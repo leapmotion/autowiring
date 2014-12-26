@@ -12,7 +12,6 @@
 #include "NewAutoFilter.h"
 #include <algorithm>
 #include <stack>
-#include <iostream>
 #include "thread_specific_ptr.h"
 
 /// <summary>
@@ -909,16 +908,6 @@ void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
   rhs.Dump(os);
   return os;
-}
-
-void CoreContext::DebugPrintCurrentExceptionInformation() {
-  try {
-    throw;
-  } catch(std::exception& ex) {
-    std::cerr << ex.what() << std::endl;
-  } catch(...) {
-    // Nothing can be done, we don't know what exception type this is.
-  }
 }
 
 std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
