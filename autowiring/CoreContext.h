@@ -11,8 +11,6 @@
 #include "ContextMember.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
-#include "EventOutputStream.h"
-#include "EventInputStream.h"
 #include "EventRegistry.h"
 #include "ExceptionFilter.h"
 #include "fast_pointer_cast.h"
@@ -38,7 +36,6 @@ class DeferrableAutowiring;
 class BasicThread;
 class BoltBase;
 class CoreContext;
-class EventOutputStreamBase;
 class GlobalCoreContext;
 class JunctionBoxBase;
 class OutstandingCountTracker;
@@ -571,18 +568,6 @@ public:
   std::shared_ptr<T> DEPRECATED(Construct(Args&&... args), "'Construct' is deprecated, use 'Inject' instead");
 
   /// <summary>
-  /// This method checks whether eventoutputstream listeners for the given type still exist.
-  /// For a given type in a hash, returns a vector of weak ptrs.
-  /// Goes through the weak ptrs, locks them, erases dead ones.
-  /// If any live ones found return true. Otherwise false.
-  /// NOTE: this func does lazy cleanup on weakptrs ptng to suff that has fallen out of scope.
-  /// </summary>
-  template <class T>
-  bool CheckEventOutputStream(void){
-    return m_junctionBoxManager->CheckEventOutputStream(typeid(T));
-  }
-
-  /// <summary>
   /// Sends AutowiringEvents to build current state
   /// </summary>
   void BuildCurrentState(void);
@@ -970,19 +955,6 @@ public:
   /// Utility routine to print information about the current exception
   /// </summary>
   static void DebugPrintCurrentExceptionInformation();
-
-  /// <summary>
-  /// Creates a new event stream based on the provided event type
-  /// </summary>
-  template<class T>
-  std::shared_ptr<EventOutputStream<T>> CreateEventOutputStream(void) {
-    return m_junctionBoxManager->CreateEventOutputStream<T>();
-  }
-
-  template<class T>
-  std::shared_ptr<EventInputStream<T>> CreateEventInputStream(void) {
-    return std::make_shared<EventInputStream<T>>();
-  }
 };
 
 /// <summary>
