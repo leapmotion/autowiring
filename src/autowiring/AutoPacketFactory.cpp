@@ -8,7 +8,6 @@
 
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
-  m_parent(GetContext()->GetParentContext()),
   m_packetCount(0),
   m_packetDurationSum(0),
   m_packetDurationSqSum(0)
@@ -118,8 +117,6 @@ void AutoPacketFactory::Clear(void) {
 }
 
 void AutoPacketFactory::Invalidate(void) {
-  if(m_parent)
-    m_parent->Invalidate();
 }
 
 void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {

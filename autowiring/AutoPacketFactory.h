@@ -33,9 +33,6 @@ public:
   ~AutoPacketFactory(void);
 
 private:
-  // Parent packet factory, if one exists:
-  Autowired<AutoPacketFactory> m_parent;
-
   // Lock for this type
   mutable std::mutex m_lock;
   
