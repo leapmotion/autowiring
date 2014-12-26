@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include FUNCTIONAL_HEADER
 
 AutoPacketGraph::AutoPacketGraph() {

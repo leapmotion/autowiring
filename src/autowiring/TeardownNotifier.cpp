@@ -1,6 +1,11 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TeardownNotifier.h"
+#include "InterlockedExchange.h"
+
+TeardownNotifier::TeardownNotifier(void):
+  m_pFirstTeardownListener(nullptr)
+{}
 
 TeardownNotifier::~TeardownNotifier(void) {
   // Notify all teardown listeners, this will be our last opportunity to do so:
@@ -8,11 +13,20 @@ TeardownNotifier::~TeardownNotifier(void) {
 }
 
 void TeardownNotifier::NotifyTeardownListeners(void) {
-  for(const auto& listener : m_teardownListeners)
-    listener();
-  m_teardownListeners.clear();
+  EntryBase* next;
+  for (auto cur = m_pFirstTeardownListener; cur; cur = next) {
+    next = cur->pFlink;
+    (*cur)();
+    delete cur;
+  }
+
+  m_pFirstTeardownListener = nullptr;
 }
 
-void TeardownNotifier::AddTeardownListener(const std::function<void ()>& listener) {
-  m_teardownListeners.push_back(listener);
+void TeardownNotifier::AddTeardownListenerInternal(EntryBase* listener) {
+  EntryBase* pResult;
+  do {
+    listener->pFlink = m_pFirstTeardownListener;
+    pResult = compare_exchange<EntryBase>(&m_pFirstTeardownListener, listener, listener->pFlink);
+  } while (pResult != listener->pFlink);
 }

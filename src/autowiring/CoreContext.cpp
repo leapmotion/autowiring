@@ -3,16 +3,16 @@
 #include "CoreContext.h"
 #include "AutoInjectable.h"
 #include "AutoPacketFactory.h"
-#include "BoltBase.h"
+#include "CoreContextStateBlock.h"
 #include "CoreThread.h"
 #include "demangle.h"
 #include "GlobalCoreContext.h"
 #include "JunctionBox.h"
 #include "MicroBolt.h"
 #include "NewAutoFilter.h"
-#include <algorithm>
-#include <stack>
 #include "thread_specific_ptr.h"
+#include <sstream>
+#include <stack>
 
 /// <summary>
 /// A pointer to the current context, specific to the current thread.

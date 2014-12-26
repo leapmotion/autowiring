@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "AutoConfig.h"
 #include "AnySharedPointer.h"
+#include <sstream>
 
 using namespace autowiring;
 
@@ -47,6 +48,20 @@ AutoConfigManager::AutoConfigManager(void){
 }
 
 AutoConfigManager::~AutoConfigManager(void){}
+
+void AutoConfigManager::ThrowKeyNotFoundException(const std::string& key) const {
+  std::stringstream ss;
+  ss << "No configuration found for key '" << key << "'";
+  throw autowiring_error(ss.str());
+}
+
+void AutoConfigManager::ThrowTypeMismatchException(const std::string& key, const std::type_info& ti) const {
+  std::stringstream ss;
+  ss << "Attempting to set config '" << key << "' with incorrect type '"
+    << autowiring::demangle(ti) << "'";
+  throw autowiring_error(ss.str());
+
+}
 
 bool AutoConfigManager::IsConfigured(const std::string& key) {
   std::lock_guard<std::mutex> lk(m_lock);

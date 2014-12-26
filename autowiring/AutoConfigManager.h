@@ -2,11 +2,12 @@
 #pragma once
 #include "autowiring_error.h"
 #include "ConfigRegistry.h"
+#include "ContextMember.h"
 #include <string>
-#include <sstream>
 #include <vector>
 #include STL_UNORDERED_MAP
 #include STL_UNORDERED_SET
+#include MUTEX_HEADER
 #include MEMORY_HEADER
 
 struct AnySharedPointer;
@@ -43,6 +44,10 @@ private:
   // map of callbacks registered for a key
   std::unordered_map<std::string, std::vector<t_callback>> m_callbacks;
 
+  // Exception throwers:
+  void ThrowKeyNotFoundException(const std::string& key) const;
+  void ThrowTypeMismatchException(const std::string& key, const std::type_info& ti) const;
+
 public:
   /// <summary>
   /// Check if this key has been set
@@ -73,18 +78,11 @@ public:
   template<class T>
   void Set(const std::string& key, const T& value) {
     
-    if (!s_registry.count(key)) {
-      std::stringstream ss;
-      ss << "No configuration found for key '" << key << "'";
-      throw autowiring_error(ss.str());
-    }
+    if (!s_registry.count(key))
+      ThrowKeyNotFoundException(key);
     
-    if (!s_registry.find(key)->second->verifyType(typeid(T))) {
-      std::stringstream ss;
-      ss << "Attempting to set config '" << key << "' with incorrect type '"
-         << autowiring::demangle(typeid(T)) << "'";
-      throw autowiring_error(ss.str());
-    }
+    if (!s_registry.find(key)->second->verifyType(typeid(T)))
+      ThrowTypeMismatchException(key, typeid(T));
     
     // Set value in this AutoConfigManager
     SetRecursive(key, AnySharedPointer(std::make_shared<T>(value)));

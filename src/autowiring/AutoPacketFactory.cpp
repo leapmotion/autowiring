@@ -2,8 +2,7 @@
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketInternal.hpp"
-#include "fast_pointer_cast.h"
-#include "thread_specific_ptr.h"
+#include "CoreContext.h"
 #include <cmath>
 
 AutoPacketFactory::AutoPacketFactory(void):
@@ -158,7 +157,7 @@ void AutoPacketFactory::ResetPacketStatistics(void) {
   m_packetDurationSqSum = 0.0;
 }
 
-template class RegType<AutoPacketFactory>;
 template struct SlotInformationStump<AutoPacketFactory, false>;
 template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;
 template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, Object>(const std::shared_ptr<Object>& Other);
+template class RegType<AutoPacketFactory>;

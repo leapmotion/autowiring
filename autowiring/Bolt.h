@@ -12,7 +12,6 @@
 /// To create a class that will have a new instance inserted into each instance of a context
 /// with a given sigil, use Boltable.
 /// </remarks>
-
 template<typename... Sigil>
 class Bolt:
   public BoltBase

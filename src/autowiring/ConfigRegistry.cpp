@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "ConfigRegistry.h"
 #include "AutoConfigParser.hpp"
+#include "demangle.h"
 
 // Head of a linked list which will have node for every event type
 const ConfigRegistryEntry* g_pFirstConfigEntry = nullptr;
@@ -18,4 +19,10 @@ ConfigRegistryEntry::ConfigRegistryEntry(const std::type_info& tinfo, bool has_v
 
 bool ConfigRegistryEntry::is(const std::string& key) const {
   return m_key == key;
+}
+
+void autowiring::ThrowFailedTypeParseException(const std::string& str, const std::type_info& ti) {
+  std::stringstream msg;
+  msg << "Failed to parse '" << str << "' as type '" << autowiring::demangle(ti) << "'";
+  throw autowiring_error(msg.str());
 }

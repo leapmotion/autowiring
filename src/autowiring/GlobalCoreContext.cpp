@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "GlobalCoreContext.h"
+#include <cassert>
 
 GlobalCoreContext::GlobalCoreContext(void):
   CoreContextT<GlobalCoreContext>(std::shared_ptr<CoreContext>(), t_childList::iterator(), std::shared_ptr<CoreContext>())

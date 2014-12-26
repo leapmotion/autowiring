@@ -6,12 +6,10 @@
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
-#include "CoreContextStateBlock.h"
 #include "CoreRunnable.h"
 #include "ContextMember.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
-#include "EventRegistry.h"
 #include "ExceptionFilter.h"
 #include "fast_pointer_cast.h"
 #include "has_autoinit.h"
@@ -26,16 +24,15 @@
 
 #include <list>
 #include MEMORY_HEADER
-#include FUNCTIONAL_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
-#include STL_UNORDERED_SET
 
+struct CoreContextStateBlock;
 class AutoInjectable;
-class DeferrableAutowiring;
 class BasicThread;
 class BoltBase;
 class CoreContext;
+class DeferrableAutowiring;
 class GlobalCoreContext;
 class JunctionBoxBase;
 class OutstandingCountTracker;
@@ -397,7 +394,7 @@ protected:
   template<class Fx>
   void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&)) { TeardownNotifier::AddTeardownListener([fx, this] () mutable { fx(*this); }); }
   template<class Fx>
-  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void) const) { TeardownNotifier::AddTeardownListener(fx); }
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void) const) { TeardownNotifier::AddTeardownListener(std::forward<Fx&&>(fx)); }
 
   template<class Fx>
   void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&) const) { TeardownNotifier::AddTeardownListener([fx, this] () mutable { fx(*this); }); }

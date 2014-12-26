@@ -2,15 +2,9 @@
 #pragma once
 #include "JunctionBoxBase.h"
 #include "JunctionBoxEntry.h"
-#include "uuid.h"
-#include <map>
-#include <stdexcept>
-#include <vector>
-#include <cassert>
 #include TYPE_INDEX_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_MAP
-#include TYPE_TRAITS_HEADER
 
 class CoreContext;
 class JunctionBoxBase;

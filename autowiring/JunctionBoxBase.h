@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include <vector>
 #include "Object.h"
+#include <list>
 #include MUTEX_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_SET
@@ -37,7 +37,7 @@ protected:
   /// <summary>
   /// Invokes SignalTerminate on each context in the specified vector.  Does not wait.
   /// </summary>
-  static void TerminateAll(const std::vector<std::weak_ptr<CoreContext>>& teardown);
+  static void TerminateAll(const std::list<std::weak_ptr<CoreContext>>& teardown);
 
   /// <summary>
   /// Convenience routine for Fire calls

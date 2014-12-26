@@ -8,10 +8,7 @@
 #include "JunctionBoxEntry.h"
 #include "TypeUnifier.h"
 #include <set>
-#include STL_TUPLE_HEADER
-#include RVALUE_HEADER
 #include MEMORY_HEADER
-#include STL_UNORDERED_SET
 #include TYPE_TRAITS_HEADER
 
 class CoreContext;
@@ -109,18 +106,21 @@ public:
     std::unique_lock<std::mutex> lk(m_lock);
     int deleteCount = m_numberOfDeletions;
 
-    // Set of contexts that need to be torn down in the event of an exception:
-    std::vector<std::weak_ptr<CoreContext>> teardown;
+    // Collection of contexts that need to be torn down in the event of an exception.  Using a list,
+    // here, instead of a vector because this list is expected to almost always be empty, and we can
+    // avoid having to include <vector> by using a list instead.
+    std::list<std::weak_ptr<CoreContext>> teardown;
 
-    for(auto it = m_st.begin(); it != m_st.end(); ){
+    for (auto it = m_st.begin(); it != m_st.end();){
       JunctionBoxEntry<T> currentEvent(*it);
 
       lk.unlock();
       try {
         fn(*currentEvent.m_ptr, args...);
-      } catch(...) {
+      }
+      catch (...) {
         teardown.push_back(ContextDumbToWeak(currentEvent.m_owner));
-        
+
         // If T doesn't inherit Object, then we need to cast to a unifying type which does
         typedef typename SelectTypeUnifier<T>::type TActual;
         this->FilterFiringException(autowiring::fast_pointer_cast<TActual>(currentEvent.m_ptr));
@@ -130,12 +130,13 @@ public:
       // Increment iterator correctly even if it's been invalidated
       if (deleteCount == m_numberOfDeletions){
         ++it;
-      } else {
+      }
+      else {
         it = m_st.upper_bound(currentEvent);
         deleteCount = m_numberOfDeletions;
       }
     }
-    if(teardown.empty())
+    if (teardown.empty())
       // Nobody threw any exceptions, end here
       return true;
 

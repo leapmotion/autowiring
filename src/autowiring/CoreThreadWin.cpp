@@ -3,6 +3,7 @@
 #include "BasicThread.h"
 #include "BasicThreadStateBlock.h"
 #include CHRONO_HEADER
+#include <stdexcept>
 #include <Windows.h>
 #include <Avrt.h>
 
