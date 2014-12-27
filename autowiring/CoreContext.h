@@ -566,6 +566,16 @@ public:
   static void InjectCurrent(void) {
     CurrentContext()->Inject<T>();
   }
+
+  /// <returns>
+  /// True if the specified type can be autowired in this context
+  /// </returns>
+  template<class T>
+  bool Has(void) const {
+    std::shared_ptr<T> ptr;
+    FindByType(ptr);
+    return ptr != nullptr;
+  }
   
   template<typename T, typename... Args>
   std::shared_ptr<T> DEPRECATED(Construct(Args&&... args), "'Construct' is deprecated, use 'Inject' instead");
