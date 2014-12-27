@@ -125,8 +125,7 @@ public:
   typedef T value_type;
 
   AutowirableSlot(const std::shared_ptr<CoreContext>& ctxt) :
-    DeferrableAutowiring(AnySharedPointerT<T>(), ctxt),
-    m_fast_pointer_cast(&autowiring::fast_pointer_cast<T, Object>)
+    DeferrableAutowiring(AnySharedPointerT<T>(), ctxt)
   {
     SlotInformationStackLocation::RegisterSlot(this);
   }
@@ -134,8 +133,6 @@ public:
   virtual ~AutowirableSlot(void) {
     CancelAutowiring();
   }
-
-  std::shared_ptr<T>(*const m_fast_pointer_cast)(const std::shared_ptr<Object>&);
 
   /// <remarks>
   /// Shadowing GetType call, provided here as a virtual function optimization
