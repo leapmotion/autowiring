@@ -2,8 +2,6 @@
 #pragma once
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
-#include "EventOutputStream.h"
-#include "EventInputStream.h"
 #include "fast_pointer_cast.h"
 #include "InvokeRelay.h"
 #include "JunctionBoxBase.h"
@@ -49,30 +47,6 @@ protected:
   volatile int m_numberOfDeletions;
 
 public:
-  /// <summary>
-  /// Recursive serialize message: Initial Processing- n arg case
-  /// </summary>
-  template <typename Memfn, typename... Targs>
-  void SerializeInit(Memfn memfn, Targs&... args) {
-    //First distribute the arguments to any listening serializers in current context
-    if (m_PotentialMarshals){
-      auto m_vector = *m_PotentialMarshals;
-      auto it = m_vector.begin();
-
-      while (it != m_vector.end()){
-        auto testptr = (*it).lock();
-        if (testptr) {
-          //if given eventid is enabled for given eventoutputstream, serialize!
-          if (testptr->IsEnabled(memfn))
-            testptr->SerializeInit(memfn, args...);
-          ++it;
-        }
-        else
-          it = m_vector.erase(it); //opportunistically kill dead references.
-      }
-    }
-  }
-
   /// <summary>
   /// Convenience method allowing consumers to quickly determine whether any listeners exist
   /// </summary>

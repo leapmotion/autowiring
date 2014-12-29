@@ -8,7 +8,6 @@
 
 class CoreContext;
 class DispatchQueue;
-class EventOutputStreamBase;
 
 template<class T>
 struct JunctionBoxEntry;
@@ -61,13 +60,6 @@ public:
   bool IsInitiated(void) const {return m_isInitiated;}
   void Initiate(void) {m_isInitiated=true;}
   
-  // Accessor methods:
-  std::vector<std::weak_ptr<EventOutputStreamBase> > * m_PotentialMarshals;
-
-  void SetPotentialMarshals(std::vector<std::weak_ptr<EventOutputStreamBase>> * inVec){
-    m_PotentialMarshals = inVec;
-  }
-
   const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const { return m_dispatch; }
   std::mutex& GetDispatchQueueLock(void) const { return m_lock; }
 

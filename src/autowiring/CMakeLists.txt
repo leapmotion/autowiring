@@ -98,9 +98,6 @@ set(Autowiring_SRCS
   DispatchQueue.cpp
   DispatchQueue.h
   DispatchThunk.h
-  EventInputStream.h
-  EventOutputStream.cpp
-  EventOutputStream.h
   EventRegistry.cpp
   EventRegistry.h
   ExceptionFilter.cpp
