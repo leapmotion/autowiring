@@ -140,8 +140,6 @@ set(Autowiring_SRCS
   SlotInformation.h
   TeardownNotifier.cpp
   TeardownNotifier.h
-  ThreadStatusBlock.cpp
-  ThreadStatusBlock.h
   thread_specific_ptr.h
   TypeIdentifier.h
   TypeRegistry.cpp
