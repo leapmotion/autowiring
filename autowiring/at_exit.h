@@ -5,7 +5,7 @@
 template<class Fn>
 struct AtExit {
   AtExit(Fn&& fn) :
-    fn(std::move(fn))
+    fn(std::forward<Fn&&>(fn))
   {}
 
   ~AtExit(void) {
@@ -17,5 +17,5 @@ struct AtExit {
 
 template<class Fn>
 AtExit<Fn> MakeAtExit(Fn&& fn) {
-  return AtExit<Fn>(std::forward<Fn>(fn));
+  return AtExit<Fn>(std::forward<Fn&&>(fn));
 }

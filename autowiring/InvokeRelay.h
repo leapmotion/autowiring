@@ -123,9 +123,6 @@ public:
       // Context not yet started
       return true;
 
-    // Give the serializer a chance to handle these arguments:
-    erp->SerializeInit(fnPtr, args...);
-
     auto fw = [this](T& obj, Args... args) {
       (obj.*fnPtr)(args...);
     };

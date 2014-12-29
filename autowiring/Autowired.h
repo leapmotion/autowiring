@@ -372,9 +372,7 @@ public:
   bool HasListeners(void) const {
     //TODO: Refactor this so it isn't messy
     //check: does it have any direct listeners, or are any appropriate marshalling objects wired into the immediate context?
-    auto ctxt = CoreContext::CurrentContext();
-    bool checkval = ctxt->CheckEventOutputStream<T>();
-    return (checkval || (!m_junctionBox.expired() && m_junctionBox.lock()->HasListeners()) );
+    return !m_junctionBox.expired() && m_junctionBox.lock()->HasListeners();
   }
 
   template<class MemFn>

@@ -8,16 +8,12 @@
 
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
-  m_parent(GetContext()->GetParentContext()),
   m_packetCount(0),
   m_packetDurationSum(0),
   m_packetDurationSqSum(0)
 {}
 
-AutoPacketFactory::~AutoPacketFactory() {
-  // Invalidate the pool and recursively invalidate all parents
-  Invalidate();
-}
+AutoPacketFactory::~AutoPacketFactory() {}
 
 std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   if(ShouldStop())
@@ -83,9 +79,6 @@ bool AutoPacketFactory::OnStart(void) {
 }
 
 void AutoPacketFactory::OnStop(bool graceful) {
-  // Kill the object pool
-  Invalidate();
-
   // Queue of local variables to be destroyed when leaving scope
   t_autoFilterSet autoFilters;
   
@@ -117,31 +110,15 @@ void AutoPacketFactory::Clear(void) {
   Stop(false);
 }
 
-void AutoPacketFactory::Invalidate(void) {
-  if(m_parent)
-    m_parent->Invalidate();
-}
-
 void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
-  (std::lock_guard<std::mutex>)m_lock,
+  std::lock_guard<std::mutex> lk(m_lock);
   m_autoFilters.insert(rhs);
-
-  // Trigger object pool reset after releasing the lock.  While it's possible that some
-  // packets may be issued between lock reset and object pool reset, these packets will
-  // not be specifically invalid; they will simply result in late delivery to certain
-  // recipients.  Eventually, all packets will be reset and released.
-  Invalidate();
 }
 
 void AutoPacketFactory::RemoveSubscriber(const AutoFilterDescriptor& autoFilter) {
   // Trivial removal from the autofilter set:
-  {
-    std::lock_guard<std::mutex> lk(m_lock);
-    m_autoFilters.erase(autoFilter);
-  }
-
-  // Regeneration of the packet pool for the same reason as described in AddSubscriber
-  Invalidate();
+  std::lock_guard<std::mutex> lk(m_lock);
+  m_autoFilters.erase(autoFilter);
 }
 
 AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(const std::type_info* nodeType) {

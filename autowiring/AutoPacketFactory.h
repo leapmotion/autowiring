@@ -33,9 +33,6 @@ public:
   ~AutoPacketFactory(void);
 
 private:
-  // Parent packet factory, if one exists:
-  Autowired<AutoPacketFactory> m_parent;
-
   // Lock for this type
   mutable std::mutex m_lock;
   
@@ -59,9 +56,6 @@ private:
 
   // Returns the internal outstanding count, for use with AutoPacket
   std::shared_ptr<void> GetInternalOutstanding(void);
-
-  // Recursive invalidation routine, causes AutoPacket object pools to be dumped to the root
-  void Invalidate(void);
 
   // Utility override, does nothing
   void AddSubscriber(std::false_type) {}

@@ -98,9 +98,6 @@ set(Autowiring_SRCS
   DispatchQueue.cpp
   DispatchQueue.h
   DispatchThunk.h
-  EventInputStream.h
-  EventOutputStream.cpp
-  EventOutputStream.h
   EventRegistry.cpp
   EventRegistry.h
   ExceptionFilter.cpp
@@ -143,8 +140,6 @@ set(Autowiring_SRCS
   SlotInformation.h
   TeardownNotifier.cpp
   TeardownNotifier.h
-  ThreadStatusBlock.cpp
-  ThreadStatusBlock.h
   thread_specific_ptr.h
   TypeIdentifier.h
   TypeRegistry.cpp
