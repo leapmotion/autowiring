@@ -950,11 +950,6 @@ public:
   /// Utility debug method for writing a snapshot of this context to the specified output stream
   /// </summary>
   void Dump(std::ostream& os) const;
-
-  /// <summary>
-  /// Utility routine to print information about the current exception
-  /// </summary>
-  static void DebugPrintCurrentExceptionInformation();
 };
 
 /// <summary>
