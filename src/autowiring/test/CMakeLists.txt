@@ -37,7 +37,6 @@ set(AutowiringTest_SRCS
   GlobalInitTest.cpp
   GuardObjectTest.cpp
   InterlockedRoutinesTest.cpp
-  MarshalingTest.cpp
   MultiInheritTest.cpp
   ObjectPoolTest.cpp
   PeerContextTest.cpp
