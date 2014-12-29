@@ -32,58 +32,6 @@ TEST_F(AutoFilterTest, GetOutstandingTest) {
   ASSERT_EQ(0UL, factory->GetOutstandingPacketCount()) << "Factory outstanding did not go to zero after releasing the only outstanding packet";
 }
 
-TEST_F(AutoFilterTest, VerifyDescendentAwareness) {
-  // Create a packet while the factory has no subscribers:
-  AutoRequired<AutoPacketFactory> parentFactory;
-  std::shared_ptr<AutoPacket> firstPacket = parentFactory->NewPacket();
-
-  // Verify subscription-free status:
-  EXPECT_FALSE(firstPacket->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
-
-  std::shared_ptr<AutoPacket> strongPacket;
-  std::weak_ptr<AutoPacket> weakPacket;
-  std::weak_ptr<FilterA> filterChecker;
-
-  // Create a subcontext
-  {
-    AutoCreateContext subContext;
-    {
-      CurrentContextPusher pusher(subContext);
-
-      //add a filter in the subcontext
-      AutoRequired<FilterA> subFilter;
-      filterChecker = subFilter;
-    }
-    EXPECT_FALSE(firstPacket->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
-
-    //Create a packet where a subscriber exists only in a subcontext
-    strongPacket = parentFactory->NewPacket();
-    std::shared_ptr<AutoPacket> holdPacket = parentFactory->NewPacket();
-    weakPacket = holdPacket;
-    EXPECT_TRUE(strongPacket->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
-    EXPECT_TRUE(weakPacket.lock()->HasSubscribers<Decoration<0>>()) << "Packet lacked expected subscription from subcontext";
-  }
-  EXPECT_FALSE(filterChecker.expired()) << "Packet keeping subcontext member alive";
-
-  // Verify the second packet will no longer have subscriptions  -
-  // normally removing a subscriber would mean the packet still has the subscriber, but
-  // in this case, the subscriber was actually destroyed so the packet has lost a subscriber.
-  EXPECT_TRUE(strongPacket->HasSubscribers<Decoration<0>>()) << "Missing subscriber from destroyed subcontext";
-
-  // Call the subscriber... this will either succeed or segfault.
-  strongPacket->Decorate(Decoration<0>());
-  strongPacket->Decorate(Decoration<1>());
-  EXPECT_TRUE(strongPacket->HasSubscribers<Decoration<0>>()) << "Calling a subscriber should not remove it";
-  {
-    std::shared_ptr<FilterA> holdFilter = filterChecker.lock();
-    ASSERT_EQ(1, holdFilter->m_called) << "Subcontext filter was not called";
-  }
-
-  // Create a packet after the subcontext has been destroyed
-  auto lastPacket = parentFactory->NewPacket();
-  EXPECT_FALSE(lastPacket->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
-}
-
 TEST_F(AutoFilterTest, VerifySimpleFilter) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<FilterA> filterA;
@@ -521,68 +469,6 @@ public:
 
   size_t nReceived;
 };
-
-TEST_F(AutoFilterTest, DeferredRecieptInSubContext) {
-  static const size_t nPackets = 5;
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<DeferredAutoFilter>();
-
-  std::vector<std::weak_ptr<AutoPacket>> allPackets;
-
-  // Issue a packet before the subcontext is created, hold it for awhile:
-  auto preissued = factory->NewPacket();
-  preissued->Decorate(Decoration<0>());
-  allPackets.push_back(preissued);
-
-  {
-    // Create subcontext
-    AutoCreateContext ctxt;
-    CurrentContextPusher pshr(ctxt);
-    AutoRequired<DeferredAutoFilter> daf;
-
-    // Now we initiate:
-    ctxt->Initiate();
-
-    // Issue a few packets, have them get picked up by the subcontext:
-    for(size_t i = nPackets; i--;)
-    {
-      auto packet = factory->NewPacket();
-      packet->Decorate(Decoration<0>());
-      allPackets.push_back(packet);
-    }
-
-    // Terminate the subcontext, release references
-    ctxt->SignalShutdown(true);
-    ctxt->Wait();
-
-    // Verify that the filter got all of the packets that it should have gotten:
-    ASSERT_EQ(nPackets, daf->nReceived) << "AutoFilter did not get all packets that were pended to it";
-  }
-
-  // Release the preissued packet:
-  preissued.reset();
-
-  // Index of packets that were not expired at the time of detection
-  std::set<size_t> notExpired;
-
-  // Now verify that all of our packets are expired:
-  for(size_t i = 0; i < allPackets.size(); i++)
-    if(!allPackets[i].expired())
-      notExpired.insert(i);
-
-  if(!notExpired.empty()) {
-    // Delay for a bit, see if they expire later:
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    for(size_t i = 0; i < allPackets.size(); i++)
-      ASSERT_TRUE(allPackets[i].expired()) << "Packet " << i << " did not expire even after a delay that should have allowed it to expire";
-   
-    // They did, tell the user what didn't expire the first time around
-    std::stringstream ss;
-    for(auto index : notExpired)
-      ss << index << " ";
-    FAIL() << "These packets did not expire after all recipients went out of scope: " << ss.str();
-  }
-}
 
 class HasAWeirdAutoFilterMethod {
 public:

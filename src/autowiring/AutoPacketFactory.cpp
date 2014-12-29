@@ -8,7 +8,6 @@
 
 AutoPacketFactory::AutoPacketFactory(void):
   ContextMember("AutoPacketFactory"),
-  m_parent(GetContext()->GetParentContext()),
   m_packetCount(0),
   m_packetDurationSum(0),
   m_packetDurationSqSum(0)

@@ -16,13 +16,8 @@ void AutoPacketInternal::Initialize(void) {
   this->m_initTime = std::chrono::high_resolution_clock::now();
 
   // Traverse all descendant contexts, adding their packet subscriber vectors one at a time:
-  for(const auto& curContext : ContextEnumerator(m_parentFactory->GetContext())) {
-    AutowiredFast<AutoPacketFactory> curFactory(curContext);
-    if(curFactory)
-      // Only insert if this context actually has a packet factory
-      curFactory->AppendAutoFiltersTo(m_satCounters);
-  }
-  
+  m_parentFactory->AppendAutoFiltersTo(m_satCounters);
+
   // Sort, eliminate duplicates
   m_satCounters.sort();
   m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
