@@ -43,7 +43,13 @@ struct ObjectTraits {
         return false;
       }()
     )
-  {}
+  {
+    // We can instantiate casts to Object here at the point where object traits are being generated
+    (void) autowiring::fast_pointer_cast_initializer<Object, TActual>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<TActual, Object>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<Object, T>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<T, Object>::sc_init;
+  }
 
   // The type of the passed pointer
   const std::type_info& type;

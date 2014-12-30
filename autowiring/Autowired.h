@@ -270,14 +270,14 @@ public:
 
   // !!!!! Read comment in AutoRequired if you get a compiler error here !!!!!
   AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) {
-    (void) autowiring::fast_pointer_cast_initializer<Object, T>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<T, Object>::sc_init;
 
     if (ctxt)
       ctxt->FindByTypeRecursive(*this);
   }
 
   AutowiredFast(const CoreContext* pCtxt) {
-    (void) autowiring::fast_pointer_cast_initializer<Object, T>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<T, Object>::sc_init;
 
     pCtxt->FindByTypeRecursive(*this);
   }
