@@ -3,9 +3,9 @@
 
 #include <boost/exception_ptr.hpp>
 namespace std {
-  using boost::exception_ptr;
-  using boost::rethrow_exception;
-  using boost::current_exception;
+  using AUTOWIRING_BOOST_NAME::exception_ptr;
+  using AUTOWIRING_BOOST_NAME::rethrow_exception;
+  using AUTOWIRING_BOOST_NAME::current_exception;
 }
 
 class throw_exception_util {

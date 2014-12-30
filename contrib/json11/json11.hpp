@@ -54,7 +54,6 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <initializer_list>
 
 #ifdef _MSC_VER
   // noexcept was added to MSVC in Visual Studio 2014
@@ -123,6 +122,11 @@ public:
         Json(array(v.begin(), v.end()))
     {}
 
+    template<class V>
+    Json(V* begin, V* end):
+      Json(array(begin, end))
+    {}
+
     // This prevents Json(some_pointer) from accidentally producing a bool. Use
     // Json(bool(some_pointer)) if that behavior is desired.
     Json(void *) = delete;
@@ -184,14 +188,6 @@ public:
     bool operator<= (const Json &rhs) const { return !(rhs < *this); }
     bool operator>  (const Json &rhs) const { return  (rhs < *this); }
     bool operator>= (const Json &rhs) const { return !(*this < rhs); }
-
-    /* has_shape(types, err)
-     *
-     * Return true if this is a JSON object and, for each item in types, has a field of
-     * the given type. If not, return false and set err to a descriptive message.
-     */
-    typedef std::initializer_list<std::pair<std::string, Type>> shape;
-    bool has_shape(const shape & types, std::string & err) const;
 
 private:
     std::shared_ptr<JsonValue> m_ptr;

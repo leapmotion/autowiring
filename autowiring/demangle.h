@@ -3,12 +3,6 @@
 #include TYPE_INDEX_HEADER
 #include <string>
 
-#if __GNUG__ // Mac and linux
-#include <cxxabi.h>
-#include <cstdlib>
-#include MEMORY_HEADER
-#endif
-
 struct AnySharedPointer;
 
 //

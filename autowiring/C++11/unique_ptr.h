@@ -30,7 +30,7 @@ public:
   {
   }
 
-  unique_ptr(pointer _Ptr, typename boost::remove_reference<Del>::type&& _Deleter) :
+  unique_ptr(pointer _Ptr, typename AUTOWIRING_BOOST_NAME::remove_reference<Del>::type&& _Deleter) :
     stored_ptr(_Ptr),
     stored_deleter(_Deleter)
   {}

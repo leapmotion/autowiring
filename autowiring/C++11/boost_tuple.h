@@ -26,7 +26,7 @@ namespace std {
       return m_tuple < other.m_tuple;
     }
 
-    boost::tuple<Ts...> m_tuple;
+    AUTOWIRING_BOOST_NAME::tuple<Ts...> m_tuple;
   };
   
   template<typename... Ts>
@@ -35,8 +35,8 @@ namespace std {
   }
 
   template<int I, typename... Ts>
-  auto get(const ::std::tuple<Ts...>& tup) -> decltype(boost::get<I>(tup.m_tuple)) {
-    return boost::get<I>(tup.m_tuple);
+  auto get(const ::std::tuple<Ts...>& tup) -> decltype(AUTOWIRING_BOOST_NAME::get<I>(tup.m_tuple)) {
+    return AUTOWIRING_BOOST_NAME::get<I>(tup.m_tuple);
   }
 
   template<typename... Ts>

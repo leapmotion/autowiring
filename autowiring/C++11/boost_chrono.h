@@ -5,6 +5,6 @@
 
 namespace std {
   namespace chrono {
-    using namespace boost::chrono;
+    using namespace AUTOWIRING_BOOST_NAME::chrono;
   }
 }

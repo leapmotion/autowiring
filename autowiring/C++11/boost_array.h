@@ -4,5 +4,5 @@
 #include <boost/array.hpp>
 
 namespace std {
-  using boost::array;
+  using AUTOWIRING_BOOST_NAME::array;
 }

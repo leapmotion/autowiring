@@ -27,9 +27,7 @@
 #include <boost/move/utility.hpp>
 #include <boost/move/traits.hpp>
 #include <boost/config/abi_prefix.hpp>
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-#include <type_traits>
-#endif
+
 namespace autoboost
 {
 

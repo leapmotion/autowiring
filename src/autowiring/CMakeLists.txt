@@ -150,6 +150,24 @@ set(Autowiring_SRCS
   var_logic.h
 )
 
+add_conditional_sources(
+  Autowiring_SRCS
+  "ON"
+  GROUP_NAME "Autoboost"
+  FILES
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/system/src/error_code.cpp
+)
+
+add_conditional_sources(
+  Autowiring_SRCS
+  "NOT MSVC"
+  GROUP_NAME "Autoboost"
+  FILES
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/once_atomic.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/thread.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/future.cpp
+)
+
 if(NOT AUTOWIRING_BUILD_AUTONET)
   list(APPEND Autowiring_SRCS DefaultAutoNetServer.cpp)
 endif()
@@ -212,13 +230,6 @@ target_include_directories(Autowiring INTERFACE
   "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
 )
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
-
-# The boost C++11 shim is required when building without autowiring_USE_LIBCXX off Windows
-# We do not mention the link libraries; rather, we require that downstream clients
-# satisfy this link dependency.
-if(NOT WIN32 AND NOT autowiring_USE_LIBCXX)
-  find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
-endif()
 
 # Need multithreading services if available
 find_package(Threads)

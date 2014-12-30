@@ -9,13 +9,13 @@
 #include <boost/thread/once.hpp>
 
 namespace std {
-  using boost::mutex;
-  using boost::recursive_mutex;
-  using boost::lock_guard;
-  using boost::unique_lock;
-  using boost::condition_variable;
-  using boost::condition_variable_any;
-  using boost::cv_status;
-  using boost::once_flag;
-  using boost::call_once;
+  using AUTOWIRING_BOOST_NAME::mutex;
+  using AUTOWIRING_BOOST_NAME::recursive_mutex;
+  using AUTOWIRING_BOOST_NAME::lock_guard;
+  using AUTOWIRING_BOOST_NAME::unique_lock;
+  using AUTOWIRING_BOOST_NAME::condition_variable;
+  using AUTOWIRING_BOOST_NAME::condition_variable_any;
+  using AUTOWIRING_BOOST_NAME::cv_status;
+  using AUTOWIRING_BOOST_NAME::once_flag;
+  using AUTOWIRING_BOOST_NAME::call_once;
 }
