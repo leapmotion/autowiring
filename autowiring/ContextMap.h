@@ -84,7 +84,7 @@ public:
     std::lock_guard<std::mutex> lk(m_lk);
     auto& rhs = m_contexts[key];
     if(!rhs.expired())
-      throw_rethrowable autowiring_error("Specified key is already associated with another context");
+      throw autowiring_error("Specified key is already associated with another context");
 
     rhs = context;
 

@@ -95,16 +95,6 @@
 #endif
 
 /*********************
- * exception_ptr availability
- *********************/
-#if (defined(__APPLE__) && !defined(_LIBCPP_VERSION))
-  #define EXCEPTION_PTR_HEADER <autowiring/C++11/boost_exception_ptr.h>
-#else
-  #define EXCEPTION_PTR_HEADER <stdexcept>
-  #define throw_rethrowable throw
-#endif
-
-/*********************
  * system error availability
  *********************/
 #if STL11_ALLOWED
