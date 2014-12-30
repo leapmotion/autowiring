@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "has_autofilter.h"
-#include "has_simple_constructor.h"
 #include "Object.h"
 #include RVALUE_HEADER
 

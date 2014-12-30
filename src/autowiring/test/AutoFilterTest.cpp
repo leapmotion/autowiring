@@ -5,6 +5,7 @@
 #include <autowiring/AutoPacketFactory.h>
 #include <autowiring/Deferred.h>
 #include <autowiring/NewAutoFilter.h>
+#include <autowiring/ObjectPool.h>
 #include <autowiring/DeclareAutoFilter.h>
 #include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/AutoTimeStamp.h>

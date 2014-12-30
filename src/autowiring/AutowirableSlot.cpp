@@ -3,6 +3,7 @@
 #include "AutowirableSlot.h"
 #include "autowiring_error.h"
 #include "CoreContext.h"
+#include <cassert>
 #include <stdexcept>
 
 using namespace std;

@@ -3,6 +3,7 @@
 #include "auto_arg.h"
 #include "AutoPacket.h"
 #include "Decompose.h"
+#include <assert.h>
 
 class Deferred;
 

@@ -5,6 +5,7 @@
 #include "AutowiringEvents.h"
 #include "JunctionBox.h"
 #include "EventRegistry.h"
+#include <cassert>
 
 template class RegEvent<AutowiringEvents>;
 template class TypeUnifierComplex<AutowiringEvents>;

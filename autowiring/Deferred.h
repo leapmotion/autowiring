@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include <assert.h>
 
 class CoreThread;
 
@@ -18,19 +17,4 @@ public:
   Deferred(void) {}
 
   Deferred(CoreThread* pThread) {}
-};
-
-/// <summary>
-/// Utility type which asserts when construction is attempted
-/// </summary>
-/// <remarks>
-/// Any consumer who attempts to invoke a deferred 
-/// </remarks>
-class FatalDeferredInvocation:
-  public Deferred
-{
-public:
-  FatalDeferredInvocation(void) {
-    assert(false);
-  }
 };

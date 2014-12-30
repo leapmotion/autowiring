@@ -135,6 +135,7 @@ set(Autowiring_SRCS
   ObjectPoolMonitor.h
   ObjectTraits.h
   SatCounter.h
+  SatCounter.cpp
   SharedPointerSlot.h
   SlotInformation.cpp
   SlotInformation.h

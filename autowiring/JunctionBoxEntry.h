@@ -30,7 +30,6 @@ struct JunctionBoxEntry:
   JunctionBoxEntry& operator=(const JunctionBoxEntry& rhs) {
     // This shouldn't be used. non-c++11 containers require this...
     throw std::runtime_error("Can't copy a JunctionBoxEntry");
-    return *this;
   }
 
   bool operator==(const JunctionBoxEntry& rhs) const {

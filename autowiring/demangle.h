@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include TYPE_INDEX_HEADER
 #include <string>
+#include <typeinfo>
 
 struct AnySharedPointer;
 
