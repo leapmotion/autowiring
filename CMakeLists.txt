@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.0)
 include(version.cmake)
 project(autowiring VERSION ${autowiring_VERSION})
 
+# We don't care if variables are not dereferenced when quoted
+cmake_policy(SET CMP0054 NEW)
+
 include(CTest)
 include(CheckTypeSize)
 
