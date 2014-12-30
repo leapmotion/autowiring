@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1)
 include(version.cmake)
 project(autowiring VERSION ${autowiring_VERSION})
 
@@ -117,7 +117,7 @@ if(AUTOWIRING_IS_EMBEDDED)
   set(AUTOWIRING_BUILD_TESTS_DEFAULT OFF)
 else()
   set(AUTOWIRING_BUILD_TESTS_DEFAULT ON)
-  
+
   # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
   # wants us to do.
