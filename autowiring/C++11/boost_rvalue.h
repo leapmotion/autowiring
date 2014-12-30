@@ -4,6 +4,6 @@
 #include <boost/move/move.hpp>
 
 namespace std {
-  using boost::forward;
-  using boost::move;
+  using AUTOWIRING_BOOST_NAME::forward;
+  using AUTOWIRING_BOOST_NAME::move;
 }

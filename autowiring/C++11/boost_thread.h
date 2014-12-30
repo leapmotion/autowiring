@@ -4,6 +4,6 @@
 #include <boost/thread/thread.hpp>
 
 namespace std {
-  using boost::thread;
-  namespace this_thread = boost::this_thread;
+  using AUTOWIRING_BOOST_NAME::thread;
+  namespace this_thread = AUTOWIRING_BOOST_NAME::this_thread;
 }

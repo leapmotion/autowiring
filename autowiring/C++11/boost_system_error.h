@@ -5,9 +5,13 @@
 #include <boost/system/system_error.hpp>
 
 namespace std {
-  using errc = boost::system::errc::errc_t;
-  using boost::system::error_category;
-  using boost::system::generic_category;
-  using boost::system::make_error_code;
-  using boost::system::system_error;
+  using AUTOWIRING_BOOST_NAME::system::error_category;
+  using AUTOWIRING_BOOST_NAME::system::generic_category;
+  using AUTOWIRING_BOOST_NAME::system::system_error;
+
+  using AUTOWIRING_BOOST_NAME::system::is_error_code_enum;
+
+  namespace errc {
+    using AUTOWIRING_BOOST_NAME::system::errc::make_error_code;
+  }
 }

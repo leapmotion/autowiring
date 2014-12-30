@@ -20,26 +20,26 @@
 #include <boost/utility/enable_if.hpp>
 
 namespace std {
-  using boost::conditional;
-  using boost::decay;
-  using boost::false_type;
-  using boost::has_trivial_constructor;
-  using boost::integral_constant;
-  using boost::is_abstract;
-  using boost::is_array;
-  using boost::is_class;
-  using boost::is_base_of;
-  using boost::is_const;
-  using boost::is_floating_point;
-  using boost::is_integral;
-  using boost::is_polymorphic;
-  using boost::is_same;
-  using boost::is_scalar;
-  using boost::remove_extent;
-  using boost::remove_reference;
-  using boost::true_type;
-  using boost::is_void;
-  using boost::is_convertible;
+  using AUTOWIRING_BOOST_NAME::conditional;
+  using AUTOWIRING_BOOST_NAME::decay;
+  using AUTOWIRING_BOOST_NAME::false_type;
+  using AUTOWIRING_BOOST_NAME::has_trivial_constructor;
+  using AUTOWIRING_BOOST_NAME::integral_constant;
+  using AUTOWIRING_BOOST_NAME::is_abstract;
+  using AUTOWIRING_BOOST_NAME::is_array;
+  using AUTOWIRING_BOOST_NAME::is_class;
+  using AUTOWIRING_BOOST_NAME::is_base_of;
+  using AUTOWIRING_BOOST_NAME::is_const;
+  using AUTOWIRING_BOOST_NAME::is_floating_point;
+  using AUTOWIRING_BOOST_NAME::is_integral;
+  using AUTOWIRING_BOOST_NAME::is_polymorphic;
+  using AUTOWIRING_BOOST_NAME::is_same;
+  using AUTOWIRING_BOOST_NAME::is_scalar;
+  using AUTOWIRING_BOOST_NAME::remove_extent;
+  using AUTOWIRING_BOOST_NAME::remove_reference;
+  using AUTOWIRING_BOOST_NAME::true_type;
+  using AUTOWIRING_BOOST_NAME::is_void;
+  using AUTOWIRING_BOOST_NAME::is_convertible;
 
   template<bool _Test, class _Type = void>
   struct enable_if {};

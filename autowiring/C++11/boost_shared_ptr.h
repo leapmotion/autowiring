@@ -14,13 +14,13 @@
 #include <boost/asio/detail/shared_ptr.hpp>
 
 namespace std {
-  using boost::shared_ptr;
-  using boost::weak_ptr;
-  using boost::enable_shared_from_this;
-  using boost::owner_less;
+  using AUTOWIRING_BOOST_NAME::shared_ptr;
+  using AUTOWIRING_BOOST_NAME::weak_ptr;
+  using AUTOWIRING_BOOST_NAME::enable_shared_from_this;
+  using AUTOWIRING_BOOST_NAME::owner_less;
 
-  using boost::const_pointer_cast;
-  using boost::static_pointer_cast;
-  using boost::dynamic_pointer_cast;
-  using boost::make_shared;
+  using AUTOWIRING_BOOST_NAME::const_pointer_cast;
+  using AUTOWIRING_BOOST_NAME::static_pointer_cast;
+  using AUTOWIRING_BOOST_NAME::dynamic_pointer_cast;
+  using AUTOWIRING_BOOST_NAME::make_shared;
 }

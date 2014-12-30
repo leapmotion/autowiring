@@ -4,5 +4,5 @@
 #include <boost/utility/declval.hpp>
 
 namespace std {
-  using boost::declval;
+  using AUTOWIRING_BOOST_NAME::declval;
 }

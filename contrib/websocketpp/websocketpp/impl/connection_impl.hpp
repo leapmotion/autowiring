@@ -1044,8 +1044,7 @@ bool connection<config>::initialize_processor() {
 
     std::stringstream ss;
     std::string sep = "";
-    std::vector<int>::const_iterator it;
-    for (it = versions_supported.begin(); it != versions_supported.end(); it++)
+    for (auto it = versions_supported.begin(); it != versions_supported.end(); it++)
     {
         ss << sep << *it;
         sep = ",";
@@ -1731,9 +1730,9 @@ void connection<config>::atomic_state_check(istate_type req, std::string msg)
 }
 
 template <typename config>
-const std::vector<int>& connection<config>::get_supported_versions() const
+std::vector<int> connection<config>::get_supported_versions() const
 {
-    return versions_supported;
+  return std::vector<int>(versions_supported.begin(), versions_supported.end());
 }
 
 template <typename config>

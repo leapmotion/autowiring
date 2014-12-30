@@ -6,6 +6,13 @@
 #include <cctype>
 #include <map>
 #include <set>
+#include SYSTEM_ERROR_HEADER
+#include ARRAY_HEADER
+
+#if !AUTOWIRING_USE_LIBCXX
+  // No initializer lists on libstdc
+  #define BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#endif
 
 // Need to redefine this namespace so we don't create linker problems.  Such problems may be
 // created if our static library is imported by another project that uses an incompatible
