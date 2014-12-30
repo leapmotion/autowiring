@@ -3,11 +3,11 @@
 // Boost Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/thread/detail/config.hpp>
-#ifndef BOOST_NO_EXCEPTIONS
+#include <autoboost/thread/detail/config.hpp>
+#ifndef AUTOBOOST_NO_EXCEPTIONS
 
 
-#include <boost/thread/future_error_code.hpp>
+#include <autoboost/thread/future_error_code.hpp>
 #include <string>
 
 namespace autoboost
@@ -20,12 +20,12 @@ namespace autoboost
       public autoboost::system::error_category
     {
     public:
-        virtual const char* name() const BOOST_NOEXCEPT;
+        virtual const char* name() const AUTOBOOST_NOEXCEPT;
         virtual std::string message(int ev) const;
     };
 
     const char*
-    future_error_category::name() const BOOST_NOEXCEPT
+    future_error_category::name() const AUTOBOOST_NOEXCEPT
     {
         return "future";
     }
@@ -33,7 +33,7 @@ namespace autoboost
     std::string
     future_error_category::message(int ev) const
     {
-        switch (BOOST_SCOPED_ENUM_NATIVE(future_errc)(ev))
+        switch (AUTOBOOST_SCOPED_ENUM_NATIVE(future_errc)(ev))
         {
         case future_errc::broken_promise:
             return std::string("The associated promise has been destructed prior "
@@ -52,9 +52,9 @@ namespace autoboost
     future_error_category future_error_category_var;
   }
 
-  BOOST_THREAD_DECL
+  AUTOBOOST_THREAD_DECL
   const system::error_category&
-  future_category() BOOST_NOEXCEPT
+  future_category() AUTOBOOST_NOEXCEPT
   {
       return thread_detail::future_error_category_var;
   }

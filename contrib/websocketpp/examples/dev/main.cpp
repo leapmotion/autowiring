@@ -3,7 +3,7 @@
 //#endif
 
 #include <random>
-#include <boost/timer/timer.hpp>
+#include <autoboost/timer/timer.hpp>
 
 #include <websocketpp/config/core.hpp>
 

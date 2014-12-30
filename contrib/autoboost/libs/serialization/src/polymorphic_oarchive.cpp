@@ -12,11 +12,11 @@
 #  pragma warning (disable : 4786) // too long name, harmless warning
 #endif
 
-#define BOOST_ARCHIVE_SOURCE
-#include <boost/archive/detail/archive_serializer_map.hpp>
+#define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/archive/detail/archive_serializer_map.hpp>
 
-#include <boost/archive/impl/archive_serializer_map.ipp>
-#include <boost/archive/polymorphic_oarchive.hpp>
+#include <autoboost/archive/impl/archive_serializer_map.ipp>
+#include <autoboost/archive/polymorphic_oarchive.hpp>
 
 namespace autoboost {
 namespace archive {

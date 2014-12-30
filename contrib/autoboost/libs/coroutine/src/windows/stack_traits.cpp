@@ -10,7 +10,7 @@ extern "C" {
 #include <windows.h>
 }
 
-//#if defined (BOOST_WINDOWS) || _POSIX_C_SOURCE >= 200112L
+//#if defined (AUTOBOOST_WINDOWS) || _POSIX_C_SOURCE >= 200112L
 
 #include <algorithm>
 #include <cmath>
@@ -18,11 +18,11 @@ extern "C" {
 #include <cstring>
 #include <stdexcept>
 
-#include <boost/assert.hpp>
-#include <boost/context/detail/config.hpp>
-#include <boost/thread.hpp>
+#include <autoboost/assert.hpp>
+#include <autoboost/context/detail/config.hpp>
+#include <autoboost/thread.hpp>
 
-#include <boost/coroutine/stack_context.hpp>
+#include <autoboost/coroutine/stack_context.hpp>
 
 // x86_64
 // test x86_64 before i386 because icc might
@@ -38,8 +38,8 @@ extern "C" {
 # define MIN_STACKSIZE  4 * 1024
 #endif
 
-#ifdef BOOST_HAS_ABI_HEADERS
-#  include BOOST_ABI_PREFIX
+#ifdef AUTOBOOST_HAS_ABI_HEADERS
+#  include AUTOBOOST_ABI_PREFIX
 #endif
 
 namespace autoboost {
@@ -69,21 +69,21 @@ std::size_t page_count( std::size_t stacksize)
 // Windows seams not to provide a limit for the stacksize
 // libcoco uses 32k+4k bytes as minimum
 bool
-stack_traits::is_unbounded() BOOST_NOEXCEPT
+stack_traits::is_unbounded() AUTOBOOST_NOEXCEPT
 { return true; }
 
 std::size_t
-stack_traits::page_size() BOOST_NOEXCEPT
+stack_traits::page_size() AUTOBOOST_NOEXCEPT
 { return pagesize(); }
 
 std::size_t
-stack_traits::default_size() BOOST_NOEXCEPT
+stack_traits::default_size() AUTOBOOST_NOEXCEPT
 {
     std::size_t size = 64 * 1024; // 64 kB
     if ( is_unbounded() )
         return (std::max)( size, minimum_size() );
 
-    BOOST_ASSERT( maximum_size() >= minimum_size() );
+    AUTOBOOST_ASSERT( maximum_size() >= minimum_size() );
     return maximum_size() == minimum_size()
         ? minimum_size()
         : ( std::min)( size, maximum_size() );
@@ -91,20 +91,20 @@ stack_traits::default_size() BOOST_NOEXCEPT
 
 // because Windows seams not to provide a limit for minimum stacksize
 std::size_t
-stack_traits::minimum_size() BOOST_NOEXCEPT
+stack_traits::minimum_size() AUTOBOOST_NOEXCEPT
 { return MIN_STACKSIZE; }
 
 // because Windows seams not to provide a limit for maximum stacksize
 // maximum_size() can never be called (pre-condition ! is_unbounded() )
 std::size_t
-stack_traits::maximum_size() BOOST_NOEXCEPT
+stack_traits::maximum_size() AUTOBOOST_NOEXCEPT
 {
-    BOOST_ASSERT( ! is_unbounded() );
+    AUTOBOOST_ASSERT( ! is_unbounded() );
     return  1 * 1024 * 1024 * 1024; // 1GB
 }
 
 }}
 
-#ifdef BOOST_HAS_ABI_HEADERS
-#  include BOOST_ABI_SUFFIX
+#ifdef AUTOBOOST_HAS_ABI_HEADERS
+#  include AUTOBOOST_ABI_SUFFIX
 #endif

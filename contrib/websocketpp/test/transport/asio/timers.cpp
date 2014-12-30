@@ -26,7 +26,7 @@
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE transport_asio_timers
-#include <boost/test/unit_test.hpp>
+#include <autoboost/test/unit_test.hpp>
 
 #include <exception>
 #include <iostream>
@@ -47,7 +47,7 @@
 #include <websocketpp/logger/stub.hpp>
 //#include <websocketpp/logger/basic.hpp>
 
-#include <boost/asio.hpp>
+#include <autoboost/asio.hpp>
 
 // Accept a connection, read data, and discard until EOF
 void run_dummy_server(int port) {
@@ -106,7 +106,7 @@ struct config {
 };
 
 // Mock context that does no validation
-typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
+typedef websocketpp::lib::shared_ptr<autoboost::asio::ssl::context> context_ptr;
 context_ptr on_tls_init(websocketpp::connection_hdl hdl) {
     return context_ptr(new boost::asio::ssl::context(boost::asio::ssl::context::tlsv1));
 }

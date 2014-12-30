@@ -18,16 +18,16 @@ extern "C" {
 #include <algorithm>
 #include <cmath>
 
-#include <boost/assert.hpp>
-#include <boost/thread.hpp>
+#include <autoboost/assert.hpp>
+#include <autoboost/thread.hpp>
 
 #if !defined (SIGSTKSZ)
 # define SIGSTKSZ (8 * 1024)
 # define UDEF_SIGSTKSZ
 #endif
 
-#ifdef BOOST_HAS_ABI_HEADERS
-#  include BOOST_ABI_PREFIX
+#ifdef AUTOBOOST_HAS_ABI_HEADERS
+#  include AUTOBOOST_ABI_PREFIX
 #endif
 
 namespace autoboost {
@@ -42,11 +42,11 @@ void pagesize_( std::size_t * size)
 void stacksize_limit_( rlimit * limit)
 {
     // conforming to POSIX.1-2001
-#if defined(BOOST_DISABLE_ASSERTS)
+#if defined(AUTOBOOST_DISABLE_ASSERTS)
     ::getrlimit( RLIMIT_STACK, limit);
 #else
     const int result = ::getrlimit( RLIMIT_STACK, limit);
-    BOOST_ASSERT( 0 == result);
+    AUTOBOOST_ASSERT( 0 == result);
 #endif
 }
 
@@ -67,40 +67,40 @@ rlimit stacksize_limit()
 }
 
 bool
-stack_traits::is_unbounded() BOOST_NOEXCEPT
+stack_traits::is_unbounded() AUTOBOOST_NOEXCEPT
 { return RLIM_INFINITY == stacksize_limit().rlim_max; }
 
 std::size_t
-stack_traits::page_size() BOOST_NOEXCEPT
+stack_traits::page_size() AUTOBOOST_NOEXCEPT
 { return pagesize(); }
 
 std::size_t
-stack_traits::default_size() BOOST_NOEXCEPT
+stack_traits::default_size() AUTOBOOST_NOEXCEPT
 {
     std::size_t size = 8 * minimum_size();
     if ( is_unbounded() ) return size;
 
-    BOOST_ASSERT( maximum_size() >= minimum_size() );
+    AUTOBOOST_ASSERT( maximum_size() >= minimum_size() );
     return maximum_size() == size
         ? size
         : (std::min)( size, maximum_size() );
 }
 
 std::size_t
-stack_traits::minimum_size() BOOST_NOEXCEPT
+stack_traits::minimum_size() AUTOBOOST_NOEXCEPT
 { return SIGSTKSZ; }
 
 std::size_t
-stack_traits::maximum_size() BOOST_NOEXCEPT
+stack_traits::maximum_size() AUTOBOOST_NOEXCEPT
 {
-    BOOST_ASSERT( ! is_unbounded() );
+    AUTOBOOST_ASSERT( ! is_unbounded() );
     return static_cast< std::size_t >( stacksize_limit().rlim_max);
 }
 
 }}
 
-#ifdef BOOST_HAS_ABI_HEADERS
-#  include BOOST_ABI_SUFFIX
+#ifdef AUTOBOOST_HAS_ABI_HEADERS
+#  include AUTOBOOST_ABI_SUFFIX
 #endif
 
 #ifdef UDEF_SIGSTKSZ

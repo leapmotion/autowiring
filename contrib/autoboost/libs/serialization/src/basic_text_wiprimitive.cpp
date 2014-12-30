@@ -8,9 +8,9 @@
 
 //  See http://www.boost.org for updates, documentation, and revision history.
 
-#include <boost/config.hpp>
+#include <autoboost/config.hpp>
 
-#ifdef BOOST_NO_STD_WSTREAMBUF
+#ifdef AUTOBOOST_NO_STD_WSTREAMBUF
 #error "wide char i/o not supported on this platform"
 #else
 
@@ -20,8 +20,8 @@
 
 #include <istream>
 
-#define BOOST_WARCHIVE_SOURCE
-#include <boost/archive/impl/basic_text_iprimitive.ipp>
+#define AUTOBOOST_WARCHIVE_SOURCE
+#include <autoboost/archive/impl/basic_text_iprimitive.ipp>
 
 namespace autoboost {
 namespace archive {
@@ -31,4 +31,4 @@ template class basic_text_iprimitive<std::wistream> ;
 } // namespace archive
 } // namespace autoboost
 
-#endif // BOOST_NO_STD_WSTREAMBUF
+#endif // AUTOBOOST_NO_STD_WSTREAMBUF

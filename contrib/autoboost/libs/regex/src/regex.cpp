@@ -12,22 +12,22 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        regex.cpp
-  *   VERSION:     see <boost/version.hpp>
+  *   VERSION:     see <autoboost/version.hpp>
   *   DESCRIPTION: Misc autoboost::regbase member funnctions.
   */
 
 
-#define BOOST_REGEX_SOURCE
+#define AUTOBOOST_REGEX_SOURCE
 
-#include <boost/config.hpp>
+#include <autoboost/config.hpp>
 #include <new>
-#include <boost/regex.hpp>
-#include <boost/throw_exception.hpp>
+#include <autoboost/regex.hpp>
+#include <autoboost/throw_exception.hpp>
 
-#if defined(BOOST_REGEX_HAS_MS_STACK_GUARD) && defined(_MSC_VER) && (_MSC_VER >= 1300)
+#if defined(AUTOBOOST_REGEX_HAS_MS_STACK_GUARD) && defined(_MSC_VER) && (_MSC_VER >= 1300)
 #  include <malloc.h>
 #endif
-#ifdef BOOST_REGEX_HAS_MS_STACK_GUARD
+#ifdef AUTOBOOST_REGEX_HAS_MS_STACK_GUARD
 #define WIN32_LEAN_AND_MEAN
 #ifndef NOMINMAX
 #  define NOMINMAX
@@ -37,15 +37,15 @@
 #include <windows.h>
 #endif
 
-#if defined(BOOST_REGEX_NON_RECURSIVE) && !defined(BOOST_REGEX_V3)
-#if BOOST_REGEX_MAX_CACHE_BLOCKS == 0
+#if defined(AUTOBOOST_REGEX_NON_RECURSIVE) && !defined(AUTOBOOST_REGEX_V3)
+#if AUTOBOOST_REGEX_MAX_CACHE_BLOCKS == 0
 #include <new>
 #else
-#include <boost/regex/v4/mem_block_cache.hpp>
+#include <autoboost/regex/v4/mem_block_cache.hpp>
 #endif
 #endif
 
-#ifdef BOOST_INTEL
+#ifdef AUTOBOOST_INTEL
 #pragma warning(disable:383)
 #endif
 
@@ -76,7 +76,7 @@ regex_error::~regex_error() throw()
 
 void regex_error::raise()const
 {
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    ::autoboost::throw_exception(*this);
 #endif
 }
@@ -85,16 +85,16 @@ void regex_error::raise()const
 
 namespace re_detail{
 
-BOOST_REGEX_DECL void BOOST_REGEX_CALL raise_runtime_error(const std::runtime_error& ex)
+AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL raise_runtime_error(const std::runtime_error& ex)
 {
    ::autoboost::throw_exception(ex);
 }
 //
 // error checking API:
 //
-BOOST_REGEX_DECL void BOOST_REGEX_CALL verify_options(autoboost::regex::flag_type /*ef*/, match_flag_type mf)
+AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL verify_options(autoboost::regex::flag_type /*ef*/, match_flag_type mf)
 {
-#ifndef BOOST_REGEX_V3
+#ifndef AUTOBOOST_REGEX_V3
    //
    // can't mix match_extra with POSIX matching rules:
    //
@@ -106,7 +106,7 @@ BOOST_REGEX_DECL void BOOST_REGEX_CALL verify_options(autoboost::regex::flag_typ
 #endif
 }
 
-#ifdef BOOST_REGEX_HAS_MS_STACK_GUARD
+#ifdef AUTOBOOST_REGEX_HAS_MS_STACK_GUARD
 
 static void execute_eror()
 {
@@ -119,7 +119,7 @@ static void execute_eror()
    raise_runtime_error(err);
 }
 
-bool BOOST_REGEX_CALL abstract_protected_call::execute()const
+bool AUTOBOOST_REGEX_CALL abstract_protected_call::execute()const
 {
    __try{
       return this->call();
@@ -131,9 +131,9 @@ bool BOOST_REGEX_CALL abstract_protected_call::execute()const
    return false;
 }
 
-BOOST_REGEX_DECL void BOOST_REGEX_CALL reset_stack_guard_page()
+AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL reset_stack_guard_page()
 {
-#if defined(BOOST_REGEX_HAS_MS_STACK_GUARD) && defined(_MSC_VER) && (_MSC_VER >= 1300)
+#if defined(AUTOBOOST_REGEX_HAS_MS_STACK_GUARD) && defined(_MSC_VER) && (_MSC_VER >= 1300)
    _resetstkoflw();
 #else
    //
@@ -175,34 +175,34 @@ BOOST_REGEX_DECL void BOOST_REGEX_CALL reset_stack_guard_page()
 }
 #endif
 
-#if defined(BOOST_REGEX_NON_RECURSIVE) && !defined(BOOST_REGEX_V3)
+#if defined(AUTOBOOST_REGEX_NON_RECURSIVE) && !defined(AUTOBOOST_REGEX_V3)
 
-#if BOOST_REGEX_MAX_CACHE_BLOCKS == 0
+#if AUTOBOOST_REGEX_MAX_CACHE_BLOCKS == 0
 
-BOOST_REGEX_DECL void* BOOST_REGEX_CALL get_mem_block()
+AUTOBOOST_REGEX_DECL void* AUTOBOOST_REGEX_CALL get_mem_block()
 {
-   return ::operator new(BOOST_REGEX_BLOCKSIZE);
+   return ::operator new(AUTOBOOST_REGEX_BLOCKSIZE);
 }
 
-BOOST_REGEX_DECL void BOOST_REGEX_CALL put_mem_block(void* p)
+AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL put_mem_block(void* p)
 {
    ::operator delete(p);
 }
 
 #else
 
-#ifdef BOOST_HAS_THREADS
-mem_block_cache block_cache = { 0, 0, BOOST_STATIC_MUTEX_INIT, };
+#ifdef AUTOBOOST_HAS_THREADS
+mem_block_cache block_cache = { 0, 0, AUTOBOOST_STATIC_MUTEX_INIT, };
 #else
 mem_block_cache block_cache = { 0, 0, };
 #endif
 
-BOOST_REGEX_DECL void* BOOST_REGEX_CALL get_mem_block()
+AUTOBOOST_REGEX_DECL void* AUTOBOOST_REGEX_CALL get_mem_block()
 {
    return block_cache.get();
 }
 
-BOOST_REGEX_DECL void BOOST_REGEX_CALL put_mem_block(void* p)
+AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL put_mem_block(void* p)
 {
    block_cache.put(p);
 }
@@ -217,7 +217,7 @@ BOOST_REGEX_DECL void BOOST_REGEX_CALL put_mem_block(void* p)
 
 } // namespace autoboost
 
-#if defined(BOOST_RE_USE_VCL) && defined(BOOST_REGEX_DYN_LINK)
+#if defined(AUTOBOOST_RE_USE_VCL) && defined(AUTOBOOST_REGEX_DYN_LINK)
 
 int WINAPI DllEntryPoint(HINSTANCE , unsigned long , void*)
 {

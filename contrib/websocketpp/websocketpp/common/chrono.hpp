@@ -37,7 +37,7 @@
 #ifdef _WEBSOCKETPP_CPP11_CHRONO_
     #include <chrono>
 #else
-    #include <boost/chrono.hpp>
+    #include <autoboost/chrono.hpp>
 #endif
 
 namespace websocketpp {

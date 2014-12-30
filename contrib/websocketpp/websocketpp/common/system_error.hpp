@@ -37,8 +37,8 @@
 #ifdef _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
     #include <system_error>
 #else
-    #include <boost/system/error_code.hpp>
-    #include <boost/system/system_error.hpp>
+    #include <autoboost/system/error_code.hpp>
+    #include <autoboost/system/system_error.hpp>
 #endif
 
 namespace websocketpp {

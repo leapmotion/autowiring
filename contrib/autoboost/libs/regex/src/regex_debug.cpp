@@ -12,21 +12,21 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        regex_debug.cpp
-  *   VERSION:     see <boost/version.hpp>
+  *   VERSION:     see <autoboost/version.hpp>
   *   DESCRIPTION: Misc. debugging helpers.
   */
 
 
-#define BOOST_REGEX_SOURCE
+#define AUTOBOOST_REGEX_SOURCE
 
-#include <boost/regex/config.hpp>
+#include <autoboost/regex/config.hpp>
 
 
 //
 // regex configuration information: this prints out the settings used
 // when the library was built - include in debugging builds only:
 //
-#ifdef BOOST_REGEX_CONFIG_INFO
+#ifdef AUTOBOOST_REGEX_CONFIG_INFO
 
 #define print_macro regex_lib_print_macro
 #define print_expression regex_lib_print_expression
@@ -43,7 +43,7 @@
 
 #include <libs/regex/test/config_info/regex_config_info.cpp>
 
-BOOST_REGEX_DECL void BOOST_REGEX_CALL print_regex_library_info()
+AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CALL print_regex_library_info()
 {
    std::cout << "\n\n";
    print_separator();

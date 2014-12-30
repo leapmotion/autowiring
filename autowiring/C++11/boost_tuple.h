@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
+#include <autoboost/tuple/tuple.hpp>
+#include <autoboost/tuple/tuple_comparison.hpp>
 
 namespace std {
   template<typename... Ts>
@@ -26,7 +26,7 @@ namespace std {
       return m_tuple < other.m_tuple;
     }
 
-    AUTOWIRING_BOOST_NAME::tuple<Ts...> m_tuple;
+    autoboost::tuple<Ts...> m_tuple;
   };
   
   template<typename... Ts>
@@ -35,8 +35,8 @@ namespace std {
   }
 
   template<int I, typename... Ts>
-  auto get(const ::std::tuple<Ts...>& tup) -> decltype(AUTOWIRING_BOOST_NAME::get<I>(tup.m_tuple)) {
-    return AUTOWIRING_BOOST_NAME::get<I>(tup.m_tuple);
+  auto get(const ::std::tuple<Ts...>& tup) -> decltype(autoboost::get<I>(tup.m_tuple)) {
+    return autoboost::get<I>(tup.m_tuple);
   }
 
   template<typename... Ts>

@@ -16,11 +16,11 @@
 #if ! ((defined _MSC_VER) && (_MSC_VER <= 1300)) \
 &&  ! defined(__BORLANDC__)
 
-#include <boost/config.hpp>
+#include <autoboost/config.hpp>
 
 #if defined(__SGI_STL_PORT) && (__SGI_STL_PORT < 0x500)
 
-#include <boost/archive/codecvt_null.hpp>
+#include <autoboost/archive/codecvt_null.hpp>
 
 // explicit instantiation
 

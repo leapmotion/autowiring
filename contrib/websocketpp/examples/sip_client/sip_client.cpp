@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-#include <boost/thread/thread.hpp>
+#include <autoboost/thread/thread.hpp>
 
 typedef websocketpp::client<websocketpp::config::asio_client> client;
 

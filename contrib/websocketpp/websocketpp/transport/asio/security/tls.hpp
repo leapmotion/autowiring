@@ -33,9 +33,9 @@
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/memory.hpp>
 
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
-#include <boost/system/error_code.hpp>
+#include <autoboost/asio.hpp>
+#include <autoboost/asio/ssl.hpp>
+#include <autoboost/system/error_code.hpp>
 
 #include <string>
 

@@ -8,14 +8,14 @@
 
 
 
-#ifndef BOOST_DATE_TIME_SOURCE
-#define BOOST_DATE_TIME_SOURCE
+#ifndef AUTOBOOST_DATE_TIME_SOURCE
+#define AUTOBOOST_DATE_TIME_SOURCE
 #endif
 #include "boost/date_time/gregorian/greg_month.hpp"
 #include "boost/date_time/gregorian/greg_facet.hpp"
 #include "boost/date_time/date_format_simple.hpp"
 #include "boost/date_time/compiler_config.hpp"
-#if defined(BOOST_DATE_TIME_INCLUDE_LIMITED_HEADERS)
+#if defined(AUTOBOOST_DATE_TIME_INCLUDE_LIMITED_HEADERS)
 #include "boost/date_time/gregorian/formatters_limited.hpp"
 #else
 #include "boost/date_time/gregorian/formatters.hpp"
@@ -84,7 +84,7 @@ namespace gregorian {
   }
 
 
-#ifndef BOOST_NO_STD_WSTRING
+#ifndef AUTOBOOST_NO_STD_WSTRING
   //! Returns 3 wchar_t english string for the month ex: Jan, Feb, Mar, Apr
   const wchar_t*
   greg_month::as_short_wstring() const 
@@ -98,15 +98,15 @@ namespace gregorian {
   {
     return w_long_month_names[value_-1];
   }
-#endif // BOOST_NO_STD_WSTRING
+#endif // AUTOBOOST_NO_STD_WSTRING
   
-#ifndef BOOST_DATE_TIME_NO_LOCALE
+#ifndef AUTOBOOST_DATE_TIME_NO_LOCALE
   /*! creates an all_date_names_put object with the correct set of names.
    * This function is only called in the event of an exception where
    * the imbued locale containing the needed facet is for some reason 
    * unreachable.
    */
-  BOOST_DATE_TIME_DECL 
+  AUTOBOOST_DATE_TIME_DECL 
   autoboost::date_time::all_date_names_put<greg_facet_config, char>* 
   create_facet_def(char /*type*/)
   {
@@ -121,7 +121,7 @@ namespace gregorian {
   }
   
   //! generates a locale with the set of gregorian name-strings of type char*
-  BOOST_DATE_TIME_DECL std::locale generate_locale(std::locale& loc, char /*type*/){
+  AUTOBOOST_DATE_TIME_DECL std::locale generate_locale(std::locale& loc, char /*type*/){
     typedef autoboost::date_time::all_date_names_put<greg_facet_config, char> facet_def;
     return std::locale(loc, new facet_def(short_month_names,
                                           long_month_names,
@@ -131,13 +131,13 @@ namespace gregorian {
         );
   }
   
-#ifndef BOOST_NO_STD_WSTRING
+#ifndef AUTOBOOST_NO_STD_WSTRING
   /*! creates an all_date_names_put object with the correct set of names.
    * This function is only called in the event of an exception where
    * the imbued locale containing the needed facet is for some reason 
    * unreachable.
    */
-  BOOST_DATE_TIME_DECL 
+  AUTOBOOST_DATE_TIME_DECL 
   autoboost::date_time::all_date_names_put<greg_facet_config, wchar_t>* 
   create_facet_def(wchar_t /*type*/)
   {
@@ -152,7 +152,7 @@ namespace gregorian {
   }
 
   //! generates a locale with the set of gregorian name-strings of type wchar_t*
-  BOOST_DATE_TIME_DECL std::locale generate_locale(std::locale& loc, wchar_t /*type*/){
+  AUTOBOOST_DATE_TIME_DECL std::locale generate_locale(std::locale& loc, wchar_t /*type*/){
     typedef autoboost::date_time::all_date_names_put<greg_facet_config, wchar_t> facet_def;
     return std::locale(loc, new facet_def(w_short_month_names,
                                           w_long_month_names,
@@ -161,8 +161,8 @@ namespace gregorian {
                                           w_long_weekday_names)
         );
   }
-#endif // BOOST_NO_STD_WSTRING
-#endif // BOOST_DATE_TIME_NO_LOCALE
+#endif // AUTOBOOST_NO_STD_WSTRING
+#endif // AUTOBOOST_DATE_TIME_NO_LOCALE
 
 } } //namespace gregorian
 

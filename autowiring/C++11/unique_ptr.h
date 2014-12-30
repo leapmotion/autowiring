@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <boost/type_traits/remove_reference.hpp>
+#include <autoboost/type_traits/remove_reference.hpp>
 
 namespace std {
 
@@ -30,7 +30,7 @@ public:
   {
   }
 
-  unique_ptr(pointer _Ptr, typename AUTOWIRING_BOOST_NAME::remove_reference<Del>::type&& _Deleter) :
+  unique_ptr(pointer _Ptr, typename autoboost::remove_reference<Del>::type&& _Deleter) :
     stored_ptr(_Ptr),
     stored_deleter(_Deleter)
   {}

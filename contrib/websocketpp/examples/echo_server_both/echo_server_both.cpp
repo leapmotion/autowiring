@@ -14,7 +14,7 @@ using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
 // type of the ssl context pointer is long so alias it
-typedef websocketpp::lib::shared_ptr<boost::asio::ssl::context> context_ptr;
+typedef websocketpp::lib::shared_ptr<autoboost::asio::ssl::context> context_ptr;
 
 // The shared on_message handler takes a template parameter so the function can
 // resolve any endpoint dependent types like message_ptr or connection_ptr

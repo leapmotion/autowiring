@@ -14,16 +14,16 @@
 
 
 #include <exception>
-#include <boost/assert.hpp>
+#include <autoboost/assert.hpp>
 #include <string>
 
-#define BOOST_ARCHIVE_SOURCE
-#include <boost/archive/xml_archive_exception.hpp>
+#define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/archive/xml_archive_exception.hpp>
 
 namespace autoboost {
 namespace archive {
 
-BOOST_ARCHIVE_DECL(BOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
 xml_archive_exception::xml_archive_exception(
         exception_code c, 
         const char * e1,
@@ -46,7 +46,7 @@ xml_archive_exception::xml_archive_exception(
             archive_exception::append(0, "Invalid XML tag name");
             break;
         default:
-            BOOST_ASSERT(false);
+            AUTOBOOST_ASSERT(false);
             archive_exception::append(0, "programming error");
             break;
         }

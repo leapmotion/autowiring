@@ -40,8 +40,8 @@
 #include <websocketpp/base64/base64.hpp>
 #include <websocketpp/error.hpp>
 
-#include <boost/asio.hpp>
-#include <boost/system/error_code.hpp>
+#include <autoboost/asio.hpp>
+#include <autoboost/system/error_code.hpp>
 
 #include <sstream>
 #include <vector>
