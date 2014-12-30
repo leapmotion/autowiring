@@ -160,7 +160,7 @@ typedef lib::function<void(lib::error_code const & ec)> write_frame_handler;
      * @todo Move this to configs to allow compile/runtime disabling or enabling
      * of protocol versions
      */
-    static std::array<int, 4> const versions_supported{0, 7, 8, 13};
+    static std::array<int, 4> const versions_supported{{0, 7, 8, 13}};
 
 namespace session {
 namespace state {
