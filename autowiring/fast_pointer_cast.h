@@ -19,8 +19,6 @@ namespace autowiring {
     std::is_base_of<T, U>::value && !std::is_same<T, U>::value,
     typename std::shared_ptr<T>
   >::type fast_pointer_cast(const std::shared_ptr<U>& Other) {
-    (void) fast_pointer_cast_initializer<T, U>::sc_init;
-    (void) fast_pointer_cast_initializer<U, T>::sc_init;
     return std::static_pointer_cast<T, U>(Other);
   };
 
@@ -31,8 +29,6 @@ namespace autowiring {
     std::is_class<T>::value,
     std::shared_ptr<T>
   >::type fast_pointer_cast(const std::shared_ptr<U>& Other) {
-    (void) fast_pointer_cast_initializer<T, U>::sc_init;
-    (void) fast_pointer_cast_initializer<U, T>::sc_init;
     return std::dynamic_pointer_cast<T, U>(Other);
   }
 
@@ -44,8 +40,6 @@ namespace autowiring {
     ) && !std::is_same<T, U>::value,
     std::shared_ptr<T>
   >::type fast_pointer_cast(const std::shared_ptr<U>&) {
-    (void) fast_pointer_cast_initializer<T, U>::sc_init;
-    (void) fast_pointer_cast_initializer<U, T>::sc_init;
     return std::shared_ptr<T>();
   }
 

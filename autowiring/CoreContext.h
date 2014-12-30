@@ -1047,6 +1047,7 @@ T* autowiring::crh<autowiring::construction_strategy::foreign_factory, T, Args..
   // We need to ensure that we can perform a find-by-type cast correctly, so
   // the dynamic caster entry is added to the registry
   (void) autowiring::fast_pointer_cast_initializer<Object, CoreContext::AutoFactory<T>>::sc_init;
+  (void) autowiring::fast_pointer_cast_initializer<CoreContext::AutoFactory<T>, Object>::sc_init;
 
   // Now we can go looking for this type:
   AnySharedPointerT<CoreContext::AutoFactory<T>> af;
