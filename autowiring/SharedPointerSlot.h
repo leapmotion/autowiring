@@ -346,7 +346,7 @@ struct SharedPointerSlotT<T, true>:
 
   bool try_assign(const std::shared_ptr<Object>& rhs) override {
     // Just perform a dynamic cast:
-    auto casted = autowiring::fast_pointer_cast<T>(rhs);
+    auto casted = autowiring::fast_pointer_cast_blind<T, Object>::cast(rhs);
     if (!casted)
       return false;
 
@@ -355,7 +355,7 @@ struct SharedPointerSlotT<T, true>:
   }
 
   virtual operator std::shared_ptr<Object>(void) const override {
-    return autowiring::fast_pointer_cast<Object>(SharedPointerSlotT<T, false>::get());
+    return autowiring::fast_pointer_cast_blind<Object, T>::cast(SharedPointerSlotT<T, false>::get());
   }
 
   using SharedPointerSlotT<T, false>::operator=;

@@ -515,8 +515,10 @@ public:
     // Creator proxy, knows how to create the type we intend to inject
     typedef autowiring::CreationRules<T, Args...> CreationRules;
 
-    // Add this type to the TypeRegistry
+    // Add this type to the TypeRegistry, also ensure that we initialize support for blind
+    // fast pointer cast to Object.
     (void) RegType<T>::r;
+    (void) autowiring::fast_pointer_cast_initializer<Object, T>::sc_init;
 
     // First see if the base object type has already been injected.  This is also necessary to
     // ensure that a memo slot is created for the type by itself, in cases where the injected
@@ -550,8 +552,9 @@ public:
       FindByType(retVal);
     }
 
-    // Factory registration if sensible to do so, but only after the underlying type has been
-    // added, so that the proper type can succeed
+    // Factory registration if sensible to do so, but only after the underlying type has been added
+    // This ensures that any creation operations that happen as a consequence of factory registration
+    // can correctly back-reference the factory proper via autowiring
     RegisterFactory(*retVal, autowiring::member_new_type<typename CreationRules::TActual>());
     return std::static_pointer_cast<T>(retVal);
   }
@@ -1044,6 +1047,11 @@ public:
 
 template<typename T, typename... Args>
 T* autowiring::crh<autowiring::construction_strategy::foreign_factory, T, Args...>::New(CoreContext& ctxt, Args&&... args) {
+  // We need to ensure that we can perform a find-by-type cast correctly, so
+  // the dynamic caster entry is added to the registry
+  (void) autowiring::fast_pointer_cast_initializer<Object, CoreContext::AutoFactory<T>>::sc_init;
+
+  // Now we can go looking for this type:
   AnySharedPointerT<CoreContext::AutoFactory<T>> af;
   ctxt.FindByType(af);
   if(!af)

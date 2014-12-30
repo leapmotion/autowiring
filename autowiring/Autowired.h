@@ -250,8 +250,17 @@ public:
 };
 
 /// <summary>
-/// Similar to Autowired, but doesn't defer creation if types doesn't already exist
+/// Provides restricted, non-blocking, and typically faster services than Autowired
 /// </summary>
+/// <remarks>
+/// AutowiredFast allows queries to be conducted against contexts that may be in teardown,
+/// and also generally operates with fewer memory allocations and better performance than
+/// Autowired.  As a drawback, notifications on AutowiredFast cannot be attached, and the
+/// field will not be updated in the case of post-hoc satisfaction--the value is effectively
+/// a constant after initialization.  AutowiredFast also requires that the autowired type
+/// be completely defined before construction.  By comparison, Autowired fields do not ever
+/// need to be defined.
+/// </remarks>
 template<class T>
 class AutowiredFast:
   public std::shared_ptr<T>
@@ -261,11 +270,15 @@ public:
 
   // !!!!! Read comment in AutoRequired if you get a compiler error here !!!!!
   AutowiredFast(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) {
+    (void) autowiring::fast_pointer_cast_initializer<Object, T>::sc_init;
+
     if (ctxt)
       ctxt->FindByTypeRecursive(*this);
   }
 
   AutowiredFast(const CoreContext* pCtxt) {
+    (void) autowiring::fast_pointer_cast_initializer<Object, T>::sc_init;
+
     pCtxt->FindByTypeRecursive(*this);
   }
 
@@ -277,7 +290,7 @@ public:
     return std::shared_ptr<T>::get();
   }
 
-  bool IsAutowired(void) const {return std::shared_ptr<T>::get() != nullptr;}
+  bool IsAutowired(void) const { return std::shared_ptr<T>::get() != nullptr; }
 };
 
 /// <summary>
