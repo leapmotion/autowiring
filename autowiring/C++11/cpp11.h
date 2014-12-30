@@ -15,6 +15,10 @@
   #define STL11_ALLOWED 1
 #endif
 
+// Deprecated macros, provided here until we can be sure that they aren't used downstream
+#define throw_rethrowable throw
+#define EXCEPTION_PTR_HEADER <stdexcept>
+
 // If Autowiring is currently being built, we want to use the "autoboost" namespace in order to
 // avoid requiring a dependency on Boost.
 #ifdef AUTOWIRING_IS_BEING_BUILT
