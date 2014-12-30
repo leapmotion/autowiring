@@ -2,10 +2,8 @@
 # Setup testing
 #
 
-if(autowiring_USE_LIBCXX)
-  add_googletest(test)
-  add_googletest(benchmark)
-endif()
+add_googletest(test)
+add_googletest(benchmark)
 
 #
 # Configure source files
@@ -164,6 +162,9 @@ add_conditional_sources(
   "NOT MSVC"
   GROUP_NAME "Autoboost"
   FILES
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/process_cpu_clocks.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/thread_clock.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/chrono.cpp
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/once_atomic.cpp
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/thread.cpp
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/future.cpp
