@@ -9,8 +9,8 @@ class ThrowsWhenRun:
 {
 public:
   // This convoluted syntax is required to evade warnings on Mac
-  decltype(throw_rethrowable Ex(100)) MakeException() {
-    return throw_rethrowable Ex(100);
+  decltype(throw Ex(100)) MakeException() {
+    return throw Ex(100);
   }
 
   void Run(void) override {
