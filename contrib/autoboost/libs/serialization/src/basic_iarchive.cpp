@@ -8,38 +8,38 @@
 
 //  See http://www.boost.org for updates, documentation, and revision history.
 
-#include <boost/config.hpp> // msvc 6.0 needs this to suppress warnings
+#include <autoboost/config.hpp> // msvc 6.0 needs this to suppress warnings
 
-#include <boost/assert.hpp>
+#include <autoboost/assert.hpp>
 #include <set>
 #include <list>
 #include <vector>
 #include <cstddef> // size_t, NULL
 
-#include <boost/config.hpp>
-#if defined(BOOST_NO_STDC_NAMESPACE)
+#include <autoboost/config.hpp>
+#if defined(AUTOBOOST_NO_STDC_NAMESPACE)
 namespace std{ 
     using ::size_t; 
 } // namespace std
 #endif
 
-#include <boost/integer_traits.hpp>
-#include <boost/serialization/state_saver.hpp>
-#include <boost/serialization/throw_exception.hpp>
-#include <boost/serialization/tracking.hpp>
+#include <autoboost/integer_traits.hpp>
+#include <autoboost/serialization/state_saver.hpp>
+#include <autoboost/serialization/throw_exception.hpp>
+#include <autoboost/serialization/tracking.hpp>
 
-#define BOOST_ARCHIVE_SOURCE
+#define AUTOBOOST_ARCHIVE_SOURCE
 // include this to prevent linker errors when the
 // same modules are marked export and import.
-#define BOOST_SERIALIZATION_SOURCE
+#define AUTOBOOST_SERIALIZATION_SOURCE
 
-#include <boost/archive/archive_exception.hpp>
+#include <autoboost/archive/archive_exception.hpp>
 
-#include <boost/archive/detail/decl.hpp>
-#include <boost/archive/basic_archive.hpp>
-#include <boost/archive/detail/basic_iserializer.hpp>
-#include <boost/archive/detail/basic_pointer_iserializer.hpp>
-#include <boost/archive/detail/basic_iarchive.hpp>
+#include <autoboost/archive/detail/decl.hpp>
+#include <autoboost/archive/basic_archive.hpp>
+#include <autoboost/archive/detail/basic_iserializer.hpp>
+#include <autoboost/archive/detail/basic_pointer_iserializer.hpp>
+#include <autoboost/archive/detail/basic_iarchive.hpp>
 
 using namespace autoboost::serialization;
 
@@ -178,7 +178,7 @@ class basic_iarchive_impl {
     } m_pending;
 
     basic_iarchive_impl(unsigned int flags) :
-        m_archive_library_version(BOOST_ARCHIVE_VERSION()),
+        m_archive_library_version(AUTOBOOST_ARCHIVE_VERSION()),
         m_flags(flags)
     {}
     ~basic_iarchive_impl(){}
@@ -311,7 +311,7 @@ basic_iarchive_impl::register_type(
 
     if(result.second){
         cobject_id_vector.push_back(cobject_id(bis));
-        BOOST_ASSERT(cobject_info_set.size() == cobject_id_vector.size());
+        AUTOBOOST_ASSERT(cobject_info_set.size() == cobject_id_vector.size());
     }
     cid = result.first->m_class_id;
     // borland complains without this minor hack
@@ -435,7 +435,7 @@ basic_iarchive_impl::load_pointer(
         // or polymorphic
         || bpis_ptr->get_basic_serializer().is_polymorphic()){
             // is must have been exported
-            char key[BOOST_SERIALIZATION_MAX_KEY_SIZE];
+            char key[AUTOBOOST_SERIALIZATION_MAX_KEY_SIZE];
             class_name_type class_name(key);
             load(ar, class_name);
             // if it has a class name
@@ -448,9 +448,9 @@ basic_iarchive_impl::load_pointer(
                 );
             bpis_ptr = (*finder)(*eti);
         }
-        BOOST_ASSERT(NULL != bpis_ptr);
+        AUTOBOOST_ASSERT(NULL != bpis_ptr);
         // class_id_type new_cid = register_type(bpis_ptr->get_basic_serializer());
-        BOOST_VERIFY(register_type(bpis_ptr->get_basic_serializer()) == cid);
+        AUTOBOOST_VERIFY(register_type(bpis_ptr->get_basic_serializer()) == cid);
         int i = cid;
         cobject_id_vector[i].bpis_ptr = bpis_ptr;
     }
@@ -472,7 +472,7 @@ basic_iarchive_impl::load_pointer(
 
     // allocate space on the heap for the object - to be constructed later
     t = bpis_ptr->heap_allocation();
-    BOOST_ASSERT(NULL != t);
+    AUTOBOOST_ASSERT(NULL != t);
 
     if(! tracking){
         bpis_ptr->load_object_ptr(ar, t, co.file_version);
@@ -518,28 +518,28 @@ namespace autoboost {
 namespace archive {
 namespace detail {
 
-BOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL(void)
 basic_iarchive::next_object_pointer(void *t){
     pimpl->next_object_pointer(t);
 }
 
-BOOST_ARCHIVE_DECL(BOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
 basic_iarchive::basic_iarchive(unsigned int flags) : 
     pimpl(new basic_iarchive_impl(flags))
 {}
 
-BOOST_ARCHIVE_DECL(BOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
 basic_iarchive::~basic_iarchive()
 {
     delete pimpl;
 }
 
-BOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL(void)
 basic_iarchive::set_library_version(library_version_type archive_library_version){
     pimpl->set_library_version(archive_library_version);
 }
 
-BOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL(void)
 basic_iarchive::reset_object_address(
     const void * new_address, 
     const void * old_address
@@ -547,7 +547,7 @@ basic_iarchive::reset_object_address(
     pimpl->reset_object_address(new_address, old_address);
 }
 
-BOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL(void)
 basic_iarchive::load_object(
     void *t, 
     const basic_iserializer & bis
@@ -556,7 +556,7 @@ basic_iarchive::load_object(
 }
 
 // load a pointer object
-BOOST_ARCHIVE_DECL(const basic_pointer_iserializer *)
+AUTOBOOST_ARCHIVE_DECL(const basic_pointer_iserializer *)
 basic_iarchive::load_pointer(
     void * &t, 
     const basic_pointer_iserializer * bpis_ptr,
@@ -568,23 +568,23 @@ basic_iarchive::load_pointer(
     return pimpl->load_pointer(*this, t, bpis_ptr, finder);
 }
 
-BOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL(void)
 basic_iarchive::register_basic_serializer(const basic_iserializer & bis){
     pimpl->register_type(bis);
 }
 
-BOOST_ARCHIVE_DECL(void)
+AUTOBOOST_ARCHIVE_DECL(void)
 basic_iarchive::delete_created_pointers()
 {
     pimpl->delete_created_pointers();
 }
 
-BOOST_ARCHIVE_DECL(autoboost::archive::library_version_type) 
+AUTOBOOST_ARCHIVE_DECL(autoboost::archive::library_version_type) 
 basic_iarchive::get_library_version() const{
     return pimpl->m_archive_library_version;
 }
 
-BOOST_ARCHIVE_DECL(unsigned int) 
+AUTOBOOST_ARCHIVE_DECL(unsigned int) 
 basic_iarchive::get_flags() const{
     return pimpl->m_flags;
 }

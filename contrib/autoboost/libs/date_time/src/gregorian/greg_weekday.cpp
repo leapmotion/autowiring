@@ -8,8 +8,8 @@
 
 
 
-#ifndef BOOST_DATE_TIME_SOURCE
-#define BOOST_DATE_TIME_SOURCE
+#ifndef AUTOBOOST_DATE_TIME_SOURCE
+#define AUTOBOOST_DATE_TIME_SOURCE
 #endif
 #include "boost/date_time/gregorian/greg_weekday.hpp"
 
@@ -31,7 +31,7 @@ namespace gregorian {
     return long_weekday_names[value_];
   }
   
-#ifndef BOOST_NO_STD_WSTRING
+#ifndef AUTOBOOST_NO_STD_WSTRING
   //! Return a 3 digit english wchar_t string of the day of week (eg: Sun)
   const wchar_t*
   greg_weekday::as_short_wstring() const 
@@ -44,7 +44,7 @@ namespace gregorian {
   {
     return w_long_weekday_names[value_];
   }
-#endif // BOOST_NO_STD_WSTRING
+#endif // AUTOBOOST_NO_STD_WSTRING
   
 } } //namespace gregorian
 

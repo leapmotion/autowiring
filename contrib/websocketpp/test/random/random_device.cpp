@@ -26,7 +26,7 @@
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE random_device
-#include <boost/test/unit_test.hpp>
+#include <autoboost/test/unit_test.hpp>
 
 #include <iostream>
 

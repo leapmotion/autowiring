@@ -8,9 +8,9 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#if defined(BOOST_SP_ENABLE_DEBUG_HOOKS)
+#if defined(AUTOBOOST_SP_ENABLE_DEBUG_HOOKS)
 
-#include <boost/assert.hpp>
+#include <autoboost/assert.hpp>
 #include <new>
 #include <cstdlib>
 
@@ -64,7 +64,7 @@ void * operator new(size_t n) throw(bad_alloc)
 {
     void * p = allocate(n, allocated_scalar);
 
-#if !defined(BOOST_NO_EXCEPTIONS)
+#if !defined(AUTOBOOST_NO_EXCEPTIONS)
 
     if(p == 0) throw bad_alloc();
 
@@ -86,7 +86,7 @@ void * operator new[](size_t n) throw(bad_alloc)
 {
     void * p = allocate(n, allocated_array);
 
-#if !defined(BOOST_NO_EXCEPTIONS)
+#if !defined(AUTOBOOST_NO_EXCEPTIONS)
 
     if(p == 0) throw bad_alloc();
 
@@ -116,9 +116,9 @@ void sp_scalar_constructor_hook(void * p)
     int * pm = static_cast<int*>(p);
     pm -= m;
 
-    BOOST_ASSERT(*pm != adopted_scalar);    // second smart pointer to the same address
-    BOOST_ASSERT(*pm != allocated_array);   // allocated with new[]
-    BOOST_ASSERT(*pm == allocated_scalar);  // not allocated with new
+    AUTOBOOST_ASSERT(*pm != adopted_scalar);    // second smart pointer to the same address
+    AUTOBOOST_ASSERT(*pm != allocated_array);   // allocated with new[]
+    AUTOBOOST_ASSERT(*pm == allocated_scalar);  // not allocated with new
 
     *pm = adopted_scalar;
 }
@@ -135,7 +135,7 @@ void sp_scalar_destructor_hook(void * p)
     int * pm = static_cast<int*>(p);
     pm -= m;
 
-    BOOST_ASSERT(*pm == adopted_scalar);    // attempt to destroy nonmanaged block
+    AUTOBOOST_ASSERT(*pm == adopted_scalar);    // attempt to destroy nonmanaged block
 
     *pm = allocated_scalar;
 }
@@ -160,9 +160,9 @@ void sp_array_constructor_hook(void * /* p */)
     int * pm = static_cast<int*>(p);
     pm -= m;
 
-    BOOST_ASSERT(*pm != adopted_array);     // second smart array pointer to the same address
-    BOOST_ASSERT(*pm != allocated_scalar);  // allocated with new
-    BOOST_ASSERT(*pm == allocated_array);   // not allocated with new[]
+    AUTOBOOST_ASSERT(*pm != adopted_array);     // second smart array pointer to the same address
+    AUTOBOOST_ASSERT(*pm != allocated_scalar);  // allocated with new
+    AUTOBOOST_ASSERT(*pm == allocated_array);   // not allocated with new[]
 
     *pm = adopted_array;
 */
@@ -178,7 +178,7 @@ void sp_array_destructor_hook(void * /* p */)
     int * pm = static_cast<int*>(p);
     pm -= m;
 
-    BOOST_ASSERT(*pm == adopted_array); // attempt to destroy nonmanaged block
+    AUTOBOOST_ASSERT(*pm == adopted_array); // attempt to destroy nonmanaged block
 
     *pm = allocated_array;
 */
@@ -195,10 +195,10 @@ void operator delete(void * p) throw()
     int * pm = static_cast<int*>(p);
     pm -= m;
 
-    BOOST_ASSERT(*pm != deleted);           // double delete
-    BOOST_ASSERT(*pm != adopted_scalar);    // delete p.get();
-    BOOST_ASSERT(*pm != allocated_array);   // allocated with new[]
-    BOOST_ASSERT(*pm == allocated_scalar);  // not allocated with new
+    AUTOBOOST_ASSERT(*pm != deleted);           // double delete
+    AUTOBOOST_ASSERT(*pm != adopted_scalar);    // delete p.get();
+    AUTOBOOST_ASSERT(*pm != allocated_array);   // allocated with new[]
+    AUTOBOOST_ASSERT(*pm == allocated_scalar);  // not allocated with new
 
     *pm = deleted;
 
@@ -221,10 +221,10 @@ void operator delete[](void * p) throw()
     int * pm = static_cast<int*>(p);
     pm -= m;
 
-    BOOST_ASSERT(*pm != deleted);           // double delete
-    BOOST_ASSERT(*pm != adopted_scalar);    // delete p.get();
-    BOOST_ASSERT(*pm != allocated_scalar);  // allocated with new
-    BOOST_ASSERT(*pm == allocated_array);   // not allocated with new[]
+    AUTOBOOST_ASSERT(*pm != deleted);           // double delete
+    AUTOBOOST_ASSERT(*pm != adopted_scalar);    // delete p.get();
+    AUTOBOOST_ASSERT(*pm != allocated_scalar);  // allocated with new
+    AUTOBOOST_ASSERT(*pm == allocated_array);   // not allocated with new[]
 
     *pm = deleted;
 
@@ -240,4 +240,4 @@ void operator delete[](void * p, nothrow_t const &) throw()
 
 #endif
 
-#endif // defined(BOOST_SP_ENABLE_DEBUG_HOOKS)
+#endif // defined(AUTOBOOST_SP_ENABLE_DEBUG_HOOKS)

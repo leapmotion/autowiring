@@ -12,23 +12,23 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         regex_traits_defaults.cpp
-  *   VERSION      see <boost/version.hpp>
+  *   VERSION      see <autoboost/version.hpp>
   *   DESCRIPTION: Declares API's for access to regex_traits default properties.
   */
 
-#define BOOST_REGEX_SOURCE
-#include <boost/regex/regex_traits.hpp>
+#define AUTOBOOST_REGEX_SOURCE
+#include <autoboost/regex/regex_traits.hpp>
 
 #include <cctype>
-#ifndef BOOST_NO_WREGEX
+#ifndef AUTOBOOST_NO_WREGEX
 #include <cwctype>
 #endif
 
-#if defined(BOOST_NO_STDC_NAMESPACE)
+#if defined(AUTOBOOST_NO_STDC_NAMESPACE)
 namespace std{
    using ::tolower;
    using ::toupper;
-#ifndef BOOST_NO_WREGEX
+#ifndef AUTOBOOST_NO_WREGEX
    using ::towlower;
    using ::towupper;
 #endif
@@ -38,7 +38,7 @@ namespace std{
 
 namespace autoboost{ namespace re_detail{
 
-BOOST_REGEX_DECL const char* BOOST_REGEX_CALL get_default_syntax(regex_constants::syntax_type n)
+AUTOBOOST_REGEX_DECL const char* AUTOBOOST_REGEX_CALL get_default_syntax(regex_constants::syntax_type n)
 {
    // if the user hasn't supplied a message catalog, then this supplies
    // default "messages" for us to load in the range 1-100.
@@ -108,7 +108,7 @@ BOOST_REGEX_DECL const char* BOOST_REGEX_CALL get_default_syntax(regex_constants
    return ((n >= (sizeof(messages) / sizeof(messages[1]))) ? "" : messages[n]);
 }
 
-BOOST_REGEX_DECL const char* BOOST_REGEX_CALL get_default_error_string(regex_constants::error_type n)
+AUTOBOOST_REGEX_DECL const char* AUTOBOOST_REGEX_CALL get_default_error_string(regex_constants::error_type n)
 {
    static const char* const s_default_error_messages[] = {
       "Success",                                                            /* REG_NOERROR 0 error_ok */
@@ -141,7 +141,7 @@ BOOST_REGEX_DECL const char* BOOST_REGEX_CALL get_default_error_string(regex_con
    return (n > ::autoboost::regex_constants::error_unknown) ? s_default_error_messages[ ::autoboost::regex_constants::error_unknown] : s_default_error_messages[n];
 }
 
-BOOST_REGEX_DECL bool BOOST_REGEX_CALL is_combining_implementation(autoboost::uint_least16_t c)
+AUTOBOOST_REGEX_DECL bool AUTOBOOST_REGEX_CALL is_combining_implementation(autoboost::uint_least16_t c)
 {
    const autoboost::uint_least16_t combining_ranges[] = { 0x0300, 0x0361, 
                            0x0483, 0x0486, 
@@ -193,7 +193,7 @@ BOOST_REGEX_DECL bool BOOST_REGEX_CALL is_combining_implementation(autoboost::ui
 //
 // these are the POSIX collating names:
 //
-BOOST_REGEX_DECL const char* def_coll_names[] = {
+AUTOBOOST_REGEX_DECL const char* def_coll_names[] = {
 "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "alert", "backspace", "tab", "newline", 
 "vertical-tab", "form-feed", "carriage-return", "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", 
 "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "IS4", "IS3", "IS2", "IS1", "space", "exclamation-mark", 
@@ -214,7 +214,7 @@ BOOST_REGEX_DECL const char* def_coll_names[] = {
 // little more - but this will have to do for
 // now:
 
-BOOST_REGEX_DECL const char* def_multi_coll[] = {
+AUTOBOOST_REGEX_DECL const char* def_multi_coll[] = {
    "ae",
    "Ae",
    "AE",
@@ -241,7 +241,7 @@ BOOST_REGEX_DECL const char* def_multi_coll[] = {
 
 
 
-BOOST_REGEX_DECL std::string BOOST_REGEX_CALL lookup_default_collate_name(const std::string& name)
+AUTOBOOST_REGEX_DECL std::string AUTOBOOST_REGEX_CALL lookup_default_collate_name(const std::string& name)
 {
    unsigned int i = 0;
    while(*def_coll_names[i])
@@ -264,32 +264,32 @@ BOOST_REGEX_DECL std::string BOOST_REGEX_CALL lookup_default_collate_name(const 
    return std::string();
 }
 
-BOOST_REGEX_DECL char BOOST_REGEX_CALL do_global_lower(char c)
+AUTOBOOST_REGEX_DECL char AUTOBOOST_REGEX_CALL do_global_lower(char c)
 {
    return static_cast<char>((std::tolower)((unsigned char)c));
 }
 
-BOOST_REGEX_DECL char BOOST_REGEX_CALL do_global_upper(char c)
+AUTOBOOST_REGEX_DECL char AUTOBOOST_REGEX_CALL do_global_upper(char c)
 {
    return static_cast<char>((std::toupper)((unsigned char)c));
 }
-#ifndef BOOST_NO_WREGEX
-BOOST_REGEX_DECL wchar_t BOOST_REGEX_CALL do_global_lower(wchar_t c)
+#ifndef AUTOBOOST_NO_WREGEX
+AUTOBOOST_REGEX_DECL wchar_t AUTOBOOST_REGEX_CALL do_global_lower(wchar_t c)
 {
    return (std::towlower)(c);
 }
 
-BOOST_REGEX_DECL wchar_t BOOST_REGEX_CALL do_global_upper(wchar_t c)
+AUTOBOOST_REGEX_DECL wchar_t AUTOBOOST_REGEX_CALL do_global_upper(wchar_t c)
 {
    return (std::towupper)(c);
 }
-#ifdef BOOST_REGEX_HAS_OTHER_WCHAR_T
-BOOST_REGEX_DECL unsigned short BOOST_REGEX_CALL do_global_lower(unsigned short c)
+#ifdef AUTOBOOST_REGEX_HAS_OTHER_WCHAR_T
+AUTOBOOST_REGEX_DECL unsigned short AUTOBOOST_REGEX_CALL do_global_lower(unsigned short c)
 {
    return (std::towlower)(c);
 }
 
-BOOST_REGEX_DECL unsigned short BOOST_REGEX_CALL do_global_upper(unsigned short c)
+AUTOBOOST_REGEX_DECL unsigned short AUTOBOOST_REGEX_CALL do_global_upper(unsigned short c)
 {
    return (std::towupper)(c);
 }
@@ -297,7 +297,7 @@ BOOST_REGEX_DECL unsigned short BOOST_REGEX_CALL do_global_upper(unsigned short 
 
 #endif
 
-BOOST_REGEX_DECL regex_constants::escape_syntax_type BOOST_REGEX_CALL get_default_escape_syntax_type(char c)
+AUTOBOOST_REGEX_DECL regex_constants::escape_syntax_type AUTOBOOST_REGEX_CALL get_default_escape_syntax_type(char c)
 {
    //
    // char_syntax determines how the compiler treats a given character
@@ -492,7 +492,7 @@ BOOST_REGEX_DECL regex_constants::escape_syntax_type BOOST_REGEX_CALL get_defaul
    return char_syntax[(unsigned char)c];
 }
 
-BOOST_REGEX_DECL regex_constants::syntax_type BOOST_REGEX_CALL get_default_syntax_type(char c)
+AUTOBOOST_REGEX_DECL regex_constants::syntax_type AUTOBOOST_REGEX_CALL get_default_syntax_type(char c)
 {
    //
    // char_syntax determines how the compiler treats a given character

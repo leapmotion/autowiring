@@ -1,11 +1,11 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <boost/exception_ptr.hpp>
+#include <autoboost/exception_ptr.hpp>
 namespace std {
-  using AUTOWIRING_BOOST_NAME::exception_ptr;
-  using AUTOWIRING_BOOST_NAME::rethrow_exception;
-  using AUTOWIRING_BOOST_NAME::current_exception;
+  using autoboost::exception_ptr;
+  using autoboost::rethrow_exception;
+  using autoboost::current_exception;
 }
 
 class throw_exception_util {

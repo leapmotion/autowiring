@@ -11,15 +11,15 @@
 
 #include <cstring>
 #include <cstddef> // NULL
-#include <boost/assert.hpp>
+#include <autoboost/assert.hpp>
 
-#include <boost/config.hpp>
-#if defined(BOOST_NO_STDC_NAMESPACE)
+#include <autoboost/config.hpp>
+#if defined(AUTOBOOST_NO_STDC_NAMESPACE)
 namespace std{ using ::strcmp; }
 #endif
 
-#define BOOST_SERIALIZATION_SOURCE
-#include <boost/serialization/extended_type_info_no_rtti.hpp>
+#define AUTOBOOST_SERIALIZATION_SOURCE
+#include <autoboost/serialization/extended_type_info_no_rtti.hpp>
 
 #define EXTENDED_TYPE_INFO_NO_RTTI_KEY 2
 
@@ -27,14 +27,14 @@ namespace autoboost {
 namespace serialization { 
 namespace no_rtti_system { 
 
-BOOST_SERIALIZATION_DECL(BOOST_PP_EMPTY())  
+AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY())  
 extended_type_info_no_rtti_0::extended_type_info_no_rtti_0(
     const char * key
 ) :
     extended_type_info(EXTENDED_TYPE_INFO_NO_RTTI_KEY, key)
 {}
 
-BOOST_SERIALIZATION_DECL(bool)
+AUTOBOOST_SERIALIZATION_DECL(bool)
 extended_type_info_no_rtti_0::is_less_than(
     const autoboost::serialization::extended_type_info &rhs) const 
 {
@@ -50,14 +50,14 @@ extended_type_info_no_rtti_0::is_less_than(
     // it was exported.  Make sure that classes which use this method
     // of type id are NOT "automatically" registered by serializating 
     // through a pointer to the to most derived class.  OR make sure
-    // that the BOOST_CLASS_EXPORT is included in every file
+    // that the AUTOBOOST_CLASS_EXPORT is included in every file
     // which does this.
-    BOOST_ASSERT(NULL != l);
-    BOOST_ASSERT(NULL != r);
+    AUTOBOOST_ASSERT(NULL != l);
+    AUTOBOOST_ASSERT(NULL != r);
     return std::strcmp(l, r) < 0;
 }
 
-BOOST_SERIALIZATION_DECL(bool)
+AUTOBOOST_SERIALIZATION_DECL(bool)
 extended_type_info_no_rtti_0::is_equal(
     const autoboost::serialization::extended_type_info &rhs) const 
 {
@@ -66,17 +66,17 @@ extended_type_info_no_rtti_0::is_equal(
         return true;
     // null keys don't match with anything
     const char * l = get_key();
-    BOOST_ASSERT(NULL != l);
+    AUTOBOOST_ASSERT(NULL != l);
     if(NULL == l)
         return false;
     const char * r = rhs.get_key();
-    BOOST_ASSERT(NULL != r);
+    AUTOBOOST_ASSERT(NULL != r);
     if(NULL == r)
         return false;
     return 0 == std::strcmp(l, r);
 }
 
-BOOST_SERIALIZATION_DECL(BOOST_PP_EMPTY())  
+AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY())  
 extended_type_info_no_rtti_0::~extended_type_info_no_rtti_0()
 {}
 

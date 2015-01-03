@@ -12,17 +12,17 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         cpp_regex_traits.cpp
-  *   VERSION      see <boost/version.hpp>
+  *   VERSION      see <autoboost/version.hpp>
   *   DESCRIPTION: Implements cpp_regex_traits<char> (and associated helper classes).
   */
 
-#define BOOST_REGEX_SOURCE
-#include <boost/config.hpp>
-#ifndef BOOST_NO_STD_LOCALE
-#include <boost/regex/regex_traits.hpp>
-#include <boost/regex/pattern_except.hpp>
+#define AUTOBOOST_REGEX_SOURCE
+#include <autoboost/config.hpp>
+#ifndef AUTOBOOST_NO_STD_LOCALE
+#include <autoboost/regex/regex_traits.hpp>
+#include <autoboost/regex/pattern_except.hpp>
 
-#ifdef BOOST_NO_STDC_NAMESPACE
+#ifdef AUTOBOOST_NO_STDC_NAMESPACE
 namespace std{
    using ::memset;
 }
@@ -35,7 +35,7 @@ void cpp_regex_traits_char_layer<char>::init()
    // we need to start by initialising our syntax map so we know which
    // character is used for which purpose:
    std::memset(m_char_map, 0, sizeof(m_char_map));
-#ifndef BOOST_NO_STD_MESSAGES
+#ifndef AUTOBOOST_NO_STD_MESSAGES
 #ifndef __IBMCPP__
    std::messages<char>::catalog cat = static_cast<std::messages<char>::catalog>(-1);
 #else
@@ -59,7 +59,7 @@ void cpp_regex_traits_char_layer<char>::init()
    //
    if((int)cat >= 0)
    {
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
       try{
 #endif
          for(regex_constants::syntax_type i = 1; i < regex_constants::syntax_max; ++i)
@@ -71,7 +71,7 @@ void cpp_regex_traits_char_layer<char>::init()
             }
          }
          this->m_pmessages->close(cat);
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
       }
       catch(...)
       {
@@ -92,7 +92,7 @@ void cpp_regex_traits_char_layer<char>::init()
             ++ptr;
          }
       }
-#ifndef BOOST_NO_STD_MESSAGES
+#ifndef AUTOBOOST_NO_STD_MESSAGES
    }
 #endif
    //

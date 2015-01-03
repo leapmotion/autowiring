@@ -1,17 +1,17 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
 
-#include <boost/system/error_code.hpp>
-#include <boost/system/system_error.hpp>
+#include <autoboost/system/error_code.hpp>
+#include <autoboost/system/system_error.hpp>
 
 namespace std {
-  using AUTOWIRING_BOOST_NAME::system::error_category;
-  using AUTOWIRING_BOOST_NAME::system::generic_category;
-  using AUTOWIRING_BOOST_NAME::system::system_error;
+  using autoboost::system::error_category;
+  using autoboost::system::generic_category;
+  using autoboost::system::system_error;
 
-  using AUTOWIRING_BOOST_NAME::system::is_error_code_enum;
+  using autoboost::system::is_error_code_enum;
 
   namespace errc {
-    using AUTOWIRING_BOOST_NAME::system::errc::make_error_code;
+    using autoboost::system::errc::make_error_code;
   }
 }

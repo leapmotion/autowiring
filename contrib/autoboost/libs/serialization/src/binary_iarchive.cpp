@@ -10,13 +10,13 @@
 
 #include <istream>
 
-#define BOOST_ARCHIVE_SOURCE
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/detail/archive_serializer_map.hpp>
+#define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/archive/binary_iarchive.hpp>
+#include <autoboost/archive/detail/archive_serializer_map.hpp>
 
-#include <boost/archive/impl/archive_serializer_map.ipp>
-#include <boost/archive/impl/basic_binary_iprimitive.ipp>
-#include <boost/archive/impl/basic_binary_iarchive.ipp>
+#include <autoboost/archive/impl/archive_serializer_map.ipp>
+#include <autoboost/archive/impl/basic_binary_iprimitive.ipp>
+#include <autoboost/archive/impl/basic_binary_iarchive.ipp>
 
 namespace autoboost {
 namespace archive {

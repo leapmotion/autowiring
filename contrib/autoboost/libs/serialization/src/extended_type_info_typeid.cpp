@@ -11,16 +11,16 @@
 
 #include <algorithm>
 #include <set>
-#include <boost/assert.hpp>
+#include <autoboost/assert.hpp>
 #include <typeinfo>
 #include <cstddef> // NULL
 
-#include <boost/detail/no_exceptions_support.hpp>
+#include <autoboost/detail/no_exceptions_support.hpp>
 
-#include <boost/serialization/singleton.hpp>
+#include <autoboost/serialization/singleton.hpp>
 
-#define BOOST_SERIALIZATION_SOURCE
-#include <boost/serialization/extended_type_info_typeid.hpp>
+#define AUTOBOOST_SERIALIZATION_SOURCE
+#include <autoboost/serialization/extended_type_info_typeid.hpp>
 
 namespace autoboost { 
 namespace serialization { 
@@ -44,7 +44,7 @@ typedef std::multiset<
     type_compare
 > tkmap;
     
-BOOST_SERIALIZATION_DECL(bool) 
+AUTOBOOST_SERIALIZATION_DECL(bool) 
 extended_type_info_typeid_0::is_less_than(
     const autoboost::serialization::extended_type_info & rhs
 ) const {
@@ -56,7 +56,7 @@ extended_type_info_typeid_0::is_less_than(
     );
 }
 
-BOOST_SERIALIZATION_DECL(bool) 
+AUTOBOOST_SERIALIZATION_DECL(bool) 
 extended_type_info_typeid_0::is_equal(
     const autoboost::serialization::extended_type_info & rhs
 ) const {
@@ -70,7 +70,7 @@ extended_type_info_typeid_0::is_equal(
     ;
 }
 
-BOOST_SERIALIZATION_DECL(BOOST_PP_EMPTY())
+AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY())
 extended_type_info_typeid_0::extended_type_info_typeid_0(
     const char * key
 ) :
@@ -78,17 +78,17 @@ extended_type_info_typeid_0::extended_type_info_typeid_0(
     m_ti(NULL)
 {}
 
-BOOST_SERIALIZATION_DECL(BOOST_PP_EMPTY())
+AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY())
 extended_type_info_typeid_0::~extended_type_info_typeid_0()
 {}
 
-BOOST_SERIALIZATION_DECL(void) 
+AUTOBOOST_SERIALIZATION_DECL(void) 
 extended_type_info_typeid_0::type_register(const std::type_info & ti){
     m_ti = & ti;
     singleton<tkmap>::get_mutable_instance().insert(this);
 }
 
-BOOST_SERIALIZATION_DECL(void) 
+AUTOBOOST_SERIALIZATION_DECL(void) 
 extended_type_info_typeid_0::type_unregister()
 {
     if(NULL != m_ti){
@@ -96,7 +96,7 @@ extended_type_info_typeid_0::type_unregister()
             tkmap & x = singleton<tkmap>::get_mutable_instance();
             tkmap::iterator start = x.lower_bound(this);
             tkmap::iterator end = x.upper_bound(this);
-            BOOST_ASSERT(start != end);
+            AUTOBOOST_ASSERT(start != end);
 
             // remove entry in map which corresponds to this type
             do{
@@ -110,7 +110,7 @@ extended_type_info_typeid_0::type_unregister()
     m_ti = NULL;
 }
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(push)
 #  pragma warning(disable : 4511 4512)
 #endif
@@ -120,11 +120,11 @@ class extended_type_info_typeid_arg :
     public extended_type_info_typeid_0
 {
     virtual void * construct(unsigned int /*count*/, ...) const{
-        BOOST_ASSERT(false);
+        AUTOBOOST_ASSERT(false);
         return NULL;
     }
     virtual void destroy(void const * const /*p*/) const {
-        BOOST_ASSERT(false);
+        AUTOBOOST_ASSERT(false);
     }
 public:
     extended_type_info_typeid_arg(const std::type_info & ti) :
@@ -140,11 +140,11 @@ public:
     }
 };
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(pop)
 #endif
 
-BOOST_SERIALIZATION_DECL(const extended_type_info *)
+AUTOBOOST_SERIALIZATION_DECL(const extended_type_info *)
 extended_type_info_typeid_0::get_extended_type_info(
     const std::type_info & ti
 ) const {

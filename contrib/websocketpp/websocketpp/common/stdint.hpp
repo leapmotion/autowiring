@@ -33,7 +33,7 @@
 #endif
 
 #if defined (_WIN32) && defined (_MSC_VER) && (_MSC_VER < 1600)
-    #include <boost/cstdint.hpp>
+    #include <autoboost/cstdint.hpp>
 
     using autoboost::int8_t;
     using autoboost::int_least8_t;

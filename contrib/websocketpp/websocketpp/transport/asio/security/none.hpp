@@ -31,7 +31,7 @@
 #include <websocketpp/common/memory.hpp>
 #include <websocketpp/transport/asio/security/base.hpp>
 
-#include <boost/asio.hpp>
+#include <autoboost/asio.hpp>
 
 #include <string>
 

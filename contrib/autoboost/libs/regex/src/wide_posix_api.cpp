@@ -12,30 +12,30 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        wide_posix_api.cpp
-  *   VERSION:     see <boost/version.hpp>
+  *   VERSION:     see <autoboost/version.hpp>
   *   DESCRIPTION: Implements the wide character POSIX API wrappers.
   */
 
-#define BOOST_REGEX_SOURCE
+#define AUTOBOOST_REGEX_SOURCE
 
-#include <boost/regex/config.hpp>
+#include <autoboost/regex/config.hpp>
 
-#ifndef BOOST_NO_WREGEX
+#ifndef AUTOBOOST_NO_WREGEX
 
-#include <boost/regex.hpp>
-#include <boost/cregex.hpp>
+#include <autoboost/regex.hpp>
+#include <autoboost/cregex.hpp>
 
 #include <cwchar>
 #include <cstring>
 #include <cstdio>
 
-#ifdef BOOST_INTEL
+#ifdef AUTOBOOST_INTEL
 #pragma warning(disable:981)
 #endif
 
-#if defined(BOOST_NO_STDC_NAMESPACE) || defined(__NetBSD__)
+#if defined(AUTOBOOST_NO_STDC_NAMESPACE) || defined(__NetBSD__)
 namespace std{
-#  ifndef BOOST_NO_SWPRINTF
+#  ifndef AUTOBOOST_NO_SWPRINTF
       using ::swprintf;
 #  endif
 }
@@ -76,16 +76,16 @@ const wchar_t* wnames[] = {
 
 typedef autoboost::basic_regex<wchar_t, c_regex_traits<wchar_t> > wc_regex_type;
 
-BOOST_REGEX_DECL int BOOST_REGEX_CCALL regcompW(regex_tW* expression, const wchar_t* ptr, int f)
+AUTOBOOST_REGEX_DECL int AUTOBOOST_REGEX_CCALL regcompW(regex_tW* expression, const wchar_t* ptr, int f)
 {
    if(expression->re_magic != wmagic_value)
    {
       expression->guts = 0;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
       try{
 #endif
       expression->guts = new wc_regex_type();
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
       } catch(...)
       {
          return REG_ESPACE;
@@ -103,7 +103,7 @@ BOOST_REGEX_DECL int BOOST_REGEX_CCALL regcompW(regex_tW* expression, const wcha
    if(f & REG_NOCOLLATE)
    {
       flags |= wregex::nocollate;
-#ifndef BOOST_REGEX_V3
+#ifndef AUTOBOOST_REGEX_V3
       flags &= ~wregex::collate;
 #endif
    }
@@ -130,14 +130,14 @@ BOOST_REGEX_DECL int BOOST_REGEX_CCALL regcompW(regex_tW* expression, const wcha
 
    int result;
 
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    try{
 #endif
       expression->re_magic = wmagic_value;
       static_cast<wc_regex_type*>(expression->guts)->set_expression(ptr, p2, flags);
       expression->re_nsub = static_cast<wc_regex_type*>(expression->guts)->mark_count();
       result = static_cast<wc_regex_type*>(expression->guts)->error_code();
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    } 
    catch(const autoboost::regex_error& be)
    {
@@ -154,7 +154,7 @@ BOOST_REGEX_DECL int BOOST_REGEX_CCALL regcompW(regex_tW* expression, const wcha
 
 }
 
-BOOST_REGEX_DECL regsize_t BOOST_REGEX_CCALL regerrorW(int code, const regex_tW* e, wchar_t* buf, regsize_t buf_size)
+AUTOBOOST_REGEX_DECL regsize_t AUTOBOOST_REGEX_CCALL regerrorW(int code, const regex_tW* e, wchar_t* buf, regsize_t buf_size)
 {
    std::size_t result = 0;
    if(code & REG_ITOA)
@@ -164,7 +164,7 @@ BOOST_REGEX_DECL regsize_t BOOST_REGEX_CCALL regerrorW(int code, const regex_tW*
       {
          result = std::wcslen(wnames[code]) + 1;
          if(buf_size >= result)
-#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400) && !defined(_WIN32_WCE) && !defined(UNDER_CE)
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400) && !defined(_WIN32_WCE) && !defined(UNDER_CE)
             ::wcscpy_s(buf, buf_size, wnames[code]);
 #else
             std::wcscpy(buf, wnames[code]);
@@ -173,7 +173,7 @@ BOOST_REGEX_DECL regsize_t BOOST_REGEX_CCALL regerrorW(int code, const regex_tW*
       }
       return result;
    }
-#if !defined(BOOST_NO_SWPRINTF)
+#if !defined(AUTOBOOST_NO_SWPRINTF)
    if(code == REG_ATOI)
    {
       wchar_t localbuf[5];
@@ -189,7 +189,7 @@ BOOST_REGEX_DECL regsize_t BOOST_REGEX_CCALL regerrorW(int code, const regex_tW*
             (std::swprintf)(localbuf, 5, L"%d", i);
 #endif
             if(std::wcslen(localbuf) < buf_size)
-#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400) && !defined(_WIN32_WCE) && !defined(UNDER_CE)
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400) && !defined(_WIN32_WCE) && !defined(UNDER_CE)
                ::wcscpy_s(buf, buf_size, localbuf);
 #else
                std::wcscpy(buf, localbuf);
@@ -203,7 +203,7 @@ BOOST_REGEX_DECL regsize_t BOOST_REGEX_CCALL regerrorW(int code, const regex_tW*
       (std::swprintf)(localbuf, 5, L"%d", 0);
 #endif
       if(std::wcslen(localbuf) < buf_size)
-#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400) && !defined(_WIN32_WCE) && !defined(UNDER_CE)
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400) && !defined(_WIN32_WCE) && !defined(UNDER_CE)
          ::wcscpy_s(buf, buf_size, localbuf);
 #else
          std::wcscpy(buf, localbuf);
@@ -232,9 +232,9 @@ BOOST_REGEX_DECL regsize_t BOOST_REGEX_CCALL regerrorW(int code, const regex_tW*
    return 0;
 }
 
-BOOST_REGEX_DECL int BOOST_REGEX_CCALL regexecW(const regex_tW* expression, const wchar_t* buf, regsize_t n, regmatch_t* array, int eflags)
+AUTOBOOST_REGEX_DECL int AUTOBOOST_REGEX_CCALL regexecW(const regex_tW* expression, const wchar_t* buf, regsize_t n, regmatch_t* array, int eflags)
 {
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #pragma warning(push)
 #pragma warning(disable:4267)
 #endif
@@ -259,7 +259,7 @@ BOOST_REGEX_DECL int BOOST_REGEX_CCALL regexecW(const regex_tW* expression, cons
       end = buf + std::wcslen(buf);
    }
 
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    try{
 #endif
    if(expression->re_magic == wmagic_value)
@@ -268,7 +268,7 @@ BOOST_REGEX_DECL int BOOST_REGEX_CCALL regexecW(const regex_tW* expression, cons
    }
    else
       return result;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    } catch(...)
    {
       return REG_E_UNKNOWN;
@@ -292,12 +292,12 @@ BOOST_REGEX_DECL int BOOST_REGEX_CCALL regexecW(const regex_tW* expression, cons
       return 0;
    }
    return REG_NOMATCH;
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #pragma warning(pop)
 #endif
 }
 
-BOOST_REGEX_DECL void BOOST_REGEX_CCALL regfreeW(regex_tW* expression)
+AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CCALL regfreeW(regex_tW* expression)
 {
    if(expression->re_magic == wmagic_value)
    {

@@ -4,9 +4,9 @@
 // Boost Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/thread/detail/config.hpp>
+#include <autoboost/thread/detail/config.hpp>
 
-#if defined(BOOST_HAS_WINTHREADS) && (defined(BOOST_THREAD_BUILD_LIB) || defined(BOOST_THREAD_TEST) || defined(UNDER_CE)) && (!defined(_MSC_VER) || defined(UNDER_CE))
+#if defined(AUTOBOOST_HAS_WINTHREADS) && (defined(AUTOBOOST_THREAD_BUILD_LIB) || defined(AUTOBOOST_THREAD_TEST) || defined(UNDER_CE)) && (!defined(_MSC_VER) || defined(UNDER_CE))
 
 namespace autoboost
 {
@@ -35,4 +35,4 @@ namespace autoboost
 
 }
 
-#endif //defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB) && !defined(_MSC_VER)
+#endif //defined(AUTOBOOST_HAS_WINTHREADS) && defined(AUTOBOOST_THREAD_BUILD_LIB) && !defined(_MSC_VER)

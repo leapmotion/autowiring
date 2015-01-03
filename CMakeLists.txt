@@ -213,10 +213,17 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
 
   # Install public header files
   install(
-    DIRECTORY ${PROJECT_SOURCE_DIR}/autowiring/
-    DESTINATION include/autowiring
+    DIRECTORY ${PROJECT_SOURCE_DIR}/autowiring
+    DESTINATION include
     COMPONENT autowiring
     FILES_MATCHING PATTERN "*.h"
+  )
+
+  # Install autoboost headers
+  install(
+    DIRECTORY ${PROJECT_SOURCE_DIR}/contrib/autoboost/autoboost
+    DESTINATION include
+    COMPONENT autowiring
   )
 
   # Targets file is needed in order to describe how to link Autowiring to the rest of the system

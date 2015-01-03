@@ -8,33 +8,33 @@
 
 //  See http://www.boost.org for updates, documentation, and revision history.
 
-#include <boost/config.hpp>
-#ifdef BOOST_NO_STD_WSTREAMBUF
+#include <autoboost/config.hpp>
+#ifdef AUTOBOOST_NO_STD_WSTREAMBUF
 #error "wide char i/o not supported on this platform"
 #else
 
-#include <boost/detail/workaround.hpp>
+#include <autoboost/detail/workaround.hpp>
 
 #if (defined _MSC_VER) && (_MSC_VER == 1200)
 #  pragma warning (disable : 4786) // too long name, harmless warning
 #endif
 
-#define BOOST_WARCHIVE_SOURCE
+#define AUTOBOOST_WARCHIVE_SOURCE
 
 // the following works around an issue between spirit 1.61 and borland.
 // it turns out the the certain spirit stuff must be defined before
 // certain parts of mpl.  including this here makes sure that happens
-#if BOOST_WORKAROUND(__BORLANDC__, <= 0x560 )
-#include <boost/archive/impl/basic_xml_grammar.hpp>
+#if AUTOBOOST_WORKAROUND(__BORLANDC__, <= 0x560 )
+#include <autoboost/archive/impl/basic_xml_grammar.hpp>
 #endif
 
-#include <boost/archive/xml_wiarchive.hpp>
-#include <boost/archive/detail/archive_serializer_map.hpp>
+#include <autoboost/archive/xml_wiarchive.hpp>
+#include <autoboost/archive/detail/archive_serializer_map.hpp>
 
 // explicitly instantiate for this type of xml stream
-#include <boost/archive/impl/archive_serializer_map.ipp>
-#include <boost/archive/impl/basic_xml_iarchive.ipp>
-#include <boost/archive/impl/xml_wiarchive_impl.ipp>
+#include <autoboost/archive/impl/archive_serializer_map.ipp>
+#include <autoboost/archive/impl/basic_xml_iarchive.ipp>
+#include <autoboost/archive/impl/xml_wiarchive_impl.ipp>
 
 namespace autoboost {
 namespace archive {
@@ -46,4 +46,4 @@ template class xml_wiarchive_impl<xml_wiarchive> ;
 } // namespace archive
 } // namespace autoboost
 
-#endif // BOOST_NO_STD_WSTREAMBUF
+#endif // AUTOBOOST_NO_STD_WSTREAMBUF

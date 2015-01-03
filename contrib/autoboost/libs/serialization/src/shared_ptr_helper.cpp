@@ -14,16 +14,16 @@
 #include <cstddef> // NULL
 #include <cassert>
 
-#define BOOST_ARCHIVE_SOURCE
+#define AUTOBOOST_ARCHIVE_SOURCE
 // include this to prevent linker errors when the
 // same modules are marked export and import.
-#define BOOST_SERIALIZATION_SOURCE
+#define AUTOBOOST_SERIALIZATION_SOURCE
 
-#include <boost/serialization/throw_exception.hpp>
-#include <boost/serialization/void_cast.hpp>
-#include <boost/serialization/extended_type_info.hpp>
-#include <boost/serialization/shared_ptr_helper.hpp>
-#include <boost/archive/archive_exception.hpp>
+#include <autoboost/serialization/throw_exception.hpp>
+#include <autoboost/serialization/void_cast.hpp>
+#include <autoboost/serialization/extended_type_info.hpp>
+#include <autoboost/serialization/shared_ptr_helper.hpp>
+#include <autoboost/archive/archive_exception.hpp>
 
 namespace autoboost {
 namespace serialization {
@@ -31,8 +31,8 @@ namespace serialization {
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // a common class for holding various types of shared pointers
 
-//  #ifdef BOOST_SERIALIZATION_SHARED_PTR_132_HPP
-BOOST_ARCHIVE_DECL(void)
+//  #ifdef AUTOBOOST_SERIALIZATION_SHARED_PTR_132_HPP
+AUTOBOOST_ARCHIVE_DECL(void)
 shared_ptr_helper_base::append(const autoboost_132::shared_ptr<const void> & t){
     if(NULL == m_pointers_132)
         m_pointers_132 = new std::list<autoboost_132::shared_ptr<const void> >;
@@ -40,19 +40,19 @@ shared_ptr_helper_base::append(const autoboost_132::shared_ptr<const void> & t){
 }
 //  #endif
 
-BOOST_ARCHIVE_DECL(BOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
 shared_ptr_helper_base::shared_ptr_helper_base() :
     m_o_sp(NULL)
-    #ifdef BOOST_SERIALIZATION_SHARED_PTR_132_HPP
+    #ifdef AUTOBOOST_SERIALIZATION_SHARED_PTR_132_HPP
         , m_pointers_132(NULL)
     #endif
 {}
 
-BOOST_ARCHIVE_DECL(BOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
 shared_ptr_helper_base::~shared_ptr_helper_base(){
     if(NULL != m_o_sp)
         delete m_o_sp;
-    #ifdef BOOST_SERIALIZATION_SHARED_PTR_132_HPP
+    #ifdef AUTOBOOST_SERIALIZATION_SHARED_PTR_132_HPP
     if(NULL != m_pointers_132)
         delete m_pointers_132;
     #endif

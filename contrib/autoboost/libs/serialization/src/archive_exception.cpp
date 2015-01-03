@@ -13,11 +13,11 @@
 #endif
 
 #include <exception>
-//#include <boost/assert.hpp>
+//#include <autoboost/assert.hpp>
 #include <string>
 
-#define BOOST_ARCHIVE_SOURCE
-#include <boost/archive/archive_exception.hpp>
+#define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/archive/archive_exception.hpp>
 
 namespace autoboost {
 namespace archive {
@@ -34,7 +34,7 @@ archive_exception::append(unsigned int l, const char * a){
     return l;
 }
 
-BOOST_ARCHIVE_DECL(BOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
 archive_exception::archive_exception(
     exception_code c, 
     const char * e1,
@@ -105,20 +105,20 @@ archive_exception::archive_exception(
         length = append(length, "output stream error");
         break;
     default:
-        BOOST_ASSERT(false);
+        AUTOBOOST_ASSERT(false);
         length = append(length, "programming error");
         break;
     }
 }
-BOOST_ARCHIVE_DECL(BOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
 archive_exception::~archive_exception() throw() {}
 
-BOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_ARCHIVE_DECL(const char *)
 archive_exception::what( ) const throw()
 {
     return m_buffer;
 }
-BOOST_ARCHIVE_DECL(BOOST_PP_EMPTY())
+AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY())
 archive_exception::archive_exception() : 
         code(no_exception)
 {}

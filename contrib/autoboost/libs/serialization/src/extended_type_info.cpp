@@ -15,24 +15,24 @@
 #include <algorithm>
 #include <set>
 #include <utility>
-#include <boost/assert.hpp>
+#include <autoboost/assert.hpp>
 #include <cstddef> // NULL
 
-#include <boost/config.hpp> // msvc needs this to suppress warning
+#include <autoboost/config.hpp> // msvc needs this to suppress warning
 
 #include <cstring>
-#if defined(BOOST_NO_STDC_NAMESPACE)
+#if defined(AUTOBOOST_NO_STDC_NAMESPACE)
 namespace std{ using ::strcmp; }
 #endif
 
-#include <boost/detail/no_exceptions_support.hpp>
-#include <boost/serialization/singleton.hpp>
-#include <boost/serialization/force_include.hpp>
+#include <autoboost/detail/no_exceptions_support.hpp>
+#include <autoboost/serialization/singleton.hpp>
+#include <autoboost/serialization/force_include.hpp>
 
-#define BOOST_SERIALIZATION_SOURCE
-#include <boost/serialization/extended_type_info.hpp>
+#define AUTOBOOST_SERIALIZATION_SOURCE
+#include <autoboost/serialization/extended_type_info.hpp>
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(push)
 #  pragma warning(disable : 4511 4512)
 #endif
@@ -52,9 +52,9 @@ struct key_compare
         if(lhs == rhs)
             return false;
         const char * l = lhs->get_key();
-        BOOST_ASSERT(NULL != l);
+        AUTOBOOST_ASSERT(NULL != l);
         const char * r = rhs->get_key();
-        BOOST_ASSERT(NULL != r);
+        AUTOBOOST_ASSERT(NULL != r);
         // performance shortcut
         // shortcut to exploit string pooling
         if(l == r)
@@ -68,7 +68,7 @@ struct key_compare
 
 typedef std::multiset<const extended_type_info *, key_compare> ktmap;
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(push)
 #  pragma warning(disable : 4511 4512)
 #endif
@@ -77,23 +77,23 @@ class extended_type_info_arg : public extended_type_info
 {
     virtual bool
     is_less_than(const extended_type_info & /*rhs*/) const {
-        BOOST_ASSERT(false);
+        AUTOBOOST_ASSERT(false);
         return false;
     };
     virtual bool
     is_equal(const extended_type_info & /*rhs*/) const {
-        BOOST_ASSERT(false);
+        AUTOBOOST_ASSERT(false);
         return false;
     };
     virtual const char * get_debug_info() const {
         return get_key();
     }
     virtual void * construct(unsigned int /*count*/, ...) const{
-        BOOST_ASSERT(false);
+        AUTOBOOST_ASSERT(false);
         return NULL;
     }
     virtual void destroy(void const * const /*p*/) const {
-        BOOST_ASSERT(false);
+        AUTOBOOST_ASSERT(false);
     }
 public:
     extended_type_info_arg(const char * key) :
@@ -104,20 +104,20 @@ public:
     }
 };
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(pop)
 #endif
 
 } // namespace detail
 
-BOOST_SERIALIZATION_DECL(void)  
+AUTOBOOST_SERIALIZATION_DECL(void)  
 extended_type_info::key_register() const{
     if(NULL == get_key())
         return;
     singleton<detail::ktmap>::get_mutable_instance().insert(this);
 }
 
-BOOST_SERIALIZATION_DECL(void)  
+AUTOBOOST_SERIALIZATION_DECL(void)  
 extended_type_info::key_unregister() const{
     if(NULL == get_key())
         return;
@@ -135,9 +135,9 @@ extended_type_info::key_unregister() const{
     }
 }
 
-BOOST_SERIALIZATION_DECL(const extended_type_info *) 
+AUTOBOOST_SERIALIZATION_DECL(const extended_type_info *) 
 extended_type_info::find(const char *key) {
-    BOOST_ASSERT(NULL != key);
+    AUTOBOOST_ASSERT(NULL != key);
     const detail::ktmap & k = singleton<detail::ktmap>::get_const_instance();
     const detail::extended_type_info_arg eti_key(key);
     const detail::ktmap::const_iterator it = k.find(& eti_key);
@@ -146,7 +146,7 @@ extended_type_info::find(const char *key) {
     return *(it);
 }
 
-BOOST_SERIALIZATION_DECL(BOOST_PP_EMPTY())
+AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY())
 extended_type_info::extended_type_info(
     const unsigned int type_info_key,
     const char * key
@@ -156,11 +156,11 @@ extended_type_info::extended_type_info(
 {
 }
 
-BOOST_SERIALIZATION_DECL(BOOST_PP_EMPTY()) 
+AUTOBOOST_SERIALIZATION_DECL(AUTOBOOST_PP_EMPTY()) 
 extended_type_info::~extended_type_info(){
 }
 
-BOOST_SERIALIZATION_DECL(bool)  
+AUTOBOOST_SERIALIZATION_DECL(bool)  
 extended_type_info::operator<(const extended_type_info &rhs) const {
     // short cut for a common cases
     if(this == & rhs)
@@ -173,7 +173,7 @@ extended_type_info::operator<(const extended_type_info &rhs) const {
     return false;
 }
 
-BOOST_SERIALIZATION_DECL(bool)
+AUTOBOOST_SERIALIZATION_DECL(bool)
 extended_type_info::operator==(const extended_type_info &rhs) const {
     // short cut for a common cases
     if(this == & rhs)

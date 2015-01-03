@@ -32,7 +32,7 @@
 #ifndef WEBSOCKETPP_CONFIG_BOOST_CONFIG_HPP
 #define WEBSOCKETPP_CONFIG_BOOST_CONFIG_HPP
 
-#include <boost/config.hpp>
+#include <autoboost/config.hpp>
 
 //  _WEBSOCKETPP_CPP11_MEMORY_ and _WEBSOCKETPP_CPP11_FUNCTIONAL_ presently
 //  only work if either both or neither is defined.

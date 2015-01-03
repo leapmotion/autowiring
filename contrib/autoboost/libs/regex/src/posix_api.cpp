@@ -12,18 +12,18 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        posix_api.cpp
-  *   VERSION:     see <boost/version.hpp>
+  *   VERSION:     see <autoboost/version.hpp>
   *   DESCRIPTION: Implements the Posix API wrappers.
   */
 
-#define BOOST_REGEX_SOURCE
+#define AUTOBOOST_REGEX_SOURCE
 
-#include <boost/config.hpp>
+#include <autoboost/config.hpp>
 #include <cstdio>
-#include <boost/regex.hpp>
-#include <boost/cregex.hpp>
+#include <autoboost/regex.hpp>
+#include <autoboost/cregex.hpp>
 
-#if defined(BOOST_NO_STDC_NAMESPACE)
+#if defined(AUTOBOOST_NO_STDC_NAMESPACE)
 namespace std{
    using ::sprintf;
    using ::strcpy;
@@ -66,16 +66,16 @@ const char* names[] = {
 
 typedef autoboost::basic_regex<char, c_regex_traits<char> > c_regex_type;
 
-BOOST_REGEX_DECL int BOOST_REGEX_CCALL regcompA(regex_tA* expression, const char* ptr, int f)
+AUTOBOOST_REGEX_DECL int AUTOBOOST_REGEX_CCALL regcompA(regex_tA* expression, const char* ptr, int f)
 {
    if(expression->re_magic != magic_value)
    {
       expression->guts = 0;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
       try{
 #endif
       expression->guts = new c_regex_type();
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
       } catch(...)
       {
          return REG_ESPACE;
@@ -93,7 +93,7 @@ BOOST_REGEX_DECL int BOOST_REGEX_CCALL regcompA(regex_tA* expression, const char
    if(f & REG_NOCOLLATE)
    {
       flags |= regex::nocollate;
-#ifndef BOOST_REGEX_V3
+#ifndef AUTOBOOST_REGEX_V3
       flags &= ~regex::collate;
 #endif
    }
@@ -120,14 +120,14 @@ BOOST_REGEX_DECL int BOOST_REGEX_CCALL regcompA(regex_tA* expression, const char
 
    int result;
 
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    try{
 #endif
       expression->re_magic = magic_value;
       static_cast<c_regex_type*>(expression->guts)->set_expression(ptr, p2, flags);
       expression->re_nsub = static_cast<c_regex_type*>(expression->guts)->mark_count();
       result = static_cast<c_regex_type*>(expression->guts)->error_code();
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    } 
    catch(const autoboost::regex_error& be)
    {
@@ -144,7 +144,7 @@ BOOST_REGEX_DECL int BOOST_REGEX_CCALL regcompA(regex_tA* expression, const char
 
 }
 
-BOOST_REGEX_DECL regsize_t BOOST_REGEX_CCALL regerrorA(int code, const regex_tA* e, char* buf, regsize_t buf_size)
+AUTOBOOST_REGEX_DECL regsize_t AUTOBOOST_REGEX_CCALL regerrorA(int code, const regex_tA* e, char* buf, regsize_t buf_size)
 {
    std::size_t result = 0;
    if(code & REG_ITOA)
@@ -172,7 +172,7 @@ BOOST_REGEX_DECL regsize_t BOOST_REGEX_CCALL regerrorA(int code, const regex_tA*
             // We're converting an integer i to a string, and since i <= REG_E_UNKNOWN
             // a five character string is *always* large enough:
             //
-#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400) && !defined(_WIN32_WCE) && !defined(UNDER_CE)
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400) && !defined(_WIN32_WCE) && !defined(UNDER_CE)
             int r = (::sprintf_s)(localbuf, 5, "%d", i);
 #else
             int r = (std::sprintf)(localbuf, "%d", i);
@@ -184,7 +184,7 @@ BOOST_REGEX_DECL regsize_t BOOST_REGEX_CCALL regerrorA(int code, const regex_tA*
             return std::strlen(localbuf) + 1;
          }
       }
-#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400) && !defined(_WIN32_WCE) && !defined(UNDER_CE)
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400) && !defined(_WIN32_WCE) && !defined(UNDER_CE)
       (::sprintf_s)(localbuf, 5, "%d", 0);
 #else
       (std::sprintf)(localbuf, "%d", 0);
@@ -214,9 +214,9 @@ BOOST_REGEX_DECL regsize_t BOOST_REGEX_CCALL regerrorA(int code, const regex_tA*
    return 0;
 }
 
-BOOST_REGEX_DECL int BOOST_REGEX_CCALL regexecA(const regex_tA* expression, const char* buf, regsize_t n, regmatch_t* array, int eflags)
+AUTOBOOST_REGEX_DECL int AUTOBOOST_REGEX_CCALL regexecA(const regex_tA* expression, const char* buf, regsize_t n, regmatch_t* array, int eflags)
 {
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #pragma warning(push)
 #pragma warning(disable:4267)
 #endif
@@ -241,7 +241,7 @@ BOOST_REGEX_DECL int BOOST_REGEX_CCALL regexecA(const regex_tA* expression, cons
       end = buf + std::strlen(buf);
    }
 
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    try{
 #endif
    if(expression->re_magic == magic_value)
@@ -250,7 +250,7 @@ BOOST_REGEX_DECL int BOOST_REGEX_CCALL regexecA(const regex_tA* expression, cons
    }
    else
       return result;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    } catch(...)
    {
       return REG_E_UNKNOWN;
@@ -275,12 +275,12 @@ BOOST_REGEX_DECL int BOOST_REGEX_CCALL regexecA(const regex_tA* expression, cons
       return 0;
    }
    return REG_NOMATCH;
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #pragma warning(pop)
 #endif
 }
 
-BOOST_REGEX_DECL void BOOST_REGEX_CCALL regfreeA(regex_tA* expression)
+AUTOBOOST_REGEX_DECL void AUTOBOOST_REGEX_CCALL regfreeA(regex_tA* expression)
 {
    if(expression->re_magic == magic_value)
    {

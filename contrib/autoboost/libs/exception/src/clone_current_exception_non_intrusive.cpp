@@ -6,20 +6,20 @@
 //This MSVC-specific cpp file implements non-intrusive cloning of exception objects.
 //Based on an exception_ptr implementation by Anthony Williams.
 
-#ifdef BOOST_NO_EXCEPTIONS
+#ifdef AUTOBOOST_NO_EXCEPTIONS
 #error This file requires exception handling to be enabled.
 #endif
 
-#include <boost/exception/detail/clone_current_exception.hpp>
+#include <autoboost/exception/detail/clone_current_exception.hpp>
 
-#if defined(BOOST_ENABLE_NON_INTRUSIVE_EXCEPTION_PTR) && defined(_MSC_VER) && defined(_M_IX86) && !defined(_M_X64)
+#if defined(AUTOBOOST_ENABLE_NON_INTRUSIVE_EXCEPTION_PTR) && defined(_MSC_VER) && defined(_M_IX86) && !defined(_M_X64)
 
 //Non-intrusive cloning support implemented below, only for MSVC versions mentioned above.
 //Thanks Anthony Williams!
 
-#include <boost/exception/exception.hpp>
-#include <boost/shared_ptr.hpp>
-#ifndef BOOST_NO_RTTI
+#include <autoboost/exception/exception.hpp>
+#include <autoboost/shared_ptr.hpp>
+#ifndef AUTOBOOST_NO_RTTI
 #include <typeinfo>
 #endif
 #include <windows.h>
@@ -87,7 +87,7 @@ namespace
     cpp_type_info
         {
         unsigned flags;
-#ifndef BOOST_NO_RTTI
+#ifndef AUTOBOOST_NO_RTTI
         void const * type_info;
 #else
         std::type_info * type_info;
@@ -128,7 +128,7 @@ namespace
         void
         operator()( void * obj )
             {
-            BOOST_ASSERT(obj!=0);
+            AUTOBOOST_ASSERT(obj!=0);
             dummy_exception_type * dummy_exception_ptr=reinterpret_cast<dummy_exception_type *>(obj);
             (dummy_exception_ptr->*(et_.destructor))();
             free(obj);
@@ -139,7 +139,7 @@ namespace
     get_cpp_type_info( cpp_exception_type const & et )
         {
         cpp_type_info const * ti = et.type_info_table->info[0];
-        BOOST_ASSERT(ti!=0);
+        AUTOBOOST_ASSERT(ti!=0);
         return *ti;
         }
 
@@ -235,8 +235,8 @@ namespace
     unsigned long
     exception_cloning_filter( int & result, autoboost::exception_detail::clone_base const * & ptr, void * info_ )
         {
-        BOOST_ASSERT(exception_info_offset>=0);
-        BOOST_ASSERT(info_!=0);
+        AUTOBOOST_ASSERT(exception_info_offset>=0);
+        AUTOBOOST_ASSERT(info_!=0);
         EXCEPTION_POINTERS * info=reinterpret_cast<EXCEPTION_POINTERS *>(info_);
         EXCEPTION_RECORD * record=info->ExceptionRecord;
         if( is_cpp_exception(record) )
@@ -275,7 +275,7 @@ autoboost
         int
         clone_current_exception_non_intrusive( clone_base const * & cloned )
             {
-            BOOST_ASSERT(!cloned);
+            AUTOBOOST_ASSERT(!cloned);
             int result = clone_current_exception_result::not_supported;
             if( exception_info_offset>=0 )
                 {
@@ -290,7 +290,7 @@ autoboost
                 if( result==clone_current_exception_result::success )
                     cloned=ptr;
                 }
-            BOOST_ASSERT(result!=clone_current_exception_result::success || cloned);
+            AUTOBOOST_ASSERT(result!=clone_current_exception_result::success || cloned);
             return result;
             }
         }
@@ -301,7 +301,7 @@ autoboost
 //On all other compilers, return clone_current_exception_result::not_supported.
 //On such platforms, only the intrusive enable_current_exception() cloning will work.
 
-#include <boost/config.hpp>
+#include <autoboost/config.hpp>
 
 namespace
 autoboost
