@@ -226,14 +226,12 @@ add_pch(Autowiring_SRCS "stdafx.h" "stdafx.cpp")
 
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 
-target_include_directories(Autowiring PUBLIC
+target_include_directories(Autowiring
+  PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/contrib/autoboost>"
-  "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/contrib/autoboost>"
-)
-
-target_include_directories(Autowiring INTERFACE
+  INTERFACE
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
-  "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+  "$<INSTALL_INTERFACE:include>"
 )
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
 
