@@ -8,42 +8,42 @@
 
 //  See http://www.boost.org for updates, documentation, and revision history.
 
-#define BOOST_ARCHIVE_SOURCE
-#include <boost/archive/basic_xml_archive.hpp>
+#define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/archive/basic_xml_archive.hpp>
 
 namespace autoboost {
 namespace archive {
 
-BOOST_ARCHIVE_DECL(const char *)
-BOOST_ARCHIVE_XML_OBJECT_ID(){
+AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_ARCHIVE_XML_OBJECT_ID(){
     return "object_id";
 }
-BOOST_ARCHIVE_DECL(const char *)
-BOOST_ARCHIVE_XML_OBJECT_REFERENCE(){
+AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_ARCHIVE_XML_OBJECT_REFERENCE(){
     return "object_id_reference";
 }
-BOOST_ARCHIVE_DECL(const char *)
-BOOST_ARCHIVE_XML_CLASS_ID(){
+AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_ARCHIVE_XML_CLASS_ID(){
     return "class_id";
 }
-BOOST_ARCHIVE_DECL(const char *)
-BOOST_ARCHIVE_XML_CLASS_ID_REFERENCE(){
+AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_ARCHIVE_XML_CLASS_ID_REFERENCE(){
     return "class_id_reference";
 }
-BOOST_ARCHIVE_DECL(const char *)
-BOOST_ARCHIVE_XML_CLASS_NAME(){
+AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_ARCHIVE_XML_CLASS_NAME(){
     return "class_name";
 }
-BOOST_ARCHIVE_DECL(const char *)
-BOOST_ARCHIVE_XML_TRACKING(){
+AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_ARCHIVE_XML_TRACKING(){
     return "tracking_level";
 }
-BOOST_ARCHIVE_DECL(const char *)
-BOOST_ARCHIVE_XML_VERSION(){
+AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_ARCHIVE_XML_VERSION(){
     return "version";
 }
-BOOST_ARCHIVE_DECL(const char *)
-BOOST_ARCHIVE_XML_SIGNATURE(){
+AUTOBOOST_ARCHIVE_DECL(const char *)
+AUTOBOOST_ARCHIVE_XML_SIGNATURE(){
     return "signature";
 }
 

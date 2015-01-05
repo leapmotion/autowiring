@@ -6,20 +6,16 @@
 #include "AutoCheckout.h"
 #include "DecorationDisposition.h"
 #include "demangle.h"
-#include "hash_tuple.h"
 #include "is_any.h"
 #include "is_shared_ptr.h"
-#include "MicroAutoFilter.h"
-#include "ObjectPool.h"
 #include "TeardownNotifier.h"
 #include <list>
-#include <sstream>
 #include <typeinfo>
 #include CHRONO_HEADER
 #include MEMORY_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
-#include EXCEPTION_PTR_HEADER
+#include MUTEX_HEADER
 
 class AutoPacket;
 class AutoPacketInternal;
@@ -213,6 +209,11 @@ protected:
   /// </remarks>
   std::list<DecorationDisposition> GetDispositions(const std::type_info& ti) const;
 
+  /// <summary>
+  /// Throws a formatted runtime error corresponding to the case where an absent decoration was demanded
+  /// </summary>
+  static void ThrowNotDecoratedException(const std::type_info& ti);
+
 public:
   /// <returns>
   /// True if this packet posesses a decoration of the specified type
@@ -235,12 +236,8 @@ public:
     static_assert(!std::is_same<T, AnySharedPointer>::value, "Oops!");
 
     const T* retVal;
-    if(!Get(retVal)) {
-      std::stringstream ss;
-      ss << "Attempted to obtain a type " << autowiring::demangle(retVal)
-         << " which was not decorated on this packet";
-      throw std::runtime_error(ss.str());
-    }
+    if (!Get(retVal))
+      ThrowNotDecoratedException(typeid(auto_id<T>));
     return *retVal;
   }
 

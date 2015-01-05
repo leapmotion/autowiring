@@ -37,8 +37,8 @@
 #ifdef _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
     #include <system_error>
 #else
-    #include <boost/system/error_code.hpp>
-    #include <boost/system/system_error.hpp>
+    #include <autoboost/system/error_code.hpp>
+    #include <autoboost/system/system_error.hpp>
 #endif
 
 namespace websocketpp {
@@ -56,7 +56,7 @@ namespace lib {
     using autoboost::system::error_category;
     using autoboost::system::error_condition;
     using autoboost::system::system_error;
-    #define _WEBSOCKETPP_ERROR_CODE_ENUM_NS_START_ namespace boost { namespace system {
+    #define _WEBSOCKETPP_ERROR_CODE_ENUM_NS_START_ namespace autoboost { namespace system {
     #define _WEBSOCKETPP_ERROR_CODE_ENUM_NS_END_ }}
 #endif
 

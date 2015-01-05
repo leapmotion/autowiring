@@ -12,26 +12,26 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        cregex.cpp
-  *   VERSION:     see <boost/version.hpp>
+  *   VERSION:     see <autoboost/version.hpp>
   *   DESCRIPTION: Implements high level class autoboost::RexEx
   */
 
 
-#define BOOST_REGEX_SOURCE
+#define AUTOBOOST_REGEX_SOURCE
 
-#include <boost/regex.hpp>
-#include <boost/cregex.hpp>
-#if !defined(BOOST_NO_STD_STRING)
+#include <autoboost/regex.hpp>
+#include <autoboost/cregex.hpp>
+#if !defined(AUTOBOOST_NO_STD_STRING)
 #include <map>
 #include <list>
-#include <boost/regex/v4/fileiter.hpp>
+#include <autoboost/regex/v4/fileiter.hpp>
 typedef autoboost::match_flag_type match_flag_type;
 #include <cstdio>
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #pragma warning(disable:4309)
 #endif
-#ifdef BOOST_INTEL
+#ifdef AUTOBOOST_INTEL
 #pragma warning(disable:981 383)
 #endif
 
@@ -81,12 +81,12 @@ public:
    };
    regex e;
    cmatch m;
-#ifndef BOOST_REGEX_NO_FILEITER
+#ifndef AUTOBOOST_REGEX_NO_FILEITER
    match_results<mapfile::iterator> fm;
 #endif
    type t;
    const char* pbase;
-#ifndef BOOST_REGEX_NO_FILEITER
+#ifndef AUTOBOOST_REGEX_NO_FILEITER
    mapfile::iterator fbase;
 #endif
    std::map<int, std::string, std::less<int> > strings;
@@ -94,11 +94,11 @@ public:
    void update();
    void clean();
    RegExData() : e(), m(),
-#ifndef BOOST_REGEX_NO_FILEITER
+#ifndef AUTOBOOST_REGEX_NO_FILEITER
    fm(),
 #endif
    t(type_copy), pbase(0),
-#ifndef BOOST_REGEX_NO_FILEITER
+#ifndef AUTOBOOST_REGEX_NO_FILEITER
    fbase(),
 #endif
    strings(), positions() {}
@@ -116,7 +116,7 @@ void RegExData::update()
          positions[i] = m[i].matched ? m[i].first - pbase : -1;
       }
    }
-#ifndef BOOST_REGEX_NO_FILEITER
+#ifndef AUTOBOOST_REGEX_NO_FILEITER
    else
    {
       for(unsigned int i = 0; i < fm.size(); ++i)
@@ -131,7 +131,7 @@ void RegExData::update()
 
 void RegExData::clean()
 {
-#ifndef BOOST_REGEX_NO_FILEITER
+#ifndef AUTOBOOST_REGEX_NO_FILEITER
    fbase = mapfile::iterator();
    fm = match_results<mapfile::iterator>();
 #endif
@@ -310,7 +310,7 @@ unsigned int RegEx::Grep(std::vector<std::size_t>& v, const char* p, match_flag_
       pdata->update();
    return result;
 }
-#ifndef BOOST_REGEX_NO_FILEITER
+#ifndef AUTOBOOST_REGEX_NO_FILEITER
 namespace re_detail{
 struct pred4
 {
@@ -368,7 +368,7 @@ void BuildFileList(std::list<std::string>* pl, const char* files, bool recurse)
             ++dstart;
             continue;
          }
-#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400) && !defined(_WIN32_WCE) && !defined(UNDER_CE)
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400) && !defined(_WIN32_WCE) && !defined(UNDER_CE)
          int r = (::sprintf_s)(buf, sizeof(buf), "%s%s%s", dstart.path(), directory_iterator::separator(), ptr);
 #else
          int r = (std::sprintf)(buf, "%s%s%s", dstart.path(), directory_iterator::separator(), ptr);
@@ -448,7 +448,7 @@ unsigned int RegEx::FindFiles(FindFilesCallback cb, const char* files, bool recu
 }
 #endif
 
-#ifdef BOOST_REGEX_V3
+#ifdef AUTOBOOST_REGEX_V3
 #define regex_replace regex_merge
 #endif
 
@@ -491,7 +491,7 @@ std::size_t RegEx::Position(int i)const
    {
    case re_detail::RegExData::type_pc:
       return pdata->m[i].matched ? pdata->m[i].first - pdata->pbase : RegEx::npos;
-#ifndef BOOST_REGEX_NO_FILEITER
+#ifndef AUTOBOOST_REGEX_NO_FILEITER
    case re_detail::RegExData::type_pf:
       return pdata->fm[i].matched ? pdata->fm[i].first - pdata->fbase : RegEx::npos;
 #endif
@@ -518,7 +518,7 @@ std::size_t RegEx::Length(int i)const
    {
    case re_detail::RegExData::type_pc:
       return pdata->m[i].matched ? pdata->m[i].second - pdata->m[i].first : RegEx::npos;
-#ifndef BOOST_REGEX_NO_FILEITER
+#ifndef AUTOBOOST_REGEX_NO_FILEITER
    case re_detail::RegExData::type_pf:
       return pdata->fm[i].matched ? pdata->fm[i].second - pdata->fm[i].first : RegEx::npos;
 #endif
@@ -539,7 +539,7 @@ bool RegEx::Matched(int i)const
    {
    case re_detail::RegExData::type_pc:
       return pdata->m[i].matched;
-#ifndef BOOST_REGEX_NO_FILEITER
+#ifndef AUTOBOOST_REGEX_NO_FILEITER
    case re_detail::RegExData::type_pf:
       return pdata->fm[i].matched;
 #endif      
@@ -595,7 +595,7 @@ const std::size_t RegEx::npos = ~static_cast<std::size_t>(0);
 //
 namespace std{
 template<> template<>
-basic_string<char>& BOOST_REGEX_DECL
+basic_string<char>& AUTOBOOST_REGEX_DECL
 basic_string<char>::replace<const char*>(char* f1, char* f2, const char* i1, const char* i2)
 {
    unsigned insert_pos = f1 - begin();
@@ -617,7 +617,7 @@ basic_string<char>::replace<const char*>(char* f1, char* f2, const char* i1, con
    return *this;
 }
 template<> template<>
-basic_string<wchar_t>& BOOST_REGEX_DECL
+basic_string<wchar_t>& AUTOBOOST_REGEX_DECL
 basic_string<wchar_t>::replace<const wchar_t*>(wchar_t* f1, wchar_t* f2, const wchar_t* i1, const wchar_t* i2)
 {
    unsigned insert_pos = f1 - begin();

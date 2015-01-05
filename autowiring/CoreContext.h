@@ -6,14 +6,10 @@
 #include "AutowiringEvents.h"
 #include "autowiring_error.h"
 #include "Bolt.h"
-#include "CoreContextStateBlock.h"
 #include "CoreRunnable.h"
 #include "ContextMember.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
-#include "EventOutputStream.h"
-#include "EventInputStream.h"
-#include "EventRegistry.h"
 #include "ExceptionFilter.h"
 #include "fast_pointer_cast.h"
 #include "has_autoinit.h"
@@ -28,17 +24,15 @@
 
 #include <list>
 #include MEMORY_HEADER
-#include FUNCTIONAL_HEADER
 #include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
-#include STL_UNORDERED_SET
 
+struct CoreContextStateBlock;
 class AutoInjectable;
-class DeferrableAutowiring;
 class BasicThread;
 class BoltBase;
 class CoreContext;
-class EventOutputStreamBase;
+class DeferrableAutowiring;
 class GlobalCoreContext;
 class JunctionBoxBase;
 class OutstandingCountTracker;
@@ -400,7 +394,7 @@ protected:
   template<class Fx>
   void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&)) { TeardownNotifier::AddTeardownListener([fx, this] () mutable { fx(*this); }); }
   template<class Fx>
-  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void) const) { TeardownNotifier::AddTeardownListener(fx); }
+  void AddTeardownListener2(Fx&& fx, void (Fx::*)(void) const) { TeardownNotifier::AddTeardownListener(std::forward<Fx&&>(fx)); }
 
   template<class Fx>
   void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&) const) { TeardownNotifier::AddTeardownListener([fx, this] () mutable { fx(*this); }); }
@@ -518,8 +512,10 @@ public:
     // Creator proxy, knows how to create the type we intend to inject
     typedef autowiring::CreationRules<T, Args...> CreationRules;
 
-    // Add this type to the TypeRegistry
+    // Add this type to the TypeRegistry, also ensure that we initialize support for blind
+    // fast pointer cast to Object.
     (void) RegType<T>::r;
+    (void) autowiring::fast_pointer_cast_initializer<Object, T>::sc_init;
 
     // First see if the base object type has already been injected.  This is also necessary to
     // ensure that a memo slot is created for the type by itself, in cases where the injected
@@ -553,8 +549,9 @@ public:
       FindByType(retVal);
     }
 
-    // Factory registration if sensible to do so, but only after the underlying type has been
-    // added, so that the proper type can succeed
+    // Factory registration if sensible to do so, but only after the underlying type has been added
+    // This ensures that any creation operations that happen as a consequence of factory registration
+    // can correctly back-reference the factory proper via autowiring
     RegisterFactory(*retVal, autowiring::member_new_type<typename CreationRules::TActual>());
     return std::static_pointer_cast<T>(retVal);
   }
@@ -566,21 +563,19 @@ public:
   static void InjectCurrent(void) {
     CurrentContext()->Inject<T>();
   }
+
+  /// <returns>
+  /// True if the specified type can be autowired in this context
+  /// </returns>
+  template<class T>
+  bool Has(void) const {
+    std::shared_ptr<T> ptr;
+    FindByType(ptr);
+    return ptr != nullptr;
+  }
   
   template<typename T, typename... Args>
   std::shared_ptr<T> DEPRECATED(Construct(Args&&... args), "'Construct' is deprecated, use 'Inject' instead");
-
-  /// <summary>
-  /// This method checks whether eventoutputstream listeners for the given type still exist.
-  /// For a given type in a hash, returns a vector of weak ptrs.
-  /// Goes through the weak ptrs, locks them, erases dead ones.
-  /// If any live ones found return true. Otherwise false.
-  /// NOTE: this func does lazy cleanup on weakptrs ptng to suff that has fallen out of scope.
-  /// </summary>
-  template <class T>
-  bool CheckEventOutputStream(void){
-    return m_junctionBoxManager->CheckEventOutputStream(typeid(T));
-  }
 
   /// <summary>
   /// Sends AutowiringEvents to build current state
@@ -965,24 +960,6 @@ public:
   /// Utility debug method for writing a snapshot of this context to the specified output stream
   /// </summary>
   void Dump(std::ostream& os) const;
-
-  /// <summary>
-  /// Utility routine to print information about the current exception
-  /// </summary>
-  static void DebugPrintCurrentExceptionInformation();
-
-  /// <summary>
-  /// Creates a new event stream based on the provided event type
-  /// </summary>
-  template<class T>
-  std::shared_ptr<EventOutputStream<T>> CreateEventOutputStream(void) {
-    return m_junctionBoxManager->CreateEventOutputStream<T>();
-  }
-
-  template<class T>
-  std::shared_ptr<EventInputStream<T>> CreateEventInputStream(void) {
-    return std::make_shared<EventInputStream<T>>();
-  }
 };
 
 /// <summary>
@@ -1067,6 +1044,12 @@ public:
 
 template<typename T, typename... Args>
 T* autowiring::crh<autowiring::construction_strategy::foreign_factory, T, Args...>::New(CoreContext& ctxt, Args&&... args) {
+  // We need to ensure that we can perform a find-by-type cast correctly, so
+  // the dynamic caster entry is added to the registry
+  (void) autowiring::fast_pointer_cast_initializer<Object, CoreContext::AutoFactory<T>>::sc_init;
+  (void) autowiring::fast_pointer_cast_initializer<CoreContext::AutoFactory<T>, Object>::sc_init;
+
+  // Now we can go looking for this type:
   AnySharedPointerT<CoreContext::AutoFactory<T>> af;
   ctxt.FindByType(af);
   if(!af)

@@ -59,7 +59,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8")
     message(FATAL_ERROR "GCC version 4.8 minimum is required to build Autowiring")
   endif()
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+elseif (MSVC)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "18.0")
     message(FATAL_ERROR "MSVC 2013 minimum is required to build Autowiring")
   endif()
@@ -73,7 +73,7 @@ if(NOT WIN32)
 endif()
 
 # Clang needs special additional flags to build with C++11
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
   if(autowiring_USE_LIBCXX)
     message(STATUS "AppleClang C++11")
@@ -84,10 +84,10 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
     set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
   endif()
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   message(STATUS "Clang C++11")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   message(STATUS "GCC C++11")
 endif()
 
@@ -117,7 +117,7 @@ if(AUTOWIRING_IS_EMBEDDED)
   set(AUTOWIRING_BUILD_TESTS_DEFAULT OFF)
 else()
   set(AUTOWIRING_BUILD_TESTS_DEFAULT ON)
-  
+
   # All of our binaries go to one place:  The binaries output directory.  We only want to tinker
   # with this if we're building by ourselves, otherwise we just do whatever the enclosing project
   # wants us to do.
@@ -213,10 +213,17 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
 
   # Install public header files
   install(
-    DIRECTORY ${PROJECT_SOURCE_DIR}/autowiring/
-    DESTINATION include/autowiring
+    DIRECTORY ${PROJECT_SOURCE_DIR}/autowiring
+    DESTINATION include
     COMPONENT autowiring
     FILES_MATCHING PATTERN "*.h"
+  )
+
+  # Install autoboost headers
+  install(
+    DIRECTORY ${PROJECT_SOURCE_DIR}/contrib/autoboost/autoboost
+    DESTINATION include
+    COMPONENT autowiring
   )
 
   # Targets file is needed in order to describe how to link Autowiring to the rest of the system

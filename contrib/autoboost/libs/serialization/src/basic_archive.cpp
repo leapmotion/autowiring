@@ -31,8 +31,8 @@
 //
 //  * required only for pointers - optional for objects
 
-#define BOOST_ARCHIVE_SOURCE
-#include <boost/archive/basic_archive.hpp>
+#define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/archive/basic_archive.hpp>
 
 namespace autoboost {
 namespace archive {
@@ -41,8 +41,8 @@ namespace archive {
 // constants used in archive signature
 //This should never ever change. note that is not an std::string
 // string.
-BOOST_ARCHIVE_DECL(const char *) 
-BOOST_ARCHIVE_SIGNATURE(){
+AUTOBOOST_ARCHIVE_DECL(const char *) 
+AUTOBOOST_ARCHIVE_SIGNATURE(){
     return "serialization::archive";
 }
 
@@ -72,8 +72,8 @@ BOOST_ARCHIVE_SIGNATURE(){
 //     changed version_type to be stored as 8 bits.
 // 10- fixed base64 output/input. 
 
-BOOST_ARCHIVE_DECL(library_version_type)
-BOOST_ARCHIVE_VERSION(){
+AUTOBOOST_ARCHIVE_DECL(library_version_type)
+AUTOBOOST_ARCHIVE_VERSION(){
     return library_version_type(11);
 }
 

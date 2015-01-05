@@ -1,20 +1,16 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "Autowired.h"
 #include "AutoPacket.h"
 #include "AutoFilterDescriptor.h"
 #include "ContextMember.h"
 #include "CoreRunnable.h"
+#include "TypeRegistry.h"
 #include <list>
-#include <vector>
 #include CHRONO_HEADER
-#include TYPE_INDEX_HEADER
 #include TYPE_TRAITS_HEADER
 #include STL_UNORDERED_SET
 
-struct AdjacencyEntry;
 class AutoPacketFactory;
-class Deferred;
 class DispatchQueue;
 class AutoPacketInternal;
 
@@ -33,9 +29,6 @@ public:
   ~AutoPacketFactory(void);
 
 private:
-  // Parent packet factory, if one exists:
-  Autowired<AutoPacketFactory> m_parent;
-
   // Lock for this type
   mutable std::mutex m_lock;
   
@@ -59,9 +52,6 @@ private:
 
   // Returns the internal outstanding count, for use with AutoPacket
   std::shared_ptr<void> GetInternalOutstanding(void);
-
-  // Recursive invalidation routine, causes AutoPacket object pools to be dumped to the root
-  void Invalidate(void);
 
   // Utility override, does nothing
   void AddSubscriber(std::false_type) {}
@@ -177,8 +167,7 @@ public:
 
 // Extern explicit template instantiation declarations added to prevent
 // exterior instantation of internally used template instances
-extern template class ObjectPool<AutoPacket>;
-extern template class RegType<AutoPacketFactory>;
 extern template struct SlotInformationStump<AutoPacketFactory, false>;
 extern template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;
 extern template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, Object>(const std::shared_ptr<Object>& Other);
+extern template class RegType<AutoPacketFactory>;

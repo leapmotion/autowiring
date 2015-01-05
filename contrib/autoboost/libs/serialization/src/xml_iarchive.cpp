@@ -12,24 +12,24 @@
 #  pragma warning (disable : 4786) // too long name, harmless warning
 #endif
 
-#define BOOST_ARCHIVE_SOURCE
+#define AUTOBOOST_ARCHIVE_SOURCE
 
 // the following works around an issue between spirit 1.61 and borland.
 // it turns out the the certain spirit stuff must be defined before
 // certain parts of mpl.  including this here makes sure that happens
-#include <boost/config.hpp>
-#include <boost/detail/workaround.hpp>
-#if BOOST_WORKAROUND(__BORLANDC__, <= 0x560 )
-#include <boost/archive/impl/basic_xml_grammar.hpp>
+#include <autoboost/config.hpp>
+#include <autoboost/detail/workaround.hpp>
+#if AUTOBOOST_WORKAROUND(__BORLANDC__, <= 0x560 )
+#include <autoboost/archive/impl/basic_xml_grammar.hpp>
 #endif
 
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/detail/archive_serializer_map.hpp>
+#include <autoboost/archive/xml_iarchive.hpp>
+#include <autoboost/archive/detail/archive_serializer_map.hpp>
 
 // explicitly instantiate for this type of xml stream
-#include <boost/archive/impl/archive_serializer_map.ipp>
-#include <boost/archive/impl/basic_xml_iarchive.ipp>
-#include <boost/archive/impl/xml_iarchive_impl.ipp>
+#include <autoboost/archive/impl/archive_serializer_map.ipp>
+#include <autoboost/archive/impl/basic_xml_iarchive.ipp>
+#include <autoboost/archive/impl/xml_iarchive_impl.ipp>
 
 namespace autoboost {
 namespace archive {

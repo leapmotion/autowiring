@@ -132,3 +132,10 @@ TEST_F(AutowiringTest, TestFailureOfDynamicCast) {
   ASSERT_EQ(dynamic_cast<PrivateBase*>(pub), nullptr) << "Dynamic cast failed to give nullptr when cross casting to a private base class";
   static_assert(!std::is_base_of<Derived, PrivateBase>::value, "is_base_of said a private base was a base");
 }
+
+class CompletelyUndefinedType;
+
+TEST_F(AutowiringTest, CanAutowireCompletelyUndefinedType) {
+  Autowired<CompletelyUndefinedType> cut;
+  ASSERT_EQ(nullptr, cut.get_unsafe()) << "Autowiring of a completely undefined type succeeded unexpectedly";
+}

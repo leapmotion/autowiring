@@ -12,73 +12,73 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        wc_regex_traits.cpp
-  *   VERSION:     see <boost/version.hpp>
+  *   VERSION:     see <autoboost/version.hpp>
   *   DESCRIPTION: Implements out of line members for c_regex_traits<wchar_t>
   */
 
 
-#define BOOST_REGEX_SOURCE
+#define AUTOBOOST_REGEX_SOURCE
 
-#include <boost/detail/workaround.hpp>
+#include <autoboost/detail/workaround.hpp>
 #include <memory>
 #include <string>
 #include "internals.hpp"
 
 #if defined(_DLL_CPPLIB) && !defined(_M_CEE_PURE) && defined(_NATIVE_WCHAR_T_DEFINED) \
    && !(defined(__SGI_STL_PORT) || defined(_STLPORT_VERSION) || defined(__STD_RWCOMPILER_H__) || defined(_RWSTD_VER))\
-   && BOOST_WORKAROUND(BOOST_MSVC, <1600)
+   && AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, <1600)
 //
 // This is a horrible workaround, but without declaring these symbols extern we get
 // duplicate symbol errors when linking if the application is built without
 // /Zc:wchar_t
 //
 #ifdef _CRTIMP2_PURE
-#  define BOOST_REGEX_STDLIB_DECL _CRTIMP2_PURE
+#  define AUTOBOOST_REGEX_STDLIB_DECL _CRTIMP2_PURE
 #else
-#  define BOOST_REGEX_STDLIB_DECL _CRTIMP2
+#  define AUTOBOOST_REGEX_STDLIB_DECL _CRTIMP2
 #endif
 
 namespace std{
 
-#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
-template class BOOST_REGEX_STDLIB_DECL allocator<unsigned short>;
-template class BOOST_REGEX_STDLIB_DECL _String_val<unsigned short, allocator<unsigned short> >;
-template class BOOST_REGEX_STDLIB_DECL basic_string<unsigned short, char_traits<unsigned short>, allocator<unsigned short> >;
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, >= 1400)
+template class AUTOBOOST_REGEX_STDLIB_DECL allocator<unsigned short>;
+template class AUTOBOOST_REGEX_STDLIB_DECL _String_val<unsigned short, allocator<unsigned short> >;
+template class AUTOBOOST_REGEX_STDLIB_DECL basic_string<unsigned short, char_traits<unsigned short>, allocator<unsigned short> >;
 #endif
 
-#if BOOST_WORKAROUND(BOOST_MSVC, > 1300) && BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1400))
-template<> BOOST_REGEX_STDLIB_DECL std::size_t __cdecl char_traits<unsigned short>::length(unsigned short const*);
+#if AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, > 1300) && AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, AUTOBOOST_TESTED_AT(1400))
+template<> AUTOBOOST_REGEX_STDLIB_DECL std::size_t __cdecl char_traits<unsigned short>::length(unsigned short const*);
 #endif
 
-template BOOST_REGEX_STDLIB_DECL bool __cdecl operator==(
+template AUTOBOOST_REGEX_STDLIB_DECL bool __cdecl operator==(
    const basic_string<unsigned short, char_traits<unsigned short>, allocator<unsigned short> >&,
    const basic_string<unsigned short, char_traits<unsigned short>, allocator<unsigned short> >&);
-template BOOST_REGEX_STDLIB_DECL bool __cdecl operator==(
+template AUTOBOOST_REGEX_STDLIB_DECL bool __cdecl operator==(
    const unsigned short *,
    const basic_string<unsigned short, char_traits<unsigned short>, allocator<unsigned short> >&);
-template BOOST_REGEX_STDLIB_DECL bool __cdecl operator==(
+template AUTOBOOST_REGEX_STDLIB_DECL bool __cdecl operator==(
    const basic_string<unsigned short, char_traits<unsigned short>, allocator<unsigned short> >&,
    const unsigned short *);
-template BOOST_REGEX_STDLIB_DECL bool __cdecl operator<(
+template AUTOBOOST_REGEX_STDLIB_DECL bool __cdecl operator<(
    const basic_string<unsigned short, char_traits<unsigned short>, allocator<unsigned short> >&,
    const basic_string<unsigned short, char_traits<unsigned short>, allocator<unsigned short> >&);
-template BOOST_REGEX_STDLIB_DECL bool __cdecl operator>(
+template AUTOBOOST_REGEX_STDLIB_DECL bool __cdecl operator>(
    const basic_string<unsigned short, char_traits<unsigned short>, allocator<unsigned short> >&,
    const basic_string<unsigned short, char_traits<unsigned short>, allocator<unsigned short> >&);
 }
 #endif
 
-#include <boost/regex/config.hpp>
-#include <boost/detail/workaround.hpp>
+#include <autoboost/regex/config.hpp>
+#include <autoboost/detail/workaround.hpp>
 
-#if !BOOST_WORKAROUND(__BORLANDC__, < 0x560)
+#if !AUTOBOOST_WORKAROUND(__BORLANDC__, < 0x560)
 
-#include <boost/regex/v4/c_regex_traits.hpp>
-#ifndef BOOST_NO_WREGEX
-#include <boost/regex/v4/primary_transform.hpp>
-#include <boost/regex/v4/regex_traits_defaults.hpp>
+#include <autoboost/regex/v4/c_regex_traits.hpp>
+#ifndef AUTOBOOST_NO_WREGEX
+#include <autoboost/regex/v4/primary_transform.hpp>
+#include <autoboost/regex/v4/regex_traits_defaults.hpp>
 
-#if defined(BOOST_NO_STDC_NAMESPACE)
+#if defined(AUTOBOOST_NO_STDC_NAMESPACE)
 namespace std{
    using ::wcstol;
 }
@@ -86,7 +86,7 @@ namespace std{
 
 namespace autoboost{
 
-c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::transform(const wchar_t* p1, const wchar_t* p2) 
+c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::transform(const wchar_t* p1, const wchar_t* p2) 
 { 
    std::size_t r;
    std::size_t s = 10;
@@ -114,7 +114,7 @@ c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::t
    return result; 
 }
 
-c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::transform_primary(const wchar_t* p1, const wchar_t* p2) 
+c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::transform_primary(const wchar_t* p1, const wchar_t* p2) 
 {
    static wchar_t s_delim;
    static const int s_collate_type = ::autoboost::re_detail::find_sort_syntax(static_cast<const c_regex_traits<wchar_t>*>(0), &s_delim);
@@ -161,7 +161,7 @@ c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::t
    return result;
 }
 
-c_regex_traits<wchar_t>::char_class_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::lookup_classname(const wchar_t* p1, const wchar_t* p2) 
+c_regex_traits<wchar_t>::char_class_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::lookup_classname(const wchar_t* p1, const wchar_t* p2) 
 {
    static const char_class_type masks[] = 
    {
@@ -197,11 +197,11 @@ c_regex_traits<wchar_t>::char_class_type BOOST_REGEX_CALL c_regex_traits<wchar_t
          s[i] = (std::towlower)(s[i]);
       idx = ::autoboost::re_detail::get_default_class_id(&*s.begin(), &*s.begin() + s.size());
    }
-   BOOST_ASSERT(idx+1 < static_cast<int>(sizeof(masks) / sizeof(masks[0])));
+   AUTOBOOST_ASSERT(idx+1 < static_cast<int>(sizeof(masks) / sizeof(masks[0])));
    return masks[idx+1];
 }
 
-bool BOOST_REGEX_CALL c_regex_traits<wchar_t>::isctype(wchar_t c, char_class_type mask) 
+bool AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::isctype(wchar_t c, char_class_type mask) 
 {
    return
       ((mask & char_class_space) && (std::iswspace)(c))
@@ -220,11 +220,11 @@ bool BOOST_REGEX_CALL c_regex_traits<wchar_t>::isctype(wchar_t c, char_class_typ
       || ((mask & char_class_horizontal) && (std::iswspace)(c) && !::autoboost::re_detail::is_separator(c) && (c != L'\v'));
 }
 
-c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::lookup_collatename(const wchar_t* p1, const wchar_t* p2) 
+c_regex_traits<wchar_t>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::lookup_collatename(const wchar_t* p1, const wchar_t* p2) 
 {
-#if !defined(BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS)\
-               && !BOOST_WORKAROUND(BOOST_MSVC, < 1300)\
-               && !BOOST_WORKAROUND(__BORLANDC__, <= 0x0551)
+#if !defined(AUTOBOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS)\
+               && !AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300)\
+               && !AUTOBOOST_WORKAROUND(__BORLANDC__, <= 0x0551)
    std::string name(p1, p2);
 #else
    std::string name;
@@ -233,9 +233,9 @@ c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::l
       name.append(1, char(*p0++));
 #endif
    name = ::autoboost::re_detail::lookup_default_collate_name(name);
-#if !defined(BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS)\
-               && !BOOST_WORKAROUND(BOOST_MSVC, < 1300)\
-               && !BOOST_WORKAROUND(__BORLANDC__, <= 0x0551)
+#if !defined(AUTOBOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS)\
+               && !AUTOBOOST_WORKAROUND(AUTOBOOST_MSVC, < 1300)\
+               && !AUTOBOOST_WORKAROUND(__BORLANDC__, <= 0x0551)
    if(name.size())
       return string_type(name.begin(), name.end());
 #else
@@ -255,7 +255,7 @@ c_regex_traits<wchar_t>::string_type BOOST_REGEX_CALL c_regex_traits<wchar_t>::l
    return string_type();
 }
 
-int BOOST_REGEX_CALL c_regex_traits<wchar_t>::value(wchar_t c, int radix) 
+int AUTOBOOST_REGEX_CALL c_regex_traits<wchar_t>::value(wchar_t c, int radix) 
 {
 #ifdef __BORLANDC__
    // workaround for broken wcstol:
@@ -270,36 +270,36 @@ int BOOST_REGEX_CALL c_regex_traits<wchar_t>::value(wchar_t c, int radix)
    return result;
 }
 
-#ifdef BOOST_REGEX_HAS_OTHER_WCHAR_T
-c_regex_traits<unsigned short>::string_type BOOST_REGEX_CALL c_regex_traits<unsigned short>::transform(const unsigned short* p1, const unsigned short* p2)
+#ifdef AUTOBOOST_REGEX_HAS_OTHER_WCHAR_T
+c_regex_traits<unsigned short>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<unsigned short>::transform(const unsigned short* p1, const unsigned short* p2)
 {
    std::wstring result = c_regex_traits<wchar_t>::transform((const wchar_t*)p1, (const wchar_t*)p2);
    return string_type(result.begin(), result.end());
 }
 
-c_regex_traits<unsigned short>::string_type BOOST_REGEX_CALL c_regex_traits<unsigned short>::transform_primary(const unsigned short* p1, const unsigned short* p2)
+c_regex_traits<unsigned short>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<unsigned short>::transform_primary(const unsigned short* p1, const unsigned short* p2)
 {
    std::wstring result = c_regex_traits<wchar_t>::transform_primary((const wchar_t*)p1, (const wchar_t*)p2);
    return string_type(result.begin(), result.end());
 }
 
-c_regex_traits<unsigned short>::char_class_type BOOST_REGEX_CALL c_regex_traits<unsigned short>::lookup_classname(const unsigned short* p1, const unsigned short* p2)
+c_regex_traits<unsigned short>::char_class_type AUTOBOOST_REGEX_CALL c_regex_traits<unsigned short>::lookup_classname(const unsigned short* p1, const unsigned short* p2)
 {
    return c_regex_traits<wchar_t>::lookup_classname((const wchar_t*)p1, (const wchar_t*)p2);
 }
 
-c_regex_traits<unsigned short>::string_type BOOST_REGEX_CALL c_regex_traits<unsigned short>::lookup_collatename(const unsigned short* p1, const unsigned short* p2)
+c_regex_traits<unsigned short>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<unsigned short>::lookup_collatename(const unsigned short* p1, const unsigned short* p2)
 {
    std::wstring result = c_regex_traits<wchar_t>::lookup_collatename((const wchar_t*)p1, (const wchar_t*)p2);
    return string_type(result.begin(), result.end());
 }
 
-bool BOOST_REGEX_CALL c_regex_traits<unsigned short>::isctype(unsigned short c, char_class_type m)
+bool AUTOBOOST_REGEX_CALL c_regex_traits<unsigned short>::isctype(unsigned short c, char_class_type m)
 {
    return c_regex_traits<wchar_t>::isctype(c, m);
 }
 
-int BOOST_REGEX_CALL c_regex_traits<unsigned short>::value(unsigned short c, int radix)
+int AUTOBOOST_REGEX_CALL c_regex_traits<unsigned short>::value(unsigned short c, int radix)
 {
    return c_regex_traits<wchar_t>::value(c, radix);
 }
@@ -308,7 +308,7 @@ int BOOST_REGEX_CALL c_regex_traits<unsigned short>::value(unsigned short c, int
 
 }
 
-#endif // BOOST_NO_WREGEX
+#endif // AUTOBOOST_NO_WREGEX
 
 #endif // __BORLANDC__
 

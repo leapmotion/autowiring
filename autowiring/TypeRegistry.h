@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "autowiring_error.h"
 #include "CreationRules.h"
 #include "TypeIdentifier.h"
-#include STL_TUPLE_HEADER
 #include MEMORY_HEADER
 
 namespace autowiring {
@@ -99,3 +99,4 @@ public:
 
 template<class T>
 const TypeRegistryEntryT<T> RegType<T>::r;
+

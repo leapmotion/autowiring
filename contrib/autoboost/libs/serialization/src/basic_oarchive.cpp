@@ -8,32 +8,32 @@
 
 //  See http://www.boost.org for updates, documentation, and revision history.
 
-#include <boost/config.hpp> // msvc 6.0 needs this for warning suppression
+#include <autoboost/config.hpp> // msvc 6.0 needs this for warning suppression
 
-#include <boost/assert.hpp>
+#include <autoboost/assert.hpp>
 #include <set>
 #include <cstddef> // NULL
 
-#include <boost/limits.hpp>
-#include <boost/serialization/state_saver.hpp>
-#include <boost/serialization/throw_exception.hpp>
+#include <autoboost/limits.hpp>
+#include <autoboost/serialization/state_saver.hpp>
+#include <autoboost/serialization/throw_exception.hpp>
 
 // including this here to work around an ICC in intel 7.0
 // normally this would be part of basic_oarchive.hpp below.
-#define BOOST_ARCHIVE_SOURCE
+#define AUTOBOOST_ARCHIVE_SOURCE
 // include this to prevent linker errors when the
 // same modules are marked export and import.
-#define BOOST_SERIALIZATION_SOURCE
+#define AUTOBOOST_SERIALIZATION_SOURCE
 
-#include <boost/archive/detail/decl.hpp>
-#include <boost/archive/basic_archive.hpp>
-#include <boost/archive/detail/basic_oserializer.hpp>
-#include <boost/archive/detail/basic_pointer_oserializer.hpp>
-#include <boost/archive/detail/basic_oarchive.hpp>
-#include <boost/archive/archive_exception.hpp>
-#include <boost/serialization/extended_type_info.hpp>
+#include <autoboost/archive/detail/decl.hpp>
+#include <autoboost/archive/basic_archive.hpp>
+#include <autoboost/archive/detail/basic_oserializer.hpp>
+#include <autoboost/archive/detail/basic_pointer_oserializer.hpp>
+#include <autoboost/archive/detail/basic_oarchive.hpp>
+#include <autoboost/archive/archive_exception.hpp>
+#include <autoboost/serialization/extended_type_info.hpp>
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(push)
 #  pragma warning(disable : 4251 4231 4660 4275)
 #endif
@@ -59,8 +59,8 @@ class basic_oarchive_impl {
 
         bool operator<(const aobject &rhs) const
         {
-            BOOST_ASSERT(NULL != address);
-            BOOST_ASSERT(NULL != rhs.address);
+            AUTOBOOST_ASSERT(NULL != address);
+            AUTOBOOST_ASSERT(NULL != rhs.address);
             if( address < rhs.address )
                 return true;
             if( address > rhs.address )
@@ -170,7 +170,7 @@ class basic_oarchive_impl {
 // return NULL if not found
 inline const basic_oserializer *
 basic_oarchive_impl::find(const serialization::extended_type_info & ti) const {
-    #ifdef BOOST_MSVC
+    #ifdef AUTOBOOST_MSVC
     #  pragma warning(push)
     #  pragma warning(disable : 4511 4512)
     #endif
@@ -178,35 +178,35 @@ basic_oarchive_impl::find(const serialization::extended_type_info & ti) const {
         public basic_oserializer
     {
         bool class_info() const {
-            BOOST_ASSERT(false); 
+            AUTOBOOST_ASSERT(false); 
             return false;
         }
         // returns true if objects should be tracked
         bool tracking(const unsigned int) const {
-            BOOST_ASSERT(false);
+            AUTOBOOST_ASSERT(false);
             return false;
         }
         // returns class version
         version_type version() const {
-            BOOST_ASSERT(false);
+            AUTOBOOST_ASSERT(false);
             return version_type(0);
         }
         // returns true if this class is polymorphic
         bool is_polymorphic() const{
-            BOOST_ASSERT(false);
+            AUTOBOOST_ASSERT(false);
             return false;
         }
         void save_object_data(      
             basic_oarchive & /*ar*/, const void * /*x*/
         ) const {
-            BOOST_ASSERT(false);
+            AUTOBOOST_ASSERT(false);
         }
     public:
         bosarg(const serialization::extended_type_info & eti) :
           autoboost::archive::detail::basic_oserializer(eti)
         {}
     };
-    #ifdef BOOST_MSVC
+    #ifdef AUTOBOOST_MSVC
     #pragma warning(pop)
     #endif
     bosarg bos(ti);
@@ -331,7 +331,7 @@ basic_oarchive_impl::save_pointer(
                     // makes a copy when passing a non-const to a const.  This
                     // is permitted by the standard but rarely seen in practice
                     const class_name_type cn(key);
-                    if(cn.size() > (BOOST_SERIALIZATION_MAX_KEY_SIZE - 1))
+                    if(cn.size() > (AUTOBOOST_SERIALIZATION_MAX_KEY_SIZE - 1))
                         autoboost::serialization::throw_exception(
                             autoboost::archive::archive_exception(
                                 autoboost::archive::archive_exception::
@@ -410,18 +410,18 @@ namespace autoboost {
 namespace archive {
 namespace detail {
 
-BOOST_ARCHIVE_DECL(BOOST_PP_EMPTY()) 
+AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
 basic_oarchive::basic_oarchive(unsigned int flags)
     : pimpl(new basic_oarchive_impl(flags))
 {}
 
-BOOST_ARCHIVE_DECL(BOOST_PP_EMPTY()) 
+AUTOBOOST_ARCHIVE_DECL(AUTOBOOST_PP_EMPTY()) 
 basic_oarchive::~basic_oarchive()
 {
     delete pimpl;
 }
 
-BOOST_ARCHIVE_DECL(void) 
+AUTOBOOST_ARCHIVE_DECL(void) 
 basic_oarchive::save_object(
     const void *x, 
     const basic_oserializer & bos
@@ -429,7 +429,7 @@ basic_oarchive::save_object(
     pimpl->save_object(*this, x, bos);
 }
 
-BOOST_ARCHIVE_DECL(void) 
+AUTOBOOST_ARCHIVE_DECL(void) 
 basic_oarchive::save_pointer(
     const void * t, 
     const basic_pointer_oserializer * bpos_ptr
@@ -437,22 +437,22 @@ basic_oarchive::save_pointer(
     pimpl->save_pointer(*this, t, bpos_ptr);
 }
 
-BOOST_ARCHIVE_DECL(void) 
+AUTOBOOST_ARCHIVE_DECL(void) 
 basic_oarchive::register_basic_serializer(const basic_oserializer & bos){
     pimpl->register_type(bos);
 }
 
-BOOST_ARCHIVE_DECL(library_version_type)
+AUTOBOOST_ARCHIVE_DECL(library_version_type)
 basic_oarchive::get_library_version() const{
-    return BOOST_ARCHIVE_VERSION();
+    return AUTOBOOST_ARCHIVE_VERSION();
 }
 
-BOOST_ARCHIVE_DECL(unsigned int)
+AUTOBOOST_ARCHIVE_DECL(unsigned int)
 basic_oarchive::get_flags() const{
     return pimpl->m_flags;
 }
 
-BOOST_ARCHIVE_DECL(void) 
+AUTOBOOST_ARCHIVE_DECL(void) 
 basic_oarchive::end_preamble(){
 }
 
@@ -460,6 +460,6 @@ basic_oarchive::end_preamble(){
 } // namespace archive
 } // namespace autoboost
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #pragma warning(pop)
 #endif

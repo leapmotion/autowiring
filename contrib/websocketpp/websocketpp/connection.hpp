@@ -155,23 +155,12 @@ typedef lib::function<void(lib::error_code const & ec, size_t bytes_transferred)
 typedef lib::function<void(lib::error_code const & ec)> write_frame_handler;
 
 // constants related to the default WebSocket protocol versions available
-#ifdef _WEBSOCKETPP_INITIALIZER_LISTS_ // simplified C++11 version
     /// Container that stores the list of protocol versions supported
     /**
      * @todo Move this to configs to allow compile/runtime disabling or enabling
      * of protocol versions
      */
-    static std::vector<int> const versions_supported = {0,7,8,13};
-#else
-    /// Helper array to get around lack of initializer lists pre C++11
-    static int const helper[] = {0,7,8,13};
-    /// Container that stores the list of protocol versions supported
-    /**
-     * @todo Move this to configs to allow compile/runtime disabling or enabling
-     * of protocol versions
-     */
-    static std::vector<int> const versions_supported(helper,helper+4);
-#endif
+    static std::array<int, 4> const versions_supported{{0, 7, 8, 13}};
 
 namespace session {
 namespace state {
@@ -1168,7 +1157,7 @@ public:
     void read_frame();
 
     /// Get array of WebSocket protocol versions that this connection supports.
-    const std::vector<int>& get_supported_versions() const;
+    std::vector<int> get_supported_versions() const;
 
     /// Sets the handler for a terminating connection. Should only be used
     /// internally by the endpoint class.

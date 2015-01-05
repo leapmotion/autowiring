@@ -12,19 +12,19 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         regex_raw_buffer.cpp
-  *   VERSION      see <boost/version.hpp>
+  *   VERSION      see <autoboost/version.hpp>
   *   DESCRIPTION: Member functions for class raw_storage.
   */
 
 
-#define BOOST_REGEX_SOURCE
-#include <boost/config.hpp>
+#define AUTOBOOST_REGEX_SOURCE
+#include <autoboost/config.hpp>
 #include <memory>
 #include <cstring>
-#include <boost/assert.hpp>
-#include <boost/regex/v4/regex_raw_buffer.hpp>
+#include <autoboost/assert.hpp>
+#include <autoboost/regex/v4/regex_raw_buffer.hpp>
 
-#if defined(BOOST_NO_STDC_NAMESPACE)
+#if defined(AUTOBOOST_NO_STDC_NAMESPACE)
 namespace std{
    using ::memcpy;
    using ::memmove;
@@ -34,7 +34,7 @@ namespace std{
 
 namespace autoboost{ namespace re_detail{
 
-void BOOST_REGEX_CALL raw_storage::resize(size_type n)
+void AUTOBOOST_REGEX_CALL raw_storage::resize(size_type n)
 {
    register size_type newsize = start ? last - start : 1024;
    while(newsize < n)
@@ -45,7 +45,7 @@ void BOOST_REGEX_CALL raw_storage::resize(size_type n)
 
    // allocate and copy data:
    register pointer ptr = static_cast<pointer>(::operator new(newsize));
-   BOOST_REGEX_NOEH_ASSERT(ptr)
+   AUTOBOOST_REGEX_NOEH_ASSERT(ptr)
    if(start)
       std::memcpy(ptr, start, datasize);
 
@@ -58,9 +58,9 @@ void BOOST_REGEX_CALL raw_storage::resize(size_type n)
    last = ptr + newsize;
 }
 
-void* BOOST_REGEX_CALL raw_storage::insert(size_type pos, size_type n)
+void* AUTOBOOST_REGEX_CALL raw_storage::insert(size_type pos, size_type n)
 {
-   BOOST_ASSERT(pos <= size_type(end - start));
+   AUTOBOOST_ASSERT(pos <= size_type(end - start));
    if(size_type(last - end) < n)
       resize(n + (end - start));
    register void* result = start + pos;

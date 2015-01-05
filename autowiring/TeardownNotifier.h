@@ -1,8 +1,6 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "C++11/cpp11.h"
-#include <list>
-#include FUNCTIONAL_HEADER
+#include RVALUE_HEADER
 
 /// <summary>
 /// Maintains a list of lambdas to be invoked when the enclosing object is being destroyed
@@ -10,11 +8,37 @@
 class TeardownNotifier
 {
 public:
+  TeardownNotifier(void);
   ~TeardownNotifier(void);
 
 protected:
+  struct EntryBase
+  {
+  public:
+    EntryBase(void):
+      pFlink(nullptr)
+    {}
+    virtual ~EntryBase(void) {}
+    virtual void operator()(void) = 0;
+
+    EntryBase* pFlink;
+  };
+
+  template<class Fx>
+  struct Entry:
+    EntryBase
+  {
+    Entry(Fx&& fx):
+      fx(std::forward<Fx&&>(fx))
+    {}
+    
+    Fx fx;
+
+    void operator()(void) override { fx(); }
+  };
+
   // Teardown listeners, invoked in sequence when the context is tearing down
-  std::list<std::function<void()>> m_teardownListeners;
+  EntryBase* m_pFirstTeardownListener;
 
   /// <summary>
   /// May be invoked prospectively by a derived instance to prematurely notify teardown listeners
@@ -31,6 +55,11 @@ protected:
   /// </remarks>
   void NotifyTeardownListeners(void);
 
+  /// <summary>
+  /// Runtime version of AddTeardownListener
+  /// </summary>
+  void AddTeardownListenerInternal(EntryBase* listener);
+
 public:
   /// <summary>
   /// Registers the passed listener to be called when teardown is occurring for this object
@@ -46,5 +75,8 @@ public:
   /// destructor.  Unless otherwise stated by the object in question, however, the object should be
   /// treated as invalid at the time of notification.
   /// </remarks>
-  void AddTeardownListener(const std::function<void ()>& listener);
+  template<class Fx>
+  void AddTeardownListener(Fx&& listener) {
+    AddTeardownListenerInternal(new Entry<Fx>(std::forward<Fx&&>(listener)));
+  }
 };

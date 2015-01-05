@@ -4,7 +4,7 @@
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/coroutine/exceptions.hpp>
+#include <autoboost/coroutine/exceptions.hpp>
 
 namespace autoboost {
 namespace coroutines {
@@ -12,12 +12,12 @@ namespace coroutines {
 class coroutine_error_category : public system::error_category
 {
 public:
-    virtual const char* name() const BOOST_NOEXCEPT
+    virtual const char* name() const AUTOBOOST_NOEXCEPT
     { return "coroutine"; }
 
     virtual std::string message( int ev) const
     {
-        switch (BOOST_SCOPED_ENUM_NATIVE(coroutine_errc)(ev))
+        switch (AUTOBOOST_SCOPED_ENUM_NATIVE(coroutine_errc)(ev))
         {
         case coroutine_errc::no_data:
             return std::string("Operation not permitted because coroutine "
@@ -27,7 +27,7 @@ public:
     }
 };
 
-system::error_category const& coroutine_category() BOOST_NOEXCEPT
+system::error_category const& coroutine_category() AUTOBOOST_NOEXCEPT
 {
     static coroutines::coroutine_error_category cat;
     return cat;

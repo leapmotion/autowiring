@@ -8,9 +8,6 @@
 #include "has_autofilter.h"
 #include "is_shared_ptr.h"
 #include MEMORY_HEADER
-#include FUNCTIONAL_HEADER
-#include STL_UNORDERED_SET
-#include STL_UNORDERED_MAP
 
 class AutoPacket;
 class Deferred;

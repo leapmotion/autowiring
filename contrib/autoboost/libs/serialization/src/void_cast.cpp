@@ -13,9 +13,9 @@
 # pragma warning (disable : 4786) // too long name, harmless warning
 #endif
 
-#include <boost/assert.hpp>
+#include <autoboost/assert.hpp>
 #include <cstddef> // NULL
-#ifdef BOOST_SERIALIZATION_LOG
+#ifdef AUTOBOOST_SERIALIZATION_LOG
 #include <iostream>
 #endif
 
@@ -23,13 +23,13 @@
 #include <set>
 #include <functional>
 #include <algorithm>
-#include <boost/assert.hpp>
+#include <autoboost/assert.hpp>
 
-// BOOST
-#define BOOST_SERIALIZATION_SOURCE
-#include <boost/serialization/singleton.hpp>
-#include <boost/serialization/extended_type_info.hpp>
-#include <boost/serialization/void_cast.hpp>
+// AUTOBOOST
+#define AUTOBOOST_SERIALIZATION_SOURCE
+#include <autoboost/serialization/singleton.hpp>
+#include <autoboost/serialization/extended_type_info.hpp>
+#include <autoboost/serialization/void_cast.hpp>
 
 namespace autoboost { 
 namespace serialization {
@@ -65,7 +65,7 @@ struct void_caster_compare {
 typedef std::set<const void_caster *, void_caster_compare> set_type;
 typedef autoboost::serialization::singleton<set_type> void_caster_registry;
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(push)
 #  pragma warning(disable : 4511 4512)
 #endif
@@ -119,7 +119,7 @@ public:
     }
 };
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(pop)
 #endif
 
@@ -175,7 +175,7 @@ void_caster_shortcut::vbc_upcast(
     return NULL;
 }
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(push)
 #  pragma warning(disable : 4511 4512)
 #endif
@@ -185,16 +185,16 @@ class void_caster_argument : public void_caster
 {
     virtual void const *
     upcast(void const * const /*t*/) const {
-        BOOST_ASSERT(false);
+        AUTOBOOST_ASSERT(false);
         return NULL;
     }
     virtual void const *
     downcast( void const * const /*t*/) const {
-        BOOST_ASSERT(false);
+        AUTOBOOST_ASSERT(false);
         return NULL;
     }
     virtual bool has_virtual_base() const {
-        BOOST_ASSERT(false);
+        AUTOBOOST_ASSERT(false);
         return false;
     }
 public:
@@ -207,17 +207,17 @@ public:
     virtual ~void_caster_argument(){};
 };
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(pop)
 #endif
 
 // implementation of void caster base class
-BOOST_SERIALIZATION_DECL(void)
+AUTOBOOST_SERIALIZATION_DECL(void)
 void_caster::recursive_register(bool includes_virtual_base) const {
     void_cast_detail::set_type & s
         = void_cast_detail::void_caster_registry::get_mutable_instance();
 
-    #ifdef BOOST_SERIALIZATION_LOG
+    #ifdef AUTOBOOST_SERIALIZATION_LOG
     std::clog << "recursive_register\n";
     std::clog << m_derived->get_debug_info();
     std::clog << "<-";
@@ -270,12 +270,12 @@ void_caster::recursive_register(bool includes_virtual_base) const {
     }
 }
 
-BOOST_SERIALIZATION_DECL(void)
+AUTOBOOST_SERIALIZATION_DECL(void)
 void_caster::recursive_unregister() const {
     if(void_caster_registry::is_destroyed())
         return;
 
-    #ifdef BOOST_SERIALIZATION_LOG
+    #ifdef AUTOBOOST_SERIALIZATION_LOG
     std::clog << "recursive_unregister\n";
     std::clog << m_derived->get_debug_info();
     std::clog << "<-";
@@ -310,7 +310,7 @@ void_caster::recursive_unregister() const {
 // and alter it so that it would point to an instance of a related type.
 // Return the altered pointer. If there exists no sequence of casts that
 // can transform from_type to to_type, return a NULL.  
-BOOST_SERIALIZATION_DECL(void const *)  
+AUTOBOOST_SERIALIZATION_DECL(void const *)  
 void_upcast(
     extended_type_info const & derived,
     extended_type_info const & base,
@@ -333,7 +333,7 @@ void_upcast(
     return NULL;
 }
 
-BOOST_SERIALIZATION_DECL(void const *)  
+AUTOBOOST_SERIALIZATION_DECL(void const *)  
 void_downcast(
     extended_type_info const & derived,
     extended_type_info const & base,

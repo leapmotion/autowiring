@@ -32,11 +32,11 @@
 #include <websocketpp/common/functional.hpp>
 #include <websocketpp/common/system_error.hpp>
 
-#include <boost/system/error_code.hpp>
+#include <autoboost/system/error_code.hpp>
 
-#include <boost/aligned_storage.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/array.hpp>
+#include <autoboost/aligned_storage.hpp>
+#include <autoboost/noncopyable.hpp>
+#include <autoboost/array.hpp>
 
 #include <string>
 

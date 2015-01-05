@@ -9,13 +9,13 @@
 
 //----------------------------------------------------------------------------//
 
-// define BOOST_SYSTEM_SOURCE so that <boost/system/config.hpp> knows
+// define AUTOBOOST_SYSTEM_SOURCE so that <autoboost/system/config.hpp> knows
 // the library is being built (possibly exporting rather than importing code)
 #include "stdafx.h"
-#define BOOST_SYSTEM_SOURCE
+#define AUTOBOOST_SYSTEM_SOURCE
 
-#include <boost/system/error_code.hpp>
+#include <autoboost/system/error_code.hpp>
 
-#ifndef BOOST_ERROR_CODE_HEADER_ONLY
-#include <boost/system/detail/error_code.ipp>
+#ifndef AUTOBOOST_ERROR_CODE_HEADER_ONLY
+#include <autoboost/system/detail/error_code.ipp>
 #endif

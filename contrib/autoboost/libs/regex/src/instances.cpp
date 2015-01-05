@@ -12,21 +12,21 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        instances.cpp
-  *   VERSION:     see <boost/version.hpp>
+  *   VERSION:     see <autoboost/version.hpp>
   *   DESCRIPTION: regex narrow character template instances.
   */
 
-#define BOOST_REGEX_SOURCE
+#define AUTOBOOST_REGEX_SOURCE
 
-#include <boost/regex/config.hpp>
+#include <autoboost/regex/config.hpp>
 
-#if !defined(BOOST_REGEX_NO_EXTERNAL_TEMPLATES)
-#define BOOST_REGEX_NARROW_INSTANTIATE
+#if !defined(AUTOBOOST_REGEX_NO_EXTERNAL_TEMPLATES)
+#define AUTOBOOST_REGEX_NARROW_INSTANTIATE
 
 #ifdef __BORLANDC__
 #pragma hrdstop
 #endif
 
-#include <boost/regex.hpp>
+#include <autoboost/regex.hpp>
 
 #endif

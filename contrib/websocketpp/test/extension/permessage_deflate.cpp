@@ -26,7 +26,7 @@
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE permessage_deflate
-#include <boost/test/unit_test.hpp>
+#include <autoboost/test/unit_test.hpp>
 
 #include <websocketpp/error.hpp>
 

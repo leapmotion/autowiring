@@ -1,13 +1,11 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "autowiring_error.h"
-#include "ContextMember.h"
 #include "has_simple_constructor.h"
 #include "has_static_new.h"
 #include "SlotInformation.h"
-#include TYPE_TRAITS_HEADER
 #include RVALUE_HEADER
-#include <new>
+
+class CoreContext;
 
 template<typename T>
 struct is_injectable

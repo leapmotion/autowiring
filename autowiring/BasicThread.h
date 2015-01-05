@@ -2,9 +2,10 @@
 #pragma once
 #include "ContextMember.h"
 #include "CoreRunnable.h"
+#include CHRONO_HEADER
+#include FUNCTIONAL_HEADER
 #include MEMORY_HEADER
 #include MUTEX_HEADER
-#include CHRONO_HEADER
 
 struct BasicThreadStateBlock;
 class BasicThread;

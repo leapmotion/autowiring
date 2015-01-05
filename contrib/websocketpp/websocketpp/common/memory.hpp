@@ -37,10 +37,10 @@
 #ifdef _WEBSOCKETPP_CPP11_MEMORY_
     #include <memory>
 #else
-    #include <boost/shared_ptr.hpp>
-    #include <boost/scoped_array.hpp>
-    #include <boost/enable_shared_from_this.hpp>
-    #include <boost/pointer_cast.hpp>
+    #include <autoboost/shared_ptr.hpp>
+    #include <autoboost/scoped_array.hpp>
+    #include <autoboost/enable_shared_from_this.hpp>
+    #include <autoboost/pointer_cast.hpp>
 #endif
 
 namespace websocketpp {

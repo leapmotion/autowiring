@@ -15,13 +15,9 @@
   #define STL11_ALLOWED 1
 #endif
 
-// If Autowiring is currently being built, we want to use the "autoboost" namespace in order to
-// avoid requiring a dependency on Boost.
-#ifdef AUTOWIRING_IS_BEING_BUILT
-  #define AUTOWIRING_BOOST_NAME autoboost
-#else
-  #define AUTOWIRING_BOOST_NAME boost
-#endif
+// Deprecated macros, provided here until we can be sure that they aren't used downstream
+#define throw_rethrowable throw
+#define EXCEPTION_PTR_HEADER <stdexcept>
 
 #define IS_CLANG defined(__clang_major__)
 #define CLANG_CHECK(maj, min) (__clang_major__ == maj && __clang_minor__ >= min || __clang_major__ > maj)
@@ -92,16 +88,6 @@
 
 #if defined(_MSC_VER) || !IS_CLANG
   #define AUTOWIRE_cxx_override_control 1
-#endif
-
-/*********************
- * exception_ptr availability
- *********************/
-#if (defined(__APPLE__) && !defined(_LIBCPP_VERSION))
-  #define EXCEPTION_PTR_HEADER <autowiring/C++11/boost_exception_ptr.h>
-#else
-  #define EXCEPTION_PTR_HEADER <stdexcept>
-  #define throw_rethrowable throw
 #endif
 
 /*********************

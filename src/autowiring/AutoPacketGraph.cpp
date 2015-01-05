@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include FUNCTIONAL_HEADER
 
 AutoPacketGraph::AutoPacketGraph() {
@@ -106,7 +107,7 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
 }
 
 bool AutoPacketGraph::WriteGV(const std::string& filename, bool numPackets) const {
-  std::ofstream file(filename);
+  std::ofstream file(filename.c_str());
   if (!file && !file.good()) {
     return false;
   }

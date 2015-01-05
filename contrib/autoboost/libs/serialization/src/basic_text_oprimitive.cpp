@@ -14,8 +14,8 @@
 
 #include <ostream>
 
-#define BOOST_ARCHIVE_SOURCE
-#include <boost/archive/impl/basic_text_oprimitive.ipp>
+#define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/archive/impl/basic_text_oprimitive.ipp>
 
 namespace autoboost {
 namespace archive {

@@ -3,7 +3,6 @@
 #include "AnySharedPointer.h"
 #include "AutoFilterDescriptor.h"
 #include "demangle.h"
-#include <sstream>
 
 /// <summary>
 /// A single subscription counter entry
@@ -34,15 +33,19 @@ struct SatCounter:
   // The number of inputs remaining to this counter:
   size_t remaining;
 
+private:
+  /// <summary>
+  /// Throws a formatted exception if the underlying filter is called more than once
+  /// </summary>
+  void ThrowRepeatedCallException(void) const;
+
+public:
   /// <summary>
   /// Calls the underlying AutoFilter method with the specified AutoPacketAdapter as input
   /// </summary>
   void CallAutoFilter(AutoPacket& packet) {
-    if (called) {
-      std::stringstream ss;
-      ss << "Repeated call to " << autowiring::demangle(m_pType);
-      throw std::runtime_error(ss.str());
-    }
+    if (called)
+      ThrowRepeatedCallException();
     called = true;
     GetCall()(GetAutoFilter(), packet);
   }

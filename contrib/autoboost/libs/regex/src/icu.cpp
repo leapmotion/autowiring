@@ -12,17 +12,17 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         icu.cpp
-  *   VERSION      see <boost/version.hpp>
+  *   VERSION      see <autoboost/version.hpp>
   *   DESCRIPTION: Unicode regular expressions on top of the ICU Library.
   */
-#define BOOST_REGEX_SOURCE
+#define AUTOBOOST_REGEX_SOURCE
 
-#include <boost/regex/config.hpp>
-#ifdef BOOST_HAS_ICU
-#define BOOST_REGEX_ICU_INSTANTIATE
-#include <boost/regex/icu.hpp>
+#include <autoboost/regex/config.hpp>
+#ifdef AUTOBOOST_HAS_ICU
+#define AUTOBOOST_REGEX_ICU_INSTANTIATE
+#include <autoboost/regex/icu.hpp>
 
-#ifdef BOOST_INTEL
+#ifdef AUTOBOOST_INTEL
 #pragma warning(disable:981 2259 383)
 #endif
 
@@ -35,7 +35,7 @@ icu_regex_traits_implementation::string_type icu_regex_traits_implementation::do
    // TODO make thread safe!!!! :
    typedef u32_to_u16_iterator<const char_type*, ::UChar> itt;
    itt i(p1), j(p2);
-#ifndef BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
+#ifndef AUTOBOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
    std::vector< ::UChar> t(i, j);
 #else
    std::vector< ::UChar> t;
@@ -57,7 +57,7 @@ icu_regex_traits_implementation::string_type icu_regex_traits_implementation::do
          len = pcoll->getSortKey(static_cast<UChar const*>(0), static_cast< ::int32_t>(0), presult.get(), len+1);
       if((0 == presult[len-1]) && (len > 1))
          --len;
-#ifndef BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
+#ifndef AUTOBOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
       return string_type(presult.get(), presult.get()+len);
 #else
       string_type sresult;
@@ -70,7 +70,7 @@ icu_regex_traits_implementation::string_type icu_regex_traits_implementation::do
    }
    if((0 == result[len-1]) && (len > 1))
       --len;
-#ifndef BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
+#ifndef AUTOBOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
    return string_type(result, result+len);
 #else
    string_type sresult;
@@ -423,7 +423,7 @@ icu_regex_traits::char_class_type icu_regex_traits::lookup_classname(const char_
       if(result != 0)
          return result;
    }
-   BOOST_ASSERT(std::size_t(idx+1) < sizeof(masks) / sizeof(masks[0]));
+   AUTOBOOST_ASSERT(std::size_t(idx+1) < sizeof(masks) / sizeof(masks[0]));
    return masks[idx+1];
 }
 
@@ -432,7 +432,7 @@ icu_regex_traits::string_type icu_regex_traits::lookup_collatename(const char_ty
    string_type result;
    if(std::find_if(p1, p2, std::bind2nd(std::greater< ::UChar32>(), 0x7f)) == p2)
    {
-#ifndef BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
+#ifndef AUTOBOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
       std::string s(p1, p2);
 #else
       std::string s;
@@ -458,7 +458,7 @@ icu_regex_traits::string_type icu_regex_traits::lookup_collatename(const char_ty
       }
       // try POSIX name:
       s = ::autoboost::re_detail::lookup_default_collate_name(s);
-#ifndef BOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
+#ifndef AUTOBOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS
       result.assign(s.begin(), s.end());
 #else
       result.clear();
@@ -504,4 +504,4 @@ bool icu_regex_traits::isctype(char_type c, char_class_type f) const
 
 }
 
-#endif // BOOST_HAS_ICU
+#endif // AUTOBOOST_HAS_ICU

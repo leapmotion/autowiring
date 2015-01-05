@@ -6,8 +6,8 @@
 
 #include "boost/coroutine/detail/coroutine_context.hpp"
 
-#ifdef BOOST_HAS_ABI_HEADERS
-#  include BOOST_ABI_PREFIX
+#ifdef AUTOBOOST_HAS_ABI_HEADERS
+#  include AUTOBOOST_ABI_PREFIX
 #endif
 
 #if defined(_MSC_VER)
@@ -15,12 +15,12 @@
 # pragma warning(disable:4355)
 #endif
 
-#if defined(BOOST_USE_SEGMENTED_STACKS)
+#if defined(AUTOBOOST_USE_SEGMENTED_STACKS)
 extern "C" {
 
-void __splitstack_getcontext( void * [BOOST_COROUTINES_SEGMENTS]);
+void __splitstack_getcontext( void * [AUTOBOOST_COROUTINES_SEGMENTS]);
 
-void __splitstack_setcontext( void * [BOOST_COROUTINES_SEGMENTS]);
+void __splitstack_setcontext( void * [AUTOBOOST_COROUTINES_SEGMENTS]);
 
 }
 #endif
@@ -33,7 +33,7 @@ coroutine_context::coroutine_context() :
     stack_ctx_(),
     ctx_( 0)
 {
-#if defined(BOOST_USE_SEGMENTED_STACKS)
+#if defined(AUTOBOOST_USE_SEGMENTED_STACKS)
     __splitstack_getcontext( stack_ctx_.segments_ctx);
 #endif
 }
@@ -62,7 +62,7 @@ coroutine_context::operator=( coroutine_context const& other)
 intptr_t
 coroutine_context::jump( coroutine_context & other, intptr_t param, bool preserve_fpu)
 {
-#if defined(BOOST_USE_SEGMENTED_STACKS)
+#if defined(AUTOBOOST_USE_SEGMENTED_STACKS)
     __splitstack_getcontext( stack_ctx_.segments_ctx);
     __splitstack_setcontext( other.stack_ctx_.segments_ctx);
 
@@ -82,6 +82,6 @@ coroutine_context::jump( coroutine_context & other, intptr_t param, bool preserv
 # pragma warning(pop)
 #endif
 
-#ifdef BOOST_HAS_ABI_HEADERS
-#  include BOOST_ABI_SUFFIX
+#ifdef AUTOBOOST_HAS_ABI_HEADERS
+#  include AUTOBOOST_ABI_SUFFIX
 #endif

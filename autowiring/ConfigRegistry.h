@@ -1,13 +1,12 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "AnySharedPointer.h"
+#include "autowiring_error.h"
+#include "has_validate.h"
 #include MEMORY_HEADER
 #include FUNCTIONAL_HEADER
 #include <string>
 #include <sstream>
-#include "AnySharedPointer.h"
-#include "autowiring_error.h"
-#include "demangle.h"
-#include "has_validate.h"
 
 // Check if 'T' has a valid stream conversion operator
 template<typename T>
@@ -67,6 +66,10 @@ struct ConfigRegistryEntry {
 template<class... TKey>
 struct ConfigTypeExtractor {};
 
+namespace autowiring {
+  void ThrowFailedTypeParseException(const std::string& str, const std::type_info& ti);
+}
+
 template<class T, class... TKey>
 struct ConfigRegistryEntryT:
   public ConfigRegistryEntry
@@ -88,6 +91,7 @@ struct ConfigRegistryEntryT:
     return parseInternal<T>(str);
   }
   
+public:
   // Only use if there is a stream operator
   template<typename U>
   typename std::enable_if<has_stream<U>::value, AnySharedPointer>::type
@@ -96,12 +100,8 @@ struct ConfigRegistryEntryT:
     T val;
     ss >> std::boolalpha >> val;
     
-    if (ss.fail()) {
-      std::stringstream msg;
-      msg << "Failed to parse '" << str << "' as type '"
-          << autowiring::demangle(typeid(T)) << "'";
-      throw autowiring_error(msg.str());
-    }
+    if (ss.fail())
+      autowiring::ThrowFailedTypeParseException(str, typeid(T));
     return AnySharedPointer(std::make_shared<T>(val));
   }
 
@@ -109,8 +109,7 @@ struct ConfigRegistryEntryT:
   template<typename U>
   typename std::enable_if<!has_stream<U>::value, AnySharedPointer>::type
   parseInternal(const std::string&) const {
-    throw autowiring_error("This type doesn't support stream conversions.\
-                           Define one if you want this to be parsable");
+    throw autowiring_error("This type doesn't support stream conversions.  Define one if you want this to be parsable");
   };
 
   std::function<bool(const AnySharedPointer&)> validator(void) const override {

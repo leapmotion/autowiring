@@ -28,7 +28,7 @@ namespace gregorian {
                                            "Wednesday", "Thursday",
                                            "Friday", "Saturday"};
 
-#ifndef BOOST_NO_STD_WSTRING
+#ifndef AUTOBOOST_NO_STD_WSTRING
   const wchar_t* const w_short_month_names[NumMonths]={L"Jan",L"Feb",L"Mar",L"Apr",L"May",L"Jun",L"Jul",L"Aug",L"Sep",L"Oct",L"Nov",L"Dec",L"NAM"};
   const wchar_t* const w_long_month_names[NumMonths]={L"January",L"February",L"March",L"April",L"May",L"June",L"July",L"August",L"September",L"October",L"November",L"December",L"NotAMonth"};
   const wchar_t* const w_special_value_names[date_time::NumSpecialValues]={L"not-a-date-time",L"-infinity",L"+infinity",L"min_date_time",L"max_date_time",L"not_special"};
@@ -38,6 +38,6 @@ namespace gregorian {
   const wchar_t* const w_long_weekday_names[]= {L"Sunday",L"Monday",L"Tuesday",
                                            L"Wednesday", L"Thursday",
                                            L"Friday", L"Saturday"};
-#endif // BOOST_NO_STD_WSTRING
+#endif // AUTOBOOST_NO_STD_WSTRING
 } } // autoboost::gregorian
 #endif // DATE_TIME_SRC_GREG_NAMES_HPP___

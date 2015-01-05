@@ -6,30 +6,30 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/thread/detail/config.hpp>
+#include <autoboost/thread/detail/config.hpp>
 
-#include <boost/thread/thread_only.hpp>
-#if defined BOOST_THREAD_USES_DATETIME
-#include <boost/thread/xtime.hpp>
+#include <autoboost/thread/thread_only.hpp>
+#if defined AUTOBOOST_THREAD_USES_DATETIME
+#include <autoboost/thread/xtime.hpp>
 #endif
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/once.hpp>
-#include <boost/thread/tss.hpp>
-#include <boost/thread/future.hpp>
+#include <autoboost/thread/condition_variable.hpp>
+#include <autoboost/thread/locks.hpp>
+#include <autoboost/thread/once.hpp>
+#include <autoboost/thread/tss.hpp>
+#include <autoboost/thread/future.hpp>
 
 #ifdef __GLIBC__
 #include <sys/sysinfo.h>
 #elif defined(__APPLE__) || defined(__FreeBSD__)
 #include <sys/types.h>
 #include <sys/sysctl.h>
-#elif defined BOOST_HAS_UNISTD_H
+#elif defined AUTOBOOST_HAS_UNISTD_H
 #include <unistd.h>
 #endif
 
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/trim.hpp>
-#include <boost/lexical_cast.hpp>
+#include <autoboost/algorithm/string/split.hpp>
+#include <autoboost/algorithm/string/trim.hpp>
+#include <autoboost/lexical_cast.hpp>
 
 #include <fstream>
 #include <string>
@@ -70,10 +70,10 @@ namespace autoboost
 
         namespace
         {
-#ifdef BOOST_THREAD_PROVIDES_ONCE_CXX11
+#ifdef AUTOBOOST_THREAD_PROVIDES_ONCE_CXX11
           autoboost::once_flag current_thread_tls_init_flag;
 #else
-            autoboost::once_flag current_thread_tls_init_flag=BOOST_ONCE_INIT;
+            autoboost::once_flag current_thread_tls_init_flag=AUTOBOOST_ONCE_INIT;
 #endif
             pthread_key_t current_thread_tls_key;
 
@@ -120,7 +120,7 @@ namespace autoboost
                 }
             }
 
-#if defined BOOST_THREAD_PATCH
+#if defined AUTOBOOST_THREAD_PATCH
 
             struct  delete_current_thread_tls_key_on_dlclose_t
             {
@@ -129,7 +129,7 @@ namespace autoboost
                 }
                 ~delete_current_thread_tls_key_on_dlclose_t()
                 {
-                    if (current_thread_tls_init_flag.epoch!=BOOST_ONCE_INITIAL_FLAG_VALUE)
+                    if (current_thread_tls_init_flag.epoch!=AUTOBOOST_ONCE_INITIAL_FLAG_VALUE)
                     {
                         pthread_key_delete(current_thread_tls_key);
                     }
@@ -140,7 +140,7 @@ namespace autoboost
 
             void create_current_thread_tls_key()
             {
-                BOOST_VERIFY(!pthread_key_create(&current_thread_tls_key,&tls_destructor));
+                AUTOBOOST_VERIFY(!pthread_key_create(&current_thread_tls_key,&tls_destructor));
             }
         }
 
@@ -153,7 +153,7 @@ namespace autoboost
         void set_current_thread_data(detail::thread_data_base* new_data)
         {
             autoboost::call_once(current_thread_tls_init_flag,create_current_thread_tls_key);
-            BOOST_VERIFY(!pthread_setspecific(current_thread_tls_key,new_data));
+            AUTOBOOST_VERIFY(!pthread_setspecific(current_thread_tls_key,new_data));
         }
     }
 
@@ -166,26 +166,26 @@ namespace autoboost
                 autoboost::detail::thread_data_ptr thread_info = static_cast<autoboost::detail::thread_data_base*>(param)->self;
                 thread_info->self.reset();
                 detail::set_current_thread_data(thread_info.get());
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                BOOST_TRY
+#if defined AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS
+                AUTOBOOST_TRY
                 {
 #endif
                     thread_info->run();
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS
 
                 }
-                BOOST_CATCH (thread_interrupted const&)
+                AUTOBOOST_CATCH (thread_interrupted const&)
                 {
                 }
 // Removed as it stops the debugger identifying the cause of the exception
 // Unhandled exceptions still cause the application to terminate
-//                 BOOST_CATCH(...)
+//                 AUTOBOOST_CATCH(...)
 //                 {
 //                   throw;
 //
 //                     std::terminate();
 //                 }
-                BOOST_CATCH_END
+                AUTOBOOST_CATCH_END
 #endif
                 detail::tls_destructor(thread_info.get());
                 detail::set_current_thread_data(0);
@@ -204,14 +204,14 @@ namespace autoboost
         {
             externally_launched_thread()
             {
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS
                 interrupt_enabled=false;
 #endif
             }
             ~externally_launched_thread() {
-              BOOST_ASSERT(notify.empty());
+              AUTOBOOST_ASSERT(notify.empty());
               notify.clear();
-              BOOST_ASSERT(async_states_.empty());
+              AUTOBOOST_ASSERT(async_states_.empty());
               async_states_.clear();
             }
             void run()
@@ -246,7 +246,7 @@ namespace autoboost
     }
 
 
-    thread::thread() BOOST_NOEXCEPT
+    thread::thread() AUTOBOOST_NOEXCEPT
     {}
 
     bool thread::start_thread_noexcept()
@@ -291,7 +291,7 @@ namespace autoboost
               //lock_guard<mutex> lock(local_thread_info->data_mutex);
               if(!local_thread_info->join_started)
               {
-                  //BOOST_VERIFY(!pthread_detach(local_thread_info->thread_handle));
+                  //AUTOBOOST_VERIFY(!pthread_detach(local_thread_info->thread_handle));
                   local_thread_info->join_started=true;
                   local_thread_info->joined=true;
               }
@@ -302,7 +302,7 @@ namespace autoboost
 
 
 
-    detail::thread_data_ptr thread::get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const
+    detail::thread_data_ptr thread::get_thread_info AUTOBOOST_PREVENT_MACRO_SUBSTITUTION () const
     {
         return thread_info;
     }
@@ -337,7 +337,7 @@ namespace autoboost
             if(do_join)
             {
                 void* result=0;
-                BOOST_VERIFY(!pthread_join(local_thread_info->thread_handle,&result));
+                AUTOBOOST_VERIFY(!pthread_join(local_thread_info->thread_handle,&result));
                 lock_guard<mutex> lock(local_thread_info->data_mutex);
                 local_thread_info->joined=true;
                 local_thread_info->done_condition.notify_all();
@@ -389,7 +389,7 @@ namespace autoboost
             if(do_join)
             {
                 void* result=0;
-                BOOST_VERIFY(!pthread_join(local_thread_info->thread_handle,&result));
+                AUTOBOOST_VERIFY(!pthread_join(local_thread_info->thread_handle,&result));
                 lock_guard<mutex> lock(local_thread_info->data_mutex);
                 local_thread_info->joined=true;
                 local_thread_info->done_condition.notify_all();
@@ -408,7 +408,7 @@ namespace autoboost
         }
     }
 
-    bool thread::joinable() const BOOST_NOEXCEPT
+    bool thread::joinable() const AUTOBOOST_NOEXCEPT
     {
         return (get_thread_info)()?true:false;
     }
@@ -424,7 +424,7 @@ namespace autoboost
             lock_guard<mutex> lock(local_thread_info->data_mutex);
             if(!local_thread_info->join_started)
             {
-                BOOST_VERIFY(!pthread_detach(local_thread_info->thread_handle));
+                AUTOBOOST_VERIFY(!pthread_detach(local_thread_info->thread_handle));
                 local_thread_info->join_started=true;
                 local_thread_info->joined=true;
             }
@@ -437,19 +437,19 @@ namespace autoboost
       {
         namespace hiden
         {
-          void BOOST_THREAD_DECL sleep_for(const timespec& ts)
+          void AUTOBOOST_THREAD_DECL sleep_for(const timespec& ts)
           {
 
                 if (autoboost::detail::timespec_ge(ts, autoboost::detail::timespec_zero()))
                 {
 
-    #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
+    #   if defined(AUTOBOOST_HAS_PTHREAD_DELAY_NP)
     #     if defined(__IBMCPP__) ||  defined(_AIX)
-                  BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts)));
+                  AUTOBOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts)));
     #     else
-                  BOOST_VERIFY(!pthread_delay_np(&ts));
+                  AUTOBOOST_VERIFY(!pthread_delay_np(&ts));
     #     endif
-    #   elif defined(BOOST_HAS_NANOSLEEP)
+    #   elif defined(AUTOBOOST_HAS_NANOSLEEP)
                   //  nanosleep takes a timespec that is an offset, not
                   //  an absolute time.
                   nanosleep(&ts, 0);
@@ -462,7 +462,7 @@ namespace autoboost
                 }
           }
 
-          void BOOST_THREAD_DECL sleep_until(const timespec& ts)
+          void AUTOBOOST_THREAD_DECL sleep_until(const timespec& ts)
           {
                 timespec now = autoboost::detail::timespec_now();
                 if (autoboost::detail::timespec_gt(ts, now))
@@ -470,10 +470,10 @@ namespace autoboost
                   for (int foo=0; foo < 5; ++foo)
                   {
 
-    #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
+    #   if defined(AUTOBOOST_HAS_PTHREAD_DELAY_NP)
                     timespec d = autoboost::detail::timespec_minus(ts, now);
-                    BOOST_VERIFY(!pthread_delay_np(&d));
-    #   elif defined(BOOST_HAS_NANOSLEEP)
+                    AUTOBOOST_VERIFY(!pthread_delay_np(&d));
+    #   elif defined(AUTOBOOST_HAS_NANOSLEEP)
                     //  nanosleep takes a timespec that is an offset, not
                     //  an absolute time.
                     timespec d = autoboost::detail::timespec_minus(ts, now);
@@ -497,7 +497,7 @@ namespace autoboost
       }
       namespace hiden
       {
-        void BOOST_THREAD_DECL sleep_for(const timespec& ts)
+        void AUTOBOOST_THREAD_DECL sleep_for(const timespec& ts)
         {
             autoboost::detail::thread_data_base* const thread_info=autoboost::detail::get_current_thread_data();
 
@@ -512,7 +512,7 @@ namespace autoboost
             }
         }
 
-        void BOOST_THREAD_DECL sleep_until(const timespec& ts)
+        void AUTOBOOST_THREAD_DECL sleep_until(const timespec& ts)
         {
             autoboost::detail::thread_data_base* const thread_info=autoboost::detail::get_current_thread_data();
 
@@ -531,13 +531,13 @@ namespace autoboost
 
     namespace this_thread
     {
-        void yield() BOOST_NOEXCEPT
+        void yield() AUTOBOOST_NOEXCEPT
         {
-#   if defined(BOOST_HAS_SCHED_YIELD)
-            BOOST_VERIFY(!sched_yield());
-#   elif defined(BOOST_HAS_PTHREAD_YIELD)
-            BOOST_VERIFY(!pthread_yield());
-//#   elif defined BOOST_THREAD_USES_DATETIME
+#   if defined(AUTOBOOST_HAS_SCHED_YIELD)
+            AUTOBOOST_VERIFY(!sched_yield());
+#   elif defined(AUTOBOOST_HAS_PTHREAD_YIELD)
+            AUTOBOOST_VERIFY(!pthread_yield());
+//#   elif defined AUTOBOOST_THREAD_USES_DATETIME
 //            xtime xt;
 //            xtime_get(&xt, TIME_UTC_);
 //            sleep(xt);
@@ -551,7 +551,7 @@ namespace autoboost
 #   endif
         }
     }
-    unsigned thread::hardware_concurrency() BOOST_NOEXCEPT
+    unsigned thread::hardware_concurrency() AUTOBOOST_NOEXCEPT
     {
 #if defined(PTW32_VERSION) || defined(__hpux)
         return pthread_num_processors_np();
@@ -559,7 +559,7 @@ namespace autoboost
         int count;
         size_t size=sizeof(count);
         return sysctlbyname("hw.ncpu",&count,&size,NULL,0)?0:count;
-#elif defined(BOOST_HAS_UNISTD_H) && defined(_SC_NPROCESSORS_ONLN)
+#elif defined(AUTOBOOST_HAS_UNISTD_H) && defined(_SC_NPROCESSORS_ONLN)
         int const count=sysconf(_SC_NPROCESSORS_ONLN);
         return (count>0)?count:0;
 #elif defined(__GLIBC__)
@@ -569,7 +569,7 @@ namespace autoboost
 #endif
     }
 
-    unsigned thread::physical_concurrency() BOOST_NOEXCEPT
+    unsigned thread::physical_concurrency() AUTOBOOST_NOEXCEPT
     {
 #ifdef __linux__
         try {
@@ -627,7 +627,7 @@ namespace autoboost
 #endif
     }
 
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS
     void thread::interrupt()
     {
         detail::thread_data_ptr const local_thread_info=(get_thread_info)();
@@ -638,12 +638,12 @@ namespace autoboost
             if(local_thread_info->current_cond)
             {
                 autoboost::pthread::pthread_mutex_scoped_lock internal_lock(local_thread_info->cond_mutex);
-                BOOST_VERIFY(!pthread_cond_broadcast(local_thread_info->current_cond));
+                AUTOBOOST_VERIFY(!pthread_cond_broadcast(local_thread_info->current_cond));
             }
         }
     }
 
-    bool thread::interruption_requested() const BOOST_NOEXCEPT
+    bool thread::interruption_requested() const AUTOBOOST_NOEXCEPT
     {
         detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
@@ -674,12 +674,12 @@ namespace autoboost
 
 
 
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined AUTOBOOST_THREAD_PROVIDES_INTERRUPTIONS
     namespace this_thread
     {
         void interruption_point()
         {
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
             autoboost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
             if(thread_info && thread_info->interrupt_enabled)
             {
@@ -693,13 +693,13 @@ namespace autoboost
 #endif
         }
 
-        bool interruption_enabled() BOOST_NOEXCEPT
+        bool interruption_enabled() AUTOBOOST_NOEXCEPT
         {
             autoboost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
             return thread_info && thread_info->interrupt_enabled;
         }
 
-        bool interruption_requested() BOOST_NOEXCEPT
+        bool interruption_requested() AUTOBOOST_NOEXCEPT
         {
             autoboost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
             if(!thread_info)
@@ -713,7 +713,7 @@ namespace autoboost
             }
         }
 
-        disable_interruption::disable_interruption() BOOST_NOEXCEPT:
+        disable_interruption::disable_interruption() AUTOBOOST_NOEXCEPT:
             interruption_was_enabled(interruption_enabled())
         {
             if(interruption_was_enabled)
@@ -722,7 +722,7 @@ namespace autoboost
             }
         }
 
-        disable_interruption::~disable_interruption() BOOST_NOEXCEPT
+        disable_interruption::~disable_interruption() AUTOBOOST_NOEXCEPT
         {
             if(detail::get_current_thread_data())
             {
@@ -730,7 +730,7 @@ namespace autoboost
             }
         }
 
-        restore_interruption::restore_interruption(disable_interruption& d) BOOST_NOEXCEPT
+        restore_interruption::restore_interruption(disable_interruption& d) AUTOBOOST_NOEXCEPT
         {
             if(d.interruption_was_enabled)
             {
@@ -738,7 +738,7 @@ namespace autoboost
             }
         }
 
-        restore_interruption::~restore_interruption() BOOST_NOEXCEPT
+        restore_interruption::~restore_interruption() AUTOBOOST_NOEXCEPT
         {
             if(detail::get_current_thread_data())
             {
@@ -826,7 +826,7 @@ namespace autoboost
         }
     }
 
-    BOOST_THREAD_DECL void notify_all_autoboostat_thread_exit(condition_variable& cond, unique_lock<mutex> lk)
+    AUTOBOOST_THREAD_DECL void notify_all_autoboostat_thread_exit(condition_variable& cond, unique_lock<mutex> lk)
     {
       detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
       if(current_thread_data)
@@ -836,7 +836,7 @@ namespace autoboost
     }
 namespace detail {
 
-    void BOOST_THREAD_DECL make_ready_autoboostat_thread_exit(shared_ptr<shared_state_base> as)
+    void AUTOBOOST_THREAD_DECL make_ready_autoboostat_thread_exit(shared_ptr<shared_state_base> as)
     {
       detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
       if(current_thread_data)

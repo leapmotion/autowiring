@@ -37,8 +37,8 @@
 #ifdef _WEBSOCKETPP_CPP11_FUNCTIONAL_
     #include <functional>
 #else
-    #include <boost/bind.hpp>
-    #include <boost/function.hpp>
+    #include <autoboost/bind.hpp>
+    #include <autoboost/function.hpp>
 #endif
 
 namespace websocketpp {

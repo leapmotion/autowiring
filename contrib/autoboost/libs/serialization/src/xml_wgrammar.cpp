@@ -8,21 +8,21 @@
 
 //  See http://www.boost.org for updates, documentation, and revision history.
 
-#include <boost/config.hpp>
+#include <autoboost/config.hpp>
 
-#ifdef BOOST_NO_STD_WSTREAMBUF
+#ifdef AUTOBOOST_NO_STD_WSTREAMBUF
 #error "wide char i/o not supported on this platform"
 #else
 
-#define BOOST_WARCHIVE_SOURCE
-#include <boost/archive/impl/basic_xml_grammar.hpp>
+#define AUTOBOOST_WARCHIVE_SOURCE
+#include <autoboost/archive/impl/basic_xml_grammar.hpp>
 
 using namespace autoboost::spirit::classic;
 
 // fixup for RogueWave
-#include <boost/config.hpp>
+#include <autoboost/config.hpp>
 #if ! defined(__SGI_STL_PORT) \
-&& defined(BOOST_RWSTD_VER) && BOOST_RWSTD_VER<=0x020101
+&& defined(AUTOBOOST_RWSTD_VER) && AUTOBOOST_RWSTD_VER<=0x020101
 #include <string>
 namespace std {
     template<>
