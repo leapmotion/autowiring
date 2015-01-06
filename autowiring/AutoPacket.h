@@ -300,9 +300,9 @@ public:
   /// PROBLEM: This use case implies that holding shared_ptr references to decorations is NOT SAFE.
   /// </remarks>
   template<class T>
-  bool Get(std::shared_ptr<const T>& out) const {
+  bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto deco = m_decorations.find(typeid(auto_id<T>));
+    auto deco = m_decorations.find(DecorationKey(typeid(auto_id<T>), tshift));
     if(deco != m_decorations.end() && deco->second.satisfied) {
       auto& disposition = deco->second;
       if(disposition.m_decoration) {

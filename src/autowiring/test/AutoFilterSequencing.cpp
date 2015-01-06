@@ -156,7 +156,7 @@ TEST_F(AutoFilterSequencing, SimplePrev) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<PrevFilter> filter;
   
-  for (int i=0; i<10; ++i) {
+  for (int i=10; i<20; ++i) {
     auto packet = factory->NewPacket();
     packet->Decorate(i);
   }
