@@ -74,7 +74,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     entry->m_type = &dataType;
 
     // Decide what to do with this entry:
-    if (pCur->is_input) {
+    if (pCur->is_required) {
       entry->m_subscribers.push_back(&satCounter);
       if (entry->satisfied)
         satCounter.Decrement();
@@ -97,7 +97,7 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
     DecorationDisposition* entry = &m_decorations[dataType];
 
     // Decide what to do with this entry:
-    if (pCur->is_input) {
+    if (pCur->is_required) {
       assert(!entry->m_subscribers.empty());
       assert(&satCounter == entry->m_subscribers.back());
       entry->m_subscribers.pop_back();
@@ -115,6 +115,11 @@ void AutoPacket::MarkUnsatisfiable(const DecorationKey& info) {
 }
 
 void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
+  // Time-shifted decorations can't trigger satisfaction
+  if (info.tshift) {
+    return;
+  }
+  
   std::list<SatCounter*> callQueue;
   {
     std::lock_guard<std::mutex> lk(m_lock);

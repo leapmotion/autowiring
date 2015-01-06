@@ -17,7 +17,7 @@ class Deferred;
 /// </summary>
 struct AutoFilterDescriptorInput {
   AutoFilterDescriptorInput(void) :
-    is_input(false),
+    is_required(false),
     is_output(false),
     is_shared(false),
     ti(nullptr),
@@ -26,14 +26,14 @@ struct AutoFilterDescriptorInput {
 
   template<class T>
   AutoFilterDescriptorInput(auto_arg<T>*) :
-    is_input(auto_arg<T>::is_input),
+    is_required(auto_arg<T>::is_required),
     is_output(auto_arg<T>::is_output),
     is_shared(auto_arg<T>::is_shared),
     ti(&typeid(typename auto_arg<T>::id_type)),
     tshift(auto_arg<T>::tshift)
   {}
 
-  const bool is_input;
+  const bool is_required;
   const bool is_output;
   const bool is_shared;
   const std::type_info* const ti;
@@ -91,8 +91,9 @@ struct AutoFilterDescriptorStub {
   {
     for(auto pArg = m_pArgs; *pArg; pArg++) {
       m_arity++;
-
-      if (pArg->is_input)
+      
+      // time shifted arguments arn't required
+      if (pArg->is_required)
         ++m_requiredCount;
     }
   }
