@@ -133,18 +133,22 @@ TEST_F(AutoFilterSequencing, ManySuccessors) {
 class PrevFilter {
 public:
   PrevFilter(void):
-    m_called(0)
+    m_prev_value(-1),
+    m_called(0),
+    m_num_empty_prev(0)
   {}
   
-  int prev_value;
+  int m_prev_value;
   int m_called;
+  int m_num_empty_prev;
   
   void AutoFilter(int current, auto_prev<int> prev) {
     ++m_called;
     if (prev) {
-      EXPECT_EQ(prev_value, *prev) << "auto_prev isn't set to the previous value";
+      EXPECT_EQ(m_prev_value, *prev) << "auto_prev isn't set to the previous value";
+      m_num_empty_prev++;
     }
-    prev_value = current;
+    m_prev_value = current;
   }
 };
 
@@ -158,4 +162,5 @@ TEST_F(AutoFilterSequencing, SimplePrev) {
   }
   
   ASSERT_EQ(10, filter->m_called) << "AutoFilter not called";
+  ASSERT_EQ(1, filter->m_num_empty_prev) << "Prev should only be null for the first call";
 }
