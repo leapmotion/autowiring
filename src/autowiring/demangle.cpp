@@ -4,6 +4,8 @@
 #include "AnySharedPointer.h"
 
 #if __GNUG__ // Mac and linux
+#include <cxxabi.h>
+#include <cstdlib>
 
 std::string autowiring::demangle(const std::type_info& ti) {
   int status;

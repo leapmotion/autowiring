@@ -8,19 +8,19 @@
 
 //  See http://www.boost.org for updates, documentation, and revision history.
 
-#include <boost/config.hpp>
+#include <autoboost/config.hpp>
 
-#ifdef BOOST_NO_STD_WSTREAMBUF
+#ifdef AUTOBOOST_NO_STD_WSTREAMBUF
 #error "wide char i/o not supported on this platform"
 #else
 
-#define BOOST_WARCHIVE_SOURCE
-#include <boost/archive/binary_woarchive.hpp>
+#define AUTOBOOST_WARCHIVE_SOURCE
+#include <autoboost/archive/binary_woarchive.hpp>
 
 // explicitly instantiate for this type of text stream
-#include <boost/archive/impl/archive_serializer_map.ipp>
-#include <boost/archive/impl/basic_binary_oprimitive.ipp>
-#include <boost/archive/impl/basic_binary_oarchive.ipp>
+#include <autoboost/archive/impl/archive_serializer_map.ipp>
+#include <autoboost/archive/impl/basic_binary_oprimitive.ipp>
+#include <autoboost/archive/impl/basic_binary_oarchive.ipp>
 
 namespace autoboost {
 namespace archive {
@@ -41,4 +41,4 @@ template class binary_oarchive_impl<
 } // namespace archive
 } // namespace autoboost
 
-#endif // BOOST_NO_STD_WSTREAMBUF
+#endif // AUTOBOOST_NO_STD_WSTREAMBUF

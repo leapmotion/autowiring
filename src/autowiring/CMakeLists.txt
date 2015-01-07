@@ -2,10 +2,8 @@
 # Setup testing
 #
 
-if(autowiring_USE_LIBCXX)
-  add_googletest(test)
-  add_googletest(benchmark)
-endif()
+add_googletest(test)
+add_googletest(benchmark)
 
 #
 # Configure source files
@@ -98,9 +96,6 @@ set(Autowiring_SRCS
   DispatchQueue.cpp
   DispatchQueue.h
   DispatchThunk.h
-  EventInputStream.h
-  EventOutputStream.cpp
-  EventOutputStream.h
   EventRegistry.cpp
   EventRegistry.h
   ExceptionFilter.cpp
@@ -138,13 +133,12 @@ set(Autowiring_SRCS
   ObjectPoolMonitor.h
   ObjectTraits.h
   SatCounter.h
+  SatCounter.cpp
   SharedPointerSlot.h
   SlotInformation.cpp
   SlotInformation.h
   TeardownNotifier.cpp
   TeardownNotifier.h
-  ThreadStatusBlock.cpp
-  ThreadStatusBlock.h
   thread_specific_ptr.h
   TypeIdentifier.h
   TypeRegistry.cpp
@@ -153,6 +147,27 @@ set(Autowiring_SRCS
   unlock_object.h
   uuid.h
   var_logic.h
+)
+
+add_conditional_sources(
+  Autowiring_SRCS
+  "ON"
+  GROUP_NAME "Autoboost"
+  FILES
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/system/src/error_code.cpp
+)
+
+add_conditional_sources(
+  Autowiring_SRCS
+  "NOT MSVC"
+  GROUP_NAME "Autoboost"
+  FILES
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/process_cpu_clocks.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/thread_clock.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/chrono/src/chrono.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/once_atomic.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/thread.cpp
+  ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/future.cpp
 )
 
 if(NOT AUTOWIRING_BUILD_AUTONET)
@@ -211,19 +226,14 @@ add_pch(Autowiring_SRCS "stdafx.h" "stdafx.cpp")
 
 add_library(Autowiring STATIC ${Autowiring_SRCS})
 
-target_include_directories(Autowiring PRIVATE "${CMAKE_SOURCE_DIR}/contrib/autoboost")
-target_include_directories(Autowiring INTERFACE
+target_include_directories(Autowiring
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/contrib/autoboost>"
+  INTERFACE
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
-  "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+  "$<INSTALL_INTERFACE:include>"
 )
 set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
-
-# The boost C++11 shim is required when building without autowiring_USE_LIBCXX off Windows
-# We do not mention the link libraries; rather, we require that downstream clients
-# satisfy this link dependency.
-if(NOT WIN32 AND NOT autowiring_USE_LIBCXX)
-  find_package(Boost COMPONENTS thread atomic chrono system date_time QUIET)
-endif()
 
 # Need multithreading services if available
 find_package(Threads)

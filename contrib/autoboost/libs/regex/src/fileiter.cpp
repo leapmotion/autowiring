@@ -12,24 +12,24 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        fileiter.cpp
-  *   VERSION:     see <boost/version.hpp>
+  *   VERSION:     see <autoboost/version.hpp>
   *   DESCRIPTION: Implements file io primitives + directory searching for class autoboost::RegEx.
   */
 
 
-#define BOOST_REGEX_SOURCE
+#define AUTOBOOST_REGEX_SOURCE
 
-#include <boost/config.hpp>
+#include <autoboost/config.hpp>
 #include <climits>
 #include <stdexcept>
 #include <string>
-#include <boost/throw_exception.hpp>
-#include <boost/regex/v4/fileiter.hpp>
-#include <boost/regex/v4/regex_workaround.hpp>
-#include <boost/regex/pattern_except.hpp>
+#include <autoboost/throw_exception.hpp>
+#include <autoboost/regex/v4/fileiter.hpp>
+#include <autoboost/regex/v4/regex_workaround.hpp>
+#include <autoboost/regex/pattern_except.hpp>
 
 #include <cstdio>
-#if defined(BOOST_NO_STDC_NAMESPACE)
+#if defined(AUTOBOOST_NO_STDC_NAMESPACE)
 namespace std{
    using ::sprintf;
    using ::fseek;
@@ -47,13 +47,13 @@ namespace std{
 #endif
 
 
-#ifndef BOOST_REGEX_NO_FILEITER
+#ifndef AUTOBOOST_REGEX_NO_FILEITER
 
 #if defined(__CYGWIN__) || defined(__CYGWIN32__)
 #include <sys/cygwin.h>
 #endif
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(disable: 4800)
 #endif
 
@@ -61,15 +61,15 @@ namespace autoboost{
    namespace re_detail{
 // start with the operating system specific stuff:
 
-#if (defined(__BORLANDC__) || defined(BOOST_REGEX_FI_WIN32_DIR) || defined(BOOST_MSVC)) && !defined(BOOST_RE_NO_WIN32)
+#if (defined(__BORLANDC__) || defined(AUTOBOOST_REGEX_FI_WIN32_DIR) || defined(AUTOBOOST_MSVC)) && !defined(AUTOBOOST_RE_NO_WIN32)
 
 // platform is DOS or Windows
 // directories are separated with '\\'
 // and names are insensitive of case
 
-BOOST_REGEX_DECL const char* _fi_sep = "\\";
+AUTOBOOST_REGEX_DECL const char* _fi_sep = "\\";
 const char* _fi_sep_alt = "/";
-#define BOOST_REGEX_FI_TRANSLATE(c) std::tolower(c)
+#define AUTOBOOST_REGEX_FI_TRANSLATE(c) std::tolower(c)
 
 #else
 
@@ -77,17 +77,17 @@ const char* _fi_sep_alt = "/";
 // directories are separated with '/'
 // and names are sensitive of case
 
-BOOST_REGEX_DECL const char* _fi_sep = "/";
+AUTOBOOST_REGEX_DECL const char* _fi_sep = "/";
 const char* _fi_sep_alt = _fi_sep;
-#define BOOST_REGEX_FI_TRANSLATE(c) c
+#define AUTOBOOST_REGEX_FI_TRANSLATE(c) c
 
 #endif
 
-#ifdef BOOST_REGEX_FI_WIN32_MAP
+#ifdef AUTOBOOST_REGEX_FI_WIN32_MAP
 
 void mapfile::open(const char* file)
 {
-#if defined(BOOST_NO_ANSI_APIS)
+#if defined(AUTOBOOST_NO_ANSI_APIS)
    int filename_size = strlen(file);
    LPWSTR wide_file = (LPWSTR)_alloca( (filename_size + 1) * sizeof(WCHAR) );
    if(::MultiByteToWideChar(CP_ACP, 0,  file, filename_size,  wide_file, filename_size + 1) == 0)
@@ -126,10 +126,10 @@ void mapfile::open(const char* file)
    else
    {
       hfile = 0;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
       throw std::runtime_error("Unable to open file.");
 #else
-      BOOST_REGEX_NOEH_ASSERT(hfile != INVALID_HANDLE_VALUE);
+      AUTOBOOST_REGEX_NOEH_ASSERT(hfile != INVALID_HANDLE_VALUE);
 #endif
    }
 }
@@ -146,7 +146,7 @@ void mapfile::close()
    }
 }
 
-#elif !defined(BOOST_RE_NO_STL)
+#elif !defined(AUTOBOOST_RE_NO_STL)
 
 mapfile_iterator& mapfile_iterator::operator = (const mapfile_iterator& i)
 {
@@ -240,8 +240,8 @@ mapfile::iterator mapfile::end()const
 
 void mapfile::lock(pointer* node)const
 {
-   BOOST_ASSERT(node >= _first);
-   BOOST_ASSERT(node <= _last);
+   AUTOBOOST_ASSERT(node >= _first);
+   AUTOBOOST_ASSERT(node <= _last);
    if(node < _last)
    {
       if(*node == 0)
@@ -267,13 +267,13 @@ void mapfile::lock(pointer* node)const
            read_size = std::fread(*node + sizeof(int), _size % buf_size, 1, hfile); 
         else
            read_size = std::fread(*node + sizeof(int), buf_size, 1, hfile);
-#ifndef BOOST_NO_EXCEPTIONS 
+#ifndef AUTOBOOST_NO_EXCEPTIONS 
         if((read_size == 0) || (std::ferror(hfile)))
         { 
            throw std::runtime_error("Unable to read file."); 
         } 
 #else 
-        BOOST_REGEX_NOEH_ASSERT((0 == std::ferror(hfile)) && (read_size != 0)); 
+        AUTOBOOST_REGEX_NOEH_ASSERT((0 == std::ferror(hfile)) && (read_size != 0)); 
 #endif 
       }
       else
@@ -291,8 +291,8 @@ void mapfile::lock(pointer* node)const
 
 void mapfile::unlock(pointer* node)const
 {
-   BOOST_ASSERT(node >= _first);
-   BOOST_ASSERT(node <= _last);
+   AUTOBOOST_ASSERT(node >= _first);
+   AUTOBOOST_ASSERT(node <= _last);
    if(node < _last)
    {
       if(--(*reinterpret_cast<int*>(*node)) == 0)
@@ -315,7 +315,7 @@ long int get_file_length(std::FILE* hfile)
 void mapfile::open(const char* file)
 {
    hfile = std::fopen(file, "rb");
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    try{
 #endif
    if(hfile != 0)
@@ -340,7 +340,7 @@ void mapfile::open(const char* file)
    {
        std::runtime_error err("Unable to open file.");
    }
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    }catch(...)
    { close(); throw; }
 #endif
@@ -371,7 +371,7 @@ void mapfile::close()
 
 inline _fi_find_handle find_first_file(const char* wild,  _fi_find_data& data)
 {
-#ifdef BOOST_NO_ANSI_APIS
+#ifdef AUTOBOOST_NO_ANSI_APIS
    std::size_t wild_size = std::strlen(wild);
    LPWSTR wide_wild = (LPWSTR)_alloca( (wild_size + 1) * sizeof(WCHAR) );
    if (::MultiByteToWideChar(CP_ACP, 0,  wild, wild_size,  wide_wild, wild_size + 1) == 0)
@@ -385,7 +385,7 @@ inline _fi_find_handle find_first_file(const char* wild,  _fi_find_data& data)
 
 inline bool find_next_file(_fi_find_handle hf,  _fi_find_data& data)
 {
-#ifdef BOOST_NO_ANSI_APIS
+#ifdef AUTOBOOST_NO_ANSI_APIS
    return FindNextFileW(hf, &data);
 #else
    return FindNextFileA(hf, &data);
@@ -394,7 +394,7 @@ inline bool find_next_file(_fi_find_handle hf,  _fi_find_data& data)
    
 inline void copy_find_file_result_with_overflow_check(const _fi_find_data& data,  char* path, size_t max_size)
 {
-#ifdef BOOST_NO_ANSI_APIS
+#ifdef AUTOBOOST_NO_ANSI_APIS
    if (::WideCharToMultiByte(CP_ACP, 0,  data.cFileName, -1,  path, max_size,  NULL, NULL) == 0)
       re_detail::overflow_error_if_not_zero(1);
 #else
@@ -404,7 +404,7 @@ inline void copy_find_file_result_with_overflow_check(const _fi_find_data& data,
 
 inline bool is_not_current_or_parent_path_string(const _fi_find_data& data)
 {
-#ifdef BOOST_NO_ANSI_APIS
+#ifdef AUTOBOOST_NO_ANSI_APIS
    return (std::wcscmp(data.cFileName, L".") && std::wcscmp(data.cFileName, L".."));
 #else
    return (std::strcmp(data.cFileName, ".") && std::strcmp(data.cFileName, ".."));
@@ -416,21 +416,21 @@ file_iterator::file_iterator()
 {
    _root = _path = 0;
    ref = 0;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    try{
 #endif
    _root = new char[MAX_PATH];
-   BOOST_REGEX_NOEH_ASSERT(_root)
+   AUTOBOOST_REGEX_NOEH_ASSERT(_root)
    _path = new char[MAX_PATH];
-   BOOST_REGEX_NOEH_ASSERT(_path)
+   AUTOBOOST_REGEX_NOEH_ASSERT(_path)
    ptr = _path;
    *_path = 0;
    *_root = 0;
    ref = new file_iterator_ref();
-   BOOST_REGEX_NOEH_ASSERT(ref)
+   AUTOBOOST_REGEX_NOEH_ASSERT(ref)
    ref->hf = _fi_invalid_handle;
    ref->count = 1;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    }
    catch(...)
    {
@@ -446,13 +446,13 @@ file_iterator::file_iterator(const char* wild)
 {
    _root = _path = 0;
    ref = 0;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    try{
 #endif
    _root = new char[MAX_PATH];
-   BOOST_REGEX_NOEH_ASSERT(_root)
+   AUTOBOOST_REGEX_NOEH_ASSERT(_root)
    _path = new char[MAX_PATH];
-   BOOST_REGEX_NOEH_ASSERT(_path)
+   AUTOBOOST_REGEX_NOEH_ASSERT(_path)
    re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_root, MAX_PATH, wild));
    ptr = _root;
    while(*ptr)++ptr;
@@ -473,7 +473,7 @@ file_iterator::file_iterator(const char* wild)
    ptr = _path + std::strlen(_path);
 
    ref = new file_iterator_ref();
-   BOOST_REGEX_NOEH_ASSERT(ref)
+   AUTOBOOST_REGEX_NOEH_ASSERT(ref)
    ref->hf = find_first_file(wild,  ref->_data);
    ref->count = 1;
 
@@ -488,7 +488,7 @@ file_iterator::file_iterator(const char* wild)
       if(ref->_data.dwFileAttributes & _fi_dir)
          next();
    }
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    }
    catch(...)
    {
@@ -504,18 +504,18 @@ file_iterator::file_iterator(const file_iterator& other)
 {
    _root = _path = 0;
    ref = 0;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    try{
 #endif
    _root = new char[MAX_PATH];
-   BOOST_REGEX_NOEH_ASSERT(_root)
+   AUTOBOOST_REGEX_NOEH_ASSERT(_root)
    _path = new char[MAX_PATH];
-   BOOST_REGEX_NOEH_ASSERT(_path)
+   AUTOBOOST_REGEX_NOEH_ASSERT(_path)
    re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_root, MAX_PATH, other._root));
    re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_path, MAX_PATH, other._path));
    ptr = _path + (other.ptr - other._path);
    ref = other.ref;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    }
    catch(...)
    {
@@ -594,21 +594,21 @@ directory_iterator::directory_iterator()
 {
    _root = _path = 0;
    ref = 0;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    try{
 #endif
    _root = new char[MAX_PATH];
-   BOOST_REGEX_NOEH_ASSERT(_root)
+   AUTOBOOST_REGEX_NOEH_ASSERT(_root)
    _path = new char[MAX_PATH];
-   BOOST_REGEX_NOEH_ASSERT(_path)
+   AUTOBOOST_REGEX_NOEH_ASSERT(_path)
    ptr = _path;
    *_path = 0;
    *_root = 0;
    ref = new file_iterator_ref();
-   BOOST_REGEX_NOEH_ASSERT(ref)
+   AUTOBOOST_REGEX_NOEH_ASSERT(ref)
    ref->hf = _fi_invalid_handle;
    ref->count = 1;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    }
    catch(...)
    {
@@ -624,13 +624,13 @@ directory_iterator::directory_iterator(const char* wild)
 {
    _root = _path = 0;
    ref = 0;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    try{
 #endif
    _root = new char[MAX_PATH];
-   BOOST_REGEX_NOEH_ASSERT(_root)
+   AUTOBOOST_REGEX_NOEH_ASSERT(_root)
    _path = new char[MAX_PATH];
-   BOOST_REGEX_NOEH_ASSERT(_path)
+   AUTOBOOST_REGEX_NOEH_ASSERT(_path)
    re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_root, MAX_PATH, wild));
    ptr = _root;
    while(*ptr)++ptr;
@@ -652,7 +652,7 @@ directory_iterator::directory_iterator(const char* wild)
    ptr = _path + std::strlen(_path);
 
    ref = new file_iterator_ref();
-   BOOST_REGEX_NOEH_ASSERT(ref)
+   AUTOBOOST_REGEX_NOEH_ASSERT(ref)
    ref->count = 1;
    ref->hf = find_first_file(wild,  ref->_data);
    if(ref->hf == _fi_invalid_handle)
@@ -666,7 +666,7 @@ directory_iterator::directory_iterator(const char* wild)
       if(((ref->_data.dwFileAttributes & _fi_dir) == 0) || (std::strcmp(ptr, ".") == 0) || (std::strcmp(ptr, "..") == 0))
          next();
    }
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    }
    catch(...)
    {
@@ -694,18 +694,18 @@ directory_iterator::directory_iterator(const directory_iterator& other)
 {
    _root = _path = 0;
    ref = 0;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    try{
 #endif
    _root = new char[MAX_PATH];
-   BOOST_REGEX_NOEH_ASSERT(_root)
+   AUTOBOOST_REGEX_NOEH_ASSERT(_root)
    _path = new char[MAX_PATH];
-   BOOST_REGEX_NOEH_ASSERT(_path)
+   AUTOBOOST_REGEX_NOEH_ASSERT(_path)
    re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_root, MAX_PATH, other._root));
    re_detail::overflow_error_if_not_zero(re_detail::strcpy_s(_path, MAX_PATH, other._path));
    ptr = _path + (other.ptr - other._path);
    ref = other.ref;
-#ifndef BOOST_NO_EXCEPTIONS
+#ifndef AUTOBOOST_NO_EXCEPTIONS
    }
    catch(...)
    {
@@ -768,7 +768,7 @@ void directory_iterator::next()
 }
 
 
-#ifdef BOOST_REGEX_FI_POSIX_DIR
+#ifdef AUTOBOOST_REGEX_FI_POSIX_DIR
 
 struct _fi_priv_data
 {
@@ -833,7 +833,7 @@ bool iswild(const char* mask, const char* name)
          }
          // fall through:
       default:
-         if(BOOST_REGEX_FI_TRANSLATE(*mask) != BOOST_REGEX_FI_TRANSLATE(*name))
+         if(AUTOBOOST_REGEX_FI_TRANSLATE(*mask) != AUTOBOOST_REGEX_FI_TRANSLATE(*name))
             return false;
          ++mask;
          ++name;
@@ -912,7 +912,7 @@ bool _fi_FindClose(_fi_find_handle dat)
 } // namespace re_detail
 } // namspace boost
 
-#endif    // BOOST_REGEX_NO_FILEITER
+#endif    // AUTOBOOST_REGEX_NO_FILEITER
 
 
 

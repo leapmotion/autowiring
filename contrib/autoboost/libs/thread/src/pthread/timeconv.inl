@@ -7,7 +7,7 @@
 
 // boostinspect:nounnamed
 
-#include <boost/assert.hpp>
+#include <autoboost/assert.hpp>
 
 namespace {
 const int MILLISECONDS_PER_SECOND = 1000;
@@ -17,12 +17,12 @@ const int NANOSECONDS_PER_MILLISECOND = 1000000;
 const int MICROSECONDS_PER_SECOND = 1000000;
 const int NANOSECONDS_PER_MICROSECOND = 1000;
 
-#if defined BOOST_THREAD_USES_DATETIME
+#if defined AUTOBOOST_THREAD_USES_DATETIME
 inline void to_time(int milliseconds, autoboost::xtime& xt)
 {
     int res = 0;
     res = autoboost::xtime_get(&xt, autoboost::TIME_UTC_);
-    BOOST_ASSERT(res == autoboost::TIME_UTC_); (void)res;
+    AUTOBOOST_ASSERT(res == autoboost::TIME_UTC_); (void)res;
 
     xt.sec += (milliseconds / MILLISECONDS_PER_SECOND);
     xt.nsec += ((milliseconds % MILLISECONDS_PER_SECOND) *
@@ -35,8 +35,8 @@ inline void to_time(int milliseconds, autoboost::xtime& xt)
     }
 }
 #endif
-#if defined(BOOST_HAS_PTHREADS)
-#if defined BOOST_THREAD_USES_DATETIME
+#if defined(AUTOBOOST_HAS_PTHREADS)
+#if defined AUTOBOOST_THREAD_USES_DATETIME
 inline void to_timespec(const autoboost::xtime& xt, timespec& ts)
 {
     ts.tv_sec = static_cast<int>(xt.sec);
@@ -50,7 +50,7 @@ inline void to_timespec(const autoboost::xtime& xt, timespec& ts)
 #endif
 inline void to_time(int milliseconds, timespec& ts)
 {
-#if defined BOOST_THREAD_USES_DATETIME
+#if defined AUTOBOOST_THREAD_USES_DATETIME
     autoboost::xtime xt;
     to_time(milliseconds, xt);
     to_timespec(xt, ts);
@@ -67,13 +67,13 @@ inline void to_time(int milliseconds, timespec& ts)
 #endif
 }
 
-#if defined BOOST_THREAD_USES_DATETIME
+#if defined AUTOBOOST_THREAD_USES_DATETIME
 inline void to_timespec_duration(const autoboost::xtime& xt, timespec& ts)
 {
     autoboost::xtime cur;
     int res = 0;
     res = autoboost::xtime_get(&cur, autoboost::TIME_UTC_);
-    BOOST_ASSERT(res == autoboost::TIME_UTC_); (void)res;
+    AUTOBOOST_ASSERT(res == autoboost::TIME_UTC_); (void)res;
 
     if (autoboost::xtime_cmp(xt, cur) <= 0)
     {
@@ -100,13 +100,13 @@ inline void to_timespec_duration(const autoboost::xtime& xt, timespec& ts)
 #endif
 #endif
 
-#if defined BOOST_THREAD_USES_DATETIME
+#if defined AUTOBOOST_THREAD_USES_DATETIME
 inline void to_duration(autoboost::xtime xt, int& milliseconds)
 {
     autoboost::xtime cur;
     int res = 0;
     res = autoboost::xtime_get(&cur, autoboost::TIME_UTC_);
-    BOOST_ASSERT(res == autoboost::TIME_UTC_); (void)res;
+    AUTOBOOST_ASSERT(res == autoboost::TIME_UTC_); (void)res;
 
     if (autoboost::xtime_cmp(xt, cur) <= 0)
         milliseconds = 0;
@@ -128,7 +128,7 @@ inline void to_microduration(autoboost::xtime xt, int& microseconds)
     autoboost::xtime cur;
     int res = 0;
     res = autoboost::xtime_get(&cur, autoboost::TIME_UTC_);
-    BOOST_ASSERT(res == autoboost::TIME_UTC_); (void)res;
+    AUTOBOOST_ASSERT(res == autoboost::TIME_UTC_); (void)res;
 
     if (autoboost::xtime_cmp(xt, cur) <= 0)
         microseconds = 0;

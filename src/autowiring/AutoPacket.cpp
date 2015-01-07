@@ -9,6 +9,7 @@
 #include "ContextEnumerator.h"
 #include "SatCounter.h"
 #include <algorithm>
+#include <sstream>
 
 using namespace autowiring;
 
@@ -274,6 +275,12 @@ std::list<DecorationDisposition> AutoPacket::GetDispositions(const std::type_inf
   return dispositions;
 }
 
+void AutoPacket::ThrowNotDecoratedException(const std::type_info& ti) {
+  std::stringstream ss;
+  ss << "Attempted to obtain a type " << autowiring::demangle(ti) << " which was not decorated on this packet";
+  throw std::runtime_error(ss.str());
+}
+
 void AutoPacket::Put(const std::type_info& ti, SharedPointerSlot&& in) {
   auto& entry = m_decorations[ti];
   if(entry.satisfied || entry.isCheckedOut) {
@@ -347,7 +354,6 @@ AutoPacket::Recipient AutoPacket::AddRecipient(const AutoFilterDescriptor& descr
     m_satCounters.push_front(descriptor);
     retVal.position = m_satCounters.begin();
     recipient = &m_satCounters.front();
-    recipient->Reset();
 
     // (2) Update satisfaction & Append types from subscriber
     AddSatCounter(*recipient);

@@ -10,14 +10,14 @@
 
 #include <ostream>
 
-#define BOOST_ARCHIVE_SOURCE
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/detail/archive_serializer_map.hpp>
+#define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/archive/binary_oarchive.hpp>
+#include <autoboost/archive/detail/archive_serializer_map.hpp>
 
 // explicitly instantiate for this type of binary stream
-#include <boost/archive/impl/archive_serializer_map.ipp>
-#include <boost/archive/impl/basic_binary_oprimitive.ipp>
-#include <boost/archive/impl/basic_binary_oarchive.ipp>
+#include <autoboost/archive/impl/archive_serializer_map.ipp>
+#include <autoboost/archive/impl/basic_binary_oprimitive.ipp>
+#include <autoboost/archive/impl/basic_binary_oarchive.ipp>
 
 namespace autoboost {
 namespace archive {

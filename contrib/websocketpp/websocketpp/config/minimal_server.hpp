@@ -88,7 +88,7 @@ namespace config {
  * <system_error>
  *
  * Operating System:
- * <stdint.h> or <boost/cstdint.hpp>
+ * <stdint.h> or <autoboost/cstdint.hpp>
  * <netinet/in.h> or <winsock2.h> (for ntohl.. could potentially bundle this)
  *
  * @since 0.4.0-dev

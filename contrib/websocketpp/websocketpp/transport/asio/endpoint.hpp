@@ -34,9 +34,9 @@
 #include <websocketpp/transport/asio/connection.hpp>
 #include <websocketpp/transport/asio/security/none.hpp>
 
-#include <boost/asio.hpp>
-#include <boost/bind.hpp>
-#include <boost/system/error_code.hpp>
+#include <autoboost/asio.hpp>
+#include <autoboost/bind.hpp>
+#include <autoboost/system/error_code.hpp>
 
 namespace websocketpp {
 namespace transport {

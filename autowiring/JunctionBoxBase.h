@@ -1,14 +1,13 @@
 // Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include <vector>
 #include "Object.h"
+#include <list>
 #include MUTEX_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_SET
 
 class CoreContext;
 class DispatchQueue;
-class EventOutputStreamBase;
 
 template<class T>
 struct JunctionBoxEntry;
@@ -38,7 +37,7 @@ protected:
   /// <summary>
   /// Invokes SignalTerminate on each context in the specified vector.  Does not wait.
   /// </summary>
-  static void TerminateAll(const std::vector<std::weak_ptr<CoreContext>>& teardown);
+  static void TerminateAll(const std::list<std::weak_ptr<CoreContext>>& teardown);
 
   /// <summary>
   /// Convenience routine for Fire calls
@@ -61,13 +60,6 @@ public:
   bool IsInitiated(void) const {return m_isInitiated;}
   void Initiate(void) {m_isInitiated=true;}
   
-  // Accessor methods:
-  std::vector<std::weak_ptr<EventOutputStreamBase> > * m_PotentialMarshals;
-
-  void SetPotentialMarshals(std::vector<std::weak_ptr<EventOutputStreamBase>> * inVec){
-    m_PotentialMarshals = inVec;
-  }
-
   const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const { return m_dispatch; }
   std::mutex& GetDispatchQueueLock(void) const { return m_lock; }
 

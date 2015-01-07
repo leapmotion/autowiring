@@ -8,11 +8,11 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#if defined(BOOST_SP_ENABLE_DEBUG_HOOKS)
+#if defined(AUTOBOOST_SP_ENABLE_DEBUG_HOOKS)
 
-#include <boost/assert.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/detail/lightweight_mutex.hpp>
+#include <autoboost/assert.hpp>
+#include <autoboost/shared_ptr.hpp>
+#include <autoboost/detail/lightweight_mutex.hpp>
 #include <cstdlib>
 #include <map>
 #include <deque>
@@ -102,7 +102,7 @@ static void find_unreachable_objects_impl(map_type const & m, map2_type & m2)
         {
             autoboost::detail::sp_counted_base const * p = static_cast<autoboost::detail::sp_counted_base const *>(i->first);
 
-            BOOST_ASSERT(p->use_count() != 0); // there should be no inactive counts in the map
+            AUTOBOOST_ASSERT(p->use_count() != 0); // there should be no inactive counts in the map
 
             m2[ i->first ];
 
@@ -136,7 +136,7 @@ static void find_unreachable_objects_impl(map_type const & m, map2_type & m2)
             open.pop_front();
 
             map_type::const_iterator i = m.find(p);
-            BOOST_ASSERT(i != m.end());
+            AUTOBOOST_ASSERT(i != m.end());
 
             scan_and_mark(i->second.first, i->second.second, m2, open);
         }
@@ -149,7 +149,7 @@ std::size_t find_unreachable_objects(bool report)
 {
     map2_type m2;
 
-#ifdef BOOST_HAS_THREADS
+#ifdef AUTOBOOST_HAS_THREADS
 
     // This will work without the #ifdef, but some compilers warn
     // that lock is not referenced
@@ -167,7 +167,7 @@ std::size_t find_unreachable_objects(bool report)
         for(map2_type::iterator j = m2.begin(); j != m2.end(); ++j)
         {
             map_type::const_iterator i = m.find(j->first);
-            BOOST_ASSERT(i != m.end());
+            AUTOBOOST_ASSERT(i != m.end());
             std::cout << "Unreachable object at " << i->second.first << ", " << i->second.second << " bytes long.\n";
         }
     }
@@ -201,7 +201,7 @@ void free_unreachable_objects()
     {
         map2_type m2;
 
-#ifdef BOOST_HAS_THREADS
+#ifdef AUTOBOOST_HAS_THREADS
 
         mutex_type::scoped_lock lock(get_mutex());
 
@@ -214,7 +214,7 @@ void free_unreachable_objects()
         for(map2_type::iterator j = m2.begin(); j != m2.end(); ++j)
         {
             map_type::const_iterator i = m.find(j->first);
-            BOOST_ASSERT(i != m.end());
+            AUTOBOOST_ASSERT(i != m.end());
             scan_and_free(i->second.first, i->second.second, m2, free);
         }
     }
@@ -233,7 +233,7 @@ void sp_scalar_constructor_hook(void *)
 
 void sp_scalar_constructor_hook(void * px, std::size_t size, void * pn)
 {
-#ifdef BOOST_HAS_THREADS
+#ifdef AUTOBOOST_HAS_THREADS
 
     mutex_type::scoped_lock lock(get_mutex());
 
@@ -248,7 +248,7 @@ void sp_scalar_destructor_hook(void *)
 
 void sp_scalar_destructor_hook(void *, std::size_t, void * pn)
 {
-#ifdef BOOST_HAS_THREADS
+#ifdef AUTOBOOST_HAS_THREADS
 
     mutex_type::scoped_lock lock(get_mutex());
 
@@ -267,4 +267,4 @@ void sp_array_destructor_hook(void *)
 
 } // namespace autoboost
 
-#endif // defined(BOOST_SP_ENABLE_DEBUG_HOOKS)
+#endif // defined(AUTOBOOST_SP_ENABLE_DEBUG_HOOKS)

@@ -12,24 +12,24 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE:        c_regex_traits.cpp
-  *   VERSION:     see <boost/version.hpp>
+  *   VERSION:     see <autoboost/version.hpp>
   *   DESCRIPTION: Implements out of line c_regex_traits<char> members
   */
 
 
-#define BOOST_REGEX_SOURCE
+#define AUTOBOOST_REGEX_SOURCE
 
-#include <boost/config.hpp>
-#include <boost/detail/workaround.hpp>
+#include <autoboost/config.hpp>
+#include <autoboost/detail/workaround.hpp>
 #include "internals.hpp"
 
-#if !BOOST_WORKAROUND(__BORLANDC__, < 0x560)
+#if !AUTOBOOST_WORKAROUND(__BORLANDC__, < 0x560)
 
-#include <boost/regex/v4/c_regex_traits.hpp>
-#include <boost/regex/v4/primary_transform.hpp>
-#include <boost/regex/v4/regex_traits_defaults.hpp>
+#include <autoboost/regex/v4/c_regex_traits.hpp>
+#include <autoboost/regex/v4/primary_transform.hpp>
+#include <autoboost/regex/v4/regex_traits_defaults.hpp>
 
-#ifdef BOOST_NO_STDC_NAMESPACE
+#ifdef AUTOBOOST_NO_STDC_NAMESPACE
 namespace std{
    using ::strxfrm; using ::isspace;
    using ::ispunct; using ::isalpha;
@@ -40,13 +40,13 @@ namespace std{
 }
 #endif
 
-#ifdef BOOST_HAS_ABI_HEADERS
-#  include BOOST_ABI_PREFIX
+#ifdef AUTOBOOST_HAS_ABI_HEADERS
+#  include AUTOBOOST_ABI_PREFIX
 #endif
 
 namespace autoboost{
 
-c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::transform(const char* p1, const char* p2)
+c_regex_traits<char>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::transform(const char* p1, const char* p2)
 { 
    std::string result(10, ' ');
    std::size_t s = result.size();
@@ -74,7 +74,7 @@ c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::transfo
    return result; 
 }
 
-c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::transform_primary(const char* p1, const char* p2)
+c_regex_traits<char>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::transform_primary(const char* p1, const char* p2)
 {
    static char s_delim;
    static const int s_collate_type = ::autoboost::re_detail::find_sort_syntax(static_cast<c_regex_traits<char>*>(0), &s_delim);
@@ -121,7 +121,7 @@ c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::transfo
    return result;
 }
 
-c_regex_traits<char>::char_class_type BOOST_REGEX_CALL c_regex_traits<char>::lookup_classname(const char* p1, const char* p2)
+c_regex_traits<char>::char_class_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::lookup_classname(const char* p1, const char* p2)
 {
    static const char_class_type masks[] = 
    {
@@ -157,11 +157,11 @@ c_regex_traits<char>::char_class_type BOOST_REGEX_CALL c_regex_traits<char>::loo
          s[i] = static_cast<char>((std::tolower)(static_cast<unsigned char>(s[i])));
       idx = ::autoboost::re_detail::get_default_class_id(&*s.begin(), &*s.begin() + s.size());
    }
-   BOOST_ASSERT(std::size_t(idx+1) < sizeof(masks) / sizeof(masks[0]));
+   AUTOBOOST_ASSERT(std::size_t(idx+1) < sizeof(masks) / sizeof(masks[0]));
    return masks[idx+1];
 }
 
-bool BOOST_REGEX_CALL c_regex_traits<char>::isctype(char c, char_class_type mask)
+bool AUTOBOOST_REGEX_CALL c_regex_traits<char>::isctype(char c, char_class_type mask)
 {
    return
       ((mask & char_class_space) && (std::isspace)(static_cast<unsigned char>(c)))
@@ -179,7 +179,7 @@ bool BOOST_REGEX_CALL c_regex_traits<char>::isctype(char c, char_class_type mask
       || ((mask & char_class_horizontal) && (std::isspace)(static_cast<unsigned char>(c)) && !::autoboost::re_detail::is_separator(c) && (c != '\v'));
 }
 
-c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::lookup_collatename(const char* p1, const char* p2)
+c_regex_traits<char>::string_type AUTOBOOST_REGEX_CALL c_regex_traits<char>::lookup_collatename(const char* p1, const char* p2)
 {
    std::string s(p1, p2);
    s = ::autoboost::re_detail::lookup_default_collate_name(s);
@@ -188,7 +188,7 @@ c_regex_traits<char>::string_type BOOST_REGEX_CALL c_regex_traits<char>::lookup_
    return s;
 }
 
-int BOOST_REGEX_CALL c_regex_traits<char>::value(char c, int radix)
+int AUTOBOOST_REGEX_CALL c_regex_traits<char>::value(char c, int radix)
 {
    char b[2] = { c, '\0', };
    char* ep;
@@ -199,8 +199,8 @@ int BOOST_REGEX_CALL c_regex_traits<char>::value(char c, int radix)
 }
 
 }
-#ifdef BOOST_HAS_ABI_HEADERS
-#  include BOOST_ABI_SUFFIX
+#ifdef AUTOBOOST_HAS_ABI_HEADERS
+#  include AUTOBOOST_ABI_SUFFIX
 #endif
 
 #endif

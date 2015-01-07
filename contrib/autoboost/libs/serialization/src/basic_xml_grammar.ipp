@@ -14,33 +14,33 @@
 
 #include <istream>
 #include <algorithm>
-#include <boost/config.hpp> // BOOST_DEDUCED_TYPENAME
+#include <autoboost/config.hpp> // AUTOBOOST_DEDUCED_TYPENAME
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(push)
 #  pragma warning(disable : 4511 4512)
 #endif
 
 // spirit stuff
-#include <boost/spirit/include/classic_operators.hpp>
-#include <boost/spirit/include/classic_actions.hpp>
-#include <boost/spirit/include/classic_numerics.hpp>
+#include <autoboost/spirit/include/classic_operators.hpp>
+#include <autoboost/spirit/include/classic_actions.hpp>
+#include <autoboost/spirit/include/classic_numerics.hpp>
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #pragma warning(pop)
 #endif
 
 // for head_iterator test
-//#include <boost/bind.hpp> 
-#include <boost/function.hpp>
-#include <boost/serialization/pfto.hpp>
+//#include <autoboost/bind.hpp> 
+#include <autoboost/function.hpp>
+#include <autoboost/serialization/pfto.hpp>
 
-#include <boost/io/ios_state.hpp>
-#include <boost/serialization/throw_exception.hpp>
-#include <boost/archive/impl/basic_xml_grammar.hpp>
-#include <boost/archive/xml_archive_exception.hpp>
-#include <boost/archive/basic_xml_archive.hpp>
-#include <boost/archive/iterators/xml_unescape.hpp>
+#include <autoboost/io/ios_state.hpp>
+#include <autoboost/serialization/throw_exception.hpp>
+#include <autoboost/archive/impl/basic_xml_grammar.hpp>
+#include <autoboost/archive/xml_archive_exception.hpp>
+#include <autoboost/archive/basic_xml_archive.hpp>
+#include <autoboost/archive/iterators/xml_unescape.hpp>
 
 using namespace autoboost::spirit::classic;
 
@@ -52,7 +52,7 @@ namespace archive {
 
 namespace xml { // anonymous
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #  pragma warning(push)
 #  pragma warning(disable : 4511 4512)
 #endif
@@ -89,7 +89,7 @@ struct assign_impl<std::string> {
     {}
 };
 
-#ifndef BOOST_NO_STD_WSTRING
+#ifndef AUTOBOOST_NO_STD_WSTRING
 template<>
 struct assign_impl<std::wstring> {
     std::wstring & t;
@@ -131,8 +131,8 @@ struct append_string {
     #if 0
         typedef autoboost::archive::iterators::xml_unescape<Iterator> translator;
         contents.append(
-            translator(BOOST_MAKE_PFTO_WRAPPER(start)), 
-            translator(BOOST_MAKE_PFTO_WRAPPER(end))
+            translator(AUTOBOOST_MAKE_PFTO_WRAPPER(start)), 
+            translator(AUTOBOOST_MAKE_PFTO_WRAPPER(end))
         );
     #endif
         contents.append(start, end);
@@ -146,7 +146,7 @@ template<class String>
 struct append_char {
     String & contents;
     void operator()(const unsigned int char_value) const {
-        const BOOST_DEDUCED_TYPENAME String::value_type z = char_value;
+        const AUTOBOOST_DEDUCED_TYPENAME String::value_type z = char_value;
         contents += z;
     }
     append_char(String & contents_)
@@ -159,7 +159,7 @@ struct append_lit {
     String & contents;
     template<class X, class Y>
     void operator()(const X & /*x*/, const Y & /*y*/) const {
-        const BOOST_DEDUCED_TYPENAME String::value_type z = c;
+        const AUTOBOOST_DEDUCED_TYPENAME String::value_type z = c;
         contents += z;
     }
     append_lit(String & contents_)
@@ -167,7 +167,7 @@ struct append_lit {
     {}
 };
 
-#ifdef BOOST_MSVC
+#ifdef AUTOBOOST_MSVC
 #pragma warning(pop)
 #endif
 
@@ -175,7 +175,7 @@ struct append_lit {
 
 template<class CharType>
 bool basic_xml_grammar<CharType>::my_parse(
-    BOOST_DEDUCED_TYPENAME basic_xml_grammar<CharType>::IStream & is,
+    AUTOBOOST_DEDUCED_TYPENAME basic_xml_grammar<CharType>::IStream & is,
     const rule_t & rule_,
     CharType delimiter
 ) const {
@@ -192,7 +192,7 @@ bool basic_xml_grammar<CharType>::my_parse(
     
     CharType val;
     do{
-        BOOST_DEDUCED_TYPENAME basic_xml_grammar<CharType>::IStream::int_type
+        AUTOBOOST_DEDUCED_TYPENAME basic_xml_grammar<CharType>::IStream::int_type
             result = is.get();
         if(is.fail())
             return false;
@@ -206,14 +206,14 @@ bool basic_xml_grammar<CharType>::my_parse(
     // is terminated.  This will permit the archive to be used for debug
     // and transaction data logging in the standard way.
     
-    parse_info<BOOST_DEDUCED_TYPENAME std::basic_string<CharType>::iterator> 
+    parse_info<AUTOBOOST_DEDUCED_TYPENAME std::basic_string<CharType>::iterator> 
         result = autoboost::spirit::classic::parse(arg.begin(), arg.end(), rule_);
     return result.hit;
 }
 
 template<class CharType>
 bool basic_xml_grammar<CharType>::parse_start_tag(
-    BOOST_DEDUCED_TYPENAME basic_xml_grammar<CharType>::IStream & is
+    AUTOBOOST_DEDUCED_TYPENAME basic_xml_grammar<CharType>::IStream & is
 ){
     rv.class_name.resize(0);
     return my_parse(is, STag);
@@ -283,7 +283,7 @@ basic_xml_grammar<CharType>::basic_xml_grammar(){
         CharDataChars [
             xml::append_string<
                 StringType, 
-                BOOST_DEDUCED_TYPENAME std::basic_string<CharType>::const_iterator
+                AUTOBOOST_DEDUCED_TYPENAME std::basic_string<CharType>::const_iterator
             >(rv.contents)
         ]
     ;
@@ -318,7 +318,7 @@ basic_xml_grammar<CharType>::basic_xml_grammar(){
     ;
 
     ClassIDAttribute = 
-        str_p(BOOST_ARCHIVE_XML_CLASS_ID()) >> NameTail
+        str_p(AUTOBOOST_ARCHIVE_XML_CLASS_ID()) >> NameTail
         >> Eq 
         >> L'"'
         >> int_p [xml::assign_object(rv.class_id)]
@@ -326,9 +326,9 @@ basic_xml_grammar<CharType>::basic_xml_grammar(){
       ;
 
     ObjectIDAttribute = (
-        str_p(BOOST_ARCHIVE_XML_OBJECT_ID()) 
+        str_p(AUTOBOOST_ARCHIVE_XML_OBJECT_ID()) 
         | 
-        str_p(BOOST_ARCHIVE_XML_OBJECT_REFERENCE()) 
+        str_p(AUTOBOOST_ARCHIVE_XML_OBJECT_REFERENCE()) 
         )
         >> NameTail
         >> Eq 
@@ -353,7 +353,7 @@ basic_xml_grammar<CharType>::basic_xml_grammar(){
     ;
     
     ClassNameAttribute = 
-        str_p(BOOST_ARCHIVE_XML_CLASS_NAME()) 
+        str_p(AUTOBOOST_ARCHIVE_XML_CLASS_NAME()) 
         >> Eq 
         >> L'"'
         >> ClassName
@@ -361,7 +361,7 @@ basic_xml_grammar<CharType>::basic_xml_grammar(){
     ;
 
     TrackingAttribute = 
-        str_p(BOOST_ARCHIVE_XML_TRACKING())
+        str_p(AUTOBOOST_ARCHIVE_XML_TRACKING())
         >> Eq
         >> L'"'
         >> uint_p [xml::assign_level(rv.tracking_level)]
@@ -369,7 +369,7 @@ basic_xml_grammar<CharType>::basic_xml_grammar(){
     ;
 
     VersionAttribute = 
-        str_p(BOOST_ARCHIVE_XML_VERSION())
+        str_p(AUTOBOOST_ARCHIVE_XML_VERSION())
         >> Eq
         >> L'"'
         >> uint_p [xml::assign_object(rv.version)]
@@ -449,7 +449,7 @@ void basic_xml_grammar<CharType>::init(IStream & is){
         autoboost::serialization::throw_exception(
             xml_archive_exception(xml_archive_exception::xml_archive_parsing_error)
         );
-    if(! std::equal(rv.class_name.begin(), rv.class_name.end(), BOOST_ARCHIVE_SIGNATURE()))
+    if(! std::equal(rv.class_name.begin(), rv.class_name.end(), AUTOBOOST_ARCHIVE_SIGNATURE()))
         autoboost::serialization::throw_exception(
             archive_exception(archive_exception::invalid_signature)
         );

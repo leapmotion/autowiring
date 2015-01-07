@@ -39,9 +39,9 @@
     #include <mutex>
     #include <condition_variable>
 #else
-    #include <boost/thread.hpp>
-    #include <boost/thread/mutex.hpp>
-    #include <boost/thread/condition_variable.hpp>
+    #include <autoboost/thread.hpp>
+    #include <autoboost/thread/mutex.hpp>
+    #include <autoboost/thread/condition_variable.hpp>
 #endif
 
 namespace websocketpp {

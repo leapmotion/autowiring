@@ -3,7 +3,6 @@
 #include "AnySharedPointer.h"
 #include "AutoFilterDescriptor.h"
 #include "demangle.h"
-#include <sstream>
 
 /// <summary>
 /// A single subscription counter entry
@@ -19,7 +18,7 @@ struct SatCounter:
   SatCounter(const AutoFilterDescriptor& source):
     AutoFilterDescriptor(source),
     called(false),
-    remaining(0)
+    remaining(m_requiredCount)
   {}
 
   SatCounter(const SatCounter& source):
@@ -28,38 +27,27 @@ struct SatCounter:
     remaining(source.remaining)
   {}
 
-  SatCounter& operator = (const SatCounter& source) {
-    AutoFilterDescriptor::operator = (source);
-    called = source.called;
-    remaining = source.remaining;
-    return *this;
-  }
-
   // The number of times the AutoFilter is called
   bool called;
 
   // The number of inputs remaining to this counter:
   size_t remaining;
 
+private:
+  /// <summary>
+  /// Throws a formatted exception if the underlying filter is called more than once
+  /// </summary>
+  void ThrowRepeatedCallException(void) const;
+
+public:
   /// <summary>
   /// Calls the underlying AutoFilter method with the specified AutoPacketAdapter as input
   /// </summary>
   void CallAutoFilter(AutoPacket& packet) {
-    if (called) {
-      std::stringstream ss;
-      ss << "Repeated call to " << autowiring::demangle(m_pType);
-      throw std::runtime_error(ss.str());
-    }
+    if (called)
+      ThrowRepeatedCallException();
     called = true;
     GetCall()(GetAutoFilter(), packet);
-  }
-
-  /// <summary>
-  /// Resets the remaining counter to its initial value
-  /// </summary>
-  void Reset(void) {
-    called = false;
-    remaining = m_requiredCount;
   }
 
   /// <summary>

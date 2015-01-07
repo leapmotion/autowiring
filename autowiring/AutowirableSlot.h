@@ -125,8 +125,7 @@ public:
   typedef T value_type;
 
   AutowirableSlot(const std::shared_ptr<CoreContext>& ctxt) :
-    DeferrableAutowiring(AnySharedPointerT<T>(), ctxt),
-    m_fast_pointer_cast(&autowiring::fast_pointer_cast<T, Object>)
+    DeferrableAutowiring(AnySharedPointerT<T>(), ctxt)
   {
     SlotInformationStackLocation::RegisterSlot(this);
   }
@@ -135,8 +134,6 @@ public:
     CancelAutowiring();
   }
 
-  std::shared_ptr<T>(*const m_fast_pointer_cast)(const std::shared_ptr<Object>&);
-
   /// <remarks>
   /// Shadowing GetType call, provided here as a virtual function optimization
   /// </remarks>
@@ -144,9 +141,33 @@ public:
     return typeid(T);
   }
 
-  bool IsAutowired(void) const { return !!get(); }
+  bool IsAutowired(void) const {
+    // If the user wishes to know if this type is instantiated, we will require that a full definition
+    // of this type MUST be available.  The reason for this is that, if the user wishes to know if a
+    // type is autowired, they are required at a minimum to know what that type's inheritance relations
+    // are to other types in the system.
+    (void) autowiring::fast_pointer_cast_initializer<T, Object>::sc_init;
+    return !!get();
+  }
 
+  /// <remarks>
+  /// Obtains a pointer to the underlying type, if autowired
+  /// </remarks>
   T* get(void) const {
+    // For now, we require that the full type be available to use this method
+    (void) autowiring::fast_pointer_cast_initializer<T, Object>::sc_init;
+    return get_unsafe();
+  }
+
+  /// <remarks>
+  /// Obtains a pointer to the underlying type, if autowired
+  /// </remarks>
+  /// <remarks>
+  /// Users are STRONGLY discouraged from making use of this routine.  This function does not cause
+  /// any runtime type information about T to wind up in any of Autowiring's type registries, and
+  /// this may prevent the type from ever being detected as autowirable as a result.
+  /// </remarks>
+  T* get_unsafe(void) const {
     return
       static_cast<const AnySharedPointerT<T>*>(
         static_cast<const AnySharedPointer*>(
@@ -155,15 +176,23 @@ public:
       )->slot()->get().get();
   }
 
-  T* operator->(void) const {
-    return get();
-  }
-
   explicit operator bool(void) const {
     return IsAutowired();
   }
 
+  T* operator->(void) const {
+    // Initialize any blind fast casts to the actually desired type.  This is one of a few points
+    // where we can guarantee that the type will be completely defined, because the user is about
+    // to make use of this type.
+    (void) autowiring::fast_pointer_cast_initializer<T, Object>::sc_init;
+    return get();
+  }
+
   T& operator*(void) const {
+    // We have to initialize here, in the operator context, because we don't actually know if the
+    // user will be making use of this type.
+    (void) autowiring::fast_pointer_cast_initializer<T, Object>::sc_init;
+
     return *get();
   }
 

@@ -12,31 +12,31 @@
  /*
   *   LOCATION:    see http://www.boost.org for most recent version.
   *   FILE         static_mutex.cpp
-  *   VERSION      see <boost/version.hpp>
+  *   VERSION      see <autoboost/version.hpp>
   *   DESCRIPTION: Declares static_mutex lock type.
   */
 
-#define BOOST_REGEX_SOURCE
-#include <boost/config.hpp>
-#include <boost/assert.hpp>
+#define AUTOBOOST_REGEX_SOURCE
+#include <autoboost/config.hpp>
+#include <autoboost/assert.hpp>
 
-#ifdef BOOST_HAS_THREADS
+#ifdef AUTOBOOST_HAS_THREADS
 
-#include <boost/regex/pending/static_mutex.hpp>
+#include <autoboost/regex/pending/static_mutex.hpp>
 
-#if defined(BOOST_HAS_WINTHREADS)
+#if defined(AUTOBOOST_HAS_WINTHREADS)
 #ifndef NOMINMAX
 #  define NOMINMAX
 #endif
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <boost/static_assert.hpp>
+#include <autoboost/static_assert.hpp>
 #endif
 
 
 namespace autoboost{
 
-#if defined(BOOST_HAS_PTHREADS) && defined(PTHREAD_MUTEX_INITIALIZER)
+#if defined(AUTOBOOST_HAS_PTHREADS) && defined(PTHREAD_MUTEX_INITIALIZER)
 
 scoped_static_mutex_lock::scoped_static_mutex_lock(static_mutex& m, bool lk)
 : m_mutex(m), m_have_lock(false)
@@ -67,14 +67,14 @@ void scoped_static_mutex_lock::unlock()
       // If this fails there's nothing we can do except assert,
       // exceptions are out of the question as this code is called
       // from the lock's destructor:
-      BOOST_VERIFY(pthread_mutex_unlock(&(m_mutex.m_mutex)) == 0);
+      AUTOBOOST_VERIFY(pthread_mutex_unlock(&(m_mutex.m_mutex)) == 0);
       m_have_lock = false;
    }
 }
 
-#elif defined(BOOST_HAS_WINTHREADS)
+#elif defined(AUTOBOOST_HAS_WINTHREADS)
 
-BOOST_STATIC_ASSERT(sizeof(LONG) == sizeof(autoboost::int32_t));
+AUTOBOOST_STATIC_ASSERT(sizeof(LONG) == sizeof(autoboost::int32_t));
 
 scoped_static_mutex_lock::scoped_static_mutex_lock(static_mutex& m, bool lk)
 : m_mutex(m), m_have_lock(false)
@@ -123,12 +123,12 @@ void scoped_static_mutex_lock::unlock()
 // Portable version of a static mutex based on Boost.Thread library:
 //
 #include <stdlib.h>
-#include <boost/assert.hpp>
+#include <autoboost/assert.hpp>
 
 autoboost::recursive_mutex* static_mutex::m_pmutex = 0;
-autoboost::once_flag static_mutex::m_once = BOOST_ONCE_INIT;
+autoboost::once_flag static_mutex::m_once = AUTOBOOST_ONCE_INIT;
 
-extern "C" BOOST_REGEX_DECL void autoboost_regex_free_static_mutex()
+extern "C" AUTOBOOST_REGEX_DECL void autoboost_regex_free_static_mutex()
 {
    delete static_mutex::m_pmutex;
    static_mutex::m_pmutex = 0;
@@ -138,7 +138,7 @@ void static_mutex::init()
 {
    m_pmutex = new autoboost::recursive_mutex();
    int r = atexit(autoboost_regex_free_static_mutex);
-   BOOST_ASSERT(0 == r);
+   AUTOBOOST_ASSERT(0 == r);
 }
 
 scoped_static_mutex_lock::scoped_static_mutex_lock(static_mutex& , bool lk)
@@ -180,4 +180,4 @@ void scoped_static_mutex_lock::unlock()
 
 }
 
-#endif // BOOST_HAS_THREADS
+#endif // AUTOBOOST_HAS_THREADS

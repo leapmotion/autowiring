@@ -12,14 +12,14 @@
 #  pragma warning (disable : 4786) // too long name, harmless warning
 #endif
 
-#define BOOST_ARCHIVE_SOURCE
-#include <boost/archive/xml_oarchive.hpp>
-#include <boost/archive/detail/archive_serializer_map.hpp>
+#define AUTOBOOST_ARCHIVE_SOURCE
+#include <autoboost/archive/xml_oarchive.hpp>
+#include <autoboost/archive/detail/archive_serializer_map.hpp>
 
 // explicitly instantiate for this type of xml stream
-#include <boost/archive/impl/archive_serializer_map.ipp>
-#include <boost/archive/impl/basic_xml_oarchive.ipp>
-#include <boost/archive/impl/xml_oarchive_impl.ipp>
+#include <autoboost/archive/impl/archive_serializer_map.ipp>
+#include <autoboost/archive/impl/basic_xml_oarchive.ipp>
+#include <autoboost/archive/impl/xml_oarchive_impl.ipp>
 
 namespace autoboost {
 namespace archive {

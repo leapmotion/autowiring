@@ -26,7 +26,7 @@
  */
 //#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE basic_log
-#include <boost/test/unit_test.hpp>
+#include <autoboost/test/unit_test.hpp>
 
 #include <string>
 

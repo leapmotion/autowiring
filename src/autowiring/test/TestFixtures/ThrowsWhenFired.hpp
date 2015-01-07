@@ -16,6 +16,6 @@ public:
 
   void DoThrow(void) override {
     hit = true;
-    throw_rethrowable Ex(i);
+    throw Ex(i);
   }
 };
