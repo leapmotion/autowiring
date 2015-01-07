@@ -208,15 +208,11 @@ void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const DecorationKey& key)
   entry.m_decoration = *ptr;
 }
 
-AnySharedPointer AutoPacket::UnsafeComplete(bool ready, const DecorationKey& key, DecorationDisposition*& entry) {
+AnySharedPointer AutoPacket::UnsafeComplete(const DecorationKey& key, DecorationDisposition*& entry) {
   entry = &m_decorations[key];
 
   assert(entry->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
   assert(entry->isCheckedOut); // CompleteCheckout must follow Checkout
-
-  if(!ready)
-    // Memory must be released, the checkout was cancelled
-    entry->m_decoration->reset();
 
   // Reset the checkout flag before releasing the lock:
   entry->isCheckedOut = false;
@@ -224,26 +220,23 @@ AnySharedPointer AutoPacket::UnsafeComplete(bool ready, const DecorationKey& key
   return AnySharedPointer(entry->m_decoration);
 }
 
-void AutoPacket::CompleteCheckout(bool ready, const DecorationKey& ti) {
+void AutoPacket::CompleteCheckout(const DecorationKey& key) {
   DecorationDisposition* entry = nullptr;
   AnySharedPointer decoration;
   {
     // This allows us to retrieve correct entries for decorated input requests
     std::lock_guard<std::mutex> guard(m_lock);
-    decoration = UnsafeComplete(ready, ti, entry);
+    decoration = UnsafeComplete(key, entry);
   }
   
   // Priors update on the next key:
   if (entry) {
-    if (ready)
-      UpdateSatisfaction(ti);
-    else
-      MarkUnsatisfiable(ti);
+    UpdateSatisfaction(key);
   }
 
   // If there are any filters on _this_ packet that desire to know the prior packet, then
   // we must proactively preserve the value of this decoration for our successor.
-  DecorationKey successorPrior(ti);
+  DecorationKey successorPrior(key);
   successorPrior.tshift++;
   auto q = m_decorations.find(successorPrior);
   if (q != m_decorations.end()) {
@@ -254,7 +247,7 @@ void AutoPacket::CompleteCheckout(bool ready, const DecorationKey& ti) {
       std::lock_guard<std::mutex> lk(successorPacket->m_lock);
       successorPacket->UnsafeCheckout(&decoration, successorPrior);
     }
-    successorPacket->CompleteCheckout(true, successorPrior);
+    successorPacket->CompleteCheckout(successorPrior);
   }
 }
 
@@ -353,7 +346,7 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
       recipient->UnsafeCheckout(&any_ptr, data);
 
       DecorationDisposition* entry = nullptr;
-      recipient->UnsafeComplete(true, data, entry);
+      recipient->UnsafeComplete(data, entry);
       decoQueue.push_back(entry);
     }
 

@@ -159,12 +159,12 @@ protected:
   void UnsafeCheckout(AnySharedPointer* ptr, const DecorationKey& key);
 
   /// <summary>Un-templated & locked component of CompleteCheckout</summary>
-  AnySharedPointer UnsafeComplete(bool ready, const DecorationKey& key, DecorationDisposition*& entry);
+  AnySharedPointer UnsafeComplete(const DecorationKey& key, DecorationDisposition*& entry);
 
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
-  /// <param name="ready">Ready flag, set to false if the decoration should be marked unsatisfiable</param>
-  void CompleteCheckout(bool ready, const DecorationKey& data);
+  /// </summary>
+  void CompleteCheckout(const DecorationKey& data);
 
   /// <summary>
   /// Retrieves the decoration disposition corresponding to some type
@@ -426,7 +426,7 @@ public:
       UnsafeCheckout(&any_ptr, key);
     }
     
-    CompleteCheckout(true, key);
+    CompleteCheckout(key);
     return *ptr;
   }
 
