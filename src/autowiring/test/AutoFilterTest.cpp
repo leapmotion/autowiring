@@ -157,17 +157,6 @@ TEST_F(AutoFilterTest, VerifyNoMultiDecorate) {
   EXPECT_ANY_THROW(packet->DecorateImmediate(Decoration<2>(), Decoration<2>())) << "Repeated type in immediate decoration was not identified as an error";
 }
 
-TEST_F(AutoFilterTest, VerifyNoNullCheckout) {
-  AutoRequired<AutoPacketFactory> factory;
-
-  std::shared_ptr<Decoration<0>> nulldeco;
-  ASSERT_FALSE(nulldeco);
-
-  auto packet = factory->NewPacket();
-  EXPECT_THROW(packet->Checkout(nulldeco), std::exception) << "Failed to catch null checkout" << std::endl;
-  EXPECT_THROW(packet->Decorate(nulldeco), std::exception) << "Failed to catch null decoration" << std::endl;
-}
-
 template<int out, int in>
 class FilterGather {
 public:
@@ -292,64 +281,6 @@ TEST_F(AutoFilterTest, VerifyTeardownArrangement) {
 
   // Filter should be expired now:
   ASSERT_TRUE(filterAWeak.expired()) << "Subscriber was still left outstanding even though all references should be gone";
-}
-
-TEST_F(AutoFilterTest, VerifyCheckout) {
-  AutoRequired<FilterA> filterA;
-  AutoRequired<AutoPacketFactory> factory;
-
-  // Obtain a packet for use with deferred decoration:
-  auto packet = factory->NewPacket();
-
-  // Satisfy the other decoration:
-  packet->Decorate(Decoration<1>());
-
-  {
-    AutoCheckout<Decoration<0>> exterior;
-
-    {
-      AutoCheckout<Decoration<0>> checkout = packet->Checkout<Decoration<0>>();
-
-      // Verify we can move the original type:
-      AutoCheckout<Decoration<0>> checkoutMoved(std::move(checkout));
-
-      // Verify no hits yet:
-      EXPECT_FALSE(filterA->m_called) << "Filter called as a consequence of a checkout move operation";
-
-      // Move the checkout a second time:
-      exterior = std::move(checkoutMoved);
-    }
-
-    // Still no hits
-    EXPECT_FALSE(filterA->m_called) << "Filter called before a decoration checkout expired";
-
-    // Mark ready so we get committed:
-    exterior.Ready();
-  }
-
-  // Verify a hit took place now
-  EXPECT_LT(0, filterA->m_called) << "Filter was not called after all decorations were installed";
-}
-
-TEST_F(AutoFilterTest, RollbackCorrectness) {
-  AutoRequired<FilterA> filterA;
-  AutoRequired<AutoPacketFactory> factory;
-
-  // Obtain a packet for use with deferred decoration:
-  auto packet = factory->NewPacket();
-  packet->Decorate(Decoration<1>());
-
-  // Request and immediately allow the destruction of a checkout:
-  packet->Checkout<Decoration<0>>();
-
-  // Verify no hit took place--the checkout should have been cancelled:
-  EXPECT_FALSE(filterA->m_called) << "Filter was called even though one decoration shouldn't have been available";
-
-  // We should not be able to obtain another checkout of this decoration on this packet:
-  EXPECT_ANY_THROW(packet->Checkout<Decoration<0>>()) << "An attempt to check out a decoration a second time should have failed";
-
-  // We shouldn't be able to manually decorate, either:
-  EXPECT_ANY_THROW(packet->Decorate(Decoration<0>())) << "An attempt to manually add a previously failed decoration succeeded where it should not have";
 }
 
 TEST_F(AutoFilterTest, VerifyAntiDecorate) {

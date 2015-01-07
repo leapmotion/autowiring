@@ -15,7 +15,6 @@ set(Autowiring_SRCS
   atomic_object.h
   at_exit.h
   auto_id.h
-  AutoCheckout.h
   AutoConfig.cpp
   AutoConfig.h
   AutoConfigManager.cpp

@@ -3,7 +3,6 @@
 #include "AnySharedPointer.h"
 #include "at_exit.h"
 #include "auto_id.h"
-#include "AutoCheckout.h"
 #include "DecorationDisposition.h"
 #include "demangle.h"
 #include "is_any.h"
@@ -365,44 +364,6 @@ public:
   void ForwardAll(std::shared_ptr<AutoPacket> recipient) const;
 
   /// <summary>
-  /// Checks out the specified type, providing it to the caller to be filled in
-  /// </summary>
-  /// <param name="ptr">If set, the initial value that will be held by the checkout</param>
-  /// <remarks>
-  /// The caller must call Ready on the returned value before it falls out of scope in order
-  /// to ensure that the checkout is eventually committed.  The checkout will be committed
-  /// when it falls out of scope if so marked.
-  /// </remarks>
-  template<class T>
-  AutoCheckout<T> Checkout(std::shared_ptr<T> ptr, int tshift = 0) {
-    const std::type_info& data = typeid(auto_id<T>);
-
-    /// Injunction to prevent existential loops:
-    static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
-
-    if(!ptr)
-      throw std::runtime_error("Cannot checkout with shared_ptr == nullptr");
-
-    // This allows us to install correct entries for decorated input requests
-    AnySharedPointer any_ptr(ptr);
-    {
-      std::lock_guard<std::mutex> guard(m_lock);
-      UnsafeCheckout(&any_ptr, data);
-    }
-
-    return AutoCheckout<T>(
-      *this,
-      ptr,
-      &AutoPacket::CompleteCheckout
-    );
-  }
-
-  template<class T>
-  AutoCheckout<T> Checkout(void) {
-    return Checkout(std::make_shared<T>());
-  }
-
-  /// <summary>
   /// Marks the named decoration as unsatisfiable
   /// </summary>
   /// <remarks>
@@ -449,9 +410,24 @@ public:
   /// shared pointer.
   /// </remarks>
   template<class T>
-  const T& Decorate(std::shared_ptr<T> t) {
-    Checkout<T>(t).Ready();
-    return *t;
+  const T& Decorate(std::shared_ptr<T> ptr) {
+    DecorationKey key(typeid(auto_id<T>));
+    
+    /// Injunction to prevent existential loops:
+    static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
+    
+    if(!ptr)
+      throw std::runtime_error("Cannot checkout with shared_ptr == nullptr");
+    
+    // This allows us to install correct entries for decorated input requests
+    AnySharedPointer any_ptr(ptr);
+    {
+      std::lock_guard<std::mutex> guard(m_lock);
+      UnsafeCheckout(&any_ptr, key);
+    }
+    
+    CompleteCheckout(true, key);
+    return *ptr;
   }
 
   /// <summary>
