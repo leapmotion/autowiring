@@ -27,14 +27,6 @@
 # define AUTOBOOST_CONTEXT_DECL
 #endif
 
-#if ! defined(AUTOBOOST_CONTEXT_SOURCE) && ! defined(AUTOBOOST_ALL_NO_LIB) && ! defined(AUTOBOOST_CONTEXT_NO_LIB)
-# define AUTOBOOST_LIB_NAME autoboost_context
-# if defined(AUTOBOOST_ALL_DYN_LINK) || defined(AUTOBOOST_CONTEXT_DYN_LINK)
-#  define AUTOBOOST_DYN_LINK
-# endif
-# include <autoboost/config/auto_link.hpp>
-#endif
-
 #undef AUTOBOOST_CONTEXT_CALLDECL
 #if (defined(i386) || defined(__i386__) || defined(__i386) \
     || defined(__i486__) || defined(__i586__) || defined(__i686__) \
