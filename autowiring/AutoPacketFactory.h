@@ -100,7 +100,7 @@ public:
   /// Convienance overload of operator+= to add a subscriber from a lambda
   /// </summary>
   template<class Fx>
-  AutoPacketFactory& operator+=(Fx&& fx) {
+  void operator+=(Fx&& fx) {
     AddSubscriber(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
   }
 
