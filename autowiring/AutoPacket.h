@@ -73,6 +73,8 @@ protected:
   // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
   typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
+  std::unordered_map<std::type_index, int> m_max_timeshift;
+
   mutable std::mutex m_lock;
 
   /// <summary>

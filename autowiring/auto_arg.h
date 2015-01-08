@@ -122,7 +122,7 @@ public:
   typedef auto_prev<T, N> type;
   typedef auto_id<T> id_type;
 
-  static const bool is_required = false;
+  static const bool is_required = true;
   static const bool is_output = false;
   static const bool is_shared = false;
   static const int tshift = N;

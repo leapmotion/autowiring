@@ -69,6 +69,12 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
     DecorationKey key(*pCur->ti, pCur->tshift);
 
+    // Update maximum timeshift for this type
+    if (m_max_timeshift.count(*pCur->ti))
+      m_max_timeshift[*pCur->ti] = std::max(m_max_timeshift[*pCur->ti], pCur->tshift);
+    else
+      m_max_timeshift[*pCur->ti] = pCur->tshift;
+
     DecorationDisposition* entry = &m_decorations[key];
     entry->SetKey(key);
 
@@ -114,11 +120,6 @@ void AutoPacket::MarkUnsatisfiable(const DecorationKey& info) {
 }
 
 void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
-  // Time-shifted decorations can't trigger satisfaction
-  if (info.tshift) {
-    return;
-  }
-  
   std::list<SatCounter*> callQueue;
   {
     std::lock_guard<std::mutex> lk(m_lock);
@@ -222,10 +223,12 @@ AnySharedPointer AutoPacket::UnsafeComplete(const DecorationKey& key, Decoration
 void AutoPacket::CompleteCheckout(const DecorationKey& key) {
   DecorationDisposition* entry = nullptr;
   AnySharedPointer decoration;
+  int maxTShift;
   {
     // This allows us to retrieve correct entries for decorated input requests
     std::lock_guard<std::mutex> guard(m_lock);
     decoration = UnsafeComplete(key, entry);
+    maxTShift = m_max_timeshift[key.ti];
   }
   
   // Priors update on the next key:
@@ -233,20 +236,27 @@ void AutoPacket::CompleteCheckout(const DecorationKey& key) {
     UpdateSatisfaction(key);
   }
 
+  // Exit now if this is a timeshifted decoration.
+  if (key.tshift) {
+    return;
+  }
+
   // If there are any filters on _this_ packet that desire to know the prior packet, then
   // we must proactively preserve the value of this decoration for our successor.
-  DecorationKey successorPrior(key);
-  successorPrior.tshift++;
-  auto q = m_decorations.find(successorPrior);
-  if (q != m_decorations.end()) {
-    auto successorPacket = Successor();
+  auto successorPacket = shared_from_this();
+  for (int tshift = 1; tshift <= maxTShift; ++tshift) {
+    DecorationKey successorPrior(key.ti, tshift);
+    successorPacket = successorPacket->Successor();
 
-    // Checkout, satisfy:
-    {
-      std::lock_guard<std::mutex> lk(successorPacket->m_lock);
-      successorPacket->UnsafeCheckout(&decoration, successorPrior);
+    auto q = m_decorations.find(successorPrior);
+    if (q != m_decorations.end()) {
+      // Checkout, satisfy:
+      {
+        std::lock_guard<std::mutex> lk(successorPacket->m_lock);
+        successorPacket->UnsafeCheckout(&decoration, successorPrior);
+      }
+      successorPacket->CompleteCheckout(successorPrior);
     }
-    successorPacket->CompleteCheckout(successorPrior);
   }
 }
 

@@ -94,7 +94,7 @@ struct DecorationDisposition
     return *this;
   }
 private:
-  // Destructued key for this decoration. Use accessor functions to access
+  // Destructured key for this decoration. Use accessor functions to access
   // This is needed because DecorationKey doesn't have a default constructor
   const std::type_info* m_type;
   int m_tshift;
