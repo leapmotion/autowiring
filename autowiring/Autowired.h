@@ -338,7 +338,8 @@ public:
 /// Enables the specified type to be "bolted" to the current context.
 /// </summary>
 /// <remarks>
-/// 
+/// Used to enable a boltable class in a context and can be used even if the context has not been created yet.  In
+/// this case, the class will be constructed and enabled when the context is created
 /// </remarks>
 template<class T>
 class AutoEnable
