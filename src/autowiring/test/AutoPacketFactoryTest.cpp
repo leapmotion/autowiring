@@ -175,3 +175,27 @@ TEST_F(AutoPacketFactoryTest, AutoPacketStatistics) {
 
   ASSERT_LE(packetDelay, factory->GetMeanPacketLifetime()) << "The mean packet lifetime was less than the delay on each packet";
 }
+
+TEST_F(AutoPacketFactoryTest, AddSubscriberTest) {
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+  AutoRequired<AutoPacketFactory> factory(ctxt);
+  ctxt->Initiate();
+
+  bool first_called = false;
+  bool second_called = false;
+
+  factory->AddSubscriber(AutoFilterDescriptor([&first_called] (int) {first_called = true;}));
+  *factory += [&second_called] (int) {second_called = true;};
+
+  auto packet = factory->NewPacket();
+
+  ASSERT_FALSE(first_called) << "Normal subscriber called too early";
+  ASSERT_FALSE(second_called) << "Subscriber added with operator+= called too early";
+
+  packet->DecorateImmediate(int(0));
+
+  ASSERT_TRUE(first_called) << "Normal subscriber never called";
+  ASSERT_TRUE(second_called) << "Subscriber added with operator+= never called";
+
+}
