@@ -85,7 +85,7 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
   packet.AddTeardownListener([this, &packet] () {
     for (auto& decoration : packet.GetDispositions()) {
       auto publisher = decoration.m_publisher;
-      auto type = decoration.m_type;
+      auto type = &decoration.GetKey().ti;
       
       if (publisher && publisher->called) {
         RecordDelivery(type, *publisher, false);

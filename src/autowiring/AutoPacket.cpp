@@ -43,17 +43,17 @@ AutoPacket::~AutoPacket(void) {
   NotifyTeardownListeners();
 }
 
-DecorationDisposition& AutoPacket::CheckoutImmediateUnsafe(const std::type_info& ti, const void* pvImmed)
+DecorationDisposition& AutoPacket::CheckoutImmediateUnsafe(const DecorationKey& key, const void* pvImmed)
 {
   // Obtain the decoration disposition of the entry we will be returning
-  DecorationDisposition& dec = m_decorations[ti];
+  DecorationDisposition& dec = m_decorations[key];
 
-  // Ensure correct type if instantiated here
-  dec.m_type = &ti;
+  // Ensure correct key if instantiated here
+  dec.SetKey(key);
 
   if (dec.satisfied || dec.isCheckedOut) {
     std::stringstream ss;
-    ss << "Cannot perform immediate decoration with type " << autowiring::demangle(ti)
+    ss << "Cannot perform immediate decoration with type " << autowiring::demangle(key.ti)
        << ", the requested decoration already exists";
     throw std::runtime_error(ss.str());
   }
@@ -67,11 +67,10 @@ DecorationDisposition& AutoPacket::CheckoutImmediateUnsafe(const std::type_info&
 
 void AutoPacket::AddSatCounter(SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
-    const std::type_info& dataType = *pCur->ti;
+    DecorationKey key(*pCur->ti, pCur->tshift);
 
-    DecorationKey key(dataType, pCur->tshift);
     DecorationDisposition* entry = &m_decorations[key];
-    entry->m_type = &dataType;
+    entry->SetKey(key);
 
     // Decide what to do with this entry:
     if (pCur->is_required) {
@@ -92,9 +91,9 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
 
 void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
-    const std::type_info& dataType = *pCur->ti;
+    DecorationKey key(*pCur->ti, pCur->tshift);
 
-    DecorationDisposition* entry = &m_decorations[dataType];
+    DecorationDisposition* entry = &m_decorations[key];
 
     // Decide what to do with this entry:
     if (pCur->is_required) {
@@ -155,7 +154,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 
           // We cannot satisfy shared_ptr arguments, since the implied existence
           // guarantee of shared_ptr is violated
-          !cur->GetArgumentType(pTypeSubs[i]->m_type)->is_shared &&
+          !cur->GetArgumentType(&pTypeSubs[i]->GetKey().ti)->is_shared &&
 
           // Now do the decrementation and proceed even if optional > 0,
           // since this is the only opportunity to fulfill the arguments
@@ -181,8 +180,8 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   }
 }
 
-bool AutoPacket::UnsafeHas(const std::type_info& data) const {
-  auto q = m_decorations.find(data);
+bool AutoPacket::UnsafeHas(const DecorationKey& key) const {
+  auto q = m_decorations.find(key);
   if(q == m_decorations.end())
     return false;
   return q->second.satisfied;
@@ -190,7 +189,7 @@ bool AutoPacket::UnsafeHas(const std::type_info& data) const {
 
 void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const DecorationKey& key) {
   auto& entry = m_decorations[key];
-  entry.m_type = &key.ti; // Ensure correct type if instantiated here
+  entry.SetKey(key); // Ensure correct key if instantiated here
 
   if (entry.satisfied) {
     std::stringstream ss;
@@ -211,7 +210,7 @@ void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const DecorationKey& key)
 AnySharedPointer AutoPacket::UnsafeComplete(const DecorationKey& key, DecorationDisposition*& entry) {
   entry = &m_decorations[key];
 
-  assert(entry->m_type != nullptr); // CompleteCheckout must be for an initialized DecorationDisposition
+  assert(entry); // CompleteCheckout must be for an initialized DecorationDisposition
   assert(entry->isCheckedOut); // CompleteCheckout must follow Checkout
 
   // Reset the checkout flag before releasing the lock:
@@ -261,9 +260,9 @@ const DecorationDisposition* AutoPacket::GetDisposition(const DecorationKey& ti)
   return nullptr;
 }
 
-bool AutoPacket::HasSubscribers(const std::type_info& ti) const {
+bool AutoPacket::HasSubscribers(const DecorationKey& key) const {
   std::lock_guard<std::mutex> lk(m_lock);
-  return m_decorations.count(ti) != 0;
+  return m_decorations.count(key) != 0;
 }
 
 const SatCounter& AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {
@@ -274,33 +273,33 @@ const SatCounter& AutoPacket::GetSatisfaction(const std::type_info& subscriber) 
   throw autowiring_error("Attempted to get the satisfaction counter for an unavailable subscriber");
 }
 
-std::list<SatCounter> AutoPacket::GetSubscribers(const std::type_info& ti) const {
+std::list<SatCounter> AutoPacket::GetSubscribers(const DecorationKey& key) const {
   std::lock_guard<std::mutex> lk(m_lock);
   std::list<SatCounter> subscribers;
-  t_decorationMap::const_iterator decoration = m_decorations.find(ti);
+  t_decorationMap::const_iterator decoration = m_decorations.find(key);
   if (decoration != m_decorations.end())
     for (auto& subscriber : decoration->second.m_subscribers)
       subscribers.push_back(*subscriber);
   return subscribers;
 }
 
-std::list<DecorationDisposition> AutoPacket::GetDispositions(const std::type_info& ti) const {
+std::list<DecorationDisposition> AutoPacket::GetDispositions(const DecorationKey& key) const {
   std::lock_guard<std::mutex> lk(m_lock);
   std::list<DecorationDisposition> dispositions;
   for (auto& disposition : m_decorations)
-    if (disposition.second.m_type == &ti)
+    if (disposition.second.GetKey() == key)
       dispositions.push_back(disposition.second);
   return dispositions;
 }
 
-void AutoPacket::ThrowNotDecoratedException(const std::type_info& ti) {
+void AutoPacket::ThrowNotDecoratedException(const DecorationKey& key) {
   std::stringstream ss;
-  ss << "Attempted to obtain a type " << autowiring::demangle(ti) << " which was not decorated on this packet";
+  ss << "Attempted to obtain a type " << autowiring::demangle(key.ti) << " which was not decorated on this packet";
   throw std::runtime_error(ss.str());
 }
 
-void AutoPacket::Put(const std::type_info& ti, SharedPointerSlot&& in) {
-  auto& entry = m_decorations[ti];
+void AutoPacket::Put(const DecorationKey& key, SharedPointerSlot&& in) {
+  auto& entry = m_decorations[key];
   if(entry.satisfied || entry.isCheckedOut) {
     std::stringstream ss;
     ss << "Cannot put type " << autowiring::demangle(in.type())
@@ -308,12 +307,12 @@ void AutoPacket::Put(const std::type_info& ti, SharedPointerSlot&& in) {
     throw std::runtime_error(ss.str());
   }
 
+  entry.SetKey(key);
   entry.m_decoration = std::move(in);
-  entry.m_type = &ti;
   entry.satisfied = true;
   entry.isCheckedOut = false;
 
-  UpdateSatisfaction(ti);
+  UpdateSatisfaction(key);
 }
 
 void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
@@ -336,17 +335,17 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
       if (!decoration.second.satisfied)
         continue;
 
-      const std::type_info& data = *decoration.second.m_type;
+      DecorationKey key = decoration.second.GetKey();
 
       // Quietly drop data that is already present on recipient
-      if (recipient->UnsafeHas(data))
+      if (recipient->UnsafeHas(key))
         continue;
 
       AnySharedPointer any_ptr(decoration.second.m_decoration);
-      recipient->UnsafeCheckout(&any_ptr, data);
+      recipient->UnsafeCheckout(&any_ptr, key);
 
       DecorationDisposition* entry = nullptr;
-      recipient->UnsafeComplete(data, entry);
+      recipient->UnsafeComplete(key, entry);
       decoQueue.push_back(entry);
     }
 
@@ -357,7 +356,7 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   // Recipient satisfaction is updated outside of lock
   for (DecorationDisposition* broadDeco : decoQueue) {
     // Satisfy the base declaration first and then the shared pointer:
-    recipient->UpdateSatisfaction(broadDeco->m_decoration->type());
+    recipient->UpdateSatisfaction(broadDeco->GetKey());
   }
 }
 

@@ -169,14 +169,14 @@ TEST_F(AutoFilterSequencing, SimplePrev) {
 class PrevPrevFilter {
 public:
   PrevPrevFilter(void):
-  m_prev_prev_value(-1),
-  m_prev_value(-1),
-  m_called(0),
-  m_num_empty_prev(0)
+    m_prev_prev_value(-1),
+    m_prev_value(-1),
+    m_called(0),
+    m_num_empty_prev(0)
   {}
 
-  int m_prev_value;
   int m_prev_prev_value;
+  int m_prev_value;
   int m_called;
   int m_num_empty_prev;
 

@@ -22,38 +22,6 @@ class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
 
-struct DecorationKey {
-  DecorationKey(const DecorationKey& rhs) :
-    ti(rhs.ti),
-    tshift(rhs.tshift)
-  {}
-
-  DecorationKey(const std::type_info& ti, int tshift = 0) :
-    ti(ti),
-    tshift(tshift)
-  {}
-
-  // The type index
-  const std::type_info& ti;
-
-  // Zero refers to a decoration created on this packet, a positive number [tshift] indicates
-  // a decoration attached [tshift] packets ago.
-  int tshift;
-
-  bool operator==(const DecorationKey& rhs) const {
-    return ti == rhs.ti && tshift == rhs.tshift;
-  }
-};
-
-namespace std {
-  template<>
-  struct hash<DecorationKey> {
-    size_t operator()(const DecorationKey& key)const {
-      return key.ti.hash_code() + key.tshift;
-    }
-  };
-}
-
 /// <summary>
 /// A decorator-style processing packet
 /// </summary>
@@ -115,7 +83,7 @@ protected:
   /// available.  Thus, callers are either satisfied at the point of decoration, or will not be satisfied for that
   /// type.
   /// </remarks>
-  DecorationDisposition& CheckoutImmediateUnsafe(const std::type_info& ti, const void* pvImmed);
+  DecorationDisposition& CheckoutImmediateUnsafe(const DecorationKey& key, const void* pvImmed);
 
   /// <summary>
   /// Adds all AutoFilter argument information for a recipient
@@ -153,7 +121,7 @@ protected:
   void PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos);
 
   /// <summary>Un-templated & locked component of Has</summary>
-  bool UnsafeHas(const std::type_info& data) const;
+  bool UnsafeHas(const DecorationKey& key) const;
 
   /// <summary>Un-templated & locked component of Checkout</summary>
   void UnsafeCheckout(AnySharedPointer* ptr, const DecorationKey& key);
@@ -190,7 +158,7 @@ protected:
   }
 
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
-  bool HasSubscribers(const std::type_info& ti) const;
+  bool HasSubscribers(const DecorationKey& key) const;
 
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>
@@ -199,19 +167,19 @@ protected:
   const SatCounter& GetSatisfaction(const std::type_info& subscriber) const;
 
   /// <returns>All subscribers to the specified data</returns>
-  std::list<SatCounter> GetSubscribers(const std::type_info& data) const;
+  std::list<SatCounter> GetSubscribers(const DecorationKey& key) const;
 
   /// <returns>All decoration dispositions associated with the data type</returns>
   /// <remarks>
   /// This method is useful for determining whether flow conditions (broadcast, pipes
   /// immediate decorations) resulted in missed data.
   /// </remarks>
-  std::list<DecorationDisposition> GetDispositions(const std::type_info& ti) const;
+  std::list<DecorationDisposition> GetDispositions(const DecorationKey& key) const;
 
   /// <summary>
   /// Throws a formatted runtime error corresponding to the case where an absent decoration was demanded
   /// </summary>
-  static void ThrowNotDecoratedException(const std::type_info& ti);
+  static void ThrowNotDecoratedException(const DecorationKey& key);
 
 public:
   /// <returns>
@@ -221,22 +189,22 @@ public:
   /// Although "AutoPacket &" and "const AutoPacket&" argument types will be
   /// satisfied, the AutoPacket does not "have" these types.
   /// </remarks>
-  template<class T>
+  template<class T, int N = 0>
   bool Has(void) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    return UnsafeHas(typeid(auto_id<T>));
+    return UnsafeHas(DecorationKey(typeid(auto_id<T>), N));
   }
 
   /// <summary>
   /// Detects the desired type, or throws an exception if such a type cannot be found
   /// </summary>
-  template<class T>
+  template<class T, int N = 0>
   const T& Get(void) const {
     static_assert(!std::is_same<T, AnySharedPointer>::value, "Oops!");
 
     const T* retVal;
     if (!Get(retVal))
-      ThrowNotDecoratedException(typeid(auto_id<T>));
+      ThrowNotDecoratedException(DecorationKey(typeid(auto_id<T>), N));
     return *retVal;
   }
 
@@ -247,9 +215,9 @@ public:
   /// This method is also used by DecorateImmediate to extract pointers to data that is
   /// valid ONLY during recursive satisfaction calls.
   /// </remarks>
-  template<class T>
+  template<class T, int N = 0>
   bool Get(const T*& out) const {
-    const DecorationDisposition* pDisposition = GetDisposition<T, 0>();
+    const DecorationDisposition* pDisposition = GetDisposition<T, N>();
     if (pDisposition) {
       if (pDisposition->m_decoration) {
         out = static_cast<const T*>(pDisposition->m_decoration->ptr());
@@ -323,7 +291,7 @@ public:
   /// <summary>
   /// De-templated placement method
   /// </summary>
-  void Put(const std::type_info& ti, SharedPointerSlot&& in);
+  void Put(const DecorationKey& key, SharedPointerSlot&& in);
 
   /// <summary>
   /// Transfers ownership of argument to AutoPacket
@@ -349,7 +317,7 @@ public:
   /// </remarks>
   template<class T>
   void Put(std::shared_ptr<T> in) {
-    Put(typeid(auto_id<T>), SharedPointerSlotT<T, false>(std::move(in)));
+    Put(DecorationKey(typeid(auto_id<T>)), SharedPointerSlotT<T, false>(std::move(in)));
   }
 
   /// <summary>Shares all broadcast data from this packet with the recipient packet</summary>
@@ -372,11 +340,12 @@ public:
   /// </remarks>
   template<class T>
   void Unsatisfiable(void) {
+    DecorationKey key(typeid(auto_id<T>));
     {
       // Insert a null entry at this location:
       std::lock_guard<std::mutex> lk(m_lock);
-      auto& entry = m_decorations[typeid(auto_id<T>)];
-      entry.m_type = &typeid(auto_id<T>); // Ensure correct type if instantiated here
+      auto& entry = m_decorations[key];
+      entry.SetKey(key); // Ensure correct type if instantiated here
       if(entry.satisfied ||
          entry.isCheckedOut)
         throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
@@ -386,7 +355,7 @@ public:
     }
 
     // Now trigger a rescan:
-    MarkUnsatisfiable(typeid(auto_id<T>));
+    MarkUnsatisfiable(key);
   }
 
   /// <summary>
@@ -453,8 +422,8 @@ public:
     // Perform standard decoration with a short initialization:
     std::unique_lock<std::mutex> lk(m_lock);
     DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)] = {
-      &CheckoutImmediateUnsafe(typeid(auto_id<T>), &immed),
-      &CheckoutImmediateUnsafe(typeid(auto_id<Ts>), &immeds)...
+      &CheckoutImmediateUnsafe(DecorationKey(typeid(auto_id<T>)), &immed),
+      &CheckoutImmediateUnsafe(DecorationKey(typeid(auto_id<Ts>)), &immeds)...
     };
     lk.unlock();
 
@@ -471,11 +440,11 @@ public:
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
 #if autowiring_USE_LIBCXX
       for (const std::type_info* ti : {&typeid(auto_id<T>), &typeid(auto_id<Ts>)...})
-        MarkUnsatisfiable(*ti);
+        MarkUnsatisfiable(DecorationKey(*ti));
 #else
       bool dummy[] = {
-        (MarkUnsatisfiable(typeid(auto_id<T>)), false),
-        (MarkUnsatisfiable(typeid(auto_id<Ts>)), false)...
+        (MarkUnsatisfiable(DecorationKey(typeid(auto_id<T>))), false),
+        (MarkUnsatisfiable(DecorationKey(typeid(auto_id<Ts>))), false)...
       };
       (void)dummy;
 #endif
@@ -521,7 +490,7 @@ public:
   /// <returns>All subscribers to the specified data</returns>
   template<class T>
   inline std::list<SatCounter> GetSubscribers(void) const {
-    return GetSubscribers(typeid(auto_id<T>));
+    return GetSubscribers(DecorationKey(typeid(auto_id<T>)));
   }
 
   /// <returns>All decoration dispositions</returns>
@@ -537,7 +506,7 @@ public:
   /// </remarks>
   template<class T>
   inline std::list<DecorationDisposition> GetDispositions(void) const {
-    return GetDispositions(typeid(auto_id<T>));
+    return GetDispositions(DecorationKey(typeid(auto_id<T>)));
   }
 
   /// <summary>
@@ -548,7 +517,7 @@ public:
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   template<class T>
   bool HasSubscribers(void) const {
-    return HasSubscribers(typeid(auto_id<T>));
+    return HasSubscribers(DecorationKey(typeid(auto_id<T>)));
   }
 };
 
