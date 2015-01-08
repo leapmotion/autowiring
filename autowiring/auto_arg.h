@@ -119,7 +119,7 @@ template<class T, int N>
 class auto_arg<auto_prev<T, N>>
 {
 public:
-  typedef auto_prev<T> type;
+  typedef auto_prev<T, N> type;
   typedef auto_id<T> id_type;
 
   static const bool is_required = false;
