@@ -125,9 +125,15 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
   }
 }
 
-void AutoPacket::MarkUnsatisfiable(const DecorationKey& info) {
-  // TODO:
-  // Add an anti-present decoration
+void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
+  // Satisfy timeshifted values now
+  if (key.tshift) {
+    std::lock_guard<std::mutex> lk(m_lock);
+    auto& disp = m_decorations[key];
+    disp.satisfied = true;
+    disp.m_decoration->reset();
+    UpdateSatisfaction(key);
+  }
 }
 
 void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
@@ -188,7 +194,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
     std::lock_guard<std::mutex> lk(m_lock);
     for(size_t i = nInfos; i--;)
       for(const auto& cur : pTypeSubs[i]->m_subscribers)
-          cur->Increment();
+        cur->Increment();
   }
 }
 

@@ -100,7 +100,7 @@ protected:
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
-  void MarkUnsatisfiable(const DecorationKey& info);
+  void MarkUnsatisfiable(const DecorationKey& key);
 
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
