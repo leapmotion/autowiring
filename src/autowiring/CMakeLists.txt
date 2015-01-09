@@ -15,7 +15,6 @@ set(Autowiring_SRCS
   atomic_object.h
   at_exit.h
   auto_id.h
-  AutoCheckout.h
   AutoConfig.cpp
   AutoConfig.h
   AutoConfigManager.cpp
@@ -55,6 +54,7 @@ set(Autowiring_SRCS
   auto_arg.h
   auto_in.h
   auto_out.h
+  auto_prev.h
   BasicThread.cpp
   BasicThread.h
   BasicThreadStateBlock.cpp

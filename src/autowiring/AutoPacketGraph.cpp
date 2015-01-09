@@ -46,7 +46,7 @@ void AutoPacketGraph::LoadEdges() {
         continue;
       }
       
-      if (pCur->is_input) {
+      if (pCur->is_required) {
         DeliveryEdge edge { &type_info, descriptor, true };
         if (m_deliveryGraph.find(edge) == m_deliveryGraph.end()) {
           m_deliveryGraph[edge] = 0;
@@ -85,7 +85,7 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
   packet.AddTeardownListener([this, &packet] () {
     for (auto& decoration : packet.GetDispositions()) {
       auto publisher = decoration.m_publisher;
-      auto type = decoration.m_type;
+      auto type = &decoration.GetKey().ti;
       
       if (publisher && publisher->called) {
         RecordDelivery(type, *publisher, false);

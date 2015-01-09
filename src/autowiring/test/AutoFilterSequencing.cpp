@@ -3,6 +3,7 @@
 #include "TestFixtures/Decoration.hpp"
 #include <autowiring/autowiring.h>
 #include <autowiring/AutoSelfUpdate.h>
+#include <autowiring/auto_prev.h>
 
 class AutoFilterSequencing:
   public testing::Test
@@ -127,4 +128,79 @@ TEST_F(AutoFilterSequencing, ManySuccessors) {
     factory->NewPacket();
     ASSERT_EQ(6, first->m_called) << "AutoFilter not triggered from new packet";
   }
+}
+
+class PrevFilter {
+public:
+  PrevFilter(void):
+    m_prev_value(-1),
+    m_called(0),
+    m_num_empty_prev(0)
+  {}
+  
+  int m_prev_value;
+  int m_called;
+  int m_num_empty_prev;
+  
+  void AutoFilter(int current, auto_prev<int> prev) {
+    ++m_called;
+    if (prev) {
+      EXPECT_EQ(m_prev_value, *prev) << "auto_prev isn't set to the previous value";
+    } else {
+      m_num_empty_prev++;
+    }
+    m_prev_value = current;
+  }
+};
+
+TEST_F(AutoFilterSequencing, SimplePrev) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<PrevFilter> filter;
+  
+  for (int i=10; i<20; ++i) {
+    auto packet = factory->NewPacket();
+    packet->Decorate(i);
+  }
+  
+  ASSERT_EQ(10, filter->m_called) << "AutoFilter not called";
+  ASSERT_EQ(1, filter->m_num_empty_prev) << "Prev should only be null for the first call";
+}
+
+class PrevPrevFilter {
+public:
+  PrevPrevFilter(void):
+    m_prev_prev_value(-1),
+    m_prev_value(-1),
+    m_called(0),
+    m_num_empty_prev(0)
+  {}
+
+  int m_prev_prev_value;
+  int m_prev_value;
+  int m_called;
+  int m_num_empty_prev;
+
+  void AutoFilter(int current, auto_prev<int, 2> prev) {
+    ++m_called;
+    if (prev) {
+      EXPECT_EQ(m_prev_prev_value, *prev) << "auto_prev isn't set to the previous value";
+    } else {
+      m_num_empty_prev++;
+    }
+    m_prev_prev_value = m_prev_value;
+    m_prev_value = current;
+  }
+};
+
+TEST_F(AutoFilterSequencing, DoublePrev) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<PrevPrevFilter> filter;
+
+  for (int i=10; i<20; ++i) {
+    auto packet = factory->NewPacket();
+    packet->Decorate(i);
+  }
+
+  ASSERT_EQ(10, filter->m_called) << "AutoFilter not called";
+  ASSERT_EQ(2, filter->m_num_empty_prev) << "Prev should only be null for the first two calls";
 }

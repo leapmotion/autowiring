@@ -38,5 +38,9 @@ void AutoPacketInternal::Initialize(void) {
     call->CallAutoFilter(*this);
 
   // First-call indicated by argumument type AutoPacket&:
-  UpdateSatisfaction(typeid(auto_arg<AutoPacket&>::id_type));
+  UpdateSatisfaction(DecorationKey(typeid(auto_arg<AutoPacket&>::id_type)));
+}
+
+std::shared_ptr<AutoPacketInternal> AutoPacketInternal::SuccessorInternal(void) {
+  return std::static_pointer_cast<AutoPacketInternal>(Successor());
 }

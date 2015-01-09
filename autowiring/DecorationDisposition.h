@@ -2,9 +2,42 @@
 #pragma once
 #include "AutowiringConfig.h"
 #include "AnySharedPointer.h"
+#include <cassert>
 #include <vector>
 
 struct SatCounter;
+
+struct DecorationKey {
+  DecorationKey(const DecorationKey& rhs) :
+    ti(rhs.ti),
+    tshift(rhs.tshift)
+  {}
+  
+  explicit DecorationKey(const std::type_info& ti, int tshift = 0) :
+    ti(ti),
+    tshift(tshift)
+  {}
+  
+  // The type index
+  const std::type_info& ti;
+  
+  // Zero refers to a decoration created on this packet, a positive number [tshift] indicates
+  // a decoration attached [tshift] packets ago.
+  int tshift;
+  
+  bool operator==(const DecorationKey& rhs) const {
+    return ti == rhs.ti && tshift == rhs.tshift;
+  }
+};
+
+namespace std {
+  template<>
+  struct hash<DecorationKey> {
+    size_t operator()(const DecorationKey& key)const {
+      return key.ti.hash_code() + key.tshift;
+    }
+  };
+}
 
 /// <remarks>
 /// A disposition holder, used to maintain initialization state on the key
@@ -60,10 +93,13 @@ struct DecorationDisposition
     satisfied = source.satisfied;
     return *this;
   }
-
-  // The type of the decoration.
+private:
+  // Destructured key for this decoration. Use accessor functions to access
+  // This is needed because DecorationKey doesn't have a default constructor
   const std::type_info* m_type;
-
+  int m_tshift;
+  
+public:
   // The decoration proper--potentially, this decoration might be from a prior execution of this
   // packet.  In the case of immediate decorations, this value will be invalid.
   AnySharedPointer m_decoration;
@@ -88,6 +124,22 @@ struct DecorationDisposition
   // NOTE: In order to make a type unsatisfiable set (and persist)
   // isCheckedOut == true && satisfied == false
   bool satisfied;
+  
+  // Set the key that identifies this decoration
+  void SetKey(const DecorationKey& key) {
+    m_type = &key.ti;
+    m_tshift = key.tshift;
+  }
+  
+  // Get the key that identifies this decoration
+  DecorationKey GetKey(void) const {
+    assert(m_type);
+    return DecorationKey(*m_type, m_tshift);
+  }
+  
+  operator bool() {
+    return bool(m_type);
+  }
 
   void Reset(void) {
     // IMPORTANT: Do not reset type_info

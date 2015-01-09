@@ -25,5 +25,10 @@ public:
   /// spurious calls when no packet is issued.
   /// </remarks>
   void Initialize(void);
+
+  /// <summary>
+  /// 
+  /// </summary>
+  std::shared_ptr<AutoPacketInternal> SuccessorInternal(void);
 };
 
