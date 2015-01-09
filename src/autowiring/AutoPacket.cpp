@@ -39,6 +39,17 @@ AutoPacket::~AutoPacket(void) {
     prev_current->m_successor.reset();
   }
   
+  // Trigger AutoFilter functions with unsatisfied auto_prev's
+  // We now know they will never be satisfied
+  for (auto& pair : m_decorations) {
+    auto& disp = pair.second;
+    if (!disp.satisfied && pair.first.tshift) {
+      disp.satisfied = true;
+      disp.m_decoration->reset();
+      UpdateSatisfaction(pair.first);
+    }
+  }
+
   // Needed for the AutoPacketGraph
   NotifyTeardownListeners();
 }
@@ -70,10 +81,10 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     DecorationKey key(*pCur->ti, pCur->tshift);
 
     // Update maximum timeshift for this type
-    if (m_max_timeshift.count(*pCur->ti))
-      m_max_timeshift[*pCur->ti] = std::max(m_max_timeshift[*pCur->ti], pCur->tshift);
+    if (m_maxTimeshift.count(*pCur->ti))
+      m_maxTimeshift[*pCur->ti] = std::max(m_maxTimeshift[*pCur->ti], pCur->tshift);
     else
-      m_max_timeshift[*pCur->ti] = pCur->tshift;
+      m_maxTimeshift[*pCur->ti] = pCur->tshift;
 
     DecorationDisposition* entry = &m_decorations[key];
     entry->SetKey(key);
@@ -228,7 +239,7 @@ void AutoPacket::CompleteCheckout(const DecorationKey& key) {
     // This allows us to retrieve correct entries for decorated input requests
     std::lock_guard<std::mutex> guard(m_lock);
     decoration = UnsafeComplete(key, entry);
-    maxTShift = m_max_timeshift[key.ti];
+    maxTShift = m_maxTimeshift[key.ti];
   }
   
   // Priors update on the next key:
@@ -260,10 +271,10 @@ void AutoPacket::CompleteCheckout(const DecorationKey& key) {
   }
 }
 
-const DecorationDisposition* AutoPacket::GetDisposition(const DecorationKey& ti) const {
+const DecorationDisposition* AutoPacket::GetDisposition(const DecorationKey& key) const {
   std::lock_guard<std::mutex> lk(m_lock);
 
-  auto q = m_decorations.find(ti);
+  auto q = m_decorations.find(key);
   if (q != m_decorations.end() && q->second.satisfied)
     return &q->second;
 

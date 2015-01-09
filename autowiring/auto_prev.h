@@ -14,7 +14,7 @@ struct auto_prev {
 public:
   auto_prev(const AutoPacket& val)
   {
-    val.Get(m_value);
+    val.Get(m_value, N);
   }
 
   operator bool(void) const {
