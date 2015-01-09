@@ -32,10 +32,6 @@ void AutoPacketGraph::LoadEdges() {
   std::list<AutoFilterDescriptor> descriptors;
   m_factory->AppendAutoFiltersTo(descriptors);
   
-  // Sort, eliminate duplicates
-  descriptors.sort();
-  descriptors.erase(std::unique(descriptors.begin(), descriptors.end()), descriptors.end());
-  
   for (auto& descriptor : descriptors) {
     for(auto pCur = descriptor.GetAutoFilterInput(); *pCur; pCur++) {
       const std::type_info& type_info = *pCur->ti;
@@ -46,7 +42,7 @@ void AutoPacketGraph::LoadEdges() {
         continue;
       }
       
-      if (pCur->is_required) {
+      if (pCur->is_input) {
         DeliveryEdge edge { &type_info, descriptor, true };
         if (m_deliveryGraph.find(edge) == m_deliveryGraph.end()) {
           m_deliveryGraph[edge] = 0;

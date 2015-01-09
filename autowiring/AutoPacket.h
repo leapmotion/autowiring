@@ -100,7 +100,7 @@ protected:
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
-  void MarkUnsatisfiable(const DecorationKey& info);
+  void MarkUnsatisfiable(const DecorationKey& key);
 
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
@@ -149,14 +149,9 @@ protected:
   /// <remarks>
   /// This method also does type aliasing in order to avoid attempted references to undefined types
   /// </remarks>
-  template<class T, int N>
-  const DecorationDisposition* GetDisposition(void) const {
-    return GetDisposition(
-        DecorationKey(
-          typeid(auto_id<T>),
-          N
-        )
-      );
+  template<class T>
+  const DecorationDisposition* GetDisposition(int tshift = 0) const {
+    return GetDisposition(DecorationKey(typeid(auto_id<T>), tshift));
   }
 
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
@@ -219,7 +214,7 @@ public:
   /// </remarks>
   template<class T, int N = 0>
   bool Get(const T*& out) const {
-    const DecorationDisposition* pDisposition = GetDisposition<T, N>();
+    const DecorationDisposition* pDisposition = GetDisposition<T>(N);
     if (pDisposition) {
       if (pDisposition->m_decoration) {
         out = static_cast<const T*>(pDisposition->m_decoration->ptr());
@@ -251,7 +246,7 @@ public:
   template<class T, int N = 0>
   bool Get(const std::shared_ptr<const T>*& out) const {
     // Decoration must be present and the shared pointer itself must also be present
-    const DecorationDisposition* pDisposition = GetDisposition<T, N>();
+    const DecorationDisposition* pDisposition = GetDisposition<T>(N);
     if (!pDisposition || !pDisposition->m_decoration) {
       out = nullptr;
       return false;

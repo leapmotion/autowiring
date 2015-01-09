@@ -90,7 +90,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     entry->SetKey(key);
 
     // Decide what to do with this entry:
-    if (pCur->is_required) {
+    if (pCur->is_input) {
       entry->m_subscribers.push_back(&satCounter);
       if (entry->satisfied)
         satCounter.Decrement();
@@ -113,7 +113,7 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
     DecorationDisposition* entry = &m_decorations[key];
 
     // Decide what to do with this entry:
-    if (pCur->is_required) {
+    if (pCur->is_input) {
       assert(!entry->m_subscribers.empty());
       assert(&satCounter == entry->m_subscribers.back());
       entry->m_subscribers.pop_back();
@@ -125,9 +125,15 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
   }
 }
 
-void AutoPacket::MarkUnsatisfiable(const DecorationKey& info) {
-  // TODO:
-  // Add an anti-present decoration
+void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
+  // Satisfy timeshifted values now
+  if (key.tshift) {
+    std::lock_guard<std::mutex> lk(m_lock);
+    auto& disp = m_decorations[key];
+    disp.satisfied = true;
+    disp.m_decoration->reset();
+    UpdateSatisfaction(key);
+  }
 }
 
 void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
@@ -188,7 +194,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
     std::lock_guard<std::mutex> lk(m_lock);
     for(size_t i = nInfos; i--;)
       for(const auto& cur : pTypeSubs[i]->m_subscribers)
-          cur->Increment();
+        cur->Increment();
   }
 }
 
@@ -259,8 +265,7 @@ void AutoPacket::CompleteCheckout(const DecorationKey& key) {
     DecorationKey successorPrior(key.ti, tshift);
     successorPacket = successorPacket->Successor();
 
-    auto q = m_decorations.find(successorPrior);
-    if (q != m_decorations.end()) {
+    if (m_decorations.count(successorPrior)) {
       // Checkout, satisfy:
       {
         std::lock_guard<std::mutex> lk(successorPacket->m_lock);
