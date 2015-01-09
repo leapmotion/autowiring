@@ -259,8 +259,7 @@ void AutoPacket::CompleteCheckout(const DecorationKey& key) {
     DecorationKey successorPrior(key.ti, tshift);
     successorPacket = successorPacket->Successor();
 
-    auto q = m_decorations.find(successorPrior);
-    if (q != m_decorations.end()) {
+    if (m_decorations.count(successorPrior)) {
       // Checkout, satisfy:
       {
         std::lock_guard<std::mutex> lk(successorPacket->m_lock);

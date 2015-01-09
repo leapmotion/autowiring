@@ -38,7 +38,7 @@ private:
   // Internal outstanding reference for issued packet:
   std::weak_ptr<void> m_outstandingInternal;
   
-  // The last packet issued from this factory
+  // The next packet to be issued from this factory
   std::shared_ptr<AutoPacketInternal> m_nextPacket;
 
   // Collection of known subscribers
