@@ -90,7 +90,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     entry->SetKey(key);
 
     // Decide what to do with this entry:
-    if (pCur->is_required) {
+    if (pCur->is_input) {
       entry->m_subscribers.push_back(&satCounter);
       if (entry->satisfied)
         satCounter.Decrement();
@@ -113,7 +113,7 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
     DecorationDisposition* entry = &m_decorations[key];
 
     // Decide what to do with this entry:
-    if (pCur->is_required) {
+    if (pCur->is_input) {
       assert(!entry->m_subscribers.empty());
       assert(&satCounter == entry->m_subscribers.back());
       entry->m_subscribers.pop_back();

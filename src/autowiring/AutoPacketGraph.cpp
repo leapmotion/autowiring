@@ -42,7 +42,7 @@ void AutoPacketGraph::LoadEdges() {
         continue;
       }
       
-      if (pCur->is_required) {
+      if (pCur->is_input) {
         DeliveryEdge edge { &type_info, descriptor, true };
         if (m_deliveryGraph.find(edge) == m_deliveryGraph.end()) {
           m_deliveryGraph[edge] = 0;
