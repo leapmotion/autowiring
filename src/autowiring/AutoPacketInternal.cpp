@@ -17,10 +17,6 @@ void AutoPacketInternal::Initialize(void) {
 
   // Traverse all descendant contexts, adding their packet subscriber vectors one at a time:
   m_parentFactory->AppendAutoFiltersTo(m_satCounters);
-
-  // Sort, eliminate duplicates
-  m_satCounters.sort();
-  m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
   
   // Prime the satisfaction graph for each element:
   for(auto& satCounter : m_satCounters)
