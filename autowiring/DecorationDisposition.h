@@ -138,7 +138,7 @@ public:
   }
   
   operator bool() {
-    return bool(m_type);
+    return !!m_type;
   }
 
   void Reset(void) {
