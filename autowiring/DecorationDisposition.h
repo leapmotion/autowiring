@@ -4,6 +4,7 @@
 #include "AnySharedPointer.h"
 #include <cassert>
 #include <vector>
+#include TYPE_INDEX_HEADER
 
 struct SatCounter;
 
@@ -33,8 +34,12 @@ struct DecorationKey {
 namespace std {
   template<>
   struct hash<DecorationKey> {
-    size_t operator()(const DecorationKey& key)const {
+    size_t operator()(const DecorationKey& key) const {
+#if AUTOWIRING_USE_LIBCXX
       return key.ti.hash_code() + key.tshift;
+#else
+      return std::type_index(key.ti).hash_code() + key.tshift;
+#endif
     }
   };
 }
