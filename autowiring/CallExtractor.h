@@ -10,12 +10,12 @@ class Deferred;
 // The type of the call centralizer
 typedef void(*t_extractedCall)(const AnySharedPointer& obj, AutoPacket&);
 
-/// <summary>
-/// Specialization for immediate mode cases
-/// </summary>
 template<class MemFn>
 struct CallExtractor;
 
+/// <summary>
+/// Specialization for nonmember function calls
+/// </summary>
 template<class RetType, class... Args>
 struct CallExtractor<RetType (*)(Args...)>:
   Decompose<RetType(*)(Args...)>
@@ -40,6 +40,9 @@ struct CallExtractor<RetType (*)(Args...)>:
   }
 };
 
+/// <summary>
+/// Specialization for member function AutoFilter functions
+/// </summary>
 template<class T, class... Args>
 struct CallExtractor<void (T::*)(Args...)>:
   Decompose<void (T::*)(Args...)>
@@ -69,7 +72,7 @@ struct CallExtractor<void (T::*)(Args...)>:
 };
 
 /// <summary>
-/// Specialization for stateless AutoFilter routines
+/// Specialization for stateless member function AutoFilter routines
 /// </summary>
 template<class T, class... Args>
 struct CallExtractor<void (T::*)(Args...) const> :
@@ -92,7 +95,7 @@ struct CallExtractor<void (T::*)(Args...) const> :
 };
 
 /// <summary>
-/// Specialization for deferred cases
+/// Specialization for deferred member function AutoFilter routines
 /// </summary>
 template<class T, class... Args>
 struct CallExtractor<Deferred (T::*)(Args...)>:
@@ -108,14 +111,11 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
     const void* pObj = obj->ptr();
 
     // Obtain a shared pointer of the AutoPacket in order to ensure the packet
-    // stays resident when we pend this lambda to the destination object's
+    // is not destroyed when we pend this lambda to the destination object's
     // dispatch queue.
     auto pAutoPacket = autoPacket.shared_from_this();
 
     // Pend the call to this object's dispatch queue:
-    // WARNING: The autowiring::DataFill information will be referenced,
-    // since it should be from a SatCounter associated to autoPacket,
-    // and will therefore have the same lifecycle as the AutoPacket.
     *(T*) pObj += [pObj, pAutoPacket] {
       (((T*) pObj)->*memFn)(
         typename auto_arg<Args>::type(*pAutoPacket)...
