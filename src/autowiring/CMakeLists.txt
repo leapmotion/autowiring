@@ -170,10 +170,6 @@ add_conditional_sources(
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/future.cpp
 )
 
-if(NOT AUTOWIRING_BUILD_AUTONET)
-  list(APPEND Autowiring_SRCS DefaultAutoNetServer.cpp)
-endif()
-
 if(NOT APPLE)
   # avoid warning: has no symbols
   set(Autowiring_SRCS

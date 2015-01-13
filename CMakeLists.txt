@@ -101,13 +101,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules")
 include(AddPCH)
 include(ConditionalSources)
 
-if(autowiring_BUILD_ARM)
-  # Currently cannot build Autonet for ARM, so default this off on that platform
-  set(AUTOWIRING_BUILD_AUTONET_DEFAULT OFF)
-else()
-  set(AUTOWIRING_BUILD_AUTONET_DEFAULT ON)
-endif()
-
 # We don't build tests unless we're being built by ourselves in our own source tree
 # When we're embedded in someone else's subtree, it's not likely that they will want
 # us to bring all of our unit tests in with us.  Though, if they do desire this, they
