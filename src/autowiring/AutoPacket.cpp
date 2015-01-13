@@ -45,7 +45,7 @@ AutoPacket::~AutoPacket(void) {
     auto& disp = pair.second;
     if (!disp.satisfied && pair.first.tshift) {
       disp.satisfied = true;
-      disp.m_decoration->reset();
+      disp.m_decorations.clear();
       UpdateSatisfaction(pair.first);
     }
   }
@@ -91,17 +91,22 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
 
     // Decide what to do with this entry:
     if (pCur->is_input) {
+      if (entry->m_publishers.size() > 1) {
+        std::stringstream ss;
+        ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->ti);
+        throw std::runtime_error(ss.str());
+      }
       entry->m_subscribers.push_back(&satCounter);
       if (entry->satisfied)
         satCounter.Decrement();
     }
     if (pCur->is_output) {
-      if(entry->m_publisher) {
+      if(entry->m_publishers.size() > 0 && entry->m_subscribers.size() > 0) {
         std::stringstream ss;
-        ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti);
+        ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << "with existing subscriber.";
         throw std::runtime_error(ss.str());
       }
-      entry->m_publisher = &satCounter;
+      entry->m_publishers.push_back(&satCounter);
     }
   }
 }
@@ -119,8 +124,9 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
       entry->m_subscribers.pop_back();
     }
     if (pCur->is_output) {
-      assert(&satCounter == entry->m_publisher);
-      entry->m_publisher = nullptr;
+      assert(!entry->m_publishers.empty());
+      assert(&satCounter == entry->m_publishers.back());
+      entry->m_publishers.pop_back();
     }
   }
 }
@@ -131,7 +137,7 @@ void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
     std::lock_guard<std::mutex> lk(m_lock);
     auto& disp = m_decorations[key];
     disp.satisfied = true;
-    disp.m_decoration->reset();
+    disp.m_decorations.clear();
     UpdateSatisfaction(key);
   }
 }
@@ -222,7 +228,11 @@ void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const DecorationKey& key)
     throw std::runtime_error(ss.str());
   }
   entry.isCheckedOut = true;
-  entry.m_decoration = *ptr;
+  if (entry.m_decorations.empty()) {
+    entry.m_decorations.push_back(*ptr);
+  } else {
+    entry.m_decorations[0] = *ptr;
+  }
 }
 
 AnySharedPointer AutoPacket::UnsafeComplete(const DecorationKey& key, DecorationDisposition*& entry) {
@@ -234,7 +244,7 @@ AnySharedPointer AutoPacket::UnsafeComplete(const DecorationKey& key, Decoration
   // Reset the checkout flag before releasing the lock:
   entry->isCheckedOut = false;
   entry->satisfied = true;
-  return AnySharedPointer(entry->m_decoration);
+  return AnySharedPointer(entry->m_decorations[0]);
 }
 
 void AutoPacket::CompleteCheckout(const DecorationKey& key) {
@@ -334,7 +344,10 @@ void AutoPacket::Put(const DecorationKey& key, SharedPointerSlot&& in) {
   }
 
   entry.SetKey(key);
-  entry.m_decoration = std::move(in);
+  if (entry.m_decorations.empty()) {
+    entry.m_decorations.push_back(AnySharedPointer());
+  }
+  entry.m_decorations[0] = in;
   entry.satisfied = true;
   entry.isCheckedOut = false;
 
@@ -367,7 +380,7 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
       if (recipient->UnsafeHas(key))
         continue;
 
-      AnySharedPointer any_ptr(decoration.second.m_decoration);
+      AnySharedPointer any_ptr(decoration.second.m_decorations[0]);
       recipient->UnsafeCheckout(&any_ptr, key);
 
       DecorationDisposition* entry = nullptr;

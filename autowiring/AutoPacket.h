@@ -216,8 +216,8 @@ public:
   bool Get(const T*& out) const {
     const DecorationDisposition* pDisposition = GetDisposition<T>(N);
     if (pDisposition) {
-      if (pDisposition->m_decoration) {
-        out = static_cast<const T*>(pDisposition->m_decoration->ptr());
+      if (pDisposition->m_decorations.size() == 1) {
+        out = static_cast<const T*>(pDisposition->m_decorations[0]->ptr());
         return true;
       }
 
@@ -247,12 +247,12 @@ public:
   bool Get(const std::shared_ptr<const T>*& out) const {
     // Decoration must be present and the shared pointer itself must also be present
     const DecorationDisposition* pDisposition = GetDisposition<T>(N);
-    if (!pDisposition || !pDisposition->m_decoration) {
+    if (!pDisposition || pDisposition->m_decorations.size() != 1) {
       out = nullptr;
       return false;
     }
 
-    out = &pDisposition->m_decoration->as_unsafe<const T>();
+    out = &pDisposition->m_decorations[0]->as_unsafe<const T>();
     return true;
   }
 
@@ -269,8 +269,8 @@ public:
     auto deco = m_decorations.find(DecorationKey(typeid(auto_id<T>), tshift));
     if(deco != m_decorations.end() && deco->second.satisfied) {
       auto& disposition = deco->second;
-      if(disposition.m_decoration) {
-        out = disposition.m_decoration->as_unsafe<T>();
+      if(disposition.m_decorations.size() == 1) {
+        out = disposition.m_decorations[0]->as_unsafe<T>();
         return true;
       }
     }
@@ -536,11 +536,11 @@ bool AutoPacket::Get(const std::shared_ptr<T>*& out) const {
   static_assert(!std::is_const<T>::value, "Overload resolution selected an incorrect version of Get");
 
   const DecorationDisposition* pDisposition = GetDisposition<T>();
-  if (!pDisposition || !pDisposition->m_decoration) {
+  if (!pDisposition || pDisposition->m_decorations.size() != 1) {
     out = nullptr;
     return false;
   }
 
-  out = &pDisposition->m_decoration->as_unsafe<T>();
+  out = &pDisposition->m_decorations[0]->as_unsafe<T>();
   return true;
 }

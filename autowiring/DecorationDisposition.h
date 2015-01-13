@@ -75,7 +75,6 @@ struct DecorationDisposition
   DecorationDisposition(void) :
     m_type(nullptr),
     m_pImmediate(nullptr),
-    m_publisher(nullptr),
     isCheckedOut(false),
     satisfied(false)
   {}
@@ -83,7 +82,7 @@ struct DecorationDisposition
   DecorationDisposition(const DecorationDisposition& source) :
     m_type(source.m_type),
     m_pImmediate(source.m_pImmediate),
-    m_publisher(source.m_publisher),
+    m_publishers(source.m_publishers),
     m_subscribers(source.m_subscribers),
     isCheckedOut(source.isCheckedOut),
     satisfied(source.satisfied)
@@ -92,7 +91,7 @@ struct DecorationDisposition
   DecorationDisposition& operator=(const DecorationDisposition& source) {
     m_type = source.m_type;
     m_pImmediate = source.m_pImmediate;
-    m_publisher = source.m_publisher;
+    m_publishers = source.m_publishers;
     m_subscribers = source.m_subscribers;
     isCheckedOut = source.isCheckedOut;
     satisfied = source.satisfied;
@@ -107,15 +106,15 @@ private:
 public:
   // The decoration proper--potentially, this decoration might be from a prior execution of this
   // packet.  In the case of immediate decorations, this value will be invalid.
-  AnySharedPointer m_decoration;
+  std::vector<AnySharedPointer> m_decorations;
 
   // A pointer to the immediate decorations, if one is specified, or else nullptr
   const void* m_pImmediate;
 
-  // Provider for this decoration, where it can be statically inferred.  Note that a provider for
+  // Providers for this decoration, where it can be statically inferred.  Note that a provider for
   // this decoration may exist even if this value is null, in the event that dynamic decoration is
   // taking place.
-  SatCounter* m_publisher;
+  std::vector<SatCounter*> m_publishers;
 
   // Satisfaction counters
   std::vector<SatCounter*> m_subscribers;
@@ -148,7 +147,7 @@ public:
 
   void Reset(void) {
     // IMPORTANT: Do not reset type_info
-    m_decoration->reset();
+    m_decorations.clear();
     m_pImmediate = nullptr;
     isCheckedOut = false;
     satisfied = false;
