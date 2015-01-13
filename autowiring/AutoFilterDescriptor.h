@@ -52,7 +52,7 @@ struct AutoFilterDescriptorInput {
 };
 
 /// <summary>
-/// The unbound part of an AutoFilter, includes everything except the AnySharedPointer
+/// The unbound part of an AutoFilter, includes everything except the AnySharedPointer representing the filter proper
 /// </summary>
 struct AutoFilterDescriptorStub {
   AutoFilterDescriptorStub(void) :
@@ -355,8 +355,11 @@ public:
 };
 
 /// <summary>
-/// Utility routine to support the creation of an AutoFilterDescriptor from any member function
+/// Utility routine to support the creation of an AutoFilterDescriptor from T::AutoFilter
 /// </summary>
+/// <remarks>
+/// This method will return an empty descriptor in the case that T::AutoFilter is not defined
+/// </remarks>
 template<class T>
 AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
   return std::move(AutoFilterDescriptorSelect<T>(ptr).desc);
