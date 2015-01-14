@@ -366,7 +366,11 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
       AnySharedPointer any_ptr(decoration.second.m_decorations[0]);
       recipient->DecorateUnsafe(&any_ptr, key);
 
+#if AUTOWIRING_USE_LIBCXX
       const DecorationDisposition* entry = &m_decorations.at(key);
+#else
+      const DecorationDisposition* entry = &(m_decorations.find(key)->second);
+#endif
       decoQueue.push_back(entry);
     }
 
