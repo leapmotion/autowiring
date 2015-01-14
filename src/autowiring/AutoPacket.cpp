@@ -128,8 +128,8 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
   }
 }
 
-void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
-  // Satisfy timeshifted values now
+void AutoPacket::MarkUnsatisfiable(const DecorationKey& key, bool recursiveCall) {
+  // Perform unsatisfaction logic
   if (key.tshift) {
     {
       std::lock_guard<std::mutex> lk(m_lock);
@@ -138,22 +138,25 @@ void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
       disp.m_decorations.clear();
     }
     UpdateSatisfaction(key);
+  }
 
-  // Update mark timeshifted values from successor packets as unsatisfiable
-  } else {
-    std::lock_guard<std::mutex> lk(m_lock);
+  // We're manually implementing tail-call optimization, so don't recurse more than once
+  if (recursiveCall) {
+    return;
+  }
 
-    auto successor = SuccessorUnsafe();
-    DecorationKey shiftedKey(key.ti, key.tshift + 1);
+  // Recurse on successor packets
+  std::lock_guard<std::mutex> lk(m_lock);
 
-    while (m_decorations.count(shiftedKey)) {
-      // Decorate and satisfy
-      successor->MarkUnsatisfiable(shiftedKey);
+  auto successor = SuccessorUnsafe();
+  DecorationKey shiftedKey(key.ti, key.tshift + 1);
 
-      // Update key and successor
-      shiftedKey.tshift++;
-      successor = successor->Successor();
-    }
+  while (m_decorations.count(shiftedKey)) {
+    successor->MarkUnsatisfiable(shiftedKey, true);
+
+    // Update key and successor
+    shiftedKey.tshift++;
+    successor = successor->Successor();
   }
 }
 
@@ -226,7 +229,7 @@ bool AutoPacket::HasUnsafe(const DecorationKey& key) const {
   return q->second.satisfied;
 }
 
-void AutoPacket::DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key) {
+void AutoPacket::DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key, bool recursiveCall) {
   auto& entry = m_decorations[key];
   entry.SetKey(key); // Ensure correct key if instantiated here
 
@@ -259,8 +262,8 @@ void AutoPacket::DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key)
   // This allows us to retrieve correct entries for decorated input requests
   AnySharedPointer decoration(entry.m_decorations[0]);
   
-  // Exit now if this is a timeshifted decoration.
-  if (key.tshift) {
+  // We're manually implementing tail-call optimization, so don't recurse more than once
+  if (recursiveCall) {
     return;
   }
 
@@ -272,7 +275,7 @@ void AutoPacket::DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key)
   while (m_decorations.count(shiftedKey)) {
     // Decorate and satisfy
     (std::lock_guard<std::mutex>)successor->m_lock,
-    successor->DecorateUnsafe(ptr, shiftedKey);
+    successor->DecorateUnsafe(ptr, shiftedKey, true);
     successor->UpdateSatisfaction(shiftedKey);
     
     // Update key and successor

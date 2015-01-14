@@ -99,7 +99,7 @@ protected:
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
-  void MarkUnsatisfiable(const DecorationKey& key);
+  void MarkUnsatisfiable(const DecorationKey& key, bool recursiveCall=false);
 
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
@@ -125,7 +125,7 @@ protected:
   bool HasUnsafe(const DecorationKey& key) const;
 
   /// <summary>Un-templated & locked component of Checkout</summary>
-  void DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key);
+  void DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key, bool recursiveCall=false);
 
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
