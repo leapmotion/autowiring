@@ -143,7 +143,7 @@ void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
 }
 
 void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
-  std::list<SatCounter*> callQueue;
+  std::vector<SatCounter*> callQueue;
   {
     std::lock_guard<std::mutex> lk(m_lock);
 
@@ -153,8 +153,8 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
       return;
 
     // Update satisfaction inside of lock
-    DecorationDisposition* decoration = &dFind->second;
-    for(const auto& satCounter : decoration->m_subscribers)
+    DecorationDisposition& decoration = dFind->second;
+    for(SatCounter* satCounter : decoration.m_subscribers)
       if(satCounter->Decrement())
         callQueue.push_back(satCounter);
   }
@@ -165,12 +165,12 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
 }
 
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
-  std::list<SatCounter*> callQueue;
+  std::vector<SatCounter*> callQueue;
   // First pass, decrement what we can:
   {
     std::lock_guard<std::mutex> lk(m_lock);
     for(size_t i = nInfos; i--;) {
-      for(SatCounter*& cur : pTypeSubs[i]->m_subscribers) {
+      for(SatCounter* cur : pTypeSubs[i]->m_subscribers) {
         if(
           // We only care about sat counters that aren't deferred--skip everyone else
           // Deferred calls will be too late.
@@ -428,7 +428,6 @@ std::list<DecorationDisposition> AutoPacket::GetDispositions() const {
 
 std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
   std::lock_guard<std::mutex> lk(m_lock);
-
   return SuccessorUnsafe();
 }
 

@@ -23,7 +23,7 @@ void AutoPacketInternal::Initialize(void) {
     AddSatCounter(satCounter);
   
   // Find all subscribers with no required or optional arguments:
-  std::list<SatCounter*> callCounters;
+  std::vector<SatCounter*> callCounters;
   for (auto& satCounter : m_satCounters)
     if (satCounter)
       callCounters.push_back(&satCounter);
