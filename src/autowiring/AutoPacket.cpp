@@ -80,33 +80,33 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
     DecorationKey key(*pCur->ti, pCur->tshift);
 
-    // Update maximum timeshift for this type
-    if (m_maxTimeshift.count(*pCur->ti))
-      m_maxTimeshift[*pCur->ti] = std::max(m_maxTimeshift[*pCur->ti], pCur->tshift);
-    else
-      m_maxTimeshift[*pCur->ti] = pCur->tshift;
-
-    DecorationDisposition* entry = &m_decorations[key];
-    entry->SetKey(key);
+    DecorationDisposition& entry = m_decorations[key];
+    entry.SetKey(key);
 
     // Decide what to do with this entry:
     if (pCur->is_input) {
-      if (entry->m_publishers.size() > 1) {
+      if (entry.m_publishers.size() > 1) {
         std::stringstream ss;
         ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->ti);
         throw std::runtime_error(ss.str());
       }
-      entry->m_subscribers.push_back(&satCounter);
-      if (entry->satisfied)
+      entry.m_subscribers.push_back(&satCounter);
+      if (entry.satisfied)
         satCounter.Decrement();
     }
     if (pCur->is_output) {
-      if(entry->m_publishers.size() > 0 && entry->m_subscribers.size() > 0) {
+      if(entry.m_publishers.size() > 0 && entry.m_subscribers.size() > 0) {
         std::stringstream ss;
         ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << "with existing subscriber.";
         throw std::runtime_error(ss.str());
       }
-      entry->m_publishers.push_back(&satCounter);
+      entry.m_publishers.push_back(&satCounter);
+    }
+
+    // Make sure decorations exist for timeshifts less that key's timeshift
+    for (int tshift = 0; tshift < key.tshift; ++tshift) {
+      DecorationKey shiftKey(key.ti, tshift);
+      m_decorations[shiftKey].SetKey(shiftKey);
     }
   }
 }
@@ -237,16 +237,13 @@ void AutoPacket::DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key)
   assert(entry); // UnsafeComplete must be for an initialized DecorationDisposition
   assert(entry.isCheckedOut); // UnsafeComplete must follow Checkout
 
-  int maxTShift;
-
   // Reset the checkout flag before releasing the lock:
   entry.isCheckedOut = false;
   entry.satisfied = true;
 
   // This allows us to retrieve correct entries for decorated input requests
   AnySharedPointer decoration(entry.m_decorations[0]);
-  maxTShift = m_maxTimeshift[key.ti];
-
+  
   // Exit now if this is a timeshifted decoration.
   if (key.tshift) {
     return;
@@ -254,18 +251,18 @@ void AutoPacket::DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key)
 
   // If there are any filters on _this_ packet that desire to know the prior packet, then
   // we must proactively preserve the value of this decoration for our successor.
-  auto successorPacket = shared_from_this();
-  for (int tshift = 1; tshift <= maxTShift; ++tshift) {
-    DecorationKey successorPrior(key.ti, tshift);
-    successorPacket = successorPacket->SuccessorUnsafe();
-
-    if (m_decorations.count(successorPrior)) {
-      // Checkout, satisfy:
-      {
-        std::lock_guard<std::mutex> lk(successorPacket->m_lock);
-        successorPacket->DecorateUnsafe(&decoration, successorPrior);
-      }
-    }
+  auto successor = SuccessorUnsafe();
+  DecorationKey shiftedKey(key.ti, key.tshift + 1);
+  
+  while (m_decorations.count(shiftedKey)) {
+    // Decorate and satisfy
+    (std::lock_guard<std::mutex>)successor->m_lock,
+    successor->DecorateUnsafe(ptr, shiftedKey);
+    successor->UpdateSatisfaction(shiftedKey);
+    
+    // Update key and successor
+    shiftedKey.tshift++;
+    successor = successor->Successor();
   }
 }
 

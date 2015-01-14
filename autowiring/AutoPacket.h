@@ -73,7 +73,6 @@ protected:
   // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
   typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decorations;
-  std::unordered_map<std::type_index, int> m_maxTimeshift;
 
   mutable std::mutex m_lock;
 
@@ -394,9 +393,8 @@ public:
       DecorateUnsafe(&any_ptr, key);
     }
     
-    if (m_decorations[key]) {
-      UpdateSatisfaction(key);
-    }
+    // Call AutoFilters that are now satisfied
+    UpdateSatisfaction(key);
 
     return *ptr;
   }
