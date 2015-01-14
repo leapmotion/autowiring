@@ -214,6 +214,24 @@ TEST_F(AutoFilterSequencing, OnlyPrev) {
   ASSERT_EQ(10, filter->m_called) << "Filter not called for every packet decoration";
 }
 
+TEST_F(AutoFilterSequencing, FirstPrev) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<OnlyPrev> filter;
+  
+  int prev2 = 0;
+  *factory += [&prev2] (auto_prev<int, 2> prev){
+    prev2++;
+  };
+
+  auto packet = factory->NewPacket();
+
+  ASSERT_EQ(1, filter->m_called) << "First packet doesn't have auto_prev value satisfied";
+  ASSERT_EQ(1, prev2) << "Filter called incorrect number of times";
+  
+  auto packet2 = factory->NewPacket();
+  ASSERT_EQ(2, prev2) << "Filter called incorrect number of times";
+}
+
 class PrevPrevFilter {
 public:
   PrevPrevFilter(void):

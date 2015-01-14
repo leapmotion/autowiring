@@ -129,6 +129,10 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
 }
 
 void AutoPacket::MarkUnsatisfiable(const DecorationKey& key, bool recursiveCall) {
+  if (std::lock_guard<std::mutex>(m_lock), HasUnsafe(key)) {
+    return;
+  }
+  
   // Perform unsatisfaction logic
   if (key.tshift) {
     {

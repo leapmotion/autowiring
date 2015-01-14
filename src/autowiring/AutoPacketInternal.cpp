@@ -11,22 +11,34 @@ AutoPacketInternal::AutoPacketInternal(AutoPacketFactory& factory, std::shared_p
 
 AutoPacketInternal::~AutoPacketInternal(void) {}
 
-void AutoPacketInternal::Initialize(void) {
+void AutoPacketInternal::Initialize(bool isFirstPacket) {
   // Mark init time of packet
   this->m_initTime = std::chrono::high_resolution_clock::now();
 
   // Traverse all descendant contexts, adding their packet subscriber vectors one at a time:
   m_parentFactory->AppendAutoFiltersTo(m_satCounters);
   
-  // Prime the satisfaction graph for each element:
-  for(auto& satCounter : m_satCounters)
-    AddSatCounter(satCounter);
-  
   // Find all subscribers with no required or optional arguments:
   std::vector<SatCounter*> callCounters;
-  for (auto& satCounter : m_satCounters)
-    if (satCounter)
+  for (auto& satCounter : m_satCounters) {
+    
+    // Prime the satisfaction graph for element:
+    AddSatCounter(satCounter);
+    
+    if (satCounter) {
       callCounters.push_back(&satCounter);
+    }
+  }
+  
+  // Mark timeshifted decorations as unsatisfiable on the first packet
+  if (isFirstPacket) {
+    for (auto& dec : m_decorations) {
+      auto& key = dec.first;
+      if (key.tshift) {
+        MarkUnsatisfiable(key);
+      }
+    }
+  }
 
   // Call all subscribers with no required or optional arguments:
   // NOTE: This may result in decorations that cause other subscribers to be called.
