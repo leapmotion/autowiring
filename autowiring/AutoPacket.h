@@ -85,7 +85,7 @@ protected:
   /// available.  Thus, callers are either satisfied at the point of decoration, or will not be satisfied for that
   /// type.
   /// </remarks>
-  DecorationDisposition& CheckoutImmediateUnsafe(const DecorationKey& key, const void* pvImmed);
+  DecorationDisposition& DecorateImmediateUnsafe(const DecorationKey& key, const void* pvImmed);
 
   /// <summary>
   /// Adds all AutoFilter argument information for a recipient
@@ -123,18 +123,20 @@ protected:
   void PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos);
 
   /// <summary>Un-templated & locked component of Has</summary>
-  bool UnsafeHas(const DecorationKey& key) const;
+  bool HasUnsafe(const DecorationKey& key) const;
 
   /// <summary>Un-templated & locked component of Checkout</summary>
-  void UnsafeCheckout(AnySharedPointer* ptr, const DecorationKey& key);
-
-  /// <summary>Un-templated & locked component of CompleteCheckout</summary>
-  AnySharedPointer UnsafeComplete(const DecorationKey& key, DecorationDisposition*& entry);
+  void DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key);
 
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
   /// </summary>
-  void CompleteCheckout(const DecorationKey& data);
+  void UnsafeComplete(const DecorationKey& data);
+
+  /// <summary>
+  /// The portion of Successor that must run under a lock
+  /// </summary>
+  std::shared_ptr<AutoPacket> SuccessorUnsafe(void);
 
   /// <summary>
   /// Retrieves the decoration disposition corresponding to some type
@@ -189,7 +191,7 @@ public:
   template<class T, int N = 0>
   bool Has(void) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    return UnsafeHas(DecorationKey(typeid(auto_id<T>), N));
+    return HasUnsafe(DecorationKey(typeid(auto_id<T>), N));
   }
 
   /// <summary>
@@ -389,10 +391,13 @@ public:
     AnySharedPointer any_ptr(ptr);
     {
       std::lock_guard<std::mutex> guard(m_lock);
-      UnsafeCheckout(&any_ptr, key);
+      DecorateUnsafe(&any_ptr, key);
     }
     
-    CompleteCheckout(key);
+    if (m_decorations[key]) {
+      UpdateSatisfaction(key);
+    }
+
     return *ptr;
   }
 
@@ -419,8 +424,8 @@ public:
     // Perform standard decoration with a short initialization:
     std::unique_lock<std::mutex> lk(m_lock);
     DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)] = {
-      &CheckoutImmediateUnsafe(DecorationKey(typeid(auto_id<T>)), &immed),
-      &CheckoutImmediateUnsafe(DecorationKey(typeid(auto_id<Ts>)), &immeds)...
+      &DecorateImmediateUnsafe(DecorationKey(typeid(auto_id<T>)), &immed),
+      &DecorateImmediateUnsafe(DecorationKey(typeid(auto_id<Ts>)), &immeds)...
     };
     lk.unlock();
 
@@ -510,7 +515,7 @@ public:
   /// Returns the next packet that will be issued by the packet factory in this context relative to this context
   /// </summary>
   std::shared_ptr<AutoPacket> Successor(void);
-  
+
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   template<class T>
   bool HasSubscribers(void) const {
