@@ -143,18 +143,6 @@ protected:
   /// <returns>The disposition, if the decoration exists and is satisfied, otherwise nullptr</returns>
   const DecorationDisposition* GetDisposition(const DecorationKey& ti) const;
 
-  /// <summary>
-  /// Retrieves the decoration disposition corresponding to some type
-  /// </summary>
-  /// <returns>The disposition, if the decoration exists and is satisfied, otherwise nullptr</returns>
-  /// <remarks>
-  /// This method also does type aliasing in order to avoid attempted references to undefined types
-  /// </remarks>
-  template<class T>
-  const DecorationDisposition* GetDisposition(int tshift = 0) const {
-    return GetDisposition(DecorationKey(typeid(auto_id<T>), tshift));
-  }
-
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   bool HasSubscribers(const DecorationKey& key) const;
 
@@ -187,22 +175,22 @@ public:
   /// Although "AutoPacket &" and "const AutoPacket&" argument types will be
   /// satisfied, the AutoPacket does not "have" these types.
   /// </remarks>
-  template<class T, int N = 0>
-  bool Has(void) const {
+  template<class T>
+  bool Has(int tshift=0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    return HasUnsafe(DecorationKey(typeid(auto_id<T>), N));
+    return HasUnsafe(DecorationKey(typeid(auto_id<T>), tshift));
   }
 
   /// <summary>
   /// Detects the desired type, or throws an exception if such a type cannot be found
   /// </summary>
-  template<class T, int N = 0>
-  const T& Get(void) const {
+  template<class T>
+  const T& Get(int tshift=0) const {
     static_assert(!std::is_same<T, AnySharedPointer>::value, "Oops!");
 
     const T* retVal;
-    if (!Get(retVal))
-      ThrowNotDecoratedException(DecorationKey(typeid(auto_id<T>), N));
+    if (!Get(retVal, tshift))
+      ThrowNotDecoratedException(DecorationKey(typeid(auto_id<T>), tshift));
     return *retVal;
   }
 
@@ -213,9 +201,9 @@ public:
   /// This method is also used by DecorateImmediate to extract pointers to data that is
   /// valid ONLY during recursive satisfaction calls.
   /// </remarks>
-  template<class T, int N = 0>
-  bool Get(const T*& out) const {
-    const DecorationDisposition* pDisposition = GetDisposition<T>(N);
+  template<class T>
+  bool Get(const T*& out, int tshift=0) const {
+    const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(typeid(auto_id<T>), tshift));
     if (pDisposition) {
       if (pDisposition->m_decorations.size() == 1) {
         out = static_cast<const T*>(pDisposition->m_decorations[0]->ptr());
@@ -239,15 +227,15 @@ public:
   /// <summary>
   /// Shared pointer specialization of const T*&, used to obtain the underlying shared pointer for some type T
   /// </summary>
-  /// <param name="N">The number back to retrieve</param>
+  /// <param name="tshift">The number back to retrieve</param>
   /// <remarks>
   /// This specialization cannot be used to obtain a decoration which has been attached to this packet via
   /// DecorateImmediate.
   /// </remarks>
-  template<class T, int N = 0>
-  bool Get(const std::shared_ptr<const T>*& out) const {
+  template<class T>
+  bool Get(const std::shared_ptr<const T>*& out, int tshift=0) const {
     // Decoration must be present and the shared pointer itself must also be present
-    const DecorationDisposition* pDisposition = GetDisposition<T>(N);
+    const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(typeid(auto_id<T>), tshift));
     if (!pDisposition || pDisposition->m_decorations.size() != 1) {
       out = nullptr;
       return false;
@@ -538,7 +526,7 @@ template<class T>
 bool AutoPacket::Get(const std::shared_ptr<T>*& out) const {
   static_assert(!std::is_const<T>::value, "Overload resolution selected an incorrect version of Get");
 
-  const DecorationDisposition* pDisposition = GetDisposition<T>();
+  const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(typeid(auto_id<T>)));
   if (!pDisposition || pDisposition->m_decorations.size() != 1) {
     out = nullptr;
     return false;
