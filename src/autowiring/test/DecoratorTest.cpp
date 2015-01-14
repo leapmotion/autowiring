@@ -94,3 +94,14 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
   ASSERT_FALSE(disps.front().satisfied) << "Incorrect satisfaction status";
   ASSERT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
 }
+
+TEST_F(DecoratorTest, ForwardAllTest) {
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet1 = factory->NewPacket();
+  auto packet2 = factory->NewPacket();
+
+  packet1->Decorate(Decoration<0>());
+  packet1->ForwardAll(packet2);
+
+  ASSERT_TRUE(packet2->Has<Decoration<0>>()) << "Forwarded packet did not have a decoration present on the original packet as expected";
+}
