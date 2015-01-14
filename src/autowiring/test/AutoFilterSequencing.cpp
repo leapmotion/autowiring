@@ -190,6 +190,30 @@ TEST_F(AutoFilterSequencing, UnsatisfiedPrev) {
   }
 }
 
+struct OnlyPrev {
+  OnlyPrev():
+    m_called(0)
+  {}
+  
+  void AutoFilter(auto_prev<int> p) {
+    ++m_called;
+  }
+  
+  int m_called;
+};
+
+TEST_F(AutoFilterSequencing, OnlyPrev) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<OnlyPrev> filter;
+  
+  for (int i=10; i<20; ++i) {
+    auto packet = factory->NewPacket();
+    packet->Decorate(i);
+  }
+  
+  ASSERT_EQ(10, filter->m_called) << "Filter not called for every packet decoration";
+}
+
 class PrevPrevFilter {
 public:
   PrevPrevFilter(void):
