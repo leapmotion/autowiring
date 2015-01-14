@@ -54,7 +54,7 @@ AutoPacket::~AutoPacket(void) {
   NotifyTeardownListeners();
 }
 
-DecorationDisposition& AutoPacket::CheckoutImmediateUnsafe(const DecorationKey& key, const void* pvImmed)
+DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& key, const void* pvImmed)
 {
   // Obtain the decoration disposition of the entry we will be returning
   DecorationDisposition& dec = m_decorations[key];
@@ -204,14 +204,14 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   }
 }
 
-bool AutoPacket::UnsafeHas(const DecorationKey& key) const {
+bool AutoPacket::HasUnsafe(const DecorationKey& key) const {
   auto q = m_decorations.find(key);
   if(q == m_decorations.end())
     return false;
   return q->second.satisfied;
 }
 
-void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const DecorationKey& key) {
+void AutoPacket::DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key) {
   auto& entry = m_decorations[key];
   entry.SetKey(key); // Ensure correct key if instantiated here
 
@@ -233,35 +233,19 @@ void AutoPacket::UnsafeCheckout(AnySharedPointer* ptr, const DecorationKey& key)
   } else {
     entry.m_decorations[0] = *ptr;
   }
-}
 
-AnySharedPointer AutoPacket::UnsafeComplete(const DecorationKey& key, DecorationDisposition*& entry) {
-  entry = &m_decorations[key];
+  assert(entry); // UnsafeComplete must be for an initialized DecorationDisposition
+  assert(entry.isCheckedOut); // UnsafeComplete must follow Checkout
 
-  assert(entry); // CompleteCheckout must be for an initialized DecorationDisposition
-  assert(entry->isCheckedOut); // CompleteCheckout must follow Checkout
+  int maxTShift;
 
   // Reset the checkout flag before releasing the lock:
-  entry->isCheckedOut = false;
-  entry->satisfied = true;
-  return AnySharedPointer(entry->m_decorations[0]);
-}
+  entry.isCheckedOut = false;
+  entry.satisfied = true;
 
-void AutoPacket::CompleteCheckout(const DecorationKey& key) {
-  DecorationDisposition* entry = nullptr;
-  AnySharedPointer decoration;
-  int maxTShift;
-  {
-    // This allows us to retrieve correct entries for decorated input requests
-    std::lock_guard<std::mutex> guard(m_lock);
-    decoration = UnsafeComplete(key, entry);
-    maxTShift = m_maxTimeshift[key.ti];
-  }
-  
-  // Priors update on the next key:
-  if (entry) {
-    UpdateSatisfaction(key);
-  }
+  // This allows us to retrieve correct entries for decorated input requests
+  AnySharedPointer decoration(entry.m_decorations[0]);
+  maxTShift = m_maxTimeshift[key.ti];
 
   // Exit now if this is a timeshifted decoration.
   if (key.tshift) {
@@ -273,15 +257,14 @@ void AutoPacket::CompleteCheckout(const DecorationKey& key) {
   auto successorPacket = shared_from_this();
   for (int tshift = 1; tshift <= maxTShift; ++tshift) {
     DecorationKey successorPrior(key.ti, tshift);
-    successorPacket = successorPacket->Successor();
+    successorPacket = successorPacket->SuccessorUnsafe();
 
     if (m_decorations.count(successorPrior)) {
       // Checkout, satisfy:
       {
         std::lock_guard<std::mutex> lk(successorPacket->m_lock);
-        successorPacket->UnsafeCheckout(&decoration, successorPrior);
+        successorPacket->DecorateUnsafe(&decoration, successorPrior);
       }
-      successorPacket->CompleteCheckout(successorPrior);
     }
   }
 }
@@ -355,7 +338,7 @@ void AutoPacket::Put(const DecorationKey& key, SharedPointerSlot&& in) {
 }
 
 void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
-  std::list<DecorationDisposition*> decoQueue;
+  std::vector<const DecorationDisposition*> decoQueue;
   {
     // Use memory well-ordering to establish a lock heirarchy
     if(this < recipient.get()) {
@@ -377,14 +360,13 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
       DecorationKey key = decoration.second.GetKey();
 
       // Quietly drop data that is already present on recipient
-      if (recipient->UnsafeHas(key))
+      if (recipient->HasUnsafe(key))
         continue;
 
       AnySharedPointer any_ptr(decoration.second.m_decorations[0]);
-      recipient->UnsafeCheckout(&any_ptr, key);
+      recipient->DecorateUnsafe(&any_ptr, key);
 
-      DecorationDisposition* entry = nullptr;
-      recipient->UnsafeComplete(key, entry);
+      const DecorationDisposition* entry = &m_decorations.at(key);
       decoQueue.push_back(entry);
     }
 
@@ -393,7 +375,7 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   }
 
   // Recipient satisfaction is updated outside of lock
-  for (DecorationDisposition* broadDeco : decoQueue) {
+  for (const DecorationDisposition* broadDeco : decoQueue) {
     // Satisfy the base declaration first and then the shared pointer:
     recipient->UpdateSatisfaction(broadDeco->GetKey());
   }
@@ -446,6 +428,10 @@ std::list<DecorationDisposition> AutoPacket::GetDispositions() const {
 std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
   std::lock_guard<std::mutex> lk(m_lock);
 
+  return SuccessorUnsafe();
+}
+
+std::shared_ptr<AutoPacket> AutoPacket::SuccessorUnsafe(void) {
   // If successor doesn't already exists, create it
   if (!m_successor){
     m_successor = m_parentFactory->ConstructPacket();
@@ -453,3 +439,4 @@ std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
 
   return m_successor;
 }
+
