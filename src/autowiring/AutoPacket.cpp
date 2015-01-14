@@ -42,11 +42,8 @@ AutoPacket::~AutoPacket(void) {
   // Trigger AutoFilter functions with unsatisfied auto_prev's
   // We now know they will never be satisfied
   for (auto& pair : m_decorations) {
-    auto& disp = pair.second;
-    if (!disp.satisfied && pair.first.tshift) {
-      disp.satisfied = true;
-      disp.m_decorations.clear();
-      UpdateSatisfaction(pair.first);
+    if (!pair.second.satisfied) {
+      MarkUnsatisfiable(pair.first);
     }
   }
 
@@ -134,11 +131,29 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
 void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
   // Satisfy timeshifted values now
   if (key.tshift) {
-    std::lock_guard<std::mutex> lk(m_lock);
-    auto& disp = m_decorations[key];
-    disp.satisfied = true;
-    disp.m_decorations.clear();
+    {
+      std::lock_guard<std::mutex> lk(m_lock);
+      auto& disp = m_decorations[key];
+      disp.satisfied = true;
+      disp.m_decorations.clear();
+    }
     UpdateSatisfaction(key);
+
+  // Update mark timeshifted values from successor packets as unsatisfiable
+  } else {
+    std::lock_guard<std::mutex> lk(m_lock);
+
+    auto successor = SuccessorUnsafe();
+    DecorationKey shiftedKey(key.ti, key.tshift + 1);
+
+    while (m_decorations.count(shiftedKey)) {
+      // Decorate and satisfy
+      successor->MarkUnsatisfiable(shiftedKey);
+
+      // Update key and successor
+      shiftedKey.tshift++;
+      successor = successor->Successor();
+    }
   }
 }
 
