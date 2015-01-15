@@ -8,6 +8,7 @@ namespace std {
   template<typename... Ts>
   class tuple {
   public:
+    tuple(void) {}
     tuple(const Ts&... ele):
       m_tuple(ele...)
     {}
