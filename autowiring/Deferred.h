@@ -14,7 +14,5 @@ class CoreThread;
 /// </remarks>
 class Deferred {
 public:
-  Deferred(void) {}
-
   Deferred(CoreThread* pThread) {}
 };

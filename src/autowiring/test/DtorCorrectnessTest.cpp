@@ -31,7 +31,7 @@ std::atomic<size_t> CtorDtorCopyCounter::s_construction;
 class CtorDtorListener {
 public:
   virtual void DoFired(CtorDtorCopyCounter ctr) = 0;
-  virtual Deferred DoDeferred(CtorDtorCopyCounter ctr) = 0;
+  virtual void DoDeferred(CtorDtorCopyCounter ctr) = 0;
 };
 
 class MyCtorDtorListener:
@@ -46,12 +46,12 @@ public:
 
   bool m_hitDeferred;
 
-  virtual void DoFired(CtorDtorCopyCounter ctr) {
-  }
+  virtual void DoFired(CtorDtorCopyCounter ctr) {}
 
-  virtual Deferred DoDeferred(CtorDtorCopyCounter ctr) {
-    m_hitDeferred = true;
-    return Deferred(this);
+  virtual void DoDeferred(CtorDtorCopyCounter ctr) {
+    *this += [this] {
+      m_hitDeferred = true;
+    };
   }
 };
 
