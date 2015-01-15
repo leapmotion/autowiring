@@ -108,7 +108,6 @@ TEST_F(AutoFilterCollapseRulesTest, CanAcceptUndefinedSharedPointerInput) {
 
 #if AUTOWIRING_USE_LIBCXX
 TEST_F(AutoFilterCollapseRulesTest, ConstCollapse) {
-  CurrentContextPusher pshr((AutoCreateContext()));
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<AcceptsConstReference> filter;
   

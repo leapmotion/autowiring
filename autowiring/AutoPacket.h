@@ -183,7 +183,7 @@ public:
   template<class T>
   bool Has(int tshift=0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    return HasUnsafe(DecorationKey(typeid(auto_id<T>), tshift));
+    return HasUnsafe(DecorationKey(auto_id<T>::key(), tshift));
   }
 
   /// <summary>
@@ -195,7 +195,7 @@ public:
 
     const T* retVal;
     if (!Get(retVal, tshift))
-      ThrowNotDecoratedException(DecorationKey(typeid(auto_id<T>), tshift));
+      ThrowNotDecoratedException(DecorationKey(auto_id<T>::key(), tshift));
     return *retVal;
   }
 
@@ -208,7 +208,7 @@ public:
   /// </remarks>
   template<class T>
   bool Get(const T*& out, int tshift=0) const {
-    const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(typeid(auto_id<T>), tshift));
+    const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(auto_id<T>::key(), tshift));
     if (pDisposition) {
       if (pDisposition->m_decorations.size() == 1) {
         out = static_cast<const T*>(pDisposition->m_decorations[0]->ptr());
@@ -240,7 +240,7 @@ public:
   template<class T>
   bool Get(const std::shared_ptr<const T>*& out, int tshift=0) const {
     // Decoration must be present and the shared pointer itself must also be present
-    const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(typeid(auto_id<T>), tshift));
+    const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(auto_id<T>::key(), tshift));
     if (!pDisposition || pDisposition->m_decorations.size() != 1) {
       out = nullptr;
       return false;
@@ -260,7 +260,7 @@ public:
   template<class T>
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto deco = m_decorations.find(DecorationKey(typeid(auto_id<T>), tshift));
+    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
     if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Satisfied) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
@@ -294,7 +294,7 @@ public:
   /// </remarks>
   template<class T>
   void Put(T* in) {
-    Put(typeid(auto_id<T>), SharedPointerSlotT<T, false>(std::shared_ptr<T>(in)));
+    Put(auto_id<T>::key(), SharedPointerSlotT<T, false>(std::shared_ptr<T>(in)));
   }
 
   /// <summary>
@@ -308,7 +308,7 @@ public:
   /// </remarks>
   template<class T>
   void Put(std::shared_ptr<T> in) {
-    Put(DecorationKey(typeid(auto_id<T>)), SharedPointerSlotT<T, false>(std::move(in)));
+    Put(DecorationKey(auto_id<T>::key()), SharedPointerSlotT<T, false>(std::move(in)));
   }
 
   /// <summary>Shares all broadcast data from this packet with the recipient packet</summary>
@@ -331,7 +331,7 @@ public:
   /// </remarks>
   template<class T>
   void Unsatisfiable(void) {
-    DecorationKey key(typeid(auto_id<T>));
+    DecorationKey key(auto_id<T>::key());
     {
       // Insert a null entry at this location:
       std::lock_guard<std::mutex> lk(m_lock);
@@ -371,7 +371,7 @@ public:
   /// </remarks>
   template<class T>
   const T& Decorate(std::shared_ptr<T> ptr) {
-    DecorationKey key(typeid(auto_id<T>));
+    DecorationKey key(auto_id<T>::key());
     
     /// Injunction to prevent existential loops:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
@@ -407,8 +407,8 @@ public:
     // Perform standard decoration with a short initialization:
     std::unique_lock<std::mutex> lk(m_lock);
     DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)] = {
-      &DecorateImmediateUnsafe(DecorationKey(typeid(auto_id<T>)), &immed),
-      &DecorateImmediateUnsafe(DecorationKey(typeid(auto_id<Ts>)), &immeds)...
+      &DecorateImmediateUnsafe(DecorationKey(auto_id<T>::key()), &immed),
+      &DecorateImmediateUnsafe(DecorationKey(auto_id<Ts>::key()), &immeds)...
     };
     lk.unlock();
 
@@ -424,12 +424,12 @@ public:
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
 #if autowiring_USE_LIBCXX
-      for (const std::type_info* ti : {&typeid(auto_id<T>), &typeid(auto_id<Ts>)...})
+      for (const std::type_info* ti : {&auto_id<T>::key(), &auto_id<Ts>::key()...})
         MarkUnsatisfiable(DecorationKey(*ti));
 #else
       bool dummy[] = {
-        (MarkUnsatisfiable(DecorationKey(typeid(auto_id<T>))), false),
-        (MarkUnsatisfiable(DecorationKey(typeid(auto_id<Ts>))), false)...
+        (MarkUnsatisfiable(DecorationKey(auto_id<T>::key())), false),
+        (MarkUnsatisfiable(DecorationKey(auto_id<Ts>::key())), false)...
       };
       (void)dummy;
 #endif
@@ -470,12 +470,12 @@ public:
   /// If the type is not a subscriber GetSatisfaction().GetType() == nullptr will be true
   /// </remarks>
   template<class T>
-  inline const SatCounter& GetSatisfaction(void) const { return GetSatisfaction(typeid(auto_id<T>)); }
+  inline const SatCounter& GetSatisfaction(void) const { return GetSatisfaction(auto_id<T>::key()); }
 
   /// <returns>All subscribers to the specified data</returns>
   template<class T>
   inline std::list<SatCounter> GetSubscribers(void) const {
-    return GetSubscribers(DecorationKey(typeid(auto_id<T>)));
+    return GetSubscribers(DecorationKey(auto_id<T>::key()));
   }
 
   /// <returns>All decoration dispositions</returns>
@@ -491,7 +491,7 @@ public:
   /// </remarks>
   template<class T>
   inline std::list<DecorationDisposition> GetDispositions(void) const {
-    return GetDispositions(DecorationKey(typeid(auto_id<T>)));
+    return GetDispositions(DecorationKey(auto_id<T>::key()));
   }
 
   /// <summary>
@@ -502,7 +502,7 @@ public:
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   template<class T>
   bool HasSubscribers(void) const {
-    return HasSubscribers(DecorationKey(typeid(auto_id<T>)));
+    return HasSubscribers(DecorationKey(auto_id<T>::key()));
   }
 };
 
@@ -523,7 +523,7 @@ template<class T>
 bool AutoPacket::Get(const std::shared_ptr<T>*& out) const {
   static_assert(!std::is_const<T>::value, "Overload resolution selected an incorrect version of Get");
 
-  const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(typeid(auto_id<T>)));
+  const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(auto_id<T>::key()));
   if (!pDisposition || pDisposition->m_decorations.size() != 1) {
     out = nullptr;
     return false;
