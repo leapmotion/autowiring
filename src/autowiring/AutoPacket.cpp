@@ -282,6 +282,7 @@ void AutoPacket::Decorate(const AnySharedPointer& ptr, DecorationKey key) {
   } while (
     // If there are any filters on _this_ packet that desire to know the prior packet, then
     // we must proactively preserve the value of this decoration for our successor.
+    (std::lock_guard<std::mutex>)m_lock,
     m_decorations.count(key)
   );
 }
