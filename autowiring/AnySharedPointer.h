@@ -6,7 +6,7 @@ struct AnySharedPointer {
 public:
   AnySharedPointer(void);
   AnySharedPointer(AnySharedPointer&& rhs);
-  explicit AnySharedPointer(const AnySharedPointer& rhs);
+  AnySharedPointer(const AnySharedPointer& rhs);
 
   template<class T>
   explicit AnySharedPointer(const std::shared_ptr<T>& rhs) {
