@@ -121,11 +121,16 @@ protected:
   /// </remarks>
   void PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos);
 
-  /// <summary>Un-templated & locked component of Has</summary>
+  /// <summary>Unsynchronized runtime counterpart to Has</summary>
   bool HasUnsafe(const DecorationKey& key) const;
 
-  /// <summary>Un-templated & locked component of Checkout</summary>
-  void DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key, bool recursiveCall=false);
+  /// <summary>
+  /// Performs a decoration operation but does not attach priors to successors.
+  /// </summary>
+  void DecorateUnsafeNoPriors(const AnySharedPointer& ptr, const DecorationKey& key);
+
+  /// <summary>Runtime counterpart to Decorate</summary>
+  void Decorate(const AnySharedPointer& ptr, DecorationKey key);
 
   /// <summary>
   /// Invoked from a checkout when a checkout has completed
@@ -375,15 +380,7 @@ public:
       throw std::runtime_error("Cannot checkout with shared_ptr == nullptr");
     
     // This allows us to install correct entries for decorated input requests
-    AnySharedPointer any_ptr(ptr);
-    {
-      std::lock_guard<std::mutex> guard(m_lock);
-      DecorateUnsafe(&any_ptr, key);
-    }
-    
-    // Call AutoFilters that are now satisfied
-    UpdateSatisfaction(key);
-
+    Decorate(AnySharedPointer(ptr), key);
     return *ptr;
   }
 
