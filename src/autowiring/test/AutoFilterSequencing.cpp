@@ -166,6 +166,72 @@ TEST_F(AutoFilterSequencing, SimplePrev) {
   ASSERT_EQ(1, filter->m_num_empty_prev) << "Prev should only be null for the first call";
 }
 
+TEST_F(AutoFilterSequencing, UnsatisfiedPrev) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<PrevFilter> filter;
+
+  {
+    auto packet = factory->NewPacket();
+    packet->Decorate(42);
+
+    // Don't decorate this packet
+    auto emptyPacket = factory->NewPacket();
+  }
+
+  ASSERT_EQ(1, filter->m_called);
+
+  {
+    auto packet = factory->NewPacket();
+
+    // Prev from previous packet should have been marked unsatisfiable
+    packet->Decorate(1337);
+    ASSERT_EQ(2, filter->m_called) << "auto_prev<int> not marked unsatisfiable on this packet";
+    ASSERT_EQ(2, filter->m_num_empty_prev);
+  }
+}
+
+struct OnlyPrev {
+  OnlyPrev():
+    m_called(0)
+  {}
+  
+  void AutoFilter(auto_prev<int> p) {
+    ++m_called;
+  }
+  
+  int m_called;
+};
+
+TEST_F(AutoFilterSequencing, OnlyPrev) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<OnlyPrev> filter;
+  
+  for (int i=10; i<20; ++i) {
+    auto packet = factory->NewPacket();
+    packet->Decorate(i);
+  }
+  
+  ASSERT_EQ(10, filter->m_called) << "Filter not called for every packet decoration";
+}
+
+TEST_F(AutoFilterSequencing, FirstPrev) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<OnlyPrev> filter;
+  
+  int prev2 = 0;
+  *factory += [&prev2] (auto_prev<int, 2> prev){
+    prev2++;
+  };
+
+  auto packet = factory->NewPacket();
+
+  ASSERT_EQ(1, filter->m_called) << "First packet doesn't have auto_prev value satisfied";
+  ASSERT_EQ(1, prev2) << "Filter called incorrect number of times";
+  
+  auto packet2 = factory->NewPacket();
+  ASSERT_EQ(2, prev2) << "Filter called incorrect number of times";
+}
+
 class PrevPrevFilter {
 public:
   PrevPrevFilter(void):

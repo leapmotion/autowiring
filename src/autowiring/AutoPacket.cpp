@@ -42,11 +42,8 @@ AutoPacket::~AutoPacket(void) {
   // Trigger AutoFilter functions with unsatisfied auto_prev's
   // We now know they will never be satisfied
   for (auto& pair : m_decorations) {
-    auto& disp = pair.second;
-    if (!disp.satisfied && pair.first.tshift) {
-      disp.satisfied = true;
-      disp.m_decorations.clear();
-      UpdateSatisfaction(pair.first);
+    if (!pair.second.satisfied) {
+      MarkUnsatisfiable(pair.first);
     }
   }
 
@@ -80,33 +77,33 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
     DecorationKey key(*pCur->ti, pCur->tshift);
 
-    // Update maximum timeshift for this type
-    if (m_maxTimeshift.count(*pCur->ti))
-      m_maxTimeshift[*pCur->ti] = std::max(m_maxTimeshift[*pCur->ti], pCur->tshift);
-    else
-      m_maxTimeshift[*pCur->ti] = pCur->tshift;
-
-    DecorationDisposition* entry = &m_decorations[key];
-    entry->SetKey(key);
+    DecorationDisposition& entry = m_decorations[key];
+    entry.SetKey(key);
 
     // Decide what to do with this entry:
     if (pCur->is_input) {
-      if (entry->m_publishers.size() > 1) {
+      if (entry.m_publishers.size() > 1) {
         std::stringstream ss;
         ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->ti);
         throw std::runtime_error(ss.str());
       }
-      entry->m_subscribers.push_back(&satCounter);
-      if (entry->satisfied)
+      entry.m_subscribers.push_back(&satCounter);
+      if (entry.satisfied)
         satCounter.Decrement();
     }
     if (pCur->is_output) {
-      if(entry->m_publishers.size() > 0 && entry->m_subscribers.size() > 0) {
+      if(entry.m_publishers.size() > 0 && entry.m_subscribers.size() > 0) {
         std::stringstream ss;
         ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << "with existing subscriber.";
         throw std::runtime_error(ss.str());
       }
-      entry->m_publishers.push_back(&satCounter);
+      entry.m_publishers.push_back(&satCounter);
+    }
+
+    // Make sure decorations exist for timeshifts less that key's timeshift
+    for (int tshift = 0; tshift < key.tshift; ++tshift) {
+      DecorationKey shiftKey(key.ti, tshift);
+      m_decorations[shiftKey].SetKey(shiftKey);
     }
   }
 }
@@ -131,19 +128,44 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
   }
 }
 
-void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
-  // Satisfy timeshifted values now
+void AutoPacket::MarkUnsatisfiable(const DecorationKey& key, bool recursiveCall) {
+  if (std::lock_guard<std::mutex>(m_lock), HasUnsafe(key)) {
+    return;
+  }
+  
+  // Perform unsatisfaction logic
   if (key.tshift) {
-    std::lock_guard<std::mutex> lk(m_lock);
-    auto& disp = m_decorations[key];
-    disp.satisfied = true;
-    disp.m_decorations.clear();
+    {
+      std::lock_guard<std::mutex> lk(m_lock);
+      auto& disp = m_decorations[key];
+      disp.satisfied = true;
+      disp.m_decorations.clear();
+    }
     UpdateSatisfaction(key);
+  }
+
+  // We're manually implementing tail-call optimization, so don't recurse more than once
+  if (recursiveCall) {
+    return;
+  }
+
+  // Recurse on successor packets
+  std::lock_guard<std::mutex> lk(m_lock);
+
+  auto successor = SuccessorUnsafe();
+  DecorationKey shiftedKey(key.ti, key.tshift + 1);
+
+  while (m_decorations.count(shiftedKey)) {
+    successor->MarkUnsatisfiable(shiftedKey, true);
+
+    // Update key and successor
+    shiftedKey.tshift++;
+    successor = successor->Successor();
   }
 }
 
 void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
-  std::list<SatCounter*> callQueue;
+  std::vector<SatCounter*> callQueue;
   {
     std::lock_guard<std::mutex> lk(m_lock);
 
@@ -153,8 +175,8 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
       return;
 
     // Update satisfaction inside of lock
-    DecorationDisposition* decoration = &dFind->second;
-    for(const auto& satCounter : decoration->m_subscribers)
+    DecorationDisposition& decoration = dFind->second;
+    for(SatCounter* satCounter : decoration.m_subscribers)
       if(satCounter->Decrement())
         callQueue.push_back(satCounter);
   }
@@ -165,12 +187,12 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
 }
 
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
-  std::list<SatCounter*> callQueue;
+  std::vector<SatCounter*> callQueue;
   // First pass, decrement what we can:
   {
     std::lock_guard<std::mutex> lk(m_lock);
     for(size_t i = nInfos; i--;) {
-      for(SatCounter*& cur : pTypeSubs[i]->m_subscribers) {
+      for(SatCounter* cur : pTypeSubs[i]->m_subscribers) {
         if(
           // We only care about sat counters that aren't deferred--skip everyone else
           // Deferred calls will be too late.
@@ -211,7 +233,7 @@ bool AutoPacket::HasUnsafe(const DecorationKey& key) const {
   return q->second.satisfied;
 }
 
-void AutoPacket::DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key) {
+void AutoPacket::DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key, bool recursiveCall) {
   auto& entry = m_decorations[key];
   entry.SetKey(key); // Ensure correct key if instantiated here
 
@@ -237,35 +259,32 @@ void AutoPacket::DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key)
   assert(entry); // UnsafeComplete must be for an initialized DecorationDisposition
   assert(entry.isCheckedOut); // UnsafeComplete must follow Checkout
 
-  int maxTShift;
-
   // Reset the checkout flag before releasing the lock:
   entry.isCheckedOut = false;
   entry.satisfied = true;
 
   // This allows us to retrieve correct entries for decorated input requests
   AnySharedPointer decoration(entry.m_decorations[0]);
-  maxTShift = m_maxTimeshift[key.ti];
-
-  // Exit now if this is a timeshifted decoration.
-  if (key.tshift) {
+  
+  // We're manually implementing tail-call optimization, so don't recurse more than once
+  if (recursiveCall) {
     return;
   }
 
   // If there are any filters on _this_ packet that desire to know the prior packet, then
   // we must proactively preserve the value of this decoration for our successor.
-  auto successorPacket = shared_from_this();
-  for (int tshift = 1; tshift <= maxTShift; ++tshift) {
-    DecorationKey successorPrior(key.ti, tshift);
-    successorPacket = successorPacket->SuccessorUnsafe();
-
-    if (m_decorations.count(successorPrior)) {
-      // Checkout, satisfy:
-      {
-        std::lock_guard<std::mutex> lk(successorPacket->m_lock);
-        successorPacket->DecorateUnsafe(&decoration, successorPrior);
-      }
-    }
+  auto successor = SuccessorUnsafe();
+  DecorationKey shiftedKey(key.ti, key.tshift + 1);
+  
+  while (m_decorations.count(shiftedKey)) {
+    // Decorate and satisfy
+    (std::lock_guard<std::mutex>)successor->m_lock,
+    successor->DecorateUnsafe(ptr, shiftedKey, true);
+    successor->UpdateSatisfaction(shiftedKey);
+    
+    // Update key and successor
+    shiftedKey.tshift++;
+    successor = successor->Successor();
   }
 }
 
@@ -431,7 +450,6 @@ std::list<DecorationDisposition> AutoPacket::GetDispositions() const {
 
 std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
   std::lock_guard<std::mutex> lk(m_lock);
-
   return SuccessorUnsafe();
 }
 

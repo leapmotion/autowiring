@@ -21,10 +21,12 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
   std::shared_ptr<AutoPacketInternal> retVal;
+  bool isFirstPacket;
   {
     std::lock_guard<std::mutex> lk(m_lock);
     
     // New packet issued
+    isFirstPacket = !m_packetCount;
     ++m_packetCount;
   
     // Create a new next packet
@@ -32,7 +34,7 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
     m_nextPacket = retVal->SuccessorInternal();
   }
   
-  retVal->Initialize();
+  retVal->Initialize(isFirstPacket);
   return retVal;
 }
 
