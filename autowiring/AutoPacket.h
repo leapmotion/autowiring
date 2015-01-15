@@ -256,7 +256,7 @@ public:
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
     auto deco = m_decorations.find(DecorationKey(typeid(auto_id<T>), tshift));
-    if(deco != m_decorations.end() && deco->second.satisfied) {
+    if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Satisfied) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
         out = disposition.m_decorations[0]->as_unsafe<T>();
@@ -332,12 +332,12 @@ public:
       std::lock_guard<std::mutex> lk(m_lock);
       auto& entry = m_decorations[key];
       entry.SetKey(key); // Ensure correct type if instantiated here
-      if(entry.satisfied ||
-         entry.isCheckedOut)
+      if(entry.m_state == DispositionState::PartlySatisfied ||
+         entry.m_state == DispositionState::Satisfied)
         throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
 
       // Mark the entry as permanently checked-out
-      entry.isCheckedOut = true;
+      entry.m_state = DispositionState::Unsatisfiable;
     }
 
     // Now trigger a rescan:
@@ -422,7 +422,7 @@ public:
       // IMPORTANT: isCheckedOut = true prevents subsequent decorations of this type
       for(DecorationDisposition*  pEntry : pTypeSubs) {
         pEntry->m_pImmediate = nullptr;
-        pEntry->satisfied = false;
+        pEntry->m_state = DispositionState::Unsatisfiable;
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
