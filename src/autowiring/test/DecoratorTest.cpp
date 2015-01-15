@@ -91,7 +91,7 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
   ASSERT_EQ(1UL, subs.size()) << "Incorrect subscriber count";
   auto disps = packet2->GetDispositions<Decoration<0>>();
   ASSERT_EQ(1UL, disps.size()) << "Incorrect count of expected decorations";
-  ASSERT_FALSE(disps.front().satisfied) << "Incorrect satisfaction status";
+  ASSERT_FALSE(disps.front().m_state == DispositionState::Satisfied) << "Incorrect satisfaction status";
   ASSERT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
 }
 
