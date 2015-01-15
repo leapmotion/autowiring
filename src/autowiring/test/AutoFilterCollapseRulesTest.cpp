@@ -106,7 +106,6 @@ TEST_F(AutoFilterCollapseRulesTest, CanAcceptUndefinedSharedPointerInput) {
   AutoRequired<AcceptsUnnamedExternalClassSharedPtr> auecsp;
 }
 
-#if AUTOWIRING_USE_LIBCXX
 TEST_F(AutoFilterCollapseRulesTest, SharedPointerAliasingRules) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<FilterGen<std::shared_ptr<const int>>> genFilter1;
@@ -143,4 +142,3 @@ TEST_F(AutoFilterCollapseRulesTest, AutoFilterSharedAliasingRules) {
   ASSERT_TRUE(packet->Has<int>()) << "Filter producing a shared pointer of type int did not correctly collapse to the basic int type";
   ASSERT_EQ(55, std::get<0>(consumes->m_args)) << "Filter consuming a shared pointer output was not called as expected";
 }
-#endif
