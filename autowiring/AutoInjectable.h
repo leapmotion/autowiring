@@ -2,6 +2,7 @@
 #pragma once
 #include "AutoFuture.h"
 #include "CoreContext.h"
+#include "index_tuple.h"
 
 class AutoInjectableExpressionBase {
 public:
