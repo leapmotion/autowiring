@@ -106,6 +106,27 @@ TEST_F(AutoFilterCollapseRulesTest, CanAcceptUndefinedSharedPointerInput) {
   AutoRequired<AcceptsUnnamedExternalClassSharedPtr> auecsp;
 }
 
+TEST_F(AutoFilterCollapseRulesTest, ConstCollapse) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<AcceptsConstReference> filter;
+  
+  // Test const shared_ptr
+  auto packet1 = factory->NewPacket();
+  
+  std::shared_ptr<const int> dec1 = std::make_shared<const int>(42);
+  packet1->Decorate(dec1);
+  
+  ASSERT_EQ(1, filter->m_called) << "'const T' decoration didn't resolve to 'T'";
+  
+  // Test const value
+  auto packet2 = factory->NewPacket();
+  
+  const int dec2 = 42;
+  packet2->Decorate(dec2);
+  
+  ASSERT_EQ(2, filter->m_called) << "'const T' decoration didn't resolve to 'T'";
+}
+
 TEST_F(AutoFilterCollapseRulesTest, SharedPointerAliasingRules) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<FilterGen<std::shared_ptr<const int>>> genFilter1;

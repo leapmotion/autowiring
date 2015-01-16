@@ -235,54 +235,56 @@ bool AutoPacket::HasUnsafe(const DecorationKey& key) const {
   return q->second.m_state == DispositionState::Satisfied;
 }
 
-void AutoPacket::DecorateUnsafe(AnySharedPointer* ptr, const DecorationKey& key, bool recursiveCall) {
+void AutoPacket::DecorateUnsafeNoPriors(const AnySharedPointer& ptr, const DecorationKey& key) {
   auto& entry = m_decorations[key];
   entry.SetKey(key); // Ensure correct key if instantiated here
 
   if (entry.m_state == DispositionState::Satisfied) {
     std::stringstream ss;
-    ss << "Cannot decorate this packet with type " << autowiring::demangle(*ptr)
-       << ", the requested decoration is already satisfied";
+    ss << "Cannot decorate this packet with type " << autowiring::demangle(ptr)
+      << ", the requested decoration is already satisfied";
     throw std::runtime_error(ss.str());
   }
-  if(entry.m_state == DispositionState::Unsatisfiable) {
+  if (entry.m_state == DispositionState::Unsatisfiable) {
     std::stringstream ss;
-    ss << "Cannot check out decoration of type " << autowiring::demangle(*ptr)
-       << ", it has been marked unsatisfiable";
+    ss << "Cannot check out decoration of type " << autowiring::demangle(ptr)
+      << ", it has been marked unsatisfiable";
     throw std::runtime_error(ss.str());
   }
 
   if (entry.m_decorations.empty()) {
-    entry.m_decorations.push_back(*ptr);
-  } else {
-    entry.m_decorations[0] = *ptr;
+    entry.m_decorations.push_back(ptr);
+  }
+  else {
+    entry.m_decorations[0] = ptr;
   }
 
   entry.m_state = DispositionState::Satisfied;
 
   // This allows us to retrieve correct entries for decorated input requests
   AnySharedPointer decoration(entry.m_decorations[0]);
-  
-  // We're manually implementing tail-call optimization, so don't recurse more than once
-  if (recursiveCall) {
-    return;
-  }
+}
 
-  // If there are any filters on _this_ packet that desire to know the prior packet, then
-  // we must proactively preserve the value of this decoration for our successor.
-  auto successor = SuccessorUnsafe();
-  DecorationKey shiftedKey(key.ti, key.tshift + 1);
-  
-  while (m_decorations.count(shiftedKey)) {
-    // Decorate and satisfy
-    (std::lock_guard<std::mutex>)successor->m_lock,
-    successor->DecorateUnsafe(ptr, shiftedKey, true);
-    successor->UpdateSatisfaction(shiftedKey);
-    
-    // Update key and successor
-    shiftedKey.tshift++;
-    successor = successor->Successor();
-  }
+void AutoPacket::Decorate(const AnySharedPointer& ptr, DecorationKey key) {
+  auto cur = shared_from_this();
+
+  do {
+    // Decorate, first, while holding down a lock
+    (std::lock_guard<std::mutex>)cur->m_lock,
+    cur->DecorateUnsafeNoPriors(ptr, key);
+
+    // Now update satisfaction set on this entry
+    cur->UpdateSatisfaction(key);
+
+    // Obtain the successor
+    cur = cur->Successor();
+    key.tshift++;
+  } while (
+    // If there are any filters on _this_ packet that desire to know the prior packet, then
+    // we must proactively preserve the value of this decoration for our successor.
+    (std::lock_guard<std::mutex>)m_lock,
+    m_decorations.count(key)
+  );
 }
 
 const DecorationDisposition* AutoPacket::GetDisposition(const DecorationKey& key) const {
@@ -353,50 +355,30 @@ void AutoPacket::Put(const DecorationKey& key, SharedPointerSlot&& in) {
 }
 
 void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
-  std::vector<const DecorationDisposition*> decoQueue;
+  // Copy decorations into an internal decorations maintenance collection.  The values
+  // in this collection are guaranteed to be stable in memory, and there are stable states
+  // that can be relied upon without synchronization.
+  std::vector<std::pair<const DecorationDisposition*, AnySharedPointer>> dd;
   {
-    // Use memory well-ordering to establish a lock heirarchy
-    if(this < recipient.get()) {
-      m_lock.lock();
-      recipient->m_lock.lock();
-    }
-    else {
-      recipient->m_lock.lock();
-      m_lock.lock();
-    }
-
-    for (auto& decoration : m_decorations) {
-      // Only existing data is propagated
-      // Unsatisfiable quilifiers are NOT propagated
-      // ASSERT: AutoPacket types are never marked "satisfied"
-      if (decoration.second.m_state != DispositionState::Satisfied)
-        continue;
-
-      DecorationKey key = decoration.second.GetKey();
-
-      // Quietly drop data that is already present on recipient
-      if (recipient->HasUnsafe(key))
-        continue;
-
-      AnySharedPointer any_ptr(decoration.second.m_decorations[0]);
-      recipient->DecorateUnsafe(&any_ptr, key);
-
-#if AUTOWIRING_USE_LIBCXX
-      const DecorationDisposition* entry = &m_decorations.at(key);
-#else
-      const DecorationDisposition* entry = &(m_decorations.find(key)->second);
-#endif
-      decoQueue.push_back(entry);
-    }
-
-    m_lock.unlock();
-    recipient->m_lock.unlock();
+    std::lock_guard<std::mutex> lk(m_lock);
+    for (const auto& decoration : m_decorations)
+      // Only fully satisfied decorations are considered for propagation
+      if (decoration.second.m_state == DispositionState::Satisfied)
+        for (const auto& single : decoration.second.m_decorations)
+          dd.push_back(std::make_pair(&decoration.second, single));
   }
 
-  // Recipient satisfaction is updated outside of lock
-  for (const DecorationDisposition* broadDeco : decoQueue) {
-    // Satisfy the base declaration first and then the shared pointer:
-    recipient->UpdateSatisfaction(broadDeco->GetKey());
+  // Lock down recipient colleciton while we go through and attach decorations:
+  for (auto& cur : dd) {
+    {
+      std::lock_guard<std::mutex> lk(recipient->m_lock);
+      if (recipient->HasUnsafe(cur.first->GetKey()))
+        // Key already present, circle around
+        continue;
+    }
+
+    // Decorate while unsynchronized:
+    recipient->Decorate(cur.second, cur.first->GetKey());
   }
 }
 
