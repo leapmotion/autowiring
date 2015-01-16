@@ -2,7 +2,6 @@
 #pragma once
 #include "AutowirableSlot.h"
 #include "Decompose.h"
-#include "Deferred.h"
 #include "GlobalCoreContext.h"
 #include MEMORY_HEADER
 #include ATOMIC_HEADER
@@ -391,8 +390,6 @@ public:
 
   template<class MemFn>
   InvokeRelay<MemFn> operator()(MemFn pfn) const {
-    static_assert(std::is_same<typename Decompose<MemFn>::type, T>::value, "Cannot invoke an event for an unrelated type");
-
     auto box = m_junctionBox.lock();
     if(!box)
       // Context has been destroyed
@@ -405,15 +402,6 @@ public:
 
   template<class MemFn>
   InvokeRelay<MemFn> Fire(MemFn pfn) const {
-    static_assert(!std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Fire an event which is marked Deferred");
-
-    return operator()(pfn);
-  }
-
-  template<class MemFn>
-  InvokeRelay<MemFn> Defer(MemFn pfn) const {
-    static_assert(std::is_same<typename Decompose<MemFn>::retType, Deferred>::value, "Cannot Defer an event which does not return the Deferred type");
-
     return operator()(pfn);
   }
 };

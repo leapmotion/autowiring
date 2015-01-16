@@ -121,8 +121,7 @@ TEST_F(CoreThreadTest, VerifyNestedTermination) {
 
 class SleepEvent {
 public:
-  virtual Deferred SleepFor(int seconds) = 0;
-  virtual Deferred SleepForThenThrow(int seconds) = 0;
+  virtual void SleepFor(int seconds) = 0;
 };
 
 class ListenThread :
@@ -132,16 +131,12 @@ class ListenThread :
 public:
   ListenThread() : CoreThread("ListenThread") {}
 
-  Deferred SleepFor(int seconds) override {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    if(ShouldStop())
-      throw std::runtime_error("Execution aborted");
-
-    return Deferred(this);
-  }
-
-  Deferred SleepForThenThrow(int seconds) override {
-    return Deferred(this);
+  void SleepFor(int seconds) override {
+    *this += [this] {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      if(ShouldStop())
+        throw std::runtime_error("Execution aborted");
+    };
   }
 };
 

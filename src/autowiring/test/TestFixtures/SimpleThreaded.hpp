@@ -6,7 +6,7 @@
 template<class T>
 class SharedPtrReceiver {
 public:
-  virtual Deferred OnEvent(std::shared_ptr<T> obj) = 0;
+  virtual void OnEvent(std::shared_ptr<T> obj) = 0;
 };
 
 /// <summary>
@@ -20,8 +20,8 @@ class SimpleThreadedT:
 public:
   SimpleThreadedT(void) {}
 
-  Deferred OnEvent(std::shared_ptr<T> obj) override {
-    return Deferred(this);
+  void OnEvent(std::shared_ptr<T> obj) override {
+    *this += [obj]{};
   }
 };
 

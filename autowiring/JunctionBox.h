@@ -12,10 +12,6 @@
 #include TYPE_TRAITS_HEADER
 
 class CoreContext;
-class JunctionBoxBase;
-
-template<typename T>
-struct JunctionBoxEntry;
 
 /// <summary>
 /// Utility routine which shuts down the current context

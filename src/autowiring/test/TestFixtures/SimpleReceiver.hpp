@@ -102,11 +102,11 @@ public:
 class CallableInterfaceDeferred
 {
 public:
-  virtual Deferred CopyVectorDeferred(const std::vector<int>& vec) = 0;
-  virtual Deferred ZeroArgsDeferred(void) = 0;
-  virtual Deferred OneArgDeferred(int arg) = 0;
-  virtual Deferred TrackCopy(CopyCounter&& ctr) = 0;
-  virtual Deferred AllDoneDeferred(void) = 0;
+  virtual void CopyVectorDeferred(const std::vector<int>& vec) = 0;
+  virtual void ZeroArgsDeferred(void) = 0;
+  virtual void OneArgDeferred(int arg) = 0;
+  virtual void TrackCopy(CopyCounter&& ctr) = 0;
+  virtual void AllDoneDeferred(void) = 0;
 };
 
 class SimpleReceiver:
@@ -152,26 +152,28 @@ public:
     m_oneArg = arg;
   }
 
-  virtual Deferred ZeroArgsDeferred(void) override {
-    m_zero = true;
-    return Deferred(this);
+  virtual void ZeroArgsDeferred(void) override {
+    *this += [this] {
+      m_zero = true;
+    };
   }
 
-  virtual Deferred OneArgDeferred(int arg) override {
-    m_one = true;
-    m_oneArg = arg;
-    return Deferred(this);
+  virtual void OneArgDeferred(int arg) override {
+    *this += [this, arg] {
+      m_one = true;
+      m_oneArg = arg;
+    };
   }
 
-  Deferred CopyVectorDeferred(const std::vector<int>& vec) override {
+  void CopyVectorDeferred(const std::vector<int>& vec) override {
     // Copy out the argument:
-    m_myVec = vec;
-    return Deferred(this);
+    *this += [this, vec] {
+      m_myVec = vec;
+    };
   }
 
-  Deferred TrackCopy(CopyCounter&& ctr) override {
+  void TrackCopy(CopyCounter&& ctr) override {
     m_myCtr = std::forward<CopyCounter>(ctr);
-    return Deferred(this);
   }
 
   void CopyVectorForwarded(std::vector<int>&& vec) override {
@@ -187,9 +189,10 @@ public:
     Stop();
   }
 
-  Deferred AllDoneDeferred(void) override {
-    Stop();
-    return Deferred(this);
+  void AllDoneDeferred(void) override {
+    *this += [this] {
+      Stop();
+    };
   }
 
   // Overridden here so we can hit the barrier if we're still waiting on it
