@@ -25,20 +25,6 @@ AutoPacket::~AutoPacket(void) {
     )
   );
   
-  // Create vector of all successor packets that will be destroyed
-  // This prevents recursive AutoPacket destructor calls
-  std::vector<std::shared_ptr<AutoPacket>> packets;  
-  
-  // Recurse through unique successors, storing them in our vector
-  for (AutoPacket* current = this; current->m_successor.unique();) {
-    packets.push_back(current->m_successor);
-    
-    // Reset and continue to next successor
-    AutoPacket* prev_current = current;
-    current = current->m_successor.get();
-    prev_current->m_successor.reset();
-  }
-  
   // Trigger AutoFilter functions with unsatisfied auto_prev's
   // We now know they will never be satisfied
   for (auto& pair : m_decorations) {
@@ -52,6 +38,20 @@ AutoPacket::~AutoPacket(void) {
 
   // Needed for the AutoPacketGraph
   NotifyTeardownListeners();
+  
+  // Create vector of all successor packets that will be destroyed
+  // This prevents recursive AutoPacket destructor calls
+  std::vector<std::shared_ptr<AutoPacket>> packets;
+  
+  // Recurse through unique successors, storing them in our vector
+  for (AutoPacket* current = this; current->m_successor.unique();) {
+    packets.push_back(current->m_successor);
+    
+    // Reset and continue to next successor
+    AutoPacket* prev_current = current;
+    current = current->m_successor.get();
+    prev_current->m_successor.reset();
+  }
 }
 
 DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& key, const void* pvImmed)
