@@ -232,6 +232,36 @@ TEST_F(AutoFilterSequencing, FirstPrev) {
   ASSERT_EQ(2, prev2) << "Filter called incorrect number of times";
 }
 
+class DeferredPrev:
+  public CoreThread
+{
+public:
+  DeferredPrev(void):
+    m_called(0)
+  {}
+  
+  Deferred AutoFilter(auto_prev<int> prev) {
+    ++m_called;
+    return Deferred(this);
+  }
+  
+  int m_called;
+};
+
+TEST_F(AutoFilterSequencing, DeferredPrev) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<DeferredPrev> def;
+  
+  factory->NewPacket()->Decorate(42);
+  factory->NewPacket();
+  
+  *def += [def] {
+    ASSERT_EQ(2, def->m_called);
+  };
+  
+  AutoCurrentContext()->SignalShutdown(true);
+}
+
 class PrevPrevFilter {
 public:
   PrevPrevFilter(void):
