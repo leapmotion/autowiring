@@ -18,11 +18,15 @@ public:
   }
 
   operator bool(void) const {
-    return bool(m_value);
+    return m_value.operator bool();
   }
 
   const T& operator*(void) const {
     return *m_value;
+  }
+  
+  const T* operator->(void) const {
+    return m_value.get();
   }
 
   std::shared_ptr<const T> m_value;
