@@ -280,6 +280,20 @@ public:
   }
 
   /// <summary>
+  /// Returns a vector with a pointer to each decoration of type T, adding a nullptr to the end.
+  /// </summary>
+  template<class T>
+  std::vector<T*> GetAll(int tshift = 0) {
+    std::vector<T*> retval;
+    auto deco = m_decorations.find(DecorationKey(typeid(auto_id<T>), tshift));
+    for (auto& dispo : deco->second.m_decorations) {
+      retval.push_back(dispo.as<T>().ptr().get());
+    }
+    retval.push_back(nullptr);
+    return retval;
+  }
+
+  /// <summary>
   /// De-templated placement method
   /// </summary>
   void Put(const DecorationKey& key, SharedPointerSlot&& in);

@@ -145,3 +145,8 @@ public:
   static const bool is_shared = false;
   static const int tshift = 0;
 };
+
+template<class T>
+class auto_arg<const T*[]> :
+  public auto_in<const T*[]>
+{};
