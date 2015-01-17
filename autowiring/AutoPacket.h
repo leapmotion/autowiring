@@ -99,7 +99,12 @@ protected:
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
-  void MarkUnsatisfiable(const DecorationKey& key, bool recursiveCall=false);
+  void MarkUnsatisfiable(const DecorationKey& key);
+  
+  /// <summary>
+  /// Marks timeshifted decorations on successor packets as unsatisfiable
+  /// </summary>
+  void MarkSuccessorsUnsatisfiable(DecorationKey type);
 
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
