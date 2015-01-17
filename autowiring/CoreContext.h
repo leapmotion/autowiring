@@ -101,6 +101,7 @@ public:
   /// </summary>
   static std::shared_ptr<CoreContext> GetGlobal(void);
 
+  /// \internal
   /// <summary>
   /// Represents a single entry, together with any deferred elements waiting on the satisfaction of this entry
   /// </summary>
@@ -147,6 +148,7 @@ protected:
   typedef std::unordered_map<std::type_index, std::list<BoltBase*>> t_contextNameListeners;
   t_contextNameListeners m_nameListeners;
 
+  /// \internal
   /// <summary>
   /// A proxy context member that knows how to create a factory for a particular type
   /// </summary>
@@ -158,6 +160,7 @@ protected:
   template<class T>
   class AutoFactory;
 
+  /// \internal
   template<class T, class Fn>
   class AutoFactoryFn;
 
@@ -904,6 +907,7 @@ public:
     }
   };
 
+  /// \internal
   /// <summary>
   /// Adds a post-attachment listener in this context for a particular autowired member.
   /// There is no guarantee for the context in which the listener will be called.
@@ -959,10 +963,10 @@ public:
   void Dump(std::ostream& os) const;
 };
 
-/// <summary>
-/// Forward-declarable version of CoreContext::InjectCurrent
-/// </summary>
 namespace autowiring {
+  /// <summary>
+  /// Forward-declarable version of CoreContext::InjectCurrent
+  /// </summary>
   template<typename T>
   void InjectCurrent(void){
     CoreContext::InjectCurrent<T>();

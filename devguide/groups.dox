@@ -1,0 +1,11 @@
+/// \defgroup Context Classes about contexts
+/// Context are a basic concept of Autowiring.
+
+    /// \class AutoDesired< T >
+    /// \ingroup Context
+    
+/// \defgroup Threading Classes about threads
+/// Thread magament is a service provided by Autowiring
+
+/// \defgroup Events Classes about events
+/// Autowiring provides an event subscription and broadcast system.
