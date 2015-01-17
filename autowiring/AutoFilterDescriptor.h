@@ -76,6 +76,10 @@ struct AutoFilterDescriptorStub {
   /// <summary>
   /// Constructs a new packet subscriber entry based on the specified call extractor and call pointer
   /// </summary>
+  /// <param name="pType">The type of the underlying filter</param>
+  /// <param name="pArgs">The inputs accepted by the filter</param>
+  /// <param name="deferred">True if the filter is deferred</param>
+  /// <param name="pCall">A pointer to the AutoFilter call routine itself</param>
   /// <remarks>
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call.  The extractor
   /// is required to carry information about the type of the proper member function to be called; t_extractedCall is
