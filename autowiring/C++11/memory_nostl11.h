@@ -15,3 +15,7 @@ struct std::hash<std::shared_ptr<T>>:
     return std::hash<T*>::operator()(__p.get());
   }
 };
+
+namespace std {
+  using autoboost::enable_shared_from_this;
+}
