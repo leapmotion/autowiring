@@ -41,8 +41,8 @@
  * Location of the unordered_set header
  *********************/
 #if defined(__APPLE__) && !defined(_LIBCPP_VERSION)
-  #define STL_UNORDERED_SET <tr1/unordered_set>
-  #define STL_UNORDERED_MAP <tr1/unordered_map>
+  #define STL_UNORDERED_SET <autowiring/C++11/tr1_unordered_set.h>
+  #define STL_UNORDERED_MAP <autowiring/C++11/tr1_unordered_map.h>
 #else
   #define STL_UNORDERED_SET <unordered_set>
   #define STL_UNORDERED_MAP <unordered_map>
@@ -324,16 +324,6 @@
  */
 #if STL11_ALLOWED
   #define _WEBSOCKETPP_CPP11_SYSTEM_ERROR_
-#endif
-
-/*********************
- * Make all of TR1 available in namespace std, but only on Mac/libstdc++:
- *********************/
-#if defined(__APPLE__) && !STL11_ALLOWED
-namespace std {
-  namespace tr1 {}
-  using namespace std::tr1;
-}
 #endif
 
 /*********************
