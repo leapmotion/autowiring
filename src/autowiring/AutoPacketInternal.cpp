@@ -36,6 +36,7 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
       auto& key = dec.first;
       if (key.tshift) {
         MarkUnsatisfiable(key);
+        MarkSuccessorsUnsatisfiable(key);
       }
     }
   }

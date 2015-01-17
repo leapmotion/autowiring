@@ -25,9 +25,21 @@ AutoPacket::~AutoPacket(void) {
     )
   );
   
+  // Mark decorations of successor packets that use decorations
+  // originating from this packet as unsatisfiable
+  for (auto& pair : m_decorations) {
+    if (!pair.first.tshift &&
+        pair.second.m_state != DispositionState::Satisfied) {
+      MarkSuccessorsUnsatisfiable(DecorationKey(pair.first.ti, 0));
+    }
+  }
+
+  // Needed for the AutoPacketGraph
+  NotifyTeardownListeners();
+  
   // Create vector of all successor packets that will be destroyed
   // This prevents recursive AutoPacket destructor calls
-  std::vector<std::shared_ptr<AutoPacket>> packets;  
+  std::vector<std::shared_ptr<AutoPacket>> packets;
   
   // Recurse through unique successors, storing them in our vector
   for (AutoPacket* current = this; current->m_successor.unique();) {
@@ -38,20 +50,6 @@ AutoPacket::~AutoPacket(void) {
     current = current->m_successor.get();
     prev_current->m_successor.reset();
   }
-  
-  // Trigger AutoFilter functions with unsatisfied auto_prev's
-  // We now know they will never be satisfied
-  for (auto& pair : m_decorations) {
-    if (pair.second.m_state == DispositionState::PartlySatisfied) {
-      pair.second.m_state = DispositionState::Satisfied;
-      UpdateSatisfaction(pair.first);
-    } else if (pair.second.m_state != DispositionState::Satisfied) {
-      MarkUnsatisfiable(pair.first);
-    }
-  }
-
-  // Needed for the AutoPacketGraph
-  NotifyTeardownListeners();
 }
 
 DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& key, const void* pvImmed)
@@ -130,11 +128,7 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
   }
 }
 
-void AutoPacket::MarkUnsatisfiable(const DecorationKey& key, bool recursiveCall) {
-  if (std::lock_guard<std::mutex>(m_lock), HasUnsafe(key)) {
-    return;
-  }
-  
+void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
   // Perform unsatisfaction logic
   if (key.tshift) {
     {
@@ -145,23 +139,20 @@ void AutoPacket::MarkUnsatisfiable(const DecorationKey& key, bool recursiveCall)
     }
     UpdateSatisfaction(key);
   }
+}
 
-  // We're manually implementing tail-call optimization, so don't recurse more than once
-  if (recursiveCall) {
-    return;
-  }
-
-  // Recurse on successor packets
+void AutoPacket::MarkSuccessorsUnsatisfiable(DecorationKey key) {
   std::lock_guard<std::mutex> lk(m_lock);
-
+  
+  // Update key and successor
+  key.tshift++;
   auto successor = SuccessorUnsafe();
-  DecorationKey shiftedKey(key.ti, key.tshift + 1);
-
-  while (m_decorations.count(shiftedKey)) {
-    successor->MarkUnsatisfiable(shiftedKey, true);
-
+  
+  while (m_decorations.count(key)) {
+    successor->MarkUnsatisfiable(key);
+    
     // Update key and successor
-    shiftedKey.tshift++;
+    key.tshift++;
     successor = successor->Successor();
   }
 }
