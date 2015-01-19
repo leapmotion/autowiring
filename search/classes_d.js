@@ -1,9 +1,7 @@
 var searchData=
 [
-  ['object',['Object',['../class_object.html',1,'']]],
-  ['objectpool',['ObjectPool',['../class_object_pool.html',1,'']]],
-  ['objectpool_3c_20autopacket_20_3e',['ObjectPool&lt; AutoPacket &gt;',['../class_object_pool.html',1,'']]],
-  ['objectpool_3c_20lockreducedcollection_3a_3acollection_2c_20resetter_20_3e',['ObjectPool&lt; LockReducedCollection::Collection, Resetter &gt;',['../class_object_pool.html',1,'']]],
-  ['objectpoolmonitor',['ObjectPoolMonitor',['../class_object_pool_monitor.html',1,'']]],
-  ['optional_5fptr',['optional_ptr',['../classoptional__ptr.html',1,'']]]
+  ['newautofilter',['NewAutoFilter',['../class_new_auto_filter.html',1,'']]],
+  ['newautofilterforwarder',['NewAutoFilterForwarder',['../class_new_auto_filter_forwarder.html',1,'']]],
+  ['newautofilterforwarder_3c_20rettype_28t_3a_3a_2a_29_28args_2e_2e_2e_29_3e',['NewAutoFilterForwarder&lt; RetType(T::*)(Args...)&gt;',['../class_new_auto_filter_forwarder_3_01_ret_type_07_t_1_1_5_08_07_args_8_8_8_08_4.html',1,'']]],
+  ['notype',['NoType',['../struct_no_type.html',1,'']]]
 ];

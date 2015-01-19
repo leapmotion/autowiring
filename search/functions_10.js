@@ -1,11 +1,8 @@
 var searchData=
 [
-  ['wait',['Wait',['../class_auto_future.html#ac7269cb00b6a437e15db753861f4ed1f',1,'AutoFuture::Wait()'],['../class_auto_packet_factory.html#afbdb97327549abf74619b72d1a3c9013',1,'AutoPacketFactory::Wait()'],['../class_basic_thread.html#aeb1d4c4434facd45276435932249d0e9',1,'BasicThread::Wait()'],['../class_core_context.html#a846274ca88865c63655b5eeb054d12b9',1,'CoreContext::Wait(void)'],['../class_core_context.html#a6708295354459d99f39f4f4a2899211d',1,'CoreContext::Wait(const std::chrono::nanoseconds duration)'],['../class_core_job.html#a14222f7e6514f16f07995a54f25a0b98',1,'CoreJob::Wait()'],['../class_core_runnable.html#a2ae70373de4de229b2f040726c3a9d0b',1,'CoreRunnable::Wait()'],['../class_object_pool.html#a877409f6b738265196568fc80b90b022',1,'ObjectPool::Wait()']]],
-  ['waitfor',['WaitFor',['../class_auto_future.html#a2c66e4f9d36ad6fea17bc473f78fff36',1,'AutoFuture::WaitFor()'],['../class_basic_thread.html#a27ef6f4c63df2a7ebed3e0611c515b94',1,'BasicThread::WaitFor()'],['../class_object_pool.html#a9dc712c96e394694c68b0449e2dc26d3',1,'ObjectPool::WaitFor()']]],
-  ['waitforevent',['WaitForEvent',['../class_core_thread.html#abab0835a5c4ccbba0763874db858f5d8',1,'CoreThread::WaitForEvent(void)'],['../class_core_thread.html#a466afe94a457ba5f2df2c4c72989c015',1,'CoreThread::WaitForEvent(std::chrono::milliseconds milliseconds)'],['../class_core_thread.html#afe062fc928df2de899079e4e156934eb',1,'CoreThread::WaitForEvent(std::chrono::steady_clock::time_point wakeTime)']]],
-  ['waitforeventunsafe',['WaitForEventUnsafe',['../class_core_thread.html#afaab2791634ebf0aa366b4a59ef9472d',1,'CoreThread']]],
-  ['waitforstateupdate',['WaitForStateUpdate',['../class_basic_thread.html#a4b616b47385599a5ca237d2b8870d1c7',1,'BasicThread']]],
-  ['waituntil',['WaitUntil',['../class_basic_thread.html#adcd884613ad7b178ce0aeca3ead15742',1,'BasicThread']]],
-  ['wasstarted',['WasStarted',['../class_core_context.html#ad12f8a7181248f040bde3fd4cdcd799e',1,'CoreContext']]],
-  ['wrap',['Wrap',['../class_object_pool.html#ac5a92c29d141fc40e3620f13276df392',1,'ObjectPool']]]
+  ['terminateall',['TerminateAll',['../class_junction_box_base.html#af38821b30e0fc191f433a58be8f224b4',1,'JunctionBoxBase']]],
+  ['threadsleep',['ThreadSleep',['../class_basic_thread.html#aa64b53cce1df48cdfa5b407e96164956',1,'BasicThread']]],
+  ['thrownotdecoratedexception',['ThrowNotDecoratedException',['../class_auto_packet.html#a86abd368d9425cf5ef2b942884b3a1b5',1,'AutoPacket']]],
+  ['try_5fassign',['try_assign',['../struct_shared_pointer_slot.html#ad6f347f4158070752ef55ee91c4b9232',1,'SharedPointerSlot::try_assign()'],['../struct_shared_pointer_slot_t_3_01_t_00_01true_01_4.html#a5d4fd9d7ce24b503895a662a9cdba3fd',1,'SharedPointerSlotT&lt; T, true &gt;::try_assign()']]],
+  ['type',['type',['../struct_shared_pointer_slot.html#a29cf3e7ce37b3bc0300b5c6ae14c658b',1,'SharedPointerSlot::type()'],['../struct_shared_pointer_slot_t_3_01_t_00_01false_01_4.html#aad145d013b880ad02d32cf6ca3baa275',1,'SharedPointerSlotT&lt; T, false &gt;::type()']]]
 ];
