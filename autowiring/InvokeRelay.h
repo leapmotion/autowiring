@@ -12,10 +12,10 @@ class JunctionBox;
 template<class FnPtr>
 class InvokeRelay {};
 
-template<class T, typename... Args>
-class InvokeRelay<void (T::*)(Args...)> {
+template<class RetType, class T, typename... Args>
+class InvokeRelay<RetType (T::*)(Args...)> {
 public:
-  InvokeRelay(std::shared_ptr<JunctionBox<T>> erp, void (T::*fnPtr)(Args...)) :
+  InvokeRelay(std::shared_ptr<JunctionBox<T>> erp, RetType (T::*fnPtr)(Args...)) :
     erp(erp),
     fnPtr(fnPtr)
   {}
@@ -29,7 +29,7 @@ public:
 
 private:
   std::shared_ptr<JunctionBox<T>> erp;
-  void (T::*fnPtr)(Args...);
+  RetType (T::*fnPtr)(Args...);
 
 public:
   /// <summary>

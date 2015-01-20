@@ -485,3 +485,27 @@ TEST_F(EventReceiverTest, EventChain){
   AutoCurrentContext ctxt;
   ctxt->Invoke(&MyReceiver::MyEvent)();
 }
+
+class HasAWeirdReturnType {
+public:
+  HasAWeirdReturnType(void) :
+    bCalled(false)
+  {}
+
+  bool bCalled;
+
+  int FiredMethod(void) {
+    bCalled = true;
+    return 1010;
+  }
+};
+
+/// <summary>
+/// Syntax verification to ensure 
+TEST_F(EventReceiverTest, OddReturnTypeTest) {
+  AutoRequired<HasAWeirdReturnType> hawrt;
+  AutoFired<HasAWeirdReturnType> af;
+  af(&HasAWeirdReturnType::FiredMethod)();
+
+  ASSERT_TRUE(hawrt->bCalled) << "Method with a strange fired return type did not get invoked as expected";
+}
