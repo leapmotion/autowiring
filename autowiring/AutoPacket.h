@@ -106,9 +106,9 @@ protected:
   /// <param name="info">The decoration which was just added to this packet</param>
   /// <remarks>
   /// This method results in a call to the AutoFilter method on any subscribers which are
-  /// satisfied by this decoration.
+  /// satisfied by this decoration.  This method must be called with m_lock held.
   /// </remarks>
-  void UpdateSatisfaction(const DecorationKey& info);
+  void UpdateSatisfactionUnsafe(std::unique_lock<std::mutex>&& lk, const DecorationDisposition& disposition);
 
   /// <summary>
   /// Performs a "satisfaction pulse", which will avoid notifying any deferred filters
@@ -126,7 +126,7 @@ protected:
   /// <summary>
   /// Performs a decoration operation but does not attach priors to successors.
   /// </summary>
-  void DecorateUnsafeNoPriors(const AnySharedPointer& ptr, const DecorationKey& key);
+  void DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key);
 
   /// <summary>Runtime counterpart to Decorate</summary>
   void Decorate(const AnySharedPointer& ptr, DecorationKey key);
@@ -185,7 +185,7 @@ public:
   template<class T>
   bool Has(int tshift=0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    return HasUnsafe(DecorationKey(auto_id<T>::key(), tshift));
+    return HasUnsafe(DecorationKey(auto_id<T>::key(), true, tshift));
   }
 
   /// <summary>
@@ -197,7 +197,7 @@ public:
 
     const T* retVal;
     if (!Get(retVal, tshift))
-      ThrowNotDecoratedException(DecorationKey(auto_id<T>::key(), tshift));
+      ThrowNotDecoratedException(DecorationKey(auto_id<T>::key(), false, tshift));
     return *retVal;
   }
 
@@ -210,7 +210,7 @@ public:
   /// </remarks>
   template<class T>
   bool Get(const T*& out, int tshift=0) const {
-    const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(auto_id<T>::key(), tshift));
+    const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(auto_id<T>::key(), false, tshift));
     if (pDisposition) {
       if (pDisposition->m_decorations.size() == 1) {
         out = static_cast<const T*>(pDisposition->m_decorations[0]->ptr());
@@ -242,7 +242,7 @@ public:
   template<class T>
   bool Get(const std::shared_ptr<const T>*& out, int tshift=0) const {
     // Decoration must be present and the shared pointer itself must also be present
-    const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(auto_id<T>::key(), tshift));
+    const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(auto_id<T>::key(), true, tshift));
     if (!pDisposition || pDisposition->m_decorations.size() != 1) {
       out = nullptr;
       return false;
@@ -262,7 +262,7 @@ public:
   template<class T>
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
+    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), true, tshift));
     if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Satisfied) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
@@ -274,11 +274,14 @@ public:
     return false;
   }
 
+  /// <returns>
+  /// The shared pointer decoration for the specified type and time shift, or nullptr if no such decoration exists
+  /// </returns>
   template<class T>
-  const std::shared_ptr<const T>& GetShared(int tshift = 0) const {
+  const std::shared_ptr<const T>* GetShared(int tshift = 0) const {
     const std::shared_ptr<const T>* retVal;
     Get(retVal, tshift);
-    return *retVal;
+    return retVal;
   }
 
   /// <summary>
@@ -291,7 +294,7 @@ public:
   template<class T>
   const T** GetAll(int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
+    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), true, tshift));
 
     // If decoration doesn't exist, return empty null-terminated buffer
     if (q == m_decorations.end()) {
@@ -328,22 +331,8 @@ public:
   /// </remarks>
   template<class T>
   void Unsatisfiable(void) {
-    DecorationKey key(auto_id<T>::key());
-    {
-      // Insert a null entry at this location:
-      std::lock_guard<std::mutex> lk(m_lock);
-      auto& entry = m_decorations[key];
-      entry.SetKey(key); // Ensure correct type if instantiated here
-      if(entry.m_state == DispositionState::PartlySatisfied ||
-         entry.m_state == DispositionState::Satisfied)
-        throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
-
-      // Mark the entry as permanently checked-out
-      entry.m_state = DispositionState::Unsatisfiable;
-    }
-
-    // Now trigger a rescan:
-    MarkUnsatisfiable(key);
+    MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), false, 0));
+    MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), true, 0));
   }
 
   /// <summary>
@@ -356,11 +345,12 @@ public:
   /// </remarks>
   template<class T>
   const T& Decorate(T t) {
-    DecorationKey key(auto_id<T>::key());
-
     // Create a copy of the input, put the copy in a shared pointer
     auto ptr = std::make_shared<T>(std::forward<T&&>(t));
-    Decorate(AnySharedPointer(ptr), key);
+    Decorate(
+      AnySharedPointer(ptr),
+      DecorationKey(auto_id<T>::key(), true, 0)
+    );
     return *ptr;
   }
 
@@ -375,7 +365,7 @@ public:
   /// </remarks>
   template<class T>
   void Decorate(std::shared_ptr<T> ptr) {
-    DecorationKey key(auto_id<T>::key());
+    DecorationKey key(auto_id<T>::key(), true, 0);
     
     // We don't want to see this overload used on a const T
     static_assert(!std::is_const<T>::value, "Cannot decorate a shared pointer to const T with this overload");
@@ -425,8 +415,8 @@ public:
     // Perform standard decoration with a short initialization:
     std::unique_lock<std::mutex> lk(m_lock);
     DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)] = {
-      &DecorateImmediateUnsafe(DecorationKey(auto_id<T>::key()), &immed),
-      &DecorateImmediateUnsafe(DecorationKey(auto_id<Ts>::key()), &immeds)...
+      &DecorateImmediateUnsafe(DecorationKey(auto_id<T>::key(), false, 0), &immed),
+      &DecorateImmediateUnsafe(DecorationKey(auto_id<Ts>::key(), false, 0), &immeds)...
     };
     lk.unlock();
 
@@ -442,12 +432,14 @@ public:
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
 #if autowiring_USE_LIBCXX
-      for (const std::type_info* ti : {&auto_id<T>::key(), &auto_id<Ts>::key()...})
-        MarkUnsatisfiable(DecorationKey(*ti));
+      for (const std::type_info* ti : {&auto_id<T>::key(), &auto_id<Ts>::key()...}) {
+        MarkUnsatisfiable(DecorationKey(*ti, true, 0));
+        MarkUnsatisfiable(DecorationKey(*ti, false, 0));
+      }
 #else
       bool dummy[] = {
-        (MarkUnsatisfiable(DecorationKey(auto_id<T>::key())), false),
-        (MarkUnsatisfiable(DecorationKey(auto_id<Ts>::key())), false)...
+        (MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), false, 0)), false),
+        (MarkUnsatisfiable(DecorationKey(auto_id<Ts>::key(), false, 0)), false)...
       };
       (void)dummy;
 #endif
@@ -505,7 +497,9 @@ public:
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   template<class T>
   bool HasSubscribers(void) const {
-    return HasSubscribers(DecorationKey(auto_id<T>::key()));
+    return
+      HasSubscribers(DecorationKey(auto_id<T>::key(), false, 0)) ||
+      HasSubscribers(DecorationKey(auto_id<T>::key(), true, 0));
   }
 
   struct SignalStub {

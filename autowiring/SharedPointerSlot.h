@@ -135,16 +135,20 @@ public:
   /// </remarks>
   virtual void reset(void) {}
 
+  template<class T>
+  static const std::shared_ptr<T>& null(void) {
+    static const std::shared_ptr<T> s_empty;
+    return s_empty;
+  }
+
   /// <summary>
   /// Attempts to coerce this type to the specified type
   /// </summary>
   template<class T>
   const std::shared_ptr<T>& as(void) const {
-    static const std::shared_ptr<T> s_empty;
-
     if (type() == typeid(void))
       // This is allowed, we always permit null to be cast to the requested type.
-      return s_empty;
+      return null<T>();
 
     if (type() != typeid(auto_id<T>))
       throw std::runtime_error("Attempted to obtain a shared pointer for an unrelated type");

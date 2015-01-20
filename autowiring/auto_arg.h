@@ -76,7 +76,10 @@ public:
 
   template<class C>
   static const std::shared_ptr<const T>& arg(C& packet) {
-    return packet.template GetShared<T>();
+    auto retVal = packet.template GetShared<T>();
+    if (!retVal)
+      return SharedPointerSlot::null<const T>();
+    return *retVal;
   }
 };
 
@@ -203,7 +206,7 @@ public:
 
   static const bool is_input = true;
   static const bool is_output = false;
-  static const bool is_shared = false;
+  static const bool is_shared = true;
   static const bool is_multi = false;
   static const int tshift = N;
 
