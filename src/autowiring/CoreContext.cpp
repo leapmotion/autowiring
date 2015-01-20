@@ -254,7 +254,7 @@ void CoreContext::AddInternal(const ObjectTraits& traits) {
 
   // Subscribers, if applicable:
   const auto& stump = traits.stump;
-  if(traits.subscriber) {
+  if(!traits.subscriber.empty()) {
     AddPacketSubscriber(traits.subscriber);
 
     // Ancilliary subscribers, if present:
