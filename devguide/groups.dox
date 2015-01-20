@@ -1,5 +1,5 @@
 /// \defgroup Context Classes about contexts
-/// Context are a basic concept of Autowiring.
+/// Contexts are a basic concept of Autowiring.
 
     /// \class AutoDesired< T >
     /// \ingroup Context
