@@ -364,7 +364,12 @@ public:
   /// </remarks>
   template<class T>
   const T& Decorate(T t) {
-    return Decorate(std::make_shared<T>(std::forward<T>(t)));
+    DecorationKey key(auto_id<T>::key());
+
+    // Create a copy of the input, put the copy in a shared pointer
+    auto ptr = std::make_shared<T>(std::forward<T&&>(t));
+    Decorate(AnySharedPointer(ptr), key);
+    return *ptr;
   }
 
   /// <summary>
