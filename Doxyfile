@@ -766,19 +766,49 @@ INPUT                  = autowiring src/autowiring src/autonet
 INPUT_ENCODING         = UTF-8
 
 # If the value of the INPUT tag contains directories, you can use the
-# FILE_PATTERNS tag to specify one or more wildcard patterns (like *.cpp and
-# *.h) to filter out the source-files in the directories. If left blank the
-# following patterns are tested:*.c, *.cc, *.cxx, *.cpp, *.c++, *.java, *.ii,
-# *.ixx, *.ipp, *.i++, *.inl, *.idl, *.ddl, *.odl, *.h, *.hh, *.hxx, *.hpp,
-# *.h++, *.cs, *.d, *.php, *.php4, *.php5, *.phtml, *.inc, *.m, *.markdown,
-# *.md, *.mm, *.dox, *.py, *.f90, *.f, *.for, *.tcl, *.vhd, *.vhdl, *.ucf,
-# *.qsf, *.as and *.js.
+# FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
+# and *.h) to filter out the source-files in the directories. If left 
+# blank the following patterns are tested: 
+# *.c *.cc *.cxx *.cpp *.c++ *.d *.java *.ii *.ixx *.ipp *.i++ *.inl *.h *.hh 
+# *.hxx *.hpp *.h++ *.idl *.odl *.cs *.php *.php3 *.inc *.m *.mm *.dox *.py 
+# *.f90 *.f *.for *.vhd *.vhdl
 
-FILE_PATTERNS          =
+FILE_PATTERNS          = "at_exit.h" \
+                         "auto_arg.h" \
+                         "auto_in.h" \
+                         "auto_out.h" \
+                         "auto_prev.h" \
+                         "AutoConfig.h" \
+                         "AutoNetServer.h" \
+                         "AutoPacket.h" \
+                         "AutoPacketFactory.h" \
+                         "AutoPacketGraph.h" \
+                         "AutoParameter.h" \
+                         "AutoSelfUpdate.h" \
+                         Autowired.h \
+                         "autowiring_error.h" \
+                         "BasicThread.h" \
+                         "Bolt.h" \
+                         BoltBase.h \
+                         "ContextCreator.h" \
+                         "ContextCreatorBase.h" \
+                         "ContextEnumerator.h" \
+                         "ContextMember.h" \
+                         "CoreContext.h" \
+                         "CoreJob.h" \
+                         "CoreRunnable.h" \
+                         "CoreThread.h" \
+                         "CurrentContextPusher.h" \
+                         "DispatchQueue.h" \
+                         "ExceptionFilter.h" \
+                         "GlobalCoreContext.h" \
+                         *.md \
+                         *.dox \
+                         examples/*.*
 
-# The RECURSIVE tag can be used to specify whether or not subdirectories should
-# be searched for input files as well.
-# The default value is: NO.
+# The RECURSIVE tag can be used to turn specify whether or not subdirectories 
+# should be searched for input files as well. Possible values are YES and NO. 
+# If left blank NO is used.
 
 RECURSIVE              = NO
 

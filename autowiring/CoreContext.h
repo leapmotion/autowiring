@@ -82,8 +82,9 @@ public:
 };
 
 /// <summary>
-/// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain
+/// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain.
 /// </summary>
+/// A context is the basic unit of organization within an autowired application. The scope of a context determines determines how dependencies are  
 class CoreContext:
   public TeardownNotifier,
   public std::enable_shared_from_this<CoreContext>
