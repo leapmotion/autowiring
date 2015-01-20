@@ -87,7 +87,7 @@ TEST_F(ArgumentTypeTest, TestAutoIn) {
 
   // Deduced Type
   const auto& arg = t_argShared::arg(*packet);
-  ASSERT_TRUE(arg.unique()) << "AutoPacket should store the sole shared pointer reference";
+  ASSERT_EQ(2UL, arg.use_count()) << "AutoPacket should store exactly two shared pointer references";
 }
 
 TEST_F(ArgumentTypeTest, TestAutoOut) {
@@ -113,6 +113,6 @@ TEST_F(ArgumentTypeTest, TestAutoOut) {
 
   const Argument<0>* arg = nullptr;
   ASSERT_TRUE(packet->Get(arg)) << "Missing output";
-  ASSERT_EQ(a0, packet->GetShared<Argument<0>>()) << "Shared pointer copied incorrectly";
+  ASSERT_EQ(a0, *packet->GetShared<Argument<0>>()) << "Shared pointer copied incorrectly";
   ASSERT_EQ(1, arg->i) << "Output was not copied";
 }
