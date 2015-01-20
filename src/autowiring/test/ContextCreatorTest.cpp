@@ -91,6 +91,8 @@ TEST_F(ContextCreatorTest, ValidateSimpleEviction) {
 }
 
 TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
+  AutoCurrentContext()->Initiate();
+
   // Number of dependent contexts to be created
   const size_t count = 100;
 
@@ -139,7 +141,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
   // Wait for all contexts to be destroyed
   std::unique_lock<std::mutex> lk(lock);
   bool wait_status = cond.wait_for(lk, std::chrono::seconds(1), [&counter] {return counter == 0;});
-  ASSERT_TRUE(wait_status) << "All teardown listeners didn't trigger";
+  ASSERT_TRUE(wait_status) << "All teardown listeners didn't trigger, counter still at " << counter;
 
   // Validate that everything expires:
   EXPECT_EQ(static_cast<size_t>(0), creator->GetSize()) << "Not all contexts were evicted as expected";

@@ -14,6 +14,27 @@
 #include <sstream>
 #include <stack>
 
+class DelayedContextHold:
+  public CoreRunnable
+{
+public:
+  DelayedContextHold(std::shared_ptr<CoreContext> context):
+    m_context(context)
+  {}
+
+  // A pointer to the enclosing context.  This pointer is held until this instance is started or stopped
+  std::shared_ptr<CoreContext> m_context;
+
+  bool OnStart(void) override {
+    m_context.reset();
+    return false;
+  }
+
+  void OnStop(bool) override {
+    m_context.reset();
+  }
+};
+
 /// <summary>
 /// A pointer to the current context, specific to the current thread.
 /// </summary>
@@ -400,8 +421,14 @@ void CoreContext::Initiate(void) {
   m_junctionBoxManager->Initiate();
 
   // Notify all child contexts that they can start if they want
-  if (!IsRunning())
+  if (!IsRunning()) {
+    lk.unlock();
+
+    // Need to inject a delayed context type so that this context will not be destroyed until
+    // it has an opportunity to start.
+    Inject<DelayedContextHold>(shared_from_this());
     return;
+  }
 
   // Now we can recover the first thread that will need to be started
   beginning = m_threads.begin();
@@ -415,15 +442,29 @@ void CoreContext::Initiate(void) {
   }
   lk.lock();
 
+  // We have to hold this to prevent dtors from running in a synchronized context
+  std::shared_ptr<CoreContext> prior;
   for (auto childWeak : m_children) {
     // Obtain child pointer and lock it down so our iterator stays stable
     auto child = childWeak.lock();
 
     // Cannot hold a lock safely if we hand off control to a child context
     lk.unlock();
+    
+    // Control handoff to the child context must happen outside of a lock:
     child->TryTransitionToRunState();
+
+    // Permit a prior context to expire if needed
+    prior.reset();
+
+    // Need to preserve current child context pointer before it goes out of scope in order to
+    // preserve our iterator.
     lk.lock();
+    prior = child;
   }
+
+  // Release our lock before letting `prior` expire, we can't hold a lock through such an event
+  lk.unlock();
 }
 
 void CoreContext::InitiateCoreThreads(void) {
