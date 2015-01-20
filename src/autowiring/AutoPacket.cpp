@@ -83,8 +83,8 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     entry.SetKey(key);
 
     // Decide what to do with this entry:
-    if (pCur->is_input) {
-      if (entry.m_publishers.size() > 1) {
+    if (pCur->arg_type & AutoArgType::In) {
+      if (entry.m_publishers.size() > 1 && !(pCur->arg_type & AutoArgType::Multi)) {
         std::stringstream ss;
         ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->ti);
         throw std::runtime_error(ss.str());
@@ -93,11 +93,17 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
       if (entry.m_state == DispositionState::Satisfied)
         satCounter.Decrement();
     }
-    if (pCur->is_output) {
-      if(entry.m_publishers.size() > 0 && entry.m_subscribers.size() > 0) {
-        std::stringstream ss;
-        ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << "with existing subscriber.";
-        throw std::runtime_error(ss.str());
+    if (pCur->arg_type & AutoArgType::Out) {
+      if(entry.m_publishers.size() > 0) {
+        for (SatCounter* subscriber : entry.m_subscribers) {
+          for(auto pOther = subscriber->GetAutoFilterInput(); *pCur; pCur++) {
+            if (!(pOther->arg_type & AutoArgType::Multi)) {
+              std::stringstream ss;
+              ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << "with existing subscriber.";
+              throw std::runtime_error(ss.str());
+            }
+          }
+        }
       }
       entry.m_publishers.push_back(&satCounter);
     }
@@ -117,12 +123,12 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
     DecorationDisposition* entry = &m_decorations[key];
 
     // Decide what to do with this entry:
-    if (pCur->is_input) {
+    if (pCur->arg_type & AutoArgType::In) {
       assert(!entry->m_subscribers.empty());
       assert(&satCounter == entry->m_subscribers.back());
       entry->m_subscribers.pop_back();
     }
-    if (pCur->is_output) {
+    if (pCur->arg_type & AutoArgType::Out) {
       assert(!entry->m_publishers.empty());
       assert(&satCounter == entry->m_publishers.back());
       entry->m_publishers.pop_back();
@@ -202,7 +208,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 
           // We cannot satisfy shared_ptr arguments, since the implied existence
           // guarantee of shared_ptr is violated
-          !cur->GetArgumentType(&pTypeSubs[i]->GetKey().ti)->is_shared &&
+          !(cur->GetArgumentType(&pTypeSubs[i]->GetKey().ti)->arg_type & AutoArgType::Shared) &&
 
           // Now do the decrementation and proceed even if optional > 0,
           // since this is the only opportunity to fulfill the arguments

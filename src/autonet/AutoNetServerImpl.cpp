@@ -193,8 +193,8 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
       Json::object args;
       for (auto pArg = object.subscriber.GetAutoFilterInput(); *pArg; ++pArg) {
         args[autowiring::demangle(pArg->ti)] = Json::object{
-          {"isInput", pArg->is_input || pArg->tshift},
-          {"isOutput", pArg->is_output}
+          {"isInput", pArg->arg_type & AutoArgType::In || pArg->tshift},
+          {"isOutput", pArg->arg_type & AutoArgType::Out}
         };
       }
       types["autoFilter"] = args;

@@ -20,7 +20,7 @@ template<class RetType, class... Args>
 struct CallExtractor<RetType (*)(Args...)>:
   Decompose<RetType(*)(Args...)>
 {
-  static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
+  static const bool has_outputs = is_any<static_cast<bool>(auto_arg<Args>::arg_type & AutoArgType::Out)...>::value;
   static const bool deferred = false;
   static const bool stateless = true;
 
@@ -47,7 +47,7 @@ template<class T, class... Args>
 struct CallExtractor<void (T::*)(Args...)>:
   Decompose<void (T::*)(Args...)>
 {
-  static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
+  static const bool has_outputs = is_any<static_cast<bool>(auto_arg<Args>::arg_type & AutoArgType::Out)...>::value;
   static const bool stateless = false;
   static const bool deferred = false;
   static const size_t N = sizeof...(Args);
@@ -78,7 +78,7 @@ template<class T, class... Args>
 struct CallExtractor<void (T::*)(Args...) const> :
   Decompose<void (T::*)(Args...)>
 {
-  static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
+  static const bool has_outputs = is_any<static_cast<bool>(auto_arg<Args>::arg_type & AutoArgType::Out)...>::value;
   static const bool stateless = true;
   static const bool deferred = false;
   static const size_t N = sizeof...(Args);
@@ -101,7 +101,7 @@ template<class T, class... Args>
 struct CallExtractor<Deferred (T::*)(Args...)>:
   Decompose<void (T::*)(Args...)>
 {
-  static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
+  static const bool has_outputs = is_any<static_cast<bool>(auto_arg<Args>::arg_type & AutoArgType::Out)...>::value;
   static const bool stateless = false;
   static const bool deferred = true;
   static const size_t N = sizeof...(Args);

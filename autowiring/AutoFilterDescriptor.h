@@ -17,25 +17,19 @@ class Deferred;
 /// </summary>
 struct AutoFilterDescriptorInput {
   AutoFilterDescriptorInput(void) :
-    is_input(false),
-    is_output(false),
-    is_shared(false),
+    arg_type(0),
     ti(nullptr),
     tshift(0)
   {}
 
   template<class T>
   AutoFilterDescriptorInput(auto_arg<T>*) :
-    is_input(auto_arg<T>::is_input),
-    is_output(auto_arg<T>::is_output),
-    is_shared(auto_arg<T>::is_shared),
+    arg_type(auto_arg<T>::arg_type),
     ti(&typeid(typename auto_arg<T>::id_type)),
     tshift(auto_arg<T>::tshift)
   {}
 
-  const bool is_input;
-  const bool is_output;
-  const bool is_shared;
+  const int arg_type;
   const std::type_info* const ti;
   const int tshift;
 
@@ -93,7 +87,7 @@ struct AutoFilterDescriptorStub {
       m_arity++;
       
       // time shifted arguments arn't required
-      if (pArg->is_input)
+      if (pArg->arg_type & AutoArgType::In)
         ++m_requiredCount;
     }
   }
