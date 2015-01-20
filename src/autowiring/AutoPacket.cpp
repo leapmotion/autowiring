@@ -326,25 +326,6 @@ void AutoPacket::ThrowNotDecoratedException(const DecorationKey& key) {
   throw std::runtime_error(ss.str());
 }
 
-void AutoPacket::Put(const DecorationKey& key, SharedPointerSlot&& in) {
-  auto& entry = m_decorations[key];
-  if(entry.m_state != DispositionState::Unsatisfied) {
-    std::stringstream ss;
-    ss << "Cannot put type " << autowiring::demangle(in.type())
-      << " on AutoPacket, the requested type already exists";
-    throw std::runtime_error(ss.str());
-  }
-
-  entry.SetKey(key);
-  if (entry.m_decorations.empty()) {
-    entry.m_decorations.push_back(AnySharedPointer());
-  }
-  entry.m_decorations[0] = in;
-  entry.m_state = DispositionState::Satisfied;
-
-  UpdateSatisfaction(key);
-}
-
 void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   // Copy decorations into an internal decorations maintenance collection.  The values
   // in this collection are guaranteed to be stable in memory, and there are stable states
