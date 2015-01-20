@@ -303,11 +303,6 @@ public:
     m_autoFilter->reset();
   }
 
-  /// <returns>
-  /// True if this subscriber instance is not empty.
-  /// </returns>
-  operator bool(void) const { return !empty(); }
-
   /// <returns>True when both the AutoFilter method and subscriber instance are equal.</returns>
   bool operator==(const AutoFilterDescriptor& rhs) const {
     // AutoFilter methods are the same for all instances of a class,

@@ -766,7 +766,7 @@ public:
       AddEventReceiver(JunctionBoxEntry<Object>(this, traits.pObject));
     
     // Add PacketSubscriber;
-    if(traits.subscriber)
+    if(!traits.subscriber.empty())
       AddPacketSubscriber(traits.subscriber);
   }
 
@@ -797,7 +797,7 @@ public:
       UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<Object>(this, traits.pObject));
     
     // Cleanup if its a packet listener
-    if(traits.subscriber)
+    if(!traits.subscriber.empty())
       UnsnoopAutoPacket(traits);
   }
   

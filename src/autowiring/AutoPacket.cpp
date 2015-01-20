@@ -176,11 +176,12 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
   for (SatCounter* call : callQueue)
-    call->CallAutoFilter(*this);
+    call->GetCall()(call->GetAutoFilter(), *this);
 }
 
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
   std::vector<SatCounter*> callQueue;
+
   // First pass, decrement what we can:
   {
     std::lock_guard<std::mutex> lk(m_lock);
@@ -191,13 +192,13 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
           // Deferred calls will be too late.
           !cur->IsDeferred() &&
 
-          // We cannot satisfy shared_ptr arguments, since the implied existence
-          // guarantee of shared_ptr is violated
+          // We cannot satisfy shared_ptr arguments, since the delegated lifetime
+          // contract of shared_ptr is violated
           !cur->GetArgumentType(&pTypeSubs[i]->GetKey().ti)->is_shared &&
 
           // Now do the decrementation and proceed even if optional > 0,
           // since this is the only opportunity to fulfill the arguments
-          (cur->Decrement() || cur->remaining == 0)
+          cur->Decrement()
         )
           // Finally, queue a call for this type
           callQueue.push_back(cur);
@@ -207,10 +208,9 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
   for (SatCounter* call : callQueue)
-    call->CallAutoFilter(*this);
+    call->GetCall()(call->GetAutoFilter(), *this);
 
-  // Reset all counters
-  // since data in this call will not be available subsequently
+  // Reset all counters, data in this call will not be available on return
   {
     std::lock_guard<std::mutex> lk(m_lock);
     for(size_t i = nInfos; i--;)
@@ -380,21 +380,21 @@ AutoPacket::Recipient AutoPacket::AddRecipient(const AutoFilterDescriptor& descr
   {
     std::lock_guard<std::mutex> lk(m_lock);
 
-    // (1) Append & Initialize new satisfaction counter
+    // Append & Initialize new satisfaction counter
     m_satCounters.push_front(descriptor);
     retVal.position = m_satCounters.begin();
     recipient = &m_satCounters.front();
 
-    // (2) Update satisfaction & Append types from subscriber
+    // Update satisfaction & Append types from subscriber
     AddSatCounter(*recipient);
 
-    // (3) Short-circuit if we don't need to call
-    if(!*recipient)
+    // Short-circuit if we don't need to call
+    if(recipient->remaining)
       return retVal;
   }
 
-  // (4) All types are satisfied, call AutoFilter now.
-  recipient->CallAutoFilter(*this);
+  // Filter is ready to be called, oblige it
+  recipient->GetCall()(recipient->GetAutoFilter(), *this);
   return retVal;
 }
 

@@ -25,9 +25,8 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
     // Prime the satisfaction graph for element:
     AddSatCounter(satCounter);
     
-    if (satCounter) {
+    if (!satCounter.remaining)
       callCounters.push_back(&satCounter);
-    }
   }
   
   // Mark timeshifted decorations as unsatisfiable on the first packet
@@ -44,7 +43,7 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
   // Call all subscribers with no required or optional arguments:
   // NOTE: This may result in decorations that cause other subscribers to be called.
   for (SatCounter* call : callCounters)
-    call->CallAutoFilter(*this);
+    call->GetCall()(call->GetAutoFilter(), *this);
 
   // First-call indicated by argumument type AutoPacket&:
   UpdateSatisfaction(DecorationKey(typeid(auto_arg<AutoPacket&>::id_type)));
