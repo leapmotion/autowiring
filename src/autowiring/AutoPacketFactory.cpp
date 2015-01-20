@@ -3,6 +3,7 @@
 #include "AutoPacketFactory.h"
 #include "AutoPacketInternal.hpp"
 #include "CoreContext.h"
+#include "SatCounter.h"
 #include <cmath>
 
 AutoPacketFactory::AutoPacketFactory(void):
@@ -67,6 +68,27 @@ std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
     }
   );
   m_outstandingInternal = retVal;
+  return retVal;
+}
+
+SatCounter* AutoPacketFactory::CreateSatCounterList(void) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+
+  // Trivial return check
+  if (m_autoFilters.empty())
+    return nullptr;
+
+  auto q = m_autoFilters.begin();
+
+  // Construct the linked list.  This code implements a push-front so that retVal
+  // always refers to the first element of the linked list.
+  SatCounter* retVal = new SatCounter(*q);
+  while (++q != m_autoFilters.end()) {
+    SatCounter* next = new SatCounter(*q);
+    retVal->blink = next;
+    next->flink = retVal;
+    retVal = next;
+  }
   return retVal;
 }
 

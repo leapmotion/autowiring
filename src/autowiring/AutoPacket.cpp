@@ -15,7 +15,8 @@ using namespace autowiring;
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
-  m_outstanding(std::move(outstanding))
+  m_outstanding(std::move(outstanding)),
+  m_firstCounter(nullptr)
 {}
 
 AutoPacket::~AutoPacket(void) {
@@ -49,6 +50,13 @@ AutoPacket::~AutoPacket(void) {
     AutoPacket* prev_current = current;
     current = current->m_successor.get();
     prev_current->m_successor.reset();
+  }
+
+  // Safe linked list unwind
+  for (auto cur = m_firstCounter; cur;) {
+    auto next = cur->flink;
+    delete cur;
+    cur = next;
   }
 }
 
@@ -301,9 +309,9 @@ bool AutoPacket::HasSubscribers(const DecorationKey& key) const {
 
 const SatCounter& AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {
   std::lock_guard<std::mutex> lk(m_lock);
-  for (auto& sat : m_satCounters)
-    if (sat.GetType() == &subscriber)
-      return sat;
+  for (auto* sat = m_firstCounter; sat; sat = sat->flink)
+    if (sat->GetType() == &subscriber)
+      return *sat;
   throw autowiring_error("Attempted to get the satisfaction counter for an unavailable subscriber");
 }
 
@@ -360,40 +368,36 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   }
 }
 
-AutoPacket::Recipient AutoPacket::AddRecipient(const AutoFilterDescriptor& descriptor) {
-  Recipient retVal;
-  SatCounter* recipient;
+const SatCounter* AutoPacket::AddRecipient(const AutoFilterDescriptor& descriptor) {
+  SatCounter& sat = *new SatCounter(descriptor);
 
+  // Linked list insertion:
   {
     std::lock_guard<std::mutex> lk(m_lock);
-
-    // Append & Initialize new satisfaction counter
-    m_satCounters.push_front(descriptor);
-    retVal.position = m_satCounters.begin();
-    recipient = &m_satCounters.front();
+    sat.flink = m_firstCounter;
+    if (m_firstCounter)
+      m_firstCounter->blink = &sat;
+    m_firstCounter = &sat;
 
     // Update satisfaction & Append types from subscriber
-    AddSatCounter(*recipient);
-
-    // Short-circuit if we don't need to call
-    if(recipient->remaining)
-      return retVal;
+    AddSatCounter(sat);
   }
 
-  // Filter is ready to be called, oblige it
-  recipient->GetCall()(recipient->GetAutoFilter(), *this);
-  return retVal;
+  if (!sat.remaining)
+    // Filter is ready to be called, oblige it
+    sat.GetCall()(sat.GetAutoFilter(), *this);
+
+  // Done
+  return &sat;
 }
 
-void AutoPacket::RemoveRecipient(Recipient&& recipient) {
-  // Copy out the iterator, and eliminate the iterator from the source structure
-  auto q = recipient.position;
-  recipient.position = m_satCounters.end();
-
+void AutoPacket::RemoveRecipient(const SatCounter& recipient) {
   // Remove the recipient from our list
   std::lock_guard<std::mutex> lk(m_lock);
-  RemoveSatCounter(*q);
-  m_satCounters.erase(q);
+  if (recipient.blink)
+    recipient.blink->flink = recipient.flink;
+  if (recipient.flink)
+    recipient.flink->blink = recipient.blink;
 }
 
 std::list<DecorationDisposition> AutoPacket::GetDispositions() const {
