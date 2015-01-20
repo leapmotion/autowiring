@@ -391,13 +391,10 @@ public:
   template<class MemFn>
   InvokeRelay<MemFn> operator()(MemFn pfn) const {
     auto box = m_junctionBox.lock();
-    if(!box)
-      // Context has been destroyed
-      return InvokeRelay<MemFn>();
-
-    AutoGlobalContext()->Invoke(&AutowiringEvents::EventFired)(*CoreContext::CurrentContext(),typeid(typename Decompose<MemFn>::type));
-
-    return MakeInvokeRelay(box, pfn);
+    return
+      box ?
+      MakeInvokeRelay(box, pfn) :
+      InvokeRelay<MemFn>();
   }
 
   template<class MemFn>

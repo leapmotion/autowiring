@@ -18,7 +18,6 @@ public:
   virtual void NewContext(CoreContext&)=0;
   virtual void ExpiredContext(CoreContext&)=0;
   virtual void NewObject(CoreContext&, const ObjectTraits&)=0;
-  virtual void EventFired(CoreContext&, const std::type_info&)=0;
 };
 
 // Extern explicit template instantiation declarations added to prevent

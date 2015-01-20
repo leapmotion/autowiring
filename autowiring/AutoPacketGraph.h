@@ -97,7 +97,6 @@ protected:
   /// AutowiringEvents overrides
   virtual void NewContext(CoreContext&) override {}
   virtual void ExpiredContext(CoreContext&) override {}
-  virtual void EventFired(CoreContext&, const std::type_info&) override {}
   virtual void NewObject(CoreContext&, const ObjectTraits&) override;
   
   /// CoreRunnable overrides
