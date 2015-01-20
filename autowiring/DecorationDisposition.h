@@ -100,6 +100,7 @@ struct DecorationDisposition
     m_state = source.m_state;
     return *this;
   }
+
 private:
   // Destructured key for this decoration. Use accessor functions to access
   // This is needed because DecorationKey doesn't have a default constructor

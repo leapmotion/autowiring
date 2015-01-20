@@ -421,3 +421,63 @@ std::shared_ptr<AutoPacket> AutoPacket::SuccessorUnsafe(void) {
 std::shared_ptr<CoreContext> AutoPacket::GetContext(void) const {
   return m_parentFactory->GetContext();
 }
+
+bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterDescriptorInput* inputs, std::chrono::nanoseconds duration) {
+  auto stub = std::make_shared<SignalStub>(*this, cv);
+
+  // This ad-hoc filter detects when all the requested decorations have been added, and then
+  // sets the necessary flags to inform the user
+  AddRecipient(
+    AutoFilterDescriptor(
+      stub,
+      AutoFilterDescriptorStub(
+        &typeid(AutoPacketFactory),
+        inputs,
+        false,
+        [] (const AnySharedPointer& obj, AutoPacket&) {
+          auto stub = obj->as<SignalStub>();
+
+          // Completed, mark the output as satisfied and update the condition variable
+          std::lock_guard<std::mutex>(stub->packet.m_lock);
+          stub->is_satisfied = true;
+
+          // Only notify while the condition variable is still valid
+          if (stub->cv)
+            stub->cv->notify_all();
+        }
+      )
+    )
+  );
+
+  // This lambda will detect when the packet has been abandoned without all of the necessary
+  // decorations.  In that case, the satisfaction flag is left in its initial state
+  AddTeardownListener(
+    [stub] {
+      std::lock_guard<std::mutex>(stub->packet.m_lock);
+      stub->is_complete = true;
+
+      // Only notify the condition variable if it's still present
+      if (stub->cv)
+        stub->cv->notify_all();
+    }
+  );
+
+  // Delay for the requested period:
+  std::unique_lock<std::mutex> lk(m_lock);
+
+  auto x = MakeAtExit([&stub] {
+    // Clear the condition variable out of the stub to prevent anyone else from trying to signal it
+    stub->cv = nullptr;
+  });
+
+  bool bRet =
+      duration == std::chrono::nanoseconds::max() ?
+      cv.wait(lk, [&] { return stub->is_complete; }), true :
+      cv.wait_for(lk, duration, [&] { return stub->is_satisfied || stub->is_complete; });
+
+  // If we didn't get all of the decorations we wanted we should throw an exception indicating this
+  if (!stub->is_satisfied)
+    throw autowiring_error("Not all of the requested decorations were available on a packet at the conclusion of Call");
+
+  return bRet;
+}

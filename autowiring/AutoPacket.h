@@ -3,6 +3,7 @@
 #include "AnySharedPointer.h"
 #include "at_exit.h"
 #include "auto_id.h"
+#include "AutoFilterDescriptorInput.h"
 #include "DecorationDisposition.h"
 #include "demangle.h"
 #include "is_any.h"
@@ -20,8 +21,9 @@ class AutoPacket;
 class AutoPacketInternal;
 class AutoPacketFactory;
 class AutoPacketProfiler;
-struct AutoFilterDescriptor;
 class CoreContext;
+struct AutoFilterDescriptor;
+struct AutoFilterDescriptorInput;
 
 /// <summary>
 /// A decorator-style processing packet
@@ -467,7 +469,14 @@ public:
   /// Convenience overload, provided to allow the attachment of receive-only filters to a const AutoPacket
   /// </summary>
   template<class Fx>
-  const AutoPacket& operator+=(Fx&& fx) const;
+  const AutoPacket& operator+=(Fx&& fx) const {
+    static_assert(
+      !Decompose<decltype(&Fx::operator())>::template any<arg_is_out>::value,
+      "Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types"
+      );
+    *const_cast<AutoPacket*>(this) += std::forward<Fx&&>(fx);
+    return *this;
+  }
 
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>
@@ -509,22 +518,90 @@ public:
     return HasSubscribers(DecorationKey(auto_id<T>::key()));
   }
 
+  struct SignalStub {
+    SignalStub(const AutoPacket& packet, std::condition_variable& cv) :
+      packet(packet),
+      cv(&cv)
+    {}
+
+    const AutoPacket& packet;
+    std::condition_variable* cv;
+    bool is_satisfied = false;
+    bool is_complete = false;
+  };
+
+  /// <summary>
+  /// Blocks until the specified descriptor is satisfied
+  /// </summary>
+  /// <param name="duration">
+  /// The amount of time to wait.  If set to std::chrono::nanoseconds::max, this method will block indefinitely
+  /// </param>
+  /// <returns>False if a timeout occurred, true otherwise</returns>
+  /// <remarks>
+  /// This method considers the arguments described by "inputs" and will block until all decorations that are needed
+  /// by this filter have been satisfied on this packet.  When this function returns, the specified filter will have
+  /// been called.
+  /// </remarks>
+  bool Wait(std::condition_variable& cv, const AutoFilterDescriptorInput* inputs, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max());
+
+  /// <summary>
+  /// Blocks until the passed lambda function can be called
+  /// </summary>
+  /// <param name="cv">A condition variable that can be signalled when the wait condition has expired</param>
+  /// <returns>
+  /// True on success, false if a timeout occurred
+  /// </returns>
+  /// <remarks>
+  /// This method will invoke the passed autoFilter function once all of its arguments are present on the packet
+  /// this routine generates internally.  This method will not return until the specified autoFilter is called.
+  /// If the autoFilter cannot be called because the required decorations are not present on the packet on teardown,
+  /// this method will throw an exception.
+  ///
+  /// The passed autoFilter routine must not attach any decorations to the packet, nor may it accept a non-const
+  /// AutoFilter as an input argument.
+  /// </remarks>
+  template<class Fx>
+  bool Wait(std::condition_variable& cv, Fx&& autoFilter, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max())
+  {
+    auto stub = std::make_shared<SignalStub>(*this, cv);
+
+    // Add the filter that will ultimately be invoked
+    *this += std::move(autoFilter);
+    return Wait(cv, Decompose<decltype(&Fx::operator())>::template Enumerate<AutoFilterDescriptorInput>::types, duration);
+  }
+
+  /// <summary>
+  /// Delays until the specified decorations are satisfied
+  /// </summary>
+  template<class... Decorations>
+  bool Wait(std::condition_variable& cv)
+  {
+    static const AutoFilterDescriptorInput inputs [] = {
+      static_cast<auto_arg<Decorations>*>(nullptr)...,
+      AutoFilterDescriptorInput()
+    };
+
+    return Wait(cv, inputs, std::chrono::nanoseconds::max());
+  }
+
+  /// <summary>
+  /// Timed version of Wait
+  /// </summary>
+  template<class... Args>
+  bool Wait(std::chrono::nanoseconds duration, std::condition_variable& cv)
+  {
+    static const AutoFilterDescriptorInput inputs [] = {
+      static_cast<auto_arg<Args>*>(nullptr)...,
+      AutoFilterDescriptorInput()
+    };
+
+    return Wait(cv, inputs, duration);
+  }
+
+
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;
 };
-
-#include "CallExtractor.h"
-
-template<class Fx>
-const AutoPacket& AutoPacket::operator+=(Fx&& fx) const
-{
-  static_assert(
-    !Decompose<decltype(&Fx::operator())>::template any<arg_is_out>::value,
-    "Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types"
-  );
-  *const_cast<AutoPacket*>(this) += std::forward<Fx&&>(fx);
-  return *this;
-}
 
 template<class T>
 bool AutoPacket::Get(const std::shared_ptr<T>*& out) const {
