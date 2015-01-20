@@ -230,15 +230,6 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
   };
 }
 
-void AutoNetServerImpl::EventFired(CoreContext& context, const std::type_info& info){
-  int contextID = ResolveContextID(&context);
-  std::string name = autowiring::demangle(info);
-
-  *this += [this, contextID, name] {
-    BroadcastMessage("eventFired", contextID, Json::object{{"name", name}});
-  };
-}
-
 void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
   m_Subscribers.insert(hdl);
 

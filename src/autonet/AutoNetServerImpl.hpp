@@ -68,13 +68,6 @@ public:
   /// <param name="obj">The object</param>
   virtual void NewObject(CoreContext& ctxt, const ObjectTraits& obj) override;
 
-  /// <summary>
-  /// Updates server when a context has expired
-  /// </summary>
-  /// <param name="ctxt">The expired context</param>
-  /// <param name="evtInfo">The event type</param>
-  virtual void EventFired(CoreContext& ctxt, const std::type_info& evtInfo) override;
-
 protected:
   /// <summary>
   /// Sends a message to specified client.
