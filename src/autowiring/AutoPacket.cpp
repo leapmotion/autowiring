@@ -258,17 +258,16 @@ void AutoPacket::DecorateUnsafeNoPriors(const AnySharedPointer& ptr, const Decor
     throw std::runtime_error(ss.str());
   }
 
-  if (entry.m_decorations.empty()) {
-    entry.m_decorations.push_back(ptr);
-  }
-  else {
-    entry.m_decorations[0] = ptr;
-  }
+  entry.m_decorations.push_back(ptr);
 
-  entry.m_state = DispositionState::Satisfied;
+  if (entry.m_decorations.size() >= entry.m_publishers.size()) {
+    entry.m_state = DispositionState::Satisfied;
+  } else {
+    entry.m_state = DispositionState::PartlySatisfied;
+  }
 
   // This allows us to retrieve correct entries for decorated input requests
-  AnySharedPointer decoration(entry.m_decorations[0]);
+  AnySharedPointer decoration(entry.m_decorations.back());
 }
 
 void AutoPacket::Decorate(const AnySharedPointer& ptr, DecorationKey key) {
@@ -280,7 +279,9 @@ void AutoPacket::Decorate(const AnySharedPointer& ptr, DecorationKey key) {
     cur->DecorateUnsafeNoPriors(ptr, key);
 
     // Now update satisfaction set on this entry
-    cur->UpdateSatisfaction(key);
+    if (m_decorations[key].m_state == DispositionState::Satisfied) {
+      cur->UpdateSatisfaction(key);
+    }
 
     // Obtain the successor
     cur = cur->Successor();
@@ -343,7 +344,7 @@ void AutoPacket::ThrowNotDecoratedException(const DecorationKey& key) {
 
 void AutoPacket::Put(const DecorationKey& key, SharedPointerSlot&& in) {
   auto& entry = m_decorations[key];
-  if(entry.m_state != DispositionState::Unsatisfied) {
+  if(entry.m_state != DispositionState::Unsatisfied && entry.m_state != DispositionState::PartlySatisfied) {
     std::stringstream ss;
     ss << "Cannot put type " << autowiring::demangle(in.type())
       << " on AutoPacket, the requested type already exists";
@@ -351,13 +352,13 @@ void AutoPacket::Put(const DecorationKey& key, SharedPointerSlot&& in) {
   }
 
   entry.SetKey(key);
-  if (entry.m_decorations.empty()) {
-    entry.m_decorations.push_back(AnySharedPointer());
+  entry.m_decorations.emplace_back(std::move(in));
+  if (entry.m_decorations.size() >= entry.m_publishers.size()) {
+    entry.m_state = DispositionState::Satisfied;
+    UpdateSatisfaction(key);
+  } else {
+    entry.m_state = DispositionState::PartlySatisfied;
   }
-  entry.m_decorations[0] = in;
-  entry.m_state = DispositionState::Satisfied;
-
-  UpdateSatisfaction(key);
 }
 
 void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {

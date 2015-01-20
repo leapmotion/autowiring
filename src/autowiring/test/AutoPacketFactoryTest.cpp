@@ -197,5 +197,29 @@ TEST_F(AutoPacketFactoryTest, AddSubscriberTest) {
 
   ASSERT_TRUE(first_called) << "Normal subscriber never called";
   ASSERT_TRUE(second_called) << "Subscriber added with operator+= never called";
+}
 
+TEST_F(AutoPacketFactoryTest, MultiDecorateTest) {
+  AutoCreateContext ctxt;
+  CurrentContextPusher pshr(ctxt);
+  AutoRequired<AutoPacketFactory> factory(ctxt);
+  ctxt->Initiate();
+
+  int called = 0;
+
+  *factory += [&called] (int& out) { out = called++; };
+  *factory += [&called] (int& out) { out = called++; };
+  *factory += [&called] (auto_in<const int*[]> vals) {
+    called++;
+    int i;
+    for (i = 0; vals[i] != nullptr; i++) {
+      EXPECT_EQ(i, *(vals[i])) << "Incorrect values were added to the packet";
+    }
+    EXPECT_EQ(2, i) << "The wrong number of values were added to the packet";
+  };
+  ASSERT_EQ(0, called);
+
+  auto packet = factory->NewPacket();
+
+  ASSERT_EQ(3, called);
 }
