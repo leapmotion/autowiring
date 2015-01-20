@@ -9,7 +9,7 @@ public:
   AnySharedPointer(const AnySharedPointer& rhs);
 
   template<class T>
-  explicit AnySharedPointer(const std::shared_ptr<T>& rhs) {
+  AnySharedPointer(const std::shared_ptr<T>& rhs) {
     // Delegate the remainder to the assign operation:
     new (m_space) SharedPointerSlotT<T>(rhs);
   }
