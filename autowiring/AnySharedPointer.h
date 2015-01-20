@@ -7,6 +7,8 @@ public:
   AnySharedPointer(void);
   AnySharedPointer(AnySharedPointer&& rhs);
   AnySharedPointer(const AnySharedPointer& rhs);
+  AnySharedPointer(const SharedPointerSlot&& rhs);
+  AnySharedPointer(const SharedPointerSlot& rhs);
 
   template<class T>
   explicit AnySharedPointer(const std::shared_ptr<T>& rhs) {
