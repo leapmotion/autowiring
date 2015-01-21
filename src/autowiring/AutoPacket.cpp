@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoPacket.h"
 #include "Autowired.h"
@@ -25,9 +25,21 @@ AutoPacket::~AutoPacket(void) {
     )
   );
   
+  // Mark decorations of successor packets that use decorations
+  // originating from this packet as unsatisfiable
+  for (auto& pair : m_decorations) {
+    if (!pair.first.tshift &&
+        pair.second.m_state != DispositionState::Satisfied) {
+      MarkSuccessorsUnsatisfiable(DecorationKey(pair.first.ti, 0));
+    }
+  }
+
+  // Needed for the AutoPacketGraph
+  NotifyTeardownListeners();
+  
   // Create vector of all successor packets that will be destroyed
   // This prevents recursive AutoPacket destructor calls
-  std::vector<std::shared_ptr<AutoPacket>> packets;  
+  std::vector<std::shared_ptr<AutoPacket>> packets;
   
   // Recurse through unique successors, storing them in our vector
   for (AutoPacket* current = this; current->m_successor.unique();) {
@@ -38,20 +50,6 @@ AutoPacket::~AutoPacket(void) {
     current = current->m_successor.get();
     prev_current->m_successor.reset();
   }
-  
-  // Trigger AutoFilter functions with unsatisfied auto_prev's
-  // We now know they will never be satisfied
-  for (auto& pair : m_decorations) {
-    if (pair.second.m_state == DispositionState::PartlySatisfied) {
-      pair.second.m_state = DispositionState::Satisfied;
-      UpdateSatisfaction(pair.first);
-    } else if (pair.second.m_state != DispositionState::Satisfied) {
-      MarkUnsatisfiable(pair.first);
-    }
-  }
-
-  // Needed for the AutoPacketGraph
-  NotifyTeardownListeners();
 }
 
 DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& key, const void* pvImmed)
@@ -136,11 +134,7 @@ void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
   }
 }
 
-void AutoPacket::MarkUnsatisfiable(const DecorationKey& key, bool recursiveCall) {
-  if (std::lock_guard<std::mutex>(m_lock), HasUnsafe(key)) {
-    return;
-  }
-  
+void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
   // Perform unsatisfaction logic
   if (key.tshift) {
     {
@@ -151,23 +145,20 @@ void AutoPacket::MarkUnsatisfiable(const DecorationKey& key, bool recursiveCall)
     }
     UpdateSatisfaction(key);
   }
+}
 
-  // We're manually implementing tail-call optimization, so don't recurse more than once
-  if (recursiveCall) {
-    return;
-  }
-
-  // Recurse on successor packets
+void AutoPacket::MarkSuccessorsUnsatisfiable(DecorationKey key) {
   std::lock_guard<std::mutex> lk(m_lock);
-
+  
+  // Update key and successor
+  key.tshift++;
   auto successor = SuccessorUnsafe();
-  DecorationKey shiftedKey(key.ti, key.tshift + 1);
-
-  while (m_decorations.count(shiftedKey)) {
-    successor->MarkUnsatisfiable(shiftedKey, true);
-
+  
+  while (m_decorations.count(key)) {
+    successor->MarkUnsatisfiable(key);
+    
     // Update key and successor
-    shiftedKey.tshift++;
+    key.tshift++;
     successor = successor->Successor();
   }
 }
@@ -191,11 +182,12 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
   for (SatCounter* call : callQueue)
-    call->CallAutoFilter(*this);
+    call->GetCall()(call->GetAutoFilter(), *this);
 }
 
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
   std::vector<SatCounter*> callQueue;
+
   // First pass, decrement what we can:
   {
     std::lock_guard<std::mutex> lk(m_lock);
@@ -212,7 +204,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 
           // Now do the decrementation and proceed even if optional > 0,
           // since this is the only opportunity to fulfill the arguments
-          (cur->Decrement() || cur->remaining == 0)
+          cur->Decrement()
         )
           // Finally, queue a call for this type
           callQueue.push_back(cur);
@@ -222,10 +214,9 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
   for (SatCounter* call : callQueue)
-    call->CallAutoFilter(*this);
+    call->GetCall()(call->GetAutoFilter(), *this);
 
-  // Reset all counters
-  // since data in this call will not be available subsequently
+  // Reset all counters, data in this call will not be available on return
   {
     std::lock_guard<std::mutex> lk(m_lock);
     for(size_t i = nInfos; i--;)
@@ -342,25 +333,6 @@ void AutoPacket::ThrowNotDecoratedException(const DecorationKey& key) {
   throw std::runtime_error(ss.str());
 }
 
-void AutoPacket::Put(const DecorationKey& key, SharedPointerSlot&& in) {
-  auto& entry = m_decorations[key];
-  if(entry.m_state != DispositionState::Unsatisfied && entry.m_state != DispositionState::PartlySatisfied) {
-    std::stringstream ss;
-    ss << "Cannot put type " << autowiring::demangle(in.type())
-      << " on AutoPacket, the requested type already exists";
-    throw std::runtime_error(ss.str());
-  }
-
-  entry.SetKey(key);
-  entry.m_decorations.emplace_back(std::move(in));
-  if (entry.m_decorations.size() >= entry.m_publishers.size()) {
-    entry.m_state = DispositionState::Satisfied;
-    UpdateSatisfaction(key);
-  } else {
-    entry.m_state = DispositionState::PartlySatisfied;
-  }
-}
-
 void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   // Copy decorations into an internal decorations maintenance collection.  The values
   // in this collection are guaranteed to be stable in memory, and there are stable states
@@ -396,21 +368,21 @@ AutoPacket::Recipient AutoPacket::AddRecipient(const AutoFilterDescriptor& descr
   {
     std::lock_guard<std::mutex> lk(m_lock);
 
-    // (1) Append & Initialize new satisfaction counter
+    // Append & Initialize new satisfaction counter
     m_satCounters.push_front(descriptor);
     retVal.position = m_satCounters.begin();
     recipient = &m_satCounters.front();
 
-    // (2) Update satisfaction & Append types from subscriber
+    // Update satisfaction & Append types from subscriber
     AddSatCounter(*recipient);
 
-    // (3) Short-circuit if we don't need to call
-    if(!*recipient)
+    // Short-circuit if we don't need to call
+    if(recipient->remaining)
       return retVal;
   }
 
-  // (4) All types are satisfied, call AutoFilter now.
-  recipient->CallAutoFilter(*this);
+  // Filter is ready to be called, oblige it
+  recipient->GetCall()(recipient->GetAutoFilter(), *this);
   return retVal;
 }
 

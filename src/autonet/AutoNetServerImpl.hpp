@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AutoNetServer.h"
 #include "AutowiringEvents.h"
@@ -67,13 +67,6 @@ public:
   /// <param name="ctxt">Context containing the object</param>
   /// <param name="obj">The object</param>
   virtual void NewObject(CoreContext& ctxt, const ObjectTraits& obj) override;
-
-  /// <summary>
-  /// Updates server when a context has expired
-  /// </summary>
-  /// <param name="ctxt">The expired context</param>
-  /// <param name="evtInfo">The event type</param>
-  virtual void EventFired(CoreContext& ctxt, const std::type_info& evtInfo) override;
 
 protected:
   /// <summary>

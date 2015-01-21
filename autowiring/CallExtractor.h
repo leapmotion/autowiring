@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "auto_arg.h"
 #include "AutoPacket.h"
@@ -50,7 +50,6 @@ struct CallExtractor<void (T::*)(Args...)>:
   static const bool has_outputs = is_any<static_cast<bool>(auto_arg<Args>::arg_type & AutoArgType::Out)...>::value;
   static const bool stateless = false;
   static const bool deferred = false;
-  static const size_t N = sizeof...(Args);
 
   /// <summary>
   /// Binder struct, lets us refer to an instance of Call by type
@@ -81,7 +80,6 @@ struct CallExtractor<void (T::*)(Args...) const> :
   static const bool has_outputs = is_any<static_cast<bool>(auto_arg<Args>::arg_type & AutoArgType::Out)...>::value;
   static const bool stateless = true;
   static const bool deferred = false;
-  static const size_t N = sizeof...(Args);
   
   template<void(T::*memFn)(Args...) const>
   static void Call(const AnySharedPointer& obj, AutoPacket& autoPacket) {
@@ -104,7 +102,6 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
   static const bool has_outputs = is_any<static_cast<bool>(auto_arg<Args>::arg_type & AutoArgType::Out)...>::value;
   static const bool stateless = false;
   static const bool deferred = true;
-  static const size_t N = sizeof...(Args);
 
   template<Deferred(T::*memFn)(Args...)>
   static void Call(const AnySharedPointer& obj, AutoPacket& autoPacket) {

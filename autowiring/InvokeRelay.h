@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "is_any.h"
 #include STL_TUPLE_HEADER
@@ -12,10 +12,10 @@ class JunctionBox;
 template<class FnPtr>
 class InvokeRelay {};
 
-template<class T, typename... Args>
-class InvokeRelay<void (T::*)(Args...)> {
+template<class RetType, class T, typename... Args>
+class InvokeRelay<RetType (T::*)(Args...)> {
 public:
-  InvokeRelay(std::shared_ptr<JunctionBox<T>> erp, void (T::*fnPtr)(Args...)) :
+  InvokeRelay(std::shared_ptr<JunctionBox<T>> erp, RetType (T::*fnPtr)(Args...)) :
     erp(erp),
     fnPtr(fnPtr)
   {}
@@ -29,7 +29,7 @@ public:
 
 private:
   std::shared_ptr<JunctionBox<T>> erp;
-  void (T::*fnPtr)(Args...);
+  RetType (T::*fnPtr)(Args...);
 
 public:
   /// <summary>

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
 #include "AutoPacket.h"
@@ -36,7 +36,7 @@ public:
   /// <summary>Destruction of auto_out makes type data available</summary>
   ~auto_out(void) {
     if(m_packet && m_value)
-      m_packet->Put(m_value);
+      m_packet->Decorate(m_value);
   }
 
 protected:

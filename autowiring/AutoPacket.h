@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
 #include "at_exit.h"
@@ -108,7 +108,12 @@ protected:
   /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
-  void MarkUnsatisfiable(const DecorationKey& key, bool recursiveCall=false);
+  void MarkUnsatisfiable(const DecorationKey& key);
+  
+  /// <summary>
+  /// Marks timeshifted decorations on successor packets as unsatisfiable
+  /// </summary>
+  void MarkSuccessorsUnsatisfiable(DecorationKey type);
 
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
@@ -300,38 +305,6 @@ public:
     }
     retval.push_back(nullptr);
     return retval;
-  }
-
-  /// <summary>
-  /// De-templated placement method
-  /// </summary>
-  void Put(const DecorationKey& key, SharedPointerSlot&& in);
-
-  /// <summary>
-  /// Transfers ownership of argument to AutoPacket
-  /// </summary>
-  /// <remarks>
-  /// This method may throw an exception.  Ownership is unconditionally transferred to this class
-  /// even in the event an exception is thrown, thus the passed pointer is guaranteed to be cleaned
-  /// up properly in all cases.
-  /// </remarks>
-  template<class T>
-  void Put(T* in) {
-    Put(auto_id<T>::key(), SharedPointerSlotT<T, false>(std::shared_ptr<T>(in)));
-  }
-
-  /// <summary>
-  /// Shares ownership of argument with AutoPacket
-  /// </summary>
-  /// <remarks>
-  /// This can be used to:
-  /// - place data on the AutoPack from an ObjectPool
-  /// - move data from one AutoPacket to another without copying
-  /// - alias the type of a decoration on AutoPacket
-  /// </remarks>
-  template<class T>
-  void Put(std::shared_ptr<T> in) {
-    Put(DecorationKey(auto_id<T>::key()), SharedPointerSlotT<T, false>(std::move(in)));
   }
 
   /// <summary>Shares all broadcast data from this packet with the recipient packet</summary>

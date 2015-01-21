@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoPacketGraph.h"
 #include "CoreContext.h"
@@ -83,7 +83,7 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
       auto type = &decoration.GetKey().ti;
 
       for (auto& publisher : decoration.m_publishers) {
-        if (publisher->called) {
+        if (!publisher->remaining) {
           RecordDelivery(type, *publisher, false);
         }
       }
@@ -95,7 +95,7 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
           continue;
         }
         
-        if (subscriber->called) {
+        if (subscriber->remaining) {
           RecordDelivery(type, *subscriber, true);
         }
       }

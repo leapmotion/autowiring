@@ -5,7 +5,7 @@
 #
 
 ENFORCED_FILES="autowiring examples src"
-COPYRIGHT_HEADER="// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved."
+COPYRIGHT_HEADER="// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved."
 
 # Go to root directory
 for f in $(find $ENFORCED_FILES -name *.hpp -o -name *.cpp -o -name *.h);

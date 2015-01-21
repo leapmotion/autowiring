@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/Decoration.hpp"
 #include <autowiring/autowiring.h>
@@ -230,6 +230,36 @@ TEST_F(AutoFilterSequencing, FirstPrev) {
   
   auto packet2 = factory->NewPacket();
   ASSERT_EQ(2, prev2) << "Filter called incorrect number of times";
+}
+
+class DeferredPrev:
+  public CoreThread
+{
+public:
+  DeferredPrev(void):
+    m_called(0)
+  {}
+  
+  Deferred AutoFilter(auto_prev<int> prev) {
+    ++m_called;
+    return Deferred(this);
+  }
+  
+  int m_called;
+};
+
+TEST_F(AutoFilterSequencing, DeferredPrev) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<DeferredPrev> def;
+  
+  factory->NewPacket()->Decorate(42);
+  factory->NewPacket();
+  
+  *def += [def] {
+    ASSERT_EQ(2, def->m_called);
+  };
+  
+  AutoCurrentContext()->SignalShutdown(true);
 }
 
 class PrevPrevFilter {

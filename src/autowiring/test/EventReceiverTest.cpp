@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/FiresManyEventsWhenRun.hpp"
 #include "TestFixtures/SimpleReceiver.hpp"
@@ -484,4 +484,28 @@ TEST_F(EventReceiverTest, EventChain){
   AutoRequired<MyReceiver> recr;
   AutoCurrentContext ctxt;
   ctxt->Invoke(&MyReceiver::MyEvent)();
+}
+
+class HasAWeirdReturnType {
+public:
+  HasAWeirdReturnType(void) :
+    bCalled(false)
+  {}
+
+  bool bCalled;
+
+  int FiredMethod(void) {
+    bCalled = true;
+    return 1010;
+  }
+};
+
+/// <summary>
+/// Syntax verification to ensure 
+TEST_F(EventReceiverTest, OddReturnTypeTest) {
+  AutoRequired<HasAWeirdReturnType> hawrt;
+  AutoFired<HasAWeirdReturnType> af;
+  af(&HasAWeirdReturnType::FiredMethod)();
+
+  ASSERT_TRUE(hawrt->bCalled) << "Method with a strange fired return type did not get invoked as expected";
 }

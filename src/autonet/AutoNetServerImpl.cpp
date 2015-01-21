@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoNetServerImpl.hpp"
 #include "at_exit.h"
@@ -227,15 +227,6 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
     }
 
     BroadcastMessage("newObject", contextID, types, objData);
-  };
-}
-
-void AutoNetServerImpl::EventFired(CoreContext& context, const std::type_info& info){
-  int contextID = ResolveContextID(&context);
-  std::string name = autowiring::demangle(info);
-
-  *this += [this, contextID, name] {
-    BroadcastMessage("eventFired", contextID, Json::object{{"name", name}});
   };
 }
 

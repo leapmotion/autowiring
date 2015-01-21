@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
 #include "AutoFilterDescriptor.h"
@@ -652,10 +652,6 @@ public:
   template<typename MemFn>
   InvokeRelay<MemFn> Invoke(MemFn memFn){
     typedef typename Decompose<MemFn>::type EventType;
-
-    if (!std::is_same<AutowiringEvents,EventType>::value)
-      GetGlobal()->Invoke(&AutowiringEvents::EventFired)(*this, typeid(EventType));
-
     return MakeInvokeRelay(GetJunctionBox<EventType>(), memFn);
   }
 
@@ -770,7 +766,7 @@ public:
       AddEventReceiver(JunctionBoxEntry<Object>(this, traits.pObject));
     
     // Add PacketSubscriber;
-    if(traits.subscriber)
+    if(!traits.subscriber.empty())
       AddPacketSubscriber(traits.subscriber);
   }
 
@@ -801,7 +797,7 @@ public:
       UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<Object>(this, traits.pObject));
     
     // Cleanup if its a packet listener
-    if(traits.subscriber)
+    if(!traits.subscriber.empty())
       UnsnoopAutoPacket(traits);
   }
   
