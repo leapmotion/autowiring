@@ -136,6 +136,12 @@ public:
   static const int tshift = 0;
 };
 
+/// <summary>
+/// Multi-in specialization
+/// </summary>
+/// <remarks>
+/// This specialization is for gathering multiply decorated types from a packet
+/// </remarks>
 template<class T>
 class auto_arg<T const **> :
   public auto_in<T const **>
