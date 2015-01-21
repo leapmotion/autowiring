@@ -210,6 +210,7 @@ TEST_F(AutoPacketFactoryTest, MultiDecorateTest) {
   *factory += [&called] (int& out) { out = called++; };
   *factory += [&called] (int& out) { out = called++; };
   *factory += [&called] (const int* vals[]) {
+    ASSERT_NE(nullptr, vals);
     called++;
     int i;
     for (i = 0; vals[i] != nullptr; i++) {
