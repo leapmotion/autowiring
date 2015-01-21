@@ -61,14 +61,9 @@ public:
 };
 
 template<class T>
-class auto_in<T const *[]>
+class auto_in<T const **>
 {
 public:
-  typedef auto_id<T> id_type;
-  typedef auto_in<T const *[]> type;
-  static const int arg_type = AutoArgType::In | AutoArgType::Multi;
-  static const int tshift = 0;
-
   auto_in(AutoPacket& packet) :
     packet(packet),
     m_values(packet.GetAll<T>())
@@ -76,8 +71,8 @@ public:
 
 private:
   const AutoPacket& packet;
-  const std::vector<const T*> m_values;
+  std::vector<const T*> m_values;
 
 public:
-  operator const T* const *() const { return &m_values[0]; }
+  operator const T**() { return &m_values[0]; }
 };

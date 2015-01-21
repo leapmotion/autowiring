@@ -137,6 +137,12 @@ public:
 };
 
 template<class T>
-class auto_arg<T const *[]> :
-  public auto_in<T const *[]>
-{};
+class auto_arg<T const **> :
+  public auto_in<T const **>
+{
+public:
+  typedef auto_id<T> id_type;
+  typedef auto_in<T const **> type;
+  static const int arg_type = AutoArgType::In | AutoArgType::Multi;
+  static const int tshift = 0;
+};

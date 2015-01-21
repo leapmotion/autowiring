@@ -209,7 +209,7 @@ TEST_F(AutoPacketFactoryTest, MultiDecorateTest) {
 
   *factory += [&called] (int& out) { out = called++; };
   *factory += [&called] (int& out) { out = called++; };
-  *factory += [&called] (auto_in<const int*[]> vals) {
+  *factory += [&called] (const int* vals[]) {
     called++;
     int i;
     for (i = 0; vals[i] != nullptr; i++) {
