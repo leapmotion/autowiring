@@ -45,21 +45,21 @@ typedef Argument<0>& required_out;
 typedef auto_out<Argument<0>> fundamental_out;
 
 TEST_F(ArgumentTypeTest, AutoFilterTemplateTests) {
-  ASSERT_TRUE(auto_arg<copied_in>::arg_type & AutoArgType::In) << "Should be input";
-  ASSERT_TRUE(auto_arg<copied_in_const>::arg_type & AutoArgType::In) << "Should be input";
-  ASSERT_TRUE(auto_arg<required_in>::arg_type & AutoArgType::In) << "Should be input";
+  ASSERT_TRUE(auto_arg<copied_in>::is_input) << "Should be input";
+  ASSERT_TRUE(auto_arg<copied_in_const>::is_input) << "Should be input";
+  ASSERT_TRUE(auto_arg<required_in>::is_input) << "Should be input";
 
-  ASSERT_TRUE(auto_arg<required_in_shared>::arg_type & AutoArgType::In) << "Should be input";
-  ASSERT_TRUE(auto_arg<required_in_shared>::arg_type & AutoArgType::Shared) << "Input is a shared ptr";
+  ASSERT_TRUE(auto_arg<required_in_shared>::is_input) << "Should be input";
+  ASSERT_TRUE(auto_arg<required_in_shared>::is_shared) << "Input is a shared ptr";
 
-  ASSERT_TRUE(auto_arg<fundamental_in>::arg_type & AutoArgType::In) << "Should be input";
-  ASSERT_FALSE(auto_arg<fundamental_in>::arg_type & AutoArgType::Shared) << "Input is not explicitly a shared ptr";
+  ASSERT_TRUE(auto_arg<fundamental_in>::is_input) << "Should be input";
+  ASSERT_FALSE(auto_arg<fundamental_in>::is_shared) << "Input is not explicitly a shared ptr";
 
-  ASSERT_FALSE(auto_arg<required_out>::arg_type & AutoArgType::In) << "Should be output";
-  ASSERT_FALSE(auto_arg<required_out>::arg_type & AutoArgType::Shared) << "Output is a shared ptr";
+  ASSERT_FALSE(auto_arg<required_out>::is_input) << "Should be output";
+  ASSERT_FALSE(auto_arg<required_out>::is_shared) << "Output is a shared ptr";
 
-  ASSERT_FALSE(auto_arg<fundamental_out>::arg_type & AutoArgType::In) << "Should be output";
-  ASSERT_FALSE(auto_arg<fundamental_out>::arg_type & AutoArgType::Shared) << "Output is a shared ptr";
+  ASSERT_FALSE(auto_arg<fundamental_out>::is_input) << "Should be output";
+  ASSERT_FALSE(auto_arg<fundamental_out>::is_shared) << "Output is a shared ptr";
 }
 
 TEST_F(ArgumentTypeTest, TestAutoIn) {
@@ -94,8 +94,8 @@ TEST_F(ArgumentTypeTest, TestAutoOut) {
   {
     typedef auto_arg<Argument<0>&> t_argType;
     t_argType::type out(*packet);
-    ASSERT_FALSE(t_argType::arg_type & AutoArgType::In) << "Incorrect orientation";
-    ASSERT_TRUE(t_argType::arg_type & AutoArgType::Out) << "Incorrect orientation";
+    ASSERT_FALSE(t_argType::is_input) << "Incorrect orientation";
+    ASSERT_TRUE(t_argType::is_output) << "Incorrect orientation";
 
     // Implicit commitment to output
     out->i = 1;

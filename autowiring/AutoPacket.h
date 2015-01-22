@@ -22,15 +22,6 @@ class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
 
-namespace AutoArgType {
-enum AutoArgType : int {
-  In     = 1 << 0,
-  Out    = 1 << 1,
-  Multi  = 1 << 2,
-  Shared = 1 << 3
-};
-}
-
 /// <summary>
 /// A decorator-style processing packet
 /// </summary>
