@@ -7,3 +7,9 @@ AutoNetServer::AutoNetServer():
 {}
 
 AutoNetServer::~AutoNetServer(){}
+
+void AutoNetServer::AddEventHandler(const std::string& event, std::function<void(const std::vector<std::string>&)> handler) {
+  *this += [this, event, handler] {
+    m_handlers[event].push_back(std::move(handler));
+  };
+}

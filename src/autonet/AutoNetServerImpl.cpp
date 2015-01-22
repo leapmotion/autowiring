@@ -108,7 +108,7 @@ void AutoNetServerImpl::OnMessage(websocketpp::connection_hdl hdl, message_ptr p
 }
 
 void AutoNetServerImpl::Breakpoint(std::string name){
-  std::unique_lock<std::mutex> lk(m_mutex);
+  std::unique_lock<std::mutex> lk(m_breakpoint_mutex);
 
   m_breakpoints.insert(name);
 
@@ -230,6 +230,10 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
   };
 }
 
+void AutoNetServerImpl::SendEvent(const std::string& event, const std::vector<std::string>& args) {
+  
+}
+
 void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
   m_Subscribers.insert(hdl);
 
@@ -270,7 +274,7 @@ void AutoNetServerImpl::HandleInjectContextMember(int contextID, std::string typ
 }
 
 void AutoNetServerImpl::HandleResumeFromBreakpoint(std::string name){
-  std::unique_lock<std::mutex> lk(m_mutex);
+  std::lock_guard<std::mutex> lk(m_breakpoint_mutex);
 
   m_breakpoints.erase(name);
   m_breakpoint_cv.notify_all();
