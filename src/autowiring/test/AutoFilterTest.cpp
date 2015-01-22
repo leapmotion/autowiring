@@ -853,3 +853,31 @@ TEST_F(AutoFilterTest, PacketTeardownNotificationCheck) {
   ASSERT_TRUE(*called) << "Teardown listener was not called after packet destruction";
   ASSERT_TRUE(called.unique()) << "Teardown listener lambda function was leaked";
 }
+
+struct ContextChecker:
+  ContextMember
+{
+  ContextChecker(void):
+    m_called(0)
+  {}
+
+  void AutoFilter(int i) {
+    ++m_called;
+    ASSERT_EQ(AutoCurrentContext(), GetContext()) << "AutoFilter not called CurrentContext set to packet's context";
+  }
+
+  int m_called;
+};
+
+TEST_F(AutoFilterTest, CurrentContextCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<ContextChecker> filter;
+
+  {
+    CurrentContextPusher pshr((AutoCreateContext()));
+    auto packet = factory->NewPacket();
+    packet->Decorate(42);
+  }
+
+  ASSERT_EQ(1, filter->m_called) << "AutoFilter called incorrect number of times";
+}
