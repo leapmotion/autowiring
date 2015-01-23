@@ -82,27 +82,26 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
 
     // Decide what to do with this entry:
     if (pCur->is_input) {
-      if (entry.m_publishers.size() > 1 && !(pCur->is_multi)) {
+      if (entry.m_publishers.size() > 1 && !pCur->is_multi) {
         std::stringstream ss;
         ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->ti);
         throw std::runtime_error(ss.str());
       }
+
       entry.m_subscribers.push_back(&satCounter);
       if (entry.m_state == DispositionState::Satisfied)
         satCounter.Decrement();
     }
     if (pCur->is_output) {
-      if(entry.m_publishers.size() > 0) {
-        for (SatCounter* subscriber : entry.m_subscribers) {
-          for(auto pOther = subscriber->GetAutoFilterInput(); *pOther; pOther++) {
-            if (!(pOther->is_multi)) {
+      if(!entry.m_publishers.empty())
+        for (SatCounter* subscriber : entry.m_subscribers)
+          for(auto pOther = subscriber->GetAutoFilterInput(); *pOther; pOther++)
+            if (!pOther->is_multi) {
               std::stringstream ss;
-              ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << "with existing subscriber.";
+              ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << " with existing subscriber.";
               throw std::runtime_error(ss.str());
             }
-          }
-        }
-      }
+
       entry.m_publishers.push_back(&satCounter);
     }
 
