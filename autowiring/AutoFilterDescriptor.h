@@ -20,6 +20,7 @@ struct AutoFilterDescriptorInput {
     is_input(false),
     is_output(false),
     is_shared(false),
+    is_multi(false),
     ti(nullptr),
     tshift(0)
   {}
@@ -29,6 +30,7 @@ struct AutoFilterDescriptorInput {
     is_input(auto_arg<T>::is_input),
     is_output(auto_arg<T>::is_output),
     is_shared(auto_arg<T>::is_shared),
+    is_multi(auto_arg<T>::is_multi),
     ti(&typeid(typename auto_arg<T>::id_type)),
     tshift(auto_arg<T>::tshift)
   {}
@@ -36,6 +38,7 @@ struct AutoFilterDescriptorInput {
   const bool is_input;
   const bool is_output;
   const bool is_shared;
+  const bool is_multi;
   const std::type_info* const ti;
   const int tshift;
 

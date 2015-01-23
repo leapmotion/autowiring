@@ -51,6 +51,7 @@ before_script:
 
 script:
   # Build Autowriring, run unit tests, and install
+  - ulimit -c unlimited
   - make -j 8 || make
   - ctest --output-on-failure
   - sudo make install
@@ -65,4 +66,7 @@ script:
     && cd ..
 
 after_failure:
+  - if [ -e core ]; then
+      gdb --core=core;
+    fi
   - cat Testing/Temporary/LastTest.log 2> /dev/null

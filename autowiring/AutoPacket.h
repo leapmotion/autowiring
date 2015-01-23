@@ -285,6 +285,20 @@ public:
     return *retVal;
   }
 
+  /// <summary>
+  /// Returns a vector with a pointer to each decoration of type T, adding a nullptr to the end.
+  /// </summary>
+  template<class T>
+  std::vector<const T*> GetAll(int tshift = 0) {
+    std::vector<const T*> retval;
+    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
+    for (auto& dispo : deco->second.m_decorations) {
+      retval.push_back(dispo.as<T>().get().get());
+    }
+    retval.push_back(nullptr);
+    return retval;
+  }
+
   /// <summary>Shares all broadcast data from this packet with the recipient packet</summary>
   /// <remarks>
   /// This method should ONLY be called during the final-call sequence.

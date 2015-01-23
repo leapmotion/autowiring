@@ -82,21 +82,26 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
 
     // Decide what to do with this entry:
     if (pCur->is_input) {
-      if (entry.m_publishers.size() > 1) {
+      if (entry.m_publishers.size() > 1 && !pCur->is_multi) {
         std::stringstream ss;
         ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->ti);
         throw std::runtime_error(ss.str());
       }
+
       entry.m_subscribers.push_back(&satCounter);
       if (entry.m_state == DispositionState::Satisfied)
         satCounter.Decrement();
     }
     if (pCur->is_output) {
-      if(entry.m_publishers.size() > 0 && entry.m_subscribers.size() > 0) {
-        std::stringstream ss;
-        ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << "with existing subscriber.";
-        throw std::runtime_error(ss.str());
-      }
+      if(!entry.m_publishers.empty())
+        for (SatCounter* subscriber : entry.m_subscribers)
+          for(auto pOther = subscriber->GetAutoFilterInput(); *pOther; pOther++)
+            if (!pOther->is_multi) {
+              std::stringstream ss;
+              ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << " with existing subscriber.";
+              throw std::runtime_error(ss.str());
+            }
+
       entry.m_publishers.push_back(&satCounter);
     }
 
@@ -192,8 +197,8 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
           // Deferred calls will be too late.
           !cur->IsDeferred() &&
 
-          // We cannot satisfy shared_ptr arguments, since the delegated lifetime
-          // contract of shared_ptr is violated
+          // We cannot satisfy shared_ptr arguments, since the implied existence
+          // guarantee of shared_ptr is violated
           !cur->GetArgumentType(&pTypeSubs[i]->GetKey().ti)->is_shared &&
 
           // Now do the decrementation and proceed even if optional > 0,
@@ -243,17 +248,16 @@ void AutoPacket::DecorateUnsafeNoPriors(const AnySharedPointer& ptr, const Decor
     throw std::runtime_error(ss.str());
   }
 
-  if (entry.m_decorations.empty()) {
-    entry.m_decorations.push_back(ptr);
-  }
-  else {
-    entry.m_decorations[0] = ptr;
-  }
+  entry.m_decorations.push_back(ptr);
 
-  entry.m_state = DispositionState::Satisfied;
+  if (entry.m_decorations.size() >= entry.m_publishers.size()) {
+    entry.m_state = DispositionState::Satisfied;
+  } else {
+    entry.m_state = DispositionState::PartlySatisfied;
+  }
 
   // This allows us to retrieve correct entries for decorated input requests
-  AnySharedPointer decoration(entry.m_decorations[0]);
+  AnySharedPointer decoration(entry.m_decorations.back());
 }
 
 void AutoPacket::Decorate(const AnySharedPointer& ptr, DecorationKey key) {
@@ -265,7 +269,9 @@ void AutoPacket::Decorate(const AnySharedPointer& ptr, DecorationKey key) {
     cur->DecorateUnsafeNoPriors(ptr, key);
 
     // Now update satisfaction set on this entry
-    cur->UpdateSatisfaction(key);
+    if (m_decorations[key].m_state == DispositionState::Satisfied) {
+      cur->UpdateSatisfaction(key);
+    }
 
     // Obtain the successor
     cur = cur->Successor();

@@ -59,3 +59,20 @@ public:
   AutoPacket& operator*(void) const { return packet; }
   AutoPacket* operator->(void) const { return &packet; }
 };
+
+template<class T>
+class auto_in<T const **>
+{
+public:
+  auto_in(AutoPacket& packet) :
+    packet(packet),
+    m_values(packet.GetAll<T>())
+  {}
+
+private:
+  const AutoPacket& packet;
+  std::vector<const T*> m_values;
+
+public:
+  operator const T**() { return &m_values[0]; }
+};
