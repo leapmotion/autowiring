@@ -412,3 +412,6 @@ std::shared_ptr<AutoPacket> AutoPacket::SuccessorUnsafe(void) {
   return m_successor;
 }
 
+std::shared_ptr<CoreContext> AutoPacket::GetContext(void) const {
+  return m_parentFactory->GetContext();
+}

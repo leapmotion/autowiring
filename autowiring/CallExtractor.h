@@ -2,6 +2,7 @@
 #pragma once
 #include "auto_arg.h"
 #include "AutoPacket.h"
+#include "CurrentContextPusher.h"
 #include "Decompose.h"
 #include <assert.h>
 
@@ -24,14 +25,17 @@ struct CallExtractor<RetType (*)(Args...)>:
   static const bool deferred = false;
   static const bool stateless = true;
 
+  // This is the true type of the input, it's the fnptr itself, not a function object
+  typedef RetType(*t_pfn)(Args...);
+
   /// <summary>
   /// Binder struct, lets us refer to an instance of Call by type
   /// </summary>
   static void Call(const AnySharedPointer& obj, AutoPacket& autoPacket) {
     const void* pfn = obj->ptr();
 
-    // This is the true type of the input, it's the fnptr itself, not a function object
-    typedef RetType(*t_pfn)(Args...);
+    // Set the current context to this packet's context
+    CurrentContextPusher pshr(autoPacket.GetContext());
 
     // Handoff
     ((t_pfn)pfn)(
@@ -63,6 +67,9 @@ struct CallExtractor<void (T::*)(Args...)>:
     // to the correct foundation type before attempting to construct an AutoFilterDescriptor.
     assert(typeid(auto_id<T>) == obj->type());
 
+    // Set the current context to this packet's context
+    CurrentContextPusher pshr(autoPacket.GetContext());
+
     // Handoff
     (((T*) pObj)->*memFn)(
       typename auto_arg<Args>::type(autoPacket)...
@@ -84,6 +91,9 @@ struct CallExtractor<void (T::*)(Args...) const> :
   template<void(T::*memFn)(Args...) const>
   static void Call(const AnySharedPointer& obj, AutoPacket& autoPacket) {
     const void* pObj = obj->ptr();
+
+    // Set the current context to this packet's context
+    CurrentContextPusher pshr(autoPacket.GetContext());
 
     // Handoff
     (((const T*) pObj)->*memFn)(
@@ -114,6 +124,10 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
 
     // Pend the call to this object's dispatch queue:
     *(T*) pObj += [pObj, pAutoPacket] {
+
+      // Set the current context to this packet's context
+      CurrentContextPusher pshr(pAutoPacket->GetContext());
+
       (((T*) pObj)->*memFn)(
         typename auto_arg<Args>::type(*pAutoPacket)...
       );
