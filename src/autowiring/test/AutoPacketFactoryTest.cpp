@@ -211,8 +211,7 @@ TEST_F(AutoPacketFactoryTest, EnumerateDecorationsTest) {
 }
 
 TEST_F(AutoPacketFactoryTest, MultiDecorateTest) {
-  AutoCreateContext ctxt;
-  CurrentContextPusher pshr(ctxt);
+  AutoCurrentContext ctxt;
   AutoRequired<AutoPacketFactory> factory(ctxt);
   ctxt->Initiate();
 
@@ -223,15 +222,38 @@ TEST_F(AutoPacketFactoryTest, MultiDecorateTest) {
   *factory += [&called] (const int* vals[]) {
     ASSERT_NE(nullptr, vals);
     called++;
+
+    // Guarantee that values were added in the expected order
     int i;
-    for (i = 0; vals[i] != nullptr; i++) {
-      EXPECT_EQ(i, *(vals[i])) << "Incorrect values were added to the packet";
-    }
-    EXPECT_EQ(2, i) << "The wrong number of values were added to the packet";
+    for (i = 0; vals[i]; i++)
+      ASSERT_EQ(i, *(vals[i])) << "Incorrect values were added to the packet";
+
+    // Verify we got the number of values out that we wanted to get out
+    ASSERT_EQ(2, i) << "The wrong number of values were added to the packet";
   };
-  ASSERT_EQ(0, called);
+  ASSERT_EQ(0, called) << "Lambda functions were called before expected";
 
   auto packet = factory->NewPacket();
 
-  ASSERT_EQ(3, called);
+  ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
+}
+
+TEST_F(AutoPacketFactoryTest, MultiPostHocIntroductionTest) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+  AutoRequired<AutoPacketFactory> factory(ctxt);
+
+  int called = 0;
+
+  *factory += [&called](int& out) { out = called++; };
+  *factory += [&called](int& out) { out = called++; };
+
+  // Add a gather step on the packet:
+  auto packet = factory->NewPacket();
+  *packet += [&called](const int* vals []){
+    ASSERT_NE(nullptr, vals);
+    called++;
+  };
+
+  ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
 }
