@@ -373,6 +373,18 @@ public:
   }
 
   /// <summary>
+  /// Decoration method specialized for const shared pointer types
+  /// </summary>
+  /// <remarks>
+  /// This decoration method has the additional benefit that it will make direct use of the passed
+  /// shared pointer.
+  /// </remarks>
+  template<class T>
+  const T& Decorate(std::shared_ptr<const T> ptr) {
+    return Decorate(std::const_pointer_cast<T>(ptr));
+  }
+
+  /// <summary>
   /// Subscribers respond to the decoration arguments immediately or never for this packet.
   /// Optional argument resolution is forced for any subscriber requiring at least one
   /// argument of this method
