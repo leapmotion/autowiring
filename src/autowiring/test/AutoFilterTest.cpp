@@ -863,7 +863,7 @@ struct ContextChecker:
 
   void AutoFilter(int i) {
     ++m_called;
-    ASSERT_EQ(AutoCurrentContext(), GetContext()) << "AutoFilter not called CurrentContext set to packet's context";
+    ASSERT_EQ(AutoCurrentContext(), GetContext()) << "AutoFilter not called with the current context set to packet's context";
   }
 
   int m_called;

@@ -21,6 +21,7 @@ class AutoPacketInternal;
 class AutoPacketFactory;
 class AutoPacketProfiler;
 struct AutoFilterDescriptor;
+class CoreContext;
 
 /// <summary>
 /// A decorator-style processing packet
@@ -477,6 +478,9 @@ public:
   bool HasSubscribers(void) const {
     return HasSubscribers(DecorationKey(auto_id<T>::key()));
   }
+
+  /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
+  std::shared_ptr<CoreContext> GetContext(void) const;
 };
 
 #include "CallExtractor.h"
