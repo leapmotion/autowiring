@@ -199,6 +199,17 @@ TEST_F(AutoPacketFactoryTest, AddSubscriberTest) {
   ASSERT_TRUE(second_called) << "Subscriber added with operator+= never called";
 }
 
+TEST_F(AutoPacketFactoryTest, EnumerateDecorationsTest) {
+  auto sample = [](const int* vals []) {};
+  AutoFilterDescriptor desc(sample);
+
+  size_t i = 0;
+  for (auto* pCur = desc.GetAutoFilterInput(); *pCur; pCur++)
+    i++;
+
+  ASSERT_EQ(1, i) << "AutoFilterDescriptor parsed an incorrect number of arguments from a lambda";
+}
+
 TEST_F(AutoPacketFactoryTest, MultiDecorateTest) {
   AutoCreateContext ctxt;
   CurrentContextPusher pshr(ctxt);
