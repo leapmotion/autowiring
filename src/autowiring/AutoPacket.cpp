@@ -94,7 +94,7 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
     if (pCur->is_output) {
       if(entry.m_publishers.size() > 0) {
         for (SatCounter* subscriber : entry.m_subscribers) {
-          for(auto pOther = subscriber->GetAutoFilterInput(); *pCur; pCur++) {
+          for(auto pOther = subscriber->GetAutoFilterInput(); *pOther; pOther++) {
             if (!(pOther->is_multi)) {
               std::stringstream ss;
               ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << "with existing subscriber.";
