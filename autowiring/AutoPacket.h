@@ -39,11 +39,10 @@ class AutoPacket:
   public std::enable_shared_from_this<AutoPacket>,
   public TeardownNotifier
 {
-private:
+public:
   AutoPacket(const AutoPacket& rhs) = delete;
   AutoPacket(AutoPacket&&) = delete;
 
-public:
   // Must hold the lock to 'factory' when calling this constructor
   AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
