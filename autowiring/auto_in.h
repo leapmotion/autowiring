@@ -1,8 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-
-#include "AutoPacket.h"
 #include MEMORY_HEADER
+#include <vector>
 
 /// <summary>
 /// Fundamental type of required input arguments of AutoFilter methods.
@@ -15,13 +14,11 @@ public:
   static const bool is_input = true;
   static const bool is_output = false;
 
-  auto_in(AutoPacket& packet) :
-    packet(packet),
-    m_value(packet.Get<T>())
+  auto_in(const T& value) :
+    m_value(value)
   {}
 
 private:
-  const AutoPacket& packet;
   const T& m_value;
 
 public:
@@ -29,19 +26,10 @@ public:
     return true;
   }
 
-  const std::shared_ptr<const T>& get(void) const {
-    const std::shared_ptr<const T>* retVal;
-    if(!packet.Get(retVal))
-      throw std::runtime_error("Shared pointer not available on this type");
-    return *retVal;
-  }
-
   operator const T&() const { return m_value; }
-  operator std::shared_ptr<const T>() const { return get(); }
   const T& operator*(void) const { return m_value; }
   const T* operator->(void) const { return &m_value; }
 };
-
 
 template<>
 class auto_in<AutoPacket>
@@ -64,9 +52,8 @@ template<class T>
 class auto_in<T const **>
 {
 public:
-  auto_in(AutoPacket& packet) :
-    packet(packet),
-    m_values(packet.GetAll<T>())
+  auto_in(std::vector<const T*>&& values) :
+    m_values(std::move(values))
   {}
 
 private:
