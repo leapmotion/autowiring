@@ -1,0 +1,12 @@
+AutoGlobalContext global;
+for(auto context : ContextEnumerator(global)){
+    std::cout << "Enumerating all contexts" << std::endl;
+}
+
+for(auto context : ContextEnumeratorT<Foo>(childContext)){
+    std::cout << "Enumerating 'Foo' contexts within childContext" << std::endl;
+}
+
+for(auto context : CurrentContextEnumerator()){
+    std::cout << "Enumerating current context" << std::endl;
+}

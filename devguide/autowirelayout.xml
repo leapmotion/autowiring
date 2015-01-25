@@ -5,7 +5,7 @@
     <tab type="mainpage" visible="yes" title="Overview"/>
     <tab type="pages" visible="yes" title="Developer's Guide" intro=""/>
     <tab type="modules" visible="yes" title="Groups" intro="The following groups organize the Autowire class by responsibility."/>
-    <tab type="namespaces" visible="yes" title="">
+    <tab type="namespaces" visible="no" title="">
       <tab type="namespacelist" visible="yes" title="" intro=""/>
       <tab type="namespacemembers" visible="yes" title="" intro=""/>
     </tab>
@@ -17,7 +17,7 @@
     </tab>
     <tab type="files" visible="yes" title="">
       <tab type="filelist" visible="yes" title="" intro=""/>
-      <tab type="globals" visible="yes" title="" intro=""/>
+      <tab type="globals" visible="no" title="" intro=""/>
     </tab>
     <tab type="examples" visible="yes" title="" intro=""/>  
   </navindex>

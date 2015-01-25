@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 15.1.0, SVG Export Plug-In  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
+]>
+<svg version="1.1"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+	 x="0px" y="0px" width="470px" height="212px" viewBox="0 0 470 212" style="overflow:visible;enable-background:new 0 0 470 212;"
+	 xml:space="preserve">
+<defs>
+</defs>
+<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M338.5,28.5c0,6.627-5.373,12-12,12h-150c-6.627,0-12-5.373-12-12
+	v-16c0-6.627,5.373-12,12-12h150c6.627,0,12,5.373,12,12V28.5z"/>
+<text transform="matrix(1 0 0 1 207.2002 23.6323)" style="font-family:'Helvetica'; font-size:12;">Global Context</text>
+<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M184.5,112.5c0,6.627-5.373,12-12,12h-107c-6.627,0-12-5.373-12-12
+	v-16c0-6.627,5.373-12,12-12h107c6.627,0,12,5.373,12,12V112.5z"/>
+<text transform="matrix(1 0 0 1 64.9707 104.5)" style="font-family:'Helvetica'; font-size:12;">Anonymous Context</text>
+<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M131.5,199.5c0,6.627-5.373,12-12,12h-107c-6.627,0-12-5.373-12-12
+	v-16c0-6.627,5.373-12,12-12h107c6.627,0,12,5.373,12,12V199.5z"/>
+<text transform="matrix(1 0 0 1 11.9707 191.5)" style="font-family:'Helvetica'; font-size:12;">Anonymous Context</text>
+<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M286.5,199.5c0,6.627-5.373,12-12,12h-107c-6.627,0-12-5.373-12-12
+	v-16c0-6.627,5.373-12,12-12h107c6.627,0,12,5.373,12,12V199.5z"/>
+<text transform="matrix(1 0 0 1 177.6494 191.5)" style="font-family:'Helvetica'; font-size:12;">NS::Bar Context</text>
+<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M422.5,112.5c0,6.627-5.373,12-12,12h-107c-6.627,0-12-5.373-12-12
+	v-16c0-6.627,5.373-12,12-12h107c6.627,0,12,5.373,12,12V112.5z"/>
+<text transform="matrix(1 0 0 1 312.6475 104.5)" style="font-family:'Helvetica'; font-size:12;">NS::Foo Context</text>
+<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M469.5,199.5c0,6.627-5.373,12-12,12h-107c-6.627,0-12-5.373-12-12
+	v-16c0-6.627,5.373-12,12-12h107c6.627,0,12,5.373,12,12V199.5z"/>
+<text transform="matrix(1 0 0 1 349.9707 191.5)" style="font-family:'Helvetica'; font-size:12;">Anonymous Context</text>
+<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M246.889,40.5c0,27.847-127.889,10.492-127.889,44"/>
+<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M357,84.5c-0.443-35.988-110.116-9.542-110.111-44"/>
+<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M61.413,171.5c0-32.079,57.587-27,57.587-47"/>
+<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M221,171.5c0-47-102-9.765-102-47"/>
+<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M404,171.5c0-27.946-47-3.153-47-47"/>
+</svg>

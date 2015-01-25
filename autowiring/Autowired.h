@@ -9,12 +9,17 @@
 class CoreContext;
 class GlobalCoreContext;
 
+/// \file
+/// Autowiring definitions.
+
 /// <summary>
 /// Provides a simple way to obtain a reference to the current context
 /// </summary>
 /// <remarks>
 /// Users of this class are encouraged not to hold references for longer than needed.  Failing
 /// to release a context pointer could prevent resources from being correctly released.
+///
+/// \include snippets/Context_AutoCurrentContext.txt
 /// </remarks>
 class AutoCurrentContext:
   public std::shared_ptr<CoreContext>
@@ -24,8 +29,15 @@ public:
 };
 
 /// <summary>
-/// Simple way to obtain a reference to the global context
+/// Provides a simple way to obtain a reference to the global context.
 /// </summary>
+/// <remarks>
+/// One global context is created automatically for an application. In complex
+/// applications, take care when using the global context because unexpected interactions
+/// can occur between members added to global from different parts of the application.
+///
+/// \include snippets/Context_AutoGlobalContext.txt
+/// </remarks>
 class AutoGlobalContext:
   public std::shared_ptr<GlobalCoreContext>
 {
@@ -34,10 +46,12 @@ public:
 };
 
 /// <summary>
-/// Provides a simple way to create a dependent context pointer
+/// Provides a simple way to create a child of the current context using a sigil.
 /// </summary>
 /// <remarks>
-/// The newly created context will be created using CoreContext::CurrentContext()->Create().
+/// The newly created context is created using CoreContext::CurrentContext()->Create().
+///
+/// \include snippets/Context_AutoCreateContextT.txt
 /// </remarks>
 template<typename T>
 class AutoCreateContextT:
@@ -61,16 +75,31 @@ public:
   {}
 };
 
+/// <summary>
+/// Provides a simple way to create a dependent context pointer.
+/// </summary>
+/// <remarks>
+/// The newly created context will be created using CoreContext::CurrentContext()->Create().
+///
+/// \include snippets/Context_AutoCreateContext.txt
+/// </remarks>
 typedef AutoCreateContextT<void> AutoCreateContext;
 
 
 /// <summary>
-/// An autowired template class that forms the foundation of the context consumer system
+/// Autowires a "slot" in a context to which an instance of the specified type
+/// will be wired when it becomes available.
 /// </summary>
 /// <param name="T">The class whose type is to be found.  Must be an EXACT match.</param>
 /// <remarks>
-/// The autowired class offers a quick way to import or create an instance of a specified
+/// The Autowired template class forms the foundation of the context consumer system.
+/// It provides a quick way to import or create an instance of a specified
 /// class in the local context.
+///
+/// If an instance of the type specified in the template parameter already exists
+/// in the context, the dependency is satisfied using that instance immediately.
+/// Otherwise, the dependency is satisfied when an instance of the correct type
+/// is created in the context.
 ///
 /// This class may be safely used even when the member in question is an abstract type.
 /// </remarks>
@@ -131,12 +160,13 @@ public:
   }
   
   /// <summary>
-  /// Allows a lambda function to be called when this slot is autowired
+  /// Assigns a lambda function to be called when the dependency for this slot is autowired.
   /// </summary>
   /// <remarks>
-  /// In contrast with CoreContext::NotifyWhenAutowired, the specified lambda will only be
+  /// In contrast with CoreContext::NotifyWhenAutowired, the specified lambda is only
   /// called as long as this Autowired slot has not been destroyed.  If this slot is destroyed
-  /// beforehand, the lambda will never be invoked.
+  /// before the dependency is satisfied, i.e. because the owning context shuts down, the
+  /// lambda is never invoked.
   /// </remarks>
   template<class Fn>
   void NotifyWhenAutowired(Fn fn) {
@@ -184,16 +214,21 @@ public:
 };
 
 /// <summary>
-/// Similar to Autowired, Creates a new instance if this instance isn't autowired
+/// Autowires the specified dependency, creating a new instance if one does not already exist.
 /// </summary>
 /// <remarks>
-/// This class is simply a convenience class and provides a declarative way to name a required dependency.
+/// Autowiring searches for a suitable instance to satisfy this dependency in the
+/// current context or any of its ancestors. If that search fails, a new instance
+/// of the specified type is created.
 ///
-/// If type T has a static member function called New, the helper's Create routine will attempt call
+/// If type T has a static member function called New, Autowiring calls
 /// this function instead of the default constructor, even if the default constructor has been supplied,
 /// and even if the arity of the New routine is not zero.
 ///
 /// To prevent this behavior, use a name other than New.
+///
+/// If you get a compile error when using AutoRequire, ensure that class T is fully
+/// defined at the point in the program where the type is autorequired.
 /// </remarks>
 template<class T>
 class AutoRequired:
@@ -249,9 +284,13 @@ public:
 };
 
 /// <summary>
-/// Provides restricted, non-blocking, and typically faster services than Autowired
+/// Autowires a slot immediately, with restrictions.
 /// </summary>
 /// <remarks>
+/// AutowiredFast provides non-blocking and typically faster services than Autowired.
+/// However, the dependency must already exist. The autowiring slot will not be
+/// wired if the dependency is not created until later.
+///
 /// AutowiredFast allows queries to be conducted against contexts that may be in teardown,
 /// and also generally operates with fewer memory allocations and better performance than
 /// Autowired.  As a drawback, notifications on AutowiredFast cannot be attached, and the
@@ -293,8 +332,11 @@ public:
 };
 
 /// <summary>
-/// Idiom to enable boltable classes
+/// Enables the specified type to be "bolted" to the current context.
 /// </summary>
+/// <remarks>
+/// 
+/// </remarks>
 template<class T>
 class AutoEnable
 {

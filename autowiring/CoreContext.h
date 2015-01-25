@@ -52,12 +52,15 @@ class CoreContextT;
 template<typename T>
 class JunctionBox;
 
-enum class ShutdownMode {
-  // Shut down gracefully by allowing threads to run down dispatch queues
-  Graceful,
+/// \file
+/// CoreContext definitions.
 
-  // Shut down immediately, do not attempt to run down thread dispatch queues
-  Immediate
+/// <summary>
+/// The modes in which a context can shut down.
+/// </summary>
+enum class ShutdownMode {
+  Graceful,   ///< Shut down gracefully by allowing threads to run down dispatch queues.
+  Immediate   ///< Shut down immediately, do not attempt to run down thread dispatch queues.
 };
 
 class AutoSearchLambda {
@@ -84,7 +87,45 @@ public:
 /// <summary>
 /// A top-level container class representing an autowiring domain, a minimum broadcast domain, and a thread execution domain.
 /// </summary>
-/// A context is the basic unit of organization within an autowired application. The scope of a context determines determines how dependencies are  
+/// <remarks>
+/// A context is the basic unit of organization within an autowired application. The scope of a context
+/// determines:
+/// * How Autowired dependencies are resolved
+/// * Who receives AutoFired events
+/// * Thread ownership (BasicThread, CoreThread)
+/// * AutoPacket filter graph scope
+///
+/// Dependencies can be injected into a context using AutoRequired (or its cousins Autowired and AutoDesired).
+/// The system looks in the current context for an existing object of the required type to satisfy the dependency.
+/// If one does not exist, it looks in parent contexts. Finally, if no existing object is found after searching up the
+/// context tree, a new instance of the required type is created. When another object of the same type is added to the
+/// context (or one of its parents), a shared pointer to the existing instance is used. This resolution system carries
+/// the restriction that only one instance of an Autowired type can exist in the same branch of the context tree.
+/// In addition, an Autowired member of a context exists for as long as that context.
+///
+/// Autowired dependencies do not need to meet any special requirements such as inheriting from a particular Autowiring
+/// type or implementing a particular interface. However, if a type contains Autowired members, instances of that
+/// type must be Autowired to a context in order for the dependencies of their members to be satisfied.
+///
+/// Contexts can be created with ::AutoCreateContext and AutoCreateContextT. The global context is created automatically;
+/// get a reference to it using AutoGlobalContext.
+///
+/// \include snippets/Context_Class_Create.txt
+///
+/// Contexts can be enumerated using the ContextEnumerator class. You can restrict enumeration
+/// to those contexts marked with a given sigil with ContextEnumeratorT<Sigil>. You can also
+/// enumerate the current context with CurrentContextEnumerator.
+///
+/// \include snippets/Context_Class_Enumerate.txt
+///
+/// Autowired members of a context can pass information using AutoFired events, as well as with a filter graph.
+/// You can also pass data from one context to another in the same way. A context can also snoop on another context's
+/// events and filter graph packets to receive data it wouldn't otherwise have access to. Use Bolt objects to receive
+/// notification when a context of a particular sigil type is created. This allows you to set up snooping
+/// whenever a particular type of context is created.
+///
+/// Events, threads, and filter graphs require that the context's Initiate() function is called.
+/// </remarks>
 class CoreContext:
   public TeardownNotifier,
   public std::enable_shared_from_this<CoreContext>
@@ -97,8 +138,9 @@ public:
   virtual ~CoreContext(void);
 
   /// <summary>
-  /// Convenience method to obtain a shared reference to the global context
+  /// Returns a shared reference to the global context.
   /// </summary>
+  /// \sa AutoGlobalContext, GlobalCoreContext
   static std::shared_ptr<CoreContext> GetGlobal(void);
 
   /// \internal
@@ -207,6 +249,7 @@ protected:
     std::shared_ptr<CoreContext> pPeer
   );
 
+  /// \internal
   /// <summary>
   /// Register new context with parent and notify others of its creation.
   /// </summary>
@@ -215,6 +258,7 @@ protected:
   /// <param name="inj">An injectable to be inserted into the context before bolts are fired</param>
   std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer, AutoInjectable&& pInj);
 
+  /// \internal
   /// <summary>
   /// Overload which does not perform injection
   /// </summary>
@@ -241,11 +285,13 @@ protected:
   template<typename T, typename... Sigil>
   void AutoRequireMicroBolt(void);
 
+  /// \internal
   /// <summary>
   /// Unregisters all event receivers in this context
   /// </summary>
   void UnregisterEventReceiversUnsafe(void);
 
+  /// \internal
   /// <summary>
   /// Broadcasts a notice to any listener in the current context regarding a creation event on a particular context name
   /// </summary>
@@ -255,27 +301,32 @@ protected:
   /// </remarks>
   void BroadcastContextCreationNotice(const std::type_info& sigil) const;
 
+  /// \internal
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
   void UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const ObjectTraits& entry);
 
+  /// \internal
   /// <summary>
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
   /// <param name="pRecvr">The junction box entry corresponding to the receiver type</param>
   void AddEventReceiver(const JunctionBoxEntry<Object>& pRecvr);
 
+  /// \internal
   /// <summary>
   /// Add delayed event receivers
   /// </summary>
   void AddEventReceivers(const t_rcvrSet& receivers);
 
+  /// \internal
   /// <summary>
   /// Removes all recognized event receivers in the indicated range
   /// </summary>
   void RemoveEventReceivers(const t_rcvrSet& receivers);
 
+  /// \internal
   /// <summary>
   /// Adds an object of any kind to the IOC container
   /// </summary>
@@ -288,22 +339,26 @@ protected:
   /// </remarks>
   void AddCoreRunnable(const std::shared_ptr<CoreRunnable>& pCoreRunnable);
 
+  /// \internal
   /// <summary>
   /// Adds the specified context creation listener to receive creation events broadcast from this context
   /// </summary>
   /// <param name="pBase">The instance being added</param>
   void AddBolt(const std::shared_ptr<BoltBase>& pBase);
 
+  /// \internal
   /// <summary>
   /// Overload of Add based on ContextMember
   /// </summary>
   void AddContextMember(const std::shared_ptr<ContextMember>& ptr);
 
+  /// \internal
   /// <summary>
   /// Forwarding routine, recursively adds a packet subscriber to the internal packet factory
   /// </summary>
   void AddPacketSubscriber(const AutoFilterDescriptor& rhs);
 
+  /// \internal
   /// <summary>
   /// Increments the total number of contexts still outstanding
   /// </summary>
@@ -317,11 +372,13 @@ protected:
   /// </remarks>
   std::shared_ptr<Object> IncrementOutstandingThreadCount(void);
 
+  /// \internal
   /// <summary>
   /// Internal type introduction routine
   /// </summary>
   void AddInternal(const ObjectTraits& traits);
 
+  /// \internal
   /// <summary>
   /// Scans the memo collection for the specified entry, or adds a deferred resolution marker if resolution was not possible
   /// </summary>
@@ -331,31 +388,37 @@ protected:
   /// <param name="reference">An initialized shared pointer slot which may be used in type detection</param>
   void FindByType(AnySharedPointer& reference) const;
 
+  /// \internal
   /// <summary>
   /// Unsynchronized version of FindByType
   /// </summary>
   MemoEntry& FindByTypeUnsafe(AnySharedPointer& reference) const;
 
+  /// \internal
   /// <summary>
   /// Recursive locking for Autowire satisfaction search
   /// </summary>
   void FindByTypeRecursive(AnySharedPointer& reference, const AutoSearchLambda& searchFn) const;
 
+  /// \internal
   /// <summary>
   /// Adds the specified deferrable autowiring to be satisfied at a later date when its matched type is inserted
   /// </summary>
   void AddDeferredUnsafe(DeferrableAutowiring* deferrable);
 
+  /// \internal
   /// <summary>
   /// Adds a snooper to the snoopers set
   /// </summary>
   void InsertSnooper(std::shared_ptr<Object> snooper);
 
+  /// \internal
   /// <summary>
   /// Removes a snooper to the snoopers set
   /// </summary>
   void RemoveSnooper(std::shared_ptr<Object> snooper);
   
+  /// \internal
   /// <summary>
   /// Recursively removes the specified snooper
   /// </summary>
@@ -365,11 +428,13 @@ protected:
   /// </remarks>
   void UnsnoopEvents(Object* snooper, const JunctionBoxEntry<Object>& traits);
   
+  /// \internal
   /// <summary>
   /// Forwarding routine, only removes from this context
   /// </summary>
   void UnsnoopAutoPacket(const ObjectTraits& traits);
 
+  /// \internal
   /// <summary>
   /// Registers a factory _function_, a lambda which is capable of constructing decltype(fn())
   /// </summary>
@@ -378,6 +443,7 @@ protected:
     Inject<AutoFactoryFn<typename std::remove_pointer<decltype(fn())>::type, Fn>>(std::forward<Fn>(fn));
   }
 
+  /// \internal
   /// <summary>
   /// Registers a new foreign factory type without explicitly specifying the returned value type
   /// </summary>
@@ -388,59 +454,68 @@ protected:
     RegisterFactoryFn([&obj] { return obj.New(); });
   }
 
+  /// \internal
   template<class Factory>
   void RegisterFactory(const Factory&, autowiring::member_new_type<Factory, autowiring::factorytype::none>) {}
 
   // Internal resolvers, used to determine which teardown style the user would like to use
+  /// \internal
   template<class Fx>
   void AddTeardownListener2(Fx&& fx, void (Fx::*)(void)) { TeardownNotifier::AddTeardownListener(fx); }
 
+  /// \internal
   template<class Fx>
   void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&)) { TeardownNotifier::AddTeardownListener([fx, this] () mutable { fx(*this); }); }
+  /// \internal
   template<class Fx>
   void AddTeardownListener2(Fx&& fx, void (Fx::*)(void) const) { TeardownNotifier::AddTeardownListener(std::forward<Fx&&>(fx)); }
 
+  /// \internal
   template<class Fx>
   void AddTeardownListener2(Fx&& fx, void (Fx::*)(const CoreContext&) const) { TeardownNotifier::AddTeardownListener([fx, this] () mutable { fx(*this); }); }
 
 public:
   // Accessor methods:
+  /// True if and only if this is the global context.
   bool IsGlobalContext(void) const { return !m_pParent; }
+  /// The number of Autowired members in this context.
   size_t GetMemberCount(void) const { return m_concreteTypes.size(); }
+  /// The number of child contexts of this context.
   size_t GetChildCount(void) const;
+  /// The type used as a sigil when creating this class, if any.
   virtual const std::type_info& GetSigilType(void) const = 0;
+  /// The Context iterator for the parent context's children, pointing to this context.
   t_childList::iterator GetBackReference(void) const { return m_backReference; }
+  /// A shared reference to the parent context of this context.
   const std::shared_ptr<CoreContext>& GetParentContext(void) const { return m_pParent; }
 
-  /// <returns>
-  /// True if the sigil type of this CoreContext matches the specified sigil type
-  /// </returns>
+  /// True if the sigil type of this CoreContext matches the specified sigil type.
   template<class Sigil>
   bool Is(void) const { return GetSigilType() == typeid(Sigil); }
 
-  /// <returns>
-  /// The first child in the set of this context's children
-  /// </returns>
+  /// The first child in the set of this context's children.
   std::shared_ptr<CoreContext> FirstChild(void) const;
 
-  /// <returns>
   /// The next context sharing the same parent, or null if this is the last entry in the list
-  /// </returns>
   std::shared_ptr<CoreContext> NextSibling(void) const;
 
-  /// <returns>
-  /// The type identifier of the specified type identifier
-  /// </returns>
+  /// <summary>
+  /// Gets the type information for the instance referenced by the specified shared pointer.
+  /// </summary>
   /// <remarks>
   /// The returned type structure will be the actual type of the specified object as defined at the time of
   /// injection.  In the case of a static factory new or AutoFactory new, this type will be the type of the
   /// interface.  All other members are the concrete type actually injected, as opposed to the type unifier
   /// for that type.
   ///
-  /// This method will throw an exception if the passed shared pointer is not strictly a member of this context
+  /// This method will throw an exception if the passed shared pointer is not strictly a member of this context.
   /// </remarks>
+  /// <returns>
+  /// The type identifier of the referenced instance.
+  /// </returns>
   const std::type_info& GetAutoTypeId(const AnySharedPointer& ptr) const;
 
+  /// \internal
   /// <summary>
   /// Creation helper routine
   /// </summary>
@@ -455,22 +530,35 @@ public:
     );
   }
 
+  /// \internal
   /// <summary>
   /// Factory to create a new context
   /// </summary>
-  /// <param name="T">The context sigil.</param>
+  /// <param name="inj">An injectable type.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(AutoInjectable&& inj) {
     return CreateInternal(&CoreContext::Create<T>, nullptr, std::move(inj));
   }
 
+  /// <summary>
+  /// Creates a child context of this context.
+  /// </summary>
+  /// <remarks>
+  /// Using using ::AutoCreateContext or AutoCreateContextT is the prefered way to create
+  /// children of the current context.
+  ///
+  /// \code
+  /// AutoCreateContext myContext;
+  /// AutoCreateContextT<MySigil> myMarkedContext;
+  /// \endcode
+  /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
     return CreateInternal(&CoreContext::Create<T>, nullptr);
   }
 
   /// <summary>
-  /// Factory to create a peer context
+  /// Creates a peer context to this context.
   /// </summary>
   /// <remarks>
   /// A peer context allows clients to create autowiring contexts which are in the same event
@@ -478,7 +566,7 @@ public:
   /// be useful where multiple instances of a particular object are desired, but inserting
   /// such objects into a simple child context is cumbersome because the objects at parent
   /// scope are listening to events originating from objects at child scope. Events can be fired,
-  /// but not received, from an unintiated context if its peer is initiated.
+  /// but not received, from an uninitiated context if its peer is initiated.
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> CreatePeer(void) {
@@ -486,10 +574,11 @@ public:
   }
 
   /// <summary>
-  /// Allows a specifically named class to be bolted
+  /// Allows a specifically named class to be "bolted" to this context or one of its subcontexts.
   /// </summary>
   /// <remarks>
-  /// If the specified type does not inherit from BoltTo, this method has no effect
+  /// Call Enable<T> before calling BoltTo<T>. If the specified type does not inherit from Bolt,
+  /// this method has no effect.
   /// </remarks>
   template<class T>
   void Enable(void) {
@@ -498,7 +587,7 @@ public:
   }
 
   /// <summary>
-  /// Causes the specified type T to be injected in any subcontext created with one of the matching sigil types
+  /// Injects the specified type T into all subcontexts created with one of the matching sigil types.
   /// </summary>
   template<class T, class... Sigils>
   void BoltTo(void) {
@@ -506,10 +595,10 @@ public:
   }
 
   /// <summary>
-  /// Utility method which will inject the specified types into this context
+  /// Injects the specified types into this context.
   /// </summary>
   /// <remarks>
-  /// Arguments will be passed to the T constructor if provided
+  /// Arguments will be passed to the T constructor, if provided.
   /// </remarks>
   template<typename T, typename... Args>
   std::shared_ptr<T> Inject(Args&&... args) {
@@ -561,16 +650,16 @@ public:
   }
 
   /// <summary>
-  /// Static version of Inject that uses the current context
+  /// Injects a type into the current context.
   /// </summary>
   template<typename T>
   static void InjectCurrent(void) {
     CurrentContext()->Inject<T>();
   }
 
-  /// <returns>
-  /// True if the specified type can be autowired in this context
-  /// </returns>
+  /// <summary>
+  /// True, if an instance of the specified type exists and dependencies of that type can be autowired in this context.
+  /// </summary>
   template<class T>
   bool Has(void) const {
     std::shared_ptr<T> ptr;
@@ -581,30 +670,34 @@ public:
   template<typename T, typename... Args>
   std::shared_ptr<T> DEPRECATED(Construct(Args&&... args), "'Construct' is deprecated, use 'Inject' instead");
 
+  /// \internal
   /// <summary>
-  /// Sends AutowiringEvents to build current state
+  /// Sends AutowiringEvents to build current state.
   /// </summary>
   void BuildCurrentState(void);
 
-  /// <returns>
-  /// A copy of the list of child CoreRunnables
-  /// </returns>
+  /// <summary>
+  /// A copy of the current list of child CoreRunnables of this context.
+  /// </summary>
   /// <remarks>
-  /// No guarantee is made about how long the returned collection will be consistent with this
+  /// No guarantee is made about how long the returned collection will be consistent within this
   /// context.  A thread may potentially be added to the context after the method returns.
   /// </remarks>
   std::vector<std::shared_ptr<BasicThread>> CopyBasicThreadList(void) const;
 
-  /// <returns>
-  /// True if CoreRunnable instances in this context should begin teardown operations
-  /// </returns>
+  /// <summary>
+  /// True, if the CoreRunnable instances in this context should begin teardown operations.
+  /// </summary>
   bool IsShutdown(void) const {return m_isShutdown;}
 
+  /// <summary>
+  /// True, if the Initiate() function has been called.
+  /// </summary>
   bool IsInitiated(void) const {return m_initiated;}
 
-  /// <returns>
-  /// True if this context was ever started
-  /// </returns>
+  /// <summary>
+  /// True, if this context was ever started.
+  /// </summary>
   /// <remarks>
   /// A return value of "true" is guaranteed to be indefinitely correct.  A return value of
   /// "false" will only be correct for as long as it takes for someone to start this context.
@@ -615,12 +708,15 @@ public:
     return m_initiated || m_isShutdown;
   }
 
-  /// <returns>
-  /// True if this context is an ancestor of the specified context
-  /// </returns>
+  /// <summary>
+  /// Reports whether the specified context is an ancestor of this context.
+  /// </summary>
   /// <remarks>
-  /// This method will also return true if this == child
+  /// This method will also return true if this == child.
   /// </remarks>
+  /// <returns>
+  /// True if this context is an ancestor of the specified context.
+  /// </returns>
   bool IsAncestorOf(const CoreContext* child) const {
     for(auto cur = child; cur; cur = cur->GetParentContext().get())
       if(cur == this)
@@ -628,8 +724,9 @@ public:
     return false;
   }
 
+  /// \internal
   /// <summary>
-  /// Obtains a shared pointer to an event sender _in this context_ matching the specified type
+  /// Provides a shared pointer to the event sender in this context that matches the specified type.
   /// </summary>
   template<class T>
   std::shared_ptr<JunctionBox<T>> GetJunctionBox(void) {
@@ -642,16 +739,25 @@ public:
   }
 
   /// <summary>
-  /// Convenience method which allows an event to be fired without making the remote context current
+  /// Fires an event in another context.
   /// </summary>
   /// <remarks>
-  /// The following two statements are equivalent:
+  /// Invoke allows you to fire an event in another context without first making that
+  /// context current.
   ///
-  ///  CurrentContextPusher(ctxt),
-  ///  (AutoFired<MyEventType>())(&MyEventType::MyEvent)();
+  /// The following statment:
   ///
-  ///  ctxt->Invoke(&MyEventType::MyEvent)();
+  ///    \code
+  ///    ctxt->Invoke(&MyEventType::MyEvent)();
+  ///    \endcode
   ///
+  /// is equivalent to:
+  ///
+  ///    \code
+  ///    CurrentContextPusher(ctxt);
+  ///    (AutoFired<MyEventType>())(&MyEventType::MyEvent)();
+  ///    ctxt->Pop();
+  ///    \endcode
   /// </remarks>
   template<typename MemFn>
   InvokeRelay<MemFn> Invoke(MemFn memFn){
@@ -660,66 +766,88 @@ public:
   }
 
   /// <summary>
-  /// Utility routine, invoked typically by the service, which starts all registered
-  /// core threads.
+  /// Starts all registered threads and enables events and the flow of filter graph packets.
   /// </summary>
   void Initiate(void);
   void DEPRECATED(InitiateCoreThreads(void), "InitiateCoreThreads is deprecated, use Initiate instead");
 
   /// <summary>
-  /// This signals to the whole system that a shutdown operation is underway, and that shutdown procedures should
-  /// begin immediately
+  /// Begins shutdown of this context, optionally waiting for child contexts and threads to also shut
+  /// down before returning.
   /// </summary>
-  /// <param name="wait">Set if the function should wait for all child contexts to exit before returning</param>
+  /// <param name="wait">Specifies whether the function should wait for all child contexts to exit before returning</param>
+  /// <param name="shutdownMode">Specifies whether CoreThread objects should run all pending jobs or should shutdown immediately.</param>
   /// <remarks>
-  /// This method will immediately prevent any new events from being recieved by this context or by any descendant
+  /// After this method is invoked, no new events can be dispatched within this context or any descendant
   /// context, whether those events are fired in this context or one above, and regardless of whether these events
   /// are fired or deferred.  Event receivers in this context will also not receive any messages.
+  ///
+  /// Filter graph packets will not be sent to receivers.
+  ///
+  /// The OnStop() method of all threads in the context is invoked. The specified shutdown mode
+  /// determines whether the graceful parameter of OnStop() is set to true or false.
   /// </remarks>
   void SignalShutdown(bool wait = false, ShutdownMode shutdownMode = ShutdownMode::Graceful);
 
   /// <summary>
-  /// Alias for SignalShutdown(true, ShutdownMode::Immediate)
+  /// Shuts down the context with the Immediate shutdown mode.
   /// </summary>
+  /// <remarks>
+  /// The same as calling SignalShutdown(true, ShutdownMode::Immediate).
+  /// </remarks>
   void SignalTerminate(bool wait = true) { SignalShutdown(wait, ShutdownMode::Immediate); }
 
   /// <summary>
-  /// Waits until the context is transitioned to the Stopped state and all threads and child threads have terminated.
+  /// Waits until the context begins shutting down (IsShutdown is true)
+  /// and all threads and child threads have terminated.
   /// </summary>
+  /// <remarks>
+  /// You can use this function to keep a context in scope while it processes events, etc.
+  /// For example, to prevent exiting from the program's main() function:
+  ///
+  /// \code
+  /// int main(){
+  ///     AutoCurrentContext ctxt;
+  ///     // set up and initiate context...
+  ///     ctxt->Wait();
+  /// }
+  /// \endcode
+  /// </remarks>
   void Wait(void);
 
   /// <summary>
-  /// Timed overload
+  /// Waits for the specified number of nanoseconds.
   /// </summary>
   bool Wait(const std::chrono::nanoseconds duration);
 
   /// <summary>
-  /// Wait until the context is initiated or is shutting down
+  /// Waits until the context is initiated or, if never initiated, until it starts shutting down.
   /// </summary>
-  /// <returns>True if initiated, false if shutting down</returns>
+  /// <returns>True if initiated, false if shutting down.</returns>
   bool DelayUntilInitiated(void);
 
   /// <summary>
-  /// This makes this core context current.
+  /// Makes this context the current context.
   /// </summary>
-  /// <returns>The previously current context</returns>
+  /// <returns>The previously current context.</returns>
   std::shared_ptr<CoreContext> SetCurrent(void);
 
   /// <summary>
-  /// Makes no context current
+  /// Makes no context current.
   /// </summary>
   /// <remarks>
-  /// Generally speaking, users wishing to release their reference to some context can do so simply
-  /// by making the global context current.
+  /// Generally speaking, if you just want to release a reference to the current context, simply
+  /// make the global context current instead.
   /// </remarks>
   static void EvictCurrent(void);
 
   /// <summary>
-  /// This retrieves a shared pointer to the current context.  It is only contextually relevant.
+  /// The shared pointer to the current context.
   /// </summary>
-  /// <return>
-  /// The last core context to have called SetCurrent in the current thread, or else an empty pointer
-  /// </return>
+  /// <returns>
+  /// A shared pointer to the current CoreContext instance of the current thread,
+  /// or else an empty pointer, if no context is current.
+  /// </returns>
   /// <remarks>
   /// This works by using thread-local store, and so is safe in multithreaded systems.  The current
   /// context is assigned before invoking a CoreRunnable instance's Run method, and it's also assigned
@@ -748,7 +876,7 @@ public:
   void FilterFiringException(const JunctionBoxBase* pProxy, Object* pRecipient);
 
   /// <summary>
-  /// Enables the passed event receiver to obtain messages broadcast by this context
+  /// Registers the specified event receiver to receive messages broadcast within this context.
   /// </summary>
   /// <remarks>
   /// This enables the passed event receiver to snoop events that are broadcast from a
@@ -980,8 +1108,11 @@ std::shared_ptr<T> CoreContext::Construct(Args&&... args) {
 }
 
 /// <summary>
-/// Constant type optimization for named sigil types
+/// A type of CoreContext that has a sigil.
 /// </summary>
+/// <remarks>
+/// 
+/// </remarks>
 template<class T>
 class CoreContextT:
   public CoreContext
