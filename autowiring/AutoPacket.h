@@ -39,11 +39,10 @@ class AutoPacket:
   public std::enable_shared_from_this<AutoPacket>,
   public TeardownNotifier
 {
-private:
+public:
   AutoPacket(const AutoPacket& rhs) = delete;
   AutoPacket(AutoPacket&&) = delete;
 
-public:
   // Must hold the lock to 'factory' when calling this constructor
   AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
@@ -285,6 +284,20 @@ public:
     return *retVal;
   }
 
+  /// <summary>
+  /// Returns a vector with a pointer to each decoration of type T, adding a nullptr to the end.
+  /// </summary>
+  template<class T>
+  std::vector<const T*> GetAll(int tshift = 0) {
+    std::vector<const T*> retval;
+    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
+    for (auto& dispo : deco->second.m_decorations) {
+      retval.push_back(dispo.as<T>().get().get());
+    }
+    retval.push_back(nullptr);
+    return retval;
+  }
+
   /// <summary>Shares all broadcast data from this packet with the recipient packet</summary>
   /// <remarks>
   /// This method should ONLY be called during the final-call sequence.
@@ -333,7 +346,12 @@ public:
   /// </remarks>
   template<class T>
   const T& Decorate(T t) {
-    return Decorate(std::make_shared<T>(std::forward<T>(t)));
+    DecorationKey key(auto_id<T>::key());
+
+    // Create a copy of the input, put the copy in a shared pointer
+    auto ptr = std::make_shared<T>(std::forward<T&&>(t));
+    Decorate(AnySharedPointer(ptr), key);
+    return *ptr;
   }
 
   /// <summary>
@@ -356,6 +374,18 @@ public:
     // This allows us to install correct entries for decorated input requests
     Decorate(AnySharedPointer(ptr), key);
     return *ptr;
+  }
+
+  /// <summary>
+  /// Decoration method specialized for const shared pointer types
+  /// </summary>
+  /// <remarks>
+  /// This decoration method has the additional benefit that it will make direct use of the passed
+  /// shared pointer.
+  /// </remarks>
+  template<class T>
+  const T& Decorate(std::shared_ptr<const T> ptr) {
+    return Decorate(std::const_pointer_cast<T>(ptr));
   }
 
   /// <summary>

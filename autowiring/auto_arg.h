@@ -30,6 +30,7 @@ public:
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
+  static const bool is_multi = false;
   static const int tshift = 0;
 };
 
@@ -61,6 +62,7 @@ public:
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = true;
+  static const bool is_multi = false;
   static const int tshift = 0;
 };
 
@@ -85,6 +87,7 @@ public:
   static const bool is_input = false;
   static const bool is_output = true;
   static const bool is_shared = false;
+  static const bool is_multi = false;
   static const int tshift = 0;
 };
 
@@ -125,6 +128,7 @@ public:
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
+  static const bool is_multi = false;
   static const int tshift = N;
 };
 
@@ -143,5 +147,26 @@ public:
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+};
+
+/// <summary>
+/// Multi-in specialization
+/// </summary>
+/// <remarks>
+/// This specialization is for gathering multiply decorated types from a packet
+/// </remarks>
+template<class T>
+class auto_arg<T const **> :
+  public auto_in<T const **>
+{
+public:
+  typedef auto_id<T> id_type;
+  typedef auto_in<T const **> type;
+  static const bool is_input = true;
+  static const bool is_output = false;
+  static const bool is_shared = false;
+  static const bool is_multi = true;
   static const int tshift = 0;
 };

@@ -15,6 +15,15 @@ AnySharedPointer::AnySharedPointer(const AnySharedPointer& rhs) {
   new (m_space) SharedPointerSlot(*rhs.slot());
 }
 
+AnySharedPointer::AnySharedPointer(const SharedPointerSlot&& rhs) {
+  new (m_space) SharedPointerSlot(std::move(rhs));
+}
+
+AnySharedPointer::AnySharedPointer(const SharedPointerSlot& rhs){
+  new (m_space) SharedPointerSlot(rhs);
+}
+
+
 AnySharedPointer::~AnySharedPointer(void) {
   // Pass control to the *real* destructor:
   slot()->~SharedPointerSlot();
