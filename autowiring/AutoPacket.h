@@ -9,7 +9,6 @@
 #include "is_any.h"
 #include "is_shared_ptr.h"
 #include "TeardownNotifier.h"
-#include <list>
 #include <typeinfo>
 #include CHRONO_HEADER
 #include MEMORY_HEADER
@@ -159,22 +158,25 @@ protected:
   /// </remarks>
   const SatCounter& GetSatisfaction(const std::type_info& subscriber) const;
 
-  /// <returns>All subscribers to the specified data</returns>
-  std::list<SatCounter> GetSubscribers(const DecorationKey& key) const;
-
-  /// <returns>All decoration dispositions associated with the data type</returns>
-  /// <remarks>
-  /// This method is useful for determining whether flow conditions (broadcast, pipes
-  /// immediate decorations) resulted in missed data.
-  /// </remarks>
-  std::list<DecorationDisposition> GetDispositions(const DecorationKey& key) const;
-
   /// <summary>
   /// Throws a formatted runtime error corresponding to the case where an absent decoration was demanded
   /// </summary>
   static void ThrowNotDecoratedException(const DecorationKey& key);
 
 public:
+  /// <returns>
+  /// The number of distinct decoration types on this packet
+  /// </returns>
+  size_t GetDecorationTypeCount(void) const;
+
+  /// <returns>
+  /// A copy of the decoration dispositions collection
+  /// </returns>
+  /// <remarks>
+  /// This is a diagnostic method, users are recommended to avoid the use of this routine where possible
+  /// </remarks>
+  t_decorationMap GetDecorations(void) const;
+
   /// <returns>
   /// True if this packet posesses a decoration of the specified type
   /// </returns>
@@ -479,28 +481,6 @@ public:
   /// </remarks>
   template<class T>
   inline const SatCounter& GetSatisfaction(void) const { return GetSatisfaction(auto_id<T>::key()); }
-
-  /// <returns>All subscribers to the specified data</returns>
-  template<class T>
-  inline std::list<SatCounter> GetSubscribers(void) const {
-    return GetSubscribers(DecorationKey(auto_id<T>::key()));
-  }
-
-  /// <returns>All decoration dispositions</returns>
-  /// <remarks>
-  /// This method is useful for getting a picture of the entire disposition graph
-  /// </remarks>
-  std::list<DecorationDisposition> GetDispositions() const;
-
-  /// <returns>All decoration dispositions associated with the data type</returns>
-  /// <remarks>
-  /// This method is useful for determining whether flow conditions (broadcast, pipes
-  /// immediate decorations) resulted in missed data.
-  /// </remarks>
-  template<class T>
-  inline std::list<DecorationDisposition> GetDispositions(void) const {
-    return GetDispositions(DecorationKey(auto_id<T>::key()));
-  }
 
   /// <summary>
   /// Returns the next packet that will be issued by the packet factory in this context relative to this context
