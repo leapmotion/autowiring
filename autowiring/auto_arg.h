@@ -129,7 +129,22 @@ class auto_arg<std::shared_ptr<T>&>:
   public auto_arg<T&>
 {
 public:
-  typedef std::shared_ptr<T>& arg_type;
+  static const bool is_shared = true;
+
+  // Utility type, required to dereference the std::shared_ptr
+  struct arg_type {
+    arg_type(std::shared_ptr<T>& arg) :
+      arg(arg)
+    {}
+
+    std::shared_ptr<T>& arg;
+    operator std::shared_ptr<T>&() const { return arg; }
+  };
+
+  template<class C>
+  static std::shared_ptr<T> arg(C&) {
+    return std::shared_ptr<T>();
+  }
 };
 
 /// <summary>
