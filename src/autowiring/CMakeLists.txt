@@ -22,6 +22,7 @@ set(Autowiring_SRCS
   AutoConfigParser.cpp
   AutoConfigParser.hpp
   AutoFilterDescriptor.h
+  AutoFilterDescriptorInput.h
   AutoFuture.cpp
   AutoFuture.h
   AutoInjectable.cpp
