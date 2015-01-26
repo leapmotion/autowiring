@@ -278,9 +278,9 @@ public:
   }
 
   template<class T>
-  const std::shared_ptr<const T>& GetShared(void) const {
+  const std::shared_ptr<const T>& GetShared(int tshift = 0) const {
     const std::shared_ptr<const T>* retVal;
-    Get(retVal);
+    Get(retVal, tshift);
     return *retVal;
   }
 
