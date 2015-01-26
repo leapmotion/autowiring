@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include MEMORY_HEADER
-#include THREAD_HEADER
 #include MUTEX_HEADER
+#include THREAD_HEADER
 
 struct BasicThreadStateBlock:
   std::enable_shared_from_this<BasicThreadStateBlock>

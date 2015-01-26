@@ -3,10 +3,10 @@
 #include "AnySharedPointer.h"
 #include "autowiring_error.h"
 #include "has_validate.h"
-#include MEMORY_HEADER
-#include FUNCTIONAL_HEADER
 #include <string>
 #include <sstream>
+#include FUNCTIONAL_HEADER
+#include MEMORY_HEADER
 
 // Check if 'T' has a valid stream conversion operator
 template<typename T>

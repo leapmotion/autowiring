@@ -6,7 +6,7 @@
 #include "CurrentContextPusher.h"
 #include "Decompose.h"
 #include "index_tuple.h"
-#include <assert.h>
+#include <cassert>
 
 class Deferred;
 

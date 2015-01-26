@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include <utility>
 #include CHRONO_HEADER
 
 /// <summary>
@@ -81,7 +80,8 @@ public:
 
   DispatchThunkDelayed& operator=(DispatchThunkDelayed&& rhs) {
     m_readyAt = rhs.m_readyAt;
-    std::swap(m_thunk, rhs.m_thunk);
+    m_thunk = rhs.m_thunk;
+    rhs.m_thunk = nullptr;
     return *this;
   }
   
