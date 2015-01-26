@@ -315,29 +315,22 @@ const SatCounter& AutoPacket::GetSatisfaction(const std::type_info& subscriber) 
   throw autowiring_error("Attempted to get the satisfaction counter for an unavailable subscriber");
 }
 
-std::list<SatCounter> AutoPacket::GetSubscribers(const DecorationKey& key) const {
-  std::lock_guard<std::mutex> lk(m_lock);
-  std::list<SatCounter> subscribers;
-  t_decorationMap::const_iterator decoration = m_decorations.find(key);
-  if (decoration != m_decorations.end())
-    for (auto& subscriber : decoration->second.m_subscribers)
-      subscribers.push_back(*subscriber);
-  return subscribers;
-}
-
-std::list<DecorationDisposition> AutoPacket::GetDispositions(const DecorationKey& key) const {
-  std::lock_guard<std::mutex> lk(m_lock);
-  std::list<DecorationDisposition> dispositions;
-  for (auto& disposition : m_decorations)
-    if (disposition.second.GetKey() == key)
-      dispositions.push_back(disposition.second);
-  return dispositions;
-}
-
 void AutoPacket::ThrowNotDecoratedException(const DecorationKey& key) {
   std::stringstream ss;
   ss << "Attempted to obtain a type " << autowiring::demangle(key.ti) << " which was not decorated on this packet";
   throw std::runtime_error(ss.str());
+}
+
+size_t AutoPacket::GetDecorationTypeCount(void) const
+{
+  std::lock_guard<std::mutex> lk(m_lock);
+  return m_decorations.size();
+}
+
+AutoPacket::t_decorationMap AutoPacket::GetDecorations(void) const
+{
+  std::lock_guard<std::mutex> lk(m_lock);
+  return m_decorations;
 }
 
 void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
@@ -398,14 +391,6 @@ void AutoPacket::RemoveRecipient(const SatCounter& recipient) {
     recipient.blink->flink = recipient.flink;
   if (recipient.flink)
     recipient.flink->blink = recipient.blink;
-}
-
-std::list<DecorationDisposition> AutoPacket::GetDispositions() const {
-  std::lock_guard<std::mutex> lk(m_lock);
-  std::list<DecorationDisposition> dispositions;
-  for (auto& disposition : m_decorations)
-    dispositions.push_back(disposition.second);
-  return dispositions;
 }
 
 std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
