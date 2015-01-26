@@ -1,9 +1,11 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "auto_arg.h"
+#include "auto_tuple.h"
 #include "AutoPacket.h"
 #include "CurrentContextPusher.h"
 #include "Decompose.h"
+#include "index_tuple.h"
 #include <assert.h>
 
 class Deferred;
@@ -11,14 +13,42 @@ class Deferred;
 // The type of the call centralizer
 typedef void(*t_extractedCall)(const AnySharedPointer& obj, AutoPacket&);
 
-template<class MemFn>
+template<class MemFn, class Index = typename make_index_tuple<Decompose<MemFn>::N>::type>
 struct CallExtractor;
+
+template<class... Args>
+struct CallExtractorSetup
+{
+  CallExtractorSetup(AutoPacket& packet):
+    packet(packet),
+    pshr(packet.GetContext()),
+    args(
+      (auto_arg<Args>::arg(packet))...
+    )
+  {}
+
+  AutoPacket& packet;
+  CurrentContextPusher pshr;
+  autowiring::tuple<typename auto_arg<Args>::type...> args;
+
+  template<int N>
+  typename std::enable_if<
+    auto_arg<typename autowiring::nth_type<N, Args...>::type>::is_output,
+    bool
+  >::type Commit(bool) {
+    packet.Decorate(autowiring::get<N>(args));
+    return true;
+  }
+
+  template<int N>
+  bool Commit(...) { return false; }
+};
 
 /// <summary>
 /// Specialization for nonmember function calls
 /// </summary>
-template<class RetType, class... Args>
-struct CallExtractor<RetType (*)(Args...)>:
+template<class RetType, class... Args, int... N>
+struct CallExtractor<RetType (*)(Args...), index_tuple<N...>>:
   Decompose<RetType(*)(Args...)>
 {
   static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
@@ -31,24 +61,23 @@ struct CallExtractor<RetType (*)(Args...)>:
   /// <summary>
   /// Binder struct, lets us refer to an instance of Call by type
   /// </summary>
-  static void Call(const AnySharedPointer& obj, AutoPacket& autoPacket) {
+  static void Call(const AnySharedPointer& obj, AutoPacket& packet) {
     const void* pfn = obj->ptr();
-
-    // Set the current context to this packet's context
-    CurrentContextPusher pshr(autoPacket.GetContext());
-
-    // Handoff
+    
+    // Setup, handoff, commit
+    CallExtractorSetup<Args...> extractor(packet);
     ((t_pfn)pfn)(
-      typename auto_arg<Args>::type(autoPacket)...
+      static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
+    (void)std::initializer_list<bool>{extractor.template Commit<N>(false)...};
   }
 };
 
 /// <summary>
 /// Specialization for member function AutoFilter functions
 /// </summary>
-template<class T, class... Args>
-struct CallExtractor<void (T::*)(Args...)>:
+template<class T, class... Args, int... N>
+struct CallExtractor<void (T::*)(Args...), index_tuple<N...>> :
   Decompose<void (T::*)(Args...)>
 {
   static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
@@ -59,7 +88,7 @@ struct CallExtractor<void (T::*)(Args...)>:
   /// Binder struct, lets us refer to an instance of Call by type
   /// </summary>
   template<void(T::*memFn)(Args...)>
-  static void Call(const AnySharedPointer& obj, AutoPacket& autoPacket) {
+  static void Call(const AnySharedPointer& obj, AutoPacket& packet) {
     const void* pObj = obj->ptr();
 
     // This exception type indicates that an attempt was made to construct an AutoFilterDescriptor with an
@@ -67,21 +96,20 @@ struct CallExtractor<void (T::*)(Args...)>:
     // to the correct foundation type before attempting to construct an AutoFilterDescriptor.
     assert(typeid(auto_id<T>) == obj->type());
 
-    // Set the current context to this packet's context
-    CurrentContextPusher pshr(autoPacket.GetContext());
-
-    // Handoff
+    // Extract, call, commit
+    CallExtractorSetup<Args...> extractor(packet);
     (((T*) pObj)->*memFn)(
-      typename auto_arg<Args>::type(autoPacket)...
+      static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
+    (void)std::initializer_list<bool>{extractor.template Commit<N>(false)...};
   }
 };
 
 /// <summary>
 /// Specialization for stateless member function AutoFilter routines
 /// </summary>
-template<class T, class... Args>
-struct CallExtractor<void (T::*)(Args...) const> :
+template<class T, class... Args, int... N>
+struct CallExtractor<void (T::*)(Args...) const, index_tuple<N...>> :
   Decompose<void (T::*)(Args...)>
 {
   static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
@@ -89,24 +117,23 @@ struct CallExtractor<void (T::*)(Args...) const> :
   static const bool deferred = false;
   
   template<void(T::*memFn)(Args...) const>
-  static void Call(const AnySharedPointer& obj, AutoPacket& autoPacket) {
+  static void Call(const AnySharedPointer& obj, AutoPacket& packet) {
     const void* pObj = obj->ptr();
 
-    // Set the current context to this packet's context
-    CurrentContextPusher pshr(autoPacket.GetContext());
-
-    // Handoff
+    // Extract, call, commit
+    CallExtractorSetup<Args...> extractor(packet);
     (((const T*) pObj)->*memFn)(
-      typename auto_arg<Args>::type(autoPacket)...
+      static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
+    (void)std::initializer_list<bool>{extractor.template Commit<N>(false)...};
   }
 };
 
 /// <summary>
 /// Specialization for deferred member function AutoFilter routines
 /// </summary>
-template<class T, class... Args>
-struct CallExtractor<Deferred (T::*)(Args...)>:
+template<class T, class... Args, int... N>
+struct CallExtractor<Deferred(T::*)(Args...), index_tuple<N...>> :
   Decompose<void (T::*)(Args...)>
 {
   static const bool has_outputs = is_any<auto_arg<Args>::is_output...>::value;
@@ -125,12 +152,12 @@ struct CallExtractor<Deferred (T::*)(Args...)>:
     // Pend the call to this object's dispatch queue:
     *(T*) pObj += [pObj, pAutoPacket] {
 
-      // Set the current context to this packet's context
-      CurrentContextPusher pshr(pAutoPacket->GetContext());
-
+      // Extract, call, commit
+      CallExtractorSetup<Args...> extractor(*pAutoPacket);
       (((T*) pObj)->*memFn)(
-        typename auto_arg<Args>::type(*pAutoPacket)...
+        static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
       );
+      (void)std::initializer_list<bool>{extractor.template Commit<N>(false)...};
     };
   }
 };

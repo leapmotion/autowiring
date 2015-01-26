@@ -3,6 +3,9 @@
 #include "auto_in.h"
 #include "auto_out.h"
 #include "auto_prev.h"
+#include <initializer_list>
+
+class AutoPacket;
 
 /*
  The auto_arg<T> classes are used to generate of auto_in and auto_out types
@@ -25,13 +28,19 @@ template<class T>
 class auto_arg
 {
 public:
-  typedef auto_in<T> type;
+  typedef const T& type;
+  typedef type arg_type;
   typedef auto_id<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
+
+  template<class C>
+  static const T& arg(C& packet) {
+    return packet.template Get<T>();
+  }
 };
 
 /// <summary>
@@ -57,13 +66,19 @@ template<class T>
 class auto_arg<std::shared_ptr<const T>>
 {
 public:
-  typedef auto_in<const T> type;
+  typedef const std::shared_ptr<const T>& type;
+  typedef type arg_type;
   typedef auto_id<T> id_type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = true;
   static const bool is_multi = false;
   static const int tshift = 0;
+
+  template<class C>
+  static const std::shared_ptr<const T>& arg(C& packet) {
+    return packet.template GetShared<T>();
+  }
 };
 
 /// <summary>
@@ -75,20 +90,35 @@ class auto_arg<auto_in<T>>:
 {};
 
 /// <summary>
-/// Specialization for "T&" ~ auto_in<T>
+/// Specialization for "T&" ~ auto_out<T>
 /// </summary>
 template<class T>
-class auto_arg<T&> :
-  public auto_out<T>
+class auto_arg<T&>
 {
 public:
-  typedef auto_out<T> type;
+  typedef std::shared_ptr<T> type;
+  
+  // Utility type, required to dereference the std::shared_ptr
+  struct arg_type {
+    arg_type(std::shared_ptr<T>& arg) :
+      arg(*arg)
+    {}
+
+    T& arg;
+    operator T&() const { return arg; }
+  };
+
   typedef auto_id<T> id_type;
   static const bool is_input = false;
   static const bool is_output = true;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
+
+  template<class C>
+  static std::shared_ptr<T> arg(C&) {
+    return std::make_shared<T>();
+  }
 };
 
 /// <summary>
@@ -97,7 +127,10 @@ public:
 template<class T>
 class auto_arg<std::shared_ptr<T>&>:
   public auto_arg<T&>
-{};
+{
+public:
+  typedef std::shared_ptr<T>& arg_type;
+};
 
 /// <summary>
 /// Forbidden input T
@@ -116,13 +149,17 @@ class auto_arg<std::shared_ptr<T>> {
 template<class T>
 class auto_arg<auto_out<T>>:
   public auto_arg<T&>
-{};
+{
+public:
+  typedef auto_out<T> arg_type;
+};
 
 template<class T, int N>
 class auto_arg<auto_prev<T, N>>
 {
 public:
   typedef auto_prev<T, N> type;
+  typedef auto_prev<T, N> arg_type;
   typedef auto_id<T> id_type;
 
   static const bool is_input = true;
@@ -130,6 +167,13 @@ public:
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = N;
+
+  template<class C>
+  static const T* arg(C& packet) {
+    const T* retVal;
+    packet.template Get<T>(retVal, N);
+    return retVal;
+  }
 };
 
 /// <summary>
@@ -142,13 +186,18 @@ template<>
 class auto_arg<AutoPacket&>
 {
 public:
-  typedef auto_in<AutoPacket> type;
+  typedef AutoPacket& type;
+  typedef auto_in<AutoPacket> arg_type;
   typedef AutoPacket id_type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
+
+  static AutoPacket& arg(AutoPacket& packet) {
+    return packet;
+  }
 };
 
 /// <summary>
@@ -158,15 +207,39 @@ public:
 /// This specialization is for gathering multiply decorated types from a packet
 /// </remarks>
 template<class T>
-class auto_arg<T const **> :
-  public auto_in<T const **>
+class auto_arg<T const **>
 {
 public:
+  typedef std::vector<const T*> type;
+
+  // Another compositional structure, used to coerce a vector to a data item
+  struct arg_type {
+    arg_type(type& value) :
+      value(value.data())
+    {}
+
+    T const ** value;
+
+    operator T const **(void) const { return value; }
+  };
+
   typedef auto_id<T> id_type;
-  typedef auto_in<T const **> type;
   static const bool is_input = true;
   static const bool is_output = false;
   static const bool is_shared = false;
   static const bool is_multi = true;
   static const int tshift = 0;
+
+  template<class C>
+  static std::vector<const T*> arg(C& packet) {
+    return packet.template GetAll<T>();
+  }
+};
+
+/// <summary>
+/// Utility predicate, used to assess whether T is an output argument
+/// </summary>
+template<class T>
+struct arg_is_out {
+  static const bool value = auto_arg<T>::is_output;
 };

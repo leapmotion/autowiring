@@ -514,7 +514,7 @@ template<class Fx>
 const SatCounter* AutoPacket::operator+=(Fx&& fx) const
 {
   static_assert(
-    !CallExtractor<decltype(&Fx::operator())>::has_outputs,
+    !Decompose<decltype(&Fx::operator())>::template any<arg_is_out>::value,
     "Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types"
   );
   return *const_cast<AutoPacket*>(this) += std::forward<Fx&&>(fx);
