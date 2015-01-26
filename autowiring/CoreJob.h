@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "ContextMember.h"
-#include "DispatchQueue.h"
 #include "CoreRunnable.h"
+#include "DispatchQueue.h"
 
 class Object;
 

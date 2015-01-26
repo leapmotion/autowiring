@@ -5,7 +5,6 @@
 #include "ContextMember.h"
 #include "CoreRunnable.h"
 #include "TypeRegistry.h"
-#include <list>
 #include CHRONO_HEADER
 #include TYPE_TRAITS_HEADER
 #include STL_UNORDERED_SET
