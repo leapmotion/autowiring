@@ -263,6 +263,7 @@ TEST_F(ObjectPoolTest, EmptyPoolIssuance) {
 
   // Now see if we can delay for the thread to back out:
   ctxt->Initiate();
+  ASSERT_TRUE(ctxt->IsRunning());
   pool.Rundown();
 
   // Verify that it got released as expected:

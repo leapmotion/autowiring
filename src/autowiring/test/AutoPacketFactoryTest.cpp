@@ -94,6 +94,8 @@ public:
 };
 
 TEST_F(AutoPacketFactoryTest, AutoPacketFactoryCycle) {
+  AutoCurrentContext()->Initiate();
+
   std::weak_ptr<CoreContext> ctxtWeak;
   std::weak_ptr<HoldsAutoPacketFactoryReference> hapfrWeak;
   std::shared_ptr<AutoPacket> packet;
@@ -150,10 +152,9 @@ public:
 
 TEST_F(AutoPacketFactoryTest, AutoPacketStatistics) {
   // Create a context, fill it up, kick it off:
-  AutoCreateContext ctxt;
-  CurrentContextPusher pshr(ctxt);
-  AutoRequired<DelaysAutoPacketsOneMS> dapoms(ctxt);
-  AutoRequired<AutoPacketFactory> factory(ctxt);
+  AutoCurrentContext ctxt;
+  AutoRequired<DelaysAutoPacketsOneMS> dapoms;
+  AutoRequired<AutoPacketFactory> factory;
   ctxt->Initiate();
 
   int numPackets = 20;
@@ -177,9 +178,8 @@ TEST_F(AutoPacketFactoryTest, AutoPacketStatistics) {
 }
 
 TEST_F(AutoPacketFactoryTest, AddSubscriberTest) {
-  AutoCreateContext ctxt;
-  CurrentContextPusher pshr(ctxt);
-  AutoRequired<AutoPacketFactory> factory(ctxt);
+  AutoCurrentContext ctxt;
+  AutoRequired<AutoPacketFactory> factory;
   ctxt->Initiate();
 
   bool first_called = false;
@@ -234,7 +234,6 @@ TEST_F(AutoPacketFactoryTest, MultiDecorateTest) {
   ASSERT_EQ(0, called) << "Lambda functions were called before expected";
 
   auto packet = factory->NewPacket();
-
   ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
 }
 
