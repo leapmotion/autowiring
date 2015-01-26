@@ -193,7 +193,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
       Json::object args;
       for (auto pArg = object.subscriber.GetAutoFilterInput(); *pArg; ++pArg) {
         args[autowiring::demangle(pArg->ti)] = Json::object{
-          {"isInput", pArg->is_input || pArg->tshift},
+          {"isInput", pArg->is_input},
           {"isOutput", pArg->is_output}
         };
       }
@@ -230,8 +230,26 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
   };
 }
 
-void AutoNetServerImpl::SendEvent(const std::string& event, const std::vector<std::string>& args) {
+void AutoNetServerImpl::SendEvent(const std::string& rawEvent, const std::vector<std::string>& args) {
+  // Prepend '$' to custum event to avoid namespace collitions with internal events
+  std::string event("$");
+  event.append(rawEvent);
   
+  Json::array jsonArgs;
+  for (const auto& a : args) {
+    jsonArgs.push_back(a);
+  }
+  
+  *this += [this, event, jsonArgs] {
+    for(websocketpp::connection_hdl hdl : m_Subscribers) {
+      Json msg = Json::object{
+        {"type", event},
+        {"args", jsonArgs}
+      };
+      
+      m_Server.send(hdl, msg.dump(), websocketpp::frame::opcode::text);
+    }
+  };
 }
 
 void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
