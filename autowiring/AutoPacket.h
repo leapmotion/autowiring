@@ -374,12 +374,14 @@ public:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
     
     // Either decorate, or prevent anyone from decorating
-    if (ptr)
+    if (ptr) {
       Decorate(AnySharedPointer(ptr), key);
-    else
+      return *ptr;
+    }
+    else {
       MarkUnsatisfiable(key);
-
-    return *ptr;
+      return *static_cast<T*>(nullptr);
+    }
   }
 
   /// <summary>

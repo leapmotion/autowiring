@@ -3,7 +3,6 @@
 #include "auto_in.h"
 #include "auto_out.h"
 #include "auto_prev.h"
-#include <initializer_list>
 
 class AutoPacket;
 
