@@ -3,6 +3,8 @@
 #include MEMORY_HEADER
 #include <vector>
 
+class AutoPacket;
+
 /// <summary>
 /// Fundamental type of required input arguments of AutoFilter methods.
 /// </summary>

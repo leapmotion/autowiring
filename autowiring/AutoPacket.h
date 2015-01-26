@@ -24,6 +24,9 @@ class CoreContext;
 struct AutoFilterDescriptor;
 struct AutoFilterDescriptorInput;
 
+template<class MemFn>
+struct Decompose;
+
 /// <summary>
 /// A decorator-style processing packet
 /// </summary>
