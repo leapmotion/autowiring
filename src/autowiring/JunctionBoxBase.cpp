@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "JunctionBoxBase.h"
+#include "AnySharedPointer.h"
 #include "CoreContext.h"
 
 JunctionBoxBase::~JunctionBoxBase(void) {}
@@ -13,9 +14,11 @@ void JunctionBoxBase::TerminateAll(const std::list<std::weak_ptr<CoreContext>>& 
   }
 }
 
-void JunctionBoxBase::FilterFiringException(const std::shared_ptr<Object>& pRecipient) const {
+void JunctionBoxBase::FilterFiringException(const AnySharedPointer& pRecipient) const {
+  std::shared_ptr<Object> obj = *pRecipient;
+
   // Obtain the current context and pass control:
-  CoreContext::CurrentContext()->FilterFiringException(this, pRecipient.get());
+  CoreContext::CurrentContext()->FilterFiringException(this, obj.get());
 }
 
 std::weak_ptr<CoreContext> JunctionBoxBase::ContextDumbToWeak(CoreContext* pContext) {

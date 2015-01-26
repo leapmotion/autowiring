@@ -69,7 +69,7 @@ struct CallExtractor<RetType (*)(Args...), index_tuple<N...>>:
     ((t_pfn)pfn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
-    std::initializer_list<bool>{extractor.template Commit<N>(false)...};
+    (void)std::initializer_list<bool>{extractor.template Commit<N>(false)...};
   }
 };
 
@@ -101,7 +101,7 @@ struct CallExtractor<void (T::*)(Args...), index_tuple<N...>> :
     (((T*) pObj)->*memFn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
-    std::initializer_list<bool>{extractor.template Commit<N>(false)...};
+    (void)std::initializer_list<bool>{extractor.template Commit<N>(false)...};
   }
 };
 
@@ -125,7 +125,7 @@ struct CallExtractor<void (T::*)(Args...) const, index_tuple<N...>> :
     (((const T*) pObj)->*memFn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
-    std::initializer_list<bool>{extractor.template Commit<N>(false)...};
+    (void)std::initializer_list<bool>{extractor.template Commit<N>(false)...};
   }
 };
 
@@ -157,7 +157,7 @@ struct CallExtractor<Deferred(T::*)(Args...), index_tuple<N...>> :
       (((T*) pObj)->*memFn)(
         static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
       );
-      std::initializer_list<bool>{extractor.template Commit<N>(false)...};
+      (void)std::initializer_list<bool>{extractor.template Commit<N>(false)...};
     };
   }
 };

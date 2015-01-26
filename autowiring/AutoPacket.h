@@ -49,11 +49,6 @@ public:
   AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
 
-  struct Recipient {
-    // The iterator pointing to the location where the satisfaction counter was inserted
-    std::list<SatCounter>::iterator position;
-  };
-
 protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
@@ -67,8 +62,8 @@ protected:
   // Outstanding count local and remote holds:
   const std::shared_ptr<void> m_outstanding;
 
-  // Saturation counters, constructed when the packet is created and reset each time thereafter
-  std::list<SatCounter> m_satCounters;
+  // Pointer to a forward linked list of saturation counters, constructed when the packet is created
+  SatCounter* m_firstCounter;
 
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
@@ -280,9 +275,9 @@ public:
   }
 
   template<class T>
-  const std::shared_ptr<const T>& GetShared(void) const {
+  const std::shared_ptr<const T>& GetShared(int tshift = 0) const {
     const std::shared_ptr<const T>* retVal;
-    Get(retVal);
+    Get(retVal, tshift);
     return *retVal;
   }
 
@@ -450,18 +445,18 @@ public:
   /// This method is not idempotent.  The returned Recipient structure may be used to remove
   /// the recipient safely at any point.  The caller MUST NOT attempt 
   /// </remarks>
-  Recipient AddRecipient(const AutoFilterDescriptor& descriptor);
+  const SatCounter* AddRecipient(const AutoFilterDescriptor& descriptor);
 
   /// <summary>
   /// Removes a previously added packet recipient
   /// </summary>
-  void RemoveRecipient(Recipient&& recipient);
+  void RemoveRecipient(const SatCounter& recipient);
 
   /// <summary>
   /// Convenience overload, identical in behavior to AddRecipient
   /// </summary>
   template<class Fx>
-  Recipient operator+=(Fx&& fx) {
+  const SatCounter* operator+=(Fx&& fx) {
     return AddRecipient(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
   }
 
