@@ -53,8 +53,8 @@ namespace autowiring {
 
     template<class T, class... Ts>
     tuple(T&& arg, Ts&&... args) :
-      tuple_value<sizeof...(Ts), Arg>(std::forward<T&&>(arg)),
-      tuple<Args...>(std::forward<Ts&&>(args)...)
+      tuple<Args...>(std::forward<Ts&&>(args)...),
+      tuple_value<sizeof...(Ts), Arg>(std::forward<T&&>(arg))
     {}
   };
 }

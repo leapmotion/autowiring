@@ -51,8 +51,8 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iter
   m_pParent(pParent),
   m_backReference(backReference),
   m_stateBlock(new CoreContextStateBlock),
-  m_beforeRunning(false),
   m_state(State::NotStarted),
+  m_beforeRunning(false),
   m_junctionBoxManager(
     pPeer ? pPeer->m_junctionBoxManager : std::make_shared<JunctionBoxManager>()
   )
