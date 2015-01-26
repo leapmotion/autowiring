@@ -2,10 +2,9 @@
 #pragma once
 #include "Object.h"
 #include <list>
-#include MUTEX_HEADER
 #include MEMORY_HEADER
-#include STL_UNORDERED_SET
 
+struct AnySharedPointer;
 class CoreContext;
 class DispatchQueue;
 
@@ -24,13 +23,6 @@ public:
   virtual ~JunctionBoxBase(void);
 
 protected:
-  // Dispatch queue lock:
-  mutable std::mutex m_lock;
-
-  // Just the DispatchQueue listeners:
-  typedef std::unordered_set<DispatchQueue*> t_stType;
-  t_stType m_dispatch;
-  
   // This JunctionBox can fire and receive events
   bool m_isInitiated;
 
@@ -46,7 +38,7 @@ protected:
   /// This is a convenience routine, its only purpose is to add the "this" parameter to the
   /// call to FilterFiringException
   /// </remarks>
-  void FilterFiringException(const std::shared_ptr<Object>& pReceiver) const;
+  void FilterFiringException(const AnySharedPointer& pReceiver) const;
 
   /// <summary>
   /// Converts a dumb pointer into a weak pointer
@@ -60,9 +52,6 @@ public:
   bool IsInitiated(void) const {return m_isInitiated;}
   void Initiate(void) {m_isInitiated=true;}
   
-  const std::unordered_set<DispatchQueue*> GetDispatchQueue(void) const { return m_dispatch; }
-  std::mutex& GetDispatchQueueLock(void) const { return m_lock; }
-
   virtual bool HasListeners(void) const = 0;
 
   // Event attachment and detachment pure virtuals
