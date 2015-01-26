@@ -2,6 +2,7 @@
 #pragma once
 #include "CoreThread.h"
 #include "ConfigRegistry.h"
+#include "index_tuple.h"
 #include <sstream>
 #include STL_UNORDERED_MAP
 #include FUNCTIONAL_HEADER
@@ -35,9 +36,7 @@ public:
   /// Add a custom event handler. Arguments must be primative types are strings
   template<typename... Args>
   void AddEventHandler(const std::string& event, std::function<void(Args...)> handler) {
-    AddEventHandler(event, [this, handler] (const std::vector<std::string>& args) {
-      assert(sizeof...(Args) == args.size());
-    });
+    AddEventHandler(event, handler, typename make_index_tuple<sizeof...(Args)>::type());
   }
   
   /// Send a custom event to all clients.
@@ -57,11 +56,20 @@ protected:
   std::unordered_map<std::string, std::vector<std::function<void(std::vector<std::string>)>>> m_handlers;
   
 private:
+  // Extract arguments from list of strings, parse and pass to handler
+  template<typename... Args, size_t... N>
+  void AddEventHandler(const std::string& event, std::function<void(Args...)>& handler, index_tuple<N...>) {
+    AddEventHandler(event, [this, handler] (const std::vector<std::string>& args) {
+      assert(sizeof...(Args) == args.size());
+      handler(parse<Args>(args[N])...);
+    });
+  }
+  
   // parse type to string
   template<class T>
   std::string parse(const T& t){
-    std::istringstream ss;
-    t >> ss;
+    std::ostringstream ss;
+    ss << t;
     return ss.str();
   }
   
