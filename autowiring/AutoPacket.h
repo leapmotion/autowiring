@@ -362,6 +362,9 @@ public:
   /// <remarks>
   /// This decoration method has the additional benefit that it will make direct use of the passed
   /// shared pointer.
+  ///
+  /// If the passed value is null, the corresponding value will be marked unsatisfiable.  In this case,
+  /// the user is responsible for discarding the returned reference.
   /// </remarks>
   template<class T>
   const T& Decorate(std::shared_ptr<T> ptr) {
@@ -370,11 +373,12 @@ public:
     /// Injunction to prevent existential loops:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
     
-    if(!ptr)
-      throw std::runtime_error("Cannot checkout with shared_ptr == nullptr");
-    
-    // This allows us to install correct entries for decorated input requests
-    Decorate(AnySharedPointer(ptr), key);
+    // Either decorate, or prevent anyone from decorating
+    if (ptr)
+      Decorate(AnySharedPointer(ptr), key);
+    else
+      MarkUnsatisfiable(key);
+
     return *ptr;
   }
 
