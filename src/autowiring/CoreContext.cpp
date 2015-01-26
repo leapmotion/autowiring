@@ -447,6 +447,9 @@ void CoreContext::Initiate(void) {
   for (auto childWeak : m_children) {
     // Obtain child pointer and lock it down so our iterator stays stable
     auto child = childWeak.lock();
+    if (!child)
+      // Expiration while we were attempting to dereference, circle around
+      continue;
 
     // Cannot hold a lock safely if we hand off control to a child context
     lk.unlock();
