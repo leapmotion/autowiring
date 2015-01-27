@@ -9,4 +9,6 @@ public:
   HasForwardOnlyType(void);
 
   Autowired<MyForwardedType> forwarded;
+
+  void AutoFilter(std::shared_ptr<MyForwardedType>& output);
 };

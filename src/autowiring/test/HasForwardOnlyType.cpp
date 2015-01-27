@@ -8,3 +8,7 @@ class MyForwardedType {};
 
 // And then we provide the ctor
 HasForwardOnlyType::HasForwardOnlyType(void) {}
+
+void HasForwardOnlyType::AutoFilter(std::shared_ptr<MyForwardedType>& output) {
+
+}
