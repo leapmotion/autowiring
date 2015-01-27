@@ -2,6 +2,7 @@
 #pragma once
 #include "Object.h"
 #include RVALUE_HEADER
+#include TYPE_TRAITS_HEADER
 
 class TypeUnifier: public Object {};
 

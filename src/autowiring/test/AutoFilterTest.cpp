@@ -497,7 +497,7 @@ TEST_F(AutoFilterTest, SingleImmediate) {
     packet->DecorateImmediate(dec);
 
     ASSERT_TRUE(fgp->m_called == 1) << "Filter should called " << fgp->m_called << " times, expected 1";
-    ASSERT_TRUE(std::get<0>(fgp->m_args).i == pattern) << "Filter argument yielded " << std::get<0>(fgp->m_args).i << "expected " << pattern;
+    ASSERT_TRUE(autowiring::get<0>(fgp->m_args).i == pattern) << "Filter argument yielded " << autowiring::get<0>(fgp->m_args).i << "expected " << pattern;
   }
   ASSERT_EQ(0, factory->GetOutstandingPacketCount()) << "Destroyed packet remains outstanding";
 

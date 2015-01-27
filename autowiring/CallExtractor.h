@@ -16,6 +16,11 @@ typedef void(*t_extractedCall)(const AnySharedPointer& obj, AutoPacket&);
 template<class MemFn, class Index = typename make_index_tuple<Decompose<MemFn>::N>::type>
 struct CallExtractor;
 
+namespace autowiring {
+  template<class... Args>
+  void noop(Args...) {}
+}
+
 template<class... Args>
 struct CallExtractorSetup
 {
@@ -69,7 +74,7 @@ struct CallExtractor<RetType (*)(Args...), index_tuple<N...>>:
     ((t_pfn)pfn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
-    (void)std::initializer_list<bool>{extractor.template Commit<N>(false)...};
+    autowiring::noop(extractor.template Commit<N>(false)...);
   }
 };
 
@@ -101,7 +106,7 @@ struct CallExtractor<void (T::*)(Args...), index_tuple<N...>> :
     (((T*) pObj)->*memFn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
-    (void)std::initializer_list<bool>{extractor.template Commit<N>(false)...};
+    autowiring::noop(extractor.template Commit<N>(false)...);
   }
 };
 
@@ -125,7 +130,7 @@ struct CallExtractor<void (T::*)(Args...) const, index_tuple<N...>> :
     (((const T*) pObj)->*memFn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
-    (void)std::initializer_list<bool>{extractor.template Commit<N>(false)...};
+    autowiring::noop(extractor.template Commit<N>(false)...);
   }
 };
 
@@ -157,7 +162,7 @@ struct CallExtractor<Deferred(T::*)(Args...), index_tuple<N...>> :
       (((T*) pObj)->*memFn)(
         static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
       );
-      (void)std::initializer_list<bool>{extractor.template Commit<N>(false)...};
+      autowiring::noop(extractor.template Commit<N>(false)...);
     };
   }
 };
