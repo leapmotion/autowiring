@@ -26,6 +26,31 @@ AutoNetServerImpl::AutoNetServerImpl(void) :
   m_Server.set_open_handler(std::bind(&AutoNetServerImpl::OnOpen, this, ::_1));
   m_Server.set_close_handler(std::bind(&AutoNetServerImpl::OnClose, this, ::_1));
   m_Server.set_message_handler(std::bind(&AutoNetServerImpl::OnMessage, this, ::_1, ::_2));
+  
+  // Register internal event handlers
+  AddEventHandler("terminateContext", [this] (int contextID) {
+    ResolveContextID(contextID)->SignalShutdown();
+  });
+  
+  AddEventHandler("injectContextMember", [this] (int contextID, const std::string& typeName){
+    std::shared_ptr<CoreContext> ctxt = ResolveContextID(contextID)->shared_from_this();
+    
+    if(m_AllTypes.find(typeName) != m_AllTypes.end()) {
+      CurrentContextPusher pshr(ctxt);
+      m_AllTypes[typeName]();
+    }
+    else {
+      // Type doesn't exist
+      assert(false);
+    }
+  });
+  
+  AddEventHandler("resumeFromBreakpoint", [this] (const std::string& name){
+    std::lock_guard<std::mutex> lk(m_breakpoint_mutex);
+    
+    m_breakpoints.erase(name);
+    m_breakpoint_cv.notify_all();
+  });
 
   // Generate list of all types from type registry
   for(auto type = g_pFirstTypeEntry; type; type = type->pFlink)
@@ -95,16 +120,33 @@ void AutoNetServerImpl::OnMessage(websocketpp::connection_hdl hdl, message_ptr p
 
   std::string msgType = msg["type"].string_value();
   Json::array msgArgs = msg["args"].array_items();
-
-  *this += [this, hdl, msgType, msgArgs] {
-    if(msgType == "subscribe") HandleSubscribe(hdl);
-    else if(msgType == "unsubscribe") HandleUnsubscribe(hdl);
-    else if(msgType == "terminateContext") HandleTerminateContext(msgArgs[0].int_value());
-    else if(msgType == "injectContextMember") HandleInjectContextMember(msgArgs[0].int_value(), msgArgs[1].string_value());
-    else if(msgType == "resumeFromBreakpoint") HandleResumeFromBreakpoint(msgArgs[0].string_value());
-    else
-      SendMessage(hdl, "invalidMessage", "Message type not recognized");
-  };
+  
+  // Handle client specific internal events
+  if (msgType == "subscribe") {
+    *this += [this, hdl] {
+      HandleSubscribe(hdl);
+    };
+  }
+  else if(msgType == "unsubscribe") {
+    *this += [this, hdl] {
+      HandleUnsubscribe(hdl);
+    };
+  }
+  // Handle other internal events and custom events
+  else {
+    *this += [this, msgType, msgArgs] {
+      // parse args into vector of strings
+      std::vector<std::string> args;
+      for (const auto& a : msgArgs) {
+        args.push_back(!a.string_value().empty() ? a.string_value() : a.dump());
+      }
+    
+      // call all the handlers
+      for (const auto& handler : this->m_handlers[msgType]) {
+        handler(args);
+      }
+    };
+  }
 }
 
 void AutoNetServerImpl::Breakpoint(std::string name){
@@ -272,30 +314,6 @@ void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
 void AutoNetServerImpl::HandleUnsubscribe(websocketpp::connection_hdl hdl) {
   this->m_Subscribers.erase(hdl);
   SendMessage(hdl, "unsubscribed");
-}
-
-void AutoNetServerImpl::HandleTerminateContext(int contextID) {
-  ResolveContextID(contextID)->SignalShutdown();
-}
-
-void AutoNetServerImpl::HandleInjectContextMember(int contextID, std::string typeName) {
-  std::shared_ptr<CoreContext> ctxt = ResolveContextID(contextID)->shared_from_this();
-
-  if(m_AllTypes.find(typeName) != m_AllTypes.end()) {
-    CurrentContextPusher pshr(ctxt);
-    m_AllTypes[typeName]();
-  }
-  else {
-    // Type doesn't exist
-    assert(false);
-  }
-}
-
-void AutoNetServerImpl::HandleResumeFromBreakpoint(std::string name){
-  std::lock_guard<std::mutex> lk(m_breakpoint_mutex);
-
-  m_breakpoints.erase(name);
-  m_breakpoint_cv.notify_all();
 }
 
 //helper functions

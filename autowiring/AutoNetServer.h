@@ -29,9 +29,6 @@ public:
   /// </summary>
   /// <param name="name">The identifier for this breakpoint</param>
   virtual void Breakpoint(std::string name) = 0;
-
-  /// Allows a breakpoint previously set with Breakpoint to be resumed
-  virtual void HandleResumeFromBreakpoint(std::string name) = 0;
   
   /// Add a custom event handler. Arguments must be primative types are strings
   template<typename... Args>

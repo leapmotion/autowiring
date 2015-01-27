@@ -117,19 +117,6 @@ protected:
   void HandleUnsubscribe(websocketpp::connection_hdl hdl);
 
   /// <summary>
-  /// Called when a "terminateContext" event is sent from a client
-  /// </summary>
-  /// <param name="contextID">ID of the context to be terminated</param>
-  void HandleTerminateContext(int contextID);
-
-  /// <summary>
-  /// Called when a "injectContextMember" event is sent from a client
-  /// </summary>
-  /// <param name="contextID">ID of the context to inject the type</param>
-  /// <param name="typeName">Name of the type to inject. From std::type_info.name()</param>
-  void HandleInjectContextMember(int contextID, std::string typeName);
-
-  /// <summary>
   /// Assigns each context a unique ID number
   /// </summary>
   /// <param name="ctxt">Client that sent event</param>
