@@ -215,3 +215,21 @@ TEST_F(CoreContextTest, NoEnumerateBeforeBoltReturn) {
   // Need to block until this thread is done
   t.join();
 }
+
+TEST_F(CoreContextTest, InitiateCausesDelayedHold) {
+  std::weak_ptr<CoreContext> ctxtWeak;
+
+  // Create and initiate a subcontext, but do not initiate the parent context
+  {
+    AutoCreateContext ctxt;
+    ctxtWeak = ctxt;
+    ctxt->Initiate();
+  }
+
+  // Weak pointer should not be expired yet
+  ASSERT_FALSE(ctxtWeak.expired()) << "Subcontext expired after initiation even though its parent context was not yet initiated";
+
+  // Starting up the outer context should cause the inner one to self destruct
+  AutoCurrentContext()->Initiate();
+  ASSERT_TRUE(ctxtWeak.expired()) << "Subcontext containing no threads incorrectly persisted after termination";
+}

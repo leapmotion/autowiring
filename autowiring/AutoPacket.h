@@ -3,12 +3,12 @@
 #include "AnySharedPointer.h"
 #include "at_exit.h"
 #include "auto_id.h"
+#include "AutoFilterDescriptorInput.h"
 #include "DecorationDisposition.h"
 #include "demangle.h"
 #include "is_any.h"
 #include "is_shared_ptr.h"
 #include "TeardownNotifier.h"
-#include <list>
 #include <typeinfo>
 #include CHRONO_HEADER
 #include MEMORY_HEADER
@@ -20,7 +20,12 @@ class AutoPacket;
 class AutoPacketInternal;
 class AutoPacketFactory;
 class AutoPacketProfiler;
+class CoreContext;
 struct AutoFilterDescriptor;
+struct AutoFilterDescriptorInput;
+
+template<class MemFn>
+struct Decompose;
 
 /// <summary>
 /// A decorator-style processing packet
@@ -38,19 +43,13 @@ class AutoPacket:
   public std::enable_shared_from_this<AutoPacket>,
   public TeardownNotifier
 {
-private:
+public:
   AutoPacket(const AutoPacket& rhs) = delete;
   AutoPacket(AutoPacket&&) = delete;
 
-public:
   // Must hold the lock to 'factory' when calling this constructor
   AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
-
-  struct Recipient {
-    // The iterator pointing to the location where the satisfaction counter was inserted
-    std::list<SatCounter>::iterator position;
-  };
 
 protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
@@ -65,8 +64,8 @@ protected:
   // Outstanding count local and remote holds:
   const std::shared_ptr<void> m_outstanding;
 
-  // Saturation counters, constructed when the packet is created and reset each time thereafter
-  std::list<SatCounter> m_satCounters;
+  // Pointer to a forward linked list of saturation counters, constructed when the packet is created
+  SatCounter* m_firstCounter;
 
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
@@ -162,22 +161,25 @@ protected:
   /// </remarks>
   const SatCounter& GetSatisfaction(const std::type_info& subscriber) const;
 
-  /// <returns>All subscribers to the specified data</returns>
-  std::list<SatCounter> GetSubscribers(const DecorationKey& key) const;
-
-  /// <returns>All decoration dispositions associated with the data type</returns>
-  /// <remarks>
-  /// This method is useful for determining whether flow conditions (broadcast, pipes
-  /// immediate decorations) resulted in missed data.
-  /// </remarks>
-  std::list<DecorationDisposition> GetDispositions(const DecorationKey& key) const;
-
   /// <summary>
   /// Throws a formatted runtime error corresponding to the case where an absent decoration was demanded
   /// </summary>
   static void ThrowNotDecoratedException(const DecorationKey& key);
 
 public:
+  /// <returns>
+  /// The number of distinct decoration types on this packet
+  /// </returns>
+  size_t GetDecorationTypeCount(void) const;
+
+  /// <returns>
+  /// A copy of the decoration dispositions collection
+  /// </returns>
+  /// <remarks>
+  /// This is a diagnostic method, users are recommended to avoid the use of this routine where possible
+  /// </remarks>
+  t_decorationMap GetDecorations(void) const;
+
   /// <returns>
   /// True if this packet posesses a decoration of the specified type
   /// </returns>
@@ -278,42 +280,24 @@ public:
   }
 
   template<class T>
-  const std::shared_ptr<const T>& GetShared(void) const {
+  const std::shared_ptr<const T>& GetShared(int tshift = 0) const {
     const std::shared_ptr<const T>* retVal;
-    Get(retVal);
+    Get(retVal, tshift);
     return *retVal;
   }
 
   /// <summary>
-  /// De-templated placement method
+  /// Returns a vector with a pointer to each decoration of type T, adding a nullptr to the end.
   /// </summary>
-  void Put(const DecorationKey& key, SharedPointerSlot&& in);
-
-  /// <summary>
-  /// Transfers ownership of argument to AutoPacket
-  /// </summary>
-  /// <remarks>
-  /// This method may throw an exception.  Ownership is unconditionally transferred to this class
-  /// even in the event an exception is thrown, thus the passed pointer is guaranteed to be cleaned
-  /// up properly in all cases.
-  /// </remarks>
   template<class T>
-  void Put(T* in) {
-    Put(auto_id<T>::key(), SharedPointerSlotT<T, false>(std::shared_ptr<T>(in)));
-  }
-
-  /// <summary>
-  /// Shares ownership of argument with AutoPacket
-  /// </summary>
-  /// <remarks>
-  /// This can be used to:
-  /// - place data on the AutoPack from an ObjectPool
-  /// - move data from one AutoPacket to another without copying
-  /// - alias the type of a decoration on AutoPacket
-  /// </remarks>
-  template<class T>
-  void Put(std::shared_ptr<T> in) {
-    Put(DecorationKey(auto_id<T>::key()), SharedPointerSlotT<T, false>(std::move(in)));
+  std::vector<const T*> GetAll(int tshift = 0) {
+    std::vector<const T*> retval;
+    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
+    for (auto& dispo : deco->second.m_decorations) {
+      retval.push_back(dispo.as<T>().get().get());
+    }
+    retval.push_back(nullptr);
+    return retval;
   }
 
   /// <summary>Shares all broadcast data from this packet with the recipient packet</summary>
@@ -364,7 +348,12 @@ public:
   /// </remarks>
   template<class T>
   const T& Decorate(T t) {
-    return Decorate(std::make_shared<T>(std::forward<T>(t)));
+    DecorationKey key(auto_id<T>::key());
+
+    // Create a copy of the input, put the copy in a shared pointer
+    auto ptr = std::make_shared<T>(std::forward<T&&>(t));
+    Decorate(AnySharedPointer(ptr), key);
+    return *ptr;
   }
 
   /// <summary>
@@ -373,6 +362,9 @@ public:
   /// <remarks>
   /// This decoration method has the additional benefit that it will make direct use of the passed
   /// shared pointer.
+  ///
+  /// If the passed value is null, the corresponding value will be marked unsatisfiable.  In this case,
+  /// the user is responsible for discarding the returned reference.
   /// </remarks>
   template<class T>
   const T& Decorate(std::shared_ptr<T> ptr) {
@@ -381,12 +373,27 @@ public:
     /// Injunction to prevent existential loops:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
     
-    if(!ptr)
-      throw std::runtime_error("Cannot checkout with shared_ptr == nullptr");
-    
-    // This allows us to install correct entries for decorated input requests
-    Decorate(AnySharedPointer(ptr), key);
-    return *ptr;
+    // Either decorate, or prevent anyone from decorating
+    if (ptr) {
+      Decorate(AnySharedPointer(ptr), key);
+      return *ptr;
+    }
+    else {
+      MarkUnsatisfiable(key);
+      return *static_cast<T*>(nullptr);
+    }
+  }
+
+  /// <summary>
+  /// Decoration method specialized for const shared pointer types
+  /// </summary>
+  /// <remarks>
+  /// This decoration method has the additional benefit that it will make direct use of the passed
+  /// shared pointer.
+  /// </remarks>
+  template<class T>
+  const T& Decorate(std::shared_ptr<const T> ptr) {
+    return Decorate(std::const_pointer_cast<T>(ptr));
   }
 
   /// <summary>
@@ -449,18 +456,18 @@ public:
   /// This method is not idempotent.  The returned Recipient structure may be used to remove
   /// the recipient safely at any point.  The caller MUST NOT attempt 
   /// </remarks>
-  Recipient AddRecipient(const AutoFilterDescriptor& descriptor);
+  const SatCounter* AddRecipient(const AutoFilterDescriptor& descriptor);
 
   /// <summary>
   /// Removes a previously added packet recipient
   /// </summary>
-  void RemoveRecipient(Recipient&& recipient);
+  void RemoveRecipient(const SatCounter& recipient);
 
   /// <summary>
   /// Convenience overload, identical in behavior to AddRecipient
   /// </summary>
   template<class Fx>
-  Recipient operator+=(Fx&& fx) {
+  const SatCounter* operator+=(Fx&& fx) {
     return AddRecipient(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
   }
 
@@ -468,7 +475,14 @@ public:
   /// Convenience overload, provided to allow the attachment of receive-only filters to a const AutoPacket
   /// </summary>
   template<class Fx>
-  const AutoPacket& operator+=(Fx&& fx) const;
+  const AutoPacket& operator+=(Fx&& fx) const {
+    static_assert(
+      !Decompose<decltype(&Fx::operator())>::template any<arg_is_out>::value,
+      "Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types"
+      );
+    *const_cast<AutoPacket*>(this) += std::forward<Fx&&>(fx);
+    return *this;
+  }
 
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>
@@ -476,28 +490,6 @@ public:
   /// </remarks>
   template<class T>
   inline const SatCounter& GetSatisfaction(void) const { return GetSatisfaction(auto_id<T>::key()); }
-
-  /// <returns>All subscribers to the specified data</returns>
-  template<class T>
-  inline std::list<SatCounter> GetSubscribers(void) const {
-    return GetSubscribers(DecorationKey(auto_id<T>::key()));
-  }
-
-  /// <returns>All decoration dispositions</returns>
-  /// <remarks>
-  /// This method is useful for getting a picture of the entire disposition graph
-  /// </remarks>
-  std::list<DecorationDisposition> GetDispositions() const;
-
-  /// <returns>All decoration dispositions associated with the data type</returns>
-  /// <remarks>
-  /// This method is useful for determining whether flow conditions (broadcast, pipes
-  /// immediate decorations) resulted in missed data.
-  /// </remarks>
-  template<class T>
-  inline std::list<DecorationDisposition> GetDispositions(void) const {
-    return GetDispositions(DecorationKey(auto_id<T>::key()));
-  }
 
   /// <summary>
   /// Returns the next packet that will be issued by the packet factory in this context relative to this context
@@ -509,20 +501,91 @@ public:
   bool HasSubscribers(void) const {
     return HasSubscribers(DecorationKey(auto_id<T>::key()));
   }
+
+  struct SignalStub {
+    SignalStub(const AutoPacket& packet, std::condition_variable& cv) :
+      packet(packet),
+      cv(&cv)
+    {}
+
+    const AutoPacket& packet;
+    std::condition_variable* cv;
+    bool is_satisfied = false;
+    bool is_complete = false;
+  };
+
+  /// <summary>
+  /// Blocks until the specified descriptor is satisfied
+  /// </summary>
+  /// <param name="duration">
+  /// The amount of time to wait.  If set to std::chrono::nanoseconds::max, this method will block indefinitely
+  /// </param>
+  /// <returns>False if a timeout occurred, true otherwise</returns>
+  /// <remarks>
+  /// This method considers the arguments described by "inputs" and will block until all decorations that are needed
+  /// by this filter have been satisfied on this packet.  When this function returns, the specified filter will have
+  /// been called.
+  /// </remarks>
+  bool Wait(std::condition_variable& cv, const AutoFilterDescriptorInput* inputs, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max());
+
+  /// <summary>
+  /// Blocks until the passed lambda function can be called
+  /// </summary>
+  /// <param name="cv">A condition variable that can be signalled when the wait condition has expired</param>
+  /// <returns>
+  /// True on success, false if a timeout occurred
+  /// </returns>
+  /// <remarks>
+  /// This method will invoke the passed autoFilter function once all of its arguments are present on the packet
+  /// this routine generates internally.  This method will not return until the specified autoFilter is called.
+  /// If the autoFilter cannot be called because the required decorations are not present on the packet on teardown,
+  /// this method will throw an exception.
+  ///
+  /// The passed autoFilter routine must not attach any decorations to the packet, nor may it accept a non-const
+  /// AutoFilter as an input argument.
+  /// </remarks>
+  template<class Fx>
+  bool Wait(std::condition_variable& cv, Fx&& autoFilter, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max())
+  {
+    auto stub = std::make_shared<SignalStub>(*this, cv);
+
+    // Add the filter that will ultimately be invoked
+    *this += std::move(autoFilter);
+    return Wait(cv, Decompose<decltype(&Fx::operator())>::template Enumerate<AutoFilterDescriptorInput>::types, duration);
+  }
+
+  /// <summary>
+  /// Delays until the specified decorations are satisfied
+  /// </summary>
+  template<class... Decorations>
+  bool Wait(std::condition_variable& cv)
+  {
+    static const AutoFilterDescriptorInput inputs [] = {
+      static_cast<auto_arg<Decorations>*>(nullptr)...,
+      AutoFilterDescriptorInput()
+    };
+
+    return Wait(cv, inputs, std::chrono::nanoseconds::max());
+  }
+
+  /// <summary>
+  /// Timed version of Wait
+  /// </summary>
+  template<class... Args>
+  bool Wait(std::chrono::nanoseconds duration, std::condition_variable& cv)
+  {
+    static const AutoFilterDescriptorInput inputs [] = {
+      static_cast<auto_arg<Args>*>(nullptr)...,
+      AutoFilterDescriptorInput()
+    };
+
+    return Wait(cv, inputs, duration);
+  }
+
+
+  /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
+  std::shared_ptr<CoreContext> GetContext(void) const;
 };
-
-#include "CallExtractor.h"
-
-template<class Fx>
-const AutoPacket& AutoPacket::operator+=(Fx&& fx) const
-{
-  static_assert(
-    !CallExtractor<decltype(&Fx::operator())>::has_outputs,
-    "Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types"
-  );
-  *const_cast<AutoPacket*>(this) += std::forward<Fx&&>(fx);
-  return *this;
-}
 
 template<class T>
 bool AutoPacket::Get(const std::shared_ptr<T>*& out) const {

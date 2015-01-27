@@ -6,6 +6,7 @@ set(AutowiringTest_SRCS
   AutoFilterCollapseRulesTest.cpp
   AutoFilterDiagnosticsTest.cpp
   AutoInjectableTest.cpp
+  AutoPacketTest.cpp
   AutoPacketFactoryTest.cpp
   AutoParameterTest.cpp
   AutoRestarterTest.cpp
@@ -46,6 +47,7 @@ set(AutowiringTest_SRCS
   TypeRegistryTest.cpp
   ScopeTest.cpp
   SnoopTest.cpp
+  TupleTest.cpp
   TestFixtures/custom_exception.hpp
   TestFixtures/ExitRaceThreaded.hpp
   TestFixtures/SimpleInterface.hpp

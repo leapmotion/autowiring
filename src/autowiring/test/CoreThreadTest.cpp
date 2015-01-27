@@ -92,6 +92,8 @@ TEST_F(CoreThreadTest, VerifyIndefiniteDelay) {
 
 TEST_F(CoreThreadTest, VerifyNestedTermination) {
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
+
   std::shared_ptr<SimpleThreaded> st;
 
   // Insert a thread into a second-order subcontext:
@@ -164,8 +166,7 @@ TEST_F(CoreThreadTest, AUTOTHROW_VerifyDispatchQueueShutdown) {
 }
 
 TEST_F(CoreThreadTest, AUTOTHROW_VerifyNoLeakOnExecptions) {
-  AutoCreateContext ctxt;
-  CurrentContextPusher pshr(ctxt);
+  AutoCurrentContext ctxt;
 
   AutoRequired<ListenThread> listener;
   auto value = std::make_shared<std::string>("sentinal");

@@ -15,7 +15,8 @@ using namespace autowiring;
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
-  m_outstanding(std::move(outstanding))
+  m_outstanding(std::move(outstanding)),
+  m_firstCounter(nullptr)
 {}
 
 AutoPacket::~AutoPacket(void) {
@@ -50,6 +51,13 @@ AutoPacket::~AutoPacket(void) {
     current = current->m_successor.get();
     prev_current->m_successor.reset();
   }
+
+  // Safe linked list unwind
+  for (auto cur = m_firstCounter; cur;) {
+    auto next = cur->flink;
+    delete cur;
+    cur = next;
+  }
 }
 
 DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& key, const void* pvImmed)
@@ -82,21 +90,26 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
 
     // Decide what to do with this entry:
     if (pCur->is_input) {
-      if (entry.m_publishers.size() > 1) {
+      if (entry.m_publishers.size() > 1 && !pCur->is_multi) {
         std::stringstream ss;
         ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->ti);
         throw std::runtime_error(ss.str());
       }
+
       entry.m_subscribers.push_back(&satCounter);
       if (entry.m_state == DispositionState::Satisfied)
         satCounter.Decrement();
     }
     if (pCur->is_output) {
-      if(entry.m_publishers.size() > 0 && entry.m_subscribers.size() > 0) {
-        std::stringstream ss;
-        ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << "with existing subscriber.";
-        throw std::runtime_error(ss.str());
-      }
+      if(!entry.m_publishers.empty())
+        for (SatCounter* subscriber : entry.m_subscribers)
+          for(auto pOther = subscriber->GetAutoFilterInput(); *pOther; pOther++)
+            if (!pOther->is_multi) {
+              std::stringstream ss;
+              ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << " with existing subscriber.";
+              throw std::runtime_error(ss.str());
+            }
+
       entry.m_publishers.push_back(&satCounter);
     }
 
@@ -176,11 +189,12 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
   for (SatCounter* call : callQueue)
-    call->CallAutoFilter(*this);
+    call->GetCall()(call->GetAutoFilter(), *this);
 }
 
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
   std::vector<SatCounter*> callQueue;
+
   // First pass, decrement what we can:
   {
     std::lock_guard<std::mutex> lk(m_lock);
@@ -197,7 +211,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 
           // Now do the decrementation and proceed even if optional > 0,
           // since this is the only opportunity to fulfill the arguments
-          (cur->Decrement() || cur->remaining == 0)
+          cur->Decrement()
         )
           // Finally, queue a call for this type
           callQueue.push_back(cur);
@@ -207,10 +221,9 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
   for (SatCounter* call : callQueue)
-    call->CallAutoFilter(*this);
+    call->GetCall()(call->GetAutoFilter(), *this);
 
-  // Reset all counters
-  // since data in this call will not be available subsequently
+  // Reset all counters, data in this call will not be available on return
   {
     std::lock_guard<std::mutex> lk(m_lock);
     for(size_t i = nInfos; i--;)
@@ -243,17 +256,16 @@ void AutoPacket::DecorateUnsafeNoPriors(const AnySharedPointer& ptr, const Decor
     throw std::runtime_error(ss.str());
   }
 
-  if (entry.m_decorations.empty()) {
-    entry.m_decorations.push_back(ptr);
-  }
-  else {
-    entry.m_decorations[0] = ptr;
-  }
+  entry.m_decorations.push_back(ptr);
 
-  entry.m_state = DispositionState::Satisfied;
+  if (entry.m_decorations.size() >= entry.m_publishers.size()) {
+    entry.m_state = DispositionState::Satisfied;
+  } else {
+    entry.m_state = DispositionState::PartlySatisfied;
+  }
 
   // This allows us to retrieve correct entries for decorated input requests
-  AnySharedPointer decoration(entry.m_decorations[0]);
+  AnySharedPointer decoration(entry.m_decorations.back());
 }
 
 void AutoPacket::Decorate(const AnySharedPointer& ptr, DecorationKey key) {
@@ -265,7 +277,9 @@ void AutoPacket::Decorate(const AnySharedPointer& ptr, DecorationKey key) {
     cur->DecorateUnsafeNoPriors(ptr, key);
 
     // Now update satisfaction set on this entry
-    cur->UpdateSatisfaction(key);
+    if (m_decorations[key].m_state == DispositionState::Satisfied) {
+      cur->UpdateSatisfaction(key);
+    }
 
     // Obtain the successor
     cur = cur->Successor();
@@ -295,29 +309,10 @@ bool AutoPacket::HasSubscribers(const DecorationKey& key) const {
 
 const SatCounter& AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {
   std::lock_guard<std::mutex> lk(m_lock);
-  for (auto& sat : m_satCounters)
-    if (sat.GetType() == &subscriber)
-      return sat;
+  for (auto* sat = m_firstCounter; sat; sat = sat->flink)
+    if (sat->GetType() == &subscriber)
+      return *sat;
   throw autowiring_error("Attempted to get the satisfaction counter for an unavailable subscriber");
-}
-
-std::list<SatCounter> AutoPacket::GetSubscribers(const DecorationKey& key) const {
-  std::lock_guard<std::mutex> lk(m_lock);
-  std::list<SatCounter> subscribers;
-  t_decorationMap::const_iterator decoration = m_decorations.find(key);
-  if (decoration != m_decorations.end())
-    for (auto& subscriber : decoration->second.m_subscribers)
-      subscribers.push_back(*subscriber);
-  return subscribers;
-}
-
-std::list<DecorationDisposition> AutoPacket::GetDispositions(const DecorationKey& key) const {
-  std::lock_guard<std::mutex> lk(m_lock);
-  std::list<DecorationDisposition> dispositions;
-  for (auto& disposition : m_decorations)
-    if (disposition.second.GetKey() == key)
-      dispositions.push_back(disposition.second);
-  return dispositions;
 }
 
 void AutoPacket::ThrowNotDecoratedException(const DecorationKey& key) {
@@ -326,23 +321,16 @@ void AutoPacket::ThrowNotDecoratedException(const DecorationKey& key) {
   throw std::runtime_error(ss.str());
 }
 
-void AutoPacket::Put(const DecorationKey& key, SharedPointerSlot&& in) {
-  auto& entry = m_decorations[key];
-  if(entry.m_state != DispositionState::Unsatisfied) {
-    std::stringstream ss;
-    ss << "Cannot put type " << autowiring::demangle(in.type())
-      << " on AutoPacket, the requested type already exists";
-    throw std::runtime_error(ss.str());
-  }
+size_t AutoPacket::GetDecorationTypeCount(void) const
+{
+  std::lock_guard<std::mutex> lk(m_lock);
+  return m_decorations.size();
+}
 
-  entry.SetKey(key);
-  if (entry.m_decorations.empty()) {
-    entry.m_decorations.push_back(AnySharedPointer());
-  }
-  entry.m_decorations[0] = in;
-  entry.m_state = DispositionState::Satisfied;
-
-  UpdateSatisfaction(key);
+AutoPacket::t_decorationMap AutoPacket::GetDecorations(void) const
+{
+  std::lock_guard<std::mutex> lk(m_lock);
+  return m_decorations;
 }
 
 void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
@@ -373,48 +361,36 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   }
 }
 
-AutoPacket::Recipient AutoPacket::AddRecipient(const AutoFilterDescriptor& descriptor) {
-  Recipient retVal;
-  SatCounter* recipient;
+const SatCounter* AutoPacket::AddRecipient(const AutoFilterDescriptor& descriptor) {
+  SatCounter& sat = *new SatCounter(descriptor);
 
+  // Linked list insertion:
   {
     std::lock_guard<std::mutex> lk(m_lock);
+    sat.flink = m_firstCounter;
+    if (m_firstCounter)
+      m_firstCounter->blink = &sat;
+    m_firstCounter = &sat;
 
-    // (1) Append & Initialize new satisfaction counter
-    m_satCounters.push_front(descriptor);
-    retVal.position = m_satCounters.begin();
-    recipient = &m_satCounters.front();
-
-    // (2) Update satisfaction & Append types from subscriber
-    AddSatCounter(*recipient);
-
-    // (3) Short-circuit if we don't need to call
-    if(!*recipient)
-      return retVal;
+    // Update satisfaction & Append types from subscriber
+    AddSatCounter(sat);
   }
 
-  // (4) All types are satisfied, call AutoFilter now.
-  recipient->CallAutoFilter(*this);
-  return retVal;
+  if (!sat.remaining)
+    // Filter is ready to be called, oblige it
+    sat.GetCall()(sat.GetAutoFilter(), *this);
+
+  // Done
+  return &sat;
 }
 
-void AutoPacket::RemoveRecipient(Recipient&& recipient) {
-  // Copy out the iterator, and eliminate the iterator from the source structure
-  auto q = recipient.position;
-  recipient.position = m_satCounters.end();
-
+void AutoPacket::RemoveRecipient(const SatCounter& recipient) {
   // Remove the recipient from our list
   std::lock_guard<std::mutex> lk(m_lock);
-  RemoveSatCounter(*q);
-  m_satCounters.erase(q);
-}
-
-std::list<DecorationDisposition> AutoPacket::GetDispositions() const {
-  std::lock_guard<std::mutex> lk(m_lock);
-  std::list<DecorationDisposition> dispositions;
-  for (auto& disposition : m_decorations)
-    dispositions.push_back(disposition.second);
-  return dispositions;
+  if (recipient.blink)
+    recipient.blink->flink = recipient.flink;
+  if (recipient.flink)
+    recipient.flink->blink = recipient.blink;
 }
 
 std::shared_ptr<AutoPacket> AutoPacket::Successor(void) {
@@ -431,3 +407,66 @@ std::shared_ptr<AutoPacket> AutoPacket::SuccessorUnsafe(void) {
   return m_successor;
 }
 
+std::shared_ptr<CoreContext> AutoPacket::GetContext(void) const {
+  return m_parentFactory->GetContext();
+}
+
+bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterDescriptorInput* inputs, std::chrono::nanoseconds duration) {
+  auto stub = std::make_shared<SignalStub>(*this, cv);
+
+  // This ad-hoc filter detects when all the requested decorations have been added, and then
+  // sets the necessary flags to inform the user
+  AddRecipient(
+    AutoFilterDescriptor(
+      stub,
+      AutoFilterDescriptorStub(
+        &typeid(AutoPacketFactory),
+        inputs,
+        false,
+        [] (const AnySharedPointer& obj, AutoPacket&) {
+          auto stub = obj->as<SignalStub>();
+
+          // Completed, mark the output as satisfied and update the condition variable
+          std::lock_guard<std::mutex>(stub->packet.m_lock);
+          stub->is_satisfied = true;
+
+          // Only notify while the condition variable is still valid
+          if (stub->cv)
+            stub->cv->notify_all();
+        }
+      )
+    )
+  );
+
+  // This lambda will detect when the packet has been abandoned without all of the necessary
+  // decorations.  In that case, the satisfaction flag is left in its initial state
+  AddTeardownListener(
+    [stub] {
+      std::lock_guard<std::mutex>(stub->packet.m_lock);
+      stub->is_complete = true;
+
+      // Only notify the condition variable if it's still present
+      if (stub->cv)
+        stub->cv->notify_all();
+    }
+  );
+
+  // Delay for the requested period:
+  std::unique_lock<std::mutex> lk(m_lock);
+
+  auto x = MakeAtExit([&stub] {
+    // Clear the condition variable out of the stub to prevent anyone else from trying to signal it
+    stub->cv = nullptr;
+  });
+
+  bool bRet =
+      duration == std::chrono::nanoseconds::max() ?
+      cv.wait(lk, [&] { return stub->is_complete; }), true :
+      cv.wait_for(lk, duration, [&] { return stub->is_satisfied || stub->is_complete; });
+
+  // If we didn't get all of the decorations we wanted we should throw an exception indicating this
+  if (!stub->is_satisfied)
+    throw autowiring_error("Not all of the requested decorations were available on a packet at the conclusion of Call");
+
+  return bRet;
+}

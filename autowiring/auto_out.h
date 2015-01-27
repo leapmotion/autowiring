@@ -1,7 +1,5 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-
-#include "AutoPacket.h"
 #include MEMORY_HEADER
 
 /// <summary>
@@ -20,28 +18,16 @@ class auto_out
 public:
   typedef T id_type;
 
-  auto_out(const auto_out& rhs) = delete;
-  auto_out(auto_out&& rhs) :
-    m_packet(rhs.m_packet),
-    m_value(std::move(rhs.m_value))
-  {
-    rhs.m_value.reset();
-    rhs.m_packet = nullptr;
-  }
-
-  auto_out(AutoPacket& packet) :
-    m_packet(&packet)
+  auto_out(const auto_out<T>& rhs):
+    m_value(rhs.m_value)
   {}
 
-  /// <summary>Destruction of auto_out makes type data available</summary>
-  ~auto_out(void) {
-    if(m_packet && m_value)
-      m_packet->Put(m_value);
-  }
+  auto_out(std::shared_ptr<T>& value) :
+    m_value(value)
+  {}
 
 protected:
-  AutoPacket* m_packet;
-  std::shared_ptr<T> m_value;
+  std::shared_ptr<T>& m_value;
 
 public:
   /// <summary>
@@ -51,17 +37,11 @@ public:
     m_value.reset();
   }
 
-  T* get() {
-    if(!m_value)
-      m_value = std::make_shared<T>();
-    return m_value.get();
-  }
-
   // Convenience operator overloads
-  T& operator* () { return *get(); }
-  T* operator-> () { return get(); }
+  T& operator* () { return *m_value; }
+  T* operator-> () { return m_value.get(); }
   explicit operator bool() const { return m_value; }
-  operator T&(void) { return *get(); }
+  operator T&(void) { return *m_value; }
   operator std::shared_ptr<T>&(void) { return m_value; }
 
   /// <summary>Output will be shared data provided by rhs</summary>

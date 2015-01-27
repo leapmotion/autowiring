@@ -161,5 +161,23 @@ TEST_F(AutoFilterCollapseRulesTest, AutoFilterSharedAliasingRules) {
   // Decorate the packet, verify attribute presence:
   auto packet = factory->NewPacket();
   ASSERT_TRUE(packet->Has<int>()) << "Filter producing a shared pointer of type int did not correctly collapse to the basic int type";
-  ASSERT_EQ(55, std::get<0>(consumes->m_args)) << "Filter consuming a shared pointer output was not called as expected";
+  ASSERT_EQ(55, autowiring::get<0>(consumes->m_args)) << "Filter consuming a shared pointer output was not called as expected";
+}
+
+class CannotBeDefaultConstructed {
+  CannotBeDefaultConstructed(int) {}
+};
+
+class SharedPtrNoDefault
+{
+public:
+  void AutoFilter(std::shared_ptr<CannotBeDefaultConstructed>& out) {
+    ASSERT_EQ(nullptr, out) << "An argument that should have been provided null was incorrectly default constructed";
+  }
+};
+
+TEST_F(AutoFilterCollapseRulesTest, SharedPtrNoDefaultTest) {
+  AutoRequired<SharedPtrNoDefault> spnd;
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet = factory->NewPacket();
 }

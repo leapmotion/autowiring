@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-
 #include "AnySharedPointer.h"
 #include "AutoFilterDescriptor.h"
 #include "BoltBase.h"
@@ -8,10 +7,8 @@
 #include "CoreRunnable.h"
 #include "BasicThread.h"
 #include "ExceptionFilter.h"
-#include "EventRegistry.h"
 #include "fast_pointer_cast.h"
 #include "Object.h"
-
 #include <typeinfo>
 #include MEMORY_HEADER
 

@@ -11,24 +11,28 @@ struct SatCounter:
   public AutoFilterDescriptor
 {
   SatCounter(void):
-    called(false),
+    flink(nullptr),
+    blink(nullptr),
     remaining(0)
   {}
 
   SatCounter(const AutoFilterDescriptor& source):
     AutoFilterDescriptor(source),
-    called(false),
+    flink(nullptr),
+    blink(nullptr),
     remaining(m_requiredCount)
   {}
 
   SatCounter(const SatCounter& source):
     AutoFilterDescriptor(static_cast<const AutoFilterDescriptor&>(source)),
-    called(source.called),
+    flink(nullptr),
+    blink(nullptr),
     remaining(source.remaining)
   {}
 
-  // The number of times the AutoFilter is called
-  bool called;
+  // Forward and backward linked list pointers
+  SatCounter* flink;
+  SatCounter* blink;
 
   // The number of inputs remaining to this counter:
   size_t remaining;
@@ -40,16 +44,6 @@ private:
   void ThrowRepeatedCallException(void) const;
 
 public:
-  /// <summary>
-  /// Calls the underlying AutoFilter method with the specified AutoPacketAdapter as input
-  /// </summary>
-  void CallAutoFilter(AutoPacket& packet) {
-    if (called)
-      ThrowRepeatedCallException();
-    called = true;
-    GetCall()(GetAutoFilter(), packet);
-  }
-
   /// <summary>
   /// Conditionally decrements AutoFilter argument satisfaction.
   /// </summary>
@@ -64,7 +58,4 @@ public:
   void Increment(void) {
     ++remaining;
   }
-
-  /// <returns>False if there are any inputs still outstanding</returns>
-  operator bool(void) const { return !remaining; }
 };

@@ -172,15 +172,32 @@ protected:
 
   // State block for this context:
   std::unique_ptr<CoreContextStateBlock> m_stateBlock;
+
+  enum class State {
+    // Not yet started
+    NotStarted,
+
+    // Parent context has been started, and this context can proceed directly to the Running state
+    CanRun,
+
+    // User has called Initiated, but the parent context cannot yet be run
+    Initiated,
+
+    // Parent context is in the Running state and this context was in the Initiated state.
+    // Transition to the running state is automatic once the parent context transitions.
+    Running,
+
+    // Context is terminated, cleanup operations are underway.
+    Shutdown,
+    
+    // Context was terminated without having been initiated
+    Abandoned
+  };
+
+  State m_state;
   
   // Set if a thread is added and needs to be run
   bool m_beforeRunning;
-
-  // Set if threads in this context should be started when they are added
-  bool m_initiated;
-
-  // Set if the context has been shut down
-  bool m_isShutdown;
 
   // Child contexts:
   t_childList m_children;
@@ -318,7 +335,7 @@ protected:
   /// <summary>
   /// Add delayed event receivers
   /// </summary>
-  void AddEventReceivers(const t_rcvrSet& receivers);
+  void AddEventReceiversUnsafe(t_rcvrSet&& receivers);
 
   /// \internal
   /// <summary>
@@ -435,6 +452,11 @@ protected:
   void UnsnoopAutoPacket(const ObjectTraits& traits);
 
   /// \internal
+  /// <summary>
+  /// Invoked by a parent context on a child context when the parent has transitioned to the Running state
+  /// </summary>
+  void TryTransitionToRunState(void);
+
   /// <summary>
   /// Registers a factory _function_, a lambda which is capable of constructing decltype(fn())
   /// </summary>
@@ -686,27 +708,49 @@ public:
   std::vector<std::shared_ptr<BasicThread>> CopyBasicThreadList(void) const;
 
   /// <summary>
-  /// True, if the CoreRunnable instances in this context should begin teardown operations.
-  /// </summary>
-  bool IsShutdown(void) const {return m_isShutdown;}
-
-  /// <summary>
-  /// True, if the Initiate() function has been called.
-  /// </summary>
-  bool IsInitiated(void) const {return m_initiated;}
-
-  /// <summary>
-  /// True, if this context was ever started.
+  /// True, if the context has been initiated.
   /// </summary>
   /// <remarks>
-  /// A return value of "true" is guaranteed to be indefinitely correct.  A return value of
-  /// "false" will only be correct for as long as it takes for someone to start this context.
-  /// Unless externally synchronized, this operation may return false on a running context.
+  /// This method will return true even if the context is currently shut down.  Once the context is
+  /// shut down, the return value of this method is guaranteed to not change.
   /// </remarks>
-  bool WasStarted(void) const {
-    // We were started IF we will run new threads, OR we have been signalled to stop
-    return m_initiated || m_isShutdown;
+  bool IsInitiated(void) const {
+    switch (m_state) {
+    case State::Initiated:
+    case State::Running:
+    case State::Shutdown:
+      return true;
+    default:
+      return false;
+    }
   }
+
+  /// <summary>
+  /// True, if the context is presently running.
+  /// </summary>
+  /// <remarks>
+  /// This method may return false even if IsInitiated returns true if the parent context has not
+  /// yet been initiated.
+  /// </remarks>
+  bool IsRunning(void) const { return m_state == State::Running; }
+
+  /// <returns>
+  /// True if CoreRunnable instances in this context should begin teardown operations
+  /// </returns>
+  bool IsShutdown(void) const {
+    switch (m_state) {
+    case State::Shutdown:
+    case State::Abandoned:
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  /// <summary>
+  /// Alias of the IsInitiated method
+  /// </summary>
+  bool WasStarted(void) const { return IsInitiated(); }
 
   /// <summary>
   /// Reports whether the specified context is an ancestor of this context.
@@ -898,7 +942,7 @@ public:
       AddEventReceiver(JunctionBoxEntry<Object>(this, traits.pObject));
     
     // Add PacketSubscriber;
-    if(traits.subscriber)
+    if(!traits.subscriber.empty())
       AddPacketSubscriber(traits.subscriber);
   }
 
@@ -929,7 +973,7 @@ public:
       UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<Object>(this, traits.pObject));
     
     // Cleanup if its a packet listener
-    if(traits.subscriber)
+    if(!traits.subscriber.empty())
       UnsnoopAutoPacket(traits);
   }
   
