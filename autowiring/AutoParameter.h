@@ -61,6 +61,7 @@ protected:
   }
 };
 
+/// \internal
 /// <summary>
 /// Base class for providing an easy way to specify just a default value
 /// </summary>
@@ -82,6 +83,7 @@ protected:
   virtual ~DefaultKey() = 0;
 };
 
+/// \internal
 /// <summary>
 /// Base class for providing an easy way to default, min and max values
 /// </summary>

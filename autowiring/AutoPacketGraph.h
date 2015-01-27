@@ -9,6 +9,7 @@
 #include STL_UNORDERED_MAP
 
 
+/// \internal
 /// <summary>
 /// Represents an edge in the graph from a type to an AutoFilter
 /// </summary>

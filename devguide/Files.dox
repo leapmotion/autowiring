@@ -1,0 +1,68 @@
+/* Descriptions of the public namespaces */
+/// \namespace autowiring
+/// The namespace for the Autowiring library.
+
+/* Descriptions of the public files */
+/// \file at_exit.h
+
+/// \file auto_arg.h
+
+/// \file auto_in.h
+
+/// \file auto_out.h
+
+/// \file auto_prev.h
+
+/// \file AutoConfig.h
+
+/// \file AutoNetServer.h
+
+/// \file AutoPacket.h
+
+/// \file AutoPacketFactory.h
+
+/// \file AutoPacketGraph.h
+
+/// \file AutoParameter.h
+
+/// \file AutoSelfUpdate.h
+
+/// \file Autowired.h
+/// Autowiring definitions
+
+/// \file autowiring_error.h
+
+/// \file BasicThread.h
+
+/// \file Bolt.h
+
+/// \file BoltBase.h
+
+/// \file ContextCreator.h
+
+/// \file ContextCreatorBase.h
+
+/// \file ContextEnumerator.h
+
+/// \file ContextMember.h
+
+/// \file CoreContext.h
+/// CoreContext definitions
+
+/// \file CoreJob.h
+
+/// \file CoreRunnable.h
+
+/// \file CoreThread.h
+
+/// \file CurrentContextPusher.h
+
+/// \file DispatchQueue.h
+
+/// \file ExceptionFilter.h
+
+/// \file GlobalCoreContext.h
+
+/// \file MicroBolt.h
+
+/// \file demangle.h

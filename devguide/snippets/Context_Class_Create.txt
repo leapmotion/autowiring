@@ -1,0 +1,5 @@
+AutoGlobalContext global;
+AutoCreateContext childContext;
+
+class Foo{}; //dummy class
+AutoCreateContextT<Foo> childContextWithSigil;

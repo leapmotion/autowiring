@@ -5,6 +5,7 @@
 
 class CoreContext;
 
+/// ContextCreatorBase
 class ContextCreatorBase {
 public:
   ContextCreatorBase(void);

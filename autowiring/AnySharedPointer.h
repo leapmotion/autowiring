@@ -2,6 +2,10 @@
 #pragma once
 #include "SharedPointerSlot.h"
 
+/// \file SharedPointerSlot.h
+/// \internal
+
+/// AnySharedPointer
 struct AnySharedPointer {
 public:
   AnySharedPointer(void);

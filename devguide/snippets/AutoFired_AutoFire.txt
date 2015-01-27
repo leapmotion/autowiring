@@ -1,0 +1,20 @@
+class Event{
+    public:
+        virtual void intEvent(int data) = 0;
+};
+
+class EventReceiver : public Event{
+    public:
+        EventReceiver(){}
+        void intEvent(int data) override {
+            std::cout << "Receiver Handled event with data: " << data << std::endl;
+        }
+};
+
+AutoCurrentContext ctxt;
+AutoFired<Event> eventDispatcher;
+AutoRequired<EventReceiver> receiver;
+
+ctxt->Initiate(); //required for events to dispatch
+
+eventDispatcher(&Event::intEvent)(12);

@@ -1,0 +1,1 @@
+   Event code 12 handled by Foo.

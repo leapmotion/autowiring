@@ -15,6 +15,7 @@ namespace autowiring {
 
   std::string demangle(const AnySharedPointer& ptr);
 
+  /// Returns a human-readable std::string describing the type.
   template<typename T>
   std::string demangle(const T&) {
     return demangle(typeid(T));
