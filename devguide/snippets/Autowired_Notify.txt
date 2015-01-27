@@ -1,0 +1,3 @@
+Autowired<Foo> slotFoo;
+slotFoo.NotifyWhenAutowired([](){std::cout << "slotFoo wired." << std::endl;});
+AutoRequired<Foo> foo; // NotifyWhenAutowired on slotFoo invoked.

@@ -1,0 +1,6 @@
+try {
+    AutoCurrentContext()->Inject<T>();
+} catch(...) {
+    AutoCurrentContext()->FilterException();
+}
+Autowired<T> foo;

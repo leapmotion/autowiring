@@ -9,15 +9,12 @@
 class CoreContext;
 class GlobalCoreContext;
 
-/// \file
-/// Autowiring definitions.
-
 /// <summary>
-/// Provides a simple way to obtain a reference to the current context
+/// Provides a reference to the current context.
 /// </summary>
 /// <remarks>
-/// Users of this class are encouraged not to hold references for longer than needed.  Failing
-/// to release a context pointer could prevent resources from being correctly released.
+/// Do not hold references longer than needed.  Failing
+/// to release a context pointer could prevent resources from being released.
 ///
 /// \include snippets/Context_AutoCurrentContext.txt
 /// </remarks>
@@ -29,7 +26,7 @@ public:
 };
 
 /// <summary>
-/// Provides a simple way to obtain a reference to the global context.
+/// Provides a reference to the global context.
 /// </summary>
 /// <remarks>
 /// One global context is created automatically for an application. In complex
@@ -49,7 +46,8 @@ public:
 /// Provides a simple way to create a child of the current context using a sigil.
 /// </summary>
 /// <remarks>
-/// The newly created context is created using CoreContext::CurrentContext()->Create().
+/// A sigil is a class that serves to classify the context. You can use the sigil to
+/// identify a group of related contexts.
 ///
 /// \include snippets/Context_AutoCreateContextT.txt
 /// </remarks>
@@ -76,11 +74,9 @@ public:
 };
 
 /// <summary>
-/// Provides a simple way to create a dependent context pointer.
+/// Creates a new context as a child of the current context.
 /// </summary>
 /// <remarks>
-/// The newly created context will be created using CoreContext::CurrentContext()->Create().
-///
 /// \include snippets/Context_AutoCreateContext.txt
 /// </remarks>
 typedef AutoCreateContextT<void> AutoCreateContext;
@@ -95,6 +91,8 @@ typedef AutoCreateContextT<void> AutoCreateContext;
 /// The Autowired template class forms the foundation of the context consumer system.
 /// It provides a quick way to import or create an instance of a specified
 /// class in the local context.
+///
+/// \include snippets/Autowired_Autowired.txt
 ///
 /// If an instance of the type specified in the template parameter already exists
 /// in the context, the dependency is satisfied using that instance immediately.
@@ -167,6 +165,8 @@ public:
   /// called as long as this Autowired slot has not been destroyed.  If this slot is destroyed
   /// before the dependency is satisfied, i.e. because the owning context shuts down, the
   /// lambda is never invoked.
+  ///
+  /// \include snippets/Autowired_Notify.txt
   /// </remarks>
   template<class Fn>
   void NotifyWhenAutowired(Fn fn) {
@@ -221,11 +221,12 @@ public:
 /// current context or any of its ancestors. If that search fails, a new instance
 /// of the specified type is created.
 ///
-/// If type T has a static member function called New, Autowiring calls
-/// this function instead of the default constructor, even if the default constructor has been supplied,
-/// and even if the arity of the New routine is not zero.
+/// \include snippets/Autowired_AutoRequired.txt
 ///
-/// To prevent this behavior, use a name other than New.
+/// If type T has a static member function called New, Autowiring calls
+/// this function instead of the default constructor, even if the default constructor
+/// has been supplied, and even if the arity of the New routine is not zero. To
+/// prevent this behavior, use a name other than New.
 ///
 /// If you get a compile error when using AutoRequire, ensure that class T is fully
 /// defined at the point in the program where the type is autorequired.
@@ -265,7 +266,7 @@ public:
   {}
   
   /// <summary>
-  /// Construct overload, for types which take constructor arguments
+  /// AutoRequired overload that forwards constructor arguments to the type being wired.
   /// </summary>
   template<class... Args>
   AutoRequired(const std::shared_ptr<CoreContext>& ctxt, Args&&... args) :
@@ -284,18 +285,20 @@ public:
 };
 
 /// <summary>
-/// Autowires a slot immediately, with restrictions.
+/// Autowires a slot immediately (with limitations).
 /// </summary>
 /// <remarks>
 /// AutowiredFast provides non-blocking and typically faster services than Autowired.
-/// However, the dependency must already exist. The autowiring slot will not be
-/// wired if the dependency is not created until later.
+/// However, an instance satisfying the dependency must already exist. If not, the
+/// autowiring slot will never be wired, even if the dependency is created later.
+///
+/// \include snippets/Autowired_AutowiredFast.txt
 ///
 /// AutowiredFast allows queries to be conducted against contexts that may be in teardown,
 /// and also generally operates with fewer memory allocations and better performance than
 /// Autowired.  As a drawback, notifications on AutowiredFast cannot be attached, and the
 /// field will not be updated in the case of post-hoc satisfaction--the value is effectively
-/// a constant after initialization.  AutowiredFast also requires that the autowired type
+/// a constant after initialization. AutowiredFast also requires that the autowired type
 /// be completely defined before construction.  By comparison, Autowired fields do not ever
 /// need to be defined.
 /// </remarks>
@@ -348,20 +351,25 @@ public:
 };
 
 /// <summary>
-/// Convenience class which attempts to inject type T and discards any exceptions
+/// Attempts to create and inject a dependency, discarding any exceptions.
 /// </summary>
 /// <remarks>
-/// Use of this type is functionally equivalent to the following:
+/// Like AutoRequired, AutoDesired attempts to create an instance of the type
+/// to be autowired. However, if creation of the dependency fails, the slot is
+/// created and the dependency is satisfied when an instance of the correct type
+/// is created and wired later.
 ///
-///  try {
-///    AutoCurrentContext()->Inject&lt;T&gt;();
-///  catch(...) {
-///    AutoCurrentContext()->FilterException();
-///  }
-///  Autowired&lt;T&gt; foo;
+/// \include snippets/Autowired_AutoDesired.txt
 ///
-/// Users who wish to know whether an exception was thrown may replace uses of AutoDesired with the above
-/// and perform their own handling.
+/// Use AutoDesired instead of AutoRequired or Autowired when creation of the dependency may fail,
+/// while, unlike Autowired, still creating the dependency when possible.
+///
+/// AutoDesired is functionally equivalent to the following:
+///
+/// \include snippets/Autowired_AutoDesired_Alternate.txt
+///
+/// If you want to know whether an exception was thrown, replace uses of AutoDesired with the above
+/// and perform your own exception handling.
 /// </remarks>
 template<class T>
 class AutoDesired:
@@ -377,7 +385,8 @@ public:
 };
 
 /// <summary>
-/// Convenience class functionally identical to AutoRequired, but specialized to forward ctor arguments
+/// A version of AutoRequired that forwards constructor arguments to the injected
+/// type's constructor function.
 /// </summary>
 template<class T>
 class AutoConstruct:
@@ -395,8 +404,45 @@ public:
 };
 
 /// <summary>
-/// Convenience class to create an event firer. Also caches the associated JunctionBox
+/// Injects an object that can fire events.
 /// </summary>
+/// <remarks>
+/// An autowiring event is technically a callback implemented by Autowired members
+/// of a context. An event is fired by invoking the event function, which, in turn,
+/// invokes the callback functions of all members of the context implementing the
+/// function. For example, you might define a simple event class as follows:
+///
+/// \include snippets/AutoFired_Event.txt
+///
+/// You can then add an event dispatcher to a context with AutoFired:
+///
+/// \include snippets/AutoFired_Declare.txt
+///
+/// and trigger the event with:
+///
+/// \include snippets/AutoFired_Dispatch.txt
+///
+/// Now for the event to do anything, you must also autowire members to the context
+/// that extend your Event class and implement your Event::eventFunction() (or whatever
+/// the class and function are called in your code). For example:
+///
+/// \include snippets/AutoFired_Receiver.txt
+///
+/// You can add an instance of class Foo to the context and its eventFunction()
+/// will be invoked whenever the event is fired. Note that the context must be
+/// “initiated” by calling its Initiate() function before events are propagated.
+/// The context code for dispatching and handling this simple event would look like this:
+///
+/// \include snippets/AutoFired_Example.txt
+///
+/// Which will print the following line to the standard output stream:
+///
+/// \include snippets/AutoFired_Result.txt
+///
+/// If other members of the context inherited Event — or contained their own
+/// autowired members that inherited Event, the callback functions implemented by
+/// those members would also be invoked.
+/// </remarks>
 template<class T>
   class AutoFired
 {
@@ -405,6 +451,7 @@ public:
     m_junctionBox(ctxt->GetJunctionBox<T>())
   {}
 
+  /// \internal
   /// <summary>
   /// Utility constructor, used when the receiver is already known
   /// </summary>
@@ -412,6 +459,7 @@ public:
     m_junctionBox(junctionBox)
   {}
 
+  /// \internal
   /// <summary>
   /// Utility constructor, used to support movement operations
   /// </summary>

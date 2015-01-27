@@ -1,0 +1,60 @@
+class Event{
+    public:
+        virtual void fireEvent() = 0;
+};
+
+class GeneralEvent : public Event{
+    public:
+        void fireEvent() override {
+            std::cout << "--General Event" << std::endl;
+        }
+};
+
+class FooEvent : public GeneralEvent {
+    public:
+        void fireEvent() override {
+            std::cout << "--Foo Event." << std::endl;
+        }
+};
+
+class BarEvent : public GeneralEvent  {
+    public:
+        void fireEvent() override {
+            std::cout << "--Bar Event." << std::endl;
+        }
+};
+
+class EventListener {
+    public:
+        AutoRequired<GeneralEvent> generalListener;
+        AutoRequired<FooEvent> fooListener;
+        AutoRequired<BarEvent> barListener;
+};
+
+class EventDispatcher {
+    public:
+        AutoFired<GeneralEvent> generalDispatcher;
+        AutoFired<FooEvent> fooDispatcher;
+        AutoFired<BarEvent> barDispatcher;
+};
+AutoCurrentContext ctxt;
+AutoRequired<EventListener> listener;
+AutoRequired<EventDispatcher> dispatcher;
+ctxt->Initiate(); //required for events to dispatch
+
+std::cout << "Fire General Event:" << std::endl;
+dispatcher->generalDispatcher(&GeneralEvent::fireEvent)();
+std::cout << "Fire Foo Event:" << std::endl;
+dispatcher->fooDispatcher(&FooEvent::fireEvent)();
+std::cout << "Fire Bar Event:" << std::endl;
+dispatcher->barDispatcher(&BarEvent::fireEvent)();
+
+// Results:
+// Fire General Event:
+// --General Event
+// --Bar Event.
+// --Foo Event.
+// Fire Foo Event:
+// --Foo Event.
+// Fire Bar Event:
+// --Bar Event.

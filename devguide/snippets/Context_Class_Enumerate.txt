@@ -1,12 +1,21 @@
 AutoGlobalContext global;
 for(auto context : ContextEnumerator(global)){
-    std::cout << "Enumerating all contexts" << std::endl;
+    std::cout << "Enumerating "
+              << autowiring::demangle(&context->GetSigilType())
+              << " within global context."
+              << std::endl;
 }
 
 for(auto context : ContextEnumeratorT<Foo>(childContext)){
-    std::cout << "Enumerating 'Foo' contexts within childContext" << std::endl;
+    std::cout << "Enumerating "
+              << autowiring::demangle(&context->GetSigilType())
+              << " within childContext."
+              << std::endl;
 }
 
 for(auto context : CurrentContextEnumerator()){
-    std::cout << "Enumerating current context" << std::endl;
+    std::cout << "Enumerating "
+              << autowiring::demangle(&context->GetSigilType())
+              << " in current context."
+              << std::endl;
 }

@@ -1,0 +1,6 @@
+class Foo : Event {
+    public:
+        void eventFunction(int data) override {
+            std::cout << "Event code " << data << " handled by Foo." << std::endl;
+        }
+};
