@@ -57,7 +57,9 @@ private:
   template<typename... Args, size_t... N>
   void AddEventHandler(const std::string& event, std::function<void(Args...)>& handler, index_tuple<N...>) {
     AddEventHandler(event, [this, handler] (const std::vector<std::string>& args) {
-      assert(sizeof...(Args) == args.size());
+      if (sizeof...(Args) != args.size())
+        // TODO:  Return some kind of singal to the caller indicating that there is a problem
+        return;
       handler(parse<Args>(args[N])...);
     });
   }
