@@ -52,13 +52,13 @@ protected:
   // Send event with arguments parsed as vector of string
   virtual void SendEvent(const std::string& event, const std::vector<std::string>& args) = 0;
   
-  // Add a handler that will be called when an event is received from the client
-  void AddEventHandlerInternal(const std::string& event, std::function<void(const std::vector<std::string>&)> handler);
-  
   // Map of callbacks keyed by event type
   std::unordered_map<std::string, std::vector<std::function<void(std::vector<std::string>)>>> m_handlers;
   
 private:
+  // Add a handler that will be called when an event is received from the client
+  void AddEventHandlerInternal(const std::string& event, std::function<void(const std::vector<std::string>&)> handler);
+  
   // Extract arguments from list of strings, parse and pass to handler
   template<typename Fx, typename... Args, int... N>
   void AddEventHandler(const std::string& event, Fx&& handler, void (Fx::*pfn)(Args...) const, index_tuple<N...>) {

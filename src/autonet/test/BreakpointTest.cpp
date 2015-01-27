@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "AutoNetServer.h"
+#include "src/autonet/AutoNetServerImpl.hpp"
 #include "Autowired.h"
 #include THREAD_HEADER
 
@@ -9,7 +9,7 @@ class BreakpointTest:
 {};
 
 class ExposedAutoNetServer:
-  public AutoNetServer
+  public AutoNetServerImpl
 {
 public:
   void HandleResumeFromBreakpoint(const std::string& breakpoint) {
