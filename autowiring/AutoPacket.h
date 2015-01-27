@@ -363,25 +363,20 @@ public:
   /// This decoration method has the additional benefit that it will make direct use of the passed
   /// shared pointer.
   ///
-  /// If the passed value is null, the corresponding value will be marked unsatisfiable.  In this case,
-  /// the user is responsible for discarding the returned reference.
+  /// If the passed value is null, the corresponding value will be marked unsatisfiable.
   /// </remarks>
   template<class T>
-  const T& Decorate(std::shared_ptr<T> ptr) {
+  void Decorate(std::shared_ptr<T> ptr) {
     DecorationKey key(auto_id<T>::key());
     
     /// Injunction to prevent existential loops:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
     
     // Either decorate, or prevent anyone from decorating
-    if (ptr) {
+    if (ptr)
       Decorate(AnySharedPointer(ptr), key);
-      return *ptr;
-    }
-    else {
+    else
       MarkUnsatisfiable(key);
-      return *static_cast<T*>(nullptr);
-    }
   }
 
   /// <summary>
@@ -392,8 +387,8 @@ public:
   /// shared pointer.
   /// </remarks>
   template<class T>
-  const T& Decorate(std::shared_ptr<const T> ptr) {
-    return Decorate(std::const_pointer_cast<T>(ptr));
+  void Decorate(std::shared_ptr<const T> ptr) {
+    Decorate(std::const_pointer_cast<T>(ptr));
   }
 
   /// <summary>
