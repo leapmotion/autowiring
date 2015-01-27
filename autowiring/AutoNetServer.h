@@ -60,7 +60,7 @@ protected:
   
 private:
   // Extract arguments from list of strings, parse and pass to handler
-  template<typename Fx, typename... Args, size_t... N>
+  template<typename Fx, typename... Args, int... N>
   void AddEventHandler(const std::string& event, Fx&& handler, void (Fx::*pfn)(Args...) const, index_tuple<N...>) {
     AddEventHandlerInternal(
       event,
