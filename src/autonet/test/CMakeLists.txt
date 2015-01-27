@@ -6,6 +6,7 @@ include_directories(
 set(AutoNetTest_SRCS
   AutoNetTest.cpp
   BreakpointTest.cpp
+  RPCTest.cpp
   WebsocketTest.cpp
 )
 

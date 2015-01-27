@@ -100,6 +100,9 @@ protected:
     for(websocketpp::connection_hdl ptr : m_Subscribers)
       SendMessage(ptr, p_type, std::forward<Args>(args)...);
   }
+  
+  // Send custom event to all clients
+  void SendEvent(const std::string& event, const std::vector<std::string>& args);
 
   /// <summary>
   /// Called when a "Subscribe" event is sent from a client
@@ -112,19 +115,6 @@ protected:
   /// </summary>
   /// <param name="client">Client that sent event</param>
   void HandleUnsubscribe(websocketpp::connection_hdl hdl);
-
-  /// <summary>
-  /// Called when a "terminateContext" event is sent from a client
-  /// </summary>
-  /// <param name="contextID">ID of the context to be terminated</param>
-  void HandleTerminateContext(int contextID);
-
-  /// <summary>
-  /// Called when a "injectContextMember" event is sent from a client
-  /// </summary>
-  /// <param name="contextID">ID of the context to inject the type</param>
-  /// <param name="typeName">Name of the type to inject. From std::type_info.name()</param>
-  void HandleInjectContextMember(int contextID, std::string typeName);
 
   /// <summary>
   /// Assigns each context a unique ID number
@@ -165,7 +155,7 @@ protected:
   std::map<std::weak_ptr<BasicThread>, ThreadStats, std::owner_less<std::weak_ptr<BasicThread>>> m_Threads;
 
   // Breakpoint functionality
-  std::mutex m_mutex;
+  std::mutex m_breakpoint_mutex;
   std::condition_variable m_breakpoint_cv;
   std::set<std::string> m_breakpoints;
 
