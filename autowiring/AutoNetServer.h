@@ -3,6 +3,7 @@
 #include "CoreThread.h"
 #include "ConfigRegistry.h"
 #include "index_tuple.h"
+#include <autowiring/Decompose.h>
 #include <sstream>
 #include STL_UNORDERED_MAP
 #include FUNCTIONAL_HEADER
@@ -31,9 +32,14 @@ public:
   virtual void Breakpoint(std::string name) = 0;
   
   /// Add a custom event handler. Arguments must be primative types are strings
-  template<typename... Args>
-  void AddEventHandler(const std::string& event, std::function<void(Args...)> handler) {
-    AddEventHandler(event, handler, typename make_index_tuple<sizeof...(Args)>::type());
+  template<typename Fx>
+  void AddEventHandler(const std::string& event, Fx&& handler) {
+    AddEventHandler<Fx>(
+      event,
+      std::forward<Fx&&>(handler),
+      &Fx::operator(),
+      typename make_index_tuple<Decompose<decltype(&Fx::operator())>::N>::type()
+    );
   }
   
   /// Send a custom event to all clients.
@@ -47,21 +53,24 @@ protected:
   virtual void SendEvent(const std::string& event, const std::vector<std::string>& args) = 0;
   
   // Add a handler that will be called when an event is received from the client
-  void AddEventHandler(const std::string& event, std::function<void(const std::vector<std::string>&)> handler);
+  void AddEventHandlerInternal(const std::string& event, std::function<void(const std::vector<std::string>&)> handler);
   
   // Map of callbacks keyed by event type
   std::unordered_map<std::string, std::vector<std::function<void(std::vector<std::string>)>>> m_handlers;
   
 private:
   // Extract arguments from list of strings, parse and pass to handler
-  template<typename... Args, size_t... N>
-  void AddEventHandler(const std::string& event, std::function<void(Args...)>& handler, index_tuple<N...>) {
-    AddEventHandler(event, [this, handler] (const std::vector<std::string>& args) {
-      if (sizeof...(Args) != args.size())
-        // TODO:  Return some kind of singal to the caller indicating that there is a problem
-        return;
-      handler(parse<Args>(args[N])...);
-    });
+  template<typename Fx, typename... Args, size_t... N>
+  void AddEventHandler(const std::string& event, Fx&& handler, void (Fx::*pfn)(Args...) const, index_tuple<N...>) {
+    AddEventHandlerInternal(
+      event,
+      [this, handler, pfn] (const std::vector<std::string>& args) {
+        if (sizeof...(Args) != args.size())
+          // TODO:  Return some kind of singal to the caller indicating that there is a problem
+          return;
+        (handler.*pfn)(parse<Args>(args[N])...);
+      }
+    );
   }
   
   // parse type to string
@@ -74,9 +83,9 @@ private:
   
   // parse string to primative type
   template<class T>
-  T parse(const std::string& str){
+  typename std::decay<T>::type parse(const std::string& str){
     std::istringstream ss(str);
-    T val;
+    typename std::decay<T>::type val;
     ss >> std::boolalpha >> val;
     
     if (ss.fail()) {
