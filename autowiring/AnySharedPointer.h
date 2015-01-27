@@ -2,11 +2,17 @@
 #pragma once
 #include "SharedPointerSlot.h"
 
+/// \file SharedPointerSlot.h
+/// \internal
+
+/// AnySharedPointer
 struct AnySharedPointer {
 public:
   AnySharedPointer(void);
   AnySharedPointer(AnySharedPointer&& rhs);
   AnySharedPointer(const AnySharedPointer& rhs);
+  AnySharedPointer(const SharedPointerSlot&& rhs);
+  AnySharedPointer(const SharedPointerSlot& rhs);
 
   template<class T>
   AnySharedPointer(const std::shared_ptr<T>& rhs) {

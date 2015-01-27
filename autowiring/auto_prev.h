@@ -1,6 +1,5 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "AutoPacket.h"
 
 /// <summary>
 /// Identifier for AutoFilter inputs from the previous packet
@@ -12,22 +11,21 @@
 template<class T, int N = 1>
 struct auto_prev {
 public:
-  auto_prev(const AutoPacket& val)
-  {
-    val.Get(m_value, N);
-  }
+  auto_prev(const T* value) :
+    value(value)
+  {}
 
   operator bool(void) const {
-    return m_value.operator bool();
+    return !!value;
   }
 
   const T& operator*(void) const {
-    return *m_value;
+    return *value;
   }
   
   const T* operator->(void) const {
-    return m_value.get();
+    return value;
   }
 
-  std::shared_ptr<const T> m_value;
+  const T* const value;
 };

@@ -39,6 +39,8 @@ TEST_F(ContextMapTest, VerifySimple) {
 }
 
 TEST_F(ContextMapTest, VerifyWithThreads) {
+  AutoCurrentContext()->Initiate();
+
   ContextMap<string> mp;
   std::shared_ptr<SimpleThreaded> threaded;
   std::weak_ptr<CoreContext> weakContext;

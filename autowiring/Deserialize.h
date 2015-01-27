@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include TYPE_TRAITS_HEADER
+#include <string>
 
 /// <summary>
 /// Support class for deserializing byte-streams input as std::string into a variety of formats

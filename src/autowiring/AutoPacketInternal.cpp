@@ -16,17 +16,17 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
   this->m_initTime = std::chrono::high_resolution_clock::now();
 
   // Traverse all descendant contexts, adding their packet subscriber vectors one at a time:
-  m_parentFactory->AppendAutoFiltersTo(m_satCounters);
+  m_firstCounter = m_parentFactory->CreateSatCounterList();
   
   // Find all subscribers with no required or optional arguments:
   std::vector<SatCounter*> callCounters;
-  for (auto& satCounter : m_satCounters) {
+  for (auto* satCounter = m_firstCounter; satCounter; satCounter = satCounter->flink) {
     
     // Prime the satisfaction graph for element:
-    AddSatCounter(satCounter);
+    AddSatCounter(*satCounter);
     
-    if (!satCounter.remaining)
-      callCounters.push_back(&satCounter);
+    if (!satCounter->remaining)
+      callCounters.push_back(satCounter);
   }
   
   // Mark timeshifted decorations as unsatisfiable on the first packet

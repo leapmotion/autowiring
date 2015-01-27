@@ -2,10 +2,11 @@
 #pragma once
 #include "CoreContext.h"
 
+/// \internal
 template<class T>
 struct EnableBoltInternal {};
 
-// A special class designed to make it easier to detect when our context is the global context
+/// A special class designed to make it easier to detect when our context is the global context
 class GlobalCoreContext:
   public CoreContextT<GlobalCoreContext>
 {
@@ -61,6 +62,7 @@ private:
 /// </summary>
 std::shared_ptr<GlobalCoreContext> GetGlobalContext(void);
 
+/// \internal
 /// <summary>
 /// Provides a declarative way to set the global context
 /// </summary>

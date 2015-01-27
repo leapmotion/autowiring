@@ -5,7 +5,6 @@
 #include "ContextMember.h"
 #include "CoreRunnable.h"
 #include "TypeRegistry.h"
-#include <list>
 #include CHRONO_HEADER
 #include TYPE_TRAITS_HEADER
 #include STL_UNORDERED_SET
@@ -65,6 +64,12 @@ public:
     std::lock_guard<std::mutex> lk(m_lock);
     container.insert(container.end(), m_autoFilters.begin(), m_autoFilters.end());
   }
+
+  /// <summary>
+  /// Creates a linked list of saturation counters
+  /// </summary>
+  /// <returns>The first element in the list, or nullptr if the list is empty</returns>
+  SatCounter* CreateSatCounterList(void) const;
 
   // CoreRunnable overrides:
   bool OnStart(void) override;

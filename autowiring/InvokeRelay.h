@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "is_any.h"
-#include STL_TUPLE_HEADER
 
 template<typename T>
 class JunctionBox;

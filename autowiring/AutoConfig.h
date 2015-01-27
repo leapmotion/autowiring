@@ -9,6 +9,7 @@
 
 struct AnySharedPointer;
 
+/// \internal
 /// <summary>
 /// Utility base type for configuration members
 /// </summary>

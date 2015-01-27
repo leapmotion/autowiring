@@ -497,7 +497,7 @@ TEST_F(AutoFilterTest, SingleImmediate) {
     packet->DecorateImmediate(dec);
 
     ASSERT_TRUE(fgp->m_called == 1) << "Filter should called " << fgp->m_called << " times, expected 1";
-    ASSERT_TRUE(std::get<0>(fgp->m_args).i == pattern) << "Filter argument yielded " << std::get<0>(fgp->m_args).i << "expected " << pattern;
+    ASSERT_TRUE(autowiring::get<0>(fgp->m_args).i == pattern) << "Filter argument yielded " << autowiring::get<0>(fgp->m_args).i << "expected " << pattern;
   }
   ASSERT_EQ(0, factory->GetOutstandingPacketCount()) << "Destroyed packet remains outstanding";
 
@@ -852,4 +852,32 @@ TEST_F(AutoFilterTest, PacketTeardownNotificationCheck) {
 
   ASSERT_TRUE(*called) << "Teardown listener was not called after packet destruction";
   ASSERT_TRUE(called.unique()) << "Teardown listener lambda function was leaked";
+}
+
+struct ContextChecker:
+  ContextMember
+{
+  ContextChecker(void):
+    m_called(0)
+  {}
+
+  void AutoFilter(int i) {
+    ++m_called;
+    ASSERT_EQ(AutoCurrentContext(), GetContext()) << "AutoFilter not called with the current context set to packet's context";
+  }
+
+  int m_called;
+};
+
+TEST_F(AutoFilterTest, CurrentContextCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<ContextChecker> filter;
+
+  {
+    CurrentContextPusher pshr((AutoCreateContext()));
+    auto packet = factory->NewPacket();
+    packet->Decorate(42);
+  }
+
+  ASSERT_EQ(1, filter->m_called) << "AutoFilter called incorrect number of times";
 }

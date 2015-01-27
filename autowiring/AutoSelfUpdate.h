@@ -22,6 +22,7 @@ public:
   typedef typename atomic::shared shared;
   typedef BasedAutoFilter<AutoSelfUpdate<object_type>, void, const object&> gather;
 
+  /// \internal
   /// <summary>
   /// The type assigned to the prior value of the object
   /// in order to distinguish it from the AutoFilter argument.

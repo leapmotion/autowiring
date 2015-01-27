@@ -22,10 +22,10 @@ TEST_F(AutoFilterDiagnosticsTest, CanGetExpectedTrueType) {
   AutoRequired<AutoPacketFactory> factory;
 
   auto packet = factory->NewPacket();
-  auto dispositions = packet->GetDispositions();
-  ASSERT_EQ(1UL, dispositions.size()) << "Dispositions collection contained an unexpected AutoFilter";
+  auto decorations = packet->GetDecorations();
+  ASSERT_EQ(1UL, decorations.size()) << "Dispositions collection contained an unexpected AutoFilter";
 
-  auto& disposition = dispositions.front();
+  auto& disposition = decorations.begin()->second;
   ASSERT_EQ(1UL, disposition.m_subscribers.size()) << "Expected exactly one subscriber for the sole present type";
 
   const SatCounter* descriptor = disposition.m_subscribers.front();

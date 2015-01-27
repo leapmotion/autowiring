@@ -22,6 +22,7 @@ set(Autowiring_SRCS
   AutoConfigParser.cpp
   AutoConfigParser.hpp
   AutoFilterDescriptor.h
+  AutoFilterDescriptorInput.h
   AutoFuture.cpp
   AutoFuture.h
   AutoInjectable.cpp
@@ -55,6 +56,7 @@ set(Autowiring_SRCS
   auto_in.h
   auto_out.h
   auto_prev.h
+  auto_tuple.h
   BasicThread.cpp
   BasicThread.h
   BasicThreadStateBlock.cpp

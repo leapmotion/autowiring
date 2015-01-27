@@ -22,6 +22,12 @@ namespace std {
       return *this;
     }
 
+    template<class... OtherTs>
+    tuple& operator=(const tuple<OtherTs...>& other) {
+      m_tuple = other;
+      return *this;
+    }
+
     bool operator==(const tuple<T, Ts...>& other) const {
       return m_tuple == other.m_tuple;
     }

@@ -2,6 +2,7 @@
 #pragma once
 #include <autowiring/autowiring.h>
 #include "demangle.h"
+#include <autowiring/at_exit.h>
 #include MEMORY_HEADER
 
 #ifndef GTEST_INCLUDE_GTEST_GTEST_H_
@@ -59,14 +60,15 @@ struct TestInfoProxy {
 class AutowiringEnclosure:
   public testing::EmptyTestEventListener
 {
-private:
-  // Weak pointer to the created context, used to detect proper context destruction
-  std::weak_ptr<CoreContext> m_createWeak;
-
 public:
   // Base overrides:
   void OnTestStart(const testing::TestInfo& info) override {
     AutoRequired<AutowiringEnclosureExceptionFilter> filter;
+
+    // Set global context current first, then initiate
+    AutoGlobalContext global;
+    global->SetCurrent();
+    global->Initiate();
 
     // The context proper.  This is automatically assigned as the current
     // context when SetUp is invoked.
@@ -81,13 +83,13 @@ public:
   }
 
   void OnTestEnd(const testing::TestInfo& info) override {
-    // Verify we can grab the test case back out and that the pointer is correct:
-    Autowired<TestInfoProxy> ti;
-    Autowired<AutowiringEnclosureExceptionFilter> ecef;
-    auto ctxt = ecef ? ecef->GetContext() : nullptr;
+    auto setglobal = MakeAtExit([] {
+      // Unconditionally reset the global context as the current context
+      AutoGlobalContext()->SetCurrent();
+    });
 
-    // Unconditionally reset the global context as the current context
-    AutoGlobalContext()->SetCurrent();
+    // Verify we can grab the test case back out and that the pointer is correct:
+    Autowired<AutowiringEnclosureExceptionFilter> ecef;
 
     // Global initialization tests are special, we don't bother checking closure principle on them:
     if(!strcmp("GlobalInitTest", info.test_case_name()))
@@ -97,6 +99,7 @@ public:
     ASSERT_TRUE(ecef.IsAutowired()) << "Failed to find the enclosed context exception filter; unit test may have incorrectly reset the enclosing context before returning";
 
     // Now try to tear down the test context enclosure:
+    auto ctxt = ecef ? ecef->GetContext() : nullptr;
     ctxt->SignalShutdown();
 
     // Do not allow teardown to take more than 250 milliseconds or so

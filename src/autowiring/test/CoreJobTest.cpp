@@ -156,6 +156,8 @@ TEST_F(CoreJobTest, RecursiveAdd) {
 }
 
 TEST_F(CoreJobTest, RaceCondition) {
+  AutoCurrentContext()->Initiate();
+
   for (int i=0; i<5; i++) {
     AutoCreateContext ctxt;
     CurrentContextPusher pshr(ctxt);

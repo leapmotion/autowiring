@@ -3,6 +3,7 @@
 
 /// <summary>
 /// Utility type which enables the composition of a sequence [0, sizeof...(Ts))
+/// </summary>
 template<int ...>
 struct index_tuple {};
 

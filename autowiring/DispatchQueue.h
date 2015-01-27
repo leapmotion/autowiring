@@ -9,6 +9,7 @@
 
 class DispatchQueue;
 
+/// \internal
 /// <summary>
 /// Thrown when a dispatch operation was aborted
 /// </summary>

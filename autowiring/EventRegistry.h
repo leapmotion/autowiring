@@ -2,8 +2,6 @@
 #pragma once
 #include "TypeIdentifier.h"
 #include "JunctionBox.h"
-#include TYPE_TRAITS_HEADER
-#include STL_TUPLE_HEADER
 #include MEMORY_HEADER
 
 class JunctionBoxBase;

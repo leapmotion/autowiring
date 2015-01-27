@@ -1,0 +1,1 @@
+Autowired<Foo> slotFoo;

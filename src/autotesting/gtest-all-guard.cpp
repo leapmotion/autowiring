@@ -7,6 +7,9 @@ using namespace std;
 
 int autotesting_main(int argc, const char* argv[])
 {
+  // Always start the global context
+  AutoGlobalContext()->Initiate();
+
   auto& listeners = testing::UnitTest::GetInstance()->listeners();
   listeners.Append(new AutowiringEnclosure);
   testing::InitGoogleTest(&argc, (char**)argv);

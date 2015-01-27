@@ -3,7 +3,6 @@
 #include "autowiring_error.h"
 #include "Object.h"
 #include "ObjectPoolMonitor.h"
-#include <set>
 #include <cassert>
 #include <vector>
 #include FUNCTIONAL_HEADER

@@ -79,7 +79,8 @@ bool AutoPacketGraph::OnStart(void) {
 
 void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
   packet.AddTeardownListener([this, &packet] () {
-    for (auto& decoration : packet.GetDispositions()) {
+    for (auto& cur : packet.GetDecorations()) {
+      auto& decoration = cur.second;
       auto type = &decoration.GetKey().ti;
 
       for (auto& publisher : decoration.m_publishers) {

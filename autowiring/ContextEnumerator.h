@@ -38,7 +38,7 @@ protected:
   const std::shared_ptr<CoreContext> m_root;
 
 public:
-  // The iterator class which is actually used in enumerating contexts
+  /// The iterator class which is actually used in enumerating contexts
   class iterator {
   public:
     typedef std::input_iterator_tag iterator_category;
@@ -79,7 +79,7 @@ public:
   iterator end(void) { return iterator(m_root, std::shared_ptr<CoreContext>()); }
 };
 
-
+/// CurrentContextEnumerator
 class CurrentContextEnumerator:
   public ContextEnumerator
 {
@@ -90,6 +90,7 @@ public:
   CurrentContextEnumerator(void);
 };
 
+/// CurrentContextEnumeratorT
 template<class Sigil>
 class ContextEnumeratorT:
   public ContextEnumerator
@@ -99,6 +100,7 @@ public:
     ContextEnumerator(ctxt)
   {}
 
+  /// CurrentContextEnumeratorT iterator
   class iterator:
     public ContextEnumerator::iterator
   {
