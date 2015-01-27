@@ -6,7 +6,6 @@
 #include <autowiring/Deferred.h>
 #include <autowiring/NewAutoFilter.h>
 #include <autowiring/ObjectPool.h>
-#include <autowiring/DeclareAutoFilter.h>
 #include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/AutoTimeStamp.h>
 #include <autowiring/SatCounter.h>
@@ -763,48 +762,6 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
   const Decoration<0>* dec;
   ASSERT_TRUE(packet->Get(dec)) << "Deferred decorator didn't attach a decoration to an issued packet";
   ASSERT_EQ(105, dec->i) << "Deferred decorate-only AutoFilter did not properly attach before context termination";
-}
-
-TEST_F(AutoFilterTest, MicroAutoFilterTests) {
-  int extVal = -1;
-  MicroAutoFilter<void, const int&> makeImmediate(
-  [&extVal] (const int& getVal) {
-    extVal = getVal;
-  });
-  int setVal = 1;
-  makeImmediate.AutoFilter(setVal);
-  ASSERT_EQ(1, extVal);
-}
-
-struct MultiFilter01 {
-  std::list<int> call_vals;
-  void Call0(const Decoration<0>& arg) { call_vals.push_back(arg.i); }
-  void Call1(const Decoration<1>& arg) { call_vals.push_back(arg.i); }
-
-  MultiFilter01() {
-    // Constructor wraps each method in an AutoFilter call
-    DeclareAutoFilter(this, &MultiFilter01::Call0);
-    DeclareAutoFilter(this, &MultiFilter01::Call1);
-  }
-};
-
-TEST_F(AutoFilterTest, DeclareAutoFilterTest) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<MultiFilter01> mf01;
-
-  auto packetA = factory->NewPacket();
-  packetA->Decorate(Decoration<0>());
-  ASSERT_EQ(1, mf01->call_vals.size()) << "Failed to call AutoFilter wrapped method";
-  ASSERT_EQ(0, mf01->call_vals.back()) << "Calling value was not propagated";
-
-  auto packetB = factory->NewPacket();
-  packetB->Decorate(Decoration<1>());
-  ASSERT_EQ(2, mf01->call_vals.size()) << "Failed to call AutoFilter wrapped method";
-  ASSERT_EQ(1, mf01->call_vals.back()) << "Calling value was not propagated";
-
-  packetA->Decorate(Decoration<1>(2));
-  ASSERT_EQ(3, mf01->call_vals.size()) << "Failed to call AutoFilter wrapped method";
-  ASSERT_EQ(2, mf01->call_vals.back()) << "Calling value was not propagated";
 }
 
 class MyInheritingAutoFilter:
