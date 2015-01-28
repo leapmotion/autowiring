@@ -369,7 +369,10 @@ public:
   void Decorate(std::shared_ptr<T> ptr) {
     DecorationKey key(auto_id<T>::key());
     
-    /// Injunction to prevent existential loops:
+    // We don't want to see this overload used on a const T
+    static_assert(!std::is_const<T>::value, "Cannot decorate a shared pointer to const T with this overload");
+
+    // Injunction to prevent existential loops:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
     
     // Either decorate, or prevent anyone from decorating
