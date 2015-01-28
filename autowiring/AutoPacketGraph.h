@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AutoFilterDescriptor.h"
 #include "AutoPacket.h"
@@ -9,6 +9,7 @@
 #include STL_UNORDERED_MAP
 
 
+/// \internal
 /// <summary>
 /// Represents an edge in the graph from a type to an AutoFilter
 /// </summary>
@@ -97,7 +98,6 @@ protected:
   /// AutowiringEvents overrides
   virtual void NewContext(CoreContext&) override {}
   virtual void ExpiredContext(CoreContext&) override {}
-  virtual void EventFired(CoreContext&, const std::type_info&) override {}
   virtual void NewObject(CoreContext&, const ObjectTraits&) override;
   
   /// CoreRunnable overrides

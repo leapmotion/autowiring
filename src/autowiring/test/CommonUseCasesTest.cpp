@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "HasForwardOnlyType.hpp"
 
@@ -13,4 +13,5 @@ class CUCTSample {};
 // only take place with great attention paid to a proper deprecation strategy.
 TEST_F(CommonUseCasesTest, AutowiredForwardType) {
   HasForwardOnlyType f;
+  AutoRequired<HasForwardOnlyType> fp;
 }

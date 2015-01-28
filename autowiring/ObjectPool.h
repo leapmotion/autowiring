@@ -1,9 +1,8 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "autowiring_error.h"
 #include "Object.h"
 #include "ObjectPoolMonitor.h"
-#include <set>
 #include <cassert>
 #include <vector>
 #include FUNCTIONAL_HEADER

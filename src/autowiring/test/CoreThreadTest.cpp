@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/SimpleThreaded.hpp"
 #include <autowiring/at_exit.h>
@@ -92,6 +92,8 @@ TEST_F(CoreThreadTest, VerifyIndefiniteDelay) {
 
 TEST_F(CoreThreadTest, VerifyNestedTermination) {
   AutoCurrentContext ctxt;
+  ctxt->Initiate();
+
   std::shared_ptr<SimpleThreaded> st;
 
   // Insert a thread into a second-order subcontext:
@@ -121,8 +123,7 @@ TEST_F(CoreThreadTest, VerifyNestedTermination) {
 
 class SleepEvent {
 public:
-  virtual Deferred SleepFor(int seconds) = 0;
-  virtual Deferred SleepForThenThrow(int seconds) = 0;
+  virtual void SleepFor(int seconds) = 0;
 };
 
 class ListenThread :
@@ -132,16 +133,12 @@ class ListenThread :
 public:
   ListenThread() : CoreThread("ListenThread") {}
 
-  Deferred SleepFor(int seconds) override {
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    if(ShouldStop())
-      throw std::runtime_error("Execution aborted");
-
-    return Deferred(this);
-  }
-
-  Deferred SleepForThenThrow(int seconds) override {
-    return Deferred(this);
+  void SleepFor(int seconds) override {
+    *this += [this] {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      if(ShouldStop())
+        throw std::runtime_error("Execution aborted");
+    };
   }
 };
 
@@ -169,8 +166,7 @@ TEST_F(CoreThreadTest, AUTOTHROW_VerifyDispatchQueueShutdown) {
 }
 
 TEST_F(CoreThreadTest, AUTOTHROW_VerifyNoLeakOnExecptions) {
-  AutoCreateContext ctxt;
-  CurrentContextPusher pshr(ctxt);
+  AutoCurrentContext ctxt;
 
   AutoRequired<ListenThread> listener;
   auto value = std::make_shared<std::string>("sentinal");

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/ThrowsWhenFired.hpp"
 #include "TestFixtures/ThrowsWhenRun.hpp"
@@ -147,6 +147,9 @@ TEST_F(ExceptionFilterTest, SimpleFilterCheck) {
 }
 
 TEST_F(ExceptionFilterTest, FireContainmentCheck) {
+  // Initiate parent context first
+  AutoCurrentContext()->Initiate();
+
   // Firing will occur at the parent context scope:
   AutoFired<ThrowingListener> broadcaster;
 
@@ -166,6 +169,8 @@ TEST_F(ExceptionFilterTest, FireContainmentCheck) {
 }
 
 TEST_F(ExceptionFilterTest, AUTOTHROW_EnclosedThrowCheck) {
+  AutoCurrentContext()->Initiate();
+
   // Create our listener:
   AutoRequired<GenericFilter> filter;
 
@@ -178,7 +183,7 @@ TEST_F(ExceptionFilterTest, AUTOTHROW_EnclosedThrowCheck) {
   subCtxt->Initiate();
 
   // Wait for the exception to get thrown:
-  subCtxt->Wait();
+  ASSERT_TRUE(subCtxt->Wait(std::chrono::seconds(5))) << "Context did not terminate in a timely fashion";
 
   // Verify that the filter caught the exception:
   EXPECT_TRUE(filter->m_hit) << "Filter operating in a superior context did not catch an exception thrown from a child context";

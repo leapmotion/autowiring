@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
 #include "boost_shared_ptr.h"
@@ -15,3 +15,7 @@ struct std::hash<std::shared_ptr<T>>:
     return std::hash<T*>::operator()(__p.get());
   }
 };
+
+namespace std {
+  using autoboost::enable_shared_from_this;
+}

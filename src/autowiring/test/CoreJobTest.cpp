@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/CoreJob.h>
 #include THREAD_HEADER
@@ -156,6 +156,8 @@ TEST_F(CoreJobTest, RecursiveAdd) {
 }
 
 TEST_F(CoreJobTest, RaceCondition) {
+  AutoCurrentContext()->Initiate();
+
   for (int i=0; i<5; i++) {
     AutoCreateContext ctxt;
     CurrentContextPusher pshr(ctxt);

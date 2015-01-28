@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AnySharedPointer.h"
 
@@ -14,6 +14,15 @@ AnySharedPointer::AnySharedPointer(AnySharedPointer&& rhs)
 AnySharedPointer::AnySharedPointer(const AnySharedPointer& rhs) {
   new (m_space) SharedPointerSlot(*rhs.slot());
 }
+
+AnySharedPointer::AnySharedPointer(const SharedPointerSlot&& rhs) {
+  new (m_space) SharedPointerSlot(std::move(rhs));
+}
+
+AnySharedPointer::AnySharedPointer(const SharedPointerSlot& rhs){
+  new (m_space) SharedPointerSlot(rhs);
+}
+
 
 AnySharedPointer::~AnySharedPointer(void) {
   // Pass control to the *real* destructor:

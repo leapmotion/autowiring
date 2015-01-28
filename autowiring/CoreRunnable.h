@@ -1,8 +1,8 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include CHRONO_HEADER
 #include MEMORY_HEADER
 #include MUTEX_HEADER
-#include CHRONO_HEADER
 
 class Object;
 

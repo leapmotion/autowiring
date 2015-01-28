@@ -1,7 +1,9 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <autowiring/CoreThread.h>
+#include <autowiring/auto_tuple.h>
 #include <autowiring/has_autofilter.h>
+#include STL_TUPLE_HEADER
 
 /// <summary>
 /// A simple "decoration" class which will be added to a variety of sample packets
@@ -136,7 +138,6 @@ public:
 /// <summary>
 /// A generic filter which accepts templated input types
 /// </summary>
-#if AUTOWIRING_USE_LIBCXX
 template<class... Args>
 class FilterGen {
 public:
@@ -156,13 +157,12 @@ public:
       ASSERT_FALSE(cur) << "Packet was already decorated with at least one output-only type";
 
     ++m_called;
-    m_args = std::tie(args...);
+    m_args = autowiring::tie(args...);
   }
 
   int m_called;
-  std::tuple<typename std::decay<Args>::type...> m_args;
+  autowiring::tuple<typename std::remove_cv<typename std::decay<Args>::type>::type...> m_args;
 };
-#endif
 
 /// <summary>
 /// A filter that should trigger a static_assert in AutoRequire<BadFilterA>

@@ -1,0 +1,2 @@
+class Foo{}; //dummy class
+AutoCreateContextT<Foo> childContextWithSigil;

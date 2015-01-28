@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <autowiring/autowiring.h>
 
@@ -9,4 +9,6 @@ public:
   HasForwardOnlyType(void);
 
   Autowired<MyForwardedType> forwarded;
+
+  void AutoFilter(std::shared_ptr<MyForwardedType>& output);
 };

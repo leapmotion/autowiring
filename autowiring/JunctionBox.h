@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "DispatchQueue.h"
 #include "DispatchThunk.h"
@@ -12,10 +12,6 @@
 #include TYPE_TRAITS_HEADER
 
 class CoreContext;
-class JunctionBoxBase;
-
-template<typename T>
-struct JunctionBoxEntry;
 
 /// <summary>
 /// Utility routine which shuts down the current context
@@ -36,6 +32,9 @@ public:
   virtual ~JunctionBox(void) {}
 
 protected:
+  // Listener set lock
+  mutable std::mutex m_lock;
+
   // Collection of all known listeners:
   typedef std::set<JunctionBoxEntry<T>> t_listenerSet;
   t_listenerSet m_st;
@@ -65,34 +64,22 @@ public:
   }
 
   /// <summary>
-  /// Adds the specified observer to receive events dispatched from this instace
+  /// Adds the specified observer to receive events raised from this instace
   /// </summary>
   void Add(const JunctionBoxEntry<T>& rhs) {
     std::lock_guard<std::mutex> lk(m_lock);
 
     // Trivial insert
     m_st.insert(rhs);
-
-    // If the RHS implements DispatchQueue, add it to that collection as well:
-    DispatchQueue* pDispatch = autowiring::fast_pointer_cast<DispatchQueue, T>(rhs.m_ptr).get();
-    if(pDispatch)
-      m_dispatch.insert(pDispatch);
   }
 
   /// <summary>
   /// Removes the specified observer from the set currently configured to receive events
   /// </summary>
   void Remove(const JunctionBoxEntry<T>& rhs) {
+    // Update the deletion count, delete, return
     std::lock_guard<std::mutex> lk(m_lock);
-
-    // Update the deletion count
     m_numberOfDeletions++;
-
-    // If the RHS implements DispatchQueue, remove it from the dispatchers collection
-    DispatchQueue* pDispatch = autowiring::fast_pointer_cast<DispatchQueue, T>(rhs.m_ptr).get();
-    if(pDispatch)
-      m_dispatch.erase(pDispatch);
-
     m_st.erase(rhs);
   }
 
@@ -123,7 +110,7 @@ public:
 
         // If T doesn't inherit Object, then we need to cast to a unifying type which does
         typedef typename SelectTypeUnifier<T>::type TActual;
-        this->FilterFiringException(autowiring::fast_pointer_cast<TActual>(currentEvent.m_ptr));
+        this->FilterFiringException(currentEvent.m_ptr);
       }
       lk.lock();
 

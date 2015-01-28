@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/FiresManyEventsWhenRun.hpp"
 #include "TestFixtures/SimpleReceiver.hpp"
@@ -44,8 +44,8 @@ TEST_F(EventReceiverTest, VerifyNoReceive) {
   AutoFired<CallableInterfaceDeferred> sender;
 
   // Try to defer these calls, should not be delivered anywhere:
-  EXPECT_NO_THROW(sender.Defer(&CallableInterfaceDeferred::ZeroArgsDeferred)());
-  EXPECT_NO_THROW(sender.Defer(&CallableInterfaceDeferred::OneArgDeferred)(100));
+  EXPECT_NO_THROW(sender(&CallableInterfaceDeferred::ZeroArgsDeferred)());
+  EXPECT_NO_THROW(sender(&CallableInterfaceDeferred::OneArgDeferred)(100));
 
   // Unblock:
   receiver->Proceed();
@@ -53,7 +53,7 @@ TEST_F(EventReceiverTest, VerifyNoReceive) {
   // Allow dispatch delivery and post the quit event:
   //receiver->AcceptDispatchDelivery();
   AutoCurrentContext()->Initiate();
-  sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
+  sender(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Wait:
   receiver->Wait();
@@ -71,9 +71,9 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
   //receiver->AcceptDispatchDelivery();
 
   // Deferred fire:
-  sender.Defer(&CallableInterfaceDeferred::ZeroArgsDeferred)();
-  sender.Defer(&CallableInterfaceDeferred::OneArgDeferred)(101);
-  sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
+  sender(&CallableInterfaceDeferred::ZeroArgsDeferred)();
+  sender(&CallableInterfaceDeferred::OneArgDeferred)(101);
+  sender(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Verify that nothing is hit yet:
   EXPECT_FALSE(receiver->m_zero) << "Zero-argument call made prematurely";
@@ -107,8 +107,8 @@ TEST_F(EventReceiverTest, NontrivialCopy) {
     ascending.push_back(i);
 
   // Deferred fire:
-  sender.Defer(&CallableInterfaceDeferred::CopyVectorDeferred)(ascending);
-  sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
+  sender(&CallableInterfaceDeferred::CopyVectorDeferred)(ascending);
+  sender(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Verify that nothing is hit yet:
   EXPECT_TRUE(receiver->m_myVec.empty()) << "Event handler invoked before barrier was hit; it should have been deferred";
@@ -167,7 +167,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   CopyCounter ctr;
 
   // Signal stop:
-  sender.Defer(&CallableInterfaceDeferred::AllDoneDeferred)();
+  sender(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Let the sender process and then wait for it before we go on:
   receiver->Proceed();
@@ -484,4 +484,28 @@ TEST_F(EventReceiverTest, EventChain){
   AutoRequired<MyReceiver> recr;
   AutoCurrentContext ctxt;
   ctxt->Invoke(&MyReceiver::MyEvent)();
+}
+
+class HasAWeirdReturnType {
+public:
+  HasAWeirdReturnType(void) :
+    bCalled(false)
+  {}
+
+  bool bCalled;
+
+  int FiredMethod(void) {
+    bCalled = true;
+    return 1010;
+  }
+};
+
+/// <summary>
+/// Syntax verification to ensure 
+TEST_F(EventReceiverTest, OddReturnTypeTest) {
+  AutoRequired<HasAWeirdReturnType> hawrt;
+  AutoFired<HasAWeirdReturnType> af;
+  af(&HasAWeirdReturnType::FiredMethod)();
+
+  ASSERT_TRUE(hawrt->bCalled) << "Method with a strange fired return type did not get invoked as expected";
 }

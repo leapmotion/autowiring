@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "HasForwardOnlyType.hpp"
 
@@ -8,3 +8,7 @@ class MyForwardedType {};
 
 // And then we provide the ctor
 HasForwardOnlyType::HasForwardOnlyType(void) {}
+
+void HasForwardOnlyType::AutoFilter(std::shared_ptr<MyForwardedType>& output) {
+
+}

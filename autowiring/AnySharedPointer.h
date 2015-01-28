@@ -1,15 +1,21 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "SharedPointerSlot.h"
 
+/// \file SharedPointerSlot.h
+/// \internal
+
+/// AnySharedPointer
 struct AnySharedPointer {
 public:
   AnySharedPointer(void);
   AnySharedPointer(AnySharedPointer&& rhs);
-  explicit AnySharedPointer(const AnySharedPointer& rhs);
+  AnySharedPointer(const AnySharedPointer& rhs);
+  AnySharedPointer(const SharedPointerSlot&& rhs);
+  AnySharedPointer(const SharedPointerSlot& rhs);
 
   template<class T>
-  explicit AnySharedPointer(const std::shared_ptr<T>& rhs) {
+  AnySharedPointer(const std::shared_ptr<T>& rhs) {
     // Delegate the remainder to the assign operation:
     new (m_space) SharedPointerSlotT<T>(rhs);
   }

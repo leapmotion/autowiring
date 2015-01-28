@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AutoConfig.h"
 #include "has_validate.h"
@@ -61,6 +61,7 @@ protected:
   }
 };
 
+/// \internal
 /// <summary>
 /// Base class for providing an easy way to specify just a default value
 /// </summary>
@@ -82,6 +83,7 @@ protected:
   virtual ~DefaultKey() = 0;
 };
 
+/// \internal
 /// <summary>
 /// Base class for providing an easy way to default, min and max values
 /// </summary>

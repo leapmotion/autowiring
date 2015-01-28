@@ -50,9 +50,21 @@ if(APPLE)
       message("Parent project has set autowiring_USE_LIBCXX = OFF -> Build Autowiring using c++98")
     endif()
   endif()
+
+  # Install autoboost when using libstdc++
+  if(autowiring_USE_LIBCXX)
+    set(autowiring_INSTALL_AUTOBOOST OFF)
+  else()
+    set(autowiring_INSTALL_AUTOBOOST ON)
+  endif()
 else()
   # Always use libc++ on other platforms
   set(autowiring_USE_LIBCXX ON)
+
+  # Don't install autoboost unless otherwise specified
+  if(NOT DEFINED autowiring_INSTALL_AUTOBOOST)
+    set(autowiring_INSTALL_AUTOBOOST OFF)
+  endif()
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
@@ -100,13 +112,6 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules")
 include(AddPCH)
 include(ConditionalSources)
-
-if(autowiring_BUILD_ARM)
-  # Currently cannot build Autonet for ARM, so default this off on that platform
-  set(AUTOWIRING_BUILD_AUTONET_DEFAULT OFF)
-else()
-  set(AUTOWIRING_BUILD_AUTONET_DEFAULT ON)
-endif()
 
 # We don't build tests unless we're being built by ourselves in our own source tree
 # When we're embedded in someone else's subtree, it's not likely that they will want
@@ -220,7 +225,7 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   )
 
   # Install autoboost headers
-  if(NOT autowiring_USE_LIBCXX)
+  if(autowiring_INSTALL_AUTOBOOST)
     install(
       DIRECTORY ${PROJECT_SOURCE_DIR}/contrib/autoboost/autoboost
       DESTINATION include

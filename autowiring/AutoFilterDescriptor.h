@@ -1,8 +1,8 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
-#include "AutoPacket.h"
 #include "auto_arg.h"
+#include "AutoFilterDescriptorInput.h"
 #include "CallExtractor.h"
 #include "Decompose.h"
 #include "has_autofilter.h"
@@ -13,43 +13,7 @@ class AutoPacket;
 class Deferred;
 
 /// <summary>
-/// AutoFilter argument disposition
-/// </summary>
-struct AutoFilterDescriptorInput {
-  AutoFilterDescriptorInput(void) :
-    is_input(false),
-    is_output(false),
-    is_shared(false),
-    ti(nullptr)
-  {}
-
-  template<class T>
-  AutoFilterDescriptorInput(auto_arg<T>*) :
-    is_input(auto_arg<T>::is_input),
-    is_output(auto_arg<T>::is_output),
-    is_shared(auto_arg<T>::is_shared),
-    ti(&typeid(typename auto_arg<T>::id_type))
-  {}
-
-  const bool is_input;
-  const bool is_output;
-  const bool is_shared;
-  const std::type_info* const ti;
-
-  operator bool(void) const {
-    return !!ti;
-  }
-
-  template<class T>
-  struct rebind {
-    operator AutoFilterDescriptorInput() {
-      return AutoFilterDescriptorInput((auto_arg<T>*)nullptr);
-    }
-  };
-};
-
-/// <summary>
-/// The unbound part of an AutoFilter, includes everything except the AnySharedPointer
+/// The unbound part of an AutoFilter, includes everything except the AnySharedPointer representing the filter proper
 /// </summary>
 struct AutoFilterDescriptorStub {
   AutoFilterDescriptorStub(void) :
@@ -73,6 +37,10 @@ struct AutoFilterDescriptorStub {
   /// <summary>
   /// Constructs a new packet subscriber entry based on the specified call extractor and call pointer
   /// </summary>
+  /// <param name="pType">The type of the underlying filter</param>
+  /// <param name="pArgs">The inputs accepted by the filter</param>
+  /// <param name="deferred">True if the filter is deferred</param>
+  /// <param name="pCall">A pointer to the AutoFilter call routine itself</param>
   /// <remarks>
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call.  The extractor
   /// is required to carry information about the type of the proper member function to be called; t_extractedCall is
@@ -88,7 +56,8 @@ struct AutoFilterDescriptorStub {
   {
     for(auto pArg = m_pArgs; *pArg; pArg++) {
       m_arity++;
-
+      
+      // time shifted arguments arn't required
       if (pArg->is_input)
         ++m_requiredCount;
     }
@@ -295,11 +264,6 @@ public:
     m_autoFilter->reset();
   }
 
-  /// <returns>
-  /// True if this subscriber instance is not empty.
-  /// </returns>
-  operator bool(void) const { return !empty(); }
-
   /// <returns>True when both the AutoFilter method and subscriber instance are equal.</returns>
   bool operator==(const AutoFilterDescriptor& rhs) const {
     // AutoFilter methods are the same for all instances of a class,
@@ -351,8 +315,11 @@ public:
 };
 
 /// <summary>
-/// Utility routine to support the creation of an AutoFilterDescriptor from any member function
+/// Utility routine to support the creation of an AutoFilterDescriptor from T::AutoFilter
 /// </summary>
+/// <remarks>
+/// This method will return an empty descriptor in the case that T::AutoFilter is not defined
+/// </remarks>
 template<class T>
 AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
   return std::move(AutoFilterDescriptorSelect<T>(ptr).desc);

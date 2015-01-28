@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/ExitRaceThreaded.hpp"
 #include "TestFixtures/SimpleThreaded.hpp"
@@ -39,6 +39,8 @@ TEST_F(ContextMapTest, VerifySimple) {
 }
 
 TEST_F(ContextMapTest, VerifyWithThreads) {
+  AutoCurrentContext()->Initiate();
+
   ContextMap<string> mp;
   std::shared_ptr<SimpleThreaded> threaded;
   std::weak_ptr<CoreContext> weakContext;

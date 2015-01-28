@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <string>
 #include <typeinfo>
@@ -15,6 +15,7 @@ namespace autowiring {
 
   std::string demangle(const AnySharedPointer& ptr);
 
+  /// Returns a human-readable std::string describing the type.
   template<typename T>
   std::string demangle(const T&) {
     return demangle(typeid(T));

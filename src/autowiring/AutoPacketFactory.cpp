@@ -1,8 +1,9 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketInternal.hpp"
 #include "CoreContext.h"
+#include "SatCounter.h"
 #include <cmath>
 
 AutoPacketFactory::AutoPacketFactory(void):
@@ -21,10 +22,12 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
     throw autowiring_error("Cannot create a packet until the AutoPacketFactory is started");
   
   std::shared_ptr<AutoPacketInternal> retVal;
+  bool isFirstPacket;
   {
     std::lock_guard<std::mutex> lk(m_lock);
     
     // New packet issued
+    isFirstPacket = !m_packetCount;
     ++m_packetCount;
   
     // Create a new next packet
@@ -32,7 +35,7 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
     m_nextPacket = retVal->SuccessorInternal();
   }
   
-  retVal->Initialize();
+  retVal->Initialize(isFirstPacket);
   return retVal;
 }
 
@@ -65,6 +68,27 @@ std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
     }
   );
   m_outstandingInternal = retVal;
+  return retVal;
+}
+
+SatCounter* AutoPacketFactory::CreateSatCounterList(void) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+
+  // Trivial return check
+  if (m_autoFilters.empty())
+    return nullptr;
+
+  auto q = m_autoFilters.begin();
+
+  // Construct the linked list.  This code implements a push-front so that retVal
+  // always refers to the first element of the linked list.
+  SatCounter* retVal = new SatCounter(*q);
+  while (++q != m_autoFilters.end()) {
+    SatCounter* next = new SatCounter(*q);
+    retVal->blink = next;
+    next->flink = retVal;
+    retVal = next;
+  }
   return retVal;
 }
 

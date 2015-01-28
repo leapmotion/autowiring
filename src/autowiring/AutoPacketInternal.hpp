@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AutoPacket.h"
 
@@ -24,6 +24,11 @@ public:
   /// It is not called when the Packet is created since that could result in
   /// spurious calls when no packet is issued.
   /// </remarks>
-  void Initialize(void);
+  void Initialize(bool isFirstPacket);
+
+  /// <summary>
+  /// 
+  /// </summary>
+  std::shared_ptr<AutoPacketInternal> SuccessorInternal(void);
 };
 

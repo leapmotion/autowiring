@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "Autowired.h"
 #include "AutoConfigManager.h"
@@ -9,6 +9,7 @@
 
 struct AnySharedPointer;
 
+/// \internal
 /// <summary>
 /// Utility base type for configuration members
 /// </summary>

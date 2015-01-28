@@ -1,8 +1,9 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
 /// <summary>
 /// Utility type which enables the composition of a sequence [0, sizeof...(Ts))
+/// </summary>
 template<int ...>
 struct index_tuple {};
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/SimpleThreaded.hpp"
 #include <autowiring/ObjectPool.h>
@@ -263,6 +263,7 @@ TEST_F(ObjectPoolTest, EmptyPoolIssuance) {
 
   // Now see if we can delay for the thread to back out:
   ctxt->Initiate();
+  ASSERT_TRUE(ctxt->IsRunning());
   pool.Rundown();
 
   // Verify that it got released as expected:

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/Decoration.hpp"
 #include <autowiring/AutoPacket.h>
@@ -6,7 +6,6 @@
 #include <autowiring/Deferred.h>
 #include <autowiring/NewAutoFilter.h>
 #include <autowiring/ObjectPool.h>
-#include <autowiring/DeclareAutoFilter.h>
 #include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/AutoTimeStamp.h>
 #include <autowiring/SatCounter.h>
@@ -157,17 +156,6 @@ TEST_F(AutoFilterTest, VerifyNoMultiDecorate) {
   EXPECT_ANY_THROW(packet->DecorateImmediate(Decoration<2>(), Decoration<2>())) << "Repeated type in immediate decoration was not identified as an error";
 }
 
-TEST_F(AutoFilterTest, VerifyNoNullCheckout) {
-  AutoRequired<AutoPacketFactory> factory;
-
-  std::shared_ptr<Decoration<0>> nulldeco;
-  ASSERT_FALSE(nulldeco);
-
-  auto packet = factory->NewPacket();
-  EXPECT_THROW(packet->Checkout(nulldeco), std::exception) << "Failed to catch null checkout" << std::endl;
-  EXPECT_THROW(packet->Decorate(nulldeco), std::exception) << "Failed to catch null decoration" << std::endl;
-}
-
 template<int out, int in>
 class FilterGather {
 public:
@@ -292,64 +280,6 @@ TEST_F(AutoFilterTest, VerifyTeardownArrangement) {
 
   // Filter should be expired now:
   ASSERT_TRUE(filterAWeak.expired()) << "Subscriber was still left outstanding even though all references should be gone";
-}
-
-TEST_F(AutoFilterTest, VerifyCheckout) {
-  AutoRequired<FilterA> filterA;
-  AutoRequired<AutoPacketFactory> factory;
-
-  // Obtain a packet for use with deferred decoration:
-  auto packet = factory->NewPacket();
-
-  // Satisfy the other decoration:
-  packet->Decorate(Decoration<1>());
-
-  {
-    AutoCheckout<Decoration<0>> exterior;
-
-    {
-      AutoCheckout<Decoration<0>> checkout = packet->Checkout<Decoration<0>>();
-
-      // Verify we can move the original type:
-      AutoCheckout<Decoration<0>> checkoutMoved(std::move(checkout));
-
-      // Verify no hits yet:
-      EXPECT_FALSE(filterA->m_called) << "Filter called as a consequence of a checkout move operation";
-
-      // Move the checkout a second time:
-      exterior = std::move(checkoutMoved);
-    }
-
-    // Still no hits
-    EXPECT_FALSE(filterA->m_called) << "Filter called before a decoration checkout expired";
-
-    // Mark ready so we get committed:
-    exterior.Ready();
-  }
-
-  // Verify a hit took place now
-  EXPECT_LT(0, filterA->m_called) << "Filter was not called after all decorations were installed";
-}
-
-TEST_F(AutoFilterTest, RollbackCorrectness) {
-  AutoRequired<FilterA> filterA;
-  AutoRequired<AutoPacketFactory> factory;
-
-  // Obtain a packet for use with deferred decoration:
-  auto packet = factory->NewPacket();
-  packet->Decorate(Decoration<1>());
-
-  // Request and immediately allow the destruction of a checkout:
-  packet->Checkout<Decoration<0>>();
-
-  // Verify no hit took place--the checkout should have been cancelled:
-  EXPECT_FALSE(filterA->m_called) << "Filter was called even though one decoration shouldn't have been available";
-
-  // We should not be able to obtain another checkout of this decoration on this packet:
-  EXPECT_ANY_THROW(packet->Checkout<Decoration<0>>()) << "An attempt to check out a decoration a second time should have failed";
-
-  // We shouldn't be able to manually decorate, either:
-  EXPECT_ANY_THROW(packet->Decorate(Decoration<0>())) << "An attempt to manually add a previously failed decoration succeeded where it should not have";
 }
 
 TEST_F(AutoFilterTest, VerifyAntiDecorate) {
@@ -566,7 +496,7 @@ TEST_F(AutoFilterTest, SingleImmediate) {
     packet->DecorateImmediate(dec);
 
     ASSERT_TRUE(fgp->m_called == 1) << "Filter should called " << fgp->m_called << " times, expected 1";
-    ASSERT_TRUE(std::get<0>(fgp->m_args).i == pattern) << "Filter argument yielded " << std::get<0>(fgp->m_args).i << "expected " << pattern;
+    ASSERT_TRUE(autowiring::get<0>(fgp->m_args).i == pattern) << "Filter argument yielded " << autowiring::get<0>(fgp->m_args).i << "expected " << pattern;
   }
   ASSERT_EQ(0, factory->GetOutstandingPacketCount()) << "Destroyed packet remains outstanding";
 
@@ -834,48 +764,6 @@ TEST_F(AutoFilterTest, DeferredDecorateOnly) {
   ASSERT_EQ(105, dec->i) << "Deferred decorate-only AutoFilter did not properly attach before context termination";
 }
 
-TEST_F(AutoFilterTest, MicroAutoFilterTests) {
-  int extVal = -1;
-  MicroAutoFilter<void, const int&> makeImmediate(
-  [&extVal] (const int& getVal) {
-    extVal = getVal;
-  });
-  int setVal = 1;
-  makeImmediate.AutoFilter(setVal);
-  ASSERT_EQ(1, extVal);
-}
-
-struct MultiFilter01 {
-  std::list<int> call_vals;
-  void Call0(const Decoration<0>& arg) { call_vals.push_back(arg.i); }
-  void Call1(const Decoration<1>& arg) { call_vals.push_back(arg.i); }
-
-  MultiFilter01() {
-    // Constructor wraps each method in an AutoFilter call
-    DeclareAutoFilter(this, &MultiFilter01::Call0);
-    DeclareAutoFilter(this, &MultiFilter01::Call1);
-  }
-};
-
-TEST_F(AutoFilterTest, DeclareAutoFilterTest) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<MultiFilter01> mf01;
-
-  auto packetA = factory->NewPacket();
-  packetA->Decorate(Decoration<0>());
-  ASSERT_EQ(1, mf01->call_vals.size()) << "Failed to call AutoFilter wrapped method";
-  ASSERT_EQ(0, mf01->call_vals.back()) << "Calling value was not propagated";
-
-  auto packetB = factory->NewPacket();
-  packetB->Decorate(Decoration<1>());
-  ASSERT_EQ(2, mf01->call_vals.size()) << "Failed to call AutoFilter wrapped method";
-  ASSERT_EQ(1, mf01->call_vals.back()) << "Calling value was not propagated";
-
-  packetA->Decorate(Decoration<1>(2));
-  ASSERT_EQ(3, mf01->call_vals.size()) << "Failed to call AutoFilter wrapped method";
-  ASSERT_EQ(2, mf01->call_vals.back()) << "Calling value was not propagated";
-}
-
 class MyInheritingAutoFilter:
   public FilterGen<std::vector<int>>
 {};
@@ -921,4 +809,32 @@ TEST_F(AutoFilterTest, PacketTeardownNotificationCheck) {
 
   ASSERT_TRUE(*called) << "Teardown listener was not called after packet destruction";
   ASSERT_TRUE(called.unique()) << "Teardown listener lambda function was leaked";
+}
+
+struct ContextChecker:
+  ContextMember
+{
+  ContextChecker(void):
+    m_called(0)
+  {}
+
+  void AutoFilter(int i) {
+    ++m_called;
+    ASSERT_EQ(AutoCurrentContext(), GetContext()) << "AutoFilter not called with the current context set to packet's context";
+  }
+
+  int m_called;
+};
+
+TEST_F(AutoFilterTest, CurrentContextCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<ContextChecker> filter;
+
+  {
+    CurrentContextPusher pshr((AutoCreateContext()));
+    auto packet = factory->NewPacket();
+    packet->Decorate(42);
+  }
+
+  ASSERT_EQ(1, filter->m_called) << "AutoFilter called incorrect number of times";
 }

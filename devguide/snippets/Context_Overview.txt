@@ -1,0 +1,10 @@
+class Bar{};
+class Foo{
+    public:
+        AutoRequired<Bar> bar;
+};
+AutoCreateContext ctxt;
+CurrentContextPusher push(ctxt);
+
+AutoRequired<Foo> foo;
+AutoRequired<Bar> bar; //bar and foo.bar point to the same instance

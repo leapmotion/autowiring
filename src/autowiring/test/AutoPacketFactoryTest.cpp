@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/CoreThread.h>
 #include CHRONO_HEADER
@@ -94,6 +94,8 @@ public:
 };
 
 TEST_F(AutoPacketFactoryTest, AutoPacketFactoryCycle) {
+  AutoCurrentContext()->Initiate();
+
   std::weak_ptr<CoreContext> ctxtWeak;
   std::weak_ptr<HoldsAutoPacketFactoryReference> hapfrWeak;
   std::shared_ptr<AutoPacket> packet;
@@ -150,10 +152,9 @@ public:
 
 TEST_F(AutoPacketFactoryTest, AutoPacketStatistics) {
   // Create a context, fill it up, kick it off:
-  AutoCreateContext ctxt;
-  CurrentContextPusher pshr(ctxt);
-  AutoRequired<DelaysAutoPacketsOneMS> dapoms(ctxt);
-  AutoRequired<AutoPacketFactory> factory(ctxt);
+  AutoCurrentContext ctxt;
+  AutoRequired<DelaysAutoPacketsOneMS> dapoms;
+  AutoRequired<AutoPacketFactory> factory;
   ctxt->Initiate();
 
   int numPackets = 20;
@@ -174,4 +175,84 @@ TEST_F(AutoPacketFactoryTest, AutoPacketStatistics) {
   ASSERT_EQ(numPackets, factory->GetTotalPacketCount()) << "The factory did not get enough packets";
 
   ASSERT_LE(packetDelay, factory->GetMeanPacketLifetime()) << "The mean packet lifetime was less than the delay on each packet";
+}
+
+TEST_F(AutoPacketFactoryTest, AddSubscriberTest) {
+  AutoCurrentContext ctxt;
+  AutoRequired<AutoPacketFactory> factory;
+  ctxt->Initiate();
+
+  bool first_called = false;
+  bool second_called = false;
+
+  factory->AddSubscriber(AutoFilterDescriptor([&first_called] (int) {first_called = true;}));
+  *factory += [&second_called] (int) {second_called = true;};
+
+  auto packet = factory->NewPacket();
+
+  ASSERT_FALSE(first_called) << "Normal subscriber called too early";
+  ASSERT_FALSE(second_called) << "Subscriber added with operator+= called too early";
+
+  packet->DecorateImmediate(int(0));
+
+  ASSERT_TRUE(first_called) << "Normal subscriber never called";
+  ASSERT_TRUE(second_called) << "Subscriber added with operator+= never called";
+}
+
+TEST_F(AutoPacketFactoryTest, EnumerateDecorationsTest) {
+  auto sample = [](const int* vals []) {};
+  AutoFilterDescriptor desc(sample);
+
+  size_t i = 0;
+  for (auto* pCur = desc.GetAutoFilterInput(); *pCur; pCur++)
+    i++;
+
+  ASSERT_EQ(1, i) << "AutoFilterDescriptor parsed an incorrect number of arguments from a lambda";
+}
+
+TEST_F(AutoPacketFactoryTest, MultiDecorateTest) {
+  AutoCurrentContext ctxt;
+  AutoRequired<AutoPacketFactory> factory(ctxt);
+  ctxt->Initiate();
+
+  int called = 0;
+
+  *factory += [&called] (int& out) { out = called++; };
+  *factory += [&called] (int& out) { out = called++; };
+  *factory += [&called] (const int* vals[]) {
+    ASSERT_NE(nullptr, vals);
+    called++;
+
+    // Guarantee that values were added in the expected order
+    int i;
+    for (i = 0; vals[i]; i++)
+      ASSERT_EQ(i, *(vals[i])) << "Incorrect values were added to the packet";
+
+    // Verify we got the number of values out that we wanted to get out
+    ASSERT_EQ(2, i) << "The wrong number of values were added to the packet";
+  };
+  ASSERT_EQ(0, called) << "Lambda functions were called before expected";
+
+  auto packet = factory->NewPacket();
+  ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
+}
+
+TEST_F(AutoPacketFactoryTest, MultiPostHocIntroductionTest) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+  AutoRequired<AutoPacketFactory> factory(ctxt);
+
+  int called = 0;
+
+  *factory += [&called](int& out) { out = called++; };
+  *factory += [&called](int& out) { out = called++; };
+
+  // Add a gather step on the packet:
+  auto packet = factory->NewPacket();
+  *packet += [&called](const int* vals []){
+    ASSERT_NE(nullptr, vals);
+    called++;
+  };
+
+  ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
 }

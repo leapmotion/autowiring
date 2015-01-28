@@ -1,8 +1,8 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "has_autofilter.h"
 #include "Object.h"
 #include RVALUE_HEADER
+#include TYPE_TRAITS_HEADER
 
 class TypeUnifier: public Object {};
 

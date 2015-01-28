@@ -1,0 +1,4 @@
+class Event {
+    public:
+        virtual void eventFunction(int) = 0;
+};

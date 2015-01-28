@@ -15,7 +15,6 @@ set(Autowiring_SRCS
   atomic_object.h
   at_exit.h
   auto_id.h
-  AutoCheckout.h
   AutoConfig.cpp
   AutoConfig.h
   AutoConfigManager.cpp
@@ -23,6 +22,7 @@ set(Autowiring_SRCS
   AutoConfigParser.cpp
   AutoConfigParser.hpp
   AutoFilterDescriptor.h
+  AutoFilterDescriptorInput.h
   AutoFuture.cpp
   AutoFuture.h
   AutoInjectable.cpp
@@ -55,6 +55,8 @@ set(Autowiring_SRCS
   auto_arg.h
   auto_in.h
   auto_out.h
+  auto_prev.h
+  auto_tuple.h
   BasicThread.cpp
   BasicThread.h
   BasicThreadStateBlock.cpp
@@ -86,7 +88,6 @@ set(Autowiring_SRCS
   CreationRules.h
   CurrentContextPusher.cpp
   CurrentContextPusher.h
-  DeclareAutoFilter.h
   Decompose.h
   DecorationDisposition.h
   Deferred.h
@@ -169,10 +170,6 @@ add_conditional_sources(
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/thread.cpp
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/future.cpp
 )
-
-if(NOT AUTOWIRING_BUILD_AUTONET)
-  list(APPEND Autowiring_SRCS DefaultAutoNetServer.cpp)
-endif()
 
 if(NOT APPLE)
   # avoid warning: has no symbols

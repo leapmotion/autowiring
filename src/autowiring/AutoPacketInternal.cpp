@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoPacketInternal.hpp"
 #include "AutoPacketFactory.h"
@@ -11,32 +11,44 @@ AutoPacketInternal::AutoPacketInternal(AutoPacketFactory& factory, std::shared_p
 
 AutoPacketInternal::~AutoPacketInternal(void) {}
 
-void AutoPacketInternal::Initialize(void) {
+void AutoPacketInternal::Initialize(bool isFirstPacket) {
   // Mark init time of packet
   this->m_initTime = std::chrono::high_resolution_clock::now();
 
   // Traverse all descendant contexts, adding their packet subscriber vectors one at a time:
-  m_parentFactory->AppendAutoFiltersTo(m_satCounters);
-
-  // Sort, eliminate duplicates
-  m_satCounters.sort();
-  m_satCounters.erase(std::unique(m_satCounters.begin(), m_satCounters.end()), m_satCounters.end());
-  
-  // Prime the satisfaction graph for each element:
-  for(auto& satCounter : m_satCounters)
-    AddSatCounter(satCounter);
+  m_firstCounter = m_parentFactory->CreateSatCounterList();
   
   // Find all subscribers with no required or optional arguments:
-  std::list<SatCounter*> callCounters;
-  for (auto& satCounter : m_satCounters)
-    if (satCounter)
-      callCounters.push_back(&satCounter);
+  std::vector<SatCounter*> callCounters;
+  for (auto* satCounter = m_firstCounter; satCounter; satCounter = satCounter->flink) {
+    
+    // Prime the satisfaction graph for element:
+    AddSatCounter(*satCounter);
+    
+    if (!satCounter->remaining)
+      callCounters.push_back(satCounter);
+  }
+  
+  // Mark timeshifted decorations as unsatisfiable on the first packet
+  if (isFirstPacket) {
+    for (auto& dec : m_decorations) {
+      auto& key = dec.first;
+      if (key.tshift) {
+        MarkUnsatisfiable(key);
+        MarkSuccessorsUnsatisfiable(key);
+      }
+    }
+  }
 
   // Call all subscribers with no required or optional arguments:
   // NOTE: This may result in decorations that cause other subscribers to be called.
   for (SatCounter* call : callCounters)
-    call->CallAutoFilter(*this);
+    call->GetCall()(call->GetAutoFilter(), *this);
 
   // First-call indicated by argumument type AutoPacket&:
-  UpdateSatisfaction(typeid(auto_arg<AutoPacket&>::id_type));
+  UpdateSatisfaction(DecorationKey(typeid(auto_arg<AutoPacket&>::id_type)));
+}
+
+std::shared_ptr<AutoPacketInternal> AutoPacketInternal::SuccessorInternal(void) {
+  return std::static_pointer_cast<AutoPacketInternal>(Successor());
 }

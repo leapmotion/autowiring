@@ -1,10 +1,11 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include MEMORY_HEADER
 #include MUTEX_HEADER
 
 class CoreContext;
 
+/// ContextCreatorBase
 class ContextCreatorBase {
 public:
   ContextCreatorBase(void);

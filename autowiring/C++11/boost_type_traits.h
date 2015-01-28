@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 
 #include <autoboost/type_traits/conditional.hpp>
@@ -17,6 +17,7 @@
 #include <autoboost/type_traits/is_void.hpp>
 #include <autoboost/type_traits/remove_extent.hpp>
 #include <autoboost/type_traits/remove_reference.hpp>
+#include <autoboost/type_traits/remove_pointer.hpp>
 #include <autoboost/utility/enable_if.hpp>
 
 namespace std {
@@ -40,6 +41,9 @@ namespace std {
   using autoboost::true_type;
   using autoboost::is_void;
   using autoboost::is_convertible;
+  using autoboost::remove_cv;
+  using autoboost::remove_pointer;
+  using autoboost::is_reference;
 
   template<bool _Test, class _Type = void>
   struct enable_if {};

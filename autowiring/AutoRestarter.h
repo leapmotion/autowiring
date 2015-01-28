@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "atomic_object.h"
 #include "CoreRunnable.h"
@@ -114,6 +114,10 @@ protected:
   /// Called by the monitor context member when a context has been stopped
   /// </summary>
   virtual void OnContextStopped(const ContextMember& monitor) {
+    // If our context is shut down already, we can take no action
+    if (AutoCurrentContext()->IsShutdown())
+      return;
+
     {
       std::lock_guard<std::mutex> lk(m_lock);
       if(m_context != monitor.GetContext())

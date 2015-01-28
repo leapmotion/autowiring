@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/Decoration.hpp"
 #include <autowiring/AutoPacket.h>
@@ -81,16 +81,23 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
 
   // Verify the first packet still does not have subscriptions:
   ASSERT_THROW(packet1->GetSatisfaction<FilterA>(), autowiring_error) << "Subscription was incorrectly, retroactively added to a packet";
-  ASSERT_TRUE(packet1->GetSubscribers<Decoration<0>>().empty()) << "Subscription was incorrectly, retroactively added to a packet";
-  ASSERT_TRUE(packet1->GetDispositions<Decoration<0>>().empty()) << "Subscription was incorrectly, retroactively added to a packet";
+  ASSERT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
+  ASSERT_EQ(0UL, packet1->GetDecorationTypeCount()) << "Subscription was incorrectly, retroactively added to a packet";
   ASSERT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
 
   // Verify the second one does:
   ASSERT_THROW(packet2->GetSatisfaction<FilterA>(), autowiring_error) << "Packet lacked an expected subscription";
-  auto subs = packet2->GetSubscribers<Decoration<0>>();
-  ASSERT_EQ(1UL, subs.size()) << "Incorrect subscriber count";
-  auto disps = packet2->GetDispositions<Decoration<0>>();
-  ASSERT_EQ(1UL, disps.size()) << "Incorrect count of expected decorations";
-  ASSERT_FALSE(disps.front().satisfied) << "Incorrect satisfaction status";
+  ASSERT_EQ(2UL, packet2->GetDecorationTypeCount()) << "Incorrect count of expected decorations";
   ASSERT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
+}
+
+TEST_F(DecoratorTest, ForwardAllTest) {
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet1 = factory->NewPacket();
+  auto packet2 = factory->NewPacket();
+
+  packet1->Decorate(Decoration<0>());
+  packet1->ForwardAll(packet2);
+
+  ASSERT_TRUE(packet2->Has<Decoration<0>>()) << "Forwarded packet did not have a decoration present on the original packet as expected";
 }

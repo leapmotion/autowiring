@@ -1,5 +1,6 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "is_any.h"
 #include <typeinfo>
 
 template<class... Ts>
@@ -22,6 +23,14 @@ struct TemplatePack {
   struct Enumerate {
     static const T types[N + 1];
   };
+
+  /// <summary>
+  /// Evaluates the specified predicate on each argument in the pack
+  /// </summary>
+  template<template<typename> class is>
+  struct any {
+    static const bool value = is_any<is<Ts>::value...>::value;
+  };
 };
 
 template<class... Ts>
@@ -36,6 +45,16 @@ struct Decompose;
 
 template<class R, class W, class... Args>
 struct Decompose<R(W::*)(Args...)> :
+  TemplatePack<Args...>
+{
+  typedef R(W::*memType)(Args...);
+  typedef void fnType(Args...);
+  typedef W type;
+  typedef R retType;
+};
+
+template<class R, class W, class... Args>
+struct Decompose<R(W::*)(Args...) const> :
   TemplatePack<Args...>
 {
   typedef R(W::*memType)(Args...);

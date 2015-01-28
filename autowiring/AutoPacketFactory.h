@@ -1,11 +1,10 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AutoPacket.h"
 #include "AutoFilterDescriptor.h"
 #include "ContextMember.h"
 #include "CoreRunnable.h"
 #include "TypeRegistry.h"
-#include <list>
 #include CHRONO_HEADER
 #include TYPE_TRAITS_HEADER
 #include STL_UNORDERED_SET
@@ -38,7 +37,7 @@ private:
   // Internal outstanding reference for issued packet:
   std::weak_ptr<void> m_outstandingInternal;
   
-  // The last packet issued from this factory
+  // The next packet to be issued from this factory
   std::shared_ptr<AutoPacketInternal> m_nextPacket;
 
   // Collection of known subscribers
@@ -65,6 +64,12 @@ public:
     std::lock_guard<std::mutex> lk(m_lock);
     container.insert(container.end(), m_autoFilters.begin(), m_autoFilters.end());
   }
+
+  /// <summary>
+  /// Creates a linked list of saturation counters
+  /// </summary>
+  /// <returns>The first element in the list, or nullptr if the list is empty</returns>
+  SatCounter* CreateSatCounterList(void) const;
 
   // CoreRunnable overrides:
   bool OnStart(void) override;
@@ -94,6 +99,14 @@ public:
   template<class T>
   void AddSubscriber(const std::shared_ptr<T>& rhs) {
     AddSubscriber(MakeAutoFilterDescriptor<T>(rhs));
+  }
+
+  /// <summary>
+  /// Convienance overload of operator+= to add a subscriber from a lambda
+  /// </summary>
+  template<class Fx>
+  void operator+=(Fx&& fx) {
+    AddSubscriber(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
   }
 
   /// <summary>

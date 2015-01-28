@@ -1,13 +1,15 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "JunctionBoxBase.h"
-#include "JunctionBoxEntry.h"
 #include TYPE_INDEX_HEADER
 #include MEMORY_HEADER
 #include STL_UNORDERED_MAP
 
 class CoreContext;
 class JunctionBoxBase;
+class Object;
+
+template<class T>
+struct JunctionBoxEntry;
 
 /// <summary>
 /// General manager class of all junction boxes defined in some context

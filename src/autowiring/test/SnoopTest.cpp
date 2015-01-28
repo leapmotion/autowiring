@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "TestFixtures/Decoration.hpp"
 #include "TestFixtures/SimpleObject.hpp"
@@ -156,10 +156,15 @@ TEST_F(SnoopTest, AmbiguousReciept) {
 }
 
 TEST_F(SnoopTest, AvoidDoubleReciept) {
+  AutoCurrentContext()->Initiate();
+
   AutoCreateContext sibCtxt;
   
   AutoCreateContext parentCtxt;
   CurrentContextPusher parentPshr(parentCtxt);
+
+  sibCtxt->Initiate();
+  parentCtxt->Initiate();
   
   // Create the parent listener:
   AutoRequired<ParentMember> parentMember;
@@ -181,8 +186,8 @@ TEST_F(SnoopTest, AvoidDoubleReciept) {
     firer(&UpBroadcastListener::SimpleCall)();
 
     // Verify that the child and parent got the message once
-    EXPECT_EQ(1, childMember->m_callCount) << "Message not received by another member of the same context";
-    EXPECT_EQ(1, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
+    ASSERT_EQ(1, childMember->m_callCount) << "Message not received by another member of the same context";
+    ASSERT_EQ(1, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
     
     
     // Test sibling context
@@ -192,24 +197,26 @@ TEST_F(SnoopTest, AvoidDoubleReciept) {
     
     firer(&UpBroadcastListener::SimpleCall)();
     
-    EXPECT_EQ(2, childMember->m_callCount) << "Message not received by another member of the same context";
-    EXPECT_EQ(2, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
-    EXPECT_EQ(1, alsoInParent->m_callCount) << "Parent context member didn't receive message";
-    EXPECT_EQ(1, sibMember->m_callCount) << "Sibling context member didn't receive message";
+    ASSERT_EQ(2, childMember->m_callCount) << "Message not received by another member of the same context";
+    ASSERT_EQ(2, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
+    ASSERT_EQ(1, alsoInParent->m_callCount) << "Parent context member didn't receive message";
+    ASSERT_EQ(1, sibMember->m_callCount) << "Sibling context member didn't receive message";
     
     // Make sure unsnoop cleans up everything
     child->Unsnoop(sibMember);
     firer(&UpBroadcastListener::SimpleCall)();
     
-    EXPECT_EQ(3, childMember->m_callCount) << "Message not received by another member of the same context";
-    EXPECT_EQ(3, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
-    EXPECT_EQ(2, alsoInParent->m_callCount) << "Parent context member didn't receive message";
-    EXPECT_EQ(1, sibMember->m_callCount) << "Sibling context member didn't unsnoop";
+    ASSERT_EQ(3, childMember->m_callCount) << "Message not received by another member of the same context";
+    ASSERT_EQ(3, parentMember->m_callCount) << "Parent context snooper didn't receive a message broadcast by the child context";
+    ASSERT_EQ(2, alsoInParent->m_callCount) << "Parent context member didn't receive message";
+    ASSERT_EQ(1, sibMember->m_callCount) << "Sibling context member didn't unsnoop";
   }
 }
 
 TEST_F(SnoopTest, MultiSnoop) {
   AutoCurrentContext base;
+  base->Initiate();
+
   auto ctxt1 = base->Create<int>();
   auto ctxt2 = ctxt1->Create<double>();
 
@@ -225,16 +232,20 @@ TEST_F(SnoopTest, MultiSnoop) {
   ctxt1->Invoke(&UpBroadcastListener::SimpleCall)();
   ctxt2->Invoke(&UpBroadcastListener::SimpleCall)();
   
-  EXPECT_EQ(1, member->m_callCount) << "Received events from child contexts";
+  ASSERT_EQ(1, member->m_callCount) << "Received events from child contexts";
+  member->m_callCount = 0;
   
-  // Snoop both
+  // Snoop both.  Invocation in an uninitialized context should not cause any handlers to be raised.
   ctxt1->Snoop(member);
   ctxt2->Snoop(member);
   base->Invoke(&UpBroadcastListener::SimpleCall)();
   ctxt1->Invoke(&UpBroadcastListener::SimpleCall)();
   ctxt2->Invoke(&UpBroadcastListener::SimpleCall)();
   
-  EXPECT_EQ(4, member->m_callCount) << "Didn't receive all events";
+  ASSERT_EQ(2, member->m_callCount) << "Didn't receive all events";
+  member->m_callCount = 0;
+  member1->m_callCount = 0;
+  member2->m_callCount = 0;
   
   // Unsnoop one
   ctxt2->Unsnoop(member);
@@ -242,9 +253,9 @@ TEST_F(SnoopTest, MultiSnoop) {
   ctxt1->Invoke(&UpBroadcastListener::SimpleCall)();
   ctxt2->Invoke(&UpBroadcastListener::SimpleCall)();
   
-  EXPECT_EQ(6, member->m_callCount) << "Unsnooped both!";
-  EXPECT_EQ(6, member1->m_callCount) << "Native context member didn't receive correct number of events";
-  EXPECT_EQ(9, member2->m_callCount) << "Native context member didn't receive correct number of events";
+  ASSERT_EQ(1, member->m_callCount) << "Unsnooped both!";
+  ASSERT_EQ(0, member1->m_callCount) << "Native context member didn't receive correct number of events";
+  ASSERT_EQ(1, member2->m_callCount) << "Native context member didn't receive correct number of events";
 }
 
 TEST_F(SnoopTest, AntiCyclicRemoval) {
@@ -268,6 +279,8 @@ TEST_F(SnoopTest, AntiCyclicRemoval) {
 
 
 TEST_F(SnoopTest, SimplePackets) {
+  AutoCurrentContext()->Initiate();
+
   AutoCreateContext Pipeline;
   AutoCreateContext Tracking;
   Pipeline->Initiate();

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "var_logic.h"
 #include <autowiring/auto_arg.h>
@@ -66,42 +66,53 @@ TEST_F(ArgumentTypeTest, TestAutoIn) {
   AutoRequired<AutoPacketFactory> factory;
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   packet->Decorate(Argument<0>(1));
-  auto_in<const Argument<0>> in(*packet);
-  ASSERT_TRUE(in.is_input) << "Incorrect orientation";
-  ASSERT_FALSE(in.is_output) << "Incorrect orientation";
-  ASSERT_EQ(1, in->i) << "Incorrect initialization";
+
+  typedef auto_arg<const Argument<0>> t_arg;
+  typedef auto_arg<std::shared_ptr<const Argument<0>>> t_argShared;
+
+  ASSERT_TRUE(t_arg::is_input) << "Incorrect orientation";
+  ASSERT_FALSE(t_arg::is_output) << "Incorrect orientation";
 
   // Base Cast
   {
-    const Argument<0>& base_in = *in;
-    ASSERT_EQ(1, base_in.i) << "Incorrect base cast";
+    const auto& in = t_arg::arg(*packet);
+    ASSERT_EQ(1, in.i) << "Incorrect initialization";
   }
 
   // Shared Cast
   {
-    std::shared_ptr<const Argument<0>> shared_in = in;
-    ASSERT_EQ(1, shared_in->i) << "Incorrect base cast";
+    auto shared_in = t_argShared::arg(*packet);
+    ASSERT_EQ(1, shared_in->i) << "Incorrect shared cast";
   }
 
   // Deduced Type
-  auto_arg<std::shared_ptr<const Argument<0>>>::type arg(*packet);
-  ASSERT_TRUE(in.get().unique()) << "AutoPacket should store the sole shared pointer reference";
+  const auto& arg = t_argShared::arg(*packet);
+  ASSERT_TRUE(arg.unique()) << "AutoPacket should store the sole shared pointer reference";
 }
 
 TEST_F(ArgumentTypeTest, TestAutoOut) {
   AutoRequired<AutoPacketFactory> factory;
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
+
+  std::shared_ptr<Argument<0>> a0;
   {
     typedef auto_arg<Argument<0>&> t_argType;
-    t_argType::type out(*packet);
+    std::shared_ptr<Argument<0>> out = t_argType::arg(*packet);
     ASSERT_FALSE(t_argType::is_input) << "Incorrect orientation";
     ASSERT_TRUE(t_argType::is_output) << "Incorrect orientation";
 
     // Implicit commitment to output
     out->i = 1;
+
+    // Normally this happens in CallExtractor, but we will do it here by hand
+    packet->Decorate(out);
+
+    // Track the shared pointer in order to ensure no copying takes place
+    a0 = out;
   }
 
   const Argument<0>* arg = nullptr;
   ASSERT_TRUE(packet->Get(arg)) << "Missing output";
+  ASSERT_EQ(a0, packet->GetShared<Argument<0>>()) << "Shared pointer copied incorrectly";
   ASSERT_EQ(1, arg->i) << "Output was not copied";
 }
