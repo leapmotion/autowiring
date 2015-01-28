@@ -195,12 +195,15 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
     Json::object types;
 
     // Add object data
-    objData["name"] = autowiring::demangle(typeid(*object.pObject));
+    objData["name"] = autowiring::demangle(object.type);
+    objData["id"] = autowiring::demangle(object.value.slot()->type());
+
+    // Add slots for this object
     {
       Json::array slots;
       for(auto slot = object.stump.pHead; slot; slot = slot->pFlink) {
         slots.push_back(Json::object{
-            {"name", autowiring::demangle(slot->type)},
+            {"id", autowiring::demangle(slot->type)},
             {"autoRequired", slot->autoRequired},
             {"offset", int(slot->slotOffset)}
         });
@@ -235,6 +238,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
       Json::object args;
       for (auto pArg = object.subscriber.GetAutoFilterInput(); *pArg; ++pArg) {
         args[autowiring::demangle(pArg->ti)] = Json::object{
+          {"id", autowiring::demangle(pArg->ti)},
           {"isInput", pArg->is_input},
           {"isOutput", pArg->is_output}
         };
