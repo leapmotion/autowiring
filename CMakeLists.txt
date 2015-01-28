@@ -50,9 +50,21 @@ if(APPLE)
       message("Parent project has set autowiring_USE_LIBCXX = OFF -> Build Autowiring using c++98")
     endif()
   endif()
+
+  # Install autoboost when using libstdc++
+  if(autowiring_USE_LIBCXX)
+    set(autowiring_INSTALL_AUTOBOOST OFF)
+  else()
+    set(autowiring_INSTALL_AUTOBOOST ON)
+  endif()
 else()
   # Always use libc++ on other platforms
   set(autowiring_USE_LIBCXX ON)
+
+  # Don't install autoboost unless otherwise specified
+  if(NOT DEFINED autowiring_INSTALL_AUTOBOOST)
+    set(autowiring_INSTALL_AUTOBOOST OFF)
+  endif()
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
@@ -213,7 +225,7 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
   )
 
   # Install autoboost headers
-  if(NOT autowiring_USE_LIBCXX)
+  if(autowiring_INSTALL_AUTOBOOST)
     install(
       DIRECTORY ${PROJECT_SOURCE_DIR}/contrib/autoboost/autoboost
       DESTINATION include
