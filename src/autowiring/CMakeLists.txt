@@ -147,6 +147,7 @@ set(Autowiring_SRCS
   TypeUnifier.h
   unlock_object.h
   uuid.h
+  uuid.cpp
   var_logic.h
 )
 
@@ -170,14 +171,6 @@ add_conditional_sources(
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/thread.cpp
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/future.cpp
 )
-
-if(NOT APPLE)
-  # avoid warning: has no symbols
-  set(Autowiring_SRCS
-    ${Autowiring_SRCS}
-    uuid.cpp
-  )
-endif()
 
 add_windows_sources(Autowiring_SRCS
   CoreThreadWin.cpp
