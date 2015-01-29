@@ -224,17 +224,21 @@ template<class T>
 class auto_arg<T const **>
 {
 public:
-  typedef std::vector<const T*> type;
+  typedef const T** type;
 
   // Another compositional structure, used to coerce a vector to a data item
   struct arg_type {
-    arg_type(type& value) :
-      value(value.data())
+    arg_type(const T** value) :
+      value(value)
     {}
 
-    T const ** value;
+    ~arg_type(void) {
+      std::return_temporary_buffer(value);
+    }
 
-    operator T const **(void) const { return value; }
+    const T** value;
+
+    operator const T**(void) const { return value; }
   };
 
   typedef auto_id<T> id_type;
@@ -245,7 +249,7 @@ public:
   static const int tshift = 0;
 
   template<class C>
-  static std::vector<const T*> arg(C& packet) {
+  static const T** arg(C& packet) {
     return packet.template GetAll<T>();
   }
 };
