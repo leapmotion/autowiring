@@ -289,7 +289,7 @@ public:
   /// <summary>
   /// Returns a null-terminated temporary buffer containing all decorations
   /// </summary>
-  /// <returns>The buffer, or nullptr if no matching decorations exist</returns>
+  /// <returns>The null-terminated temporary buffer</returns>
   /// <remarks>
   /// The returned buffer must be freed with std::return_temporary_buffer
   /// </remarks>
@@ -297,8 +297,13 @@ public:
   const T** GetAll(int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
     auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
-    if (q == m_decorations.end())
-      return nullptr;
+
+    // If decoration doesn't exist, return empty null-terminated buffer
+    if (q == m_decorations.end()) {
+      const T** retVal = std::get_temporary_buffer<const T*>(1).first;
+      retVal[0] = nullptr;
+      return retVal;
+    }
 
     const auto& decorations = q->second.m_decorations;
     const T** retVal = std::get_temporary_buffer<const T*>(decorations.size() + 1).first;
