@@ -440,34 +440,8 @@ void CoreContext::Initiate(void) {
     for (auto q = beginning; q != m_threads.end(); ++q)
       (*q)->Start(outstanding);
   }
-  lk.lock();
-
-  // We have to hold this to prevent dtors from running in a synchronized context
-  std::shared_ptr<CoreContext> prior;
-  for (auto childWeak : m_children) {
-    // Obtain child pointer and lock it down so our iterator stays stable
-    auto child = childWeak.lock();
-    if (!child)
-      // Expiration while we were attempting to dereference, circle around
-      continue;
-
-    // Cannot hold a lock safely if we hand off control to a child context
-    lk.unlock();
-    
-    // Control handoff to the child context must happen outside of a lock:
-    child->TryTransitionToRunState();
-
-    // Permit a prior context to expire if needed
-    prior.reset();
-
-    // Need to preserve current child context pointer before it goes out of scope in order to
-    // preserve our iterator.
-    lk.lock();
-    prior = child;
-  }
-
-  // Release our lock before letting `prior` expire, we can't hold a lock through such an event
-  lk.unlock();
+  
+  TryTransitionChildrenToRunState();
 }
 
 void CoreContext::InitiateCoreThreads(void) {
@@ -999,31 +973,63 @@ void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
   Inject<AutoPacketFactory>()->AddSubscriber(rhs);
 }
 
-void CoreContext::TryTransitionToRunState(void) {
+void CoreContext::TryTransitionChildrenToRunState(void) {
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
-  switch (m_state) {
-  case State::Initiated:
-    // Can transition to the running state now
+  
+  // We have to hold this to prevent dtors from running in a synchronized context
+  std::shared_ptr<CoreContext> prior;
+  for (auto childWeak : m_children) {
+    // Obtain child pointer and lock it down so our iterator stays stable
+    auto child = childWeak.lock();
+    if (!child)
+      // Expiration while we were attempting to dereference, circle around
+      continue;
+    
+    // Cannot hold a lock safely if we hand off control to a child context
+    lk.unlock();
     {
-      auto q = m_threads.begin();
-      m_state = State::Running;
-      lk.unlock();
-
-      auto outstanding = IncrementOutstandingThreadCount();
-      while (q != m_threads.end()) {
-        (*q)->Start(outstanding);
-        q++;
+      // Get lock of child while we're modifying it's state
+      std::unique_lock<std::mutex> childLk(child->m_stateBlock->m_lock);
+      
+      switch (child->m_state) {
+        case State::Initiated:
+          // Can transition to the running state now
+          {
+            auto q = child->m_threads.begin();
+            child->m_state = State::Running;
+            childLk.unlock();
+            
+            auto outstanding = child->IncrementOutstandingThreadCount();
+            while (q != child->m_threads.end()) {
+              (*q)->Start(outstanding);
+              q++;
+            }
+          }
+          break;
+        case State::CanRun:
+        case State::NotStarted:
+        case State::Running:
+        case State::Shutdown:
+        case State::Abandoned:
+          // No action need be taken for these states
+          return;
       }
     }
-    break;
-  case State::CanRun:
-  case State::NotStarted:
-  case State::Running:
-  case State::Shutdown:
-  case State::Abandoned:
-    // No action need be taken for these states
-    return;
+    
+    // Recursivly try to transition children
+    child->TryTransitionChildrenToRunState();
+    
+    // Permit a prior context to expire if needed
+    prior.reset();
+    
+    // Need to preserve current child context pointer before it goes out of scope in order to
+    // preserve our iterator.
+    lk.lock();
+    prior = child;
   }
+  
+  // Release our lock before letting `prior` expire, we can't hold a lock through such an event
+  lk.unlock();
 }
 
 void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {

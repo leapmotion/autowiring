@@ -453,9 +453,9 @@ protected:
 
   /// \internal
   /// <summary>
-  /// Invoked by a parent context on a child context when the parent has transitioned to the Running state
+  /// Invoked by a parent context when the parent has transitioned to the Running state
   /// </summary>
-  void TryTransitionToRunState(void);
+  void TryTransitionChildrenToRunState(void);
 
   /// <summary>
   /// Registers a factory _function_, a lambda which is capable of constructing decltype(fn())
