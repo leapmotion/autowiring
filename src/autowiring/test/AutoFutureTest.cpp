@@ -33,3 +33,25 @@ TEST_F(AutoFutureTest, VerifyFutureExtraction) {
   ) << "Continuation task did not launch as expected when the main task concluded";
   ASSERT_EQ(201, future.get()) << "Future value not propagated correctly back to the origin";
 }
+
+TEST_F(AutoFutureTest, CorrectDestructionTest) {
+  auto captured = std::make_shared<bool>(false);
+  {
+    auto f = std::async(
+      std::launch::deferred,
+      [] {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        return 5;
+      }
+    );
+
+    autowiring::then(f, [captured] {
+      *captured = true;
+    });
+    f.get();
+    ASSERT_FALSE(captured.unique()) << "Lambda was destroyed prematurely";
+  }
+
+  ASSERT_TRUE(*captured) << "Continuation lambda did not run as expected";
+  ASSERT_TRUE(captured.unique()) << "Continuation lambda leaked memory";
+}
