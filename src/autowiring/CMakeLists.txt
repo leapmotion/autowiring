@@ -188,6 +188,7 @@ add_windows_sources(Autowiring_SRCS
 )
 
 add_mac_sources(Autowiring_SRCS
+  auto_future_mac.h
   CoreThreadMac.cpp
 )
 
