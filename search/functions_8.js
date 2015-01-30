@@ -1,19 +1,13 @@
 var searchData=
 [
-  ['increment',['Increment',['../struct_sat_counter.html#a0ed6fb857a4400cb9055be08415b85f3',1,'SatCounter']]],
-  ['incrementoutstandingthreadcount',['IncrementOutstandingThreadCount',['../class_core_context.html#a5a772a84b896a9930bbcf4047420b6ee',1,'CoreContext']]],
-  ['init',['init',['../struct_shared_pointer_slot.html#a98a64c1fa173076432457e2daf338645',1,'SharedPointerSlot']]],
-  ['initialize',['Initialize',['../class_auto_packet_internal.html#a3a2e8e48dc4caaacd2776c4ec62590eb',1,'AutoPacketInternal']]],
-  ['initiate',['Initiate',['../class_core_context.html#aec4c58c375caaeb70d20807cd4029657',1,'CoreContext::Initiate()'],['../class_junction_box_manager.html#ab95e839338d5e8f633da3b5fb9ddd3d5',1,'JunctionBoxManager::Initiate()']]],
-  ['inject',['Inject',['../class_core_context.html#a005f71baab03719918429b7ecdd8a9ba',1,'CoreContext::Inject()'],['../struct_type_registry_entry.html#a47eaaaf82f89453541bcf2ff1854c5fd',1,'TypeRegistryEntry::Inject()'],['../struct_type_registry_entry_t.html#adc09e008498155b325d810c5c93e2311',1,'TypeRegistryEntryT::Inject()']]],
-  ['injectcurrent',['InjectCurrent',['../class_core_context.html#a0716b1184e3fba32e64c06160d3153a3',1,'CoreContext']]],
-  ['insert',['Insert',['../class_lock_reduced_collection.html#aae63c6790f31138c44d5d2f9392f2e4b',1,'LockReducedCollection']]],
-  ['insertsnooper',['InsertSnooper',['../class_core_context.html#ae83f60a0420935b7d1d09de44e5aa9a7',1,'CoreContext']]],
+  ['initiate',['Initiate',['../class_core_context.html#aec4c58c375caaeb70d20807cd4029657',1,'CoreContext']]],
+  ['inject',['Inject',['../class_core_context.html#a005f71baab03719918429b7ecdd8a9ba',1,'CoreContext']]],
+  ['injectcurrent',['InjectCurrent',['../class_core_context.html#a0716b1184e3fba32e64c06160d3153a3',1,'CoreContext::InjectCurrent()'],['../namespaceautowiring.html#a033857ad21d8598b555bd4ce9470e910',1,'autowiring::InjectCurrent()']]],
   ['invoke',['Invoke',['../class_core_context.html#a1fe1f8ada791176b9c4893963b74aee1',1,'CoreContext']]],
-  ['is',['Is',['../class_core_context.html#aefaae7d459f3ee07dce5b65c731e7900',1,'CoreContext::Is()'],['../struct_shared_pointer_slot.html#a9de1cdba907ea7e17a8dbb2d6885f838',1,'SharedPointerSlot::is()']]],
-  ['isabandoned',['IsAbandoned',['../class_object_pool_monitor.html#ab38ad1217e95e5d0a59a454243ca7c95',1,'ObjectPoolMonitor']]],
+  ['is',['Is',['../class_core_context.html#aefaae7d459f3ee07dce5b65c731e7900',1,'CoreContext']]],
   ['isancestorof',['IsAncestorOf',['../class_core_context.html#a46ab31f4f5f30284304bca63390f9545',1,'CoreContext']]],
-  ['isconfigured',['IsConfigured',['../class_auto_config.html#a56481d36524bf3aa830add2fc71ffc53',1,'AutoConfig::IsConfigured()'],['../class_auto_config_manager.html#a7b16964f87d5132923b4d5042c497af4',1,'AutoConfigManager::IsConfigured()']]],
-  ['isinherited',['IsInherited',['../class_auto_config_manager.html#a42baffd1924058618fe7c99a68217ff8',1,'AutoConfigManager']]],
+  ['isglobalcontext',['IsGlobalContext',['../class_core_context.html#ae2eb27daa6e017c3b678868faf0f7b14',1,'CoreContext']]],
+  ['isinitiated',['IsInitiated',['../class_core_context.html#a17d4381dc7affb5ee90f14063b757e4a',1,'CoreContext']]],
+  ['isrunning',['IsRunning',['../class_core_context.html#a47e98de82b665c7d3791b317f7789fa3',1,'CoreContext::IsRunning()'],['../class_core_runnable.html#ab13799735ef39ebe372f9851395a7f53',1,'CoreRunnable::IsRunning()']]],
   ['isshutdown',['IsShutdown',['../class_core_context.html#a6b08c5f0dead4908659cf87c6eb77abb',1,'CoreContext']]]
 ];

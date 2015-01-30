@@ -1,12 +1,16 @@
 var searchData=
 [
-  ['pend',['Pend',['../class_dispatch_queue.html#ad2e44d8531decda82fe874ef073d2d99',1,'DispatchQueue']]],
-  ['performstatusupdate',['PerformStatusUpdate',['../class_basic_thread.html#a3be1fc03a61380ff66fbba791dd1d49d',1,'BasicThread']]],
-  ['pollthreadutilization',['PollThreadUtilization',['../class_auto_net_server_impl.html#a2db8cc2c54cdd273e0d832d1a289e619',1,'AutoNetServerImpl']]],
-  ['pop',['Pop',['../class_current_context_pusher.html#a3d167e35dd04b489a0ad9b80244bd222',1,'CurrentContextPusher']]],
-  ['preallocate',['Preallocate',['../class_object_pool.html#ab1c935af506a2677886174fa5abf6334',1,'ObjectPool']]],
-  ['prior_5fobject',['prior_object',['../class_auto_self_update_1_1prior__object.html',1,'AutoSelfUpdate']]],
-  ['promotereadyeventsunsafe',['PromoteReadyEventsUnsafe',['../class_dispatch_queue.html#ad44c86ebbd7d2045112e7516edb1caa6',1,'DispatchQueue']]],
-  ['pulsesatisfaction',['PulseSatisfaction',['../class_auto_packet.html#aa90a9d17516b284059a0f30249656d56',1,'AutoPacket']]],
-  ['put',['Put',['../class_auto_packet.html#a139f7015e781a094f43c9a30051d8b3d',1,'AutoPacket::Put(const DecorationKey &amp;key, SharedPointerSlot &amp;&amp;in)'],['../class_auto_packet.html#a88913247c596018f77b29f2de9e2cd73',1,'AutoPacket::Put(T *in)'],['../class_auto_packet.html#a68e83b2de56c678b5d5c6e2933fcfad6',1,'AutoPacket::Put(std::shared_ptr&lt; T &gt; in)']]]
+  ['setcurrent',['SetCurrent',['../class_core_context.html#ad306c1c3703311ba1fe7fdb4add279f9',1,'CoreContext']]],
+  ['setcurrentthreadname',['SetCurrentThreadName',['../class_basic_thread.html#aa6d8803cdc6ab28b1d79740b115487c5',1,'BasicThread']]],
+  ['setdispatchercap',['SetDispatcherCap',['../class_dispatch_queue.html#a6e455ffdaece9c129717211f13752fa3',1,'DispatchQueue']]],
+  ['shouldstop',['ShouldStop',['../class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994',1,'CoreRunnable']]],
+  ['shutdownmode',['ShutdownMode',['../_core_context_8h.html#aa042d52710c2112736f295f5adab0de5',1,'CoreContext.h']]],
+  ['signalshutdown',['SignalShutdown',['../class_core_context.html#a8e0ff07669244590fcdcec9aeb588aa5',1,'CoreContext']]],
+  ['signalterminate',['SignalTerminate',['../class_core_context.html#a107256cd9f29a43301afca98cd7309a5',1,'CoreContext']]],
+  ['snoop',['Snoop',['../class_core_context.html#a861a5330dfe8fb609c2de97d2ea937a0',1,'CoreContext::Snoop(const std::shared_ptr&lt; T &gt; &amp;pSnooper)'],['../class_core_context.html#ab31a7a286dded4026fe4dd263eb22076',1,'CoreContext::Snoop(const Autowired&lt; T &gt; &amp;snooper)']]],
+  ['start',['Start',['../class_core_runnable.html#a235e7d1ea4b649bff6c30b75a421f5f5',1,'CoreRunnable']]],
+  ['stop',['Stop',['../class_core_runnable.html#a41c3338adf9bf7222b13bbafb564dabb',1,'CoreRunnable']]],
+  ['successor',['Successor',['../class_auto_packet.html#a99e7dd1ee400c313c05d56d7642a0c87',1,'AutoPacket']]],
+  ['successorunsafe',['SuccessorUnsafe',['../class_auto_packet.html#af7d82f8536c4a1b847a5ba0efb9b99d6',1,'AutoPacket']]],
+  ['suggestsoonestwakeuptimeunsafe',['SuggestSoonestWakeupTimeUnsafe',['../class_dispatch_queue.html#a457e780c30d55fffc706892e1ebb160a',1,'DispatchQueue']]]
 ];
