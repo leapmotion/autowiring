@@ -233,3 +233,43 @@ TEST_F(CoreContextTest, InitiateCausesDelayedHold) {
   AutoCurrentContext()->Initiate();
   ASSERT_TRUE(ctxtWeak.expired()) << "Subcontext containing no threads incorrectly persisted after termination";
 }
+
+TEST_F(CoreContextTest, InitiateOrder) {
+  AutoCurrentContext testCtxt;
+  testCtxt->Initiate();
+  {
+    auto outerCtxt = testCtxt->Create<void>();
+    auto middleCtxt = outerCtxt->Create<void>();
+    auto innerCtxt = middleCtxt->Create<void>();
+    
+    middleCtxt->Initiate();
+    innerCtxt->Initiate();
+    outerCtxt->Initiate();
+    
+    EXPECT_TRUE(outerCtxt->IsRunning());
+    EXPECT_TRUE(middleCtxt->IsRunning());
+    EXPECT_TRUE(innerCtxt->IsRunning());
+    
+    outerCtxt->SignalShutdown(true);
+    middleCtxt->SignalShutdown(true);
+    innerCtxt->SignalShutdown(true);
+  }
+  
+  {
+    auto outerCtxt = testCtxt->Create<void>();
+    auto middleCtxt = outerCtxt->Create<void>();
+    auto innerCtxt = middleCtxt->Create<void>();
+    
+    innerCtxt->Initiate();
+    middleCtxt->Initiate();
+    outerCtxt->Initiate();
+    
+    EXPECT_TRUE(outerCtxt->IsRunning());
+    EXPECT_TRUE(middleCtxt->IsRunning());
+    EXPECT_TRUE(innerCtxt->IsRunning());
+    
+    innerCtxt->SignalShutdown(true);
+    middleCtxt->SignalShutdown(true);
+    outerCtxt->SignalShutdown(true);
+  }
+}
