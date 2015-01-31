@@ -178,7 +178,7 @@ struct AutoFilterDescriptor:
         std::static_pointer_cast<typename Decompose<decltype(&T::AutoFilter)>::type>(subscriber)
       ),
       &typeid(T),
-      Decompose<decltype(&T::AutoFilter)>::template Enumerate<AutoFilterDescriptorInput>::types,
+      Decompose<decltype(&T::AutoFilter)>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types,
       CallExtractor<decltype(&T::AutoFilter)>::deferred,
       &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
     )
@@ -195,7 +195,7 @@ struct AutoFilterDescriptor:
     AutoFilterDescriptor(
       AnySharedPointer(std::make_shared<Fn>(std::forward<Fn>(fn))),
       &typeid(Fn),
-      CallExtractor<decltype(&Fn::operator())>::template Enumerate<AutoFilterDescriptorInput>::types,
+      CallExtractor<decltype(&Fn::operator())>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types,
       false,
       &CallExtractor<decltype(&Fn::operator())>::template Call<&Fn::operator()>
     )
@@ -240,7 +240,7 @@ struct AutoFilterDescriptor:
       // The remainder is fairly straightforward
       &typeid(pfn),
 
-      CallExtractor<decltype(pfn)>::template Enumerate<AutoFilterDescriptorInput>::types,
+      CallExtractor<decltype(pfn)>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types,
       false,
       CallExtractor<decltype(pfn)>::Call
     )

@@ -562,7 +562,7 @@ public:
 
     // Add the filter that will ultimately be invoked
     *this += std::move(autoFilter);
-    return Wait(cv, Decompose<decltype(&Fx::operator())>::template Enumerate<AutoFilterDescriptorInput>::types, duration);
+    return Wait(cv, Decompose<decltype(&Fx::operator())>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types, duration);
   }
 
   /// <summary>
@@ -586,7 +586,7 @@ public:
   bool Wait(std::chrono::nanoseconds duration, std::condition_variable& cv)
   {
     static const AutoFilterDescriptorInput inputs [] = {
-      static_cast<auto_arg<Args>*>(nullptr)...,
+      AutoFilterDescriptorInputT<Args>()...,
       AutoFilterDescriptorInput()
     };
 
