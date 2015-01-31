@@ -13,21 +13,24 @@ struct SatCounter:
   SatCounter(void):
     flink(nullptr),
     blink(nullptr),
-    remaining(0)
+    remaining(0),
+    called(false)
   {}
 
   SatCounter(const AutoFilterDescriptor& source):
     AutoFilterDescriptor(source),
     flink(nullptr),
     blink(nullptr),
-    remaining(m_requiredCount)
+    remaining(m_requiredCount),
+    called(false)
   {}
 
   SatCounter(const SatCounter& source):
     AutoFilterDescriptor(static_cast<const AutoFilterDescriptor&>(source)),
     flink(nullptr),
     blink(nullptr),
-    remaining(source.remaining)
+    remaining(source.remaining),
+    called(source.called)
   {}
 
   // Forward and backward linked list pointers
@@ -36,6 +39,9 @@ struct SatCounter:
 
   // The number of inputs remaining to this counter:
   size_t remaining;
+
+  // Has the associated function been called?
+  bool called;
 
 private:
   /// <summary>

@@ -29,6 +29,10 @@ struct DecorationKey {
   bool operator==(const DecorationKey& rhs) const {
     return ti == rhs.ti && tshift == rhs.tshift;
   }
+
+  bool operator!=(const DecorationKey& rhs) const {
+    return !operator==(rhs);
+  }
 };
 
 namespace std {
@@ -66,7 +70,8 @@ struct DecorationDisposition
     m_decorations(source.m_decorations),
     m_pImmediate(source.m_pImmediate),
     m_publishers(source.m_publishers),
-    m_state(source.m_state)
+    m_state(source.m_state),
+    m_maxAltitude(source.m_maxAltitude)
   {}
   DecorationDisposition& operator=(DecorationDisposition&& source) {
     m_decorations = std::move(source.m_decorations);
@@ -74,6 +79,7 @@ struct DecorationDisposition
     source.m_pImmediate = nullptr;
     m_publishers = std::move(source.m_publishers);
     m_state = source.m_state;
+    m_maxAltitude = source.m_maxAltitude;
     return *this;
   }
 #endif //AUTOWIRING_USE_LIBCXX
@@ -81,7 +87,8 @@ struct DecorationDisposition
   DecorationDisposition(void) :
     m_type(nullptr),
     m_pImmediate(nullptr),
-    m_state(DispositionState::Unsatisfied)
+    m_state(DispositionState::Unsatisfied),
+    m_maxAltitude(std::numeric_limits<int>::max())
   {}
 
   DecorationDisposition(const DecorationDisposition& source) :
@@ -89,7 +96,8 @@ struct DecorationDisposition
     m_pImmediate(source.m_pImmediate),
     m_publishers(source.m_publishers),
     m_subscribers(source.m_subscribers),
-    m_state(source.m_state)
+    m_state(source.m_state),
+    m_maxAltitude(source.m_maxAltitude)
   {}
 
   DecorationDisposition& operator=(const DecorationDisposition& source) {
@@ -98,6 +106,7 @@ struct DecorationDisposition
     m_publishers = source.m_publishers;
     m_subscribers = source.m_subscribers;
     m_state = source.m_state;
+    m_maxAltitude = source.m_maxAltitude;
     return *this;
   }
 
@@ -125,6 +134,9 @@ public:
 
   // The current state of this disposition
   DispositionState m_state;
+
+  // The highest altitude at which subscribers have been decremented
+  int m_maxAltitude;
   
   // Set the key that identifies this decoration
   void SetKey(const DecorationKey& key) {
@@ -147,5 +159,6 @@ public:
     m_decorations.clear();
     m_pImmediate = nullptr;
     m_state = DispositionState::Unsatisfied;
+    m_maxAltitude = std::numeric_limits<int>::max();
   }
 };

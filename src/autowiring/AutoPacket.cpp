@@ -96,7 +96,10 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
         throw std::runtime_error(ss.str());
       }
 
-      entry.m_subscribers.push_back(&satCounter);
+      // Maintain m_subscribers sorted by altitude in descending order
+      auto it = std::upper_bound(entry.m_subscribers.begin(), entry.m_subscribers.end(), &satCounter,
+                                 [](SatCounter* a, SatCounter* b){ return a->GetAltitude() > b->GetAltitude(); });
+      entry.m_subscribers.insert(it, &satCounter);
       if (entry.m_state == DispositionState::Satisfied)
         satCounter.Decrement();
     }
@@ -182,14 +185,47 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
 
     // Update satisfaction inside of lock
     DecorationDisposition& decoration = dFind->second;
-    for(SatCounter* satCounter : decoration.m_subscribers)
-      if(satCounter->Decrement())
-        callQueue.push_back(satCounter);
+    int newMaxAltitude = decoration.m_maxAltitude;
+    int newMaxSet = false;
+    bool allCalled = true;
+    for(SatCounter* satCounter : decoration.m_subscribers) {
+      if (satCounter->GetAltitude() >= decoration.m_maxAltitude) {
+        if (!satCounter->called) {
+          allCalled = false;
+        }
+      } else {
+        if (!allCalled) {
+          break;
+        }
+
+        if (!newMaxSet) {
+          newMaxAltitude = satCounter->GetAltitude();
+          newMaxSet = true;
+        }
+
+        if (satCounter->GetAltitude() != newMaxAltitude) {
+          break;
+        }
+
+        if(satCounter->Decrement()) {
+          satCounter->called = true;
+          callQueue.push_back(satCounter);
+        }
+      }
+    }
+    decoration.m_maxAltitude = newMaxAltitude;
   }
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
-  for (SatCounter* call : callQueue)
+  for (SatCounter* call : callQueue) {
     call->GetCall()(call->GetAutoFilter(), *this);
+    for(auto pCur = call->GetAutoFilterInput(); *pCur; pCur++) {
+      const DecorationKey other(*(pCur->ti), pCur->tshift);
+      if (other != info) {
+        UpdateSatisfaction(other);
+      }
+    }
+  }
 }
 
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
@@ -423,6 +459,7 @@ bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterDescriptorInp
         &typeid(AutoPacketFactory),
         inputs,
         false,
+        0,
         [] (const AnySharedPointer& obj, AutoPacket&) {
           auto stub = obj->as<SignalStub>();
 

@@ -838,3 +838,28 @@ TEST_F(AutoFilterTest, CurrentContextCheck) {
 
   ASSERT_EQ(1, filter->m_called) << "AutoFilter called incorrect number of times";
 }
+
+TEST_F(AutoFilterTest, BasicFilterAltitudeCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  bool firstRan = false;
+  bool secondRan = false;
+
+  factory->AddSubscriber(AutoFilterDescriptor([&firstRan](const int&, const char&) {firstRan = true;},2));
+  factory->AddSubscriber(AutoFilterDescriptor([&secondRan](const int&) {secondRan = true;},1));
+
+  auto packet = factory->NewPacket();
+
+  ASSERT_FALSE(firstRan) << "First Autofilter called too early";
+  ASSERT_FALSE(secondRan) << "Second Autofilter called too early";
+
+  packet->Decorate(static_cast<int>(0));
+
+  ASSERT_FALSE(firstRan) << "First Autofilter called with only one argument";
+  ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
+
+  packet->Decorate(static_cast<char>('a'));
+
+  ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
+  ASSERT_TRUE(secondRan) << "Second Autofilter not called on time";
+
+}
