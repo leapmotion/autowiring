@@ -16,14 +16,20 @@ struct AutoFilterDescriptorInput {
     tshift(0)
   {}
 
-  template<class T>
-  AutoFilterDescriptorInput(auto_arg<T>*) :
-    is_input(auto_arg<T>::is_input),
-    is_output(auto_arg<T>::is_output),
-    is_shared(auto_arg<T>::is_shared),
-    is_multi(auto_arg<T>::is_multi),
-    ti(&typeid(typename auto_arg<T>::id_type)),
-    tshift(auto_arg<T>::tshift)
+  AutoFilterDescriptorInput(
+    bool is_input,
+    bool is_output,
+    bool is_shared,
+    bool is_multi,
+    const std::type_info* ti,
+    int tshift
+  ) :
+    is_input(is_input),
+    is_output(is_output),
+    is_shared(is_shared),
+    is_multi(is_multi),
+    ti(ti),
+    tshift(tshift)
   {}
 
   const bool is_input;
@@ -36,11 +42,20 @@ struct AutoFilterDescriptorInput {
   operator bool(void) const {
     return !!ti;
   }
+};
 
-  template<class T>
-  struct rebind {
-    operator AutoFilterDescriptorInput() {
-      return AutoFilterDescriptorInput((auto_arg<T>*)nullptr);
-    }
-  };
+template<typename T>
+struct AutoFilterDescriptorInputT:
+  AutoFilterDescriptorInput
+{
+  AutoFilterDescriptorInputT(void) :
+    AutoFilterDescriptorInput(
+      auto_arg<T>::is_input,
+      auto_arg<T>::is_output,
+      auto_arg<T>::is_shared,
+      auto_arg<T>::is_multi,
+      &typeid(typename auto_arg<T>::id_type),
+      auto_arg<T>::tshift
+    )
+  {}
 };
