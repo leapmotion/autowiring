@@ -95,7 +95,7 @@ public:
 /// * Thread ownership (BasicThread, CoreThread)
 /// * AutoPacket filter graph scope
 ///
-/// Dependencies can be injected into a context using AutoRequired (or its cousins Autowired and AutoDesired).
+/// Dependencies can be injected into a context using AutoRequired (or its cousin Autowired).
 /// The system looks in the current context for an existing object of the required type to satisfy the dependency.
 /// If one does not exist, it looks in parent contexts. Finally, if no existing object is found after searching up the
 /// context tree, a new instance of the required type is created. When another object of the same type is added to the

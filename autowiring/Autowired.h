@@ -351,40 +351,6 @@ public:
 };
 
 /// <summary>
-/// Attempts to create and inject a dependency, discarding any exceptions.
-/// </summary>
-/// <remarks>
-/// Like AutoRequired, AutoDesired attempts to create an instance of the type
-/// to be autowired. However, if creation of the dependency fails, the slot is
-/// created and the dependency is satisfied when an instance of the correct type
-/// is created and wired later.
-///
-/// \include snippets/Autowired_AutoDesired.txt
-///
-/// Use AutoDesired instead of AutoRequired or Autowired when creation of the dependency may fail,
-/// while, unlike Autowired, still creating the dependency when possible.
-///
-/// AutoDesired is functionally equivalent to the following:
-///
-/// \include snippets/Autowired_AutoDesired_Alternate.txt
-///
-/// If you want to know whether an exception was thrown, replace uses of AutoDesired with the above
-/// and perform your own exception handling.
-/// </remarks>
-template<class T>
-class AutoDesired:
-  public Autowired<T>
-{
-public:
-  AutoDesired(void) {
-    try { AutoRequired<T>(); }
-    catch(...) {
-      CoreContext::CurrentContext()->FilterException();
-    }
-  }
-};
-
-/// <summary>
 /// A version of AutoRequired that forwards constructor arguments to the injected
 /// type's constructor function.
 /// </summary>
