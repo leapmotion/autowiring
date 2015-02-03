@@ -24,12 +24,11 @@ namespace autowiring {
 template<class... Args>
 struct CallExtractorSetup
 {
-  CallExtractorSetup(AutoPacket& packet):
+  template<class... Ts>
+  CallExtractorSetup(AutoPacket& packet, Ts&&... args) :
     packet(packet),
     pshr(packet.GetContext()),
-    args(
-      (auto_arg<Args>::arg(packet))...
-    )
+    args(std::forward<Ts&&>(args)...)
   {}
 
   AutoPacket& packet;
@@ -70,7 +69,7 @@ struct CallExtractor<RetType (*)(Args...), index_tuple<N...>>:
     const void* pfn = obj->ptr();
     
     // Setup, handoff, commit
-    CallExtractorSetup<Args...> extractor(packet);
+    CallExtractorSetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
     ((t_pfn)pfn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
@@ -102,7 +101,7 @@ struct CallExtractor<void (T::*)(Args...), index_tuple<N...>> :
     assert(typeid(auto_id<T>) == obj->type());
 
     // Extract, call, commit
-    CallExtractorSetup<Args...> extractor(packet);
+    CallExtractorSetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
     (((T*) pObj)->*memFn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
@@ -126,7 +125,7 @@ struct CallExtractor<void (T::*)(Args...) const, index_tuple<N...>> :
     const void* pObj = obj->ptr();
 
     // Extract, call, commit
-    CallExtractorSetup<Args...> extractor(packet);
+    CallExtractorSetup<Args...> extractor(packet, (auto_arg<Args>::arg(packet))...);
     (((const T*) pObj)->*memFn)(
       static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
     );
@@ -158,7 +157,7 @@ struct CallExtractor<Deferred(T::*)(Args...), index_tuple<N...>> :
     *(T*) pObj += [pObj, pAutoPacket] {
 
       // Extract, call, commit
-      CallExtractorSetup<Args...> extractor(*pAutoPacket);
+      CallExtractorSetup<Args...> extractor(*pAutoPacket, (auto_arg<Args>::arg(*pAutoPacket))...);
       (((T*) pObj)->*memFn)(
         static_cast<typename auto_arg<Args>::arg_type>(autowiring::get<N>(extractor.args))...
       );

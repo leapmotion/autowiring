@@ -293,27 +293,6 @@ public:
   bool operator>=(const AutoFilterDescriptor& rhs) const { return !(*this < rhs);}
 };
 
-template<class T, bool has_autofilter = has_autofilter<T>::value>
-class AutoFilterDescriptorSelect:
-  public std::true_type
-{
-public:
-  AutoFilterDescriptorSelect(const std::shared_ptr<T>& subscriber) :
-    desc(subscriber)
-  {}
-
-  const AutoFilterDescriptor desc;
-};
-
-template<class T>
-class AutoFilterDescriptorSelect<T, false>:
-  public std::false_type
-{
-public:
-  AutoFilterDescriptorSelect(const std::shared_ptr<T>&) {}
-  const AutoFilterDescriptor desc;
-};
-
 /// <summary>
 /// Utility routine to support the creation of an AutoFilterDescriptor from T::AutoFilter
 /// </summary>
@@ -322,7 +301,26 @@ public:
 /// </remarks>
 template<class T>
 AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
-  return std::move(AutoFilterDescriptorSelect<T>(ptr).desc);
+  return MakeAutoFilterDescriptor(ptr, std::integral_constant<bool, has_autofilter<T>::value>());
+}
+
+/// <summary>
+/// Alias for AutoFilterDescriptor(ptr)
+/// </summary>
+template<class T>
+AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr, std::true_type) {
+  return AutoFilterDescriptor(ptr);
+}
+
+/// <summary>
+/// Utility routine to support the creation of an AutoFilterDescriptor from T::AutoFilter
+/// </summary>
+/// <remarks>
+/// This method will return an empty descriptor in the case that T::AutoFilter is not defined
+/// </remarks>
+template<class T>
+AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>&, std::false_type) {
+  return AutoFilterDescriptor();
 }
 
 namespace std {
