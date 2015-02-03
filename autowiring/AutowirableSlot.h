@@ -9,7 +9,7 @@
 class CoreContext;
 class DeferrableAutowiring;
 class GlobalCoreContext;
-class Object;
+class CoreObject;
 
 // Utility routine, for users who need a function that does nothing
 template<class T>
@@ -146,7 +146,7 @@ public:
     // of this type MUST be available.  The reason for this is that, if the user wishes to know if a
     // type is autowired, they are required at a minimum to know what that type's inheritance relations
     // are to other types in the system.
-    (void) autowiring::fast_pointer_cast_initializer<T, Object>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
     return !!get();
   }
 
@@ -155,7 +155,7 @@ public:
   /// </remarks>
   T* get(void) const {
     // For now, we require that the full type be available to use this method
-    (void) autowiring::fast_pointer_cast_initializer<T, Object>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
     return get_unsafe();
   }
 
@@ -184,14 +184,14 @@ public:
     // Initialize any blind fast casts to the actually desired type.  This is one of a few points
     // where we can guarantee that the type will be completely defined, because the user is about
     // to make use of this type.
-    (void) autowiring::fast_pointer_cast_initializer<T, Object>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
     return get();
   }
 
   T& operator*(void) const {
     // We have to initialize here, in the operator context, because we don't actually know if the
     // user will be making use of this type.
-    (void) autowiring::fast_pointer_cast_initializer<T, Object>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
 
     return *get();
   }

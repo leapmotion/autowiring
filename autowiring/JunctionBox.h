@@ -50,14 +50,14 @@ public:
     return (std::lock_guard<std::mutex>)m_lock, !m_st.empty();
   }
 
-  void Add(const JunctionBoxEntry<Object>& rhs) override {
+  void Add(const JunctionBoxEntry<CoreObject>& rhs) override {
     auto casted = rhs.Rebind<T>();
     if(casted)
       // Proposed type is directly one of our receivers
       Add(casted);
   }
 
-  void Remove(const JunctionBoxEntry<Object>& rhs) override {
+  void Remove(const JunctionBoxEntry<CoreObject>& rhs) override {
     auto casted = rhs.Rebind<T>();
     if(casted)
       Remove(casted);
@@ -108,7 +108,7 @@ public:
       catch (...) {
         teardown.push_back(ContextDumbToWeak(currentEvent.m_owner));
 
-        // If T doesn't inherit Object, then we need to cast to a unifying type which does
+        // If T doesn't inherit CoreObject, then we need to cast to a unifying type which does
         typedef typename SelectTypeUnifier<T>::type TActual;
         this->FilterFiringException(currentEvent.m_ptr);
       }

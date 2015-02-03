@@ -36,13 +36,13 @@ void JunctionBoxManager::Initiate(void) {
     q.second->Initiate();
 }
 
-void JunctionBoxManager::AddEventReceiver(JunctionBoxEntry<Object> receiver) {
+void JunctionBoxManager::AddEventReceiver(JunctionBoxEntry<CoreObject> receiver) {
   // Notify all junctionboxes that there is a new event
   for(const auto& q: m_junctionBoxes)
     q.second->Add(receiver);
 }
 
-void JunctionBoxManager::RemoveEventReceiver(JunctionBoxEntry<Object> receiver) {
+void JunctionBoxManager::RemoveEventReceiver(JunctionBoxEntry<CoreObject> receiver) {
   // Notify all compatible senders that we're going away:
   for(const auto& q : m_junctionBoxes)
     q.second->Remove(receiver);

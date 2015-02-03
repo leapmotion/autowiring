@@ -5,8 +5,8 @@
 /// General object base, used to make conversions possible between various shared pointer implementations.
 /// Withouat an object base, there is no way to do generic autowiring.
 /// </summary>
-class Object {
+class CoreObject {
 public:
-  Object(void);
-  virtual ~Object(void);
+  CoreObject(void);
+  virtual ~CoreObject(void);
 };

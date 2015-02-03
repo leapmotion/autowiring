@@ -33,7 +33,7 @@ TEST_F(DecoratorTest, VerifyCorrectExtraction) {
 }
 
 TEST_F(DecoratorTest, VerifyEmptyExtraction) {
-  auto obj = std::make_shared<Object>();
+  auto obj = std::make_shared<CoreObject>();
 
   // Should be possible to obtain this value and have it remain valid even after the descriptor is gone
   const AutoFilterDescriptorInput* v = MakeAutoFilterDescriptor(obj).GetAutoFilterInput();

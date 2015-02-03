@@ -5,7 +5,7 @@
 #include TYPE_TRAITS_HEADER
 
 class AutoPacketFactory;
-class Object;
+class CoreObject;
 
 namespace autowiring {
   template<class T, class U>
