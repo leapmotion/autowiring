@@ -10,3 +10,6 @@ public:
   CoreObject(void);
   virtual ~CoreObject(void);
 };
+
+// Temporarily typedef to old name of 'CoreObject' until all users of Autowiring have been updated
+typedef CoreObject Object;
