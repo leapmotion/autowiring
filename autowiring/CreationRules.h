@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "has_simple_constructor.h"
+#include "has_constructor.h"
 #include "has_static_new.h"
 #include "SlotInformation.h"
 #include RVALUE_HEADER
