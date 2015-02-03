@@ -81,6 +81,8 @@ set(Autowiring_SRCS
   CoreContextStateBlock.h
   CoreJob.cpp
   CoreJob.h
+  CoreObject.cpp
+  CoreObject.h
   CoreRunnable.cpp
   CoreRunnable.h
   CoreThread.cpp
@@ -127,8 +129,6 @@ set(Autowiring_SRCS
   MicroAutoFilter.h
   MicroBolt.h
   NewAutoFilter.h
-  Object.cpp
-  Object.h
   ObjectPool.h
   ObjectPoolMonitor.cpp
   ObjectPoolMonitor.h

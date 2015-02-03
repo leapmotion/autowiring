@@ -135,7 +135,7 @@ protected:
       GenerateContext();
   }
 
-  void Filter(const JunctionBoxBase* pJunctionBox, Object* pRecipient) override {
+  void Filter(const JunctionBoxBase* pJunctionBox, CoreObject* pRecipient) override {
     Filter();
   }
 

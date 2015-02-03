@@ -2,7 +2,7 @@
 #pragma once
 
 class JunctionBoxBase;
-class Object;
+class CoreObject;
 
 /// <summary>
 /// Implements an exception filter type, invoked when an unhandled exception is thrown
@@ -69,5 +69,5 @@ public:
   /// <remarks>
   /// Implementors can use "throw" with no arguments to trigger a rethrow of the originating exception.
   /// </remarks>
-  virtual void Filter(const JunctionBoxBase* pJunctionBox, Object* pRecipient) {}
+  virtual void Filter(const JunctionBoxBase* pJunctionBox, CoreObject* pRecipient) {}
 };

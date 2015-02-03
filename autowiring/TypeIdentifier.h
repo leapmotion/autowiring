@@ -1,11 +1,11 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "Object.h"
+#include "CoreObject.h"
 #include <typeinfo>
 
 // Checks if an Object* listens to a event T;
 struct TypeIdentifierBase {
-  virtual bool IsSameAs(const Object* obj) = 0;
+  virtual bool IsSameAs(const CoreObject* obj) = 0;
   virtual const std::type_info& Type() = 0;
 };
 
@@ -14,7 +14,7 @@ template<typename T>
 public TypeIdentifierBase
 {
   // true if "obj" is an event receiver for T
-  bool IsSameAs(const Object* obj) override {
+  bool IsSameAs(const CoreObject* obj) override {
     return !!dynamic_cast<const T*>(obj);
   }
   

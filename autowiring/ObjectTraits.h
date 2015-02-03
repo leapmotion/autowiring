@@ -8,7 +8,7 @@
 #include "BasicThread.h"
 #include "ExceptionFilter.h"
 #include "fast_pointer_cast.h"
-#include "Object.h"
+#include "CoreObject.h"
 #include <typeinfo>
 #include MEMORY_HEADER
 
@@ -23,7 +23,7 @@ struct ObjectTraits {
     stump(SlotInformationStump<T>::s_stump),
     value(value),
     subscriber(MakeAutoFilterDescriptor(value)),
-    pObject(autowiring::fast_pointer_cast<Object>(value)),
+    pCoreObject(autowiring::fast_pointer_cast<CoreObject>(value)),
     pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
     pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),
     pBasicThread(autowiring::fast_pointer_cast<BasicThread>(value)),
@@ -33,7 +33,7 @@ struct ObjectTraits {
       [this]{
         for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink) {
           auto identifier = evt->NewTypeIdentifier();
-          if (identifier->IsSameAs(pObject.get()))
+          if (identifier->IsSameAs(pCoreObject.get()))
             return true;
         }
         // "T" not found in event registry
@@ -41,11 +41,11 @@ struct ObjectTraits {
       }()
     )
   {
-    // We can instantiate casts to Object here at the point where object traits are being generated
-    (void) autowiring::fast_pointer_cast_initializer<Object, TActual>::sc_init;
-    (void) autowiring::fast_pointer_cast_initializer<TActual, Object>::sc_init;
-    (void) autowiring::fast_pointer_cast_initializer<Object, T>::sc_init;
-    (void) autowiring::fast_pointer_cast_initializer<T, Object>::sc_init;
+    // We can instantiate casts to CoreObject here at the point where object traits are being generated
+    (void) autowiring::fast_pointer_cast_initializer<CoreObject, TActual>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<TActual, CoreObject>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<CoreObject, T>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
   }
 
   // The type of the passed pointer
@@ -94,7 +94,7 @@ struct ObjectTraits {
   const AutoFilterDescriptor subscriber;
 
   // There are a lot of interfaces we support, here they all are:
-  const std::shared_ptr<Object> pObject;
+  const std::shared_ptr<CoreObject> pCoreObject;
   const std::shared_ptr<ContextMember> pContextMember;
   const std::shared_ptr<CoreRunnable> pCoreRunnable;
   const std::shared_ptr<BasicThread> pBasicThread;

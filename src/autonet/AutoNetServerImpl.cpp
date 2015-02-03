@@ -250,7 +250,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
     {
       Json::array listenerTypes;
       for(const auto& event : m_EventTypes) {
-        if(event->IsSameAs(object.pObject.get()))
+        if(event->IsSameAs(object.pCoreObject.get()))
           listenerTypes.push_back(autowiring::demangle(event->Type()));
       }
 
