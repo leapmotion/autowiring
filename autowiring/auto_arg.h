@@ -89,6 +89,32 @@ class auto_arg<auto_in<T>>:
 {};
 
 /// <summary>
+/// Construction helper for output-by-reference decoration types
+/// </summary>
+/// <remarks>
+/// If an output decoration type T has a constructor of the form T(AutoPacket&), then this constructor should
+/// be invoked preferentially when T is being constructed.
+/// </remarks>
+template<class T, bool has_default = std::is_constructible<T>::value, bool has_autofilter = std::is_constructible<T, AutoPacket&>::value>
+struct auto_arg_ctor_helper;
+
+template<class T, bool has_default>
+struct auto_arg_ctor_helper<T, has_default, true> {
+  static std::shared_ptr<T> arg(AutoPacket& packet) {
+    return std::make_shared<T>(packet);
+  }
+};
+
+template<class T, bool has_default>
+struct auto_arg_ctor_helper<T, has_default, false> {
+  static_assert(has_default, "Cannot speculatively construct an output argument of type T, it doesn't have any available constructors");
+
+  static std::shared_ptr<T> arg(AutoPacket&) {
+    return std::make_shared<T>();
+  }
+};
+
+/// <summary>
 /// Specialization for "T&" ~ auto_out<T>
 /// </summary>
 template<class T>
@@ -114,9 +140,8 @@ public:
   static const bool is_multi = false;
   static const int tshift = 0;
 
-  template<class C>
-  static std::shared_ptr<T> arg(C&) {
-    return std::make_shared<T>();
+  static std::shared_ptr<T> arg(AutoPacket& packet) {
+    return auto_arg_ctor_helper<T>::arg(packet);
   }
 };
 
