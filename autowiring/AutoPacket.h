@@ -479,6 +479,7 @@ public:
   /// </summary>
   template<class Fx>
   const SatCounter* operator+=(Fx&& fx) {
+    static_assert(!std::is_same<int, Fx>::value, "It is illegal to add an AutoFilter with a non-default altitude directly to an AutoPacket.");
     return AddRecipient(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
   }
 

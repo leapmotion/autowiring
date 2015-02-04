@@ -844,11 +844,12 @@ TEST_F(AutoFilterTest, BasicFilterAltitudeCheck) {
   bool firstRan = false;
   bool secondRan = false;
 
-  factory->AddSubscriber(AutoFilterDescriptor([&firstRan, &secondRan](const int&, const char&) {
+  *factory += 2, [&firstRan, &secondRan](const int&, const char&) {
     ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
     firstRan = true;
-  },2));
-  factory->AddSubscriber(AutoFilterDescriptor([&secondRan](const int&) {secondRan = true;},1));
+  };
+
+  *factory += 1, [&secondRan](const int&) {secondRan = true;};
 
   {
     firstRan = false;
@@ -916,16 +917,18 @@ TEST_F(AutoFilterTest, MultiLevelFilterAltitudeCheck) {
   bool secondRan = false;
   bool thirdRan = false;
 
-  factory->AddSubscriber(AutoFilterDescriptor([&firstRan, &secondRan, &thirdRan](const int&, const char&) {
+  *factory+= 3, [&firstRan, &secondRan, &thirdRan](const int&, const char&) {
     ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
     ASSERT_FALSE(thirdRan) << "Third Autofilter called before first";
     firstRan = true;
-  },3));
-  factory->AddSubscriber(AutoFilterDescriptor([&secondRan, &thirdRan](const int&, const short&) {
+  };
+
+  *factory += 2, [&secondRan, &thirdRan](const int&, const short&) {
     ASSERT_FALSE(thirdRan) << "Third Autofilter called before first";
     secondRan = true;
-  },2));
-  factory->AddSubscriber(AutoFilterDescriptor([&thirdRan](const int&) {thirdRan = true;},1));
+  };
+
+  *factory += 1, [&thirdRan](const int&) {thirdRan = true;};
 
   {
     firstRan = false;
@@ -982,9 +985,9 @@ TEST_F(AutoFilterTest, MultiLevelFilterAltitudeCheck) {
 
 TEST_F(AutoFilterTest, SimpleMultiLevelFilterAltitudeCheck) {
   AutoRequired<AutoPacketFactory> factory;
-  bool firstRan = false;
-  bool secondRan = false;
-  bool thirdRan = false;
+  bool firstRan;
+  bool secondRan;
+  bool thirdRan;
 
   *factory += 3, [&firstRan, &secondRan, &thirdRan](const int&) {
     ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
@@ -999,11 +1002,27 @@ TEST_F(AutoFilterTest, SimpleMultiLevelFilterAltitudeCheck) {
 
   *factory += 1, [&thirdRan](const int&) {thirdRan = true;};
 
-  factory->NewPacket()->Decorate(static_cast<int>(0));
+  {
+    firstRan = false;
+    secondRan = false;
+    thirdRan = false;
+    factory->NewPacket()->Decorate(static_cast<int>(0));
 
-  ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
-  ASSERT_TRUE(secondRan) << "Second Autofilter not called on time";
-  ASSERT_TRUE(thirdRan) << "Third Autofilter not called on time";
+    ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
+    ASSERT_TRUE(secondRan) << "Second Autofilter not called on time";
+    ASSERT_TRUE(thirdRan) << "Third Autofilter not called on time";
+  }
+
+  {
+    firstRan = false;
+    secondRan = false;
+    thirdRan = false;
+    factory->NewPacket()->DecorateImmediate(static_cast<int>(0));
+
+    ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
+    ASSERT_TRUE(secondRan) << "Second Autofilter not called on time";
+    ASSERT_TRUE(thirdRan) << "Third Autofilter not called on time";
+  }
 }
 
 struct FirstFilter {
@@ -1044,3 +1063,6 @@ TEST_F(AutoFilterTest, ClassAltitudeCheck) {
   ASSERT_TRUE(second->called) << "Second Autofilter not called on time";
 }
 
+TEST_F(AutoFilterTest, DeferredAltitudeTest) {
+
+}
