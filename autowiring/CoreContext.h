@@ -95,7 +95,7 @@ public:
 /// * Thread ownership (BasicThread, CoreThread)
 /// * AutoPacket filter graph scope
 ///
-/// Dependencies can be injected into a context using AutoRequired (or its cousins Autowired and AutoDesired).
+/// Dependencies can be injected into a context using AutoRequired (or its cousin Autowired).
 /// The system looks in the current context for an existing object of the required type to satisfy the dependency.
 /// If one does not exist, it looks in parent contexts. Finally, if no existing object is found after searching up the
 /// context tree, a new instance of the required type is created. When another object of the same type is added to the
@@ -234,14 +234,14 @@ protected:
   std::vector<ExceptionFilter*> m_filters;
 
   // All known event receivers and receiver proxies originating from this context:
-  typedef std::set<JunctionBoxEntry<Object>> t_rcvrSet;
+  typedef std::set<JunctionBoxEntry<CoreObject>> t_rcvrSet;
   t_rcvrSet m_eventReceivers;
 
   // List of eventReceivers to be added when this context in initiated
   t_rcvrSet m_delayedEventReceivers;
   
   // Context members from other contexts that have snooped this context
-  std::set<Object*> m_snoopers;
+  std::set<CoreObject*> m_snoopers;
 
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
   const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
@@ -252,7 +252,7 @@ protected:
 
   // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
   // Destructor does nothing; this is by design.
-  std::weak_ptr<Object> m_outstanding;
+  std::weak_ptr<CoreObject> m_outstanding;
 
   // Creation rules are allowed to refer to private methods in this type
   template<autowiring::construction_strategy, class T, class... Args>
@@ -329,7 +329,7 @@ protected:
   /// Adds the named event receiver to the collection of known receivers
   /// </summary>
   /// <param name="pRecvr">The junction box entry corresponding to the receiver type</param>
-  void AddEventReceiver(const JunctionBoxEntry<Object>& pRecvr);
+  void AddEventReceiver(const JunctionBoxEntry<CoreObject>& pRecvr);
 
   /// \internal
   /// <summary>
@@ -387,7 +387,7 @@ protected:
   ///
   /// The caller is responsible for exterior synchronization
   /// </remarks>
-  std::shared_ptr<Object> IncrementOutstandingThreadCount(void);
+  std::shared_ptr<CoreObject> IncrementOutstandingThreadCount(void);
 
   /// \internal
   /// <summary>
@@ -427,13 +427,13 @@ protected:
   /// <summary>
   /// Adds a snooper to the snoopers set
   /// </summary>
-  void InsertSnooper(std::shared_ptr<Object> snooper);
+  void InsertSnooper(std::shared_ptr<CoreObject> snooper);
 
   /// \internal
   /// <summary>
   /// Removes a snooper to the snoopers set
   /// </summary>
-  void RemoveSnooper(std::shared_ptr<Object> snooper);
+  void RemoveSnooper(std::shared_ptr<CoreObject> snooper);
   
   /// \internal
   /// <summary>
@@ -443,7 +443,7 @@ protected:
   /// This method has no effect if the passed value is presently a snooper in this context; the
   /// snooper collection must therefore be updated prior to the call to this method.
   /// </remarks>
-  void UnsnoopEvents(Object* snooper, const JunctionBoxEntry<Object>& traits);
+  void UnsnoopEvents(CoreObject* snooper, const JunctionBoxEntry<CoreObject>& traits);
   
   /// \internal
   /// <summary>
@@ -453,9 +453,9 @@ protected:
 
   /// \internal
   /// <summary>
-  /// Invoked by a parent context on a child context when the parent has transitioned to the Running state
+  /// Invoked by a parent context when the parent has transitioned to the Running state
   /// </summary>
-  void TryTransitionToRunState(void);
+  void TryTransitionChildrenToRunState(void);
 
   /// <summary>
   /// Registers a factory _function_, a lambda which is capable of constructing decltype(fn())
@@ -628,13 +628,13 @@ public:
     typedef autowiring::CreationRules<T, Args...> CreationRules;
 
     // Add this type to the TypeRegistry, also ensure that we initialize support for blind
-    // fast pointer cast to Object.
+    // fast pointer cast to CoreObject.
     (void) RegType<T>::r;
-    (void) autowiring::fast_pointer_cast_initializer<Object, T>::sc_init;
+    (void) autowiring::fast_pointer_cast_initializer<CoreObject, T>::sc_init;
 
     // First see if the base object type has already been injected.  This is also necessary to
     // ensure that a memo slot is created for the type by itself, in cases where the injected
-    // member does not inherit Object and this member is eventually satisfied by one that does.
+    // member does not inherit CoreObject and this member is eventually satisfied by one that does.
     {
       std::shared_ptr<T> pure;
       FindByType(pure);
@@ -917,7 +917,7 @@ public:
   /// </summary>
   /// <param name="pProxy">The sender of the event</param>
   /// <param name="pRecipient">The recipient of the event</param>
-  void FilterFiringException(const JunctionBoxBase* pProxy, Object* pRecipient);
+  void FilterFiringException(const JunctionBoxBase* pProxy, CoreObject* pRecipient);
 
   /// <summary>
   /// Registers the specified event receiver to receive messages broadcast within this context.
@@ -939,7 +939,7 @@ public:
 
     // Add EventReceiver
     if(traits.receivesEvents)
-      AddEventReceiver(JunctionBoxEntry<Object>(this, traits.pObject));
+      AddEventReceiver(JunctionBoxEntry<CoreObject>(this, traits.pCoreObject));
     
     // Add PacketSubscriber;
     if(!traits.subscriber.empty())
@@ -966,11 +966,11 @@ public:
     
     RemoveSnooper(pSnooper);
     
-    auto oSnooper = std::static_pointer_cast<Object>(pSnooper);
+    auto oSnooper = std::static_pointer_cast<CoreObject>(pSnooper);
     
     // Cleanup if its an EventReceiver
     if(traits.receivesEvents)
-      UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<Object>(this, traits.pObject));
+      UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<CoreObject>(this, traits.pCoreObject));
     
     // Cleanup if its a packet listener
     if(!traits.subscriber.empty())
@@ -1192,7 +1192,7 @@ public:
 
 template<class T, class Fn>
 class CoreContext::AutoFactoryFn :
-  public Object,
+  public CoreObject,
   public CoreContext::AutoFactory<T>
 {
 public:
@@ -1207,7 +1207,7 @@ public:
 
 template<class... Ts, class Fn>
 class CoreContext::AutoFactoryFn<std::tuple<Ts...>, Fn> :
-  public Object,
+  public CoreObject,
   CoreContext::AutoFactory<Ts>...
 {
 public:
@@ -1222,8 +1222,8 @@ template<typename T, typename... Args>
 T* autowiring::crh<autowiring::construction_strategy::foreign_factory, T, Args...>::New(CoreContext& ctxt, Args&&... args) {
   // We need to ensure that we can perform a find-by-type cast correctly, so
   // the dynamic caster entry is added to the registry
-  (void) autowiring::fast_pointer_cast_initializer<Object, CoreContext::AutoFactory<T>>::sc_init;
-  (void) autowiring::fast_pointer_cast_initializer<CoreContext::AutoFactory<T>, Object>::sc_init;
+  (void) autowiring::fast_pointer_cast_initializer<CoreObject, CoreContext::AutoFactory<T>>::sc_init;
+  (void) autowiring::fast_pointer_cast_initializer<CoreContext::AutoFactory<T>, CoreObject>::sc_init;
 
   // Now we can go looking for this type:
   AnySharedPointerT<CoreContext::AutoFactory<T>> af;

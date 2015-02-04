@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "Object.h"
+#include "CoreObject.h"
 #include "TeardownNotifier.h"
 #include MEMORY_HEADER
 
@@ -10,7 +10,7 @@ class CoreContext;
 /// A class that must be inherited in order to be a member of a context heriarchy
 /// </summary>
 class ContextMember:
-  public Object,
+  public CoreObject,
   public TeardownNotifier,
   public std::enable_shared_from_this<ContextMember>
 {

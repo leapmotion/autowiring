@@ -15,11 +15,11 @@ struct TemplatePack {
   ///
   /// The returned array contains one more element than the arity of the decomposed member function
   /// type.  Each element in the array is initialized based on the type of the corresponding argument
-  /// in the decomposed function.  Elements in the array are constructed using the "rebind" structure
+  /// in the decomposed function.  Elements in the array are constructed using the "Generator" type
   /// which must be an interior type to type T.  An instance of type rebind should be castable to the
   /// base type T, or it must be a function returning a value of type T.
   /// </remarks>
-  template<class T>
+  template<class T, template<typename> class Generator>
   struct Enumerate {
     static const T types[N + 1];
   };
@@ -34,8 +34,8 @@ struct TemplatePack {
 };
 
 template<class... Ts>
-template<class T>
-const T TemplatePack<Ts...>::Enumerate<T>::types[] = {typename T::template rebind<Ts>()..., T()};
+template<class T, template<typename> class Generator>
+const T TemplatePack<Ts...>::Enumerate<T, Generator>::types[] = {Generator<Ts>()..., T()};
 
 /// <summary>
 /// Provides some static reflection support for member function pointers

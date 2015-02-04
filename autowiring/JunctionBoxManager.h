@@ -6,7 +6,7 @@
 
 class CoreContext;
 class JunctionBoxBase;
-class Object;
+class CoreObject;
 
 template<class T>
 struct JunctionBoxEntry;
@@ -29,8 +29,8 @@ public:
   /// </summary>
   void Initiate(void);
 
-  void AddEventReceiver(JunctionBoxEntry<Object> receiver);
-  void RemoveEventReceiver(JunctionBoxEntry<Object> pRecvr);
+  void AddEventReceiver(JunctionBoxEntry<CoreObject> receiver);
+  void RemoveEventReceiver(JunctionBoxEntry<CoreObject> pRecvr);
 
 protected:
   // All junction boxes known by this manager:

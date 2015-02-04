@@ -75,7 +75,7 @@ struct use_unifier:
   std::integral_constant<
     bool,
     std::is_class<T>::value &&
-    !std::is_base_of<Object, T>::value
+    !std::is_base_of<CoreObject, T>::value
   >
 {};
 

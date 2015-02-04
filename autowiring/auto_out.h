@@ -31,6 +31,11 @@ protected:
 
 public:
   /// <summary>
+  /// Returns the dumb pointer to the underlying output value
+  /// </summary>
+  T* get(void) const { return m_value.get(); }
+
+  /// <summary>
   /// Releases the internal shared pointer, preventing it from being decorated on the packet
   /// </summary>
   void reset(void) {

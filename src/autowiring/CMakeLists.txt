@@ -81,6 +81,8 @@ set(Autowiring_SRCS
   CoreContextStateBlock.h
   CoreJob.cpp
   CoreJob.h
+  CoreObject.cpp
+  CoreObject.h
   CoreRunnable.cpp
   CoreRunnable.h
   CoreThread.cpp
@@ -127,8 +129,6 @@ set(Autowiring_SRCS
   MicroAutoFilter.h
   MicroBolt.h
   NewAutoFilter.h
-  Object.cpp
-  Object.h
   ObjectPool.h
   ObjectPoolMonitor.cpp
   ObjectPoolMonitor.h
@@ -170,14 +170,6 @@ add_conditional_sources(
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/pthread/thread.cpp
   ${PROJECT_SOURCE_DIR}/contrib/autoboost/libs/thread/src/future.cpp
 )
-
-if(NOT APPLE)
-  # avoid warning: has no symbols
-  set(Autowiring_SRCS
-    ${Autowiring_SRCS}
-    uuid.cpp
-  )
-endif()
 
 add_windows_sources(Autowiring_SRCS
   CoreThreadWin.cpp

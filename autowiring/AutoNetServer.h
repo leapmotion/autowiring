@@ -45,7 +45,7 @@ public:
   /// Send a custom event to all clients.
   template<typename... Args>
   void SendEvent(const std::string& event, Args... args) {
-    SendEvent(event, std::vector<std::string>{parse(args)...});
+    SendEvent(event, std::vector<std::string>{parseToString(args)...});
   }
   
 protected:
@@ -68,14 +68,14 @@ private:
         if (sizeof...(Args) != args.size())
           // TODO:  Return some kind of singal to the caller indicating that there is a problem
           return;
-        (handler.*pfn)(parse<Args>(args[N])...);
+        (handler.*pfn)(parseFromString<typename std::decay<Args>::type>(args[N])...);
       }
     );
   }
   
   // parse type to string
   template<class T>
-  std::string parse(const T& t){
+  std::string parseToString(const T& t){
     std::ostringstream ss;
     ss << t;
     return ss.str();
@@ -83,7 +83,7 @@ private:
   
   // parse string to primative type
   template<class T>
-  typename std::decay<T>::type parse(const std::string& str){
+  inline T parseFromString(const std::string& str){
     std::istringstream ss(str);
     typename std::decay<T>::type val;
     ss >> std::boolalpha >> val;
@@ -95,3 +95,9 @@ private:
     return val;
   }
 };
+
+// template specialization for a string to just return itself unparsed
+template<>
+inline std::string AutoNetServer::parseFromString<std::string>(const std::string& str) {
+  return str;
+}

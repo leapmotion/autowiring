@@ -71,7 +71,7 @@ public:
     }
   }
 
-  virtual void Filter(const JunctionBoxBase* pJunctionBox, Object* pRecipient) override {
+  virtual void Filter(const JunctionBoxBase* pJunctionBox, CoreObject* pRecipient) override {
     m_hit = true;
     try {
       throw;

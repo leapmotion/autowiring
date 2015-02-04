@@ -287,17 +287,30 @@ public:
   }
 
   /// <summary>
-  /// Returns a vector with a pointer to each decoration of type T, adding a nullptr to the end.
+  /// Returns a null-terminated temporary buffer containing all decorations
   /// </summary>
+  /// <returns>The null-terminated temporary buffer</returns>
+  /// <remarks>
+  /// The returned buffer must be freed with std::return_temporary_buffer
+  /// </remarks>
   template<class T>
-  std::vector<const T*> GetAll(int tshift = 0) {
-    std::vector<const T*> retval;
-    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
-    for (auto& dispo : deco->second.m_decorations) {
-      retval.push_back(dispo.as<T>().get().get());
+  const T** GetAll(int tshift = 0) const {
+    std::lock_guard<std::mutex> lk(m_lock);
+    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
+
+    // If decoration doesn't exist, return empty null-terminated buffer
+    if (q == m_decorations.end()) {
+      const T** retVal = std::get_temporary_buffer<const T*>(1).first;
+      retVal[0] = nullptr;
+      return retVal;
     }
-    retval.push_back(nullptr);
-    return retval;
+
+    const auto& decorations = q->second.m_decorations;
+    const T** retVal = std::get_temporary_buffer<const T*>(decorations.size() + 1).first;
+    for (size_t i = 0; i < decorations.size(); i++)
+      retVal[i] = static_cast<const T*>(decorations[i]->ptr());
+    retVal[decorations.size()] = nullptr;
+    return retVal;
   }
 
   /// <summary>Shares all broadcast data from this packet with the recipient packet</summary>
@@ -369,7 +382,10 @@ public:
   void Decorate(std::shared_ptr<T> ptr) {
     DecorationKey key(auto_id<T>::key());
     
-    /// Injunction to prevent existential loops:
+    // We don't want to see this overload used on a const T
+    static_assert(!std::is_const<T>::value, "Cannot decorate a shared pointer to const T with this overload");
+
+    // Injunction to prevent existential loops:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
     
     // Either decorate, or prevent anyone from decorating
@@ -546,7 +562,7 @@ public:
 
     // Add the filter that will ultimately be invoked
     *this += std::move(autoFilter);
-    return Wait(cv, Decompose<decltype(&Fx::operator())>::template Enumerate<AutoFilterDescriptorInput>::types, duration);
+    return Wait(cv, Decompose<decltype(&Fx::operator())>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types, duration);
   }
 
   /// <summary>
@@ -570,7 +586,7 @@ public:
   bool Wait(std::chrono::nanoseconds duration, std::condition_variable& cv)
   {
     static const AutoFilterDescriptorInput inputs [] = {
-      static_cast<auto_arg<Args>*>(nullptr)...,
+      AutoFilterDescriptorInputT<Args>()...,
       AutoFilterDescriptorInput()
     };
 
