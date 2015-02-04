@@ -1,1 +1,1 @@
-set(autowiring_VERSION 0.4.2)
+set(autowiring_VERSION 0.4.3)
