@@ -53,4 +53,15 @@ namespace std {
   {
     typedef _Type type;
   };
+
+  template<class T, class... Args>
+  struct is_constructible {
+    template<class U>
+    static std::true_type select(decltype(U(*static_cast<typename remove_reference<Args>::type*>(nullptr)...))*);
+    
+    template<class U>
+    static std::false_type select(...);
+
+    static const bool value = decltype(select<T>(static_cast<T*>(nullptr)))::value;
+  };
 }
