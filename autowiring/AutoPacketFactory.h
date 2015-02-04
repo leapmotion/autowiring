@@ -102,6 +102,31 @@ public:
   }
 
   /// <summary>
+  /// Wrapper class to enable combining an altitude and a function in a single += operation
+  class AutoPacketFactoryAltitudeExpression {
+  public:
+    AutoPacketFactoryAltitudeExpression(AutoPacketFactory* pParent, int altitude) :
+    m_pParent(pParent),
+    m_altitude(altitude)
+    {}
+
+  private:
+    AutoPacketFactory* m_pParent;
+    int m_altitude;
+
+  public:
+    template<class _Fx>
+    void operator,(_Fx&& fx) {
+      // Let the parent handle this one directly after composing a the altitude with the function
+      m_pParent->AddSubscriber(AutoFilterDescriptor(std::forward<_Fx&&>(fx), m_altitude));
+    }
+  };
+
+  AutoPacketFactoryAltitudeExpression operator+=(int rhs) {
+    return AutoPacketFactoryAltitudeExpression(this, rhs);
+  }
+
+  /// <summary>
   /// Convienance overload of operator+= to add a subscriber from a lambda
   /// </summary>
   template<class Fx>

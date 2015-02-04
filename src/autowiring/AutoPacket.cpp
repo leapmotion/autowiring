@@ -185,30 +185,44 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
 
     // Update satisfaction inside of lock
     DecorationDisposition& decoration = dFind->second;
+
+    // State parameters
+    // The maximum altitude which we have already decremented
     int newMaxAltitude = decoration.m_maxAltitude;
+    // Flags to control loop logic
     int newMaxSet = false;
     bool allCalled = true;
+
+    // This requires that the subscriber list be given in descending order of altitude
     for(SatCounter* satCounter : decoration.m_subscribers) {
+      // In the initial segment (the counters which we have already decremented),
+      // we only wish to know if every satCounter has actually been called. If any have not
+      // we cannot proceed on to decrement any other altitudes.
       if (satCounter->GetAltitude() >= decoration.m_maxAltitude) {
         if (!satCounter->called) {
           allCalled = false;
         }
       } else {
+        // First, break out if we have not called every filter of a higher altitude
         if (!allCalled) {
           break;
         }
 
+        // At this point we are going to decrement counters at a new altitude, but we only want to
+        // decrement one new altitude
         if (!newMaxSet) {
           newMaxAltitude = satCounter->GetAltitude();
           newMaxSet = true;
         }
 
+        // If we have found a counter of an altitude lower than the new max, we are done looking
         if (satCounter->GetAltitude() != newMaxAltitude) {
           break;
         }
 
+        // If we've made it this far, we know that we are safe to decrement and potentially call
+        // the satCounter
         if(satCounter->Decrement()) {
-          satCounter->called = true;
           callQueue.push_back(satCounter);
         }
       }
@@ -219,11 +233,12 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
   // Make calls outside of lock, to avoid deadlock from decorations in methods
   for (SatCounter* call : callQueue) {
     call->GetCall()(call->GetAutoFilter(), *this);
+    call->called = true;
+
+    // After calling a method, we may have freed up one of its inputs to move on to a new altitude
+    // recurse this function on each input to make sure that we get a chance to process all filters
     for(auto pCur = call->GetAutoFilterInput(); *pCur; pCur++) {
-      const DecorationKey other(*(pCur->ti), pCur->tshift);
-      if (other != info) {
-        UpdateSatisfaction(other);
-      }
+      UpdateSatisfaction(DecorationKey(*(pCur->ti), pCur->tshift));
     }
   }
 }
@@ -235,8 +250,13 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   {
     std::lock_guard<std::mutex> lk(m_lock);
     for(size_t i = nInfos; i--;) {
+      pTypeSubs[i]->m_maxAltitude = (*pTypeSubs[i]->m_subscribers.begin())->GetAltitude();
       for(SatCounter* cur : pTypeSubs[i]->m_subscribers) {
         if(
+          // We only need to process things at the highest altitude, the lower
+          // altitudes will be handled by recursive calls to UpdateSatisfaction
+          cur->GetAltitude() == pTypeSubs[i]->m_maxAltitude &&
+
           // We only care about sat counters that aren't deferred--skip everyone else
           // Deferred calls will be too late.
           !cur->IsDeferred() &&
@@ -256,8 +276,14 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   }
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
-  for (SatCounter* call : callQueue)
+  for (SatCounter* call : callQueue) {
     call->GetCall()(call->GetAutoFilter(), *this);
+    call->called = true;
+
+    for(auto pCur = call->GetAutoFilterInput(); *pCur; pCur++) {
+      UpdateSatisfaction(DecorationKey(*(pCur->ti), pCur->tshift));
+    }
+  }
 
   // Reset all counters, data in this call will not be available on return
   {

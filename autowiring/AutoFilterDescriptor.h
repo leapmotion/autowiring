@@ -187,7 +187,7 @@ struct AutoFilterDescriptor:
       &typeid(T),
       Decompose<decltype(&T::AutoFilter)>::template Enumerate<AutoFilterDescriptorInput>::types,
       CallExtractor<decltype(&T::AutoFilter)>::deferred,
-      0,
+      autofilter_altitude<T>::value,
       &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
     )
   {}
