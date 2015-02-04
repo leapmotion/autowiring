@@ -172,4 +172,4 @@ protected:
 /// <summary>
 /// Equivalent to new AutoNetServerImpl
 /// </summary>
-AutoNetServer* NewAutoNetServerImpl(bool);
+AutoNetServer* NewAutoNetServerImpl(AutoNetSecurity level);

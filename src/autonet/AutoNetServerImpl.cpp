@@ -66,8 +66,8 @@ AutoNetServerImpl<ASIO>::AutoNetServerImpl(void) :
 template<typename ASIO>
 AutoNetServerImpl<ASIO>::~AutoNetServerImpl(){}
 
-AutoNetServer* NewAutoNetServerImpl(bool use_tls) {
-  if (use_tls) {
+AutoNetServer* NewAutoNetServerImpl(AutoNetSecurity level) {
+  if (level == AutoNetSecurity::TLS) {
     return new AutoNetServerImpl<websocketpp::config::asio_tls>();
   } else {
     return new AutoNetServerImpl<websocketpp::config::asio>();
@@ -166,7 +166,7 @@ void AutoNetServerImpl<websocketpp::config::asio>::SetCertificate(std::shared_pt
 // TLS Certificate
 template<>
 void AutoNetServerImpl<websocketpp::config::asio_tls>::SetCertificate(std::shared_ptr<autoboost::asio::ssl::context> certificate) {
-  m_Server.set_tls_init_handler([certificate] {
+  m_Server.set_tls_init_handler([certificate] (websocketpp::connection_hdl) {
     return certificate;
   });
 }
