@@ -161,11 +161,26 @@ void AutoNetServerImpl<ASIO>::OnMessage(websocketpp::connection_hdl hdl, message
 
 // TLS Certificate
 template<>
-void AutoNetServerImpl<websocketpp::config::asio>::SetCertificate(std::shared_ptr<autoboost::asio::ssl::context>) {}
+void AutoNetServerImpl<websocketpp::config::asio>::SetCertificate(const std::string& passphrase, const std::string& privateKeyPath, const std::string& certPath) {}
 
 // TLS Certificate
 template<>
-void AutoNetServerImpl<websocketpp::config::asio_tls>::SetCertificate(std::shared_ptr<autoboost::asio::ssl::context> certificate) {
+void AutoNetServerImpl<websocketpp::config::asio_tls>::SetCertificate(const std::string& passphrase, const std::string& privateKeyPath, const std::string& certPath) {
+
+  const auto getPassphrase = [passphrase] (size_t maxLength, autoboost::asio::ssl::context::password_purpose) {
+    std::string phrase = passphrase;
+    if (phrase.size() > maxLength) {
+      phrase.resize(maxLength);
+    }
+    return phrase;
+  };
+
+  auto certificate = std::make_shared<autoboost::asio::ssl::context>(autoboost::asio::ssl::context::tlsv1);
+  certificate->set_options(autoboost::asio::ssl::context::default_workarounds | autoboost::asio::ssl::context::no_sslv2);
+  certificate->set_password_callback(getPassphrase);
+  certificate->use_rsa_private_key_file(privateKeyPath, autoboost::asio::ssl::context::pem);
+  certificate->use_certificate_file(certPath, autoboost::asio::ssl::context::pem);
+
   m_Server.set_tls_init_handler([certificate] (websocketpp::connection_hdl) {
     return certificate;
   });

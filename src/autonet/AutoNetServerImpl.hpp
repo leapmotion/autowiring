@@ -48,7 +48,7 @@ public:
   void OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message);
   
   // TLS Certificate
-  void SetCertificate(std::shared_ptr<autoboost::asio::ssl::context> certificate);
+  void SetCertificate(const std::string& passphrase, const std::string& privateKeyPath, const std::string& certPath);
 
   // AutoNetServer overrides:
   void Breakpoint(std::string name) override;
