@@ -9,7 +9,7 @@ class BreakpointTest:
 {};
 
 class ExposedAutoNetServer:
-  public AutoNetServerImpl
+  public AutoNetServerImpl<websocketpp::config::asio>
 {
 public:
   void HandleResumeFromBreakpoint(const std::string& breakpoint) {

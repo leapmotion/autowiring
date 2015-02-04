@@ -10,7 +10,12 @@
 
 class AutoNetServer;
 
-extern AutoNetServer* NewAutoNetServerImpl(void);
+enum class AutoNetSecurity {
+  NONE,
+  TLS
+};
+
+extern AutoNetServer* NewAutoNetServerImpl(AutoNetSecurity);
 
 class AutoNetServer:
   public CoreThread
@@ -21,8 +26,8 @@ protected:
 public:
   virtual ~AutoNetServer();
 
-  static AutoNetServer* New(void) {
-    return NewAutoNetServerImpl();
+  static AutoNetServer* New(AutoNetSecurity level = AutoNetSecurity::NONE) {
+    return NewAutoNetServerImpl(level);
   }
 
   /// <summary>
