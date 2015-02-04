@@ -14,7 +14,8 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 using json11::Json;
 
-AutoNetServerImpl::AutoNetServerImpl(void) :
+template<typename ASIO>
+AutoNetServerImpl<ASIO>::AutoNetServerImpl(void) :
   m_Port(8000)
 {
   // Configure websocketpp
@@ -62,16 +63,20 @@ AutoNetServerImpl::AutoNetServerImpl(void) :
     m_EventTypes.insert(event->NewTypeIdentifier());
 }
 
-AutoNetServerImpl::~AutoNetServerImpl()
-{
-}
+template<typename ASIO>
+AutoNetServerImpl<ASIO>::~AutoNetServerImpl(){}
 
-AutoNetServer* NewAutoNetServerImpl(void) {
-  return new AutoNetServerImpl;
+AutoNetServer* NewAutoNetServerImpl(bool use_tls) {
+  if (use_tls) {
+    return new AutoNetServerImpl<websocketpp::config::asio_tls>();
+  } else {
+    return new AutoNetServerImpl<websocketpp::config::asio>();
+  }
 }
 
 // CoreThread overrides
-void AutoNetServerImpl::Run(void){
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::Run(void){
   std::cout << "Starting Autonet server..." << std::endl;
   
   m_Server.listen(m_Port);
@@ -86,7 +91,8 @@ void AutoNetServerImpl::Run(void){
   CoreThread::Run();
 }
 
-void AutoNetServerImpl::OnStop(void) {
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::OnStop(void) {
   if (m_Server.is_listening())
     m_Server.stop_listening();
   
@@ -96,18 +102,22 @@ void AutoNetServerImpl::OnStop(void) {
 }
 
 // Server Handler functions
-void AutoNetServerImpl::OnOpen(websocketpp::connection_hdl hdl) {
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::OnOpen(websocketpp::connection_hdl hdl) {
   *this += [this, hdl] {
     SendMessage(hdl, "opened");
   };
 }
-void AutoNetServerImpl::OnClose(websocketpp::connection_hdl hdl) {
+
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::OnClose(websocketpp::connection_hdl hdl) {
   *this += [this, hdl] {
     this->m_Subscribers.erase(hdl);
   };
 }
 
-void AutoNetServerImpl::OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message) {
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message) {
   // Parse string from client
   std::string err;
   Json msg = Json::parse(p_message->get_payload(), err);
@@ -149,7 +159,20 @@ void AutoNetServerImpl::OnMessage(websocketpp::connection_hdl hdl, message_ptr p
   }
 }
 
-void AutoNetServerImpl::Breakpoint(std::string name){
+// TLS Certificate
+template<>
+void AutoNetServerImpl<websocketpp::config::asio>::SetCertificate(std::shared_ptr<autoboost::asio::ssl::context>) {}
+
+// TLS Certificate
+template<>
+void AutoNetServerImpl<websocketpp::config::asio_tls>::SetCertificate(std::shared_ptr<autoboost::asio::ssl::context> certificate) {
+  m_Server.set_tls_init_handler([certificate] {
+    return certificate;
+  });
+}
+
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::Breakpoint(std::string name){
   std::unique_lock<std::mutex> lk(m_breakpoint_mutex);
 
   m_breakpoints.insert(name);
@@ -164,7 +187,8 @@ void AutoNetServerImpl::Breakpoint(std::string name){
 }
 
 // Update Functions
-void AutoNetServerImpl::NewContext(CoreContext& newCtxt){
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::NewContext(CoreContext& newCtxt){
   auto ctxt = newCtxt.shared_from_this();
 
   *this += [this, ctxt] {
@@ -180,14 +204,16 @@ void AutoNetServerImpl::NewContext(CoreContext& newCtxt){
   };
 }
 
-void AutoNetServerImpl::ExpiredContext(CoreContext& oldCtxt){
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::ExpiredContext(CoreContext& oldCtxt){
   int id = ResolveContextID(&oldCtxt);
   *this += [this, id] {
     BroadcastMessage("expiredContext", id);
   };
 }
 
-void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object){
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::NewObject(CoreContext& ctxt, const ObjectTraits& object){
   int contextID = ResolveContextID(&ctxt);
 
   *this += [this, object, contextID]{
@@ -276,7 +302,8 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
   };
 }
 
-void AutoNetServerImpl::SendEvent(const std::string& rawEvent, const std::vector<std::string>& args) {
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::SendEvent(const std::string& rawEvent, const std::vector<std::string>& args) {
   // Prepend '$' to custum event to avoid namespace collitions with internal events
   std::string event("$");
   event.append(rawEvent);
@@ -298,7 +325,8 @@ void AutoNetServerImpl::SendEvent(const std::string& rawEvent, const std::vector
   };
 }
 
-void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::HandleSubscribe(websocketpp::connection_hdl hdl) {
   m_Subscribers.insert(hdl);
 
   Json::array types;
@@ -315,13 +343,15 @@ void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
   }
 }
 
-void AutoNetServerImpl::HandleUnsubscribe(websocketpp::connection_hdl hdl) {
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::HandleUnsubscribe(websocketpp::connection_hdl hdl) {
   this->m_Subscribers.erase(hdl);
   SendMessage(hdl, "unsubscribed");
 }
 
 //helper functions
-int AutoNetServerImpl::ResolveContextID(CoreContext* ctxt) {
+template<typename ASIO>
+int AutoNetServerImpl<ASIO>::ResolveContextID(CoreContext* ctxt) {
   static int counter = 0;
 
   if(m_ContextIDs.find(ctxt) == m_ContextIDs.end()){
@@ -334,11 +364,13 @@ int AutoNetServerImpl::ResolveContextID(CoreContext* ctxt) {
   }
 }
 
-CoreContext* AutoNetServerImpl::ResolveContextID(int id) {
+template<typename ASIO>
+CoreContext* AutoNetServerImpl<ASIO>::ResolveContextID(int id) {
   return m_ContextPtrs.at(id);
 }
 
-void AutoNetServerImpl::PollThreadUtilization(std::chrono::milliseconds period){
+template<typename ASIO>
+void AutoNetServerImpl<ASIO>::PollThreadUtilization(std::chrono::milliseconds period){
 
   *this += period, [this, period] {
 
@@ -384,3 +416,6 @@ void AutoNetServerImpl::PollThreadUtilization(std::chrono::milliseconds period){
     PollThreadUtilization(period);
   };
 }
+
+template class AutoNetServerImpl<websocketpp::config::asio>;
+template class AutoNetServerImpl<websocketpp::config::asio_tls>;

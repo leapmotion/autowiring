@@ -10,7 +10,7 @@
 
 class AutoNetServer;
 
-extern AutoNetServer* NewAutoNetServerImpl(void);
+extern AutoNetServer* NewAutoNetServerImpl(bool);
 
 class AutoNetServer:
   public CoreThread
@@ -21,8 +21,8 @@ protected:
 public:
   virtual ~AutoNetServer();
 
-  static AutoNetServer* New(void) {
-    return NewAutoNetServerImpl();
+  static AutoNetServer* New(bool use_tls = false) {
+    return NewAutoNetServerImpl(use_tls);
   }
 
   /// <summary>

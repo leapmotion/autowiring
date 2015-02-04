@@ -20,10 +20,12 @@
 #define websocketpp websocketpp_autonet
 #include <websocketpp/server.hpp>
 #include <websocketpp/config/asio_no_tls.hpp>
+#include <websocketpp/config/asio.hpp>
 
 struct ObjectTraits;
 struct TypeIdentifierBase;
 
+template<typename ASIO>
 class AutoNetServerImpl:
   public AutoNetServer,
   public virtual AutowiringEvents
@@ -33,8 +35,8 @@ public:
   ~AutoNetServerImpl();
 
   //Types
-  typedef websocketpp::server<websocketpp::config::asio> t_server;
-  typedef t_server::message_ptr message_ptr;
+  typedef websocketpp::server<ASIO> t_server;
+  typedef typename t_server::message_ptr message_ptr;
 
   // Functions from BasicThread
   virtual void Run(void) override;
@@ -44,6 +46,9 @@ public:
   void OnOpen(websocketpp::connection_hdl hdl);
   void OnClose(websocketpp::connection_hdl hdl);
   void OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message);
+  
+  // TLS Certificate
+  void SetCertificate(std::shared_ptr<autoboost::asio::ssl::context> certificate);
 
   // AutoNetServer overrides:
   void Breakpoint(std::string name) override;
@@ -167,4 +172,4 @@ protected:
 /// <summary>
 /// Equivalent to new AutoNetServerImpl
 /// </summary>
-AutoNetServer* NewAutoNetServerImpl(void);
+AutoNetServer* NewAutoNetServerImpl(bool);
