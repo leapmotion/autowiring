@@ -113,7 +113,7 @@ $(document).ready(function(){initNavTree('index.html','');});
 <h1>Organization</h1>
 <p>A Context is a basic unit of organization in an autowired application. A Context defines the scope in which autowiring resolves dependencies, broadcasts events and filter graph packets, and maintains object and thread lifespans. Contexts form a tree structure. The root of the tree is the global context, which is created automatically. Contexts can "contain" other contexts as child nodes in the context tree. Dependencies within a child context can be satisfied by an autowired member of a parent context (if it can't be satisfied within the child itself).</p>
 <p> 
-<iframe src="ContextTree.svg" frameBorder="0"></iframe>
+<object data="ContextTree.svg"></object>
 </p>
 <p>Most applications will only have a few contexts. Child contexts are most useful when managing temporary resources. For example, if you have multiple views to the same data, the data model could be a type within a parent context while each view exists within a child context. These child contexts could be created and destroyed on demand.</p>
 <h1>Autowiring</h1>
@@ -144,7 +144,7 @@ $(document).ready(function(){initNavTree('index.html','');});
 <h1>Filter graph networks</h1>
 <p>Autofilters support the creation of filter graph networks within a context. <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> objects within a context can implement the Autofilter function, which will be automatically invoked when a suitable packet is dispatched by the <a class="el" href="class_auto_packet_factory.html" title="A configurable factory class for pipeline packets with a built-in object pool ">AutoPacketFactory</a> or another filter.</p>
 <p> 
-<iframe src="FilterGraph.svg" frameBorder="0"></iframe>
+<object data="FilterGraph.svg"></object>
 </p>
 <p>The publishing object does not need any knowledge of the receiving objects. Similarly, the <a class="el" href="class_auto_fired.html" title="Injects an object that can fire events. ">AutoFired</a> event system allows an object to define a callback function that gets called whenever an event is triggered. </p>
 </div></div><!-- contents -->

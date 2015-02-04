@@ -5,34 +5,34 @@
 ]>
 <svg version="1.1"
 	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
-	 x="0px" y="0px" width="571px" height="145px" viewBox="0 0 571 145" style="overflow:visible;enable-background:new 0 0 571 145;"
+	 x="0px" y="0px" width="571px" height="145px" viewBox="0 0 571 145" overflow="visible" enable-background="new 0 0 571 145"
 	 xml:space="preserve">
 <defs>
 </defs>
-<rect x="0.5" y="0.5" style="fill:#FFFFFF;stroke:#000000;stroke-miterlimit:10;" width="107" height="38"/>
-<text transform="matrix(1 0 0 1 6.5942 19.5)" style="font-family:'MyriadPro-Regular'; font-size:12;">AutoPacketFactory</text>
-<rect x="32.5" y="80.5" style="fill:none;stroke:#000000;stroke-miterlimit:10;" width="131" height="37"/>
-<text transform="matrix(1 0 0 1 39.897 91.7769)" style="font-family:'MyriadPro-Regular'; font-size:12;">In</text>
-<text transform="matrix(1 0 0 1 139.3672 111.6118)" style="font-family:'MyriadPro-Regular'; font-size:12;">Out</text>
-<text transform="matrix(1 0 0 1 80.3604 99.2148)" style="font-family:'MyriadPro-Regular'; font-size:12;">Filter A</text>
-<rect x="211.5" y="19.5" style="fill:none;stroke:#000000;stroke-miterlimit:10;" width="131" height="37"/>
-<text transform="matrix(1 0 0 1 218.897 30.7769)" style="font-family:'MyriadPro-Regular'; font-size:12;">In</text>
-<text transform="matrix(1 0 0 1 318.3672 50.6118)" style="font-family:'MyriadPro-Regular'; font-size:12;">Out</text>
-<text transform="matrix(1 0 0 1 259.7803 38.2148)" style="font-family:'MyriadPro-Regular'; font-size:12;">Filter B</text>
-<rect x="211.5" y="93.5" style="fill:none;stroke:#000000;stroke-miterlimit:10;" width="131" height="37"/>
-<text transform="matrix(1 0 0 1 218.897 104.7769)" style="font-family:'MyriadPro-Regular'; font-size:12;">In</text>
-<text transform="matrix(1 0 0 1 318.3672 124.6118)" style="font-family:'MyriadPro-Regular'; font-size:12;">Out</text>
-<text transform="matrix(1 0 0 1 259.5522 112.2148)" style="font-family:'MyriadPro-Regular'; font-size:12;">Filter C</text>
-<rect x="375.5" y="56.5" style="fill:none;stroke:#000000;stroke-miterlimit:10;" width="131" height="37"/>
-<text transform="matrix(1 0 0 1 382.8965 67.7769)" style="font-family:'MyriadPro-Regular'; font-size:12;">In</text>
-<text transform="matrix(1 0 0 1 482.3672 87.6118)" style="font-family:'MyriadPro-Regular'; font-size:12;">Out</text>
-<text transform="matrix(1 0 0 1 423.0361 75.2148)" style="font-family:'MyriadPro-Regular'; font-size:12;">Filter D</text>
-<text transform="matrix(1 0 0 1 382.8975 87.6118)" style="font-family:'MyriadPro-Regular'; font-size:12;">In</text>
-<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M54,38c0,17.604-65.479,42.5-21.5,49.612"/>
-<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M211.5,30.777c-39.831,0-22.979,63.81-48,74"/>
-<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M163.5,104.777c39.896,6.835,18.087-5.893,48-5.562"/>
-<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M342.5,46.653c33-0.209,0,17.905,33,17.905"/>
-<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M342.5,117.5c36.93,0.227-0.682-29.425,33-29.888"/>
-<circle style="fill:none;stroke:#000000;stroke-miterlimit:10;" cx="566.62" cy="71.496" r="3.719"/>
-<path style="fill:none;stroke:#000000;stroke-miterlimit:10;" d="M506.5,80.5c27.476-0.789,33.26-19.698,56.4-9.004"/>
+<rect x="0.5" y="0.5" fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" width="107" height="38"/>
+<text transform="matrix(1 0 0 1 3.3105 19.5)" font-family="'ArialMT'" font-size="12">AutoPacketFactory</text>
+<rect x="32.5" y="80.5" fill="none" stroke="#000000" stroke-miterlimit="10" width="131" height="37"/>
+<text transform="matrix(1 0 0 1 39.6572 91.7769)" font-family="'ArialMT'" font-size="12">In</text>
+<text transform="matrix(1 0 0 1 139.1221 111.6118)" font-family="'ArialMT'" font-size="12">Out</text>
+<text transform="matrix(1 0 0 1 78.998 99.2148)" font-family="'ArialMT'" font-size="12">Filter A</text>
+<rect x="211.5" y="19.5" fill="none" stroke="#000000" stroke-miterlimit="10" width="131" height="37"/>
+<text transform="matrix(1 0 0 1 218.6572 30.7769)" font-family="'ArialMT'" font-size="12">In</text>
+<text transform="matrix(1 0 0 1 318.1221 50.6118)" font-family="'ArialMT'" font-size="12">Out</text>
+<text transform="matrix(1 0 0 1 257.998 38.2148)" font-family="'ArialMT'" font-size="12">Filter B</text>
+<rect x="211.5" y="93.5" fill="none" stroke="#000000" stroke-miterlimit="10" width="131" height="37"/>
+<text transform="matrix(1 0 0 1 218.6572 104.7769)" font-family="'ArialMT'" font-size="12">In</text>
+<text transform="matrix(1 0 0 1 318.1221 124.6118)" font-family="'ArialMT'" font-size="12">Out</text>
+<text transform="matrix(1 0 0 1 257.667 112.2148)" font-family="'ArialMT'" font-size="12">Filter C</text>
+<rect x="375.5" y="56.5" fill="none" stroke="#000000" stroke-miterlimit="10" width="131" height="37"/>
+<text transform="matrix(1 0 0 1 382.6572 67.7769)" font-family="'ArialMT'" font-size="12">In</text>
+<text transform="matrix(1 0 0 1 482.1221 87.6118)" font-family="'ArialMT'" font-size="12">Out</text>
+<text transform="matrix(1 0 0 1 421.667 75.2148)" font-family="'ArialMT'" font-size="12">Filter D</text>
+<text transform="matrix(1 0 0 1 382.6572 87.6118)" font-family="'ArialMT'" font-size="12">In</text>
+<path fill="none" stroke="#000000" stroke-miterlimit="10" d="M54,38c0,17.604-65.479,42.5-21.5,49.612"/>
+<path fill="none" stroke="#000000" stroke-miterlimit="10" d="M211.5,30.777c-39.831,0-22.979,63.81-48,74"/>
+<path fill="none" stroke="#000000" stroke-miterlimit="10" d="M163.5,104.777c39.896,6.835,18.087-5.893,48-5.562"/>
+<path fill="none" stroke="#000000" stroke-miterlimit="10" d="M342.5,46.653c33-0.209,0,17.905,33,17.905"/>
+<path fill="none" stroke="#000000" stroke-miterlimit="10" d="M342.5,117.5c36.93,0.227-0.682-29.425,33-29.888"/>
+<circle fill="none" stroke="#000000" stroke-miterlimit="10" cx="566.62" cy="71.496" r="3.719"/>
+<path fill="none" stroke="#000000" stroke-miterlimit="10" d="M506.5,80.5c27.476-0.789,33.26-19.698,56.4-9.004"/>
 </svg>
