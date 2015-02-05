@@ -14,6 +14,41 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 using json11::Json;
 
+////
+//// Default AutoNet transport layer implementation
+////
+
+DefaultAutoNetTransport::DefaultAutoNetTransport(void){}
+DefaultAutoNetTransport::~DefaultAutoNetTransport(void){}
+
+void DefaultAutoNetTransport::Start(void) {
+  
+}
+
+void DefaultAutoNetTransport::Stop(void) {
+  
+}
+
+void DefaultAutoNetTransport::Send(connection_hdl hdl, const std::string& msg){
+  
+}
+
+void DefaultAutoNetTransport::OnOpen(std::function<void(connection_hdl)> fn) {
+  
+}
+
+void DefaultAutoNetTransport::OnClose(std::function<void(connection_hdl)> fn) {
+  
+}
+
+void DefaultAutoNetTransport::OnMessage(std::function<void(connection_hdl, std::string)> fn) {
+  
+}
+
+////
+//// AutoNetServer implementation
+////
+
 AutoNetServerImpl::AutoNetServerImpl(std::unique_ptr<AutoNetTransport> transport) :
   m_Port(8000),
   m_transport(std::move(transport))
@@ -69,6 +104,10 @@ AutoNetServerImpl::~AutoNetServerImpl()
 
 AutoNetServer* NewAutoNetServerImpl(std::unique_ptr<AutoNetTransport> transport) {
   return new AutoNetServerImpl(std::move(transport));
+}
+
+AutoNetServer* NewAutoNetServerImpl(void) {
+  return new AutoNetServerImpl();
 }
 
 // CoreThread overrides

@@ -24,6 +24,28 @@
 struct ObjectTraits;
 struct TypeIdentifierBase;
 
+//// Default transport layer for AutoNet
+class DefaultAutoNetTransport:
+public AutoNetTransport
+{
+public:
+  DefaultAutoNetTransport();
+  virtual ~DefaultAutoNetTransport();
+  
+  void Start(void);
+  void Stop(void);
+  
+  void Send(connection_hdl hdl, const std::string& msg);
+  
+  void OnOpen(std::function<void(connection_hdl)> fn);
+  void OnClose(std::function<void(connection_hdl)> fn);
+  void OnMessage(std::function<void(connection_hdl, std::string)> fn);
+  
+private:
+  std::set<connection_hdl> m_connections;
+};
+
+// Protocol layer for AutoNet
 class AutoNetServerImpl:
   public AutoNetServer,
   public virtual AutowiringEvents
@@ -171,3 +193,4 @@ protected:
 /// Equivalent to new AutoNetServerImpl
 /// </summary>
 AutoNetServer* NewAutoNetServerImpl(std::unique_ptr<AutoNetTransport>);
+AutoNetServer* NewAutoNetServerImpl(void);

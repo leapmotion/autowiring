@@ -5,7 +5,6 @@
 #include "index_tuple.h"
 #include <autowiring/Decompose.h>
 #include <sstream>
-#include <set>
 #include STL_UNORDERED_MAP
 #include FUNCTIONAL_HEADER
 
@@ -23,28 +22,9 @@ public:
   virtual void OnMessage(std::function<void(connection_hdl, std::string)> fn) = 0;
 };
 
-class DefaultAutoNetTransport:
-  public AutoNetTransport
-{
-public:
-  DefaultAutoNetTransport();
-  virtual ~DefaultAutoNetTransport();
-  
-  void Start(void);
-  void Stop(void);
-  
-  void Send(connection_hdl hdl, const std::string& msg);
-  
-  void OnOpen(std::function<void(connection_hdl)> fn);
-  void OnClose(std::function<void(connection_hdl)> fn);
-  void OnMessage(std::function<void(connection_hdl, std::string)> fn);
-
-private:
-  std::set<connection_hdl> m_connections;
-};
-
 class AutoNetServer;
 extern AutoNetServer* NewAutoNetServerImpl(std::unique_ptr<AutoNetTransport>);
+extern AutoNetServer* NewAutoNetServerImpl(void);
 
 class AutoNetServer:
   public CoreThread
@@ -55,8 +35,12 @@ protected:
 public:
   virtual ~AutoNetServer();
 
-  static AutoNetServer* New(std::unique_ptr<AutoNetTransport> transport = std::make_unique<DefaultAutoNetTransport>()) {
+  static AutoNetServer* New(std::unique_ptr<AutoNetTransport> transport) {
     return NewAutoNetServerImpl(std::move(transport));
+  }
+  
+  static AutoNetServer* New(void) {
+    return NewAutoNetServerImpl();
   }
 
   /// <summary>
