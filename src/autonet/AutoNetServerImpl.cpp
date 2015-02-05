@@ -10,8 +10,6 @@
 #include <iostream>
 #include FUTURE_HEADER
 
-using std::placeholders::_1;
-using std::placeholders::_2;
 using json11::Json;
 
 ////
@@ -47,11 +45,21 @@ void DefaultAutoNetTransport::Send(connection_hdl hdl, const std::string& msg){
 }
 
 void DefaultAutoNetTransport::OnOpen(std::function<void(connection_hdl)> fn) {
-  m_server.set_open_handler(fn);
+  m_server.set_open_handler([this, fn] (connection_hdl hdl) {
+    (std::lock_guard<std::mutex>)m_lock,
+    m_connections.insert(hdl);
+    
+    fn(hdl);
+  });
 }
 
 void DefaultAutoNetTransport::OnClose(std::function<void(connection_hdl)> fn) {
-  m_server.set_close_handler(fn);
+  m_server.set_close_handler([this, fn] (connection_hdl hdl) {
+    (std::lock_guard<std::mutex>)m_lock,
+    m_connections.erase(hdl);
+    
+    fn(hdl);
+  });
 }
 
 void DefaultAutoNetTransport::OnMessage(std::function<void(connection_hdl, std::string)> fn) {
@@ -66,18 +74,25 @@ void DefaultAutoNetTransport::OnMessage(std::function<void(connection_hdl, std::
 ////
 
 AutoNetServerImpl::AutoNetServerImpl(std::unique_ptr<AutoNetTransport> transport) :
-  m_Port(8000),
   m_transport(std::move(transport))
 {
-  // Configure websocketpp
-  m_Server.init_asio();
-  m_Server.set_access_channels(websocketpp::log::alevel::none);
-  m_Server.set_error_channels(websocketpp::log::elevel::none);
 
   // Register handlers
-  m_Server.set_open_handler(std::bind(&AutoNetServerImpl::OnOpen, this, ::_1));
-  m_Server.set_close_handler(std::bind(&AutoNetServerImpl::OnClose, this, ::_1));
-  m_Server.set_message_handler(std::bind(&AutoNetServerImpl::OnMessage, this, ::_1, ::_2));
+  m_transport->OnOpen([this] (AutoNetTransport::connection_hdl hdl) {
+    *this += [this, hdl] {
+      SendMessage(hdl, "opened");
+    };
+  });
+  
+  m_transport->OnClose([this] (AutoNetTransport::connection_hdl hdl) {
+    *this += [this, hdl] {
+      this->m_Subscribers.erase(hdl);
+    };
+  });
+  
+  m_transport->OnMessage([this](AutoNetTransport::connection_hdl hdl, std::string payload) {
+    OnMessage(hdl, payload);
+  });
   
   // Register internal event handlers
   AddEventHandler("terminateContext", [this] (int contextID) {
@@ -114,9 +129,7 @@ AutoNetServerImpl::AutoNetServerImpl(std::unique_ptr<AutoNetTransport> transport
     m_EventTypes.insert(event->NewTypeIdentifier());
 }
 
-AutoNetServerImpl::~AutoNetServerImpl()
-{
-}
+AutoNetServerImpl::~AutoNetServerImpl(){}
 
 AutoNetServer* NewAutoNetServerImpl(std::unique_ptr<AutoNetTransport> transport) {
   return new AutoNetServerImpl(std::move(transport));
@@ -130,12 +143,9 @@ AutoNetServer* NewAutoNetServerImpl(void) {
 void AutoNetServerImpl::Run(void){
   std::cout << "Starting Autonet server..." << std::endl;
   
-  m_Server.listen(m_Port);
-  m_Server.start_accept();
-  
   // blocks until the server finishes
   auto websocket = std::async(std::launch::async, [this]{
-    m_Server.run();
+    m_transport->Start();
   });
 
   PollThreadUtilization(std::chrono::milliseconds(1000));
@@ -143,30 +153,13 @@ void AutoNetServerImpl::Run(void){
 }
 
 void AutoNetServerImpl::OnStop(void) {
-  if (m_Server.is_listening())
-    m_Server.stop_listening();
-  
-  for (auto& conn : m_Subscribers) {
-    m_Server.close(conn, websocketpp::close::status::normal, "closed");
-  }
+  m_transport->Stop();
 }
 
-// Server Handler functions
-void AutoNetServerImpl::OnOpen(websocketpp::connection_hdl hdl) {
-  *this += [this, hdl] {
-    SendMessage(hdl, "opened");
-  };
-}
-void AutoNetServerImpl::OnClose(websocketpp::connection_hdl hdl) {
-  *this += [this, hdl] {
-    this->m_Subscribers.erase(hdl);
-  };
-}
-
-void AutoNetServerImpl::OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message) {
+void AutoNetServerImpl::OnMessage(AutoNetTransport::connection_hdl hdl, std::string payload) {
   // Parse string from client
   std::string err;
-  Json msg = Json::parse(p_message->get_payload(), err);
+  Json msg = Json::parse(payload, err);
 
   if(!err.empty()) {
     std::cout << "Parse error: " << err << std::endl;
@@ -343,13 +336,13 @@ void AutoNetServerImpl::SendEvent(const std::string& rawEvent, const std::vector
   }
   
   *this += [this, event, jsonArgs] {
-    for(websocketpp::connection_hdl hdl : m_Subscribers) {
+    for(auto hdl : m_Subscribers) {
       Json msg = Json::object{
         {"type", event},
         {"args", jsonArgs}
       };
       
-      m_Server.send(hdl, msg.dump(), websocketpp::frame::opcode::text);
+      m_transport->Send(hdl, msg.dump());
     }
   };
 }

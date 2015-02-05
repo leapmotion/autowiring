@@ -45,7 +45,8 @@ private:
   typedef websocketpp::server<websocketpp::config::asio> t_server;
   typedef t_server::message_ptr message_ptr;
   
-  std::set<connection_hdl> m_connections;
+  std::mutex m_lock;
+  std::set<connection_hdl, std::owner_less<AutoNetTransport::connection_hdl>> m_connections;
   int m_port;
   t_server m_server;
 };
@@ -58,19 +59,13 @@ class AutoNetServerImpl:
 public:
   AutoNetServerImpl(std::unique_ptr<AutoNetTransport> = std::make_unique<DefaultAutoNetTransport>());
   ~AutoNetServerImpl();
-
-  //Types
-  typedef websocketpp::server<websocketpp::config::asio> t_server;
-  typedef t_server::message_ptr message_ptr;
+  
+  // Handle websocket messages
+  void OnMessage(AutoNetTransport::connection_hdl hdl, std::string payload);
 
   // Functions from BasicThread
   virtual void Run(void) override;
   virtual void OnStop(void) override;
-
-  // Server Handler functions
-  void OnOpen(websocketpp::connection_hdl hdl);
-  void OnClose(websocketpp::connection_hdl hdl);
-  void OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message);
 
   // AutoNetServer overrides:
   void Breakpoint(std::string name) override;
@@ -106,7 +101,7 @@ protected:
   /// Client callback with same number of arguments passed here will be called
   /// </remarks>
   template<typename... Args>
-  void SendMessage(websocketpp::connection_hdl hdl, const char* p_type, Args&&... args){
+  void SendMessage(AutoNetTransport::connection_hdl hdl, const char* p_type, Args&&... args){
     using json11::Json;
 
     Json msg = Json::object{
@@ -114,7 +109,7 @@ protected:
         {"args", Json::array{args...}}
     };
 
-    m_Server.send(hdl, msg.dump(), websocketpp::frame::opcode::text);
+    m_transport->Send(hdl, msg.dump());
   }
 
   /// <summary>
@@ -124,7 +119,7 @@ protected:
   /// <param name="args...">An arg to be passed to client side event handler</param>
   template<typename ...Args>
   void BroadcastMessage(const char* p_type, Args&&... args) {
-    for(websocketpp::connection_hdl ptr : m_Subscribers)
+    for(AutoNetTransport::connection_hdl ptr : m_Subscribers)
       SendMessage(ptr, p_type, std::forward<Args>(args)...);
   }
   
@@ -135,13 +130,13 @@ protected:
   /// Called when a "Subscribe" event is sent from a client
   /// </summary>
   /// <param name="client">Client that sent event</param>
-  void HandleSubscribe(websocketpp::connection_hdl hdl);
+  void HandleSubscribe(AutoNetTransport::connection_hdl hdl);
 
   /// <summary>
   /// Called when a "Unsubscribe" event is sent from a client
   /// </summary>
   /// <param name="client">Client that sent event</param>
-  void HandleUnsubscribe(websocketpp::connection_hdl hdl);
+  void HandleUnsubscribe(AutoNetTransport::connection_hdl hdl);
 
   /// <summary>
   /// Assigns each context a unique ID number
@@ -161,7 +156,7 @@ protected:
   *******************************************/
 
   // Set of all subscribers
-  std::set<websocketpp::connection_hdl, std::owner_less<websocketpp::connection_hdl>> m_Subscribers;
+  std::set<AutoNetTransport::connection_hdl, std::owner_less<AutoNetTransport::connection_hdl>> m_Subscribers;
 
   // one-to-one map of contexts to integers
   std::map<CoreContext*, int> m_ContextIDs;
@@ -185,10 +180,6 @@ protected:
   std::mutex m_breakpoint_mutex;
   std::condition_variable m_breakpoint_cv;
   std::set<std::string> m_breakpoints;
-
-  // The actual server
-  t_server m_Server;
-  const int m_Port; // Port to listen on
   
   // Transport layer for AutoNet
   std::unique_ptr<AutoNetTransport> m_transport;
