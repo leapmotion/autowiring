@@ -14,54 +14,36 @@
   #define BOOST_NO_CXX11_HDR_INITIALIZER_LIST
 #endif
 
-// Need to redefine this namespace so we don't create linker problems.  Such problems may be
-// created if our static library is imported by another project that uses an incompatible
-// version of websocketpp.
-#define websocketpp websocketpp_autonet
-#include <websocketpp/server.hpp>
-#include <websocketpp/config/asio_no_tls.hpp>
-
 struct ObjectTraits;
 struct TypeIdentifierBase;
-
-//// Default transport layer for AutoNet
-class DefaultAutoNetTransport:
-public AutoNetTransport
-{
-public:
-  DefaultAutoNetTransport();
-  virtual ~DefaultAutoNetTransport();
-  
-  void Start(void);
-  void Stop(void);
-  
-  void Send(connection_hdl hdl, const std::string& msg);
-  
-  void OnOpen(std::function<void(connection_hdl)> fn);
-  void OnClose(std::function<void(connection_hdl)> fn);
-  void OnMessage(std::function<void(connection_hdl, std::string)> fn);
-  
-private:
-  typedef websocketpp::server<websocketpp::config::asio> t_server;
-  typedef t_server::message_ptr message_ptr;
-  
-  std::mutex m_lock;
-  std::set<connection_hdl, std::owner_less<AutoNetTransport::connection_hdl>> m_connections;
-  int m_port;
-  t_server m_server;
-};
 
 // Protocol layer for AutoNet
 class AutoNetServerImpl:
   public AutoNetServer,
-  public virtual AutowiringEvents
+  public AutowiringEvents,
+  public AutoNetTransportHandler
 {
 public:
-  AutoNetServerImpl(std::unique_ptr<AutoNetTransport> = std::make_unique<DefaultAutoNetTransport>());
+  /// <summary>
+  /// Constructs an AutoNet server with the default HTTP transport mechanism
+  /// </summary>
+  AutoNetServerImpl(void);
+
+  /// <summary>
+  /// Constructs an AutoNet server with the specified transport
+  /// </summary>
+  AutoNetServerImpl(std::unique_ptr<AutoNetTransport>&& transport);
   ~AutoNetServerImpl();
   
   // Handle websocket messages
-  void OnMessage(AutoNetTransport::connection_hdl hdl, std::string payload);
+  void OnOpen(connection_hdl handle) override {
+  }
+  void OnClose(connection_hdl handle) override {
+    *this += [this, handle] {
+      this->m_Subscribers.erase(handle);
+    };
+  }
+  void OnMessage(AutoNetTransportHandler::connection_hdl hdl, const std::string& payload) override;
 
   // Functions from BasicThread
   virtual void Run(void) override;
@@ -101,7 +83,7 @@ protected:
   /// Client callback with same number of arguments passed here will be called
   /// </remarks>
   template<typename... Args>
-  void SendMessage(AutoNetTransport::connection_hdl hdl, const char* p_type, Args&&... args){
+  void SendMessage(AutoNetTransportHandler::connection_hdl hdl, const char* p_type, Args&&... args) {
     using json11::Json;
 
     Json msg = Json::object{
@@ -119,7 +101,7 @@ protected:
   /// <param name="args...">An arg to be passed to client side event handler</param>
   template<typename ...Args>
   void BroadcastMessage(const char* p_type, Args&&... args) {
-    for(AutoNetTransport::connection_hdl ptr : m_Subscribers)
+    for(auto ptr : m_Subscribers)
       SendMessage(ptr, p_type, std::forward<Args>(args)...);
   }
   
@@ -130,13 +112,13 @@ protected:
   /// Called when a "Subscribe" event is sent from a client
   /// </summary>
   /// <param name="client">Client that sent event</param>
-  void HandleSubscribe(AutoNetTransport::connection_hdl hdl);
+  void HandleSubscribe(AutoNetTransportHandler::connection_hdl hdl);
 
   /// <summary>
   /// Called when a "Unsubscribe" event is sent from a client
   /// </summary>
   /// <param name="client">Client that sent event</param>
-  void HandleUnsubscribe(AutoNetTransport::connection_hdl hdl);
+  void HandleUnsubscribe(AutoNetTransportHandler::connection_hdl hdl);
 
   /// <summary>
   /// Assigns each context a unique ID number
@@ -156,7 +138,7 @@ protected:
   *******************************************/
 
   // Set of all subscribers
-  std::set<AutoNetTransport::connection_hdl, std::owner_less<AutoNetTransport::connection_hdl>> m_Subscribers;
+  std::set<AutoNetTransportHandler::connection_hdl, std::owner_less<AutoNetTransportHandler::connection_hdl>> m_Subscribers;
 
   // one-to-one map of contexts to integers
   std::map<CoreContext*, int> m_ContextIDs;
