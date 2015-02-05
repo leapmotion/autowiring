@@ -13,6 +13,8 @@ set(AutoNet_SRCS
   AutoNetServer.h
   AutoNetServerImpl.cpp
   AutoNetServerImpl.hpp
+  AutoNetTransportHttp.hpp
+  AutoNetTransportHttp.cpp
   ${PROJECT_SOURCE_DIR}/contrib/json11/json11.cpp
   ${PROJECT_SOURCE_DIR}/contrib/json11/json11.hpp
 )

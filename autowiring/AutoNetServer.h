@@ -8,18 +8,42 @@
 #include STL_UNORDERED_MAP
 #include FUNCTIONAL_HEADER
 
-class AutoNetTransport {
+class AutoNetTransportHandler {
 public:
   typedef std::weak_ptr<void> connection_hdl;
-  
+
+  virtual void OnOpen(connection_hdl handle) = 0;
+  virtual void OnClose(connection_hdl handle) = 0;
+  virtual void OnMessage(connection_hdl handle, const std::string& message) = 0;
+};
+
+/// <summary>
+/// Represents a transport implementation that carries AutoNet data to a visualizer client
+/// </summary>
+class AutoNetTransport {
+public:
+  /// <summary>
+  /// Causes the transport to begin servicing user requests
+  /// </summary>
   virtual void Start(void) = 0;
+
+  /// <summary>
+  /// Causes the transport to stop servicing user requests, also shuts down any active connections
+  /// </summary>
   virtual void Stop(void) = 0;
+
+  /// <summary>
+  /// Transmits the specified string message to the remote host
+  /// </summary>
+  virtual void Send(AutoNetTransportHandler::connection_hdl hdl, const std::string& msg) = 0;
   
-  virtual void Send(connection_hdl hdl, const std::string& msg) = 0;
-  
-  virtual void OnOpen(std::function<void(connection_hdl)> fn) = 0;
-  virtual void OnClose(std::function<void(connection_hdl)> fn) = 0;
-  virtual void OnMessage(std::function<void(connection_hdl, std::string)> fn) = 0;
+  /// <summary>
+  /// Assigns the handler for operations occuring on this transport
+  /// </summary>
+  /// <remarks>
+  /// This routine accepts a nullptr argument, the effect will be to clear the current handler
+  /// </remarks>
+  virtual void SetTransportHandler(std::shared_ptr<AutoNetTransportHandler> handler) = 0;
 };
 
 class AutoNetServer;

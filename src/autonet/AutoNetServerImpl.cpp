@@ -3,6 +3,7 @@
 #include "AutoNetServerImpl.hpp"
 #include "at_exit.h"
 #include "autowiring.h"
+#include "AutoNetTransportHttp.hpp"
 #include "demangle.h"
 #include "ObjectTraits.h"
 #include "EventRegistry.h"
@@ -12,88 +13,18 @@
 
 using json11::Json;
 
-////
-//// Default AutoNet transport layer implementation
-////
+#ifdef _MSC_VER
+  // Because Windows is dumb
+  #undef SendMessage
+#endif
 
-DefaultAutoNetTransport::DefaultAutoNetTransport(void):
-  m_port(8000)
-{
-  m_server.init_asio();
-  m_server.set_access_channels(websocketpp::log::alevel::none);
-  m_server.set_error_channels(websocketpp::log::elevel::none);
-}
+AutoNetServerImpl::AutoNetServerImpl(void):
+  AutoNetServerImpl(std::unique_ptr<AutoNetTransportHttp>(new AutoNetTransportHttp))
+{}
 
-DefaultAutoNetTransport::~DefaultAutoNetTransport(void){}
-
-void DefaultAutoNetTransport::Start(void) {
-  m_server.listen(m_port);
-  m_server.start_accept();
-  m_server.run();
-}
-
-void DefaultAutoNetTransport::Stop(void) {
-  if (m_server.is_listening())
-    m_server.stop_listening();
-  
-  for (auto& conn : m_connections)
-    m_server.close(conn, websocketpp::close::status::normal, "closed");
-}
-
-void DefaultAutoNetTransport::Send(connection_hdl hdl, const std::string& msg){
-  m_server.send(hdl, msg, websocketpp::frame::opcode::text);
-}
-
-void DefaultAutoNetTransport::OnOpen(std::function<void(connection_hdl)> fn) {
-  m_server.set_open_handler([this, fn] (connection_hdl hdl) {
-    (std::lock_guard<std::mutex>)m_lock,
-    m_connections.insert(hdl);
-    
-    fn(hdl);
-  });
-}
-
-void DefaultAutoNetTransport::OnClose(std::function<void(connection_hdl)> fn) {
-  m_server.set_close_handler([this, fn] (connection_hdl hdl) {
-    (std::lock_guard<std::mutex>)m_lock,
-    m_connections.erase(hdl);
-    
-    fn(hdl);
-  });
-}
-
-void DefaultAutoNetTransport::OnMessage(std::function<void(connection_hdl, std::string)> fn) {
-  m_server.set_message_handler([fn](websocketpp::connection_hdl hdl, message_ptr message){
-    std::string msg = message->get_payload();
-    fn(hdl, msg);
-  });
-}
-
-////
-//// AutoNetServer implementation
-////
-
-AutoNetServerImpl::AutoNetServerImpl(std::unique_ptr<AutoNetTransport> transport) :
+AutoNetServerImpl::AutoNetServerImpl(std::unique_ptr<AutoNetTransport>&& transport) :
   m_transport(std::move(transport))
-{
-
-  // Register handlers
-  m_transport->OnOpen([this] (AutoNetTransport::connection_hdl hdl) {
-    *this += [this, hdl] {
-      SendMessage(hdl, "opened");
-    };
-  });
-  
-  m_transport->OnClose([this] (AutoNetTransport::connection_hdl hdl) {
-    *this += [this, hdl] {
-      this->m_Subscribers.erase(hdl);
-    };
-  });
-  
-  m_transport->OnMessage([this](AutoNetTransport::connection_hdl hdl, std::string payload) {
-    OnMessage(hdl, payload);
-  });
-  
+{ 
   // Register internal event handlers
   AddEventHandler("terminateContext", [this] (int contextID) {
     ResolveContextID(contextID)->SignalShutdown();
@@ -143,6 +74,9 @@ AutoNetServer* NewAutoNetServerImpl(void) {
 void AutoNetServerImpl::Run(void){
   std::cout << "Starting Autonet server..." << std::endl;
   
+  // Register ourselves as a handler
+  m_transport->SetTransportHandler(std::static_pointer_cast<AutoNetServerImpl>(shared_from_this()));
+
   // blocks until the server finishes
   auto websocket = std::async(std::launch::async, [this]{
     m_transport->Start();
@@ -156,7 +90,7 @@ void AutoNetServerImpl::OnStop(void) {
   m_transport->Stop();
 }
 
-void AutoNetServerImpl::OnMessage(AutoNetTransport::connection_hdl hdl, std::string payload) {
+void AutoNetServerImpl::OnMessage(AutoNetTransportHandler::connection_hdl hdl, const std::string& payload) {
   // Parse string from client
   std::string err;
   Json msg = Json::parse(payload, err);
