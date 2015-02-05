@@ -8,8 +8,22 @@
 #include STL_UNORDERED_MAP
 #include FUNCTIONAL_HEADER
 
-class AutoNetServer;
+class AutoNetTransport {
+public:
+  typedef std::weak_ptr<void> connection_hdl;
+  
+  virtual void Start(void) = 0;
+  virtual void Stop(void) = 0;
+  
+  virtual void Send(connection_hdl hdl, const std::string& msg) = 0;
+  
+  virtual void OnOpen(std::function<void(connection_hdl)> fn) = 0;
+  virtual void OnClose(std::function<void(connection_hdl)> fn) = 0;
+  virtual void OnMessage(std::function<void(connection_hdl, std::string)> fn) = 0;
+};
 
+class AutoNetServer;
+extern AutoNetServer* NewAutoNetServerImpl(std::unique_ptr<AutoNetTransport>);
 extern AutoNetServer* NewAutoNetServerImpl(void);
 
 class AutoNetServer:
@@ -21,6 +35,10 @@ protected:
 public:
   virtual ~AutoNetServer();
 
+  static AutoNetServer* New(std::unique_ptr<AutoNetTransport> transport) {
+    return NewAutoNetServerImpl(std::move(transport));
+  }
+  
   static AutoNetServer* New(void) {
     return NewAutoNetServerImpl();
   }
