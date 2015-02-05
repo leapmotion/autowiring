@@ -29,7 +29,7 @@ class AutoNetServerImpl:
   public virtual AutowiringEvents
 {
 public:
-  AutoNetServerImpl();
+  AutoNetServerImpl(std::unique_ptr<AutoNetTransport> = std::make_unique<DefaultAutoNetTransport>());
   ~AutoNetServerImpl();
 
   //Types
@@ -162,9 +162,12 @@ protected:
   // The actual server
   t_server m_Server;
   const int m_Port; // Port to listen on
+  
+  // Transport layer for AutoNet
+  std::unique_ptr<AutoNetTransport> m_transport;
 };
 
 /// <summary>
 /// Equivalent to new AutoNetServerImpl
 /// </summary>
-AutoNetServer* NewAutoNetServerImpl(void);
+AutoNetServer* NewAutoNetServerImpl(std::unique_ptr<AutoNetTransport>);

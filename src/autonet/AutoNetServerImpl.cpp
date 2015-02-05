@@ -14,8 +14,9 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 using json11::Json;
 
-AutoNetServerImpl::AutoNetServerImpl(void) :
-  m_Port(8000)
+AutoNetServerImpl::AutoNetServerImpl(std::unique_ptr<AutoNetTransport> transport) :
+  m_Port(8000),
+  m_transport(std::move(transport))
 {
   // Configure websocketpp
   m_Server.init_asio();
@@ -66,8 +67,8 @@ AutoNetServerImpl::~AutoNetServerImpl()
 {
 }
 
-AutoNetServer* NewAutoNetServerImpl(void) {
-  return new AutoNetServerImpl;
+AutoNetServer* NewAutoNetServerImpl(std::unique_ptr<AutoNetTransport> transport) {
+  return new AutoNetServerImpl(std::move(transport));
 }
 
 // CoreThread overrides
