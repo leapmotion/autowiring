@@ -42,7 +42,12 @@ public:
   void OnMessage(std::function<void(connection_hdl, std::string)> fn);
   
 private:
+  typedef websocketpp::server<websocketpp::config::asio> t_server;
+  typedef t_server::message_ptr message_ptr;
+  
   std::set<connection_hdl> m_connections;
+  int m_port;
+  t_server m_server;
 };
 
 // Protocol layer for AutoNet

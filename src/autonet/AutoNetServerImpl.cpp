@@ -18,31 +18,47 @@ using json11::Json;
 //// Default AutoNet transport layer implementation
 ////
 
-DefaultAutoNetTransport::DefaultAutoNetTransport(void){}
+DefaultAutoNetTransport::DefaultAutoNetTransport(void):
+  m_port(8000)
+{
+  m_server.init_asio();
+  m_server.set_access_channels(websocketpp::log::alevel::none);
+  m_server.set_error_channels(websocketpp::log::elevel::none);
+}
+
 DefaultAutoNetTransport::~DefaultAutoNetTransport(void){}
 
 void DefaultAutoNetTransport::Start(void) {
-  
+  m_server.listen(m_port);
+  m_server.start_accept();
+  m_server.run();
 }
 
 void DefaultAutoNetTransport::Stop(void) {
+  if (m_server.is_listening())
+    m_server.stop_listening();
   
+  for (auto& conn : m_connections)
+    m_server.close(conn, websocketpp::close::status::normal, "closed");
 }
 
 void DefaultAutoNetTransport::Send(connection_hdl hdl, const std::string& msg){
-  
+  m_server.send(hdl, msg, websocketpp::frame::opcode::text);
 }
 
 void DefaultAutoNetTransport::OnOpen(std::function<void(connection_hdl)> fn) {
-  
+  m_server.set_open_handler(fn);
 }
 
 void DefaultAutoNetTransport::OnClose(std::function<void(connection_hdl)> fn) {
-  
+  m_server.set_close_handler(fn);
 }
 
 void DefaultAutoNetTransport::OnMessage(std::function<void(connection_hdl, std::string)> fn) {
-  
+  m_server.set_message_handler([fn](websocketpp::connection_hdl hdl, message_ptr message){
+    std::string msg = message->get_payload();
+    fn(hdl, msg);
+  });
 }
 
 ////
