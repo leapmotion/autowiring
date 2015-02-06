@@ -10,7 +10,7 @@ CoreThread::CoreThread(const char* pName):
 
 CoreThread::~CoreThread(void){}
 
-void CoreThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<Object>&& refTracker) {
+void CoreThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<CoreObject>&& refTracker) {
   try {
     // If we are asked to rundown while we still have elements in our dispatch queue,
     // we must try to process them:

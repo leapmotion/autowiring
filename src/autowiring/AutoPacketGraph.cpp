@@ -74,7 +74,7 @@ void AutoPacketGraph::NewObject(CoreContext&, const ObjectTraits&) {
 bool AutoPacketGraph::OnStart(void) {
   LoadEdges();
   
-  return false;
+  return true;
 }
 
 void AutoPacketGraph::AutoFilter(AutoPacket& packet) {

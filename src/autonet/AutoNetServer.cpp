@@ -7,3 +7,8 @@ AutoNetServer::AutoNetServer():
 {}
 
 AutoNetServer::~AutoNetServer(){}
+
+void AutoNetServer::AddEventHandlerInternal(const std::string& event, std::function<void(const std::vector<std::string>&)> handler) {
+  std::lock_guard<std::mutex> lk(this->GetLock());
+  m_handlers[event].push_back(std::move(handler));
+}

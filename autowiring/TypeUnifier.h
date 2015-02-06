@@ -1,10 +1,10 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "Object.h"
+#include "CoreObject.h"
 #include RVALUE_HEADER
 #include TYPE_TRAITS_HEADER
 
-class TypeUnifier: public Object {};
+class TypeUnifier: public CoreObject {};
 
 template<class T>
 class TypeUnifierComplex:
@@ -25,11 +25,11 @@ public:
 /// </summary>
 template<
   class T,
-  bool inheritsObject = std::is_base_of<Object, T>::value
+  bool inheritsCoreObject = std::is_base_of<CoreObject, T>::value
 >
 struct SelectTypeUnifier;
 
-// Anyone already inheriting Object can just use Object
+// Anyone already inheriting CoreObject can just use CoreObject
 template<class T>
 struct SelectTypeUnifier<T, true> {
   typedef T type;

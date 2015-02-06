@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
+#include "src/autonet/AutoNetServerImpl.hpp"
 #include "AutoNetServer.h"
 #include "Autowired.h"
 #include THREAD_HEADER
@@ -9,17 +10,24 @@ class BreakpointTest:
 {};
 
 class ExposedAutoNetServer:
-  public AutoNetServer
+  public AutoNetServerImpl
 {
-public:
-  using AutoNetServer::HandleResumeFromBreakpoint;
+public:  
+  void HandleResumeFromBreakpoint(const std::string& breakpoint) {
+    *this += [this, breakpoint] {
+      for (const auto& handler : this->m_handlers["resumeFromBreakpoint"]){
+        std::vector<std::string> args{breakpoint};
+        handler(args);
+      }
+    };
+  }
 };
 
 class BreakpointThread:
   public BasicThread
 {
   void Run(void) override {
-    Autowired<AutoNetServer> autonet;
+    Autowired<ExposedAutoNetServer> autonet;
     autonet->Breakpoint("InThread");
     std::cout << "Thread finished" << std::endl;
   }
@@ -31,16 +39,15 @@ class WaitsThenSimulatesResume:
   void Run(void) override {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    AutowiredFast<AutoNetServer> autonet;
-    auto autonetInternal = static_cast<ExposedAutoNetServer*>(autonet.get());
-    autonetInternal->HandleResumeFromBreakpoint("Main");
-    autonetInternal->HandleResumeFromBreakpoint("InThread");
+    AutowiredFast<ExposedAutoNetServer> autonet;
+    autonet->HandleResumeFromBreakpoint("Main");
+    autonet->HandleResumeFromBreakpoint("InThread");
   }
 };
 
 TEST_F(BreakpointTest, SimplePauseAndResume) {
   AutoCurrentContext()->Initiate();
-  AutoRequired<AutoNetServer> autonet;
+  AutoRequired<ExposedAutoNetServer> autonet;
   AutoRequired<BreakpointThread> thread;
   AutoRequired<WaitsThenSimulatesResume>();
   

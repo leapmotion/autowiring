@@ -21,7 +21,7 @@ std::mutex& BasicThread::GetLock(void) {
   return m_state->m_lock;
 }
 
-void BasicThread::DoRun(std::shared_ptr<Object>&& refTracker) {
+void BasicThread::DoRun(std::shared_ptr<CoreObject>&& refTracker) {
   assert(m_running);
 
   // Make our own session current before we do anything else:
@@ -56,7 +56,7 @@ void BasicThread::DoRun(std::shared_ptr<Object>&& refTracker) {
   DoRunLoopCleanup(pusher.Pop(), std::move(refTracker));
 }
 
-void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<Object>&& refTracker) {
+void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<CoreObject>&& refTracker) {
   // Take a copy of our state condition shared pointer while we still hold a reference to
   // ourselves.  This is the only member out of our collection of members that we actually
   // need to hold a reference to.
