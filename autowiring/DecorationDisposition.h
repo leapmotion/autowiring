@@ -4,6 +4,7 @@
 #include "AnySharedPointer.h"
 #include <cassert>
 #include <vector>
+#include <limits>
 #include TYPE_INDEX_HEADER
 
 struct SatCounter;
