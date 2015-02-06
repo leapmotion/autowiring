@@ -106,16 +106,6 @@ protected:
   void MarkSuccessorsUnsatisfiable(DecorationKey type);
 
   /// <summary>
-  /// Updates subscriber statuses given that the specified type information has been satisfied
-  /// </summary>
-  /// <param name="info">The decoration which was just added to this packet</param>
-  /// <remarks>
-  /// This method results in a call to the AutoFilter method on any subscribers which are
-  /// satisfied by this decoration.
-  /// </remarks>
-  void UpdateSatisfaction(const DecorationKey& info);
-
-  /// <summary>
   /// Performs a "satisfaction pulse", which will avoid notifying any deferred filters
   /// </summary>
   /// <remarks>
@@ -167,6 +157,16 @@ protected:
   static void ThrowNotDecoratedException(const DecorationKey& key);
 
 public:
+  /// <summary>
+  /// Updates subscriber statuses given that the specified type information has been satisfied
+  /// </summary>
+  /// <param name="info">The decoration which was just added to this packet</param>
+  /// <remarks>
+  /// This method results in a call to the AutoFilter method on any subscribers which are
+  /// satisfied by this decoration.
+  /// </remarks>
+  void UpdateSatisfaction(const DecorationKey& info);
+
   /// <returns>
   /// The number of distinct decoration types on this packet
   /// </returns>

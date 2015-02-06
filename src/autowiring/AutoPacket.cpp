@@ -186,11 +186,15 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
     // Update satisfaction inside of lock
     DecorationDisposition& decoration = dFind->second;
 
+    if (decoration.m_state != DispositionState::Satisfied) {
+      return;
+    }
+
     // State parameters
     // The maximum altitude which we have already decremented
     int newMaxAltitude = decoration.m_maxAltitude;
     // Flags to control loop logic
-    int newMaxSet = false;
+    bool newMaxSet = false;
     bool allCalled = true;
 
     // This requires that the subscriber list be given in descending order of altitude

@@ -46,6 +46,13 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
     call->GetCall()(call->GetAutoFilter(), *this);
 
   // First-call indicated by argumument type AutoPacket&:
+  {
+    std::lock_guard<std::mutex> lk(m_lock);
+
+    auto dFind = m_decorations.find(DecorationKey(typeid(auto_arg<AutoPacket&>::id_type)));
+    if(dFind != m_decorations.end())
+      dFind->second.m_state = DispositionState::Satisfied;
+  }
   UpdateSatisfaction(DecorationKey(typeid(auto_arg<AutoPacket&>::id_type)));
 }
 
