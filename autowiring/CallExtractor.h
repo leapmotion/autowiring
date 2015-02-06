@@ -46,6 +46,15 @@ struct CallExtractorSetup
   }
 
   template<int N>
+  typename std::enable_if<
+  auto_arg<typename autowiring::nth_type<N, Args...>::type>::is_input,
+  bool
+  >::type Commit(bool) {
+    packet.UpdateSatisfaction(DecorationKey(typeid(typename auto_arg<typename autowiring::nth_type<N, Args...>::type>::id_type), auto_arg<typename autowiring::nth_type<N, Args...>::type>::tshift));
+    return true;
+  }
+
+  template<int N>
   bool Commit(...) { return false; }
 };
 

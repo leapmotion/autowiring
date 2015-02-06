@@ -236,14 +236,8 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
   for (SatCounter* call : callQueue) {
-    call->GetCall()(call->GetAutoFilter(), *this);
     call->called = true;
-
-    // After calling a method, we may have freed up one of its inputs to move on to a new altitude
-    // recurse this function on each input to make sure that we get a chance to process all filters
-    for(auto pCur = call->GetAutoFilterInput(); *pCur; pCur++) {
-      UpdateSatisfaction(DecorationKey(*(pCur->ti), pCur->tshift));
-    }
+    call->GetCall()(call->GetAutoFilter(), *this);
   }
 }
 
@@ -281,12 +275,8 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
   for (SatCounter* call : callQueue) {
-    call->GetCall()(call->GetAutoFilter(), *this);
     call->called = true;
-
-    for(auto pCur = call->GetAutoFilterInput(); *pCur; pCur++) {
-      UpdateSatisfaction(DecorationKey(*(pCur->ti), pCur->tshift));
-    }
+    call->GetCall()(call->GetAutoFilter(), *this);
   }
 
   // Reset all counters, data in this call will not be available on return
