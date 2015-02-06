@@ -6,5 +6,6 @@
 namespace std {
   namespace chrono {
     using namespace autoboost::chrono;
+    typedef high_resolution_clock profiling_clock;
   }
 }

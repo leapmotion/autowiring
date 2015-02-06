@@ -305,11 +305,7 @@
  * Chrono
  */
 #if STL11_ALLOWED
-  #if defined(_MSC_VER) && _MSC_VER < 1900 //high_resolution_clock is broken on all MSVC versions below 2015.
-    #define CHRONO_HEADER <autowiring/C++11/chrono_win_patched.h>
-  #else
-    #define CHRONO_HEADER <chrono>
-  #endif
+  #define CHRONO_HEADER <autowiring/C++11/chrono_with_profiling_clock.h>
 #else
   #define CHRONO_HEADER <autowiring/C++11/boost_chrono.h>
 #endif
