@@ -27,6 +27,8 @@
 
 /// \file AutoSelfUpdate.h
 
+/// \file AutoTimeStamp.h
+
 /// \file Autowired.h
 /// Autowiring definitions
 
@@ -52,10 +54,15 @@
 /// \file CoreJob.h
 
 /// \file CoreRunnable.h
+/// Base class for autowiring classes that use threads.
 
 /// \file CoreThread.h
 
 /// \file CurrentContextPusher.h
+
+/// \file Deferred.h
+
+/// \file demangle.h
 
 /// \file DispatchQueue.h
 
@@ -65,4 +72,5 @@
 
 /// \file MicroBolt.h
 
-/// \file demangle.h
+/// \file Object.h
+

@@ -6,6 +6,13 @@
 
 class Object;
 
+/// <summary>
+/// Base class for objects that run threads.
+/// </summary>
+/// <remarks>
+/// Users of Autowiring will typically use BasicThread or CoreThread instead of
+/// extending this class.
+/// </remarks>
 class CoreRunnable {
 public:
   CoreRunnable(void);
@@ -31,9 +38,11 @@ protected:
   const std::shared_ptr<Object>& GetOutstanding(void) const;
 
   /// <summary>
-  /// Method invoked from Start when this class is being asked to begin processing
+  /// Invoked by the Start() method. Override this method to perform
+  /// any needed setup;
   /// </summary>
-  /// <returns>True if processing has started, false otherwise</returns>
+  /// <returns>True if processing has started, false otherwise. When overriding, returning false
+  /// will shut down the runnable immediately.</returns>
   /// <remarks>
   /// This method will be called at most once.  Returning false from this method will result in an immediate invocation
   /// of the OnStop(false).
@@ -41,31 +50,38 @@ protected:
   virtual bool OnStart(void) { return false; };
 
   /// <summary>
-  /// Invoked by the base class when a Stop call has been made
+  /// Invoked by the base class Stop() method. Override this method to perform
+  /// any needed cleanup.
   /// </summary>
   /// <remarks>
   /// This method will be called at most once. 
   /// </remarks>
+  /// <param name="graceful">Specifies whether the runnable should stop normally or whether
+  /// it should exit as quickly as possible.</param>
   virtual void OnStop(bool graceful) {};
 
   /// <summary>
-  /// Invoked by the base class when a Wait call has been made, to ensure all cleanups have happened after the Stop call
+  /// Invoked when a Wait() call has been made. Override this method to perform
+  /// any actions required before this runnable enters the waiting state.
   /// </summary>
   /// <remarks>
-  /// This call should not block for extended periods of time.
+  /// This call should not block for an extended period of time.
   /// </remarks>
   virtual void DoAdditionalWait() {};
 
 public:
   // Accessor methods:
+  /// Reports whether this runnable is currently running.
   bool IsRunning(void) const { return (bool)m_outstanding; }
+  /// Reports whether this runnable was ever started.
   bool WasStarted(void) const { return m_wasStarted; }
+  /// Reports whether this runnable should stop.
   bool ShouldStop(void) const { return m_shouldStop; }
 
   /// <summary>
-  /// Causes this runnable to begin processing
+  /// Causes this runnable to begin processing.
   /// </summary>
-  /// <returns>This method always returns true</returns>
+  /// <returns>This method always returns true.</returns>
   /// <remarks>
   /// It is an error to call this routine more than once.  The passed outstanding shared pointer
   /// is used to keep tracking of number of simultaneous runnables outstanding.  This routine may
@@ -77,27 +93,31 @@ public:
   virtual bool Start(std::shared_ptr<Object> outstanding);
 
   /// <summary>
-  /// Stops this runnable, optionally performing graceful cleanup if requested
+  /// Stops this runnable.
   /// </summary>
   /// <remarks>
+  /// Calls OnStop(), forwarding the graceful parameter.
+  ///
   /// On return of this method, regardless of the return value, a subsequent call to Wait is
   /// guaranteed to either return immediately, or once the thread implementation completes.
   /// </remarks>
   void Stop(bool graceful = true);
 
   /// <summary>
-  /// Waits for this object to start running, and then stop running
+  /// Waits indefinitely. Returns when this runnable stops.
   /// </summary>
   void Wait(void);
 
   /// <summary>
-  /// Waits for this object to start running, and then stop running
+  /// Waits for the specified amount of time.
   /// </summary>
   bool WaitFor(std::chrono::nanoseconds timeout);
 
   /// <summary>
-  /// Waits for this object to start running, and then stop running
+  /// Waits until the specified time.
   /// </summary>
+  /// <param name="timepoint">A std::chrono type representing a
+  /// duration or future point in time.</param>
   template<typename TimeType>
   bool WaitUntil(TimeType timepoint);
 };

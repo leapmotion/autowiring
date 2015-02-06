@@ -350,6 +350,7 @@ public:
   }
 };
 
+/// \internal deprecated
 /// <summary>
 /// Attempts to create and inject a dependency, discarding any exceptions.
 /// </summary>

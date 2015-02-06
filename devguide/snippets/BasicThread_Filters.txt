@@ -1,0 +1,34 @@
+class PrimeGenerator : public BasicThread {
+    public:
+        Autowired<AutoPacketFactory> packetFactory;
+        void Run() override {
+            unsigned long int test = 2;
+            while (!ShouldStop())
+            {
+                for (unsigned long int i = test/2; i > 0 ; --i) {
+                    if (i == 1) {
+                        auto packet = packetFactory->NewPacket();
+                        packet->Decorate(test);
+                    }
+                    if (test % i == 0) {break;}
+                }
+                test++;
+            }
+        }
+};
+
+class PrimeListener{
+    public:
+        void AutoFilter(unsigned long int prime) {
+            std::cout << "Prime: " << prime << std::endl;
+        }
+};
+
+AutoCreateContext ctxt;
+CurrentContextPusher pusher(ctxt);
+AutoRequired<PrimeGenerator> generator;
+AutoRequired<PrimeListener> listener;
+
+ctxt->Initiate();
+ctxt->Wait(std::chrono::milliseconds(100));
+ctxt->SignalShutdown(true);

@@ -1,0 +1,17 @@
+AutoCreateContext ctxt;
+CurrentContextPusher pusher(ctxt);
+
+AutoRequired<CoreThread> runner;
+ctxt->Initiate();
+
+*runner += []{
+    std::cout << "Job ran." << std::endl;
+};
+
+int x = 0;
+auto func = [&x]{
+    std::cout << "Value of x: " << x << std::endl;
+};
+x = 4;
+*runner += func;
+ctxt->SignalShutdown(true);

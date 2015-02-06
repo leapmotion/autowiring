@@ -1,0 +1,1 @@
+void AutoFilter(std::shared_ptr<const T> pointer){}
