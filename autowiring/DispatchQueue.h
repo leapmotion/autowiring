@@ -59,11 +59,6 @@ protected:
   bool m_aborted;
 
   /// <summary>
-  /// Recommends a point in time to wake up to check for events
-  /// </summary>
-  std::chrono::steady_clock::time_point SuggestSoonestWakeupTimeUnsafe(std::chrono::steady_clock::time_point latestTime) const;
-
-  /// <summary>
   /// Moves all ready events from the delayed queue into the dispatch queue
   /// </summary>
   void PromoteReadyEventsUnsafe(void);
@@ -161,6 +156,22 @@ public:
     m_queueUpdated.notify_all();
     OnPended(std::move(lk));
   }
+
+  /// <summary>
+  /// Recommends a point in time to wake up to check for events
+  /// </summary>
+  /// <returns>
+  /// lastestTime, or if there is a dispatch in the delayed queue which will be ready sooner than latestTime, the
+  /// time_point when that dispatch will be ready to run.
+  /// </returns>
+  /// <remarks>
+  /// This method is used by clients that are performing manual dispatch operations and wish to know the shortest time
+  /// they should sleep in order to be guaranteed that, upon waking, a dispatch will be ready to run.
+  ///
+  /// Users should be aware that another dispatch may arrive which is ready to run sooner than the returned suggestion.
+  /// Notification of this case will be provided to derived classes via the OnPended override.
+  /// </remarks>
+  std::chrono::steady_clock::time_point SuggestSoonestWakeupTimeUnsafe(std::chrono::steady_clock::time_point latestTime) const;
 
   class DispatchThunkDelayedExpression {
   public:
