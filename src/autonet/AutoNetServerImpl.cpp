@@ -3,6 +3,7 @@
 #include "AutoNetServerImpl.hpp"
 #include "at_exit.h"
 #include "autowiring.h"
+#include "AutoNetTransportHttp.hpp"
 #include "demangle.h"
 #include "ObjectTraits.h"
 #include "EventRegistry.h"
@@ -10,22 +11,44 @@
 #include <iostream>
 #include FUTURE_HEADER
 
-using std::placeholders::_1;
-using std::placeholders::_2;
 using json11::Json;
 
-AutoNetServerImpl::AutoNetServerImpl(void) :
-  m_Port(8000)
-{
-  // Configure websocketpp
-  m_Server.init_asio();
-  m_Server.set_access_channels(websocketpp::log::alevel::none);
-  m_Server.set_error_channels(websocketpp::log::elevel::none);
+#ifdef _MSC_VER
+  // Because Windows is dumb
+  #undef SendMessage
+#endif
 
-  // Register handlers
-  m_Server.set_open_handler(std::bind(&AutoNetServerImpl::OnOpen, this, ::_1));
-  m_Server.set_close_handler(std::bind(&AutoNetServerImpl::OnClose, this, ::_1));
-  m_Server.set_message_handler(std::bind(&AutoNetServerImpl::OnMessage, this, ::_1, ::_2));
+AutoNetServerImpl::AutoNetServerImpl(void):
+  AutoNetServerImpl(std::unique_ptr<AutoNetTransportHttp>(new AutoNetTransportHttp))
+{}
+
+AutoNetServerImpl::AutoNetServerImpl(std::unique_ptr<AutoNetTransport>&& transport) :
+  m_transport(std::move(transport))
+{ 
+  // Register internal event handlers
+  AddEventHandler("terminateContext", [this] (int contextID) {
+    ResolveContextID(contextID)->SignalShutdown();
+  });
+  
+  AddEventHandler("injectContextMember", [this] (int contextID, const std::string& typeName){
+    std::shared_ptr<CoreContext> ctxt = ResolveContextID(contextID)->shared_from_this();
+    
+    if(m_AllTypes.find(typeName) != m_AllTypes.end()) {
+      CurrentContextPusher pshr(ctxt);
+      m_AllTypes[typeName]();
+    }
+    else {
+      // Type doesn't exist
+      assert(false);
+    }
+  });
+  
+  AddEventHandler("resumeFromBreakpoint", [this] (const std::string& name){
+    std::lock_guard<std::mutex> lk(m_breakpoint_mutex);
+    
+    m_breakpoints.erase(name);
+    m_breakpoint_cv.notify_all();
+  });
 
   // Generate list of all types from type registry
   for(auto type = g_pFirstTypeEntry; type; type = type->pFlink)
@@ -37,24 +60,26 @@ AutoNetServerImpl::AutoNetServerImpl(void) :
     m_EventTypes.insert(event->NewTypeIdentifier());
 }
 
-AutoNetServerImpl::~AutoNetServerImpl()
-{
+AutoNetServerImpl::~AutoNetServerImpl(){}
+
+AutoNetServer* NewAutoNetServerImpl(std::unique_ptr<AutoNetTransport> transport) {
+  return new AutoNetServerImpl(std::move(transport));
 }
 
 AutoNetServer* NewAutoNetServerImpl(void) {
-  return new AutoNetServerImpl;
+  return new AutoNetServerImpl();
 }
 
 // CoreThread overrides
 void AutoNetServerImpl::Run(void){
   std::cout << "Starting Autonet server..." << std::endl;
   
-  m_Server.listen(m_Port);
-  m_Server.start_accept();
-  
+  // Register ourselves as a handler
+  m_transport->SetTransportHandler(std::static_pointer_cast<AutoNetServerImpl>(shared_from_this()));
+
   // blocks until the server finishes
   auto websocket = std::async(std::launch::async, [this]{
-    m_Server.run();
+    m_transport->Start();
   });
 
   PollThreadUtilization(std::chrono::milliseconds(1000));
@@ -62,30 +87,13 @@ void AutoNetServerImpl::Run(void){
 }
 
 void AutoNetServerImpl::OnStop(void) {
-  if (m_Server.is_listening())
-    m_Server.stop_listening();
-  
-  for (auto& conn : m_Subscribers) {
-    m_Server.close(conn, websocketpp::close::status::normal, "closed");
-  }
+  m_transport->Stop();
 }
 
-// Server Handler functions
-void AutoNetServerImpl::OnOpen(websocketpp::connection_hdl hdl) {
-  *this += [this, hdl] {
-    SendMessage(hdl, "opened");
-  };
-}
-void AutoNetServerImpl::OnClose(websocketpp::connection_hdl hdl) {
-  *this += [this, hdl] {
-    this->m_Subscribers.erase(hdl);
-  };
-}
-
-void AutoNetServerImpl::OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message) {
+void AutoNetServerImpl::OnMessage(AutoNetTransportHandler::connection_hdl hdl, const std::string& payload) {
   // Parse string from client
   std::string err;
-  Json msg = Json::parse(p_message->get_payload(), err);
+  Json msg = Json::parse(payload, err);
 
   if(!err.empty()) {
     std::cout << "Parse error: " << err << std::endl;
@@ -95,20 +103,37 @@ void AutoNetServerImpl::OnMessage(websocketpp::connection_hdl hdl, message_ptr p
 
   std::string msgType = msg["type"].string_value();
   Json::array msgArgs = msg["args"].array_items();
-
-  *this += [this, hdl, msgType, msgArgs] {
-    if(msgType == "subscribe") HandleSubscribe(hdl);
-    else if(msgType == "unsubscribe") HandleUnsubscribe(hdl);
-    else if(msgType == "terminateContext") HandleTerminateContext(msgArgs[0].int_value());
-    else if(msgType == "injectContextMember") HandleInjectContextMember(msgArgs[0].int_value(), msgArgs[1].string_value());
-    else if(msgType == "resumeFromBreakpoint") HandleResumeFromBreakpoint(msgArgs[0].string_value());
-    else
-      SendMessage(hdl, "invalidMessage", "Message type not recognized");
-  };
+  
+  // Handle client specific internal events
+  if (msgType == "subscribe") {
+    *this += [this, hdl] {
+      HandleSubscribe(hdl);
+    };
+  }
+  else if(msgType == "unsubscribe") {
+    *this += [this, hdl] {
+      HandleUnsubscribe(hdl);
+    };
+  }
+  // Handle other internal events and custom events
+  else {
+    *this += [this, msgType, msgArgs] {
+      // parse args into vector of strings
+      std::vector<std::string> args;
+      for (const auto& a : msgArgs) {
+        args.push_back(!a.string_value().empty() ? a.string_value() : a.dump());
+      }
+    
+      // call all the handlers
+      for (const auto& handler : this->m_handlers[msgType]) {
+        handler(args);
+      }
+    };
+  }
 }
 
 void AutoNetServerImpl::Breakpoint(std::string name){
-  std::unique_lock<std::mutex> lk(m_mutex);
+  std::unique_lock<std::mutex> lk(m_breakpoint_mutex);
 
   m_breakpoints.insert(name);
 
@@ -153,12 +178,15 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
     Json::object types;
 
     // Add object data
-    objData["name"] = autowiring::demangle(typeid(*object.pObject));
+    objData["name"] = autowiring::demangle(object.type);
+    objData["id"] = autowiring::demangle(object.value.slot()->type());
+
+    // Add slots for this object
     {
       Json::array slots;
       for(auto slot = object.stump.pHead; slot; slot = slot->pFlink) {
         slots.push_back(Json::object{
-            {"name", autowiring::demangle(slot->type)},
+            {"id", autowiring::demangle(slot->type)},
             {"autoRequired", slot->autoRequired},
             {"offset", int(slot->slotOffset)}
         });
@@ -193,7 +221,8 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
       Json::object args;
       for (auto pArg = object.subscriber.GetAutoFilterInput(); *pArg; ++pArg) {
         args[autowiring::demangle(pArg->ti)] = Json::object{
-          {"isInput", pArg->is_input || pArg->tshift},
+          {"id", autowiring::demangle(pArg->ti)},
+          {"isInput", pArg->is_input},
           {"isOutput", pArg->is_output}
         };
       }
@@ -204,7 +233,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
     {
       Json::array listenerTypes;
       for(const auto& event : m_EventTypes) {
-        if(event->IsSameAs(object.pObject.get()))
+        if(event->IsSameAs(object.pCoreObject.get()))
           listenerTypes.push_back(autowiring::demangle(event->Type()));
       }
 
@@ -230,6 +259,28 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object)
   };
 }
 
+void AutoNetServerImpl::SendEvent(const std::string& rawEvent, const std::vector<std::string>& args) {
+  // Prepend '$' to custum event to avoid namespace collitions with internal events
+  std::string event("$");
+  event.append(rawEvent);
+  
+  Json::array jsonArgs;
+  for (const auto& a : args) {
+    jsonArgs.push_back(a);
+  }
+  
+  *this += [this, event, jsonArgs] {
+    for(auto hdl : m_Subscribers) {
+      Json msg = Json::object{
+        {"type", event},
+        {"args", jsonArgs}
+      };
+      
+      m_transport->Send(hdl, msg.dump());
+    }
+  };
+}
+
 void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
   m_Subscribers.insert(hdl);
 
@@ -250,30 +301,6 @@ void AutoNetServerImpl::HandleSubscribe(websocketpp::connection_hdl hdl) {
 void AutoNetServerImpl::HandleUnsubscribe(websocketpp::connection_hdl hdl) {
   this->m_Subscribers.erase(hdl);
   SendMessage(hdl, "unsubscribed");
-}
-
-void AutoNetServerImpl::HandleTerminateContext(int contextID) {
-  ResolveContextID(contextID)->SignalShutdown();
-}
-
-void AutoNetServerImpl::HandleInjectContextMember(int contextID, std::string typeName) {
-  std::shared_ptr<CoreContext> ctxt = ResolveContextID(contextID)->shared_from_this();
-
-  if(m_AllTypes.find(typeName) != m_AllTypes.end()) {
-    CurrentContextPusher pshr(ctxt);
-    m_AllTypes[typeName]();
-  }
-  else {
-    // Type doesn't exist
-    assert(false);
-  }
-}
-
-void AutoNetServerImpl::HandleResumeFromBreakpoint(std::string name){
-  std::unique_lock<std::mutex> lk(m_mutex);
-
-  m_breakpoints.erase(name);
-  m_breakpoint_cv.notify_all();
 }
 
 //helper functions

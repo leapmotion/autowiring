@@ -13,4 +13,5 @@ class CUCTSample {};
 // only take place with great attention paid to a proper deprecation strategy.
 TEST_F(CommonUseCasesTest, AutowiredForwardType) {
   HasForwardOnlyType f;
+  AutoRequired<HasForwardOnlyType> fp;
 }

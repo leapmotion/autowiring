@@ -305,7 +305,7 @@
  * Chrono
  */
 #if STL11_ALLOWED
-  #define CHRONO_HEADER <chrono>
+  #define CHRONO_HEADER <autowiring/C++11/chrono_with_profiling_clock.h>
 #else
   #define CHRONO_HEADER <autowiring/C++11/boost_chrono.h>
 #endif

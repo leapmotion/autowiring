@@ -20,7 +20,7 @@ public:
 static_assert(!has_simple_constructor<ClassWithIntegralCtor>::value, "A class without a simple constructor was incorrectly identified as having one");
 
 class ClassWithStaticNew:
-  public Object
+  public CoreObject
 {
 public:
   ClassWithStaticNew(bool madeByFactory = false):
@@ -37,7 +37,7 @@ public:
 
 static_assert(has_simple_constructor<ClassWithStaticNew>::value, "Class with default-argument constructor was not correctly detected as such ");
 static_assert(has_static_new<ClassWithStaticNew>::value, "Class with static allocator was not correctly detected as having one");
-static_assert(!has_static_new<Object>::value, "Static New detected on a class that does not have a static New");
+static_assert(!has_static_new<CoreObject>::value, "Static New detected on a class that does not have a static New");
 
 TEST_F(FactoryTest, VerifyFactoryCall) {
   // Try to create the static new type:

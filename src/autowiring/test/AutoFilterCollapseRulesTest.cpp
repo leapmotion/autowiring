@@ -181,3 +181,29 @@ TEST_F(AutoFilterCollapseRulesTest, SharedPtrNoDefaultTest) {
   AutoRequired<AutoPacketFactory> factory;
   auto packet = factory->NewPacket();
 }
+
+class WantsAutoPacketInput {
+public:
+  WantsAutoPacketInput(void):
+    pPacket(nullptr)
+  {}
+
+  WantsAutoPacketInput(AutoPacket& packet):
+    pPacket(&packet)
+  {}
+
+  AutoPacket* pPacket;
+};
+
+class ConstructsWantsAutoPacketInput {
+public:
+  void AutoFilter(AutoPacket& packet, WantsAutoPacketInput& wapi) {
+    ASSERT_EQ(&packet, wapi.pPacket) << "Speculatively constructed output type did not have the correct constructor overload invoked";
+  }
+};
+
+TEST_F(AutoFilterCollapseRulesTest, CtorRequiredWPI) {
+  // This is enough to kick off the AutoFilter above and cause an exception, if one is going to occur
+  AutoRequired<ConstructsWantsAutoPacketInput>();
+  AutoRequired<AutoPacketFactory>()->NewPacket();
+}

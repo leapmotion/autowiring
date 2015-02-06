@@ -4,7 +4,7 @@
 #include MEMORY_HEADER
 #include MUTEX_HEADER
 
-class Object;
+class CoreObject;
 
 /// <summary>
 /// Base class for objects that run threads.
@@ -26,7 +26,7 @@ private:
   bool m_shouldStop;
 
   // The outstanding count, held for as long as processing is underway
-  std::shared_ptr<Object> m_outstanding;
+  std::shared_ptr<CoreObject> m_outstanding;
 
 protected:
   std::mutex m_lock;
@@ -35,7 +35,7 @@ protected:
   /// <returns>
   /// A reference to the current outstanding counter
   /// </returns>
-  const std::shared_ptr<Object>& GetOutstanding(void) const;
+  const std::shared_ptr<CoreObject>& GetOutstanding(void) const;
 
   /// <summary>
   /// Invoked by the Start() method. Override this method to perform
@@ -90,7 +90,7 @@ public:
   /// Callers should strongly prefer not to override Start if possible.  Instead, override OnStart and
   /// obtain an instance of the outstanding pointer via GetOutstanding
   /// </remarks>
-  virtual bool Start(std::shared_ptr<Object> outstanding);
+  virtual bool Start(std::shared_ptr<CoreObject> outstanding);
 
   /// <summary>
   /// Stops this runnable.

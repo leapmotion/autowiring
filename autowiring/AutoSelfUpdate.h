@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "atomic_object.h"
-#include "DeclareAutoFilter.h"
 
 /// <summary>
 /// Enables an automatic self-update when a packet is decorated with the object type.
@@ -20,7 +19,6 @@ public:
   typedef typename atomic::lock lock;
   typedef typename atomic::unlock unlock;
   typedef typename atomic::shared shared;
-  typedef BasedAutoFilter<AutoSelfUpdate<object_type>, void, const object&> gather;
 
   /// \internal
   /// <summary>
@@ -34,34 +32,23 @@ public:
 
   AutoSelfUpdate(void) {
     // Instanties a BasedAutoFilter for the AutoGather method
-    m_gather = DeclareAutoFilter(this, &AutoSelfUpdate<object_type>::AutoGather);
+    *m_factory += [this] (prior_object& prior) {
+      std::lock_guard<lock> lock_this(this->m_lock);
+      prior = this->m_object;
+    };
+
+    *m_factory += [this](const object& update) {
+      *this = update;
+    };
   }
+
   using atomic::operator=;
+
   operator object(void) {
     // NOTE: This avoids "using" keyword with a cast operator overload
     return *(atomic*)this;
   }
 
-  /// <summary>
-  /// Decorates all packets with instances of prior_object
-  /// </summary>
-  void AutoFilter(prior_object& prior) {
-    std::lock_guard<lock> lock_this(atomic::m_lock);
-    prior = atomic::m_object;
-  }
-
-  /// <summary>
-  /// Updates this object to equal the most recent decoration by object
-  /// </summary>
-  void AutoGather(const object& update) {
-    atomic::operator = (update);
-  }
-
-  /// <returns>a reference to the MicroAutoFilter instance calling AutoGather</returns>
-  std::shared_ptr<gather> GatherAutoFilter() const {
-    return m_gather;
-  }
-
 protected:
-  std::shared_ptr<gather> m_gather;
+  AutoRequired<AutoPacketFactory> m_factory;
 };

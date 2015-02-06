@@ -65,10 +65,9 @@ namespace autowiring {
 
     tuple(void) = default;
 
-    template<class T, class... Ts>
-    tuple(T&& arg, Ts&&... args) :
-      tuple<Args...>(std::forward<Ts&&>(args)...),
-      tuple_value<sizeof...(Ts), Arg>(std::forward<T&&>(arg))
+    tuple(Arg&& arg, Args&&... args) :
+      tuple<Args...>(std::forward<Args>(args)...),
+      tuple_value<sizeof...(Args), Arg>(std::forward<Arg&&>(arg))
     {}
 
     template<class OtherT, class... OtherTs>

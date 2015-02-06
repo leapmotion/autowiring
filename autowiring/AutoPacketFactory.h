@@ -98,7 +98,7 @@ public:
   /// </summary>
   template<class T>
   void AddSubscriber(const std::shared_ptr<T>& rhs) {
-    AddSubscriber(MakeAutoFilterDescriptor<T>(rhs));
+    AddSubscriber(AutoFilterDescriptor(rhs));
   }
 
   /// <summary>
@@ -182,5 +182,7 @@ public:
 // exterior instantation of internally used template instances
 extern template struct SlotInformationStump<AutoPacketFactory, false>;
 extern template const std::shared_ptr<AutoPacketFactory>& SharedPointerSlot::as<AutoPacketFactory>(void) const;
-extern template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, Object>(const std::shared_ptr<Object>& Other);
+extern template std::shared_ptr<AutoPacketFactory> autowiring::fast_pointer_cast<AutoPacketFactory, CoreObject>(const std::shared_ptr<CoreObject>& Other);
 extern template class RegType<AutoPacketFactory>;
+extern template struct autowiring::fast_pointer_cast_blind<CoreObject, AutoPacketFactory>;
+extern template struct autowiring::fast_pointer_cast_initializer<CoreObject, AutoPacketFactory>;

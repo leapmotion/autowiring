@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "Object.h"
+#include "CoreObject.h"
 #include <list>
 #include MEMORY_HEADER
 
@@ -55,6 +55,6 @@ public:
   virtual bool HasListeners(void) const = 0;
 
   // Event attachment and detachment pure virtuals
-  virtual void Add(const JunctionBoxEntry<Object>& rhs) = 0;
-  virtual void Remove(const JunctionBoxEntry<Object>& rhs) = 0;
+  virtual void Add(const JunctionBoxEntry<CoreObject>& rhs) = 0;
+  virtual void Remove(const JunctionBoxEntry<CoreObject>& rhs) = 0;
 };

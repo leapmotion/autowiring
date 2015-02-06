@@ -193,9 +193,9 @@ const std::type_info& CoreContext::GetAutoTypeId(const AnySharedPointer& ptr) co
   return pObjTraits->type;
 }
 
-std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
+std::shared_ptr<CoreObject> CoreContext::IncrementOutstandingThreadCount(void) {
   // Optimistic check
-  std::shared_ptr<Object> retVal = m_outstanding.lock();
+  std::shared_ptr<CoreObject> retVal = m_outstanding.lock();
   if(retVal)
     return retVal;
 
@@ -208,14 +208,14 @@ std::shared_ptr<Object> CoreContext::IncrementOutstandingThreadCount(void) {
   // Increment the parent's outstanding count as well.  This will be held by the lambda, and will cause the enclosing
   // context's outstanding thread count to be incremented by one as long as we have any threads still running in our
   // context.  This property is relied upon in order to get the Wait function to operate properly.
-  std::shared_ptr<Object> parentCount;
+  std::shared_ptr<CoreObject> parentCount;
   if(m_pParent)
     parentCount = m_pParent->IncrementOutstandingThreadCount();
 
   auto self = shared_from_this();
   retVal.reset(
-    (Object*)1,
-    [this, self, parentCount](Object*) {
+    (CoreObject*)1,
+    [this, self, parentCount](CoreObject*) {
       // Object being destroyed, notify all recipients
       std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
@@ -244,7 +244,7 @@ void CoreContext::AddInternal(const ObjectTraits& traits) {
     auto q = m_typeMemos.find(traits.actual_type);
     if(q != m_typeMemos.end()) {
       auto& v = q->second;
-      if(*v.m_value == traits.pObject)
+      if(*v.m_value == traits.pCoreObject)
         throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
       if(*v.m_value)
         throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
@@ -274,7 +274,7 @@ void CoreContext::AddInternal(const ObjectTraits& traits) {
 
   // Event receivers:
   if(traits.receivesEvents) {
-    JunctionBoxEntry<Object> entry(this, traits.pObject);
+    JunctionBoxEntry<CoreObject> entry(this, traits.pCoreObject);
 
     // Add to our vector of local receivers first:
     (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
@@ -440,34 +440,8 @@ void CoreContext::Initiate(void) {
     for (auto q = beginning; q != m_threads.end(); ++q)
       (*q)->Start(outstanding);
   }
-  lk.lock();
-
-  // We have to hold this to prevent dtors from running in a synchronized context
-  std::shared_ptr<CoreContext> prior;
-  for (auto childWeak : m_children) {
-    // Obtain child pointer and lock it down so our iterator stays stable
-    auto child = childWeak.lock();
-    if (!child)
-      // Expiration while we were attempting to dereference, circle around
-      continue;
-
-    // Cannot hold a lock safely if we hand off control to a child context
-    lk.unlock();
-    
-    // Control handoff to the child context must happen outside of a lock:
-    child->TryTransitionToRunState();
-
-    // Permit a prior context to expire if needed
-    prior.reset();
-
-    // Need to preserve current child context pointer before it goes out of scope in order to
-    // preserve our iterator.
-    lk.lock();
-    prior = child;
-  }
-
-  // Release our lock before letting `prior` expire, we can't hold a lock through such an event
-  lk.unlock();
+  
+  TryTransitionChildrenToRunState();
 }
 
 void CoreContext::InitiateCoreThreads(void) {
@@ -786,7 +760,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     // Determine whether the current candidate element satisfies the autowiring we are considering.
     // This is done internally via a dynamic cast on the interface type for which this polymorphic
     // base type was constructed.
-    if(!value.m_value->try_assign(entry.pObject))
+    if(!value.m_value->try_assign(entry.pCoreObject))
       continue;
 
     // Success, assign the traits
@@ -844,7 +818,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     cur.first->Finalize(cur.second);
 }
 
-void CoreContext::AddEventReceiver(const JunctionBoxEntry<Object>& entry) {
+void CoreContext::AddEventReceiver(const JunctionBoxEntry<CoreObject>& entry) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
@@ -895,7 +869,7 @@ void CoreContext::RemoveEventReceivers(const t_rcvrSet& receivers) {
     m_pParent->RemoveEventReceivers(receivers);
 }
 
-void CoreContext::UnsnoopEvents(Object* oSnooper, const JunctionBoxEntry<Object>& receiver) {
+void CoreContext::UnsnoopEvents(CoreObject* oSnooper, const JunctionBoxEntry<CoreObject>& receiver) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     if(
@@ -950,7 +924,7 @@ void CoreContext::FilterException(void) {
     throw;
 }
 
-void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, Object* pRecipient) {
+void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, CoreObject* pRecipient) {
   // Filter in order:
   for(CoreContext* pCur = this; pCur; pCur = pCur->GetParentContext().get())
     for(ExceptionFilter* filter : pCur->m_filters) {
@@ -980,12 +954,12 @@ void CoreContext::AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
   entry.pFirst = deferrable;
 }
 
-void CoreContext::InsertSnooper(std::shared_ptr<Object> snooper) {
+void CoreContext::InsertSnooper(std::shared_ptr<CoreObject> snooper) {
   (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
     m_snoopers.insert(snooper.get());
 }
 
-void CoreContext::RemoveSnooper(std::shared_ptr<Object> snooper) {
+void CoreContext::RemoveSnooper(std::shared_ptr<CoreObject> snooper) {
   (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
   m_snoopers.erase(snooper.get());
 }
@@ -999,31 +973,63 @@ void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
   Inject<AutoPacketFactory>()->AddSubscriber(rhs);
 }
 
-void CoreContext::TryTransitionToRunState(void) {
+void CoreContext::TryTransitionChildrenToRunState(void) {
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
-  switch (m_state) {
-  case State::Initiated:
-    // Can transition to the running state now
+  
+  // We have to hold this to prevent dtors from running in a synchronized context
+  std::shared_ptr<CoreContext> prior;
+  for (auto childWeak : m_children) {
+    // Obtain child pointer and lock it down so our iterator stays stable
+    auto child = childWeak.lock();
+    if (!child)
+      // Expiration while we were attempting to dereference, circle around
+      continue;
+    
+    // Cannot hold a lock safely if we hand off control to a child context
+    lk.unlock();
     {
-      auto q = m_threads.begin();
-      m_state = State::Running;
-      lk.unlock();
-
-      auto outstanding = IncrementOutstandingThreadCount();
-      while (q != m_threads.end()) {
-        (*q)->Start(outstanding);
-        q++;
+      // Get lock of child while we're modifying it's state
+      std::unique_lock<std::mutex> childLk(child->m_stateBlock->m_lock);
+      
+      switch (child->m_state) {
+        case State::Initiated:
+          // Can transition to the running state now
+          {
+            auto q = child->m_threads.begin();
+            child->m_state = State::Running;
+            childLk.unlock();
+            
+            auto outstanding = child->IncrementOutstandingThreadCount();
+            while (q != child->m_threads.end()) {
+              (*q)->Start(outstanding);
+              q++;
+            }
+          }
+          break;
+        case State::CanRun:
+        case State::NotStarted:
+        case State::Running:
+        case State::Shutdown:
+        case State::Abandoned:
+          // No action need be taken for these states
+          return;
       }
     }
-    break;
-  case State::CanRun:
-  case State::NotStarted:
-  case State::Running:
-  case State::Shutdown:
-  case State::Abandoned:
-    // No action need be taken for these states
-    return;
+    
+    // Recursivly try to transition children
+    child->TryTransitionChildrenToRunState();
+    
+    // Permit a prior context to expire if needed
+    prior.reset();
+    
+    // Need to preserve current child context pointer before it goes out of scope in order to
+    // preserve our iterator.
+    lk.lock();
+    prior = child;
   }
+  
+  // Release our lock before letting `prior` expire, we can't hold a lock through such an event
+  lk.unlock();
 }
 
 void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {
@@ -1032,7 +1038,7 @@ void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {
     
     // If the passed value is currently a snooper, then the caller has snooped a context and also
     // one of its parents.  End here.
-    if ( m_snoopers.count(traits.pObject.get()) )
+    if ( m_snoopers.count(traits.pCoreObject.get()) )
       return;
   }
   

@@ -13,11 +13,11 @@ CoreRunnable::CoreRunnable(void):
 
 CoreRunnable::~CoreRunnable(void) {}
 
-const std::shared_ptr<Object>& CoreRunnable::GetOutstanding(void) const {
+const std::shared_ptr<CoreObject>& CoreRunnable::GetOutstanding(void) const {
   return m_outstanding;
 }
 
-bool CoreRunnable::Start(std::shared_ptr<Object> outstanding) {
+bool CoreRunnable::Start(std::shared_ptr<CoreObject> outstanding) {
   std::lock_guard<std::mutex> lk(m_lock);
   if(m_wasStarted || m_outstanding || m_shouldStop)
     // We have already been started or stopped, end here
@@ -46,7 +46,7 @@ void CoreRunnable::Stop(bool graceful) {
   }
 
   if (m_outstanding) {
-    std::shared_ptr<Object> outstanding;
+    std::shared_ptr<CoreObject> outstanding;
     std::lock_guard<std::mutex> lk(m_lock);
 
     // Ensure we do not invoke the outstanding count dtor while holding a lock

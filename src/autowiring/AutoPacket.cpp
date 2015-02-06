@@ -227,7 +227,7 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   {
     std::lock_guard<std::mutex> lk(m_lock);
     for(size_t i = nInfos; i--;)
-      for(const auto& cur : pTypeSubs[i]->m_subscribers)
+      for(SatCounter* cur : pTypeSubs[i]->m_subscribers)
         cur->Increment();
   }
 }

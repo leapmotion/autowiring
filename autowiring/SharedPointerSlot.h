@@ -3,7 +3,7 @@
 #include "auto_id.h"
 #include "autowiring_error.h"
 #include "fast_pointer_cast.h"
-#include "Object.h"
+#include "CoreObject.h"
 #include "SlotInformation.h"
 #include MEMORY_HEADER
 #include <stdexcept>
@@ -56,7 +56,7 @@ protected:
 
 public:
   operator bool(void) const { return !empty(); }
-  virtual operator std::shared_ptr<Object>(void) const { return std::shared_ptr<Object>(); }
+  virtual operator std::shared_ptr<CoreObject>(void) const { return std::shared_ptr<CoreObject>(); }
   virtual void* ptr(void) { return nullptr; }
   virtual const void* ptr(void) const { return nullptr; }
 
@@ -89,7 +89,7 @@ public:
   /// Attempts to dynamically assign this slot to the specified object without changing the current type
   /// </summary>
   /// <returns>True if the assignment succeeds</returns>
-  virtual bool try_assign(const std::shared_ptr<Object>& rhs) {
+  virtual bool try_assign(const std::shared_ptr<CoreObject>& rhs) {
     return false;
   }
 
@@ -197,10 +197,10 @@ public:
   }
 
   /// <summary>
-  /// Specialization for the Object base type
+  /// Specialization for the CoreObject base type
   /// </summary>
-  bool operator==(const std::shared_ptr<Object>& rhs) const {
-    return this->operator std::shared_ptr<Object>() == rhs;
+  bool operator==(const std::shared_ptr<CoreObject>& rhs) const {
+    return this->operator std::shared_ptr<CoreObject>() == rhs;
   }
 
   /// <summary>
@@ -344,9 +344,9 @@ struct SharedPointerSlotT<T, true>:
     new (pSpace) SharedPointerSlotT<T, true>(*this);
   }
 
-  bool try_assign(const std::shared_ptr<Object>& rhs) override {
+  bool try_assign(const std::shared_ptr<CoreObject>& rhs) override {
     // Just perform a dynamic cast:
-    auto casted = autowiring::fast_pointer_cast_blind<T, Object>::cast(rhs);
+    auto casted = autowiring::fast_pointer_cast_blind<T, CoreObject>::cast(rhs);
     if (!casted)
       return false;
 
@@ -354,8 +354,8 @@ struct SharedPointerSlotT<T, true>:
     return true;
   }
 
-  virtual operator std::shared_ptr<Object>(void) const override {
-    return autowiring::fast_pointer_cast_blind<Object, T>::cast(SharedPointerSlotT<T, false>::get());
+  virtual operator std::shared_ptr<CoreObject>(void) const override {
+    return autowiring::fast_pointer_cast_blind<CoreObject, T>::cast(SharedPointerSlotT<T, false>::get());
   }
 
   using SharedPointerSlotT<T, false>::operator=;

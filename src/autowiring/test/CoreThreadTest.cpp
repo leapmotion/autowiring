@@ -60,7 +60,7 @@ TEST_F(CoreThreadTest, VerifyStartSpam) {
   ctxt->Initiate();
 
   // This shouldn't cause another thread to be created:
-  instance->Start(std::shared_ptr<Object>((Object*) 1, [] (Object*) {}));
+  instance->Start(std::shared_ptr<CoreObject>((CoreObject*) 1, [] (CoreObject*) {}));
 
   EXPECT_FALSE(instance->m_multiHit) << "Thread was run more than once unexpectedly";
 }

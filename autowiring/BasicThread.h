@@ -127,13 +127,13 @@ protected:
   /// shared pointer passed to it, typically as a last step before return, potentially
   /// triggering the case described above.
   /// </remarks>
-  virtual void DoRun(std::shared_ptr<Object>&& refTracker);
+  virtual void DoRun(std::shared_ptr<CoreObject>&& refTracker);
 
   /// <summary>
   /// Performs all cleanup operations that must take place after DoRun()
   /// </summary>
   /// <param name="pusher">The last reference to the enclosing context held by this thread</param>
-  virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<Object>&& refTracker);
+  virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<CoreObject>&& refTracker);
 
   void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
 

@@ -72,16 +72,13 @@ via the [find_package](http://www.cmake.org/cmake/help/v3.0/command/find_package
 
 ### Arm-linux
 
-Building on Android requires the use of a toolchain file.  You will need to use an alternate prefix path if you are trying to cross-compile, the prefix path
-should contain your version of the Boost libraries built for Android.  To configure, use the following invocation:
+Building on Android requires the use of a toolchain file.  You will need to use an alternate prefix path if you are trying to cross-compile, the prefix path should contain your version of the Boost libraries built for Android.  To configure, use the following invocation:
 
     cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake -DCMAKE_PREFIX_PATH:PATH=/your/lib/path
 
 ### Android
 
-Similar requirements to Arm-linux, you must specify a toolchain file.  You must also specify the path to your Android toolchain directory.  Make sure you update
-/opt/android-standalone-toolchain to point to your actual Android standalone toolchain directory.  If you aren't cross-compiling, then simply run cmake with
-no options.
+Similar requirements to Arm-linux, you must specify a toolchain file.  You must also specify the path to your Android toolchain directory.  Make sure you update `/opt/android-standalone-toolchain` to point to your actual Android standalone toolchain directory. To build for 64 bit android systems, export the environment variable `export ARMv8=true`. If you aren't cross-compiling, then simply run cmake with no options.
 
     cmake . -DCMAKE_TOOLCHAIN_FILE=toolchain-android.cmake -DLLVM_ANDROID_TOOLCHAIN_DIR=/opt/android-standalone-toolchain
 
