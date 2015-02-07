@@ -441,7 +441,8 @@ void CoreContext::Initiate(void) {
       (*q)->Start(outstanding);
   }
   
-  TryTransitionChildrenToRunState();
+  // Update state of children now that we are initated
+  TryTransitionChildrenState();
 }
 
 void CoreContext::InitiateCoreThreads(void) {
@@ -973,7 +974,7 @@ void CoreContext::AddPacketSubscriber(const AutoFilterDescriptor& rhs) {
   Inject<AutoPacketFactory>()->AddSubscriber(rhs);
 }
 
-void CoreContext::TryTransitionChildrenToRunState(void) {
+void CoreContext::TryTransitionChildrenState(void) {
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
   
   // We have to hold this to prevent dtors from running in a synchronized context
@@ -997,27 +998,38 @@ void CoreContext::TryTransitionChildrenToRunState(void) {
           {
             auto q = child->m_threads.begin();
             child->m_state = State::Running;
-            childLk.unlock();
             
+            // Child had it's state changed
+            child->m_stateBlock->m_stateChanged.notify_all();
+            
+            childLk.unlock();
             auto outstanding = child->IncrementOutstandingThreadCount();
+            
             while (q != child->m_threads.end()) {
               (*q)->Start(outstanding);
               q++;
             }
           }
+          
+          // Recursivly try to transition children
+          child->TryTransitionChildrenState();
+          
+          break;
+        case State::NotStarted:
+          // Children can run now that their parent has been initiated
+          child->m_state = State::CanRun;
+          
+          // Child had it's state changed
+          child->m_stateBlock->m_stateChanged.notify_all();
           break;
         case State::CanRun:
-        case State::NotStarted:
         case State::Running:
         case State::Shutdown:
         case State::Abandoned:
           // No action need be taken for these states
-          return;
+          break;
       }
     }
-    
-    // Recursivly try to transition children
-    child->TryTransitionChildrenToRunState();
     
     // Permit a prior context to expire if needed
     prior.reset();
