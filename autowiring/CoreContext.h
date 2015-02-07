@@ -455,7 +455,7 @@ protected:
   /// <summary>
   /// Invoked by a parent context when the parent has transitioned to the Running state
   /// </summary>
-  void TryTransitionChildrenToRunState(void);
+  void TryTransitionChildrenState(void);
 
   /// <summary>
   /// Registers a factory _function_, a lambda which is capable of constructing decltype(fn())

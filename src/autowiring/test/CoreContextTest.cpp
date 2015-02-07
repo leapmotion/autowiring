@@ -251,8 +251,6 @@ TEST_F(CoreContextTest, InitiateOrder) {
     EXPECT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
     EXPECT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
     
-    innerCtxt->SignalShutdown(true);
-    middleCtxt->SignalShutdown(true);
     outerCtxt->SignalShutdown(true);
   }
   
@@ -270,8 +268,6 @@ TEST_F(CoreContextTest, InitiateOrder) {
     EXPECT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
     EXPECT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
     
-    innerCtxt->SignalShutdown(true);
-    middleCtxt->SignalShutdown(true);
     outerCtxt->SignalShutdown(true);
   }
   
@@ -290,64 +286,59 @@ TEST_F(CoreContextTest, InitiateOrder) {
     EXPECT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
     
     outerCtxt->SignalShutdown(true);
-    middleCtxt->SignalShutdown(true);
-    innerCtxt->SignalShutdown(true);
   }
 }
 
 TEST_F(CoreContextTest, InitiateMultipleChildren) {
-  AutoCurrentContext outerCtxt;
+  AutoCurrentContext testCtxt;
+  testCtxt->Initiate();
   // Initiate all children
   {
-    auto testCtxt = outerCtxt->Create<void>();
-    auto child1 = testCtxt->Create<void>();
-    auto child2 = testCtxt->Create<void>();
-    auto child3 = testCtxt->Create<void>();
+    auto outerCtxt = testCtxt->Create<void>();
+    auto child1 = outerCtxt->Create<void>();
+    auto child2 = outerCtxt->Create<void>();
+    auto child3 = outerCtxt->Create<void>();
 
     child1->Initiate();
     child2->Initiate();
     child3->Initiate();
 
-    testCtxt->Initiate();
+    outerCtxt->Initiate();
 
     EXPECT_TRUE(child1->IsRunning());
     EXPECT_TRUE(child2->IsRunning());
     EXPECT_TRUE(child3->IsRunning());
 
-    child1->SignalShutdown(true);
-    child2->SignalShutdown(true);
-    child3->SignalShutdown(true);
+    outerCtxt->SignalShutdown(true);
   }
 
   // Don't initiate middle child
   {
-    auto testCtxt = outerCtxt->Create<void>();
-    auto child1 = testCtxt->Create<void>();
-    auto child2 = testCtxt->Create<void>();
-    auto child3 = testCtxt->Create<void>();
+    auto outerCtxt = testCtxt->Create<void>();
+    auto child1 = outerCtxt->Create<void>();
+    auto child2 = outerCtxt->Create<void>();
+    auto child3 = outerCtxt->Create<void>();
 
     child1->Initiate();
     child3->Initiate();
 
-    testCtxt->Initiate();
+    outerCtxt->Initiate();
 
     EXPECT_TRUE(child1->IsRunning());
     EXPECT_FALSE(child2->IsInitiated());
     EXPECT_TRUE(child3->IsRunning());
 
-    child1->SignalShutdown(true);
-    child2->SignalShutdown(true);
-    child3->SignalShutdown(true);
+    outerCtxt->SignalShutdown(true);
   }
 
   // Don't initiate middle child and initiate parent first
   {
-    auto testCtxt = outerCtxt->Create<void>();
-    auto child1 = testCtxt->Create<void>();
-    auto child2 = testCtxt->Create<void>();
-    auto child3 = testCtxt->Create<void>();
+    auto outerCtxt = testCtxt->Create<void>();
+    auto child1 = outerCtxt->Create<void>();
+    auto child2 = outerCtxt->Create<void>();
+    auto child3 = outerCtxt->Create<void>();
 
-    testCtxt->Initiate();
+    outerCtxt->Initiate();
 
     child1->Initiate();
     child3->Initiate();
@@ -356,8 +347,6 @@ TEST_F(CoreContextTest, InitiateMultipleChildren) {
     EXPECT_FALSE(child2->IsInitiated());
     EXPECT_TRUE(child3->IsRunning());
 
-    child1->SignalShutdown(true);
-    child2->SignalShutdown(true);
-    child3->SignalShutdown(true);
+    outerCtxt->SignalShutdown(true);
   }
 }
