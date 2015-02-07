@@ -350,6 +350,7 @@ public:
   }
 };
 
+/// \internal deprecated
 /// <summary>
 /// A version of AutoRequired that forwards constructor arguments to the injected
 /// type's constructor function.

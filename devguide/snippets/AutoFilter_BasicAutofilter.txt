@@ -1,0 +1,5 @@
+class BasicFilter {
+    void AutoFilter(T inputByValue, const Q& inputByRef, W& output){
+        output.property = inputByValue.attribute + inputByRef.member;
+    }
+};

@@ -11,38 +11,62 @@ struct BasicThreadStateBlock;
 class BasicThread;
 class CoreContext;
 
+/// \internal (until ElevatePriority feature is implmented on all platforms)
+/// <summary>
+/// Thread priority classifications from low to high.
+/// </summary>
+/// <remarks>
+/// Use the ThreadPriority enumeration with the BasicThread::ElevatePriority class
+/// to raise the priority of a thread when needed.
+/// </remarks>
 enum class ThreadPriority {
-  // This is the default thread priority, it's treated as a value lower than any of the
-  // other priority so that an initial request to elevate can alter the OS-supplied default
-  // without causing the types of contention problems resulting from a high-priority operation
-  // transitioning to a low-priority state.
+  /// This is the default thread priority. It is treated as a value lower than any of the
+  /// other priorities so that an initial request to elevate can alter the OS-supplied default
+  /// without causing the contention problems resulting from a high-priority operation
+  /// transitioning to a low-priority state.
   Default,
 
-  Idle,
-  Lowest,
-  BelowNormal,
-  Normal,
-  AboveNormal,
-  Highest,
-  TimeCritical,
+  Idle, ///< Lower
+  Lowest, ///< Low
+  BelowNormal, ///< Below normal
+  Normal, ///< Normal
+  AboveNormal, ///< Above normal
+  Highest, ///< High
+  TimeCritical, ///< Critical
 
-  // This is a special case for multimedia applications.  Some operating systems, like Windows,
-  // can provide additional scheduling guarantees to applications which declare themselves as
-  // multimedia-intensive in nature.  For other systems, Multimedia is identical to TimeCritical.
+  /// This is a special case for multimedia applications.  Some operating systems, like Windows,
+  /// can provide additional scheduling guarantees to applications which declare themselves as
+  /// multimedia-intensive in nature.  For other systems, Multimedia is identical to TimeCritical.
   Multimedia
 };
 
 /// <summary>
-/// This is an abstract class that has a single Run method for implementation by a
-/// derived class.  The object will remain in the context as long as the thread is
-/// running, even if there are no other references to it.
+/// An abstract class for creating a thread with a single Run method.
 /// </summary>
+/// <remarks>
+/// This is an abstract class that has a single Run() method for implementation by
+/// derived classes.  A BasicThread instance remains in the context as long as the thread is
+/// running, even if there are no other references to it.
+///
+/// To create a thread, extend BasicThread and implement the desired Run() method.
+/// To start the thread, wire your thread object to a context and Initiate() the context.
+/// When the SignalShutown() or SignalTermination() methods of the owning context
+/// are called, or you call the BasicThread::OnStop() function, the ShouldStop()
+/// function will evaluate to true. It is your Run() implementation's responsibility to
+/// terminate when ShouldStop() becomes true.
+///
+/// The following example prints out the sequence of prime numbers until the context
+/// signals that threads should shutdown:
+///
+/// \include snippets/BasicThread_Class.txt
+/// </remarks>
 class BasicThread:
   public ContextMember,
   public virtual CoreRunnable
 {
 public:
-  /// <param name="pName">An optional name for this thread</param>
+  /// Creates a BasicThread object.
+  /// <param name="pName">An optional name for this thread. The name is visible in some debuggers.</param>
   BasicThread(const char* pName = nullptr);
   virtual ~BasicThread(void);
 
@@ -65,16 +89,17 @@ protected:
   ThreadPriority m_priority;
 
   /// <summary>
-  /// Assigns the name of the thread, for use in debugger windows
+  /// Assigns a name to the thread, displayed in debuggers.
   /// </summary>
   /// <remarks>
-  /// Some platforms allow the assignment of a thread name for viewing by a debugger
-  /// window.  This method is a platform-independent way of doing this for the current
+  /// Some platforms allow the assignment of a thread name for identifying threads shown in a debugger
+  /// window.  This method provides a platform-independent way of doing setting this name for the current
   /// thread.
   /// </remarks>
   void SetCurrentThreadName(void) const;
 
 private:
+  /// Only implemented on Windows (as of version 0.4.1).
   /// <summary>
   /// Sets the thread priority of this thread
   /// </summary>
@@ -86,7 +111,7 @@ private:
 
 protected:
   /// <summary>
-  /// Recovers a general lock used to synchronize entities in this thread internally
+  /// Recovers a general lock used to synchronize entities in this thread internally.
   /// </summary>
   std::mutex& GetLock(void);
 
@@ -105,15 +130,16 @@ protected:
   virtual void DoRun(std::shared_ptr<CoreObject>&& refTracker);
 
   /// <summary>
-  /// Performs all cleanup operations that must take place after DoRun
+  /// Performs all cleanup operations that must take place after DoRun()
   /// </summary>
   /// <param name="pusher">The last reference to the enclosing context held by this thread</param>
   virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<CoreObject>&& refTracker);
 
   void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
 
+  /// \internal Only implemented on Windows (as of 0.4.1).
   /// <summary>
-  /// RAII-style class for use with threads that need temporary priority boosts
+  /// Boosts thread priority while an instance of this type exists.
   /// </summary>
   /// <remarks>
   /// The thread priority is changed when the requested priority is higher than the
@@ -122,8 +148,15 @@ protected:
   /// </remarks>
   class ElevatePriority {
   public:
+    /// Creating an ElevatePriority object as a member of a BasicThread instance
+    /// elevates the priority of the thread if the specified priority is higher
+    /// then the current thread priority. Destroy this ElevatePriority instance
+    /// to restore the normal thread priority.
     ElevatePriority(ElevatePriority&) = delete;
 
+    /// Elevates the priority of a BasicThread instance if the specified priority is higher
+    /// then the current thread priority. Destroy this ElevatePriority instance
+    /// to restore the normal thread priority.
     ElevatePriority(BasicThread& thread, ThreadPriority priority) :
       m_oldPriority(thread.m_priority),
       m_thread(thread)
@@ -133,6 +166,8 @@ protected:
         m_thread.SetThreadPriority(priority);
     }
 
+    /// Destroying this object returns the thread to its previous priority
+    /// level.
     ~ElevatePriority(void) {
       // Delevate if the old level is lower than the current level:
       if(m_thread.m_priority > m_oldPriority)
@@ -145,19 +180,23 @@ protected:
   };
 
   /// <summary>
-  /// Performs a state condition wait using the specified lambda to judge completeness
+  /// Waits until the specified lambda function returns true or the thread shuts down.
   /// </summary>
+  /// <remarks>
+  /// The lambda function is called repeatedly until it evaluates to true.
+  /// </remarks>
   void WaitForStateUpdate(const std::function<bool()>& fn);
 
   /// <summary>
-  /// Obtains a mutex, invokes the specified lambda, and then updates the basic thread's state condition
+  /// Obtains a mutex, invokes the specified lambda function, and then updates
+  /// the basic thread's state condition.
   /// </summary>
   void PerformStatusUpdate(const std::function<void()>& fn);
 
   /// <summary>
-  /// A convenience method that will sleep this thread for the specified duration
+  /// Sleeps this thread for the specified duration.
   /// </summary>
-  /// <returns>False if the thread was terminated before the timeout elapsed</returns>
+  /// <returns>False if the thread was terminated before the timeout elapsed.</returns>
   /// <remarks>
   /// Events are dispatched by this method while the sleep is taking place, which makes this
   /// method similar to an alertable wait on Windows.  Callers are cautioned against holding
@@ -185,34 +224,50 @@ protected:
 
 public:
   /// <summary>
-  /// Begins the core thread
+  /// Begins thread execution.
   /// </summary>
-  /// <param name="context">A shared pointer to the context containing this thread</param>
   /// <remarks>
+  /// Implement this function to perform the work to be done by this thread. Your
+  /// Run() function implementation must exit when ShouldStop() becomes true.
+  ///
+  /// BasicThreads can be stopped gracefully or immediately. Override OnStop(bool graceful)
+  /// to implement different behavior for these two shutdown modes. For example,
+  /// if the shutdown mode is immediate, you might abort any actions in progress,
+  /// but if the mode is graceful, you might take time to save files, etc. This
+  /// behavior is application defined. Autowiring does not impose its own requirements.
+  /// You can also perform custom shutdown cleanup in an OnStop() implementation.
+  ///
   /// The default implementation of Run will simply call WaitForEvent in a loop until it's
   /// told to quit.
   /// </remarks>
   virtual void Run() = 0;
 
   /// <summary>
-  /// Provides derived members with a way of obtaining notification that this thread is being stopped
+  /// Invoked by the base class Stop() method. Implement this method to perform any needed cleanup.
   /// </summary>
   /// <remarks>
-  /// Callers must not perform any time-consuming operations in this callback; the method may be called
+  /// Do not perform any time-consuming operations in this callback; the method may be called
   /// from a time-sensitive context and unacceptable system performance could result if long-duration
   /// operations are undertaken here.
+  ///
+  /// Override the OnStop(bool graceful) version of this function to handle immediate vs. graceful shutdown
+  /// cleanup.
   /// </remarks>
   virtual void OnStop(void) {}
 
   /// <summary>
-  /// Forces all Autowiring threads to reidentify themselves
+  /// Forces all Autowiring threads to reidentify themselves.
   /// </summary>
   /// <remarks>
+  /// Calls SetThreadName() for each thread.
   /// </remarks>
   static void ForceCoreThreadReidentify(void);
 
+  /// <summary>
+  /// The thread creation time.
+  /// </summary>
   /// <returns>
-  /// Returns the time when this thread was created
+  /// Returns the time when this thread was created.
   /// </returns>
   /// <remarks>
   /// If the thread has not yet run, this routine returns std::steady_clock::time_point::min
@@ -220,12 +275,18 @@ public:
   std::chrono::steady_clock::time_point GetCreationTime(void);
 
   /// <summary>
-  /// Obtains running time information for this thread
+  /// Reports kernel and user mode running times for this thread.
   /// </summary>
+  /// <remarks>
+  /// This function is intended for debugging and performance reporting. It is used
+  /// by the AutoNet server.
+  ///
+  /// \include snippets/BasicThread_GetRunningTime.txt
+  /// </remarks>
   void GetThreadTimes(std::chrono::milliseconds& kernelTime, std::chrono::milliseconds& userTime);
 };
 
 /// <summary>
-/// Alias of CoreThread::ForceCoreThreadReidentify, provided with C-style linkage for easy invocation
+/// Alias of CoreThread::ForceCoreThreadReidentify, provided with C-style linkage for easy invocation.
 /// </summary>
 extern "C" void ForceCoreThreadReidentify(void);

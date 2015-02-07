@@ -3,7 +3,6 @@
 // \defgroup Context Classes about contexts
 // Contexts are a basic concept of Autowiring.
 
-    // \class AutoDesired< T >
     // \ingroup Context
     
 // \defgroup Threading Classes about threads

@@ -16,7 +16,7 @@ Autowiring provides the following services:
 A Context is a basic unit of organization in an autowired application. A Context defines the scope in which autowiring resolves dependencies, broadcasts events and filter graph packets, and maintains object and thread lifespans. Contexts form a tree structure. The root of the tree is the global context, which is created automatically. Contexts can "contain" other contexts as child nodes in the context tree. Dependencies within a child context can be satisfied by an autowired member of a parent context (if it can't be satisfied within the child itself). 
 
 \htmlonly
-<iframe src="ContextTree.svg" frameBorder="0"></iframe>
+<object data="ContextTree.svg"></object>
 \endhtmlonly
 
 Most applications will only have a few contexts. Child contexts are most useful when managing temporary resources. For example, if you have multiple views to the same data, the data model could be a type within a parent context while each view exists within a child context. These child contexts could be created and destroyed on demand.
@@ -29,12 +29,18 @@ Inside a context, objects can be autowired directly or as members of another aut
 
 This example creates a context and autowires two members into it. Type Foo contains its own AutoRequired member, so an instance of Bar is also created. When a member of type Bar is added to the context directly, it receives a shared pointer to the existing instance of Bar. Thus bar and foo.bar reference the same instance.
 
+Autowiring "slots" can also be injected into a context without creating a new instance of the injected type. Autowired slots are filled immediately, if possible, otherwise, they are filled as soon as a matching type is created.
+
+\include snippets/Context_Overview_Autowire.txt
+
+In this case, the bar member of the Foo instance is Autowired instead of AutoRequired. Thus the shared pointer remains unset until the instance of Bar is created. 
+
 # Filter graph networks
 
 Autofilters support the creation of filter graph networks within a context. Autowired objects within a context can implement the Autofilter function, which will be automatically invoked when a suitable packet is dispatched by the AutoPacketFactory or another filter.
 
 \htmlonly
-<iframe src="FilterGraph.svg" frameBorder="0"></iframe>
+<object data="FilterGraph.svg"></object>
 \endhtmlonly
 
  The publishing object does not need any knowledge of the receiving objects. Similarly, the AutoFired event system allows an object to define a callback function that gets called whenever an event is triggered.

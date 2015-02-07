@@ -1,0 +1,17 @@
+AutoCreateContext ctxt;
+CurrentContextPusher pusher(ctxt);
+
+class FooThread : public BasicThread{
+    public:
+        FooThread(const char* pName = nullptr)
+            :BasicThread(pName){}
+        void Run() override {
+            std::cout << "Thread starting" << std::endl;
+            this->WaitFor(std::chrono::seconds(1));
+            std::cout << "Thread done" << std::endl;
+
+        }
+};
+ctxt->Initiate();
+AutoRequired<FooThread>(AutoCurrentContext(), "thread_foo");
+ctxt->SignalShutdown(true, ShutdownMode::Graceful);
