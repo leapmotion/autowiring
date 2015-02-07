@@ -95,6 +95,7 @@ TEST_F(AutoFilterTests, AutoFilter_PrimeFilter) {
 }
 
 TEST_F(AutoFilterTests, ImageFilterNet) {
+    // !!!AutoFilter_ImageNet
     struct Image{};
     struct RawImage: public Image{};
     struct BlurredImage: public Image{};
@@ -124,12 +125,10 @@ TEST_F(AutoFilterTests, ImageFilterNet) {
             }
     };
 
-    class CircleFinder : public CoreThread {
+    class CircleFinder {
         public:
             void AutoFilter(const BlurredImage img, CircleList &circles){
-                this->WaitFor(std::chrono::milliseconds(500)); //simulate long running process
                 circles = findCircles(img);
-                //return Deferred(this);
             }
             CircleList findCircles(const BlurredImage blurred){
                 std::cout << "Found circles." << std::endl;
@@ -152,7 +151,7 @@ TEST_F(AutoFilterTests, ImageFilterNet) {
     class GraphOut {
         public:
             void AutoFilter(const CircleList circles, const LineList lines, AutoPacket &packet){
-                std::cout << "Received final packet with lines and circles. " << packet.Has<RawImage>() << std::endl;
+                std::cout << "Received final packet with lines and circles. " << std::endl;
             }
     };
 
@@ -168,6 +167,7 @@ TEST_F(AutoFilterTests, ImageFilterNet) {
     ctxt->Initiate();
 
     camera->produceImage(1);
+    // !!!END
 }
 
 TEST_F(AutoFilterTests, AutoFilter_Types) {

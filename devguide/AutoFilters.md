@@ -38,7 +38,7 @@ Autowiring uses the form of the argument to determine whether it is an input or 
   \include snippets/AutoFilter_InType_shared_ptr.txt
 * ``T*[]`` — A null-terminated array of pointers to type T. A pointer to an instance of T is added for each filter that adds an instance of T to the packet. The filter taking this input is called when all filters outputting T have run (or no more can run).
   \include snippets/AutoFilter_Type_array.txt
-* ``T&&`` — An input that this filter must add. Called a synchronizing decoration.
+* ``T&&`` — A synchronizing decoration. The previous value is removed from the packet. The filter function can assign a new value. Use for inplace modification of a data item in the packet.
   \include snippets/AutoFilter_OutType_Rvalue.txt
 
 ### Output argumets
@@ -53,7 +53,7 @@ Autowiring uses the form of the argument to determine whether it is an input or 
 * ``AutoPacket &packet`` — provides a reference to the packet itself. This argument is not treated as an input or output; other arguments determine when the filter function is called.
   \include snippets/AutoFilter_Type_packet.txt
 
-* ``AutoPrev &previous`` --
+.. * ``AutoPrev &previous`` --
 
 Note that a filter function with no input arguments is called when a new, empty packet is called.
 
@@ -75,7 +75,7 @@ To create a filter graph network:
  
 The following example shows a hypothetical filter graph that takes a camera image, runs a blur filter, and then line and circle feature finding filters:
 
-\include snippets/
+\include snippets/AutoFilter_ImageNet.txt
 
 All filters in the same context are part of the same network. You can design things so that parts of the graph never intersect, but the pontential for type collisions and hence unintended interaction exists.
 
@@ -84,23 +84,4 @@ All filters in the same context are part of the same network. You can design thi
 AutoFilter functions implicitly decorate packets by implementing an output argument. You can also explicitly decorate a packet with the Decorate() and DecorateImmediate() functions.
 
 The Decorate() function works the same as an AutoFilter output. DecorateImmediate() is for time-critical data, such as items that have a very short lifespan. When you call DecorateImmediate(T), every AutoFilter function that takes the type T and whose other inputs are satisfied is invoked before DecorateImmediate() returns. After that, type T is marked as unsatisfiable and no other functions that take type T are invoked for the current packet.
-
-
-------------
-
-What sets the boundaries of a network? — the context (exceptions?)
-
-Can a context host more than one filter graph network? Probably inadvisable because of possible decoration type collisions, but could it even work?
-
-Thread considerations? Can a filter delegate its work to a thread? Or will the packet die before the thread returns?
-
-Recommendations for the limits of filter graph networks. I.e. when to create a new network vs. adding on to an existing one. Just general separation of responsibility principles?
-
-How does an array input (T*[]) work? When does a filter get called when it wants an array? As soon as one is added, even if empty? Does adding elements have some affect? Who enforces the null termination?
-
-What are the implications of synchronizing decorations (T&&)?
-
-What are implications of DecorateImmediate?
-
-What is AutoSelfUpdate?
 
