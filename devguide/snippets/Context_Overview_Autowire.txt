@@ -1,0 +1,10 @@
+class Bar{};
+class Foo{
+    public:
+        Autowired<Bar> bar;
+};
+AutoCreateContext ctxt;
+CurrentContextPusher push(ctxt);
+
+AutoRequired<Foo> foo; //foo.bar still unwired
+AutoRequired<Bar> bar; //foo.bar is wired to bar

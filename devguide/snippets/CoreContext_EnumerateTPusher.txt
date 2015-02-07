@@ -1,0 +1,5 @@
+AutoGlobalContext global;
+for(auto context : ContextEnumeratorT<Foo>(global)){
+    CurrentContextPusher push(context);
+    // Perform some action
+} //Previous context restored
