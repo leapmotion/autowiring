@@ -1,8 +1,8 @@
 #pragma once
 #if STL11_ALLOWED
-#define CHRONO_HEADER <chrono>
+#include <chrono>
 #else
-#define CHRONO_HEADER <autowiring/C++11/boost_chrono.h>
+#include <autowiring/C++11/boost_chrono.h>
 #endif
 
 //This solution taken from http://stackoverflow.com/questions/8386128/how-to-get-the-precision-of-high-resolution-clock
