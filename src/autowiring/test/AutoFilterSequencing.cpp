@@ -300,3 +300,364 @@ TEST_F(AutoFilterSequencing, DoublePrev) {
   ASSERT_EQ(10, filter->m_called) << "AutoFilter not called";
   ASSERT_EQ(2, filter->m_num_empty_prev) << "Prev should only be null for the first two calls";
 }
+
+TEST_F(AutoFilterSequencing, BasicFilterAltitudeCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  bool firstRan = false;
+  bool secondRan = false;
+
+  *factory += 2, [&firstRan, &secondRan](const int&, const char&) {
+    ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
+    firstRan = true;
+  };
+
+  *factory += 1, [&secondRan](const int&) {secondRan = true;};
+
+  {
+    firstRan = false;
+    secondRan = false;
+    auto packet = factory->NewPacket();
+
+    packet->Decorate(static_cast<int>(0));
+
+    ASSERT_FALSE(firstRan) << "First Autofilter called with only one argument";
+    ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
+
+    packet->Decorate(static_cast<char>('a'));
+
+    ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
+    ASSERT_TRUE(secondRan) << "Second Autofilter not called on time";
+  }
+
+  {
+    firstRan = false;
+    secondRan = false;
+    auto packet = factory->NewPacket();
+
+    packet->DecorateImmediate(static_cast<int>(0));
+
+    ASSERT_FALSE(firstRan) << "First Autofilter called with only one argument";
+    ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
+
+    packet->Decorate(static_cast<char>('a'));
+
+    ASSERT_FALSE(firstRan) << "First Autofilter called inappropriately";
+    ASSERT_FALSE(secondRan) << "Second Autofilter called inappropriately";
+  }
+
+  {
+    firstRan = false;
+    secondRan = false;
+    auto packet = factory->NewPacket();
+
+    packet->DecorateImmediate(static_cast<int>(0), static_cast<char>('a'));
+
+    ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
+    ASSERT_TRUE(secondRan) << "Second Autofilter not called on time";
+  }
+
+  {
+    firstRan = false;
+    secondRan = false;
+    auto packet = factory->NewPacket();
+
+    packet->Decorate(static_cast<int>(0));
+
+    ASSERT_FALSE(firstRan) << "First Autofilter called with only one argument";
+    ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
+
+    packet->DecorateImmediate(static_cast<char>('a'));
+
+    ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
+    ASSERT_TRUE(secondRan) << "Second Autofilter not called on time";
+  }
+}
+
+TEST_F(AutoFilterSequencing, MultiLevelFilterAltitudeCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  bool firstRan = false;
+  bool secondRan = false;
+  bool thirdRan = false;
+
+  *factory+= 3, [&firstRan, &secondRan, &thirdRan](const int&, const char&) {
+    ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
+    ASSERT_FALSE(thirdRan) << "Third Autofilter called before first";
+    firstRan = true;
+  };
+
+  *factory += 2, [&secondRan, &thirdRan](const int&, const short&) {
+    ASSERT_FALSE(thirdRan) << "Third Autofilter called before first";
+    secondRan = true;
+  };
+
+  *factory += 1, [&thirdRan](const int&) {thirdRan = true;};
+
+  {
+    firstRan = false;
+    secondRan = false;
+    thirdRan = false;
+
+    auto packet = factory->NewPacket();
+
+    packet->Decorate(static_cast<int>(0));
+
+    ASSERT_FALSE(firstRan) << "First Autofilter called with only one argument";
+    ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
+    ASSERT_FALSE(thirdRan) << "Third Autofilter called before first";
+
+    packet->Decorate(static_cast<char>('a'));
+
+    ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
+    ASSERT_FALSE(secondRan) << "Second Autofilter not called on time";
+    ASSERT_FALSE(thirdRan) << "Third Autofilter not called on time";
+
+    packet->Decorate(static_cast<short>(0));
+
+    ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
+    ASSERT_TRUE(secondRan) << "Second Autofilter not called on time";
+    ASSERT_TRUE(thirdRan) << "Third Autofilter not called on time";
+  }
+
+  {
+    firstRan = false;
+    secondRan = false;
+    thirdRan = false;
+
+    auto packet = factory->NewPacket();
+
+    packet->Decorate(static_cast<int>(0));
+
+    ASSERT_FALSE(firstRan) << "First Autofilter called with only one argument";
+    ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
+    ASSERT_FALSE(thirdRan) << "Third Autofilter called before first";
+
+    packet->Decorate(static_cast<short>(0));
+
+    ASSERT_FALSE(firstRan) << "First Autofilter not called on time";
+    ASSERT_FALSE(secondRan) << "Second Autofilter not called on time";
+    ASSERT_FALSE(thirdRan) << "Third Autofilter not called on time";
+
+    packet->Decorate(static_cast<char>('a'));
+
+    ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
+    ASSERT_TRUE(secondRan) << "Second Autofilter not called on time";
+    ASSERT_TRUE(thirdRan) << "Third Autofilter not called on time";
+  }
+
+  {
+    firstRan = false;
+    secondRan = false;
+    thirdRan = false;
+
+    auto packet = factory->NewPacket();
+
+    packet->Decorate(static_cast<char>('a'));
+
+    ASSERT_FALSE(firstRan) << "First Autofilter called with only one argument";
+    ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
+    ASSERT_FALSE(thirdRan) << "Third Autofilter called before first";
+
+    packet->Decorate(static_cast<short>(0));
+
+    ASSERT_FALSE(firstRan) << "First Autofilter not called on time";
+    ASSERT_FALSE(secondRan) << "Second Autofilter not called on time";
+    ASSERT_FALSE(thirdRan) << "Third Autofilter not called on time";
+
+    packet->Decorate(static_cast<int>(0));
+
+    ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
+    ASSERT_TRUE(secondRan) << "Second Autofilter not called on time";
+    ASSERT_TRUE(thirdRan) << "Third Autofilter not called on time";
+  }
+
+}
+
+TEST_F(AutoFilterSequencing, SimpleMultiLevelFilterAltitudeCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  bool firstRan;
+  bool secondRan;
+  bool thirdRan;
+
+  *factory += 3, [&firstRan, &secondRan, &thirdRan](const int&) {
+    ASSERT_FALSE(secondRan) << "Second Autofilter called before first";
+    ASSERT_FALSE(thirdRan) << "Third Autofilter called before first";
+    firstRan = true;
+  };
+
+  *factory += 2, [&secondRan, &thirdRan](const int&) {
+    ASSERT_FALSE(thirdRan) << "Third Autofilter called before first";
+    secondRan = true;
+  };
+
+  *factory += 1, [&thirdRan](const int&) {thirdRan = true;};
+
+  {
+    firstRan = false;
+    secondRan = false;
+    thirdRan = false;
+    factory->NewPacket()->Decorate(static_cast<int>(0));
+
+    ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
+    ASSERT_TRUE(secondRan) << "Second Autofilter not called on time";
+    ASSERT_TRUE(thirdRan) << "Third Autofilter not called on time";
+  }
+
+  {
+    firstRan = false;
+    secondRan = false;
+    thirdRan = false;
+    factory->NewPacket()->DecorateImmediate(static_cast<int>(0));
+
+    ASSERT_TRUE(firstRan) << "First Autofilter not called on time";
+    ASSERT_TRUE(secondRan) << "Second Autofilter not called on time";
+    ASSERT_TRUE(thirdRan) << "Third Autofilter not called on time";
+  }
+}
+
+struct FirstFilter {
+  static const int altitude = 2;
+
+  void AutoFilter(const int&, const char&, AutoPacket& packet) {
+    called = true;
+    EXPECT_FALSE(packet.Has<short>()) << "Second Filter called before first";
+  }
+
+  bool called = false;
+};
+
+struct SecondFilter {
+  static const int altitude = 1;
+
+  void AutoFilter(const int&, short& out) {
+    out = 0;
+    called = true;
+  }
+
+  bool called = false;
+};
+
+struct FirstFilterDeferred:
+public CoreThread
+{
+  static const int altitude = 2;
+
+  Deferred AutoFilter(const int&, const char&, AutoPacket& packet) {
+    called = true;
+    EXPECT_FALSE(packet.Has<short>()) << "Second Filter called before first";
+    return Deferred(this);
+  }
+
+  bool called = false;
+};
+
+struct SecondFilterDeferred:
+public CoreThread
+{
+  static const int altitude = 1;
+
+  Deferred AutoFilter(const int&, short& out) {
+    out = 0;
+    called = true;
+    return Deferred(this);
+  }
+
+  bool called = false;
+};
+
+TEST_F(AutoFilterSequencing, ClassAltitudeCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FirstFilter> first;
+  AutoRequired<SecondFilter> second;
+
+  {
+    auto packet = factory->NewPacket();
+
+    packet->Decorate(static_cast<int>(0));
+
+    packet->Decorate(static_cast<char>('a'));
+
+    packet->AddTeardownListener([=] () {
+      EXPECT_TRUE(first->called) << "First Autofilter not called on time";
+      EXPECT_TRUE(second->called) << "Second Autofilter not called on time";
+    });
+  }
+  AutoCurrentContext()->SignalShutdown(true);
+  AutoCurrentContext()->Wait();
+}
+
+TEST_F(AutoFilterSequencing, FirstDeferredClassAltitudeCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FirstFilterDeferred> first;
+  AutoRequired<SecondFilter> second;
+
+  {
+    auto packet = factory->NewPacket();
+
+    packet->Decorate(static_cast<int>(0));
+
+    packet->Decorate(static_cast<char>('a'));
+
+    packet->AddTeardownListener([=] () {
+      EXPECT_TRUE(first->called) << "First Autofilter not called on time";
+      EXPECT_TRUE(second->called) << "Second Autofilter not called on time";
+    });
+  }
+  AutoCurrentContext()->SignalShutdown(true);
+  AutoCurrentContext()->Wait();
+}
+
+TEST_F(AutoFilterSequencing, SecondDeferredClassAltitudeCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FirstFilter> first;
+  AutoRequired<SecondFilterDeferred> second;
+
+  {
+    auto packet = factory->NewPacket();
+
+    packet->Decorate(static_cast<int>(0));
+
+    packet->Decorate(static_cast<char>('a'));
+
+    packet->AddTeardownListener([=] () {
+      EXPECT_TRUE(first->called) << "First Autofilter not called on time";
+      EXPECT_TRUE(second->called) << "Second Autofilter not called on time";
+    });
+  }
+  AutoCurrentContext()->SignalShutdown(true);
+  AutoCurrentContext()->Wait();
+}
+
+TEST_F(AutoFilterSequencing, BothDeferredClassAltitudeCheck) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<FirstFilterDeferred> first;
+  AutoRequired<SecondFilterDeferred> second;
+
+  {
+    auto packet = factory->NewPacket();
+
+    packet->Decorate(static_cast<int>(0));
+
+    packet->Decorate(static_cast<char>('a'));
+
+    packet->AddTeardownListener([=] () {
+      EXPECT_TRUE(first->called) << "First Autofilter not called on time";
+      EXPECT_TRUE(second->called) << "Second Autofilter not called on time";
+    });
+  }
+
+  {
+    auto packet = factory->NewPacket();
+
+    packet->Decorate(static_cast<char>('a'));
+
+    packet->Decorate(static_cast<int>(0));
+
+    packet->AddTeardownListener([=] () {
+      EXPECT_TRUE(first->called) << "First Autofilter not called on time";
+      EXPECT_TRUE(second->called) << "Second Autofilter not called on time";
+    });
+  }
+
+  AutoCurrentContext()->SignalShutdown(true);
+  AutoCurrentContext()->Wait();
+}

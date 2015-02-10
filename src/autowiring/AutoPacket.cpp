@@ -96,7 +96,10 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
         throw std::runtime_error(ss.str());
       }
 
-      entry.m_subscribers.push_back(&satCounter);
+      // Maintain m_subscribers sorted by altitude in descending order
+      auto it = std::upper_bound(entry.m_subscribers.begin(), entry.m_subscribers.end(), &satCounter,
+                                 [](SatCounter* a, SatCounter* b){ return a->GetAltitude() > b->GetAltitude(); });
+      entry.m_subscribers.insert(it, &satCounter);
       if (entry.m_state == DispositionState::Satisfied)
         satCounter.Decrement();
     }
@@ -182,14 +185,60 @@ void AutoPacket::UpdateSatisfaction(const DecorationKey& info) {
 
     // Update satisfaction inside of lock
     DecorationDisposition& decoration = dFind->second;
-    for(SatCounter* satCounter : decoration.m_subscribers)
-      if(satCounter->Decrement())
-        callQueue.push_back(satCounter);
+
+    if (decoration.m_state != DispositionState::Satisfied) {
+      return;
+    }
+
+    // State parameters
+    // The maximum altitude which we have already decremented
+    int newMaxAltitude = decoration.m_maxAltitude;
+    // Flags to control loop logic
+    bool newMaxSet = false;
+    bool allCalled = true;
+
+    // This requires that the subscriber list be given in descending order of altitude
+    for(SatCounter* satCounter : decoration.m_subscribers) {
+      // In the initial segment (the counters which we have already decremented),
+      // we only wish to know if every satCounter has actually been called. If any have not
+      // we cannot proceed on to decrement any other altitudes.
+      if (satCounter->GetAltitude() >= decoration.m_maxAltitude) {
+        if (!satCounter->called) {
+          allCalled = false;
+        }
+      } else {
+        // First, break out if we have not called every filter of a higher altitude
+        if (!allCalled) {
+          break;
+        }
+
+        // At this point we are going to decrement counters at a new altitude, but we only want to
+        // decrement one new altitude
+        if (!newMaxSet) {
+          newMaxAltitude = satCounter->GetAltitude();
+          newMaxSet = true;
+        }
+
+        // If we have found a counter of an altitude lower than the new max, we are done looking
+        if (satCounter->GetAltitude() != newMaxAltitude) {
+          break;
+        }
+
+        // If we've made it this far, we know that we are safe to decrement and potentially call
+        // the satCounter
+        if(satCounter->Decrement()) {
+          callQueue.push_back(satCounter);
+        }
+      }
+    }
+    decoration.m_maxAltitude = newMaxAltitude;
   }
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
-  for (SatCounter* call : callQueue)
+  for (SatCounter* call : callQueue) {
+    call->called = true;
     call->GetCall()(call->GetAutoFilter(), *this);
+  }
 }
 
 void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos) {
@@ -199,8 +248,13 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   {
     std::lock_guard<std::mutex> lk(m_lock);
     for(size_t i = nInfos; i--;) {
+      pTypeSubs[i]->m_maxAltitude = (*pTypeSubs[i]->m_subscribers.begin())->GetAltitude();
       for(SatCounter* cur : pTypeSubs[i]->m_subscribers) {
         if(
+          // We only need to process things at the highest altitude, the lower
+          // altitudes will be handled by recursive calls to UpdateSatisfaction
+          cur->GetAltitude() == pTypeSubs[i]->m_maxAltitude &&
+
           // We only care about sat counters that aren't deferred--skip everyone else
           // Deferred calls will be too late.
           !cur->IsDeferred() &&
@@ -220,8 +274,10 @@ void AutoPacket::PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nI
   }
 
   // Make calls outside of lock, to avoid deadlock from decorations in methods
-  for (SatCounter* call : callQueue)
+  for (SatCounter* call : callQueue) {
+    call->called = true;
     call->GetCall()(call->GetAutoFilter(), *this);
+  }
 
   // Reset all counters, data in this call will not be available on return
   {
@@ -423,6 +479,7 @@ bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterDescriptorInp
         &typeid(AutoPacketFactory),
         inputs,
         false,
+        0,
         [] (const AnySharedPointer& obj, AutoPacket&) {
           auto stub = obj->as<SignalStub>();
 

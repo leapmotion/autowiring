@@ -143,3 +143,31 @@ struct has_autofilter {
     "Cannot define more than one AutoFilter method and all AutoFilter methods must be public"
   );
 };
+
+/// <summary>
+/// Reflection primitive which can be used to deted the presence of a static integer member named altitude.
+/// </summary>
+template <class T>
+struct has_altitude {
+  template<class U, class = typename std::enable_if<!std::is_member_pointer<decltype(&U::altitude)>::value>::type>
+  static std::true_type select(int);
+
+  template <class U>
+  static std::false_type select(...);
+
+  static const bool value = decltype(select<T>(0))::value;
+};
+
+/// <summary>
+/// Reflection primiitive which can extract the value of a type's altitude member, and gives zero in the case
+/// that no such member exists.
+/// </summary>
+template<typename T, bool Selector = has_altitude<T>::value>
+struct autofilter_altitude {
+  static const int value = T::altitude;
+};
+
+template<typename T>
+struct autofilter_altitude<T, false> {
+  static const int value = 0;
+};
