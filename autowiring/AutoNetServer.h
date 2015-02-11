@@ -22,6 +22,8 @@ public:
 /// </summary>
 class AutoNetTransport {
 public:
+  virtual ~AutoNetTransport(void){}
+
   /// <summary>
   /// Causes the transport to begin servicing user requests
   /// </summary>
