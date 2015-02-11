@@ -91,11 +91,6 @@ protected:
   void AddSatCounter(SatCounter& satCounter);
 
   /// <summary>
-  /// Removes all AutoFilter argument information for a recipient
-  /// </summary>
-  void RemoveSatCounter(const SatCounter& satCounter);
-
-  /// <summary>
   /// Marks the specified entry as being unsatisfiable
   /// </summary>
   void MarkUnsatisfiable(const DecorationKey& key);
