@@ -53,11 +53,12 @@ protected:
   /// Invoked by the base class Stop() method. Override this method to perform
   /// any needed cleanup.
   /// </summary>
+  /// <param name="graceful">
+  /// Specifies whether the runnable should stop normally or whether it should exit as quickly as possible.
+  /// </param>
   /// <remarks>
-  /// This method will be called at most once. 
+  /// This method will be called at most once from a passive level.
   /// </remarks>
-  /// <param name="graceful">Specifies whether the runnable should stop normally or whether
-  /// it should exit as quickly as possible.</param>
   virtual void OnStop(bool graceful) {};
 
   /// <summary>
