@@ -5,6 +5,7 @@
 namespace std {
   using autoboost::atomic;
   using autoboost::atomic_flag;
+  using autoboost::atomic_thread_fence;
   using autoboost::memory_order_relaxed;
   using autoboost::memory_order_consume;
   using autoboost::memory_order_acquire;

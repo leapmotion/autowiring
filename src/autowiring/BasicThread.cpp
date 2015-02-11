@@ -71,11 +71,7 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   m_running = false;
 
   // Need to ensure that "stop" and "running" are actually updated in memory before we mark "complete"
-#if autowiring_USE_LIBCXX
   std::atomic_thread_fence(std::memory_order_release);
-#else
-  (std::lock_guard<std::mutex>)state->m_lock;
-#endif
   m_completed = true;
 
   // Tell our CoreRunnable parent that we're done to ensure that our reference count will be cleared.
