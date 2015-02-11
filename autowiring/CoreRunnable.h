@@ -38,26 +38,27 @@ protected:
   const std::shared_ptr<CoreObject>& GetOutstanding(void) const;
 
   /// <summary>
-  /// Invoked by the Start() method. Override this method to perform
-  /// any needed setup;
+  /// Invoked by the Start() method. Override this method to perform any needed setup
   /// </summary>
-  /// <returns>True if processing has started, false otherwise. When overriding, returning false
-  /// will shut down the runnable immediately.</returns>
+  /// <returns>
+  /// True if processing has started, false otherwise. When overriding, returning false will shut down the
+  /// runnable immediately.
+  /// </returns>
   /// <remarks>
-  /// This method will be called at most once.  Returning false from this method will result in an immediate invocation
-  /// of the OnStop(false).
+  /// This method will be called at most once.  Returning false from this method will result in an immediate
+  /// invocation of OnStop(false).
   /// </remarks>
   virtual bool OnStart(void) { return false; };
 
   /// <summary>
-  /// Invoked by the base class Stop() method. Override this method to perform
-  /// any needed cleanup.
+  /// Invoked by the base class Stop() method. Override this method to perform any needed cleanup.
   /// </summary>
+  /// <param name="graceful">
+  /// Specifies whether the runnable should stop normally or whether it should exit as quickly as possible.
+  /// </param>
   /// <remarks>
-  /// This method will be called at most once. 
+  /// This method will be called at most once from a passive level.
   /// </remarks>
-  /// <param name="graceful">Specifies whether the runnable should stop normally or whether
-  /// it should exit as quickly as possible.</param>
   virtual void OnStop(bool graceful) {};
 
   /// <summary>

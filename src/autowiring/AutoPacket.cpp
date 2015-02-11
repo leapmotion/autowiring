@@ -121,26 +121,6 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
   }
 }
 
-void AutoPacket::RemoveSatCounter(const SatCounter& satCounter) {
-  for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
-    DecorationKey key(*pCur->ti, pCur->tshift);
-
-    DecorationDisposition* entry = &m_decorations[key];
-
-    // Decide what to do with this entry:
-    if (pCur->is_input) {
-      assert(!entry->m_subscribers.empty());
-      assert(&satCounter == entry->m_subscribers.back());
-      entry->m_subscribers.pop_back();
-    }
-    if (pCur->is_output) {
-      assert(!entry->m_publishers.empty());
-      assert(&satCounter == entry->m_publishers.back());
-      entry->m_publishers.pop_back();
-    }
-  }
-}
-
 void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
   // Perform unsatisfaction logic
   if (key.tshift) {
