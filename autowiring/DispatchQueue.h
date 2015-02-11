@@ -56,6 +56,8 @@ protected:
   // Notice when the dispatch queue has been updated:
   std::condition_variable m_queueUpdated;
 
+  // True if DispatchQueue::Abort has been called.  This will cause the dispatch queue's remaining entries
+  // to be dumped and prevent the introduction of new entries to the queue.
   bool m_aborted;
 
   /// <summary>
