@@ -473,3 +473,47 @@ TEST_F(CoreThreadTest, VerifyThreadGetsOnStop) {
   EXPECT_TRUE(bsoosh->got_stopped) << "BasicThread instance did not receive an OnStop notification as expected";
   EXPECT_TRUE(ctoosh->got_stopped) << "CoreThread instance did not receive an OnStop notification as expected";
 }
+
+class MakesPassiveCallInOnStop:
+  public CoreThread
+{
+public:
+  // Run operation is left empty, we want our thread to stop right after it starts
+  void Run(void) override {}
+
+  bool bStartExcepted = false;
+  bool bStopExcepted = false;
+
+  bool OnStart(void) override {
+    try {
+      std::lock_guard<std::mutex> lk(GetLock());
+    }
+    catch (...) {
+      bStartExcepted = true;
+    }
+    return CoreThread::OnStart();
+  }
+
+  void OnStop(void) override {
+    try {
+      // Causes an already-obtained exception if we are in rundown
+      std::lock_guard<std::mutex> lk(GetLock());
+    }
+    catch (...) {
+      bStopExcepted = true;
+    }
+  }
+};
+
+TEST_F(CoreThreadTest, LightsOutPassiveCall) {
+  AutoCurrentContext ctxt;
+  AutoRequired<MakesPassiveCallInOnStop> mpc;
+  ctxt->Initiate();
+  
+  // Wait for bad things to happen
+  ASSERT_TRUE(mpc->WaitFor(std::chrono::seconds(5))) << "Passive call thread took too long to quit";
+
+  // Verify no bad things happened:
+  ASSERT_FALSE(mpc->bStartExcepted) << "Exception occurred during an attempt to elevate to synchronized level from CoreThread::OnStart";
+  ASSERT_FALSE(mpc->bStopExcepted) << "Exception occurred during an attempt to elevate to synchronized level from CoreThread::OnStop";
+}

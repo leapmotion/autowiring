@@ -5,6 +5,7 @@
 #include "BasicThreadStateBlock.h"
 #include "ContextEnumerator.h"
 #include "fast_pointer_cast.h"
+#include ATOMIC_HEADER
 
 BasicThread::BasicThread(const char* pName):
   ContextMember(pName),
@@ -65,14 +66,13 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   // Perform a manual notification of teardown listeners
   NotifyTeardownListeners();
 
-  // Notify everyone that we're completed:
-  std::lock_guard<std::mutex> lk(state->m_lock);
+  // Transition to stopped state.  Synchronization not required, transitions are all one-way
   m_stop = true;
-  m_completed = true;
   m_running = false;
 
-  // No longer running, we MUST release the thread pointer to ensure proper teardown order
-  state->m_thisThread.detach();
+  // Need to ensure that "stop" and "running" are actually updated in memory before we mark "complete"
+  std::atomic_thread_fence(std::memory_order_release);
+  m_completed = true;
 
   // Tell our CoreRunnable parent that we're done to ensure that our reference count will be cleared.
   Stop(false);
@@ -86,8 +86,17 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   // will destroy the entire underlying context.
   refTracker.reset();
 
-  // Notify other threads that we are done.  At this point, any held references that might
-  // still exist are held by entities other than ourselves.
+  // MUST detach here.  By this point in the application, it's possible that `this` has already been
+  // deleted.  If that's the case, `state.unique()` is true, and when we go out of scope, the destructor
+  // for m_thisThread will be invoked.  If that happens, the destructor will block for the held thread
+  // to quit--and, in this case, the thread which is being held is actually us.  Blocking on it, in that
+  // case, would be a trivial deadlock.  So, because we're about to quit anyway, we simply detach the
+  // thread and prepare for final teardown operations.
+  state->m_thisThread.detach();
+
+  // Notify other threads that we are done.  At this point, any held references that might still exist
+  // notification must happen from a synchronized level in order to ensure proper ordering.
+  std::lock_guard<std::mutex> lk(state->m_lock);
   state->m_stateCondition.notify_all();
 }
 
