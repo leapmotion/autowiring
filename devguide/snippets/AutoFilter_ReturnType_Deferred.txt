@@ -1,0 +1,5 @@
+class DeferredFilter : public CoreThread{
+    Deferred AutoFilter(T input, W& output){
+        return Deferred(this);
+    }
+};

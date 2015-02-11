@@ -1,0 +1,29 @@
+class PrimeGenerator : public BasicThread{
+    public:
+        void Run() override {
+            unsigned long int test = 2;
+            while (!ShouldStop())
+            {
+                for (unsigned long int i = test/2; i > 0 ; --i) {
+                    if (i == 1) {
+                        std::chrono::milliseconds kernelTime, userTime;
+                        this->GetThreadTimes(kernelTime, userTime);
+                        std::cout << "Calculated primes up to: " << test
+                                  << " in " << (&kernelTime)->count() << " kernel ms "
+                                  << "and " << (&userTime)->count() << " user ms."
+                                  << std::endl;
+                    }
+                    if (test % i == 0) {break;}
+                }
+                test++;
+            }
+        }
+};
+
+AutoCreateContext ctxt;
+CurrentContextPusher pusher(ctxt);
+
+AutoRequired<PrimeGenerator> timedPrimer;
+ctxt->Initiate();
+ctxt->Wait(std::chrono::milliseconds(100));
+ctxt->SignalShutdown(true);

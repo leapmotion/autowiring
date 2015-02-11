@@ -14,36 +14,40 @@
   #define BOOST_NO_CXX11_HDR_INITIALIZER_LIST
 #endif
 
-// Need to redefine this namespace so we don't create linker problems.  Such problems may be
-// created if our static library is imported by another project that uses an incompatible
-// version of websocketpp.
-#define websocketpp websocketpp_autonet
-#include <websocketpp/server.hpp>
-#include <websocketpp/config/asio_no_tls.hpp>
-
 struct ObjectTraits;
 struct TypeIdentifierBase;
 
+// Protocol layer for AutoNet
 class AutoNetServerImpl:
   public AutoNetServer,
-  public virtual AutowiringEvents
+  public AutowiringEvents,
+  public AutoNetTransportHandler
 {
 public:
-  AutoNetServerImpl();
-  ~AutoNetServerImpl();
+  /// <summary>
+  /// Constructs an AutoNet server with the default HTTP transport mechanism
+  /// </summary>
+  AutoNetServerImpl(void);
 
-  //Types
-  typedef websocketpp::server<websocketpp::config::asio> t_server;
-  typedef t_server::message_ptr message_ptr;
+  /// <summary>
+  /// Constructs an AutoNet server with the specified transport
+  /// </summary>
+  AutoNetServerImpl(std::unique_ptr<AutoNetTransport>&& transport);
+  ~AutoNetServerImpl();
+  
+  // Handle websocket messages
+  void OnOpen(connection_hdl handle) override {
+  }
+  void OnClose(connection_hdl handle) override {
+    *this += [this, handle] {
+      this->m_Subscribers.erase(handle);
+    };
+  }
+  void OnMessage(AutoNetTransportHandler::connection_hdl hdl, const std::string& payload) override;
 
   // Functions from BasicThread
   virtual void Run(void) override;
   virtual void OnStop(void) override;
-
-  // Server Handler functions
-  void OnOpen(websocketpp::connection_hdl hdl);
-  void OnClose(websocketpp::connection_hdl hdl);
-  void OnMessage(websocketpp::connection_hdl hdl, message_ptr p_message);
 
   // AutoNetServer overrides:
   void Breakpoint(std::string name) override;
@@ -79,7 +83,7 @@ protected:
   /// Client callback with same number of arguments passed here will be called
   /// </remarks>
   template<typename... Args>
-  void SendMessage(websocketpp::connection_hdl hdl, const char* p_type, Args&&... args){
+  void SendMessage(AutoNetTransportHandler::connection_hdl hdl, const char* p_type, Args&&... args) {
     using json11::Json;
 
     Json msg = Json::object{
@@ -87,7 +91,7 @@ protected:
         {"args", Json::array{args...}}
     };
 
-    m_Server.send(hdl, msg.dump(), websocketpp::frame::opcode::text);
+    m_transport->Send(hdl, msg.dump());
   }
 
   /// <summary>
@@ -97,7 +101,7 @@ protected:
   /// <param name="args...">An arg to be passed to client side event handler</param>
   template<typename ...Args>
   void BroadcastMessage(const char* p_type, Args&&... args) {
-    for(websocketpp::connection_hdl ptr : m_Subscribers)
+    for(auto ptr : m_Subscribers)
       SendMessage(ptr, p_type, std::forward<Args>(args)...);
   }
   
@@ -108,13 +112,13 @@ protected:
   /// Called when a "Subscribe" event is sent from a client
   /// </summary>
   /// <param name="client">Client that sent event</param>
-  void HandleSubscribe(websocketpp::connection_hdl hdl);
+  void HandleSubscribe(AutoNetTransportHandler::connection_hdl hdl);
 
   /// <summary>
   /// Called when a "Unsubscribe" event is sent from a client
   /// </summary>
   /// <param name="client">Client that sent event</param>
-  void HandleUnsubscribe(websocketpp::connection_hdl hdl);
+  void HandleUnsubscribe(AutoNetTransportHandler::connection_hdl hdl);
 
   /// <summary>
   /// Assigns each context a unique ID number
@@ -134,7 +138,7 @@ protected:
   *******************************************/
 
   // Set of all subscribers
-  std::set<websocketpp::connection_hdl, std::owner_less<websocketpp::connection_hdl>> m_Subscribers;
+  std::set<AutoNetTransportHandler::connection_hdl, std::owner_less<AutoNetTransportHandler::connection_hdl>> m_Subscribers;
 
   // one-to-one map of contexts to integers
   std::map<CoreContext*, int> m_ContextIDs;
@@ -158,13 +162,13 @@ protected:
   std::mutex m_breakpoint_mutex;
   std::condition_variable m_breakpoint_cv;
   std::set<std::string> m_breakpoints;
-
-  // The actual server
-  t_server m_Server;
-  const int m_Port; // Port to listen on
+  
+  // Transport layer for AutoNet
+  std::unique_ptr<AutoNetTransport> m_transport;
 };
 
 /// <summary>
 /// Equivalent to new AutoNetServerImpl
 /// </summary>
+AutoNetServer* NewAutoNetServerImpl(std::unique_ptr<AutoNetTransport>);
 AutoNetServer* NewAutoNetServerImpl(void);

@@ -198,7 +198,7 @@ public:
   /// </summary>
   template<class T>
   const T& Get(int tshift=0) const {
-    static_assert(!std::is_same<T, AnySharedPointer>::value, "Oops!");
+    static_assert(!std::is_same<T, AnySharedPointer>::value, "AnySharedPointer is not permitted to be directly decorated on an AutoPacket");
 
     const T* retVal;
     if (!Get(retVal, tshift))

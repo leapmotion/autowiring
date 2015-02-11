@@ -1,0 +1,26 @@
+AutoCreateContext ctxt;
+CurrentContextPusher pusher(ctxt);
+
+class FooThread : public BasicThread{
+    public:
+        void OnStop(bool graceful) override{
+            std::cout << "OnStop" << std::endl;
+        }
+        void Run() override {
+            unsigned long int test = 2;
+            while (!ShouldStop())
+            {
+                for (unsigned long int i = test/2; i > 0 ; --i) {
+                    if (i == 1) {
+                        std::cout << "Prime: " << test << std::endl;
+                    }
+                    if (test % i == 0) {break;}
+                }
+                test++;
+            }
+            std::cout << "Should stop " << std::endl;
+        }
+};
+ctxt->Initiate();
+AutoRequired<FooThread> foo;
+foo->Stop(true);

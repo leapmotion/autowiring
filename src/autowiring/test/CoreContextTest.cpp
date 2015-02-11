@@ -237,39 +237,116 @@ TEST_F(CoreContextTest, InitiateCausesDelayedHold) {
 TEST_F(CoreContextTest, InitiateOrder) {
   AutoCurrentContext testCtxt;
   testCtxt->Initiate();
+  // Initiate inner to outer
   {
     auto outerCtxt = testCtxt->Create<void>();
     auto middleCtxt = outerCtxt->Create<void>();
     auto innerCtxt = middleCtxt->Create<void>();
     
-    middleCtxt->Initiate();
     innerCtxt->Initiate();
+    middleCtxt->Initiate();
     outerCtxt->Initiate();
     
-    EXPECT_TRUE(outerCtxt->IsRunning());
-    EXPECT_TRUE(middleCtxt->IsRunning());
-    EXPECT_TRUE(innerCtxt->IsRunning());
+    EXPECT_TRUE(outerCtxt->IsRunning()) << "Context not running after begin initiated";
+    EXPECT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
+    EXPECT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
     
     outerCtxt->SignalShutdown(true);
-    middleCtxt->SignalShutdown(true);
-    innerCtxt->SignalShutdown(true);
   }
   
+  // Initiate outer to inner
   {
     auto outerCtxt = testCtxt->Create<void>();
     auto middleCtxt = outerCtxt->Create<void>();
     auto innerCtxt = middleCtxt->Create<void>();
     
-    innerCtxt->Initiate();
+    outerCtxt->Initiate();
     middleCtxt->Initiate();
+    innerCtxt->Initiate();
+    
+    EXPECT_TRUE(outerCtxt->IsRunning()) << "Context not running after begin initiated";
+    EXPECT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
+    EXPECT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
+    
+    outerCtxt->SignalShutdown(true);
+  }
+  
+  // Initiate middle, inner, then outer
+  {
+    auto outerCtxt = testCtxt->Create<void>();
+    auto middleCtxt = outerCtxt->Create<void>();
+    auto innerCtxt = middleCtxt->Create<void>();
+    
+    middleCtxt->Initiate();
+    innerCtxt->Initiate();
     outerCtxt->Initiate();
     
-    EXPECT_TRUE(outerCtxt->IsRunning());
-    EXPECT_TRUE(middleCtxt->IsRunning());
-    EXPECT_TRUE(innerCtxt->IsRunning());
+    EXPECT_TRUE(outerCtxt->IsRunning()) << "Context not running after begin initiated";
+    EXPECT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
+    EXPECT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
     
-    innerCtxt->SignalShutdown(true);
-    middleCtxt->SignalShutdown(true);
+    outerCtxt->SignalShutdown(true);
+  }
+}
+
+TEST_F(CoreContextTest, InitiateMultipleChildren) {
+  AutoCurrentContext testCtxt;
+  testCtxt->Initiate();
+  // Initiate all children
+  {
+    auto outerCtxt = testCtxt->Create<void>();
+    auto child1 = outerCtxt->Create<void>();
+    auto child2 = outerCtxt->Create<void>();
+    auto child3 = outerCtxt->Create<void>();
+
+    child1->Initiate();
+    child2->Initiate();
+    child3->Initiate();
+
+    outerCtxt->Initiate();
+
+    EXPECT_TRUE(child1->IsRunning());
+    EXPECT_TRUE(child2->IsRunning());
+    EXPECT_TRUE(child3->IsRunning());
+
+    outerCtxt->SignalShutdown(true);
+  }
+
+  // Don't initiate middle child
+  {
+    auto outerCtxt = testCtxt->Create<void>();
+    auto child1 = outerCtxt->Create<void>();
+    auto child2 = outerCtxt->Create<void>();
+    auto child3 = outerCtxt->Create<void>();
+
+    child1->Initiate();
+    child3->Initiate();
+
+    outerCtxt->Initiate();
+
+    EXPECT_TRUE(child1->IsRunning());
+    EXPECT_FALSE(child2->IsInitiated());
+    EXPECT_TRUE(child3->IsRunning());
+
+    outerCtxt->SignalShutdown(true);
+  }
+
+  // Don't initiate middle child and initiate parent first
+  {
+    auto outerCtxt = testCtxt->Create<void>();
+    auto child1 = outerCtxt->Create<void>();
+    auto child2 = outerCtxt->Create<void>();
+    auto child3 = outerCtxt->Create<void>();
+
+    outerCtxt->Initiate();
+
+    child1->Initiate();
+    child3->Initiate();
+
+    EXPECT_TRUE(child1->IsRunning());
+    EXPECT_FALSE(child2->IsInitiated());
+    EXPECT_TRUE(child3->IsRunning());
+
     outerCtxt->SignalShutdown(true);
   }
 }
