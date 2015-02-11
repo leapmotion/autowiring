@@ -521,10 +521,14 @@ public:
   template<class Sigil>
   bool Is(void) const { return GetSigilType() == typeid(Sigil); }
 
+  /// <summary>
   /// The first child in the set of this context's children.
+  /// </summary>
   std::shared_ptr<CoreContext> FirstChild(void) const;
 
+  /// <summary>
   /// The next context sharing the same parent, or null if this is the last entry in the list
+  /// </summary>
   std::shared_ptr<CoreContext> NextSibling(void) const;
 
   /// <summary>
