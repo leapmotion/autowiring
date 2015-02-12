@@ -83,7 +83,7 @@ TEST_F(AutoFilterCollapseRulesTest, SharedPtrCollapse) {
     auto packet = factory->NewPacket();
     packet->DecorateImmediate(constr_int);
     ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
-    ASSERT_EQ(0, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
+    ASSERT_EQ(1, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
   }
   constr_filter->m_called = 0;
   shared_filter->m_called = 0;
@@ -129,14 +129,21 @@ TEST_F(AutoFilterCollapseRulesTest, ConstCollapse) {
 
 TEST_F(AutoFilterCollapseRulesTest, SharedPointerAliasingRules) {
   AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<FilterGen<std::shared_ptr<const int>>> genFilter1;
-  AutoRequired<FilterGen<int>> genFilter2;
+  bool gen1Called = false;
+  bool gen2Called = false;
+
+  *factory += [&gen1Called](AutoPacket&, std::shared_ptr<const int>) {
+    gen1Called = true;
+  };
+  *factory += [&gen2Called](AutoPacket&, int) {
+    gen2Called = true;
+  };
 
   auto packet = factory->NewPacket();
   packet->Decorate<int>(55);
 
-  ASSERT_EQ(1UL, genFilter1->m_called) << "AutoFilter accepting a shared pointer was not called as expected";
-  ASSERT_EQ(1UL, genFilter2->m_called) << "AutoFilter accepting a decorated type was not called as expected";
+  ASSERT_TRUE(gen1Called) << "AutoFilter accepting a shared pointer was not called as expected";
+  ASSERT_TRUE(gen2Called) << "AutoFilter accepting a decorated type was not called as expected";
 }
 
 class ProducesSharedPointer {
@@ -206,4 +213,24 @@ TEST_F(AutoFilterCollapseRulesTest, CtorRequiredWPI) {
   // This is enough to kick off the AutoFilter above and cause an exception, if one is going to occur
   AutoRequired<ConstructsWantsAutoPacketInput>();
   AutoRequired<AutoPacketFactory>()->NewPacket();
+}
+
+TEST_F(AutoFilterCollapseRulesTest, UnsatisfiableDecoration) {
+  AutoRequired<AutoPacketFactory> factory;
+
+  bool bInvoked = false;
+  *factory += [&](std::shared_ptr<const Decoration<0>> dec) {
+    ASSERT_FALSE(dec) << "Decoration was attached to the packet when it should not have been";
+    bInvoked = true;
+  };
+  *factory += [](const Decoration<0>&) {
+    FAIL() << "A filter was invoked when it should have been unsatisfiable";
+  };
+
+  // Kick off what should be a launch of the shared pointer-accepting input
+  auto packet = factory->NewPacket();
+  packet->Decorate(std::shared_ptr<Decoration<0>>());
+
+  // Ensure the correct decoration was invoked
+  ASSERT_TRUE(bInvoked) << "AutoFilter was not invoked in an unsatisfiable case as expected";
 }

@@ -45,6 +45,7 @@ set(AutowiringTest_SRCS
   SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.cpp
   TypeRegistryTest.cpp
+  SatisfiabilityTest.cpp
   ScopeTest.cpp
   SnoopTest.cpp
   TupleTest.cpp

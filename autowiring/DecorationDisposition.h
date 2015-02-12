@@ -9,25 +9,36 @@
 struct SatCounter;
 
 struct DecorationKey {
+  DecorationKey(void) :
+    ti(nullptr),
+    is_shared(false),
+    tshift(-1)
+  {}
+
   DecorationKey(const DecorationKey& rhs) :
     ti(rhs.ti),
+    is_shared(rhs.is_shared),
     tshift(rhs.tshift)
   {}
   
-  explicit DecorationKey(const std::type_info& ti, int tshift = 0) :
-    ti(ti),
+  explicit DecorationKey(const std::type_info& ti, bool is_shared, int tshift) :
+    ti(&ti),
+    is_shared(is_shared),
     tshift(tshift)
   {}
   
   // The type index
-  const std::type_info& ti;
+  const std::type_info* ti;
+
+  // True if this decoration can be used with AutoFilters that accept a shared_ptr input type
+  bool is_shared;
   
   // Zero refers to a decoration created on this packet, a positive number [tshift] indicates
   // a decoration attached [tshift] packets ago.
   int tshift;
   
   bool operator==(const DecorationKey& rhs) const {
-    return ti == rhs.ti && tshift == rhs.tshift;
+    return ti == rhs.ti && is_shared == rhs.is_shared && tshift == rhs.tshift;
   }
 };
 
@@ -35,10 +46,13 @@ namespace std {
   template<>
   struct hash<DecorationKey> {
     size_t operator()(const DecorationKey& key) const {
+      return
+        key.tshift +
+        (key.is_shared ? 0x80000 : 0x70000) +
 #if AUTOWIRING_USE_LIBCXX
-      return key.ti.hash_code() + key.tshift;
+        key.ti->hash_code();
 #else
-      return std::type_index(key.ti).hash_code() + key.tshift;
+        std::type_index(*key.ti).hash_code();
 #endif
     }
   };
@@ -46,9 +60,20 @@ namespace std {
 
 // The possible states for a DecorationDisposition
 enum class DispositionState {
+  // No decorations attached
   Unsatisfied,
+
+  // Some decorations present, but not all of them.  Cannot proceed.
   PartlySatisfied,
+
+  // Everything attached, ready to go
   Satisfied,
+
+  // Unsatisfiable, and the callers on this decoration cannot accept a non-null
+  // entry--IE, they accept const references as inputs.
+  UnsatisfiableNoCall,
+
+  // This decoration will never be satisfied.  Calls are generated to the
   Unsatisfiable
 };
 
@@ -57,62 +82,26 @@ enum class DispositionState {
 /// </remarks>
 struct DecorationDisposition
 {
-#if AUTOWIRING_USE_LIBCXX
-  DecorationDisposition(DecorationDisposition&&) = delete;
-  void operator=(DecorationDisposition&&) = delete;
-#else
-  // The methods below are needed for c++98 builds
-  DecorationDisposition(DecorationDisposition&& source) :
-    m_decorations(source.m_decorations),
-    m_pImmediate(source.m_pImmediate),
-    m_publishers(source.m_publishers),
-    m_state(source.m_state)
-  {}
-  DecorationDisposition& operator=(DecorationDisposition&& source) {
-    m_decorations = std::move(source.m_decorations);
-    m_pImmediate = source.m_pImmediate;
-    source.m_pImmediate = nullptr;
-    m_publishers = std::move(source.m_publishers);
-    m_state = source.m_state;
-    return *this;
-  }
-#endif //AUTOWIRING_USE_LIBCXX
-
   DecorationDisposition(void) :
-    m_type(nullptr),
     m_pImmediate(nullptr),
     m_state(DispositionState::Unsatisfied)
   {}
 
   DecorationDisposition(const DecorationDisposition& source) :
-    m_type(source.m_type),
+    m_decorations(source.m_decorations),
     m_pImmediate(source.m_pImmediate),
     m_publishers(source.m_publishers),
     m_subscribers(source.m_subscribers),
     m_state(source.m_state)
   {}
-
-  DecorationDisposition& operator=(const DecorationDisposition& source) {
-    m_type = source.m_type;
-    m_pImmediate = source.m_pImmediate;
-    m_publishers = source.m_publishers;
-    m_subscribers = source.m_subscribers;
-    m_state = source.m_state;
-    return *this;
-  }
-
-private:
-  // Destructured key for this decoration. Use accessor functions to access
-  // This is needed because DecorationKey doesn't have a default constructor
-  const std::type_info* m_type;
-  int m_tshift;
   
-public:
   // The decoration proper--potentially, this decoration might be from a prior execution of this
   // packet.  In the case of immediate decorations, this value will be invalid.
+  // Valid if and only if is_shared is false.
   std::vector<AnySharedPointer> m_decorations;
 
-  // A pointer to the immediate decorations, if one is specified, or else nullptr
+  // A pointer to the immediate decorations, if one is specified, or else nullptr.
+  // Valid if and only if is_shared is true.
   const void* m_pImmediate;
 
   // Providers for this decoration, where it can be statically inferred.  Note that a provider for
@@ -126,20 +115,17 @@ public:
   // The current state of this disposition
   DispositionState m_state;
   
-  // Set the key that identifies this decoration
-  void SetKey(const DecorationKey& key) {
-    m_type = &key.ti;
-    m_tshift = key.tshift;
-  }
-  
-  // Get the key that identifies this decoration
-  DecorationKey GetKey(void) const {
-    assert(m_type);
-    return DecorationKey(*m_type, m_tshift);
-  }
-  
-  operator bool() {
-    return !!m_type;
+  /// <returns>
+  /// True if all publishers have run on this disposition
+  /// </summary>
+  /// <remarks>
+  /// Publication is complete automatically on this type if there are no statically known publishers,
+  /// and at least one decoration has been attached to this disposition.
+  /// </remarks>
+  bool IsPublicationComplete(void) const {
+    return
+      !m_decorations.empty() &&
+      m_decorations.size() >= m_publishers.size();
   }
 
   void Reset(void) {
