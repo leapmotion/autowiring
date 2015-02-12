@@ -81,7 +81,7 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
   packet.AddTeardownListener([this, &packet] () {
     for (auto& cur : packet.GetDecorations()) {
       auto& decoration = cur.second;
-      auto type = &decoration.GetKey().ti;
+      auto type = cur.first.ti;
 
       for (auto& publisher : decoration.m_publishers) {
         if (!publisher->remaining) {
