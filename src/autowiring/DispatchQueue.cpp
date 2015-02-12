@@ -73,6 +73,10 @@ void DispatchQueue::Abort(void) {
 
 bool DispatchQueue::DispatchEvent(void) {
   std::unique_lock<std::mutex> lk(m_dispatchLock);
+
+  // Update queue with delayed events that are ready
+  PromoteReadyEventsUnsafe();
+
   if (m_dispatchQueue.empty())
     return false;
 
