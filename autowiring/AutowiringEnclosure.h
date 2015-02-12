@@ -80,6 +80,7 @@ public:
 
     // Now make it current and let the test run:
     create->SetCurrent();
+    create->Initiate();
   }
 
   void OnTestEnd(const testing::TestInfo& info) override {
