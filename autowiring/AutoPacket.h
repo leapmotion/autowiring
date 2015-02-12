@@ -591,7 +591,7 @@ template<class T>
 bool AutoPacket::Get(const std::shared_ptr<T>*& out) const {
   static_assert(!std::is_const<T>::value, "Overload resolution selected an incorrect version of Get");
 
-  const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(auto_id<T>::key()));
+  const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(auto_id<T>::key(), true, 0));
   if (!pDisposition || pDisposition->m_decorations.size() != 1) {
     out = nullptr;
     return false;
