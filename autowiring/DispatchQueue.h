@@ -63,7 +63,11 @@ protected:
   /// <summary>
   /// Moves all ready events from the delayed queue into the dispatch queue
   /// </summary>
-  void PromoteReadyEventsUnsafe(void);
+  /// <returns>True if at least one dispatcher was promoted</returns>
+  bool PromoteReadyDispatchersUnsafe(void);
+
+  // Identical to PromoteReadyDispatchersUnsafe, invoke that method instead
+  void DEPRECATED(PromoteReadyEventsUnsafe(void), "Superceded by PromoteReadyDispatchersUnsafe") { PromoteReadyDispatchersUnsafe(); }
 
   /// <summary>
   /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
@@ -132,6 +136,9 @@ protected:
   /// Similar to WaitForEvent, but does not block
   /// </summary>
   /// <returns>True if an event was dispatched, false if the queue was empty when checked</returns>
+  /// <remarks>
+  /// If the dispatch queue is empty, this method will check the delayed dispatch queue.
+  /// </remarks>
   bool DispatchEvent(void);
 
   /// <summary>
