@@ -63,7 +63,11 @@ protected:
   /// <summary>
   /// Moves all ready events from the delayed queue into the dispatch queue
   /// </summary>
-  void PromoteReadyEventsUnsafe(void);
+  /// <returns>True if at least one dispatcher was promoted</returns>
+  bool PromoteReadyDispatchersUnsafe(void);
+
+  // Identical to PromoteReadyDispatchersUnsafe, invoke that method instead
+  void DEPRECATED(PromoteReadyEventsUnsafe(void), "Superceded by PromoteReadyDispatchersUnsafe") { PromoteReadyDispatchersUnsafe(); }
 
   /// <summary>
   /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
@@ -132,32 +136,22 @@ protected:
   /// Similar to WaitForEvent, but does not block
   /// </summary>
   /// <returns>True if an event was dispatched, false if the queue was empty when checked</returns>
+  /// <remarks>
+  /// If the dispatch queue is empty, this method will check the delayed dispatch queue.
+  /// </remarks>
   bool DispatchEvent(void);
 
   /// <summary>
   /// Similar to DispatchEvent, but will attempt to dispatch all events currently queued
   /// </summary>
   /// <returns>The total number of events dispatched</returns>
-  int DispatchAllEvents(void) {
-    int retVal = 0;
-    while(DispatchEvent())
-      retVal++;
-    return retVal;
-  }
+  int DispatchAllEvents(void);
 
 public:
   /// <summary>
   /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>
-  void AddExisting(DispatchThunkBase* pBase) {
-    std::unique_lock<std::mutex> lk(m_dispatchLock);
-    if(m_dispatchQueue.size() >= m_dispatchCap)
-      return;
-
-    m_dispatchQueue.push_back(pBase);
-    m_queueUpdated.notify_all();
-    OnPended(std::move(lk));
-  }
+  void AddExisting(DispatchThunkBase* pBase);
 
   /// <summary>
   /// Recommends a point in time to wake up to check for events
@@ -216,9 +210,7 @@ public:
   /// <summary>
   /// Overload for absolute-time based delayed dispatch thunk
   /// </summary>
-  DispatchThunkDelayedExpression operator+=(std::chrono::steady_clock::time_point rhs) {
-    return DispatchThunkDelayedExpression(this, rhs);
-  }
+  DispatchThunkDelayedExpression operator+=(std::chrono::steady_clock::time_point rhs);
 
   /// <summary>
   /// Directly pends a delayed dispatch thunk
@@ -226,18 +218,7 @@ public:
   /// <remarks>
   /// This overload will always succeed and does not consult the dispatch cap
   /// </remarks>
-  void operator+=(DispatchThunkDelayed&& rhs) {
-    std::lock_guard<std::mutex> lk(m_dispatchLock);
-
-    m_delayedQueue.push(std::forward<DispatchThunkDelayed>(rhs));
-    if(
-      m_delayedQueue.top().GetReadyTime() == rhs.GetReadyTime() &&
-      m_dispatchQueue.empty()
-    )
-      // We're becoming the new next-to-execute entity, dispatch queue currently empty, trigger wakeup
-      // so our newly pended delay thunk is eventually processed.
-      m_queueUpdated.notify_all();
-  }
+  void operator+=(DispatchThunkDelayed&& rhs);
 
   /// <summary>
   /// Generic overload which will pend an arbitrary dispatch type
@@ -256,4 +237,3 @@ public:
     OnPended(std::move(lk));
   }
 };
-
