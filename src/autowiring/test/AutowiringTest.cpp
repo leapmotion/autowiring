@@ -162,7 +162,7 @@ StaticNewInt* CreateStaticNewIntImpl(std::unique_ptr<int> val){
 TEST_F(AutowiringTest, StaticNewWithArgs) {
   const bool static_new = has_static_new<StaticNewInt, typename std::unique_ptr<int>>::value;
   ASSERT_TRUE(static_new) << "has_static_new didn't correctly identify static New()";
-  
+
   {
     AutoCreateContext ctxt;
     ASSERT_NO_THROW(ctxt->Inject<StaticNewInt>()) << "Exception throws while injecting member";
