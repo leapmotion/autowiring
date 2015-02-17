@@ -11,7 +11,7 @@
 template<class T, class Selector, class... Args>
 struct has_well_formed_static_new {
   static const bool value = std::is_convertible<
-    decltype(T::New(*(typename std::remove_reference<Args>::type*)nullptr...)),
+    decltype(T::New(std::forward<Args>(*(typename std::remove_reference<Args>::type*)nullptr)...)),
     T*
   >::value;
 };
@@ -24,11 +24,8 @@ struct has_well_formed_static_new<T, std::false_type, Args...> {
 template<typename T, typename... Args>
 struct has_static_new
 {
-  template<class Fn, Fn>
-  struct unnamed_constant;
-
   template<class U>
-  static std::true_type select(decltype(U::New(*(typename std::remove_reference<Args>::type*)nullptr...))*);
+  static std::true_type select(decltype(U::New(std::forward<Args>(*(typename std::remove_reference<Args>::type*)nullptr)...))*);
 
   template<class U>
   static std::false_type select(...);
