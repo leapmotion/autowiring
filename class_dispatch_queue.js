@@ -14,7 +14,7 @@ var class_dispatch_queue =
     [ "operator+=", "class_dispatch_queue.html#ada43ba9a08cec6888a103f94f6e2dabb", null ],
     [ "operator+=", "class_dispatch_queue.html#a8dfd34970fbfca53f0d3b10cbb9c433c", null ],
     [ "Pend", "class_dispatch_queue.html#ad2e44d8531decda82fe874ef073d2d99", null ],
-    [ "PromoteReadyEventsUnsafe", "class_dispatch_queue.html#ad44c86ebbd7d2045112e7516edb1caa6", null ],
+    [ "PromoteReadyDispatchersUnsafe", "class_dispatch_queue.html#ad392c934d343fb56f8c233d2fbd6243b", null ],
     [ "SetDispatcherCap", "class_dispatch_queue.html#a6e455ffdaece9c129717211f13752fa3", null ],
     [ "SuggestSoonestWakeupTimeUnsafe", "class_dispatch_queue.html#a457e780c30d55fffc706892e1ebb160a", null ]
 ];

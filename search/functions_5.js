@@ -1,8 +1,8 @@
 var searchData=
 [
-  ['filter',['Filter',['../class_exception_filter.html#afe8a4a6f547e2c9297cd88144977deae',1,'ExceptionFilter::Filter(void)'],['../class_exception_filter.html#ad997a9d6bb8ffd587e535879f2e77718',1,'ExceptionFilter::Filter(const JunctionBoxBase *pJunctionBox, Object *pRecipient)']]],
+  ['filter',['Filter',['../class_exception_filter.html#afe8a4a6f547e2c9297cd88144977deae',1,'ExceptionFilter::Filter(void)'],['../class_exception_filter.html#a0b3b4d0bc7b414b5a4df02db134153c6',1,'ExceptionFilter::Filter(const JunctionBoxBase *pJunctionBox, CoreObject *pRecipient)']]],
   ['filterexception',['FilterException',['../class_core_context.html#a5b5b71f520358864f1cf52eb108aceb3',1,'CoreContext']]],
-  ['filterfiringexception',['FilterFiringException',['../class_core_context.html#acf39b096026f4f48c7fc1326f1f25426',1,'CoreContext']]],
+  ['filterfiringexception',['FilterFiringException',['../class_core_context.html#a14de7efacd23075c69ea134a7a45f4a8',1,'CoreContext']]],
   ['findbytype',['FindByType',['../class_core_context.html#ad49a3f07a2ab270baa6cec93707127bc',1,'CoreContext']]],
   ['findbytyperecursive',['FindByTypeRecursive',['../class_core_context.html#a01014fe31d9a6a10cc7357a5924a6460',1,'CoreContext::FindByTypeRecursive(std::shared_ptr&lt; T &gt; &amp;ptr) const '],['../class_core_context.html#a6936a4534f8d5b7c959bfed783c0eed5',1,'CoreContext::FindByTypeRecursive(AnySharedPointerT&lt; T &gt; &amp;slot) const ']]],
   ['findcontext',['FindContext',['../class_context_creator.html#a5a76e8e218cb45e52033f31450ca450d',1,'ContextCreator']]],

@@ -13,7 +13,8 @@ var dir_2e38afdc5a4015337247db13c49755ec =
       [ "auto_arg< std::shared_ptr< T > & >", "classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_01_4.html", null ],
       [ "auto_arg< std::shared_ptr< T > >", "classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_4.html", null ],
       [ "auto_arg< T & >", "classauto__arg_3_01_t_01_6_01_4.html", null ],
-      [ "auto_arg< T const ** >", "classauto__arg_3_01_t_01const_01_5_5_01_4.html", null ]
+      [ "auto_arg< T const ** >", "classauto__arg_3_01_t_01const_01_5_5_01_4.html", null ],
+      [ "auto_arg_ctor_helper", "structauto__arg__ctor__helper.html", null ]
     ] ],
     [ "auto_in.h", "auto__in_8h.html", [
       [ "auto_in", "classauto__in.html", null ]
@@ -25,9 +26,9 @@ var dir_2e38afdc5a4015337247db13c49755ec =
       [ "auto_prev", "structauto__prev.html", null ]
     ] ],
     [ "AutoConfig.h", "_auto_config_8h.html", [
-      [ "AutoConfig", "class_auto_config.html", null ]
+      [ "AutoConfig", "class_auto_config.html", "class_auto_config" ]
     ] ],
-    [ "AutoNetServer.h", "_auto_net_server_8h.html", null ],
+    [ "AutoNetServer.h", "_auto_net_server_8h.html", "_auto_net_server_8h" ],
     [ "AutoPacket.h", "_auto_packet_8h.html", [
       [ "AutoPacket", "class_auto_packet.html", "class_auto_packet" ]
     ] ],
@@ -41,7 +42,10 @@ var dir_2e38afdc5a4015337247db13c49755ec =
       [ "AutoParameter", "class_auto_parameter.html", null ]
     ] ],
     [ "AutoSelfUpdate.h", "_auto_self_update_8h.html", [
-      [ "AutoSelfUpdate", "class_auto_self_update.html", "class_auto_self_update" ]
+      [ "AutoSelfUpdate", "class_auto_self_update.html", null ]
+    ] ],
+    [ "AutoTimeStamp.h", "_auto_time_stamp_8h.html", [
+      [ "AutoTimeStamp", "class_auto_time_stamp.html", "class_auto_time_stamp" ]
     ] ],
     [ "Autowired.h", "_autowired_8h.html", "_autowired_8h" ],
     [ "autowiring_error.h", "autowiring__error_8h.html", null ],
@@ -60,7 +64,7 @@ var dir_2e38afdc5a4015337247db13c49755ec =
     [ "ContextEnumerator.h", "_context_enumerator_8h.html", [
       [ "ContextEnumerator", "class_context_enumerator.html", "class_context_enumerator" ],
       [ "ContextEnumeratorT", "class_context_enumerator_t.html", "class_context_enumerator_t" ],
-      [ "CoreContextT", "singleton_core_context_t.html", "singleton_core_context_t" ],
+      [ "CoreContextT", "class_core_context_t.html", "class_core_context_t" ],
       [ "CurrentContextEnumerator", "class_current_context_enumerator.html", "class_current_context_enumerator" ],
       [ "iterator", "class_context_enumerator_t_1_1iterator.html", null ],
       [ "iterator", "class_context_enumerator_1_1iterator.html", null ]
@@ -79,6 +83,9 @@ var dir_2e38afdc5a4015337247db13c49755ec =
     [ "CurrentContextPusher.h", "_current_context_pusher_8h.html", [
       [ "CurrentContextPusher", "class_current_context_pusher.html", "class_current_context_pusher" ]
     ] ],
+    [ "Deferred.h", "_deferred_8h.html", [
+      [ "Deferred", "class_deferred.html", null ]
+    ] ],
     [ "demangle.h", "demangle_8h.html", "demangle_8h" ],
     [ "DispatchQueue.h", "_dispatch_queue_8h.html", [
       [ "DispatchQueue", "class_dispatch_queue.html", "class_dispatch_queue" ]
@@ -90,5 +97,6 @@ var dir_2e38afdc5a4015337247db13c49755ec =
     [ "MicroBolt.h", "_micro_bolt_8h.html", [
       [ "Boltable", "struct_boltable.html", null ],
       [ "MicroBolt", "struct_micro_bolt.html", "struct_micro_bolt" ]
-    ] ]
+    ] ],
+    [ "Object.h", "_object_8h.html", null ]
 ];

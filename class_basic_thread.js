@@ -2,8 +2,8 @@ var class_basic_thread =
 [
     [ "BasicThread", "class_basic_thread.html#aefcc009fa192036be9ea4d11218612a4", null ],
     [ "DoAdditionalWait", "class_basic_thread.html#aa1c27fc2a6442177815f4bea0df47926", null ],
-    [ "DoRun", "class_basic_thread.html#a651406ab34ab53201e4d6e238c69ad5a", null ],
-    [ "DoRunLoopCleanup", "class_basic_thread.html#afcb59db20ab0d37ab401efc03aab215d", null ],
+    [ "DoRun", "class_basic_thread.html#aac69a4f359aab347371e9e1c11a9dd41", null ],
+    [ "DoRunLoopCleanup", "class_basic_thread.html#afffae6629cda8683d6706e319bb81038", null ],
     [ "ForceCoreThreadReidentify", "class_basic_thread.html#ae9d8f1216df2a3f93b3b3a6a4c454fa0", null ],
     [ "GetCreationTime", "class_basic_thread.html#a6f756d73ea97f88a9d12f6e0708f1cf8", null ],
     [ "GetLock", "class_basic_thread.html#a1d7ede51afd942a19ea957e1f7cad304", null ],

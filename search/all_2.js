@@ -16,8 +16,8 @@ var searchData=
   ['copybasicthreadlist',['CopyBasicThreadList',['../class_core_context.html#a248d2983aeb495dfa013024d10fbfc16',1,'CoreContext']]],
   ['corecontext',['CoreContext',['../class_core_context.html',1,'']]],
   ['corecontext_2eh',['CoreContext.h',['../_core_context_8h.html',1,'']]],
-  ['corecontextt',['CoreContextT',['../singleton_core_context_t.html',1,'']]],
-  ['corecontextt_3c_20globalcorecontext_20_3e',['CoreContextT&lt; GlobalCoreContext &gt;',['../singleton_core_context_t.html',1,'']]],
+  ['corecontextt',['CoreContextT',['../class_core_context_t.html',1,'']]],
+  ['corecontextt_3c_20globalcorecontext_20_3e',['CoreContextT&lt; GlobalCoreContext &gt;',['../class_core_context_t.html',1,'']]],
   ['corejob_2eh',['CoreJob.h',['../_core_job_8h.html',1,'']]],
   ['corerunnable',['CoreRunnable',['../class_core_runnable.html',1,'']]],
   ['corerunnable_2eh',['CoreRunnable.h',['../_core_runnable_8h.html',1,'']]],
@@ -30,5 +30,6 @@ var searchData=
   ['currentcontext',['CurrentContext',['../class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836',1,'CoreContext']]],
   ['currentcontextenumerator',['CurrentContextEnumerator',['../class_current_context_enumerator.html',1,'CurrentContextEnumerator'],['../class_current_context_enumerator.html#aa7211789df7dcdb945539a8fa2b0d7a8',1,'CurrentContextEnumerator::CurrentContextEnumerator()']]],
   ['currentcontextpusher',['CurrentContextPusher',['../class_current_context_pusher.html',1,'CurrentContextPusher'],['../class_current_context_pusher.html#a6805271ced0d18a69366808cd5c9c0d9',1,'CurrentContextPusher::CurrentContextPusher()']]],
-  ['currentcontextpusher_2eh',['CurrentContextPusher.h',['../_current_context_pusher_8h.html',1,'']]]
+  ['currentcontextpusher_2eh',['CurrentContextPusher.h',['../_current_context_pusher_8h.html',1,'']]],
+  ['contexts',['Contexts',['../md_devguide__contexts.html',1,'']]]
 ];

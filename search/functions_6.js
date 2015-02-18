@@ -1,8 +1,7 @@
 var searchData=
 [
-  ['gatherautofilter',['GatherAutoFilter',['../class_auto_self_update.html#a57317358a4e65072264bf143611422af',1,'AutoSelfUpdate']]],
-  ['get',['Get',['../class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d',1,'AutoPacket::Get(int tshift=0) const '],['../class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b',1,'AutoPacket::Get(const T *&amp;out, int tshift=0) const '],['../class_auto_packet.html#aedfb2068e9ff2f88e632a74259745b5d',1,'AutoPacket::Get(const std::shared_ptr&lt; const T &gt; *&amp;out, int tshift=0) const '],['../class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7',1,'AutoPacket::Get(std::shared_ptr&lt; const T &gt; &amp;out, int tshift=0) const '],['../class_global_core_context.html#adfc57edc6952e0e8bd6eb982c2caef03',1,'GlobalCoreContext::Get()']]],
-  ['getall',['GetAll',['../class_auto_packet.html#a67f8ff9016ebf3e36f835df04a3cd16e',1,'AutoPacket']]],
+  ['get',['get',['../classauto__out.html#aafe294268c22edb9a8039c8362582b16',1,'auto_out::get()'],['../class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d',1,'AutoPacket::Get(int tshift=0) const '],['../class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b',1,'AutoPacket::Get(const T *&amp;out, int tshift=0) const '],['../class_auto_packet.html#aedfb2068e9ff2f88e632a74259745b5d',1,'AutoPacket::Get(const std::shared_ptr&lt; const T &gt; *&amp;out, int tshift=0) const '],['../class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7',1,'AutoPacket::Get(std::shared_ptr&lt; const T &gt; &amp;out, int tshift=0) const '],['../class_global_core_context.html#adfc57edc6952e0e8bd6eb982c2caef03',1,'GlobalCoreContext::Get()']]],
+  ['getall',['GetAll',['../class_auto_packet.html#aea6f7ada47b79a2767051b65430595a8',1,'AutoPacket']]],
   ['getautotypeid',['GetAutoTypeId',['../class_core_context.html#a61f9eacb9552d40849a03190f342ae64',1,'CoreContext']]],
   ['getbackreference',['GetBackReference',['../class_core_context.html#ae88653daf77a40b41dec8e64c175813d',1,'CoreContext']]],
   ['getchildcount',['GetChildCount',['../class_core_context.html#a26665562a7e88fb2ecb00e1ae56432c6',1,'CoreContext']]],
@@ -18,13 +17,14 @@ var searchData=
   ['getlock',['GetLock',['../class_basic_thread.html#a1d7ede51afd942a19ea957e1f7cad304',1,'BasicThread']]],
   ['getmeanpacketlifetime',['GetMeanPacketLifetime',['../class_auto_packet_factory.html#aa14ee291b0bdb1c8131f268c4a7265c0',1,'AutoPacketFactory']]],
   ['getmembercount',['GetMemberCount',['../class_core_context.html#ad725f1858d6305af6721e575bb312674',1,'CoreContext']]],
-  ['getoutstanding',['GetOutstanding',['../class_core_runnable.html#a868560688e509d51cdc3a9752fca6eaf',1,'CoreRunnable']]],
+  ['getoutstanding',['GetOutstanding',['../class_core_runnable.html#a7d2c7498d9db4e8f76dc2b6a69d8f1bc',1,'CoreRunnable']]],
   ['getoutstandingpacketcount',['GetOutstandingPacketCount',['../class_auto_packet_factory.html#acdc9c322e9fe5257202c0d00b68a5059',1,'AutoPacketFactory']]],
   ['getpacketlifetimestandarddeviation',['GetPacketLifetimeStandardDeviation',['../class_auto_packet_factory.html#a8743ffc532d0fe739782a2f843a86467',1,'AutoPacketFactory']]],
   ['getparentcontext',['GetParentContext',['../class_core_context.html#a3783fd45517f23b6f070e0b06e916440',1,'CoreContext']]],
   ['getsatisfaction',['GetSatisfaction',['../class_auto_packet.html#a367921514045be484e134b34b4d6460d',1,'AutoPacket::GetSatisfaction(const std::type_info &amp;subscriber) const '],['../class_auto_packet.html#a1e8152052798e49283c8297886c62ffe',1,'AutoPacket::GetSatisfaction(void) const ']]],
   ['getself',['GetSelf',['../class_context_member.html#ac57af82464416e1763e1d04c50b4c89c',1,'ContextMember']]],
-  ['getsigiltype',['GetSigilType',['../class_core_context.html#a2785f3a9ba5946d57a9a3b72d99b9955',1,'CoreContext::GetSigilType()'],['../singleton_core_context_t.html#afe93fda298c9bd5932348a4295d25cbd',1,'CoreContextT::GetSigilType()']]],
+  ['getshared',['GetShared',['../class_auto_packet.html#a5467f83887d63a602cb05d88c6893bc0',1,'AutoPacket']]],
+  ['getsigiltype',['GetSigilType',['../class_core_context.html#a2785f3a9ba5946d57a9a3b72d99b9955',1,'CoreContext::GetSigilType()'],['../class_core_context_t.html#afe93fda298c9bd5932348a4295d25cbd',1,'CoreContextT::GetSigilType()']]],
   ['getthreadtimes',['GetThreadTimes',['../class_basic_thread.html#a643d476885ee38306b061d7fb37c126f',1,'BasicThread']]],
   ['gettotalpacketcount',['GetTotalPacketCount',['../class_auto_packet_factory.html#a002ce21f9b397665baa809d20fcdb6eb',1,'AutoPacketFactory']]],
   ['gettypedescriptorunsafe',['GetTypeDescriptorUnsafe',['../class_auto_packet_factory.html#a7a6329926ddb0ce8c19775435eacf756',1,'AutoPacketFactory']]]

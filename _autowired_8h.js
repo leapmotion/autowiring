@@ -1,9 +1,7 @@
 var _autowired_8h =
 [
-    [ "AutoConstruct", "class_auto_construct.html", null ],
     [ "AutoCreateContextT", "class_auto_create_context_t.html", null ],
     [ "AutoCurrentContext", "class_auto_current_context.html", null ],
-    [ "AutoDesired", "class_auto_desired.html", null ],
     [ "AutoEnable", "class_auto_enable.html", null ],
     [ "AutoFired", "class_auto_fired.html", null ],
     [ "AutoGlobalContext", "class_auto_global_context.html", null ],
