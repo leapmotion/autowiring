@@ -27,11 +27,11 @@ extern "C" {
 }
 
 namespace {
-  const long long g_Frequency = []()
+  const double g_nanosecs_per_tic = []()
   {
     int64_t frequency;
     QueryPerformanceFrequency(&reinterpret_cast<LARGE_INTEGER&>(frequency));
-    return frequency;
+    return 1e9 / static_cast<double>(frequency);
   }();
 }
 
@@ -48,7 +48,7 @@ namespace std {
       static time_point now() {
         int64_t count;
         QueryPerformanceCounter(&reinterpret_cast<LARGE_INTEGER&>(count));
-        return time_point(duration(count * static_cast<rep>(period::den) / g_Frequency));
+        return time_point(duration(static_cast<int64_t>(static_cast<double>(count) * g_nanosecs_per_tic)));
       }
     };
   }
