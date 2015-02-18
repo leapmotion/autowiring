@@ -16,8 +16,7 @@ JunctionBoxManager::JunctionBoxManager(void) {
     m_junctionBoxes[p->ti] = p->NewJunctionBox();
 
   // Make sure AutowiringEvents is in EventRegistry
-  assert(m_junctionBoxes.find(typeid(AutowiringEvents)) != m_junctionBoxes.end()
-         && "AutowiringEvents wasn't added to the event registry");
+  m_junctionBoxes[typeid(AutowiringEvents)] = std::make_shared<JunctionBox<AutowiringEvents>>();
   
   // Always allow internal events
   m_junctionBoxes[typeid(AutowiringEvents)]->Initiate();
