@@ -735,7 +735,7 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
 
 void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const ObjectTraits& entry) {
   // Collection of satisfiable lists:
-  std::vector<std::pair<const DeferrableUnsynchronizedStrategy*, DeferrableAutowiring*>> satisfiable;
+  std::vector<DeferrableAutowiring*> satisfiable;
 
   // Notify any autowired field whose autowiring was deferred.  We do this by processing each entry
   // in the entire type memos collection.  These entries are keyed on the type of the memo, and the
@@ -790,9 +790,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
         // are identified by an empty strategy, and we just skip them.
         auto strategy = pNext->GetStrategy();
         if(strategy)
-          satisfiable.push_back(
-            std::make_pair(strategy, pNext)
-          );
+          satisfiable.push_back(pNext);
       }
     }
   }
@@ -816,7 +814,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
 
   // Run through everything else and finalize it all:
   for(const auto& cur : satisfiable)
-    cur.first->Finalize(cur.second);
+    cur->GetStrategy()->Finalize(cur);
 }
 
 void CoreContext::AddEventReceiver(const JunctionBoxEntry<CoreObject>& entry) {
