@@ -161,7 +161,8 @@ public:
     // The first deferrable autowiring which requires this type, if one exists:
     DeferrableAutowiring* pFirst;
 
-    // A back reference to the concrete type from which this memo was generated:
+    // A back reference to the concrete type from which this memo was generated.  This field may be null
+    // if there is no corresponding concrete type.
     const CoreObjectDescriptor* pObjTraits;
 
     // Once this memo entry is satisfied, this will contain the AnySharedPointer instance that performs
@@ -325,7 +326,22 @@ protected:
 
   /// \internal
   /// <summary>
-  /// Invokes all deferred autowiring fields, generally called after a new member has been added
+  /// Satisfies all slots associated with the passed memo entry and causes finalizers to be invoked
+  /// </summary>
+  /// <remarks>
+  /// The passed lock will be unlocked when this function returns
+  /// </remarks>
+  void SatisfyAutowiring(std::unique_lock<std::mutex>& lk, MemoEntry& entry);
+
+  /// \internal
+  /// <summary>
+  /// Updates slots related to a single autowired field
+  /// </summary>
+  void UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, MemoEntry& entry);
+
+  /// \internal
+  /// <summary>
+  /// Updates all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
   void UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry);
 
@@ -399,6 +415,12 @@ protected:
   /// Internal type introduction routine
   /// </summary>
   void AddInternal(const CoreObjectDescriptor& traits);
+
+  /// \internal
+  /// <summary>
+  /// Internal specific interface introduction routine
+  /// </summary>
+  void AddInternal(const AnySharedPointer& ptr);
 
   /// \internal
   /// <summary>
@@ -632,6 +654,22 @@ public:
   template<class T, class... Sigils>
   void BoltTo(void) {
     EnableInternal((T*)nullptr, (Boltable<Sigils...>*)nullptr);
+  }
+
+  /// <summary>
+  /// Introduces the specified pointer to this context explicitly
+  /// </summary>
+  /// <param name="ptr">The interface to make available in this context</param>
+  /// <remarks>
+  /// Add is similar in behavior to Inject, except that the passed pointer is not treated as a concrete
+  /// type.  This means that other interfaces implemented by ptr will not be available for autowiring
+  /// unless explicitly made discoverable by another call to Add.
+  ///
+  /// It is an error to add a type which is already autowirable in a context.
+  /// </remarks>
+  template<typename T>
+  void Add(const std::shared_ptr<T>& ptr) {
+    AddInternal(AnySharedPointer(ptr));
   }
 
   /// <summary>
