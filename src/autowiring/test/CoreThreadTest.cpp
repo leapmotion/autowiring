@@ -517,3 +517,43 @@ TEST_F(CoreThreadTest, LightsOutPassiveCall) {
   ASSERT_FALSE(mpc->bStartExcepted) << "Exception occurred during an attempt to elevate to synchronized level from CoreThread::OnStart";
   ASSERT_FALSE(mpc->bStopExcepted) << "Exception occurred during an attempt to elevate to synchronized level from CoreThread::OnStop";
 }
+
+class CoreThreadExtraction:
+  public CoreThread
+{
+public:
+  using CoreThread::m_queueUpdated;
+};
+
+TEST_F(CoreThreadTest, SpuriousWakeupTest) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<CoreThreadExtraction> extraction;
+
+  std::mutex lock;
+  std::condition_variable cv;
+  bool ready = false;
+
+  auto wakeFn = [&] {
+    std::lock_guard<std::mutex> lk(lock);
+    ready = true;
+    cv.notify_all();
+  };
+
+  // Add a delayed lambda that we know won't launch and another one that should launch right away
+  *extraction += wakeFn;
+  *extraction += std::chrono::hours(1), [] {};
+
+  // Delay until the extraction lambda has run:
+  std::unique_lock<std::mutex> lk(lock);
+  ASSERT_TRUE(cv.wait_for(lk, std::chrono::seconds(5), [&] { return ready; }));
+
+  // Now force a spurious wakeup--this shouldn't technically be a problem
+  extraction->m_queueUpdated.notify_all();
+  
+  // Delayed wake function, block for this to happen:
+  ready = false;
+  *extraction += std::chrono::milliseconds(1), wakeFn;
+  ASSERT_TRUE(cv.wait_for(lk, std::chrono::seconds(5), [&] { return ready; }));
+
+  ASSERT_EQ(1UL, extraction->GetDispatchQueueLength()) << "Dispatch queue changed size under a spurious wakeup condition";
+}
