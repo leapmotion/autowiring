@@ -11,7 +11,11 @@
 template<class T, class Selector, class... Args>
 struct has_well_formed_static_new {
   static const bool value = std::is_convertible<
-    decltype(T::New(std::forward<Args>(*(typename std::remove_reference<Args>::type*)nullptr)...)),
+    decltype(
+      T::New(
+        std::declval<Args>()...
+      )
+    ),
     T*
   >::value;
 };
