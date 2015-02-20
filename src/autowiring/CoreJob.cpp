@@ -118,3 +118,14 @@ void CoreJob::DoAdditionalWait(void) {
     m_curEvent = nullptr;
   }
 }
+
+bool CoreJob::DoAdditionalWait(std::chrono::nanoseconds timeout) {
+  if (!m_curEvent)
+    return true;
+
+  std::future<void>* ptr = static_cast<std::future<void>*>(m_curEvent);
+  auto status = ptr->wait_for(timeout);
+  delete ptr;
+  m_curEvent = nullptr;
+  return status == std::future_status::ready;
+}

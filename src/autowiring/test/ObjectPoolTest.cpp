@@ -367,6 +367,8 @@ TEST_F(ObjectPoolTest, MovableObjectPoolAysnc) {
     *AutoRequired<CoreThread>() += [objs] {};
   }
 
+  ASSERT_EQ(0, from.GetCached()) << "Initial pool received cached entities unexpectedly";
+
   // Kick off threads, then immediately and asynchronously move the pool:
   AutoCurrentContext()->Initiate();
   ObjectPool<int> to = std::move(from);

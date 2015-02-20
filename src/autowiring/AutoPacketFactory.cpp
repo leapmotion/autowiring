@@ -128,6 +128,17 @@ void AutoPacketFactory::DoAdditionalWait(void) {
   );
 }
 
+bool AutoPacketFactory::DoAdditionalWait(std::chrono::nanoseconds timeout) {
+  std::unique_lock<std::mutex> lk(m_lock);
+  return m_stateCondition.wait_for(
+    lk,
+    timeout,
+    [this]{
+      return ShouldStop() && m_outstandingInternal.expired();
+    }
+  );
+}
+
 void AutoPacketFactory::Clear(void) {
   // Simple handoff to Stop is sufficient
   Stop(false);
