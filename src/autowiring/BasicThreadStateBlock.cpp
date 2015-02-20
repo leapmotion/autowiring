@@ -2,4 +2,9 @@
 #include "stdafx.h"
 #include "BasicThreadStateBlock.h"
 
-BasicThreadStateBlock::~BasicThreadStateBlock(){}
+BasicThreadStateBlock::BasicThreadStateBlock(void):
+  m_completed(false)
+{}
+
+BasicThreadStateBlock::~BasicThreadStateBlock(void)
+{}

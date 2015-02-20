@@ -82,9 +82,6 @@ protected:
   // Run condition:
   bool m_running;
 
-  // Completion condition, true when this thread is no longer running and has run at least once
-  bool m_completed;
-
   // The current thread priority
   ThreadPriority m_priority;
 
