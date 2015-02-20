@@ -706,6 +706,7 @@ FILE_PATTERNS          = "at_exit.h" \
                          "ContextCreator.h" \
                          "ContextCreatorBase.h" \
                          "ContextEnumerator.h" \
+                         ContextMap.h \
                          "ContextMember.h" \
                          "CoreContext.h" \
                          "CoreJob.h" \
