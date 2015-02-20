@@ -15,6 +15,7 @@ set(Autowiring_SRCS
   atomic_object.h
   at_exit.h
   auto_id.h
+  auto_future.h
   AutoConfig.cpp
   AutoConfig.h
   AutoConfigManager.cpp
@@ -172,12 +173,14 @@ add_conditional_sources(
 )
 
 add_windows_sources(Autowiring_SRCS
+  auto_future_win.h
   CoreThreadWin.cpp
   InterlockedExchangeWin.cpp
   thread_specific_ptr_win.h
 )
 
 add_mac_sources(Autowiring_SRCS
+  auto_future_mac.h
   CoreThreadMac.cpp
 )
 

@@ -61,6 +61,11 @@ set(AutowiringTest_SRCS
   UuidTest.cpp
 )
 
+add_windows_sources(
+  AutowiringTest_SRCS
+  AutoFutureTest.cpp
+)
+
 if(autowiring_USE_LIBCXX)
   set(AutowiringTest_SRCS ${AutowiringTest_SRCS}
     AutoFilterFunctionTest.cpp
