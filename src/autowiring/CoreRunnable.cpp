@@ -58,23 +58,28 @@ void CoreRunnable::Stop(bool graceful) {
 }
 
 void CoreRunnable::Wait(void) {
-  std::unique_lock<std::mutex> lk(m_lock);
-  m_cv.wait(lk, [this] { return ShouldStop() && !IsRunning(); });
+  {
+    std::unique_lock<std::mutex> lk(m_lock);
+    m_cv.wait(lk, [this] { return ShouldStop() && !IsRunning(); });
+  }
   DoAdditionalWait();
 }
 
 bool CoreRunnable::WaitFor(std::chrono::nanoseconds timeout) {
-  std::unique_lock<std::mutex> lk(m_lock);
-
-  if (m_cv.wait_for(lk, timeout, [this] { return ShouldStop() && !IsRunning(); }))
-    return DoAdditionalWait(timeout);
-  return false;
+  {
+    std::unique_lock<std::mutex> lk(m_lock);
+    if (!m_cv.wait_for(lk, timeout, [this] { return ShouldStop() && !IsRunning(); }))
+      return false;
+  }
+  return DoAdditionalWait(timeout);
 }
 
 template<typename TimeType>
 bool CoreRunnable::WaitUntil(TimeType timepoint) {
-  std::unique_lock<std::mutex> lk(m_lock);
-  if (m_cv.wait_until(lk, timepoint, [this] { return ShouldStop() && !IsRunning(); }))
-    return DoAdditionalWait(timepoint - TimeType::now());
-  return false;
+  {
+    std::unique_lock<std::mutex> lk(m_lock);
+    if (!m_cv.wait_until(lk, timepoint, [this] { return ShouldStop() && !IsRunning(); }))
+      return false;
+  }
+  return DoAdditionalWait(timepoint - TimeType::now());;
 }
