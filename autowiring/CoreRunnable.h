@@ -7,7 +7,7 @@
 class CoreObject;
 
 /// <summary>
-/// Base class for objects that run threads.
+/// Provides the interface for threads that should receive start and stop notifications in a context
 /// </summary>
 /// <remarks>
 /// Users of Autowiring will typically use BasicThread or CoreThread instead of

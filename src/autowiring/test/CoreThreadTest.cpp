@@ -557,6 +557,7 @@ TEST_F(CoreThreadTest, SpuriousWakeupTest) {
 
   ASSERT_EQ(1UL, extraction->GetDispatchQueueLength()) << "Dispatch queue changed size under a spurious wakeup condition";
 }
+
 class BlocksInOnStop:
   public CoreThread
 {

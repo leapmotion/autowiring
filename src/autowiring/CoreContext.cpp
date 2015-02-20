@@ -145,6 +145,11 @@ size_t CoreContext::GetChildCount(void) const {
   return m_children.size();
 }
 
+std::vector<CoreRunnable*> CoreContext::GetRunnables(void) const {
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+  return std::vector<CoreRunnable*>(m_threads.begin(), m_threads.end());
+}
+
 std::shared_ptr<CoreContext> CoreContext::FirstChild(void) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
@@ -381,8 +386,6 @@ void CoreContext::Initiate(void) {
   // Get the beginning of the thread list that we have at the time of lock acquisition
   // New threads are added to the front of the thread list, which means that objects
   // after this iterator are the ones that will need to be started
-  t_threadList::iterator beginning;
-
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
 
   // Now we can transition to initiated or running:
@@ -431,7 +434,7 @@ void CoreContext::Initiate(void) {
   }
 
   // Now we can recover the first thread that will need to be started
-  beginning = m_threads.begin();
+  auto beginning = m_threads.begin();
 
   // Start our threads before starting any child contexts:
   lk.unlock();
@@ -452,7 +455,7 @@ void CoreContext::InitiateCoreThreads(void) {
 void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   // As we signal shutdown, there may be a CoreRunnable that is in the "running" state.  If so,
   // then we will skip that thread as we signal the list of threads to shutdown.
-  t_threadList::iterator firstThreadToStop;
+  std::list<CoreRunnable*>::iterator firstThreadToStop;
   
   // Trivial return check
   if (IsShutdown())
