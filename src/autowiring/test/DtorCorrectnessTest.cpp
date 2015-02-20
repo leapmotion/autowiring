@@ -114,8 +114,8 @@ TEST_F(DtorCorrectnessTest, VerifyDeferringDtors) {
   listener2->Wait();
 
   // Verify that we actually hit something:
-  EXPECT_TRUE(listener1->m_hitDeferred) << "Failed to hit a listener's deferred call";
-  EXPECT_TRUE(listener2->m_hitDeferred) << "Failed to hit a listener's deferred call";
+  EXPECT_TRUE(listener1->m_hitDeferred) << "Failed to hit listener #1's deferred call";
+  EXPECT_TRUE(listener2->m_hitDeferred) << "Failed to hit listener #2's deferred call";
 
   // Release all of our pointers:
   listener1.reset();

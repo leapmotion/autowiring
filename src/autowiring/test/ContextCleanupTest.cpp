@@ -153,7 +153,9 @@ TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
   *ct += [called] { *called = true; };
 
   // Verify that a graceful shutdown ensures both lambdas are called:
+  ASSERT_FALSE(ctxt->IsShutdown()) << "Context shut down prematurely";
   ctxt->SignalShutdown(true, ShutdownMode::Graceful);
+  ASSERT_FALSE(ct->IsRunning()) << "Thread still reported as running even after a wait concluded";
   ASSERT_TRUE(*called) << "Graceful shutdown did not correctly run down all lambdas";
 }
 
