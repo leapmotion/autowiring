@@ -43,4 +43,5 @@ public:
   bool OnStart(void) override;
   void OnStop(bool graceful) override;
   void DoAdditionalWait(void) override;
+  bool DoAdditionalWait(std::chrono::nanoseconds timeout) override;
 };
