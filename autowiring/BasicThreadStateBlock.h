@@ -7,7 +7,8 @@
 struct BasicThreadStateBlock:
   std::enable_shared_from_this<BasicThreadStateBlock>
 {
-  ~BasicThreadStateBlock();
+  BasicThreadStateBlock(void);
+  ~BasicThreadStateBlock(void);
 
   // General purpose thread lock and update condition for the lock
   std::mutex m_lock;
@@ -15,4 +16,7 @@ struct BasicThreadStateBlock:
 
   // The current thread, if running
   std::thread m_thisThread;
+
+  // Completion condition, true when this thread is no longer running and has run at least once
+  bool m_completed;
 };

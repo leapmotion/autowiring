@@ -12,7 +12,6 @@ BasicThread::BasicThread(const char* pName):
   m_state(std::make_shared<BasicThreadStateBlock>()),
   m_stop(false),
   m_running(false),
-  m_completed(false),
   m_priority(ThreadPriority::Default)
 {}
 
@@ -70,10 +69,6 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   m_stop = true;
   m_running = false;
 
-  // Need to ensure that "stop" and "running" are actually updated in memory before we mark "complete"
-  std::atomic_thread_fence(std::memory_order_release);
-  m_completed = true;
-
   // Tell our CoreRunnable parent that we're done to ensure that our reference count will be cleared.
   Stop(false);
 
@@ -97,6 +92,7 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   // Notify other threads that we are done.  At this point, any held references that might still exist
   // notification must happen from a synchronized level in order to ensure proper ordering.
   std::lock_guard<std::mutex> lk(state->m_lock);
+  state->m_completed = true;
   state->m_stateCondition.notify_all();
 }
 
@@ -146,7 +142,7 @@ bool BasicThread::OnStart(void) {
 void BasicThread::OnStop(bool graceful) {
   // If we were never started, we need to set our completed flag to true
   if (!m_running) {
-    m_completed = true;
+    m_state->m_completed = true;
   }
 
   // Always invoke stop handler:
@@ -158,7 +154,7 @@ void BasicThread::DoAdditionalWait(void) {
   std::unique_lock<std::mutex> lk(m_state->m_lock);
   m_state->m_stateCondition.wait(
     lk,
-    [this] {return this->m_completed; }
+    [this] {return m_state->m_completed; }
   );
 }
 
