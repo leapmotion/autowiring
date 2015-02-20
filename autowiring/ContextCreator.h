@@ -9,6 +9,7 @@
 /// </summary>
 /// <param name="Sigil">The sigil type that will be used for created contexts</param>
 /// <param name="Key">A key type used to identify this context</param>
+/// <obsolete>This class is obsolete, make use of <seealso cref="ContextMap"/> instead</obsolete>
 /// <remarks>
 /// This class helps manage the creation of contexts with global names.  When the new child context
 /// is created, a notification is broadcast throughout the entire current context to any registered
@@ -20,7 +21,7 @@
 /// All static member functions are thread-safe, other members are not thread-safe.
 /// </remarks>
 template<class Sigil, class Key = void>
-class ContextCreator:
+class ContextCreator :
   public ContextCreatorBase
 {
 protected:
@@ -32,6 +33,9 @@ protected:
   typedef Key t_callbackHandle;
 
 public:
+  DEPRECATED(ContextCreator(void), "This type is deprecated, use manual context creation and ContextMap instead")
+  {}
+
   // Accessor methods:
   size_t GetSize(void) const {return m_contexts.size();}
 
