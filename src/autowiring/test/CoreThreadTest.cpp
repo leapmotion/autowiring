@@ -557,3 +557,49 @@ TEST_F(CoreThreadTest, SpuriousWakeupTest) {
 
   ASSERT_EQ(1UL, extraction->GetDispatchQueueLength()) << "Dispatch queue changed size under a spurious wakeup condition";
 }
+class BlocksInOnStop:
+  public CoreThread
+{
+public:
+  bool is_waiting = false;
+  bool signal = false;
+
+  void Run(void) {
+    // Let the run loop return.  This triggers cleanup operations and ultimately causes OnStop
+    // to get called in our own thread context.
+  }
+
+  bool Block(std::chrono::nanoseconds timeout) {
+    std::unique_lock<std::mutex> lk(m_lock);
+    return m_cv.wait_for(lk, timeout, [this] {return is_waiting; });
+  }
+
+  void Continue(void) {
+    std::lock_guard<std::mutex> lk(m_lock);
+    signal = true;
+    m_cv.notify_all();
+  }
+
+  void OnStop(void) override {
+    std::unique_lock<std::mutex> lk(this->m_lock);
+    is_waiting = true;
+    m_cv.notify_all();
+    m_cv.wait_for(lk, std::chrono::seconds(5), [this] { return signal; });
+  }
+};
+
+TEST_F(CoreThreadTest, ContextWaitTimesOutInOnStop) {
+  AutoCurrentContext ctxt;
+  AutoRequired<BlocksInOnStop> bios;
+  ctxt->Initiate();
+
+  // Wait for our pathological case to be waiting before we try shutting down the context
+  ASSERT_TRUE(bios->Block(std::chrono::seconds(5))) << "Blocking class failed to enter a blocked condition as expected";
+
+  ctxt->SignalShutdown();
+  ASSERT_FALSE(bios->WaitFor(std::chrono::milliseconds(1))) << "Timed wait on a misbehaving CoreThread did not time out as expected";
+  ASSERT_FALSE(ctxt->Wait(std::chrono::milliseconds(1))) << "Context wait routine did not timeout as expected";
+
+  // Let BIOS back out now:
+  bios->Continue();
+}
