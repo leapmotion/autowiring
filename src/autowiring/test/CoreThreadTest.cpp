@@ -557,3 +557,17 @@ TEST_F(CoreThreadTest, SpuriousWakeupTest) {
 
   ASSERT_EQ(1UL, extraction->GetDispatchQueueLength()) << "Dispatch queue changed size under a spurious wakeup condition";
 }
+
+TEST_F(CoreThreadTest, WaitForTimesOut) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+
+  AutoCreateContext sub;
+  CurrentContextPusher pshr(sub);
+  AutoRequired<CoreThread> ct;
+  ASSERT_FALSE(ct->WaitFor(std::chrono::microseconds(1))) << "A wait on a thread succeeded where it should have blocked indefinitely";
+
+  // Terminate outer context, thread should stop (eventually)
+  ctxt->SignalShutdown();
+  ASSERT_TRUE(ct->WaitFor(std::chrono::seconds(5))) << "Outer scope termination did not correctly propagate to a child thread";
+}
