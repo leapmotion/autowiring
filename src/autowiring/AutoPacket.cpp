@@ -10,6 +10,7 @@
 #include "SatCounter.h"
 #include <algorithm>
 #include <sstream>
+#include <future>
 
 using namespace autowiring;
 
