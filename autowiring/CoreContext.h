@@ -253,8 +253,7 @@ protected:
   const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
 
   // Actual core threads:
-  typedef std::list<CoreRunnable*> t_threadList;
-  t_threadList m_threads;
+  std::list<CoreRunnable*> m_threads;
 
   // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
   // Destructor does nothing; this is by design.
@@ -516,6 +515,15 @@ public:
   t_childList::iterator GetBackReference(void) const { return m_backReference; }
   /// A shared reference to the parent context of this context.
   const std::shared_ptr<CoreContext>& GetParentContext(void) const { return m_pParent; }
+
+  /// <summary>
+  /// Returns a copy of the list of runnables
+  /// </summary>
+  /// <remarks>
+  /// This list is intended primarily for diagnostic purposes.  The pointers are dumb pointers, and may be
+  /// invalidated if the caller is not careful to hold a shared pointer to the context.
+  /// </remarks>
+  std::vector<CoreRunnable*> GetRunnables(void) const;
 
   /// True if the sigil type of this CoreContext matches the specified sigil type.
   template<class Sigil>
