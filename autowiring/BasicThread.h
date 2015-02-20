@@ -76,6 +76,9 @@ protected:
   // we're actually signalling this event after we free ourselves.
   const std::shared_ptr<BasicThreadStateBlock> m_state;
 
+  // Flag indicating that this thread was started at some point
+  bool m_wasStarted;
+
   // Flag indicating that we need to stop right now
   bool m_stop;
 
@@ -217,7 +220,8 @@ protected:
 
   void OnStop(bool graceful) override;
 
-  void DoAdditionalWait() override;
+  void DoAdditionalWait(void) override;
+  bool DoAdditionalWait(std::chrono::nanoseconds timeout) override;
 
 public:
   /// <summary>

@@ -10,6 +10,7 @@
 BasicThread::BasicThread(const char* pName):
   ContextMember(pName),
   m_state(std::make_shared<BasicThreadStateBlock>()),
+  m_wasStarted(false),
   m_stop(false),
   m_running(false),
   m_priority(ThreadPriority::Default)
@@ -23,6 +24,7 @@ std::mutex& BasicThread::GetLock(void) {
 
 void BasicThread::DoRun(std::shared_ptr<CoreObject>&& refTracker) {
   assert(m_running);
+  m_wasStarted = true;
 
   // Make our own session current before we do anything else:
   CurrentContextPusher pusher(GetContext());
@@ -141,9 +143,8 @@ bool BasicThread::OnStart(void) {
 
 void BasicThread::OnStop(bool graceful) {
   // If we were never started, we need to set our completed flag to true
-  if (!m_running) {
+  if (!m_wasStarted)
     m_state->m_completed = true;
-  }
 
   // Always invoke stop handler:
   OnStop();
@@ -154,7 +155,17 @@ void BasicThread::DoAdditionalWait(void) {
   std::unique_lock<std::mutex> lk(m_state->m_lock);
   m_state->m_stateCondition.wait(
     lk,
-    [this] {return m_state->m_completed; }
+    [this] { return m_state->m_completed; }
+  );
+}
+
+bool BasicThread::DoAdditionalWait(std::chrono::nanoseconds timeout) {
+  // Wait for the run loop cleanup to happen in DoRunLoopCleanup
+  std::unique_lock<std::mutex> lk(m_state->m_lock);
+  return m_state->m_stateCondition.wait_for(
+    lk,
+    timeout,
+    [this] { return m_state->m_completed; }
   );
 }
 
