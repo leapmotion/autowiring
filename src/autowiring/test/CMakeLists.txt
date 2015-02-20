@@ -5,7 +5,6 @@ set(AutowiringTest_SRCS
   AutoConstructTest.cpp
   AutoFilterCollapseRulesTest.cpp
   AutoFilterDiagnosticsTest.cpp
-  AutoFutureTest.cpp
   AutoInjectableTest.cpp
   AutoPacketTest.cpp
   AutoPacketFactoryTest.cpp
@@ -59,6 +58,11 @@ set(AutowiringTest_SRCS
   TestFixtures/ThrowsWhenRun.hpp
   TestFixtures/MultiInherit.hpp
   UuidTest.cpp
+)
+
+add_windows_sources(
+  AutowiringTest_SRCS
+  AutoFutureTest.cpp
 )
 
 if(autowiring_USE_LIBCXX)
