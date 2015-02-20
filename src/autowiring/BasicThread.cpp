@@ -24,7 +24,6 @@ std::mutex& BasicThread::GetLock(void) {
 
 void BasicThread::DoRun(std::shared_ptr<CoreObject>&& refTracker) {
   assert(m_running);
-  m_wasStarted = true;
 
   // Make our own session current before we do anything else:
   CurrentContextPusher pusher(GetContext());
@@ -126,8 +125,9 @@ bool BasicThread::OnStart(void) {
   if(!context)
     return false;
 
-  // Currently running:
+  // Currently running and started:
   m_running = true;
+  m_wasStarted = true;
 
   // Place the new thread entity directly in the space where it goes to avoid
   // any kind of races arising from asynchronous access to this space
