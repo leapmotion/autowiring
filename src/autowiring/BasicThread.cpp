@@ -13,6 +13,7 @@ BasicThread::BasicThread(const char* pName):
   m_wasStarted(false),
   m_stop(false),
   m_running(false),
+  m_completed(m_state->m_completed),
   m_priority(ThreadPriority::Default)
 {}
 
@@ -167,6 +168,10 @@ bool BasicThread::DoAdditionalWait(std::chrono::nanoseconds timeout) {
     timeout,
     [this] { return m_state->m_completed; }
   );
+}
+
+bool BasicThread::IsCompleted(void) const {
+  return m_state->m_completed;
 }
 
 void BasicThread::ForceCoreThreadReidentify(void) {
