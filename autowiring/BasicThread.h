@@ -85,6 +85,9 @@ protected:
   // Run condition:
   bool m_running;
 
+  // Legacy field, some clients still refer to this
+  bool& DEPRECATED(m_completed, "Use IsCompleted instead");
+
   // The current thread priority
   ThreadPriority m_priority;
 
@@ -224,6 +227,11 @@ protected:
   bool DoAdditionalWait(std::chrono::nanoseconds timeout) override;
 
 public:
+  /// <returns>
+  /// True if this thread has transitioned to a completed state
+  /// </returns>
+  bool IsCompleted(void) const;
+
   /// <summary>
   /// Begins thread execution.
   /// </summary>
