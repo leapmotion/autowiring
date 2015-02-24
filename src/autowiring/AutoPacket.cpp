@@ -95,6 +95,8 @@ void AutoPacket::AddSatCounter(SatCounter& satCounter) {
       case DispositionState::Unsatisfiable:
         satCounter.Decrement();
         break;
+      default:
+        break;
       }
     }
     if (pCur->is_output) {
@@ -239,6 +241,8 @@ void AutoPacket::DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key
             << ", it has been marked unsatisfiable";
           throw std::runtime_error(ss.str());
         }
+        break;
+      default:
         break;
       }
 
