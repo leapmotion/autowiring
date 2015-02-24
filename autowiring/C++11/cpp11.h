@@ -325,20 +325,14 @@
 /*********************
  * Deprecation convenience macro
  *********************/
-#ifndef _DEBUG
-
 #ifdef _MSC_VER
 #define DEPRECATED(signature, msg) __declspec(deprecated(msg)) signature
 #define DEPRECATED_CLASS(classname, msg) __declspec(deprecated(msg)) classname
+#define DEPRECATED_MEMBER(member, msg) member
 #else
 #define DEPRECATED(signature, msg) signature __attribute__((deprecated))
 #define DEPRECATED_CLASS(classname, msg)
-#endif
-
-#else
-// In release mode we don't bother to deprecate
-#define DEPRECATED(signature, msg) signature
-#define DEPRECATED_CLASS(classname, msg)
+#define DEPRECATED_MEMBER(member, msg) DEPRECATED(member, msg)
 #endif
 
 /*********************
