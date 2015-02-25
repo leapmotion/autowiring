@@ -6,7 +6,9 @@
 
 class JunctionBoxBase;
 
-struct EventRegistryEntry {
+struct EventRegistryEntry:
+  public TypeIdentifierBase
+{
   EventRegistryEntry(const std::type_info& ti);
   
   // Next entry in the list:
@@ -16,19 +18,9 @@ struct EventRegistryEntry {
   const std::type_info& ti;
   
   /// <summary>
-  /// The runtime type information corresponding to this entry
-  /// </summary>
-  virtual const std::type_info& GetTypeInfo(void) const = 0;
-  
-  /// <summary>
   /// Constructor method, used to generate a new junction box
   /// </summary>
   virtual std::shared_ptr<JunctionBoxBase> NewJunctionBox(void) const = 0;
-  
-  /// <summary>
-  /// Used to create a type identifier value, for use with AutoNet
-  /// </summary>
-  virtual std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const = 0;
 };
 
 template<class T>
@@ -38,20 +30,16 @@ struct EventRegistryEntryT:
   EventRegistryEntryT(void):
     EventRegistryEntry(typeid(T))
   {}
-  
+
   virtual const std::type_info& GetTypeInfo(void) const override { return typeid(T); }
-
-
+  
   virtual std::shared_ptr<JunctionBoxBase> NewJunctionBox(void) const override {
-    return std::static_pointer_cast<JunctionBoxBase>(
-      std::make_shared<JunctionBox<T>>()
-    );
+    return std::make_shared<JunctionBox<T>>();
   }
 
-  std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const override {
-    return std::static_pointer_cast<TypeIdentifierBase>(
-      std::make_shared<TypeIdentifier<T>>()
-    );
+  // true if "obj" is an event receiver for T
+  bool IsSameAs(const CoreObject* obj) const override {
+    return !!dynamic_cast<const T*>(obj);
   }
 };
 

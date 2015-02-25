@@ -5,20 +5,13 @@
 
 // Checks if an Object* listens to a event T;
 struct TypeIdentifierBase {
-  virtual bool IsSameAs(const CoreObject* obj) = 0;
-  virtual const std::type_info& Type() = 0;
-};
+  /// <summary>
+  /// The runtime type information corresponding to this identifier
+  /// </summary>
+  virtual const std::type_info& GetTypeInfo(void) const = 0;
 
-template<typename T>
-  struct TypeIdentifier:
-public TypeIdentifierBase
-{
-  // true if "obj" is an event receiver for T
-  bool IsSameAs(const CoreObject* obj) override {
-    return !!dynamic_cast<const T*>(obj);
-  }
-  
-  const std::type_info& Type() override {
-    return typeid(T);
-  }
+  /// <returns>
+  /// True if this type identifier can cast the specified CoreObject
+  /// </returns>
+  virtual bool IsSameAs(const CoreObject* obj) const = 0;
 };
