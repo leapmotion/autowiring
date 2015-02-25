@@ -194,7 +194,7 @@ const std::type_info& CoreContext::GetAutoTypeId(const AnySharedPointer& ptr) co
   if (q == m_typeMemos.end() || !q->second.pObjTraits)
     throw autowiring_error("Attempted to obtain the true type of a shared pointer that was not a member of this context");
 
-  const ObjectTraits* pObjTraits = q->second.pObjTraits;
+  const CoreObjectDescriptor* pObjTraits = q->second.pObjTraits;
   return pObjTraits->type;
 }
 
@@ -237,7 +237,7 @@ std::shared_ptr<CoreObject> CoreContext::IncrementOutstandingThreadCount(void) {
   return retVal;
 }
 
-void CoreContext::AddInternal(const ObjectTraits& traits) {
+void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
   {
     std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
 
@@ -324,7 +324,7 @@ CoreContext::MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& referenc
   }
 
   // Resolve based on iterated dynamic casts for each concrete type:
-  const ObjectTraits* pObjTraits = nullptr;
+  const CoreObjectDescriptor* pObjTraits = nullptr;
   for(const auto& type : m_concreteTypes) {
     if(!reference->try_assign(*type.value))
       // No match, try the next entry
@@ -736,7 +736,7 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
-void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const ObjectTraits& entry) {
+void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry) {
   // Collection of satisfiable lists:
   std::vector<DeferrableUnsynchronizedStrategy*> satisfiable;
 
@@ -1045,7 +1045,7 @@ void CoreContext::TryTransitionChildrenState(void) {
   lk.unlock();
 }
 
-void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {
+void CoreContext::UnsnoopAutoPacket(const CoreObjectDescriptor& traits) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     

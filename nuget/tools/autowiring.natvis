@@ -40,7 +40,7 @@
     </Expand>
   </Type>
 
-  <Type Name="std::vector&lt;ObjectTraits, std::allocator&lt;ObjectTraits&gt;&gt;">
+  <Type Name="std::vector&lt;CoreObjectDescriptor, std::allocator&lt;CoreObjectDescriptor&gt;&gt;">
     <DisplayString>[size = {_Mylast - _Myfirst}]</DisplayString>
     <Expand>
       <Item Name="Size">_Mylast - _Myfirst</Item>
@@ -51,7 +51,7 @@
     </Expand>
   </Type>
 
-  <Type Name="ObjectTraits">
+  <Type Name="CoreObjectDescriptor">
     <DisplayString Condition="type._M_data != nullptr">[{((char*)type._M_data + 6 + (*(char*)type._M_data == 's')),sb}, uses = {((std::shared_ptr&lt;Object&gt;*)((SharedPointerSlot*)value.m_space)-&gt;m_space)-&gt;_Rep-&gt;_Uses}]</DisplayString>
     <DisplayString>?</DisplayString>
     <Expand>
