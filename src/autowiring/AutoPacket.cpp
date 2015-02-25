@@ -10,7 +10,7 @@
 #include "SatCounter.h"
 #include <algorithm>
 #include <sstream>
-#include <future>
+#include RVALUE_HEADER
 
 using namespace autowiring;
 
@@ -340,7 +340,7 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   // Copy decorations into an internal decorations maintenance collection.  The values
   // in this collection are guaranteed to be stable in memory, and there are stable states
   // that can be relied upon without synchronization.
-  std::vector<t_decorationMap::value_type> dd;
+  std::vector<std::pair<DecorationKey, DecorationDisposition>> dd;
   {
     std::lock_guard<std::mutex> lk(m_lock);
     for (const auto& decoration : m_decorations)
