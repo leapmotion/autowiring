@@ -98,7 +98,7 @@ protected:
   /// AutowiringEvents overrides
   virtual void NewContext(CoreContext&) override {}
   virtual void ExpiredContext(CoreContext&) override {}
-  virtual void NewObject(CoreContext&, const ObjectTraits&) override;
+  virtual void NewObject(CoreContext&, const CoreObjectDescriptor&) override;
   
   /// CoreRunnable overrides
   virtual bool OnStart(void) override;

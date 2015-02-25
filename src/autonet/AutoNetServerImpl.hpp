@@ -14,7 +14,7 @@
   #define BOOST_NO_CXX11_HDR_INITIALIZER_LIST
 #endif
 
-struct ObjectTraits;
+struct CoreObjectDescriptor;
 struct TypeIdentifierBase;
 
 // Protocol layer for AutoNet
@@ -70,7 +70,7 @@ public:
   /// </summary>
   /// <param name="ctxt">Context containing the object</param>
   /// <param name="obj">The object</param>
-  virtual void NewObject(CoreContext& ctxt, const ObjectTraits& obj) override;
+  virtual void NewObject(CoreContext& ctxt, const CoreObjectDescriptor& obj) override;
 
 protected:
   /// <summary>
