@@ -604,3 +604,14 @@ TEST_F(CoreThreadTest, ContextWaitTimesOutInOnStop) {
   // Let BIOS back out now:
   bios->Continue();
 }
+
+TEST_F(CoreThreadTest, UniqueOwnershipUnderTermination) {
+  AutoCreateContext subCtxt;
+
+  // Spin up a thread in a context that will take a long time to respond to the "stop" condition
+  AutoRequired<BlocksInOnStop> bios(subCtxt);
+
+  // Now start and then wait for the termination of the subcontext:
+  subCtxt->Initiate();
+  ASSERT_TRUE(bios->Block(std::chrono::seconds(5))) << "Blocking class failed to enter a blocked condition as expected";
+}
