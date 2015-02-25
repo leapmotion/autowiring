@@ -57,7 +57,7 @@ AutoNetServerImpl::AutoNetServerImpl(std::unique_ptr<AutoNetTransport>&& transpo
 
   // Generate list of all events from event registry
   for(auto event = g_pFirstEventEntry; event; event = event->pFlink)
-    m_EventTypes.insert(event->NewTypeIdentifier());
+    m_EventTypes.insert(event);
 }
 
 AutoNetServerImpl::~AutoNetServerImpl(){}
@@ -233,8 +233,8 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const CoreObjectDescriptor&
     {
       Json::array listenerTypes;
       for(const auto& event : m_EventTypes) {
-        if(event->IsSameAs(object.pCoreObject.get()))
-          listenerTypes.push_back(autowiring::demangle(event->Type()));
+        if (object.receivesEvents)
+          listenerTypes.push_back(autowiring::demangle(event->GetTypeInfo()));
       }
 
       if(!listenerTypes.empty())
