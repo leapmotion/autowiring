@@ -79,7 +79,7 @@ namespace autowiring {
   /// </summary>
   template<class T>
   struct fast_pointer_cast_blind<T, T> {
-    std::shared_ptr<T> cast(const std::shared_ptr<T>& rhs) {
+    static std::shared_ptr<T> cast(const std::shared_ptr<T>& rhs) {
       return rhs;
     }
   };
@@ -105,6 +105,12 @@ namespace autowiring {
       // Update the cast routine:
       fast_pointer_cast_blind<T, U>::cast = &fast_pointer_cast<T, U>;
     }
+    static const fast_pointer_cast_initializer sc_init;
+  };
+
+  // Trivial case specialization
+  template<class T>
+  struct fast_pointer_cast_initializer<T, T> {
     static const fast_pointer_cast_initializer sc_init;
   };
 
