@@ -16,7 +16,7 @@
 #include "InvokeRelay.h"
 #include "JunctionBoxManager.h"
 #include "member_new_type.h"
-#include "ObjectTraits.h"
+#include "CoreObjectDescriptor.h"
 #include "result_or_default.h"
 #include "TeardownNotifier.h"
 #include "TypeRegistry.h"
@@ -162,7 +162,7 @@ public:
     DeferrableAutowiring* pFirst;
 
     // A back reference to the concrete type from which this memo was generated:
-    const ObjectTraits* pObjTraits;
+    const CoreObjectDescriptor* pObjTraits;
 
     // Once this memo entry is satisfied, this will contain the AnySharedPointer instance that performs
     // the satisfaction
@@ -230,7 +230,7 @@ protected:
   class AutoFactoryFn;
 
   // This is a list of concrete types, indexed by the true type of each element.
-  std::list<ObjectTraits> m_concreteTypes;
+  std::list<CoreObjectDescriptor> m_concreteTypes;
 
   // This is a memoization map used to memoize any already-detected interfaces.
   mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;
@@ -327,7 +327,7 @@ protected:
   /// <summary>
   /// Invokes all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
-  void UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const ObjectTraits& entry);
+  void UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry);
 
   /// \internal
   /// <summary>
@@ -398,7 +398,7 @@ protected:
   /// <summary>
   /// Internal type introduction routine
   /// </summary>
-  void AddInternal(const ObjectTraits& traits);
+  void AddInternal(const CoreObjectDescriptor& traits);
 
   /// \internal
   /// <summary>
@@ -454,7 +454,7 @@ protected:
   /// <summary>
   /// Forwarding routine, only removes from this context
   /// </summary>
-  void UnsnoopAutoPacket(const ObjectTraits& traits);
+  void UnsnoopAutoPacket(const CoreObjectDescriptor& traits);
 
   /// \internal
   /// <summary>
@@ -671,7 +671,7 @@ public:
 
     try {
       // Pass control to the insertion routine, which will handle injection from this point:
-      AddInternal(ObjectTraits(retVal, (T*)nullptr));
+      AddInternal(CoreObjectDescriptor(retVal, (T*)nullptr));
     }
     catch(autowiring_error&) {
       // We know why this exception occurred.  It's because, while we were constructing our
@@ -950,7 +950,7 @@ public:
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    const ObjectTraits traits(pSnooper, (T*)nullptr);
+    const CoreObjectDescriptor traits(pSnooper, (T*)nullptr);
     
     // Add to collections of snoopers
     InsertSnooper(pSnooper);
@@ -980,7 +980,7 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    const ObjectTraits traits(pSnooper, (T*)nullptr);
+    const CoreObjectDescriptor traits(pSnooper, (T*)nullptr);
     
     RemoveSnooper(pSnooper);
     

@@ -15,9 +15,9 @@
 /// <summary>
 /// Mapping and extraction structure used to provide a runtime version of an Object-implementing shared pointer
 /// </summary>
-struct ObjectTraits {
+struct CoreObjectDescriptor {
   template<class TActual, class T>
-  ObjectTraits(const std::shared_ptr<TActual>& value, T*) :
+  CoreObjectDescriptor(const std::shared_ptr<TActual>& value, T*) :
     type(typeid(T)),
     actual_type(typeid(*value)),
     stump(SlotInformationStump<T>::s_stump),
@@ -51,7 +51,7 @@ struct ObjectTraits {
   // The type of the passed pointer
   const std::type_info& type;
 
-  // The "actual type" used by Autowiring.  This type may differ from ObjectTraits::type in cases
+  // The "actual type" used by Autowiring.  This type may differ from CoreObjectDescriptor::type in cases
   // where a type unifier is used, or if the concrete type is defined in an external module--for
   // instance, by a class factory.
   const std::type_info& actual_type;
