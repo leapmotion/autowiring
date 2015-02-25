@@ -67,7 +67,7 @@ void AutoPacketGraph::RecordDelivery(const std::type_info* ti, const AutoFilterD
   itr->second++;
 }
 
-void AutoPacketGraph::NewObject(CoreContext&, const ObjectTraits&) {
+void AutoPacketGraph::NewObject(CoreContext&, const CoreObjectDescriptor&) {
   LoadEdges();
 }
 

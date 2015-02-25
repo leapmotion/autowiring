@@ -133,7 +133,7 @@ set(Autowiring_SRCS
   ObjectPool.h
   ObjectPoolMonitor.cpp
   ObjectPoolMonitor.h
-  ObjectTraits.h
+  CoreObjectDescriptor.h
   SatCounter.h
   SatCounter.cpp
   SharedPointerSlot.h

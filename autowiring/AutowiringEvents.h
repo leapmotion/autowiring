@@ -3,7 +3,7 @@
 #include "EventRegistry.h"
 #include TYPE_INDEX_HEADER
 
-struct ObjectTraits;
+struct CoreObjectDescriptor;
 class CoreContext;
 
 /// <summary>
@@ -17,7 +17,7 @@ public:
   
   virtual void NewContext(CoreContext&)=0;
   virtual void ExpiredContext(CoreContext&)=0;
-  virtual void NewObject(CoreContext&, const ObjectTraits&)=0;
+  virtual void NewObject(CoreContext&, const CoreObjectDescriptor&)=0;
 };
 
 // Extern explicit template instantiation declarations added to prevent
