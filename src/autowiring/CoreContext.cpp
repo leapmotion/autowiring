@@ -871,13 +871,13 @@ void CoreContext::RemoveEventReceivers(const t_rcvrSet& receivers) {
     m_pParent->RemoveEventReceivers(receivers);
 }
 
-void CoreContext::UnsnoopEvents(CoreObject* oSnooper, const JunctionBoxEntry<CoreObject>& receiver) {
+void CoreContext::UnsnoopEvents(const AnySharedPointer& snooper, const JunctionBoxEntry<CoreObject>& receiver) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     if(
       // If the passed value is currently a snooper, then the caller has snooped a context and also
       // one of its parents.  End here.
-      m_snoopers.count(oSnooper) ||
+      m_snoopers.count(snooper) ||
 
       // If we are an event receiver in this context, then the caller has snooped a context and
       // is also a proper EventReceiver in one of that context's ancestors--this is a fairly
@@ -894,7 +894,7 @@ void CoreContext::UnsnoopEvents(CoreObject* oSnooper, const JunctionBoxEntry<Cor
 
   // Handoff to parent type:
   if(m_pParent)
-    m_pParent->UnsnoopEvents(oSnooper, receiver);
+    m_pParent->UnsnoopEvents(snooper, receiver);
 }
 
 void CoreContext::FilterException(void) {
@@ -938,6 +938,31 @@ void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, CoreObjec
     }
 }
 
+void CoreContext::Snoop(const CoreObjectDescriptor& traits) {
+  // Add to collections of snoopers
+  InsertSnooper(traits.value);
+
+  // Add EventReceiver
+  if (traits.receivesEvents)
+    AddEventReceiver(JunctionBoxEntry<CoreObject>(this, traits.pCoreObject));
+
+  // Add PacketSubscriber;
+  if (!traits.subscriber.empty())
+    AddPacketSubscriber(traits.subscriber);
+}
+
+void CoreContext::Unsnoop(const CoreObjectDescriptor& traits) {
+  RemoveSnooper(traits.value);
+
+  // Cleanup if its an EventReceiver
+  if (traits.receivesEvents)
+    UnsnoopEvents(traits.value, JunctionBoxEntry<CoreObject>(this, traits.pCoreObject));
+
+  // Cleanup if its a packet listener
+  if (!traits.subscriber.empty())
+    UnsnoopAutoPacket(traits);
+}
+
 void CoreContext::AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
   // Determine whether a type memo exists right now for the thing we're trying to defer.  If it doesn't
   // exist, we need to inject one in order to allow deferred satisfaction to know what kind of type we
@@ -956,14 +981,14 @@ void CoreContext::AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
   entry.pFirst = deferrable;
 }
 
-void CoreContext::InsertSnooper(std::shared_ptr<CoreObject> snooper) {
+void CoreContext::InsertSnooper(const AnySharedPointer& snooper) {
   (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
-    m_snoopers.insert(snooper.get());
+  m_snoopers.insert(snooper);
 }
 
-void CoreContext::RemoveSnooper(std::shared_ptr<CoreObject> snooper) {
+void CoreContext::RemoveSnooper(const AnySharedPointer& snooper) {
   (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
-  m_snoopers.erase(snooper.get());
+  m_snoopers.erase(snooper);
 }
 
 void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
@@ -1051,7 +1076,7 @@ void CoreContext::UnsnoopAutoPacket(const CoreObjectDescriptor& traits) {
     
     // If the passed value is currently a snooper, then the caller has snooped a context and also
     // one of its parents.  End here.
-    if ( m_snoopers.count(traits.pCoreObject.get()) )
+    if (m_snoopers.count(traits.value))
       return;
   }
   
