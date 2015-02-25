@@ -247,7 +247,7 @@ protected:
   t_rcvrSet m_delayedEventReceivers;
   
   // Context members from other contexts that have snooped this context
-  std::set<CoreObject*> m_snoopers;
+  std::set<AnySharedPointer> m_snoopers;
 
   // Manages events for this context. One JunctionBoxManager is shared between peer contexts
   const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
@@ -432,13 +432,13 @@ protected:
   /// <summary>
   /// Adds a snooper to the snoopers set
   /// </summary>
-  void InsertSnooper(std::shared_ptr<CoreObject> snooper);
+  void InsertSnooper(const AnySharedPointer& snooper);
 
   /// \internal
   /// <summary>
   /// Removes a snooper to the snoopers set
   /// </summary>
-  void RemoveSnooper(std::shared_ptr<CoreObject> snooper);
+  void RemoveSnooper(const AnySharedPointer& snooper);
   
   /// \internal
   /// <summary>
@@ -448,7 +448,7 @@ protected:
   /// This method has no effect if the passed value is presently a snooper in this context; the
   /// snooper collection must therefore be updated prior to the call to this method.
   /// </remarks>
-  void UnsnoopEvents(CoreObject* snooper, const JunctionBoxEntry<CoreObject>& traits);
+  void UnsnoopEvents(const AnySharedPointer& snooper, const JunctionBoxEntry<CoreObject>& traits);
   
   /// \internal
   /// <summary>
@@ -938,6 +938,11 @@ public:
   void FilterFiringException(const JunctionBoxBase* pProxy, CoreObject* pRecipient);
 
   /// <summary>
+  /// Runtime version of Snoop
+  /// </summary>
+  void Snoop(const CoreObjectDescriptor& traits);
+
+  /// <summary>
   /// Registers the specified event receiver to receive messages broadcast within this context.
   /// </summary>
   /// <remarks>
@@ -950,18 +955,7 @@ public:
   /// </remarks>
   template<class T>
   void Snoop(const std::shared_ptr<T>& pSnooper) {
-    const CoreObjectDescriptor traits(pSnooper, (T*)nullptr);
-    
-    // Add to collections of snoopers
-    InsertSnooper(pSnooper);
-
-    // Add EventReceiver
-    if(traits.receivesEvents)
-      AddEventReceiver(JunctionBoxEntry<CoreObject>(this, traits.pCoreObject));
-    
-    // Add PacketSubscriber;
-    if(!traits.subscriber.empty())
-      AddPacketSubscriber(traits.subscriber);
+    Snoop(CoreObjectDescriptor(pSnooper, (T*)nullptr));
   }
 
   /// <summary>
@@ -969,8 +963,18 @@ public:
   /// </summary>
   template<class T>
   void Snoop(const Autowired<T>& snooper) {
-    return Snoop(static_cast<const std::shared_ptr<T>&>(snooper));
+    Snoop(
+      CoreObjectDescriptor(
+        static_cast<const std::shared_ptr<T>&>(snooper),
+        (T*)nullptr
+      )
+    );
   }
+
+  /// <summary>
+  /// Runtime version of Unsnoop
+  /// </summary>
+  void Unsnoop(const CoreObjectDescriptor& traits);
 
   /// <summary>
   /// Unregisters an event receiver previously registered to receive snooped events
@@ -980,19 +984,7 @@ public:
   /// </remarks>
   template<class T>
   void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    const CoreObjectDescriptor traits(pSnooper, (T*)nullptr);
-    
-    RemoveSnooper(pSnooper);
-    
-    auto oSnooper = std::static_pointer_cast<CoreObject>(pSnooper);
-    
-    // Cleanup if its an EventReceiver
-    if(traits.receivesEvents)
-      UnsnoopEvents(oSnooper.get(), JunctionBoxEntry<CoreObject>(this, traits.pCoreObject));
-    
-    // Cleanup if its a packet listener
-    if(!traits.subscriber.empty())
-      UnsnoopAutoPacket(traits);
+    Unsnoop(CoreObjectDescriptor(pSnooper, (T*)nullptr));
   }
   
   /// <summary>
@@ -1000,7 +992,12 @@ public:
   /// </summary>
   template<class T>
   void Unsnoop(const Autowired<T>& snooper) {
-    return Unsnoop(static_cast<const std::shared_ptr<T>&>(snooper));
+    Unsnoop(
+      CoreObjectDescriptor(
+        static_cast<const std::shared_ptr<T>&>(snooper),
+        (T*)nullptr
+      )
+    );
   }
 
   /// <summary>
