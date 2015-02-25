@@ -319,7 +319,29 @@ TEST_F(SnoopTest, CanSnoopAutowired) {
   AutoCurrentContext ctxt;
   ctxt->Inject<SimpleObject>();
 
-  // Now autowire what we injeced and verify we can snoop this directly
+  // Now autowire what we injected and verify we can snoop this directly
   Autowired<SimpleObject> so;
   ctxt->Snoop(so);
+}
+
+TEST_F(SnoopTest, RuntimeSnoopCall) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+
+  auto x = std::make_shared<ChildMember>();
+  CoreObjectDescriptor traits(x);
+
+  // Try to snoop and verify that the snooped member gets an event:
+  ctxt->Snoop(x);
+
+  AutoFired<UpBroadcastListener> ubl;
+  ubl(&UpBroadcastListener::SimpleCall)();
+
+  ASSERT_TRUE(x->m_simpleCall) << "Runtime snoop call did not correctly register a child context member";
+  ASSERT_EQ(1UL, x->m_callCount) << "Call count to a child member was incorrect";
+
+  // And the alternative variant next:
+  ctxt->Unsnoop(x);
+  ubl(&UpBroadcastListener::SimpleCall)();
+  ASSERT_EQ(1UL, x->m_callCount) << "Snoop method was invoked after the related type was removed";
 }
