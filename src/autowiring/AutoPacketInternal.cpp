@@ -21,16 +21,14 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
   // Find all subscribers with no required or optional arguments:
   std::vector<SatCounter*> callCounters;
   for (auto* satCounter = m_firstCounter; satCounter; satCounter = satCounter->flink) {
-    
     // Prime the satisfaction graph for element:
     AddSatCounter(*satCounter);
-    
     if (!satCounter->remaining)
       callCounters.push_back(satCounter);
   }
   
   // Mark timeshifted decorations as unsatisfiable on the first packet
-  if (isFirstPacket) {
+  if (isFirstPacket)
     for (auto& dec : m_decorations) {
       auto& key = dec.first;
       if (key.tshift) {
@@ -38,7 +36,6 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
         MarkSuccessorsUnsatisfiable(key);
       }
     }
-  }
 
   // Call all subscribers with no required or optional arguments:
   // NOTE: This may result in decorations that cause other subscribers to be called.
@@ -46,7 +43,22 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
     call->GetCall()(call->GetAutoFilter(), *this);
 
   // First-call indicated by argumument type AutoPacket&:
-  UpdateSatisfaction(DecorationKey(typeid(auto_arg<AutoPacket&>::id_type)));
+#if autowiring_USE_LIBCXX
+  for (bool is_shared : {false, true}) {
+#else
+  for (int num = 0; num < 2; ++num) {
+    bool is_shared = (bool)num;
+#endif
+    std::unique_lock<std::mutex> lk(m_lock);
+
+    // Don't modify the decorations set if nobody expects an AutoPacket input
+    auto q = m_decorations.find(DecorationKey(typeid(auto_arg<AutoPacket&>::id_type), is_shared, 0));
+    if (q == m_decorations.end())
+      continue;
+
+    q->second.m_state = DispositionState::Satisfied;
+    UpdateSatisfactionUnsafe(std::move(lk), q->second);
+  }
 }
 
 std::shared_ptr<AutoPacketInternal> AutoPacketInternal::SuccessorInternal(void) {

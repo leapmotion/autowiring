@@ -74,7 +74,7 @@ TEST_F(ContextCleanupTest, VerifyContextDtor) {
       AutoRequired<SimpleObject> simple;
       objVerifier = simple;
 
-      // Each ObjectTraits instance holds 2 strong references to SimpleObject, as CoreObject type and as ContextMember type.
+      // Each CoreObjectDescriptor instance holds 2 strong references to SimpleObject, as CoreObject type and as ContextMember type.
       // One instance is held in CoreContext::m_concreteTypes and the other in the CoreContext::m_typeMemos.
       // Finally, once more reference is held by the shared_ptr<SimpleObject> inheritance of simple.
       EXPECT_EQ(5, objVerifier.use_count()) << "Unexpected number of references to a newly constructed object";
@@ -153,7 +153,9 @@ TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
   *ct += [called] { *called = true; };
 
   // Verify that a graceful shutdown ensures both lambdas are called:
+  ASSERT_FALSE(ctxt->IsShutdown()) << "Context shut down prematurely";
   ctxt->SignalShutdown(true, ShutdownMode::Graceful);
+  ASSERT_FALSE(ct->IsRunning()) << "Thread still reported as running even after a wait concluded";
   ASSERT_TRUE(*called) << "Graceful shutdown did not correctly run down all lambdas";
 }
 

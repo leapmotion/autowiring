@@ -15,9 +15,15 @@
 /// <summary>
 /// Mapping and extraction structure used to provide a runtime version of an Object-implementing shared pointer
 /// </summary>
-struct ObjectTraits {
-  template<class TActual, class T>
-  ObjectTraits(const std::shared_ptr<TActual>& value, T*) :
+/// <remarks>
+/// This type is used to describe an object that is a member of a context.  This descriptor structure performs
+/// all of the type rule induction work that CoreContext performs, and provides users with a way to provide a
+/// runtime description of a type.  This is critical in cases where a type is not available at compile time--
+/// for instance, if that type is provided in another module that is dynamically linked.
+/// </remarks>
+struct CoreObjectDescriptor {
+  template<typename TActual, typename T>
+  CoreObjectDescriptor(const std::shared_ptr<TActual>& value, T*) :
     type(typeid(T)),
     actual_type(typeid(*value)),
     stump(SlotInformationStump<T>::s_stump),
@@ -48,10 +54,18 @@ struct ObjectTraits {
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
   }
 
+  /// <summary>
+  /// Special case where the declared type is also the true type
+  /// </summary>
+  template<typename T>
+  CoreObjectDescriptor(const std::shared_ptr<T>& value) :
+    CoreObjectDescriptor(value, static_cast<T*>(nullptr))
+  {}
+
   // The type of the passed pointer
   const std::type_info& type;
 
-  // The "actual type" used by Autowiring.  This type may differ from ObjectTraits::type in cases
+  // The "actual type" used by Autowiring.  This type may differ from CoreObjectDescriptor::type in cases
   // where a type unifier is used, or if the concrete type is defined in an external module--for
   // instance, by a class factory.
   const std::type_info& actual_type;

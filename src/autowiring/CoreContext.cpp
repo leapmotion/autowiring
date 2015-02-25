@@ -145,6 +145,11 @@ size_t CoreContext::GetChildCount(void) const {
   return m_children.size();
 }
 
+std::vector<CoreRunnable*> CoreContext::GetRunnables(void) const {
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+  return std::vector<CoreRunnable*>(m_threads.begin(), m_threads.end());
+}
+
 std::shared_ptr<CoreContext> CoreContext::FirstChild(void) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
@@ -189,7 +194,7 @@ const std::type_info& CoreContext::GetAutoTypeId(const AnySharedPointer& ptr) co
   if (q == m_typeMemos.end() || !q->second.pObjTraits)
     throw autowiring_error("Attempted to obtain the true type of a shared pointer that was not a member of this context");
 
-  const ObjectTraits* pObjTraits = q->second.pObjTraits;
+  const CoreObjectDescriptor* pObjTraits = q->second.pObjTraits;
   return pObjTraits->type;
 }
 
@@ -232,7 +237,7 @@ std::shared_ptr<CoreObject> CoreContext::IncrementOutstandingThreadCount(void) {
   return retVal;
 }
 
-void CoreContext::AddInternal(const ObjectTraits& traits) {
+void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
   {
     std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
 
@@ -319,7 +324,7 @@ CoreContext::MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& referenc
   }
 
   // Resolve based on iterated dynamic casts for each concrete type:
-  const ObjectTraits* pObjTraits = nullptr;
+  const CoreObjectDescriptor* pObjTraits = nullptr;
   for(const auto& type : m_concreteTypes) {
     if(!reference->try_assign(*type.value))
       // No match, try the next entry
@@ -381,8 +386,6 @@ void CoreContext::Initiate(void) {
   // Get the beginning of the thread list that we have at the time of lock acquisition
   // New threads are added to the front of the thread list, which means that objects
   // after this iterator are the ones that will need to be started
-  t_threadList::iterator beginning;
-
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
 
   // Now we can transition to initiated or running:
@@ -431,7 +434,7 @@ void CoreContext::Initiate(void) {
   }
 
   // Now we can recover the first thread that will need to be started
-  beginning = m_threads.begin();
+  auto beginning = m_threads.begin();
 
   // Start our threads before starting any child contexts:
   lk.unlock();
@@ -452,7 +455,7 @@ void CoreContext::InitiateCoreThreads(void) {
 void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   // As we signal shutdown, there may be a CoreRunnable that is in the "running" state.  If so,
   // then we will skip that thread as we signal the list of threads to shutdown.
-  t_threadList::iterator firstThreadToStop;
+  std::list<CoreRunnable*>::iterator firstThreadToStop;
   
   // Trivial return check
   if (IsShutdown())
@@ -647,7 +650,7 @@ void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable
   // Always finalize this entry:
   auto strategy = pDeferrable->GetStrategy();
   if(strategy)
-    strategy->Finalize(pDeferrable);
+    strategy->Finalize();
 
   // Stores the immediate predecessor of the node we will linearly scan for in our
   // linked list.
@@ -733,9 +736,9 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
-void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const ObjectTraits& entry) {
+void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry) {
   // Collection of satisfiable lists:
-  std::vector<std::pair<const DeferrableUnsynchronizedStrategy*, DeferrableAutowiring*>> satisfiable;
+  std::vector<DeferrableUnsynchronizedStrategy*> satisfiable;
 
   // Notify any autowired field whose autowiring was deferred.  We do this by processing each entry
   // in the entire type memos collection.  These entries are keyed on the type of the memo, and the
@@ -790,9 +793,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
         // are identified by an empty strategy, and we just skip them.
         auto strategy = pNext->GetStrategy();
         if(strategy)
-          satisfiable.push_back(
-            std::make_pair(strategy, pNext)
-          );
+          satisfiable.push_back(strategy);
       }
     }
   }
@@ -816,7 +817,7 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
 
   // Run through everything else and finalize it all:
   for(const auto& cur : satisfiable)
-    cur.first->Finalize(cur.second);
+    cur->Finalize();
 }
 
 void CoreContext::AddEventReceiver(const JunctionBoxEntry<CoreObject>& entry) {
@@ -870,13 +871,13 @@ void CoreContext::RemoveEventReceivers(const t_rcvrSet& receivers) {
     m_pParent->RemoveEventReceivers(receivers);
 }
 
-void CoreContext::UnsnoopEvents(CoreObject* oSnooper, const JunctionBoxEntry<CoreObject>& receiver) {
+void CoreContext::UnsnoopEvents(const AnySharedPointer& snooper, const JunctionBoxEntry<CoreObject>& receiver) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     if(
       // If the passed value is currently a snooper, then the caller has snooped a context and also
       // one of its parents.  End here.
-      m_snoopers.count(oSnooper) ||
+      m_snoopers.count(snooper) ||
 
       // If we are an event receiver in this context, then the caller has snooped a context and
       // is also a proper EventReceiver in one of that context's ancestors--this is a fairly
@@ -893,7 +894,7 @@ void CoreContext::UnsnoopEvents(CoreObject* oSnooper, const JunctionBoxEntry<Cor
 
   // Handoff to parent type:
   if(m_pParent)
-    m_pParent->UnsnoopEvents(oSnooper, receiver);
+    m_pParent->UnsnoopEvents(snooper, receiver);
 }
 
 void CoreContext::FilterException(void) {
@@ -937,6 +938,31 @@ void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, CoreObjec
     }
 }
 
+void CoreContext::Snoop(const CoreObjectDescriptor& traits) {
+  // Add to collections of snoopers
+  InsertSnooper(traits.value);
+
+  // Add EventReceiver
+  if (traits.receivesEvents)
+    AddEventReceiver(JunctionBoxEntry<CoreObject>(this, traits.pCoreObject));
+
+  // Add PacketSubscriber;
+  if (!traits.subscriber.empty())
+    AddPacketSubscriber(traits.subscriber);
+}
+
+void CoreContext::Unsnoop(const CoreObjectDescriptor& traits) {
+  RemoveSnooper(traits.value);
+
+  // Cleanup if its an EventReceiver
+  if (traits.receivesEvents)
+    UnsnoopEvents(traits.value, JunctionBoxEntry<CoreObject>(this, traits.pCoreObject));
+
+  // Cleanup if its a packet listener
+  if (!traits.subscriber.empty())
+    UnsnoopAutoPacket(traits);
+}
+
 void CoreContext::AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
   // Determine whether a type memo exists right now for the thing we're trying to defer.  If it doesn't
   // exist, we need to inject one in order to allow deferred satisfaction to know what kind of type we
@@ -955,14 +981,14 @@ void CoreContext::AddDeferredUnsafe(DeferrableAutowiring* deferrable) {
   entry.pFirst = deferrable;
 }
 
-void CoreContext::InsertSnooper(std::shared_ptr<CoreObject> snooper) {
+void CoreContext::InsertSnooper(const AnySharedPointer& snooper) {
   (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
-    m_snoopers.insert(snooper.get());
+  m_snoopers.insert(snooper);
 }
 
-void CoreContext::RemoveSnooper(std::shared_ptr<CoreObject> snooper) {
+void CoreContext::RemoveSnooper(const AnySharedPointer& snooper) {
   (std::lock_guard<std::mutex>)m_stateBlock->m_lock,
-  m_snoopers.erase(snooper.get());
+  m_snoopers.erase(snooper);
 }
 
 void CoreContext::AddContextMember(const std::shared_ptr<ContextMember>& ptr) {
@@ -1044,13 +1070,13 @@ void CoreContext::TryTransitionChildrenState(void) {
   lk.unlock();
 }
 
-void CoreContext::UnsnoopAutoPacket(const ObjectTraits& traits) {
+void CoreContext::UnsnoopAutoPacket(const CoreObjectDescriptor& traits) {
   {
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
     
     // If the passed value is currently a snooper, then the caller has snooped a context and also
     // one of its parents.  End here.
-    if ( m_snoopers.count(traits.pCoreObject.get()) )
+    if (m_snoopers.count(traits.value))
       return;
   }
   

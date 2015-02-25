@@ -111,3 +111,70 @@ TEST_F(AutowiringTest, CanAutowireCompletelyUndefinedType) {
   Autowired<CompletelyUndefinedType> cut;
   ASSERT_EQ(nullptr, cut.get_unsafe()) << "Autowiring of a completely undefined type succeeded unexpectedly";
 }
+
+class StaticNewInt;
+
+StaticNewInt* CreateStaticNewIntImpl();
+StaticNewInt* CreateStaticNewIntImpl(std::unique_ptr<int>);
+
+class StaticNewInt:
+  public CoreObject
+{
+protected:
+  StaticNewInt(void){}
+public:
+  static StaticNewInt* New(std::unique_ptr<int> value) {
+    return CreateStaticNewIntImpl(std::move(value));
+  }
+
+  static StaticNewInt* New(void) {
+    return CreateStaticNewIntImpl();
+  }
+
+  virtual int getValue(void) = 0;
+};
+
+class StaticNewIntImpl:
+  public StaticNewInt
+{
+public:
+  StaticNewIntImpl(void):
+    m_value(new int(42))
+  {}
+  StaticNewIntImpl(std::unique_ptr<int> val):
+    m_value(std::move(val))
+  {}
+
+  int getValue(void) override {
+    return *m_value;
+  }
+
+  std::unique_ptr<int> m_value;
+};
+
+StaticNewInt* CreateStaticNewIntImpl(){
+  return new StaticNewIntImpl();
+}
+StaticNewInt* CreateStaticNewIntImpl(std::unique_ptr<int> val){
+  return new StaticNewIntImpl(std::move(val));
+}
+
+TEST_F(AutowiringTest, StaticNewWithArgs) {
+  const bool static_new = has_static_new<StaticNewInt, typename std::unique_ptr<int>>::value;
+  ASSERT_TRUE(static_new) << "has_static_new didn't correctly identify static New()";
+
+  {
+    AutoCreateContext ctxt;
+    ASSERT_NO_THROW(ctxt->Inject<StaticNewInt>()) << "Exception throws while injecting member";
+    AutowiredFast<StaticNewInt> obj(ctxt);
+    EXPECT_EQ(42, obj->getValue()) << "Wrong constructor called";
+    ctxt->SignalShutdown(true);
+  }
+  {
+    AutoCreateContext ctxt;
+    ASSERT_NO_THROW(auto obj = ctxt->Inject<StaticNewInt>(std::unique_ptr<int>(new int(1337)))) << "Exception throws while injecting member";
+    AutowiredFast<StaticNewInt> obj(ctxt);
+    EXPECT_EQ(1337, obj->getValue()) << "Wrong constructor called";
+    ctxt->SignalShutdown(true);
+  }
+}

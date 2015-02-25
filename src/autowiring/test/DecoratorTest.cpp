@@ -68,6 +68,8 @@ TEST_F(DecoratorTest, VerifySimplePacketDecoration) {
 }
 
 TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
+  auto filter = [](const Decoration<0>& zero, const Decoration<1>& one) {};
+
   // Create a packet while the factory has no subscribers:
   AutoRequired<AutoPacketFactory> factory;
   auto packet1 = factory->NewPacket();
@@ -76,17 +78,17 @@ TEST_F(DecoratorTest, VerifyDecoratorAwareness) {
   ASSERT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription exists where one should not have existed";
 
   // Create another packet where a subscriber exists:
-  AutoRequired<FilterA> filterA;
+  *factory += filter;
   auto packet2 = factory->NewPacket();
 
   // Verify the first packet still does not have subscriptions:
-  ASSERT_THROW(packet1->GetSatisfaction<FilterA>(), autowiring_error) << "Subscription was incorrectly, retroactively added to a packet";
+  ASSERT_THROW(packet1->GetSatisfaction<decltype(filter)>(), autowiring_error) << "Subscription was incorrectly, retroactively added to a packet";
   ASSERT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
   ASSERT_EQ(0UL, packet1->GetDecorationTypeCount()) << "Subscription was incorrectly, retroactively added to a packet";
   ASSERT_FALSE(packet1->HasSubscribers<Decoration<0>>()) << "Subscription was incorrectly, retroactively added to a packet";
 
   // Verify the second one does:
-  ASSERT_THROW(packet2->GetSatisfaction<FilterA>(), autowiring_error) << "Packet lacked an expected subscription";
+  ASSERT_THROW(packet2->GetSatisfaction<decltype(filter)>(), autowiring_error) << "Packet lacked an expected subscription";
   ASSERT_EQ(2UL, packet2->GetDecorationTypeCount()) << "Incorrect count of expected decorations";
   ASSERT_TRUE(packet2->HasSubscribers<Decoration<0>>()) << "Packet lacked an expected subscription";
 }

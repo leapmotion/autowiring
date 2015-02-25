@@ -155,3 +155,29 @@ TEST_F(FactoryTest, VerifyCanAutowireActualType) {
 
   ASSERT_TRUE(concrete.IsAutowired()) << "Failed to find the concrete derived type in a factory new construction in a case where it is known to exist";
 }
+
+class AcceptsString:
+  public Object
+{
+public:
+  AcceptsString(const char* str) :
+    str(str)
+  {}
+
+  static AcceptsString* New(const char* pstrNamespace) {
+    return new AcceptsString(pstrNamespace);
+  }
+
+  const char* const str;
+};
+
+TEST_F(FactoryTest, StringLiteralCheck) {
+  // This case can sometimes fail to compile because of the way we check for static new.
+  // String literals are interpreted to be a reference to an array, and taking the address of such a type can
+  // cause problems.
+  AutoCurrentContext()->Inject<AcceptsString>("Abcd");
+  Autowired<AcceptsString> as;
+
+  ASSERT_TRUE(as.IsAutowired()) << "Standard injection with an argument did not correctly forward the argument";
+  ASSERT_STREQ("Abcd", as->str) << "Constructed type was not constructed properly";
+}

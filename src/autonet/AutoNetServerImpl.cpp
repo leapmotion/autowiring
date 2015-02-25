@@ -5,7 +5,7 @@
 #include "autowiring.h"
 #include "AutoNetTransportHttp.hpp"
 #include "demangle.h"
-#include "ObjectTraits.h"
+#include "CoreObjectDescriptor.h"
 #include "EventRegistry.h"
 #include "TypeRegistry.h"
 #include <iostream>
@@ -170,7 +170,7 @@ void AutoNetServerImpl::ExpiredContext(CoreContext& oldCtxt){
   };
 }
 
-void AutoNetServerImpl::NewObject(CoreContext& ctxt, const ObjectTraits& object){
+void AutoNetServerImpl::NewObject(CoreContext& ctxt, const CoreObjectDescriptor& object){
   int contextID = ResolveContextID(&ctxt);
 
   *this += [this, object, contextID]{

@@ -7,7 +7,7 @@
 class CoreObject;
 
 /// <summary>
-/// Base class for objects that run threads.
+/// Provides the interface for threads that should receive start and stop notifications in a context
 /// </summary>
 /// <remarks>
 /// Users of Autowiring will typically use BasicThread or CoreThread instead of
@@ -62,13 +62,22 @@ protected:
   virtual void OnStop(bool graceful) {};
 
   /// <summary>
-  /// Invoked when a Wait() call has been made. Override this method to perform
-  /// any actions required before this runnable enters the waiting state.
+  /// Invoked just before control is returned to the user.
   /// </summary>
+  /// <param name="timeout">The maximum amount of time to wait</param>
+  /// <returns>True if the wait succeeded, false if a timeout occurred</returns>
   /// <remarks>
-  /// This call should not block for an extended period of time.
+  /// This virtual method provides implementors with a way to add further constraints to the wait operation
+  /// beyond the condition variable held internally by this CoreRunnable.
+  ///
+  /// This method must return true if the timeout is indefinite.
   /// </remarks>
-  virtual void DoAdditionalWait() {};
+  virtual bool DoAdditionalWait(std::chrono::nanoseconds timeout) { return true; }
+
+  /// <summary>
+  /// Untimed variant of DoAdditionalWait
+  /// </summary>
+  virtual void DoAdditionalWait(void) { }
 
 public:
   // Accessor methods:

@@ -191,3 +191,20 @@ TEST_F(AnySharedPointerTest, VoidReturnExpected) {
   // Validate equivalence of the void operator:
   ASSERT_EQ(v.get(), slot->ptr()) << "Shared pointer slot did not return a void* with an expected value";
 }
+
+TEST_F(AnySharedPointerTest, CanHoldCoreObject) {
+  auto co = std::make_shared<CoreObject>();
+
+  AnySharedPointer x = co;
+  ASSERT_EQ(co, x) << "Held CoreObject was not equivalent to constructed instance";
+}
+
+TEST_F(AnySharedPointerTest, CanFastCastToSelf) {
+  autowiring::fast_pointer_cast_initializer<CoreObject, CoreObject>::sc_init;
+
+  auto co = std::make_shared<CoreObject>();
+  ASSERT_EQ(
+    co,
+    autowiring::fast_pointer_cast<CoreObject>(co)
+  ) << "Could not cast a CoreObject instance to itself";
+}

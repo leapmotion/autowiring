@@ -45,6 +45,7 @@ set(AutowiringTest_SRCS
   SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.cpp
   TypeRegistryTest.cpp
+  SatisfiabilityTest.cpp
   ScopeTest.cpp
   SnoopTest.cpp
   TupleTest.cpp
@@ -58,6 +59,11 @@ set(AutowiringTest_SRCS
   TestFixtures/ThrowsWhenRun.hpp
   TestFixtures/MultiInherit.hpp
   UuidTest.cpp
+)
+
+add_windows_sources(
+  AutowiringTest_SRCS
+  AutoFutureTest.cpp
 )
 
 if(autowiring_USE_LIBCXX)

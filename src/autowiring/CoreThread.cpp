@@ -84,11 +84,8 @@ bool CoreThread::WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chron
     if(m_aborted)
       throw dispatch_aborted_exception();
 
-    // Pull over any ready events:
-    PromoteReadyEventsUnsafe();
-
-    // Dispatch events if the queue is now non-empty:
-    if(!m_dispatchQueue.empty())
+    if (PromoteReadyDispatchersUnsafe())
+      // Dispatcher is ready to run!  Exit our loop and dispatch an event
       break;
 
     if(status == std::cv_status::timeout)

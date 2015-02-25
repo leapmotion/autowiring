@@ -76,14 +76,17 @@ protected:
   // we're actually signalling this event after we free ourselves.
   const std::shared_ptr<BasicThreadStateBlock> m_state;
 
+  // Flag indicating that this thread was started at some point
+  bool m_wasStarted;
+
   // Flag indicating that we need to stop right now
   bool m_stop;
 
   // Run condition:
   bool m_running;
 
-  // Completion condition, true when this thread is no longer running and has run at least once
-  bool m_completed;
+  // Legacy field, some clients still refer to this
+  bool& DEPRECATED_MEMBER(m_completed, "Use IsCompleted instead");
 
   // The current thread priority
   ThreadPriority m_priority;
@@ -220,9 +223,15 @@ protected:
 
   void OnStop(bool graceful) override;
 
-  void DoAdditionalWait() override;
+  void DoAdditionalWait(void) override;
+  bool DoAdditionalWait(std::chrono::nanoseconds timeout) override;
 
 public:
+  /// <returns>
+  /// True if this thread has transitioned to a completed state
+  /// </returns>
+  bool IsCompleted(void) const;
+
   /// <summary>
   /// Begins thread execution.
   /// </summary>
