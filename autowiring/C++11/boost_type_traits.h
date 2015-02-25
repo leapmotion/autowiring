@@ -19,10 +19,12 @@
 #include <autoboost/type_traits/remove_reference.hpp>
 #include <autoboost/type_traits/remove_pointer.hpp>
 #include <autoboost/utility/enable_if.hpp>
+#include <autoboost/utility/declval.hpp>
 
 namespace std {
   using autoboost::conditional;
   using autoboost::decay;
+  using autoboost::declval;
   using autoboost::false_type;
   using autoboost::has_trivial_constructor;
   using autoboost::integral_constant;
