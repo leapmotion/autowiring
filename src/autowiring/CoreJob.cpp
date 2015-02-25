@@ -4,6 +4,18 @@
 #include "CoreContext.h"
 #include FUTURE_HEADER
 
+// Arm doesn't have std::future, but does have std::chrono. We need to convert from std::chrono
+// to autoboost::chrono when passing arguments to "std::future"(alias to autoboost::future) on arm.
+#if autowiring_BUILD_ARM
+autoboost::chrono::nanoseconds NanosecondsForFutureWait(const std::chrono::nanoseconds& time) {
+  return autoboost::chrono::nanoseconds(time.count());
+}
+#else
+std::chrono::nanoseconds NanosecondsForFutureWait(const std::chrono::nanoseconds& time) {
+  return time;
+}
+#endif
+
 CoreJob::CoreJob(const char* name) :
   ContextMember(name),
   m_running(false),
@@ -124,7 +136,7 @@ bool CoreJob::DoAdditionalWait(std::chrono::nanoseconds timeout) {
     return true;
 
   std::future<void>* ptr = static_cast<std::future<void>*>(m_curEvent);
-  auto status = ptr->wait_for(timeout);
+  auto status = ptr->wait_for(NanosecondsForFutureWait(timeout));
   delete ptr;
   m_curEvent = nullptr;
   return status == std::future_status::ready;
