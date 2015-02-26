@@ -195,7 +195,7 @@ const std::type_info& CoreContext::GetAutoTypeId(const AnySharedPointer& ptr) co
     throw autowiring_error("Attempted to obtain the true type of a shared pointer that was not a member of this context");
 
   const CoreObjectDescriptor* pObjTraits = q->second.pObjTraits;
-  return pObjTraits->type;
+  return *pObjTraits->type;
 }
 
 std::shared_ptr<CoreObject> CoreContext::IncrementOutstandingThreadCount(void) {
@@ -246,7 +246,7 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
     // concrete type defined in another context or potentially a unifier type.  Creating a slot here
     // is also undesirable because the complete type is not available and we can't create a dynaimc
     // caster to identify when this slot gets satisfied.
-    auto q = m_typeMemos.find(traits.actual_type);
+    auto q = m_typeMemos.find(*traits.actual_type);
     if(q != m_typeMemos.end()) {
       auto& v = q->second;
       if(*v.m_value == traits.pCoreObject)
@@ -290,7 +290,7 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
   }
 
   // Subscribers, if applicable:
-  const auto& stump = traits.stump;
+  const auto& stump = *traits.stump;
   if(!traits.subscriber.empty()) {
     AddPacketSubscriber(traits.subscriber);
 
