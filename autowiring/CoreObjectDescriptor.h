@@ -24,9 +24,9 @@
 struct CoreObjectDescriptor {
   template<typename TActual, typename T>
   CoreObjectDescriptor(const std::shared_ptr<TActual>& value, T*) :
-    type(typeid(T)),
-    actual_type(typeid(*value)),
-    stump(SlotInformationStump<T>::s_stump),
+    type(&typeid(T)),
+    actual_type(&typeid(*value)),
+    stump(&SlotInformationStump<T>::s_stump),
     value(value),
     subscriber(MakeAutoFilterDescriptor(value)),
     pCoreObject(autowiring::fast_pointer_cast<CoreObject>(value)),
@@ -63,12 +63,12 @@ struct CoreObjectDescriptor {
   {}
 
   // The type of the passed pointer
-  const std::type_info& type;
+  const std::type_info* type;
 
   // The "actual type" used by Autowiring.  This type may differ from CoreObjectDescriptor::type in cases
   // where a type unifier is used, or if the concrete type is defined in an external module--for
   // instance, by a class factory.
-  const std::type_info& actual_type;
+  const std::type_info* actual_type;
 
   /// <summary>
   /// Used to obtain a list of slots defined on this type, for reflection purposes
@@ -98,23 +98,23 @@ struct CoreObjectDescriptor {
   ///
   /// The linked list is guaranteed to be in reverse-sorted order
   /// </remarks>
-  const SlotInformationStumpBase& stump;
+  const SlotInformationStumpBase* stump;
 
   // A holder to store the original shared pointer, to ensure that type information propagates
   // correctly on the right-hand side of our map
-  const AnySharedPointer value;
+  AnySharedPointer value;
 
   // The packet subscriber introduction method, if appropriate:
-  const AutoFilterDescriptor subscriber;
+  AutoFilterDescriptor subscriber;
 
   // There are a lot of interfaces we support, here they all are:
-  const std::shared_ptr<CoreObject> pCoreObject;
-  const std::shared_ptr<ContextMember> pContextMember;
-  const std::shared_ptr<CoreRunnable> pCoreRunnable;
-  const std::shared_ptr<BasicThread> pBasicThread;
-  const std::shared_ptr<ExceptionFilter> pFilter;
-  const std::shared_ptr<BoltBase> pBoltBase;
+  std::shared_ptr<CoreObject> pCoreObject;
+  std::shared_ptr<ContextMember> pContextMember;
+  std::shared_ptr<CoreRunnable> pCoreRunnable;
+  std::shared_ptr<BasicThread> pBasicThread;
+  std::shared_ptr<ExceptionFilter> pFilter;
+  std::shared_ptr<BoltBase> pBoltBase;
 
   // Does this type receive events?
-  const bool receivesEvents;
+  bool receivesEvents;
 };
