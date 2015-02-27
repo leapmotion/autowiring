@@ -43,3 +43,22 @@ TEST_F(AutoPacketTest, FactoryCallTest) {
 
   ASSERT_TRUE(bCalled);
 }
+
+TEST_F(AutoPacketTest, MultipleDecorateGetFailures) {
+  // Decorate with two integer types:
+  *factory += [](int& arg) { arg = 0; };
+  *factory += [](int& arg) { arg = 1; };
+
+  // Now issue the packet:
+  auto packet = factory->NewPacket();
+
+  // Any type of "Get" call made on int should fail now
+  {
+    const int* out;
+    ASSERT_ANY_THROW(packet->Get(out));
+  }
+  {
+    const std::shared_ptr<const int>* out;
+    ASSERT_ANY_THROW(packet->Get(out));
+  }
+}

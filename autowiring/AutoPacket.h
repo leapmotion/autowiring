@@ -161,6 +161,11 @@ protected:
   /// </summary>
   static void ThrowNotDecoratedException(const DecorationKey& key);
 
+  /// <summary>
+  /// Throws a formatted runtime error corresponding to the case where a decoration was demanded and more than one such decoration was present
+  /// </summary>
+  static void ThrowMultiplyDecoratedException(const DecorationKey& key);
+
 public:
   /// <returns>
   /// The number of distinct decoration types on this packet
@@ -210,11 +215,20 @@ public:
   /// </remarks>
   template<class T>
   bool Get(const T*& out, int tshift=0) const {
-    const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(auto_id<T>::key(), false, tshift));
+    DecorationKey key(auto_id<T>::key(), false, tshift);
+    const DecorationDisposition* pDisposition = GetDisposition(key);
     if (pDisposition) {
-      if (pDisposition->m_decorations.size() == 1) {
+      switch (pDisposition->m_decorations.size()) {
+      case 0:
+        // No shared pointer decorations available, we have to try something else
+        break;
+      case 1:
+        // Single decoration, we can do what the user is asking
         out = static_cast<const T*>(pDisposition->m_decorations[0]->ptr());
         return true;
+      default:
+        ThrowMultiplyDecoratedException(key);
+        break;
       }
 
       // Second-chance satisfaction with an immediate
@@ -238,18 +252,31 @@ public:
   /// <remarks>
   /// This specialization cannot be used to obtain a decoration which has been attached to this packet via
   /// DecorateImmediate.
+  ///
+  /// This method will throw an exception if the requested decoration is multiply present on the packet
   /// </remarks>
   template<class T>
   bool Get(const std::shared_ptr<const T>*& out, int tshift=0) const {
     // Decoration must be present and the shared pointer itself must also be present
-    const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(auto_id<T>::key(), true, tshift));
-    if (!pDisposition || pDisposition->m_decorations.size() != 1) {
+    DecorationKey key(auto_id<T>::key(), true, tshift);
+    const DecorationDisposition* pDisposition = GetDisposition(key);
+    if (!pDisposition) {
       out = nullptr;
       return false;
     }
-
-    out = &pDisposition->m_decorations[0]->as_unsafe<const T>();
-    return true;
+    switch (pDisposition->m_decorations.size()) {
+    case 0:
+      // Simple non-availability, trivial return
+      out = nullptr;
+      return false;
+    case 1:
+      // Single decoration available, we can return here
+      out = &pDisposition->m_decorations[0]->as_unsafe<const T>();
+      return true;
+    default:
+      ThrowMultiplyDecoratedException(key);
+      return false;
+    }
   }
 
   /// <summary>
