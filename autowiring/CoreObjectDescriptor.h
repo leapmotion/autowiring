@@ -37,11 +37,9 @@ struct CoreObjectDescriptor {
     pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
     receivesEvents(
       [this]{
-        for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink) {
-          auto identifier = evt->NewTypeIdentifier();
-          if (identifier->IsSameAs(pCoreObject.get()))
+        for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink)
+          if (evt->IsSameAs(pCoreObject.get()))
             return true;
-        }
         // "T" not found in event registry
         return false;
       }()
