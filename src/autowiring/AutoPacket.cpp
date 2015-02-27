@@ -324,6 +324,12 @@ void AutoPacket::ThrowNotDecoratedException(const DecorationKey& key) {
   throw std::runtime_error(ss.str());
 }
 
+void AutoPacket::ThrowMultiplyDecoratedException(const DecorationKey& key) {
+  std::stringstream ss;
+  ss << "Attempted to obtain a type " << autowiring::demangle(key.ti) << " which was decorated more than once on this packet";
+  throw std::runtime_error(ss.str());
+}
+
 size_t AutoPacket::GetDecorationTypeCount(void) const
 {
   std::lock_guard<std::mutex> lk(m_lock);
