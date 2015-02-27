@@ -331,6 +331,20 @@ public:
     return std::shared_ptr<T>::get();
   }
 
+  T* operator->(void) const {
+    auto retVal = std::shared_ptr<T>::operator->();
+    if (!retVal)
+      throw autowiring_error("Attempted to dereference a null autowired field");
+    return retVal;
+  }
+
+  T& operator*(void) const {
+    auto retVal = std::shared_ptr<T>::operator*();
+    if (!retVal)
+      throw autowiring_error("Attempted to dereference a null autowired field");
+    return retVal;
+  }
+
   bool IsAutowired(void) const { return std::shared_ptr<T>::get() != nullptr; }
 };
 

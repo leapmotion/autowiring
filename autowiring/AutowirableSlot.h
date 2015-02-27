@@ -184,15 +184,23 @@ public:
     // where we can guarantee that the type will be completely defined, because the user is about
     // to make use of this type.
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
-    return get();
+
+    auto retVal = get();
+    if (!retVal)
+      throw autowiring_error("Attempted to dereference a null autowired field");
+    return retVal;
   }
 
   T& operator*(void) const {
+    auto retVal = get();
+    if (!retVal)
+      throw autowiring_error("Attempted to dereference a null autowired field");
+
     // We have to initialize here, in the operator context, because we don't actually know if the
     // user will be making use of this type.
     (void) autowiring::fast_pointer_cast_initializer<T, CoreObject>::sc_init;
 
-    return *get();
+    return *retVal;
   }
 
   using AnySharedPointer::operator=;
