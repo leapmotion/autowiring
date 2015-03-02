@@ -307,6 +307,19 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
   GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, traits);
 }
 
+void CoreContext::AddInternal(const AnySharedPointer& ptr) {
+  std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
+
+  // Verify that this type isn't already satisfied
+  MemoEntry& entry = m_typeMemos[ptr->type()];
+  if (entry.m_value)
+    throw autowiring_error("This interface is already present in the context");
+
+  // Now we can satisfy it:
+  entry.m_value = ptr;
+  UpdateDeferredElement(std::move(lk), entry);
+}
+
 void CoreContext::FindByType(AnySharedPointer& reference) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   FindByTypeUnsafe(reference);
@@ -736,76 +749,145 @@ void CoreContext::BroadcastContextCreationNotice(const std::type_info& sigil) co
     m_pParent->BroadcastContextCreationNotice(sigil);
 }
 
-void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry) {
-  // Collection of satisfiable lists:
-  std::vector<DeferrableUnsynchronizedStrategy*> satisfiable;
+void CoreContext::SatisfyAutowiring(std::unique_lock<std::mutex>& lk, MemoEntry& entry) {
+  std::vector<DeferrableUnsynchronizedStrategy*> requiresFinalize;
 
-  // Notify any autowired field whose autowiring was deferred.  We do this by processing each entry
-  // in the entire type memos collection.  These entries are keyed on the type of the memo, and the
-  // value is a linked list of trees of deferred autowiring instances that will need to be called
-  // if the corresponding memo type has been satisfied.
-  //
-  // A tree data structure is used, here, specifically because there are cases where child nodes
-  // on a tree should only be called if and only if the root node is still present.  For instance,
-  // creating an Autowired field adds a tree to this list with the root node referring to the
-  // Autowired field itself, and then invoking Autowired::NotifyWhenAutowired attaches a child to
-  // this tree.  If the Autowired instance is destroyed, the lambda registered for notification is
-  // also removed at the same time.
-  //
-  // Each connected nonroot deferrable autowiring is referred to as a "dependant chain".
+  // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
+  // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
+  // release the lock.
   std::stack<DeferrableAutowiring*> stk;
-  for(auto& cur : m_typeMemos) {
-    MemoEntry& value = cur.second;
+  stk.push(entry.pFirst);
+  entry.pFirst = nullptr;
 
-    if(value.m_value)
-      // This entry is already satisfied, no need to process it
-      continue;
+  // Depth-first search
+  while (!stk.empty()) {
+    auto top = stk.top();
+    stk.pop();
 
-    // Determine whether the current candidate element satisfies the autowiring we are considering.
-    // This is done internally via a dynamic cast on the interface type for which this polymorphic
-    // base type was constructed.
-    if(!value.m_value->try_assign(entry.pCoreObject))
-      continue;
+    for (DeferrableAutowiring* pCur = top; pCur; pCur = pCur->GetFlink()) {
+      pCur->SatisfyAutowiring(entry.m_value);
 
-    // Success, assign the traits
-    value.pObjTraits = &entry;
+      // See if there's another chain we need to process:
+      auto child = pCur->ReleaseDependentChain();
+      if (child)
+        stk.push(child);
 
-    // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
-    // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
-    // release the lock.
-    stk.push(value.pFirst);
-    value.pFirst = nullptr;
-
-    // Finish satisfying the remainder of the chain while we hold the lock:
-    while(!stk.empty()) {
-      auto top = stk.top();
-      stk.pop();
-
-      for(DeferrableAutowiring* pNext = top; pNext; pNext = pNext->GetFlink()) {
-        pNext->SatisfyAutowiring(value.m_value);
-
-        // See if there's another chain we need to process:
-        auto child = pNext->ReleaseDependentChain();
-        if(child)
-          stk.push(child);
-
-        // Not everyone needs to be finalized.  The entities that don't require finalization
-        // are identified by an empty strategy, and we just skip them.
-        auto strategy = pNext->GetStrategy();
-        if(strategy)
-          satisfiable.push_back(strategy);
-      }
+      // Not everyone needs to be finalized.  The entities that don't require finalization
+      // are identified by an empty strategy, and we just skip them.
+      auto strategy = pCur->GetStrategy();
+      if (strategy)
+        requiresFinalize.push_back(strategy);
     }
   }
 
+  lk.unlock();
+
+  // Run through everything else and finalize it all:
+  for (const auto& cur : requiresFinalize)
+    cur->Finalize();
+}
+
+void CoreContext::UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, MemoEntry& entry) {
+  // Satisfy what needs to be satisfied:
+  SatisfyAutowiring(lk, entry);
+
   // Give children a chance to also update their deferred elements:
-  for(const auto& weak_child : m_children) {
+  lk.lock();
+  for (const auto& weak_child : m_children) {
+    // Hold reference to prevent this iterator from becoming invalidated:
+    auto ctxt = weak_child.lock();
+    if (!ctxt)
+      continue;
+
+    // Reverse lock before satisfying children:
+    lk.unlock();
+    ctxt->UpdateDeferredElement(
+      std::unique_lock<std::mutex>(ctxt->m_stateBlock->m_lock),
+      entry
+    );
+    lk.lock();
+  }
+  lk.unlock();
+}
+
+void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry) {
+  {
+    // Collection of items needing finalization:
+    std::vector<DeferrableUnsynchronizedStrategy*> delayedFinalize;
+
+    // Notify any autowired field whose autowiring was deferred.  We do this by processing each entry
+    // in the entire type memos collection.  These entries are keyed on the type of the memo, and the
+    // value is a linked list of trees of deferred autowiring instances that will need to be called
+    // if the corresponding memo type has been satisfied.
+    //
+    // A tree data structure is used, here, specifically because there are cases where child nodes
+    // on a tree should only be called if and only if the root node is still present.  For instance,
+    // creating an Autowired field adds a tree to this list with the root node referring to the
+    // Autowired field itself, and then invoking Autowired::NotifyWhenAutowired attaches a child to
+    // this tree.  If the Autowired instance is destroyed, the lambda registered for notification is
+    // also removed at the same time.
+    //
+    // Each connected nonroot deferrable autowiring is referred to as a "dependant chain".
+    std::stack<DeferrableAutowiring*> stk;
+    for (auto& cur : m_typeMemos) {
+      MemoEntry& value = cur.second;
+
+      if (value.m_value)
+        // This entry is already satisfied, no need to process it
+        continue;
+
+      // Determine whether the current candidate element satisfies the autowiring we are considering.
+      // This is done internally via a dynamic cast on the interface type for which this polymorphic
+      // base type was constructed.
+      if (!value.m_value->try_assign(entry.pCoreObject))
+        continue;
+
+      // Success, assign the traits
+      value.pObjTraits = &entry;
+
+      // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
+      // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
+      // release the lock.
+      stk.push(value.pFirst);
+      value.pFirst = nullptr;
+
+      // Finish satisfying the remainder of the chain while we hold the lock:
+      while (!stk.empty()) {
+        auto top = stk.top();
+        stk.pop();
+
+        for (DeferrableAutowiring* pNext = top; pNext; pNext = pNext->GetFlink()) {
+          pNext->SatisfyAutowiring(value.m_value);
+
+          // See if there's another chain we need to process:
+          auto child = pNext->ReleaseDependentChain();
+          if (child)
+            stk.push(child);
+
+          // Not everyone needs to be finalized.  The entities that don't require finalization
+          // are identified by an empty strategy, and we just skip them.
+          auto strategy = pNext->GetStrategy();
+          if (strategy)
+            delayedFinalize.push_back(strategy);
+        }
+      }
+    }
+    lk.unlock();
+
+    // Run through everything else and finalize it all:
+    for (const auto& cur : delayedFinalize)
+      cur->Finalize();
+  }
+
+  // Give children a chance to also update their deferred elements:
+  lk.lock();
+  for (const auto& weak_child : m_children) {
     // Hold reference to prevent this iterator from becoming invalidated:
     auto ctxt = weak_child.lock();
     if(!ctxt)
       continue;
 
-    // Reverse lock before satisfying children:
+    // Reverse lock before handing off control:
     lk.unlock();
     ctxt->UpdateDeferredElements(
       std::unique_lock<std::mutex>(ctxt->m_stateBlock->m_lock),
@@ -813,11 +895,6 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     );
     lk.lock();
   }
-  lk.unlock();
-
-  // Run through everything else and finalize it all:
-  for(const auto& cur : satisfiable)
-    cur->Finalize();
 }
 
 void CoreContext::AddEventReceiver(const JunctionBoxEntry<CoreObject>& entry) {
