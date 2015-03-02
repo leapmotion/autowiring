@@ -184,3 +184,9 @@ TEST_F(AutowiringTest, NullDereferenceAttempt) {
   ASSERT_ANY_THROW(*co) << "A dereference attempt on a CoreObject did not throw an exception as expected";
   ASSERT_ANY_THROW(co->one) << "A dereference attempt on a CoreObject did not throw an exception as expected";
 }
+
+TEST_F(AutowiringTest, FastNullDereferenceAttempt) {
+  AutowiredFast<SimpleObject> co;
+  ASSERT_ANY_THROW(*co) << "A dereference attempt on a CoreObject did not throw an exception as expected";
+  ASSERT_ANY_THROW(co->one) << "A dereference attempt on a CoreObject did not throw an exception as expected";
+}
