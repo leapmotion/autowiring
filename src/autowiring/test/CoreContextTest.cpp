@@ -350,3 +350,14 @@ TEST_F(CoreContextTest, InitiateMultipleChildren) {
     outerCtxt->SignalShutdown(true);
   }
 }
+
+class CoreContextAddTestClass {};
+
+TEST_F(CoreContextTest, CoreContextAdd) {
+  auto myClass = std::make_shared<CoreContextAddTestClass>();
+  AutoCurrentContext ctxt;
+  ctxt->Add(myClass);
+
+  Autowired<CoreContextAddTestClass> mc;
+  ASSERT_TRUE(mc.IsAutowired()) << "Manually registered interface was not detected as expected";
+}
