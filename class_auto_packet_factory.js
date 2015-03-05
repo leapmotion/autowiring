@@ -6,6 +6,7 @@ var class_auto_packet_factory =
     [ "Clear", "class_auto_packet_factory.html#a7f6df86d37b611fd7da03b5d89088d4e", null ],
     [ "CreateSatCounterList", "class_auto_packet_factory.html#a7dfade595ca37b082e41d6fb7e415876", null ],
     [ "DoAdditionalWait", "class_auto_packet_factory.html#adcff2e0a4fd863f3a618973c6c5d6b3f", null ],
+    [ "DoAdditionalWait", "class_auto_packet_factory.html#aa969b149c74e23e0ee708481ec90ec94", null ],
     [ "GetMeanPacketLifetime", "class_auto_packet_factory.html#aa14ee291b0bdb1c8131f268c4a7265c0", null ],
     [ "GetOutstandingPacketCount", "class_auto_packet_factory.html#acdc9c322e9fe5257202c0d00b68a5059", null ],
     [ "GetPacketLifetimeStandardDeviation", "class_auto_packet_factory.html#a8743ffc532d0fe739782a2f843a86467", null ],

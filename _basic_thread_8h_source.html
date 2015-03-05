@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.4.2</span>
+   &#160;<span id="projectnumber">0.4.4</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -150,81 +150,87 @@ $(document).ready(function(){initNavTree('_basic_thread_8h_source.html','');});
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  <span class="comment">// we&#39;re actually signalling this event after we free ourselves.</span></div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keyword">const</span> std::shared_ptr&lt;BasicThreadStateBlock&gt; m_state;</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="comment">// Flag indicating that we need to stop right now</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordtype">bool</span> m_stop;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="comment">// Flag indicating that this thread was started at some point</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordtype">bool</span> m_wasStarted;</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  <span class="comment">// Run condition:</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keywordtype">bool</span> m_running;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  <span class="comment">// Flag indicating that we need to stop right now</span></div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keywordtype">bool</span> m_stop;</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="comment">// Completion condition, true when this thread is no longer running and has run at least once</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="keywordtype">bool</span> m_completed;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="comment">// Run condition:</span></div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="keywordtype">bool</span> m_running;</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="comment">// The current thread priority</span></div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <a class="code" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a> m_priority;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="comment">// Legacy field, some clients still refer to this</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keywordtype">bool</span>&amp; DEPRECATED_MEMBER(m_completed, <span class="stringliteral">&quot;Use IsCompleted instead&quot;</span>);</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aa6d8803cdc6ab28b1d79740b115487c5">SetCurrentThreadName</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <span class="keywordtype">void</span> SetThreadPriority(<a class="code" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a> threadPriority);</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  std::mutex&amp; <a class="code" href="class_basic_thread.html#a1d7ede51afd942a19ea957e1f7cad304">GetLock</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aac69a4f359aab347371e9e1c11a9dd41">DoRun</a>(std::shared_ptr&lt;CoreObject&gt;&amp;&amp; refTracker);</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#afffae6629cda8683d6706e319bb81038">DoRunLoopCleanup</a>(std::shared_ptr&lt;CoreContext&gt;&amp;&amp; ctxt, std::shared_ptr&lt;CoreObject&gt;&amp;&amp; refTracker);</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;  <span class="keywordtype">void</span> DEPRECATED(Ready(<span class="keywordtype">void</span>) <span class="keyword">const</span>, <span class="stringliteral">&quot;Do not call this method, the concept of thread readiness is now deprecated&quot;</span>) {}</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;  <span class="keyword">class </span>ElevatePriority {</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    ElevatePriority(ElevatePriority&amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    ElevatePriority(<a class="code" href="class_basic_thread.html">BasicThread</a>&amp; thread, <a class="code" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a> priority) :</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;      m_oldPriority(thread.m_priority),</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;      m_thread(thread)</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    {</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;      <span class="comment">// Elevate if the new level is higher than the old level:</span></div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;      <span class="keywordflow">if</span>(priority &gt; m_oldPriority)</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;        m_thread.SetThreadPriority(priority);</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    }</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    ~ElevatePriority(<span class="keywordtype">void</span>) {</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;      <span class="comment">// Delevate if the old level is lower than the current level:</span></div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;      <span class="keywordflow">if</span>(m_thread.m_priority &gt; m_oldPriority)</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;        m_thread.SetThreadPriority(m_oldPriority);</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    }</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    <a class="code" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a> m_oldPriority;</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    <a class="code" href="class_basic_thread.html">BasicThread</a>&amp; m_thread;</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;  };</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a4b616b47385599a5ca237d2b8870d1c7">WaitForStateUpdate</a>(<span class="keyword">const</span> std::function&lt;<span class="keywordtype">bool</span>()&gt;&amp; fn);</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a3be1fc03a61380ff66fbba791dd1d49d">PerformStatusUpdate</a>(<span class="keyword">const</span> std::function&lt;<span class="keywordtype">void</span>()&gt;&amp; fn);</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_basic_thread.html#aa64b53cce1df48cdfa5b407e96164956">ThreadSleep</a>(std::chrono::nanoseconds timeout);</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_basic_thread.html#a64061568019d519e3a27d1d3a840c741">OnStart</a>() <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">OnStop</a>(<span class="keywordtype">bool</span> graceful) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aa1c27fc2a6442177815f4bea0df47926">DoAdditionalWait</a>() <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033">Run</a>() = 0;</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;</div>
-<div class="line"><a name="l00256"></a><span class="lineno"><a class="line" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">  256</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">OnStop</a>(<span class="keywordtype">void</span>) {}</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#ae9d8f1216df2a3f93b3b3a6a4c454fa0">ForceCoreThreadReidentify</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;  std::chrono::steady_clock::time_point <a class="code" href="class_basic_thread.html#a6f756d73ea97f88a9d12f6e0708f1cf8">GetCreationTime</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a643d476885ee38306b061d7fb37c126f">GetThreadTimes</a>(std::chrono::milliseconds&amp; kernelTime, std::chrono::milliseconds&amp; userTime);</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;};</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;<span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> <span class="keywordtype">void</span> <a class="code" href="_basic_thread_8h.html#a4bc1468846019424a13c8c2b5d85a974">ForceCoreThreadReidentify</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="comment">// The current thread priority</span></div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <a class="code" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a> m_priority;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aa6d8803cdc6ab28b1d79740b115487c5">SetCurrentThreadName</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  <span class="keywordtype">void</span> SetThreadPriority(<a class="code" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a> threadPriority);</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  std::mutex&amp; <a class="code" href="class_basic_thread.html#a1d7ede51afd942a19ea957e1f7cad304">GetLock</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aac69a4f359aab347371e9e1c11a9dd41">DoRun</a>(std::shared_ptr&lt;CoreObject&gt;&amp;&amp; refTracker);</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#afffae6629cda8683d6706e319bb81038">DoRunLoopCleanup</a>(std::shared_ptr&lt;CoreContext&gt;&amp;&amp; ctxt, std::shared_ptr&lt;CoreObject&gt;&amp;&amp; refTracker);</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;  <span class="keywordtype">void</span> DEPRECATED(Ready(<span class="keywordtype">void</span>) <span class="keyword">const</span>, <span class="stringliteral">&quot;Do not call this method, the concept of thread readiness is now deprecated&quot;</span>) {}</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  <span class="keyword">class </span>ElevatePriority {</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    ElevatePriority(ElevatePriority&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    ElevatePriority(<a class="code" href="class_basic_thread.html">BasicThread</a>&amp; thread, <a class="code" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a> priority) :</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;      m_oldPriority(thread.m_priority),</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;      m_thread(thread)</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    {</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;      <span class="comment">// Elevate if the new level is higher than the old level:</span></div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;      <span class="keywordflow">if</span>(priority &gt; m_oldPriority)</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;        m_thread.SetThreadPriority(priority);</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    }</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;    ~ElevatePriority(<span class="keywordtype">void</span>) {</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;      <span class="comment">// Delevate if the old level is lower than the current level:</span></div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;      <span class="keywordflow">if</span>(m_thread.m_priority &gt; m_oldPriority)</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;        m_thread.SetThreadPriority(m_oldPriority);</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    }</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;  <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    <a class="code" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a> m_oldPriority;</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;    <a class="code" href="class_basic_thread.html">BasicThread</a>&amp; m_thread;</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;  };</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a4b616b47385599a5ca237d2b8870d1c7">WaitForStateUpdate</a>(<span class="keyword">const</span> std::function&lt;<span class="keywordtype">bool</span>()&gt;&amp; fn);</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a3be1fc03a61380ff66fbba791dd1d49d">PerformStatusUpdate</a>(<span class="keyword">const</span> std::function&lt;<span class="keywordtype">void</span>()&gt;&amp; fn);</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_basic_thread.html#aa64b53cce1df48cdfa5b407e96164956">ThreadSleep</a>(std::chrono::nanoseconds timeout);</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_basic_thread.html#a64061568019d519e3a27d1d3a840c741">OnStart</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">OnStop</a>(<span class="keywordtype">bool</span> graceful) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aec8c9fa548fc917627ab1806309c5747">DoAdditionalWait</a>(<span class="keywordtype">void</span>) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_basic_thread.html#aec8c9fa548fc917627ab1806309c5747">DoAdditionalWait</a>(std::chrono::nanoseconds timeout) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_basic_thread.html#a2c6d0e971236f28d25eaef0bffb6181e">IsCompleted</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033">Run</a>() = 0;</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;</div>
+<div class="line"><a name="l00265"></a><span class="lineno"><a class="line" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">  265</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">OnStop</a>(<span class="keywordtype">void</span>) {}</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#ae9d8f1216df2a3f93b3b3a6a4c454fa0">ForceCoreThreadReidentify</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;  std::chrono::steady_clock::time_point <a class="code" href="class_basic_thread.html#a6f756d73ea97f88a9d12f6e0708f1cf8">GetCreationTime</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a643d476885ee38306b061d7fb37c126f">GetThreadTimes</a>(std::chrono::milliseconds&amp; kernelTime, std::chrono::milliseconds&amp; userTime);</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;};</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;<span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> <span class="keywordtype">void</span> <a class="code" href="_basic_thread_8h.html#a4bc1468846019424a13c8c2b5d85a974">ForceCoreThreadReidentify</a>(<span class="keywordtype">void</span>);</div>
 <div class="ttc" id="class_basic_thread_html_ae9d8f1216df2a3f93b3b3a6a4c454fa0"><div class="ttname"><a href="class_basic_thread.html#ae9d8f1216df2a3f93b3b3a6a4c454fa0">BasicThread::ForceCoreThreadReidentify</a></div><div class="ttdeci">static void ForceCoreThreadReidentify(void)</div><div class="ttdoc">Forces all Autowiring threads to reidentify themselves. </div></div>
 <div class="ttc" id="class_basic_thread_html_aa64b53cce1df48cdfa5b407e96164956"><div class="ttname"><a href="class_basic_thread.html#aa64b53cce1df48cdfa5b407e96164956">BasicThread::ThreadSleep</a></div><div class="ttdeci">bool ThreadSleep(std::chrono::nanoseconds timeout)</div><div class="ttdoc">Sleeps this thread for the specified duration. </div></div>
 <div class="ttc" id="_basic_thread_8h_html_ac21de3041b361912460403d2649eaa0ea960b44c579bc2f6818d2daaf9e4c16f0"><div class="ttname"><a href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0ea960b44c579bc2f6818d2daaf9e4c16f0">ThreadPriority::Normal</a></div><div class="ttdoc">Normal. </div></div>
@@ -233,21 +239,22 @@ $(document).ready(function(){initNavTree('_basic_thread_8h_source.html','');});
 <div class="ttc" id="class_basic_thread_html_aac69a4f359aab347371e9e1c11a9dd41"><div class="ttname"><a href="class_basic_thread.html#aac69a4f359aab347371e9e1c11a9dd41">BasicThread::DoRun</a></div><div class="ttdeci">virtual void DoRun(std::shared_ptr&lt; CoreObject &gt; &amp;&amp;refTracker)</div><div class="ttdoc">Routine that sets up the necessary extranea before a call to Run </div></div>
 <div class="ttc" id="_basic_thread_8h_html_ac21de3041b361912460403d2649eaa0ea930ee274ea2e4d208702d4695b3ec0f4"><div class="ttname"><a href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0ea930ee274ea2e4d208702d4695b3ec0f4">ThreadPriority::AboveNormal</a></div><div class="ttdoc">Above normal. </div></div>
 <div class="ttc" id="class_basic_thread_html_a643d476885ee38306b061d7fb37c126f"><div class="ttname"><a href="class_basic_thread.html#a643d476885ee38306b061d7fb37c126f">BasicThread::GetThreadTimes</a></div><div class="ttdeci">void GetThreadTimes(std::chrono::milliseconds &amp;kernelTime, std::chrono::milliseconds &amp;userTime)</div><div class="ttdoc">Reports kernel and user mode running times for this thread. </div></div>
+<div class="ttc" id="class_basic_thread_html_a2c6d0e971236f28d25eaef0bffb6181e"><div class="ttname"><a href="class_basic_thread.html#a2c6d0e971236f28d25eaef0bffb6181e">BasicThread::IsCompleted</a></div><div class="ttdeci">bool IsCompleted(void) const </div><div class="ttdoc">True if this thread has transitioned to a completed state </div></div>
 <div class="ttc" id="class_basic_thread_html"><div class="ttname"><a href="class_basic_thread.html">BasicThread</a></div><div class="ttdoc">An abstract class for creating a thread with a single Run method. </div><div class="ttdef"><b>Definition:</b> BasicThread.h:63</div></div>
 <div class="ttc" id="_basic_thread_8h_html_ac21de3041b361912460403d2649eaa0ea241c2b24551c35a31d9f82c1b4798c34"><div class="ttname"><a href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0ea241c2b24551c35a31d9f82c1b4798c34">ThreadPriority::TimeCritical</a></div><div class="ttdoc">Critical. </div></div>
 <div class="ttc" id="class_basic_thread_html_a64061568019d519e3a27d1d3a840c741"><div class="ttname"><a href="class_basic_thread.html#a64061568019d519e3a27d1d3a840c741">BasicThread::OnStart</a></div><div class="ttdeci">bool OnStart() override</div><div class="ttdoc">Causes a new thread to be created in which the Run method will be invoked </div></div>
-<div class="ttc" id="class_basic_thread_html_a1186558c53eb71abc32af737376b44f3"><div class="ttname"><a href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">BasicThread::OnStop</a></div><div class="ttdeci">virtual void OnStop(void)</div><div class="ttdoc">Invoked by the base class Stop() method. Implement this method to perform any needed cleanup...</div><div class="ttdef"><b>Definition:</b> BasicThread.h:256</div></div>
+<div class="ttc" id="class_basic_thread_html_a1186558c53eb71abc32af737376b44f3"><div class="ttname"><a href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">BasicThread::OnStop</a></div><div class="ttdeci">virtual void OnStop(void)</div><div class="ttdoc">Invoked by the base class Stop() method. Implement this method to perform any needed cleanup...</div><div class="ttdef"><b>Definition:</b> BasicThread.h:265</div></div>
+<div class="ttc" id="class_basic_thread_html_aec8c9fa548fc917627ab1806309c5747"><div class="ttname"><a href="class_basic_thread.html#aec8c9fa548fc917627ab1806309c5747">BasicThread::DoAdditionalWait</a></div><div class="ttdeci">void DoAdditionalWait(void) override</div><div class="ttdoc">Untimed variant of DoAdditionalWait </div></div>
 <div class="ttc" id="_basic_thread_8h_html_ac21de3041b361912460403d2649eaa0eab5b8e20937205384be7b9e0c29a28fdb"><div class="ttname"><a href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0eab5b8e20937205384be7b9e0c29a28fdb">ThreadPriority::Lowest</a></div><div class="ttdoc">Low. </div></div>
 <div class="ttc" id="class_context_member_html"><div class="ttname"><a href="class_context_member.html">ContextMember</a></div><div class="ttdoc">A class that must be inherited in order to be a member of a context heriarchy </div><div class="ttdef"><b>Definition:</b> ContextMember.h:12</div></div>
 <div class="ttc" id="class_basic_thread_html_aa6d8803cdc6ab28b1d79740b115487c5"><div class="ttname"><a href="class_basic_thread.html#aa6d8803cdc6ab28b1d79740b115487c5">BasicThread::SetCurrentThreadName</a></div><div class="ttdeci">void SetCurrentThreadName(void) const </div><div class="ttdoc">Assigns a name to the thread, displayed in debuggers. </div></div>
 <div class="ttc" id="_context_member_8h_html"><div class="ttname"><a href="_context_member_8h.html">ContextMember.h</a></div></div>
 <div class="ttc" id="_basic_thread_8h_html_ac21de3041b361912460403d2649eaa0ea7a1920d61156abc05a60135aefe8bc67"><div class="ttname"><a href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0ea7a1920d61156abc05a60135aefe8bc67">ThreadPriority::Default</a></div><div class="ttdoc">This is the default thread priority. It is treated as a value lower than any of the other priorities ...</div></div>
-<div class="ttc" id="class_core_runnable_html"><div class="ttname"><a href="class_core_runnable.html">CoreRunnable</a></div><div class="ttdoc">Base class for objects that run threads. </div><div class="ttdef"><b>Definition:</b> CoreRunnable.h:16</div></div>
+<div class="ttc" id="class_core_runnable_html"><div class="ttname"><a href="class_core_runnable.html">CoreRunnable</a></div><div class="ttdoc">Provides the interface for threads that should receive start and stop notifications in a context ...</div><div class="ttdef"><b>Definition:</b> CoreRunnable.h:16</div></div>
 <div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:135</div></div>
 <div class="ttc" id="class_basic_thread_html_aca183b811e4f93dfce70a449649b3033"><div class="ttname"><a href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033">BasicThread::Run</a></div><div class="ttdeci">virtual void Run()=0</div><div class="ttdoc">Begins thread execution. </div></div>
 <div class="ttc" id="class_basic_thread_html_a4b616b47385599a5ca237d2b8870d1c7"><div class="ttname"><a href="class_basic_thread.html#a4b616b47385599a5ca237d2b8870d1c7">BasicThread::WaitForStateUpdate</a></div><div class="ttdeci">void WaitForStateUpdate(const std::function&lt; bool()&gt; &amp;fn)</div><div class="ttdoc">Waits until the specified lambda function returns true or the thread shuts down. </div></div>
 <div class="ttc" id="_basic_thread_8h_html_ac21de3041b361912460403d2649eaa0ea2f56b4f336dc97edf739bf79523fb9a6"><div class="ttname"><a href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0ea2f56b4f336dc97edf739bf79523fb9a6">ThreadPriority::Multimedia</a></div><div class="ttdoc">This is a special case for multimedia applications. Some operating systems, like Windows, can provide additional scheduling guarantees to applications which declare themselves as multimedia-intensive in nature. For other systems, Multimedia is identical to TimeCritical. </div></div>
-<div class="ttc" id="class_basic_thread_html_aa1c27fc2a6442177815f4bea0df47926"><div class="ttname"><a href="class_basic_thread.html#aa1c27fc2a6442177815f4bea0df47926">BasicThread::DoAdditionalWait</a></div><div class="ttdeci">void DoAdditionalWait() override</div><div class="ttdoc">Invoked when a Wait() call has been made. Override this method to perform any actions required before...</div></div>
 <div class="ttc" id="class_basic_thread_html_a1d7ede51afd942a19ea957e1f7cad304"><div class="ttname"><a href="class_basic_thread.html#a1d7ede51afd942a19ea957e1f7cad304">BasicThread::GetLock</a></div><div class="ttdeci">std::mutex &amp; GetLock(void)</div><div class="ttdoc">Recovers a general lock used to synchronize entities in this thread internally. </div></div>
 <div class="ttc" id="_basic_thread_8h_html_ac21de3041b361912460403d2649eaa0ea582996407922dab08d5cf2b3d2a7c1c9"><div class="ttname"><a href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0ea582996407922dab08d5cf2b3d2a7c1c9">ThreadPriority::Highest</a></div><div class="ttdoc">High. </div></div>
 <div class="ttc" id="_core_runnable_8h_html"><div class="ttname"><a href="_core_runnable_8h.html">CoreRunnable.h</a></div><div class="ttdoc">Base class for autowiring classes that use threads. </div></div>
@@ -263,7 +270,7 @@ $(document).ready(function(){initNavTree('_basic_thread_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_basic_thread_8h.html">BasicThread.h</a></li>
-    <li class="footer">Generated on Wed Feb 18 2015 08:35:36 for Autowiring by
+    <li class="footer">Generated on Thu Mar 5 2015 14:13:17 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

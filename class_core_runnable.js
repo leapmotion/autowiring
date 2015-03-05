@@ -1,6 +1,7 @@
 var class_core_runnable =
 [
-    [ "DoAdditionalWait", "class_core_runnable.html#a5ac21e35ff95c7f8b83c20d3c2f51b62", null ],
+    [ "DoAdditionalWait", "class_core_runnable.html#acfcf01282cf908f91218bfdd5601678c", null ],
+    [ "DoAdditionalWait", "class_core_runnable.html#af3c2a762acf2fd367f09fff1100231da", null ],
     [ "GetOutstanding", "class_core_runnable.html#a7d2c7498d9db4e8f76dc2b6a69d8f1bc", null ],
     [ "IsRunning", "class_core_runnable.html#ab13799735ef39ebe372f9851395a7f53", null ],
     [ "OnStart", "class_core_runnable.html#aa72398f9348bd2b63fd9e040ee21f7e9", null ],

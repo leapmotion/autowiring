@@ -9,7 +9,7 @@ var searchData=
   ['shutdownmode',['ShutdownMode',['../_core_context_8h.html#aa042d52710c2112736f295f5adab0de5',1,'CoreContext.h']]],
   ['signalshutdown',['SignalShutdown',['../class_core_context.html#a8e0ff07669244590fcdcec9aeb588aa5',1,'CoreContext']]],
   ['signalterminate',['SignalTerminate',['../class_core_context.html#a107256cd9f29a43301afca98cd7309a5',1,'CoreContext']]],
-  ['snoop',['Snoop',['../class_core_context.html#a861a5330dfe8fb609c2de97d2ea937a0',1,'CoreContext::Snoop(const std::shared_ptr&lt; T &gt; &amp;pSnooper)'],['../class_core_context.html#ab31a7a286dded4026fe4dd263eb22076',1,'CoreContext::Snoop(const Autowired&lt; T &gt; &amp;snooper)']]],
+  ['snoop',['Snoop',['../class_core_context.html#a298731e89acacebbd52f39478c76f08c',1,'CoreContext::Snoop(const CoreObjectDescriptor &amp;traits)'],['../class_core_context.html#a861a5330dfe8fb609c2de97d2ea937a0',1,'CoreContext::Snoop(const std::shared_ptr&lt; T &gt; &amp;pSnooper)'],['../class_core_context.html#ab31a7a286dded4026fe4dd263eb22076',1,'CoreContext::Snoop(const Autowired&lt; T &gt; &amp;snooper)']]],
   ['start',['Start',['../class_auto_net_transport.html#a615cb11de99c2e4286c744e8ba6b2470',1,'AutoNetTransport::Start()'],['../class_core_runnable.html#a4f5e7e482f70200b82d8f0d489eedd12',1,'CoreRunnable::Start()']]],
   ['stop',['Stop',['../class_auto_net_transport.html#a9be6e10a968cdf1ebe3e441e08c13368',1,'AutoNetTransport::Stop()'],['../class_core_runnable.html#a41c3338adf9bf7222b13bbafb564dabb',1,'CoreRunnable::Stop()']]],
   ['successor',['Successor',['../class_auto_packet.html#a99e7dd1ee400c313c05d56d7642a0c87',1,'AutoPacket']]],

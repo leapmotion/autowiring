@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.4.2</span>
+   &#160;<span id="projectnumber">0.4.4</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -342,78 +342,78 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;  <span class="keywordtype">bool</span> IsAutowired(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> std::shared_ptr&lt;T&gt;::get() != <span class="keyword">nullptr</span>; }</div>
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;};</div>
 <div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00344"></a><span class="lineno"><a class="line" href="class_auto_enable.html">  344</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_auto_enable.html">AutoEnable</a></div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;{</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;  <span class="comment">// !!!!! Read comment in AutoRequired if you get a compiler error here !!!!!</span></div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;  <a class="code" href="class_auto_enable.html">AutoEnable</a>(std::shared_ptr&lt;CoreContext&gt; ctxt = <a class="code" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a>()) {</div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;    ctxt-&gt;Enable&lt;T&gt;();</div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;  }</div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;};</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;<span class="keyword">class </span>AutoConstruct:</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;  <span class="keyword">public</span> std::shared_ptr&lt;T&gt;</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;{</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span>... Args&gt;</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  AutoConstruct(Args&amp;&amp;... args) :</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;    <a class="code" href="namespacestd.html">std</a>::shared_ptr&lt;T&gt;(<a class="code" href="class_core_context.html">CoreContext</a>::CurrentContext()-&gt;template Inject&lt;T&gt;(<a class="code" href="namespacestd.html">std</a>::forward&lt;Args&amp;&amp;&gt;(args)...))</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  {}</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  <span class="keyword">operator</span> bool(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> IsAutowired(); }</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <span class="keyword">operator</span> T*(void) <span class="keyword">const</span> { <span class="keywordflow">return</span> std::shared_ptr&lt;T&gt;::get(); }</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  <span class="keywordtype">bool</span> IsAutowired(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> std::shared_ptr&lt;T&gt;::get() != <span class="keyword">nullptr</span>; }</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;};</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00414"></a><span class="lineno"><a class="line" href="class_auto_fired.html">  414</a></span>&#160;  <span class="keyword">class </span><a class="code" href="class_auto_fired.html">AutoFired</a></div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;{</div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  <a class="code" href="class_auto_fired.html">AutoFired</a>(<span class="keyword">const</span> std::shared_ptr&lt;CoreContext&gt;&amp; ctxt = <a class="code" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a>()):</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;    m_junctionBox(ctxt-&gt;GetJunctionBox&lt;T&gt;())</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  {}</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;  <a class="code" href="class_auto_fired.html">AutoFired</a>(<span class="keyword">const</span> std::shared_ptr&lt;JunctionBox&lt;T&gt;&gt;&amp; junctionBox) :</div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;    m_junctionBox(junctionBox)</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;  {}</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;  <a class="code" href="class_auto_fired.html">AutoFired</a>(<a class="code" href="class_auto_fired.html">AutoFired</a>&amp;&amp; rhs):</div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;    m_junctionBox(std::move(rhs.m_junctionBox))</div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;  {}</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;  std::weak_ptr&lt;JunctionBox&lt;T&gt;&gt; m_junctionBox;</div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;</div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;  <span class="keywordtype">bool</span> HasListeners(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;    <span class="comment">//TODO: Refactor this so it isn&#39;t messy</span></div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;    <span class="comment">//check: does it have any direct listeners, or are any appropriate marshalling objects wired into the immediate context?</span></div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="keyword">auto</span> junctionBox = m_junctionBox.lock();</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;    <span class="keywordflow">return</span> junctionBox &amp;&amp; junctionBox-&gt;HasListeners();</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;  }</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> MemFn&gt;</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;  InvokeRelay&lt;MemFn&gt; operator()(MemFn pfn)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    <span class="keyword">auto</span> box = m_junctionBox.lock();</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    <span class="keywordflow">return</span></div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;      box ?</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;      MakeInvokeRelay(box, pfn) :</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;      InvokeRelay&lt;MemFn&gt;();</div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;  }</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;</div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> MemFn&gt;</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;  InvokeRelay&lt;MemFn&gt; Fire(MemFn pfn)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;    <span class="keywordflow">return</span> operator()(pfn);</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  }</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;};</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;</div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;<span class="comment">// We will also pull in a few utility headers which are reliant upon the declarations in this file</span></div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;<span class="comment">// TODO:  Consider moving the declarations in this file into its own header, and using this header</span></div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;<span class="comment">// as a master header for all of Autowiring</span></div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_auto_packet_factory_8h.html">AutoPacketFactory.h</a>&quot;</span></div>
-<div class="ttc" id="class_auto_enable_html"><div class="ttname"><a href="class_auto_enable.html">AutoEnable</a></div><div class="ttdoc">Enables the specified type to be "bolted" to the current context. </div><div class="ttdef"><b>Definition:</b> Autowired.h:344</div></div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00345"></a><span class="lineno"><a class="line" href="class_auto_enable.html">  345</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_auto_enable.html">AutoEnable</a></div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;{</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;  <span class="comment">// !!!!! Read comment in AutoRequired if you get a compiler error here !!!!!</span></div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;  <a class="code" href="class_auto_enable.html">AutoEnable</a>(std::shared_ptr&lt;CoreContext&gt; ctxt = <a class="code" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a>()) {</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;    ctxt-&gt;Enable&lt;T&gt;();</div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;  }</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;};</div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;<span class="keyword">class </span>AutoConstruct:</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;  <span class="keyword">public</span> std::shared_ptr&lt;T&gt;</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;{</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span>... Args&gt;</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;  AutoConstruct(Args&amp;&amp;... args) :</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    <a class="code" href="namespacestd.html">std</a>::shared_ptr&lt;T&gt;(<a class="code" href="class_core_context.html">CoreContext</a>::CurrentContext()-&gt;template Inject&lt;T&gt;(<a class="code" href="namespacestd.html">std</a>::forward&lt;Args&amp;&amp;&gt;(args)...))</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  {}</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <span class="keyword">operator</span> bool(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> IsAutowired(); }</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  <span class="keyword">operator</span> T*(void) <span class="keyword">const</span> { <span class="keywordflow">return</span> std::shared_ptr&lt;T&gt;::get(); }</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;  <span class="keywordtype">bool</span> IsAutowired(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> std::shared_ptr&lt;T&gt;::get() != <span class="keyword">nullptr</span>; }</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;};</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00415"></a><span class="lineno"><a class="line" href="class_auto_fired.html">  415</a></span>&#160;  <span class="keyword">class </span><a class="code" href="class_auto_fired.html">AutoFired</a></div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;{</div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  <a class="code" href="class_auto_fired.html">AutoFired</a>(<span class="keyword">const</span> std::shared_ptr&lt;CoreContext&gt;&amp; ctxt = <a class="code" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a>()):</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;    m_junctionBox(ctxt-&gt;GetJunctionBox&lt;T&gt;())</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;  {}</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;  <a class="code" href="class_auto_fired.html">AutoFired</a>(<span class="keyword">const</span> std::shared_ptr&lt;JunctionBox&lt;T&gt;&gt;&amp; junctionBox) :</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;    m_junctionBox(junctionBox)</div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;  {}</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;</div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;  <a class="code" href="class_auto_fired.html">AutoFired</a>(<a class="code" href="class_auto_fired.html">AutoFired</a>&amp;&amp; rhs):</div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;    m_junctionBox(std::move(rhs.m_junctionBox))</div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;  {}</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;</div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;  std::weak_ptr&lt;JunctionBox&lt;T&gt;&gt; m_junctionBox;</div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;</div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;  <span class="keywordtype">bool</span> HasListeners(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;    <span class="comment">//TODO: Refactor this so it isn&#39;t messy</span></div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="comment">//check: does it have any direct listeners, or are any appropriate marshalling objects wired into the immediate context?</span></div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;    <span class="keyword">auto</span> junctionBox = m_junctionBox.lock();</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;    <span class="keywordflow">return</span> junctionBox &amp;&amp; junctionBox-&gt;HasListeners();</div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;  }</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> MemFn&gt;</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;  InvokeRelay&lt;MemFn&gt; operator()(MemFn pfn)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    <span class="keyword">auto</span> box = m_junctionBox.lock();</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    <span class="keywordflow">return</span></div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;      box ?</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;      MakeInvokeRelay(box, pfn) :</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;      InvokeRelay&lt;MemFn&gt;();</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;  }</div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;</div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> MemFn&gt;</div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;  InvokeRelay&lt;MemFn&gt; Fire(MemFn pfn)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;    <span class="keywordflow">return</span> operator()(pfn);</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;  }</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;};</div>
+<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;</div>
+<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;<span class="comment">// We will also pull in a few utility headers which are reliant upon the declarations in this file</span></div>
+<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;<span class="comment">// TODO:  Consider moving the declarations in this file into its own header, and using this header</span></div>
+<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;<span class="comment">// as a master header for all of Autowiring</span></div>
+<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_auto_packet_factory_8h.html">AutoPacketFactory.h</a>&quot;</span></div>
+<div class="ttc" id="class_auto_enable_html"><div class="ttname"><a href="class_auto_enable.html">AutoEnable</a></div><div class="ttdoc">Enables the specified type to be "bolted" to the current context. </div><div class="ttdef"><b>Definition:</b> Autowired.h:345</div></div>
 <div class="ttc" id="class_global_core_context_html"><div class="ttname"><a href="class_global_core_context.html">GlobalCoreContext</a></div><div class="ttdoc">A special class designed to make it easier to detect when our context is the global context...</div><div class="ttdef"><b>Definition:</b> GlobalCoreContext.h:10</div></div>
 <div class="ttc" id="namespacestd_html"><div class="ttname"><a href="namespacestd.html">std</a></div><div class="ttdoc">STL namespace. </div></div>
 <div class="ttc" id="class_autowired_fast_html"><div class="ttname"><a href="class_autowired_fast.html">AutowiredFast</a></div><div class="ttdoc">Autowires a slot immediately (with limitations). </div><div class="ttdef"><b>Definition:</b> Autowired.h:306</div></div>
@@ -426,7 +426,7 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <div class="ttc" id="class_auto_required_html_a64e2c65e4a28a6a28c0ba96a11d94e33"><div class="ttname"><a href="class_auto_required.html#a64e2c65e4a28a6a28c0ba96a11d94e33">AutoRequired::AutoRequired</a></div><div class="ttdeci">AutoRequired(const std::shared_ptr&lt; CoreContext &gt; &amp;ctxt, Args &amp;&amp;...args)</div><div class="ttdoc">AutoRequired overload that forwards constructor arguments to the type being wired. </div><div class="ttdef"><b>Definition:</b> Autowired.h:272</div></div>
 <div class="ttc" id="_autowired_8h_html_aa65e92d94fffb9dcc42b0ff6de09f4cb"><div class="ttname"><a href="_autowired_8h.html#aa65e92d94fffb9dcc42b0ff6de09f4cb">AutoCreateContext</a></div><div class="ttdeci">AutoCreateContextT&lt; void &gt; AutoCreateContext</div><div class="ttdoc">Creates a new context as a child of the current context. </div><div class="ttdef"><b>Definition:</b> Autowired.h:82</div></div>
 <div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:135</div></div>
-<div class="ttc" id="class_auto_fired_html"><div class="ttname"><a href="class_auto_fired.html">AutoFired</a></div><div class="ttdoc">Injects an object that can fire events. </div><div class="ttdef"><b>Definition:</b> Autowired.h:414</div></div>
+<div class="ttc" id="class_auto_fired_html"><div class="ttname"><a href="class_auto_fired.html">AutoFired</a></div><div class="ttdoc">Injects an object that can fire events. </div><div class="ttdef"><b>Definition:</b> Autowired.h:415</div></div>
 <div class="ttc" id="class_autowired_html"><div class="ttname"><a href="class_autowired.html">Autowired</a></div><div class="ttdoc">Autowires a "slot" in a context to which an instance of the specified type will be wired when it beco...</div><div class="ttdef"><b>Definition:</b> Autowired.h:105</div></div>
 <div class="ttc" id="class_auto_global_context_html"><div class="ttname"><a href="class_auto_global_context.html">AutoGlobalContext</a></div><div class="ttdoc">Provides a reference to the global context. </div><div class="ttdef"><b>Definition:</b> Autowired.h:38</div></div>
 <div class="ttc" id="_global_core_context_8h_html"><div class="ttname"><a href="_global_core_context_8h.html">GlobalCoreContext.h</a></div></div>
@@ -436,7 +436,7 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_autowired_8h.html">Autowired.h</a></li>
-    <li class="footer">Generated on Wed Feb 18 2015 08:35:36 for Autowiring by
+    <li class="footer">Generated on Thu Mar 5 2015 14:13:17 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

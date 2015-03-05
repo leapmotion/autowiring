@@ -21,6 +21,7 @@ var searchData=
   ['getoutstandingpacketcount',['GetOutstandingPacketCount',['../class_auto_packet_factory.html#acdc9c322e9fe5257202c0d00b68a5059',1,'AutoPacketFactory']]],
   ['getpacketlifetimestandarddeviation',['GetPacketLifetimeStandardDeviation',['../class_auto_packet_factory.html#a8743ffc532d0fe739782a2f843a86467',1,'AutoPacketFactory']]],
   ['getparentcontext',['GetParentContext',['../class_core_context.html#a3783fd45517f23b6f070e0b06e916440',1,'CoreContext']]],
+  ['getrunnables',['GetRunnables',['../class_core_context.html#a93a15fed7006535074ba0cad22734300',1,'CoreContext']]],
   ['getsatisfaction',['GetSatisfaction',['../class_auto_packet.html#a367921514045be484e134b34b4d6460d',1,'AutoPacket::GetSatisfaction(const std::type_info &amp;subscriber) const '],['../class_auto_packet.html#a1e8152052798e49283c8297886c62ffe',1,'AutoPacket::GetSatisfaction(void) const ']]],
   ['getself',['GetSelf',['../class_context_member.html#ac57af82464416e1763e1d04c50b4c89c',1,'ContextMember']]],
   ['getshared',['GetShared',['../class_auto_packet.html#a5467f83887d63a602cb05d88c6893bc0',1,'AutoPacket']]],

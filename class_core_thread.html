@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.4.2</span>
+   &#160;<span id="projectnumber">0.4.4</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -129,7 +129,7 @@ Inheritance diagram for CoreThread:</div>
 <area href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. " alt="BasicThread" shape="rect" coords="55,56,155,80"/>
 <area href="class_dispatch_queue.html" title="This is an asynchronous queue of zero-argument functions " alt="DispatchQueue" shape="rect" coords="165,56,265,80"/>
 <area href="class_context_member.html" title="A class that must be inherited in order to be a member of a context heriarchy " alt="ContextMember" shape="rect" coords="0,0,100,24"/>
-<area href="class_core_runnable.html" title="Base class for objects that run threads. " alt="CoreRunnable" shape="rect" coords="110,0,210,24"/>
+<area href="class_core_runnable.html" title="Provides the interface for threads that should receive start and stop notifications in a context ..." alt="CoreRunnable" shape="rect" coords="110,0,210,24"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -164,6 +164,11 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a643d476885ee38306b061d7fb37c126f inherit pub_methods_class_basic_thread"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a643d476885ee38306b061d7fb37c126f">GetThreadTimes</a> (std::chrono::milliseconds &amp;kernelTime, std::chrono::milliseconds &amp;userTime)</td></tr>
 <tr class="memdesc:a643d476885ee38306b061d7fb37c126f inherit pub_methods_class_basic_thread"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports kernel and user mode running times for this thread.  <a href="#a643d476885ee38306b061d7fb37c126f">More...</a><br /></td></tr>
 <tr class="separator:a643d476885ee38306b061d7fb37c126f inherit pub_methods_class_basic_thread"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c6d0e971236f28d25eaef0bffb6181e inherit pub_methods_class_basic_thread"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2c6d0e971236f28d25eaef0bffb6181e"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a2c6d0e971236f28d25eaef0bffb6181e">IsCompleted</a> (void) const </td></tr>
+<tr class="memdesc:a2c6d0e971236f28d25eaef0bffb6181e inherit pub_methods_class_basic_thread"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if this thread has transitioned to a completed state </dd></dl>
+<br /></td></tr>
+<tr class="separator:a2c6d0e971236f28d25eaef0bffb6181e inherit pub_methods_class_basic_thread"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_class_context_member"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_class_context_member')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="class_context_member.html">ContextMember</a></td></tr>
 <tr class="memitem:a256451cd0e6dfb1b9c6312cd2b0a4129 inherit pub_methods_class_context_member"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_context_member.html#a256451cd0e6dfb1b9c6312cd2b0a4129">GetContext</a> (void) const </td></tr>
 <tr class="memdesc:a256451cd0e6dfb1b9c6312cd2b0a4129 inherit pub_methods_class_context_member"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the context associated with this object.  <a href="#a256451cd0e6dfb1b9c6312cd2b0a4129">More...</a><br /></td></tr>
@@ -248,9 +253,12 @@ Protected Member Functions</h2></td></tr>
 <tr class="memdesc:a90d73c0f622ae1cdb94a7a1ccb355a83"><td class="mdescLeft">&#160;</td><td class="mdescRight">Overridden here so we can rundown the dispatch queue  <a href="#a90d73c0f622ae1cdb94a7a1ccb355a83">More...</a><br /></td></tr>
 <tr class="separator:a90d73c0f622ae1cdb94a7a1ccb355a83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_class_basic_thread"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_class_basic_thread')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="class_basic_thread.html">BasicThread</a></td></tr>
-<tr class="memitem:aa1c27fc2a6442177815f4bea0df47926 inherit pro_methods_class_basic_thread"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#aa1c27fc2a6442177815f4bea0df47926">DoAdditionalWait</a> () override</td></tr>
-<tr class="memdesc:aa1c27fc2a6442177815f4bea0df47926 inherit pro_methods_class_basic_thread"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked when a <a class="el" href="class_core_runnable.html#acb3c019cfe57942e293c9cec805828e7" title="Waits indefinitely. Returns when this runnable stops. ">Wait()</a> call has been made. Override this method to perform any actions required before this runnable enters the waiting state.  <a href="#aa1c27fc2a6442177815f4bea0df47926">More...</a><br /></td></tr>
-<tr class="separator:aa1c27fc2a6442177815f4bea0df47926 inherit pro_methods_class_basic_thread"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec8c9fa548fc917627ab1806309c5747 inherit pro_methods_class_basic_thread"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#aec8c9fa548fc917627ab1806309c5747">DoAdditionalWait</a> (void) override</td></tr>
+<tr class="memdesc:aec8c9fa548fc917627ab1806309c5747 inherit pro_methods_class_basic_thread"><td class="mdescLeft">&#160;</td><td class="mdescRight">Untimed variant of DoAdditionalWait  <a href="#aec8c9fa548fc917627ab1806309c5747">More...</a><br /></td></tr>
+<tr class="separator:aec8c9fa548fc917627ab1806309c5747 inherit pro_methods_class_basic_thread"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43a1abcadf00639a64c02fc0ab2785f3 inherit pro_methods_class_basic_thread"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a43a1abcadf00639a64c02fc0ab2785f3">DoAdditionalWait</a> (std::chrono::nanoseconds timeout) override</td></tr>
+<tr class="memdesc:a43a1abcadf00639a64c02fc0ab2785f3 inherit pro_methods_class_basic_thread"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked just before control is returned to the user.  <a href="#a43a1abcadf00639a64c02fc0ab2785f3">More...</a><br /></td></tr>
+<tr class="separator:a43a1abcadf00639a64c02fc0ab2785f3 inherit pro_methods_class_basic_thread"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac69a4f359aab347371e9e1c11a9dd41 inherit pro_methods_class_basic_thread"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#aac69a4f359aab347371e9e1c11a9dd41">DoRun</a> (std::shared_ptr&lt; CoreObject &gt; &amp;&amp;refTracker)</td></tr>
 <tr class="memdesc:aac69a4f359aab347371e9e1c11a9dd41 inherit pro_methods_class_basic_thread"><td class="mdescLeft">&#160;</td><td class="mdescRight">Routine that sets up the necessary extranea before a call to Run  <a href="#aac69a4f359aab347371e9e1c11a9dd41">More...</a><br /></td></tr>
 <tr class="separator:aac69a4f359aab347371e9e1c11a9dd41 inherit pro_methods_class_basic_thread"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -503,7 +511,7 @@ Additional Inherited Members</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_core_thread.html">CoreThread</a></li>
-    <li class="footer">Generated on Wed Feb 18 2015 08:35:36 for Autowiring by
+    <li class="footer">Generated on Thu Mar 5 2015 14:13:17 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

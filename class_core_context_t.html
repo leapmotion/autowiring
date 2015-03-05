@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.4.2</span>
+   &#160;<span id="projectnumber">0.4.4</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -212,6 +212,9 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 const std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a3783fd45517f23b6f070e0b06e916440">GetParentContext</a> (void) const </td></tr>
 <tr class="memdesc:a3783fd45517f23b6f070e0b06e916440 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">A shared reference to the parent context of this context. <br /></td></tr>
 <tr class="separator:a3783fd45517f23b6f070e0b06e916440 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93a15fed7006535074ba0cad22734300 inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="class_core_runnable.html">CoreRunnable</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a93a15fed7006535074ba0cad22734300">GetRunnables</a> (void) const </td></tr>
+<tr class="memdesc:a93a15fed7006535074ba0cad22734300 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a copy of the list of runnables  <a href="#a93a15fed7006535074ba0cad22734300">More...</a><br /></td></tr>
+<tr class="separator:a93a15fed7006535074ba0cad22734300 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff72e44be09394686d51a367a6ff9e23 inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:aff72e44be09394686d51a367a6ff9e23 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#aff72e44be09394686d51a367a6ff9e23">Has</a> (void) const </td></tr>
 <tr class="memdesc:aff72e44be09394686d51a367a6ff9e23 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">True, if an instance of the specified type exists and dependencies of that type can be autowired in this context.  <a href="#aff72e44be09394686d51a367a6ff9e23">More...</a><br /></td></tr>
@@ -247,7 +250,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="separator:a47e98de82b665c7d3791b317f7789fa3 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6b08c5f0dead4908659cf87c6eb77abb inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6b08c5f0dead4908659cf87c6eb77abb"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a6b08c5f0dead4908659cf87c6eb77abb">IsShutdown</a> (void) const </td></tr>
-<tr class="memdesc:a6b08c5f0dead4908659cf87c6eb77abb inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if <a class="el" href="class_core_runnable.html" title="Base class for objects that run threads. ">CoreRunnable</a> instances in this context should begin teardown operations </dd></dl>
+<tr class="memdesc:a6b08c5f0dead4908659cf87c6eb77abb inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if <a class="el" href="class_core_runnable.html" title="Provides the interface for threads that should receive start and stop notifications in a context ...">CoreRunnable</a> instances in this context should begin teardown operations </dd></dl>
 <br /></td></tr>
 <tr class="separator:a6b08c5f0dead4908659cf87c6eb77abb inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad571b7a096111d87c37e826546f875ea inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ad571b7a096111d87c37e826546f875ea">NextSibling</a> (void) const </td></tr>
@@ -262,6 +265,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:a107256cd9f29a43301afca98cd7309a5 inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a107256cd9f29a43301afca98cd7309a5">SignalTerminate</a> (bool wait=true)</td></tr>
 <tr class="memdesc:a107256cd9f29a43301afca98cd7309a5 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shuts down the context with the Immediate shutdown mode.  <a href="#a107256cd9f29a43301afca98cd7309a5">More...</a><br /></td></tr>
 <tr class="separator:a107256cd9f29a43301afca98cd7309a5 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a298731e89acacebbd52f39478c76f08c inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a298731e89acacebbd52f39478c76f08c">Snoop</a> (const CoreObjectDescriptor &amp;traits)</td></tr>
+<tr class="memdesc:a298731e89acacebbd52f39478c76f08c inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runtime version of Snoop  <a href="#a298731e89acacebbd52f39478c76f08c">More...</a><br /></td></tr>
+<tr class="separator:a298731e89acacebbd52f39478c76f08c inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a861a5330dfe8fb609c2de97d2ea937a0 inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:a861a5330dfe8fb609c2de97d2ea937a0 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a861a5330dfe8fb609c2de97d2ea937a0">Snoop</a> (const std::shared_ptr&lt; T &gt; &amp;pSnooper)</td></tr>
 <tr class="memdesc:a861a5330dfe8fb609c2de97d2ea937a0 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Registers the specified event receiver to receive messages broadcast within this context.  <a href="#a861a5330dfe8fb609c2de97d2ea937a0">More...</a><br /></td></tr>
@@ -270,6 +276,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:ab31a7a286dded4026fe4dd263eb22076 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#ab31a7a286dded4026fe4dd263eb22076">Snoop</a> (const <a class="el" href="class_autowired.html">Autowired</a>&lt; T &gt; &amp;snooper)</td></tr>
 <tr class="memdesc:ab31a7a286dded4026fe4dd263eb22076 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resolution overload  <a href="#ab31a7a286dded4026fe4dd263eb22076">More...</a><br /></td></tr>
 <tr class="separator:ab31a7a286dded4026fe4dd263eb22076 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6f5afc470011d07ace7066d289285ff inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ab6f5afc470011d07ace7066d289285ff">Unsnoop</a> (const CoreObjectDescriptor &amp;traits)</td></tr>
+<tr class="memdesc:ab6f5afc470011d07ace7066d289285ff inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runtime version of Unsnoop  <a href="#ab6f5afc470011d07ace7066d289285ff">More...</a><br /></td></tr>
+<tr class="separator:ab6f5afc470011d07ace7066d289285ff inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae98a62b5ff67127aa2f870ec54196fd3 inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:ae98a62b5ff67127aa2f870ec54196fd3 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#ae98a62b5ff67127aa2f870ec54196fd3">Unsnoop</a> (const std::shared_ptr&lt; T &gt; &amp;pSnooper)</td></tr>
 <tr class="memdesc:ae98a62b5ff67127aa2f870ec54196fd3 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unregisters an event receiver previously registered to receive snooped events  <a href="#ae98a62b5ff67127aa2f870ec54196fd3">More...</a><br /></td></tr>
@@ -325,7 +334,7 @@ class CoreContextT&lt; T &gt;</h3>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_core_context_t.html">CoreContextT</a></li>
-    <li class="footer">Generated on Wed Feb 18 2015 08:35:36 for Autowiring by
+    <li class="footer">Generated on Thu Mar 5 2015 14:13:17 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>
