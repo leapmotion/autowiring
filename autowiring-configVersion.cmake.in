@@ -12,9 +12,6 @@ if(autowiring_DEBUG)
 
   message(STATUS "Installed CMAKE_SIZEOF_VOID_P: @CMAKE_SIZEOF_VOID_P@")
   message(STATUS "Configured CMAKE_SIZEOF_VOID_P: ${CMAKE_SIZEOF_VOID_P}")
-
-  message(STATUS "Installed using autowiring_USE_LIBCXX: @autowiring_USE_LIBCXX@")
-  message(STATUS "Configured using autowiring_USE_LIBCXX: ${autowiring_USE_LIBCXX}")
 endif()
 
 # If the customer has an override architecture requirement, use that
@@ -73,25 +70,21 @@ endforeach()
 # Determine whether the user's request (either implied or explicit) for libstdc++ can
 # be met by this verison of Autowiring
 if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  # If this value isn't defined, then we assume the user's request is "on"
-  if(NOT DEFINED autowiring_USE_LIBCXX)
-    SET(autowiring_USE_LIBCXX ON)
+  # Require that the user either omit autowiring_USE_LIBCXX or leave it off
+  if(DEFINED autowiring_USE_LIBCXX)
+    if(autowiring_USE_LIBCXX)
+      message(WARNING "Autowiring no longer supports libstdc++, autowiring_USE_LIBCXX is therefore a deprecated flag")
+    else()
+      message(STATUS "Autowiring no longer supports libstdc++")
+      set(PACKAGE_VERSION_COMPATIBLE FALSE)
+      set(PACKAGE_VERSION_UNSUITABLE TRUE)
+      return()
+    endif()
   endif()
   
   if(autowiring_DEBUG)
     message(STATUS "Installed autowiring_USE_LIBCXX: @autowiring_USE_LIBCXX@")
     message(STATUS "Configured autowiring_USE_LIBCXX: ${autowiring_USE_LIBCXX}")
-  endif()
-
-  # Our built version must be the same as the requested version.  If it's not, then we are
-  # not a match for the user's request
-  if((NOT ${autowiring_USE_LIBCXX} AND @autowiring_USE_LIBCXX@) OR (${autowiring_USE_LIBCXX} AND NOT @autowiring_USE_LIBCXX@))
-    if(autowiring_DEBUG)
-      message("User C++ runtime library request incompatible with locally built version")
-    endif()
-    set(PACKAGE_VERSION_COMPATIBLE FALSE)
-    set(PACKAGE_VERSION_UNSUITABLE TRUE)
-    return()
   endif()
 endif()
 

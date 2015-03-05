@@ -1,8 +1,3 @@
-if(NOT WIN32 AND NOT autowiring_USE_LIBCXX)
-  message("Cannot build Autonet, requires proper C++11 support")
-  return()
-endif()
-
 add_googletest(test)
 include_directories(
   ${PROJECT_SOURCE_DIR}/contrib/autoboost
