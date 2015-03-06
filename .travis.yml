@@ -9,6 +9,9 @@ before_install:
   # Enforce Leap Motion copyright notice
   - ./scripts/copyright_check.sh
 
+  # Verify that our version numbers all line up
+  - ./scripts/version_number_updated.sh
+
   # g++4.8.1
   - if [ "$CXX" == "g++" ]; then
       sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
