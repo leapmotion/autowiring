@@ -43,12 +43,7 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
     call->GetCall()(call->GetAutoFilter(), *this);
 
   // First-call indicated by argumument type AutoPacket&:
-#if autowiring_USE_LIBCXX
   for (bool is_shared : {false, true}) {
-#else
-  for (int num = 0; num < 2; ++num) {
-    bool is_shared = (bool)num;
-#endif
     std::unique_lock<std::mutex> lk(m_lock);
 
     // Don't modify the decorations set if nobody expects an AutoPacket input

@@ -40,33 +40,6 @@ if(EXTERNAL_LIBRARY_DIR)
   list(APPEND CMAKE_INCLUDE_PATH ${EXTERNAL_LIBRARY_DIR})
 endif()
 
-if(APPLE)
-  # Offer option for autowiring_USE_LIBCXX
-  # Check for existing definition of autowiring_USE_LIBCXX
-  if(NOT DEFINED autowiring_USE_LIBCXX)
-    option(autowiring_USE_LIBCXX "Build Autowiring using c++11" ON)
-  else()
-    if(NOT autowiring_USE_LIBCXX)
-      message("Parent project has set autowiring_USE_LIBCXX = OFF -> Build Autowiring using c++98")
-    endif()
-  endif()
-
-  # Install autoboost when using libstdc++
-  if(autowiring_USE_LIBCXX)
-    set(autowiring_INSTALL_AUTOBOOST OFF)
-  else()
-    set(autowiring_INSTALL_AUTOBOOST ON)
-  endif()
-else()
-  # Always use libc++ on other platforms
-  set(autowiring_USE_LIBCXX ON)
-
-  # Don't install autoboost unless otherwise specified
-  if(NOT DEFINED autowiring_INSTALL_AUTOBOOST)
-    set(autowiring_INSTALL_AUTOBOOST OFF)
-  endif()
-endif()
-
 if(CMAKE_COMPILER_IS_GNUCC)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.8")
     message(FATAL_ERROR "GCC version 4.8 minimum is required to build Autowiring")
@@ -86,16 +59,9 @@ endif()
 
 # Clang needs special additional flags to build with C++11
 if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-  # Apple needs us to tell it that we're using libc++, or it will try to use libstdc++ instead
-  if(autowiring_USE_LIBCXX)
-    message(STATUS "AppleClang C++11")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
-    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
-  else()
-    message(STATUS "AppleClang C++11 with libstdc++")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
-  endif()
+  message(STATUS "AppleClang C++11")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+  set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   message(STATUS "Clang C++11")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lstdc++")
@@ -223,15 +189,6 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
     COMPONENT autowiring
     FILES_MATCHING PATTERN "*.h"
   )
-
-  # Install autoboost headers
-  if(autowiring_INSTALL_AUTOBOOST)
-    install(
-      DIRECTORY ${PROJECT_SOURCE_DIR}/contrib/autoboost/autoboost
-      DESTINATION include
-      COMPONENT autowiring
-    )
-  endif()
 
   # Targets file is needed in order to describe how to link Autowiring to the rest of the system
   install(EXPORT AutowiringTargets FILE AutowiringTargets.cmake COMPONENT autowiring NAMESPACE Autowiring:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})

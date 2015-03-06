@@ -131,11 +131,7 @@
 #endif
 
 #if TYPE_TRAITS_AVAILABLE
-  #if defined(_MSC_VER) || defined(_LIBCPP_VERSION)
-    #define TYPE_TRAITS_HEADER <type_traits>
-  #else
-    #define TYPE_TRAITS_HEADER <type_traits>
-  #endif
+  #define TYPE_TRAITS_HEADER <type_traits>
 #else
   #define TYPE_TRAITS_HEADER <autowiring/C++11/boost_type_traits.h>
 #endif
