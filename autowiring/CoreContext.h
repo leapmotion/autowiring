@@ -296,11 +296,7 @@ protected:
   // Enables a boltable class
   template<typename T, typename... Sigils>
   void EnableInternal(T*, Boltable<Sigils...>*) {
-    bool dummy[] = {
-      false, // Ensure non-zero array size
-      (AutoRequireMicroBolt<T, Sigils>(), false)...
-    };
-    (void) dummy;
+    [](...){}((AutoRequireMicroBolt<T, Sigils>(),false)...);
   }
 
   void EnableInternal(...) {}
