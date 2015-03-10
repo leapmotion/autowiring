@@ -2,6 +2,7 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "AutoFilterDescriptor.h"
+#include "AutowiringEvents.h"
 #include "BoltBase.h"
 #include "ContextMember.h"
 #include "CoreRunnable.h"
@@ -36,7 +37,11 @@ struct CoreObjectDescriptor {
     pFilter(autowiring::fast_pointer_cast<ExceptionFilter>(value)),
     pBoltBase(autowiring::fast_pointer_cast<BoltBase>(value)),
     receivesEvents(
-      [this]{
+      [this, value]{
+        // Because we manually added AutowiringEvents to the JunctionBoxManager, check here also
+        if (autowiring::fast_pointer_cast<AutowiringEvents>(value))
+          return true;
+        
         for (auto evt = g_pFirstEventEntry; evt; evt = evt->pFlink)
           if (evt->IsSameAs(pCoreObject.get()))
             return true;
