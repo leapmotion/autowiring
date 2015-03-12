@@ -110,57 +110,55 @@ SlotInformationStump<T, false> SlotInformationStump<T, false>::s_stump;
 /// </summary>
 class SlotInformationStackLocation {
 public:
-  SlotInformationStackLocation(const SlotInformationStackLocation& rhs) = delete;
-  SlotInformationStackLocation(SlotInformationStackLocation&& rhs) = delete;
-
   /// <summary>
   /// Registers a new stack location on the current thread, used to provide slot reflection services in Autowiring
   /// </summary>
-  SlotInformationStackLocation(SlotInformationStumpBase* pStump, const void* pObj = nullptr, size_t extent = 0);
+  SlotInformationStackLocation(SlotInformationStumpBase& stump, const void* pObj = nullptr, size_t extent = 0);
 
   ~SlotInformationStackLocation(void);
 
-private:
-  // The prior stack location, made current when this slot goes out of scope
-  SlotInformationStackLocation* m_pPrior;
-
   // The pointer location where the stump will be stored:
-  SlotInformationStumpBase* m_pStump;
+  SlotInformationStumpBase& stump;
 
+  // Information about the object being constructed while this stack location is valid:
+  const void* const pObj;
+  const size_t extent;
+
+  // The prior stack location, made current when this slot goes out of scope
+  SlotInformationStackLocation& prior;
+
+private:
   // Current slot information:
   SlotInformation* m_pCur;
 
   // Most recent AutoFilter descriptor link:
   AutoFilterDescriptorStubLink* m_pLastLink;
 
-  // Information about the object being constructed while this stack location is valid:
-  const void* m_pObj;
-  size_t m_extent;
-
 public:
   /// <returns>
   /// True if the passed pointer is inside of the object currently under construction at this stack location
   /// </returns>
-  bool Encloses(const void* ptr) {
-    return m_pObj < ptr && ptr < (char*) m_pObj + m_extent;
+  bool Encloses(const void* ptr) const {
+    return pObj < ptr && ptr < (char*) pObj + extent;
   }
 
-  /// <summary>
-  /// The slot information stump for this stack location
-  /// </summary>
-  SlotInformationStumpBase* GetStump(void) const {
-    return m_pStump;
+  /// <returns>
+  /// The offset of the specified pointer from the beginning of the object under construction
+  /// </returns>
+  /// <param name="ptr">The object whose offset is to be found</param>
+  /// <remarks>
+  /// The return value is undefined if the passed pointer is not within the object under construction.  This
+  /// function is intend to be used during field construction to find the offset of the passed field within
+  /// its enclosing type.
+  /// </remarks>
+  size_t Offset(const void* ptr) const {
+    return (char*) ptr - (char*) pObj;
   }
 
   /// <summary>
   /// Returns the current information stump entry, or null if no stack location exists
   /// </summary>
   static SlotInformationStackLocation* CurrentStackLocation(void);
-
-  /// <summary>
-  /// Returns the stump in the current stack location, or null
-  /// </summary>
-  static SlotInformationStumpBase* CurrentStump(void);
 
   /// <summary>
   /// Registers the named slot with the current stack location
@@ -171,8 +169,4 @@ public:
   /// Registers a NewAutoFilter with this SlotInformation
   /// </summary>
   static void RegisterSlot(const AutoFilterDescriptorStub& stub);
-
-  // Operator overloads:
-  void operator=(SlotInformationStackLocation&& rhs) = delete;
-  void operator=(const SlotInformationStackLocation& rhs) = delete;
 };
