@@ -16,6 +16,8 @@ set(Autowiring_SRCS
   at_exit.h
   auto_id.h
   auto_future.h
+  auto_signal.h
+  auto_signal.cpp
   AutoConfig.cpp
   AutoConfig.h
   AutoConfigManager.cpp
