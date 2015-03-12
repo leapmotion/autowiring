@@ -9,13 +9,13 @@
 // Special file-level allocation with a no-op dtor, because all stack locations are stack-allocated
 static autowiring::thread_specific_ptr<SlotInformationStackLocation> tss([](SlotInformationStackLocation*) {});
 
-SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStumpBase* pStump, const void* pObj, size_t extent) :
-  m_pPrior(tss.get()),
-  m_pStump(pStump),
+SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStumpBase& stump, const void* pObj, size_t extent) :
+  prior(*tss),
+  stump(stump),
   m_pCur(nullptr),
   m_pLastLink(nullptr),
-  m_pObj(pObj),
-  m_extent(extent)
+  pObj(pObj),
+  extent(extent)
 {
   tss.reset(this);
 }
@@ -33,27 +33,18 @@ void UpdateOrCascadeDelete(T* ptr, const T*& dest) {
 }
 
 SlotInformationStackLocation::~SlotInformationStackLocation(void) {
-  if(!m_pStump)
-    // Rvalue moved, end here
-    return;
-
   // Replace the prior stack location, we were pushed
-  tss.reset(m_pPrior);
+  tss.reset(&prior);
 
-  UpdateOrCascadeDelete(m_pCur, m_pStump->pHead);
-  UpdateOrCascadeDelete(m_pLastLink, m_pStump->pFirstAutoFilter);
+  UpdateOrCascadeDelete(m_pCur, stump.pHead);
+  UpdateOrCascadeDelete(m_pLastLink, stump.pFirstAutoFilter);
 
   // Unconditionally update to true, no CAS needed
-  m_pStump->bInitialized = true;
+  stump.bInitialized = true;
 }
 
 SlotInformationStackLocation* SlotInformationStackLocation::CurrentStackLocation(void) {
   return tss.get();
-}
-
-SlotInformationStumpBase* SlotInformationStackLocation::CurrentStump(void) {
-  // Trivial null defaulting:
-  return tss.get() ? tss->m_pStump : nullptr;
 }
 
 void SlotInformationStackLocation::RegisterSlot(DeferrableAutowiring* pDeferrable) {
@@ -61,7 +52,7 @@ void SlotInformationStackLocation::RegisterSlot(DeferrableAutowiring* pDeferrabl
     // Nothing to do, this slot entry is missing
     return;
 
-  if(tss->m_pStump->bInitialized)
+  if(tss->stump.bInitialized)
     // No reason to continue, stump already initialized
     return;
 
@@ -73,13 +64,13 @@ void SlotInformationStackLocation::RegisterSlot(DeferrableAutowiring* pDeferrabl
     tss->m_pCur,
     pDeferrable->GetType(),
     reinterpret_cast<const unsigned char*>(pDeferrable) -
-    reinterpret_cast<const unsigned char*>(tss->m_pObj),
+    reinterpret_cast<const unsigned char*>(tss->pObj),
     false
   );
 }
 
 void SlotInformationStackLocation::RegisterSlot(const AutoFilterDescriptorStub& stub) {
-  if(!tss.get() || tss->m_pStump->bInitialized)
+  if(!tss.get() || tss->stump.bInitialized)
     return;
 
   tss->m_pLastLink = new AutoFilterDescriptorStubLink(stub, tss->m_pLastLink);
