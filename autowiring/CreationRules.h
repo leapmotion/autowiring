@@ -111,7 +111,7 @@ struct crh<construction_strategy::standard, T, Args...> {
     try {
       // Push a new stack location so that all constructors from here know the injected type under construction
       SlotInformationStackLocation loc(
-        &SlotInformationStump<T>::s_stump,
+        SlotInformationStump<T>::s_stump,
         pSpace,
         sizeof(TActual)
       );
