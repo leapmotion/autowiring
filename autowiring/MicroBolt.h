@@ -32,11 +32,7 @@ public:
     // multiple calls to Inject<T>() if a matching context
     // is created during traversal.
     const auto ctxt = CoreContext::CurrentContext();
-    const bool dummy [] = {
-      LoopInject<Sigils>(ctxt)...,
-      false
-    };
-    (void)dummy;
+    [](...){}(LoopInject<Sigils>(ctxt)...);
   }
   void ContextCreated(void) override;
 };
