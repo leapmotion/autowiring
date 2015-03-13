@@ -13,6 +13,7 @@ set(AutowiringTest_SRCS
   AutoPacketFactoryTest.cpp
   AutoParameterTest.cpp
   AutoRestarterTest.cpp
+  AutoSignalTest.cpp
   AutowiringTest.cpp
   AutowiringUtilitiesTest.cpp
   BasicThreadTest.cpp
