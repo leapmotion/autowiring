@@ -67,3 +67,58 @@ TEST_F(AutoSignalTest, SignalWithAutowiring) {
   ras->signal(99);
   ASSERT_FALSE(handler_called) << "A handler was unexpectedly called after it should have been destroyed";
 }
+
+TEST_F(AutoSignalTest, MultipleSlotsTest) {
+  autowiring::signal<void(void)> signal;
+  
+  bool handler_called1 = false;
+  bool handler_called2 = false;
+  
+  auto* registration1 =
+  signal += [&] {
+    handler_called1 = true;
+  };
+  
+  // Registration 2
+  signal += [&] {
+    handler_called2 = true;
+  };
+  
+  // Trivially raise the signal:
+  signal();
+  ASSERT_TRUE(handler_called1) << "Handler 1 was not called on a stack-allocated signal";
+  ASSERT_TRUE(handler_called2) << "Handler 2 was not called on a stack-allocated signal";
+  
+  // Unregister the first signal and reset the variables
+  signal -= registration1;
+  
+  handler_called1 = false;
+  handler_called2 = false;
+  
+  // Verify that registration 2 can still receive the signals
+  signal();
+  ASSERT_FALSE(handler_called1) << "Handler 1 was called after being unregistered";
+  ASSERT_TRUE(handler_called2) << "Handler 2 was inadvertently unregistered";
+}
+
+TEST_F(AutoSignalTest, RaiseASignalWithinASlotTest) {
+  autowiring::signal<void(void)> signal1;
+  autowiring::signal<void(void)> signal2;
+  
+  bool handler_called1 = false;
+  bool handler_called2 = false;
+  
+  signal1 += [&] {
+    handler_called1 = true;
+    signal2();
+  };
+  
+  signal2 += [&] {
+    handler_called2 = true;
+  };
+  
+  // Trivially raise the signal:
+  signal1();
+  ASSERT_TRUE(handler_called1) << "Handler 1 was not called on a stack-allocated signal";
+  ASSERT_TRUE(handler_called2) << "Handler 2 was not called on a stack-allocated signal";
+}
