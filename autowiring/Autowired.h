@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "auto_signal.h"
 #include "AutowirableSlot.h"
 #include "Decompose.h"
 #include "GlobalCoreContext.h"
@@ -120,11 +121,15 @@ public:
   }
 
   ~Autowired(void) {
+    // Unlink all signal entries
+    for (auto& unlinkEntry : m_unlinkEntries)
+      *unlinkEntry.relay -= unlinkEntry.node;
+
     if(m_pFirstChild == this)
       // Tombstoned, nothing to do:
       return;
 
-    // Need to ensure that nobody tries to autowire us while we are tearing down:
+    // Need to ensure that nobody tries to fill us while we are tearing down:
     this->CancelAutowiring();
 
     // And now we destroy our deferrable autowiring collection:
@@ -138,6 +143,23 @@ private:
   // the base class, which refers to the _next sibling_; by contrast, this type refers to the _first child_
   // which will be the first member registered via NotifyWhenAutowired.
   std::atomic<AutowirableSlot<T>*> m_pFirstChild;
+
+  struct unlink_entry
+  {
+    unlink_entry(
+      autowiring::signal_relay* relay,
+      autowiring::internal::signal_node_base* node
+    ) :
+      relay(relay),
+      node(node)
+    {}
+
+    autowiring::signal_relay* relay;
+    autowiring::internal::signal_node_base* node;
+  };
+
+  // The set of all nodes that will have to be unlinked when this field is torn down
+  std::vector<unlink_entry> m_unlinkEntries;
 
 public:
   operator const std::shared_ptr<T>&(void) const {
@@ -156,7 +178,37 @@ public:
   operator T*(void) const {
     return this->operator const std::shared_ptr<T>&().get();
   }
+
+  template<typename... Args>
+  struct signal_relay {
+    signal_relay(Autowired<T>& owner, autowiring::signal_relay_t<Args...>& relay) :
+      owner(owner),
+      relay(relay)
+    {}
+
+  private:
+    Autowired<T>& owner;
+    autowiring::signal_relay_t<Args...>& relay;
+
+  public:
+    void operator+=(std::function<void(Args...)>&& fn) {
+      owner.m_unlinkEntries.push_back(
+        unlink_entry(
+          &relay,
+          relay += std::move(fn)
+        )
+      );
+    }
+  };
   
+  template<typename... Args>
+  signal_relay<Args...> operator()(autowiring::signal<void(Args...)> T::*handler) {
+    auto ctxt = AutowirableSlot<T>::GetContext();
+    if (!ctxt)
+      throw std::runtime_error("Attempted to attach a signal to an Autowired field in a context that was already destroyed");
+    return {*this, ctxt->RelayForType(handler)};
+  }
+
   /// <summary>
   /// Assigns a lambda function to be called when the dependency for this slot is autowired.
   /// </summary>

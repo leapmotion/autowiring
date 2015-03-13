@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
+#include "auto_signal.h"
 #include "AutoFilterDescriptor.h"
 #include "AutowirableSlot.h"
 #include "AutowiringEvents.h"
@@ -51,6 +52,11 @@ class CoreContextT;
 
 template<typename T>
 class JunctionBox;
+
+namespace autowiring {
+  template<typename... Args>
+  struct signal_relay_t;
+}
 
 /// \file
 /// CoreContext definitions.
@@ -1177,6 +1183,36 @@ public:
   /// Unregisters a slot as a recipient of potential autowiring
   /// </summary>
   void CancelAutowiringNotification(DeferrableAutowiring* pDeferrable);
+
+  /// <returns>
+  /// A slots-and-signals type relay for a specific type
+  /// </returns>
+  template<typename T, typename... Args>
+  autowiring::signal_relay_t<Args...>& RelayForType(autowiring::signal<void(Args...)> T::*handler) {
+    typedef typename SelectTypeUnifier<T>::type TActual;
+
+    // Get the table first
+    auto registration = Inject<autowiring::signal_relay_registration_table>();
+
+    // Find the basis offset between T and TActual.  This is the address of the first member of T
+    // relative to the base of TActual.
+    size_t basis =
+      reinterpret_cast<size_t>(
+        static_cast<T*>(
+          reinterpret_cast<TActual*>(1)
+        )
+      ) - 1;
+
+    // Find the offset and return the relay
+    return
+      static_cast<autowiring::signal_relay_t<Args...>&>(
+        *registration->GetSignalRelay(
+          typeid(TActual),
+          basis +
+          reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*handler))
+        )
+      );
+  }
 
   /// <summary>
   /// Utility debug method for writing a snapshot of this context to the specified output stream
