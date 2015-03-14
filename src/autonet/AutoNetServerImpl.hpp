@@ -145,7 +145,7 @@ protected:
   std::map<int, CoreContext*> m_ContextPtrs;
 
   // All event types
-  std::set<std::shared_ptr<TypeIdentifierBase>> m_EventTypes;
+  std::set<const TypeIdentifierBase*> m_EventTypes;
 
   // All ContextMembers
   std::map<std::string, std::function<void(void)>> m_AllTypes;

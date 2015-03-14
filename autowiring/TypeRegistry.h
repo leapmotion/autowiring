@@ -10,7 +10,9 @@ namespace autowiring {
   void InjectCurrent(void);
 }
 
-struct TypeRegistryEntry {
+struct TypeRegistryEntry:
+  public TypeIdentifierBase
+{
   TypeRegistryEntry(const std::type_info& ti);
 
   // Next entry in the list:
@@ -18,16 +20,6 @@ struct TypeRegistryEntry {
 
   // Type of this entry:
   const std::type_info& ti;
-
-  /// <summary>
-  /// The runtime type information corresponding to this entry
-  /// </summary>
-  virtual const std::type_info& GetTypeInfo(void) const = 0;
-
-  /// <summary>
-  /// Used to create a type identifier value, for use with AutoNet
-  /// </summary>
-  virtual std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const = 0;
 
   /// <summary>
   /// Returns true if an injection is possible on the described type
@@ -57,10 +49,9 @@ struct TypeRegistryEntryT:
 
   virtual const std::type_info& GetTypeInfo(void) const override { return typeid(T); }
 
-  std::shared_ptr<TypeIdentifierBase> NewTypeIdentifier(void) const override {
-    return std::static_pointer_cast<TypeIdentifierBase>(
-      std::make_shared<TypeIdentifier<T>>()
-    );
+  // true if "obj" is an event receiver for T
+  bool IsSameAs(const CoreObject* obj) const override {
+    return !!dynamic_cast<const T*>(obj);
   }
 
   bool CanInject(void) const override {

@@ -5,11 +5,15 @@ set(AutowiringTest_SRCS
   AutoConstructTest.cpp
   AutoFilterCollapseRulesTest.cpp
   AutoFilterDiagnosticsTest.cpp
+  AutoFilterFunctionTest.cpp
+  AutoFilterSequencing.cpp
+  AutoFilterTest.cpp
   AutoInjectableTest.cpp
   AutoPacketTest.cpp
   AutoPacketFactoryTest.cpp
   AutoParameterTest.cpp
   AutoRestarterTest.cpp
+  AutoSignalTest.cpp
   AutowiringTest.cpp
   AutowiringUtilitiesTest.cpp
   BasicThreadTest.cpp
@@ -65,14 +69,6 @@ add_windows_sources(
   AutowiringTest_SRCS
   AutoFutureTest.cpp
 )
-
-if(autowiring_USE_LIBCXX)
-  set(AutowiringTest_SRCS ${AutowiringTest_SRCS}
-    AutoFilterFunctionTest.cpp
-    AutoFilterSequencing.cpp
-    AutoFilterTest.cpp
-  )
-endif()
 
 set(AutowiringFixture_SRCS
   HasForwardOnlyType.hpp
