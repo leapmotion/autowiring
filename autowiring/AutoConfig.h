@@ -61,6 +61,10 @@ public:
     return m_manager->Get(m_key)->template as<T>().get();
   }
 
+  void operator=(const T& newValue) {
+    return m_manager->Set(m_key, newValue);
+  }
+
   /// <returns>
   /// True if this configurable field has been satisfied with a value
   /// </returns>
