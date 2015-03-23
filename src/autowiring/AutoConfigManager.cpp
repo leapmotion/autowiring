@@ -105,6 +105,17 @@ void AutoConfigManager::AddCallback(const std::string& key, t_callback&& fx) {
   m_callbacks[key].push_back(fx);
 }
 
+void AutoConfigManager::AddCallback(t_add_callback&& fx) {
+  // Grab lock until done setting value
+  std::lock_guard<std::mutex> lk(m_lock);
+
+  for (auto& key : m_orderedKeys) {
+    fx(key, m_values[key]);
+  }
+
+  m_addCallbacks.emplace_back(std::move(fx));
+}
+
 void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer value) {
   // Call all validators for this key
   if (s_validators.count(key)) {
@@ -118,13 +129,21 @@ void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer va
   }
   
   // Grab lock until done setting value
-  std::lock_guard<std::mutex> lk(m_lock);
-  
+  std::unique_lock<std::mutex> lk(m_lock);
+
   // Actually set the value in this manager
   SetInternal(key, value);
   
   // Mark key set from this manager
-  m_setHere.insert(key);
+  auto inserted = m_setHere.insert(key);
+  if (inserted.second) {
+    m_orderedKeys.push_back(key);
+    for (auto& callback : m_addCallbacks) {
+      lk.unlock();
+      callback(key, value);
+      lk.lock();
+    }
+  }
   
   // Enumerate descendant contexts
   auto enumerator = ContextEnumerator(GetContext());
