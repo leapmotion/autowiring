@@ -2,79 +2,48 @@
 #include "stdafx.h"
 #include "AutoConfigParser.hpp"
 #include "demangle.h"
-#include "expect.hpp"
+#include <stdexcept>
 
-  
-std::string autowiring::ExtractKeyUnix(std::stringstream& ss) {
+std::string autowiring::ExtractKey(const std::string& demangled) {
   //Extract Namespace and value from typename
-  //ConfigTypeExtractor<Namespace, Value>
-  
-  std::string arg1;
-  std::string arg2;
-  ss >> expect("ConfigTypeExtractor<");
-  ss >> arg1;
-  
-  // If arg1 contains a comma, there are 2 arguments
-  auto found = arg1.find(",");
-  if (found != std::string::npos) {
-    ss >> arg2;
-    
-    // Remove trailing ","
-    arg1.resize(arg1.size()-1);
-    
-    // Remove trailing '>'
-    arg2.resize(arg2.size()-1);
-    
-    std::stringstream key;
-    key << arg1 << "." << arg2;
-    return key.str();
-    
-  } else {
-    // Remove trailing '>'
-    arg1.resize(arg1.size()-1);
-    return arg1;
-  }
-}
+  //struct ConfigTypeExtractor<struct Namespace, class ..., struct Value>
+  //Or on unix: ConfigTypeExtractor<Namespace, ..., Value>
 
-std::string autowiring::ExtractKeyWin(std::stringstream& ss) {
-  //Extract Namespace and value from typename
-  //struct ConfigTypeExtractor<struct Namespace, struct Value>
+  const auto identifiersStart = demangled.find('<');
+  const auto identifiersEnd = demangled.rfind('>');
+  if (identifiersStart == (std::string::npos) || identifiersEnd == std::string::npos)
+    return std::string();
+
+  std::string key;
   
-  std::string arg1;
-  std::string arg2;
-  ss >> expect("struct") >> expect("ConfigTypeExtractor<struct");
-  ss >> arg1;
-  
-  // If arg1 contains a comma, there are 2 arguments
-  auto found = arg1.find(",struct");
-  if (found != std::string::npos) {
-    ss >> arg2;
+  auto subKeyStart = identifiersStart;
+  while (subKeyStart < identifiersEnd) {
+    //Find the > or , which denotes the start of the next identifier (or the end of the identifiers)
+    auto subKeyEnd = demangled.find_first_of(",>", subKeyStart);
+
+    //Find the end of :: or the space between the struct declaration and our name backwards from the end of the identifer
     
-    // Remove trailing ",struct"
-    arg1 = arg1.substr(0, found);
-    
-    // Remove trailing '>'
-    arg2.resize(arg2.size()-1);
-    
-    std::stringstream key;
-    key << arg1 << "." << arg2;
-    return key.str();
-    
-  } else {
-    // Remove trailing '>'
-    arg1.resize(arg1.size()-1);
-    return arg1;
+    auto subKeyStartTrimmed = demangled.find_last_of(" <,", subKeyEnd-1);
+    if(subKeyStartTrimmed != std::string::npos && subKeyStartTrimmed > subKeyStart)
+      subKeyStart = subKeyStartTrimmed;
+
+    ++subKeyStart; //skip the space, :, or < that comes at the start
+    key += demangled.substr(subKeyStart, (subKeyEnd-subKeyStart));
+    key += ".";
+
+    subKeyStart = subKeyEnd + 1;
   }
+
+  key.resize(key.size() - 1); //trim the trailing .
+  return key;
 }
 
 std::string autowiring::ExtractKey(const std::type_info& ti) {
-  std::string demangled = demangle(ti);
-  std::stringstream ss(demangled);
-
-  return
-#if __GNUG__// Mac and linux
-  ExtractKeyUnix(ss);
-#else // Windows
-  ExtractKeyWin(ss);
-#endif
+  bool success;
+  std::string demangled = demangle(ti,&success);
+  
+  if(! success )
+    throw std::runtime_error("Demangle failed, structure may not be used as part of a key. Is your struct declared inside a function? Symbol=" + demangled);
+  
+  return ExtractKey(demangled);
 }
