@@ -40,7 +40,7 @@ class AutoConfig:
   public AutoConfigBase
 {
 public:
-  static_assert(sizeof...(TKey)==1 || sizeof...(TKey)==2, "Must provide a key and optional namespace");
+  static_assert(sizeof...(TKey) >= 1, "Must provide a key and optionally at least one namespace");
   
   AutoConfig(void) :
     AutoConfigBase(typeid(ConfigTypeExtractor<TKey...>))

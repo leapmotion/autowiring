@@ -10,15 +10,15 @@ struct AnySharedPointer;
 // Just returns type_info.name() on windows
 //
 namespace autowiring {
-  std::string demangle(const std::type_info& ti);
-  std::string demangle(const std::type_info* ti);
+  std::string demangle(const std::type_info& ti, bool* success = nullptr);
+  std::string demangle(const std::type_info* ti, bool* success = nullptr);
 
-  std::string demangle(const AnySharedPointer& ptr);
+  std::string demangle(const AnySharedPointer& ptr, bool* success = nullptr);
 
   /// Returns a human-readable std::string describing the type.
   template<typename T>
-  std::string demangle(const T&) {
-    return demangle(typeid(T));
+  std::string demangle(const T&, bool* success = nullptr) {
+    return demangle(typeid(T), success);
   }
 
 }//namespace autowiring

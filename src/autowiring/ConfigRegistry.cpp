@@ -23,6 +23,6 @@ bool ConfigRegistryEntry::is(const std::string& key) const {
 
 void autowiring::ThrowFailedTypeParseException(const std::string& str, const std::type_info& ti) {
   std::stringstream msg;
-  msg << "Failed to parse '" << str << "' as type '" << autowiring::demangle(ti) << "'";
+  msg << "Failed to parse '" << str << "' as type '" << autowiring::demangle(ti, nullptr) << "'";
   throw autowiring_error(msg.str());
 }
