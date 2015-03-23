@@ -42,7 +42,22 @@ class AutoConfig:
 public:
   static_assert(sizeof...(TKey) >= 1, "Must provide a key and optionally at least one namespace");
   
-  AutoConfig(void) :
+  template<typename ...t_Args>
+  AutoConfig(t_Args&&... args) :
+    AutoConfigBase(typeid(ConfigTypeExtractor<TKey...>))
+  {
+    // Register with config registry
+    (void)RegConfig<T, TKey...>::r;
+
+    if (!IsConfigured()){
+      m_manager->Set(m_key, T(std::forward<t_Args>(args)...));
+    }
+  }
+
+#if _WIN32 //Silence warnings about multiple default constructors on windows
+  template<>
+#endif
+  AutoConfig() :
     AutoConfigBase(typeid(ConfigTypeExtractor<TKey...>))
   {
     // Register with config registry
