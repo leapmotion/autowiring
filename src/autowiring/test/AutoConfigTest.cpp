@@ -310,3 +310,14 @@ TEST_F(AutoConfigTest, Validators) {
   acm->Set("ValidatedKey", 1337);
   ASSERT_EQ(1337, *valid->m_config) << "Value not set for key";
 }
+
+TEST_F(AutoConfigTest, DirectAssignemnt) {
+  AutoConfig<int, struct Namespace1, struct XYZ> var;
+  var = 10;
+  ASSERT_EQ(10, *var);
+
+  AutoRequired<MyConfigurableClass> containsVar;
+
+  ASSERT_EQ(10, *var);
+  ASSERT_EQ(10, *containsVar->m_myName);
+}
