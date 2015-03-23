@@ -321,3 +321,43 @@ TEST_F(AutoConfigTest, DirectAssignemnt) {
   ASSERT_EQ(10, *var);
   ASSERT_EQ(10, *containsVar->m_myName);
 }
+
+
+struct ComplexValue {
+  int a;
+  int b;
+  int c;
+
+  ComplexValue(int nA, int nB, int nC) : a(nA), b(nB), c(nC) {}
+  ComplexValue(int repeated) : a(repeated), b(repeated), c(repeated) {}
+};
+
+struct MyComplexValueClass {
+  AutoConfig<ComplexValue, struct Namespace1, struct MyCxValue> m_cfg;
+  AutoConfig<ComplexValue, struct Namespace1, struct MyCxValue2> m_cfg2 = ComplexValue{ 10, 15, 30 };
+
+  MyComplexValueClass() : m_cfg(ComplexValue{ 2, 20, 20 }) {}
+};
+
+TEST_F(AutoConfigTest, ComplexConstruction){
+  AutoRequired<AutoConfigManager> mgr;
+  ASSERT_FALSE(mgr->IsConfigured("Namespace1.MyCxValue"));
+  
+  AutoConfig<ComplexValue, Namespace1, MyCxValue> defaultConstructed;
+
+  ASSERT_FALSE(mgr->IsConfigured("Namespace1.MyCxValue")) << "Improperly set config value when default constructing AutoConfig";
+
+  AutoConfig<ComplexValue, Namespace1, MyCxValue> fancyConstructed(1, 2, 3);
+  
+  ASSERT_TRUE(mgr->IsConfigured("Namespace1.MyCxValue")) << "Initializing constructor did not set config value";
+  ASSERT_EQ(fancyConstructed->a, 1) << "Initializing constructor did not set config value";
+  ASSERT_EQ(fancyConstructed->b, 2) << "Initializing constructor did not set config value";
+  ASSERT_EQ(fancyConstructed->c, 3) << "Initializing constructor did not set config value";
+
+
+  AutoConfig<ComplexValue, Namespace1, MyCxValue> fancy2(7);
+  ASSERT_EQ(fancy2->a, 1) << "Second Initalizing constructor overrode the first!";
+  ASSERT_EQ(fancy2->b, 2) << "Second Initalizing constructor overrode the first!";
+  ASSERT_EQ(fancy2->c, 3) << "Second Initalizing constructor overrode the first!";
+}
+
