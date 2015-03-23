@@ -361,3 +361,54 @@ TEST_F(AutoConfigTest, ComplexConstruction){
   ASSERT_EQ(fancy2->c, 3) << "Second Initalizing constructor overrode the first!";
 }
 
+struct OuterCtxt{};
+struct MiddleCtxt{};
+struct InnerCtxt{};
+TEST_F(AutoConfigTest, ListingConfigs) {
+  AutoCreateContextT<OuterCtxt> ctxt_outer;
+  auto ctxt_middle = ctxt_outer->Create<MiddleCtxt>();
+  auto ctxt_inner = ctxt_middle->Create<InnerCtxt>();
+
+  AutoRequired<AutoConfigManager> acm_outer(ctxt_outer);
+  AutoRequired<AutoConfigManager> acm_inner(ctxt_inner);
+
+  AutoRequired<MyConfigurableClass> var1_inner(ctxt_inner);
+  var1_inner->m_myName = 1;
+ 
+  ASSERT_EQ(0, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
+  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
+
+  int callback_outer = 0;
+  acm_outer->AddCallback([&callback_outer](const std::string& key, const AnySharedPointer& ptr) {
+    ++callback_outer;
+  });
+
+  int callback_inner = 0;
+  acm_inner->AddCallback([&callback_inner](const std::string& key, const AnySharedPointer& ptr) {
+    ++callback_inner;
+  });
+
+  ASSERT_EQ(1, callback_inner) << "Callback not called on existing keys";
+
+  AutoRequired<MyConfigurableClass2> var1_outer(ctxt_outer);
+  var1_outer->m_myName = 2;
+
+  ASSERT_EQ(1, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
+  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
+
+  AutoRequired<MyConfigurableClass> var2_outer(ctxt_outer);
+  var2_outer->m_myName = 3;
+
+  ASSERT_EQ(2, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
+  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
+
+  ASSERT_EQ(2, callback_outer) << "Outer callback called an incorrect number of times";
+  ASSERT_EQ(1, callback_inner) << "Inner callback called an incorrect number of times";
+
+  auto keys_outer = acm_outer->GetLocalKeys();
+  ASSERT_EQ(var1_outer->m_myName.m_key, keys_outer[0]) << "Keys listed out of construction order";
+  ASSERT_EQ(var2_outer->m_myName.m_key, keys_outer[1]) << "Keys listed out of construction order";
+
+  auto keys_inner = acm_inner->GetLocalKeys();
+  ASSERT_EQ(var1_inner->m_myName.m_key, keys_inner[0]) << "Keys listed out of construction order";
+}
