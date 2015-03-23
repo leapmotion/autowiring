@@ -151,10 +151,9 @@ void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer va
       
       //Actaully set the value
       mgmt->SetInternal(key, value);
-    
-      // Continue to next context
-      ++ctxt;
     }
+    // Continue to next context
+    ++ctxt;
   }
 }
 
