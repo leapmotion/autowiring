@@ -1,16 +1,28 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/AutoConfig.h>
-#include <autowiring/AutoConfigManager.h>
 
 class AutoConfigTest:
   public testing::Test
 {};
 
+struct Namespace1 {};
+struct Namespace2 {};
+struct XYZ {};
 
+TEST_F(AutoConfigTest, VerifyBasicAssignment) {
+  AutoConfig<int, Namespace1, XYZ> cfg1;
+  cfg1 = 1;
+  ASSERT_EQ(cfg1, 1) << "Operator = failed";
 
+  AutoConfig<int, Namespace2, XYZ> cfg2(2);
+  ASSERT_EQ(cfg2, 2) << "Default construction failed";
 
+  AutoConfig<int, Namespace1, XYZ> cfg1a;
+  ASSERT_EQ(cfg1a, 1) << "Failed to autowire AutoConfig value";
 
+  cfg1a = 3;
+  ASSERT_EQ(cfg1, 3) << "Failed to autowire AutoConfig value";
 }
 
 struct MyConfigurableClass {
