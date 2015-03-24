@@ -2,7 +2,7 @@
 #pragma once
 #include "autowiring_error.h"
 #include "CoreContext.h"
-#include STL_UNORDERED_MAP
+#include <map>
 
 extern std::shared_ptr<CoreContext> NewContextThunk(void);
 
@@ -30,40 +30,92 @@ public:
     tracker(void):
       destroyed(false)
     {}
+
+    // True when the enclosing context map has been destroyed
     bool destroyed;
   };
 
   ContextMap(void):
-    m_tracker(new tracker),
-    m_lk(*m_tracker)
+    m_tracker(std::make_shared<tracker>())
   {
   }
 
   ~ContextMap(void) {
     // Teardown pathway assurance:
-    (std::lock_guard<std::mutex>)m_lk,
-    (m_tracker->destroyed = true);
-
-    // Done, we can release our copy of the shared pointer and end here
-    m_tracker.reset();
+    std::lock_guard<std::mutex> lk(*m_tracker);
+    m_tracker->destroyed = true;
   }
 
 private:
   // Tracker lock, used to protect against accidental destructor-contending access while still allowing
   // the parent ContextMap structure to be stack-allocated
-  std::shared_ptr<tracker> m_tracker;
-
-  typedef std::unordered_map<Key, std::weak_ptr<CoreContext>> t_mpType;
-  std::mutex& m_lk;
+  const std::shared_ptr<tracker> m_tracker;
+  typedef std::map<Key, std::weak_ptr<CoreContext>> t_mpType;
   t_mpType m_contexts;
 
 public:
   // Accessor methods:
   size_t size(void) const {return m_contexts.size();}
 
+  class iterator {
+  public:
+    iterator(ContextMap& parent) :
+      parent(parent)
+    {
+      std::lock_guard<std::mutex> lk(*parent.m_tracker);
+
+      // Advance to the first iterator we can actually lock down:
+      iter = parent.m_contexts.begin();
+      while (
+        iter != parent.m_contexts.end() &&
+        !(ctxt = iter->second.lock())
+      )
+        // Failure, next entry
+        iter++;
+    }
+      
+    iterator(ContextMap& parent, typename t_mpType::iterator iter, std::shared_ptr<CoreContext> ctxt) :
+      parent(parent),
+      iter(iter),
+      ctxt(ctxt)
+    {}
+
+  private:
+    ContextMap& parent;
+    typename t_mpType::iterator iter;
+    std::shared_ptr<CoreContext> ctxt;
+
+  public:
+    const iterator& operator++(void) {
+      // We need to ensure our local shared pointer doesn't go away until after we have
+      // advanced to the next entry
+      std::shared_ptr<CoreContext> deferred = std::move(ctxt);
+
+      // Loop until we get another stable entry:
+      std::lock_guard<std::mutex> lk(*parent.m_tracker);
+      do iter++;
+      while (iter != parent.m_contexts.end() && !(ctxt = iter->second.lock()));
+
+      // We can safely unlock because the current entry won't be evicted automatically as long as
+      // the shared pointer reference is held down.
+      return *this;
+    }
+
+    const std::shared_ptr<CoreContext>& operator*(void) const { return ctxt; }
+    const CoreContext& operator->(void) const { return *ctxt; }
+    bool operator==(const iterator& rhs) const { return &parent == &rhs.parent && iter == rhs.iter; }
+    bool operator!=(const iterator& rhs) const { return !(*this == rhs); }
+    explicit operator bool(void) const {
+      return ctxt;
+    }
+  };
+
+  iterator begin(void) { return iterator(*this); }
+  iterator end(void) { return iterator(*this, m_contexts.end(), nullptr); }
+
   template<class Fn>
   void Enumerate(Fn&& fn) {
-    std::lock_guard<std::mutex> lk(m_lk);
+    std::lock_guard<std::mutex> lk(*m_tracker);
     for(const auto& entry : m_contexts) {
       auto ctxt = entry.second.lock();
       if(ctxt && !fn(entry.first, ctxt))
@@ -81,7 +133,7 @@ public:
   /// An exception will be thrown if the passed key is already associated with a context
   /// </remarks>
   void Add(const Key& key, std::shared_ptr<CoreContext>& context) {
-    std::lock_guard<std::mutex> lk(m_lk);
+    std::lock_guard<std::mutex> lk(*m_tracker);
     auto& rhs = m_contexts[key];
     if(!rhs.expired())
       throw autowiring_error("Specified key is already associated with another context");
@@ -126,13 +178,20 @@ public:
   /// <summary>
   /// Attempts to find a context by the specified key
   /// </summary>
-  std::shared_ptr<CoreContext> Find(const Key& key) {
-    std::lock_guard<std::mutex> lk(m_lk);
+  std::shared_ptr<CoreContext> Find(const Key& key) const {
+    std::lock_guard<std::mutex> lk(*m_tracker);
     auto q = m_contexts.find(key);
 
     return
       q == m_contexts.end() ?
       std::shared_ptr<CoreContext>() :
       q->second.lock();
+  }
+
+  /// <summary>
+  /// Identical to Find
+  /// </summary>
+  std::shared_ptr<CoreContext> operator[](const Key& key) const {
+    return Find(key);
   }
 };

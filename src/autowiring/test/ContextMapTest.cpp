@@ -237,3 +237,35 @@ TEST_F(ContextMapTest, VerifySimpleEnumeration) {
   EXPECT_EQ(1UL, found.count("context_se_3")) << "Failed to find map element '3'";
 }
 
+TEST_F(ContextMapTest, VerifyRangeBasedEnumeration) {
+  std::shared_ptr<CoreContext> ctxt1 = AutoCreateContext();
+  std::shared_ptr<CoreContext> ctxt2 = AutoCreateContext();
+  std::shared_ptr<CoreContext> ctxt3 = AutoCreateContext();
+
+  ContextMap<string> mp;
+  mp.Add("a", ctxt1);
+  mp.Add("b", ctxt2);
+  mp.Add("c", ctxt3);
+
+  size_t ct = 0;
+
+  // Internal map in ContextMap ensures entries are enumerated in-order
+  for (auto& cur : mp) {
+    switch (ct) {
+    case 0:
+      // Release the entry we are presently enumerating
+      ctxt1.reset();
+      break;
+    case 1:
+      // No behavior
+      break;
+    case 2:
+      // Release an entry we already enumerated
+      ctxt2.reset();
+      break;
+    }
+    ct++;
+  }
+
+  ASSERT_EQ(3UL, ct) << "Context map range-based enumeration did not correctly enumerate all members";
+}
