@@ -7,7 +7,7 @@ class AutoParameterTest:
   public testing::Test
 {};
 
-
+/*
 struct MyParamClass1 {
   struct MyIntParam1 {
     static int Default() { return 15; }
@@ -156,3 +156,4 @@ TEST_F(AutoParameterTest, VerifyDefaultMinMaxKey) {
   ASSERT_TRUE(param.Set(10) && *param == 10)
     << "Should be able to set values that are valid according to the validation function";
 }
+*/
