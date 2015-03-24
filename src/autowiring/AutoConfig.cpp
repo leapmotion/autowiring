@@ -3,7 +3,10 @@
 #include "AutoConfig.h"
 #include "AutoConfigParser.hpp"
 
-AutoConfigVarBase::AutoConfigVarBase(const std::type_info& ti) :
-  m_key(autowiring::ExtractKey(ti))
+AutoConfigVarBase::AutoConfigVarBase(const std::type_info& ti, bool configured) :
+  m_key(autowiring::ExtractKey(ti)),
+  m_isConfigured(configured),
   onChangedSignal(),
+  ContextMember(m_key.c_str())
 {}
+
