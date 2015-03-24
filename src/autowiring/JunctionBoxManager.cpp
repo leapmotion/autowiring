@@ -26,7 +26,9 @@ JunctionBoxManager::~JunctionBoxManager(void) {}
 
 std::shared_ptr<JunctionBoxBase> JunctionBoxManager::Get(const std::type_index& pTypeIndex) {
   auto box = m_junctionBoxes.find(pTypeIndex);
-  assert(box != m_junctionBoxes.end() && "If JunctionBox isn't found, EventRegistry isn't working");
+  if (box == m_junctionBoxes.end())
+    throw autowiring_error("Attempted to obtain a junction box for an unregistered type");
+
   return box->second;
 }
 
