@@ -3,6 +3,6 @@
 #include "AutoConfig.h"
 #include "AutoConfigParser.hpp"
 
-AutoConfigBase::AutoConfigBase(const std::type_info& ti):
+AutoConfigVarBase::AutoConfigVarBase(const std::type_info& ti) :
   m_key(autowiring::ExtractKey(ti))
 {}
