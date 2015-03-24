@@ -26,7 +26,7 @@ struct CoreObjectDescriptor {
   template<typename TActual, typename T>
   CoreObjectDescriptor(const std::shared_ptr<TActual>& value, T*) :
     type(&typeid(T)),
-    actual_type(&typeid(*value)),
+    actual_type(&typeid(auto_id<TActual>)),
     stump(&SlotInformationStump<T>::s_stump),
     value(value),
     subscriber(MakeAutoFilterDescriptor(value)),
