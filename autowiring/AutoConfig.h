@@ -20,6 +20,10 @@ public:
 
   // Key used to identify this config value
   const std::string m_key;
+
+  // Generic interface functions for getting and setting
+  virtual void Get(void* pValue) const = 0;
+  virtual void Set(const void* pValue) = 0;
   
   typedef autowiring::signal<void(const AutoConfigVarBase& val)> t_OnChangedSignal;
   t_OnChangedSignal onChangedSignal;
@@ -55,6 +59,9 @@ public:
   void operator=(const T& newValue) {
     m_value = newValue;
   }
+
+  void Get(void* pValue) const override { *reinterpret_cast<T*>(pValue) = m_value; }
+  void Set(const void* pValue) override { m_value = *reinterpret_cast<const T*>(pValue); }
 
   // Add a callback for when this config value changes
   t_OnChangedSignal::t_registration* operator+=(std::function<void(const T&)>&& fx) {
