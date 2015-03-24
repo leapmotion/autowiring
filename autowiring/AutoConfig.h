@@ -43,6 +43,8 @@ public:
   {
     // Register with config registry
     (void)RegConfig<T, TKey...>::r;
+
+    onChangedSignal(*this);
   }
 
   AutoConfigVar() :
@@ -58,6 +60,7 @@ public:
 
   void operator=(const T& newValue) {
     m_value = newValue;
+    onChangedSignal(*this);
   }
 
   void Get(void* pValue) const override { *reinterpret_cast<T*>(pValue) = m_value; }
@@ -65,10 +68,12 @@ public:
 
   // Add a callback for when this config value changes
   t_OnChangedSignal::t_registration* operator+=(std::function<void(const T&)>&& fx) {
-    return onChangedSignal += [this,fx](){
-      fx(m_value);
+    return onChangedSignal += [fx](const AutoConfigVarBase& var){
+      fx(reinterpret_cast<const AutoConfigVar<T,TKey...>*>(&var)->m_value);
     };
   }
+
+  void operator-=(t_OnChangedSignal::t_registration* node) { onChangedSignal -= node; }
 
 private:
   T m_value;
@@ -90,14 +95,18 @@ private:
 template<class T, class... TKeys>
 class AutoConfig : public AutoRequired<AutoConfigVar<T, TKeys...>> {
 public:
+  typedef AutoConfigVar<T, TKeys...> t_Var;
+
   AutoConfig(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
-    AutoRequired<AutoConfigVar<T, TKeys...>>(ctxt)
+    AutoRequired<t_Var>(ctxt)
   {
   }
 
   template<typename ...t_Args>
   AutoConfig(const std::shared_ptr<CoreContext>& ctxt, t_Args&&... args) :
-    AutoRequired<AutoConfigVar<T, TKeys...>>(ctxt, std::forward<t_Args>(args)...)
+    AutoRequired<t_Var>(ctxt, std::forward<t_Args>(args)...)
   {
   }
+
+  using AutoRequired<t_Var>::operator*;
 };

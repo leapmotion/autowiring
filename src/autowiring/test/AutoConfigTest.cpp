@@ -28,22 +28,47 @@ TEST_F(AutoConfigTest, VerifyBasicAssignment) {
   ASSERT_EQ(*cfg2a, 2) << "Constructor overwrote value when it wasn't supposed to!";
 }
 
-struct MyConfigurableClass {
-  AutoConfig<int, struct Namespace1, struct XYZ> m_myName;
-};
+TEST_F(AutoConfigTest, VerifyBasicSignals) {
+  AutoCurrentContext ctxt;
 
-struct MyConfigurableClass2 {
-  AutoConfig<int, struct Namespace2, struct XYZ> m_myName;
-};
+  int handler_called = 0;
+  int handler_value_read = 0;
+  Autowired<AutoConfigVar<int, Namespace1, XYZ>> autoCfg;
+  autoCfg(&AutoConfigVar<int, Namespace1, XYZ>::onChangedSignal) += [&](const AutoConfigVarBase& var) {
+    ++handler_called;
+    var.Get(&handler_value_read);
+  };
 
-TEST_F(AutoConfigTest, VerifySimpleAssignment) {
-  // Set an attribute in the manager before injecting anything:
-  AutoRequired<AutoConfigManager> acm;
-  acm->Set("Namespace1.XYZ", 323);
+  AutoConfig<int, Namespace1, XYZ> cfg1(CoreContext::CurrentContext(), 1);
+  ASSERT_EQ(handler_called, 1) << "OnChanged not triggered by construction";
+  ASSERT_EQ(handler_value_read, 1) << "Bad value read in OnChanged";
 
-  // Now inject the type which expects this value to be assigned:
-  AutoRequired<MyConfigurableClass> mcc;
-  ASSERT_EQ(323, *mcc->m_myName) << "Configurable type did not receive a value as expected";
+  *cfg1 = 20;
+  ASSERT_EQ(handler_called, 2) << "OnChanged not triggered by assignement";
+  ASSERT_EQ(handler_value_read, 20) << "Bad value read in OnChanged";
+
+  AutoConfig<int, Namespace1, XYZ> cfg2(CoreContext::CurrentContext());
+  *cfg2 = 2;
+
+  ASSERT_EQ(handler_called, 3) << "OnChanged not triggred by assignement from alternate autowired instance";
+  ASSERT_EQ(handler_value_read, 2) << "Bad value read in OnChanged";
+
+  int handler_direct_called = 0;
+  int handler_direct_value = 0;
+  auto* registration = *cfg2 += [&](const int& var) {
+    ++handler_direct_called;
+    handler_direct_value = var;
+  };
+
+  *cfg1 = 30;
+  ASSERT_EQ(handler_direct_called, 1) << "OnChanged not triggred by indirect +=";
+  ASSERT_EQ(handler_direct_value, 30) << "Bad value read in OnChanged";
+
+  *cfg1 -= registration;
+  
+  *cfg1 = 123;
+  ASSERT_EQ(handler_direct_called, 1) << "OnChanged not unsubscribed by indirect -=";
+  ASSERT_EQ(handler_direct_value, 30) << "Bad value read in OnChanged";
 }
 
 struct NamespaceRoot;
