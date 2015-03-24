@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "Autowired.h"
-#include "AutoConfigManager.h"
+#include "auto_signal.h"
 #include "ConfigRegistry.h"
 
 #include <string>
@@ -20,6 +20,9 @@ public:
 
   // Key used to identify this config value
   const std::string m_key;
+  
+  typedef autowiring::signal<void(void)> t_OnChangedSignal;
+  t_OnChangedSignal onChangedSignal;
 };
 
 /// <summary>
@@ -48,10 +51,6 @@ public:
   {
     // Register with config registry
     (void)RegConfig<T, TKey...>::r;
-
-    if (!IsConfigured()){
-      m_manager->Set(m_key, T(std::forward<t_Arg>(arg), std::forward<t_Args>(args)...));
-    }
   }
 
   AutoConfig() :
@@ -61,33 +60,21 @@ public:
     (void)RegConfig<T, TKey...>::r;
   }
 
-protected:
-  AutoRequired<AutoConfigManager> m_manager;
-
 public:
-  const T& operator*() const {
-    return *m_manager->Get(m_key).template as<T>().get();
-  }
-
-  const T* operator->(void) const {
-    return m_manager->Get(m_key)->template as<T>().get();
-  }
+  
+  operator const T&() const { return m_value; }
 
   void operator=(const T& newValue) {
-    return m_manager->Set(m_key, newValue);
+    m_value = newValue;
   }
 
-  /// <returns>
-  /// True if this configurable field has been satisfied with a value
-  /// </returns>
-  bool IsConfigured(void) const {
-    return m_manager->IsConfigured(m_key);
-  }
-  
   // Add a callback for when this config value changes
-  void operator+=(std::function<void(const T&)>&& fx) {
-    m_manager->AddCallback(m_key, [fx](const AnySharedPointer& val){
-      fx(*val.template as<T>().get());
-    });
+  t_OnChangedSignal::t_registration* operator+=(std::function<void(const T&)>&& fx) {
+    return onChangedSignal += [this,fx](){
+      fx(m_value);
+    };
   }
+
+private:
+  T m_value;
 };
