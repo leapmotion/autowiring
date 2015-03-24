@@ -5,4 +5,5 @@
 
 AutoConfigVarBase::AutoConfigVarBase(const std::type_info& ti) :
   m_key(autowiring::ExtractKey(ti))
+  onChangedSignal(),
 {}
