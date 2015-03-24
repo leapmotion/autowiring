@@ -161,7 +161,8 @@ public:
   /// </summary>
   struct MemoEntry {
     MemoEntry(void) :
-      pFirst(nullptr)
+      pFirst(nullptr),
+      m_local(true)
     {}
 
     // The first deferrable autowiring which requires this type, if one exists:
@@ -174,6 +175,9 @@ public:
     // Once this memo entry is satisfied, this will contain the AnySharedPointer instance that performs
     // the satisfaction
     AnySharedPointer m_value;
+
+    // A flag to determine if this memo entry was set from the current context.
+    bool m_local;
   };
 
 protected:
@@ -345,7 +349,7 @@ protected:
   /// <summary>
   /// Updates all deferred autowiring fields, generally called after a new member has been added
   /// </summary>
-  void UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry);
+  void UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry, bool local);
 
   /// \internal
   /// <summary>
@@ -432,13 +436,13 @@ protected:
   /// The memo entry where this type was found
   /// </returns>
   /// <param name="reference">An initialized shared pointer slot which may be used in type detection</param>
-  void FindByType(AnySharedPointer& reference) const;
+  void FindByType(AnySharedPointer& reference, bool localOnly = false) const;
 
   /// \internal
   /// <summary>
   /// Unsynchronized version of FindByType
   /// </summary>
-  MemoEntry& FindByTypeUnsafe(AnySharedPointer& reference) const;
+  MemoEntry& FindByTypeUnsafe(AnySharedPointer& reference, bool localOnly = false) const;
 
   /// \internal
   /// <summary>
@@ -1047,9 +1051,9 @@ public:
   /// Locates an available context member in this context
   /// </summary>
   template<class T>
-  void FindByType(std::shared_ptr<T>& slot) const {
+  void FindByType(std::shared_ptr<T>& slot, bool localOnly = false) const {
     AnySharedPointerT<T> reference;
-    FindByType(reference);
+    FindByType(reference, localOnly);
     slot = reference.slot()->template as<T>();
   }
 

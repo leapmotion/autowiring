@@ -270,7 +270,7 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
 
     // Notify any autowiring field that is currently waiting that we have a new member
     // to be considered.
-    UpdateDeferredElements(std::move(lk), m_concreteTypes.back());
+    UpdateDeferredElements(std::move(lk), m_concreteTypes.back(), true);
   }
   
   // Moving this outside the lock because AddCoreRunnable will perform the checks inside its function
@@ -320,19 +320,21 @@ void CoreContext::AddInternal(const AnySharedPointer& ptr) {
   UpdateDeferredElement(std::move(lk), entry);
 }
 
-void CoreContext::FindByType(AnySharedPointer& reference) const {
+void CoreContext::FindByType(AnySharedPointer& reference, bool localOnly) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-  FindByTypeUnsafe(reference);
+  FindByTypeUnsafe(reference, localOnly);
 }
 
-CoreContext::MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
+CoreContext::MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference, bool localOnly) const {
   const std::type_info& type = reference->type();
 
   // If we've attempted to search for this type before, we will return the value of the memo immediately:
   auto q = m_typeMemos.find(type);
   if(q != m_typeMemos.end()) {
     // We can copy over and return here
-    reference = q->second.m_value;
+    if (!localOnly || q->second.m_local){
+      reference = q->second.m_value;
+    }
     return q->second;
   }
 
@@ -801,7 +803,7 @@ void CoreContext::UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, MemoE
   lk.unlock();
 }
 
-void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry) {
+void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry, bool local) {
   {
     // Collection of items needing finalization:
     std::vector<DeferrableUnsynchronizedStrategy*> delayedFinalize;
@@ -835,6 +837,9 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
 
       // Success, assign the traits
       value.pObjTraits = &entry;
+
+      // Store if it was injected from the local context or not
+      value.m_local = local;
 
       // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
       // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
@@ -882,7 +887,8 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     lk.unlock();
     ctxt->UpdateDeferredElements(
       std::unique_lock<std::mutex>(ctxt->m_stateBlock->m_lock),
-      entry
+      entry,
+      false
     );
     lk.lock();
   }
