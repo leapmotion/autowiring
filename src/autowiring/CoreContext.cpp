@@ -504,57 +504,48 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
     m_stateBlock->m_stateChanged.notify_all();
   }
 
+  // Teardown interleave assurance--all of these contexts will generally be destroyed
+  // at the exit of this block, due to the behavior of SignalTerminate, unless exterior
+  // context references (IE, related to snooping) exist.
+  //
+  // This is done in order to provide a stable collection that may be traversed during
+  // teardown outside of a lock.
+  std::vector<std::shared_ptr<CoreContext>> childrenInterleave;
+
   {
-    // Teardown interleave assurance--all of these contexts will generally be destroyed
-    // at the exit of this block, due to the behavior of SignalTerminate, unless exterior
-    // context references (IE, related to snooping) exist.
-    //
-    // This is done in order to provide a stable collection that may be traversed during
-    // teardown outside of a lock.
-    std::vector<std::shared_ptr<CoreContext>> childrenInterleave;
+    // Tear down all the children.
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
-    {
-      // Tear down all the children.
-      std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+    // Fill strong lock series in order to ensure proper teardown interleave:
+    childrenInterleave.reserve(m_children.size());
+    for(const auto& entry : m_children) {
+      auto childContext = entry.lock();
 
-      // Fill strong lock series in order to ensure proper teardown interleave:
-      childrenInterleave.reserve(m_children.size());
-      for(const auto& entry : m_children) {
-        auto childContext = entry.lock();
+      // Technically, it *is* possible for this weak pointer to be expired, even though
+      // we're holding the lock.  This may happen if the context itself is exiting even
+      // as we are processing SignalTerminate.  In that case, the child context in
+      // question is blocking in its dtor lambda, waiting patiently until we're done,
+      // at which point it will modify the m_children collection.
+      if(!childContext)
+        continue;
 
-        // Technically, it *is* possible for this weak pointer to be expired, even though
-        // we're holding the lock.  This may happen if the context itself is exiting even
-        // as we are processing SignalTerminate.  In that case, the child context in
-        // question is blocking in its dtor lambda, waiting patiently until we're done,
-        // at which point it will modify the m_children collection.
-        if(!childContext)
-          continue;
-
-        // Add to the interleave so we can SignalTerminate in a controlled way.
-        childrenInterleave.push_back(childContext);
-      }
+      // Add to the interleave so we can SignalTerminate in a controlled way.
+      childrenInterleave.push_back(childContext);
     }
-
-    // Now that we have a locked-down, immutable series, begin termination signalling:
-    for(size_t i = childrenInterleave.size(); i--; )
-      childrenInterleave[i]->SignalShutdown(wait);
   }
+
+  // Now that we have a locked-down, immutable series, begin termination signalling:
+  for(size_t i = childrenInterleave.size(); i--; )
+    childrenInterleave[i]->SignalShutdown(false, shutdownMode);
 
   // Pass notice to all child threads:
   bool graceful = (shutdownMode == ShutdownMode::Graceful);
   for (auto itr = firstThreadToStop; itr != m_threads.end(); ++itr)
     (*itr)->Stop(graceful);
 
-  // Signal our condition variable
-  m_stateBlock->m_stateChanged.notify_all();
-
-  // Short-return if required:
-  if(!wait)
-    return;
-
-  // Wait for the treads to finish before returning.
-  for (CoreRunnable* runnable : m_threads)
-    runnable->Wait();
+  // Wait if requested
+  if(wait)
+    Wait();
 }
 
 void CoreContext::Wait(void) {
