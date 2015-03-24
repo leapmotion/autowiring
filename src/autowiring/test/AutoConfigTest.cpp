@@ -12,17 +12,20 @@ struct XYZ {};
 
 TEST_F(AutoConfigTest, VerifyBasicAssignment) {
   AutoConfig<int, Namespace1, XYZ> cfg1;
-  cfg1 = 1;
-  ASSERT_EQ(cfg1, 1) << "Operator = failed";
+  *cfg1 = 1;
+  ASSERT_EQ(*cfg1, 1) << "Operator = failed";
 
-  AutoConfig<int, Namespace2, XYZ> cfg2(2);
-  ASSERT_EQ(cfg2, 2) << "Default construction failed";
+  AutoConfig<int, Namespace2, XYZ> cfg2(CoreContext::CurrentContext(), 2);
+  ASSERT_EQ(*cfg2, 2) << "Default construction failed";
 
   AutoConfig<int, Namespace1, XYZ> cfg1a;
-  ASSERT_EQ(cfg1a, 1) << "Failed to autowire AutoConfig value";
+  ASSERT_EQ(*cfg1a, 1) << "Failed to autowire AutoConfig value";
 
-  cfg1a = 3;
-  ASSERT_EQ(cfg1, 3) << "Failed to autowire AutoConfig value";
+  *cfg1a = 3;
+  ASSERT_EQ(*cfg1, 3) << "Failed to autowire AutoConfig value";
+
+  AutoConfig<int, Namespace2, XYZ> cfg2a(CoreContext::CurrentContext(), 5);
+  ASSERT_EQ(*cfg2a, 2) << "Constructor overwrote value when it wasn't supposed to!";
 }
 
 struct MyConfigurableClass {

@@ -13,48 +13,36 @@ struct AnySharedPointer;
 /// <summary>
 /// Utility base type for configuration members
 /// </summary>
-class AutoConfigBase
+class AutoConfigVarBase
 {
 public:
-  AutoConfigBase(const std::type_info& tiName);
+  AutoConfigVarBase(const std::type_info& tiName);
 
   // Key used to identify this config value
   const std::string m_key;
   
-  typedef autowiring::signal<void(void)> t_OnChangedSignal;
+  typedef autowiring::signal<void(const AutoConfigVarBase& val)> t_OnChangedSignal;
   t_OnChangedSignal onChangedSignal;
 };
 
-/// <summary>
-/// Register an attribute with the AutoConfig system. For example
-///
-/// AutoConfig<int, struct MyNamespace, struct MyKey> m_myVal;
-/// defines the key "MyNamespace.MyKey"
-///
-/// The Namespace field is optional, so
-/// AutoConfig<int, struct MyKey> m_myVal;
-/// defines the key "MyKey"
-///
-/// AutoConfig values can be set from the AutoConfigManager. The string key
-/// is used as the identifier for the value
-/// </summary>
 template<class T, class... TKey>
-class AutoConfig:
-  public AutoConfigBase
+class AutoConfigVar:
+  public AutoConfigVarBase
 {
 public:
   static_assert(sizeof...(TKey) >= 1, "Must provide a key and optionally at least one namespace");
   
   template<typename t_Arg, typename ...t_Args>
-  AutoConfig(t_Arg &&arg, t_Args&&... args) :
-    AutoConfigBase(typeid(ConfigTypeExtractor<TKey...>))
+  AutoConfigVar(t_Arg &&arg, t_Args&&... args) :
+    AutoConfigVarBase(typeid(ConfigTypeExtractor<TKey...>)),
+    m_value(std::forward<t_Arg>(arg), std::forward<t_Args>(args)...)
   {
     // Register with config registry
     (void)RegConfig<T, TKey...>::r;
   }
 
-  AutoConfig() :
-    AutoConfigBase(typeid(ConfigTypeExtractor<TKey...>))
+  AutoConfigVar() :
+    AutoConfigVarBase(typeid(ConfigTypeExtractor<TKey...>))
   {
     // Register with config registry
     (void)RegConfig<T, TKey...>::r;
@@ -77,4 +65,32 @@ public:
 
 private:
   T m_value;
+};
+
+/// <summary>
+/// Register an attribute with the AutoConfig system. For example
+///
+/// AutoConfig<int, struct MyNamespace, struct MyKey> m_myVal;
+/// defines the key "MyNamespace.MyKey"
+///
+/// The Namespace field is optional, so
+/// AutoConfig<int, struct MyKey> m_myVal;
+/// defines the key "MyKey"
+///
+/// AutoConfig values can be set from the AutoConfigManager. The string key
+/// is used as the identifier for the value
+/// </summary>
+template<class T, class... TKeys>
+class AutoConfig : public AutoRequired<AutoConfigVar<T, TKeys...>> {
+public:
+  AutoConfig(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
+    AutoRequired<AutoConfigVar<T, TKeys...>>(ctxt)
+  {
+  }
+
+  template<typename ...t_Args>
+  AutoConfig(const std::shared_ptr<CoreContext>& ctxt, t_Args&&... args) :
+    AutoRequired<AutoConfigVar<T, TKeys...>>(ctxt, std::forward<t_Args>(args)...)
+  {
+  }
 };
