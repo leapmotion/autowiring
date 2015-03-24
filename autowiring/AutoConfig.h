@@ -29,9 +29,11 @@ public:
   t_OnChangedSignal onChangedSignal;
 
   bool IsConfigured() const { return m_isConfigured; }
+  bool IsInherited() const { return m_parentRegistration != nullptr; }
 
 protected:
   bool m_isConfigured;
+  t_OnChangedSignal::t_registration* m_parentRegistration;
 };
 
 template<class T, class... TKey>
@@ -58,6 +60,25 @@ public:
   {
     // Register with config registry
     (void)RegConfig<T, TKey...>::r;
+    
+    const auto ctxt = m_context.lock();
+    if (!ctxt)
+      return;
+
+    //This will wind up being recursive
+    auto parent = ctxt->GetParentContext();
+    if (parent != nullptr) {
+      auto parentVar = parent->Inject<AutoConfigVar<T, TKey...>>();
+
+      //Only copy the value if it's initalized
+      if (parentVar->IsConfigured()) {
+        SetInternal(parentVar->m_value);
+      }
+
+      m_parentRegistration = *parentVar += [this](const T& val){
+        SetInternal(val);
+      };
+    }
   }
 
 public:
@@ -65,6 +86,12 @@ public:
   operator const T&() const { return m_value; }
 
   void operator=(const T& newValue) {
+    if (m_parentRegistration) {
+      auto parent_ctxt = m_context.lock()->GetParentContext();
+      AutowiredFast<AutoConfigVar<T, TKey...>> parentVar(parent_ctxt);
+      *parentVar -= m_parentRegistration;
+      m_parentRegistration = nullptr;
+    }
     SetInternal(newValue);
   }
 
@@ -82,6 +109,7 @@ public:
 
 private:
   T m_value;
+
   void SetInternal(const T& val) {
     m_isConfigured = true;
     m_value = val;
