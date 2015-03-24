@@ -198,8 +198,9 @@ namespace autowiring {
     const std::shared_ptr<signal_relay_t<Args...>> m_relay;
 
   public:
-    internal::signal_node<Args...>* operator+=(std::function<void(Args...)>&& fn) { return *m_relay += std::move(fn); }
-    void operator-=(internal::signal_node<Args...>* node) { return *m_relay -= node; }
+    typedef internal::signal_node<Args...> t_registration;
+    t_registration* operator+=(std::function<void(Args...)>&& fn) { return *m_relay += std::move(fn); }
+    void operator-=(t_registration* node) { return *m_relay -= node; }
 
     /// <summary>
     /// Raises the signal and invokes all attached handlers
