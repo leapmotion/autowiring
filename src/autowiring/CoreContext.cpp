@@ -245,14 +245,21 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
     // the value, rather than the type passed in via traits.type, because the proper type might be a
     // concrete type defined in another context or potentially a unifier type.  Creating a slot here
     // is also undesirable because the complete type is not available and we can't create a dynaimc
-    // caster to identify when this slot gets satisfied.
+    // caster to identify when this slot gets satisfied. If a slot was non-local, overwrite it.
     auto q = m_typeMemos.find(*traits.actual_type);
     if(q != m_typeMemos.end()) {
       auto& v = q->second;
-      if(traits.pCoreObject && *v.m_value == traits.pCoreObject)
-        throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
-      if(*v.m_value)
-        throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+
+      if (v.m_local) {
+        if (traits.pCoreObject && *v.m_value == traits.pCoreObject)
+          throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
+        if (*v.m_value)
+          throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+      }
+      else {
+        v.m_value = traits.value;
+        v.m_local = true;
+      }
     }
 
     // Add the new concrete type:

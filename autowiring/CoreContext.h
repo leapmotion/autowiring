@@ -699,7 +699,7 @@ public:
     // member does not inherit CoreObject and this member is eventually satisfied by one that does.
     {
       std::shared_ptr<T> pure;
-      FindByType(pure);
+      FindByType(pure, true); //skip non-local slots.
       if (pure)
         return pure;
     }
