@@ -251,6 +251,7 @@ TEST_F(ContextMapTest, VerifyRangeBasedEnumeration) {
 
   // Internal map in ContextMap ensures entries are enumerated in-order
   for (auto& cur : mp) {
+    (void)cur;
     switch (ct) {
     case 0:
       // Release the entry we are presently enumerating

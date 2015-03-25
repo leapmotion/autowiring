@@ -76,7 +76,7 @@ public:
     //This will wind up being recursive
     auto parent = ctxt->GetParentContext();
     if (parent != nullptr) {
-      auto parentVar = parent->Inject<AutoConfigVar<T, TKey...>>();
+      auto parentVar = parent->template Inject<AutoConfigVar<T, TKey...>>();
 
       //Only copy the value if it's initalized
       if (parentVar->IsConfigured()) {
@@ -109,7 +109,7 @@ public:
 
   void SetParsed(const std::string& value) override { 
     auto entry = RegConfig<T, TKey...>::r;
-    *this = entry.parseInternal<T>(value);
+    *this = entry.template parseInternal<T>(value);
   }
 
   // Add a callback for when this config value changes

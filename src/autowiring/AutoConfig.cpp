@@ -4,10 +4,12 @@
 #include "AutoConfigParser.hpp"
 
 AutoConfigVarBase::AutoConfigVarBase(const std::type_info& ti, bool configured) :
+  ContextMember(),
   m_key(autowiring::ExtractKey(ti)),
-  m_isConfigured(configured),
-  m_parentRegistration(nullptr),
   onChangedSignal(),
-  ContextMember(m_key.c_str())
-{}
+  m_isConfigured(configured),
+  m_parentRegistration(nullptr)
+{
+  m_name = m_key.c_str();
+}
 
