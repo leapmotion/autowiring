@@ -249,7 +249,7 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
     auto q = m_typeMemos.find(*traits.actual_type);
     if(q != m_typeMemos.end()) {
       auto& v = q->second;
-      if(*v.m_value == traits.pCoreObject)
+      if(traits.pCoreObject && *v.m_value == traits.pCoreObject)
         throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
       if(*v.m_value)
         throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
