@@ -105,11 +105,21 @@ void AutoConfigManager::AddCallback(const std::string& key, t_callback&& fx) {
   m_callbacks[key].push_back(fx);
 }
 
+void AutoConfigManager::AddCallback(t_add_callback&& fx) {
+  // Grab lock until done setting value
+  std::lock_guard<std::mutex> lk(m_lock);
+
+  for (auto& key : m_orderedKeys) 
+    fx(key, m_values[key]);
+
+  m_addCallbacks.emplace_back(std::move(fx));
+}
+
 void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer value) {
   // Call all validators for this key
   if (s_validators.count(key)) {
     for (auto const& fx : s_validators.find(key)->second) {
-      if (!fx(value)){
+      if (!fx(value)) {
         std::stringstream ss;
         ss << "Attempted to set key '" << key << "'which didin't pass validator";
         throw autowiring_error(ss.str());
@@ -118,13 +128,21 @@ void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer va
   }
   
   // Grab lock until done setting value
-  std::lock_guard<std::mutex> lk(m_lock);
-  
+  std::unique_lock<std::mutex> lk(m_lock);
+
   // Actually set the value in this manager
   SetInternal(key, value);
   
   // Mark key set from this manager
-  m_setHere.insert(key);
+  auto inserted = m_setHere.insert(key);
+  if (inserted.second) {
+    m_orderedKeys.push_back(key);
+    for (auto& callback : m_addCallbacks) {
+      lk.unlock();
+      callback(key, value);
+      lk.lock();
+    }
+  }
   
   // Enumerate descendant contexts
   auto enumerator = ContextEnumerator(GetContext());
@@ -151,10 +169,9 @@ void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer va
       
       //Actaully set the value
       mgmt->SetInternal(key, value);
-    
-      // Continue to next context
-      ++ctxt;
     }
+    // Continue to next context
+    ++ctxt;
   }
 }
 
@@ -162,7 +179,6 @@ void AutoConfigManager::SetInternal(const std::string& key, const AnySharedPoint
   m_values[key] = value;
   
   // Call callbacks for this key
-  for (const auto& cb : m_callbacks[key]) {
+  for (const auto& cb : m_callbacks[key])
     cb(value);
-  }
 }

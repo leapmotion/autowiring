@@ -8,6 +8,50 @@ class AutoConfigTest:
   public testing::Test
 {};
 
+TEST_F(AutoConfigTest, ExtractKeyTestWin) {
+  std::string type1("struct ConfigTypeExtractor<struct Namespace1, struct XYZ>");
+  const auto key1 = autowiring::ExtractKey(type1);
+  ASSERT_EQ("Namespace1.XYZ", key1) << "Failed to properly extract Key with a single namespace";
+
+  std::string type2("struct ConfigTypeExtractor<struct Namespace1, struct Namespace2, struct XYZ>");
+  const auto key2 = autowiring::ExtractKey(type2);
+  ASSERT_EQ("Namespace1.Namespace2.XYZ", key2) << "Failed to properly extract Key with multiple namespaces";
+
+  std::string type3("struct ConfigTypeExtractor<struct XYZ>");
+  const auto key3 = autowiring::ExtractKey(type3);
+  ASSERT_EQ("XYZ", key3) << "Failed to properly extract Key with no namespace";
+
+  std::string type4("struct ConfigTypeExtractor<class ClassNamespace1, class AutoConfigTest, struct XYZ>");
+  const auto key4 = autowiring::ExtractKey(type4);
+  ASSERT_EQ("ClassNamespace1.AutoConfigTest.XYZ", key4) << "Failed to properly extract Key with class namespaces";
+
+  std::string type5("struct ConfigTypeExtractor<class ClassNamespace1, class Base::Nested, struct XYZ>");
+  const auto key5 = autowiring::ExtractKey(type5);
+  ASSERT_EQ("ClassNamespace1.Base::Nested.XYZ", key5) << "Failed to properly extract Key from nested";
+}
+
+TEST_F(AutoConfigTest, ExtractKeyTestPOSIX) {
+  std::string type1("ConfigTypeExtractor<Namespace1, XYZ>");
+  const auto key1 = autowiring::ExtractKey(type1);
+  ASSERT_EQ("Namespace1.XYZ", key1) << "Failed to properly extract Key with a single namespace";
+
+  std::string type2("ConfigTypeExtractor<Namespace1, Namespace2, XYZ>");
+  const auto key2 = autowiring::ExtractKey(type2);
+  ASSERT_EQ("Namespace1.Namespace2.XYZ", key2) << "Failed to properly extract Key with multiple namespaces";
+
+  std::string type3("ConfigTypeExtractor<XYZ>");
+  const auto key3 = autowiring::ExtractKey(type3);
+  ASSERT_EQ("XYZ", key3) << "Failed to properly extract Key with no namespace";
+
+  std::string type4("ConfigTypeExtractor<ClassNamespace1, AutoConfigTest, XYZ>");
+  const auto key4 = autowiring::ExtractKey(type4);
+  ASSERT_EQ("ClassNamespace1.AutoConfigTest.XYZ", key4) << "Failed to properly extract Key with class namespaces";
+  
+  std::string type5("ConfigTypeExtractor<ClassNamespace1, Base::Nested, XYZ>");
+  const auto key5 = autowiring::ExtractKey(type5);
+  ASSERT_EQ("ClassNamespace1.Base::Nested.XYZ", key5) << "Failed to properly extract Key from nested";
+}
+
 struct MyConfigurableClass {
   AutoConfig<int, struct Namespace1, struct XYZ> m_myName;
 };
@@ -31,6 +75,17 @@ TEST_F(AutoConfigTest, VerifySimpleAssignment) {
   // Now inject the type which expects this value to be assigned:
   AutoRequired<MyConfigurableClass> mcc;
   ASSERT_EQ(323, *mcc->m_myName) << "Configurable type did not receive a value as expected";
+}
+
+struct NamespaceRoot;
+struct NamespaceChild;
+
+TEST_F(AutoConfigTest, VerifyNestedNamespace) {
+  AutoRequired<AutoConfigManager> acm;
+  acm->Set("NamespaceRoot.NamespaceChild.Namespace1.Namespace2.XYZ", 142);
+
+  AutoConfig<int, struct NamespaceRoot, struct NamespaceChild, struct Namespace1, struct Namespace2, struct XYZ> cfg;
+  ASSERT_EQ(142, *cfg);
 }
 
 struct MyBoolClass {
@@ -120,15 +175,6 @@ TEST_F(AutoConfigTest, VerifyDuplicateConfigAssignment) {
   ASSERT_EQ(1111, *clz2->m_myName);
 }
 
-TEST_F(AutoConfigTest, ExtractKeyTestWin) {
-  std::stringstream win("struct ConfigTypeExtractor<struct Namespace1,struct XYZ>");
-  
-  ASSERT_STREQ(
-    "Namespace1.XYZ",
-    autowiring::ExtractKeyWin(win).c_str()
-  ) << "Windows key extraction implementation mismatch";
-}
-
 class TypeWithoutAShiftOperator {
 public:
   int foo;
@@ -180,14 +226,18 @@ TEST_F(AutoConfigTest, NestedContexts) {
   std::shared_ptr<CoreContext> ctxt_middle = ctxt_outer->Create<void>();
   std::shared_ptr<CoreContext> ctxt_sibling = ctxt_outer->Create<void>();
   std::shared_ptr<CoreContext> ctxt_inner = ctxt_middle->Create<void>();
+  std::shared_ptr<CoreContext> ctxt_no_manager = ctxt_inner->Create<void>();
+  std::shared_ptr<CoreContext> ctxt_leaf = ctxt_no_manager->Create<void>();
   
   AutoRequired<MyConfigurableClass> mcc_outer(ctxt_outer);
   AutoRequired<MyConfigurableClass> mcc_middle(ctxt_middle);
   AutoRequired<MyConfigurableClass> mcc_sibling(ctxt_sibling);
   AutoRequired<MyConfigurableClass> mcc_inner(ctxt_inner);
+  AutoRequired<MyConfigurableClass> mcc_leaf(ctxt_leaf);
   
   AutoRequired<AutoConfigManager> acm_outer(ctxt_outer);
   AutoRequired<AutoConfigManager> acm_middle(ctxt_middle);
+  AutoRequired<AutoConfigManager> acm_leaf(ctxt_leaf);
   
   // Set initial value
   acm_outer->Set("Namespace1.XYZ", 42);
@@ -195,7 +245,9 @@ TEST_F(AutoConfigTest, NestedContexts) {
   ASSERT_EQ(42, *mcc_middle->m_myName) << "Config value not set in descendant context";
   ASSERT_EQ(42, *mcc_sibling->m_myName) << "Config value not set in descendant context";
   ASSERT_EQ(42, *mcc_inner->m_myName) << "Config value not set in descendant context";
+  ASSERT_EQ(42, *mcc_leaf->m_myName) << "Config value not set in desendant context";
   EXPECT_TRUE(acm_middle->IsInherited("Namespace1.XYZ")) << "Inherited key not marked as such";
+  EXPECT_TRUE(acm_leaf->IsInherited("Namespace1.XYZ")) << "Inherited key not marked as such";
   
   // Set middle, inner shouldn't be able to be set from outer after this
   bool callback_hit1 = false;
@@ -207,6 +259,7 @@ TEST_F(AutoConfigTest, NestedContexts) {
   ASSERT_EQ(42, *mcc_sibling->m_myName) << "Config value set from sibling context";
   ASSERT_EQ(1337, *mcc_middle->m_myName) << "Config value not set";
   ASSERT_EQ(1337, *mcc_inner->m_myName) << "Config value not set in child context";
+  ASSERT_EQ(1337, *mcc_leaf->m_myName) << "Config value not set in leaf context";
   ASSERT_TRUE(callback_hit1) << "Callback not hit in inner context";
   
   // Set from outter, inner should be shielded by middle context
@@ -236,6 +289,7 @@ struct ValidatedKey{
     return value > 5;
   }
 };
+
 struct MyValidatedClass{
   AutoConfig<int, ValidatedKey> m_config;
 };
@@ -255,4 +309,106 @@ TEST_F(AutoConfigTest, Validators) {
   
   acm->Set("ValidatedKey", 1337);
   ASSERT_EQ(1337, *valid->m_config) << "Value not set for key";
+}
+
+TEST_F(AutoConfigTest, DirectAssignemnt) {
+  AutoConfig<int, struct Namespace1, struct XYZ> var;
+  var = 10;
+  ASSERT_EQ(10, *var);
+
+  AutoRequired<MyConfigurableClass> containsVar;
+
+  ASSERT_EQ(10, *var);
+  ASSERT_EQ(10, *containsVar->m_myName);
+}
+
+
+struct ComplexValue {
+  int a;
+  int b;
+  int c;
+
+  ComplexValue(int nA, int nB, int nC) : a(nA), b(nB), c(nC) {}
+  ComplexValue(int repeated) : a(repeated), b(repeated), c(repeated) {}
+};
+
+struct MyComplexValueClass {
+  AutoConfig<ComplexValue, struct Namespace1, struct MyCxValue> m_cfg;
+  AutoConfig<ComplexValue, struct Namespace1, struct MyCxValue2> m_cfg2 = ComplexValue{ 10, 15, 30 };
+
+  MyComplexValueClass() : m_cfg(ComplexValue{ 2, 20, 20 }) {}
+};
+
+TEST_F(AutoConfigTest, ComplexConstruction){
+  AutoRequired<AutoConfigManager> mgr;
+  ASSERT_FALSE(mgr->IsConfigured("Namespace1.MyCxValue"));
+  
+  AutoConfig<ComplexValue, Namespace1, MyCxValue> defaultConstructed;
+
+  ASSERT_FALSE(mgr->IsConfigured("Namespace1.MyCxValue")) << "Improperly set config value when default constructing AutoConfig";
+
+  AutoConfig<ComplexValue, Namespace1, MyCxValue> fancyConstructed(1, 2, 3);
+  
+  ASSERT_TRUE(mgr->IsConfigured("Namespace1.MyCxValue")) << "Initializing constructor did not set config value";
+  ASSERT_EQ(fancyConstructed->a, 1) << "Initializing constructor did not set config value";
+  ASSERT_EQ(fancyConstructed->b, 2) << "Initializing constructor did not set config value";
+  ASSERT_EQ(fancyConstructed->c, 3) << "Initializing constructor did not set config value";
+
+
+  AutoConfig<ComplexValue, Namespace1, MyCxValue> fancy2(7);
+  ASSERT_EQ(fancy2->a, 1) << "Second Initalizing constructor overrode the first!";
+  ASSERT_EQ(fancy2->b, 2) << "Second Initalizing constructor overrode the first!";
+  ASSERT_EQ(fancy2->c, 3) << "Second Initalizing constructor overrode the first!";
+}
+
+struct OuterCtxt{};
+struct MiddleCtxt{};
+struct InnerCtxt{};
+TEST_F(AutoConfigTest, ListingConfigs) {
+  AutoCreateContextT<OuterCtxt> ctxt_outer;
+  auto ctxt_middle = ctxt_outer->Create<MiddleCtxt>();
+  auto ctxt_inner = ctxt_middle->Create<InnerCtxt>();
+
+  AutoRequired<AutoConfigManager> acm_outer(ctxt_outer);
+  AutoRequired<AutoConfigManager> acm_inner(ctxt_inner);
+
+  AutoRequired<MyConfigurableClass> var1_inner(ctxt_inner);
+  var1_inner->m_myName = 1;
+ 
+  ASSERT_EQ(0, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
+  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
+
+  int callback_outer = 0;
+  acm_outer->AddCallback([&callback_outer](const std::string& key, const AnySharedPointer& ptr) {
+    ++callback_outer;
+  });
+
+  int callback_inner = 0;
+  acm_inner->AddCallback([&callback_inner](const std::string& key, const AnySharedPointer& ptr) {
+    ++callback_inner;
+  });
+
+  ASSERT_EQ(1, callback_inner) << "Callback not called on existing keys";
+
+  AutoRequired<MyConfigurableClass2> var1_outer(ctxt_outer);
+  var1_outer->m_myName = 2;
+
+  ASSERT_EQ(1, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
+  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
+
+  AutoRequired<MyConfigurableClass> var2_outer(ctxt_outer);
+  var2_outer->m_myName = 3;
+
+  ASSERT_EQ(2, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
+  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
+
+  ASSERT_EQ(2, callback_outer) << "Outer callback called an incorrect number of times";
+  ASSERT_EQ(1, callback_inner) << "Inner callback called an incorrect number of times";
+
+  auto keys_outer = acm_outer->GetLocalKeys();
+  ASSERT_EQ(var1_outer->m_myName.m_key, keys_outer[0]) << "Keys listed out of construction order";
+  ASSERT_EQ(var2_outer->m_myName.m_key, keys_outer[1]) << "Keys listed out of construction order";
+
+  auto keys_inner = acm_inner->GetLocalKeys();
+  ASSERT_EQ(var1_inner->m_myName.m_key, keys_inner[0]) << "Keys listed out of construction order";
 }
