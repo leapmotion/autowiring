@@ -106,7 +106,6 @@ set(Autowiring_SRCS
   EventRegistry.h
   ExceptionFilter.cpp
   ExceptionFilter.h
-  expect.hpp
   fast_pointer_cast.h
   GlobalCoreContext.cpp
   GlobalCoreContext.h
