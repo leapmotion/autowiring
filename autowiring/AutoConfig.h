@@ -24,7 +24,9 @@ public:
   // Generic interface functions for getting and setting
   virtual void Get(void* pValue) const = 0;
   virtual void Set(const void* pValue) = 0;
-  
+
+  virtual void SetParsed(const std::string& value) = 0;
+
   typedef autowiring::signal<void(const AutoConfigVarBase& val)> t_OnChangedSignal;
   t_OnChangedSignal onChangedSignal;
 
@@ -97,6 +99,11 @@ public:
 
   void Get(void* pValue) const override { *reinterpret_cast<T*>(pValue) = m_value; }
   void Set(const void* pValue) override { *this = *reinterpret_cast<const T*>(pValue); }
+
+  void SetParsed(const std::string& value) override { 
+    auto entry = RegConfig<T, TKey...>::r;
+    *this = entry.parseInternal<T>(value);
+  }
 
   // Add a callback for when this config value changes
   t_OnChangedSignal::t_registration* operator+=(std::function<void(const T&)>&& fx) {
