@@ -130,7 +130,9 @@ TEST_F(AutoConfigTest, VerifyParsedAssignment) {
   *noparse = Unparseable{ 20 };
   ASSERT_EQ((*noparse)->v, 20);
 }
-/*
+
+struct MyConfigurableClass {
+  AutoConfig<int, Namespace1, XYZ> cfg;
 };
 
 TEST_F(AutoConfigTest, NestedContexts) {
@@ -148,55 +150,51 @@ TEST_F(AutoConfigTest, NestedContexts) {
   AutoRequired<MyConfigurableClass> mcc_inner(ctxt_inner);
   AutoRequired<MyConfigurableClass> mcc_leaf(ctxt_leaf);
   
-  AutoRequired<AutoConfigManager> acm_outer(ctxt_outer);
-  AutoRequired<AutoConfigManager> acm_middle(ctxt_middle);
-  AutoRequired<AutoConfigManager> acm_leaf(ctxt_leaf);
-  
   // Set initial value
-  acm_outer->Set("Namespace1.XYZ", 42);
-  ASSERT_EQ(42, *mcc_outer->m_myName) << "Config value not set";
-  ASSERT_EQ(42, *mcc_middle->m_myName) << "Config value not set in descendant context";
-  ASSERT_EQ(42, *mcc_sibling->m_myName) << "Config value not set in descendant context";
-  ASSERT_EQ(42, *mcc_inner->m_myName) << "Config value not set in descendant context";
-  ASSERT_EQ(42, *mcc_leaf->m_myName) << "Config value not set in desendant context";
-  EXPECT_TRUE(acm_middle->IsInherited("Namespace1.XYZ")) << "Inherited key not marked as such";
-  EXPECT_TRUE(acm_leaf->IsInherited("Namespace1.XYZ")) << "Inherited key not marked as such";
+  *mcc_outer->cfg = 42;
+  ASSERT_EQ(42, *mcc_outer->cfg) << "Config value not set";
+  ASSERT_EQ(42, *mcc_middle->cfg) << "Config value not set in descendant context";
+  ASSERT_EQ(42, *mcc_sibling->cfg) << "Config value not set in descendant context";
+  ASSERT_EQ(42, *mcc_inner->cfg) << "Config value not set in descendant context";
+  ASSERT_EQ(42, *mcc_leaf->cfg) << "Config value not set in desendant context";
+  EXPECT_TRUE(mcc_middle->cfg->IsInherited()) << "Inherited key not marked as such";
+  EXPECT_TRUE(mcc_leaf->cfg->IsInherited()) << "Inherited key not marked as such";
   
   // Set middle, inner shouldn't be able to be set from outer after this
   bool callback_hit1 = false;
-  mcc_inner->m_myName += [&callback_hit1](int) {
+  *mcc_inner->cfg += [&callback_hit1](int) {
     callback_hit1 = true;
   };
-  acm_middle->Set("Namespace1.XYZ", 1337);
-  ASSERT_EQ(42, *mcc_outer->m_myName) << "Config value changed in outer context";
-  ASSERT_EQ(42, *mcc_sibling->m_myName) << "Config value set from sibling context";
-  ASSERT_EQ(1337, *mcc_middle->m_myName) << "Config value not set";
-  ASSERT_EQ(1337, *mcc_inner->m_myName) << "Config value not set in child context";
-  ASSERT_EQ(1337, *mcc_leaf->m_myName) << "Config value not set in leaf context";
+  *mcc_middle->cfg = 1337;
+  ASSERT_EQ(42, *mcc_outer->cfg) << "Config value changed in outer context";
+  ASSERT_EQ(42, *mcc_sibling->cfg) << "Config value set from sibling context";
+  ASSERT_EQ(1337, *mcc_middle->cfg) << "Config value not set";
+  ASSERT_EQ(1337, *mcc_inner->cfg) << "Config value not set in child context";
+  ASSERT_EQ(1337, *mcc_leaf->cfg) << "Config value not set in leaf context";
   ASSERT_TRUE(callback_hit1) << "Callback not hit in inner context";
   
   // Set from outter, inner should be shielded by middle context
-  mcc_inner->m_myName += [](int) {
+  *mcc_inner->cfg += [](int) {
     FAIL() << "This callback should never be hit";
   };
   
   // Make sure sibling context is not shielded
   bool callback_hit2 = false;
-  mcc_sibling->m_myName += [&callback_hit2](int) {
+  *mcc_sibling->cfg += [&callback_hit2](int) {
     callback_hit2 = true;
   };
   
   // Set from outer, shouldn't effect middle or inner contexts
-  acm_outer->Set("Namespace1.XYZ", 999);
-  ASSERT_EQ(999, *mcc_outer->m_myName) << "Config value not set";
-  ASSERT_EQ(1337, *mcc_middle->m_myName) << "Config value overwritten when value was set in this context";
-  ASSERT_EQ(1337, *mcc_inner->m_myName) << "Config value overwritten when value was set in parent context";
+  *mcc_outer->cfg = 999;
+  ASSERT_EQ(999, *mcc_outer->cfg) << "Config value not set";
+  ASSERT_EQ(1337, *mcc_middle->cfg) << "Config value overwritten when value was set in this context";
+  ASSERT_EQ(1337, *mcc_inner->cfg) << "Config value overwritten when value was set in parent context";
   
   // Make sure sibling hit
-  ASSERT_EQ(999, *mcc_sibling->m_myName) << "Value not set on sibling of context where value was previously set";
+  ASSERT_EQ(999, *mcc_sibling->cfg) << "Value not set on sibling of context where value was previously set";
   ASSERT_TRUE(callback_hit2) << "Callback not called on sibling of context where value was previously set";
 }
-
+/*
 struct ValidatedKey{
   static bool Validate(const int& value) {
     return value > 5;
