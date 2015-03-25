@@ -149,8 +149,8 @@ private:
 /// AutoConfig<int, struct MyKey> m_myVal;
 /// defines the key "MyKey"
 ///
-/// AutoConfig values can be set from the AutoConfigManager. The string key
-/// is used as the identifier for the value
+/// AutoConfig values can also be set from the AutoConfigListing in the same context. The string key
+/// is used as the identifier for the value.
 /// </summary>
 template<class T, class... TKeys>
 class AutoConfig : public AutoRequired<AutoConfigVar<T, TKeys...>> {

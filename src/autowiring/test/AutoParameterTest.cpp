@@ -114,7 +114,7 @@ struct MyParamClass4 {
 };
 
 TEST_F(AutoParameterTest, VerifyInvalidPreconfiguredValue) {
-  AutoRequired<AutoConfigManager> acm;
+  AutoRequired<AutoConfigListing> acm;
   ASSERT_ANY_THROW(acm->Set("AutoParam.MyParamClass4::MyIntParam4", 0));
   
   AutoRequired<MyParamClass4> my4;
