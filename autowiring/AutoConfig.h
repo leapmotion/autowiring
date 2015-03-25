@@ -157,16 +157,20 @@ class AutoConfig : public AutoRequired<AutoConfigVar<T, TKeys...>> {
 public:
   typedef AutoConfigVar<T, TKeys...> t_Var;
 
+  using AutoRequired<t_Var>::operator*;
+
   AutoConfig(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
     AutoRequired<t_Var>(ctxt)
   {
   }
 
-  template<typename ...t_Args>
-  AutoConfig(const std::shared_ptr<CoreContext>& ctxt, t_Args&&... args) :
-    AutoRequired<t_Var>(ctxt, std::forward<t_Args>(args)...)
+  template<typename t_Arg, typename ...t_Args>
+  AutoConfig(t_Arg&& arg, t_Args&&... args) :
+    AutoRequired<t_Var>(CoreContext::CurrentContext(), std::forward<t_Arg>(arg), std::forward<t_Args>(args)...)
   {
+    if (!(*this)->IsConfigured() || (*this)->IsInherited()) {
+      **this = T(std::forward<t_Arg>(arg), std::forward<t_Args>(args)...);
+    }
   }
-
-  using AutoRequired<t_Var>::operator*;
+  
 };
