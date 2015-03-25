@@ -109,9 +109,8 @@ void AutoConfigManager::AddCallback(t_add_callback&& fx) {
   // Grab lock until done setting value
   std::lock_guard<std::mutex> lk(m_lock);
 
-  for (auto& key : m_orderedKeys) {
+  for (auto& key : m_orderedKeys) 
     fx(key, m_values[key]);
-  }
 
   m_addCallbacks.emplace_back(std::move(fx));
 }
@@ -120,7 +119,7 @@ void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer va
   // Call all validators for this key
   if (s_validators.count(key)) {
     for (auto const& fx : s_validators.find(key)->second) {
-      if (!fx(value)){
+      if (!fx(value)) {
         std::stringstream ss;
         ss << "Attempted to set key '" << key << "'which didin't pass validator";
         throw autowiring_error(ss.str());
@@ -180,7 +179,6 @@ void AutoConfigManager::SetInternal(const std::string& key, const AnySharedPoint
   m_values[key] = value;
   
   // Call callbacks for this key
-  for (const auto& cb : m_callbacks[key]) {
+  for (const auto& cb : m_callbacks[key])
     cb(value);
-  }
 }

@@ -39,10 +39,9 @@ std::string autowiring::ExtractKey(const std::string& demangled) {
 }
 
 std::string autowiring::ExtractKey(const std::type_info& ti) {
-  bool success;
-  std::string demangled = demangle(ti,&success);
+  std::string demangled = demangle(ti);
   
-  if(! success )
+  if(demangled.empty())
     throw std::runtime_error("Demangle failed, structure may not be used as part of a key. Is your struct declared inside a function? Symbol=" + demangled);
   
   return ExtractKey(demangled);
