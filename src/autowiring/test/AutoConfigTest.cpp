@@ -15,7 +15,7 @@ TEST_F(AutoConfigTest, VerifyBasicAssignment) {
   *cfg1 = 1;
   ASSERT_EQ(*cfg1, 1) << "Operator = failed";
 
-  AutoConfig<int, Namespace2, XYZ> cfg2(CoreContext::CurrentContext(), 2);
+  AutoConfig<int, Namespace2, XYZ> cfg2(2);
   ASSERT_EQ(*cfg2, 2) << "Default construction failed";
 
   AutoConfig<int, Namespace1, XYZ> cfg1a;
@@ -24,7 +24,7 @@ TEST_F(AutoConfigTest, VerifyBasicAssignment) {
   *cfg1a = 3;
   ASSERT_EQ(*cfg1, 3) << "Failed to autowire AutoConfig value";
 
-  AutoConfig<int, Namespace2, XYZ> cfg2a(CoreContext::CurrentContext(), 5);
+  AutoConfig<int, Namespace2, XYZ> cfg2a(5);
   ASSERT_EQ(*cfg2a, 2) << "Constructor overwrote value when it wasn't supposed to!";
 }
 
@@ -39,7 +39,7 @@ TEST_F(AutoConfigTest, VerifyBasicSignals) {
     var.Get(&handler_value_read);
   };
 
-  AutoConfig<int, Namespace1, XYZ> cfg1(CoreContext::CurrentContext(), 1);
+  AutoConfig<int, Namespace1, XYZ> cfg1(1);
   ASSERT_EQ(handler_called, 1) << "OnChanged not triggered by construction";
   ASSERT_EQ(handler_value_read, 1) << "Bad value read in OnChanged";
 
@@ -47,7 +47,7 @@ TEST_F(AutoConfigTest, VerifyBasicSignals) {
   ASSERT_EQ(handler_called, 2) << "OnChanged not triggered by assignement";
   ASSERT_EQ(handler_value_read, 20) << "Bad value read in OnChanged";
 
-  AutoConfig<int, Namespace1, XYZ> cfg2(CoreContext::CurrentContext());
+  AutoConfig<int, Namespace1, XYZ> cfg2;
   *cfg2 = 2;
 
   ASSERT_EQ(handler_called, 3) << "OnChanged not triggred by assignement from alternate autowired instance";
@@ -217,18 +217,6 @@ TEST_F(AutoConfigTest, Validators) {
   *valid->m_config = 1337;
   ASSERT_EQ(1337, *valid->m_config) << "Value not set for key";
 }
-/*
-TEST_F(AutoConfigTest, DirectAssignemnt) {
-  AutoConfig<int, struct Namespace1, struct XYZ> var;
-  var = 10;
-  ASSERT_EQ(10, *var);
-
-  AutoRequired<MyConfigurableClass> containsVar;
-
-  ASSERT_EQ(10, *var);
-  ASSERT_EQ(10, *containsVar->m_myName);
-}
-
 
 struct ComplexValue {
   int a;
@@ -237,6 +225,7 @@ struct ComplexValue {
 
   ComplexValue(int nA, int nB, int nC) : a(nA), b(nB), c(nC) {}
   ComplexValue(int repeated) : a(repeated), b(repeated), c(repeated) {}
+  ComplexValue() {}
 };
 
 struct MyComplexValueClass {
@@ -247,76 +236,23 @@ struct MyComplexValueClass {
 };
 
 TEST_F(AutoConfigTest, ComplexConstruction){
-  AutoRequired<AutoConfigManager> mgr;
-  ASSERT_FALSE(mgr->IsConfigured("Namespace1.MyCxValue"));
-  
+  //Default constuction is not allowed if the underlying type does not support it
   AutoConfig<ComplexValue, Namespace1, MyCxValue> defaultConstructed;
-
-  ASSERT_FALSE(mgr->IsConfigured("Namespace1.MyCxValue")) << "Improperly set config value when default constructing AutoConfig";
+  ASSERT_FALSE(defaultConstructed->IsConfigured()) << "non-initalizing constructor should not configure a value!";
 
   AutoConfig<ComplexValue, Namespace1, MyCxValue> fancyConstructed(1, 2, 3);
   
-  ASSERT_TRUE(mgr->IsConfigured("Namespace1.MyCxValue")) << "Initializing constructor did not set config value";
-  ASSERT_EQ(fancyConstructed->a, 1) << "Initializing constructor did not set config value";
-  ASSERT_EQ(fancyConstructed->b, 2) << "Initializing constructor did not set config value";
-  ASSERT_EQ(fancyConstructed->c, 3) << "Initializing constructor did not set config value";
+  ASSERT_TRUE(fancyConstructed->IsConfigured()) << "Initializing constructor did not set config value";
+  ASSERT_EQ((*fancyConstructed)->a, 1) << "Initializing constructor did not set config value";
+  ASSERT_EQ((*fancyConstructed)->b, 2) << "Initializing constructor did not set config value";
+  ASSERT_EQ((*fancyConstructed)->c, 3) << "Initializing constructor did not set config value";
 
+  AutoRequired<MyComplexValueClass> complex;
+  ASSERT_EQ((*complex->m_cfg)->a, 1) << "Second Initalizing constructor overrode the first!";
+  ASSERT_EQ((*complex->m_cfg)->b, 2) << "Second Initalizing constructor overrode the first!";
+  ASSERT_EQ((*complex->m_cfg)->c, 3) << "Second Initalizing constructor overrode the first!";
 
-  AutoConfig<ComplexValue, Namespace1, MyCxValue> fancy2(7);
-  ASSERT_EQ(fancy2->a, 1) << "Second Initalizing constructor overrode the first!";
-  ASSERT_EQ(fancy2->b, 2) << "Second Initalizing constructor overrode the first!";
-  ASSERT_EQ(fancy2->c, 3) << "Second Initalizing constructor overrode the first!";
+  ASSERT_EQ((*complex->m_cfg2)->a, 10) << "Initializing constructor was not called";
+  ASSERT_EQ((*complex->m_cfg2)->b, 15) << "Initializing constructor was not called";
+  ASSERT_EQ((*complex->m_cfg2)->c, 30) << "Initializing constructor was not called";
 }
-
-struct OuterCtxt{};
-struct MiddleCtxt{};
-struct InnerCtxt{};
-TEST_F(AutoConfigTest, ListingConfigs) {
-  AutoCreateContextT<OuterCtxt> ctxt_outer;
-  auto ctxt_middle = ctxt_outer->Create<MiddleCtxt>();
-  auto ctxt_inner = ctxt_middle->Create<InnerCtxt>();
-
-  AutoRequired<AutoConfigManager> acm_outer(ctxt_outer);
-  AutoRequired<AutoConfigManager> acm_inner(ctxt_inner);
-
-  AutoRequired<MyConfigurableClass> var1_inner(ctxt_inner);
-  var1_inner->m_myName = 1;
- 
-  ASSERT_EQ(0, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
-  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
-
-  int callback_outer = 0;
-  acm_outer->AddCallback([&callback_outer](const std::string& key, const AnySharedPointer& ptr) {
-    ++callback_outer;
-  });
-
-  int callback_inner = 0;
-  acm_inner->AddCallback([&callback_inner](const std::string& key, const AnySharedPointer& ptr) {
-    ++callback_inner;
-  });
-
-  ASSERT_EQ(1, callback_inner) << "Callback not called on existing keys";
-
-  AutoRequired<MyConfigurableClass2> var1_outer(ctxt_outer);
-  var1_outer->m_myName = 2;
-
-  ASSERT_EQ(1, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
-  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
-
-  AutoRequired<MyConfigurableClass> var2_outer(ctxt_outer);
-  var2_outer->m_myName = 3;
-
-  ASSERT_EQ(2, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
-  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
-
-  ASSERT_EQ(2, callback_outer) << "Outer callback called an incorrect number of times";
-  ASSERT_EQ(1, callback_inner) << "Inner callback called an incorrect number of times";
-
-  auto keys_outer = acm_outer->GetLocalKeys();
-  ASSERT_EQ(var1_outer->m_myName.m_key, keys_outer[0]) << "Keys listed out of construction order";
-  ASSERT_EQ(var2_outer->m_myName.m_key, keys_outer[1]) << "Keys listed out of construction order";
-
-  auto keys_inner = acm_inner->GetLocalKeys();
-  ASSERT_EQ(var1_inner->m_myName.m_key, keys_inner[0]) << "Keys listed out of construction order";
-}
-*/
