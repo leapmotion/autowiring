@@ -832,8 +832,8 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     for (auto& cur : m_typeMemos) {
       MemoEntry& value = cur.second;
 
-      if (value.m_value)
-        // This entry is already satisfied, no need to process it
+      if (value.m_value && value.m_local)
+        // This entry is already satisfied locally, no need to process it
         continue;
 
       // Determine whether the current candidate element satisfies the autowiring we are considering.
