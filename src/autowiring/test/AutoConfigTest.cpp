@@ -194,7 +194,7 @@ TEST_F(AutoConfigTest, NestedContexts) {
   ASSERT_EQ(999, *mcc_sibling->cfg) << "Value not set on sibling of context where value was previously set";
   ASSERT_TRUE(callback_hit2) << "Callback not called on sibling of context where value was previously set";
 }
-/*
+
 struct ValidatedKey{
   static bool Validate(const int& value) {
     return value > 5;
@@ -206,22 +206,18 @@ struct MyValidatedClass{
 };
 
 TEST_F(AutoConfigTest, Validators) {
-  AutoRequired<AutoConfigManager> acm;
-  
-  ASSERT_ANY_THROW(acm->Set("ValidatedKey", 2)) << "AutoConfigManager didn't regect invalid value";
-  
   AutoRequired<MyValidatedClass> valid;
   
-  acm->Set("ValidatedKey", 42);
+  *valid->m_config = 42;
   ASSERT_EQ(42, *valid->m_config) << "Value not set for key";
   
-  ASSERT_ANY_THROW(acm->Set("ValidatedKey", 1)) << "AutoConfigManager didn't regect invalid value";
+  ASSERT_ANY_THROW(*valid->m_config = 1) << "AutoConfigManager didn't regect invalid value";
   ASSERT_EQ(42, *valid->m_config) << "Value not set for key";
   
-  acm->Set("ValidatedKey", 1337);
+  *valid->m_config = 1337;
   ASSERT_EQ(1337, *valid->m_config) << "Value not set for key";
 }
-
+/*
 TEST_F(AutoConfigTest, DirectAssignemnt) {
   AutoConfig<int, struct Namespace1, struct XYZ> var;
   var = 10;

@@ -32,7 +32,7 @@ private:
   static const std::unordered_map<std::string, const ConfigRegistryEntry*> s_registry;
   
   // map of validators registered for a key
-  static const std::unordered_map<std::string, std::vector<t_validator>> s_validators;
+  static const std::unordered_map<std::string, t_validator> s_validators;
   
   // lock for all members
   std::mutex m_lock;

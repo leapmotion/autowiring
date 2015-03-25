@@ -19,12 +19,12 @@ static std::unordered_map<std::string, const ConfigRegistryEntry*> FillRegistry(
 }
 
 // Create map of all validators specified
-static std::unordered_map<std::string, std::vector<AutoConfigManager::t_validator>> FillValidators(void) {
-  std::unordered_map<std::string, std::vector<AutoConfigManager::t_validator>> validator;
+static std::unordered_map<std::string, AutoConfigManager::t_validator> FillValidators(void) {
+  std::unordered_map<std::string, AutoConfigManager::t_validator> validator;
   
   for (auto config = g_pFirstConfigEntry; config; config = config->pFlink) {
-    if (config->m_has_validator) {
-      validator[config->m_key].push_back(config->validator());
+    if (config->m_hasValidator) {
+      validator[config->m_key] = config->validator();
     }
   }
   
@@ -32,7 +32,7 @@ static std::unordered_map<std::string, std::vector<AutoConfigManager::t_validato
 }
 
 const std::unordered_map<std::string, const ConfigRegistryEntry*> AutoConfigManager::s_registry = FillRegistry();
-const std::unordered_map<std::string, std::vector<AutoConfigManager::t_validator>> AutoConfigManager::s_validators = FillValidators();
+const std::unordered_map<std::string, AutoConfigManager::t_validator> AutoConfigManager::s_validators = FillValidators();
 
 AutoConfigManager::AutoConfigManager(void){
   // Copy parent's config settings
@@ -119,12 +119,11 @@ void AutoConfigManager::AddCallback(t_add_callback&& fx) {
 void AutoConfigManager::SetRecursive(const std::string& key, AnySharedPointer value) {
   // Call all validators for this key
   if (s_validators.count(key)) {
-    for (auto const& fx : s_validators.find(key)->second) {
-      if (!fx(value)) {
-        std::stringstream ss;
-        ss << "Attempted to set key '" << key << "'which didin't pass validator";
-        throw autowiring_error(ss.str());
-      }
+    auto const& fx = s_validators.find(key)->second;
+    if (!fx(value)) {
+      std::stringstream ss;
+      ss << "Attempted to set key '" << key << "'which didin't pass validator";
+      throw autowiring_error(ss.str());
     }
   }
   

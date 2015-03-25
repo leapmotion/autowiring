@@ -45,7 +45,7 @@ struct ConfigRegistryEntry {
   const std::string m_key;
   
   // True if a validator was provided
-  const bool m_has_validator;
+  const bool m_hasValidator;
   
   // Is this key identify this entry?
   bool is(const std::string& key) const;
@@ -111,6 +111,12 @@ public:
   parseInternal(const std::string&) const {
     throw autowiring_error("This type doesn't support stream conversions.  Define one if you want this to be parsable");
   };
+
+  std::function<bool(const T&)> validatorInternal(void) {
+    return[](const T& ptr) {
+      return CallValidate<T, t_key>::Call(ptr);
+    };
+  }
 
   std::function<bool(const AnySharedPointer&)> validator(void) const override {
     return [] (const AnySharedPointer& ptr) {

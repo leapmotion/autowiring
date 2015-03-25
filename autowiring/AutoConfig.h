@@ -51,7 +51,13 @@ public:
     m_value(std::forward<t_Arg>(arg), std::forward<t_Args>(args)...)
   {
     // Register with config registry
-    (void)RegConfig<T, TKey...>::r;
+    auto config = RegConfig<T, TKey...>::r;
+
+    if (config.m_hasValidator) {
+      if (!config.validatorInternal()(m_value)) {
+        throw autowiring_error("Cannot construct AutoConfigVar with a value that fails validation");
+      }
+    }
 
     onChangedSignal(*this);
   }
@@ -89,13 +95,13 @@ public:
   const T* operator->() const { return &m_value; }
 
   void operator=(const T& newValue) {
+    SetInternal(newValue);
     if (m_parentRegistration) {
       auto parent_ctxt = m_context.lock()->GetParentContext();
       AutowiredFast<AutoConfigVar<T, TKey...>> parentVar(parent_ctxt);
       *parentVar -= m_parentRegistration;
       m_parentRegistration = nullptr;
     }
-    SetInternal(newValue);
   }
 
   void Get(void* pValue) const override { *reinterpret_cast<T*>(pValue) = m_value; }
@@ -119,6 +125,14 @@ private:
   T m_value;
 
   void SetInternal(const T& val) {
+    auto config = RegConfig<T, TKey...>::r;
+
+    if (config.m_hasValidator) {
+      if (!config.validatorInternal()(val)) {
+        throw autowiring_error("Validator rejected set for config value");
+      }
+    }
+
     m_isConfigured = true;
     m_value = val;
     onChangedSignal(*this);
