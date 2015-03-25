@@ -211,7 +211,7 @@ TEST_F(AutoConfigTest, Validators) {
   *valid->m_config = 42;
   ASSERT_EQ(42, *valid->m_config) << "Value not set for key";
   
-  ASSERT_ANY_THROW(*valid->m_config = 1) << "AutoConfigManager didn't regect invalid value";
+  ASSERT_ANY_THROW(*valid->m_config = 1) << "AutoConfig validator didn't reject invalid value";
   ASSERT_EQ(42, *valid->m_config) << "Value not set for key";
   
   *valid->m_config = 1337;

@@ -20,8 +20,8 @@ set(Autowiring_SRCS
   auto_signal.cpp
   AutoConfig.cpp
   AutoConfig.h
-  AutoConfigManager.cpp
-  AutoConfigManager.h
+  AutoConfigListing.cpp
+  AutoConfigListing.h
   AutoConfigParser.cpp
   AutoConfigParser.hpp
   AutoFilterDescriptor.h
