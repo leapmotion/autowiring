@@ -88,13 +88,13 @@ struct ConfigRegistryEntryT:
   // Parse string into this ConfigEntry's type. Throw an exception
   // if no such stream operator exists
   AnySharedPointer parse(const std::string& str) const override {
-    return parseInternal<T>(str);
+    return AnySharedPointer(std::make_shared<T>(std::move(parseInternal<T>(str))));
   }
   
 public:
   // Only use if there is a stream operator
   template<typename U>
-  typename std::enable_if<has_stream<U>::value, AnySharedPointer>::type
+  typename std::enable_if<has_stream<U>::value, T>::type
   parseInternal(const std::string& str) const {
     std::istringstream ss(str);
     T val;
@@ -102,12 +102,12 @@ public:
     
     if (ss.fail())
       autowiring::ThrowFailedTypeParseException(str, typeid(T));
-    return AnySharedPointer(std::make_shared<T>(val));
+    return val;
   }
 
   // Throw exception if there is no stream operator
   template<typename U>
-  typename std::enable_if<!has_stream<U>::value, AnySharedPointer>::type
+  typename std::enable_if<!has_stream<U>::value, T>::type
   parseInternal(const std::string&) const {
     throw autowiring_error("This type doesn't support stream conversions.  Define one if you want this to be parsable");
   };

@@ -108,89 +108,30 @@ TEST_F(AutoConfigTest, VerifyBasicInheritance) {
   ASSERT_EQ(1002, *cfg_outer) << "Override of a configurable value in a child scope affected parent";
 }
 
-/*
-struct DefaultName {
-  AutoConfig<int, struct defaultname1> m_def;
+struct Unparseable {
+  int v;
 };
-
-TEST_F(AutoConfigTest, DefaultNamespace) {
-  AutoRequired<AutoConfigManager> acm;
-  acm->Set("defaultname1", 123);
-  
-  AutoRequired<DefaultName> def;
-  
-  ASSERT_EQ(123, *def->m_def);
-}
 
 TEST_F(AutoConfigTest, VerifyParsedAssignment) {
   // We must also be able to support implicit string-to-type conversion via the shift operator for this type
-  AutoRequired<AutoConfigManager> acm;
+  AutoConfig<int, Namespace1, XYZ> cfg;
 
   // Direct assignment to a string should not work, the type isn't a string it's an int
-  ASSERT_ANY_THROW(acm->Set("Namespace1.XYZ", "327")) << "An attempt to assign a value to an unrelated type did not generate an exception as expected";
-  
-  ASSERT_ANY_THROW(acm->Set("Namespace1.XYZ", 3.0)) << "An attempt to assign a value to an unrelated type did not generate an exception as expected";
+  ASSERT_ANY_THROW(cfg->SetParsed("badvalue")) << "An attempt to assign a value to an unparsable string did not throw an exception";
+  ASSERT_FALSE(cfg->IsConfigured()) << "A failed parse incorrectly marked the value as configured";
 
   // Assignment to a string type should result in an appropriate coercion to the right value
-  ASSERT_TRUE(acm->SetParsed("Namespace1.XYZ", "324"));
+  cfg->SetParsed("324");
+  ASSERT_EQ(*cfg, 324);
+  ASSERT_TRUE(cfg->IsConfigured()) << "Assignement from a parsed value falied to mark the value as configured";
+
+  AutoConfig<Unparseable, Namespace2, Unparseable> noparse;
+  ASSERT_ANY_THROW(cfg->SetParsed("anyvalue")) << "An attempt to parse a value into an unparsable structure did not throw an exception";
+  *noparse = Unparseable{ 20 };
+  ASSERT_EQ((*noparse)->v, 20);
 }
-
-TEST_F(AutoConfigTest, VerifyDuplicateConfigAssignment) {
-  AutoRequired<AutoConfigManager> acm;
-  ASSERT_TRUE(acm->SetParsed("Namespace1.XYZ", "324"));
-  ASSERT_TRUE(acm->SetParsed("Namespace2.XYZ", "1111"));
-
-  AutoRequired<MyConfigurableClass> clz1;
-  AutoRequired<MyConfigurableClass2> clz2;
-
-  ASSERT_EQ(324, *clz1->m_myName);
-  ASSERT_EQ(1111, *clz2->m_myName);
-}
-
-class TypeWithoutAShiftOperator {
-public:
-  int foo;
+/*
 };
-
-struct NoShift {
-  AutoConfig<TypeWithoutAShiftOperator, struct MyNoShift> m_noshift;
-};
-
-static_assert(has_stream<int>::value, "Stream operation not detected on a primitive type");
-static_assert(!has_stream<TypeWithoutAShiftOperator>::value, "Stream operation detected on a type that should not have supported it");
-
-TEST_F(AutoConfigTest, TypeWithoutAShiftOperatorTest) {
-  AutoRequired<NoShift> noshift;
-
-  AutoRequired<AutoConfigManager> mgr;
-
-  // Indirect assignment should cause an exception
-  ASSERT_ANY_THROW(mgr->Set("MyNoShift", "")) << "Expected a throw in a case where a configurable value was used which cannot be assigned";
-
-  // Direct assignment should be supported still
-  TypeWithoutAShiftOperator tasoVal;
-  tasoVal.foo = 592;
-  mgr->Set<TypeWithoutAShiftOperator>("MyNoShift", tasoVal);
-
-  ASSERT_EQ(592, noshift->m_noshift->foo) << "Value assignment did not result in an update to a non-serializable configuration field";
-}
-
-TEST_F(AutoConfigTest, Callbacks) {
-  AutoRequired<AutoConfigManager> acm;
-  AutoRequired<MyConfigurableClass> mcc;
-  
-  acm->Set("Namespace1.XYZ", 4);
-  
-  mcc->m_myName += [](int val) {
-    ASSERT_EQ(val, 42);
-  };
-  
-  mcc->m_myName += [](int val) {
-    ASSERT_EQ(val, 42);
-  };
-  
-  acm->Set("Namespace1.XYZ", 42);
-}
 
 TEST_F(AutoConfigTest, NestedContexts) {
   // Set up contexts and members
