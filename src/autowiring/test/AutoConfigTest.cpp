@@ -34,7 +34,7 @@ TEST_F(AutoConfigTest, VerifyBasicSignals) {
   int handler_called = 0;
   int handler_value_read = 0;
   Autowired<AutoConfigVar<int, Namespace1, XYZ>> autoCfg;
-  autoCfg(&AutoConfigVar<int, Namespace1, XYZ>::onChangedSignal) += [&](const AutoConfigVarBase& var) {
+  autoCfg(&AutoConfigVarBase::onChangedSignal) += [&](const AutoConfigVarBase& var) {
     ++handler_called;
     var.Get(&handler_value_read);
   };

@@ -10,12 +10,12 @@
 static autowiring::thread_specific_ptr<SlotInformationStackLocation> tss([](SlotInformationStackLocation*) {});
 
 SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStumpBase& stump, const void* pObj, size_t extent) :
-  prior(*tss),
   stump(stump),
-  m_pCur(nullptr),
-  m_pLastLink(nullptr),
   pObj(pObj),
-  extent(extent)
+  extent(extent),
+  prior(*tss),
+  m_pCur(nullptr),
+  m_pLastLink(nullptr)
 {
   tss.reset(this);
 }
