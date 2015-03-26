@@ -215,4 +215,12 @@ TEST_F(ContextEnumeratorTest, ForwardIteratorCheck) {
   ASSERT_EQ(prior, *b) << "Incrementation of an unrelated iterator invalidated a copy of that iterator";
   ++b;
   ASSERT_EQ(a, b) << "Postfix and prefix incrementation are not equivalently implemented";
+
+  a++;
+  ASSERT_EQ(a, std::next(b)) << "std::next did not correctly return the next iterator after the specified iterator";
+  b++;
+
+  std::advance(a, 1);
+  b++;
+  ASSERT_EQ(a, b) << "std::advance did not actually advance an iterator";
 }
