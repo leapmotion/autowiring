@@ -172,3 +172,16 @@ TEST_F(ContextEnumeratorTest, ComplexRemovalInterference) {
     ASSERT_TRUE(cur.expired()) << "Found an element that was iterated after it should have been unreachable";
 }
 
+TEST_F(ContextEnumeratorTest, Unique) {
+  AutoCreateContextT<NamedContext> named;
+  ASSERT_EQ(named, ContextEnumeratorT<NamedContext>().unique()) <<
+    "Expected the unique context to be equal to the specifically named child context";
+}
+
+TEST_F(ContextEnumeratorTest, BadUnique) {
+  AutoCreateContextT<NamedContext> named1;
+  AutoCreateContextT<NamedContext> named2;
+
+  ASSERT_THROW(ContextEnumeratorT<NamedContext>().unique(), autowiring_error) <<
+    "An attempt to obtain a unique context from an enumerator providing more than one should throw an exception";
+}

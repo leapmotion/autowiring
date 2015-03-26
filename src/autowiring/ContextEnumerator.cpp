@@ -3,7 +3,11 @@
 #include "ContextEnumerator.h"
 #include "CoreContext.h"
 
-ContextEnumerator::ContextEnumerator(const std::shared_ptr<CoreContext>& root):
+ContextEnumerator::ContextEnumerator(void) :
+  m_root(CoreContext::CurrentContext())
+{}
+
+ContextEnumerator::ContextEnumerator(const std::shared_ptr<CoreContext>& root) :
   m_root(root)
 {}
 
