@@ -66,7 +66,7 @@ public:
   /// This method will throw an exception if the specified name cannot be found as a configurable value
   /// in the application, or if the specified value type does not match the type expected by this field
   /// </remarks>
-  std::weak_ptr<AutoConfigVarBase> Get(const std::string& key);
+  std::shared_ptr<AutoConfigVarBase> Get(const std::string& key);
 
   /// <summary>
   /// Assigns the specified value to an AutoConfig with a given key. Creates one if it doesn't exist.
