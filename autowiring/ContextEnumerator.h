@@ -47,7 +47,7 @@ public:
   /// The iterator class which is actually used in enumerating contexts
   class iterator {
   public:
-    typedef std::input_iterator_tag iterator_category;
+    typedef std::forward_iterator_tag iterator_category;
     typedef const std::shared_ptr<CoreContext>& value_type;
     typedef size_t difference_type;
     typedef const std::shared_ptr<CoreContext>* pointer;
@@ -73,8 +73,10 @@ public:
     
     // Operator overloads:
     const iterator& operator++(void);
+    iterator operator++(int);
+
     const std::shared_ptr<CoreContext>& operator*(void) const { return m_cur; }
-    const CoreContext& operator->(void) const { return ***this; }
+    const std::shared_ptr<CoreContext>& operator->(void) const { return m_cur; }
     bool operator==(const iterator& rhs) const { return m_root == rhs.m_root && m_cur == rhs.m_cur; }
     bool operator!=(const iterator& rhs) const { return !(*this == rhs); }
     explicit operator bool(void) const { return !!m_cur.get(); }
@@ -132,6 +134,13 @@ public:
       ContextEnumerator::iterator::operator++();
       _advance();
       return *this;
+    }
+
+    iterator operator++(int) {
+      auto retVal = *this;
+      ContextEnumerator::iterator::operator++(0);
+      _advance();
+      return retVal;
     }
 
     std::shared_ptr<CoreContextT<Sigil>> operator*(void) const { return std::static_pointer_cast<CoreContextT<Sigil>>(m_cur); }
