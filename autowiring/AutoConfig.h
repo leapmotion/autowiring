@@ -82,7 +82,7 @@ public:
   void Set(const void* pValue) override { *this = *reinterpret_cast<const T*>(pValue); }
 
   void SetParsed(const std::string& value) override { 
-    *this = RegistryEntry.parseInternal<T>(value);
+    *this = RegistryEntry.template parseInternal<T>(value);
   }
 
   // Add a callback for when this config value changes
