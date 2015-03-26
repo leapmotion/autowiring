@@ -66,10 +66,13 @@ bool AutoConfigListing::IsInherited(const std::string& key) {
   return config && config->IsInherited();
 }
 
-std::weak_ptr<AutoConfigVarBase> AutoConfigListing::Get(const std::string& key) {
+std::shared_ptr<AutoConfigVarBase> AutoConfigListing::Get(const std::string& key) {
   std::lock_guard<std::mutex> lk(m_lock);
-  return m_values[key];
-  
+
+  auto found = m_values.find(key);
+  if (found != m_values.end())
+    return found->second.lock();
+
   // Key not found, throw exception
   std::stringstream ss;
   ss << "Attepted to get key '" << key << "' which hasn't been set";
