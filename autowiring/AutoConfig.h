@@ -1,49 +1,23 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "AutoConfigBase.h"
 #include "Autowired.h"
-#include "auto_signal.h"
 #include "ConfigRegistry.h"
 
-#include <string>
-#include TYPE_INDEX_HEADER
-
-struct AnySharedPointer;
-
-/// \internal
 /// <summary>
-/// Utility base type for configuration members
-/// </summary>
-class AutoConfigVarBase : public ContextMember
-{
-public:
-  AutoConfigVarBase(const std::type_info& tiName, bool configured = false);
-
-  // Key used to identify this config value
-  const std::string m_key;
-
-  // Generic interface functions for getting and setting
-  virtual void Get(void* pValue) const = 0;
-  virtual void Set(const void* pValue) = 0;
-
-  virtual void SetParsed(const std::string& value) = 0;
-
-  typedef autowiring::signal<void(const AutoConfigVarBase& val)> t_OnChangedSignal;
-  t_OnChangedSignal onChangedSignal;
-
-  bool IsConfigured() const { return m_isConfigured; }
-  bool IsInherited() const { return m_parentRegistration != nullptr; }
-
-protected:
-  bool m_isConfigured;
-  t_OnChangedSignal::t_registration* m_parentRegistration;
-};
+/// The type underlying the AutoConfig System.
+/// Represents a unique type created by the combination of the type and a set of sigils.
+/// Responsible for tracking changes to the underlying value and triggering signals,
+/// making sure values are inherited correctly from enclosing contexts, and providing
+/// a primitive polymorphic get/set interface (void*)
+/// <summary>
 
 template<class T, class... TKey>
 class AutoConfigVar:
   public AutoConfigVarBase
 {
 public:
-  static_assert(sizeof...(TKey) >= 1, "Must provide a key and optionally at least one namespace");
+  static_assert(sizeof...(TKey) >= 1, "Must provide a key and optionally a set of namespaces");
   
   template<typename t_Arg, typename ...t_Args>
   AutoConfigVar(t_Arg &&arg, t_Args&&... args) :

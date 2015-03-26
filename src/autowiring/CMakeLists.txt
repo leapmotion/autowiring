@@ -18,8 +18,9 @@ set(Autowiring_SRCS
   auto_future.h
   auto_signal.h
   auto_signal.cpp
-  AutoConfig.cpp
   AutoConfig.h
+  AutoConfigBase.cpp
+  AutoConfigBase.h
   AutoConfigListing.cpp
   AutoConfigListing.h
   AutoConfigParser.cpp
