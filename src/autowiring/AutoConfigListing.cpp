@@ -56,14 +56,16 @@ void AutoConfigListing::ThrowTypeMismatchException(const std::string& key, const
 
 bool AutoConfigListing::IsConfigured(const std::string& key) {
   std::lock_guard<std::mutex> lk(m_lock);
-  auto config = m_values[key].lock();
-  return config && config->IsConfigured();
+  auto found = m_values.find(key);
+
+  return found != m_values.end() && found->second.lock()->IsConfigured();
 }
 
 bool AutoConfigListing::IsInherited(const std::string& key) {
   std::lock_guard<std::mutex> lk(m_lock);
-  auto config = m_values[key].lock();
-  return config && config->IsInherited();
+  auto found = m_values.find(key);
+
+  return found != m_values.end() && found->second.lock()->IsConfigured();
 }
 
 std::shared_ptr<AutoConfigVarBase> AutoConfigListing::Get(const std::string& key) {
@@ -80,26 +82,17 @@ std::shared_ptr<AutoConfigVarBase> AutoConfigListing::Get(const std::string& key
 }
 
 bool AutoConfigListing::SetParsed(const std::string& key, const std::string& value) {
-  // Key not found
-  if (!s_registry.count(key)) {
-    return false;
-  }
-
-  auto parsedValue = s_registry.find(key)->second->parse(value);
-  
-  SetInternal(key, &(*parsedValue));
+  auto config = GetOrConstruct(key, nullptr);
+  config->SetParsed(value);
   return true;
 }
 
 void AutoConfigListing::AddOnChanged(const std::string& key, std::function<void(const AutoConfigVarBase&)>&& fx) {
-  std::lock_guard<std::mutex> lk(m_lock);
-  auto config = m_values[key].lock();
-  if (config)
-    (*config).onChangedSignal += std::move(fx);
+  auto config = GetOrConstruct(key, nullptr);
+  (*config).onChangedSignal += std::move(fx);
 }
 
 void AutoConfigListing::AddCallback(t_add_callback&& fx) {
-  // Grab lock until done setting value
   std::lock_guard<std::mutex> lk(m_lock);
 
   for (auto& key : m_orderedKeys) {
@@ -108,27 +101,32 @@ void AutoConfigListing::AddCallback(t_add_callback&& fx) {
       fx(*config);
   }
   
-  m_addCallbacks.emplace_back(std::move(fx));
+  m_onAddedSignal += std::move(fx);
 }
 
 void AutoConfigListing::SetInternal(const std::string& key, const void* value) {
-  std::unique_lock<std::mutex> lk(m_lock);
-  auto config = m_values[key].lock();
+  auto config = GetOrConstruct(key, value);
+  config->Set(value);
+}
 
-  if (!config) {
-    auto entry = s_registry.find(key);
-    if (entry == s_registry.end()) {
-      ThrowKeyNotFoundException(key);
-      return;
-    }
+std::shared_ptr<AutoConfigVarBase> AutoConfigListing::GetOrConstruct(const std::string& key, const void* value) {
+  std::unique_lock<std::mutex> lk(m_lock); 
+  
+  auto found = m_values.find(key);
+  if (found != m_values.end())
+    return found->second.lock();
 
-    auto ctxt = m_context.lock();
-    lk.unlock();
-    config = entry->second->m_injector(ctxt, value);
-    lk.lock();
-    m_values[key] = config;
+  auto entry = s_registry.find(key);
+  if (entry == s_registry.end()) {
+    ThrowKeyNotFoundException(key);
+    return nullptr;
   }
 
+  auto ctxt = m_context.lock();
   lk.unlock();
-  config->Set(value);
+  auto newValue = entry->second->m_injector(ctxt, value);
+  lk.lock();
+  
+  m_values.emplace(key, newValue);
+  return newValue;
 }
