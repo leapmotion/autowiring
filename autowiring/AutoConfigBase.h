@@ -34,5 +34,5 @@ public:
 
 protected:
   bool m_isConfigured;
-  t_OnChangedSignal::t_registration* m_parentRegistration;
+  t_OnChangedSignal::registration_t* m_parentRegistration;
 };

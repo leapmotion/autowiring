@@ -19,9 +19,9 @@ public:
   AutoConfigListing();
   virtual ~AutoConfigListing();
   
-  // Callback function type
-  typedef std::function<void(const AutoConfigVarBase&)> t_add_callback;
-  
+  // Callback signal type
+  typedef autowiring::signal<void(const AutoConfigVarBase&)> onAddSignal_t;
+
   // Validator function type
   typedef std::function<bool(const AnySharedPointer&)> t_validator;
   
@@ -100,7 +100,7 @@ public:
 
   // Add a callback for when a key is set in this context.  Is immediately called on all
   // currently existing values in the order they were created.
-  void AddCallback(t_add_callback&& fx);
+  onAddSignal_t::registration_t* AddCallback(onAddSignal_t::function_t&& fx);
 
   // Returns a list of all keys which have been set from this context.
   const std::vector<std::string>& GetLocalKeys() const { return m_orderedKeys; }
@@ -112,7 +112,7 @@ private:
 
   std::shared_ptr<AutoConfigVarBase> GetOrConstruct(const std::string& key, const void* value);
 
-  autowiring::signal<void(const AutoConfigVarBase&)> m_onAddedSignal;
+  onAddSignal_t m_onAddedSignal;
 
   friend class AutoConfigVarBase;
   void NotifyConfigAdded(const std::shared_ptr<AutoConfigVarBase>& cfg);
