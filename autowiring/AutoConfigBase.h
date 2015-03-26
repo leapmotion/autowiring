@@ -4,7 +4,7 @@
 #include "auto_signal.h"
 
 #include <string>
-#include <C++11/cpp11.h>
+#include "C++11/cpp11.h"
 #include TYPE_INDEX_HEADER
 
 struct AnySharedPointer;
