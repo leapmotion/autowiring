@@ -57,6 +57,7 @@
 #include <autoboost/thread/future_error_code.hpp>
 #ifdef AUTOBOOST_THREAD_USES_CHRONO
 #include <autoboost/chrono/system_clocks.hpp>
+#include <chrono>
 #endif
 
 #if defined AUTOBOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
@@ -1391,8 +1392,14 @@ namespace autoboost
         wait_for(const chrono::duration<Rep, Period>& rel_time) const
         {
           return wait_until(chrono::steady_clock::now() + rel_time);
-
         }
+
+        template<class Rep, class Period>
+        future_status wait_for(const std::chrono::duration<Rep, Period>& rel_time) const
+        {
+          return wait_for(chrono::duration<Rep, autoboost::ratio<Period::num, Period::den>>(rel_time.count()));
+        }
+
         template <class Clock, class Duration>
         future_status
         wait_until(const chrono::time_point<Clock, Duration>& abs_time) const
