@@ -50,6 +50,12 @@ const ContextEnumerator::iterator& ContextEnumerator::iterator::operator++(void)
   return *this;
 }
 
+ContextEnumerator::iterator ContextEnumerator::iterator::operator++(int) {
+  auto retVal = *this;
+  _next(m_cur->FirstChild());
+  return retVal;
+}
+
 CurrentContextEnumerator::CurrentContextEnumerator(void) :
   ContextEnumerator(CoreContext::CurrentContext())
 {

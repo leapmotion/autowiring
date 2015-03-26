@@ -11,7 +11,7 @@ class ContextEnumeratorTest:
 TEST_F(ContextEnumeratorTest, DegenerateEnumeration) {
   size_t ct = 0;
   for(const auto& cur : ContextEnumerator(std::shared_ptr<CoreContext>(nullptr))) {
-    ASSERT_TRUE(!!cur.get()) << "Context enumerator incorrectly enumerated a null context pointer";
+    ASSERT_TRUE(!!cur) << "Context enumerator incorrectly enumerated a null context pointer";
     ct++;
   }
   ASSERT_EQ(0UL, ct) << "An empty enumerator unexpectedly enumerated one or more entries";
@@ -184,4 +184,43 @@ TEST_F(ContextEnumeratorTest, BadUnique) {
 
   ASSERT_THROW(ContextEnumeratorT<NamedContext>().unique(), autowiring_error) <<
     "An attempt to obtain a unique context from an enumerator providing more than one should throw an exception";
+}
+
+TEST_F(ContextEnumeratorTest, ForwardIteratorCheck) {
+  static_assert(std::is_default_constructible<ContextEnumerator::iterator>::value, "ForwardIterator constraint requires iterators to be default-constructable");
+  static_assert(
+    std::is_same<
+      std::iterator_traits<ContextEnumerator::iterator>::iterator_category,
+      std::forward_iterator_tag
+    >::value,
+    "ContextEnumerator iterator not recognized as a forward iterator"
+  );
+
+  AutoCreateContext ctxt1;
+  AutoCreateContext ctxt2;
+  AutoCreateContext ctxt2_0(ctxt2);
+  AutoCreateContext ctxt2_1(ctxt2);
+  AutoCreateContext ctxt2_1_0(ctxt2_1);
+  AutoCreateContext ctxt3;
+
+  ContextEnumerator e;
+  auto a = e.begin();
+  auto b = e.begin();
+
+  ASSERT_EQ(a++, b++) << "Incrementation equivalence was not satisfied";
+  ASSERT_EQ(a, b) << "Iterators not equivalent after incrementation";
+
+  auto prior = *b;
+  a++;
+  ASSERT_EQ(prior, *b) << "Incrementation of an unrelated iterator invalidated a copy of that iterator";
+  ++b;
+  ASSERT_EQ(a, b) << "Postfix and prefix incrementation are not equivalently implemented";
+
+  a++;
+  ASSERT_EQ(a, std::next(b)) << "std::next did not correctly return the next iterator after the specified iterator";
+  b++;
+
+  std::advance(a, 1);
+  b++;
+  ASSERT_EQ(a, b) << "std::advance did not actually advance an iterator";
 }
