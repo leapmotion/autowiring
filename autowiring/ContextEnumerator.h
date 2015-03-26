@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "autowiring_error.h"
 #include MEMORY_HEADER
 
 class CoreContext;
@@ -26,6 +27,11 @@ class CoreContextT;
 class ContextEnumerator
 {
 public:
+  /// <summary>
+  /// Constructs a context enumerator for the current context
+  /// </summary>
+  ContextEnumerator(void);
+
   /// <summary>
   /// Constructs an enumerator which may enumerate all of the contexts rooted at the specified root
   /// </summary>
@@ -96,7 +102,9 @@ class ContextEnumeratorT:
   public ContextEnumerator
 {
 public:
-  ContextEnumeratorT(const std::shared_ptr<CoreContext>& ctxt):
+  ContextEnumeratorT()
+  {}
+  ContextEnumeratorT(const std::shared_ptr<CoreContext>& ctxt) :
     ContextEnumerator(ctxt)
   {}
 
@@ -129,6 +137,18 @@ public:
     std::shared_ptr<CoreContextT<Sigil>> operator*(void) const { return std::static_pointer_cast<CoreContextT<Sigil>>(m_cur); }
     const CoreContext& operator->(void) const { return ***this; }
   };
+
+  // Convenience routine for returning a single unique element
+  std::shared_ptr<CoreContext> unique(void) {
+    iterator q = begin();
+    iterator r = q;
+
+    // If advancing q gets us to the end, then we only have one element and we can return success
+    if (++q == end())
+      return *r;
+
+    throw autowiring_error("Attempted to get a unique context on a context enumerator that enumerates more than one child");
+  }
 
   // Standard STL duck interface methods:
   iterator begin(void) { return iterator(m_root, m_root); };
