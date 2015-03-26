@@ -50,7 +50,7 @@ TEST_F(AutoConfigListingTest, VerifyPostHocAssignment) {
   // Now inject the type which expects this value to be assigned:
   ASSERT_EQ(323, *cfg) << "Configurable type did not receive a value as expected";
 }
-/*
+
 TEST_F(AutoConfigListingTest, VerifyRecursiveSearch) {
   AutoRequired<AutoConfigListing> acm;
   acm->Set("Namespace1.XYZ", 1001);
@@ -60,14 +60,14 @@ TEST_F(AutoConfigListingTest, VerifyRecursiveSearch) {
     CurrentContextPusher pshr(ctxt);
 
     // Now inject an element here, and verify that it was wired up as expected:
-    AutoRequired<MyConfigurableClass> mcc;
-    ASSERT_TRUE(mcc->m_myName->IsConfigured()) << "A configurable value was not configured as expected";
-    ASSERT_EQ(1001, *mcc->m_myName) << "Configurable value obtained from a parent scope did not have the correct value";
+    AutoConfig<int, Namespace1, XYZ> cfg;
+    ASSERT_TRUE(cfg->IsConfigured()) << "A configurable value was not configured as expected";
+    ASSERT_EQ(*cfg, 1001) << "Configurable value obtained from a parent scope did not have the correct value";
 
     // This must work as expected--a local context override will rewrite configuration values in the local scope
     AutoRequired<AutoConfigListing> sub_mcc;
     sub_mcc->Set("Namespace1.XYZ", 1002);
-    ASSERT_EQ(1002, *mcc->m_myName) << "Override of a configurable value in a derived class did not take place as expected";
+    ASSERT_EQ(1002, *cfg) << "Override of a configurable value in a derived class did not take place as expected";
   }
 }
 
@@ -81,7 +81,7 @@ TEST_F(AutoConfigListingTest, DefaultNamespace) {
   
   AutoRequired<DefaultName> def;
   
-  ASSERT_EQ(123, *def->m_def);
+  ASSERT_EQ(*def->m_def, 123);
 }
 
 TEST_F(AutoConfigListingTest, VerifyParsedAssignment) {
@@ -102,11 +102,11 @@ TEST_F(AutoConfigListingTest, VerifyDuplicateConfigAssignment) {
   ASSERT_TRUE(acm->SetParsed("Namespace1.XYZ", "324"));
   ASSERT_TRUE(acm->SetParsed("Namespace2.XYZ", "1111"));
 
-  AutoRequired<MyConfigurableClass> clz1;
-  AutoRequired<MyConfigurableClass2> clz2;
+  AutoConfig<int, Namespace1, XYZ> clz1;
+  AutoConfig<int, Namespace2, XYZ> clz2;
 
-  ASSERT_EQ(324, *clz1->m_myName);
-  ASSERT_EQ(1111, *clz2->m_myName);
+  ASSERT_EQ(*clz1, 324);
+  ASSERT_EQ(*clz2, 1111);
 }
 
 class TypeWithoutAShiftOperator {
@@ -134,25 +134,32 @@ TEST_F(AutoConfigListingTest, TypeWithoutAShiftOperatorTest) {
   tasoVal.foo = 592;
   mgr->Set<TypeWithoutAShiftOperator>("MyNoShift", tasoVal);
 
-  ASSERT_EQ(592, noshift->m_noshift->foo) << "Value assignment did not result in an update to a non-serializable configuration field";
+  ASSERT_EQ((*noshift->m_noshift)->foo, 592) << "Value assignment did not result in an update to a non-serializable configuration field";
 }
 
 TEST_F(AutoConfigListingTest, Callbacks) {
   AutoRequired<AutoConfigListing> acm;
-  AutoRequired<MyConfigurableClass> mcc;
+  AutoConfig<int, Namespace1, XYZ> cfg;
   
   acm->Set("Namespace1.XYZ", 4);
   
-  mcc->m_myName += [](int val) {
+  *cfg += [](int val) {
     ASSERT_EQ(val, 42);
   };
   
-  mcc->m_myName += [](int val) {
+  *cfg += [](int val) {
     ASSERT_EQ(val, 42);
   };
   
   acm->Set("Namespace1.XYZ", 42);
 }
+
+struct MyConfigurableClass {
+  AutoConfig<int, Namespace1, XYZ> cfg;
+};
+struct MyConfigurableClass2 {
+  AutoConfig<int, Namespace2, XYZ> cfg;
+};
 
 TEST_F(AutoConfigListingTest, NestedContexts) {
   // Set up contexts and members
@@ -175,46 +182,46 @@ TEST_F(AutoConfigListingTest, NestedContexts) {
   
   // Set initial value
   acm_outer->Set("Namespace1.XYZ", 42);
-  ASSERT_EQ(42, *mcc_outer->m_myName) << "Config value not set";
-  ASSERT_EQ(42, *mcc_middle->m_myName) << "Config value not set in descendant context";
-  ASSERT_EQ(42, *mcc_sibling->m_myName) << "Config value not set in descendant context";
-  ASSERT_EQ(42, *mcc_inner->m_myName) << "Config value not set in descendant context";
-  ASSERT_EQ(42, *mcc_leaf->m_myName) << "Config value not set in desendant context";
+  ASSERT_EQ(42, *mcc_outer->cfg) << "Config value not set";
+  ASSERT_EQ(42, *mcc_middle->cfg) << "Config value not set in descendant context";
+  ASSERT_EQ(42, *mcc_sibling->cfg) << "Config value not set in descendant context";
+  ASSERT_EQ(42, *mcc_inner->cfg) << "Config value not set in descendant context";
+  ASSERT_EQ(42, *mcc_leaf->cfg) << "Config value not set in desendant context";
   EXPECT_TRUE(acm_middle->IsInherited("Namespace1.XYZ")) << "Inherited key not marked as such";
   EXPECT_TRUE(acm_leaf->IsInherited("Namespace1.XYZ")) << "Inherited key not marked as such";
   
   // Set middle, inner shouldn't be able to be set from outer after this
   bool callback_hit1 = false;
-  mcc_inner->m_myName += [&callback_hit1](int) {
+  *mcc_inner->cfg += [&callback_hit1](int) {
     callback_hit1 = true;
   };
   acm_middle->Set("Namespace1.XYZ", 1337);
-  ASSERT_EQ(42, *mcc_outer->m_myName) << "Config value changed in outer context";
-  ASSERT_EQ(42, *mcc_sibling->m_myName) << "Config value set from sibling context";
-  ASSERT_EQ(1337, *mcc_middle->m_myName) << "Config value not set";
-  ASSERT_EQ(1337, *mcc_inner->m_myName) << "Config value not set in child context";
-  ASSERT_EQ(1337, *mcc_leaf->m_myName) << "Config value not set in leaf context";
+  ASSERT_EQ(42, *mcc_outer->cfg) << "Config value changed in outer context";
+  ASSERT_EQ(42, *mcc_sibling->cfg) << "Config value set from sibling context";
+  ASSERT_EQ(1337, *mcc_middle->cfg) << "Config value not set";
+  ASSERT_EQ(1337, *mcc_inner->cfg) << "Config value not set in child context";
+  ASSERT_EQ(1337, *mcc_leaf->cfg) << "Config value not set in leaf context";
   ASSERT_TRUE(callback_hit1) << "Callback not hit in inner context";
   
   // Set from outter, inner should be shielded by middle context
-  mcc_inner->m_myName += [](int) {
+  *mcc_inner->cfg += [](int) {
     FAIL() << "This callback should never be hit";
   };
   
   // Make sure sibling context is not shielded
   bool callback_hit2 = false;
-  mcc_sibling->m_myName += [&callback_hit2](int) {
+  *mcc_sibling->cfg += [&callback_hit2](int) {
     callback_hit2 = true;
   };
   
   // Set from outer, shouldn't effect middle or inner contexts
   acm_outer->Set("Namespace1.XYZ", 999);
-  ASSERT_EQ(999, *mcc_outer->m_myName) << "Config value not set";
-  ASSERT_EQ(1337, *mcc_middle->m_myName) << "Config value overwritten when value was set in this context";
-  ASSERT_EQ(1337, *mcc_inner->m_myName) << "Config value overwritten when value was set in parent context";
+  ASSERT_EQ(999, *mcc_outer->cfg) << "Config value not set";
+  ASSERT_EQ(1337, *mcc_middle->cfg) << "Config value overwritten when value was set in this context";
+  ASSERT_EQ(1337, *mcc_inner->cfg) << "Config value overwritten when value was set in parent context";
   
   // Make sure sibling hit
-  ASSERT_EQ(999, *mcc_sibling->m_myName) << "Value not set on sibling of context where value was previously set";
+  ASSERT_EQ(999, *mcc_sibling->cfg) << "Value not set on sibling of context where value was previously set";
   ASSERT_TRUE(callback_hit2) << "Callback not called on sibling of context where value was previously set";
 }
 
@@ -245,56 +252,6 @@ TEST_F(AutoConfigListingTest, Validators) {
   ASSERT_EQ(1337, *valid->m_config) << "Value not set for key";
 }
 
-TEST_F(AutoConfigListingTest, DirectAssignemnt) {
-  AutoConfig<int, struct Namespace1, struct XYZ> var;
-  var = 10;
-  ASSERT_EQ(10, *var);
-
-  AutoRequired<MyConfigurableClass> containsVar;
-
-  ASSERT_EQ(10, *var);
-  ASSERT_EQ(10, *containsVar->m_myName);
-}
-
-
-struct ComplexValue {
-  int a;
-  int b;
-  int c;
-
-  ComplexValue(int nA, int nB, int nC) : a(nA), b(nB), c(nC) {}
-  ComplexValue(int repeated) : a(repeated), b(repeated), c(repeated) {}
-};
-
-struct MyComplexValueClass {
-  AutoConfig<ComplexValue, struct Namespace1, struct MyCxValue> m_cfg;
-  AutoConfig<ComplexValue, struct Namespace1, struct MyCxValue2> m_cfg2 = ComplexValue{ 10, 15, 30 };
-
-  MyComplexValueClass() : m_cfg(ComplexValue{ 2, 20, 20 }) {}
-};
-
-TEST_F(AutoConfigListingTest, ComplexConstruction){
-  AutoRequired<AutoConfigListing> mgr;
-  ASSERT_FALSE(mgr->IsConfigured("Namespace1.MyCxValue"));
-  
-  AutoConfig<ComplexValue, Namespace1, MyCxValue> defaultConstructed;
-
-  ASSERT_FALSE(mgr->IsConfigured("Namespace1.MyCxValue")) << "Improperly set config value when default constructing AutoConfig";
-
-  AutoConfig<ComplexValue, Namespace1, MyCxValue> fancyConstructed(1, 2, 3);
-  
-  ASSERT_TRUE(mgr->IsConfigured("Namespace1.MyCxValue")) << "Initializing constructor did not set config value";
-  ASSERT_EQ(fancyConstructed->a, 1) << "Initializing constructor did not set config value";
-  ASSERT_EQ(fancyConstructed->b, 2) << "Initializing constructor did not set config value";
-  ASSERT_EQ(fancyConstructed->c, 3) << "Initializing constructor did not set config value";
-
-
-  AutoConfig<ComplexValue, Namespace1, MyCxValue> fancy2(7);
-  ASSERT_EQ(fancy2->a, 1) << "Second Initalizing constructor overrode the first!";
-  ASSERT_EQ(fancy2->b, 2) << "Second Initalizing constructor overrode the first!";
-  ASSERT_EQ(fancy2->c, 3) << "Second Initalizing constructor overrode the first!";
-}
-
 struct OuterCtxt{};
 struct MiddleCtxt{};
 struct InnerCtxt{};
@@ -307,31 +264,31 @@ TEST_F(AutoConfigListingTest, ListingConfigs) {
   AutoRequired<AutoConfigListing> acm_inner(ctxt_inner);
 
   AutoRequired<MyConfigurableClass> var1_inner(ctxt_inner);
-  var1_inner->m_myName = 1;
+  *var1_inner->cfg = 1;
  
   ASSERT_EQ(0, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
   ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
 
   int callback_outer = 0;
-  acm_outer->AddCallback([&callback_outer](const std::string& key, const AnySharedPointer& ptr) {
+  acm_outer->AddCallback([&callback_outer](const AutoConfigVarBase& ptr) {
     ++callback_outer;
   });
 
   int callback_inner = 0;
-  acm_inner->AddCallback([&callback_inner](const std::string& key, const AnySharedPointer& ptr) {
+  acm_inner->AddCallback([&callback_inner](const AutoConfigVarBase& ptr) {
     ++callback_inner;
   });
 
   ASSERT_EQ(1, callback_inner) << "Callback not called on existing keys";
 
   AutoRequired<MyConfigurableClass2> var1_outer(ctxt_outer);
-  var1_outer->m_myName = 2;
+  *var1_outer->cfg = 2;
 
   ASSERT_EQ(1, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
   ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
 
   AutoRequired<MyConfigurableClass> var2_outer(ctxt_outer);
-  var2_outer->m_myName = 3;
+  var2_outer->cfg = 3;
 
   ASSERT_EQ(2, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
   ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
@@ -340,10 +297,9 @@ TEST_F(AutoConfigListingTest, ListingConfigs) {
   ASSERT_EQ(1, callback_inner) << "Inner callback called an incorrect number of times";
 
   auto keys_outer = acm_outer->GetLocalKeys();
-  ASSERT_EQ(var1_outer->m_myName.m_key, keys_outer[0]) << "Keys listed out of construction order";
-  ASSERT_EQ(var2_outer->m_myName.m_key, keys_outer[1]) << "Keys listed out of construction order";
+  ASSERT_EQ(var1_outer->cfg->m_key, keys_outer[0]) << "Keys listed out of construction order";
+  ASSERT_EQ(var2_outer->cfg->m_key, keys_outer[1]) << "Keys listed out of construction order";
 
   auto keys_inner = acm_inner->GetLocalKeys();
-  ASSERT_EQ(var1_inner->m_myName.m_key, keys_inner[0]) << "Keys listed out of construction order";
+  ASSERT_EQ(var1_inner->cfg->m_key, keys_inner[0]) << "Keys listed out of construction order";
 }
-*/
