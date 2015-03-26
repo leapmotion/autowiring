@@ -263,12 +263,6 @@ TEST_F(AutoConfigListingTest, ListingConfigs) {
   AutoRequired<AutoConfigListing> acm_outer(ctxt_outer);
   AutoRequired<AutoConfigListing> acm_inner(ctxt_inner);
 
-  AutoRequired<MyConfigurableClass> var1_inner(ctxt_inner);
-  *var1_inner->cfg = 1;
- 
-  ASSERT_EQ(0, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
-  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
-
   int callback_outer = 0;
   acm_outer->AddCallback([&callback_outer](const AutoConfigVarBase& ptr) {
     ++callback_outer;
@@ -279,22 +273,36 @@ TEST_F(AutoConfigListingTest, ListingConfigs) {
     ++callback_inner;
   });
 
+  AutoRequired<MyConfigurableClass> var1_inner(ctxt_inner);
+  *var1_inner->cfg = 1;
+ 
+  ASSERT_EQ(0, callback_outer) << "OnAdded fired incorrectly";
+  ASSERT_EQ(1, callback_inner) << "Callback fired incorrectly";
+  ASSERT_EQ(0, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
+  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
+
   ASSERT_EQ(1, callback_inner) << "Callback not called on existing keys";
 
-  AutoRequired<MyConfigurableClass2> var1_outer(ctxt_outer);
+  AutoRequired<MyConfigurableClass> var1_outer(ctxt_outer);
   *var1_outer->cfg = 2;
 
   ASSERT_EQ(1, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
   ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
 
-  AutoRequired<MyConfigurableClass> var2_outer(ctxt_outer);
-  var2_outer->cfg = 3;
+  AutoRequired<MyConfigurableClass2> var2_outer(ctxt_outer);
+  AutoRequired<MyConfigurableClass2> var2_inner(ctxt_inner);
 
-  ASSERT_EQ(2, acm_outer->GetLocalKeys().size()) << "Incorrect number of keys found in outer context";
-  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of keys found in inner context";
+  ASSERT_EQ(1, acm_outer->GetLocalKeys().size()) << "Constructing an uninitialized config incremented the local count";
+
+  *var2_outer->cfg = 3;
+
+  ASSERT_EQ(2, acm_outer->GetLocalKeys().size()) << "Incorrect number of local keys found in outer context";
+  ASSERT_EQ(1, acm_inner->GetLocalKeys().size()) << "Incorrect number of local keys found in inner context";
 
   ASSERT_EQ(2, callback_outer) << "Outer callback called an incorrect number of times";
   ASSERT_EQ(1, callback_inner) << "Inner callback called an incorrect number of times";
+
+  ASSERT_EQ(*var2_inner->cfg, *var2_outer->cfg) << "Value did not get set in child context";
 
   auto keys_outer = acm_outer->GetLocalKeys();
   ASSERT_EQ(var1_outer->cfg->m_key, keys_outer[0]) << "Keys listed out of construction order";
