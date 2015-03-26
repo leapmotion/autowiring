@@ -41,9 +41,6 @@ private:
   // list of keys set locally from this context in order of creation.
   std::vector<std::string> m_orderedKeys;
 
-  // list of callbacks for keys being added to this context.
-  std::list<t_add_callback> m_addCallbacks;
-
   // Exception throwers:
   void ThrowKeyNotFoundException(const std::string& key) const;
   void ThrowTypeMismatchException(const std::string& key, const std::type_info& ti) const;
@@ -112,4 +109,8 @@ private:
   // Set a value in this manager, call callbacks
   // Must hold m_lock when calling this
   void SetInternal(const std::string& key, const void* value);
+
+  std::shared_ptr<AutoConfigVarBase> GetOrConstruct(const std::string& key, const void* value);
+
+  autowiring::signal<void(const AutoConfigVarBase&)> m_onAddedSignal;
 };
