@@ -83,7 +83,14 @@ void AutoNetServerImpl::Run(void){
   });
 
   PollThreadUtilization(std::chrono::milliseconds(1000));
-  CoreThread::Run();
+
+  try {
+    CoreThread::Run();
+  }
+  catch (...) {
+    Stop();
+    throw;
+  }
 }
 
 void AutoNetServerImpl::OnStop(void) {
