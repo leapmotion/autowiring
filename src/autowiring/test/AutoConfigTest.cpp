@@ -28,6 +28,19 @@ TEST_F(AutoConfigTest, VerifyBasicAssignment) {
   ASSERT_EQ(*cfg2a, 2) << "Constructor overwrote value when it wasn't supposed to!";
 }
 
+//Ideally, this shouldn't even compile. As it stands, it should be at the very least an exception.
+TEST_F(AutoConfigTest, DISABLED_VerifySingleUnderlyingType){
+  AutoConfig<int, Namespace1, XYZ> cfg1;
+  bool threw = false;
+  try {
+    AutoConfig<float, Namespace1, XYZ> cfg2;
+  }
+  catch(...){
+    threw = true;
+  }
+  ASSERT_TRUE(threw) << "Constructing an AutoConfig with the same name and a different type failed to cause an exception";
+}
+
 TEST_F(AutoConfigTest, VerifyBasicSignals) {
   AutoCurrentContext ctxt;
 
