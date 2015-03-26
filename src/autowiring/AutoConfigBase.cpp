@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include "AutoConfigBase.h"
 #include "AutoConfigParser.hpp"
+#include "AutoConfigListing.h"
+#include "CoreContext.h"
 
 AutoConfigVarBase::AutoConfigVarBase(const std::type_info& ti, bool configured) :
   ContextMember(),
@@ -13,3 +15,8 @@ AutoConfigVarBase::AutoConfigVarBase(const std::type_info& ti, bool configured) 
   m_name = m_key.c_str();
 }
 
+void AutoConfigVarBase::AutoInit() {
+  auto ctxt = m_context.lock();
+  auto listing = ctxt->Inject<AutoConfigListing>();
+  listing->NotifyConfigAdded(GetSelf<AutoConfigVarBase>());
+}

@@ -113,4 +113,7 @@ private:
   std::shared_ptr<AutoConfigVarBase> GetOrConstruct(const std::string& key, const void* value);
 
   autowiring::signal<void(const AutoConfigVarBase&)> m_onAddedSignal;
+
+  friend class AutoConfigVarBase;
+  void NotifyConfigAdded(const std::shared_ptr<AutoConfigVarBase>& cfg);
 };
