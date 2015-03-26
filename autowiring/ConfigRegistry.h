@@ -56,9 +56,9 @@ struct ConfigRegistryEntry {
   // Verify 'ti' is the same type as this entry's value
   virtual bool verifyType(const std::type_info& ti) const = 0;
   
-  // Parse a string into this entrie's value type.
+  // Parse a string into this entry's value type.
   // Type must have operator>> T defined
-  virtual AnySharedPointer parse(const std::string&) const = 0;
+  virtual void parse(AutoConfigVarBase&, const std::string&) const = 0;
   
   // Returns function which validates this input. The validator function is
   // defined as KEY::Validate(const T&) where KEY is the type identifing this entry
@@ -90,8 +90,8 @@ struct ConfigRegistryEntryT:
 
   // Parse string into this ConfigEntry's type. Throw an exception
   // if no such stream operator exists
-  AnySharedPointer parse(const std::string& str) const override {
-    return AnySharedPointer(std::make_shared<T>(std::move(parseInternal<T>(str))));
+  void parse(AutoConfigVarBase& var, const std::string& str) const override {
+    var.SetParsed(str);
   }
   
 public:
