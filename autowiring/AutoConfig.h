@@ -25,10 +25,10 @@ public:
     m_value(std::forward<t_Arg>(arg), std::forward<t_Args>(args)...)
   {
     // Register with config registry
-    auto config = RegConfig<T, TKey...>::r;
+    (void)AutoConfigVar<T, TKey...>::RegistryEntry;
 
-    if (config.m_hasValidator) {
-      if (!config.validatorInternal()(m_value)) {
+    if (RegistryEntry.m_hasValidator) {
+      if (!RegistryEntry.validatorInternal()(m_value)) {
         throw autowiring_error("Cannot construct AutoConfigVar with a value that fails validation");
       }
     }
@@ -41,7 +41,7 @@ public:
     m_value()
   {
     // Register with config registry
-    (void)RegConfig<T, TKey...>::r;
+    (void)AutoConfigVar<T, TKey...>::RegistryEntry;
     
     const auto ctxt = m_context.lock();
     if (!ctxt)
@@ -82,8 +82,7 @@ public:
   void Set(const void* pValue) override { *this = *reinterpret_cast<const T*>(pValue); }
 
   void SetParsed(const std::string& value) override { 
-    auto entry = RegConfig<T, TKey...>::r;
-    *this = entry.template parseInternal<T>(value);
+    *this = RegistryEntry.parseInternal<T>(value);
   }
 
   // Add a callback for when this config value changes
@@ -99,10 +98,8 @@ private:
   T m_value;
 
   void SetInternal(const T& val) {
-    auto config = RegConfig<T, TKey...>::r;
-
-    if (config.m_hasValidator) {
-      if (!config.validatorInternal()(val)) {
+    if (RegistryEntry.m_hasValidator) {
+      if (!RegistryEntry.validatorInternal()(val)) {
         throw autowiring_error("Validator rejected set for config value");
       }
     }
@@ -111,7 +108,21 @@ private:
     m_value = val;
     onChangedSignal(*this);
   }
+
+public:
+  static std::shared_ptr<AutoConfigVarBase> Inject(const std::shared_ptr<CoreContext>& ctxt, const void* value) {
+    if (!value)
+      return ctxt->Inject<AutoConfigVar<T, TKey...>>();
+    else
+      return ctxt->Inject<AutoConfigVar<T, TKey...>>(*reinterpret_cast<const T*>(value));
+  }
+
+  static const ConfigRegistryEntryT<T, TKey...> RegistryEntry;
 };
+
+template<class T, class... TKey>
+const ConfigRegistryEntryT<T, TKey...> AutoConfigVar<T, TKey...>::RegistryEntry(&AutoConfigVar<T, TKey...>::Inject);
+
 
 /// <summary>
 /// Register an attribute with the AutoConfig system. For example

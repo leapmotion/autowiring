@@ -8,6 +8,7 @@
 #include FUNCTIONAL_HEADER
 #include MEMORY_HEADER
 
+#include "AnySharedPointer.h"
 // Check if 'T' has a valid stream conversion operator
 template<typename T>
 struct has_stream {
@@ -36,7 +37,9 @@ struct get_last<T>{
 
 // Stores information about an AutoConfigVar type
 struct ConfigRegistryEntry {
-  ConfigRegistryEntry(const std::type_info& ti, bool has_validator);
+  typedef std::function<std::shared_ptr<AutoConfigVarBase>(const std::shared_ptr<CoreContext>&, const void*)> injector_t;
+  
+  ConfigRegistryEntry(const std::type_info& ti, bool has_validator, injector_t&& inject);
 
   // Next entry in the list:
   const ConfigRegistryEntry* const pFlink;
@@ -47,9 +50,9 @@ struct ConfigRegistryEntry {
   // True if a validator was provided
   const bool m_hasValidator;
   
-  // Is this key identify this entry?
-  bool is(const std::string& key) const;
-  
+  // Construct an instance of the AutoConfigVar with this key.
+  const injector_t m_injector;
+
   // Verify 'ti' is the same type as this entry's value
   virtual bool verifyType(const std::type_info& ti) const = 0;
   
@@ -77,8 +80,8 @@ struct ConfigRegistryEntryT:
   // The "key" proper, without the namespace
   typedef typename get_last<TKey...>::last t_key;
   
-  ConfigRegistryEntryT(void):
-    ConfigRegistryEntry(typeid(ConfigTypeExtractor<TKey...>), has_validate<t_key>::value)
+  ConfigRegistryEntryT(injector_t&& constructor) :
+    ConfigRegistryEntry(typeid(ConfigTypeExtractor<TKey...>), has_validate<t_key>::value, std::move(constructor))
   {}
   
   bool verifyType(const std::type_info& ti) const override {
@@ -112,7 +115,7 @@ public:
     throw autowiring_error("This type doesn't support stream conversions.  Define one if you want this to be parsable");
   };
 
-  std::function<bool(const T&)> validatorInternal(void) {
+  std::function<bool(const T&)> validatorInternal(void) const {
     return[](const T& ptr) {
       return CallValidate<T, t_key>::Call(ptr);
     };
@@ -128,19 +131,3 @@ public:
 extern const ConfigRegistryEntry* g_pFirstConfigEntry;
 extern size_t g_confgiEntryCount;
 
-/// <summary>
-/// Adds the specified type to the universal type registry
-/// </summary>
-/// <remarks>
-/// Any instance of this type registry parameterized on type T will be added to the
-/// global static type registry, and this registry is computed at link time.
-/// </remarks>
-template<class T, class... TKey>
-class RegConfig
-{
-public:
-  static const ConfigRegistryEntryT<T, TKey...> r;
-};
-
-template<class T, class... TKey>
-const ConfigRegistryEntryT<T, TKey...> RegConfig<T, TKey...>::r;

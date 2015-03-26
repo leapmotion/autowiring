@@ -8,17 +8,14 @@
 const ConfigRegistryEntry* g_pFirstConfigEntry = nullptr;
 size_t g_configEntryCount = 0;
 
-ConfigRegistryEntry::ConfigRegistryEntry(const std::type_info& tinfo, bool has_validator) :
+ConfigRegistryEntry::ConfigRegistryEntry(const std::type_info& tinfo, bool hasValidator, injector_t&& inject) :
   pFlink(g_pFirstConfigEntry),
   m_key(autowiring::ExtractKey(tinfo)),
-  m_hasValidator(has_validator)
+  m_hasValidator(hasValidator),
+  m_injector(std::move(inject))
 {
   g_configEntryCount++;
   g_pFirstConfigEntry = this;
-}
-
-bool ConfigRegistryEntry::is(const std::string& key) const {
-  return m_key == key;
 }
 
 void autowiring::ThrowFailedTypeParseException(const std::string& str, const std::type_info& ti) {

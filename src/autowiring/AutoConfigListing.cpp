@@ -81,7 +81,9 @@ bool AutoConfigListing::SetParsed(const std::string& key, const std::string& val
   if (!s_registry.count(key)) {
     return false;
   }
+
   auto parsedValue = s_registry.find(key)->second->parse(value);
+  
   SetInternal(key, &(*parsedValue));
   return true;
 }
@@ -107,10 +109,23 @@ void AutoConfigListing::AddCallback(t_add_callback&& fx) {
 }
 
 void AutoConfigListing::SetInternal(const std::string& key, const void* value) {
+  std::unique_lock<std::mutex> lk(m_lock);
   auto config = m_values[key].lock();
 
-  if (!config)
-    return;
+  if (!config) {
+    auto entry = s_registry.find(key);
+    if (entry == s_registry.end()) {
+      ThrowKeyNotFoundException(key);
+      return;
+    }
 
+    auto ctxt = m_context.lock();
+    lk.unlock();
+    config = entry->second->m_injector(ctxt, value);
+    lk.lock();
+    m_values[key] = config;
+  }
+
+  lk.unlock();
   config->Set(value);
 }
