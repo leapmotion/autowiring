@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "AnySharedPointer.h"
+#include "AutoConfigBase.h"
 #include "autowiring_error.h"
 #include "has_validate.h"
 #include <string>
@@ -34,7 +34,7 @@ struct get_last<T>{
   typedef T last;
 };
 
-// Stores information about an AutoConfig entry
+// Stores information about an AutoConfigVar type
 struct ConfigRegistryEntry {
   ConfigRegistryEntry(const std::type_info& ti, bool has_validator);
 
