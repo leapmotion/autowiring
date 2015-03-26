@@ -17,6 +17,7 @@ class AutoConfigVarBase : public ContextMember
 {
 public:
   AutoConfigVarBase(const std::type_info& tiName, bool configured = false);
+  void AutoInit();
 
   // Key used to identify this config value
   const std::string m_key;

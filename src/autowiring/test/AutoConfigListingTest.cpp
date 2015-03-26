@@ -21,7 +21,7 @@ TEST_F(AutoConfigListingTest, VerifySimpleAssignment) {
   AutoConfig<int, Namespace1, XYZ> cfg;
   ASSERT_EQ(323, *cfg) << "Configurable type did not receive a value as expected";
 }
-/*
+
 struct NamespaceRoot;
 struct NamespaceChild;
 
@@ -37,20 +37,9 @@ struct MyBoolClass {
   AutoConfig<bool, struct bool_space, struct my_bool> m_bool;
 };
 
-TEST_F(AutoConfigListingTest, VerifyBool) {
-  AutoRequired<AutoConfigListing> acm;
-  AutoRequired<MyBoolClass> clz1;
-  
-  acm->Set("bool_space.my_bool", true);
-  ASSERT_TRUE(*clz1->m_bool);
-  
-  acm->SetParsed("bool_space.my_bool", "false");
-  ASSERT_FALSE(*clz1->m_bool);
-}
-
 TEST_F(AutoConfigListingTest, VerifyPostHocAssignment) {
   // Inject the configurable type first
-  AutoRequired<MyConfigurableClass> mcc;
+  AutoConfig<int, Namespace1, XYZ> cfg;
 
   // Configuration manager must exist at this point as a consequence of the earlier construction
   Autowired<AutoConfigListing> acm;
@@ -59,9 +48,9 @@ TEST_F(AutoConfigListingTest, VerifyPostHocAssignment) {
   acm->Set("Namespace1.XYZ", 323);
 
   // Now inject the type which expects this value to be assigned:
-  ASSERT_EQ(323, *mcc->m_myName) << "Configurable type did not receive a value as expected";
+  ASSERT_EQ(323, *cfg) << "Configurable type did not receive a value as expected";
 }
-
+/*
 TEST_F(AutoConfigListingTest, VerifyRecursiveSearch) {
   AutoRequired<AutoConfigListing> acm;
   acm->Set("Namespace1.XYZ", 1001);

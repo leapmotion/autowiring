@@ -1,8 +1,9 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
-#include "AutoConfig.h"
+#include "AutoConfigBase.h"
 #include "AutoConfigListing.h"
-#include "AnySharedPointer.h"
+#include "AutoConfigParser.hpp"
+#include "demangle.h"
 #include <sstream>
 
 using namespace autowiring;
@@ -129,4 +130,9 @@ std::shared_ptr<AutoConfigVarBase> AutoConfigListing::GetOrConstruct(const std::
   
   m_values.emplace(key, newValue);
   return newValue;
+}
+
+void AutoConfigListing::NotifyConfigAdded(const std::shared_ptr<AutoConfigVarBase>& config){
+  std::lock_guard<std::mutex> lk(m_lock);
+  m_values.emplace(config->m_key, config);
 }
