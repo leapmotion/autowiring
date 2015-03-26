@@ -86,13 +86,13 @@ public:
   }
 
   // Add a callback for when this config value changes
-  t_OnChangedSignal::t_registration* operator+=(std::function<void(const T&)>&& fx) {
+  t_OnChangedSignal::registration_t* operator+=(std::function<void(const T&)>&& fx) {
     return onChangedSignal += [fx](const AutoConfigVarBase& var){
       fx(reinterpret_cast<const AutoConfigVar<T,TKey...>*>(&var)->m_value);
     };
   }
 
-  void operator-=(t_OnChangedSignal::t_registration* node) { onChangedSignal -= node; }
+  void operator-=(t_OnChangedSignal::registration_t* node) { onChangedSignal -= node; }
 
 private:
   T m_value;

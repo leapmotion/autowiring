@@ -93,7 +93,7 @@ void AutoConfigListing::AddOnChanged(const std::string& key, std::function<void(
   (*config).onChangedSignal += std::move(fx);
 }
 
-void AutoConfigListing::AddCallback(t_add_callback&& fx) {
+AutoConfigListing::onAddSignal_t::registration_t* AutoConfigListing::AddCallback(onAddSignal_t::function_t&& fx) {
   std::lock_guard<std::mutex> lk(m_lock);
 
   for (auto& key : m_orderedKeys) {
@@ -102,7 +102,7 @@ void AutoConfigListing::AddCallback(t_add_callback&& fx) {
       fx(*config);
   }
   
-  m_onAddedSignal += std::move(fx);
+  return m_onAddedSignal += std::move(fx);
 }
 
 void AutoConfigListing::SetInternal(const std::string& key, const void* value) {
