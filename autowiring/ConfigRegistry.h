@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "AnySharedPointer.h"
+#include "AutoConfigBase.h"
 #include "autowiring_error.h"
 #include "has_validate.h"
 #include <string>
@@ -8,6 +8,7 @@
 #include FUNCTIONAL_HEADER
 #include MEMORY_HEADER
 
+#include "AnySharedPointer.h"
 // Check if 'T' has a valid stream conversion operator
 template<typename T>
 struct has_stream {
@@ -34,9 +35,11 @@ struct get_last<T>{
   typedef T last;
 };
 
-// Stores information about an AutoConfig entry
+// Stores information about an AutoConfigVar type
 struct ConfigRegistryEntry {
-  ConfigRegistryEntry(const std::type_info& ti, bool has_validator);
+  typedef std::function<std::shared_ptr<AutoConfigVarBase>(const std::shared_ptr<CoreContext>&, const void*)> injector_t;
+  
+  ConfigRegistryEntry(const std::type_info& ti, bool has_validator, injector_t&& inject);
 
   // Next entry in the list:
   const ConfigRegistryEntry* const pFlink;
@@ -45,17 +48,17 @@ struct ConfigRegistryEntry {
   const std::string m_key;
   
   // True if a validator was provided
-  const bool m_has_validator;
+  const bool m_hasValidator;
   
-  // Is this key identify this entry?
-  bool is(const std::string& key) const;
-  
+  // Construct an instance of the AutoConfigVar with this key.
+  const injector_t m_injector;
+
   // Verify 'ti' is the same type as this entry's value
   virtual bool verifyType(const std::type_info& ti) const = 0;
   
-  // Parse a string into this entrie's value type.
+  // Parse a string into this entry's value type.
   // Type must have operator>> T defined
-  virtual AnySharedPointer parse(const std::string&) const = 0;
+  virtual void parse(AutoConfigVarBase&, const std::string&) const = 0;
   
   // Returns function which validates this input. The validator function is
   // defined as KEY::Validate(const T&) where KEY is the type identifing this entry
@@ -77,8 +80,8 @@ struct ConfigRegistryEntryT:
   // The "key" proper, without the namespace
   typedef typename get_last<TKey...>::last t_key;
   
-  ConfigRegistryEntryT(void):
-    ConfigRegistryEntry(typeid(ConfigTypeExtractor<TKey...>), has_validate<t_key>::value)
+  ConfigRegistryEntryT(injector_t&& constructor) :
+    ConfigRegistryEntry(typeid(ConfigTypeExtractor<TKey...>), has_validate<t_key>::value, std::move(constructor))
   {}
   
   bool verifyType(const std::type_info& ti) const override {
@@ -87,14 +90,14 @@ struct ConfigRegistryEntryT:
 
   // Parse string into this ConfigEntry's type. Throw an exception
   // if no such stream operator exists
-  AnySharedPointer parse(const std::string& str) const override {
-    return parseInternal<T>(str);
+  void parse(AutoConfigVarBase& var, const std::string& str) const override {
+    var.SetParsed(str);
   }
   
 public:
   // Only use if there is a stream operator
   template<typename U>
-  typename std::enable_if<has_stream<U>::value, AnySharedPointer>::type
+  typename std::enable_if<has_stream<U>::value, T>::type
   parseInternal(const std::string& str) const {
     std::istringstream ss(str);
     T val;
@@ -102,15 +105,21 @@ public:
     
     if (ss.fail())
       autowiring::ThrowFailedTypeParseException(str, typeid(T));
-    return AnySharedPointer(std::make_shared<T>(val));
+    return val;
   }
 
   // Throw exception if there is no stream operator
   template<typename U>
-  typename std::enable_if<!has_stream<U>::value, AnySharedPointer>::type
+  typename std::enable_if<!has_stream<U>::value, T>::type
   parseInternal(const std::string&) const {
     throw autowiring_error("This type doesn't support stream conversions.  Define one if you want this to be parsable");
   };
+
+  std::function<bool(const T&)> validatorInternal(void) const {
+    return[](const T& ptr) {
+      return CallValidate<T, t_key>::Call(ptr);
+    };
+  }
 
   std::function<bool(const AnySharedPointer&)> validator(void) const override {
     return [] (const AnySharedPointer& ptr) {
@@ -122,19 +131,3 @@ public:
 extern const ConfigRegistryEntry* g_pFirstConfigEntry;
 extern size_t g_confgiEntryCount;
 
-/// <summary>
-/// Adds the specified type to the universal type registry
-/// </summary>
-/// <remarks>
-/// Any instance of this type registry parameterized on type T will be added to the
-/// global static type registry, and this registry is computed at link time.
-/// </remarks>
-template<class T, class... TKey>
-class RegConfig
-{
-public:
-  static const ConfigRegistryEntryT<T, TKey...> r;
-};
-
-template<class T, class... TKey>
-const ConfigRegistryEntryT<T, TKey...> RegConfig<T, TKey...>::r;

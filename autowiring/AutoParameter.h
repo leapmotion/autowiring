@@ -7,7 +7,7 @@
 struct AutoParam{};
 
 /// <summary>
-/// Register an AutoParameter with "AutoParam" namespace in AutoConfigManager.
+/// Register an AutoParameter with "AutoParam" namespace in AutoConfigListing.
 /// In addition to being the lookup string, the Key also implements:
 ///   - static constexpr T Default()
 ///   - (optional) static bool Validate(const T&)
@@ -66,7 +66,7 @@ protected:
 /// Base class for providing an easy way to specify just a default value
 /// </summary>
 /// <remarks>
-/// Because the class names are used as keys to be stored in the AutoConfigManager, these classes cannot be used
+/// Because the class names are used as keys to be stored in the AutoConfigListing, these classes cannot be used
 /// directly and must be subclassed:
 ///
 ///   struct MyDefaultKey : DefaultKey<int, 15> {};
@@ -88,7 +88,7 @@ protected:
 /// Base class for providing an easy way to default, min and max values
 /// </summary>
 /// <remarks>
-/// Because the class names are used as keys to be stored in the AutoConfigManager, these classes cannot be used
+/// Because the class names are used as keys to be stored in the AutoConfigListing, these classes cannot be used
 /// directly and must be subclassed:
 ///
 ///   struct MyDefaultMinMaxKey : DefaultMinMaxKey<int, 15, 10, 20> {};
