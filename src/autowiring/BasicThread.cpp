@@ -17,7 +17,9 @@ BasicThread::BasicThread(const char* pName):
   m_priority(ThreadPriority::Default)
 {}
 
-BasicThread::~BasicThread(void){}
+BasicThread::~BasicThread(void) {
+  NotifyTeardownListeners();
+}
 
 std::mutex& BasicThread::GetLock(void) {
   return m_state->m_lock;
@@ -64,12 +66,12 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   // need to hold a reference to.
   auto state = m_state;
 
-  // Perform a manual notification of teardown listeners
-  NotifyTeardownListeners();
-
   // Transition to stopped state.  Synchronization not required, transitions are all one-way
   m_stop = true;
   m_running = false;
+
+  // Perform a manual notification of teardown listeners
+  NotifyTeardownListeners();
 
   // Tell our CoreRunnable parent that we're done to ensure that our reference count will be cleared.
   Stop(false);
