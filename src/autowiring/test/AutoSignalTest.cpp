@@ -122,3 +122,23 @@ TEST_F(AutoSignalTest, RaiseASignalWithinASlotTest) {
   ASSERT_TRUE(handler_called1) << "Handler 1 was not called on a stack-allocated signal";
   ASSERT_TRUE(handler_called2) << "Handler 2 was not called on a stack-allocated signal";
 }
+
+TEST_F(AutoSignalTest, NodeRemoval) {
+  autowiring::signal<void(void)> signal1;
+  autowiring::signal<void(void)> signal2;
+
+  bool handler_called1 = false;
+  bool handler_called2 = false;
+
+  auto* registration1 = signal1 += [&] { handler_called1 = true; };
+  auto* registration2 = signal2 += [&] { handler_called2 = true; };
+  
+  ASSERT_ANY_THROW(signal1 -= registration2) << "Removing a registration from a different signal than it was registered to failed to throw an exception";
+
+  registration1->remove();
+  signal1();
+  signal2();
+  
+  ASSERT_FALSE(handler_called1) << "Handler1 was called after being unregistered";
+  ASSERT_TRUE(handler_called2) << "Handler2 was removed after an invalid -= operation";
+}
