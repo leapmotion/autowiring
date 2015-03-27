@@ -116,4 +116,5 @@ private:
 
   friend class AutoConfigVarBase;
   void NotifyConfigAdded(const std::shared_ptr<AutoConfigVarBase>& cfg);
+  void NotifySetLocally(const std::shared_ptr<AutoConfigVarBase>& cfg);
 };

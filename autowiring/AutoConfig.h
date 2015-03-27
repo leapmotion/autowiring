@@ -52,12 +52,15 @@ public:
     if (parent != nullptr) {
       auto parentVar = parent->template Inject<AutoConfigVar<T, TKey...>>();
 
-      //Only copy the value if it's initalized
+      //Only copy the value if it's initalized. Base::AutoInit will take care of
+      //the various listing notifications.
       if (parentVar->IsConfigured()) {
-        SetInternal(parentVar->m_value);
+        m_isConfigured = true;
+        m_value = parentVar->m_value;
       }
 
       m_parentRegistration = *parentVar += [this](const T& val){
+        RunValidation(val);
         SetInternal(val);
       };
     }
@@ -69,13 +72,17 @@ public:
   const T* operator->() const { return &m_value; }
 
   void operator=(const T& newValue) {
-    SetInternal(newValue);
+    RunValidation(newValue);
+
     if (m_parentRegistration) {
       auto parent_ctxt = m_context.lock()->GetParentContext();
       AutowiredFast<AutoConfigVar<T, TKey...>> parentVar(parent_ctxt);
       *parentVar -= m_parentRegistration;
       m_parentRegistration = nullptr;
+      OnSetLocally();
     }
+
+    SetInternal(newValue);
   }
 
   void Get(void* pValue) const override { *reinterpret_cast<T*>(pValue) = m_value; }
@@ -97,13 +104,15 @@ public:
 private:
   T m_value;
 
-  void SetInternal(const T& val) {
+  void RunValidation(const T& val) {
     if (RegistryEntry.m_hasValidator) {
       if (!RegistryEntry.validatorInternal()(val)) {
         throw autowiring_error("Validator rejected set for config value");
       }
     }
+  }
 
+  void SetInternal(const T& val) {
     m_isConfigured = true;
     m_value = val;
     onChangedSignal(*this);
@@ -149,11 +158,20 @@ public:
   {
   }
 
+  AutoConfig(T&& initialValue, const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
+    AutoRequired<t_Var>(ctxt, std::move(initialValue))
+  {
+    if (!(*this)->IsLocal()) {
+      **this = std::move(initialValue);
+    }
+  }
+
   template<typename t_Arg, typename ...t_Args>
-  AutoConfig(t_Arg&& arg, t_Args&&... args) :
+  explicit AutoConfig(t_Arg&& arg, t_Args&&... args) :
     AutoRequired<t_Var>(CoreContext::CurrentContext(), std::forward<t_Arg>(arg), std::forward<t_Args>(args)...)
   {
-    if (!(*this)->IsConfigured() || (*this)->IsInherited()) {
+    //If we wind up being a reference to an existing value, we may still want to set it...
+    if (!(*this)->IsLocal()) {
       **this = T(std::forward<t_Arg>(arg), std::forward<t_Args>(args)...);
     }
   }

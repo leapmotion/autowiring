@@ -18,5 +18,15 @@ AutoConfigVarBase::AutoConfigVarBase(const std::type_info& ti, bool configured) 
 void AutoConfigVarBase::AutoInit() {
   auto ctxt = m_context.lock();
   auto listing = ctxt->Inject<AutoConfigListing>();
-  listing->NotifyConfigAdded(GetSelf<AutoConfigVarBase>());
+  auto self = GetSelf<AutoConfigVarBase>();
+
+  listing->NotifyConfigAdded(self);
+  if (!IsInherited())
+    listing->NotifySetLocally(self);
+}
+
+void AutoConfigVarBase::OnSetLocally() {
+  auto ctxt = m_context.lock();
+  auto listing = ctxt->Inject<AutoConfigListing>(); //get or set
+  listing->NotifySetLocally(GetSelf<AutoConfigVarBase>());
 }

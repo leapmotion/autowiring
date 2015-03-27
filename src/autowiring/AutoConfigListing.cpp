@@ -128,11 +128,18 @@ std::shared_ptr<AutoConfigVarBase> AutoConfigListing::GetOrConstruct(const std::
   auto newValue = entry->second->m_injector(ctxt, value);
   lk.lock();
   
-  m_values.emplace(key, newValue);
   return newValue;
 }
 
 void AutoConfigListing::NotifyConfigAdded(const std::shared_ptr<AutoConfigVarBase>& config){
   std::lock_guard<std::mutex> lk(m_lock);
   m_values.emplace(config->m_key, config);
+}
+
+void AutoConfigListing::NotifySetLocally(const std::shared_ptr<AutoConfigVarBase>& config) {
+  {
+    std::lock_guard<std::mutex> lk(m_lock);
+    m_orderedKeys.push_back(config->m_key);
+  }
+  m_onAddedSignal(*config);
 }
