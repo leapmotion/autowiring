@@ -32,6 +32,21 @@ namespace autowiring {
       // Forward and backward linkages:
       signal_node_base* pFlink;
       signal_node_base* pBlink;
+      
+      void remove(){
+        // Clear linkage
+        if (this->pBlink)
+          this->pBlink->pFlink = this->pFlink;
+        if (this->pFlink)
+          this->pFlink->pBlink = this->pBlink;
+
+        // If we're the head pointer, throw an exception
+        if (!this->pBlink)
+          throw std::runtime_error("Cannot remove the head of the list");
+
+        // Fully unlinked, delete
+        delete this;
+      }
     };
 
     // Holds a reference to one of the signal holders
@@ -46,6 +61,8 @@ namespace autowiring {
       {}
 
       const std::function<void(Args...)> fn;
+
+      using signal_node_base::remove;
     };
 
 
@@ -117,40 +134,34 @@ namespace autowiring {
   /// <summary>
   /// Stores a signal 
   /// </summary>
-  struct signal_relay
+  /// <remarks>
+  /// This is functionally a sentinal head of the linked list.
+  /// </remarks>
+  struct signal_relay :
+    internal::signal_node_base
   {
-  public:
-    signal_relay(void) :
-      pHead(nullptr)
-    {}
+    signal_relay(void) {}
 
     ~signal_relay(void) {
       // Standard linked list cleaup
       internal::signal_node_base* next = nullptr;
-      for (auto cur = pHead; cur; cur = next) {
+      for (auto cur = pFlink; cur; cur = next) {
         next = cur->pFlink;
         delete cur;
       }
     }
 
-  protected:
-    // First entry on the list:
-    internal::signal_node_base* pHead;
+    /// <summary>
+    /// Searches the list for this node and removes it, or throws if it is not found.
+    /// </summary>
+    void operator-=(signal_node_base* node) {
+      signal_node_base* cur;
+      for (cur = pFlink; cur != nullptr; cur = cur->pFlink) {
+        if (cur == node)
+          return node->remove();
+      }
 
-  public:
-    void operator-=(internal::signal_node_base* rhs) {
-      // Clear linkage
-      if (rhs->pBlink)
-        rhs->pBlink->pFlink = rhs->pFlink;
-      if (rhs->pFlink)
-        rhs->pFlink->pBlink = rhs->pBlink;
-
-      // If we're the head pointer then unlink
-      if (rhs == pHead)
-        pHead = rhs->pFlink;
-
-      // Fully unlinked, delete
-      delete rhs;
+      throw std::runtime_error("Attempted to remove node which is not part of this list.");
     }
   };
 
@@ -162,19 +173,19 @@ namespace autowiring {
     signal_relay
   {
     internal::signal_node<Args...>* GetHead(void) const {
-      return static_cast<internal::signal_node<Args...>*>(pHead);
+      return static_cast<internal::signal_node<Args...>*>(pFlink);
     }
 
     /// <summary>
     /// Attaches the specified handler to this signal
     /// </summary>
     internal::signal_node<Args...>* operator+=(std::function<void(Args...)>&& fn) {
-      // Standard singly linked list insert:
       auto retVal = new internal::signal_node<Args...>(std::move(fn));
-      retVal->pFlink = pHead;
-      if (pHead)
-        pHead->pBlink = retVal;
-      pHead = retVal;
+      retVal->pBlink = this;
+      retVal->pFlink = pFlink;
+      if (pFlink)
+        pFlink->pBlink = retVal;
+      pFlink = retVal;
       return retVal;
     }
   };
