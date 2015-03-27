@@ -3,6 +3,7 @@ var searchData=
   ['recorddelivery',['RecordDelivery',['../class_auto_packet_graph.html#a9aed0a133c33072bc604d3992a642e6a',1,'AutoPacketGraph']]],
   ['recordpacketduration',['RecordPacketDuration',['../class_auto_packet_factory.html#ad98c3ea149c6c3edf0d2d647012d884f',1,'AutoPacketFactory']]],
   ['registerfactoryfn',['RegisterFactoryFn',['../class_core_context.html#a543d73b7ea7d1a457eb61dc73758a797',1,'CoreContext']]],
+  ['relayfortype',['RelayForType',['../class_core_context.html#a2675f3769d6a151972dec3743b196682',1,'CoreContext']]],
   ['release',['Release',['../class_global_core_context.html#adcaca1bd731c8a6e3200e2b451e794f3',1,'GlobalCoreContext']]],
   ['removecontext',['RemoveContext',['../class_context_creator.html#a7b1fb8f9815cb1f053460fd2e9cfbc16',1,'ContextCreator::RemoveContext(const Key &amp;key)'],['../class_context_creator.html#ae18fee825e9161ca9dd500706f6f1f6e',1,'ContextCreator::RemoveContext(typename t_mpType::iterator q)']]],
   ['removerecipient',['RemoveRecipient',['../class_auto_packet.html#aa302c91a39594f5ea0f58094ce4fea3a',1,'AutoPacket']]],

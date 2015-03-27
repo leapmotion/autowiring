@@ -1,5 +1,6 @@
 var class_core_context =
 [
+    [ "Add", "class_core_context.html#a274e47cff1ae841fe66e03a186d8eede", null ],
     [ "AddTeardownListener", "class_core_context.html#a7447775cbe9d10c8018c0b7344a1fdc2", null ],
     [ "Autowire", "class_core_context.html#ada59ec3baf8cb335d6e0792dd1473705", null ],
     [ "BoltTo", "class_core_context.html#a81cde2e3e4031ac1bc1c9e761f8eff11", null ],
@@ -14,7 +15,7 @@ var class_core_context =
     [ "EvictCurrent", "class_core_context.html#aac1878fadff510297d81f6beb32b38ef", null ],
     [ "FilterException", "class_core_context.html#a5b5b71f520358864f1cf52eb108aceb3", null ],
     [ "FilterFiringException", "class_core_context.html#a14de7efacd23075c69ea134a7a45f4a8", null ],
-    [ "FindByType", "class_core_context.html#ad49a3f07a2ab270baa6cec93707127bc", null ],
+    [ "FindByType", "class_core_context.html#af83ce7cc526af425b14a87c02070b868", null ],
     [ "FindByTypeRecursive", "class_core_context.html#a01014fe31d9a6a10cc7357a5924a6460", null ],
     [ "FindByTypeRecursive", "class_core_context.html#a6936a4534f8d5b7c959bfed783c0eed5", null ],
     [ "FirstChild", "class_core_context.html#aac5cef7deb0bf47f0c6d51ee015f6750", null ],
@@ -39,6 +40,7 @@ var class_core_context =
     [ "IsShutdown", "class_core_context.html#a6b08c5f0dead4908659cf87c6eb77abb", null ],
     [ "NextSibling", "class_core_context.html#ad571b7a096111d87c37e826546f875ea", null ],
     [ "RegisterFactoryFn", "class_core_context.html#a543d73b7ea7d1a457eb61dc73758a797", null ],
+    [ "RelayForType", "class_core_context.html#a2675f3769d6a151972dec3743b196682", null ],
     [ "SetCurrent", "class_core_context.html#ad306c1c3703311ba1fe7fdb4add279f9", null ],
     [ "SignalShutdown", "class_core_context.html#a8e0ff07669244590fcdcec9aeb588aa5", null ],
     [ "SignalTerminate", "class_core_context.html#a107256cd9f29a43301afca98cd7309a5", null ],

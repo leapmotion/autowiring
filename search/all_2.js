@@ -8,7 +8,7 @@ var searchData=
   ['contextcreator_3c_20sigil_2c_20void_20_3e',['ContextCreator&lt; Sigil, void &gt;',['../class_context_creator_3_01_sigil_00_01void_01_4.html',1,'']]],
   ['contextcreatorbase',['ContextCreatorBase',['../class_context_creator_base.html',1,'']]],
   ['contextcreatorbase_2eh',['ContextCreatorBase.h',['../_context_creator_base_8h.html',1,'']]],
-  ['contextenumerator',['ContextEnumerator',['../class_context_enumerator.html',1,'ContextEnumerator'],['../class_context_enumerator.html#afcf8c137b219c0741bf61cddf6a57d09',1,'ContextEnumerator::ContextEnumerator()']]],
+  ['contextenumerator',['ContextEnumerator',['../class_context_enumerator.html',1,'ContextEnumerator'],['../class_context_enumerator.html#a8b6236af393465180931ecab653eed7f',1,'ContextEnumerator::ContextEnumerator(void)'],['../class_context_enumerator.html#afcf8c137b219c0741bf61cddf6a57d09',1,'ContextEnumerator::ContextEnumerator(const std::shared_ptr&lt; CoreContext &gt; &amp;root)']]],
   ['contextenumerator_2eh',['ContextEnumerator.h',['../_context_enumerator_8h.html',1,'']]],
   ['contextenumeratort',['ContextEnumeratorT',['../class_context_enumerator_t.html',1,'']]],
   ['contextmember',['ContextMember',['../class_context_member.html',1,'']]],

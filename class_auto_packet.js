@@ -34,6 +34,7 @@ var class_auto_packet =
     [ "RemoveRecipient", "class_auto_packet.html#aa302c91a39594f5ea0f58094ce4fea3a", null ],
     [ "Successor", "class_auto_packet.html#a99e7dd1ee400c313c05d56d7642a0c87", null ],
     [ "SuccessorUnsafe", "class_auto_packet.html#af7d82f8536c4a1b847a5ba0efb9b99d6", null ],
+    [ "ThrowMultiplyDecoratedException", "class_auto_packet.html#a876a04e499194ec2c8960ee9aa655b0b", null ],
     [ "ThrowNotDecoratedException", "class_auto_packet.html#ad77d4e6ff2c9fe5fb19dcd43c91fbc57", null ],
     [ "UnsafeComplete", "class_auto_packet.html#a0dbabcc26a87524dbd833390d6dff5f3", null ],
     [ "Unsatisfiable", "class_auto_packet.html#a2b9788e64105fee4f967e53871c4d93b", null ],

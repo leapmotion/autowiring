@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.4.4</span>
+   &#160;<span id="projectnumber">0.5.1</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -287,6 +287,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-static-methods"></a>
 Static Protected Member Functions</h2></td></tr>
+<tr class="memitem:a876a04e499194ec2c8960ee9aa655b0b"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a876a04e499194ec2c8960ee9aa655b0b">ThrowMultiplyDecoratedException</a> (const DecorationKey &amp;key)</td></tr>
+<tr class="memdesc:a876a04e499194ec2c8960ee9aa655b0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Throws a formatted runtime error corresponding to the case where a decoration was demanded and more than one such decoration was present  <a href="#a876a04e499194ec2c8960ee9aa655b0b">More...</a><br /></td></tr>
+<tr class="separator:a876a04e499194ec2c8960ee9aa655b0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad77d4e6ff2c9fe5fb19dcd43c91fbc57"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#ad77d4e6ff2c9fe5fb19dcd43c91fbc57">ThrowNotDecoratedException</a> (const DecorationKey &amp;key)</td></tr>
 <tr class="memdesc:ad77d4e6ff2c9fe5fb19dcd43c91fbc57"><td class="mdescLeft">&#160;</td><td class="mdescRight">Throws a formatted runtime error corresponding to the case where an absent decoration was demanded  <a href="#ad77d4e6ff2c9fe5fb19dcd43c91fbc57">More...</a><br /></td></tr>
 <tr class="separator:ad77d4e6ff2c9fe5fb19dcd43c91fbc57"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -313,7 +316,7 @@ Static Protected Member Functions</h2></td></tr>
 <p>Adds a recipient for data associated only with this issuance of the packet. </p>
 <p>This method is not idempotent. The returned Recipient structure may be used to remove the recipient safely at any point. The caller MUST NOT attempt </p>
 
-<p>Referenced by <a class="el" href="class_auto_packet.html#ac016b40fd64cf3e9df03627de240448a">DecorateImmediate()</a>, and <a class="el" href="class_auto_packet.html#a3fa96738dac77521d123698ad3f80a35">operator+=()</a>.</p>
+<p>Referenced by <a class="el" href="class_auto_packet.html#a3fa96738dac77521d123698ad3f80a35">operator+=()</a>.</p>
 
 </div>
 </div>
@@ -713,7 +716,8 @@ template&lt;class T &gt; </div>
   </table>
   </dd>
 </dl>
-<p>This specialization cannot be used to obtain a decoration which has been attached to this packet via DecorateImmediate. </p>
+<p>This specialization cannot be used to obtain a decoration which has been attached to this packet via DecorateImmediate.</p>
+<p>This method will throw an exception if the requested decoration is multiply present on the packet </p>
 
 </div>
 </div>
@@ -1118,8 +1122,6 @@ template&lt;class Fx &gt; </div>
 
 <p>Removes a previously added packet recipient </p>
 
-<p>Referenced by <a class="el" href="class_auto_packet.html#ac016b40fd64cf3e9df03627de240448a">DecorateImmediate()</a>.</p>
-
 </div>
 </div>
 <a class="anchor" id="a99e7dd1ee400c313c05d56d7642a0c87"></a>
@@ -1163,6 +1165,34 @@ template&lt;class Fx &gt; </div>
 </div><div class="memdoc">
 
 <p>The portion of Successor that must run under a lock </p>
+
+</div>
+</div>
+<a class="anchor" id="a876a04e499194ec2c8960ee9aa655b0b"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static void AutoPacket::ThrowMultiplyDecoratedException </td>
+          <td>(</td>
+          <td class="paramtype">const DecorationKey &amp;&#160;</td>
+          <td class="paramname"><em>key</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Throws a formatted runtime error corresponding to the case where a decoration was demanded and more than one such decoration was present </p>
+
+<p>Referenced by <a class="el" href="class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b">Get()</a>.</p>
 
 </div>
 </div>
@@ -1464,7 +1494,7 @@ template&lt;class... Args&gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_auto_packet.html">AutoPacket</a></li>
-    <li class="footer">Generated on Thu Mar 5 2015 14:13:17 for Autowiring by
+    <li class="footer">Generated on Thu Mar 26 2015 17:32:37 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

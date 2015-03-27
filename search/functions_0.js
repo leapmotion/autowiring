@@ -1,6 +1,7 @@
 var searchData=
 [
   ['abort',['Abort',['../class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016',1,'DispatchQueue']]],
+  ['add',['Add',['../class_core_context.html#a274e47cff1ae841fe66e03a186d8eede',1,'CoreContext']]],
   ['addexisting',['AddExisting',['../class_dispatch_queue.html#a1121ea959ace80dfcee8a26b44a2d376',1,'DispatchQueue']]],
   ['addrecipient',['AddRecipient',['../class_auto_packet.html#a125a001b0cfb8f5bfca5cac6b291e2a9',1,'AutoPacket']]],
   ['addsatcounter',['AddSatCounter',['../class_auto_packet.html#ae0f3ad679665c5013e8e9daa85909ab4',1,'AutoPacket']]],

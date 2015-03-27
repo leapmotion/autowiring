@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.4.4</span>
+   &#160;<span id="projectnumber">0.5.1</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -135,6 +135,10 @@ Inheritance diagram for CoreContext:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a274e47cff1ae841fe66e03a186d8eede"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
+<tr class="memitem:a274e47cff1ae841fe66e03a186d8eede"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a274e47cff1ae841fe66e03a186d8eede">Add</a> (const std::shared_ptr&lt; T &gt; &amp;ptr)</td></tr>
+<tr class="memdesc:a274e47cff1ae841fe66e03a186d8eede"><td class="mdescLeft">&#160;</td><td class="mdescRight">Introduces the specified pointer to this context explicitly  <a href="#a274e47cff1ae841fe66e03a186d8eede">More...</a><br /></td></tr>
+<tr class="separator:a274e47cff1ae841fe66e03a186d8eede"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7447775cbe9d10c8018c0b7344a1fdc2"><td class="memTemplParams" colspan="2">template&lt;class Fx &gt; </td></tr>
 <tr class="memitem:a7447775cbe9d10c8018c0b7344a1fdc2"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a7447775cbe9d10c8018c0b7344a1fdc2">AddTeardownListener</a> (Fx &amp;&amp;fx)</td></tr>
 <tr class="memdesc:a7447775cbe9d10c8018c0b7344a1fdc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a teardown notifier which receives a pointer to this context on destruction  <a href="#a7447775cbe9d10c8018c0b7344a1fdc2">More...</a><br /></td></tr>
@@ -177,10 +181,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a14de7efacd23075c69ea134a7a45f4a8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a14de7efacd23075c69ea134a7a45f4a8">FilterFiringException</a> (const JunctionBoxBase *pProxy, CoreObject *pRecipient)</td></tr>
 <tr class="memdesc:a14de7efacd23075c69ea134a7a45f4a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Filters a std::current_exception thrown by an EventSenderBase during a Fire  <a href="#a14de7efacd23075c69ea134a7a45f4a8">More...</a><br /></td></tr>
 <tr class="separator:a14de7efacd23075c69ea134a7a45f4a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad49a3f07a2ab270baa6cec93707127bc"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:ad49a3f07a2ab270baa6cec93707127bc"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#ad49a3f07a2ab270baa6cec93707127bc">FindByType</a> (std::shared_ptr&lt; T &gt; &amp;slot) const </td></tr>
-<tr class="memdesc:ad49a3f07a2ab270baa6cec93707127bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove EventReceiver from parents unless its a member of the parent  <a href="#ad49a3f07a2ab270baa6cec93707127bc">More...</a><br /></td></tr>
-<tr class="separator:ad49a3f07a2ab270baa6cec93707127bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af83ce7cc526af425b14a87c02070b868"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr class="memitem:af83ce7cc526af425b14a87c02070b868"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#af83ce7cc526af425b14a87c02070b868">FindByType</a> (std::shared_ptr&lt; T &gt; &amp;slot, bool localOnly=false) const </td></tr>
+<tr class="memdesc:af83ce7cc526af425b14a87c02070b868"><td class="mdescLeft">&#160;</td><td class="mdescRight">Remove EventReceiver from parents unless its a member of the parent  <a href="#af83ce7cc526af425b14a87c02070b868">More...</a><br /></td></tr>
+<tr class="separator:af83ce7cc526af425b14a87c02070b868"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01014fe31d9a6a10cc7357a5924a6460"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:a01014fe31d9a6a10cc7357a5924a6460"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a01014fe31d9a6a10cc7357a5924a6460">FindByTypeRecursive</a> (std::shared_ptr&lt; T &gt; &amp;ptr) const </td></tr>
 <tr class="memdesc:a01014fe31d9a6a10cc7357a5924a6460"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identical to Autowire, but will not register the passed slot for deferred resolution  <a href="#a01014fe31d9a6a10cc7357a5924a6460">More...</a><br /></td></tr>
@@ -259,6 +263,12 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:ad571b7a096111d87c37e826546f875ea"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ad571b7a096111d87c37e826546f875ea">NextSibling</a> (void) const </td></tr>
 <tr class="memdesc:ad571b7a096111d87c37e826546f875ea"><td class="mdescLeft">&#160;</td><td class="mdescRight">The next context sharing the same parent, or null if this is the last entry in the list  <a href="#ad571b7a096111d87c37e826546f875ea">More...</a><br /></td></tr>
 <tr class="separator:ad571b7a096111d87c37e826546f875ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2675f3769d6a151972dec3743b196682"><td class="memTemplParams" colspan="2"><a class="anchor" id="a2675f3769d6a151972dec3743b196682"></a>
+template&lt;typename T , typename... Args&gt; </td></tr>
+<tr class="memitem:a2675f3769d6a151972dec3743b196682"><td class="memTemplItemLeft" align="right" valign="top">autowiring::signal_relay_t&lt; Args...&gt; &amp;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a2675f3769d6a151972dec3743b196682">RelayForType</a> (autowiring::signal&lt; void(Args...)&gt; T::*handler)</td></tr>
+<tr class="memdesc:a2675f3769d6a151972dec3743b196682"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>A slots-and-signals type relay for a specific type </dd></dl>
+<br /></td></tr>
+<tr class="separator:a2675f3769d6a151972dec3743b196682"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad306c1c3703311ba1fe7fdb4add279f9"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ad306c1c3703311ba1fe7fdb4add279f9">SetCurrent</a> (void)</td></tr>
 <tr class="memdesc:ad306c1c3703311ba1fe7fdb4add279f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Makes this context the current context.  <a href="#ad306c1c3703311ba1fe7fdb4add279f9">More...</a><br /></td></tr>
 <tr class="separator:ad306c1c3703311ba1fe7fdb4add279f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -365,6 +375,42 @@ Protected Member Functions</h2></td></tr>
 </div><!-- fragment --><p><a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> members of a context can pass information using <a class="el" href="class_auto_fired.html" title="Injects an object that can fire events. ">AutoFired</a> events, as well as with a filter graph. You can also pass data from one context to another in the same way. A context can also snoop on another context's events and filter graph packets to receive data it wouldn't otherwise have access to. Use <a class="el" href="class_bolt.html">Bolt</a> objects to receive notification when a context of a particular sigil type is created. This allows you to set up snooping whenever a particular type of context is created.</p>
 <p>Events, threads, and filter graphs require that the context's <a class="el" href="class_core_context.html#aec4c58c375caaeb70d20807cd4029657" title="Starts all registered threads and enables events and the flow of filter graph packets. ">Initiate()</a> function is called. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a274e47cff1ae841fe66e03a186d8eede"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void CoreContext::Add </td>
+          <td>(</td>
+          <td class="paramtype">const std::shared_ptr&lt; T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>ptr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Introduces the specified pointer to this context explicitly </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ptr</td><td>The interface to make available in this context</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Add is similar in behavior to Inject, except that the passed pointer is not treated as a concrete type. This means that other interfaces implemented by ptr will not be available for autowiring unless explicitly made discoverable by another call to Add.</p>
+<p>It is an error to add a type which is already autowirable in a context. </p>
+
+</div>
+</div>
 <a class="anchor" id="a7447775cbe9d10c8018c0b7344a1fdc2"></a>
 <div class="memitem">
 <div class="memproto">
@@ -741,7 +787,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ad49a3f07a2ab270baa6cec93707127bc"></a>
+<a class="anchor" id="af83ce7cc526af425b14a87c02070b868"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -754,8 +800,18 @@ template&lt;class T &gt; </div>
           <td class="memname">void CoreContext::FindByType </td>
           <td>(</td>
           <td class="paramtype">std::shared_ptr&lt; T &gt; &amp;&#160;</td>
-          <td class="paramname"><em>slot</em></td><td>)</td>
-          <td> const</td>
+          <td class="paramname"><em>slot</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>localOnly</em> = <code>false</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const</td>
         </tr>
       </table>
   </td>
@@ -1497,7 +1553,7 @@ template&lt;class T &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_core_context.html">CoreContext</a></li>
-    <li class="footer">Generated on Thu Mar 5 2015 14:13:17 for Autowiring by
+    <li class="footer">Generated on Thu Mar 26 2015 17:32:37 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

@@ -3,7 +3,7 @@ var searchData=
   ['cancelautowiringnotification',['CancelAutowiringNotification',['../class_core_context.html#ae784ab63f9d15a717cdcb3a4a22466c2',1,'CoreContext']]],
   ['clear',['Clear',['../class_auto_packet_factory.html#a7f6df86d37b611fd7da03b5d89088d4e',1,'AutoPacketFactory::Clear()'],['../class_context_creator.html#ac49c180a55cf83fa9f56ed1dcb7277a9',1,'ContextCreator::Clear()'],['../class_context_creator_3_01_sigil_00_01void_01_4.html#ac9f9b4a38da139e3bc477046c3b2c7e1',1,'ContextCreator&lt; Sigil, void &gt;::Clear()'],['../class_context_creator_base.html#a1632dc481be42e270970158be27c65a3',1,'ContextCreatorBase::Clear()']]],
   ['contextcreated',['ContextCreated',['../class_bolt_base.html#a549b755a9a153a2ae7c7108e84fea519',1,'BoltBase::ContextCreated()'],['../struct_micro_bolt.html#a15a835b332824ac3f2d765aefdc68c83',1,'MicroBolt::ContextCreated()']]],
-  ['contextenumerator',['ContextEnumerator',['../class_context_enumerator.html#afcf8c137b219c0741bf61cddf6a57d09',1,'ContextEnumerator']]],
+  ['contextenumerator',['ContextEnumerator',['../class_context_enumerator.html#a8b6236af393465180931ecab653eed7f',1,'ContextEnumerator::ContextEnumerator(void)'],['../class_context_enumerator.html#afcf8c137b219c0741bf61cddf6a57d09',1,'ContextEnumerator::ContextEnumerator(const std::shared_ptr&lt; CoreContext &gt; &amp;root)']]],
   ['copybasicthreadlist',['CopyBasicThreadList',['../class_core_context.html#a248d2983aeb495dfa013024d10fbfc16',1,'CoreContext']]],
   ['corethread',['CoreThread',['../class_core_thread.html#a710618147be29bbee10455141ac9f713',1,'CoreThread']]],
   ['create',['Create',['../class_core_context.html#a58e6c77193e81a7e83474afb58630c33',1,'CoreContext']]],
