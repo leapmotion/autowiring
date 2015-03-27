@@ -22,8 +22,11 @@ public:
   // Key used to identify this config value
   const std::string m_key;
 
+  // True if this config was set at all
   bool IsConfigured() const { return m_isConfigured; }
   bool IsInherited() const { return m_parentRegistration != nullptr; }
+  //True if the config was set from within this context (isn't inherited)
+  bool IsLocal() const { return IsConfigured() && !IsInherited(); }
 
   typedef autowiring::signal<void(const AutoConfigVarBase& val)> t_OnChangedSignal;
   t_OnChangedSignal onChangedSignal;
@@ -33,6 +36,8 @@ public:
   virtual void SetParsed(const std::string& value) = 0;
 
 protected:
+  void OnSetLocally();
+
   bool m_isConfigured;
   t_OnChangedSignal::registration_t* m_parentRegistration;
 };
