@@ -245,14 +245,21 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
     // the value, rather than the type passed in via traits.type, because the proper type might be a
     // concrete type defined in another context or potentially a unifier type.  Creating a slot here
     // is also undesirable because the complete type is not available and we can't create a dynaimc
-    // caster to identify when this slot gets satisfied.
+    // caster to identify when this slot gets satisfied. If a slot was non-local, overwrite it.
     auto q = m_typeMemos.find(*traits.actual_type);
     if(q != m_typeMemos.end()) {
       auto& v = q->second;
-      if(*v.m_value == traits.pCoreObject)
-        throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
-      if(*v.m_value)
-        throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+
+      if (v.m_local) {
+        if (traits.pCoreObject && *v.m_value == traits.pCoreObject)
+          throw std::runtime_error("An attempt was made to add the same value to the same context more than once");
+        if (*v.m_value)
+          throw std::runtime_error("An attempt was made to add the same type to the same context more than once");
+      }
+      else {
+        v.m_value = traits.value;
+        v.m_local = true;
+      }
     }
 
     // Add the new concrete type:
@@ -270,7 +277,7 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
 
     // Notify any autowiring field that is currently waiting that we have a new member
     // to be considered.
-    UpdateDeferredElements(std::move(lk), m_concreteTypes.back());
+    UpdateDeferredElements(std::move(lk), m_concreteTypes.back(), true);
   }
   
   // Moving this outside the lock because AddCoreRunnable will perform the checks inside its function
@@ -320,19 +327,21 @@ void CoreContext::AddInternal(const AnySharedPointer& ptr) {
   UpdateDeferredElement(std::move(lk), entry);
 }
 
-void CoreContext::FindByType(AnySharedPointer& reference) const {
+void CoreContext::FindByType(AnySharedPointer& reference, bool localOnly) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-  FindByTypeUnsafe(reference);
+  FindByTypeUnsafe(reference, localOnly);
 }
 
-CoreContext::MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference) const {
+CoreContext::MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference, bool localOnly) const {
   const std::type_info& type = reference->type();
 
   // If we've attempted to search for this type before, we will return the value of the memo immediately:
   auto q = m_typeMemos.find(type);
   if(q != m_typeMemos.end()) {
     // We can copy over and return here
-    reference = q->second.m_value;
+    if (!localOnly || q->second.m_local){
+      reference = q->second.m_value;
+    }
     return q->second;
   }
 
@@ -504,57 +513,48 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
     m_stateBlock->m_stateChanged.notify_all();
   }
 
+  // Teardown interleave assurance--all of these contexts will generally be destroyed
+  // at the exit of this block, due to the behavior of SignalTerminate, unless exterior
+  // context references (IE, related to snooping) exist.
+  //
+  // This is done in order to provide a stable collection that may be traversed during
+  // teardown outside of a lock.
+  std::vector<std::shared_ptr<CoreContext>> childrenInterleave;
+
   {
-    // Teardown interleave assurance--all of these contexts will generally be destroyed
-    // at the exit of this block, due to the behavior of SignalTerminate, unless exterior
-    // context references (IE, related to snooping) exist.
-    //
-    // This is done in order to provide a stable collection that may be traversed during
-    // teardown outside of a lock.
-    std::vector<std::shared_ptr<CoreContext>> childrenInterleave;
+    // Tear down all the children.
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
 
-    {
-      // Tear down all the children.
-      std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+    // Fill strong lock series in order to ensure proper teardown interleave:
+    childrenInterleave.reserve(m_children.size());
+    for(const auto& entry : m_children) {
+      auto childContext = entry.lock();
 
-      // Fill strong lock series in order to ensure proper teardown interleave:
-      childrenInterleave.reserve(m_children.size());
-      for(const auto& entry : m_children) {
-        auto childContext = entry.lock();
+      // Technically, it *is* possible for this weak pointer to be expired, even though
+      // we're holding the lock.  This may happen if the context itself is exiting even
+      // as we are processing SignalTerminate.  In that case, the child context in
+      // question is blocking in its dtor lambda, waiting patiently until we're done,
+      // at which point it will modify the m_children collection.
+      if(!childContext)
+        continue;
 
-        // Technically, it *is* possible for this weak pointer to be expired, even though
-        // we're holding the lock.  This may happen if the context itself is exiting even
-        // as we are processing SignalTerminate.  In that case, the child context in
-        // question is blocking in its dtor lambda, waiting patiently until we're done,
-        // at which point it will modify the m_children collection.
-        if(!childContext)
-          continue;
-
-        // Add to the interleave so we can SignalTerminate in a controlled way.
-        childrenInterleave.push_back(childContext);
-      }
+      // Add to the interleave so we can SignalTerminate in a controlled way.
+      childrenInterleave.push_back(childContext);
     }
-
-    // Now that we have a locked-down, immutable series, begin termination signalling:
-    for(size_t i = childrenInterleave.size(); i--; )
-      childrenInterleave[i]->SignalShutdown(wait);
   }
+
+  // Now that we have a locked-down, immutable series, begin termination signalling:
+  for(size_t i = childrenInterleave.size(); i--; )
+    childrenInterleave[i]->SignalShutdown(false, shutdownMode);
 
   // Pass notice to all child threads:
   bool graceful = (shutdownMode == ShutdownMode::Graceful);
   for (auto itr = firstThreadToStop; itr != m_threads.end(); ++itr)
     (*itr)->Stop(graceful);
 
-  // Signal our condition variable
-  m_stateBlock->m_stateChanged.notify_all();
-
-  // Short-return if required:
-  if(!wait)
-    return;
-
-  // Wait for the treads to finish before returning.
-  for (CoreRunnable* runnable : m_threads)
-    runnable->Wait();
+  // Wait if requested
+  if(wait)
+    Wait();
 }
 
 void CoreContext::Wait(void) {
@@ -810,7 +810,7 @@ void CoreContext::UpdateDeferredElement(std::unique_lock<std::mutex>&& lk, MemoE
   lk.unlock();
 }
 
-void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry) {
+void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, const CoreObjectDescriptor& entry, bool local) {
   {
     // Collection of items needing finalization:
     std::vector<DeferrableUnsynchronizedStrategy*> delayedFinalize;
@@ -832,8 +832,8 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     for (auto& cur : m_typeMemos) {
       MemoEntry& value = cur.second;
 
-      if (value.m_value)
-        // This entry is already satisfied, no need to process it
+      if (value.m_value && value.m_local)
+        // This entry is already satisfied locally, no need to process it
         continue;
 
       // Determine whether the current candidate element satisfies the autowiring we are considering.
@@ -844,6 +844,9 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
 
       // Success, assign the traits
       value.pObjTraits = &entry;
+
+      // Store if it was injected from the local context or not
+      value.m_local = local;
 
       // Now we need to take on the responsibility of satisfying this deferral.  We will do this by
       // nullifying the flink, and by ensuring that the memo is satisfied at the point where we
@@ -891,7 +894,8 @@ void CoreContext::UpdateDeferredElements(std::unique_lock<std::mutex>&& lk, cons
     lk.unlock();
     ctxt->UpdateDeferredElements(
       std::unique_lock<std::mutex>(ctxt->m_stateBlock->m_lock),
-      entry
+      entry,
+      false
     );
     lk.lock();
   }

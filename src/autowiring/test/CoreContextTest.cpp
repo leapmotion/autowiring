@@ -361,3 +361,76 @@ TEST_F(CoreContextTest, CoreContextAdd) {
   Autowired<CoreContextAddTestClass> mc;
   ASSERT_TRUE(mc.IsAutowired()) << "Manually registered interface was not detected as expected";
 }
+
+struct ExplicitlyHoldsOutstandingCount:
+  public CoreRunnable
+{
+public:
+  bool OnStart(void) override {
+    outstanding = CoreRunnable::GetOutstanding();
+    return true;
+  }
+
+  void OnStop(bool) override {
+    // Just mark that this event took place
+    calledStop.set_value(true);
+  }
+
+  void DoAdditionalWait(void) override {
+    std::unique_lock<std::mutex> lk(lock);
+    cv.wait(lk, [&] { return !outstanding; });
+  }
+
+  void Proceed(void) {
+    std::lock_guard<std::mutex> lk(lock);
+    outstanding.reset();
+    cv.notify_all();
+  }
+
+  std::promise<bool> calledStop;
+
+  std::mutex lock;
+  std::condition_variable cv;
+  std::shared_ptr<CoreObject> outstanding;
+};
+
+TEST_F(CoreContextTest, AppropriateShutdownInterleave) {
+  // Need both an outer and an inner context
+  AutoCurrentContext ctxtOuter;
+  AutoCreateContext ctxtInner;
+
+  // Need to inject types at both scopes
+  AutoRequired<ExplicitlyHoldsOutstandingCount> outer(ctxtOuter);
+  AutoRequired<ExplicitlyHoldsOutstandingCount> inner(ctxtInner);
+
+  // Start both contexts up
+  ctxtOuter->Initiate();
+  ctxtInner->Initiate();
+
+  // Now shut down the outer context.  Hand off to an async, we want this to block.
+  std::future<void> holder = std::async(
+    std::launch::async,
+    [&] {
+      ctxtOuter->SignalShutdown(true);
+    }
+  );
+
+  // Need to ensure that both outstanding counters are reset at some point:
+  {
+    auto cleanup = MakeAtExit([&] {
+      outer->Proceed();
+      inner->Proceed();
+    });
+
+    // Outer entry should have called "stop":
+    auto future = outer->calledStop.get_future();
+    ASSERT_EQ(
+      std::future_status::ready,
+      future.wait_for(std::chrono::seconds(5))
+    ) << "Outer scope's OnStop method was incorrectly blocked by a child context member taking a long time to shut down";
+  }
+
+  // Both contexts should be stopped now:
+  ASSERT_TRUE(ctxtOuter->Wait(std::chrono::seconds(5))) << "Outer context did not tear down in a timely fashion";
+  ASSERT_TRUE(ctxtInner->Wait(std::chrono::seconds(5))) << "Inner context did not tear down in a timely fashion";
+}

@@ -13,13 +13,22 @@ std::string autowiring::demangle(const std::type_info& ti) {
     abi::__cxa_demangle(ti.name(), nullptr, nullptr, &status),
     std::free
   };
-  return std::string(status == 0 ? res.get() : ti.name());
+
+  if(status != 0)
+    return std::string();
+  
+  return std::string(res.get());
 }
 
 #else // Windows
 
 std::string autowiring::demangle(const std::type_info& ti) {
-  return std::string(ti.name());
+  std::string demangled(ti.name());
+  
+  if (demangled.find("`") != std::string::npos)
+    return std::string();
+  
+  return demangled;
 }
 
 #endif

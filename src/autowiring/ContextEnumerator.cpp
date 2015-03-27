@@ -3,7 +3,11 @@
 #include "ContextEnumerator.h"
 #include "CoreContext.h"
 
-ContextEnumerator::ContextEnumerator(const std::shared_ptr<CoreContext>& root):
+ContextEnumerator::ContextEnumerator(void) :
+  m_root(CoreContext::CurrentContext())
+{}
+
+ContextEnumerator::ContextEnumerator(const std::shared_ptr<CoreContext>& root) :
   m_root(root)
 {}
 
@@ -44,6 +48,12 @@ const ContextEnumerator::iterator& ContextEnumerator::iterator::NextSibling(void
 const ContextEnumerator::iterator& ContextEnumerator::iterator::operator++(void) {
   _next(m_cur->FirstChild());
   return *this;
+}
+
+ContextEnumerator::iterator ContextEnumerator::iterator::operator++(int) {
+  auto retVal = *this;
+  _next(m_cur->FirstChild());
+  return retVal;
 }
 
 CurrentContextEnumerator::CurrentContextEnumerator(void) :

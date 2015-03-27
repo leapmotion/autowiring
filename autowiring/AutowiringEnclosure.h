@@ -102,11 +102,10 @@ public:
     auto ctxt = ecef ? ecef->GetContext() : nullptr;
     ctxt->SignalShutdown();
 
-    // Do not allow teardown to take more than 250 milliseconds or so
-    if(!ctxt->Wait(std::chrono::milliseconds(250))) {
-      // Critical error--took too long to tear down
-      assert(false);
-    }
+    // Do not allow teardown to take more than 5 seconds.  This is considered a "timely teardown" limit.
+    // If it takes more than this amount of time to tear down, the test case itself should invoke SignalShutdown
+    // and Wait itself with the extended teardown period specified.
+    ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Test case took too long to tear down, unit tests running after this point are untrustworthy";
 
     static const char sc_autothrow [] = "AUTOTHROW_";
     if(!strncmp(sc_autothrow, info.name(), sizeof(sc_autothrow) - 1))

@@ -21,6 +21,8 @@ public:
   
   // Callback function type
   typedef std::function<void(const AnySharedPointer&)> t_callback;
+
+  typedef std::function<void(const std::string&, const AnySharedPointer&)> t_add_callback;
   
   // Validator function type
   typedef std::function<bool(const AnySharedPointer&)> t_validator;
@@ -41,8 +43,14 @@ private:
   // Set of keys for values set from this context
   std::unordered_set<std::string> m_setHere;
   
+  // list of keys for values set from this context in order of creation.
+  std::vector<std::string> m_orderedKeys;
+
   // map of callbacks registered for a key
   std::unordered_map<std::string, std::vector<t_callback>> m_callbacks;
+
+  // list of callbacks registered for keys which exist in this context.
+  std::list<t_add_callback> m_addCallbacks;
 
   // Exception throwers:
   void ThrowKeyNotFoundException(const std::string& key) const;
@@ -67,7 +75,7 @@ public:
   /// in the application, or if the specified value type does not match the type expected by this field
   /// </remarks>
   AnySharedPointer& Get(const std::string& key);
-  
+
   /// <summary>
   /// Assigns the specified value to an AnySharedPointer slot
   /// </summary>
@@ -106,7 +114,14 @@ public:
   
   // Add a callback for when key is changed in this context
   void AddCallback(const std::string& key, t_callback&& fx);
-  
+
+  // Add a callback for when a key is set in this context.  Is immediately called on all
+  // currently existing values in the order they were created
+  void AddCallback(t_add_callback&& fx);
+
+  // Returns a list of all keys which have been set from this context
+  const std::vector<std::string>& GetLocalKeys() const { return m_orderedKeys; }
+
 private:
   // Handles setting a value recursivly to all child contexts
   void SetRecursive(const std::string& key, AnySharedPointer value);
