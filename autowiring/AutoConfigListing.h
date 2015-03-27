@@ -10,47 +10,36 @@
 #include MUTEX_HEADER
 #include MEMORY_HEADER
 
-struct AnySharedPointer;
+class AutoConfigVarBase;
 
-class AutoConfigManager:
+class AutoConfigListing:
   public ContextMember
 {
 public:
-  AutoConfigManager();
-  virtual ~AutoConfigManager();
+  AutoConfigListing();
+  virtual ~AutoConfigListing();
   
-  // Callback function type
-  typedef std::function<void(const AnySharedPointer&)> t_callback;
+  // Callback signal type
+  typedef autowiring::signal<void(const AutoConfigVarBase&)> onAddSignal_t;
 
-  typedef std::function<void(const std::string&, const AnySharedPointer&)> t_add_callback;
-  
   // Validator function type
   typedef std::function<bool(const AnySharedPointer&)> t_validator;
   
 private:
-  // local map of the config registry
+  // Local map of the config registry
   static const std::unordered_map<std::string, const ConfigRegistryEntry*> s_registry;
   
-  // map of validators registered for a key
-  static const std::unordered_map<std::string, std::vector<t_validator>> s_validators;
+  // Validators for keys that have them.
+  static const std::unordered_map<std::string, t_validator> s_validators;
   
-  // lock for all members
+  // Lock for all members
   std::mutex m_lock;
   
-  // Values of AutoConfigs in this context
-  std::unordered_map<std::string, AnySharedPointer> m_values;
+  // Map of AutoConfigs in this context
+  std::unordered_map<std::string, std::weak_ptr<AutoConfigVarBase>> m_values;
   
-  // Set of keys for values set from this context
-  std::unordered_set<std::string> m_setHere;
-  
-  // list of keys for values set from this context in order of creation.
+  // list of keys set locally from this context in order of creation.
   std::vector<std::string> m_orderedKeys;
-
-  // map of callbacks registered for a key
-  std::unordered_map<std::string, std::vector<t_callback>> m_callbacks;
-
-  // list of callbacks registered for keys which exist in this context.
-  std::list<t_add_callback> m_addCallbacks;
 
   // Exception throwers:
   void ThrowKeyNotFoundException(const std::string& key) const;
@@ -74,10 +63,10 @@ public:
   /// This method will throw an exception if the specified name cannot be found as a configurable value
   /// in the application, or if the specified value type does not match the type expected by this field
   /// </remarks>
-  AnySharedPointer& Get(const std::string& key);
+  std::shared_ptr<AutoConfigVarBase> Get(const std::string& key);
 
   /// <summary>
-  /// Assigns the specified value to an AnySharedPointer slot
+  /// Assigns the specified value to an AutoConfig with a given key. Creates one if it doesn't exist.
   /// </summary>
   /// <remarks>
   /// This method will throw an exception if the specified name cannot be found as a configurable value
@@ -92,15 +81,9 @@ public:
     if (!s_registry.find(key)->second->verifyType(typeid(T)))
       ThrowTypeMismatchException(key, typeid(T));
     
-    // Set value in this AutoConfigManager
-    SetRecursive(key, AnySharedPointer(std::make_shared<T>(value)));
+    SetInternal(key, &value);
   }
   
-  /// <summary>
-  /// Overload for c-style string. Converts to std::string
-  /// </summary>
-  void Set(const std::string& key, const char* value);
-
   /// <summary>
   /// Coerces the string representation of the specified field to the correct value type
   /// </summary>
@@ -113,20 +96,25 @@ public:
   bool SetParsed(const std::string& key, const std::string& value);
   
   // Add a callback for when key is changed in this context
-  void AddCallback(const std::string& key, t_callback&& fx);
+  void AddOnChanged(const std::string& key, std::function<void(const AutoConfigVarBase&)>&& fx);
 
   // Add a callback for when a key is set in this context.  Is immediately called on all
-  // currently existing values in the order they were created
-  void AddCallback(t_add_callback&& fx);
+  // currently existing values in the order they were created.
+  onAddSignal_t::registration_t* AddCallback(onAddSignal_t::function_t&& fx);
 
-  // Returns a list of all keys which have been set from this context
+  // Returns a list of all keys which have been set from this context.
   const std::vector<std::string>& GetLocalKeys() const { return m_orderedKeys; }
 
 private:
-  // Handles setting a value recursivly to all child contexts
-  void SetRecursive(const std::string& key, AnySharedPointer value);
-  
   // Set a value in this manager, call callbacks
   // Must hold m_lock when calling this
-  void SetInternal(const std::string& key, const AnySharedPointer& value);
+  void SetInternal(const std::string& key, const void* value);
+
+  std::shared_ptr<AutoConfigVarBase> GetOrConstruct(const std::string& key, const void* value);
+
+  onAddSignal_t m_onAddedSignal;
+
+  friend class AutoConfigVarBase;
+  void NotifyConfigAdded(const std::shared_ptr<AutoConfigVarBase>& cfg);
+  void NotifySetLocally(const std::shared_ptr<AutoConfigVarBase>& cfg);
 };

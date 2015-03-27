@@ -201,12 +201,16 @@ public:
     }
   };
   
-  template<typename... Args>
-  signal_relay<Args...> operator()(autowiring::signal<void(Args...)> T::*handler) {
+  template<typename U, typename... Args>
+  signal_relay<Args...> operator()(autowiring::signal<void(Args...)> U::*handler) {
+    static_assert(std::is_base_of<U, T>::value, "Cannot reference member of unrelated type");
+    
+    auto handlerActual = static_cast<autowiring::signal<void(Args...)> T::*>(handler);
+
     auto ctxt = AutowirableSlot<T>::GetContext();
     if (!ctxt)
       throw std::runtime_error("Attempted to attach a signal to an Autowired field in a context that was already destroyed");
-    return {*this, ctxt->RelayForType(handler)};
+    return {*this, ctxt->RelayForType(handlerActual)};
   }
 
   /// <summary>

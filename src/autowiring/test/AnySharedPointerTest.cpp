@@ -200,7 +200,7 @@ TEST_F(AnySharedPointerTest, CanHoldCoreObject) {
 }
 
 TEST_F(AnySharedPointerTest, CanFastCastToSelf) {
-  autowiring::fast_pointer_cast_initializer<CoreObject, CoreObject>::sc_init;
+  (void)autowiring::fast_pointer_cast_initializer<CoreObject, CoreObject>::sc_init;
 
   auto co = std::make_shared<CoreObject>();
   ASSERT_EQ(
