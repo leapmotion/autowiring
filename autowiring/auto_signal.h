@@ -33,6 +33,9 @@ namespace autowiring {
       signal_node_base* pFlink;
       signal_node_base* pBlink;
       
+      /// <summary>
+      /// Removes this node from the list it's in, or throws if it's the head.
+      /// </summary>
       void remove(){
         // Clear linkage
         if (this->pBlink)
@@ -63,8 +66,20 @@ namespace autowiring {
       const std::function<void(Args...)> fn;
 
       using signal_node_base::remove;
-    };
 
+      /// <summary>
+      /// Appends the specified handler to this list of nodes.
+      /// </summary>
+      internal::signal_node<Args...>* operator+=(std::function<void(Args...)>&& fn) {
+        auto retVal = new internal::signal_node<Args...>(std::move(fn));
+        retVal->pBlink = this;
+        retVal->pFlink = pFlink;
+        if (pFlink)
+          pFlink->pBlink = retVal;
+        pFlink = retVal;
+        return retVal;
+      }
+    };
 
     struct signal_registration_base {
       signal_registration_base(void);
@@ -180,13 +195,7 @@ namespace autowiring {
     /// Attaches the specified handler to this signal
     /// </summary>
     internal::signal_node<Args...>* operator+=(std::function<void(Args...)>&& fn) {
-      auto retVal = new internal::signal_node<Args...>(std::move(fn));
-      retVal->pBlink = this;
-      retVal->pFlink = pFlink;
-      if (pFlink)
-        pFlink->pBlink = retVal;
-      pFlink = retVal;
-      return retVal;
+      return *reinterpret_cast<internal::signal_node<Args...>*>(this) += std::move(fn);
     }
   };
 
