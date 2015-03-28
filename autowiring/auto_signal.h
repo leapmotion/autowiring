@@ -50,11 +50,19 @@ namespace autowiring {
         // Fully unlinked, delete
         delete this;
       }
+
+      void insert(signal_node_base* node) {
+        node->pBlink = this;
+        node->pFlink = pFlink;
+        if (pFlink)
+          pFlink->pBlink = node;
+        pFlink = node;
+      }
     };
 
     // Holds a reference to one of the signal holders
     template<typename... Args>
-    struct signal_node:
+    struct signal_node :
       signal_node_base
     {
       signal_node(const signal_node& rhs) = delete;
@@ -62,23 +70,42 @@ namespace autowiring {
       signal_node(std::function<void(Args...)>&& fn) :
         fn(std::move(fn))
       {}
+      
+      signal_node(std::function<void(signal_node_base*, Args...)>&& newFn) :
+        fn([this, newFn](Args... args){ newFn(this, args...); })
+      {}
 
       const std::function<void(Args...)> fn;
 
       using signal_node_base::remove;
 
+      //Same Args
+      template<typename t_Fn>
+      signal_node<Args...>* Register(t_Fn newFn, void(t_Fn::*pfn) (Args...) const){
+        auto retVal = new signal_node<Args...>(std::forward<t_Fn>(newFn));
+        insert(retVal);
+        return retVal;
+      }
+
+      //Additional First arg is a signal_node_base*
+      template<typename t_Fn>
+      signal_node<Args...>* Register(t_Fn newFn, void(t_Fn::*pfn) (signal_node_base*, Args...) const){
+        auto retVal = new signal_node<Args...>(std::forward<t_Fn>(newFn));
+        insert(retVal);
+        return retVal;
+      }
+      
       /// <summary>
       /// Appends the specified handler to this list of nodes.
       /// </summary>
-      internal::signal_node<Args...>* operator+=(std::function<void(Args...)>&& fn) {
-        auto retVal = new internal::signal_node<Args...>(std::move(fn));
-        retVal->pBlink = this;
-        retVal->pFlink = pFlink;
-        if (pFlink)
-          pFlink->pBlink = retVal;
-        pFlink = retVal;
-        return retVal;
+      template<typename t_Fn>
+      signal_node<Args...>* operator+=(t_Fn fn) {
+          return this->Register<t_Fn>(std::forward<t_Fn>(fn), &t_Fn::operator());
       }
+    private:
+      signal_node() {}
+
+      
     };
 
     struct signal_registration_base {
@@ -194,9 +221,11 @@ namespace autowiring {
     /// <summary>
     /// Attaches the specified handler to this signal
     /// </summary>
-    internal::signal_node<Args...>* operator+=(std::function<void(Args...)>&& fn) {
-      return *reinterpret_cast<internal::signal_node<Args...>*>(this) += std::move(fn);
+    template<typename t_Fn>
+    internal::signal_node<Args...>* operator+=(t_Fn fn) {
+      return *reinterpret_cast<internal::signal_node<Args...>*>(this) += std::forward<t_Fn>(fn);
     }
+
   };
 
   /// <summary>
@@ -221,7 +250,9 @@ namespace autowiring {
     typedef internal::signal_node<Args...> registration_t;
     typedef std::function<void(Args...)> function_t;
 
-    registration_t* operator+=(function_t&& fn) { return *m_relay += std::move(fn); }
+    template<typename t_Fn>
+    registration_t* operator+=(t_Fn && fn) { return *m_relay += std::move(fn); }
+
     void operator-=(registration_t* node) { return *m_relay -= node; }
 
     /// <summary>
