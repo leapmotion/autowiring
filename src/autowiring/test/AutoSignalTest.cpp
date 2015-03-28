@@ -142,3 +142,41 @@ TEST_F(AutoSignalTest, NodeRemoval) {
   ASSERT_FALSE(handler_called1) << "Handler1 was called after being unregistered";
   ASSERT_TRUE(handler_called2) << "Handler2 was removed after an invalid -= operation";
 }
+
+TEST_F(AutoSignalTest, CallOrdering) {
+  autowiring::signal<void(void)> signal1;
+
+  bool handler_called1 = false;
+  bool handler_called2 = false;
+
+  //handlers are inserted at the begining, so this will be called last.
+  auto* registration1 = signal1 += [&] {
+    ASSERT_TRUE(handler_called2);
+    handler_called1 = true;
+  };
+  auto* registration2 = signal1 += [&] { handler_called2 = true; };
+
+  signal1();
+
+  ASSERT_TRUE(handler_called1) << "Handler1 was called after being unregistered";
+  ASSERT_TRUE(handler_called2) << "Handler2 was removed after an invalid -= operation";
+}
+
+TEST_F(AutoSignalTest, CallInsertion) {
+  autowiring::signal<void(void)> signal1;
+
+  bool handler_called1 = false;
+  bool handler_called2 = false;
+
+  auto* registration1 = signal1 += [&] { handler_called1 = true; };
+
+  //when += to a registration object, the new one is appended.
+  auto* registration2 = *registration1 += [&] {
+    ASSERT_TRUE(handler_called1);
+    handler_called2 = true; };
+
+  signal1();
+
+  ASSERT_TRUE(handler_called1) << "Handler1 was called after being unregistered";
+  ASSERT_TRUE(handler_called2) << "Handler2 was removed after an invalid -= operation";
+}
