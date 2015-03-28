@@ -150,11 +150,11 @@ TEST_F(AutoSignalTest, CallOrdering) {
   bool handler_called2 = false;
 
   //handlers are inserted at the begining, so this will be called last.
-  auto* registration1 = signal1 += [&] {
+  signal1 += [&] {
     ASSERT_TRUE(handler_called2);
     handler_called1 = true;
   };
-  auto* registration2 = signal1 += [&] { handler_called2 = true; };
+  signal1 += [&] { handler_called2 = true; };
 
   signal1();
 
@@ -168,10 +168,10 @@ TEST_F(AutoSignalTest, CallInsertion) {
   bool handler_called1 = false;
   bool handler_called2 = false;
 
-  auto* registration1 = signal1 += [&] { handler_called1 = true; };
+  auto* registration1 = signal1 += [&](void) { handler_called1 = true; };
 
   //when += to a registration object, the new one is appended.
-  auto* registration2 = *registration1 += [&] {
+  *registration1 += [&](void) {
     ASSERT_TRUE(handler_called1);
     handler_called2 = true; };
 
@@ -179,4 +179,45 @@ TEST_F(AutoSignalTest, CallInsertion) {
 
   ASSERT_TRUE(handler_called1) << "Handler1 was called after being unregistered";
   ASSERT_TRUE(handler_called2) << "Handler2 was removed after an invalid -= operation";
+}
+
+TEST_F(AutoSignalTest, SelfReferencingCall) {
+  typedef autowiring::signal<void(int)> signal_t;
+  signal_t signal1;
+
+  bool handler_called1 = false;
+  int magic_number = 123;
+
+  //The main test is just if this thing will compile
+  signal_t::registration_t* registration1 =
+  signal1 += [&](autowiring::internal::signal_node_base* reg, int magic) {
+    ASSERT_EQ(magic, magic_number);
+    ASSERT_EQ(registration1, reg);
+    handler_called1 = true;
+  };
+
+  signal1(magic_number);
+
+  ASSERT_TRUE(handler_called1) << "Handler was not called!";
+}
+
+TEST_F(AutoSignalTest, SelfRemovingCall) {
+  typedef autowiring::signal<void(int)> signal_t;
+  signal_t signal1;
+  
+  int handler_called1 = 0;
+  int magic_number = 123;
+  
+  signal_t::registration_t* registration1 =
+  signal1 += [&](autowiring::internal::signal_node_base* reg, int magic) {
+    ASSERT_EQ(magic, magic_number);
+    ASSERT_EQ(registration1, reg);
+    ++handler_called1;
+    reg->remove();
+  };
+  
+  signal1(magic_number);
+  signal1(magic_number);
+  
+  ASSERT_EQ(handler_called1, 1) << "Handler was unable to remove itself!";
 }
