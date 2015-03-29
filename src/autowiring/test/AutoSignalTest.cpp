@@ -135,7 +135,7 @@ TEST_F(AutoSignalTest, NodeRemoval) {
   
   ASSERT_ANY_THROW(signal1 -= registration2) << "Removing a registration from a different signal than it was registered to failed to throw an exception";
 
-  registration1->remove();
+  delete registration1;
   signal1();
   signal2();
   
@@ -213,7 +213,7 @@ TEST_F(AutoSignalTest, SelfRemovingCall) {
     ASSERT_EQ(magic, magic_number);
     ASSERT_EQ(registration1, reg);
     ++handler_called1;
-    reg->remove();
+    delete reg;
   };
   
   signal1(magic_number);

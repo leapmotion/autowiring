@@ -27,30 +27,21 @@ namespace autowiring {
         pBlink(nullptr)
       {}
 
-      virtual ~signal_node_base(void) {}
+      /// <summary>
+      /// Removes this node from the list it's in, or throws if it's the head.
+      /// </summary>
+      virtual ~signal_node_base(void) {
+       // Clear linkage
+        if (this->pBlink)
+          this->pBlink->pFlink = this->pFlink;
+        if (this->pFlink)
+          this->pFlink->pBlink = this->pBlink;
+      }
 
       // Forward and backward linkages:
       signal_node_base* pFlink;
       signal_node_base* pBlink;
       
-      /// <summary>
-      /// Removes this node from the list it's in, or throws if it's the head.
-      /// </summary>
-      void remove(){
-        // Clear linkage
-        if (this->pBlink)
-          this->pBlink->pFlink = this->pFlink;
-        if (this->pFlink)
-          this->pFlink->pBlink = this->pBlink;
-
-        // If we're the head pointer, throw an exception
-        if (!this->pBlink)
-          throw std::runtime_error("Cannot remove the head of the list");
-
-        // Fully unlinked, delete
-        delete this;
-      }
-
       void insert(signal_node_base* node) {
         node->pBlink = this;
         node->pFlink = pFlink;
@@ -71,41 +62,22 @@ namespace autowiring {
         fn(std::move(fn))
       {}
       
+      //Functions where the first argument is a signal_node_base are also ok.
       signal_node(std::function<void(signal_node_base*, Args...)>&& newFn) :
         fn([this, newFn](Args... args){ newFn(this, args...); })
       {}
 
       const std::function<void(Args...)> fn;
 
-      using signal_node_base::remove;
-
-      //Same Args
-      template<typename t_Fn>
-      signal_node<Args...>* Register(t_Fn newFn, void(t_Fn::*pfn) (Args...) const){
-        auto retVal = new signal_node<Args...>(std::forward<t_Fn>(newFn));
-        insert(retVal);
-        return retVal;
-      }
-
-      //Additional First arg is a signal_node_base*
-      template<typename t_Fn>
-      signal_node<Args...>* Register(t_Fn newFn, void(t_Fn::*pfn) (signal_node_base*, Args...) const){
-        auto retVal = new signal_node<Args...>(std::forward<t_Fn>(newFn));
-        insert(retVal);
-        return retVal;
-      }
-      
       /// <summary>
       /// Appends the specified handler to this list of nodes.
       /// </summary>
       template<typename t_Fn>
       signal_node<Args...>* operator+=(t_Fn fn) {
-          return this->Register<t_Fn>(std::forward<t_Fn>(fn), &t_Fn::operator());
+        auto retVal = new signal_node<Args...>(std::forward<t_Fn>(fn));
+        insert(retVal);
+        return retVal;
       }
-    private:
-      signal_node() {}
-
-      
     };
 
     struct signal_registration_base {
@@ -184,7 +156,7 @@ namespace autowiring {
   {
     signal_relay(void) {}
 
-    ~signal_relay(void) {
+    ~signal_relay(void) override {
       // Standard linked list cleaup
       internal::signal_node_base* next = nullptr;
       for (auto cur = pFlink; cur; cur = next) {
@@ -199,8 +171,10 @@ namespace autowiring {
     void operator-=(signal_node_base* node) {
       signal_node_base* cur;
       for (cur = pFlink; cur != nullptr; cur = cur->pFlink) {
-        if (cur == node)
-          return node->remove();
+        if (cur == node){
+          delete node;
+          return;
+        }
       }
 
       throw std::runtime_error("Attempted to remove node which is not part of this list.");
