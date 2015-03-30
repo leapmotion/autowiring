@@ -135,6 +135,7 @@ TEST_F(AutoSignalTest, NodeRemoval) {
   
   ASSERT_ANY_THROW(signal1 -= registration2) << "Removing a registration from a different signal than it was registered to failed to throw an exception";
 
+  registration1->remove();
   delete registration1;
   signal1();
   signal2();
@@ -216,22 +217,23 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
     ASSERT_EQ(magic, magic_number);
     ASSERT_EQ(registration1, reg);
     ++handler_called1;
-    reg->remove();
-    delete reg;
+    delete reg->remove();
   };
   
+  auto lambda3 = [&](int magic) {
+    ++handler_called3;
+  };
+
   signal_t::registration_t* registration2 = signal1 += [&](signal_t::registration_t* reg, int magic) {
     ASSERT_EQ(magic, magic_number);
     ASSERT_EQ(registration2, reg);
     ++handler_called2;
     
-    //+= is an append operation, so this function will be evaluated immediately after the current one.
-    *reg += [&](int magic) {
-      ++handler_called3;
-    };
+    //+= is an append operation, but because when we're traveling the list and we grab the next pointer
+    //*before* the function get's called, this append won't be picked up until the 2nd pass.
+    *reg += std::move(lambda3);
     
-    reg->remove();
-    delete reg;
+    delete reg->remove();
   };
   
   signal1(magic_number);
@@ -239,5 +241,5 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
   
   ASSERT_EQ(handler_called1, 1) << "Handler was unable to remove itself!";
   ASSERT_EQ(handler_called2, 1) << "Specific handler was unable to remove itself";
-  ASSERT_EQ(handler_called3, 2) << "Handler was unable to append to itself.";
+  ASSERT_EQ(handler_called3, 1) << "Handler was unable to append to itself or was called prematurely.";
 }
