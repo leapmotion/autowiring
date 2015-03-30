@@ -59,7 +59,7 @@ class RemovesSelf:
   virtual void ZeroArgs(void){
     counter++;
     AutoCurrentContext ctxt;
-    ctxt->Unsnoop(GetSelf<RemovesSelf>());
+    ctxt->RemoveSnooper(GetSelf<RemovesSelf>());
   }
 public:
   RemovesSelf():
@@ -83,7 +83,7 @@ TEST_F(SnoopTest, VerifySimpleSnoop) {
     AutoRequired<ChildMember> childMember;
 
     // Snoop
-    child->Snoop(parentMember);
+    child->AddSnooper(parentMember);
 
     // Now fire an event from the child:
     AutoFired<UpBroadcastListener> firer;
@@ -111,8 +111,8 @@ TEST_F(SnoopTest, VerifyUnsnoop) {
     AutoRequired<ChildMember> childMember;
 
     // Snoop, unsnoop:
-    snoopy->Snoop(parentMember);
-    snoopy->Unsnoop(parentMember);
+    snoopy->AddSnooper(parentMember);
+    snoopy->RemoveSnooper(parentMember);
     snoopy->Initiate();
 
     // Fire one event:
@@ -136,7 +136,7 @@ TEST_F(SnoopTest, AmbiguousReciept) {
 
   {
     AutoCreateContext subCtxt;
-    subCtxt->Snoop(parent);
+    subCtxt->AddSnooper(parent);
     subCtxt->Initiate();
 
     // Verify that simple firing _here_ causes transmission as expected:
@@ -178,7 +178,7 @@ TEST_F(SnoopTest, AvoidDoubleReciept) {
       childMember = child->Inject<ChildMember>();
 
       // Snoop
-      child->Snoop(parentMember);
+      child->AddSnooper(parentMember);
     }
 
     // Now fire an event from the parent:
@@ -193,7 +193,7 @@ TEST_F(SnoopTest, AvoidDoubleReciept) {
     // Test sibling context
     AutoRequired<SiblingMember> sibMember(sibCtxt);
     AutoRequired<SiblingMember> alsoInParent;
-    child->Snoop(sibMember);
+    child->AddSnooper(sibMember);
     
     firer(&UpBroadcastListener::SimpleCall)();
     
@@ -203,7 +203,7 @@ TEST_F(SnoopTest, AvoidDoubleReciept) {
     ASSERT_EQ(1, sibMember->m_callCount) << "Sibling context member didn't receive message";
     
     // Make sure unsnoop cleans up everything
-    child->Unsnoop(sibMember);
+    child->RemoveSnooper(sibMember);
     firer(&UpBroadcastListener::SimpleCall)();
     
     ASSERT_EQ(3, childMember->m_callCount) << "Message not received by another member of the same context";
@@ -236,8 +236,8 @@ TEST_F(SnoopTest, MultiSnoop) {
   member->m_callCount = 0;
   
   // Snoop both.  Invocation in an uninitialized context should not cause any handlers to be raised.
-  ctxt1->Snoop(member);
-  ctxt2->Snoop(member);
+  ctxt1->AddSnooper(member);
+  ctxt2->AddSnooper(member);
   base->Invoke(&UpBroadcastListener::SimpleCall)();
   ctxt1->Invoke(&UpBroadcastListener::SimpleCall)();
   ctxt2->Invoke(&UpBroadcastListener::SimpleCall)();
@@ -248,7 +248,7 @@ TEST_F(SnoopTest, MultiSnoop) {
   member2->m_callCount = 0;
   
   // Unsnoop one
-  ctxt2->Unsnoop(member);
+  ctxt2->RemoveSnooper(member);
   base->Invoke(&UpBroadcastListener::SimpleCall)();
   ctxt1->Invoke(&UpBroadcastListener::SimpleCall)();
   ctxt2->Invoke(&UpBroadcastListener::SimpleCall)();
@@ -265,7 +265,7 @@ TEST_F(SnoopTest, AntiCyclicRemoval) {
   CurrentContextPusher pshr(snoopy);
   snoopy->Initiate();
   
-  snoopy->Snoop(removeself);
+  snoopy->AddSnooper(removeself);
   
   ASSERT_EQ(0, removeself->counter);
   
@@ -289,7 +289,7 @@ TEST_F(SnoopTest, SimplePackets) {
   // Add filter to tracking
   AutoRequired<FilterA> filter(Tracking);
   AutoRequired<FilterF> detachedFilter(Tracking);
-  Pipeline->Snoop(filter);
+  Pipeline->AddSnooper(filter);
   ASSERT_FALSE(!!filter->m_called) << "Filter called prematurely";
   ASSERT_FALSE(detachedFilter->m_called) << "Filter called prematurely";
   
@@ -308,7 +308,7 @@ TEST_F(SnoopTest, SimplePackets) {
   //reset
   filter->m_called = false;
   
-  Pipeline->Unsnoop(filter);
+  Pipeline->RemoveSnooper(filter);
   auto packet2 = factory->NewPacket();
   packet2->Decorate(Decoration<0>());
   packet2->Decorate(Decoration<1>());
@@ -321,7 +321,7 @@ TEST_F(SnoopTest, CanSnoopAutowired) {
 
   // Now autowire what we injected and verify we can snoop this directly
   Autowired<SimpleObject> so;
-  ctxt->Snoop(so);
+  ctxt->AddSnooper(so);
 }
 
 TEST_F(SnoopTest, RuntimeSnoopCall) {
@@ -332,7 +332,7 @@ TEST_F(SnoopTest, RuntimeSnoopCall) {
   CoreObjectDescriptor traits(x);
 
   // Try to snoop and verify that the snooped member gets an event:
-  ctxt->Snoop(x);
+  ctxt->AddSnooper(x);
 
   AutoFired<UpBroadcastListener> ubl;
   ubl(&UpBroadcastListener::SimpleCall)();
@@ -341,7 +341,7 @@ TEST_F(SnoopTest, RuntimeSnoopCall) {
   ASSERT_EQ(1UL, x->m_callCount) << "Call count to a child member was incorrect";
 
   // And the alternative variant next:
-  ctxt->Unsnoop(x);
+  ctxt->RemoveSnooper(x);
   ubl(&UpBroadcastListener::SimpleCall)();
   ASSERT_EQ(1UL, x->m_callCount) << "Snoop method was invoked after the related type was removed";
 }

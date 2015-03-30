@@ -1019,7 +1019,7 @@ void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, CoreObjec
     }
 }
 
-void CoreContext::Snoop(const CoreObjectDescriptor& traits) {
+void CoreContext::AddSnooper(const CoreObjectDescriptor& traits) {
   // Add to collections of snoopers
   InsertSnooper(traits.value);
 
@@ -1032,7 +1032,7 @@ void CoreContext::Snoop(const CoreObjectDescriptor& traits) {
     AddPacketSubscriber(traits.subscriber);
 }
 
-void CoreContext::Unsnoop(const CoreObjectDescriptor& traits) {
+void CoreContext::RemoveSnooper(const CoreObjectDescriptor& traits) {
   RemoveSnooper(traits.value);
 
   // Cleanup if its an EventReceiver
