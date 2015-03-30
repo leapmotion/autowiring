@@ -238,9 +238,8 @@ TEST_F(AutoPacketFactoryTest, MultiDecorateTest) {
 }
 
 TEST_F(AutoPacketFactoryTest, MultiPostHocIntroductionTest) {
-  AutoCurrentContext ctxt;
-  ctxt->Initiate();
-  AutoRequired<AutoPacketFactory> factory(ctxt);
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
 
   int called = 0;
 
@@ -255,4 +254,17 @@ TEST_F(AutoPacketFactoryTest, MultiPostHocIntroductionTest) {
   };
 
   ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
+}
+
+TEST_F(AutoPacketFactoryTest, CanRemoveAddedLambda) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  auto desc = *factory += [](int&){};
+  auto packet1 = factory->NewPacket();
+  *factory -= desc;
+  auto packet2 = factory->NewPacket();
+
+  ASSERT_TRUE(packet1->Has<int>()) << "First packet did not posess expected decoration";
+  ASSERT_FALSE(packet2->Has<int>()) << "Decoration present even after all filters were removed from a factory";
 }
