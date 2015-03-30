@@ -1,5 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "Decompose.h"
+
 #include <atomic>
 #include <functional>
 #include <memory>
@@ -51,12 +53,18 @@ namespace autowiring {
       /// If you call this function, you are assuming responsibility for the memory and 
       /// are expected to call delete on the node.
       /// </remarks>
-      void remove() {
+      /// <returns>
+      /// A pointer to itself for easier chaining of operations.
+      /// </returns>
+      signal_node_base* remove() {
         // Clear linkage
         if (this->pBlink)
           this->pBlink->pFlink = this->pFlink;
         if (this->pFlink)
           this->pFlink->pBlink = this->pBlink;
+
+        this->pBlink = this->pFlink = nullptr;
+        return this;
       }
     };
 
@@ -82,8 +90,17 @@ namespace autowiring {
       /// Appends the specified handler to this list of nodes.
       /// </summary>
       template<typename t_Fn>
-      signal_node<Args...>* operator+=(t_Fn fn) {
-        auto retVal = new signal_node<Args...>(std::forward<t_Fn>(fn));
+      typename std::enable_if<Decompose<decltype(&t_Fn::operator())>::N == sizeof...(Args), signal_node<Args...>*>::type
+      operator+=(t_Fn fn) {
+        auto retVal = new signal_node<Args...>(std::function<void(Args...)>(std::forward<t_Fn>(fn)));
+        insert_after(retVal);
+        return retVal;
+      }
+
+      template<typename t_Fn>
+      typename std::enable_if<Decompose<decltype(&t_Fn::operator())>::N == sizeof...(Args) + 1, signal_node<Args...>*>::type
+        operator+=(t_Fn fn) {
+        auto retVal = new signal_node<Args...>(std::function<void(signal_node<Args...>*,Args...)>(std::forward<t_Fn>(fn)));
         insert_after(retVal);
         return retVal;
       }
@@ -243,12 +260,14 @@ namespace autowiring {
     /// Raises the signal and invokes all attached handlers
     /// </summary>
     void operator()(Args... args) const {
-      for (
-        auto cur = m_relay->GetHead();
-        cur;
-        cur = static_cast<decltype(cur)>(cur->pFlink)
-      )
+      auto cur = m_relay->GetHead();
+      while(cur) {
+        //Grab the next pointer before we evaluate incase the current node is deleted by it's
+        //function.
+        auto next = static_cast<decltype(cur)>(cur->pFlink);
         cur->fn(args...);
+        cur = next;
+      }
     }
   };
 }
