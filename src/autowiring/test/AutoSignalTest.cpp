@@ -190,11 +190,11 @@ TEST_F(AutoSignalTest, SelfReferencingCall) {
 
   //The main test is just if this thing will compile
   signal_t::registration_t* registration1 =
-  signal1 += [&](autowiring::internal::signal_node_base* reg, int magic) {
-    ASSERT_EQ(magic, magic_number);
-    ASSERT_EQ(registration1, reg);
-    handler_called1 = true;
-  };
+    signal1 += [&](autowiring::internal::signal_node_base* reg, int magic) {
+      ASSERT_EQ(magic, magic_number);
+      ASSERT_EQ(registration1, reg);
+      handler_called1 = true;
+    };
 
   signal1(magic_number);
 
@@ -216,7 +216,7 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
     ASSERT_EQ(magic, magic_number);
     ASSERT_EQ(registration1, reg);
     ++handler_called1;
-    
+    reg->remove();
     delete reg;
   };
   
@@ -230,6 +230,7 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
       ++handler_called3;
     };
     
+    reg->remove();
     delete reg;
   };
   

@@ -27,27 +27,36 @@ namespace autowiring {
         pBlink(nullptr)
       {}
 
-      /// <summary>
-      /// Removes this node from the list it's in, or throws if it's the head.
-      /// </summary>
-      virtual ~signal_node_base(void) {
-       // Clear linkage
-        if (this->pBlink)
-          this->pBlink->pFlink = this->pFlink;
-        if (this->pFlink)
-          this->pFlink->pBlink = this->pBlink;
-      }
+      virtual ~signal_node_base(void) {}
 
       // Forward and backward linkages:
       signal_node_base* pFlink;
       signal_node_base* pBlink;
       
-      void insert(signal_node_base* node) {
+      /// <summary>
+      /// Inserts a node after the current one
+      /// </summary>
+      void insert_after(signal_node_base* node) {
         node->pBlink = this;
         node->pFlink = pFlink;
         if (pFlink)
           pFlink->pBlink = node;
         pFlink = node;
+      }
+
+      /// <summary>
+      /// Removes this node from the list it's in.
+      /// </summary>
+      /// <remarks>
+      /// If you call this function, you are assuming responsibility for the memory and 
+      /// are expected to call delete on the node.
+      /// </remarks>
+      void remove() {
+        // Clear linkage
+        if (this->pBlink)
+          this->pBlink->pFlink = this->pFlink;
+        if (this->pFlink)
+          this->pFlink->pBlink = this->pBlink;
       }
     };
 
@@ -64,7 +73,7 @@ namespace autowiring {
       
       //Functions where the first argument is a signal_node<...> or base type are also ok.
       signal_node(std::function<void(signal_node<Args...>*, Args...)>&& newFn) :
-      fn([this, newFn](Args... args){ newFn(this, args...); })
+        fn([this, newFn](Args... args){ newFn(this, args...); })
       {}
       
       const std::function<void(Args...)> fn;
@@ -75,7 +84,7 @@ namespace autowiring {
       template<typename t_Fn>
       signal_node<Args...>* operator+=(t_Fn fn) {
         auto retVal = new signal_node<Args...>(std::forward<t_Fn>(fn));
-        insert(retVal);
+        insert_after(retVal);
         return retVal;
       }
     };
@@ -161,17 +170,18 @@ namespace autowiring {
       internal::signal_node_base* next = nullptr;
       for (auto cur = pFlink; cur; cur = next) {
         next = cur->pFlink;
-        delete cur;
+        delete cur; //don't bother unlinking..
       }
     }
 
     /// <summary>
-    /// Searches the list for this node and removes it, or throws if it is not found.
+    /// Searches the list for this node and deletes it, or throws if it is not found.
     /// </summary>
     void operator-=(signal_node_base* node) {
       signal_node_base* cur;
       for (cur = pFlink; cur != nullptr; cur = cur->pFlink) {
         if (cur == node){
+          node->remove();
           delete node;
           return;
         }
@@ -225,7 +235,7 @@ namespace autowiring {
     typedef std::function<void(Args...)> function_t;
 
     template<typename t_Fn>
-    registration_t* operator+=(t_Fn && fn) { return *m_relay += std::move(fn); }
+    registration_t* operator+=(t_Fn fn) { return *m_relay += std::forward<t_Fn>(fn); }
 
     void operator-=(registration_t* node) { return *m_relay -= node; }
 
