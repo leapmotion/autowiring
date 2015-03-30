@@ -144,15 +144,20 @@ void AutoPacketFactory::Clear(void) {
   Stop(false);
 }
 
-void AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
+const AutoFilterDescriptor& AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor& rhs) {
   std::lock_guard<std::mutex> lk(m_lock);
   m_autoFilters.insert(rhs);
+  return rhs;
 }
 
 void AutoPacketFactory::RemoveSubscriber(const AutoFilterDescriptor& autoFilter) {
   // Trivial removal from the autofilter set:
   std::lock_guard<std::mutex> lk(m_lock);
   m_autoFilters.erase(autoFilter);
+}
+
+void AutoPacketFactory::operator-=(const AutoFilterDescriptor& desc) {
+  RemoveSubscriber(desc);
 }
 
 AutoFilterDescriptor AutoPacketFactory::GetTypeDescriptorUnsafe(const std::type_info* nodeType) {
