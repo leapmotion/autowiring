@@ -89,32 +89,51 @@ public:
   /// <summary>
   /// Registers the passed subscriber, if it defines a method called AutoFilter
   /// </summary>
+  /// <param name="rhs">The descriptor for the AutoFilter to be added</param>
+  /// <returns>rhs</returns>
   /// <remarks>
   /// This method is idempotent
   /// </remarks>
-  void AddSubscriber(const AutoFilterDescriptor& rhs);
+  const AutoFilterDescriptor& AddSubscriber(const AutoFilterDescriptor& rhs);
 
   /// <summary>
   /// Convenience override of AddSubscriber
   /// </summary>
+  /// <param name="rhs">A shared pointer to a type which has an AutoFilter routine on it</param>
+  /// <remarks>
+  /// For this call to be valid, T::AutoFilter must be defined and must be a compliant AutoFilter
+  /// </remarks>
   template<class T>
-  void AddSubscriber(const std::shared_ptr<T>& rhs) {
-    AddSubscriber(AutoFilterDescriptor(rhs));
-  }
-
-  /// <summary>
-  /// Convienance overload of operator+= to add a subscriber from a lambda
-  /// </summary>
-  template<class Fx>
-  void operator+=(Fx&& fx) {
-    AddSubscriber(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
+  AutoFilterDescriptor AddSubscriber(const std::shared_ptr<T>& rhs) {
+    return AddSubscriber(AutoFilterDescriptor(rhs));
   }
 
   /// <summary>
   /// Removes the designated AutoFilter from this factory
   /// </summary>
   /// <param name="autoFilter">The AutoFilter to be removed</param>
+  /// <remarks>
+  /// This method will not retroactively modify packets that have already been issued with the specified
+  /// AutoFilter on it.  Only packets that are issued after this method returns will lack the presence of
+  /// the autoFilter described by the parameter.
+  /// </remarks>
   void RemoveSubscriber(const AutoFilterDescriptor& autoFilter);
+
+  /// <summary>
+  /// Convienance overload of operator+= to add a subscriber from a lambda
+  /// </summary>
+  /// <remarks>
+  /// This method provides a way to attach a lambda function directly to the factory
+  /// </remarks>
+  template<class Fx>
+  AutoFilterDescriptor operator+= (Fx&& fx) {
+    return AddSubscriber(AutoFilterDescriptor(std::forward<Fx&&>(fx)));
+  }
+
+  /// <summary>
+  /// Overloaded counterpart to RemoveSubscriber
+  /// </summary>
+  void operator-=(const AutoFilterDescriptor& desc);
 
 protected:
   /// <summary>
