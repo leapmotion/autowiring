@@ -62,11 +62,11 @@ namespace autowiring {
         fn(std::move(fn))
       {}
       
-      //Functions where the first argument is a signal_node_base are also ok.
-      signal_node(std::function<void(signal_node_base*, Args...)>&& newFn) :
-        fn([this, newFn](Args... args){ newFn(this, args...); })
+      //Functions where the first argument is a signal_node<...> or base type are also ok.
+      signal_node(std::function<void(signal_node<Args...>*, Args...)>&& newFn) :
+      fn([this, newFn](Args... args){ newFn(this, args...); })
       {}
-
+      
       const std::function<void(Args...)> fn;
 
       /// <summary>

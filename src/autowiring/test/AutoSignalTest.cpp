@@ -201,11 +201,14 @@ TEST_F(AutoSignalTest, SelfReferencingCall) {
   ASSERT_TRUE(handler_called1) << "Handler was not called!";
 }
 
-TEST_F(AutoSignalTest, SelfRemovingCall) {
+TEST_F(AutoSignalTest, SelfModifyingCall) {
   typedef autowiring::signal<void(int)> signal_t;
   signal_t signal1;
   
   int handler_called1 = 0;
+  int handler_called2 = 0;
+  int handler_called3 = 0;
+  
   int magic_number = 123;
   
   signal_t::registration_t* registration1 =
@@ -213,6 +216,20 @@ TEST_F(AutoSignalTest, SelfRemovingCall) {
     ASSERT_EQ(magic, magic_number);
     ASSERT_EQ(registration1, reg);
     ++handler_called1;
+    
+    delete reg;
+  };
+  
+  signal_t::registration_t* registration2 = signal1 += [&](signal_t::registration_t* reg, int magic) {
+    ASSERT_EQ(magic, magic_number);
+    ASSERT_EQ(registration2, reg);
+    ++handler_called2;
+    
+    //+= is an append operation, so this function will be evaluated immediately after the current one.
+    *reg += [&](int magic) {
+      ++handler_called3;
+    };
+    
     delete reg;
   };
   
@@ -220,4 +237,6 @@ TEST_F(AutoSignalTest, SelfRemovingCall) {
   signal1(magic_number);
   
   ASSERT_EQ(handler_called1, 1) << "Handler was unable to remove itself!";
+  ASSERT_EQ(handler_called2, 1) << "Specific handler was unable to remove itself";
+  ASSERT_EQ(handler_called3, 2) << "Handler was unable to append to itself.";
 }
