@@ -47,39 +47,6 @@ protected:
 public:
   /// \internal
   /// <summary>
-  /// Waits until a lambda function is ready to run in this thread's dispatch queue,
-  /// dispatches the function, and then returns.
-  /// </summary>
-  void WaitForEvent(void);
-
-  /// \internal
-  /// <summary>
-  /// Waits until a lambda function in the dispatch queue is ready to run or the specified
-  /// time period elapses, whichever comes first.
-  /// </summary>
-  /// <returns>
-  /// False if the timeout period elapsed before an event could be dispatched, true otherwise
-  /// </returns>
-  bool WaitForEvent(std::chrono::milliseconds milliseconds);
-
-  /// \internal
-  /// <summary>
-  /// Waits until a lambda function in the dispatch queue is ready to run or the specified
-  /// time is reached, whichever comes first.
-  /// </summary>
-  /// <returns>
-  /// False if the timeout period elapsed before an event could be dispatched, true otherwise
-  /// </returns>
-  bool WaitForEvent(std::chrono::steady_clock::time_point wakeTime);
-
-  /// \internal
-  /// <summary>
-  /// An unsafe variant of WaitForEvent
-  /// </summary>
-  bool WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chrono::steady_clock::time_point wakeTime);
-
-  /// \internal
-  /// <summary>
   /// Called automatically to begin core thread execution.
   /// </summary>
   /// <param name="context">A shared pointer to the context containing this thread</param>
