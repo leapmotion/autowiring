@@ -122,3 +122,124 @@ TEST_F(AutoSignalTest, RaiseASignalWithinASlotTest) {
   ASSERT_TRUE(handler_called1) << "Handler 1 was not called on a stack-allocated signal";
   ASSERT_TRUE(handler_called2) << "Handler 2 was not called on a stack-allocated signal";
 }
+
+TEST_F(AutoSignalTest, NodeRemoval) {
+  autowiring::signal<void(void)> signal1;
+  autowiring::signal<void(void)> signal2;
+
+  bool handler_called1 = false;
+  bool handler_called2 = false;
+
+  auto* registration1 = signal1 += [&] { handler_called1 = true; };
+  auto* registration2 = signal2 += [&] { handler_called2 = true; };
+  
+  ASSERT_ANY_THROW(signal1 -= registration2) << "Removing a registration from a different signal than it was registered to failed to throw an exception";
+
+  registration1->remove();
+  delete registration1;
+  signal1();
+  signal2();
+  
+  ASSERT_FALSE(handler_called1) << "Handler1 was called after being unregistered";
+  ASSERT_TRUE(handler_called2) << "Handler2 was removed after an invalid -= operation";
+}
+
+TEST_F(AutoSignalTest, CallOrdering) {
+  autowiring::signal<void(void)> signal1;
+
+  bool handler_called1 = false;
+  bool handler_called2 = false;
+
+  //handlers are inserted at the begining, so this will be called last.
+  signal1 += [&] {
+    ASSERT_TRUE(handler_called2);
+    handler_called1 = true;
+  };
+  signal1 += [&] { handler_called2 = true; };
+
+  signal1();
+
+  ASSERT_TRUE(handler_called1) << "Handler1 was called after being unregistered";
+  ASSERT_TRUE(handler_called2) << "Handler2 was removed after an invalid -= operation";
+}
+
+TEST_F(AutoSignalTest, CallInsertion) {
+  autowiring::signal<void(void)> signal1;
+
+  bool handler_called1 = false;
+  bool handler_called2 = false;
+
+  auto* registration1 = signal1 += [&](void) { handler_called1 = true; };
+
+  //when += to a registration object, the new one is appended.
+  *registration1 += [&](void) {
+    ASSERT_TRUE(handler_called1);
+    handler_called2 = true; };
+
+  signal1();
+
+  ASSERT_TRUE(handler_called1) << "Handler1 was called after being unregistered";
+  ASSERT_TRUE(handler_called2) << "Handler2 was removed after an invalid -= operation";
+}
+
+TEST_F(AutoSignalTest, SelfReferencingCall) {
+  typedef autowiring::signal<void(int)> signal_t;
+  signal_t signal1;
+
+  bool handler_called1 = false;
+  int magic_number = 123;
+
+  //The main test is just if this thing will compile
+  signal_t::registration_t* registration1 =
+    signal1 += [&](autowiring::internal::signal_node_base* reg, int magic) {
+      ASSERT_EQ(magic, magic_number);
+      ASSERT_EQ(registration1, reg);
+      handler_called1 = true;
+    };
+
+  signal1(magic_number);
+
+  ASSERT_TRUE(handler_called1) << "Handler was not called!";
+}
+
+TEST_F(AutoSignalTest, SelfModifyingCall) {
+  typedef autowiring::signal<void(int)> signal_t;
+  signal_t signal1;
+  
+  int handler_called1 = 0;
+  int handler_called2 = 0;
+  int handler_called3 = 0;
+  
+  int magic_number = 123;
+  
+  signal_t::registration_t* registration1 =
+  signal1 += [&](autowiring::internal::signal_node_base* reg, int magic) {
+    ASSERT_EQ(magic, magic_number);
+    ASSERT_EQ(registration1, reg);
+    ++handler_called1;
+    delete reg->remove();
+  };
+  
+  auto lambda3 = [&](int magic) {
+    ++handler_called3;
+  };
+
+  signal_t::registration_t* registration2 = signal1 += [&](signal_t::registration_t* reg, int magic) {
+    ASSERT_EQ(magic, magic_number);
+    ASSERT_EQ(registration2, reg);
+    ++handler_called2;
+    
+    //+= is an append operation, but because when we're traveling the list and we grab the next pointer
+    //*before* the function get's called, this append won't be picked up until the 2nd pass.
+    *reg += std::move(lambda3);
+    
+    delete reg->remove();
+  };
+  
+  signal1(magic_number);
+  signal1(magic_number);
+  
+  ASSERT_EQ(handler_called1, 1) << "Handler was unable to remove itself!";
+  ASSERT_EQ(handler_called2, 1) << "Specific handler was unable to remove itself";
+  ASSERT_EQ(handler_called3, 1) << "Handler was unable to append to itself or was called prematurely.";
+}
