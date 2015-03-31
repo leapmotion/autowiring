@@ -187,6 +187,17 @@ public:
   void AddExisting(DispatchThunkBase* pBase);
 
   /// <summary>
+  /// Blocks until all dispatchers on the DispatchQueue at the time of the call have been dispatched
+  /// </summary>
+  /// <param name="timeout">The maximum amount of time to wait</param>
+  /// <remarks>
+  /// This method does not cause any dispatchers to run.  If the underlying dispatch queue does not have an event loop
+  /// operating on it, this method will deadlock.  It is an error for the party responsible for driving the dispatch queue
+  /// via WaitForEvent or DispatchAllEvents unless that party first delegates the responsibility elsewhere.
+  /// </remarks>
+  bool Barrier(std::chrono::nanoseconds timeout);
+
+  /// <summary>
   /// Recommends a point in time to wake up to check for events
   /// </summary>
   /// <returns>
