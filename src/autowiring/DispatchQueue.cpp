@@ -179,6 +179,16 @@ void DispatchQueue::AddExisting(DispatchThunkBase* pBase) {
   OnPended(std::move(lk));
 }
 
+bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
+  // Set up the lambda:
+  auto complete = std::make_shared<bool>(false);
+  *this += [complete] { *complete = true; };
+
+  // Obtain the lock, wait until our variable is satisfied, which might be right away:
+  std::unique_lock<std::mutex> lk(m_dispatchLock);
+  return m_queueUpdated.wait_for(lk, timeout, [&] {return  *complete; });
+}
+
 std::chrono::steady_clock::time_point
 DispatchQueue::SuggestSoonestWakeupTimeUnsafe(std::chrono::steady_clock::time_point latestTime) const {
   return
