@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <autowiring/CoreThread.h>
 #include <autowiring/DispatchQueue.h>
+#include <future>
 
 using namespace std;
 
@@ -67,4 +68,22 @@ TEST_F(DispatchQueueTest, PathologicalStartAndStop){
   ASSERT_TRUE(t4->WaitFor(std::chrono::seconds(10)));
 }
 
+TEST_F(DispatchQueueTest, Waypoint) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<CoreThread> ct;
 
+  // Barrier on an empty dispatch queue should return right away:
+  ASSERT_TRUE(ct->Barrier(std::chrono::seconds(5))) << "Barrier on an empty dispatch queue did not return immediately as expected";
+
+  // Attach a lambda that will wait until the promise is complete:
+  std::promise<bool> barrier;
+  *ct += [&] {
+    auto f = barrier.get_future();
+    f.wait();
+  };
+  ASSERT_FALSE(ct->Barrier(std::chrono::milliseconds(1))) << "Barrier returned even though a dispatcher was not complete";
+  barrier.set_value(true);
+
+  // Now we should be able to complete:
+  ASSERT_TRUE(ct->Barrier(std::chrono::seconds(5))) << "Barrier did not return even though a dispatcher should have completed";
+}
