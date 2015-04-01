@@ -68,7 +68,7 @@ TEST_F(DispatchQueueTest, PathologicalStartAndStop){
   ASSERT_TRUE(t4->WaitFor(std::chrono::seconds(10)));
 }
 
-TEST_F(DispatchQueueTest, Waypoint) {
+TEST_F(DispatchQueueTest, Barrier) {
   AutoCurrentContext()->Initiate();
   AutoRequired<CoreThread> ct;
 
