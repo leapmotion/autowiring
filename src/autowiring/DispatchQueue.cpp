@@ -82,7 +82,7 @@ void DispatchQueue::Abort(void) {
 void DispatchQueue::WaitForEvent(void) {
   std::unique_lock<std::mutex> lk(m_dispatchLock);
   if (m_aborted)
-    throw dispatch_aborted_exception("Dispatch queue was aborted while waiting for an event");
+    throw dispatch_aborted_exception("Dispatch queue was aborted prior to waiting for an event");
 
   // Unconditional delay:
   m_queueUpdated.wait(lk, [this]() -> bool {
@@ -124,7 +124,7 @@ bool DispatchQueue::WaitForEvent(std::chrono::steady_clock::time_point wakeTime)
 
 bool DispatchQueue::WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chrono::steady_clock::time_point wakeTime) {
   if (m_aborted)
-    throw dispatch_aborted_exception("Dispatch queue was aborted while waiting for an event");
+    throw dispatch_aborted_exception("Dispatch queue was aborted prior to waiting for an event");
 
   while (m_dispatchQueue.empty()) {
     // Derive a wakeup time using the high precision timer:
