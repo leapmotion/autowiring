@@ -193,6 +193,21 @@ bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
   return rv;
 }
 
+void DispatchQueue::Barrier(void) {
+  // Set up the lambda:
+  bool complete = false;
+  *this += [&] { complete = true; };
+
+  // Obtain the lock, wait until our variable is satisfied, which might be right away:
+  std::unique_lock<std::mutex> lk(m_dispatchLock);
+  m_queueUpdated.wait(lk, [&] { return m_aborted || complete; });
+  if (m_aborted)
+    // At this point, the dispatch queue MUST be completely run down.  We have no outstanding references
+    // to our stack-allocated "complete" variable.  Furthermore, after m_aborted is true, no further
+    // dispatchers are permitted to be run.
+    throw autowiring_error("Dispatch queue was aborted while a barrier was invoked");
+}
+
 std::chrono::steady_clock::time_point
 DispatchQueue::SuggestSoonestWakeupTimeUnsafe(std::chrono::steady_clock::time_point latestTime) const {
   return
