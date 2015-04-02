@@ -194,6 +194,9 @@ public:
   /// This method does not cause any dispatchers to run.  If the underlying dispatch queue does not have an event loop
   /// operating on it, this method will deadlock.  It is an error for the party responsible for driving the dispatch queue
   /// via WaitForEvent or DispatchAllEvents unless that party first delegates the responsibility elsewhere.
+  ///
+  /// If DispatchQueue::Abort() is called before the dispatcher has been completed, this method will throw an exception.
+  /// If a dispatcher on the underlying DispatchQueue throws an exception, this method will also throw an exception.
   /// </remarks>
   bool Barrier(std::chrono::nanoseconds timeout);
 
