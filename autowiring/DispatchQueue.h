@@ -201,6 +201,11 @@ public:
   bool Barrier(std::chrono::nanoseconds timeout);
 
   /// <summary>
+  /// Identical to the timed version of Barrier, but does not time out
+  /// </summary>
+  void Barrier(void);
+
+  /// <summary>
   /// Recommends a point in time to wake up to check for events
   /// </summary>
   /// <returns>
