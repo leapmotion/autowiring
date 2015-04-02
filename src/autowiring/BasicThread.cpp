@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "BasicThread.h"
 #include "Autowired.h"
+#include "autowiring_error.h"
 #include "BasicThreadStateBlock.h"
 #include "ContextEnumerator.h"
 #include "fast_pointer_cast.h"
@@ -109,7 +110,7 @@ void BasicThread::WaitForStateUpdate(const std::function<bool()>& fn) {
     }
   );
   if(ShouldStop())
-    throw dispatch_aborted_exception();
+    throw dispatch_aborted_exception("Thread was stopped before the function returned true");
 }
 
 void BasicThread::PerformStatusUpdate(const std::function<void()>& fn) {

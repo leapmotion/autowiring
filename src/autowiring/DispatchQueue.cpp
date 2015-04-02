@@ -2,10 +2,12 @@
 #include "stdafx.h"
 #include "DispatchQueue.h"
 #include "at_exit.h"
-#include "autowiring_error.h"
 #include <assert.h>
 
-dispatch_aborted_exception::dispatch_aborted_exception(void){}
+dispatch_aborted_exception::dispatch_aborted_exception(const std::string& what):
+  autowiring_error(what)
+{}
+
 dispatch_aborted_exception::~dispatch_aborted_exception(void){}
 
 DispatchQueue::DispatchQueue(void):
@@ -80,12 +82,12 @@ void DispatchQueue::Abort(void) {
 void DispatchQueue::WaitForEvent(void) {
   std::unique_lock<std::mutex> lk(m_dispatchLock);
   if (m_aborted)
-    throw dispatch_aborted_exception();
+    throw dispatch_aborted_exception("Dispatch queue was aborted prior to waiting for an event");
 
   // Unconditional delay:
   m_queueUpdated.wait(lk, [this]() -> bool {
     if (m_aborted)
-      throw dispatch_aborted_exception();
+      throw dispatch_aborted_exception("Dispatch queue was aborted while waiting for an event");
 
     return
       // We will need to transition out if the delay queue receives any items:
@@ -122,7 +124,7 @@ bool DispatchQueue::WaitForEvent(std::chrono::steady_clock::time_point wakeTime)
 
 bool DispatchQueue::WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chrono::steady_clock::time_point wakeTime) {
   if (m_aborted)
-    throw dispatch_aborted_exception();
+    throw dispatch_aborted_exception("Dispatch queue was aborted prior to waiting for an event");
 
   while (m_dispatchQueue.empty()) {
     // Derive a wakeup time using the high precision timer:
@@ -134,7 +136,7 @@ bool DispatchQueue::WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::ch
 
     // Short-circuit if the queue was aborted
     if (m_aborted)
-      throw dispatch_aborted_exception();
+      throw dispatch_aborted_exception("Dispatch queue was aborted while waiting for an event");
 
     if (PromoteReadyDispatchersUnsafe())
       // Dispatcher is ready to run!  Exit our loop and dispatch an event
@@ -189,7 +191,7 @@ bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
   std::unique_lock<std::mutex> lk(m_dispatchLock);
   bool rv = m_queueUpdated.wait_for(lk, timeout, [&] { return m_aborted || *complete; });
   if (m_aborted)
-    throw autowiring_error("Dispatch queue was aborted while a barrier was invoked");
+    throw dispatch_aborted_exception("Dispatch queue was aborted while a barrier was invoked");
   return rv;
 }
 
@@ -205,7 +207,7 @@ void DispatchQueue::Barrier(void) {
     // At this point, the dispatch queue MUST be completely run down.  We have no outstanding references
     // to our stack-allocated "complete" variable.  Furthermore, after m_aborted is true, no further
     // dispatchers are permitted to be run.
-    throw autowiring_error("Dispatch queue was aborted while a barrier was invoked");
+    throw dispatch_aborted_exception("Dispatch queue was aborted while a barrier was invoked");
 }
 
 std::chrono::steady_clock::time_point
