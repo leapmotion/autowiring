@@ -237,7 +237,3 @@ TEST_F(ExceptionFilterTest, VerifySimpleConfinement) {
   // Verify that the child scope was terminated as expected:
   EXPECT_TRUE(child->IsShutdown()) << "An event recipient in a child scope threw an exception and the child context was not correctly terminated";
 }
-
-TEST_F(ExceptionFilterTest, NoRecursiveShutdowns) {
-
-}
