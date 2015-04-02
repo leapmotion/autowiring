@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "DispatchQueue.h"
 #include "at_exit.h"
+#include "autowiring_error.h"
 #include <assert.h>
 
 dispatch_aborted_exception::dispatch_aborted_exception(void){}
@@ -186,7 +187,10 @@ bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
 
   // Obtain the lock, wait until our variable is satisfied, which might be right away:
   std::unique_lock<std::mutex> lk(m_dispatchLock);
-  return m_queueUpdated.wait_for(lk, timeout, [&] {return  *complete; });
+  bool rv = m_queueUpdated.wait_for(lk, timeout, [&] { return m_aborted || *complete; });
+  if (m_aborted)
+    throw autowiring_error("Dispatch queue was aborted while a barrier was invoked");
+  return rv;
 }
 
 std::chrono::steady_clock::time_point
