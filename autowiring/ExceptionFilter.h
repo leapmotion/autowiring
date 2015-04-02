@@ -15,6 +15,7 @@ class CoreObject;
 /// filter the passed exception.  Generally, the filtration technique should be written
 /// as follows:
 ///
+/// \code
 /// try {
 ///   throw;
 /// } catch(custom_type_1& t1) {
@@ -22,17 +23,21 @@ class CoreObject;
 /// } catch(custom_type_2& t2) {
 ///   ...handling code...
 /// }
+/// \endcode
 ///
 /// Alternatively, this strategy may be used:
 ///
+/// \code
 /// try {
 ///   throw;
 /// } catch(custom_type_1&) {
 /// } catch(custom_type_2&) {
 /// }
 /// ...handling code...
+/// \endcode
 ///
 /// Filtration methods may safely allow any unhandled rethrows to percolate to the caller.
+/// Autowiring will ignore any exceptions thrown by a filter method.
 ///
 /// Unhandled exceptions thrown in a context will cause that context to be torn down.  By
 /// the time the exception filter is called, teardown of the context originating the
@@ -59,6 +64,8 @@ public:
   /// prevent certain exceptions from being unhandled.
   ///
   /// Implementors can use "throw" with no arguments to trigger a rethrow of the originating exception.
+  ///
+  /// Exceptions thrown by this method are silently ignored by Autowiring.
   /// </remarks>
   virtual void Filter(void) {};
 
@@ -68,6 +75,8 @@ public:
   /// <param name="pRecipient">The target of the call</param>
   /// <remarks>
   /// Implementors can use "throw" with no arguments to trigger a rethrow of the originating exception.
+  ///
+  /// Exceptions thrown by this method are silently ignored by Autowiring.
   /// </remarks>
   virtual void Filter(const JunctionBoxBase* pJunctionBox, CoreObject* pRecipient) {}
 };
