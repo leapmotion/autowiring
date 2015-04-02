@@ -630,6 +630,13 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
     m_nameListeners[typeid(void)].push_back(pBase.get());
 }
 
+JunctionBoxBase& CoreContext::All(const std::type_info& ti) const {
+  auto jb = m_junctionBoxManager->Get(ti);
+  if (!jb)
+    throw autowiring_error("Attempted to obtain a junction box which has not been declared");
+  return *jb;
+}
+
 void CoreContext::BuildCurrentState(void) {
   AutoGlobalContext glbl;
   glbl->Invoke(&AutowiringEvents::NewContext)(*this);

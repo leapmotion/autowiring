@@ -750,6 +750,39 @@ public:
     FindByType(ptr);
     return ptr != nullptr;
   }
+
+  /// <summary>
+  /// Runtime variant of All
+  /// </summary>
+  /// <remarks>
+  /// This instance does not cause a correct instantiation of the underlying junction box.  Users are cautioned against
+  /// using this method directly unless they are able to ensure a proper entry is made into the type registry.
+  ///
+  /// It is an error to call this method on an unregistered type.
+  /// </remarks>
+  JunctionBoxBase& All(const std::type_info& ti) const;
+
+  /// <summary>
+  /// Returns all members of and snoopers on this context which implement the specified interface
+  /// </summary>
+  /// <remarks>
+  /// This method makes use of the JunctionBox subsystem, and thus is extremely efficient.  The underlying system is
+  /// memoized, and new entries automatically update any existing memos, which gives this routine O(n) efficiency, where
+  /// n is the number of types in this context that implement the specified interface.
+  ///
+  /// Note that the junction box will also contain members of child contexts that implement the specified interface, and
+  /// instances that are snooping this context.
+  ///
+  /// This method's result will be an empty vector if the context is not currently initiated.
+  /// </remarks>
+  template<class T>
+  JunctionBox<T>& All(void) {
+    // Type registration, needed to ensure our junction box actually exists
+    (void) RegEvent<T>::r;
+
+    // Simple coercive transfer:
+    return static_cast<JunctionBox<T>&>(All(typeid(T)));
+  }
   
   template<typename T, typename... Args>
   std::shared_ptr<T> DEPRECATED(Construct(Args&&... args), "'Construct' is deprecated, use 'Inject' instead");
