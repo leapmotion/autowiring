@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "DispatchQueue.h"
 #include "at_exit.h"
-#include "autowiring_error.h"
 #include <assert.h>
 
 dispatch_aborted_exception::dispatch_aborted_exception(const std::string& what):
@@ -192,7 +191,7 @@ bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
   std::unique_lock<std::mutex> lk(m_dispatchLock);
   bool rv = m_queueUpdated.wait_for(lk, timeout, [&] { return m_aborted || *complete; });
   if (m_aborted)
-    throw autowiring_error("Dispatch queue was aborted while a barrier was invoked");
+    throw dispatch_aborted_exception("Dispatch queue was aborted while a barrier was invoked");
   return rv;
 }
 
@@ -208,7 +207,7 @@ void DispatchQueue::Barrier(void) {
     // At this point, the dispatch queue MUST be completely run down.  We have no outstanding references
     // to our stack-allocated "complete" variable.  Furthermore, after m_aborted is true, no further
     // dispatchers are permitted to be run.
-    throw autowiring_error("Dispatch queue was aborted while a barrier was invoked");
+    throw dispatch_aborted_exception("Dispatch queue was aborted while a barrier was invoked");
 }
 
 std::chrono::steady_clock::time_point
