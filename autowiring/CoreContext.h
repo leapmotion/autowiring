@@ -773,7 +773,7 @@ public:
   /// Note that the junction box will also contain members of child contexts that implement the specified interface, and
   /// instances that are snooping this context.
   ///
-  /// This method's result will be an empty vector if the context is not currently initiated.
+  /// This method's result will be an empty iterable if the context is not currently initiated.
   /// </remarks>
   template<class T>
   JunctionBox<T>& All(void) {

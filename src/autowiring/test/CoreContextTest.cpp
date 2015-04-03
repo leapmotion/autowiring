@@ -454,11 +454,12 @@ TEST_F(CoreContextTest, All) {
   auto& allMembers = ctxt->All<MyClassForAllBase>();
   ASSERT_LE(2UL, allMembers.size()) << "All members not correctly identified by call to all";
 
-  bool found1;
-  bool found2;
+  // Check all instances found
+  bool found1 = false;
+  bool found2 = false;
   for (auto& cur : allMembers) {
-    found1 = &cur == c1.get();
-    found2 = &cur == c2.get();
+    found1 |= &cur == c1.get();
+    found2 |= &cur == c2.get();
   }
 
   ASSERT_TRUE(found1) << "Failed to find MyClassForAll<1> via its ContextMember interface";
