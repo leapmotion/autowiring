@@ -52,6 +52,12 @@ public:
   bool IsInitiated(void) const {return m_isInitiated;}
   void Initiate(void) {m_isInitiated=true;}
   
+  /// <summary>
+  /// Convenience method allowing consumers to quickly determine whether any listeners exist
+  /// </summary>
+  /// <returns>
+  /// True if at least one listener has been registered
+  /// </returns>
   virtual bool HasListeners(void) const = 0;
 
   // Event attachment and detachment pure virtuals

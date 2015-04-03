@@ -6,11 +6,15 @@
 class CoreContext;
 
 struct JunctionBoxEntryBase {
+  JunctionBoxEntryBase(void) :
+    m_owner(nullptr)
+  {}
+
   JunctionBoxEntryBase(CoreContext* owner) :
     m_owner(owner)
   {}
 
-  CoreContext* const m_owner;
+  CoreContext* m_owner;
 };
 
 /// <summary>
@@ -20,17 +24,14 @@ template<class T>
 struct JunctionBoxEntry:
   JunctionBoxEntryBase
 {
+  JunctionBoxEntry(void) {}
+
   JunctionBoxEntry(CoreContext* owner, std::shared_ptr<T> ptr) :
     JunctionBoxEntryBase(owner),
     m_ptr(ptr)
   {}
 
   std::shared_ptr<T> m_ptr;
-
-  JunctionBoxEntry& operator=(const JunctionBoxEntry& rhs) {
-    // This shouldn't be used. non-c++11 containers require this...
-    throw std::runtime_error("Can't copy a JunctionBoxEntry");
-  }
 
   bool operator==(const JunctionBoxEntry& rhs) const {
     return m_ptr == rhs.m_ptr;
