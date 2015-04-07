@@ -1,6 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "autowiring_error.h"
+#include "dispatch_aborted_exception.h"
 #include "DispatchThunk.h"
 #include <list>
 #include <queue>
@@ -9,18 +9,6 @@
 #include MEMORY_HEADER
 
 class DispatchQueue;
-
-/// \internal
-/// <summary>
-/// Thrown when a dispatch operation was aborted
-/// </summary>
-class dispatch_aborted_exception:
-  public autowiring_error
-{
-public:
-  dispatch_aborted_exception(const std::string& what);
-  virtual ~dispatch_aborted_exception(void);
-};
 
 /// <summary>
 /// This is an asynchronous queue of zero-argument functions
