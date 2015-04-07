@@ -100,6 +100,8 @@ set(Autowiring_SRCS
   demangle.cpp
   demangle.h
   Deserialize.h
+  dispatch_aborted_exception.h
+  dispatch_aborted_exception.cpp
   DispatchQueue.cpp
   DispatchQueue.h
   DispatchThunk.h

@@ -4,12 +4,6 @@
 #include "at_exit.h"
 #include <assert.h>
 
-dispatch_aborted_exception::dispatch_aborted_exception(const std::string& what):
-  autowiring_error(what)
-{}
-
-dispatch_aborted_exception::~dispatch_aborted_exception(void){}
-
 DispatchQueue::DispatchQueue(void):
   m_dispatchCap(1024),
   m_aborted(false)
