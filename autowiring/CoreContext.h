@@ -1185,7 +1185,6 @@ public:
     }
   };
 
-  /// \internal
   /// <summary>
   /// Adds a post-attachment listener in this context for a particular autowired member.
   /// There is no guarantee for the context in which the listener will be called.
