@@ -49,11 +49,7 @@ namespace std {
       return
         key.tshift +
         (key.is_shared ? 0x80000 : 0x70000) +
-#if AUTOWIRING_USE_LIBCXX
         key.ti->hash_code();
-#else
-        std::type_index(*key.ti).hash_code();
-#endif
     }
   };
 }
