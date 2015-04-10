@@ -52,9 +52,9 @@ endif()
 
 message(STATUS "Compiler version ${CMAKE_CXX_COMPILER_VERSION}")
 
-# Always use c++11 compiler
+# Always use c++11 compiler with hidden visibility
 if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fvisibility=hidden")
 endif()
 
 # Clang needs special additional flags to build with C++11
