@@ -2,7 +2,8 @@
 #include "stdafx.h"
 #include <autowiring/CoreThread.h>
 #include <autowiring/DispatchQueue.h>
-#include <future>
+#include <thread>
+#include FUTURE_HEADER
 
 using namespace std;
 
