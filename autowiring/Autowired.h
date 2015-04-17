@@ -160,6 +160,8 @@ private:
 
   // The set of all nodes that will have to be unlinked when this field is torn down
   std::vector<unlink_entry> m_unlinkEntries;
+  //Required to keep the registration table alive untill after we're dead.
+  std::shared_ptr<autowiring::signal_relay_registration_table> m_registrationTable;
 
 public:
   operator const std::shared_ptr<T>&(void) const {
@@ -210,6 +212,10 @@ public:
     auto ctxt = AutowirableSlot<T>::GetContext();
     if (!ctxt)
       throw std::runtime_error("Attempted to attach a signal to an Autowired field in a context that was already destroyed");
+
+    if (!m_registrationTable)
+      m_registrationTable = ctxt->template Inject<autowiring::signal_relay_registration_table>();
+
     return {*this, ctxt->RelayForType(handlerActual)};
   }
 
