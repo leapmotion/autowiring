@@ -117,38 +117,3 @@
 
 ======================================================
 
-1. Jared Deckard
-Github account: deckar01
-Email: jared.deckard@gmail.com
-
-2. Stu Kabakoff
-Github account: sakabako
-Email: sakabako@gmail.com
-
-3. Yoshihiro Iwanaga
-Github account: iwanaga
-Email: iwanaga.blackie@gmail.com
-
-4. ARJUNKUMAR KRISHNAMOORTHY
-Github account: tk120404
-Email: Arjunkumartk@gmail.com 
-
-5. Rob Witoff
-Github account: witoff
-Email: leap@pspct.com
-
-6. Richard Pearson
-Github account: catdevnull
-Email: github@catdevnull.co.uk
-
-7. Ben Nortier
-Github account: bjnortier
-Email: bjnortier@gmail.com
-
-8. Andrew Kennedy
-Github account: akenn
-Email: andrew@akenn.org
-
-9. Victor Norgren
-Github account: logotype
-Email: victor@logotype.se
