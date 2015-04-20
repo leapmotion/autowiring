@@ -186,11 +186,11 @@ struct AutoFilterDescriptor:
   /// Recipients added in this way cannot receive piped data, since they are anonymous.
   /// </remarks>
   template<class Fn>
-  AutoFilterDescriptor(Fn fn):
+  AutoFilterDescriptor(Fn fn, autowiring::altitude altitude = autowiring::altitude::Standard):
     AutoFilterDescriptor(
       AnySharedPointer(std::make_shared<Fn>(std::forward<Fn>(fn))),
       &typeid(Fn),
-      autowiring::altitude::Standard,
+      altitude,
       CallExtractor<decltype(&Fn::operator())>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types,
       false,
       &CallExtractor<decltype(&Fn::operator())>::template Call<&Fn::operator()>

@@ -119,6 +119,25 @@ public:
   /// </remarks>
   void RemoveSubscriber(const AutoFilterDescriptor& autoFilter);
 
+  struct AutoPacketFactoryExpression {
+    AutoPacketFactoryExpression(AutoPacketFactory& factory, autowiring::altitude altitude):
+      factory(factory),
+      altitude(altitude)
+    {}
+
+    AutoPacketFactory& factory;
+    autowiring::altitude altitude;
+
+    template<class Fx>
+    AutoFilterDescriptor operator,(Fx&& fx) {
+      return factory.AddSubscriber(AutoFilterDescriptor(std::forward<Fx&&>(fx), altitude));
+    }
+  };
+
+  AutoPacketFactoryExpression operator+=(autowiring::altitude altitude) {
+    return AutoPacketFactoryExpression(*this, altitude);
+  }
+
   /// <summary>
   /// Convienance overload of operator+= to add a subscriber from a lambda
   /// </summary>
