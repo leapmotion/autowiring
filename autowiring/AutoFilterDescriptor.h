@@ -25,14 +25,8 @@ struct AutoFilterDescriptorStub {
     m_pCall(nullptr)
   {}
 
-  AutoFilterDescriptorStub(const AutoFilterDescriptorStub& rhs) :
-    m_pType(rhs.m_pType),
-    m_pArgs(rhs.m_pArgs),
-    m_deferred(rhs.m_deferred),
-    m_arity(rhs.m_arity),
-    m_requiredCount(rhs.m_requiredCount),
-    m_pCall(rhs.m_pCall)
-  {}
+  AutoFilterDescriptorStub(const AutoFilterDescriptorStub&) = default;
+  AutoFilterDescriptorStub& operator=(const AutoFilterDescriptorStub&) = default;
 
   /// <summary>
   /// Constructs a new packet subscriber entry based on the specified call extractor and call pointer
@@ -137,18 +131,8 @@ struct AutoFilterDescriptor:
   AutoFilterDescriptorStub
 {
   AutoFilterDescriptor(void) {}
-
-  AutoFilterDescriptor(const AutoFilterDescriptor& rhs) :
-    AutoFilterDescriptorStub(rhs),
-    m_autoFilter(rhs.m_autoFilter)
-  {}
-
-  AutoFilterDescriptor& operator=(const AutoFilterDescriptor& rhs) {
-    AutoFilterDescriptorStub::operator = (rhs);
-    m_autoFilter = rhs.m_autoFilter;
-    return *this;
-  }
-
+  AutoFilterDescriptor(const AutoFilterDescriptor&) = default;
+  AutoFilterDescriptor& operator=(const AutoFilterDescriptor&) = default;
   AutoFilterDescriptor(AutoFilterDescriptor&& rhs) :
     AutoFilterDescriptorStub(std::move(rhs)),
     m_autoFilter(std::move(rhs.m_autoFilter))
