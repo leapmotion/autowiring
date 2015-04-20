@@ -51,3 +51,30 @@ TEST_F(AutoFilterAltitudeTest, StandardAltitudeArrangement) {
   ASSERT_EQ(5, alt4->order);
   ASSERT_EQ(6, alt5->order);
 }
+
+TEST_F(AutoFilterAltitudeTest, LambdaAltitudesOnFactory) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  int seq = 0;
+  int ctr[9];
+
+  for (size_t i = 0; i < 9; i++) {
+    ctr[i] = -1;
+    *factory += (autowiring::altitude)i, [&, i] {
+      ctr[i] = ++seq;
+    };
+  }
+
+  // Generate a packet and trip the assignments:
+  auto packet = factory->NewPacket();
+  ASSERT_EQ(9, ctr[0]);
+  ASSERT_EQ(8, ctr[1]);
+  ASSERT_EQ(7, ctr[2]);
+  ASSERT_EQ(6, ctr[3]);
+  ASSERT_EQ(5, ctr[4]);
+  ASSERT_EQ(4, ctr[5]);
+  ASSERT_EQ(3, ctr[6]);
+  ASSERT_EQ(2, ctr[7]);
+  ASSERT_EQ(1, ctr[8]);
+}
