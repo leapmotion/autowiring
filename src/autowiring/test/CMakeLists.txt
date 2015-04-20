@@ -5,6 +5,7 @@ set(AutowiringTest_SRCS
   AutoConfigListingTest.cpp
   AutoConfigParserTest.cpp
   AutoConstructTest.cpp
+  AutoFilterAltitudeTest.cpp
   AutoFilterCollapseRulesTest.cpp
   AutoFilterDiagnosticsTest.cpp
   AutoFilterFunctionTest.cpp

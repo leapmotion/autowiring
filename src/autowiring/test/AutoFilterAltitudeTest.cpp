@@ -1,0 +1,53 @@
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
+#include "stdafx.h"
+#include <autowiring/autowiring.h>
+
+class AutoFilterAltitudeTest:
+  public testing::Test
+{};
+
+struct AltitudeValue {};
+
+struct AltitudeMonotonicCounter {
+  std::atomic<int> order{0};
+};
+
+template<autowiring::altitude A>
+struct HasProfilingAltitude {
+  static const autowiring::altitude altitude = A;
+
+  AutoRequired<AltitudeMonotonicCounter> ctr;
+  int order = -1;
+
+  void AutoFilter(const AltitudeValue& val) {
+    order = ++ctr->order;
+  }
+};
+
+TEST_F(AutoFilterAltitudeTest, AltitudeDetection) {
+  AutoFilterDescriptor desc(std::make_shared<HasProfilingAltitude<autowiring::altitude::Highest>>());
+  ASSERT_EQ(autowiring::altitude::Highest, desc.GetAltitude()) << "Filter altitude was not correctly inferred";
+}
+
+TEST_F(AutoFilterAltitudeTest, StandardAltitudeArrangement) {
+  AutoCurrentContext()->Initiate();
+
+  AutoRequired<HasProfilingAltitude<autowiring::altitude::Standard>> alt3;
+  AutoRequired<HasProfilingAltitude<autowiring::altitude::Asynchronous>> alt1;
+  AutoRequired<HasProfilingAltitude<autowiring::altitude::Realtime>> alt2;
+  AutoRequired<HasProfilingAltitude<autowiring::altitude::Passive>> alt4;
+  AutoRequired<HasProfilingAltitude<autowiring::altitude::Lowest>> alt5;
+  AutoRequired<HasProfilingAltitude<autowiring::altitude::Dispatch>> alt0;
+
+  AutoRequired<AutoPacketFactory> factory;
+  auto packet = factory->NewPacket();
+  packet->Decorate(AltitudeValue{});
+
+  // Now we verify things got invoked in the right order:
+  ASSERT_EQ(1, alt0->order);
+  ASSERT_EQ(2, alt1->order);
+  ASSERT_EQ(3, alt2->order);
+  ASSERT_EQ(4, alt3->order);
+  ASSERT_EQ(5, alt4->order);
+  ASSERT_EQ(6, alt5->order);
+}

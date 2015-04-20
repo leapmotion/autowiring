@@ -3,6 +3,7 @@
 #include <autowiring/ContextEnumerator.h>
 #include <algorithm>
 #include MEMORY_HEADER
+#include STL_UNORDERED_SET
 
 class ContextEnumeratorTest:
   public testing::Test

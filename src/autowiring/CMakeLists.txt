@@ -14,6 +14,7 @@ set(Autowiring_SRCS
   AnySharedPointer.h
   atomic_object.h
   at_exit.h
+  altitude.h
   auto_id.h
   auto_future.h
   auto_signal.h
