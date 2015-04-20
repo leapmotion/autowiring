@@ -7,7 +7,7 @@
 #include "TypeRegistry.h"
 #include CHRONO_HEADER
 #include TYPE_TRAITS_HEADER
-#include STL_UNORDERED_SET
+#include <set>
 
 class AutoPacketFactory;
 class DispatchQueue;
@@ -41,7 +41,7 @@ private:
   std::shared_ptr<AutoPacketInternal> m_nextPacket;
 
   // Collection of known subscribers
-  typedef std::unordered_set<AutoFilterDescriptor, std::hash<AutoFilterDescriptor>> t_autoFilterSet;
+  typedef std::set<AutoFilterDescriptor> t_autoFilterSet;
   t_autoFilterSet m_autoFilters;
 
   // Accumulators used to compute statistics about AutoPacket lifespan.

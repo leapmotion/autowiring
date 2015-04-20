@@ -424,6 +424,7 @@ bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterDescriptorInp
       stub,
       AutoFilterDescriptorStub(
         &typeid(AutoPacketFactory),
+        autowiring::altitude::Dispatch,
         inputs,
         false,
         [] (const AnySharedPointer& obj, AutoPacket&) {

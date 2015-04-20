@@ -10,6 +10,7 @@
 #include <string>
 #include <sstream>
 #include FUNCTIONAL_HEADER
+#include STL_UNORDERED_SET
 
 AutoPacketGraph::AutoPacketGraph() {
 }
