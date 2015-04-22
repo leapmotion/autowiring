@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "dispatch_aborted_exception.h"
 #include "DispatchThunk.h"
 #include <list>
 #include <queue>
@@ -8,18 +9,6 @@
 #include MEMORY_HEADER
 
 class DispatchQueue;
-
-/// \internal
-/// <summary>
-/// Thrown when a dispatch operation was aborted
-/// </summary>
-class dispatch_aborted_exception:
-  public std::exception
-{
-public:
-  dispatch_aborted_exception(void);
-  virtual ~dispatch_aborted_exception(void);
-};
 
 /// <summary>
 /// This is an asynchronous queue of zero-argument functions
@@ -147,11 +136,63 @@ protected:
   /// <returns>The total number of events dispatched</returns>
   int DispatchAllEvents(void);
 
+  /// \internal
+  /// <summary>
+  /// Waits until a lambda function is ready to run in this thread's dispatch queue,
+  /// dispatches the function, and then returns.
+  /// </summary>
+  void WaitForEvent(void);
+
+  /// \internal
+  /// <summary>
+  /// Waits until a lambda function in the dispatch queue is ready to run or the specified
+  /// time period elapses, whichever comes first.
+  /// </summary>
+  /// <returns>
+  /// False if the timeout period elapsed before an event could be dispatched, true otherwise
+  /// </returns>
+  bool WaitForEvent(std::chrono::milliseconds milliseconds);
+
+  /// \internal
+  /// <summary>
+  /// Waits until a lambda function in the dispatch queue is ready to run or the specified
+  /// time is reached, whichever comes first.
+  /// </summary>
+  /// <returns>
+  /// False if the timeout period elapsed before an event could be dispatched, true otherwise
+  /// </returns>
+  bool WaitForEvent(std::chrono::steady_clock::time_point wakeTime);
+
+  /// \internal
+  /// <summary>
+  /// An unsafe variant of WaitForEvent
+  /// </summary>
+  bool WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chrono::steady_clock::time_point wakeTime);
+
 public:
   /// <summary>
   /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>
   void AddExisting(DispatchThunkBase* pBase);
+
+  /// <summary>
+  /// Blocks until all dispatchers on the DispatchQueue at the time of the call have been dispatched
+  /// </summary>
+  /// <param name="timeout">The maximum amount of time to wait</param>
+  /// <remarks>
+  /// This method does not cause any dispatchers to run.  If the underlying dispatch queue does not have an event loop
+  /// operating on it, this method will deadlock.  It is an error for the party responsible for driving the dispatch queue
+  /// via WaitForEvent or DispatchAllEvents unless that party first delegates the responsibility elsewhere.
+  ///
+  /// If DispatchQueue::Abort() is called before the dispatcher has been completed, this method will throw an exception.
+  /// If a dispatcher on the underlying DispatchQueue throws an exception, this method will also throw an exception.
+  /// </remarks>
+  bool Barrier(std::chrono::nanoseconds timeout);
+
+  /// <summary>
+  /// Identical to the timed version of Barrier, but does not time out
+  /// </summary>
+  void Barrier(void);
 
   /// <summary>
   /// Recommends a point in time to wake up to check for events

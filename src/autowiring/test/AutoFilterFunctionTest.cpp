@@ -125,7 +125,6 @@ TEST_F(AutoFilterFunctionalTest, ObservingFunctionTest) {
   ASSERT_TRUE(*called) << "Receive-only filter attached to a const packet image was not correctly called";
 }
 
-
 TEST_F(AutoFilterFunctionalTest, TripleFunctionTest) {
   AutoRequired<AutoPacketFactory> factory;
 
@@ -150,4 +149,23 @@ TEST_F(AutoFilterFunctionalTest, TripleFunctionTest) {
   packet->Decorate(Decoration<0>());
   ASSERT_TRUE(*called1) << "Final observer method was not invoked as expected";
   ASSERT_TRUE(*called2) << "Two-argument observer method not invoked as expected";
+}
+
+TEST_F(AutoFilterFunctionalTest, MultiPostHocIntroductionTest) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+
+  int called = 0;
+
+  *factory += [&called](int& out) { out = called++; };
+  *factory += [&called](int& out) { out = called++; };
+
+  // Add a gather step on the packet:
+  auto packet = factory->NewPacket();
+  *packet += [&called](const int* vals []){
+    ASSERT_NE(nullptr, vals);
+    called++;
+  };
+
+  ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
 }

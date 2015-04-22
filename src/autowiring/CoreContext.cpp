@@ -630,6 +630,13 @@ void CoreContext::AddBolt(const std::shared_ptr<BoltBase>& pBase) {
     m_nameListeners[typeid(void)].push_back(pBase.get());
 }
 
+JunctionBoxBase& CoreContext::All(const std::type_info& ti) const {
+  auto jb = m_junctionBoxManager->Get(ti);
+  if (!jb)
+    throw autowiring_error("Attempted to obtain a junction box which has not been declared");
+  return *jb;
+}
+
 void CoreContext::BuildCurrentState(void) {
   AutoGlobalContext glbl;
   glbl->Invoke(&AutowiringEvents::NewContext)(*this);
@@ -1019,7 +1026,7 @@ void CoreContext::FilterFiringException(const JunctionBoxBase* pProxy, CoreObjec
     }
 }
 
-void CoreContext::Snoop(const CoreObjectDescriptor& traits) {
+void CoreContext::AddSnooper(const CoreObjectDescriptor& traits) {
   // Add to collections of snoopers
   InsertSnooper(traits.value);
 
@@ -1032,7 +1039,7 @@ void CoreContext::Snoop(const CoreObjectDescriptor& traits) {
     AddPacketSubscriber(traits.subscriber);
 }
 
-void CoreContext::Unsnoop(const CoreObjectDescriptor& traits) {
+void CoreContext::RemoveSnooper(const CoreObjectDescriptor& traits) {
   RemoveSnooper(traits.value);
 
   // Cleanup if its an EventReceiver

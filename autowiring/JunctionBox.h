@@ -43,9 +43,83 @@ protected:
   volatile int m_numberOfDeletions;
 
 public:
-  /// <summary>
-  /// Convenience method allowing consumers to quickly determine whether any listeners exist
-  /// </summary>
+  class iterator {
+  public:
+    iterator(void) {}
+
+    iterator(JunctionBox<T>* pParent) :
+      pParent(pParent),
+      q(pParent->m_st.end()),
+      deleteCount(pParent->m_numberOfDeletions)
+    {}
+
+    iterator(JunctionBox<T>* pParent, typename t_listenerSet::iterator q) :
+      pParent(pParent),
+      q(q),
+      currentEvent(*q),
+      deleteCount(pParent->m_numberOfDeletions)
+    {}
+
+    typedef std::forward_iterator_tag iterator_category;
+
+  private:
+    JunctionBox<T>* pParent = nullptr;
+    typename t_listenerSet::iterator q;
+    JunctionBoxEntry<T> currentEvent;
+    int deleteCount;
+
+  public:
+    // Required operator overloads:
+    T& operator*(void) const { return *currentEvent.m_ptr; }
+    T* operator->(void) const { return currentEvent.m_ptr.get(); }
+    bool operator==(const iterator& rhs) const { return q == rhs.q; }
+    bool operator!=(const iterator& rhs) const { return q != rhs.q; }
+    bool operator<(const iterator& rhs) const { return q < rhs.q; }
+
+    iterator operator++(void) {
+      // Need to hold this here to prevent deletion from occuring while the lock is held
+      std::shared_ptr<T> old = currentEvent.m_ptr;
+        std::lock_guard<std::mutex> lk(pParent->m_lock);
+
+      // Increment iterator correctly even if it's been invalidated
+      if (deleteCount == pParent->m_numberOfDeletions)
+        ++q;
+      else {
+        q = pParent->m_st.upper_bound(currentEvent);
+        deleteCount = pParent->m_numberOfDeletions;
+      }
+
+      // Only update if we aren't at the end:
+      currentEvent =
+        q == pParent->m_st.end() ?
+        JunctionBoxEntry<T>() :
+        *q;
+      return *this;
+    }
+
+    iterator operator++(int) {
+      iterator prior = *this;
+      *this++;
+      return prior;
+    }
+  };
+
+  iterator begin(void) {
+    std::lock_guard<std::mutex> lk(m_lock);
+    return iterator(this, m_st.begin());
+  }
+
+  iterator end(void) {
+    std::lock_guard<std::mutex> lk(m_lock);
+    return iterator(this);
+  }
+
+  size_t size(void) const {
+    std::lock_guard<std::mutex> lk(m_lock);
+    return m_st.size();
+  }
+
+  // JunctionBoxBase overrides:
   bool HasListeners(void) const override {
     return (std::lock_guard<std::mutex>)m_lock, !m_st.empty();
   }

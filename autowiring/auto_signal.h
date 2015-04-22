@@ -1,5 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "Decompose.h"
+
 #include <atomic>
 #include <functional>
 #include <memory>
@@ -32,11 +34,43 @@ namespace autowiring {
       // Forward and backward linkages:
       signal_node_base* pFlink;
       signal_node_base* pBlink;
+      
+      /// <summary>
+      /// Inserts a node after the current one
+      /// </summary>
+      void insert_after(signal_node_base* node) {
+        node->pBlink = this;
+        node->pFlink = pFlink;
+        if (pFlink)
+          pFlink->pBlink = node;
+        pFlink = node;
+      }
+
+      /// <summary>
+      /// Removes this node from the list it's in.
+      /// </summary>
+      /// <remarks>
+      /// If you call this function, you are assuming responsibility for the memory and 
+      /// are expected to call delete on the node.
+      /// </remarks>
+      /// <returns>
+      /// A pointer to itself for easier chaining of operations.
+      /// </returns>
+      signal_node_base* remove() {
+        // Clear linkage
+        if (this->pBlink)
+          this->pBlink->pFlink = this->pFlink;
+        if (this->pFlink)
+          this->pFlink->pBlink = this->pBlink;
+
+        this->pBlink = this->pFlink = nullptr;
+        return this;
+      }
     };
 
     // Holds a reference to one of the signal holders
     template<typename... Args>
-    struct signal_node:
+    struct signal_node :
       signal_node_base
     {
       signal_node(const signal_node& rhs) = delete;
@@ -44,10 +78,33 @@ namespace autowiring {
       signal_node(std::function<void(Args...)>&& fn) :
         fn(std::move(fn))
       {}
-
+      
+      //Functions where the first argument is a signal_node<...> or base type are also ok.
+      signal_node(std::function<void(signal_node<Args...>*, Args...)>&& newFn) :
+        fn([this, newFn](Args... args){ newFn(this, args...); })
+      {}
+      
       const std::function<void(Args...)> fn;
-    };
 
+      /// <summary>
+      /// Appends the specified handler to this list of nodes.
+      /// </summary>
+      template<typename t_Fn>
+      typename std::enable_if<Decompose<decltype(&t_Fn::operator())>::N == sizeof...(Args), signal_node<Args...>*>::type
+      operator+=(t_Fn fn) {
+        auto retVal = new signal_node<Args...>(std::function<void(Args...)>(std::forward<t_Fn>(fn)));
+        insert_after(retVal);
+        return retVal;
+      }
+
+      template<typename t_Fn>
+      typename std::enable_if<Decompose<decltype(&t_Fn::operator())>::N == sizeof...(Args) + 1, signal_node<Args...>*>::type
+        operator+=(t_Fn fn) {
+        auto retVal = new signal_node<Args...>(std::function<void(signal_node<Args...>*,Args...)>(std::forward<t_Fn>(fn)));
+        insert_after(retVal);
+        return retVal;
+      }
+    };
 
     struct signal_registration_base {
       signal_registration_base(void);
@@ -117,40 +174,37 @@ namespace autowiring {
   /// <summary>
   /// Stores a signal 
   /// </summary>
-  struct signal_relay
+  /// <remarks>
+  /// This is functionally a sentinal head of the linked list.
+  /// </remarks>
+  struct signal_relay :
+    internal::signal_node_base
   {
-  public:
-    signal_relay(void) :
-      pHead(nullptr)
-    {}
+    signal_relay(void) {}
 
-    ~signal_relay(void) {
+    ~signal_relay(void) override {
       // Standard linked list cleaup
       internal::signal_node_base* next = nullptr;
-      for (auto cur = pHead; cur; cur = next) {
+      for (auto cur = pFlink; cur; cur = next) {
         next = cur->pFlink;
-        delete cur;
+        delete cur; //don't bother unlinking..
       }
     }
 
-  protected:
-    // First entry on the list:
-    internal::signal_node_base* pHead;
+    /// <summary>
+    /// Searches the list for this node and deletes it, or throws if it is not found.
+    /// </summary>
+    void operator-=(signal_node_base* node) {
+      signal_node_base* cur;
+      for (cur = pFlink; cur != nullptr; cur = cur->pFlink) {
+        if (cur == node){
+          node->remove();
+          delete node;
+          return;
+        }
+      }
 
-  public:
-    void operator-=(internal::signal_node_base* rhs) {
-      // Clear linkage
-      if (rhs->pBlink)
-        rhs->pBlink->pFlink = rhs->pFlink;
-      if (rhs->pFlink)
-        rhs->pFlink->pBlink = rhs->pBlink;
-
-      // If we're the head pointer then unlink
-      if (rhs == pHead)
-        pHead = rhs->pFlink;
-
-      // Fully unlinked, delete
-      delete rhs;
+      throw std::runtime_error("Attempted to remove node which is not part of this list.");
     }
   };
 
@@ -162,21 +216,17 @@ namespace autowiring {
     signal_relay
   {
     internal::signal_node<Args...>* GetHead(void) const {
-      return static_cast<internal::signal_node<Args...>*>(pHead);
+      return static_cast<internal::signal_node<Args...>*>(pFlink);
     }
 
     /// <summary>
     /// Attaches the specified handler to this signal
     /// </summary>
-    internal::signal_node<Args...>* operator+=(std::function<void(Args...)>&& fn) {
-      // Standard singly linked list insert:
-      auto retVal = new internal::signal_node<Args...>(std::move(fn));
-      retVal->pFlink = pHead;
-      if (pHead)
-        pHead->pBlink = retVal;
-      pHead = retVal;
-      return retVal;
+    template<typename t_Fn>
+    internal::signal_node<Args...>* operator+=(t_Fn fn) {
+      return *reinterpret_cast<internal::signal_node<Args...>*>(this) += std::forward<t_Fn>(fn);
     }
+
   };
 
   /// <summary>
@@ -198,19 +248,26 @@ namespace autowiring {
     const std::shared_ptr<signal_relay_t<Args...>> m_relay;
 
   public:
-    internal::signal_node<Args...>* operator+=(std::function<void(Args...)>&& fn) { return *m_relay += std::move(fn); }
-    void operator-=(internal::signal_node<Args...>* node) { return *m_relay -= node; }
+    typedef internal::signal_node<Args...> registration_t;
+    typedef std::function<void(Args...)> function_t;
+
+    template<typename t_Fn>
+    registration_t* operator+=(t_Fn fn) { return *m_relay += std::forward<t_Fn>(fn); }
+
+    void operator-=(registration_t* node) { return *m_relay -= node; }
 
     /// <summary>
     /// Raises the signal and invokes all attached handlers
     /// </summary>
     void operator()(Args... args) const {
-      for (
-        auto cur = m_relay->GetHead();
-        cur;
-        cur = static_cast<decltype(cur)>(cur->pFlink)
-      )
+      auto cur = m_relay->GetHead();
+      while(cur) {
+        //Grab the next pointer before we evaluate incase the current node is deleted by it's
+        //function.
+        auto next = static_cast<decltype(cur)>(cur->pFlink);
         cur->fn(args...);
+        cur = next;
+      }
     }
   };
 }

@@ -9,11 +9,6 @@
 #include SYSTEM_ERROR_HEADER
 #include ARRAY_HEADER
 
-#if !AUTOWIRING_USE_LIBCXX
-  // No initializer lists on libstdc
-  #define BOOST_NO_CXX11_HDR_INITIALIZER_LIST
-#endif
-
 struct CoreObjectDescriptor;
 struct TypeIdentifierBase;
 

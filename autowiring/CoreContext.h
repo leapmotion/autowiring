@@ -750,6 +750,39 @@ public:
     FindByType(ptr);
     return ptr != nullptr;
   }
+
+  /// <summary>
+  /// Runtime variant of All
+  /// </summary>
+  /// <remarks>
+  /// This instance does not cause a correct instantiation of the underlying junction box.  Users are cautioned against
+  /// using this method directly unless they are able to ensure a proper entry is made into the type registry.
+  ///
+  /// It is an error to call this method on an unregistered type.
+  /// </remarks>
+  JunctionBoxBase& All(const std::type_info& ti) const;
+
+  /// <summary>
+  /// Returns all members of and snoopers on this context which implement the specified interface
+  /// </summary>
+  /// <remarks>
+  /// This method makes use of the JunctionBox subsystem, and thus is extremely efficient.  The underlying system is
+  /// memoized, and new entries automatically update any existing memos, which gives this routine O(n) efficiency, where
+  /// n is the number of types in this context that implement the specified interface.
+  ///
+  /// Note that the junction box will also contain members of child contexts that implement the specified interface, and
+  /// instances that are snooping this context.
+  ///
+  /// This method's result will be an empty iterable if the context is not currently initiated.
+  /// </remarks>
+  template<class T>
+  JunctionBox<T>& All(void) {
+    // Type registration, needed to ensure our junction box actually exists
+    (void) RegEvent<T>::r;
+
+    // Simple coercive transfer:
+    return static_cast<JunctionBox<T>&>(All(typeid(T)));
+  }
   
   template<typename T, typename... Args>
   std::shared_ptr<T> DEPRECATED(Construct(Args&&... args), "'Construct' is deprecated, use 'Inject' instead");
@@ -981,13 +1014,20 @@ public:
   /// <param name="pRecipient">The recipient of the event</param>
   void FilterFiringException(const JunctionBoxBase* pProxy, CoreObject* pRecipient);
 
+  /// <seealso cref="Snoop">Identical to RemoveSnooper</seealso>
+  void DEPRECATED(Snoop(const CoreObjectDescriptor& traits), "Use AddSnooper instead") { return AddSnooper(traits); }
+  template<class T>
+  void DEPRECATED(Snoop(const std::shared_ptr<T>& pSnooper), "Use AddSnooper instead");
+  template<class T>
+  void DEPRECATED(Snoop(const Autowired<T>& snooper), "Use AddSnooper instead");
+  
   /// <summary>
-  /// Runtime version of Snoop
+  /// Runtime version of AddSnooper
   /// </summary>
-  void Snoop(const CoreObjectDescriptor& traits);
+  void AddSnooper(const CoreObjectDescriptor& traits);
 
   /// <summary>
-  /// Registers the specified event receiver to receive messages broadcast within this context.
+  /// Registers the specified event receiver to receive messages from this context
   /// </summary>
   /// <remarks>
   /// This enables the passed event receiver to snoop events that are broadcast from a
@@ -998,16 +1038,16 @@ public:
   /// broadcast in THIS context will be forwarded to the snooper.
   /// </remarks>
   template<class T>
-  void Snoop(const std::shared_ptr<T>& pSnooper) {
-    Snoop(CoreObjectDescriptor(pSnooper, (T*)nullptr));
+  void AddSnooper(const std::shared_ptr<T>& pSnooper) {
+    AddSnooper(CoreObjectDescriptor(pSnooper, (T*)nullptr));
   }
 
   /// <summary>
   /// Resolution overload
   /// </summary>
   template<class T>
-  void Snoop(const Autowired<T>& snooper) {
-    Snoop(
+  void AddSnooper(const Autowired<T>& snooper) {
+    AddSnooper(
       CoreObjectDescriptor(
         static_cast<const std::shared_ptr<T>&>(snooper),
         (T*)nullptr
@@ -1015,28 +1055,35 @@ public:
     );
   }
 
-  /// <summary>
-  /// Runtime version of Unsnoop
-  /// </summary>
-  void Unsnoop(const CoreObjectDescriptor& traits);
+  /// <seealso cref="RemoveSnooper">Identical to RemoveSnooper</seealso>
+  void DEPRECATED(Unsnoop(const CoreObjectDescriptor& traits), "Use RemoveSnooper instead") { return RemoveSnooper(traits); }
+  template<class T>
+  void DEPRECATED(Unsnoop(const std::shared_ptr<T>& pSnooper), "Use RemoveSnooper instead");
+  template<class T>
+  void DEPRECATED(Unsnoop(const Autowired<T>& snooper), "Use RemoveSnooper instead");
 
   /// <summary>
-  /// Unregisters an event receiver previously registered to receive snooped events
+  /// Runtime version of RemoveSnooper
+  /// </summary>
+  void RemoveSnooper(const CoreObjectDescriptor& traits);
+
+  /// <summary>
+  /// Unregisters a snooper previously registered to receive snooped events
   /// </summary>
   /// <remarks>
-  /// It is an error to call this method without a prior call to Snoop
+  /// It is an error to call this method without a prior call to AddSnooper
   /// </remarks>
   template<class T>
-  void Unsnoop(const std::shared_ptr<T>& pSnooper) {
-    Unsnoop(CoreObjectDescriptor(pSnooper, (T*)nullptr));
+  void RemoveSnooper(const std::shared_ptr<T>& pSnooper) {
+    RemoveSnooper(CoreObjectDescriptor(pSnooper, (T*)nullptr));
   }
   
   /// <summary>
-  /// Resolution overload
+  /// Resolution overload of RemoveSnooper
   /// </summary>
   template<class T>
-  void Unsnoop(const Autowired<T>& snooper) {
-    Unsnoop(
+  void RemoveSnooper(const Autowired<T>& snooper) {
+    RemoveSnooper(
       CoreObjectDescriptor(
         static_cast<const std::shared_ptr<T>&>(snooper),
         (T*)nullptr
@@ -1138,7 +1185,6 @@ public:
     }
   };
 
-  /// \internal
   /// <summary>
   /// Adds a post-attachment listener in this context for a particular autowired member.
   /// There is no guarantee for the context in which the listener will be called.
@@ -1270,6 +1316,30 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 template<typename T, typename... Sigil>
 void CoreContext::AutoRequireMicroBolt(void) {
   Inject<MicroBolt<T, Sigil...>>();
+}
+
+template<class T>
+void CoreContext::Snoop(const std::shared_ptr<T>& pSnooper)
+{
+  return AddSnooper(pSnooper);
+}
+
+template<class T>
+void CoreContext::Snoop(const Autowired<T>& snooper)
+{
+  return AddSnooper(snooper);
+}
+
+template<class T>
+void CoreContext::Unsnoop(const std::shared_ptr<T>& pSnooper)
+{
+  return RemoveSnooper(pSnooper);
+}
+
+template<class T>
+void CoreContext::Unsnoop(const Autowired<T>& snooper)
+{
+  return RemoveSnooper(snooper);
 }
 
 template<class T>

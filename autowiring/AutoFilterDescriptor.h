@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "AnySharedPointer.h"
+#include "altitude.h"
 #include "auto_arg.h"
 #include "AutoFilterDescriptorInput.h"
 #include "CallExtractor.h"
@@ -18,6 +19,7 @@ class Deferred;
 struct AutoFilterDescriptorStub {
   AutoFilterDescriptorStub(void) :
     m_pType(nullptr),
+    m_altitude(autowiring::altitude::Standard),
     m_pArgs(nullptr),
     m_deferred(false),
     m_arity(0),
@@ -25,14 +27,8 @@ struct AutoFilterDescriptorStub {
     m_pCall(nullptr)
   {}
 
-  AutoFilterDescriptorStub(const AutoFilterDescriptorStub& rhs) :
-    m_pType(rhs.m_pType),
-    m_pArgs(rhs.m_pArgs),
-    m_deferred(rhs.m_deferred),
-    m_arity(rhs.m_arity),
-    m_requiredCount(rhs.m_requiredCount),
-    m_pCall(rhs.m_pCall)
-  {}
+  AutoFilterDescriptorStub(const AutoFilterDescriptorStub&) = default;
+  AutoFilterDescriptorStub& operator=(const AutoFilterDescriptorStub&) = default;
 
   /// <summary>
   /// Constructs a new packet subscriber entry based on the specified call extractor and call pointer
@@ -46,8 +42,9 @@ struct AutoFilterDescriptorStub {
   /// is required to carry information about the type of the proper member function to be called; t_extractedCall is
   /// required to be instantiated by the caller and point to the AutoFilter proxy routine.
   /// </summary>
-  AutoFilterDescriptorStub(const std::type_info* pType, const AutoFilterDescriptorInput* pArgs, bool deferred, t_extractedCall pCall) :
+  AutoFilterDescriptorStub(const std::type_info* pType, autowiring::altitude altitude, const AutoFilterDescriptorInput* pArgs, bool deferred, t_extractedCall pCall) :
     m_pType(pType),
+    m_altitude(altitude),
     m_pArgs(pArgs),
     m_deferred(deferred),
     m_arity(0),
@@ -66,6 +63,9 @@ struct AutoFilterDescriptorStub {
 protected:
   // Type of the subscriber itself
   const std::type_info* m_pType;
+
+  // Altitude--controls when the filter gets called
+  autowiring::altitude m_altitude;
 
   // This subscriber's argument types
   // NOTE: This is a reference to a static generated list,
@@ -93,6 +93,7 @@ protected:
 
 public:
   // Accessor methods:
+  autowiring::altitude GetAltitude(void) const { return m_altitude; }
   const std::type_info* GetType() const { return m_pType; }
   size_t GetArity(void) const { return m_arity; }
   size_t GetRequiredCount(void) const { return m_requiredCount; }
@@ -137,18 +138,8 @@ struct AutoFilterDescriptor:
   AutoFilterDescriptorStub
 {
   AutoFilterDescriptor(void) {}
-
-  AutoFilterDescriptor(const AutoFilterDescriptor& rhs) :
-    AutoFilterDescriptorStub(rhs),
-    m_autoFilter(rhs.m_autoFilter)
-  {}
-
-  AutoFilterDescriptor& operator=(const AutoFilterDescriptor& rhs) {
-    AutoFilterDescriptorStub::operator = (rhs);
-    m_autoFilter = rhs.m_autoFilter;
-    return *this;
-  }
-
+  AutoFilterDescriptor(const AutoFilterDescriptor&) = default;
+  AutoFilterDescriptor& operator=(const AutoFilterDescriptor&) = default;
   AutoFilterDescriptor(AutoFilterDescriptor&& rhs) :
     AutoFilterDescriptorStub(std::move(rhs)),
     m_autoFilter(std::move(rhs.m_autoFilter))
@@ -178,6 +169,10 @@ struct AutoFilterDescriptor:
         std::static_pointer_cast<typename Decompose<decltype(&T::AutoFilter)>::type>(subscriber)
       ),
       &typeid(T),
+      autowiring::altitude_of<
+        T,
+        CallExtractor<decltype(&T::AutoFilter)>::deferred ? autowiring::altitude::Dispatch : autowiring::altitude::Standard
+      >::value,
       Decompose<decltype(&T::AutoFilter)>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types,
       CallExtractor<decltype(&T::AutoFilter)>::deferred,
       &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
@@ -191,10 +186,11 @@ struct AutoFilterDescriptor:
   /// Recipients added in this way cannot receive piped data, since they are anonymous.
   /// </remarks>
   template<class Fn>
-  AutoFilterDescriptor(Fn fn):
+  AutoFilterDescriptor(Fn fn, autowiring::altitude altitude = autowiring::altitude::Standard):
     AutoFilterDescriptor(
       AnySharedPointer(std::make_shared<Fn>(std::forward<Fn>(fn))),
       &typeid(Fn),
+      altitude,
       CallExtractor<decltype(&Fn::operator())>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types,
       false,
       &CallExtractor<decltype(&Fn::operator())>::template Call<&Fn::operator()>
@@ -219,13 +215,13 @@ struct AutoFilterDescriptor:
   ///
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call
   /// </summary>
-  AutoFilterDescriptor(const AnySharedPointer& autoFilter, const std::type_info* pType, const AutoFilterDescriptorInput* pArgs, bool deferred, t_extractedCall pCall) :
-    AutoFilterDescriptorStub(pType, pArgs, deferred, pCall),
+  AutoFilterDescriptor(const AnySharedPointer& autoFilter, const std::type_info* pType, autowiring::altitude altitude, const AutoFilterDescriptorInput* pArgs, bool deferred, t_extractedCall pCall) :
+    AutoFilterDescriptorStub(pType, altitude, pArgs, deferred, pCall),
     m_autoFilter(autoFilter)
   {}
 
   template<class RetType, class... Args>
-  AutoFilterDescriptor(RetType(*pfn)(Args...)):
+  AutoFilterDescriptor(RetType(*pfn)(Args...), autowiring::altitude altitude = autowiring::altitude::Standard) :
     AutoFilterDescriptor(
       // Token shared pointer, used to provide a pointer to pfn because we can't
       // capture it in a template processing context.  Hopefully this can be changed
@@ -239,7 +235,7 @@ struct AutoFilterDescriptor:
 
       // The remainder is fairly straightforward
       &typeid(pfn),
-
+      altitude,
       CallExtractor<decltype(pfn)>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types,
       false,
       CallExtractor<decltype(pfn)>::Call
@@ -278,9 +274,11 @@ public:
   /// Default for std library sorting of unique elements
   /// </summary>
   bool operator<(const AutoFilterDescriptor& rhs) const {
-    if (m_pCall < rhs.m_pCall)
-      return true;
-    return m_autoFilter < rhs.m_autoFilter;
+    // This filter is "logically prior" to the right-hand side if this filter has a HIGHER altitude
+    // than the one on the right-hand side
+    return
+      std::tie(m_altitude, m_pCall, m_autoFilter) <
+      std::tie(rhs.m_altitude, rhs.m_pCall, rhs.m_autoFilter);
   }
 
   /// <summary>

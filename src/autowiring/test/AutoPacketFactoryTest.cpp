@@ -199,60 +199,15 @@ TEST_F(AutoPacketFactoryTest, AddSubscriberTest) {
   ASSERT_TRUE(second_called) << "Subscriber added with operator+= never called";
 }
 
-TEST_F(AutoPacketFactoryTest, EnumerateDecorationsTest) {
-  auto sample = [](const int* vals []) {};
-  AutoFilterDescriptor desc(sample);
+TEST_F(AutoPacketFactoryTest, CanRemoveAddedLambda) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
 
-  size_t i = 0;
-  for (auto* pCur = desc.GetAutoFilterInput(); *pCur; pCur++)
-    i++;
+  auto desc = *factory += [](int&){};
+  auto packet1 = factory->NewPacket();
+  *factory -= desc;
+  auto packet2 = factory->NewPacket();
 
-  ASSERT_EQ(1, i) << "AutoFilterDescriptor parsed an incorrect number of arguments from a lambda";
-}
-
-TEST_F(AutoPacketFactoryTest, MultiDecorateTest) {
-  AutoCurrentContext ctxt;
-  AutoRequired<AutoPacketFactory> factory(ctxt);
-  ctxt->Initiate();
-
-  int called = 0;
-
-  *factory += [&called] (int& out) { out = called++; };
-  *factory += [&called] (int& out) { out = called++; };
-  *factory += [&called] (const int* vals[]) {
-    ASSERT_NE(nullptr, vals);
-    called++;
-
-    // Guarantee that values were added in the expected order
-    int i;
-    for (i = 0; vals[i]; i++)
-      ASSERT_EQ(i, *(vals[i])) << "Incorrect values were added to the packet";
-
-    // Verify we got the number of values out that we wanted to get out
-    ASSERT_EQ(2, i) << "The wrong number of values were added to the packet";
-  };
-  ASSERT_EQ(0, called) << "Lambda functions were called before expected";
-
-  auto packet = factory->NewPacket();
-  ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
-}
-
-TEST_F(AutoPacketFactoryTest, MultiPostHocIntroductionTest) {
-  AutoCurrentContext ctxt;
-  ctxt->Initiate();
-  AutoRequired<AutoPacketFactory> factory(ctxt);
-
-  int called = 0;
-
-  *factory += [&called](int& out) { out = called++; };
-  *factory += [&called](int& out) { out = called++; };
-
-  // Add a gather step on the packet:
-  auto packet = factory->NewPacket();
-  *packet += [&called](const int* vals []){
-    ASSERT_NE(nullptr, vals);
-    called++;
-  };
-
-  ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
+  ASSERT_TRUE(packet1->Has<int>()) << "First packet did not posess expected decoration";
+  ASSERT_FALSE(packet2->Has<int>()) << "Decoration present even after all filters were removed from a factory";
 }

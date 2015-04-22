@@ -14,14 +14,16 @@ set(Autowiring_SRCS
   AnySharedPointer.h
   atomic_object.h
   at_exit.h
+  altitude.h
   auto_id.h
   auto_future.h
   auto_signal.h
   auto_signal.cpp
-  AutoConfig.cpp
   AutoConfig.h
-  AutoConfigManager.cpp
-  AutoConfigManager.h
+  AutoConfigBase.cpp
+  AutoConfigBase.h
+  AutoConfigListing.cpp
+  AutoConfigListing.h
   AutoConfigParser.cpp
   AutoConfigParser.hpp
   AutoFilterDescriptor.h
@@ -99,6 +101,8 @@ set(Autowiring_SRCS
   demangle.cpp
   demangle.h
   Deserialize.h
+  dispatch_aborted_exception.h
+  dispatch_aborted_exception.cpp
   DispatchQueue.cpp
   DispatchQueue.h
   DispatchThunk.h

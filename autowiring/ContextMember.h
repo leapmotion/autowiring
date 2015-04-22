@@ -38,7 +38,9 @@ public:
   /// <remarks>
   /// A context may be destroyed if and only if none of its members are running and none of
   /// them may enter a runnable state.  This happens when the last pointer to ContextMember
-  /// is lost.  Resource cleanup must be started at this point.
+  /// is lost.  Resource cleanup must be started at this point.  Context members are deemed
+  /// to be unable to enter a running state if they were not signalled to enter this state
+  /// before the last shared pointer to their outer CoreContext is released.
   ///
   /// For contexts containing strictly heirarchial objects, implementors of this method do
   /// not need to do anything.  If, however, there are circular references anywhere in the

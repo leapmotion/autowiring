@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "BasicThread.h"
 #include "Autowired.h"
+#include "autowiring_error.h"
 #include "BasicThreadStateBlock.h"
 #include "ContextEnumerator.h"
 #include "fast_pointer_cast.h"
@@ -17,7 +18,9 @@ BasicThread::BasicThread(const char* pName):
   m_priority(ThreadPriority::Default)
 {}
 
-BasicThread::~BasicThread(void){}
+BasicThread::~BasicThread(void) {
+  NotifyTeardownListeners();
+}
 
 std::mutex& BasicThread::GetLock(void) {
   return m_state->m_lock;
@@ -64,12 +67,12 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   // need to hold a reference to.
   auto state = m_state;
 
-  // Perform a manual notification of teardown listeners
-  NotifyTeardownListeners();
-
   // Transition to stopped state.  Synchronization not required, transitions are all one-way
   m_stop = true;
   m_running = false;
+
+  // Perform a manual notification of teardown listeners
+  NotifyTeardownListeners();
 
   // Tell our CoreRunnable parent that we're done to ensure that our reference count will be cleared.
   Stop(false);
@@ -107,7 +110,7 @@ void BasicThread::WaitForStateUpdate(const std::function<bool()>& fn) {
     }
   );
   if(ShouldStop())
-    throw dispatch_aborted_exception();
+    throw dispatch_aborted_exception("Thread was stopped before the function returned true");
 }
 
 void BasicThread::PerformStatusUpdate(const std::function<void()>& fn) {

@@ -2,10 +2,14 @@ set(AutowiringTest_SRCS
   AnySharedPointerTest.cpp
   ArgumentTypeTest.cpp
   AutoConfigTest.cpp
+  AutoConfigListingTest.cpp
+  AutoConfigParserTest.cpp
   AutoConstructTest.cpp
+  AutoFilterAltitudeTest.cpp
   AutoFilterCollapseRulesTest.cpp
   AutoFilterDiagnosticsTest.cpp
   AutoFilterFunctionTest.cpp
+  AutoFilterMultiDecorateTest.cpp
   AutoFilterSequencing.cpp
   AutoFilterTest.cpp
   AutoInjectableTest.cpp

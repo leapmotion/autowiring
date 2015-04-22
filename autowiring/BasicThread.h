@@ -233,6 +233,26 @@ public:
   bool IsCompleted(void) const;
 
   /// <summary>
+  /// Adds a function object which will be called when this BasicThread stops running or is destroyed
+  /// </summary>
+  /// <remarks>
+  /// The listener is invoked before the destruction of this BasicThread and also immediately after the
+  /// BasicThread instance has transitioned to the Stopped state.
+  ///
+  /// Users who attach a teardown listener MUST NOT attempt to invoke any methods not defined by
+  /// BasicThread, and MUST NOT attempt to invoke any non-final virtual functions available here.  The
+  /// object itself may be partially destroyed by the time the listener is invoked, and virtual methods
+  /// may not have the expected behavior.
+  ///
+  /// It is guaranteed to be safe to call any non-virtual method defined by BasicThread from a teardown
+  /// listener.
+  /// </remarks>
+  template<class Fx>
+  void AddTeardownListener(Fx&& listener) {
+    return TeardownNotifier::AddTeardownListener(std::forward<Fx&&>(listener));
+  }
+
+  /// <summary>
   /// Begins thread execution.
   /// </summary>
   /// <remarks>
