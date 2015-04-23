@@ -5,7 +5,7 @@
 #include "AutowiringEvents.h"
 #include "JunctionBox.h"
 #include "EventRegistry.h"
-#include <cassert>
+#include <sstream>
 
 template class RegEvent<AutowiringEvents>;
 template class TypeUnifierComplex<AutowiringEvents>;
@@ -26,8 +26,14 @@ JunctionBoxManager::~JunctionBoxManager(void) {}
 
 std::shared_ptr<JunctionBoxBase> JunctionBoxManager::Get(const std::type_index& pTypeIndex) {
   auto box = m_junctionBoxes.find(pTypeIndex);
-  if (box == m_junctionBoxes.end())
-    throw autowiring_error("Attempted to obtain a junction box for an unregistered type");
+  if (box == m_junctionBoxes.end()) {
+    std::ostringstream ss;
+    ss << "Attempted to obtain a junction box for [[ " << pTypeIndex.name() << " ]], which is not registered." << std::endl
+       << "Known junction boxes:" << std::endl;
+    for (const auto& cur : m_junctionBoxes)
+      ss << cur.first.name() << std::endl;
+    throw autowiring_error(ss.str());
+  }
 
   return box->second;
 }
