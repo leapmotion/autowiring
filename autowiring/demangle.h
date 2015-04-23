@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <string>
-#include <typeinfo>
+#include <typeindex>
 
 struct AnySharedPointer;
 
@@ -12,6 +12,9 @@ struct AnySharedPointer;
 namespace autowiring {
   std::string demangle(const std::type_info& ti);
   std::string demangle(const std::type_info* ti);
+
+  std::string demangle(const std::type_index& ti);
+  std::string demangle(const std::type_index* ti);
 
   std::string demangle(const AnySharedPointer& ptr);
 
