@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.1</span>
+   &#160;<span id="projectnumber">0.5.2</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -145,6 +145,10 @@ Public Member Functions</h2></td></tr>
 </dl>
 <br /></td></tr>
 <tr class="separator:aefcc009fa192036be9ea4d11218612a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6274398126caa21fe3d9e37a46360ca7"><td class="memTemplParams" colspan="2">template&lt;class Fx &gt; </td></tr>
+<tr class="memitem:a6274398126caa21fe3d9e37a46360ca7"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a6274398126caa21fe3d9e37a46360ca7">AddTeardownListener</a> (Fx &amp;&amp;listener)</td></tr>
+<tr class="memdesc:a6274398126caa21fe3d9e37a46360ca7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a function object which will be called when this <a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a> stops running or is destroyed  <a href="#a6274398126caa21fe3d9e37a46360ca7">More...</a><br /></td></tr>
+<tr class="separator:a6274398126caa21fe3d9e37a46360ca7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f756d73ea97f88a9d12f6e0708f1cf8"><td class="memItemLeft" align="right" valign="top">std::chrono::steady_clock::time_point&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a6f756d73ea97f88a9d12f6e0708f1cf8">GetCreationTime</a> (void)</td></tr>
 <tr class="memdesc:a6f756d73ea97f88a9d12f6e0708f1cf8"><td class="mdescLeft">&#160;</td><td class="mdescRight">The thread creation time.  <a href="#a6f756d73ea97f88a9d12f6e0708f1cf8">More...</a><br /></td></tr>
 <tr class="separator:a6f756d73ea97f88a9d12f6e0708f1cf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -282,6 +286,37 @@ const std::shared_ptr&lt; CoreObject &gt; &amp;&#160;</td><td class="memItemRigh
 <div class="line">ctxt-&gt;SignalShutdown(<span class="keyword">true</span>);</div>
 </div><!-- fragment --> <dl><dt><b>Examples: </b></dt><dd><a class="el" href="_thread_example_8cpp-example.html#_a0">ThreadExample.cpp</a>.</dd>
 </dl></div><h2 class="groupheader">Member Function Documentation</h2>
+<a class="anchor" id="a6274398126caa21fe3d9e37a46360ca7"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class Fx &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void BasicThread::AddTeardownListener </td>
+          <td>(</td>
+          <td class="paramtype">Fx &amp;&amp;&#160;</td>
+          <td class="paramname"><em>listener</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Adds a function object which will be called when this <a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a> stops running or is destroyed </p>
+<p>The listener is invoked before the destruction of this <a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a> and also immediately after the <a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a> instance has transitioned to the Stopped state.</p>
+<p>Users who attach a teardown listener MUST NOT attempt to invoke any methods not defined by <a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a>, and MUST NOT attempt to invoke any non-final virtual functions available here. The object itself may be partially destroyed by the time the listener is invoked, and virtual methods may not have the expected behavior.</p>
+<p>It is guaranteed to be safe to call any non-virtual method defined by <a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a> from a teardown listener. </p>
+
+</div>
+</div>
 <a class="anchor" id="aec8c9fa548fc917627ab1806309c5747"></a>
 <div class="memitem">
 <div class="memproto">
@@ -794,7 +829,7 @@ const std::shared_ptr&lt; CoreObject &gt; &amp;&#160;</td><td class="memItemRigh
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_basic_thread.html">BasicThread</a></li>
-    <li class="footer">Generated on Thu Mar 26 2015 17:32:37 for Autowiring by
+    <li class="footer">Generated on Thu Apr 23 2015 10:08:48 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

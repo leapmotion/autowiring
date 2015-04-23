@@ -4,6 +4,8 @@ var class_dispatch_queue =
     [ "Abort", "class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016", null ],
     [ "AddExisting", "class_dispatch_queue.html#a1121ea959ace80dfcee8a26b44a2d376", null ],
     [ "AreAnyDispatchersReady", "class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc", null ],
+    [ "Barrier", "class_dispatch_queue.html#a36dd84e1f8c210b971b9b08f89b8af10", null ],
+    [ "Barrier", "class_dispatch_queue.html#a202af0ec4502042b5fb32c0dfc4cdfa8", null ],
     [ "DispatchAllEvents", "class_dispatch_queue.html#af94131c04ad4d1513cc411870fc6b002", null ],
     [ "DispatchEvent", "class_dispatch_queue.html#ae4cf0ed4b428ecbee03fb64a0e705ce7", null ],
     [ "DispatchEventUnsafe", "class_dispatch_queue.html#a7c909a2f706599e2aeaea163afc43d2a", null ],

@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.1</span>
+   &#160;<span id="projectnumber">0.5.2</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -115,26 +115,26 @@ $(document).ready(function(){initNavTree('_exception_filter_8h_source.html','');
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="keyword">class </span>JunctionBoxBase;</div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="keyword">class </span>CoreObject;</div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;</div>
-<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="class_exception_filter.html">   46</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_exception_filter.html">ExceptionFilter</a></div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;{</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <a class="code" href="class_exception_filter.html">ExceptionFilter</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="keyword">virtual</span> ~<a class="code" href="class_exception_filter.html">ExceptionFilter</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
-<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="class_exception_filter.html#afe8a4a6f547e2c9297cd88144977deae">   63</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_exception_filter.html#afe8a4a6f547e2c9297cd88144977deae">Filter</a>(<span class="keywordtype">void</span>) {};</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;</div>
-<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="class_exception_filter.html#a0b3b4d0bc7b414b5a4df02db134153c6">   72</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_exception_filter.html#a0b3b4d0bc7b414b5a4df02db134153c6">Filter</a>(<span class="keyword">const</span> JunctionBoxBase* pJunctionBox, CoreObject* pRecipient) {}</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;};</div>
-<div class="ttc" id="class_exception_filter_html_a0b3b4d0bc7b414b5a4df02db134153c6"><div class="ttname"><a href="class_exception_filter.html#a0b3b4d0bc7b414b5a4df02db134153c6">ExceptionFilter::Filter</a></div><div class="ttdeci">virtual void Filter(const JunctionBoxBase *pJunctionBox, CoreObject *pRecipient)</div><div class="ttdoc">This is an exception filter for exceptions thrown during a call to Fire </div><div class="ttdef"><b>Definition:</b> ExceptionFilter.h:72</div></div>
-<div class="ttc" id="class_exception_filter_html"><div class="ttname"><a href="class_exception_filter.html">ExceptionFilter</a></div><div class="ttdoc">Implements an exception filter type, invoked when an unhandled exception is thrown ...</div><div class="ttdef"><b>Definition:</b> ExceptionFilter.h:46</div></div>
-<div class="ttc" id="class_exception_filter_html_afe8a4a6f547e2c9297cd88144977deae"><div class="ttname"><a href="class_exception_filter.html#afe8a4a6f547e2c9297cd88144977deae">ExceptionFilter::Filter</a></div><div class="ttdeci">virtual void Filter(void)</div><div class="ttdoc">This method is invoked when an exception has been thrown by CoreThread::Run </div><div class="ttdef"><b>Definition:</b> ExceptionFilter.h:63</div></div>
+<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="class_exception_filter.html">   51</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_exception_filter.html">ExceptionFilter</a></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;{</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  <a class="code" href="class_exception_filter.html">ExceptionFilter</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  <span class="keyword">virtual</span> ~<a class="code" href="class_exception_filter.html">ExceptionFilter</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
+<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="class_exception_filter.html#afe8a4a6f547e2c9297cd88144977deae">   70</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_exception_filter.html#afe8a4a6f547e2c9297cd88144977deae">Filter</a>(<span class="keywordtype">void</span>) {};</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
+<div class="line"><a name="l00081"></a><span class="lineno"><a class="line" href="class_exception_filter.html#a0b3b4d0bc7b414b5a4df02db134153c6">   81</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_exception_filter.html#a0b3b4d0bc7b414b5a4df02db134153c6">Filter</a>(<span class="keyword">const</span> JunctionBoxBase* pJunctionBox, CoreObject* pRecipient) {}</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;};</div>
+<div class="ttc" id="class_exception_filter_html_a0b3b4d0bc7b414b5a4df02db134153c6"><div class="ttname"><a href="class_exception_filter.html#a0b3b4d0bc7b414b5a4df02db134153c6">ExceptionFilter::Filter</a></div><div class="ttdeci">virtual void Filter(const JunctionBoxBase *pJunctionBox, CoreObject *pRecipient)</div><div class="ttdoc">This is an exception filter for exceptions thrown during a call to Fire </div><div class="ttdef"><b>Definition:</b> ExceptionFilter.h:81</div></div>
+<div class="ttc" id="class_exception_filter_html"><div class="ttname"><a href="class_exception_filter.html">ExceptionFilter</a></div><div class="ttdoc">Implements an exception filter type, invoked when an unhandled exception is thrown ...</div><div class="ttdef"><b>Definition:</b> ExceptionFilter.h:51</div></div>
+<div class="ttc" id="class_exception_filter_html_afe8a4a6f547e2c9297cd88144977deae"><div class="ttname"><a href="class_exception_filter.html#afe8a4a6f547e2c9297cd88144977deae">ExceptionFilter::Filter</a></div><div class="ttdeci">virtual void Filter(void)</div><div class="ttdoc">This method is invoked when an exception has been thrown by CoreThread::Run </div><div class="ttdef"><b>Definition:</b> ExceptionFilter.h:70</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_exception_filter_8h.html">ExceptionFilter.h</a></li>
-    <li class="footer">Generated on Thu Mar 26 2015 17:32:37 for Autowiring by
+    <li class="footer">Generated on Thu Apr 23 2015 10:08:47 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

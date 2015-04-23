@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.1</span>
+   &#160;<span id="projectnumber">0.5.2</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -133,13 +133,13 @@ Inheritance diagram for AutoPacketFactory:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aebc98b7e98aca8662c4b6699728661f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#aebc98b7e98aca8662c4b6699728661f2">AddSubscriber</a> (const AutoFilterDescriptor &amp;rhs)</td></tr>
-<tr class="memdesc:aebc98b7e98aca8662c4b6699728661f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Registers the passed subscriber, if it defines a method called AutoFilter  <a href="#aebc98b7e98aca8662c4b6699728661f2">More...</a><br /></td></tr>
-<tr class="separator:aebc98b7e98aca8662c4b6699728661f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54f53a637a2fcf9d954ef3eff81bc51f"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:a54f53a637a2fcf9d954ef3eff81bc51f"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#a54f53a637a2fcf9d954ef3eff81bc51f">AddSubscriber</a> (const std::shared_ptr&lt; T &gt; &amp;rhs)</td></tr>
-<tr class="memdesc:a54f53a637a2fcf9d954ef3eff81bc51f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience override of AddSubscriber  <a href="#a54f53a637a2fcf9d954ef3eff81bc51f">More...</a><br /></td></tr>
-<tr class="separator:a54f53a637a2fcf9d954ef3eff81bc51f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05848286dfbd933b4e8538c4bf352513"><td class="memItemLeft" align="right" valign="top">const AutoFilterDescriptor &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#a05848286dfbd933b4e8538c4bf352513">AddSubscriber</a> (const AutoFilterDescriptor &amp;rhs)</td></tr>
+<tr class="memdesc:a05848286dfbd933b4e8538c4bf352513"><td class="mdescLeft">&#160;</td><td class="mdescRight">Registers the passed subscriber, if it defines a method called AutoFilter  <a href="#a05848286dfbd933b4e8538c4bf352513">More...</a><br /></td></tr>
+<tr class="separator:a05848286dfbd933b4e8538c4bf352513"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30ca1621713ee8d6561a8832542bcad6"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr class="memitem:a30ca1621713ee8d6561a8832542bcad6"><td class="memTemplItemLeft" align="right" valign="top">AutoFilterDescriptor&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#a30ca1621713ee8d6561a8832542bcad6">AddSubscriber</a> (const std::shared_ptr&lt; T &gt; &amp;rhs)</td></tr>
+<tr class="memdesc:a30ca1621713ee8d6561a8832542bcad6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convenience override of AddSubscriber  <a href="#a30ca1621713ee8d6561a8832542bcad6">More...</a><br /></td></tr>
+<tr class="separator:a30ca1621713ee8d6561a8832542bcad6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c26425753556533cdec00968acdcffa"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:a5c26425753556533cdec00968acdcffa"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#a5c26425753556533cdec00968acdcffa">AppendAutoFiltersTo</a> (T &amp;container) const </td></tr>
 <tr class="memdesc:a5c26425753556533cdec00968acdcffa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies the internal set of AutoFilter members to the specified container  <a href="#a5c26425753556533cdec00968acdcffa">More...</a><br /></td></tr>
@@ -179,10 +179,13 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="cl
 <tr class="memitem:ac8615d15ffbe346e4f2f6976e8f4dcdc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#ac8615d15ffbe346e4f2f6976e8f4dcdc">OnStop</a> (bool graceful) override</td></tr>
 <tr class="memdesc:ac8615d15ffbe346e4f2f6976e8f4dcdc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked by the base class <a class="el" href="class_core_runnable.html#a41c3338adf9bf7222b13bbafb564dabb" title="Stops this runnable. ">Stop()</a> method. Override this method to perform any needed cleanup.  <a href="#ac8615d15ffbe346e4f2f6976e8f4dcdc">More...</a><br /></td></tr>
 <tr class="separator:ac8615d15ffbe346e4f2f6976e8f4dcdc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a20af3a6f13788f3137d054770a5c7838"><td class="memTemplParams" colspan="2">template&lt;class Fx &gt; </td></tr>
-<tr class="memitem:a20af3a6f13788f3137d054770a5c7838"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#a20af3a6f13788f3137d054770a5c7838">operator+=</a> (Fx &amp;&amp;fx)</td></tr>
-<tr class="memdesc:a20af3a6f13788f3137d054770a5c7838"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convienance overload of operator+= to add a subscriber from a lambda  <a href="#a20af3a6f13788f3137d054770a5c7838">More...</a><br /></td></tr>
-<tr class="separator:a20af3a6f13788f3137d054770a5c7838"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e1ba463b54159ebcfc8c63a4f9d0b51"><td class="memTemplParams" colspan="2">template&lt;class Fx &gt; </td></tr>
+<tr class="memitem:a7e1ba463b54159ebcfc8c63a4f9d0b51"><td class="memTemplItemLeft" align="right" valign="top">AutoFilterDescriptor&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#a7e1ba463b54159ebcfc8c63a4f9d0b51">operator+=</a> (Fx &amp;&amp;fx)</td></tr>
+<tr class="memdesc:a7e1ba463b54159ebcfc8c63a4f9d0b51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convienance overload of operator+= to add a subscriber from a lambda  <a href="#a7e1ba463b54159ebcfc8c63a4f9d0b51">More...</a><br /></td></tr>
+<tr class="separator:a7e1ba463b54159ebcfc8c63a4f9d0b51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a898408176ab705b61bcb41025298bf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#a5a898408176ab705b61bcb41025298bf">operator-=</a> (const AutoFilterDescriptor &amp;desc)</td></tr>
+<tr class="memdesc:a5a898408176ab705b61bcb41025298bf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Overloaded counterpart to RemoveSubscriber  <a href="#a5a898408176ab705b61bcb41025298bf">More...</a><br /></td></tr>
+<tr class="separator:a5a898408176ab705b61bcb41025298bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad98c3ea149c6c3edf0d2d647012d884f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#ad98c3ea149c6c3edf0d2d647012d884f">RecordPacketDuration</a> (std::chrono::nanoseconds duration)</td></tr>
 <tr class="memdesc:ad98c3ea149c6c3edf0d2d647012d884f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called by each <a class="el" href="class_auto_packet.html" title="A decorator-style processing packet ">AutoPacket</a>'s Finalize method to allow the factory to record statistics about packet lifespan.  <a href="#ad98c3ea149c6c3edf0d2d647012d884f">More...</a><br /></td></tr>
 <tr class="separator:ad98c3ea149c6c3edf0d2d647012d884f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -249,12 +252,12 @@ const std::shared_ptr&lt; CoreObject &gt; &amp;&#160;</td><td class="memItemRigh
 <div class="textblock"><p>A configurable factory class for pipeline packets with a built-in object pool </p>
 <p>Generally, only one packet factory is required per context. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="aebc98b7e98aca8662c4b6699728661f2"></a>
+<a class="anchor" id="a05848286dfbd933b4e8538c4bf352513"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void AutoPacketFactory::AddSubscriber </td>
+          <td class="memname">const AutoFilterDescriptor&amp; AutoPacketFactory::AddSubscriber </td>
           <td>(</td>
           <td class="paramtype">const AutoFilterDescriptor &amp;&#160;</td>
           <td class="paramname"><em>rhs</em></td><td>)</td>
@@ -264,11 +267,18 @@ const std::shared_ptr&lt; CoreObject &gt; &amp;&#160;</td><td class="memItemRigh
 </div><div class="memdoc">
 
 <p>Registers the passed subscriber, if it defines a method called AutoFilter </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">rhs</td><td>The descriptor for the AutoFilter to be added</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>rhs</dd></dl>
 <p>This method is idempotent </p>
 
 </div>
 </div>
-<a class="anchor" id="a54f53a637a2fcf9d954ef3eff81bc51f"></a>
+<a class="anchor" id="a30ca1621713ee8d6561a8832542bcad6"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -278,7 +288,7 @@ template&lt;class T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void AutoPacketFactory::AddSubscriber </td>
+          <td class="memname">AutoFilterDescriptor AutoPacketFactory::AddSubscriber </td>
           <td>(</td>
           <td class="paramtype">const std::shared_ptr&lt; T &gt; &amp;&#160;</td>
           <td class="paramname"><em>rhs</em></td><td>)</td>
@@ -293,6 +303,13 @@ template&lt;class T &gt; </div>
 </div><div class="memdoc">
 
 <p>Convenience override of AddSubscriber </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">rhs</td><td>A shared pointer to a type which has an AutoFilter routine on it</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>For this call to be valid, T::AutoFilter must be defined and must be a compliant AutoFilter </p>
 
 </div>
 </div>
@@ -601,7 +618,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a20af3a6f13788f3137d054770a5c7838"></a>
+<a class="anchor" id="a7e1ba463b54159ebcfc8c63a4f9d0b51"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -611,7 +628,7 @@ template&lt;class Fx &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void AutoPacketFactory::operator+= </td>
+          <td class="memname">AutoFilterDescriptor AutoPacketFactory::operator+= </td>
           <td>(</td>
           <td class="paramtype">Fx &amp;&amp;&#160;</td>
           <td class="paramname"><em>fx</em></td><td>)</td>
@@ -626,6 +643,25 @@ template&lt;class Fx &gt; </div>
 </div><div class="memdoc">
 
 <p>Convienance overload of operator+= to add a subscriber from a lambda </p>
+<p>This method provides a way to attach a lambda function directly to the factory </p>
+
+</div>
+</div>
+<a class="anchor" id="a5a898408176ab705b61bcb41025298bf"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void AutoPacketFactory::operator-= </td>
+          <td>(</td>
+          <td class="paramtype">const AutoFilterDescriptor &amp;&#160;</td>
+          <td class="paramname"><em>desc</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Overloaded counterpart to RemoveSubscriber </p>
 
 </div>
 </div>
@@ -674,6 +710,7 @@ template&lt;class Fx &gt; </div>
   </table>
   </dd>
 </dl>
+<p>This method will not retroactively modify packets that have already been issued with the specified AutoFilter on it. Only packets that are issued after this method returns will lack the presence of the autoFilter described by the parameter. </p>
 
 </div>
 </div>
@@ -704,7 +741,7 @@ template&lt;class Fx &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_auto_packet_factory.html">AutoPacketFactory</a></li>
-    <li class="footer">Generated on Thu Mar 26 2015 17:32:37 for Autowiring by
+    <li class="footer">Generated on Thu Apr 23 2015 10:08:48 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

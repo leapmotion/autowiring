@@ -25,9 +25,7 @@ var dir_2e38afdc5a4015337247db13c49755ec =
     [ "auto_prev.h", "auto__prev_8h.html", [
       [ "auto_prev", "structauto__prev.html", null ]
     ] ],
-    [ "AutoConfig.h", "_auto_config_8h.html", [
-      [ "AutoConfig", "class_auto_config.html", "class_auto_config" ]
-    ] ],
+    [ "AutoConfig.h", "_auto_config_8h.html", "_auto_config_8h" ],
     [ "AutoNetServer.h", "_auto_net_server_8h.html", "_auto_net_server_8h" ],
     [ "AutoPacket.h", "_auto_packet_8h.html", [
       [ "AutoPacket", "class_auto_packet.html", "class_auto_packet" ]

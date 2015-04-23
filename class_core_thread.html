@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.1</span>
+   &#160;<span id="projectnumber">0.5.2</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -158,6 +158,10 @@ Public Member Functions</h2></td></tr>
 </dl>
 <br /></td></tr>
 <tr class="separator:aefcc009fa192036be9ea4d11218612a4 inherit pub_methods_class_basic_thread"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6274398126caa21fe3d9e37a46360ca7 inherit pub_methods_class_basic_thread"><td class="memTemplParams" colspan="2">template&lt;class Fx &gt; </td></tr>
+<tr class="memitem:a6274398126caa21fe3d9e37a46360ca7 inherit pub_methods_class_basic_thread"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a6274398126caa21fe3d9e37a46360ca7">AddTeardownListener</a> (Fx &amp;&amp;listener)</td></tr>
+<tr class="memdesc:a6274398126caa21fe3d9e37a46360ca7 inherit pub_methods_class_basic_thread"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a function object which will be called when this <a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a> stops running or is destroyed  <a href="#a6274398126caa21fe3d9e37a46360ca7">More...</a><br /></td></tr>
+<tr class="separator:a6274398126caa21fe3d9e37a46360ca7 inherit pub_methods_class_basic_thread"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6f756d73ea97f88a9d12f6e0708f1cf8 inherit pub_methods_class_basic_thread"><td class="memItemLeft" align="right" valign="top">std::chrono::steady_clock::time_point&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a6f756d73ea97f88a9d12f6e0708f1cf8">GetCreationTime</a> (void)</td></tr>
 <tr class="memdesc:a6f756d73ea97f88a9d12f6e0708f1cf8 inherit pub_methods_class_basic_thread"><td class="mdescLeft">&#160;</td><td class="mdescRight">The thread creation time.  <a href="#a6f756d73ea97f88a9d12f6e0708f1cf8">More...</a><br /></td></tr>
 <tr class="separator:a6f756d73ea97f88a9d12f6e0708f1cf8 inherit pub_methods_class_basic_thread"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -224,6 +228,12 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:a9ee3c640b1c46dc87157d7e1186db9bc inherit pub_methods_class_dispatch_queue"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if there are curerntly any dispatchers ready for execution&ndash;IE, DispatchEvent would return true </dd></dl>
 <br /></td></tr>
 <tr class="separator:a9ee3c640b1c46dc87157d7e1186db9bc inherit pub_methods_class_dispatch_queue"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36dd84e1f8c210b971b9b08f89b8af10 inherit pub_methods_class_dispatch_queue"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a36dd84e1f8c210b971b9b08f89b8af10">Barrier</a> (std::chrono::nanoseconds timeout)</td></tr>
+<tr class="memdesc:a36dd84e1f8c210b971b9b08f89b8af10 inherit pub_methods_class_dispatch_queue"><td class="mdescLeft">&#160;</td><td class="mdescRight">Blocks until all dispatchers on the <a class="el" href="class_dispatch_queue.html" title="This is an asynchronous queue of zero-argument functions ">DispatchQueue</a> at the time of the call have been dispatched  <a href="#a36dd84e1f8c210b971b9b08f89b8af10">More...</a><br /></td></tr>
+<tr class="separator:a36dd84e1f8c210b971b9b08f89b8af10 inherit pub_methods_class_dispatch_queue"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a202af0ec4502042b5fb32c0dfc4cdfa8 inherit pub_methods_class_dispatch_queue"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a202af0ec4502042b5fb32c0dfc4cdfa8">Barrier</a> (void)</td></tr>
+<tr class="memdesc:a202af0ec4502042b5fb32c0dfc4cdfa8 inherit pub_methods_class_dispatch_queue"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identical to the timed version of Barrier, but does not time out  <a href="#a202af0ec4502042b5fb32c0dfc4cdfa8">More...</a><br /></td></tr>
+<tr class="separator:a202af0ec4502042b5fb32c0dfc4cdfa8 inherit pub_methods_class_dispatch_queue"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aead80f32b70b6c6ee5acffb2b083724a inherit pub_methods_class_dispatch_queue"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aead80f32b70b6c6ee5acffb2b083724a"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#aead80f32b70b6c6ee5acffb2b083724a">GetDispatchQueueLength</a> (void) const </td></tr>
 <tr class="memdesc:aead80f32b70b6c6ee5acffb2b083724a inherit pub_methods_class_dispatch_queue"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>The total number of all ready and delayed events </dd></dl>
@@ -511,7 +521,7 @@ Additional Inherited Members</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_core_thread.html">CoreThread</a></li>
-    <li class="footer">Generated on Thu Mar 26 2015 17:32:37 for Autowiring by
+    <li class="footer">Generated on Thu Apr 23 2015 10:08:48 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

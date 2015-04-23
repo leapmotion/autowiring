@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.1</span>
+   &#160;<span id="projectnumber">0.5.2</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -227,7 +227,7 @@ template&lt;class T &gt; </div>
 </div><div class="memdoc">
 
 <p>Invoked by the parent context when the parent context is about to be destroyed </p>
-<p>A context may be destroyed if and only if none of its members are running and none of them may enter a runnable state. This happens when the last pointer to <a class="el" href="class_context_member.html" title="A class that must be inherited in order to be a member of a context heriarchy ">ContextMember</a> is lost. Resource cleanup must be started at this point.</p>
+<p>A context may be destroyed if and only if none of its members are running and none of them may enter a runnable state. This happens when the last pointer to <a class="el" href="class_context_member.html" title="A class that must be inherited in order to be a member of a context heriarchy ">ContextMember</a> is lost. Resource cleanup must be started at this point. Context members are deemed to be unable to enter a running state if they were not signalled to enter this state before the last shared pointer to their outer <a class="el" href="class_core_context.html" title="A top-level container class representing an autowiring domain, a minimum broadcast domain...">CoreContext</a> is released.</p>
 <p>For contexts containing strictly heirarchial objects, implementors of this method do not need to do anything. If, however, there are circular references anywhere in the context, callers should invoke reset() on each autowired member they control.</p>
 <p>TODO: Eventually, we MUST eliminate this method and simply keep track of all <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> instances in a single context. This can be done safely by using the <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a>'s internal m_tracker member, which can serve to notify listeners when the instance is destroyed. Alternatively, the <a class="el" href="class_autowired.html" title="Autowires a &quot;slot&quot; in a context to which an instance of the specified type will be wired when it beco...">Autowired</a> instance could attach and detach itself from a linked list in a lock-free way in order to support chain detachment. </p>
 
@@ -242,7 +242,7 @@ template&lt;class T &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_context_member.html">ContextMember</a></li>
-    <li class="footer">Generated on Thu Mar 26 2015 17:32:37 for Autowiring by
+    <li class="footer">Generated on Thu Apr 23 2015 10:08:48 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

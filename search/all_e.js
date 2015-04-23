@@ -7,6 +7,7 @@ var searchData=
   ['release',['Release',['../class_global_core_context.html#adcaca1bd731c8a6e3200e2b451e794f3',1,'GlobalCoreContext']]],
   ['removecontext',['RemoveContext',['../class_context_creator.html#a7b1fb8f9815cb1f053460fd2e9cfbc16',1,'ContextCreator::RemoveContext(const Key &amp;key)'],['../class_context_creator.html#ae18fee825e9161ca9dd500706f6f1f6e',1,'ContextCreator::RemoveContext(typename t_mpType::iterator q)']]],
   ['removerecipient',['RemoveRecipient',['../class_auto_packet.html#aa302c91a39594f5ea0f58094ce4fea3a',1,'AutoPacket']]],
+  ['removesnooper',['RemoveSnooper',['../class_core_context.html#a9dc0d1a9db98765d26bb89cab5bb4f90',1,'CoreContext::RemoveSnooper(const CoreObjectDescriptor &amp;traits)'],['../class_core_context.html#a1a7dd841f71c271a2f61b0a698011f29',1,'CoreContext::RemoveSnooper(const std::shared_ptr&lt; T &gt; &amp;pSnooper)'],['../class_core_context.html#a9dc0620a27181c14654da12561c1cead',1,'CoreContext::RemoveSnooper(const Autowired&lt; T &gt; &amp;snooper)']]],
   ['removesubscriber',['RemoveSubscriber',['../class_auto_packet_factory.html#aac1b97303f4c049d1db42f2f91da70af',1,'AutoPacketFactory']]],
   ['reset',['reset',['../classauto__out.html#a8f2e723420ba2ca6827bd7e5cedc842d',1,'auto_out']]],
   ['resetpacketstatistics',['ResetPacketStatistics',['../class_auto_packet_factory.html#ae582e1a1e37dae158b22ec0ad322b7d7',1,'AutoPacketFactory']]],

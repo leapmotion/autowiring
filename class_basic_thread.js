@@ -1,6 +1,7 @@
 var class_basic_thread =
 [
     [ "BasicThread", "class_basic_thread.html#aefcc009fa192036be9ea4d11218612a4", null ],
+    [ "AddTeardownListener", "class_basic_thread.html#a6274398126caa21fe3d9e37a46360ca7", null ],
     [ "DoAdditionalWait", "class_basic_thread.html#aec8c9fa548fc917627ab1806309c5747", null ],
     [ "DoAdditionalWait", "class_basic_thread.html#a43a1abcadf00639a64c02fc0ab2785f3", null ],
     [ "DoRun", "class_basic_thread.html#aac69a4f359aab347371e9e1c11a9dd41", null ],

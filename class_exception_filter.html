@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.1</span>
+   &#160;<span id="projectnumber">0.5.2</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -133,10 +133,21 @@ Public Member Functions</h2></td></tr>
 <div class="textblock"><p>Implements an exception filter type, invoked when an unhandled exception is thrown </p>
 <p>An exception filter is called with an exception current in the application, and it can access this exception either with current_exception or via throw.</p>
 <p>Implementors of this interface must use throw or std::rethrow_exception in order to filter the passed exception. Generally, the filtration technique should be written as follows:</p>
-<p>try { throw; } catch(custom_type_1&amp; t1) { ...handling code... } catch(custom_type_2&amp; t2) { ...handling code... }</p>
-<p>Alternatively, this strategy may be used:</p>
-<p>try { throw; } catch(custom_type_1&amp;) { } catch(custom_type_2&amp;) { } ...handling code...</p>
-<p>Filtration methods may safely allow any unhandled rethrows to percolate to the caller.</p>
+<div class="fragment"><div class="line"><span class="keywordflow">try</span> {</div>
+<div class="line">  <span class="keywordflow">throw</span>;</div>
+<div class="line">} <span class="keywordflow">catch</span>(custom_type_1&amp; t1) {</div>
+<div class="line">  ...handling code...</div>
+<div class="line">} <span class="keywordflow">catch</span>(custom_type_2&amp; t2) {</div>
+<div class="line">  ...handling code...</div>
+<div class="line">}</div>
+</div><!-- fragment --><p>Alternatively, this strategy may be used:</p>
+<div class="fragment"><div class="line"><span class="keywordflow">try</span> {</div>
+<div class="line">  <span class="keywordflow">throw</span>;</div>
+<div class="line">} <span class="keywordflow">catch</span>(custom_type_1&amp;) {</div>
+<div class="line">} <span class="keywordflow">catch</span>(custom_type_2&amp;) {</div>
+<div class="line">}</div>
+<div class="line">...handling code...</div>
+</div><!-- fragment --><p>Filtration methods may safely allow any unhandled rethrows to percolate to the caller. Autowiring will ignore any exceptions thrown by a filter method.</p>
 <p>Unhandled exceptions thrown in a context will cause that context to be torn down. By the time the exception filter is called, teardown of the context originating the exception is inevitable. The originating context may potentially be torn down already by the time the filter method is called.</p>
 <p>All filter methods are guaranteed to be called in the thread and context of the code which threw the exception. In the case of Fire, it will be in the context of the caller. In the case of Defer, it will be in the context of the callee. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
@@ -164,7 +175,8 @@ Public Member Functions</h2></td></tr>
 
 <p>This method is invoked when an exception has been thrown by <a class="el" href="class_core_thread.html#a3268ba6d9cb6ff14272ba50a17e9fe9f" title="Begins thread execution. ">CoreThread::Run</a> </p>
 <p>Such an exception is treated as a fatal exception, and will unconditionally result in the enclosing context being torn down. Filters MUST NOT attempt to alter this behavior. If this behavior is not desirable, greater care should be taken to prevent certain exceptions from being unhandled.</p>
-<p>Implementors can use "throw" with no arguments to trigger a rethrow of the originating exception. </p>
+<p>Implementors can use "throw" with no arguments to trigger a rethrow of the originating exception.</p>
+<p>Exceptions thrown by this method are silently ignored by Autowiring. </p>
 
 </div>
 </div>
@@ -207,7 +219,8 @@ Public Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<p>Implementors can use "throw" with no arguments to trigger a rethrow of the originating exception. </p>
+<p>Implementors can use "throw" with no arguments to trigger a rethrow of the originating exception.</p>
+<p>Exceptions thrown by this method are silently ignored by Autowiring. </p>
 
 </div>
 </div>
@@ -220,7 +233,7 @@ Public Member Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_exception_filter.html">ExceptionFilter</a></li>
-    <li class="footer">Generated on Thu Mar 26 2015 17:32:37 for Autowiring by
+    <li class="footer">Generated on Thu Apr 23 2015 10:08:48 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.1</span>
+   &#160;<span id="projectnumber">0.5.2</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -219,18 +219,23 @@ $(document).ready(function(){initNavTree('_basic_thread_8h_source.html','');});
 <div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_basic_thread.html#a2c6d0e971236f28d25eaef0bffb6181e">IsCompleted</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span>;</div>
 <div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033">Run</a>() = 0;</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;</div>
-<div class="line"><a name="l00265"></a><span class="lineno"><a class="line" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">  265</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">OnStop</a>(<span class="keywordtype">void</span>) {}</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#ae9d8f1216df2a3f93b3b3a6a4c454fa0">ForceCoreThreadReidentify</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;  std::chrono::steady_clock::time_point <a class="code" href="class_basic_thread.html#a6f756d73ea97f88a9d12f6e0708f1cf8">GetCreationTime</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a643d476885ee38306b061d7fb37c126f">GetThreadTimes</a>(std::chrono::milliseconds&amp; kernelTime, std::chrono::milliseconds&amp; userTime);</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;};</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;<span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> <span class="keywordtype">void</span> <a class="code" href="_basic_thread_8h.html#a4bc1468846019424a13c8c2b5d85a974">ForceCoreThreadReidentify</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> Fx&gt;</div>
+<div class="line"><a name="l00251"></a><span class="lineno"><a class="line" href="class_basic_thread.html#a6274398126caa21fe3d9e37a46360ca7">  251</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a6274398126caa21fe3d9e37a46360ca7">AddTeardownListener</a>(Fx&amp;&amp; listener) {</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;    <span class="keywordflow">return</span> TeardownNotifier::AddTeardownListener(std::forward&lt;Fx&amp;&amp;&gt;(listener));</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;  }</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aca183b811e4f93dfce70a449649b3033">Run</a>() = 0;</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;</div>
+<div class="line"><a name="l00285"></a><span class="lineno"><a class="line" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">  285</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">OnStop</a>(<span class="keywordtype">void</span>) {}</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#ae9d8f1216df2a3f93b3b3a6a4c454fa0">ForceCoreThreadReidentify</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  std::chrono::steady_clock::time_point <a class="code" href="class_basic_thread.html#a6f756d73ea97f88a9d12f6e0708f1cf8">GetCreationTime</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#a643d476885ee38306b061d7fb37c126f">GetThreadTimes</a>(std::chrono::milliseconds&amp; kernelTime, std::chrono::milliseconds&amp; userTime);</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;};</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;<span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> <span class="keywordtype">void</span> <a class="code" href="_basic_thread_8h.html#a4bc1468846019424a13c8c2b5d85a974">ForceCoreThreadReidentify</a>(<span class="keywordtype">void</span>);</div>
 <div class="ttc" id="class_basic_thread_html_ae9d8f1216df2a3f93b3b3a6a4c454fa0"><div class="ttname"><a href="class_basic_thread.html#ae9d8f1216df2a3f93b3b3a6a4c454fa0">BasicThread::ForceCoreThreadReidentify</a></div><div class="ttdeci">static void ForceCoreThreadReidentify(void)</div><div class="ttdoc">Forces all Autowiring threads to reidentify themselves. </div></div>
 <div class="ttc" id="class_basic_thread_html_aa64b53cce1df48cdfa5b407e96164956"><div class="ttname"><a href="class_basic_thread.html#aa64b53cce1df48cdfa5b407e96164956">BasicThread::ThreadSleep</a></div><div class="ttdeci">bool ThreadSleep(std::chrono::nanoseconds timeout)</div><div class="ttdoc">Sleeps this thread for the specified duration. </div></div>
 <div class="ttc" id="_basic_thread_8h_html_ac21de3041b361912460403d2649eaa0ea960b44c579bc2f6818d2daaf9e4c16f0"><div class="ttname"><a href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0ea960b44c579bc2f6818d2daaf9e4c16f0">ThreadPriority::Normal</a></div><div class="ttdoc">Normal. </div></div>
@@ -243,9 +248,10 @@ $(document).ready(function(){initNavTree('_basic_thread_8h_source.html','');});
 <div class="ttc" id="class_basic_thread_html"><div class="ttname"><a href="class_basic_thread.html">BasicThread</a></div><div class="ttdoc">An abstract class for creating a thread with a single Run method. </div><div class="ttdef"><b>Definition:</b> BasicThread.h:63</div></div>
 <div class="ttc" id="_basic_thread_8h_html_ac21de3041b361912460403d2649eaa0ea241c2b24551c35a31d9f82c1b4798c34"><div class="ttname"><a href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0ea241c2b24551c35a31d9f82c1b4798c34">ThreadPriority::TimeCritical</a></div><div class="ttdoc">Critical. </div></div>
 <div class="ttc" id="class_basic_thread_html_a64061568019d519e3a27d1d3a840c741"><div class="ttname"><a href="class_basic_thread.html#a64061568019d519e3a27d1d3a840c741">BasicThread::OnStart</a></div><div class="ttdeci">bool OnStart() override</div><div class="ttdoc">Causes a new thread to be created in which the Run method will be invoked </div></div>
-<div class="ttc" id="class_basic_thread_html_a1186558c53eb71abc32af737376b44f3"><div class="ttname"><a href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">BasicThread::OnStop</a></div><div class="ttdeci">virtual void OnStop(void)</div><div class="ttdoc">Invoked by the base class Stop() method. Implement this method to perform any needed cleanup...</div><div class="ttdef"><b>Definition:</b> BasicThread.h:265</div></div>
+<div class="ttc" id="class_basic_thread_html_a1186558c53eb71abc32af737376b44f3"><div class="ttname"><a href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">BasicThread::OnStop</a></div><div class="ttdeci">virtual void OnStop(void)</div><div class="ttdoc">Invoked by the base class Stop() method. Implement this method to perform any needed cleanup...</div><div class="ttdef"><b>Definition:</b> BasicThread.h:285</div></div>
 <div class="ttc" id="class_basic_thread_html_aec8c9fa548fc917627ab1806309c5747"><div class="ttname"><a href="class_basic_thread.html#aec8c9fa548fc917627ab1806309c5747">BasicThread::DoAdditionalWait</a></div><div class="ttdeci">void DoAdditionalWait(void) override</div><div class="ttdoc">Untimed variant of DoAdditionalWait </div></div>
 <div class="ttc" id="_basic_thread_8h_html_ac21de3041b361912460403d2649eaa0eab5b8e20937205384be7b9e0c29a28fdb"><div class="ttname"><a href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0eab5b8e20937205384be7b9e0c29a28fdb">ThreadPriority::Lowest</a></div><div class="ttdoc">Low. </div></div>
+<div class="ttc" id="class_basic_thread_html_a6274398126caa21fe3d9e37a46360ca7"><div class="ttname"><a href="class_basic_thread.html#a6274398126caa21fe3d9e37a46360ca7">BasicThread::AddTeardownListener</a></div><div class="ttdeci">void AddTeardownListener(Fx &amp;&amp;listener)</div><div class="ttdoc">Adds a function object which will be called when this BasicThread stops running or is destroyed ...</div><div class="ttdef"><b>Definition:</b> BasicThread.h:251</div></div>
 <div class="ttc" id="class_context_member_html"><div class="ttname"><a href="class_context_member.html">ContextMember</a></div><div class="ttdoc">A class that must be inherited in order to be a member of a context heriarchy </div><div class="ttdef"><b>Definition:</b> ContextMember.h:12</div></div>
 <div class="ttc" id="class_basic_thread_html_aa6d8803cdc6ab28b1d79740b115487c5"><div class="ttname"><a href="class_basic_thread.html#aa6d8803cdc6ab28b1d79740b115487c5">BasicThread::SetCurrentThreadName</a></div><div class="ttdeci">void SetCurrentThreadName(void) const </div><div class="ttdoc">Assigns a name to the thread, displayed in debuggers. </div></div>
 <div class="ttc" id="_context_member_8h_html"><div class="ttname"><a href="_context_member_8h.html">ContextMember.h</a></div></div>
@@ -270,7 +276,7 @@ $(document).ready(function(){initNavTree('_basic_thread_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_basic_thread_8h.html">BasicThread.h</a></li>
-    <li class="footer">Generated on Thu Mar 26 2015 17:32:37 for Autowiring by
+    <li class="footer">Generated on Thu Apr 23 2015 10:08:47 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

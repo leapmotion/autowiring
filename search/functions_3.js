@@ -7,6 +7,7 @@ var searchData=
   ['delayuntilinitiated',['DelayUntilInitiated',['../class_core_context.html#abafba926a5bb2aa13f15c4de0d0df019',1,'CoreContext']]],
   ['demangle',['demangle',['../namespaceautowiring.html#aef8c65202e0d57213ea8335013bc634a',1,'autowiring']]],
   ['demangletypename',['DemangleTypeName',['../class_auto_packet_graph.html#a04f1aea942c321644bd35f876a28ec65',1,'AutoPacketGraph']]],
+  ['deprecated',['DEPRECATED',['../class_core_context.html#a7bb897f4389cf1eae8fc2e7d6364d918',1,'CoreContext::DEPRECATED(Snoop(const CoreObjectDescriptor &amp;traits),&quot;Use AddSnooper instead&quot;)'],['../class_core_context.html#a83630f48d49e0e287efaf477a26435d3',1,'CoreContext::DEPRECATED(Unsnoop(const CoreObjectDescriptor &amp;traits),&quot;Use RemoveSnooper instead&quot;)']]],
   ['dispatchallevents',['DispatchAllEvents',['../class_dispatch_queue.html#af94131c04ad4d1513cc411870fc6b002',1,'DispatchQueue']]],
   ['dispatchevent',['DispatchEvent',['../class_dispatch_queue.html#ae4cf0ed4b428ecbee03fb64a0e705ce7',1,'DispatchQueue']]],
   ['dispatcheventunsafe',['DispatchEventUnsafe',['../class_dispatch_queue.html#a7c909a2f706599e2aeaea163afc43d2a',1,'DispatchQueue']]],
