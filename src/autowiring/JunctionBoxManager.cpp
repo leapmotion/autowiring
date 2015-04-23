@@ -3,9 +3,12 @@
 #include "JunctionBoxManager.h"
 #include "AutoPacketFactory.h"
 #include "AutowiringEvents.h"
+#include "demangle.h"
 #include "JunctionBox.h"
 #include "EventRegistry.h"
 #include <sstream>
+
+using namespace autowiring;
 
 template class RegEvent<AutowiringEvents>;
 template class TypeUnifierComplex<AutowiringEvents>;
@@ -28,10 +31,10 @@ std::shared_ptr<JunctionBoxBase> JunctionBoxManager::Get(const std::type_index& 
   auto box = m_junctionBoxes.find(pTypeIndex);
   if (box == m_junctionBoxes.end()) {
     std::ostringstream ss;
-    ss << "Attempted to obtain a junction box for [[ " << pTypeIndex.name() << " ]], which is not registered." << std::endl
+    ss << "Attempted to obtain a junction box for [[ " << demangle(pTypeIndex) << " ]], which is not registered." << std::endl
        << "Known junction boxes:" << std::endl;
     for (const auto& cur : m_junctionBoxes)
-      ss << cur.first.name() << std::endl;
+      ss << demangle(cur.first) << std::endl;
     throw autowiring_error(ss.str());
   }
 
