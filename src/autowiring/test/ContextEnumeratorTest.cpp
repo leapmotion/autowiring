@@ -179,7 +179,13 @@ TEST_F(ContextEnumeratorTest, Unique) {
     "Expected the unique context to be equal to the specifically named child context";
 }
 
-TEST_F(ContextEnumeratorTest, BadUnique) {
+TEST_F(ContextEnumeratorTest, BadUnique0) {
+  // Intentionally create 0 contexts with the NamedContext sigil.
+  ASSERT_THROW(ContextEnumeratorT<NamedContext>().unique(), autowiring_error) <<
+    "An attempt to obtain a unique context from an enumerator providing none should throw an exception";
+}
+
+TEST_F(ContextEnumeratorTest, BadUnique2) {
   AutoCreateContextT<NamedContext> named1;
   AutoCreateContextT<NamedContext> named2;
 
