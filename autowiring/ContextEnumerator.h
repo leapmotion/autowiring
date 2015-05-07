@@ -150,6 +150,12 @@ public:
   // Convenience routine for returning a single unique element
   std::shared_ptr<CoreContext> unique(void) {
     iterator q = begin();
+
+    // If there are no elements in this enumerator (indicated by begin() == end()), then throw an error,
+    // as this operation is undefined.
+    if (q == end())
+      throw autowiring_error("Attempted to get a unique context on a context enumerator that enumerates no children");
+
     iterator r = q;
 
     // If advancing q gets us to the end, then we only have one element and we can return success
