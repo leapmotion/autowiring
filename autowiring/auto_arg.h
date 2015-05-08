@@ -112,8 +112,23 @@ template<class T, bool has_default>
 struct auto_arg_ctor_helper<T, has_default, false> {
   static_assert(has_default, "Cannot speculatively construct an output argument of type T, it doesn't have any available constructors");
 
+  template<void* (*)(size_t)>
+  struct fn {};
+
+  template<typename U>
+  static std::shared_ptr<U> Allocate(fn<&U::operator new>*) {
+    return std::shared_ptr<U>(new U);
+  }
+
+  template<typename U>
+  static std::shared_ptr<U> Allocate(...) {
+    return std::make_shared<U>();
+  }
+
   static std::shared_ptr<T> arg(AutoPacket&) {
-    return std::make_shared<T>();
+    // Use make shared, if we can; if static new is present on this type, though, then we have to use
+    // the uglier two-part construction syntax
+    return Allocate<T>(nullptr);
   }
 };
 

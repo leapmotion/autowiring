@@ -71,3 +71,44 @@ TEST_F(AutoFilterConstructRulesTest, CanAcceptUndefinedSharedPointerInput) {
   AutoRequired<AcceptsUnnamedExternalClass> auec;
   AutoRequired<AcceptsUnnamedExternalClassSharedPtr> auecsp;
 }
+
+class HasCustomNewFunction {
+public:
+  static bool s_invoked;
+
+  static void* operator new(size_t ncb){
+    s_invoked = true;
+
+    uint8_t* pRetVal = ::new uint8_t[ncb];
+    for (size_t i = 0; i < ncb; i++)
+      pRetVal[i] = (i + 1) * 101;
+    return pRetVal;
+  }
+
+  uint8_t data[128];
+};
+
+bool HasCustomNewFunction::s_invoked = false;
+
+class GeneratesCustomAllocatedType {
+public:
+  void AutoFilter(HasCustomNewFunction&) {}
+};
+
+TEST_F(AutoFilterConstructRulesTest, CorrectlyCallsCustomAllocator) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<GeneratesCustomAllocatedType>();
+
+  ASSERT_FALSE(HasCustomNewFunction::s_invoked) << "Custom allocator was invoked prematurely";
+  auto packet = factory->NewPacket();
+  auto* phcnf = packet->GetShared<HasCustomNewFunction>();
+  auto& hcnf = *phcnf;
+  ASSERT_TRUE(phcnf && hcnf) << "Decoration with custom allocator not present on a packet as expected";
+  ASSERT_TRUE(HasCustomNewFunction::s_invoked) << "Custom new allocator was not invoked as expected";
+
+  for (size_t i = 0; i < 128; i++)
+    ASSERT_EQ(
+      static_cast<uint8_t>((i + 1) * 101),
+      hcnf->data[i]
+    ) << "Custom new allocator did not fill space, mismatch at offset " << i;
+}
