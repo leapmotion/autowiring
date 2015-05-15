@@ -115,8 +115,7 @@ protected:
   /// </summary>
   /// <remarks>
   /// A satisfaction pulse will call any AutoFilter instances which are satisfied by the
-  /// decoration of the passed decoration types.  Such filters will be called even if
-  /// some optional inputs remain outstanding.
+  /// decoration of the passed decoration types.
   /// </remarks>
   void PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos);
 
@@ -353,8 +352,8 @@ public:
   /// Marks the named decoration as unsatisfiable
   /// </summary>
   /// <remarks>
-  /// Marking a decoration as unsatisfiable immediately causes any filters with an optional
-  /// input on this type to be called, if the remainder of their inputs are available.
+  /// Marking a decoration as unsatisfiable immediately causes any filters with an input of the
+  /// form std::shared_ptr<const T> to be called, if the remainder of their inputs are available.
   /// </remarks>
   template<class T>
   void Unsatisfiable(void) {
