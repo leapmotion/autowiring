@@ -200,3 +200,35 @@ TEST_F(ContextCreatorTest, VoidKeyType) {
   EXPECT_EQ(0UL, vc->GetSize()) << "A void context creator was not correctly updated when its dependent context went out of scope";
   EXPECT_EQ(2UL, vc->m_totalDestroyed) << "The void creator did not receive the expected number of NotifyContextDestroyed calls";
 }
+
+struct mySigil {};
+
+class BackReferencingClass:
+  public CoreRunnable
+{
+public:
+  bool OnStart(void) override {
+    AutoCurrentContext ctxt;
+    m_parentContext = ctxt->GetParentContext();
+    return true;
+  }
+  void OnStop(bool graceful) {
+    m_parentContext.reset();
+  }
+  std::shared_ptr<CoreContext> m_parentContext;
+};
+
+TEST_F(ContextCreatorTest, TeardownListenerTest) {
+  // Create a context and verify teardown happens as expected
+  AutoCreateContext mainContext;
+  CurrentContextPusher pusher(mainContext);
+
+  AutoRequired<ContextCreator<mySigil, int>> creator;
+  {
+    auto subctxt = creator->CreateContext(0).first;
+    auto brc = subctxt->Inject<BackReferencingClass>();
+    subctxt->Initiate();
+  }
+  creator->Clear(true);
+  ASSERT_TRUE(true) << "Really all this test has to do is not crash by this point.";
+}
