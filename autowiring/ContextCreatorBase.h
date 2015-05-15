@@ -28,31 +28,17 @@ protected:
   /// </remarks>
   template<class Ctr, class Fx>
   void Clear(bool wait, Ctr& ctr, Fx&& locker) {
-    if(!wait) {
-      // Trivial signal-clear-return:
-      std::lock_guard<std::mutex> lk(m_contextLock);
-      for(const auto& ctxt : ctr) {
-        auto locked = locker(ctxt);
-        if(locked)
-          locked->SignalShutdown();
-      }
-      ctr.clear();
+    // Copy out under lock
+    Ctr ctrCopy = (std::lock_guard<std::mutex>(m_contextLock), std::move(ctr));
+    
+    for (const auto& ctxt : ctrCopy) {
+      auto locked = locker(ctxt);
+      if(locked)
+        locked->SignalShutdown();
+    }
+
+    if (!wait)
       return;
-    }
-
-    Ctr ctrCopy;
-
-    // Copy out and clear:
-    {
-      std::lock_guard<std::mutex> lk(m_contextLock);
-      for(const auto& ctxt : ctr) {
-        auto locked = locker(ctxt);
-        if(locked)
-          locked->SignalShutdown();
-      }
-      ctrCopy = ctr;
-      ctr.clear();
-    }
 
     // Signal everyone first, then wait in a second pass:
     for(const auto& ctxt : ctrCopy) {
