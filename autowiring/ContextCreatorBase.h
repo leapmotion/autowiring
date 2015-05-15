@@ -24,14 +24,16 @@ protected:
   /// <param name="ctr">The collection of contexts to be cleared</param>
   /// <param name="iter">An iterator locker, which can obtain a shared pointer from an iterator</param>
   /// <remarks>
-  /// This method is synchronized on the contextLock and this will generally make it thread-safe
+  /// This method is synchronized on the contextLock and this will generally make it thread-safe.
+  /// It will clear the local context list immediately, but it is not garunteed that the context
+  /// list will be empty at the time of return.
   /// </remarks>
   template<class Ctr, class Fx>
   void Clear(bool wait, Ctr& ctr, Fx&& locker) {
-    // Copy out under lock
-    Ctr ctrCopy = (std::lock_guard<std::mutex>(m_contextLock), std::move(ctr));
+    // Move out under lock
+    Ctr ctrLocal = (std::lock_guard<std::mutex>(m_contextLock), std::move(ctr));
     
-    for (const auto& ctxt : ctrCopy) {
+    for (const auto& ctxt : ctrLocal) {
       auto locked = locker(ctxt);
       if(locked)
         locked->SignalShutdown();
@@ -41,7 +43,7 @@ protected:
       return;
 
     // Signal everyone first, then wait in a second pass:
-    for(const auto& ctxt : ctrCopy) {
+    for (const auto& ctxt : ctrLocal) {
       auto locked = locker(ctxt);
       if(locked)
         locked->Wait();
