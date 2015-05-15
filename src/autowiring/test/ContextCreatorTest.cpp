@@ -203,19 +203,11 @@ TEST_F(ContextCreatorTest, VoidKeyType) {
 
 struct mySigil {};
 
-class BackReferencingClass:
+class Runnable:
   public CoreRunnable
 {
 public:
-  bool OnStart(void) override {
-    AutoCurrentContext ctxt;
-    m_parentContext = ctxt->GetParentContext();
-    return true;
-  }
-  void OnStop(bool graceful) {
-    m_parentContext.reset();
-  }
-  std::shared_ptr<CoreContext> m_parentContext;
+  bool OnStart(void) override { return true;  }
 };
 
 TEST_F(ContextCreatorTest, TeardownListenerTest) {
@@ -226,7 +218,7 @@ TEST_F(ContextCreatorTest, TeardownListenerTest) {
   AutoRequired<ContextCreator<mySigil, int>> creator;
   {
     auto subctxt = creator->CreateContext(0).first;
-    auto brc = subctxt->Inject<BackReferencingClass>();
+    auto brc = subctxt->Inject<Runnable>();
     subctxt->Initiate();
   }
   creator->Clear(true);
