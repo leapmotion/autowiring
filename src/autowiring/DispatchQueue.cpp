@@ -4,33 +4,36 @@
 #include "at_exit.h"
 #include <assert.h>
 
-DispatchQueue::DispatchQueue(void):
-  m_dispatchCap(1024),
-  m_aborted(false)
-{}
+DispatchQueue::DispatchQueue(void) {}
 
 DispatchQueue::~DispatchQueue(void) {
   // Wipe out each entry in the queue, we can't call any of them because we're in teardown
-  for(DispatchThunkBase* thunk : m_dispatchQueue)
-    delete thunk;
-  
-  while (!m_delayedQueue.empty()) {
-    DispatchThunkDelayed thunk = m_delayedQueue.top();
-    thunk.Reset();
-    m_delayedQueue.pop();
+  for (auto cur = m_pHead; cur;) {
+    auto next = cur->m_pFlink;
+    delete cur;
+    cur = next;
   }
 }
 
 bool DispatchQueue::PromoteReadyDispatchersUnsafe(void) {
   // Move all ready elements out of the delayed queue and into the dispatch queue:
   size_t nInitial = m_delayedQueue.size();
-  for(
+
+  // String together a chain of things that will be made ready:
+  for (
     auto now = std::chrono::steady_clock::now();
     !m_delayedQueue.empty() && m_delayedQueue.top().GetReadyTime() < now;
     m_delayedQueue.pop()
-  )
-    // This item's ready time has elapsed, we can add it to our dispatch queue now:
-    m_dispatchQueue.push_back(m_delayedQueue.top().Get());
+  ) {
+    // Update tail if head is already set, otherwise update head:
+    auto thunk = m_delayedQueue.top().Release();
+    if (m_pHead)
+      m_pTail->m_pFlink = thunk;
+    else
+      m_pHead = thunk;
+    m_pTail = thunk;
+    m_count++;
+  }
 
   // Something was promoted if the dispatch queue size is different
   return nInitial != m_delayedQueue.size();
@@ -40,20 +43,18 @@ void DispatchQueue::DispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
   // Pull the ready thunk off of the front of the queue and pop it while we hold the lock.
   // Then, we will excecute the call while the lock has been released so we do not create
   // deadlocks.
-  std::unique_ptr<DispatchThunkBase> thunk(m_dispatchQueue.front());
-  m_dispatchQueue.pop_front();
-  bool wasEmpty = m_dispatchQueue.empty();
+  std::unique_ptr<DispatchThunkBase> thunk(m_pHead);
+  m_pHead = thunk->m_pFlink;
+  m_count--;
   lk.unlock();
-  
-  MakeAtExit(
-    [this, wasEmpty] {
-      // If we emptied the queue, we'd like to reobtain the lock and tell everyone
-      // that the queue is now empty.
-      if(wasEmpty)
-        m_queueUpdated.notify_all();
-    }
-  ),
-  (*thunk)();
+
+  if (thunk->m_pFlink)
+    (*thunk)();
+  else {
+    // We will need to notify when the thunk completes
+    MakeAtExit([this] { m_queueUpdated.notify_all(); }),
+    (*thunk)();
+  }
 }
 
 void DispatchQueue::Abort(void) {
@@ -64,10 +65,12 @@ void DispatchQueue::Abort(void) {
   m_dispatchCap = 0;
   
   // Destroy the whole dispatch queue:
-  while(!m_dispatchQueue.empty()) {
-    delete m_dispatchQueue.front();
-    m_dispatchQueue.pop_front();
+  for (auto cur = m_pHead; cur;) {
+    auto next = cur->m_pFlink;
+    delete cur;
+    cur = next;
   }
+  m_pHead = nullptr;
   
   // Wake up anyone who is still waiting:
   m_queueUpdated.notify_all();
@@ -79,7 +82,7 @@ void DispatchQueue::WaitForEvent(void) {
     throw dispatch_aborted_exception("Dispatch queue was aborted prior to waiting for an event");
 
   // Unconditional delay:
-  m_queueUpdated.wait(lk, [this]() -> bool {
+  m_queueUpdated.wait(lk, [this] {
     if (m_aborted)
       throw dispatch_aborted_exception("Dispatch queue was aborted while waiting for an event");
 
@@ -88,18 +91,16 @@ void DispatchQueue::WaitForEvent(void) {
       !this->m_delayedQueue.empty() ||
 
       // We also transition out if the dispatch queue has any events:
-      !this->m_dispatchQueue.empty();
+      this->m_pHead;
   });
 
-  if (m_dispatchQueue.empty()) {
+  if (!m_pHead)
     // The delay queue has items but the dispatch queue does not, we need to switch
     // to the suggested sleep timeout variant:
     WaitForEventUnsafe(lk, m_delayedQueue.top().GetReadyTime());
-  }
-  else {
+  else
     // We have an event, we can just hop over to this variant:
     DispatchEventUnsafe(lk);
-  }
 }
 
 bool DispatchQueue::WaitForEvent(std::chrono::milliseconds milliseconds) {
@@ -120,7 +121,7 @@ bool DispatchQueue::WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::ch
   if (m_aborted)
     throw dispatch_aborted_exception("Dispatch queue was aborted prior to waiting for an event");
 
-  while (m_dispatchQueue.empty()) {
+  while (!m_pHead) {
     // Derive a wakeup time using the high precision timer:
     wakeTime = SuggestSoonestWakeupTimeUnsafe(wakeTime);
 
@@ -151,10 +152,9 @@ bool DispatchQueue::DispatchEvent(void) {
   // If the queue is empty and we fail to promote anything, return here
   // Note that, due to short-circuiting, promotion will not take place if the queue is not empty.
   // This behavior is by design.
-  if (m_dispatchQueue.empty() && !PromoteReadyDispatchersUnsafe())
+  if (!m_pHead && !PromoteReadyDispatchersUnsafe())
     return false;
 
-  assert(!m_dispatchQueue.empty());
   DispatchEventUnsafe(lk);
   return true;
 }
@@ -166,13 +166,20 @@ int DispatchQueue::DispatchAllEvents(void) {
   return retVal;
 }
 
-void DispatchQueue::AddExisting(DispatchThunkBase* pBase) {
-  std::unique_lock<std::mutex> lk(m_dispatchLock);
-  if(m_dispatchQueue.size() >= m_dispatchCap)
-    return;
-  
-  m_dispatchQueue.push_back(pBase);
-  m_queueUpdated.notify_all();
+void DispatchQueue::PendExisting(std::unique_lock<std::mutex>&& lk, DispatchThunkBase* thunk) {
+  // Count must be separately maintained:
+  m_count++;
+
+  // Linked list setup:
+  if (m_pHead)
+    m_pTail->m_pFlink = thunk;
+  else {
+    m_pHead = thunk;
+    m_queueUpdated.notify_all();
+  }
+  m_pTail = thunk;
+
+  // Notification as needed:
   OnPended(std::move(lk));
 }
 
@@ -187,7 +194,7 @@ bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
     throw dispatch_aborted_exception("Dispatch queue was aborted before a timed wait was attempted");
 
   // Short-circuit if the queue is already empty
-  if (m_dispatchQueue.empty())
+  if (!m_pHead)
     return true;
 
   // Also short-circuit if zero is specified as the timeout value
@@ -198,7 +205,12 @@ bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
   // that it is non-empty.  Thus, we do not need to signal the m_queueUpdated condition variable.
   auto complete = std::make_shared<bool>(false);
   auto lambda = [complete] { *complete = true; };
-  m_dispatchQueue.push_back(new DispatchThunk<decltype(lambda)>(std::move(lambda)));
+  PendExisting(
+    std::move(lk),
+    new DispatchThunk<decltype(lambda)>(std::move(lambda))
+  );
+  if (!lk.owns_lock())
+    lk.lock();
 
   // Wait until our variable is satisfied, which might be right away:
   bool rv = m_queueUpdated.wait_for(lk, timeout, [&] { return m_aborted || *complete; });
@@ -246,10 +258,7 @@ void DispatchQueue::operator+=(DispatchThunkDelayed&& rhs) {
   std::lock_guard<std::mutex> lk(m_dispatchLock);
   
   m_delayedQueue.push(std::forward<DispatchThunkDelayed>(rhs));
-  if(
-    m_delayedQueue.top().GetReadyTime() == rhs.GetReadyTime() &&
-    m_dispatchQueue.empty()
-  )
+  if(m_delayedQueue.top().GetReadyTime() == rhs.GetReadyTime() && !m_pHead)
     // We're becoming the new next-to-execute entity, dispatch queue currently empty, trigger wakeup
     // so our newly pended delay thunk is eventually processed.
     m_queueUpdated.notify_all();
