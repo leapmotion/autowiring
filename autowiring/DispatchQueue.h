@@ -186,6 +186,9 @@ public:
   ///
   /// If DispatchQueue::Abort() is called before the dispatcher has been completed, this method will throw an exception.
   /// If a dispatcher on the underlying DispatchQueue throws an exception, this method will also throw an exception.
+  ///
+  /// If zero is passed as the timeout value, this method will return true if and only if the queue was empty at the time
+  /// of the call, ignoring any delayed dispatchers.
   /// </remarks>
   bool Barrier(std::chrono::nanoseconds timeout);
 
