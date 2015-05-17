@@ -1,10 +1,9 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
+#include "PriorityBoost.h"
+#include "Benchmark.h"
 #include <autowiring/CoreThread.h>
-
-class BoostPriorityTest:
-  public testing::Test
-{};
+#include <stdexcept>
 
 template<ThreadPriority priority>
 class JustIncrementsANumber:
@@ -34,7 +33,7 @@ public:
 #ifdef _MSC_VER
 #include "windows.h"
 
-TEST_F(BoostPriorityTest, VerifyCanBoostPriority) {
+Benchmark PriorityBoost::CanBoostPriority(void) {
   AutoCurrentContext ctxt;
 
   // Create two spinners and kick them off at the same time:
@@ -76,8 +75,16 @@ TEST_F(BoostPriorityTest, VerifyCanBoostPriority) {
   // Need to terminate before we try running a comparison.
   ctxt->SignalTerminate();
 
-  ASSERT_LE(lower->val, higher->val) << "A lower-priority thread was moved out of the sleep queue more frequently than a high-priority thread";
+  return Benchmark {
+    {"Low priority CPU time", std::chrono::nanoseconds{lower->val}},
+    {"High priority CPU time", std::chrono::nanoseconds{higher->val}},
+  };
 }
+
 #else
+Benchmark PriorityBoost::CanBoostPriority(void) {
+  throw std::runtime_error("Not implemented");
+}
+
 #pragma message "Warning:  SetThreadPriority not implemented on Unix"
 #endif
