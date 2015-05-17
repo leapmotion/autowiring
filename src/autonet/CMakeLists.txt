@@ -22,8 +22,6 @@ add_library(AutoNet STATIC ${AutoNet_SRCS})
 target_link_libraries(AutoNet PRIVATE Autowiring)
 set_target_properties(AutoNet PROPERTIES INTERFACE_LINK_LIBRARIES Autowiring)
 
-set_property(TARGET AutoNet PROPERTY FOLDER "Autowiring")
-
 #
 # Install library
 #
