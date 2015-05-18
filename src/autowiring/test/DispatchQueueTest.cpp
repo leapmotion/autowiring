@@ -41,7 +41,7 @@ TEST_F(DispatchQueueTest, SimpleEvents) {
   
   int num = DispatchAllEvents();
   
-  *this += [&count] () {
+  *this += [&count]() {
     count += 5 ;
   };
   
@@ -67,6 +67,13 @@ TEST_F(DispatchQueueTest, PathologicalStartAndStop){
   ASSERT_TRUE(t3->WaitFor(std::chrono::seconds(10)));
   t4->Stop(true);
   ASSERT_TRUE(t4->WaitFor(std::chrono::seconds(10)));
+}
+
+TEST_F(DispatchQueueTest, TrivialBarrier) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<CoreThread> ct;
+
+  ASSERT_TRUE(ct->Barrier(std::chrono::seconds(0))) << "Zero-time barrier on a zero-length queue did not pass as expected";
 }
 
 TEST_F(DispatchQueueTest, Barrier) {
@@ -109,8 +116,10 @@ TEST_F(DispatchQueueTest, BarrierWithAbort) {
     std::lock_guard<std::mutex> lk(b->lock);
   };
 
+  // Delay for long enough for the barrier to be reached:
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
   // Launch something that will barrier:
-  auto exception = std::make_shared<bool>(false);
   auto f = std::async(
     std::launch::async,
     [=] {
@@ -118,16 +127,14 @@ TEST_F(DispatchQueueTest, BarrierWithAbort) {
         ct->Barrier(std::chrono::seconds(5));
       }
       catch (autowiring_error&) {
-        *exception = true;
+        return false;
       }
+      return true;
     }
   );
-
-  // Delay for long enough for the barrier to be reached:
-  std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
   // Now abandon the queue, this should cause the async thread to quit:
   ct->Abort();
   ASSERT_EQ(std::future_status::ready, f.wait_for(std::chrono::seconds(5))) << "Barrier did not abort fast enough";
-  ASSERT_TRUE(*exception) << "Exception should have been thrown inside the Barrier call";
+  ASSERT_FALSE(f.get()) << "Exception should have been thrown inside the Barrier call";
 }

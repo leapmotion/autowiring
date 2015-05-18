@@ -177,15 +177,33 @@ void DispatchQueue::AddExisting(DispatchThunkBase* pBase) {
 }
 
 bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
-  // Set up the lambda:
-  auto complete = std::make_shared<bool>(false);
-  *this += [complete] { *complete = true; };
+  static const char text [] = "Dispatch queue was aborted while a barrier was invoked";
 
-  // Obtain the lock, wait until our variable is satisfied, which might be right away:
+  // Optimistic check first:
   std::unique_lock<std::mutex> lk(m_dispatchLock);
+
+  // Short-circuit if dispatching has been aborted
+  if (m_aborted)
+    throw dispatch_aborted_exception("Dispatch queue was aborted before a timed wait was attempted");
+
+  // Short-circuit if the queue is already empty
+  if (m_dispatchQueue.empty())
+    return true;
+
+  // Also short-circuit if zero is specified as the timeout value
+  if (timeout.count() == 0)
+    return false;
+
+  // Set up the lambda.  Note that the queue size CANNOT be 1, because we just checked to verify
+  // that it is non-empty.  Thus, we do not need to signal the m_queueUpdated condition variable.
+  auto complete = std::make_shared<bool>(false);
+  auto lambda = [complete] { *complete = true; };
+  m_dispatchQueue.push_back(new DispatchThunk<decltype(lambda)>(std::move(lambda)));
+
+  // Wait until our variable is satisfied, which might be right away:
   bool rv = m_queueUpdated.wait_for(lk, timeout, [&] { return m_aborted || *complete; });
   if (m_aborted)
-    throw dispatch_aborted_exception("Dispatch queue was aborted while a barrier was invoked");
+    throw dispatch_aborted_exception("Dispatch queue was aborted during a timed wait");
   return rv;
 }
 
