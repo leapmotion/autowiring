@@ -274,21 +274,16 @@ public:
   /// Default for std library sorting of unique elements
   /// </summary>
   bool operator<(const AutoFilterDescriptor& rhs) const {
-    // This filter is "logically prior" to the right-hand side if this filter has a HIGHER altitude
-    // than the one on the right-hand side
     return
       std::tie(m_altitude, m_pCall, m_autoFilter) <
       std::tie(rhs.m_altitude, rhs.m_pCall, rhs.m_autoFilter);
   }
 
-  /// <summary>
-  /// Default for std library sorting of repeatable elements
-  /// </summary>
+  // Operator overloads:
   bool operator<=(const AutoFilterDescriptor& rhs) const { return *this < rhs || *this == rhs;}
-
   bool operator>(const AutoFilterDescriptor& rhs) const { return !(*this <= rhs);}
-
   bool operator>=(const AutoFilterDescriptor& rhs) const { return !(*this < rhs);}
+  bool operator!=(const AutoFilterDescriptor& rhs) const { return !(*this == rhs); }
 };
 
 /// <summary>
