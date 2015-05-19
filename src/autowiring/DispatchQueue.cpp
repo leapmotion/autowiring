@@ -189,8 +189,6 @@ void DispatchQueue::PendExisting(std::unique_lock<std::mutex>&& lk, DispatchThun
 }
 
 bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
-  static const char text [] = "Dispatch queue was aborted while a barrier was invoked";
-
   // Optimistic check first:
   std::unique_lock<std::mutex> lk(m_dispatchLock);
 
