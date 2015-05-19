@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include CHRONO_HEADER
+#include <memory>
 
 /// <summary>
 /// A simple virtual class used to hold a trivial thunk
@@ -9,6 +10,8 @@ class DispatchThunkBase {
 public:
   virtual ~DispatchThunkBase(void){}
   virtual void operator()() = 0;
+
+  DispatchThunkBase* m_pFlink = nullptr;
 };
 
 template<class _Fx>
@@ -16,8 +19,8 @@ class DispatchThunk:
   public DispatchThunkBase
 {
 public:
-  DispatchThunk(const _Fx& fx):
-    m_fx(fx)
+  DispatchThunk(_Fx&& fx) :
+    m_fx(std::forward<_Fx&&>(fx))
   {}
 
   _Fx m_fx;
@@ -46,26 +49,13 @@ public:
 
   DispatchThunkDelayed(DispatchThunkDelayed&& rhs) :
     m_readyAt(rhs.m_readyAt),
-    m_thunk(rhs.m_thunk)
-  {
-    rhs.m_thunk = nullptr;
-  }
-  
-  DispatchThunkDelayed(const DispatchThunkDelayed& rhs) :
-    m_readyAt(rhs.m_readyAt),
-    m_thunk(rhs.m_thunk)
+    m_thunk(std::move(rhs.m_thunk))
   {}
-
-  // Little bit of a hack to support non-C++11
-  void Reset(void) {
-    if(m_thunk)
-      delete m_thunk;
-  }
-
+  
 private:
   // The time when the thunk becomes ready-to-execute
   std::chrono::steady_clock::time_point m_readyAt;
-  DispatchThunkBase* m_thunk;
+  mutable std::unique_ptr<DispatchThunkBase> m_thunk;
 
 public:
   // Accessor methods:
@@ -74,22 +64,7 @@ public:
   /// <summary>
   /// Extracts the underlying thunk
   /// </summary>
-  DispatchThunkBase* Get(void) const {
-    return m_thunk;
-  }
-
-  DispatchThunkDelayed& operator=(DispatchThunkDelayed&& rhs) {
-    m_readyAt = rhs.m_readyAt;
-    m_thunk = rhs.m_thunk;
-    rhs.m_thunk = nullptr;
-    return *this;
-  }
-  
-  DispatchThunkDelayed& operator=(const DispatchThunkDelayed& rhs) {
-    m_readyAt = rhs.m_readyAt;
-    m_thunk = rhs.m_thunk;
-    return *this;
-  }
+  DispatchThunkBase* Release(void) const { return m_thunk.release(); }
 
   /// <summary>
   /// Operator overload, used to sequence delayed dispatch thunks
@@ -97,4 +72,10 @@ public:
   bool operator<(const DispatchThunkDelayed& rhs) const {
     return rhs.m_readyAt < m_readyAt;
   }
+
+  void operator=(DispatchThunkDelayed&& rhs) {
+    m_readyAt = rhs.m_readyAt;
+    m_thunk = std::move(rhs.m_thunk);
+  }
+  void operator=(const DispatchThunkDelayed&) const = delete;
 };

@@ -2,6 +2,7 @@
 #pragma once
 #include "dispatch_aborted_exception.h"
 #include "DispatchThunk.h"
+#include <atomic>
 #include <list>
 #include <queue>
 #include MUTEX_HEADER
@@ -19,6 +20,8 @@ class DispatchQueue;
 class DispatchQueue {
 public:
   DispatchQueue(void);
+  DispatchQueue(DispatchQueue&&) = delete;
+  DispatchQueue(const DispatchQueue&) = delete;
 
   /// <summary>
   /// Runs down the dispatch queue without calling anything
@@ -31,10 +34,14 @@ public:
 
 protected:
   // The maximum allowed number of pended dispatches before pended calls start getting dropped
-  size_t m_dispatchCap;
+  size_t m_dispatchCap = 1000;
 
-  // The dispatch queue proper:
-  std::list<DispatchThunkBase*> m_dispatchQueue;
+  // Current linked list length
+  std::atomic<size_t> m_count{0};
+
+  // The dispatch queue proper.  A vector is used, here, not a queue, because this collection is frequently emptied.
+  DispatchThunkBase* m_pHead = nullptr;
+  DispatchThunkBase* m_pTail = nullptr;
 
   // Priority queue of non-ready events:
   std::priority_queue<DispatchThunkDelayed> m_delayedQueue;
@@ -47,7 +54,7 @@ protected:
 
   // True if DispatchQueue::Abort has been called.  This will cause the dispatch queue's remaining entries
   // to be dumped and prevent the introduction of new entries to the queue.
-  bool m_aborted;
+  bool m_aborted = false;
 
   /// <summary>
   /// Moves all ready events from the delayed queue into the dispatch queue
@@ -78,28 +85,29 @@ protected:
   /// </remarks>
   virtual void OnPended(std::unique_lock<std::mutex>&& lk) {}
 
+  template<class _Fx>
+  void Pend(_Fx&& fx) {
+    PendExisting(
+      std::unique_lock<std::mutex>(m_dispatchLock),
+      new DispatchThunk<_Fx>(std::forward<_Fx&&>(fx))
+    );
+  }
+
   /// <summary>
   /// Attaches an element to the end of the dispatch queue without any checks.
   /// </summary>
-  template<class _Fx>
-  void Pend(_Fx&& fx) {
-    std::unique_lock<std::mutex> lk(m_dispatchLock);
-    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(fx));
-    m_queueUpdated.notify_all();
-
-    OnPended(std::move(lk));
-  }
+  void PendExisting(std::unique_lock<std::mutex>&& lk, DispatchThunkBase* thunk);
 
 public:
   /// <returns>
   /// True if there are curerntly any dispatchers ready for execution--IE, DispatchEvent would return true
   /// </returns>
-  bool AreAnyDispatchersReady(void) const { return !m_dispatchQueue.empty(); }
+  bool AreAnyDispatchersReady(void) const { return !!m_count; }
 
   /// <returns>
   /// The total number of all ready and delayed events
   /// </returns>
-  size_t GetDispatchQueueLength(void) const {return m_dispatchQueue.size() + m_delayedQueue.size();}
+  size_t GetDispatchQueueLength(void) const {return m_count + m_delayedQueue.size();}
 
   /// <summary>
   /// Causes the current dispatch queue to be dumped if it's non-empty
@@ -173,7 +181,11 @@ public:
   /// <summary>
   /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>
-  void AddExisting(DispatchThunkBase* pBase);
+  void AddExisting(std::unique_ptr<DispatchThunkBase>&& pBase) {
+    std::unique_lock<std::mutex> lk(m_dispatchLock);
+    if (m_count < m_dispatchCap)
+      PendExisting(std::move(lk), pBase.release());
+  }
 
   /// <summary>
   /// Blocks until all dispatchers on the DispatchQueue at the time of the call have been dispatched
@@ -273,11 +285,23 @@ public:
     static_assert(!std::is_pointer<_Fx>::value, "Cannot pend a pointer to a function, we must have direct ownership");
 
     std::unique_lock<std::mutex> lk(m_dispatchLock);
-    if(m_dispatchQueue.size() >= m_dispatchCap)
+    if (m_count >= m_dispatchCap)
       return;
 
-    m_dispatchQueue.push_back(new DispatchThunk<_Fx>(std::forward<_Fx>(fx)));
-    m_queueUpdated.notify_all();
+    // Count must be separately maintained:
+    m_count++;
+
+    // Linked list setup:
+    auto thunk = new DispatchThunk<_Fx>(std::forward<_Fx>(fx));
+    if (m_pHead)
+      m_pTail->m_pFlink = thunk; 
+    else {
+      m_pHead = thunk;
+      m_queueUpdated.notify_all();
+    }
+    m_pTail = thunk;
+
+    // Notification as needed:
     OnPended(std::move(lk));
   }
 };
