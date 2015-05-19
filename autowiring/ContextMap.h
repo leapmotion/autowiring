@@ -27,18 +27,11 @@ public:
   struct tracker:
     public std::mutex
   {
-    tracker(void):
-      destroyed(false)
-    {}
-
     // True when the enclosing context map has been destroyed
-    bool destroyed;
+    bool destroyed = false;
   };
 
-  ContextMap(void):
-    m_tracker(std::make_shared<tracker>())
-  {
-  }
+  ContextMap(void) = default;
 
   ~ContextMap(void) {
     // Teardown pathway assurance:
@@ -49,7 +42,7 @@ public:
 private:
   // Tracker lock, used to protect against accidental destructor-contending access while still allowing
   // the parent ContextMap structure to be stack-allocated
-  const std::shared_ptr<tracker> m_tracker;
+  const std::shared_ptr<tracker> m_tracker = std::make_shared<tracker>();
   typedef std::map<Key, std::weak_ptr<CoreContext>> t_mpType;
   t_mpType m_contexts;
 

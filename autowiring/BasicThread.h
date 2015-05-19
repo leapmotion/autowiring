@@ -77,19 +77,19 @@ protected:
   const std::shared_ptr<BasicThreadStateBlock> m_state;
 
   // Flag indicating that this thread was started at some point
-  bool m_wasStarted;
+  bool m_wasStarted = false;
 
   // Flag indicating that we need to stop right now
-  bool m_stop;
+  bool m_stop = false;
 
   // Run condition:
-  bool m_running;
+  bool m_running = false;
 
   // Legacy field, some clients still refer to this
   bool& DEPRECATED_MEMBER(m_completed, "Use IsCompleted instead");
 
   // The current thread priority
-  ThreadPriority m_priority;
+  ThreadPriority m_priority = ThreadPriority::Default;
 
   /// <summary>
   /// Assigns a name to the thread, displayed in debuggers.

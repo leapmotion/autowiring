@@ -16,15 +16,11 @@ struct JunctionBoxEntry;
 /// </summary>
 class JunctionBoxBase {
 public:
-  JunctionBoxBase(void):
-    m_isInitiated(false)
-  {}
-  
   virtual ~JunctionBoxBase(void);
 
 protected:
   // This JunctionBox can fire and receive events
-  bool m_isInitiated;
+  bool m_isInitiated = false;
 
   /// <summary>
   /// Invokes SignalTerminate on each context in the specified vector.  Does not wait.

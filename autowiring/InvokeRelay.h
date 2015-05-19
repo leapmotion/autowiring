@@ -14,21 +14,18 @@ class InvokeRelay {};
 template<class RetType, class T, typename... Args>
 class InvokeRelay<RetType (T::*)(Args...)> {
 public:
+  InvokeRelay(void) = default;
+
   InvokeRelay(std::shared_ptr<JunctionBox<T>> erp, RetType (T::*fnPtr)(Args...)) :
     erp(erp),
     fnPtr(fnPtr)
-  {}
-
-  // Null constructor
-  InvokeRelay():
-    erp(nullptr)
   {}
 
   static_assert(!is_any<std::is_rvalue_reference<Args>::value...>::value, "Can't use rvalue references as event argument type");
 
 private:
   std::shared_ptr<JunctionBox<T>> erp;
-  RetType (T::*fnPtr)(Args...);
+  RetType (T::*fnPtr)(Args...) = nullptr;
 
 public:
   /// <summary>

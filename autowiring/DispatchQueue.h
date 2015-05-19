@@ -34,7 +34,7 @@ public:
 
 protected:
   // The maximum allowed number of pended dispatches before pended calls start getting dropped
-  size_t m_dispatchCap = 1000;
+  size_t m_dispatchCap = 1024;
 
   // Current linked list length
   std::atomic<size_t> m_count{0};

@@ -10,32 +10,24 @@
 struct SatCounter:
   public AutoFilterDescriptor
 {
-  SatCounter(void):
-    flink(nullptr),
-    blink(nullptr),
-    remaining(0)
-  {}
+  SatCounter(void) = default;
 
   SatCounter(const AutoFilterDescriptor& source):
     AutoFilterDescriptor(source),
-    flink(nullptr),
-    blink(nullptr),
     remaining(m_requiredCount)
   {}
 
   SatCounter(const SatCounter& source):
     AutoFilterDescriptor(static_cast<const AutoFilterDescriptor&>(source)),
-    flink(nullptr),
-    blink(nullptr),
     remaining(source.remaining)
   {}
 
   // Forward and backward linked list pointers
-  SatCounter* flink;
-  SatCounter* blink;
+  SatCounter* flink = nullptr;
+  SatCounter* blink = nullptr;
 
   // The number of inputs remaining to this counter:
-  size_t remaining;
+  size_t remaining = 0;
 
 private:
   /// <summary>

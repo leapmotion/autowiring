@@ -3,8 +3,7 @@
 #include "TeardownNotifier.h"
 #include "InterlockedExchange.h"
 
-TeardownNotifier::TeardownNotifier(void):
-  m_pFirstTeardownListener(nullptr)
+TeardownNotifier::TeardownNotifier(void) 
 {}
 
 TeardownNotifier::~TeardownNotifier(void) {

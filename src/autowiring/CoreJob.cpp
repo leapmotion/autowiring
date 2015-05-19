@@ -17,10 +17,7 @@ std::chrono::nanoseconds NanosecondsForFutureWait(const std::chrono::nanoseconds
 #endif
 
 CoreJob::CoreJob(const char* name) :
-  ContextMember(name),
-  m_running(false),
-  m_curEvent(nullptr),
-  m_curEventInTeardown(true)
+  ContextMember(name)
 {}
 
 CoreJob::~CoreJob(void)

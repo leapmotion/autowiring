@@ -13,9 +13,7 @@ SlotInformationStackLocation::SlotInformationStackLocation(SlotInformationStumpB
   stump(stump),
   pObj(pObj),
   extent(extent),
-  prior(*tss),
-  m_pCur(nullptr),
-  m_pLastLink(nullptr)
+  prior(*tss)
 {
   tss.reset(this);
 }

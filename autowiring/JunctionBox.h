@@ -25,10 +25,6 @@ class JunctionBox:
   public JunctionBoxBase
 {
 public:
-  JunctionBox(void):
-    m_numberOfDeletions(0)
-  {}
-
   virtual ~JunctionBox(void) {}
 
 protected:
@@ -40,7 +36,7 @@ protected:
   t_listenerSet m_st;
 
   // Incremented every time an event is deleted to notify potentially invalidated iterators
-  volatile int m_numberOfDeletions;
+  volatile int m_numberOfDeletions = 0;
 
 public:
   class iterator {
