@@ -54,18 +54,7 @@ before_script:
 
 script:
   # Build Autowriring, run unit tests, and install
-  - make -j 8 || make
-  - ctest --output-on-failure
-  - sudo make install
-
-  # Package
-  - sudo cpack || (cat _CPack_Packages/Linux/TGZ/InstallOutput.log; exit 1)
-
-  # Build examples from installed Autowiring
-  - cd examples
-    && cmake . -Dautowiring_ARCHITECTURE=x64
-    && make
-    && cd ..
+  - ./scripts/build_test_install.sh
 
 after_failure:
   - cat Testing/Temporary/LastTest.log 2> /dev/null
