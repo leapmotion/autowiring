@@ -7,14 +7,7 @@
 /// AutoFilter argument disposition
 /// </summary>
 struct AutoFilterDescriptorInput {
-  AutoFilterDescriptorInput(void) :
-    is_input(false),
-    is_output(false),
-    is_shared(false),
-    is_multi(false),
-    ti(nullptr),
-    tshift(0)
-  {}
+  AutoFilterDescriptorInput(void) = default;
 
   AutoFilterDescriptorInput(
     bool is_input,
@@ -32,12 +25,12 @@ struct AutoFilterDescriptorInput {
     tshift(tshift)
   {}
 
-  const bool is_input;
-  const bool is_output;
-  const bool is_shared;
-  const bool is_multi;
-  const std::type_info* const ti;
-  const int tshift;
+  const bool is_input = false;
+  const bool is_output = false;
+  const bool is_shared = false;
+  const bool is_multi = false;
+  const std::type_info* const ti = nullptr;
+  const int tshift = 0;
 
   operator bool(void) const {
     return !!ti;

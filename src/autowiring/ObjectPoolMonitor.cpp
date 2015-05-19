@@ -3,8 +3,7 @@
 #include "ObjectPoolMonitor.h"
 
 ObjectPoolMonitor::ObjectPoolMonitor(void* pOwner) :
-  m_pOwner(pOwner),
-  m_abandoned(false)
+  m_pOwner(pOwner)
 {}
 
 void ObjectPoolMonitor::Abandon(void) {

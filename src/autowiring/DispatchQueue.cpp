@@ -4,9 +4,7 @@
 #include "at_exit.h"
 #include <assert.h>
 
-DispatchQueue::DispatchQueue(void):
-  m_dispatchCap(1024),
-  m_aborted(false)
+DispatchQueue::DispatchQueue(void)
 {}
 
 DispatchQueue::~DispatchQueue(void) {

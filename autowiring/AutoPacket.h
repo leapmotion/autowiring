@@ -65,7 +65,7 @@ protected:
   const std::shared_ptr<void> m_outstanding;
 
   // Pointer to a forward linked list of saturation counters, constructed when the packet is created
-  SatCounter* m_firstCounter;
+  SatCounter* m_firstCounter = nullptr;
 
   // The set of decorations currently attached to this object, and the associated lock:
   // Decorations are indexed first by type and second by pipe terminating type, if any.

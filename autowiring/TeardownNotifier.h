@@ -15,13 +15,10 @@ protected:
   struct EntryBase
   {
   public:
-    EntryBase(void):
-      pFlink(nullptr)
-    {}
     virtual ~EntryBase(void) {}
     virtual void operator()(void) = 0;
 
-    EntryBase* pFlink;
+    EntryBase* pFlink = nullptr;
   };
 
   template<class Fx>
@@ -38,7 +35,7 @@ protected:
   };
 
   // Teardown listeners, invoked in sequence when the context is tearing down
-  EntryBase* m_pFirstTeardownListener;
+  EntryBase* m_pFirstTeardownListener = nullptr;
 
   /// <summary>
   /// May be invoked prospectively by a derived instance to prematurely notify teardown listeners

@@ -31,7 +31,7 @@ public:
 
 protected:
   // The maximum allowed number of pended dispatches before pended calls start getting dropped
-  size_t m_dispatchCap;
+  size_t m_dispatchCap = 1024;
 
   // The dispatch queue proper:
   std::list<DispatchThunkBase*> m_dispatchQueue;
@@ -47,7 +47,7 @@ protected:
 
   // True if DispatchQueue::Abort has been called.  This will cause the dispatch queue's remaining entries
   // to be dumped and prevent the introduction of new entries to the queue.
-  bool m_aborted;
+  bool m_aborted = false;
 
   /// <summary>
   /// Moves all ready events from the delayed queue into the dispatch queue

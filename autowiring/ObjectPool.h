@@ -47,10 +47,8 @@ public:
     const std::function<void(T&)>& final = &DefaultFinalize<T>
   ) :
     m_monitor(std::make_shared<ObjectPoolMonitor>(this)),
-    m_poolVersion(0),
     m_maxPooled(maxPooled),
     m_limit(limit),
-    m_outstanding(0),
     m_initial(initial),
     m_final(final),
     m_alloc(alloc)
@@ -94,12 +92,12 @@ protected:
   // to return to the pool to instead free themselves.
   // IMPORTANT: m_objs cannot be a vector of std::unique_ptr instances because the required move
   // implementation of std::vector is missing when not building with c++11.
-  size_t m_poolVersion;
+  size_t m_poolVersion = 0;
   std::vector<T*> m_objs;
 
   size_t m_maxPooled;
   size_t m_limit;
-  size_t m_outstanding;
+  size_t m_outstanding = 0;
 
   // Resetters:
   std::function<void(T&)> m_initial;

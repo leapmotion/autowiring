@@ -6,24 +6,18 @@
 
 struct AutoRestarterConfig
 {
-  AutoRestarterConfig(void) :
-    restartOnException(false),
-    restartOnShutdown(false),
-    startWhenCreated(false)
-  {}
-
   // Restart the context on exception
-  bool restartOnException;
+  bool restartOnException = false;
 
   // Restart the context if it terminates through ordinary behavior.  This will continue
   // until the AutoRestarter's own exterior context has been terminated.
   //
   // If the context is manually shut down, it then the AutoRestarter will return nullptr
   // in response to GetContext until Regenerate is called
-  bool restartOnShutdown;
+  bool restartOnShutdown = false;
 
   // Once the context is created (or recreated), start it up
-  bool startWhenCreated;
+  bool startWhenCreated = false;
 };
 
 /// <summary>

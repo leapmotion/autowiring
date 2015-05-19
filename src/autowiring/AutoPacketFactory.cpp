@@ -7,10 +7,7 @@
 #include <cmath>
 
 AutoPacketFactory::AutoPacketFactory(void):
-  ContextMember("AutoPacketFactory"),
-  m_packetCount(0),
-  m_packetDurationSum(0),
-  m_packetDurationSqSum(0)
+  ContextMember("AutoPacketFactory")
 {}
 
 AutoPacketFactory::~AutoPacketFactory() {}

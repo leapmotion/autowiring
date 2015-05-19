@@ -18,5 +18,5 @@ struct BasicThreadStateBlock:
   std::thread m_thisThread;
 
   // Completion condition, true when this thread is no longer running and has run at least once
-  bool m_completed;
+  bool m_completed = false;
 };
