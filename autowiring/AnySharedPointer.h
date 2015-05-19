@@ -50,19 +50,9 @@ public:
     return *slot() == rhs;
   }
 
-  /// <summary>
-  /// Default for std library sorting of unique elements
-  /// </summary>
+  // Additional operator overloads:
   bool operator<(const AnySharedPointer& rhs) const { return *slot() < *rhs.slot();}
-
-  /// <summary>
-  /// Default for std library sorting of repeatable elements
-  /// </summary>
-  bool operator<=(const AnySharedPointer& rhs) const { return *slot() <= *rhs.slot();}
-
-  bool operator>(const AnySharedPointer& rhs) const { return *slot() > *rhs.slot();}
-
-  bool operator>=(const AnySharedPointer& rhs) const { return *slot() >= *rhs.slot();}
+  bool operator!=(const AnySharedPointer& rhs) const { return !(*this == rhs); }
 
   /// <summary>
   /// Copy assignment operator

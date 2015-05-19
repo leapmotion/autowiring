@@ -7,6 +7,7 @@
 #include "SlotInformation.h"
 #include MEMORY_HEADER
 #include <stdexcept>
+#include <tuple>
 
 template<class T, bool use_object = true>
 struct SharedPointerSlotT;
@@ -55,7 +56,7 @@ protected:
   virtual void assign(const SharedPointerSlot& rhs) {}
 
 public:
-  operator bool(void) const { return !empty(); }
+  explicit operator bool(void) const { return !empty(); }
   virtual operator std::shared_ptr<CoreObject>(void) const { return std::shared_ptr<CoreObject>(); }
   virtual void* ptr(void) { return nullptr; }
   virtual const void* ptr(void) const { return nullptr; }
@@ -172,6 +173,15 @@ public:
     // Instantiate the static cast with "false" because this function should not be attempting to
     // instantiate any casts.
     return static_cast<const SharedPointerSlotT<T, false>*>(this)->get();
+  }
+
+  bool operator<(const SharedPointerSlot& rhs) const {
+    return
+      &type() < &rhs.type() ?
+      true :
+      &type() == &rhs.type() ?
+      ptr() < rhs.ptr() :
+      false;
   }
 
   /// <summary>

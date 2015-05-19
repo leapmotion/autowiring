@@ -177,6 +177,32 @@ TEST_F(AutoPacketFactoryTest, AutoPacketStatistics) {
   ASSERT_LE(packetDelay, factory->GetMeanPacketLifetime()) << "The mean packet lifetime was less than the delay on each packet";
 }
 
+TEST_F(AutoPacketFactoryTest, DescriptorNonEquivalence) {
+  AutoFilterDescriptor descs[2];
+  for (size_t i = 0; i < 2; i++)
+    descs[i] = AutoFilterDescriptor([i] (int) { });
+  ASSERT_NE(descs[0], descs[1]) << "Descriptors evaluated to equivalence even though they were constructed distinctly";
+  ASSERT_NE(descs[0].GetAutoFilter(), descs[1].GetAutoFilter()) << "Shared pointers to underlying autofilters were equal when they should not have been";
+  ASSERT_NE(descs[0] < descs[1], descs[1] < descs[0]) << "Two inequal descriptors violated disjunctive syllogism";
+}
+
+TEST_F(AutoPacketFactoryTest, MultipleInstanceAddition) {
+  AutoCurrentContext ctxt;
+  AutoRequired<AutoPacketFactory> factory;
+  ctxt->Initiate();
+
+  bool ary[2] = {};
+  for (size_t i = 0; i < 2; i++)
+    *factory += [i, &ary] (int) {
+      ary[i] = true;
+    };
+
+  auto packet = factory->NewPacket();
+  packet->Decorate(101);
+  ASSERT_TRUE(ary[0]) << "First of two identically typed AutoFilter lambdas was not called";
+  ASSERT_TRUE(ary[1]) << "Second of two identically typed AutoFilter lambdas was not called";
+}
+
 TEST_F(AutoPacketFactoryTest, AddSubscriberTest) {
   AutoCurrentContext ctxt;
   AutoRequired<AutoPacketFactory> factory;
@@ -185,15 +211,29 @@ TEST_F(AutoPacketFactoryTest, AddSubscriberTest) {
   bool first_called = false;
   bool second_called = false;
 
-  factory->AddSubscriber(AutoFilterDescriptor([&first_called] (int) {first_called = true;}));
-  *factory += [&second_called] (int) {second_called = true;};
+  factory->AddSubscriber(AutoFilterDescriptor([&first_called](int) {first_called = true; }));
+  {
+    std::vector<AutoFilterDescriptor> descs;
+    factory->AppendAutoFiltersTo(descs);
+    ASSERT_EQ(1UL, descs.size()) << "Expected exactly one AutoFilters after call to AddSubscriber";
+  }
+
+  *factory += [&second_called] (int v) {
+    second_called = true;
+    ASSERT_EQ(101, v) << "Decoration value mismatch";
+  };
+  {
+    std::vector<AutoFilterDescriptor> descs;
+    factory->AppendAutoFiltersTo(descs);
+    ASSERT_EQ(2UL, descs.size()) << "Expected exactly two AutoFilters on this packet";
+  }
 
   auto packet = factory->NewPacket();
 
   ASSERT_FALSE(first_called) << "Normal subscriber called too early";
   ASSERT_FALSE(second_called) << "Subscriber added with operator+= called too early";
 
-  packet->DecorateImmediate(int(0));
+  packet->DecorateImmediate(int(101));
 
   ASSERT_TRUE(first_called) << "Normal subscriber never called";
   ASSERT_TRUE(second_called) << "Subscriber added with operator+= never called";
