@@ -96,6 +96,22 @@ TEST_F(DispatchQueueTest, Barrier) {
   ASSERT_TRUE(ct->Barrier(std::chrono::seconds(5))) << "Barrier did not return even though a dispatcher should have completed";
 }
 
+TEST_F(DispatchQueueTest, BarrierWithSingleDelayedDispatcher) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<CoreThread> ct;
+
+  // Hold our initial lock down so we can choose when the dispatcher concludes:
+  auto b = std::make_shared<std::mutex>();
+  std::unique_lock<std::mutex> lk(*b);
+
+  // This dispatch entry will delay until we're ready for it to continue:
+  *ct += [b] { std::unique_lock<std::mutex> lk(*b); };
+
+  // Now we invoke the barrier with a timeout.  This barrier must fail because the above block
+  // should prevent barriers from succeeding
+  ASSERT_FALSE(ct->Barrier(std::chrono::microseconds(1))) << "Barrier passed even though an entry was still being processed";
+}
+
 struct BarrierMonitor {
   // Standard continuation behavior:
   std::mutex lock;
@@ -108,7 +124,7 @@ TEST_F(DispatchQueueTest, BarrierWithAbort) {
   AutoCurrentContext()->Initiate();
   AutoRequired<CoreThread> ct;
 
-  // Hold our initial lockdown:
+  // Barrier construction, hold down lock before kicking anything off so we can set everything up:
   auto b = std::make_shared<BarrierMonitor>();
   std::unique_lock<std::mutex> lk(b->lock);
 

@@ -2,6 +2,7 @@
 #pragma once
 #include "dispatch_aborted_exception.h"
 #include "DispatchThunk.h"
+#include <atomic>
 #include <list>
 #include <queue>
 #include MUTEX_HEADER
@@ -19,6 +20,8 @@ class DispatchQueue;
 class DispatchQueue {
 public:
   DispatchQueue(void);
+  DispatchQueue(DispatchQueue&&) = delete;
+  DispatchQueue(const DispatchQueue&) = delete;
 
   /// <summary>
   /// Runs down the dispatch queue without calling anything
@@ -34,7 +37,7 @@ protected:
   size_t m_dispatchCap = 1000;
 
   // Current linked list length
-  size_t m_count = 0;
+  std::atomic<size_t> m_count{0};
 
   // The dispatch queue proper.  A vector is used, here, not a queue, because this collection is frequently emptied.
   DispatchThunkBase* m_pHead = nullptr;

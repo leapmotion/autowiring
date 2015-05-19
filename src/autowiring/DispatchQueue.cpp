@@ -45,14 +45,19 @@ void DispatchQueue::DispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
   // deadlocks.
   std::unique_ptr<DispatchThunkBase> thunk(m_pHead);
   m_pHead = thunk->m_pFlink;
-  m_count--;
   lk.unlock();
+
+  // Decrement the count only after the thunk is done:
+  auto dec = MakeAtExit([&] { m_count--; });
 
   if (thunk->m_pFlink)
     (*thunk)();
   else {
-    // We will need to notify when the thunk completes
-    MakeAtExit([this] { m_queueUpdated.notify_all(); }),
+    MakeAtExit([&] {
+      // Notify that we have hit zero:
+      lk.lock();
+      m_queueUpdated.notify_all();
+    }),
     (*thunk)();
   }
 }
@@ -194,7 +199,7 @@ bool DispatchQueue::Barrier(std::chrono::nanoseconds timeout) {
     throw dispatch_aborted_exception("Dispatch queue was aborted before a timed wait was attempted");
 
   // Short-circuit if the queue is already empty
-  if (!m_pHead)
+  if (!m_count)
     return true;
 
   // Also short-circuit if zero is specified as the timeout value
