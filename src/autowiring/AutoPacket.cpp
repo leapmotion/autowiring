@@ -16,8 +16,7 @@ using namespace autowiring;
 
 AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
-  m_outstanding(std::move(outstanding)),
-  m_firstCounter(nullptr)
+  m_outstanding(std::move(outstanding))
 {}
 
 AutoPacket::~AutoPacket(void) {

@@ -89,23 +89,6 @@ TEST_F(AutoFilterCollapseRulesTest, SharedPtrCollapse) {
   shared_filter->m_called = 0;
 }
 
-class UnnamedExternalClass;
-
-class AcceptsUnnamedExternalClass {
-public:
-  void AutoFilter(const UnnamedExternalClass&) {}
-};
-
-class AcceptsUnnamedExternalClassSharedPtr {
-public:
-  void AutoFilter(std::shared_ptr<const UnnamedExternalClass>) {}
-};
-
-TEST_F(AutoFilterCollapseRulesTest, CanAcceptUndefinedSharedPointerInput) {
-  AutoRequired<AcceptsUnnamedExternalClass> auec;
-  AutoRequired<AcceptsUnnamedExternalClassSharedPtr> auecsp;
-}
-
 TEST_F(AutoFilterCollapseRulesTest, ConstCollapse) {
   AutoRequired<AutoPacketFactory> factory;
   AutoRequired<AcceptsConstReference> filter;
@@ -169,50 +152,6 @@ TEST_F(AutoFilterCollapseRulesTest, AutoFilterSharedAliasingRules) {
   auto packet = factory->NewPacket();
   ASSERT_TRUE(packet->Has<int>()) << "Filter producing a shared pointer of type int did not correctly collapse to the basic int type";
   ASSERT_EQ(55, autowiring::get<0>(consumes->m_args)) << "Filter consuming a shared pointer output was not called as expected";
-}
-
-class CannotBeDefaultConstructed {
-  CannotBeDefaultConstructed(int) {}
-};
-
-class SharedPtrNoDefault
-{
-public:
-  void AutoFilter(std::shared_ptr<CannotBeDefaultConstructed>& out) {
-    ASSERT_EQ(nullptr, out) << "An argument that should have been provided null was incorrectly default constructed";
-  }
-};
-
-TEST_F(AutoFilterCollapseRulesTest, SharedPtrNoDefaultTest) {
-  AutoRequired<SharedPtrNoDefault> spnd;
-  AutoRequired<AutoPacketFactory> factory;
-  auto packet = factory->NewPacket();
-}
-
-class WantsAutoPacketInput {
-public:
-  WantsAutoPacketInput(void):
-    pPacket(nullptr)
-  {}
-
-  WantsAutoPacketInput(AutoPacket& packet):
-    pPacket(&packet)
-  {}
-
-  AutoPacket* pPacket;
-};
-
-class ConstructsWantsAutoPacketInput {
-public:
-  void AutoFilter(AutoPacket& packet, WantsAutoPacketInput& wapi) {
-    ASSERT_EQ(&packet, wapi.pPacket) << "Speculatively constructed output type did not have the correct constructor overload invoked";
-  }
-};
-
-TEST_F(AutoFilterCollapseRulesTest, CtorRequiredWPI) {
-  // This is enough to kick off the AutoFilter above and cause an exception, if one is going to occur
-  AutoRequired<ConstructsWantsAutoPacketInput>();
-  AutoRequired<AutoPacketFactory>()->NewPacket();
 }
 
 TEST_F(AutoFilterCollapseRulesTest, UnsatisfiableDecoration) {

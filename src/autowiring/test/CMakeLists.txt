@@ -7,6 +7,7 @@ set(AutowiringTest_SRCS
   AutoConstructTest.cpp
   AutoFilterAltitudeTest.cpp
   AutoFilterCollapseRulesTest.cpp
+  AutoFilterConstructRulesTest.cpp
   AutoFilterDiagnosticsTest.cpp
   AutoFilterFunctionTest.cpp
   AutoFilterMultiDecorateTest.cpp
@@ -88,7 +89,6 @@ set(AutowiringFixture_SRCS
 add_pch(AutowiringFixture_SRCS "stdafx.h" "stdafx.cpp")
 add_library(AutowiringFixture ${AutowiringFixture_SRCS})
 target_include_directories(AutowiringFixture PRIVATE "${CMAKE_SOURCE_DIR}/contrib/autoboost")
-set_property(TARGET AutowiringFixture PROPERTY FOLDER "Autowiring")
 
 add_pch(AutowiringTest_SRCS "stdafx.h" "stdafx.cpp")
 add_executable(AutowiringTest ${AutowiringTest_SRCS})
@@ -105,8 +105,6 @@ endif()
 if(TARGET AutoNet)
   target_link_libraries(AutowiringTest AutoNet)
 endif()
-
-set_property(TARGET AutowiringTest PROPERTY FOLDER "Autowiring")
 
 # This is a unit test, let CMake know this
 add_test(NAME AutowiringTest COMMAND $<TARGET_FILE:AutowiringTest>)

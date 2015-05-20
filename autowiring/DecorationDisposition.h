@@ -9,11 +9,7 @@
 struct SatCounter;
 
 struct DecorationKey {
-  DecorationKey(void) :
-    ti(nullptr),
-    is_shared(false),
-    tshift(-1)
-  {}
+  DecorationKey(void) = default;
 
   DecorationKey(const DecorationKey& rhs) :
     ti(rhs.ti),
@@ -28,14 +24,14 @@ struct DecorationKey {
   {}
   
   // The type index
-  const std::type_info* ti;
+  const std::type_info* ti = nullptr;
 
   // True if this decoration can be used with AutoFilters that accept a shared_ptr input type
-  bool is_shared;
+  bool is_shared = false;
   
   // Zero refers to a decoration created on this packet, a positive number [tshift] indicates
   // a decoration attached [tshift] packets ago.
-  int tshift;
+  int tshift = -1;
   
   bool operator==(const DecorationKey& rhs) const {
     return ti == rhs.ti && is_shared == rhs.is_shared && tshift == rhs.tshift;
@@ -78,10 +74,7 @@ enum class DispositionState {
 /// </remarks>
 struct DecorationDisposition
 {
-  DecorationDisposition(void) :
-    m_pImmediate(nullptr),
-    m_state(DispositionState::Unsatisfied)
-  {}
+  DecorationDisposition(void) = default;
 
   DecorationDisposition(const DecorationDisposition& source) :
     m_decorations(source.m_decorations),
@@ -98,7 +91,7 @@ struct DecorationDisposition
 
   // A pointer to the immediate decorations, if one is specified, or else nullptr.
   // Valid if and only if is_shared is true.
-  const void* m_pImmediate;
+  const void* m_pImmediate = nullptr;
 
   // Providers for this decoration, where it can be statically inferred.  Note that a provider for
   // this decoration may exist even if this value is null, in the event that dynamic decoration is
@@ -109,7 +102,7 @@ struct DecorationDisposition
   std::vector<SatCounter*> m_subscribers;
 
   // The current state of this disposition
-  DispositionState m_state;
+  DispositionState m_state = DispositionState::Unsatisfied;
   
   /// <returns>
   /// True if all publishers have run on this disposition

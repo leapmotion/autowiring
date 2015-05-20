@@ -41,7 +41,7 @@ TEST_F(DispatchQueueTest, SimpleEvents) {
   
   int num = DispatchAllEvents();
   
-  *this += [&count] () {
+  *this += [&count]() {
     count += 5 ;
   };
   
@@ -69,6 +69,13 @@ TEST_F(DispatchQueueTest, PathologicalStartAndStop){
   ASSERT_TRUE(t4->WaitFor(std::chrono::seconds(10)));
 }
 
+TEST_F(DispatchQueueTest, TrivialBarrier) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<CoreThread> ct;
+
+  ASSERT_TRUE(ct->Barrier(std::chrono::seconds(0))) << "Zero-time barrier on a zero-length queue did not pass as expected";
+}
+
 TEST_F(DispatchQueueTest, Barrier) {
   AutoCurrentContext()->Initiate();
   AutoRequired<CoreThread> ct;
@@ -89,45 +96,67 @@ TEST_F(DispatchQueueTest, Barrier) {
   ASSERT_TRUE(ct->Barrier(std::chrono::seconds(5))) << "Barrier did not return even though a dispatcher should have completed";
 }
 
+TEST_F(DispatchQueueTest, BarrierWithSingleDelayedDispatcher) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<CoreThread> ct;
+
+  // Hold our initial lock down so we can choose when the dispatcher concludes:
+  auto b = std::make_shared<std::mutex>();
+  std::unique_lock<std::mutex> lk(*b);
+
+  // This dispatch entry will delay until we're ready for it to continue:
+  *ct += [b] { std::unique_lock<std::mutex> lk(*b); };
+
+  // Now we invoke the barrier with a timeout.  This barrier must fail because the above block
+  // should prevent barriers from succeeding
+  ASSERT_FALSE(ct->Barrier(std::chrono::microseconds(1))) << "Barrier passed even though an entry was still being processed";
+}
+
 struct BarrierMonitor {
   // Standard continuation behavior:
   std::mutex lock;
   std::condition_variable cv;
-  bool done;
+  size_t nReady = 0;
+  bool done = false;
 };
 
 TEST_F(DispatchQueueTest, BarrierWithAbort) {
   AutoCurrentContext()->Initiate();
   AutoRequired<CoreThread> ct;
 
-  // Hold our initial lockdown:
+  // Barrier construction, hold down lock before kicking anything off so we can set everything up:
   auto b = std::make_shared<BarrierMonitor>();
   std::unique_lock<std::mutex> lk(b->lock);
 
   // This dispatch entry will delay until we're ready for it to continue:
   *ct += [b] {
-    std::lock_guard<std::mutex> lk(b->lock);
+    std::unique_lock<std::mutex> lk(b->lock);
+    b->nReady++;
+    b->cv.notify_all();
+    b->cv.wait(lk, [&] { return b->done; });
   };
 
   // Launch something that will barrier:
-  auto exception = std::make_shared<bool>(false);
   auto f = std::async(
     std::launch::async,
     [=] {
-      try {
-        ct->Barrier(std::chrono::seconds(5));
+      {
+        std::unique_lock<std::mutex> lk(b->lock);
+        b->nReady++;
+        b->cv.notify_all();
       }
-      catch (autowiring_error&) {
-        *exception = true;
-      }
+      return ct->Barrier(std::chrono::seconds(5));
     }
   );
 
-  // Delay for long enough for the barrier to be reached:
-  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  // Wait for all threads to hit the barrier, then signal anyone interested that they can back out
+  b->cv.wait(lk, [&] { return b->nReady == 2; });
+  b->done = true;
+  b->cv.notify_all();
 
-  // Now abandon the queue, this should cause the async thread to quit:
+  // Abandon the queue before relinquishing the lock:
   ct->Abort();
+
   ASSERT_EQ(std::future_status::ready, f.wait_for(std::chrono::seconds(5))) << "Barrier did not abort fast enough";
-  ASSERT_TRUE(*exception) << "Exception should have been thrown inside the Barrier call";
+  ASSERT_ANY_THROW(f.get()) << "Barrier call returned instead of throwing an exception";
 }

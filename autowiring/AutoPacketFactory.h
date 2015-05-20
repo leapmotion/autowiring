@@ -45,9 +45,9 @@ private:
   t_autoFilterSet m_autoFilters;
 
   // Accumulators used to compute statistics about AutoPacket lifespan.
-  long long m_packetCount;
-  double m_packetDurationSum;
-  double m_packetDurationSqSum;
+  long long m_packetCount = 0;
+  double m_packetDurationSum = 0.0;
+  double m_packetDurationSqSum = 0.0;
 
   // Returns the internal outstanding count, for use with AutoPacket
   std::shared_ptr<void> GetInternalOutstanding(void);

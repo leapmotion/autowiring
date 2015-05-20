@@ -37,11 +37,11 @@ class FilterFirstValidateInheritance:
 
 static_assert(
   std::is_same<
-  FilterFirst,
-  Decompose<decltype(&FilterFirstValidateInheritance::AutoFilter)>::type
+    FilterFirst,
+    Decompose<decltype(&FilterFirstValidateInheritance::AutoFilter)>::type
   >::value,
   "Decomposed type did not correctly name the implementing type of an inherited method"
-  );
+);
 
 TEST_F(AutoFilterSequencing, VerifyFirstLastCalls) {
   AutoRequired<AutoPacketFactory> factory;

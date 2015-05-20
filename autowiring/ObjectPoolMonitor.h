@@ -25,7 +25,7 @@ public:
 
 private:
   void* m_pOwner;
-  bool m_abandoned;
+  bool m_abandoned = false;
 
 public:
   // Accessor methods:

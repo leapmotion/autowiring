@@ -230,7 +230,6 @@ target_include_directories(Autowiring
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
   "$<INSTALL_INTERFACE:include>"
 )
-set_property(TARGET Autowiring PROPERTY FOLDER "Autowiring")
 
 # Need multithreading services if available
 find_package(Threads)

@@ -10,11 +10,11 @@
 class AutoPacketProfiler
 {
 public:
-  AutoPacketProfiler();
-  ~AutoPacketProfiler();
+  AutoPacketProfiler(void);
+  ~AutoPacketProfiler(void);
 
 private:
-  bool m_shouldProfile;
+  bool m_shouldProfile = false;
 
   /// <summary>
   /// Total amount of time spent in any one subscriber

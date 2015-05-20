@@ -7,10 +7,10 @@
 #include <cxxabi.h>
 #include <cstdlib>
 
-std::string autowiring::demangle(const std::type_info& ti) {
+static std::string demangle_name(const char* name) {
   int status;
   std::unique_ptr<char, void(*)(void*)> res{
-    abi::__cxa_demangle(ti.name(), nullptr, nullptr, &status),
+    abi::__cxa_demangle(name, nullptr, nullptr, &status),
     std::free
   };
 
@@ -22,8 +22,8 @@ std::string autowiring::demangle(const std::type_info& ti) {
 
 #else // Windows
 
-std::string autowiring::demangle(const std::type_info& ti) {
-  std::string demangled(ti.name());
+static std::string demangle_name(const char* name) {
+  std::string demangled(name);
   
   if (demangled.find("`") != std::string::npos)
     return std::string();
@@ -33,11 +33,23 @@ std::string autowiring::demangle(const std::type_info& ti) {
 
 #endif
 
-std::string autowiring::demangle(const AnySharedPointer& ptr) {
-  return autowiring::demangle(ptr->type());
+std::string autowiring::demangle(const std::type_info& ti) {
+  return demangle_name(ti.name());
 }
 
 std::string autowiring::demangle(const std::type_info* ti) {
-  return autowiring::demangle(*ti);
+  return demangle_name(ti->name());
+}
+
+std::string autowiring::demangle(const std::type_index& ti) {
+  return demangle_name(ti.name());
+}
+
+std::string autowiring::demangle(const std::type_index* ti) {
+  return demangle_name(ti->name());
+}
+
+std::string autowiring::demangle(const AnySharedPointer& ptr) {
+  return autowiring::demangle(ptr->type());
 }
 

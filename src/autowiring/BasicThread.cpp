@@ -11,11 +11,7 @@
 BasicThread::BasicThread(const char* pName):
   ContextMember(pName),
   m_state(std::make_shared<BasicThreadStateBlock>()),
-  m_wasStarted(false),
-  m_stop(false),
-  m_running(false),
-  m_completed(m_state->m_completed),
-  m_priority(ThreadPriority::Default)
+  m_completed(m_state->m_completed)
 {}
 
 BasicThread::~BasicThread(void) {

@@ -46,25 +46,22 @@ struct SlotInformation {
 /// </summary>
 struct SlotInformationStumpBase {
   SlotInformationStumpBase(const std::type_info& ti) :
-    ti(ti),
-    bInitialized(false),
-    pHead(nullptr),
-    pFirstAutoFilter(nullptr)
+    ti(ti)
   {}
 
   // RTTI to which this stump pertains
   const std::type_info& ti;
 
   // Initialization flag, used to indicate that this stump has valid data
-  bool bInitialized;
+  bool bInitialized = false;
 
   // Current slot information:
-  const SlotInformation* pHead;
+  const SlotInformation* pHead = nullptr;
 
   // If there are any custom AutoFilter fields defined, this is the first of them
   // Note that these custom fields -only- include fields registered via the AutoFilter
   // registration type
-  const AutoFilterDescriptorStubLink* pFirstAutoFilter;
+  const AutoFilterDescriptorStubLink* pFirstAutoFilter = nullptr;
 };
 
 /// <summary>
@@ -129,10 +126,10 @@ public:
 
 private:
   // Current slot information:
-  SlotInformation* m_pCur;
+  SlotInformation* m_pCur = nullptr;
 
   // Most recent AutoFilter descriptor link:
-  AutoFilterDescriptorStubLink* m_pLastLink;
+  AutoFilterDescriptorStubLink* m_pLastLink = nullptr;
 
 public:
   /// <returns>

@@ -17,10 +17,7 @@ std::chrono::nanoseconds NanosecondsForFutureWait(const std::chrono::nanoseconds
 #endif
 
 CoreJob::CoreJob(const char* name) :
-  ContextMember(name),
-  m_running(false),
-  m_curEvent(nullptr),
-  m_curEventInTeardown(true)
+  ContextMember(name)
 {}
 
 CoreJob::~CoreJob(void)
@@ -44,9 +41,10 @@ void CoreJob::OnPended(std::unique_lock<std::mutex>&& lk){
   if(!outstanding) {
     // We're currently signalled to stop, we must empty the queue and then
     // return here--we can't accept dispatch delivery on a stopped queue.
-    while(!m_dispatchQueue.empty()) {
-      delete m_dispatchQueue.front();
-      m_dispatchQueue.pop_front();
+    for (auto cur = m_pHead; cur;) {
+      auto next = cur->m_pFlink;
+      delete cur;
+      cur = next;
     }
   } else {
     // Need to ask the thread pool to handle our events again:
@@ -97,11 +95,9 @@ bool CoreJob::OnStart(void) {
   m_running = true;
 
   std::unique_lock<std::mutex> lk;
-  if(!m_dispatchQueue.empty()) {
+  if(m_pHead)
     // Simulate a pending event, because we need to set up our async:
     OnPended(std::move(lk));
-  }
-
   return true;
 }
 

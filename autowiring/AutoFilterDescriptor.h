@@ -17,16 +17,7 @@ class Deferred;
 /// The unbound part of an AutoFilter, includes everything except the AnySharedPointer representing the filter proper
 /// </summary>
 struct AutoFilterDescriptorStub {
-  AutoFilterDescriptorStub(void) :
-    m_pType(nullptr),
-    m_altitude(autowiring::altitude::Standard),
-    m_pArgs(nullptr),
-    m_deferred(false),
-    m_arity(0),
-    m_requiredCount(0),
-    m_pCall(nullptr)
-  {}
-
+  AutoFilterDescriptorStub(void) = default;
   AutoFilterDescriptorStub(const AutoFilterDescriptorStub&) = default;
   AutoFilterDescriptorStub& operator=(const AutoFilterDescriptorStub&) = default;
 
@@ -62,34 +53,34 @@ struct AutoFilterDescriptorStub {
 
 protected:
   // Type of the subscriber itself
-  const std::type_info* m_pType;
+  const std::type_info* m_pType = nullptr;
 
   // Altitude--controls when the filter gets called
-  autowiring::altitude m_altitude;
+  autowiring::altitude m_altitude = autowiring::altitude::Standard;
 
   // This subscriber's argument types
   // NOTE: This is a reference to a static generated list,
   // therefore it MUST be const and MUST be shallow-copied.
-  const AutoFilterDescriptorInput* m_pArgs;
+  const AutoFilterDescriptorInput* m_pArgs = nullptr;
 
   // Set if this is a deferred subscriber.  Deferred subscribers cannot receive immediate-style
   // decorations, and have additional handling considerations when dealing with non-copyable
   // decorations.
-  bool m_deferred;
+  bool m_deferred = false;
 
   // The number of parameters that will be extracted from the repository object when making
   // a Call.  This is used to prime the AutoPacket in order to make saturation checking work
   // correctly.
-  size_t m_arity;
+  size_t m_arity = 0;
 
   // The number of arguments declared to be required:
-  size_t m_requiredCount;
+  size_t m_requiredCount = 0;
 
   // The first argument of this static global is void*, but it is expected that the argument
   // that will actually be passed is of a type corresponding to the member function bound
   // by this operation.  Strong guarantees must be made that the types passed into this routine
   // are identical to the types expected by the corresponding call.
-  t_extractedCall m_pCall;
+  t_extractedCall m_pCall = nullptr;
 
 public:
   // Accessor methods:
@@ -274,21 +265,16 @@ public:
   /// Default for std library sorting of unique elements
   /// </summary>
   bool operator<(const AutoFilterDescriptor& rhs) const {
-    // This filter is "logically prior" to the right-hand side if this filter has a HIGHER altitude
-    // than the one on the right-hand side
     return
       std::tie(m_altitude, m_pCall, m_autoFilter) <
       std::tie(rhs.m_altitude, rhs.m_pCall, rhs.m_autoFilter);
   }
 
-  /// <summary>
-  /// Default for std library sorting of repeatable elements
-  /// </summary>
+  // Operator overloads:
   bool operator<=(const AutoFilterDescriptor& rhs) const { return *this < rhs || *this == rhs;}
-
   bool operator>(const AutoFilterDescriptor& rhs) const { return !(*this <= rhs);}
-
   bool operator>=(const AutoFilterDescriptor& rhs) const { return !(*this < rhs);}
+  bool operator!=(const AutoFilterDescriptor& rhs) const { return !(*this == rhs); }
 };
 
 /// <summary>

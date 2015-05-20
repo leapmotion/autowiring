@@ -20,10 +20,10 @@ public:
   
 private:
   // Set to true if this runnable was ever signaled to start
-  bool m_wasStarted;
+  bool m_wasStarted = false;
 
   // Set to true if this runnable should terminate processing
-  bool m_shouldStop;
+  bool m_shouldStop = false;
 
   // The outstanding count, held for as long as processing is underway
   std::shared_ptr<CoreObject> m_outstanding;
