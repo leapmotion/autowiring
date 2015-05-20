@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "DispatchQueueBm.h"
 #include "Benchmark.h"
-#include <future>
+#include FUTURE_HEADER
 #include <thread>
 
 Benchmark DispatchQueueBm::Dispatch(void) {
