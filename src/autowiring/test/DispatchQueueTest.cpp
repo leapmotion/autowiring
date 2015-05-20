@@ -158,6 +158,5 @@ TEST_F(DispatchQueueTest, BarrierWithAbort) {
   ct->Abort();
 
   ASSERT_EQ(std::future_status::ready, f.wait_for(std::chrono::seconds(5))) << "Barrier did not abort fast enough";
-  bool rs;
-  ASSERT_ANY_THROW(rs = f.get()) << "Barrier call returned " << std::boolalpha << rs << " instead of throwing an exception";
+  ASSERT_ANY_THROW(f.get()) << "Barrier call returned instead of throwing an exception";
 }
