@@ -303,43 +303,16 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
   ASSERT_EQ(handler_called3, 1) << "Handler was unable to append to itself or was called prematurely.";
 }
 
-struct SubRootA {
-  virtual void VMethod() {}
-  virtual void AMethod() = 0;
-  void Method() {}
-  int data0;
-  int data1;
-};
-
-struct RootA
+struct VBase
 {
-
-  virtual void This() {}
-  virtual void Class() {}
-  virtual void Has() {}
-  virtual void ALot() {}
-  virtual void Of() {}
-  virtual void Methods() {}
-
-  int and;
-  int abit;
-  int ofdata;
+  int someData;
 };
 
-struct RootB
+struct Derived :
+  public virtual VBase
 {
   typedef autowiring::signal<void(void)> signal_t;
   signal_t signal1;
-  signal_t signal2;
-  signal_t signal3;
-
-  virtual void AbstractMethod() = 0;
-};
-struct Derived :
-  public virtual RootA,
-  public RootB
-{
-  void AbstractMethod() override {}
 };
 
 TEST_F(AutoSignalTest, ComplexInheritanceSignal) {
