@@ -302,3 +302,63 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
   ASSERT_EQ(handler_called2, 1) << "Specific handler was unable to remove itself";
   ASSERT_EQ(handler_called3, 1) << "Handler was unable to append to itself or was called prematurely.";
 }
+
+struct SubRootA {
+  virtual void VMethod() {}
+  virtual void AMethod() = 0;
+  void Method() {}
+  int data0;
+  int data1;
+};
+
+struct RootA
+{
+
+  virtual void This() {}
+  virtual void Class() {}
+  virtual void Has() {}
+  virtual void ALot() {}
+  virtual void Of() {}
+  virtual void Methods() {}
+
+  int and;
+  int abit;
+  int ofdata;
+};
+
+struct RootB
+{
+  typedef autowiring::signal<void(void)> signal_t;
+  signal_t signal1;
+  signal_t signal2;
+  signal_t signal3;
+
+  virtual void AbstractMethod() = 0;
+};
+struct Derived :
+  public virtual RootA,
+  public RootB
+{
+  void AbstractMethod() override {}
+};
+
+TEST_F(AutoSignalTest, ComplexInheritanceSignal) {
+  int handlerCount = 0;
+  {
+    Autowired<Derived> derivedSlot;
+
+    // Register a signal handler:
+    derivedSlot(&Derived::signal1) += [&]{
+      ++handlerCount;
+    };
+
+    // Inject type type after the signal has been registered
+    AutoRequired<Derived>();
+
+    // Now raise the signal, see what happens:
+    derivedSlot->signal1();
+
+    // Verify that the handler got called with the correct value:
+    ASSERT_TRUE(handlerCount > 0) << "Signal handler was not invoked";
+  }
+}
