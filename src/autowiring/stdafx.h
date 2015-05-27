@@ -7,10 +7,29 @@
 // Only include these headers in cases where a pch can be generated
 // Currently this is only supported on MSVC
 #ifdef _MSC_VER
-  #include <thread>
   #ifndef NOMINMAX
     #define NOMINMAX
   #endif
+
+  #include <algorithm>
+  #include <functional>
+  #include <future>
+  #include <iosfwd>
+  #include <list>
+  #include <map>
+  #include <memory>
+  #include <mutex>
+  #include <queue>
+  #include <set>
+  #include <sstream>
+  #include <string>
+  #include <thread>
+  #include <tuple>
+  #include <type_traits>
+  #include <typeindex>
+  #include <unordered_map>
+  #include <unordered_set>
+  #include <vector>
 #endif
   
 #ifndef _MSC_VER
