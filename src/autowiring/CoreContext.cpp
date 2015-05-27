@@ -330,7 +330,7 @@ void CoreContext::FindByType(AnySharedPointer& reference, bool localOnly) const 
   FindByTypeUnsafe(reference, localOnly);
 }
 
-CoreContext::MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference, bool localOnly) const {
+MemoEntry& CoreContext::FindByTypeUnsafe(AnySharedPointer& reference, bool localOnly) const {
   const std::type_info& type = reference->type();
 
   // If we've attempted to search for this type before, we will return the value of the memo immediately:

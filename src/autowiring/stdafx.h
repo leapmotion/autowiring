@@ -12,6 +12,9 @@
   #endif
 
   #include <algorithm>
+  #include <atomic>
+  #include <chrono>
+  #include <exception>
   #include <functional>
   #include <future>
   #include <iosfwd>

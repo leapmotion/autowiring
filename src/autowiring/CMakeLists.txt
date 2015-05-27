@@ -132,6 +132,8 @@ set(Autowiring_SRCS
   JunctionBoxManager.cpp
   JunctionBoxManager.h
   member_new_type.h
+  MemoEntry.h
+  MemoEntry.cpp
   MicroAutoFilter.h
   MicroBolt.h
   NewAutoFilter.h
