@@ -121,10 +121,6 @@ public:
   }
 
   ~Autowired(void) {
-    // Unlink all signal entries
-    for (auto& unlinkEntry : m_unlinkEntries)
-      *unlinkEntry.relay -= unlinkEntry.node;
-
     if(m_pFirstChild == this)
       // Tombstoned, nothing to do:
       return;
@@ -143,25 +139,6 @@ private:
   // the base class, which refers to the _next sibling_; by contrast, this type refers to the _first child_
   // which will be the first member registered via NotifyWhenAutowired.
   std::atomic<AutowirableSlot<T>*> m_pFirstChild;
-
-  struct unlink_entry
-  {
-    unlink_entry(
-      autowiring::signal_relay* relay,
-      autowiring::internal::signal_node_base* node
-    ) :
-      relay(relay),
-      node(node)
-    {}
-
-    autowiring::signal_relay* relay;
-    autowiring::internal::signal_node_base* node;
-  };
-
-  // The set of all nodes that will have to be unlinked when this field is torn down
-  std::vector<unlink_entry> m_unlinkEntries;
-  //Required to keep the registration table alive untill after we're dead.
-  std::shared_ptr<autowiring::signal_relay_registration_table> m_registrationTable;
 
 public:
   operator const std::shared_ptr<T>&(void) const {
@@ -183,40 +160,25 @@ public:
 
   template<typename... Args>
   struct signal_relay {
-    signal_relay(Autowired<T>& owner, autowiring::signal_relay_t<Args...>& relay) :
-      owner(owner),
-      relay(relay)
-    {}
+    std::function<void(Args...)> fn;
 
-  private:
-    Autowired<T>& owner;
-    autowiring::signal_relay_t<Args...>& relay;
-
-  public:
-    void operator+=(std::function<void(Args...)>&& fn) {
-      owner.m_unlinkEntries.push_back(
-        unlink_entry(
-          &relay,
-          relay += std::move(fn)
-        )
-      );
+    template<typename Fn>
+    void operator+=(Fn&& rhs) {
+      if (fn)
+        throw std::runtime_error("Attempted to attach multiple times to the same relay");
+      fn = rhs;
     }
   };
   
   template<typename U, typename... Args>
-  signal_relay<Args...> operator()(autowiring::signal<void(Args...)> U::*handler) {
+  signal_relay<Args...>& operator()(autowiring::signal<void(Args...)> U::*sig) {
     static_assert(std::is_base_of<U, T>::value, "Cannot reference member of unrelated type");
-    
-    auto handlerActual = static_cast<autowiring::signal<void(Args...)> T::*>(handler);
 
-    auto ctxt = AutowirableSlot<T>::GetContext();
-    if (!ctxt)
-      throw std::runtime_error("Attempted to attach a signal to an Autowired field in a context that was already destroyed");
-
-    if (!m_registrationTable)
-      m_registrationTable = ctxt->template Inject<autowiring::signal_relay_registration_table>();
-
-    return {*this, ctxt->RelayForType(handlerActual)};
+    auto retVal = std::make_shared<signal_relay<Args...>>();
+    NotifyWhenAutowired([this, sig, retVal] {
+      static_cast<U*>(get())->*sig += retVal->fn;
+    });
+    return *retVal;
   }
 
   /// <summary>

@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include <autowiring/autowiring.h>
 
+using namespace autowiring;
+
 class AutoSignalTest:
   public testing::Test
 {};
@@ -18,7 +20,7 @@ TEST_F(AutoSignalTest, SimpleSignalTest) {
   int val = 0;
 
   // Register a handler directly on the signal:
-  auto* registration =
+  auto registration =
     signal += [&](int v) {
       handler_called = true;
       val = v;
@@ -133,10 +135,10 @@ TEST_F(AutoSignalTest, MultipleSlotsTest) {
   bool handler_called1 = false;
   bool handler_called2 = false;
   
-  auto* registration1 =
-  signal += [&] {
-    handler_called1 = true;
-  };
+  auto registration1 =
+    signal += [&] {
+      handler_called1 = true;
+    };
   
   // Registration 2
   signal += [&] {
@@ -189,13 +191,12 @@ TEST_F(AutoSignalTest, NodeRemoval) {
   bool handler_called1 = false;
   bool handler_called2 = false;
 
-  auto* registration1 = signal1 += [&] { handler_called1 = true; };
-  auto* registration2 = signal2 += [&] { handler_called2 = true; };
+  auto registration1 = signal1 += [&] { handler_called1 = true; };
+  auto registration2 = signal2 += [&] { handler_called2 = true; };
   
   ASSERT_ANY_THROW(signal1 -= registration2) << "Removing a registration from a different signal than it was registered to failed to throw an exception";
 
-  registration1->remove();
-  delete registration1;
+  registration1.reset();
   signal1();
   signal2();
   
@@ -222,25 +223,6 @@ TEST_F(AutoSignalTest, CallOrdering) {
   ASSERT_TRUE(handler_called2) << "Handler2 was removed after an invalid -= operation";
 }
 
-TEST_F(AutoSignalTest, CallInsertion) {
-  autowiring::signal<void(void)> signal1;
-
-  bool handler_called1 = false;
-  bool handler_called2 = false;
-
-  auto* registration1 = signal1 += [&](void) { handler_called1 = true; };
-
-  //when += to a registration object, the new one is appended.
-  *registration1 += [&](void) {
-    ASSERT_TRUE(handler_called1);
-    handler_called2 = true; };
-
-  signal1();
-
-  ASSERT_TRUE(handler_called1) << "Handler1 was called after being unregistered";
-  ASSERT_TRUE(handler_called2) << "Handler2 was removed after an invalid -= operation";
-}
-
 TEST_F(AutoSignalTest, SelfReferencingCall) {
   typedef autowiring::signal<void(int)> signal_t;
   signal_t signal1;
@@ -249,10 +231,10 @@ TEST_F(AutoSignalTest, SelfReferencingCall) {
   int magic_number = 123;
 
   //The main test is just if this thing will compile
-  signal_t::registration_t* registration1 =
-    signal1 += [&](autowiring::internal::signal_node_base* reg, int magic) {
+  registration_t registration1 =
+    signal1 += [&](registration_t* reg, int magic) {
       ASSERT_EQ(magic, magic_number);
-      ASSERT_EQ(registration1, reg);
+      ASSERT_EQ(registration1, *reg);
       handler_called1 = true;
     };
 
@@ -271,29 +253,30 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
   
   int magic_number = 123;
   
-  signal_t::registration_t* registration1 =
-  signal1 += [&](autowiring::internal::signal_node_base* reg, int magic) {
-    ASSERT_EQ(magic, magic_number);
-    ASSERT_EQ(registration1, reg);
-    ++handler_called1;
-    delete reg->remove();
-  };
+  registration_t registration1 =
+    signal1 += [&](registration_t* reg, int magic) {
+      ASSERT_EQ(magic, magic_number);
+      ASSERT_EQ(registration1, *reg);
+      ++handler_called1;
+      reg->reset();
+    };
   
   auto lambda3 = [&](int magic) {
     ++handler_called3;
   };
 
-  signal_t::registration_t* registration2 = signal1 += [&](signal_t::registration_t* reg, int magic) {
-    ASSERT_EQ(magic, magic_number);
-    ASSERT_EQ(registration2, reg);
-    ++handler_called2;
+  registration_t registration2 =
+    signal1 += [&](registration_t* reg, int magic) {
+      ASSERT_EQ(magic, magic_number);
+      ASSERT_EQ(registration2, *reg);
+      ++handler_called2;
     
-    //+= is an append operation, but because when we're traveling the list and we grab the next pointer
-    //*before* the function get's called, this append won't be picked up until the 2nd pass.
-    *reg += std::move(lambda3);
+      //+= is an append operation, but because when we're traveling the list and we grab the next pointer
+      //*before* the function get's called, this append won't be picked up until the 2nd pass.
+      signal1 += std::move(lambda3);
     
-    delete reg->remove();
-  };
+      reg->reset();
+    };
   
   signal1(magic_number);
   signal1(magic_number);

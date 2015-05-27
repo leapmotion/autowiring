@@ -216,7 +216,7 @@ protected:
   template<class T, class Fn>
   class AutoFactoryFn;
 
-  // This is a list of concrete types, indexed by the true type of each element.
+  // Simple list of concrete types
   std::list<CoreObjectDescriptor> m_concreteTypes;
 
   // This is a memoization map used to memoize any already-detected interfaces.
@@ -1209,36 +1209,6 @@ public:
   /// Unregisters a slot as a recipient of potential autowiring
   /// </summary>
   void CancelAutowiringNotification(DeferrableAutowiring* pDeferrable);
-
-  /// <returns>
-  /// A slots-and-signals type relay for a specific type
-  /// </returns>
-  template<typename T, typename... Args>
-  autowiring::signal_relay_t<Args...>& RelayForType(autowiring::signal<void(Args...)> T::*handler) {
-    typedef typename SelectTypeUnifier<T>::type TActual;
-
-    // Get the table first
-    auto registration = Inject<autowiring::signal_relay_registration_table>();
-
-    // Find the basis offset between T and TActual.  This is the address of the first member of T
-    // relative to the base of TActual.
-    size_t basis =
-      reinterpret_cast<size_t>(
-        static_cast<T*>(
-          reinterpret_cast<TActual*>(1)
-        )
-      ) - 1;
-
-    // Find the offset and return the relay
-    return
-      static_cast<autowiring::signal_relay_t<Args...>&>(
-        *registration->GetSignalRelay(
-          typeid(TActual),
-          basis +
-          reinterpret_cast<size_t>(&(static_cast<T*>(nullptr)->*handler))
-        )
-      );
-  }
 
   /// <summary>
   /// Utility debug method for writing a snapshot of this context to the specified output stream

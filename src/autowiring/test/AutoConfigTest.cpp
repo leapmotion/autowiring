@@ -68,7 +68,7 @@ TEST_F(AutoConfigTest, VerifyBasicSignals) {
 
   int handler_direct_called = 0;
   int handler_direct_value = 0;
-  auto* registration = *cfg2 += [&](const int& var) {
+  auto registration = *cfg2 += [&](const int& var) {
     ++handler_direct_called;
     handler_direct_value = var;
   };
