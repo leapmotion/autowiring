@@ -62,7 +62,7 @@ enum class ThreadPriority {
 /// </remarks>
 class BasicThread:
   public ContextMember,
-  public virtual CoreRunnable
+  public CoreRunnable
 {
 public:
   /// Creates a BasicThread object.
