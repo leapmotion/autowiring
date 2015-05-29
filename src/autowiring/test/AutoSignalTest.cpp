@@ -249,12 +249,13 @@ TEST_F(AutoSignalTest, CallOrdering) {
   bool handler_called1 = false;
   bool handler_called2 = false;
 
-  //handlers are inserted at the begining, so this will be called last.
+  //handlers are inserted at the end, so this will be called first.
+  signal1 += [&] { handler_called1 = true; };
+
   signal1 += [&] {
-    ASSERT_TRUE(handler_called2);
-    handler_called1 = true;
+    ASSERT_TRUE(handler_called1) << "Handler1 was not called before handler2";
+    handler_called2 = true;
   };
-  signal1 += [&] { handler_called2 = true; };
 
   signal1();
 
