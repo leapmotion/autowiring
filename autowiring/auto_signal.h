@@ -44,7 +44,7 @@ namespace autowiring {
     /// <summary>
     /// Removes the signal node identified on the rhs without requiring full type information
     /// </summary>
-    virtual void operator-=(internal::signal_node_base* rhs);
+    virtual void operator-=(internal::signal_node_base* rhs) = 0;
 
     /// <summary>
     /// Removes the specified registration

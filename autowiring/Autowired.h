@@ -121,6 +121,12 @@ public:
   }
 
   ~Autowired(void) {
+    // And remove any events that were added to the object by this autowired field
+    auto localEvents = std::move(m_events);
+    for (auto& registration : localEvents) {
+      registration.reset();
+    }
+
     if(m_pFirstChild == this)
       // Tombstoned, nothing to do:
       return;
@@ -140,6 +146,7 @@ private:
   // which will be the first member registered via NotifyWhenAutowired.
   std::atomic<AutowirableSlot<T>*> m_pFirstChild;
 
+  std::vector<autowiring::registration_t> m_events;
 public:
   operator const std::shared_ptr<T>&(void) const {
     return
@@ -176,7 +183,7 @@ public:
 
     auto retVal = std::make_shared<signal_relay<Args...>>();
     NotifyWhenAutowired([this, sig, retVal] {
-      static_cast<U*>(get())->*sig += retVal->fn;
+      m_events.push_back(static_cast<U*>(get())->*sig += retVal->fn);
     });
     return *retVal;
   }
