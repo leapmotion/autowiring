@@ -89,7 +89,7 @@ namespace autowiring {
   private:
     // Listeners and the corresponding lock:
     mutable std::mutex m_lock;
-    std::vector<entry_t> m_listeners;
+    std::list<entry_t> m_listeners;
 
     // Perfect match override:
     template<typename Fn>
@@ -138,10 +138,9 @@ namespace autowiring {
 
     void operator-=(internal::signal_node_base* rhs) override {
       std::lock_guard<std::mutex> lk(m_lock);
-      for (size_t i = 0; i < m_listeners.size(); i++)
-        if (m_listeners[i].get() == rhs) {
-          m_listeners[i] = m_listeners.back();
-          m_listeners.pop_back();
+      for (auto listener = m_listeners.begin(); listener != m_listeners.end(); ++listener)
+        if (listener->get() == rhs) {
+          m_listeners.erase(listener);
           return;
         }
       throw std::runtime_error("Attempted to remove node which is not part of this list.");
@@ -165,9 +164,14 @@ namespace autowiring {
     /// Raises the signal and invokes all attached handlers
     /// </summary>
     void operator()(Args... args) const {
-      // Take a copy of the callee set:
-      for (auto& callee : ((std::lock_guard<std::mutex>)m_lock, m_listeners))
-        (*callee)(args...);
+      // A basic foreach doesn't work, since calling an element may remove it from the list.
+      // To compensate, we must move to the next element BEFORE calling the function.
+      auto iter = m_listeners.begin();
+      while (iter != m_listeners.end()) {
+        auto callee = iter;
+        std::lock_guard<std::mutex>(m_lock), ++iter;
+        (**callee)(args...);
+      }
     }
   };
 }
