@@ -41,6 +41,7 @@ TEST_F(AutoSignalTest, SimpleSignalTest) {
 
 TEST_F(AutoSignalTest, SignalWithAutowiring) {
   bool handler_called = false;
+  bool handler2_called = false;
   int val = 202;
 
   {
@@ -55,11 +56,16 @@ TEST_F(AutoSignalTest, SignalWithAutowiring) {
     // Inject type type after the signal has been registered
     AutoRequired<RaisesASignal>();
 
+    ras(&RaisesASignal::signal) += [&](int v) {
+      handler2_called = true;
+    };
+
     // Now raise the signal, see what happens:
     ras->signal(55);
 
     // Verify that the handler got called with the correct value:
     ASSERT_TRUE(handler_called) << "Signal handler was not invoked";
+    ASSERT_TRUE(handler2_called) << "Second Signal handler was not invoked";
     ASSERT_EQ(55, val) << "Signal handler not called with the correct parameter as expected";
   }
 
