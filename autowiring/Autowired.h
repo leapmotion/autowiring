@@ -165,27 +165,33 @@ public:
     return this->operator const std::shared_ptr<T>&().get();
   }
 
-  template<typename... Args>
+  //A small temporary structure for the info required to register an event
+  //with a member signal on an autowired field.
+  template<typename U, typename... Args>
   struct signal_relay {
-    std::function<void(Args...)> fn;
+    Autowired<T>* field;
+    autowiring::signal<void(Args...)> U::*member;
+
+    signal_relay(Autowired<T>& f, autowiring::signal<void(Args...)> U::*m) :
+      field(&f), member(m) 
+    {}
 
     template<typename Fn>
     void operator+=(Fn&& rhs) {
-      if (fn)
-        throw std::runtime_error("Attempted to attach multiple times to the same relay");
-      fn = rhs;
+      Autowired<T>* l_field = field; //lambda capture of references doesn't work right.
+      autowiring::signal<void(Args...)> U::* l_member = member;
+
+      field->NotifyWhenAutowired([l_field, l_member, rhs](){
+        auto reg = static_cast<U*>(l_field->get())->*l_member += rhs;
+        l_field->m_events.push_back(reg);
+      });
     }
   };
   
   template<typename U, typename... Args>
-  signal_relay<Args...>& operator()(autowiring::signal<void(Args...)> U::*sig) {
+  signal_relay<U,Args...> operator()(autowiring::signal<void(Args...)> U::*sig) {
     static_assert(std::is_base_of<U, T>::value, "Cannot reference member of unrelated type");
-
-    auto retVal = std::make_shared<signal_relay<Args...>>();
-    NotifyWhenAutowired([this, sig, retVal] {
-      m_events.push_back(static_cast<U*>(get())->*sig += retVal->fn);
-    });
-    return *retVal;
+    return signal_relay<U, Args... >(*this, sig);
   }
 
   /// <summary>

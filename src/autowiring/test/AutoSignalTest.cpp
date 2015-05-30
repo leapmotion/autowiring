@@ -80,7 +80,6 @@ struct RaisesASignalDerived : public RaisesASignal {
 
 };
 
-
 TEST_F(AutoSignalTest, SignalWithAutowiringDerived) {
   bool handler_called = false;
   bool wired = false;
