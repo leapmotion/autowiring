@@ -75,9 +75,6 @@ public:
     RunValidation(newValue);
 
     if (m_parentRegistration) {
-      auto parent_ctxt = m_context.lock()->GetParentContext();
-      AutowiredFast<AutoConfigVar<T, TKey...>> parentVar(parent_ctxt);
-      *parentVar -= m_parentRegistration;
       m_parentRegistration.reset();
       OnSetLocally();
     }
