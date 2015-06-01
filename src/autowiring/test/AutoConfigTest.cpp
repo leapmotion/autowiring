@@ -4,7 +4,13 @@
 
 class AutoConfigTest:
   public testing::Test
-{};
+{
+public:
+  void TearDown() {
+    // Always drop the global context when tests are done
+    GlobalCoreContext::Release();
+  }
+};
 
 struct Namespace1 {};
 struct Namespace2 {};
@@ -53,22 +59,22 @@ TEST_F(AutoConfigTest, VerifyBasicSignals) {
   };
 
   AutoConfig<int, Namespace1, XYZ> cfg1(1);
-  ASSERT_EQ(handler_called, 1) << "OnChanged not triggered by construction";
-  ASSERT_EQ(handler_value_read, 1) << "Bad value read in OnChanged";
+  ASSERT_EQ(handler_called, 0) << "OnChanged triggered by construction";
+  ASSERT_EQ(handler_value_read, 0) << "Bad value read in OnChanged";
 
   *cfg1 = 20;
-  ASSERT_EQ(handler_called, 2) << "OnChanged not triggered by assignement";
+  ASSERT_EQ(handler_called, 1) << "OnChanged not triggered by assignement";
   ASSERT_EQ(handler_value_read, 20) << "Bad value read in OnChanged";
 
   AutoConfig<int, Namespace1, XYZ> cfg2;
   *cfg2 = 2;
 
-  ASSERT_EQ(handler_called, 3) << "OnChanged not triggred by assignement from alternate autowired instance";
+  ASSERT_EQ(handler_called, 2) << "OnChanged not triggred by assignement from alternate autowired instance";
   ASSERT_EQ(handler_value_read, 2) << "Bad value read in OnChanged";
 
   int handler_direct_called = 0;
   int handler_direct_value = 0;
-  auto* registration = *cfg2 += [&](const int& var) {
+  auto registration = *cfg2 += [&](const int& var) {
     ++handler_direct_called;
     handler_direct_value = var;
   };

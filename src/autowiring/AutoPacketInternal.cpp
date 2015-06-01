@@ -20,11 +20,15 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
   
   // Find all subscribers with no required or optional arguments:
   std::vector<SatCounter*> callCounters;
-  for (auto* satCounter = m_firstCounter; satCounter; satCounter = satCounter->flink) {
-    // Prime the satisfaction graph for element:
-    AddSatCounter(*satCounter);
-    if (!satCounter->remaining)
-      callCounters.push_back(satCounter);
+
+  {
+    std::lock_guard<std::mutex> lk(m_lock);
+    for (auto* satCounter = m_firstCounter; satCounter; satCounter = satCounter->flink) {
+      // Prime the satisfaction graph for element:
+      AddSatCounterUnsafe(*satCounter);
+      if (!satCounter->remaining)
+        callCounters.push_back(satCounter);
+    }
   }
   
   // Mark timeshifted decorations as unsatisfiable on the first packet

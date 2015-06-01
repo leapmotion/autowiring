@@ -33,7 +33,6 @@ public:
       }
     }
 
-    onChangedSignal(*this);
   }
 
   AutoConfigVar() :
@@ -75,10 +74,7 @@ public:
     RunValidation(newValue);
 
     if (m_parentRegistration) {
-      auto parent_ctxt = m_context.lock()->GetParentContext();
-      AutowiredFast<AutoConfigVar<T, TKey...>> parentVar(parent_ctxt);
-      *parentVar -= m_parentRegistration;
-      m_parentRegistration = nullptr;
+      m_parentRegistration.reset();
       OnSetLocally();
     }
 
@@ -93,13 +89,13 @@ public:
   }
 
   // Add a callback for when this config value changes
-  t_OnChangedSignal::registration_t* operator+=(std::function<void(const T&)>&& fx) {
+  autowiring::registration_t operator+=(std::function<void(const T&)>&& fx) {
     return onChangedSignal += [fx](const AutoConfigVarBase& var){
       fx(reinterpret_cast<const AutoConfigVar<T,TKey...>*>(&var)->m_value);
     };
   }
 
-  void operator-=(t_OnChangedSignal::registration_t* node) { onChangedSignal -= node; }
+  void operator-=(autowiring::registration_t node) { onChangedSignal -= node; }
 
 private:
   T m_value;

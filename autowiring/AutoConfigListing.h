@@ -100,7 +100,7 @@ public:
 
   // Add a callback for when a key is set in this context.  Is immediately called on all
   // currently existing values in the order they were created.
-  onAddSignal_t::registration_t* AddCallback(onAddSignal_t::function_t&& fx);
+  autowiring::registration_t AddCallback(std::function<void(const AutoConfigVarBase&)>&& fx);
 
   // Returns a list of all keys which have been set from this context.
   const std::vector<std::string>& GetLocalKeys() const { return m_orderedKeys; }

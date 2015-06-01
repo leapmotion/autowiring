@@ -8,9 +8,7 @@
 AutoConfigVarBase::AutoConfigVarBase(const std::type_info& ti, bool configured) :
   ContextMember(),
   m_key(autowiring::ExtractKey(ti)),
-  onChangedSignal(),
-  m_isConfigured(configured),
-  m_parentRegistration(nullptr)
+  m_isConfigured(configured)
 {
   m_name = m_key.c_str();
 }

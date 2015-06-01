@@ -92,17 +92,18 @@ public:
   virtual ~PrivateBase(void) {}
 };
 
-class Derived : public PublicBase, private PrivateBase {
+class DynamicCastDerivedType : public PublicBase, private PrivateBase {
 public:
-  Derived(void) {}
-  ~Derived(void) {}
+  DynamicCastDerivedType(void) {}
+  ~DynamicCastDerivedType(void) {}
 };
 
 TEST_F(AutowiringTest, TestFailureOfDynamicCast) {
-  Derived d;
-  PublicBase *pub = static_cast<PublicBase*>(&d);
-  ASSERT_EQ(dynamic_cast<PrivateBase*>(pub), nullptr) << "Dynamic cast failed to give nullptr when cross casting to a private base class";
-  static_assert(!std::is_base_of<Derived, PrivateBase>::value, "is_base_of said a private base was a base");
+  DynamicCastDerivedType d;
+  PublicBase* pub = static_cast<PublicBase*>(&d);
+  PrivateBase* priv = dynamic_cast<PrivateBase*>(pub);
+  ASSERT_EQ(nullptr, priv) << "Dynamic cast failed to give nullptr when cross casting to a private base class";
+  static_assert(!std::is_base_of<DynamicCastDerivedType, PrivateBase>::value, "is_base_of said a private base was a base");
 }
 
 class CompletelyUndefinedType;

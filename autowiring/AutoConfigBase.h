@@ -24,7 +24,7 @@ public:
 
   // True if this config was set at all
   bool IsConfigured() const { return m_isConfigured; }
-  bool IsInherited() const { return m_parentRegistration != nullptr; }
+  bool IsInherited() const { return (bool)m_parentRegistration; }
   //True if the config was set from within this context (isn't inherited)
   bool IsLocal() const { return IsConfigured() && !IsInherited(); }
 
@@ -39,5 +39,5 @@ protected:
   void OnSetLocally();
 
   bool m_isConfigured;
-  t_OnChangedSignal::registration_t* m_parentRegistration;
+  autowiring::registration_t m_parentRegistration;
 };

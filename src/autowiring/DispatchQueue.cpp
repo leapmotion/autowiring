@@ -40,15 +40,15 @@ bool DispatchQueue::PromoteReadyDispatchersUnsafe(void) {
 }
 
 void DispatchQueue::DispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
+  // Decrement the count only after the thunk has exected and is deleted:
+  auto dec = MakeAtExit([&] { m_count--; });
+
   // Pull the ready thunk off of the front of the queue and pop it while we hold the lock.
   // Then, we will excecute the call while the lock has been released so we do not create
   // deadlocks.
   std::unique_ptr<DispatchThunkBase> thunk(m_pHead);
   m_pHead = thunk->m_pFlink;
   lk.unlock();
-
-  // Decrement the count only after the thunk is done:
-  auto dec = MakeAtExit([&] { m_count--; });
 
   if (thunk->m_pFlink)
     (*thunk)();
@@ -63,20 +63,31 @@ void DispatchQueue::DispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
 }
 
 void DispatchQueue::Abort(void) {
-  std::lock_guard<std::mutex> lk(m_dispatchLock);
-  m_aborted = true;
+  // Do not permit any more lambdas to be pended to our queue
+  DispatchThunkBase* pHead;
+  {
+    std::lock_guard<std::mutex> lk(m_dispatchLock);
+    m_aborted = true;
+    m_dispatchCap = 0;
+    pHead = m_pHead;
+    m_pHead = nullptr;
+    m_pTail = nullptr;
+  }
   
-  // Do not permit any more lambdas to be pended to our queue:
-  m_dispatchCap = 0;
-  
-  // Destroy the whole dispatch queue:
-  for (auto cur = m_pHead; cur;) {
+  // Destroy the whole dispatch queue.  Do so in an unsynchronized context in order to prevent
+  // reentrancy.
+  size_t nTraversed = 0;
+  for (auto cur = pHead; cur;) {
     auto next = cur->m_pFlink;
     delete cur;
     cur = next;
+    nTraversed++;
   }
-  m_pHead = nullptr;
   
+  // Decrement the count by the number of entries we actually traversed.  Abort may potentially
+  // be called from a lambda function, so assigning this value directly to zero would be an error.
+  m_count -= nTraversed;
+
   // Wake up anyone who is still waiting:
   m_queueUpdated.notify_all();
 }
@@ -261,7 +272,7 @@ void DispatchQueue::operator+=(DispatchThunkDelayed&& rhs) {
   std::lock_guard<std::mutex> lk(m_dispatchLock);
   
   m_delayedQueue.push(std::forward<DispatchThunkDelayed>(rhs));
-  if(m_delayedQueue.top().GetReadyTime() == rhs.GetReadyTime() && !m_pHead)
+  if(m_delayedQueue.top().GetReadyTime() == rhs.GetReadyTime() && !m_count)
     // We're becoming the new next-to-execute entity, dispatch queue currently empty, trigger wakeup
     // so our newly pended delay thunk is eventually processed.
     m_queueUpdated.notify_all();
