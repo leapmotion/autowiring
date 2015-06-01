@@ -2,7 +2,7 @@ var class_dispatch_queue =
 [
     [ "~DispatchQueue", "class_dispatch_queue.html#aa62c1140f05c7513bc80668aa724684c", null ],
     [ "Abort", "class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016", null ],
-    [ "AddExisting", "class_dispatch_queue.html#a1121ea959ace80dfcee8a26b44a2d376", null ],
+    [ "AddExisting", "class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0", null ],
     [ "AreAnyDispatchersReady", "class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc", null ],
     [ "Barrier", "class_dispatch_queue.html#a36dd84e1f8c210b971b9b08f89b8af10", null ],
     [ "Barrier", "class_dispatch_queue.html#a202af0ec4502042b5fb32c0dfc4cdfa8", null ],
@@ -15,7 +15,7 @@ var class_dispatch_queue =
     [ "operator+=", "class_dispatch_queue.html#a00e6065b7860a6bb075634a0fbbc7203", null ],
     [ "operator+=", "class_dispatch_queue.html#ada43ba9a08cec6888a103f94f6e2dabb", null ],
     [ "operator+=", "class_dispatch_queue.html#a8dfd34970fbfca53f0d3b10cbb9c433c", null ],
-    [ "Pend", "class_dispatch_queue.html#ad2e44d8531decda82fe874ef073d2d99", null ],
+    [ "PendExisting", "class_dispatch_queue.html#a6603bb739523587631367935af2aea36", null ],
     [ "PromoteReadyDispatchersUnsafe", "class_dispatch_queue.html#ad392c934d343fb56f8c233d2fbd6243b", null ],
     [ "SetDispatcherCap", "class_dispatch_queue.html#a6e455ffdaece9c129717211f13752fa3", null ],
     [ "SuggestSoonestWakeupTimeUnsafe", "class_dispatch_queue.html#a457e780c30d55fffc706892e1ebb160a", null ]

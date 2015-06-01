@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.2</span>
+   &#160;<span id="projectnumber">0.5.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -231,19 +231,25 @@ $(document).ready(function(){initNavTree('_context_enumerator_8h_source.html',''
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  <span class="comment">// Convenience routine for returning a single unique element</span></div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;  std::shared_ptr&lt;CoreContext&gt; unique(<span class="keywordtype">void</span>) {</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    <a class="code" href="class_context_enumerator_t_1_1iterator.html">iterator</a> q = begin();</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    <a class="code" href="class_context_enumerator_t_1_1iterator.html">iterator</a> r = q;</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    <span class="comment">// If advancing q gets us to the end, then we only have one element and we can return success</span></div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;    <span class="keywordflow">if</span> (++q == end())</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;      <span class="keywordflow">return</span> *r;</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    <span class="comment">// If there are no elements in this enumerator (indicated by begin() == end()), then throw an error,</span></div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    <span class="comment">// as this operation is undefined.</span></div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;    <span class="keywordflow">if</span> (q == end())</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;      <span class="keywordflow">throw</span> autowiring_error(<span class="stringliteral">&quot;Attempted to get a unique context on a context enumerator that enumerates no children&quot;</span>);</div>
 <div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <span class="keywordflow">throw</span> autowiring_error(<span class="stringliteral">&quot;Attempted to get a unique context on a context enumerator that enumerates more than one child&quot;</span>);</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;  }</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;  <span class="comment">// Standard STL duck interface methods:</span></div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;  iterator begin(<span class="keywordtype">void</span>) { <span class="keywordflow">return</span> iterator(m_root, m_root); };</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;  iterator end(<span class="keywordtype">void</span>) { <span class="keywordflow">return</span> iterator(m_root); }</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;};</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <a class="code" href="class_context_enumerator_t_1_1iterator.html">iterator</a> r = q;</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    <span class="comment">// If advancing q gets us to the end, then we only have one element and we can return success</span></div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    <span class="keywordflow">if</span> (++q == end())</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;      <span class="keywordflow">return</span> *r;</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    <span class="keywordflow">throw</span> autowiring_error(<span class="stringliteral">&quot;Attempted to get a unique context on a context enumerator that enumerates more than one child&quot;</span>);</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;  }</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;  <span class="comment">// Standard STL duck interface methods:</span></div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;  iterator begin(<span class="keywordtype">void</span>) { <span class="keywordflow">return</span> iterator(m_root, m_root); };</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  iterator end(<span class="keywordtype">void</span>) { <span class="keywordflow">return</span> iterator(m_root); }</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;};</div>
 <div class="ttc" id="autowiring__error_8h_html"><div class="ttname"><a href="autowiring__error_8h.html">autowiring_error.h</a></div></div>
 <div class="ttc" id="class_current_context_enumerator_html_aa7211789df7dcdb945539a8fa2b0d7a8"><div class="ttname"><a href="class_current_context_enumerator.html#aa7211789df7dcdb945539a8fa2b0d7a8">CurrentContextEnumerator::CurrentContextEnumerator</a></div><div class="ttdeci">CurrentContextEnumerator(void)</div><div class="ttdoc">Constructs an enumerator based on the current context </div></div>
 <div class="ttc" id="class_context_enumerator_html_a8b6236af393465180931ecab653eed7f"><div class="ttname"><a href="class_context_enumerator.html#a8b6236af393465180931ecab653eed7f">ContextEnumerator::ContextEnumerator</a></div><div class="ttdeci">ContextEnumerator(void)</div><div class="ttdoc">Constructs a context enumerator for the current context </div></div>
@@ -260,7 +266,7 @@ $(document).ready(function(){initNavTree('_context_enumerator_8h_source.html',''
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_context_enumerator_8h.html">ContextEnumerator.h</a></li>
-    <li class="footer">Generated on Thu Apr 23 2015 10:08:47 for Autowiring by
+    <li class="footer">Generated on Mon Jun 1 2015 11:36:06 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

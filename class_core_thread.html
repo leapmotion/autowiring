@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.2</span>
+   &#160;<span id="projectnumber">0.5.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -220,9 +220,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:a3193aa5422bf9e1aa80e1c1e9a913016 inherit pub_methods_class_dispatch_queue"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016">Abort</a> (void)</td></tr>
 <tr class="memdesc:a3193aa5422bf9e1aa80e1c1e9a913016 inherit pub_methods_class_dispatch_queue"><td class="mdescLeft">&#160;</td><td class="mdescRight">Causes the current dispatch queue to be dumped if it's non-empty  <a href="#a3193aa5422bf9e1aa80e1c1e9a913016">More...</a><br /></td></tr>
 <tr class="separator:a3193aa5422bf9e1aa80e1c1e9a913016 inherit pub_methods_class_dispatch_queue"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1121ea959ace80dfcee8a26b44a2d376 inherit pub_methods_class_dispatch_queue"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a1121ea959ace80dfcee8a26b44a2d376">AddExisting</a> (DispatchThunkBase *pBase)</td></tr>
-<tr class="memdesc:a1121ea959ace80dfcee8a26b44a2d376 inherit pub_methods_class_dispatch_queue"><td class="mdescLeft">&#160;</td><td class="mdescRight">Explicit overload for already-constructed dispatch thunk types  <a href="#a1121ea959ace80dfcee8a26b44a2d376">More...</a><br /></td></tr>
-<tr class="separator:a1121ea959ace80dfcee8a26b44a2d376 inherit pub_methods_class_dispatch_queue"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ecb6036d42a7b56e960713f4f9630a0 inherit pub_methods_class_dispatch_queue"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0">AddExisting</a> (std::unique_ptr&lt; DispatchThunkBase &gt; &amp;&amp;pBase)</td></tr>
+<tr class="memdesc:a1ecb6036d42a7b56e960713f4f9630a0 inherit pub_methods_class_dispatch_queue"><td class="mdescLeft">&#160;</td><td class="mdescRight">Explicit overload for already-constructed dispatch thunk types  <a href="#a1ecb6036d42a7b56e960713f4f9630a0">More...</a><br /></td></tr>
+<tr class="separator:a1ecb6036d42a7b56e960713f4f9630a0 inherit pub_methods_class_dispatch_queue"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ee3c640b1c46dc87157d7e1186db9bc inherit pub_methods_class_dispatch_queue"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ee3c640b1c46dc87157d7e1186db9bc"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc">AreAnyDispatchersReady</a> (void) const </td></tr>
 <tr class="memdesc:a9ee3c640b1c46dc87157d7e1186db9bc inherit pub_methods_class_dispatch_queue"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if there are curerntly any dispatchers ready for execution&ndash;IE, DispatchEvent would return true </dd></dl>
@@ -309,10 +309,9 @@ const std::shared_ptr&lt; CoreObject &gt; &amp;&#160;</td><td class="memItemRigh
 <tr class="memitem:a6c7d922485f14bdbb72559df2e009b40 inherit pro_methods_class_dispatch_queue"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">OnPended</a> (std::unique_lock&lt; std::mutex &gt; &amp;&amp;lk)</td></tr>
 <tr class="memdesc:a6c7d922485f14bdbb72559df2e009b40 inherit pro_methods_class_dispatch_queue"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility virtual, called whenever a new event is deferred  <a href="#a6c7d922485f14bdbb72559df2e009b40">More...</a><br /></td></tr>
 <tr class="separator:a6c7d922485f14bdbb72559df2e009b40 inherit pro_methods_class_dispatch_queue"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2e44d8531decda82fe874ef073d2d99 inherit pro_methods_class_dispatch_queue"><td class="memTemplParams" colspan="2">template&lt;class _Fx &gt; </td></tr>
-<tr class="memitem:ad2e44d8531decda82fe874ef073d2d99 inherit pro_methods_class_dispatch_queue"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#ad2e44d8531decda82fe874ef073d2d99">Pend</a> (_Fx &amp;&amp;fx)</td></tr>
-<tr class="memdesc:ad2e44d8531decda82fe874ef073d2d99 inherit pro_methods_class_dispatch_queue"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attaches an element to the end of the dispatch queue without any checks.  <a href="#ad2e44d8531decda82fe874ef073d2d99">More...</a><br /></td></tr>
-<tr class="separator:ad2e44d8531decda82fe874ef073d2d99 inherit pro_methods_class_dispatch_queue"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6603bb739523587631367935af2aea36 inherit pro_methods_class_dispatch_queue"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a6603bb739523587631367935af2aea36">PendExisting</a> (std::unique_lock&lt; std::mutex &gt; &amp;&amp;lk, DispatchThunkBase *thunk)</td></tr>
+<tr class="memdesc:a6603bb739523587631367935af2aea36 inherit pro_methods_class_dispatch_queue"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attaches an element to the end of the dispatch queue without any checks.  <a href="#a6603bb739523587631367935af2aea36">More...</a><br /></td></tr>
+<tr class="separator:a6603bb739523587631367935af2aea36 inherit pro_methods_class_dispatch_queue"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad392c934d343fb56f8c233d2fbd6243b inherit pro_methods_class_dispatch_queue"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#ad392c934d343fb56f8c233d2fbd6243b">PromoteReadyDispatchersUnsafe</a> (void)</td></tr>
 <tr class="memdesc:ad392c934d343fb56f8c233d2fbd6243b inherit pro_methods_class_dispatch_queue"><td class="mdescLeft">&#160;</td><td class="mdescRight">Moves all ready events from the delayed queue into the dispatch queue  <a href="#ad392c934d343fb56f8c233d2fbd6243b">More...</a><br /></td></tr>
 <tr class="separator:ad392c934d343fb56f8c233d2fbd6243b inherit pro_methods_class_dispatch_queue"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -521,7 +520,7 @@ Additional Inherited Members</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_core_thread.html">CoreThread</a></li>
-    <li class="footer">Generated on Thu Apr 23 2015 10:08:48 for Autowiring by
+    <li class="footer">Generated on Mon Jun 1 2015 11:36:07 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

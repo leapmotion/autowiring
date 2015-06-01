@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.2</span>
+   &#160;<span id="projectnumber">0.5.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -151,19 +151,19 @@ $(document).ready(function(){initNavTree('_basic_thread_8h_source.html','');});
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keyword">const</span> std::shared_ptr&lt;BasicThreadStateBlock&gt; m_state;</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="comment">// Flag indicating that this thread was started at some point</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordtype">bool</span> m_wasStarted;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordtype">bool</span> m_wasStarted = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  <span class="comment">// Flag indicating that we need to stop right now</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keywordtype">bool</span> m_stop;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keywordtype">bool</span> m_stop = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="comment">// Run condition:</span></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="keywordtype">bool</span> m_running;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="keywordtype">bool</span> m_running = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="comment">// Legacy field, some clients still refer to this</span></div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keywordtype">bool</span>&amp; DEPRECATED_MEMBER(m_completed, <span class="stringliteral">&quot;Use IsCompleted instead&quot;</span>);</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="comment">// The current thread priority</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <a class="code" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a> m_priority;</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <a class="code" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0e">ThreadPriority</a> m_priority = <a class="code" href="_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0ea7a1920d61156abc05a60135aefe8bc67">ThreadPriority::Default</a>;</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_basic_thread.html#aa6d8803cdc6ab28b1d79740b115487c5">SetCurrentThreadName</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span>;</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;</div>
@@ -276,7 +276,7 @@ $(document).ready(function(){initNavTree('_basic_thread_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_basic_thread_8h.html">BasicThread.h</a></li>
-    <li class="footer">Generated on Thu Apr 23 2015 10:08:47 for Autowiring by
+    <li class="footer">Generated on Mon Jun 1 2015 11:36:06 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

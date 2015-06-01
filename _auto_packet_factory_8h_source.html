@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.2</span>
+   &#160;<span id="projectnumber">0.5.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -150,9 +150,9 @@ $(document).ready(function(){initNavTree('_auto_packet_factory_8h_source.html','
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  t_autoFilterSet m_autoFilters;</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="comment">// Accumulators used to compute statistics about AutoPacket lifespan.</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="keywordtype">long</span> <span class="keywordtype">long</span> m_packetCount;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="keywordtype">double</span> m_packetDurationSum;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="keywordtype">double</span> m_packetDurationSqSum;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="keywordtype">long</span> <span class="keywordtype">long</span> m_packetCount = 0;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="keywordtype">double</span> m_packetDurationSum = 0.0;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="keywordtype">double</span> m_packetDurationSqSum = 0.0;</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  <span class="comment">// Returns the internal outstanding count, for use with AutoPacket</span></div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  std::shared_ptr&lt;void&gt; GetInternalOutstanding(<span class="keywordtype">void</span>);</div>
@@ -263,7 +263,7 @@ $(document).ready(function(){initNavTree('_auto_packet_factory_8h_source.html','
 <div class="ttc" id="class_auto_packet_factory_html_aac1b97303f4c049d1db42f2f91da70af"><div class="ttname"><a href="class_auto_packet_factory.html#aac1b97303f4c049d1db42f2f91da70af">AutoPacketFactory::RemoveSubscriber</a></div><div class="ttdeci">void RemoveSubscriber(const AutoFilterDescriptor &amp;autoFilter)</div><div class="ttdoc">Removes the designated AutoFilter from this factory </div></div>
 <div class="ttc" id="class_auto_packet_factory_html_adcff2e0a4fd863f3a618973c6c5d6b3f"><div class="ttname"><a href="class_auto_packet_factory.html#adcff2e0a4fd863f3a618973c6c5d6b3f">AutoPacketFactory::DoAdditionalWait</a></div><div class="ttdeci">void DoAdditionalWait(void) override</div><div class="ttdoc">Untimed variant of DoAdditionalWait </div></div>
 <div class="ttc" id="_core_runnable_8h_html"><div class="ttname"><a href="_core_runnable_8h.html">CoreRunnable.h</a></div><div class="ttdoc">Base class for autowiring classes that use threads. </div></div>
-<div class="ttc" id="class_dispatch_queue_html"><div class="ttname"><a href="class_dispatch_queue.html">DispatchQueue</a></div><div class="ttdoc">This is an asynchronous queue of zero-argument functions </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:19</div></div>
+<div class="ttc" id="class_dispatch_queue_html"><div class="ttname"><a href="class_dispatch_queue.html">DispatchQueue</a></div><div class="ttdoc">This is an asynchronous queue of zero-argument functions </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:20</div></div>
 <div class="ttc" id="class_auto_packet_factory_html_aa14ee291b0bdb1c8131f268c4a7265c0"><div class="ttname"><a href="class_auto_packet_factory.html#aa14ee291b0bdb1c8131f268c4a7265c0">AutoPacketFactory::GetMeanPacketLifetime</a></div><div class="ttdeci">double GetMeanPacketLifetime(void)</div><div class="ttdoc">Returns the mean lifespan of AutoPackets in nanoseconds since the last statistics reset...</div></div>
 <div class="ttc" id="class_auto_packet_factory_html_acdc9c322e9fe5257202c0d00b68a5059"><div class="ttname"><a href="class_auto_packet_factory.html#acdc9c322e9fe5257202c0d00b68a5059">AutoPacketFactory::GetOutstandingPacketCount</a></div><div class="ttdeci">size_t GetOutstandingPacketCount(void) const </div><div class="ttdoc">the number of outstanding AutoPackets</div></div>
 <div class="ttc" id="class_auto_packet_factory_html_ad98c3ea149c6c3edf0d2d647012d884f"><div class="ttname"><a href="class_auto_packet_factory.html#ad98c3ea149c6c3edf0d2d647012d884f">AutoPacketFactory::RecordPacketDuration</a></div><div class="ttdeci">void RecordPacketDuration(std::chrono::nanoseconds duration)</div><div class="ttdoc">Called by each AutoPacket&#39;s Finalize method to allow the factory to record statistics about packet li...</div></div>
@@ -273,7 +273,7 @@ $(document).ready(function(){initNavTree('_auto_packet_factory_8h_source.html','
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_auto_packet_factory_8h.html">AutoPacketFactory.h</a></li>
-    <li class="footer">Generated on Thu Apr 23 2015 10:08:47 for Autowiring by
+    <li class="footer">Generated on Mon Jun 1 2015 11:36:06 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

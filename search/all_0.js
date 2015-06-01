@@ -3,7 +3,7 @@ var searchData=
   ['abort',['Abort',['../class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016',1,'DispatchQueue']]],
   ['abovenormal',['AboveNormal',['../_basic_thread_8h.html#ac21de3041b361912460403d2649eaa0ea930ee274ea2e4d208702d4695b3ec0f4',1,'BasicThread.h']]],
   ['add',['Add',['../class_core_context.html#a274e47cff1ae841fe66e03a186d8eede',1,'CoreContext']]],
-  ['addexisting',['AddExisting',['../class_dispatch_queue.html#a1121ea959ace80dfcee8a26b44a2d376',1,'DispatchQueue']]],
+  ['addexisting',['AddExisting',['../class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0',1,'DispatchQueue']]],
   ['addrecipient',['AddRecipient',['../class_auto_packet.html#a125a001b0cfb8f5bfca5cac6b291e2a9',1,'AutoPacket']]],
   ['addsatcounter',['AddSatCounter',['../class_auto_packet.html#ae0f3ad679665c5013e8e9daa85909ab4',1,'AutoPacket']]],
   ['addsnooper',['AddSnooper',['../class_core_context.html#a7e0312724984a15bffd56019af5a2737',1,'CoreContext::AddSnooper(const CoreObjectDescriptor &amp;traits)'],['../class_core_context.html#a670aaca238bf0f7db59bcdb71f84ccd0',1,'CoreContext::AddSnooper(const std::shared_ptr&lt; T &gt; &amp;pSnooper)'],['../class_core_context.html#a01a34fcd446e51c5c006d9f3d46b4cc7',1,'CoreContext::AddSnooper(const Autowired&lt; T &gt; &amp;snooper)']]],

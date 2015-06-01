@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.2</span>
+   &#160;<span id="projectnumber">0.5.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -1100,7 +1100,7 @@ template&lt;class Fx &gt; </div>
 </div><div class="memdoc">
 
 <p>Performs a "satisfaction pulse", which will avoid notifying any deferred filters </p>
-<p>A satisfaction pulse will call any AutoFilter instances which are satisfied by the decoration of the passed decoration types. Such filters will be called even if some optional inputs remain outstanding. </p>
+<p>A satisfaction pulse will call any AutoFilter instances which are satisfied by the decoration of the passed decoration types. </p>
 
 <p>Referenced by <a class="el" href="class_auto_packet.html#ac016b40fd64cf3e9df03627de240448a">DecorateImmediate()</a>.</p>
 
@@ -1275,7 +1275,7 @@ template&lt;class T &gt; </div>
 </div><div class="memdoc">
 
 <p>Marks the named decoration as unsatisfiable </p>
-<p>Marking a decoration as unsatisfiable immediately causes any filters with an optional input on this type to be called, if the remainder of their inputs are available. </p>
+<p>Marking a decoration as unsatisfiable immediately causes any filters with an input of the form std::shared_ptr&lt;const T&gt; to be called, if the remainder of their inputs are available. </p>
 
 </div>
 </div>
@@ -1494,7 +1494,7 @@ template&lt;class... Args&gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_auto_packet.html">AutoPacket</a></li>
-    <li class="footer">Generated on Thu Apr 23 2015 10:08:48 for Autowiring by
+    <li class="footer">Generated on Mon Jun 1 2015 11:36:07 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

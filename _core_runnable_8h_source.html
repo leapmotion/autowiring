@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.2</span>
+   &#160;<span id="projectnumber">0.5.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -124,10 +124,10 @@ $(document).ready(function(){initNavTree('_core_runnable_8h_source.html','');});
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  </div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">private</span>:</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="comment">// Set to true if this runnable was ever signaled to start</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="keywordtype">bool</span> m_wasStarted;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="keywordtype">bool</span> m_wasStarted = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="comment">// Set to true if this runnable should terminate processing</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keywordtype">bool</span> m_shouldStop;</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keywordtype">bool</span> m_shouldStop = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  <span class="comment">// The outstanding count, held for as long as processing is underway</span></div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  std::shared_ptr&lt;CoreObject&gt; m_outstanding;</div>
@@ -183,7 +183,7 @@ $(document).ready(function(){initNavTree('_core_runnable_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_core_runnable_8h.html">CoreRunnable.h</a></li>
-    <li class="footer">Generated on Thu Apr 23 2015 10:08:47 for Autowiring by
+    <li class="footer">Generated on Mon Jun 1 2015 11:36:06 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

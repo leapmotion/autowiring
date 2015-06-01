@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.2</span>
+   &#160;<span id="projectnumber">0.5.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -138,9 +138,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a3193aa5422bf9e1aa80e1c1e9a913016"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016">Abort</a> (void)</td></tr>
 <tr class="memdesc:a3193aa5422bf9e1aa80e1c1e9a913016"><td class="mdescLeft">&#160;</td><td class="mdescRight">Causes the current dispatch queue to be dumped if it's non-empty  <a href="#a3193aa5422bf9e1aa80e1c1e9a913016">More...</a><br /></td></tr>
 <tr class="separator:a3193aa5422bf9e1aa80e1c1e9a913016"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1121ea959ace80dfcee8a26b44a2d376"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a1121ea959ace80dfcee8a26b44a2d376">AddExisting</a> (DispatchThunkBase *pBase)</td></tr>
-<tr class="memdesc:a1121ea959ace80dfcee8a26b44a2d376"><td class="mdescLeft">&#160;</td><td class="mdescRight">Explicit overload for already-constructed dispatch thunk types  <a href="#a1121ea959ace80dfcee8a26b44a2d376">More...</a><br /></td></tr>
-<tr class="separator:a1121ea959ace80dfcee8a26b44a2d376"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ecb6036d42a7b56e960713f4f9630a0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0">AddExisting</a> (std::unique_ptr&lt; DispatchThunkBase &gt; &amp;&amp;pBase)</td></tr>
+<tr class="memdesc:a1ecb6036d42a7b56e960713f4f9630a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Explicit overload for already-constructed dispatch thunk types  <a href="#a1ecb6036d42a7b56e960713f4f9630a0">More...</a><br /></td></tr>
+<tr class="separator:a1ecb6036d42a7b56e960713f4f9630a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ee3c640b1c46dc87157d7e1186db9bc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ee3c640b1c46dc87157d7e1186db9bc"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc">AreAnyDispatchersReady</a> (void) const </td></tr>
 <tr class="memdesc:a9ee3c640b1c46dc87157d7e1186db9bc"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if there are curerntly any dispatchers ready for execution&ndash;IE, DispatchEvent would return true </dd></dl>
@@ -189,10 +189,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a6c7d922485f14bdbb72559df2e009b40"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40">OnPended</a> (std::unique_lock&lt; std::mutex &gt; &amp;&amp;lk)</td></tr>
 <tr class="memdesc:a6c7d922485f14bdbb72559df2e009b40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility virtual, called whenever a new event is deferred  <a href="#a6c7d922485f14bdbb72559df2e009b40">More...</a><br /></td></tr>
 <tr class="separator:a6c7d922485f14bdbb72559df2e009b40"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2e44d8531decda82fe874ef073d2d99"><td class="memTemplParams" colspan="2">template&lt;class _Fx &gt; </td></tr>
-<tr class="memitem:ad2e44d8531decda82fe874ef073d2d99"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#ad2e44d8531decda82fe874ef073d2d99">Pend</a> (_Fx &amp;&amp;fx)</td></tr>
-<tr class="memdesc:ad2e44d8531decda82fe874ef073d2d99"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attaches an element to the end of the dispatch queue without any checks.  <a href="#ad2e44d8531decda82fe874ef073d2d99">More...</a><br /></td></tr>
-<tr class="separator:ad2e44d8531decda82fe874ef073d2d99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6603bb739523587631367935af2aea36"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a6603bb739523587631367935af2aea36">PendExisting</a> (std::unique_lock&lt; std::mutex &gt; &amp;&amp;lk, DispatchThunkBase *thunk)</td></tr>
+<tr class="memdesc:a6603bb739523587631367935af2aea36"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attaches an element to the end of the dispatch queue without any checks.  <a href="#a6603bb739523587631367935af2aea36">More...</a><br /></td></tr>
+<tr class="separator:a6603bb739523587631367935af2aea36"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad392c934d343fb56f8c233d2fbd6243b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#ad392c934d343fb56f8c233d2fbd6243b">PromoteReadyDispatchersUnsafe</a> (void)</td></tr>
 <tr class="memdesc:ad392c934d343fb56f8c233d2fbd6243b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Moves all ready events from the delayed queue into the dispatch queue  <a href="#ad392c934d343fb56f8c233d2fbd6243b">More...</a><br /></td></tr>
 <tr class="separator:ad392c934d343fb56f8c233d2fbd6243b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -253,18 +252,26 @@ Protected Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a1121ea959ace80dfcee8a26b44a2d376"></a>
+<a class="anchor" id="a1ecb6036d42a7b56e960713f4f9630a0"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">void DispatchQueue::AddExisting </td>
           <td>(</td>
-          <td class="paramtype">DispatchThunkBase *&#160;</td>
+          <td class="paramtype">std::unique_ptr&lt; DispatchThunkBase &gt; &amp;&amp;&#160;</td>
           <td class="paramname"><em>pBase</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Explicit overload for already-constructed dispatch thunk types </p>
@@ -293,7 +300,8 @@ Protected Member Functions</h2></td></tr>
   </dd>
 </dl>
 <p>This method does not cause any dispatchers to run. If the underlying dispatch queue does not have an event loop operating on it, this method will deadlock. It is an error for the party responsible for driving the dispatch queue via WaitForEvent or DispatchAllEvents unless that party first delegates the responsibility elsewhere.</p>
-<p>If <a class="el" href="class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016" title="Causes the current dispatch queue to be dumped if it&#39;s non-empty ">DispatchQueue::Abort()</a> is called before the dispatcher has been completed, this method will throw an exception. If a dispatcher on the underlying <a class="el" href="class_dispatch_queue.html" title="This is an asynchronous queue of zero-argument functions ">DispatchQueue</a> throws an exception, this method will also throw an exception. </p>
+<p>If <a class="el" href="class_dispatch_queue.html#a3193aa5422bf9e1aa80e1c1e9a913016" title="Causes the current dispatch queue to be dumped if it&#39;s non-empty ">DispatchQueue::Abort()</a> is called before the dispatcher has been completed, this method will throw an exception. If a dispatcher on the underlying <a class="el" href="class_dispatch_queue.html" title="This is an asynchronous queue of zero-argument functions ">DispatchQueue</a> throws an exception, this method will also throw an exception.</p>
+<p>If zero is passed as the timeout value, this method will return true if and only if the queue was empty at the time of the call, ignoring any delayed dispatchers. </p>
 
 </div>
 </div>
@@ -428,7 +436,7 @@ Protected Member Functions</h2></td></tr>
 <p>Utility virtual, called whenever a new event is deferred </p>
 <p>The recipient of this call will be running in an arbitrary thread context while holding the dispatch lock. The queue is guaranteed to contain at least one element, and may potentially contain more. The caller MUST NOT attempt to pend any more events during this call, or a deadlock could occur. </p>
 
-<p>Referenced by <a class="el" href="class_dispatch_queue.html#a8dfd34970fbfca53f0d3b10cbb9c433c">operator+=()</a>, and <a class="el" href="class_dispatch_queue.html#ad2e44d8531decda82fe874ef073d2d99">Pend()</a>.</p>
+<p>Referenced by <a class="el" href="class_dispatch_queue.html#a8dfd34970fbfca53f0d3b10cbb9c433c">operator+=()</a>.</p>
 
 </div>
 </div>
@@ -525,31 +533,41 @@ template&lt;class _Fx &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="ad2e44d8531decda82fe874ef073d2d99"></a>
+<a class="anchor" id="a6603bb739523587631367935af2aea36"></a>
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class _Fx &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void DispatchQueue::Pend </td>
+          <td class="memname">void DispatchQueue::PendExisting </td>
           <td>(</td>
-          <td class="paramtype">_Fx &amp;&amp;&#160;</td>
-          <td class="paramname"><em>fx</em></td><td>)</td>
+          <td class="paramtype">std::unique_lock&lt; std::mutex &gt; &amp;&amp;&#160;</td>
+          <td class="paramname"><em>lk</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">DispatchThunkBase *&#160;</td>
+          <td class="paramname"><em>thunk</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 <p>Attaches an element to the end of the dispatch queue without any checks. </p>
+
+<p>Referenced by <a class="el" href="class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0">AddExisting()</a>.</p>
 
 </div>
 </div>
@@ -636,7 +654,7 @@ template&lt;class _Fx &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_dispatch_queue.html">DispatchQueue</a></li>
-    <li class="footer">Generated on Thu Apr 23 2015 10:08:48 for Autowiring by
+    <li class="footer">Generated on Mon Jun 1 2015 11:36:07 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

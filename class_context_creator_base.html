@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.2</span>
+   &#160;<span id="projectnumber">0.5.3</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -188,7 +188,7 @@ template&lt;class Ctr , class Fx &gt; </div>
   </table>
   </dd>
 </dl>
-<p>This method is synchronized on the contextLock and this will generally make it thread-safe </p>
+<p>This method is synchronized on the contextLock and this will generally make it thread-safe. It will clear the local context list immediately, but it is not garunteed that the context list will be empty at the time of return. </p>
 
 <p>Referenced by <a class="el" href="class_context_creator.html#ac49c180a55cf83fa9f56ed1dcb7277a9">ContextCreator&lt; Sigil, Key &gt;::Clear()</a>, and <a class="el" href="class_context_creator_3_01_sigil_00_01void_01_4.html#ac9f9b4a38da139e3bc477046c3b2c7e1">ContextCreator&lt; Sigil, void &gt;::Clear()</a>.</p>
 
@@ -203,7 +203,7 @@ template&lt;class Ctr , class Fx &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_context_creator_base.html">ContextCreatorBase</a></li>
-    <li class="footer">Generated on Thu Apr 23 2015 10:08:48 for Autowiring by
+    <li class="footer">Generated on Mon Jun 1 2015 11:36:07 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>
