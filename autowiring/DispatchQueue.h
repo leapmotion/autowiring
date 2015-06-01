@@ -107,6 +107,11 @@ public:
   /// <returns>
   /// The total number of all ready and delayed events
   /// </returns>
+  /// <remarks>
+  /// This method will also count dispatchers that are presently underway or presently being deleted.  Thus, calling
+  /// this method from within a dispatcher, or from that dispatcher's destructor, should always return a size of at
+  /// least 1.
+  /// </remarks>
   size_t GetDispatchQueueLength(void) const {return m_count + m_delayedQueue.size();}
 
   /// <summary>
