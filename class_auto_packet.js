@@ -1,7 +1,7 @@
 var class_auto_packet =
 [
     [ "AddRecipient", "class_auto_packet.html#a125a001b0cfb8f5bfca5cac6b291e2a9", null ],
-    [ "AddSatCounter", "class_auto_packet.html#ae0f3ad679665c5013e8e9daa85909ab4", null ],
+    [ "AddSatCounterUnsafe", "class_auto_packet.html#a684e3e0747beb2f1d052e6e46f9da931", null ],
     [ "Decorate", "class_auto_packet.html#a58cab6182ed3149b78b023a303467d39", null ],
     [ "Decorate", "class_auto_packet.html#a828d9a72ac228f36087723cca4f93e13", null ],
     [ "Decorate", "class_auto_packet.html#a92d46044bc68b565aa3772c67d961dea", null ],

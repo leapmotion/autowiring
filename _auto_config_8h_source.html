@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.3</span>
+   &#160;<span id="projectnumber">0.5.4</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -137,141 +137,136 @@ $(document).ready(function(){initNavTree('_auto_config_8h_source.html','');});
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;      }</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    }</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    onChangedSignal(*<span class="keyword">this</span>);</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  }</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <a class="code" href="class_auto_config_var.html">AutoConfigVar</a>() :</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    AutoConfigVarBase(<span class="keyword">typeid</span>(ConfigTypeExtractor&lt;TKey...&gt;)),</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    m_value()</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  {</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="comment">// Register with config registry</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    (void)<a class="code" href="class_auto_config_var.html">AutoConfigVar&lt;T, TKey...&gt;::RegistryEntry</a>;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    </div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> ctxt = m_context.lock();</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keywordflow">if</span> (!ctxt)</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;      <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="comment">//This will wind up being recursive</span></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="keyword">auto</span> parent = ctxt-&gt;GetParentContext();</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keywordflow">if</span> (parent != <span class="keyword">nullptr</span>) {</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;      <span class="keyword">auto</span> parentVar = parent-&gt;template Inject&lt;<a class="code" href="class_auto_config_var.html">AutoConfigVar</a>&lt;T, TKey...&gt;&gt;();</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;      <span class="comment">//Only copy the value if it&#39;s initalized. Base::AutoInit will take care of</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;      <span class="comment">//the various listing notifications.</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;      <span class="keywordflow">if</span> (parentVar-&gt;IsConfigured()) {</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        m_isConfigured = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        m_value = parentVar-&gt;m_value;</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;      }</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;      m_parentRegistration = *parentVar += [<span class="keyword">this</span>](<span class="keyword">const</span> T&amp; val){</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        RunValidation(val);</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        SetInternal(val);</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;      };</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    }</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  }</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keyword">operator</span> <span class="keyword">const</span> T&amp;() <span class="keyword">const</span> { <span class="keywordflow">return</span> m_value; }</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <span class="keyword">const</span> T* operator-&gt;()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> &amp;m_value; }</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  <span class="keywordtype">void</span> operator=(<span class="keyword">const</span> T&amp; newValue) {</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    RunValidation(newValue);</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordflow">if</span> (m_parentRegistration) {</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;      <span class="keyword">auto</span> parent_ctxt = m_context.lock()-&gt;GetParentContext();</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;      <a class="code" href="class_autowired_fast.html">AutowiredFast</a>&lt;<a class="code" href="class_auto_config_var.html">AutoConfigVar</a>&lt;T, TKey...&gt;&gt; parentVar(parent_ctxt);</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;      *parentVar -= m_parentRegistration;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;      m_parentRegistration = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;      OnSetLocally();</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    }</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    SetInternal(newValue);</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  }</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="keywordtype">void</span> Get(<span class="keywordtype">void</span>* pValue)<span class="keyword"> const override </span>{ *<span class="keyword">reinterpret_cast&lt;</span>T*<span class="keyword">&gt;</span>(pValue) = m_value; }</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keywordtype">void</span> Set(<span class="keyword">const</span> <span class="keywordtype">void</span>* pValue)<span class="keyword"> override </span>{ *<span class="keyword">this</span> = *<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>T*<span class="keyword">&gt;</span>(pValue); }</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  }</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <a class="code" href="class_auto_config_var.html">AutoConfigVar</a>() :</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    AutoConfigVarBase(<span class="keyword">typeid</span>(ConfigTypeExtractor&lt;TKey...&gt;)),</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    m_value()</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  {</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    <span class="comment">// Register with config registry</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    (void)<a class="code" href="class_auto_config_var.html">AutoConfigVar&lt;T, TKey...&gt;::RegistryEntry</a>;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    </div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> ctxt = m_context.lock();</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keywordflow">if</span> (!ctxt)</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;      <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <span class="comment">//This will wind up being recursive</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keyword">auto</span> parent = ctxt-&gt;GetParentContext();</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="keywordflow">if</span> (parent != <span class="keyword">nullptr</span>) {</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;      <span class="keyword">auto</span> parentVar = parent-&gt;template Inject&lt;<a class="code" href="class_auto_config_var.html">AutoConfigVar</a>&lt;T, TKey...&gt;&gt;();</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;      <span class="comment">//Only copy the value if it&#39;s initalized. Base::AutoInit will take care of</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;      <span class="comment">//the various listing notifications.</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;      <span class="keywordflow">if</span> (parentVar-&gt;IsConfigured()) {</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        m_isConfigured = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        m_value = parentVar-&gt;m_value;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;      }</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;      m_parentRegistration = *parentVar += [<span class="keyword">this</span>](<span class="keyword">const</span> T&amp; val){</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        RunValidation(val);</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        SetInternal(val);</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;      };</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    }</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  }</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  </div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="keyword">operator</span> <span class="keyword">const</span> T&amp;() <span class="keyword">const</span> { <span class="keywordflow">return</span> m_value; }</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keyword">const</span> T* operator-&gt;()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> &amp;m_value; }</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keywordtype">void</span> operator=(<span class="keyword">const</span> T&amp; newValue) {</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    RunValidation(newValue);</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordflow">if</span> (m_parentRegistration) {</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;      m_parentRegistration.reset();</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;      OnSetLocally();</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    }</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    SetInternal(newValue);</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  }</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="keywordtype">void</span> Get(<span class="keywordtype">void</span>* pValue)<span class="keyword"> const override </span>{ *<span class="keyword">reinterpret_cast&lt;</span>T*<span class="keyword">&gt;</span>(pValue) = m_value; }</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="keywordtype">void</span> Set(<span class="keyword">const</span> <span class="keywordtype">void</span>* pValue)<span class="keyword"> override </span>{ *<span class="keyword">this</span> = *<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>T*<span class="keyword">&gt;</span>(pValue); }</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  <span class="keywordtype">void</span> SetParsed(<span class="keyword">const</span> std::string&amp; value)<span class="keyword"> override </span>{ </div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    *<span class="keyword">this</span> = RegistryEntry.template parseInternal&lt;T&gt;(value);</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  }</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="keywordtype">void</span> SetParsed(<span class="keyword">const</span> std::string&amp; value)<span class="keyword"> override </span>{ </div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    *<span class="keyword">this</span> = RegistryEntry.template parseInternal&lt;T&gt;(value);</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  }</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  <span class="comment">// Add a callback for when this config value changes</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  t_OnChangedSignal::registration_t* operator+=(std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> T&amp;)&gt;&amp;&amp; fx) {</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keywordflow">return</span> onChangedSignal += [fx](<span class="keyword">const</span> AutoConfigVarBase&amp; var){</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;      fx(<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span><a class="code" href="class_auto_config_var.html">AutoConfigVar</a>&lt;T,TKey...<span class="keyword">&gt;</span>*&gt;(&amp;var)-&gt;m_value);</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    };</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  }</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="keywordtype">void</span> operator-=(t_OnChangedSignal::registration_t* node) { onChangedSignal -= node; }</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  T m_value;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  <span class="keywordtype">void</span> RunValidation(<span class="keyword">const</span> T&amp; val) {</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="keywordflow">if</span> (RegistryEntry.m_hasValidator) {</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;      <span class="keywordflow">if</span> (!RegistryEntry.validatorInternal()(val)) {</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;        <span class="keywordflow">throw</span> autowiring_error(<span class="stringliteral">&quot;Validator rejected set for config value&quot;</span>);</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;      }</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    }</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  }</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  <span class="keywordtype">void</span> SetInternal(<span class="keyword">const</span> T&amp; val) {</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    m_isConfigured = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    m_value = val;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    onChangedSignal(*<span class="keyword">this</span>);</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  }</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  <span class="keyword">static</span> std::shared_ptr&lt;AutoConfigVarBase&gt; Inject(<span class="keyword">const</span> std::shared_ptr&lt;CoreContext&gt;&amp; ctxt, <span class="keyword">const</span> <span class="keywordtype">void</span>* value) {</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    <span class="keywordflow">if</span> (!value)</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;      <span class="keywordflow">return</span> ctxt-&gt;Inject&lt;<a class="code" href="class_auto_config_var.html">AutoConfigVar</a>&lt;T, TKey...&gt;&gt;();</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;      <span class="keywordflow">return</span> ctxt-&gt;Inject&lt;<a class="code" href="class_auto_config_var.html">AutoConfigVar</a>&lt;T, TKey...&gt;&gt;(*<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>T*<span class="keyword">&gt;</span>(value));</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  }</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> ConfigRegistryEntryT&lt;T, TKey...&gt; RegistryEntry;</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;};</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="comment">// Add a callback for when this config value changes</span></div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  autowiring::registration_t operator+=(std::function&lt;<span class="keywordtype">void</span>(<span class="keyword">const</span> T&amp;)&gt;&amp;&amp; fx) {</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <span class="keywordflow">return</span> onChangedSignal += [fx](<span class="keyword">const</span> AutoConfigVarBase&amp; var){</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;      fx(<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span><a class="code" href="class_auto_config_var.html">AutoConfigVar</a>&lt;T,TKey...<span class="keyword">&gt;</span>*&gt;(&amp;var)-&gt;m_value);</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    };</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  }</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  <span class="keywordtype">void</span> operator-=(autowiring::registration_t node) { onChangedSignal -= node; }</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  T m_value;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  <span class="keywordtype">void</span> RunValidation(<span class="keyword">const</span> T&amp; val) {</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordflow">if</span> (RegistryEntry.m_hasValidator) {</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;      <span class="keywordflow">if</span> (!RegistryEntry.validatorInternal()(val)) {</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;        <span class="keywordflow">throw</span> autowiring_error(<span class="stringliteral">&quot;Validator rejected set for config value&quot;</span>);</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;      }</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    }</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  }</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  <span class="keywordtype">void</span> SetInternal(<span class="keyword">const</span> T&amp; val) {</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    m_isConfigured = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    m_value = val;</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    onChangedSignal(*<span class="keyword">this</span>);</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  }</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  <span class="keyword">static</span> std::shared_ptr&lt;AutoConfigVarBase&gt; Inject(<span class="keyword">const</span> std::shared_ptr&lt;CoreContext&gt;&amp; ctxt, <span class="keyword">const</span> <span class="keywordtype">void</span>* value) {</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keywordflow">if</span> (!value)</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;      <span class="keywordflow">return</span> ctxt-&gt;Inject&lt;<a class="code" href="class_auto_config_var.html">AutoConfigVar</a>&lt;T, TKey...&gt;&gt;();</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      <span class="keywordflow">return</span> ctxt-&gt;Inject&lt;<a class="code" href="class_auto_config_var.html">AutoConfigVar</a>&lt;T, TKey...&gt;&gt;(*<span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>T*<span class="keyword">&gt;</span>(value));</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  }</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> ConfigRegistryEntryT&lt;T, TKey...&gt; RegistryEntry;</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;};</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class </span>T, <span class="keyword">class</span>... TKey&gt;</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;<span class="keyword">const</span> ConfigRegistryEntryT&lt;T, TKey...&gt; <a class="code" href="class_auto_config_var.html">AutoConfigVar&lt;T, TKey...&gt;::RegistryEntry</a>(&amp;<a class="code" href="class_auto_config_var.html">AutoConfigVar&lt;T, TKey...&gt;::Inject</a>);</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;</div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class </span>T, <span class="keyword">class</span>... TKey&gt;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="keyword">const</span> ConfigRegistryEntryT&lt;T, TKey...&gt; <a class="code" href="class_auto_config_var.html">AutoConfigVar&lt;T, TKey...&gt;::RegistryEntry</a>(&amp;<a class="code" href="class_auto_config_var.html">AutoConfigVar&lt;T, TKey...&gt;::Inject</a>);</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class </span>T, <span class="keyword">class</span>... TKeys&gt;</div>
-<div class="line"><a name="l00150"></a><span class="lineno"><a class="line" href="class_auto_config.html">  150</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_auto_config.html">AutoConfig</a> : <span class="keyword">public</span> <a class="code" href="class_auto_required.html">AutoRequired</a>&lt;AutoConfigVar&lt;T, TKeys...&gt;&gt; {</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  <span class="keyword">typedef</span> <a class="code" href="class_auto_config_var.html">AutoConfigVar</a>&lt;T, TKeys...&gt; <a class="code" href="class_auto_config_var.html">t_Var</a>;</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;  <span class="keyword">using</span> <a class="code" href="class_auto_required.html">AutoRequired&lt;t_Var&gt;::operator</a>*;</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  <a class="code" href="class_auto_config.html">AutoConfig</a>(<span class="keyword">const</span> std::shared_ptr&lt;CoreContext&gt;&amp; ctxt = <a class="code" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a>()) :</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    <a class="code" href="class_auto_required.html">AutoRequired&lt;t_Var&gt;</a>(ctxt)</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;  {</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;  }</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;  <a class="code" href="class_auto_config.html">AutoConfig</a>(T&amp;&amp; initialValue, <span class="keyword">const</span> std::shared_ptr&lt;CoreContext&gt;&amp; ctxt = <a class="code" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a>()) :</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    <a class="code" href="class_auto_required.html">AutoRequired&lt;t_Var&gt;</a>(ctxt, std::move(initialValue))</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;  {</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;    <span class="keywordflow">if</span> (!(*this)-&gt;IsLocal()) {</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;      **<span class="keyword">this</span> = std::move(initialValue);</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    }</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;  }</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> t_Arg, <span class="keyword">typename</span> ...t_Args&gt;</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  <span class="keyword">explicit</span> <a class="code" href="class_auto_config.html">AutoConfig</a>(t_Arg&amp;&amp; arg, t_Args&amp;&amp;... args) :</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    <a class="code" href="class_auto_required.html">AutoRequired&lt;t_Var&gt;</a>(<a class="code" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a>(), std::forward&lt;t_Arg&gt;(arg), std::forward&lt;t_Args&gt;(args)...)</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;  {</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;    <span class="comment">//If we wind up being a reference to an existing value, we may still want to set it...</span></div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;    <span class="keywordflow">if</span> (!(*this)-&gt;IsLocal()) {</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;      **<span class="keyword">this</span> = T(std::forward&lt;t_Arg&gt;(arg), std::forward&lt;t_Args&gt;(args)...);</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;    }</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  }</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  </div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;};</div>
-<div class="ttc" id="class_auto_config_html"><div class="ttname"><a href="class_auto_config.html">AutoConfig</a></div><div class="ttdoc">Register an attribute with the AutoConfig system. For example </div><div class="ttdef"><b>Definition:</b> AutoConfig.h:150</div></div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class </span>T, <span class="keyword">class</span>... TKeys&gt;</div>
+<div class="line"><a name="l00146"></a><span class="lineno"><a class="line" href="class_auto_config.html">  146</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_auto_config.html">AutoConfig</a> : <span class="keyword">public</span> <a class="code" href="class_auto_required.html">AutoRequired</a>&lt;AutoConfigVar&lt;T, TKeys...&gt;&gt; {</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;  <span class="keyword">typedef</span> <a class="code" href="class_auto_config_var.html">AutoConfigVar</a>&lt;T, TKeys...&gt; <a class="code" href="class_auto_config_var.html">t_Var</a>;</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  <span class="keyword">using</span> <a class="code" href="class_auto_required.html">AutoRequired&lt;t_Var&gt;::operator</a>*;</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;  <a class="code" href="class_auto_config.html">AutoConfig</a>(<span class="keyword">const</span> std::shared_ptr&lt;CoreContext&gt;&amp; ctxt = <a class="code" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a>()) :</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    <a class="code" href="class_auto_required.html">AutoRequired&lt;t_Var&gt;</a>(ctxt)</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;  {</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  }</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;  <a class="code" href="class_auto_config.html">AutoConfig</a>(T&amp;&amp; initialValue, <span class="keyword">const</span> std::shared_ptr&lt;CoreContext&gt;&amp; ctxt = <a class="code" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a>()) :</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    <a class="code" href="class_auto_required.html">AutoRequired&lt;t_Var&gt;</a>(ctxt, std::move(initialValue))</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;  {</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keywordflow">if</span> (!(*this)-&gt;IsLocal()) {</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;      **<span class="keyword">this</span> = std::move(initialValue);</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    }</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;  }</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> t_Arg, <span class="keyword">typename</span> ...t_Args&gt;</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;  <span class="keyword">explicit</span> <a class="code" href="class_auto_config.html">AutoConfig</a>(t_Arg&amp;&amp; arg, t_Args&amp;&amp;... args) :</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    <a class="code" href="class_auto_required.html">AutoRequired&lt;t_Var&gt;</a>(<a class="code" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a>(), std::forward&lt;t_Arg&gt;(arg), std::forward&lt;t_Args&gt;(args)...)</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;  {</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;    <span class="comment">//If we wind up being a reference to an existing value, we may still want to set it...</span></div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    <span class="keywordflow">if</span> (!(*this)-&gt;IsLocal()) {</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;      **<span class="keyword">this</span> = T(std::forward&lt;t_Arg&gt;(arg), std::forward&lt;t_Args&gt;(args)...);</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;    }</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;  }</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;  </div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;};</div>
+<div class="ttc" id="class_auto_config_html"><div class="ttname"><a href="class_auto_config.html">AutoConfig</a></div><div class="ttdoc">Register an attribute with the AutoConfig system. For example </div><div class="ttdef"><b>Definition:</b> AutoConfig.h:146</div></div>
 <div class="ttc" id="_autowired_8h_html"><div class="ttname"><a href="_autowired_8h.html">Autowired.h</a></div><div class="ttdoc">Autowiring definitions. </div></div>
-<div class="ttc" id="class_autowired_fast_html"><div class="ttname"><a href="class_autowired_fast.html">AutowiredFast</a></div><div class="ttdoc">Autowires a slot immediately (with limitations). </div><div class="ttdef"><b>Definition:</b> Autowired.h:368</div></div>
-<div class="ttc" id="class_auto_required_html"><div class="ttname"><a href="class_auto_required.html">AutoRequired</a></div><div class="ttdoc">Autowires the specified dependency, creating a new instance if one does not already exist...</div><div class="ttdef"><b>Definition:</b> Autowired.h:297</div></div>
+<div class="ttc" id="class_auto_required_html"><div class="ttname"><a href="class_auto_required.html">AutoRequired</a></div><div class="ttdoc">Autowires the specified dependency, creating a new instance if one does not already exist...</div><div class="ttdef"><b>Definition:</b> Autowired.h:272</div></div>
 <div class="ttc" id="class_core_context_html_a3f8e26f6c2f8e94bdff0f2e2870b6836"><div class="ttname"><a href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a></div><div class="ttdeci">static std::shared_ptr&lt; CoreContext &gt; CurrentContext(void)</div><div class="ttdoc">The shared pointer to the current context. </div></div>
 <div class="ttc" id="class_auto_config_var_html"><div class="ttname"><a href="class_auto_config_var.html">AutoConfigVar</a></div><div class="ttdoc">The type underlying the AutoConfig System. Represents a unique type created by the combination of the...</div><div class="ttdef"><b>Definition:</b> AutoConfig.h:16</div></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -280,7 +275,7 @@ $(document).ready(function(){initNavTree('_auto_config_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_auto_config_8h.html">AutoConfig.h</a></li>
-    <li class="footer">Generated on Mon Jun 1 2015 11:36:06 for Autowiring by
+    <li class="footer">Generated on Mon Jun 1 2015 14:37:44 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

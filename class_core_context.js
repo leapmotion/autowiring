@@ -48,7 +48,6 @@ var class_core_context =
     [ "NextSibling", "class_core_context.html#ad571b7a096111d87c37e826546f875ea", null ],
     [ "NotifyWhenAutowired", "class_core_context.html#af5920389c012b628511fe22dfb1dadb4", null ],
     [ "RegisterFactoryFn", "class_core_context.html#a543d73b7ea7d1a457eb61dc73758a797", null ],
-    [ "RelayForType", "class_core_context.html#a2675f3769d6a151972dec3743b196682", null ],
     [ "RemoveSnooper", "class_core_context.html#a9dc0d1a9db98765d26bb89cab5bb4f90", null ],
     [ "RemoveSnooper", "class_core_context.html#a1a7dd841f71c271a2f61b0a698011f29", null ],
     [ "RemoveSnooper", "class_core_context.html#a9dc0620a27181c14654da12561c1cead", null ],

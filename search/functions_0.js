@@ -4,7 +4,7 @@ var searchData=
   ['add',['Add',['../class_core_context.html#a274e47cff1ae841fe66e03a186d8eede',1,'CoreContext']]],
   ['addexisting',['AddExisting',['../class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0',1,'DispatchQueue']]],
   ['addrecipient',['AddRecipient',['../class_auto_packet.html#a125a001b0cfb8f5bfca5cac6b291e2a9',1,'AutoPacket']]],
-  ['addsatcounter',['AddSatCounter',['../class_auto_packet.html#ae0f3ad679665c5013e8e9daa85909ab4',1,'AutoPacket']]],
+  ['addsatcounterunsafe',['AddSatCounterUnsafe',['../class_auto_packet.html#a684e3e0747beb2f1d052e6e46f9da931',1,'AutoPacket']]],
   ['addsnooper',['AddSnooper',['../class_core_context.html#a7e0312724984a15bffd56019af5a2737',1,'CoreContext::AddSnooper(const CoreObjectDescriptor &amp;traits)'],['../class_core_context.html#a670aaca238bf0f7db59bcdb71f84ccd0',1,'CoreContext::AddSnooper(const std::shared_ptr&lt; T &gt; &amp;pSnooper)'],['../class_core_context.html#a01a34fcd446e51c5c006d9f3d46b4cc7',1,'CoreContext::AddSnooper(const Autowired&lt; T &gt; &amp;snooper)']]],
   ['addsubscriber',['AddSubscriber',['../class_auto_packet_factory.html#a05848286dfbd933b4e8538c4bf352513',1,'AutoPacketFactory::AddSubscriber(const AutoFilterDescriptor &amp;rhs)'],['../class_auto_packet_factory.html#a30ca1621713ee8d6561a8832542bcad6',1,'AutoPacketFactory::AddSubscriber(const std::shared_ptr&lt; T &gt; &amp;rhs)']]],
   ['addteardownlistener',['AddTeardownListener',['../class_basic_thread.html#a6274398126caa21fe3d9e37a46360ca7',1,'BasicThread::AddTeardownListener()'],['../class_core_context.html#a7447775cbe9d10c8018c0b7344a1fdc2',1,'CoreContext::AddTeardownListener()']]],
