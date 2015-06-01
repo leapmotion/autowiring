@@ -75,7 +75,7 @@ DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& 
   return dec;
 }
 
-void AutoPacket::AddSatCounter(SatCounter& satCounter) {
+void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
     DecorationKey key(*pCur->ti, pCur->is_shared, pCur->tshift);
     DecorationDisposition& entry = m_decorations[key];
@@ -375,7 +375,7 @@ const SatCounter* AutoPacket::AddRecipient(const AutoFilterDescriptor& descripto
     m_firstCounter = &sat;
 
     // Update satisfaction & Append types from subscriber
-    AddSatCounter(sat);
+    AddSatCounterUnsafe(sat);
   }
 
   if (!sat.remaining)
