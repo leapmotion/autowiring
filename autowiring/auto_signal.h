@@ -170,7 +170,7 @@ namespace autowiring {
       auto iter = m_listeners.begin();
       while (iter != m_listeners.end()) {
         auto callee = iter;
-        std::lock_guard<std::mutex>(m_lock), ++iter;
+        (std::lock_guard<std::mutex>)m_lock, ++iter;
         (**callee)(args...);
       }
     }
