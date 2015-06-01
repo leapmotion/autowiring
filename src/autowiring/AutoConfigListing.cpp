@@ -93,7 +93,7 @@ void AutoConfigListing::AddOnChanged(const std::string& key, std::function<void(
   (*config).onChangedSignal += std::move(fx);
 }
 
-AutoConfigListing::onAddSignal_t::registration_t* AutoConfigListing::AddCallback(onAddSignal_t::function_t&& fx) {
+autowiring::registration_t AutoConfigListing::AddCallback(std::function<void(const AutoConfigVarBase&)>&& fx) {
   std::lock_guard<std::mutex> lk(m_lock);
 
   for (auto& key : m_orderedKeys) {

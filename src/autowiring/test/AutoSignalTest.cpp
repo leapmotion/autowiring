@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include <autowiring/autowiring.h>
 
+using namespace autowiring;
+
 class AutoSignalTest:
   public testing::Test
 {};
@@ -18,7 +20,7 @@ TEST_F(AutoSignalTest, SimpleSignalTest) {
   int val = 0;
 
   // Register a handler directly on the signal:
-  auto* registration =
+  auto registration =
     signal += [&](int v) {
       handler_called = true;
       val = v;
@@ -39,6 +41,7 @@ TEST_F(AutoSignalTest, SimpleSignalTest) {
 
 TEST_F(AutoSignalTest, SignalWithAutowiring) {
   bool handler_called = false;
+  bool handler2_called = false;
   int val = 202;
 
   {
@@ -53,11 +56,16 @@ TEST_F(AutoSignalTest, SignalWithAutowiring) {
     // Inject type type after the signal has been registered
     AutoRequired<RaisesASignal>();
 
+    ras(&RaisesASignal::signal) += [&](int v) {
+      handler2_called = true;
+    };
+
     // Now raise the signal, see what happens:
     ras->signal(55);
 
     // Verify that the handler got called with the correct value:
     ASSERT_TRUE(handler_called) << "Signal handler was not invoked";
+    ASSERT_TRUE(handler2_called) << "Second Signal handler was not invoked";
     ASSERT_EQ(55, val) << "Signal handler not called with the correct parameter as expected";
   }
 
@@ -71,6 +79,43 @@ TEST_F(AutoSignalTest, SignalWithAutowiring) {
 struct RaisesASignalDerived : public RaisesASignal {
 
 };
+
+TEST_F(AutoSignalTest, SignalWithAutowiringDerived) {
+  bool handler_called = false;
+  bool wired = false;
+  int val = 202;
+
+  {
+    Autowired<RaisesASignal> ras;
+
+    // Register a signal handler on the base type
+    ras(&RaisesASignal::signal) += [&](int v) {
+      handler_called = true;
+      val = v;
+    };
+
+    ras.NotifyWhenAutowired([&]() {
+      wired = true;
+    });
+
+    // Inject derived type type after the signal has been registered
+    AutoRequired<RaisesASignalDerived> derived;
+
+    // Now raise the signal on the derived object and see what happens:
+    derived->signal(55);
+
+    // Verify that the handler got called with the correct value:
+    ASSERT_TRUE(wired) << "Signal handler was not autowired";
+    ASSERT_TRUE(handler_called) << "Signal handler was not invoked";
+    ASSERT_EQ(55, val) << "Signal handler not called with the correct parameter as expected";
+  }
+
+  // Raise the signal again, this should not cause anything to break:
+  Autowired<RaisesASignal> ras;
+  handler_called = false;
+  ras->signal(99);
+  ASSERT_FALSE(handler_called) << "A handler was unexpectedly called after it should have been destroyed";
+}
 
 struct ContainsRaises {
   ContainsRaises() : count(0) {
@@ -97,9 +142,7 @@ TEST_F(AutoSignalTest, ConstructorAutowiredRegistration) {
     CurrentContextPusher pshr(ctxt);
     (void)pshr;
     {
-      AutoRequired<ContainsRaises> cRas;
 
-      //Autowired<RaisesASignal> ras;
       Autowired<RaisesASignalDerived> rasDerived;
 
       // Register a signal handler:
@@ -107,6 +150,8 @@ TEST_F(AutoSignalTest, ConstructorAutowiredRegistration) {
         handler_called = true;
         val = v;
       };
+
+      AutoRequired<ContainsRaises> cRas;
 
       // Inject type type after the signal has been registered
       AutoRequired<RaisesASignalDerived>();
@@ -116,6 +161,7 @@ TEST_F(AutoSignalTest, ConstructorAutowiredRegistration) {
 
       // Verify that the handler got called with the correct value:
       ASSERT_TRUE(handler_called) << "Signal handler was not invoked";
+      ASSERT_TRUE(cRas->count > 0) << "Signal hander in object constructor was not invoked";
       ASSERT_EQ(55, val) << "Signal handler not called with the correct parameter as expected";
     }
 
@@ -133,10 +179,10 @@ TEST_F(AutoSignalTest, MultipleSlotsTest) {
   bool handler_called1 = false;
   bool handler_called2 = false;
   
-  auto* registration1 =
-  signal += [&] {
-    handler_called1 = true;
-  };
+  auto registration1 =
+    signal += [&] {
+      handler_called1 = true;
+    };
   
   // Registration 2
   signal += [&] {
@@ -189,13 +235,12 @@ TEST_F(AutoSignalTest, NodeRemoval) {
   bool handler_called1 = false;
   bool handler_called2 = false;
 
-  auto* registration1 = signal1 += [&] { handler_called1 = true; };
-  auto* registration2 = signal2 += [&] { handler_called2 = true; };
+  auto registration1 = signal1 += [&] { handler_called1 = true; };
+  auto registration2 = signal2 += [&] { handler_called2 = true; };
   
   ASSERT_ANY_THROW(signal1 -= registration2) << "Removing a registration from a different signal than it was registered to failed to throw an exception";
 
-  registration1->remove();
-  delete registration1;
+  registration1.reset();
   signal1();
   signal2();
   
@@ -209,31 +254,13 @@ TEST_F(AutoSignalTest, CallOrdering) {
   bool handler_called1 = false;
   bool handler_called2 = false;
 
-  //handlers are inserted at the begining, so this will be called last.
+  //handlers are inserted at the end, so this will be called first.
+  signal1 += [&] { handler_called1 = true; };
+
   signal1 += [&] {
-    ASSERT_TRUE(handler_called2);
-    handler_called1 = true;
+    ASSERT_TRUE(handler_called1) << "Handler1 was not called before handler2";
+    handler_called2 = true;
   };
-  signal1 += [&] { handler_called2 = true; };
-
-  signal1();
-
-  ASSERT_TRUE(handler_called1) << "Handler1 was called after being unregistered";
-  ASSERT_TRUE(handler_called2) << "Handler2 was removed after an invalid -= operation";
-}
-
-TEST_F(AutoSignalTest, CallInsertion) {
-  autowiring::signal<void(void)> signal1;
-
-  bool handler_called1 = false;
-  bool handler_called2 = false;
-
-  auto* registration1 = signal1 += [&](void) { handler_called1 = true; };
-
-  //when += to a registration object, the new one is appended.
-  *registration1 += [&](void) {
-    ASSERT_TRUE(handler_called1);
-    handler_called2 = true; };
 
   signal1();
 
@@ -249,10 +276,10 @@ TEST_F(AutoSignalTest, SelfReferencingCall) {
   int magic_number = 123;
 
   //The main test is just if this thing will compile
-  signal_t::registration_t* registration1 =
-    signal1 += [&](autowiring::internal::signal_node_base* reg, int magic) {
+  registration_t registration1 =
+    signal1 += [&](registration_t* reg, int magic) {
       ASSERT_EQ(magic, magic_number);
-      ASSERT_EQ(registration1, reg);
+      ASSERT_EQ(registration1, *reg);
       handler_called1 = true;
     };
 
@@ -271,29 +298,30 @@ TEST_F(AutoSignalTest, SelfModifyingCall) {
   
   int magic_number = 123;
   
-  signal_t::registration_t* registration1 =
-  signal1 += [&](autowiring::internal::signal_node_base* reg, int magic) {
-    ASSERT_EQ(magic, magic_number);
-    ASSERT_EQ(registration1, reg);
-    ++handler_called1;
-    delete reg->remove();
-  };
+  registration_t registration1 =
+    signal1 += [&](registration_t* reg, int magic) {
+      ASSERT_EQ(magic, magic_number);
+      ASSERT_EQ(registration1, *reg);
+      ++handler_called1;
+      reg->reset();
+    };
   
   auto lambda3 = [&](int magic) {
     ++handler_called3;
   };
 
-  signal_t::registration_t* registration2 = signal1 += [&](signal_t::registration_t* reg, int magic) {
-    ASSERT_EQ(magic, magic_number);
-    ASSERT_EQ(registration2, reg);
-    ++handler_called2;
+  registration_t registration2 =
+    signal1 += [&](registration_t* reg, int magic) {
+      ASSERT_EQ(magic, magic_number);
+      ASSERT_EQ(registration2, *reg);
+      ++handler_called2;
     
-    //+= is an append operation, but because when we're traveling the list and we grab the next pointer
-    //*before* the function get's called, this append won't be picked up until the 2nd pass.
-    *reg += std::move(lambda3);
+      //+= is an append operation, but because when we're traveling the list and we grab the next pointer
+      //*before* the function get's called, this append won't be picked up until the 2nd pass.
+      signal1 += std::move(lambda3);
     
-    delete reg->remove();
-  };
+      reg->reset();
+    };
   
   signal1(magic_number);
   signal1(magic_number);
