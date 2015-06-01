@@ -88,7 +88,7 @@ protected:
   /// <summary>
   /// Adds all AutoFilter argument information for a recipient
   /// </summary>
-  void AddSatCounter(SatCounter& satCounter);
+  void AddSatCounterUnsafe(SatCounter& satCounter);
 
   /// <summary>
   /// Marks the specified entry as being unsatisfiable

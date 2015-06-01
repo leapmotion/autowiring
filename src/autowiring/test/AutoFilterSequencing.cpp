@@ -300,3 +300,40 @@ TEST_F(AutoFilterSequencing, DoublePrev) {
   ASSERT_EQ(10, filter->m_called) << "AutoFilter not called";
   ASSERT_EQ(2, filter->m_num_empty_prev) << "Prev should only be null for the first two calls";
 }
+
+class ConcurrentAutoPrev:
+  public CoreThread
+{
+public:
+  ConcurrentAutoPrev(void) :
+    CoreThread("ConcurrentAutoPrev")
+  {}
+
+  int count = 0;
+  bool success = true;
+
+  Deferred AutoFilter(const std::string&, int& out, auto_prev<int> prior) {
+    if (prior)
+      success = success && *prior == count;
+    out = ++count;
+    return Deferred(this);
+  }
+};
+
+TEST_F(AutoFilterSequencing, PathologicalAsync) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<ConcurrentAutoPrev> filter;
+
+  std::string hello = "Hello!";
+  for (int i = 0; i < 20; i++) {
+    auto packet = factory->NewPacket();
+    packet->Decorate(hello);
+  }
+
+  ctxt->SignalShutdown(false, ShutdownMode::Graceful);
+  ctxt->Wait();
+
+  ASSERT_TRUE(filter->success) << "AutoFilter inconsistency detected";
+}
