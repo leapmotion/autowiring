@@ -3,6 +3,7 @@
 #include "Decompose.h"
 #include <atomic>
 #include <functional>
+#include <list>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
