@@ -40,9 +40,6 @@ bool DispatchQueue::PromoteReadyDispatchersUnsafe(void) {
 }
 
 void DispatchQueue::DispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
-  // Decrement the count only after the thunk has exected and is deleted:
-  auto dec = MakeAtExit([&] { m_count--; });
-
   // Pull the ready thunk off of the front of the queue and pop it while we hold the lock.
   // Then, we will excecute the call while the lock has been released so we do not create
   // deadlocks.
@@ -50,16 +47,12 @@ void DispatchQueue::DispatchEventUnsafe(std::unique_lock<std::mutex>& lk) {
   m_pHead = thunk->m_pFlink;
   lk.unlock();
 
-  if (thunk->m_pFlink)
-    (*thunk)();
-  else {
-    MakeAtExit([&] {
+  MakeAtExit([&] {
+    if (!--m_count)
       // Notify that we have hit zero:
-      lk.lock();
       m_queueUpdated.notify_all();
-    }),
-    (*thunk)();
-  }
+  }),
+  (*thunk)();
 }
 
 void DispatchQueue::Abort(void) {
