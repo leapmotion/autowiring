@@ -160,3 +160,29 @@ TEST_F(DispatchQueueTest, BarrierWithAbort) {
   ASSERT_EQ(std::future_status::ready, f.wait_for(std::chrono::seconds(5))) << "Barrier did not abort fast enough";
   ASSERT_ANY_THROW(f.get()) << "Barrier call returned instead of throwing an exception";
 }
+
+class DispatchQueueUnwrap:
+  public DispatchQueue
+{
+public:
+  using DispatchQueue::DispatchAllEvents;
+};
+
+TEST_F(DispatchQueueTest, AbortsWithinDispatcherDtor) {
+  DispatchQueueUnwrap dq;
+  {
+    std::shared_ptr<bool> abortsOnTeardown(
+      new bool,
+      [&dq](bool* ptr) {
+        // Pend a lambda and then immediately cause it to be destroyed
+        dq += [] {};
+        dq.Abort();
+        delete ptr;
+      }
+    );
+    dq += [abortsOnTeardown] {};
+  }
+
+  // Now try to run the dispatch behavior
+  dq.DispatchAllEvents();
+}
