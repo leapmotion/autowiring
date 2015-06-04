@@ -30,6 +30,11 @@ public:
   }
 };
 
+template<typename Fx>
+std::unique_ptr<DispatchThunkBase> MakeDispatchThunk(Fx&& fx) {
+  return std::unique_ptr<DispatchThunkBase>(new DispatchThunk<Fx>(std::forward<Fx&&>(fx)));
+}
+
 /// <summary>
 /// A so-called "delayed" dispatch thunk which must not be executed prior to the specified time
 /// </summary>

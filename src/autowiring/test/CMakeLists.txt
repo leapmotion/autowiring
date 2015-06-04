@@ -56,6 +56,7 @@ set(AutowiringTest_SRCS
   SatisfiabilityTest.cpp
   ScopeTest.cpp
   SnoopTest.cpp
+  ThreadPoolTest.cpp
   TupleTest.cpp
   TestFixtures/custom_exception.hpp
   TestFixtures/ExitRaceThreaded.hpp

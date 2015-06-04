@@ -8,10 +8,17 @@
 #include "demangle.h"
 #include "GlobalCoreContext.h"
 #include "JunctionBox.h"
+#include "ManualThreadPool.h"
 #include "MicroBolt.h"
+#include "NullPool.h"
+#include "SystemThreadPool.h"
 #include "thread_specific_ptr.h"
+#include "ThreadPool.h"
 #include <sstream>
 #include <stack>
+#include <stdexcept>
+
+using namespace autowiring;
 
 class DelayedContextHold:
   public CoreRunnable
@@ -43,13 +50,14 @@ public:
 /// to the global context directly because it could change teardown order if the main thread sets the global context
 /// as current.
 /// </remarks>
-static autowiring::thread_specific_ptr<std::shared_ptr<CoreContext>> autoCurrentContext;
+static thread_specific_ptr<std::shared_ptr<CoreContext>> autoCurrentContext;
 
 // Peer Context Constructor. Called interally by CreatePeer
 CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference) :
   m_pParent(pParent),
   m_backReference(backReference),
   m_stateBlock(new CoreContextStateBlock),
+  m_threadPool(std::make_shared<NullPool>()),
   m_junctionBoxManager(new JunctionBoxManager)
 {}
 
@@ -454,13 +462,50 @@ void CoreContext::Initiate(void) {
   auto beginning = m_threads.begin();
 
   // Start our threads before starting any child contexts:
+  std::shared_ptr<ThreadPool> threadPool;
+  auto nullPool = std::dynamic_pointer_cast<NullPool>(m_threadPool);
+  if (nullPool) {
+    // Decide which pool will become our current thread pool.  Global context is the final case,
+    // which defaults to the system thread pool
+    if (!nullPool->GetSuccessor())
+      nullPool->SetSuccessor(m_pParent ? m_pParent->GetThreadPool() : SystemThreadPool::New());
+
+    // Trigger null pool destruction at this point:
+    m_threadPool = nullPool->MoveDispatchersToSuccessor();
+  }
+
+  // The default case should not generally occur, but if it were the case that the null pool were
+  // updated before the context was initiated, then we would have no work to do as no successors
+  // exist to be moved.  In that case, simply take a record of the current thread pool for the
+  // call to Start that follows the unlock.
+  threadPool = m_threadPool;
   lk.unlock();
+
+  // Start the thread pool out of the lock, and then update our start token if our thread pool
+  // reference has not changed.  The next pool could potentially be nullptr if the parent is going
+  // down while we are going up.
+  if (threadPool) {
+    // Initiate 
+    auto startToken = threadPool->Start();
+
+    // Transfer all dispatchers from the null pool to the new thread pool:
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+
+    // If the thread pool was updated while we were trying to start the pool we observed earlier,
+    // then allow our token to expire and do not do any other work.  Whomever caused the thread
+    // pool pointer to be updated would also have seen that the context is currently started,
+    // and would have updated both the thread pool pointer and the start token at the same time.
+    if (m_threadPool == threadPool)
+      // Swap, not assign; we don't want teardown to happen while synchronized
+      std::swap(m_startToken, startToken);
+  }
+
   {
     auto outstanding = IncrementOutstandingThreadCount();
     for (auto q = beginning; q != m_threads.end(); ++q)
       (*q)->Start(outstanding);
   }
-  
+
   // Update state of children now that we are initated
   TryTransitionChildrenState();
 }
@@ -469,7 +514,7 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   // As we signal shutdown, there may be a CoreRunnable that is in the "running" state.  If so,
   // then we will skip that thread as we signal the list of threads to shutdown.
   std::list<CoreRunnable*>::iterator firstThreadToStop;
-  
+
   // Trivial return check
   if (IsShutdown())
     return;
@@ -512,9 +557,18 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   // teardown outside of a lock.
   std::vector<std::shared_ptr<CoreContext>> childrenInterleave;
 
+  // Thread pool token and pool pointer
+  std::shared_ptr<void> startToken;
+  std::shared_ptr<ThreadPool> threadPool;
+
+  // Tear down all the children, evict thread pool:
   {
-    // Tear down all the children.
     std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+
+    startToken = std::move(m_startToken);
+    m_startToken.reset();
+    threadPool = std::move(m_threadPool);
+    m_threadPool.reset();
 
     // Fill strong lock series in order to ensure proper teardown interleave:
     childrenInterleave.reserve(m_children.size());
@@ -649,6 +703,48 @@ void CoreContext::BuildCurrentState(void) {
   }
 }
 
+void CoreContext::SetThreadPool(std::shared_ptr<ThreadPool> threadPool) {
+  if (!threadPool)
+    throw std::invalid_argument("A context cannot be given a null thread pool");
+
+  std::shared_ptr<ThreadPool> priorThreadPool;
+  {
+    std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+    if (IsShutdown())
+      // Nothing to do, context already down
+      return;
+
+    if (!IsRunning()) {
+      // Just set up the forwarding thread pool
+      auto nullPool = std::dynamic_pointer_cast<NullPool>(m_threadPool);
+      if (!nullPool)
+        throw autowiring_error("Internal error, null pool was deassigned even though the context has not been started");
+      priorThreadPool = nullPool->GetSuccessor();
+      nullPool->SetSuccessor(threadPool);
+      return;
+    }
+
+    priorThreadPool = m_threadPool;
+    m_threadPool = threadPool;
+  }
+
+  // We are presently running.  We need to start the pool, and then attempt to
+  // update our token
+  auto startToken = threadPool->Start();
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+  if (m_threadPool != threadPool)
+    // Thread pool was updated by someone else, let them complete their operation
+    return;
+
+  // Update our start token and return.  Swap, not move; we don't want to risk
+  // calling destructors while synchronized.
+  std::swap(m_startToken, startToken);
+}
+
+std::shared_ptr<ThreadPool> CoreContext::GetThreadPool(void) const {
+  return (std::lock_guard<std::mutex>)m_stateBlock->m_lock, m_threadPool;
+}
+
 void CoreContext::CancelAutowiringNotification(DeferrableAutowiring* pDeferrable) {
   if (!pDeferrable)
     return;
@@ -688,7 +784,7 @@ void CoreContext::Dump(std::ostream& os) const {
   std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
   
   for(const auto& entry : m_typeMemos) {
-    os << autowiring::demangle(entry.first);
+    os << demangle(entry.first);
     const void* pObj = entry.second.m_value->ptr();
     if(pObj)
       os << " 0x" << std::hex << pObj;

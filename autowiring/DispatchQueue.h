@@ -39,6 +39,9 @@ protected:
   // Current linked list length
   std::atomic<size_t> m_count{0};
 
+  // Current version cap:
+  std::atomic<uint64_t> m_version{1};
+
   // The dispatch queue proper.  A vector is used, here, not a queue, because this collection is frequently emptied.
   DispatchThunkBase* m_pHead = nullptr;
   DispatchThunkBase* m_pTail = nullptr;
@@ -131,6 +134,16 @@ public:
   void Abort(void);
 
   /// <summary>
+  /// Causes all calls to WaitForEvent to return control to their callers
+  /// </summary>
+  /// <remarks>
+  /// This method will cause any threads blocked in WaitForEvent to wake up and make progress.  This can be
+  /// useful when threads are being used to dispatch work items and it's necessary to wake them in order to
+  /// handle out-of-queue processing--IE, pool maintenance
+  /// </remarks>
+  void WakeAllWaitingThreads(void);
+
+  /// <summary>
   /// Similar to WaitForEvent, but does not block
   /// </summary>
   /// <returns>True if an event was dispatched, false if the queue was empty when checked</returns>
@@ -145,14 +158,12 @@ public:
   /// <returns>The total number of events dispatched</returns>
   int DispatchAllEvents(void);
 
-  /// \internal
   /// <summary>
   /// Waits until a lambda function is ready to run in this thread's dispatch queue,
   /// dispatches the function, and then returns.
   /// </summary>
   void WaitForEvent(void);
 
-  /// \internal
   /// <summary>
   /// Waits until a lambda function in the dispatch queue is ready to run or the specified
   /// time period elapses, whichever comes first.
@@ -162,7 +173,6 @@ public:
   /// </returns>
   bool WaitForEvent(std::chrono::milliseconds milliseconds);
 
-  /// \internal
   /// <summary>
   /// Waits until a lambda function in the dispatch queue is ready to run or the specified
   /// time is reached, whichever comes first.
@@ -246,6 +256,11 @@ public:
       );
     }
   };
+
+  /// <summary>
+  /// Extracts the contents of the dispatch queue on the right-hand side for handling by this queue
+  /// </summary>
+  void operator+=(DispatchQueue&& rhs);
 
   /// <summary>
   /// Overload for the introduction of a delayed dispatch thunk
