@@ -4,7 +4,6 @@
 #include <autowiring/AutoPacket.h>
 #include <autowiring/AutoPacketFactory.h>
 #include <autowiring/Deferred.h>
-#include <autowiring/NewAutoFilter.h>
 #include <autowiring/ObjectPool.h>
 #include <autowiring/AutoSelfUpdate.h>
 #include <autowiring/AutoTimeStamp.h>
@@ -154,64 +153,6 @@ TEST_F(AutoFilterTest, VerifyNoMultiDecorate) {
   EXPECT_ANY_THROW(packet->DecorateImmediate(localDeco0)) << "Redundant immediate decoration did not throw an exception as expected";
 
   EXPECT_ANY_THROW(packet->DecorateImmediate(Decoration<2>(), Decoration<2>())) << "Repeated type in immediate decoration was not identified as an error";
-}
-
-template<int out, int in>
-class FilterGather {
-public:
-  FilterGather():
-    FilterGather_AutoGather(this, &FilterGather<out, in>::AutoGather),
-    m_called_out(0),
-    m_called_in(0),
-    m_out(out),
-    m_in(in)
-  {}
-
-  void AutoFilter(AutoPacket& packet) {
-    ++m_called_out;
-    packet.Decorate(Decoration<out>(m_out));
-  }
-
-
-  NewAutoFilter FilterGather_AutoGather;
-  void AutoGather(const Decoration<in>& input) {
-    ++m_called_in;
-    m_in = input.i;
-  }
-
-  int m_called_out;
-  int m_called_in;
-  int m_out;
-  int m_in;
-};
-
-TEST_F(AutoFilterTest, VerifyTwoAutoFilterCalls) {
-  AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<FilterGather<0,1>> zero2one;
-  AutoRequired<FilterGather<1,0>> one2zero;
-  zero2one->m_out = 3;
-  one2zero->m_out = 4;
-
-  //Verify that calls made on allocation from object pool do not introduce a race condition
-  {
-    std::shared_ptr<AutoPacket> packet = factory->NewPacket();
-    ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << zero2one->m_called_out << " times";
-    ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter of implicitly decorated type was called " << zero2one->m_called_in << " times";
-    ASSERT_EQ(4, zero2one->m_in) << "AutoFilter received incorrect input of " << zero2one->m_in;
-    ASSERT_EQ(1, one2zero->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << one2zero->m_called_out << " times";
-    ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter of implicitly decorated type was called " << one2zero->m_called_in << " times";
-    ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
-    zero2one->m_out = 5;
-    one2zero->m_out = 6;
-  }
-
-  //Verify that no additional calls are made during return of packet to object pool
-  ASSERT_EQ(1, zero2one->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << zero2one->m_called_out << " times";
-  ASSERT_EQ(1, zero2one->m_called_in) << "AutoFilter of implicitly decorated type was called " << zero2one->m_called_in << " times";
-  ASSERT_EQ(4, zero2one->m_in) << "AutoFilter received incorrect input of " << zero2one->m_in;
-  ASSERT_EQ(1, one2zero->m_called_out) << "AutoFilter with AutoPacket as only argument was called " << one2zero->m_called_out << " times";
-  ASSERT_EQ(1, one2zero->m_called_in) << "AutoFilter of implicitly decorated type was called " << one2zero->m_called_in << " times";
-  ASSERT_EQ(3, one2zero->m_in) << "AutoFilter received incorrect input of " << one2zero->m_in;
 }
 
 TEST_F(AutoFilterTest, VerifyInterThreadDecoration) {
@@ -404,11 +345,14 @@ public:
 class HasAWeirdAutoFilterMethod {
 public:
   HasAWeirdAutoFilterMethod(void):
-    af(this, &HasAWeirdAutoFilterMethod::AutoFilterFoo),
     m_baseValue(101),
     m_called0(0),
     m_called1(0)
   {
+    *factory += [this] {
+      ASSERT_EQ(101, m_baseValue) << "AutoFilter entry base offset incorrectly computed";
+      ++m_called1;
+    };
   }
 
   void AutoFilter(Decoration<0>) {
@@ -416,12 +360,7 @@ public:
     ++m_called0;
   }
 
-  void AutoFilterFoo(Decoration<0>) {
-    ASSERT_EQ(101, m_baseValue) << "AutoFilter entry base offset incorrectly computed";
-    ++m_called1;
-  }
-
-  NewAutoFilter af;
+  AutoRequired<AutoPacketFactory> factory;
   const int m_baseValue;
   int m_called0;
   int m_called1;

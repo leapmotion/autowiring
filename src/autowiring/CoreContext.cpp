@@ -9,7 +9,6 @@
 #include "GlobalCoreContext.h"
 #include "JunctionBox.h"
 #include "MicroBolt.h"
-#include "NewAutoFilter.h"
 #include "thread_specific_ptr.h"
 #include <sstream>
 #include <stack>
@@ -636,7 +635,7 @@ JunctionBoxBase& CoreContext::All(const std::type_info& ti) const {
 }
 
 void CoreContext::BuildCurrentState(void) {
-  AutoGlobalContext glbl;
+  auto glbl = GlobalCoreContext::Get();
   glbl->Invoke(&AutowiringEvents::NewContext)(*this);
     
   // Enumerate objects injected into this context
