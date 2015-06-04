@@ -98,6 +98,11 @@ protected:
   /// </summary>
   void PendExisting(std::unique_lock<std::mutex>&& lk, DispatchThunkBase* thunk);
 
+  /// <summary>
+  /// Updates the upper bound on the number of allowed pending dispatchers
+  /// </summary>
+  void SetDispatcherCap(size_t dispatchCap) { m_dispatchCap = dispatchCap; }
+
 public:
   /// <returns>
   /// True if there are curerntly any dispatchers ready for execution--IE, DispatchEvent would return true
@@ -127,12 +132,6 @@ public:
   /// This method is idempotent
   /// </remarks>
   void Abort(void);
-
-protected:
-  /// <summary>
-  /// Updates the upper bound on the number of allowed pending dispatchers
-  /// </summary>
-  void SetDispatcherCap(size_t dispatchCap) { m_dispatchCap = dispatchCap; }
 
   /// <summary>
   /// Similar to WaitForEvent, but does not block
@@ -182,7 +181,6 @@ protected:
   /// </summary>
   bool WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chrono::steady_clock::time_point wakeTime);
 
-public:
   /// <summary>
   /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>
