@@ -102,7 +102,7 @@ public:
   /// <returns>
   /// True if there are curerntly any dispatchers ready for execution--IE, DispatchEvent would return true
   /// </returns>
-  bool AreAnyDispatchersReady(void) const { return !!m_count; }
+  bool AreAnyDispatchersReady(void) const { return !!m_pHead; }
 
   /// <returns>
   /// The total number of all ready and delayed events
