@@ -136,7 +136,6 @@ set(Autowiring_SRCS
   MemoEntry.cpp
   MicroAutoFilter.h
   MicroBolt.h
-  NewAutoFilter.h
   ObjectPool.h
   ObjectPoolMonitor.cpp
   ObjectPoolMonitor.h
