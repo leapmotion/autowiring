@@ -173,3 +173,23 @@ TEST_F(AutoFilterCollapseRulesTest, UnsatisfiableDecoration) {
   // Ensure the correct decoration was invoked
   ASSERT_TRUE(bInvoked) << "AutoFilter was not invoked in an unsatisfiable case as expected";
 }
+
+TEST_F(AutoFilterCollapseRulesTest, SharedOutSelfAutoPrev) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoCurrentContext()->Initiate();
+
+  auto hello = std::make_shared<std::string>("Hello world!");
+  size_t nMsgs = 0;
+  *factory += [&](auto_prev<std::string> lastMsg, std::shared_ptr<std::string>& msg) {
+    msg = hello;
+    if (lastMsg)
+      nMsgs++;
+  };
+
+  auto packet1 = factory->NewPacket();
+  auto packet2 = factory->NewPacket();
+
+  ASSERT_TRUE(packet1->Has<std::string>());
+  ASSERT_TRUE(packet2->Has<std::string>());
+  ASSERT_EQ(1UL, nMsgs) << "auto_prev was not correctly set when a filter produces a shared_ptr output";
+}
