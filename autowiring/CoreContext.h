@@ -145,7 +145,7 @@ class CoreContext:
 {
 protected:
   typedef std::list<std::weak_ptr<CoreContext>> t_childList;
-  CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer);
+  CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference);
 
 public:
   virtual ~CoreContext(void);
@@ -236,8 +236,8 @@ protected:
   // Context members from other contexts that have snooped this context
   std::set<AnySharedPointer> m_snoopers;
 
-  // Manages events for this context. One JunctionBoxManager is shared between peer contexts
-  const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
+  // Manages events for this context
+  const std::unique_ptr<JunctionBoxManager> m_junctionBoxManager;
 
   // Actual core threads:
   std::list<CoreRunnable*> m_threads;
@@ -254,24 +254,22 @@ protected:
   // Delayed creation routine
   typedef std::shared_ptr<CoreContext> (*t_pfnCreate)(
     std::shared_ptr<CoreContext> pParent,
-    t_childList::iterator backReference,
-    std::shared_ptr<CoreContext> pPeer
-  );
+    t_childList::iterator backReference
+    );
+
+  /// \internal
+  /// <summary>
+  /// Overload which does not perform injection
+  /// </summary>
+  std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate);
 
   /// \internal
   /// <summary>
   /// Register new context with parent and notify others of its creation.
   /// </summary>
   /// <param name="pfnCreate">A creation routine which can create the desired context</param>
-  /// <param name="pPeer">The peer context, if one exists</param>
   /// <param name="inj">An injectable to be inserted into the context before bolts are fired</param>
-  std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer, AutoInjectable&& pInj);
-
-  /// \internal
-  /// <summary>
-  /// Overload which does not perform injection
-  /// </summary>
-  std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer);
+  std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, AutoInjectable&& pInj);
 
   // Adds a bolt proper to this context
   template<typename T, typename... Sigils>
@@ -566,11 +564,10 @@ public:
   template<class T>
   static std::shared_ptr<CoreContext> Create(
     std::shared_ptr<CoreContext> pParent,
-    t_childList::iterator backReference,
-    std::shared_ptr<CoreContext> pPeer
+    t_childList::iterator backReference
   ) {
     return std::static_pointer_cast<CoreContext>(
-      std::make_shared<CoreContextT<T>>(pParent, backReference, pPeer)
+      std::make_shared<CoreContextT<T>>(pParent, backReference)
     );
   }
 
@@ -581,7 +578,7 @@ public:
   /// <param name="inj">An injectable type.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(AutoInjectable&& inj) {
-    return CreateInternal(&CoreContext::Create<T>, nullptr, std::move(inj));
+    return CreateInternal(&CoreContext::Create<T>, std::move(inj));
   }
 
   /// <summary>
@@ -598,23 +595,7 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return CreateInternal(&CoreContext::Create<T>, nullptr);
-  }
-
-  /// <summary>
-  /// Creates a peer context to this context.
-  /// </summary>
-  /// <remarks>
-  /// A peer context allows clients to create autowiring contexts which are in the same event
-  /// domain with respect to each other, but are not in the same autowiring domain.  This can
-  /// be useful where multiple instances of a particular object are desired, but inserting
-  /// such objects into a simple child context is cumbersome because the objects at parent
-  /// scope are listening to events originating from objects at child scope. Events can be fired,
-  /// but not received, from an uninitiated context if its peer is initiated.
-  /// </remarks>
-  template<class T>
-  std::shared_ptr<CoreContext> CreatePeer(void) {
-    return m_pParent->CreateInternal(&CoreContext::Create<T>, shared_from_this());
+    return CreateInternal(&CoreContext::Create<T>);
   }
 
   /// <summary>
@@ -1245,8 +1226,8 @@ class CoreContextT:
 public:
   static const std::type_info& sc_type;
 
-  CoreContextT(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
-    CoreContext(pParent, backReference, pPeer)
+  CoreContextT(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference) :
+    CoreContext(pParent, backReference)
   {}
 
   const std::type_info& GetSigilType(void) const override { return sc_type; }

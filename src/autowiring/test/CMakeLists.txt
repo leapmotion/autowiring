@@ -49,7 +49,6 @@ set(AutowiringTest_SRCS
   InterlockedRoutinesTest.cpp
   MultiInheritTest.cpp
   ObjectPoolTest.cpp
-  PeerContextTest.cpp
   PostConstructTest.cpp
   SelfSelectingFixtureTest.cpp
   TeardownNotifierTest.cpp
