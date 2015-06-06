@@ -25,7 +25,7 @@ TEST_F(AutoParameterTest, VerifyCorrectDeconstruction) {
   AutoRequired<MyParamClass1> mpc;
   auto& param = mpc->m_param;
   
-  EXPECT_STREQ("AutoParam.MyParamClass1::MyIntParam1", param.m_key.c_str())
+  ASSERT_STREQ("AutoParam.MyParamClass1::MyIntParam1", param.m_key.c_str())
     << "Configuration variable name was not correctly extracted";
 }
 

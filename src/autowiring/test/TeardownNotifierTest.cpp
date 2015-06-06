@@ -21,7 +21,7 @@ TEST_F(TeardownNotifierTest, VerifySingleNotification) {
     member->AddTeardownListener([&hit] {hit = true;});
   }
 
-  EXPECT_TRUE(hit) << "Teardown listener was not hit as expected during context teardown";
+  ASSERT_TRUE(hit) << "Teardown listener was not hit as expected during context teardown";
 }
 
 TEST_F(TeardownNotifierTest, ReferenceMemberInTeardown) {
@@ -44,7 +44,7 @@ TEST_F(TeardownNotifierTest, ReferenceMemberInTeardown) {
     });
   }
 
-  EXPECT_TRUE(hit) << "Failed to reference a member of a context in it's teardown listener";
+  ASSERT_TRUE(hit) << "Failed to reference a member of a context in it's teardown listener";
 }
 
 TEST_F(TeardownNotifierTest, CanAutowireInTeardown) {

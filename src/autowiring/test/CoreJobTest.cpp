@@ -82,9 +82,9 @@ TEST_F(CoreJobTest, VerifyTeardown) {
   };
 
   ctxt->SignalShutdown(true);
-  EXPECT_TRUE(check1) << "Lambda 1 didn't finish";
-  EXPECT_TRUE(check2) << "Lambda 2 didn't finish";
-  EXPECT_TRUE(check3) << "Lambda 3 didn't finish";
+  ASSERT_TRUE(check1) << "Lambda 1 didn't finish";
+  ASSERT_TRUE(check2) << "Lambda 2 didn't finish";
+  ASSERT_TRUE(check3) << "Lambda 3 didn't finish";
 }
 
 struct SimpleListen{
@@ -111,7 +111,7 @@ TEST_F(CoreJobTest, VerifyNoEventReceivers){
   ASSERT_FALSE(listener->m_flag) << "Flag was initialized improperly";
 
   fire(&SimpleListen::SetFlag)();
-  EXPECT_FALSE(listener->m_flag) << "Lister recived event event though it wasn't initiated";
+  ASSERT_FALSE(listener->m_flag) << "Lister recived event event though it wasn't initiated";
 }
 
 TEST_F(CoreJobTest, AbandonedDispatchers) {
@@ -150,9 +150,9 @@ TEST_F(CoreJobTest, RecursiveAdd) {
   cj->Wait();
   
   // Verify that all lambdas on the CoreThread got called as expected:
-  EXPECT_TRUE(first) << "Appended lambda didn't set value";
-  EXPECT_TRUE(second) << "Appended lambda didn't set value";
-  EXPECT_TRUE(third) << "Appended lambda didn't set value";
+  ASSERT_TRUE(first) << "Appended lambda didn't set value";
+  ASSERT_TRUE(second) << "Appended lambda didn't set value";
+  ASSERT_TRUE(third) << "Appended lambda didn't set value";
 }
 
 TEST_F(CoreJobTest, RaceCondition) {

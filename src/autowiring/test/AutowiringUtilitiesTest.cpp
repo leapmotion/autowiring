@@ -18,7 +18,7 @@ class Thread1:
   virtual void Run(){
     s_thread_specific_int.reset(new int(4));
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    EXPECT_EQ(4, *s_thread_specific_int);
+    ASSERT_EQ(4, *s_thread_specific_int);
   }
 };
 
@@ -28,7 +28,7 @@ class Thread2:
   virtual void Run() {
     s_thread_specific_int.reset(new int(3));
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    EXPECT_EQ(3, *s_thread_specific_int);
+    ASSERT_EQ(3, *s_thread_specific_int);
   }
 };
 
@@ -46,6 +46,6 @@ TEST_F(AutowiringUtilitiesTest, ThreadSpecificPtr) {
   
   std::this_thread::sleep_for(std::chrono::milliseconds(50));
   
-  EXPECT_EQ(5, *s_thread_specific_int);
+  ASSERT_EQ(5, *s_thread_specific_int);
   AutoCurrentContext()->SignalShutdown(true);
 }
