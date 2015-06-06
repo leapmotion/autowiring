@@ -740,9 +740,6 @@ public:
     // Simple coercive transfer:
     return static_cast<JunctionBox<T>&>(All(typeid(T)));
   }
-  
-  template<typename T, typename... Args>
-  std::shared_ptr<T> DEPRECATED(Construct(Args&&... args), "'Construct' is deprecated, use 'Inject' instead");
 
   /// \internal
   /// <summary>
@@ -1205,12 +1202,6 @@ namespace autowiring {
   void InjectCurrent(void){
     CoreContext::InjectCurrent<T>();
   }
-}
-
-// Deprecated, use Inject
-template<typename T, typename... Args>
-std::shared_ptr<T> CoreContext::Construct(Args&&... args) {
-  return Inject<T>(std::forward<Args>(args)...);
 }
 
 /// <summary>
