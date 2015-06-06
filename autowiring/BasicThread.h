@@ -85,9 +85,6 @@ protected:
   // Run condition:
   bool m_running = false;
 
-  // Legacy field, some clients still refer to this
-  bool& DEPRECATED_MEMBER(m_completed, "Use IsCompleted instead");
-
   // The current thread priority
   ThreadPriority m_priority = ThreadPriority::Default;
 
