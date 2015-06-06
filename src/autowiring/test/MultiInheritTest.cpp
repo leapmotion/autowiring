@@ -28,10 +28,10 @@ class MultiInheritDerived:
 {
 public:
   MultiInheritDerived(void) {
-    ASSERT_TRUE(Base::m_member.IsAutowired()) << "Base AutoRequired member was not initialized properly";
-    ASSERT_EQ(100, Base::m_member->m_i) << "Autowired instance was not properly constructed";
-    ASSERT_TRUE(m_secondMember.IsAutowired()) << "Failed to autowire a type which should have been injected in this context";
-    ASSERT_EQ(m_member.get(), m_secondMember.get()) << "Autowiring idempotency was violated";
+    EXPECT_TRUE(Base::m_member.IsAutowired()) << "Base AutoRequired member was not initialized properly";
+    EXPECT_EQ(100, Base::m_member->m_i) << "Autowired instance was not properly constructed";
+    EXPECT_TRUE(m_secondMember.IsAutowired()) << "Failed to autowire a type which should have been injected in this context";
+    EXPECT_EQ(m_member.get(), m_secondMember.get()) << "Autowiring idempotency was violated";
   }
 
   Autowired<Shared> m_secondMember;

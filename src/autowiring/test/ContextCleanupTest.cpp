@@ -14,7 +14,7 @@ TEST_F(ContextCleanupTest, ValidateTeardownOrder) {
   class WeakPtrChecker {
   public:
     ~WeakPtrChecker(void) {
-      ASSERT_TRUE(self.expired()) << "Shared pointer to this was not expired at destructor time";
+      EXPECT_TRUE(self.expired()) << "Shared pointer to this was not expired at destructor time";
     }
 
     std::weak_ptr<WeakPtrChecker> self;
