@@ -62,9 +62,6 @@ protected:
   /// <returns>True if at least one dispatcher was promoted</returns>
   bool PromoteReadyDispatchersUnsafe(void);
 
-  // Identical to PromoteReadyDispatchersUnsafe, invoke that method instead
-  void DEPRECATED(PromoteReadyEventsUnsafe(void), "Superceded by PromoteReadyDispatchersUnsafe") { PromoteReadyDispatchersUnsafe(); }
-
   /// <summary>
   /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
   /// </summary>
