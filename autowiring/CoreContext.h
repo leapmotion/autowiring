@@ -884,7 +884,6 @@ public:
   /// Starts all registered threads and enables events and the flow of filter graph packets.
   /// </summary>
   void Initiate(void);
-  void DEPRECATED(InitiateCoreThreads(void), "InitiateCoreThreads is deprecated, use Initiate instead");
 
   /// <summary>
   /// Begins shutdown of this context, optionally waiting for child contexts and threads to also shut
