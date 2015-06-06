@@ -24,10 +24,6 @@ private:
   const T& m_value;
 
 public:
-  DEPRECATED(operator bool(void) const, "This test is unnecessary, auto_in will always be satisfied") {
-    return true;
-  }
-
   operator const T&() const { return m_value; }
   const T& operator*(void) const { return m_value; }
   const T* operator->(void) const { return &m_value; }
