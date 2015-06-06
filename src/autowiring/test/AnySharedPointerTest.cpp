@@ -92,7 +92,7 @@ TEST_F(AnySharedPointerTest, SlotReassignment) {
 
   // Recast to another shared pointer, verify reference count goes down:
   slot = sharedPointerB;
-  EXPECT_EQ(2, sharedPointerB.use_count()) << "Reference count was not incremented properly during a shared pointer hold";
+  ASSERT_EQ(2, sharedPointerB.use_count()) << "Reference count was not incremented properly during a shared pointer hold";
   ASSERT_TRUE(sharedPointerA.unique()) << "Destructor was not properly invoked for a shared pointer slot";
 
   // Now change the type completely, verify proper release:
@@ -128,7 +128,7 @@ TEST_F(AnySharedPointerTest, SlotDuplication) {
     ASSERT_FALSE(slot1->empty()) << "A slot initialized from a shared pointer was incorrectly marked as empty";
 
     // Verify the type came across:
-    EXPECT_EQ(typeid(auto_id<bool>), slot1->type()) << "Dynamic initialization did not correctly adjust the dynamic type";
+    ASSERT_EQ(typeid(auto_id<bool>), slot1->type()) << "Dynamic initialization did not correctly adjust the dynamic type";
 
     // Now copy it over:
     slot2 = slot1;

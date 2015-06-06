@@ -145,7 +145,7 @@ public:
   void AutoFilter(int current, auto_prev<int> prev) {
     ++m_called;
     if (prev) {
-      EXPECT_EQ(m_prev_value, *prev) << "auto_prev isn't set to the previous value";
+      ASSERT_EQ(m_prev_value, *prev) << "auto_prev isn't set to the previous value";
     } else {
       m_num_empty_prev++;
     }
@@ -279,7 +279,7 @@ public:
   void AutoFilter(int current, auto_prev<int, 2> prev) {
     ++m_called;
     if (prev) {
-      EXPECT_EQ(m_prev_prev_value, *prev) << "auto_prev isn't set to the previous value";
+      ASSERT_EQ(m_prev_prev_value, *prev) << "auto_prev isn't set to the previous value";
     } else {
       m_num_empty_prev++;
     }

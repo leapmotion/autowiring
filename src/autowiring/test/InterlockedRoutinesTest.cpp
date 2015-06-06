@@ -19,8 +19,8 @@ void CheckFn() {
   void* pExchanged = exchange_acquire(&dest, exchangeVal);
 
   // Verify all known states:
-  EXPECT_EQ(&spot, pExchanged) << "Return value of exchange_acquire as incorrect";
-  EXPECT_EQ(nullptr, dest) << "Exchange destination was not properly assigned";
+  ASSERT_EQ(&spot, pExchanged) << "Return value of exchange_acquire as incorrect";
+  ASSERT_EQ(nullptr, dest) << "Exchange destination was not properly assigned";
 }
 
 TEST_F(InterlockedRoutinesTest, VerifyExchangeAcquire) {
@@ -41,16 +41,16 @@ TEST_F(InterlockedRoutinesTest, VerifyCompareExchange) {
 
   // A compare-exchange that is known to fail:
   pExchanged = compare_exchange(&dest, &spot2, &spot3);
-  EXPECT_EQ(&spot1, dest) << "Exchanged values even though the comparand was not equal";
-  EXPECT_EQ(&spot1, pExchanged) << "Returned exchange value was not the value of dest";
+  ASSERT_EQ(&spot1, dest) << "Exchanged values even though the comparand was not equal";
+  ASSERT_EQ(&spot1, pExchanged) << "Returned exchange value was not the value of dest";
 
   // Reset:
   dest = &spot1;
 
   // A compare-exchange that should succeed:
   pExchanged = compare_exchange(&dest, &spot2, &spot1);
-  EXPECT_EQ(&spot2, dest) << "Destination was not given a correct value";
-  EXPECT_EQ(&spot1, pExchanged) << "Return value under a successful exchange was not the original value";
+  ASSERT_EQ(&spot2, dest) << "Destination was not given a correct value";
+  ASSERT_EQ(&spot1, pExchanged) << "Return value under a successful exchange was not the original value";
 }
 
 TEST_F(InterlockedRoutinesTest, VerifyCompareExchangePathological) {
@@ -109,5 +109,5 @@ TEST_F(InterlockedRoutinesTest, VerifyCompareExchangePathological) {
   // Verify that no illegal transitions have taken place by ensuring the count is precisely
   // the count we expect:
   size_t offset = (char*)counter - &base;
-  EXPECT_EQ(offset, threadCount) << "Interlocked exchange under heavy contention failed to honor interlocking requirements";
+  ASSERT_EQ(offset, threadCount) << "Interlocked exchange under heavy contention failed to honor interlocking requirements";
 }

@@ -176,8 +176,8 @@ TEST_F(AutoConfigTest, NestedContexts) {
   ASSERT_EQ(42, *mcc_sibling->cfg) << "Config value not set in descendant context";
   ASSERT_EQ(42, *mcc_inner->cfg) << "Config value not set in descendant context";
   ASSERT_EQ(42, *mcc_leaf->cfg) << "Config value not set in desendant context";
-  EXPECT_TRUE(mcc_middle->cfg->IsInherited()) << "Inherited key not marked as such";
-  EXPECT_TRUE(mcc_leaf->cfg->IsInherited()) << "Inherited key not marked as such";
+  ASSERT_TRUE(mcc_middle->cfg->IsInherited()) << "Inherited key not marked as such";
+  ASSERT_TRUE(mcc_leaf->cfg->IsInherited()) << "Inherited key not marked as such";
   
   // Set middle, inner shouldn't be able to be set from outer after this
   bool callback_hit1 = false;

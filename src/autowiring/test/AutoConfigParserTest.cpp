@@ -62,6 +62,6 @@ struct MyConfigurableClass {
 TEST_F(AutoConfigParserTest, VerifyCorrectDeconstruction) {
   AutoRequired<MyConfigurableClass> mcc;
 
-  EXPECT_STREQ("Namespace1.XYZ", mcc->m_myName->m_key.c_str())
+  ASSERT_STREQ("Namespace1.XYZ", mcc->m_myName->m_key.c_str())
     << "Configuration variable name was not correctly extracted";
 }

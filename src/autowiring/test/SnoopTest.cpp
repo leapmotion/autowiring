@@ -90,14 +90,14 @@ TEST_F(SnoopTest, VerifySimpleSnoop) {
     firer(&UpBroadcastListener::SimpleCall)();
 
     // Verify that the child itself got the message:
-    EXPECT_TRUE(childMember->m_simpleCall) << "Message not received by another member of the same context";
+    ASSERT_TRUE(childMember->m_simpleCall) << "Message not received by another member of the same context";
   }
 
   // Verify that the parent got the message:
-  EXPECT_TRUE(parentMember->m_simpleCall) << "Parent context snooper didn't receive a message broadcast by the child context";
+  ASSERT_TRUE(parentMember->m_simpleCall) << "Parent context snooper didn't receive a message broadcast by the child context";
 
   // Verify that the OTHER member got nothing:
-  EXPECT_FALSE(ignored->m_simpleCall) << "A member in a parent context received a child-context message even though it didn't request to snoop that context";
+  ASSERT_FALSE(ignored->m_simpleCall) << "A member in a parent context received a child-context message even though it didn't request to snoop that context";
 }
 
 TEST_F(SnoopTest, VerifyUnsnoop) {
@@ -120,10 +120,10 @@ TEST_F(SnoopTest, VerifyUnsnoop) {
     firer(&UpBroadcastListener::SimpleCall)();
 
     // The local listener should have gotten something
-    EXPECT_TRUE(childMember->m_simpleCall) << "Message not received by a local listener after Unsnoop call";
+    ASSERT_TRUE(childMember->m_simpleCall) << "Message not received by a local listener after Unsnoop call";
   }
 
-  EXPECT_FALSE(parentMember->m_simpleCall) << "ParentMember snooper received an event, even after an Unsnoop call was made";
+  ASSERT_FALSE(parentMember->m_simpleCall) << "ParentMember snooper received an event, even after an Unsnoop call was made";
 }
 
 TEST_F(SnoopTest, AmbiguousReciept) {
@@ -152,7 +152,7 @@ TEST_F(SnoopTest, AmbiguousReciept) {
   ASSERT_TRUE(ubl.HasListeners()) << "Apparently no listeners exist after subcontext destruction";
 
   ubl(&UpBroadcastListener::SimpleCall)();
-  EXPECT_TRUE(parent->m_simpleCall) << "Snooped parent did not receive an event as expected when snooped context was destroyed";
+  ASSERT_TRUE(parent->m_simpleCall) << "Snooped parent did not receive an event as expected when snooped context was destroyed";
 }
 
 TEST_F(SnoopTest, AvoidDoubleReciept) {
@@ -271,10 +271,10 @@ TEST_F(SnoopTest, AntiCyclicRemoval) {
   
   AutoFired<SimpleEvent> ubl;
   ubl(&SimpleEvent::ZeroArgs)();
-  EXPECT_EQ(1, removeself->counter) << "Received event";
+  ASSERT_EQ(1, removeself->counter) << "Received event";
   
   ubl(&SimpleEvent::ZeroArgs)();
-  EXPECT_EQ(1, removeself->counter) << "Received event even though unsnooped";
+  ASSERT_EQ(1, removeself->counter) << "Received event even though unsnooped";
 }
 
 
@@ -302,8 +302,8 @@ TEST_F(SnoopTest, SimplePackets) {
   
   // Now compleletly satisfy filter. Should snoop across contexts
   packet->Decorate(Decoration<1>());
-  EXPECT_TRUE(!!filter->m_called) << "A snooper did not receive an AutoPacket originating in a snooped context";
-  EXPECT_FALSE(detachedFilter->m_called) << "Received a packet from a different context";
+  ASSERT_TRUE(!!filter->m_called) << "A snooper did not receive an AutoPacket originating in a snooped context";
+  ASSERT_FALSE(detachedFilter->m_called) << "Received a packet from a different context";
   
   //reset
   filter->m_called = false;
@@ -312,7 +312,7 @@ TEST_F(SnoopTest, SimplePackets) {
   auto packet2 = factory->NewPacket();
   packet2->Decorate(Decoration<0>());
   packet2->Decorate(Decoration<1>());
-  EXPECT_FALSE(!!filter->m_called) << "Unsnoop didn't work";
+  ASSERT_FALSE(!!filter->m_called) << "Unsnoop didn't work";
 }
 
 TEST_F(SnoopTest, CanSnoopAutowired) {

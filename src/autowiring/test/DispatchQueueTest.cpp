@@ -45,8 +45,8 @@ TEST_F(DispatchQueueTest, SimpleEvents) {
     count += 5 ;
   };
   
-  EXPECT_EQ(2, num);
-  EXPECT_EQ(6, count);
+  ASSERT_EQ(2, num);
+  ASSERT_EQ(6, count);
 }
 
 TEST_F(DispatchQueueTest, PathologicalStartAndStop){
