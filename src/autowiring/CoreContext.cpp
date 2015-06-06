@@ -46,13 +46,11 @@ public:
 static autowiring::thread_specific_ptr<std::shared_ptr<CoreContext>> autoCurrentContext;
 
 // Peer Context Constructor. Called interally by CreatePeer
-CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
+CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference) :
   m_pParent(pParent),
   m_backReference(backReference),
   m_stateBlock(new CoreContextStateBlock),
-  m_junctionBoxManager(
-    pPeer ? pPeer->m_junctionBoxManager : std::make_shared<JunctionBoxManager>()
-  )
+  m_junctionBoxManager(new JunctionBoxManager)
 {}
 
 CoreContext::~CoreContext(void) {
@@ -86,11 +84,11 @@ CoreContext::~CoreContext(void) {
     q->NotifyContextTeardown();
 }
 
-std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer) {
-  return CreateInternal(pfnCreate, pPeer, AutoInjectable());
+std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate) {
+  return CreateInternal(pfnCreate, AutoInjectable());
 }
 
-std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer, AutoInjectable&& inj)
+std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, AutoInjectable&& inj)
 {
   // don't allow new children if shutting down
   if(IsShutdown())
@@ -107,7 +105,7 @@ std::shared_ptr<CoreContext> CoreContext::CreateInternal(t_pfnCreate pfnCreate, 
 
   // Create the shared pointer for the context--do not add the context to itself,
   // this creates a dangerous cyclic reference.
-  std::shared_ptr<CoreContext> retVal = pfnCreate(shared_from_this(), childIterator, pPeer);
+  std::shared_ptr<CoreContext> retVal = pfnCreate(shared_from_this(), childIterator);
 
   // Notify AutowiringEvents listeners
   GetGlobal()->Invoke(&AutowiringEvents::NewContext)(*retVal);
