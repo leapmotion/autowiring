@@ -465,10 +465,6 @@ void CoreContext::Initiate(void) {
   TryTransitionChildrenState();
 }
 
-void CoreContext::InitiateCoreThreads(void) {
-  Initiate();
-}
-
 void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
   // As we signal shutdown, there may be a CoreRunnable that is in the "running" state.  If so,
   // then we will skip that thread as we signal the list of threads to shutdown.
