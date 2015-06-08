@@ -241,9 +241,6 @@ public:
     return false;
   }
 
-  template<class T>
-  bool DEPRECATED(Get(const std::shared_ptr<T>*& out) const, "This version of Get is deprecated due to the dangers it implies, do not use");
-
   /// <summary>
   /// Shared pointer specialization of const T*&, used to obtain the underlying shared pointer for some type T
   /// </summary>
@@ -604,17 +601,3 @@ public:
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;
 };
-
-template<class T>
-bool AutoPacket::Get(const std::shared_ptr<T>*& out) const {
-  static_assert(!std::is_const<T>::value, "Overload resolution selected an incorrect version of Get");
-
-  const DecorationDisposition* pDisposition = GetDisposition(DecorationKey(auto_id<T>::key(), true, 0));
-  if (!pDisposition || pDisposition->m_decorations.size() != 1) {
-    out = nullptr;
-    return false;
-  }
-
-  out = &pDisposition->m_decorations[0]->as_unsafe<T>();
-  return true;
-}
