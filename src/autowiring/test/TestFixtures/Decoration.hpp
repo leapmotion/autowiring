@@ -21,11 +21,7 @@ public:
 // Some simple filters which use the above decoration:
 class FilterRoot {
 public:
-  FilterRoot(void) :
-    m_called(0)
-  {}
-
-  int m_called;
+  int m_called = 0;
   Decoration<0> m_zero;
   Decoration<1> m_one;
 };
@@ -50,10 +46,6 @@ class FilterB:
   public FilterRoot
 {
 public:
-  FilterB(void) :
-    m_excepted(false)
-  {}
-
   Deferred AutoFilter(const Decoration<0>& zero, const Decoration<1>& one) {
     ++m_called;
     m_zero = zero;
@@ -61,8 +53,8 @@ public:
     return Deferred(this);
   }
 
-  bool m_proceed;
-  bool m_excepted;
+  bool m_proceed = false;
+  bool m_excepted = false;
 
   void Continue(void) {
     PerformStatusUpdate([this] { m_proceed = true; });
