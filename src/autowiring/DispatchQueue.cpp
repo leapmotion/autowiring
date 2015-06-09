@@ -85,31 +85,46 @@ void DispatchQueue::Abort(void) {
   m_queueUpdated.notify_all();
 }
 
+void DispatchQueue::WakeAllWaitingThreads(void) {
+  m_version++;
+  m_queueUpdated.notify_all();
+}
+
 void DispatchQueue::WaitForEvent(void) {
   std::unique_lock<std::mutex> lk(m_dispatchLock);
   if (m_aborted)
     throw dispatch_aborted_exception("Dispatch queue was aborted prior to waiting for an event");
 
   // Unconditional delay:
-  m_queueUpdated.wait(lk, [this] {
-    if (m_aborted)
-      throw dispatch_aborted_exception("Dispatch queue was aborted while waiting for an event");
+  uint64_t version = m_version;
+  m_queueUpdated.wait(
+    lk,
+    [this, version] {
+      if (m_aborted)
+        throw dispatch_aborted_exception("Dispatch queue was aborted while waiting for an event");
 
-    return
-      // We will need to transition out if the delay queue receives any items:
-      !this->m_delayedQueue.empty() ||
+      return
+        // We will need to transition out if the delay queue receives any items:
+        !this->m_delayedQueue.empty() ||
 
-      // We also transition out if the dispatch queue has any events:
-      this->m_pHead;
-  });
+        // We also transition out if the dispatch queue has any events:
+        this->m_pHead ||
+        
+        // Or, finally, if the versions don't match
+        version != m_version;
+    }
+  );
 
-  if (!m_pHead)
+  if (m_pHead) {
+    // We have an event, we can just hop over to this variant:
+    DispatchEventUnsafe(lk);
+    return;
+  }
+
+  if (!m_delayedQueue.empty())
     // The delay queue has items but the dispatch queue does not, we need to switch
     // to the suggested sleep timeout variant:
     WaitForEventUnsafe(lk, m_delayedQueue.top().GetReadyTime());
-  else
-    // We have an event, we can just hop over to this variant:
-    DispatchEventUnsafe(lk);
 }
 
 bool DispatchQueue::WaitForEvent(std::chrono::milliseconds milliseconds) {
@@ -117,10 +132,9 @@ bool DispatchQueue::WaitForEvent(std::chrono::milliseconds milliseconds) {
 }
 
 bool DispatchQueue::WaitForEvent(std::chrono::steady_clock::time_point wakeTime) {
-  if (wakeTime == std::chrono::steady_clock::time_point::max()) {
+  if (wakeTime == std::chrono::steady_clock::time_point::max())
     // Maximal wait--we can optimize by using the zero-arguments version
     return WaitForEvent(), true;
-  }
 
   std::unique_lock<std::mutex> lk(m_dispatchLock);
   return WaitForEventUnsafe(lk, wakeTime);
