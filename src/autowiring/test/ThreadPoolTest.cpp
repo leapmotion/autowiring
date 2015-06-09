@@ -22,7 +22,7 @@ TEST_F(ThreadPoolTest, SimpleSubmission) {
   };
 
   auto rs = p->get_future();
-  ASSERT_EQ(std::future_status::ready, rs.wait_for(std::chrono::seconds(30))) << "Thread pool lambda was not dispatched in a timely fashion";
+  ASSERT_EQ(std::future_status::ready, rs.wait_for(std::chrono::seconds(5))) << "Thread pool lambda was not dispatched in a timely fashion";
 }
 
 static void PoolOverload(void) {
@@ -40,7 +40,7 @@ static void PoolOverload(void) {
     };
 
   auto rs = p->get_future();
-  ASSERT_EQ(std::future_status::ready, rs.wait_for(std::chrono::seconds(30))) << "Pool saturation did not complete in a timely fashion";
+  ASSERT_EQ(std::future_status::ready, rs.wait_for(std::chrono::seconds(5))) << "Pool saturation did not complete in a timely fashion";
 }
 
 TEST_F(ThreadPoolTest, PoolOverload) {
@@ -69,7 +69,7 @@ TEST_F(ThreadPoolTest, PendBeforeContextStart) {
   ASSERT_EQ(std::future_status::timeout, f.wait_for(std::chrono::milliseconds(1))) << "A pended lambda was completed before the owning context was intiated";
 
   ctxt->Initiate();
-  ASSERT_EQ(std::future_status::ready, f.wait_for(std::chrono::seconds(30))) << "A lambda did not complete in a timely fashion after its context was started";
+  ASSERT_EQ(std::future_status::ready, f.wait_for(std::chrono::seconds(5))) << "A lambda did not complete in a timely fashion after its context was started";
 
   // Terminate, verify that we don't capture any more lambdas:
   ctxt->SignalShutdown();
@@ -93,7 +93,7 @@ TEST_F(ThreadPoolTest, ManualThreadPoolBehavior) {
   );
 
   auto valFuture = val.get_future();
-  ASSERT_EQ(std::future_status::ready, valFuture.wait_for(std::chrono::seconds(30))) << "Join thread took too much time to start up";
+  ASSERT_EQ(std::future_status::ready, valFuture.wait_for(std::chrono::seconds(5))) << "Join thread took too much time to start up";
   auto token = valFuture.get();
 
   // Set up the context 
@@ -112,9 +112,9 @@ TEST_F(ThreadPoolTest, ManualThreadPoolBehavior) {
 
   // Wait for everything to get hit:
   auto hitDoneFuture = hitDone.get_future();
-  ASSERT_EQ(std::future_status::ready, hitDoneFuture.wait_for(std::chrono::seconds(30))) << "Manual pool did not dispatch lambdas in a timely fashion";
+  ASSERT_EQ(std::future_status::ready, hitDoneFuture.wait_for(std::chrono::seconds(5))) << "Manual pool did not dispatch lambdas in a timely fashion";
 
   // Verify that cancellation of the token causes the manual thread to back out
   token->Leave();
-  ASSERT_EQ(std::future_status::ready, launch.wait_for(std::chrono::seconds(30))) << "Token cancellation did not correctly release a single waiting thread";
+  ASSERT_EQ(std::future_status::ready, launch.wait_for(std::chrono::seconds(5))) << "Token cancellation did not correctly release a single waiting thread";
 }

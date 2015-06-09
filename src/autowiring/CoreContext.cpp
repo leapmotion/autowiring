@@ -57,8 +57,8 @@ CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iter
   m_pParent(pParent),
   m_backReference(backReference),
   m_stateBlock(new CoreContextStateBlock),
-  m_threadPool(std::make_shared<NullPool>()),
-  m_junctionBoxManager(new JunctionBoxManager)
+  m_junctionBoxManager(new JunctionBoxManager),
+  m_threadPool(std::make_shared<NullPool>())
 {}
 
 CoreContext::~CoreContext(void) {

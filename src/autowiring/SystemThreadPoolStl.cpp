@@ -47,6 +47,7 @@ void SystemThreadPoolStl::OnStartUnsafe(void) {
   // TODO:  Set this number according to std::thread::hardware_concurrency.  This can't
   // be done right now due to the fact that DispatchQueue has terrible concurrency
   // performance.
+  (void)concurrent;
   while (m_outstanding < 2)
     AddWorkerThreadUnsafe();
 }
