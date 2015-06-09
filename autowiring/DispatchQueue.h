@@ -284,15 +284,20 @@ public:
     static_assert(!std::is_base_of<DispatchThunkBase, _Fx>::value, "Overload resolution malfunction, must not doubly wrap a dispatch thunk");
     static_assert(!std::is_pointer<_Fx>::value, "Cannot pend a pointer to a function, we must have direct ownership");
 
+    // Create the thunk first to reduce the amount of time we spend in lock:
+    auto thunk = new DispatchThunk<_Fx>(std::forward<_Fx>(fx));
+
     std::unique_lock<std::mutex> lk(m_dispatchLock);
-    if (m_count >= m_dispatchCap)
+    if (m_count >= m_dispatchCap) {
+      lk.unlock();
+      delete thunk;
       return;
+    }
 
     // Count must be separately maintained:
     m_count++;
 
     // Linked list setup:
-    auto thunk = new DispatchThunk<_Fx>(std::forward<_Fx>(fx));
     if (m_pHead)
       m_pTail->m_pFlink = thunk; 
     else {
