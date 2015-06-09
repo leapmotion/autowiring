@@ -27,7 +27,7 @@ private:
   DispatchQueue m_toBeDone;
 
   // The current number of outstanding workers
-  std::atomic<size_t> m_outstanding;
+  std::atomic<size_t> m_outstanding{0};
 
   /// <summary>
   /// Creates a new worker thread to process the dispatch queue
