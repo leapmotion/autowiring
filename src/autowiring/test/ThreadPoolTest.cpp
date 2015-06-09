@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include <autowiring/autowiring.h>
 #include <autowiring/ManualThreadPool.h>
+#include <autowiring/NullPool.h>
 #include <autowiring/SystemThreadPoolStl.h>
 #include FUTURE_HEADER
 
@@ -12,6 +13,12 @@ class ThreadPoolTest:
 TEST_F(ThreadPoolTest, SimpleSubmission) {
   AutoCurrentContext ctxt;
   ctxt->Initiate();
+
+  // Simple validation
+  auto pool = ctxt->GetThreadPool();
+  ASSERT_NE(nullptr, pool.get()) << "Pool can never be null on an initiated context";
+  ASSERT_EQ(nullptr, dynamic_cast<autowiring::NullPool*>(pool.get())) << "After context initiation, the pool should not be a null pool";
+  ASSERT_TRUE(pool->IsStarted()) << "Pool was not started when the enclosing context was initiated";
 
   // Submit a job and then block for its completion.  Use a promise to ensure that
   // the job is being executed in some other thread context.
