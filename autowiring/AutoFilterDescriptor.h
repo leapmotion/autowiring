@@ -3,7 +3,7 @@
 #include "AnySharedPointer.h"
 #include "altitude.h"
 #include "auto_arg.h"
-#include "AutoFilterDescriptorInput.h"
+#include "AutoFilterArgument.h"
 #include "CallExtractor.h"
 #include "Decompose.h"
 #include "has_autofilter.h"
@@ -33,7 +33,7 @@ struct AutoFilterDescriptorStub {
   /// is required to carry information about the type of the proper member function to be called; t_extractedCall is
   /// required to be instantiated by the caller and point to the AutoFilter proxy routine.
   /// </summary>
-  AutoFilterDescriptorStub(const std::type_info* pType, autowiring::altitude altitude, const AutoFilterDescriptorInput* pArgs, bool deferred, t_extractedCall pCall) :
+  AutoFilterDescriptorStub(const std::type_info* pType, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall) :
     m_pType(pType),
     m_altitude(altitude),
     m_pArgs(pArgs),
@@ -61,7 +61,7 @@ protected:
   // This subscriber's argument types
   // NOTE: This is a reference to a static generated list,
   // therefore it MUST be const and MUST be shallow-copied.
-  const AutoFilterDescriptorInput* m_pArgs = nullptr;
+  const AutoFilterArgument* m_pArgs = nullptr;
 
   // Set if this is a deferred subscriber.  Deferred subscribers cannot receive immediate-style
   // decorations, and have additional handling considerations when dealing with non-copyable
@@ -88,7 +88,7 @@ public:
   const std::type_info* GetType() const { return m_pType; }
   size_t GetArity(void) const { return m_arity; }
   size_t GetRequiredCount(void) const { return m_requiredCount; }
-  const AutoFilterDescriptorInput* GetAutoFilterInput(void) const { return m_pArgs; }
+  const AutoFilterArgument* GetAutoFilterArguments(void) const { return m_pArgs; }
   bool IsDeferred(void) const { return m_deferred; }
   const std::type_info* GetAutoFilterTypeInfo(void) const { return m_pType; }
 
@@ -98,7 +98,7 @@ public:
   /// <remarks>
   /// Returns nullptr when no argument is of the requested type.
   /// </remarks>
-  const AutoFilterDescriptorInput* GetArgumentType(const std::type_info* argType) {
+  const AutoFilterArgument* GetArgumentType(const std::type_info* argType) {
     for(auto pArg = m_pArgs; *pArg; pArg++) {
       if (pArg->ti == argType) {
         return pArg;
@@ -164,7 +164,7 @@ struct AutoFilterDescriptor:
         T,
         CallExtractor<decltype(&T::AutoFilter)>::deferred ? autowiring::altitude::Dispatch : autowiring::altitude::Standard
       >::value,
-      Decompose<decltype(&T::AutoFilter)>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types,
+      Decompose<decltype(&T::AutoFilter)>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types,
       CallExtractor<decltype(&T::AutoFilter)>::deferred,
       &CallExtractor<decltype(&T::AutoFilter)>::template Call<&T::AutoFilter>
     )
@@ -182,7 +182,7 @@ struct AutoFilterDescriptor:
       AnySharedPointer(std::make_shared<Fn>(std::forward<Fn>(fn))),
       &typeid(Fn),
       altitude,
-      CallExtractor<decltype(&Fn::operator())>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types,
+      CallExtractor<decltype(&Fn::operator())>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types,
       false,
       &CallExtractor<decltype(&Fn::operator())>::template Call<&Fn::operator()>
     )
@@ -206,7 +206,7 @@ struct AutoFilterDescriptor:
   ///
   /// The caller is responsible for decomposing the desired routine into the target AutoFilter call
   /// </summary>
-  AutoFilterDescriptor(const AnySharedPointer& autoFilter, const std::type_info* pType, autowiring::altitude altitude, const AutoFilterDescriptorInput* pArgs, bool deferred, t_extractedCall pCall) :
+  AutoFilterDescriptor(const AnySharedPointer& autoFilter, const std::type_info* pType, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall) :
     AutoFilterDescriptorStub(pType, altitude, pArgs, deferred, pCall),
     m_autoFilter(autoFilter)
   {}
@@ -227,7 +227,7 @@ struct AutoFilterDescriptor:
       // The remainder is fairly straightforward
       &typeid(pfn),
       altitude,
-      CallExtractor<decltype(pfn)>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types,
+      CallExtractor<decltype(pfn)>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types,
       false,
       CallExtractor<decltype(pfn)>::Call
     )

@@ -76,7 +76,7 @@ DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& 
 }
 
 void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
-  for(auto pCur = satCounter.GetAutoFilterInput(); *pCur; pCur++) {
+  for(auto pCur = satCounter.GetAutoFilterArguments(); *pCur; pCur++) {
     DecorationKey key(*pCur->ti, pCur->is_shared, pCur->tshift);
     DecorationDisposition& entry = m_decorations[key];
 
@@ -101,7 +101,7 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
     if (pCur->is_output) {
       if(!entry.m_publishers.empty())
         for (SatCounter* subscriber : entry.m_subscribers)
-          for(auto pOther = subscriber->GetAutoFilterInput(); *pOther; pOther++)
+          for(auto pOther = subscriber->GetAutoFilterArguments(); *pOther; pOther++)
             if (!pOther->is_multi) {
               std::stringstream ss;
               ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << " with existing subscriber.";
@@ -413,7 +413,7 @@ std::shared_ptr<CoreContext> AutoPacket::GetContext(void) const {
   return m_parentFactory->GetContext();
 }
 
-bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterDescriptorInput* inputs, std::chrono::nanoseconds duration) {
+bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterArgument* inputs, std::chrono::nanoseconds duration) {
   auto stub = std::make_shared<SignalStub>(*this, cv);
 
   // This ad-hoc filter detects when all the requested decorations have been added, and then
