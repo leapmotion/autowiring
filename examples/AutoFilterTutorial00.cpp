@@ -1,11 +1,10 @@
+// AutoFilterTutorial00.cpp created by Victor Dods on 2015/06/03
+// Copyright (C) Leap Motion, Inc. All rights reserved.
 /// @page AutoFilterTutorial00 AutoFilter Tutorial 00
 /// This tutorial will introduce the reader to the AutoFilter concept and how to implement a rudimentary
 /// AutoFilter network.  It is recommended that the reader become familiar with the concept of a context
 /// (see XXX TODO context tutorial) before reading this tutorial.
-/// @code
-// AutoFilterTutorial00.cpp created by Victor Dods on 2015/06/03
-// Copyright (C) Leap Motion, Inc. All rights reserved.
-/// @endcode
+///
 /// A filter network can be thought of as a directed acyclic graph, where the nodes of the graph represent
 /// data structures and the collection of arrows pointing at each graph node represent a function which
 /// populates the data structure which that node represents.  That collection of arrows will be refered to
@@ -57,7 +56,6 @@ public:
 };
 /// @endcode 
 /// This filter takes an int as input and has no output.  It simply prints the value of the input.
-/// and 
 /// @code
 class IntPrinter {
 public:
@@ -125,6 +123,8 @@ int main () {
 /// @code
   packet = factory->NewPacket();
   packet->Decorate(std::string("45954.1"));
+  
+  return 0; // Return with no error.
 }
 /// @endcode
 /// The output of this program is:
