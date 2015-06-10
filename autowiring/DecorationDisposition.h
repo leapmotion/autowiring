@@ -65,7 +65,8 @@ enum class DispositionState {
   // entry--IE, they accept const references as inputs.
   UnsatisfiableNoCall,
 
-  // This decoration will never be satisfied.  Calls are generated to the
+  // This decoration will never be satisfied.  Calls are generated with a null
+  // shared pointer passed as the value.
   Unsatisfiable
 };
 
