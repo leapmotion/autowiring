@@ -7,5 +7,6 @@ Here are sequences of annotated, compiling programs which are designed to teach 
 ### AutoFilter
 
 - @subpage AutoFilterTutorial00
+- @subpage AutoFilterTutorial01
 
 */

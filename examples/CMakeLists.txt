@@ -40,6 +40,9 @@ target_link_libraries(AutoFilterExample Autowiring::Autowiring)
 add_executable(AutoFilterTutorial00 AutoFilterTutorial00.cpp)
 target_link_libraries(AutoFilterTutorial00 Autowiring::Autowiring)
 
+add_executable(AutoFilterTutorial01 AutoFilterTutorial01.cpp)
+target_link_libraries(AutoFilterTutorial01 Autowiring::Autowiring)
+
 # Need multithreading services if available
 find_package(Threads)
 if(Threads_FOUND)
