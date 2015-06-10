@@ -36,7 +36,7 @@ static void PoolOverload(void) {
   AutoCurrentContext ctxt;
   ctxt->Initiate();
 
-  size_t cap = 10000;
+  size_t cap = 1000;
   auto ctr = std::make_shared<std::atomic<size_t>>(cap);
   auto p = std::make_shared<std::promise<void>>();
 
