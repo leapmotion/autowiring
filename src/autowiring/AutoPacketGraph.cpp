@@ -34,7 +34,7 @@ void AutoPacketGraph::LoadEdges() {
   m_factory->AppendAutoFiltersTo(descriptors);
   
   for (auto& descriptor : descriptors) {
-    for(auto pCur = descriptor.GetAutoFilterInput(); *pCur; pCur++) {
+    for(auto pCur = descriptor.GetAutoFilterArguments(); *pCur; pCur++) {
       const std::type_info& type_info = *pCur->ti;
       
       // Skip the AutoPacketGraph

@@ -226,7 +226,7 @@ void AutoNetServerImpl::NewObject(CoreContext& ctxt, const CoreObjectDescriptor&
     // Check if type implements an AutoFilter
     if (!object.subscriber.empty()) {
       Json::object args;
-      for (auto pArg = object.subscriber.GetAutoFilterInput(); *pArg; ++pArg) {
+      for (auto pArg = object.subscriber.GetAutoFilterArguments(); *pArg; ++pArg) {
         args[autowiring::demangle(pArg->ti)] = Json::object{
           {"id", autowiring::demangle(pArg->ti)},
           {"isInput", pArg->is_input},

@@ -88,7 +88,7 @@ public:
   const std::type_info* GetType() const { return m_pType; }
   size_t GetArity(void) const { return m_arity; }
   size_t GetRequiredCount(void) const { return m_requiredCount; }
-  const AutoFilterDescriptorInput* GetAutoFilterInput(void) const { return m_pArgs; }
+  const AutoFilterDescriptorInput* GetAutoFilterArguments(void) const { return m_pArgs; }
   bool IsDeferred(void) const { return m_deferred; }
   const std::type_info* GetAutoFilterTypeInfo(void) const { return m_pType; }
 

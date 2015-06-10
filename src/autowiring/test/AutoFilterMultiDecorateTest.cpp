@@ -20,7 +20,7 @@ TEST_F(AutoFilterMultiDecorateTest, EnumerateDecorationsTest) {
   AutoFilterDescriptor desc(sample);
 
   size_t i = 0;
-  for (auto* pCur = desc.GetAutoFilterInput(); *pCur; pCur++)
+  for (auto* pCur = desc.GetAutoFilterArguments(); *pCur; pCur++)
     i++;
 
   ASSERT_EQ(1, i) << "AutoFilterDescriptor parsed an incorrect number of arguments from a lambda";
