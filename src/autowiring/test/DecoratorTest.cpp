@@ -23,7 +23,7 @@ TEST_F(DecoratorTest, VerifyCorrectExtraction) {
   // Run our prop extractor based on a known decorator:
   AutoRequired<FilterA> filterA;
   AutoFilterDescriptor desc(static_cast<std::shared_ptr<FilterA>&>(filterA));
-  for(const AutoFilterDescriptorInput* cur = desc.GetAutoFilterArguments(); *cur; cur++)
+  for(const AutoFilterArgument* cur = desc.GetAutoFilterArguments(); *cur; cur++)
     v.push_back(cur->ti);
   ASSERT_EQ(2UL, v.size()) << "Extracted an insufficient number of types from a known filter function";
 
@@ -36,7 +36,7 @@ TEST_F(DecoratorTest, VerifyEmptyExtraction) {
   auto obj = std::make_shared<CoreObject>();
 
   // Should be possible to obtain this value and have it remain valid even after the descriptor is gone
-  const AutoFilterDescriptorInput* v = MakeAutoFilterDescriptor(obj).GetAutoFilterArguments();
+  const AutoFilterArgument* v = MakeAutoFilterDescriptor(obj).GetAutoFilterArguments();
   ASSERT_EQ(nullptr, v) << "Extracted arguments from an object known not to have a Filter method";
 }
 

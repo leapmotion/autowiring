@@ -3,7 +3,7 @@
 #include "AnySharedPointer.h"
 #include "at_exit.h"
 #include "auto_id.h"
-#include "AutoFilterDescriptorInput.h"
+#include "AutoFilterArgument.h"
 #include "DecorationDisposition.h"
 #include "demangle.h"
 #include "is_any.h"
@@ -22,7 +22,7 @@ class AutoPacketFactory;
 class AutoPacketProfiler;
 class CoreContext;
 struct AutoFilterDescriptor;
-struct AutoFilterDescriptorInput;
+struct AutoFilterArgument;
 
 template<class MemFn>
 struct Decompose;
@@ -541,7 +541,7 @@ public:
   /// by this filter have been satisfied on this packet.  When this function returns, the specified filter will have
   /// been called.
   /// </remarks>
-  bool Wait(std::condition_variable& cv, const AutoFilterDescriptorInput* inputs, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max());
+  bool Wait(std::condition_variable& cv, const AutoFilterArgument* inputs, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max());
 
   /// <summary>
   /// Blocks until the passed lambda function can be called
@@ -566,7 +566,7 @@ public:
 
     // Add the filter that will ultimately be invoked
     *this += std::move(autoFilter);
-    return Wait(cv, Decompose<decltype(&Fx::operator())>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types, duration);
+    return Wait(cv, Decompose<decltype(&Fx::operator())>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types, duration);
   }
 
   /// <summary>
@@ -575,9 +575,9 @@ public:
   template<class... Decorations>
   bool Wait(std::condition_variable& cv)
   {
-    static const AutoFilterDescriptorInput inputs [] = {
+    static const AutoFilterArgument inputs [] = {
       static_cast<auto_arg<Decorations>*>(nullptr)...,
-      AutoFilterDescriptorInput()
+      AutoFilterArgument()
     };
 
     return Wait(cv, inputs, std::chrono::nanoseconds::max());
@@ -589,9 +589,9 @@ public:
   template<class... Args>
   bool Wait(std::chrono::nanoseconds duration, std::condition_variable& cv)
   {
-    static const AutoFilterDescriptorInput inputs [] = {
-      AutoFilterDescriptorInputT<Args>()...,
-      AutoFilterDescriptorInput()
+    static const AutoFilterArgument inputs [] = {
+      AutoFilterArgumentT<Args>()...,
+      AutoFilterArgument()
     };
 
     return Wait(cv, inputs, duration);

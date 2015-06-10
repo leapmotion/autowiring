@@ -413,7 +413,7 @@ std::shared_ptr<CoreContext> AutoPacket::GetContext(void) const {
   return m_parentFactory->GetContext();
 }
 
-bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterDescriptorInput* inputs, std::chrono::nanoseconds duration) {
+bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterArgument* inputs, std::chrono::nanoseconds duration) {
   auto stub = std::make_shared<SignalStub>(*this, cv);
 
   // This ad-hoc filter detects when all the requested decorations have been added, and then
