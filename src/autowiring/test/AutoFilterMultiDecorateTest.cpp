@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/CoreThread.h>
+#include "TestFixtures/Decoration.hpp"
 #include CHRONO_HEADER
 #include THREAD_HEADER
 
@@ -63,4 +64,31 @@ TEST_F(AutoFilterMultiDecorateTest, MultiPostHocIntroductionTest) {
   };
 
   ASSERT_EQ(3, called) << "Not all lambda functions were called as expected";
+}
+
+TEST_F(AutoFilterMultiDecorateTest, UnsatDecTest) {
+  AutoRequired<AutoPacketFactory> f;
+  *f += [] (const Decoration<0>&, std::string& out) {
+    out = "Hello";
+  };
+  *f += [](const Decoration<1>&, std::string& out) {
+    out = "World";
+  };
+  *f += [](std::string* args[], int& val) {
+    for (val = 0; *args; args++, val++);
+  };
+
+  auto packet = f->NewPacket();
+  packet->Decorate(Decoration<0>{});
+  packet->Unsatisfiable<Decoration<1>>();
+
+  const std::string** strs = packet->GetAll<std::string>();
+  ASSERT_NE(nullptr, strs) << "String datatype not found on multidecorate packet";
+  ASSERT_NE(nullptr, strs[0]) << "No strings attached to a multidecorate packet as expected";
+  ASSERT_EQ(nullptr, strs[1]) << "Expected one string back, got two";
+  ASSERT_EQ("Hello", *strs[0]) << "Entry in multidecorate set was not the expected value";
+
+  int nEntries;
+  ASSERT_NO_THROW(nEntries = packet->Get<int>()) << "Multidecorate filter was not run as expected";
+  ASSERT_EQ(1, nEntries) << "Mismatch of number of multi-decorate entries on the packet";
 }
