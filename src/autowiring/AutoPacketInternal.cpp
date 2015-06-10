@@ -47,17 +47,15 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
     call->GetCall()(call->GetAutoFilter(), *this);
 
   // First-call indicated by argumument type AutoPacket&:
-  for (bool is_shared : {false, true}) {
-    std::unique_lock<std::mutex> lk(m_lock);
+  std::unique_lock<std::mutex> lk(m_lock);
 
-    // Don't modify the decorations set if nobody expects an AutoPacket input
-    auto q = m_decorations.find(DecorationKey(typeid(auto_arg<AutoPacket&>::id_type), is_shared, 0));
-    if (q == m_decorations.end())
-      continue;
+  // Don't modify the decorations set if nobody expects an AutoPacket input
+  auto q = m_decorations.find(DecorationKey(typeid(auto_arg<AutoPacket&>::id_type), 0));
+  if (q == m_decorations.end())
+    return;
 
-    q->second.m_state = DispositionState::Satisfied;
-    UpdateSatisfactionUnsafe(std::move(lk), q->second);
-  }
+  q->second.m_state = DispositionState::Satisfied;
+  UpdateSatisfactionUnsafe(std::move(lk), q->second);
 }
 
 std::shared_ptr<AutoPacketInternal> AutoPacketInternal::SuccessorInternal(void) {

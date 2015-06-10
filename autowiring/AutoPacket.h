@@ -117,7 +117,7 @@ protected:
   /// A satisfaction pulse will call any AutoFilter instances which are satisfied by the
   /// decoration of the passed decoration types.
   /// </remarks>
-  void PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos);
+  void PulseSatisfactionUnsafe(std::unique_lock<std::mutex> lk, DecorationDisposition* pTypeSubs [], size_t nInfos);
 
   /// <summary>Unsynchronized runtime counterpart to Has</summary>
   bool HasUnsafe(const DecorationKey& key) const;
@@ -189,7 +189,7 @@ public:
   template<class T>
   bool Has(int tshift=0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    return HasUnsafe(DecorationKey(auto_id<T>::key(), true, tshift));
+    return HasUnsafe(DecorationKey(auto_id<T>::key(), tshift));
   }
 
   /// <summary>
@@ -201,7 +201,7 @@ public:
 
     const T* retVal;
     if (!Get(retVal, tshift))
-      ThrowNotDecoratedException(DecorationKey(auto_id<T>::key(), false, tshift));
+      ThrowNotDecoratedException(DecorationKey(auto_id<T>::key(), tshift));
     return *retVal;
   }
 
@@ -214,7 +214,7 @@ public:
   /// </remarks>
   template<class T>
   bool Get(const T*& out, int tshift=0) const {
-    DecorationKey key(auto_id<T>::key(), false, tshift);
+    DecorationKey key(auto_id<T>::key(), tshift);
     const DecorationDisposition* pDisposition = GetDisposition(key);
     if (pDisposition) {
       switch (pDisposition->m_decorations.size()) {
@@ -254,7 +254,7 @@ public:
   template<class T>
   bool Get(const std::shared_ptr<const T>*& out, int tshift=0) const {
     // Decoration must be present and the shared pointer itself must also be present
-    DecorationKey key(auto_id<T>::key(), true, tshift);
+    DecorationKey key(auto_id<T>::key(), tshift);
     const DecorationDisposition* pDisposition = GetDisposition(key);
     if (!pDisposition) {
       out = nullptr;
@@ -317,7 +317,7 @@ public:
   template<class T>
   const T** GetAll(int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), true, tshift));
+    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
 
     // If decoration doesn't exist, return empty null-terminated buffer
     if (q == m_decorations.end()) {
@@ -354,8 +354,7 @@ public:
   /// </remarks>
   template<class T>
   void Unsatisfiable(void) {
-    MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), false, 0));
-    MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), true, 0));
+    MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
   }
 
   /// <summary>
@@ -372,7 +371,7 @@ public:
     auto ptr = std::make_shared<T>(std::forward<T&&>(t));
     Decorate(
       AnySharedPointer(ptr),
-      DecorationKey(auto_id<T>::key(), true, 0)
+      DecorationKey(auto_id<T>::key(), 0)
     );
     return *ptr;
   }
@@ -388,7 +387,7 @@ public:
   /// </remarks>
   template<class T>
   void Decorate(std::shared_ptr<T> ptr) {
-    DecorationKey key(auto_id<T>::key(), true, 0);
+    DecorationKey key(auto_id<T>::key(), 0);
     
     // We don't want to see this overload used on a const T
     static_assert(!std::is_const<T>::value, "Cannot decorate a shared pointer to const T with this overload");
@@ -438,11 +437,9 @@ public:
     // Perform standard decoration with a short initialization:
     std::unique_lock<std::mutex> lk(m_lock);
     DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)] = {
-      &DecorateImmediateUnsafe(DecorationKey(auto_id<T>::key(), false, 0), &immed),
-      &DecorateImmediateUnsafe(DecorationKey(auto_id<Ts>::key(), false, 0), &immeds)...
+      &DecorateImmediateUnsafe(DecorationKey(auto_id<T>::key(), 0), &immed),
+      &DecorateImmediateUnsafe(DecorationKey(auto_id<Ts>::key(), 0), &immeds)...
     };
-    lk.unlock();
-
 
     // Pulse satisfaction:
     MakeAtExit([this, &pTypeSubs] {
@@ -454,12 +451,10 @@ public:
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-      for (const std::type_info* ti : {&auto_id<T>::key(), &auto_id<Ts>::key()...}) {
-        MarkUnsatisfiable(DecorationKey(*ti, true, 0));
-        MarkUnsatisfiable(DecorationKey(*ti, false, 0));
-      }
+      for (const std::type_info* ti : {&auto_id<T>::key(), &auto_id<Ts>::key()...})
+        MarkUnsatisfiable(DecorationKey(*ti, 0));
     }),
-    PulseSatisfaction(pTypeSubs, 1 + sizeof...(Ts));
+    PulseSatisfactionUnsafe(std::move(lk), pTypeSubs, 1 + sizeof...(Ts));
   }
 
   /// <summary>
@@ -512,9 +507,7 @@ public:
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   template<class T>
   bool HasSubscribers(void) const {
-    return
-      HasSubscribers(DecorationKey(auto_id<T>::key(), false, 0)) ||
-      HasSubscribers(DecorationKey(auto_id<T>::key(), true, 0));
+    return HasSubscribers(DecorationKey(auto_id<T>::key(), 0));
   }
 
   struct SignalStub {
