@@ -193,3 +193,29 @@ TEST_F(AutoFilterCollapseRulesTest, SharedOutSelfAutoPrev) {
   ASSERT_TRUE(packet2->Has<std::string>());
   ASSERT_EQ(1UL, nMsgs) << "auto_prev was not correctly set when a filter produces a shared_ptr output";
 }
+
+struct Base {};
+struct Derived : public Base{};
+
+TEST_F(AutoFilterCollapseRulesTest, AutoPrevInheritance) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoCurrentContext()->Initiate();
+  
+  size_t counter = 0;
+  
+  *factory += [&](const std::vector<Base>& base, auto_prev<std::vector<Derived>> prev, std::vector<Derived>& deriv) {
+    deriv.emplace_back();
+    
+    if (counter) {
+      ASSERT_FALSE(prev->empty()) << "auto_prev not called";
+    }
+    
+    counter++;
+  };
+  
+  for (size_t i = 0; i < 10; ++i) {
+    auto packet = factory->NewPacket();
+    std::vector<Base> baseVec{Base(), Base(), Base()};
+    packet->Decorate(baseVec);
+  }
+}
