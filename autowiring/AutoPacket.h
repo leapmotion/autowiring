@@ -35,9 +35,6 @@ struct Decompose;
 /// The pipeline packet is not a type of context; querying the packet for an element of
 /// a particular type will look for an element of precisely that type, not an inherited
 /// type or a related interface.
-///
-/// Consumers who wish to advertise a particular field under multiple types must do so
-/// manually with the Advertise function.
 /// </remarks>
 class AutoPacket:
   public std::enable_shared_from_this<AutoPacket>,
