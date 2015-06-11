@@ -163,7 +163,7 @@ class auto_arg<T&>
 {
 public:
   typedef std::shared_ptr<T> type;
-  
+
   // Utility type, required to dereference the std::shared_ptr
   struct arg_type {
     arg_type(std::shared_ptr<T>& arg) :
@@ -292,7 +292,7 @@ class auto_arg<T const **>
 public:
   typedef const T** arg_type;
   struct type {
-    explicit type(type&& rhs) :
+    type(type&& rhs) :
       ptr(std::move(rhs.ptr))
     {}
 
