@@ -17,7 +17,7 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
 
   // Traverse all descendant contexts, adding their packet subscriber vectors one at a time:
   m_firstCounter = m_parentFactory->CreateSatCounterList();
-  
+
   // Find all subscribers with no required or optional arguments:
   std::vector<SatCounter*> callCounters;
 
@@ -30,7 +30,7 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
         callCounters.push_back(satCounter);
     }
   }
-  
+
   // Mark timeshifted decorations as unsatisfiable on the first packet
   if (isFirstPacket)
     for (auto& dec : m_decorations) {
@@ -46,16 +46,27 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
   for (SatCounter* call : callCounters)
     call->GetCall()(call->GetAutoFilter(), *this);
 
-  // First-call indicated by argumument type AutoPacket&:
-  std::unique_lock<std::mutex> lk(m_lock);
+  std::vector<SatCounter*> callQueue;
+  {
+    // First-call indicated by argumument type AutoPacket&:
+    std::lock_guard<std::mutex> lk(m_lock);
 
-  // Don't modify the decorations set if nobody expects an AutoPacket input
-  auto q = m_decorations.find(DecorationKey(typeid(auto_arg<AutoPacket&>::id_type), 0));
-  if (q == m_decorations.end())
-    return;
+    // Manual handling of the AutoPacket input type:
+    auto q = m_decorations.find(DecorationKey(typeid(auto_arg<AutoPacket&>::id_type), 0));
+    if (q == m_decorations.end())
+      return;
 
-  q->second.m_state = DispositionState::Satisfied;
-  UpdateSatisfactionUnsafe(std::move(lk), q->second);
+    q->second.m_state = DispositionState::Complete;
+    for (auto subscriber : q->second.m_subscribers) {
+      auto* satCounter = subscriber.satCounter;
+      if (satCounter->Decrement())
+        callQueue.push_back(satCounter);
+    }
+  }
+
+  // Generate all calls
+  for (SatCounter* call : callQueue)
+    call->GetCall()(call->GetAutoFilter(), *this);
 }
 
 std::shared_ptr<AutoPacketInternal> AutoPacketInternal::SuccessorInternal(void) {

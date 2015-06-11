@@ -29,7 +29,7 @@ AutoPacket::~AutoPacket(void) {
   // Mark decorations of successor packets that use decorations
   // originating from this packet as unsatisfiable
   for (auto& pair : m_decorations)
-    if (!pair.first.tshift && pair.second.m_state != DispositionState::Satisfied)
+    if (!pair.first.tshift && pair.second.m_state != DispositionState::Complete)
       MarkSuccessorsUnsatisfiable(DecorationKey(*pair.first.ti, 0));
 
   // Needed for the AutoPacketGraph
@@ -70,7 +70,7 @@ DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& 
   }
 
   // Mark the entry as appropriate:
-  dec.m_state = DispositionState::Satisfied;
+  dec.m_state = DispositionState::Complete;
   dec.m_pImmediate = pvImmed;
   return dec;
 }
@@ -88,10 +88,17 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
         throw std::runtime_error(ss.str());
       }
 
-      entry.m_subscribers.push_back({pCur->is_shared, &satCounter});
+      entry.m_subscribers.push_back({
+        pCur->is_shared,
+        pCur->is_multi ?
+        DecorationDisposition::Subscriber::Type::Multi :
+        pCur->is_shared ?
+        DecorationDisposition::Subscriber::Type::Optional :
+        DecorationDisposition::Subscriber::Type::Normal,
+        &satCounter
+      });
       switch (entry.m_state) {
-      case DispositionState::Satisfied:
-      case DispositionState::Unsatisfiable:
+      case DispositionState::Complete:
         satCounter.Decrement();
         break;
       default:
@@ -101,12 +108,13 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
     if (pCur->is_output) {
       if(!entry.m_publishers.empty())
         for (const auto& subscriber : entry.m_subscribers)
-          for(auto pOther = subscriber.satCounter->GetAutoFilterArguments(); *pOther; pOther++)
-            if (!pOther->is_multi) {
+          for (auto pOther = subscriber.satCounter->GetAutoFilterArguments(); *pOther; pOther++) {
+            if (*pOther->ti == *pCur->ti && !pOther->is_multi) {
               std::stringstream ss;
               ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << " with existing subscriber.";
               throw std::runtime_error(ss.str());
             }
+          }
 
       entry.m_publishers.push_back(&satCounter);
     }
@@ -122,11 +130,10 @@ void AutoPacket::MarkUnsatisfiable(const DecorationKey& key) {
   std::unique_lock<std::mutex> lk(m_lock);
   auto& entry = m_decorations[key];
 
-  if (entry.m_state == DispositionState::PartlySatisfied || entry.m_state == DispositionState::Satisfied)
-    throw std::runtime_error("Cannot mark a decoration as unsatisfiable when that decoration is already present on this packet");
-
-  // Mark the entry as permanently unsatisfiable:
-  entry.m_state = DispositionState::Unsatisfiable;
+  // Clear all decorations and pointers attached here
+  entry.m_state = DispositionState::Complete;
+  entry.m_decorations.clear();
+  entry.m_pImmediate = nullptr;
 
   // Notify all consumers
   UpdateSatisfactionUnsafe(std::move(lk), entry);
@@ -148,33 +155,78 @@ void AutoPacket::MarkSuccessorsUnsatisfiable(DecorationKey key) {
   }
 }
 
-void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex>&& lk, const DecorationDisposition& disposition) {
+void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const DecorationDisposition& disposition) {
+  // Update satisfaction inside of lock
+  if (disposition.m_state != DispositionState::Complete)
+    // Nothing to do yet
+    return;
+
+  // Any filter that who can take this decoration as an optional input should be called
   std::vector<SatCounter*> callQueue;
 
-  // Update satisfaction inside of lock
-  switch (disposition.m_state) {
-  case DispositionState::Unsatisfiable:
-    // Call only optional subscribers
-    for (const auto& subscriber : disposition.m_subscribers)
-      if (subscriber.is_optional && subscriber.satCounter->Decrement())
-        callQueue.push_back(subscriber.satCounter);
+  // Recursively mark unsatisfiable any single-output arguments on these subscribers:
+  std::vector<const AutoFilterArgument*> unsatOutputArgs;
+
+  switch (disposition.m_decorations.size()) {
+  case 0:
+    // No decorations here whatsoever.
+    // Subscribers that cannot be invoked should have their outputs recursively marked unsatisfiable.
+    // Subscribers that can be invoked should be.
+    for (auto subscriber : disposition.m_subscribers) {
+      auto* satCounter = subscriber.satCounter;
+      switch (subscriber.type) {
+      case DecorationDisposition::Subscriber::Type::Multi:
+      case DecorationDisposition::Subscriber::Type::Optional:
+        // Optional, we will just generate a call to this subscriber, if possible:
+        if (satCounter->Decrement())
+          callQueue.push_back(satCounter);
+        break;
+      case DecorationDisposition::Subscriber::Type::Normal:
+        {
+          // Non-optional, consider outputs and recursively invalidate
+          const auto* args = satCounter->GetAutoFilterArguments();
+          for (size_t i = satCounter->GetArity(); i--;)
+            // Only consider output arguments:
+            if (args[i].is_output)
+              // This output is transitively unsatisfiable, include it for later removal
+              unsatOutputArgs.push_back(&args[i]);
+        }
+        break;
+      }
+    }
     break;
-  case DispositionState::Satisfied:
-    // Identical to the unsatisfiable case, except we don't need to test subscribers to see
-    // if their inputs are considered optional
-    for (const auto& subscriber : disposition.m_subscribers)
-      if (subscriber.satCounter->Decrement())
-        callQueue.push_back(subscriber.satCounter);
+  case 1:
+    // One unique decoration available.  We should be able to call everyone.
+    for (auto subscriber : disposition.m_subscribers) {
+      auto* satCounter = subscriber.satCounter;
+      if (satCounter->Decrement())
+        callQueue.push_back(satCounter);
+    }
     break;
   default:
-    // Nothing to do
-    return;
+    // Multiple decorations.  Single-input types should never be encountered, but if they are,
+    // we can't call them.  Always call multi-input entries.
+    for (auto subscriber : disposition.m_subscribers) {
+      if (subscriber.type == DecorationDisposition::Subscriber::Type::Multi)
+        callQueue.push_back(subscriber.satCounter);
+    }
+    break;
   }
-
-  // Make calls outside of lock, to avoid deadlock from decorations in methods
   lk.unlock();
+
+  // Generate all calls
   for (SatCounter* call : callQueue)
     call->GetCall()(call->GetAutoFilter(), *this);
+
+  // Mark all unsatisfiable output types
+  for (auto unsatOutputArg : unsatOutputArgs) {
+    // One more producer run, even though we couldn't attach any new decorations
+    auto& entry = m_decorations[DecorationKey{*unsatOutputArg->ti, 0}];
+    entry.m_nProducersRun++;
+
+    // Now recurse on this entry
+    UpdateSatisfactionUnsafe(std::unique_lock<std::mutex>{m_lock}, entry);
+  }
 }
 
 void AutoPacket::PulseSatisfactionUnsafe(std::unique_lock<std::mutex> lk, DecorationDisposition* pTypeSubs[], size_t nInfos) {
@@ -193,8 +245,8 @@ void AutoPacket::PulseSatisfactionUnsafe(std::unique_lock<std::mutex> lk, Decora
       for (const auto& cur : pTypeSubs[i]->m_subscribers) {
         SatCounter* satCounter = cur.satCounter;
         if (
-          // Shared pointer inputs can't receive a non-null input:
-          !cur.is_optional &&
+          // Require that this counter not need a shared pointer, because we can't provide one
+          !cur.is_shared &&
 
           // We only care about sat counters that aren't deferred--skip everyone else
           // Deferred calls will be too late.
@@ -234,7 +286,7 @@ bool AutoPacket::HasUnsafe(const DecorationKey& key) const {
   auto q = m_decorations.find(key);
   if(q == m_decorations.end())
     return false;
-  return q->second.m_state == DispositionState::Satisfied;
+  return !q->second.m_decorations.empty();
 }
 
 void AutoPacket::DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key) {
@@ -244,19 +296,16 @@ void AutoPacket::DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key
 
     disposition = &m_decorations[key];
     switch (disposition->m_state) {
-    case DispositionState::Satisfied:
+    case DispositionState::Complete:
       {
         std::stringstream ss;
-        ss << "Cannot decorate this packet with type " << autowiring::demangle(ptr)
-          << ", the requested decoration is already satisfied";
-        throw std::runtime_error(ss.str());
-      }
-      break;
-    case DispositionState::Unsatisfiable:
-      {
-        std::stringstream ss;
-        ss << "Cannot check out decoration of type " << autowiring::demangle(ptr)
-          << ", it has been marked unsatisfiable";
+        if (disposition->m_decorations.empty())
+          // Completed with no decorations, unsatisfiable
+          ss << "Cannot check out decoration of type " << autowiring::demangle(ptr)
+            << ", it has been marked unsatisfiable";
+        else
+          ss << "Cannot decorate this packet with type " << autowiring::demangle(ptr)
+            << ", the requested decoration is already satisfied";
         throw std::runtime_error(ss.str());
       }
       break;
@@ -266,6 +315,7 @@ void AutoPacket::DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key
 
     // Decoration attaches here
     disposition->m_decorations.push_back(ptr);
+    disposition->m_nProducersRun++;
   }
 
   // Uniformly advance state:
@@ -274,7 +324,7 @@ void AutoPacket::DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key
   case DispositionState::PartlySatisfied:
     // Permit a transition to another state
     if (disposition->IsPublicationComplete()) {
-      disposition->m_state = DispositionState::Satisfied;
+      disposition->m_state = DispositionState::Complete;
       UpdateSatisfactionUnsafe(std::unique_lock<std::mutex>(m_lock), *disposition);
     }
     else
@@ -308,7 +358,7 @@ const DecorationDisposition* AutoPacket::GetDisposition(const DecorationKey& key
   std::lock_guard<std::mutex> lk(m_lock);
 
   auto q = m_decorations.find(key);
-  if (q != m_decorations.end() && q->second.m_state == DispositionState::Satisfied)
+  if (q != m_decorations.end() && q->second.m_state == DispositionState::Complete)
     return &q->second;
 
   return nullptr;
@@ -359,8 +409,8 @@ void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
   {
     std::lock_guard<std::mutex> lk(m_lock);
     for (const auto& decoration : m_decorations)
-      // Only fully satisfied decorations are considered for propagation
-      if (decoration.second.m_state == DispositionState::Satisfied)
+      // Only fully complete decorations are considered for propagation
+      if (decoration.second.m_state == DispositionState::Complete)
         dd.push_back(decoration);
   }
 

@@ -50,12 +50,8 @@ enum class DispositionState {
   // Some decorations present, but not all of them.  Cannot proceed.
   PartlySatisfied,
 
-  // Everything attached, ready to go
-  Satisfied,
-
-  // This decoration will never be satisfied.  Calls are generated with a null
-  // shared pointer passed as the value.
-  Unsatisfiable
+  // All publishers on this decoration have been run or cannot be executed
+  Complete
 };
 
 /// <remarks>
@@ -73,7 +69,11 @@ struct DecorationDisposition
     m_state(source.m_state)
   {}
   
-  // The decoration proper--potentially, this decoration might be from a prior execution of this
+  // The number of producers of this decoration type which have concluded.  This number may be larger
+  // than the number of attached decorations if some producers could not run.
+  size_t m_nProducersRun = 0;
+
+  // The decorations proper--potentially, these decorations might be from a prior execution of this
   // packet.  In the case of immediate decorations, this value will be invalid.
   // Valid if and only if is_shared is false.
   std::vector<AnySharedPointer> m_decorations;
@@ -89,17 +89,32 @@ struct DecorationDisposition
 
   // Satisfaction counters
   struct Subscriber {
-    Subscriber(void) {}
+    enum class Type {
+      // Ordinary, reference-in, non-optional subscriber
+      Normal,
 
-    Subscriber(bool is_optional, SatCounter* satCounter):
-      is_optional{is_optional},
+      // Optional.  If this flag is set, it indicates that the referenced AutoFilter could still be
+      // called even if the decoration is not attached to the packet--IE, the AutoFilter accepts a
+      // shared pointer or an array
+      Optional,
+
+      // Abides by all of the rules of Optional, but additionally can be called when multiple
+      // instances of a decoration are present.
+      Multi
+    };
+
+    Subscriber(void) {}
+    Subscriber(bool is_shared, Type type, SatCounter* satCounter) :
+      is_shared{is_shared},
+      type{type},
       satCounter{satCounter}
     {}
 
-    // Optional flag.  If this flag is set, it indicates that the referenced AutoFilter could still
-    // be called even if the decoration is not attached to the packet--IE, the AutoFilter accepts a
-    // shared pointer or an array
-    bool is_optional = false;
+    // True if a shared pointer will be taken, false otherwise
+    bool is_shared = false;
+
+    // The relationship between this subscriber and the provided decoration
+    Type type = Type::Normal;
 
     // The satisfaction counter itself
     SatCounter* satCounter = nullptr;
@@ -118,9 +133,7 @@ struct DecorationDisposition
   /// and at least one decoration has been attached to this disposition.
   /// </remarks>
   bool IsPublicationComplete(void) const {
-    return
-      !m_decorations.empty() &&
-      m_decorations.size() >= m_publishers.size();
+    return !m_decorations.empty() && m_nProducersRun >= m_publishers.size();
   }
 
   void Reset(void) {
