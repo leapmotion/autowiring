@@ -13,28 +13,23 @@ struct DecorationKey {
 
   DecorationKey(const DecorationKey& rhs) :
     ti(rhs.ti),
-    is_shared(rhs.is_shared),
     tshift(rhs.tshift)
   {}
   
-  explicit DecorationKey(const std::type_info& ti, bool is_shared, int tshift) :
+  explicit DecorationKey(const std::type_info& ti, int tshift) :
     ti(&ti),
-    is_shared(is_shared),
     tshift(tshift)
   {}
   
   // The type index
   const std::type_info* ti = nullptr;
 
-  // True if this decoration can be used with AutoFilters that accept a shared_ptr input type
-  bool is_shared = false;
-  
   // Zero refers to a decoration created on this packet, a positive number [tshift] indicates
   // a decoration attached [tshift] packets ago.
   int tshift = -1;
   
   bool operator==(const DecorationKey& rhs) const {
-    return ti == rhs.ti && is_shared == rhs.is_shared && tshift == rhs.tshift;
+    return ti == rhs.ti && tshift == rhs.tshift;
   }
 };
 
@@ -42,10 +37,7 @@ namespace std {
   template<>
   struct hash<DecorationKey> {
     size_t operator()(const DecorationKey& key) const {
-      return
-        key.tshift +
-        (key.is_shared ? 0x80000 : 0x70000) +
-        key.ti->hash_code();
+      return key.tshift + key.ti->hash_code();
     }
   };
 }
@@ -60,10 +52,6 @@ enum class DispositionState {
 
   // Everything attached, ready to go
   Satisfied,
-
-  // Unsatisfiable, and the callers on this decoration cannot accept a non-null
-  // entry--IE, they accept const references as inputs.
-  UnsatisfiableNoCall,
 
   // This decoration will never be satisfied.  Calls are generated with a null
   // shared pointer passed as the value.
@@ -100,7 +88,24 @@ struct DecorationDisposition
   std::vector<SatCounter*> m_publishers;
 
   // Satisfaction counters
-  std::vector<SatCounter*> m_subscribers;
+  struct Subscriber {
+    Subscriber(void) {}
+
+    Subscriber(bool is_optional, SatCounter* satCounter):
+      is_optional{is_optional},
+      satCounter{satCounter}
+    {}
+
+    // Optional flag.  If this flag is set, it indicates that the referenced AutoFilter could still
+    // be called even if the decoration is not attached to the packet--IE, the AutoFilter accepts a
+    // shared pointer or an array
+    bool is_optional = false;
+
+    // The satisfaction counter itself
+    SatCounter* satCounter = nullptr;
+  };
+
+  std::vector<Subscriber> m_subscribers;
 
   // The current state of this disposition
   DispositionState m_state = DispositionState::Unsatisfied;
