@@ -80,6 +80,7 @@ TEST_F(ThreadPoolTest, PendBeforeContextStart) {
 
   // Terminate, verify that we don't capture any more lambdas:
   ctxt->SignalShutdown();
+  ASSERT_EQ(nullptr, ctxt->GetThreadPool()) << "Thread pool was still present on a terminated context";
   ASSERT_FALSE(*ctxt += [barr] {}) << "Lambda append operation incorrectly evaluated to true";
   ASSERT_TRUE(barr.unique()) << "Lambda was incorrectly captured by a context that was already terminated";
 }
