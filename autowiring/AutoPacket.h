@@ -308,26 +308,27 @@ public:
   /// Returns a null-terminated temporary buffer containing all decorations
   /// </summary>
   /// <returns>The null-terminated temporary buffer</returns>
-  /// <remarks>
-  /// The returned buffer must be freed with std::return_temporary_buffer
-  /// </remarks>
   template<class T>
-  const T** GetAll(int tshift = 0) const {
+  std::unique_ptr<const T*[]> GetAll(int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
     auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
+    std::unique_ptr<const T*[]> retVal;
 
     // If decoration doesn't exist, return empty null-terminated buffer
     if (q == m_decorations.end()) {
-      const T** retVal = std::get_temporary_buffer<const T*>(1).first;
+      retVal.reset(new const T*[1]);
       retVal[0] = nullptr;
       return retVal;
     }
 
     const auto& decorations = q->second.m_decorations;
-    const T** retVal = std::get_temporary_buffer<const T*>(decorations.size() + 1).first;
+    retVal.reset(new const T*[decorations.size() + 1]);
+
     for (size_t i = 0; i < decorations.size(); i++)
       retVal[i] = static_cast<const T*>(decorations[i]->ptr());
+
     retVal[decorations.size()] = nullptr;
+
     return retVal;
   }
 

@@ -163,7 +163,7 @@ class auto_arg<T&>
 {
 public:
   typedef std::shared_ptr<T> type;
-  
+
   // Utility type, required to dereference the std::shared_ptr
   struct arg_type {
     arg_type(std::shared_ptr<T>& arg) :
@@ -290,21 +290,19 @@ template<class T>
 class auto_arg<T const **>
 {
 public:
-  typedef const T** type;
-
-  // Another compositional structure, used to coerce a vector to a data item
-  struct arg_type {
-    arg_type(const T** value) :
-      value(value)
+  typedef const T** arg_type;
+  struct type {
+    type(type&& rhs) :
+      ptr(std::move(rhs.ptr))
     {}
 
-    ~arg_type(void) {
-      std::return_temporary_buffer(value);
-    }
+    explicit type(std::unique_ptr<const T*[]> ptr) :
+      ptr{std::move(ptr)}
+    {}
 
-    const T** value;
+    std::unique_ptr<const T*[]> ptr;
 
-    operator const T**(void) const { return value; }
+    operator const T**(void) const { return ptr.get(); }
   };
 
   typedef auto_id<T> id_type;
@@ -315,8 +313,8 @@ public:
   static const int tshift = 0;
 
   template<class C>
-  static const T** arg(C& packet) {
-    return packet.template GetAll<T>();
+  static type arg(C& packet) {
+    return type{packet.template GetAll<T>()};
   }
 };
 
