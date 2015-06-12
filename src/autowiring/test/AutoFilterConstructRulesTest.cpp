@@ -19,6 +19,10 @@ public:
     return pRetVal;
   }
 
+  static void operator delete(void* ptr) {
+    ::delete[] static_cast<uint8_t*>(ptr);
+  }
+
   uint8_t data[128];
 };
 bool HasCustomNewFunction::s_invoked = false;
