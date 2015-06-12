@@ -105,7 +105,7 @@ protected:
   /// This method results in a call to the AutoFilter method on any subscribers which are
   /// satisfied by this decoration.  This method must be called with m_lock held.
   /// </remarks>
-  void UpdateSatisfactionUnsafe(std::unique_lock<std::mutex>&& lk, const DecorationDisposition& disposition);
+  void UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const DecorationDisposition& disposition);
 
   /// <summary>
   /// Performs a "satisfaction pulse", which will avoid notifying any deferred filters
@@ -177,7 +177,7 @@ public:
   t_decorationMap GetDecorations(void) const;
 
   /// <returns>
-  /// True if this packet posesses a decoration of the specified type
+  /// True if this packet posesses one or more instances of a decoration of the specified type
   /// </returns>
   /// <remarks>
   /// Although "AutoPacket &" and "const AutoPacket&" argument types will be
@@ -283,7 +283,7 @@ public:
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
     auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), true, tshift));
-    if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Satisfied) {
+    if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Complete) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
         out = disposition.m_decorations[0]->as_unsafe<T>();
@@ -444,7 +444,7 @@ public:
       // IMPORTANT: isCheckedOut = true prevents subsequent decorations of this type
       for(DecorationDisposition*  pEntry : pTypeSubs) {
         pEntry->m_pImmediate = nullptr;
-        pEntry->m_state = DispositionState::Unsatisfiable;
+        pEntry->m_state = DispositionState::Complete;
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:

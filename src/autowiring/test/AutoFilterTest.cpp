@@ -230,14 +230,14 @@ TEST_F(AutoFilterTest, VerifyAntiDecorate) {
     // Obtain a new packet and mark an unsatisfiable decoration:
     auto packet = factory->NewPacket();
     packet->Unsatisfiable<Decoration<0>>();
-    ASSERT_ANY_THROW(packet->Decorate(Decoration<0>())) << "Decoration succeeded on a decoration marked unsatisfiable";
+    ASSERT_ANY_THROW(packet->Decorate(Decoration<0>())) << "Incorrectly allowed a decoration to be added to a packet when that decoration was unsatisfiable";
   }
 
   {
     // Obtain a new packet and try to make a satisfied decoration unsatisfiable.
     auto packet = factory->NewPacket();
     packet->Decorate(Decoration<0>());
-    ASSERT_ANY_THROW(packet->Unsatisfiable<Decoration<0>>()) << "Succeeded in marking an already-existing decoration as unsatisfiable";
+    ASSERT_NO_THROW(packet->Unsatisfiable<Decoration<0>>()) << "Failed to expunge a decoration from a packet";
   }
 }
 
