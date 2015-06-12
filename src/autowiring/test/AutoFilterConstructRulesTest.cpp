@@ -1,6 +1,28 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 
+/*
+ * We need to declare this before the test fixture, since the test fixture needs to
+ * reset a static boolean flag when this test finishes. A static flag must be used
+ * because were a testing a static 'new' function.
+*/
+class HasCustomNewFunction {
+public:
+  static bool s_invoked;
+
+  static void* operator new(size_t ncb){
+    s_invoked = true;
+
+    uint8_t* pRetVal = ::new uint8_t[ncb];
+    for (size_t i = 0; i < ncb; i++)
+      pRetVal[i] = (i + 1) * 101;
+    return pRetVal;
+  }
+
+  uint8_t data[128];
+};
+bool HasCustomNewFunction::s_invoked = false;
+
 class AutoFilterConstructRulesTest:
   public testing::Test
 {
@@ -9,7 +31,14 @@ public:
     // All decorator tests must run from an initiated context
     AutoCurrentContext()->Initiate();
   }
+
+protected:
+  virtual void SetUp() {
+    // Make sure static flags are in a good state before the test starts
+    HasCustomNewFunction::s_invoked = false;
+  }
 };
+
 
 class CannotBeDefaultConstructed {
   CannotBeDefaultConstructed(int) {}
@@ -71,24 +100,6 @@ TEST_F(AutoFilterConstructRulesTest, CanAcceptUndefinedSharedPointerInput) {
   AutoRequired<AcceptsUnnamedExternalClass> auec;
   AutoRequired<AcceptsUnnamedExternalClassSharedPtr> auecsp;
 }
-
-class HasCustomNewFunction {
-public:
-  static bool s_invoked;
-
-  static void* operator new(size_t ncb){
-    s_invoked = true;
-
-    uint8_t* pRetVal = ::new uint8_t[ncb];
-    for (size_t i = 0; i < ncb; i++)
-      pRetVal[i] = (i + 1) * 101;
-    return pRetVal;
-  }
-
-  uint8_t data[128];
-};
-
-bool HasCustomNewFunction::s_invoked = false;
 
 class GeneratesCustomAllocatedType {
 public:
