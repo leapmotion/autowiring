@@ -173,23 +173,29 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
     // Subscribers that cannot be invoked should have their outputs recursively marked unsatisfiable.
     // Subscribers that can be invoked should be.
     for (auto subscriber : disposition.m_subscribers) {
-      auto* satCounter = subscriber.satCounter;
+      auto& satCounter = *subscriber.satCounter;
+      if (!satCounter.remaining)
+        // Skip subscribers that have already been called--a decoration is being expunged from the packet,
+        // but the filter in question has already been invoked, and so its outputs are already on the packet
+        continue;
+
       switch (subscriber.type) {
       case DecorationDisposition::Subscriber::Type::Multi:
       case DecorationDisposition::Subscriber::Type::Optional:
         // Optional, we will just generate a call to this subscriber, if possible:
-        if (satCounter->Decrement())
-          callQueue.push_back(satCounter);
+        if (satCounter.Decrement())
+          callQueue.push_back(&satCounter);
         break;
       case DecorationDisposition::Subscriber::Type::Normal:
         {
           // Non-optional, consider outputs and recursively invalidate
-          const auto* args = satCounter->GetAutoFilterArguments();
-          for (size_t i = satCounter->GetArity(); i--;)
+          const auto* args = satCounter.GetAutoFilterArguments();
+          for (size_t i = satCounter.GetArity(); i--;) {
             // Only consider output arguments:
             if (args[i].is_output)
               // This output is transitively unsatisfiable, include it for later removal
               unsatOutputArgs.push_back(&args[i]);
+          }
         }
         break;
       }
@@ -198,9 +204,9 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   case 1:
     // One unique decoration available.  We should be able to call everyone.
     for (auto subscriber : disposition.m_subscribers) {
-      auto* satCounter = subscriber.satCounter;
-      if (satCounter->Decrement())
-        callQueue.push_back(satCounter);
+      auto& satCounter = *subscriber.satCounter;
+      if (satCounter.Decrement())
+        callQueue.push_back(&satCounter);
     }
     break;
   default:
