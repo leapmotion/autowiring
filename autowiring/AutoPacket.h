@@ -315,20 +315,24 @@ public:
   std::unique_ptr<const T*[]> GetAll(int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
     auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
+    std::unique_ptr<const T*[]> retVal;
 
     // If decoration doesn't exist, return empty null-terminated buffer
     if (q == m_decorations.end()) {
-      const T** retVal = new const T*[1];
+      retVal.reset(new const T*[1]);
       retVal[0] = nullptr;
-      return std::unique_ptr<const T*[]>{retVal};
+      return retVal;
     }
 
     const auto& decorations = q->second.m_decorations;
-    const T** retVal = new const T*[decorations.size() + 1];
+    retVal.reset(new const T*[decorations.size() + 1]);
+
     for (size_t i = 0; i < decorations.size(); i++)
       retVal[i] = static_cast<const T*>(decorations[i]->ptr());
+
     retVal[decorations.size()] = nullptr;
-    return std::unique_ptr<const T*[]>{retVal};
+
+    return retVal;
   }
 
   /// <summary>Shares all broadcast data from this packet with the recipient packet</summary>
