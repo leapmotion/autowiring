@@ -9,6 +9,7 @@
 #include "Bolt.h"
 #include "CoreRunnable.h"
 #include "ContextMember.h"
+#include "CallExtractor.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
 #include "ExceptionFilter.h"
@@ -290,7 +291,7 @@ protected:
   // Enables a boltable class
   template<typename T, typename... Sigils>
   void EnableInternal(T*, Boltable<Sigils...>*) {
-    [](...){}((AutoRequireMicroBolt<T, Sigils>(),false)...);
+    autowiring::noop((AutoRequireMicroBolt<T, Sigils>(),false)...);
   }
 
   void EnableInternal(...) {}
