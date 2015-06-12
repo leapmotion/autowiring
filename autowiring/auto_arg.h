@@ -296,11 +296,11 @@ public:
       ptr(std::move(rhs.ptr))
     {}
 
-    explicit type(std::unique_ptr<const T*>&& ptr) :
+    explicit type(std::unique_ptr<const T*[]>&& ptr) :
       ptr{std::move(ptr)}
     {}
 
-    std::unique_ptr<const T*> ptr;
+    std::unique_ptr<const T*[]> ptr;
 
     operator const T**(void) const { return ptr.get(); }
   };

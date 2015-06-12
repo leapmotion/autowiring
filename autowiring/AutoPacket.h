@@ -312,7 +312,7 @@ public:
   /// </summary>
   /// <returns>The null-terminated temporary buffer</returns>
   template<class T>
-  std::unique_ptr<const T*> GetAll(int tshift = 0) const {
+  std::unique_ptr<const T*[]> GetAll(int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
     auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
 
@@ -320,7 +320,7 @@ public:
     if (q == m_decorations.end()) {
       const T** retVal = new const T*[1];
       retVal[0] = nullptr;
-      return std::unique_ptr<const T*>{retVal};
+      return std::unique_ptr<const T*[]>{retVal};
     }
 
     const auto& decorations = q->second.m_decorations;
@@ -328,7 +328,7 @@ public:
     for (size_t i = 0; i < decorations.size(); i++)
       retVal[i] = static_cast<const T*>(decorations[i]->ptr());
     retVal[decorations.size()] = nullptr;
-    return std::unique_ptr<const T*>{retVal};
+    return std::unique_ptr<const T*[]>{retVal};
   }
 
   /// <summary>Shares all broadcast data from this packet with the recipient packet</summary>
