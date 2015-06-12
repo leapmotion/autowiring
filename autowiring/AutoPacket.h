@@ -283,7 +283,7 @@ public:
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
     auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), true, tshift));
-    if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Satisfied) {
+    if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Complete) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
         out = disposition.m_decorations[0]->as_unsafe<T>();
