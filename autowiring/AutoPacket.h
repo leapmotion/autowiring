@@ -249,9 +249,12 @@ public:
   /// This method will throw an exception if the requested decoration is multiply present on the packet
   /// </remarks>
   template<class T>
-  bool Get(const std::shared_ptr<const T>*& out, int tshift=0) const {
+  bool Get(const std::shared_ptr<T>*& out, int tshift=0) const {
+    static_assert(std::is_const<T>::value, "Cannot get a non-const shared pointer from AutoPacket, declare as `const std::shared_ptr<const T>*`");
+    typedef typename std::remove_const<T>::type TActual;
+
     // Decoration must be present and the shared pointer itself must also be present
-    DecorationKey key(auto_id<T>::key(), tshift);
+    DecorationKey key(auto_id<TActual>::key(), tshift);
     const DecorationDisposition* pDisposition = GetDisposition(key);
     if (!pDisposition) {
       out = nullptr;
@@ -264,7 +267,7 @@ public:
       return false;
     case 1:
       // Single decoration available, we can return here
-      out = &pDisposition->m_decorations[0]->as_unsafe<const T>();
+      out = &pDisposition->m_decorations[0]->as_unsafe<T>();
       return true;
     default:
       ThrowMultiplyDecoratedException(key);
