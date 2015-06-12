@@ -88,11 +88,11 @@ TEST_F(AutoFilterMultiDecorateTest, UnsatDecTest) {
 
   auto strs = packet->GetAll<std::string>();
   ASSERT_NE(nullptr, strs) << "String datatype not found on multidecorate packet";
-  ASSERT_NE(nullptr, strs.get()[0]) << "No strings attached to a multidecorate packet as expected";
-  ASSERT_NE(nullptr, strs.get()[1]) << "Expected two strings back, got one";
-  ASSERT_EQ(nullptr, strs.get()[2]) << "Expected two strings back, got three";
-  ASSERT_EQ("Hello", *strs.get()[0]) << "Entry in multidecorate set was not the expected value";
-  ASSERT_EQ("Crickets", *strs.get()[1]) << "Entry in multidecorate set was not the expected value";
+  ASSERT_NE(nullptr, strs[0]) << "No strings attached to a multidecorate packet as expected";
+  ASSERT_NE(nullptr, strs[1]) << "Expected two strings back, got one";
+  ASSERT_EQ(nullptr, strs[2]) << "Expected two strings back, got three";
+  ASSERT_EQ("Hello", *strs[0]) << "Entry in multidecorate set was not the expected value";
+  ASSERT_EQ("Crickets", *strs[1]) << "Entry in multidecorate set was not the expected value";
 
   int nEntries;
   ASSERT_NO_THROW(nEntries = packet->Get<int>()) << "Multidecorate filter was not run as expected";
