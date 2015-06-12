@@ -247,9 +247,9 @@ TEST_F(CoreContextTest, InitiateOrder) {
     middleCtxt->Initiate();
     outerCtxt->Initiate();
     
-    EXPECT_TRUE(outerCtxt->IsRunning()) << "Context not running after begin initiated";
-    EXPECT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
-    EXPECT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
+    ASSERT_TRUE(outerCtxt->IsRunning()) << "Context not running after begin initiated";
+    ASSERT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
+    ASSERT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
     
     outerCtxt->SignalShutdown(true);
   }
@@ -264,9 +264,9 @@ TEST_F(CoreContextTest, InitiateOrder) {
     middleCtxt->Initiate();
     innerCtxt->Initiate();
     
-    EXPECT_TRUE(outerCtxt->IsRunning()) << "Context not running after begin initiated";
-    EXPECT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
-    EXPECT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
+    ASSERT_TRUE(outerCtxt->IsRunning()) << "Context not running after begin initiated";
+    ASSERT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
+    ASSERT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
     
     outerCtxt->SignalShutdown(true);
   }
@@ -281,9 +281,9 @@ TEST_F(CoreContextTest, InitiateOrder) {
     innerCtxt->Initiate();
     outerCtxt->Initiate();
     
-    EXPECT_TRUE(outerCtxt->IsRunning()) << "Context not running after begin initiated";
-    EXPECT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
-    EXPECT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
+    ASSERT_TRUE(outerCtxt->IsRunning()) << "Context not running after begin initiated";
+    ASSERT_TRUE(middleCtxt->IsRunning()) << "Context not running after begin initiated";
+    ASSERT_TRUE(innerCtxt->IsRunning()) << "Context not running after begin initiated";
     
     outerCtxt->SignalShutdown(true);
   }
@@ -305,9 +305,9 @@ TEST_F(CoreContextTest, InitiateMultipleChildren) {
 
     outerCtxt->Initiate();
 
-    EXPECT_TRUE(child1->IsRunning());
-    EXPECT_TRUE(child2->IsRunning());
-    EXPECT_TRUE(child3->IsRunning());
+    ASSERT_TRUE(child1->IsRunning());
+    ASSERT_TRUE(child2->IsRunning());
+    ASSERT_TRUE(child3->IsRunning());
 
     outerCtxt->SignalShutdown(true);
   }
@@ -324,9 +324,9 @@ TEST_F(CoreContextTest, InitiateMultipleChildren) {
 
     outerCtxt->Initiate();
 
-    EXPECT_TRUE(child1->IsRunning());
-    EXPECT_FALSE(child2->IsInitiated());
-    EXPECT_TRUE(child3->IsRunning());
+    ASSERT_TRUE(child1->IsRunning());
+    ASSERT_FALSE(child2->IsInitiated());
+    ASSERT_TRUE(child3->IsRunning());
 
     outerCtxt->SignalShutdown(true);
   }
@@ -343,9 +343,9 @@ TEST_F(CoreContextTest, InitiateMultipleChildren) {
     child1->Initiate();
     child3->Initiate();
 
-    EXPECT_TRUE(child1->IsRunning());
-    EXPECT_FALSE(child2->IsInitiated());
-    EXPECT_TRUE(child3->IsRunning());
+    ASSERT_TRUE(child1->IsRunning());
+    ASSERT_FALSE(child2->IsInitiated());
+    ASSERT_TRUE(child3->IsRunning());
 
     outerCtxt->SignalShutdown(true);
   }

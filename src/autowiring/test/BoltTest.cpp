@@ -91,7 +91,7 @@ TEST_F(BoltTest, VerifySimpleInjection) {
   // Verify that the SimpleObject didn't accidentally get injected out here:
   {
     Autowired<SimpleObject> so;
-    EXPECT_FALSE(so.IsAutowired()) << "Object was injected into an outer scope by a bolt";
+    ASSERT_FALSE(so.IsAutowired()) << "Object was injected into an outer scope by a bolt";
   }
 
   // Verify that the objecT DID get autowired where we expected it to be autowired
@@ -116,10 +116,10 @@ TEST_F(BoltTest, VerifyMapping) {
   std::shared_ptr<CoreContext> createdContext = simpleCreator.CreateContext(L"Simple2").first;
 
   // Verify we have a hit our bolt:
-  EXPECT_TRUE(myListener->hit) << "The listener callback was not hit as expected";
+  ASSERT_TRUE(myListener->hit) << "The listener callback was not hit as expected";
 
   // Verify that the correct context was created:
-  EXPECT_EQ(createdContext, myListener->createdContext) << "The context set to current for the listener callback was not the context that got created";
+  ASSERT_EQ(createdContext, myListener->createdContext) << "The context set to current for the listener callback was not the context that got created";
 }
 
 TEST_F(BoltTest, VerifyCreationBubbling) {
@@ -143,7 +143,7 @@ TEST_F(BoltTest, VerifyCreationBubbling) {
   simpleCreator->CreateContext(L"Simple");
 
   // Check the listener to verify we had a hit:
-  EXPECT_TRUE(listener->hit) << "The listener callback was not hit as expected";
+  ASSERT_TRUE(listener->hit) << "The listener callback was not hit as expected";
 }
 
 TEST_F(BoltTest, VerifyMultipleInjection) {
@@ -156,7 +156,7 @@ TEST_F(BoltTest, VerifyMultipleInjection) {
   // Verify that the SimpleObject didn't accidentally get injected out here:
   {
     Autowired<SimpleObject> so;
-    EXPECT_FALSE(so.IsAutowired()) << "Object was injected into an outer scope by a bolt";
+    ASSERT_FALSE(so.IsAutowired()) << "Object was injected into an outer scope by a bolt";
   }
 
   // Verify that the objecT DID get autowired where we expected it to be autowired
@@ -176,7 +176,7 @@ TEST_F(BoltTest, EmptyBolt) {
   AutoCurrentContext ctxt;
   AutoEnable<InjectsIntoEverything>();
   Autowired<CountObject> so;
-  EXPECT_FALSE(so.IsAutowired()) << "CountObject injected into outer context";
+  ASSERT_FALSE(so.IsAutowired()) << "CountObject injected into outer context";
 
   AutoCreateContext created;
   {

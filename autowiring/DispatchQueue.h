@@ -39,6 +39,9 @@ protected:
   // Current linked list length
   std::atomic<size_t> m_count{0};
 
+  // Current version cap:
+  std::atomic<uint64_t> m_version{1};
+
   // The dispatch queue proper.  A vector is used, here, not a queue, because this collection is frequently emptied.
   DispatchThunkBase* m_pHead = nullptr;
   DispatchThunkBase* m_pTail = nullptr;
@@ -61,9 +64,6 @@ protected:
   /// </summary>
   /// <returns>True if at least one dispatcher was promoted</returns>
   bool PromoteReadyDispatchersUnsafe(void);
-
-  // Identical to PromoteReadyDispatchersUnsafe, invoke that method instead
-  void DEPRECATED(PromoteReadyEventsUnsafe(void), "Superceded by PromoteReadyDispatchersUnsafe") { PromoteReadyDispatchersUnsafe(); }
 
   /// <summary>
   /// Similar to DispatchEvent, except assumes that the dispatch lock is currently held
@@ -98,11 +98,16 @@ protected:
   /// </summary>
   void PendExisting(std::unique_lock<std::mutex>&& lk, DispatchThunkBase* thunk);
 
+  /// <summary>
+  /// Updates the upper bound on the number of allowed pending dispatchers
+  /// </summary>
+  void SetDispatcherCap(size_t dispatchCap) { m_dispatchCap = dispatchCap; }
+
 public:
   /// <returns>
   /// True if there are curerntly any dispatchers ready for execution--IE, DispatchEvent would return true
   /// </returns>
-  bool AreAnyDispatchersReady(void) const { return !!m_count; }
+  bool AreAnyDispatchersReady(void) const { return !!m_pHead; }
 
   /// <returns>
   /// The total number of all ready and delayed events
@@ -128,11 +133,15 @@ public:
   /// </remarks>
   void Abort(void);
 
-protected:
   /// <summary>
-  /// Updates the upper bound on the number of allowed pending dispatchers
+  /// Causes all calls to WaitForEvent to return control to their callers
   /// </summary>
-  void SetDispatcherCap(size_t dispatchCap) { m_dispatchCap = dispatchCap; }
+  /// <remarks>
+  /// This method will cause any threads blocked in WaitForEvent to wake up and make progress.  This can be
+  /// useful when threads are being used to dispatch work items and it's necessary to wake them in order to
+  /// handle out-of-queue processing--IE, pool maintenance
+  /// </remarks>
+  void WakeAllWaitingThreads(void);
 
   /// <summary>
   /// Similar to WaitForEvent, but does not block
@@ -149,14 +158,12 @@ protected:
   /// <returns>The total number of events dispatched</returns>
   int DispatchAllEvents(void);
 
-  /// \internal
   /// <summary>
   /// Waits until a lambda function is ready to run in this thread's dispatch queue,
   /// dispatches the function, and then returns.
   /// </summary>
   void WaitForEvent(void);
 
-  /// \internal
   /// <summary>
   /// Waits until a lambda function in the dispatch queue is ready to run or the specified
   /// time period elapses, whichever comes first.
@@ -166,7 +173,6 @@ protected:
   /// </returns>
   bool WaitForEvent(std::chrono::milliseconds milliseconds);
 
-  /// \internal
   /// <summary>
   /// Waits until a lambda function in the dispatch queue is ready to run or the specified
   /// time is reached, whichever comes first.
@@ -182,7 +188,6 @@ protected:
   /// </summary>
   bool WaitForEventUnsafe(std::unique_lock<std::mutex>& lk, std::chrono::steady_clock::time_point wakeTime);
 
-public:
   /// <summary>
   /// Explicit overload for already-constructed dispatch thunk types
   /// </summary>
@@ -253,6 +258,11 @@ public:
   };
 
   /// <summary>
+  /// Extracts the contents of the dispatch queue on the right-hand side for handling by this queue
+  /// </summary>
+  void operator+=(DispatchQueue&& rhs);
+
+  /// <summary>
   /// Overload for the introduction of a delayed dispatch thunk
   /// </summary>
   template<class Rep, class Period>
@@ -289,15 +299,20 @@ public:
     static_assert(!std::is_base_of<DispatchThunkBase, _Fx>::value, "Overload resolution malfunction, must not doubly wrap a dispatch thunk");
     static_assert(!std::is_pointer<_Fx>::value, "Cannot pend a pointer to a function, we must have direct ownership");
 
+    // Create the thunk first to reduce the amount of time we spend in lock:
+    auto thunk = new DispatchThunk<_Fx>(std::forward<_Fx>(fx));
+
     std::unique_lock<std::mutex> lk(m_dispatchLock);
-    if (m_count >= m_dispatchCap)
+    if (m_count >= m_dispatchCap) {
+      lk.unlock();
+      delete thunk;
       return;
+    }
 
     // Count must be separately maintained:
     m_count++;
 
     // Linked list setup:
-    auto thunk = new DispatchThunk<_Fx>(std::forward<_Fx>(fx));
     if (m_pHead)
       m_pTail->m_pFlink = thunk; 
     else {

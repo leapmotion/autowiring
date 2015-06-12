@@ -6,10 +6,10 @@
 /// <summary>
 /// AutoFilter argument disposition
 /// </summary>
-struct AutoFilterDescriptorInput {
-  AutoFilterDescriptorInput(void) = default;
+struct AutoFilterArgument {
+  AutoFilterArgument(void) = default;
 
-  AutoFilterDescriptorInput(
+  AutoFilterArgument(
     bool is_input,
     bool is_output,
     bool is_shared,
@@ -38,11 +38,11 @@ struct AutoFilterDescriptorInput {
 };
 
 template<typename T>
-struct AutoFilterDescriptorInputT:
-  AutoFilterDescriptorInput
+struct AutoFilterArgumentT:
+  AutoFilterArgument
 {
-  AutoFilterDescriptorInputT(void) :
-    AutoFilterDescriptorInput(
+  AutoFilterArgumentT(void) :
+    AutoFilterArgument(
       auto_arg<T>::is_input,
       auto_arg<T>::is_output,
       auto_arg<T>::is_shared,

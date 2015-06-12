@@ -85,9 +85,6 @@ protected:
   // Run condition:
   bool m_running = false;
 
-  // Legacy field, some clients still refer to this
-  bool& DEPRECATED_MEMBER(m_completed, "Use IsCompleted instead");
-
   // The current thread priority
   ThreadPriority m_priority = ThreadPriority::Default;
 
@@ -137,8 +134,6 @@ protected:
   /// </summary>
   /// <param name="pusher">The last reference to the enclosing context held by this thread</param>
   virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<CoreObject>&& refTracker);
-
-  void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
 
   /// \internal Only implemented on Windows (as of 0.4.1).
   /// <summary>

@@ -2,4 +2,8 @@
 #pragma once
 
 #include <memory>
-#include "make_unique.h"
+
+// MSVC already implements make_unique
+#ifndef _MSC_VER
+  #include "make_unique.h"
+#endif

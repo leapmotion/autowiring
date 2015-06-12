@@ -9,6 +9,7 @@
 #include "Bolt.h"
 #include "CoreRunnable.h"
 #include "ContextMember.h"
+#include "CallExtractor.h"
 #include "CreationRules.h"
 #include "CurrentContextPusher.h"
 #include "ExceptionFilter.h"
@@ -21,6 +22,7 @@
 #include "CoreObjectDescriptor.h"
 #include "result_or_default.h"
 #include "TeardownNotifier.h"
+#include "ThreadPool.h"
 #include "TypeRegistry.h"
 #include "TypeUnifier.h"
 
@@ -57,6 +59,8 @@ class JunctionBox;
 namespace autowiring {
   template<typename... Args>
   struct signal_relay_t;
+
+  class ThreadPool;
 }
 
 /// \file
@@ -145,7 +149,7 @@ class CoreContext:
 {
 protected:
   typedef std::list<std::weak_ptr<CoreContext>> t_childList;
-  CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer);
+  CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference);
 
 public:
   virtual ~CoreContext(void);
@@ -236,8 +240,8 @@ protected:
   // Context members from other contexts that have snooped this context
   std::set<AnySharedPointer> m_snoopers;
 
-  // Manages events for this context. One JunctionBoxManager is shared between peer contexts
-  const std::shared_ptr<JunctionBoxManager> m_junctionBoxManager;
+  // Manages events for this context
+  const std::unique_ptr<JunctionBoxManager> m_junctionBoxManager;
 
   // Actual core threads:
   std::list<CoreRunnable*> m_threads;
@@ -245,6 +249,13 @@ protected:
   // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
   // Destructor does nothing; this is by design.
   std::weak_ptr<CoreObject> m_outstanding;
+
+  // The thread pool used by this context.  By default, a context inherits the thread pool of
+  // its parent, and the global context gets the system thread pool.
+  std::shared_ptr<autowiring::ThreadPool> m_threadPool;
+
+  // The start token for the thread pool, if one exists
+  std::shared_ptr<void> m_startToken;
 
   // Creation rules are allowed to refer to private methods in this type
   template<autowiring::construction_strategy, class T, class... Args>
@@ -254,24 +265,22 @@ protected:
   // Delayed creation routine
   typedef std::shared_ptr<CoreContext> (*t_pfnCreate)(
     std::shared_ptr<CoreContext> pParent,
-    t_childList::iterator backReference,
-    std::shared_ptr<CoreContext> pPeer
-  );
+    t_childList::iterator backReference
+    );
+
+  /// \internal
+  /// <summary>
+  /// Overload which does not perform injection
+  /// </summary>
+  std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate);
 
   /// \internal
   /// <summary>
   /// Register new context with parent and notify others of its creation.
   /// </summary>
   /// <param name="pfnCreate">A creation routine which can create the desired context</param>
-  /// <param name="pPeer">The peer context, if one exists</param>
   /// <param name="inj">An injectable to be inserted into the context before bolts are fired</param>
-  std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer, AutoInjectable&& pInj);
-
-  /// \internal
-  /// <summary>
-  /// Overload which does not perform injection
-  /// </summary>
-  std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, std::shared_ptr<CoreContext> pPeer);
+  std::shared_ptr<CoreContext> CreateInternal(t_pfnCreate pfnCreate, AutoInjectable&& pInj);
 
   // Adds a bolt proper to this context
   template<typename T, typename... Sigils>
@@ -282,7 +291,7 @@ protected:
   // Enables a boltable class
   template<typename T, typename... Sigils>
   void EnableInternal(T*, Boltable<Sigils...>*) {
-    [](...){}((AutoRequireMicroBolt<T, Sigils>(),false)...);
+    autowiring::noop((AutoRequireMicroBolt<T, Sigils>(),false)...);
   }
 
   void EnableInternal(...) {}
@@ -566,11 +575,10 @@ public:
   template<class T>
   static std::shared_ptr<CoreContext> Create(
     std::shared_ptr<CoreContext> pParent,
-    t_childList::iterator backReference,
-    std::shared_ptr<CoreContext> pPeer
+    t_childList::iterator backReference
   ) {
     return std::static_pointer_cast<CoreContext>(
-      std::make_shared<CoreContextT<T>>(pParent, backReference, pPeer)
+      std::make_shared<CoreContextT<T>>(pParent, backReference)
     );
   }
 
@@ -581,7 +589,7 @@ public:
   /// <param name="inj">An injectable type.</param>
   template<class T>
   std::shared_ptr<CoreContext> Create(AutoInjectable&& inj) {
-    return CreateInternal(&CoreContext::Create<T>, nullptr, std::move(inj));
+    return CreateInternal(&CoreContext::Create<T>, std::move(inj));
   }
 
   /// <summary>
@@ -598,23 +606,7 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContext> Create(void) {
-    return CreateInternal(&CoreContext::Create<T>, nullptr);
-  }
-
-  /// <summary>
-  /// Creates a peer context to this context.
-  /// </summary>
-  /// <remarks>
-  /// A peer context allows clients to create autowiring contexts which are in the same event
-  /// domain with respect to each other, but are not in the same autowiring domain.  This can
-  /// be useful where multiple instances of a particular object are desired, but inserting
-  /// such objects into a simple child context is cumbersome because the objects at parent
-  /// scope are listening to events originating from objects at child scope. Events can be fired,
-  /// but not received, from an uninitiated context if its peer is initiated.
-  /// </remarks>
-  template<class T>
-  std::shared_ptr<CoreContext> CreatePeer(void) {
-    return m_pParent->CreateInternal(&CoreContext::Create<T>, shared_from_this());
+    return CreateInternal(&CoreContext::Create<T>);
   }
 
   /// <summary>
@@ -759,9 +751,6 @@ public:
     // Simple coercive transfer:
     return static_cast<JunctionBox<T>&>(All(typeid(T)));
   }
-  
-  template<typename T, typename... Args>
-  std::shared_ptr<T> DEPRECATED(Construct(Args&&... args), "'Construct' is deprecated, use 'Inject' instead");
 
   /// \internal
   /// <summary>
@@ -884,7 +873,6 @@ public:
   /// Starts all registered threads and enables events and the flow of filter graph packets.
   /// </summary>
   void Initiate(void);
-  void DEPRECATED(InitiateCoreThreads(void), "InitiateCoreThreads is deprecated, use Initiate instead");
 
   /// <summary>
   /// Begins shutdown of this context, optionally waiting for child contexts and threads to also shut
@@ -1162,6 +1150,49 @@ public:
   };
 
   /// <summary>
+  /// Assigns the thread pool handler for this context
+  /// </summary>
+  /// <remarks>
+  /// If the context is currently running, the thread pool will automatically be started.  The pool's
+  /// start token and shared pointer is reset automatically when the context is torn down.  If the
+  /// context has already been shut down (IE, IsShutdown returns true), this method has no effect.
+  ///
+  /// Dispatchers that have been attached to the current thread pool will not be transitioned to the
+  /// new pool.  Changing the thread pool may cause the previously assigned thread pool to be stopped.
+  /// This will cause it to complete all work assigned to it and release resources associated with
+  /// processing.  If there are no other handles to the pool, it may potentially destroy itself.
+  ///
+  /// It is an error to pass nullptr to this method.
+  /// </remarks>
+  void SetThreadPool(std::shared_ptr<autowiring::ThreadPool> threadPool);
+
+  /// <summary>
+  /// Returns the current thread pool
+  /// </summary>
+  /// <remarks>
+  /// If the context has been shut down, (IE, IsShutdown returns true), this method returns nullptr.  Calling
+  /// ThreadPool::Start on the returned shared pointer will not cause dispatchers pended to this context to
+  /// be executed.  To do this, invoke CoreContext::Initiate
+  /// </remarks>
+  std::shared_ptr<autowiring::ThreadPool> GetThreadPool(void) const;
+
+  /// <summary>
+  /// Submits the specified lambda to this context's ThreadPool for processing
+  /// </summary>
+  /// <returns>True if the job has been submitted for execution</returns>
+  /// <remarks>
+  /// The passed thunk will not be executed if the current context has already stopped.
+  /// </remarks>
+  template<class Fx>
+  bool operator+=(Fx&& fx) {
+    auto pool = GetThreadPool();
+    return
+      pool ?
+      pool->Submit(std::make_unique<DispatchThunk<Fx>>(std::forward<Fx&&>(fx))) :
+      false;
+  }
+
+  /// <summary>
   /// Adds a post-attachment listener in this context for a particular autowired member.
   /// There is no guarantee for the context in which the listener will be called.
   /// </summary>
@@ -1226,12 +1257,6 @@ namespace autowiring {
   }
 }
 
-// Deprecated, use Inject
-template<typename T, typename... Args>
-std::shared_ptr<T> CoreContext::Construct(Args&&... args) {
-  return Inject<T>(std::forward<Args>(args)...);
-}
-
 /// <summary>
 /// A type of CoreContext that has a sigil.
 /// </summary>
@@ -1245,8 +1270,8 @@ class CoreContextT:
 public:
   static const std::type_info& sc_type;
 
-  CoreContextT(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference, std::shared_ptr<CoreContext> pPeer) :
-    CoreContext(pParent, backReference, pPeer)
+  CoreContextT(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference) :
+    CoreContext(pParent, backReference)
   {}
 
   const std::type_info& GetSigilType(void) const override { return sc_type; }

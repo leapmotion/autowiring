@@ -37,8 +37,6 @@ public:
   virtual ~CoreThread(void);
 
 protected:
-  void DEPRECATED(Ready(void) const, "Do not call this method, the concept of thread readiness is now deprecated") {}
-
   /// <summary>
   /// Overridden here so we can rundown the dispatch queue
   /// </summary>

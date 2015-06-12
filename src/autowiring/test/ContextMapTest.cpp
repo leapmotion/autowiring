@@ -30,12 +30,12 @@ TEST_F(ContextMapTest, VerifySimple) {
 
     // We should be able to find this context now:
     std::shared_ptr<CoreContext> found = mp.Find("context_simple");
-    EXPECT_TRUE(!!found.get()) << "Failed to find a context that was just inserted into a context map";
+    ASSERT_TRUE(!!found.get()) << "Failed to find a context that was just inserted into a context map";
   }
 
   // We shouldn't be able to find it now that it's gone out of scope:
   std::shared_ptr<CoreContext> notFound = mp.Find("context_simple");
-  EXPECT_FALSE(!!notFound.get()) << "Context was not evicted as expected when it went out of scope";
+  ASSERT_FALSE(!!notFound.get()) << "Context was not evicted as expected when it went out of scope";
 }
 
 TEST_F(ContextMapTest, VerifyWithThreads) {
@@ -69,7 +69,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
 
     // Relock the weak context, verify that we get back the same pointer:
     auto relocked = weakContext.lock();
-    EXPECT_EQ(relocked, context) << "Mapped context pointer was not identical to a previously stored context pointer";
+    ASSERT_EQ(relocked, context) << "Mapped context pointer was not identical to a previously stored context pointer";
 
     // Terminate whole context
     context->SignalTerminate();
@@ -81,7 +81,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
   {
     // Verify that the context is gone now that everything in it has stopped running
     auto ctxt = mp.Find("context_withthreads");
-    EXPECT_FALSE(ctxt) << "Context was not properly evicted from the map";
+    ASSERT_FALSE(ctxt) << "Context was not properly evicted from the map";
 
     // Just return early if the context was empty as we expected, the next part of this test is for diagnostics
     if(!ctxt)
@@ -95,7 +95,7 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     // but this one succeeds, it could be due to race conditions in CoreThread
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     ctxt = mp.Find("context_withthreads");
-    EXPECT_FALSE(ctxt) << "Context was not properly evicted even after waiting for a time to ensure eviction";
+    ASSERT_FALSE(ctxt) << "Context was not properly evicted even after waiting for a time to ensure eviction";
   }
 }
 
@@ -176,7 +176,7 @@ TEST_F(ContextMapTest, VerifyWithThreadsPathological) {
 
   // Clear the context collection:
   contexts.clear();
-  EXPECT_EQ(0UL, mp.size()) << "Context map did not empty as expected";
+  ASSERT_EQ(0UL, mp.size()) << "Context map did not empty as expected";
 }
 
 TEST_F(ContextMapTest, AdjacentCleanupTest) {
@@ -231,10 +231,10 @@ TEST_F(ContextMapTest, VerifySimpleEnumeration) {
     }
   );
 
-  EXPECT_EQ(3UL, count) << "Failed to enumerate all expected context pointers";
-  EXPECT_EQ(1UL, found.count("context_se_1")) << "Failed to find map element '1'";
-  EXPECT_EQ(1UL, found.count("context_se_2")) << "Failed to find map element '2'";
-  EXPECT_EQ(1UL, found.count("context_se_3")) << "Failed to find map element '3'";
+  ASSERT_EQ(3UL, count) << "Failed to enumerate all expected context pointers";
+  ASSERT_EQ(1UL, found.count("context_se_1")) << "Failed to find map element '1'";
+  ASSERT_EQ(1UL, found.count("context_se_2")) << "Failed to find map element '2'";
+  ASSERT_EQ(1UL, found.count("context_se_3")) << "Failed to find map element '3'";
 }
 
 TEST_F(ContextMapTest, VerifyRangeBasedEnumeration) {

@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "ContextSearchBm.h"
 #include "Benchmark.h"
+#include <algorithm>
 #include <unordered_map>
 
 Benchmark ContextSearchBm::Search(void) {
@@ -132,6 +133,48 @@ Benchmark ContextSearchBm::Fast(void) {
 
   return Benchmark{
     {
+      "unordered_map<typeinfo, shared_ptr>",
+      [](Stopwatch& sw) {
+        static const std::type_info* tis [] = {
+          &typeid(dummy<1>),
+          &typeid(dummy<2>),
+          &typeid(dummy<3>),
+          &typeid(dummy<4>),
+          &typeid(dummy<5>),
+          &typeid(dummy<6>),
+          &typeid(dummy<7>),
+          &typeid(dummy<8>),
+          &typeid(dummy<9>),
+          &typeid(dummy<10>),
+          &typeid(dummy<11>),
+          &typeid(dummy<12>),
+          &typeid(dummy<13>),
+          &typeid(dummy<14>),
+          &typeid(dummy<15>),
+          &typeid(dummy<16>),
+          &typeid(dummy<17>),
+          &typeid(dummy<18>),
+          &typeid(dummy<19>),
+          &typeid(dummy<20>),
+          &typeid(dummy<21>),
+          &typeid(dummy<22>),
+          &typeid(dummy<23>),
+          &typeid(dummy<24>),
+          &typeid(dummy<25>)
+        };
+
+        std::unordered_map<std::type_index, std::shared_ptr<bool>> v;
+        for (const auto* ti : tis)
+          v[*ti] = std::make_shared<bool>(true);
+
+        sw.Start();
+        for (int i = 0; i < n; ++i) {
+          v.find(*tis[i % 25]);
+        }
+        sw.Stop(n);
+      }
+    },
+    {
       "Autowired<T>",
       [](Stopwatch& sw) {
         sw.Start();
@@ -145,7 +188,7 @@ Benchmark ContextSearchBm::Fast(void) {
       [](Stopwatch& sw) {
         sw.Start();
         for (int i = 0; i < n; ++i) {
-          AutowiredFast<dummy<1>> a1;
+          AutowiredFast<dummy<1>>();
           AutowiredFast<dummy<2>>();
           AutowiredFast<dummy<3>>();
           AutowiredFast<dummy<4>>();
