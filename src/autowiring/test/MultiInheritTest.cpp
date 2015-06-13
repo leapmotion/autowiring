@@ -11,11 +11,7 @@ class MultiInheritTest:
 
 class Shared {
 public:
-  Shared(void) {
-    m_i = 100;
-  }
-
-  int m_i;
+  int m_i = 100;
 };
 
 class Base {

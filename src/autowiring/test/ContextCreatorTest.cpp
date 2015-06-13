@@ -20,11 +20,7 @@ class VoidCreator:
   public ContextCreator<EvictionContext>
 {
 public:
-  VoidCreator(void):
-    m_totalDestroyed(0)
-  {}
-
-  size_t m_totalDestroyed;
+  size_t m_totalDestroyed = 0;
 
   void NotifyContextDestroyed(t_callbackHandle q, CoreContext* pContext) override {
     m_totalDestroyed++;
@@ -34,13 +30,9 @@ public:
 
 class GlobalSignal {
 public:
-  GlobalSignal(void):
-    m_shouldContinue(false)
-  {}
-
 private:
   std::mutex m_lock;
-  bool m_shouldContinue;
+  bool m_shouldContinue = false;
   std::condition_variable s_continueCond;
 
 public:

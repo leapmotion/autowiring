@@ -29,11 +29,7 @@ class A:
   public ContextMember
 {
 public:
-  A(void):
-    m_value(2)
-  {}
-
-  int m_value;
+  int m_value = 2;
 
   int GetValue(void) const {return m_value;}
 };
@@ -69,30 +65,28 @@ class Smarter:
   public ContextMember
 {
 public:
-  Smarter(void):
-    value(1)
+  Smarter(void)
   {
     m_a.NotifyWhenAutowired([this] () {
       this->value = m_a->GetValue();
     });
   }
 
-  int value;
+  int value = 1;
   Autowired<A> m_a;
 };
 
 class SmarterInterface
 {
 public:
-  SmarterInterface(void):
-    value(1)
+  SmarterInterface(void)
   {
     m_interface.NotifyWhenAutowired([this] () {
       this->value = m_interface->GetValue();
     });
   }
 
-  int value;
+  int value = 1;
   Autowired<Interface> m_interface;
 };
 
@@ -359,11 +353,6 @@ TEST_F(PostConstructTest, RecursiveNotificationPostConstruction) {
 struct ClassWithAutoInit:
   std::enable_shared_from_this<ClassWithAutoInit>
 {
-  ClassWithAutoInit(void) :
-    m_constructed(true),
-    m_postConstructed(false)
-  {}
-
   void AutoInit(void) {
     ASSERT_TRUE(m_constructed) << "A postconstruct routine was called BEFORE the corresponding constructor";
     m_postConstructed = true;
@@ -372,8 +361,8 @@ struct ClassWithAutoInit:
     ASSERT_EQ(this, myself.get()) << "Reflexive shared_from_this did not return a shared pointer to this as expected";
   }
 
-  bool m_constructed;
-  bool m_postConstructed;
+  bool m_constructed = true;
+  bool m_postConstructed = false;
 };
 
 static_assert(has_autoinit<ClassWithAutoInit>::value, "AutoInit-bearing class did not pass a static type check");

@@ -118,24 +118,14 @@ TEST_F(AutoFilterCollapseRulesTest, SharedPointerAliasingRules) {
   ASSERT_TRUE(gen2Called) << "AutoFilter accepting a decorated type was not called as expected";
 }
 
-class ProducesSharedPointer {
-public:
-  ProducesSharedPointer(void) :
-    m_called(0)
-  {}
-
-  int m_called;
-
-  void AutoFilter(std::shared_ptr<int>& output) {
-    ++m_called;
-    output = std::make_shared<int>(55);
-  }
-};
-
 TEST_F(AutoFilterCollapseRulesTest, AutoFilterSharedAliasingRules) {
-  AutoRequired<ProducesSharedPointer> produces;
   AutoRequired<FilterGen<int>> consumes;
   AutoRequired<AutoPacketFactory> factory;
+
+  *factory += [&](std::shared_ptr<int>& output) {
+    output = std::make_shared<int>(55);
+  };
+  *factory += [&](int) {};
 
   // Decorate the packet, verify attribute presence:
   auto packet = factory->NewPacket();

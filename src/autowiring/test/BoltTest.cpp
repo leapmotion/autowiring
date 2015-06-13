@@ -18,11 +18,7 @@ class Listener:
   public Bolt<Pipeline>
 {
 public:
-  Listener(void):
-    hit(false)
-  {}
-
-  bool hit;
+  bool hit = false;
 
   std::shared_ptr<CoreContext> createdContext;
 
@@ -59,27 +55,19 @@ public:
 struct CountObject:
   ContextMember
 {
-  CountObject():
-    count(0)
-  {}
-
-  int count;
+  int count = 0;
 };
 
 class InjectsIntoEverything:
   public Bolt<>
 {
 public:
-  InjectsIntoEverything():
-    count(0)
-  {}
-
   void ContextCreated(void) override {
     AutoRequired<CountObject> derp;
     (derp->count)++;
   }
 
-  int count;
+  int count = 0;
 };
 
 TEST_F(BoltTest, VerifySimpleInjection) {
