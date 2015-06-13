@@ -1,7 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "AutoPacket.h"
-#include "Autowired.h"
 #include "AutoPacketFactory.h"
 #include "AutoPacketInternal.hpp"
 #include "AutoPacketProfiler.h"

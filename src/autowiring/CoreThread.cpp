@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "CoreThread.h"
-#include "Autowired.h"
 #include "BasicThreadStateBlock.h"
+#include "CurrentContextPusher.h"
 
 CoreThread::CoreThread(const char* pName):
   BasicThread(pName)
