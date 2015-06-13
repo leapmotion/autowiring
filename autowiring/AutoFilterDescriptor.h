@@ -33,23 +33,7 @@ struct AutoFilterDescriptorStub {
   /// is required to carry information about the type of the proper member function to be called; t_extractedCall is
   /// required to be instantiated by the caller and point to the AutoFilter proxy routine.
   /// </summary>
-  AutoFilterDescriptorStub(const std::type_info* pType, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall) :
-    m_pType(pType),
-    m_altitude(altitude),
-    m_pArgs(pArgs),
-    m_deferred(deferred),
-    m_arity(0),
-    m_requiredCount(0),
-    m_pCall(pCall)
-  {
-    for(auto pArg = m_pArgs; *pArg; pArg++) {
-      m_arity++;
-      
-      // time shifted arguments arn't required
-      if (pArg->is_input)
-        ++m_requiredCount;
-    }
-  }
+  AutoFilterDescriptorStub(const std::type_info* pType, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall);
 
 protected:
   // Type of the subscriber itself
@@ -98,14 +82,7 @@ public:
   /// <remarks>
   /// Returns nullptr when no argument is of the requested type.
   /// </remarks>
-  const AutoFilterArgument* GetArgumentType(const std::type_info* argType) {
-    for(auto pArg = m_pArgs; *pArg; pArg++) {
-      if (pArg->ti == argType) {
-        return pArg;
-      }
-    }
-    return nullptr;
-  }
+  const AutoFilterArgument* GetArgumentType(const std::type_info* argType) const;
 
   /// <returns>A call lambda wrapping the associated subscriber</returns>
   /// <remarks>
