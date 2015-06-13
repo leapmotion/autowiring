@@ -76,6 +76,16 @@ public:
   bool IsDeferred(void) const { return m_deferred; }
   const std::type_info* GetAutoFilterTypeInfo(void) const { return m_pType; }
 
+  /// <returns>
+  /// True if the specified type is present as an output argument on this filter
+  /// </returns>
+  bool Provides(const std::type_info& ti) const;
+
+  /// <returns>
+  /// True if the specified type is present as an input argument on this filter
+  /// </returns>
+  bool Consumes(const std::type_info& ti) const;
+
   /// <summary>
   /// Orientation (input/output, required/optional) of the argument type.
   /// </summary>

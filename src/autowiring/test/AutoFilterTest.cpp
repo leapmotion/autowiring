@@ -81,6 +81,10 @@ TEST_F(AutoFilterTest, VerifyTypeUsage) {
   ASSERT_EQ(2, filterA->m_one.i) << "AutoFilter was called using derived type instead of parent";
 }
 
+int DoTheThingAndStuff(void) {
+  return 999;
+}
+
 TEST_F(AutoFilterTest, VerifyAutoOut) {
   AutoRequired<AutoPacketFactory> factory;
 

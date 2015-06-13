@@ -18,6 +18,7 @@ set(AutowiringTest_SRCS
   AutoPacketFactoryTest.cpp
   AutoRestarterTest.cpp
   AutoSignalTest.cpp
+  AutowiringDebugTest.cpp
   AutowiringTest.cpp
   AutowiringUtilitiesTest.cpp
   BasicThreadTest.cpp

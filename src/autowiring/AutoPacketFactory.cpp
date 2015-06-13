@@ -74,6 +74,13 @@ std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
   return retVal;
 }
 
+std::vector<AutoFilterDescriptor> AutoPacketFactory::GetAutoFilters(void) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  std::vector<AutoFilterDescriptor> retVal;
+  retVal.assign(m_autoFilters.begin(), m_autoFilters.end());
+  return retVal;
+}
+
 SatCounter* AutoPacketFactory::CreateSatCounterList(void) const {
   std::lock_guard<std::mutex> lk(m_lock);
 
