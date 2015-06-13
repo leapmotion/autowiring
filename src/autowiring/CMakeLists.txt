@@ -52,7 +52,6 @@ set(Autowiring_SRCS
   Autowired.h
   autowiring.h
   AutowiringConfig.h
-  AutowiringConfig.h
   AutowiringEvents.cpp
   AutowiringEvents.h
   autowiring_error.cpp
