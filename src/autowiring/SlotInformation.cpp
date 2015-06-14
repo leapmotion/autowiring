@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "SlotInformation.h"
+#include "AutowirableSlot.h"
 #include "InterlockedExchange.h"
-#include "Autowired.h"
 #include "thread_specific_ptr.h"
 #include MEMORY_HEADER
 
