@@ -12,6 +12,11 @@ AutoPacketFactory::AutoPacketFactory(void):
 
 AutoPacketFactory::~AutoPacketFactory() {}
 
+std::shared_ptr<AutoPacket> AutoPacketFactory::CurrentPacket(void) {
+  std::lock_guard<std::mutex> lk(m_lock);
+  return m_curPacket.lock();
+}
+
 std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   if(ShouldStop())
     throw autowiring_error("Attempted to create a packet on an AutoPacketFactory that was already terminated");
@@ -30,6 +35,7 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
     // Create a new next packet
     retVal = m_nextPacket;
     m_nextPacket = retVal->SuccessorInternal();
+    m_curPacket = retVal;
   }
   
   retVal->Initialize(isFirstPacket);
