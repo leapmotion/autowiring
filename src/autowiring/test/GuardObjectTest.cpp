@@ -8,10 +8,10 @@ public testing::Test
 {};
 
 class copy_count {
-  mutable int m_copy;
+  mutable int m_copy = 0;
 
 public:
-  copy_count(): m_copy(0) {}
+  copy_count() {}
 
   copy_count(const copy_count& source): m_copy(source.m_copy + 1) {
     source.m_copy = m_copy;

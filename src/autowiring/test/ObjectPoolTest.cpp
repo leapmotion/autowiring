@@ -27,33 +27,26 @@ TEST_F(ObjectPoolTest, VerifyOutstandingLimit) {
 }
 
 class LifeCycle {
-  static int constructNum;
-  static int destructNum;
-  static std::mutex numLock;
+  static std::atomic<int> constructNum;
+  static std::atomic<int> destructNum;
 
-  //Lock ensures that status checks are atomic.
-  //This does not prevent asynchronous calls.
-  std::mutex stageLock;
   enum LifeStage {
     pooled,
     issued
-  } stage;
+  };
+  std::atomic<LifeStage> stage;
 
 public:
-  LifeCycle() : stage(pooled) {
-    std::lock_guard<std::mutex> guard(numLock);
+  LifeCycle():
+    stage{pooled}
+  {
     ++constructNum;
   }
 
   ~LifeCycle() {
-    {
-      std::lock_guard<std::mutex> guard(numLock);
-      ++destructNum;
-    }
-    std::lock_guard<std::mutex> guard(stageLock);
-    if (stage != pooled) {
+    ++destructNum;
+    if (stage != pooled)
       throw std::runtime_error("Destructor called before Finalize");
-    }
   }
 
   static ObjectPool<LifeCycle>* NewObjectPool(size_t limit = ~0, size_t maxPooled = ~0) {
@@ -65,38 +58,32 @@ public:
   }
 
   static void InitializeNum() {
-    std::lock_guard<std::mutex> guard(numLock);
     constructNum = 0;
     destructNum = 0;
   }
   static int ConstructNum() {
-    std::lock_guard<std::mutex> guard(numLock);
     return constructNum;
   }
   static int DestructNum() {
-    std::lock_guard<std::mutex> guard(numLock);
     return destructNum;
   }
 
 protected:
   void Initialize() {
-    std::lock_guard<std::mutex> guard(stageLock);
     if (stage != pooled)
       throw std::runtime_error("Initialize called on object not pooled");
     stage = issued;
   }
 
   void Finalize() {
-    std::lock_guard<std::mutex> guard(stageLock);
     if (stage != issued)
       throw std::runtime_error("Finalize called on object not issued");
     stage = pooled;
   }
 };
 
-std::mutex LifeCycle::numLock;
-int LifeCycle::constructNum = 0;
-int LifeCycle::destructNum = 0;
+std::atomic<int> LifeCycle::constructNum{0};
+std::atomic<int> LifeCycle::destructNum{0};
 
 TEST_F(ObjectPoolTest, LifeCycleTestLimitOne) {
   LifeCycle::InitializeNum();

@@ -88,13 +88,8 @@ TEST_F(CoreJobTest, VerifyTeardown) {
 }
 
 struct SimpleListen{
-  SimpleListen():
-    m_flag(false)
-  {}
-
-  void SetFlag(){m_flag=true;}
-
-  bool m_flag;
+  void SetFlag(){ m_flag = true; }
+  bool m_flag = false;
 };
 
 TEST_F(CoreJobTest, VerifyNoEventReceivers){

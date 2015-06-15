@@ -30,14 +30,8 @@ class SpamguardTest:
   public CoreThread
 {
 public:
-  SpamguardTest(void):
-    m_hit(false),
-    m_multiHit(false)
-  {
-  }
-
-  bool m_hit;
-  bool m_multiHit;
+  bool m_hit = false;
+  bool m_multiHit = false;
 
   void Run(void) override {
     if(m_hit) {
@@ -314,11 +308,7 @@ class WaitsALongTimeThenQuits:
   public CoreThread
 {
 public:
-  WaitsALongTimeThenQuits(void):
-    m_runExiting(false)
-  {}
-
-  bool m_runExiting;
+  bool m_runExiting = false;
 
   void Run(void) override {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -444,8 +434,7 @@ class BTOverridesOnStopHandler:
   public BasicThread
 {
 public:
-  BTOverridesOnStopHandler(void) : got_stopped(false) {}
-  bool got_stopped;
+  bool got_stopped = false;
 
   void Run(void) override {}
 
@@ -456,8 +445,7 @@ class CTOverridesOnStopHandler:
   public CoreThread
 {
 public:
-  CTOverridesOnStopHandler(void) : got_stopped(false) {}
-  bool got_stopped;
+  bool got_stopped = false;
   void OnStop(void) override { got_stopped = true; }
 };
 

@@ -17,13 +17,8 @@ class SnoopTestBase:
   public ContextMember
 {
 public:
-  SnoopTestBase(void):
-    m_simpleCall(false),
-    m_callCount(0)
-  {}
-
-  bool m_simpleCall;
-  int m_callCount;
+  bool m_simpleCall = false;
+  int m_callCount = 0;
 
   void SimpleCall(void) override {
     m_simpleCall = true;
@@ -62,10 +57,7 @@ class RemovesSelf:
     ctxt->RemoveSnooper(GetSelf<RemovesSelf>());
   }
 public:
-  RemovesSelf():
-    counter(0)
-  {};
-  int counter;
+  int counter = 0;
 };
 
 TEST_F(SnoopTest, VerifySimpleSnoop) {

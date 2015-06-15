@@ -31,9 +31,7 @@ class IssuesPacketWaitsThenQuits:
   public CoreThread
 {
 public:
-  IssuesPacketWaitsThenQuits(void) :
-    m_hasQuit(false)
-  {
+  IssuesPacketWaitsThenQuits(void) {
     // Note:  Don't do this in practice.  This only works because we only inject this type
     // into a context that's already running; normally, creating a packet from our ctor can
     // cause an exception if we are being injected before Initiate is called.
@@ -41,7 +39,7 @@ public:
     m_packet = factory->NewPacket();
   }
 
-  bool m_hasQuit;
+  bool m_hasQuit = false;
   std::shared_ptr<AutoPacket> m_packet;
 
   void Run(void) override {
@@ -80,12 +78,8 @@ TEST_F(AutoPacketFactoryTest, WaitRunsDownAllPackets) {
 
 class HoldsAutoPacketFactoryReference {
 public:
-  HoldsAutoPacketFactoryReference(void):
-    m_value(0)
-  {}
-
   AutoRequired<AutoPacketFactory> m_factory;
-  int m_value;
+  int m_value = 0;
 
   // Just a dummy AutoFilter method so that this class is recognized as an AutoFilter
   void AutoFilter(int value) {
@@ -143,8 +137,6 @@ TEST_F(AutoPacketFactoryTest, AutoPacketFactoryCycle) {
 
 class DelaysAutoPacketsOneMS {
 public:
-  DelaysAutoPacketsOneMS(void) {}
-
   void AutoFilter(int value) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }

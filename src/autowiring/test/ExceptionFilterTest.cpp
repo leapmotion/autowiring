@@ -45,18 +45,10 @@ class GenericFilter:
   public ExceptionFilter
 {
 public:
-  GenericFilter(void):
-    m_hit(false),
-    m_specific(false),
-    m_generic(false),
-    m_fireSpecific(false)
-  {
-  }
-
-  bool m_hit;
-  bool m_specific;
-  bool m_generic;
-  bool m_fireSpecific;
+  bool m_hit = false;
+  bool m_specific = false;
+  bool m_generic = false;
+  bool m_fireSpecific = false;
 
   virtual void Filter(void) override {
     m_hit = true;

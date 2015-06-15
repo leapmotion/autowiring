@@ -20,15 +20,11 @@ class HitCountingBolt:
   public Bolt<SimpleLocalClass>
 {
 public:
-  HitCountingBolt(void):
-    m_hitCount(0)
-  {}
-
   void ContextCreated(void) override {
     m_hitCount++;
   }
 
-  size_t m_hitCount;
+  size_t m_hitCount = 0;
 };
 
 TEST_F(SelfSelectingFixtureTest, LocalFixtureTest) {

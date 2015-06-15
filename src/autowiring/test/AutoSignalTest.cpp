@@ -76,9 +76,9 @@ TEST_F(AutoSignalTest, SignalWithAutowiring) {
   ASSERT_FALSE(handler_called) << "A handler was unexpectedly called after it should have been destroyed";
 }
 
-struct RaisesASignalDerived : public RaisesASignal {
-
-};
+struct RaisesASignalDerived:
+  public RaisesASignal
+{};
 
 TEST_F(AutoSignalTest, SignalWithAutowiringDerived) {
   bool handler_called = false;
@@ -118,7 +118,7 @@ TEST_F(AutoSignalTest, SignalWithAutowiringDerived) {
 }
 
 struct ContainsRaises {
-  ContainsRaises() : count(0) {
+  ContainsRaises(void) {
     ras(&RaisesASignal::signal) += [this](int v) {
       count++;
     };
@@ -129,7 +129,7 @@ struct ContainsRaises {
     i++;
   }
   Autowired<RaisesASignal> ras;
-  int count;
+  int count = 0;
 };
 
 TEST_F(AutoSignalTest, ConstructorAutowiredRegistration) {
