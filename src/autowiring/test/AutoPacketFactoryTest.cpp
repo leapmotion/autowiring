@@ -251,3 +251,13 @@ TEST_F(AutoPacketFactoryTest, CanRemoveAddedLambda) {
   ASSERT_TRUE(packet1->Has<int>()) << "First packet did not posess expected decoration";
   ASSERT_FALSE(packet2->Has<int>()) << "Decoration present even after all filters were removed from a factory";
 }
+
+TEST_F(AutoPacketFactoryTest, CurrentPacket) {
+  AutoCurrentContext()->Initiate();
+  AutoRequired<AutoPacketFactory> factory;
+  ASSERT_EQ(nullptr, factory->CurrentPacket()) << "Current packet returned before any packets were issued";
+  auto packet = factory->NewPacket();
+  ASSERT_EQ(packet, factory->CurrentPacket()) << "Current packet was not reported correctly as being issued to the known current packet";
+  packet.reset();
+  ASSERT_EQ(nullptr, factory->CurrentPacket()) << "A current packet was reported after the current packet has expired";
+}
