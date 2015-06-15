@@ -37,11 +37,11 @@ target_link_libraries(EventExample Autowiring::Autowiring)
 add_executable(AutoFilterExample AutoFilterExample.cpp)
 target_link_libraries(AutoFilterExample Autowiring::Autowiring)
 
-add_executable(AutoFilterTutorial00 AutoFilterTutorial00.cpp)
-target_link_libraries(AutoFilterTutorial00 Autowiring::Autowiring)
+add_executable(AutoFilterTutorial.0.0 AutoFilterTutorial.0.0.cpp)
+target_link_libraries(AutoFilterTutorial.0.0 Autowiring::Autowiring)
 
-add_executable(AutoFilterTutorial01 AutoFilterTutorial01.cpp)
-target_link_libraries(AutoFilterTutorial01 Autowiring::Autowiring)
+add_executable(AutoFilterTutorial.1.0 AutoFilterTutorial.1.0.cpp)
+target_link_libraries(AutoFilterTutorial.1.0 Autowiring::Autowiring)
 
 # Need multithreading services if available
 find_package(Threads)

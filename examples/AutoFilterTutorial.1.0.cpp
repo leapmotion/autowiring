@@ -1,6 +1,6 @@
-// AutoFilterTutorial01.cpp created by Victor Dods on 2015/06/10
+// AutoFilterTutorial.1.0.cpp created by Victor Dods on 2015/06/10
 // Copyright (C) Leap Motion, Inc. All rights reserved.
-/// @page AutoFilterTutorial01 AutoFilter Tutorial 01
+/// @page AutoFilterTutorial_0_1 AutoFilter Tutorial 1.0
 /// This tutorial will introduce the reader to the different kinds of `AutoFilter` input parameter semantics.
 ///
 /// The central theme to the Autowiring implementation of the `AutoFilter` concept is that parameters are only

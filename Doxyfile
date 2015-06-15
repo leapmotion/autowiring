@@ -719,8 +719,8 @@ FILE_PATTERNS          = "at_exit.h" \
                          "GlobalCoreContext.h" \
                          *.md \
                          *.dox \
-                         AutoFilterTutorial00.cpp \
-                         AutoFilterTutorial01.cpp
+                         AutoFilterTutorial.0.0.cpp \
+                         AutoFilterTutorial.1.0.cpp
 
 # The RECURSIVE tag can be used to turn specify whether or not subdirectories 
 # should be searched for input files as well. Possible values are YES and NO. 
