@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.4</span>
+   &#160;<span id="projectnumber">0.6.0</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -127,25 +127,23 @@ $(document).ready(function(){initNavTree('_core_thread_8h_source.html','');});
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keyword">virtual</span> ~<a class="code" href="class_core_thread.html">CoreThread</a>(<span class="keywordtype">void</span>);</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="keywordtype">void</span> DEPRECATED(Ready(<span class="keywordtype">void</span>) <span class="keyword">const</span>, <span class="stringliteral">&quot;Do not call this method, the concept of thread readiness is now deprecated&quot;</span>) {}</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_core_thread.html#a90d73c0f622ae1cdb94a7a1ccb355a83">DoRunLoopCleanup</a>(std::shared_ptr&lt;CoreContext&gt;&amp;&amp; ctxt, std::shared_ptr&lt;CoreObject&gt;&amp;&amp; refTracker) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_core_thread.html#a3268ba6d9cb6ff14272ba50a17e9fe9f">Run</a>(<span class="keywordtype">void</span>) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
-<div class="line"><a name="l00074"></a><span class="lineno"><a class="line" href="class_core_thread.html#ac07f01958825aa4d9edb820fe22fdc8b">   74</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_core_thread.html#ac07f01958825aa4d9edb820fe22fdc8b">OnStop</a>(<span class="keywordtype">void</span>) {}</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_core_thread.html#ac07f01958825aa4d9edb820fe22fdc8b">OnStop</a>(<span class="keywordtype">bool</span> graceful) <span class="keyword">override</span> <span class="keyword">final</span>;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;};</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_core_thread.html#a90d73c0f622ae1cdb94a7a1ccb355a83">DoRunLoopCleanup</a>(std::shared_ptr&lt;CoreContext&gt;&amp;&amp; ctxt, std::shared_ptr&lt;CoreObject&gt;&amp;&amp; refTracker) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_core_thread.html#a3268ba6d9cb6ff14272ba50a17e9fe9f">Run</a>(<span class="keywordtype">void</span>) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
+<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="class_core_thread.html#ac07f01958825aa4d9edb820fe22fdc8b">   72</a></span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="class_core_thread.html#ac07f01958825aa4d9edb820fe22fdc8b">OnStop</a>(<span class="keywordtype">void</span>) {}</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_core_thread.html#ac07f01958825aa4d9edb820fe22fdc8b">OnStop</a>(<span class="keywordtype">bool</span> graceful) <span class="keyword">override</span> <span class="keyword">final</span>;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;};</div>
 <div class="ttc" id="class_core_thread_html_a710618147be29bbee10455141ac9f713"><div class="ttname"><a href="class_core_thread.html#a710618147be29bbee10455141ac9f713">CoreThread::CoreThread</a></div><div class="ttdeci">CoreThread(const char *pName=nullptr)</div><div class="ttdoc">Constructs a core thread object with an optional name. </div></div>
 <div class="ttc" id="class_core_thread_html"><div class="ttname"><a href="class_core_thread.html">CoreThread</a></div><div class="ttdoc">Provides a dispatch queue that creates a thread to run jobs (in the form of lambda functions) in the ...</div><div class="ttdef"><b>Definition:</b> CoreThread.h:27</div></div>
 <div class="ttc" id="_dispatch_queue_8h_html"><div class="ttname"><a href="_dispatch_queue_8h.html">DispatchQueue.h</a></div></div>
-<div class="ttc" id="class_core_thread_html_ac07f01958825aa4d9edb820fe22fdc8b"><div class="ttname"><a href="class_core_thread.html#ac07f01958825aa4d9edb820fe22fdc8b">CoreThread::OnStop</a></div><div class="ttdeci">virtual void OnStop(void)</div><div class="ttdoc">Invoked when the thread should stop. Implement this method to perform any needed cleanup. </div><div class="ttdef"><b>Definition:</b> CoreThread.h:74</div></div>
+<div class="ttc" id="class_core_thread_html_ac07f01958825aa4d9edb820fe22fdc8b"><div class="ttname"><a href="class_core_thread.html#ac07f01958825aa4d9edb820fe22fdc8b">CoreThread::OnStop</a></div><div class="ttdeci">virtual void OnStop(void)</div><div class="ttdoc">Invoked when the thread should stop. Implement this method to perform any needed cleanup. </div><div class="ttdef"><b>Definition:</b> CoreThread.h:72</div></div>
 <div class="ttc" id="class_basic_thread_html"><div class="ttname"><a href="class_basic_thread.html">BasicThread</a></div><div class="ttdoc">An abstract class for creating a thread with a single Run method. </div><div class="ttdef"><b>Definition:</b> BasicThread.h:63</div></div>
 <div class="ttc" id="class_core_thread_html_a90d73c0f622ae1cdb94a7a1ccb355a83"><div class="ttname"><a href="class_core_thread.html#a90d73c0f622ae1cdb94a7a1ccb355a83">CoreThread::DoRunLoopCleanup</a></div><div class="ttdeci">virtual void DoRunLoopCleanup(std::shared_ptr&lt; CoreContext &gt; &amp;&amp;ctxt, std::shared_ptr&lt; CoreObject &gt; &amp;&amp;refTracker) override</div><div class="ttdoc">Overridden here so we can rundown the dispatch queue </div></div>
 <div class="ttc" id="_basic_thread_8h_html"><div class="ttname"><a href="_basic_thread_8h.html">BasicThread.h</a></div></div>
-<div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:142</div></div>
+<div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:146</div></div>
 <div class="ttc" id="class_dispatch_queue_html"><div class="ttname"><a href="class_dispatch_queue.html">DispatchQueue</a></div><div class="ttdoc">This is an asynchronous queue of zero-argument functions </div><div class="ttdef"><b>Definition:</b> DispatchQueue.h:20</div></div>
 <div class="ttc" id="class_core_thread_html_a3268ba6d9cb6ff14272ba50a17e9fe9f"><div class="ttname"><a href="class_core_thread.html#a3268ba6d9cb6ff14272ba50a17e9fe9f">CoreThread::Run</a></div><div class="ttdeci">void Run(void) override</div><div class="ttdoc">Begins thread execution. </div></div>
 </div><!-- fragment --></div><!-- contents -->
@@ -154,7 +152,7 @@ $(document).ready(function(){initNavTree('_core_thread_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_core_thread_8h.html">CoreThread.h</a></li>
-    <li class="footer">Generated on Mon Jun 1 2015 14:37:45 for Autowiring by
+    <li class="footer">Generated on Mon Jun 15 2015 11:10:30 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

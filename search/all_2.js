@@ -25,7 +25,6 @@ var searchData=
   ['corethread_2eh',['CoreThread.h',['../_core_thread_8h.html',1,'']]],
   ['create',['Create',['../class_core_context.html#a58e6c77193e81a7e83474afb58630c33',1,'CoreContext']]],
   ['createcontext',['CreateContext',['../class_context_creator.html#a1c1011b0d7ff27d26a233a529e5d935c',1,'ContextCreator::CreateContext()'],['../class_context_creator_3_01_sigil_00_01void_01_4.html#ae889c252b47f3855373c7709fa8773a6',1,'ContextCreator&lt; Sigil, void &gt;::CreateContext()']]],
-  ['createpeer',['CreatePeer',['../class_core_context.html#a94a1163a33eb268e7fd943b05e7892d8',1,'CoreContext']]],
   ['createsatcounterlist',['CreateSatCounterList',['../class_auto_packet_factory.html#a7dfade595ca37b082e41d6fb7e415876',1,'AutoPacketFactory']]],
   ['currentcontext',['CurrentContext',['../class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836',1,'CoreContext']]],
   ['currentcontextenumerator',['CurrentContextEnumerator',['../class_current_context_enumerator.html',1,'CurrentContextEnumerator'],['../class_current_context_enumerator.html#aa7211789df7dcdb945539a8fa2b0d7a8',1,'CurrentContextEnumerator::CurrentContextEnumerator()']]],

@@ -11,6 +11,7 @@ var class_dispatch_queue =
     [ "DispatchEventUnsafe", "class_dispatch_queue.html#a7c909a2f706599e2aeaea163afc43d2a", null ],
     [ "GetDispatchQueueLength", "class_dispatch_queue.html#aead80f32b70b6c6ee5acffb2b083724a", null ],
     [ "OnPended", "class_dispatch_queue.html#a6c7d922485f14bdbb72559df2e009b40", null ],
+    [ "operator+=", "class_dispatch_queue.html#a993c2a6b31496f06d47079a56086a507", null ],
     [ "operator+=", "class_dispatch_queue.html#af2064b527f4ded6b9fbfd3f9193df696", null ],
     [ "operator+=", "class_dispatch_queue.html#a00e6065b7860a6bb075634a0fbbc7203", null ],
     [ "operator+=", "class_dispatch_queue.html#ada43ba9a08cec6888a103f94f6e2dabb", null ],
@@ -18,5 +19,9 @@ var class_dispatch_queue =
     [ "PendExisting", "class_dispatch_queue.html#a6603bb739523587631367935af2aea36", null ],
     [ "PromoteReadyDispatchersUnsafe", "class_dispatch_queue.html#ad392c934d343fb56f8c233d2fbd6243b", null ],
     [ "SetDispatcherCap", "class_dispatch_queue.html#a6e455ffdaece9c129717211f13752fa3", null ],
-    [ "SuggestSoonestWakeupTimeUnsafe", "class_dispatch_queue.html#a457e780c30d55fffc706892e1ebb160a", null ]
+    [ "SuggestSoonestWakeupTimeUnsafe", "class_dispatch_queue.html#a457e780c30d55fffc706892e1ebb160a", null ],
+    [ "WaitForEvent", "class_dispatch_queue.html#a304588a65ecc0712c3aafe0461c73f1b", null ],
+    [ "WaitForEvent", "class_dispatch_queue.html#aa284e235b0971d36bd858dc320c1a853", null ],
+    [ "WaitForEvent", "class_dispatch_queue.html#ad9e2d4588e439c8a0425ce0c50dc0f25", null ],
+    [ "WakeAllWaitingThreads", "class_dispatch_queue.html#afd3293e212f176ae7a11cbb4690cce71", null ]
 ];

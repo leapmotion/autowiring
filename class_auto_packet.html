@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.4</span>
+   &#160;<span id="projectnumber">0.6.0</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -156,18 +156,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a43cde58980c81a1c47cd683dd820ff2b"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b">Get</a> (const T *&amp;out, int tshift=0) const </td></tr>
 <tr class="memdesc:a43cde58980c81a1c47cd683dd820ff2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determines whether this pipeline packet contains an entry of the specified type  <a href="#a43cde58980c81a1c47cd683dd820ff2b">More...</a><br /></td></tr>
 <tr class="separator:a43cde58980c81a1c47cd683dd820ff2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aedfb2068e9ff2f88e632a74259745b5d"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:aedfb2068e9ff2f88e632a74259745b5d"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#aedfb2068e9ff2f88e632a74259745b5d">Get</a> (const std::shared_ptr&lt; const T &gt; *&amp;out, int tshift=0) const </td></tr>
-<tr class="memdesc:aedfb2068e9ff2f88e632a74259745b5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shared pointer specialization of const T*&amp;, used to obtain the underlying shared pointer for some type T  <a href="#aedfb2068e9ff2f88e632a74259745b5d">More...</a><br /></td></tr>
-<tr class="separator:aedfb2068e9ff2f88e632a74259745b5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a39c55fd5996f492dfa2d2ce68448fb67"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr class="memitem:a39c55fd5996f492dfa2d2ce68448fb67"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a39c55fd5996f492dfa2d2ce68448fb67">Get</a> (const std::shared_ptr&lt; T &gt; *&amp;out, int tshift=0) const </td></tr>
+<tr class="memdesc:a39c55fd5996f492dfa2d2ce68448fb67"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shared pointer specialization of const T*&amp;, used to obtain the underlying shared pointer for some type T  <a href="#a39c55fd5996f492dfa2d2ce68448fb67">More...</a><br /></td></tr>
+<tr class="separator:a39c55fd5996f492dfa2d2ce68448fb67"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a434994156ef4debce252bb124ba2d5e7"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:a434994156ef4debce252bb124ba2d5e7"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7">Get</a> (std::shared_ptr&lt; const T &gt; &amp;out, int tshift=0) const </td></tr>
 <tr class="memdesc:a434994156ef4debce252bb124ba2d5e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shared pointer specialization, used to obtain the underlying shared pointer for some type T  <a href="#a434994156ef4debce252bb124ba2d5e7">More...</a><br /></td></tr>
 <tr class="separator:a434994156ef4debce252bb124ba2d5e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea6f7ada47b79a2767051b65430595a8"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:aea6f7ada47b79a2767051b65430595a8"><td class="memTemplItemLeft" align="right" valign="top">const T **&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#aea6f7ada47b79a2767051b65430595a8">GetAll</a> (int tshift=0) const </td></tr>
-<tr class="memdesc:aea6f7ada47b79a2767051b65430595a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a null-terminated temporary buffer containing all decorations  <a href="#aea6f7ada47b79a2767051b65430595a8">More...</a><br /></td></tr>
-<tr class="separator:aea6f7ada47b79a2767051b65430595a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b3fb6084dc850b1b9d077726104541f"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr class="memitem:a7b3fb6084dc850b1b9d077726104541f"><td class="memTemplItemLeft" align="right" valign="top">std::unique_ptr&lt; const T *[]&gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a7b3fb6084dc850b1b9d077726104541f">GetAll</a> (int tshift=0) const </td></tr>
+<tr class="memdesc:a7b3fb6084dc850b1b9d077726104541f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a null-terminated temporary buffer containing all decorations  <a href="#a7b3fb6084dc850b1b9d077726104541f">More...</a><br /></td></tr>
+<tr class="separator:a7b3fb6084dc850b1b9d077726104541f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab194d4255c47b1d85d9b8b27a14f3f07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab194d4255c47b1d85d9b8b27a14f3f07"></a>
 std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#ab194d4255c47b1d85d9b8b27a14f3f07">GetContext</a> (void) const </td></tr>
 <tr class="memdesc:ab194d4255c47b1d85d9b8b27a14f3f07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the context of this packet (The context of the <a class="el" href="class_auto_packet_factory.html" title="A configurable factory class for pipeline packets with a built-in object pool ">AutoPacketFactory</a> that created this context) <br /></td></tr>
@@ -194,7 +194,7 @@ template&lt;class T &gt; </td></tr>
 <tr class="separator:a5467f83887d63a602cb05d88c6893bc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a749ec811977357ea7165b8e77be65932"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:a749ec811977357ea7165b8e77be65932"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a749ec811977357ea7165b8e77be65932">Has</a> (int tshift=0) const </td></tr>
-<tr class="memdesc:a749ec811977357ea7165b8e77be65932"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if this packet posesses a decoration of the specified type </dd></dl>
+<tr class="memdesc:a749ec811977357ea7165b8e77be65932"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if this packet posesses one or more instances of a decoration of the specified type </dd></dl>
  <a href="#a749ec811977357ea7165b8e77be65932">More...</a><br /></td></tr>
 <tr class="separator:a749ec811977357ea7165b8e77be65932"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a76af6d953ba5968fffd20cb736ad0cbc"><td class="memTemplParams" colspan="2"><a class="anchor" id="a76af6d953ba5968fffd20cb736ad0cbc"></a>
@@ -221,9 +221,9 @@ template&lt;class T &gt; </td></tr>
 <tr class="memitem:a2b9788e64105fee4f967e53871c4d93b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a2b9788e64105fee4f967e53871c4d93b">Unsatisfiable</a> (void)</td></tr>
 <tr class="memdesc:a2b9788e64105fee4f967e53871c4d93b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Marks the named decoration as unsatisfiable  <a href="#a2b9788e64105fee4f967e53871c4d93b">More...</a><br /></td></tr>
 <tr class="separator:a2b9788e64105fee4f967e53871c4d93b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a654e349d38d07225b64008a6ff0351c6"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a654e349d38d07225b64008a6ff0351c6">Wait</a> (std::condition_variable &amp;cv, const AutoFilterDescriptorInput *inputs, std::chrono::nanoseconds duration=std::chrono::nanoseconds::max())</td></tr>
-<tr class="memdesc:a654e349d38d07225b64008a6ff0351c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Blocks until the specified descriptor is satisfied  <a href="#a654e349d38d07225b64008a6ff0351c6">More...</a><br /></td></tr>
-<tr class="separator:a654e349d38d07225b64008a6ff0351c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac24353583ddd518aad7973942e4b1baa"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#ac24353583ddd518aad7973942e4b1baa">Wait</a> (std::condition_variable &amp;cv, const AutoFilterArgument *inputs, std::chrono::nanoseconds duration=std::chrono::nanoseconds::max())</td></tr>
+<tr class="memdesc:ac24353583ddd518aad7973942e4b1baa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Blocks until the specified descriptor is satisfied  <a href="#ac24353583ddd518aad7973942e4b1baa">More...</a><br /></td></tr>
+<tr class="separator:ac24353583ddd518aad7973942e4b1baa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adde180a2515100943e2b33e999b7f6d3"><td class="memTemplParams" colspan="2">template&lt;class Fx &gt; </td></tr>
 <tr class="memitem:adde180a2515100943e2b33e999b7f6d3"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#adde180a2515100943e2b33e999b7f6d3">Wait</a> (std::condition_variable &amp;cv, Fx &amp;&amp;autoFilter, std::chrono::nanoseconds duration=std::chrono::nanoseconds::max())</td></tr>
 <tr class="memdesc:adde180a2515100943e2b33e999b7f6d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Blocks until the passed lambda function can be called  <a href="#adde180a2515100943e2b33e999b7f6d3">More...</a><br /></td></tr>
@@ -272,18 +272,18 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:a29f7dcf03fe916c5566ca61afcc19782"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a29f7dcf03fe916c5566ca61afcc19782">MarkUnsatisfiable</a> (const DecorationKey &amp;key)</td></tr>
 <tr class="memdesc:a29f7dcf03fe916c5566ca61afcc19782"><td class="mdescLeft">&#160;</td><td class="mdescRight">Marks the specified entry as being unsatisfiable  <a href="#a29f7dcf03fe916c5566ca61afcc19782">More...</a><br /></td></tr>
 <tr class="separator:a29f7dcf03fe916c5566ca61afcc19782"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa90a9d17516b284059a0f30249656d56"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#aa90a9d17516b284059a0f30249656d56">PulseSatisfaction</a> (DecorationDisposition *pTypeSubs[], size_t nInfos)</td></tr>
-<tr class="memdesc:aa90a9d17516b284059a0f30249656d56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs a "satisfaction pulse", which will avoid notifying any deferred filters  <a href="#aa90a9d17516b284059a0f30249656d56">More...</a><br /></td></tr>
-<tr class="separator:aa90a9d17516b284059a0f30249656d56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a17e257b9636aff04f23d82d11abfb2a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a17e257b9636aff04f23d82d11abfb2a6">PulseSatisfactionUnsafe</a> (std::unique_lock&lt; std::mutex &gt; lk, DecorationDisposition *pTypeSubs[], size_t nInfos)</td></tr>
+<tr class="memdesc:a17e257b9636aff04f23d82d11abfb2a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs a "satisfaction pulse", which will avoid notifying any deferred filters  <a href="#a17e257b9636aff04f23d82d11abfb2a6">More...</a><br /></td></tr>
+<tr class="separator:a17e257b9636aff04f23d82d11abfb2a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7d82f8536c4a1b847a5ba0efb9b99d6"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_auto_packet.html">AutoPacket</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#af7d82f8536c4a1b847a5ba0efb9b99d6">SuccessorUnsafe</a> (void)</td></tr>
 <tr class="memdesc:af7d82f8536c4a1b847a5ba0efb9b99d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">The portion of Successor that must run under a lock  <a href="#af7d82f8536c4a1b847a5ba0efb9b99d6">More...</a><br /></td></tr>
 <tr class="separator:af7d82f8536c4a1b847a5ba0efb9b99d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0dbabcc26a87524dbd833390d6dff5f3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a0dbabcc26a87524dbd833390d6dff5f3">UnsafeComplete</a> (const DecorationKey &amp;data)</td></tr>
 <tr class="memdesc:a0dbabcc26a87524dbd833390d6dff5f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked from a checkout when a checkout has completed  <a href="#a0dbabcc26a87524dbd833390d6dff5f3">More...</a><br /></td></tr>
 <tr class="separator:a0dbabcc26a87524dbd833390d6dff5f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a112ba05a6a371322e297676d64c5358f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a112ba05a6a371322e297676d64c5358f">UpdateSatisfactionUnsafe</a> (std::unique_lock&lt; std::mutex &gt; &amp;&amp;lk, const DecorationDisposition &amp;disposition)</td></tr>
-<tr class="memdesc:a112ba05a6a371322e297676d64c5358f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates subscriber statuses given that the specified type information has been satisfied  <a href="#a112ba05a6a371322e297676d64c5358f">More...</a><br /></td></tr>
-<tr class="separator:a112ba05a6a371322e297676d64c5358f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5500ce562229a4b8944a0f7a647d0ab6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a5500ce562229a4b8944a0f7a647d0ab6">UpdateSatisfactionUnsafe</a> (std::unique_lock&lt; std::mutex &gt; lk, const DecorationDisposition &amp;disposition)</td></tr>
+<tr class="memdesc:a5500ce562229a4b8944a0f7a647d0ab6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates subscriber statuses given that the specified type information has been satisfied  <a href="#a5500ce562229a4b8944a0f7a647d0ab6">More...</a><br /></td></tr>
+<tr class="separator:a5500ce562229a4b8944a0f7a647d0ab6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-static-methods"></a>
 Static Protected Member Functions</h2></td></tr>
@@ -296,8 +296,7 @@ Static Protected Member Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A decorator-style processing packet </p>
-<p>A processing packet may be decorated with additional types as desired by the user. The pipeline packet is not a type of context; querying the packet for an element of a particular type will look for an element of precisely that type, not an inherited type or a related interface.</p>
-<p>Consumers who wish to advertise a particular field under multiple types must do so manually with the Advertise function. </p>
+<p>A processing packet may be decorated with additional types as desired by the user. The pipeline packet is not a type of context; querying the packet for an element of a particular type will look for an element of precisely that type, not an inherited type or a related interface. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a125a001b0cfb8f5bfca5cac6b291e2a9"></a>
 <div class="memitem">
@@ -675,7 +674,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="aedfb2068e9ff2f88e632a74259745b5d"></a>
+<a class="anchor" id="a39c55fd5996f492dfa2d2ce68448fb67"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -687,7 +686,7 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="memname">bool AutoPacket::Get </td>
           <td>(</td>
-          <td class="paramtype">const std::shared_ptr&lt; const T &gt; *&amp;&#160;</td>
+          <td class="paramtype">const std::shared_ptr&lt; T &gt; *&amp;&#160;</td>
           <td class="paramname"><em>out</em>, </td>
         </tr>
         <tr>
@@ -760,7 +759,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="aea6f7ada47b79a2767051b65430595a8"></a>
+<a class="anchor" id="a7b3fb6084dc850b1b9d077726104541f"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -770,7 +769,7 @@ template&lt;class T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const T** AutoPacket::GetAll </td>
+          <td class="memname">std::unique_ptr&lt;const T*[]&gt; AutoPacket::GetAll </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>tshift</em> = <code>0</code></td><td>)</td>
@@ -786,7 +785,6 @@ template&lt;class T &gt; </div>
 
 <p>Returns a null-terminated temporary buffer containing all decorations </p>
 <dl class="section return"><dt>Returns</dt><dd>The null-terminated temporary buffer</dd></dl>
-<p>The returned buffer must be freed with std::return_temporary_buffer </p>
 
 </div>
 </div>
@@ -923,7 +921,7 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p><dl class="section return"><dt>Returns</dt><dd>True if this packet posesses a decoration of the specified type </dd></dl>
+<p><dl class="section return"><dt>Returns</dt><dd>True if this packet posesses one or more instances of a decoration of the specified type </dd></dl>
 </p>
 <p>Although "AutoPacket &amp;" and "const AutoPacket&amp;" argument types will be satisfied, the <a class="el" href="class_auto_packet.html" title="A decorator-style processing packet ">AutoPacket</a> does not "have" these types. </p>
 
@@ -1067,7 +1065,7 @@ template&lt;class Fx &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="aa90a9d17516b284059a0f30249656d56"></a>
+<a class="anchor" id="a17e257b9636aff04f23d82d11abfb2a6"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -1075,8 +1073,14 @@ template&lt;class Fx &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void AutoPacket::PulseSatisfaction </td>
+          <td class="memname">void AutoPacket::PulseSatisfactionUnsafe </td>
           <td>(</td>
+          <td class="paramtype">std::unique_lock&lt; std::mutex &gt;&#160;</td>
+          <td class="paramname"><em>lk</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">DecorationDisposition *&#160;</td>
           <td class="paramname"><em>pTypeSubs</em>[], </td>
         </tr>
@@ -1279,7 +1283,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a112ba05a6a371322e297676d64c5358f"></a>
+<a class="anchor" id="a5500ce562229a4b8944a0f7a647d0ab6"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -1289,7 +1293,7 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="memname">void AutoPacket::UpdateSatisfactionUnsafe </td>
           <td>(</td>
-          <td class="paramtype">std::unique_lock&lt; std::mutex &gt; &amp;&amp;&#160;</td>
+          <td class="paramtype">std::unique_lock&lt; std::mutex &gt;&#160;</td>
           <td class="paramname"><em>lk</em>, </td>
         </tr>
         <tr>
@@ -1322,7 +1326,7 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a654e349d38d07225b64008a6ff0351c6"></a>
+<a class="anchor" id="ac24353583ddd518aad7973942e4b1baa"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1335,7 +1339,7 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const AutoFilterDescriptorInput *&#160;</td>
+          <td class="paramtype">const AutoFilterArgument *&#160;</td>
           <td class="paramname"><em>inputs</em>, </td>
         </tr>
         <tr>
@@ -1494,7 +1498,7 @@ template&lt;class... Args&gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_auto_packet.html">AutoPacket</a></li>
-    <li class="footer">Generated on Mon Jun 1 2015 14:37:45 for Autowiring by
+    <li class="footer">Generated on Mon Jun 15 2015 11:10:30 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

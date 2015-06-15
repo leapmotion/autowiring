@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.4</span>
+   &#160;<span id="projectnumber">0.6.0</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -152,10 +152,19 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:a202af0ec4502042b5fb32c0dfc4cdfa8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a202af0ec4502042b5fb32c0dfc4cdfa8">Barrier</a> (void)</td></tr>
 <tr class="memdesc:a202af0ec4502042b5fb32c0dfc4cdfa8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identical to the timed version of Barrier, but does not time out  <a href="#a202af0ec4502042b5fb32c0dfc4cdfa8">More...</a><br /></td></tr>
 <tr class="separator:a202af0ec4502042b5fb32c0dfc4cdfa8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af94131c04ad4d1513cc411870fc6b002"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#af94131c04ad4d1513cc411870fc6b002">DispatchAllEvents</a> (void)</td></tr>
+<tr class="memdesc:af94131c04ad4d1513cc411870fc6b002"><td class="mdescLeft">&#160;</td><td class="mdescRight">Similar to DispatchEvent, but will attempt to dispatch all events currently queued  <a href="#af94131c04ad4d1513cc411870fc6b002">More...</a><br /></td></tr>
+<tr class="separator:af94131c04ad4d1513cc411870fc6b002"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae4cf0ed4b428ecbee03fb64a0e705ce7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#ae4cf0ed4b428ecbee03fb64a0e705ce7">DispatchEvent</a> (void)</td></tr>
+<tr class="memdesc:ae4cf0ed4b428ecbee03fb64a0e705ce7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Similar to WaitForEvent, but does not block  <a href="#ae4cf0ed4b428ecbee03fb64a0e705ce7">More...</a><br /></td></tr>
+<tr class="separator:ae4cf0ed4b428ecbee03fb64a0e705ce7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aead80f32b70b6c6ee5acffb2b083724a"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#aead80f32b70b6c6ee5acffb2b083724a">GetDispatchQueueLength</a> (void) const </td></tr>
 <tr class="memdesc:aead80f32b70b6c6ee5acffb2b083724a"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>The total number of all ready and delayed events </dd></dl>
  <a href="#aead80f32b70b6c6ee5acffb2b083724a">More...</a><br /></td></tr>
 <tr class="separator:aead80f32b70b6c6ee5acffb2b083724a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a993c2a6b31496f06d47079a56086a507"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a993c2a6b31496f06d47079a56086a507">operator+=</a> (<a class="el" href="class_dispatch_queue.html">DispatchQueue</a> &amp;&amp;rhs)</td></tr>
+<tr class="memdesc:a993c2a6b31496f06d47079a56086a507"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extracts the contents of the dispatch queue on the right-hand side for handling by this queue  <a href="#a993c2a6b31496f06d47079a56086a507">More...</a><br /></td></tr>
+<tr class="separator:a993c2a6b31496f06d47079a56086a507"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af2064b527f4ded6b9fbfd3f9193df696"><td class="memTemplParams" colspan="2">template&lt;class Rep , class Period &gt; </td></tr>
 <tr class="memitem:af2064b527f4ded6b9fbfd3f9193df696"><td class="memTemplItemLeft" align="right" valign="top">DispatchThunkDelayedExpression&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#af2064b527f4ded6b9fbfd3f9193df696">operator+=</a> (std::chrono::duration&lt; Rep, Period &gt; rhs)</td></tr>
 <tr class="memdesc:af2064b527f4ded6b9fbfd3f9193df696"><td class="mdescLeft">&#160;</td><td class="mdescRight">Overload for the introduction of a delayed dispatch thunk  <a href="#af2064b527f4ded6b9fbfd3f9193df696">More...</a><br /></td></tr>
@@ -173,15 +182,21 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:a457e780c30d55fffc706892e1ebb160a"><td class="memItemLeft" align="right" valign="top">std::chrono::steady_clock::time_point&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a457e780c30d55fffc706892e1ebb160a">SuggestSoonestWakeupTimeUnsafe</a> (std::chrono::steady_clock::time_point latestTime) const </td></tr>
 <tr class="memdesc:a457e780c30d55fffc706892e1ebb160a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Recommends a point in time to wake up to check for events  <a href="#a457e780c30d55fffc706892e1ebb160a">More...</a><br /></td></tr>
 <tr class="separator:a457e780c30d55fffc706892e1ebb160a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a304588a65ecc0712c3aafe0461c73f1b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a304588a65ecc0712c3aafe0461c73f1b">WaitForEvent</a> (void)</td></tr>
+<tr class="memdesc:a304588a65ecc0712c3aafe0461c73f1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits until a lambda function is ready to run in this thread's dispatch queue, dispatches the function, and then returns.  <a href="#a304588a65ecc0712c3aafe0461c73f1b">More...</a><br /></td></tr>
+<tr class="separator:a304588a65ecc0712c3aafe0461c73f1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa284e235b0971d36bd858dc320c1a853"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#aa284e235b0971d36bd858dc320c1a853">WaitForEvent</a> (std::chrono::milliseconds milliseconds)</td></tr>
+<tr class="memdesc:aa284e235b0971d36bd858dc320c1a853"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits until a lambda function in the dispatch queue is ready to run or the specified time period elapses, whichever comes first.  <a href="#aa284e235b0971d36bd858dc320c1a853">More...</a><br /></td></tr>
+<tr class="separator:aa284e235b0971d36bd858dc320c1a853"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9e2d4588e439c8a0425ce0c50dc0f25"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#ad9e2d4588e439c8a0425ce0c50dc0f25">WaitForEvent</a> (std::chrono::steady_clock::time_point wakeTime)</td></tr>
+<tr class="memdesc:ad9e2d4588e439c8a0425ce0c50dc0f25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits until a lambda function in the dispatch queue is ready to run or the specified time is reached, whichever comes first.  <a href="#ad9e2d4588e439c8a0425ce0c50dc0f25">More...</a><br /></td></tr>
+<tr class="separator:ad9e2d4588e439c8a0425ce0c50dc0f25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd3293e212f176ae7a11cbb4690cce71"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#afd3293e212f176ae7a11cbb4690cce71">WakeAllWaitingThreads</a> (void)</td></tr>
+<tr class="memdesc:afd3293e212f176ae7a11cbb4690cce71"><td class="mdescLeft">&#160;</td><td class="mdescRight">Causes all calls to WaitForEvent to return control to their callers  <a href="#afd3293e212f176ae7a11cbb4690cce71">More...</a><br /></td></tr>
+<tr class="separator:afd3293e212f176ae7a11cbb4690cce71"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:af94131c04ad4d1513cc411870fc6b002"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#af94131c04ad4d1513cc411870fc6b002">DispatchAllEvents</a> (void)</td></tr>
-<tr class="memdesc:af94131c04ad4d1513cc411870fc6b002"><td class="mdescLeft">&#160;</td><td class="mdescRight">Similar to DispatchEvent, but will attempt to dispatch all events currently queued  <a href="#af94131c04ad4d1513cc411870fc6b002">More...</a><br /></td></tr>
-<tr class="separator:af94131c04ad4d1513cc411870fc6b002"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae4cf0ed4b428ecbee03fb64a0e705ce7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#ae4cf0ed4b428ecbee03fb64a0e705ce7">DispatchEvent</a> (void)</td></tr>
-<tr class="memdesc:ae4cf0ed4b428ecbee03fb64a0e705ce7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Similar to WaitForEvent, but does not block  <a href="#ae4cf0ed4b428ecbee03fb64a0e705ce7">More...</a><br /></td></tr>
-<tr class="separator:ae4cf0ed4b428ecbee03fb64a0e705ce7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c909a2f706599e2aeaea163afc43d2a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a7c909a2f706599e2aeaea163afc43d2a">DispatchEventUnsafe</a> (std::unique_lock&lt; std::mutex &gt; &amp;lk)</td></tr>
 <tr class="memdesc:a7c909a2f706599e2aeaea163afc43d2a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Similar to DispatchEvent, except assumes that the dispatch lock is currently held  <a href="#a7c909a2f706599e2aeaea163afc43d2a">More...</a><br /></td></tr>
 <tr class="separator:a7c909a2f706599e2aeaea163afc43d2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -325,9 +340,6 @@ Protected Member Functions</h2></td></tr>
 <a class="anchor" id="af94131c04ad4d1513cc411870fc6b002"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">int DispatchQueue::DispatchAllEvents </td>
@@ -337,11 +349,6 @@ Protected Member Functions</h2></td></tr>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Similar to DispatchEvent, but will attempt to dispatch all events currently queued </p>
@@ -352,9 +359,6 @@ Protected Member Functions</h2></td></tr>
 <a class="anchor" id="ae4cf0ed4b428ecbee03fb64a0e705ce7"></a>
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">bool DispatchQueue::DispatchEvent </td>
@@ -364,11 +368,6 @@ Protected Member Functions</h2></td></tr>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
 <p>Similar to WaitForEvent, but does not block </p>
@@ -464,6 +463,24 @@ Protected Member Functions</h2></td></tr>
 <p>The recipient of this call will be running in an arbitrary thread context while holding the dispatch lock. The queue is guaranteed to contain at least one element, and may potentially contain more. The caller MUST NOT attempt to pend any more events during this call, or a deadlock could occur. </p>
 
 <p>Referenced by <a class="el" href="class_dispatch_queue.html#a8dfd34970fbfca53f0d3b10cbb9c433c">operator+=()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a993c2a6b31496f06d47079a56086a507"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void DispatchQueue::operator+= </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_dispatch_queue.html">DispatchQueue</a> &amp;&amp;&#160;</td>
+          <td class="paramname"><em>rhs</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Extracts the contents of the dispatch queue on the right-hand side for handling by this queue </p>
 
 </div>
 </div>
@@ -672,6 +689,81 @@ template&lt;class _Fx &gt; </div>
 
 </div>
 </div>
+<a class="anchor" id="a304588a65ecc0712c3aafe0461c73f1b"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void DispatchQueue::WaitForEvent </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Waits until a lambda function is ready to run in this thread's dispatch queue, dispatches the function, and then returns. </p>
+
+</div>
+</div>
+<a class="anchor" id="aa284e235b0971d36bd858dc320c1a853"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool DispatchQueue::WaitForEvent </td>
+          <td>(</td>
+          <td class="paramtype">std::chrono::milliseconds&#160;</td>
+          <td class="paramname"><em>milliseconds</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Waits until a lambda function in the dispatch queue is ready to run or the specified time period elapses, whichever comes first. </p>
+<dl class="section return"><dt>Returns</dt><dd>False if the timeout period elapsed before an event could be dispatched, true otherwise </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ad9e2d4588e439c8a0425ce0c50dc0f25"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool DispatchQueue::WaitForEvent </td>
+          <td>(</td>
+          <td class="paramtype">std::chrono::steady_clock::time_point&#160;</td>
+          <td class="paramname"><em>wakeTime</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Waits until a lambda function in the dispatch queue is ready to run or the specified time is reached, whichever comes first. </p>
+<dl class="section return"><dt>Returns</dt><dd>False if the timeout period elapsed before an event could be dispatched, true otherwise </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="afd3293e212f176ae7a11cbb4690cce71"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void DispatchQueue::WakeAllWaitingThreads </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Causes all calls to WaitForEvent to return control to their callers </p>
+<p>This method will cause any threads blocked in WaitForEvent to wake up and make progress. This can be useful when threads are being used to dispatch work items and it's necessary to wake them in order to handle out-of-queue processing&ndash;IE, pool maintenance </p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>autowiring/<a class="el" href="_dispatch_queue_8h_source.html">DispatchQueue.h</a></li>
 </ul>
@@ -681,7 +773,7 @@ template&lt;class _Fx &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_dispatch_queue.html">DispatchQueue</a></li>
-    <li class="footer">Generated on Mon Jun 1 2015 14:37:45 for Autowiring by
+    <li class="footer">Generated on Mon Jun 15 2015 11:10:30 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

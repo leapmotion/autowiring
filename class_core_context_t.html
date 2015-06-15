@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.4</span>
+   &#160;<span id="projectnumber">0.6.0</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -180,10 +180,6 @@ const std::type_info &amp;&#160;</td><td class="memItemRight" valign="bottom"><a
 <tr class="memitem:a58e6c77193e81a7e83474afb58630c33 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a58e6c77193e81a7e83474afb58630c33">Create</a> (void)</td></tr>
 <tr class="memdesc:a58e6c77193e81a7e83474afb58630c33 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a child context of this context.  <a href="#a58e6c77193e81a7e83474afb58630c33">More...</a><br /></td></tr>
 <tr class="separator:a58e6c77193e81a7e83474afb58630c33 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a94a1163a33eb268e7fd943b05e7892d8 inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:a94a1163a33eb268e7fd943b05e7892d8 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a94a1163a33eb268e7fd943b05e7892d8">CreatePeer</a> (void)</td></tr>
-<tr class="memdesc:a94a1163a33eb268e7fd943b05e7892d8 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a peer context to this context.  <a href="#a94a1163a33eb268e7fd943b05e7892d8">More...</a><br /></td></tr>
-<tr class="separator:a94a1163a33eb268e7fd943b05e7892d8 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abafba926a5bb2aa13f15c4de0d0df019 inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#abafba926a5bb2aa13f15c4de0d0df019">DelayUntilInitiated</a> (void)</td></tr>
 <tr class="memdesc:abafba926a5bb2aa13f15c4de0d0df019 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits until the context is initiated or, if never initiated, until it starts shutting down.  <a href="#abafba926a5bb2aa13f15c4de0d0df019">More...</a><br /></td></tr>
 <tr class="separator:abafba926a5bb2aa13f15c4de0d0df019 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -247,6 +243,9 @@ const std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreConte
 <tr class="memitem:a93a15fed7006535074ba0cad22734300 inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="class_core_runnable.html">CoreRunnable</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a93a15fed7006535074ba0cad22734300">GetRunnables</a> (void) const </td></tr>
 <tr class="memdesc:a93a15fed7006535074ba0cad22734300 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a copy of the list of runnables  <a href="#a93a15fed7006535074ba0cad22734300">More...</a><br /></td></tr>
 <tr class="separator:a93a15fed7006535074ba0cad22734300 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7646ea17e7eb961c2193485926af7965 inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; autowiring::ThreadPool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a7646ea17e7eb961c2193485926af7965">GetThreadPool</a> (void) const </td></tr>
+<tr class="memdesc:a7646ea17e7eb961c2193485926af7965 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the current thread pool  <a href="#a7646ea17e7eb961c2193485926af7965">More...</a><br /></td></tr>
+<tr class="separator:a7646ea17e7eb961c2193485926af7965 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff72e44be09394686d51a367a6ff9e23 inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:aff72e44be09394686d51a367a6ff9e23 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#aff72e44be09394686d51a367a6ff9e23">Has</a> (void) const </td></tr>
 <tr class="memdesc:aff72e44be09394686d51a367a6ff9e23 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">True, if an instance of the specified type exists and dependencies of that type can be autowired in this context.  <a href="#aff72e44be09394686d51a367a6ff9e23">More...</a><br /></td></tr>
@@ -292,6 +291,10 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:af5920389c012b628511fe22dfb1dadb4 inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">const AutowirableSlotFn&lt; T, Fn &gt; *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#af5920389c012b628511fe22dfb1dadb4">NotifyWhenAutowired</a> (Fn &amp;&amp;listener)</td></tr>
 <tr class="memdesc:af5920389c012b628511fe22dfb1dadb4 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a post-attachment listener in this context for a particular autowired member. There is no guarantee for the context in which the listener will be called.  <a href="#af5920389c012b628511fe22dfb1dadb4">More...</a><br /></td></tr>
 <tr class="separator:af5920389c012b628511fe22dfb1dadb4 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d4ff8b34b0d1a6159abff8f7b96599e inherit pub_methods_class_core_context"><td class="memTemplParams" colspan="2">template&lt;class Fx &gt; </td></tr>
+<tr class="memitem:a9d4ff8b34b0d1a6159abff8f7b96599e inherit pub_methods_class_core_context"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a9d4ff8b34b0d1a6159abff8f7b96599e">operator+=</a> (Fx &amp;&amp;fx)</td></tr>
+<tr class="memdesc:a9d4ff8b34b0d1a6159abff8f7b96599e inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Submits the specified lambda to this context's ThreadPool for processing  <a href="#a9d4ff8b34b0d1a6159abff8f7b96599e">More...</a><br /></td></tr>
+<tr class="separator:a9d4ff8b34b0d1a6159abff8f7b96599e inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9dc0d1a9db98765d26bb89cab5bb4f90 inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a9dc0d1a9db98765d26bb89cab5bb4f90">RemoveSnooper</a> (const CoreObjectDescriptor &amp;traits)</td></tr>
 <tr class="memdesc:a9dc0d1a9db98765d26bb89cab5bb4f90 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runtime version of RemoveSnooper  <a href="#a9dc0d1a9db98765d26bb89cab5bb4f90">More...</a><br /></td></tr>
 <tr class="separator:a9dc0d1a9db98765d26bb89cab5bb4f90 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -306,6 +309,9 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:ad306c1c3703311ba1fe7fdb4add279f9 inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ad306c1c3703311ba1fe7fdb4add279f9">SetCurrent</a> (void)</td></tr>
 <tr class="memdesc:ad306c1c3703311ba1fe7fdb4add279f9 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Makes this context the current context.  <a href="#ad306c1c3703311ba1fe7fdb4add279f9">More...</a><br /></td></tr>
 <tr class="separator:ad306c1c3703311ba1fe7fdb4add279f9 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a733240501e3607dc40a12b8456fb69be inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a733240501e3607dc40a12b8456fb69be">SetThreadPool</a> (std::shared_ptr&lt; autowiring::ThreadPool &gt; threadPool)</td></tr>
+<tr class="memdesc:a733240501e3607dc40a12b8456fb69be inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns the thread pool handler for this context  <a href="#a733240501e3607dc40a12b8456fb69be">More...</a><br /></td></tr>
+<tr class="separator:a733240501e3607dc40a12b8456fb69be inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8e0ff07669244590fcdcec9aeb588aa5 inherit pub_methods_class_core_context"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a8e0ff07669244590fcdcec9aeb588aa5">SignalShutdown</a> (bool wait=false, <a class="el" href="_core_context_8h.html#aa042d52710c2112736f295f5adab0de5">ShutdownMode</a> shutdownMode=<a class="el" href="_core_context_8h.html#aa042d52710c2112736f295f5adab0de5a33246d22483d4dbb20f20f098e24a684">ShutdownMode::Graceful</a>)</td></tr>
 <tr class="memdesc:a8e0ff07669244590fcdcec9aeb588aa5 inherit pub_methods_class_core_context"><td class="mdescLeft">&#160;</td><td class="mdescRight">Begins shutdown of this context, optionally waiting for child contexts and threads to also shut down before returning.  <a href="#a8e0ff07669244590fcdcec9aeb588aa5">More...</a><br /></td></tr>
 <tr class="separator:a8e0ff07669244590fcdcec9aeb588aa5 inherit pub_methods_class_core_context"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -359,7 +365,7 @@ class CoreContextT&lt; T &gt;</h3>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_core_context_t.html">CoreContextT</a></li>
-    <li class="footer">Generated on Mon Jun 1 2015 14:37:45 for Autowiring by
+    <li class="footer">Generated on Mon Jun 15 2015 11:10:30 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

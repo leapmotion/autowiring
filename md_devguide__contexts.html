@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.4</span>
+   &#160;<span id="projectnumber">0.6.0</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -114,7 +114,7 @@ $(document).ready(function(){initNavTree('md_devguide__contexts.html','');});
 </pre><p>You can use the <a class="el" href="class_context_enumerator.html" title="A virtual container which may be used to enumerate all children of a particular context ...">ContextEnumerator</a> and <a class="el" href="class_context_enumerator_t.html" title="CurrentContextEnumeratorT. ">ContextEnumeratorT</a> classes to enumerate existing contexts.</p>
 <h1>Creating Contexts</h1>
 <p>The simplest way to create a new context is with: </p><pre class="fragment">AutoCreateContext newContext;
-</pre><p>This creates a new context as a child of the current context. You can also create a context as a child of another context with the <a class="el" href="class_core_context.html#a58e6c77193e81a7e83474afb58630c33" title="Creates a child context of this context. ">CoreContext::Create()</a> and <a class="el" href="class_core_context.html#a94a1163a33eb268e7fd943b05e7892d8" title="Creates a peer context to this context. ">CoreContext::CreatePeer()</a> methods.</p>
+</pre><p>This creates a new context as a child of the current context. You can also create a context as a child of another context with the <a class="el" href="class_core_context.html#a58e6c77193e81a7e83474afb58630c33" title="Creates a child context of this context. ">CoreContext::Create()</a> and CoreContext::CreatePeer() methods.</p>
 <h2>Sigils</h2>
 <p>You can categorize your contexts by assigning a sigil class at creation. A sigil class serves as a marker, which you can use to identify contexts by type. The sigil class can be any type, even an empty class declaration. Use the <a class="el" href="class_auto_create_context_t.html" title="Provides a simple way to create a child of the current context using a sigil. ">AutoCreateContextT</a> template to create a class with a sigil: </p><pre class="fragment">class Foo{};
 AutoCreateContextT&lt;Foo&gt; contextWithSigil;
@@ -164,7 +164,7 @@ foo-&gt;SetCurrent();
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon Jun 1 2015 14:37:45 for Autowiring by
+    <li class="footer">Generated on Mon Jun 15 2015 11:10:30 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

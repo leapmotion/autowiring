@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.5.4</span>
+   &#160;<span id="projectnumber">0.6.0</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -166,45 +166,45 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;{</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  <a class="code" href="class_autowired.html">Autowired</a>(<span class="keyword">const</span> std::shared_ptr&lt;CoreContext&gt;&amp; ctxt = <a class="code" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a>()) :</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    AutowirableSlot&lt;T&gt;(ctxt),</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    m_pFirstChild(<span class="keyword">nullptr</span>)</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  {</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="keywordflow">if</span>(ctxt)</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;      ctxt-&gt;Autowire(</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;      *<span class="keyword">static_cast&lt;</span>AnySharedPointerT&lt;T&gt;*<span class="keyword">&gt;</span>(</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;        static_cast&lt;AnySharedPointer*&gt;(<span class="keyword">this</span>)</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;      ),</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;      *<span class="keyword">this</span></div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    );</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  }</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  ~<a class="code" href="class_autowired.html">Autowired</a>(<span class="keywordtype">void</span>) {</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <span class="comment">// And remove any events that were added to the object by this autowired field</span></div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    <span class="keyword">auto</span> localEvents = std::move(m_events);</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; registration : localEvents) {</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;      registration.reset();</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    }</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    <span class="keywordflow">if</span>(m_pFirstChild == <span class="keyword">this</span>)</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;      <span class="comment">// Tombstoned, nothing to do:</span></div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;      <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <span class="comment">// Need to ensure that nobody tries to fill us while we are tearing down:</span></div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    this-&gt;CancelAutowiring();</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    <span class="comment">// And now we destroy our deferrable autowiring collection:</span></div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    std::unique_ptr&lt;DeferrableAutowiring&gt; prior;</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;    <span class="keywordflow">for</span>(DeferrableAutowiring* cur = m_pFirstChild; cur; cur = cur-&gt;GetFlink())</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;      prior.reset(cur);</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;  }</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;  <span class="comment">// The first deferred child known to need registration.  This is distinct from the m_pFlink entry in</span></div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;  <span class="comment">// the base class, which refers to the _next sibling_; by contrast, this type refers to the _first child_</span></div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;  <span class="comment">// which will be the first member registered via NotifyWhenAutowired.</span></div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;  std::atomic&lt;AutowirableSlot&lt;T&gt;*&gt; m_pFirstChild;</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;  std::vector&lt;autowiring::registration_t&gt; m_events;</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    AutowirableSlot&lt;T&gt;(ctxt)</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  {</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="keywordflow">if</span>(ctxt)</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;      ctxt-&gt;Autowire(</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;      *<span class="keyword">static_cast&lt;</span>AnySharedPointerT&lt;T&gt;*<span class="keyword">&gt;</span>(</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;        static_cast&lt;AnySharedPointer*&gt;(<span class="keyword">this</span>)</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;      ),</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;      *<span class="keyword">this</span></div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    );</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  }</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  ~<a class="code" href="class_autowired.html">Autowired</a>(<span class="keywordtype">void</span>) {</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    <span class="comment">// And remove any events that were added to the object by this autowired field</span></div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <span class="keyword">auto</span> localEvents = std::move(m_events);</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span>&amp; registration : localEvents) {</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;      registration.reset();</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    }</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    <span class="keywordflow">if</span>(m_pFirstChild == <span class="keyword">this</span>)</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;      <span class="comment">// Tombstoned, nothing to do:</span></div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;      <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="comment">// Need to ensure that nobody tries to fill us while we are tearing down:</span></div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    this-&gt;CancelAutowiring();</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="comment">// And now we destroy our deferrable autowiring collection:</span></div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    std::unique_ptr&lt;DeferrableAutowiring&gt; prior;</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <span class="keywordflow">for</span>(DeferrableAutowiring* cur = m_pFirstChild; cur; cur = cur-&gt;GetFlink())</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;      prior.reset(cur);</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;  }</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;  <span class="comment">// The first deferred child known to need registration.  This is distinct from the m_pFlink entry in</span></div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;  <span class="comment">// the base class, which refers to the _next sibling_; by contrast, this type refers to the _first child_</span></div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;  <span class="comment">// which will be the first member registered via NotifyWhenAutowired.</span></div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;  std::atomic&lt;AutowirableSlot&lt;T&gt;*&gt; m_pFirstChild{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;  std::vector&lt;autowiring::registration_t&gt; m_events;</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;</div>
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;  <span class="keyword">operator</span> <span class="keyword">const</span> std::shared_ptr&lt;T&gt;&amp;(void) <span class="keyword">const</span> {</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    <span class="keywordflow">return</span></div>
@@ -476,7 +476,7 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <div class="ttc" id="class_auto_current_context_html"><div class="ttname"><a href="class_auto_current_context.html">AutoCurrentContext</a></div><div class="ttdoc">Provides a reference to the current context. </div><div class="ttdef"><b>Definition:</b> Autowired.h:22</div></div>
 <div class="ttc" id="class_auto_required_html_a64e2c65e4a28a6a28c0ba96a11d94e33"><div class="ttname"><a href="class_auto_required.html#a64e2c65e4a28a6a28c0ba96a11d94e33">AutoRequired::AutoRequired</a></div><div class="ttdeci">AutoRequired(const std::shared_ptr&lt; CoreContext &gt; &amp;ctxt, Args &amp;&amp;...args)</div><div class="ttdoc">AutoRequired overload that forwards constructor arguments to the type being wired. </div><div class="ttdef"><b>Definition:</b> Autowired.h:309</div></div>
 <div class="ttc" id="_autowired_8h_html_aa65e92d94fffb9dcc42b0ff6de09f4cb"><div class="ttname"><a href="_autowired_8h.html#aa65e92d94fffb9dcc42b0ff6de09f4cb">AutoCreateContext</a></div><div class="ttdeci">AutoCreateContextT&lt; void &gt; AutoCreateContext</div><div class="ttdoc">Creates a new context as a child of the current context. </div><div class="ttdef"><b>Definition:</b> Autowired.h:83</div></div>
-<div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:142</div></div>
+<div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:146</div></div>
 <div class="ttc" id="class_auto_fired_html"><div class="ttname"><a href="class_auto_fired.html">AutoFired</a></div><div class="ttdoc">Injects an object that can fire events. </div><div class="ttdef"><b>Definition:</b> Autowired.h:466</div></div>
 <div class="ttc" id="class_autowired_html"><div class="ttname"><a href="class_autowired.html">Autowired</a></div><div class="ttdoc">Autowires a "slot" in a context to which an instance of the specified type will be wired when it beco...</div><div class="ttdef"><b>Definition:</b> Autowired.h:106</div></div>
 <div class="ttc" id="class_auto_global_context_html"><div class="ttname"><a href="class_auto_global_context.html">AutoGlobalContext</a></div><div class="ttdoc">Provides a reference to the global context. </div><div class="ttdef"><b>Definition:</b> Autowired.h:39</div></div>
@@ -487,7 +487,7 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_autowired_8h.html">Autowired.h</a></li>
-    <li class="footer">Generated on Mon Jun 1 2015 14:37:45 for Autowiring by
+    <li class="footer">Generated on Mon Jun 15 2015 11:10:30 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

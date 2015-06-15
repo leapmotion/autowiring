@@ -4,6 +4,7 @@ var searchData=
   ['setcurrent',['SetCurrent',['../class_core_context.html#ad306c1c3703311ba1fe7fdb4add279f9',1,'CoreContext']]],
   ['setcurrentthreadname',['SetCurrentThreadName',['../class_basic_thread.html#aa6d8803cdc6ab28b1d79740b115487c5',1,'BasicThread']]],
   ['setdispatchercap',['SetDispatcherCap',['../class_dispatch_queue.html#a6e455ffdaece9c129717211f13752fa3',1,'DispatchQueue']]],
+  ['setthreadpool',['SetThreadPool',['../class_core_context.html#a733240501e3607dc40a12b8456fb69be',1,'CoreContext']]],
   ['settransporthandler',['SetTransportHandler',['../class_auto_net_transport.html#a98115d15fde7d0e1083b1943afe7b03d',1,'AutoNetTransport']]],
   ['shouldstop',['ShouldStop',['../class_core_runnable.html#a69501f9f79d67d4e53ba38383500f994',1,'CoreRunnable']]],
   ['signalshutdown',['SignalShutdown',['../class_core_context.html#a8e0ff07669244590fcdcec9aeb588aa5',1,'CoreContext']]],
