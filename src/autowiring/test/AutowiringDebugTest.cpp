@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/autowiring.h>
+#include <autowiring/AutowiringDebug.h>
 #include "TestFixtures/Decoration.hpp"
 
 class AutowiringDebugTest:
@@ -45,4 +46,21 @@ TEST_F(AutowiringDebugTest, CanGetCurrentPacket) {
   };
 
   auto packet = factory->NewPacket();
+}
+
+struct Herp{};
+struct Derp{};
+
+TEST_F(AutowiringDebugTest, ContextPrintout) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+  
+  AutoCreateContextT<Herp> hCtxt;
+  auto ctxt1 = hCtxt->Create<Derp>();
+  auto ctxt2 = hCtxt->Create<Derp>();
+  AutoCreateContextT<Derp> dCtxt;
+  auto ctxt3 = dCtxt->Create<Herp>();
+  auto ctxt4 = ctxt3->Create<int>();
+  
+  autowiring::dbg::PrintContextTree(std::cout);
 }

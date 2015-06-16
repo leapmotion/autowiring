@@ -19,6 +19,11 @@ bool IsLambda(const std::type_info& ti);
 /// </returns>
 std::string ContextName(void);
 
+/// <summary>
+/// Attempts to determine why the specified AutoFilter type might not be called
+/// </summary>
+void PrintContextTree(std::ostream& os);
+
 /// <returns>
 /// The current packet under processing
 /// </returns>

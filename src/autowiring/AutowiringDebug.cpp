@@ -69,6 +69,29 @@ std::string autowiring::dbg::ContextName(void) {
   return autowiring::demangle(ctxt->GetSigilType());
 }
 
+void PrintContextTreeRecursive(std::ostream& os, std::shared_ptr<CoreContext> ctxt, int level) {
+  AutoCurrentContext curCtxt;
+  for (; ctxt; ctxt = ctxt->NextSibling()) {
+    // print formatting
+    for (int i = 0; i<level; ++i) {
+      os << "── ";
+    }
+    
+    // Print context name
+    os << autowiring::demangle(ctxt->GetSigilType());
+    if (ctxt == curCtxt) {
+      os << "(Current Context)";
+    }
+    os << '\n';
+    PrintContextTreeRecursive(os, ctxt->FirstChild(), level + 1);
+  }
+}
+
+void autowiring::dbg::PrintContextTree(std::ostream& os) {
+  PrintContextTreeRecursive(os, AutoGlobalContext(), 0);
+  os << std::endl;
+}
+
 AutoPacket* autowiring::dbg::CurrentPacket(void) {
   Autowired<AutoPacketFactory> factory;
   if (!factory)
