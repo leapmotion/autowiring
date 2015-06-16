@@ -55,12 +55,13 @@ TEST_F(AutowiringDebugTest, ContextPrintout) {
   AutoCurrentContext ctxt;
   ctxt->Initiate();
   
-  AutoCreateContextT<Herp> hCtxt;
-  auto ctxt1 = hCtxt->Create<Derp>();
-  auto ctxt2 = hCtxt->Create<Derp>();
   AutoCreateContextT<Derp> dCtxt;
-  auto ctxt3 = dCtxt->Create<Herp>();
-  auto ctxt4 = ctxt3->Create<int>();
+  auto ctxt1 = dCtxt->Create<Herp>();
+  auto ctxt2 = dCtxt->Create<Derp>();
+  auto ctxt3 = ctxt1->Create<int>();
+  AutoCreateContextT<Herp> hCtxt;
+  auto ctxt4 = hCtxt->Create<Derp>();
+  auto ctxt5 = hCtxt->Create<Derp>();
   
   autowiring::dbg::PrintContextTree(std::cout);
 }

@@ -70,11 +70,32 @@ std::string autowiring::dbg::ContextName(void) {
 }
 
 void PrintContextTreeRecursive(std::ostream& os, std::shared_ptr<CoreContext> ctxt, int level) {
+  // Initialize these only once
   AutoCurrentContext curCtxt;
+  
   for (; ctxt; ctxt = ctxt->NextSibling()) {
     // print formatting
-    for (int i = 0; i<level; ++i) {
-      os << "── ";
+    if (!ctxt->IsGlobalContext()) {
+    
+      // Create of vector of contexts from root to 'ctxt'
+      std::vector<std::shared_ptr<CoreContext>> path;
+      for (auto c = ctxt; !c->IsGlobalContext(); c = c->GetParentContext()) {
+        path.push_back(c);
+      }
+      std::reverse(path.begin(), path.end());
+    
+      for (auto c : path) {
+        if (c == path.back()) {
+          if (c->NextSibling())
+            os << "├── ";
+          else
+            os << "└── ";
+        } else if (c->NextSibling()) {
+          os << "│   ";
+        } else {
+          os << "    ";
+        }
+      }
     }
     
     // Print context name
@@ -89,7 +110,7 @@ void PrintContextTreeRecursive(std::ostream& os, std::shared_ptr<CoreContext> ct
 
 void autowiring::dbg::PrintContextTree(std::ostream& os) {
   PrintContextTreeRecursive(os, AutoGlobalContext(), 0);
-  os << std::endl;
+  os << std::flush;
 }
 
 AutoPacket* autowiring::dbg::CurrentPacket(void) {
