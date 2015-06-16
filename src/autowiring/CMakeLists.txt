@@ -74,9 +74,6 @@ set(Autowiring_SRCS
   CallExtractor.h
   ConfigRegistry.cpp
   ConfigRegistry.h
-  ContextCreator.h
-  ContextCreatorBase.cpp
-  ContextCreatorBase.h
   ContextEnumerator.cpp
   ContextEnumerator.h
   ContextMap.h
