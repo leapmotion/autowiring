@@ -319,7 +319,7 @@ public:
     auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
     if (q == m_decorations.end())
       return std::unique_ptr<const T*[]>{
-        new const T*[] {nullptr}
+        new const T*[1] {nullptr}
       };
 
     // Transfer in, return to caller:
@@ -344,7 +344,7 @@ public:
     auto q = m_decorations.find(DecorationKey(auto_id<TActual>::key(), tshift));
     if (q == m_decorations.end())
       return std::unique_ptr<std::shared_ptr<const T>[]>{
-        new std::shared_ptr<const T>[] {nullptr}
+        new std::shared_ptr<const T>[1] {nullptr}
       };
 
     // Transfer in, return to caller:
