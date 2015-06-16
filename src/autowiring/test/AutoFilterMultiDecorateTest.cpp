@@ -77,8 +77,15 @@ TEST_F(AutoFilterMultiDecorateTest, UnsatDecTest) {
   *f += [](const Decoration<2>&, std::string& out) {
     out = "Crickets";
   };
-  *f += [](const std::string* args[], int& val) {
-    for (val = 0; *args; args++, val++);
+  
+  int f1 = 0;
+  *f += [&](const std::string* args []) {
+    for (f1 = 0; *args; args++, f1++);
+  };
+
+  int f2 = 0;
+  *f += [&](const std::string*const args []) {
+    for (f2 = 0; *args; args++, f2++);
   };
 
   auto packet = f->NewPacket();
@@ -94,7 +101,33 @@ TEST_F(AutoFilterMultiDecorateTest, UnsatDecTest) {
   ASSERT_EQ("Hello", *strs[0]) << "Entry in multidecorate set was not the expected value";
   ASSERT_EQ("Crickets", *strs[1]) << "Entry in multidecorate set was not the expected value";
 
-  int nEntries;
-  ASSERT_NO_THROW(nEntries = packet->Get<int>()) << "Multidecorate filter was not run as expected";
-  ASSERT_EQ(2, nEntries) << "Mismatch of number of multi-decorate entries on the packet";
+  ASSERT_EQ(2, f1) << "const T*[] input decoration count mismatch";
+  ASSERT_EQ(2, f2) << "const T*const[] input decoration count mismatch";
+}
+
+TEST_F(AutoFilterMultiDecorateTest, ArrayOfSharedPointers) {
+  AutoRequired<AutoPacketFactory> f;
+  *f += [](const Decoration<0>&, std::string& out) {
+    out = "Hello";
+  };
+  *f += [](const Decoration<1>&, std::string& out) {
+    out = "World";
+  };
+
+  int f1 = 0;
+  *f += [&](std::shared_ptr<const std::string> args []) {
+    for (f1 = 0; *args; args++, f1++);
+  };
+
+  int f2 = 0;
+  *f += [&](const std::shared_ptr<const std::string> args []) {
+    for (f2 = 0; *args; args++, f2++);
+  };
+
+  auto packet = f->NewPacket();
+  packet->Decorate(Decoration<0>{});
+  packet->Decorate(Decoration<1>{});
+  
+  ASSERT_EQ(2, f1) << "shared_ptr[] input decoration count mismatch";
+  ASSERT_EQ(2, f2) << "const shared_ptr[] input decoration count mismatch";
 }

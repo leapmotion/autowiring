@@ -285,7 +285,7 @@ public:
   template<class T>
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), true, tshift));
+    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
     if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Complete) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
@@ -308,30 +308,52 @@ public:
   }
 
   /// <summary>
-  /// Returns a null-terminated temporary buffer containing all decorations
+  /// Returns a null-terminated buffer containing all decorations
   /// </summary>
-  /// <returns>The null-terminated temporary buffer</returns>
+  /// <returns>The null-terminated buffer</returns>
   template<class T>
   std::unique_ptr<const T*[]> GetAll(int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
-    std::unique_ptr<const T*[]> retVal;
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    if (q == m_decorations.end()) {
-      retVal.reset(new const T*[1]);
-      retVal[0] = nullptr;
-      return retVal;
-    }
+    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
+    if (q == m_decorations.end())
+      return std::unique_ptr<const T*[]>{
+        new const T*[1] {nullptr}
+      };
 
+    // Transfer in, return to caller:
     const auto& decorations = q->second.m_decorations;
-    retVal.reset(new const T*[decorations.size() + 1]);
-
+    std::unique_ptr<const T* []> retVal{new const T*[decorations.size() + 1]};
     for (size_t i = 0; i < decorations.size(); i++)
       retVal[i] = static_cast<const T*>(decorations[i]->ptr());
-
     retVal[decorations.size()] = nullptr;
+    return retVal;
+  }
 
+  /// <summary>
+  /// Shared variant of GetAll
+  /// </summary>
+  /// <returns>The null-terminated buffer</returns>
+  template<class T>
+  std::unique_ptr<std::shared_ptr<const T>[]> GetAllShared(int tshift = 0) const {
+    std::lock_guard<std::mutex> lk(m_lock);
+    typedef typename std::remove_const<T>::type TActual;
+
+    // If decoration doesn't exist, return empty null-terminated buffer
+    auto q = m_decorations.find(DecorationKey(auto_id<TActual>::key(), tshift));
+    if (q == m_decorations.end())
+      return std::unique_ptr<std::shared_ptr<const T>[]>{
+        new std::shared_ptr<const T>[1] {nullptr}
+      };
+
+    // Transfer in, return to caller:
+    const auto& decorations = q->second.m_decorations;
+    std::unique_ptr<std::shared_ptr<const T>[]> retVal{
+      new std::shared_ptr<const T>[decorations.size() + 1]
+    };
+    for (size_t i = 0; i < decorations.size(); i++)
+      retVal[i] = decorations[i].as<T>().get();
     return retVal;
   }
 
