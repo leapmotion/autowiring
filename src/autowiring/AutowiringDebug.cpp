@@ -22,7 +22,13 @@ bool autowiring::dbg::IsLambda(const std::type_info& ti) {
     if (
       !('a' <= cur && cur <= 'z') &&
       !('A' <= cur && cur <= 'Z') &&
-      !('0' <= cur && cur <= '9')
+      !('0' <= cur && cur <= '9') &&
+      cur != '_' &&
+      cur != ':' &&
+      cur != '<' &&
+      cur != '>' &&
+      cur != ',' &&
+      cur != ' '
     )
       return true;
   return false;
