@@ -34,7 +34,7 @@ void AutoPacketGraph::LoadEdges() {
   m_factory->AppendAutoFiltersTo(descriptors);
   
   for (auto& descriptor : descriptors) {
-    for(auto pCur = descriptor.GetAutoFilterInput(); *pCur; pCur++) {
+    for(auto pCur = descriptor.GetAutoFilterArguments(); *pCur; pCur++) {
       const std::type_info& type_info = *pCur->ti;
       
       // Skip the AutoPacketGraph
@@ -84,22 +84,18 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
       auto& decoration = cur.second;
       auto type = cur.first.ti;
 
-      for (auto& publisher : decoration.m_publishers) {
-        if (!publisher->remaining) {
+      for (auto& publisher : decoration.m_publishers)
+        if (!publisher->remaining)
           RecordDelivery(type, *publisher, false);
-        }
-      }
 
       for (auto& subscriber : decoration.m_subscribers) {
         // Skip the AutoPacketGraph
-        const std::type_info& descType = m_factory->GetContext()->GetAutoTypeId(subscriber->GetAutoFilter());
-        if (descType == typeid(AutoPacketGraph)) {
+        const std::type_info& descType = m_factory->GetContext()->GetAutoTypeId(subscriber.satCounter->GetAutoFilter());
+        if (descType == typeid(AutoPacketGraph))
           continue;
-        }
         
-        if (subscriber->remaining) {
-          RecordDelivery(type, *subscriber, true);
-        }
+        if (subscriber.satCounter->remaining)
+          RecordDelivery(type, *subscriber.satCounter, true);
       }
     }
   });

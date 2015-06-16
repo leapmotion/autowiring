@@ -1,17 +1,19 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include "BasicThread.h"
-#include "Autowired.h"
 #include "autowiring_error.h"
 #include "BasicThreadStateBlock.h"
 #include "ContextEnumerator.h"
+#include "CoreContext.h"
+#include "CurrentContextPusher.h"
+#include "dispatch_aborted_exception.h"
+#include "GlobalCoreContext.h"
 #include "fast_pointer_cast.h"
 #include ATOMIC_HEADER
 
 BasicThread::BasicThread(const char* pName):
   ContextMember(pName),
-  m_state(std::make_shared<BasicThreadStateBlock>()),
-  m_completed(m_state->m_completed)
+  m_state(std::make_shared<BasicThreadStateBlock>())
 {}
 
 BasicThread::~BasicThread(void) {
@@ -174,7 +176,7 @@ bool BasicThread::IsCompleted(void) const {
 }
 
 void BasicThread::ForceCoreThreadReidentify(void) {
-  for(const auto& ctxt : ContextEnumerator(AutoGlobalContext())) {
+  for(const auto& ctxt : ContextEnumerator(GlobalCoreContext::Get())) {
     for(const auto& thread : ctxt->CopyBasicThreadList())
       thread->SetCurrentThreadName();
   }

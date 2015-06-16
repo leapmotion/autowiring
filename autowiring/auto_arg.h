@@ -84,6 +84,29 @@ public:
 };
 
 /// <summary>
+/// Specialization for "T*" ~ auto_in<T*>.  T must be const-qualified in order to be an input parameter.
+/// </summary>
+template<class T>
+class auto_arg<T*>
+{
+public:
+  static_assert(std::is_const<T>::value, "Pointer-typed input parameters must point to a const-qualified type (T must be const-qualified)");
+  typedef T* type;
+  typedef T* arg_type;
+  typedef auto_id<T*> id_type;
+  static const bool is_input = true;
+  static const bool is_output = false;
+  static const bool is_shared = false;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  template<class C>
+  static const T* arg(C& packet) {
+    return packet.template Get<const T*>();
+  }
+};
+
+/// <summary>
 /// Specialization for equivalent T auto_in<T>
 /// </summary>
 template<class T>
@@ -140,7 +163,7 @@ class auto_arg<T&>
 {
 public:
   typedef std::shared_ptr<T> type;
-  
+
   // Utility type, required to dereference the std::shared_ptr
   struct arg_type {
     arg_type(std::shared_ptr<T>& arg) :
@@ -267,21 +290,19 @@ template<class T>
 class auto_arg<T const **>
 {
 public:
-  typedef const T** type;
-
-  // Another compositional structure, used to coerce a vector to a data item
-  struct arg_type {
-    arg_type(const T** value) :
-      value(value)
+  typedef const T** arg_type;
+  struct type {
+    type(type&& rhs) :
+      ptr(std::move(rhs.ptr))
     {}
 
-    ~arg_type(void) {
-      std::return_temporary_buffer(value);
-    }
+    explicit type(std::unique_ptr<const T*[]> ptr) :
+      ptr{std::move(ptr)}
+    {}
 
-    const T** value;
+    std::unique_ptr<const T*[]> ptr;
 
-    operator const T**(void) const { return value; }
+    operator const T**(void) const { return ptr.get(); }
   };
 
   typedef auto_id<T> id_type;
@@ -292,8 +313,8 @@ public:
   static const int tshift = 0;
 
   template<class C>
-  static const T** arg(C& packet) {
-    return packet.template GetAll<T>();
+  static type arg(C& packet) {
+    return type{packet.template GetAll<T>()};
   }
 };
 

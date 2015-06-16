@@ -29,7 +29,7 @@ struct CoreObjectDescriptor {
     actual_type(&typeid(auto_id<TActual>)),
     stump(&SlotInformationStump<T>::s_stump),
     value(value),
-    subscriber(MakeAutoFilterDescriptor(value)),
+    subscriber(MakeAutoFilterDescriptor<T>(value)),
     pCoreObject(autowiring::fast_pointer_cast<CoreObject>(value)),
     pContextMember(autowiring::fast_pointer_cast<ContextMember>(value)),
     pCoreRunnable(autowiring::fast_pointer_cast<CoreRunnable>(value)),

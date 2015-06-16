@@ -11,7 +11,7 @@ class ScopeTest:
 TEST_F(ScopeTest, VerifyGlobalExists) {
   // Verify that we at least get a global scope
   AutoGlobalContext global;
-  EXPECT_TRUE(nullptr != global.get()) << "Failed to autowire the global context";
+  ASSERT_TRUE(nullptr != global.get()) << "Failed to autowire the global context";
 }
 
 class A : public ContextMember {};
@@ -31,18 +31,18 @@ TEST_F(ScopeTest, VerifyInherit) {
     CurrentContextPusher pusher;
     pContext->SetCurrent();
 
-    EXPECT_TRUE(ctxt.get() != pContext.get()) << "Failed to create a sub-context";
+    ASSERT_TRUE(ctxt.get() != pContext.get()) << "Failed to create a sub-context";
 
     //try and autowire a member from the parent context
     Autowired<A> autoA;
-    EXPECT_FALSE(!autoA.get()) << "Autowired member not wired from parent context";
+    ASSERT_FALSE(!autoA.get()) << "Autowired member not wired from parent context";
 
     //add a member in the subcontext
     pContext->Inject<B>();
   }
 
   Autowired<B> autoB;
-  EXPECT_TRUE(!autoB.get()) << "Autowired member wired from sub-context";
+  ASSERT_TRUE(!autoB.get()) << "Autowired member wired from sub-context";
 }
 
 struct NoSimpleConstructor:
@@ -71,8 +71,8 @@ TEST_F(ScopeTest, StaticInject){
   Autowired<A> preA;
   Autowired<B> preB;
 
-  EXPECT_FALSE(preA.IsAutowired());
-  EXPECT_FALSE(preB.IsAutowired());
+  ASSERT_FALSE(preA.IsAutowired());
+  ASSERT_FALSE(preB.IsAutowired());
 
   CoreContext::InjectCurrent<A>();
   CoreContext::InjectCurrent<B>();
@@ -80,8 +80,8 @@ TEST_F(ScopeTest, StaticInject){
   Autowired<A> a;
   Autowired<B> b;
 
-  EXPECT_TRUE(a.IsAutowired());
-  EXPECT_TRUE(b.IsAutowired());
+  ASSERT_TRUE(a.IsAutowired());
+  ASSERT_TRUE(b.IsAutowired());
 }
 
 TEST_F(ScopeTest, VerifyAutowireSpecifiedContext){
@@ -92,7 +92,7 @@ TEST_F(ScopeTest, VerifyAutowireSpecifiedContext){
   subCtxt->Inject<A>();
 
   Autowired<A> aWired(subCtxt);
-  EXPECT_TRUE(aWired) << "Autowired member not wired from the passed context";
+  ASSERT_TRUE(aWired) << "Autowired member not wired from the passed context";
 }
 
 TEST_F(ScopeTest, VerifyAutoRequireSpecifiedContext){
@@ -101,8 +101,8 @@ TEST_F(ScopeTest, VerifyAutoRequireSpecifiedContext){
   Autowired<SimpleObject> aWired(subCtxt);
   Autowired<SimpleObject> aFail;
 
-  EXPECT_TRUE(aWired) << "Autorequired member not added to the passed context";
-  EXPECT_FALSE(aFail) << "Autorequired member added to the wrong context";
+  ASSERT_TRUE(aWired) << "Autorequired member not added to the passed context";
+  ASSERT_FALSE(aFail) << "Autorequired member added to the wrong context";
 }
 
 //This mangles the heap! why??  Using SimpleObject instead of A works fine!
@@ -127,7 +127,7 @@ TEST_F(ScopeTest, AutowiringOrdering) {
     CurrentContextPusher pshr(inner1);
 
     AutoRequired<A> a2;
-    EXPECT_FALSE(a.IsAutowired());
+    ASSERT_FALSE(a.IsAutowired());
   }
 
   // AutoRequire in outer context, Autowire in inner
@@ -136,8 +136,8 @@ TEST_F(ScopeTest, AutowiringOrdering) {
     CurrentContextPusher pshr(inner2);
 
     Autowired<B> b2;
-    EXPECT_TRUE(b.IsAutowired());
-    EXPECT_EQ(b->GetContext(), outer);
+    ASSERT_TRUE(b.IsAutowired());
+    ASSERT_EQ(b->GetContext(), outer);
   }
 
   // AutoRequire in outer context, AutoRequire in inner
@@ -146,8 +146,8 @@ TEST_F(ScopeTest, AutowiringOrdering) {
     CurrentContextPusher pshr(inner3);
 
     AutoRequired<C> c2;
-    EXPECT_TRUE(c2.IsAutowired());
-    EXPECT_NE(c->GetContext(), c2->GetContext());
+    ASSERT_TRUE(c2.IsAutowired());
+    ASSERT_NE(c->GetContext(), c2->GetContext());
   }
 
   // Autowire in outer context, Autowire in inner

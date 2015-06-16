@@ -27,7 +27,8 @@ set(Autowiring_SRCS
   AutoConfigParser.cpp
   AutoConfigParser.hpp
   AutoFilterDescriptor.h
-  AutoFilterDescriptorInput.h
+  AutoFilterDescriptor.cpp
+  AutoFilterArgument.h
   AutoFuture.cpp
   AutoFuture.h
   AutoInjectable.cpp
@@ -52,7 +53,8 @@ set(Autowiring_SRCS
   Autowired.h
   autowiring.h
   AutowiringConfig.h
-  AutowiringConfig.h
+  AutowiringDebug.h
+  AutowiringDebug.cpp
   AutowiringEvents.cpp
   AutowiringEvents.h
   autowiring_error.cpp
@@ -131,12 +133,15 @@ set(Autowiring_SRCS
   JunctionBoxEntry.h
   JunctionBoxManager.cpp
   JunctionBoxManager.h
+  ManualThreadPool.h
+  ManualThreadPool.cpp
   member_new_type.h
   MemoEntry.h
   MemoEntry.cpp
   MicroAutoFilter.h
   MicroBolt.h
-  NewAutoFilter.h
+  NullPool.h
+  NullPool.cpp
   ObjectPool.h
   ObjectPoolMonitor.cpp
   ObjectPoolMonitor.h
@@ -146,9 +151,15 @@ set(Autowiring_SRCS
   SharedPointerSlot.h
   SlotInformation.cpp
   SlotInformation.h
+  SystemThreadPool.cpp
+  SystemThreadPool.h
+  SystemThreadPoolStl.cpp
+  SystemThreadPoolStl.h
   TeardownNotifier.cpp
   TeardownNotifier.h
   thread_specific_ptr.h
+  ThreadPool.h
+  ThreadPool.cpp
   TypeIdentifier.h
   TypeRegistry.cpp
   TypeRegistry.h
@@ -182,6 +193,8 @@ add_conditional_sources(
 add_windows_sources(Autowiring_SRCS
   auto_future_win.h
   CoreThreadWin.cpp
+  SystemThreadPoolWin.cpp
+  SystemThreadPoolWin.h
   InterlockedExchangeWin.cpp
   thread_specific_ptr_win.h
 )

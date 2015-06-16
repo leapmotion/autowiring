@@ -12,13 +12,12 @@ class SpinsAndThenQuits:
 public:
   SpinsAndThenQuits(size_t spinCount) :
     BasicThread("SpinsAndThenQuits"),
-    m_spinCount(spinCount),
-    m_continue(false)
+    m_spinCount(spinCount)
   {}
 
   volatile size_t m_spinCount;
 
-  bool m_continue;
+  bool m_continue = false;
   std::condition_variable m_signal;
 
   std::chrono::milliseconds m_kernelTime;

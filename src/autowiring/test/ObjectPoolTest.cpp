@@ -23,37 +23,30 @@ TEST_F(ObjectPoolTest, VerifyOutstandingLimit) {
 
   // Verify that grabbing a third object fails:
   pool(obj3);
-  EXPECT_TRUE(obj3 == nullptr) << "Object pool issued more objects than it was authorized to issue";
+  ASSERT_TRUE(obj3 == nullptr) << "Object pool issued more objects than it was authorized to issue";
 }
 
 class LifeCycle {
-  static int constructNum;
-  static int destructNum;
-  static std::mutex numLock;
+  static std::atomic<int> constructNum;
+  static std::atomic<int> destructNum;
 
-  //Lock ensures that status checks are atomic.
-  //This does not prevent asynchronous calls.
-  std::mutex stageLock;
   enum LifeStage {
     pooled,
     issued
-  } stage;
+  };
+  std::atomic<LifeStage> stage;
 
 public:
-  LifeCycle() : stage(pooled) {
-    std::lock_guard<std::mutex> guard(numLock);
+  LifeCycle():
+    stage{pooled}
+  {
     ++constructNum;
   }
 
   ~LifeCycle() {
-    {
-      std::lock_guard<std::mutex> guard(numLock);
-      ++destructNum;
-    }
-    std::lock_guard<std::mutex> guard(stageLock);
-    if (stage != pooled) {
+    ++destructNum;
+    if (stage != pooled)
       throw std::runtime_error("Destructor called before Finalize");
-    }
   }
 
   static ObjectPool<LifeCycle>* NewObjectPool(size_t limit = ~0, size_t maxPooled = ~0) {
@@ -65,38 +58,32 @@ public:
   }
 
   static void InitializeNum() {
-    std::lock_guard<std::mutex> guard(numLock);
     constructNum = 0;
     destructNum = 0;
   }
   static int ConstructNum() {
-    std::lock_guard<std::mutex> guard(numLock);
     return constructNum;
   }
   static int DestructNum() {
-    std::lock_guard<std::mutex> guard(numLock);
     return destructNum;
   }
 
 protected:
   void Initialize() {
-    std::lock_guard<std::mutex> guard(stageLock);
     if (stage != pooled)
       throw std::runtime_error("Initialize called on object not pooled");
     stage = issued;
   }
 
   void Finalize() {
-    std::lock_guard<std::mutex> guard(stageLock);
     if (stage != issued)
       throw std::runtime_error("Finalize called on object not issued");
     stage = pooled;
   }
 };
 
-std::mutex LifeCycle::numLock;
-int LifeCycle::constructNum = 0;
-int LifeCycle::destructNum = 0;
+std::atomic<int> LifeCycle::constructNum{0};
+std::atomic<int> LifeCycle::destructNum{0};
 
 TEST_F(ObjectPoolTest, LifeCycleTestLimitOne) {
   LifeCycle::InitializeNum();
@@ -180,7 +167,7 @@ TEST_F(ObjectPoolTest, DISABLED_VerifyAsynchronousUsage) {
     // still outstanding.
     {
       auto obj4 = pool.WaitFor(std::chrono::milliseconds(1));
-      EXPECT_TRUE(obj4 == nullptr) << "Pool issued another element even though it should have hit its outstanding limit";
+      ASSERT_TRUE(obj4 == nullptr) << "Pool issued another element even though it should have hit its outstanding limit";
     }
 
     // Now we kick off threads:
@@ -195,7 +182,7 @@ TEST_F(ObjectPoolTest, DISABLED_VerifyAsynchronousUsage) {
   // This should return more or less right away as objects become available:
   {
     auto obj4 = pool.WaitFor(std::chrono::milliseconds(10));
-    EXPECT_TRUE(obj4 != nullptr) << "Object pool failed to be notified that it received a new element";
+    ASSERT_TRUE(obj4 != nullptr) << "Object pool failed to be notified that it received a new element";
   }
 
   // Cause the thread to quit:
@@ -258,8 +245,8 @@ TEST_F(ObjectPoolTest, EmptyPoolIssuance) {
 
   // Verify properties now that we've zeroized the limit:
   pool.SetOutstandingLimit(0);
-  EXPECT_ANY_THROW(pool.SetOutstandingLimit(1)) << "An attempt to alter a zeroized outstanding limit did not throw an exception as expected";
-  EXPECT_ANY_THROW(pool.Wait()) << "An attempt to obtain an element on an empty pool did not throw an exception as expected";
+  ASSERT_ANY_THROW(pool.SetOutstandingLimit(1)) << "An attempt to alter a zeroized outstanding limit did not throw an exception as expected";
+  ASSERT_ANY_THROW(pool.Wait()) << "An attempt to obtain an element on an empty pool did not throw an exception as expected";
 
   // Now see if we can delay for the thread to back out:
   ctxt->Initiate();

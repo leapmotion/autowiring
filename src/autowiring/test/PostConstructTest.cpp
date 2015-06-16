@@ -29,11 +29,7 @@ class A:
   public ContextMember
 {
 public:
-  A(void):
-    m_value(2)
-  {}
-
-  int m_value;
+  int m_value = 2;
 
   int GetValue(void) const {return m_value;}
 };
@@ -69,30 +65,28 @@ class Smarter:
   public ContextMember
 {
 public:
-  Smarter(void):
-    value(1)
+  Smarter(void)
   {
     m_a.NotifyWhenAutowired([this] () {
       this->value = m_a->GetValue();
     });
   }
 
-  int value;
+  int value = 1;
   Autowired<A> m_a;
 };
 
 class SmarterInterface
 {
 public:
-  SmarterInterface(void):
-    value(1)
+  SmarterInterface(void)
   {
     m_interface.NotifyWhenAutowired([this] () {
       this->value = m_interface->GetValue();
     });
   }
 
-  int value;
+  int value = 1;
   Autowired<Interface> m_interface;
 };
 
@@ -102,7 +96,7 @@ class FailedAutowiringInstance {
 TEST_F(PostConstructTest, VerifyNaiveBehavior) {
   // Create a context and add just the naive class, to verify the problematic behavior:
   AutoCurrentContext ctxt;
-  EXPECT_THROW(ctxt->Inject<Naive>(), std::exception) << "Naive class didn't throw an exception as expected";
+  ASSERT_THROW(ctxt->Inject<Naive>(), std::exception) << "Naive class didn't throw an exception as expected";
 }
 
 TEST_F(PostConstructTest, VerifyExpectedDeferrmentCount) {
@@ -112,7 +106,7 @@ TEST_F(PostConstructTest, VerifyExpectedDeferrmentCount) {
   ctxt->Inject<Smarter>();
 
   // Now test the count:
-  EXPECT_EQ(
+  ASSERT_EQ(
     1UL,
     ((ContextExposer&)*ctxt).DeferredCount()
   ) << "Unexpected number of deferred initializers";
@@ -127,14 +121,14 @@ TEST_F(PostConstructTest, VerifySmartBehavior) {
   // Check that we can get the item we just injected
   Autowired<Smarter> smarter;
   ASSERT_TRUE(smarter.IsAutowired()) << "Slot was not satisfied as expected";
-  EXPECT_EQ(1, smarter->value) << "Unexpected initial value of SmarterA instance";
+  ASSERT_EQ(1, smarter->value) << "Unexpected initial value of SmarterA instance";
 
   // Now inject A, and see if delayed autowiring has taken place:
   ctxt->Inject<A>();
-  EXPECT_FALSE(!smarter->m_a.get()) << "Autowired member was not wired as expected";
+  ASSERT_FALSE(!smarter->m_a.get()) << "Autowired member was not wired as expected";
 
   // Verify the value was updated by the notification routine
-  EXPECT_EQ(2, smarter->value) << "Post-construction notification routine wasn't invoked as expected";
+  ASSERT_EQ(2, smarter->value) << "Post-construction notification routine wasn't invoked as expected";
 }
 
 TEST_F(PostConstructTest, VerifySmartBehaviorWithInheritance) {
@@ -145,13 +139,13 @@ TEST_F(PostConstructTest, VerifySmartBehaviorWithInheritance) {
 
   //Initially value should be one, which is the default
   Autowired<SmarterInterface> smarterI;
-  EXPECT_EQ(1, smarterI->value) << "Unexpected initial value of SmarterA instance";
+  ASSERT_EQ(1, smarterI->value) << "Unexpected initial value of SmarterA instance";
 
   //Now add Implementation and check the wiring
   ctxt->Inject<Implementation>();
-  EXPECT_FALSE(!smarterI->m_interface.get()) << "Autowired subclass was not wired as expected";
+  ASSERT_FALSE(!smarterI->m_interface.get()) << "Autowired subclass was not wired as expected";
 
-  EXPECT_EQ(2, smarterI->value) << "Post-construction notification routine wasn't invoked on subclass";
+  ASSERT_EQ(2, smarterI->value) << "Post-construction notification routine wasn't invoked on subclass";
 }
 
 TEST_F(PostConstructTest, VerifyLoopingFailedAutowiring) {
@@ -270,7 +264,7 @@ TEST_F(PostConstructTest, ContextNotifyWhenAutowired) {
   );
 
   // Should only be two uses, at this point, of the capture of the above lambda:
-  EXPECT_EQ(2L, called.use_count()) << "Unexpected number of references held in a capture lambda";
+  ASSERT_EQ(2L, called.use_count()) << "Unexpected number of references held in a capture lambda";
 
   // Create another entry that will add another slot to the deferred list:
   Autowired<SimpleObject> sobj;
@@ -359,11 +353,6 @@ TEST_F(PostConstructTest, RecursiveNotificationPostConstruction) {
 struct ClassWithAutoInit:
   std::enable_shared_from_this<ClassWithAutoInit>
 {
-  ClassWithAutoInit(void) :
-    m_constructed(true),
-    m_postConstructed(false)
-  {}
-
   void AutoInit(void) {
     ASSERT_TRUE(m_constructed) << "A postconstruct routine was called BEFORE the corresponding constructor";
     m_postConstructed = true;
@@ -372,8 +361,8 @@ struct ClassWithAutoInit:
     ASSERT_EQ(this, myself.get()) << "Reflexive shared_from_this did not return a shared pointer to this as expected";
   }
 
-  bool m_constructed;
-  bool m_postConstructed;
+  bool m_constructed = true;
+  bool m_postConstructed = false;
 };
 
 static_assert(has_autoinit<ClassWithAutoInit>::value, "AutoInit-bearing class did not pass a static type check");

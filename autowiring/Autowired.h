@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "auto_signal.h"
+#include "AutowiringDebug.h"
 #include "AutowirableSlot.h"
-#include "Decompose.h"
 #include "GlobalCoreContext.h"
 #include MEMORY_HEADER
 #include ATOMIC_HEADER
@@ -108,8 +108,7 @@ class Autowired:
 {
 public:
   Autowired(const std::shared_ptr<CoreContext>& ctxt = CoreContext::CurrentContext()) :
-    AutowirableSlot<T>(ctxt),
-    m_pFirstChild(nullptr)
+    AutowirableSlot<T>(ctxt)
   {
     if(ctxt)
       ctxt->Autowire(
@@ -144,9 +143,10 @@ private:
   // The first deferred child known to need registration.  This is distinct from the m_pFlink entry in
   // the base class, which refers to the _next sibling_; by contrast, this type refers to the _first child_
   // which will be the first member registered via NotifyWhenAutowired.
-  std::atomic<AutowirableSlot<T>*> m_pFirstChild;
+  std::atomic<AutowirableSlot<T>*> m_pFirstChild{nullptr};
 
   std::vector<autowiring::registration_t> m_events;
+
 public:
   operator const std::shared_ptr<T>&(void) const {
     return

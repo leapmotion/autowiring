@@ -28,9 +28,9 @@ TEST_F(EventReceiverTest, SimpleMethodCall) {
   sender(&CallableInterface::OneArg)(100);
 
   // Verify that stuff happens even when the thread isn't running:
-  EXPECT_TRUE(receiver->m_zero);
-  EXPECT_TRUE(receiver->m_one);
-  EXPECT_EQ(100, receiver->m_oneArg);
+  ASSERT_TRUE(receiver->m_zero);
+  ASSERT_TRUE(receiver->m_one);
+  ASSERT_EQ(100, receiver->m_oneArg);
 
   // Unblock:
   receiver->Proceed();
@@ -44,8 +44,8 @@ TEST_F(EventReceiverTest, VerifyNoReceive) {
   AutoFired<CallableInterfaceDeferred> sender;
 
   // Try to defer these calls, should not be delivered anywhere:
-  EXPECT_NO_THROW(sender(&CallableInterfaceDeferred::ZeroArgsDeferred)());
-  EXPECT_NO_THROW(sender(&CallableInterfaceDeferred::OneArgDeferred)(100));
+  ASSERT_NO_THROW(sender(&CallableInterfaceDeferred::ZeroArgsDeferred)());
+  ASSERT_NO_THROW(sender(&CallableInterfaceDeferred::OneArgDeferred)(100));
 
   // Unblock:
   receiver->Proceed();
@@ -59,8 +59,8 @@ TEST_F(EventReceiverTest, VerifyNoReceive) {
   receiver->Wait();
 
   // Verify that no call was not made accidentally
-  EXPECT_FALSE(receiver->m_zero) << "A zero-argument call was pended to a dispatcher not marked ready";
-  EXPECT_FALSE(receiver->m_one) << "A single-argument call was pended to a dispatcher not marked ready";
+  ASSERT_FALSE(receiver->m_zero) << "A zero-argument call was pended to a dispatcher not marked ready";
+  ASSERT_FALSE(receiver->m_one) << "A single-argument call was pended to a dispatcher not marked ready";
 }
 
 TEST_F(EventReceiverTest, DeferredInvoke) {
@@ -76,9 +76,9 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
   sender(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Verify that nothing is hit yet:
-  EXPECT_FALSE(receiver->m_zero) << "Zero-argument call made prematurely";
-  EXPECT_FALSE(receiver->m_one) << "One-argument call made prematurely";
-  EXPECT_TRUE(receiver->IsRunning()) << "Receiver is terminated";
+  ASSERT_FALSE(receiver->m_zero) << "Zero-argument call made prematurely";
+  ASSERT_FALSE(receiver->m_one) << "One-argument call made prematurely";
+  ASSERT_TRUE(receiver->IsRunning()) << "Receiver is terminated";
 
   // Unblock:
   receiver->Proceed();
@@ -87,9 +87,9 @@ TEST_F(EventReceiverTest, DeferredInvoke) {
   receiver->Wait();
 
   // Validate deferred firing:
-  EXPECT_TRUE(receiver->m_zero) << "Zero argument call was not properly deferred";
-  EXPECT_TRUE(receiver->m_one) << "Single argument call was not properly deferred";
-  EXPECT_EQ(101, receiver->m_oneArg) << "Argument was not correctly propagated through a deferred call";
+  ASSERT_TRUE(receiver->m_zero) << "Zero argument call was not properly deferred";
+  ASSERT_TRUE(receiver->m_one) << "Single argument call was not properly deferred";
+  ASSERT_EQ(101, receiver->m_oneArg) << "Argument was not correctly propagated through a deferred call";
 }
 
 TEST_F(EventReceiverTest, NontrivialCopy) {
@@ -111,8 +111,8 @@ TEST_F(EventReceiverTest, NontrivialCopy) {
   sender(&CallableInterfaceDeferred::AllDoneDeferred)();
 
   // Verify that nothing is hit yet:
-  EXPECT_TRUE(receiver->m_myVec.empty()) << "Event handler invoked before barrier was hit; it should have been deferred";
-  EXPECT_TRUE(receiver->IsRunning()) << "Receiver is terminated";
+  ASSERT_TRUE(receiver->m_myVec.empty()) << "Event handler invoked before barrier was hit; it should have been deferred";
+  ASSERT_TRUE(receiver->IsRunning()) << "Receiver is terminated";
 
   // Unblock:
   receiver->Proceed();
@@ -123,7 +123,7 @@ TEST_F(EventReceiverTest, NontrivialCopy) {
   // Validate our vectors:
   ASSERT_EQ(10, (int)receiver->m_myVec.size()) << "Receiver was not populated correctly with a vector";
   for(int i = 0; i < s_numElems; i++)
-    EXPECT_EQ(i, ascending[i]) << "Element at offset " << i << " was incorrectly copied";
+    ASSERT_EQ(i, ascending[i]) << "Element at offset " << i << " was incorrectly copied";
 }
 
 TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
@@ -177,7 +177,7 @@ TEST_F(EventReceiverTest, VerifyNoUnnecessaryCopies) {
   // copy from the the Defer call, and one again when the deferred method is passed
   // the DispatchQueue
   CopyCounter& finalCtr = receiver->m_myCtr;
-  EXPECT_LE(finalCtr.m_count, 2) << "Transfer object was copied too many times";
+  ASSERT_LE(finalCtr.m_count, 2) << "Transfer object was copied too many times";
 }
 
 TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
@@ -205,25 +205,25 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
       sender(&CallableInterface::ZeroArgs)();
 
       // Verify that it gets caught:
-      EXPECT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
+      ASSERT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
 
       subCtxt->SignalShutdown(true);
     }
 
     // Verify subcontext is gone:
-    EXPECT_TRUE(subCtxtWeak.expired()) << "Subcontext endured outside of its intended scope";
+    ASSERT_TRUE(subCtxtWeak.expired()) << "Subcontext endured outside of its intended scope";
 
     // Verify the reference count on the event receiver
-    EXPECT_EQ(1, rcvrCopy.use_count()) << "Detected a leaked reference to an event receiver";
+    ASSERT_EQ(1, rcvrCopy.use_count()) << "Detected a leaked reference to an event receiver";
 
     // Fire the event again--shouldn't be captured by the receiver because its context is gone
     rcvrCopy->m_zero = false;
     sender(&CallableInterface::ZeroArgs)();
-    EXPECT_FALSE(rcvrCopy->m_zero) << "Event receiver was still wired even after its enclosing context was removed";
+    ASSERT_FALSE(rcvrCopy->m_zero) << "Event receiver was still wired even after its enclosing context was removed";
   }
 
   // The parent context had better not be holding a reference at this point
-  EXPECT_TRUE(rcvrWeak.expired()) << "Event receiver reference still being held after its context and all shared references are gone";
+  ASSERT_TRUE(rcvrWeak.expired()) << "Event receiver reference still being held after its context and all shared references are gone";
 
   // Fire the event again, this shouldn't cause anything to blow up!
   sender(&CallableInterface::ZeroArgs)();
@@ -314,9 +314,9 @@ TEST_F(EventReceiverTest, VerifyDirectInvocation) {
   ctxt->Invoke(&CallableInterface::OneArg)(100);
 
   // Verify that stuff happens even when the thread isn't running:
-  EXPECT_TRUE(receiver->m_zero);
-  EXPECT_TRUE(receiver->m_one);
-  EXPECT_EQ(100, receiver->m_oneArg);
+  ASSERT_TRUE(receiver->m_zero);
+  ASSERT_TRUE(receiver->m_one);
+  ASSERT_EQ(100, receiver->m_oneArg);
 
   // Unblock:
   receiver->Proceed();
@@ -331,7 +331,7 @@ TEST_F(EventReceiverTest, NoEventsAfterShutdown) {
   ci(&CallableInterface::ZeroArgs)();
 
   // Verify that the callable interface didn't get the event after shutdown
-  EXPECT_FALSE(receiver->m_zero) << "A context member caught an event after its enclosing context was torn down";
+  ASSERT_FALSE(receiver->m_zero) << "A context member caught an event after its enclosing context was torn down";
 }
 
 class PassByValueInterface {
@@ -388,8 +388,8 @@ TEST_F(EventReceiverTest, VerifyMultiplePassByRef) {
   // Fire the "pass by ref" event:
   sender(&PassByValueInterface::ConstStringRefArg)(passByRef);
   // Verify that the value received matches what we sent both receivers:
-  EXPECT_EQ(passByRef, receiver1->value());
-  EXPECT_EQ(passByRef, receiver2->value());
+  ASSERT_EQ(passByRef, receiver1->value());
+  ASSERT_EQ(passByRef, receiver2->value());
 
   receiver1->Stop();
   receiver2->Stop();
@@ -408,8 +408,8 @@ TEST_F(EventReceiverTest, VerifyMultiplePassByValue) {
   sender(&PassByValueInterface::StringArg)(passByValue);
 
   // Verify that the value received matches what we sent both receivers:
-  EXPECT_EQ(passByValue, receiver1->value());
-  EXPECT_EQ(passByValue, receiver2->value());
+  ASSERT_EQ(passByValue, receiver1->value());
+  ASSERT_EQ(passByValue, receiver2->value());
 
   receiver1->Stop();
   receiver2->Stop();
@@ -439,7 +439,7 @@ TEST_F(EventReceiverTest, VerifyNoActionWhileStopped) {
   ASSERT_FALSE(sr->IsRunning()) << "CoreThread was running in a context that was not started";
 
   // Fire events at the outer scope--this should succeed but should not be picked up by the CoreThread:
-  //EXPECT_ANY_THROW(ciOuter(&CallableInterface::ZeroArgs)()) << "Firing and event before context is initiated didn't throw exception";
+  //ASSERT_ANY_THROW(ciOuter(&CallableInterface::ZeroArgs)()) << "Firing and event before context is initiated didn't throw exception";
   ASSERT_FALSE(sr->m_zero) << "A member of an uninitialized context incorrectly received an event";
 
   //ciOuterDeferred(&CallableInterfaceDeferred::ZeroArgsDeferred)();
@@ -463,7 +463,7 @@ TEST_F(EventReceiverTest, VerifyCorrectContext){
   
   AutoFired<CallableInterface> fire(outerCtxt);
   fire(&CallableInterface::ZeroArgs)();
-  EXPECT_TRUE(receiver->m_zero) << "AutoFired was created with the current context instead of the passed in context";
+  ASSERT_TRUE(receiver->m_zero) << "AutoFired was created with the current context instead of the passed in context";
 }
 
 TEST_F(EventReceiverTest, EventChain){
@@ -488,11 +488,7 @@ TEST_F(EventReceiverTest, EventChain){
 
 class HasAWeirdReturnType {
 public:
-  HasAWeirdReturnType(void) :
-    bCalled(false)
-  {}
-
-  bool bCalled;
+  bool bCalled = false;
 
   int FiredMethod(void) {
     bCalled = true;

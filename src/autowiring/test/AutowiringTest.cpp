@@ -7,6 +7,7 @@
 #include <autowiring/CoreThread.h>
 
 int main(int argc, const char* argv []) {
+  autowiring::dbg::DebugInit();
   return autotesting_main(argc, argv);
 }
 
@@ -168,14 +169,14 @@ TEST_F(AutowiringTest, StaticNewWithArgs) {
     AutoCreateContext ctxt;
     ASSERT_NO_THROW(ctxt->Inject<StaticNewInt>()) << "Exception throws while injecting member";
     AutowiredFast<StaticNewInt> obj(ctxt);
-    EXPECT_EQ(42, obj->getValue()) << "Wrong constructor called";
+    ASSERT_EQ(42, obj->getValue()) << "Wrong constructor called";
     ctxt->SignalShutdown(true);
   }
   {
     AutoCreateContext ctxt;
     ASSERT_NO_THROW(auto obj = ctxt->Inject<StaticNewInt>(std::unique_ptr<int>(new int(1337)))) << "Exception throws while injecting member";
     AutowiredFast<StaticNewInt> obj(ctxt);
-    EXPECT_EQ(1337, obj->getValue()) << "Wrong constructor called";
+    ASSERT_EQ(1337, obj->getValue()) << "Wrong constructor called";
     ctxt->SignalShutdown(true);
   }
 }

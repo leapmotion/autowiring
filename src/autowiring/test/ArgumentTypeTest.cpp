@@ -87,7 +87,7 @@ TEST_F(ArgumentTypeTest, TestAutoIn) {
 
   // Deduced Type
   const auto& arg = t_argShared::arg(*packet);
-  ASSERT_EQ(2UL, arg.use_count()) << "AutoPacket should store exactly two shared pointer references";
+  ASSERT_EQ(1UL, arg.use_count()) << "AutoPacket should store exactly one shared pointer reference to a decorated entry";
 }
 
 TEST_F(ArgumentTypeTest, TestAutoOut) {

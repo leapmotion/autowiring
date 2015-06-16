@@ -63,12 +63,12 @@ TEST_F(ContextCleanupTest, VerifyContextDtor) {
     contextVerifier = subContext;
 
     // Verify the use count is what we expect at this point, should be just the pointer itself:
-    EXPECT_EQ(1, contextVerifier.use_count()) << "Unexpected reference count on CoreContext";
+    ASSERT_EQ(1, contextVerifier.use_count()) << "Unexpected reference count on CoreContext";
 
     {
       // Now make the context current, and check the new count
       CurrentContextPusher pshr(subContext);
-      EXPECT_EQ(2, contextVerifier.use_count()) << "Context currency assignment altered use count unexpectedly";
+      ASSERT_EQ(2, contextVerifier.use_count()) << "Context currency assignment altered use count unexpectedly";
 
       // Generate a new simple object:
       AutoRequired<SimpleObject> simple;
@@ -77,28 +77,28 @@ TEST_F(ContextCleanupTest, VerifyContextDtor) {
       // Each CoreObjectDescriptor instance holds 2 strong references to SimpleObject, as CoreObject type and as ContextMember type.
       // One instance is held in CoreContext::m_concreteTypes and the other in the CoreContext::m_typeMemos.
       // Finally, once more reference is held by the shared_ptr<SimpleObject> inheritance of simple.
-      EXPECT_EQ(5, objVerifier.use_count()) << "Unexpected number of references to a newly constructed object";
+      ASSERT_EQ(5, objVerifier.use_count()) << "Unexpected number of references to a newly constructed object";
 
       // Reference count should be unchanged:
-      EXPECT_EQ(2, contextVerifier.use_count()) << "Reference count changed unexpectedly after addition of an object";
+      ASSERT_EQ(2, contextVerifier.use_count()) << "Reference count changed unexpectedly after addition of an object";
 
       // Eliminate the thread reference to this context:
       auto ref = subContext;
-      EXPECT_EQ(3, ref.use_count()) << "Pointer copy didn't increment the context reference count as expected";
+      ASSERT_EQ(3, ref.use_count()) << "Pointer copy didn't increment the context reference count as expected";
       subContextWeak = subContext;
     }
 
     // Pop should decrement the reference count by two:  Once for the actual Autowired instance, and
     // again for the Autowired smart pointer itself.  This context will then be the only remaining
     // reference, and when it goes out of scope, the context will go away.
-    EXPECT_EQ(1, subContextWeak.use_count()) << "Pop didn't decrement the context reference count as expected";
+    ASSERT_EQ(1, subContextWeak.use_count()) << "Pop didn't decrement the context reference count as expected";
   }
 
   // The weak pointer to the context should be invalid by now:
-  EXPECT_TRUE(contextVerifier.expired()) << "CoreContext still had " << contextVerifier.use_count() << " reference(s)";
+  ASSERT_TRUE(contextVerifier.expired()) << "CoreContext still had " << contextVerifier.use_count() << " reference(s)";
 
   // The object should be gone, but will still be around if the context still exists:
-  EXPECT_TRUE(objVerifier.expired()) << "SimpleObject still had " << objVerifier.use_count() << " reference(s)";
+  ASSERT_TRUE(objVerifier.expired()) << "SimpleObject still had " << objVerifier.use_count() << " reference(s)";
 }
 
 TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
@@ -113,7 +113,7 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   context->Initiate();
 
   // No exit initially:
-  EXPECT_FALSE(context->Wait(std::chrono::milliseconds(10))) << "Core context completed prematurely";
+  ASSERT_FALSE(context->Wait(std::chrono::milliseconds(10))) << "Core context completed prematurely";
 
   Autowired<SimpleThreaded> simple;
   ASSERT_TRUE(simple) << "Couldn't autowire the SimpleThreaded object";
@@ -122,22 +122,18 @@ TEST_F(ContextCleanupTest, VerifyThreadCleanup) {
   context->SignalShutdown();
 
   // Now we verify that exiting happens promptly:
-  EXPECT_TRUE(context->Wait(std::chrono::milliseconds(100))) << "Context did not exit in a timely fashion";
+  ASSERT_TRUE(context->Wait(std::chrono::milliseconds(100))) << "Context did not exit in a timely fashion";
 }
 
 class ReceivesTeardownNotice:
   public ContextMember
 {
 public:
-  ReceivesTeardownNotice(void) :
-    m_notified(false)
-  {}
-
   void NotifyContextTeardown(void) override {
     m_notified = true;
   }
 
-  bool m_notified;
+  bool m_notified = false;
 };
 
 TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
@@ -200,11 +196,7 @@ class TakesALongTimeToExit:
   public CoreThread
 {
 public:
-  TakesALongTimeToExit(void) :
-    m_canContinue(false)
-  {}
-
-  bool m_canContinue;
+  bool m_canContinue = false;
 
   void Continue(void) {
     PerformStatusUpdate([this] {m_canContinue = true; });
@@ -235,6 +227,6 @@ TEST_F(ContextCleanupTest, VerifyThreadShutdownInterleave) {
   ctxt->SignalShutdown(true);
 
   // At this point, the thread must have returned AND released its shared pointer to the enclosing context
-  EXPECT_EQ(initCount, ctxt.use_count()) << "Context thread persisted even after it should have fallen out of scope";
+  ASSERT_EQ(initCount, ctxt.use_count()) << "Context thread persisted even after it should have fallen out of scope";
 }
 

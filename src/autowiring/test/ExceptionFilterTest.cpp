@@ -45,18 +45,10 @@ class GenericFilter:
   public ExceptionFilter
 {
 public:
-  GenericFilter(void):
-    m_hit(false),
-    m_specific(false),
-    m_generic(false),
-    m_fireSpecific(false)
-  {
-  }
-
-  bool m_hit;
-  bool m_specific;
-  bool m_generic;
-  bool m_fireSpecific;
+  bool m_hit = false;
+  bool m_specific = false;
+  bool m_generic = false;
+  bool m_fireSpecific = false;
 
   virtual void Filter(void) override {
     m_hit = true;
@@ -64,7 +56,7 @@ public:
       throw;
     } catch(tracking_exception&) {
     } catch(custom_exception& custom) {
-      EXPECT_EQ(100, custom.m_value) << "A filtered custom exception did not have the expected member field value";
+      ASSERT_EQ(100, custom.m_value) << "A filtered custom exception did not have the expected member field value";
       m_specific = true;
     } catch(...) {
       m_generic = true;
@@ -76,7 +68,7 @@ public:
     try {
       throw;
     } catch(custom_exception& custom) {
-      EXPECT_EQ(200, custom.m_value) << "A fired exception did not have the expected value, probable copy malfunction";
+      ASSERT_EQ(200, custom.m_value) << "A fired exception did not have the expected value, probable copy malfunction";
       m_fireSpecific = true;
     } catch(...) {
       m_generic = true;
@@ -96,7 +88,7 @@ TEST_F(ExceptionFilterTest, AUTOTHROW_ExceptionDestruction) {
   thrower->Wait();
 
   // Verify that the exception was destroyed the correct number of times:
-  EXPECT_EQ(0UL, tracking_exception::s_count) << "Exception was not destroyed the correct number of times";
+  ASSERT_EQ(0UL, tracking_exception::s_count) << "Exception was not destroyed the correct number of times";
 }
 
 TEST_F(ExceptionFilterTest, CheckThrowThrow) {
@@ -107,7 +99,7 @@ TEST_F(ExceptionFilterTest, CheckThrowThrow) {
     }
   };
 
-  EXPECT_THROW(throw example(), std::exception) << "An exception type which throws from its ctor did not throw the expected type";
+  ASSERT_THROW(throw example(), std::exception) << "An exception type which throws from its ctor did not throw the expected type";
 }
 
 TEST_F(ExceptionFilterTest, AUTOTHROW_ThreadThrowsCheck) {
@@ -122,9 +114,9 @@ TEST_F(ExceptionFilterTest, AUTOTHROW_ThreadThrowsCheck) {
   thrower->Wait();
 
   // Hopefully the filter got hit in the right spot:
-  EXPECT_TRUE(filter->m_hit) << "Filter was not invoked for a thrown exception";
-  EXPECT_TRUE(filter->m_specific) << "Filter did not correctly detect the exception type";
-  EXPECT_FALSE(filter->m_generic) << "Filter did not correctly filter out a specific exception";
+  ASSERT_TRUE(filter->m_hit) << "Filter was not invoked for a thrown exception";
+  ASSERT_TRUE(filter->m_specific) << "Filter did not correctly detect the exception type";
+  ASSERT_FALSE(filter->m_generic) << "Filter did not correctly filter out a specific exception";
 }
 
 TEST_F(ExceptionFilterTest, SimpleFilterCheck) {
@@ -140,10 +132,10 @@ TEST_F(ExceptionFilterTest, SimpleFilterCheck) {
   AutoRequired<ThrowsWhenFired<>> fireThrower;
 
   // Add something to fire the exception:
-  EXPECT_NO_THROW(broadcaster(&ThrowingListener::DoThrow)());
+  ASSERT_NO_THROW(broadcaster(&ThrowingListener::DoThrow)());
 
   // Verify that the exception was filtered properly by the generic filter:
-  EXPECT_TRUE(filter->m_fireSpecific) << "Filter was not invoked on a Fired exception";
+  ASSERT_TRUE(filter->m_fireSpecific) << "Filter was not invoked on a Fired exception";
 }
 
 TEST_F(ExceptionFilterTest, FireContainmentCheck) {
@@ -159,13 +151,13 @@ TEST_F(ExceptionFilterTest, FireContainmentCheck) {
   ctxt->Inject<ThrowsWhenFired<>>();
 
   // Now cause the exception to occur:
-  EXPECT_NO_THROW(broadcaster(&ThrowingListener::DoThrow)());
+  ASSERT_NO_THROW(broadcaster(&ThrowingListener::DoThrow)());
 
   // Verify that the context containing the fire thrower was torn down:
-  EXPECT_TRUE(ctxt->IsShutdown()) << "An unhandled exception from a fire call in a context should have signalled it to stop";
+  ASSERT_TRUE(ctxt->IsShutdown()) << "An unhandled exception from a fire call in a context should have signalled it to stop";
 
   // Verify that the parent context was protected:
-  EXPECT_FALSE(AutoCurrentContext()->IsShutdown()) << "An unhandled exception incorrectly terminated a parent context";
+  ASSERT_FALSE(AutoCurrentContext()->IsShutdown()) << "An unhandled exception incorrectly terminated a parent context";
 }
 
 TEST_F(ExceptionFilterTest, AUTOTHROW_EnclosedThrowCheck) {
@@ -186,7 +178,7 @@ TEST_F(ExceptionFilterTest, AUTOTHROW_EnclosedThrowCheck) {
   ASSERT_TRUE(subCtxt->Wait(std::chrono::seconds(5))) << "Context did not terminate in a timely fashion";
 
   // Verify that the filter caught the exception:
-  EXPECT_TRUE(filter->m_hit) << "Filter operating in a superior context did not catch an exception thrown from a child context";
+  ASSERT_TRUE(filter->m_hit) << "Filter operating in a superior context did not catch an exception thrown from a child context";
 }
 
 TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
@@ -201,7 +193,7 @@ TEST_F(ExceptionFilterTest, VerifyThrowingRecipients) {
   tl(&ThrowingListener::DoThrow)();
 
   // Verify that BOTH are hit:
-  EXPECT_TRUE(v200->hit && v201->hit) << "Expected all receivers of a fired event will be processed, even if some throw exceptions";
+  ASSERT_TRUE(v200->hit && v201->hit) << "Expected all receivers of a fired event will be processed, even if some throw exceptions";
 }
 
 TEST_F(ExceptionFilterTest, ExceptionFirewall) {
@@ -232,8 +224,8 @@ TEST_F(ExceptionFilterTest, VerifySimpleConfinement) {
   tl(&ThrowingListener::DoThrow)();
 
   // Verify that the parent scope wasn't incorrectly terminated:
-  EXPECT_FALSE(ctxt->IsShutdown()) << "Parent scope was terminated incorrectly due to an exception sourced by a child context";
+  ASSERT_FALSE(ctxt->IsShutdown()) << "Parent scope was terminated incorrectly due to an exception sourced by a child context";
 
   // Verify that the child scope was terminated as expected:
-  EXPECT_TRUE(child->IsShutdown()) << "An event recipient in a child scope threw an exception and the child context was not correctly terminated";
+  ASSERT_TRUE(child->IsShutdown()) << "An event recipient in a child scope threw an exception and the child context was not correctly terminated";
 }

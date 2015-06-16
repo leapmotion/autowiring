@@ -62,3 +62,11 @@ TEST_F(AutoPacketTest, MultipleDecorateGetFailures) {
     ASSERT_ANY_THROW(packet->Get(out));
   }
 }
+
+TEST_F(AutoPacketTest, AliasGet) {
+  auto packet = factory->NewPacket();
+  packet->Decorate(Decoration<0>{});
+
+  const std::shared_ptr<const Decoration<0>>* ptr;
+  ASSERT_TRUE(packet->Get(ptr)) << "Failed to find the shared pointer version of a trivial decoration on the packet";
+}

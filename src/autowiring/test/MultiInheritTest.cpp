@@ -11,11 +11,7 @@ class MultiInheritTest:
 
 class Shared {
 public:
-  Shared(void) {
-    m_i = 100;
-  }
-
-  int m_i;
+  int m_i = 100;
 };
 
 class Base {
@@ -50,7 +46,7 @@ TEST_F(MultiInheritTest, VerifyCast) {
   ASSERT_TRUE(wiredPobj.IsAutowired()) << "Autowiring failed for a multi-inheritance object";
 
   // Verify that we get a pObj back with correct casting:
-  EXPECT_EQ(obj.get(), wiredPobj.get()) << "Autowiring failed on a multiple inheritance object";
+  ASSERT_EQ(obj.get(), wiredPobj.get()) << "Autowiring failed on a multiple inheritance object";
 }
 
 TEST_F(MultiInheritTest, VerifyBaseInitializer) {
@@ -60,5 +56,5 @@ TEST_F(MultiInheritTest, VerifyBaseInitializer) {
   MultiInheritDerived derived;
 
   // Expect that something autowires when we're done at least:
-  EXPECT_TRUE(derived.m_member.IsAutowired());
+  ASSERT_TRUE(derived.m_member.IsAutowired());
 }

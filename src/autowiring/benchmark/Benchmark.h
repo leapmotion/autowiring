@@ -12,7 +12,7 @@ struct Stopwatch {
   void Stop(size_t n) {
     auto stop = std::chrono::profiling_clock::now();
     std::chrono::duration<double> delta = stop - start;
-    duration += delta / n;
+    duration += delta / static_cast<double>(n);
   }
 
 private:

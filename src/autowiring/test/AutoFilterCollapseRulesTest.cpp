@@ -12,36 +12,20 @@ public:
   }
 };
 
-class AcceptsConstReference {
-public:
-  AcceptsConstReference(void) :
-    m_called(0)
-  {}
-
-  int m_called;
-
-  void AutoFilter(const int& dataIn) {
-    ++m_called;
-  }
-};
-
-class AcceptsSharedPointer {
-public:
-  AcceptsSharedPointer(void) :
-    m_called(0)
-  {}
-
-  int m_called;
-
-  void AutoFilter(std::shared_ptr<const int> dataIn) {
-    ++m_called;
-  }
-};
-
 TEST_F(AutoFilterCollapseRulesTest, SharedPtrCollapse) {
   AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<AcceptsConstReference> constr_filter;
-  AutoRequired<AcceptsSharedPointer> shared_filter;
+
+  int contRefCallCount = 0;
+  *factory += [&](const int& dataIn) {
+    contRefCallCount++;
+  };
+
+  int sharedPtrRefCallCount = 0;
+  std::shared_ptr<const int> dataInVal;
+  *factory += [&](std::shared_ptr<const int> dataIn) {
+    sharedPtrRefCallCount++;
+    dataInVal = dataIn;
+  };
 
   int constr_int = 222;
   std::shared_ptr<int> shared_int = std::make_shared<int>(232);
@@ -52,11 +36,11 @@ TEST_F(AutoFilterCollapseRulesTest, SharedPtrCollapse) {
   {
     auto packet = factory->NewPacket();
     packet->Decorate(constr_int);
-    ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
-    ASSERT_EQ(1, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
+    ASSERT_EQ(1, contRefCallCount) << "Called const reference method " << contRefCallCount << " times";
+    ASSERT_EQ(1, sharedPtrRefCallCount) << "Called shared pointer method " << sharedPtrRefCallCount << " times";
   }
-  constr_filter->m_called = 0;
-  shared_filter->m_called = 0;
+  contRefCallCount = 0;
+  sharedPtrRefCallCount = 0;
 
   // Decorate(shared_ptr<type> X) calls AutoFilter(const type& X)
   // Decorate(shared_ptr<type> X) calls AutoFilter(shared_ptr<type> X)
@@ -64,12 +48,12 @@ TEST_F(AutoFilterCollapseRulesTest, SharedPtrCollapse) {
   {
     auto packet = factory->NewPacket();
     packet->Decorate(shared_int);
-    ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
-    ASSERT_EQ(1, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
+    ASSERT_EQ(1, contRefCallCount) << "Called const reference method " << contRefCallCount << " times";
+    ASSERT_EQ(1, sharedPtrRefCallCount) << "Called shared pointer method " << sharedPtrRefCallCount << " times";
     ASSERT_FALSE(shared_int.unique()) << "Argument of Decorate should be shared, not copied, when possible";
   }
-  constr_filter->m_called = 0;
-  shared_filter->m_called = 0;
+  contRefCallCount = 0;
+  sharedPtrRefCallCount = 0;
 
   // DecorateImmediate(type X) calls AutoFilter(const type& X)
   // DecorateImmediate(type X) DOES NOT CALL AutoFilter(shared_ptr<type> X)
@@ -82,16 +66,21 @@ TEST_F(AutoFilterCollapseRulesTest, SharedPtrCollapse) {
   {
     auto packet = factory->NewPacket();
     packet->DecorateImmediate(constr_int);
-    ASSERT_EQ(1, constr_filter->m_called) << "Called const reference method " << constr_filter->m_called << " times";
-    ASSERT_EQ(1, shared_filter->m_called) << "Called shared pointer method " << shared_filter->m_called << " times";
+    ASSERT_EQ(1, contRefCallCount) << "Called const reference method " << contRefCallCount << " times";
+    ASSERT_EQ(1, sharedPtrRefCallCount) << "Shared pointer method not called as expected";
+    ASSERT_EQ(nullptr, dataInVal) << "A non-null shared pointer was received by an AutoFilter method during a DecorateImmediate call";
   }
-  constr_filter->m_called = 0;
-  shared_filter->m_called = 0;
+  contRefCallCount = 0;
+  sharedPtrRefCallCount = 0;
 }
 
 TEST_F(AutoFilterCollapseRulesTest, ConstCollapse) {
   AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<AcceptsConstReference> filter;
+
+  int callCount = 0;
+  *factory += [&](const int& dataIn) {
+    callCount++;
+  };
   
   // Test const shared_ptr
   auto packet1 = factory->NewPacket();
@@ -99,7 +88,7 @@ TEST_F(AutoFilterCollapseRulesTest, ConstCollapse) {
   std::shared_ptr<const int> dec1 = std::make_shared<const int>(42);
   packet1->Decorate(dec1);
   
-  ASSERT_EQ(1, filter->m_called) << "'const T' decoration didn't resolve to 'T'";
+  ASSERT_EQ(1, callCount) << "'const T' decoration didn't resolve to 'T'";
   
   // Test const value
   auto packet2 = factory->NewPacket();
@@ -107,7 +96,7 @@ TEST_F(AutoFilterCollapseRulesTest, ConstCollapse) {
   const int dec2 = 42;
   packet2->Decorate(dec2);
   
-  ASSERT_EQ(2, filter->m_called) << "'const T' decoration didn't resolve to 'T'";
+  ASSERT_EQ(2, callCount) << "'const T' decoration didn't resolve to 'T'";
 }
 
 TEST_F(AutoFilterCollapseRulesTest, SharedPointerAliasingRules) {
@@ -129,24 +118,14 @@ TEST_F(AutoFilterCollapseRulesTest, SharedPointerAliasingRules) {
   ASSERT_TRUE(gen2Called) << "AutoFilter accepting a decorated type was not called as expected";
 }
 
-class ProducesSharedPointer {
-public:
-  ProducesSharedPointer(void) :
-    m_called(0)
-  {}
-
-  int m_called;
-
-  void AutoFilter(std::shared_ptr<int>& output) {
-    ++m_called;
-    output = std::make_shared<int>(55);
-  }
-};
-
 TEST_F(AutoFilterCollapseRulesTest, AutoFilterSharedAliasingRules) {
-  AutoRequired<ProducesSharedPointer> produces;
   AutoRequired<FilterGen<int>> consumes;
   AutoRequired<AutoPacketFactory> factory;
+
+  *factory += [&](std::shared_ptr<int>& output) {
+    output = std::make_shared<int>(55);
+  };
+  *factory += [&](int) {};
 
   // Decorate the packet, verify attribute presence:
   auto packet = factory->NewPacket();
@@ -172,4 +151,50 @@ TEST_F(AutoFilterCollapseRulesTest, UnsatisfiableDecoration) {
 
   // Ensure the correct decoration was invoked
   ASSERT_TRUE(bInvoked) << "AutoFilter was not invoked in an unsatisfiable case as expected";
+}
+
+TEST_F(AutoFilterCollapseRulesTest, SharedOutSelfAutoPrev) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoCurrentContext()->Initiate();
+
+  auto hello = std::make_shared<std::string>("Hello world!");
+  size_t nMsgs = 0;
+  *factory += [&](auto_prev<std::string> lastMsg, std::shared_ptr<std::string>& msg) {
+    msg = hello;
+    if (lastMsg)
+      nMsgs++;
+  };
+
+  auto packet1 = factory->NewPacket();
+  auto packet2 = factory->NewPacket();
+
+  ASSERT_TRUE(packet1->Has<std::string>());
+  ASSERT_TRUE(packet2->Has<std::string>());
+  ASSERT_EQ(1UL, nMsgs) << "auto_prev was not correctly set when a filter produces a shared_ptr output";
+}
+
+struct Base {};
+struct Derived : public Base{};
+
+TEST_F(AutoFilterCollapseRulesTest, AutoPrevInheritance) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoCurrentContext()->Initiate();
+  
+  size_t counter = 0;
+  
+  *factory += [&](const std::vector<Base>& base, auto_prev<std::vector<Derived>> prev, std::vector<Derived>& deriv) {
+    deriv.emplace_back();
+    
+    if (counter) {
+      ASSERT_FALSE(prev->empty()) << "auto_prev not called";
+    }
+    
+    counter++;
+  };
+  
+  for (size_t i = 0; i < 10; ++i) {
+    auto packet = factory->NewPacket();
+    std::vector<Base> baseVec{Base(), Base(), Base()};
+    packet->Decorate(baseVec);
+  }
 }

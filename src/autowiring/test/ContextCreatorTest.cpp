@@ -20,11 +20,7 @@ class VoidCreator:
   public ContextCreator<EvictionContext>
 {
 public:
-  VoidCreator(void):
-    m_totalDestroyed(0)
-  {}
-
-  size_t m_totalDestroyed;
+  size_t m_totalDestroyed = 0;
 
   void NotifyContextDestroyed(t_callbackHandle q, CoreContext* pContext) override {
     m_totalDestroyed++;
@@ -34,13 +30,9 @@ public:
 
 class GlobalSignal {
 public:
-  GlobalSignal(void):
-    m_shouldContinue(false)
-  {}
-
 private:
   std::mutex m_lock;
-  bool m_shouldContinue;
+  bool m_shouldContinue = false;
   std::condition_variable s_continueCond;
 
 public:
@@ -87,7 +79,7 @@ TEST_F(ContextCreatorTest, ValidateSimpleEviction) {
   ASSERT_TRUE(ctxtWeak.expired()) << "Expected the context to be destroyed";
 
   // Verify that our creator is now empty:
-  EXPECT_EQ(0UL, creator->GetSize()) << "Context creator is non-empty after all created contexts were destroyed";
+  ASSERT_EQ(0UL, creator->GetSize()) << "Context creator is non-empty after all created contexts were destroyed";
 }
 
 TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
@@ -144,7 +136,7 @@ TEST_F(ContextCreatorTest, ValidateMultipleEviction) {
   ASSERT_TRUE(wait_status) << "All teardown listeners didn't trigger, counter still at " << counter;
 
   // Validate that everything expires:
-  EXPECT_EQ(static_cast<size_t>(0), creator->GetSize()) << "Not all contexts were evicted as expected";
+  ASSERT_EQ(static_cast<size_t>(0), creator->GetSize()) << "Not all contexts were evicted as expected";
 }
 
 TEST_F(ContextCreatorTest, ClearAndTeardown) {
@@ -177,7 +169,7 @@ TEST_F(ContextCreatorTest, ClearAndTeardown) {
   ASSERT_TRUE(ctxtWeak.expired()) << "Expected the context to be destroyed";
 
   // Verify that our creator is now empty:
- // EXPECT_EQ(0UL, creator->GetSize()) << "Context creator is non-empty after all created contexts were destroyed";
+ // ASSERT_EQ(0UL, creator->GetSize()) << "Context creator is non-empty after all created contexts were destroyed";
 }
 
 TEST_F(ContextCreatorTest, VoidKeyType) {
@@ -185,20 +177,20 @@ TEST_F(ContextCreatorTest, VoidKeyType) {
 
   {
     std::shared_ptr<CoreContext> ctxt = vc->CreateContext();
-    EXPECT_EQ(1UL, vc->GetSize()) << "Requested that a context be created, but the void creator did not have any members";
+    ASSERT_EQ(1UL, vc->GetSize()) << "Requested that a context be created, but the void creator did not have any members";
 
-    EXPECT_EQ(1UL, vc->GetSize()) << "A created context was apparently destroyed after firing bolts";
-    EXPECT_EQ(0UL, vc->m_totalDestroyed) << "The void creator received a NotifyContextDestroyed call unexpectedly early";
+    ASSERT_EQ(1UL, vc->GetSize()) << "A created context was apparently destroyed after firing bolts";
+    ASSERT_EQ(0UL, vc->m_totalDestroyed) << "The void creator received a NotifyContextDestroyed call unexpectedly early";
 
     vc->Clear(true);
 
     //Make another one to check about collisions
     std::shared_ptr<CoreContext> ctxt2 = vc->CreateContext();
-    EXPECT_EQ(1UL, vc->GetSize()) << "Second void context creation failed!";
+    ASSERT_EQ(1UL, vc->GetSize()) << "Second void context creation failed!";
   }
 
-  EXPECT_EQ(0UL, vc->GetSize()) << "A void context creator was not correctly updated when its dependent context went out of scope";
-  EXPECT_EQ(2UL, vc->m_totalDestroyed) << "The void creator did not receive the expected number of NotifyContextDestroyed calls";
+  ASSERT_EQ(0UL, vc->GetSize()) << "A void context creator was not correctly updated when its dependent context went out of scope";
+  ASSERT_EQ(2UL, vc->m_totalDestroyed) << "The void creator did not receive the expected number of NotifyContextDestroyed calls";
 }
 
 struct mySigil {};
