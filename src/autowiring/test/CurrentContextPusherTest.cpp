@@ -3,6 +3,7 @@
 #include <autowiring/Autowired.h>
 #include <autowiring/CoreContext.h>
 #include <autowiring/CurrentContextPusher.h>
+#include <future>
 
 class CurrentContextPusherTest:
   public testing::Test
@@ -21,4 +22,20 @@ TEST_F(CurrentContextPusherTest, VerifyResetsDuringThrow) {
   }
 
   ASSERT_EQ(current.get(), CoreContext::CurrentContext().get());
+}
+
+TEST_F(CurrentContextPusherTest, NoUnexpectedGlobalHold) {
+  AutoCreateContext ctxt;
+  AutoGlobalContext global;
+
+  int initUses = global.use_count();
+  auto rs = std::async(
+    std::launch::async,
+    [&ctxt] {
+      CurrentContextPusher pshr(ctxt);
+    }
+  );
+  rs.get();
+  ASSERT_TRUE(ctxt.unique()) << "The current context pointer was not correctly cleaned up on thread exit";
+  ASSERT_EQ(initUses, global.use_count()) << "A global reference was unexpectedly leaked by the pusher";
 }

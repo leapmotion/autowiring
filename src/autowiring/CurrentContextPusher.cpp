@@ -4,7 +4,7 @@
 #include "GlobalCoreContext.h"
 
 CurrentContextPusher::CurrentContextPusher(void):
-  m_prior(CoreContext::CurrentContext())
+  m_prior(CoreContext::CurrentContextOrNull())
 {}
 
 CurrentContextPusher::CurrentContextPusher(std::shared_ptr<CoreContext> pContext):
@@ -28,10 +28,12 @@ CurrentContextPusher::~CurrentContextPusher(void) {
 }
 
 std::shared_ptr<CoreContext> CurrentContextPusher::Pop(void) {
-  std::shared_ptr<CoreContext> retVal;
-  if(m_prior) {
-    retVal = m_prior->SetCurrent();
-    m_prior.reset();
-  }
+  if (pop_invoked)
+    // Nothing to do
+    return nullptr;
+
+  pop_invoked = true;
+  auto retVal = CoreContext::SetCurrent(m_prior);
+  m_prior.reset();
   return retVal;
 }

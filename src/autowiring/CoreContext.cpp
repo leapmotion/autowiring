@@ -618,6 +618,11 @@ bool CoreContext::DelayUntilInitiated(void) {
   return !IsShutdown();
 }
 
+std::shared_ptr<CoreContext> CoreContext::CurrentContextOrNull(void) {
+  auto retVal = autoCurrentContext.get();
+  return retVal ? *retVal : nullptr;
+}
+
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
   if(!autoCurrentContext.get())
     return std::static_pointer_cast<CoreContext, GlobalCoreContext>(GetGlobalContext());
@@ -1268,15 +1273,17 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
   return os;
 }
 
-std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
-  std::shared_ptr<CoreContext> newCurrent = this->shared_from_this();
-
-  if(!newCurrent)
-    throw std::runtime_error("Attempted to make a CoreContext current from a CoreContext ctor");
-
-  std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContext();
-  autoCurrentContext.reset(new std::shared_ptr<CoreContext>(newCurrent));
+std::shared_ptr<CoreContext> CoreContext::SetCurrent(const std::shared_ptr<CoreContext>& ctxt) {
+  std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContextOrNull();
+  if (ctxt)
+    autoCurrentContext.reset(new std::shared_ptr<CoreContext>(ctxt));
+  else
+    autoCurrentContext.reset();
   return retVal;
+}
+
+std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
+  return CoreContext::SetCurrent(shared_from_this());
 }
 
 void CoreContext::EvictCurrent(void) {
