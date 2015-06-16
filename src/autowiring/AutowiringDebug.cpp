@@ -51,7 +51,12 @@ static std::string DemangleWithAutoID(const std::type_info& ti) {
   auto retVal = demangle(ti);
 
   // prefix is at the beginning of the string, skip over it
+#ifdef _MSC_VER
   static const char prefix [] = "struct auto_id<";
+#else
+  static const char prefix [] = "auto_id<";
+#endif
+
   if (retVal.compare(0, sizeof(prefix) - 1, prefix) == 0) {
     size_t off = sizeof(prefix) - 1;
     retVal = retVal.substr(off, retVal.length() - off - 2);
