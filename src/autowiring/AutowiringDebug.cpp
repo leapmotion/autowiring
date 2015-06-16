@@ -36,11 +36,14 @@ bool autowiring::dbg::IsLambda(const std::type_info& ti) {
 #endif
 
 static std::string TrimPrefix(std::string name) {
+#ifdef _MSC_VER
   // "class" or "struct" prefixes should be eliminated
   if (name.compare(0, 6, "class "))
     name = name.substr(5);
   if (name.compare(0, 7, "struct "))
     name = name.substr(6);
+#endif
+
   return name;
 }
 
