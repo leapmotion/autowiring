@@ -318,6 +318,54 @@ public:
   }
 };
 
+template<class T>
+class auto_arg<T const *const*>:
+  public auto_arg<T const**>
+{};
+
+/// <summary>
+/// Shared pointer multi-in specialization
+/// </summary>
+/// </remarks>
+template<class T>
+class auto_arg<std::shared_ptr<const T>*>
+{
+public:
+  typedef std::shared_ptr<const T>* arg_type;
+
+  struct type {
+    type(type&& rhs) :
+      ptr(std::move(rhs.ptr))
+    {}
+
+    explicit type(std::unique_ptr<std::shared_ptr<const T>[]> ptr) :
+      ptr{std::move(ptr)}
+    {}
+
+    std::unique_ptr<std::shared_ptr<const T>[]> ptr;
+
+    operator std::shared_ptr<const T>*(void) const { return ptr.get(); }
+  };
+
+  typedef auto_id<T> id_type;
+  static const bool is_input = true;
+  static const bool is_output = false;
+  static const bool is_shared = false;
+  static const bool is_multi = true;
+  static const int tshift = 0;
+
+  template<class C>
+  static type arg(C& packet) {
+    return type{packet.template GetAllShared<T>()};
+  }
+};
+
+
+template<class T>
+class auto_arg<const std::shared_ptr<const T>*>:
+  public auto_arg<std::shared_ptr<const T>*>
+{};
+
 /// <summary>
 /// Utility predicate, used to assess whether T is an output argument
 /// </summary>
