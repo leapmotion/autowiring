@@ -18,6 +18,20 @@ AutoFilterDescriptorStub::AutoFilterDescriptorStub(const std::type_info* pType, 
   }
 }
 
+bool AutoFilterDescriptorStub::Provides(const std::type_info& ti) const {
+  for (size_t i = GetArity(); i--;)
+    if (*m_pArgs[i].ti == ti)
+      return m_pArgs[i].is_output;
+  return false;
+}
+
+bool AutoFilterDescriptorStub::Consumes(const std::type_info& ti) const {
+  for (size_t i = GetArity(); i--;)
+    if (*m_pArgs[i].ti == ti)
+      return m_pArgs[i].is_output;
+  return false;
+}
+
 const AutoFilterArgument* AutoFilterDescriptorStub::GetArgumentType(const std::type_info* argType) const {
   for (auto pArg = m_pArgs; *pArg; pArg++)
     if (pArg->ti == argType)

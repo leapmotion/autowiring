@@ -68,6 +68,11 @@ public:
     container.insert(container.end(), m_autoFilters.begin(), m_autoFilters.end());
   }
 
+  /// <returns>
+  /// A copy of all AutoFilter instances on this class
+  /// </returns>
+  std::vector<AutoFilterDescriptor> GetAutoFilters(void) const;
+
   /// <summary>
   /// Creates a linked list of saturation counters
   /// </summary>
