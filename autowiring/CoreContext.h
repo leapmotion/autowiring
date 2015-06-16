@@ -930,9 +930,14 @@ public:
   bool DelayUntilInitiated(void);
 
   /// <summary>
+  /// Static version of SetCurrent, may be invoked with nullptr
+  /// </summary>
+  static std::shared_ptr<CoreContext> SetCurrent(const std::shared_ptr<CoreContext>& ctxt);
+
+  /// <summary>
   /// Makes this context the current context.
   /// </summary>
-  /// <returns>The previously current context.</returns>
+  /// <returns>The previously current context, or else nullptr if no context was current.</returns>
   std::shared_ptr<CoreContext> SetCurrent(void);
 
   /// <summary>
@@ -941,6 +946,8 @@ public:
   /// <remarks>
   /// Generally speaking, if you just want to release a reference to the current context, simply
   /// make the global context current instead.
+  ///
+  /// This method is identical to CoreContext::SetCurrent(nullptr)
   /// </remarks>
   static void EvictCurrent(void);
 
@@ -948,14 +955,19 @@ public:
   /// The shared pointer to the current context.
   /// </summary>
   /// <returns>
-  /// A shared pointer to the current CoreContext instance of the current thread,
-  /// or else an empty pointer, if no context is current.
+  /// A shared pointer to the current CoreContext instance of the current thread, or else nullptr,
+  /// if no context is current.
   /// </returns>
   /// <remarks>
   /// This works by using thread-local store, and so is safe in multithreaded systems.  The current
   /// context is assigned before invoking a CoreRunnable instance's Run method, and it's also assigned
   /// when a context is first constructed by a thread.
   /// </remarks>
+  static std::shared_ptr<CoreContext> CurrentContextOrNull(void);
+
+  /// <summary>
+  /// Identical to CurrentContextNoCheck, except returns the global context instead of a null pointer
+  /// </summary>
   static std::shared_ptr<CoreContext> CurrentContext(void);
 
   /// <summary>
