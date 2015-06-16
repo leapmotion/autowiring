@@ -32,7 +32,6 @@ set(AutowiringTest_SRCS
   ContextMapTest.cpp
   ContextMemberTest.cpp
   CoreThreadTest.cpp
-  ContextCreatorTest.cpp
   CurrentContextPusherTest.cpp
   DecoratorTest.cpp
   DispatchQueueTest.cpp
