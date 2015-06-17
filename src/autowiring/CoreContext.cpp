@@ -300,7 +300,6 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
   }
 
   // Subscribers, if applicable:
-  const auto& stump = *traits.stump;
   if(!traits.subscriber.empty())
     AddPacketSubscriber(traits.subscriber);
 
