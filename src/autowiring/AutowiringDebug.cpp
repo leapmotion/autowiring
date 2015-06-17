@@ -82,13 +82,13 @@ void PrintContextTreeRecursive(std::ostream& os, std::shared_ptr<CoreContext> ct
     }
 
     // Print indentation the shows 'ctxt's path in the tree
-    for (auto c : path)
-      if (c == path.back())
-        if (c->NextSibling())
+    for (auto it = path.begin(); it != path.end(); ++it)
+      if (std::next(it) == path.end()) // Check if last element
+        if ((*it)->NextSibling())
           os << "├── ";
         else
           os << "└── ";
-      else if (c->NextSibling()) // If not the last child
+      else if ((*it)->NextSibling()) // If not the last child
         os << "│   ";
       else
         os << "    ";
