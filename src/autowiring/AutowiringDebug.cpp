@@ -98,14 +98,13 @@ void PrintContextTreeRecursive(std::ostream& os, std::shared_ptr<CoreContext> ct
     if (ctxt == curCtxt) {
       os << "(Current Context)";
     }
-    os << "\n";
+    os << std::endl;
     PrintContextTreeRecursive(os, ctxt->FirstChild());
   }
 }
 
 void autowiring::dbg::PrintContextTree(std::ostream& os) {
   PrintContextTreeRecursive(os, AutoGlobalContext());
-  os << std::flush;
 }
 
 AutoPacket* autowiring::dbg::CurrentPacket(void) {

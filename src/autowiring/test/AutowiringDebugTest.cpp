@@ -3,6 +3,7 @@
 #include <autowiring/autowiring.h>
 #include <autowiring/AutowiringDebug.h>
 #include "TestFixtures/Decoration.hpp"
+#include <algorithm>
 
 class AutowiringDebugTest:
   public testing::Test
