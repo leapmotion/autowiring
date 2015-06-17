@@ -300,18 +300,8 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
   }
 
   // Subscribers, if applicable:
-  const auto& stump = *traits.stump;
-  if(!traits.subscriber.empty()) {
+  if(!traits.subscriber.empty())
     AddPacketSubscriber(traits.subscriber);
-
-    // Ancilliary subscribers, if present:
-    for(const auto* pCur = stump.pFirstAutoFilter; pCur; pCur = pCur->pFlink) {
-      AutoFilterDescriptor subscriber(traits.subscriber.GetAutoFilter(), pCur->stub);
-      AddPacketSubscriber(subscriber);
-    }
-  }
-  else if(stump.pFirstAutoFilter)
-    throw autowiring_error("It is an error to make use of NewAutoFilter in a type which does not have an AutoFilter member; please provide an AutoFilter method on this type");
 
   // Signal listeners that a new object has been created
   GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, traits);

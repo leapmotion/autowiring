@@ -35,7 +35,6 @@ SlotInformationStackLocation::~SlotInformationStackLocation(void) {
   tss.reset(&prior);
 
   UpdateOrCascadeDelete(m_pCur, stump.pHead);
-  UpdateOrCascadeDelete(m_pLastLink, stump.pFirstAutoFilter);
 
   // Unconditionally update to true, no CAS needed
   stump.bInitialized = true;
@@ -65,11 +64,4 @@ void SlotInformationStackLocation::RegisterSlot(DeferrableAutowiring* pDeferrabl
     reinterpret_cast<const unsigned char*>(tss->pObj),
     false
   );
-}
-
-void SlotInformationStackLocation::RegisterSlot(const AutoFilterDescriptorStub& stub) {
-  if(!tss.get() || tss->stump.bInitialized)
-    return;
-
-  tss->m_pLastLink = new AutoFilterDescriptorStubLink(stub, tss->m_pLastLink);
 }
