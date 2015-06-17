@@ -2,6 +2,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <iostream>
 
 struct AutoFilterDescriptor;
 class AutoPacket;
@@ -20,9 +21,9 @@ bool IsLambda(const std::type_info& ti);
 std::string ContextName(void);
 
 /// <summary>
-/// Attempts to determine why the specified AutoFilter type might not be called
+/// Write a string representation of the context hierarchy to 'os'
 /// </summary>
-void PrintContextTree(std::ostream& os);
+void PrintContextTree(std::ostream& os = std::cout);
 
 /// <returns>
 /// The current packet under processing

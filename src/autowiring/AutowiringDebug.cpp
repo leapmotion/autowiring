@@ -69,47 +69,42 @@ std::string autowiring::dbg::ContextName(void) {
   return autowiring::demangle(ctxt->GetSigilType());
 }
 
-void PrintContextTreeRecursive(std::ostream& os, std::shared_ptr<CoreContext> ctxt, int level) {
-  // Initialize these only once
+void PrintContextTreeRecursive(std::ostream& os, std::shared_ptr<CoreContext> ctxt) {
+  // Initialize this only once
   AutoCurrentContext curCtxt;
   
   for (; ctxt; ctxt = ctxt->NextSibling()) {
-    // print formatting
-    if (!ctxt->IsGlobalContext()) {
     
-      // Create of vector of contexts from root to 'ctxt'
-      std::vector<std::shared_ptr<CoreContext>> path;
-      for (auto c = ctxt; !c->IsGlobalContext(); c = c->GetParentContext()) {
-        path.push_back(c);
-      }
-      std::reverse(path.begin(), path.end());
-    
-      for (auto c : path) {
-        if (c == path.back()) {
-          if (c->NextSibling())
-            os << "├── ";
-          else
-            os << "└── ";
-        } else if (c->NextSibling()) {
-          os << "│   ";
-        } else {
-          os << "    ";
-        }
-      }
+    // Create of vector of contexts from child of global to 'ctxt'
+    std::deque<std::shared_ptr<CoreContext>> path;
+    for (auto c = ctxt; !c->IsGlobalContext(); c = c->GetParentContext()) {
+      path.push_front(c);
     }
-    
+
+    // Print indentation the shows 'ctxt's path in the tree
+    for (auto c : path)
+      if (c == path.back())
+        if (c->NextSibling())
+          os << "├── ";
+        else
+          os << "└── ";
+      else if (c->NextSibling()) // If not the last child
+        os << "│   ";
+      else
+        os << "    ";
+
     // Print context name
     os << autowiring::demangle(ctxt->GetSigilType());
     if (ctxt == curCtxt) {
       os << "(Current Context)";
     }
-    os << '\n';
-    PrintContextTreeRecursive(os, ctxt->FirstChild(), level + 1);
+    os << "\n";
+    PrintContextTreeRecursive(os, ctxt->FirstChild());
   }
 }
 
 void autowiring::dbg::PrintContextTree(std::ostream& os) {
-  PrintContextTreeRecursive(os, AutoGlobalContext(), 0);
+  PrintContextTreeRecursive(os, AutoGlobalContext());
   os << std::flush;
 }
 
