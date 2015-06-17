@@ -2,6 +2,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <iostream>
 
 struct AutoFilterDescriptor;
 class AutoPacket;
@@ -18,6 +19,11 @@ bool IsLambda(const std::type_info& ti);
 /// A string corresponding to the current context name
 /// </returns>
 std::string ContextName(void);
+
+/// <summary>
+/// Write a string representation of the context hierarchy to 'os'
+/// </summary>
+void PrintContextTree(std::ostream& os = std::cout);
 
 /// <returns>
 /// The current packet under processing

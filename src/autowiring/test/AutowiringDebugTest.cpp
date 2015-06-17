@@ -1,7 +1,9 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #include "stdafx.h"
 #include <autowiring/autowiring.h>
+#include <autowiring/AutowiringDebug.h>
 #include "TestFixtures/Decoration.hpp"
+#include <algorithm>
 
 class AutowiringDebugTest:
   public testing::Test
@@ -45,4 +47,42 @@ TEST_F(AutowiringDebugTest, CanGetCurrentPacket) {
   };
 
   auto packet = factory->NewPacket();
+}
+
+struct Herp{};
+struct Derp{};
+
+TEST_F(AutowiringDebugTest, ContextPrintout) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+
+  AutoCreateContextT<Derp> dCtxt;
+  auto ctxt1 = dCtxt->Create<Herp>();
+  auto ctxt2 = dCtxt->Create<Derp>();
+  auto ctxt3 = ctxt1->Create<int>();
+  AutoCreateContextT<Herp> hCtxt;
+  auto ctxt4 = hCtxt->Create<Derp>();
+  auto ctxt5 = hCtxt->Create<Derp>();
+
+  // This is the expected output
+  std::string tree = "GlobalCoreContext\n"
+                     "└── void(Current Context)\n"
+                     "    ├── Derp\n"
+                     "    │   ├── Herp\n"
+                     "    │   │   └── int\n"
+                     "    │   └── Derp\n"
+                     "    └── Herp\n"
+                     "        ├── Derp\n"
+                     "        └── Derp\n";
+
+  // Remove whitespace so test is more robust
+  tree.erase(std::remove_if(tree.begin(), tree.end(), isspace), tree.end());
+
+  // Write output to stringstream an remove whitespace
+  std::stringstream ss;
+  autowiring::dbg::PrintContextTree(ss);
+  auto output = ss.str();
+  output.erase(std::remove_if(output.begin(), output.end(), isspace), output.end());
+
+  ASSERT_EQ(tree, output) << "Didn't print correct tree";
 }

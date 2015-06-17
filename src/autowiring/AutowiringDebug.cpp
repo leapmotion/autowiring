@@ -69,6 +69,44 @@ std::string autowiring::dbg::ContextName(void) {
   return autowiring::demangle(ctxt->GetSigilType());
 }
 
+void PrintContextTreeRecursive(std::ostream& os, std::shared_ptr<CoreContext> ctxt) {
+  // Initialize this only once
+  AutoCurrentContext curCtxt;
+  
+  for (; ctxt; ctxt = ctxt->NextSibling()) {
+    
+    // Create of vector of contexts from child of global to 'ctxt'
+    std::deque<std::shared_ptr<CoreContext>> path;
+    for (auto c = ctxt; !c->IsGlobalContext(); c = c->GetParentContext()) {
+      path.push_front(c);
+    }
+
+    // Print indentation the shows 'ctxt's path in the tree
+    for (auto c : path)
+      if (c == path.back())
+        if (c->NextSibling())
+          os << "├── ";
+        else
+          os << "└── ";
+      else if (c->NextSibling()) // If not the last child
+        os << "│   ";
+      else
+        os << "    ";
+
+    // Print context name
+    os << autowiring::demangle(ctxt->GetSigilType());
+    if (ctxt == curCtxt) {
+      os << "(Current Context)";
+    }
+    os << std::endl;
+    PrintContextTreeRecursive(os, ctxt->FirstChild());
+  }
+}
+
+void autowiring::dbg::PrintContextTree(std::ostream& os) {
+  PrintContextTreeRecursive(os, AutoGlobalContext());
+}
+
 AutoPacket* autowiring::dbg::CurrentPacket(void) {
   Autowired<AutoPacketFactory> factory;
   if (!factory)
