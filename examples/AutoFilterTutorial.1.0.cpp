@@ -80,20 +80,12 @@ struct Hippo6 {
   std::unordered_set<std::string> m_received_input_decoration_types;
 };
 /// @endcode
-/// We also define two more structs having AutoFilter methods whose parameter types are analogous C++ pointer values.  These will serve
+/// We also define another struct having an AutoFilter method whose parameter type is an analogous C++ pointer.  This will serve
 /// to demonstrate which filters are called or not called at what times.
 /// @code
 struct Ostrich1 {
-  void AutoFilter (std::string *input) {
-    std::cout << "Ostrich1::AutoFilter(std::string *) was called with (dereferenced) value: \"" << *input << "\"\n";
-    m_received_input_decoration_types.insert(*input);
-  }
-  std::unordered_set<std::string> m_received_input_decoration_types;
-};
-
-struct Ostrich2 {
   void AutoFilter (const std::string *input) {
-    std::cout << "Ostrich2::AutoFilter(const std::string *) was called with (dereferenced) value: \"" << *input << "\"\n";
+    std::cout << "Ostrich1::AutoFilter(const std::string *) was called with (dereferenced) value: \"" << *input << "\"\n";
     m_received_input_decoration_types.insert(*input);
   }
   std::unordered_set<std::string> m_received_input_decoration_types;
@@ -109,7 +101,6 @@ int main () {
   AutoRequired<Hippo5>();
   AutoRequired<Hippo6>();
   AutoRequired<Ostrich1>();
-  AutoRequired<Ostrich2>();
   Autowired<AutoPacketFactory> factory;
   // Declare a packet to use in the following code blocks.
   std::shared_ptr<AutoPacket> packet;
@@ -213,10 +204,8 @@ int main () {
     std::cout << "All Hippo# context members received the expected inputs.\n";
   }
   {
-    if (AutowiredFast<Ostrich1>()->m_received_input_decoration_types != std::unordered_set<std::string>({"std::string *"}))
+    if (AutowiredFast<Ostrich1>()->m_received_input_decoration_types != std::unordered_set<std::string>({"const std::string *"}))
       throw std::runtime_error("Ostrich1 did not receive the expected inputs.");
-    if (AutowiredFast<Ostrich2>()->m_received_input_decoration_types != std::unordered_set<std::string>({"const std::string *"}))
-      throw std::runtime_error("Ostrich2 did not receive the expected inputs.");
     std::cout << "All Ostrich# context members received the expected inputs.\n";
   }
   std::cout << "All verifications passed.\n";
