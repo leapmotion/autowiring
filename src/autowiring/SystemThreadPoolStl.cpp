@@ -5,7 +5,8 @@
 
 using namespace autowiring;
 
-SystemThreadPoolStl::SystemThreadPoolStl(void)
+SystemThreadPoolStl::SystemThreadPoolStl(void):
+  m_toBeDone(~0)
 {}
 
 SystemThreadPoolStl::~SystemThreadPoolStl(void)
