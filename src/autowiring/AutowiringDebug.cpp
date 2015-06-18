@@ -12,7 +12,7 @@ using namespace autowiring::dbg;
 #ifdef _MSC_VER
 // On Windows, lambda functions start with the key string "class <"
 bool autowiring::dbg::IsLambda(const std::type_info& ti) {
-  return demangle(ti).compare(0, 7, "class <") == 0;
+  return demangle(ti)[0] == '<';
 }
 #else
 // On other platforms, try to find lambda functions by the presence of forbidden characters
@@ -35,33 +35,17 @@ bool autowiring::dbg::IsLambda(const std::type_info& ti) {
 }
 #endif
 
-static std::string TrimPrefix(std::string name) {
-#ifdef _MSC_VER
-  // "class" or "struct" prefixes should be eliminated
-  if (name.compare(0, 6, "class "))
-    name = name.substr(5);
-  if (name.compare(0, 7, "struct "))
-    name = name.substr(6);
-#endif
-
-  return name;
-}
-
 static std::string DemangleWithAutoID(const std::type_info& ti) {
   auto retVal = demangle(ti);
 
   // prefix is at the beginning of the string, skip over it
-#ifdef _MSC_VER
-  static const char prefix [] = "struct auto_id<";
-#else
   static const char prefix [] = "auto_id<";
-#endif
 
   if (retVal.compare(0, sizeof(prefix) - 1, prefix) == 0) {
     size_t off = sizeof(prefix) - 1;
     retVal = retVal.substr(off, retVal.length() - off - 2);
   }
-  return TrimPrefix(retVal);
+  return retVal;
 }
 
 std::string autowiring::dbg::ContextName(void) {
@@ -120,7 +104,7 @@ static const AutoFilterDescriptor* DescriptorByName(const char* name, const std:
     if (!type)
       continue;
 
-    auto curName = TrimPrefix(demangle(type));
+    auto curName = demangle(type);
     if (!curName.compare(name))
       return &filter;
   }

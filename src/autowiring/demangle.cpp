@@ -23,12 +23,33 @@ static std::string demangle_name(const char* name) {
 #else // Windows
 
 static std::string demangle_name(const char* name) {
-  std::string demangled(name);
-  
-  if (demangled.find("`") != std::string::npos)
-    return std::string();
-  
-  return demangled;
+  if (strchr(name, '`'))
+    return std::string{};
+
+  // Number of left <'s we have seen
+  int nLeft = 0;
+
+  // "class" or "struct" prefixes should be eliminated
+  std::ostringstream os;
+  while(*name) {
+    if (strncmp(name, "class ", 6) == 0) {
+      name += 6;
+      continue;
+    }
+    
+    if (strncmp(name, "struct ", 7) == 0) {
+      name += 7;
+      continue;
+    }
+
+    os << *name;
+    if(*name == ',')
+      // Put a space after all commas, required for proper template parsing
+      os << ' ';
+
+    name++;
+  }
+  return os.str();
 }
 
 #endif
