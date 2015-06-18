@@ -76,13 +76,13 @@ TEST_F(AutowiringDebugTest, ContextPrintout) {
                      "        └── Derp\n";
 
   // Remove whitespace so test is more robust
-  tree.erase(std::remove_if(tree.begin(), tree.end(), isspace), tree.end());
+  tree.erase(std::remove_if(tree.begin(), tree.end(), [](char ch) { return ch == ' '; }), tree.end());
 
   // Write output to stringstream an remove whitespace
   std::stringstream ss;
   autowiring::dbg::PrintContextTree(ss);
   auto output = ss.str();
-  output.erase(std::remove_if(output.begin(), output.end(), isspace), output.end());
+  output.erase(std::remove_if(output.begin(), output.end(), [](char ch) { return ch == ' '; }), output.end());
 
   ASSERT_EQ(tree, output) << "Didn't print correct tree";
 }
