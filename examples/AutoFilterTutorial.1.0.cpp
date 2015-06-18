@@ -264,10 +264,9 @@ int main () {
 ///     Hippo4::AutoFilter(std::shared_ptr<const std::string>) was called with (dereferenced) value: "const std::shared_ptr<const std::string>"
 ///     
 ///     Decorating packet with instance of `std::string *`:
-///     Ostrich1::AutoFilter(std::string *) was called with (dereferenced) value: "std::string *"
 ///     
 ///     Decorating packet with instance of `const std::string *`:
-///     Ostrich2::AutoFilter(const std::string *) was called with (dereferenced) value: "const std::string *"
+///     Ostrich1::AutoFilter(const std::string *) was called with (dereferenced) value: "const std::string *"
 ///     
 ///     All Hippo# context members received the expected inputs.
 ///     All Ostrich# context members received the expected inputs.
