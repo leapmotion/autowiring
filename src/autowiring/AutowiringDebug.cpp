@@ -193,6 +193,54 @@ std::vector<std::string> autowiring::dbg::ListRootDecorations(void) {
   return retVal;
 }
 
+void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os) {
+  WriteAutoFilterGraph(os, AutoCurrentContext());
+}
+
+void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<CoreContext> ctxt) {
+  CurrentContextPusher pshr(ctxt);
+  Autowired<AutoPacketFactory> factory;
+
+  // Write opening and closing parts of file. Now, we only need to write edges
+  os << "graph " << autowiring::demangle(ctxt->GetSigilType()) << " {" << std::endl;
+  MakeAtExit([&os]{
+    os << "}" << std::endl;
+  });
+
+  // If no factory, this is an empty network
+  if (!factory) {
+    return;
+  }
+
+  // Obtain all descriptors:
+  const std::vector<AutoFilterDescriptor> descs = factory->GetAutoFilters();
+
+  // Create map of input type, to filters that receive that input
+  std::unordered_map<const std::type_info*, std::vector<AutoFilterDescriptor>> receivers;
+
+  for (const auto& desc : descs) {
+    auto args = desc.GetAutoFilterArguments();
+    for (size_t i = 0; i < desc.GetArity(); i++) {
+      const AutoFilterArgument& arg = args[i];
+
+      if (arg.is_input)
+        receivers[arg.ti].push_back(desc);
+    }
+  }
+
+  // Write edges from outputs to receivers
+  for (const auto& desc : descs) {
+    auto args = desc.GetAutoFilterArguments();
+    for (size_t i = 0; i < desc.GetArity(); i++) {
+      const AutoFilterArgument& arg = args[i];
+
+      if (arg.is_output)
+        for (const auto& filter : receivers[arg.ti])
+          os << autowiring::demangle(desc.GetType()) << " -> " << autowiring::demangle(filter.GetType()) << std::endl;
+    }
+  }
+}
+
 void autowiring::dbg::DebugInit(void) {
 
 }

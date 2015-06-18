@@ -6,6 +6,7 @@
 
 struct AutoFilterDescriptor;
 class AutoPacket;
+class CoreContext;
 
 namespace autowiring {
 namespace dbg {
@@ -47,6 +48,14 @@ std::string AutoFilterInfo(const char* name);
 /// </summary>
 /// <param name="name">The name of the filter</param>
 std::vector<std::string> ListRootDecorations(void);
+
+/// <summary>
+/// Write a DOT file representing the AutoFilter
+/// </summary>
+/// <param name="ctxt">Context of AutoFilter network to output. Defaults to AutoCurrentContext</param>
+/// <param name="os">output stream to write DOT file</param>
+void WriteAutoFilterGraph(std::ostream& os);
+void WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<CoreContext> ctxt);
 
 /// <summary>
 /// Initializes the Autowiring debug library
