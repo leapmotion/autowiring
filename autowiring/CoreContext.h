@@ -586,7 +586,7 @@ private:
   /// Creation helper routine
   /// </summary>
   template<class T>
-  static std::shared_ptr<CoreContext> UntypedCreate(
+  static std::shared_ptr<CoreContext> CreateUntyped(
     std::shared_ptr<CoreContext> pParent,
     t_childList::iterator backReference
   ) {
@@ -601,7 +601,7 @@ public:
   /// <param name="inj">An injectable type.</param>
   template<class T>
   std::shared_ptr<CoreContextT<T>> Create(AutoInjectable&& inj) {
-    return std::static_pointer_cast<CoreContextT<T>>(CreateInternal(&CoreContext::UntypedCreate<T>, std::move(inj)));
+    return std::static_pointer_cast<CoreContextT<T>>(CreateInternal(&CoreContext::CreateUntyped<T>, std::move(inj)));
   }
 
   /// <summary>
@@ -618,7 +618,7 @@ public:
   /// </remarks>
   template<class T>
   std::shared_ptr<CoreContextT<T>> Create(void) {
-    return std::static_pointer_cast<CoreContextT<T>>(CreateInternal(&CoreContext::UntypedCreate<T>));
+    return std::static_pointer_cast<CoreContextT<T>>(CreateInternal(&CoreContext::CreateUntyped<T>));
   }
 
   /// <summary>
