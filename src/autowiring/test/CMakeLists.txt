@@ -34,6 +34,7 @@ set(AutowiringTest_SRCS
   CoreThreadTest.cpp
   CurrentContextPusherTest.cpp
   DecoratorTest.cpp
+  DemangleTest.cpp
   DispatchQueueTest.cpp
   DtorCorrectnessTest.hpp
   DtorCorrectnessTest.cpp

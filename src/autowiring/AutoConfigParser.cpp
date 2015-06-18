@@ -5,13 +5,12 @@
 #include <stdexcept>
 
 std::string autowiring::ExtractKey(const std::string& demangled) {
-  //Extract Namespace and value from typename
-  //struct ConfigTypeExtractor<struct Namespace, class ..., struct Value>
-  //Or on unix: ConfigTypeExtractor<Namespace, ..., Value>
+  // Extract Namespace and value from typename
+  // ConfigTypeExtractor<Namespace, ..., Value>
 
   const auto identifiersStart = demangled.find('<');
   const auto identifiersEnd = demangled.rfind('>');
-  if (identifiersStart == (std::string::npos) || identifiersEnd == std::string::npos)
+  if (identifiersStart == std::string::npos || identifiersEnd == std::string::npos)
     return std::string();
 
   std::string key;
