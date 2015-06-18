@@ -43,7 +43,7 @@ static std::string DemangleWithAutoID(const std::type_info& ti) {
 
   if (retVal.compare(0, sizeof(prefix) - 1, prefix) == 0) {
     size_t off = sizeof(prefix) - 1;
-    retVal = retVal.substr(off, retVal.length() - off - 2);
+    retVal = retVal.substr(off, retVal.length() - off - 1);
   }
   return retVal;
 }
@@ -202,8 +202,8 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<Cor
   Autowired<AutoPacketFactory> factory;
 
   // Write opening and closing parts of file. Now, we only need to write edges
-  os << "graph " << autowiring::demangle(ctxt->GetSigilType()) << " {" << std::endl;
-  MakeAtExit([&os]{
+  os << "digraph " << autowiring::demangle(ctxt->GetSigilType()) << " {" << std::endl;
+  auto exit = MakeAtExit([&os]{
     os << "}" << std::endl;
   });
 
@@ -216,7 +216,7 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<Cor
   const std::vector<AutoFilterDescriptor> descs = factory->GetAutoFilters();
 
   // Create map of input type, to filters that receive that input
-  std::unordered_map<const std::type_info*, std::vector<AutoFilterDescriptor>> receivers;
+  std::unordered_map<const std::type_info*, std::vector<std::pair<AutoFilterDescriptor, AutoFilterArgument>>> receivers;
 
   for (const auto& desc : descs) {
     auto args = desc.GetAutoFilterArguments();
@@ -224,7 +224,7 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<Cor
       const AutoFilterArgument& arg = args[i];
 
       if (arg.is_input)
-        receivers[arg.ti].push_back(desc);
+        receivers[arg.ti].push_back(std::make_pair(desc, arg));
     }
   }
 
@@ -235,8 +235,24 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<Cor
       const AutoFilterArgument& arg = args[i];
 
       if (arg.is_output)
-        for (const auto& filter : receivers[arg.ti])
-          os << autowiring::demangle(desc.GetType()) << " -> " << autowiring::demangle(filter.GetType()) << std::endl;
+        for (const auto& filter : receivers[arg.ti]) {
+          const AutoFilterDescriptor& inDesc = filter.first;
+          const AutoFilterArgument& inArg = filter.second;
+
+          // Write edge
+          os << autowiring::demangle(desc.GetType()) << " -> " << autowiring::demangle(inDesc.GetType()) << " ";
+
+          // Add label with decoration type
+          os << "[";
+          os << "label=\"" << DemangleWithAutoID(*arg.ti) << "\" ";
+
+          // Make dotted line if timeshifted input
+          if (inArg.tshift) {
+            os << "style=dotted ";
+          }
+
+          os << "];" << std::endl;
+        }
     }
   }
 }
