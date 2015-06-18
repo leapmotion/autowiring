@@ -6,6 +6,10 @@
 
 DispatchQueue::DispatchQueue(void) {}
 
+DispatchQueue::DispatchQueue(size_t dispatchCap):
+  m_dispatchCap(dispatchCap)
+{}
+
 DispatchQueue::~DispatchQueue(void) {
   // Wipe out each entry in the queue, we can't call any of them because we're in teardown
   for (auto cur = m_pHead; cur;) {

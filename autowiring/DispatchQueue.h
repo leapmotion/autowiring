@@ -20,6 +20,7 @@ class DispatchQueue;
 class DispatchQueue {
 public:
   DispatchQueue(void);
+  DispatchQueue(size_t dispatchCap);
   DispatchQueue(DispatchQueue&&) = delete;
   DispatchQueue(const DispatchQueue&) = delete;
 
