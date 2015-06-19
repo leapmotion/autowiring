@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "AutowiringDebug.h"
 #include "Autowired.h"
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -215,44 +216,61 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<Cor
   // Obtain all descriptors:
   const std::vector<AutoFilterDescriptor> descs = factory->GetAutoFilters();
 
-  // Create map of input type, to filters that receive that input
-  std::unordered_map<const std::type_info*, std::vector<std::pair<AutoFilterDescriptor, AutoFilterArgument>>> receivers;
+  std::set<std::string> decorations;
+  std::set<std::string> filters;
+  std::unordered_map<std::string, int> idMap; // demangled name to ID
+
+  // give each node a unique id
+  int idCounter = 0;
 
   for (const auto& desc : descs) {
+    std::string filter = autowiring::demangle(desc.GetType());
+
+    // Assign each filter an ID
+    if (!filters.count(filter)) {
+      filters.insert(filter);
+      idMap[filter] = idCounter++;
+    }
+
     auto args = desc.GetAutoFilterArguments();
     for (size_t i = 0; i < desc.GetArity(); i++) {
       const AutoFilterArgument& arg = args[i];
 
-      if (arg.is_input)
-        receivers[arg.ti].push_back(std::make_pair(desc, arg));
+      std::string decoration = DemangleWithAutoID(*arg.ti);
+
+      // Assign each decoration and ID
+      if (!decorations.count(decoration)) {
+        decorations.insert(decoration);
+        idMap[decoration] = idCounter++;
+      }
+
+      // Add edge
+      if (arg.is_input) {
+        os << idMap[decoration] << " -> " << idMap[filter];
+      } else {
+        os << idMap[filter] << " -> " << idMap[decoration];
+      }
+
+      // Label time shifted edges
+      if (arg.tshift) {
+        os << " [style=dotted label=\"prev=" << arg.tshift << "\"]";
+      }
+
+      os << std::endl;
     }
   }
 
-  // Write edges from outputs to receivers
-  for (const auto& desc : descs) {
-    auto args = desc.GetAutoFilterArguments();
-    for (size_t i = 0; i < desc.GetArity(); i++) {
-      const AutoFilterArgument& arg = args[i];
+  // Label each node with its demangled name
+  for (const auto& node : idMap) {
+    std::string name = node.first;
+    int id = node.second;
 
-      if (arg.is_output)
-        for (const auto& filter : receivers[arg.ti]) {
-          const AutoFilterDescriptor& inDesc = filter.first;
-          const AutoFilterArgument& inArg = filter.second;
+    if (decorations.count(name)) {
+      os << id << " [shape=oval label=\""<< name << "\"];" << std::endl;
+    }
 
-          // Write edge
-          os << autowiring::demangle(desc.GetType()) << " -> " << autowiring::demangle(inDesc.GetType()) << " ";
-
-          // Add label with decoration type
-          os << "[";
-          os << "label=\"" << DemangleWithAutoID(*arg.ti) << "\" ";
-
-          // Make dotted line if timeshifted input
-          if (inArg.tshift) {
-            os << "style=dotted ";
-          }
-
-          os << "];" << std::endl;
-        }
+    if (filters.count(name)) {
+      os << id << " [shape=box label=\""<< name << "\"];" << std::endl;
     }
   }
 }

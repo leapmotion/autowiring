@@ -111,11 +111,14 @@ TEST_F(AutowiringDebugTest, BasicAutoFilterGraph) {
   AutoRequired<IntOutputer> filter1;
   AutoRequired<IntInFloatOut> filter2;
   AutoRequired<IntInFloatIn> filter3;
-  AutoCurrentContext()->Initiate();
 
+  *factory += [](auto_prev<float> in, std::string& out) {
+    out = "hello world";
+  };
+
+  AutoCurrentContext()->Initiate();
   auto packet = factory->NewPacket();
 
-  std::ofstream f("test.dot");
-  autowiring::dbg::WriteAutoFilterGraph(f);
+  autowiring::dbg::WriteAutoFilterGraph(std::cout);
   
 }
