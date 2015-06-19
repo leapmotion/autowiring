@@ -101,9 +101,7 @@ struct IntInFloatOut {
 };
 
 struct IntInFloatIn {
-  void AutoFilter(const int& i, const float& f) {
-    std::cout << static_cast<float>(i) + f << std::endl;
-  }
+  void AutoFilter(const int& i, const float& f) {}
 };
 
 TEST_F(AutowiringDebugTest, BasicAutoFilterGraph) {
@@ -116,9 +114,14 @@ TEST_F(AutowiringDebugTest, BasicAutoFilterGraph) {
     out = "hello world";
   };
 
+  *factory += [](double& out) { out = 3.0;};
+  *factory += [](double& out) { out = 4.0; };
+
+  *factory += [](const double* vals []){};
+
   AutoCurrentContext()->Initiate();
   auto packet = factory->NewPacket();
 
-  autowiring::dbg::WriteAutoFilterGraph(std::cout);
-  
+  std::stringstream ss;
+  autowiring::dbg::WriteAutoFilterGraph(ss);
 }
