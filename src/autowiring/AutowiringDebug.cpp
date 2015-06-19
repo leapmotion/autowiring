@@ -139,7 +139,7 @@ std::string autowiring::dbg::AutoFilterInfo(const char* name) {
     return "Filter not found";
 
   std::ostringstream os;
-  std::function<void(const AutoFilterDescriptor&, int)> fnCall = [&](const AutoFilterDescriptor& desc, size_t nLevels) {
+  std::function<void(const AutoFilterDescriptor&, size_t)> fnCall = [&](const AutoFilterDescriptor& desc, size_t nLevels) {
     auto args = desc.GetAutoFilterArguments();
 
     for (size_t i = 0; i < desc.GetArity(); i++) {
@@ -152,7 +152,7 @@ std::string autowiring::dbg::AutoFilterInfo(const char* name) {
         auto providerArg = providerDesc.GetArgumentType(args[i].ti);
         if (providerArg && providerArg->is_output) {
           // Need to print information about this provider:
-          os << demangle(*args[i].ti) << ' ' << std::string(' ', nLevels) << demangle(*providerDesc.GetType()) << std::endl;
+          os << demangle(*args[i].ti) << ' ' << std::string(nLevels, ' ') << demangle(*providerDesc.GetType()) << std::endl;
 
           // The current descriptor provides an input to the parent, recurse
           fnCall(providerDesc, nLevels + 1);
