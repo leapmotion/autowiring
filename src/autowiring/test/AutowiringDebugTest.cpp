@@ -4,6 +4,7 @@
 #include <autowiring/AutowiringDebug.h>
 #include "TestFixtures/Decoration.hpp"
 #include <algorithm>
+#include <fstream>
 
 class AutowiringDebugTest:
   public testing::Test
@@ -85,4 +86,42 @@ TEST_F(AutowiringDebugTest, ContextPrintout) {
   output.erase(std::remove_if(output.begin(), output.end(), [](char ch) { return ch == ' '; }), output.end());
 
   ASSERT_EQ(tree, output) << "Didn't print correct tree";
+}
+
+struct IntOutputer {
+  void AutoFilter(int& i) {
+    i = 4;
+  }
+};
+
+struct IntInFloatOut {
+  void AutoFilter(const int& i, float& f) {
+    f = static_cast<float>(i) + 3;
+  }
+};
+
+struct IntInFloatIn {
+  void AutoFilter(const int& i, const float& f) {}
+};
+
+TEST_F(AutowiringDebugTest, BasicAutoFilterGraph) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoRequired<IntOutputer> filter1;
+  AutoRequired<IntInFloatOut> filter2;
+  AutoRequired<IntInFloatIn> filter3;
+
+  *factory += [](auto_prev<float> in, std::string& out) {
+    out = "hello world";
+  };
+
+  *factory += [](double& out) { out = 3.0;};
+  *factory += [](double& out) { out = 4.0; };
+
+  *factory += [](const double* vals []){};
+
+  AutoCurrentContext()->Initiate();
+  auto packet = factory->NewPacket();
+
+  std::stringstream ss;
+  autowiring::dbg::WriteAutoFilterGraph(ss);
 }

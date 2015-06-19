@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "AutowiringDebug.h"
 #include "Autowired.h"
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -43,7 +44,8 @@ static std::string DemangleWithAutoID(const std::type_info& ti) {
 
   if (retVal.compare(0, sizeof(prefix) - 1, prefix) == 0) {
     size_t off = sizeof(prefix) - 1;
-    retVal = retVal.substr(off, retVal.length() - off - 2);
+    size_t end = retVal.find_last_not_of(' ', retVal.find_last_of('>') - 1);
+    retVal = retVal.substr(off, end - off + 1);
   }
   return retVal;
 }
@@ -89,6 +91,10 @@ void PrintContextTreeRecursive(std::ostream& os, std::shared_ptr<CoreContext> ct
 
 void autowiring::dbg::PrintContextTree(std::ostream& os) {
   PrintContextTreeRecursive(os, AutoGlobalContext());
+}
+
+void autowiring::dbg::PrintContextTree(void) {
+  PrintContextTreeRecursive(std::cout, AutoGlobalContext());
 }
 
 AutoPacket* autowiring::dbg::CurrentPacket(void) {
@@ -191,6 +197,86 @@ std::vector<std::string> autowiring::dbg::ListRootDecorations(void) {
     if (input.second)
       retVal.push_back(DemangleWithAutoID(*input.second));
   return retVal;
+}
+
+void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os) {
+  WriteAutoFilterGraph(os, AutoCurrentContext());
+}
+
+void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<CoreContext> ctxt) {
+  CurrentContextPusher pshr(ctxt);
+  Autowired<AutoPacketFactory> factory;
+
+  // Write opening and closing parts of file. Now, we only need to write edges
+  os << "digraph " << autowiring::demangle(ctxt->GetSigilType()) << " {" << std::endl;
+  auto exit = MakeAtExit([&os]{
+    os << "}" << std::endl;
+  });
+
+  // If no factory, this is an empty network
+  if (!factory) {
+    return;
+  }
+
+  // Obtain all descriptors:
+  const std::vector<AutoFilterDescriptor> descs = factory->GetAutoFilters();
+
+  std::unordered_map<std::string, int> decorations; // demangled name to ID
+  std::unordered_map<std::string, int> filters; // demangled name to ID
+
+  // give each node a unique id
+  int idCounter = 0;
+
+  for (const auto& desc : descs) {
+    std::string filter = autowiring::demangle(desc.GetType());
+
+    // Assign each filter an ID
+    if (filters.find(filter) == filters.end()) {
+      filters[filter] = idCounter++;
+    }
+
+    auto args = desc.GetAutoFilterArguments();
+    for (size_t i = 0; i < desc.GetArity(); i++) {
+      const AutoFilterArgument& arg = args[i];
+
+      std::string decoration = DemangleWithAutoID(*arg.ti);
+
+      // Assign each decoration and ID
+      if (decorations.find(decoration) == decorations.end()) {
+        decorations[decoration] = idCounter++;
+      }
+
+      // Add edge
+      if (arg.is_input) {
+        os << decorations[decoration] << " -> " << filters[filter];
+      } else {
+        os << filters[filter] << " -> " << decorations[decoration];
+      }
+
+      // Label time shifted edges
+      if (arg.tshift) {
+        os << " [style=dotted label=\"prev=" << arg.tshift << "\"]";
+      }
+
+      os << std::endl;
+    }
+  }
+
+  // Label each filter with its demangled name
+  for (const auto& filter : filters) {
+    const std::string& name = filter.first;
+    int id = filter.second;
+
+    os << id << " [shape=box label=\""<< name << "\"];" << std::endl;
+  }
+
+  // Label each decoration with its demangled name
+  for (const auto& decoration : decorations) {
+    const std::string& name = decoration.first;
+    int id = decoration.second;
+
+    os << id << " [shape=oval label=\""<< name << "\"];" << std::endl;
+  }
 }
 
 void autowiring::dbg::DebugInit(void) {
