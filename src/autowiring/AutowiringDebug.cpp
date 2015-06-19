@@ -216,9 +216,8 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<Cor
   // Obtain all descriptors:
   const std::vector<AutoFilterDescriptor> descs = factory->GetAutoFilters();
 
-  std::set<std::string> decorations;
-  std::set<std::string> filters;
-  std::unordered_map<std::string, int> idMap; // demangled name to ID
+  std::unordered_map<std::string, int> decorations; // demangled name to ID
+  std::unordered_map<std::string, int> filters; // demangled name to ID
 
   // give each node a unique id
   int idCounter = 0;
@@ -227,9 +226,8 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<Cor
     std::string filter = autowiring::demangle(desc.GetType());
 
     // Assign each filter an ID
-    if (!filters.count(filter)) {
-      filters.insert(filter);
-      idMap[filter] = idCounter++;
+    if (filters.find(filter) == filters.end()) {
+      filters[filter] = idCounter++;
     }
 
     auto args = desc.GetAutoFilterArguments();
@@ -239,16 +237,15 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<Cor
       std::string decoration = DemangleWithAutoID(*arg.ti);
 
       // Assign each decoration and ID
-      if (!decorations.count(decoration)) {
-        decorations.insert(decoration);
-        idMap[decoration] = idCounter++;
+      if (decorations.find(decoration) == decorations.end()) {
+        decorations[decoration] = idCounter++;
       }
 
       // Add edge
       if (arg.is_input) {
-        os << idMap[decoration] << " -> " << idMap[filter];
+        os << decorations[decoration] << " -> " << filters[filter];
       } else {
-        os << idMap[filter] << " -> " << idMap[decoration];
+        os << filters[filter] << " -> " << decorations[decoration];
       }
 
       // Label time shifted edges
@@ -260,18 +257,20 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<Cor
     }
   }
 
-  // Label each node with its demangled name
-  for (const auto& node : idMap) {
-    std::string name = node.first;
-    int id = node.second;
+  // Label each filter with its demangled name
+  for (const auto& filter : filters) {
+    const std::string& name = filter.first;
+    int id = filter.second;
 
-    if (decorations.count(name)) {
-      os << id << " [shape=oval label=\""<< name << "\"];" << std::endl;
-    }
+    os << id << " [shape=box label=\""<< name << "\"];" << std::endl;
+  }
 
-    if (filters.count(name)) {
-      os << id << " [shape=box label=\""<< name << "\"];" << std::endl;
-    }
+  // Label each decoration with its demangled name
+  for (const auto& decoration : decorations) {
+    const std::string& name = decoration.first;
+    int id = decoration.second;
+
+    os << id << " [shape=oval label=\""<< name << "\"];" << std::endl;
   }
 }
 
