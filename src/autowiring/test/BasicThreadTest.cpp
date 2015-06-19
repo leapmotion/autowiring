@@ -70,9 +70,7 @@ TEST_F(BasicThreadTest, IsMainThread) {
   ASSERT_TRUE(BasicThread::IsMainThread()) << "Main thread not correctly identified as the main thread";
   std::future<bool> secondaryIsMain = std::async(
     std::launch::async,
-    [] {
-      return BasicThread::IsMainThread();
-    }
+    &BasicThread::IsMainThread
   );
   ASSERT_FALSE(secondaryIsMain.get()) << "Secondary thread incorrectly identified as the main thread";
 }
