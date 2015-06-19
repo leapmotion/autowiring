@@ -93,6 +93,10 @@ void autowiring::dbg::PrintContextTree(std::ostream& os) {
   PrintContextTreeRecursive(os, AutoGlobalContext());
 }
 
+void autowiring::dbg::PrintContextTree(void) {
+  PrintContextTreeRecursive(std::cout, AutoGlobalContext());
+}
+
 AutoPacket* autowiring::dbg::CurrentPacket(void) {
   Autowired<AutoPacketFactory> factory;
   if (!factory)
