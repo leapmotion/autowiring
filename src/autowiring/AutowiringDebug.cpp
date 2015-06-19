@@ -44,7 +44,8 @@ static std::string DemangleWithAutoID(const std::type_info& ti) {
 
   if (retVal.compare(0, sizeof(prefix) - 1, prefix) == 0) {
     size_t off = sizeof(prefix) - 1;
-    retVal = retVal.substr(off, retVal.length() - off - 1);
+    size_t end = retVal.find_last_not_of(' ', retVal.find_last_of('>') - 1);
+    retVal = retVal.substr(off, end - off + 1);
   }
   return retVal;
 }
