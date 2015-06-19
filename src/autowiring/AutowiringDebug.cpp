@@ -203,6 +203,12 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os) {
   WriteAutoFilterGraph(os, AutoCurrentContext());
 }
 
+std::string WriteAutoFilterGraph(void) {
+  std::stringstream ss;
+  WriteAutoFilterGraph(ss);
+  return ss.str();
+}
+
 void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<CoreContext> ctxt) {
   CurrentContextPusher pshr(ctxt);
   Autowired<AutoPacketFactory> factory;
