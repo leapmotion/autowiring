@@ -390,6 +390,7 @@ public:
   /// </remarks>
   template<class T>
   const T& Decorate(T t) {
+    static_assert(!std::is_pointer<T>::value, "Can't decorate using a pointer type.");
     // Create a copy of the input, put the copy in a shared pointer
     auto ptr = std::make_shared<T>(std::forward<T&&>(t));
     Decorate(
