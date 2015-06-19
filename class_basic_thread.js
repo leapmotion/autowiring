@@ -11,6 +11,7 @@ var class_basic_thread =
     [ "GetLock", "class_basic_thread.html#a1d7ede51afd942a19ea957e1f7cad304", null ],
     [ "GetThreadTimes", "class_basic_thread.html#a643d476885ee38306b061d7fb37c126f", null ],
     [ "IsCompleted", "class_basic_thread.html#a2c6d0e971236f28d25eaef0bffb6181e", null ],
+    [ "IsMainThread", "class_basic_thread.html#aa5fbc237ea2f1034509db47d0ed2f639", null ],
     [ "OnStart", "class_basic_thread.html#a64061568019d519e3a27d1d3a840c741", null ],
     [ "OnStop", "class_basic_thread.html#abb056d8402460ea96e350e2b9dcc2f4d", null ],
     [ "OnStop", "class_basic_thread.html#a1186558c53eb71abc32af737376b44f3", null ],

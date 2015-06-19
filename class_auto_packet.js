@@ -15,6 +15,7 @@ var class_auto_packet =
     [ "Get", "class_auto_packet.html#a39c55fd5996f492dfa2d2ce68448fb67", null ],
     [ "Get", "class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7", null ],
     [ "GetAll", "class_auto_packet.html#a7b3fb6084dc850b1b9d077726104541f", null ],
+    [ "GetAllShared", "class_auto_packet.html#a83083664deb879a30addd33b1e69230c", null ],
     [ "GetContext", "class_auto_packet.html#ab194d4255c47b1d85d9b8b27a14f3f07", null ],
     [ "GetDecorations", "class_auto_packet.html#aa1235227e171d7229b72d3901e6d1042", null ],
     [ "GetDecorationTypeCount", "class_auto_packet.html#ad162cefce3bd9980fa2984c29f2a2517", null ],

@@ -7,6 +7,7 @@ var searchData=
   ['auto_5farg_3c_20autopacket_20_26_20_3e',['auto_arg&lt; AutoPacket &amp; &gt;',['../classauto__arg_3_01_auto_packet_01_6_01_4.html',1,'']]],
   ['auto_5farg_3c_20const_20t_20_26_20_3e',['auto_arg&lt; const T &amp; &gt;',['../classauto__arg_3_01const_01_t_01_6_01_4.html',1,'']]],
   ['auto_5farg_3c_20const_20t_20_3e',['auto_arg&lt; const T &gt;',['../classauto__arg_3_01const_01_t_01_4.html',1,'']]],
+  ['auto_5farg_3c_20std_3a_3ashared_5fptr_3c_20const_20t_20_3e_20_2a_20_3e',['auto_arg&lt; std::shared_ptr&lt; const T &gt; * &gt;',['../classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_5_01_4.html',1,'']]],
   ['auto_5farg_3c_20std_3a_3ashared_5fptr_3c_20const_20t_20_3e_20_3e',['auto_arg&lt; std::shared_ptr&lt; const T &gt; &gt;',['../classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_4.html',1,'']]],
   ['auto_5farg_3c_20std_3a_3ashared_5fptr_3c_20t_20_3e_20_26_20_3e',['auto_arg&lt; std::shared_ptr&lt; T &gt; &amp; &gt;',['../classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_01_4.html',1,'']]],
   ['auto_5farg_3c_20std_3a_3ashared_5fptr_3c_20t_20_3e_20_3e',['auto_arg&lt; std::shared_ptr&lt; T &gt; &gt;',['../classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_4.html',1,'']]],

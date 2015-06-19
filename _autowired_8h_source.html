@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.6.0</span>
+   &#160;<span id="projectnumber">0.7.0</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -112,8 +112,8 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <a href="_autowired_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;auto_signal.h&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;AutowirableSlot.h&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Decompose.h&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;AutowiringDebug.h&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;AutowirableSlot.h&quot;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_global_core_context_8h.html">GlobalCoreContext.h</a>&quot;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include MEMORY_HEADER</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include ATOMIC_HEADER</span></div>
@@ -471,7 +471,7 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <div class="ttc" id="class_autowired_html_a809ba72dfc0e7a010a6a3ae09c186955"><div class="ttname"><a href="class_autowired.html#a809ba72dfc0e7a010a6a3ae09c186955">Autowired::NotifyWhenAutowired</a></div><div class="ttdeci">void NotifyWhenAutowired(Fn fn)</div><div class="ttdoc">Assigns a lambda function to be called when the dependency for this slot is autowired. </div><div class="ttdef"><b>Definition:</b> Autowired.h:209</div></div>
 <div class="ttc" id="class_auto_create_context_t_html"><div class="ttname"><a href="class_auto_create_context_t.html">AutoCreateContextT</a></div><div class="ttdoc">Provides a simple way to create a child of the current context using a sigil. </div><div class="ttdef"><b>Definition:</b> Autowired.h:56</div></div>
 <div class="ttc" id="class_auto_required_html"><div class="ttname"><a href="class_auto_required.html">AutoRequired</a></div><div class="ttdoc">Autowires the specified dependency, creating a new instance if one does not already exist...</div><div class="ttdef"><b>Definition:</b> Autowired.h:272</div></div>
-<div class="ttc" id="class_core_context_html_a3f8e26f6c2f8e94bdff0f2e2870b6836"><div class="ttname"><a href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a></div><div class="ttdeci">static std::shared_ptr&lt; CoreContext &gt; CurrentContext(void)</div><div class="ttdoc">The shared pointer to the current context. </div></div>
+<div class="ttc" id="class_core_context_html_a3f8e26f6c2f8e94bdff0f2e2870b6836"><div class="ttname"><a href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a></div><div class="ttdeci">static std::shared_ptr&lt; CoreContext &gt; CurrentContext(void)</div><div class="ttdoc">Identical to CurrentContextNoCheck, except returns the global context instead of a null pointer ...</div></div>
 <div class="ttc" id="_auto_packet_factory_8h_html"><div class="ttname"><a href="_auto_packet_factory_8h.html">AutoPacketFactory.h</a></div></div>
 <div class="ttc" id="class_auto_current_context_html"><div class="ttname"><a href="class_auto_current_context.html">AutoCurrentContext</a></div><div class="ttdoc">Provides a reference to the current context. </div><div class="ttdef"><b>Definition:</b> Autowired.h:22</div></div>
 <div class="ttc" id="class_auto_required_html_a64e2c65e4a28a6a28c0ba96a11d94e33"><div class="ttname"><a href="class_auto_required.html#a64e2c65e4a28a6a28c0ba96a11d94e33">AutoRequired::AutoRequired</a></div><div class="ttdeci">AutoRequired(const std::shared_ptr&lt; CoreContext &gt; &amp;ctxt, Args &amp;&amp;...args)</div><div class="ttdoc">AutoRequired overload that forwards constructor arguments to the type being wired. </div><div class="ttdef"><b>Definition:</b> Autowired.h:309</div></div>
@@ -487,7 +487,7 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_autowired_8h.html">Autowired.h</a></li>
-    <li class="footer">Generated on Mon Jun 15 2015 11:10:30 for Autowiring by
+    <li class="footer">Generated on Fri Jun 19 2015 17:25:35 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.6.0</span>
+   &#160;<span id="projectnumber">0.7.0</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -150,12 +150,22 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a7dfade595ca37b082e41d6fb7e415876"><td class="memItemLeft" align="right" valign="top">SatCounter *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#a7dfade595ca37b082e41d6fb7e415876">CreateSatCounterList</a> (void) const </td></tr>
 <tr class="memdesc:a7dfade595ca37b082e41d6fb7e415876"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a linked list of saturation counters  <a href="#a7dfade595ca37b082e41d6fb7e415876">More...</a><br /></td></tr>
 <tr class="separator:a7dfade595ca37b082e41d6fb7e415876"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ec111268055a58305cb0f8b582b73e0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ec111268055a58305cb0f8b582b73e0"></a>
+std::shared_ptr&lt; <a class="el" href="class_auto_packet.html">AutoPacket</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#a7ec111268055a58305cb0f8b582b73e0">CurrentPacket</a> (void)</td></tr>
+<tr class="memdesc:a7ec111268055a58305cb0f8b582b73e0"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>The most recently issued packet, or possibly nullptr if that packet has already been destroyed </dd></dl>
+<br /></td></tr>
+<tr class="separator:a7ec111268055a58305cb0f8b582b73e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adcff2e0a4fd863f3a618973c6c5d6b3f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#adcff2e0a4fd863f3a618973c6c5d6b3f">DoAdditionalWait</a> (void) override</td></tr>
 <tr class="memdesc:adcff2e0a4fd863f3a618973c6c5d6b3f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Untimed variant of DoAdditionalWait  <a href="#adcff2e0a4fd863f3a618973c6c5d6b3f">More...</a><br /></td></tr>
 <tr class="separator:adcff2e0a4fd863f3a618973c6c5d6b3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa969b149c74e23e0ee708481ec90ec94"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#aa969b149c74e23e0ee708481ec90ec94">DoAdditionalWait</a> (std::chrono::nanoseconds timeout) override</td></tr>
 <tr class="memdesc:aa969b149c74e23e0ee708481ec90ec94"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked just before control is returned to the user.  <a href="#aa969b149c74e23e0ee708481ec90ec94">More...</a><br /></td></tr>
 <tr class="separator:aa969b149c74e23e0ee708481ec90ec94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acad58c3ecf73ff5d6dc9c84c70d923bd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acad58c3ecf73ff5d6dc9c84c70d923bd"></a>
+std::vector&lt; AutoFilterDescriptor &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#acad58c3ecf73ff5d6dc9c84c70d923bd">GetAutoFilters</a> (void) const </td></tr>
+<tr class="memdesc:acad58c3ecf73ff5d6dc9c84c70d923bd"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>A copy of all AutoFilter instances on this class </dd></dl>
+<br /></td></tr>
+<tr class="separator:acad58c3ecf73ff5d6dc9c84c70d923bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa14ee291b0bdb1c8131f268c4a7265c0"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet_factory.html#aa14ee291b0bdb1c8131f268c4a7265c0">GetMeanPacketLifetime</a> (void)</td></tr>
 <tr class="memdesc:aa14ee291b0bdb1c8131f268c4a7265c0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the mean lifespan of AutoPackets in nanoseconds since the last statistics reset.  <a href="#aa14ee291b0bdb1c8131f268c4a7265c0">More...</a><br /></td></tr>
 <tr class="separator:aa14ee291b0bdb1c8131f268c4a7265c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -741,7 +751,7 @@ template&lt;class Fx &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_auto_packet_factory.html">AutoPacketFactory</a></li>
-    <li class="footer">Generated on Mon Jun 15 2015 11:10:30 for Autowiring by
+    <li class="footer">Generated on Fri Jun 19 2015 17:25:35 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

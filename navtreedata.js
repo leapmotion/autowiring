@@ -4,6 +4,7 @@ var NAVTREE =
     [ "Autowiring IoC Framework", "index.html", null ],
     [ "Autofilters", "md_devguide__auto_filters.html", null ],
     [ "Contexts", "md_devguide__contexts.html", null ],
+    [ "Tutorials", "_tutorials.html", "_tutorials" ],
     [ "Namespace List", "namespaces.html", "namespaces" ],
     [ "Namespace Members", "namespacemembers.html", [
       [ "All", "namespacemembers.html", null ],
@@ -27,7 +28,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "_auto_config_8h.html",
-"class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836"
+"class_core_context.html#a6936a4534f8d5b7c959bfed783c0eed5"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

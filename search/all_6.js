@@ -2,6 +2,8 @@ var searchData=
 [
   ['get',['get',['../classauto__out.html#aafe294268c22edb9a8039c8362582b16',1,'auto_out::get()'],['../class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d',1,'AutoPacket::Get(int tshift=0) const '],['../class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b',1,'AutoPacket::Get(const T *&amp;out, int tshift=0) const '],['../class_auto_packet.html#a39c55fd5996f492dfa2d2ce68448fb67',1,'AutoPacket::Get(const std::shared_ptr&lt; T &gt; *&amp;out, int tshift=0) const '],['../class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7',1,'AutoPacket::Get(std::shared_ptr&lt; const T &gt; &amp;out, int tshift=0) const '],['../class_global_core_context.html#adfc57edc6952e0e8bd6eb982c2caef03',1,'GlobalCoreContext::Get()']]],
   ['getall',['GetAll',['../class_auto_packet.html#a7b3fb6084dc850b1b9d077726104541f',1,'AutoPacket']]],
+  ['getallshared',['GetAllShared',['../class_auto_packet.html#a83083664deb879a30addd33b1e69230c',1,'AutoPacket']]],
+  ['getautofilters',['GetAutoFilters',['../class_auto_packet_factory.html#acad58c3ecf73ff5d6dc9c84c70d923bd',1,'AutoPacketFactory']]],
   ['getautotypeid',['GetAutoTypeId',['../class_core_context.html#a61f9eacb9552d40849a03190f342ae64',1,'CoreContext']]],
   ['getbackreference',['GetBackReference',['../class_core_context.html#ae88653daf77a40b41dec8e64c175813d',1,'CoreContext']]],
   ['getchildcount',['GetChildCount',['../class_core_context.html#a26665562a7e88fb2ecb00e1ae56432c6',1,'CoreContext']]],

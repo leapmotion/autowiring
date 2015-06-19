@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.6.0</span>
+   &#160;<span id="projectnumber">0.7.0</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -380,18 +380,63 @@ $(document).ready(function(){initNavTree('auto__arg_8h_source.html','');});
 <div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  }</div>
 <div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;};</div>
 <div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00325"></a><span class="lineno"><a class="line" href="structarg__is__out.html">  325</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structarg__is__out.html">arg_is_out</a> {</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> value = <a class="code" href="classauto__arg.html">auto_arg&lt;T&gt;::is_output</a>;</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;};</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;<span class="keyword">class </span><a class="code" href="classauto__arg.html">auto_arg</a>&lt;T const *<span class="keyword">const</span>*&gt;:</div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;  <span class="keyword">public</span> <a class="code" href="classauto__arg_3_01_t_01const_01_5_5_01_4.html">auto_arg&lt;T const**&gt;</a></div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;{};</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00331"></a><span class="lineno"><a class="line" href="classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_5_01_4.html">  331</a></span>&#160;<span class="keyword">class </span><a class="code" href="classauto__arg.html">auto_arg</a>&lt;<a class="code" href="namespacestd.html">std</a>::shared_ptr&lt;const T&gt;*&gt;</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;{</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;  <span class="keyword">typedef</span> std::shared_ptr&lt;const T&gt;* arg_type;</div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;</div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;  <span class="keyword">struct </span>type {</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;    type(type&amp;&amp; rhs) :</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;      ptr(std::move(rhs.ptr))</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    {}</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    <span class="keyword">explicit</span> type(std::unique_ptr&lt;std::shared_ptr&lt;const T&gt;[]&gt; ptr) :</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;      ptr{std::move(ptr)}</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;    {}</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;</div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;    std::unique_ptr&lt;std::shared_ptr&lt;const T&gt;[]&gt; ptr;</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;    <span class="keyword">operator</span> std::shared_ptr&lt;const T&gt;*(void) <span class="keyword">const</span> { <span class="keywordflow">return</span> ptr.get(); }</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;  };</div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;  <span class="keyword">typedef</span> auto_id&lt;T&gt; id_type;</div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_input = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_output = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_shared = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_multi = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> tshift = 0;</div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> C&gt;</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;  <span class="keyword">static</span> type arg(C&amp; packet) {</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;    <span class="keywordflow">return</span> type{packet.template GetAllShared&lt;T&gt;()};</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;  }</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;};</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;<span class="keyword">class </span><a class="code" href="classauto__arg.html">auto_arg</a>&lt;const std::shared_ptr&lt;const T&gt;*&gt;:</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  <span class="keyword">public</span> <a class="code" href="classauto__arg.html">auto_arg</a>&lt;std::shared_ptr&lt;const T&gt;*&gt;</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;{};</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00373"></a><span class="lineno"><a class="line" href="structarg__is__out.html">  373</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structarg__is__out.html">arg_is_out</a> {</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> value = <a class="code" href="classauto__arg.html">auto_arg&lt;T&gt;::is_output</a>;</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;};</div>
 <div class="ttc" id="auto__prev_8h_html"><div class="ttname"><a href="auto__prev_8h.html">auto_prev.h</a></div></div>
 <div class="ttc" id="auto__in_8h_html"><div class="ttname"><a href="auto__in_8h.html">auto_in.h</a></div></div>
 <div class="ttc" id="namespacestd_html"><div class="ttname"><a href="namespacestd.html">std</a></div><div class="ttdoc">STL namespace. </div></div>
 <div class="ttc" id="class_auto_packet_html"><div class="ttname"><a href="class_auto_packet.html">AutoPacket</a></div><div class="ttdoc">A decorator-style processing packet </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:39</div></div>
-<div class="ttc" id="structarg__is__out_html"><div class="ttname"><a href="structarg__is__out.html">arg_is_out</a></div><div class="ttdoc">Utility predicate, used to assess whether T is an output argument </div><div class="ttdef"><b>Definition:</b> auto_arg.h:325</div></div>
+<div class="ttc" id="structarg__is__out_html"><div class="ttname"><a href="structarg__is__out.html">arg_is_out</a></div><div class="ttdoc">Utility predicate, used to assess whether T is an output argument </div><div class="ttdef"><b>Definition:</b> auto_arg.h:373</div></div>
 <div class="ttc" id="auto__out_8h_html"><div class="ttname"><a href="auto__out_8h.html">auto_out.h</a></div></div>
 <div class="ttc" id="structauto__arg__ctor__helper_html"><div class="ttname"><a href="structauto__arg__ctor__helper.html">auto_arg_ctor_helper</a></div><div class="ttdoc">Construction helper for output-by-reference decoration types </div><div class="ttdef"><b>Definition:</b> auto_arg.h:125</div></div>
 <div class="ttc" id="classauto__in_html"><div class="ttname"><a href="classauto__in.html">auto_in</a></div><div class="ttdoc">Fundamental type of required input arguments of AutoFilter methods. </div><div class="ttdef"><b>Definition:</b> auto_in.h:12</div></div>
+<div class="ttc" id="classauto__arg_3_01_t_01const_01_5_5_01_4_html"><div class="ttname"><a href="classauto__arg_3_01_t_01const_01_5_5_01_4.html">auto_arg&lt; T const ** &gt;</a></div><div class="ttdoc">Multi-in specialization </div><div class="ttdef"><b>Definition:</b> auto_arg.h:290</div></div>
 <div class="ttc" id="classauto__out_html"><div class="ttname"><a href="classauto__out.html">auto_out</a></div><div class="ttdoc">Declares an output of an AutoFilter method via an argument. </div><div class="ttdef"><b>Definition:</b> auto_out.h:16</div></div>
 <div class="ttc" id="structauto__prev_html"><div class="ttname"><a href="structauto__prev.html">auto_prev</a></div><div class="ttdoc">Identifier for AutoFilter inputs from the previous packet </div><div class="ttdef"><b>Definition:</b> auto_prev.h:12</div></div>
 <div class="ttc" id="classauto__arg_html"><div class="ttname"><a href="classauto__arg.html">auto_arg</a></div><div class="ttdoc">Reinterpret copied argument as input </div><div class="ttdef"><b>Definition:</b> auto_arg.h:27</div></div>
@@ -401,7 +446,7 @@ $(document).ready(function(){initNavTree('auto__arg_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="auto__arg_8h.html">auto_arg.h</a></li>
-    <li class="footer">Generated on Mon Jun 15 2015 11:10:29 for Autowiring by
+    <li class="footer">Generated on Fri Jun 19 2015 17:25:35 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

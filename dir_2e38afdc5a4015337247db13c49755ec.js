@@ -9,6 +9,7 @@ var dir_2e38afdc5a4015337247db13c49755ec =
       [ "auto_arg< AutoPacket & >", "classauto__arg_3_01_auto_packet_01_6_01_4.html", null ],
       [ "auto_arg< const T & >", "classauto__arg_3_01const_01_t_01_6_01_4.html", null ],
       [ "auto_arg< const T >", "classauto__arg_3_01const_01_t_01_4.html", null ],
+      [ "auto_arg< std::shared_ptr< const T > * >", "classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_5_01_4.html", null ],
       [ "auto_arg< std::shared_ptr< const T > >", "classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_4.html", null ],
       [ "auto_arg< std::shared_ptr< T > & >", "classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_01_4.html", null ],
       [ "auto_arg< std::shared_ptr< T > >", "classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_4.html", null ],
@@ -48,18 +49,12 @@ var dir_2e38afdc5a4015337247db13c49755ec =
     ] ],
     [ "Autowired.h", "_autowired_8h.html", "_autowired_8h" ],
     [ "autowiring_error.h", "autowiring__error_8h.html", null ],
+    [ "AutowiringDebug.h", "_autowiring_debug_8h_source.html", null ],
     [ "BasicThread.h", "_basic_thread_8h.html", "_basic_thread_8h" ],
     [ "Bolt.h", "_bolt_8h.html", [
       [ "Bolt", "class_bolt.html", "class_bolt" ]
     ] ],
     [ "BoltBase.h", "_bolt_base_8h.html", "_bolt_base_8h" ],
-    [ "ContextCreator.h", "_context_creator_8h.html", [
-      [ "ContextCreator", "class_context_creator.html", "class_context_creator" ],
-      [ "ContextCreator< Sigil, void >", "class_context_creator_3_01_sigil_00_01void_01_4.html", "class_context_creator_3_01_sigil_00_01void_01_4" ]
-    ] ],
-    [ "ContextCreatorBase.h", "_context_creator_base_8h.html", [
-      [ "ContextCreatorBase", "class_context_creator_base.html", "class_context_creator_base" ]
-    ] ],
     [ "ContextEnumerator.h", "_context_enumerator_8h.html", [
       [ "ContextEnumerator", "class_context_enumerator.html", "class_context_enumerator" ],
       [ "ContextEnumeratorT", "class_context_enumerator_t.html", "class_context_enumerator_t" ],
@@ -97,5 +92,7 @@ var dir_2e38afdc5a4015337247db13c49755ec =
       [ "Boltable", "struct_boltable.html", null ],
       [ "MicroBolt", "struct_micro_bolt.html", "struct_micro_bolt" ]
     ] ],
-    [ "Object.h", "_object_8h.html", null ]
+    [ "Object.h", "_object_8h.html", null ],
+    [ "SystemThreadPool.h", "_system_thread_pool_8h_source.html", null ],
+    [ "ThreadPool.h", "_thread_pool_8h_source.html", null ]
 ];

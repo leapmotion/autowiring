@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.6.0</span>
+   &#160;<span id="projectnumber">0.7.0</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -145,9 +145,9 @@ $(document).ready(function(){initNavTree('functions_c.html','');});
 </li>
 <li>Clear()
 : <a class="el" href="class_auto_packet_factory.html#a7f6df86d37b611fd7da03b5d89088d4e">AutoPacketFactory</a>
-, <a class="el" href="class_context_creator.html#ac49c180a55cf83fa9f56ed1dcb7277a9">ContextCreator&lt; Sigil, Key &gt;</a>
-, <a class="el" href="class_context_creator_3_01_sigil_00_01void_01_4.html#ac9f9b4a38da139e3bc477046c3b2c7e1">ContextCreator&lt; Sigil, void &gt;</a>
-, <a class="el" href="class_context_creator_base.html#a1632dc481be42e270970158be27c65a3">ContextCreatorBase</a>
+</li>
+<li>Consume()
+: <a class="el" href="classautowiring_1_1_thread_pool.html#a1ddb6f9970182a30d57a3de470ec8786">autowiring::ThreadPool</a>
 </li>
 <li>ContextCreated()
 : <a class="el" href="class_bolt_base.html#a549b755a9a153a2ae7c7108e84fea519">BoltBase</a>
@@ -163,11 +163,7 @@ $(document).ready(function(){initNavTree('functions_c.html','');});
 : <a class="el" href="class_core_thread.html#a710618147be29bbee10455141ac9f713">CoreThread</a>
 </li>
 <li>Create()
-: <a class="el" href="class_core_context.html#a58e6c77193e81a7e83474afb58630c33">CoreContext</a>
-</li>
-<li>CreateContext()
-: <a class="el" href="class_context_creator.html#a1c1011b0d7ff27d26a233a529e5d935c">ContextCreator&lt; Sigil, Key &gt;</a>
-, <a class="el" href="class_context_creator_3_01_sigil_00_01void_01_4.html#ae889c252b47f3855373c7709fa8773a6">ContextCreator&lt; Sigil, void &gt;</a>
+: <a class="el" href="class_core_context.html#a6edf5743ee22ca42a0ca3d8cff226fca">CoreContext</a>
 </li>
 <li>CreateSatCounterList()
 : <a class="el" href="class_auto_packet_factory.html#a7dfade595ca37b082e41d6fb7e415876">AutoPacketFactory</a>
@@ -178,8 +174,14 @@ $(document).ready(function(){initNavTree('functions_c.html','');});
 <li>CurrentContextEnumerator()
 : <a class="el" href="class_current_context_enumerator.html#aa7211789df7dcdb945539a8fa2b0d7a8">CurrentContextEnumerator</a>
 </li>
+<li>CurrentContextOrNull()
+: <a class="el" href="class_core_context.html#a5d6f660be9a17de4d3bd44a99d3046cb">CoreContext</a>
+</li>
 <li>CurrentContextPusher()
 : <a class="el" href="class_current_context_pusher.html#a6805271ced0d18a69366808cd5c9c0d9">CurrentContextPusher</a>
+</li>
+<li>CurrentPacket()
+: <a class="el" href="class_auto_packet_factory.html#a7ec111268055a58305cb0f8b582b73e0">AutoPacketFactory</a>
 </li>
 </ul>
 </div><!-- contents -->
@@ -187,7 +189,7 @@ $(document).ready(function(){initNavTree('functions_c.html','');});
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Mon Jun 15 2015 11:10:30 for Autowiring by
+    <li class="footer">Generated on Fri Jun 19 2015 17:25:36 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

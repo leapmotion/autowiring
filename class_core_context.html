@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.6.0</span>
+   &#160;<span id="projectnumber">0.7.0</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -175,23 +175,13 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a248d2983aeb495dfa013024d10fbfc16"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::shared_ptr&lt; <a class="el" href="class_basic_thread.html">BasicThread</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a248d2983aeb495dfa013024d10fbfc16">CopyBasicThreadList</a> (void) const </td></tr>
 <tr class="memdesc:a248d2983aeb495dfa013024d10fbfc16"><td class="mdescLeft">&#160;</td><td class="mdescRight">A copy of the current list of child CoreRunnables of this context.  <a href="#a248d2983aeb495dfa013024d10fbfc16">More...</a><br /></td></tr>
 <tr class="separator:a248d2983aeb495dfa013024d10fbfc16"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a58e6c77193e81a7e83474afb58630c33"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
-<tr class="memitem:a58e6c77193e81a7e83474afb58630c33"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a58e6c77193e81a7e83474afb58630c33">Create</a> (void)</td></tr>
-<tr class="memdesc:a58e6c77193e81a7e83474afb58630c33"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a child context of this context.  <a href="#a58e6c77193e81a7e83474afb58630c33">More...</a><br /></td></tr>
-<tr class="separator:a58e6c77193e81a7e83474afb58630c33"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6edf5743ee22ca42a0ca3d8cff226fca"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr class="memitem:a6edf5743ee22ca42a0ca3d8cff226fca"><td class="memTemplItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context_t.html">CoreContextT</a>&lt; T &gt; &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a6edf5743ee22ca42a0ca3d8cff226fca">Create</a> (void)</td></tr>
+<tr class="memdesc:a6edf5743ee22ca42a0ca3d8cff226fca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a child context of this context.  <a href="#a6edf5743ee22ca42a0ca3d8cff226fca">More...</a><br /></td></tr>
+<tr class="separator:a6edf5743ee22ca42a0ca3d8cff226fca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abafba926a5bb2aa13f15c4de0d0df019"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#abafba926a5bb2aa13f15c4de0d0df019">DelayUntilInitiated</a> (void)</td></tr>
 <tr class="memdesc:abafba926a5bb2aa13f15c4de0d0df019"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits until the context is initiated or, if never initiated, until it starts shutting down.  <a href="#abafba926a5bb2aa13f15c4de0d0df019">More...</a><br /></td></tr>
 <tr class="separator:abafba926a5bb2aa13f15c4de0d0df019"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7bb897f4389cf1eae8fc2e7d6364d918"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7bb897f4389cf1eae8fc2e7d6364d918"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a7bb897f4389cf1eae8fc2e7d6364d918">DEPRECATED</a> (Snoop(const CoreObjectDescriptor &amp;traits),&quot;Use <a class="el" href="class_core_context.html#a7e0312724984a15bffd56019af5a2737">AddSnooper</a> instead&quot;)</td></tr>
-<tr class="memdesc:a7bb897f4389cf1eae8fc2e7d6364d918"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section see"><dt>See also</dt><dd>Snoop</dd></dl>
-<p>Identical to RemoveSnooper<br /></td></tr>
-<tr class="separator:a7bb897f4389cf1eae8fc2e7d6364d918"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a83630f48d49e0e287efaf477a26435d3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a83630f48d49e0e287efaf477a26435d3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a83630f48d49e0e287efaf477a26435d3">DEPRECATED</a> (Unsnoop(const CoreObjectDescriptor &amp;traits),&quot;Use RemoveSnooper instead&quot;)</td></tr>
-<tr class="memdesc:a83630f48d49e0e287efaf477a26435d3"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section see"><dt>See also</dt><dd>RemoveSnooper</dd></dl>
-<p>Identical to RemoveSnooper<br /></td></tr>
-<tr class="separator:a83630f48d49e0e287efaf477a26435d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8bc3598a2c82c5452ec5b942ec84ceed"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a8bc3598a2c82c5452ec5b942ec84ceed">Dump</a> (std::ostream &amp;os) const </td></tr>
 <tr class="memdesc:a8bc3598a2c82c5452ec5b942ec84ceed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Utility debug method for writing a snapshot of this context to the specified output stream  <a href="#a8bc3598a2c82c5452ec5b942ec84ceed">More...</a><br /></td></tr>
 <tr class="separator:a8bc3598a2c82c5452ec5b942ec84ceed"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -246,7 +236,7 @@ const std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreConte
 virtual const std::type_info &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a2785f3a9ba5946d57a9a3b72d99b9955">GetSigilType</a> (void) const =0</td></tr>
 <tr class="memdesc:a2785f3a9ba5946d57a9a3b72d99b9955"><td class="mdescLeft">&#160;</td><td class="mdescRight">The type used as a sigil when creating this class, if any. <br /></td></tr>
 <tr class="separator:a2785f3a9ba5946d57a9a3b72d99b9955"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7646ea17e7eb961c2193485926af7965"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; autowiring::ThreadPool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a7646ea17e7eb961c2193485926af7965">GetThreadPool</a> (void) const </td></tr>
+<tr class="memitem:a7646ea17e7eb961c2193485926af7965"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classautowiring_1_1_thread_pool.html">autowiring::ThreadPool</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a7646ea17e7eb961c2193485926af7965">GetThreadPool</a> (void) const </td></tr>
 <tr class="memdesc:a7646ea17e7eb961c2193485926af7965"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the current thread pool  <a href="#a7646ea17e7eb961c2193485926af7965">More...</a><br /></td></tr>
 <tr class="separator:a7646ea17e7eb961c2193485926af7965"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff72e44be09394686d51a367a6ff9e23"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
@@ -312,7 +302,7 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:ad306c1c3703311ba1fe7fdb4add279f9"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#ad306c1c3703311ba1fe7fdb4add279f9">SetCurrent</a> (void)</td></tr>
 <tr class="memdesc:ad306c1c3703311ba1fe7fdb4add279f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Makes this context the current context.  <a href="#ad306c1c3703311ba1fe7fdb4add279f9">More...</a><br /></td></tr>
 <tr class="separator:ad306c1c3703311ba1fe7fdb4add279f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a733240501e3607dc40a12b8456fb69be"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a733240501e3607dc40a12b8456fb69be">SetThreadPool</a> (std::shared_ptr&lt; autowiring::ThreadPool &gt; threadPool)</td></tr>
+<tr class="memitem:a733240501e3607dc40a12b8456fb69be"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a733240501e3607dc40a12b8456fb69be">SetThreadPool</a> (std::shared_ptr&lt; <a class="el" href="classautowiring_1_1_thread_pool.html">autowiring::ThreadPool</a> &gt; threadPool)</td></tr>
 <tr class="memdesc:a733240501e3607dc40a12b8456fb69be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns the thread pool handler for this context  <a href="#a733240501e3607dc40a12b8456fb69be">More...</a><br /></td></tr>
 <tr class="separator:a733240501e3607dc40a12b8456fb69be"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8e0ff07669244590fcdcec9aeb588aa5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a8e0ff07669244590fcdcec9aeb588aa5">SignalShutdown</a> (bool wait=false, <a class="el" href="_core_context_8h.html#aa042d52710c2112736f295f5adab0de5">ShutdownMode</a> shutdownMode=<a class="el" href="_core_context_8h.html#aa042d52710c2112736f295f5adab0de5a33246d22483d4dbb20f20f098e24a684">ShutdownMode::Graceful</a>)</td></tr>
@@ -334,8 +324,11 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a3f8e26f6c2f8e94bdff0f2e2870b6836"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CurrentContext</a> (void)</td></tr>
-<tr class="memdesc:a3f8e26f6c2f8e94bdff0f2e2870b6836"><td class="mdescLeft">&#160;</td><td class="mdescRight">The shared pointer to the current context.  <a href="#a3f8e26f6c2f8e94bdff0f2e2870b6836">More...</a><br /></td></tr>
+<tr class="memdesc:a3f8e26f6c2f8e94bdff0f2e2870b6836"><td class="mdescLeft">&#160;</td><td class="mdescRight">Identical to CurrentContextNoCheck, except returns the global context instead of a null pointer  <a href="#a3f8e26f6c2f8e94bdff0f2e2870b6836">More...</a><br /></td></tr>
 <tr class="separator:a3f8e26f6c2f8e94bdff0f2e2870b6836"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d6f660be9a17de4d3bd44a99d3046cb"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a5d6f660be9a17de4d3bd44a99d3046cb">CurrentContextOrNull</a> (void)</td></tr>
+<tr class="memdesc:a5d6f660be9a17de4d3bd44a99d3046cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The shared pointer to the current context.  <a href="#a5d6f660be9a17de4d3bd44a99d3046cb">More...</a><br /></td></tr>
+<tr class="separator:a5d6f660be9a17de4d3bd44a99d3046cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac1878fadff510297d81f6beb32b38ef"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#aac1878fadff510297d81f6beb32b38ef">EvictCurrent</a> (void)</td></tr>
 <tr class="memdesc:aac1878fadff510297d81f6beb32b38ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Makes no context current.  <a href="#aac1878fadff510297d81f6beb32b38ef">More...</a><br /></td></tr>
 <tr class="separator:aac1878fadff510297d81f6beb32b38ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -346,6 +339,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a0716b1184e3fba32e64c06160d3153a3"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_core_context.html#a0716b1184e3fba32e64c06160d3153a3">InjectCurrent</a> (void)</td></tr>
 <tr class="memdesc:a0716b1184e3fba32e64c06160d3153a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Injects a type into the current context.  <a href="#a0716b1184e3fba32e64c06160d3153a3">More...</a><br /></td></tr>
 <tr class="separator:a0716b1184e3fba32e64c06160d3153a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b2aca013ec6ca56def339ccc2a950e7"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_context.html#a4b2aca013ec6ca56def339ccc2a950e7">SetCurrent</a> (const std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt; &amp;ctxt)</td></tr>
+<tr class="memdesc:a4b2aca013ec6ca56def339ccc2a950e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Static version of SetCurrent, may be invoked with nullptr  <a href="#a4b2aca013ec6ca56def339ccc2a950e7">More...</a><br /></td></tr>
+<tr class="separator:a4b2aca013ec6ca56def339ccc2a950e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
@@ -448,7 +444,7 @@ template&lt;typename T &gt; </div>
 
 <p>Runtime version of AddSnooper </p>
 
-<p>Referenced by <a class="el" href="class_core_context.html#a670aaca238bf0f7db59bcdb71f84ccd0">AddSnooper()</a>, and <a class="el" href="class_core_context.html#a7bb897f4389cf1eae8fc2e7d6364d918">DEPRECATED()</a>.</p>
+<p>Referenced by <a class="el" href="class_core_context.html#a670aaca238bf0f7db59bcdb71f84ccd0">AddSnooper()</a>.</p>
 
 </div>
 </div>
@@ -699,7 +695,7 @@ template&lt;class T , class... Sigils&gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a58e6c77193e81a7e83474afb58630c33"></a>
+<a class="anchor" id="a6edf5743ee22ca42a0ca3d8cff226fca"></a>
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
@@ -709,7 +705,7 @@ template&lt;class T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::shared_ptr&lt;<a class="el" href="class_core_context.html">CoreContext</a>&gt; CoreContext::Create </td>
+          <td class="memname">std::shared_ptr&lt;<a class="el" href="class_core_context_t.html">CoreContextT</a>&lt;T&gt; &gt; CoreContext::Create </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -752,11 +748,37 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>The shared pointer to the current context. </p>
-<dl class="section return"><dt>Returns</dt><dd>A shared pointer to the current <a class="el" href="class_core_context.html" title="A top-level container class representing an autowiring domain, a minimum broadcast domain...">CoreContext</a> instance of the current thread, or else an empty pointer, if no context is current. </dd></dl>
-<p>This works by using thread-local store, and so is safe in multithreaded systems. The current context is assigned before invoking a <a class="el" href="class_core_runnable.html" title="Provides the interface for threads that should receive start and stop notifications in a context ...">CoreRunnable</a> instance's Run method, and it's also assigned when a context is first constructed by a thread. </p>
+<p>Identical to CurrentContextNoCheck, except returns the global context instead of a null pointer </p>
 
 <p>Referenced by <a class="el" href="class_core_context.html#a0716b1184e3fba32e64c06160d3153a3">InjectCurrent()</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a5d6f660be9a17de4d3bd44a99d3046cb"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static std::shared_ptr&lt;<a class="el" href="class_core_context.html">CoreContext</a>&gt; CoreContext::CurrentContextOrNull </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>The shared pointer to the current context. </p>
+<dl class="section return"><dt>Returns</dt><dd>A shared pointer to the current <a class="el" href="class_core_context.html" title="A top-level container class representing an autowiring domain, a minimum broadcast domain...">CoreContext</a> instance of the current thread, or else nullptr, if no context is current. </dd></dl>
+<p>This works by using thread-local store, and so is safe in multithreaded systems. The current context is assigned before invoking a <a class="el" href="class_core_runnable.html" title="Provides the interface for threads that should receive start and stop notifications in a context ...">CoreRunnable</a> instance's Run method, and it's also assigned when a context is first constructed by a thread. </p>
 
 </div>
 </div>
@@ -849,7 +871,8 @@ template&lt;class T &gt; </div>
 </div><div class="memdoc">
 
 <p>Makes no context current. </p>
-<p>Generally speaking, if you just want to release a reference to the current context, simply make the global context current instead. </p>
+<p>Generally speaking, if you just want to release a reference to the current context, simply make the global context current instead.</p>
+<p>This method is identical to CoreContext::SetCurrent(nullptr) </p>
 
 </div>
 </div>
@@ -1093,7 +1116,7 @@ template&lt;class T &gt; </div>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::shared_ptr&lt;autowiring::ThreadPool&gt; CoreContext::GetThreadPool </td>
+          <td class="memname">std::shared_ptr&lt;<a class="el" href="classautowiring_1_1_thread_pool.html">autowiring::ThreadPool</a>&gt; CoreContext::GetThreadPool </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -1515,6 +1538,32 @@ template&lt;class T &gt; </div>
 
 </div>
 </div>
+<a class="anchor" id="a4b2aca013ec6ca56def339ccc2a950e7"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static std::shared_ptr&lt;<a class="el" href="class_core_context.html">CoreContext</a>&gt; CoreContext::SetCurrent </td>
+          <td>(</td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>ctxt</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Static version of SetCurrent, may be invoked with nullptr </p>
+
+</div>
+</div>
 <a class="anchor" id="ad306c1c3703311ba1fe7fdb4add279f9"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1530,7 +1579,7 @@ template&lt;class T &gt; </div>
 </div><div class="memdoc">
 
 <p>Makes this context the current context. </p>
-<dl class="section return"><dt>Returns</dt><dd>The previously current context.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The previously current context, or else nullptr if no context was current.</dd></dl>
 
 </div>
 </div>
@@ -1541,7 +1590,7 @@ template&lt;class T &gt; </div>
         <tr>
           <td class="memname">void CoreContext::SetThreadPool </td>
           <td>(</td>
-          <td class="paramtype">std::shared_ptr&lt; autowiring::ThreadPool &gt;&#160;</td>
+          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classautowiring_1_1_thread_pool.html">autowiring::ThreadPool</a> &gt;&#160;</td>
           <td class="paramname"><em>threadPool</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1699,7 +1748,7 @@ template&lt;class T &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_core_context.html">CoreContext</a></li>
-    <li class="footer">Generated on Mon Jun 15 2015 11:10:30 for Autowiring by
+    <li class="footer">Generated on Fri Jun 19 2015 17:25:35 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

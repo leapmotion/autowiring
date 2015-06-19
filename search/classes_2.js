@@ -1,8 +1,5 @@
 var searchData=
 [
-  ['contextcreator',['ContextCreator',['../class_context_creator.html',1,'']]],
-  ['contextcreator_3c_20sigil_2c_20void_20_3e',['ContextCreator&lt; Sigil, void &gt;',['../class_context_creator_3_01_sigil_00_01void_01_4.html',1,'']]],
-  ['contextcreatorbase',['ContextCreatorBase',['../class_context_creator_base.html',1,'']]],
   ['contextenumerator',['ContextEnumerator',['../class_context_enumerator.html',1,'']]],
   ['contextenumeratort',['ContextEnumeratorT',['../class_context_enumerator_t.html',1,'']]],
   ['contextmember',['ContextMember',['../class_context_member.html',1,'']]],

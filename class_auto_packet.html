@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.6.0</span>
+   &#160;<span id="projectnumber">0.7.0</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -166,8 +166,12 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a434994156ef4debce252bb124ba2d5e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b3fb6084dc850b1b9d077726104541f"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
 <tr class="memitem:a7b3fb6084dc850b1b9d077726104541f"><td class="memTemplItemLeft" align="right" valign="top">std::unique_ptr&lt; const T *[]&gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a7b3fb6084dc850b1b9d077726104541f">GetAll</a> (int tshift=0) const </td></tr>
-<tr class="memdesc:a7b3fb6084dc850b1b9d077726104541f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a null-terminated temporary buffer containing all decorations  <a href="#a7b3fb6084dc850b1b9d077726104541f">More...</a><br /></td></tr>
+<tr class="memdesc:a7b3fb6084dc850b1b9d077726104541f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a null-terminated buffer containing all decorations  <a href="#a7b3fb6084dc850b1b9d077726104541f">More...</a><br /></td></tr>
 <tr class="separator:a7b3fb6084dc850b1b9d077726104541f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a83083664deb879a30addd33b1e69230c"><td class="memTemplParams" colspan="2">template&lt;class T &gt; </td></tr>
+<tr class="memitem:a83083664deb879a30addd33b1e69230c"><td class="memTemplItemLeft" align="right" valign="top">std::unique_ptr&lt; std::shared_ptr&lt; const T &gt;[]&gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#a83083664deb879a30addd33b1e69230c">GetAllShared</a> (int tshift=0) const </td></tr>
+<tr class="memdesc:a83083664deb879a30addd33b1e69230c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shared variant of GetAll  <a href="#a83083664deb879a30addd33b1e69230c">More...</a><br /></td></tr>
+<tr class="separator:a83083664deb879a30addd33b1e69230c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab194d4255c47b1d85d9b8b27a14f3f07"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab194d4255c47b1d85d9b8b27a14f3f07"></a>
 std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_auto_packet.html#ab194d4255c47b1d85d9b8b27a14f3f07">GetContext</a> (void) const </td></tr>
 <tr class="memdesc:ab194d4255c47b1d85d9b8b27a14f3f07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the context of this packet (The context of the <a class="el" href="class_auto_packet_factory.html" title="A configurable factory class for pipeline packets with a built-in object pool ">AutoPacketFactory</a> that created this context) <br /></td></tr>
@@ -783,8 +787,37 @@ template&lt;class T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Returns a null-terminated temporary buffer containing all decorations </p>
-<dl class="section return"><dt>Returns</dt><dd>The null-terminated temporary buffer</dd></dl>
+<p>Returns a null-terminated buffer containing all decorations </p>
+<dl class="section return"><dt>Returns</dt><dd>The null-terminated buffer</dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="a83083664deb879a30addd33b1e69230c"></a>
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::unique_ptr&lt;std::shared_ptr&lt;const T&gt;[]&gt; AutoPacket::GetAllShared </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>tshift</em> = <code>0</code></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Shared variant of GetAll </p>
+<dl class="section return"><dt>Returns</dt><dd>The null-terminated buffer</dd></dl>
 
 </div>
 </div>
@@ -1498,7 +1531,7 @@ template&lt;class... Args&gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_auto_packet.html">AutoPacket</a></li>
-    <li class="footer">Generated on Mon Jun 15 2015 11:10:30 for Autowiring by
+    <li class="footer">Generated on Fri Jun 19 2015 17:25:35 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>
