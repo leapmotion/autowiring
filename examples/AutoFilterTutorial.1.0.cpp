@@ -1,5 +1,4 @@
-// AutoFilterTutorial.1.0.cpp created by Victor Dods on 2015/06/10
-// Copyright (C) Leap Motion, Inc. All rights reserved.
+// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 /// @page AutoFilterTutorial_1_0 AutoFilter Tutorial 1.0
 /// This tutorial will introduce the reader to the different kinds of `AutoFilter` input parameter semantics.
 ///
