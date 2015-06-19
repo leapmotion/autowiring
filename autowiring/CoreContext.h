@@ -1371,20 +1371,3 @@ public:
 
   const Fn fn;
 };
-
-template<typename T, typename... Args>
-T* autowiring::crh<autowiring::construction_strategy::foreign_factory, T, Args...>::New(CoreContext& ctxt, Args&&... args) {
-  // We need to ensure that we can perform a find-by-type cast correctly, so
-  // the dynamic caster entry is added to the registry
-  (void) autowiring::fast_pointer_cast_initializer<CoreObject, CoreContext::AutoFactory<T>>::sc_init;
-  (void) autowiring::fast_pointer_cast_initializer<CoreContext::AutoFactory<T>, CoreObject>::sc_init;
-
-  // Now we can go looking for this type:
-  AnySharedPointerT<CoreContext::AutoFactory<T>> af;
-  ctxt.FindByType(af);
-  if(!af)
-    throw autowiring_error("Attempted to AutoRequire an interface, but failed to find a factory for this interface in the current context");
-
-  // Standard factory invocation:
-  return (*af)(ctxt);
-}
