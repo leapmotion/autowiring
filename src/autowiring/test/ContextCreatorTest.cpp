@@ -193,6 +193,30 @@ TEST_F(ContextCreatorTest, VoidKeyType) {
   ASSERT_EQ(2UL, vc->m_totalDestroyed) << "The void creator did not receive the expected number of NotifyContextDestroyed calls";
 }
 
+TEST_F(ContextCreatorTest, ExplicitCallTo_CoreContext_Create) {
+  struct FancySigil { };
+  struct DullSigil { };
+
+  std::shared_ptr<GlobalCoreContext> gc = GlobalCoreContext::Get();
+
+  std::shared_ptr<CoreContextT<FancySigil>> ctxt1 = gc->Create<FancySigil>();
+  std::shared_ptr<CoreContext> ctxt2 = gc->Create<FancySigil>();
+  std::shared_ptr<CoreContext> ctxt3 = gc->Create<DullSigil>();
+
+  size_t FancySigilCount = 0;
+  for (auto m : ContextEnumeratorT<FancySigil>(gc)) {
+    ++FancySigilCount;
+  }
+
+  size_t DullSigilCount = 0;
+  for (auto m : ContextEnumeratorT<DullSigil>(gc)) {
+    ++DullSigilCount;
+  }
+
+  ASSERT_EQ(2, FancySigilCount);
+  ASSERT_EQ(1, DullSigilCount);
+}
+
 struct mySigil {};
 
 class Runnable:

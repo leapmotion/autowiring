@@ -32,9 +32,9 @@ set(AutowiringTest_SRCS
   ContextMapTest.cpp
   ContextMemberTest.cpp
   CoreThreadTest.cpp
-  ContextCreatorTest.cpp
   CurrentContextPusherTest.cpp
   DecoratorTest.cpp
+  DemangleTest.cpp
   DispatchQueueTest.cpp
   DtorCorrectnessTest.hpp
   DtorCorrectnessTest.cpp
