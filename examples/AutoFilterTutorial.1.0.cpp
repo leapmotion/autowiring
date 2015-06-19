@@ -1,6 +1,6 @@
 // AutoFilterTutorial.1.0.cpp created by Victor Dods on 2015/06/10
 // Copyright (C) Leap Motion, Inc. All rights reserved.
-/// @page AutoFilterTutorial_0_1 AutoFilter Tutorial 1.0
+/// @page AutoFilterTutorial_1_0 AutoFilter Tutorial 1.0
 /// This tutorial will introduce the reader to the different kinds of `AutoFilter` input parameter semantics.
 ///
 /// The central theme to the Autowiring implementation of the `AutoFilter` concept is that parameters are only
@@ -79,36 +79,23 @@ struct Hippo6 {
   }
   std::unordered_set<std::string> m_received_input_decoration_types;
 };
-/// @endcode
-/// We also define another struct having an AutoFilter method whose parameter type is an analogous C++ pointer.  This will serve
-/// to demonstrate which filters are called or not called at what times.
-/// @code
-struct Ostrich1 {
-  void AutoFilter (const std::string *input) {
-    std::cout << "Ostrich1::AutoFilter(const std::string *) was called with (dereferenced) value: \"" << *input << "\"\n";
-    m_received_input_decoration_types.insert(*input);
-  }
-  std::unordered_set<std::string> m_received_input_decoration_types;
-};
 
 int main () {
   // Initialization of context, injection of context members, obtaining access to the factory.
   AutoCurrentContext()->Initiate();
-  AutoRequired<Hippo1>();
-  AutoRequired<Hippo2>();
-  AutoRequired<Hippo3>();
-  AutoRequired<Hippo4>();
-  AutoRequired<Hippo5>();
-  AutoRequired<Hippo6>();
-  AutoRequired<Ostrich1>();
+  AutoRequired<Hippo1> hippo1;
+  AutoRequired<Hippo2> hippo2;
+  AutoRequired<Hippo3> hippo3;
+  AutoRequired<Hippo4> hippo4;
+  AutoRequired<Hippo5> hippo5;
+  AutoRequired<Hippo6> hippo6;
   Autowired<AutoPacketFactory> factory;
   // Declare a packet to use in the following code blocks.
   std::shared_ptr<AutoPacket> packet;
 /// @endcode
 /// At this point we will execute the filter network a number of times, each with a different type related to `std::string`,
 /// in order to observe which filters are executed.  The first six executions demonstrate the types that are equivalent to
-/// `std::string` as input parameters (in which we expect only `Hippo#::AutoFilter` to be called), while the remaining
-/// executions demonstrate inequivalent types (in which we expect no `Hippo#::AutoFilter` to be called).
+/// `std::string` as input parameters (in which we expect only `Hippo#::AutoFilter` to be called).
 /// @code  
   {
     packet = factory->NewPacket();
@@ -158,27 +145,7 @@ int main () {
     std::cout << '\n';
   }
 /// @endcode
-/// The remaining executions demonstrate types inequivalent to `std::string`.  In particular, `std::string *`
-/// and `const std::string *` are considered inequivalent.
-/// @code 
-  {
-    packet = factory->NewPacket();
-    std::cout << "Decorating packet with instance of `std::string *`:\n";
-    std::string s = std::string("std::string *");
-    packet->Decorate(&s);
-    std::cout << '\n';
-  }
-  
-  {
-    packet = factory->NewPacket();
-    std::cout << "Decorating packet with instance of `const std::string *`:\n";
-    const std::string s = std::string("const std::string *");
-    packet->Decorate(&s);
-    std::cout << '\n';
-  }
-/// @endcode
 /// Verify that the accumulated values in the `m_received_input_decoration_types` for each context member are what we expect.
-/// The `AutowiredFast` function is used to obtain a handle to the context member, identified uniquely by its type.
 /// @code
   {
     std::unordered_set<std::string> expected_hippo_inputs({
@@ -189,24 +156,19 @@ int main () {
       "std::shared_ptr<const std::string>",
       "const std::shared_ptr<const std::string>"
     });
-    if (AutowiredFast<Hippo1>()->m_received_input_decoration_types != expected_hippo_inputs)
+    if (hippo1->m_received_input_decoration_types != expected_hippo_inputs)
       throw std::runtime_error("Hippo1 did not receive the expected inputs.");
-    if (AutowiredFast<Hippo2>()->m_received_input_decoration_types != expected_hippo_inputs)
+    if (hippo1->m_received_input_decoration_types != expected_hippo_inputs)
       throw std::runtime_error("Hippo2 did not receive the expected inputs.");
-    if (AutowiredFast<Hippo3>()->m_received_input_decoration_types != expected_hippo_inputs)
+    if (hippo1->m_received_input_decoration_types != expected_hippo_inputs)
       throw std::runtime_error("Hippo3 did not receive the expected inputs.");
-    if (AutowiredFast<Hippo4>()->m_received_input_decoration_types != expected_hippo_inputs)
+    if (hippo1->m_received_input_decoration_types != expected_hippo_inputs)
       throw std::runtime_error("Hippo4 did not receive the expected inputs.");
-    if (AutowiredFast<Hippo5>()->m_received_input_decoration_types != expected_hippo_inputs)
+    if (hippo1->m_received_input_decoration_types != expected_hippo_inputs)
       throw std::runtime_error("Hippo5 did not receive the expected inputs.");
-    if (AutowiredFast<Hippo6>()->m_received_input_decoration_types != expected_hippo_inputs)
+    if (hippo1->m_received_input_decoration_types != expected_hippo_inputs)
       throw std::runtime_error("Hippo6 did not receive the expected inputs.");
     std::cout << "All Hippo# context members received the expected inputs.\n";
-  }
-  {
-    if (AutowiredFast<Ostrich1>()->m_received_input_decoration_types != std::unordered_set<std::string>({"const std::string *"}))
-      throw std::runtime_error("Ostrich1 did not receive the expected inputs.");
-    std::cout << "All Ostrich# context members received the expected inputs.\n";
   }
   std::cout << "All verifications passed.\n";
 
@@ -263,13 +225,7 @@ int main () {
 ///     Hippo5::AutoFilter(const std::shared_ptr<const std::string>) was called with (dereferenced) value: "const std::shared_ptr<const std::string>"
 ///     Hippo4::AutoFilter(std::shared_ptr<const std::string>) was called with (dereferenced) value: "const std::shared_ptr<const std::string>"
 ///     
-///     Decorating packet with instance of `std::string *`:
-///     
-///     Decorating packet with instance of `const std::string *`:
-///     Ostrich1::AutoFilter(const std::string *) was called with (dereferenced) value: "const std::string *"
-///     
 ///     All Hippo# context members received the expected inputs.
-///     All Ostrich# context members received the expected inputs.
 ///     All verifications passed.
 ///
 /// One thing to note is that the order that the `AutoFilter` methods are called is not necessarily the order in which
