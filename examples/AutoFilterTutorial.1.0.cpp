@@ -229,4 +229,4 @@ int main () {
 ///     All verifications passed.
 ///
 /// One thing to note is that the order that the `AutoFilter` methods are called is not necessarily the order in which
-/// the context members (the `Hippo#` and `Ostrich#` instances) were injected.
+/// the context members (the `Hippo#` instances) were injected.
