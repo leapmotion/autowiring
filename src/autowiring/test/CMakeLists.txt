@@ -42,7 +42,6 @@ set(AutowiringTest_SRCS
   EventReceiverTest.cpp
   EventRegistryTest.cpp
   FactoryTest.cpp
-  ForeignTest.cpp
   GlobalInitTest.hpp
   GlobalInitTest.cpp
   GuardObjectTest.cpp
