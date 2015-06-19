@@ -1002,13 +1002,6 @@ public:
   /// <param name="pRecipient">The recipient of the event</param>
   void FilterFiringException(const JunctionBoxBase* pProxy, CoreObject* pRecipient);
 
-  /// <seealso cref="Snoop">Identical to RemoveSnooper</seealso>
-  void DEPRECATED(Snoop(const CoreObjectDescriptor& traits), "Use AddSnooper instead") { return AddSnooper(traits); }
-  template<class T>
-  void DEPRECATED(Snoop(const std::shared_ptr<T>& pSnooper), "Use AddSnooper instead");
-  template<class T>
-  void DEPRECATED(Snoop(const Autowired<T>& snooper), "Use AddSnooper instead");
-  
   /// <summary>
   /// Runtime version of AddSnooper
   /// </summary>
@@ -1042,13 +1035,6 @@ public:
       )
     );
   }
-
-  /// <seealso cref="RemoveSnooper">Identical to RemoveSnooper</seealso>
-  void DEPRECATED(Unsnoop(const CoreObjectDescriptor& traits), "Use RemoveSnooper instead") { return RemoveSnooper(traits); }
-  template<class T>
-  void DEPRECATED(Unsnoop(const std::shared_ptr<T>& pSnooper), "Use RemoveSnooper instead");
-  template<class T>
-  void DEPRECATED(Unsnoop(const Autowired<T>& snooper), "Use RemoveSnooper instead");
 
   /// <summary>
   /// Runtime version of RemoveSnooper
@@ -1311,30 +1297,6 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& context);
 template<typename T, typename... Sigil>
 void CoreContext::AutoRequireMicroBolt(void) {
   Inject<MicroBolt<T, Sigil...>>();
-}
-
-template<class T>
-void CoreContext::Snoop(const std::shared_ptr<T>& pSnooper)
-{
-  return AddSnooper(pSnooper);
-}
-
-template<class T>
-void CoreContext::Snoop(const Autowired<T>& snooper)
-{
-  return AddSnooper(snooper);
-}
-
-template<class T>
-void CoreContext::Unsnoop(const std::shared_ptr<T>& pSnooper)
-{
-  return RemoveSnooper(pSnooper);
-}
-
-template<class T>
-void CoreContext::Unsnoop(const Autowired<T>& snooper)
-{
-  return RemoveSnooper(snooper);
 }
 
 template<class T>
