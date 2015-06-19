@@ -125,7 +125,7 @@ public:
   ///
   /// An exception will be thrown if the passed key is already associated with a context
   /// </remarks>
-  void Add(const Key& key, std::shared_ptr<CoreContext>& context) {
+  void Add(const Key& key, const std::shared_ptr<CoreContext>& context) {
     std::lock_guard<std::mutex> lk(*m_tracker);
     auto& rhs = m_contexts[key];
     if(!rhs.expired())
