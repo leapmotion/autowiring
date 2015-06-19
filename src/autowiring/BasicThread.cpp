@@ -11,6 +11,8 @@
 #include "fast_pointer_cast.h"
 #include ATOMIC_HEADER
 
+static auto mainTID = std::this_thread::get_id();
+
 BasicThread::BasicThread(const char* pName):
   ContextMember(pName),
   m_state(std::make_shared<BasicThreadStateBlock>())
@@ -184,4 +186,8 @@ void BasicThread::ForceCoreThreadReidentify(void) {
 
 void ForceCoreThreadReidentify(void) {
   BasicThread::ForceCoreThreadReidentify();
+}
+
+bool BasicThread::IsMainThread(void) {
+  return mainTID == std::this_thread::get_id();
 }
