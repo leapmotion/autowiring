@@ -13,6 +13,8 @@
 
 /// \file auto_prev.h
 
+/// \file AutowiringDebug.h
+
 /// \file AutoConfig.h
 
 /// \file AutoNetServer.h
@@ -39,10 +41,6 @@
 /// \file Bolt.h
 
 /// \file BoltBase.h
-
-/// \file ContextCreator.h
-
-/// \file ContextCreatorBase.h
 
 /// \file ContextEnumerator.h
 

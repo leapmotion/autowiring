@@ -132,7 +132,8 @@ protected:
   /// <summary>
   /// Performs all cleanup operations that must take place after DoRun()
   /// </summary>
-  /// <param name="pusher">The last reference to the enclosing context held by this thread</param>
+  /// <param name="ctxt">The last reference to the enclosing context held by this thread</param>
+  /// <param name="refTracker">A reference tracker held for as long as the cleanup operation is incomplete</param>
   virtual void DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::shared_ptr<CoreObject>&& refTracker);
 
   /// \internal Only implemented on Windows (as of 0.4.1).
