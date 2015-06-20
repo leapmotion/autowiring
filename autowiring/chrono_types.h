@@ -2,7 +2,7 @@
 #pragma once
 #include <autowiring/C++11/cpp11.h>
 #include CHRONO_HEADER
-#include "chrono_timer.h"
+#include <autowiring/basic_timer.h>
 
 //Common chrono types
 typedef std::chrono::duration<double> seconds_d;
