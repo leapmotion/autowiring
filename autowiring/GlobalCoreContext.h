@@ -35,6 +35,11 @@ public:
   /// <summary>
   /// Releases the global context, allowing reinitialization
   /// </summary>
+  /// <returns>
+  /// A reference to the global context.  The caller may test `std::shared_ptr::unique`
+  /// to determine whether the pointer is the last outstanding reference to the global
+  /// context.
+  /// </returns>
   /// <remarks>
   /// In addition to releasing the global core context, all initializer operations
   /// are dumped.  Note that releasing the context is not synonymous with destroying
@@ -49,7 +54,7 @@ public:
   /// thread holds a reference to the current global context via SetCurrent, it is
   /// the caller's responsibility to manually release that reference via EvictCurrent.
   /// </remarks>
-  static void Release(void);
+  static std::shared_ptr<GlobalCoreContext> Release(void);
 
 private:
   // Global context shared pointer and lock:

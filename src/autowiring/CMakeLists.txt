@@ -27,6 +27,7 @@ set(Autowiring_SRCS
   AutoConfigParser.cpp
   AutoConfigParser.hpp
   AutoFilterDescriptor.h
+  AutoFilterDescriptor.cpp
   AutoFilterArgument.h
   AutoFuture.cpp
   AutoFuture.h
@@ -52,7 +53,8 @@ set(Autowiring_SRCS
   Autowired.h
   autowiring.h
   AutowiringConfig.h
-  AutowiringConfig.h
+  AutowiringDebug.h
+  AutowiringDebug.cpp
   AutowiringEvents.cpp
   AutowiringEvents.h
   autowiring_error.cpp
@@ -72,9 +74,6 @@ set(Autowiring_SRCS
   CallExtractor.h
   ConfigRegistry.cpp
   ConfigRegistry.h
-  ContextCreator.h
-  ContextCreatorBase.cpp
-  ContextCreatorBase.h
   ContextEnumerator.cpp
   ContextEnumerator.h
   ContextMap.h

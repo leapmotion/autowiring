@@ -573,23 +573,35 @@ public:
   /// Creation helper routine
   /// </summary>
   template<class T>
-  static std::shared_ptr<CoreContext> Create(
+  static std::shared_ptr<CoreContextT<T>> Create(
     std::shared_ptr<CoreContext> pParent,
     t_childList::iterator backReference
   ) {
-    return std::static_pointer_cast<CoreContext>(
-      std::make_shared<CoreContextT<T>>(pParent, backReference)
-    );
+    return std::make_shared<CoreContextT<T>>(pParent, backReference);
   }
 
+private:
+  /// \internal
+  /// <summary>
+  /// Creation helper routine
+  /// </summary>
+  template<class T>
+  static std::shared_ptr<CoreContext> CreateUntyped(
+    std::shared_ptr<CoreContext> pParent,
+    t_childList::iterator backReference
+  ) {
+    return std::static_pointer_cast<CoreContext>(std::make_shared<CoreContextT<T>>(pParent, backReference));
+  }
+
+public:
   /// \internal
   /// <summary>
   /// Factory to create a new context
   /// </summary>
   /// <param name="inj">An injectable type.</param>
   template<class T>
-  std::shared_ptr<CoreContext> Create(AutoInjectable&& inj) {
-    return CreateInternal(&CoreContext::Create<T>, std::move(inj));
+  std::shared_ptr<CoreContextT<T>> Create(AutoInjectable&& inj) {
+    return std::static_pointer_cast<CoreContextT<T>>(CreateInternal(&CoreContext::CreateUntyped<T>, std::move(inj)));
   }
 
   /// <summary>
@@ -605,8 +617,8 @@ public:
   /// \endcode
   /// </remarks>
   template<class T>
-  std::shared_ptr<CoreContext> Create(void) {
-    return CreateInternal(&CoreContext::Create<T>);
+  std::shared_ptr<CoreContextT<T>> Create(void) {
+    return std::static_pointer_cast<CoreContextT<T>>(CreateInternal(&CoreContext::CreateUntyped<T>));
   }
 
   /// <summary>
@@ -930,9 +942,14 @@ public:
   bool DelayUntilInitiated(void);
 
   /// <summary>
+  /// Static version of SetCurrent, may be invoked with nullptr
+  /// </summary>
+  static std::shared_ptr<CoreContext> SetCurrent(const std::shared_ptr<CoreContext>& ctxt);
+
+  /// <summary>
   /// Makes this context the current context.
   /// </summary>
-  /// <returns>The previously current context.</returns>
+  /// <returns>The previously current context, or else nullptr if no context was current.</returns>
   std::shared_ptr<CoreContext> SetCurrent(void);
 
   /// <summary>
@@ -941,6 +958,8 @@ public:
   /// <remarks>
   /// Generally speaking, if you just want to release a reference to the current context, simply
   /// make the global context current instead.
+  ///
+  /// This method is identical to CoreContext::SetCurrent(nullptr)
   /// </remarks>
   static void EvictCurrent(void);
 
@@ -948,14 +967,19 @@ public:
   /// The shared pointer to the current context.
   /// </summary>
   /// <returns>
-  /// A shared pointer to the current CoreContext instance of the current thread,
-  /// or else an empty pointer, if no context is current.
+  /// A shared pointer to the current CoreContext instance of the current thread, or else nullptr,
+  /// if no context is current.
   /// </returns>
   /// <remarks>
   /// This works by using thread-local store, and so is safe in multithreaded systems.  The current
   /// context is assigned before invoking a CoreRunnable instance's Run method, and it's also assigned
   /// when a context is first constructed by a thread.
   /// </remarks>
+  static std::shared_ptr<CoreContext> CurrentContextOrNull(void);
+
+  /// <summary>
+  /// Identical to CurrentContextNoCheck, except returns the global context instead of a null pointer
+  /// </summary>
   static std::shared_ptr<CoreContext> CurrentContext(void);
 
   /// <summary>
@@ -978,13 +1002,6 @@ public:
   /// <param name="pRecipient">The recipient of the event</param>
   void FilterFiringException(const JunctionBoxBase* pProxy, CoreObject* pRecipient);
 
-  /// <seealso cref="Snoop">Identical to RemoveSnooper</seealso>
-  void DEPRECATED(Snoop(const CoreObjectDescriptor& traits), "Use AddSnooper instead") { return AddSnooper(traits); }
-  template<class T>
-  void DEPRECATED(Snoop(const std::shared_ptr<T>& pSnooper), "Use AddSnooper instead");
-  template<class T>
-  void DEPRECATED(Snoop(const Autowired<T>& snooper), "Use AddSnooper instead");
-  
   /// <summary>
   /// Runtime version of AddSnooper
   /// </summary>
@@ -1018,13 +1035,6 @@ public:
       )
     );
   }
-
-  /// <seealso cref="RemoveSnooper">Identical to RemoveSnooper</seealso>
-  void DEPRECATED(Unsnoop(const CoreObjectDescriptor& traits), "Use RemoveSnooper instead") { return RemoveSnooper(traits); }
-  template<class T>
-  void DEPRECATED(Unsnoop(const std::shared_ptr<T>& pSnooper), "Use RemoveSnooper instead");
-  template<class T>
-  void DEPRECATED(Unsnoop(const Autowired<T>& snooper), "Use RemoveSnooper instead");
 
   /// <summary>
   /// Runtime version of RemoveSnooper
@@ -1290,30 +1300,6 @@ void CoreContext::AutoRequireMicroBolt(void) {
 }
 
 template<class T>
-void CoreContext::Snoop(const std::shared_ptr<T>& pSnooper)
-{
-  return AddSnooper(pSnooper);
-}
-
-template<class T>
-void CoreContext::Snoop(const Autowired<T>& snooper)
-{
-  return AddSnooper(snooper);
-}
-
-template<class T>
-void CoreContext::Unsnoop(const std::shared_ptr<T>& pSnooper)
-{
-  return RemoveSnooper(pSnooper);
-}
-
-template<class T>
-void CoreContext::Unsnoop(const Autowired<T>& snooper)
-{
-  return RemoveSnooper(snooper);
-}
-
-template<class T>
 class CoreContext::AutoFactory
 {
 public:
@@ -1347,20 +1333,3 @@ public:
 
   const Fn fn;
 };
-
-template<typename T, typename... Args>
-T* autowiring::crh<autowiring::construction_strategy::foreign_factory, T, Args...>::New(CoreContext& ctxt, Args&&... args) {
-  // We need to ensure that we can perform a find-by-type cast correctly, so
-  // the dynamic caster entry is added to the registry
-  (void) autowiring::fast_pointer_cast_initializer<CoreObject, CoreContext::AutoFactory<T>>::sc_init;
-  (void) autowiring::fast_pointer_cast_initializer<CoreContext::AutoFactory<T>, CoreObject>::sc_init;
-
-  // Now we can go looking for this type:
-  AnySharedPointerT<CoreContext::AutoFactory<T>> af;
-  ctxt.FindByType(af);
-  if(!af)
-    throw autowiring_error("Attempted to AutoRequire an interface, but failed to find a factory for this interface in the current context");
-
-  // Standard factory invocation:
-  return (*af)(ctxt);
-}

@@ -81,16 +81,16 @@ TEST_F(AutoFilterTest, VerifyTypeUsage) {
   ASSERT_EQ(2, filterA->m_one.i) << "AutoFilter was called using derived type instead of parent";
 }
 
-class FilterOut {
-public:
-  void AutoFilter(auto_out<Decoration<0>> out) {
-    out->i = 1;
-  }
-};
+int DoTheThingAndStuff(void) {
+  return 999;
+}
 
 TEST_F(AutoFilterTest, VerifyAutoOut) {
   AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<FilterOut> out;
+
+  *factory += [](auto_out<Decoration<0>> out) {
+    out->i = 1;
+  };
 
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   const Decoration<0>* result0 = nullptr;
@@ -98,18 +98,15 @@ TEST_F(AutoFilterTest, VerifyAutoOut) {
   ASSERT_EQ(result0->i, 1) << "Output incorrect";
 }
 
-class FilterOutPooled {
-  ObjectPool<Decoration<0>> m_pool;
-public:
-  void AutoFilter(auto_out<Decoration<0>> out) {
-    out = m_pool();
-    out-> i = 1;
-  }
-};
-
 TEST_F(AutoFilterTest, VerifyAutoOutPooled) {
   AutoRequired<AutoPacketFactory> factory;
-  AutoRequired<FilterOutPooled> out;
+  ObjectPool<Decoration<0>> pool;
+
+  *factory += [&](auto_out<Decoration<0>> out) {
+    out = pool();
+    out->i = 1;
+  };
+
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
   const Decoration<0>* result0 = nullptr;
   ASSERT_TRUE(packet->Get(result0)) << "Output missing";
@@ -320,73 +317,40 @@ TEST_F(AutoFilterTest, VerifyReferenceBasedInput) {
   }
 }
 
-class DeferredAutoFilter:
-  public CoreThread
-{
-public:
-  DeferredAutoFilter(void) :
-    nReceived(0)
-  {}
-
-  Deferred AutoFilter(AutoPacket&, const Decoration<0>&) {
-    // First packet is always delayed, this allows the dispatch queue to fill
-    // up with packets, and triggers typical rundown behavior
-    if(!nReceived)
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-    nReceived++;
-    return Deferred(this);
-  }
-
-  size_t nReceived;
-};
-
-class HasAWeirdAutoFilterMethod {
-public:
-  HasAWeirdAutoFilterMethod(void):
-    m_baseValue(101),
-    m_called0(0),
-    m_called1(0)
-  {
-    *factory += [this] {
-      ASSERT_EQ(101, m_baseValue) << "AutoFilter entry base offset incorrectly computed";
-      ++m_called1;
-    };
-  }
-
-  void AutoFilter(Decoration<0>) {
-    ASSERT_EQ(101, m_baseValue) << "AutoFilter entry base offset incorrectly computed";
-    ++m_called0;
-  }
-
+TEST_F(AutoFilterTest, ZeroArgumentAutoFilter) {
   AutoRequired<AutoPacketFactory> factory;
-  const int m_baseValue;
-  int m_called0;
-  int m_called1;
-};
 
-TEST_F(AutoFilterTest, AnyAutoFilter) {
-  AutoRequired<HasAWeirdAutoFilterMethod> t;
+  int called1 = 0;
+  *factory += [&] { called1++; };
+  factory->NewPacket();
+
+  ASSERT_EQ(1, called1) << "Zero-argument AutoFilter method was not invoked as expected";
+}
+
+TEST_F(AutoFilterTest, ByValueDecoration) {
   AutoRequired<AutoPacketFactory> factory;
+
+  int called0 = 0;
+  int value = 101;
+  *factory += [&called0, value](Decoration<0>) {
+    // Check to ensure that the value was transferred in correctly
+    ASSERT_EQ(101, value) << "AutoFilter entry base offset incorrectly computed";
+    ++called0;
+  };
+
   auto packet = factory->NewPacket();
-
   packet->Decorate(Decoration<0>());
-  ASSERT_TRUE(t->m_called0 == 1) << "Root AutoFilter method was not invoked as expected";
-  ASSERT_TRUE(t->m_called1 == 1) << "Custom AutoFilter method was not invoked as expected";
+  ASSERT_EQ(1, called0) << "Root AutoFilter method was not invoked as expected";
 }
 
 class SimpleIntegerFilter
 {
 public:
-  SimpleIntegerFilter(void) :
-    hit(false)
-  {}
-
   void AutoFilter(int val) {
     hit = true;
   }
 
-  bool hit;
+  bool hit = false;
 };
 
 class DeferredIntegerFilter:
@@ -394,8 +358,7 @@ class DeferredIntegerFilter:
 {
 public:
   DeferredIntegerFilter(void) :
-    CoreThread("DeferredIntegerFilter"),
-    hit(false)
+    CoreThread("DeferredIntegerFilter")
   {}
 
   Deferred AutoFilter(int val) {
@@ -403,7 +366,7 @@ public:
     return Deferred(this);
   }
 
-  bool hit;
+  bool hit = false;
 };
 
 TEST_F(AutoFilterTest, SingleImmediate) {
@@ -450,11 +413,10 @@ class DoesNothingWithSharedPointer:
 {
 public:
   DoesNothingWithSharedPointer(void):
-    CoreThread("DoesNothingWithSharedPointer"),
-    callCount(0)
+    CoreThread("DoesNothingWithSharedPointer")
   {}
 
-  size_t callCount;
+  size_t callCount = 0;
 
   Deferred AutoFilter(std::shared_ptr<const int>) {
     callCount++;
@@ -752,16 +714,12 @@ TEST_F(AutoFilterTest, PacketTeardownNotificationCheck) {
 struct ContextChecker:
   ContextMember
 {
-  ContextChecker(void):
-    m_called(0)
-  {}
-
   void AutoFilter(int i) {
     ++m_called;
     ASSERT_EQ(AutoCurrentContext(), GetContext()) << "AutoFilter not called with the current context set to packet's context";
   }
 
-  int m_called;
+  int m_called = 0;
 };
 
 TEST_F(AutoFilterTest, CurrentContextCheck) {

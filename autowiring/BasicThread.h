@@ -308,6 +308,11 @@ public:
   /// \include snippets/BasicThread_GetRunningTime.txt
   /// </remarks>
   void GetThreadTimes(std::chrono::milliseconds& kernelTime, std::chrono::milliseconds& userTime);
+
+  /// <returns>
+  /// True if the calling thread is the main thread
+  /// </returns>
+  static bool IsMainThread(void);
 };
 
 /// <summary>

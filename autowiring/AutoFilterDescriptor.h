@@ -33,23 +33,7 @@ struct AutoFilterDescriptorStub {
   /// is required to carry information about the type of the proper member function to be called; t_extractedCall is
   /// required to be instantiated by the caller and point to the AutoFilter proxy routine.
   /// </summary>
-  AutoFilterDescriptorStub(const std::type_info* pType, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall) :
-    m_pType(pType),
-    m_altitude(altitude),
-    m_pArgs(pArgs),
-    m_deferred(deferred),
-    m_arity(0),
-    m_requiredCount(0),
-    m_pCall(pCall)
-  {
-    for(auto pArg = m_pArgs; *pArg; pArg++) {
-      m_arity++;
-      
-      // time shifted arguments arn't required
-      if (pArg->is_input)
-        ++m_requiredCount;
-    }
-  }
+  AutoFilterDescriptorStub(const std::type_info* pType, autowiring::altitude altitude, const AutoFilterArgument* pArgs, bool deferred, t_extractedCall pCall);
 
 protected:
   // Type of the subscriber itself
@@ -92,20 +76,23 @@ public:
   bool IsDeferred(void) const { return m_deferred; }
   const std::type_info* GetAutoFilterTypeInfo(void) const { return m_pType; }
 
+  /// <returns>
+  /// True if the specified type is present as an output argument on this filter
+  /// </returns>
+  bool Provides(const std::type_info& ti) const;
+
+  /// <returns>
+  /// True if the specified type is present as an input argument on this filter
+  /// </returns>
+  bool Consumes(const std::type_info& ti) const;
+
   /// <summary>
   /// Orientation (input/output, required/optional) of the argument type.
   /// </summary>
   /// <remarks>
   /// Returns nullptr when no argument is of the requested type.
   /// </remarks>
-  const AutoFilterArgument* GetArgumentType(const std::type_info* argType) {
-    for(auto pArg = m_pArgs; *pArg; pArg++) {
-      if (pArg->ti == argType) {
-        return pArg;
-      }
-    }
-    return nullptr;
-  }
+  const AutoFilterArgument* GetArgumentType(const std::type_info* argType) const;
 
   /// <returns>A call lambda wrapping the associated subscriber</returns>
   /// <remarks>
@@ -277,22 +264,13 @@ public:
   bool operator!=(const AutoFilterDescriptor& rhs) const { return !(*this == rhs); }
 };
 
-/// <summary>
-/// Utility routine to support the creation of an AutoFilterDescriptor from T::AutoFilter
-/// </summary>
-/// <remarks>
-/// This method will return an empty descriptor in the case that T::AutoFilter is not defined
-/// </remarks>
-template<class T>
-AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
-  return MakeAutoFilterDescriptor(ptr, std::integral_constant<bool, has_autofilter<T>::value>());
-}
-
+namespace autowiring {
+namespace internal {
 /// <summary>
 /// Alias for AutoFilterDescriptor(ptr)
 /// </summary>
 template<class T>
-AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr, std::true_type) {
+AutoFilterDescriptor MakeAFDescriptor(const std::shared_ptr<T>& ptr, std::true_type) {
   return AutoFilterDescriptor(ptr);
 }
 
@@ -303,8 +281,21 @@ AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr, std
 /// This method will return an empty descriptor in the case that T::AutoFilter is not defined
 /// </remarks>
 template<class T>
-AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>&, std::false_type) {
+AutoFilterDescriptor MakeAFDescriptor(const std::shared_ptr<T>&, std::false_type) {
   return AutoFilterDescriptor();
+}
+}
+}
+
+/// <summary>
+/// Utility routine to support the creation of an AutoFilterDescriptor from T::AutoFilter
+/// </summary>
+/// <remarks>
+/// This method will return an empty descriptor in the case that T::AutoFilter is not defined
+/// </remarks>
+template<class T>
+AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
+  return autowiring::internal::MakeAFDescriptor(ptr, std::integral_constant<bool, has_autofilter<T>::value>());
 }
 
 namespace std {

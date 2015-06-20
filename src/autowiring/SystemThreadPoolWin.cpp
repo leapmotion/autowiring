@@ -5,9 +5,9 @@
 
 using namespace autowiring;
 
-SystemThreadPoolWin::SystemThreadPoolWin(void) 
-{
-}
+SystemThreadPoolWin::SystemThreadPoolWin(void) :
+  m_toBeDone(~0)
+{}
 
 SystemThreadPoolWin::~SystemThreadPoolWin(void)
 {

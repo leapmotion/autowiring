@@ -16,13 +16,8 @@ public:
 
 class FilterFirst {
 public:
-  FilterFirst(void) :
-    m_magic(0xDEADBEEF),
-    m_called(0)
-  {}
-
-  const int m_magic;
-  int m_called;
+  const int m_magic = 0xDEADBEEF;
+  int m_called = 0;
 
   void AutoFilter(AutoPacket& pkt) {
     ASSERT_EQ(0xDEADBEEF, m_magic) << "Magic value was corrupted, pointer was not adjusted to the correct offset";
@@ -132,15 +127,9 @@ TEST_F(AutoFilterSequencing, ManySuccessors) {
 
 class PrevFilter {
 public:
-  PrevFilter(void):
-    m_prev_value(-1),
-    m_called(0),
-    m_num_empty_prev(0)
-  {}
-  
-  int m_prev_value;
-  int m_called;
-  int m_num_empty_prev;
+  int m_prev_value = -1;
+  int m_called = 0;
+  int m_num_empty_prev = 0;
   
   void AutoFilter(int current, auto_prev<int> prev) {
     ++m_called;
@@ -191,15 +180,11 @@ TEST_F(AutoFilterSequencing, UnsatisfiedPrev) {
 }
 
 struct OnlyPrev {
-  OnlyPrev():
-    m_called(0)
-  {}
-  
   void AutoFilter(auto_prev<int> p) {
     ++m_called;
   }
   
-  int m_called;
+  int m_called = 0;
 };
 
 TEST_F(AutoFilterSequencing, OnlyPrev) {
@@ -236,16 +221,12 @@ class DeferredPrev:
   public CoreThread
 {
 public:
-  DeferredPrev(void):
-    m_called(0)
-  {}
-  
   Deferred AutoFilter(auto_prev<int> prev) {
     ++m_called;
     return Deferred(this);
   }
   
-  int m_called;
+  int m_called = 0;
 };
 
 TEST_F(AutoFilterSequencing, DeferredPrev) {
@@ -264,17 +245,10 @@ TEST_F(AutoFilterSequencing, DeferredPrev) {
 
 class PrevPrevFilter {
 public:
-  PrevPrevFilter(void):
-    m_prev_prev_value(-1),
-    m_prev_value(-1),
-    m_called(0),
-    m_num_empty_prev(0)
-  {}
-
-  int m_prev_prev_value;
-  int m_prev_value;
-  int m_called;
-  int m_num_empty_prev;
+  int m_prev_prev_value = -1;
+  int m_prev_value = -1;
+  int m_called = 0;
+  int m_num_empty_prev = 0;
 
   void AutoFilter(int current, auto_prev<int, 2> prev) {
     ++m_called;

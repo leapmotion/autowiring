@@ -118,24 +118,14 @@ TEST_F(AutoFilterCollapseRulesTest, SharedPointerAliasingRules) {
   ASSERT_TRUE(gen2Called) << "AutoFilter accepting a decorated type was not called as expected";
 }
 
-class ProducesSharedPointer {
-public:
-  ProducesSharedPointer(void) :
-    m_called(0)
-  {}
-
-  int m_called;
-
-  void AutoFilter(std::shared_ptr<int>& output) {
-    ++m_called;
-    output = std::make_shared<int>(55);
-  }
-};
-
 TEST_F(AutoFilterCollapseRulesTest, AutoFilterSharedAliasingRules) {
-  AutoRequired<ProducesSharedPointer> produces;
   AutoRequired<FilterGen<int>> consumes;
   AutoRequired<AutoPacketFactory> factory;
+
+  *factory += [&](std::shared_ptr<int>& output) {
+    output = std::make_shared<int>(55);
+  };
+  *factory += [&](int) {};
 
   // Decorate the packet, verify attribute presence:
   auto packet = factory->NewPacket();
@@ -181,4 +171,30 @@ TEST_F(AutoFilterCollapseRulesTest, SharedOutSelfAutoPrev) {
   ASSERT_TRUE(packet1->Has<std::string>());
   ASSERT_TRUE(packet2->Has<std::string>());
   ASSERT_EQ(1UL, nMsgs) << "auto_prev was not correctly set when a filter produces a shared_ptr output";
+}
+
+struct Base {};
+struct Derived : public Base{};
+
+TEST_F(AutoFilterCollapseRulesTest, AutoPrevInheritance) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoCurrentContext()->Initiate();
+  
+  size_t counter = 0;
+  
+  *factory += [&](const std::vector<Base>& base, auto_prev<std::vector<Derived>> prev, std::vector<Derived>& deriv) {
+    deriv.emplace_back();
+    
+    if (counter) {
+      ASSERT_FALSE(prev->empty()) << "auto_prev not called";
+    }
+    
+    counter++;
+  };
+  
+  for (size_t i = 0; i < 10; ++i) {
+    auto packet = factory->NewPacket();
+    std::vector<Base> baseVec{Base(), Base(), Base()};
+    packet->Decorate(baseVec);
+  }
 }

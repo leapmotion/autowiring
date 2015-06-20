@@ -39,3 +39,6 @@ autowiring-*-*.zip
 _CPack_Packages
 win64/Autowiring.nuspec
 Autowiring.nuspec
+.kdev4
+autowiring.kdev4
+

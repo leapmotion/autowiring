@@ -9,7 +9,7 @@ The following files and folders are significant to the Doxygen generation:
 * ``autowiring/`` -- Autowiring header files.
 * ``src/`` -- Autowiring source files.
 * ``docs/`` -- the Doxygen output.
-* ``examples/`` -- Examples of simple Autowiring programs
+* ``examples/`` -- Examples of simple Autowiring programs, including a progressive tutorial series on the concepts of Autowiring.
 * ``devguide/`` -- Dev Guide topics (as Markdown files) and some control files (defining groups and examples).
 
 Generating the HTML docs

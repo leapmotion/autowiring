@@ -67,11 +67,11 @@ Note that a filter function with no input arguments is called when a new, empty 
 
 To create a filter graph network:
 
-#. Implement the desired filter classes, each with an AutoFired function.
-#. Autowire these types into a context.
-#. Initiate the context.
-#. Create a packet using the context's AutoPacketFactory.
-#. Decorate the packet with a data type (unless one of your filter functions takes an empty packet as input).
+1. Implement the desired filter classes, each with an AutoFilter function.
+2. Autowire these types into a context.
+3. Initiate the context.
+4. Create a packet using the context's AutoPacketFactory.
+5. Decorate the packet with a data type (unless one of your filter functions takes an empty packet as input).
  
 The following example shows a hypothetical filter graph that takes a camera image, runs a blur filter, and then line and circle feature finding filters:
 

@@ -129,15 +129,11 @@ class ReceivesTeardownNotice:
   public ContextMember
 {
 public:
-  ReceivesTeardownNotice(void) :
-    m_notified(false)
-  {}
-
   void NotifyContextTeardown(void) override {
     m_notified = true;
   }
 
-  bool m_notified;
+  bool m_notified = false;
 };
 
 TEST_F(ContextCleanupTest, VerifyGracefulThreadCleanup) {
@@ -200,11 +196,7 @@ class TakesALongTimeToExit:
   public CoreThread
 {
 public:
-  TakesALongTimeToExit(void) :
-    m_canContinue(false)
-  {}
-
-  bool m_canContinue;
+  bool m_canContinue = false;
 
   void Continue(void) {
     PerformStatusUpdate([this] {m_canContinue = true; });

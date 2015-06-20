@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include <autowiring/Autowired.h>
 #include <autowiring/Bolt.h>
-#include <autowiring/ContextCreator.h>
 #include "TestFixtures/SimpleObject.hpp"
 #include <string>
 #include <iostream>
@@ -18,11 +17,7 @@ class Listener:
   public Bolt<Pipeline>
 {
 public:
-  Listener(void):
-    hit(false)
-  {}
-
-  bool hit;
+  bool hit = false;
 
   std::shared_ptr<CoreContext> createdContext;
 
@@ -31,11 +26,6 @@ public:
 
     createdContext = CoreContext::CurrentContext();
   }
-};
-
-class Creator:
-  public ContextCreator<Pipeline, std::string>
-{
 };
 
 class InjectsIntoPipeline:
@@ -59,27 +49,19 @@ public:
 struct CountObject:
   ContextMember
 {
-  CountObject():
-    count(0)
-  {}
-
-  int count;
+  int count = 0;
 };
 
 class InjectsIntoEverything:
   public Bolt<>
 {
 public:
-  InjectsIntoEverything():
-    count(0)
-  {}
-
   void ContextCreated(void) override {
     AutoRequired<CountObject> derp;
     (derp->count)++;
   }
 
-  int count;
+  int count = 0;
 };
 
 TEST_F(BoltTest, VerifySimpleInjection) {
@@ -101,19 +83,14 @@ TEST_F(BoltTest, VerifySimpleInjection) {
 }
 
 TEST_F(BoltTest, VerifyMapping) {
-  ContextCreator<Pipeline, std::wstring> simpleCreator;
-
   // Trivial context creation check:
-  {
-    auto ctxt = simpleCreator.CreateContext(L"Simple");
-    ASSERT_TRUE(ctxt.second && ctxt.first.get()) << "Initial context creation did not succeed as expected";
-  }
+  AutoCreateContextT<Pipeline> ctxt1;
 
   // Now try to autowire a listener:
   AutoRequired<Listener> myListener;
 
   // Create a second context, verify that the listener got the message:
-  std::shared_ptr<CoreContext> createdContext = simpleCreator.CreateContext(L"Simple2").first;
+  AutoCreateContextT<Pipeline> createdContext;
 
   // Verify we have a hit our bolt:
   ASSERT_TRUE(myListener->hit) << "The listener callback was not hit as expected";
@@ -132,15 +109,13 @@ TEST_F(BoltTest, VerifyCreationBubbling) {
   // Put the listener in the parent context:
   AutoRequired<Listener> listener;
 
+  AutoCurrentContext outer;
+
   // Create a child context of the current one, and put the creator in there:
   AutoCreateContext childContext;
-  std::shared_ptr<ContextCreator<Pipeline, std::wstring>> simpleCreator = (
-    CurrentContextPusher(childContext),
-    AutoRequired<ContextCreator<Pipeline, std::wstring>>()
-  );
+  CurrentContextPusher pshr(childContext);
 
-  // Dependent context broadcast check:
-  simpleCreator->CreateContext(L"Simple");
+  auto pipline = outer->Create<Pipeline>();
 
   // Check the listener to verify we had a hit:
   ASSERT_TRUE(listener->hit) << "The listener callback was not hit as expected";

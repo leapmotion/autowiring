@@ -488,11 +488,7 @@ TEST_F(EventReceiverTest, EventChain){
 
 class HasAWeirdReturnType {
 public:
-  HasAWeirdReturnType(void) :
-    bCalled(false)
-  {}
-
-  bool bCalled;
+  bool bCalled = false;
 
   int FiredMethod(void) {
     bCalled = true;

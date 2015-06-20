@@ -155,15 +155,11 @@ class BoltThatChecksForAThread:
   public Bolt<PreBoltInjectionSigil>
 {
 public:
-  BoltThatChecksForAThread(void):
-    m_threadPresent(false)
-  {}
-
   void ContextCreated(void) override {
     m_threadPresent = Autowired<CoreThread>().IsAutowired();
   }
 
-  bool m_threadPresent;
+  bool m_threadPresent = false;
 };
 
 TEST_F(CoreContextTest, PreBoltInjection) {
@@ -184,16 +180,12 @@ class BoltThatTakesALongTimeToReturn:
   public Bolt<NoEnumerateBeforeBoltReturn>
 {
 public:
-  BoltThatTakesALongTimeToReturn(void) :
-    m_bDoneRunning(false)
-  {}
-
   void ContextCreated(void) override {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     m_bDoneRunning = true;
   }
 
-  bool m_bDoneRunning;
+  bool m_bDoneRunning = false;
 };
 
 TEST_F(CoreContextTest, NoEnumerateBeforeBoltReturn) {

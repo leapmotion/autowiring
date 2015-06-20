@@ -40,11 +40,10 @@ class MyCtorDtorListener:
 {
 public:
   MyCtorDtorListener(void):
-    CoreThread("MyCtorDtorListener"),
-    m_hitDeferred(false)
+    CoreThread("MyCtorDtorListener")
   {}
 
-  bool m_hitDeferred;
+  bool m_hitDeferred = false;
 
   virtual void DoFired(CtorDtorCopyCounter ctr) {}
 
