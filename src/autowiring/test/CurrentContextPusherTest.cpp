@@ -3,6 +3,7 @@
 #include <autowiring/Autowired.h>
 #include <autowiring/CoreContext.h>
 #include <autowiring/CurrentContextPusher.h>
+#include <thread>
 
 class CurrentContextPusherTest:
   public testing::Test
