@@ -31,7 +31,7 @@ public:
   void Start(void) override;
   void Stop(void) override;
 
-  void Send(connection_hdl hdl, const std::string& msg);
+  void Send(connection_hdl hdl, const std::string& msg) override;
   void SetTransportHandler(std::shared_ptr<AutoNetTransportHandler> handler) override;
 
 private:
@@ -45,4 +45,4 @@ private:
   std::set<connection_hdl, std::owner_less<connection_hdl>> m_connections;
   int m_port;
   t_server m_server;
-}; 
+};

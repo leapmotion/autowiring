@@ -497,7 +497,7 @@ TEST_F(CoreThreadTest, LightsOutPassiveCall) {
   AutoCurrentContext ctxt;
   AutoRequired<MakesPassiveCallInOnStop> mpc;
   ctxt->Initiate();
-  
+
   // Wait for bad things to happen
   ASSERT_TRUE(mpc->WaitFor(std::chrono::seconds(5))) << "Passive call thread took too long to quit";
 
@@ -537,7 +537,7 @@ TEST_F(CoreThreadTest, SpuriousWakeupTest) {
 
   // Now force a spurious wakeup--this shouldn't technically be a problem
   extraction->m_queueUpdated.notify_all();
-  
+
   // Delayed wake function, block for this to happen:
   ready = false;
   *extraction += std::chrono::milliseconds(1), wakeFn;
@@ -553,7 +553,7 @@ public:
   bool is_waiting = false;
   bool signal = false;
 
-  void Run(void) {
+  void Run(void) override {
     // Let the run loop return.  This triggers cleanup operations and ultimately causes OnStop
     // to get called in our own thread context.
   }
