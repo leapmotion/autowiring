@@ -178,8 +178,6 @@ public:
       catch (...) {
         teardown.push_back(ContextDumbToWeak(currentEvent.m_owner));
 
-        // If T doesn't inherit CoreObject, then we need to cast to a unifying type which does
-        typedef typename SelectTypeUnifier<T>::type TActual;
         this->FilterFiringException(currentEvent.m_ptr);
       }
       lk.lock();
