@@ -69,7 +69,7 @@ public:
   ///
   /// The base implementation of this method is guaranteed to do nothing.
   /// </remarks>
-  virtual void OnStop(void) {}
+  void OnStop(void) override {}
 
   /// <summary>
   /// Invoked when the thread should stop. Override to perform custom handling when the thread is told to stop.

@@ -312,7 +312,7 @@ public:
     new (pSpace) SharedPointerSlotT<T, false>(*this);
   }
 
-  bool empty(void) const { return get() == nullptr; }
+  bool empty(void) const override { return get() == nullptr; }
   const std::type_info& type(void) const override { return typeid(auto_id<T>); }
 
   void reset(void) override {
