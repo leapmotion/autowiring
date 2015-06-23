@@ -11,7 +11,6 @@ struct BasicThreadStateBlock;
 class BasicThread;
 class CoreContext;
 
-/// \internal (until ElevatePriority feature is implmented on all platforms)
 /// <summary>
 /// Thread priority classifications from low to high.
 /// </summary>
