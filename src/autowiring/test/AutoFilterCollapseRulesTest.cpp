@@ -198,3 +198,22 @@ TEST_F(AutoFilterCollapseRulesTest, AutoPrevInheritance) {
     packet->Decorate(baseVec);
   }
 }
+
+TEST_F(AutoFilterCollapseRulesTest, CoreContextArg) {
+  AutoCurrentContext ctxt;
+  AutoRequired<AutoPacketFactory> factory;
+
+  bool match1 = false;
+  bool match2 = false;
+
+  *factory += [ctxt, &match1](CoreContext& ctxtArg) {
+    match1 = ctxt.get() == &ctxtArg;
+  };
+  *factory += [ctxt, &match2](std::shared_ptr<CoreContext> ctxtArg) {
+    match2 = ctxt.get() == ctxtArg.get();
+  };
+
+  auto packet = factory->NewPacket();
+  ASSERT_TRUE(match1) << "Reference input argument did not match expected";
+  ASSERT_TRUE(match2) << "Shared pointer input argument did not match expectation";
+}

@@ -15,10 +15,16 @@ set(Autowiring_SRCS
   atomic_object.h
   at_exit.h
   altitude.h
+  auto_arg.h
+  auto_arg.cpp
   auto_id.h
+  auto_in.h
   auto_future.h
+  auto_out.h
+  auto_prev.h
   auto_signal.h
   auto_signal.cpp
+  auto_tuple.h
   AutoConfig.h
   AutoConfigBase.cpp
   AutoConfigBase.h
@@ -59,11 +65,6 @@ set(Autowiring_SRCS
   AutowiringEvents.h
   autowiring_error.cpp
   autowiring_error.h
-  auto_arg.h
-  auto_in.h
-  auto_out.h
-  auto_prev.h
-  auto_tuple.h
   BasicThread.cpp
   BasicThread.h
   BasicThreadStateBlock.cpp
