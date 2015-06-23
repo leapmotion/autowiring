@@ -190,15 +190,6 @@ if(NOT AUTOWIRING_IS_EMBEDDED)
     FILES_MATCHING PATTERN "*.h"
   )
   
-  # Install autoboost headers on ARM, which still requires them
-  if(autowiring_BUILD_ARM)
-    install(
-      DIRECTORY ${PROJECT_SOURCE_DIR}/contrib/autoboost/autoboost
-      DESTINATION include
-      COMPONENT autowiring
-    )
-  endif()
-
   # Targets file is needed in order to describe how to link Autowiring to the rest of the system
   install(EXPORT AutowiringTargets FILE AutowiringTargets.cmake COMPONENT autowiring NAMESPACE Autowiring:: DESTINATION cmake CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
 
