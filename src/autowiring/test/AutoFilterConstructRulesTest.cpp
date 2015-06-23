@@ -15,7 +15,7 @@ public:
 
     uint8_t* pRetVal = ::new uint8_t[ncb];
     for (size_t i = 0; i < ncb; i++)
-      pRetVal[i] = (i + 1) * 101;
+      pRetVal[i] = static_cast<uint8_t>((i + 1) * 101);
     return pRetVal;
   }
 
