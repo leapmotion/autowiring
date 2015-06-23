@@ -19,10 +19,7 @@ enum class construction_strategy {
   standard,
 
   // Use the static new defined by the type
-  factory_new,
-
-  // Type is abstract, use an enclosing factory context
-  foreign_factory
+  factory_new
 };
 
 template<class T, class... Args>
@@ -31,10 +28,6 @@ struct select_strategy {
     // If a factory new is defined, then use it
     has_static_new<T, Args...>::value ?
     construction_strategy::factory_new :
-
-    // If the type is abstract, then we will try to find a foreign factory
-    std::is_abstract<T>::value ?
-    construction_strategy::foreign_factory :
 
     // Otherwise we give up and just try to compose the type directly
     construction_strategy::standard;
@@ -101,7 +94,6 @@ struct crh<construction_strategy::standard, T, Args...> {
   // If T doesn't inherit Object, then we need to compose a unifying type which does
   typedef typename SelectTypeUnifier<T>::type TActual;
 
-  static_assert(!std::is_abstract<T>::value, "Cannot create a type which is abstract");
   static_assert(!has_static_new<T, Args...>::value, "Can't inject member with arguments if it has a static New");
 
   static TActual* New(const CoreContext&, Args&&... args) {
@@ -125,15 +117,6 @@ struct crh<construction_strategy::standard, T, Args...> {
       throw;
     }
   }
-};
-
-template<class T, class... Args>
-struct crh<construction_strategy::foreign_factory, T, Args...> {
-  typedef T TActual;
-
-  // The definition of this method has to be provided in CoreContext.h because it actually makes use
-  // of the CoreContext argument
-  static T* New(CoreContext& ctxt, Args&&... args);
 };
 
 /// <summary>

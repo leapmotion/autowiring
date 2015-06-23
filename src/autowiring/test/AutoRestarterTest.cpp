@@ -13,18 +13,13 @@ class CreationDetectionBolt:
   public Bolt<RestartingSigil>
 {
 public:
-  CreationDetectionBolt(void):
-    nContextsCreated(0),
-    called(false)
-  {}
-
   void ContextCreated(void) override {
     called = true;
     nContextsCreated++;
   }
 
-  size_t nContextsCreated;
-  bool called;
+  size_t nContextsCreated = 0;
+  bool called = false;
 };
 
 class ThrowsAnExceptionFirstTime:

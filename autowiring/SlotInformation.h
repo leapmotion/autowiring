@@ -4,18 +4,7 @@
 #include <typeinfo>
 #include MEMORY_HEADER
 
-struct AutoFilterDescriptorStub;
 class DeferrableAutowiring;
-
-struct AutoFilterDescriptorStubLink {
-  AutoFilterDescriptorStubLink(const AutoFilterDescriptorStub& stub, const AutoFilterDescriptorStubLink* pFlink) :
-    stub(stub),
-    pFlink(pFlink)
-  {}
-
-  const AutoFilterDescriptorStub& stub;
-  const AutoFilterDescriptorStubLink* const pFlink;
-};
 
 /// <summary>
 /// Represents information about a single slot detected as having been declared in a context member
@@ -57,11 +46,6 @@ struct SlotInformationStumpBase {
 
   // Current slot information:
   const SlotInformation* pHead = nullptr;
-
-  // If there are any custom AutoFilter fields defined, this is the first of them
-  // Note that these custom fields -only- include fields registered via the AutoFilter
-  // registration type
-  const AutoFilterDescriptorStubLink* pFirstAutoFilter = nullptr;
 };
 
 /// <summary>
@@ -128,9 +112,6 @@ private:
   // Current slot information:
   SlotInformation* m_pCur = nullptr;
 
-  // Most recent AutoFilter descriptor link:
-  AutoFilterDescriptorStubLink* m_pLastLink = nullptr;
-
 public:
   /// <returns>
   /// True if the passed pointer is inside of the object currently under construction at this stack location
@@ -161,9 +142,4 @@ public:
   /// Registers the named slot with the current stack location
   /// </summary>
   static void RegisterSlot(DeferrableAutowiring* pAutowiring);
-
-  /// <summary>
-  /// Registers a NewAutoFilter with this SlotInformation
-  /// </summary>
-  static void RegisterSlot(const AutoFilterDescriptorStub& stub);
 };

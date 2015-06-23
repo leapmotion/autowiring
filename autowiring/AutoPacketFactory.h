@@ -37,6 +37,9 @@ private:
   // Internal outstanding reference for issued packet:
   std::weak_ptr<void> m_outstandingInternal;
   
+  // The most recently issued packet:
+  std::weak_ptr<AutoPacketInternal> m_curPacket;
+
   // The next packet to be issued from this factory
   std::shared_ptr<AutoPacketInternal> m_nextPacket;
 
@@ -64,6 +67,11 @@ public:
     std::lock_guard<std::mutex> lk(m_lock);
     container.insert(container.end(), m_autoFilters.begin(), m_autoFilters.end());
   }
+
+  /// <returns>
+  /// A copy of all AutoFilter instances on this class
+  /// </returns>
+  std::vector<AutoFilterDescriptor> GetAutoFilters(void) const;
 
   /// <summary>
   /// Creates a linked list of saturation counters
@@ -166,6 +174,11 @@ protected:
   static bool IsAutoPacketType(const std::type_info& dataType);
 
 public:
+  /// <returns>
+  /// The most recently issued packet, or possibly nullptr if that packet has already been destroyed
+  /// </returns>
+  std::shared_ptr<AutoPacket> CurrentPacket(void);
+
   /// <summary>
   /// Obtains a new packet from the object pool and configures it with the current
   /// satisfaction graph

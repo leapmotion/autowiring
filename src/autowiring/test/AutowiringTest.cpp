@@ -7,6 +7,7 @@
 #include <autowiring/CoreThread.h>
 
 int main(int argc, const char* argv []) {
+  autowiring::dbg::DebugInit();
   return autotesting_main(argc, argv);
 }
 

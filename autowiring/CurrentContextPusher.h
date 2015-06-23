@@ -36,6 +36,10 @@ public:
   std::shared_ptr<CoreContext> Pop(void);
 
 private:
+  // True if Pop has already been invoked
+  bool pop_invoked = false;
+
+  // Pointer to the prior context--may potentially be nullptr
   std::shared_ptr<CoreContext> m_prior;
 };
 

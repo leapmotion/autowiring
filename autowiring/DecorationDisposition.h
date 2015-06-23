@@ -13,28 +13,23 @@ struct DecorationKey {
 
   DecorationKey(const DecorationKey& rhs) :
     ti(rhs.ti),
-    is_shared(rhs.is_shared),
     tshift(rhs.tshift)
   {}
   
-  explicit DecorationKey(const std::type_info& ti, bool is_shared, int tshift) :
+  explicit DecorationKey(const std::type_info& ti, int tshift) :
     ti(&ti),
-    is_shared(is_shared),
     tshift(tshift)
   {}
   
   // The type index
   const std::type_info* ti = nullptr;
 
-  // True if this decoration can be used with AutoFilters that accept a shared_ptr input type
-  bool is_shared = false;
-  
   // Zero refers to a decoration created on this packet, a positive number [tshift] indicates
   // a decoration attached [tshift] packets ago.
   int tshift = -1;
   
   bool operator==(const DecorationKey& rhs) const {
-    return ti == rhs.ti && is_shared == rhs.is_shared && tshift == rhs.tshift;
+    return ti == rhs.ti && tshift == rhs.tshift;
   }
 };
 
@@ -42,10 +37,7 @@ namespace std {
   template<>
   struct hash<DecorationKey> {
     size_t operator()(const DecorationKey& key) const {
-      return
-        key.tshift +
-        (key.is_shared ? 0x80000 : 0x70000) +
-        key.ti->hash_code();
+      return key.tshift + key.ti->hash_code();
     }
   };
 }
@@ -58,15 +50,8 @@ enum class DispositionState {
   // Some decorations present, but not all of them.  Cannot proceed.
   PartlySatisfied,
 
-  // Everything attached, ready to go
-  Satisfied,
-
-  // Unsatisfiable, and the callers on this decoration cannot accept a non-null
-  // entry--IE, they accept const references as inputs.
-  UnsatisfiableNoCall,
-
-  // This decoration will never be satisfied.  Calls are generated to the
-  Unsatisfiable
+  // All publishers on this decoration have been run or cannot be executed
+  Complete
 };
 
 /// <remarks>
@@ -84,7 +69,11 @@ struct DecorationDisposition
     m_state(source.m_state)
   {}
   
-  // The decoration proper--potentially, this decoration might be from a prior execution of this
+  // The number of producers of this decoration type which have concluded.  This number may be larger
+  // than the number of attached decorations if some producers could not run.
+  size_t m_nProducersRun = 0;
+
+  // The decorations proper--potentially, these decorations might be from a prior execution of this
   // packet.  In the case of immediate decorations, this value will be invalid.
   // Valid if and only if is_shared is false.
   std::vector<AnySharedPointer> m_decorations;
@@ -99,7 +88,39 @@ struct DecorationDisposition
   std::vector<SatCounter*> m_publishers;
 
   // Satisfaction counters
-  std::vector<SatCounter*> m_subscribers;
+  struct Subscriber {
+    enum class Type {
+      // Ordinary, reference-in, non-optional subscriber
+      Normal,
+
+      // Optional.  If this flag is set, it indicates that the referenced AutoFilter could still be
+      // called even if the decoration is not attached to the packet--IE, the AutoFilter accepts a
+      // shared pointer or an array
+      Optional,
+
+      // Abides by all of the rules of Optional, but additionally can be called when multiple
+      // instances of a decoration are present.
+      Multi
+    };
+
+    Subscriber(void) {}
+    Subscriber(bool is_shared, Type type, SatCounter* satCounter) :
+      is_shared{is_shared},
+      type{type},
+      satCounter{satCounter}
+    {}
+
+    // True if a shared pointer will be taken, false otherwise
+    bool is_shared = false;
+
+    // The relationship between this subscriber and the provided decoration
+    Type type = Type::Normal;
+
+    // The satisfaction counter itself
+    SatCounter* satCounter = nullptr;
+  };
+
+  std::vector<Subscriber> m_subscribers;
 
   // The current state of this disposition
   DispositionState m_state = DispositionState::Unsatisfied;
@@ -112,9 +133,7 @@ struct DecorationDisposition
   /// and at least one decoration has been attached to this disposition.
   /// </remarks>
   bool IsPublicationComplete(void) const {
-    return
-      !m_decorations.empty() &&
-      m_decorations.size() >= m_publishers.size();
+    return !m_decorations.empty() && m_nProducersRun >= m_publishers.size();
   }
 
   void Reset(void) {

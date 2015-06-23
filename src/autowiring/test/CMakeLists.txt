@@ -16,9 +16,9 @@ set(AutowiringTest_SRCS
   AutoInjectableTest.cpp
   AutoPacketTest.cpp
   AutoPacketFactoryTest.cpp
-  AutoParameterTest.cpp
   AutoRestarterTest.cpp
   AutoSignalTest.cpp
+  AutowiringDebugTest.cpp
   AutowiringTest.cpp
   AutowiringUtilitiesTest.cpp
   BasicThreadTest.cpp
@@ -32,9 +32,9 @@ set(AutowiringTest_SRCS
   ContextMapTest.cpp
   ContextMemberTest.cpp
   CoreThreadTest.cpp
-  ContextCreatorTest.cpp
   CurrentContextPusherTest.cpp
   DecoratorTest.cpp
+  DemangleTest.cpp
   DispatchQueueTest.cpp
   DtorCorrectnessTest.hpp
   DtorCorrectnessTest.cpp
@@ -42,7 +42,6 @@ set(AutowiringTest_SRCS
   EventReceiverTest.cpp
   EventRegistryTest.cpp
   FactoryTest.cpp
-  ForeignTest.cpp
   GlobalInitTest.hpp
   GlobalInitTest.cpp
   GuardObjectTest.cpp

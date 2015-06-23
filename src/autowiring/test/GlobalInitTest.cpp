@@ -14,16 +14,18 @@ void GlobalInitTest::SetUp(void) {
 }
 
 void GlobalInitTest::TearDown(void) {
-  std::weak_ptr<GlobalCoreContext> glbl = AutoGlobalContext();
+  std::shared_ptr<GlobalCoreContext> glbl = AutoGlobalContext();
 
-  // Always drop the global context when tests are done
-  GlobalCoreContext::Release();
+  {
+    // Always drop the global context when tests are done
+    ASSERT_EQ(glbl, GlobalCoreContext::Release()) << "Release did not correctly return the previously current global context";
+  }
 
   // Also release the current context, whatever it is.
   CoreContext::EvictCurrent();
 
   // Be absolutely sure the global context went away
-  ASSERT_TRUE(glbl.expired()) << "Global context did not tear down as expected";
+  ASSERT_TRUE(glbl.unique()) << "An unexpected additional reference to the global context was detected";
 }
 
 TEST_F(GlobalInitTest, VerifyGlobalExists) {

@@ -12,6 +12,11 @@ AutoPacketFactory::AutoPacketFactory(void):
 
 AutoPacketFactory::~AutoPacketFactory() {}
 
+std::shared_ptr<AutoPacket> AutoPacketFactory::CurrentPacket(void) {
+  std::lock_guard<std::mutex> lk(m_lock);
+  return m_curPacket.lock();
+}
+
 std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
   if(ShouldStop())
     throw autowiring_error("Attempted to create a packet on an AutoPacketFactory that was already terminated");
@@ -30,6 +35,7 @@ std::shared_ptr<AutoPacket> AutoPacketFactory::NewPacket(void) {
     // Create a new next packet
     retVal = m_nextPacket;
     m_nextPacket = retVal->SuccessorInternal();
+    m_curPacket = retVal;
   }
   
   retVal->Initialize(isFirstPacket);
@@ -65,6 +71,13 @@ std::shared_ptr<void> AutoPacketFactory::GetInternalOutstanding(void) {
     }
   );
   m_outstandingInternal = retVal;
+  return retVal;
+}
+
+std::vector<AutoFilterDescriptor> AutoPacketFactory::GetAutoFilters(void) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  std::vector<AutoFilterDescriptor> retVal;
+  retVal.assign(m_autoFilters.begin(), m_autoFilters.end());
   return retVal;
 }
 

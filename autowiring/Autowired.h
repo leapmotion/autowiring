@@ -1,8 +1,8 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "auto_signal.h"
+#include "AutowiringDebug.h"
 #include "AutowirableSlot.h"
-#include "Decompose.h"
 #include "GlobalCoreContext.h"
 #include MEMORY_HEADER
 #include ATOMIC_HEADER
@@ -402,7 +402,7 @@ public:
   }
 };
 
-/// \internal deprecated
+/// \internal
 /// <summary>
 /// A version of AutoRequired that forwards constructor arguments to the injected
 /// type's constructor function.

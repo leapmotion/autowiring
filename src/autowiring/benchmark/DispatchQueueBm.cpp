@@ -38,7 +38,7 @@ Benchmark DispatchQueueBm::Dispatch(void) {
           }
         );
 
-        int x = 0;
+        size_t x = 0;
         std::string s = "Hello world";
         auto l = [&x, s] { x += s.length(); };
 
@@ -62,7 +62,7 @@ Benchmark DispatchQueueBm::Dispatch(void) {
         AutoRequired<CoreThread> ct;
         ctxt->Initiate();
 
-        int x = 0;
+        size_t x = 0;
         std::string s = "Hello world";
         auto l = [&x, s] { x += s.length(); };
 

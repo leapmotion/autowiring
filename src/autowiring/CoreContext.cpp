@@ -300,18 +300,8 @@ void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
   }
 
   // Subscribers, if applicable:
-  const auto& stump = *traits.stump;
-  if(!traits.subscriber.empty()) {
+  if(!traits.subscriber.empty())
     AddPacketSubscriber(traits.subscriber);
-
-    // Ancilliary subscribers, if present:
-    for(const auto* pCur = stump.pFirstAutoFilter; pCur; pCur = pCur->pFlink) {
-      AutoFilterDescriptor subscriber(traits.subscriber.GetAutoFilter(), pCur->stub);
-      AddPacketSubscriber(subscriber);
-    }
-  }
-  else if(stump.pFirstAutoFilter)
-    throw autowiring_error("It is an error to make use of NewAutoFilter in a type which does not have an AutoFilter member; please provide an AutoFilter method on this type");
 
   // Signal listeners that a new object has been created
   GetGlobal()->Invoke(&AutowiringEvents::NewObject)(*this, traits);
@@ -616,6 +606,11 @@ bool CoreContext::DelayUntilInitiated(void) {
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
   m_stateBlock->m_stateChanged.wait(lk, [this] {return IsInitiated();});
   return !IsShutdown();
+}
+
+std::shared_ptr<CoreContext> CoreContext::CurrentContextOrNull(void) {
+  auto retVal = autoCurrentContext.get();
+  return retVal ? *retVal : nullptr;
 }
 
 std::shared_ptr<CoreContext> CoreContext::CurrentContext(void) {
@@ -1268,15 +1263,17 @@ std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
   return os;
 }
 
-std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
-  std::shared_ptr<CoreContext> newCurrent = this->shared_from_this();
-
-  if(!newCurrent)
-    throw std::runtime_error("Attempted to make a CoreContext current from a CoreContext ctor");
-
-  std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContext();
-  autoCurrentContext.reset(new std::shared_ptr<CoreContext>(newCurrent));
+std::shared_ptr<CoreContext> CoreContext::SetCurrent(const std::shared_ptr<CoreContext>& ctxt) {
+  std::shared_ptr<CoreContext> retVal = CoreContext::CurrentContextOrNull();
+  if (ctxt)
+    autoCurrentContext.reset(new std::shared_ptr<CoreContext>(ctxt));
+  else
+    autoCurrentContext.reset();
   return retVal;
+}
+
+std::shared_ptr<CoreContext> CoreContext::SetCurrent(void) {
+  return CoreContext::SetCurrent(shared_from_this());
 }
 
 void CoreContext::EvictCurrent(void) {

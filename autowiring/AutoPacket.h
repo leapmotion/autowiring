@@ -3,7 +3,7 @@
 #include "AnySharedPointer.h"
 #include "at_exit.h"
 #include "auto_id.h"
-#include "AutoFilterDescriptorInput.h"
+#include "AutoFilterArgument.h"
 #include "DecorationDisposition.h"
 #include "demangle.h"
 #include "is_any.h"
@@ -22,7 +22,7 @@ class AutoPacketFactory;
 class AutoPacketProfiler;
 class CoreContext;
 struct AutoFilterDescriptor;
-struct AutoFilterDescriptorInput;
+struct AutoFilterArgument;
 
 template<class MemFn>
 struct Decompose;
@@ -35,9 +35,6 @@ struct Decompose;
 /// The pipeline packet is not a type of context; querying the packet for an element of
 /// a particular type will look for an element of precisely that type, not an inherited
 /// type or a related interface.
-///
-/// Consumers who wish to advertise a particular field under multiple types must do so
-/// manually with the Advertise function.
 /// </remarks>
 class AutoPacket:
   public std::enable_shared_from_this<AutoPacket>,
@@ -108,7 +105,7 @@ protected:
   /// This method results in a call to the AutoFilter method on any subscribers which are
   /// satisfied by this decoration.  This method must be called with m_lock held.
   /// </remarks>
-  void UpdateSatisfactionUnsafe(std::unique_lock<std::mutex>&& lk, const DecorationDisposition& disposition);
+  void UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const DecorationDisposition& disposition);
 
   /// <summary>
   /// Performs a "satisfaction pulse", which will avoid notifying any deferred filters
@@ -117,7 +114,7 @@ protected:
   /// A satisfaction pulse will call any AutoFilter instances which are satisfied by the
   /// decoration of the passed decoration types.
   /// </remarks>
-  void PulseSatisfaction(DecorationDisposition* pTypeSubs[], size_t nInfos);
+  void PulseSatisfactionUnsafe(std::unique_lock<std::mutex> lk, DecorationDisposition* pTypeSubs [], size_t nInfos);
 
   /// <summary>Unsynchronized runtime counterpart to Has</summary>
   bool HasUnsafe(const DecorationKey& key) const;
@@ -180,7 +177,7 @@ public:
   t_decorationMap GetDecorations(void) const;
 
   /// <returns>
-  /// True if this packet posesses a decoration of the specified type
+  /// True if this packet posesses one or more instances of a decoration of the specified type
   /// </returns>
   /// <remarks>
   /// Although "AutoPacket &" and "const AutoPacket&" argument types will be
@@ -189,7 +186,7 @@ public:
   template<class T>
   bool Has(int tshift=0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    return HasUnsafe(DecorationKey(auto_id<T>::key(), true, tshift));
+    return HasUnsafe(DecorationKey(auto_id<T>::key(), tshift));
   }
 
   /// <summary>
@@ -201,7 +198,7 @@ public:
 
     const T* retVal;
     if (!Get(retVal, tshift))
-      ThrowNotDecoratedException(DecorationKey(auto_id<T>::key(), false, tshift));
+      ThrowNotDecoratedException(DecorationKey(auto_id<T>::key(), tshift));
     return *retVal;
   }
 
@@ -214,7 +211,7 @@ public:
   /// </remarks>
   template<class T>
   bool Get(const T*& out, int tshift=0) const {
-    DecorationKey key(auto_id<T>::key(), false, tshift);
+    DecorationKey key(auto_id<T>::key(), tshift);
     const DecorationDisposition* pDisposition = GetDisposition(key);
     if (pDisposition) {
       switch (pDisposition->m_decorations.size()) {
@@ -252,9 +249,12 @@ public:
   /// This method will throw an exception if the requested decoration is multiply present on the packet
   /// </remarks>
   template<class T>
-  bool Get(const std::shared_ptr<const T>*& out, int tshift=0) const {
+  bool Get(const std::shared_ptr<T>*& out, int tshift=0) const {
+    static_assert(std::is_const<T>::value, "Cannot get a non-const shared pointer from AutoPacket, declare as `const std::shared_ptr<const T>*`");
+    typedef typename std::remove_const<T>::type TActual;
+
     // Decoration must be present and the shared pointer itself must also be present
-    DecorationKey key(auto_id<T>::key(), true, tshift);
+    DecorationKey key(auto_id<TActual>::key(), tshift);
     const DecorationDisposition* pDisposition = GetDisposition(key);
     if (!pDisposition) {
       out = nullptr;
@@ -267,7 +267,7 @@ public:
       return false;
     case 1:
       // Single decoration available, we can return here
-      out = &pDisposition->m_decorations[0]->as_unsafe<const T>();
+      out = &pDisposition->m_decorations[0]->as_unsafe<T>();
       return true;
     default:
       ThrowMultiplyDecoratedException(key);
@@ -285,8 +285,8 @@ public:
   template<class T>
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), true, tshift));
-    if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Satisfied) {
+    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
+    if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Complete) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
         out = disposition.m_decorations[0]->as_unsafe<T>();
@@ -308,29 +308,52 @@ public:
   }
 
   /// <summary>
-  /// Returns a null-terminated temporary buffer containing all decorations
+  /// Returns a null-terminated buffer containing all decorations
   /// </summary>
-  /// <returns>The null-terminated temporary buffer</returns>
-  /// <remarks>
-  /// The returned buffer must be freed with std::return_temporary_buffer
-  /// </remarks>
+  /// <returns>The null-terminated buffer</returns>
   template<class T>
-  const T** GetAll(int tshift = 0) const {
+  std::unique_ptr<const T*[]> GetAll(int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), true, tshift));
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    if (q == m_decorations.end()) {
-      const T** retVal = std::get_temporary_buffer<const T*>(1).first;
-      retVal[0] = nullptr;
-      return retVal;
-    }
+    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
+    if (q == m_decorations.end())
+      return std::unique_ptr<const T*[]>{
+        new const T*[1] {nullptr}
+      };
 
+    // Transfer in, return to caller:
     const auto& decorations = q->second.m_decorations;
-    const T** retVal = std::get_temporary_buffer<const T*>(decorations.size() + 1).first;
+    std::unique_ptr<const T* []> retVal{new const T*[decorations.size() + 1]};
     for (size_t i = 0; i < decorations.size(); i++)
       retVal[i] = static_cast<const T*>(decorations[i]->ptr());
     retVal[decorations.size()] = nullptr;
+    return retVal;
+  }
+
+  /// <summary>
+  /// Shared variant of GetAll
+  /// </summary>
+  /// <returns>The null-terminated buffer</returns>
+  template<class T>
+  std::unique_ptr<std::shared_ptr<const T>[]> GetAllShared(int tshift = 0) const {
+    std::lock_guard<std::mutex> lk(m_lock);
+    typedef typename std::remove_const<T>::type TActual;
+
+    // If decoration doesn't exist, return empty null-terminated buffer
+    auto q = m_decorations.find(DecorationKey(auto_id<TActual>::key(), tshift));
+    if (q == m_decorations.end())
+      return std::unique_ptr<std::shared_ptr<const T>[]>{
+        new std::shared_ptr<const T>[1] {nullptr}
+      };
+
+    // Transfer in, return to caller:
+    const auto& decorations = q->second.m_decorations;
+    std::unique_ptr<std::shared_ptr<const T>[]> retVal{
+      new std::shared_ptr<const T>[decorations.size() + 1]
+    };
+    for (size_t i = 0; i < decorations.size(); i++)
+      retVal[i] = decorations[i].as<T>().get();
     return retVal;
   }
 
@@ -354,8 +377,7 @@ public:
   /// </remarks>
   template<class T>
   void Unsatisfiable(void) {
-    MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), false, 0));
-    MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), true, 0));
+    MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
   }
 
   /// <summary>
@@ -368,11 +390,12 @@ public:
   /// </remarks>
   template<class T>
   const T& Decorate(T t) {
+    static_assert(!std::is_pointer<T>::value, "Can't decorate using a pointer type.");
     // Create a copy of the input, put the copy in a shared pointer
     auto ptr = std::make_shared<T>(std::forward<T&&>(t));
     Decorate(
       AnySharedPointer(ptr),
-      DecorationKey(auto_id<T>::key(), true, 0)
+      DecorationKey(auto_id<T>::key(), 0)
     );
     return *ptr;
   }
@@ -388,7 +411,7 @@ public:
   /// </remarks>
   template<class T>
   void Decorate(std::shared_ptr<T> ptr) {
-    DecorationKey key(auto_id<T>::key(), true, 0);
+    DecorationKey key(auto_id<T>::key(), 0);
     
     // We don't want to see this overload used on a const T
     static_assert(!std::is_const<T>::value, "Cannot decorate a shared pointer to const T with this overload");
@@ -438,11 +461,9 @@ public:
     // Perform standard decoration with a short initialization:
     std::unique_lock<std::mutex> lk(m_lock);
     DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)] = {
-      &DecorateImmediateUnsafe(DecorationKey(auto_id<T>::key(), false, 0), &immed),
-      &DecorateImmediateUnsafe(DecorationKey(auto_id<Ts>::key(), false, 0), &immeds)...
+      &DecorateImmediateUnsafe(DecorationKey(auto_id<T>::key(), 0), &immed),
+      &DecorateImmediateUnsafe(DecorationKey(auto_id<Ts>::key(), 0), &immeds)...
     };
-    lk.unlock();
-
 
     // Pulse satisfaction:
     MakeAtExit([this, &pTypeSubs] {
@@ -450,16 +471,14 @@ public:
       // IMPORTANT: isCheckedOut = true prevents subsequent decorations of this type
       for(DecorationDisposition*  pEntry : pTypeSubs) {
         pEntry->m_pImmediate = nullptr;
-        pEntry->m_state = DispositionState::Unsatisfiable;
+        pEntry->m_state = DispositionState::Complete;
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-      for (const std::type_info* ti : {&auto_id<T>::key(), &auto_id<Ts>::key()...}) {
-        MarkUnsatisfiable(DecorationKey(*ti, true, 0));
-        MarkUnsatisfiable(DecorationKey(*ti, false, 0));
-      }
+      for (const std::type_info* ti : {&auto_id<T>::key(), &auto_id<Ts>::key()...})
+        MarkUnsatisfiable(DecorationKey(*ti, 0));
     }),
-    PulseSatisfaction(pTypeSubs, 1 + sizeof...(Ts));
+    PulseSatisfactionUnsafe(std::move(lk), pTypeSubs, 1 + sizeof...(Ts));
   }
 
   /// <summary>
@@ -512,9 +531,7 @@ public:
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   template<class T>
   bool HasSubscribers(void) const {
-    return
-      HasSubscribers(DecorationKey(auto_id<T>::key(), false, 0)) ||
-      HasSubscribers(DecorationKey(auto_id<T>::key(), true, 0));
+    return HasSubscribers(DecorationKey(auto_id<T>::key(), 0));
   }
 
   struct SignalStub {
@@ -541,7 +558,7 @@ public:
   /// by this filter have been satisfied on this packet.  When this function returns, the specified filter will have
   /// been called.
   /// </remarks>
-  bool Wait(std::condition_variable& cv, const AutoFilterDescriptorInput* inputs, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max());
+  bool Wait(std::condition_variable& cv, const AutoFilterArgument* inputs, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max());
 
   /// <summary>
   /// Blocks until the passed lambda function can be called
@@ -566,7 +583,7 @@ public:
 
     // Add the filter that will ultimately be invoked
     *this += std::move(autoFilter);
-    return Wait(cv, Decompose<decltype(&Fx::operator())>::template Enumerate<AutoFilterDescriptorInput, AutoFilterDescriptorInputT>::types, duration);
+    return Wait(cv, Decompose<decltype(&Fx::operator())>::template Enumerate<AutoFilterArgument, AutoFilterArgumentT>::types, duration);
   }
 
   /// <summary>
@@ -575,9 +592,9 @@ public:
   template<class... Decorations>
   bool Wait(std::condition_variable& cv)
   {
-    static const AutoFilterDescriptorInput inputs [] = {
+    static const AutoFilterArgument inputs [] = {
       static_cast<auto_arg<Decorations>*>(nullptr)...,
-      AutoFilterDescriptorInput()
+      AutoFilterArgument()
     };
 
     return Wait(cv, inputs, std::chrono::nanoseconds::max());
@@ -589,9 +606,9 @@ public:
   template<class... Args>
   bool Wait(std::chrono::nanoseconds duration, std::condition_variable& cv)
   {
-    static const AutoFilterDescriptorInput inputs [] = {
-      AutoFilterDescriptorInputT<Args>()...,
-      AutoFilterDescriptorInput()
+    static const AutoFilterArgument inputs [] = {
+      AutoFilterArgumentT<Args>()...,
+      AutoFilterArgument()
     };
 
     return Wait(cv, inputs, duration);
