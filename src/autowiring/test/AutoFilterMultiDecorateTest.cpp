@@ -131,3 +131,23 @@ TEST_F(AutoFilterMultiDecorateTest, ArrayOfSharedPointers) {
   ASSERT_EQ(2, f1) << "shared_ptr[] input decoration count mismatch";
   ASSERT_EQ(2, f2) << "const shared_ptr[] input decoration count mismatch";
 }
+
+TEST_F(AutoFilterMultiDecorateTest, SingleFunctionDoubleOutput) {
+  AutoRequired<AutoPacketFactory> factory;
+  AutoCurrentContext()->Initiate();
+
+  *factory += [](Decoration<0>& one, Decoration<0>& two) {
+    ASSERT_NE(&one, &two) << "When the same decoration type is mentioned more than once in a signature, the two outputs should be distinct";
+    one.i = 1;
+    two.i = 2;
+  };
+
+  size_t nArgs = 0;
+  *factory += [&] (const Decoration<0>* args []) {
+    while (*args++)
+      nArgs++;
+  };
+
+  factory->NewPacket();
+  ASSERT_EQ(2UL, nArgs) << "A filter that multiply attaches decorations did not correctly do so";
+}
