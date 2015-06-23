@@ -94,12 +94,6 @@ add_executable(AutowiringTest ${AutowiringTest_SRCS})
 target_link_libraries(AutowiringTest Autowiring AutowiringFixture AutoTesting)
 target_include_directories(AutowiringTest PRIVATE "${CMAKE_SOURCE_DIR}/contrib/autoboost")
 
-# Need boost thread on android, because of our use of std::async
-if(BUILD_ANDROID)
-  find_package(Boost COMPONENTS atomic system thread REQUIRED QUIET)
-  target_link_libraries(AutowiringTest ${Boost_LIBRARIES})
-endif()
-
 # Link AutoNet if we've got it
 if(TARGET AutoNet)
   target_link_libraries(AutowiringTest AutoNet)
