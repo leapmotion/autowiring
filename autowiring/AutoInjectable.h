@@ -97,7 +97,7 @@ private:
 /// to create instances of the enclosed payload objects in the current context.  This operation is
 /// idempotent according to the ordinary rules of AutoRequire and CoreContext::Construct.
 /// </remarks>
-class AutoInjectable
+class DEPRECATED_CLASS(AutoInjectable, "This class is deprecated. Use std::vector<std::function<void()>> instead")
 {
 public:
   AutoInjectable(AutoInjectableExpressionBase* pValue = nullptr);
