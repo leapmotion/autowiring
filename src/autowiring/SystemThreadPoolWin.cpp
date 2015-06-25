@@ -60,7 +60,7 @@ void SystemThreadPoolWin::OnStop(void) {
   m_pwkDispatchRundown = nullptr;
 }
 
-void SystemThreadPoolWin::Consume(std::shared_ptr<DispatchQueue> dq)
+void SystemThreadPoolWin::Consume(const std::shared_ptr<DispatchQueue>& dq)
 {
   // Append the entry and then signal the rundown queue that there is work to be done
   std::lock_guard<std::mutex> lk(m_lock);

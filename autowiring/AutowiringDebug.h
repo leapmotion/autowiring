@@ -59,7 +59,7 @@ std::vector<std::string> ListRootDecorations(void);
 /// <returns> string representation of DOT file, or outputs to 'os' </returns>
 std::string WriteAutoFilterGraph(void);
 void WriteAutoFilterGraph(std::ostream& os);
-void WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<CoreContext> ctxt);
+void WriteAutoFilterGraph(std::ostream& os, const std::shared_ptr<CoreContext>& ctxt);
 
 /// <summary>
 /// Initializes the Autowiring debug library

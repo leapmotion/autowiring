@@ -32,7 +32,7 @@ public:
   /// <summary>
   /// Sets the pool that will be used by the owning context when the owning context initiates
   /// </summary>
-  void SetSuccessor(std::shared_ptr<ThreadPool> successor);
+  void SetSuccessor(const std::shared_ptr<ThreadPool>& successor);
 
   /// <summary>
   /// Causes all internally held dispatchers to be moved to the successor pool, then clears this pool

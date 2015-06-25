@@ -70,7 +70,7 @@ public:
   /// This method is guaranteed not to block.  The default implementation captures the passed
   /// queue in a lambda and invokes Submit with this constructed lambda.
   /// </remarks>
-  virtual void Consume(std::shared_ptr<DispatchQueue> dq);
+  virtual void Consume(const std::shared_ptr<DispatchQueue>& dq);
 
   /// <summary>
   /// Adds the specified thunk to be executed by the thread pool at some later time
