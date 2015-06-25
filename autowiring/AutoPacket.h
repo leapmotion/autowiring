@@ -389,10 +389,31 @@ public:
   /// value regardless of whether any subscribers exist.
   /// </remarks>
   template<class T>
-  const T& Decorate(T t) {
+  const T& Decorate(T&& t) {
+    typedef typename std::remove_reference<T>::type BaseType;
+    static_assert(!std::is_pointer<BaseType>::value, "Can't decorate using a pointer type.");
+    // Create a copy of the input, put the copy in a shared pointer
+    auto ptr = std::make_shared<BaseType>(std::forward<T>(t));
+    Decorate(
+      AnySharedPointer(ptr),
+      DecorationKey(auto_id<BaseType>::key(), 0)
+    );
+    return *ptr;
+  }
+
+  /// <summary>
+  /// Decorates this packet with a particular type T, forwarding the arguments to the constructor of T.
+  /// </summary>
+  /// <returns>A reference to the internally persisted object</returns>
+  /// <remarks>
+  /// The Decorate method is unconditional and will install the passed
+  /// value regardless of whether any subscribers exist.
+  /// </remarks>
+  template<class T, typename... Args>
+  const T& Decorate(Args&&... args) {
     static_assert(!std::is_pointer<T>::value, "Can't decorate using a pointer type.");
     // Create a copy of the input, put the copy in a shared pointer
-    auto ptr = std::make_shared<T>(std::forward<T&&>(t));
+    auto ptr = std::make_shared<T>(std::forward<Args>(args)...);
     Decorate(
       AnySharedPointer(ptr),
       DecorationKey(auto_id<T>::key(), 0)
