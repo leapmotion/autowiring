@@ -10,7 +10,7 @@ NullPool::NullPool(void)
 NullPool::~NullPool(void)
 {}
 
-void NullPool::SetSuccessor(std::shared_ptr<ThreadPool> successor) {
+void NullPool::SetSuccessor(const std::shared_ptr<ThreadPool>& successor) {
   std::lock_guard<std::mutex> lk(m_lock);
   m_successor = successor;
 }

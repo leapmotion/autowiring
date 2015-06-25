@@ -24,7 +24,7 @@ std::shared_ptr<void> ThreadPool::Start(void) {
 }
 
 
-void ThreadPool::Consume(std::shared_ptr<DispatchQueue> dq) {
+void ThreadPool::Consume(const std::shared_ptr<DispatchQueue>& dq) {
   Submit(
     MakeDispatchThunk(
       [dq] { dq->DispatchAllEvents(); }

@@ -369,7 +369,7 @@ public:
   /// Furthermore, types that are unsatisfied in this context will not be marked as
   /// unsatisfied in the recipient - only present data will be provided.
   /// </remarks>
-  void ForwardAll(std::shared_ptr<AutoPacket> recipient) const;
+  void ForwardAll(const std::shared_ptr<AutoPacket>& recipient) const;
 
   /// <summary>
   /// Marks the named decoration as unsatisfiable
@@ -413,7 +413,7 @@ public:
   /// If the passed value is null, the corresponding value will be marked unsatisfiable.
   /// </remarks>
   template<class T>
-  void Decorate(std::shared_ptr<T> ptr) {
+  void Decorate(const std::shared_ptr<T>& ptr) {
     DecorationKey key(auto_id<T>::key(), 0);
     
     // We don't want to see this overload used on a const T
@@ -437,7 +437,7 @@ public:
   /// shared pointer.
   /// </remarks>
   template<class T>
-  void Decorate(std::shared_ptr<const T> ptr) {
+  void Decorate(const std::shared_ptr<const T>& ptr) {
     Decorate(std::const_pointer_cast<T>(ptr));
   }
 

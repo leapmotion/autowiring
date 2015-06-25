@@ -53,7 +53,7 @@ public:
 static thread_specific_ptr<std::shared_ptr<CoreContext>> autoCurrentContext;
 
 // Peer Context Constructor. Called interally by CreatePeer
-CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference) :
+CoreContext::CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference) :
   m_pParent(pParent),
   m_backReference(backReference),
   m_stateBlock(new CoreContextStateBlock),
@@ -698,7 +698,7 @@ void CoreContext::BuildCurrentState(void) {
   }
 }
 
-void CoreContext::SetThreadPool(std::shared_ptr<ThreadPool> threadPool) {
+void CoreContext::SetThreadPool(const std::shared_ptr<ThreadPool>& threadPool) {
   if (!threadPool)
     throw std::invalid_argument("A context cannot be given a null thread pool");
 

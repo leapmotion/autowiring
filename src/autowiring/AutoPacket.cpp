@@ -419,7 +419,7 @@ AutoPacket::t_decorationMap AutoPacket::GetDecorations(void) const
   return m_decorations;
 }
 
-void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
+void AutoPacket::ForwardAll(const std::shared_ptr<AutoPacket>& recipient) const {
   // Copy decorations into an internal decorations maintenance collection.  The values
   // in this collection are guaranteed to be stable in memory, and there are stable states
   // that can be relied upon without synchronization.
