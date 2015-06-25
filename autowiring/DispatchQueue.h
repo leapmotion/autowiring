@@ -21,7 +21,7 @@ class DispatchQueue {
 public:
   DispatchQueue(void);
   DispatchQueue(size_t dispatchCap);
-  DispatchQueue(DispatchQueue&&) = delete;
+  DispatchQueue(DispatchQueue&&);
   DispatchQueue(const DispatchQueue&) = delete;
 
   /// <summary>
