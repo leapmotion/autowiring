@@ -203,7 +203,7 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os) {
   WriteAutoFilterGraph(os, AutoCurrentContext());
 }
 
-std::string WriteAutoFilterGraph(void) {
+std::string autowiring::dbg::AutoFilterGraphStr(void) {
   std::stringstream ss;
   WriteAutoFilterGraph(ss);
   return ss.str();
@@ -286,5 +286,7 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<Cor
 }
 
 void autowiring::dbg::DebugInit(void) {
-
+  static const void* p [] = {
+    (void*) AutoFilterGraphStr
+  };
 }
