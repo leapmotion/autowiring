@@ -68,7 +68,7 @@ protected:
   // Decorations are indexed first by type and second by pipe terminating type, if any.
   // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
   typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
-  t_decorationMap m_decorations;
+  t_decorationMap m_decoration_map;
 
   mutable std::mutex m_lock;
 
@@ -285,8 +285,8 @@ public:
   template<class T>
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
-    if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Complete) {
+    auto deco = m_decoration_map.find(DecorationKey(auto_id<T>::key(), tshift));
+    if(deco != m_decoration_map.end() && deco->second.m_state == DispositionState::Complete) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
         out = disposition.m_decorations[0]->as_unsafe<T>();
@@ -316,8 +316,8 @@ public:
     std::lock_guard<std::mutex> lk(m_lock);
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
-    if (q == m_decorations.end())
+    auto q = m_decoration_map.find(DecorationKey(auto_id<T>::key(), tshift));
+    if (q == m_decoration_map.end())
       return std::unique_ptr<const T*[]>{
         new const T*[1] {nullptr}
       };
@@ -341,8 +341,8 @@ public:
     typedef typename std::remove_const<T>::type TActual;
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decorations.find(DecorationKey(auto_id<TActual>::key(), tshift));
-    if (q == m_decorations.end())
+    auto q = m_decoration_map.find(DecorationKey(auto_id<TActual>::key(), tshift));
+    if (q == m_decoration_map.end())
       return std::unique_ptr<std::shared_ptr<const T>[]>{
         new std::shared_ptr<const T>[1] {nullptr}
       };
