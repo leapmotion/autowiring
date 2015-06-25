@@ -40,7 +40,7 @@ struct CallExtractorSetup
     auto_arg<typename autowiring::nth_type<N, Args...>::type>::is_output,
     bool
   >::type Commit(bool) {
-    packet.Decorate(autowiring::get<N>(args));
+    auto_arg<typename autowiring::nth_type<N, Args...>::type>::Commit(packet, autowiring::get<N>(args));
     return true;
   }
 

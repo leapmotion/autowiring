@@ -186,6 +186,10 @@ public:
 
   static std::shared_ptr<T> arg(AutoPacket& packet) {
     return auto_arg_ctor_helper<T>::arg(packet);
+
+  template<class C>
+  static void Commit (C& packet, type val) {
+    packet.template Decorate<T>(val);
   }
 };
 
