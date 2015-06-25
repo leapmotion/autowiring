@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "auto_arg.h"
+#include "auto_in.h"
 #include "auto_tuple.h"
 #include "AutoPacket.h"
 #include "CurrentContextPusher.h"

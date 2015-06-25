@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "var_logic.h"
 #include <autowiring/auto_arg.h>
+#include <autowiring/auto_out.h>
 #include <autowiring/has_autofilter.h>
 
 class ArgumentTypeTest:
@@ -31,10 +32,6 @@ public:
   int i;
   Argument(int j = N) : i(j) {}
 };
-
-void FilterFunction(const Argument<0>& typeIn, auto_out<Argument<1>> typeOut) {
-  typeOut->i += 1 + typeIn.i;
-}
 
 typedef Argument<0> copied_in;
 typedef const Argument<0> copied_in_const;

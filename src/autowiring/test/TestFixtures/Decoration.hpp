@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include <autowiring/CoreThread.h>
+#include <autowiring/auto_out.h>
 #include <autowiring/auto_tuple.h>
 #include <autowiring/has_autofilter.h>
 #include STL_TUPLE_HEADER
@@ -206,7 +207,7 @@ public:
     void AutoFilter(AutoPacket& pkt, auto_out<Decoration<0>> zero) {
       ++m_called;
       pkt.Decorate(Decoration<1>());
-      ++zero->i;
+      zero = Decoration<0>(1);
     }
 };
 
@@ -219,6 +220,6 @@ public FilterRoot {
 public:
   void AutoFilter(auto_out<Decoration<2>> two) {
     ++m_called;
-    two = std::make_shared<Decoration<2>>();
+    two = Decoration<2>();
   }
 };
