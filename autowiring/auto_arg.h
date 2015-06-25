@@ -117,6 +117,8 @@ class auto_arg<auto_in<T>>:
   public auto_arg<T>
 {};
 
+namespace Internal {
+
 /// <summary>
 /// Construction helper for output-by-reference decoration types
 /// </summary>
@@ -158,6 +160,8 @@ struct auto_arg_ctor_helper<T, has_default, false> {
   }
 };
 
+} // end of namespace Internal
+
 /// <summary>
 /// Specialization for "T&" ~ auto_out<T>
 /// </summary>
@@ -185,7 +189,8 @@ public:
   static const int tshift = 0;
 
   static std::shared_ptr<T> arg(AutoPacket& packet) {
-    return auto_arg_ctor_helper<T>::arg(packet);
+    return Internal::auto_arg_ctor_helper<T>::arg(packet);
+  }
 
   template<class C>
   static void Commit (C& packet, type val) {
