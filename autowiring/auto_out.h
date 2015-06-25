@@ -24,6 +24,7 @@ public:
   const T *operator -> () const { AssertValidityGuarantee(); return m_auto_out_impl->operator->(); }
   auto_out &operator= (const T &t) { AssertValidityGuarantee(); m_auto_out_impl->operator=(t); }
   auto_out &operator= (T &&t) { AssertValidityGuarantee(); m_auto_out_impl->operator=(std::forward<T>(t)); }
+  auto_out &operator= (const std::shared_ptr<T> &t) { AssertValidityGuarantee(); m_auto_out_impl->operator=(t); }
   
 private:
   
@@ -62,6 +63,13 @@ private:
       assert(bool(m_packet) && "m_packet should never be null.");
       if (!m_decoration) {
         m_packet->Decorate<T>(std::forward<T>(t));
+        m_packet->Get<T>(m_decoration);
+      }
+    }
+    void operator= (const std::shared_ptr<T> &t) {
+      assert(bool(m_packet) && "m_packet should never be null.");
+      if (!m_decoration) {
+        m_packet->Decorate<T>(t);
         m_packet->Get<T>(m_decoration);
       }
     }
