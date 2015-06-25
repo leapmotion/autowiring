@@ -289,4 +289,5 @@ void autowiring::dbg::DebugInit(void) {
   static const void* p [] = {
     (void*) AutoFilterGraphStr
   };
+  (void)p;
 }
