@@ -146,6 +146,9 @@ protected:
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   bool HasSubscribers(const DecorationKey& key) const;
 
+  /// <returns>Zero if there are no publishers, otherwise the number of publishers</returns>
+  size_t HasPublishers(const DecorationKey& key) const;
+
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>
   /// If the type is not a subscriber GetSatisfaction().GetType() == nullptr will be true
@@ -529,9 +532,15 @@ public:
   std::shared_ptr<AutoPacket> Successor(void);
 
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
-  template<class T>
+  template<typename T>
   bool HasSubscribers(void) const {
-    return HasSubscribers(DecorationKey(auto_id<T>::key(), 0));
+    return HasSubscribers(DecorationKey{auto_id<T>::key(), 0});
+  }
+
+  /// <returns>Zero if there are no publishers, otherwise the number of publishers</returns>
+  template<typename T>
+  size_t HasPublishers(void) const {
+    return HasPublishers(DecorationKey{auto_id<T>::key(), 0});
   }
 
   struct SignalStub {

@@ -371,7 +371,20 @@ const DecorationDisposition* AutoPacket::GetDisposition(const DecorationKey& key
 
 bool AutoPacket::HasSubscribers(const DecorationKey& key) const {
   std::lock_guard<std::mutex> lk(m_lock);
-  return m_decorations.count(key) != 0;
+  auto q = m_decorations.find(key);
+  return
+    q == m_decorations.end() ?
+    false :
+    q->second.m_subscribers.size() != 0;
+}
+
+size_t AutoPacket::HasPublishers(const DecorationKey& key) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  auto q = m_decorations.find(key);
+  return
+    q == m_decorations.end() ?
+    0 :
+    q->second.m_publishers.size();
 }
 
 const SatCounter& AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {
