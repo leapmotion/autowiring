@@ -48,6 +48,11 @@ public:
   AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
 
+  // The set of decorations currently attached to this object, and the associated lock:
+  // Decorations are indexed first by type and second by pipe terminating type, if any.
+  // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
+  typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
+
 protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
@@ -64,10 +69,6 @@ protected:
   // Pointer to a forward linked list of saturation counters, constructed when the packet is created
   SatCounter* m_firstCounter = nullptr;
 
-  // The set of decorations currently attached to this object, and the associated lock:
-  // Decorations are indexed first by type and second by pipe terminating type, if any.
-  // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
-  typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
   t_decorationMap m_decoration_map;
 
   mutable std::mutex m_lock;
