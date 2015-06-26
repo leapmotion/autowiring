@@ -735,3 +735,33 @@ TEST_F(AutoFilterTest, CurrentContextCheck) {
 
   ASSERT_EQ(1, filter->m_called) << "AutoFilter called incorrect number of times";
 }
+
+TEST_F(AutoFilterTest, AutoOut0) {
+  AutoRequired<AutoPacketFactory> factory;
+  {
+    auto packet = factory->NewPacket();
+    packet->Decorate(123.45);
+    ASSERT_EQ(1, packet->GetDecorationTypeCount()) << "Did not get the expected number of decorations.";
+    ASSERT_EQ(123.45, packet->Get<double>());
+    *packet += [](const double &x, auto_out<int> y) {
+      y = static_cast<int>(x);
+    };
+    ASSERT_EQ(2, packet->GetDecorationTypeCount()) << "Did not get the expected number of decorations.";
+    ASSERT_EQ(123, packet->Get<int>());
+  }
+}
+
+TEST_F(AutoFilterTest, AutoOut1) {
+  AutoRequired<AutoPacketFactory> factory;
+  {
+    auto packet = factory->NewPacket();
+    // Same as AutoOut0 but add the filter first.
+    *packet += [](const double &x, auto_out<int> y) {
+      y = static_cast<int>(x);
+    };
+    packet->Decorate(123.45);
+    ASSERT_EQ(2, packet->GetDecorationTypeCount()) << "Did not get the expected number of decorations.";
+    ASSERT_EQ(123.45, packet->Get<double>());
+    ASSERT_EQ(123, packet->Get<int>());
+  }
+}
