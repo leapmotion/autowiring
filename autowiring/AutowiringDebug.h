@@ -57,7 +57,7 @@ std::vector<std::string> ListRootDecorations(void);
 /// <param name="ctxt">Context of AutoFilter network to output. Defaults to AutoCurrentContext</param>
 /// <param name="os">output stream to write DOT file</param>
 /// <returns> string representation of DOT file, or outputs to 'os' </returns>
-std::string WriteAutoFilterGraph(void);
+std::string AutoFilterGraphStr(void);
 void WriteAutoFilterGraph(std::ostream& os);
 void WriteAutoFilterGraph(std::ostream& os, const std::shared_ptr<CoreContext>& ctxt);
 
