@@ -8,6 +8,7 @@ class ParallelTest:
 {};
 
 TEST_F(ParallelTest, Basic) {
+  AutoCurrentContext()->Initiate();
   autowiring::parallel p;
 
   for (int i : {0,4,2,5,1,3}) {
@@ -17,8 +18,8 @@ TEST_F(ParallelTest, Basic) {
   }
 
   std::vector<int> result;
-  for (int i : p) {
-    result.push_back(i);
+  for (auto it = p.begin<int>(); it != p.end<int>(); ++it) {
+    result.push_back(*it);
   }
 
   ASSERT_EQ(result.size(), 6) << "Didn't receive all value";
