@@ -6,7 +6,6 @@
 #include <iterator>
 #include <unordered_map>
 #include <typeindex>
-#include <vector>
 #include <deque>
 
 namespace autowiring {
@@ -39,7 +38,7 @@ public:
   void Pop(void) {
     std::unique_lock<std::mutex> lk(m_queueMutex);
 
-    if (m_queue.empty())
+    if (m_queue[typeid(T)].empty())
       if (!m_outstandingCount)
         throw std::out_of_range("No outstanding jobs");
 
@@ -57,11 +56,10 @@ public:
   T Top(void) {
     std::unique_lock<std::mutex> lk(m_queueMutex);
 
-    if (m_queue.empty())
+    if (m_queue[typeid(T)].empty())
       m_queueUpdated.wait(lk, [this]{
         return !m_queue[typeid(T)].empty();
       });
-
     return *static_cast<T*>(m_queue[typeid(T)].front()->ptr());
   }
 
@@ -70,7 +68,7 @@ public:
   struct iterator:
     public std::iterator<std::input_iterator_tag, T>
   {
-    iterator(parallel& p, size_t& remaining):
+    iterator(parallel& p, const size_t& remaining):
       m_parent(p),
       m_remaining(remaining)
     {}
@@ -90,7 +88,7 @@ public:
 
   protected:
     parallel& m_parent;
-    size_t& m_remaining;
+    const size_t& m_remaining;
   };
 
   // Get an iterator to the begining of out queue of job results
@@ -102,7 +100,7 @@ public:
   // Iterator representing no jobs results remaining
   template<typename T>
   iterator<T> end(void) {
-    static size_t empty = 0;
+    static const size_t empty = 0;
     return iterator<T>(*this, empty);
   }
 

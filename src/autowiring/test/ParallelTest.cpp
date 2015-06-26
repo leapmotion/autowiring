@@ -2,6 +2,9 @@
 #include "stdafx.h"
 #include "gtest-all-guard.hpp"
 #include <autowiring/Parallel.h>
+#include <algorithm>
+#include <thread>
+#include <random>
 
 class ParallelTest:
   public testing::Test
@@ -11,8 +14,13 @@ TEST_F(ParallelTest, Basic) {
   AutoCurrentContext()->Initiate();
   autowiring::parallel p;
 
+  std::mt19937_64 mt(time(nullptr));
+  std::uniform_int_distribution<int> dist(0, 500);
+
   for (int i : {0,4,2,5,1,3}) {
-    p += [i]() {
+    int sleepTime = dist(mt);
+    p += [i, sleepTime]() {
+      std::this_thread::sleep_for(sleepTime*std::chrono::milliseconds(1));
       return i;
     };
   }
