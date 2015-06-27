@@ -165,12 +165,14 @@ protected:
 
 public:
   /// <returns>
-  /// The number of distinct decoration types on this packet
+  /// The number of distinct decoration types on this packet (this is really an implementation-detail-based count
+  /// of the parameters of all relevant filters, including lambdas appended to this packet).
   /// </returns>
   size_t GetDecorationTypeCount(void) const;
 
   /// <returns>
-  /// A copy of the decoration dispositions collection
+  /// A copy of the decoration dispositions collection (this is really an implementation-detail-based description
+  /// of the parameters of all relevant filters, including lambdas appended to this packet).
   /// </returns>
   /// <remarks>
   /// This is a diagnostic method, users are recommended to avoid the use of this routine where possible
@@ -377,7 +379,17 @@ public:
   /// form std::shared_ptr<const T> to be called, if the remainder of their inputs are available.
   /// </remarks>
   template<class T>
-  void Unsatisfiable(void) {
+  void DEPRECATED(Unsatisfiable(void), "Unsatisfiable is deprecated; use MarkUnsatisfiable instead.");
+
+  /// <summary>
+  /// Marks the named decoration as unsatisfiable
+  /// </summary>
+  /// <remarks>
+  /// Marking a decoration as unsatisfiable immediately causes any filters with an input of the
+  /// form std::shared_ptr<const T> to be called, if the remainder of their inputs are available.
+  /// </remarks>
+  template<class T>
+  void MarkUnsatisfiable(void) {
     MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
   }
 
@@ -640,3 +652,8 @@ public:
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;
 };
+
+template<class T>
+void AutoPacket::Unsatisfiable(void) {
+  MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
+}
