@@ -374,7 +374,20 @@ const DecorationDisposition* AutoPacket::GetDisposition(const DecorationKey& key
 
 bool AutoPacket::HasSubscribers(const DecorationKey& key) const {
   std::lock_guard<std::mutex> lk(m_lock);
-  return m_decoration_map.count(key) != 0;
+  auto q = m_decoration_map.find(key);
+  return
+    q == m_decoration_map.end() ?
+    false :
+    q->second.m_subscribers.size() != 0;
+}
+
+size_t AutoPacket::HasPublishers(const DecorationKey& key) const {
+  std::lock_guard<std::mutex> lk(m_lock);
+  auto q = m_decoration_map.find(key);
+  return
+    q == m_decoration_map.end() ?
+    0 :
+    q->second.m_publishers.size();
 }
 
 const SatCounter& AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {
@@ -409,7 +422,7 @@ AutoPacket::t_decorationMap AutoPacket::GetDecorations(void) const
   return m_decoration_map;
 }
 
-void AutoPacket::ForwardAll(std::shared_ptr<AutoPacket> recipient) const {
+void AutoPacket::ForwardAll(const std::shared_ptr<AutoPacket>& recipient) const {
   // Copy decorations into an internal decorations maintenance collection.  The values
   // in this collection are guaranteed to be stable in memory, and there are stable states
   // that can be relied upon without synchronization.

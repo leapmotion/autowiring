@@ -26,7 +26,7 @@ struct JunctionBoxEntry:
 {
   JunctionBoxEntry(void) {}
 
-  JunctionBoxEntry(CoreContext* owner, std::shared_ptr<T> ptr) :
+  JunctionBoxEntry(CoreContext* owner, const std::shared_ptr<T>& ptr) :
     JunctionBoxEntryBase(owner),
     m_ptr(ptr)
   {}

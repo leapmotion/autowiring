@@ -149,7 +149,7 @@ class CoreContext:
 {
 protected:
   typedef std::list<std::weak_ptr<CoreContext>> t_childList;
-  CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference);
+  CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference);
 
 public:
   virtual ~CoreContext(void);
@@ -1174,7 +1174,7 @@ public:
   ///
   /// It is an error to pass nullptr to this method.
   /// </remarks>
-  void SetThreadPool(std::shared_ptr<autowiring::ThreadPool> threadPool);
+  void SetThreadPool(const std::shared_ptr<autowiring::ThreadPool>& threadPool);
 
   /// <summary>
   /// Returns the current thread pool
@@ -1280,7 +1280,7 @@ class CoreContextT:
 public:
   static const std::type_info& sc_type;
 
-  CoreContextT(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference) :
+  CoreContextT(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference) :
     CoreContext(pParent, backReference)
   {}
 

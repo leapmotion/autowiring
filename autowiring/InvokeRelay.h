@@ -16,7 +16,7 @@ class InvokeRelay<RetType (T::*)(Args...)> {
 public:
   InvokeRelay(void) = default;
 
-  InvokeRelay(std::shared_ptr<JunctionBox<T>> erp, RetType (T::*fnPtr)(Args...)) :
+  InvokeRelay(const std::shared_ptr<JunctionBox<T>>& erp, RetType (T::*fnPtr)(Args...)) :
     erp(erp),
     fnPtr(fnPtr)
   {}
@@ -56,6 +56,6 @@ public:
 /// Makes an invocation relay for a particular junction box and function pointer
 /// </summary>
 template<typename T, typename FnPtr>
-InvokeRelay<FnPtr> MakeInvokeRelay(std::shared_ptr<JunctionBox<T>> pJunctionBox, FnPtr fnPtr) {
+InvokeRelay<FnPtr> MakeInvokeRelay(const std::shared_ptr<JunctionBox<T>>& pJunctionBox, FnPtr fnPtr) {
   return InvokeRelay<FnPtr>(pJunctionBox, fnPtr);
 }

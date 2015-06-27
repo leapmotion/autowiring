@@ -7,11 +7,15 @@ CurrentContextPusher::CurrentContextPusher(void):
   m_prior(CoreContext::CurrentContextOrNull())
 {}
 
-CurrentContextPusher::CurrentContextPusher(std::shared_ptr<CoreContext> pContext):
+CurrentContextPusher::CurrentContextPusher(CoreContext& context):
+  m_prior(context.SetCurrent())
+{}
+
+CurrentContextPusher::CurrentContextPusher(const std::shared_ptr<CoreContext>& pContext) :
   m_prior(pContext->SetCurrent())
 {}
 
-CurrentContextPusher::CurrentContextPusher(std::shared_ptr<GlobalCoreContext> pContext) :
+CurrentContextPusher::CurrentContextPusher(const std::shared_ptr<GlobalCoreContext>& pContext) :
   m_prior(pContext->SetCurrent())
 {}
 
