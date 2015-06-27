@@ -23,6 +23,12 @@
 /// to from various types, primary including T and its relatives (e.g. `const T&` and `T&&` and `std::shared_ptr<T>`.
 /// When assigned to from a T-like typed value, the packet is decorated with that value.  Assignment can only happen
 /// once.
+///
+/// Note that `auto_out<T>` as an output parameter of an autofilter is conceptually less strict than `T&`.  The former
+/// does not guarantee that T will be decorated onto the packet by the time the autofilter method returns, and the
+/// determination of which may require reasoning about the run-time state of the program.  The latter guarantees that
+/// T will be decorated onto the packet by the time the autofilter method returns.  Use `T&` if possible, and only
+/// use auto_out<T> when the deferred output behavior is required.
 /// </remarks>
 template <class T>
 class auto_out
