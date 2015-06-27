@@ -44,7 +44,7 @@ private:
     auto_out_impl (auto_out_impl &&aoi) : m_packet(std::move(aoi.m_packet)), m_decoration(std::move(aoi.m_decoration)) { }
     ~auto_out_impl () {
       if (!m_decoration)
-        m_packet->Unsatisfiable<T>();
+        m_packet->MarkUnsatisfiable<T>();
     }
     const T &operator * () const {
       AssertValidity();
