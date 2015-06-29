@@ -140,6 +140,6 @@ struct has_autofilter {
   static_assert(
     value ||
     has_unambiguous_autofilter<detect_ambiguous_autofilter>::value,
-    "Cannot define more than one AutoFilter method and all AutoFilter methods must be public"
+    "Cannot define more than one AutoFilter method and all AutoFilter methods must be public and all AutoFilter reference-output arguments must be completely defined"
   );
 };
