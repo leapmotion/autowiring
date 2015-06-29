@@ -1,12 +1,12 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "auto_id.h"
-#include "auto_in.h"
-#include "auto_out.h"
 #include "auto_prev.h"
 #include "SharedPointerSlot.h"
 
 class AutoPacket;
+template <class T> class auto_in;
+template <class T> class auto_out;
 class CoreContext;
 
 /*
@@ -117,6 +117,8 @@ class auto_arg<auto_in<T>>:
   public auto_arg<T>
 {};
 
+namespace Internal {
+
 /// <summary>
 /// Construction helper for output-by-reference decoration types
 /// </summary>
@@ -158,6 +160,8 @@ struct auto_arg_ctor_helper<T, has_default, false> {
   }
 };
 
+} // end of namespace Internal
+
 /// <summary>
 /// Specialization for "T&" ~ auto_out<T>
 /// </summary>
@@ -185,7 +189,12 @@ public:
   static const int tshift = 0;
 
   static std::shared_ptr<T> arg(AutoPacket& packet) {
-    return auto_arg_ctor_helper<T>::arg(packet);
+    return Internal::auto_arg_ctor_helper<T>::arg(packet);
+  }
+
+  template<class C>
+  static void Commit (C& packet, type val) {
+    packet.template Decorate<T>(val);
   }
 };
 
@@ -226,15 +235,28 @@ class auto_arg<std::shared_ptr<T>> {
   );
 };
 
-/// <summary>
-/// Specialization for equivalent T auto_out<T>
-/// </summary>
 template<class T>
-class auto_arg<auto_out<T>>:
-  public auto_arg<T&>
+class auto_arg<auto_out<T>>
 {
 public:
+
+  typedef auto_out<T> type;
   typedef auto_out<T> arg_type;
+  typedef auto_id<T> id_type;
+  static const bool is_input = false;
+  static const bool is_output = true;
+  static const bool is_shared = false;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  static auto_out<T> arg(AutoPacket& packet) {
+    return auto_out<T>(packet);
+  }
+
+  template<class C>
+  static void Commit (C& packet, type val) {
+    // Do nothing -- auto_out does its own deferred decoration.
+  }
 };
 
 template<class T, int N>

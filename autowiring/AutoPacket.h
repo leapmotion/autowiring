@@ -48,6 +48,11 @@ public:
   AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
 
+  // The set of decorations currently attached to this object, and the associated lock:
+  // Decorations are indexed first by type and second by pipe terminating type, if any.
+  // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
+  typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
+
 protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
@@ -64,11 +69,7 @@ protected:
   // Pointer to a forward linked list of saturation counters, constructed when the packet is created
   SatCounter* m_firstCounter = nullptr;
 
-  // The set of decorations currently attached to this object, and the associated lock:
-  // Decorations are indexed first by type and second by pipe terminating type, if any.
-  // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
-  typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
-  t_decorationMap m_decorations;
+  t_decorationMap m_decoration_map;
 
   mutable std::mutex m_lock;
 
@@ -167,12 +168,14 @@ protected:
 
 public:
   /// <returns>
-  /// The number of distinct decoration types on this packet
+  /// The number of distinct decoration types on this packet (this is really an implementation-detail-based count
+  /// of the parameters of all relevant filters, including lambdas appended to this packet).
   /// </returns>
   size_t GetDecorationTypeCount(void) const;
 
   /// <returns>
-  /// A copy of the decoration dispositions collection
+  /// A copy of the decoration dispositions collection (this is really an implementation-detail-based description
+  /// of the parameters of all relevant filters, including lambdas appended to this packet).
   /// </returns>
   /// <remarks>
   /// This is a diagnostic method, users are recommended to avoid the use of this routine where possible
@@ -288,8 +291,8 @@ public:
   template<class T>
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
-    if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Complete) {
+    auto deco = m_decoration_map.find(DecorationKey(auto_id<T>::key(), tshift));
+    if(deco != m_decoration_map.end() && deco->second.m_state == DispositionState::Complete) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
         out = disposition.m_decorations[0]->as_unsafe<T>();
@@ -319,8 +322,8 @@ public:
     std::lock_guard<std::mutex> lk(m_lock);
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
-    if (q == m_decorations.end())
+    auto q = m_decoration_map.find(DecorationKey(auto_id<T>::key(), tshift));
+    if (q == m_decoration_map.end())
       return std::unique_ptr<const T*[]>{
         new const T*[1] {nullptr}
       };
@@ -344,8 +347,8 @@ public:
     typedef typename std::remove_const<T>::type TActual;
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decorations.find(DecorationKey(auto_id<TActual>::key(), tshift));
-    if (q == m_decorations.end())
+    auto q = m_decoration_map.find(DecorationKey(auto_id<TActual>::key(), tshift));
+    if (q == m_decoration_map.end())
       return std::unique_ptr<std::shared_ptr<const T>[]>{
         new std::shared_ptr<const T>[1] {nullptr}
       };
@@ -379,7 +382,17 @@ public:
   /// form std::shared_ptr<const T> to be called, if the remainder of their inputs are available.
   /// </remarks>
   template<class T>
-  void Unsatisfiable(void) {
+  void DEPRECATED(Unsatisfiable(void), "Unsatisfiable is deprecated; use MarkUnsatisfiable instead.");
+
+  /// <summary>
+  /// Marks the named decoration as unsatisfiable
+  /// </summary>
+  /// <remarks>
+  /// Marking a decoration as unsatisfiable immediately causes any filters with an input of the
+  /// form std::shared_ptr<const T> to be called, if the remainder of their inputs are available.
+  /// </remarks>
+  template<class T>
+  void MarkUnsatisfiable(void) {
     MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
   }
 
@@ -392,10 +405,31 @@ public:
   /// value regardless of whether any subscribers exist.
   /// </remarks>
   template<class T>
-  const T& Decorate(T t) {
+  const T& Decorate(T&& t) {
+    typedef typename std::remove_reference<T>::type BaseType;
+    static_assert(!std::is_pointer<BaseType>::value, "Can't decorate using a pointer type.");
+    // Create a copy of the input, put the copy in a shared pointer
+    auto ptr = std::make_shared<BaseType>(std::forward<T>(t));
+    Decorate(
+      AnySharedPointer(ptr),
+      DecorationKey(auto_id<BaseType>::key(), 0)
+    );
+    return *ptr;
+  }
+
+  /// <summary>
+  /// Decorates this packet with a particular type T, forwarding the arguments to the constructor of T.
+  /// </summary>
+  /// <returns>A reference to the internally persisted object</returns>
+  /// <remarks>
+  /// The Decorate method is unconditional and will install the passed
+  /// value regardless of whether any subscribers exist.
+  /// </remarks>
+  template<class T, typename... Args>
+  const T& Decorate(Args&&... args) {
     static_assert(!std::is_pointer<T>::value, "Can't decorate using a pointer type.");
     // Create a copy of the input, put the copy in a shared pointer
-    auto ptr = std::make_shared<T>(std::forward<T&&>(t));
+    auto ptr = std::make_shared<T>(std::forward<Args>(args)...);
     Decorate(
       AnySharedPointer(ptr),
       DecorationKey(auto_id<T>::key(), 0)
@@ -627,3 +661,8 @@ public:
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;
 };
+
+template<class T>
+void AutoPacket::Unsatisfiable(void) {
+  MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
+}
