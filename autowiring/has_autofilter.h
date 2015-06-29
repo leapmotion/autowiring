@@ -50,30 +50,6 @@ struct has_autofilter_arity<W, false>:
   static const int N = -1;
 };
 
-//=============================================
-// Test whether AutoFilter has unique arguments
-//=============================================
-template<class MemFn>
-struct all_distinct_arguments;
-
-// IMPORTANT: This evaluation must occur only when it has been
-// determined that the class has a unique AutoFilter method taking
-// at least one argument.
-template<class R, class W, class... Args>
-struct all_distinct_arguments<R(W::*)(Args...)>:
-  std::integral_constant<bool, !is_any_repeated<Args...>::value>
-{};
-
-template<class W, bool Selector = true>
-struct has_distinct_arguments:
-  all_distinct_arguments<decltype(&W::AutoFilter)>
-{};
-
-template<class W>
-struct has_distinct_arguments<W, false>:
-  std::false_type
-{};
-
 //===========================================================
 // Test for existence of unique AutoFilter with > 0 arguments
 //===========================================================
@@ -101,17 +77,15 @@ struct has_unambiguous_autofilter
 
   // Evaluates to true only if T includes a unique AutoFilter method,
   // with a meaningful return type,
-  // with at least one argument,
-  // and with all argument id types distinct
+  // with at least one argument
   static const bool value =
-    has_distinct_arguments<T,
-      has_autofilter_arity<T,
+      has_autofilter_arity<
+        T,
         has_autofilter_return<
           T,
           decltype(select<T>(nullptr))::value
         >::value
-      >::value
-    >::value;
+      >::value;
 };
 
 class AutoPacket;

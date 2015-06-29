@@ -132,10 +132,22 @@ TEST_F(AutoFilterMultiDecorateTest, ArrayOfSharedPointers) {
   ASSERT_EQ(2, f2) << "const shared_ptr[] input decoration count mismatch";
 }
 
+class SameOutputTwiceWithInput {
+public:
+  void AutoFilter(Decoration<0>& one, Decoration<0>& two) {
+    one.i = 101;
+    two.i = 102;
+  }
+};
+
+static_assert(has_unambiguous_autofilter<SameOutputTwiceWithInput>::value, "AutoFilter appears to be ambiguous on a multi-out type");
+static_assert(has_autofilter<SameOutputTwiceWithInput>::value, "AutoFilter not detected on a multi-out class");
+
 TEST_F(AutoFilterMultiDecorateTest, SingleFunctionDoubleOutput) {
   AutoRequired<AutoPacketFactory> factory;
   AutoCurrentContext()->Initiate();
 
+  AutoRequired<SameOutputTwiceWithInput>();
   *factory += [](Decoration<0>& one, Decoration<0>& two) {
     ASSERT_NE(&one, &two) << "When the same decoration type is mentioned more than once in a signature, the two outputs should be distinct";
     one.i = 1;
@@ -149,5 +161,6 @@ TEST_F(AutoFilterMultiDecorateTest, SingleFunctionDoubleOutput) {
   };
 
   factory->NewPacket();
-  ASSERT_EQ(2UL, nArgs) << "A filter that multiply attaches decorations did not correctly do so";
+  ASSERT_EQ(4UL, nArgs) << "Two filters that multiply attach decorations did not correctly do so";
 }
+
