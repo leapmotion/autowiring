@@ -296,32 +296,30 @@ bool AutoPacket::HasUnsafe(const DecorationKey& key) const {
 
 void AutoPacket::DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key) {
   DecorationDisposition* disposition;
-  {
-    std::lock_guard<std::mutex> lk(m_lock);
+  std::unique_lock<std::mutex> lk(m_lock);
 
-    disposition = &m_decorations[key];
-    switch (disposition->m_state) {
-    case DispositionState::Complete:
-      {
-        std::stringstream ss;
-        if (disposition->m_decorations.empty())
-          // Completed with no decorations, unsatisfiable
-          ss << "Cannot check out decoration of type " << autowiring::demangle(ptr)
-            << ", it has been marked unsatisfiable";
-        else
-          ss << "Cannot decorate this packet with type " << autowiring::demangle(ptr)
-            << ", the requested decoration is already satisfied";
-        throw std::runtime_error(ss.str());
-      }
-      break;
-    default:
-      break;
+  disposition = &m_decorations[key];
+  switch (disposition->m_state) {
+  case DispositionState::Complete:
+    {
+      std::stringstream ss;
+      if (disposition->m_decorations.empty())
+        // Completed with no decorations, unsatisfiable
+        ss << "Cannot check out decoration of type " << autowiring::demangle(ptr)
+          << ", it has been marked unsatisfiable";
+      else
+        ss << "Cannot decorate this packet with type " << autowiring::demangle(ptr)
+          << ", the requested decoration is already satisfied";
+      throw std::runtime_error(ss.str());
     }
-
-    // Decoration attaches here
-    disposition->m_decorations.push_back(ptr);
-    disposition->m_nProducersRun++;
+    break;
+  default:
+    break;
   }
+
+  // Decoration attaches here
+  disposition->m_decorations.push_back(ptr);
+  disposition->m_nProducersRun++;
 
   // Uniformly advance state:
   switch (disposition->m_state) {
@@ -330,7 +328,7 @@ void AutoPacket::DecorateNoPriors(const AnySharedPointer& ptr, DecorationKey key
     // Permit a transition to another state
     if (disposition->IsPublicationComplete()) {
       disposition->m_state = DispositionState::Complete;
-      UpdateSatisfactionUnsafe(std::unique_lock<std::mutex>(m_lock), *disposition);
+      UpdateSatisfactionUnsafe(std::move(lk), *disposition);
     }
     else
       disposition->m_state = DispositionState::PartlySatisfied;
