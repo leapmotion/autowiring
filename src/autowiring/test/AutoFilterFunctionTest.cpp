@@ -53,7 +53,7 @@ TEST_F(AutoFilterFunctionalTest, FunctionDecorationLambdaTest) {
     auto sentry = std::make_shared<bool>(true);
     *packet +=
       [addType, sentry](const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
-        typeOut->i += 1 + typeIn.i;
+        typeOut = Decoration<1>(1 + 1 + typeIn.i);
       };
 
     // Sentry's use count should be precisely two at this point
@@ -72,7 +72,7 @@ TEST_F(AutoFilterFunctionalTest, FunctionInjectorTest) {
   auto packet = factory->NewPacket();
   int addType = 1;
   packet->AddRecipient([addType](auto_out<Decoration<0>> typeOut) {
-    typeOut->i += addType;
+    typeOut = Decoration<0>(addType);
   });
   const Decoration<0>* getdec;
   ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
