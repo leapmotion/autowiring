@@ -11,14 +11,10 @@ autoboost::chrono::nanoseconds NanosecondsForFutureWait(const std::chrono::nanos
   return autoboost::chrono::nanoseconds(time.count());
 }
 #else
- std::chrono::nanoseconds NanosecondsForFutureWait(const std::chrono::nanoseconds& time) {
-   return time;
- }
-#endif
-
 std::chrono::nanoseconds NanosecondsForFutureWait(const std::chrono::nanoseconds& time) {
   return time;
 }
+#endif
 
 CoreJob::CoreJob(const char* name) :
   ContextMember(name)
