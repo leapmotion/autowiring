@@ -1,5 +1,9 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "auto_arg.h"
+
+template<class T>
+class auto_arg;
 
 /// <summary>
 /// Identifier for AutoFilter inputs from the previous packet
@@ -28,4 +32,26 @@ public:
   }
 
   const T* const value;
+};
+
+template<class T, int N>
+class auto_arg<auto_prev<T, N>>
+{
+public:
+  typedef auto_prev<T, N> type;
+  typedef auto_prev<T, N> arg_type;
+  typedef auto_id<T> id_type;
+
+  static const bool is_input = true;
+  static const bool is_output = false;
+  static const bool is_shared = true;
+  static const bool is_multi = false;
+  static const int tshift = N;
+
+  template<class C>
+  static const T* arg(C& packet) {
+    const T* retVal;
+    packet.template Get<T>(retVal, N);
+    return retVal;
+  }
 };
