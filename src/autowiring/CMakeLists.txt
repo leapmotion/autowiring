@@ -143,6 +143,8 @@ set(Autowiring_SRCS
   ObjectPool.h
   ObjectPoolMonitor.cpp
   ObjectPoolMonitor.h
+  Parallel.h
+  Parallel.cpp
   CoreObjectDescriptor.h
   SatCounter.h
   SatCounter.cpp
