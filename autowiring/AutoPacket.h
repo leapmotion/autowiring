@@ -2,6 +2,7 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "at_exit.h"
+#include "auto_arg.h"
 #include "auto_id.h"
 #include "AutoFilterArgument.h"
 #include "DecorationDisposition.h"
@@ -167,12 +168,14 @@ protected:
 
 public:
   /// <returns>
-  /// The number of distinct decoration types on this packet
+  /// The number of distinct decoration types on this packet (this is really an implementation-detail-based count
+  /// of the parameters of all relevant filters, including lambdas appended to this packet).
   /// </returns>
   size_t GetDecorationTypeCount(void) const;
 
   /// <returns>
-  /// A copy of the decoration dispositions collection
+  /// A copy of the decoration dispositions collection (this is really an implementation-detail-based description
+  /// of the parameters of all relevant filters, including lambdas appended to this packet).
   /// </returns>
   /// <remarks>
   /// This is a diagnostic method, users are recommended to avoid the use of this routine where possible
@@ -524,7 +527,7 @@ public:
     static_assert(
       !Decompose<decltype(&Fx::operator())>::template any<arg_is_out>::value,
       "Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types"
-      );
+    );
     *const_cast<AutoPacket*>(this) += std::forward<Fx&&>(fx);
     return *this;
   }

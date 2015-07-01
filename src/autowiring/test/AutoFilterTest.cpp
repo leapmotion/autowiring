@@ -89,7 +89,7 @@ TEST_F(AutoFilterTest, VerifyAutoOut) {
   AutoRequired<AutoPacketFactory> factory;
 
   *factory += [](auto_out<Decoration<0>> out) {
-    out->i = 1;
+    *out = Decoration<0>(1);
   };
 
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
@@ -103,8 +103,9 @@ TEST_F(AutoFilterTest, VerifyAutoOutPooled) {
   ObjectPool<Decoration<0>> pool;
 
   *factory += [&](auto_out<Decoration<0>> out) {
-    out = pool();
-    out->i = 1;
+    auto p = pool();
+    p->i = 1;
+    *out = p;
   };
 
   std::shared_ptr<AutoPacket> packet = factory->NewPacket();
@@ -733,4 +734,221 @@ TEST_F(AutoFilterTest, CurrentContextCheck) {
   }
 
   ASSERT_EQ(1, filter->m_called) << "AutoFilter called incorrect number of times";
+}
+
+TEST_F(AutoFilterTest, AutoOut0) {
+  AutoRequired<AutoPacketFactory> factory;
+  {
+    auto packet = factory->NewPacket();
+    packet->Decorate(123.45);
+    ASSERT_EQ(1, packet->GetDecorationTypeCount()) << "Did not get the expected number of decorations.";
+    ASSERT_EQ(123.45, packet->Get<double>());
+    *packet += [](const double &x, auto_out<int> y) {
+      *y = static_cast<int>(x);
+    };
+    ASSERT_EQ(2, packet->GetDecorationTypeCount()) << "Did not get the expected number of decorations.";
+    ASSERT_EQ(123, packet->Get<int>());
+  }
+}
+
+TEST_F(AutoFilterTest, AutoOut1) {
+  AutoRequired<AutoPacketFactory> factory;
+  {
+    auto packet = factory->NewPacket();
+    // Same as AutoOut0 but add the filter first.
+    *packet += [](const double &x, auto_out<int> y) {
+      *y = static_cast<int>(x);
+    };
+    packet->Decorate(123.45);
+    ASSERT_EQ(2, packet->GetDecorationTypeCount()) << "Did not get the expected number of decorations.";
+    ASSERT_EQ(123.45, packet->Get<double>());
+    ASSERT_EQ(123, packet->Get<int>());
+  }
+}
+
+#include <iostream>
+
+std::string decoration_status_string(DispositionState s) {
+  switch (s) {
+  case DispositionState::Unsatisfied:
+    return "Unsatisfied";
+  case DispositionState::PartlySatisfied:
+    return "PartlySatisfied";
+  case DispositionState::Complete:
+    return "Complete";
+  }
+  return "";
+}
+
+void print_decorations(const std::string &label, const AutoPacket::t_decorationMap &d) {
+  std::cout << label << " {\n";
+  for (auto it : d) {
+    std::cout << "    " << autowiring::demangle(it.first.ti) << " : " << decoration_status_string(it.second.m_state) << '\n';
+  }
+  std::cout << "}\n";
+}
+
+TEST_F(AutoFilterTest, AutoOut2) {
+  
+  // NOTE: this test uses implementation details of DecorationDisposition, which is not part of the public API,
+  // and should be refactored once that part is cleaned up (in particular, AutoPacket::GetDecorations is
+  // what is exposing that, and should be moved into autowiring::dbg, out of the public API for AutoPacket).
+  
+  AutoRequired<AutoPacketFactory> factory;
+  {
+    auto packet = factory->NewPacket();
+    auto d = packet->GetDecorations();
+    ASSERT_EQ(0, d.size()) << "Unexpected number of AutoFilter parameters.";
+    
+    packet->Decorate(123.45);
+    d = packet->GetDecorations();
+    ASSERT_EQ(1, d.size()) << "Unexpected number of AutoFilter parameters.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(typeid(auto_id<double>),0)].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(typeid(auto_id<double>),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+
+    bool filter_0_called = false;
+    auto filter_0 = [&filter_0_called](const double &x, auto_out<int> y) {
+      filter_0_called = true;
+    };
+    bool filter_1_called = false;
+    auto filter_1 = [&filter_1_called](int y) {
+      filter_1_called = true;
+    };
+    
+    ASSERT_FALSE(filter_0_called) << "We expected filter_0 to not have been called by now.";
+    ASSERT_FALSE(filter_1_called) << "We expected filter_1 to not have been called by now.";
+    
+    *packet += filter_0;
+    
+    ASSERT_TRUE(filter_0_called) << "We expected filter_0 to have been called by now.";
+    ASSERT_FALSE(filter_1_called) << "We expected filter_0 to not have been called by now.";
+    d = packet->GetDecorations();
+    ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(typeid(auto_id<double>),0)].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(typeid(auto_id<double>),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+    // Being Complete and having no decorations indicates that it has been MarkUnsatisfiable()'d.
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(typeid(auto_id<int>),0)].m_state) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(0, d[DecorationKey(typeid(auto_id<int>),0)].m_decorations.size()) << "Incorrect `int` decoration disposition.";
+
+    // Because the auto_out<int> was never assigned to, it went unsatisfiable, so this filter should never be called.
+    *packet += filter_1;
+    ASSERT_TRUE(filter_0_called) << "We expected filter_0 to have been called by now.";
+    ASSERT_FALSE(filter_1_called) << "We expected filter_0 to not have been called by now.";
+  }
+}
+
+TEST_F(AutoFilterTest, AutoOut3) {
+  
+  // NOTE: this test uses implementation details of DecorationDisposition, which is not part of the public API,
+  // and should be refactored once that part is cleaned up (in particular, AutoPacket::GetDecorations is
+  // what is exposing that, and should be moved into autowiring::dbg, out of the public API for AutoPacket).
+  
+  AutoRequired<AutoPacketFactory> factory;
+  {
+    auto packet = factory->NewPacket();
+    auto d = packet->GetDecorations();
+    ASSERT_EQ(0, d.size()) << "Unexpected number of AutoFilter parameters.";
+
+    bool filter_1_called = false;
+    auto filter_1 = [&filter_1_called](int y) {
+      filter_1_called = true;
+    };
+    *packet += filter_1;
+    
+    packet->Decorate(123.45);
+    d = packet->GetDecorations();
+    ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(typeid(auto_id<double>),0)].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(typeid(auto_id<double>),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(DispositionState::Unsatisfied, d[DecorationKey(typeid(auto_id<int>),0)].m_state) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(0, d[DecorationKey(typeid(auto_id<int>),0)].m_decorations.size()) << "Incorrect `int` decoration disposition.";
+
+    bool filter_0_called = false;
+    auto filter_0 = [&filter_0_called](const double &x, auto_out<int> y) {
+      filter_0_called = true;
+    };
+    
+    ASSERT_FALSE(filter_0_called) << "We expected filter_0 to not have been called by now.";
+    ASSERT_FALSE(filter_1_called) << "We expected filter_1 to not have been called by now.";
+    
+    *packet += filter_0;
+    
+    ASSERT_TRUE(filter_0_called) << "We expected filter_0 to have been called by now.";
+    ASSERT_FALSE(filter_1_called) << "We expected filter_0 to not have been called by now.";
+    d = packet->GetDecorations();
+    ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(typeid(auto_id<double>),0)].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(typeid(auto_id<double>),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+    // Being Complete and having no decorations indicates that it has been MarkUnsatisfiable()'d.
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(typeid(auto_id<int>),0)].m_state) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(0, d[DecorationKey(typeid(auto_id<int>),0)].m_decorations.size()) << "Incorrect `int` decoration disposition.";
+
+    // Because the auto_out<int> was never assigned to, it went unsatisfiable, so this filter should never be called.
+    ASSERT_TRUE(filter_0_called) << "We expected filter_0 to have been called by now.";
+    ASSERT_FALSE(filter_1_called) << "We expected filter_0 to not have been called by now.";
+  }
+}
+
+TEST_F(AutoFilterTest, AutoOut4) {
+  
+  // NOTE: this test uses implementation details of DecorationDisposition, which is not part of the public API,
+  // and should be refactored once that part is cleaned up (in particular, AutoPacket::GetDecorations is
+  // what is exposing that, and should be moved into autowiring::dbg, out of the public API for AutoPacket).
+  
+  AutoRequired<AutoPacketFactory> factory;
+  {
+    auto packet = factory->NewPacket();
+    auto d = packet->GetDecorations();
+    ASSERT_EQ(0, d.size()) << "Unexpected number of AutoFilter parameters.";
+
+    bool filter_1_called = false;
+    auto filter_1 = [&filter_1_called](int y) {
+      filter_1_called = true;
+    };
+    *packet += filter_1;
+    
+    packet->Decorate(123.45);
+    d = packet->GetDecorations();
+    ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(typeid(auto_id<double>),0)].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(typeid(auto_id<double>),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(DispositionState::Unsatisfied, d[DecorationKey(typeid(auto_id<int>),0)].m_state) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(0, d[DecorationKey(typeid(auto_id<int>),0)].m_decorations.size()) << "Incorrect `int` decoration disposition.";
+
+    bool filter_0_called = false;
+    auto_out<int> ao;
+    auto filter_0 = [&ao, &filter_0_called](const double &x, auto_out<int> y) {
+      ao = std::move(y);
+      filter_0_called = true;
+    };
+    
+    ASSERT_FALSE(filter_0_called) << "We expected filter_0 to not have been called by now.";
+    ASSERT_FALSE(filter_1_called) << "We expected filter_1 to not have been called by now.";
+    
+    *packet += filter_0;
+    
+    ASSERT_TRUE(filter_0_called) << "We expected filter_0 to have been called by now.";
+    ASSERT_FALSE(filter_1_called) << "We expected filter_0 to not have been called by now.";
+    d = packet->GetDecorations();
+    ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(typeid(auto_id<double>),0)].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(typeid(auto_id<double>),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+
+    // Being Complete and having no decorations indicates that it has been MarkUnsatisfiable()'d.
+    ASSERT_EQ(DispositionState::Unsatisfied, d[DecorationKey(typeid(auto_id<int>),0)].m_state) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(0, d[DecorationKey(typeid(auto_id<int>),0)].m_decorations.size()) << "Incorrect `int` decoration disposition.";
+
+    // Assign to ao, thereby decorating the packet with int.
+    *ao = 42;
+    ao.reset();
+    
+    ASSERT_TRUE(filter_0_called) << "We expected filter_0 to have been called by now.";
+    ASSERT_TRUE(filter_1_called) << "We expected filter_0 to have been called by now.";
+    d = packet->GetDecorations();
+    ASSERT_EQ(2, d.size()) << "Unexpected number of AutoFilter parameters.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(typeid(auto_id<double>),0)].m_state) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(typeid(auto_id<double>),0)].m_decorations.size()) << "Incorrect `double` decoration disposition.";
+    ASSERT_EQ(DispositionState::Complete, d[DecorationKey(typeid(auto_id<int>),0)].m_state) << "Incorrect `int` decoration disposition.";
+    ASSERT_EQ(1, d[DecorationKey(typeid(auto_id<int>),0)].m_decorations.size()) << "Incorrect `int` decoration disposition.";
+  }
 }

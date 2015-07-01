@@ -98,7 +98,10 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       });
       switch (entry.m_state) {
       case DispositionState::Complete:
-        satCounter.Decrement();
+        // Either decorations must be present, or the decoration type must be a shared_ptr.
+        if (!entry.m_decorations.empty() || pCur->is_shared) {
+          satCounter.Decrement();
+        }
         break;
       default:
         break;

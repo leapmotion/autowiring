@@ -1,6 +1,7 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "auto_arg.h"
+#include "auto_in.h"
 #include "auto_tuple.h"
 #include "AutoPacket.h"
 #include "CurrentContextPusher.h"
@@ -40,7 +41,7 @@ struct CallExtractorSetup
     auto_arg<typename autowiring::nth_type<N, Args...>::type>::is_output,
     bool
   >::type Commit(bool) {
-    packet.Decorate(autowiring::get<N>(args));
+    auto_arg<typename autowiring::nth_type<N, Args...>::type>::Commit(packet, autowiring::get<N>(args));
     return true;
   }
 

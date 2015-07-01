@@ -16,11 +16,11 @@ public:
     m_called = true;
 
     // Record the decoration address:
-    m_rcvDecAddr = out1;
+    Decoration<1> &ref = out1 = Decoration<1>();
+    m_rcvDecAddr = &ref;
 
     // Satisfy our other decoration:
-    if(out1)
-      out1->i = -100;
+    ref.i = -100;
   }
 
   Decoration<1>* m_rcvDecAddr;
@@ -39,14 +39,14 @@ public:
     m_called = true;
 
     // Record the decoration address:
-    m_rcvDecAddr1 = out1;
-    m_rcvDecAddr2 = out2;
+    Decoration<1> &ref1 = out1 = Decoration<1>();
+    m_rcvDecAddr1 = &ref1;
+    Decoration<2> &ref2 = out2 = Decoration<2>();
+    m_rcvDecAddr2 = &ref2;
 
     // Satisfy our other decoration:
-    if(out1)
-      out1->i = -100;
-    if(out2)
-      out2->i = -101;
+    ref1.i = -100;
+    ref2.i = -101;
   }
 
   Decoration<1>* m_rcvDecAddr1;

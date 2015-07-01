@@ -1,11 +1,10 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
 #include "auto_id.h"
-#include "auto_in.h"
-#include "auto_out.h"
 #include "SharedPointerSlot.h"
 
 class AutoPacket;
+template <class T> class auto_in;
 class CoreContext;
 
 /*
@@ -108,6 +107,8 @@ public:
   }
 };
 
+namespace detail {
+
 /// <summary>
 /// Construction helper for output-by-reference decoration types
 /// </summary>
@@ -149,6 +150,8 @@ struct auto_arg_ctor_helper<T, has_default, false> {
   }
 };
 
+} // end of namespace detail
+
 /// <summary>
 /// Specialization for "T&" ~ auto_out<T>
 /// </summary>
@@ -176,7 +179,12 @@ public:
   static const int tshift = 0;
 
   static std::shared_ptr<T> arg(AutoPacket& packet) {
-    return auto_arg_ctor_helper<T>::arg(packet);
+    return detail::auto_arg_ctor_helper<T>::arg(packet);
+  }
+
+  template<class C>
+  static void Commit (C& packet, type val) {
+    packet.template Decorate<T>(val);
   }
 };
 
@@ -215,17 +223,6 @@ class auto_arg<std::shared_ptr<T>> {
     std::is_same<T, AutoPacket>::value,
     "std::shared_ptr<AutoPacket> is the only T that may be supplied as a non-const shared input"
   );
-};
-
-/// <summary>
-/// Specialization for equivalent T auto_out<T>
-/// </summary>
-template<class T>
-class auto_arg<auto_out<T>>:
-  public auto_arg<T&>
-{
-public:
-  typedef auto_out<T> arg_type;
 };
 
 /// <summary>
