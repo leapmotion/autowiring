@@ -24,6 +24,9 @@ class CoreContext;
 struct AutoFilterDescriptor;
 struct AutoFilterArgument;
 
+template<class T>
+class auto_arg;
+
 template<class MemFn>
 struct Decompose;
 
@@ -627,4 +630,28 @@ public:
 
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;
+};
+
+/// <summary>
+/// AutoPacket specialization
+/// </summary>
+/// <remarks>
+/// Because this type is immediately satisfied, it is neither an input nor an output
+/// </remarks>
+template<>
+class auto_arg<AutoPacket&>
+{
+public:
+  typedef AutoPacket& type;
+  typedef AutoPacket& arg_type;
+  typedef AutoPacket id_type;
+  static const bool is_input = false;
+  static const bool is_output = false;
+  static const bool is_shared = false;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  static AutoPacket& arg(AutoPacket& packet) {
+    return packet;
+  }
 };
