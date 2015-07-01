@@ -33,7 +33,7 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
 
   // Mark timeshifted decorations as unsatisfiable on the first packet
   if (isFirstPacket)
-    for (auto& dec : m_decorations) {
+    for (auto& dec : m_decoration_map) {
       auto& key = dec.first;
       if (key.tshift) {
         MarkUnsatisfiable(key);

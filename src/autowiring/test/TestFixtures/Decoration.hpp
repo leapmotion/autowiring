@@ -206,7 +206,7 @@ public:
     void AutoFilter(AutoPacket& pkt, auto_out<Decoration<0>> zero) {
       ++m_called;
       pkt.Decorate(Decoration<1>());
-      ++zero->i;
+      zero = Decoration<0>(1);
     }
 };
 

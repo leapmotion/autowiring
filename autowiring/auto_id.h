@@ -13,7 +13,7 @@
 template<class T>
 struct auto_id {
   
-  // Return this type_info for this type with 'const' and 'volitile' removed
+  // Return this type_info for this type with 'const' and 'volatile' removed
   static const std::type_info& key(void) {
     return typeid(auto_id<typename std::remove_cv<T>::type>);
   }
