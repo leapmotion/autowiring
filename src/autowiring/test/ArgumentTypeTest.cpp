@@ -32,10 +32,6 @@ public:
   Argument(int j = N) : i(j) {}
 };
 
-void FilterFunction(const Argument<0>& typeIn, auto_out<Argument<1>> typeOut) {
-  typeOut->i += 1 + typeIn.i;
-}
-
 typedef Argument<0> copied_in;
 typedef const Argument<0> copied_in_const;
 typedef const Argument<0>& required_in;
