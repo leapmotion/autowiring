@@ -4,6 +4,18 @@
 #include "CoreContext.h"
 #include FUTURE_HEADER
 
+// Arm doesn't have std::future, but does have std::chrono. We need to convert from std::chrono
+// to autoboost::chrono when passing arguments to "std::future"(alias to autoboost::future) on arm.
+#if autowiring_BUILD_ANDROID
+autoboost::chrono::nanoseconds NanosecondsForFutureWait(const std::chrono::nanoseconds& time) {
+  return autoboost::chrono::nanoseconds(time.count());
+}
+#else
+ std::chrono::nanoseconds NanosecondsForFutureWait(const std::chrono::nanoseconds& time) {
+   return time;
+ }
+#endif
+
 std::chrono::nanoseconds NanosecondsForFutureWait(const std::chrono::nanoseconds& time) {
   return time;
 }
