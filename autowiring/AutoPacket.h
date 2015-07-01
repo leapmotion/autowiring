@@ -26,6 +26,33 @@ class auto_arg;
 template<class MemFn>
 struct Decompose;
 
+namespace autowiring {
+  template<typename T>
+  struct is_shared_ptr:
+    std::false_type
+  {};
+
+  template<typename T>
+  struct is_shared_ptr<std::shared_ptr<T>> :
+    std::true_type
+  {};
+
+  template<typename T>
+  struct is_shared_ptr<std::shared_ptr<const T>> :
+    std::true_type
+  {};
+
+  template<typename T>
+  struct is_shared_ptr<const T> :
+    is_shared_ptr<T>
+  {};
+
+  template<typename T>
+  struct is_shared_ptr<T&> :
+    is_shared_ptr<T>
+  {};
+}
+
 /// <summary>
 /// A decorator-style processing packet
 /// </summary>
@@ -394,26 +421,6 @@ public:
   }
 
   /// <summary>
-  /// Decorates this packet with a particular type
-  /// </summary>
-  /// <returns>A reference to the internally persisted object</returns>
-  /// <remarks>
-  /// The Decorate method is unconditional and will install the passed
-  /// value regardless of whether any subscribers exist.
-  /// </remarks>
-  template<class T>
-  const T& Decorate(T t) {
-    static_assert(!std::is_pointer<T>::value, "Can't decorate using a pointer type.");
-    // Create a copy of the input, put the copy in a shared pointer
-    auto ptr = std::make_shared<T>(std::forward<T&&>(t));
-    Decorate(
-      AnySharedPointer(ptr),
-      DecorationKey(auto_id<T>::key(), 0)
-    );
-    return *ptr;
-  }
-
-  /// <summary>
   /// Decoration method specialized for shared pointer types
   /// </summary>
   /// <remarks>
@@ -449,6 +456,51 @@ public:
   template<class T>
   void Decorate(const std::shared_ptr<const T>& ptr) {
     Decorate(std::const_pointer_cast<T>(ptr));
+  }
+
+  /// <summary>
+  /// Decorates this packet with a particular type
+  /// </summary>
+  /// <returns>A reference to the internally persisted object</returns>
+  /// <remarks>
+  /// The Decorate method is unconditional and will install the passed
+  /// value regardless of whether any subscribers exist.
+  /// </remarks>
+  template<class T>
+  typename std::enable_if<
+    !autowiring::is_shared_ptr<T>::value,
+    const T&
+  >::type Decorate(T&& t) {
+    static_assert(!std::is_pointer<T>::value, "Can't decorate using a pointer type.");
+    typedef typename std::decay<T>::type TActual;
+
+    // Create a copy of the input, put the copy in a shared pointer
+    auto ptr = std::make_shared<TActual>(std::forward<T&&>(t));
+    Decorate(
+      AnySharedPointer(ptr),
+      DecorationKey(auto_id<TActual>::key(), 0)
+    );
+    return *ptr;
+  }
+
+  /// <summary>
+  /// Decorates this packet with a particular type T, forwarding the arguments to the constructor of T.
+  /// </summary>
+  /// <returns>A reference to the internally persisted object</returns>
+  /// <remarks>
+  /// The Decorate method is unconditional and will install the passed
+  /// value regardless of whether any subscribers exist.
+  /// </remarks>
+  template<class T, typename... Args>
+  const T& Emplace(Args&&... args) {
+    static_assert(!std::is_pointer<T>::value, "Can't decorate using a pointer type.");
+    // Create a copy of the input, put the copy in a shared pointer
+    auto ptr = std::make_shared<T>(std::forward<Args&&>(args)...);
+    Decorate(
+      AnySharedPointer(ptr),
+      DecorationKey(auto_id<T>::key(), 0)
+    );
+    return *ptr;
   }
 
   /// <summary>
