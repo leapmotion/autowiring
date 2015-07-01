@@ -17,7 +17,7 @@ namespace autowiring {
 
   struct registration_t;
 
-  namespace internal {
+  namespace detail {
     struct signal_node_base {};
 
     template<typename... Args>
@@ -45,7 +45,7 @@ namespace autowiring {
     /// <summary>
     /// Removes the signal node identified on the rhs without requiring full type information
     /// </summary>
-    virtual void operator-=(internal::signal_node_base* rhs) = 0;
+    virtual void operator-=(detail::signal_node_base* rhs) = 0;
 
     /// <summary>
     /// Removes the specified registration
@@ -57,13 +57,13 @@ namespace autowiring {
   {
     registration_t(void) = default;
 
-    registration_t(signal_base* parent, internal::signal_node_base* entry) :
+    registration_t(signal_base* parent, detail::signal_node_base* entry) :
       parent(parent),
       entry(entry)
     {}
 
     signal_base* parent = nullptr;
-    internal::signal_node_base* entry;
+    detail::signal_node_base* entry;
 
     explicit operator bool(void) const { return !!parent; }
 
@@ -85,7 +85,7 @@ namespace autowiring {
   struct signal<void(Args...)>:
     signal_base
   {
-    typedef std::shared_ptr<internal::signal_node_t_base<Args...>> entry_t;
+    typedef std::shared_ptr<detail::signal_node_t_base<Args...>> entry_t;
 
   private:
     // Listeners and the corresponding lock:
@@ -96,13 +96,13 @@ namespace autowiring {
     template<typename Fn>
     entry_t make_registration(Fn fn, void (Fn::*)(Args...) const) {
       return std::make_shared<
-        internal::signal_node_t<Fn, Args...>
+        detail::signal_node_t<Fn, Args...>
       >(std::forward<Fn>(fn));
     }
 
     template<class Fn>
     struct Forwarder:
-      internal::signal_node_t_base<Args...>
+      detail::signal_node_t_base<Args...>
     {
       Forwarder(signal* parent, Fn&& fn) :
         parent(parent),
@@ -137,7 +137,7 @@ namespace autowiring {
       return {this, entry.get()};
     }
 
-    void operator-=(internal::signal_node_base* rhs) override {
+    void operator-=(detail::signal_node_base* rhs) override {
       std::lock_guard<std::mutex> lk(m_lock);
       for (auto listener = m_listeners.begin(); listener != m_listeners.end(); ++listener)
         if (listener->get() == rhs) {
