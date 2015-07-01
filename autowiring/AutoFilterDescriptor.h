@@ -265,7 +265,7 @@ public:
 };
 
 namespace autowiring {
-namespace internal {
+namespace detail {
 /// <summary>
 /// Alias for AutoFilterDescriptor(ptr)
 /// </summary>
@@ -295,7 +295,7 @@ AutoFilterDescriptor MakeAFDescriptor(const std::shared_ptr<T>&, std::false_type
 /// </remarks>
 template<class T>
 AutoFilterDescriptor MakeAutoFilterDescriptor(const std::shared_ptr<T>& ptr) {
-  return autowiring::internal::MakeAFDescriptor(ptr, std::integral_constant<bool, has_autofilter<T>::value>());
+  return autowiring::detail::MakeAFDescriptor(ptr, std::integral_constant<bool, has_autofilter<T>::value>());
 }
 
 namespace std {
