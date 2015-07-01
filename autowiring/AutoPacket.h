@@ -379,7 +379,17 @@ public:
   /// form std::shared_ptr<const T> to be called, if the remainder of their inputs are available.
   /// </remarks>
   template<class T>
-  void Unsatisfiable(void) {
+  void DEPRECATED(Unsatisfiable(void), "Unsatisfiable is deprecated; use MarkUnsatisfiable instead.");
+
+  /// <summary>
+  /// Marks the named decoration as unsatisfiable
+  /// </summary>
+  /// <remarks>
+  /// Marking a decoration as unsatisfiable immediately causes any filters with an input of the
+  /// form std::shared_ptr<const T> to be called, if the remainder of their inputs are available.
+  /// </remarks>
+  template<class T>
+  void MarkUnsatisfiable(void) {
     MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
   }
 
@@ -627,3 +637,8 @@ public:
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;
 };
+
+template<class T>
+void AutoPacket::Unsatisfiable(void) {
+  MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
+}
