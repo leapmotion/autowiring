@@ -24,6 +24,9 @@ class CoreContext;
 struct AutoFilterDescriptor;
 struct AutoFilterArgument;
 
+template<class T>
+class auto_arg;
+
 template<class MemFn>
 struct Decompose;
 
@@ -48,6 +51,11 @@ public:
   AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
 
+  // The set of decorations currently attached to this object, and the associated lock:
+  // Decorations are indexed first by type and second by pipe terminating type, if any.
+  // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
+  typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
+
 protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
@@ -64,11 +72,7 @@ protected:
   // Pointer to a forward linked list of saturation counters, constructed when the packet is created
   SatCounter* m_firstCounter = nullptr;
 
-  // The set of decorations currently attached to this object, and the associated lock:
-  // Decorations are indexed first by type and second by pipe terminating type, if any.
-  // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
-  typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
-  t_decorationMap m_decorations;
+  t_decorationMap m_decoration_map;
 
   mutable std::mutex m_lock;
 
@@ -288,8 +292,8 @@ public:
   template<class T>
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
-    if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Complete) {
+    auto deco = m_decoration_map.find(DecorationKey(auto_id<T>::key(), tshift));
+    if(deco != m_decoration_map.end() && deco->second.m_state == DispositionState::Complete) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
         out = disposition.m_decorations[0]->as_unsafe<T>();
@@ -319,8 +323,8 @@ public:
     std::lock_guard<std::mutex> lk(m_lock);
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
-    if (q == m_decorations.end())
+    auto q = m_decoration_map.find(DecorationKey(auto_id<T>::key(), tshift));
+    if (q == m_decoration_map.end())
       return std::unique_ptr<const T*[]>{
         new const T*[1] {nullptr}
       };
@@ -344,8 +348,8 @@ public:
     typedef typename std::remove_const<T>::type TActual;
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decorations.find(DecorationKey(auto_id<TActual>::key(), tshift));
-    if (q == m_decorations.end())
+    auto q = m_decoration_map.find(DecorationKey(auto_id<TActual>::key(), tshift));
+    if (q == m_decoration_map.end())
       return std::unique_ptr<std::shared_ptr<const T>[]>{
         new std::shared_ptr<const T>[1] {nullptr}
       };
@@ -636,6 +640,30 @@ public:
 
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;
+};
+
+/// <summary>
+/// AutoPacket specialization
+/// </summary>
+/// <remarks>
+/// Because this type is immediately satisfied, it is neither an input nor an output
+/// </remarks>
+template<>
+class auto_arg<AutoPacket&>
+{
+public:
+  typedef AutoPacket& type;
+  typedef AutoPacket& arg_type;
+  typedef AutoPacket id_type;
+  static const bool is_input = false;
+  static const bool is_output = false;
+  static const bool is_shared = false;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  static AutoPacket& arg(AutoPacket& packet) {
+    return packet;
+  }
 };
 
 template<class T>

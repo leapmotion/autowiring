@@ -3,7 +3,6 @@
 #include "auto_id.h"
 #include "auto_in.h"
 #include "auto_out.h"
-#include "auto_prev.h"
 #include "SharedPointerSlot.h"
 
 class AutoPacket;
@@ -108,14 +107,6 @@ public:
     return packet.template Get<const T*>();
   }
 };
-
-/// <summary>
-/// Specialization for equivalent T auto_in<T>
-/// </summary>
-template<class T>
-class auto_arg<auto_in<T>>:
-  public auto_arg<T>
-{};
 
 /// <summary>
 /// Construction helper for output-by-reference decoration types
@@ -235,52 +226,6 @@ class auto_arg<auto_out<T>>:
 {
 public:
   typedef auto_out<T> arg_type;
-};
-
-template<class T, int N>
-class auto_arg<auto_prev<T, N>>
-{
-public:
-  typedef auto_prev<T, N> type;
-  typedef auto_prev<T, N> arg_type;
-  typedef auto_id<T> id_type;
-
-  static const bool is_input = true;
-  static const bool is_output = false;
-  static const bool is_shared = true;
-  static const bool is_multi = false;
-  static const int tshift = N;
-
-  template<class C>
-  static const T* arg(C& packet) {
-    const T* retVal;
-    packet.template Get<T>(retVal, N);
-    return retVal;
-  }
-};
-
-/// <summary>
-/// AutoPacket specialization
-/// </summary>
-/// <remarks>
-/// Because this type is immediately satisfied, it is neither an input nor an output
-/// </remarks>
-template<>
-class auto_arg<AutoPacket&>
-{
-public:
-  typedef AutoPacket& type;
-  typedef auto_in<AutoPacket> arg_type;
-  typedef AutoPacket id_type;
-  static const bool is_input = false;
-  static const bool is_output = false;
-  static const bool is_shared = false;
-  static const bool is_multi = false;
-  static const int tshift = 0;
-
-  static AutoPacket& arg(AutoPacket& packet) {
-    return packet;
-  }
 };
 
 /// <summary>
