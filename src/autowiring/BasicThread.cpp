@@ -22,7 +22,7 @@ BasicThread::~BasicThread(void) {
   NotifyTeardownListeners();
 }
 
-std::mutex& BasicThread::GetLock(void) {
+std::mutex& BasicThread::GetLock(void) const {
   return m_state->m_lock;
 }
 
@@ -101,7 +101,7 @@ void BasicThread::DoRunLoopCleanup(std::shared_ptr<CoreContext>&& ctxt, std::sha
   state->m_stateCondition.notify_all();
 }
 
-void BasicThread::WaitForStateUpdate(const std::function<bool()>& fn) {
+void BasicThread::WaitForStateUpdate(const std::function<bool()>& fn) const {
   std::unique_lock<std::mutex> lk(m_state->m_lock);
   m_state->m_stateCondition.wait(
     lk,
@@ -113,13 +113,13 @@ void BasicThread::WaitForStateUpdate(const std::function<bool()>& fn) {
     throw dispatch_aborted_exception("Thread was stopped before the function returned true");
 }
 
-void BasicThread::PerformStatusUpdate(const std::function<void()>& fn) {
+void BasicThread::PerformStatusUpdate(const std::function<void()>& fn) const {
   std::unique_lock<std::mutex> lk(m_state->m_lock);
   fn();
   m_state->m_stateCondition.notify_all();
 }
 
-bool BasicThread::ThreadSleep(std::chrono::nanoseconds timeout) {
+bool BasicThread::ThreadSleep(std::chrono::nanoseconds timeout) const {
   std::unique_lock<std::mutex> lk(m_state->m_lock);
   return m_state->m_stateCondition.wait_for(lk, timeout, [this] { return ShouldStop(); });
 }
