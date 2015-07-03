@@ -113,7 +113,7 @@ protected:
   /// <summary>
   /// Recovers a general lock used to synchronize entities in this thread internally.
   /// </summary>
-  std::mutex& GetLock(void);
+  std::mutex& GetLock(void) const;
 
   /// <summary>
   /// Routine that sets up the necessary extranea before a call to Run
@@ -183,13 +183,13 @@ protected:
   /// <remarks>
   /// The lambda function is called repeatedly until it evaluates to true.
   /// </remarks>
-  void WaitForStateUpdate(const std::function<bool()>& fn);
+  void WaitForStateUpdate(const std::function<bool()>& fn) const;
 
   /// <summary>
   /// Obtains a mutex, invokes the specified lambda function, and then updates
   /// the basic thread's state condition.
   /// </summary>
-  void PerformStatusUpdate(const std::function<void()>& fn);
+  void PerformStatusUpdate(const std::function<void()>& fn) const;
 
   /// <summary>
   /// Sleeps this thread for the specified duration.
@@ -203,7 +203,7 @@ protected:
   /// Callers should not invoke this method outside of this thread's thread context, or an
   /// interruption exception could result.
   /// </remarks>
-  bool ThreadSleep(std::chrono::nanoseconds timeout);
+  bool ThreadSleep(std::chrono::nanoseconds timeout) const;
 
   /// <summary>
   /// Causes a new thread to be created in which the Run method will be invoked
