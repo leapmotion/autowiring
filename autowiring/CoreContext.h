@@ -224,7 +224,7 @@ protected:
   std::list<CoreObjectDescriptor> m_concreteTypes;
 
   // This is a memoization map used to memoize any already-detected interfaces.
-  mutable std::unordered_map<std::type_index, MemoEntry> m_typeMemos;
+  mutable std::unordered_map<auto_id, MemoEntry> m_typeMemos;
 
   // All known context members, exception filters:
   std::vector<ContextMember*> m_contextMembers;
@@ -548,7 +548,7 @@ public:
   /// <returns>
   /// The type identifier of the referenced instance.
   /// </returns>
-  const std::type_info& GetAutoTypeId(const AnySharedPointer& ptr) const;
+  auto_id GetAutoTypeId(const AnySharedPointer& ptr) const;
 
   /// \internal
   /// <summary>
@@ -1077,7 +1077,7 @@ public:
   void FindByType(std::shared_ptr<T>& slot, bool localOnly = false) const {
     AnySharedPointerT<T> reference;
     FindByType(reference, localOnly);
-    slot = reference.slot()->template as<T>();
+    slot = reference.template as<T>();
   }
 
   /// <summary>
@@ -1087,7 +1087,7 @@ public:
   void FindByTypeRecursive(std::shared_ptr<T>& ptr) const {
     AnySharedPointerT<T> slot;
     FindByTypeRecursive(slot, AutoSearchLambdaDefault());
-    ptr = slot.slot()->get();
+    ptr = slot.get();
   }
 
   /// <summary>

@@ -15,18 +15,6 @@
 AutoPacketGraph::AutoPacketGraph() {
 }
 
-std::string AutoPacketGraph::DemangleTypeName(const std::type_info* type_info) const {
-  std::string demangled = autowiring::demangle(type_info);
-  
-  size_t demangledLength = demangled.length();
-  size_t newLength =
-    demangled[demangledLength - 2] == ' ' ?
-    demangledLength - 10 :
-    demangledLength - 9;
-  
-  return demangled.substr(demangled.find("<") + 1, newLength);
-}
-
 void AutoPacketGraph::LoadEdges() {
   std::lock_guard<std::mutex> lk(m_lock);
   
@@ -35,23 +23,23 @@ void AutoPacketGraph::LoadEdges() {
   
   for (auto& descriptor : descriptors) {
     for(auto pCur = descriptor.GetAutoFilterArguments(); *pCur; pCur++) {
-      const std::type_info& type_info = *pCur->ti;
+      auto_id id = pCur->id;
       
       // Skip the AutoPacketGraph
-      const std::type_info& descType = m_factory->GetContext()->GetAutoTypeId(descriptor.GetAutoFilter());
-      if (descType == typeid(AutoPacketGraph)) {
+      const auto_id descType = m_factory->GetContext()->GetAutoTypeId(descriptor.GetAutoFilter());
+      if (descType == auto_id_t<AutoPacketGraph>{}) {
         continue;
       }
       
       if (pCur->is_input) {
-        DeliveryEdge edge { &type_info, descriptor, true };
+        DeliveryEdge edge { id, descriptor, true };
         if (m_deliveryGraph.find(edge) == m_deliveryGraph.end()) {
           m_deliveryGraph[edge] = 0;
         }
       }
       
       if (pCur->is_output) {
-        DeliveryEdge edge { &type_info, descriptor, false };
+        DeliveryEdge edge { id, descriptor, false };
         if (m_deliveryGraph.find(edge) == m_deliveryGraph.end()) {
           m_deliveryGraph[edge] = 0;
         }
@@ -60,8 +48,8 @@ void AutoPacketGraph::LoadEdges() {
   }
 }
 
-void AutoPacketGraph::RecordDelivery(const std::type_info* ti, const AutoFilterDescriptor& descriptor, bool input) {
-  DeliveryEdge edge { ti, descriptor, input };
+void AutoPacketGraph::RecordDelivery(auto_id id, const AutoFilterDescriptor& descriptor, bool input) {
+  DeliveryEdge edge { id, descriptor, input };
   
   auto itr = m_deliveryGraph.find(edge);
   assert(itr != m_deliveryGraph.end());
@@ -82,7 +70,7 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
   packet.AddTeardownListener([this, &packet] () {
     for (auto& cur : packet.GetDecorations()) {
       auto& decoration = cur.second;
-      auto type = cur.first.ti;
+      auto type = cur.first.id;
 
       for (auto& publisher : decoration.m_publishers)
         if (!publisher->remaining)
@@ -90,8 +78,8 @@ void AutoPacketGraph::AutoFilter(AutoPacket& packet) {
 
       for (auto& subscriber : decoration.m_subscribers) {
         // Skip the AutoPacketGraph
-        const std::type_info& descType = m_factory->GetContext()->GetAutoTypeId(subscriber.satCounter->GetAutoFilter());
-        if (descType == typeid(AutoPacketGraph))
+        auto_id descType = m_factory->GetContext()->GetAutoTypeId(subscriber.satCounter->GetAutoFilter());
+        if (descType == auto_id_t<AutoPacketGraph>{})
           continue;
         
         if (subscriber.satCounter->remaining)
@@ -122,12 +110,12 @@ bool AutoPacketGraph::WriteGV(const std::string& filename, bool numPackets) cons
     auto count = itr.second;
     
     // Skip the AutoPacketGraph
-    const std::type_info& descType = m_factory->GetContext()->GetAutoTypeId(descriptor.GetAutoFilter());
-    if (descType == typeid(AutoPacketGraph)) {
+    auto_id descType = m_factory->GetContext()->GetAutoTypeId(descriptor.GetAutoFilter());
+    if (descType == auto_id_t<AutoPacketGraph>{}) {
       continue;
     }
     
-    std::string typeName = DemangleTypeName(type);
+    std::string typeName = autowiring::demangle(type);
     std::string descriptorName = autowiring::demangle(descType);
     
     // Get a unique set of types/descriptors

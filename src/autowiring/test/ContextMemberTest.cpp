@@ -40,12 +40,20 @@ TEST_F(ContextMemberTest, VerifyDetectedMembers)
 {
   AutoRequired<HasAFewSlots> hasAFew;
 
+  (void) auto_id_t_init<SimpleObject>::init;
+  (void) auto_id_t_init<SimpleThreadedT<long>>::init;
+  (void) auto_id_t_init<SimpleThreadedT<int>>::init;
+
   // Slots defined in reverse order here, because that's how they will be present in the collection
   SlotInformation expected [] = {
-    SlotInformation(nullptr, typeid(auto_id<SimpleObject>), offsetof_nowarn(HasAFewSlots, m_sobj), false),
-    SlotInformation(nullptr, typeid(auto_id<SimpleThreadedT<long>>), offsetof_nowarn(HasAFewSlots, m_sthread2), false),
-    SlotInformation(nullptr, typeid(auto_id<SimpleThreadedT<int>>), offsetof_nowarn(HasAFewSlots, m_sthread1), false)
+    {nullptr, auto_id_t<SimpleObject>{}, offsetof_nowarn(HasAFewSlots, m_sobj), false},
+    {nullptr, auto_id_t<SimpleThreadedT<long>>{}, offsetof_nowarn(HasAFewSlots, m_sthread2), false},
+    {nullptr, auto_id_t<SimpleThreadedT<int>>{}, offsetof_nowarn(HasAFewSlots, m_sthread1), false}
   };
+
+  ASSERT_EQ(typeid(SimpleObject), *expected[0].type.block->ti);
+  ASSERT_EQ(typeid(SimpleThreadedT<long>), *expected[1].type.block->ti);
+  ASSERT_EQ(typeid(SimpleThreadedT<int>), *expected[2].type.block->ti);
 
   // Validate all pointers are what we expect to find, and in the right order
   size_t ct = 0;

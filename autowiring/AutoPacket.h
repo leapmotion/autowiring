@@ -9,6 +9,7 @@
 #include "demangle.h"
 #include "is_any.h"
 #include "is_shared_ptr.h"
+#include "noop.h"
 #include "TeardownNotifier.h"
 #include <typeinfo>
 #include CHRONO_HEADER
@@ -182,7 +183,7 @@ protected:
   /// <remarks>
   /// If the type is not a subscriber GetSatisfaction().GetType() == nullptr will be true
   /// </remarks>
-  const SatCounter& GetSatisfaction(const std::type_info& subscriber) const;
+  const SatCounter& GetSatisfaction(auto_id subscriber) const;
 
   /// <summary>
   /// Throws a formatted runtime error corresponding to the case where an absent decoration was demanded
@@ -220,7 +221,7 @@ public:
   template<class T>
   bool Has(int tshift=0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    return HasUnsafe(DecorationKey(auto_id<T>::key(), tshift));
+    return HasUnsafe(DecorationKey(auto_id_t<T>{}, tshift));
   }
 
   /// <summary>
@@ -232,7 +233,7 @@ public:
 
     const T* retVal;
     if (!Get(retVal, tshift))
-      ThrowNotDecoratedException(DecorationKey(auto_id<T>::key(), tshift));
+      ThrowNotDecoratedException(DecorationKey(auto_id_t<T>{}, tshift));
     return *retVal;
   }
 
@@ -245,7 +246,7 @@ public:
   /// </remarks>
   template<class T>
   bool Get(const T*& out, int tshift=0) const {
-    DecorationKey key(auto_id<T>::key(), tshift);
+    DecorationKey key(auto_id_t<T>{}, tshift);
     const DecorationDisposition* pDisposition = GetDisposition(key);
     if (pDisposition) {
       switch (pDisposition->m_decorations.size()) {
@@ -254,7 +255,7 @@ public:
         break;
       case 1:
         // Single decoration, we can do what the user is asking
-        out = static_cast<const T*>(pDisposition->m_decorations[0]->ptr());
+        out = static_cast<const T*>(pDisposition->m_decorations[0].ptr());
         return true;
       default:
         ThrowMultiplyDecoratedException(key);
@@ -289,7 +290,7 @@ public:
     typedef typename std::remove_const<T>::type TActual;
 
     // Decoration must be present and the shared pointer itself must also be present
-    DecorationKey key(auto_id<TActual>::key(), tshift);
+    DecorationKey key(auto_id_t<TActual>{}, tshift);
     const DecorationDisposition* pDisposition = GetDisposition(key);
     if (!pDisposition) {
       out = nullptr;
@@ -302,7 +303,7 @@ public:
       return false;
     case 1:
       // Single decoration available, we can return here
-      out = &pDisposition->m_decorations[0]->as_unsafe<T>();
+      out = &pDisposition->m_decorations[0].as<T>();
       return true;
     default:
       ThrowMultiplyDecoratedException(key);
@@ -320,11 +321,11 @@ public:
   template<class T>
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto deco = m_decoration_map.find(DecorationKey(auto_id<T>::key(), tshift));
+    auto deco = m_decoration_map.find(DecorationKey(auto_id_t<T>{}, tshift));
     if(deco != m_decoration_map.end() && deco->second.m_state == DispositionState::Complete) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
-        out = disposition.m_decorations[0]->as_unsafe<T>();
+        out = disposition.m_decorations[0].as<T>();
         return true;
       }
     }
@@ -351,7 +352,7 @@ public:
     std::lock_guard<std::mutex> lk(m_lock);
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decoration_map.find(DecorationKey(auto_id<T>::key(), tshift));
+    auto q = m_decoration_map.find(DecorationKey(auto_id_t<T>{}, tshift));
     if (q == m_decoration_map.end())
       return std::unique_ptr<const T*[]>{
         new const T*[1] {nullptr}
@@ -361,7 +362,7 @@ public:
     const auto& decorations = q->second.m_decorations;
     std::unique_ptr<const T* []> retVal{new const T*[decorations.size() + 1]};
     for (size_t i = 0; i < decorations.size(); i++)
-      retVal[i] = static_cast<const T*>(decorations[i]->ptr());
+      retVal[i] = static_cast<const T*>(decorations[i].ptr());
     retVal[decorations.size()] = nullptr;
     return retVal;
   }
@@ -376,7 +377,7 @@ public:
     typedef typename std::remove_const<T>::type TActual;
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decoration_map.find(DecorationKey(auto_id<TActual>::key(), tshift));
+    auto q = m_decoration_map.find(DecorationKey(auto_id_t<TActual>{}, tshift));
     if (q == m_decoration_map.end())
       return std::unique_ptr<std::shared_ptr<const T>[]>{
         new std::shared_ptr<const T>[1] {nullptr}
@@ -388,7 +389,7 @@ public:
       new std::shared_ptr<const T>[decorations.size() + 1]
     };
     for (size_t i = 0; i < decorations.size(); i++)
-      retVal[i] = decorations[i].as<T>().get();
+      retVal[i] = decorations[i].as<T>();
     return retVal;
   }
 
@@ -422,10 +423,11 @@ public:
   /// </remarks>
   template<class T>
   void MarkUnsatisfiable(void) {
-    MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
+    MarkUnsatisfiable(DecorationKey(auto_id_t<T>{}, 0));
   }
 
   /// <summary>
+
   /// Decoration method specialized for shared pointer types
   /// </summary>
   /// <remarks>
@@ -436,14 +438,14 @@ public:
   /// </remarks>
   template<class T>
   void Decorate(const std::shared_ptr<T>& ptr) {
-    DecorationKey key(auto_id<T>::key(), 0);
+    DecorationKey key(auto_id_t<T>{}, 0);
     
     // We don't want to see this overload used on a const T
     static_assert(!std::is_const<T>::value, "Cannot decorate a shared pointer to const T with this overload");
 
     // Injunction to prevent existential loops:
     static_assert(!std::is_same<T, AutoPacket>::value, "Cannot decorate a packet with another packet");
-    
+
     // Either decorate, or prevent anyone from decorating
     if (ptr)
       Decorate(AnySharedPointer(ptr), key);
@@ -483,7 +485,7 @@ public:
     auto ptr = std::make_shared<TActual>(std::forward<T&&>(t));
     Decorate(
       AnySharedPointer(ptr),
-      DecorationKey(auto_id<TActual>::key(), 0)
+      DecorationKey(auto_id_t<TActual>{}, 0)
     );
     return *ptr;
   }
@@ -503,7 +505,7 @@ public:
     auto ptr = std::make_shared<T>(std::forward<Args&&>(args)...);
     Decorate(
       AnySharedPointer(ptr),
-      DecorationKey(auto_id<T>::key(), 0)
+      DecorationKey(auto_id_t<T>(), 0)
     );
     return *ptr;
   }
@@ -531,8 +533,8 @@ public:
     // Perform standard decoration with a short initialization:
     std::unique_lock<std::mutex> lk(m_lock);
     DecorationDisposition* pTypeSubs[1 + sizeof...(Ts)] = {
-      &DecorateImmediateUnsafe(DecorationKey(auto_id<T>::key(), 0), &immed),
-      &DecorateImmediateUnsafe(DecorationKey(auto_id<Ts>::key(), 0), &immeds)...
+      &DecorateImmediateUnsafe(DecorationKey(auto_id_t<T>(), 0), &immed),
+      &DecorateImmediateUnsafe(DecorationKey(auto_id_t<Ts>(), 0), &immeds)...
     };
 
     // Pulse satisfaction:
@@ -545,8 +547,10 @@ public:
       }
 
       // Now trigger a rescan to hit any deferred, unsatisfiable entries:
-      for (const std::type_info* ti : {&auto_id<T>::key(), &auto_id<Ts>::key()...})
-        MarkUnsatisfiable(DecorationKey(*ti, 0));
+      autowiring::noop(
+        (MarkUnsatisfiable(DecorationKey(auto_id_t<T>(), 0)), false),
+        (MarkUnsatisfiable(DecorationKey(auto_id_t<Ts>(), 0)), false)...
+      );
     }),
     PulseSatisfactionUnsafe(std::move(lk), pTypeSubs, 1 + sizeof...(Ts));
   }
@@ -591,7 +595,7 @@ public:
   /// If the type is not a subscriber GetSatisfaction().GetType() == nullptr will be true
   /// </remarks>
   template<class T>
-  inline const SatCounter& GetSatisfaction(void) const { return GetSatisfaction(auto_id<T>::key()); }
+  inline const SatCounter& GetSatisfaction(void) const { return GetSatisfaction(auto_id_t<T>{}); }
 
   /// <summary>
   /// Returns the next packet that will be issued by the packet factory in this context relative to this context
@@ -601,13 +605,13 @@ public:
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   template<typename T>
   bool HasSubscribers(void) const {
-    return HasSubscribers(DecorationKey{auto_id<T>::key(), 0});
+    return HasSubscribers(DecorationKey{auto_id_t<T>{}, 0});
   }
 
   /// <returns>Zero if there are no publishers, otherwise the number of publishers</returns>
   template<typename T>
   size_t HasPublishers(void) const {
-    return HasPublishers(DecorationKey{auto_id<T>::key(), 0});
+    return HasPublishers(DecorationKey{auto_id_t<T>{}, 0});
   }
 
   struct SignalStub {
@@ -711,7 +715,7 @@ class auto_arg<AutoPacket&>
 public:
   typedef AutoPacket& type;
   typedef AutoPacket& arg_type;
-  typedef AutoPacket id_type;
+  typedef auto_id_t<AutoPacket> id_type;
   static const bool is_input = false;
   static const bool is_output = false;
   static const bool is_shared = false;
@@ -725,5 +729,5 @@ public:
 
 template<class T>
 void AutoPacket::Unsatisfiable(void) {
-  MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
+  MarkUnsatisfiable(DecorationKey(auto_id_t<T>{}, 0));
 }

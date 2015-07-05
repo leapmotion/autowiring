@@ -1,5 +1,6 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "auto_id.h"
 #include "TypeUnifier.h"
 #include <typeinfo>
 #include MEMORY_HEADER
@@ -10,7 +11,7 @@ class DeferrableAutowiring;
 /// Represents information about a single slot detected as having been declared in a context member
 /// </summary>
 struct SlotInformation {
-  SlotInformation(const SlotInformation* pFlink, const std::type_info& type, size_t slotOffset, bool autoRequired) :
+  SlotInformation(const SlotInformation* pFlink, auto_id type, size_t slotOffset, bool autoRequired) :
     pFlink(pFlink),
     type(type),
     slotOffset(slotOffset),
@@ -21,7 +22,7 @@ struct SlotInformation {
   const SlotInformation* const pFlink;
 
   // The type of this slot:
-  const std::type_info& type;
+  const auto_id type;
 
   // The offset of this slot relative to the base of the enclosing object
   size_t slotOffset;

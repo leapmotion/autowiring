@@ -60,7 +60,7 @@ public:
       m_queueUpdated.wait(lk, [this]{
         return !m_queue[typeid(T)].empty();
       });
-    return *static_cast<T*>(m_queue[typeid(T)].front()->ptr());
+    return *static_cast<T*>(m_queue[typeid(T)].front().ptr());
   }
 
   // Iterator that acts as a proxy to

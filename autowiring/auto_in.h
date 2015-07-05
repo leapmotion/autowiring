@@ -16,10 +16,6 @@ template<class T>
 class auto_in
 {
 public:
-  typedef std::shared_ptr<T> id_type;
-  static const bool is_input = true;
-  static const bool is_output = false;
-
   auto_in(const T& value) :
     m_value(value)
   {}

@@ -40,7 +40,7 @@ class auto_arg<auto_prev<T, N>>
 public:
   typedef auto_prev<T, N> type;
   typedef auto_prev<T, N> arg_type;
-  typedef auto_id<T> id_type;
+  typedef auto_id_t<T> id_type;
 
   static const bool is_input = true;
   static const bool is_output = false;

@@ -16,7 +16,10 @@ using namespace autowiring;
 AutoPacket::AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding):
   m_parentFactory(std::static_pointer_cast<AutoPacketFactory>(factory.shared_from_this())),
   m_outstanding(std::move(outstanding))
-{}
+{
+  // Need to ensure our identity type is instantiated
+  (void) auto_id_t_init<AutoPacket>::init;
+}
 
 AutoPacket::~AutoPacket(void) {
   m_parentFactory->RecordPacketDuration(
@@ -29,7 +32,7 @@ AutoPacket::~AutoPacket(void) {
   // originating from this packet as unsatisfiable
   for (auto& pair : m_decoration_map)
     if (!pair.first.tshift && pair.second.m_state != DispositionState::Complete)
-      MarkSuccessorsUnsatisfiable(DecorationKey(*pair.first.ti, 0));
+      MarkSuccessorsUnsatisfiable(DecorationKey(pair.first.id, 0));
 
   // Needed for the AutoPacketGraph
   NotifyTeardownListeners();
@@ -63,7 +66,7 @@ DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& 
 
   if (dec.m_state != DispositionState::Unsatisfied) {
     std::stringstream ss;
-    ss << "Cannot perform immediate decoration with type " << autowiring::demangle(key.ti)
+    ss << "Cannot perform immediate decoration with type " << autowiring::demangle(key.id)
        << ", the requested decoration already exists";
     throw std::runtime_error(ss.str());
   }
@@ -76,14 +79,14 @@ DecorationDisposition& AutoPacket::DecorateImmediateUnsafe(const DecorationKey& 
 
 void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
   for(auto pCur = satCounter.GetAutoFilterArguments(); *pCur; pCur++) {
-    DecorationKey key(*pCur->ti, pCur->tshift);
+    DecorationKey key(pCur->id, pCur->tshift);
     DecorationDisposition& entry = m_decoration_map[key];
 
     // Decide what to do with this entry:
     if (pCur->is_input) {
       if (entry.m_publishers.size() > 1 && !pCur->is_multi) {
         std::stringstream ss;
-        ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->ti);
+        ss << "Cannot add listener for multi-broadcast type " << autowiring::demangle(pCur->id);
         throw std::runtime_error(ss.str());
       }
 
@@ -111,9 +114,9 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
       if(!entry.m_publishers.empty())
         for (const auto& subscriber : entry.m_subscribers)
           for (auto pOther = subscriber.satCounter->GetAutoFilterArguments(); *pOther; pOther++) {
-            if (*pOther->ti == *pCur->ti && !pOther->is_multi) {
+            if (pOther->id == pCur->id && !pOther->is_multi) {
               std::stringstream ss;
-              ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->ti) << " with existing subscriber.";
+              ss << "Added identical data broadcasts of type " << autowiring::demangle(pCur->id) << " with existing subscriber.";
               throw std::runtime_error(ss.str());
             }
           }
@@ -123,7 +126,7 @@ void AutoPacket::AddSatCounterUnsafe(SatCounter& satCounter) {
 
     // Make sure decorations exist for timeshifts less that key's timeshift
     for (int tshift = 0; tshift < key.tshift; ++tshift)
-      m_decoration_map[DecorationKey(*key.ti, tshift)];
+      m_decoration_map[DecorationKey(key.id, tshift)];
   }
 }
 
@@ -229,7 +232,7 @@ void AutoPacket::UpdateSatisfactionUnsafe(std::unique_lock<std::mutex> lk, const
   // Mark all unsatisfiable output types
   for (auto unsatOutputArg : unsatOutputArgs) {
     // One more producer run, even though we couldn't attach any new decorations
-    auto& entry = m_decoration_map[DecorationKey{*unsatOutputArg->ti, 0}];
+    auto& entry = m_decoration_map[DecorationKey{unsatOutputArg->id, 0}];
     entry.m_nProducersRun++;
 
     // Now recurse on this entry
@@ -388,23 +391,23 @@ size_t AutoPacket::HasPublishers(const DecorationKey& key) const {
     q->second.m_publishers.size();
 }
 
-const SatCounter& AutoPacket::GetSatisfaction(const std::type_info& subscriber) const {
+const SatCounter& AutoPacket::GetSatisfaction(auto_id subscriber) const {
   std::lock_guard<std::mutex> lk(m_lock);
   for (auto* sat = m_firstCounter; sat; sat = sat->flink)
-    if (sat->GetType() == &subscriber)
+    if (sat->GetType() == subscriber)
       return *sat;
   throw autowiring_error("Attempted to get the satisfaction counter for an unavailable subscriber");
 }
 
 void AutoPacket::ThrowNotDecoratedException(const DecorationKey& key) {
   std::stringstream ss;
-  ss << "Attempted to obtain a type " << autowiring::demangle(key.ti) << " which was not decorated on this packet";
+  ss << "Attempted to obtain a type " << autowiring::demangle(key.id) << " which was not decorated on this packet";
   throw std::runtime_error(ss.str());
 }
 
 void AutoPacket::ThrowMultiplyDecoratedException(const DecorationKey& key) {
   std::stringstream ss;
-  ss << "Attempted to obtain a type " << autowiring::demangle(key.ti) << " which was decorated more than once on this packet";
+  ss << "Attempted to obtain a type " << autowiring::demangle(key.id) << " which was decorated more than once on this packet";
   throw std::runtime_error(ss.str());
 }
 
@@ -498,12 +501,12 @@ bool AutoPacket::Wait(std::condition_variable& cv, const AutoFilterArgument* inp
     AutoFilterDescriptor(
       stub,
       AutoFilterDescriptorStub(
-        &typeid(AutoPacketFactory),
+        auto_id_t<AutoPacketFactory>{},
         autowiring::altitude::Dispatch,
         inputs,
         false,
         [] (const AnySharedPointer& obj, AutoPacket&) {
-          auto stub = obj->as<SignalStub>();
+          auto stub = obj.as<SignalStub>();
 
           // Completed, mark the output as satisfied and update the condition variable
           std::lock_guard<std::mutex>(stub->packet.m_lock);

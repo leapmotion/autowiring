@@ -18,6 +18,7 @@ set(Autowiring_SRCS
   auto_arg.h
   auto_arg.cpp
   auto_id.h
+  auto_id.cpp
   auto_in.h
   auto_future.h
   auto_out.h
@@ -138,6 +139,7 @@ set(Autowiring_SRCS
   MemoEntry.cpp
   MicroAutoFilter.h
   MicroBolt.h
+  noop.h
   NullPool.h
   NullPool.cpp
   ObjectPool.h
@@ -148,7 +150,6 @@ set(Autowiring_SRCS
   CoreObjectDescriptor.h
   SatCounter.h
   SatCounter.cpp
-  SharedPointerSlot.h
   SlotInformation.cpp
   SlotInformation.h
   SystemThreadPool.cpp
