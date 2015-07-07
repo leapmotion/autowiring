@@ -6,7 +6,7 @@
 
 // Arm doesn't have std::future, but does have std::chrono. We need to convert from std::chrono
 // to autoboost::chrono when passing arguments to "std::future"(alias to autoboost::future) on arm.
-#if autowiring_BUILD_ANDROID
+#if __ANDROID__ && !GCC_CHECK(4, 9)
 autoboost::chrono::nanoseconds NanosecondsForFutureWait(const std::chrono::nanoseconds& time) {
   return autoboost::chrono::nanoseconds(time.count());
 }
