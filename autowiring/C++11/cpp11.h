@@ -102,7 +102,7 @@
 /*********************
  * future availability
  *********************/
-#if (_MSC_VER >= 1700 || (STL11_ALLOWED)) && !__ANDROID__
+#if (_MSC_VER >= 1700 || (STL11_ALLOWED)) && (!__ANDROID__ || (__GNUC__ == 4 && __GNUC_MINOR__ >= 9) || __GNUC__ >= 5)
   #define FUTURE_HEADER <future>
 #else
   // As of NDK r10, we still don't have an implementation of "future" for Android
