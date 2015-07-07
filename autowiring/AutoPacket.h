@@ -12,17 +12,13 @@
 #include <typeinfo>
 #include CHRONO_HEADER
 #include MEMORY_HEADER
-#include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 #include MUTEX_HEADER
 
-class AutoPacket;
 class AutoPacketInternal;
 class AutoPacketFactory;
-class AutoPacketProfiler;
 class CoreContext;
 struct AutoFilterDescriptor;
-struct AutoFilterArgument;
 
 template<class T>
 class auto_arg;
