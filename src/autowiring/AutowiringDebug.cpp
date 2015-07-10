@@ -210,11 +210,14 @@ std::string autowiring::dbg::AutoFilterGraphStr(void) {
 }
 
 void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, const std::shared_ptr<CoreContext>& ctxt) {
-  CurrentContextPusher pshr(ctxt);
-  Autowired<AutoPacketFactory> factory;
+  return autowiring::dbg::WriteAutoFilterGraph(os, *ctxt);
+}
+
+void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, CoreContext& ctxt) {
+  AutowiredFast<AutoPacketFactory> factory(&ctxt);
 
   // Write opening and closing parts of file. Now, we only need to write edges
-  os << "digraph " << autowiring::demangle(ctxt->GetSigilType()) << " {" << std::endl;
+  os << "digraph " << autowiring::demangle(ctxt.GetSigilType()) << " {" << std::endl;
   auto exit = MakeAtExit([&os]{
     os << "}" << std::endl;
   });
