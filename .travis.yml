@@ -1,22 +1,28 @@
 language: cpp
-compiler: g++
-os: linux
 sudo: false
-env:
-  global:
-  - CC=gcc-4.8
-  - CXX=g++-4.8
-  - CMAKE_URL=http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-i386.tar.gz
-  - CMAKE_DIRNAME=cmake-3.1.0-Linux-i386
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-4.8
-      - g++-4.8
-      - libc6-i386
+matrix:
+  include:
+  - os: linux
+    env:
+    - _CC: gcc-4.8
+    - _CXX: g++-4.8
+    - CMAKE_URL=http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-i386.tar.gz
+    - CMAKE_DIRNAME=cmake-3.1.0-Linux-i386
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-4.8
+          - g++-4.8
+          - libc6-i386
+  - os: osx
+    env:
+    - _CC: clang
+    - _CXX: clang++
+    - CMAKE_URL=http://www.cmake.org/files/v3.1/cmake-3.1.0-Darwin64.tar.gz
+    - CMAKE_DIRNAME=cmake-3.1.0-Darwin64/CMake.app/Contents
 
 before_install:
   # Enforce whitespace guidelines
@@ -32,11 +38,10 @@ install:
   # CMake 3.1
   - curl $CMAKE_URL | tar xz
 
-  # g++4.8.1
-  - export CC=gcc-4.8
-  - export CXX=g++-4.8
-
 before_script:
+  - export CC=$_CC
+  - export CXX=$_CXX
+  - $CXX --version
   - export CPATH=/usr/include/c++/4.8:/usr/include/x86_64-linux-gnu/c++/4.8/:$CPATH
   - export LD_LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.8:$LD_LIBRARY_PATH
 
