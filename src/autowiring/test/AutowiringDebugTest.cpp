@@ -66,26 +66,25 @@ TEST_F(AutowiringDebugTest, ContextPrintout) {
   auto ctxt5 = hCtxt->Create<Derp>();
 
   // This is the expected output
-  std::string tree = "GlobalCoreContext\n"
-                     "└── void(Current Context)\n"
+  std::string tree = "void(Current Context)\n"
+                     "├── Derp\n"
+                     "│   ├── Herp\n"
+                     "│   │   └── int\n"
+                     "│   └── Derp\n"
+                     "└── Herp\n"
                      "    ├── Derp\n"
-                     "    │   ├── Herp\n"
-                     "    │   │   └── int\n"
-                     "    │   └── Derp\n"
-                     "    └── Herp\n"
-                     "        ├── Derp\n"
-                     "        └── Derp\n";
+                     "    └── Derp\n";
 
   // Remove whitespace so test is more robust
   tree.erase(std::remove_if(tree.begin(), tree.end(), [](char ch) { return ch == ' '; }), tree.end());
 
   // Write output to stringstream an remove whitespace
   std::stringstream ss;
-  autowiring::dbg::PrintContextTree(ss);
+  autowiring::dbg::PrintContextTree(ss, ctxt);
   auto output = ss.str();
   output.erase(std::remove_if(output.begin(), output.end(), [](char ch) { return ch == ' '; }), output.end());
 
-  ASSERT_EQ(tree, output) << "Didn't print correct tree";
+  ASSERT_STREQ(tree.c_str(), output.c_str()) << "Didn't print correct tree";
 }
 
 struct IntOutputer {

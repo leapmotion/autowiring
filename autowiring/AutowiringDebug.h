@@ -27,6 +27,7 @@ std::string ContextName(void);
 /// </summary>
 void PrintContextTree(void);
 void PrintContextTree(std::ostream& os);
+void PrintContextTree(std::ostream& os, const std::shared_ptr<CoreContext>& ctxt);
 
 /// <returns>
 /// The current packet under processing
