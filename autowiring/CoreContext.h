@@ -168,7 +168,7 @@ protected:
   const t_childList::iterator m_backReference;
 
   // State block for this context:
-  std::unique_ptr<CoreContextStateBlock> m_stateBlock;
+  std::shared_ptr<CoreContextStateBlock> m_stateBlock;
 
   enum class State {
     // Not yet started
@@ -245,10 +245,6 @@ protected:
 
   // Actual core threads:
   std::list<CoreRunnable*> m_threads;
-
-  // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
-  // Destructor does nothing; this is by design.
-  std::weak_ptr<CoreObject> m_outstanding;
 
   // The thread pool used by this context.  By default, a context inherits the thread pool of
   // its parent, and the global context gets the system thread pool.
@@ -386,20 +382,6 @@ protected:
   /// Forwarding routine, recursively adds a packet subscriber to the internal packet factory
   /// </summary>
   void AddPacketSubscriber(const AutoFilterDescriptor& rhs);
-
-  /// \internal
-  /// <summary>
-  /// Increments the total number of contexts still outstanding
-  /// </summary>
-  /// <remarks>
-  /// This is an indirect incrementation routine.  The count will be incremented for as
-  /// long as the returned shared_ptr is not destroyed.  Once it's destroyed, the count
-  /// is decremented.  The caller is encouraged not to copy the return value, as doing
-  /// so can give inflated values for the current number of outstanding threads.
-  ///
-  /// The caller is responsible for exterior synchronization
-  /// </remarks>
-  std::shared_ptr<CoreObject> IncrementOutstandingThreadCount(void);
 
   /// \internal
   /// <summary>
