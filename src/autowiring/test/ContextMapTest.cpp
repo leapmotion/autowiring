@@ -68,15 +68,18 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     ASSERT_TRUE(!!context.get()) << "Map evicted a context before expected";
 
     // Relock the weak context, verify that we get back the same pointer:
-    auto relocked = weakContext.lock();
-    ASSERT_EQ(relocked, context) << "Mapped context pointer was not identical to a previously stored context pointer";
+    ASSERT_EQ(weakContext.lock(), context) << "Mapped context pointer was not identical to a previously stored context pointer";
 
-    // Terminate whole context
-    context->SignalTerminate();
+    // Terminate whole context, wait for it to respond
+    context->SignalShutdown();
+    context->Wait();
+    ASSERT_EQ(1UL, context.use_count()) << "Context reference should have been unique after thread expiration";
   }
 
   // Release our threaded entity:
+  ASSERT_EQ(1UL, threaded.use_count()) << "Thread was holding a self-reference even after context termination has completed";
   threaded.reset();
+  ASSERT_TRUE(weakContext.expired()) << "Context still existed even after the last reference to it should have been gone";
 
   {
     // Verify that the context is gone now that everything in it has stopped running
