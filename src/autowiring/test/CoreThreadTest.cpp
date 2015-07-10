@@ -520,11 +520,13 @@ TEST_F(CoreThreadTest, SpuriousWakeupTest) {
   std::mutex lock;
   std::condition_variable cv;
   bool ready = false;
+  size_t countOnWake = -1;
 
   auto wakeFn = [&] {
     std::lock_guard<std::mutex> lk(lock);
     ready = true;
     cv.notify_all();
+    countOnWake = extraction->GetDispatchQueueLength();
   };
 
   // Add a delayed lambda that we know won't launch and another one that should launch right away
@@ -543,7 +545,7 @@ TEST_F(CoreThreadTest, SpuriousWakeupTest) {
   *extraction += std::chrono::milliseconds(1), wakeFn;
   ASSERT_TRUE(cv.wait_for(lk, std::chrono::seconds(5), [&] { return ready; }));
 
-  ASSERT_EQ(1UL, extraction->GetDispatchQueueLength()) << "Dispatch queue changed size under a spurious wakeup condition";
+  ASSERT_EQ(2UL, countOnWake) << "Dispatch queue changed size under a spurious wakeup condition";
 }
 
 class BlocksInOnStop:
