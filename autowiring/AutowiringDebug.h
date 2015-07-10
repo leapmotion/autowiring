@@ -60,6 +60,7 @@ std::vector<std::string> ListRootDecorations(void);
 std::string AutoFilterGraphStr(void);
 void WriteAutoFilterGraph(std::ostream& os);
 void WriteAutoFilterGraph(std::ostream& os, const std::shared_ptr<CoreContext>& ctxt);
+void WriteAutoFilterGraph(std::ostream& os, CoreContext& ctxt);
 
 /// <summary>
 /// Initializes the Autowiring debug library
