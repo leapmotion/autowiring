@@ -304,37 +304,6 @@ TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
   ASSERT_TRUE(t->WaitFor(std::chrono::seconds(5))) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
 }
 
-class WaitsALongTimeThenQuits:
-  public CoreThread
-{
-public:
-  bool m_runExiting = false;
-
-  void Run(void) override {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    m_runExiting = true;
-  }
-};
-
-TEST_F(CoreThreadTest, NestedContextWait) {
-  AutoCurrentContext ctxt;
-
-  // Initiate the outer context:
-  ctxt->Initiate();
-
-  // Create a subcontext which has our delay thread in it:
-  auto waitsAwhile = ctxt->Inject<WaitsALongTimeThenQuits>();
-  ctxt->Initiate();
-
-  // Stop and delay on the outer context:
-  ctxt->SignalShutdown();
-  ctxt->Wait();
-
-  // Now we verify that our interior thread has actually quit:
-  ASSERT_TRUE(!waitsAwhile->IsRunning()) << "Inner thread was marked running by CoreThread when outer context returned";
-  ASSERT_TRUE(waitsAwhile->m_runExiting) << "Inner thread marked as stopped, but has not apparently quit";
-}
-
 TEST_F(CoreThreadTest, WaitBeforeInitiate) {
   AutoCurrentContext ctxt;
 
@@ -593,4 +562,31 @@ TEST_F(CoreThreadTest, ContextWaitTimesOutInOnStop) {
 
   // Let BIOS back out now:
   bios->Continue();
+}
+
+TEST_F(CoreThreadTest, SubContextHoldsParentContext) {
+  AutoCurrentContext parent;
+  AutoCreateContext child;
+  auto thread = child->Inject<CoreThread>();
+
+  auto cv = std::make_shared<std::condition_variable>();
+  auto lock = std::make_shared<std::mutex>();
+  auto proceed = std::make_shared<bool>(false);
+  *thread += [cv, lock, proceed] {
+    std::unique_lock<std::mutex> lk(*lock);
+    cv->wait_for(lk, std::chrono::seconds(5), [&] { return *proceed; });
+  };
+
+  parent->Initiate();
+  child->Initiate();
+
+  // Terminate the parent, verify that the child has exited:
+  parent->SignalShutdown();
+  ASSERT_FALSE(parent->Wait(std::chrono::milliseconds(5))) << "Parent context returned before all child threads were done";
+  {
+    std::lock_guard<std::mutex> lk(*lock);
+    *proceed = true;
+    cv->notify_all();
+  }
+  ASSERT_TRUE(parent->Wait(std::chrono::seconds(5))) << "Signalled thread did not terminate in a timely fashion";
 }
