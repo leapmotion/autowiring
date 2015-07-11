@@ -590,3 +590,18 @@ TEST_F(CoreThreadTest, SubContextHoldsParentContext) {
   }
   ASSERT_TRUE(parent->Wait(std::chrono::seconds(5))) << "Signalled thread did not terminate in a timely fashion";
 }
+
+class DoesNothingButQuit:
+  public CoreThread
+{
+public:
+  void Run(void) override {}
+};
+
+TEST_F(CoreThreadTest, QuiescentNotTerminated) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+  AutoRequired<DoesNothingButQuit> ct;
+  ASSERT_TRUE(ctxt->Quiescent(std::chrono::seconds(5))) << "Quiescence was not achieved in a thread that should have self-terminated";
+  ASSERT_TRUE(ctxt->IsQuiescent()) << "Delayed for quiescence, but this was not the state entered when checked on return";
+}

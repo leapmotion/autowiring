@@ -107,6 +107,9 @@ public:
     // and Wait itself with the extended teardown period specified.
     ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Test case took too long to tear down, unit tests running after this point are untrustworthy";
 
+    // Global context should return to quiescence:
+    ASSERT_TRUE(AutoGlobalContext()->Quiescent(std::chrono::seconds(5))) << "Contexts took too long to release all references to the global context";
+
     static const char sc_autothrow [] = "AUTOTHROW_";
     if(!strncmp(sc_autothrow, info.name(), sizeof(sc_autothrow) - 1))
       // Throw expected, end here

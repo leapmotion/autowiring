@@ -895,6 +895,26 @@ public:
   void SignalTerminate(bool wait = true) { SignalShutdown(wait, ShutdownMode::Immediate); }
 
   /// <summary>
+  /// Identical to Wait, except blocks only until the threads in this and all descendant contexts have stopped
+  /// </summary>
+  /// <remarks>
+  /// This method intrinsically may imply a race condition unless the caller is careful to ensure it retains
+  /// total control over injection and subcontext creation events.  In a single-threaded system, the currrent
+  /// context and all child contexts are guaranteed to have no CoreRunnable instances in a running state.
+  /// </remarks>
+  void Quiescent(void) const;
+
+  /// <summary>
+  /// Timed version of Quiescent
+  /// </summary>
+  bool Quiescent(std::chrono::nanoseconds duration) const;
+
+  /// <summary>
+  /// Retrieves the system's current quiescence status
+  /// </summary>
+  bool IsQuiescent(void) const;
+
+  /// <summary>
   /// Waits until the context begins shutting down (IsShutdown is true)
   /// and all threads and child threads have terminated.
   /// </summary>
