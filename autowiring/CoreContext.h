@@ -902,12 +902,17 @@ public:
   /// total control over injection and subcontext creation events.  In a single-threaded system, the currrent
   /// context and all child contexts are guaranteed to have no CoreRunnable instances in a running state.
   /// </remarks>
-  void Quiescent(void);
+  void Quiescent(void) const;
 
   /// <summary>
   /// Timed version of Quiescent
   /// </summary>
-  bool Quiescent(std::chrono::nanoseconds duration);
+  bool Quiescent(std::chrono::nanoseconds duration) const;
+
+  /// <summary>
+  /// Retrieves the system's current quiescence status
+  /// </summary>
+  bool IsQuiescent(void) const;
 
   /// <summary>
   /// Waits until the context begins shutting down (IsShutdown is true)

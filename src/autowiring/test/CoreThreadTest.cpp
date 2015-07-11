@@ -603,4 +603,5 @@ TEST_F(CoreThreadTest, QuiescentNotTerminated) {
   ctxt->Initiate();
   AutoRequired<DoesNothingButQuit> ct;
   ASSERT_TRUE(ctxt->Quiescent(std::chrono::seconds(5))) << "Quiescence was not achieved in a thread that should have self-terminated";
+  ASSERT_TRUE(ctxt->IsQuiescent()) << "Delayed for quiescence, but this was not the state entered when checked on return";
 }
