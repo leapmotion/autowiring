@@ -1213,10 +1213,6 @@ void CoreContext::UnsnoopAutoPacket(const CoreObjectDescriptor& traits) {
   
   // Always remove from this context's PacketFactory:
   Inject<AutoPacketFactory>()->RemoveSubscriber(traits.subscriber);
-  
-  // Handoff to parent:
-  if (m_pParent)
-    m_pParent->UnsnoopAutoPacket(traits);
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {
