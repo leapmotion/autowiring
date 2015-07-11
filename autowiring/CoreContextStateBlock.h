@@ -1,10 +1,29 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "CoreObject.h"
 #include <memory>
 #include MUTEX_HEADER
 
-class CoreObject;
 class CoreContext;
+struct CoreContextStateBlock;
+
+namespace autowiring {
+  /// <summary>
+  /// Container type used for state block referencing
+  /// </summary>
+  class RunCounter:
+    public CoreObject
+  {
+  public:
+    RunCounter(const std::shared_ptr<CoreContextStateBlock>& stateBlock, const std::shared_ptr<CoreContext>& owner);
+    ~RunCounter(void);
+
+  private:
+    const std::shared_ptr<CoreContextStateBlock> stateBlock;
+    const std::shared_ptr<RunCounter> parentCount;
+    std::shared_ptr<CoreContext> owner;
+  };
+}
 
 struct CoreContextStateBlock:
   std::enable_shared_from_this<CoreContextStateBlock>
@@ -24,7 +43,7 @@ public:
 
   // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
   // Destructor does nothing; this is by design.
-  std::weak_ptr<CoreObject> m_outstanding;
+  std::weak_ptr<autowiring::RunCounter> m_outstanding;
 
   /// \internal
   /// <summary>
@@ -39,6 +58,6 @@ public:
   ///
   /// The caller is responsible for exterior synchronization
   /// </remarks>
-  std::shared_ptr<CoreObject> IncrementOutstandingThreadCount(std::shared_ptr<CoreContext> owner);
+  std::shared_ptr<autowiring::RunCounter> IncrementOutstandingThreadCount(std::shared_ptr<CoreContext> owner);
 };
 
