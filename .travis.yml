@@ -1,6 +1,22 @@
 language: cpp
 compiler: g++
 os: linux
+sudo: false
+env:
+  global:
+  - CC=gcc-4.8
+  - CXX=g++-4.8
+  - CMAKE_URL=http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-i386.tar.gz
+  - CMAKE_DIRNAME=cmake-3.1.0-Linux-i386
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-4.8
+      - g++-4.8
+      - libc6-i386
 
 before_install:
   # Enforce whitespace guidelines
@@ -12,49 +28,29 @@ before_install:
   # Verify that our version numbers all line up
   - ./scripts/version_number_updated.sh
 
-  # g++4.8.1
-  - if [ "$CXX" == "g++" ]; then
-      sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-      && export CXX;
-    fi
-
-  # clang 3.4
-  - if [ "$CXX" == "clang++" ]; then
-      sudo add-apt-repository -y ppa:h-rayflood/llvm;
-    fi
-
-  - sudo apt-get remove gcc-4.6 g++-4.6 cmake
-  - sudo apt-get -qq update
-
 install:
   # CMake 3.1
-  - sudo apt-get -qq install libc6-i386
-    && wget http://www.cmake.org/files/v3.1/cmake-3.1.0-Linux-i386.tar.gz
-    && tar -xzf cmake-3.1.0-Linux-i386.tar.gz
-    && sudo cp -fR cmake-3.1.0-Linux-i386/* /usr
+  - curl $CMAKE_URL | tar xz
 
   # g++4.8.1
-  - if [ "$CXX" = "g++" ]; then
-      sudo apt-get install -qq  gcc-4.8 g++-4.8
-      && export CXX="g++-4.8"
-      && sudo ln -s /usr/bin/gcc-4.8 /usr/bin/gcc
-      && sudo ln -s /usr/bin/g++-4.8 /usr/bin/g++;
-    fi
-
-  # clang 3.4
-  - if [ "$CXX" == "clang++" ]; then
-      sudo apt-get install --allow-unauthenticated -qq clang-3.4
-      && export CXX="clang++-3.4";
-    fi
+  - export CC=gcc-4.8
+  - export CXX=g++-4.8
 
 before_script:
   - export CPATH=/usr/include/c++/4.8:/usr/include/x86_64-linux-gnu/c++/4.8/:$CPATH
   - export LD_LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/4.8:$LD_LIBRARY_PATH
-  - cmake . -DCMAKE_BUILD_TYPE=Release -Dautowiring_ARCHITECTURE=x64
 
 script:
   # Build Autowriring, run unit tests, and install
-  - ./scripts/build_test_install.sh
+  - $CMAKE_DIRNAME/bin/cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=~/autowiring/
+  - make -j 4 || make
+  - ctest --output-on-failure
+  - make install
+  - cpack || (cat _CPack_Packages/Linux/TGZ/InstallOutput.log; exit 3)
+  - cd examples
+  - ../$CMAKE_DIRNAME/bin/cmake . -DCMAKE_PREFIX_PATH:PATH=~
+  - make
+
 
 after_failure:
   - cat Testing/Temporary/LastTest.log 2> /dev/null
