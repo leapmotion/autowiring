@@ -400,12 +400,12 @@ TEST_F(CoreContextTest, AppropriateShutdownInterleave) {
   ctxtInner->Initiate();
 
   // Now shut down the outer context.  Hand off to an async, we want this to block.
-  std::future<void> holder = std::async(
-    std::launch::async,
-    [&] {
+  std::thread holder{
+    [ctxtOuter] {
       ctxtOuter->SignalShutdown(true);
     }
-  );
+  };
+  auto holderClean = MakeAtExit([&holder] { holder.join(); });
 
   // Need to ensure that both outstanding counters are reset at some point:
   {
@@ -424,6 +424,7 @@ TEST_F(CoreContextTest, AppropriateShutdownInterleave) {
 
   // Both contexts should be stopped now:
   ASSERT_TRUE(ctxtOuter->Wait(std::chrono::seconds(5))) << "Outer context did not tear down in a timely fashion";
+  ASSERT_TRUE(ctxtOuter->IsQuiescent()) << "Quiescence not achieved by outer context after shutdown";
   ASSERT_TRUE(ctxtInner->Wait(std::chrono::seconds(5))) << "Inner context did not tear down in a timely fashion";
 }
 

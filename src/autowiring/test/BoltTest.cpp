@@ -88,6 +88,9 @@ TEST_F(BoltTest, VerifyMapping) {
 
   // Now try to autowire a listener:
   AutoRequired<Listener> myListener;
+  auto cleanup = MakeAtExit([myListener] {
+    myListener->createdContext.reset();
+  });
 
   // Create a second context, verify that the listener got the message:
   AutoCreateContextT<Pipeline> createdContext;
@@ -108,6 +111,9 @@ TEST_F(BoltTest, VerifyCreationBubbling) {
 
   // Put the listener in the parent context:
   AutoRequired<Listener> listener;
+  auto cleanup = MakeAtExit([listener] {
+    listener->createdContext.reset();
+  });
 
   AutoCurrentContext outer;
 

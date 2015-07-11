@@ -84,8 +84,8 @@ public:
 
   void OnTestEnd(const testing::TestInfo& info) override {
     auto setglobal = MakeAtExit([] {
-      // Unconditionally reset the global context as the current context
-      AutoGlobalContext()->SetCurrent();
+      // Unconditionally nullify the global context as the current context
+      CoreContext::EvictCurrent();
     });
 
     // Verify we can grab the test case back out and that the pointer is correct:
@@ -109,6 +109,9 @@ public:
 
     // Global context should return to quiescence:
     ASSERT_TRUE(AutoGlobalContext()->Quiescent(std::chrono::seconds(5))) << "Contexts took too long to release all references to the global context";
+
+    // And no more references to this context, except the current context and the pointer itself
+    ASSERT_GE(2, ctxt.use_count()) << "Detected a dangling context reference after test termination, context may be leaking";
 
     static const char sc_autothrow [] = "AUTOTHROW_";
     if(!strncmp(sc_autothrow, info.name(), sizeof(sc_autothrow) - 1))

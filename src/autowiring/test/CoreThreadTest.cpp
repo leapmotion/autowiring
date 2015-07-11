@@ -360,8 +360,12 @@ TEST_F(CoreThreadTest, EnsureContextCurrencyInRundown) {
   // Create our tester class, and then shut down the context.  This should cause a full rundown
   // on the dispatch queue.
   AutoRequired<VerifiesCurrentContextOnRundown> tester;
+
+  // Need to be absolutely sure that the cyclic reference the tester creates is cleaned up:
+  auto clean = MakeAtExit([&tester] { tester->m_ctxt.reset(); });
+
   ctxt->Initiate();
-  ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Context did not tear down in a timely fashion";
+  ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Context did not shut down in a timely fashion";
   ASSERT_EQ(ctxt, tester->m_ctxt) << "Current context was not preserved while a CoreThread was being run down";
 }
 
@@ -562,33 +566,39 @@ TEST_F(CoreThreadTest, ContextWaitTimesOutInOnStop) {
 
   // Let BIOS back out now:
   bios->Continue();
+  ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Context did not complete in a timely fashion";
+  ASSERT_EQ(2UL, ctxt.use_count()) << "Entity held a context shared pointer after teardown has taken place";
 }
 
 TEST_F(CoreThreadTest, SubContextHoldsParentContext) {
   AutoCurrentContext parent;
-  AutoCreateContext child;
-  auto thread = child->Inject<CoreThread>();
-
-  auto cv = std::make_shared<std::condition_variable>();
-  auto lock = std::make_shared<std::mutex>();
-  auto proceed = std::make_shared<bool>(false);
-  *thread += [cv, lock, proceed] {
-    std::unique_lock<std::mutex> lk(*lock);
-    cv->wait_for(lk, std::chrono::seconds(5), [&] { return *proceed; });
-  };
-
-  parent->Initiate();
-  child->Initiate();
-
-  // Terminate the parent, verify that the child has exited:
-  parent->SignalShutdown();
-  ASSERT_FALSE(parent->Wait(std::chrono::milliseconds(5))) << "Parent context returned before all child threads were done";
+  size_t initUses = parent.use_count();
   {
-    std::lock_guard<std::mutex> lk(*lock);
-    *proceed = true;
-    cv->notify_all();
+    AutoCreateContext child;
+    auto thread = child->Inject<CoreThread>();
+
+    auto cv = std::make_shared<std::condition_variable>();
+    auto lock = std::make_shared<std::mutex>();
+    auto proceed = std::make_shared<bool>(false);
+    *thread += [cv, lock, proceed] {
+      std::unique_lock<std::mutex> lk(*lock);
+      cv->wait_for(lk, std::chrono::seconds(5), [&] { return *proceed; });
+    };
+
+    parent->Initiate();
+    child->Initiate();
+
+    // Terminate the parent, verify that the child has exited:
+    parent->SignalShutdown();
+    ASSERT_FALSE(parent->Wait(std::chrono::milliseconds(5))) << "Parent context returned before all child threads were done";
+    {
+      std::lock_guard<std::mutex> lk(*lock);
+      *proceed = true;
+      cv->notify_all();
+    }
+    ASSERT_TRUE(parent->Wait(std::chrono::seconds(5))) << "Signalled thread did not terminate in a timely fashion";
   }
-  ASSERT_TRUE(parent->Wait(std::chrono::seconds(5))) << "Signalled thread did not terminate in a timely fashion";
+  ASSERT_EQ(initUses, parent.use_count()) << "Parent had spurious references after all objects should have been destroyed";
 }
 
 class DoesNothingButQuit:
