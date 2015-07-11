@@ -553,6 +553,16 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
     Wait();
 }
 
+void CoreContext::Quiescent(void) {
+  std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
+  m_stateBlock->m_stateChanged.wait(lk, [this] { return m_stateBlock->m_outstanding.expired(); });
+}
+
+bool CoreContext::Quiescent(const std::chrono::nanoseconds duration) {
+  std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
+  return m_stateBlock->m_stateChanged.wait_for(lk, duration, [this] { return m_stateBlock->m_outstanding.expired(); });
+}
+
 void CoreContext::Wait(void) {
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
   m_stateBlock->m_stateChanged.wait(lk, [this] {return IsShutdown() && m_stateBlock->m_outstanding.expired(); });
