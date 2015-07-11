@@ -284,22 +284,21 @@ TEST_F(SnoopTest, SimplePackets) {
   Pipeline->AddSnooper(filter);
   ASSERT_FALSE(!!filter->m_called) << "Filter called prematurely";
   ASSERT_FALSE(detachedFilter->m_called) << "Filter called prematurely";
-  
+
   // Add factory to pipeline
   AutoRequired<AutoPacketFactory> factory(Pipeline);
   auto packet = factory->NewPacket();
-  
+
   packet->Decorate(Decoration<0>());
   ASSERT_FALSE(!!filter->m_called) << "Filter called prematurely";
-  
+
   // Now compleletly satisfy filter. Should snoop across contexts
   packet->Decorate(Decoration<1>());
   ASSERT_TRUE(!!filter->m_called) << "A snooper did not receive an AutoPacket originating in a snooped context";
   ASSERT_FALSE(detachedFilter->m_called) << "Received a packet from a different context";
-  
+
   //reset
   filter->m_called = false;
-  
   Pipeline->RemoveSnooper(filter);
   auto packet2 = factory->NewPacket();
   packet2->Decorate(Decoration<0>());

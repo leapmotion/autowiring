@@ -207,7 +207,10 @@ TEST_F(EventReceiverTest, VerifyDescendantContextWiring) {
       // Verify that it gets caught:
       ASSERT_TRUE(rcvr->m_zero) << "Event receiver in descendant context was not properly autowired";
 
-      subCtxt->SignalShutdown(true);
+      subCtxt->SignalShutdown();
+      subCtxt->Wait();
+      pshr.Pop();
+      ASSERT_EQ(1UL, subCtxt.use_count()) << "A subcontext that should be going away was incorrectly referenced";
     }
 
     // Verify subcontext is gone:
