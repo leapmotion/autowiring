@@ -8,6 +8,21 @@ class AnySharedPointerTest:
   public testing::Test
 {};
 
+// Autowiring takes advantage of the representational equivalence of instantiations of
+// shared_ptr, and therefore requires that their layouts all be the same.
+static_assert(
+  sizeof(std::shared_ptr<void*>) == sizeof(std::shared_ptr<int>),
+  "Shared pointer representations must be equivalent for casting to work correctly"
+);
+
+TEST_F(AnySharedPointerTest, CanReinterpretCastSharedPtr) {
+  auto iShared = std::make_shared<int>(101);
+  auto vShared = *reinterpret_cast<std::shared_ptr<void>*>(&iShared);
+
+  ASSERT_EQ(2UL, iShared.use_count()) << "Reinterpretive assignment of a void pointer did not increment the use count";
+  ASSERT_EQ(iShared.get(), vShared.get()) << "Reinterpreted shared pointer did not properly hold a member variable";
+}
+
 class MyUnusedClass {};
 
 template<>
