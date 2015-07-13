@@ -20,7 +20,7 @@ The context forms the boundaries of a filter network. There are two ways around 
 
 You can create a filter with any object by implementing a function named AutoFilter. The arguments of the function declares both the input types of the filter and the output types. Const references and arguments passed by value are inputs. Non-const references are output types. The following example creates a class implementing an AutoFilter that takes two inputs and has one output:
 
-  \include snippets/AutoFilter_BasicFilter.txt
+\include snippets/AutoFilter_BasicAutoFilter.txt
 
 The function is called when instances of types T and Q are added to the packet. On exit from the function, the type W is added to the packet.
 

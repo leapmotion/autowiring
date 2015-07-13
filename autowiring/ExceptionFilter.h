@@ -72,6 +72,7 @@ public:
   /// <summary>
   /// This is an exception filter for exceptions thrown during a call to Fire
   /// </summary>
+  /// <param name="pJunctionBox">The junction box generating the exception</param>
   /// <param name="pRecipient">The target of the call</param>
   /// <remarks>
   /// Implementors can use "throw" with no arguments to trigger a rethrow of the originating exception.

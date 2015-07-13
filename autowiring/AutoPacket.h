@@ -128,7 +128,8 @@ protected:
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
   /// </summary>
-  /// <param name="info">The decoration which was just added to this packet</param>
+  /// <param name="lk">The unique_lock used to control the synchronization level</param>
+  /// <param name="disposition">The decoration that was just updated</param>
   /// <remarks>
   /// This method results in a call to the AutoFilter method on any subscribers which are
   /// satisfied by this decoration.  This method must be called with m_lock held.
@@ -274,6 +275,7 @@ public:
   /// <summary>
   /// Shared pointer specialization of const T*&, used to obtain the underlying shared pointer for some type T
   /// </summary>
+  /// <param name="out">Receives the requested decoration, or else nullptr</param>
   /// <param name="tshift">The number back to retrieve</param>
   /// <remarks>
   /// This specialization cannot be used to obtain a decoration which has been attached to this packet via
@@ -623,6 +625,8 @@ public:
   /// <summary>
   /// Blocks until the specified descriptor is satisfied
   /// </summary>
+  /// <param name="cv">A condition variable used to perform the wait</param>
+  /// <param name="inputs">The inputs whose satisfaction state is to be considered</param>
   /// <param name="duration">
   /// The amount of time to wait.  If set to std::chrono::nanoseconds::max, this method will block indefinitely
   /// </param>
@@ -638,6 +642,8 @@ public:
   /// Blocks until the passed lambda function can be called
   /// </summary>
   /// <param name="cv">A condition variable that can be signalled when the wait condition has expired</param>
+  /// <param name="autoFilter">The filter to be blocked on</param>
+  /// <param name="duration">The maximum amount of time to wait</param>
   /// <returns>
   /// True on success, false if a timeout occurred
   /// </returns>
