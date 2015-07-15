@@ -33,7 +33,7 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
 
   // Mark timeshifted decorations as unsatisfiable on the first packet
   if (isFirstPacket)
-    for (auto& dec : m_decorations) {
+    for (auto& dec : m_decoration_map) {
       auto& key = dec.first;
       if (key.tshift) {
         MarkUnsatisfiable(key);
@@ -44,28 +44,6 @@ void AutoPacketInternal::Initialize(bool isFirstPacket) {
   // Call all subscribers with no required or optional arguments:
   // NOTE: This may result in decorations that cause other subscribers to be called.
   for (SatCounter* call : callCounters)
-    call->GetCall()(call->GetAutoFilter(), *this);
-
-  std::vector<SatCounter*> callQueue;
-  {
-    // First-call indicated by argumument type AutoPacket&:
-    std::lock_guard<std::mutex> lk(m_lock);
-
-    // Manual handling of the AutoPacket input type:
-    auto q = m_decorations.find(DecorationKey(typeid(auto_arg<AutoPacket&>::id_type), 0));
-    if (q == m_decorations.end())
-      return;
-
-    q->second.m_state = DispositionState::Complete;
-    for (auto subscriber : q->second.m_subscribers) {
-      auto* satCounter = subscriber.satCounter;
-      if (satCounter->Decrement())
-        callQueue.push_back(satCounter);
-    }
-  }
-
-  // Generate all calls
-  for (SatCounter* call : callQueue)
     call->GetCall()(call->GetAutoFilter(), *this);
 }
 

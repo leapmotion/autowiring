@@ -304,37 +304,6 @@ TEST_F(CoreThreadTest, VerifyPendByTimePoint) {
   ASSERT_TRUE(t->WaitFor(std::chrono::seconds(5))) << "A timepoint-based delayed dispatch was not invoked in a timely fashion";
 }
 
-class WaitsALongTimeThenQuits:
-  public CoreThread
-{
-public:
-  bool m_runExiting = false;
-
-  void Run(void) override {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    m_runExiting = true;
-  }
-};
-
-TEST_F(CoreThreadTest, NestedContextWait) {
-  AutoCurrentContext ctxt;
-
-  // Initiate the outer context:
-  ctxt->Initiate();
-
-  // Create a subcontext which has our delay thread in it:
-  auto waitsAwhile = ctxt->Inject<WaitsALongTimeThenQuits>();
-  ctxt->Initiate();
-
-  // Stop and delay on the outer context:
-  ctxt->SignalShutdown();
-  ctxt->Wait();
-
-  // Now we verify that our interior thread has actually quit:
-  ASSERT_TRUE(!waitsAwhile->IsRunning()) << "Inner thread was marked running by CoreThread when outer context returned";
-  ASSERT_TRUE(waitsAwhile->m_runExiting) << "Inner thread marked as stopped, but has not apparently quit";
-}
-
 TEST_F(CoreThreadTest, WaitBeforeInitiate) {
   AutoCurrentContext ctxt;
 
@@ -391,8 +360,12 @@ TEST_F(CoreThreadTest, EnsureContextCurrencyInRundown) {
   // Create our tester class, and then shut down the context.  This should cause a full rundown
   // on the dispatch queue.
   AutoRequired<VerifiesCurrentContextOnRundown> tester;
+
+  // Need to be absolutely sure that the cyclic reference the tester creates is cleaned up:
+  auto clean = MakeAtExit([&tester] { tester->m_ctxt.reset(); });
+
   ctxt->Initiate();
-  ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Context did not tear down in a timely fashion";
+  ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Context did not shut down in a timely fashion";
   ASSERT_EQ(ctxt, tester->m_ctxt) << "Current context was not preserved while a CoreThread was being run down";
 }
 
@@ -497,7 +470,7 @@ TEST_F(CoreThreadTest, LightsOutPassiveCall) {
   AutoCurrentContext ctxt;
   AutoRequired<MakesPassiveCallInOnStop> mpc;
   ctxt->Initiate();
-  
+
   // Wait for bad things to happen
   ASSERT_TRUE(mpc->WaitFor(std::chrono::seconds(5))) << "Passive call thread took too long to quit";
 
@@ -520,11 +493,13 @@ TEST_F(CoreThreadTest, SpuriousWakeupTest) {
   std::mutex lock;
   std::condition_variable cv;
   bool ready = false;
+  size_t countOnWake = -1;
 
   auto wakeFn = [&] {
     std::lock_guard<std::mutex> lk(lock);
     ready = true;
     cv.notify_all();
+    countOnWake = extraction->GetDispatchQueueLength();
   };
 
   // Add a delayed lambda that we know won't launch and another one that should launch right away
@@ -537,13 +512,13 @@ TEST_F(CoreThreadTest, SpuriousWakeupTest) {
 
   // Now force a spurious wakeup--this shouldn't technically be a problem
   extraction->m_queueUpdated.notify_all();
-  
+
   // Delayed wake function, block for this to happen:
   ready = false;
   *extraction += std::chrono::milliseconds(1), wakeFn;
   ASSERT_TRUE(cv.wait_for(lk, std::chrono::seconds(5), [&] { return ready; }));
 
-  ASSERT_EQ(1UL, extraction->GetDispatchQueueLength()) << "Dispatch queue changed size under a spurious wakeup condition";
+  ASSERT_EQ(2UL, countOnWake) << "Dispatch queue changed size under a spurious wakeup condition";
 }
 
 class BlocksInOnStop:
@@ -553,7 +528,7 @@ public:
   bool is_waiting = false;
   bool signal = false;
 
-  void Run(void) {
+  void Run(void) override {
     // Let the run loop return.  This triggers cleanup operations and ultimately causes OnStop
     // to get called in our own thread context.
   }
@@ -591,4 +566,52 @@ TEST_F(CoreThreadTest, ContextWaitTimesOutInOnStop) {
 
   // Let BIOS back out now:
   bios->Continue();
+  ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Context did not complete in a timely fashion";
+  ASSERT_EQ(2UL, ctxt.use_count()) << "Entity held a context shared pointer after teardown has taken place";
+}
+
+TEST_F(CoreThreadTest, SubContextHoldsParentContext) {
+  AutoCurrentContext parent;
+  size_t initUses = parent.use_count();
+  {
+    AutoCreateContext child;
+    auto thread = child->Inject<CoreThread>();
+
+    auto cv = std::make_shared<std::condition_variable>();
+    auto lock = std::make_shared<std::mutex>();
+    auto proceed = std::make_shared<bool>(false);
+    *thread += [cv, lock, proceed] {
+      std::unique_lock<std::mutex> lk(*lock);
+      cv->wait_for(lk, std::chrono::seconds(5), [&] { return *proceed; });
+    };
+
+    parent->Initiate();
+    child->Initiate();
+
+    // Terminate the parent, verify that the child has exited:
+    parent->SignalShutdown();
+    ASSERT_FALSE(parent->Wait(std::chrono::milliseconds(5))) << "Parent context returned before all child threads were done";
+    {
+      std::lock_guard<std::mutex> lk(*lock);
+      *proceed = true;
+      cv->notify_all();
+    }
+    ASSERT_TRUE(parent->Wait(std::chrono::seconds(5))) << "Signalled thread did not terminate in a timely fashion";
+  }
+  ASSERT_EQ(initUses, parent.use_count()) << "Parent had spurious references after all objects should have been destroyed";
+}
+
+class DoesNothingButQuit:
+  public CoreThread
+{
+public:
+  void Run(void) override {}
+};
+
+TEST_F(CoreThreadTest, QuiescentNotTerminated) {
+  AutoCurrentContext ctxt;
+  ctxt->Initiate();
+  AutoRequired<DoesNothingButQuit> ct;
+  ASSERT_TRUE(ctxt->Quiescent(std::chrono::seconds(5))) << "Quiescence was not achieved in a thread that should have self-terminated";
+  ASSERT_TRUE(ctxt->IsQuiescent()) << "Delayed for quiescence, but this was not the state entered when checked on return";
 }

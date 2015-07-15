@@ -55,15 +55,12 @@ std::string autowiring::dbg::ContextName(void) {
   return autowiring::demangle(ctxt->GetSigilType());
 }
 
-void PrintContextTreeRecursive(std::ostream& os, std::shared_ptr<CoreContext> ctxt) {
-  // Initialize this only once
-  AutoCurrentContext curCtxt;
-  
+void PrintContextTreeRecursive(std::ostream& os, const std::shared_ptr<CoreContext>& root, std::shared_ptr<CoreContext> ctxt) {
   for (; ctxt; ctxt = ctxt->NextSibling()) {
     
     // Create of vector of contexts from child of global to 'ctxt'
     std::deque<std::shared_ptr<CoreContext>> path;
-    for (auto c = ctxt; !c->IsGlobalContext(); c = c->GetParentContext()) {
+    for (auto c = ctxt; c != root; c = c->GetParentContext()) {
       path.push_front(c);
     }
 
@@ -81,20 +78,24 @@ void PrintContextTreeRecursive(std::ostream& os, std::shared_ptr<CoreContext> ct
 
     // Print context name
     os << autowiring::demangle(ctxt->GetSigilType());
-    if (ctxt == curCtxt) {
+    if (ctxt == root) {
       os << "(Current Context)";
     }
     os << std::endl;
-    PrintContextTreeRecursive(os, ctxt->FirstChild());
+    PrintContextTreeRecursive(os, root, ctxt->FirstChild());
   }
 }
 
 void autowiring::dbg::PrintContextTree(std::ostream& os) {
-  PrintContextTreeRecursive(os, AutoGlobalContext());
+  PrintContextTreeRecursive(os, AutoGlobalContext(), AutoGlobalContext());
+}
+
+void autowiring::dbg::PrintContextTree(std::ostream& os, const std::shared_ptr<CoreContext>& ctxt) {
+  PrintContextTreeRecursive(os, ctxt, ctxt);
 }
 
 void autowiring::dbg::PrintContextTree(void) {
-  PrintContextTreeRecursive(std::cout, AutoGlobalContext());
+  PrintContextTreeRecursive(std::cout, AutoGlobalContext(), AutoGlobalContext());
 }
 
 AutoPacket* autowiring::dbg::CurrentPacket(void) {
@@ -203,18 +204,21 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os) {
   WriteAutoFilterGraph(os, AutoCurrentContext());
 }
 
-std::string WriteAutoFilterGraph(void) {
+std::string autowiring::dbg::AutoFilterGraphStr(void) {
   std::stringstream ss;
   WriteAutoFilterGraph(ss);
   return ss.str();
 }
 
-void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<CoreContext> ctxt) {
-  CurrentContextPusher pshr(ctxt);
-  Autowired<AutoPacketFactory> factory;
+void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, const std::shared_ptr<CoreContext>& ctxt) {
+  return autowiring::dbg::WriteAutoFilterGraph(os, *ctxt);
+}
+
+void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, CoreContext& ctxt) {
+  AutowiredFast<AutoPacketFactory> factory(&ctxt);
 
   // Write opening and closing parts of file. Now, we only need to write edges
-  os << "digraph " << autowiring::demangle(ctxt->GetSigilType()) << " {" << std::endl;
+  os << "digraph " << autowiring::demangle(ctxt.GetSigilType()) << " {" << std::endl;
   auto exit = MakeAtExit([&os]{
     os << "}" << std::endl;
   });
@@ -286,5 +290,8 @@ void autowiring::dbg::WriteAutoFilterGraph(std::ostream& os, std::shared_ptr<Cor
 }
 
 void autowiring::dbg::DebugInit(void) {
-
+  static const void* p [] = {
+    (void*) AutoFilterGraphStr
+  };
+  (void)p;
 }

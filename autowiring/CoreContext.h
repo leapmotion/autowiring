@@ -149,7 +149,7 @@ class CoreContext:
 {
 protected:
   typedef std::list<std::weak_ptr<CoreContext>> t_childList;
-  CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference);
+  CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference);
 
 public:
   virtual ~CoreContext(void);
@@ -168,7 +168,7 @@ protected:
   const t_childList::iterator m_backReference;
 
   // State block for this context:
-  std::unique_ptr<CoreContextStateBlock> m_stateBlock;
+  std::shared_ptr<CoreContextStateBlock> m_stateBlock;
 
   enum class State {
     // Not yet started
@@ -245,10 +245,6 @@ protected:
 
   // Actual core threads:
   std::list<CoreRunnable*> m_threads;
-
-  // Clever use of shared pointer to expose the number of outstanding CoreRunnable instances.
-  // Destructor does nothing; this is by design.
-  std::weak_ptr<CoreObject> m_outstanding;
 
   // The thread pool used by this context.  By default, a context inherits the thread pool of
   // its parent, and the global context gets the system thread pool.
@@ -386,20 +382,6 @@ protected:
   /// Forwarding routine, recursively adds a packet subscriber to the internal packet factory
   /// </summary>
   void AddPacketSubscriber(const AutoFilterDescriptor& rhs);
-
-  /// \internal
-  /// <summary>
-  /// Increments the total number of contexts still outstanding
-  /// </summary>
-  /// <remarks>
-  /// This is an indirect incrementation routine.  The count will be incremented for as
-  /// long as the returned shared_ptr is not destroyed.  Once it's destroyed, the count
-  /// is decremented.  The caller is encouraged not to copy the return value, as doing
-  /// so can give inflated values for the current number of outstanding threads.
-  ///
-  /// The caller is responsible for exterior synchronization
-  /// </remarks>
-  std::shared_ptr<CoreObject> IncrementOutstandingThreadCount(void);
 
   /// \internal
   /// <summary>
@@ -913,6 +895,26 @@ public:
   void SignalTerminate(bool wait = true) { SignalShutdown(wait, ShutdownMode::Immediate); }
 
   /// <summary>
+  /// Identical to Wait, except blocks only until the threads in this and all descendant contexts have stopped
+  /// </summary>
+  /// <remarks>
+  /// This method intrinsically may imply a race condition unless the caller is careful to ensure it retains
+  /// total control over injection and subcontext creation events.  In a single-threaded system, the currrent
+  /// context and all child contexts are guaranteed to have no CoreRunnable instances in a running state.
+  /// </remarks>
+  void Quiescent(void) const;
+
+  /// <summary>
+  /// Timed version of Quiescent
+  /// </summary>
+  bool Quiescent(std::chrono::nanoseconds duration) const;
+
+  /// <summary>
+  /// Retrieves the system's current quiescence status
+  /// </summary>
+  bool IsQuiescent(void) const;
+
+  /// <summary>
   /// Waits until the context begins shutting down (IsShutdown is true)
   /// and all threads and child threads have terminated.
   /// </summary>
@@ -1174,7 +1176,7 @@ public:
   ///
   /// It is an error to pass nullptr to this method.
   /// </remarks>
-  void SetThreadPool(std::shared_ptr<autowiring::ThreadPool> threadPool);
+  void SetThreadPool(const std::shared_ptr<autowiring::ThreadPool>& threadPool);
 
   /// <summary>
   /// Returns the current thread pool
@@ -1280,7 +1282,7 @@ class CoreContextT:
 public:
   static const std::type_info& sc_type;
 
-  CoreContextT(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference) :
+  CoreContextT(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference) :
     CoreContext(pParent, backReference)
   {}
 

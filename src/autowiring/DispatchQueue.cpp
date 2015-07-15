@@ -10,6 +10,14 @@ DispatchQueue::DispatchQueue(size_t dispatchCap):
   m_dispatchCap(dispatchCap)
 {}
 
+DispatchQueue::DispatchQueue(DispatchQueue&& q):
+  m_dispatchCap(q.m_dispatchCap),
+  m_aborted(q.m_aborted)
+{
+  if (!m_aborted)
+    *this += std::move(q);
+}
+
 DispatchQueue::~DispatchQueue(void) {
   // Wipe out each entry in the queue, we can't call any of them because we're in teardown
   for (auto cur = m_pHead; cur;) {
@@ -273,6 +281,35 @@ DispatchQueue::SuggestSoonestWakeupTimeUnsafe(std::chrono::steady_clock::time_po
       m_delayedQueue.top().GetReadyTime(),
       latestTime
     );
+}
+
+void DispatchQueue::operator+=(DispatchQueue&& rhs) {
+  std::unique_lock<std::mutex> lk(m_dispatchLock);
+
+  // Append thunks to our queue
+  if (m_pHead)
+    m_pTail->m_pFlink = rhs.m_pHead;
+  else
+    m_pHead = rhs.m_pHead;
+
+  m_pTail = rhs.m_pTail;
+  m_count += rhs.m_count;
+
+  // Clear queue from rhs
+  rhs.m_pHead = nullptr;
+  rhs.m_pTail = nullptr;
+  rhs.m_count = 0;
+
+  // Append delayed thunks
+  while (!rhs.m_delayedQueue.empty()) {
+    const auto& top = rhs.m_delayedQueue.top();
+    m_delayedQueue.emplace(top.GetReadyTime(), top.Release());
+    rhs.m_delayedQueue.pop();
+  }
+
+  // Notification as needed:
+  m_queueUpdated.notify_all();
+  OnPended(std::move(lk));
 }
 
 DispatchQueue::DispatchThunkDelayedExpression DispatchQueue::operator+=(std::chrono::steady_clock::time_point rhs) {

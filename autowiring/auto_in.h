@@ -1,9 +1,13 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
+#include "auto_arg.h"
 #include MEMORY_HEADER
 #include <vector>
 
 class AutoPacket;
+
+template<class T>
+class auto_arg;
 
 /// <summary>
 /// Fundamental type of required input arguments of AutoFilter methods.
@@ -61,3 +65,11 @@ private:
 public:
   operator const T**() { return &m_values[0]; }
 };
+
+/// <summary>
+/// Specialization for equivalent T auto_in<T>
+/// </summary>
+template<class T>
+class auto_arg<auto_in<T>> :
+  public auto_arg<T>
+{};

@@ -1,10 +1,11 @@
 // Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.
 #pragma once
-#include "auto_in.h"
-#include "auto_out.h"
-#include "auto_prev.h"
+#include "auto_id.h"
+#include "SharedPointerSlot.h"
 
 class AutoPacket;
+template <class T> class auto_in;
+class CoreContext;
 
 /*
  The auto_arg<T> classes are used to generate of auto_in and auto_out types
@@ -106,13 +107,7 @@ public:
   }
 };
 
-/// <summary>
-/// Specialization for equivalent T auto_in<T>
-/// </summary>
-template<class T>
-class auto_arg<auto_in<T>>:
-  public auto_arg<T>
-{};
+namespace detail {
 
 /// <summary>
 /// Construction helper for output-by-reference decoration types
@@ -155,6 +150,8 @@ struct auto_arg_ctor_helper<T, has_default, false> {
   }
 };
 
+} // end of namespace detail
+
 /// <summary>
 /// Specialization for "T&" ~ auto_out<T>
 /// </summary>
@@ -182,7 +179,12 @@ public:
   static const int tshift = 0;
 
   static std::shared_ptr<T> arg(AutoPacket& packet) {
-    return auto_arg_ctor_helper<T>::arg(packet);
+    return detail::auto_arg_ctor_helper<T>::arg(packet);
+  }
+
+  template<class C>
+  static void Commit (C& packet, type val) {
+    packet.template Decorate<T>(val);
   }
 };
 
@@ -224,60 +226,41 @@ class auto_arg<std::shared_ptr<T>> {
 };
 
 /// <summary>
-/// Specialization for equivalent T auto_out<T>
+/// CoreContext specialization
 /// </summary>
-template<class T>
-class auto_arg<auto_out<T>>:
-  public auto_arg<T&>
-{
-public:
-  typedef auto_out<T> arg_type;
-};
-
-template<class T, int N>
-class auto_arg<auto_prev<T, N>>
-{
-public:
-  typedef auto_prev<T, N> type;
-  typedef auto_prev<T, N> arg_type;
-  typedef auto_id<T> id_type;
-
-  static const bool is_input = true;
-  static const bool is_output = false;
-  static const bool is_shared = true;
-  static const bool is_multi = false;
-  static const int tshift = N;
-
-  template<class C>
-  static const T* arg(C& packet) {
-    const T* retVal;
-    packet.template Get<T>(retVal, N);
-    return retVal;
-  }
-};
-
-/// <summary>
-/// AutoPacket specialization
-/// </summary>
-/// <remarks>
-/// This type is treated as an input type because it supports concurrent modification
-/// </remarks>
 template<>
-class auto_arg<AutoPacket&>
+class auto_arg<CoreContext&>
 {
 public:
-  typedef AutoPacket& type;
-  typedef auto_in<AutoPacket> arg_type;
-  typedef AutoPacket id_type;
-  static const bool is_input = true;
+  typedef CoreContext& type;
+  typedef CoreContext& arg_type;
+  typedef CoreContext id_type;
+  static const bool is_input = false;
   static const bool is_output = false;
   static const bool is_shared = false;
   static const bool is_multi = false;
   static const int tshift = 0;
 
-  static AutoPacket& arg(AutoPacket& packet) {
-    return packet;
-  }
+  static CoreContext& arg(AutoPacket&);
+};
+
+/// <summary>
+/// shared_ptr CoreContext specialization
+/// </summary>
+template<>
+class auto_arg<std::shared_ptr<CoreContext>>
+{
+public:
+  typedef std::shared_ptr<CoreContext> type;
+  typedef std::shared_ptr<CoreContext> arg_type;
+  typedef CoreContext id_type;
+  static const bool is_input = false;
+  static const bool is_output = false;
+  static const bool is_shared = false;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  static std::shared_ptr<CoreContext> arg(AutoPacket&);
 };
 
 /// <summary>
@@ -326,7 +309,6 @@ class auto_arg<T const *const*>:
 /// <summary>
 /// Shared pointer multi-in specialization
 /// </summary>
-/// </remarks>
 template<class T>
 class auto_arg<std::shared_ptr<const T>*>
 {

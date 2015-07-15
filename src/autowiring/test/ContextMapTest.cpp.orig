@@ -73,11 +73,18 @@ TEST_F(ContextMapTest, VerifyWithThreads) {
     // Terminate whole context, wait for it to respond
     context->SignalShutdown();
     context->Wait();
+<<<<<<< HEAD
     ASSERT_EQ(1UL, context.use_count()) << "Context reference should have been unique after thread expiration";
   }
 
   // Release our threaded entity:
   ASSERT_EQ(1UL, threaded.use_count()) << "Thread was holding a self-reference even after context termination has completed";
+=======
+  }
+
+  // Release our threaded entity:
+  ASSERT_TRUE(threaded.unique()) << "Thread was holding a self-reference even after context termination has completed";
+>>>>>>> Eliminate race condition in ContextMapTest.VerifyWithThreads
   threaded.reset();
   ASSERT_TRUE(weakContext.expired()) << "Context still existed even after the last reference to it should have been gone";
 

@@ -34,7 +34,7 @@ private:
 
 public:
   // ThreadPool overrides:
-  void Consume(std::shared_ptr<DispatchQueue> dq) override;
+  void Consume(const std::shared_ptr<DispatchQueue>& dq) override;
   bool Submit(std::unique_ptr<DispatchThunkBase>&& thunk) override;
 };
 

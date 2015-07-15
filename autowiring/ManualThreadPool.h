@@ -8,7 +8,7 @@ namespace autowiring {
 class ManualThreadPool;
 
 struct ThreadPoolToken {
-  ThreadPoolToken(std::shared_ptr<ManualThreadPool> manualPool) :
+  ThreadPoolToken(const std::shared_ptr<ManualThreadPool>& manualPool) :
     manualPool(manualPool)
   {}
 

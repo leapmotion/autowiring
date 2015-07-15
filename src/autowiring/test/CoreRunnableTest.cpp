@@ -17,6 +17,10 @@ public:
     m_myContext->Initiate();
     return false;
   }
+  
+  void OnStop(bool) override {
+    m_myContext.reset();
+  }
 };
 
 TEST_F(CoreRunnableTest, CanStartSubcontextWhileInitiating) {

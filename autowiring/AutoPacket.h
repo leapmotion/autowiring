@@ -2,6 +2,7 @@
 #pragma once
 #include "AnySharedPointer.h"
 #include "at_exit.h"
+#include "auto_arg.h"
 #include "auto_id.h"
 #include "AutoFilterArgument.h"
 #include "DecorationDisposition.h"
@@ -12,20 +13,46 @@
 #include <typeinfo>
 #include CHRONO_HEADER
 #include MEMORY_HEADER
-#include TYPE_INDEX_HEADER
 #include STL_UNORDERED_MAP
 #include MUTEX_HEADER
 
-class AutoPacket;
 class AutoPacketInternal;
 class AutoPacketFactory;
-class AutoPacketProfiler;
 class CoreContext;
 struct AutoFilterDescriptor;
-struct AutoFilterArgument;
+
+template<class T>
+class auto_arg;
 
 template<class MemFn>
 struct Decompose;
+
+namespace autowiring {
+  template<typename T>
+  struct is_shared_ptr:
+    std::false_type
+  {};
+
+  template<typename T>
+  struct is_shared_ptr<std::shared_ptr<T>> :
+    std::true_type
+  {};
+
+  template<typename T>
+  struct is_shared_ptr<std::shared_ptr<const T>> :
+    std::true_type
+  {};
+
+  template<typename T>
+  struct is_shared_ptr<const T> :
+    is_shared_ptr<T>
+  {};
+
+  template<typename T>
+  struct is_shared_ptr<T&> :
+    is_shared_ptr<T>
+  {};
+}
 
 /// <summary>
 /// A decorator-style processing packet
@@ -48,6 +75,11 @@ public:
   AutoPacket(AutoPacketFactory& factory, std::shared_ptr<void>&& outstanding);
   ~AutoPacket();
 
+  // The set of decorations currently attached to this object, and the associated lock:
+  // Decorations are indexed first by type and second by pipe terminating type, if any.
+  // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
+  typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
+
 protected:
   // A pointer back to the factory that created us. Used for recording lifetime statistics.
   const std::shared_ptr<AutoPacketFactory> m_parentFactory;
@@ -64,11 +96,7 @@ protected:
   // Pointer to a forward linked list of saturation counters, constructed when the packet is created
   SatCounter* m_firstCounter = nullptr;
 
-  // The set of decorations currently attached to this object, and the associated lock:
-  // Decorations are indexed first by type and second by pipe terminating type, if any.
-  // NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.
-  typedef std::unordered_map<DecorationKey, DecorationDisposition> t_decorationMap;
-  t_decorationMap m_decorations;
+  t_decorationMap m_decoration_map;
 
   mutable std::mutex m_lock;
 
@@ -100,7 +128,8 @@ protected:
   /// <summary>
   /// Updates subscriber statuses given that the specified type information has been satisfied
   /// </summary>
-  /// <param name="info">The decoration which was just added to this packet</param>
+  /// <param name="lk">The unique_lock used to control the synchronization level</param>
+  /// <param name="disposition">The decoration that was just updated</param>
   /// <remarks>
   /// This method results in a call to the AutoFilter method on any subscribers which are
   /// satisfied by this decoration.  This method must be called with m_lock held.
@@ -146,6 +175,9 @@ protected:
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
   bool HasSubscribers(const DecorationKey& key) const;
 
+  /// <returns>Zero if there are no publishers, otherwise the number of publishers</returns>
+  size_t HasPublishers(const DecorationKey& key) const;
+
   /// <returns>A reference to the satisfaction counter for the specified type</returns>
   /// <remarks>
   /// If the type is not a subscriber GetSatisfaction().GetType() == nullptr will be true
@@ -164,12 +196,14 @@ protected:
 
 public:
   /// <returns>
-  /// The number of distinct decoration types on this packet
+  /// The number of distinct decoration types on this packet (this is really an implementation-detail-based count
+  /// of the parameters of all relevant filters, including lambdas appended to this packet).
   /// </returns>
   size_t GetDecorationTypeCount(void) const;
 
   /// <returns>
-  /// A copy of the decoration dispositions collection
+  /// A copy of the decoration dispositions collection (this is really an implementation-detail-based description
+  /// of the parameters of all relevant filters, including lambdas appended to this packet).
   /// </returns>
   /// <remarks>
   /// This is a diagnostic method, users are recommended to avoid the use of this routine where possible
@@ -241,6 +275,7 @@ public:
   /// <summary>
   /// Shared pointer specialization of const T*&, used to obtain the underlying shared pointer for some type T
   /// </summary>
+  /// <param name="out">Receives the requested decoration, or else nullptr</param>
   /// <param name="tshift">The number back to retrieve</param>
   /// <remarks>
   /// This specialization cannot be used to obtain a decoration which has been attached to this packet via
@@ -285,8 +320,8 @@ public:
   template<class T>
   bool Get(std::shared_ptr<const T>& out, int tshift = 0) const {
     std::lock_guard<std::mutex> lk(m_lock);
-    auto deco = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
-    if(deco != m_decorations.end() && deco->second.m_state == DispositionState::Complete) {
+    auto deco = m_decoration_map.find(DecorationKey(auto_id<T>::key(), tshift));
+    if(deco != m_decoration_map.end() && deco->second.m_state == DispositionState::Complete) {
       auto& disposition = deco->second;
       if(disposition.m_decorations.size() == 1) {
         out = disposition.m_decorations[0]->as_unsafe<T>();
@@ -316,8 +351,8 @@ public:
     std::lock_guard<std::mutex> lk(m_lock);
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decorations.find(DecorationKey(auto_id<T>::key(), tshift));
-    if (q == m_decorations.end())
+    auto q = m_decoration_map.find(DecorationKey(auto_id<T>::key(), tshift));
+    if (q == m_decoration_map.end())
       return std::unique_ptr<const T*[]>{
         new const T*[1] {nullptr}
       };
@@ -341,8 +376,8 @@ public:
     typedef typename std::remove_const<T>::type TActual;
 
     // If decoration doesn't exist, return empty null-terminated buffer
-    auto q = m_decorations.find(DecorationKey(auto_id<TActual>::key(), tshift));
-    if (q == m_decorations.end())
+    auto q = m_decoration_map.find(DecorationKey(auto_id<TActual>::key(), tshift));
+    if (q == m_decoration_map.end())
       return std::unique_ptr<std::shared_ptr<const T>[]>{
         new std::shared_ptr<const T>[1] {nullptr}
       };
@@ -366,7 +401,7 @@ public:
   /// Furthermore, types that are unsatisfied in this context will not be marked as
   /// unsatisfied in the recipient - only present data will be provided.
   /// </remarks>
-  void ForwardAll(std::shared_ptr<AutoPacket> recipient) const;
+  void ForwardAll(const std::shared_ptr<AutoPacket>& recipient) const;
 
   /// <summary>
   /// Marks the named decoration as unsatisfiable
@@ -376,28 +411,18 @@ public:
   /// form std::shared_ptr<const T> to be called, if the remainder of their inputs are available.
   /// </remarks>
   template<class T>
-  void Unsatisfiable(void) {
-    MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
-  }
+  void DEPRECATED(Unsatisfiable(void), "Unsatisfiable is deprecated; use MarkUnsatisfiable instead.");
 
   /// <summary>
-  /// Decorates this packet with a particular type
+  /// Marks the named decoration as unsatisfiable
   /// </summary>
-  /// <returns>A reference to the internally persisted object</returns>
   /// <remarks>
-  /// The Decorate method is unconditional and will install the passed
-  /// value regardless of whether any subscribers exist.
+  /// Marking a decoration as unsatisfiable immediately causes any filters with an input of the
+  /// form std::shared_ptr<const T> to be called, if the remainder of their inputs are available.
   /// </remarks>
   template<class T>
-  const T& Decorate(T t) {
-    static_assert(!std::is_pointer<T>::value, "Can't decorate using a pointer type.");
-    // Create a copy of the input, put the copy in a shared pointer
-    auto ptr = std::make_shared<T>(std::forward<T&&>(t));
-    Decorate(
-      AnySharedPointer(ptr),
-      DecorationKey(auto_id<T>::key(), 0)
-    );
-    return *ptr;
+  void MarkUnsatisfiable(void) {
+    MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
   }
 
   /// <summary>
@@ -410,7 +435,7 @@ public:
   /// If the passed value is null, the corresponding value will be marked unsatisfiable.
   /// </remarks>
   template<class T>
-  void Decorate(std::shared_ptr<T> ptr) {
+  void Decorate(const std::shared_ptr<T>& ptr) {
     DecorationKey key(auto_id<T>::key(), 0);
     
     // We don't want to see this overload used on a const T
@@ -434,8 +459,53 @@ public:
   /// shared pointer.
   /// </remarks>
   template<class T>
-  void Decorate(std::shared_ptr<const T> ptr) {
+  void Decorate(const std::shared_ptr<const T>& ptr) {
     Decorate(std::const_pointer_cast<T>(ptr));
+  }
+
+  /// <summary>
+  /// Decorates this packet with a particular type
+  /// </summary>
+  /// <returns>A reference to the internally persisted object</returns>
+  /// <remarks>
+  /// The Decorate method is unconditional and will install the passed
+  /// value regardless of whether any subscribers exist.
+  /// </remarks>
+  template<class T>
+  typename std::enable_if<
+    !autowiring::is_shared_ptr<T>::value,
+    const T&
+  >::type Decorate(T&& t) {
+    static_assert(!std::is_pointer<T>::value, "Can't decorate using a pointer type.");
+    typedef typename std::decay<T>::type TActual;
+
+    // Create a copy of the input, put the copy in a shared pointer
+    auto ptr = std::make_shared<TActual>(std::forward<T&&>(t));
+    Decorate(
+      AnySharedPointer(ptr),
+      DecorationKey(auto_id<TActual>::key(), 0)
+    );
+    return *ptr;
+  }
+
+  /// <summary>
+  /// Decorates this packet with a particular type T, forwarding the arguments to the constructor of T.
+  /// </summary>
+  /// <returns>A reference to the internally persisted object</returns>
+  /// <remarks>
+  /// The Decorate method is unconditional and will install the passed
+  /// value regardless of whether any subscribers exist.
+  /// </remarks>
+  template<class T, typename... Args>
+  const T& Emplace(Args&&... args) {
+    static_assert(!std::is_pointer<T>::value, "Can't decorate using a pointer type.");
+    // Create a copy of the input, put the copy in a shared pointer
+    auto ptr = std::make_shared<T>(std::forward<Args&&>(args)...);
+    Decorate(
+      AnySharedPointer(ptr),
+      DecorationKey(auto_id<T>::key(), 0)
+    );
+    return *ptr;
   }
 
   /// <summary>
@@ -511,7 +581,7 @@ public:
     static_assert(
       !Decompose<decltype(&Fx::operator())>::template any<arg_is_out>::value,
       "Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types"
-      );
+    );
     *const_cast<AutoPacket*>(this) += std::forward<Fx&&>(fx);
     return *this;
   }
@@ -529,9 +599,15 @@ public:
   std::shared_ptr<AutoPacket> Successor(void);
 
   /// <returns>True if the indicated type has been requested for use by some consumer</returns>
-  template<class T>
+  template<typename T>
   bool HasSubscribers(void) const {
-    return HasSubscribers(DecorationKey(auto_id<T>::key(), 0));
+    return HasSubscribers(DecorationKey{auto_id<T>::key(), 0});
+  }
+
+  /// <returns>Zero if there are no publishers, otherwise the number of publishers</returns>
+  template<typename T>
+  size_t HasPublishers(void) const {
+    return HasPublishers(DecorationKey{auto_id<T>::key(), 0});
   }
 
   struct SignalStub {
@@ -549,6 +625,8 @@ public:
   /// <summary>
   /// Blocks until the specified descriptor is satisfied
   /// </summary>
+  /// <param name="cv">A condition variable used to perform the wait</param>
+  /// <param name="inputs">The inputs whose satisfaction state is to be considered</param>
   /// <param name="duration">
   /// The amount of time to wait.  If set to std::chrono::nanoseconds::max, this method will block indefinitely
   /// </param>
@@ -564,6 +642,8 @@ public:
   /// Blocks until the passed lambda function can be called
   /// </summary>
   /// <param name="cv">A condition variable that can be signalled when the wait condition has expired</param>
+  /// <param name="autoFilter">The filter to be blocked on</param>
+  /// <param name="duration">The maximum amount of time to wait</param>
   /// <returns>
   /// True on success, false if a timeout occurred
   /// </returns>
@@ -618,3 +698,32 @@ public:
   /// Get the context of this packet (The context of the AutoPacketFactory that created this context)
   std::shared_ptr<CoreContext> GetContext(void) const;
 };
+
+/// <summary>
+/// AutoPacket specialization
+/// </summary>
+/// <remarks>
+/// Because this type is immediately satisfied, it is neither an input nor an output
+/// </remarks>
+template<>
+class auto_arg<AutoPacket&>
+{
+public:
+  typedef AutoPacket& type;
+  typedef AutoPacket& arg_type;
+  typedef AutoPacket id_type;
+  static const bool is_input = false;
+  static const bool is_output = false;
+  static const bool is_shared = false;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  static AutoPacket& arg(AutoPacket& packet) {
+    return packet;
+  }
+};
+
+template<class T>
+void AutoPacket::Unsatisfiable(void) {
+  MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
+}

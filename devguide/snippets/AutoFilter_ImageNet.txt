@@ -1,0 +1,71 @@
+struct Image{};
+struct RawImage: public Image{};
+struct BlurredImage: public Image{};
+struct CircleList{};
+struct LineList{};
+struct FeatureList{};
+
+class Camera{
+    public:
+        AutoRequired<AutoPacketFactory> packetGenerator;
+        void produceImage(int id){
+            RawImage raw;
+            std::cout << "Produced raw image # " << id << std::endl;
+            auto packet = packetGenerator->NewPacket();
+            packet->Decorate(raw);
+        }
+};
+
+class BlurFilter{
+    public:
+        void AutoFilter(const RawImage img, BlurredImage &blurred){
+            blurred = blur(img);
+        }
+        BlurredImage blur(const RawImage raw){
+            std::cout << "Blurred image." << std::endl;
+            return BlurredImage();
+        }
+};
+
+class CircleFinder {
+    public:
+        void AutoFilter(const BlurredImage img, CircleList &circles){
+            circles = findCircles(img);
+        }
+        CircleList findCircles(const BlurredImage blurred){
+            std::cout << "Found circles." << std::endl;
+            return CircleList();
+        }
+};
+
+class LineFinder {
+    public:
+        AutoRequired<AutoPacketFactory> packetGenerator;
+        void AutoFilter(const BlurredImage img, LineList &lines){
+            lines = findLines(img);
+        }
+        LineList findLines(const BlurredImage blurred){
+            std::cout << "Found lines." << std::endl;
+            return LineList();
+        }
+};
+
+class GraphOut {
+    public:
+        void AutoFilter(const CircleList circles, const LineList lines, AutoPacket &packet){
+            std::cout << "Received final packet with lines and circles. " << std::endl;
+        }
+};
+
+AutoCreateContext ctxt;
+ctxt->SetCurrent();
+
+AutoRequired<Camera> camera;
+AutoRequired<BlurFilter> blurFilter;
+AutoRequired<CircleFinder> circleFilter;
+AutoRequired<LineFinder> lineFilter;
+AutoRequired<GraphOut> graphOutput;
+
+ctxt->Initiate();
+
+camera->produceImage(1);

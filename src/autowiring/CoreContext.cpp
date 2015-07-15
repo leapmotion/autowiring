@@ -53,10 +53,10 @@ public:
 static thread_specific_ptr<std::shared_ptr<CoreContext>> autoCurrentContext;
 
 // Peer Context Constructor. Called interally by CreatePeer
-CoreContext::CoreContext(std::shared_ptr<CoreContext> pParent, t_childList::iterator backReference) :
+CoreContext::CoreContext(const std::shared_ptr<CoreContext>& pParent, t_childList::iterator backReference) :
   m_pParent(pParent),
   m_backReference(backReference),
-  m_stateBlock(new CoreContextStateBlock),
+  m_stateBlock(std::make_shared<CoreContextStateBlock>(pParent ? pParent->m_stateBlock : nullptr)),
   m_junctionBoxManager(new JunctionBoxManager),
   m_threadPool(std::make_shared<NullPool>())
 {}
@@ -199,45 +199,6 @@ const std::type_info& CoreContext::GetAutoTypeId(const AnySharedPointer& ptr) co
 
   const CoreObjectDescriptor* pObjTraits = q->second.pObjTraits;
   return *pObjTraits->type;
-}
-
-std::shared_ptr<CoreObject> CoreContext::IncrementOutstandingThreadCount(void) {
-  // Optimistic check
-  std::shared_ptr<CoreObject> retVal = m_outstanding.lock();
-  if(retVal)
-    return retVal;
-
-  // Double-check
-  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-  retVal = m_outstanding.lock();
-  if (retVal)
-    return retVal;
-
-  // Increment the parent's outstanding count as well.  This will be held by the lambda, and will cause the enclosing
-  // context's outstanding thread count to be incremented by one as long as we have any threads still running in our
-  // context.  This property is relied upon in order to get the Wait function to operate properly.
-  std::shared_ptr<CoreObject> parentCount;
-  if(m_pParent)
-    parentCount = m_pParent->IncrementOutstandingThreadCount();
-
-  auto self = shared_from_this();
-  retVal.reset(
-    (CoreObject*)1,
-    [this, self, parentCount](CoreObject*) {
-      // Object being destroyed, notify all recipients
-      std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
-
-      // Unfortunately, this destructor callback is made before weak pointers are
-      // invalidated, which requires that we manually reset the outstanding count
-      m_outstanding.reset();
-
-      // Wake everyone up
-      m_stateBlock->m_stateChanged.notify_all();
-    }
-  );
-
-  m_outstanding = retVal;
-  return retVal;
 }
 
 void CoreContext::AddInternal(const CoreObjectDescriptor& traits) {
@@ -490,8 +451,8 @@ void CoreContext::Initiate(void) {
       std::swap(m_startToken, startToken);
   }
 
-  {
-    auto outstanding = IncrementOutstandingThreadCount();
+  if (beginning != m_threads.end()) {
+    auto outstanding = m_stateBlock->IncrementOutstandingThreadCount(shared_from_this());
     for (auto q = beginning; q != m_threads.end(); ++q)
       (*q)->Start(outstanding);
   }
@@ -592,14 +553,29 @@ void CoreContext::SignalShutdown(bool wait, ShutdownMode shutdownMode) {
     Wait();
 }
 
+void CoreContext::Quiescent(void) const {
+  std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
+  m_stateBlock->m_stateChanged.wait(lk, [this] { return m_stateBlock->m_outstanding.expired(); });
+}
+
+bool CoreContext::Quiescent(const std::chrono::nanoseconds duration) const {
+  std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
+  return m_stateBlock->m_stateChanged.wait_for(lk, duration, [this] { return m_stateBlock->m_outstanding.expired(); });
+}
+
+bool CoreContext::IsQuiescent(void) const {
+  std::lock_guard<std::mutex> lk(m_stateBlock->m_lock);
+  return m_stateBlock->m_outstanding.expired();
+}
+
 void CoreContext::Wait(void) {
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
-  m_stateBlock->m_stateChanged.wait(lk, [this] {return IsShutdown() && this->m_outstanding.expired(); });
+  m_stateBlock->m_stateChanged.wait(lk, [this] { return IsShutdown() && m_stateBlock->m_outstanding.expired(); });
 }
 
 bool CoreContext::Wait(const std::chrono::nanoseconds duration) {
   std::unique_lock<std::mutex> lk(m_stateBlock->m_lock);
-  return m_stateBlock->m_stateChanged.wait_for(lk, duration, [this] {return IsShutdown() && this->m_outstanding.expired(); });
+  return m_stateBlock->m_stateChanged.wait_for(lk, duration, [this] { return IsShutdown() && m_stateBlock->m_outstanding.expired(); });
 }
 
 bool CoreContext::DelayUntilInitiated(void) {
@@ -641,7 +617,7 @@ void CoreContext::AddCoreRunnable(const std::shared_ptr<CoreRunnable>& ptr) {
 
   // Run this thread without the lock
   if(shouldRun)
-    ptr->Start(IncrementOutstandingThreadCount());
+    ptr->Start(m_stateBlock->IncrementOutstandingThreadCount(shared_from_this()));
   
 
   // Check if the stop signal was sent between the time we started running until now.  If so, then
@@ -698,7 +674,7 @@ void CoreContext::BuildCurrentState(void) {
   }
 }
 
-void CoreContext::SetThreadPool(std::shared_ptr<ThreadPool> threadPool) {
+void CoreContext::SetThreadPool(const std::shared_ptr<ThreadPool>& threadPool) {
   if (!threadPool)
     throw std::invalid_argument("A context cannot be given a null thread pool");
 
@@ -1199,7 +1175,7 @@ void CoreContext::TryTransitionChildrenState(void) {
             child->m_stateBlock->m_stateChanged.notify_all();
             
             childLk.unlock();
-            auto outstanding = child->IncrementOutstandingThreadCount();
+            auto outstanding = child->m_stateBlock->IncrementOutstandingThreadCount(child);
             
             while (q != child->m_threads.end()) {
               (*q)->Start(outstanding);
@@ -1252,10 +1228,6 @@ void CoreContext::UnsnoopAutoPacket(const CoreObjectDescriptor& traits) {
   
   // Always remove from this context's PacketFactory:
   Inject<AutoPacketFactory>()->RemoveSubscriber(traits.subscriber);
-  
-  // Handoff to parent:
-  if (m_pParent)
-    m_pParent->UnsnoopAutoPacket(traits);
 }
 
 std::ostream& operator<<(std::ostream& os, const CoreContext& rhs) {

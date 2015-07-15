@@ -13,8 +13,12 @@ public:
 };
 
 void FilterFunction(const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
-  typeOut->i += 1 + typeIn.i;
+  *typeOut = Decoration<1>(1 + 1 + typeIn.i);
 }
+
+// void FilterFunction(const Decoration<0>& typeIn, Decoration<1> &typeOut) {
+//   typeOut = Decoration<1>(1 + 1 + typeIn.i);
+// }
 
 TEST_F(AutoFilterFunctionalTest, FunctionDecorationTest) {
   // AddRecipient that is an instance of std::function f : a -> b
@@ -27,9 +31,11 @@ TEST_F(AutoFilterFunctionalTest, FunctionDecorationTest) {
   {
     auto packet = factory->NewPacket();
     packet->Decorate(Decoration<0>());
+    ASSERT_EQ(1, packet->GetDecorationTypeCount()) << "Unexpected number of decorations";
     packet->AddRecipient(AutoFilterDescriptor(&FilterFunction));
     const Decoration<1>* getdec;
     ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
+    ASSERT_EQ(2, packet->GetDecorationTypeCount()) << "Unexpected number of decorations";
   }
 
   //Decoration with function first
@@ -40,6 +46,7 @@ TEST_F(AutoFilterFunctionalTest, FunctionDecorationTest) {
     packet->Decorate(Decoration<0>());
     const Decoration<1>* getdec;
     ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";
+    ASSERT_EQ(2, packet->GetDecorationTypeCount()) << "Unexpected number of decorations";
   }
 }
 
@@ -53,7 +60,7 @@ TEST_F(AutoFilterFunctionalTest, FunctionDecorationLambdaTest) {
     auto sentry = std::make_shared<bool>(true);
     *packet +=
       [addType, sentry](const Decoration<0>& typeIn, auto_out<Decoration<1>> typeOut) {
-        typeOut->i += 1 + typeIn.i;
+        *typeOut = Decoration<1>(1 + 1 + typeIn.i);
       };
 
     // Sentry's use count should be precisely two at this point
@@ -72,7 +79,7 @@ TEST_F(AutoFilterFunctionalTest, FunctionInjectorTest) {
   auto packet = factory->NewPacket();
   int addType = 1;
   packet->AddRecipient([addType](auto_out<Decoration<0>> typeOut) {
-    typeOut->i += addType;
+    *typeOut = Decoration<0>(addType);
   });
   const Decoration<0>* getdec;
   ASSERT_TRUE(packet->Get(getdec)) << "Decoration function was not called";

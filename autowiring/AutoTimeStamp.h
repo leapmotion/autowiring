@@ -16,6 +16,6 @@ public:
   /// AutoPacketFactory.NewPacket()->Has<AutoTimeStamp::time>() == true.
   /// </remarks>
   void AutoFilter(auto_out<std::chrono::high_resolution_clock::time_point> t) {
-    t = std::chrono::high_resolution_clock::now();
+    *t = std::chrono::high_resolution_clock::now();
   }
 };

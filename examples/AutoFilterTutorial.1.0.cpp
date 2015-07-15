@@ -16,12 +16,11 @@
 /// - `const std::shared_ptr<const T>`
 /// - `const std::shared_ptr<const T> &`
 ///
-/// @code{.cpp}
 #include <autowiring/Autowired.h> // Needed for Autowiring classes.
 #include <iostream>               // Needed for std::cout.
 #include <string>                 // Needed for std::string.
 #include <unordered_set>          // Needed for std::unordered_set.
-/// @endcode
+
 /// We will now define several structures having AutoFilter methods.  Note that classes and structs are essentially equivalent
 /// in C++ (besides the default access specifiers), so using struct here doesn't indicate anything special, it just allows us
 /// to avoid having to explicitly write the `public:` access specifier.
@@ -30,7 +29,6 @@
 /// a reflective message indicating the struct and the type, and then store the input value.  The input values that we will
 /// send will indicate the type used to decorate the packet used in the execution.  This way, we can verify that the expected
 /// inputs were received by the expected context members.
-/// @code
 struct Hippo1 {
   void AutoFilter (std::string input) {
     std::cout << "Hippo1::AutoFilter(std::string) was called with value: \"" << input << "\"\n";
@@ -91,11 +89,10 @@ int main () {
   Autowired<AutoPacketFactory> factory;
   // Declare a packet to use in the following code blocks.
   std::shared_ptr<AutoPacket> packet;
-/// @endcode
+
 /// At this point we will execute the filter network a number of times, each with a different type related to `std::string`,
 /// in order to observe which filters are executed.  The first six executions demonstrate the types that are equivalent to
-/// `std::string` as input parameters (in which we expect only `Hippo#::AutoFilter` to be called).
-/// @code  
+/// `std::string` as input parameters (in which we expect only `Hippo#::AutoFilter` to be called). 
   {
     packet = factory->NewPacket();
     std::cout << "Decorating packet with instance of `std::string`:\n";
@@ -143,9 +140,8 @@ int main () {
     packet->Decorate(s);
     std::cout << '\n';
   }
-/// @endcode
+
 /// Verify that the accumulated values in the `m_received_input_decoration_types` for each context member are what we expect.
-/// @code
   {
     std::unordered_set<std::string> expected_hippo_inputs({
       "std::string",
@@ -173,7 +169,7 @@ int main () {
 
   return 0; // Return with no error.
 }
-/// @endcode
+
 /// The output of this program should be (with possibly a different ordering of `AutoFilter` calls):
 ///
 ///     Decorating packet with instance of `std::string`:

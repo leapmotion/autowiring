@@ -29,7 +29,7 @@ public:
   /// </summary>
   AutoNetServerImpl(std::unique_ptr<AutoNetTransport>&& transport);
   ~AutoNetServerImpl();
-  
+
   // Handle websocket messages
   void OnOpen(connection_hdl handle) override {
   }
@@ -99,9 +99,9 @@ protected:
     for(auto ptr : m_Subscribers)
       SendMessage(ptr, p_type, std::forward<Args>(args)...);
   }
-  
+
   // Send custom event to all clients
-  void SendEvent(const std::string& event, const std::vector<std::string>& args);
+  void SendEvent(const std::string& event, const std::vector<std::string>& args) override;
 
   /// <summary>
   /// Called when a "Subscribe" event is sent from a client
@@ -157,7 +157,7 @@ protected:
   std::mutex m_breakpoint_mutex;
   std::condition_variable m_breakpoint_cv;
   std::set<std::string> m_breakpoints;
-  
+
   // Transport layer for AutoNet
   std::unique_ptr<AutoNetTransport> m_transport;
 };

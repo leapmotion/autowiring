@@ -186,3 +186,24 @@ TEST_F(DispatchQueueTest, AbortsWithinDispatcherDtor) {
   // Now try to run the dispatch behavior
   dq.DispatchAllEvents();
 }
+
+
+TEST_F(DispatchQueueTest, MoveConstructor) {
+  int counter = 0;
+  {
+    DispatchQueue dq1;
+
+    dq1 += [&counter] {counter++;};
+    dq1 += [&counter] {counter++;};
+
+    DispatchQueue dq2(std::move(dq1));
+
+    dq2 += [&counter] {counter++;};
+
+    dq2.DispatchAllEvents();
+    ASSERT_EQ(counter, 3) << "Lambdas not trasfered by move constructor";
+
+    dq2 += [&counter] {counter++;};
+  }
+  ASSERT_EQ(counter, 3) << "Lambdas not trasfered by move constructor";
+}
