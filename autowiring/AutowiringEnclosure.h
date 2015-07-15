@@ -61,6 +61,18 @@ class AutowiringEnclosure:
   public testing::EmptyTestEventListener
 {
 public:
+  /// <summary>
+  /// Constructs a new AutowiringEnclosure
+  /// </summary>
+  /// <param name="allowGlobalReferences">
+  /// Prevents the enclosure from ensuring that the global context returns to a quiescent state
+  /// </param>
+  AutowiringEnclosure(bool allowGlobalReferences = false) :
+    allowGlobalReferences(allowGlobalReferences)
+  {}
+
+  const bool allowGlobalReferences;
+
   // Base overrides:
   void OnTestStart(const testing::TestInfo& info) override {
     AutoRequired<AutowiringEnclosureExceptionFilter> filter;
@@ -108,7 +120,8 @@ public:
     ASSERT_TRUE(ctxt->Wait(std::chrono::seconds(5))) << "Test case took too long to tear down, unit tests running after this point are untrustworthy";
 
     // Global context should return to quiescence:
-    ASSERT_TRUE(AutoGlobalContext()->Quiescent(std::chrono::seconds(5))) << "Contexts took too long to release all references to the global context";
+    if (!allowGlobalReferences)
+      ASSERT_TRUE(AutoGlobalContext()->Quiescent(std::chrono::seconds(5))) << "Contexts took too long to release all references to the global context";
 
     // And no more references to this context, except the current context and the pointer itself
     ASSERT_GE(2, ctxt.use_count()) << "Detected a dangling context reference after test termination, context may be leaking";
