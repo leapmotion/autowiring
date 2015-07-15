@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.0</span>
+   &#160;<span id="projectnumber">0.7.1</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -132,9 +132,9 @@ Inheritance diagram for autowiring::ThreadPool:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1ddb6f9970182a30d57a3de470ec8786"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1_thread_pool.html#a1ddb6f9970182a30d57a3de470ec8786">Consume</a> (std::shared_ptr&lt; <a class="el" href="class_dispatch_queue.html">DispatchQueue</a> &gt; dq)</td></tr>
-<tr class="memdesc:a1ddb6f9970182a30d57a3de470ec8786"><td class="mdescLeft">&#160;</td><td class="mdescRight">Causes the thread pool to call all lambdas specified on the passed <a class="el" href="class_dispatch_queue.html" title="This is an asynchronous queue of zero-argument functions ">DispatchQueue</a>  <a href="#a1ddb6f9970182a30d57a3de470ec8786">More...</a><br /></td></tr>
-<tr class="separator:a1ddb6f9970182a30d57a3de470ec8786"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4e0e0f0ed07a8f7eecb902e477e7400"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1_thread_pool.html#ad4e0e0f0ed07a8f7eecb902e477e7400">Consume</a> (const std::shared_ptr&lt; <a class="el" href="class_dispatch_queue.html">DispatchQueue</a> &gt; &amp;dq)</td></tr>
+<tr class="memdesc:ad4e0e0f0ed07a8f7eecb902e477e7400"><td class="mdescLeft">&#160;</td><td class="mdescRight">Causes the thread pool to call all lambdas specified on the passed <a class="el" href="class_dispatch_queue.html" title="This is an asynchronous queue of zero-argument functions ">DispatchQueue</a>  <a href="#ad4e0e0f0ed07a8f7eecb902e477e7400">More...</a><br /></td></tr>
+<tr class="separator:ad4e0e0f0ed07a8f7eecb902e477e7400"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4fdad28cbbe451fc38b99e026648ed83"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4fdad28cbbe451fc38b99e026648ed83"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classautowiring_1_1_thread_pool.html#a4fdad28cbbe451fc38b99e026648ed83">IsStarted</a> (void) const </td></tr>
 <tr class="memdesc:a4fdad28cbbe451fc38b99e026648ed83"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if the thread pool is running</dd></dl>
@@ -159,7 +159,7 @@ Protected Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Generic interface for a thread pool </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="a1ddb6f9970182a30d57a3de470ec8786"></a>
+<a class="anchor" id="ad4e0e0f0ed07a8f7eecb902e477e7400"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -169,7 +169,7 @@ Protected Member Functions</h2></td></tr>
         <tr>
           <td class="memname">virtual void autowiring::ThreadPool::Consume </td>
           <td>(</td>
-          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="class_dispatch_queue.html">DispatchQueue</a> &gt;&#160;</td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="class_dispatch_queue.html">DispatchQueue</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>dq</em></td><td>)</td>
           <td></td>
         </tr>
@@ -306,7 +306,7 @@ Protected Member Functions</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="namespaceautowiring.html">autowiring</a></li><li class="navelem"><a class="el" href="classautowiring_1_1_thread_pool.html">ThreadPool</a></li>
-    <li class="footer">Generated on Fri Jun 19 2015 17:25:36 for Autowiring by
+    <li class="footer">Generated on Tue Jul 14 2015 17:54:59 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

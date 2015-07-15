@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.0</span>
+   &#160;<span id="projectnumber">0.7.1</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -135,15 +135,7 @@ Inheritance diagram for BasicThread:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aefcc009fa192036be9ea4d11218612a4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aefcc009fa192036be9ea4d11218612a4"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#aefcc009fa192036be9ea4d11218612a4">BasicThread</a> (const char *pName=nullptr)</td></tr>
-<tr class="memdesc:aefcc009fa192036be9ea4d11218612a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a <a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a> object. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">pName</td><td>An optional name for this thread. The name is visible in some debuggers.</td></tr>
-  </table>
-  </dd>
-</dl>
-<br /></td></tr>
+<tr class="memitem:aefcc009fa192036be9ea4d11218612a4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#aefcc009fa192036be9ea4d11218612a4">BasicThread</a> (const char *pName=nullptr)</td></tr>
 <tr class="separator:aefcc009fa192036be9ea4d11218612a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6274398126caa21fe3d9e37a46360ca7"><td class="memTemplParams" colspan="2">template&lt;class Fx &gt; </td></tr>
 <tr class="memitem:a6274398126caa21fe3d9e37a46360ca7"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a6274398126caa21fe3d9e37a46360ca7">AddTeardownListener</a> (Fx &amp;&amp;listener)</td></tr>
@@ -155,10 +147,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a643d476885ee38306b061d7fb37c126f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a643d476885ee38306b061d7fb37c126f">GetThreadTimes</a> (std::chrono::milliseconds &amp;kernelTime, std::chrono::milliseconds &amp;userTime)</td></tr>
 <tr class="memdesc:a643d476885ee38306b061d7fb37c126f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports kernel and user mode running times for this thread.  <a href="#a643d476885ee38306b061d7fb37c126f">More...</a><br /></td></tr>
 <tr class="separator:a643d476885ee38306b061d7fb37c126f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2c6d0e971236f28d25eaef0bffb6181e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2c6d0e971236f28d25eaef0bffb6181e"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a2c6d0e971236f28d25eaef0bffb6181e">IsCompleted</a> (void) const </td></tr>
-<tr class="memdesc:a2c6d0e971236f28d25eaef0bffb6181e"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if this thread has transitioned to a completed state </dd></dl>
-<br /></td></tr>
+<tr class="memitem:a2c6d0e971236f28d25eaef0bffb6181e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a2c6d0e971236f28d25eaef0bffb6181e">IsCompleted</a> (void) const </td></tr>
 <tr class="separator:a2c6d0e971236f28d25eaef0bffb6181e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1186558c53eb71abc32af737376b44f3"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a1186558c53eb71abc32af737376b44f3">OnStop</a> (void)</td></tr>
 <tr class="memdesc:a1186558c53eb71abc32af737376b44f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked by the base class <a class="el" href="class_core_runnable.html#a41c3338adf9bf7222b13bbafb564dabb" title="Stops this runnable. ">Stop()</a> method. Implement this method to perform any needed cleanup.  <a href="#a1186558c53eb71abc32af737376b44f3">More...</a><br /></td></tr>
@@ -212,10 +201,7 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:ae9d8f1216df2a3f93b3b3a6a4c454fa0"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#ae9d8f1216df2a3f93b3b3a6a4c454fa0">ForceCoreThreadReidentify</a> (void)</td></tr>
 <tr class="memdesc:ae9d8f1216df2a3f93b3b3a6a4c454fa0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forces all Autowiring threads to reidentify themselves.  <a href="#ae9d8f1216df2a3f93b3b3a6a4c454fa0">More...</a><br /></td></tr>
 <tr class="separator:ae9d8f1216df2a3f93b3b3a6a4c454fa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa5fbc237ea2f1034509db47d0ed2f639"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa5fbc237ea2f1034509db47d0ed2f639"></a>
-static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#aa5fbc237ea2f1034509db47d0ed2f639">IsMainThread</a> (void)</td></tr>
-<tr class="memdesc:aa5fbc237ea2f1034509db47d0ed2f639"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if the calling thread is the main thread </dd></dl>
-<br /></td></tr>
+<tr class="memitem:aa5fbc237ea2f1034509db47d0ed2f639"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#aa5fbc237ea2f1034509db47d0ed2f639">IsMainThread</a> (void)</td></tr>
 <tr class="separator:aa5fbc237ea2f1034509db47d0ed2f639"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
@@ -232,32 +218,29 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:afffae6629cda8683d6706e319bb81038"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#afffae6629cda8683d6706e319bb81038">DoRunLoopCleanup</a> (std::shared_ptr&lt; <a class="el" href="class_core_context.html">CoreContext</a> &gt; &amp;&amp;ctxt, std::shared_ptr&lt; CoreObject &gt; &amp;&amp;refTracker)</td></tr>
 <tr class="memdesc:afffae6629cda8683d6706e319bb81038"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs all cleanup operations that must take place after <a class="el" href="class_basic_thread.html#aac69a4f359aab347371e9e1c11a9dd41" title="Routine that sets up the necessary extranea before a call to Run ">DoRun()</a>  <a href="#afffae6629cda8683d6706e319bb81038">More...</a><br /></td></tr>
 <tr class="separator:afffae6629cda8683d6706e319bb81038"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d7ede51afd942a19ea957e1f7cad304"><td class="memItemLeft" align="right" valign="top">std::mutex &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a1d7ede51afd942a19ea957e1f7cad304">GetLock</a> (void)</td></tr>
-<tr class="memdesc:a1d7ede51afd942a19ea957e1f7cad304"><td class="mdescLeft">&#160;</td><td class="mdescRight">Recovers a general lock used to synchronize entities in this thread internally.  <a href="#a1d7ede51afd942a19ea957e1f7cad304">More...</a><br /></td></tr>
-<tr class="separator:a1d7ede51afd942a19ea957e1f7cad304"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a208ccf918f0a440e2c6c53c2ac835a37"><td class="memItemLeft" align="right" valign="top">std::mutex &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a208ccf918f0a440e2c6c53c2ac835a37">GetLock</a> (void) const </td></tr>
+<tr class="memdesc:a208ccf918f0a440e2c6c53c2ac835a37"><td class="mdescLeft">&#160;</td><td class="mdescRight">Recovers a general lock used to synchronize entities in this thread internally.  <a href="#a208ccf918f0a440e2c6c53c2ac835a37">More...</a><br /></td></tr>
+<tr class="separator:a208ccf918f0a440e2c6c53c2ac835a37"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a64061568019d519e3a27d1d3a840c741"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a64061568019d519e3a27d1d3a840c741">OnStart</a> () override</td></tr>
 <tr class="memdesc:a64061568019d519e3a27d1d3a840c741"><td class="mdescLeft">&#160;</td><td class="mdescRight">Causes a new thread to be created in which the Run method will be invoked  <a href="#a64061568019d519e3a27d1d3a840c741">More...</a><br /></td></tr>
 <tr class="separator:a64061568019d519e3a27d1d3a840c741"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb056d8402460ea96e350e2b9dcc2f4d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#abb056d8402460ea96e350e2b9dcc2f4d">OnStop</a> (bool graceful) override</td></tr>
 <tr class="memdesc:abb056d8402460ea96e350e2b9dcc2f4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked by the base class <a class="el" href="class_core_runnable.html#a41c3338adf9bf7222b13bbafb564dabb" title="Stops this runnable. ">Stop()</a> method. Override this method to perform any needed cleanup.  <a href="#abb056d8402460ea96e350e2b9dcc2f4d">More...</a><br /></td></tr>
 <tr class="separator:abb056d8402460ea96e350e2b9dcc2f4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3be1fc03a61380ff66fbba791dd1d49d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a3be1fc03a61380ff66fbba791dd1d49d">PerformStatusUpdate</a> (const std::function&lt; void()&gt; &amp;fn)</td></tr>
-<tr class="memdesc:a3be1fc03a61380ff66fbba791dd1d49d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtains a mutex, invokes the specified lambda function, and then updates the basic thread's state condition.  <a href="#a3be1fc03a61380ff66fbba791dd1d49d">More...</a><br /></td></tr>
-<tr class="separator:a3be1fc03a61380ff66fbba791dd1d49d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6fa3d56f8a17a6a8244aeab10fff577"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#ac6fa3d56f8a17a6a8244aeab10fff577">PerformStatusUpdate</a> (const std::function&lt; void()&gt; &amp;fn) const </td></tr>
+<tr class="memdesc:ac6fa3d56f8a17a6a8244aeab10fff577"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtains a mutex, invokes the specified lambda function, and then updates the basic thread's state condition.  <a href="#ac6fa3d56f8a17a6a8244aeab10fff577">More...</a><br /></td></tr>
+<tr class="separator:ac6fa3d56f8a17a6a8244aeab10fff577"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa6d8803cdc6ab28b1d79740b115487c5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#aa6d8803cdc6ab28b1d79740b115487c5">SetCurrentThreadName</a> (void) const </td></tr>
 <tr class="memdesc:aa6d8803cdc6ab28b1d79740b115487c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assigns a name to the thread, displayed in debuggers.  <a href="#aa6d8803cdc6ab28b1d79740b115487c5">More...</a><br /></td></tr>
 <tr class="separator:aa6d8803cdc6ab28b1d79740b115487c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa64b53cce1df48cdfa5b407e96164956"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#aa64b53cce1df48cdfa5b407e96164956">ThreadSleep</a> (std::chrono::nanoseconds timeout)</td></tr>
-<tr class="memdesc:aa64b53cce1df48cdfa5b407e96164956"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sleeps this thread for the specified duration.  <a href="#aa64b53cce1df48cdfa5b407e96164956">More...</a><br /></td></tr>
-<tr class="separator:aa64b53cce1df48cdfa5b407e96164956"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b616b47385599a5ca237d2b8870d1c7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a4b616b47385599a5ca237d2b8870d1c7">WaitForStateUpdate</a> (const std::function&lt; bool()&gt; &amp;fn)</td></tr>
-<tr class="memdesc:a4b616b47385599a5ca237d2b8870d1c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits until the specified lambda function returns true or the thread shuts down.  <a href="#a4b616b47385599a5ca237d2b8870d1c7">More...</a><br /></td></tr>
-<tr class="separator:a4b616b47385599a5ca237d2b8870d1c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70536c1d5295d4f7457b4405f6b5e9f6"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a70536c1d5295d4f7457b4405f6b5e9f6">ThreadSleep</a> (std::chrono::nanoseconds timeout) const </td></tr>
+<tr class="memdesc:a70536c1d5295d4f7457b4405f6b5e9f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sleeps this thread for the specified duration.  <a href="#a70536c1d5295d4f7457b4405f6b5e9f6">More...</a><br /></td></tr>
+<tr class="separator:a70536c1d5295d4f7457b4405f6b5e9f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b8057883725bfbfedd44b2f4ab471a6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_basic_thread.html#a4b8057883725bfbfedd44b2f4ab471a6">WaitForStateUpdate</a> (const std::function&lt; bool()&gt; &amp;fn) const </td></tr>
+<tr class="memdesc:a4b8057883725bfbfedd44b2f4ab471a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits until the specified lambda function returns true or the thread shuts down.  <a href="#a4b8057883725bfbfedd44b2f4ab471a6">More...</a><br /></td></tr>
+<tr class="separator:a4b8057883725bfbfedd44b2f4ab471a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_class_core_runnable"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_class_core_runnable')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="class_core_runnable.html">CoreRunnable</a></td></tr>
-<tr class="memitem:a7d2c7498d9db4e8f76dc2b6a69d8f1bc inherit pro_methods_class_core_runnable"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d2c7498d9db4e8f76dc2b6a69d8f1bc"></a>
-const std::shared_ptr&lt; CoreObject &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a7d2c7498d9db4e8f76dc2b6a69d8f1bc">GetOutstanding</a> (void) const </td></tr>
-<tr class="memdesc:a7d2c7498d9db4e8f76dc2b6a69d8f1bc inherit pro_methods_class_core_runnable"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>A reference to the current outstanding counter </dd></dl>
-<br /></td></tr>
+<tr class="memitem:a7d2c7498d9db4e8f76dc2b6a69d8f1bc inherit pro_methods_class_core_runnable"><td class="memItemLeft" align="right" valign="top">const std::shared_ptr&lt; CoreObject &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_core_runnable.html#a7d2c7498d9db4e8f76dc2b6a69d8f1bc">GetOutstanding</a> (void) const </td></tr>
 <tr class="separator:a7d2c7498d9db4e8f76dc2b6a69d8f1bc inherit pro_methods_class_core_runnable"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -290,7 +273,30 @@ const std::shared_ptr&lt; CoreObject &gt; &amp;&#160;</td><td class="memItemRigh
 <div class="line">ctxt-&gt;Wait(std::chrono::milliseconds(100));</div>
 <div class="line">ctxt-&gt;SignalShutdown(<span class="keyword">true</span>);</div>
 </div><!-- fragment --> <dl><dt><b>Examples: </b></dt><dd><a class="el" href="_thread_example_8cpp-example.html#_a0">ThreadExample.cpp</a>.</dd>
-</dl></div><h2 class="groupheader">Member Function Documentation</h2>
+</dl></div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a class="anchor" id="aefcc009fa192036be9ea4d11218612a4"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">BasicThread::BasicThread </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>pName</em> = <code>nullptr</code></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Creates a <a class="el" href="class_basic_thread.html" title="An abstract class for creating a thread with a single Run method. ">BasicThread</a> object. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">pName</td><td>An optional name for this thread. The name is visible in some debuggers.</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
 <a class="anchor" id="a6274398126caa21fe3d9e37a46360ca7"></a>
 <div class="memitem">
 <div class="memproto">
@@ -449,7 +455,8 @@ template&lt;class Fx &gt; </div>
 <p>Performs all cleanup operations that must take place after <a class="el" href="class_basic_thread.html#aac69a4f359aab347371e9e1c11a9dd41" title="Routine that sets up the necessary extranea before a call to Run ">DoRun()</a> </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">pusher</td><td>The last reference to the enclosing context held by this thread</td></tr>
+    <tr><td class="paramname">ctxt</td><td>The last reference to the enclosing context held by this thread</td></tr>
+    <tr><td class="paramname">refTracker</td><td>A reference tracker held for as long as the cleanup operation is incomplete</td></tr>
   </table>
   </dd>
 </dl>
@@ -505,7 +512,7 @@ template&lt;class Fx &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a1d7ede51afd942a19ea957e1f7cad304"></a>
+<a class="anchor" id="a208ccf918f0a440e2c6c53c2ac835a37"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -517,7 +524,7 @@ template&lt;class Fx &gt; </div>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -587,6 +594,48 @@ template&lt;class Fx &gt; </div>
 <div class="line">ctxt-&gt;Wait(std::chrono::milliseconds(100));</div>
 <div class="line">ctxt-&gt;SignalShutdown(<span class="keyword">true</span>);</div>
 </div><!-- fragment --> 
+</div>
+</div>
+<a class="anchor" id="a2c6d0e971236f28d25eaef0bffb6181e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool BasicThread::IsCompleted </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>True if this thread has transitioned to a completed state </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="aa5fbc237ea2f1034509db47d0ed2f639"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">static bool BasicThread::IsMainThread </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>True if the calling thread is the main thread </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="a64061568019d519e3a27d1d3a840c741"></a>
@@ -681,11 +730,11 @@ template&lt;class Fx &gt; </div>
 <p>Do not perform any time-consuming operations in this callback; the method may be called from a time-sensitive context and unacceptable system performance could result if long-duration operations are undertaken here.</p>
 <p>Override the <a class="el" href="class_basic_thread.html#abb056d8402460ea96e350e2b9dcc2f4d" title="Invoked by the base class Stop() method. Override this method to perform any needed cleanup...">OnStop(bool graceful)</a> version of this function to handle immediate vs. graceful shutdown cleanup. </p>
 
-<p>Reimplemented in <a class="el" href="class_core_thread.html#ac07f01958825aa4d9edb820fe22fdc8b">CoreThread</a>.</p>
+<p>Reimplemented in <a class="el" href="class_core_thread.html#ab4d06e78e0b2365c429c05bde674b1bc">CoreThread</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a3be1fc03a61380ff66fbba791dd1d49d"></a>
+<a class="anchor" id="ac6fa3d56f8a17a6a8244aeab10fff577"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -697,7 +746,7 @@ template&lt;class Fx &gt; </div>
           <td>(</td>
           <td class="paramtype">const std::function&lt; void()&gt; &amp;&#160;</td>
           <td class="paramname"><em>fn</em></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -769,7 +818,7 @@ template&lt;class Fx &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="aa64b53cce1df48cdfa5b407e96164956"></a>
+<a class="anchor" id="a70536c1d5295d4f7457b4405f6b5e9f6"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -781,7 +830,7 @@ template&lt;class Fx &gt; </div>
           <td>(</td>
           <td class="paramtype">std::chrono::nanoseconds&#160;</td>
           <td class="paramname"><em>timeout</em></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -798,7 +847,7 @@ template&lt;class Fx &gt; </div>
 
 </div>
 </div>
-<a class="anchor" id="a4b616b47385599a5ca237d2b8870d1c7"></a>
+<a class="anchor" id="a4b8057883725bfbfedd44b2f4ab471a6"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -810,7 +859,7 @@ template&lt;class Fx &gt; </div>
           <td>(</td>
           <td class="paramtype">const std::function&lt; bool()&gt; &amp;&#160;</td>
           <td class="paramname"><em>fn</em></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -834,7 +883,7 @@ template&lt;class Fx &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_basic_thread.html">BasicThread</a></li>
-    <li class="footer">Generated on Fri Jun 19 2015 17:25:35 for Autowiring by
+    <li class="footer">Generated on Tue Jul 14 2015 17:54:59 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

@@ -1,12 +1,13 @@
 var searchData=
 [
-  ['decorate',['Decorate',['../class_auto_packet.html#a58cab6182ed3149b78b023a303467d39',1,'AutoPacket::Decorate(const AnySharedPointer &amp;ptr, DecorationKey key)'],['../class_auto_packet.html#a828d9a72ac228f36087723cca4f93e13',1,'AutoPacket::Decorate(T t)'],['../class_auto_packet.html#a92d46044bc68b565aa3772c67d961dea',1,'AutoPacket::Decorate(std::shared_ptr&lt; T &gt; ptr)'],['../class_auto_packet.html#a73e991ef12c4ca95d8c87c98442405f9',1,'AutoPacket::Decorate(std::shared_ptr&lt; const T &gt; ptr)']]],
+  ['decorate',['Decorate',['../class_auto_packet.html#a58cab6182ed3149b78b023a303467d39',1,'AutoPacket::Decorate(const AnySharedPointer &amp;ptr, DecorationKey key)'],['../class_auto_packet.html#a3964c80db7d3f4a22584a7e3fa82e126',1,'AutoPacket::Decorate(const std::shared_ptr&lt; T &gt; &amp;ptr)'],['../class_auto_packet.html#ab2eb82a4b2b0904f63d6d2a56639668c',1,'AutoPacket::Decorate(const std::shared_ptr&lt; const T &gt; &amp;ptr)'],['../class_auto_packet.html#a226d8fca104604bf290251b30783d030',1,'AutoPacket::Decorate(T &amp;&amp;t)']]],
   ['decorateimmediate',['DecorateImmediate',['../class_auto_packet.html#ac016b40fd64cf3e9df03627de240448a',1,'AutoPacket']]],
   ['decorateimmediateunsafe',['DecorateImmediateUnsafe',['../class_auto_packet.html#afff5b7454dc3bcfb943d74e8738efe72',1,'AutoPacket']]],
   ['decoratenopriors',['DecorateNoPriors',['../class_auto_packet.html#a721c9e5f19dcc05c8d408901615fcea5',1,'AutoPacket']]],
   ['delayuntilinitiated',['DelayUntilInitiated',['../class_core_context.html#abafba926a5bb2aa13f15c4de0d0df019',1,'CoreContext']]],
   ['demangle',['demangle',['../namespaceautowiring.html#aef8c65202e0d57213ea8335013bc634a',1,'autowiring']]],
   ['demangletypename',['DemangleTypeName',['../class_auto_packet_graph.html#a04f1aea942c321644bd35f876a28ec65',1,'AutoPacketGraph']]],
+  ['deprecated',['DEPRECATED',['../class_auto_packet.html#aada270350032ac870594ac2fdf6fe372',1,'AutoPacket']]],
   ['dispatchallevents',['DispatchAllEvents',['../class_dispatch_queue.html#af94131c04ad4d1513cc411870fc6b002',1,'DispatchQueue']]],
   ['dispatchevent',['DispatchEvent',['../class_dispatch_queue.html#ae4cf0ed4b428ecbee03fb64a0e705ce7',1,'DispatchQueue']]],
   ['dispatcheventunsafe',['DispatchEventUnsafe',['../class_dispatch_queue.html#a7c909a2f706599e2aeaea163afc43d2a',1,'DispatchQueue']]],

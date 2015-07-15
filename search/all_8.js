@@ -13,9 +13,10 @@ var searchData=
   ['isglobalcontext',['IsGlobalContext',['../class_core_context.html#ae2eb27daa6e017c3b678868faf0f7b14',1,'CoreContext']]],
   ['isinitiated',['IsInitiated',['../class_core_context.html#a17d4381dc7affb5ee90f14063b757e4a',1,'CoreContext']]],
   ['ismainthread',['IsMainThread',['../class_basic_thread.html#aa5fbc237ea2f1034509db47d0ed2f639',1,'BasicThread']]],
+  ['isquiescent',['IsQuiescent',['../class_core_context.html#ad9830b4f21a5195e8b93bfde236033a2',1,'CoreContext']]],
   ['isrunning',['IsRunning',['../class_core_context.html#a47e98de82b665c7d3791b317f7789fa3',1,'CoreContext::IsRunning()'],['../class_core_runnable.html#ab13799735ef39ebe372f9851395a7f53',1,'CoreRunnable::IsRunning()']]],
   ['isshutdown',['IsShutdown',['../class_core_context.html#a6b08c5f0dead4908659cf87c6eb77abb',1,'CoreContext']]],
   ['isstarted',['IsStarted',['../classautowiring_1_1_thread_pool.html#a4fdad28cbbe451fc38b99e026648ed83',1,'autowiring::ThreadPool']]],
-  ['iterator',['iterator',['../class_context_enumerator_t_1_1iterator.html',1,'ContextEnumeratorT']]],
-  ['iterator',['iterator',['../class_context_enumerator_1_1iterator.html',1,'ContextEnumerator']]]
+  ['iterator',['iterator',['../class_context_enumerator_1_1iterator.html',1,'ContextEnumerator']]],
+  ['iterator',['iterator',['../class_context_enumerator_t_1_1iterator.html',1,'ContextEnumeratorT']]]
 ];

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['get',['get',['../classauto__out.html#aafe294268c22edb9a8039c8362582b16',1,'auto_out::get()'],['../class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d',1,'AutoPacket::Get(int tshift=0) const '],['../class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b',1,'AutoPacket::Get(const T *&amp;out, int tshift=0) const '],['../class_auto_packet.html#a39c55fd5996f492dfa2d2ce68448fb67',1,'AutoPacket::Get(const std::shared_ptr&lt; T &gt; *&amp;out, int tshift=0) const '],['../class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7',1,'AutoPacket::Get(std::shared_ptr&lt; const T &gt; &amp;out, int tshift=0) const '],['../class_global_core_context.html#adfc57edc6952e0e8bd6eb982c2caef03',1,'GlobalCoreContext::Get()']]],
+  ['get',['Get',['../class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d',1,'AutoPacket::Get(int tshift=0) const '],['../class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b',1,'AutoPacket::Get(const T *&amp;out, int tshift=0) const '],['../class_auto_packet.html#a39c55fd5996f492dfa2d2ce68448fb67',1,'AutoPacket::Get(const std::shared_ptr&lt; T &gt; *&amp;out, int tshift=0) const '],['../class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7',1,'AutoPacket::Get(std::shared_ptr&lt; const T &gt; &amp;out, int tshift=0) const '],['../class_global_core_context.html#adfc57edc6952e0e8bd6eb982c2caef03',1,'GlobalCoreContext::Get()']]],
   ['getall',['GetAll',['../class_auto_packet.html#a7b3fb6084dc850b1b9d077726104541f',1,'AutoPacket']]],
   ['getallshared',['GetAllShared',['../class_auto_packet.html#a83083664deb879a30addd33b1e69230c',1,'AutoPacket']]],
   ['getautofilters',['GetAutoFilters',['../class_auto_packet_factory.html#acad58c3ecf73ff5d6dc9c84c70d923bd',1,'AutoPacketFactory']]],
@@ -16,7 +16,7 @@ var searchData=
   ['getdisposition',['GetDisposition',['../class_auto_packet.html#af40ffd3b386863a7874866aa5a6b0429',1,'AutoPacket']]],
   ['getglobal',['GetGlobal',['../class_core_context.html#a143f68a029dbd4eb6bf628c7ea6e9d31',1,'CoreContext']]],
   ['getglobalcontext',['GetGlobalContext',['../_global_core_context_8h.html#af48a92c18e5b4ea361c1626b04536546',1,'GlobalCoreContext.h']]],
-  ['getlock',['GetLock',['../class_basic_thread.html#a1d7ede51afd942a19ea957e1f7cad304',1,'BasicThread']]],
+  ['getlock',['GetLock',['../class_basic_thread.html#a208ccf918f0a440e2c6c53c2ac835a37',1,'BasicThread']]],
   ['getmeanpacketlifetime',['GetMeanPacketLifetime',['../class_auto_packet_factory.html#aa14ee291b0bdb1c8131f268c4a7265c0',1,'AutoPacketFactory']]],
   ['getmembercount',['GetMemberCount',['../class_core_context.html#ad725f1858d6305af6721e575bb312674',1,'CoreContext']]],
   ['getoutstanding',['GetOutstanding',['../class_core_runnable.html#a7d2c7498d9db4e8f76dc2b6a69d8f1bc',1,'CoreRunnable']]],

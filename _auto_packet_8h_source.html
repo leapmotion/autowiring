@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.0</span>
+   &#160;<span id="projectnumber">0.7.1</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -113,438 +113,520 @@ $(document).ready(function(){initNavTree('_auto_packet_8h_source.html','');});
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;AnySharedPointer.h&quot;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="at__exit_8h.html">at_exit.h</a>&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;auto_id.h&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;AutoFilterArgument.h&quot;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;DecorationDisposition.h&quot;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="demangle_8h.html">demangle.h</a>&quot;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;is_any.h&quot;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;is_shared_ptr.h&quot;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;TeardownNotifier.h&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;typeinfo&gt;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include CHRONO_HEADER</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include MEMORY_HEADER</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include TYPE_INDEX_HEADER</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="auto__arg_8h.html">auto_arg.h</a>&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;auto_id.h&quot;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;AutoFilterArgument.h&quot;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;DecorationDisposition.h&quot;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="demangle_8h.html">demangle.h</a>&quot;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;is_any.h&quot;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;is_shared_ptr.h&quot;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;TeardownNotifier.h&quot;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;typeinfo&gt;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include CHRONO_HEADER</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include MEMORY_HEADER</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include STL_UNORDERED_MAP</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include MUTEX_HEADER</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">class </span><a class="code" href="class_auto_packet.html">AutoPacket</a>;</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keyword">class </span>AutoPacketInternal;</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">class </span><a class="code" href="class_auto_packet_factory.html">AutoPacketFactory</a>;</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">class </span>AutoPacketProfiler;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">class </span><a class="code" href="class_core_context.html">CoreContext</a>;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">struct </span>AutoFilterDescriptor;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="keyword">struct </span>AutoFilterArgument;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">class </span>AutoPacketInternal;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keyword">class </span><a class="code" href="class_auto_packet_factory.html">AutoPacketFactory</a>;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">class </span><a class="code" href="class_core_context.html">CoreContext</a>;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">struct </span>AutoFilterDescriptor;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="keyword">class </span><a class="code" href="classauto__arg.html">auto_arg</a>;</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> MemFn&gt;</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="keyword">struct </span>Decompose;</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;</div>
-<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="class_auto_packet.html">   39</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_auto_packet.html">AutoPacket</a>:</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="keyword">public</span> std::enable_shared_from_this&lt;AutoPacket&gt;,</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="keyword">public</span> TeardownNotifier</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;{</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <a class="code" href="class_auto_packet.html">AutoPacket</a>(<span class="keyword">const</span> <a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; rhs) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <a class="code" href="class_auto_packet.html">AutoPacket</a>(<a class="code" href="class_auto_packet.html">AutoPacket</a>&amp;&amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="comment">// Must hold the lock to &#39;factory&#39; when calling this constructor</span></div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <a class="code" href="class_auto_packet.html">AutoPacket</a>(<a class="code" href="class_auto_packet_factory.html">AutoPacketFactory</a>&amp; factory, std::shared_ptr&lt;void&gt;&amp;&amp; outstanding);</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  ~<a class="code" href="class_auto_packet.html">AutoPacket</a>();</div>
+<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="namespaceautowiring.html">   30</a></span>&#160;<span class="keyword">namespace </span><a class="code" href="namespaceautowiring.html">autowiring</a> {</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="keyword">struct </span>is_shared_ptr:</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    std::false_type</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  {};</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keyword">struct </span>is_shared_ptr&lt;std::shared_ptr&lt;T&gt;&gt; :</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    std::true_type</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  {};</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="keyword">struct </span>is_shared_ptr&lt;std::shared_ptr&lt;const T&gt;&gt; :</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    std::true_type</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  {};</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="keyword">struct </span>is_shared_ptr&lt;const T&gt; :</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    is_shared_ptr&lt;T&gt;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  {};</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  <span class="comment">// A pointer back to the factory that created us. Used for recording lifetime statistics.</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="keyword">const</span> std::shared_ptr&lt;AutoPacketFactory&gt; m_parentFactory;</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  <span class="comment">// The successor to this packet</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  std::shared_ptr&lt;AutoPacketInternal&gt; m_successor;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  <span class="comment">// Hold the time point at which this packet was last initalized.</span></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  std::chrono::high_resolution_clock::time_point m_initTime;</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  <span class="comment">// Outstanding count local and remote holds:</span></div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  <span class="keyword">const</span> std::shared_ptr&lt;void&gt; m_outstanding;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  <span class="comment">// Pointer to a forward linked list of saturation counters, constructed when the packet is created</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  SatCounter* m_firstCounter = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="comment">// The set of decorations currently attached to this object, and the associated lock:</span></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  <span class="comment">// Decorations are indexed first by type and second by pipe terminating type, if any.</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <span class="comment">// NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.</span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="keyword">typedef</span> std::unordered_map&lt;DecorationKey, DecorationDisposition&gt; t_decorationMap;</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  t_decorationMap m_decorations;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <span class="keyword">mutable</span> std::mutex m_lock;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  DecorationDisposition&amp; <a class="code" href="class_auto_packet.html#afff5b7454dc3bcfb943d74e8738efe72">DecorateImmediateUnsafe</a>(<span class="keyword">const</span> DecorationKey&amp; key, <span class="keyword">const</span> <span class="keywordtype">void</span>* pvImmed);</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a684e3e0747beb2f1d052e6e46f9da931">AddSatCounterUnsafe</a>(SatCounter&amp; satCounter);</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  <span class="keyword">struct </span>is_shared_ptr&lt;T&amp;&gt; :</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    is_shared_ptr&lt;T&gt;</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  {};</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;}</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
+<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="class_auto_packet.html">   66</a></span>&#160;<span class="keyword">class </span><a class="code" href="class_auto_packet.html">AutoPacket</a>:</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="keyword">public</span> std::enable_shared_from_this&lt;AutoPacket&gt;,</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  <span class="keyword">public</span> TeardownNotifier</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;{</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <a class="code" href="class_auto_packet.html">AutoPacket</a>(<span class="keyword">const</span> <a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; rhs) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <a class="code" href="class_auto_packet.html">AutoPacket</a>(<a class="code" href="class_auto_packet.html">AutoPacket</a>&amp;&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  <span class="comment">// Must hold the lock to &#39;factory&#39; when calling this constructor</span></div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <a class="code" href="class_auto_packet.html">AutoPacket</a>(<a class="code" href="class_auto_packet_factory.html">AutoPacketFactory</a>&amp; factory, std::shared_ptr&lt;void&gt;&amp;&amp; outstanding);</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  ~<a class="code" href="class_auto_packet.html">AutoPacket</a>();</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  <span class="comment">// The set of decorations currently attached to this object, and the associated lock:</span></div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="comment">// Decorations are indexed first by type and second by pipe terminating type, if any.</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="comment">// NOTE: This is a disambiguation of function reference assignment, and avoids use of constexp.</span></div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  <span class="keyword">typedef</span> std::unordered_map&lt;DecorationKey, DecorationDisposition&gt; t_decorationMap;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  <span class="comment">// A pointer back to the factory that created us. Used for recording lifetime statistics.</span></div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="keyword">const</span> std::shared_ptr&lt;AutoPacketFactory&gt; m_parentFactory;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  <span class="comment">// The successor to this packet</span></div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  std::shared_ptr&lt;AutoPacketInternal&gt; m_successor;</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a29f7dcf03fe916c5566ca61afcc19782">MarkUnsatisfiable</a>(<span class="keyword">const</span> DecorationKey&amp; key);</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  </div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a64bf152b18a9e20c701661706fcce9c9">MarkSuccessorsUnsatisfiable</a>(DecorationKey type);</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a5500ce562229a4b8944a0f7a647d0ab6">UpdateSatisfactionUnsafe</a>(std::unique_lock&lt;std::mutex&gt; lk, <span class="keyword">const</span> DecorationDisposition&amp; disposition);</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a17e257b9636aff04f23d82d11abfb2a6">PulseSatisfactionUnsafe</a>(std::unique_lock&lt;std::mutex&gt; lk, DecorationDisposition* pTypeSubs [], <span class="keywordtype">size_t</span> nInfos);</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a0758dc93f396121900cc5de17f46dcbf">HasUnsafe</a>(<span class="keyword">const</span> DecorationKey&amp; key) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a721c9e5f19dcc05c8d408901615fcea5">DecorateNoPriors</a>(<span class="keyword">const</span> AnySharedPointer&amp; ptr, DecorationKey key);</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a58cab6182ed3149b78b023a303467d39">Decorate</a>(<span class="keyword">const</span> AnySharedPointer&amp; ptr, DecorationKey key);</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a0dbabcc26a87524dbd833390d6dff5f3">UnsafeComplete</a>(<span class="keyword">const</span> DecorationKey&amp; data);</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;  std::shared_ptr&lt;AutoPacket&gt; <a class="code" href="class_auto_packet.html#af7d82f8536c4a1b847a5ba0efb9b99d6">SuccessorUnsafe</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;  <span class="keyword">const</span> DecorationDisposition* <a class="code" href="class_auto_packet.html#af40ffd3b386863a7874866aa5a6b0429">GetDisposition</a>(<span class="keyword">const</span> DecorationKey&amp; ti) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a76af6d953ba5968fffd20cb736ad0cbc">HasSubscribers</a>(<span class="keyword">const</span> DecorationKey&amp; key) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;  <span class="keyword">const</span> SatCounter&amp; <a class="code" href="class_auto_packet.html#a1e8152052798e49283c8297886c62ffe">GetSatisfaction</a>(<span class="keyword">const</span> std::type_info&amp; subscriber) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#ad77d4e6ff2c9fe5fb19dcd43c91fbc57">ThrowNotDecoratedException</a>(<span class="keyword">const</span> DecorationKey&amp; key);</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a876a04e499194ec2c8960ee9aa655b0b">ThrowMultiplyDecoratedException</a>(<span class="keyword">const</span> DecorationKey&amp; key);</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;  <span class="keywordtype">size_t</span> <a class="code" href="class_auto_packet.html#ad162cefce3bd9980fa2984c29f2a2517">GetDecorationTypeCount</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  t_decorationMap <a class="code" href="class_auto_packet.html#aa1235227e171d7229b72d3901e6d1042">GetDecorations</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00187"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a749ec811977357ea7165b8e77be65932">  187</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a749ec811977357ea7165b8e77be65932">Has</a>(<span class="keywordtype">int</span> tshift=0)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    std::lock_guard&lt;std::mutex&gt; lk(m_lock);</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#a0758dc93f396121900cc5de17f46dcbf">HasUnsafe</a>(DecorationKey(auto_id&lt;T&gt;::key(), tshift));</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  }</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="comment">// Hold the time point at which this packet was last initalized.</span></div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  std::chrono::high_resolution_clock::time_point m_initTime;</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="comment">// Outstanding count local and remote holds:</span></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  <span class="keyword">const</span> std::shared_ptr&lt;void&gt; m_outstanding;</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="comment">// Pointer to a forward linked list of saturation counters, constructed when the packet is created</span></div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  SatCounter* m_firstCounter = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  t_decorationMap m_decoration_map;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keyword">mutable</span> std::mutex m_lock;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  DecorationDisposition&amp; <a class="code" href="class_auto_packet.html#afff5b7454dc3bcfb943d74e8738efe72">DecorateImmediateUnsafe</a>(<span class="keyword">const</span> DecorationKey&amp; key, <span class="keyword">const</span> <span class="keywordtype">void</span>* pvImmed);</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a684e3e0747beb2f1d052e6e46f9da931">AddSatCounterUnsafe</a>(SatCounter&amp; satCounter);</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a48c97deb0563443453c6c0407a13a525">MarkUnsatisfiable</a>(<span class="keyword">const</span> DecorationKey&amp; key);</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  </div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a64bf152b18a9e20c701661706fcce9c9">MarkSuccessorsUnsatisfiable</a>(DecorationKey type);</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a5500ce562229a4b8944a0f7a647d0ab6">UpdateSatisfactionUnsafe</a>(std::unique_lock&lt;std::mutex&gt; lk, <span class="keyword">const</span> DecorationDisposition&amp; disposition);</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a17e257b9636aff04f23d82d11abfb2a6">PulseSatisfactionUnsafe</a>(std::unique_lock&lt;std::mutex&gt; lk, DecorationDisposition* pTypeSubs [], <span class="keywordtype">size_t</span> nInfos);</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a0758dc93f396121900cc5de17f46dcbf">HasUnsafe</a>(<span class="keyword">const</span> DecorationKey&amp; key) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a721c9e5f19dcc05c8d408901615fcea5">DecorateNoPriors</a>(<span class="keyword">const</span> AnySharedPointer&amp; ptr, DecorationKey key);</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a58cab6182ed3149b78b023a303467d39">Decorate</a>(<span class="keyword">const</span> AnySharedPointer&amp; ptr, DecorationKey key);</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a0dbabcc26a87524dbd833390d6dff5f3">UnsafeComplete</a>(<span class="keyword">const</span> DecorationKey&amp; data);</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;  std::shared_ptr&lt;AutoPacket&gt; <a class="code" href="class_auto_packet.html#af7d82f8536c4a1b847a5ba0efb9b99d6">SuccessorUnsafe</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;  <span class="keyword">const</span> DecorationDisposition* <a class="code" href="class_auto_packet.html#af40ffd3b386863a7874866aa5a6b0429">GetDisposition</a>(<span class="keyword">const</span> DecorationKey&amp; ti) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a76af6d953ba5968fffd20cb736ad0cbc">HasSubscribers</a>(<span class="keyword">const</span> DecorationKey&amp; key) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;  <span class="keywordtype">size_t</span> <a class="code" href="class_auto_packet.html#a14fe26e212e7ca42fa6731f9a168111a">HasPublishers</a>(<span class="keyword">const</span> DecorationKey&amp; key) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;  <span class="keyword">const</span> SatCounter&amp; <a class="code" href="class_auto_packet.html#a1e8152052798e49283c8297886c62ffe">GetSatisfaction</a>(<span class="keyword">const</span> std::type_info&amp; subscriber) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#ad77d4e6ff2c9fe5fb19dcd43c91fbc57">ThrowNotDecoratedException</a>(<span class="keyword">const</span> DecorationKey&amp; key);</div>
 <div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00196"></a><span class="lineno"><a class="line" href="class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d">  196</a></span>&#160;  <span class="keyword">const</span> T&amp; <a class="code" href="class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d">Get</a>(<span class="keywordtype">int</span> tshift=0)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    static_assert(!std::is_same&lt;T, AnySharedPointer&gt;::value, <span class="stringliteral">&quot;AnySharedPointer is not permitted to be directly decorated on an AutoPacket&quot;</span>);</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    <span class="keyword">const</span> T* retVal;</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    <span class="keywordflow">if</span> (!<a class="code" href="class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d">Get</a>(retVal, tshift))</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;      <a class="code" href="class_auto_packet.html#ad77d4e6ff2c9fe5fb19dcd43c91fbc57">ThrowNotDecoratedException</a>(DecorationKey(auto_id&lt;T&gt;::key(), tshift));</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    <span class="keywordflow">return</span> *retVal;</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;  }</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00213"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b">  213</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b">Get</a>(<span class="keyword">const</span> T*&amp; out, <span class="keywordtype">int</span> tshift=0)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;    DecorationKey key(auto_id&lt;T&gt;::key(), tshift);</div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;    <span class="keyword">const</span> DecorationDisposition* pDisposition = <a class="code" href="class_auto_packet.html#af40ffd3b386863a7874866aa5a6b0429">GetDisposition</a>(key);</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    <span class="keywordflow">if</span> (pDisposition) {</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;      <span class="keywordflow">switch</span> (pDisposition-&gt;m_decorations.size()) {</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;      <span class="keywordflow">case</span> 0:</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;        <span class="comment">// No shared pointer decorations available, we have to try something else</span></div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;        <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;      <span class="keywordflow">case</span> 1:</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;        <span class="comment">// Single decoration, we can do what the user is asking</span></div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;        out = <span class="keyword">static_cast&lt;</span><span class="keyword">const </span>T*<span class="keyword">&gt;</span>(pDisposition-&gt;m_decorations[0]-&gt;ptr());</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;      <span class="keywordflow">default</span>:</div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;        <a class="code" href="class_auto_packet.html#a876a04e499194ec2c8960ee9aa655b0b">ThrowMultiplyDecoratedException</a>(key);</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;        <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;      }</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;      <span class="comment">// Second-chance satisfaction with an immediate</span></div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;      <span class="keywordflow">if</span> (pDisposition-&gt;m_pImmediate) {</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;        out = (T*) pDisposition-&gt;m_pImmediate;</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;      }</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;    }</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    out = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;  }</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00252"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a39c55fd5996f492dfa2d2ce68448fb67">  252</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a39c55fd5996f492dfa2d2ce68448fb67">Get</a>(<span class="keyword">const</span> std::shared_ptr&lt;T&gt;*&amp; out, <span class="keywordtype">int</span> tshift=0)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;    static_assert(std::is_const&lt;T&gt;::value, <span class="stringliteral">&quot;Cannot get a non-const shared pointer from AutoPacket, declare as `const std::shared_ptr&lt;const T&gt;*`&quot;</span>);</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> std::remove_const&lt;T&gt;::type TActual;</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;    <span class="comment">// Decoration must be present and the shared pointer itself must also be present</span></div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;    DecorationKey key(auto_id&lt;TActual&gt;::key(), tshift);</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;    <span class="keyword">const</span> DecorationDisposition* pDisposition = <a class="code" href="class_auto_packet.html#af40ffd3b386863a7874866aa5a6b0429">GetDisposition</a>(key);</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;    <span class="keywordflow">if</span> (!pDisposition) {</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;      out = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    }</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <span class="keywordflow">switch</span> (pDisposition-&gt;m_decorations.size()) {</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    <span class="keywordflow">case</span> 0:</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;      <span class="comment">// Simple non-availability, trivial return</span></div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;      out = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    <span class="keywordflow">case</span> 1:</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;      <span class="comment">// Single decoration available, we can return here</span></div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;      out = &amp;pDisposition-&gt;m_decorations[0]-&gt;as_unsafe&lt;T&gt;();</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    <span class="keywordflow">default</span>:</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;      <a class="code" href="class_auto_packet.html#a876a04e499194ec2c8960ee9aa655b0b">ThrowMultiplyDecoratedException</a>(key);</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    }</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;  }</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00286"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7">  286</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7">Get</a>(std::shared_ptr&lt;const T&gt;&amp; out, <span class="keywordtype">int</span> tshift = 0)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    std::lock_guard&lt;std::mutex&gt; lk(m_lock);</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    <span class="keyword">auto</span> deco = m_decorations.find(DecorationKey(auto_id&lt;T&gt;::key(), tshift));</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    <span class="keywordflow">if</span>(deco != m_decorations.end() &amp;&amp; deco-&gt;second.m_state == DispositionState::Complete) {</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;      <span class="keyword">auto</span>&amp; disposition = deco-&gt;second;</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;      <span class="keywordflow">if</span>(disposition.m_decorations.size() == 1) {</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;        out = disposition.m_decorations[0]-&gt;as_unsafe&lt;T&gt;();</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;      }</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    }</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;    out.reset();</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;  }</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00304"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a5467f83887d63a602cb05d88c6893bc0">  304</a></span>&#160;  <span class="keyword">const</span> std::shared_ptr&lt;const T&gt;* <a class="code" href="class_auto_packet.html#a5467f83887d63a602cb05d88c6893bc0">GetShared</a>(<span class="keywordtype">int</span> tshift = 0)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="keyword">const</span> std::shared_ptr&lt;const T&gt;* retVal;</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    <a class="code" href="class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d">Get</a>(retVal, tshift);</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <span class="keywordflow">return</span> retVal;</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;  }</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00315"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a7b3fb6084dc850b1b9d077726104541f">  315</a></span>&#160;  std::unique_ptr&lt;const T*[]&gt; <a class="code" href="class_auto_packet.html#a7b3fb6084dc850b1b9d077726104541f">GetAll</a>(<span class="keywordtype">int</span> tshift = 0)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    std::lock_guard&lt;std::mutex&gt; lk(m_lock);</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    <span class="comment">// If decoration doesn&#39;t exist, return empty null-terminated buffer</span></div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;    <span class="keyword">auto</span> q = m_decorations.find(DecorationKey(auto_id&lt;T&gt;::key(), tshift));</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;    <span class="keywordflow">if</span> (q == m_decorations.end())</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;      <span class="keywordflow">return</span> std::unique_ptr&lt;<span class="keyword">const</span> T*[]&gt;{</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;        <span class="keyword">new</span> <span class="keyword">const</span> T*[1] {<span class="keyword">nullptr</span>}</div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;      };</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    <span class="comment">// Transfer in, return to caller:</span></div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span>&amp; decorations = q-&gt;second.m_decorations;</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    std::unique_ptr&lt;const T* []&gt; retVal{<span class="keyword">new</span> <span class="keyword">const</span> T*[decorations.size() + 1]};</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; decorations.size(); i++)</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;      retVal[i] = static_cast&lt;const T*&gt;(decorations[i]-&gt;ptr());</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    retVal[decorations.size()] = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    <span class="keywordflow">return</span> retVal;</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  }</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;  <span class="keyword">static</span> <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a876a04e499194ec2c8960ee9aa655b0b">ThrowMultiplyDecoratedException</a>(<span class="keyword">const</span> DecorationKey&amp; key);</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;  <span class="keywordtype">size_t</span> <a class="code" href="class_auto_packet.html#ad162cefce3bd9980fa2984c29f2a2517">GetDecorationTypeCount</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;  t_decorationMap <a class="code" href="class_auto_packet.html#aa1235227e171d7229b72d3901e6d1042">GetDecorations</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00221"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a749ec811977357ea7165b8e77be65932">  221</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a749ec811977357ea7165b8e77be65932">Has</a>(<span class="keywordtype">int</span> tshift=0)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    std::lock_guard&lt;std::mutex&gt; lk(m_lock);</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#a0758dc93f396121900cc5de17f46dcbf">HasUnsafe</a>(DecorationKey(auto_id&lt;T&gt;::key(), tshift));</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;  }</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00230"></a><span class="lineno"><a class="line" href="class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d">  230</a></span>&#160;  <span class="keyword">const</span> T&amp; <a class="code" href="class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d">Get</a>(<span class="keywordtype">int</span> tshift=0)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;    static_assert(!std::is_same&lt;T, AnySharedPointer&gt;::value, <span class="stringliteral">&quot;AnySharedPointer is not permitted to be directly decorated on an AutoPacket&quot;</span>);</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;    <span class="keyword">const</span> T* retVal;</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;    <span class="keywordflow">if</span> (!<a class="code" href="class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d">Get</a>(retVal, tshift))</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;      <a class="code" href="class_auto_packet.html#ad77d4e6ff2c9fe5fb19dcd43c91fbc57">ThrowNotDecoratedException</a>(DecorationKey(auto_id&lt;T&gt;::key(), tshift));</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    <span class="keywordflow">return</span> *retVal;</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;  }</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00247"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b">  247</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b">Get</a>(<span class="keyword">const</span> T*&amp; out, <span class="keywordtype">int</span> tshift=0)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    DecorationKey key(auto_id&lt;T&gt;::key(), tshift);</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    <span class="keyword">const</span> DecorationDisposition* pDisposition = <a class="code" href="class_auto_packet.html#af40ffd3b386863a7874866aa5a6b0429">GetDisposition</a>(key);</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    <span class="keywordflow">if</span> (pDisposition) {</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;      <span class="keywordflow">switch</span> (pDisposition-&gt;m_decorations.size()) {</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;      <span class="keywordflow">case</span> 0:</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;        <span class="comment">// No shared pointer decorations available, we have to try something else</span></div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;        <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;      <span class="keywordflow">case</span> 1:</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;        <span class="comment">// Single decoration, we can do what the user is asking</span></div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;        out = <span class="keyword">static_cast&lt;</span><span class="keyword">const </span>T*<span class="keyword">&gt;</span>(pDisposition-&gt;m_decorations[0]-&gt;ptr());</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;      <span class="keywordflow">default</span>:</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;        <a class="code" href="class_auto_packet.html#a876a04e499194ec2c8960ee9aa655b0b">ThrowMultiplyDecoratedException</a>(key);</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;        <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;      }</div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;      <span class="comment">// Second-chance satisfaction with an immediate</span></div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;      <span class="keywordflow">if</span> (pDisposition-&gt;m_pImmediate) {</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;        out = (T*) pDisposition-&gt;m_pImmediate;</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;      }</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    }</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    out = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  }</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00287"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a39c55fd5996f492dfa2d2ce68448fb67">  287</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a39c55fd5996f492dfa2d2ce68448fb67">Get</a>(<span class="keyword">const</span> std::shared_ptr&lt;T&gt;*&amp; out, <span class="keywordtype">int</span> tshift=0)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    static_assert(std::is_const&lt;T&gt;::value, <span class="stringliteral">&quot;Cannot get a non-const shared pointer from AutoPacket, declare as `const std::shared_ptr&lt;const T&gt;*`&quot;</span>);</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> std::remove_const&lt;T&gt;::type TActual;</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    <span class="comment">// Decoration must be present and the shared pointer itself must also be present</span></div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;    DecorationKey key(auto_id&lt;TActual&gt;::key(), tshift);</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;    <span class="keyword">const</span> DecorationDisposition* pDisposition = <a class="code" href="class_auto_packet.html#af40ffd3b386863a7874866aa5a6b0429">GetDisposition</a>(key);</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    <span class="keywordflow">if</span> (!pDisposition) {</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;      out = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;    }</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    <span class="keywordflow">switch</span> (pDisposition-&gt;m_decorations.size()) {</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    <span class="keywordflow">case</span> 0:</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;      <span class="comment">// Simple non-availability, trivial return</span></div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;      out = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;    <span class="keywordflow">case</span> 1:</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;      <span class="comment">// Single decoration available, we can return here</span></div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;      out = &amp;pDisposition-&gt;m_decorations[0]-&gt;as_unsafe&lt;T&gt;();</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <span class="keywordflow">default</span>:</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;      <a class="code" href="class_auto_packet.html#a876a04e499194ec2c8960ee9aa655b0b">ThrowMultiplyDecoratedException</a>(key);</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    }</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  }</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00321"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7">  321</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7">Get</a>(std::shared_ptr&lt;const T&gt;&amp; out, <span class="keywordtype">int</span> tshift = 0)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    std::lock_guard&lt;std::mutex&gt; lk(m_lock);</div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    <span class="keyword">auto</span> deco = m_decoration_map.find(DecorationKey(auto_id&lt;T&gt;::key(), tshift));</div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    <span class="keywordflow">if</span>(deco != m_decoration_map.end() &amp;&amp; deco-&gt;second.m_state == DispositionState::Complete) {</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;      <span class="keyword">auto</span>&amp; disposition = deco-&gt;second;</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;      <span class="keywordflow">if</span>(disposition.m_decorations.size() == 1) {</div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;        out = disposition.m_decorations[0]-&gt;as_unsafe&lt;T&gt;();</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;      }</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    }</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    out.reset();</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;  }</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;</div>
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00339"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a83083664deb879a30addd33b1e69230c">  339</a></span>&#160;  std::unique_ptr&lt;std::shared_ptr&lt;const T&gt;[]&gt; <a class="code" href="class_auto_packet.html#a83083664deb879a30addd33b1e69230c">GetAllShared</a>(<span class="keywordtype">int</span> tshift = 0)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;    std::lock_guard&lt;std::mutex&gt; lk(m_lock);</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> std::remove_const&lt;T&gt;::type TActual;</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;    <span class="comment">// If decoration doesn&#39;t exist, return empty null-terminated buffer</span></div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;    <span class="keyword">auto</span> q = m_decorations.find(DecorationKey(auto_id&lt;TActual&gt;::key(), tshift));</div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;    <span class="keywordflow">if</span> (q == m_decorations.end())</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;      <span class="keywordflow">return</span> std::unique_ptr&lt;std::shared_ptr&lt;const T&gt;[]&gt;{</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;        <span class="keyword">new</span> std::shared_ptr&lt;const T&gt;[1] {<span class="keyword">nullptr</span>}</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;      };</div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;</div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;    <span class="comment">// Transfer in, return to caller:</span></div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span>&amp; decorations = q-&gt;second.m_decorations;</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;    std::unique_ptr&lt;std::shared_ptr&lt;const T&gt;[]&gt; retVal{</div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;      <span class="keyword">new</span> std::shared_ptr&lt;const T&gt;[decorations.size() + 1]</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;    };</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; decorations.size(); i++)</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;      retVal[i] = decorations[i].as&lt;T&gt;().get();</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;    <span class="keywordflow">return</span> retVal;</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;  }</div>
+<div class="line"><a name="l00339"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a5467f83887d63a602cb05d88c6893bc0">  339</a></span>&#160;  <span class="keyword">const</span> std::shared_ptr&lt;const T&gt;* <a class="code" href="class_auto_packet.html#a5467f83887d63a602cb05d88c6893bc0">GetShared</a>(<span class="keywordtype">int</span> tshift = 0)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;    <span class="keyword">const</span> std::shared_ptr&lt;const T&gt;* retVal;</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    <a class="code" href="class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d">Get</a>(retVal, tshift);</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;    <span class="keywordflow">return</span> retVal;</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;  }</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;</div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00350"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a7b3fb6084dc850b1b9d077726104541f">  350</a></span>&#160;  std::unique_ptr&lt;const T*[]&gt; <a class="code" href="class_auto_packet.html#a7b3fb6084dc850b1b9d077726104541f">GetAll</a>(<span class="keywordtype">int</span> tshift = 0)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;    std::lock_guard&lt;std::mutex&gt; lk(m_lock);</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;</div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;    <span class="comment">// If decoration doesn&#39;t exist, return empty null-terminated buffer</span></div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;    <span class="keyword">auto</span> q = m_decoration_map.find(DecorationKey(auto_id&lt;T&gt;::key(), tshift));</div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;    <span class="keywordflow">if</span> (q == m_decoration_map.end())</div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;      <span class="keywordflow">return</span> std::unique_ptr&lt;<span class="keyword">const</span> T*[]&gt;{</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;        <span class="keyword">new</span> <span class="keyword">const</span> T*[1] {<span class="keyword">nullptr</span>}</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;      };</div>
 <div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a664edd114a9489c90020ed3467cc9642">ForwardAll</a>(std::shared_ptr&lt;AutoPacket&gt; recipient) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00379"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a2b9788e64105fee4f967e53871c4d93b">  379</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a2b9788e64105fee4f967e53871c4d93b">Unsatisfiable</a>(<span class="keywordtype">void</span>) {</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;    <a class="code" href="class_auto_packet.html#a29f7dcf03fe916c5566ca61afcc19782">MarkUnsatisfiable</a>(DecorationKey(auto_id&lt;T&gt;::key(), 0));</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  }</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00392"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a828d9a72ac228f36087723cca4f93e13">  392</a></span>&#160;  <span class="keyword">const</span> T&amp; <a class="code" href="class_auto_packet.html#a828d9a72ac228f36087723cca4f93e13">Decorate</a>(T t) {</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;    static_assert(!std::is_pointer&lt;T&gt;::value, <span class="stringliteral">&quot;Can&#39;t decorate using a pointer type.&quot;</span>);</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;    <span class="comment">// Create a copy of the input, put the copy in a shared pointer</span></div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;    <span class="keyword">auto</span> ptr = std::make_shared&lt;T&gt;(std::forward&lt;T&amp;&amp;&gt;(t));</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;    <a class="code" href="class_auto_packet.html#a58cab6182ed3149b78b023a303467d39">Decorate</a>(</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;      AnySharedPointer(ptr),</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;      DecorationKey(auto_id&lt;T&gt;::key(), 0)</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;    );</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;    <span class="keywordflow">return</span> *ptr;</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;  }</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00413"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a92d46044bc68b565aa3772c67d961dea">  413</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a92d46044bc68b565aa3772c67d961dea">Decorate</a>(std::shared_ptr&lt;T&gt; ptr) {</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;    DecorationKey key(auto_id&lt;T&gt;::key(), 0);</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;    </div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;    <span class="comment">// We don&#39;t want to see this overload used on a const T</span></div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;    static_assert(!std::is_const&lt;T&gt;::value, <span class="stringliteral">&quot;Cannot decorate a shared pointer to const T with this overload&quot;</span>);</div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;    <span class="comment">// Injunction to prevent existential loops:</span></div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;    static_assert(!std::is_same&lt;T, AutoPacket&gt;::value, <span class="stringliteral">&quot;Cannot decorate a packet with another packet&quot;</span>);</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;    </div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;    <span class="comment">// Either decorate, or prevent anyone from decorating</span></div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;    <span class="keywordflow">if</span> (ptr)</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;      <a class="code" href="class_auto_packet.html#a58cab6182ed3149b78b023a303467d39">Decorate</a>(AnySharedPointer(ptr), key);</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;      <a class="code" href="class_auto_packet.html#a29f7dcf03fe916c5566ca61afcc19782">MarkUnsatisfiable</a>(key);</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;  }</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00437"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a73e991ef12c4ca95d8c87c98442405f9">  437</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a73e991ef12c4ca95d8c87c98442405f9">Decorate</a>(std::shared_ptr&lt;const T&gt; ptr) {</div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;    <a class="code" href="class_auto_packet.html#a58cab6182ed3149b78b023a303467d39">Decorate</a>(std::const_pointer_cast&lt;T&gt;(ptr));</div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;  }</div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class </span>T, <span class="keyword">class</span>... Ts&gt;</div>
-<div class="line"><a name="l00453"></a><span class="lineno"><a class="line" href="class_auto_packet.html#ac016b40fd64cf3e9df03627de240448a">  453</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#ac016b40fd64cf3e9df03627de240448a">DecorateImmediate</a>(<span class="keyword">const</span> T&amp; immed, <span class="keyword">const</span> Ts&amp;... immeds) {</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;    <span class="comment">// None of the inputs may be shared pointers--if any of the inputs are shared pointers, they must be attached</span></div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;    <span class="comment">// to this packet via Decorate, or else dereferenced and used that way.</span></div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;    static_assert(</div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;      !is_any&lt;is_shared_ptr&lt;T&gt;::value, is_shared_ptr&lt;Ts&gt;::value...&gt;::value,</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;      <span class="stringliteral">&quot;DecorateImmediate must not be used to attach a shared pointer, use Decorate on such a decoration instead&quot;</span></div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;    );</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;    <span class="comment">// Perform standard decoration with a short initialization:</span></div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;    std::unique_lock&lt;std::mutex&gt; lk(m_lock);</div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;    DecorationDisposition* pTypeSubs[1 + <span class="keyword">sizeof</span>...(Ts)] = {</div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;      &amp;<a class="code" href="class_auto_packet.html#afff5b7454dc3bcfb943d74e8738efe72">DecorateImmediateUnsafe</a>(DecorationKey(auto_id&lt;T&gt;::key(), 0), &amp;immed),</div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;      &amp;<a class="code" href="class_auto_packet.html#afff5b7454dc3bcfb943d74e8738efe72">DecorateImmediateUnsafe</a>(DecorationKey(auto_id&lt;Ts&gt;::key(), 0), &amp;immeds)...</div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;    };</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;    <span class="comment">// Pulse satisfaction:</span></div>
-<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;    MakeAtExit([<span class="keyword">this</span>, &amp;pTypeSubs] {</div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;      <span class="comment">// Mark entries as unsatisfiable:</span></div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;      <span class="comment">// IMPORTANT: isCheckedOut = true prevents subsequent decorations of this type</span></div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;      <span class="keywordflow">for</span>(DecorationDisposition*  pEntry : pTypeSubs) {</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;        pEntry-&gt;m_pImmediate = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;        pEntry-&gt;m_state = DispositionState::Complete;</div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;      }</div>
-<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;</div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;      <span class="comment">// Now trigger a rescan to hit any deferred, unsatisfiable entries:</span></div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">const</span> std::type_info* ti : {&amp;auto_id&lt;T&gt;::key(), &amp;auto_id&lt;Ts&gt;::key()...})</div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;        <a class="code" href="class_auto_packet.html#a29f7dcf03fe916c5566ca61afcc19782">MarkUnsatisfiable</a>(DecorationKey(*ti, 0));</div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;    }),</div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;    <a class="code" href="class_auto_packet.html#a17e257b9636aff04f23d82d11abfb2a6">PulseSatisfactionUnsafe</a>(std::move(lk), pTypeSubs, 1 + <span class="keyword">sizeof</span>...(Ts));</div>
-<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;  }</div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;</div>
-<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;  <span class="keyword">const</span> SatCounter* <a class="code" href="class_auto_packet.html#a125a001b0cfb8f5bfca5cac6b291e2a9">AddRecipient</a>(<span class="keyword">const</span> AutoFilterDescriptor&amp; descriptor);</div>
-<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;</div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#aa302c91a39594f5ea0f58094ce4fea3a">RemoveRecipient</a>(<span class="keyword">const</span> SatCounter&amp; recipient);</div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;</div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> Fx&gt;</div>
-<div class="line"><a name="l00502"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a3fa96738dac77521d123698ad3f80a35">  502</a></span>&#160;  <span class="keyword">const</span> SatCounter* <a class="code" href="class_auto_packet.html#a3fa96738dac77521d123698ad3f80a35">operator+=</a>(Fx&amp;&amp; fx) {</div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#a125a001b0cfb8f5bfca5cac6b291e2a9">AddRecipient</a>(AutoFilterDescriptor(std::forward&lt;Fx&amp;&amp;&gt;(fx)));</div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;  }</div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;</div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> Fx&gt;</div>
-<div class="line"><a name="l00510"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a30a84b4131245539806ff5a7738f04f3">  510</a></span>&#160;  <span class="keyword">const</span> <a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; <a class="code" href="class_auto_packet.html#a30a84b4131245539806ff5a7738f04f3">operator+=</a>(Fx&amp;&amp; fx)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;    static_assert(</div>
-<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;      !Decompose&lt;decltype(&amp;Fx::operator())&gt;::<span class="keyword">template</span> any&lt;arg_is_out&gt;::value,</div>
-<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;      <span class="stringliteral">&quot;Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types&quot;</span></div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;      );</div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;    *<span class="keyword">const_cast&lt;</span><a class="code" href="class_auto_packet.html">AutoPacket</a>*<span class="keyword">&gt;</span>(<span class="keyword">this</span>) += std::forward&lt;Fx&amp;&amp;&gt;(fx);</div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;  }</div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;</div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00524"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a1e8152052798e49283c8297886c62ffe">  524</a></span>&#160;  <span class="keyword">inline</span> <span class="keyword">const</span> SatCounter&amp; <a class="code" href="class_auto_packet.html#a1e8152052798e49283c8297886c62ffe">GetSatisfaction</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#a1e8152052798e49283c8297886c62ffe">GetSatisfaction</a>(auto_id&lt;T&gt;::key()); }</div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;</div>
-<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;  std::shared_ptr&lt;AutoPacket&gt; <a class="code" href="class_auto_packet.html#a99e7dd1ee400c313c05d56d7642a0c87">Successor</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    <span class="comment">// Transfer in, return to caller:</span></div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span>&amp; decorations = q-&gt;second.m_decorations;</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;    std::unique_ptr&lt;const T* []&gt; retVal{<span class="keyword">new</span> <span class="keyword">const</span> T*[decorations.size() + 1]};</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; decorations.size(); i++)</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;      retVal[i] = static_cast&lt;const T*&gt;(decorations[i]-&gt;ptr());</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;    retVal[decorations.size()] = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    <span class="keywordflow">return</span> retVal;</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  }</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00374"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a83083664deb879a30addd33b1e69230c">  374</a></span>&#160;  std::unique_ptr&lt;std::shared_ptr&lt;const T&gt;[]&gt; <a class="code" href="class_auto_packet.html#a83083664deb879a30addd33b1e69230c">GetAllShared</a>(<span class="keywordtype">int</span> tshift = 0)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    std::lock_guard&lt;std::mutex&gt; lk(m_lock);</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> std::remove_const&lt;T&gt;::type TActual;</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;    <span class="comment">// If decoration doesn&#39;t exist, return empty null-terminated buffer</span></div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;    <span class="keyword">auto</span> q = m_decoration_map.find(DecorationKey(auto_id&lt;TActual&gt;::key(), tshift));</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;    <span class="keywordflow">if</span> (q == m_decoration_map.end())</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;      <span class="keywordflow">return</span> std::unique_ptr&lt;std::shared_ptr&lt;const T&gt;[]&gt;{</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;        <span class="keyword">new</span> std::shared_ptr&lt;const T&gt;[1] {<span class="keyword">nullptr</span>}</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;      };</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;    <span class="comment">// Transfer in, return to caller:</span></div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span>&amp; decorations = q-&gt;second.m_decorations;</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    std::unique_ptr&lt;std::shared_ptr&lt;const T&gt;[]&gt; retVal{</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;      <span class="keyword">new</span> std::shared_ptr&lt;const T&gt;[decorations.size() + 1]</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    };</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; decorations.size(); i++)</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;      retVal[i] = decorations[i].as&lt;T&gt;().get();</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;    <span class="keywordflow">return</span> retVal;</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;  }</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a04a92e6f29f23e8f301266dbb4461bd1">ForwardAll</a>(<span class="keyword">const</span> std::shared_ptr&lt;AutoPacket&gt;&amp; recipient) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#aada270350032ac870594ac2fdf6fe372">DEPRECATED</a>(Unsatisfiable(<span class="keywordtype">void</span>), <span class="stringliteral">&quot;Unsatisfiable is deprecated; use MarkUnsatisfiable instead.&quot;</span>);</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00424"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a48c97deb0563443453c6c0407a13a525">  424</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a48c97deb0563443453c6c0407a13a525">MarkUnsatisfiable</a>(<span class="keywordtype">void</span>) {</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    <a class="code" href="class_auto_packet.html#a48c97deb0563443453c6c0407a13a525">MarkUnsatisfiable</a>(DecorationKey(auto_id&lt;T&gt;::key(), 0));</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;  }</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;</div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00438"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a3964c80db7d3f4a22584a7e3fa82e126">  438</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#a3964c80db7d3f4a22584a7e3fa82e126">Decorate</a>(<span class="keyword">const</span> std::shared_ptr&lt;T&gt;&amp; ptr) {</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;    DecorationKey key(auto_id&lt;T&gt;::key(), 0);</div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    </div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;    <span class="comment">// We don&#39;t want to see this overload used on a const T</span></div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;    static_assert(!std::is_const&lt;T&gt;::value, <span class="stringliteral">&quot;Cannot decorate a shared pointer to const T with this overload&quot;</span>);</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;    <span class="comment">// Injunction to prevent existential loops:</span></div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;    static_assert(!std::is_same&lt;T, AutoPacket&gt;::value, <span class="stringliteral">&quot;Cannot decorate a packet with another packet&quot;</span>);</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;    </div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;    <span class="comment">// Either decorate, or prevent anyone from decorating</span></div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;    <span class="keywordflow">if</span> (ptr)</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;      <a class="code" href="class_auto_packet.html#a58cab6182ed3149b78b023a303467d39">Decorate</a>(AnySharedPointer(ptr), key);</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;      <a class="code" href="class_auto_packet.html#a48c97deb0563443453c6c0407a13a525">MarkUnsatisfiable</a>(key);</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;  }</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00462"></a><span class="lineno"><a class="line" href="class_auto_packet.html#ab2eb82a4b2b0904f63d6d2a56639668c">  462</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#ab2eb82a4b2b0904f63d6d2a56639668c">Decorate</a>(<span class="keyword">const</span> std::shared_ptr&lt;const T&gt;&amp; ptr) {</div>
+<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;    <a class="code" href="class_auto_packet.html#a58cab6182ed3149b78b023a303467d39">Decorate</a>(std::const_pointer_cast&lt;T&gt;(ptr));</div>
+<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;  }</div>
+<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;</div>
+<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;  <span class="keyword">typename</span> std::enable_if&lt;</div>
+<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;    !autowiring::is_shared_ptr&lt;T&gt;::value,</div>
+<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;    <span class="keyword">const</span> T&amp;</div>
+<div class="line"><a name="l00478"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a226d8fca104604bf290251b30783d030">  478</a></span>&#160;  &gt;::type <a class="code" href="class_auto_packet.html#a226d8fca104604bf290251b30783d030">Decorate</a>(T&amp;&amp; t) {</div>
+<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;    static_assert(!std::is_pointer&lt;T&gt;::value, <span class="stringliteral">&quot;Can&#39;t decorate using a pointer type.&quot;</span>);</div>
+<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> std::decay&lt;T&gt;::type TActual;</div>
+<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;</div>
+<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;    <span class="comment">// Create a copy of the input, put the copy in a shared pointer</span></div>
+<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;    <span class="keyword">auto</span> ptr = std::make_shared&lt;TActual&gt;(std::forward&lt;T&amp;&amp;&gt;(t));</div>
+<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;    <a class="code" href="class_auto_packet.html#a58cab6182ed3149b78b023a303467d39">Decorate</a>(</div>
+<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;      AnySharedPointer(ptr),</div>
+<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;      DecorationKey(auto_id&lt;TActual&gt;::key(), 0)</div>
+<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;    );</div>
+<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;    <span class="keywordflow">return</span> *ptr;</div>
+<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;  }</div>
+<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;</div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class </span>T, <span class="keyword">typename</span>... Args&gt;</div>
+<div class="line"><a name="l00500"></a><span class="lineno"><a class="line" href="class_auto_packet.html#af7d43caac6380f61c837c4baa2756d9c">  500</a></span>&#160;  <span class="keyword">const</span> T&amp; <a class="code" href="class_auto_packet.html#af7d43caac6380f61c837c4baa2756d9c">Emplace</a>(Args&amp;&amp;... args) {</div>
+<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    static_assert(!std::is_pointer&lt;T&gt;::value, <span class="stringliteral">&quot;Can&#39;t decorate using a pointer type.&quot;</span>);</div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;    <span class="comment">// Create a copy of the input, put the copy in a shared pointer</span></div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;    <span class="keyword">auto</span> ptr = std::make_shared&lt;T&gt;(std::forward&lt;Args&amp;&amp;&gt;(args)...);</div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;    <a class="code" href="class_auto_packet.html#a58cab6182ed3149b78b023a303467d39">Decorate</a>(</div>
+<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;      AnySharedPointer(ptr),</div>
+<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;      DecorationKey(auto_id&lt;T&gt;::key(), 0)</div>
+<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;    );</div>
+<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;    <span class="keywordflow">return</span> *ptr;</div>
+<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;  }</div>
+<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;</div>
+<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class </span>T, <span class="keyword">class</span>... Ts&gt;</div>
+<div class="line"><a name="l00523"></a><span class="lineno"><a class="line" href="class_auto_packet.html#ac016b40fd64cf3e9df03627de240448a">  523</a></span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#ac016b40fd64cf3e9df03627de240448a">DecorateImmediate</a>(<span class="keyword">const</span> T&amp; immed, <span class="keyword">const</span> Ts&amp;... immeds) {</div>
+<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;    <span class="comment">// None of the inputs may be shared pointers--if any of the inputs are shared pointers, they must be attached</span></div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;    <span class="comment">// to this packet via Decorate, or else dereferenced and used that way.</span></div>
+<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;    static_assert(</div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;      !is_any&lt;is_shared_ptr&lt;T&gt;::value, is_shared_ptr&lt;Ts&gt;::value...&gt;::value,</div>
+<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;      <span class="stringliteral">&quot;DecorateImmediate must not be used to attach a shared pointer, use Decorate on such a decoration instead&quot;</span></div>
+<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;    );</div>
 <div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;</div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><a name="l00533"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a76af6d953ba5968fffd20cb736ad0cbc">  533</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a76af6d953ba5968fffd20cb736ad0cbc">HasSubscribers</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#a76af6d953ba5968fffd20cb736ad0cbc">HasSubscribers</a>(DecorationKey(auto_id&lt;T&gt;::key(), 0));</div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;  }</div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;</div>
-<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;  <span class="keyword">struct </span>SignalStub {</div>
-<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;    SignalStub(<span class="keyword">const</span> <a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; packet, std::condition_variable&amp; cv) :</div>
-<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;      packet(packet),</div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;      cv(&amp;cv)</div>
-<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;    {}</div>
-<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;</div>
-<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;    <span class="keyword">const</span> <a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; packet;</div>
-<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;    std::condition_variable* cv;</div>
-<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;    <span class="keywordtype">bool</span> is_satisfied = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;    <span class="keywordtype">bool</span> is_complete = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;  };</div>
-<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;</div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#ac24353583ddd518aad7973942e4b1baa">Wait</a>(std::condition_variable&amp; cv, <span class="keyword">const</span> AutoFilterArgument* inputs, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max());</div>
+<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;    <span class="comment">// Perform standard decoration with a short initialization:</span></div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;    std::unique_lock&lt;std::mutex&gt; lk(m_lock);</div>
+<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;    DecorationDisposition* pTypeSubs[1 + <span class="keyword">sizeof</span>...(Ts)] = {</div>
+<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;      &amp;<a class="code" href="class_auto_packet.html#afff5b7454dc3bcfb943d74e8738efe72">DecorateImmediateUnsafe</a>(DecorationKey(auto_id&lt;T&gt;::key(), 0), &amp;immed),</div>
+<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;      &amp;<a class="code" href="class_auto_packet.html#afff5b7454dc3bcfb943d74e8738efe72">DecorateImmediateUnsafe</a>(DecorationKey(auto_id&lt;Ts&gt;::key(), 0), &amp;immeds)...</div>
+<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;    };</div>
+<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;</div>
+<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;    <span class="comment">// Pulse satisfaction:</span></div>
+<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;    MakeAtExit([<span class="keyword">this</span>, &amp;pTypeSubs] {</div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;      <span class="comment">// Mark entries as unsatisfiable:</span></div>
+<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;      <span class="comment">// IMPORTANT: isCheckedOut = true prevents subsequent decorations of this type</span></div>
+<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;      <span class="keywordflow">for</span>(DecorationDisposition*  pEntry : pTypeSubs) {</div>
+<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;        pEntry-&gt;m_pImmediate = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;        pEntry-&gt;m_state = DispositionState::Complete;</div>
+<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;      }</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;</div>
+<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;      <span class="comment">// Now trigger a rescan to hit any deferred, unsatisfiable entries:</span></div>
+<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">const</span> std::type_info* ti : {&amp;auto_id&lt;T&gt;::key(), &amp;auto_id&lt;Ts&gt;::key()...})</div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;        <a class="code" href="class_auto_packet.html#a48c97deb0563443453c6c0407a13a525">MarkUnsatisfiable</a>(DecorationKey(*ti, 0));</div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;    }),</div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;    <a class="code" href="class_auto_packet.html#a17e257b9636aff04f23d82d11abfb2a6">PulseSatisfactionUnsafe</a>(std::move(lk), pTypeSubs, 1 + <span class="keyword">sizeof</span>...(Ts));</div>
+<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;  }</div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;</div>
+<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;  <span class="keyword">const</span> SatCounter* <a class="code" href="class_auto_packet.html#a125a001b0cfb8f5bfca5cac6b291e2a9">AddRecipient</a>(<span class="keyword">const</span> AutoFilterDescriptor&amp; descriptor);</div>
 <div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;</div>
+<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="class_auto_packet.html#aa302c91a39594f5ea0f58094ce4fea3a">RemoveRecipient</a>(<span class="keyword">const</span> SatCounter&amp; recipient);</div>
+<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;</div>
+<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> Fx&gt;</div>
+<div class="line"><a name="l00572"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a3fa96738dac77521d123698ad3f80a35">  572</a></span>&#160;  <span class="keyword">const</span> SatCounter* <a class="code" href="class_auto_packet.html#a3fa96738dac77521d123698ad3f80a35">operator+=</a>(Fx&amp;&amp; fx) {</div>
+<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#a125a001b0cfb8f5bfca5cac6b291e2a9">AddRecipient</a>(AutoFilterDescriptor(std::forward&lt;Fx&amp;&amp;&gt;(fx)));</div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;  }</div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;</div>
 <div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> Fx&gt;</div>
-<div class="line"><a name="l00580"></a><span class="lineno"><a class="line" href="class_auto_packet.html#adde180a2515100943e2b33e999b7f6d3">  580</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#adde180a2515100943e2b33e999b7f6d3">Wait</a>(std::condition_variable&amp; cv, Fx&amp;&amp; autoFilter, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max())</div>
-<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;  {</div>
-<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;    <span class="keyword">auto</span> stub = std::make_shared&lt;SignalStub&gt;(*<span class="keyword">this</span>, cv);</div>
-<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;</div>
-<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;    <span class="comment">// Add the filter that will ultimately be invoked</span></div>
-<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;    *<span class="keyword">this</span> += std::move(autoFilter);</div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#ac24353583ddd518aad7973942e4b1baa">Wait</a>(cv, Decompose&lt;decltype(&amp;Fx::operator())&gt;::<span class="keyword">template</span> Enumerate&lt;AutoFilterArgument, AutoFilterArgumentT&gt;::types, duration);</div>
+<div class="line"><a name="l00580"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a30a84b4131245539806ff5a7738f04f3">  580</a></span>&#160;  <span class="keyword">const</span> <a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; <a class="code" href="class_auto_packet.html#a30a84b4131245539806ff5a7738f04f3">operator+=</a>(Fx&amp;&amp; fx)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;    static_assert(</div>
+<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;      !Decompose&lt;decltype(&amp;Fx::operator())&gt;::<span class="keyword">template</span> any&lt;arg_is_out&gt;::value,</div>
+<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;      <span class="stringliteral">&quot;Cannot add an AutoFilter to a const AutoPacket if any of its arguments are output types&quot;</span></div>
+<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;    );</div>
+<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;    *<span class="keyword">const_cast&lt;</span><a class="code" href="class_auto_packet.html">AutoPacket</a>*<span class="keyword">&gt;</span>(<span class="keyword">this</span>) += std::forward&lt;Fx&amp;&amp;&gt;(fx);</div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;    <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
 <div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;  }</div>
 <div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;</div>
-<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span>... Decorations&gt;</div>
-<div class="line"><a name="l00593"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a5587ee9febad91417f6ee1f4c65d6282">  593</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a5587ee9febad91417f6ee1f4c65d6282">Wait</a>(std::condition_variable&amp; cv)</div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;  {</div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;    <span class="keyword">static</span> <span class="keyword">const</span> AutoFilterArgument inputs [] = {</div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;      <span class="keyword">static_cast&lt;</span><a class="code" href="classauto__arg.html">auto_arg&lt;Decorations&gt;</a>*<span class="keyword">&gt;</span>(<span class="keyword">nullptr</span>)...,</div>
-<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;      AutoFilterArgument()</div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    };</div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;</div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#ac24353583ddd518aad7973942e4b1baa">Wait</a>(cv, inputs, std::chrono::nanoseconds::max());</div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;  }</div>
-<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;</div>
-<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span>... Args&gt;</div>
-<div class="line"><a name="l00607"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a0b8aea3ddb3ab167ec745f5f7cb6dd3a">  607</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a0b8aea3ddb3ab167ec745f5f7cb6dd3a">Wait</a>(std::chrono::nanoseconds duration, std::condition_variable&amp; cv)</div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;  {</div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;    <span class="keyword">static</span> <span class="keyword">const</span> AutoFilterArgument inputs [] = {</div>
-<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;      AutoFilterArgumentT&lt;Args&gt;()...,</div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;      AutoFilterArgument()</div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;    };</div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;</div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#ac24353583ddd518aad7973942e4b1baa">Wait</a>(cv, inputs, duration);</div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;  }</div>
-<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;</div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;</div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;  std::shared_ptr&lt;CoreContext&gt; <a class="code" href="class_auto_packet.html#ab194d4255c47b1d85d9b8b27a14f3f07">GetContext</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;};</div>
+<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00594"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a1e8152052798e49283c8297886c62ffe">  594</a></span>&#160;  <span class="keyword">inline</span> <span class="keyword">const</span> SatCounter&amp; <a class="code" href="class_auto_packet.html#a1e8152052798e49283c8297886c62ffe">GetSatisfaction</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#a1e8152052798e49283c8297886c62ffe">GetSatisfaction</a>(auto_id&lt;T&gt;::key()); }</div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;</div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;  std::shared_ptr&lt;AutoPacket&gt; <a class="code" href="class_auto_packet.html#a99e7dd1ee400c313c05d56d7642a0c87">Successor</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;</div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00603"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a76af6d953ba5968fffd20cb736ad0cbc">  603</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a76af6d953ba5968fffd20cb736ad0cbc">HasSubscribers</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#a76af6d953ba5968fffd20cb736ad0cbc">HasSubscribers</a>(DecorationKey{auto_id&lt;T&gt;::key(), 0});</div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;  }</div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;</div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00609"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a14fe26e212e7ca42fa6731f9a168111a">  609</a></span>&#160;  <span class="keywordtype">size_t</span> <a class="code" href="class_auto_packet.html#a14fe26e212e7ca42fa6731f9a168111a">HasPublishers</a>(<span class="keywordtype">void</span>)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#a14fe26e212e7ca42fa6731f9a168111a">HasPublishers</a>(DecorationKey{auto_id&lt;T&gt;::key(), 0});</div>
+<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;  }</div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;</div>
+<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;  <span class="keyword">struct </span>SignalStub {</div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;    SignalStub(<span class="keyword">const</span> <a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; packet, std::condition_variable&amp; cv) :</div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;      packet(packet),</div>
+<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;      cv(&amp;cv)</div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;    {}</div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;</div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    <span class="keyword">const</span> <a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; packet;</div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;    std::condition_variable* cv;</div>
+<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;    <span class="keywordtype">bool</span> is_satisfied = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;    <span class="keywordtype">bool</span> is_complete = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;  };</div>
+<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;</div>
+<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#ac24353583ddd518aad7973942e4b1baa">Wait</a>(std::condition_variable&amp; cv, <span class="keyword">const</span> AutoFilterArgument* inputs, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max());</div>
+<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;</div>
+<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span> Fx&gt;</div>
+<div class="line"><a name="l00660"></a><span class="lineno"><a class="line" href="class_auto_packet.html#adde180a2515100943e2b33e999b7f6d3">  660</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#adde180a2515100943e2b33e999b7f6d3">Wait</a>(std::condition_variable&amp; cv, Fx&amp;&amp; autoFilter, std::chrono::nanoseconds duration = std::chrono::nanoseconds::max())</div>
+<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;  {</div>
+<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;    <span class="keyword">auto</span> stub = std::make_shared&lt;SignalStub&gt;(*<span class="keyword">this</span>, cv);</div>
+<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;</div>
+<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;    <span class="comment">// Add the filter that will ultimately be invoked</span></div>
+<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;    *<span class="keyword">this</span> += std::move(autoFilter);</div>
+<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#ac24353583ddd518aad7973942e4b1baa">Wait</a>(cv, Decompose&lt;decltype(&amp;Fx::operator())&gt;::<span class="keyword">template</span> Enumerate&lt;AutoFilterArgument, AutoFilterArgumentT&gt;::types, duration);</div>
+<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;  }</div>
+<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;</div>
+<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span>... Decorations&gt;</div>
+<div class="line"><a name="l00673"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a5587ee9febad91417f6ee1f4c65d6282">  673</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a5587ee9febad91417f6ee1f4c65d6282">Wait</a>(std::condition_variable&amp; cv)</div>
+<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;  {</div>
+<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;    <span class="keyword">static</span> <span class="keyword">const</span> AutoFilterArgument inputs [] = {</div>
+<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;      <span class="keyword">static_cast&lt;</span><a class="code" href="classauto__arg.html">auto_arg&lt;Decorations&gt;</a>*<span class="keyword">&gt;</span>(<span class="keyword">nullptr</span>)...,</div>
+<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;      AutoFilterArgument()</div>
+<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;    };</div>
+<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;</div>
+<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#ac24353583ddd518aad7973942e4b1baa">Wait</a>(cv, inputs, std::chrono::nanoseconds::max());</div>
+<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;  }</div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;</div>
+<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;  <span class="keyword">template</span>&lt;<span class="keyword">class</span>... Args&gt;</div>
+<div class="line"><a name="l00687"></a><span class="lineno"><a class="line" href="class_auto_packet.html#a0b8aea3ddb3ab167ec745f5f7cb6dd3a">  687</a></span>&#160;  <span class="keywordtype">bool</span> <a class="code" href="class_auto_packet.html#a0b8aea3ddb3ab167ec745f5f7cb6dd3a">Wait</a>(std::chrono::nanoseconds duration, std::condition_variable&amp; cv)</div>
+<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;  {</div>
+<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;    <span class="keyword">static</span> <span class="keyword">const</span> AutoFilterArgument inputs [] = {</div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;      AutoFilterArgumentT&lt;Args&gt;()...,</div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;      AutoFilterArgument()</div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;    };</div>
+<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;</div>
+<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="class_auto_packet.html#ac24353583ddd518aad7973942e4b1baa">Wait</a>(cv, inputs, duration);</div>
+<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;  }</div>
+<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;</div>
+<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;  std::shared_ptr&lt;CoreContext&gt; <a class="code" href="class_auto_packet.html#ab194d4255c47b1d85d9b8b27a14f3f07">GetContext</a>(<span class="keywordtype">void</span>) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;};</div>
+<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;</div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;<span class="keyword">template</span>&lt;&gt;</div>
+<div class="line"><a name="l00709"></a><span class="lineno"><a class="line" href="classauto__arg_3_01_auto_packet_01_6_01_4.html">  709</a></span>&#160;<span class="keyword">class </span><a class="code" href="classauto__arg.html">auto_arg</a>&lt;<a class="code" href="class_auto_packet.html">AutoPacket</a>&amp;&gt;</div>
+<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;{</div>
+<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;  <span class="keyword">typedef</span> <a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; type;</div>
+<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;  <span class="keyword">typedef</span> <a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; <a class="code" href="class_auto_packet.html">arg_type</a>;</div>
+<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;  <span class="keyword">typedef</span> <a class="code" href="class_auto_packet.html">AutoPacket</a> <a class="code" href="class_auto_packet.html">id_type</a>;</div>
+<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_input = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_output = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_shared = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">bool</span> is_multi = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;  <span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">int</span> tshift = 0;</div>
+<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;</div>
+<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;  <span class="keyword">static</span> <a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; arg(<a class="code" href="class_auto_packet.html">AutoPacket</a>&amp; packet) {</div>
+<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;    <span class="keywordflow">return</span> packet;</div>
+<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;  }</div>
+<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;};</div>
+<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;</div>
+<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;<span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
+<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;<span class="keywordtype">void</span> AutoPacket::Unsatisfiable(<span class="keywordtype">void</span>) {</div>
+<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;  <a class="code" href="class_auto_packet.html#a48c97deb0563443453c6c0407a13a525">MarkUnsatisfiable</a>(DecorationKey(auto_id&lt;T&gt;::key(), 0));</div>
+<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;}</div>
+<div class="ttc" id="class_auto_packet_html_af7d43caac6380f61c837c4baa2756d9c"><div class="ttname"><a href="class_auto_packet.html#af7d43caac6380f61c837c4baa2756d9c">AutoPacket::Emplace</a></div><div class="ttdeci">const T &amp; Emplace(Args &amp;&amp;...args)</div><div class="ttdoc">Decorates this packet with a particular type T, forwarding the arguments to the constructor of T...</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:500</div></div>
 <div class="ttc" id="class_auto_packet_html_ac24353583ddd518aad7973942e4b1baa"><div class="ttname"><a href="class_auto_packet.html#ac24353583ddd518aad7973942e4b1baa">AutoPacket::Wait</a></div><div class="ttdeci">bool Wait(std::condition_variable &amp;cv, const AutoFilterArgument *inputs, std::chrono::nanoseconds duration=std::chrono::nanoseconds::max())</div><div class="ttdoc">Blocks until the specified descriptor is satisfied </div></div>
 <div class="ttc" id="class_auto_packet_html_a721c9e5f19dcc05c8d408901615fcea5"><div class="ttname"><a href="class_auto_packet.html#a721c9e5f19dcc05c8d408901615fcea5">AutoPacket::DecorateNoPriors</a></div><div class="ttdeci">void DecorateNoPriors(const AnySharedPointer &amp;ptr, DecorationKey key)</div><div class="ttdoc">Performs a decoration operation but does not attach priors to successors. </div></div>
-<div class="ttc" id="class_auto_packet_html_a30a84b4131245539806ff5a7738f04f3"><div class="ttname"><a href="class_auto_packet.html#a30a84b4131245539806ff5a7738f04f3">AutoPacket::operator+=</a></div><div class="ttdeci">const AutoPacket &amp; operator+=(Fx &amp;&amp;fx) const </div><div class="ttdoc">Convenience overload, provided to allow the attachment of receive-only filters to a const AutoPacket ...</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:510</div></div>
+<div class="ttc" id="class_auto_packet_html_a30a84b4131245539806ff5a7738f04f3"><div class="ttname"><a href="class_auto_packet.html#a30a84b4131245539806ff5a7738f04f3">AutoPacket::operator+=</a></div><div class="ttdeci">const AutoPacket &amp; operator+=(Fx &amp;&amp;fx) const </div><div class="ttdoc">Convenience overload, provided to allow the attachment of receive-only filters to a const AutoPacket ...</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:580</div></div>
 <div class="ttc" id="class_auto_packet_html_a876a04e499194ec2c8960ee9aa655b0b"><div class="ttname"><a href="class_auto_packet.html#a876a04e499194ec2c8960ee9aa655b0b">AutoPacket::ThrowMultiplyDecoratedException</a></div><div class="ttdeci">static void ThrowMultiplyDecoratedException(const DecorationKey &amp;key)</div><div class="ttdoc">Throws a formatted runtime error corresponding to the case where a decoration was demanded and more t...</div></div>
-<div class="ttc" id="class_auto_packet_html_a92d46044bc68b565aa3772c67d961dea"><div class="ttname"><a href="class_auto_packet.html#a92d46044bc68b565aa3772c67d961dea">AutoPacket::Decorate</a></div><div class="ttdeci">void Decorate(std::shared_ptr&lt; T &gt; ptr)</div><div class="ttdoc">Decoration method specialized for shared pointer types </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:413</div></div>
-<div class="ttc" id="class_auto_packet_html_a39c55fd5996f492dfa2d2ce68448fb67"><div class="ttname"><a href="class_auto_packet.html#a39c55fd5996f492dfa2d2ce68448fb67">AutoPacket::Get</a></div><div class="ttdeci">bool Get(const std::shared_ptr&lt; T &gt; *&amp;out, int tshift=0) const </div><div class="ttdoc">Shared pointer specialization of const T*&, used to obtain the underlying shared pointer for some typ...</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:252</div></div>
-<div class="ttc" id="class_auto_packet_html_a73e991ef12c4ca95d8c87c98442405f9"><div class="ttname"><a href="class_auto_packet.html#a73e991ef12c4ca95d8c87c98442405f9">AutoPacket::Decorate</a></div><div class="ttdeci">void Decorate(std::shared_ptr&lt; const T &gt; ptr)</div><div class="ttdoc">Decoration method specialized for const shared pointer types </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:437</div></div>
-<div class="ttc" id="class_auto_packet_html_a828d9a72ac228f36087723cca4f93e13"><div class="ttname"><a href="class_auto_packet.html#a828d9a72ac228f36087723cca4f93e13">AutoPacket::Decorate</a></div><div class="ttdeci">const T &amp; Decorate(T t)</div><div class="ttdoc">Decorates this packet with a particular type </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:392</div></div>
+<div class="ttc" id="auto__arg_8h_html"><div class="ttname"><a href="auto__arg_8h.html">auto_arg.h</a></div></div>
+<div class="ttc" id="class_auto_packet_html_a39c55fd5996f492dfa2d2ce68448fb67"><div class="ttname"><a href="class_auto_packet.html#a39c55fd5996f492dfa2d2ce68448fb67">AutoPacket::Get</a></div><div class="ttdeci">bool Get(const std::shared_ptr&lt; T &gt; *&amp;out, int tshift=0) const </div><div class="ttdoc">Shared pointer specialization of const T*&, used to obtain the underlying shared pointer for some typ...</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:287</div></div>
+<div class="ttc" id="class_auto_packet_html_a3964c80db7d3f4a22584a7e3fa82e126"><div class="ttname"><a href="class_auto_packet.html#a3964c80db7d3f4a22584a7e3fa82e126">AutoPacket::Decorate</a></div><div class="ttdeci">void Decorate(const std::shared_ptr&lt; T &gt; &amp;ptr)</div><div class="ttdoc">Decoration method specialized for shared pointer types </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:438</div></div>
 <div class="ttc" id="class_auto_packet_html_afff5b7454dc3bcfb943d74e8738efe72"><div class="ttname"><a href="class_auto_packet.html#afff5b7454dc3bcfb943d74e8738efe72">AutoPacket::DecorateImmediateUnsafe</a></div><div class="ttdeci">DecorationDisposition &amp; DecorateImmediateUnsafe(const DecorationKey &amp;key, const void *pvImmed)</div><div class="ttdoc">Checks out the decoration named by the specified type information and attaches the specified immediat...</div></div>
-<div class="ttc" id="class_auto_packet_html_a2b9788e64105fee4f967e53871c4d93b"><div class="ttname"><a href="class_auto_packet.html#a2b9788e64105fee4f967e53871c4d93b">AutoPacket::Unsatisfiable</a></div><div class="ttdeci">void Unsatisfiable(void)</div><div class="ttdoc">Marks the named decoration as unsatisfiable </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:379</div></div>
-<div class="ttc" id="class_auto_packet_html_a664edd114a9489c90020ed3467cc9642"><div class="ttname"><a href="class_auto_packet.html#a664edd114a9489c90020ed3467cc9642">AutoPacket::ForwardAll</a></div><div class="ttdeci">void ForwardAll(std::shared_ptr&lt; AutoPacket &gt; recipient) const </div><div class="ttdoc">Shares all broadcast data from this packet with the recipient packet</div></div>
+<div class="ttc" id="class_auto_packet_html_a48c97deb0563443453c6c0407a13a525"><div class="ttname"><a href="class_auto_packet.html#a48c97deb0563443453c6c0407a13a525">AutoPacket::MarkUnsatisfiable</a></div><div class="ttdeci">void MarkUnsatisfiable(void)</div><div class="ttdoc">Marks the named decoration as unsatisfiable </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:424</div></div>
 <div class="ttc" id="demangle_8h_html"><div class="ttname"><a href="demangle_8h.html">demangle.h</a></div></div>
-<div class="ttc" id="class_auto_packet_html"><div class="ttname"><a href="class_auto_packet.html">AutoPacket</a></div><div class="ttdoc">A decorator-style processing packet </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:39</div></div>
-<div class="ttc" id="class_auto_packet_html_a1e8152052798e49283c8297886c62ffe"><div class="ttname"><a href="class_auto_packet.html#a1e8152052798e49283c8297886c62ffe">AutoPacket::GetSatisfaction</a></div><div class="ttdeci">const SatCounter &amp; GetSatisfaction(void) const </div><div class="ttdoc">A reference to the satisfaction counter for the specified type</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:524</div></div>
+<div class="ttc" id="class_auto_packet_html"><div class="ttname"><a href="class_auto_packet.html">AutoPacket</a></div><div class="ttdoc">A decorator-style processing packet </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:66</div></div>
+<div class="ttc" id="class_auto_packet_html_a1e8152052798e49283c8297886c62ffe"><div class="ttname"><a href="class_auto_packet.html#a1e8152052798e49283c8297886c62ffe">AutoPacket::GetSatisfaction</a></div><div class="ttdeci">const SatCounter &amp; GetSatisfaction(void) const </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:594</div></div>
 <div class="ttc" id="class_auto_packet_html_a684e3e0747beb2f1d052e6e46f9da931"><div class="ttname"><a href="class_auto_packet.html#a684e3e0747beb2f1d052e6e46f9da931">AutoPacket::AddSatCounterUnsafe</a></div><div class="ttdeci">void AddSatCounterUnsafe(SatCounter &amp;satCounter)</div><div class="ttdoc">Adds all AutoFilter argument information for a recipient </div></div>
-<div class="ttc" id="class_auto_packet_html_a5467f83887d63a602cb05d88c6893bc0"><div class="ttname"><a href="class_auto_packet.html#a5467f83887d63a602cb05d88c6893bc0">AutoPacket::GetShared</a></div><div class="ttdeci">const std::shared_ptr&lt; const T &gt; * GetShared(int tshift=0) const </div><div class="ttdoc">The shared pointer decoration for the specified type and time shift, or nullptr if no such decoration...</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:304</div></div>
-<div class="ttc" id="class_auto_packet_html_a76af6d953ba5968fffd20cb736ad0cbc"><div class="ttname"><a href="class_auto_packet.html#a76af6d953ba5968fffd20cb736ad0cbc">AutoPacket::HasSubscribers</a></div><div class="ttdeci">bool HasSubscribers(void) const </div><div class="ttdoc">True if the indicated type has been requested for use by some consumer</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:533</div></div>
+<div class="ttc" id="class_auto_packet_html_a5467f83887d63a602cb05d88c6893bc0"><div class="ttname"><a href="class_auto_packet.html#a5467f83887d63a602cb05d88c6893bc0">AutoPacket::GetShared</a></div><div class="ttdeci">const std::shared_ptr&lt; const T &gt; * GetShared(int tshift=0) const </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:339</div></div>
+<div class="ttc" id="class_auto_packet_html_a76af6d953ba5968fffd20cb736ad0cbc"><div class="ttname"><a href="class_auto_packet.html#a76af6d953ba5968fffd20cb736ad0cbc">AutoPacket::HasSubscribers</a></div><div class="ttdeci">bool HasSubscribers(void) const </div><div class="ttdoc">True if the indicated type has been requested for use by some consumer</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:603</div></div>
 <div class="ttc" id="class_auto_packet_html_ad77d4e6ff2c9fe5fb19dcd43c91fbc57"><div class="ttname"><a href="class_auto_packet.html#ad77d4e6ff2c9fe5fb19dcd43c91fbc57">AutoPacket::ThrowNotDecoratedException</a></div><div class="ttdeci">static void ThrowNotDecoratedException(const DecorationKey &amp;key)</div><div class="ttdoc">Throws a formatted runtime error corresponding to the case where an absent decoration was demanded ...</div></div>
+<div class="ttc" id="class_auto_packet_html_ab2eb82a4b2b0904f63d6d2a56639668c"><div class="ttname"><a href="class_auto_packet.html#ab2eb82a4b2b0904f63d6d2a56639668c">AutoPacket::Decorate</a></div><div class="ttdeci">void Decorate(const std::shared_ptr&lt; const T &gt; &amp;ptr)</div><div class="ttdoc">Decoration method specialized for const shared pointer types </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:462</div></div>
 <div class="ttc" id="class_auto_packet_html_af40ffd3b386863a7874866aa5a6b0429"><div class="ttname"><a href="class_auto_packet.html#af40ffd3b386863a7874866aa5a6b0429">AutoPacket::GetDisposition</a></div><div class="ttdeci">const DecorationDisposition * GetDisposition(const DecorationKey &amp;ti) const </div><div class="ttdoc">Retrieves the decoration disposition corresponding to some type </div></div>
-<div class="ttc" id="class_auto_packet_html_aa1235227e171d7229b72d3901e6d1042"><div class="ttname"><a href="class_auto_packet.html#aa1235227e171d7229b72d3901e6d1042">AutoPacket::GetDecorations</a></div><div class="ttdeci">t_decorationMap GetDecorations(void) const </div><div class="ttdoc">A copy of the decoration dispositions collection </div></div>
+<div class="ttc" id="class_auto_packet_html_aa1235227e171d7229b72d3901e6d1042"><div class="ttname"><a href="class_auto_packet.html#aa1235227e171d7229b72d3901e6d1042">AutoPacket::GetDecorations</a></div><div class="ttdeci">t_decorationMap GetDecorations(void) const </div></div>
 <div class="ttc" id="class_auto_packet_html_af7d82f8536c4a1b847a5ba0efb9b99d6"><div class="ttname"><a href="class_auto_packet.html#af7d82f8536c4a1b847a5ba0efb9b99d6">AutoPacket::SuccessorUnsafe</a></div><div class="ttdeci">std::shared_ptr&lt; AutoPacket &gt; SuccessorUnsafe(void)</div><div class="ttdoc">The portion of Successor that must run under a lock </div></div>
 <div class="ttc" id="at__exit_8h_html"><div class="ttname"><a href="at__exit_8h.html">at_exit.h</a></div></div>
 <div class="ttc" id="class_auto_packet_html_ab194d4255c47b1d85d9b8b27a14f3f07"><div class="ttname"><a href="class_auto_packet.html#ab194d4255c47b1d85d9b8b27a14f3f07">AutoPacket::GetContext</a></div><div class="ttdeci">std::shared_ptr&lt; CoreContext &gt; GetContext(void) const </div><div class="ttdoc">Get the context of this packet (The context of the AutoPacketFactory that created this context) ...</div></div>
-<div class="ttc" id="class_auto_packet_html_a434994156ef4debce252bb124ba2d5e7"><div class="ttname"><a href="class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7">AutoPacket::Get</a></div><div class="ttdeci">bool Get(std::shared_ptr&lt; const T &gt; &amp;out, int tshift=0) const </div><div class="ttdoc">Shared pointer specialization, used to obtain the underlying shared pointer for some type T ...</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:286</div></div>
-<div class="ttc" id="class_auto_packet_html_a43cde58980c81a1c47cd683dd820ff2b"><div class="ttname"><a href="class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b">AutoPacket::Get</a></div><div class="ttdeci">bool Get(const T *&amp;out, int tshift=0) const </div><div class="ttdoc">Determines whether this pipeline packet contains an entry of the specified type </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:213</div></div>
+<div class="ttc" id="class_auto_packet_html_a434994156ef4debce252bb124ba2d5e7"><div class="ttname"><a href="class_auto_packet.html#a434994156ef4debce252bb124ba2d5e7">AutoPacket::Get</a></div><div class="ttdeci">bool Get(std::shared_ptr&lt; const T &gt; &amp;out, int tshift=0) const </div><div class="ttdoc">Shared pointer specialization, used to obtain the underlying shared pointer for some type T ...</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:321</div></div>
+<div class="ttc" id="class_auto_packet_html_a43cde58980c81a1c47cd683dd820ff2b"><div class="ttname"><a href="class_auto_packet.html#a43cde58980c81a1c47cd683dd820ff2b">AutoPacket::Get</a></div><div class="ttdeci">bool Get(const T *&amp;out, int tshift=0) const </div><div class="ttdoc">Determines whether this pipeline packet contains an entry of the specified type </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:247</div></div>
 <div class="ttc" id="class_auto_packet_html_a5500ce562229a4b8944a0f7a647d0ab6"><div class="ttname"><a href="class_auto_packet.html#a5500ce562229a4b8944a0f7a647d0ab6">AutoPacket::UpdateSatisfactionUnsafe</a></div><div class="ttdeci">void UpdateSatisfactionUnsafe(std::unique_lock&lt; std::mutex &gt; lk, const DecorationDisposition &amp;disposition)</div><div class="ttdoc">Updates subscriber statuses given that the specified type information has been satisfied ...</div></div>
 <div class="ttc" id="class_auto_packet_html_a64bf152b18a9e20c701661706fcce9c9"><div class="ttname"><a href="class_auto_packet.html#a64bf152b18a9e20c701661706fcce9c9">AutoPacket::MarkSuccessorsUnsatisfiable</a></div><div class="ttdeci">void MarkSuccessorsUnsatisfiable(DecorationKey type)</div><div class="ttdoc">Marks timeshifted decorations on successor packets as unsatisfiable </div></div>
-<div class="ttc" id="class_auto_packet_html_a0b8aea3ddb3ab167ec745f5f7cb6dd3a"><div class="ttname"><a href="class_auto_packet.html#a0b8aea3ddb3ab167ec745f5f7cb6dd3a">AutoPacket::Wait</a></div><div class="ttdeci">bool Wait(std::chrono::nanoseconds duration, std::condition_variable &amp;cv)</div><div class="ttdoc">Timed version of Wait </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:607</div></div>
-<div class="ttc" id="class_auto_packet_html_a29f7dcf03fe916c5566ca61afcc19782"><div class="ttname"><a href="class_auto_packet.html#a29f7dcf03fe916c5566ca61afcc19782">AutoPacket::MarkUnsatisfiable</a></div><div class="ttdeci">void MarkUnsatisfiable(const DecorationKey &amp;key)</div><div class="ttdoc">Marks the specified entry as being unsatisfiable </div></div>
+<div class="ttc" id="class_auto_packet_html_a0b8aea3ddb3ab167ec745f5f7cb6dd3a"><div class="ttname"><a href="class_auto_packet.html#a0b8aea3ddb3ab167ec745f5f7cb6dd3a">AutoPacket::Wait</a></div><div class="ttdeci">bool Wait(std::chrono::nanoseconds duration, std::condition_variable &amp;cv)</div><div class="ttdoc">Timed version of Wait </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:687</div></div>
+<div class="ttc" id="class_auto_packet_html_aada270350032ac870594ac2fdf6fe372"><div class="ttname"><a href="class_auto_packet.html#aada270350032ac870594ac2fdf6fe372">AutoPacket::DEPRECATED</a></div><div class="ttdeci">void DEPRECATED(Unsatisfiable(void),&quot;Unsatisfiable is deprecated; use MarkUnsatisfiable instead.&quot;)</div><div class="ttdoc">Marks the named decoration as unsatisfiable </div></div>
 <div class="ttc" id="class_auto_packet_html_a17e257b9636aff04f23d82d11abfb2a6"><div class="ttname"><a href="class_auto_packet.html#a17e257b9636aff04f23d82d11abfb2a6">AutoPacket::PulseSatisfactionUnsafe</a></div><div class="ttdeci">void PulseSatisfactionUnsafe(std::unique_lock&lt; std::mutex &gt; lk, DecorationDisposition *pTypeSubs[], size_t nInfos)</div><div class="ttdoc">Performs a "satisfaction pulse", which will avoid notifying any deferred filters </div></div>
 <div class="ttc" id="class_auto_packet_factory_html"><div class="ttname"><a href="class_auto_packet_factory.html">AutoPacketFactory</a></div><div class="ttdoc">A configurable factory class for pipeline packets with a built-in object pool </div><div class="ttdef"><b>Definition:</b> AutoPacketFactory.h:22</div></div>
 <div class="ttc" id="class_core_context_html"><div class="ttname"><a href="class_core_context.html">CoreContext</a></div><div class="ttdoc">A top-level container class representing an autowiring domain, a minimum broadcast domain...</div><div class="ttdef"><b>Definition:</b> CoreContext.h:146</div></div>
-<div class="ttc" id="class_auto_packet_html_a3fa96738dac77521d123698ad3f80a35"><div class="ttname"><a href="class_auto_packet.html#a3fa96738dac77521d123698ad3f80a35">AutoPacket::operator+=</a></div><div class="ttdeci">const SatCounter * operator+=(Fx &amp;&amp;fx)</div><div class="ttdoc">Convenience overload, identical in behavior to AddRecipient </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:502</div></div>
-<div class="ttc" id="class_auto_packet_html_a749ec811977357ea7165b8e77be65932"><div class="ttname"><a href="class_auto_packet.html#a749ec811977357ea7165b8e77be65932">AutoPacket::Has</a></div><div class="ttdeci">bool Has(int tshift=0) const </div><div class="ttdoc">True if this packet posesses one or more instances of a decoration of the specified type ...</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:187</div></div>
-<div class="ttc" id="class_auto_packet_html_ac016b40fd64cf3e9df03627de240448a"><div class="ttname"><a href="class_auto_packet.html#ac016b40fd64cf3e9df03627de240448a">AutoPacket::DecorateImmediate</a></div><div class="ttdeci">void DecorateImmediate(const T &amp;immed, const Ts &amp;...immeds)</div><div class="ttdoc">Subscribers respond to the decoration arguments immediately or never for this packet. Optional argument resolution is forced for any subscriber requiring at least one argument of this method </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:453</div></div>
-<div class="ttc" id="class_auto_packet_html_a83083664deb879a30addd33b1e69230c"><div class="ttname"><a href="class_auto_packet.html#a83083664deb879a30addd33b1e69230c">AutoPacket::GetAllShared</a></div><div class="ttdeci">std::unique_ptr&lt; std::shared_ptr&lt; const T &gt;[]&gt; GetAllShared(int tshift=0) const </div><div class="ttdoc">Shared variant of GetAll </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:339</div></div>
+<div class="ttc" id="class_auto_packet_html_a3fa96738dac77521d123698ad3f80a35"><div class="ttname"><a href="class_auto_packet.html#a3fa96738dac77521d123698ad3f80a35">AutoPacket::operator+=</a></div><div class="ttdeci">const SatCounter * operator+=(Fx &amp;&amp;fx)</div><div class="ttdoc">Convenience overload, identical in behavior to AddRecipient </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:572</div></div>
+<div class="ttc" id="class_auto_packet_html_a749ec811977357ea7165b8e77be65932"><div class="ttname"><a href="class_auto_packet.html#a749ec811977357ea7165b8e77be65932">AutoPacket::Has</a></div><div class="ttdeci">bool Has(int tshift=0) const </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:221</div></div>
+<div class="ttc" id="class_auto_packet_html_ac016b40fd64cf3e9df03627de240448a"><div class="ttname"><a href="class_auto_packet.html#ac016b40fd64cf3e9df03627de240448a">AutoPacket::DecorateImmediate</a></div><div class="ttdeci">void DecorateImmediate(const T &amp;immed, const Ts &amp;...immeds)</div><div class="ttdoc">Subscribers respond to the decoration arguments immediately or never for this packet. Optional argument resolution is forced for any subscriber requiring at least one argument of this method </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:523</div></div>
+<div class="ttc" id="namespaceautowiring_html"><div class="ttname"><a href="namespaceautowiring.html">autowiring</a></div><div class="ttdef"><b>Definition:</b> AutoPacket.h:30</div></div>
+<div class="ttc" id="class_auto_packet_html_a83083664deb879a30addd33b1e69230c"><div class="ttname"><a href="class_auto_packet.html#a83083664deb879a30addd33b1e69230c">AutoPacket::GetAllShared</a></div><div class="ttdeci">std::unique_ptr&lt; std::shared_ptr&lt; const T &gt;[]&gt; GetAllShared(int tshift=0) const </div><div class="ttdoc">Shared variant of GetAll </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:374</div></div>
+<div class="ttc" id="class_auto_packet_html_a14fe26e212e7ca42fa6731f9a168111a"><div class="ttname"><a href="class_auto_packet.html#a14fe26e212e7ca42fa6731f9a168111a">AutoPacket::HasPublishers</a></div><div class="ttdeci">size_t HasPublishers(void) const </div><div class="ttdoc">Zero if there are no publishers, otherwise the number of publishers</div><div class="ttdef"><b>Definition:</b> AutoPacket.h:609</div></div>
 <div class="ttc" id="class_auto_packet_html_a0758dc93f396121900cc5de17f46dcbf"><div class="ttname"><a href="class_auto_packet.html#a0758dc93f396121900cc5de17f46dcbf">AutoPacket::HasUnsafe</a></div><div class="ttdeci">bool HasUnsafe(const DecorationKey &amp;key) const </div><div class="ttdoc">Unsynchronized runtime counterpart to Has</div></div>
-<div class="ttc" id="class_auto_packet_html_a7b3fb6084dc850b1b9d077726104541f"><div class="ttname"><a href="class_auto_packet.html#a7b3fb6084dc850b1b9d077726104541f">AutoPacket::GetAll</a></div><div class="ttdeci">std::unique_ptr&lt; const T *[]&gt; GetAll(int tshift=0) const </div><div class="ttdoc">Returns a null-terminated buffer containing all decorations </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:315</div></div>
+<div class="ttc" id="class_auto_packet_html_a226d8fca104604bf290251b30783d030"><div class="ttname"><a href="class_auto_packet.html#a226d8fca104604bf290251b30783d030">AutoPacket::Decorate</a></div><div class="ttdeci">std::enable_if&lt; !autowiring::is_shared_ptr&lt; T &gt;::value, const T &amp; &gt;::type Decorate(T &amp;&amp;t)</div><div class="ttdoc">Decorates this packet with a particular type </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:478</div></div>
+<div class="ttc" id="class_auto_packet_html_a7b3fb6084dc850b1b9d077726104541f"><div class="ttname"><a href="class_auto_packet.html#a7b3fb6084dc850b1b9d077726104541f">AutoPacket::GetAll</a></div><div class="ttdeci">std::unique_ptr&lt; const T *[]&gt; GetAll(int tshift=0) const </div><div class="ttdoc">Returns a null-terminated buffer containing all decorations </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:350</div></div>
 <div class="ttc" id="class_auto_packet_html_aa302c91a39594f5ea0f58094ce4fea3a"><div class="ttname"><a href="class_auto_packet.html#aa302c91a39594f5ea0f58094ce4fea3a">AutoPacket::RemoveRecipient</a></div><div class="ttdeci">void RemoveRecipient(const SatCounter &amp;recipient)</div><div class="ttdoc">Removes a previously added packet recipient </div></div>
-<div class="ttc" id="class_auto_packet_html_afc2ea2311961fd3e9f92c6b5dc40887d"><div class="ttname"><a href="class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d">AutoPacket::Get</a></div><div class="ttdeci">const T &amp; Get(int tshift=0) const </div><div class="ttdoc">Detects the desired type, or throws an exception if such a type cannot be found </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:196</div></div>
+<div class="ttc" id="class_auto_packet_html_afc2ea2311961fd3e9f92c6b5dc40887d"><div class="ttname"><a href="class_auto_packet.html#afc2ea2311961fd3e9f92c6b5dc40887d">AutoPacket::Get</a></div><div class="ttdeci">const T &amp; Get(int tshift=0) const </div><div class="ttdoc">Detects the desired type, or throws an exception if such a type cannot be found </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:230</div></div>
 <div class="ttc" id="class_auto_packet_html_a125a001b0cfb8f5bfca5cac6b291e2a9"><div class="ttname"><a href="class_auto_packet.html#a125a001b0cfb8f5bfca5cac6b291e2a9">AutoPacket::AddRecipient</a></div><div class="ttdeci">const SatCounter * AddRecipient(const AutoFilterDescriptor &amp;descriptor)</div><div class="ttdoc">Adds a recipient for data associated only with this issuance of the packet. </div></div>
 <div class="ttc" id="class_auto_packet_html_a99e7dd1ee400c313c05d56d7642a0c87"><div class="ttname"><a href="class_auto_packet.html#a99e7dd1ee400c313c05d56d7642a0c87">AutoPacket::Successor</a></div><div class="ttdeci">std::shared_ptr&lt; AutoPacket &gt; Successor(void)</div><div class="ttdoc">Returns the next packet that will be issued by the packet factory in this context relative to this co...</div></div>
 <div class="ttc" id="class_auto_packet_html_a0dbabcc26a87524dbd833390d6dff5f3"><div class="ttname"><a href="class_auto_packet.html#a0dbabcc26a87524dbd833390d6dff5f3">AutoPacket::UnsafeComplete</a></div><div class="ttdeci">void UnsafeComplete(const DecorationKey &amp;data)</div><div class="ttdoc">Invoked from a checkout when a checkout has completed </div></div>
-<div class="ttc" id="class_auto_packet_html_a5587ee9febad91417f6ee1f4c65d6282"><div class="ttname"><a href="class_auto_packet.html#a5587ee9febad91417f6ee1f4c65d6282">AutoPacket::Wait</a></div><div class="ttdeci">bool Wait(std::condition_variable &amp;cv)</div><div class="ttdoc">Delays until the specified decorations are satisfied </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:593</div></div>
-<div class="ttc" id="class_auto_packet_html_ad162cefce3bd9980fa2984c29f2a2517"><div class="ttname"><a href="class_auto_packet.html#ad162cefce3bd9980fa2984c29f2a2517">AutoPacket::GetDecorationTypeCount</a></div><div class="ttdeci">size_t GetDecorationTypeCount(void) const </div><div class="ttdoc">The number of distinct decoration types on this packet </div></div>
-<div class="ttc" id="classauto__arg_html"><div class="ttname"><a href="classauto__arg.html">auto_arg</a></div><div class="ttdoc">Reinterpret copied argument as input </div><div class="ttdef"><b>Definition:</b> auto_arg.h:27</div></div>
-<div class="ttc" id="class_auto_packet_html_adde180a2515100943e2b33e999b7f6d3"><div class="ttname"><a href="class_auto_packet.html#adde180a2515100943e2b33e999b7f6d3">AutoPacket::Wait</a></div><div class="ttdeci">bool Wait(std::condition_variable &amp;cv, Fx &amp;&amp;autoFilter, std::chrono::nanoseconds duration=std::chrono::nanoseconds::max())</div><div class="ttdoc">Blocks until the passed lambda function can be called </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:580</div></div>
+<div class="ttc" id="class_auto_packet_html_a5587ee9febad91417f6ee1f4c65d6282"><div class="ttname"><a href="class_auto_packet.html#a5587ee9febad91417f6ee1f4c65d6282">AutoPacket::Wait</a></div><div class="ttdeci">bool Wait(std::condition_variable &amp;cv)</div><div class="ttdoc">Delays until the specified decorations are satisfied </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:673</div></div>
+<div class="ttc" id="class_auto_packet_html_ad162cefce3bd9980fa2984c29f2a2517"><div class="ttname"><a href="class_auto_packet.html#ad162cefce3bd9980fa2984c29f2a2517">AutoPacket::GetDecorationTypeCount</a></div><div class="ttdeci">size_t GetDecorationTypeCount(void) const </div></div>
+<div class="ttc" id="classauto__arg_html"><div class="ttname"><a href="classauto__arg.html">auto_arg</a></div><div class="ttdoc">Reinterpret copied argument as input </div><div class="ttdef"><b>Definition:</b> auto_arg.h:28</div></div>
+<div class="ttc" id="class_auto_packet_html_adde180a2515100943e2b33e999b7f6d3"><div class="ttname"><a href="class_auto_packet.html#adde180a2515100943e2b33e999b7f6d3">AutoPacket::Wait</a></div><div class="ttdeci">bool Wait(std::condition_variable &amp;cv, Fx &amp;&amp;autoFilter, std::chrono::nanoseconds duration=std::chrono::nanoseconds::max())</div><div class="ttdoc">Blocks until the passed lambda function can be called </div><div class="ttdef"><b>Definition:</b> AutoPacket.h:660</div></div>
+<div class="ttc" id="class_auto_packet_html_a04a92e6f29f23e8f301266dbb4461bd1"><div class="ttname"><a href="class_auto_packet.html#a04a92e6f29f23e8f301266dbb4461bd1">AutoPacket::ForwardAll</a></div><div class="ttdeci">void ForwardAll(const std::shared_ptr&lt; AutoPacket &gt; &amp;recipient) const </div><div class="ttdoc">Shares all broadcast data from this packet with the recipient packet</div></div>
 <div class="ttc" id="class_auto_packet_html_a58cab6182ed3149b78b023a303467d39"><div class="ttname"><a href="class_auto_packet.html#a58cab6182ed3149b78b023a303467d39">AutoPacket::Decorate</a></div><div class="ttdeci">void Decorate(const AnySharedPointer &amp;ptr, DecorationKey key)</div><div class="ttdoc">Runtime counterpart to Decorate</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
@@ -552,7 +634,7 @@ $(document).ready(function(){initNavTree('_auto_packet_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_auto_packet_8h.html">AutoPacket.h</a></li>
-    <li class="footer">Generated on Fri Jun 19 2015 17:25:35 for Autowiring by
+    <li class="footer">Generated on Tue Jul 14 2015 17:54:58 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

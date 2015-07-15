@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.0</span>
+   &#160;<span id="projectnumber">0.7.1</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -115,87 +115,27 @@ $(document).ready(function(){initNavTree('classauto__out.html','');});
 </div><!--header-->
 <div class="contents">
 
-<p>Declares an output of an AutoFilter method via an argument.  
+<p>The auto_out&lt;T&gt; class provides a way to implement deferred-output autofilters.  
  <a href="classauto__out.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="auto__out_8h_source.html">auto_out.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aafe294268c22edb9a8039c8362582b16"><td class="memItemLeft" align="right" valign="top">T *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__out.html#aafe294268c22edb9a8039c8362582b16">get</a> (void) const </td></tr>
-<tr class="memdesc:aafe294268c22edb9a8039c8362582b16"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the dumb pointer to the underlying output value  <a href="#aafe294268c22edb9a8039c8362582b16">More...</a><br /></td></tr>
-<tr class="separator:aafe294268c22edb9a8039c8362582b16"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15f98128f4ba7a91652a1711e24ad569"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classauto__out.html">auto_out</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__out.html#a15f98128f4ba7a91652a1711e24ad569">operator=</a> (std::shared_ptr&lt; T &gt; rhs)</td></tr>
-<tr class="memdesc:a15f98128f4ba7a91652a1711e24ad569"><td class="mdescLeft">&#160;</td><td class="mdescRight">Output will be shared data provided by rhs <a href="#a15f98128f4ba7a91652a1711e24ad569">More...</a><br /></td></tr>
-<tr class="separator:a15f98128f4ba7a91652a1711e24ad569"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f2e723420ba2ca6827bd7e5cedc842d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classauto__out.html#a8f2e723420ba2ca6827bd7e5cedc842d">reset</a> (void)</td></tr>
-<tr class="memdesc:a8f2e723420ba2ca6827bd7e5cedc842d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Releases the internal shared pointer, preventing it from being decorated on the packet  <a href="#a8f2e723420ba2ca6827bd7e5cedc842d">More...</a><br /></td></tr>
+<tr class="memdesc:a8f2e723420ba2ca6827bd7e5cedc842d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Releases the internal implementatoin object  <a href="#a8f2e723420ba2ca6827bd7e5cedc842d">More...</a><br /></td></tr>
 <tr class="separator:a8f2e723420ba2ca6827bd7e5cedc842d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;class T&gt;<br />
 class auto_out&lt; T &gt;</h3>
 
-<p>Declares an output of an AutoFilter method via an argument. </p>
-<p>Lazy allocation is implemented, and is triggered on destruction. Any attempt to access the referenced data will trigger instantiation and a commitment to output the data. Moved construction and assignment removes the option to output from the r-value operand, but does <em>not</em> force an output. </p>
+<p>The auto_out&lt;T&gt; class provides a way to implement deferred-output autofilters. </p>
+<p>An <code><a class="el" href="classauto__out.html" title="The auto_out<T> class provides a way to implement deferred-output autofilters. ">auto_out</a>&lt;T&gt;</code> parameter in an autofilter is an output parameter equivalent to type T. It stores a std::shared_ptr to the <a class="el" href="class_auto_packet.html" title="A decorator-style processing packet ">AutoPacket</a> from which the autofilter call was generated, and essentially just waits to be assigned to, at which point it decorates the packet with the assigned value. If the auto_out&lt;T&gt; instance (and all copies of it) is destroyed without being assigned to, then it marks T as unsatisfiable, which has particular consequences (see <a class="el" href="class_auto_packet.html#a29f7dcf03fe916c5566ca61afcc19782" title="Marks the specified entry as being unsatisfiable ">AutoPacket::MarkUnsatisfiable</a>).</p>
+<p>In particular, auto_out&lt;T&gt; allows one to define asynchronously processed autofilters by deferring output decoration until much later than the filter itself was called. For example, one could store the auto_out&lt;T&gt;, begin an asynchronous process on a different thread, and assign to the auto_out&lt;T&gt; once that process completes.</p>
+<p>The auto_out&lt;T&gt; class has shared_ptr style semantics (pointer dereferencing), and additionally can be assigned to from various types, primary including T and its relatives (e.g. <code>const T&amp;</code> and <code>T&amp;&amp;</code> and <code>std::shared_ptr&lt;T&gt;</code>. When assigned to from a T-like typed value, the packet is decorated with that value. Assignment can only happen once.</p>
+<p>Note that <code><a class="el" href="classauto__out.html" title="The auto_out<T> class provides a way to implement deferred-output autofilters. ">auto_out</a>&lt;T&gt;</code> as an output parameter of an autofilter is conceptually less strict than <code>T&amp;</code>. The former does not guarantee that T will be decorated onto the packet by the time the autofilter method returns, and the determination of which may require reasoning about the run-time state of the program. The latter guarantees that T will be decorated onto the packet by the time the autofilter method returns. Use <code>T&amp;</code> if possible, and only use auto_out&lt;T&gt; when the deferred output behavior is required. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a class="anchor" id="aafe294268c22edb9a8039c8362582b16"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class T&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">T* <a class="el" href="classauto__out.html">auto_out</a>&lt; T &gt;::get </td>
-          <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Returns the dumb pointer to the underlying output value </p>
-
-</div>
-</div>
-<a class="anchor" id="a15f98128f4ba7a91652a1711e24ad569"></a>
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class T&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classauto__out.html">auto_out</a>&amp; <a class="el" href="classauto__out.html">auto_out</a>&lt; T &gt;::operator= </td>
-          <td>(</td>
-          <td class="paramtype">std::shared_ptr&lt; T &gt;&#160;</td>
-          <td class="paramname"><em>rhs</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Output will be shared data provided by rhs</p>
-<p>This method faciliates output of shared ObjectPool data, with destructors defined accordingly. </p>
-
-</div>
-</div>
 <a class="anchor" id="a8f2e723420ba2ca6827bd7e5cedc842d"></a>
 <div class="memitem">
 <div class="memproto">
@@ -220,7 +160,8 @@ template&lt;class T&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Releases the internal shared pointer, preventing it from being decorated on the packet </p>
+<p>Releases the internal implementatoin object </p>
+<p>If this <a class="el" href="classauto__out.html" title="The auto_out<T> class provides a way to implement deferred-output autofilters. ">auto_out</a> is the last handle to this output instance, this method will cause the attached decoration to be assigned </p>
 
 </div>
 </div>
@@ -233,7 +174,7 @@ template&lt;class T&gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="classauto__out.html">auto_out</a></li>
-    <li class="footer">Generated on Fri Jun 19 2015 17:25:35 for Autowiring by
+    <li class="footer">Generated on Tue Jul 14 2015 17:54:58 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

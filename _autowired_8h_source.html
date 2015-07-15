@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.0</span>
+   &#160;<span id="projectnumber">0.7.1</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -112,7 +112,7 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <a href="_autowired_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">// Copyright (C) 2012-2015 Leap Motion, Inc. All rights reserved.</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;auto_signal.h&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;AutowiringDebug.h&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_autowiring_debug_8h.html">AutowiringDebug.h</a>&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;AutowirableSlot.h&quot;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_global_core_context_8h.html">GlobalCoreContext.h</a>&quot;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include MEMORY_HEADER</span></div>
@@ -148,11 +148,11 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    std::shared_ptr&lt;CoreContext&gt;(<a class="code" href="class_core_context.html#a3f8e26f6c2f8e94bdff0f2e2870b6836">CoreContext::CurrentContext</a>()-&gt;Create&lt;T&gt;(std::move(inj)))</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  {}</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  <a class="code" href="class_auto_create_context_t.html">AutoCreateContextT</a>(std::shared_ptr&lt;CoreContext&gt;&amp; ctxt) :</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  <a class="code" href="class_auto_create_context_t.html">AutoCreateContextT</a>(<span class="keyword">const</span> std::shared_ptr&lt;CoreContext&gt;&amp; ctxt) :</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    std::shared_ptr&lt;CoreContext&gt;(ctxt-&gt;Create&lt;T&gt;())</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  {}</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <a class="code" href="class_auto_create_context_t.html">AutoCreateContextT</a>(std::shared_ptr&lt;CoreContext&gt;&amp; ctxt, AutoInjectable&amp;&amp; inj) :</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <a class="code" href="class_auto_create_context_t.html">AutoCreateContextT</a>(<span class="keyword">const</span> std::shared_ptr&lt;CoreContext&gt;&amp; ctxt, AutoInjectable&amp;&amp; inj) :</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    std::shared_ptr&lt;CoreContext&gt;(ctxt-&gt;Create&lt;T&gt;(std::move(inj)))</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  {}</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;};</div>
@@ -465,6 +465,7 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;<span class="comment">// as a master header for all of Autowiring</span></div>
 <div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="_auto_packet_factory_8h.html">AutoPacketFactory.h</a>&quot;</span></div>
 <div class="ttc" id="class_auto_enable_html"><div class="ttname"><a href="class_auto_enable.html">AutoEnable</a></div><div class="ttdoc">Enables the specified type to be "bolted" to the current context. </div><div class="ttdef"><b>Definition:</b> Autowired.h:396</div></div>
+<div class="ttc" id="_autowiring_debug_8h_html"><div class="ttname"><a href="_autowiring_debug_8h.html">AutowiringDebug.h</a></div></div>
 <div class="ttc" id="class_global_core_context_html"><div class="ttname"><a href="class_global_core_context.html">GlobalCoreContext</a></div><div class="ttdoc">A special class designed to make it easier to detect when our context is the global context...</div><div class="ttdef"><b>Definition:</b> GlobalCoreContext.h:10</div></div>
 <div class="ttc" id="namespacestd_html"><div class="ttname"><a href="namespacestd.html">std</a></div><div class="ttdoc">STL namespace. </div></div>
 <div class="ttc" id="class_autowired_fast_html"><div class="ttname"><a href="class_autowired_fast.html">AutowiredFast</a></div><div class="ttdoc">Autowires a slot immediately (with limitations). </div><div class="ttdef"><b>Definition:</b> Autowired.h:343</div></div>
@@ -487,7 +488,7 @@ $(document).ready(function(){initNavTree('_autowired_8h_source.html','');});
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_2e38afdc5a4015337247db13c49755ec.html">autowiring</a></li><li class="navelem"><a class="el" href="_autowired_8h.html">Autowired.h</a></li>
-    <li class="footer">Generated on Fri Jun 19 2015 17:25:35 for Autowiring by
+    <li class="footer">Generated on Tue Jul 14 2015 17:54:58 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>

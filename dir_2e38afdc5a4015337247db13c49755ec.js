@@ -4,32 +4,38 @@ var dir_2e38afdc5a4015337247db13c49755ec =
     [ "auto_arg.h", "auto__arg_8h.html", [
       [ "arg_is_out", "structarg__is__out.html", null ],
       [ "auto_arg", "classauto__arg.html", null ],
-      [ "auto_arg< auto_in< T > >", "classauto__arg_3_01auto__in_3_01_t_01_4_01_4.html", null ],
-      [ "auto_arg< auto_out< T > >", "classauto__arg_3_01auto__out_3_01_t_01_4_01_4.html", null ],
-      [ "auto_arg< AutoPacket & >", "classauto__arg_3_01_auto_packet_01_6_01_4.html", null ],
       [ "auto_arg< const T & >", "classauto__arg_3_01const_01_t_01_6_01_4.html", null ],
       [ "auto_arg< const T >", "classauto__arg_3_01const_01_t_01_4.html", null ],
+      [ "auto_arg< CoreContext & >", "classauto__arg_3_01_core_context_01_6_01_4.html", null ],
       [ "auto_arg< std::shared_ptr< const T > * >", "classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_5_01_4.html", null ],
       [ "auto_arg< std::shared_ptr< const T > >", "classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_4.html", null ],
+      [ "auto_arg< std::shared_ptr< CoreContext > >", "classauto__arg_3_01std_1_1shared__ptr_3_01_core_context_01_4_01_4.html", null ],
       [ "auto_arg< std::shared_ptr< T > & >", "classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_01_4.html", null ],
       [ "auto_arg< std::shared_ptr< T > >", "classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_4.html", null ],
       [ "auto_arg< T & >", "classauto__arg_3_01_t_01_6_01_4.html", null ],
       [ "auto_arg< T * >", "classauto__arg_3_01_t_01_5_01_4.html", null ],
       [ "auto_arg< T const ** >", "classauto__arg_3_01_t_01const_01_5_5_01_4.html", null ],
-      [ "auto_arg_ctor_helper", "structauto__arg__ctor__helper.html", null ]
+      [ "auto_arg_ctor_helper", "structdetail_1_1auto__arg__ctor__helper.html", null ],
+      [ "auto_in", "classauto__in.html", null ]
     ] ],
     [ "auto_in.h", "auto__in_8h.html", [
+      [ "auto_arg", "classauto__arg.html", null ],
+      [ "auto_arg< auto_in< T > >", "classauto__arg_3_01auto__in_3_01_t_01_4_01_4.html", null ],
       [ "auto_in", "classauto__in.html", null ]
     ] ],
     [ "auto_out.h", "auto__out_8h.html", [
+      [ "auto_arg", "classauto__arg.html", null ],
       [ "auto_out", "classauto__out.html", "classauto__out" ]
     ] ],
     [ "auto_prev.h", "auto__prev_8h.html", [
+      [ "auto_arg", "classauto__arg.html", null ],
       [ "auto_prev", "structauto__prev.html", null ]
     ] ],
     [ "AutoConfig.h", "_auto_config_8h.html", "_auto_config_8h" ],
     [ "AutoNetServer.h", "_auto_net_server_8h.html", "_auto_net_server_8h" ],
     [ "AutoPacket.h", "_auto_packet_8h.html", [
+      [ "auto_arg", "classauto__arg.html", null ],
+      [ "auto_arg< AutoPacket & >", "classauto__arg_3_01_auto_packet_01_6_01_4.html", null ],
       [ "AutoPacket", "class_auto_packet.html", "class_auto_packet" ]
     ] ],
     [ "AutoPacketFactory.h", "_auto_packet_factory_8h.html", [
@@ -49,7 +55,7 @@ var dir_2e38afdc5a4015337247db13c49755ec =
     ] ],
     [ "Autowired.h", "_autowired_8h.html", "_autowired_8h" ],
     [ "autowiring_error.h", "autowiring__error_8h.html", null ],
-    [ "AutowiringDebug.h", "_autowiring_debug_8h_source.html", null ],
+    [ "AutowiringDebug.h", "_autowiring_debug_8h.html", "_autowiring_debug_8h" ],
     [ "BasicThread.h", "_basic_thread_8h.html", "_basic_thread_8h" ],
     [ "Bolt.h", "_bolt_8h.html", [
       [ "Bolt", "class_bolt.html", "class_bolt" ]

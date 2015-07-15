@@ -1,11 +1,5 @@
 var searchData=
 [
-  ['wait',['Wait',['../class_auto_packet.html#ac24353583ddd518aad7973942e4b1baa',1,'AutoPacket::Wait(std::condition_variable &amp;cv, const AutoFilterArgument *inputs, std::chrono::nanoseconds duration=std::chrono::nanoseconds::max())'],['../class_auto_packet.html#adde180a2515100943e2b33e999b7f6d3',1,'AutoPacket::Wait(std::condition_variable &amp;cv, Fx &amp;&amp;autoFilter, std::chrono::nanoseconds duration=std::chrono::nanoseconds::max())'],['../class_auto_packet.html#a5587ee9febad91417f6ee1f4c65d6282',1,'AutoPacket::Wait(std::condition_variable &amp;cv)'],['../class_auto_packet.html#a0b8aea3ddb3ab167ec745f5f7cb6dd3a',1,'AutoPacket::Wait(std::chrono::nanoseconds duration, std::condition_variable &amp;cv)'],['../class_core_context.html#a846274ca88865c63655b5eeb054d12b9',1,'CoreContext::Wait(void)'],['../class_core_context.html#a6708295354459d99f39f4f4a2899211d',1,'CoreContext::Wait(const std::chrono::nanoseconds duration)'],['../class_core_runnable.html#acb3c019cfe57942e293c9cec805828e7',1,'CoreRunnable::Wait()']]],
-  ['waitfor',['WaitFor',['../class_core_runnable.html#a4856481bde70b25d28bac86876cadf88',1,'CoreRunnable']]],
-  ['waitforevent',['WaitForEvent',['../class_dispatch_queue.html#a304588a65ecc0712c3aafe0461c73f1b',1,'DispatchQueue::WaitForEvent(void)'],['../class_dispatch_queue.html#aa284e235b0971d36bd858dc320c1a853',1,'DispatchQueue::WaitForEvent(std::chrono::milliseconds milliseconds)'],['../class_dispatch_queue.html#ad9e2d4588e439c8a0425ce0c50dc0f25',1,'DispatchQueue::WaitForEvent(std::chrono::steady_clock::time_point wakeTime)']]],
-  ['waitforstateupdate',['WaitForStateUpdate',['../class_basic_thread.html#a4b616b47385599a5ca237d2b8870d1c7',1,'BasicThread']]],
-  ['waituntil',['WaitUntil',['../class_core_runnable.html#aa8b6ac4ade1032ea1411680a04592d87',1,'CoreRunnable']]],
-  ['wakeallwaitingthreads',['WakeAllWaitingThreads',['../class_dispatch_queue.html#afd3293e212f176ae7a11cbb4690cce71',1,'DispatchQueue']]],
-  ['wasstarted',['WasStarted',['../class_core_context.html#ad12f8a7181248f040bde3fd4cdcd799e',1,'CoreContext::WasStarted()'],['../class_core_runnable.html#a1b36f39e87ce13aa8a751922aa61dd03',1,'CoreRunnable::WasStarted()']]],
-  ['writegv',['WriteGV',['../class_auto_packet_graph.html#a2f9fb7e8a3cda106fecc172d5e4649d7',1,'AutoPacketGraph']]]
+  ['unsafecomplete',['UnsafeComplete',['../class_auto_packet.html#a0dbabcc26a87524dbd833390d6dff5f3',1,'AutoPacket']]],
+  ['updatesatisfactionunsafe',['UpdateSatisfactionUnsafe',['../class_auto_packet.html#a5500ce562229a4b8944a0f7a647d0ab6',1,'AutoPacket']]]
 ];

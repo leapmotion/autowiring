@@ -14,5 +14,6 @@ var searchData=
   ['autoselfupdate_2eh',['AutoSelfUpdate.h',['../_auto_self_update_8h.html',1,'']]],
   ['autotimestamp_2eh',['AutoTimeStamp.h',['../_auto_time_stamp_8h.html',1,'']]],
   ['autowired_2eh',['Autowired.h',['../_autowired_8h.html',1,'']]],
-  ['autowiring_5ferror_2eh',['autowiring_error.h',['../autowiring__error_8h.html',1,'']]]
+  ['autowiring_5ferror_2eh',['autowiring_error.h',['../autowiring__error_8h.html',1,'']]],
+  ['autowiringdebug_2eh',['AutowiringDebug.h',['../_autowiring_debug_8h.html',1,'']]]
 ];

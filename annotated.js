@@ -1,21 +1,24 @@
 var annotated =
 [
     [ "autowiring", "namespaceautowiring.html", "namespaceautowiring" ],
+    [ "detail", null, [
+      [ "auto_arg_ctor_helper", "structdetail_1_1auto__arg__ctor__helper.html", null ]
+    ] ],
     [ "arg_is_out", "structarg__is__out.html", null ],
     [ "auto_arg", "classauto__arg.html", null ],
     [ "auto_arg< auto_in< T > >", "classauto__arg_3_01auto__in_3_01_t_01_4_01_4.html", null ],
-    [ "auto_arg< auto_out< T > >", "classauto__arg_3_01auto__out_3_01_t_01_4_01_4.html", null ],
     [ "auto_arg< AutoPacket & >", "classauto__arg_3_01_auto_packet_01_6_01_4.html", null ],
     [ "auto_arg< const T & >", "classauto__arg_3_01const_01_t_01_6_01_4.html", null ],
     [ "auto_arg< const T >", "classauto__arg_3_01const_01_t_01_4.html", null ],
+    [ "auto_arg< CoreContext & >", "classauto__arg_3_01_core_context_01_6_01_4.html", null ],
     [ "auto_arg< std::shared_ptr< const T > * >", "classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_5_01_4.html", null ],
     [ "auto_arg< std::shared_ptr< const T > >", "classauto__arg_3_01std_1_1shared__ptr_3_01const_01_t_01_4_01_4.html", null ],
+    [ "auto_arg< std::shared_ptr< CoreContext > >", "classauto__arg_3_01std_1_1shared__ptr_3_01_core_context_01_4_01_4.html", null ],
     [ "auto_arg< std::shared_ptr< T > & >", "classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_6_01_4.html", null ],
     [ "auto_arg< std::shared_ptr< T > >", "classauto__arg_3_01std_1_1shared__ptr_3_01_t_01_4_01_4.html", null ],
     [ "auto_arg< T & >", "classauto__arg_3_01_t_01_6_01_4.html", null ],
     [ "auto_arg< T * >", "classauto__arg_3_01_t_01_5_01_4.html", null ],
     [ "auto_arg< T const ** >", "classauto__arg_3_01_t_01const_01_5_5_01_4.html", null ],
-    [ "auto_arg_ctor_helper", "structauto__arg__ctor__helper.html", null ],
     [ "auto_in", "classauto__in.html", null ],
     [ "auto_out", "classauto__out.html", "classauto__out" ],
     [ "auto_prev", "structauto__prev.html", null ],

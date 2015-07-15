@@ -32,7 +32,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">Autowiring
-   &#160;<span id="projectnumber">0.7.0</span>
+   &#160;<span id="projectnumber">0.7.1</span>
    </div>
    <div id="projectbrief">A C++ Inversion of Control Framework</div>
   </td>
@@ -141,10 +141,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1ecb6036d42a7b56e960713f4f9630a0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a1ecb6036d42a7b56e960713f4f9630a0">AddExisting</a> (std::unique_ptr&lt; DispatchThunkBase &gt; &amp;&amp;pBase)</td></tr>
 <tr class="memdesc:a1ecb6036d42a7b56e960713f4f9630a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Explicit overload for already-constructed dispatch thunk types  <a href="#a1ecb6036d42a7b56e960713f4f9630a0">More...</a><br /></td></tr>
 <tr class="separator:a1ecb6036d42a7b56e960713f4f9630a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9ee3c640b1c46dc87157d7e1186db9bc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ee3c640b1c46dc87157d7e1186db9bc"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc">AreAnyDispatchersReady</a> (void) const </td></tr>
-<tr class="memdesc:a9ee3c640b1c46dc87157d7e1186db9bc"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>True if there are curerntly any dispatchers ready for execution&ndash;IE, DispatchEvent would return true </dd></dl>
-<br /></td></tr>
+<tr class="memitem:a9ee3c640b1c46dc87157d7e1186db9bc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a9ee3c640b1c46dc87157d7e1186db9bc">AreAnyDispatchersReady</a> (void) const </td></tr>
 <tr class="separator:a9ee3c640b1c46dc87157d7e1186db9bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36dd84e1f8c210b971b9b08f89b8af10"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a36dd84e1f8c210b971b9b08f89b8af10">Barrier</a> (std::chrono::nanoseconds timeout)</td></tr>
 <tr class="memdesc:a36dd84e1f8c210b971b9b08f89b8af10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Blocks until all dispatchers on the <a class="el" href="class_dispatch_queue.html" title="This is an asynchronous queue of zero-argument functions ">DispatchQueue</a> at the time of the call have been dispatched  <a href="#a36dd84e1f8c210b971b9b08f89b8af10">More...</a><br /></td></tr>
@@ -159,8 +156,6 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memdesc:ae4cf0ed4b428ecbee03fb64a0e705ce7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Similar to WaitForEvent, but does not block  <a href="#ae4cf0ed4b428ecbee03fb64a0e705ce7">More...</a><br /></td></tr>
 <tr class="separator:ae4cf0ed4b428ecbee03fb64a0e705ce7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aead80f32b70b6c6ee5acffb2b083724a"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#aead80f32b70b6c6ee5acffb2b083724a">GetDispatchQueueLength</a> (void) const </td></tr>
-<tr class="memdesc:aead80f32b70b6c6ee5acffb2b083724a"><td class="mdescLeft">&#160;</td><td class="mdescRight"><dl class="section return"><dt>Returns</dt><dd>The total number of all ready and delayed events </dd></dl>
- <a href="#aead80f32b70b6c6ee5acffb2b083724a">More...</a><br /></td></tr>
 <tr class="separator:aead80f32b70b6c6ee5acffb2b083724a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a993c2a6b31496f06d47079a56086a507"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dispatch_queue.html#a993c2a6b31496f06d47079a56086a507">operator+=</a> (<a class="el" href="class_dispatch_queue.html">DispatchQueue</a> &amp;&amp;rhs)</td></tr>
 <tr class="memdesc:a993c2a6b31496f06d47079a56086a507"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extracts the contents of the dispatch queue on the right-hand side for handling by this queue  <a href="#a993c2a6b31496f06d47079a56086a507">More...</a><br /></td></tr>
@@ -289,6 +284,31 @@ Protected Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Explicit overload for already-constructed dispatch thunk types </p>
+
+</div>
+</div>
+<a class="anchor" id="a9ee3c640b1c46dc87157d7e1186db9bc"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool DispatchQueue::AreAnyDispatchersReady </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<dl class="section return"><dt>Returns</dt><dd>True if there are curerntly any dispatchers ready for execution&ndash;IE, DispatchEvent would return true </dd></dl>
 
 </div>
 </div>
@@ -430,9 +450,7 @@ Protected Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-
-<p><dl class="section return"><dt>Returns</dt><dd>The total number of all ready and delayed events </dd></dl>
-</p>
+<dl class="section return"><dt>Returns</dt><dd>The total number of all ready and delayed events </dd></dl>
 <p>This method will also count dispatchers that are presently underway or presently being deleted. Thus, calling this method from within a dispatcher, or from that dispatcher's destructor, should always return a size of at least 1. </p>
 
 </div>
@@ -773,7 +791,7 @@ template&lt;class _Fx &gt; </div>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_dispatch_queue.html">DispatchQueue</a></li>
-    <li class="footer">Generated on Fri Jun 19 2015 17:25:35 for Autowiring by
+    <li class="footer">Generated on Tue Jul 14 2015 17:54:59 for Autowiring by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.9.1 </li>
   </ul>
