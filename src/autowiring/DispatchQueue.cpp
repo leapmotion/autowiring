@@ -312,8 +312,8 @@ void DispatchQueue::operator+=(DispatchQueue&& rhs) {
   OnPended(std::move(lk));
 }
 
-DispatchQueue::DispatchThunkDelayedExpression DispatchQueue::operator+=(std::chrono::steady_clock::time_point rhs) {
-  return DispatchThunkDelayedExpression(this, rhs);
+DispatchQueue::DispatchThunkDelayedExpressionAbs DispatchQueue::operator+=(std::chrono::steady_clock::time_point rhs) {
+  return{this, rhs};
 }
 
 void DispatchQueue::operator+=(DispatchThunkDelayed&& rhs) {
