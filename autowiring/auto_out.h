@@ -66,7 +66,7 @@ public:
       if (m_decoration)
         m_packet->Decorate<T>(std::move(m_decoration));
       else
-        m_packet->Unsatisfiable<T>();
+        m_packet->MarkUnsatisfiable<T>();
     }
 
   private:
