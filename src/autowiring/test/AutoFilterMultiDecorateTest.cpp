@@ -90,7 +90,7 @@ TEST_F(AutoFilterMultiDecorateTest, UnsatDecTest) {
 
   auto packet = f->NewPacket();
   packet->Decorate(Decoration<0>{});
-  packet->Unsatisfiable<Decoration<1>>();
+  packet->MarkUnsatisfiable<Decoration<1>>();
   packet->Decorate(Decoration<2>{});
 
   auto strs = packet->GetAll<std::string>();

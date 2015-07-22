@@ -25,7 +25,7 @@ TEST_F(SatisfiabilityTest, MarkUnsatisfiableCalls) {
   bool bSharedPtrCalled = false;
   *packet += [&bSharedPtrCalled](std::shared_ptr<const Decoration<0>> dec) { bSharedPtrCalled = true; };
 
-  packet->Unsatisfiable<Decoration<0>>();
+  packet->MarkUnsatisfiable<Decoration<0>>();
 
   ASSERT_FALSE(bRefCalled) << "Reference version should not have been called";
   ASSERT_TRUE(bSharedPtrCalled) << "Shared pointer version should have been called as a result of Unsatisfiable";
