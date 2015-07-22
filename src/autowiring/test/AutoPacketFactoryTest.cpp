@@ -169,15 +169,6 @@ TEST_F(AutoPacketFactoryTest, AutoPacketStatistics) {
   ASSERT_LE(packetDelay, factory->GetMeanPacketLifetime()) << "The mean packet lifetime was less than the delay on each packet";
 }
 
-TEST_F(AutoPacketFactoryTest, DescriptorNonEquivalence) {
-  AutoFilterDescriptor descs[2];
-  for (size_t i = 0; i < 2; i++)
-    descs[i] = AutoFilterDescriptor([i] (int) { });
-  ASSERT_NE(descs[0], descs[1]) << "Descriptors evaluated to equivalence even though they were constructed distinctly";
-  ASSERT_NE(descs[0].GetAutoFilter(), descs[1].GetAutoFilter()) << "Shared pointers to underlying autofilters were equal when they should not have been";
-  ASSERT_NE(descs[0] < descs[1], descs[1] < descs[0]) << "Two inequal descriptors violated disjunctive syllogism";
-}
-
 TEST_F(AutoPacketFactoryTest, MultipleInstanceAddition) {
   AutoCurrentContext ctxt;
   AutoRequired<AutoPacketFactory> factory;

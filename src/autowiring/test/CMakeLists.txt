@@ -8,6 +8,7 @@ set(AutowiringTest_SRCS
   AutoFilterAltitudeTest.cpp
   AutoFilterCollapseRulesTest.cpp
   AutoFilterConstructRulesTest.cpp
+  AutoFilterDescriptorTest.cpp
   AutoFilterDiagnosticsTest.cpp
   AutoFilterFunctionTest.cpp
   AutoFilterMultiDecorateTest.cpp
