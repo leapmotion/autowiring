@@ -195,6 +195,10 @@ add_windows_sources(Autowiring_SRCS
   CoreThreadWin.cpp
   SystemThreadPoolWin.cpp
   SystemThreadPoolWin.hpp
+  SystemThreadPoolWinXP.cpp
+  SystemThreadPoolWinXP.hpp
+  SystemThreadPoolWinLH.cpp
+  SystemThreadPoolWinLH.hpp
   InterlockedExchangeWin.cpp
   thread_specific_ptr_win.h
 )
