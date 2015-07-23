@@ -124,6 +124,7 @@ set(Autowiring_SRCS
   InterlockedExchange.h
   InvokeRelay.h
   is_any.h
+  is_complete.h
   is_shared_ptr.h
   JunctionBox.h
   JunctionBoxBase.cpp
