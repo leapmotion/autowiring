@@ -7,8 +7,13 @@
 
 namespace autowiring {
 
+  namespace detail {
+    extern const decltype(&CreateThreadpoolWork) g_CreateThreadpoolWork;
+    extern const decltype(&CloseThreadpoolWork) g_CloseThreadpoolWork;
+  }
+
 /// <summary>
-/// A thread pool that makes use of the underlying system's APIs
+/// Abstract base class used by Windows XP and LH compatibility layers
 /// </summary>
 class SystemThreadPoolWin:
   public SystemThreadPool
@@ -17,11 +22,7 @@ public:
   SystemThreadPoolWin(void);
   ~SystemThreadPoolWin(void);
 
-private:
-  // Work item for single dispatchers
-  PTP_WORK m_pwkDispatchRundown;
-  PTP_WORK m_pwkSingle;
-
+protected:
   // Vector of dispathc queues that need to be run down
   concurrency::concurrent_queue<std::shared_ptr<DispatchQueue>> m_rundownTargets;
 
@@ -29,13 +30,7 @@ private:
   DispatchQueue m_toBeDone;
 
   // ThreadPool overrides:
-  void OnStartUnsafe(void) override;
   void OnStop(void) override;
-
-public:
-  // ThreadPool overrides:
-  void Consume(const std::shared_ptr<DispatchQueue>& dq) override;
-  bool Submit(std::unique_ptr<DispatchThunkBase>&& thunk) override;
 };
 
 }
