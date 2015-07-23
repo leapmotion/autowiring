@@ -17,7 +17,7 @@ SystemThreadPoolWinLH::~SystemThreadPoolWinLH(void)
 }
 
 void SystemThreadPoolWinLH::OnStartUnsafe(void) {
-  m_pwkDispatchRundown = CreateThreadpoolWork(
+  m_pwkDispatchRundown = g_CreateThreadpoolWork(
     [](PTP_CALLBACK_INSTANCE Instance, void* Context, PTP_WORK Work) {
       auto* pThis = static_cast<SystemThreadPoolWinLH*>(Context);
 
@@ -34,7 +34,7 @@ void SystemThreadPoolWinLH::OnStartUnsafe(void) {
     nullptr
   );
 
-  m_pwkSingle = CreateThreadpoolWork(
+  m_pwkSingle = g_CreateThreadpoolWork(
     [](PTP_CALLBACK_INSTANCE Instance, void* Context, PTP_WORK Work) {
       // Spin down our dispatch queue until it is empty:
       static_cast<SystemThreadPoolWinLH*>(Context)->m_toBeDone.DispatchAllEvents();
@@ -48,9 +48,9 @@ void SystemThreadPoolWinLH::OnStop(void) {
   SystemThreadPoolWin::OnStop();
 
   std::lock_guard<std::mutex> lk(m_lock);
-  CloseThreadpoolWork(m_pwkSingle);
+  g_CloseThreadpoolWork(m_pwkSingle);
   m_pwkSingle = nullptr;
-  CloseThreadpoolWork(m_pwkDispatchRundown);
+  g_CloseThreadpoolWork(m_pwkDispatchRundown);
   m_pwkDispatchRundown = nullptr;
 }
 
