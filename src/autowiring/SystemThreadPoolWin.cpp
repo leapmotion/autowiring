@@ -11,6 +11,7 @@ using namespace autowiring::detail;
 static const HMODULE hKernel32 = LoadLibrary("kernel32.dll");
 const decltype(&CreateThreadpoolWork) autowiring::detail::g_CreateThreadpoolWork = (decltype(&CreateThreadpoolWork)) GetProcAddress(hKernel32, "CreateThreadpoolWork");
 const decltype(&CloseThreadpoolWork) autowiring::detail::g_CloseThreadpoolWork = (decltype(&CloseThreadpoolWork)) GetProcAddress(hKernel32, "CloseThreadpoolWork");
+const decltype(&SubmitThreadpoolWork) autowiring::detail::g_SubmitThreadpoolWork = (decltype(&SubmitThreadpoolWork)) GetProcAddress(hKernel32, "SubmitThreadpoolWork");
 
 SystemThreadPoolWin::SystemThreadPoolWin(void) :
   m_toBeDone(~0)
