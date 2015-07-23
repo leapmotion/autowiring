@@ -25,6 +25,7 @@ class AutoPacketFactory:
 {
 public:
   AutoPacketFactory(void);
+  AutoPacketFactory(const AutoPacketFactory& rhs) = delete;
   ~AutoPacketFactory(void);
 
 private:
