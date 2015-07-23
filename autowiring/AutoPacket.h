@@ -723,6 +723,27 @@ public:
   }
 };
 
+/// <summary>
+/// AutoPacket specialization for shared pointer
+/// </summary>
+template<>
+class auto_arg<std::shared_ptr<AutoPacket>>
+{
+public:
+  typedef AutoPacket& type;
+  typedef AutoPacket& arg_type;
+  typedef AutoPacket id_type;
+  static const bool is_input = false;
+  static const bool is_output = false;
+  static const bool is_shared = false;
+  static const bool is_multi = false;
+  static const int tshift = 0;
+
+  static std::shared_ptr<AutoPacket> arg(AutoPacket& packet) {
+    return packet.shared_from_this();
+  }
+};
+
 template<class T>
 void AutoPacket::Unsatisfiable(void) {
   MarkUnsatisfiable(DecorationKey(auto_id<T>::key(), 0));
