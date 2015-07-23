@@ -60,7 +60,7 @@ void SystemThreadPoolWinLH::Consume(const std::shared_ptr<DispatchQueue>& dq)
   std::lock_guard<std::mutex> lk(m_lock);
   m_rundownTargets.push(dq);
   if (m_pwkDispatchRundown)
-    SubmitThreadpoolWork(m_pwkDispatchRundown);
+    g_SubmitThreadpoolWork(m_pwkDispatchRundown);
 }
 
 bool SystemThreadPoolWinLH::Submit(std::unique_ptr<DispatchThunkBase>&& thunk)
@@ -68,6 +68,6 @@ bool SystemThreadPoolWinLH::Submit(std::unique_ptr<DispatchThunkBase>&& thunk)
   std::lock_guard<std::mutex> lk(m_lock);
   m_toBeDone.AddExisting(std::move(thunk));
   if (m_pwkSingle)
-    SubmitThreadpoolWork(m_pwkSingle);
+    g_SubmitThreadpoolWork(m_pwkSingle);
   return true;
 }

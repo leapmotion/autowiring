@@ -10,6 +10,7 @@ namespace autowiring {
   namespace detail {
     extern const decltype(&CreateThreadpoolWork) g_CreateThreadpoolWork;
     extern const decltype(&CloseThreadpoolWork) g_CloseThreadpoolWork;
+    extern const decltype(&SubmitThreadpoolWork) g_SubmitThreadpoolWork;
   }
 
 /// <summary>
