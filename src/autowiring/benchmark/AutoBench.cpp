@@ -73,27 +73,34 @@ Benchmark PrintUsage(void) {
 }
 
 int main(int argc, const char* argv[]) {
-  switch (argc) {
-  default:
+  if (argc <= 1) {
     PrintUsage();
     return -1;
-  case 2:
-    auto& cur = sc_commands[argv[1]];
-    if (!cur.name) {
+  }
+
+  // First pass, ensure we recognize all commands:
+  for (int i = 1; i < argc; i++)
+    if (!sc_commands[argv[i]].name) {
       std::cerr << "Unrecognized command" << std::endl;
       PrintUsage();
       return -1;
     }
 
+  // Now execute everything:
+  bool errors = false;
+  for (int i = 1; i < argc; i++) {
+    auto& cur = sc_commands[argv[i]];
     try {
       Benchmark benchmark = cur.pfn();
       if (!cur.utility)
-        std::cout << benchmark;
+        std::cout
+          << cur.name << std::endl
+          << benchmark << std::endl;
     }
     catch (std::exception& ex) {
       std::cerr << ex.what() << std::endl;
-      return -1;
+      errors = true;
     }
   }
-  return 0;
+  return errors ? -1 : 0;
 }
