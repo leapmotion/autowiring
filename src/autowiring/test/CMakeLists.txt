@@ -48,6 +48,7 @@ set(AutowiringTest_SRCS
   GlobalInitTest.hpp
   GlobalInitTest.cpp
   GuardObjectTest.cpp
+  HeteroBlockTest.cpp
   InterlockedRoutinesTest.cpp
   MultiInheritTest.cpp
   ObjectPoolTest.cpp

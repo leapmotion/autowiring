@@ -10,6 +10,20 @@ namespace autowiring {
   /// </summary>
   int CreateIndex(void);
 
+  /// <summary>
+  /// Safe alignment extractor, useful because MSVC doesn't allow __alignof to be used on abstract types
+  /// </summary>
+  template<typename T, bool = std::is_abstract<T>::value>
+  struct safe_align_of:
+    std::integral_constant<size_t, AUTO_ALIGNOF(T)>
+  {};
+
+  // Abstract type, the alignment of this type is irrelevant
+  template<typename T>
+  struct safe_align_of<T, true>:
+    std::integral_constant<size_t, 1>
+  {};
+
   struct auto_id_block {
     auto_id_block(void) = default;
 
@@ -31,6 +45,7 @@ namespace autowiring {
       index(index),
       ti(&typeid(T)),
       ncb(sizeof(T)),
+      align(safe_align_of<T>::value),
       pToObj(
         reinterpret_cast<std::shared_ptr<CoreObject>(*)(const std::shared_ptr<void>&)>(pToObj)
       ),
@@ -45,6 +60,9 @@ namespace autowiring {
 
     // General properties of the underlying type
     size_t ncb;
+
+    // Alignment requirement of this type:
+    size_t align;
 
     // Generic fast casters to CoreObject
     std::shared_ptr<CoreObject>(*pToObj)(const std::shared_ptr<void>&);
